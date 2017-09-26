@@ -1,0 +1,31 @@
+{
+	"version": 0,
+	"totalAmount": "100000000000",
+	"totalFee": 0,
+	"reward": 1000000000000,
+	"payloadHash": "da3ed6a45429278bac2666961289ca17ad86595d33b31037615d4b8e8f158bba",
+	"timestamp": 0,
+	"numberOfTransactions": 1,
+	"payloadLength": 250,
+	"previousBlock": null,
+	"generatorPublicKey": "b4a440aee8b0d5a7d73018ea1ffa1a1bb9f2a2b29e7a978374751b7c09fb4392",
+	"transactions": [{
+		"type": 2,
+		"amount": 2500000000,
+		"fee": 0,
+		"timestamp": 0,
+		"recipientId": null,
+		"senderId": "16743531067956757985L",
+		"senderPublicKey": "b4a440aee8b0d5a7d73018ea1ffa1a1bb9f2a2b29e7a978374751b7c09fb4392",
+		"asset": {
+			"delegate": {
+				"username": "hotam"
+			}
+		},
+		"signature":"319b520e647be6ed47ebecbbe2f47d7dd4ca12690aaa4e36ee60493d89953519fea08b9d089850941c5b60b662f982a8890affa071e16847af406280bdee7e05",
+		"id": "8904615286204140458"
+	}],
+	"height": 1,
+	"blockSignature":"a47d07d3a8d8024eb44672bc6d07cdcd1cd03803d9612b7b10c10d5a844fb8f6ed11fab5159b6d9826b7302c3d3f5d7d29d13b40e6fe59c9374f4ec94af4eb0f",
+	"id": "7807109686729042739"
+}
