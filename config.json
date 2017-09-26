@@ -4,7 +4,7 @@
 	"version": "0.9.9a",
 	"minVersion": ">=0.9.0",
 	"fileLogLevel": "info",
-	"logFileName": "logs/lisk.log",
+	"logFileName": "logs/ETP.log",
 	"consoleLogLevel": "none",
 	"trustProxy": false,
 	"topAccounts": false,
@@ -12,7 +12,7 @@
     	"db": {
 		"host": "localhost",
 		"port": 5432,
-		"database": "lisk_test",
+		"database": "ETP_test",
 		"user": "",
 		"password": "password",
 		"poolSize": 95,
@@ -98,8 +98,8 @@
 		"options": {
 			"port": 443,
 			"address": "0.0.0.0",
-			"key": "./ssl/lisk.key",
-			"cert": "./ssl/lisk.crt"
+			"key": "./ssl/ETP.key",
+			"cert": "./ssl/ETP.crt"
 		}
 	},
 	"dapp": {
