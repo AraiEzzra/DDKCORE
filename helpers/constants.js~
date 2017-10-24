@@ -42,7 +42,7 @@
  * @property {number} unconfirmedTransactionTimeOut - 1080 blocks
  */
 module.exports = {
-	activeDelegates: 2,
+	activeDelegates: 101,
 	maxVotesPerTransaction: 33,
 	addressLength: 208,
 	blockHeaderLength: 248,
@@ -69,7 +69,7 @@ module.exports = {
 	maxSharedTxs: 100,
 	maxSignaturesLength: 196 * 256,
 	maxTxsPerBlock: 25,
-	minBroadhashConsensus: 0,
+	minBroadhashConsensus: 51,
 	nethashes: [
 		// Mainnet
 		'ed14889723f24ecc54871d058d98ce91ff2f973192075c0155ba2b7b70ad2511',
@@ -87,8 +87,8 @@ module.exports = {
 			200000000, // Milestone 3
 			100000000  // Milestone 4
 		],
-		offset:	2160,      // Start rewards at block (n)
-		distance: 300000000, // Distance between each milestone
+		offset: 2160,      // Start rewards at block (n)
+		distance: 3000000, // Distance between each milestone
 	},
 	signatureLength: 196,
 	// WARNING: When changing totalAmount you also need to change getBlockRewards(int) SQL function!

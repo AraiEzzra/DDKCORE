@@ -1,4 +1,4 @@
-'use strict.';
+'use strict';
 /**
  * A node-style callback as used by {@link logic} and {@link modules}.
  * @see {@link https://nodejs.org/api/errors.html#errors_node_js_style_callbacks}
@@ -18,7 +18,7 @@
 
 /**
  * Main entry point.
- * Loads the lisk modules, the lisk api and run the express server as Domain master.
+ * Loads the ETP modules, the ETP api and run the express server as Domain master.
  * CLI options available.
  * @module app
  */
@@ -27,12 +27,15 @@ var async = require('async');
 var checkIpInList = require('./helpers/checkIpInList.js');
 var extend = require('extend');
 var fs = require('fs');
-var moment = require('moment');
 
 var genesisblock = require('./genesisBlock.json');
 var git = require('./helpers/git.js');
 var https = require('https');
-var Logger = require('./logger.js');
+/**********************************************************/
+//Changed By Hotam Singh to enable winston logger and new logger file will be created every day
+var logger = require('./logger.js');
+logger.info('info enabled');
+/**********************************************************/
 var packageJson = require('./package.json');
 var path = require('path');
 var program = require('commander');
@@ -40,6 +43,7 @@ var httpApi = require('./helpers/httpApi.js');
 var Sequence = require('./helpers/sequence.js');
 var util = require('util');
 var z_schema = require('./helpers/z_schema.js');
+var currentDay = '';
 
 process.stdin.resume();
 
@@ -112,7 +116,7 @@ if (process.env.NODE_ENV === 'test') {
 process.env.TOP = appConfig.topAccounts;
 
 /**
- * The config object to handle lisk modules and lisk api.
+ * The config object to handle ETP modules and ETP api.
  * It loads `modules` and `api` folders content.
  * Also contains db configuration from config.json.
  * @property {object} db - Config values for database.
@@ -140,7 +144,8 @@ var config = {
 		crypto: './modules/crypto.js',
 		sql: './modules/sql.js',
 		cache: './modules/cache.js',
-		freeze: './modules/freezes.js'
+		contracts: './modules/contracts.js',
+		frogings : './modules/frogings.js'
 	},
 	api: {
 		accounts: { http: './api/http/accounts.js' },
@@ -154,17 +159,9 @@ var config = {
 		signatures: { http: './api/http/signatures.js' },
 		transactions: { http: './api/http/transactions.js' },
 		transport: { http: './api/http/transport.js' },
-		freezes: { http: './api/http/freezes.js' },
+		frogings : {http : './api/http/froging.js' }
 	}
 };
-
-/**
- * Logger holder so we can log with custom functionality.
- * The Object is initialized here and pass to others as parameter.
- * @property {object} - Logger instance.
- */
-var logger = new Logger({ echo: appConfig.consoleLogLevel, errorLevel: appConfig.fileLogLevel,
-	filename: appConfig.logFileName });
 
 // Trying to get last git commit
 try {
@@ -180,7 +177,7 @@ try {
 var d = require('domain').create();
 
 d.on('error', function (err) {
-	logger.fatal('Domain master', { message: err.message, stack: err.stack });
+	logger.error('Domain master', { message: err.message, stack: err.stack });
 	process.exit(0);
 });
 
@@ -260,7 +257,7 @@ d.run(function () {
 		 * @method network
 		 * @param {object} scope - The results from current execution,
 		 * at leats will contain the required elements.
-		 * @param {nodeStyleCallback} cb - Callback function with created Object:
+		 * @param {nodeStyleCallback} cb - Callback function with created Object: 
 		 * `{express, app, server, io, https, https_io}`.
 		 */
 		network: ['config', function (scope, cb) {
@@ -341,7 +338,7 @@ d.run(function () {
 		 * Once config, public, genesisblock, logger, build and network are completed,
 		 * adds configuration to `network.app`.
 		 * @method connect
-		 * @param {object} scope - The results from current execution,
+		 * @param {object} scope - The results from current execution, 
 		 * at leats will contain the required elements.
 		 * @param {function} cb - Callback function.
 		 */
@@ -415,15 +412,13 @@ d.run(function () {
 			var changeCase = require('change-case');
 			var bus = function () {
 				this.message = function () {
-					console.log('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^66');
 					var args = [];
 					Array.prototype.push.apply(args, arguments);
 					var topic = args.shift();
 					var eventName = 'on' + changeCase.pascalCase(topic);
-
+					
 					// executes the each module onBind function
 					modules.forEach(function (module) {
-						console.log('modules : '+JSON.stringify(module));
 						if (typeof(module[eventName]) === 'function') {
 							module[eventName].apply(module[eventName], args);
 						}
@@ -455,15 +450,16 @@ d.run(function () {
 		 * Once db, bus, schema and genesisblock are completed,
 		 * loads transaction, block, account and peers from logic folder.
 		 * @method logic
-		 * @param {object} scope - The results from current execution,
+		 * @param {object} scope - The results from current execution, 
 		 * at leats will contain the required elements.
 		 * @param {function} cb - Callback function.
-		 */
+		 */	
 		logic: ['db', 'bus', 'schema', 'genesisblock', function (scope, cb) {
 			var Transaction = require('./logic/transaction.js');
 			var Block = require('./logic/block.js');
 			var Account = require('./logic/account.js');
 			var Peers = require('./logic/peers.js');
+			var Frozen = require('./logic/frozen.js');
 
 			async.auto({
 				bus: function (cb) {
@@ -497,6 +493,9 @@ d.run(function () {
 				}],
 				peers: ['logger', function (scope, cb) {
 					new Peers(scope.logger, cb);
+				}],
+				frozen: ['logger', function (scope, cb) {
+					new Frozen(scope.logger, cb);
 				}]
 			}, cb);
 		}],
@@ -518,7 +517,7 @@ d.run(function () {
 					var d = require('domain').create();
 
 					d.on('error', function (err) {
-						scope.logger.fatal('Domain ' + name, {message: err.message, stack: err.stack});
+						scope.logger.error('Domain ' + name, {message: err.message, stack: err.stack});
 					});
 
 					d.run(function () {
@@ -539,10 +538,10 @@ d.run(function () {
 		 * Loads api from `api` folder using `config.api`, once modules, logger and
 		 * network are completed.
 		 * @method api
-		 * @param {object} scope - The results from current execution,
+		 * @param {object} scope - The results from current execution, 
 		 * at leats will contain the required elements.
 		 * @param {function} cb - Callback function.
-		 */
+		 */	
 		api: ['modules', 'logger', 'network', function (scope, cb) {
 			Object.keys(config.api).forEach(function (moduleName) {
 				Object.keys(config.api[moduleName]).forEach(function (protocol) {
@@ -571,18 +570,18 @@ d.run(function () {
 		 * Once 'ready' is completed, binds and listens for connections on the
 		 * specified host and port for `scope.network.server`.
 		 * @method listen
-		 * @param {object} scope - The results from current execution,
+		 * @param {object} scope - The results from current execution, 
 		 * at leats will contain the required elements.
 		 * @param {nodeStyleCallback} cb - Callback function with `scope.network`.
 		 */
 		listen: ['ready', function (scope, cb) {
 			scope.network.server.listen(scope.config.port, scope.config.address, function (err) {
-				scope.logger.info('Lisk started: ' + scope.config.address + ':' + scope.config.port);
+				scope.logger.info('ETP started: ' + scope.config.address + ':' + scope.config.port);
 
 				if (!err) {
 					if (scope.config.ssl.enabled) {
 						scope.network.https.listen(scope.config.ssl.options.port, scope.config.ssl.options.address, function (err) {
-							scope.logger.info('Lisk https started: ' + scope.config.ssl.options.address + ':' + scope.config.ssl.options.port);
+							scope.logger.info('ETP https started: ' + scope.config.ssl.options.address + ':' + scope.config.ssl.options.port);
 
 							cb(err, scope.network);
 						});
@@ -596,7 +595,7 @@ d.run(function () {
 		}]
 	}, function (err, scope) {
 		if (err) {
-			logger.fatal(err);
+			logger.error(err);
 		} else {
 			/**
 			 * Handles app instance (acts as global variable, passed as parameter).
@@ -610,7 +609,7 @@ d.run(function () {
 			 * @property {undefined} connect - Undefined.
 			 * @property {Object} db - Database constructor, database functions.
 			 * @property {function} dbSequence - Database function.
-			 * @property {Object} ed - Crypto functions from lisk node-sodium.
+			 * @property {Object} ed - Crypto functions from ETP node-sodium.
 			 * @property {Object} genesisblock - Block information.
 			 * @property {string} lastCommit - Hash transaction.
 			 * @property {Object} listen - Network information.
@@ -619,7 +618,7 @@ d.run(function () {
 			 * @property {Object} modules - Several modules functions.
 			 * @property {Object} network - Several network functions.
 			 * @property {string} nonce
-			 * @property {string} public - Path to lisk public folder.
+			 * @property {string} public - Path to ETP public folder.
 			 * @property {undefined} ready
 			 * @property {Object} schema - ZSchema with objects.
 			 * @property {Object} sequence - Sequence function, sequence Array.
@@ -714,7 +713,7 @@ d.run(function () {
  */
 process.on('uncaughtException', function (err) {
 	// Handle error safely
-	logger.fatal('System error', { message: err.message, stack: err.stack });
+	logger.error('System error', { message: err.message, stack: err.stack });
 	/**
 	 * emits cleanup once 'uncaughtException'.
 	 * @emits cleanup
