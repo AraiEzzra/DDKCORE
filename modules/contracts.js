@@ -45,6 +45,10 @@ function Contracts(cb, scope) {
     setImmediate(cb, null, self);
 };
 
+Cache.prototype.onNewBlock = function (block, broadcast, cb) {
+	console.log()
+};
+
 //OnBInd Event called from app.js
 Contracts.prototype.onBind = function (scope) {
     modules = {
