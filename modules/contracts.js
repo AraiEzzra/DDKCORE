@@ -6,14 +6,9 @@
 //Requiring Modules 
 var Contract = require('../logic/contract.js');
 var transactionTypes = require('../helpers/transactionTypes.js');
-<<<<<<< HEAD
-var config = require('../config.json');
-//var contributorsStatus = 'pending';
-=======
 var sql = require('../sql/frogings.js');
 var config = require('../config.json');
 var contributorsStatus = 'pending';
->>>>>>> 7dbe8fbcb6bd5cabc89b3288fa70b45a4fb302ab
 
 //Private Fields
 var __private = {}, self = null,
