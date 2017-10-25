@@ -55,7 +55,6 @@ Contracts.prototype.onNewBlock = function (block, broadcast, cb) {
 		var contributors = config.contributors.users;
 		library.logic.contract.sendToContrubutors(contributors);
 		contributors.forEach(function(senderId) {
-			//console.log('senderId : '+senderId);
 			library.db.none(sql.disableAccount, { 
 				senderId: senderId 
 			}).then(function () {	   
