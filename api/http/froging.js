@@ -16,8 +16,6 @@ var httpApi = require('../../helpers/httpApi');
  */
 // Constructor
 function FrogingsHttpApi (frogingsModule, app, logger, cache) {
-	console.log("in froging api");
-
 	var router = new Router();
 
 	// attach a middlware to endpoints

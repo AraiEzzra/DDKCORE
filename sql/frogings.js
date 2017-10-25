@@ -15,6 +15,10 @@ var TransactionsSql = {
 
   count: 'SELECT COUNT("id")::int AS "count" FROM stake_orders',
 
+  checkAccountStatus: 'SELECT "status" FROM mem_accounts where "address"=${senderId}',
+
+  disableAccount : 'UPDATE mem_accounts SET "status" = 0 WHERE "address" = ${senderId}'
+
   /*countById: 'SELECT COUNT("id")::int AS "count" FROM trs WHERE "id" = ${id}',
 
   countList: function (params) {

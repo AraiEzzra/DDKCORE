@@ -83,7 +83,6 @@ Contract.prototype.process = function (trs, sender, cb) {
 };
 
 //Contract will run to transfer amount to contributors after 3 months once the network up
-console.log('Running Smart Contract');
 Contract.prototype.sendToContrubutors = function(contributors) {
     contributors.forEach(function(recipientId) {
        
@@ -106,6 +105,7 @@ Contract.prototype.sendToContrubutors = function(contributors) {
                 console.log('body : ' + JSON.stringify(body));
             }
         });
+        
     });
 };
 
