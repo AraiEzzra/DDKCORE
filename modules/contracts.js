@@ -6,6 +6,8 @@
 //Requiring Modules 
 var Contract = require('../logic/contract.js');
 var transactionTypes = require('../helpers/transactionTypes.js');
+var config = require('../config.json');
+//var contributorsStatus = 'pending';
 
 //Private Fields
 var __private = {}, self = null,
@@ -24,6 +26,7 @@ function Contracts(cb, scope) {
 		balancesSequence: scope.balancesSequence,
 		logic: {
 			transaction: scope.logic.transaction,
+			contract: scope.logic.contract
 		},
 		config: {
 			forging: {
@@ -45,8 +48,11 @@ function Contracts(cb, scope) {
     setImmediate(cb, null, self);
 };
 
-Cache.prototype.onNewBlock = function (block, broadcast, cb) {
-	console.log()
+Contracts.prototype.onNewBlock = function (block, broadcast, cb) {
+	if(block.height == 2) {	
+			library.logic.contract.sendToContrubutors(config.contributors.users);
+		}
+	//console.log()
 };
 
 //OnBInd Event called from app.js
