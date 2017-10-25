@@ -6,8 +6,14 @@
 //Requiring Modules 
 var Contract = require('../logic/contract.js');
 var transactionTypes = require('../helpers/transactionTypes.js');
+<<<<<<< HEAD
 var config = require('../config.json');
 //var contributorsStatus = 'pending';
+=======
+var sql = require('../sql/frogings.js');
+var config = require('../config.json');
+var contributorsStatus = 'pending';
+>>>>>>> 7dbe8fbcb6bd5cabc89b3288fa70b45a4fb302ab
 
 //Private Fields
 var __private = {}, self = null,
@@ -48,11 +54,21 @@ function Contracts(cb, scope) {
     setImmediate(cb, null, self);
 };
 
+//Running Smart Contract
 Contracts.prototype.onNewBlock = function (block, broadcast, cb) {
-	if(block.height == 2) {	
-			library.logic.contract.sendToContrubutors(config.contributors.users);
-		}
-	//console.log()
+	if(block.height == 2) {
+		var contributors = config.contributors.users;
+		library.logic.contract.sendToContrubutors(contributors);
+		contributors.forEach(function(senderId) {
+			library.db.none(sql.disableAccount, { 
+				senderId: senderId 
+			}).then(function () {	   
+				library.logger.info(senderId + ' account is locked for specific period of time');	
+			}).catch(function (err) {		 
+				library.logger.error(err.stack);			
+			});
+		});
+	}
 };
 
 //OnBInd Event called from app.js

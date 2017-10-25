@@ -7,8 +7,6 @@ var ByteBuffer = require('bytebuffer');
 var BlockReward = require('../logic/blockReward.js');
 var Contract = require('../logic/contract.js');
 var constants = require('../helpers/constants.js');
-var config = require('../config.json');
-var contributorsStatus = 'pending';
 
 // Private fields
 var __private = {};
@@ -87,25 +85,7 @@ Block.prototype.create = function (data) {
 	});
 
 	var nextHeight = (data.previousBlock) ? data.previousBlock.height + 1 : 1;
-	/***************************************************************************/
-	 // Added By Hotam Singh
-
-	if(nextHeight == 2) {
-		console.log('data.timestamp : '+data.timestamp);
-		config.contributors.startTime = data.timestamp;
-		//__private.Contract.runContract(nextHeight);
-	}
-
-	if(data.timestamp == config.contributors.endTime) {
-		contributorsStatus = 'done';
-		__private.Contract.sendToContrubutors(config.contributors.users);
-	}else {
-		if(data.timestamp > config.contributors.endTime && contributorsStatus != 'done') {
-			contributorsStatus = 'done';
-			__private.Contract.sendToContrubutors(config.contributors.users);
-		}
-	}
-	/**************************************************************************/
+	
 	var reward = __private.blockReward.calcReward(nextHeight),
 	    totalFee = 0, totalAmount = 0, size = 0;
 

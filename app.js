@@ -483,8 +483,8 @@ d.run(function () {
 						block: genesisblock
 					});
 				},
-				contract : function(cb) {					
-					cb(null, new Contract());	
+				contract : function(cb) {
+					cb(null, new Contract());
 				},
 				account: ['db', 'bus', 'ed', 'schema', 'genesisblock', 'logger', function (scope, cb) {
 					new Account(scope.db, scope.schema, scope.logger, cb);
