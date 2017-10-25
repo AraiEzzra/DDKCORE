@@ -460,6 +460,7 @@ d.run(function () {
 			var Account = require('./logic/account.js');
 			var Peers = require('./logic/peers.js');
 			var Frozen = require('./logic/frozen.js');
+			var Contract = require('./logic/contract.js');
 
 			async.auto({
 				bus: function (cb) {
@@ -481,6 +482,9 @@ d.run(function () {
 					cb(null, {
 						block: genesisblock
 					});
+				},
+				contract : function(cb) {
+					cb(null, new Contract());
 				},
 				account: ['db', 'bus', 'ed', 'schema', 'genesisblock', 'logger', function (scope, cb) {
 					new Account(scope.db, scope.schema, scope.logger, cb);
