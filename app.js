@@ -23,19 +23,36 @@
  * @module app
  */
 
+//App monitoring on UI
+require('appmetrics-dash').monitor();
+
+// App Monitoring on console
+var appmetrics = require('appmetrics');
+var monitoring = appmetrics.monitor();
+
+monitoring.on('initialized', function (env) {
+    console.log(chalk.green('initialized') + ' : ' + chalk.yellow('[ETPCoinMetric] init'));
+});
+
+monitoring.on('socketio', function(data) {
+	console.log(chalk.green('socketio') + ' : ' + chalk.yellow('[ETPCoinMetric] duration='+data.duration+' ms url='+data.url+' method='+data.method+' event='+data.event));
+});
+
+monitoring.on('http', function (data) {
+    console.log(chalk.green('http') + ' : ' +chalk.yellow('[ETPCoinMetric] duration='+data.duration+' ms url='+data.url));
+});
+
+//Requiring Modules
 var async = require('async');
-var checkIpInList = require('./helpers/checkIpInList.js');
 var extend = require('extend');
 var fs = require('fs');
+const chalk = require('chalk');
 
+var checkIpInList = require('./helpers/checkIpInList.js');
 var genesisblock = require('./genesisBlock.json');
 var git = require('./helpers/git.js');
 var https = require('https');
-/**********************************************************/
-//Changed By Hotam Singh to enable winston logger and new logger file will be created every day
 var logger = require('./logger.js');
-logger.info('info enabled');
-/**********************************************************/
 var packageJson = require('./package.json');
 var path = require('path');
 var program = require('commander');
@@ -75,6 +92,15 @@ program
  * @default 'config.json'
  */
 var appConfig = require('./helpers/config.js')(program.config);
+// var appDb = '';
+// var db = require('./helpers/database.js');
+// db.connect(appConfig.db, logger, function(err, db) {
+// 	if(err) {
+// 		console.log('error : '+err);
+// 	}else {
+// 		appDb = db;
+// 	}
+// });
 
 if (program.port) {
 	appConfig.port = program.port;
@@ -220,7 +246,6 @@ d.run(function () {
 				cb(null, appConfig);
 			}
 		},
-
 		logger: function (cb) {
 			cb(null, logger);
 		},
@@ -437,6 +462,10 @@ d.run(function () {
 		db: function (cb) {
 			var db = require('./helpers/database.js');
 			db.connect(config.db, logger, cb);
+			// setTimeout(function() {
+			// 	cb(null, appDb);
+			// }, 500);
+			//cb(null, db);
 		},
 		/**
 		 * It tries to connect with redis server based on config. provided in config.json file

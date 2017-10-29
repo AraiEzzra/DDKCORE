@@ -180,24 +180,26 @@ function Migrator (pgp, db) {
  * @return {function} error|cb
  */
 module.exports.connect = function (config, logger, cb) {
+	const promise = require('bluebird');
 	var pgOptions = {
-		pgNative: true
+		promiseLib: promise
 	};
 
 	var pgp = require('pg-promise')(pgOptions);
 	var monitor = require('pg-monitor');
 
-	monitor.attach(pgOptions, config.logEvents);
+	monitor.attach(pgOptions);
 	monitor.setTheme('matrix');
 
 	monitor.log = function (msg, info){
-		logger.log(info.event, info.text);
+		console.log('event : ' + info.event + '\nmsg : ' + info.text);
 		info.display = false;
 	};
 
 	config.user = config.user || process.env.USER;
 
 	var db = pgp(config);
+
 	var migrator = new Migrator(pgp, db);
 
 	async.waterfall([
