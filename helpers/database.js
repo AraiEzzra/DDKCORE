@@ -4,6 +4,7 @@ var async = require('async');
 var bignum = require('./bignum');
 var fs = require('fs');
 var path = require('path');
+var chalk = require('chalk');
 
 // var isWin = /^win/.test(process.platform);
 // var isMac = /^darwin/.test(process.platform);
@@ -192,7 +193,6 @@ module.exports.connect = function (config, logger, cb) {
 	monitor.setTheme('matrix');
 
 	monitor.log = function (msg, info){
-		console.log('event : ' + info.event + '\nmsg : ' + info.text);
 		info.display = false;
 	};
 

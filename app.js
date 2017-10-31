@@ -31,7 +31,7 @@ var appmetrics = require('appmetrics');
 var monitoring = appmetrics.monitor();
 
 monitoring.on('initialized', function (env) {
-    console.log(chalk.green('initialized') + ' : ' + chalk.yellow('[ETPCoinMetric] init'));
+    //console.log(chalk.green('initialized') + ' : ' + chalk.yellow('[ETPCoinMetric] init'));
 });
 
 monitoring.on('socketio', function(data) {
@@ -40,6 +40,10 @@ monitoring.on('socketio', function(data) {
 
 monitoring.on('http', function (data) {
     console.log(chalk.green('http') + ' : ' +chalk.yellow('[ETPCoinMetric] duration='+data.duration+' ms url='+data.url));
+});
+
+monitoring.on('postgres', function(data) {
+	console.log(chalk.green('postgres') + ' : ' +chalk.yellow('[ETPCoinMetric] duration='+data.duration+' ms query='+data.query));
 });
 
 //Requiring Modules
@@ -287,10 +291,35 @@ d.run(function () {
 		 */
 		network: ['config', function (scope, cb) {
 			var express = require('express');
+			var http = require('http');
 			var compression = require('compression');
 			var cors = require('cors');
 			var app = express();
+			var subpath = express();
 
+			var swagger = require("swagger-node-express");
+			app.use("/v1", subpath);
+			swagger.setAppHandler(subpath);
+			subpath.use(express.static('dist'));
+
+			swagger.setApiInfo({
+				title: "example API",
+				description: "API to do something, manage something...",
+				termsOfServiceUrl: "",
+				contact: "yourname@something.com",
+				license: "",
+				licenseUrl: ""
+			});
+
+			subpath.get('/', function (req, res) {
+				res.sendFile(__dirname + '/dist/index.html');
+			});
+
+			swagger.configureSwaggerPaths('', 'api-docs', '');
+			var domain = 'localhost';
+			var applicationUrl = 'http://' + domain;
+			swagger.configure(applicationUrl, '1.0.0');
+			
 			if (appConfig.coverage) {
 				var im = require('istanbul-middleware');
 				logger.debug('Hook loader for coverage - do not use in production environment!');
