@@ -81,6 +81,8 @@ if (typeof gc !== 'undefined') {
 	}, 60000);
 }
 
+
+
 program
 	.version(packageJson.version)
 	.option('-c, --config <path>', 'config file path')
@@ -90,6 +92,7 @@ program
 	.option('-l, --log <level>', 'log level')
 	.option('-s, --snapshot <round>', 'verify snapshot')
 	.parse(process.argv);
+
 
 /**
  * @property {object} - The default list of configuration options. Can be updated by CLI.
@@ -335,6 +338,7 @@ d.run(function () {
 
 			var server = require('http').createServer(app);
 			var io = require('socket.io')(server);
+	
 
 			var privateKey, certificate, https, https_io;
 

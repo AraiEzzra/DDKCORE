@@ -14,10 +14,12 @@
   "author": "Lisk Foundation <admin@ETP.io>, lightcurve GmbH <admin@lightcurve.io>",
   "license": "GPL-3.0",
   "dependencies": {
+    "swagger-node-express": "~2.0",
+    "minimist": "*",
+    "body-parser": "=1.16.0",
     "appmetrics-dash": "^3.3.6",
     "async": "=2.1.4",
     "bignumber.js": "=4.0.0",
-    "body-parser": "=1.16.0",
     "bytebuffer": "=5.0.1",
     "change-case": "=3.0.1",
     "colors": "=1.1.2",

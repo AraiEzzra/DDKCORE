@@ -11,7 +11,15 @@
       {
          "name":"Tag1",
          "description":"API for something"
-      }
+      },
+      {
+         "name":"Account",
+         "description":"API for Account"
+      },
+      {
+        "name":"Transaction",
+        "description":"API for Transaction"
+     }
    ],
    "schemes":[
       "http"
@@ -23,21 +31,21 @@
       "application/json"
    ],
    "paths":{
-      "/path/to/method":{
+      "/api/accounts/generatePublicKey":{
          "post":{
             "tags":[
-               "Tag1"
+               "Account"
             ],
-            "description":"what this API does",
+            "description":"generatePublicKey",
             "operationId":"for the URL",
             "produces":[
                "application/json"
             ],
             "parameters":[
                {
-                  "name":"Job Parameters",
+                  "name":"secret",
                   "in":"body",
-                  "description":"Job to add to the database",
+                  "description":"generatePublicKey",
                   "required":true,
                   "schema":{
                      "$ref":"#/definitions/create"
@@ -54,44 +62,13 @@
             }
          }
       },
-      "/api/frogings/freeze":{
-        "post":{
-           "tags":[
-              "Tag1"
-           ],
-           "description":"This API freezes an amount specified by a user",
-           "operationId":"for the URL",
-           "produces":[
-              "application/json"
-           ],
-           "parameters":[
-              {
-                 "name":"Job Parameters",
-                 "in":"body",
-                 "description":"Job to add to the database",
-                 "required":true,
-                 "schema":{
-                    "$ref":"#/definitions/create"
-                 }
-              }
-           ],
-           "responses":{
-              "200":{
-                 "description":"create response",
-                 "schema":{
-                    "$ref":"#/definitions/response"
-                 }
-              }
-           }
-        }
-     },
       "/api/accounts/getBalance": {
          "get":{
             "tags":[
-               "Tag1"
+               "Account"
             ],
-            "description":"Returns the status of something",
-            "operationId":"findById",
+            "description":"Returns the balance of account",
+            "operationId":"findByAddress",
             "produces":[
                "application/json"
             ],
@@ -113,7 +90,36 @@
                }
             }
          }
-      }
+      },
+      "api/transactions/get": {
+        "get":{
+           "tags":[
+              "Transaction"
+           ],
+           "description":"Get list of Transactions",
+           "operationId":"findById",
+           "produces":[
+              "application/json"
+           ],
+           "parameters":[
+              {
+                 "name":"id",
+                 "in": "query",
+                 "description": "Get list of Transactions",
+                 "required":true,
+                 "type":"string"
+              }
+           ],
+           "responses":{
+              "200":{
+                 "description":"response",
+                 "schema":{
+                    "$ref":"#/definitions/response1"
+                 }
+              }
+           }
+        }
+     }
    },
    "definitions":{
       "create":{
