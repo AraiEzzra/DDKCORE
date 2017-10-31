@@ -25,7 +25,7 @@ var self, library, __private = {};
 function Account (db, schema, logger, cb) {
 	this.scope = {
 		db: db,
-		schema: schema,
+		schema: schema
 	};
 
 	self = this;
