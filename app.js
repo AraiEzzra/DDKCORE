@@ -60,6 +60,8 @@ if (typeof gc !== 'undefined') {
 	}, 60000);
 }
 
+
+
 program
 	.version(packageJson.version)
 	.option('-c, --config <path>', 'config file path')
@@ -69,6 +71,7 @@ program
 	.option('-l, --log <level>', 'log level')
 	.option('-s, --snapshot <round>', 'verify snapshot')
 	.parse(process.argv);
+
 
 /**
  * @property {object} - The default list of configuration options. Can be updated by CLI.
@@ -262,10 +265,39 @@ d.run(function () {
 		 */
 		network: ['config', function (scope, cb) {
 			var express = require('express');
-			var compression = require('compression');
-			var cors = require('cors');
+            var http = require('http');
+            var compression = require('compression');
+            var cors = require('cors');
 			var app = express();
+			
+			//**********Navin Swagger implementation */
+            var subpath = express();
 
+            var swagger = require("swagger-node-express");
+            app.use("/v1", subpath);
+            swagger.setAppHandler(subpath);
+            subpath.use(express.static('dist'));
+
+            swagger.setApiInfo({
+                title: "example API",
+                description: "API to do something, manage something...",
+                termsOfServiceUrl: "",
+                contact: "yourname@something.com",
+                license: "",
+                licenseUrl: ""
+            });
+
+            subpath.get('/', function (req, res) {
+                res.sendFile(__dirname + '/dist/index.html');
+            });
+
+            swagger.configureSwaggerPaths('', 'api-docs', '');
+            var domain = 'localhost';
+            var applicationUrl = 'http://' + domain;
+			swagger.configure(applicationUrl, '1.0.0');
+			
+			//************ */
+			
 			if (appConfig.coverage) {
 				var im = require('istanbul-middleware');
 				logger.debug('Hook loader for coverage - do not use in production environment!');
@@ -281,6 +313,7 @@ d.run(function () {
 
 			var server = require('http').createServer(app);
 			var io = require('socket.io')(server);
+	
 
 			var privateKey, certificate, https, https_io;
 
