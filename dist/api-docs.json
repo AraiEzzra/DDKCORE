@@ -9,10 +9,6 @@
    "basePath":"/",
    "tags":[
       {
-         "name":"Tag1",
-         "description":"API for something"
-      },
-      {
          "name":"Account",
          "description":"API for Account"
       },
@@ -61,6 +57,99 @@
                }
             }
          }
+      },
+      "/api/accounts/open":{
+        "post":{
+          "tags":[
+            "Account"
+          ],
+          "description":"Open An Account",
+          "operationId":"for the URL",
+          "produces":[
+            "application/json"
+          ],
+          "parameters":[
+            {
+              "name":"secret",
+              "in":"body",
+              "description":"generatePublicKey",
+              "required":true,
+              "schema":{
+                "$ref":"#/definitions/create"
+              }
+            }
+          ],
+          "responses":{
+            "200":{
+              "description":"create response",
+              "schema":{
+                "$ref":"#/definitions/response"
+              }
+            }
+          }
+        }
+      },
+      "/api/accounts/lock":{
+        "post":{
+          "tags":[
+            "Account"
+          ],
+          "description":"Lock User's Account",
+          "operationId":"Lock",
+          "produces":[
+            "application/json"
+          ],
+          "parameters":[
+            {
+              "name":"address",
+              "in":"body",
+              "description":"address is required",
+              "required":true,
+              "schema":{
+                "$ref":"#/definitions/create"
+              }
+            }
+          ],
+          "responses":{
+            "200":{
+              "description":"create response",
+              "schema":{
+                "$ref":"#/definitions/response"
+              }
+            }
+          }
+        }
+      },
+      "/api/accounts/unlock":{
+        "post":{
+          "tags":[
+            "Account"
+          ],
+          "description":"Unlock User's Account",
+          "operationId":"Unlock",
+          "produces":[
+            "application/json"
+          ],
+          "parameters":[
+            {
+              "name":"address",
+              "in":"body",
+              "description":"address is required",
+              "required":true,
+              "schema":{
+                "$ref":"#/definitions/create"
+              }
+            }
+          ],
+          "responses":{
+            "200":{
+              "description":"create response",
+              "schema":{
+                "$ref":"#/definitions/response"
+              }
+            }
+          }
+        }
       },
       "/api/accounts/getBalance": {
          "get":{

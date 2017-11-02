@@ -7,7 +7,6 @@
 var Contract = require('../logic/contract.js');
 var transactionTypes = require('../helpers/transactionTypes.js');
 var sql = require('../sql/frogings.js');
-var config = require('../config.json');
 var contributorsStatus = true;
 
 //Private Fields
@@ -36,6 +35,7 @@ function Contracts(cb, scope) {
 					whiteList: scope.config.forging.access.whiteList,
 				},
 			},
+			contributors: scope.config.contributors
 		},
     };
     
@@ -49,33 +49,44 @@ function Contracts(cb, scope) {
     setImmediate(cb, null, self);
 };
 
-//Running Smart Contract
+//Running smart contract to send transaction and lock/unlock contributors after a given time
 Contracts.prototype.onNewBlock = function (block, broadcast, cb) {
 	if(block.height == 2) {
-		config.contributors.startTime = block.timestamp;
-		var date = new Date(block.timestamp * 1000);
-		config.contributors.endTime = (date.setMinutes(date.getMinutes() + 5))/1000;
-		var contributors = config.contributors.users;
-		library.logic.contract.sendToContrubutors(contributors);
-		contributors.forEach(function(senderId) {
-			library.db.none(sql.disableAccount, { 
-				senderId: senderId 
-			}).then(function () {	   
-				library.logger.info(senderId + ' account is locked for ' + config.contributors.lockTime +' months');	
-			}).catch(function (err) {		 
-				library.logger.error(err.stack);			
+		library.logic.contract.calcEndTime(block.timestamp, library.config.contributors.lockTime, function(err, endTime) {
+			library.config.contributors.endTime = endTime;
+			var contributors = library.config.contributors.users;
+			library.logic.contract.sendToContrubutors(contributors);
+			contributors.forEach(function(senderId) {
+				library.db.none(sql.disableAccount, { 
+					senderId: senderId 
+				}).then(function () {	   
+					library.logger.info(senderId + ' account is locked for ' + library.config.contributors.lockTime +' months');	
+				}).catch(function (err) {		 
+					library.logger.error(err.stack);			
+				});
 			});
-		});
+		});	
 	}
 
-	//Unlock contributor's account after 3 months(currently 5 minutes) 
-	if(block.timestamp == config.contributors.endTime) {
-		var contributors = config.contributors.users;
+	//Unlock contributor's account after 3 months(currently 3 minutes) 
+	if(block.timestamp == library.config.contributors.endTime) {
+		if(library.config.contributors.newUsers && library.config.contributors.newUsers.length > 0) {
+			var contributors = library.config.contributors.newUsers;
+		}else {
+			var contributors = library.config.contributors.users;
+		}
+		var response = [];
 		contributors.forEach(function(senderId) {
 			library.db.none(sql.enableAccount, { 
 				senderId: senderId 
 			}).then(function () {	   
-				library.logger.info(senderId + ' account is unlocked for ' + config.contributors.lockTime +' months');	
+				library.logger.info(senderId + ' account is unlocked');	
+				response.push(senderId);
+				if(response.length  === contributors.length) {
+					library.config.contributors.users = library.config.contributors.users.concat(library.config.contributors.newUsers);
+					library.config.contributors.newUsers = [];
+					response = [];
+				}
 			}).catch(function (err) {		 
 				library.logger.error(err.stack);			
 			});

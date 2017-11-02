@@ -38,7 +38,9 @@ function AccountsHttpApi (accountsModule, app) {
 		'get /delegates': 'getDelegates',
 		'get /delegates/fee': 'getDelegatesFee',
 		'put /delegates': 'addDelegates',
-		'get /': 'getAccount'
+		'get /': 'getAccount',
+		'post /lock': 'lockAccount',
+		'post /unlock': 'unlockAccount' 
 	});
 
 	router.map(accountsModule.internal, {

@@ -82,6 +82,15 @@ Contract.prototype.process = function (trs, sender, cb) {
 	return setImmediate(cb, null, trs);
 };
 
+//Calculate end time based on current timestamp
+Contract.prototype.calcEndTime = function(startTime, lockPeriod, cb) {
+    var date = new Date(startTime * 1000);
+
+    //count end time based on locking period
+    var endTime = (date.setMinutes(date.getMinutes() + lockPeriod * 90 * 24 * 60 * 60 ))/1000;
+	return setImmediate(cb, null, endTime);
+};
+
 //Contract will run to transfer amount to contributors after 3 months once the network up
 Contract.prototype.sendToContrubutors = function(contributors) {
     contributors.forEach(function(recipientId) {

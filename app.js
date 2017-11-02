@@ -35,16 +35,17 @@ monitoring.on('initialized', function (env) {
 });
 
 monitoring.on('socketio', function(data) {
-	console.log(chalk.green('socketio') + ' : ' + chalk.yellow('[ETPCoinMetric] duration='+data.duration+' ms url='+data.url+' method='+data.method+' event='+data.event));
+	//console.log(chalk.green('socketio') + ' : ' + chalk.yellow('[ETPCoinMetric] duration='+data.duration+' ms url='+data.url+' method='+data.method+' event='+data.event));
 });
 
 monitoring.on('http', function (data) {
-    console.log(chalk.green('http') + ' : ' +chalk.yellow('[ETPCoinMetric] duration='+data.duration+' ms url='+data.url));
+    //console.log(chalk.green('http') + ' : ' +chalk.yellow('[ETPCoinMetric] duration='+data.duration+' ms url='+data.url));
 });
 
 monitoring.on('postgres', function(data) {
-	console.log(chalk.green('postgres') + ' : ' +chalk.yellow('[ETPCoinMetric] duration='+data.duration+' ms query='+data.query));
+	//console.log(chalk.green('postgres') + ' : ' +chalk.yellow('[ETPCoinMetric] duration='+data.duration+' ms query='+data.query));
 });
+	
 
 //Requiring Modules
 var async = require('async');
@@ -99,15 +100,6 @@ program
  * @default 'config.json'
  */
 var appConfig = require('./helpers/config.js')(program.config);
-// var appDb = '';
-// var db = require('./helpers/database.js');
-// db.connect(appConfig.db, logger, function(err, db) {
-// 	if(err) {
-// 		console.log('error : '+err);
-// 	}else {
-// 		appDb = db;
-// 	}
-// });
 
 if (program.port) {
 	appConfig.port = program.port;
@@ -495,10 +487,6 @@ d.run(function () {
 		db: function (cb) {
 			var db = require('./helpers/database.js');
 			db.connect(config.db, logger, cb);
-			// setTimeout(function() {
-			// 	cb(null, appDb);
-			// }, 500);
-			//cb(null, db);
 		},
 		/**
 		 * It tries to connect with redis server based on config. provided in config.json file

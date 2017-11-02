@@ -100,6 +100,40 @@ module.exports = {
 			}
 		}
 	},
+	lockAccount: {
+		id: 'accounts.lockAccount',
+		type: 'object',
+		properties: {
+			address: {
+				type: 'string',
+				format: 'address',
+				minLength: 1,
+				maxLength: 22
+			},
+			publicKey: {
+				type: 'string',
+				format: 'publicKey'
+			}
+		},
+		required: ['address']
+	},
+	unlockAccount: {
+		id: 'accounts.unlockAccount',
+		type: 'object',
+		properties: {
+			address: {
+				type: 'string',
+				format: 'address',
+				minLength: 1,
+				maxLength: 22
+			},
+			publicKey: {
+				type: 'string',
+				format: 'publicKey'
+			}
+		},
+		required: ['address']
+	},
 	top: {
 		id: 'accounts.top',
 		type: 'object',

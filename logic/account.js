@@ -353,6 +353,14 @@ function Account (db, schema, logger, cb) {
 			},
 			conv: Boolean,
 			immutable: true
+		},
+		{
+			name: 'acc_type',
+			type: 'SmallInt',
+			filter: {
+				type: 'SmallInt'
+			},
+			immutable: true
 		}
 	];
 	

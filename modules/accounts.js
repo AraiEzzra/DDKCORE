@@ -9,6 +9,8 @@ var schema = require('../schema/accounts.js');
 var sandboxHelper = require('../helpers/sandbox.js');
 var transactionTypes = require('../helpers/transactionTypes.js');
 var Vote = require('../logic/vote.js');
+var sql = require('../sql/accounts.js');
+var contracts = require('./contracts.js')
 
 // Private fields
 var modules, library, self, __private = {}, shared = {};
@@ -30,12 +32,18 @@ __private.blockReward = new BlockReward();
 function Accounts (cb, scope) {
 	library = {
 		ed: scope.ed,
+		db: scope.db,
+		logger: scope.logger,
 		schema: scope.schema,
 		balancesSequence: scope.balancesSequence,
 		logic: {
 			account: scope.logic.account,
 			transaction: scope.logic.transaction,
+			contract: scope.logic.contract
 		},
+		config: {
+			contributors: scope.config.contributors
+		}
 	};
 	self = this;
 
@@ -240,6 +248,7 @@ Accounts.prototype.onBind = function (scope) {
 		delegates: scope.delegates,
 		accounts: scope.accounts,
 		transactions: scope.transactions,
+		blocks: scope.blocks
 	};
 
 	__private.assetTypes[transactionTypes.VOTE].bind(
@@ -289,6 +298,9 @@ Accounts.prototype.shared = {
 						isDelegate: 0,
 						vote: 0
 					};
+					if(req.body.accType) {
+						data.acc_type = req.body.accType;
+					}
 					library.logic.account.set(accountData.address, data, function(err) {
 						if(!err) {
 							return setImmediate(cb, null, {account: accountData});
@@ -561,6 +573,64 @@ Accounts.prototype.shared = {
 					}
 				});
 			});
+		});
+	},
+
+	lockAccount: function (req, cb) {
+		library.schema.validate(req.body, schema.lockAccount, function (err) {
+			if(!err) {
+				if (!req.body.address) {
+					return setImmediate(cb, 'Missing required property: address');
+				}
+
+				var address = req.body.publicKey ? self.generateAddressByPublicKey(req.body.publicKey) : req.body.address;
+				library.db.none(sql.disableAccount, { 
+					senderId: address 
+				}).then(function () {	   
+					library.logger.info(address + ' account is locked');
+					var lastBlock = modules.blocks.lastBlock.get();
+					self.getAccount({ address: address }, function (err, account) {
+						if (err) {
+							return setImmediate(cb, err);
+						}
+						if(account.acc_type == 1) {
+							library.logic.contract.calcEndTime(lastBlock.timestamp, library.config.contributors.lockTime, function(err, endTime) {
+								library.config.contributors.endTime = endTime;
+								library.config.contributors.newUsers.push(address);
+								return setImmediate(cb, null);
+							});
+						}else {
+							return setImmediate(cb, null);
+						}
+					});
+				}).catch(function (err) {		 
+					return setImmediate(cb, err);			
+				});
+			}else {
+				return setImmediate(cb, err);
+			}
+		});
+	},
+
+	unlockAccount: function (req, cb) {
+		library.schema.validate(req.body, schema.unlockAccount, function (err) {
+			if(!err) {
+				if (!req.body.address) {
+					return setImmediate(cb, 'Missing required property: address');
+				}
+
+				var address = req.body.publicKey ? self.generateAddressByPublicKey(req.body.publicKey) : req.body.address;
+				library.db.none(sql.enableAccount, { 
+					senderId: address 
+				}).then(function () {	   
+					library.logger.info(address + ' account is unlocked');
+					return setImmediate(cb, null);
+				}).catch(function (err) {		 
+					return setImmediate(cb, err);			
+				});
+			}else {
+				return setImmediate(cb, err);
+			}
 		});
 	}
 };
