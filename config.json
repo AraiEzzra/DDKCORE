@@ -8,7 +8,7 @@
     "consoleLogLevel": "none",
     "trustProxy": false,
     "topAccounts": false,
-    "cacheEnabled": false,
+    "cacheEnabled": true,
     "db": {
         "host": "localhost",
         "port": 5432,
@@ -135,6 +135,8 @@
             "15546849747111093123E"
         ],
         "newUsers" : [],
-        "lockTime" : 3
+        "lockTime" : 3,
+        "lockStatus" : [],
+        "lockIndex" : 0
     }
 }

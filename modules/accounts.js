@@ -11,6 +11,8 @@ var transactionTypes = require('../helpers/transactionTypes.js');
 var Vote = require('../logic/vote.js');
 var sql = require('../sql/accounts.js');
 var contracts = require('./contracts.js')
+var userGroups = require('../helpers/userGroups.js');
+var cache = require('./cache.js');
 
 // Private fields
 var modules, library, self, __private = {}, shared = {};
@@ -33,6 +35,7 @@ function Accounts (cb, scope) {
 	library = {
 		ed: scope.ed,
 		db: scope.db,
+		cache: scope.cache,
 		logger: scope.logger,
 		schema: scope.schema,
 		balancesSequence: scope.balancesSequence,
@@ -78,12 +81,14 @@ __private.openAccount = function (secret, cb) {
 		}
 
 		if (account) {
-			if (account.publicKey == null) {
-				account.publicKey = publicKey;
-			}
-			return setImmediate(cb, null, account);
+			cache.prototype.addMember('account', account, function(err) {
+				if (account.publicKey == null) {
+					account.publicKey = publicKey;
+				}
+				return setImmediate(cb, null, account);
+			});
 		} else {
-			return setImmediate(cb, null, {
+			var account = {
 				address: self.generateAddressByPublicKey(publicKey),
 				u_balance: '0',
 				balance: '0',
@@ -93,6 +98,9 @@ __private.openAccount = function (secret, cb) {
 				secondPublicKey: null,
 				multisignatures: null,
 				u_multisignatures: null
+			}
+			cache.prototype.addMember('account', account, function(err) {
+				return setImmediate(cb, null, account);
 			});
 		}
 	});
@@ -593,10 +601,15 @@ Accounts.prototype.shared = {
 						if (err) {
 							return setImmediate(cb, err);
 						}
-						if(account.acc_type == 1) {
+						if(account.acc_type == userGroups.CONTRIBUTORS) {
 							library.logic.contract.calcEndTime(lastBlock.timestamp, library.config.contributors.lockTime, function(err, endTime) {
 								library.config.contributors.endTime = endTime;
 								library.config.contributors.newUsers.push(address);
+								var newContributors = {
+									users: [address],
+									endTime: endTime
+								};
+								library.config.contributors.lockStatus.push(newContributors);
 								return setImmediate(cb, null);
 							});
 						}else {

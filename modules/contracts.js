@@ -53,7 +53,11 @@ function Contracts(cb, scope) {
 Contracts.prototype.onNewBlock = function (block, broadcast, cb) {
 	if(block.height == 2) {
 		library.logic.contract.calcEndTime(block.timestamp, library.config.contributors.lockTime, function(err, endTime) {
-			library.config.contributors.endTime = endTime;
+			var initialContirbutors = {
+				users: library.config.contributors.users,
+				endTime: endTime
+			};
+			library.config.contributors.lockStatus.push(initialContirbutors);
 			var contributors = library.config.contributors.users;
 			library.logic.contract.sendToContrubutors(contributors);
 			contributors.forEach(function(senderId) {
@@ -69,28 +73,32 @@ Contracts.prototype.onNewBlock = function (block, broadcast, cb) {
 	}
 
 	//Unlock contributor's account after 3 months(currently 3 minutes) 
-	if(block.timestamp == library.config.contributors.endTime) {
-		if(library.config.contributors.newUsers && library.config.contributors.newUsers.length > 0) {
-			var contributors = library.config.contributors.newUsers;
-		}else {
-			var contributors = library.config.contributors.users;
-		}
-		var response = [];
-		contributors.forEach(function(senderId) {
-			library.db.none(sql.enableAccount, { 
-				senderId: senderId 
-			}).then(function () {	   
-				library.logger.info(senderId + ' account is unlocked');	
-				response.push(senderId);
-				if(response.length  === contributors.length) {
-					library.config.contributors.users = library.config.contributors.users.concat(library.config.contributors.newUsers);
-					library.config.contributors.newUsers = [];
-					response = [];
-				}
-			}).catch(function (err) {		 
-				library.logger.error(err.stack);			
+	var lockIndex = library.config.contributors.lockIndex;
+	if(block.height > 2 && library.config.contributors.lockStatus.length >= lockIndex + 1) {
+		if(block.timestamp == library.config.contributors.lockStatus[lockIndex].endTime) {
+			library.config.contributors.lockIndex = lockIndex + 1;
+			if(library.config.contributors.newUsers && library.config.contributors.newUsers.length > 0) {
+				var contributors = library.config.contributors.newUsers;
+			}else {
+				var contributors = library.config.contributors.users;
+			}
+			var response = [];
+			contributors.forEach(function(senderId) {
+				library.db.none(sql.enableAccount, { 
+					senderId: senderId 
+				}).then(function () {	   
+					library.logger.info(senderId + ' account is unlocked');	
+					response.push(senderId);
+					if(response.length  === contributors.length) {
+						library.config.contributors.users = library.config.contributors.users.concat(library.config.contributors.newUsers);
+						library.config.contributors.newUsers = [];
+						response = [];
+					}
+				}).catch(function (err) {		 
+					library.logger.error(err.stack);			
+				});
 			});
-		});
+		}
 	}
 };
 

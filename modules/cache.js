@@ -71,6 +71,13 @@ Cache.prototype.setJsonForKey = function (key, value, cb) {
 	client.set(key, JSON.stringify(value), cb);
 };
 
+Cache.prototype.addMember = function(key, value, cb) {
+	if (!self.isConnected()) {
+		return cb(errorCacheDisabled);
+	} 
+	client.sadd(key, JSON.stringify(value), cb);
+};
+
 /**
  * It deletes json value for a key in redis
  * @param {String} key
