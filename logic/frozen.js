@@ -106,21 +106,12 @@ Frozen.prototype.undo = function (trs, block, sender, cb) {
 };
 
 Frozen.prototype.apply = function (trs, block, sender, cb) {
-	modules.accounts.setAccountAndGet({address: trs.recipientId}, function (err, recipient) {
-		if (err) {
-			return setImmediate(cb, err);
-		}
+	// var data = {
+	// 	address: sender.address
+	// };
 
-		modules.accounts.mergeAccountAndGet({
-			address: trs.recipientId,
-			balance: trs.amount,
-			u_balance: trs.amount,
-			blockId: block.id,
-			round: modules.rounds.calc(block.height)
-		}, function (err) {
-			return setImmediate(cb, err);
-		});
-	});
+	// modules.accounts.setAccountAndGet(data, cb);
+	return setImmediate(cb, null, trs);
 };
 
 Frozen.prototype.getBytes = function (trs) {

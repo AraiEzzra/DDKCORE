@@ -19,8 +19,11 @@ var TransactionsSql = {
 
   disableAccount : 'UPDATE mem_accounts SET "status" = 0 WHERE "address" = ${senderId}',
 
-  enableAccount : 'UPDATE mem_accounts SET "status" = 1 WHERE "address" = ${senderId}'
+  enableAccount : 'UPDATE mem_accounts SET "status" = 1 WHERE "address" = ${senderId}',
 
+  updateFrozeAmount : 'UPDATE mem_accounts SET "totalFrozeAmount" = ${totalFrozeAmount} WHERE "address" = ${senderId}',
+
+  getFrozeAmount : 'SELECT "totalFrozeAmount" FROM mem_accounts WHERE "address"=${senderId}'
   /*countById: 'SELECT COUNT("id")::int AS "count" FROM trs WHERE "id" = ${id}',
 
   countList: function (params) {

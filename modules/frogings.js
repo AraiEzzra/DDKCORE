@@ -16,6 +16,7 @@ var transactionTypes = require('../helpers/transactionTypes.js');
 var Transfer = require('../logic/transfer.js');
 //navin
 var Frozen = require('../logic/frozen.js');
+var bignum = require('../helpers/bignum.js');
 
 // Private fields
 var __private = {};
@@ -554,6 +555,40 @@ Frogings.prototype.onBind = function (scope) {
 	);
 };
 
+//Navin: Update Froze amount into mem_accounts table on every single order
+Frogings.prototype.updateFrozeAmount = function (data,cb) {
+
+	library.db.one(sql.getFrozeAmount, {
+		senderId: data.account.address
+	}).then(function (row) {
+		if (row.count === 0) {
+			return setImmediate(cb, 'There is no Froze Amount ');
+		}
+		var frozeAmountFromDB = row.totalFrozeAmount;
+		var totalFrozeAmount = parseInt(frozeAmountFromDB) + parseInt(data.req.body.freezedAmount);
+		var totalFrozeAmountWithFees = totalFrozeAmount + parseInt(constants.fees.froze);
+		//verify that freeze order cannot more than avliable balance
+		if (totalFrozeAmountWithFees < data.account.balance) {
+			library.db.none(sql.updateFrozeAmount, {
+				totalFrozeAmount: totalFrozeAmount.toString(),
+				senderId: data.account.address
+			}).then(function () {
+				library.logger.info(data.account.address + ': account is freezed ');
+				return setImmediate(cb,null);
+			}).catch(function (err) {
+				library.logger.error(err.stack);
+			});
+		}else{
+			return setImmediate(cb,'Not have enough balance');
+		}
+	}).catch(function (err) {
+		library.logger.error(err.stack);
+	});
+
+	
+
+};
+
 // Shared API
 /**
  * @todo implement API comments with apidoc.
@@ -574,7 +609,8 @@ Frogings.prototype.shared = {
 		});
 	},
 
-	addTransactionForFreeze : function(req , cb){
+	addTransactionForFreeze: function (req, cb) {
+
 		console.log("yes i'm inside freeze code");
 
 		library.schema.validate(req.body, schema.addTransactionForFreeze, function (err) {
@@ -593,113 +629,128 @@ Frogings.prototype.shared = {
 
 			library.balancesSequence.add(function (cb) {
 				if (req.body.multisigAccountPublicKey && req.body.multisigAccountPublicKey !== keypair.publicKey.toString('hex')) {
-					modules.accounts.getAccount({publicKey: req.body.multisigAccountPublicKey}, function (err, account) {
-						if (err) {
-							return setImmediate(cb, err);
-						}
-
-						if (!account || !account.publicKey) {
-							return setImmediate(cb, 'Multisignature account not found');
-						}
-
-						if (!account.multisignatures || !account.multisignatures) {
-							return setImmediate(cb, 'Account does not have multisignatures enabled');
-						}
-
-						if (account.multisignatures.indexOf(keypair.publicKey.toString('hex')) < 0) {
-							return setImmediate(cb, 'Account does not belong to multisignature group');
-						}
-
-						modules.accounts.getAccount({publicKey: keypair.publicKey}, function (err, requester) {
+					modules.accounts.getAccount({ publicKey: req.body.multisigAccountPublicKey }, function (err, account) {
+						//*********************NAVIN******************* */
+						self.updateFrozeAmount({
+							account: account,
+							req: req
+						}, function (err) {
 							if (err) {
 								return setImmediate(cb, err);
-							}
+							} else {
+								
+								if (!account || !account.publicKey) {
+									return setImmediate(cb, 'Multisignature account not found');
+								}
 
-							if (!requester || !requester.publicKey) {
-								return setImmediate(cb, 'Requester not found');
-							}
+								if (!account.multisignatures || !account.multisignatures) {
+									return setImmediate(cb, 'Account does not have multisignatures enabled');
+								}
 
-							if (requester.secondSignature && !req.body.secondSecret) {
-								return setImmediate(cb, 'Missing requester second passphrase');
-							}
+								if (account.multisignatures.indexOf(keypair.publicKey.toString('hex')) < 0) {
+									return setImmediate(cb, 'Account does not belong to multisignature group');
+								}
 
-							if (requester.publicKey === account.publicKey) {
-								return setImmediate(cb, 'Invalid requester public key');
-							}
+								modules.accounts.getAccount({ publicKey: keypair.publicKey }, function (err, requester) {
+									if (err) {
+										return setImmediate(cb, err);
+									}
 
-							var secondKeypair = null;
+									if (!requester || !requester.publicKey) {
+										return setImmediate(cb, 'Requester not found');
+									}
 
-							if (requester.secondSignature) {
-								var secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
-								secondKeypair = library.ed.makeKeypair(secondHash);
-							}
+									if (requester.secondSignature && !req.body.secondSecret) {
+										return setImmediate(cb, 'Missing requester second passphrase');
+									}
 
-							var transaction;
+									if (requester.publicKey === account.publicKey) {
+										return setImmediate(cb, 'Invalid requester public key');
+									}
 
-							try {
-								transaction = library.logic.transaction.create({
-									type: transactionTypes.FROZE,
-									freezedAmount :req.body.freezedAmount,
-									sender: account,
-									keypair: keypair,
-									secondKeypair: secondKeypair,
-									requester: keypair
+									var secondKeypair = null;
+
+									if (requester.secondSignature) {
+										var secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
+										secondKeypair = library.ed.makeKeypair(secondHash);
+									}
+
+									var transaction;
+
+									try {
+										transaction = library.logic.transaction.create({
+											type: transactionTypes.FROZE,
+											freezedAmount: req.body.freezedAmount,
+											sender: account,
+											keypair: keypair,
+											secondKeypair: secondKeypair,
+											requester: keypair
+										});
+									} catch (e) {
+										return setImmediate(cb, e.toString());
+									}
+									modules.transactions.receiveTransactions([transaction], true, cb);
 								});
-							} catch (e) {
-								return setImmediate(cb, e.toString());
+
 							}
-							modules.transactions.receiveTransactions([transaction], true, cb);
 						});
+
 					});
 				} else {
-					modules.accounts.setAccountAndGet({publicKey: keypair.publicKey.toString('hex')}, function (err, account) {
-						if (err) {
-							return setImmediate(cb, err);
-						}
-						
+					modules.accounts.setAccountAndGet({ publicKey: keypair.publicKey.toString('hex') }, function (err, account) {
+						//*********************NAVIN******************* */
+						self.updateFrozeAmount({
+							account: account,
+							req: req
+						}, function (err) {
+							if (err) {
+								return setImmediate(cb, err);
+							} else {
 
-						if (!account || !account.publicKey) {
-							return setImmediate(cb, 'Account not found');
-						}
+								if (!account || !account.publicKey) {
+									return setImmediate(cb, 'Account not found');
+								}
 
-						if (account.secondSignature && !req.body.secondSecret) {
-							return setImmediate(cb, 'Invalid second passphrase');
-						}
+								if (account.secondSignature && !req.body.secondSecret) {
+									return setImmediate(cb, 'Invalid second passphrase');
+								}
 
-						var secondKeypair = null;
+								var secondKeypair = null;
 
-						if (account.secondSignature) {
-							var secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
-							secondKeypair = library.ed.makeKeypair(secondHash);
-						}
+								if (account.secondSignature) {
+									var secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
+									secondKeypair = library.ed.makeKeypair(secondHash);
+								}
 
-						var transaction;
+								var transaction;
 
-						try {
-							transaction = library.logic.transaction.create({
-								type: transactionTypes.FROZE,
-								freezedAmount: req.body.freezedAmount,
-								sender: account,
-								keypair: keypair,
-								secondKeypair: secondKeypair
-							});
-						} catch (e) {
-							return setImmediate(cb, e.toString());
-						}
-						modules.transactions.receiveTransactions([transaction], true, cb);
+								try {
+									transaction = library.logic.transaction.create({
+										type: transactionTypes.FROZE,
+										freezedAmount: req.body.freezedAmount,
+										sender: account,
+										keypair: keypair,
+										secondKeypair: secondKeypair
+									});
+								} catch (e) {
+									return setImmediate(cb, e.toString());
+								}
+								modules.transactions.receiveTransactions([transaction], true, cb);
+							}
+						});
 					});
 				}
 			}, function (err, transaction) {
 				if (err) {
 					return setImmediate(cb, err);
 				} else {
-					return setImmediate(cb, null, {transaction: transaction[0]});
+					return setImmediate(cb, null, { transaction: transaction[0] });
 				}
 			});
 		});
 
-	
-}
+
+	}
 };
 
 // Export

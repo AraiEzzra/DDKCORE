@@ -353,6 +353,16 @@ function Account (db, schema, logger, cb) {
 			},
 			conv: Boolean,
 			immutable: true
+		},
+		{
+			name: 'totalFrozeAmount',
+			type: 'BigInt',
+			filter: {
+				type: 'integer'
+			},
+			conv: Number,
+			expression: '("totalFrozeAmount")::bigint'
+
 		}
 	];
 	

@@ -9,8 +9,8 @@
    "basePath":"/",
    "tags":[
       {
-         "name":"Tag1",
-         "description":"API for something"
+         "name":"Freeze",
+         "description":"API for Freeze"
       },
       {
          "name":"Account",
@@ -119,7 +119,39 @@
               }
            }
         }
-     }
+     },
+     "/api/frogings/freeze":{
+      "post":{
+         "tags":[
+            "Freeze"
+         ],
+         "description":"generatePublicKey",
+         "operationId":"for the URL",
+         "produces":[
+            "application/json"
+         ],
+         "parameters":[
+            {
+               "name":"secret",
+               "in":"body",
+               "defaultValue": "{ \"secret\": \"wagon stock borrow episode laundry kitten salute link globe zero feed marble\",\n \"freezedAmount\" : 6000000000, \n \"publicKey\": \"c094ebee7ec0c50ebee32918655e089f6e1a604b83bcaa760293c61e0f18ab6f\"}",
+               "description":"generatePublicKey",
+               "required":true,
+               "schema":{
+                  "$ref":"#/definitions/create"
+               }
+            }
+         ],
+         "responses":{
+            "200":{
+               "description":"create response",
+               "schema":{
+                  "$ref":"#/definitions/response"
+               }
+            }
+         }
+      }
+   }
    },
    "definitions":{
       "create":{

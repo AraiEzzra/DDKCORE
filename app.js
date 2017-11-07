@@ -35,15 +35,15 @@ monitoring.on('initialized', function (env) {
 });
 
 monitoring.on('socketio', function(data) {
-	console.log(chalk.green('socketio') + ' : ' + chalk.yellow('[ETPCoinMetric] duration='+data.duration+' ms url='+data.url+' method='+data.method+' event='+data.event));
+	//console.log(chalk.green('socketio') + ' : ' + chalk.yellow('[ETPCoinMetric] duration='+data.duration+' ms url='+data.url+' method='+data.method+' event='+data.event));
 });
 
 monitoring.on('http', function (data) {
-    console.log(chalk.green('http') + ' : ' +chalk.yellow('[ETPCoinMetric] duration='+data.duration+' ms url='+data.url));
+   // console.log(chalk.green('http') + ' : ' +chalk.yellow('[ETPCoinMetric] duration='+data.duration+' ms url='+data.url));
 });
 
 monitoring.on('postgres', function(data) {
-	console.log(chalk.green('postgres') + ' : ' +chalk.yellow('[ETPCoinMetric] duration='+data.duration+' ms query='+data.query));
+//	console.log(chalk.green('postgres') + ' : ' +chalk.yellow('[ETPCoinMetric] duration='+data.duration+' ms query='+data.query));
 });
 
 //Requiring Modules

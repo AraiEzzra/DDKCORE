@@ -329,18 +329,32 @@ Transaction.prototype.checkConfirmed = function (trs, cb) {
  * @param {transaction} trs
  * @param {account} sender
  * @returns {Object} With exceeded boolean and error: address, balance
+ * Navin : modify checkbalance according to froze amount avaliable to user
  */
 Transaction.prototype.checkBalance = function (amount, balance, trs, sender) {
-	var exceededBalance = new bignum(sender[balance].toString()).lessThan(amount);
+	var totalAmountWithFrozeAmount = new bignum(((sender.totalFrozeAmount)).toString()).plus(amount);
+	var exceededBalance = new bignum(sender[balance].toString()).lessThan(totalAmountWithFrozeAmount);
 	var exceeded = (trs.blockId !== this.scope.genesisblock.block.id && exceededBalance);
 
-	return {
-		exceeded: exceeded,
-		error: exceeded ? [
-			'Account does not have enough ETP:', sender.address,
-			'balance:', new bignum(sender[balance].toString() || '0').div(Math.pow(10,8))
-		].join(' ') : null
-	};
+	if (sender.totalFrozeAmount > 0) {
+		return {
+			exceeded: exceeded,
+			error: exceeded ? [
+				'Account does not have enough ETP due to freeze amount:', sender.address,
+				'balance:', new bignum(sender[balance].toString() || '0').div(Math.pow(10, 8)),
+				'totalFreezeAmount :', new bignum(sender.totalFrozeAmount.toString()).div(Math.pow(10, 8))
+			].join(' ') : null
+		};
+	} else {
+		return {
+			exceeded: exceeded,
+			error: exceeded ? [
+				'Account does not have enough ETP:', sender.address,
+				'balance:', new bignum(sender[balance].toString() || '0').div(Math.pow(10, 8))
+			].join(' ') : null
+		};
+	}
+
 };
 
 /**
@@ -431,7 +445,6 @@ Transaction.prototype.getAccountStatus = function(trs, cb) {
  * @return {setImmediateCallback} validation errors | trs
  */
 Transaction.prototype.verify = function (trs, sender, requester, cb) {
-	//this.getAccountStatus(trs);
 	var valid = false;	
 	var err = null;	
 	if (typeof requester === 'function') {		
@@ -591,9 +604,23 @@ Transaction.prototype.verify = function (trs, sender, requester, cb) {
 	}
 
 	// Check amount
-	if (trs.amount < 0 || trs.amount > constants.totalAmount || String(trs.amount).indexOf('.') >= 0 || trs.amount.toString().indexOf('e') >= 0) {
+	if (trs.amount < 0 || trs.amount > constants.totalAmount || String(trs.amount).indexOf('.') >= 0 || trs.amount.toString().indexOf('e') >= 0 ) {
 		return setImmediate(cb, 'Invalid transaction amount');
 	}
+
+
+//Navin *******************************************************************************
+
+	// //Check sender not able to do transaction on froze amount
+	// var amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
+	// var frozeAmount = this.checkFrozeBalance(amount,'balance',trs,sender);
+
+	// if(frozeAmount.exceeded){
+	// 	return setImmediate(cb,frozeAmount.error);
+	// }
+
+
+	//********************************************************************************* */
 
 	// Check confirmed sender balance
 	var amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
