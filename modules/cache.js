@@ -71,11 +71,60 @@ Cache.prototype.setJsonForKey = function (key, value, cb) {
 	client.set(key, JSON.stringify(value), cb);
 };
 
-Cache.prototype.addMember = function(key, value, cb) {
+/**
+ * It checks existance for a key in redis
+ * @param {String} key
+ * @param {Function} cb
+ */
+Cache.prototype.isExists = function(key, cb) {
 	if (!self.isConnected()) {
 		return cb(errorCacheDisabled);
 	} 
-	client.sadd(key, JSON.stringify(value), cb);
+	client.exists(key, cb);
+};
+
+/**
+ * It sets hash value for a key in redis
+ * @param {String} key
+ * @param {Object} value
+ * @param {Function} cb
+ */
+Cache.prototype.hmset = function(key, value, cb) {
+	if (!self.isConnected()) {
+		return cb(errorCacheDisabled);
+	} 
+	client.hmset(key, value, cb);
+};
+
+/**
+ * It delets hash value for a key in redis
+ * @param {String} key
+ * @param {Object} value
+ * @param {Function} cb
+ */
+Cache.prototype.delHash = function(key, cb) {
+	if (!self.isConnected()) {
+		return cb(errorCacheDisabled);
+	} 
+	client.del(key, cb);
+};
+
+/**
+ * It gets hash values for a key in redis
+ * @param {String} key
+ * @param {Object} value
+ * @param {Function} cb
+ */
+Cache.prototype.hgetall = function(key, cb) {
+	if (!self.isConnected()) {
+		return cb(errorCacheDisabled);
+	} 
+	client.hgetall(key, function (err, value) {
+		if (err) {
+			return cb(err, value);
+		}
+		return cb(null, value);
+	});
 };
 
 /**

@@ -81,12 +81,10 @@ __private.openAccount = function (secret, cb) {
 		}
 
 		if (account) {
-			cache.prototype.addMember('account', account, function(err) {
-				if (account.publicKey == null) {
-					account.publicKey = publicKey;
-				}
-				return setImmediate(cb, null, account);
-			});
+			if (account.publicKey == null) {
+				account.publicKey = publicKey;
+			}
+			return setImmediate(cb, null, account);
 		} else {
 			var account = {
 				address: self.generateAddressByPublicKey(publicKey),
@@ -99,9 +97,7 @@ __private.openAccount = function (secret, cb) {
 				multisignatures: null,
 				u_multisignatures: null
 			}
-			cache.prototype.addMember('account', account, function(err) {
-				return setImmediate(cb, null, account);
-			});
+			return setImmediate(cb, null, account);
 		}
 	});
 };
@@ -308,14 +304,52 @@ Accounts.prototype.shared = {
 					};
 					if(req.body.accType) {
 						data.acc_type = req.body.accType;
-					}
-					library.logic.account.set(accountData.address, data, function(err) {
-						if(!err) {
-							return setImmediate(cb, null, {account: accountData});
-						}else {
-							return setImmediate(cb, err);
+						var lastBlock = modules.blocks.lastBlock.get();
+						data.endTime = library.logic.contract.calcEndTime(req.body.accType, lastBlock.timestamp);
+						if(req.body.transferedAmount) {
+							data.transferedAmount = req.body.transferedAmount;
 						}
-					});
+						var REDIS_KEY_USER_INFO_HASH = "userInfo_" + data.address;
+						var REDIS_KEY_USER_TIME_HASH = "userInfo_" + data.endTime;
+						cache.prototype.isExists(REDIS_KEY_USER_INFO_HASH, function(err, isExist) {
+							console.log('isExist : '+isExist);
+							if(!isExist) {
+								var userInfo = {
+									senderId : data.address,
+									transferedAmount: data.transferedAmount,
+									endTime : data.endTime
+								};
+								cache.prototype.hmset(REDIS_KEY_USER_INFO_HASH, userInfo);
+								cache.prototype.hmset(REDIS_KEY_USER_TIME_HASH, userInfo);
+								library.logic.contract.sendToContrubutors([data.address]);
+								library.db.none(sql.disableAccount, { 
+									senderId: account.address 
+								}).then(function () {	   
+									library.logger.info(account.address + ' account is locked');
+									library.logic.account.set(accountData.address, data, function(err) {
+										if(!err) {
+											return setImmediate(cb, null, {account: accountData});
+										}else {
+											return setImmediate(cb, err);
+										}
+									});	
+								}).catch(function (err) {		 
+									library.logger.error(err.stack);
+									return setImmediate(cb, err);			
+								});
+							}else {
+								return setImmediate(cb, null, {account: accountData});
+							}
+						});
+					}else {
+						library.logic.account.set(accountData.address, data, function(err) {
+							if(!err) {
+								return setImmediate(cb, null, {account: accountData});
+							}else {
+								return setImmediate(cb, err);
+							}
+						});
+					}
 					/****************************************************************/
 				} else {
 					return setImmediate(cb, err);

@@ -83,13 +83,17 @@ Contract.prototype.process = function (trs, sender, cb) {
 };
 
 //Calculate end time based on current timestamp
-Contract.prototype.calcEndTime = function(startTime, lockPeriod, cb) {
+Contract.prototype.calcEndTime = function(accType, startTime) {
     var date = new Date(startTime * 1000);
-
-    //count end time based on locking period
-    //var endTime = (date.setMinutes(date.getMinutes() + lockPeriod * 90 * 24 * 60 * 60 ))/1000;
-    var endTime = (date.setMinutes(date.getMinutes() + 1 ))/1000;
-    return setImmediate(cb, null, endTime);
+    /*if(accType == 1) {
+        var endTime = (date.setMinutes(date.getMinutes() + 90 * 24 * 60 * 60 ))/1000;
+    }else if(accType == 2) {
+        var endTime = (date.setMinutes(date.getMinutes() + 90 * 24 * 60 * 60 ))/1000;
+    }else if(accType == 3) {
+        var endTime = (date.setMinutes(date.getMinutes() + 365 * 24 * 60 * 60 ))/1000;
+    }*/
+    var endTime = (date.setMinutes(date.getMinutes() + 2 ))/1000;
+    return endTime;
 };
 
 //Contract will run to transfer amount to contributors after 3 months once the network up

@@ -361,7 +361,23 @@ function Account (db, schema, logger, cb) {
 				type: 'SmallInt'
 			},
 			immutable: true
-		}
+		},
+		{
+			name: 'transferedAmount',
+			type: 'BigInt',
+			filter: {
+				type: 'integer'
+			},
+			conv: Number
+		},
+		{
+			name: 'endTime',
+			type: 'BigInt',
+			filter: {
+				type: 'integer'
+			},
+			conv: Number
+		},
 	];
 	
 	// Obtains fields from model

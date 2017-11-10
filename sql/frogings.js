@@ -19,7 +19,9 @@ var TransactionsSql = {
 
   disableAccount : 'UPDATE mem_accounts SET "status" = 0 WHERE "address" = ${senderId}',
 
-  enableAccount : 'UPDATE mem_accounts SET "status" = 1 WHERE "address" = ${senderId}'
+  enableAccount : 'UPDATE mem_accounts SET "status" = 1 WHERE "address" = ${senderId}',
+
+  getMemoryAccounts : 'SELECT * FROM  mem_accounts'
 
   /*countById: 'SELECT COUNT("id")::int AS "count" FROM trs WHERE "id" = ${id}',
 
