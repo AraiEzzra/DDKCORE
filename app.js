@@ -46,6 +46,11 @@ monitoring.on('postgres', function(data) {
 //	console.log(chalk.green('postgres') + ' : ' +chalk.yellow('[ETPCoinMetric] duration='+data.duration+' ms query='+data.query));
 });
 
+monitoring.on('redis', function(data) {
+	//console.log(chalk.green('redis') + ' : ' +chalk.yellow('[ETPCoinMetric] duration='+data.duration+' ms cmd='+data.cmd));
+});
+	
+
 //Requiring Modules
 var async = require('async');
 var extend = require('extend');
@@ -99,15 +104,6 @@ program
  * @default 'config.json'
  */
 var appConfig = require('./helpers/config.js')(program.config);
-// var appDb = '';
-// var db = require('./helpers/database.js');
-// db.connect(appConfig.db, logger, function(err, db) {
-// 	if(err) {
-// 		console.log('error : '+err);
-// 	}else {
-// 		appDb = db;
-// 	}
-// });
 
 if (program.port) {
 	appConfig.port = program.port;
@@ -495,10 +491,6 @@ d.run(function () {
 		db: function (cb) {
 			var db = require('./helpers/database.js');
 			db.connect(config.db, logger, cb);
-			// setTimeout(function() {
-			// 	cb(null, appDb);
-			// }, 500);
-			//cb(null, db);
 		},
 		/**
 		 * It tries to connect with redis server based on config. provided in config.json file

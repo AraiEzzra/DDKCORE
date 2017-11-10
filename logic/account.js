@@ -355,7 +355,15 @@ function Account (db, schema, logger, cb) {
 			immutable: true
 		},
 		{
-			name: 'totalFrozeAmount',
+			name: 'acc_type',
+			type: 'SmallInt',
+			filter: {
+				type: 'SmallInt'
+			},
+			immutable: true
+		},
+		{
+			name: 'transferedAmount',
 			type: 'BigInt',
 			filter: {
 				type: 'integer'
@@ -363,6 +371,23 @@ function Account (db, schema, logger, cb) {
 			conv: Number,
 			expression: '("totalFrozeAmount")::bigint'
 
+		},
+		{
+			name: 'endTime',
+			type: 'BigInt',
+			filter: {
+				type: 'integer'
+			},
+			conv: Number
+		},
+		{ 
+			name: 'totalFrozeAmount', 
+			type: 'BigInt', 
+			filter: { 
+				type: 'integer' 
+			}, 
+			conv: Number, 
+			expression: '("totalFrozeAmount")::bigint' 
 		}
 	];
 	

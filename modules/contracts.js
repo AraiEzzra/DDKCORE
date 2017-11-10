@@ -7,8 +7,8 @@
 var Contract = require('../logic/contract.js');
 var transactionTypes = require('../helpers/transactionTypes.js');
 var sql = require('../sql/frogings.js');
-var config = require('../config.json');
 var contributorsStatus = true;
+var cache = require('./cache.js');
 
 //Private Fields
 var __private = {}, self = null,
@@ -36,6 +36,7 @@ function Contracts(cb, scope) {
 					whiteList: scope.config.forging.access.whiteList,
 				},
 			},
+			contributors: scope.config.contributors
 		},
     };
     
@@ -49,38 +50,24 @@ function Contracts(cb, scope) {
     setImmediate(cb, null, self);
 };
 
-//Running Smart Contract
+//Unlock contributors/advisors/founders after a given time
 Contracts.prototype.onNewBlock = function (block, broadcast, cb) {
-	if(block.height == 2) {
-		config.contributors.startTime = block.timestamp;
-		var date = new Date(block.timestamp * 1000);
-		config.contributors.endTime = (date.setMinutes(date.getMinutes() + 5))/1000;
-		var contributors = config.contributors.users;
-		library.logic.contract.sendToContrubutors(contributors);
-		contributors.forEach(function(senderId) {
-			library.db.none(sql.disableAccount, { 
-				senderId: senderId 
-			}).then(function () {	   
-				library.logger.info(senderId + ' account is locked for ' + config.contributors.lockTime +' months');	
-			}).catch(function (err) {		 
-				library.logger.error(err.stack);			
+	var REDIS_KEY_USER_TIME_HASH = "userInfo_" + block.timestamp;
+	cache.prototype.isExists(REDIS_KEY_USER_TIME_HASH, function(err, isExist) {
+		if(isExist) {
+			cache.prototype.hgetall(REDIS_KEY_USER_TIME_HASH, function(err, data) {
+				var senderId = data.senderId;
+				library.db.none(sql.enableAccount, { 
+					senderId: data.senderId 
+				}).then(function () {	   
+					library.logger.info(data.senderId + ' account is unlocked');	
+					cache.prototype.delHash(REDIS_KEY_USER_TIME_HASH);
+				}).catch(function (err) {		 
+					library.logger.error(err.stack);			
+				});
 			});
-		});
-	}
-
-	//Unlock contributor's account after 3 months(currently 5 minutes) 
-	if(block.timestamp == config.contributors.endTime) {
-		var contributors = config.contributors.users;
-		contributors.forEach(function(senderId) {
-			library.db.none(sql.enableAccount, { 
-				senderId: senderId 
-			}).then(function () {	   
-				library.logger.info(senderId + ' account is unlocked for ' + config.contributors.lockTime +' months');	
-			}).catch(function (err) {		 
-				library.logger.error(err.stack);			
-			});
-		});
-	}
+		}
+	});
 };
 
 //OnBInd Event called from app.js

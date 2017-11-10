@@ -35,6 +35,8 @@ CREATE TABLE IF NOT EXISTS "mem_accounts"(
   "fees" BIGINT DEFAULT 0,
   "rewards" BIGINT DEFAULT 0,
   "acc_type" SMALLINT DEFAULT 0,
+  "transferedAmount" BIGINT DEFAULT 0,
+  "endTime" INT,
   "totalFrozeAmount" BIGINT DEFAULT 0
 );
 
