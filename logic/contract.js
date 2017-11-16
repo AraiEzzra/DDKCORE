@@ -98,14 +98,14 @@ Contract.prototype.calcEndTime = function(accType, startTime) {
 
 //Contract will run to transfer amount to contributors after 3 months once the network up
 Contract.prototype.sendToContrubutors = function(contributors) {
-    contributors.forEach(function(recipientId) {
+    contributors.forEach(function(recipient) {
        
         //Request to send tarnsaction
         var jsonData = {
             json : {
                 secret: config.users[0].secret,
-                amount: 20000000000,
-                recipientId: recipientId,
+                amount: recipient.transferedAmount,
+                recipientId: recipient.address,
                 publicKey: config.users[0].publicKey
             }
         }; 
