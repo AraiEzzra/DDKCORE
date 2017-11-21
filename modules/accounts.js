@@ -321,7 +321,6 @@ Accounts.prototype.shared = {
 						var REDIS_KEY_USER_INFO_HASH = "userInfo_" + data.address;
 						var REDIS_KEY_USER_TIME_HASH = "userInfo_" + data.endTime;
 						cache.prototype.isExists(REDIS_KEY_USER_INFO_HASH, function(err, isExist) {
-							console.log('isExist : '+isExist);
 							if(!isExist) {
 								var userInfo = {
 									address : data.address,
@@ -633,34 +632,46 @@ Accounts.prototype.shared = {
 				if (!req.body.address) {
 					return setImmediate(cb, 'Missing required property: address');
 				}
-
 				var address = req.body.publicKey ? self.generateAddressByPublicKey(req.body.publicKey) : req.body.address;
-				library.db.none(sql.disableAccount, { 
-					senderId: address 
-				}).then(function () {	   
-					library.logger.info(address + ' account is locked');
-					var lastBlock = modules.blocks.lastBlock.get();
-					self.getAccount({ address: address }, function (err, account) {
-						if (err) {
-							return setImmediate(cb, err);
-						}
-						if(account.acc_type == userGroups.CONTRIBUTORS) {
-							library.logic.contract.calcEndTime(lastBlock.timestamp, library.config.contributors.lockTime, function(err, endTime) {
-								library.config.contributors.endTime = endTime;
-								library.config.contributors.newUsers.push(address);
-								var newContributors = {
-									users: [address],
-									endTime: endTime
+				self.getAccount({ address: address }, function (err, account) {
+					if (err) {
+						return setImmediate(cb, err);
+					}
+					if(account.acc_type) {
+						var lastBlock = modules.blocks.lastBlock.get();
+						var endTime = library.logic.contract.calcEndTime(account.acc_type, lastBlock.timestamp);
+						var REDIS_KEY_USER_TIME_HASH = "userInfo_" + endTime;
+						cache.prototype.isExists(REDIS_KEY_USER_TIME_HASH, function(err, isExist) {
+							if(!isExist) {
+								var userInfo = {
+									address : account.address,
+									endTime : endTime
 								};
-								library.config.contributors.lockStatus.push(newContributors);
-								return setImmediate(cb, null);
-							});
-						}else {
-							return setImmediate(cb, null);
-						}
-					});
-				}).catch(function (err) {		 
-					return setImmediate(cb, err);			
+								cache.prototype.hmset(REDIS_KEY_USER_TIME_HASH, userInfo);
+								library.db.none(sql.disableAccount, { 
+									senderId: account.address 
+								}).then(function () {	   
+									library.logger.info(account.address + ' account is locked');	
+									return setImmediate(cb, null, {account: account});
+								}).catch(function (err) {		 
+									library.logger.error(err.stack);
+									return setImmediate(cb, err);			
+								});
+							}else {
+								return setImmediate(cb, null, {account: account});
+							}
+						});
+					}else {
+						library.db.none(sql.disableAccount, { 
+							senderId: account.address 
+						}).then(function () {	   
+							library.logger.info(account.address + ' account is locked');	
+							return setImmediate(cb, null, {account: account});
+						}).catch(function (err) {		 
+							library.logger.error(err.stack);
+							return setImmediate(cb, err);			
+						});
+					}
 				});
 			}else {
 				return setImmediate(cb, err);

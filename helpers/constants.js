@@ -108,5 +108,6 @@ module.exports = {
 			minItems: 1,
 			maxItems: 15
 		}
-	}
+	},
+	defaultLock: 0
 };
