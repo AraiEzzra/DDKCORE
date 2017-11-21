@@ -10,6 +10,8 @@ var extend = require('extend');
 var slots = require('../helpers/slots.js');
 var sql = require('../sql/transactions.js');
 var sqlAccount = require('../sql/accounts.js');
+var config = require('../config.json');
+var request = require('request');
 
 // Private fields
 var self, modules, __private = {};
@@ -612,15 +614,6 @@ Transaction.prototype.verify = function (trs, sender, requester, cb) {
 //Navin *******************************************************************************
 
 	// //Check sender not able to do transaction on froze amount
-	// var amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
-	// var frozeAmount = this.checkFrozeBalance(amount,'balance',trs,sender);
-
-	// if(frozeAmount.exceeded){
-	// 	return setImmediate(cb,frozeAmount.error);
-	// }
-
-
-	//********************************************************************************* */
 
 	// Check confirmed sender balance
 	var amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
@@ -1192,6 +1185,24 @@ Transaction.prototype.bindModules = function (__modules) {
 	modules = {
 		rounds: __modules.rounds
 	};
+};
+
+//Navin : call add transaction API 
+Transaction.prototype.sendTransaction = function (data) {
+
+	var port = config.port;
+	var address = config.address;
+
+	request.put('http://' + address + ':' + port + '/api/transactions/', data, function (error, response, body) {
+		if (error) throw error;
+		if (response && response.statusCode == 200) {
+			self.scope.logger.info('Froze monthly reward Transaction : body:', body);
+		} else {
+			self.scope.logger.info('Froze monthly reward transaction status Code : ' + response.statusCode);
+			self.scope.logger.info('And its body : ' + JSON.stringify(body));
+		}
+	});
+
 };
 
 // Export
