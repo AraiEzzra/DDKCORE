@@ -1,221 +1,309 @@
 {
-   "swagger":"2.0",
-   "info":{
-      "version":"1.0.0",
-      "title":"Sample spec",
-      "description":"Sample spec for Swagger",
-      "termsOfService":"http://swagger.io/terms/"
-   },
-   "basePath":"/",
-   "tags":[
-      {
-         "name":"Freeze",
-         "description":"API for Freeze"
-      },
-      {
-         "name":"Account",
-         "description":"API for Account"
-      },
-      {
-        "name":"Transaction",
-        "description":"API for Transaction"
-     }
-   ],
-   "schemes":[
-      "http"
-   ],
-   "consumes":[
-      "application/json"
-   ],
-   "produces":[
-      "application/json"
-   ],
-   "paths":{
-      "/api/accounts/generatePublicKey":{
-         "post":{
-            "tags":[
-               "Account"
-            ],
-            "description":"generatePublicKey",
-            "operationId":"for the URL",
-            "produces":[
-               "application/json"
-            ],
-            "parameters":[
-               {
-                  "name":"secret",
-                  "in":"body",
-                  "description":"generatePublicKey",
-                  "required":true,
-                  "schema":{
-                     "$ref":"#/definitions/create"
-                  }
-               }
-            ],
-            "responses":{
-               "200":{
-                  "description":"create response",
-                  "schema":{
-                     "$ref":"#/definitions/response"
-                  }
-               }
+  "swagger": "2.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "ETP",
+    "description": "ETP API's from Swagger",
+    "termsOfService": "http://swagger.io/terms/"
+  },
+  "basePath": "/",
+  "tags": [
+    {
+      "name": "Freeze",
+      "description": "API for Freeze"
+    },
+    {
+      "name": "Account",
+      "description": "API for Account"
+    },
+    {
+      "name": "Transaction",
+      "description": "API for Transaction"
+    }
+  ],
+  "schemes": [
+    "http"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/accounts/generatePublicKey": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "description": "generatePublicKey",
+        "operationId": "for the URL",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "secret",
+            "in": "body",
+            "description": "generatePublicKey",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/create"
             }
-         }
-      },
-      "/api/accounts/getBalance": {
-         "get":{
-            "tags":[
-               "Account"
-            ],
-            "description":"Returns the balance of account",
-            "operationId":"findByAddress",
-            "produces":[
-               "application/json"
-            ],
-            "parameters":[
-               {
-                  "name":"address",
-                  "in": "query",
-                  "description": "fetch balance",
-                  "required":true,
-                  "type":"string"
-               }
-            ],
-            "responses":{
-               "200":{
-                  "description":"response",
-                  "schema":{
-                     "$ref":"#/definitions/response1"
-                  }
-               }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "create response",
+            "schema": {
+              "$ref": "#/definitions/response"
             }
-         }
-      },
-      "api/transactions/get": {
-        "get":{
-           "tags":[
-              "Transaction"
-           ],
-           "description":"Get list of Transactions",
-           "operationId":"findById",
-           "produces":[
-              "application/json"
-           ],
-           "parameters":[
-              {
-                 "name":"id",
-                 "in": "query",
-                 "description": "Get list of Transactions",
-                 "required":true,
-                 "type":"string"
-              }
-           ],
-           "responses":{
-              "200":{
-                 "description":"response",
-                 "schema":{
-                    "$ref":"#/definitions/response1"
-                 }
-              }
-           }
+          }
         }
-     },
-     "/api/frogings/freeze":{
-      "post":{
-         "tags":[
-            "Freeze"
-         ],
-         "description":"generatePublicKey",
-         "operationId":"for the URL",
-         "produces":[
-            "application/json"
-         ],
-         "parameters":[
-            {
-               "name":"secret",
-               "in":"body",
-               "defaultValue": "{ \"secret\": \"wagon stock borrow episode laundry kitten salute link globe zero feed marble\",\n \"freezedAmount\" : 6000000000, \n \"publicKey\": \"c094ebee7ec0c50ebee32918655e089f6e1a604b83bcaa760293c61e0f18ab6f\"}",
-               "description":"generatePublicKey",
-               "required":true,
-               "schema":{
-                  "$ref":"#/definitions/create"
-               }
-            }
-         ],
-         "responses":{
-            "200":{
-               "description":"create response",
-               "schema":{
-                  "$ref":"#/definitions/response"
-               }
-            }
-         }
       }
-   }
-   },
-   "definitions":{
-      "create":{
-         "properties":{
-            "eventId":{
-               "required":true,
-               "type":"string",
-               "example":"mathmaticial"
-            },
-            "numberRequired":{
-               "required":true,
-               "type":"integer",
-               "format":"int64",
-               "example":500
+    },
+    "/api/accounts/getBalance": {
+      "get": {
+        "tags": [
+          "Account"
+        ],
+        "description": "Returns the balance of account",
+        "operationId": "findByAddress",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "address",
+            "in": "query",
+            "description": "fetch balance",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "response",
+            "schema": {
+              "$ref": "#/definitions/response1"
             }
-         }
-      },
-      "response1":{
-         "properties":{
-            "jobID":{
-               "required":true,
-               "type":"string",
-               "example":"23423456543"
-            },
-            "request":{
-               "required":true,
-               "type":"schema",
-               "example":{
-                  "eventId":"mathmaticial",
-                  "numberRequired":500
-               }
-            }
-         }
-      },
-      "response":{
-         "properties":{
-            "jobID":{
-               "required":true,
-               "type":"string",
-               "example":"12321432423"
-            }
-         }
-      },
-      "delete":{
-         "properties":{
-            "jobID":{
-               "required":true,
-               "type":"string",
-               "example":"234344234234"
-            },
-            "status":{
-               "required":true,
-               "type":"string",
-               "example":"deleted"
-            }
-         }
-      },
-      "400error":{
-         "properties":{
-            "message":{
-               "type":"string",
-               "example":"400 Bad Request"
-            }
-         }
+          }
+        }
       }
-   }
+    },
+    "/api/transactions/get": {
+      "get": {
+        "tags": [
+          "Transaction"
+        ],
+        "description": "Get list of Transactions",
+        "operationId": "findById",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "description": "Get list of Transactions",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "response",
+            "schema": {
+              "$ref": "#/definitions/response1"
+            }
+          }
+        }
+      }
+    },
+    "/api/transactions/unconfirmed/get": {
+      "get": {
+        "tags": [
+          "Transaction"
+        ],
+        "description": "Get unconfirmed Transactions",
+        "operationId": "findById",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "description": "Get unconfirmed Transactions",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "response",
+            "schema": {
+              "$ref": "#/definitions/response1"
+            }
+          }
+        }
+      }
+    },
+    "/api/transactions": {
+      "get": {
+        "tags": [
+          "Transaction"
+        ],
+        "description": "Get List of Transactions",
+        "operationId": "findByblockIdsenderIdrecipientId",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "blockId",
+            "in": "query",
+            "description": "Get List of Transactions",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "response",
+            "schema": {
+              "$ref": "#/definitions/response1"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Transaction"
+        ],
+        "description": "Send Transaction",
+        "operationId": "for the URL",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "secret,amount, \n reciepientId,publicKey \n,secondSecret",
+            "in": "body",
+            "defaultValue": "{ \n \"secret\" : \"wagon stock borrow episode laundry kitten salute link globe zero feed marble\", \n \"amount\" : 100000000,\n \"recipientId\" : \"4995063339468361088E\"\n}",
+            "description": "generatePublicKey",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/create"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "create response",
+            "schema": {
+              "$ref": "#/definitions/response"
+            }
+          }
+        }
+      }
+    },
+    "/api/frogings/freeze": {
+      "post": {
+        "tags": [
+          "Freeze"
+        ],
+        "description": "generatePublicKey",
+        "operationId": "for the URL",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "secret",
+            "in": "body",
+            "defaultValue": "{\n \"secret\": \"wagon stock borrow episode laundry kitten salute link globe zero feed marble\",\n \"freezedAmount\" : 6000000000, \n \"publicKey\": \"c094ebee7ec0c50ebee32918655e089f6e1a604b83bcaa760293c61e0f18ab6f\"\n}",
+            "description": "generatePublicKey",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/create"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "create response",
+            "schema": {
+              "$ref": "#/definitions/response"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "create": {
+      "properties": {
+        "eventId": {
+          "required": true,
+          "type": "string",
+          "example": "mathmaticial"
+        },
+        "numberRequired": {
+          "required": true,
+          "type": "integer",
+          "format": "int64",
+          "example": 500
+        }
+      }
+    },
+    "response1": {
+      "properties": {
+        "jobID": {
+          "required": true,
+          "type": "string",
+          "example": "23423456543"
+        },
+        "request": {
+          "required": true,
+          "type": "schema",
+          "example": {
+            "eventId": "mathmaticial",
+            "numberRequired": 500
+          }
+        }
+      }
+    },
+    "response": {
+      "properties": {
+        "jobID": {
+          "required": true,
+          "type": "string",
+          "example": "12321432423"
+        }
+      }
+    },
+    "delete": {
+      "properties": {
+        "jobID": {
+          "required": true,
+          "type": "string",
+          "example": "234344234234"
+        },
+        "status": {
+          "required": true,
+          "type": "string",
+          "example": "deleted"
+        }
+      }
+    },
+    "400error": {
+      "properties": {
+        "message": {
+          "type": "string",
+          "example": "400 Bad Request"
+        }
+      }
+    }
+  }
 }

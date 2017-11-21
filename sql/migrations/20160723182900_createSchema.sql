@@ -49,13 +49,14 @@ CREATE TABLE IF NOT EXISTS "trs"(
 
 CREATE TABLE IF NOT EXISTS "stake_orders"(
   "id" VARCHAR(20) PRIMARY KEY,
-  "type" SMALLINT NOT NULL,
+  "status" SMALLINT NOT NULL,
   "startTime" INT NOT NULL,
+  "nextMilestone" INT NOT NULL ,
   "endTime" INT NOT NULL,
   "senderId" VARCHAR(22) NOT NULL,
   "recipientId" VARCHAR(22),
   "freezedAmount" BIGINT NOT NULL,
-  "totalAmount" BIGINT NOT NULL,
+  "milestoneCount" INT DEFAULT 0,
   FOREIGN KEY("id") REFERENCES "trs"("id") ON DELETE CASCADE
 );
 

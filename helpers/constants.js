@@ -108,5 +108,10 @@ module.exports = {
 			minItems: 1,
 			maxItems: 15
 		}
+	},
+	//Navin : Configurable froze order
+	froze : {
+		endTime : 6,
+		milestone : 2 //1 month currently 2 min
 	}
 };

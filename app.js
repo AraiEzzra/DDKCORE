@@ -560,8 +560,8 @@ d.run(function () {
 				peers: ['logger', function (scope, cb) {
 					new Peers(scope.logger, cb);
 				}],
-				frozen: ['logger', function (scope, cb) {
-					new Frozen(scope.logger, cb);
+				frozen: ['logger','db', 'transaction', function (scope, cb) {
+					new Frozen(scope.logger,scope.db, scope.transaction, cb);
 				}]
 			}, cb);
 		}],
@@ -663,6 +663,18 @@ d.run(function () {
 		if (err) {
 			logger.error(err);
 		} else {
+
+			//Navin : daily check and update stake_orders, if any Active order expired or not
+			setInterval(function () { // Set interval for checking
+				var date = new Date(); // Create a Date object to find out what time it is
+				
+				scope.logic.frozen.checkFrozeOrders(); //For testing purpose only
+				if (date.getHours() === 10 && date.getMinutes() === 20) { // Check the time
+					
+					scope.logic.frozen.checkFrozeOrders();
+				}
+			}, 60000); // Repeat every 60000 milliseconds (1 minute)
+
 			/**
 			 * Handles app instance (acts as global variable, passed as parameter).
 			 * @global
@@ -701,6 +713,7 @@ d.run(function () {
 			 * @listens cleanup
 			 */
 			process.once('cleanup', function () {
+				
 				scope.logger.info('Cleaning up...');
 				async.eachSeries(modules, function (module, cb) {
 					if (typeof(module.cleanup) === 'function') {

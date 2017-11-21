@@ -1,20 +1,30 @@
 'use strict';
 
 var constants = require('../helpers/constants.js');
+var sql = require('../sql/frogings.js');
+var slots = require('../helpers/slots.js');
+var config = require('../config.json');
+var request = require('request');
+var async = require('async');
 
 // Private fields
 var __private = {};
 __private.types = {};
 
 // Private fields
-var modules, library;
+var modules, library, self;
 
 // Constructor
-function Frozen (logger, cb) {
-  //To do
-  this.scope = {
-		logger: logger
+function Frozen(logger, db, transaction, cb) {
+	self = this;
+	self.scope = {
+		logger: logger,
+		db: db,
+		logic: {
+			transaction: transaction
+		}
 	};
+	
 	if (cb) {
 		return setImmediate(cb, null, this);
 	}
@@ -24,10 +34,10 @@ function Frozen (logger, cb) {
 Frozen.prototype.create = function (data, trs) {
 	trs.startTime = trs.timestamp;
 	var date = new Date(trs.timestamp * 1000);
-	trs.endTime = (date.setMinutes(date.getMinutes() + 5))/1000;
+	trs.nextMilestone = (date.setMinutes(date.getMinutes() + constants.froze.milestone))/1000;
+	trs.endTime = (date.setMinutes(date.getMinutes() - constants.froze.milestone + constants.froze.endTime))/1000;
 	trs.recipientId = null;
 	trs.freezedAmount = data.freezedAmount;
-	trs.totalAmount = data.sender.balance;
 	return trs;
 };
 
@@ -40,13 +50,13 @@ Frozen.prototype.dbTable = 'stake_orders';
 
 Frozen.prototype.dbFields = [
 	"id",
-	"type",
+	"status",
 	"startTime",
+	"nextMilestone",
 	"endTime",
 	"senderId",
 	"recipientId",
-	"freezedAmount" ,
-	"totalAmount" 
+	"freezedAmount" 
 ];
 
 Frozen.prototype.inactive= '0';
@@ -59,13 +69,13 @@ Frozen.prototype.dbSave = function (trs) {
 		fields: this.dbFields,
 		values: {
 			id: trs.id,
-			type: trs.type,
+			status: this.active,
 			startTime: trs.startTime,
+			nextMilestone: trs.nextMilestone,
 			endTime : trs.endTime,
 			senderId: trs.senderId,
 			recipientId: trs.recipientId,
-			freezedAmount: trs.freezedAmount,
-            totalAmount : trs.totalAmount
+			freezedAmount: trs.freezedAmount
 		}
 	};
 };
@@ -144,6 +154,77 @@ Frozen.prototype.bind = function (accounts, rounds) {
 		accounts: accounts,
 		rounds: rounds,
 	};
+};
+
+Frozen.prototype.checkFrozeOrders = function () {
+
+	var i, currentTime = slots.getTime();
+	var totalMilestone = constants.froze.endTime / constants.froze.milestone;
+
+	self.scope.db.query(sql.frozeBenefit,
+		{
+			milestone: constants.froze.milestone * 60,
+			currentTime: currentTime
+		}).then(function (rows) {
+			self.scope.logger.info("Successfully get :" + rows.length +", number of froze order");
+
+			if (rows.length > 0) {
+				//Update nextMilesone in "stake_orders" table
+				self.scope.db.none(sql.checkAndUpdateMilestone,
+					{
+						milestone: constants.froze.milestone * 60,
+						currentTime: currentTime
+					}).then(function () {
+						console.log("Successfully check milestones");
+
+						//change status and nextmilestone
+						self.scope.db.none(sql.disableFrozeOrders,
+							{
+								currentTime: currentTime,
+								totalMilestone: totalMilestone
+							}).then(function () {
+								console.log("Successfully check status for disable froze orders");
+
+							}).catch(function (err) {
+								self.scope.logger.error(err.stack);
+							});
+
+					}).catch(function (err) {
+						self.scope.logger.error(err.stack);
+					});
+			}
+
+			for (i = 0; i < rows.length; i++) {
+
+				if (rows[i].nextMilestone === rows[i].endTime) {
+					self.scope.db.none(sql.deductFrozeAmount, {
+						FrozeAmount: rows[i].freezedAmount,
+						senderId: rows[i].senderId
+					}).then(function () {
+						self.scope.logger.info("Successfully check and if applicable, deduct froze amount from mem_account table");
+
+					}).catch(function (err) {
+						self.scope.logger.error(err.stack);
+					});
+				}
+
+				//Request to send tarnsaction
+				var transactionData = {
+					json: {
+						secret: config.users[0].secret,
+						amount: parseInt(rows[i].freezedAmount * 0.1),
+						recipientId: rows[i].senderId,
+						publicKey: config.users[0].publicKey
+					}
+				};
+				//Send froze monthly rewards to users
+				self.scope.logic.transaction.sendTransaction(transactionData);
+			}
+
+		}).catch(function (err) {
+			self.scope.logger.error(err.stack);
+		});
+
 };
 
 // Export
