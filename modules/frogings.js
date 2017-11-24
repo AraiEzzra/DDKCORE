@@ -66,7 +66,7 @@ function Frogings (cb, scope) {
 
 	//Add by navin
 	__private.assetTypes[transactionTypes.FROZE] = library.logic.transaction.attachAssetType(
-		transactionTypes.FROZE, new Frozen()
+		transactionTypes.FROZE, new Frozen(scope.logger,scope.db,scope.logic.transaction)
 	);
 
 	setImmediate(cb, null, self);

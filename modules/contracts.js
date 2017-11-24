@@ -56,11 +56,10 @@ Contracts.prototype.onNewBlock = function (block, broadcast, cb) {
 	cache.prototype.isExists(REDIS_KEY_USER_TIME_HASH, function(err, isExist) {
 		if(isExist) {
 			cache.prototype.hgetall(REDIS_KEY_USER_TIME_HASH, function(err, data) {
-				var senderId = data.senderId;
 				library.db.none(sql.enableAccount, { 
-					senderId: data.senderId 
+					senderId: data.address 
 				}).then(function () {	   
-					library.logger.info(data.senderId + ' account is unlocked');	
+					library.logger.info(data.address + ' account is unlocked');	
 					cache.prototype.delHash(REDIS_KEY_USER_TIME_HASH);
 				}).catch(function (err) {		 
 					library.logger.error(err.stack);			

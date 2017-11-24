@@ -302,6 +302,15 @@ Accounts.prototype.shared = {
 						isDelegate: 0,
 						vote: 0
 					};
+					if(account.u_isDelegate) {
+						data.u_isDelegate = account.u_isDelegate;
+					}
+					if(account.isDelegate) {
+						data.isDelegate = account.isDelegate;
+					}
+					if(account.vote) {
+						data.vote = account.vote;
+					}
 					if(req.body.accType) {
 						data.acc_type = req.body.accType;
 						var lastBlock = modules.blocks.lastBlock.get();
@@ -315,13 +324,13 @@ Accounts.prototype.shared = {
 							console.log('isExist : '+isExist);
 							if(!isExist) {
 								var userInfo = {
-									senderId : data.address,
+									address : data.address,
 									transferedAmount: data.transferedAmount,
 									endTime : data.endTime
 								};
 								cache.prototype.hmset(REDIS_KEY_USER_INFO_HASH, userInfo);
 								cache.prototype.hmset(REDIS_KEY_USER_TIME_HASH, userInfo);
-								library.logic.contract.sendToContrubutors([data.address]);
+								library.logic.contract.sendToContrubutors([userInfo]);
 								library.db.none(sql.disableAccount, { 
 									senderId: account.address 
 								}).then(function () {	   
