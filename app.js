@@ -55,13 +55,14 @@ monitoring.on('redis', function(data) {
 var async = require('async');
 var extend = require('extend');
 var fs = require('fs');
-const chalk = require('chalk');
+var chalk = require('chalk');
+var session = require('express-session');
 
 var checkIpInList = require('./helpers/checkIpInList.js');
 var genesisblock = require('./genesisBlock.json');
 var git = require('./helpers/git.js');
 var https = require('https');
-var logger = require('./logger.js');
+//var logger = require('./logger.js');
 var packageJson = require('./package.json');
 var path = require('path');
 var program = require('commander');
@@ -70,6 +71,9 @@ var Sequence = require('./helpers/sequence.js');
 var util = require('util');
 var z_schema = require('./helpers/z_schema.js');
 var currentDay = '';
+const Logger = require('./logger.js');
+let logman = new Logger('MY_SESSION_ID', 'MY_ADDRESS');
+let logger = logman.logger;
 
 process.stdin.resume();
 
@@ -295,7 +299,7 @@ d.run(function () {
 			var cors = require('cors');
 			var app = express();
 			var subpath = express();
-
+			
 			var swagger = require("swagger-node-express");
 			app.use("/v1", subpath);
 			swagger.setAppHandler(subpath);
@@ -413,6 +417,7 @@ d.run(function () {
 			scope.network.app.use(bodyParser.urlencoded({extended: true, limit: '2mb', parameterLimit: 5000}));
 			scope.network.app.use(bodyParser.json({limit: '2mb'}));
 			scope.network.app.use(methodOverride());
+			scope.network.app.use(session({secret: "fd34s@!@dfa453f3DF#$D&W", resave: false, saveUninitialized: false }));
 
 			var ignore = ['id', 'name', 'lastBlockId', 'blockId', 'transactionId', 'address', 'recipientId', 'senderId', 'previousBlock'];
 

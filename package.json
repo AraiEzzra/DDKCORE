@@ -14,12 +14,10 @@
   "author": "Lisk Foundation <admin@ETP.io>, lightcurve GmbH <admin@lightcurve.io>",
   "license": "GPL-3.0",
   "dependencies": {
-    "swagger-node-express": "~2.0",
-    "minimist": "*",
-    "body-parser": "=1.16.0",
     "appmetrics-dash": "^3.3.6",
     "async": "=2.1.4",
     "bignumber.js": "=4.0.0",
+    "body-parser": "=1.16.0",
     "bytebuffer": "=5.0.1",
     "change-case": "=3.0.1",
     "colors": "=1.1.2",
@@ -32,6 +30,7 @@
     "express-domain-middleware": "=0.1.0",
     "express-query-int": "=1.0.1",
     "express-rate-limit": "=2.6.0",
+    "express-session": "^1.15.6",
     "extend": "=3.0.0",
     "ip": "=1.1.5",
     "json-schema": "=0.2.3",
@@ -40,6 +39,7 @@
     "lisk-sandbox": "LiskHQ/lisk-sandbox#162da38",
     "lodash": "=4.17.4",
     "method-override": "=2.3.7",
+    "minimist": "*",
     "npm": "=2.15.10",
     "pg": "^7.3.0",
     "pg-monitor": "=0.7.1",
@@ -57,6 +57,7 @@
     "valid-url": "=1.0.9",
     "validator": "=6.2.1",
     "validator.js": "=2.0.3",
+    "winston-meta-wrapper": "^1.2.0",
     "z-schema": "=3.18.2"
   },
   "devDependencies": {
