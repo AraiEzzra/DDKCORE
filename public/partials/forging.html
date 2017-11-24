@@ -1,3 +1,46 @@
+<div id="page-nav" ng-if="view.bar.forgingMenu">
+    <ul class="nav nav-underline pull-right" ng-show="!delegate.username && !delegateInRegistration">
+        <li>
+            <a href="#" class="bold-text registration" ng-click="registrationDelegate()">
+                <translate>delegate registration</translate>
+            </a>
+        </li>
+    </ul>
+    <ul class="nav nav-underline pull-right forgin-start" ng-show="delegate.username && forgingAllowed">
+        <li>
+            <span>
+                <translate>FORGING</translate>
+                :
+            </span>
+            <div class="switch blue-switch">
+                <label>
+                <translate>Off</translate>
+                <input type="checkbox" ng-model="dataToShow.forging" ng-click="toggleForging()">
+                <span class="lever"></span>
+                <translate>On</translate>
+                </label>
+            </div>
+        </li>
+    </ul>
+    <ul class="nav nav-underline pull-left">
+        <li ui-sref-active="active">
+            <a href="#" ui-sref="main.forging">
+                <translate>Forging</translate>
+            </a>
+        </li>
+        <li ui-sref-active="active">
+            <a href="#" ui-sref="main.delegates">
+                <translate>Delegates</translate>
+            </a>
+        </li>
+        <li ui-sref-active="active">
+            <a href="#" ui-sref="main.votes">
+                <translate>My votes ({{myVotesCount||'0'}})</translate>
+            </a>
+        </li>
+    </ul>
+</div>
+
 <div class="row" ng-if="!delegate.username">
     <div class="col-sm-12 col-xs-12 col-md-12">
         <div class="info-panel info-panel-grey">
