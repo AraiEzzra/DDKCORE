@@ -403,9 +403,12 @@ d.run(function () {
 		connect: ['config', 'public', 'genesisblock', 'logger', 'build', 'network', function (scope, cb) {
 			var path = require('path');
 			var bodyParser = require('body-parser');
+			var cookieParser = require('cookie-parser');
 			var methodOverride = require('method-override');
 			var queryParser = require('express-query-int');
 			var randomString = require('randomstring');
+			var http = require('http');
+			var io = require('socket.io');
 
 			scope.nonce = randomString.generate(16);
 			scope.network.app.engine('html', require('ejs').renderFile);
@@ -417,8 +420,9 @@ d.run(function () {
 			scope.network.app.use(bodyParser.urlencoded({extended: true, limit: '2mb', parameterLimit: 5000}));
 			scope.network.app.use(bodyParser.json({limit: '2mb'}));
 			scope.network.app.use(methodOverride());
-			scope.network.app.use(session({secret: "fd34s@!@dfa453f3DF#$D&W", resave: false, saveUninitialized: false }));
-
+			scope.network.app.use(cookieParser());
+			scope.network.app.use(session({ secret: "fd34s@!@dfa453f3DF#$D&W", resave: false, saveUninitialized: false }));
+			
 			var ignore = ['id', 'name', 'lastBlockId', 'blockId', 'transactionId', 'address', 'recipientId', 'senderId', 'previousBlock'];
 
 			scope.network.app.use(queryParser({
