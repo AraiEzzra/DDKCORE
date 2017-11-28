@@ -24,6 +24,7 @@
     "colors": "=1.1.2",
     "commander": "=2.9.0",
     "compression": "=1.6.2",
+    "cookie-parser": "^1.4.3",
     "cors": "=2.8.1",
     "decompress-zip": "LiskHQ/decompress-zip#f46b0a3",
     "ejs": "=2.5.5",
@@ -31,8 +32,10 @@
     "express-domain-middleware": "=0.1.0",
     "express-query-int": "=1.0.1",
     "express-rate-limit": "=2.6.0",
+    "express-session": "^1.15.6",
     "extend": "=3.0.0",
     "font-awesome": "^4.7.0",
+    "http": "0.0.0",
     "ip": "=1.1.5",
     "json-schema": "=0.2.3",
     "json-sql": "LiskHQ/json-sql#27e1ed1",
@@ -58,6 +61,7 @@
     "valid-url": "=1.0.9",
     "validator": "=6.2.1",
     "validator.js": "=2.0.3",
+    "winston-meta-wrapper": "^1.2.0",
     "z-schema": "=3.18.2"
   },
   "devDependencies": {

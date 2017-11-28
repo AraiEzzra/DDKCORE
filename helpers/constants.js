@@ -113,5 +113,6 @@ module.exports = {
 	froze : {
 		endTime : 6,
 		milestone : 2 //1 month currently 2 min
-	}
+	},
+	defaultLock: 0
 };

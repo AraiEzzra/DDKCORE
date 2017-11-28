@@ -6,7 +6,7 @@
  * @memberof module:helpers
  * @module helpers/httpApi
  */
-
+var winstonWrapper = require('winston-meta-wrapper');
 var extend = require('extend');
 var checkIpInList = require('./checkIpInList');
 
@@ -50,7 +50,6 @@ var middleware = {
 	logClientConnections: function (logger, req, res, next) {
 		// Log client connections
 		logger.log(req.method + ' ' + req.url + ' from ' + req.ip);
-
 		return next();
 	},
 
