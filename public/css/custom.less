@@ -2,11 +2,15 @@ body{
   background-color: #eef5f9;
 }
 
+
+
+
+
 .log-box{
   float: left;
   min-width: 240px;
   padding: 0 10px;
-  background: #cc3d3d;
+  background: #d32f2f;
   #logo{
     display: inline-block;
     background-position: center center;
@@ -16,17 +20,15 @@ body{
 #header{
   background-color: #ffffff;
   #title{
-    color: #cc3d3d;
+    color: @brown1;
   }
 }
-
 .top-header-section{
   position: fixed;
   left: 0;
   right: 0;
   top: 0;
   z-index: 1;
-
 }
 .main-page-content{
   margin-top: 67px;
@@ -36,7 +38,6 @@ body{
     color: #27292a;
   }
 }
-
 .pass-window-icon{
   background-image: none;
   text-align: center;
@@ -61,7 +62,6 @@ body{
 .top-margin {
   margin-bottom: 15px;
 }
-
 #header{
   .log-box{
     #logo{
@@ -84,7 +84,6 @@ body{
 .btn.btn-blue{
   background-color: #cc3d3d!important;
 }
-
 .pl-none{
   padding-left: 0px!important;
 }
@@ -92,23 +91,6 @@ body{
 .test {
   display: none;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* For Menu Sidebar  */
 #sidebar-wrapper{
   background: #ffffff;
@@ -133,16 +115,21 @@ body{
     }
   }
 }
+@light-green:#35d099;
+@dark-red:#d32f2f;
 
-
-
-
-
-
-
-
-
-
+.light-green-bg{
+  background: @light-green
+}
+.dark-red-bg{
+  background: @dark-red;
+}
+.light-orangr-bg{
+  background: @orange;
+}
+.normal-green-bg{
+  background: @green;
+}
 /*For explorer html*/
 .widget {
   background: #ffffff;
@@ -153,17 +140,19 @@ body{
   box-shadow: 0 0 3px 0 rgba(0,0,0,.12);
   position: relative;
     .icon-box{
-      display: inline-block;
-      width: 40px;
-      height: 40px;
-      position: absolute;
-      right: 15px;
-      top: 0;
-      color: #000;
-      transform: translateY(50%);
+    width: 80px;
+    height: 100%;
+    padding-top: 16px;
+    position: absolute;
+    right: 0;
+    top: 0;
+    color: #fff;
+    text-align: center;
+      i{
+        font-size: 40px;
+      }
     }
 }
-
 .ch-title{
   font-size: 24px;
   color: #35d099;
@@ -198,9 +187,6 @@ body{
 .ch-title-border-top{
   border-top: #35d099 4px solid;
 }
-
-
-
 /* For table section  */
 .panel{
   .panel-heading{
@@ -220,7 +206,6 @@ body{
       color: @white;
     }
   }
-
 }
 .paginated .ng-table thead th div span{
   padding: 12px 0;
@@ -255,4 +240,78 @@ body{
 }
 .pagination{
   margin: 10px 0;
+}
+
+/* For Login Page */
+#pass {
+  background-image: url("/images/blockchain.jpg");
+  width: 100%;
+  height: 100vh;
+  display: table;
+  background-size: contain;
+  position: relative;
+  .overlay {
+    width: 100%;
+    height: 100%;
+    background: #000;
+    position: absolute;
+    right: 0;
+    opacity: 0.8;
+  }
+  .pass-bottom {
+    width: auto;
+    height: auto;
+    display: table-cell;
+    position: relative;
+    vertical-align: middle;
+    .pass-window {
+      width: 372px;
+      background-color: @white;
+      border: 1px solid #cecece;
+      margin: 0 auto;
+      border-radius: 4px;
+    }
+    .pass-footer {
+      bottom: 0;
+      text-align: center;
+      width: 100%;
+      color: @white;
+      font-size: 14px;
+      padding: 20px 0;
+      margin-top:30px;
+      position: relative;
+    }
+  }
+}
+.tab-nav{
+  margin: 0 -15px  15px!important;
+}
+.empty-body.empty-table {
+  margin-top: -22px;
+}
+
+.widget{
+  margin-bottom: 15px;
+}
+
+#explorer-icon {
+  background-position: 22px 44px;
+}
+.active{
+  #explorer-icon {
+    background-position: 22px 22px;
+  }
+}
+
+
+/* For modal */
+.app-modal .material-modal-content .modal-header.modal-iconed{
+  background-image: none;
+  color: @white;
+  background-color: #cc3d3d;
+  .modal-log {
+    font-size: 35px;
+    padding-top: 21px;
+    display: inline-block;
+  }
 }

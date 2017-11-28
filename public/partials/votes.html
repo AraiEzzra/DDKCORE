@@ -1,4 +1,4 @@
-<div id="page-nav" ng-if="view.bar.forgingMenu">
+<div id="page-nav" class="tab-nav" ng-if="view.bar.forgingMenu">
     <ul class="nav nav-underline pull-right" ng-show="!delegate.username && !delegateInRegistration">
         <li>
             <a href="#" class="bold-text registration" ng-click="registrationDelegate()">
@@ -43,7 +43,7 @@
 
 <div class="row">
     <div class="col-xs-12">
-        <div class="info-panel row has-devider-xs">
+        <div class="info-panel has-devider-xs">
             <span class="plain-text col-xs-12 col-sm-6 text-left"><translate>{{voteList.length}} out of {{count}} Delegates selected</translate></span>
             <ul class="nav nav-info col-xs-12 col-sm-6 text-right">
                 <li class="list-delegate" dropdown is-open="moreDropdownSeelction.isopen">

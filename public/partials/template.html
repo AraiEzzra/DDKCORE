@@ -88,7 +88,7 @@
                  <i class="mdi-content-send left"></i>
                  <translate>SEND</translate>
               </a>
-              <button class="btn btn-blue-nav waves-effect waves-light left-margin-20" ng-init="clickedh=false" ng-show="clickedh" ui-sref="main.dashboard">Back</button>
+              <button class="btn btn-blue-nav waves-effect waves-light left-margin-20" ui-sref="main.dashboard" ng-click="classRemove()">Back</button>
 
 
               <div class="mini-chart valign-wrapper" ng-show="syncState != undefined">
@@ -127,12 +127,12 @@
               <i ng-click="clearSearch()" class="mdi-content-clear small"></i>
            </div>
            <div class="input-group">
-              <span class="input-group-addon">
+              <span class="input-group-addon">ass="form-control" placeholder="{{'Search for transactions (Transaction ID, Sender address, Recipient address)'|translate}}" ng-model="searchTransactions.searchForTransaction">
+              <span class="input-group-addon spinner-addon">
+                 <div class="
               <i class="mdi-action-search"></i>
               </span>
-              <input type="text" class="form-control" placeholder="{{'Search for transactions (Transaction ID, Sender address, Recipient address)'|translate}}" ng-model="searchTransactions.searchForTransaction">
-              <span class="input-group-addon spinner-addon">
-                 <div class="preloader-wrapper" ng-class="{'active': searchTransactions.inSearch}">
+              <input type="text" clpreloader-wrapper" ng-class="{'active': searchTransactions.inSearch}">
                     <div class="spinner-layer spinner-blue-only">
                        <div class="circle-clipper left">
                           <div class="circle"></div>
@@ -210,7 +210,8 @@
            </div>
         </div>
         <!-- Sidebar -->
-        <div id="sidebar-wrapper" ng-class="{test: obj.value1 == 'someothervalue'}">
+        <!-- <div id="sidebar-wrapper" ng-class="{test: obj.value1 == 'someothervalue'}"> -->
+        <div id="sidebar-wrapper" ng-class="myClass">   
            <div class="account-block">
               <div class="icon">
                  <img src="/images/account.png" alt="Account">
@@ -284,8 +285,9 @@
                  </a>
               </li>
               <li ng-show="showMenuItem('main.explorer')" ui-sref-active="active">
-                 <a ui-sref="main.explorer" class="waves-effect waves-blue" ng-click="obj.value1 = 'someothervalue'; clickedh=!clickedh">
-                    <div class="nav-icon" id="blockchain-icon"></div>
+                <!-- <a ui-sref="main.explorer" class="waves-effect waves-blue" ng-click="obj.value1 = 'someothervalue'; clickedh=!clickedh"> -->
+               <a ui-sref="main.explorer" class="waves-effect waves-blue" ng-click="classAdd()">    
+                    <div class="nav-icon" id="explorer-icon"></div>
                     <span class="menu-text">
                        <translate>Explorer</translate>
                     </span>

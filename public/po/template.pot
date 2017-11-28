@@ -8,7 +8,7 @@ msgstr ""
 msgid "2nd Passphrase"
 msgstr ""
 
-#: partials/modals/secondPassphraseModal.html:126
+#: partials/modals/secondPassphraseModal.html:129
 msgid "ADD SECOND PASSPHRASE"
 msgstr ""
 
@@ -23,7 +23,7 @@ msgstr ""
 #: partials/modals/passphraseCheck.html:13
 #: partials/modals/registrationDelegateModal.html:51
 #: partials/modals/registrationDelegateModal.html:86
-#: partials/modals/secondPassphraseModal.html:104
+#: partials/modals/secondPassphraseModal.html:107
 #: partials/modals/sendTransaction.html:62
 #: partials/modals/sendTransaction.html:97
 #: partials/modals/vote.html:54
@@ -86,7 +86,7 @@ msgstr ""
 
 #: js/controllers/blockchainController.js:8
 #: js/controllers/explorerController.js:10
-#: partials/template.html:282
+#: partials/template.html:283
 msgid "Blockchain"
 msgstr ""
 
@@ -102,13 +102,13 @@ msgid "CATEGORIES"
 msgstr ""
 
 #: partials/modals/masterPassphraseModal.html:38
-#: partials/modals/newUser.html:80
+#: partials/modals/newUser.html:82
 #: partials/multi.html:31
 #: partials/wallet-pendings.html:28
 msgid "CONFIRM"
 msgstr ""
 
-#: partials/modals/secondPassphraseModal.html:85
+#: partials/modals/secondPassphraseModal.html:87
 msgid "CONFIRM SECOND PASSPHRASE"
 msgstr ""
 
@@ -164,16 +164,16 @@ msgstr ""
 #: partials/modals/multisignatureModal.html:149
 #: partials/modals/multisignatureModal.html:39
 #: partials/modals/multisignatureModal.html:8
-#: partials/modals/newUser.html:10
-#: partials/modals/newUser.html:53
+#: partials/modals/newUser.html:11
+#: partials/modals/newUser.html:54
 #: partials/modals/openDappModal.html:8
 #: partials/modals/passphraseCheck.html:8
 #: partials/modals/registrationDelegateModal.html:46
 #: partials/modals/registrationDelegateModal.html:8
 #: partials/modals/registrationDelegateModal.html:81
 #: partials/modals/secondPassphraseModal.html:10
-#: partials/modals/secondPassphraseModal.html:57
-#: partials/modals/secondPassphraseModal.html:99
+#: partials/modals/secondPassphraseModal.html:101
+#: partials/modals/secondPassphraseModal.html:58
 #: partials/modals/sendTransaction.html:57
 #: partials/modals/sendTransaction.html:8
 #: partials/modals/sendTransaction.html:92
@@ -264,7 +264,7 @@ msgid "DOWNLOAD"
 msgstr ""
 
 #: js/controllers/accountController.js:8
-#: partials/template.html:229
+#: partials/template.html:230
 msgid "Dashboard"
 msgstr ""
 
@@ -274,7 +274,7 @@ msgstr ""
 
 #: partials/delegates.html:33
 #: partials/forging.html:33
-#: partials/template.html:265
+#: partials/template.html:266
 #: partials/votes.html:33
 msgid "Delegates"
 msgstr ""
@@ -333,7 +333,7 @@ msgstr ""
 msgid "Enabled"
 msgstr ""
 
-#: partials/template.html:290
+#: partials/template.html:292
 msgid "Explorer"
 msgstr ""
 
@@ -376,7 +376,7 @@ msgid "Fee"
 msgstr ""
 
 #: partials/modals/registrationDelegateModal.html:23
-#: partials/modals/secondPassphraseModal.html:28
+#: partials/modals/secondPassphraseModal.html:29
 #: partials/modals/sendTransaction.html:31
 #: partials/modals/vote.html:25
 msgid "Fee: {{fee | ETPFilter}} ETP"
@@ -391,12 +391,12 @@ msgstr ""
 #: js/controllers/votedDelegatesController.js:8
 #: partials/delegates.html:28
 #: partials/forging.html:28
-#: partials/template.html:255
+#: partials/template.html:256
 #: partials/votes.html:28
 msgid "Forging"
 msgstr ""
 
-#: partials/modals/secondPassphraseModal.html:18
+#: partials/modals/secondPassphraseModal.html:19
 msgid "Further protect your account with an optional second passphrase! It may take a few moments for the changes to take effect."
 msgstr ""
 
@@ -407,11 +407,11 @@ msgstr ""
 #: partials/modals/addDappModal.html:90
 #: partials/modals/multisignatureModal.html:138
 #: partials/modals/multisignatureModal.html:177
-#: partials/modals/newUser.html:77
+#: partials/modals/newUser.html:79
 #: partials/modals/registrationDelegateModal.html:105
 #: partials/modals/registrationDelegateModal.html:67
-#: partials/modals/secondPassphraseModal.html:123
-#: partials/modals/secondPassphraseModal.html:82
+#: partials/modals/secondPassphraseModal.html:126
+#: partials/modals/secondPassphraseModal.html:84
 #: partials/modals/sendTransaction.html:116
 #: partials/modals/sendTransaction.html:81
 #: partials/modals/vote.html:108
@@ -422,8 +422,8 @@ msgstr ""
 msgid "General"
 msgstr ""
 
-#: partials/modals/newUser.html:26
-#: partials/modals/secondPassphraseModal.html:30
+#: partials/modals/newUser.html:27
+#: partials/modals/secondPassphraseModal.html:31
 msgid "Generate New"
 msgstr ""
 
@@ -561,19 +561,19 @@ msgstr ""
 msgid "Logout"
 msgstr ""
 
-#: partials/modals/newUser.html:72
+#: partials/modals/newUser.html:74
 msgid "Make sure that you keep the passphrase safe. If you lose your passphrase later on, your account can't be restored and all your funds will be lost."
 msgstr ""
 
-#: partials/modals/newUser.html:31
+#: partials/modals/newUser.html:32
 msgid "Make sure that you keep the passphrase safe. You will be asked to re-type it for confirmation."
 msgstr ""
 
-#: partials/modals/secondPassphraseModal.html:77
+#: partials/modals/secondPassphraseModal.html:79
 msgid "Make sure that you keep the second passphrase safe. If you lose your second passphrase later on, your account can't be restored and all your funds will be lost."
 msgstr ""
 
-#: partials/modals/secondPassphraseModal.html:35
+#: partials/modals/secondPassphraseModal.html:36
 msgid "Make sure that you keep the second passphrase safe. You will be asked to re-type it for confirmation."
 msgstr ""
 
@@ -620,7 +620,7 @@ msgstr ""
 msgid "My Profile"
 msgstr ""
 
-#: partials/template.html:273
+#: partials/template.html:274
 #: partials/votes.html:67
 msgid "My Votes"
 msgstr ""
@@ -635,7 +635,7 @@ msgstr ""
 msgid "NAVIN"
 msgstr ""
 
-#: partials/passphrase.html:27
+#: partials/passphrase.html:28
 msgid "NEW ACCOUNT"
 msgstr ""
 
@@ -643,8 +643,8 @@ msgstr ""
 msgid "NEXT"
 msgstr ""
 
-#: partials/modals/newUser.html:39
-#: partials/modals/secondPassphraseModal.html:43
+#: partials/modals/newUser.html:40
+#: partials/modals/secondPassphraseModal.html:44
 msgid "NEXT STEP"
 msgstr ""
 
@@ -724,7 +724,7 @@ msgstr ""
 msgid "Others"
 msgstr ""
 
-#: partials/modals/newUser.html:66
+#: partials/modals/newUser.html:68
 msgid "Passphrase"
 msgstr ""
 
@@ -769,7 +769,7 @@ msgstr ""
 msgid "Please enter your passphrase."
 msgstr ""
 
-#: partials/modals/secondPassphraseModal.html:106
+#: partials/modals/secondPassphraseModal.html:109
 msgid "Please enter your primary passphrase below."
 msgstr ""
 
@@ -780,7 +780,7 @@ msgstr ""
 msgid "Please enter your second passphrase below."
 msgstr ""
 
-#: partials/modals/secondPassphraseModal.html:19
+#: partials/modals/secondPassphraseModal.html:20
 msgid "Please find your second passphrase below."
 msgstr ""
 
@@ -792,11 +792,11 @@ msgstr ""
 msgid "Please provide storage a link for your block application below."
 msgstr ""
 
-#: partials/modals/newUser.html:60
+#: partials/modals/newUser.html:62
 msgid "Please re-enter your passphrase below."
 msgstr ""
 
-#: partials/modals/secondPassphraseModal.html:64
+#: partials/modals/secondPassphraseModal.html:66
 msgid "Please re-enter your second passphrase below."
 msgstr ""
 
@@ -818,7 +818,7 @@ msgstr ""
 msgid "Previous Block"
 msgstr ""
 
-#: partials/modals/secondPassphraseModal.html:113
+#: partials/modals/secondPassphraseModal.html:116
 msgid "Primary Passphrase"
 msgstr ""
 
@@ -865,7 +865,7 @@ msgstr ""
 msgid "Registering user"
 msgstr ""
 
-#: partials/passphrase.html:19
+#: partials/passphrase.html:20
 msgid "Remember during this session"
 msgstr ""
 
@@ -880,8 +880,8 @@ msgstr ""
 msgid "Reward"
 msgstr ""
 
-#: partials/modals/newUser.html:36
-#: partials/modals/secondPassphraseModal.html:40
+#: partials/modals/newUser.html:37
+#: partials/modals/secondPassphraseModal.html:41
 msgid "SAVE PASSPHRASE"
 msgstr ""
 
@@ -889,7 +889,7 @@ msgstr ""
 msgid "SEND"
 msgstr ""
 
-#: partials/passphrase.html:28
+#: partials/passphrase.html:29
 msgid "SIGN IN"
 msgstr ""
 
@@ -909,7 +909,7 @@ msgid "Search Delegates"
 msgstr ""
 
 #: partials/template.html:208
-#: partials/template.html:322
+#: partials/template.html:324
 msgid "Search for applications"
 msgstr ""
 
@@ -917,11 +917,11 @@ msgstr ""
 msgid "Search for blocks"
 msgstr ""
 
-#: partials/template.html:133
+#: partials/template.html:130
 msgid "Search for transactions (Transaction ID, Sender address, Recipient address)"
 msgstr ""
 
-#: partials/modals/secondPassphraseModal.html:70
+#: partials/modals/secondPassphraseModal.html:72
 msgid "Second Passphrase"
 msgstr ""
 
@@ -972,11 +972,11 @@ msgstr ""
 msgid "Standby Delegates"
 msgstr ""
 
-#: partials/modals/newUser.html:15
+#: partials/modals/newUser.html:16
 msgid "Step 1/2 - Generate a Passphrase"
 msgstr ""
 
-#: partials/modals/secondPassphraseModal.html:15
+#: partials/modals/secondPassphraseModal.html:16
 msgid "Step 1/2 - Generate a Second Passphrase"
 msgstr ""
 
@@ -988,11 +988,11 @@ msgstr ""
 msgid "Step 1/4 - Preamble"
 msgstr ""
 
-#: partials/modals/newUser.html:58
+#: partials/modals/newUser.html:60
 msgid "Step 2/2 - Confirm your Passphrase"
 msgstr ""
 
-#: partials/modals/secondPassphraseModal.html:62
+#: partials/modals/secondPassphraseModal.html:64
 msgid "Step 2/2 - Confirm your Second Passphrase"
 msgstr ""
 
@@ -1030,11 +1030,11 @@ msgstr ""
 msgid "The master passphrase is auto-generated upon first launching the ETP client. It can be found at the end of the config.json file. Therefore only node operators can install, launch or uninstall applications. Once applications are in a launched state, anyone is free to open and use them."
 msgstr ""
 
-#: partials/modals/newUser.html:68
+#: partials/modals/newUser.html:70
 msgid "The passphrase entered doesn't match with the one generated before. Please go back and generate a new one."
 msgstr ""
 
-#: partials/modals/secondPassphraseModal.html:72
+#: partials/modals/secondPassphraseModal.html:74
 msgid "The second passphrase entered doesn't match with the one generated before. Please go back and generate a new one."
 msgstr ""
 
@@ -1144,7 +1144,7 @@ msgstr ""
 msgid "Voting for delegates"
 msgstr ""
 
-#: partials/template.html:219
+#: partials/template.html:220
 msgid "Welcome back, {{username}}"
 msgstr ""
 
@@ -1156,7 +1156,7 @@ msgstr ""
 msgid "You are not a member of any one Multi-Signature group."
 msgstr ""
 
-#: partials/modals/newUser.html:17
+#: partials/modals/newUser.html:18
 msgid "You can find your passphrase below."
 msgstr ""
 
@@ -1196,7 +1196,7 @@ msgstr ""
 #: partials/modals/registrationDelegateModal.html:60
 #: partials/modals/sendTransaction.html:71
 #: partials/modals/vote.html:63
-#: partials/passphrase.html:11
+#: partials/passphrase.html:12
 msgid "Your Passphrase"
 msgstr ""
 
