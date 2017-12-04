@@ -174,7 +174,8 @@ var config = {
 		sql: './modules/sql.js',
 		cache: './modules/cache.js',
 		contracts: './modules/contracts.js',
-		frogings : './modules/frogings.js'
+		frogings : './modules/frogings.js',
+		sendFreezeOrder : './modules/sendFreezeOrder.js'
 	},
 	api: {
 		accounts: { http: './api/http/accounts.js' },
@@ -188,7 +189,8 @@ var config = {
 		signatures: { http: './api/http/signatures.js' },
 		transactions: { http: './api/http/transactions.js' },
 		transport: { http: './api/http/transport.js' },
-		frogings : {http : './api/http/froging.js' }
+		frogings : {http : './api/http/froging.js' },
+		sendFreezeOrder : { http : './api/http/transferorder.js'}
 	}
 };
 
@@ -515,6 +517,7 @@ d.run(function () {
 			var Peers = require('./logic/peers.js');
 			var Frozen = require('./logic/frozen.js');
 			var Contract = require('./logic/contract.js');
+			var SendFreezeOrder = require('./logic/sendFreezeOrder.js');
 
 			async.auto({
 				bus: function (cb) {
@@ -554,6 +557,9 @@ d.run(function () {
 				}],
 				frozen: ['logger','db', 'transaction', function (scope, cb) {
 					new Frozen(scope.logger,scope.db, scope.transaction, cb);
+				}],
+				sendFreezeOrder: ['logger','db', function (scope, cb) {
+					new SendFreezeOrder(scope.logger,scope.db, cb);
 				}]
 			}, cb);
 		}],

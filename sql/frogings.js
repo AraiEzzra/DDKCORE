@@ -4,13 +4,14 @@
 var TransactionsSql = {
   sortFields: [
     'id',
-    'type',
+    'status',
     'startTime',
+    'nextMilestone',
     'endTime',
     'senderId',
     'recipientId',
     'freezedAmount',
-    'totalAmount'
+    'milestoneCount'
   ],
 
   count: 'SELECT COUNT("id")::int AS "count" FROM stake_orders',
@@ -33,7 +34,15 @@ var TransactionsSql = {
 
   frozeBenefit: 'SELECT "senderId" , "freezedAmount", "endTime","milestoneCount","nextMilestone" FROM stake_orders WHERE "status"=1 AND ${currentTime} >= "nextMilestone" ',
 
-  deductFrozeAmount: 'UPDATE mem_accounts SET "totalFrozeAmount" = ("totalFrozeAmount" - ${FrozeAmount}) WHERE "address" = ${senderId}'
+  deductFrozeAmount: 'UPDATE mem_accounts SET "totalFrozeAmount" = ("totalFrozeAmount" - ${FrozeAmount}) WHERE "address" = ${senderId}',
+
+  getFrozeOrders: 'SELECT * FROM stake_orders WHERE "senderId"=${senderId}',
+
+  getActiveFrozeOrder: 'SELECT * FROM stake_orders WHERE "senderId"=${senderId} AND "id"=${frozeId} AND "status"=1',
+
+  updateFrozeOrder : 'UPDATE stake_orders SET "status"=0,"recipientId"=${recipientId} WHERE "senderId"=${senderId} AND "id"=${frozeId} AND "status"=1',
+
+  createNewFrozeOrder : 'INSERT INTO stake_orders ("id","status","startTime","nextMilestone","endTime","senderId","freezedAmount","milestoneCount") VALUES (${frozeId},1,${startTime},${nextMilestone},${endTime},${senderId},${freezedAmount},${milestoneCount}) '
 
 };
 

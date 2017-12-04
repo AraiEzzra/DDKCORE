@@ -56,7 +56,8 @@ module.exports = {
 		delegate: 2500000000,
 		multisignature: 500000000,
 		dapp: 2500000000,
-		froze: 100000000
+		froze: 100000000,
+		sendfreeze: 200000000
 	},
 	feeStart: 1,
 	feeStartVolume: 10000 * 100000000,

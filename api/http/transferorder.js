@@ -15,7 +15,7 @@ var httpApi = require('../../helpers/httpApi');
  * @param {scope} app - Network app.
  */
 // Constructor
-function FrogingsHttpApi (frogingsModule, app, logger, cache) {
+function sendFreezeOrderHttpApi (sendFreezeOrderModule, app, logger, cache) {
 	var router = new Router();
 
 	// attach a middlware to endpoints
@@ -23,17 +23,12 @@ function FrogingsHttpApi (frogingsModule, app, logger, cache) {
 		'get /'
 	]);
 
-	//Hotam Singh
-	router.map(frogingsModule.shared, {
+	router.map(sendFreezeOrderModule.shared, {
 		
-		'post /freeze' : 'addTransactionForFreeze',
-		'get /count': 'getFrozensCount',
-		'post /getAllOrders' : 'getAllFreezeOrders',
-		'post /sendFreezeOrder' : 'sendFreezeOrder',
-		'post /getAllActiveOrders' : 'getAllActiveFreezeOrders'		
+		'post /sendFreezeOrder' : 'transferFreezeOrder',		
 	});
 
-	httpApi.registerEndpoint('/api/frogings', app, router, frogingsModule.isLoaded);
+	httpApi.registerEndpoint('/api/shiftOrder', app, router, sendFreezeOrderModule.isLoaded);
 }
 
-module.exports = FrogingsHttpApi;
+module.exports = sendFreezeOrderHttpApi;

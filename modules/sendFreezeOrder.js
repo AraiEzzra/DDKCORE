@@ -8,14 +8,14 @@ var extend = require('extend');
 var OrderBy = require('../helpers/orderBy.js');
 var sandboxHelper = require('../helpers/sandbox.js');
 //navin
-var schema = require('../schema/frogings.js');
+var schema = require('../schema/frogeTransfer.js');
 //var schema = require('../schema/transactions.js');
 var sql = require('../sql/frogings.js');
 var TransactionPool = require('../logic/transactionPool.js');
 var transactionTypes = require('../helpers/transactionTypes.js');
 var Transfer = require('../logic/transfer.js');
 //navin
-var Frozen = require('../logic/frozen.js');
+var sendFreezeOrder = require('../logic/sendFreezeOrder.js');
 var bignum = require('../helpers/bignum.js');
 
 // Private fields
@@ -39,7 +39,7 @@ __private.assetTypes = {};
  * @return {setImmediateCallback} Callback function with `self` as data.
  */
 // Constructor
-function Frogings (cb, scope) {
+function SendFreezeOrder (cb, scope) {
 	library = {
 		logger: scope.logger,
 		db: scope.db,
@@ -48,7 +48,8 @@ function Frogings (cb, scope) {
 		balancesSequence: scope.balancesSequence,
 		logic: {
 			transaction: scope.logic.transaction,
-			frozen: scope.logic.frozen
+			frozen: scope.logic.frozen,
+			sendFreezeOrder : scope.logic.sendFreezeOrder
 		},
 		genesisblock: scope.genesisblock
 	};
@@ -64,9 +65,12 @@ function Frogings (cb, scope) {
 	);
 
 
-	//Add by navin
-	__private.assetTypes[transactionTypes.FROZE] = library.logic.transaction.attachAssetType(
-		transactionTypes.FROZE, new Frozen(scope.logger,scope.db,scope.logic.transaction)
+	__private.assetTypes[transactionTypes.SENDFREEZE] = library.logic.transaction.attachAssetType(
+		transactionTypes.SENDFREEZE, 
+		new sendFreezeOrder(
+			scope.logger,
+			scope.db
+		)
 	);
 
 	setImmediate(cb, null, self);
@@ -297,7 +301,7 @@ __private.getVotesById = function (transaction, cb) {
  * @param {string} id
  * @return {function} Calls transactionPool.transactionInPool
  */
-Frogings.prototype.transactionInPool = function (id) {
+SendFreezeOrder.prototype.transactionInPool = function (id) {
 	return __private.transactionPool.transactionInPool(id);
 };
 
@@ -305,7 +309,7 @@ Frogings.prototype.transactionInPool = function (id) {
  * @param {string} id
  * @return {function} Calls transactionPool.getUnconfirmedTransaction
  */
-Frogings.prototype.getUnconfirmedTransaction = function (id) {
+SendFreezeOrder.prototype.getUnconfirmedTransaction = function (id) {
 	return __private.transactionPool.getUnconfirmedTransaction(id);
 };
 
@@ -313,7 +317,7 @@ Frogings.prototype.getUnconfirmedTransaction = function (id) {
  * @param {string} id
  * @return {function} Calls transactionPool.getQueuedTransaction
  */
-Frogings.prototype.getQueuedTransaction = function (id) {
+SendFreezeOrder.prototype.getQueuedTransaction = function (id) {
 	return __private.transactionPool.getQueuedTransaction(id);
 };
 
@@ -321,7 +325,7 @@ Frogings.prototype.getQueuedTransaction = function (id) {
  * @param {string} id
  * @return {function} Calls transactionPool.getMultisignatureTransaction
  */
-Frogings.prototype.getMultisignatureTransaction = function (id) {
+SendFreezeOrder.prototype.getMultisignatureTransaction = function (id) {
 	return __private.transactionPool.getMultisignatureTransaction(id);
 };
 
@@ -331,7 +335,7 @@ Frogings.prototype.getMultisignatureTransaction = function (id) {
  * @param {number} limit
  * @return {function} Calls transactionPool.getUnconfirmedTransactionList
  */
-Frogings.prototype.getUnconfirmedTransactionList = function (reverse, limit) {
+SendFreezeOrder.prototype.getUnconfirmedTransactionList = function (reverse, limit) {
 	return __private.transactionPool.getUnconfirmedTransactionList(reverse, limit);
 };
 
@@ -341,7 +345,7 @@ Frogings.prototype.getUnconfirmedTransactionList = function (reverse, limit) {
  * @param {number} limit
  * @return {function} Calls transactionPool.getQueuedTransactionList
  */
-Frogings.prototype.getQueuedTransactionList = function (reverse, limit) {
+SendFreezeOrder.prototype.getQueuedTransactionList = function (reverse, limit) {
 	return __private.transactionPool.getQueuedTransactionList(reverse, limit);
 };
 
@@ -351,7 +355,7 @@ Frogings.prototype.getQueuedTransactionList = function (reverse, limit) {
  * @param {number} limit
  * @return {function} Calls transactionPool.getQueuedTransactionList
  */
-Frogings.prototype.getMultisignatureTransactionList = function (reverse, limit) {
+SendFreezeOrder.prototype.getMultisignatureTransactionList = function (reverse, limit) {
 	return __private.transactionPool.getMultisignatureTransactionList(reverse, limit);
 };
 
@@ -361,7 +365,7 @@ Frogings.prototype.getMultisignatureTransactionList = function (reverse, limit) 
  * @param {number} limit
  * @return {function} Calls transactionPool.getMergedTransactionList
  */
-Frogings.prototype.getMergedTransactionList = function (reverse, limit) {
+SendFreezeOrder.prototype.getMergedTransactionList = function (reverse, limit) {
 	return __private.transactionPool.getMergedTransactionList(reverse, limit);
 };
 
@@ -370,7 +374,7 @@ Frogings.prototype.getMergedTransactionList = function (reverse, limit) {
  * @param {string} id
  * @return {function} Calls transactionPool.removeUnconfirmedTransaction
  */
-Frogings.prototype.removeUnconfirmedTransaction = function (id) {
+SendFreezeOrder.prototype.removeUnconfirmedTransaction = function (id) {
 	return __private.transactionPool.removeUnconfirmedTransaction(id);
 };
 
@@ -382,7 +386,7 @@ Frogings.prototype.removeUnconfirmedTransaction = function (id) {
  * @param {function} cb - Callback function.
  * @return {function} Calls transactionPool.processUnconfirmedTransaction
  */
-Frogings.prototype.processUnconfirmedTransaction = function (transaction, broadcast, cb) {
+SendFreezeOrder.prototype.processUnconfirmedTransaction = function (transaction, broadcast, cb) {
 	return __private.transactionPool.processUnconfirmedTransaction(transaction, broadcast, cb);
 };
 
@@ -391,7 +395,7 @@ Frogings.prototype.processUnconfirmedTransaction = function (transaction, broadc
  * @param {function} cb - Callback function.
  * @return {function} Calls transactionPool.applyUnconfirmedList
  */
-Frogings.prototype.applyUnconfirmedList = function (cb) {
+SendFreezeOrder.prototype.applyUnconfirmedList = function (cb) {
 	return __private.transactionPool.applyUnconfirmedList(cb);
 };
 
@@ -401,7 +405,7 @@ Frogings.prototype.applyUnconfirmedList = function (cb) {
  * @param {function} cb - Callback function.
  * @return {function} Calls transactionPool.applyUnconfirmedIds
  */
-Frogings.prototype.applyUnconfirmedIds = function (ids, cb) {
+SendFreezeOrder.prototype.applyUnconfirmedIds = function (ids, cb) {
 	return __private.transactionPool.applyUnconfirmedIds(ids, cb);
 };
 
@@ -410,7 +414,7 @@ Frogings.prototype.applyUnconfirmedIds = function (ids, cb) {
  * @param {function} cb - Callback function.
  * @return {function} Calls transactionPool.undoUnconfirmedList
  */
-Frogings.prototype.undoUnconfirmedList = function (cb) {
+SendFreezeOrder.prototype.undoUnconfirmedList = function (cb) {
 	return __private.transactionPool.undoUnconfirmedList(cb);
 };
 
@@ -422,7 +426,7 @@ Frogings.prototype.undoUnconfirmedList = function (cb) {
  * @param {account} sender
  * @param {function} cb - Callback function
  */
-Frogings.prototype.apply = function (transaction, block, sender, cb) {
+SendFreezeOrder.prototype.apply = function (transaction, block, sender, cb) {
 	library.logger.debug('Applying confirmed transaction', transaction.id);
 	library.logic.transaction.apply(transaction, block, sender, cb);
 };
@@ -435,7 +439,7 @@ Frogings.prototype.apply = function (transaction, block, sender, cb) {
  * @param {account} sender
  * @param {function} cb - Callback function
  */
-Frogings.prototype.undo = function (transaction, block, sender, cb) {
+SendFreezeOrder.prototype.undo = function (transaction, block, sender, cb) {
 	library.logger.debug('Undoing confirmed transaction', transaction.id);
 	library.logic.transaction.undo(transaction, block, sender, cb);
 };
@@ -449,7 +453,7 @@ Frogings.prototype.undo = function (transaction, block, sender, cb) {
  * @param {function} cb - Callback function
  * @return {setImmediateCallback} for errors
  */
-Frogings.prototype.applyUnconfirmed = function (transaction, sender, cb) {
+SendFreezeOrder.prototype.applyUnconfirmed = function (transaction, sender, cb) {
 	library.logger.debug('Applying unconfirmed transaction', transaction.id);
 
 	if (!sender && transaction.blockId !== library.genesisblock.block.id) {
@@ -481,7 +485,7 @@ Frogings.prototype.applyUnconfirmed = function (transaction, sender, cb) {
  * @param {function} cb
  * @return {setImmediateCallback} For error
  */
-Frogings.prototype.undoUnconfirmed = function (transaction, cb) {
+SendFreezeOrder.prototype.undoUnconfirmed = function (transaction, cb) {
 	library.logger.debug('Undoing unconfirmed transaction', transaction.id);
 
 	modules.accounts.getAccount({publicKey: transaction.senderPublicKey}, function (err, sender) {
@@ -499,7 +503,7 @@ Frogings.prototype.undoUnconfirmed = function (transaction, cb) {
  * @param {function} cb - Callback function.
  * @return {function} Calls transactionPool.receiveTransactions
  */
-Frogings.prototype.receiveTransactions = function (transactions, broadcast, cb) {
+SendFreezeOrder.prototype.receiveTransactions = function (transactions, broadcast, cb) {
 	return __private.transactionPool.receiveTransactions(transactions, broadcast, cb);
 };
 
@@ -508,7 +512,7 @@ Frogings.prototype.receiveTransactions = function (transactions, broadcast, cb) 
  * @param {function} cb - Callback function.
  * @return {function} Calls transactionPool.fillPool
  */
-Frogings.prototype.fillPool = function (cb) {
+SendFreezeOrder.prototype.fillPool = function (cb) {
 	return __private.transactionPool.fillPool(cb);
 };
 
@@ -519,7 +523,7 @@ Frogings.prototype.fillPool = function (cb) {
  * @param {*} args - List of arguments.
  * @param {function} cb - Callback function.
  */
-Frogings.prototype.sandboxApi = function (call, args, cb) {
+SendFreezeOrder.prototype.sandboxApi = function (call, args, cb) {
 	sandboxHelper.callMethod(shared, call, args, cb);
 };
 
@@ -527,7 +531,7 @@ Frogings.prototype.sandboxApi = function (call, args, cb) {
  * Checks if `modules` is loaded.
  * @return {boolean} True if `modules` is loaded.
  */
-Frogings.prototype.isLoaded = function () {
+SendFreezeOrder.prototype.isLoaded = function () {
 	return !!modules;
 };
 
@@ -538,7 +542,7 @@ Frogings.prototype.isLoaded = function () {
  * @implements module:transactions#Transfer~bind
  * @param {scope} scope - Loaded modules.
  */
-Frogings.prototype.onBind = function (scope) {
+SendFreezeOrder.prototype.onBind = function (scope) {
 	modules = {
 		accounts: scope.accounts,
 		transactions: scope.transactions,
@@ -549,103 +553,25 @@ Frogings.prototype.onBind = function (scope) {
 		scope.transactions,
 		scope.loader
 	);
-	__private.assetTypes[transactionTypes.FROZE].bind(
+	__private.assetTypes[transactionTypes.SENDFREEZE].bind(
 		scope.accounts,
 		scope.rounds
 	);
-
 };
 
-//Navin: Update Froze amount into mem_accounts table on every single order
-Frogings.prototype.updateFrozeAmount = function (data,cb) {
-
-	library.db.one(sql.getFrozeAmount, {
-		senderId: data.account.address
-	}).then(function (row) {
-		if (row.count === 0) {
-			return setImmediate(cb, 'There is no Froze Amount ');
-		}
-		var frozeAmountFromDB = row.totalFrozeAmount;
-		var totalFrozeAmount = parseInt(frozeAmountFromDB) + parseInt(data.req.body.freezedAmount);
-		var totalFrozeAmountWithFees = totalFrozeAmount + parseInt(constants.fees.froze);
-		//verify that freeze order cannot more than avliable balance
-		if (totalFrozeAmountWithFees < data.account.balance) {
-			library.db.none(sql.updateFrozeAmount, {
-				totalFrozeAmount: totalFrozeAmount.toString(),
-				senderId: data.account.address
-			}).then(function () {
-				library.logger.info(data.account.address + ': account is freezed ');
-				return setImmediate(cb,null);
-			}).catch(function (err) {
-				library.logger.error(err.stack);
-				return setImmediate(cb, err.toString());
-			});
-		}else{
-			return setImmediate(cb,'Not have enough balance');
-		}
-	}).catch(function (err) {
-		library.logger.error(err.stack);
-		return setImmediate(cb, err.toString());
-	});
-
-	
-
-};
 
 // Shared API
 /**
  * @todo implement API comments with apidoc.
  * @see {@link http://apidocjs.com/}
  */
-Frogings.prototype.shared = {
-	//Hotam Singh
-	getFrozensCount: function (req, cb) {
-		library.db.query(sql.count).then(function (transactionsCount) {
-			return setImmediate(cb, null, {
-				confirmed: transactionsCount[0].count,
-				multisignature: __private.transactionPool.multisignature.transactions.length,
-				unconfirmed: __private.transactionPool.unconfirmed.transactions.length,
-				queued: __private.transactionPool.queued.transactions.length
-			});
-		}, function (err) {
-			return setImmediate(cb, 'Unable to count transactions');
-		});
-	},
+SendFreezeOrder.prototype.shared = {
 
-	sendFreezeOrder : function(req,cb){
-
-
-	},
-
-	getAllFreezeOrders : function(req,cb){
-
-		library.db.query(sql.getFrozeOrders,{senderId:req.body.address}).then(function (rows) {
-			return setImmediate(cb, null, {
-				freezeOrders: JSON.stringify(rows)
-			});
-		}, function (err) {
-			return setImmediate(cb, 'Unable to count transactions');
-		});
-		
-	},
-
-	getAllActiveFreezeOrders : function(req,cb){
-
-		library.db.query(sql.getActiveFrozeOrders,{senderId:req.body.address}).then(function (rows) {
-			return setImmediate(cb, null, {
-				freezeOrders: JSON.stringify(rows)
-			});
-		}, function (err) {
-			return setImmediate(cb, 'Unable to count transactions');
-		});
-		
-	},
-
-	addTransactionForFreeze: function (req, cb) {
+	transferFreezeOrder: function (req, cb) {
 
 		console.log("yes i'm inside freeze code");
 
-		library.schema.validate(req.body, schema.addTransactionForFreeze, function (err) {
+		library.schema.validate(req.body, schema.transferFreezeOrder, function (err) {
 			if (err) {
 				return setImmediate(cb, err[0].message);
 			}
@@ -659,23 +585,37 @@ Frogings.prototype.shared = {
 				}
 			}
 
+			var query = { address: req.body.recipientId };
+
 			library.balancesSequence.add(function (cb) {
-				if (req.body.multisigAccountPublicKey && req.body.multisigAccountPublicKey !== keypair.publicKey.toString('hex')) {
-					modules.accounts.getAccount({ publicKey: req.body.multisigAccountPublicKey }, function (err, account) {
-						//*********************NAVIN******************* */
-						self.updateFrozeAmount({
-							account: account,
-							req: req
-						}, function (err) {
-							if (err) {
-								return setImmediate(cb, err);
-							} else {
-								
+				modules.accounts.getAccount(query, function (err, recipient) {
+					if (err) {
+						return setImmediate(cb, err);
+					}
+
+					var recipientId = recipient ? recipient.address : req.body.recipientId;
+
+					if (!recipientId) {
+						return setImmediate(cb, 'Invalid recipient');
+					}
+
+					if (req.body.multisigAccountPublicKey && req.body.multisigAccountPublicKey !== keypair.publicKey.toString('hex')) {
+						modules.accounts.getAccount({ publicKey: req.body.multisigAccountPublicKey }, function (err, account) {
+							//*************  NAVIN */
+							library.logic.sendFreezeOrder.sendFreezedOrder({
+								account: account,
+								req: req
+							}, function (err) {
+
+								if (err) {
+									return setImmediate(cb, err);
+								}
+
 								if (!account || !account.publicKey) {
 									return setImmediate(cb, 'Multisignature account not found');
 								}
 
-								if (!account.multisignatures || !account.multisignatures) {
+								if (!Array.isArray(account.multisignatures)) {
 									return setImmediate(cb, 'Account does not have multisignatures enabled');
 								}
 
@@ -711,40 +651,40 @@ Frogings.prototype.shared = {
 
 									try {
 										transaction = library.logic.transaction.create({
-											type: transactionTypes.FROZE,
-											freezedAmount: req.body.freezedAmount,
+											type: transactionType.SENDFREEZE,
 											sender: account,
+											frozeId: req.body.frozeId,
 											keypair: keypair,
+											recipientId: recipientId,
 											secondKeypair: secondKeypair,
 											requester: keypair
 										});
 									} catch (e) {
 										return setImmediate(cb, e.toString());
 									}
+
 									modules.transactions.receiveTransactions([transaction], true, cb);
 								});
-
-							}
+							});
 						});
 
-					});
-				} else {
-					modules.accounts.setAccountAndGet({ publicKey: keypair.publicKey.toString('hex') }, function (err, account) {
-						//*********************NAVIN******************* */
-						self.updateFrozeAmount({
-							account: account,
-							req: req
-						}, function (err) {
-							if (err) {
-								return setImmediate(cb, err);
-							} else {
+					} else {
+						modules.accounts.setAccountAndGet({ publicKey: keypair.publicKey.toString('hex') }, function (err, account) {
+							//*************  NAVIN */
+							library.logic.sendFreezeOrder.sendFreezedOrder({
+								account: account,
+								req: req
+							}, function (err) {
+								if (err) {
+									return setImmediate(cb, err);
+								}
 
 								if (!account || !account.publicKey) {
 									return setImmediate(cb, 'Account not found');
 								}
 
 								if (account.secondSignature && !req.body.secondSecret) {
-									return setImmediate(cb, 'Invalid second passphrase');
+									return setImmediate(cb, 'Missing second passphrase');
 								}
 
 								var secondKeypair = null;
@@ -758,26 +698,29 @@ Frogings.prototype.shared = {
 
 								try {
 									transaction = library.logic.transaction.create({
-										type: transactionTypes.FROZE,
-										freezedAmount: req.body.freezedAmount,
+										type: transactionTypes.SENDFREEZE,
 										sender: account,
+										frozeId: req.body.frozeId,
 										keypair: keypair,
+										recipientId: recipientId,
 										secondKeypair: secondKeypair
 									});
 								} catch (e) {
 									return setImmediate(cb, e.toString());
 								}
+
 								modules.transactions.receiveTransactions([transaction], true, cb);
-							}
+							});
 						});
-					});
-				}
+					}
+
+				});
 			}, function (err, transaction) {
 				if (err) {
 					return setImmediate(cb, err);
-				} else {
-					return setImmediate(cb, null, { transaction: transaction[0] });
 				}
+
+				return setImmediate(cb, null, { transactionId: transaction[0].id });
 			});
 		});
 
@@ -786,4 +729,4 @@ Frogings.prototype.shared = {
 };
 
 // Export
-module.exports = Frogings;
+module.exports = SendFreezeOrder;

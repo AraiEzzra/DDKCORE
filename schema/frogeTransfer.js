@@ -5,8 +5,8 @@ var constants = require('../helpers/constants.js');
 module.exports = {
 	
 	
-	addTransactionForFreeze: {
-		id: 'frogings.addTransactionForFreeze',
+	transferFreezeOrder: {
+		id: 'sendFreezeOrder.transferFreezeOrder',
 		type: 'object',
 		properties: {
 			secret: {
@@ -14,10 +14,16 @@ module.exports = {
 				minLength: 1,
 				maxLength: 100
 			},
-			freezedAmount: {
-				type: 'integer'
-			},
-			
+			recipientId: {
+				type: 'string',
+				format: 'address',
+				minLength: 1,
+				maxLength: 22
+            },
+            frozeId :{
+                type : 'string',
+
+            },
 			publicKey: {
 				type: 'string',
 				format: 'publicKey'
@@ -28,6 +34,6 @@ module.exports = {
 				maxLength: 100
 			}
 		},
-		required: ['secret','freezedAmount']
+		required: ['secret','recipientId','frozeId']
 	}
 };
