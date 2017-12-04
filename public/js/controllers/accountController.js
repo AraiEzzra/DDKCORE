@@ -1,7 +1,7 @@
 require('angular');
 
 angular.module('ETPApp').controller('accountController', ['$state','$scope', '$rootScope', '$http', "userService", "$interval", "$timeout", "sendTransactionModal", "secondPassphraseModal", "delegateService", 'viewFactory', 'transactionInfo', 'userInfo', '$filter', 'gettextCatalog', function ($state, $rootScope, $scope, $http, userService, $interval, $timeout, sendTransactionModal, secondPassphraseModal, delegateService, viewFactory, transactionInfo, userInfo, $filter, gettextCatalog) {
-
+    
     $scope.view = viewFactory;
     $scope.view.inLoading = true;
     $scope.view.loadingText = gettextCatalog.getString('Loading dashboard');

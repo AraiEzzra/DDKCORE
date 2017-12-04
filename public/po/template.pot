@@ -12,37 +12,37 @@ msgstr ""
 msgid "ADD SECOND PASSPHRASE"
 msgstr ""
 
-#: partials/modals/addDappModal.html:31
+#: partials/modals/addDappModal.html:32
 msgid "Accept / Next Step"
 msgstr ""
 
-#: partials/modals/addDappModal.html:140
-#: partials/modals/addDappModal.html:182
-#: partials/modals/masterPassphraseModal.html:13
-#: partials/modals/multisignatureModal.html:154
-#: partials/modals/passphraseCheck.html:13
-#: partials/modals/registrationDelegateModal.html:51
-#: partials/modals/registrationDelegateModal.html:86
+#: partials/modals/addDappModal.html:141
+#: partials/modals/addDappModal.html:183
+#: partials/modals/masterPassphraseModal.html:14
+#: partials/modals/multisignatureModal.html:155
+#: partials/modals/passphraseCheck.html:14
+#: partials/modals/registrationDelegateModal.html:52
+#: partials/modals/registrationDelegateModal.html:87
 #: partials/modals/secondPassphraseModal.html:107
-#: partials/modals/sendTransaction.html:62
-#: partials/modals/sendTransaction.html:97
-#: partials/modals/vote.html:54
-#: partials/modals/vote.html:89
+#: partials/modals/sendTransaction.html:63
+#: partials/modals/sendTransaction.html:98
+#: partials/modals/vote.html:55
+#: partials/modals/vote.html:90
 msgid "Account Verification"
 msgstr ""
 
-#: partials/modals/multisignatureModal.html:46
+#: partials/modals/multisignatureModal.html:47
 msgid "Add group members by typing in their ETP address and pressing enter."
 msgstr ""
 
 #: js/controllers/blockchainController.js:45
-#: js/controllers/explorerController.js:47
+#: js/controllers/explorerController.js:45
 #: js/controllers/transactionsController.js:66
 #: js/controllers/walletPendingsController.js:47
 #: js/controllers/walletTransactionsController.js:70
 #: js/controllers/walletsController.js:148
 #: partials/modals/transactionInfo.html:19
-#: partials/modals/userInfo.html:62
+#: partials/modals/userInfo.html:61
 msgid "Amount"
 msgstr ""
 
@@ -61,7 +61,7 @@ msgstr ""
 msgid "Approval"
 msgstr ""
 
-#: partials/modals/confirmDeletionModal.html:16
+#: partials/modals/confirmDeletionModal.html:17
 msgid "Are you sure you want to delete this item?"
 msgstr ""
 
@@ -69,7 +69,7 @@ msgstr ""
 msgid "Balance"
 msgstr ""
 
-#: partials/modals/registrationDelegateModal.html:30
+#: partials/modals/registrationDelegateModal.html:31
 msgid "Becoming a delegate requires registration. You may choose your own delegate name, which can be used to promote your delegate. Only the top 101 delegates are eligible to forge. All fees are shared equally between the top 101 delegates."
 msgstr ""
 
@@ -78,22 +78,21 @@ msgid "Block"
 msgstr ""
 
 #: js/controllers/blockchainController.js:41
-#: js/controllers/explorerController.js:43
+#: js/controllers/explorerController.js:41
 #: js/controllers/forgingController.js:123
 #: partials/modals/transactionInfo.html:35
 msgid "Block ID"
 msgstr ""
 
 #: js/controllers/blockchainController.js:8
-#: js/controllers/explorerController.js:10
 #: partials/template.html:283
 msgid "Blockchain"
 msgstr ""
 
-#: partials/modals/addDappModal.html:28
-#: partials/modals/multisignatureModal.html:28
-#: partials/modals/multisignatureModal.html:89
-#: partials/modals/vote.html:38
+#: partials/modals/addDappModal.html:29
+#: partials/modals/multisignatureModal.html:29
+#: partials/modals/multisignatureModal.html:90
+#: partials/modals/vote.html:39
 msgid "CANCEL"
 msgstr ""
 
@@ -101,7 +100,7 @@ msgstr ""
 msgid "CATEGORIES"
 msgstr ""
 
-#: partials/modals/masterPassphraseModal.html:38
+#: partials/modals/masterPassphraseModal.html:39
 #: partials/modals/newUser.html:82
 #: partials/multi.html:31
 #: partials/wallet-pendings.html:28
@@ -119,7 +118,7 @@ msgstr ""
 #: partials/modals/blockInfo.html:77
 #: partials/modals/blockModal.html:34
 #: partials/modals/transactionInfo.html:53
-#: partials/modals/userInfo.html:96
+#: partials/modals/userInfo.html:95
 msgid "CONFIRMATIONS"
 msgstr ""
 
@@ -127,13 +126,13 @@ msgstr ""
 msgid "CONFIRMED TRANSACTIONS"
 msgstr ""
 
-#: partials/modals/forgingModal.html:32
-#: partials/modals/masterPassphraseModal.html:35
-#: partials/modals/openDappModal.html:27
-#: partials/modals/passphraseCheck.html:32
-#: partials/modals/registrationDelegateModal.html:35
-#: partials/modals/sendTransaction.html:46
-#: partials/modals/vote.html:73
+#: partials/modals/forgingModal.html:33
+#: partials/modals/masterPassphraseModal.html:36
+#: partials/modals/openDappModal.html:28
+#: partials/modals/passphraseCheck.html:33
+#: partials/modals/registrationDelegateModal.html:36
+#: partials/modals/sendTransaction.html:47
+#: partials/modals/vote.html:74
 msgid "Cancel"
 msgstr ""
 
@@ -141,17 +140,17 @@ msgstr ""
 msgid "Category:"
 msgstr ""
 
-#: partials/modals/addDappModal.html:101
-#: partials/modals/addDappModal.html:106
-#: partials/modals/addDappModal.html:13
-#: partials/modals/addDappModal.html:132
-#: partials/modals/addDappModal.html:137
-#: partials/modals/addDappModal.html:174
-#: partials/modals/addDappModal.html:179
-#: partials/modals/addDappModal.html:39
-#: partials/modals/addDappModal.html:44
-#: partials/modals/addDappModal.html:70
-#: partials/modals/addDappModal.html:75
+#: partials/modals/addDappModal.html:102
+#: partials/modals/addDappModal.html:107
+#: partials/modals/addDappModal.html:133
+#: partials/modals/addDappModal.html:138
+#: partials/modals/addDappModal.html:14
+#: partials/modals/addDappModal.html:175
+#: partials/modals/addDappModal.html:180
+#: partials/modals/addDappModal.html:40
+#: partials/modals/addDappModal.html:45
+#: partials/modals/addDappModal.html:71
+#: partials/modals/addDappModal.html:76
 #: partials/modals/addDappModal.html:8
 #: partials/modals/blockInfo.html:13
 #: partials/modals/blockModal.html:9
@@ -160,28 +159,28 @@ msgstr ""
 #: partials/modals/forgingModal.html:9
 #: partials/modals/masterPassphraseModal.html:8
 #: partials/modals/multiMembersModal.html:8
-#: partials/modals/multisignatureModal.html:100
-#: partials/modals/multisignatureModal.html:149
-#: partials/modals/multisignatureModal.html:39
+#: partials/modals/multisignatureModal.html:101
+#: partials/modals/multisignatureModal.html:150
+#: partials/modals/multisignatureModal.html:40
 #: partials/modals/multisignatureModal.html:8
 #: partials/modals/newUser.html:11
 #: partials/modals/newUser.html:54
 #: partials/modals/openDappModal.html:8
 #: partials/modals/passphraseCheck.html:8
-#: partials/modals/registrationDelegateModal.html:46
+#: partials/modals/registrationDelegateModal.html:47
 #: partials/modals/registrationDelegateModal.html:8
-#: partials/modals/registrationDelegateModal.html:81
+#: partials/modals/registrationDelegateModal.html:82
 #: partials/modals/secondPassphraseModal.html:10
 #: partials/modals/secondPassphraseModal.html:101
 #: partials/modals/secondPassphraseModal.html:58
-#: partials/modals/sendTransaction.html:57
+#: partials/modals/sendTransaction.html:58
 #: partials/modals/sendTransaction.html:8
-#: partials/modals/sendTransaction.html:92
+#: partials/modals/sendTransaction.html:93
 #: partials/modals/transactionInfo.html:10
-#: partials/modals/userInfo.html:16
-#: partials/modals/vote.html:49
+#: partials/modals/userInfo.html:15
+#: partials/modals/vote.html:50
 #: partials/modals/vote.html:8
-#: partials/modals/vote.html:84
+#: partials/modals/vote.html:85
 msgid "Close modal"
 msgstr ""
 
@@ -189,13 +188,13 @@ msgstr ""
 msgid "Configuring multi-signature group"
 msgstr ""
 
-#: partials/modals/addDappModal.html:124
-#: partials/modals/addDappModal.html:166
-#: partials/modals/addDappModal.html:208
+#: partials/modals/addDappModal.html:125
+#: partials/modals/addDappModal.html:167
+#: partials/modals/addDappModal.html:209
 msgid "Confirm"
 msgstr ""
 
-#: partials/modals/confirmDeletionModal.html:13
+#: partials/modals/confirmDeletionModal.html:14
 msgid "Confirmation"
 msgstr ""
 
@@ -203,7 +202,7 @@ msgstr ""
 #: js/controllers/walletsController.js:115
 #: partials/modals/blockInfo.html:23
 #: partials/modals/transactionInfo.html:16
-#: partials/modals/userInfo.html:59
+#: partials/modals/userInfo.html:58
 msgid "Confirmations"
 msgstr ""
 
@@ -212,8 +211,8 @@ msgstr ""
 msgid "Confirmations Needed"
 msgstr ""
 
-#: partials/modals/multisignatureModal.html:125
-#: partials/modals/multisignatureModal.html:74
+#: partials/modals/multisignatureModal.html:126
+#: partials/modals/multisignatureModal.html:75
 msgid "Confirmations needed"
 msgstr ""
 
@@ -228,7 +227,7 @@ msgstr ""
 #: partials/delegates.html:164
 #: partials/delegates.html:233
 #: partials/delegates.html:95
-#: partials/modals/userInfo.html:22
+#: partials/modals/userInfo.html:21
 #: partials/votes.html:99
 msgid "Copy Address"
 msgstr ""
@@ -245,11 +244,11 @@ msgstr ""
 msgid "Copy Name"
 msgstr ""
 
-#: partials/modals/userInfo.html:25
+#: partials/modals/userInfo.html:24
 msgid "Copy Public Key"
 msgstr ""
 
-#: partials/modals/userInfo.html:55
+#: partials/modals/userInfo.html:54
 msgid "Copy Transaction ID"
 msgstr ""
 
@@ -268,7 +267,7 @@ msgstr ""
 msgid "Dashboard"
 msgstr ""
 
-#: partials/modals/registrationDelegateModal.html:21
+#: partials/modals/registrationDelegateModal.html:22
 msgid "Delegate Name"
 msgstr ""
 
@@ -288,7 +287,7 @@ msgstr ""
 msgid "Disable Forging"
 msgstr ""
 
-#: js/controllers/appController.js:315
+#: js/controllers/appController.js:317
 msgid "Disabled"
 msgstr ""
 
@@ -300,11 +299,11 @@ msgstr ""
 #: js/controllers/delegatesController.js:191
 #: js/controllers/votedDelegatesController.js:130
 #: js/controllers/walletPendingsController.js:43
-#: partials/modals/multisignatureModal.html:52
+#: partials/modals/multisignatureModal.html:53
 msgid "ETP Address"
 msgstr ""
 
-#: partials/modals/sendTransaction.html:29
+#: partials/modals/sendTransaction.html:30
 msgid "ETP Amount"
 msgstr ""
 
@@ -320,7 +319,15 @@ msgstr ""
 msgid "ETP Earned"
 msgstr ""
 
-#: partials/modals/masterPassphraseModal.html:24
+#: partials/explorer.html:173
+msgid "ETP Price"
+msgstr ""
+
+#: partials/explorer.html:160
+msgid "ETP Tansaction Per Day"
+msgstr ""
+
+#: partials/modals/masterPassphraseModal.html:25
 msgid "Empty passphrase"
 msgstr ""
 
@@ -329,10 +336,11 @@ msgstr ""
 msgid "Enable Forging"
 msgstr ""
 
-#: js/controllers/appController.js:315
+#: js/controllers/appController.js:317
 msgid "Enabled"
 msgstr ""
 
+#: js/controllers/explorerController.js:8
 #: partials/template.html:292
 msgid "Explorer"
 msgstr ""
@@ -340,7 +348,7 @@ msgstr ""
 #: partials/modals/blockInfo.html:75
 #: partials/modals/blockModal.html:32
 #: partials/modals/transactionInfo.html:50
-#: partials/modals/userInfo.html:94
+#: partials/modals/userInfo.html:93
 msgid "FEE"
 msgstr ""
 
@@ -363,22 +371,22 @@ msgid "Failed to uninstall application"
 msgstr ""
 
 #: js/controllers/blockchainController.js:46
-#: js/controllers/explorerController.js:48
+#: js/controllers/explorerController.js:46
 #: js/controllers/forgingController.js:125
 #: js/controllers/transactionsController.js:67
 #: js/controllers/walletPendingsController.js:48
 #: js/controllers/walletTransactionsController.js:71
 #: js/controllers/walletsController.js:149
-#: partials/modals/multisignatureModal.html:128
+#: partials/modals/multisignatureModal.html:129
 #: partials/modals/transactionInfo.html:22
-#: partials/modals/userInfo.html:65
+#: partials/modals/userInfo.html:64
 msgid "Fee"
 msgstr ""
 
-#: partials/modals/registrationDelegateModal.html:23
+#: partials/modals/registrationDelegateModal.html:24
 #: partials/modals/secondPassphraseModal.html:29
-#: partials/modals/sendTransaction.html:31
-#: partials/modals/vote.html:25
+#: partials/modals/sendTransaction.html:32
+#: partials/modals/vote.html:26
 msgid "Fee: {{fee | ETPFilter}} ETP"
 msgstr ""
 
@@ -400,21 +408,21 @@ msgstr ""
 msgid "Further protect your account with an optional second passphrase! It may take a few moments for the changes to take effect."
 msgstr ""
 
-#: partials/modals/addDappModal.html:121
-#: partials/modals/addDappModal.html:163
-#: partials/modals/addDappModal.html:205
-#: partials/modals/addDappModal.html:59
-#: partials/modals/addDappModal.html:90
-#: partials/modals/multisignatureModal.html:138
-#: partials/modals/multisignatureModal.html:177
+#: partials/modals/addDappModal.html:122
+#: partials/modals/addDappModal.html:164
+#: partials/modals/addDappModal.html:206
+#: partials/modals/addDappModal.html:60
+#: partials/modals/addDappModal.html:91
+#: partials/modals/multisignatureModal.html:139
+#: partials/modals/multisignatureModal.html:178
 #: partials/modals/newUser.html:79
-#: partials/modals/registrationDelegateModal.html:105
-#: partials/modals/registrationDelegateModal.html:67
+#: partials/modals/registrationDelegateModal.html:106
+#: partials/modals/registrationDelegateModal.html:68
 #: partials/modals/secondPassphraseModal.html:126
 #: partials/modals/secondPassphraseModal.html:84
-#: partials/modals/sendTransaction.html:116
-#: partials/modals/sendTransaction.html:81
-#: partials/modals/vote.html:108
+#: partials/modals/sendTransaction.html:117
+#: partials/modals/sendTransaction.html:82
+#: partials/modals/vote.html:109
 msgid "GO BACK"
 msgstr ""
 
@@ -428,7 +436,7 @@ msgid "Generate New"
 msgstr ""
 
 #: js/controllers/blockchainController.js:42
-#: js/controllers/explorerController.js:44
+#: js/controllers/explorerController.js:42
 #: partials/modals/blockInfo.html:49
 msgid "Generator"
 msgstr ""
@@ -446,7 +454,7 @@ msgid "HOME"
 msgstr ""
 
 #: js/controllers/blockchainController.js:40
-#: js/controllers/explorerController.js:42
+#: js/controllers/explorerController.js:40
 #: js/controllers/forgingController.js:122
 #: js/controllers/transactionsController.js:61
 #: js/controllers/walletTransactionsController.js:66
@@ -462,7 +470,7 @@ msgstr ""
 msgid "INSTALLED"
 msgstr ""
 
-#: partials/modals/openDappModal.html:21
+#: partials/modals/openDappModal.html:22
 msgid "If you are confident the application can be deemed trustworthy, click <strong>Open Anyway</strong>, otherwise click <strong>Cancel</strong> now."
 msgstr ""
 
@@ -526,7 +534,7 @@ msgid "Loading applications"
 msgstr ""
 
 #: js/controllers/blockchainController.js:7
-#: js/controllers/explorerController.js:9
+#: js/controllers/explorerController.js:7
 msgid "Loading blockchain"
 msgstr ""
 
@@ -577,7 +585,7 @@ msgstr ""
 msgid "Make sure that you keep the second passphrase safe. You will be asked to re-type it for confirmation."
 msgstr ""
 
-#: partials/modals/sendTransaction.html:41
+#: partials/modals/sendTransaction.html:42
 msgid "Make sure you're sending ETP to the right address. This action can't be undone later."
 msgstr ""
 
@@ -631,7 +639,7 @@ msgstr ""
 msgid "My votes ({{myVotesCount||'0'}})"
 msgstr ""
 
-#: partials/modals/userInfo.html:9
+#: partials/modals/userInfo.html:8
 msgid "NAVIN"
 msgstr ""
 
@@ -639,7 +647,7 @@ msgstr ""
 msgid "NEW ACCOUNT"
 msgstr ""
 
-#: partials/modals/multisignatureModal.html:31
+#: partials/modals/multisignatureModal.html:32
 msgid "NEXT"
 msgstr ""
 
@@ -648,7 +656,7 @@ msgstr ""
 msgid "NEXT STEP"
 msgstr ""
 
-#: partials/modals/confirmDeletionModal.html:22
+#: partials/modals/confirmDeletionModal.html:23
 msgid "NO"
 msgstr ""
 
@@ -658,8 +666,8 @@ msgstr ""
 msgid "Name"
 msgstr ""
 
-#: partials/modals/addDappModal.html:62
-#: partials/modals/addDappModal.html:93
+#: partials/modals/addDappModal.html:63
+#: partials/modals/addDappModal.html:94
 msgid "Next Step"
 msgstr ""
 
@@ -690,11 +698,11 @@ msgstr ""
 msgid "No results for this search."
 msgstr ""
 
-#: partials/modals/multisignatureModal.html:122
+#: partials/modals/multisignatureModal.html:123
 msgid "Number of members"
 msgstr ""
 
-#: partials/modals/errorModal.html:28
+#: partials/modals/errorModal.html:29
 msgid "OK"
 msgstr ""
 
@@ -702,7 +710,7 @@ msgstr ""
 msgid "OPEN"
 msgstr ""
 
-#: partials/modals/openDappModal.html:30
+#: partials/modals/openDappModal.html:31
 msgid "OPEN ANYWAY"
 msgstr ""
 
@@ -732,23 +740,23 @@ msgstr ""
 msgid "Pending transactions"
 msgstr ""
 
-#: partials/modals/multisignatureModal.html:107
+#: partials/modals/multisignatureModal.html:108
 msgid "Please check your input below and go back if necessary. Double-check the group members, else you risk losing your ETP balance!"
 msgstr ""
 
-#: partials/modals/registrationDelegateModal.html:15
+#: partials/modals/registrationDelegateModal.html:16
 msgid "Please choose a delegate name."
 msgstr ""
 
-#: partials/modals/vote.html:15
+#: partials/modals/vote.html:16
 msgid "Please confirm your selection and confirm your vote."
 msgstr ""
 
-#: partials/modals/addDappModal.html:111
+#: partials/modals/addDappModal.html:112
 msgid "Please ensure all details are correct before confirming your blockchain application."
 msgstr ""
 
-#: partials/modals/sendTransaction.html:15
+#: partials/modals/sendTransaction.html:16
 msgid "Please enter the Recipient Address and ETP Amount that you would like send below."
 msgstr ""
 
@@ -756,16 +764,16 @@ msgstr ""
 msgid "Please enter the master passphrase for this node."
 msgstr ""
 
-#: partials/modals/addDappModal.html:142
-#: partials/modals/forgingModal.html:16
-#: partials/modals/registrationDelegateModal.html:53
-#: partials/modals/sendTransaction.html:64
-#: partials/modals/vote.html:56
+#: partials/modals/addDappModal.html:143
+#: partials/modals/forgingModal.html:17
+#: partials/modals/registrationDelegateModal.html:54
+#: partials/modals/sendTransaction.html:65
+#: partials/modals/vote.html:57
 msgid "Please enter your passphrase below."
 msgstr ""
 
-#: partials/modals/multisignatureModal.html:156
-#: partials/modals/passphraseCheck.html:15
+#: partials/modals/multisignatureModal.html:157
+#: partials/modals/passphraseCheck.html:16
 msgid "Please enter your passphrase."
 msgstr ""
 
@@ -773,10 +781,10 @@ msgstr ""
 msgid "Please enter your primary passphrase below."
 msgstr ""
 
-#: partials/modals/addDappModal.html:184
-#: partials/modals/registrationDelegateModal.html:88
-#: partials/modals/sendTransaction.html:99
-#: partials/modals/vote.html:91
+#: partials/modals/addDappModal.html:185
+#: partials/modals/registrationDelegateModal.html:89
+#: partials/modals/sendTransaction.html:100
+#: partials/modals/vote.html:92
 msgid "Please enter your second passphrase below."
 msgstr ""
 
@@ -784,11 +792,11 @@ msgstr ""
 msgid "Please find your second passphrase below."
 msgstr ""
 
-#: partials/modals/addDappModal.html:49
+#: partials/modals/addDappModal.html:50
 msgid "Please provide a specification for your blockchain application below."
 msgstr ""
 
-#: partials/modals/addDappModal.html:80
+#: partials/modals/addDappModal.html:81
 msgid "Please provide storage a link for your block application below."
 msgstr ""
 
@@ -800,9 +808,9 @@ msgstr ""
 msgid "Please re-enter your second passphrase below."
 msgstr ""
 
-#: partials/modals/addDappModal.html:18
-#: partials/modals/multisignatureModal.html:15
-#: partials/modals/openDappModal.html:15
+#: partials/modals/addDappModal.html:19
+#: partials/modals/multisignatureModal.html:16
+#: partials/modals/openDappModal.html:16
 msgid "Please read carefully."
 msgstr ""
 
@@ -810,7 +818,7 @@ msgstr ""
 msgid "Press &#8984;+c to copy"
 msgstr ""
 
-#: partials/modals/multisignatureModal.html:84
+#: partials/modals/multisignatureModal.html:85
 msgid "Pressing enter confirms each member."
 msgstr ""
 
@@ -849,11 +857,11 @@ msgstr ""
 msgid "Recipient"
 msgstr ""
 
-#: partials/modals/sendTransaction.html:20
+#: partials/modals/sendTransaction.html:21
 msgid "Recipient Address"
 msgstr ""
 
-#: partials/modals/registrationDelegateModal.html:13
+#: partials/modals/registrationDelegateModal.html:14
 msgid "Register as a Delegate"
 msgstr ""
 
@@ -874,7 +882,7 @@ msgid "Removing vote from delegates"
 msgstr ""
 
 #: js/controllers/blockchainController.js:47
-#: js/controllers/explorerController.js:49
+#: js/controllers/explorerController.js:47
 #: js/controllers/forgingController.js:126
 #: partials/modals/blockInfo.html:29
 msgid "Reward"
@@ -925,15 +933,15 @@ msgstr ""
 msgid "Second Passphrase"
 msgstr ""
 
-#: partials/modals/openDappModal.html:13
+#: partials/modals/openDappModal.html:14
 msgid "Security Warning"
 msgstr ""
 
 #: partials/delegates.html:157
 #: partials/delegates.html:226
 #: partials/delegates.html:88
-#: partials/modals/sendTransaction.html:13
-#: partials/modals/userInfo.html:28
+#: partials/modals/sendTransaction.html:14
+#: partials/modals/userInfo.html:27
 #: partials/votes.html:92
 msgid "Send ETP"
 msgstr ""
@@ -964,7 +972,7 @@ msgstr ""
 msgid "Show Full Time"
 msgstr ""
 
-#: partials/modals/passphraseCheck.html:35
+#: partials/modals/passphraseCheck.html:36
 msgid "Sign"
 msgstr ""
 
@@ -980,11 +988,11 @@ msgstr ""
 msgid "Step 1/2 - Generate a Second Passphrase"
 msgstr ""
 
-#: partials/modals/multisignatureModal.html:13
+#: partials/modals/multisignatureModal.html:14
 msgid "Step 1/3 - Preamble"
 msgstr ""
 
-#: partials/modals/addDappModal.html:16
+#: partials/modals/addDappModal.html:17
 msgid "Step 1/4 - Preamble"
 msgstr ""
 
@@ -996,37 +1004,37 @@ msgstr ""
 msgid "Step 2/2 - Confirm your Second Passphrase"
 msgstr ""
 
-#: partials/modals/multisignatureModal.html:44
+#: partials/modals/multisignatureModal.html:45
 msgid "Step 2/3 - Specify Group Members"
 msgstr ""
 
-#: partials/modals/addDappModal.html:47
+#: partials/modals/addDappModal.html:48
 msgid "Step 2/4 - Specifications"
 msgstr ""
 
-#: partials/modals/multisignatureModal.html:105
+#: partials/modals/multisignatureModal.html:106
 msgid "Step 3/3 - Confirmation"
 msgstr ""
 
-#: partials/modals/addDappModal.html:78
+#: partials/modals/addDappModal.html:79
 msgid "Step 3/4 - Storage Links"
 msgstr ""
 
-#: partials/modals/addDappModal.html:109
+#: partials/modals/addDappModal.html:110
 msgid "Step 4/4 - Confirmation"
 msgstr ""
 
 #: partials/modals/blockInfo.html:19
 #: partials/modals/transactionInfo.html:15
-#: partials/modals/userInfo.html:35
+#: partials/modals/userInfo.html:34
 msgid "Summary"
 msgstr ""
 
-#: partials/modals/openDappModal.html:19
+#: partials/modals/openDappModal.html:20
 msgid "The ETP apps platform currently does not provide any protection against any unauthorized system calls made from the running application. Therefore opening any untrusted applications is not yet advisable, and could potentially lead to loss of funds."
 msgstr ""
 
-#: partials/modals/masterPassphraseModal.html:30
+#: partials/modals/masterPassphraseModal.html:31
 msgid "The master passphrase is auto-generated upon first launching the ETP client. It can be found at the end of the config.json file. Therefore only node operators can install, launch or uninstall applications. Once applications are in a launched state, anyone is free to open and use them."
 msgstr ""
 
@@ -1038,12 +1046,12 @@ msgstr ""
 msgid "The second passphrase entered doesn't match with the one generated before. Please go back and generate a new one."
 msgstr ""
 
-#: partials/modals/multisignatureModal.html:21
+#: partials/modals/multisignatureModal.html:22
 msgid "This walkthrough will guide you through the necessary steps to create a multi-signature group. It's very important that you know what multi-signatures are, else you risk loosing your ETP balance.<br><br>A multi-signature group consists of N accounts, the one who created the group is the group owner. When the owner wants to make a transaction, M of N accounts within the group need to confirm it, otherwise the transaction will not be processed. The values M and N are specified in this walkthrough.<br><br><b>Things you need to know for the multi-signature group setup:</b><br><br>• The number of group members (N).<br>• The number of needed confirmations (M).<br>• The addresses of the ETP accounts you want to add to the group."
 msgstr ""
 
 #: js/controllers/blockchainController.js:43
-#: js/controllers/explorerController.js:45
+#: js/controllers/explorerController.js:43
 #: js/controllers/forgingController.js:124
 #: js/controllers/transactionsController.js:65
 #: js/controllers/walletPendingsController.js:46
@@ -1052,7 +1060,7 @@ msgstr ""
 #: partials/account.html:76
 #: partials/modals/blockInfo.html:41
 #: partials/modals/transactionInfo.html:28
-#: partials/modals/userInfo.html:71
+#: partials/modals/userInfo.html:70
 msgid "Time"
 msgstr ""
 
@@ -1076,7 +1084,7 @@ msgstr ""
 msgid "Total Amount"
 msgstr ""
 
-#: partials/modals/userInfo.html:36
+#: partials/modals/userInfo.html:35
 msgid "Total Balance"
 msgstr ""
 
@@ -1098,19 +1106,19 @@ msgstr ""
 #: js/controllers/walletsController.js:145
 #: partials/account.html:67
 #: partials/modals/blockModal.html:17
-#: partials/modals/userInfo.html:52
-#: partials/modals/userInfo.html:78
+#: partials/modals/userInfo.html:51
+#: partials/modals/userInfo.html:77
 msgid "Transaction ID"
 msgstr ""
 
 #: js/controllers/blockchainController.js:44
-#: js/controllers/explorerController.js:46
+#: js/controllers/explorerController.js:44
 #: js/controllers/transactionsController.js:8
 #: js/controllers/walletTransactionsController.js:6
 #: partials/modals/blockInfo.html:20
 #: partials/modals/blockModal.html:7
+#: partials/modals/userInfo.html:45
 #: partials/modals/userInfo.html:46
-#: partials/modals/userInfo.html:47
 msgid "Transactions"
 msgstr ""
 
@@ -1124,8 +1132,8 @@ msgstr ""
 
 #: partials/modals/blockInfo.html:38
 #: partials/modals/transactionInfo.html:25
-#: partials/modals/userInfo.html:39
-#: partials/modals/userInfo.html:68
+#: partials/modals/userInfo.html:38
+#: partials/modals/userInfo.html:67
 msgid "USD Equivalent"
 msgstr ""
 
@@ -1148,7 +1156,7 @@ msgstr ""
 msgid "Welcome back, {{username}}"
 msgstr ""
 
-#: partials/modals/confirmDeletionModal.html:25
+#: partials/modals/confirmDeletionModal.html:26
 msgid "YES"
 msgstr ""
 
@@ -1160,7 +1168,7 @@ msgstr ""
 msgid "You can find your passphrase below."
 msgstr ""
 
-#: partials/modals/vote.html:33
+#: partials/modals/vote.html:34
 msgid "You can select up to 33 delegates in one voting turn. Up to 101 delegates in total."
 msgstr ""
 
@@ -1177,12 +1185,12 @@ msgstr ""
 msgid "You have not made any transactions yet."
 msgstr ""
 
-#: partials/votes.html:118
+#: partials/votes.html:117
 msgid "You have not voted for any delegates yet."
 msgstr ""
 
-#: partials/modals/multisignatureModal.html:113
-#: partials/modals/multisignatureModal.html:63
+#: partials/modals/multisignatureModal.html:114
+#: partials/modals/multisignatureModal.html:64
 msgid "Your Account"
 msgstr ""
 
@@ -1190,27 +1198,27 @@ msgstr ""
 msgid "Your Multi-Signature group(s) have not made any transactions yet."
 msgstr ""
 
-#: partials/modals/addDappModal.html:151
-#: partials/modals/forgingModal.html:23
-#: partials/modals/multisignatureModal.html:163
-#: partials/modals/registrationDelegateModal.html:60
-#: partials/modals/sendTransaction.html:71
-#: partials/modals/vote.html:63
+#: partials/modals/addDappModal.html:152
+#: partials/modals/forgingModal.html:24
+#: partials/modals/multisignatureModal.html:164
+#: partials/modals/registrationDelegateModal.html:61
+#: partials/modals/sendTransaction.html:72
+#: partials/modals/vote.html:64
 #: partials/passphrase.html:12
 msgid "Your Passphrase"
 msgstr ""
 
-#: partials/modals/addDappModal.html:193
-#: partials/modals/multisignatureModal.html:167
-#: partials/modals/passphraseCheck.html:22
-#: partials/modals/registrationDelegateModal.html:95
-#: partials/modals/sendTransaction.html:106
-#: partials/modals/vote.html:98
+#: partials/modals/addDappModal.html:194
+#: partials/modals/multisignatureModal.html:168
+#: partials/modals/passphraseCheck.html:23
+#: partials/modals/registrationDelegateModal.html:96
+#: partials/modals/sendTransaction.html:107
+#: partials/modals/vote.html:99
 msgid "Your Second Passphrase"
 msgstr ""
 
-#: partials/modals/multisignatureModal.html:141
-#: partials/modals/multisignatureModal.html:180
+#: partials/modals/multisignatureModal.html:142
+#: partials/modals/multisignatureModal.html:181
 msgid "confirm"
 msgstr ""
 
@@ -1220,13 +1228,13 @@ msgstr ""
 msgid "delegate registration"
 msgstr ""
 
-#: partials/modals/multisignatureModal.html:92
+#: partials/modals/multisignatureModal.html:93
 msgid "next"
 msgstr ""
 
-#: partials/modals/registrationDelegateModal.html:108
-#: partials/modals/registrationDelegateModal.html:38
-#: partials/modals/registrationDelegateModal.html:70
+#: partials/modals/registrationDelegateModal.html:109
+#: partials/modals/registrationDelegateModal.html:39
+#: partials/modals/registrationDelegateModal.html:71
 msgid "register"
 msgstr ""
 
@@ -1234,9 +1242,9 @@ msgstr ""
 msgid "remove vote"
 msgstr ""
 
-#: partials/modals/sendTransaction.html:119
-#: partials/modals/sendTransaction.html:49
-#: partials/modals/sendTransaction.html:84
+#: partials/modals/sendTransaction.html:120
+#: partials/modals/sendTransaction.html:50
+#: partials/modals/sendTransaction.html:85
 msgid "send ETP"
 msgstr ""
 

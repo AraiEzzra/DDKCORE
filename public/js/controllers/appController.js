@@ -102,7 +102,9 @@ angular.module('ETPApp').controller('appController', ['dappsService', '$scope', 
         'main.blockchain',
         'passphrase',
         'main.dappstore',
-        'main.multi'
+        'main.multi',
+        'main.explorer'
+
     ];
 
     $scope.getPriceTicker = function () {
@@ -523,5 +525,28 @@ angular.module('ETPApp').controller('appController', ['dappsService', '$scope', 
     $timeout(function () {
         $scope.getVersion();
     }, 60 * 10 * 1000);
+
+
+
+    //console.log("side menu click");
+    $scope.myClass = [];
+    $scope.classAdd = function() {
+        $scope.myClass.push('test');
+    }
+    $scope.classRemove = function() {
+        $scope.myClass.pop('test');
+    }
+
+    window.onpopstate = function(event) {
+        //alert("location: " + document.location + ", state: " + JSON.stringify(event.state));
+        if($scope.myClass.length == 0){
+            $scope.classAdd();
+            console.log($scope.myClass);
+    
+        }else{
+            $scope.classRemove();
+            console.log($scope.myClass);
+        }
+      };
 
 }]);
