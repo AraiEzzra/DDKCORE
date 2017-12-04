@@ -1,6 +1,6 @@
 var winston = require('winston');
 require('winston-daily-rotate-file');
-var winstonWrapper = require('winston-meta-wrapper');
+
 const levels = {
   error: 0,
   warn: 1,
