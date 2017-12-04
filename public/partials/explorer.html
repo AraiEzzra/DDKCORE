@@ -1,7 +1,7 @@
 <div class="top-margin"></div>
 <!--For Top Bar-->
 <div class="row">
-    <div class="col-md-3 col-sm-6">
+    <div class="col-md-3 col-sm-6 pr7">
         <div class="widget smart-standard-widget ch-title-border-top">
             <div class="widget-caption info">
                 <div class="widget-detail">
@@ -12,7 +12,7 @@
             <span class="icon-box light-green-bg"><i class="material-icons">link</i></span>
         </div>
     </div>
-    <div class="col-md-3 col-sm-6">
+    <div class="col-md-3 col-sm-6 pr7 pl7">
         <div class="widget smart-standard-widget red-border-top">
             <div class="widget-caption info">
                 <div class="widget-detail">
@@ -24,7 +24,7 @@
         </div>
     </div>
 
-    <div class="col-md-3 col-sm-6">
+    <div class="col-md-3 col-sm-6 pr7 pl7">
         <div class="widget smart-standard-widget orange-border-top">
             <div class="widget-caption info">
                 <div class="widget-detail">
@@ -36,7 +36,7 @@
         </div>
     </div>
 
-    <div class="col-md-3 col-sm-6">
+    <div class="col-md-3 col-sm-6 pl7">
         <div class="widget smart-standard-widget green-border-top">
             <div class="widget-caption info">
                 <div class="widget-detail">
@@ -88,7 +88,7 @@
                     </td>
                 </tr>
                 <tr ng-show="loading">
-                    <td class="blue white-text" colspan="8">
+                    <td class="gray2 white-text" colspan="8">
                         <translate>Loading...</translate>
                     </td>
                 </tr>
@@ -138,7 +138,7 @@
                     </td>
                 </tr>
                 <tr ng-show="loading">
-                    <td class="blue white-text" colspan="8">
+                    <td class="gray2 white-text" colspan="8">
                         <translate>Loading...</translate>
                     </td>
                 </tr>
@@ -149,5 +149,35 @@
                 <p class="empty-state-text"><translate>No results for this search.</translate></p>
             </div>
         </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h2>
+                    {{'ETP Tansaction Per Day'|translate}}
+                </h2>
+            </div>
+            <div class="panel-body">
+                <canvas class="chart chart-line" chart-data="data" chart-labels="labels" chart-series="series" chart-click="onClick"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+        <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h2>
+                        {{'ETP Price'|translate}}
+                    </h2>
+                </div>
+                <div class="panel-body">
+                    <canvas id="bar" class="chart chart-bar"
+                        chart-data="data" chart-labels="labels"> chart-series="series"
+                    </canvas>
+                </div>
+            </div>
     </div>
 </div>

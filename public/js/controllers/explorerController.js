@@ -1,13 +1,11 @@
 require('angular');
 
 angular.module('ETPApp').controller('explorerController', ['$scope', '$timeout', '$rootScope', '$http', "userService", "$interval", 'blockService', 'blockModal', 'blockInfo', 'userInfo', 'ngTableParams', 'viewFactory', 'gettextCatalog', function ($rootScope, $timeout, $scope, $http, userService, $interval, blockService, blockModal, blockInfo, userInfo, ngTableParams, viewFactory, gettextCatalog) {
-    console.log(111111111111111111111 + "Demo");
-
-
+    
     $scope.view = viewFactory;
     $scope.view.inLoading = true;
     $scope.view.loadingText = gettextCatalog.getString('Loading blockchain');
-    $scope.view.page = {title: gettextCatalog.getString('Blockchain'), previous: null};
+    $scope.view.page = {title: gettextCatalog.getString('Explorer'), previous: null};
     $scope.view.bar = {showBlockSearchBar: true};
     $scope.address = userService.address;
     $scope.loading = true;
@@ -19,7 +17,7 @@ angular.module('ETPApp').controller('explorerController', ['$scope', '$timeout',
     // Blocks
     $scope.tableBlocks = new ngTableParams({
         page: 1,
-        count: 25,
+        count: 10,
         sorting: {
             height: 'desc'
         }
@@ -108,4 +106,27 @@ angular.module('ETPApp').controller('explorerController', ['$scope', '$timeout',
         }, 2000); // Delay 2000 ms
     });
 
+    $scope.labels = ["January", "February", "March", "April", "May", "June", "July"];
+    $scope.series = ['Series A'];
+    $scope.data = [
+      [65, 59, 80, 81, 56, 55, 40]
+    ];
+    $scope.onClick = function (points, evt) {
+      console.log(points, evt);
+    };
+    
+    // Simulate async data update 
+    $timeout(function () {
+      $scope.data = [
+        [28, 48, 40, 19, 86, 27, 90]
+      ];
+    }, 3000);
+
+    $scope.labels = ['2006', '2007', '2008', '2009', '2010', '2011', '2012'];
+    $scope.series = ['Series A'];
+    
+    $scope.data = [
+        [65, 59, 80, 81, 56, 55, 40]
+    ];
+           
 }]);

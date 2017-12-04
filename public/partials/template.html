@@ -88,7 +88,7 @@
                  <i class="mdi-content-send left"></i>
                  <translate>SEND</translate>
               </a>
-              <button class="btn btn-blue-nav waves-effect waves-light left-margin-20" ui-sref="main.dashboard" ng-click="classRemove()">Back</button>
+              <button class="btn btn-blue-nav waves-effect waves-light left-margin-20" ui-sref="main.dashboard" ng-click="classRemove()" ng-if="$state.current.name === 'main.explorer'">Back</button>
 
 
               <div class="mini-chart valign-wrapper" ng-show="syncState != undefined">
@@ -122,7 +122,7 @@
               </div>
            </div>
         </div>
-        <div class="search-bar" ng-show="view.bar.showTransactionsSearchBar">
+        <!-- <div class="search-bar" ng-show="view.bar.showTransactionsSearchBar">
            <div class="search-toggle" ng-if="searchTransactions.searchForTransaction">
               <i ng-click="clearSearch()" class="mdi-content-clear small"></i>
            </div>
@@ -147,7 +147,7 @@
                  </div>
               </span>
            </div>
-        </div>
+        </div> -->
         <div id="page-nav" class="clearfix mobile-nav" ng-if="view.bar.showDappsBar">
            <ul class="nav nav-underline categories pull-left">
               <li>
