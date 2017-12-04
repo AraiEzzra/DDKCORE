@@ -1,6 +1,6 @@
 <div class="top-margin"></div>
 <div class="row">
-  <div class="col-md-6 col-sm-12 col-xs-12 ">
+  <div class="col-md-6 col-sm-12 col-xs-12 pr7 dashboard-info">
     <div class="panel widget widget-brown">
       <div class="ETP-icon"></div>
       <div class="panel-body">
@@ -13,7 +13,7 @@
       </div>
     </div>
   </div>
-  <!-- <div class="col-lg-3 col-md-6 col-sm-6 col-xs-12">
+  <!-- <div class="col-lg-3 col-md-6 col-sm-6 col-xs-12 dashboard-info">
     <div class="panel  widget widget-violet">
       <div class="dapp-icon"></div>
       <div class="panel-body">
@@ -26,7 +26,7 @@
       </div>
     </div>
   </div> -->
-  <div class="col-md-6 col-sm-12 col-xs-12">
+  <div class="col-md-6 col-sm-12 col-xs-12 pl7 dashboard-info">
     <div class="panel  widget widget-brown" ng-show="diffVersion!=-1">
       <div class="panel-body">
         <div class="wg-label">
@@ -37,7 +37,7 @@
         </div>
       </div>
     </div>
-    <div class="panel  widget widget-red" ng-show="diffVersion==-1">
+    <div class="panel widget widget-red" ng-show="diffVersion==-1">
       <div class="panel-body">
         <div class="wg-label">
           <translate>ETP Client Outdated</translate>
@@ -104,7 +104,7 @@
         </tbody>
       </table>
       <div class="panel-body empty-body" ng-if="!transactions.length">
-        <div class="logo-grey"></div>
+        <!-- <div class="logo-grey"></div> -->
         <p class="empty-state-text">
           {{'You have not made any transactions yet.'|translate}}
         </p>

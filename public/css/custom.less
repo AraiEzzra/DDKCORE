@@ -2,7 +2,27 @@ body{
   background-color: #eef5f9;
 }
 
-
+.pr7{
+  padding-right: 7.5px;
+}
+.pl7{
+  padding-left: 7.5px;
+}
+.gray2{
+  background-color: @gray2;
+}
+.tab-nav{
+  .nav-underline{
+    li{
+      &.active {
+        a {
+          font-weight: 500;
+          border-bottom: solid 4px #d32f2f;
+        }
+      }
+    }
+  }
+}
 
 
 
@@ -22,6 +42,9 @@ body{
   #title{
     color: @brown1;
   }
+  #top-menu{
+    padding: 14px 10px;
+  }
 }
 .top-header-section{
   position: fixed;
@@ -32,11 +55,6 @@ body{
 }
 .main-page-content{
   margin-top: 67px;
-}
-#header {
-  .more-down {
-    color: #27292a;
-  }
 }
 .pass-window-icon{
   background-image: none;
@@ -63,6 +81,9 @@ body{
   margin-bottom: 15px;
 }
 #header{
+  .more-down {
+    color: #27292a;
+  }
   .log-box{
     #logo{
       background-image: none;
@@ -73,6 +94,9 @@ body{
       font-weight: 500;
       font-size: 20px;
     }
+  }
+  .logo {
+    padding: 19px 10px;
   }
 }
 .pass-window-icon{
@@ -98,6 +122,9 @@ body{
     background-color: #fbfbfb;
     border-bottom: #f5f1f1 1px solid;
     .address {
+      color: #d32f2f;
+    }
+    .name{
       color: #797979;
     }
   }
@@ -305,7 +332,7 @@ body{
 
 
 /* For modal */
-.app-modal .material-modal-content .modal-header.modal-iconed{
+.app-modal .material-modal-content .modal-header.modal-iconed, .app-modal .modal-content .modal-header.modal-iconed{
   background-image: none;
   color: @white;
   background-color: #cc3d3d;
@@ -313,5 +340,64 @@ body{
     font-size: 35px;
     padding-top: 21px;
     display: inline-block;
+  }
+}
+
+.panel-default .panel-heading .more{
+  top: 17px;
+}
+/* For Table */
+.panel-default{
+  table {
+    .head{
+      border-bottom: 1px solid @border-grey;
+      th {
+        padding: 12px;
+      }
+    }
+    td{
+      &:first-child {
+        padding-left: 12px;
+      }
+    }
+    &.ng-table{
+      tr{
+        &.voted {
+          background-color: none;
+        }
+      } 
+    }
+  }
+}
+
+.padding-in-1400{
+  padding-left: 12px!important;
+}
+/* End Table */
+
+/* For Pagination */
+.paginated .pagination>li>a, .paginated .pagination>li>span{
+  margin-right:5px;
+  min-width: 32px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+.dashboard-info{
+  .panel-body{
+    padding: 0;
+  }
+  .widget{
+    padding: 15px;
   }
 }

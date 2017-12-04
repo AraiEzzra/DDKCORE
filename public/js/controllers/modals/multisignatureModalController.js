@@ -143,3 +143,15 @@ angular.module('ETPApp').controller('multisignatureModalController', ["$scope", 
     });
 
 }]);
+
+
+
+
+
+
+
+
+
+
+
+

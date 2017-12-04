@@ -34,6 +34,11 @@ ETPApp.config([
                 templateUrl: "/partials/account.html",
                 controller: "accountController"
             })
+            .state('main.explorer', {
+                url: "/explorer",
+                templateUrl: "/partials/explorer.html",
+            	controller: "explorerController"
+            })
             // .state('main.multi', {
             //     url: "/wallets",
             //     templateUrl: "/partials/multi.html",
@@ -100,7 +105,9 @@ ETPApp.config([
                 controller: "passphraseController"
             });
     }
-]).run(function (languageService, clipboardService) {
+]).run(function (languageService, clipboardService,$rootScope,$state) {
     languageService();
     clipboardService();
+    $rootScope.$state = $state;
+    
 });

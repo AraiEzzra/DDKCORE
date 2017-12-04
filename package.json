@@ -61,7 +61,6 @@
     "valid-url": "=1.0.9",
     "validator": "=6.2.1",
     "validator.js": "=2.0.3",
-    "winston-meta-wrapper": "^1.2.0",
     "z-schema": "=3.18.2"
   },
   "devDependencies": {
