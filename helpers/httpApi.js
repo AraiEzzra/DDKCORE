@@ -6,7 +6,6 @@
  * @memberof module:helpers
  * @module helpers/httpApi
  */
-var winstonWrapper = require('winston-meta-wrapper');
 var extend = require('extend');
 var checkIpInList = require('./checkIpInList');
 
