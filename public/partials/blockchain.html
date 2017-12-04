@@ -1,6 +1,41 @@
 <div class="top-margin"></div>
 <div class="row">
     <div class="col-xs-12">
+        <div class="search-bar" ng-show="view.bar.showBlockSearchBar">
+            <div class="search-toggle" ng-if="searchBlocks.searchForBlock">
+                <i ng-click="clearSearch()" class="mdi-content-clear small"></i>
+            </div>
+            <div class="input-group">
+                <span class="input-group-addon">
+                <i class="mdi-action-search"></i>
+                </span>
+                <input type="text" class="form-control" placeholder="{{'Search for blocks'|translate}}" ng-model="searchBlocks.searchForBlock">
+                <span class="input-group-addon spinner-addon">
+                    <div class="preloader-wrapper" ng-class="{'active': searchBlocks.inSearch}">
+                        <div class="spinner-layer spinner-blue-only">
+                        <div class="circle-clipper left">
+                            <div class="circle"></div>
+                        </div>
+                        <div class="gap-patch">
+                            <div class="circle"></div>
+                        </div>
+                        <div class="circle-clipper right">
+                            <div class="circle"></div>
+                        </div>
+                        </div>
+                    </div>
+                </span>
+            </div>
+        </div>
+
+
+
+
+
+
+
+
+
         <div class="panel panel-default" ng-class="{'paginated': countForgingBlocks || !searchBlocks.searchForBlock}">
             <div class="panel-heading">
                 <h2>
