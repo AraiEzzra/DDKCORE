@@ -62,6 +62,35 @@
         }
       }
     },
+    "/api/accounts": {
+      "get": {
+        "tags": [
+          "Account"
+        ],
+        "description": "Get Account Information",
+        "operationId": "findByAddress",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "address",
+            "in": "query",
+            "description": "fetch balance",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "response",
+            "schema": {
+              "$ref": "#/definitions/response1"
+            }
+          }
+        }
+      }
+    },
     "/api/accounts/getBalance": {
       "get": {
         "tags": [
@@ -160,6 +189,37 @@
         ],
         "description":"Unlock User's Account",
         "operationId":"Unlock",
+        "produces":[
+          "application/json"
+        ],
+        "parameters":[
+          {
+            "name":"address",
+            "in":"body",
+            "description":"address is required",
+            "required":true,
+            "schema":{
+              "$ref":"#/definitions/create"
+            }
+          }
+        ],
+        "responses":{
+          "200":{
+            "description":"create response",
+            "schema":{
+              "$ref":"#/definitions/response"
+            }
+          }
+        }
+      }
+    },
+    "/api/accounts/logout":{
+      "post":{
+        "tags":[
+          "Account"
+        ],
+        "description":"Logout a User",
+        "operationId":"Logout",
         "produces":[
           "application/json"
         ],

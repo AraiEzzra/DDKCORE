@@ -56,7 +56,7 @@ angular.module('ETPApp').controller('multisignatureModalController', ["$scope", 
 
             }
             if (buffer.length == 32) {
-                var ETP = require('ETP-js');
+                var ETP = require('lisk-js');
                 var address = ETP.crypto.getAddress($scope.member);
                 if ($scope.members[$scope.address] || address == userService.address) {
                     return;

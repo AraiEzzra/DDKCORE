@@ -2,6 +2,7 @@
 
 var httpApi = require('./httpApi');
 var extend = require('extend');
+var utils = require('../utils.js')
 
 /**
  * Express.js router wrapper.
@@ -23,13 +24,14 @@ var Router = function () {
 			if (route.length !== 2 || ['post', 'get', 'put'].indexOf(route[0]) === -1) {
 				throw Error('Invalid map config');
 			}
-			router[route[0]](route[1], function (req, res, next) {
+			router[route[0]](route[1], utils.validateClient, function (req, res, next) {
 				var reqRelevantInfo = {
 					ip: req.ip,
 					method: req.method,
-					path: req.path
+					path: req.path,
+					session: req.session
 				};
-				root[config[params]](extend({}, reqRelevantInfo, {'body': route[0] === 'get' ? req.query : req.body}), httpApi.respond.bind(null, res));
+				root[config[params]](extend({}, reqRelevantInfo, res, {'body': route[0] === 'get' ? req.query : req.body}), httpApi.respond.bind(null, res));
 			});
 		});
 	};

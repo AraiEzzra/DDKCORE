@@ -36,20 +36,20 @@ angular.module('ETPApp').controller('newUserController', ["$scope", "$http", "ne
             $scope.noMatch = true;
         } else {
             $scope.view.inLoading = true;
-            $http.post("/api/accounts/open/", { secret: pass })
-                .then(function (resp) {
-                    $scope.view.inLoading = false;
-                    if (resp.data.success) {
-                        newUser.deactivate();
-                        userService.setData(resp.data.account.address, resp.data.account.publicKey, resp.data.account.balance, resp.data.account.unconfirmedBalance, resp.data.account.effectiveBalance);
-                        userService.setForging(resp.data.account.forging);
-                        userService.setSecondPassphrase(resp.data.account.secondSignature);
-                        userService.unconfirmedPassphrase = resp.data.account.unconfirmedSignature;
-                        $state.go('main.dashboard');
-                    } else {
-                        console.error("Login failed. Failed to open account.");
-                    }
-                });
+            //$http.get("/api/accounts/open")
+            $http.post("/api/accounts/open/", { secret: pass }).then(function (resp) {
+                $scope.view.inLoading = false;
+                if (resp.data.success) {
+                    newUser.deactivate();
+                    userService.setData(resp.data.account.address, resp.data.account.publicKey, resp.data.account.balance, resp.data.account.unconfirmedBalance, resp.data.account.effectiveBalance);
+                    userService.setForging(resp.data.account.forging);
+                    userService.setSecondPassphrase(resp.data.account.secondSignature);
+                    userService.unconfirmedPassphrase = resp.data.account.unconfirmedSignature;
+                    $state.go('main.dashboard');
+                } else {
+                    console.error("Login failed. Failed to open account.");
+                }
+            });
         }
     }
 

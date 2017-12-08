@@ -1,7 +1,7 @@
 require('angular');
 var compareVersion = require('../../node_modules/compare-version/index.js');
 
-angular.module('ETPApp').controller('appController', ['dappsService', '$scope', '$rootScope', '$http', "userService", "$interval", "$timeout", 'viewFactory', '$state', 'blockService', 'sendTransactionModal', 'registrationDelegateModal', 'serverSocket', 'delegateService', '$window', 'forgingModal', 'errorModal', 'userInfo', 'transactionsService', 'secondPassphraseModal', 'focusFactory', 'gettextCatalog', function (dappsService, $rootScope, $scope, $http, userService, $interval, $timeout, viewFactory, $state, blockService, sendTransactionModal, registrationDelegateModal, serverSocket, delegateService, $window, forgingModal, errorModal, userInfo, transactionsService, secondPassphraseModal, focusFactory, gettextCatalog) {
+angular.module('ETPApp').controller('appController', ['dappsService', '$scope', '$rootScope', '$http', "userService", "$interval", "$timeout", 'viewFactory', '$state', 'blockService', 'sendTransactionModal', 'registrationDelegateModal', 'serverSocket', 'delegateService', '$window', 'forgingModal', 'errorModal', 'userInfo', 'transactionsService', 'secondPassphraseModal', 'focusFactory', 'gettextCatalog', '$location', function (dappsService, $rootScope, $scope, $http, userService, $interval, $timeout, viewFactory, $state, blockService, sendTransactionModal, registrationDelegateModal, serverSocket, delegateService, $window, forgingModal, errorModal, userInfo, transactionsService, secondPassphraseModal, focusFactory, gettextCatalog, $location) {
 
     $scope.searchTransactions = transactionsService;
     $scope.searchDapp = dappsService;
@@ -24,7 +24,7 @@ angular.module('ETPApp').controller('appController', ['dappsService', '$scope', 
             }
         }
     }
-
+    
     $scope.getCategories = function () {
         $http.get("/api/dapps/categories").then(function (response) {
             if (response.data.success) {
@@ -424,6 +424,16 @@ angular.module('ETPApp').controller('appController', ['dappsService', '$scope', 
 
     $scope.myUserInfo = function () {
         $scope.modal = userInfo.activate({userId: userService.address});
+    }
+
+    $scope.logout = function () {
+        //$scope.modal = userInfo.activate({userId: userService.address});
+        $http.post('/api/accounts/logout')
+            .then(function(res) {
+                //alert(JSON.stringify(res));
+                //$state.go('main.home');
+                $location.path('/');
+            });
     }
 
     $scope.syncInterval = $interval(function () {

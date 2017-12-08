@@ -14,6 +14,7 @@ var checkIpInList = require('./checkIpInList');
  * @namespace middleware
  */
 var middleware = {
+
 	/**
 	 * Adds CORS header to all requests.
 	 * @param {Object} req
