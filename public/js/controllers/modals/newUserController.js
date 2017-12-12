@@ -36,7 +36,6 @@ angular.module('ETPApp').controller('newUserController', ["$scope", "$http", "ne
             $scope.noMatch = true;
         } else {
             $scope.view.inLoading = true;
-            //$http.get("/api/accounts/open")
             $http.post("/api/accounts/open/", { secret: pass }).then(function (resp) {
                 $scope.view.inLoading = false;
                 if (resp.data.success) {
