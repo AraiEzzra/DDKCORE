@@ -56,13 +56,11 @@ var async = require('async');
 var extend = require('extend');
 var fs = require('fs');
 var chalk = require('chalk');
-var session = require('express-session');
 
 var checkIpInList = require('./helpers/checkIpInList.js');
 var genesisblock = require('./genesisBlock.json');
 var git = require('./helpers/git.js');
 var https = require('https');
-//var logger = require('./logger.js');
 var packageJson = require('./package.json');
 var path = require('path');
 var program = require('commander');
@@ -72,7 +70,7 @@ var util = require('util');
 var z_schema = require('./helpers/z_schema.js');
 var currentDay = '';
 const Logger = require('./logger.js');
-let logman = new Logger('MY_SESSION_ID', 'MY_ADDRESS');
+let logman = new Logger();
 let logger = logman.logger;
 
 process.stdin.resume();
@@ -402,15 +400,20 @@ d.run(function () {
 		 * at leats will contain the required elements.
 		 * @param {function} cb - Callback function.
 		 */
-		connect: ['config', 'public', 'genesisblock', 'logger', 'build', 'network', function (scope, cb) {
+		connect: ['config', 'public', 'genesisblock', 'logger', 'build', 'network', 'cache', function (scope, cb) {
 			var path = require('path');
 			var bodyParser = require('body-parser');
 			var cookieParser = require('cookie-parser');
 			var methodOverride = require('method-override');
 			var queryParser = require('express-query-int');
 			var randomString = require('randomstring');
-			var http = require('http');
-			var io = require('socket.io');
+			var session = require('express-session');
+			var RedisStore = require('connect-redis')(session);
+			var options = {
+				host: scope.cache.client.connection_options.host,
+				port: scope.cache.client.connection_options.port,
+				client: scope.cache.client
+			};
 
 			scope.nonce = randomString.generate(16);
 			scope.network.app.engine('html', require('ejs').renderFile);
@@ -423,7 +426,31 @@ d.run(function () {
 			scope.network.app.use(bodyParser.json({limit: '2mb'}));
 			scope.network.app.use(methodOverride());
 			scope.network.app.use(cookieParser());
-			scope.network.app.use(session({ secret: "fd34s@!@dfa453f3DF#$D&W", resave: false, saveUninitialized: false }));
+			scope.network.app.use(session({ 
+				key: 'ETP.sess',
+				store: new RedisStore(options),
+				secret: "fd34s@!@dfa453f3DF#$D&W", 
+				resave: false, 
+				saveUninitialized: false,
+				cookie: {
+					path: '/',
+					httpOnly: true,
+					secure: false,
+					maxAge: 1 * 60 * 1000,
+					signed: false
+				} 
+			}));
+
+			scope.network.app.use(function(req, res, next) {
+				if(req.session.address) {
+					logman = new Logger(req.session.id, req.session.address);
+					logger = logman.logger;
+				} else {
+					logman = new Logger();
+					logger = logman.logger;
+				}  
+				next();
+			});
 			
 			var ignore = ['id', 'name', 'lastBlockId', 'blockId', 'transactionId', 'address', 'recipientId', 'senderId', 'previousBlock'];
 
