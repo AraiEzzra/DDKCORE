@@ -553,6 +553,7 @@ Frogings.prototype.onBind = function (scope) {
 		scope.accounts,
 		scope.rounds
 	);
+
 };
 
 //Navin: Update Froze amount into mem_accounts table on every single order
@@ -577,12 +578,14 @@ Frogings.prototype.updateFrozeAmount = function (data,cb) {
 				return setImmediate(cb,null);
 			}).catch(function (err) {
 				library.logger.error(err.stack);
+				return setImmediate(cb, err.toString());
 			});
 		}else{
 			return setImmediate(cb,'Not have enough balance');
 		}
 	}).catch(function (err) {
 		library.logger.error(err.stack);
+		return setImmediate(cb, err.toString());
 	});
 
 	
@@ -607,6 +610,35 @@ Frogings.prototype.shared = {
 		}, function (err) {
 			return setImmediate(cb, 'Unable to count transactions');
 		});
+	},
+
+	sendFreezeOrder : function(req,cb){
+
+
+	},
+
+	getAllFreezeOrders : function(req,cb){
+
+		library.db.query(sql.getFrozeOrders,{senderId:req.body.address}).then(function (rows) {
+			return setImmediate(cb, null, {
+				freezeOrders: JSON.stringify(rows)
+			});
+		}, function (err) {
+			return setImmediate(cb, 'Unable to count transactions');
+		});
+		
+	},
+
+	getAllActiveFreezeOrders : function(req,cb){
+
+		library.db.query(sql.getActiveFrozeOrders,{senderId:req.body.address}).then(function (rows) {
+			return setImmediate(cb, null, {
+				freezeOrders: JSON.stringify(rows)
+			});
+		}, function (err) {
+			return setImmediate(cb, 'Unable to count transactions');
+		});
+		
 	},
 
 	addTransactionForFreeze: function (req, cb) {

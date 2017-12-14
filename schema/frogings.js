@@ -14,10 +14,8 @@ module.exports = {
 				minLength: 1,
 				maxLength: 100
 			},
-			amount: {
-				type: 'integer',
-				minimum: 1,
-				maximum: constants.totalAmount
+			freezedAmount: {
+				type: 'integer'
 			},
 			
 			publicKey: {
@@ -30,6 +28,6 @@ module.exports = {
 				maxLength: 100
 			}
 		},
-		required: ['secret']
+		required: ['secret','freezedAmount']
 	}
 };

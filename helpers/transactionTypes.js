@@ -10,5 +10,6 @@ module.exports = {
 	IN_TRANSFER: 6,
 	OUT_TRANSFER: 7,
 	FROZE: 8,
-	CONTRACT: 9
+	CONTRACT: 9,
+	SENDFREEZE : 10
 };

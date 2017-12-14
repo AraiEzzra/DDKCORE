@@ -27,7 +27,10 @@ function FrogingsHttpApi (frogingsModule, app, logger, cache) {
 	router.map(frogingsModule.shared, {
 		
 		'post /freeze' : 'addTransactionForFreeze',
-		'get /count': 'getFrozensCount'
+		'get /count': 'getFrozensCount',
+		'post /getAllOrders' : 'getAllFreezeOrders',
+		'post /sendFreezeOrder' : 'sendFreezeOrder',
+		'post /getAllActiveOrders' : 'getAllActiveFreezeOrders'		
 	});
 
 	httpApi.registerEndpoint('/api/frogings', app, router, frogingsModule.isLoaded);
