@@ -105,9 +105,15 @@ ETPApp.config([
                 controller: "passphraseController"
             });
     }
-]).run(function (languageService, clipboardService,$rootScope,$state) {
+]).run(function (languageService, clipboardService,$rootScope,$state, AuthService) {
     languageService();
     clipboardService();
+    AuthService.getUserStatus()
+        .then(function () {
+            if (AuthService.isLoggedIn()) {
+                $state.go('main.dashboard');
+            }
+        });
     $rootScope.$state = $state;
     
 });

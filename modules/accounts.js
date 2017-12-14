@@ -593,11 +593,6 @@ Accounts.prototype.shared = {
 				return setImmediate(cb, err[0].message);
 			}
 
-			// get account informaton from session's cookies
-			// if(req.session.address) {
-			// 	var address = req.session.address;
-			// }
-
 			if (!req.body.address && !req.body.publicKey) {
 				return setImmediate(cb, 'Missing required property: address or publicKey');
 			}
