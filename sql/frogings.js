@@ -24,7 +24,7 @@ var TransactionsSql = {
 
   getMemoryAccounts: 'SELECT * FROM  mem_accounts',
 
-  updateFrozeAmount: 'UPDATE mem_accounts SET "totalFrozeAmount" = ${totalFrozeAmount} WHERE "address" = ${senderId}',
+  updateFrozeAmount: 'UPDATE mem_accounts SET "totalFrozeAmount" = ("totalFrozeAmount" + ${totalFrozeAmount}) WHERE "address" = ${senderId}',
 
   getFrozeAmount: 'SELECT "totalFrozeAmount" FROM mem_accounts WHERE "address"=${senderId}',
 
@@ -40,9 +40,9 @@ var TransactionsSql = {
 
   getActiveFrozeOrder: 'SELECT * FROM stake_orders WHERE "senderId"=${senderId} AND "id"=${frozeId} AND "status"=1',
 
-  updateFrozeOrder : 'UPDATE stake_orders SET "status"=0,"recipientId"=${recipientId} WHERE "senderId"=${senderId} AND "id"=${frozeId} AND "status"=1',
+  updateFrozeOrder: 'UPDATE stake_orders SET "status"=0,"recipientId"=${recipientId} WHERE "senderId"=${senderId} AND "id"=${frozeId} AND "status"=1',
 
-  createNewFrozeOrder : 'INSERT INTO stake_orders ("id","status","startTime","nextMilestone","endTime","senderId","freezedAmount","milestoneCount") VALUES (${frozeId},1,${startTime},${nextMilestone},${endTime},${senderId},${freezedAmount},${milestoneCount}) '
+  createNewFrozeOrder: 'INSERT INTO stake_orders ("id","status","startTime","nextMilestone","endTime","senderId","freezedAmount","milestoneCount") VALUES (${frozeId},1,${startTime},${nextMilestone},${endTime},${senderId},${freezedAmount},${milestoneCount}) '
 
 };
 
