@@ -49,13 +49,13 @@
     </div>
 </div>
 <div class="row" ng-if="delegate.username">
-    <div class="col-sm-12 col-xs-12 col-md-6">
+    <div class="col-sm-12 col-xs-12 col-md-6 pr7">
         <div class="info-panel info-panel-grey clearfix">
             <span class="title">{{delegate.username}}</span>
             <span class="plain-text" ng-show="delegate.time">{{'Registered on'|translate}} {{delegate.time | timestampFilter}}</span>
         </div>
     </div>
-    <div class="col-md-6 col-xs-12 col-sm-12">
+    <div class="col-md-6 col-xs-12 col-sm-12 pl7">
         <div class="info-panel info-panel-grey">
             <span class="title">{{'ETP Earned'|translate}}</span>
             <span class="plain-text text-right">{{totalForged  | ETPFilter }} ETP</span>
@@ -68,25 +68,25 @@
              </div>
          </div> -->
     </div>
-    <div class="col-md-3 col-xs-12 col-sm-12">
+    <div class="col-md-3 col-xs-12 col-sm-12 pr7">
         <div class="info-panel info-panel-grey">
             <span class="title">{{'Today'|translate}}</span>
             <span class="plain-text text-right">{{statistics.today  | ETPFilter | number:2 }} ETP</span>
         </div>
     </div>
-    <div class="col-md-3 col-xs-12 col-sm-12">
+    <div class="col-md-3 col-xs-12 col-sm-12 pr7 pl7">
         <div class="info-panel info-panel-grey">
             <span class="title">{{'Last 24 hours'|translate}}</span>
             <span class="plain-text text-right">{{statistics.last24h  | ETPFilter | number:2 }} ETP</span>
         </div>
     </div>
-    <div class="col-md-3 col-xs-12 col-sm-12">
+    <div class="col-md-3 col-xs-12 col-sm-12 pr7 pl7">
         <div class="info-panel info-panel-grey">
             <span class="title">{{'Last 7 days'|translate}}</span>
             <span class="plain-text text-right">{{statistics.last7d  | ETPFilter | number:2 }} ETP</span>
         </div>
     </div>
-    <div class="col-md-3 col-xs-12 col-sm-12">
+    <div class="col-md-3 col-xs-12 col-sm-12 pl7">
         <div class="info-panel info-panel-grey">
             <span class="title">{{'Last 30 days'|translate}}</span>
             <span class="plain-text text-right">{{statistics.last30d  | ETPFilter | number:2 }} ETP</span>
@@ -94,7 +94,7 @@
     </div>
 </div>
 <div class="row" ng-if="delegate.username">
-    <div class="col-lg-4 col-md-6 col-sm-6 col-xs-6">
+    <div class="col-lg-4 col-md-6 col-sm-6 col-xs-6 pr7">
         <div class="light-graph">
             <div class="light-graph-heading">{{'Rank'|translate}}</div>
             <div class="light-graph-body">
@@ -103,7 +103,7 @@
             </div>
         </div>
     </div>
-    <div class="col-lg-4 col-md-6 col-sm-6 col-xs-6">
+    <div class="col-lg-4 col-md-6 col-sm-6 col-xs-6 pr7 pl7">
         <div class="light-graph">
             <div class="light-graph-heading">{{'Productivity'|translate}}</div>
             <div class="light-graph-body">
@@ -113,7 +113,7 @@
         </div>
     </div>
     <div class="clearfix visible-md visible-sm visible-xs"></div>
-    <div class="col-lg-4 col-md-6 col-sm-6 col-xs-6">
+    <div class="col-lg-4 col-md-6 col-sm-6 col-xs-6 pl7">
         <div class="light-graph">
             <div class="light-graph-heading">{{'Approval'|translate}}</div>
             <div class="light-graph-body">

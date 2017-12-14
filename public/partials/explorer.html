@@ -72,16 +72,15 @@
                     </div>
                 </div>
                 <tr ng-repeat="block in $data" ng-class="{'voted': address == block.generatorId}">
+                    <td data-title="tableBlocks.cols.Id" sortable="'Id'" class="pointer"><a href="#">40005554</a></td>
                     <td data-title="tableBlocks.cols.height" sortable="'height'" ng-click="blockInfo(block)" class="pointer"><a href="#">{{block.height}}</a></td>
-                    <td data-title="tableBlocks.cols.blockId" ng-click="blockInfo(block)" class="pointer" ng-show="showAllColumns"><a href="#">{{block.id}}</a></td>
-                    <td data-title="tableBlocks.cols.generator" ng-show="showAllColumns"><a href="#" ng-click="userInfo(block.generatorId)">{{block.generatorId}}</a></td>
                     <td data-title="tableBlocks.cols.timestamp" sortable="'timestamp'"><span ng-show="block.timestamp > 0">{{block.timestamp | timeAgoFilter : showFullTime}}</span> <span ng-show="block.timestamp == 0">-</span></td>
-                    <td data-title="tableBlocks.cols.numberOfTransactions" ng-click="showBlock(block)" class="pointer"><a href="#">{{block.numberOfTransactions}}</a></td>
-                    <td data-title="tableBlocks.cols.totalAmount" sortable="'totalAmount'">{{block.totalAmount  | ETPFilter}}</td>
-                    <td data-title="tableBlocks.cols.totalFee" sortable="'totalFee'">{{block.totalFee  | ETPFilter}}</td>
-                    <td data-title="tableBlocks.cols.reward" sortable="'reward'">{{block.reward | ETPFilter}}</td>
-                    <td data-title="''" class="width-80"></td>
-                </tr>
+                    <td data-title="tableBlocks.cols.transactions"><a href="#" ng-click="userInfo(block.generatorId)">{{block.generatorId}}</a></td>
+                    <td data-title="tableBlocks.cols.generatedBy"><a href="#" ng-click="userInfo(block.generatorId)">{{block.generatorId}}</a></td>
+                    <td data-title="tableBlocks.cols.amount"><a href="#">{{block.numberOfTransactions}}</a></td>
+                    <td data-title="tableBlocks.cols.fee">{{block.totalAmount  | ETPFilter}}</td>
+                    <td data-title="tableBlocks.cols.monthlyReward" sortable="'reward'">{{block.reward | ETPFilter}}</td>
+               </tr>
                 <tr ng-show="!loading && (!$data || $data.length == 0) && !searchBlocks.searchForBlock">
                     <td colspan="8">
                         <translate>No blockchain</translate>
