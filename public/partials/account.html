@@ -8,9 +8,7 @@
           {{'Balance'|translate}}
         </div>
         <div class="wg-data">
-          <span class="strong">{{balanceToShow[0] || 0}}
-            <span class="small">{{balanceToShow[1]}}</span>
-          </span>&nbsp;ETP
+          <span class="strong">{{balanceToShow[0] || 0}}<span class="small">{{balanceToShow[1]}}</span></span>&nbsp;ETP
         </div>
       </div>
     </div>
@@ -35,10 +33,7 @@
           {{'ETP Client'|translate}}
         </div>
         <div class="wg-data version">
-          <span class="strong">v{{version}}</span>
-          <span class="wg-legend">
-            <translate>Latest version</translate>
-          </span>
+          <span class="strong">v{{version}}</span><span class="wg-legend"><translate>Latest version</translate></span>
         </div>
       </div>
     </div>
@@ -48,10 +43,7 @@
           <translate>ETP Client Outdated</translate>
         </div>
         <div class="wg-data version">
-          <span class="strong">v{{version}}</span>
-          <a href="https://ETP.io/download" target="_blank" class="btn btn-white waves-effect pull-right">
-            <translate>UPDATE</translate>
-          </a>
+          <span class="strong">v{{version}}</span> <a href="https://ETP.io/download" target="_blank" class="btn btn-white waves-effect pull-right"><translate>UPDATE</translate></a>
         </div>
       </div>
     </div>
@@ -65,18 +57,16 @@
           {{'Latest Transactions'|translate}}
         </h2>
         <div class="more" ng-show="transactions.length">
-          <span class="sr-only">
-            <translate>More</translate>
-          </span>
+          <span class="sr-only"><translate>More</translate></span>
         </div>
       </div>
       <table id="transactions" ng-if="transactions.length">
         <thead>
           <tr class="head">
-            <th>
+            <th class="hide-in-1400">
               <translate>Transaction ID</translate>
             </th>
-            <th>
+            <th class="padding-in-1400">
               <translate>Sender</translate>
             </th>
             <th>
@@ -88,23 +78,20 @@
             <th>
               <translate>Amount (Fee)</translate>
             </th>
-      
           </tr>
         </thead>
         <tbody>
           <tr ng-repeat="transaction in transactions">
-            <td>
+            <td class="hide-in-1400">
               <a href="#" ng-click="transactionInfo(transaction)" class="word-break-xs">{{transaction.id}}</a>
             </td>
-      
             <td class="padding-in-1400">
               <a href="#" ng-click="userInfo(transaction.senderId)" class="word-break-xs">{{transaction.senderId}}</a>
             </td>
-    
-            <td class="padding-in-1400">
-              <a href="#" ng-click="userInfo(transaction.recipientId)" class="word-break-xs">{{transaction.recipientId}} </a>
+            <td ng-show="transaction.type &lt;= 1">
+              <a href="#" ng-click="userInfo(transaction.recipientId)" class="word-break-xs">{{transaction.recipientId}}</a>
             </td>
-            
+            <td ng-show="transaction.type &gt; 1"></td>
             <td>
               {{transaction.timestamp | timeAgoFilter: false}}
             </td>

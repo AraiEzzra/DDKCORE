@@ -392,38 +392,6 @@
           }
         }
       }
-    },
-    "/api/shiftOrder/sendFreezeOrder": {
-      "post": {
-        "tags": [
-          "Freeze"
-        ],
-        "description": "SendFreezeOrder",
-        "operationId": "for the URL",
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "secret",
-            "in": "body",
-            "defaultValue": "{\n \"secret\": \"wagon stock borrow episode laundry kitten salute link globe zero feed marble\",\n \"frozeId\" : \"12875263579474998903 \", \n \"recipientId\": \"5750074725018427566E\"\n}",
-            "description": "sendOrder",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/create"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "create response",
-            "schema": {
-              "$ref": "#/definitions/response"
-            }
-          }
-        }
-      }
     }
   },
   "definitions": {
