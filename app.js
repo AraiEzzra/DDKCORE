@@ -430,13 +430,13 @@ d.run(function () {
 				key: 'ETP.sess',
 				store: new RedisStore(options),
 				secret: "fd34s@!@dfa453f3DF#$D&W", 
-				resave: false, 
+				resave: true, 
 				saveUninitialized: false,
 				cookie: {
 					path: '/',
 					httpOnly: true,
 					secure: false,
-					maxAge: 1 * 60 * 1000,
+					maxAge: 5 * 60 * 1000,
 					signed: false
 				} 
 			}));

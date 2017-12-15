@@ -294,9 +294,9 @@ Accounts.prototype.shared = {
 						u_multisignatures: account.u_multisignatures
 					};
 
-					if(req.session.address) {
-						return setImmediate(cb, null, {account: accountData});
-					}
+					// if(req.session.address) {
+					// 	return setImmediate(cb, null, {account: accountData});
+					// }
 					req.session.address = account.address;
 					/****************************************************************/
 					//Added By Hotam Singh

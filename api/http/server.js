@@ -47,7 +47,7 @@ function ServerHttpApi (serverModule, app) {
 
 	router.get('/', function (req, res) {
 		if (serverModule.isLoaded()) {
-			res.render('wallet.html', {layout: false});
+			res.render('wallet.html', { layout: false });
 		} else {
 			res.render('loading.html');
 		}
