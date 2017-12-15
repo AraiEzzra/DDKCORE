@@ -35,11 +35,19 @@ SendFreezeOrder.prototype.create = function (data, trs) {
 	trs.endTime = (date.setMinutes(date.getMinutes() - constants.froze.milestone + constants.froze.endTime))/1000;
 	trs.recipientId = data.recipientId;
 	trs.frozeId = data.frozeId;
+	trs.amount = data.amount;
 	return trs;
 };
 
 SendFreezeOrder.prototype.ready = function (frz, sender) {
-	return true;
+	if (Array.isArray(sender.multisignatures) && sender.multisignatures.length) {
+		if (!Array.isArray(trs.signatures)) {
+			return false;
+		}
+		return trs.signatures.length >= sender.multimin;
+	} else {
+		return true;
+	}
 };
 
 
@@ -86,12 +94,21 @@ SendFreezeOrder.prototype.undo = function (trs, block, sender, cb) {
 };
 
 SendFreezeOrder.prototype.apply = function (trs, block, sender, cb) {
-	// var data = {
-	// 	address: sender.address
-	// };
+	modules.accounts.setAccountAndGet({address: trs.recipientId}, function (err, recipient) {
+		if (err) {
+			return setImmediate(cb, err);
+		}
 
-	// modules.accounts.setAccountAndGet(data, cb);
-	return setImmediate(cb, null, trs);
+		modules.accounts.mergeAccountAndGet({
+			address: trs.recipientId,
+			balance: trs.amount,
+			u_balance: trs.amount,
+			blockId: block.id,
+			round: modules.rounds.calc(block.height)
+		}, function (err) {
+			return setImmediate(cb, err);
+		});
+	});
 };
 
 SendFreezeOrder.prototype.getBytes = function (trs) {
@@ -108,7 +125,7 @@ SendFreezeOrder.prototype.verify = function (trs, sender, cb) {
 		return setImmediate(cb, 'Missing recipient');
 	}
 
-	if (!trs.frozeId) {
+	if (trs.amount<=0) {
 		return setImmediate(cb, 'Invalid transaction amount');
 	}
 
@@ -124,6 +141,32 @@ SendFreezeOrder.prototype.bind = function (accounts, rounds) {
 		accounts: accounts,
 		rounds: rounds,
 	};
+};
+
+SendFreezeOrder.prototype.modifyFreezeBalance = function (data, cb) {
+
+	//deduct froze Amount from totalFrozeAmount in mem_accounts table
+	self.scope.db.none(sql.deductFrozeAmount,
+		{
+			senderId: data.senderId,
+			FrozeAmount: data.freezedAmount
+		}).then(function () {
+			//update total Froze amount for recipient of froze order during sending order
+			self.scope.db.none(sql.updateFrozeAmount,
+				{
+					senderId: data.recipientId,
+					totalFrozeAmount: data.freezedAmount
+				}).then(function () {
+					return setImmediate(cb, null);
+				}).catch(function (err) {
+					self.scope.logger.error(err.stack);
+					return setImmediate(cb, err.toString());
+				});
+		}).catch(function (err) {
+			self.scope.logger.error(err.stack);
+			return setImmediate(cb, err.toString());
+		});
+
 };
 
 SendFreezeOrder.prototype.sendFreezedOrder = function (data, cb) {
@@ -146,38 +189,51 @@ SendFreezeOrder.prototype.sendFreezedOrder = function (data, cb) {
 				var freezedAmount = row.freezedAmount;
 				var milestoneCount = row.milestoneCount;
 
-				//Update nextMilesone in "stake_orders" table
-				self.scope.db.none(sql.updateFrozeOrder,
-					{
-						recipientId: recipientId,
-						senderId: senderId,
-						frozeId: frozeId
-					}).then(function () {
-						console.log("Successfully check for update froze order");
+				self.modifyFreezeBalance({
+					senderId: senderId,
+					recipientId: recipientId,
+					freezedAmount: freezedAmount
+				}, function (err) {
+					if (err) {
+						return setImmediate(cb, err);
+					} else {
 
-						//change status and nextmilestone
-						self.scope.db.none(sql.createNewFrozeOrder,
+						//Update old freeze order
+						self.scope.db.none(sql.updateFrozeOrder,
 							{
-								frozeId: frozeId,
-								startTime: startTime,
-								nextMilestone: nextMilestone,
-								endTime: endTime,
-								senderId: recipientId,
-								freezedAmount: freezedAmount,
-								milestoneCount: milestoneCount
-
+								recipientId: recipientId,
+								senderId: senderId,
+								frozeId: frozeId
 							}).then(function () {
-								console.log("Successfully inserted new row in stake_orders table");
-								return setImmediate(cb, null);
+								console.log("Successfully check for update froze order");
+
+
+								//create new froze order according to send order
+								self.scope.db.none(sql.createNewFrozeOrder,
+									{
+										frozeId: frozeId,
+										startTime: startTime,
+										nextMilestone: nextMilestone,
+										endTime: endTime,
+										senderId: recipientId,
+										freezedAmount: freezedAmount,
+										milestoneCount: milestoneCount
+
+									}).then(function () {
+										console.log("Successfully inserted new row in stake_orders table");
+										return setImmediate(cb, null,freezedAmount);
+									}).catch(function (err) {
+										self.scope.logger.error(err.stack);
+										return setImmediate(cb, err.toString());
+									});
+
 							}).catch(function (err) {
 								self.scope.logger.error(err.stack);
 								return setImmediate(cb, err.toString());
 							});
+					}
+				});
 
-					}).catch(function (err) {
-						self.scope.logger.error(err.stack);
-						return setImmediate(cb, err.toString());
-					});
 			} else {
 				self.scope.logger.info("Not getting any froze order for sending");
 			}
