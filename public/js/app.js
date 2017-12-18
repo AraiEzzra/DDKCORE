@@ -12,7 +12,7 @@ require('../node_modules/ng-table/dist/ng-table.js');
 
 Mnemonic = require('bitcore-mnemonic');
 
-ETPApp = angular.module('ETPApp', ['ui.router', 'btford.modal', 'ngCookies', 'ngTable', 'ngAnimate',  'chart.js', 'btford.socket-io', 'ui.bootstrap', 'angular.filter', 'gettext']);
+ETPApp = angular.module('ETPApp', ['ui.router', 'btford.modal', 'ngCookies', 'ngTable', 'ngAnimate', 'chart.js', 'btford.socket-io', 'ui.bootstrap', 'angular.filter', 'gettext']);
 
 ETPApp.config([
     "$locationProvider",
@@ -37,7 +37,7 @@ ETPApp.config([
             .state('main.explorer', {
                 url: "/explorer",
                 templateUrl: "/partials/explorer.html",
-            	controller: "explorerController"
+                controller: "explorerController"
             })
             // .state('main.multi', {
             //     url: "/wallets",
@@ -108,6 +108,7 @@ ETPApp.config([
 ]).run(function (languageService, clipboardService, $rootScope, $state, AuthService) {
     languageService();
     clipboardService();
+    $rootScope.$state = $state;
     AuthService.getUserStatus()
         .then(function () {
             if (AuthService.isLoggedIn()) {
@@ -116,17 +117,15 @@ ETPApp.config([
                 $state.go('passphrase');
             }
         });
-    $rootScope.$on('$stateChangeStart',
-        function (event, toState, toParams, fromState, fromParams) {
-            AuthService.getUserStatus()
-                .then(function () {
-                    if (AuthService.isLoggedIn()) {
-                        $state.go(toState.name);
-                    } else {
-                        $state.go('passphrase');
-                    }
-                });
-        }); 
-    $rootScope.$state = $state;
-    
+
+    $rootScope.$on('$stateChangeStart', function (e, toState, toParams, fromState, fromParams) {
+        AuthService.getUserStatus()
+            .then(function () {
+                if (AuthService.isLoggedIn()) {
+                    $state.go(toState.name);
+                } else {
+                    $state.go('passphrase');
+                }
+            });
+    });
 });

@@ -1,7 +1,7 @@
 require('angular');
 var compareVersion = require('../../node_modules/compare-version/index.js');
 
-angular.module('ETPApp').controller('appController', ['dappsService', '$scope', '$rootScope', '$http', "userService", "$interval", "$timeout", 'viewFactory', '$state', 'blockService', 'sendTransactionModal', 'registrationDelegateModal', 'serverSocket', 'delegateService', '$window', 'forgingModal', 'errorModal', 'userInfo', 'transactionsService', 'secondPassphraseModal', 'focusFactory', 'gettextCatalog', '$location', function (dappsService, $rootScope, $scope, $http, userService, $interval, $timeout, viewFactory, $state, blockService, sendTransactionModal, registrationDelegateModal, serverSocket, delegateService, $window, forgingModal, errorModal, userInfo, transactionsService, secondPassphraseModal, focusFactory, gettextCatalog, $location) {
+angular.module('ETPApp').controller('appController', ['dappsService', '$scope', '$rootScope', '$http', "userService", "$interval", "$timeout", 'viewFactory', '$state', 'blockService', 'sendTransactionModal', 'registrationDelegateModal', 'serverSocket', 'delegateService', '$window', 'forgingModal', 'errorModal', 'userInfo', 'transactionsService', 'secondPassphraseModal', 'focusFactory', 'gettextCatalog', '$location', 'AuthService', function (dappsService, $rootScope, $scope, $http, userService, $interval, $timeout, viewFactory, $state, blockService, sendTransactionModal, registrationDelegateModal, serverSocket, delegateService, $window, forgingModal, errorModal, userInfo, transactionsService, secondPassphraseModal, focusFactory, gettextCatalog, $location, AuthService) {
 
     $scope.searchTransactions = transactionsService;
     $scope.searchDapp = dappsService;
@@ -13,7 +13,7 @@ angular.module('ETPApp').controller('appController', ['dappsService', '$scope', 
     $scope.diffVersion = 0;
     $scope.subForgingCollapsed = true;
     $scope.categories = {};
-    $scope.dataToShow = {forging: false}
+    $scope.dataToShow = { forging: false }
 
     $scope.getCategoryName = function (id) {
         for (var key in $scope.categories) {
@@ -24,7 +24,7 @@ angular.module('ETPApp').controller('appController', ['dappsService', '$scope', 
             }
         }
     }
-    
+
     $scope.getCategories = function () {
         $http.get("/api/dapps/categories").then(function (response) {
             if (response.data.success) {
@@ -111,7 +111,7 @@ angular.module('ETPApp').controller('appController', ['dappsService', '$scope', 
         $http.get("https://explorer.ETP.io/api/getPriceTicker")
             .then(function (response) {
                 $scope.btc_usd = Math.floor(response.data.tickers.BTC.USD * 1000000) / 1000000;
-                $scope.ETP_btc = Math.floor(response.data.tickers.ETP.BTC * 1000000)  / 1000000;
+                $scope.ETP_btc = Math.floor(response.data.tickers.ETP.BTC * 1000000) / 1000000;
                 $scope.ETP_usd = Math.floor(response.data.tickers.ETP.USD * 1000000) / 1000000;
             });
     };
@@ -158,7 +158,7 @@ angular.module('ETPApp').controller('appController', ['dappsService', '$scope', 
     $scope.resetAppData();
 
     $scope.getAppData = function () {
-        $http.get("/api/accounts", {params: {address: userService.address}})
+        $http.get("/api/accounts", { params: { address: userService.address } })
             .then(function (resp) {
                 var account = resp.data.account;
                 if (!account) {
@@ -173,7 +173,7 @@ angular.module('ETPApp').controller('appController', ['dappsService', '$scope', 
                     userService.u_multisignatures = account.u_multisignatures;
                     userService.secondPassphrase = account.secondSignature || account.unconfirmedSignature;
                     userService.unconfirmedPassphrase = account.unconfirmedSignature;
-                    
+
                 }
 
                 $scope.balance = userService.balance;
@@ -322,7 +322,7 @@ angular.module('ETPApp').controller('appController', ['dappsService', '$scope', 
     }
 
     $scope.getForging = function (cb) {
-        $http.get("/api/delegates/forging/status", {params: {publicKey: userService.publicKey}})
+        $http.get("/api/delegates/forging/status", { params: { publicKey: userService.publicKey } })
             .then(function (resp) {
                 $scope.forgingAllowed = resp.data.success;
                 $scope.forging = resp.data.enabled;
@@ -399,7 +399,7 @@ angular.module('ETPApp').controller('appController', ['dappsService', '$scope', 
                     if (response.data.success) {
                         userService.setDelegateTime(response.data.transactions);
                     } else {
-                        userService.setDelegateTime([{timestamp: null}]);
+                        userService.setDelegateTime([{ timestamp: null }]);
                     }
                 });
             }
@@ -418,20 +418,20 @@ angular.module('ETPApp').controller('appController', ['dappsService', '$scope', 
     }
 
     $scope.getMyVotesCount = function () {
-        $http.get("/api/accounts/delegates/", {params: {address: userService.address}})
+        $http.get("/api/accounts/delegates/", { params: { address: userService.address } })
             .then(function (response) {
                 $scope.myVotesCount = response.data.delegates ? response.data.delegates.length : 0;
             });
     }
 
     $scope.myUserInfo = function () {
-        $scope.modal = userInfo.activate({userId: userService.address});
+        $scope.modal = userInfo.activate({ userId: userService.address });
     }
 
     $scope.logout = function () {
         //$scope.modal = userInfo.activate({userId: userService.address});
         $http.post('/api/accounts/logout')
-            .then(function(res) {
+            .then(function (res) {
                 //alert(JSON.stringify(res));
                 //$state.go('main.home');
                 $location.path('/');
@@ -540,23 +540,23 @@ angular.module('ETPApp').controller('appController', ['dappsService', '$scope', 
 
     //console.log("side menu click");
     $scope.myClass = [];
-    $scope.classAdd = function() {
+    $scope.classAdd = function () {
         $scope.myClass.push('test');
     }
-    $scope.classRemove = function() {
+    $scope.classRemove = function () {
         $scope.myClass.pop('test');
     }
 
-    window.onpopstate = function(event) {
+    window.onpopstate = function (event) {
         //alert("location: " + document.location + ", state: " + JSON.stringify(event.state));
-        if($scope.myClass.length == 0){
+        if ($scope.myClass.length != 0) {
             $scope.classAdd();
             console.log($scope.myClass);
-    
-        }else{
+
+        } else {
             $scope.classRemove();
             console.log($scope.myClass);
         }
-      };
+    };
 
 }]);

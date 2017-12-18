@@ -9,7 +9,7 @@ angular.module('ETPApp').controller('passphraseController', ['$scope', '$rootSco
     $scope.errorMessage = "";
 
     $scope.cleanUpUserData = function () {
-        var userProperties = [ 'address', 'allVotes', 'balance', 'balanceToShow', 'dataToShow', 'unconfirmedBalance',
+        var userProperties = ['address', 'allVotes', 'balance', 'balanceToShow', 'dataToShow', 'unconfirmedBalance',
             'unconfirmedPassphrase', 'username', 'rememberedPassphrase', 'publicKey', 'delegate'];
         for (var i = 0; i < userProperties.length; i++) {
             if ($rootScope[userProperties[i]] != undefined) {
