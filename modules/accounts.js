@@ -281,8 +281,8 @@ Accounts.prototype.shared = {
 			}
 
 			__private.openAccount(req.body.secret, function (err, account) {
-				if (!err) {
-					var accountData = {
+				if (!err) { 
+ 					var accountData = {
 						address: account.address,
 						unconfirmedBalance: account.u_balance,
 						balance: account.balance,
@@ -294,6 +294,10 @@ Accounts.prototype.shared = {
 						u_multisignatures: account.u_multisignatures
 					};
 
+					if(req.session.address) {
+						return setImmediate(cb, null, {account: accountData});
+					}
+					req.session.address = account.address;
 					/****************************************************************/
 					//Added By Hotam Singh
 					var data = {
@@ -698,6 +702,18 @@ Accounts.prototype.shared = {
 			}else {
 				return setImmediate(cb, err);
 			}
+		});
+	},
+
+	logout: function(req, cb) {
+		req.session.cookie.maxAge = null;
+		//req.logout();
+		//req.session.destroy();
+		req.session.destroy(function (err) {
+			if(err) {
+				return setImmediate(cb, err);
+			}
+			req.redirect('/');
 		});
 	}
 };

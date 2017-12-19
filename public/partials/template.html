@@ -88,14 +88,14 @@
                  <i class="mdi-content-send left"></i>
                  <translate>SEND</translate>
               </a>
-              <button class="btn btn-blue-nav waves-effect waves-light left-margin-20" ui-sref="main.dashboard" ng-click="classRemove()" ng-if="$state.current.name === 'main.explorer'">Back</button>
+              <a class="btn btn-blue-nav waves-effect waves-light left-margin-20" ui-sref="main.dashboard" ng-click="classRemove()" ng-if="$state.current.name === 'main.explorer'"><i class="material-icons left back-btn-icon">navigate_before</i>Back</a>
 
 
               <div class="mini-chart valign-wrapper" ng-show="syncState != undefined">
                  <div class="mini-chart-label">{{syncState}}%</div>
                  <canvas id="total-forged" class="chart chart-doughnut" chart-data="loading.values" chart-labels="loading.labels" chart-options="loading.options" chart-colours="loading.colours"></canvas>
               </div>
-              <div class="more-down left-margin-20" dropdown is-open="moreDropdownStatus.isopen">
+              <div class="more-down left-margin-20" dropdown is-open="moreDropdownStatus.isopen" ng-if="$state.current.name != 'main.explorer'">
                  <i class="mdi-navigation-more-vert" dropdown-toggle></i>
                  <ul class="dropdown-menu" role="menu">
                     <li>
@@ -114,7 +114,7 @@
                        </a>
                     </li>
                     <li>
-                       <a href="/">
+                       <a href="#" ng-click="logout()">
                           <translate>Logout</translate>
                        </a>
                     </li>

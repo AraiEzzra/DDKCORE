@@ -40,7 +40,8 @@ function AccountsHttpApi (accountsModule, app) {
 		'put /delegates': 'addDelegates',
 		'get /': 'getAccount',
 		'post /lock': 'lockAccount',
-		'post /unlock': 'unlockAccount' 
+		'post /unlock': 'unlockAccount',
+		'post /logout': 'logout'
 	});
 
 	router.map(accountsModule.internal, {
