@@ -6,7 +6,7 @@
 //Requiring Modules 
 var Contract = require('../logic/contract.js');
 var transactionTypes = require('../helpers/transactionTypes.js');
-var sql = require('../sql/frogings.js');
+var sql = require('../sql/accounts.js');
 var contributorsStatus = true;
 var cache = require('./cache.js');
 

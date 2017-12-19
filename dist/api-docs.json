@@ -306,7 +306,7 @@
         "tags": [
           "Freeze"
         ],
-        "description": "generatePublicKey",
+        "description": "freeze order",
         "operationId": "for the URL",
         "produces": [
           "application/json"
@@ -316,7 +316,7 @@
             "name": "secret",
             "in": "body",
             "defaultValue": "{\n \"secret\": \"wagon stock borrow episode laundry kitten salute link globe zero feed marble\",\n \"freezedAmount\" : 6000000000, \n \"publicKey\": \"c094ebee7ec0c50ebee32918655e089f6e1a604b83bcaa760293c61e0f18ab6f\"\n}",
-            "description": "generatePublicKey",
+            "description": "freezeOrder",
             "required": true,
             "schema": {
               "$ref": "#/definitions/create"
@@ -347,8 +347,72 @@
           {
             "name": "secret",
             "in": "body",
-            "defaultValue": "{\n \"secret\": \"wagon stock borrow episode laundry kitten salute link globe zero feed marble\",\n \"frozeId\" : \"12875263579474998903 \", \n \"recipientId\": \"5750074725018427566E\"\n}",
+            "defaultValue": "{\n \"secret\": \"wagon stock borrow episode laundry kitten salute link globe zero feed marble\",\n \"frozeId\" : \"12875263579474998903\", \n \"recipientId\": \"5750074725018427566E\"\n}",
             "description": "sendOrder",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/create"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "create response",
+            "schema": {
+              "$ref": "#/definitions/response"
+            }
+          }
+        }
+      }
+    },
+    "/api/frogings/getAllOrders": {
+      "post": {
+        "tags": [
+          "Freeze"
+        ],
+        "description": "get all freeze orders",
+        "operationId": "for the URL",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "secret",
+            "in": "body",
+            "defaultValue": "{\n \"secret\": \"wagon stock borrow episode laundry kitten salute link globe zero feed marble\"\n}",
+            "description": "secret of freeze order account",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/create"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "create response",
+            "schema": {
+              "$ref": "#/definitions/response"
+            }
+          }
+        }
+      }
+    },
+    "/api/frogings/getAllActiveOrders": {
+      "post": {
+        "tags": [
+          "Freeze"
+        ],
+        "description": "get all active freeze orders",
+        "operationId": "for the URL",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "secret",
+            "in": "body",
+            "defaultValue": "{\n \"secret\": \"wagon stock borrow episode laundry kitten salute link globe zero feed marble\"\n}",
+            "description": "secret of freeze order account",
             "required": true,
             "schema": {
               "$ref": "#/definitions/create"

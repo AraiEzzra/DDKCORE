@@ -16,15 +16,9 @@ var TransactionsSql = {
 
   count: 'SELECT COUNT("id")::int AS "count" FROM stake_orders',
 
-  checkAccountStatus: 'SELECT "status" FROM mem_accounts where "address"=${senderId}',
-
-  disableAccount: 'UPDATE mem_accounts SET "status" = 0 WHERE "address" = ${senderId}',
-
-  enableAccount: 'UPDATE mem_accounts SET "status" = 1 WHERE "address" = ${senderId}',
-
   getMemoryAccounts: 'SELECT * FROM  mem_accounts',
 
-  updateFrozeAmount: 'UPDATE mem_accounts SET "totalFrozeAmount" = ("totalFrozeAmount" + ${totalFrozeAmount}) WHERE "address" = ${senderId}',
+  updateFrozeAmount: 'UPDATE mem_accounts SET "totalFrozeAmount" = ("totalFrozeAmount" + ${freezedAmount}) WHERE "address" = ${senderId}',
 
   getFrozeAmount: 'SELECT "totalFrozeAmount" FROM mem_accounts WHERE "address"=${senderId}',
 
@@ -37,6 +31,8 @@ var TransactionsSql = {
   deductFrozeAmount: 'UPDATE mem_accounts SET "totalFrozeAmount" = ("totalFrozeAmount" - ${FrozeAmount}) WHERE "address" = ${senderId}',
 
   getFrozeOrders: 'SELECT * FROM stake_orders WHERE "senderId"=${senderId}',
+
+  getActiveFrozeOrders: 'SELECT * FROM stake_orders WHERE "senderId"=${senderId} AND "status"=1',
 
   getActiveFrozeOrder: 'SELECT * FROM stake_orders WHERE "senderId"=${senderId} AND "id"=${frozeId} AND "status"=1',
 
