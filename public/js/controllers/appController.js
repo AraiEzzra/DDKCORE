@@ -103,7 +103,8 @@ angular.module('ETPApp').controller('appController', ['dappsService', '$scope', 
         'passphrase',
         'main.dappstore',
         'main.multi',
-        'main.explorer'
+        'main.explorer',
+        'main.stake'
 
     ];
 
@@ -551,11 +552,11 @@ angular.module('ETPApp').controller('appController', ['dappsService', '$scope', 
         //alert("location: " + document.location + ", state: " + JSON.stringify(event.state));
         if($scope.myClass.length == 0){
             $scope.classAdd();
-            console.log($scope.myClass);
+            //console.log($scope.myClass);
     
         }else{
             $scope.classRemove();
-            console.log($scope.myClass);
+            //console.log($scope.myClass);
         }
       };
 

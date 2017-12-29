@@ -1,0 +1,100 @@
+<div class="top-margin"></div>
+<div class="row">
+    <div class="col-xs-12">
+        <div class="search-bar" ng-show="view.bar.showBlockSearchBar">
+            <div class="search-toggle" ng-if="searchBlocks.searchForBlock">
+                <i ng-click="clearSearch()" class="mdi-content-clear small"></i>
+            </div>
+            <div class="input-group">
+                <span class="input-group-addon">
+                <i class="mdi-action-search"></i>
+                </span>
+                <input type="text" class="form-control" placeholder="{{'Search for stake'|translate}}" ng-model="searchBlocks.searchForBlock">
+                <span class="input-group-addon spinner-addon">
+                    <div class="preloader-wrapper" ng-class="{'active': searchBlocks.inSearch}">
+                        <div class="spinner-layer spinner-blue-only">
+                        <div class="circle-clipper left">
+                            <div class="circle"></div>
+                        </div>
+                        <div class="gap-patch">
+                            <div class="circle"></div>
+                        </div>
+                        <div class="circle-clipper right">
+                            <div class="circle"></div>
+                        </div>
+                        </div>
+                    </div>
+                </span>
+            </div>
+        </div>
+
+
+
+
+
+
+
+
+
+        <div class="panel panel-default" ng-class="{'paginated': countForgingBlocks || !searchBlocks.searchForBlock}">
+            <div class="panel-heading">
+                <h2>
+                  {{'Stake/Forge'|translate}}
+                </h2>
+            </div>
+            <!-- <table ng-show="countForgingBlocks  || !searchBlocks.searchForBlock" ng-table="tableBlocks" border="0" width="100%" cellpadding="0" cellspacing="0"
+                   template-pagination="custom/pager">
+                <div class="table-menu">
+                    <div class="more-down-table" dropdown on-toggle="toggled(open)" is-open="moreDownTable.isopen">
+                        <i class="mdi-navigation-more-vert" dropdown-toggle aria-haspopup="true" aria-expanded="false"></i>
+
+                        <div class="dropdown-menu" role="menu">
+                            <p ng-click="check($event)"><input type="checkbox" class="filled-in violet" id="advanced" ng-model="showAllColumns"><label for="advanced"><translate>Show All Columns</translate></label></p>
+                            <p ng-click="check($event)"><input type="checkbox" class="filled-in violet" id="fulltime" ng-model="showFullTime"><label for="fulltime"><translate>Show Full Time</translate></label></p>
+                        </div>
+                    </div>
+                </div>
+                <tr ng-repeat="block in $data">
+                    <td data-title="tableBlocks.cols.freezeAmount"></td>
+                    <td data-title="tableBlocks.cols.status"></td>
+                    <td data-title="tableBlocks.cols.insertTime"></td>
+                    <td data-title="tableBlocks.cols.matureTime"></td>
+                    <td data-title="tableBlocks.cols.monthRemain" class="pointer"></td>
+                    <td data-title="tableBlocks.cols.recipient"></td>
+                    <td data-title="tableBlocks.cols.action">Transfer</td>
+                    <td data-title="tableBlocks.cols.reward" sortable="'reward'">{{block.reward | ETPFilter}}</td>
+                    <td data-title="''" class="width-80"></td>
+                </tr>
+                <tr ng-show="!loading && (!$data || $data.length == 0) && !searchBlocks.searchForBlock">
+                    <td colspan="8">
+                        <translate>No blockchain</translate>
+                    </td>
+                </tr>
+                <tr ng-show="loading">
+                    <td class="gray2 white-text" colspan="8">
+                        <translate>Loading...</translate>
+                    </td>
+                </tr>
+            </table> -->
+            <table ng-table ="usersTable" class="table table-bordered table-striped">
+                <tr ng-repeat="user in data">
+                <td data-title="'Name'" sortable="'name'">{{user.name}}</td>
+                <td data-title="'Age'" sortable="'age'">{{user.age}}</td>
+                <td data-title="'Location'" sortable="'location'">{{user.location}}</td>
+                </tr>
+                </table>
+
+
+
+
+
+
+
+            <div class="panel-body empty-body empty-table"
+                 ng-if="!countForgingBlocks && searchBlocks.searchForBlock">
+                <div class="logo-grey"></div>
+                <p class="empty-state-text"><translate>No results for this search.</translate></p>
+            </div>
+        </div>
+    </div>
+</div>

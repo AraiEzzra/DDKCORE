@@ -2,7 +2,12 @@ require('angular');
 
 angular.module('ETPApp').service('blockService', function ($http) {
 
-    var blocks = {
+
+
+
+    
+
+    /* var blocks = {
         lastBlockId: null,
         searchForBlock: '',
         gettingBlocks: false,
@@ -142,6 +147,6 @@ angular.module('ETPApp').service('blockService', function ($http) {
         }
     }
 
-    return blocks;
+    return blocks; */
 
 });

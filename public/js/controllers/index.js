@@ -17,6 +17,8 @@ require('../../js/controllers/dappsController');
 require('../../js/controllers/dappController');
 require('../../js/controllers/dappsCategoryController');
 require('../../js/controllers/explorerController');
+require('../../js/controllers/stakeController');
+
 // Modals
 require('../../js/controllers/modals/blockModalController');
 require('../../js/controllers/modals/forgingModalController');

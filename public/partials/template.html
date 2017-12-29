@@ -54,7 +54,7 @@
      
      
      
-<div id="wrapper" ng-controller="appController" ng-class="{'toggled': !toggled,'pl-none':$state.current.name=='main.explorer'}">
+<div id="wrapper" ng-controller="appController" ng-class="{'toggled': !toggled,'pl-none':$state.current.name==''}">
     <div class="header-wrapper top-header-section">
         <div class="nav-bar clearfix" id="header">
            <a ui-sref="main.account" class="log-box">
@@ -305,6 +305,15 @@
                     </span>
                  </a>
               </li>
+              <li ng-show="showMenuItem('main.stake')" ui-sref-active="active">
+                    <a ui-sref="main.stake" class="waves-effect waves-blue">
+                       <div class="nav-icon" id="blockchain-icon"></div>
+                       <span class="menu-text">
+                          <translate>Stake</translate>
+                       </span>
+                    </a>
+                 </li>
+
            </ul>
            <div id="inc"></div>
         </div>
