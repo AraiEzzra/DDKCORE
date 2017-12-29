@@ -1,4 +1,6 @@
-angular.module('ETPApp').service('AuthService', ['$q', '$timeout', '$http', 'userService', function ($q, $timeout, $http, userService) {
+//hotam: added new service to check status of an user
+
+angular.module('ETPApp').service('AuthService', ['$http', 'userService', function ($http, userService) {
 
     // create user variable to track user's status
     var user = null;
@@ -24,6 +26,7 @@ angular.module('ETPApp').service('AuthService', ['$q', '$timeout', '$http', 'use
             // handle success
             .success(function (resp) {
                 if (resp.status && resp.data.success) {
+                    console.log('response : ' + JSON.stringify(resp.data.account));
                     user = true;
                     userService.setData();
                     userService.setData(resp.data.account.address, resp.data.account.publicKey, resp.data.account.balance, resp.data.account.unconfirmedBalance, resp.data.account.effectiveBalance);

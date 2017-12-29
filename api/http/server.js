@@ -25,7 +25,8 @@ function ServerHttpApi (serverModule, app) {
 		res.status(500).send({success: false, error: 'Blockchain is loading'});
 	});
 
-	 router.get('/user/status', function(req, res) {
+	//hotam: get user's status
+	router.get('/user/status', function(req, res) {
 		if(req.session.address) {
 			Accounts.prototype.getAccount({address: req.session.address}, function(err, account) {
 				if(!err) {
@@ -44,24 +45,6 @@ function ServerHttpApi (serverModule, app) {
 			});
 		}
 	});  
-
-	function validateUser(req, res, next) {
-		if(req.session.address) {
-			Accounts.prototype.getAccount({address: req.session.address}, function(err, account) {
-				if(!err) {
-					return res.status(200).json({
-						status: true,
-						data: {
-							success: true,
-							account: account
-						}
-					});
-				}
-			});
-		}else {
-			next();
-		}
-	};
 
 	router.get('/', function (req, res) {
 		if (serverModule.isLoaded()) {

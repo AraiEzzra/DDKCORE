@@ -109,23 +109,22 @@ ETPApp.config([
     languageService();
     clipboardService();
     $rootScope.$state = $state;
-    AuthService.getUserStatus()
-        .then(function () {
+    //hotam: render current logged-in user upon page refresh if currently logged-in
+    AuthService.getUserStatus().then(function () {
+        if (AuthService.isLoggedIn()) {
+            $state.go('main.dashboard');
+        } else {
+            $state.go('passphrase');
+        }
+    });
+    //hotam: user authentication upon page forward/back for currently logged-in user
+    $rootScope.$on('$stateChangeStart', function (e, toState, toParams, fromState, fromParams) {
+        AuthService.getUserStatus().then(function () {
             if (AuthService.isLoggedIn()) {
-                $state.go('main.dashboard');
+                $state.go(toState.name);
             } else {
                 $state.go('passphrase');
             }
         });
-
-    $rootScope.$on('$stateChangeStart', function (e, toState, toParams, fromState, fromParams) {
-        AuthService.getUserStatus()
-            .then(function () {
-                if (AuthService.isLoggedIn()) {
-                    $state.go(toState.name);
-                } else {
-                    $state.go('passphrase');
-                }
-            });
-    });
+    }); 
 });

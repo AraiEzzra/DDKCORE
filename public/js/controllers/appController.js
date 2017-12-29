@@ -214,6 +214,7 @@ angular.module('ETPApp').controller('appController', ['dappsService', '$scope', 
     }
 
     $scope.sendTransaction = function (to) {
+        console.log('to : ' + to);
         to = to || '';
         $scope.sendTransactionModal = sendTransactionModal.activate({
             totalBalance: $scope.unconfirmedBalance,
@@ -429,13 +430,9 @@ angular.module('ETPApp').controller('appController', ['dappsService', '$scope', 
     }
 
     $scope.logout = function () {
-        //$scope.modal = userInfo.activate({userId: userService.address});
-        $http.post('/api/accounts/logout')
-            .then(function (res) {
-                //alert(JSON.stringify(res));
-                //$state.go('main.home');
-                $location.path('/');
-            });
+        $http.post('/api/accounts/logout').then(function (res) {
+            $location.path('/');
+        });
     }
 
     $scope.syncInterval = $interval(function () {
@@ -536,9 +533,6 @@ angular.module('ETPApp').controller('appController', ['dappsService', '$scope', 
         $scope.getVersion();
     }, 60 * 10 * 1000);
 
-
-
-    //console.log("side menu click");
     $scope.myClass = [];
     $scope.classAdd = function () {
         $scope.myClass.push('test');
@@ -548,7 +542,6 @@ angular.module('ETPApp').controller('appController', ['dappsService', '$scope', 
     }
 
     window.onpopstate = function (event) {
-        //alert("location: " + document.location + ", state: " + JSON.stringify(event.state));
         if ($scope.myClass.length != 0) {
             $scope.classAdd();
             console.log($scope.myClass);

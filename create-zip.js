@@ -5,33 +5,34 @@ var fs = require('fs'),
     path = require('path'),
     archiver = require('archiver'),
     currDate = new Date(),
-    year = currDate.getFullYear(),
-    month = currDate.toLocaleString("en-us", { month: "long" }),
-    dir = path.join(__dirname + '/archive/' + year + '/' + month),
     ignoredFile = currDate.getFullYear()+'-'+('0' + (currDate.getMonth() + 1)).slice(-2)+'-'+('0' + currDate.getDate()).slice(-2)+'.log';
 
 //Function to create directories recursively if doesn't exists.
-exports.createDir = function (dir) {
-    const splitPath = dir.split('/');
-    splitPath.reduce(function (dirPath, subPath) {
-        let currentPath;
-        if (subPath != '.') {
-            currentPath = dirPath + '/' + subPath;
-            if (!fs.existsSync(currentPath)) {
-                fs.mkdirSync(currentPath);
+exports.createDir = function (dir, cb) {
+    try {
+        const splitPath = dir.split('/');
+        splitPath.reduce(function (dirPath, subPath) {
+            let currentPath;
+            if (subPath != '.') {
+                currentPath = dirPath + '/' + subPath;
+                if (!fs.existsSync(currentPath)) {
+                    fs.mkdirSync(currentPath);
+                }
+            } else {
+                currentPath = subPath;
             }
-        } else {
-            currentPath = subPath;
-        }
-        return currentPath
-    }, '');
+            return currentPath
+        }, '');
+        return cb(null);
+    } catch(err) {
+        return cb(err);
+    }
 };
-exports.createDir(dir);
 
-exports.archiveLogFiles = function() {
+exports.archiveLogFiles = function(dir, cb) {
     
     // create a file to stream archive data to.
-    var output = fs.createWriteStream(path.join(dir, 'logs.zip'));
+    var output = fs.createWriteStream(path.join(dir, currDate.getTime() + '.zip'));
     var archive = archiver('zip', {});
     var logPath = __dirname + '/logs';
 
@@ -39,16 +40,21 @@ exports.archiveLogFiles = function() {
     // 'close' event is fired only when a file descriptor is involved.
     // deleting files from @logs directory when all files written to the archived directory.
     output.on('close', function () {
-        if (fs.existsSync(logPath)) {
-            fs.readdirSync(logPath).forEach(function (file, index) {
-                var curPath = logPath + "/" + file;
-                if (!fs.lstatSync(logPath).isFile()) {
-                    // delete file
-                    if(!(file == ignoredFile)) {
-                        fs.unlinkSync(curPath);
+        try {
+            if (fs.existsSync(logPath)) {
+                fs.readdirSync(logPath).forEach(function (file, index) {
+                    var curPath = logPath + "/" + file;
+                    if (!fs.lstatSync(logPath).isFile()) {
+                        // delete file
+                        if(!(file == ignoredFile || file == 'archive.log')) {
+                            fs.unlinkSync(curPath);
+                        }
                     }
-                }
-            });
+                });
+            }
+            return cb(null);
+        } catch(err) {
+            return cb(err);
         }
     });
 
@@ -62,18 +68,15 @@ exports.archiveLogFiles = function() {
     // good practice to catch warnings (ie stat failures and other non-blocking errors)
     archive.on('warning', function (err) {
         if (err.code === 'ENOENT') {
-            console.log(err);
+            return cb(err);
         } else {
-            // throw error
-            console.log(err);
-            throw err;
+            return cb(err);
         }
     });
 
     // good practice to catch this error explicitly
     archive.on('error', function (err) {
-        logger.error(err);
-        throw err;
+        return cb(err);
     });
 
     // pipe archive data to the file
@@ -82,9 +85,7 @@ exports.archiveLogFiles = function() {
     // append files from a glob pattern
     archive
         .glob("./logs/**/*", {
-            ignore: ['./logs/'+ignoredFile]
+            ignore: ['./logs/'+ignoredFile, './logs/archive.log']
         })
         .finalize();
 };
-
-exports.archiveLogFiles();

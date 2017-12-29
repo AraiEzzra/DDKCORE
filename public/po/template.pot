@@ -286,7 +286,7 @@ msgstr ""
 msgid "Disable Forging"
 msgstr ""
 
-#: js/controllers/appController.js:317
+#: js/controllers/appController.js:318
 msgid "Disabled"
 msgstr ""
 
@@ -335,7 +335,7 @@ msgstr ""
 msgid "Enable Forging"
 msgstr ""
 
-#: js/controllers/appController.js:317
+#: js/controllers/appController.js:318
 msgid "Enabled"
 msgstr ""
 
