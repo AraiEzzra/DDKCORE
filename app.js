@@ -430,13 +430,13 @@ d.run(function () {
 				key: 'ETP.sess',
 				store: new RedisStore(options),
 				secret: "fd34s@!@dfa453f3DF#$D&W", 
-				resave: false, 
+				resave: true, 
 				saveUninitialized: false,
 				cookie: {
 					path: '/',
 					httpOnly: true,
 					secure: false,
-					maxAge: 1 * 60 * 1000,
+					maxAge: 60 * 1000,
 					signed: false
 				} 
 			}));
@@ -697,11 +697,35 @@ d.run(function () {
 		if (err) {
 			logger.error(err);
 		} else {
-
 			//Navin : daily check and update stake_orders, if any Active order expired or not
 			setInterval(function () { // Set interval for checking
 				var date = new Date(); // Create a Date object to find out what time it is
-				
+				//hotam: archive log files on first day of every new month
+				//const today = new Date();
+				var nextDate = new Date();
+				nextDate.setDate(nextDate.getDate() + 1);
+				logger.archive('start executing archiving files');
+				if (date.getDate() === 1) {
+					logger.archive('checking date archiving files');
+					var createZip = require('./create-zip');
+					var year = date.getFullYear();
+					var month = date.toLocaleString("en-us", { month: "long" });
+					var dir = path.join(__dirname + '/archive/' + year + '/' + month);
+					createZip.createDir(dir, function(err) {
+						if(!err) {
+							createZip.archiveLogFiles(dir, function(err) {
+								if(!err) {
+									logger.archive('files are archived');
+								}else {
+									logger.archive('archive error : ' + err);
+								}
+							});
+						} else {
+							//console.log('directory creation error : ' + err);
+							logger.archive('directory creation error : ' + err);
+						}
+					});
+				}
 				scope.logic.frozen.checkFrozeOrders(); //For testing purpose only
 				if (date.getHours() === 10 && date.getMinutes() === 20) { // Check the time
 					

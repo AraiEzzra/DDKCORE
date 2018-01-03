@@ -12,7 +12,7 @@ require('../node_modules/ng-table/dist/ng-table.js');
 
 Mnemonic = require('bitcore-mnemonic');
 
-ETPApp = angular.module('ETPApp', ['ui.router', 'btford.modal', 'ngCookies', 'ngTable', 'ngAnimate',  'chart.js', 'btford.socket-io', 'ui.bootstrap', 'angular.filter', 'gettext']);
+ETPApp = angular.module('ETPApp', ['ui.router', 'btford.modal', 'ngCookies', 'ngTable', 'ngAnimate', 'chart.js', 'btford.socket-io', 'ui.bootstrap', 'angular.filter', 'gettext']);
 
 ETPApp.config([
     "$locationProvider",
@@ -37,7 +37,7 @@ ETPApp.config([
             .state('main.explorer', {
                 url: "/explorer",
                 templateUrl: "/partials/explorer.html",
-            	controller: "explorerController"
+                controller: "explorerController"
             })
             .state('main.stake', {
                 url: "/stake",
@@ -110,9 +110,26 @@ ETPApp.config([
                 controller: "passphraseController"
             });
     }
-]).run(function (languageService, clipboardService,$rootScope,$state) {
+]).run(function (languageService, clipboardService, $rootScope, $state, AuthService) {
     languageService();
     clipboardService();
     $rootScope.$state = $state;
-    
+    //hotam: render current logged-in user upon page refresh if currently logged-in
+    AuthService.getUserStatus().then(function () {
+        if (AuthService.isLoggedIn()) {
+            $state.go('main.dashboard');
+        } else {
+            $state.go('passphrase');
+        }
+    });
+    //hotam: user authentication upon page forward/back for currently logged-in user
+    $rootScope.$on('$stateChangeStart', function (e, toState, toParams, fromState, fromParams) {
+        AuthService.getUserStatus().then(function () {
+            if (AuthService.isLoggedIn()) {
+                $state.go(toState.name);
+            } else {
+                $state.go('passphrase');
+            }
+        });
+    }); 
 });

@@ -132,10 +132,6 @@ module.exports = {
 				minLength: 1,
 				maxLength: 100
 			},
-			publicKey: {
-				type: 'string',
-				format: 'publicKey'
-			},
 			secondSecret: {
 				type: 'string',
 				minLength: 1,

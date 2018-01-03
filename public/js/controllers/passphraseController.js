@@ -9,7 +9,7 @@ angular.module('ETPApp').controller('passphraseController', ['$scope', '$rootSco
     $scope.errorMessage = "";
 
     $scope.cleanUpUserData = function () {
-        var userProperties = [ 'address', 'allVotes', 'balance', 'balanceToShow', 'dataToShow', 'unconfirmedBalance',
+        var userProperties = ['address', 'allVotes', 'balance', 'balanceToShow', 'dataToShow', 'unconfirmedBalance',
             'unconfirmedPassphrase', 'username', 'rememberedPassphrase', 'publicKey', 'delegate'];
         for (var i = 0; i < userProperties.length; i++) {
             if ($rootScope[userProperties[i]] != undefined) {
@@ -41,29 +41,28 @@ angular.module('ETPApp').controller('passphraseController', ['$scope', '$rootSco
         }
         var data = { secret: pass };
         $scope.errorMessage = "";
-        $http.post("/api/accounts/open/", { secret: pass })
-            .then(function (resp) {
-                if (resp.data.success) {
-                    userService.setData(resp.data.account.address, resp.data.account.publicKey, resp.data.account.balance, resp.data.account.unconfirmedBalance, resp.data.account.effectiveBalance);
-                    userService.setForging(resp.data.account.forging);
-                    userService.setSecondPassphrase(resp.data.account.secondSignature || resp.data.account.unconfirmedSignature);
-                    userService.unconfirmedPassphrase = resp.data.account.unconfirmedSignature;
-                    if (remember) {
-                        userService.setSessionPassphrase(pass);
-                    }
-
-                    var goto = $cookies.get('goto');
-                    if (goto) {
-                        $state.go(goto);
-                    } else {
-                        $state.go('main.dashboard');
-                    }
-                } else {
-                    $scope.errorMessage = resp.data.error ? resp.data.error : 'Error connecting to server';
+        $http.post("/api/accounts/open/", { secret: pass }).then(function (resp) {
+            if (resp.data.success) {
+                userService.setData(resp.data.account.address, resp.data.account.publicKey, resp.data.account.balance, resp.data.account.unconfirmedBalance, resp.data.account.effectiveBalance);
+                userService.setForging(resp.data.account.forging);
+                userService.setSecondPassphrase(resp.data.account.secondSignature || resp.data.account.unconfirmedSignature);
+                userService.unconfirmedPassphrase = resp.data.account.unconfirmedSignature;
+                if (remember) {
+                    userService.setSessionPassphrase(pass);
                 }
-            }, function (error) {
-                $scope.errorMessage = error.data.error ? error.data.error : error.data;
-            });
+
+                var goto = $cookies.get('goto');
+                if (goto) {
+                    $state.go(goto);
+                } else {
+                    $state.go('main.dashboard');
+                }
+            } else {
+                $scope.errorMessage = resp.data.error ? resp.data.error : 'Error connecting to server';
+            }
+        }, function (error) {
+            $scope.errorMessage = error.data.error ? error.data.error : error.data;
+        });
     }
 
     var passphrase = $cookies.get('passphrase');

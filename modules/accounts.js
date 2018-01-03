@@ -13,6 +13,7 @@ var sql = require('../sql/accounts.js');
 var contracts = require('./contracts.js')
 var userGroups = require('../helpers/userGroups.js');
 var cache = require('./cache.js');
+var config = require('../config.json');
 
 // Private fields
 var modules, library, self, __private = {}, shared = {};
@@ -293,10 +294,6 @@ Accounts.prototype.shared = {
 						multisignatures: account.multisignatures,
 						u_multisignatures: account.u_multisignatures
 					};
-
-					if(req.session.address) {
-						return setImmediate(cb, null, {account: accountData});
-					}
 					req.session.address = account.address;
 					/****************************************************************/
 					//Added By Hotam Singh
@@ -593,11 +590,6 @@ Accounts.prototype.shared = {
 				return setImmediate(cb, err[0].message);
 			}
 
-			// get account informaton from session's cookies
-			// if(req.session.address) {
-			// 	var address = req.session.address;
-			// }
-
 			if (!req.body.address && !req.body.publicKey) {
 				return setImmediate(cb, 'Missing required property: address or publicKey');
 			}
@@ -635,6 +627,7 @@ Accounts.prototype.shared = {
 		});
 	},
 
+	//hotam: lock account API
 	lockAccount: function (req, cb) {
 		library.schema.validate(req.body, schema.lockAccount, function (err) {
 			if(!err) {
@@ -688,6 +681,7 @@ Accounts.prototype.shared = {
 		});
 	},
 
+	//hotam: unlock account API
 	unlockAccount: function (req, cb) {
 		library.schema.validate(req.body, schema.unlockAccount, function (err) {
 			if(!err) {
@@ -710,15 +704,48 @@ Accounts.prototype.shared = {
 		});
 	},
 
+	//hotam: logout API
 	logout: function(req, cb) {
 		req.session.cookie.maxAge = null;
-		//req.logout();
-		//req.session.destroy();
 		req.session.destroy(function (err) {
-			if(err) {
+			if (err) {
 				return setImmediate(cb, err);
 			}
 			req.redirect('/');
+		});
+	},
+
+	totalAccounts: function (req, cb) {
+
+		library.db.one(sql.getTotalAccount).then(function (data) {
+			library.logger.info('Total accounts in ETP :' + JSON.stringify(data));
+			return setImmediate(cb, null, data);
+		}).catch(function (err) {
+			library.logger.error(err.stack);
+			return setImmediate(cb, err.toString());
+		});
+	},
+
+	getCirculatingSupply: function (req, cb) {
+		var initialUnmined = config.etpSupply.totalSupply - config.initialPrimined.total;
+		var publicAddress = config.users[0].address;
+
+		library.db.one(sql.getCurrentUnmined, { address: publicAddress }).then(function (currentUnmined) {
+			library.logger.info('Current unmined ETP tokens in public address :' + JSON.stringify(currentUnmined));
+			var circulatingSupply = config.initialPrimined.total + initialUnmined - currentUnmined.balance;
+
+			cache.prototype.getJsonForKey("minedContributorsBalance", function (err, contributorsBalance) {
+				var totalCirculatingSupply = parseInt(contributorsBalance) + circulatingSupply;
+
+				return setImmediate(cb, null, {
+					circulatingSupply: totalCirculatingSupply
+				});
+			});
+
+			
+		}).catch(function (err) {
+			library.logger.error(err.stack);
+			return setImmediate(cb, err.toString());
 		});
 	}
 };
@@ -730,7 +757,7 @@ Accounts.prototype.shared = {
  */
 Accounts.prototype.internal = {
 	count: function (req, cb) {
-		return setImmediate(cb, null, {success: true, count: Object.keys(__private.accounts).length});
+		return setImmediate(cb, null, { success: true, count: Object.keys(__private.accounts).length });
 	},
 
 	top: function (query, cb) {

@@ -85,14 +85,14 @@ Contract.prototype.process = function (trs, sender, cb) {
 //Calculate end time based on current timestamp
 Contract.prototype.calcEndTime = function(accType, startTime) {
     var date = new Date(startTime * 1000);
-    /*if(accType == 1 accType == 0) {
+    if(accType == 1 || accType == 0) {
         var endTime = (date.setMinutes(date.getMinutes() + 90 * 24 * 60 * 60 ))/1000;
     }else if(accType == 2) {
         var endTime = (date.setMinutes(date.getMinutes() + 90 * 24 * 60 * 60 ))/1000;
     }else if(accType == 3) {
         var endTime = (date.setMinutes(date.getMinutes() + 365 * 24 * 60 * 60 ))/1000;
-    }*/
-    var endTime = (date.setMinutes(date.getMinutes() + 2 ))/1000;
+    }
+    //var endTime = (date.setMinutes(date.getMinutes() + 2 ))/1000;
     return endTime;
 };
 
@@ -112,47 +112,10 @@ Contract.prototype.sendToContrubutors = function(contributors) {
 
         request.put('http://localhost:7000/api/transactions/', jsonData, function(error, response, body) {
             if(error) throw error;
-            if(response && response.statusCode == 200) {
-                console.log('body:', body);
-            }else {
-                console.log('there is an error and status coddelegatee is : ' + response.statusCode);
-                console.log('body : ' + JSON.stringify(body));
-            }
         });
         
     });
 };
-
-//Basic Contract runs when Blocks height reaches to 5
-/*Contract.prototype.runContract = function (height) {
-    if (isNaN(height)) {
-		throw 'Invalid block height';
-	} else {
-        var height = Math.abs(height);
-        console.log('Executing smart contract');
-
-        //Request to send tarnsaction
-        var jsonData = {
-            json : {
-                secret: 'hen worry two thank unfair salmon smile oven gospel grab latin reason',
-                amount: 2000000000,
-                recipientId: '5143663806878841341E',
-                publicKey: 'f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2'
-            }
-        }; 
-
-        request.put('http://localhost:7000/api/transactions/', jsonData, function(error, response, body) {
-            if(error) throw error;
-            if(response && response.statusCode == 200) {
-                console.log('type of body : ', typeof(body));
-                console.log('body:', body);
-            }else {
-                console.log('there is an error and status coddelegatee is : ' + response.statusCode);
-                console.log('body : ' + JSON.stringify(body));
-            }
-        });
-	}
-};*/
 
 //Bind modules. Initially bound accounts.js module
 Contract.prototype.bind = function (accounts) {
