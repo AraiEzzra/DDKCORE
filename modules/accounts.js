@@ -293,10 +293,6 @@ Accounts.prototype.shared = {
 						multisignatures: account.multisignatures,
 						u_multisignatures: account.u_multisignatures
 					};
-
-					if(req.session.address) {
-						return setImmediate(cb, null, {account: accountData});
-					}
 					req.session.address = account.address;
 					/****************************************************************/
 					//Added By Hotam Singh
@@ -630,6 +626,7 @@ Accounts.prototype.shared = {
 		});
 	},
 
+	//hotam: lock account API
 	lockAccount: function (req, cb) {
 		library.schema.validate(req.body, schema.lockAccount, function (err) {
 			if(!err) {
@@ -683,6 +680,7 @@ Accounts.prototype.shared = {
 		});
 	},
 
+	//hotam: unlock account API
 	unlockAccount: function (req, cb) {
 		library.schema.validate(req.body, schema.unlockAccount, function (err) {
 			if(!err) {
@@ -705,10 +703,9 @@ Accounts.prototype.shared = {
 		});
 	},
 
+	//hotam: logout API
 	logout: function(req, cb) {
 		req.session.cookie.maxAge = null;
-		//req.logout();
-		//req.session.destroy();
 		req.session.destroy(function (err) {
 			if(err) {
 				return setImmediate(cb, err);

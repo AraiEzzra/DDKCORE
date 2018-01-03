@@ -4,7 +4,6 @@ var async = require('async');
 var bignum = require('./bignum');
 var fs = require('fs');
 var path = require('path');
-var chalk = require('chalk');
 
 // var isWin = /^win/.test(process.platform);
 // var isMac = /^darwin/.test(process.platform);
@@ -181,6 +180,7 @@ function Migrator (pgp, db) {
  * @return {function} error|cb
  */
 module.exports.connect = function (config, logger, cb) {
+	//hotam: handle appmetrics error by adding new promise library
 	const promise = require('bluebird');
 	var pgOptions = {
 		promiseLib: promise
