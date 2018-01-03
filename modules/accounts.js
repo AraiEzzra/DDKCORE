@@ -13,6 +13,7 @@ var sql = require('../sql/accounts.js');
 var contracts = require('./contracts.js')
 var userGroups = require('../helpers/userGroups.js');
 var cache = require('./cache.js');
+var config = require('../config.json');
 
 // Private fields
 var modules, library, self, __private = {}, shared = {};
@@ -707,10 +708,44 @@ Accounts.prototype.shared = {
 	logout: function(req, cb) {
 		req.session.cookie.maxAge = null;
 		req.session.destroy(function (err) {
-			if(err) {
+			if (err) {
 				return setImmediate(cb, err);
 			}
 			req.redirect('/');
+		});
+	},
+
+	totalAccounts: function (req, cb) {
+
+		library.db.one(sql.getTotalAccount).then(function (data) {
+			library.logger.info('Total accounts in ETP :' + JSON.stringify(data));
+			return setImmediate(cb, null, data);
+		}).catch(function (err) {
+			library.logger.error(err.stack);
+			return setImmediate(cb, err.toString());
+		});
+	},
+
+	getCirculatingSupply: function (req, cb) {
+		var initialUnmined = config.etpSupply.totalSupply - config.initialPrimined.total;
+		var publicAddress = config.users[0].address;
+
+		library.db.one(sql.getCurrentUnmined, { address: publicAddress }).then(function (currentUnmined) {
+			library.logger.info('Current unmined ETP tokens in public address :' + JSON.stringify(currentUnmined));
+			var circulatingSupply = config.initialPrimined.total + initialUnmined - currentUnmined.balance;
+
+			cache.prototype.getJsonForKey("minedContributorsBalance", function (err, contributorsBalance) {
+				var totalCirculatingSupply = parseInt(contributorsBalance) + circulatingSupply;
+
+				return setImmediate(cb, null, {
+					circulatingSupply: totalCirculatingSupply
+				});
+			});
+
+			
+		}).catch(function (err) {
+			library.logger.error(err.stack);
+			return setImmediate(cb, err.toString());
 		});
 	}
 };
@@ -722,7 +757,7 @@ Accounts.prototype.shared = {
  */
 Accounts.prototype.internal = {
 	count: function (req, cb) {
-		return setImmediate(cb, null, {success: true, count: Object.keys(__private.accounts).length});
+		return setImmediate(cb, null, { success: true, count: Object.keys(__private.accounts).length });
 	},
 
 	top: function (query, cb) {
