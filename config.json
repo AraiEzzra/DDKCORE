@@ -137,6 +137,13 @@
         "newUsers" : [],
         "lockTime" : 3,
         "lockStatus" : [],
-        "lockIndex" : 0
+        "lockIndex" : 0,
+        "totalAmount" : 21000000000000
+    },
+    "initialPrimined":{
+        "total":55000000000000
+    },
+    "etpSupply":{
+        "totalSupply":2100000000000000
     }
 }
