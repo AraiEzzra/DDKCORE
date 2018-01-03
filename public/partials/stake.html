@@ -78,9 +78,13 @@
             </table> -->
             <table ng-table ="usersTable" class="table table-bordered table-striped">
                 <tr ng-repeat="user in data">
-                <td data-title="'Name'" sortable="'name'">{{user.name}}</td>
-                <td data-title="'Age'" sortable="'age'">{{user.age}}</td>
-                <td data-title="'Location'" sortable="'location'">{{user.location}}</td>
+                <td data-title="'FreezeAmount'">{{user.freezeAmount}}</td>
+                <td data-title="'Status'">{{user.status}}</td>
+                <td data-title="'InsertTime'">{{user.insertTime}}</td>
+                <td data-title="'MatureTime'">{{user.matureTime}}</td>
+                <td data-title="'MonthRemain'">{{user.monthRemain}}</td>
+                <td data-title="'Recipient'">{{user.addderess}}</td>
+                <td data-title="'Action'" class="text-center"><i class="mdi-content-send"></i></td>
                 </tr>
                 </table>
 
