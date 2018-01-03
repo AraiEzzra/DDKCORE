@@ -20,9 +20,10 @@ angular.module('ETPApp').controller('stakeController', ['$scope', 'ngTableParams
     ];
     $scope.usersTable = new ngTableParams({
         page: 1,
-        count: 5
+        count: 10
     }, {
     total: $scope.users.length,
+
     getData: function ($defer, params) {
         $scope.data = params.sorting() ? $filter('orderBy')($scope.users, params.orderBy()) : $scope.users;
         $scope.data = $scope.data.slice((params.page() - 1) * params.count(), params.page() * params.count());
