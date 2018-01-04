@@ -72,6 +72,7 @@ var currentDay = '';
 const Logger = require('./logger.js');
 let logman = new Logger();
 let logger = logman.logger;
+var sockets = [];
 
 process.stdin.resume();
 
@@ -338,7 +339,33 @@ d.run(function () {
 
 			var server = require('http').createServer(app);
 			var io = require('socket.io')(server);
-	
+
+			//Function To Verify Whether A Socket Already Exists.
+			function acceptSocket(socket, sockets) {
+				var userFound = false;
+				if (sockets) {
+					for (var i = 0; i < sockets.length; i++) {
+						if (sockets[i] == socket.id) {
+							userFound = true;
+						}
+					}
+				}
+				if (!userFound) {
+					sockets.push(socket.id);
+				}
+				io.emit('updateConnected', sockets.length);
+			}
+			io.on('connection', function (socket) {
+				acceptSocket(socket, sockets);
+				socket.on('disconnect', function () {
+					sockets.forEach(function(socketId) {
+						if(socketId == socket.id) {
+							sockets.pop(socketId);
+							io.sockets.emit('updateConnected', sockets.length);
+						}
+					});
+				});
+			});
 
 			var privateKey, certificate, https, https_io;
 

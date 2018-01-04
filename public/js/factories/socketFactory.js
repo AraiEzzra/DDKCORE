@@ -14,6 +14,7 @@ angular.module('ETPApp').factory('serverSocket', ["socketFactory", "$location", 
     serverSocket.forward('multisignatures/signatures/change');
     serverSocket.forward('dapps/change');
     serverSocket.forward('rounds/change');
+    serverSocket.forward('updateConnected');
 
     return serverSocket;
 
