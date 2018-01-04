@@ -26,7 +26,6 @@ angular.module('ETPApp').service('AuthService', ['$http', 'userService', functio
             // handle success
             .success(function (resp) {
                 if (resp.status && resp.data.success) {
-                    console.log('response : ' + JSON.stringify(resp.data.account));
                     user = true;
                     userService.setData();
                     userService.setData(resp.data.account.address, resp.data.account.publicKey, resp.data.account.balance, resp.data.account.unconfirmedBalance, resp.data.account.effectiveBalance);

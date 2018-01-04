@@ -186,6 +186,11 @@ __private.verifyVersion = function (block, result) {
 __private.verifyReward = function (block, result) {
 	var expectedReward = __private.blockReward.calcReward(block.height);
 
+	if(block.height > 21000000) {
+		expectedReward = 0;
+		block.reward = 0;
+	}
+
 	if (block.height !== 1 && expectedReward !== block.reward && exceptions.blockRewards.indexOf(block.id) === -1) {
 		result.errors.push(['Invalid block reward:', block.reward, 'expected:', expectedReward].join(' '));
 	}
