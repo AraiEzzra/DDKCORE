@@ -120,125 +120,154 @@
         }
       }
     },
-    "/api/accounts/open":{
-      "post":{
-        "tags":[
+    "/api/accounts/open": {
+      "post": {
+        "tags": [
           "Account"
         ],
-        "description":"Open An Account",
-        "operationId":"for the URL",
-        "produces":[
+        "description": "Open An Account",
+        "operationId": "for the URL",
+        "produces": [
           "application/json"
         ],
-        "parameters":[
+        "parameters": [
           {
-            "name":"secret",
-            "in":"body",
-            "description":"generatePublicKey",
-            "required":true,
-            "schema":{
-              "$ref":"#/definitions/create"
+            "name": "secret",
+            "in": "body",
+            "description": "generatePublicKey",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/create"
             }
           }
         ],
-        "responses":{
-          "200":{
-            "description":"create response",
-            "schema":{
-              "$ref":"#/definitions/response"
+        "responses": {
+          "200": {
+            "description": "create response",
+            "schema": {
+              "$ref": "#/definitions/response"
             }
           }
         }
       }
     },
-    "/api/accounts/lock":{
-      "post":{
-        "tags":[
+    "/api/accounts/lock": {
+      "post": {
+        "tags": [
           "Account"
         ],
-        "description":"Lock User's Account",
-        "operationId":"Lock",
-        "produces":[
+        "description": "Lock User's Account",
+        "operationId": "Lock",
+        "produces": [
           "application/json"
         ],
-        "parameters":[
+        "parameters": [
           {
-            "name":"address",
-            "in":"body",
-            "description":"address is required",
-            "required":true,
-            "schema":{
-              "$ref":"#/definitions/create"
+            "name": "address",
+            "in": "body",
+            "description": "address is required",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/create"
             }
           }
         ],
-        "responses":{
-          "200":{
-            "description":"create response",
-            "schema":{
-              "$ref":"#/definitions/response"
+        "responses": {
+          "200": {
+            "description": "create response",
+            "schema": {
+              "$ref": "#/definitions/response"
             }
           }
         }
       }
     },
-    "/api/accounts/unlock":{
-      "post":{
-        "tags":[
+    "/api/accounts/unlock": {
+      "post": {
+        "tags": [
           "Account"
         ],
-        "description":"Unlock User's Account",
-        "operationId":"Unlock",
-        "produces":[
+        "description": "Unlock User's Account",
+        "operationId": "Unlock",
+        "produces": [
           "application/json"
         ],
-        "parameters":[
+        "parameters": [
           {
-            "name":"address",
-            "in":"body",
-            "description":"address is required",
-            "required":true,
-            "schema":{
-              "$ref":"#/definitions/create"
+            "name": "address",
+            "in": "body",
+            "description": "address is required",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/create"
             }
           }
         ],
-        "responses":{
-          "200":{
-            "description":"create response",
-            "schema":{
-              "$ref":"#/definitions/response"
+        "responses": {
+          "200": {
+            "description": "create response",
+            "schema": {
+              "$ref": "#/definitions/response"
             }
           }
         }
       }
     },
-    "/api/accounts/logout":{
-      "post":{
-        "tags":[
+    "/api/accounts/logout": {
+      "post": {
+        "tags": [
           "Account"
         ],
-        "description":"Logout a User",
-        "operationId":"Logout",
-        "produces":[
+        "description": "Logout a User",
+        "operationId": "Logout",
+        "produces": [
           "application/json"
         ],
-        "parameters":[
+        "parameters": [
           {
-            "name":"address",
-            "in":"body",
-            "description":"address is required",
-            "required":true,
-            "schema":{
-              "$ref":"#/definitions/create"
+            "name": "address",
+            "in": "body",
+            "description": "address is required",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/create"
             }
           }
         ],
-        "responses":{
-          "200":{
-            "description":"create response",
-            "schema":{
-              "$ref":"#/definitions/response"
+        "responses": {
+          "200": {
+            "description": "create response",
+            "schema": {
+              "$ref": "#/definitions/response"
+            }
+          }
+        }
+      }
+    },
+    "/api/accounts/getCirculatingSupply": {
+      "get": {
+        "tags": [
+          "Account"
+        ],
+        "description": "Circulating Supply",
+        "operationId": "none",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "none",
+            "in": "query",
+            "description": "fetch circulating supply",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "response",
+            "schema": {
+              "$ref": "#/definitions/response1"
             }
           }
         }
@@ -477,6 +506,64 @@
             "schema": {
               "$ref": "#/definitions/create"
             }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "create response",
+            "schema": {
+              "$ref": "#/definitions/response"
+            }
+          }
+        }
+      }
+    },
+    "/api/frogings/countStakeholders": {
+      "get": {
+        "tags": [
+          "Freeze"
+        ],
+        "description": "count Stakeholders",
+        "operationId": "for the URL",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "none",
+            "in": "query",
+            "description": "Get count of active stakeholders",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "create response",
+            "schema": {
+              "$ref": "#/definitions/response"
+            }
+          }
+        }
+      }
+    },
+    "/api/frogings/getTotalETPStaked": {
+      "get": {
+        "tags": [
+          "Freeze"
+        ],
+        "description": "sum of ETP staked",
+        "operationId": "for the URL",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "none",
+            "in": "query",
+            "description": "Get total ETP staked",
+            "required": false,
+            "type": "string"
           }
         ],
         "responses": {

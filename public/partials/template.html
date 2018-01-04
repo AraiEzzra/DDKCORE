@@ -80,22 +80,22 @@
               <span class="forging-state" ng-class="{'disabled': !forgingEnabled}" ng-if="forgingStatus && view.bar.forgingMenu">{{forgingStatus}}</span>
            </div>
            <div id="top-menu">
-              <span id="balance">
+              <span id="balance" class="margin-right-10">
               {{unconfirmedBalance | ETPFilter}}
               ETP
               </span>
-              <a class="btn btn-blue-nav waves-effect waves-light left-margin-20" ng-click="sendTransaction()">
+              <a class="btn btn-blue-nav waves-effect waves-light" ng-click="sendTransaction()">
                  <i class="mdi-content-send left"></i>
                  <translate>SEND</translate>
               </a>
-              <a class="btn btn-blue-nav waves-effect waves-light left-margin-20" ui-sref="main.dashboard" ng-click="classRemove()" ng-if="$state.current.name === 'main.explorer'"><i class="material-icons left back-btn-icon">navigate_before</i>Back</a>
+              <a class="btn btn-blue-nav waves-effect waves-light margin-left-10" ui-sref="main.dashboard" ng-click="classRemove()" ng-if="$state.current.name === 'main.explorer'"><i class="material-icons left back-btn-icon">navigate_before</i>Back</a>
 
 
               <div class="mini-chart valign-wrapper" ng-show="syncState != undefined">
                  <div class="mini-chart-label">{{syncState}}%</div>
                  <canvas id="total-forged" class="chart chart-doughnut" chart-data="loading.values" chart-labels="loading.labels" chart-options="loading.options" chart-colours="loading.colours"></canvas>
               </div>
-              <div class="more-down left-margin-20" dropdown is-open="moreDropdownStatus.isopen" ng-if="$state.current.name != 'main.explorer'">
+              <div class="more-down margin-left-10" dropdown is-open="moreDropdownStatus.isopen" ng-if="$state.current.name != 'main.explorer'">
                  <i class="mdi-navigation-more-vert" dropdown-toggle></i>
                  <ul class="dropdown-menu" role="menu">
                     <li>
@@ -121,6 +121,7 @@
                  </ul>
               </div>
            </div>
+
         </div>
         <!--div class="search-bar" ng-show="view.bar.showTransactionsSearchBar">
            <div class="search-toggle" ng-if="searchTransactions.searchForTransaction">
@@ -219,7 +220,8 @@
               <span class="name" ng-show="username">
                  <translate>Welcome back, {{username}}</translate>
               </span>
-              <span class="address">{{address}}</span>
+              <!--  Navin :Remove from here and show on accounts.html -->
+             <!-- <span class="address">{{address}}</span>  -->
            </div>
            <!-- <div class="white-glow"></div> -->
            <ul id="menu">
@@ -293,6 +295,15 @@
                     </span>
                  </a>
               </li>
+              <li ng-show="showMenuItem('main.stake')" ui-sref-active="active">
+                    <a ui-sref="main.stake" class="waves-effect waves-blue">
+                       <div class="nav-icon" id="blockchain-icon"></div>
+                       <span class="menu-text">
+                          <translate>Stake</translate>
+                       </span>
+                    </a>
+                 </li>
+
            </ul>
            <div id="inc"></div>
         </div>

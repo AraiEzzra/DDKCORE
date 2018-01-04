@@ -104,6 +104,28 @@ Frogings.prototype.onBind = function (scope) {
  * @see {@link http://apidocjs.com/}
  */
 Frogings.prototype.shared = {
+
+	countStakeholders: function (req, cb) {
+
+		library.db.query(sql.countStakeholders).then(function (rows) {
+			return setImmediate(cb, null, {
+				countStakeholders: JSON.stringify(rows)
+			});
+		}, function (err) {
+			return setImmediate(cb, 'Error while counting Stakeholders');
+		});
+
+	},
+
+	totalETPStaked: function (req, cb) {
+		library.db.query(sql.getTotalStakedAmount).then(function (rows) {
+			return setImmediate(cb, null, {
+				totalETPStaked: JSON.stringify(rows)
+			});
+		}, function (err) {
+			return setImmediate(cb, 'Error in getting sum of ETP staked');
+		});
+	},
 	
 	getAllFreezeOrders: function (req, cb) {
 
