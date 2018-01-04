@@ -43,7 +43,8 @@ function AccountsHttpApi (accountsModule, app) {
 		'post /unlock': 'unlockAccount',
 		'post /logout': 'logout',
 		'get /count':'totalAccounts',
-		'get /getCirculatingSupply':'getCirculatingSupply'
+		'get /getCirculatingSupply':'getCirculatingSupply',
+		'get /totalSupply' : 'totalSupply'
 	});
 
 	router.map(accountsModule.internal, {
