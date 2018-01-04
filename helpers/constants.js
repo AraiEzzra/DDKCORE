@@ -89,7 +89,7 @@ module.exports = {
 			200000000, // Milestone 3
 			100000000  // Milestone 4
 		],
-		offset: 2160,      // Start rewards at block (n)
+		offset: 2160,      // 2160 Start rewards at block (n)
 		distance: 3000000, // Distance between each milestone
 	},
 	signatureLength: 196,

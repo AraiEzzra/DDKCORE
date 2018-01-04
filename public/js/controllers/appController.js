@@ -514,6 +514,14 @@ angular.module('ETPApp').controller('appController', ['dappsService', '$scope', 
         ]);
     });
 
+    $scope.$on('socket:updateConnected', function (ev, data) {
+        console.log('************************* '+ data);
+        $scope.getAppData();
+        $scope.updateViews([
+            'main.dashboard'
+        ]);
+    });
+
     $window.onfocus = function () {
         $scope.getAppData();
         $scope.updateViews([$state.current.name]);
