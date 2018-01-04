@@ -516,7 +516,7 @@ angular.module('ETPApp').controller('appController', ['dappsService', '$scope', 
     });
 
     $scope.$on('socket:updateConnected', function (ev, data) {
-        console.log('************************* '+ data);
+        $scope.totalConnected = data;
         $scope.getAppData();
         $scope.updateViews([
             'main.dashboard'
