@@ -295,11 +295,10 @@ body{
     position: relative;
     vertical-align: middle;
     .pass-window {
-      width: 372px;
-      background-color: @white;
-      border: 1px solid #cecece;
       margin: 0 auto;
-      border-radius: 4px;
+      .pass-window-form{
+        padding: 10px 15px 15px!important;
+      }
     }
     .pass-footer {
       bottom: 0;
@@ -383,17 +382,57 @@ body{
   margin-right:5px;
   min-width: 32px;
 }
-.dashboard-info{
-  .panel-body{
-    padding: 0;
-  }
-  .widget{
-    padding: 15px;
-  }
-}
+
 
 .back-btn-icon{
   margin-left: -10px;
   font-size: 1.8em;
   margin-right: 0;
 }
+
+
+.dashboard-info{
+  .panel-body{
+    padding: 0;
+    .info-box-icon {
+      float: left;
+      height: 50px;
+      width: 50px;
+      text-align: center;
+      line-height: 70px;
+      background: #f2f5f7;
+      border-radius: 100%;
+    }
+    .info-box-content {
+      padding: 0;
+      margin-left: 60px;
+      line-height: 18px;
+      margin-top: 5px;
+      text-align: right;
+      .info-box-number{
+        font-size: 14px;
+      }
+      .info-box-text{
+        font-size: 14px;
+        font-weight: 400;
+        display: block;
+        color: #ababab;
+      }
+    }
+  }
+  .widget{
+    padding: 15px 10px;
+  }
+  .widget-brown{
+    border-top: none!important;
+  }
+
+
+}
+
+
+
+
+
+
+

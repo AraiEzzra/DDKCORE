@@ -103,7 +103,8 @@ angular.module('ETPApp').controller('appController', ['dappsService', '$scope', 
         'passphrase',
         'main.dappstore',
         'main.multi',
-        'main.explorer'
+        'main.explorer',
+        'main.stake'
 
     ];
 
@@ -556,7 +557,7 @@ angular.module('ETPApp').controller('appController', ['dappsService', '$scope', 
 
         } else {
             $scope.classRemove();
-            console.log($scope.myClass);
+            //console.log($scope.myClass);
         }
     };
 

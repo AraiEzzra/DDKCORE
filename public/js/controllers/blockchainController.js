@@ -36,6 +36,8 @@ angular.module('ETPApp').controller('blockchainController', ['$scope', '$timeout
         }
     });
 
+    
+
     $scope.tableBlocks.cols = {
         height : gettextCatalog.getString('Height'),
         blockId : gettextCatalog.getString('Block ID'),

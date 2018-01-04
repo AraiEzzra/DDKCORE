@@ -1,6 +1,19 @@
 <div class="top-margin"></div>
-<div class="row">
-  <div class="col-md-6 col-sm-12 col-xs-12 pr7 dashboard-info">
+<div class="row clearfix">
+  <!-- <div class="col-md-4 col-sm-12 col-xs-12 pr7 dashboard-info">
+    <div class="panel widget widget-brown">
+      <div class="ETP-icon"></div>
+      <div class="panel-body">
+        <div class="wg-label">
+          {{'Total Supply'|translate}}
+        </div>
+        <div class="wg-data">
+          <span class="strong">{{balanceToShow[0] || 0}}<span class="small">{{balanceToShow[1]}}</span></span>&nbsp;ETP
+        </div>
+      </div>
+    </div>
+  </div> -->
+ <!--  <div class="col-md-4 col-sm-12 col-xs-12 pr7 pl7 dashboard-info">
     <div class="panel widget widget-brown">
       <div class="ETP-icon"></div>
       <div class="panel-body">
@@ -8,11 +21,116 @@
           {{'Balance'|translate}}
         </div>
         <div class="wg-data">
+          <span class="strong">{{balanceToShow[0] || 0}}
+            <span class="small">{{balanceToShow[1]}}</span>
+          </span>&nbsp;ETP
+        </div>
+      </div>
+    </div>
+  </div> -->
+  <!-- <div class="col-md-4 col-sm-12 col-xs-12 pl7 dashboard-info">
+    <div class="panel widget widget-brown">
+      <div class="ETP-icon"></div>
+      <div class="panel-body">
+        <div class="wg-label">
+          {{'Your ETP balance'|translate}}
+        </div>
+        <div class="wg-data">
           <span class="strong">{{balanceToShow[0] || 0}}<span class="small">{{balanceToShow[1]}}</span></span>&nbsp;ETP
         </div>
       </div>
     </div>
-  </div>
+  </div> -->
+
+    <div class="col-md-3 col-sm-6 col-xs-12 pr7 dashboard-info">
+      <div class="panel widget widget-brown">
+        <div class="panel-body">
+            <span class="info-box-icon bg-blue"><img src="images/plug.png" width="32"></span>
+            <div class="info-box-content">
+                <span class="info-box-number">50</span><br>
+                <span class="info-box-text">{{'Total Supply'|translate}}</span>
+              </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3 col-sm-6 col-xs-12 pr7 pl7 dashboard-info">
+      <div class="panel widget widget-brown">
+        <div class="panel-body">
+            <span class="info-box-icon bg-blue"><img src="images/power-cord.png" width="32"></span>
+            <div class="info-box-content">
+                <span class="info-box-number">234</span><br>
+                <span class="info-box-text">{{'Circulating Supply'|translate}}</span>
+              </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6 col-xs-12 pl7 pr7 dashboard-info">
+      <div class="panel widget widget-brown">
+        <div class="panel-body">
+            <span class="info-box-icon bg-blue"><img src="images/users-group.png" width="32"></span>
+            <div class="info-box-content">
+                <span class="info-box-number">334</span><br>
+                <span class="info-box-text">{{'Token Holders'|translate}}</span>
+              </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6 col-xs-12 pl7 pr0 dashboard-info">
+      <div class="panel widget widget-brown">
+        <div class="panel-body">
+            <span class="info-box-icon bg-blue"><img src="images/money-bag-with-dollar-symbol.png" width="32"></span>
+            <div class="info-box-content">
+                <span class="info-box-number"><span class="strong">{{balanceToShow[0] || 0}}<span class="small">{{balanceToShow[1]}}</span></span>&nbsp;ETP</span><br>
+                <span class="info-box-text">{{'Your ETP Balance'|translate}}</span>
+              </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6 col-xs-12 pr7 dashboard-info">
+      <div class="panel widget widget-brown">
+        <div class="panel-body">
+            <span class="info-box-icon bg-blue"><img src="images/snowflake.png" width="32"></span>
+            <div class="info-box-content">
+                <span class="info-box-number">60</span><br>
+                <span class="info-box-text">{{'Your ETP Frozen'|translate}}</span>
+              </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6 col-xs-12 pr7 pl7 dashboard-info">
+      <div class="panel widget widget-brown">
+        <div class="panel-body">
+            <span class="info-box-icon bg-blue"><img src="images/share-connection-sing.png" width="32"></span>
+            <div class="info-box-content">
+                <span class="info-box-number">30</span><br>
+                <span class="info-box-text">{{'Total Connected'|translate}}</span>
+              </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6 col-xs-12 pl7 pr7 dashboard-info">
+      <div class="panel widget widget-brown">
+        <div class="panel-body">
+            <span class="info-box-icon bg-blue"><img src="images/icon.png" width="32"></span>
+            <div class="info-box-content">
+                <span class="info-box-number">50</span><br>
+                <span class="info-box-text">{{'Total Stakeholders'|translate}}</span>
+              </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6 col-xs-12 pl7 dashboard-info">
+      <div class="panel widget widget-brown">
+        <div class="panel-body">
+            <span class="info-box-icon bg-blue"><img src="images/location-pin.png" width="32"></span>
+            <div class="info-box-content">
+                <span class="info-box-number">4995063339468361088E</span><br>
+                <span class="info-box-text">{{'User Address'|translate}}</span>
+              </div>
+        </div>
+      </div>
+    </div>
   <!-- <div class="col-lg-3 col-md-6 col-sm-6 col-xs-12 dashboard-info">
     <div class="panel  widget widget-violet">
       <div class="dapp-icon"></div>
@@ -26,14 +144,17 @@
       </div>
     </div>
   </div> -->
-  <div class="col-md-6 col-sm-12 col-xs-12 pl7 dashboard-info">
+  <!-- <div class="col-md-6 col-sm-12 col-xs-12 pl7 dashboard-info">
     <div class="panel  widget widget-brown" ng-show="diffVersion!=-1">
       <div class="panel-body">
         <div class="wg-label">
           {{'ETP Client'|translate}}
         </div>
         <div class="wg-data version">
-          <span class="strong">v{{version}}</span><span class="wg-legend"><translate>Latest version</translate></span>
+          <span class="strong">v{{version}}</span>
+          <span class="wg-legend">
+            <translate>Latest version</translate>
+          </span>
         </div>
       </div>
     </div>
@@ -43,12 +164,47 @@
           <translate>ETP Client Outdated</translate>
         </div>
         <div class="wg-data version">
-          <span class="strong">v{{version}}</span> <a href="https://ETP.io/download" target="_blank" class="btn btn-white waves-effect pull-right"><translate>UPDATE</translate></a>
+          <span class="strong">v{{version}}</span>
+          <a href="https://ETP.io/download" target="_blank" class="btn btn-white waves-effect pull-right">
+            <translate>UPDATE</translate>
+          </a>
         </div>
       </div>
     </div>
-  </div>
+  </div> -->
 </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <div class="row">
   <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
     <div class="panel panel-default">
@@ -57,16 +213,18 @@
           {{'Latest Transactions'|translate}}
         </h2>
         <div class="more" ng-show="transactions.length">
-          <span class="sr-only"><translate>More</translate></span>
+          <span class="sr-only">
+            <translate>More</translate>
+          </span>
         </div>
       </div>
       <table id="transactions" ng-if="transactions.length">
         <thead>
           <tr class="head">
-            <th class="hide-in-1400">
+            <th>
               <translate>Transaction ID</translate>
             </th>
-            <th class="padding-in-1400">
+            <th>
               <translate>Sender</translate>
             </th>
             <th>
@@ -78,20 +236,23 @@
             <th>
               <translate>Amount (Fee)</translate>
             </th>
+      
           </tr>
         </thead>
         <tbody>
           <tr ng-repeat="transaction in transactions">
-            <td class="hide-in-1400">
+            <td>
               <a href="#" ng-click="transactionInfo(transaction)" class="word-break-xs">{{transaction.id}}</a>
             </td>
+      
             <td class="padding-in-1400">
               <a href="#" ng-click="userInfo(transaction.senderId)" class="word-break-xs">{{transaction.senderId}}</a>
             </td>
-            <td ng-show="transaction.type &lt;= 1">
-              <a href="#" ng-click="userInfo(transaction.recipientId)" class="word-break-xs">{{transaction.recipientId}}</a>
+    
+            <td class="padding-in-1400">
+              <a href="#" ng-click="userInfo(transaction.recipientId)" class="word-break-xs">{{transaction.recipientId}} </a>
             </td>
-            <td ng-show="transaction.type &gt; 1"></td>
+            
             <td>
               {{transaction.timestamp | timeAgoFilter: false}}
             </td>

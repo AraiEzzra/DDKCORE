@@ -63,7 +63,6 @@ Frozen.prototype.inactive= '0';
 Frozen.prototype.active= '1';
 
 Frozen.prototype.dbSave = function (trs) {
-	//Hotam Singh
 	return {
 		table: this.dbTable,
 		fields: this.dbFields,
@@ -166,7 +165,7 @@ Frozen.prototype.checkFrozeOrders = function () {
 			milestone: constants.froze.milestone * 60,
 			currentTime: currentTime
 		}).then(function (rows) {
-			self.scope.logger.info("Successfully get :" + rows.length +", number of froze order");
+			self.scope.logger.info("Successfully get :" + rows.length + ", number of froze order");
 
 			if (rows.length > 0) {
 				//Update nextMilesone in "stake_orders" table
@@ -175,7 +174,6 @@ Frozen.prototype.checkFrozeOrders = function () {
 						milestone: constants.froze.milestone * 60,
 						currentTime: currentTime
 					}).then(function () {
-						console.log("Successfully check milestones");
 
 						//change status and nextmilestone
 						self.scope.db.none(sql.disableFrozeOrders,
@@ -183,7 +181,7 @@ Frozen.prototype.checkFrozeOrders = function () {
 								currentTime: currentTime,
 								totalMilestone: totalMilestone
 							}).then(function () {
-								console.log("Successfully check status for disable froze orders");
+								self.scope.logger.info("Successfully check status for disable froze orders");
 
 							}).catch(function (err) {
 								self.scope.logger.error(err.stack);
@@ -224,6 +222,42 @@ Frozen.prototype.checkFrozeOrders = function () {
 		}).catch(function (err) {
 			self.scope.logger.error(err.stack);
 		});
+
+};
+
+//Navin: Update Froze amount into mem_accounts table on every single order
+Frozen.prototype.updateFrozeAmount = function (data, cb) {
+
+	self.scope.db.one(sql.getFrozeAmount, {
+		senderId: data.account.address
+	}).then(function (row) {
+		if (row.count === 0) {
+			return setImmediate(cb, 'There is no Froze Amount ');
+		}
+		var frozeAmountFromDB = row.totalFrozeAmount;
+		var totalFrozeAmount = parseInt(frozeAmountFromDB) + parseInt(data.req.body.freezedAmount);
+		var totalFrozeAmountWithFees = totalFrozeAmount + parseInt(constants.fees.froze);
+		//verify that freeze order cannot more than available balance
+		if (totalFrozeAmountWithFees < data.account.balance) {
+			self.scope.db.none(sql.updateFrozeAmount, {
+				freezedAmount: data.req.body.freezedAmount,
+				senderId: data.account.address
+			}).then(function () {
+				self.scope.logger.info(data.account.address + ': is update its froze amount in mem_accounts table ');
+				return setImmediate(cb, null);
+			}).catch(function (err) {
+				self.scope.logger.error(err.stack);
+				return setImmediate(cb, err.toString());
+			});
+		} else {
+			return setImmediate(cb, 'Not have enough balance');
+		}
+	}).catch(function (err) {
+		self.scope.logger.error(err.stack);
+		return setImmediate(cb, err.toString());
+	});
+
+
 
 };
 
