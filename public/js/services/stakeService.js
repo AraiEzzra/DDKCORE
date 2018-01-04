@@ -1,9 +1,9 @@
 require('angular');
 
-angular.module('ETPApp').service('stakeService', function () {
+angular.module('ETPApp').service('stakeService',[ function () {
     /* /api/frogings/getAllOrders */
     
-    $http({
+    /* $http({
         method : "POST",
         url : "/api/frogings/getAllOrders"
     }).then(function mySuccess(response) {
@@ -13,5 +13,10 @@ angular.module('ETPApp').service('stakeService', function () {
         $scope.myStatke = response.statusText;
         console.log(myStatke);
     });
+ */
 
-});
+
+
+    
+
+}]);

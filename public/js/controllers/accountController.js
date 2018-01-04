@@ -164,4 +164,62 @@ angular.module('ETPApp').controller('accountController', ['$state','$scope', '$r
     $scope.updateAppView();
     $scope.getCandles();
 
+
+    /* For Circulating Supply */
+   $http.get("/api/accounts/getCirculatingSupply")
+    .then(function (resp) {
+        if (resp.data.success) {
+            var circulatingSupply = resp.data.circulatingSupply;
+            $scope.circulatingSupply = JSON.parse(circulatingSupply);
+            
+
+        } else {
+            console.log(resp.data.error);
+        }
+      });
+
+    /* For Total Count*/
+    $http.get("/api/accounts/count")
+      .then(function (resp) {
+          if (resp.data.success) {
+              var totalCount = resp.data.count;
+              $scope.totalCount = JSON.parse(totalCount);
+            } else {
+              console.log(resp.data.error);
+          }
+        });
+
+    /* For Your ETP Frozen */
+    /* $http.get("/api/frogings/count")
+      .then(function (resp) {
+          if (resp.data.success) {
+              var totalCount = resp.data.count;
+              $scope.totalCount = JSON.parse(totalCount);
+            } else {
+              console.log(resp.data.error);
+          }
+      });
+ */
+         
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }]);

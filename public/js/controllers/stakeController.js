@@ -1,32 +1,58 @@
 require('angular');
 
-angular.module('ETPApp').controller('stakeController', ['$scope', 'ngTableParams', '$filter', function ($scope, ngTableParams, $filter) {
+angular.module('ETPApp').controller('stakeController', ['$scope', 'ngTableParams', '$filter', '$http',"userService", function ($scope, ngTableParams, $filter, $http, userService) {
 
-    $scope.users = [
 
-        { freezeAmount: 60, status: "Active", insertTime: '2017-12-27 12:37:25',matureTime: '26d, 23h', monthRemain: 6,addderess: "4995063339468361088E"},
-        { freezeAmount: 70, status: "Inactive", insertTime: '2017-12-27 12:37:25',matureTime: '26d, 23h', monthRemain: 6,addderess: "4995063339468361088E"},
-        { freezeAmount: 80, status: "Active", insertTime: '2017-12-27 12:37:25',matureTime: '26d, 23h', monthRemain: 6,addderess: "4995063339468361088E"},
-        { freezeAmount: 20, status: "Inactive", insertTime: '2017-12-27 12:37:25',matureTime: '26d, 23h', monthRemain: 6,addderess: "4995063339468361088E"},
-        { freezeAmount: 40, status: "Active", insertTime: '2017-12-27 12:37:25',matureTime: '26d, 23h', monthRemain: 6,addderess: "4995063339468361088E"},
-        { freezeAmount: 547, status: "Inactive", insertTime: '2017-12-27 12:37:25',matureTime: '26d, 23h', monthRemain: 6,addderess: "4995063339468361088E"},
-        { freezeAmount: 550, status: "Inactive", insertTime: '2017-12-27 12:37:25',matureTime: '26d, 23h', monthRemain: 6,addderess: "4995063339468361088E"},
-        { freezeAmount: 650, status: "Active", insertTime: '2017-12-27 12:37:25',matureTime: '26d, 23h', monthRemain: 6,addderess: "4995063339468361088E"},
-        { freezeAmount: 540, status: "Active", insertTime: '2017-12-27 12:37:25',matureTime: '26d, 23h', monthRemain: 6,addderess: "4995063339468361088E"},
-        { freezeAmount: 879, status: "Inactive", insertTime: '2017-12-27 12:37:25',matureTime: '26d, 23h', monthRemain: 6,addderess: "4995063339468361088E"},
-        { freezeAmount: 750, status: "Active", insertTime: '2017-12-27 12:37:25',matureTime: '26d, 23h', monthRemain: 6,addderess: "4995063339468361088E"},
-    ];
+    $scope.rememberedPassphrase =  userService.rememberedPassphrase;
+    $scope.freezeOrders = [];
+    $scope.view.bar = {showBlockSearchBar: true};
+    
+
+
+
+    //console.log($scope.rememberedPassphrase);
+
+    
     $scope.usersTable = new ngTableParams({
         page: 1,
-        count: 10
+        count: 5
     }, {
-    total: $scope.users.length,
+    total: $scope.freezeOrders.length,
 
     getData: function ($defer, params) {
-        $scope.data = params.sorting() ? $filter('orderBy')($scope.users, params.orderBy()) : $scope.users;
+        $scope.data = params.sorting() ? $filter('orderBy')($scope.freezeOrders, params.orderBy()) : $scope.freezeOrders;
         $scope.data = $scope.data.slice((params.page() - 1) * params.count(), params.page() * params.count());
         $defer.resolve($scope.data);
     }
     });
+
+
+
+    $http.post("/api/frogings/getAllOrders", {secret: $scope.rememberedPassphrase})
+    .then(function (resp) {
+        //alert("stake");
+        if (resp.data.success) {
+         //console.log(JSON.stringify(resp.data)+"demo");
+            var freezeOrders = resp.data.freezeOrders;
+
+            $scope.freezeOrders = JSON.parse(freezeOrders);
+
+            console.log($scope.freezeOrders);
+            
+
+        } else {
+            console.log(resp.data.error);
+        }
+      });
+
+
+
+
+/* 
+      $scope.freezeOrders = JSON.parse(freezeOrders); */
+
+
+
+
 
 }]);
