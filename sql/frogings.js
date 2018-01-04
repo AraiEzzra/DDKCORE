@@ -38,7 +38,13 @@ var TransactionsSql = {
 
   updateFrozeOrder: 'UPDATE stake_orders SET "status"=0,"recipientId"=${recipientId} WHERE "senderId"=${senderId} AND "id"=${frozeId} AND "status"=1',
 
-  createNewFrozeOrder: 'INSERT INTO stake_orders ("id","status","startTime","nextMilestone","endTime","senderId","freezedAmount","milestoneCount") VALUES (${frozeId},1,${startTime},${nextMilestone},${endTime},${senderId},${freezedAmount},${milestoneCount}) '
+  createNewFrozeOrder: 'INSERT INTO stake_orders ("id","status","startTime","nextMilestone","endTime","senderId","freezedAmount","milestoneCount") VALUES (${frozeId},1,${startTime},${nextMilestone},${endTime},${senderId},${freezedAmount},${milestoneCount}) ',
+
+  countStakeholders : 'SELECT count(DISTINCT "senderId") FROM stake_orders WHERE "status"=1',
+
+  getTotalStakedAmount : 'SELECT sum("freezedAmount") FROM stake_orders WHERE "status"=1',
+
+  getMyStakedAmount : 'SELECT sum("freezedAmount") FROM stake_orders WHERE "senderId"=${address} AND "status"=1'
 
 };
 
