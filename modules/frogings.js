@@ -126,6 +126,27 @@ Frogings.prototype.shared = {
 			return setImmediate(cb, 'Error in getting sum of ETP staked');
 		});
 	},
+
+	getMyETPFrozen: function (req, cb) {
+		library.schema.validate(req.body, schema.getMyETPFrozen, function (err) {
+			if (err) {
+				return setImmediate(cb, err[0].message);
+			}
+			var hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
+			var keypair = library.ed.makeKeypair(hash);
+
+			modules.accounts.getAccount({ publicKey: keypair.publicKey.toString('hex') }, function (err, account) {
+
+				library.db.query(sql.getMyStakedAmount, { address: account.address}).then(function (rows) {
+					return setImmediate(cb, null, {
+						totalETPStaked: JSON.stringify(rows)
+					});
+				}, function (err) {
+					return setImmediate(cb, 'Error in getting my sum of ETP staked');
+				});
+			});
+		});
+	},
 	
 	getAllFreezeOrders: function (req, cb) {
 

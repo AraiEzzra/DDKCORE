@@ -32,7 +32,8 @@ function FrogingsHttpApi (frogingsModule, app, logger, cache) {
 		'post /sendFreezeOrder' : 'sendFreezeOrder',
 		'post /getAllActiveOrders' : 'getAllActiveFreezeOrders',
 		'get /countStakeholders' : 'countStakeholders',
-		'get /getTotalETPStaked' : 'totalETPStaked'	
+		'get /getTotalETPStaked' : 'totalETPStaked'	,
+		'post /getMyETPFrozen' : 'getMyETPFrozen'
 	});
 
 	httpApi.registerEndpoint('/api/frogings', app, router, frogingsModule.isLoaded);

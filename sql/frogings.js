@@ -42,7 +42,9 @@ var TransactionsSql = {
 
   countStakeholders : 'SELECT count(DISTINCT "senderId") FROM stake_orders WHERE "status"=1',
 
-  getTotalStakedAmount : 'SELECT sum("freezedAmount") FROM stake_orders WHERE "status"=1'
+  getTotalStakedAmount : 'SELECT sum("freezedAmount") FROM stake_orders WHERE "status"=1',
+
+  getMyStakedAmount : 'SELECT sum("freezedAmount") FROM stake_orders WHERE "senderId"=${address} AND "status"=1'
 
 };
 

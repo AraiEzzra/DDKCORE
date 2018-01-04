@@ -32,7 +32,7 @@ __private.blockReward = new BlockReward();
  * @param {function} cb - Callback function.
  * @return {setImmediateCallback} Callback function with `self` as data.
  */
-function Accounts (cb, scope) {
+function Accounts(cb, scope) {
 	library = {
 		ed: scope.ed,
 		db: scope.db,
@@ -76,7 +76,7 @@ __private.openAccount = function (secret, cb) {
 	var keypair = library.ed.makeKeypair(hash);
 	var publicKey = keypair.publicKey.toString('hex');
 
-	self.getAccount({publicKey: publicKey}, function (err, account) {
+	self.getAccount({ publicKey: publicKey }, function (err, account) {
 		if (err) {
 			return setImmediate(cb, err);
 		}
@@ -190,7 +190,7 @@ Accounts.prototype.setAccountAndGet = function (data, cb) {
 		if (err) {
 			return setImmediate(cb, err);
 		}
-		return library.logic.account.get({address: address}, cb);
+		return library.logic.account.get({ address: address }, cb);
 	});
 };
 
@@ -282,8 +282,8 @@ Accounts.prototype.shared = {
 			}
 
 			__private.openAccount(req.body.secret, function (err, account) {
-				if (!err) { 
- 					var accountData = {
+				if (!err) {
+					var accountData = {
 						address: account.address,
 						unconfirmedBalance: account.u_balance,
 						balance: account.balance,
@@ -303,58 +303,58 @@ Accounts.prototype.shared = {
 						isDelegate: 0,
 						vote: 0
 					};
-					if(account.u_isDelegate) {
+					if (account.u_isDelegate) {
 						data.u_isDelegate = account.u_isDelegate;
 					}
-					if(account.isDelegate) {
+					if (account.isDelegate) {
 						data.isDelegate = account.isDelegate;
 					}
-					if(account.vote) {
+					if (account.vote) {
 						data.vote = account.vote;
 					}
-					if(req.body.accType) {
+					if (req.body.accType) {
 						data.acc_type = req.body.accType;
 						var lastBlock = modules.blocks.lastBlock.get();
 						data.endTime = library.logic.contract.calcEndTime(req.body.accType, lastBlock.timestamp);
-						if(req.body.transferedAmount) {
+						if (req.body.transferedAmount) {
 							data.transferedAmount = req.body.transferedAmount;
 						}
 						var REDIS_KEY_USER_INFO_HASH = "userInfo_" + data.address;
 						var REDIS_KEY_USER_TIME_HASH = "userInfo_" + data.endTime;
-						cache.prototype.isExists(REDIS_KEY_USER_INFO_HASH, function(err, isExist) {
-							if(!isExist) {
+						cache.prototype.isExists(REDIS_KEY_USER_INFO_HASH, function (err, isExist) {
+							if (!isExist) {
 								var userInfo = {
-									address : data.address,
+									address: data.address,
 									transferedAmount: data.transferedAmount,
-									endTime : data.endTime
+									endTime: data.endTime
 								};
 								cache.prototype.hmset(REDIS_KEY_USER_INFO_HASH, userInfo);
 								cache.prototype.hmset(REDIS_KEY_USER_TIME_HASH, userInfo);
 								library.logic.contract.sendToContrubutors([userInfo]);
-								library.db.none(sql.disableAccount, { 
-									senderId: account.address 
-								}).then(function () {	   
+								library.db.none(sql.disableAccount, {
+									senderId: account.address
+								}).then(function () {
 									library.logger.info(account.address + ' account is locked');
-									library.logic.account.set(accountData.address, data, function(err) {
-										if(!err) {
-											return setImmediate(cb, null, {account: accountData});
-										}else {
+									library.logic.account.set(accountData.address, data, function (err) {
+										if (!err) {
+											return setImmediate(cb, null, { account: accountData });
+										} else {
 											return setImmediate(cb, err);
 										}
-									});	
-								}).catch(function (err) {		 
+									});
+								}).catch(function (err) {
 									library.logger.error(err.stack);
-									return setImmediate(cb, err);			
+									return setImmediate(cb, err);
 								});
-							}else {
-								return setImmediate(cb, null, {account: accountData});
+							} else {
+								return setImmediate(cb, null, { account: accountData });
 							}
 						});
-					}else {
-						library.logic.account.set(accountData.address, data, function(err) {
-							if(!err) {
-								return setImmediate(cb, null, {account: accountData});
-							}else {
+					} else {
+						library.logic.account.set(accountData.address, data, function (err) {
+							if (!err) {
+								return setImmediate(cb, null, { account: accountData });
+							} else {
 								return setImmediate(cb, err);
 							}
 						});
@@ -381,7 +381,7 @@ Accounts.prototype.shared = {
 				var balance = account ? account.balance : '0';
 				var unconfirmedBalance = account ? account.u_balance : '0';
 
-				return setImmediate(cb, null, {balance: balance, unconfirmedBalance: unconfirmedBalance});
+				return setImmediate(cb, null, { balance: balance, unconfirmedBalance: unconfirmedBalance });
 			});
 		});
 	},
@@ -401,7 +401,7 @@ Accounts.prototype.shared = {
 					return setImmediate(cb, 'Account not found');
 				}
 
-				return setImmediate(cb, null, {publicKey: account.publicKey});
+				return setImmediate(cb, null, { publicKey: account.publicKey });
 			});
 		});
 	},
@@ -447,17 +447,17 @@ Accounts.prototype.shared = {
 							return account.delegates.indexOf(delegate.publicKey) !== -1;
 						});
 
-						return setImmediate(cb, null, {delegates: delegates});
+						return setImmediate(cb, null, { delegates: delegates });
 					});
 				} else {
-					return setImmediate(cb, null, {delegates: []});
+					return setImmediate(cb, null, { delegates: [] });
 				}
 			});
 		});
 	},
 
 	getDelegatesFee: function (req, cb) {
-		return setImmediate(cb, null, {fee: constants.fees.delegate});
+		return setImmediate(cb, null, { fee: constants.fees.delegate });
 	},
 
 	addDelegates: function (req, cb) {
@@ -579,7 +579,7 @@ Accounts.prototype.shared = {
 					return setImmediate(cb, err);
 				}
 
-				return setImmediate(cb, null, {transaction: transaction[0]});
+				return setImmediate(cb, null, { transaction: transaction[0] });
 			});
 		});
 	},
@@ -630,7 +630,7 @@ Accounts.prototype.shared = {
 	//hotam: lock account API
 	lockAccount: function (req, cb) {
 		library.schema.validate(req.body, schema.lockAccount, function (err) {
-			if(!err) {
+			if (!err) {
 				if (!req.body.address) {
 					return setImmediate(cb, 'Missing required property: address');
 				}
@@ -639,43 +639,43 @@ Accounts.prototype.shared = {
 					if (err) {
 						return setImmediate(cb, err);
 					}
-					if(account.acc_type) {
+					if (account.acc_type) {
 						var lastBlock = modules.blocks.lastBlock.get();
 						var endTime = library.logic.contract.calcEndTime(account.acc_type, lastBlock.timestamp);
 						var REDIS_KEY_USER_TIME_HASH = "userInfo_" + endTime;
-						cache.prototype.isExists(REDIS_KEY_USER_TIME_HASH, function(err, isExist) {
-							if(!isExist) {
+						cache.prototype.isExists(REDIS_KEY_USER_TIME_HASH, function (err, isExist) {
+							if (!isExist) {
 								var userInfo = {
-									address : account.address,
-									endTime : endTime
+									address: account.address,
+									endTime: endTime
 								};
 								cache.prototype.hmset(REDIS_KEY_USER_TIME_HASH, userInfo);
-								library.db.none(sql.disableAccount, { 
-									senderId: account.address 
-								}).then(function () {	   
-									library.logger.info(account.address + ' account is locked');	
-									return setImmediate(cb, null, {account: account});
-								}).catch(function (err) {		 
+								library.db.none(sql.disableAccount, {
+									senderId: account.address
+								}).then(function () {
+									library.logger.info(account.address + ' account is locked');
+									return setImmediate(cb, null, { account: account });
+								}).catch(function (err) {
 									library.logger.error(err.stack);
-									return setImmediate(cb, err);			
+									return setImmediate(cb, err);
 								});
-							}else {
-								return setImmediate(cb, null, {account: account});
+							} else {
+								return setImmediate(cb, null, { account: account });
 							}
 						});
-					}else {
-						library.db.none(sql.disableAccount, { 
-							senderId: account.address 
-						}).then(function () {	   
-							library.logger.info(account.address + ' account is locked');	
-							return setImmediate(cb, null, {account: account});
-						}).catch(function (err) {		 
+					} else {
+						library.db.none(sql.disableAccount, {
+							senderId: account.address
+						}).then(function () {
+							library.logger.info(account.address + ' account is locked');
+							return setImmediate(cb, null, { account: account });
+						}).catch(function (err) {
 							library.logger.error(err.stack);
-							return setImmediate(cb, err);			
+							return setImmediate(cb, err);
 						});
 					}
 				});
-			}else {
+			} else {
 				return setImmediate(cb, err);
 			}
 		});
@@ -684,28 +684,28 @@ Accounts.prototype.shared = {
 	//hotam: unlock account API
 	unlockAccount: function (req, cb) {
 		library.schema.validate(req.body, schema.unlockAccount, function (err) {
-			if(!err) {
+			if (!err) {
 				if (!req.body.address) {
 					return setImmediate(cb, 'Missing required property: address');
 				}
 
 				var address = req.body.publicKey ? self.generateAddressByPublicKey(req.body.publicKey) : req.body.address;
-				library.db.none(sql.enableAccount, { 
-					senderId: address 
-				}).then(function () {	   
+				library.db.none(sql.enableAccount, {
+					senderId: address
+				}).then(function () {
 					library.logger.info(address + ' account is unlocked');
 					return setImmediate(cb, null);
-				}).catch(function (err) {		 
-					return setImmediate(cb, err);			
+				}).catch(function (err) {
+					return setImmediate(cb, err);
 				});
-			}else {
+			} else {
 				return setImmediate(cb, err);
 			}
 		});
 	},
 
 	//hotam: logout API
-	logout: function(req, cb) {
+	logout: function (req, cb) {
 		req.session.cookie.maxAge = null;
 		req.session.destroy(function (err) {
 			if (err) {
@@ -742,11 +742,19 @@ Accounts.prototype.shared = {
 				});
 			});
 
-			
+
 		}).catch(function (err) {
 			library.logger.error(err.stack);
 			return setImmediate(cb, err.toString());
 		});
+	},
+	totalSupply: function (req, cb) {
+		var totalSupply = config.etpSupply.totalSupply;
+
+		return setImmediate(cb, null, {
+			totalSupply: totalSupply
+		});
+
 	}
 };
 
@@ -780,12 +788,12 @@ Accounts.prototype.internal = {
 				};
 			});
 
-			return setImmediate(cb, null, {success: true, accounts: accounts});
+			return setImmediate(cb, null, { success: true, accounts: accounts });
 		});
 	},
 
 	getAllAccounts: function (req, cb) {
-		return setImmediate(cb, null, {success: true, accounts: __private.accounts});
+		return setImmediate(cb, null, { success: true, accounts: __private.accounts });
 	}
 };
 
