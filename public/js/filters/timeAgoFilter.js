@@ -16,6 +16,9 @@ angular.module('ETPApp').filter('timeAgoFilter', function ($filter) {
         var diffTime = (currentTime - time.getTime()) / 1000;
 
         if (diffTime < 60) {
+            if(diffTime < 0) {
+                diffTime = 0;
+            }
             return Math.floor(diffTime) + ' sec ago';
         }
         if (Math.floor(diffTime / 60) <= 1) {
