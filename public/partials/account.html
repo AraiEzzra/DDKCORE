@@ -47,7 +47,7 @@
         <div class="panel-body">
             <span class="info-box-icon bg-blue"><img src="images/plug.png" width="32"></span>
             <div class="info-box-content">
-                <span class="info-box-number">50</span><br>
+                <span class="info-box-number">{{totalSupply || 0}} ETP</span><br>
                 <span class="info-box-text">{{'Total Supply'|translate}}</span>
               </div>
         </div>
@@ -59,7 +59,7 @@
         <div class="panel-body">
             <span class="info-box-icon bg-blue"><img src="images/power-cord.png" width="32"></span>
             <div class="info-box-content">
-                <span class="info-box-number">{{circulatingSupply}}</span><br>
+                <span class="info-box-number">{{circulatingSupply || 0}} ETP</span><br>
                 <span class="info-box-text">{{'Circulating Supply'|translate}}</span>
               </div>
         </div>
@@ -81,7 +81,7 @@
         <div class="panel-body">
             <span class="info-box-icon bg-blue"><img src="images/money-bag-with-dollar-symbol.png" width="32"></span>
             <div class="info-box-content">
-                <span class="info-box-number"><span class="strong">{{balanceToShow[0] || 0}}<span class="small">{{balanceToShow[1]}}</span></span>&nbsp;ETP</span><br>
+                <span class="info-box-number"><span class="strong">{{balanceToShow[0] || 0}}<span class="small">{{balanceToShow[1]}}</span></span>&nbsp;ETP</span> <span>({{((balanceDecParseInt/circulatingSupply)*100).toFixed(2)}}%)</span><br>
                 <span class="info-box-text">{{'Your ETP Balance'|translate}}</span>
               </div>
         </div>
@@ -92,7 +92,7 @@
         <div class="panel-body">
             <span class="info-box-icon bg-blue"><img src="images/snowflake.png" width="32"></span>
             <div class="info-box-content">
-                <span class="info-box-number">60</span><br>
+                <span class="info-box-number">{{myETPFrozen || 0}} ETP</span><span>({{totalETPStaked?((myETPFrozen/totalETPStaked)*100).toFixed(2):0}}%)</span><br>
                 <span class="info-box-text">{{'Your ETP Frozen'|translate}}</span>
               </div>
         </div>
@@ -114,7 +114,7 @@
         <div class="panel-body">
             <span class="info-box-icon bg-blue"><img src="images/icon.png" width="32"></span>
             <div class="info-box-content">
-                <span class="info-box-number">50</span><br>
+                <span class="info-box-number">{{countStakeholders}}</span><br>
                 <span class="info-box-text">{{'Total Stakeholders'|translate}}</span>
               </div>
         </div>
@@ -123,10 +123,10 @@
     <div class="col-md-3 col-sm-6 col-xs-12 pl7 dashboard-info">
       <div class="panel widget widget-brown">
         <div class="panel-body">
-            <span class="info-box-icon bg-blue"><img src="images/location-pin.png" width="32"></span>
+            <span class="info-box-icon bg-blue"><img src="images/moneylock.png" width="32"></span>
             <div class="info-box-content">
-                <span class="info-box-number">{{address}}</span><br>
-                <span class="info-box-text">{{'User Address'|translate}}</span>
+                <span class="info-box-number">{{totalETPStaked || 0}} ETP</span><br>
+                <span class="info-box-text">{{'Total Stake Amount'|translate}}</span>
               </div>
         </div>
       </div>

@@ -3,124 +3,125 @@
         <div class="valign" style="margin: 0 auto;">
             <div class="preloader-wrapper big active" style="margin: 0 auto; display: block;">
                 <div class="spinner-layer spinner-blue">
-                <div class="circle-clipper left">
-                    <div class="circle"></div>
-                </div>
-                <div class="gap-patch">
-                    <div class="circle"></div>
-                </div>
-                <div class="circle-clipper right">
-                    <div class="circle"></div>
-                </div>
+                    <div class="circle-clipper left">
+                        <div class="circle"></div>
+                    </div>
+                    <div class="gap-patch">
+                        <div class="circle"></div>
+                    </div>
+                    <div class="circle-clipper right">
+                        <div class="circle"></div>
+                    </div>
                 </div>
                 <div class="spinner-layer spinner-red">
-                <div class="circle-clipper left">
-                    <div class="circle"></div>
-                </div>
-                <div class="gap-patch">
-                    <div class="circle"></div>
-                </div>
-                <div class="circle-clipper right">
-                    <div class="circle"></div>
-                </div>
+                    <div class="circle-clipper left">
+                        <div class="circle"></div>
+                    </div>
+                    <div class="gap-patch">
+                        <div class="circle"></div>
+                    </div>
+                    <div class="circle-clipper right">
+                        <div class="circle"></div>
+                    </div>
                 </div>
                 <div class="spinner-layer spinner-yellow">
-                <div class="circle-clipper left">
-                    <div class="circle"></div>
-                </div>
-                <div class="gap-patch">
-                    <div class="circle"></div>
-                </div>
-                <div class="circle-clipper right">
-                    <div class="circle"></div>
-                </div>
+                    <div class="circle-clipper left">
+                        <div class="circle"></div>
+                    </div>
+                    <div class="gap-patch">
+                        <div class="circle"></div>
+                    </div>
+                    <div class="circle-clipper right">
+                        <div class="circle"></div>
+                    </div>
                 </div>
                 <div class="spinner-layer spinner-green">
-                <div class="circle-clipper left">
-                    <div class="circle"></div>
-                </div>
-                <div class="gap-patch">
-                    <div class="circle"></div>
-                </div>
-                <div class="circle-clipper right">
-                    <div class="circle"></div>
-                </div>
+                    <div class="circle-clipper left">
+                        <div class="circle"></div>
+                    </div>
+                    <div class="gap-patch">
+                        <div class="circle"></div>
+                    </div>
+                    <div class="circle-clipper right">
+                        <div class="circle"></div>
+                    </div>
                 </div>
             </div>
             <h2 style="display: block; text-align: center; margin-top: 1.8rem; line-height: 1.4rem; font-size: 1.4rem;">{{view.loadingText}}</h2>
         </div>
     </div>
 </div>
-     
-     
-     
+
+
+
 <div id="wrapper" ng-controller="appController" ng-class="{'toggled': !toggled,'pl-none':$state.current.name=='main.explorer'}">
     <div class="header-wrapper top-header-section">
         <div class="nav-bar clearfix" id="header">
-           <a ui-sref="main.account" class="log-box">
-              <div id="logo">ETP</div>
-           </a>
-           <div class="logo">
-              <button type="button" class="toggle-menu" ng-click="toggleMenu()">
-                 <span class="sr-only">
-                    <translate>Toggle navigation</translate>
-                 </span>
-                 <span class="icon-bar"></span>
-                 <span class="icon-bar"></span>
-                 <span class="icon-bar"></span>
-              </button>
-              <h1 id="title">
-                 <span class="title-icon" ng-show="view.page.previous" ng-click="goToPrevious()">
+            <a ui-sref="main.account" class="log-box">
+                <div id="logo">ETP</div>
+            </a>
+            <div class="logo">
+                <button type="button" class="toggle-menu" ng-click="toggleMenu()">
                     <span class="sr-only">
-                       <translate>Go to previous page</translate>
+                        <translate>Toggle navigation</translate>
                     </span>
-                 </span>
-                 {{view.page.title}}
-              </h1>
-              <span class="forging-state" ng-class="{'disabled': !forgingEnabled}" ng-if="forgingStatus && view.bar.forgingMenu">{{forgingStatus}}</span>
-           </div>
-           <div id="top-menu">
-              <span id="balance" class="margin-right-10">
-              {{unconfirmedBalance | ETPFilter}}
-              ETP
-              </span>
-              <a class="btn btn-blue-nav waves-effect waves-light" ng-click="sendTransaction()">
-                 <i class="mdi-content-send left"></i>
-                 <translate>SEND</translate>
-              </a>
-              <a class="btn btn-blue-nav waves-effect waves-light margin-left-10" ui-sref="main.dashboard" ng-click="classRemove()" ng-if="$state.current.name === 'main.explorer'"><i class="material-icons left back-btn-icon backBackBtn">navigate_before</i>Back</a>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <h1 id="title">
+                    <span class="title-icon" ng-show="view.page.previous" ng-click="goToPrevious()">
+                        <span class="sr-only">
+                            <translate>Go to previous page</translate>
+                        </span>
+                    </span>
+                    {{view.page.title}}
+                </h1>
+                <span class="forging-state" ng-class="{'disabled': !forgingEnabled}" ng-if="forgingStatus && view.bar.forgingMenu">{{forgingStatus}}</span>
+            </div>
+            <div id="top-menu">
+                <span id="balance" class="margin-right-10">
+                    {{unconfirmedBalance | ETPFilter}} ETP
+                </span>
+                <a class="btn btn-blue-nav waves-effect waves-light" ng-click="sendTransaction()">
+                    <i class="mdi-content-send left"></i>
+                    <translate>SEND</translate>
+                </a>
+                <a class="btn btn-blue-nav waves-effect waves-light margin-left-10" ui-sref="main.dashboard" ng-click="classRemove()" ng-if="$state.current.name === 'main.explorer'">
+                    <i class="material-icons left back-btn-icon backBackBtn">navigate_before</i>Back</a>
 
 
-              <div class="mini-chart valign-wrapper" ng-show="syncState != undefined">
-                 <div class="mini-chart-label">{{syncState}}%</div>
-                 <canvas id="total-forged" class="chart chart-doughnut" chart-data="loading.values" chart-labels="loading.labels" chart-options="loading.options" chart-colours="loading.colours"></canvas>
-              </div>
-              <div class="more-down margin-left-10" dropdown is-open="moreDropdownStatus.isopen" ng-if="$state.current.name != 'main.explorer'">
-                 <i class="mdi-navigation-more-vert" dropdown-toggle></i>
-                 <ul class="dropdown-menu" role="menu">
-                    <li>
-                       <a href="#" ng-click="myUserInfo()">
-                          <translate>My Profile</translate>
-                       </a>
-                    </li>
-                    <li ng-if="!secondPassphrase">
-                       <a href="#" ng-click="setSecondPassphrase()">
-                          <translate>2nd Passphrase</translate>
-                       </a>
-                    </li>
-                    <li>
-                       <a ui-sref="main.settings">
-                          <translate>Settings</translate>
-                       </a>
-                    </li>
-                    <li>
-                       <a href="#" ng-click="logout()">
-                          <translate>Logout</translate>
-                       </a>
-                    </li>
-                 </ul>
-              </div>
-           </div>
+                <div class="mini-chart valign-wrapper" ng-show="syncState != undefined">
+                    <div class="mini-chart-label">{{syncState}}%</div>
+                    <canvas id="total-forged" class="chart chart-doughnut" chart-data="loading.values" chart-labels="loading.labels" chart-options="loading.options"
+                        chart-colours="loading.colours"></canvas>
+                </div>
+                <div class="more-down margin-left-10" dropdown is-open="moreDropdownStatus.isopen" ng-if="$state.current.name != 'main.explorer'">
+                    <i class="mdi-navigation-more-vert" dropdown-toggle></i>
+                    <ul class="dropdown-menu" role="menu">
+                        <li>
+                            <a href="#" ng-click="myUserInfo()">
+                                <translate>My Profile</translate>
+                            </a>
+                        </li>
+                        <li ng-if="!secondPassphrase">
+                            <a href="#" ng-click="setSecondPassphrase()">
+                                <translate>2nd Passphrase</translate>
+                            </a>
+                        </li>
+                        <li>
+                            <a ui-sref="main.settings">
+                                <translate>Settings</translate>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" ng-click="logout()">
+                                <translate>Logout</translate>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
 
         </div>
         <!--div class="search-bar" ng-show="view.bar.showTransactionsSearchBar">
@@ -150,169 +151,168 @@
            </div>
         </div-->
         <div id="page-nav" class="clearfix mobile-nav" ng-if="view.bar.showDappsBar">
-           <ul class="nav nav-underline categories pull-left">
-              <li>
-                 <a ng-click="view.bar.showCategories=!view.bar.showCategories">
-                    <translate>CATEGORIES</translate>
-                    <span class="dropdown-toggle"></span>
-                 </a>
-              </li>
-           </ul>
-           <div class="categories-menu" ng-class="{'open': view.bar.showCategories}">
-              <ul class="clearfix">
-                 <li>
-                    <ul>
-                       <li ng-repeat="(key,item) in categories">
-                          <a ui-sref='main.dappsCategory({categoryId:"{{key}}"})'>{{key}}</a>
-                       </li>
-                    </ul>
-                 </li>
-              </ul>
-           </div>
-           <ul class="nav nav-underline fast-sort pull-left">
-              <li ui-sref-active="active">
-                 <a href="#" ui-sref="main.dappstore">
-                    <translate>HOME</translate>
-                 </a>
-              </li>
-              <!-- <li><a href="#">TOP RATED</a></li> -->
-              <!-- <li><a href="#">MOST USED</a></li> -->
-              <li>
-                 <a ui-sref='main.dappsCategory({categoryId:"Installed"})'>
-                    <translate>INSTALLED</translate>
-                 </a>
-              </li>
-           </ul>
-           <div class="search-toggle">
-              <i ng-click="toggleSearchDapps()" class="mdi-action-search small" ng-class="{'mdi-content-clear': view.bar.searchDapps}"></i>
-           </div>
-           <div class="search-container" ng-class="{'open': view.bar.searchDapps}">
-              <span class="input-group-addon spinner-addon" style=" position: absolute; right: 0; top: 13px; ">
-                 <div class="preloader-wrapper small" ng-class="{'active':searchDapp.inSearch}" style=" width: 22px; height: 22px; ">
-                    <div class="spinner-layer spinner-blue-only">
-                       <div class="circle-clipper left">
-                          <div class="circle"></div>
-                       </div>
-                       <div class="gap-patch">
-                          <div class="circle"></div>
-                       </div>
-                       <div class="circle-clipper right">
-                          <div class="circle"></div>
-                       </div>
+            <ul class="nav nav-underline categories pull-left">
+                <li>
+                    <a ng-click="view.bar.showCategories=!view.bar.showCategories">
+                        <translate>CATEGORIES</translate>
+                        <span class="dropdown-toggle"></span>
+                    </a>
+                </li>
+            </ul>
+            <div class="categories-menu" ng-class="{'open': view.bar.showCategories}">
+                <ul class="clearfix">
+                    <li>
+                        <ul>
+                            <li ng-repeat="(key,item) in categories">
+                                <a ui-sref='main.dappsCategory({categoryId:"{{key}}"})'>{{key}}</a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+            <ul class="nav nav-underline fast-sort pull-left">
+                <li ui-sref-active="active">
+                    <a href="#" ui-sref="main.dappstore">
+                        <translate>HOME</translate>
+                    </a>
+                </li>
+                <!-- <li><a href="#">TOP RATED</a></li> -->
+                <!-- <li><a href="#">MOST USED</a></li> -->
+                <li>
+                    <a ui-sref='main.dappsCategory({categoryId:"Installed"})'>
+                        <translate>INSTALLED</translate>
+                    </a>
+                </li>
+            </ul>
+            <div class="search-toggle">
+                <i ng-click="toggleSearchDapps()" class="mdi-action-search small" ng-class="{'mdi-content-clear': view.bar.searchDapps}"></i>
+            </div>
+            <div class="search-container" ng-class="{'open': view.bar.searchDapps}">
+                <span class="input-group-addon spinner-addon" style=" position: absolute; right: 0; top: 13px; ">
+                    <div class="preloader-wrapper small" ng-class="{'active':searchDapp.inSearch}" style=" width: 22px; height: 22px; ">
+                        <div class="spinner-layer spinner-blue-only">
+                            <div class="circle-clipper left">
+                                <div class="circle"></div>
+                            </div>
+                            <div class="gap-patch">
+                                <div class="circle"></div>
+                            </div>
+                            <div class="circle-clipper right">
+                                <div class="circle"></div>
+                            </div>
+                        </div>
                     </div>
-                 </div>
-              </span>
-              <div class="input-group">
-                 <span class="input-group-addon">
-                 <i class="mdi-action-search"></i>
-                 </span>
-                 <input type="text" focus-on="true" ng-model="searchDapp.searchForDappGlobal" class="form-control" placeholder="{{'Search for applications'|translate}}">
-              </div>
-           </div>
+                </span>
+                <div class="input-group">
+                    <span class="input-group-addon">
+                        <i class="mdi-action-search"></i>
+                    </span>
+                    <input type="text" focus-on="true" ng-model="searchDapp.searchForDappGlobal" class="form-control" placeholder="{{'Search for applications'|translate}}">
+                </div>
+            </div>
         </div>
         <!-- Sidebar -->
         <!-- <div id="sidebar-wrapper" ng-class="{test: obj.value1 == 'someothervalue'}"> -->
-        <div id="sidebar-wrapper" ng-class="myClass">   
-           <div class="account-block">
-              <div class="icon">
-                 <img src="/images/account.png" alt="Account">
-              </div>
-              <span class="name" ng-show="username">
-                 <translate>Welcome back, {{username}}</translate>
-              </span>
-              <!--  Navin :Remove from here and show on accounts.html -->
-             <!-- <span class="address">{{address}}</span>  -->
-           </div>
-           <!-- <div class="white-glow"></div> -->
-           <ul id="menu">
-              <li ng-show="showMenuItem('main.dashboard')" ui-sref-active="active">
-                 <a ui-sref="main.dashboard" class="waves-effect waves-blue">
-                    <div class="nav-icon" id="dashboard-icon"></div>
-                    <span class="menu-text">
-                       <translate>Dashboard</translate>
-                    </span>
-                 </a>
-              </li>
-              <!-- <li ng-show="showMenuItem('main.multi') && multisignature" ui-sref-active="active">
+        <div id="sidebar-wrapper" ng-class="myClass">
+            <div class="account-block">
+                <div class="icon">
+                    <img src="/images/account.png" alt="Account">
+                </div>
+                <span class="name" ng-show="username">
+                    <translate>Welcome back, {{username}}</translate>
+                </span>
+                <span class="address">{{address}}</span>
+            </div>
+            <!-- <div class="white-glow"></div> -->
+            <ul id="menu">
+                <li ng-show="showMenuItem('main.dashboard')" ui-sref-active="active">
+                    <a ui-sref="main.dashboard" class="waves-effect waves-blue">
+                        <div class="nav-icon" id="dashboard-icon"></div>
+                        <span class="menu-text">
+                            <translate>Dashboard</translate>
+                        </span>
+                    </a>
+                </li>
+                <!-- <li ng-show="showMenuItem('main.multi') && multisignature" ui-sref-active="active">
                  <a ui-sref="main.multi" class="waves-effect waves-blue">
                      <div class="nav-icon" id="multi-icon"></div>
                      <span class="menu-text"><translate>Multi-Signature</translate></span>
                  </a>
                  </li> -->
-              <!-- <li ng-show="showMenuItem('main.conversations')" ui-sref-active="active">
+                <!-- <li ng-show="showMenuItem('main.conversations')" ui-sref-active="active">
                  <a ui-sref="main.conversations" class="waves-effect waves-blue">
                      <div class="nav-icon" id="conversations-icon"></div>
                      <span class="menu-text"><translate>Conversations</translate></span>
                  </a>
                  </li> -->
-              <!-- <li ng-show="showMenuItem('main.dappstore')" ui-sref-active="active">
+                <!-- <li ng-show="showMenuItem('main.dappstore')" ui-sref-active="active">
                  <a ui-sref="main.dappstore" class="waves-effect waves-blue">
                      <div class="nav-icon" id="dappstore-icon"></div>
                      <span class="menu-text"><translate>Applications</translate></span>
                  </a>
                  </li> -->
-              <li ng-show="showMenuItem('main.forging')" ui-sref-active="active">
-                 <a ui-sref="main.forging" class="waves-effect waves-blue">
-                    <div class="nav-icon" id="forging-icon"></div>
-                    <span class="menu-text">
-                       <translate>Forging</translate>
-                    </span>
-                    <i ng-click="collapseMenu()" stop-event class="vertical-text right submenu-collapsing" ng-class="{'mdi-hardware-keyboard-arrow-down': subForgingCollapsed, 'mdi-hardware-keyboard-arrow-up':!subForgingCollapsed}"></i>
-                 </a>
-              </li>
-              <ul id="submenu" ng-hide="subForgingCollapsed">
-                 <li ng-show="showMenuItem('main.delegates')" ui-sref-active="active">
-                    <a ui-sref="main.delegates" class="waves-effect waves-blue">
-                       <div class="nav-icon" id="delegates-icon"></div>
-                       <span class="menu-text">
-                          <translate>Delegates</translate>
-                       </span>
+                <li ng-show="showMenuItem('main.forging')" ui-sref-active="active">
+                    <a ui-sref="main.forging" class="waves-effect waves-blue">
+                        <div class="nav-icon" id="forging-icon"></div>
+                        <span class="menu-text">
+                            <translate>Forging</translate>
+                        </span>
+                        <i ng-click="collapseMenu()" stop-event class="vertical-text right submenu-collapsing" ng-class="{'mdi-hardware-keyboard-arrow-down': subForgingCollapsed, 'mdi-hardware-keyboard-arrow-up':!subForgingCollapsed}"></i>
                     </a>
-                 </li>
-                 <li ng-show="showMenuItem('main.votes')" ui-sref-active="active">
-                    <a ui-sref="main.votes" class="waves-effect waves-blue">
-                       <div class="nav-icon" id="myvotes-icon"></div>
-                       <span class="menu-text">
-                          <translate>My Votes</translate>
-                       </span>
+                </li>
+                <ul id="submenu" ng-hide="subForgingCollapsed">
+                    <li ng-show="showMenuItem('main.delegates')" ui-sref-active="active">
+                        <a ui-sref="main.delegates" class="waves-effect waves-blue">
+                            <div class="nav-icon" id="delegates-icon"></div>
+                            <span class="menu-text">
+                                <translate>Delegates</translate>
+                            </span>
+                        </a>
+                    </li>
+                    <li ng-show="showMenuItem('main.votes')" ui-sref-active="active">
+                        <a ui-sref="main.votes" class="waves-effect waves-blue">
+                            <div class="nav-icon" id="myvotes-icon"></div>
+                            <span class="menu-text">
+                                <translate>My Votes</translate>
+                            </span>
+                        </a>
+                    </li>
+                </ul>
+                <li ng-show="showMenuItem('main.blockchain')" ui-sref-active="active">
+                    <a ui-sref="main.blockchain" class="waves-effect waves-blue">
+                        <div class="nav-icon" id="blockchain-icon"></div>
+                        <span class="menu-text">
+                            <translate>Blockchain</translate>
+                        </span>
                     </a>
-                 </li>
-              </ul>
-              <li ng-show="showMenuItem('main.blockchain')" ui-sref-active="active">
-                 <a ui-sref="main.blockchain" class="waves-effect waves-blue">
-                    <div class="nav-icon" id="blockchain-icon"></div>
-                    <span class="menu-text">
-                       <translate>Blockchain</translate>
-                    </span>
-                 </a>
-              </li>
-              <li ng-show="showMenuItem('main.explorer')" ui-sref-active="active">
-                <!-- <a ui-sref="main.explorer" class="waves-effect waves-blue" ng-click="obj.value1 = 'someothervalue'; clickedh=!clickedh"> -->
-               <a ui-sref="main.explorer" class="waves-effect waves-blue" ng-click="classAdd()">    
-                    <div class="nav-icon" id="explorer-icon"></div>
-                    <span class="menu-text">
-                       <translate>Explorer</translate>
-                    </span>
-                 </a>
-              </li>
-              <li ng-show="showMenuItem('main.stake')" ui-sref-active="active">
-                <a ui-sref="main.stake" class="waves-effect waves-blue">
-                    <div class="nav-icon" id="blockchain-icon"></div>
-                    <span class="menu-text">
-                        <translate>Stake</translate>
-                    </span>
-                </a>
-               </li>
-               <li ng-show="showMenuItem('main.stakeDemo')" ui-sref-active="active">
-                <a ui-sref="main.stakeDemo" class="waves-effect waves-blue">
-                    <div class="nav-icon" id="blockchain-icon"></div>
-                    <span class="menu-text">
-                        <translate>Stake Demo</translate>
-                    </span>
-                </a>
-               </li>
+                </li>
+                <li ng-show="showMenuItem('main.explorer')" ui-sref-active="active">
+                    <!-- <a ui-sref="main.explorer" class="waves-effect waves-blue" ng-click="obj.value1 = 'someothervalue'; clickedh=!clickedh"> -->
+                    <a ui-sref="main.explorer" class="waves-effect waves-blue" ng-click="classAdd()">
+                        <div class="nav-icon" id="explorer-icon"></div>
+                        <span class="menu-text">
+                            <translate>Explorer</translate>
+                        </span>
+                    </a>
+                </li>
+                <li ng-show="showMenuItem('main.stake')" ui-sref-active="active">
+                    <a ui-sref="main.stake" class="waves-effect waves-blue">
+                        <div class="nav-icon" id="blockchain-icon"></div>
+                        <span class="menu-text">
+                            <translate>Stake</translate>
+                        </span>
+                    </a>
+                </li>
+                <!-- <li ng-show="showMenuItem('main.stakeDemo')" ui-sref-active="active">
+                    <a ui-sref="main.stakeDemo" class="waves-effect waves-blue">
+                        <div class="nav-icon" id="blockchain-icon"></div>
+                        <span class="menu-text">
+                            <translate>Stake Demo</translate>
+                        </span>
+                    </a>
+                </li> -->
             </ul>
-           <div id="inc"></div>
+            <div id="inc"></div>
         </div>
         <!-- /#sidebar-wrapper -->
     </div>
@@ -322,22 +322,22 @@
             <div class="search-container open">
                 <span class="input-group-addon spinner-addon" style="position: absolute; right: 0; top: 13px;">
                     <div class="preloader-wrapper small" ng-class="{'active':searchDapp.inSearch}" style="width: 22px; height: 22px;">
-                    <div class="spinner-layer spinner-blue-only">
-                        <div class="circle-clipper left">
-                            <div class="circle"></div>
+                        <div class="spinner-layer spinner-blue-only">
+                            <div class="circle-clipper left">
+                                <div class="circle"></div>
+                            </div>
+                            <div class="gap-patch">
+                                <div class="circle"></div>
+                            </div>
+                            <div class="circle-clipper right">
+                                <div class="circle"></div>
+                            </div>
                         </div>
-                        <div class="gap-patch">
-                            <div class="circle"></div>
-                        </div>
-                        <div class="circle-clipper right">
-                            <div class="circle"></div>
-                        </div>
-                    </div>
                     </div>
                 </span>
                 <div class="input-group">
                     <span class="input-group-addon">
-                    <i class="mdi-action-search"></i>
+                        <i class="mdi-action-search"></i>
                     </span>
                     <input type="text" focus-on="true" class="form-control" ng-model="searchDapp.searchForDapp" placeholder="{{'Search for applications'|translate}}">
                 </div>

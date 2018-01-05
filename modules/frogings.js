@@ -107,9 +107,9 @@ Frogings.prototype.shared = {
 
 	countStakeholders: function (req, cb) {
 
-		library.db.query(sql.countStakeholders).then(function (rows) {
+		library.db.one(sql.countStakeholders).then(function (row) {
 			return setImmediate(cb, null, {
-				countStakeholders: JSON.stringify(rows)
+				countStakeholders: row
 			});
 		}, function (err) {
 			return setImmediate(cb, 'Error while counting Stakeholders');
@@ -118,9 +118,9 @@ Frogings.prototype.shared = {
 	},
 
 	totalETPStaked: function (req, cb) {
-		library.db.query(sql.getTotalStakedAmount).then(function (rows) {
+		library.db.one(sql.getTotalStakedAmount).then(function (row) {
 			return setImmediate(cb, null, {
-				totalETPStaked: JSON.stringify(rows)
+				totalETPStaked: row
 			});
 		}, function (err) {
 			return setImmediate(cb, 'Error in getting sum of ETP staked');
@@ -137,9 +137,9 @@ Frogings.prototype.shared = {
 
 			modules.accounts.getAccount({ publicKey: keypair.publicKey.toString('hex') }, function (err, account) {
 
-				library.db.query(sql.getMyStakedAmount, { address: account.address}).then(function (rows) {
+				library.db.one(sql.getMyStakedAmount, { address: account.address}).then(function (row) {
 					return setImmediate(cb, null, {
-						totalETPStaked: JSON.stringify(rows)
+						totalETPStaked: row
 					});
 				}, function (err) {
 					return setImmediate(cb, 'Error in getting my sum of ETP staked');
@@ -182,7 +182,7 @@ Frogings.prototype.shared = {
 
 			modules.accounts.getAccount({ publicKey: keypair.publicKey.toString('hex') }, function (err, account) {
 
-				library.db.query(sql.getActiveFrozeOrders, { senderId: account.address }).then(function (rows) {
+				library.db.one(sql.getActiveFrozeOrders, { senderId: account.address }).then(function (rows) {
 					return setImmediate(cb, null, {
 						freezeOrders: JSON.stringify(rows)
 					});

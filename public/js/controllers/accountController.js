@@ -16,6 +16,7 @@ angular.module('ETPApp').controller('accountController', ['$state','$scope', '$r
     $scope.unconfirmedPassphrase = userService.unconfirmedPassphrase;
     $scope.transactionsLoading = true;
     $scope.allVotes = 100 * 1000 * 1000 * 1000 * 1000 * 100;
+    $scope.rememberedPassphrase =  userService.rememberedPassphrase;
 
     $scope.graphs = {
         ETPPrice: {
@@ -107,6 +108,8 @@ angular.module('ETPApp').controller('accountController', ['$state','$scope', '$r
                 }
                 $scope.secondPassphrase = userService.secondPassphrase;
                 $scope.unconfirmedPassphrase = userService.unconfirmedPassphrase;
+                $scope.balanceDec = $scope.balance / 100000000;
+                $scope.balanceDecParseInt = parseInt($scope.balanceDec);
             } else {
                 $scope.resetAppData();
             }
@@ -169,8 +172,8 @@ angular.module('ETPApp').controller('accountController', ['$state','$scope', '$r
    $http.get("/api/accounts/getCirculatingSupply")
     .then(function (resp) {
         if (resp.data.success) {
-            var circulatingSupply = resp.data.circulatingSupply;
-            $scope.circulatingSupply = JSON.parse(circulatingSupply);
+            var circulatingSupply = resp.data.circulatingSupply / 100000000;
+            $scope.circulatingSupply = parseInt(circulatingSupply);
             
 
         } else {
@@ -190,17 +193,50 @@ angular.module('ETPApp').controller('accountController', ['$state','$scope', '$r
         });
 
     /* For Your ETP Frozen */
-    /* $http.get("/api/frogings/count")
-      .then(function (resp) {
-          if (resp.data.success) {
-              var totalCount = resp.data.count;
-              $scope.totalCount = JSON.parse(totalCount);
+    $http.post("/api/frogings/getMyETPFrozen", { secret: $scope.rememberedPassphrase })
+        .then(function (resp) {
+            if (resp.data.success) {
+                var myETPFrozen = resp.data.totalETPStaked.sum / 100000000;
+                $scope.myETPFrozen = parseInt(myETPFrozen);
             } else {
-              console.log(resp.data.error);
-          }
-      });
- */
-         
+                console.log(resp.data.error);
+            }
+        });
+
+    /* For Your total supply */
+    $http.get("/api/accounts/totalSupply")
+        .then(function (resp) {
+            if (resp.data.success) {
+                var totalSupply = resp.data.totalSupply / 100000000;
+                $scope.totalSupply = JSON.parse(totalSupply);
+            } else {
+                console.log(resp.data.error);
+            }
+        });
+
+
+    /* For total stakeholders */
+    $http.get("/api/frogings/countStakeholders")
+    .then(function (resp) {
+        if (resp.data.success) {
+            var countStakeholders = resp.data.countStakeholders.count;
+            $scope.countStakeholders = JSON.parse(countStakeholders);
+        } else {
+            console.log(resp.data.error);
+        }
+    });
+
+    /* For total stakeholders */
+    $http.get("/api/frogings/getTotalETPStaked")
+    .then(function (resp) {
+        if (resp.data.success) {
+            var totalETPStaked = resp.data.totalETPStaked.sum / 100000000;
+            $scope.totalETPStaked = parseInt(totalETPStaked);
+        } else {
+            console.log(resp.data.error);
+        }
+    });
+
 
 
 
