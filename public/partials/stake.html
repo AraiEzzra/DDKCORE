@@ -7,39 +7,31 @@
             </div>
             <div class="input-group">
                 <span class="input-group-addon">
-                <i class="mdi-action-search"></i>
+                    <i class="mdi-action-search"></i>
                 </span>
                 <input type="text" class="form-control" placeholder="{{'Search for stake'|translate}}" ng-model="searchBlocks.searchForBlock">
                 <span class="input-group-addon spinner-addon">
                     <div class="preloader-wrapper" ng-class="{'active': searchBlocks.inSearch}">
                         <div class="spinner-layer spinner-blue-only">
-                        <div class="circle-clipper left">
-                            <div class="circle"></div>
-                        </div>
-                        <div class="gap-patch">
-                            <div class="circle"></div>
-                        </div>
-                        <div class="circle-clipper right">
-                            <div class="circle"></div>
-                        </div>
+                            <div class="circle-clipper left">
+                                <div class="circle"></div>
+                            </div>
+                            <div class="gap-patch">
+                                <div class="circle"></div>
+                            </div>
+                            <div class="circle-clipper right">
+                                <div class="circle"></div>
+                            </div>
                         </div>
                     </div>
                 </span>
             </div>
         </div>
 
-
-
-
-
-
-
-
-
         <div class="panel panel-default" ng-class="{'paginated': countForgingBlocks || !searchBlocks.searchForBlock}">
             <div class="panel-heading">
                 <h2>
-                  {{'Stake/Forge'|translate}}
+                    {{'Stake/Forge'|translate}}
                 </h2>
             </div>
             <!-- <table ng-show="countForgingBlocks  || !searchBlocks.searchForBlock" ng-table="tableBlocks" border="0" width="100%" cellpadding="0" cellspacing="0"
@@ -76,27 +68,23 @@
                     </td>
                 </tr>
             </table> -->
-            <table ng-table ="usersTable" class="table table-bordered table-striped">
+            <table ng-show="countFreezeOrders" ng-table="usersTable" class="table table-bordered table-striped">
                 <tr ng-repeat="fo in freezeOrders">
-                <td data-title="'FreezeAmount'">{{fo.freezedAmount}}</td>
-                <td data-title="'Status'">{{fo.status}}</td>
-                <td data-title="'InsertTime'">{{ fo.startTime | date : format : timezone}}</td>
-                <td data-title="'MatureTime'">{{fo.endTime}}</td>
-                <td data-title="'MonthRemain'">{{fo.milestoneCount}}</td>
-                <td data-title="'Recipient'">{{fo.recipientId}}</td>
-                <td data-title="'Action'" class="text-center"><i class="mdi-content-send"></i></td>
+                    <td data-title="'FreezeAmount'" sortable="'freezeAmount'">{{fo.freezedAmount}}</td>
+                    <td data-title="'Status'">{{fo.status ? 'Active' : 'Inactive'}}</td>
+                    <td data-title="'InsertTime'">{{ fo.startTime | timestampFilter}}</td>
+                    <td data-title="'MatureTime'">{{fo.endTime | timestampFilter}}</td>
+                    <td data-title="'MonthRemain'">{{fo.milestoneCount}}</td>
+                    <td data-title="'Recipient'">{{fo.recipientId}}</td>
+                    <td data-title="'Action'" class="text-center">
+                        <i class="mdi-content-send"></i>
+                    </td>
                 </tr>
             </table>
-
-
-
-
-
-
-
-            <div class="panel-body empty-body empty-table"
-                ng-if="!countForgingBlocks">
-                <p class="empty-state-text"><translate>No results for this search.</translate></p>
+            <div class="panel-body empty-body empty-table" ng-if="!countFreezeOrders">
+                <p class="empty-state-text">
+                    <translate>No results for this search.</translate>
+                </p>
             </div>
         </div>
     </div>
