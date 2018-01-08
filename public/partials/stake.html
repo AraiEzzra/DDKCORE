@@ -28,7 +28,7 @@
             </div>
         </div>
 
-        <div class="panel panel-default" ng-class="{'paginated': countForgingBlocks || !searchBlocks.searchForBlock}">
+        <div class="panel panel-default" ng-class="{'paginated': countForgingBlocks }">
             <div class="panel-heading">
                 <h2>
                     {{'Stake/Forge'|translate}}
@@ -68,14 +68,14 @@
                     </td>
                 </tr>
             </table> -->
-            <table ng-show="countFreezeOrders" ng-table="usersTable" class="table table-bordered table-striped">
+            <table ng-show="countFreezeOrders" ng-table="tableBlocks" class="table table-bordered table-striped" template-pagination="custom/pager">
                 <tr ng-repeat="fo in freezeOrders">
                     <td data-title="'FreezeAmount'" sortable="'freezeAmount'">{{fo.freezedAmount}}</td>
                     <td data-title="'Status'">{{fo.status ? 'Active' : 'Inactive'}}</td>
                     <td data-title="'InsertTime'">{{ fo.startTime | timestampFilter}}</td>
                     <td data-title="'MatureTime'">{{fo.endTime | timestampFilter}}</td>
-                    <td data-title="'MonthRemain'">{{fo.milestoneCount}}</td>
-                    <td data-title="'Recipient'">{{fo.recipientId}}</td>
+                    <td data-title="'MonthRemain'">{{3-fo.milestoneCount}}</td>
+                    <td data-title="'Recipient' " class="text-center">{{fo.recipientId||'-'}}</td>
                     <td data-title="'Action'" class="text-center">
                         <i class="mdi-content-send"></i>
                     </td>
