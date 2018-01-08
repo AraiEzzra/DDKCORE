@@ -1,7 +1,7 @@
 require('angular');
 var compareVersion = require('../../node_modules/compare-version/index.js');
 
-angular.module('ETPApp').controller('appController', ['dappsService', '$scope', '$rootScope', '$http', "userService", "$interval", "$timeout", 'viewFactory', '$state', 'blockService', 'sendTransactionModal', 'registrationDelegateModal', 'serverSocket', 'delegateService', '$window', 'forgingModal', 'errorModal', 'userInfo', 'transactionsService', 'secondPassphraseModal', 'focusFactory', 'gettextCatalog', '$location', 'AuthService', function (dappsService, $rootScope, $scope, $http, userService, $interval, $timeout, viewFactory, $state, blockService, sendTransactionModal, registrationDelegateModal, serverSocket, delegateService, $window, forgingModal, errorModal, userInfo, transactionsService, secondPassphraseModal, focusFactory, gettextCatalog, $location, AuthService) {
+angular.module('ETPApp').controller('appController', ['dappsService', '$scope', '$rootScope', '$http', "userService", "$interval", "$timeout", 'viewFactory', '$state', 'blockService', 'sendTransactionModal', 'registrationDelegateModal', 'serverSocket', 'delegateService', '$window', 'forgingModal', 'errorModal', 'userInfo', 'transactionsService', 'secondPassphraseModal', 'focusFactory', 'gettextCatalog', '$location', 'AuthService','freezeAmountModal', function (dappsService, $rootScope, $scope, $http, userService, $interval, $timeout, viewFactory, $state, blockService, sendTransactionModal, registrationDelegateModal, serverSocket, delegateService, $window, forgingModal, errorModal, userInfo, transactionsService, secondPassphraseModal, focusFactory, gettextCatalog, $location, AuthService,freezeAmountModal) {
 
     $scope.searchTransactions = transactionsService;
     $scope.searchDapp = dappsService;
@@ -225,6 +225,20 @@ angular.module('ETPApp').controller('appController', ['dappsService', '$scope', 
             }
         });
     }
+
+    $scope.freezeAmount = function () {
+        console.log('freezeAmount');
+        $scope.freezeAmountModal = freezeAmountModal.activate({
+           destroy: function () {
+            }
+        });
+    }
+
+
+
+
+
+
 
     $scope.setSecondPassphrase = function () {
         $scope.addSecondPassModal = secondPassphraseModal.activate({
@@ -535,7 +549,7 @@ angular.module('ETPApp').controller('appController', ['dappsService', '$scope', 
         });
     }
 
-    $scope.getAppData();
+    $scope.getAppData();freezeAmountModal
     $scope.getPriceTicker();
     $scope.getVersion();
     $scope.getMasterPassphrase();
