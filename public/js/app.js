@@ -44,11 +44,6 @@ ETPApp.config([
                 templateUrl: "/partials/stake.html",
             	controller: "stakeController"
             })
-            .state('main.stakeDemo', {
-                url: "/stakeDemo",
-                templateUrl: "/partials/stakeDemo.html",
-            	controller: "stakeControllerDemo"
-            })
             // .state('main.multi', {
             //     url: "/wallets",
             //     templateUrl: "/partials/multi.html",

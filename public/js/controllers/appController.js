@@ -105,7 +105,6 @@ angular.module('ETPApp').controller('appController', ['dappsService', '$scope', 
         'main.multi',
         'main.explorer',
         'main.stake',
-        'main.stakeDemo'
 
     ];
 

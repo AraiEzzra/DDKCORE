@@ -1,67 +1,113 @@
-require('angular');
+    require('angular');
 
-angular.module('ETPApp').controller('stakeController', ['$scope', 'ngTableParams', '$filter', '$http',"userService", 'gettextCatalog', 'blockService', function ($scope, ngTableParams, $filter, $http, userService, gettextCatalog,blockService) {
 
-    $scope.view.page = {title: gettextCatalog.getString('Staking'), previous: null};
-    $scope.rememberedPassphrase =  userService.rememberedPassphrase;
-    $scope.freezeOrders = [];
-    $scope.view.bar = {showBlockSearchBar: true};
-    $scope.countFreezeOrders = 0;
+    
+    angular.module('ETPApp').controller('stakeController', ['$scope', 'ngTableParams', 'NameService', '$http',"userService",'gettextCatalog','sendFreezeOrderModal', function ($scope, ngTableParams, NameService, $http, userService, gettextCatalog,sendFreezeOrderModal) {
+    
+        $scope.rememberedPassphrase =  userService.rememberedPassphrase;
+        var resultData = [];
+        var data = NameService.data;
+        $scope.view.loadingText = gettextCatalog.getString('Staking blockchain');
+        $scope.view.page = {title: gettextCatalog.getString('Staking'), previous: null};
+        
+            $scope.tableParams = new ngTableParams(
+              {
+                page: 1,            // show first page
+                count: 5,           // count per page
+                sorting: {freezeAmount:'asc'}
+              },
+              {
+                total: 0, // length of data
+                counts: [],
+                getData: function($defer, params) {
+                  NameService.getData($defer,params,$scope.filter,$scope.rememberedPassphrase);
+                }
+            });
+
+            $scope.tableParams.cols = {
+                freezedAmount : gettextCatalog.getString('FreezeAmount'),
+                status : gettextCatalog.getString('Status'),
+                insertTime : gettextCatalog.getString('InsertTime'),
+                matureTime : gettextCatalog.getString('MatureTime'),
+                monthRemain : gettextCatalog.getString('MonthRemain'),
+                recipient : gettextCatalog.getString('Recipient'),
+                action : gettextCatalog.getString('Action')
+            };
+            
+            $scope.$watch("filter.$", function () {
+                $scope.tableParams.reload();
+            });
+
+
+            $scope.sendFreezeOrder = function () {
+             // console.log('freezeAmount');
+              $scope.sendFreezeOrderModal = sendFreezeOrderModal.activate({
+                 destroy: function () {
+                  }
+              });
+             }
+
+             
+      
+
+
+
+
+            
+        }]);
+
+        
+        
+        angular.module('ETPApp').service("NameService", function($http, $filter){
+          
+          function filterData(data, filter){
+            return $filter('filter')(data, filter)
+          }
+          
+          function orderData(data, params){
+            return params.sorting() ? $filter('orderBy')(data, params.orderBy()) : filteredData;
+          }
+          
+          function sliceData(data, params){
+            return data.slice((params.page() - 1) * params.count(), params.page() * params.count())
+          }
+          
+          function transformData(data,filter,params){
+            return sliceData( orderData( filterData(data,filter), params ), params);
+          }
+          
+          var service = {
+            cachedData:[],
+            getData:function($defer, params, filter, secret){
+              if(service.cachedData.length>0){
+                console.log("using cached data")
+                var filteredData = filterData(service.cachedData,filter);
+                var transformedData = sliceData(orderData(filteredData,params),params);
+                params.total(filteredData.length)
+                $defer.resolve(transformedData);
+              }
+              else{
+                console.log("fetching data")
+                $http.post('/api/frogings/getAllOrders',{secret: secret}).success(function(resp)
+                {
+                    var resultData = JSON.parse(resp.freezeOrders);
+                    console.log(JSON.stringify(resultData));
+                  angular.copy(resultData,service.cachedData)
+                  params.total(resultData.length)
+                  var filteredData = $filter('filter')(resultData, filter);
+                  var transformedData = transformData(resultData,filter,params)
+                  
+                  $defer.resolve(transformedData);
+                });  
+              }
+              
+            }
+          };
+          return service;  
+        });
     
 
 
 
-   
-
-    
-     $scope.usersTable = new ngTableParams({
-        page: 1,
-        count: 5,
-        sorting: {
-            height: 'desc'
-        },
-        dataset : $scope.freezeOrders
-    }, {
-    total: $scope.freezeOrders.length,
-
-    getData: function ($defer, params) {
-        $scope.data = params.sorting() ? $filter('orderBy')($scope.freezeOrders, params.orderBy()) : $scope.freezeOrders;
-        $scope.data = $scope.data.slice((params.page() - 1) * params.count(), params.page() * params.count());
-        $defer.resolve($scope.data);
-    }
-    });
-
-    $scope.usersTable.cols = {
-        freezeAmount : gettextCatalog.getString('FreezeAmount'),
-        status : gettextCatalog.getString('Status'),
-        insertTime : gettextCatalog.getString('InsertTime'),
-        matureTime : gettextCatalog.getString('MatureTime'),
-        monthRemain : gettextCatalog.getString('MonthRemain'),
-        recipient : gettextCatalog.getString('Recipient'),
-        action : gettextCatalog.getString('Action')
-    };
 
 
-
-
-    $http.post("/api/frogings/getAllOrders", { secret: $scope.rememberedPassphrase })
-    .then(function (resp) {
-        //alert("stake");
-        if (resp.data.success) {
-            //console.log(JSON.stringify(resp.data)+"demo");
-            var freezeOrders = resp.data.freezeOrders;
-            $scope.freezeOrders = JSON.parse(freezeOrders);
-            $scope.countFreezeOrders = freezeOrders.length;
-        } else {
-            console.log(resp.data.error);
-        }
-    });
-
-
-
-
-
-
-
-
-}]);
