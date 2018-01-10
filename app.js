@@ -23,6 +23,7 @@
  * @module app
  */
 
+//hotam: app monitoring configuration on console/UI 
 //App monitoring on UI
 require('appmetrics-dash').monitor();
 
@@ -56,7 +57,6 @@ var async = require('async');
 var extend = require('extend');
 var fs = require('fs');
 var chalk = require('chalk');
-
 var checkIpInList = require('./helpers/checkIpInList.js');
 var genesisblock = require('./genesisBlock.json');
 var git = require('./helpers/git.js');
@@ -299,13 +299,13 @@ d.run(function () {
 			var compression = require('compression');
 			var cors = require('cors');
 			var app = express();
+
+			//hotam: added swagger configuration
 			var subpath = express();
-			
 			var swagger = require("swagger-node-express");
 			app.use("/v1", subpath);
 			swagger.setAppHandler(subpath);
 			subpath.use(express.static('dist'));
-
 			swagger.setApiInfo({
 				title: "example API",
 				description: "API to do something, manage something...",
@@ -314,11 +314,9 @@ d.run(function () {
 				license: "",
 				licenseUrl: ""
 			});
-
 			subpath.get('/', function (req, res) {
 				res.sendFile(__dirname + '/dist/index.html');
 			});
-
 			swagger.configureSwaggerPaths('', 'api-docs', '');
 			var domain = 'localhost';
 			var applicationUrl = 'http://' + domain;
@@ -340,6 +338,7 @@ d.run(function () {
 			var server = require('http').createServer(app);
 			var io = require('socket.io')(server);
 
+			//hotam: handled socket's connection event
 			//Function To Verify Whether A Socket Already Exists.
 			function acceptSocket(socket, sockets) {
 				var userFound = false;
@@ -436,11 +435,6 @@ d.run(function () {
 			var randomString = require('randomstring');
 			var session = require('express-session');
 			var RedisStore = require('connect-redis')(session);
-			var options = {
-				host: scope.cache.client.connection_options.host,
-				port: scope.cache.client.connection_options.port,
-				client: scope.cache.client
-			};
 
 			scope.nonce = randomString.generate(16);
 			scope.network.app.engine('html', require('ejs').renderFile);
@@ -453,6 +447,13 @@ d.run(function () {
 			scope.network.app.use(bodyParser.json({limit: '2mb'}));
 			scope.network.app.use(methodOverride());
 			scope.network.app.use(cookieParser());
+
+			//hotam: configured redis for session handling
+			var options = {
+				host: scope.cache.client.connection_options.host,
+				port: scope.cache.client.connection_options.port,
+				client: scope.cache.client
+			};
 			scope.network.app.use(session({ 
 				key: 'ETP.sess',
 				store: new RedisStore(options),
@@ -467,7 +468,6 @@ d.run(function () {
 					signed: false
 				} 
 			}));
-
 			scope.network.app.use(function(req, res, next) {
 				if(req.session.address) {
 					logman = new Logger(req.session.id, req.session.address);
@@ -732,6 +732,8 @@ d.run(function () {
 				var nextDate = new Date();
 				nextDate.setDate(nextDate.getDate() + 1);
 				logger.archive('start executing archiving files');
+
+				//hotam: Functionality to archive log files. It is not working as expected. There are some minor changes to be done.
 				if (date.getDate() === 1) {
 					logger.archive('checking date archiving files');
 					var createZip = require('./create-zip');

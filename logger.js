@@ -1,5 +1,11 @@
+'use strict';
+
+//hotam: modified logger configuration
+//requiring dependencies
 var winston = require('winston');
 require('winston-daily-rotate-file');
+
+//defined custom log levels for winston
 const levels = {
   error: 0,
   warn: 1,
@@ -12,6 +18,7 @@ const levels = {
   archive: 8
 };
 
+//Creating file transport to write logs into a file. This file daily rotates
 var transport = new (winston.transports.DailyRotateFile)({
   filename: 'logs/./log',
   datePattern: 'yyyy-MM-dd.',
@@ -24,6 +31,7 @@ var transport = new (winston.transports.DailyRotateFile)({
   }
 });
 
+//creating file transport to write archived logs into a file.
 var traceTransport = new (winston.transports.File)({
   filename: './logs/archive.log',
   level: 'archive',
@@ -35,6 +43,7 @@ var traceTransport = new (winston.transports.File)({
   }
 });
 
+//Logger constructor
 class Logger {
   constructor(sessionId, address) {
     this.transport = transport;
