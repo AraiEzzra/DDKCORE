@@ -1,0 +1,55 @@
+<div class="app-modal valign-wrapper">
+    <div class="container height100">
+        <div class="row height100">
+            <div class="col-md-6 col-md-offset-4 height100 valign-wrapper">
+                <div class="modal-content">
+                    <div class="modal-header modal-iconed">
+                        <div class="close-modal" ng-click="close()">
+                            <span class="sr-only"><translate>Close modal</translate></span>
+                        </div>
+                        <span class="modal-log">ETP</span>
+                    </div>
+                    <div class="modal-header clearfix">
+                        <div>
+                            <h2>{{'Send ETP'|translate}}</h2>
+                        </div>
+                        <div><translate>Please enter the ETP Amount that you would like to freeze.</translate></div>
+                    </div>
+                    <div class="modal-body">
+                        <form ng-submit="passcheck()">
+                            <div class="input-group app-addon">
+                                <input id="sender" ng-focus="focus == 'sender'" type="text" class="form-control" placeholder="{{'Sender Address'|translate}}" ng-model="sender">
+                                <span class="input-group-addon clear" ng-click="clearSender()"></span>
+                            </div>
+                            <p class="error-container" ng-show="errorMessage.recipient">
+                                <span class="pass-error">{{errorMessage.recipient}}</span>
+                            </p>
+
+
+
+                            <div class="input-group app-addon">
+                                <input id="recipient" ng-focus="focus == 'recipient'" type="text" class="form-control" placeholder="{{'Recipient Address'|translate}}" ng-model="recipient">
+                                <span class="input-group-addon clear" ng-click="clearRecipient()"></span>
+                            </div>
+                            <p class="error-container" ng-show="errorMessage.recipient">
+                                <span class="pass-error">{{errorMessage.recipient}}</span>
+                            </p>
+                            
+                            <input type="submit" ng-show="false">
+                        </form>
+                    </div>
+                    <div class="modal-body bordered">
+                        <ul class="nav modal-buttons pull-right">
+                            <li>
+                                <a href="#" ng-click="close()"><translate>Cancel</translate></a>
+                            </li>
+                            <li>
+                                <a href="#" ng-click="freezeOrder(FreezeAmount)"><translate>Confirm</translate></a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

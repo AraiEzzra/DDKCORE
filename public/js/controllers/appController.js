@@ -549,7 +549,7 @@ angular.module('ETPApp').controller('appController', ['dappsService', '$scope', 
         });
     }
 
-    $scope.getAppData();freezeAmountModal
+    $scope.getAppData();
     $scope.getPriceTicker();
     $scope.getVersion();
     $scope.getMasterPassphrase();

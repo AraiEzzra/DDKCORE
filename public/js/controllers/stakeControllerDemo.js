@@ -1,117 +1,110 @@
     require('angular');
-    
-    angular.module('ETPApp').controller('stakeControllerDemo', ['$scope', '$timeout', '$rootScope', '$http', "userService", "$interval", 'blockService', 'blockModal', 'blockInfo', 'userInfo', 'ngTableParams', 'viewFactory', 'gettextCatalog', function ($rootScope, $timeout, $scope, $http, userService, $interval, blockService, blockModal, blockInfo, userInfo, ngTableParams, viewFactory, gettextCatalog) {
-    
-        $scope.view = viewFactory;
-        $scope.view.inLoading = true;
-        $scope.view.loadingText = gettextCatalog.getString('Loading staking');
-        $scope.view.page = {title: gettextCatalog.getString('Staking'), previous: null};
-        $scope.view.bar = {showBlockSearchBar: true};
-        $scope.address = userService.address;
-        $scope.loading = true;
-        $scope.showFullTime = false;
-        $scope.searchBlocks = blockService;
-        $scope.countForgingBlocks = 0;
 
+
+    
+    angular.module('ETPApp').controller('stakeControllerDemo', ['$scope', 'ngTableParams', 'NameService', '$http',"userService",'gettextCatalog','sendFreezeOrderModal', function ($scope, ngTableParams, NameService, $http, userService, gettextCatalog,sendFreezeOrderModal) {
+    
         $scope.rememberedPassphrase =  userService.rememberedPassphrase;
-        $scope.freezeOrders = [];
-    
-        // Blocks
-        $scope.tableBlocks = new ngTableParams({
-            page: 1,
-            count: 5,
-            sorting: {
-                height: 'desc'
-            }
-        }, {
-            total: 0,
-            counts: [],
-            getData: function ($defer, params) {
-                //blockService.gettingBlocks = false;
-                $scope.loading = true;
-                
-                blockService.getBlocks($scope.searchBlocks.searchForBlock, $defer, params, $scope.filter, function () {
-                    $scope.searchBlocks.inSearch = false;
-                    $scope.countForgingBlocks = params.total();
-                    $scope.loading = false;
-                    $scope.view.inLoading = false;
-                }, null, true);
-            }
-        });
-    
+        var resultData = [];
+        var data = NameService.data;
+        $scope.view.loadingText = gettextCatalog.getString('Staking blockchain');
+        $scope.view.page = {title: gettextCatalog.getString('Staking'), previous: null};
         
-    
-        $scope.tableBlocks.cols = {
-            freezeAmount : gettextCatalog.getString('FreezeAmount'),
-            status : gettextCatalog.getString('Status'),
-            insertTime : gettextCatalog.getString('InsertTime'),
-            matureTime : gettextCatalog.getString('MatureTime'),
-            monthRemain : gettextCatalog.getString('MonthRemain'),
-            recipient : gettextCatalog.getString('Recipient'),
-            action : gettextCatalog.getString('Action'),
-            //reward : gettextCatalog.getString('Reward')
-        };
-    
-        $scope.tableBlocks.settings().$scope = $scope;
-    
-        $scope.$watch("filter.$", function () {
-            $scope.tableBlocks.reload();
-        });
-    
-        $scope.updateBlocks = function () {
-            $scope.tableBlocks.reload();
-        };
-        // end Blocks
-    
-        $scope.$on('updateControllerData', function (event, data) {
-            if (data.indexOf('main.blockchain') != -1) {
-                $scope.updateBlocks();
-            }
-        });
-    
-        $scope.updateBlocks();
-    
-        $scope.$on('$destroy', function () {
-            $interval.cancel($scope.blocksInterval);
-            $scope.blocksInterval = null;
-        });
-    
-        $scope.showBlock = function (block) {
-            $scope.modal = blockModal.activate({block: block});
-        }
-    
-        $scope.blockInfo = function (block) {
-            $scope.modal = blockInfo.activate({block: block});
-        }
-    
-        $scope.userInfo = function (userId) {
-            $scope.modal = userInfo.activate({userId: userId});
-        }
-    
-        // Search blocks watcher
-        var tempSearchBlockID = '',
-            searchBlockIDTimeout;
-    
-        $scope.$watch('searchBlocks.searchForBlock', function (val) {
-            if (searchBlockIDTimeout) $timeout.cancel(searchBlockIDTimeout);
-            if (val.trim() != '') {
-                $scope.searchBlocks.inSearch = true;
-            } else {
-                $scope.searchBlocks.inSearch = false;
-                if (tempSearchBlockID != val) {
-                    tempSearchBlockID = val;
-                    $scope.updateBlocks();
-                    return;
+            $scope.tableParams = new ngTableParams(
+              {
+                page: 1,            // show first page
+                count: 5,           // count per page
+                sorting: {freezeAmount:'asc'}
+              },
+              {
+                total: 0, // length of data
+                counts: [],
+                getData: function($defer, params) {
+                  NameService.getData($defer,params,$scope.filter,$scope.rememberedPassphrase);
                 }
+            });
+
+            $scope.tableParams.cols = {
+                freezedAmount : gettextCatalog.getString('FreezeAmount'),
+                status : gettextCatalog.getString('Status'),
+                insertTime : gettextCatalog.getString('InsertTime'),
+                matureTime : gettextCatalog.getString('MatureTime'),
+                monthRemain : gettextCatalog.getString('MonthRemain'),
+                recipient : gettextCatalog.getString('Recipient'),
+                action : gettextCatalog.getString('Action')
+            };
+            
+            $scope.$watch("filter.$", function () {
+                $scope.tableParams.reload();
+            });
+
+
+            $scope.sendFreezeOrder = function () {
+             // console.log('freezeAmount');
+              $scope.sendFreezeOrderModal = sendFreezeOrderModal.activate({
+                 destroy: function () {
+                  }
+              });
+             }
+
+             
+      
+
+
+
+
+            
+        }]);
+
+        
+        
+        angular.module('ETPApp').service("NameService", function($http, $filter){
+          
+          function filterData(data, filter){
+            return $filter('filter')(data, filter)
+          }
+          
+          function orderData(data, params){
+            return params.sorting() ? $filter('orderBy')(data, params.orderBy()) : filteredData;
+          }
+          
+          function sliceData(data, params){
+            return data.slice((params.page() - 1) * params.count(), params.page() * params.count())
+          }
+          
+          function transformData(data,filter,params){
+            return sliceData( orderData( filterData(data,filter), params ), params);
+          }
+          
+          var service = {
+            cachedData:[],
+            getData:function($defer, params, filter, secret){
+              if(service.cachedData.length>0){
+                console.log("using cached data")
+                var filteredData = filterData(service.cachedData,filter);
+                var transformedData = sliceData(orderData(filteredData,params),params);
+                params.total(filteredData.length)
+                $defer.resolve(transformedData);
+              }
+              else{
+                console.log("fetching data")
+                $http.post('/api/frogings/getAllOrders',{secret: secret}).success(function(resp)
+                {
+                    var resultData = JSON.parse(resp.freezeOrders);
+                    console.log(JSON.stringify(resultData));
+                  angular.copy(resultData,service.cachedData)
+                  params.total(resultData.length)
+                  var filteredData = $filter('filter')(resultData, filter);
+                  var transformedData = transformData(resultData,filter,params)
+                  
+                  $defer.resolve(transformedData);
+                });  
+              }
+              
             }
-            tempSearchBlockID = val;
-            searchBlockIDTimeout = $timeout(function () {
-                $scope.searchBlocks.searchForBlock = tempSearchBlockID;
-                $scope.updateBlocks();
-            }, 2000); // Delay 2000 ms
+          };
+          return service;  
         });
-    
-    }]);
     
 
 
