@@ -198,7 +198,6 @@ angular.module('ETPApp').controller('sendTransactionController', ['$scope', 'sen
     }
 
     $scope.sendTransaction = function (secretPhrase, withSecond) {
-        console.log('secretPhrase : ' + secretPhrase);
         if ($scope.secondPassphrase && !withSecond) {
             $scope.checkSecondPass = true;
             $scope.focus = 'secondPhrase';

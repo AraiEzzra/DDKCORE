@@ -8,10 +8,8 @@ angular.module('ETPApp').service('stakeService',[ function () {
         url : "/api/frogings/getAllOrders"
     }).then(function mySuccess(response) {
         $scope.myStatke = response.data;
-        console.log(myStatke);
     }, function myError(response) {
         $scope.myStatke = response.statusText;
-        console.log(myStatke);
     });
  */
 

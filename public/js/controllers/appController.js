@@ -216,7 +216,6 @@ angular.module('ETPApp').controller('appController', ['dappsService', '$scope', 
     }
 
     $scope.sendTransaction = function (to) {
-        console.log('to : ' + to);
         to = to || '';
         $scope.sendTransactionModal = sendTransactionModal.activate({
             totalBalance: $scope.unconfirmedBalance,
@@ -554,11 +553,8 @@ angular.module('ETPApp').controller('appController', ['dappsService', '$scope', 
     window.onpopstate = function (event) {
         if ($scope.myClass.length != 0) {
             $scope.classAdd();
-            console.log($scope.myClass);
-
         } else {
             $scope.classRemove();
-            //console.log($scope.myClass);
         }
     };
 
