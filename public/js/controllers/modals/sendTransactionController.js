@@ -1,6 +1,6 @@
 require('angular');
 
-angular.module('ETPApp').controller('sendTransactionController', ['$scope', 'sendTransactionModal', '$http', 'userService', 'feeService', '$timeout', '$filter', function ($scope, sendTransactionModal, $http, userService, feeService, $timeout, $filter) {
+angular.module('ETPApp').controller('sendTransactionController', ['$scope', 'sendTransactionModal', '$http', 'userService', 'feeService', '$timeout', '$filter', 'freezeAmountModal', function ($scope, sendTransactionModal, $http, userService, feeService, $timeout, $filter, freezeAmountModal) {
 
     $scope.sending = false;
     $scope.passmode = false;
@@ -93,10 +93,13 @@ angular.module('ETPApp').controller('sendTransactionController', ['$scope', 'sen
     }
 
     $scope.close = function () {
+        console.log('close1 call');
         if ($scope.destroy) {
             $scope.destroy();
         }
         sendTransactionModal.deactivate();
+        freezeAmountModal.deactivate();
+        console.log('close1 call 2');
     }
 
     $scope.accountChanged = function (e) {
@@ -198,6 +201,9 @@ angular.module('ETPApp').controller('sendTransactionController', ['$scope', 'sen
     }
 
     $scope.sendTransaction = function (secretPhrase, withSecond) {
+        console.log('Demo 1');
+        
+        console.log('secretPhrase : ' + secretPhrase);
         if ($scope.secondPassphrase && !withSecond) {
             $scope.checkSecondPass = true;
             $scope.focus = 'secondPhrase';

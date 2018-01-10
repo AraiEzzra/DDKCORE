@@ -17,7 +17,7 @@ angular.module('ETPApp').controller('blockchainController', ['$scope', '$timeout
     // Blocks
     $scope.tableBlocks = new ngTableParams({
         page: 1,
-        count: 25,
+        count: 5,
         sorting: {
             height: 'desc'
         }

@@ -83,6 +83,10 @@
                 <span id="balance" class="margin-right-10">
                     {{unconfirmedBalance | ETPFilter}} ETP
                 </span>
+                <a class="btn btn-blue-nav waves-effect waves-light margin-right-10" ng-click="freezeAmount()">
+                    <translate>Freeze</translate>
+                </a>
+                
                 <a class="btn btn-blue-nav waves-effect waves-light" ng-click="sendTransaction()">
                     <i class="mdi-content-send left"></i>
                     <translate>SEND</translate>
@@ -297,20 +301,12 @@
                 </li>
                 <li ng-show="showMenuItem('main.stake')" ui-sref-active="active">
                     <a ui-sref="main.stake" class="waves-effect waves-blue">
-                        <div class="nav-icon" id="blockchain-icon"></div>
+                        <div class="nav-icon" id="stake-icon"></div>
                         <span class="menu-text">
                             <translate>Stake</translate>
                         </span>
                     </a>
                 </li>
-                <!-- <li ng-show="showMenuItem('main.stakeDemo')" ui-sref-active="active">
-                    <a ui-sref="main.stakeDemo" class="waves-effect waves-blue">
-                        <div class="nav-icon" id="blockchain-icon"></div>
-                        <span class="menu-text">
-                            <translate>Stake Demo</translate>
-                        </span>
-                    </a>
-                </li> -->
             </ul>
             <div id="inc"></div>
         </div>
