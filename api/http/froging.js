@@ -29,7 +29,6 @@ function FrogingsHttpApi (frogingsModule, app, logger, cache) {
 		'post /freeze' : 'addTransactionForFreeze',
 		'get /count': 'getFrozensCount',
 		'post /getAllOrders' : 'getAllFreezeOrders',
-		'post /sendFreezeOrder' : 'sendFreezeOrder',
 		'post /getAllActiveOrders' : 'getAllActiveFreezeOrders',
 		'get /countStakeholders' : 'countStakeholders',
 		'get /getTotalETPStaked' : 'totalETPStaked'	,

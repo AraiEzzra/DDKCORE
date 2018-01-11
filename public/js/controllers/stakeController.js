@@ -9,6 +9,7 @@
         var data = NameService.data;
         $scope.view.loadingText = gettextCatalog.getString('Staking blockchain');
         $scope.view.page = {title: gettextCatalog.getString('Staking'), previous: null};
+        $scope.countFreezeOrders = 0;
         
             $scope.tableParams = new ngTableParams(
               {
@@ -20,7 +21,9 @@
                 total: 0, // length of data
                 counts: [],
                 getData: function($defer, params) {
-                  NameService.getData($defer,params,$scope.filter,$scope.rememberedPassphrase);
+                  NameService.getData($defer,params,$scope.filter,$scope.rememberedPassphrase,function(){
+                    $scope.countFreezeOrders = params.total();
+                  });
                 }
             });
 
@@ -78,28 +81,32 @@
           
           var service = {
             cachedData:[],
-            getData:function($defer, params, filter, secret){
-              if(service.cachedData.length>0){
-                console.log("using cached data")
-                var filteredData = filterData(service.cachedData,filter);
-                var transformedData = sliceData(orderData(filteredData,params),params);
-                params.total(filteredData.length)
-                $defer.resolve(transformedData);
-              }
-              else{
-                console.log("fetching data")
+            getData:function($defer, params, filter, secret,cb){
+              // Remove below code because when we do multiple order and in between check stake,
+              //    html page then it cached it ,in future always displayed it using cache
+              
+              // if(service.cachedData.length>0){
+              //   console.log("using cached data")
+              //   var filteredData = filterData(service.cachedData,filter);
+              //   var transformedData = sliceData(orderData(filteredData,params),params);
+              //   params.total(filteredData.length)
+              //   $defer.resolve(transformedData);
+              // }
+              // else{
+              //   console.log("fetching data")
                 $http.post('/api/frogings/getAllOrders',{secret: secret}).success(function(resp)
                 {
                     var resultData = JSON.parse(resp.freezeOrders);
                     console.log(JSON.stringify(resultData));
-                  angular.copy(resultData,service.cachedData)
+                //  angular.copy(resultData,service.cachedData)
                   params.total(resultData.length)
                   var filteredData = $filter('filter')(resultData, filter);
                   var transformedData = transformData(resultData,filter,params)
                   
                   $defer.resolve(transformedData);
+                  cb(null);
                 });  
-              }
+              // }
               
             }
           };

@@ -20,7 +20,7 @@
                   {{'Latest Orders'|translate}}
                 </h2>
             </div>
-            <table ng-table="tableParams" class="table">
+            <table ng-table="tableParams" class="table" ng-show="countFreezeOrders" >
                 <tr ng-repeat="fo in $data">
                     <td data-title="tableParams.cols.freezedAmount">{{fo.freezedAmount}}</td>
                     <td data-title="tableParams.cols.status" sortable="'freezeAmount'">{{fo.status ? 'Active' : 'Inactive'}}</td>
@@ -33,6 +33,11 @@
                     </td>
                 </tr>
             </table>
+            <div class="panel-body empty-body empty-table" ng-if="!countFreezeOrders">
+                <p class="empty-state-text">
+                    <translate>No results for this search.</translate>
+                </p>
+            </div>
         </div>
     </div>
 </div>
