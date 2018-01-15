@@ -14,7 +14,7 @@
               {
                 page: 1,            // show first page
                 count: 5,           // count per page
-                sorting: {freezeAmount:'asc'}
+                sorting: {status:'desc'}
               },
               {
                 total: 0, // length of data
@@ -39,9 +39,12 @@
             });
 
 
-            $scope.sendFreezeOrder = function () {
-             // console.log('freezeAmount');
+            $scope.sendFreezeOrder = function (id) {
+             console.log(id);
+             $scope.myVar = "Hello";
+             //$scope.id;
               $scope.sendFreezeOrderModal = sendFreezeOrderModal.activate({
+                freezeId:id,
                  destroy: function () {
                   }
               });
@@ -79,27 +82,27 @@
           var service = {
             cachedData:[],
             getData:function($defer, params, filter, secret){
-              if(service.cachedData.length>0){
+             /*  if(service.cachedData.length>0){
                 console.log("using cached data")
                 var filteredData = filterData(service.cachedData,filter);
                 var transformedData = sliceData(orderData(filteredData,params),params);
                 params.total(filteredData.length)
                 $defer.resolve(transformedData);
               }
-              else{
+              else{ */
                 console.log("fetching data")
                 $http.post('/api/frogings/getAllOrders',{secret: secret}).success(function(resp)
                 {
                     var resultData = JSON.parse(resp.freezeOrders);
                     console.log(JSON.stringify(resultData));
-                  angular.copy(resultData,service.cachedData)
+                  //angular.copy(resultData,service.cachedData)
                   params.total(resultData.length)
                   var filteredData = $filter('filter')(resultData, filter);
                   var transformedData = transformData(resultData,filter,params)
                   
                   $defer.resolve(transformedData);
                 });  
-              }
+              
               
             }
           };
