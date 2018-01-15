@@ -53,6 +53,7 @@ monitoring.on('redis', function(data) {
 	
 
 //Requiring Modules
+require('dotenv').config();
 var async = require('async');
 var extend = require('extend');
 var fs = require('fs');
@@ -73,6 +74,7 @@ const Logger = require('./logger.js');
 let logman = new Logger();
 let logger = logman.logger;
 var sockets = [];
+var utils = require('./utils');
 
 process.stdin.resume();
 
@@ -197,6 +199,10 @@ var config = {
 	}
 };
 
+//merge environment variables
+var env = require('./config/env');
+utils.merge(appConfig, env);
+
 // Trying to get last git commit
 try {
 	lastCommit = git.getLastCommit();
@@ -246,14 +252,16 @@ d.run(function () {
 				if (appConfig.loading.snapshot != null) {
 					delete appConfig.loading.snapshot;
 				}
-
 				fs.writeFileSync('./config.json', JSON.stringify(appConfig, null, 4));
-
 				cb(null, appConfig);
 			} else {
 				cb(null, appConfig);
 			}
 		},
+		/* esInit: function(cb) {
+			var esInstance = require('./elasticsearch/esInit');
+			esInstance.initElasticSearch(cb);
+		}, */
 		logger: function (cb) {
 			cb(null, logger);
 		},
@@ -299,7 +307,8 @@ d.run(function () {
 			var compression = require('compression');
 			var cors = require('cors');
 			var app = express();
-
+			console.log('process.env.HOST : ' + process.env.HOST);
+			console.log('process.env.PORT : ' + process.env.PORT);
 			//hotam: added swagger configuration
 			var subpath = express();
 			var swagger = require("swagger-node-express");
@@ -457,7 +466,7 @@ d.run(function () {
 			scope.network.app.use(session({ 
 				key: 'ETP.sess',
 				store: new RedisStore(options),
-				secret: "fd34s@!@dfa453f3DF#$D&W", 
+				secret: scope.config.secret, 
 				resave: true, 
 				saveUninitialized: false,
 				cookie: {
