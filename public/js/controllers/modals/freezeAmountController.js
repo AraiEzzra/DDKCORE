@@ -1,6 +1,6 @@
 require('angular');
 
-angular.module('ETPApp').controller('freezeAmountController', ['$scope', 'userService', 'sendTransactionModal', 'freezeAmountModal', '$http', function ($scope, userService, sendTransactionModal,freezeAmountModal,$http) {
+angular.module('ETPApp').controller('freezeAmountController', ['$scope', 'userService', 'sendTransactionModal', 'freezeAmountModal', '$http','feeService', function ($scope, userService, sendTransactionModal,freezeAmountModal,$http,feeService) {
 
     $scope.rememberedPassphrase =  userService.rememberedPassphrase;
 
@@ -82,12 +82,30 @@ angular.module('ETPApp').controller('freezeAmountController', ['$scope', 'userSe
                 freezeAmountModal.deactivate(); 
                 
             } else {
-                console.log(resp.data.error);
+                //console.log(resp.data.error);
                 Materialize.toast('Freeze Error', 3000, 'red white-text');
+                $scope.errorMessage.fromServer = resp.data.error;
                
             }
         });
     }
+
+    $scope.getCurrentFee = function () {
+        $http.get('/api/blocks/getFee').then(function (resp) {
+                $scope.currentFee = resp.data.fee;
+                $scope.fee = resp.data.fee;
+            });
+    }
+
+
+
+    feeService(function (fees) {
+        $scope.fee = fees.froze;
+    });
+
+
+
+
 
     $scope.close = function () {
         console.log('close freeze amount');

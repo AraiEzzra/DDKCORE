@@ -1,28 +1,41 @@
+//import { address } from 'ip';
+
 require('angular');
 
-angular.module('ETPApp').controller('sendFreezeOrderController', ['$scope', 'userService', 'sendTransactionModal', 'sendFreezeOrderModal', '$http', function ($scope, userService, sendTransactionModal,sendFreezeOrderModal,$http) {
+angular.module('ETPApp').controller('sendFreezeOrderController', ['$scope', 'userService', 'sendTransactionModal', 'sendFreezeOrderModal', '$http','feeService', function ($scope, userService, sendTransactionModal,sendFreezeOrderModal,$http,feeService) {
 
     $scope.rememberedPassphrase =  userService.rememberedPassphrase;
 
 
     /* For Total Count*/
-
-    /* $scope.freezeOrder = function(FreezeAmount){
-        $http.post("/api/frogings/freeze",{freezedAmount:parseInt(FreezeAmount),secret: $scope.rememberedPassphrase})
+    $scope.freezeOrder = function(freezeId,recipientId){
+        console.log("Navin");
+        $http.post("/api/shiftOrder/sendFreezeOrder",{frozeId:freezeId,recipientId:recipientId,secret: $scope.rememberedPassphrase})
         .then(function (resp) {
             if (resp.data.success) {
-                Materialize.toast('Freeze Success', 3000, 'green white-text'); 
+                //console.log(JSON.stringify(resp.data));
+                Materialize.toast('Send freeze order successfully', 3000, 'green white-text'); 
                 freezeAmountModal.deactivate(); 
                 
             } else {
-                console.log(resp.data.error);
-                Materialize.toast('Freeze Error', 3000, 'red white-text');
-               
+                //console.log(resp.data.error);
+                Materialize.toast('Send freeze order failed', 3000, 'red white-text');
             }
         });
-    } */
+    }
+
+    $scope.getCurrentFee = function () {
+        $http.get('/api/blocks/getFee').then(function (resp) {
+                $scope.currentFee = resp.data.fee;
+                $scope.fee = resp.data.fee;
+            });
+    }
 
 
+
+    feeService(function (fees) {
+        $scope.fee = fees.sendfreeze;
+    });
 
 
 
@@ -43,11 +56,7 @@ angular.module('ETPApp').controller('sendFreezeOrderController', ['$scope', 'use
     }
 
 
-    $scope.clearSender = function () {
-        console.log('demo00000000000');
-        $scope.sender = '';
-        console.log($scope.sender);
-    }
+    
     $scope.clearRecipient = function () {
         $scope.recipient = '';
     }

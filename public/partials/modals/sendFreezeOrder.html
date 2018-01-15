@@ -11,32 +11,33 @@
                     </div>
                     <div class="modal-header clearfix">
                         <div>
-                            <h2>{{'Send ETP'|translate}}</h2>
+                            <h2>{{'Send Freeze Order'|translate}}</h2>
                         </div>
-                        <div><translate>Please enter the ETP Amount that you would like to freeze.</translate></div>
+                        <div><translate>Please enter the Recipient Address to which this order send.</translate></div>
                     </div>
-                    <div class="modal-body">
-                        <form ng-submit="passcheck()">
+                    <div class="modal-body send-freeze-order">
+                        <form>
                             <div class="input-group app-addon">
-                                <input id="sender" ng-focus="focus == 'sender'" type="text" class="form-control" placeholder="{{'Sender Address'|translate}}" ng-model="sender">
-                                <span class="input-group-addon clear" ng-click="clearSender()"></span>
+                                <input id="sender" ng-focus="focus == 'sender'" type="text" class="form-control" placeholder="{{'Freeze Id'|translate}}" ng-model="freezeId" readonly>
                             </div>
-                            <p class="error-container" ng-show="errorMessage.recipient">
-                                <span class="pass-error">{{errorMessage.recipient}}</span>
-                            </p>
+                            
+                           
 
 
 
                             <div class="input-group app-addon">
-                                <input id="recipient" ng-focus="focus == 'recipient'" type="text" class="form-control" placeholder="{{'Recipient Address'|translate}}" ng-model="recipient">
+                                <input id="recipient" ng-focus="focus == 'recipient'" type="text" class="form-control" placeholder="{{'Recipient Address'|translate}}" ng-model="recipientId">
                                 <span class="input-group-addon clear" ng-click="clearRecipient()"></span>
                             </div>
-                            <p class="error-container" ng-show="errorMessage.recipient">
-                                <span class="pass-error">{{errorMessage.recipient}}</span>
-                            </p>
+                            <span class="fee-text flat-text pull-right"><translate>Fee: {{fee | ETPFilter}} ETP</span>
+
+                           
                             
                             <input type="submit" ng-show="false">
                         </form>
+                    </div>
+                    <div class="modal-body bordered top-margin-40">
+                        <span class="send-info-text flat-text"><translate>Make sure you're sending freeze ETP to the right address. This action can't be undone later.</translate></span>
                     </div>
                     <div class="modal-body bordered">
                         <ul class="nav modal-buttons pull-right">
@@ -44,7 +45,7 @@
                                 <a href="#" ng-click="close()"><translate>Cancel</translate></a>
                             </li>
                             <li>
-                                <a href="#" ng-click="freezeOrder(FreezeAmount)"><translate>Confirm</translate></a>
+                                <a href="#" ng-click="freezeOrder(freezeId,recipientId)"><translate>Confirm</translate></a>
                             </li>
                         </ul>
                     </div>

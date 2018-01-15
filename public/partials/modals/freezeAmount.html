@@ -1,7 +1,7 @@
 <div class="app-modal valign-wrapper">
     <div class="container height100">
         <div class="row height100">
-            <div class="col-md-6 col-md-offset-4 height100 valign-wrapper">
+            <div class="col-md-6 col-md-offset-3 height100 valign-wrapper">
                 <div class="modal-content">
                     <div class="modal-header modal-iconed">
                         <div class="close-modal" ng-click="close()">
@@ -11,7 +11,7 @@
                     </div>
                     <div class="modal-header clearfix">
                         <div>
-                            <h2>{{'Send ETP'|translate}}</h2>
+                            <h2>{{'Freeze ETP'|translate}}</h2>
                         </div>
                         <div><translate>Please enter the ETP Amount that you would like to freeze.</translate></div>
                     </div>
@@ -23,12 +23,20 @@
                                     <label for="FreezeAmount"><translate>Freeze ETP Amount </translate></label>
                                 </div>
                                 <span class="fee-text flat-text pull-right"><translate>Fee: {{fee | ETPFilter}} ETP</span>
-                                <span class="pass-error" ng-show="errorMessage.amount">{{errorMessage.FreezeAmount}}</span>
+                                <!-- <span class="pass-error" ng-show="errorMessage.amount">{{errorMessage.FreezeAmount}}</span> -->
                             </div>
-                            <p class="error-container" ng-show="errorMessage.fromServer">
+                            <p class="error-container" ng-show="errorMessage.recipient">
+                                <span class="pass-error">{{errorMessage.recipient}}</span>
+                            </p>
+
+
+
+
+
+                            <!-- <p class="error-container" ng-show="errorMessage.fromServer">
                                 <span class="pass-error">{{errorMessage.fromServer}}</span>
                             </p>
-                            <input type="submit" ng-show="false">
+                            <input type="submit" ng-show="false"> -->
                         </form>
                     </div>
                     <div class="modal-body bordered">
