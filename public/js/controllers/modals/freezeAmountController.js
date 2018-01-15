@@ -1,8 +1,12 @@
 require('angular');
 
-angular.module('ETPApp').controller('freezeAmountController', ['$scope', 'userService', 'sendTransactionModal', 'freezeAmountModal', '$http', function ($scope, userService, sendTransactionModal,freezeAmountModal,$http) {
+angular.module('ETPApp').controller('freezeAmountController', ['$scope', 'userService', 'freezeAmountModal', '$http', function ($scope, userService,freezeAmountModal,$http) {
 
-    $scope.rememberedPassphrase =  userService.rememberedPassphrase;
+    $scope.rememberedPassphrase = userService.rememberPassphrase ? userService.rememberedPassphrase : false;
+    $scope.sending = false;
+    $scope.passmode = false;
+    $scope.presendError = false;
+    $scope.errorMessage = {};
 
     $scope.isCorrectValue = function (currency, throwError) {
         var parts = String(currency).trim().split('.');
@@ -12,17 +16,17 @@ angular.module('ETPApp').controller('freezeAmountController', ['$scope', 'userSe
         if (!throwError) throwError = false;
 
         function error (message) {
-            $scope.errorMessage.amount = message;
+            $scope.errorMessage.fAmount = message;
 
             if (throwError) {
-              throw $scope.errorMessage.amount;
+              throw $scope.errorMessage.fAmount;
             } else {
               console.error(message);
               return false;
             }
         }
 
-        if (amount == '') {
+        if (currency == null) {
             return error('ETP amount can not be blank');
         }
 
@@ -72,21 +76,86 @@ angular.module('ETPApp').controller('freezeAmountController', ['$scope', 'userSe
         return $scope.isCorrectValue(currency, true);
     }
 
+    function validateForm1 (onValid) {
+    //    var isAddress = /^[0-9]+[E|e]$/g;
+    //    var correctAddress = isAddress.test($scope.to);
+      //  $scope.errorMessage = {};
+
+        // if ($scope.to.trim() == '') {
+        //     $scope.errorMessage.recipient = 'Empty recipient';
+        //     $scope.presendError = true;
+        // } else {
+        //     if (correctAddress) {
+                if ($scope.isCorrectValue($scope.fAmount)) {
+                    return onValid();
+                } else {
+                    $scope.presendError = true;
+                }
+      //      } else {
+         //       $scope.errorMessage.recipient = 'Invalid recipient';
+            //    $scope.presendError = true;
+      //      }
+      //  }
+    }
+
+    $scope.passcheck = function () {
+        // if (fromSecondPass) {
+        //     $scope.checkSecondPass = false;
+        //     $scope.passmode = $scope.rememberedPassphrase ? false : true;
+        //     if ($scope.passmode) {
+        //         $scope.focus = 'secretPhrase';
+        //     }
+        //     $scope.secondPhrase = '';
+        //     $scope.secretPhrase = '';
+        //     return;
+        // }
+        if ($scope.rememberedPassphrase) {
+            validateForm1(function () {
+                console.log("22222");
+                $scope.presendError = false;
+                $scope.errorMessage = {};
+                $scope.freezeOrder($scope.rememberedPassphrase);
+            });
+        } else {
+            validateForm1(function () {
+                console.log("111111");
+                $scope.presendError = false;
+                $scope.errorMessage = {};
+                $scope.passmode = !$scope.passmode;
+            //    $scope.focus = 'secretPhrase';
+                $scope.secretPhrase = '';
+            });
+        }
+    }
+
     /* For Total Count*/
 
-    $scope.freezeOrder = function(FreezeAmount){
-        $http.post("/api/frogings/freeze",{freezedAmount:$scope.convertETP(FreezeAmount),secret: $scope.rememberedPassphrase})
-        .then(function (resp) {
-            if (resp.data.success) {
-                Materialize.toast('Freeze Success', 3000, 'green white-text'); 
-                freezeAmountModal.deactivate(); 
-                
-            } else {
-                console.log(resp.data.error);
-                Materialize.toast('Freeze Error', 3000, 'red white-text');
-               
-            }
-        });
+    $scope.freezeOrder = function(secretPhrase){
+       
+        $scope.errorMessage = {};
+
+        var data = {
+            secret: secretPhrase,
+            freezedAmount: $scope.convertETP($scope.fAmount)
+        };
+
+        if (!$scope.sending) {
+            $scope.sending = true;
+
+            $http.post("/api/frogings/freeze", data)
+                .then(function (resp) {
+                    if (resp.data.success) {
+                        Materialize.toast('Freeze Success', 3000, 'green white-text');
+                        freezeAmountModal.deactivate();
+
+                    } else {
+                        console.log(resp.data.error);
+                        Materialize.toast('Freeze Error', 3000, 'red white-text');
+
+                    }
+                });
+
+        }
     }
 
     $scope.close = function () {
