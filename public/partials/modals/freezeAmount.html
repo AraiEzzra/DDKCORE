@@ -1,8 +1,8 @@
 <div class="app-modal valign-wrapper">
     <div class="container height100">
         <div class="row height100">
-            <div class="col-md-6 col-md-offset-3 height100 valign-wrapper">
-                <div class="modal-content">
+            <div class="col-md-6 col-md-offset-4 height100 valign-wrapper">
+                <div class="modal-content" ng-show="!passmode">
                     <div class="modal-header modal-iconed">
                         <div class="close-modal" ng-click="close()">
                             <span class="sr-only"><translate>Close modal</translate></span>
@@ -19,11 +19,11 @@
                         <form ng-submit="passcheck()">
                             <div class="field-padding">
                                 <div class="input-field">
-                                    <input id="FreezeAmount" type="text" ng-model="FreezeAmount" ng-focus="focus == 'FreezeAmount'" ng-class="{'invalid': errorMessage.FreezeAmount}">
-                                    <label for="FreezeAmount"><translate>Freeze ETP Amount </translate></label>
+                                    <input id="fAmount" type="text" ng-model="fAmount" ng-focus="focus == 'fAmount'" ng-class="{'invalid': errorMessage.fAmount}">
+                                    <label for="fAmount"><translate>Freeze ETP Amount </translate></label>
                                 </div>
                                 <span class="fee-text flat-text pull-right"><translate>Fee: {{fee | ETPFilter}} ETP</span>
-                                <!-- <span class="pass-error" ng-show="errorMessage.amount">{{errorMessage.FreezeAmount}}</span> -->
+                                <span class="pass-error" ng-show="errorMessage.fAmount">{{errorMessage.fAmount}}</span>
                             </div>
                             <p class="error-container" ng-show="errorMessage.recipient">
                                 <span class="pass-error">{{errorMessage.recipient}}</span>
@@ -42,10 +42,45 @@
                     <div class="modal-body bordered">
                         <ul class="nav modal-buttons pull-right">
                             <li>
-                                <a href="#" ng-click="close()"><translate>Cancel</translate></a>
+                                <input type="submit" value="{{'Cancel' | translate}}" ng-click="close()" class="btn-flat" />
                             </li>
                             <li>
-                                <a href="#" ng-click="freezeOrder(FreezeAmount)"><translate>Confirm</translate></a>
+                                <input type="submit" value="{{'Freeze ETP' | translate}}" ng-click="passcheck()" class="btn-flat blue-link" ng-class="{'disabled': sending}" ng-disabled="sending" />
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-content" ng-show="passmode ">
+                    <div class="modal-header modal-iconed">
+                        <div class="close-modal" ng-click="close()">
+                            <span class="sr-only"><translate>Close modal</translate></span>
+                        </div>
+                    </div>
+                    <div class="modal-header clearfix">
+                        <div>
+                            <h2>{{'Account Verification'|translate}}</h2>
+                        </div>
+                        <div><translate>Please enter your passphrase below.</translate></div>
+                    </div>
+                    <div class="modal-body">
+                        <form ng-submit="freezeOrder(secretPhrase)">
+                            <div class="field-padding">
+                                <div class="input-field">
+                                    <input id="passPhrase" type="password" ng-model="secretPhrase" ng-focus="focus == 'secretPhrase'" ng-trim="false" autofocus ng-class="{'invalid': errorMessage.fromServer}">
+                                    <label for="passPhrase"><translate>Your Passphrase</translate></label>
+                                </div>
+                                <span class="pass-error" ng-show="errorMessage.fromServer && !secondSecret">{{errorMessage.fromServer}}</span>
+                            </div>
+                            <input type="submit" ng-show="false">
+                        </form>
+                    </div>
+                    <div class="modal-body bordered">
+                        <ul class="nav modal-buttons pull-right">
+                            <li>
+                                <input type="submit" value="{{'GO BACK' | translate}}" ng-click="passcheck()" class="btn-flat" />
+                            </li>
+                            <li>
+                                <input type="submit" value="{{'Freeze ETP' | translate}}" ng-click="freezeOrder(secretPhrase)" class="btn-flat waves-blue" ng-class="{'disabled': sending}" ng-disabled="sending" />
                             </li>
                         </ul>
                     </div>

@@ -136,8 +136,11 @@ Frogings.prototype.shared = {
 			var keypair = library.ed.makeKeypair(hash);
 
 			modules.accounts.getAccount({ publicKey: keypair.publicKey.toString('hex') }, function (err, account) {
+				if (!account || !account.address) {
+					return setImmediate(cb, 'Address of account not found');
+				}
 
-				library.db.one(sql.getMyStakedAmount, { address: account.address}).then(function (row) {
+				library.db.one(sql.getMyStakedAmount, { address: account.address }).then(function (row) {
 					return setImmediate(cb, null, {
 						totalETPStaked: row
 					});
@@ -158,6 +161,9 @@ Frogings.prototype.shared = {
 			var keypair = library.ed.makeKeypair(hash);
 
 			modules.accounts.getAccount({ publicKey: keypair.publicKey.toString('hex') }, function (err, account) {
+				if (!account || !account.address) {
+					return setImmediate(cb, 'Address of account not found');
+				}
 
 				library.db.query(sql.getFrozeOrders, { senderId: account.address }).then(function (rows) {
 					return setImmediate(cb, null, {
@@ -181,7 +187,10 @@ Frogings.prototype.shared = {
 			var keypair = library.ed.makeKeypair(hash);
 
 			modules.accounts.getAccount({ publicKey: keypair.publicKey.toString('hex') }, function (err, account) {
-
+				if (!account || !account.address) {
+					return setImmediate(cb, 'Address of account not found');
+				}
+				
 				library.db.one(sql.getActiveFrozeOrders, { senderId: account.address }).then(function (rows) {
 					return setImmediate(cb, null, {
 						freezeOrders: JSON.stringify(rows)
