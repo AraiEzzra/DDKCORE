@@ -1,12 +1,20 @@
 require('angular');
 
-angular.module('ETPApp').controller('freezeAmountController', ['$scope', 'userService', 'freezeAmountModal', '$http', function ($scope, userService,freezeAmountModal,$http) {
+angular.module('ETPApp').controller('freezeAmountController', ['$scope', 'userService', 'feeService','freezeAmountModal', '$http', function ($scope, userService,feeService,freezeAmountModal,$http) {
 
     $scope.rememberedPassphrase = userService.rememberPassphrase ? userService.rememberedPassphrase : false;
     $scope.sending = false;
     $scope.passmode = false;
     $scope.presendError = false;
     $scope.errorMessage = {};
+
+
+    $scope.getCurrentFee = function () {
+        $http.get('/api/blocks/getFee').then(function (resp) {
+                $scope.currentFee = resp.data.fee;
+                $scope.fee = resp.data.fee;
+            });
+    }
 
     $scope.isCorrectValue = function (currency, throwError) {
         var parts = String(currency).trim().split('.');
@@ -158,12 +166,6 @@ angular.module('ETPApp').controller('freezeAmountController', ['$scope', 'userSe
         }
     }
 
-    $scope.getCurrentFee = function () {
-        $http.get('/api/blocks/getFee').then(function (resp) {
-                $scope.currentFee = resp.data.fee;
-                $scope.fee = resp.data.fee;
-            });
-    }
 
 
 

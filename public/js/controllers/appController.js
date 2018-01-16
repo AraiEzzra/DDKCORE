@@ -225,7 +225,6 @@ angular.module('ETPApp').controller('appController', ['dappsService', '$scope', 
     }
 
     $scope.freezeAmount = function () {
-        console.log('freezeAmount');
         $scope.freezeAmountModal = freezeAmountModal.activate({
            destroy: function () {
             }
