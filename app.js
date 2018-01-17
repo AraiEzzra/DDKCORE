@@ -73,6 +73,7 @@ const Logger = require('./logger.js');
 let logman = new Logger();
 let logger = logman.logger;
 var sockets = [];
+var cron = require('node-cron');
 
 process.stdin.resume();
 
@@ -606,6 +607,9 @@ d.run(function () {
 				contract : function(cb) {
 					cb(null, new Contract());
 				},
+				network: function (cb) {
+					cb(null, scope.network);
+				},
 				account: ['db', 'bus', 'ed', 'schema', 'genesisblock', 'logger', function (scope, cb) {
 					new Account(scope.db, scope.schema, scope.logger, cb);
 				}],
@@ -618,8 +622,8 @@ d.run(function () {
 				peers: ['logger', function (scope, cb) {
 					new Peers(scope.logger, cb);
 				}],
-				frozen: ['logger','db', 'transaction', function (scope, cb) {
-					new Frozen(scope.logger,scope.db, scope.transaction, cb);
+				frozen: ['logger','db', 'transaction','network', function (scope, cb) {
+					new Frozen(scope.logger,scope.db, scope.transaction,scope.network, cb);
 				}],
 				sendFreezeOrder: ['logger','db', function (scope, cb) {
 					new SendFreezeOrder(scope.logger,scope.db, cb);
@@ -724,9 +728,17 @@ d.run(function () {
 		if (err) {
 			logger.error(err);
 		} else {
-			//Navin : daily check and update stake_orders, if any Active order expired or not
-			setInterval(function () { // Set interval for checking
-				var date = new Date(); // Create a Date object to find out what time it is
+
+			cron.schedule('* * * * *', function () {
+				var date = new Date();
+
+				//Navin : daily check and update stake_orders, if any Active order expired or not
+				scope.logic.frozen.checkFrozeOrders(); //For testing purpose only
+				if (date.getHours() === 10 && date.getMinutes() === 20) { // Check the time
+
+					scope.logic.frozen.checkFrozeOrders();
+				}
+
 				//hotam: archive log files on first day of every new month
 				//const today = new Date();
 				var nextDate = new Date();
@@ -734,18 +746,18 @@ d.run(function () {
 				logger.archive('start executing archiving files');
 
 				//hotam: Functionality to archive log files. It is not working as expected. There are some minor changes to be done.
-				if (date.getDate() === 1) {
+				if (date.getDate() === 17) {
 					logger.archive('checking date archiving files');
 					var createZip = require('./create-zip');
 					var year = date.getFullYear();
 					var month = date.toLocaleString("en-us", { month: "long" });
 					var dir = path.join(__dirname + '/archive/' + year + '/' + month);
-					createZip.createDir(dir, function(err) {
-						if(!err) {
-							createZip.archiveLogFiles(dir, function(err) {
-								if(!err) {
+					createZip.createDir(dir, function (err) {
+						if (!err) {
+							createZip.archiveLogFiles(dir, function (err) {
+								if (!err) {
 									logger.archive('files are archived');
-								}else {
+								} else {
 									logger.archive('archive error : ' + err);
 								}
 							});
@@ -755,12 +767,8 @@ d.run(function () {
 						}
 					});
 				}
-				scope.logic.frozen.checkFrozeOrders(); //For testing purpose only
-				if (date.getHours() === 10 && date.getMinutes() === 20) { // Check the time
-					
-					scope.logic.frozen.checkFrozeOrders();
-				}
-			}, 60000); // Repeat every 60000 milliseconds (1 minute)
+
+			});
 
 			/**
 			 * Handles app instance (acts as global variable, passed as parameter).

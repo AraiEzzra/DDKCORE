@@ -46,6 +46,7 @@
     "lodash": "=4.17.4",
     "method-override": "=2.3.7",
     "minimist": "*",
+    "node-cron": "^1.2.1",
     "npm": "=2.15.10",
     "pg": "^7.3.0",
     "pg-monitor": "=0.7.1",

@@ -15,6 +15,8 @@ angular.module('ETPApp').factory('serverSocket', ["socketFactory", "$location", 
     serverSocket.forward('dapps/change');
     serverSocket.forward('rounds/change');
     serverSocket.forward('updateConnected');
+    serverSocket.forward('stake/change');
+    serverSocket.forward('milestone/change');
 
     return serverSocket;
 

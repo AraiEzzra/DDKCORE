@@ -113,7 +113,8 @@ module.exports = {
 	//Navin : Configurable froze order : time here is in minutes
 	froze : {
 		endTime : 6,
-		milestone : 2 //for testing, taking 2 min
+		milestone : 2, //for testing, taking 2 min
+		reward : 0.1 // Currently moonthly reward is 10%
 	},
 	defaultLock: 0
 };

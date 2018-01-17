@@ -15,14 +15,15 @@ __private.types = {};
 var modules, library, self;
 
 // Constructor
-function Frozen(logger, db, transaction, cb) {
+function Frozen(logger, db, transaction, network, cb) {
 	self = this;
 	self.scope = {
 		logger: logger,
 		db: db,
 		logic: {
 			transaction: transaction
-		}
+		},
+		network: network
 	};
 	
 	if (cb) {
@@ -168,6 +169,9 @@ Frozen.prototype.checkFrozeOrders = function () {
 			self.scope.logger.info("Successfully get :" + rows.length + ", number of froze order");
 
 			if (rows.length > 0) {
+				//emit Stake order event when milestone change
+				self.scope.network.io.sockets.emit('milestone/change', null);
+
 				//Update nextMilesone in "stake_orders" table
 				self.scope.db.none(sql.checkAndUpdateMilestone,
 					{
@@ -210,7 +214,7 @@ Frozen.prototype.checkFrozeOrders = function () {
 				var transactionData = {
 					json: {
 						secret: config.users[0].secret,
-						amount: parseInt(rows[i].freezedAmount * 0.1),
+						amount: parseInt(rows[i].freezedAmount * constants.froze.reward),
 						recipientId: rows[i].senderId,
 						publicKey: config.users[0].publicKey
 					}

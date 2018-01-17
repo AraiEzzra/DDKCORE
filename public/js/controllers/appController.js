@@ -232,11 +232,6 @@ angular.module('ETPApp').controller('appController', ['dappsService', '$scope', 
     }
 
 
-
-
-
-
-
     $scope.setSecondPassphrase = function () {
         $scope.addSecondPassModal = secondPassphraseModal.activate({
             totalBalance: $scope.unconfirmedBalance,
@@ -532,6 +527,23 @@ angular.module('ETPApp').controller('appController', ['dappsService', '$scope', 
         $scope.getAppData();
         $scope.updateViews([
             'main.dashboard'
+        ]);
+    });
+
+    //Autoupdate stake Table 
+    $scope.$on('socket:stake/change', function (ev, data) {
+        $scope.getAppData();
+        $scope.updateViews([
+            'main.stake'
+        ]);
+    });
+
+    
+    //Autoupdate stake Table info
+    $scope.$on('socket:milestone/change', function (ev, data) {
+        $scope.getAppData();
+        $scope.updateViews([
+            'main.stake'
         ]);
     });
 

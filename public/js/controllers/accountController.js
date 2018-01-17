@@ -119,7 +119,6 @@ angular.module('ETPApp').controller('accountController', ['$state','$scope', '$r
 
     /* For total stakeholders */
     $scope.getStakeholdersCount = function () {
-        console.log("countStakeholders");
         $http.get("/api/frogings/countStakeholders")
             .then(function (resp) {
                 if (resp.data.success) {
@@ -186,7 +185,6 @@ angular.module('ETPApp').controller('accountController', ['$state','$scope', '$r
 
     /* For total ETP staked by stakeholders */
     $scope.getTotalETPStaked = function () {
-        console.log("getTotalETPStaked");
         $http.get("/api/frogings/getTotalETPStaked")
             .then(function (resp) {
                 if (resp.data.success) {
@@ -231,9 +229,9 @@ angular.module('ETPApp').controller('accountController', ['$state','$scope', '$r
     }
 
     $scope.updateAppView = function () {
-        $scope.getStakeholdersCount();
         $scope.getAccount();
         $scope.getTransactions();
+        $scope.getStakeholdersCount();
         $scope.getCirculatingSupply();
         $scope.getAccountHolders();
         $scope.getMyETPFrozen();
