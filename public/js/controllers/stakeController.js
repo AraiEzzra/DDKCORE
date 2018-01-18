@@ -1,7 +1,4 @@
-
 require('angular');
-
-
 
 angular.module('ETPApp').controller('stakeController', ['$scope', 'ngTableParams', 'NameService', '$http', "userService", 'gettextCatalog', 'sendFreezeOrderModal', function ($scope, ngTableParams, NameService, $http, userService, gettextCatalog, sendFreezeOrderModal) {
 
@@ -11,8 +8,11 @@ angular.module('ETPApp').controller('stakeController', ['$scope', 'ngTableParams
   $scope.view.loadingText = gettextCatalog.getString('Staking blockchain');
   $scope.view.page = { title: gettextCatalog.getString('Staking'), previous: null };
   $scope.countFreezeOrders = 0;
+  $scope.loading = true;
 
-  $scope.tableStakes = new ngTableParams(
+
+
+  $scope.tableParams = new ngTableParams(
     {
       page: 1,            // show first page
       count: 5,           // count per page
@@ -22,13 +22,15 @@ angular.module('ETPApp').controller('stakeController', ['$scope', 'ngTableParams
       total: 0, // length of data
       counts: [],
       getData: function ($defer, params) {
+        $scope.loading = true;
         NameService.getData($defer, params, $scope.filter, $scope.rememberedPassphrase, function () {
           $scope.countFreezeOrders = params.total();
+          $scope.loading = false;
         });
       }
     });
 
-  $scope.tableStakes.cols = {
+  $scope.tableParams.cols = {
     freezedAmount: gettextCatalog.getString('FreezeAmount'),
     status: gettextCatalog.getString('Status'),
     insertTime: gettextCatalog.getString('InsertTime'),
