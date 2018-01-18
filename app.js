@@ -53,6 +53,7 @@ monitoring.on('redis', function(data) {
 	
 
 //Requiring Modules
+require('dotenv').config();
 var async = require('async');
 var extend = require('extend');
 var fs = require('fs');
@@ -74,6 +75,7 @@ let logman = new Logger();
 let logger = logman.logger;
 var sockets = [];
 var cron = require('node-cron');
+var utils = require('./utils');
 
 process.stdin.resume();
 
@@ -198,6 +200,10 @@ var config = {
 	}
 };
 
+//merge environment variables
+var env = require('./config/env');
+utils.merge(appConfig, env);
+
 // Trying to get last git commit
 try {
 	lastCommit = git.getLastCommit();
@@ -212,6 +218,7 @@ try {
 var d = require('domain').create();
 
 d.on('error', function (err) {
+	console.log('error : ' + err);
 	logger.error('Domain master', { message: err.message, stack: err.stack });
 	process.exit(0);
 });
@@ -247,14 +254,16 @@ d.run(function () {
 				if (appConfig.loading.snapshot != null) {
 					delete appConfig.loading.snapshot;
 				}
-
 				fs.writeFileSync('./config.json', JSON.stringify(appConfig, null, 4));
-
 				cb(null, appConfig);
 			} else {
 				cb(null, appConfig);
 			}
 		},
+		/* esInit: function(cb) {
+			var esInstance = require('./elasticsearch/esInit');
+			esInstance.initElasticSearch(cb);
+		}, */
 		logger: function (cb) {
 			cb(null, logger);
 		},
@@ -300,7 +309,7 @@ d.run(function () {
 			var compression = require('compression');
 			var cors = require('cors');
 			var app = express();
-
+		
 			//hotam: added swagger configuration
 			var subpath = express();
 			var swagger = require("swagger-node-express");
@@ -458,7 +467,7 @@ d.run(function () {
 			scope.network.app.use(session({ 
 				key: 'ETP.sess',
 				store: new RedisStore(options),
-				secret: "fd34s@!@dfa453f3DF#$D&W", 
+				secret: scope.config.session.secret, 
 				resave: true, 
 				saveUninitialized: false,
 				cookie: {
@@ -706,8 +715,8 @@ d.run(function () {
 		 * @param {nodeStyleCallback} cb - Callback function with `scope.network`.
 		 */
 		listen: ['ready', function (scope, cb) {
-			scope.network.server.listen(scope.config.port, scope.config.address, function (err) {
-				scope.logger.info('ETP started: ' + scope.config.address + ':' + scope.config.port);
+			scope.network.server.listen(scope.config.app.port, scope.config.address, function (err) {
+				scope.logger.info('ETP started: ' + scope.config.address + ':' + scope.config.app.port);
 
 				if (!err) {
 					if (scope.config.ssl.enabled) {
