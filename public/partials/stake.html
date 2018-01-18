@@ -1,26 +1,34 @@
 <div class="top-margin"></div>
 <div class="row">
     <div class="col-xs-12">
-        <!-- <p><strong>Page:</strong> {{tableParams.page()}}</p>
-        <p><strong>Count per page:</strong> {{tableParams.count()}}</p> -->
         <div class="search-bar">
-                <div class="search-toggle" ng-if="searchBlocks.searchForBlock">
-                    <i ng-click="clearSearch()" class="mdi-content-clear small"></i>
-                </div>
-            <input  style="margin-bottom: 0px;" class="form-control" type="text" placeholder="{{'Search stake'|translate}}" ng-model="filter.$" />
+            <div class="search-toggle" ng-if="searchBlocks.searchForBlock">
+                <i ng-click="clearSearch()" class="mdi-content-clear small"></i>
+            </div>
+            <div class="input-group">
+                <span class="input-group-addon">
+                    <i class="mdi-action-search"></i>
+                </span>
+                <input style="margin-bottom: 0px;" class="form-control" type="text" placeholder="{{'Search for Stake'|translate}}" ng-model="filter.$"
+                />
+            </div>
         </div>
-        
-        
-        
-        
-        
+
+
+
+
+
+
+
+
+
         <div class="panel panel-default" ng-class="{'paginated': countForgingBlocks || !searchBlocks.searchForBlock}">
-            <div class="panel-heading"> 
+            <div class="panel-heading">
                 <h2>
-                  {{'Latest Orders'|translate}}
+                    {{'Latest Orders'|translate}}
                 </h2>
             </div>
-            <table ng-table="tableParams" class="table" ng-show="countFreezeOrders" >
+            <table ng-table="tableParams" class="table" ng-show="countFreezeOrders">
                 <tr ng-repeat="fo in $data">
                     <td data-title="tableParams.cols.freezedAmount" sortable="'freezedAmount'">{{fo.freezedAmount}}</td>
                     <td data-title="tableParams.cols.status" sortable="'status'">{{fo.status ? 'Active' : 'Inactive'}}</td>
@@ -29,7 +37,14 @@
                     <td data-title="tableParams.cols.monthRemain" sortable="'monthRemain'">{{3-fo.milestoneCount}}</td>
                     <td data-title="tableParams.cols.recipient" sortable="'recipient'">{{fo.recipientId || '-'}}</td>
                     <td data-title="tableParams.cols.action">
-                        <a class="sendFreezeAmount-btn" ng-click="sendFreezeOrder(fo.id)"><i class="mdi-content-send"></i></a>
+                        <a class="sendFreezeAmount-btn" ng-click="sendFreezeOrder(fo.id)">
+                            <i class="mdi-content-send"></i>
+                        </a>
+                    </td>
+                </tr>
+                <tr ng-show="loading">
+                    <td class="gray2 white-text" colspan="7">
+                        <translate>Loading...</translate>
                     </td>
                 </tr>
             </table>
