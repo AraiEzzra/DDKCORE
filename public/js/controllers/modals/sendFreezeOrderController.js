@@ -10,6 +10,8 @@ angular.module('ETPApp').controller('sendFreezeOrderController', ['$scope', 'use
     $scope.presendError = false;
     $scope.errorMessage = {};
     $scope.recipientAddress = '';
+    $scope.checkSecondPass = false;
+    $scope.secondPassphrase = userService.secondPassphrase;
     
 
     function validateForm2(onValid) {
@@ -33,7 +35,13 @@ angular.module('ETPApp').controller('sendFreezeOrderController', ['$scope', 'use
 
 
     $scope.passcheck = function (fromSecondPass) {
-        console.log($scope.recipientAddress);
+        if (fromSecondPass) {
+            $scope.checkSecondPass = false;
+            $scope.passmode = $scope.rememberedPassphrase ? false : true;
+            $scope.secondPhrase = '';
+            $scope.secretPhrase = '';
+            return;
+        }
         if ($scope.rememberedPassphrase) {
             validateForm2(function () {
                 $scope.presendError = false;
@@ -52,13 +60,27 @@ angular.module('ETPApp').controller('sendFreezeOrderController', ['$scope', 'use
 
 
     /* For Total Count*/
-    $scope.sendFreezeOrder = function (secretPhrase) {
-        console.log(secretPhrase+", freezeId:"+$scope.freezeId+", recipientAddress"+$scope.recipientAddress);
+    $scope.sendFreezeOrder = function (secretPhrase, withSecond) {
+        if ($scope.secondPassphrase && !withSecond) {
+            $scope.checkSecondPass = true;
+            $scope.focus = 'secondPhrase';
+            return;
+        }
+
+        $scope.errorMessage = {};
+
         var data = {
             secret: secretPhrase,
             frozeId: $scope.freezeId,
             recipientId: $scope.recipientAddress
         };
+
+        if ($scope.secondPassphrase) {
+            data.secondSecret = $scope.secondPhrase;
+            if ($scope.rememberedPassphrase) {
+                data.secret = $scope.rememberedPassphrase;
+            }
+        }
 
         if (!$scope.sending) {
             $scope.sending = true;
@@ -70,8 +92,8 @@ angular.module('ETPApp').controller('sendFreezeOrderController', ['$scope', 'use
                         sendFreezeOrderModal.deactivate();
 
                     } else {
-                        console.log(resp.data.error);
                         Materialize.toast('Send freeze order failed', 3000, 'red white-text');
+                        $scope.errorMessage.fromServer = resp.data.error;
                     }
                 });
         }

@@ -240,7 +240,14 @@ SendFreezeOrder.prototype.sendFreezedOrder = function (data, cb) {
 
 		}).catch(function (err) {
 			self.scope.logger.error(err.stack);
-			return setImmediate(cb, err.toString());
+
+			if (err.name == "QueryResultError" && err.message == "No data returned from the query.") {
+				return setImmediate(cb,'Selected order is expired. Please send active order.');
+			} else {
+
+				return setImmediate(cb, err.toString());
+			}
+
 		});
 
 };

@@ -7,6 +7,8 @@ angular.module('ETPApp').controller('freezeAmountController', ['$scope', 'userSe
     $scope.passmode = false;
     $scope.presendError = false;
     $scope.errorMessage = {};
+    $scope.checkSecondPass = false;
+    $scope.secondPassphrase = userService.secondPassphrase;
 
 
     $scope.getCurrentFee = function () {
@@ -106,17 +108,17 @@ angular.module('ETPApp').controller('freezeAmountController', ['$scope', 'userSe
       //  }
     }
 
-    $scope.passcheck = function () {
-        // if (fromSecondPass) {
-        //     $scope.checkSecondPass = false;
-        //     $scope.passmode = $scope.rememberedPassphrase ? false : true;
-        //     if ($scope.passmode) {
-        //         $scope.focus = 'secretPhrase';
-        //     }
-        //     $scope.secondPhrase = '';
-        //     $scope.secretPhrase = '';
-        //     return;
-        // }
+    $scope.passcheck = function (fromSecondPass) {
+        if (fromSecondPass) {
+            $scope.checkSecondPass = false;
+            $scope.passmode = $scope.rememberedPassphrase ? false : true;
+            if ($scope.passmode) {
+                $scope.focus = 'secretPhrase';
+            }
+            $scope.secondPhrase = '';
+            $scope.secretPhrase = '';
+            return;
+        }
         if ($scope.rememberedPassphrase) {
             validateForm1(function () {
                 console.log("22222");
@@ -138,14 +140,27 @@ angular.module('ETPApp').controller('freezeAmountController', ['$scope', 'userSe
 
     /* For Total Count*/
 
-    $scope.freezeOrder = function(secretPhrase){
-       
+    $scope.freezeOrder = function(secretPhrase,withSecond){
+        console.log("1"+$scope.secondPassphrase+"....."+secretPhrase);
+        if ($scope.secondPassphrase && !withSecond) {
+            $scope.checkSecondPass = true;
+            $scope.focus = 'secondPhrase';
+            return;
+        }
+
         $scope.errorMessage = {};
 
         var data = {
             secret: secretPhrase,
             freezedAmount: $scope.convertETP($scope.fAmount)
         };
+
+        if ($scope.secondPassphrase) {
+            data.secondSecret = $scope.secondPhrase;
+            if ($scope.rememberedPassphrase) {
+                data.secret = $scope.rememberedPassphrase;
+            }
+        }
 
         if (!$scope.sending) {
             $scope.sending = true;
@@ -159,6 +174,7 @@ angular.module('ETPApp').controller('freezeAmountController', ['$scope', 'userSe
                     } else {
                         console.log(resp.data.error);
                         Materialize.toast('Freeze Error', 3000, 'red white-text');
+                        $scope.errorMessage.fromServer = resp.data.error;
 
                     }
                 });
@@ -182,7 +198,7 @@ angular.module('ETPApp').controller('freezeAmountController', ['$scope', 'userSe
         if ($scope.destroy) {
             $scope.destroy();
         }
-        //sendTransactionModal.deactivate();
+    
         freezeAmountModal.deactivate();
         console.log('close1 call 2');
     }

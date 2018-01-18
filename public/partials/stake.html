@@ -28,15 +28,15 @@
                     {{'Latest Orders'|translate}}
                 </h2>
             </div>
-            <table ng-table="tableParams" class="table" ng-show="countFreezeOrders">
+            <table ng-table="tableStakes" class="table" ng-show="countFreezeOrders">
                 <tr ng-repeat="fo in $data">
-                    <td data-title="tableParams.cols.freezedAmount" sortable="'freezedAmount'">{{fo.freezedAmount}}</td>
-                    <td data-title="tableParams.cols.status" sortable="'status'">{{fo.status ? 'Active' : 'Inactive'}}</td>
-                    <td data-title="tableParams.cols.insertTime" sortable="'insertTime'">{{ fo.startTime | timestampFilter}}</td>
-                    <td data-title="tableParams.cols.matureTime" sortable="'matureTime'">{{fo.endTime | timestampFilter}}</td>
-                    <td data-title="tableParams.cols.monthRemain" sortable="'monthRemain'">{{3-fo.milestoneCount}}</td>
-                    <td data-title="tableParams.cols.recipient" sortable="'recipient'">{{fo.recipientId || '-'}}</td>
-                    <td data-title="tableParams.cols.action">
+                    <td data-title="tableStakes.cols.freezedAmount" sortable="'freezedAmount'">{{fo.freezedAmount}}</td>
+                    <td data-title="tableStakes.cols.status" sortable="'status'">{{fo.status ? 'Active' : 'Inactive'}}</td>
+                    <td data-title="tableStakes.cols.insertTime" sortable="'insertTime'">{{ fo.startTime | timestampFilter}}</td>
+                    <td data-title="tableStakes.cols.matureTime" sortable="'matureTime'">{{fo.endTime | timestampFilter}}</td>
+                    <td data-title="tableStakes.cols.monthRemain" sortable="'monthRemain'">{{3-fo.milestoneCount}}</td>
+                    <td data-title="tableStakes.cols.recipient" sortable="'recipient'">{{fo.recipientId || '-'}}</td>
+                    <td data-title="tableStakes.cols.action">
                         <a class="sendFreezeAmount-btn" ng-click="sendFreezeOrder(fo.id)">
                             <i class="mdi-content-send"></i>
                         </a>

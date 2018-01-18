@@ -12,7 +12,7 @@ angular.module('ETPApp').controller('stakeController', ['$scope', 'ngTableParams
 
 
 
-  $scope.tableParams = new ngTableParams(
+  $scope.tableStakes = new ngTableParams(
     {
       page: 1,            // show first page
       count: 5,           // count per page
@@ -30,7 +30,7 @@ angular.module('ETPApp').controller('stakeController', ['$scope', 'ngTableParams
       }
     });
 
-  $scope.tableParams.cols = {
+  $scope.tableStakes.cols = {
     freezedAmount: gettextCatalog.getString('FreezeAmount'),
     status: gettextCatalog.getString('Status'),
     insertTime: gettextCatalog.getString('InsertTime'),
