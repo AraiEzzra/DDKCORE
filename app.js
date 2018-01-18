@@ -217,6 +217,7 @@ try {
 var d = require('domain').create();
 
 d.on('error', function (err) {
+	console.log('error : ' + err);
 	logger.error('Domain master', { message: err.message, stack: err.stack });
 	process.exit(0);
 });
@@ -307,8 +308,7 @@ d.run(function () {
 			var compression = require('compression');
 			var cors = require('cors');
 			var app = express();
-			console.log('process.env.HOST : ' + process.env.HOST);
-			console.log('process.env.PORT : ' + process.env.PORT);
+		
 			//hotam: added swagger configuration
 			var subpath = express();
 			var swagger = require("swagger-node-express");
@@ -466,7 +466,7 @@ d.run(function () {
 			scope.network.app.use(session({ 
 				key: 'ETP.sess',
 				store: new RedisStore(options),
-				secret: scope.config.secret, 
+				secret: scope.config.session.secret, 
 				resave: true, 
 				saveUninitialized: false,
 				cookie: {
@@ -711,8 +711,8 @@ d.run(function () {
 		 * @param {nodeStyleCallback} cb - Callback function with `scope.network`.
 		 */
 		listen: ['ready', function (scope, cb) {
-			scope.network.server.listen(scope.config.port, scope.config.address, function (err) {
-				scope.logger.info('ETP started: ' + scope.config.address + ':' + scope.config.port);
+			scope.network.server.listen(scope.config.app.port, scope.config.address, function (err) {
+				scope.logger.info('ETP started: ' + scope.config.address + ':' + scope.config.app.port);
 
 				if (!err) {
 					if (scope.config.ssl.enabled) {

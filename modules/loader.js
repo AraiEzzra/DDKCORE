@@ -327,8 +327,7 @@ __private.loadBlockChain = function () {
 				esClient.indexExists().then(function(isExist) {
 					if(isExist) {
 						esClient.deleteIndex(function(err) {
-							console.log(err);
-							return setImmediate(seriesCb);
+							library.logger.error('deleting an index error : ' + err);
 						});
 					}
 					return setImmediate(seriesCb);
@@ -338,8 +337,7 @@ __private.loadBlockChain = function () {
 				esClient.indexExists().then(function(isExist) {
 					if(isExist) {
 						esClient.createIndex(function(err) {
-							console.log(err);
-							return setImmediate(seriesCb);
+							library.logger.error('creating an index error : ' + err);
 						});
 					}
 					return setImmediate(seriesCb);

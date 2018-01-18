@@ -46,6 +46,10 @@
     "peers": {
         "enabled": true,
         "list": [
+            {
+                "ip": "192.168.4.164",
+                "port": 7000
+            }
         ],
         "access": {
             "blackList": []

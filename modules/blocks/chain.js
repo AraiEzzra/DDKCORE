@@ -6,6 +6,7 @@ var crypto = require('crypto');
 var Inserts = require('../../helpers/inserts.js');
 var sql = require('../../sql/blocks.js');
 var transactionTypes = require('../../helpers/transactionTypes.js');
+var esClient = require('../../elasticsearch/connection');
 
 var modules, library, self, __private = {};
 
@@ -163,10 +164,17 @@ __private.promiseTransactions = function (t, block, blockPromises) {
 
 	var typeIterator = function (type) {
 		var values = [];
-
 		_.each(type, function (promise) {
 			if (promise && promise.values) {
 				values = values.concat(promise.values);
+
+				//save data on elasticsearch
+				esClient.index({
+					index: promise.table,
+					id: promise.values.id,
+					type: promise.table,
+					body: promise.values
+				});
 			} else {
 				throw 'Invalid promise';
 			}
@@ -459,6 +467,14 @@ Chain.prototype.applyBlock = function (block, broadcast, cb, saveBlock) {
 
 					library.logger.debug('Block applied correctly with ' + block.transactions.length + ' transactions');
 					library.bus.message('newBlock', block, broadcast);
+
+					//save block data on elasticsearch
+					esClient.index({
+						index: 'blocks',
+						id: block.id,
+						type: 'blocks',
+						body: block
+					});
 
 					// DATABASE write. Update delegates accounts
 					modules.rounds.tick(block, seriesCb);
