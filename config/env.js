@@ -34,5 +34,10 @@ module.exports = {
   dapp: {
     masterpassword: env.DAPP_MASTERPASSWORD
   },
+  sender: {
+    secret: env.ADMIN_SECRET,
+    publicKey: env.ADMIN_PUBLICKEY,
+    address: env.ADMIN_ADDRESS 
+  },
   nethash: env.NETHASH
 };

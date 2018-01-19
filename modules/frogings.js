@@ -51,7 +51,8 @@ function Frogings (cb, scope) {
 			frozen: scope.logic.frozen
 		},
 		genesisblock: scope.genesisblock,
-		network: scope.network
+		network: scope.network,
+		config: scope.config
 	};
 
 	self = this;
@@ -67,7 +68,7 @@ function Frogings (cb, scope) {
 
 	//Add by navin
 	__private.assetTypes[transactionTypes.FROZE] = library.logic.transaction.attachAssetType(
-		transactionTypes.FROZE, new Frozen(scope.logger,scope.db,scope.logic.transaction,scope.network)
+		transactionTypes.FROZE, new Frozen(scope.logger, scope.db, scope.logic.transaction, scope.network, scope.config)
 	);
 
 	setImmediate(cb, null, self);

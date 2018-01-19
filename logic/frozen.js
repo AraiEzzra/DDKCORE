@@ -3,7 +3,7 @@
 var constants = require('../helpers/constants.js');
 var sql = require('../sql/frogings.js');
 var slots = require('../helpers/slots.js');
-var config = require('../config.json');
+
 var request = require('request');
 var async = require('async');
 
@@ -15,7 +15,7 @@ __private.types = {};
 var modules, library, self;
 
 // Constructor
-function Frozen(logger, db, transaction, network, cb) {
+function Frozen(logger, db, transaction, network, config, cb) {
 	self = this;
 	self.scope = {
 		logger: logger,
@@ -23,7 +23,8 @@ function Frozen(logger, db, transaction, network, cb) {
 		logic: {
 			transaction: transaction
 		},
-		network: network
+		network: network,
+		config: config
 	};
 	
 	if (cb) {
@@ -213,10 +214,10 @@ Frozen.prototype.checkFrozeOrders = function () {
 				//Request to send tarnsaction
 				var transactionData = {
 					json: {
-						secret: config.users[0].secret,
+						secret: self.scope.config.sender.secret,
 						amount: parseInt(rows[i].freezedAmount * constants.froze.reward),
 						recipientId: rows[i].senderId,
-						publicKey: config.users[0].publicKey
+						publicKey: self.scope.config.sender.publicKey
 					}
 				};
 				//Send froze monthly rewards to users

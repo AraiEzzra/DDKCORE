@@ -613,17 +613,17 @@ d.run(function () {
 						block: genesisblock
 					});
 				},
-				contract : function(cb) {
-					cb(null, new Contract());
-				},
 				network: function (cb) {
 					cb(null, scope.network);
+				},
+				config: function (cb) {
+					cb(null, scope.config);
 				},
 				account: ['db', 'bus', 'ed', 'schema', 'genesisblock', 'logger', function (scope, cb) {
 					new Account(scope.db, scope.schema, scope.logger, cb);
 				}],
-				transaction: ['db', 'bus', 'ed', 'schema', 'genesisblock', 'account', 'logger', function (scope, cb) {
-					new Transaction(scope.db, scope.ed, scope.schema, scope.genesisblock, scope.account, scope.logger, cb);
+				transaction: ['db', 'bus', 'ed', 'schema', 'genesisblock', 'account', 'logger', 'config', function (scope, cb) {
+					new Transaction(scope.db, scope.ed, scope.schema, scope.genesisblock, scope.account, scope.logger, scope.config, cb);
 				}],
 				block: ['db', 'bus', 'ed', 'schema', 'genesisblock', 'account', 'transaction', function (scope, cb) {
 					new Block(scope.ed, scope.schema, scope.transaction, cb);
@@ -631,11 +631,14 @@ d.run(function () {
 				peers: ['logger', function (scope, cb) {
 					new Peers(scope.logger, cb);
 				}],
-				frozen: ['logger','db', 'transaction','network', function (scope, cb) {
-					new Frozen(scope.logger,scope.db, scope.transaction,scope.network, cb);
+				frozen: ['logger','db', 'transaction','network', 'config', function (scope, cb) {
+					new Frozen(scope.logger, scope.db, scope.transaction, scope.network, scope.config, cb);
 				}],
 				sendFreezeOrder: ['logger','db', function (scope, cb) {
 					new SendFreezeOrder(scope.logger,scope.db, cb);
+				}],
+				contract: ['config', function (scope, cb) {
+					new Contract(scope.config, cb);
 				}]
 			}, cb);
 		}],

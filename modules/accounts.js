@@ -46,9 +46,7 @@ function Accounts(cb, scope) {
 			transaction: scope.logic.transaction,
 			contract: scope.logic.contract
 		},
-		config: {
-			contributors: scope.config.contributors
-		}
+		config: scope.config
 	};
 	self = this;
 
@@ -749,7 +747,7 @@ Accounts.prototype.shared = {
 
 	getCirculatingSupply: function (req, cb) {
 		var initialUnmined = config.etpSupply.totalSupply - config.initialPrimined.total;
-		var publicAddress = config.users[0].address;
+		var publicAddress = library.config.sender.address;
 
 		library.db.one(sql.getCurrentUnmined, { address: publicAddress }).then(function (currentUnmined) {
 			library.logger.info('Current unmined ETP tokens in public address :' + JSON.stringify(currentUnmined));
