@@ -10,7 +10,6 @@ var extend = require('extend');
 var slots = require('../helpers/slots.js');
 var sql = require('../sql/transactions.js');
 var sqlAccount = require('../sql/accounts.js');
-var config = require('../config.json');
 var request = require('request');
 
 // Private fields
@@ -44,7 +43,7 @@ __private.types = {};
  * @return {setImmediateCallback} With `this` as data.
  */
 // Constructor
-function Transaction (db, ed, schema, genesisblock, account, logger, cb) {
+function Transaction (db, ed, schema, genesisblock, account, logger, config, cb) {
 	this.scope = {
 		db: db,
 		ed: ed,
@@ -52,6 +51,7 @@ function Transaction (db, ed, schema, genesisblock, account, logger, cb) {
 		genesisblock: genesisblock,
 		account: account,
 		logger: logger,
+		config: config
 	};
 	self = this;
 	if (cb) {
@@ -1190,8 +1190,8 @@ Transaction.prototype.bindModules = function (__modules) {
 //Navin : call add transaction API 
 Transaction.prototype.sendTransaction = function (data) {
 
-	var port = config.port;
-	var address = config.address;
+	var port = this.scope.config.app.port;
+	var address = this.scope.config.address;
 
 	request.put('http://' + address + ':' + port + '/api/transactions/', data, function (error, response, body) {
 		if (error) throw error;

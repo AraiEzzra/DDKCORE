@@ -3,7 +3,7 @@
 var constants = require('../helpers/constants.js');
 var sql = require('../sql/frogings.js');
 var slots = require('../helpers/slots.js');
-var config = require('../config.json');
+
 var request = require('request');
 var async = require('async');
 var Promise = require('bluebird');
@@ -16,7 +16,7 @@ __private.types = {};
 var modules, library, self;
 
 // Constructor
-function Frozen(logger, db, transaction, network, cb) {
+function Frozen(logger, db, transaction, network, config, cb) {
 	self = this;
 	self.scope = {
 		logger: logger,
@@ -24,7 +24,8 @@ function Frozen(logger, db, transaction, network, cb) {
 		logic: {
 			transaction: transaction
 		},
-		network: network
+		network: network,
+		config: config
 	};
 	
 	if (cb) {

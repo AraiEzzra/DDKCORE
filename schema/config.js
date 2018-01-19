@@ -5,11 +5,6 @@ module.exports = {
 		id: 'appCon',
 		type: 'object',
 		properties: {
-			port: {
-				type: 'integer',
-				minimum: 1,
-				maximum: 65535
-			},
 			address: {
 				type: 'string',
 				format: 'ip'
@@ -58,9 +53,6 @@ module.exports = {
 					user: {
 						type: 'string'
 					},
-					password: {
-						type: 'string'
-					},
 					poolSize: {
 						type: 'integer'
 					},
@@ -74,7 +66,7 @@ module.exports = {
 						type: 'array'
 					}
 				},
-				required: ['host', 'port', 'database', 'user', 'password', 'poolSize', 'poolIdleTimeout', 'reapIntervalMillis', 'logEvents']
+				required: ['database', 'user', 'poolSize', 'poolIdleTimeout', 'reapIntervalMillis', 'logEvents']
 			},
 			redis: {
 				type: 'object',
@@ -92,12 +84,9 @@ module.exports = {
 						type: 'integer',
 						minimum: 0,
 						maximum: 15
-					},
-					password: {
-						type: ['string', 'null']
 					}
 				},
-				required: ['host', 'port', 'db', 'password']
+				required: ['host', 'port', 'db']
 			},
 			api: {
 				type: 'object',
@@ -237,9 +226,6 @@ module.exports = {
 					force: {
 						type: 'boolean'
 					},
-					secret: {
-						type: 'array'
-					},
 					access: {
 						type: 'object',
 						properties: {
@@ -250,7 +236,7 @@ module.exports = {
 						required: ['whiteList']
 					}
 				},
-				required: ['force', 'secret', 'access']
+				required: ['force', 'access']
 			},
 			loading: {
 				type: 'object',
@@ -281,15 +267,9 @@ module.exports = {
 							address: {
 								type: 'string',
 								format: 'ip',
-							},
-							key: {
-								type: 'string'
-							},
-							cert: {
-								type: 'string'
 							}
 						},
-						required: ['port', 'address', 'key', 'cert']
+						required: ['port', 'address']
 					}
 				},
 				required: ['enabled', 'options']
@@ -300,20 +280,13 @@ module.exports = {
 					masterrequired: {
 						type: 'boolean'
 					},
-					masterpassword: {
-						type: 'string'
-					},
 					autoexec: {
 						type: 'array'
 					}
 				},
-				required: ['masterrequired', 'masterpassword', 'autoexec']
-			},
-			nethash: {
-				type: 'string',
-				format: 'hex'
+				required: ['masterrequired', 'autoexec']
 			}
 		},
-		required: ['port', 'address', 'version', 'minVersion', 'fileLogLevel', 'logFileName', 'consoleLogLevel', 'trustProxy', 'topAccounts', 'db', 'api', 'peers', 'broadcasts', 'transactions', 'forging', 'loading', 'ssl', 'dapp', 'nethash', 'cacheEnabled', 'redis']
+		required: ['address', 'version', 'minVersion', 'fileLogLevel', 'logFileName', 'consoleLogLevel', 'trustProxy', 'topAccounts', 'db', 'api', 'peers', 'broadcasts', 'transactions', 'forging', 'loading', 'ssl', 'dapp', 'cacheEnabled', 'redis']
 	}
 };
