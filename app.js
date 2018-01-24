@@ -23,6 +23,7 @@
  * @module app
  */
 
+//hotam: app monitoring configuration on console/UI 
 //App monitoring on UI
 require('appmetrics-dash').monitor();
 
@@ -52,11 +53,11 @@ monitoring.on('redis', function(data) {
 	
 
 //Requiring Modules
+require('dotenv').config();
 var async = require('async');
 var extend = require('extend');
 var fs = require('fs');
 var chalk = require('chalk');
-
 var checkIpInList = require('./helpers/checkIpInList.js');
 var genesisblock = require('./genesisBlock.json');
 var git = require('./helpers/git.js');
@@ -72,6 +73,9 @@ var currentDay = '';
 const Logger = require('./logger.js');
 let logman = new Logger();
 let logger = logman.logger;
+var sockets = [];
+var cron = require('node-cron');
+var utils = require('./utils');
 
 process.stdin.resume();
 
@@ -196,6 +200,10 @@ var config = {
 	}
 };
 
+//merge environment variables
+var env = require('./config/env');
+utils.merge(appConfig, env);
+
 // Trying to get last git commit
 try {
 	lastCommit = git.getLastCommit();
@@ -210,6 +218,7 @@ try {
 var d = require('domain').create();
 
 d.on('error', function (err) {
+	console.log('error : ' + err);
 	logger.error('Domain master', { message: err.message, stack: err.stack });
 	process.exit(0);
 });
@@ -245,14 +254,16 @@ d.run(function () {
 				if (appConfig.loading.snapshot != null) {
 					delete appConfig.loading.snapshot;
 				}
-
 				fs.writeFileSync('./config.json', JSON.stringify(appConfig, null, 4));
-
 				cb(null, appConfig);
 			} else {
 				cb(null, appConfig);
 			}
 		},
+		/* esInit: function(cb) {
+			var esInstance = require('./elasticsearch/esInit');
+			esInstance.initElasticSearch(cb);
+		}, */
 		logger: function (cb) {
 			cb(null, logger);
 		},
@@ -298,13 +309,13 @@ d.run(function () {
 			var compression = require('compression');
 			var cors = require('cors');
 			var app = express();
+		
+			//hotam: added swagger configuration
 			var subpath = express();
-			
 			var swagger = require("swagger-node-express");
 			app.use("/v1", subpath);
 			swagger.setAppHandler(subpath);
 			subpath.use(express.static('dist'));
-
 			swagger.setApiInfo({
 				title: "example API",
 				description: "API to do something, manage something...",
@@ -313,11 +324,9 @@ d.run(function () {
 				license: "",
 				licenseUrl: ""
 			});
-
 			subpath.get('/', function (req, res) {
 				res.sendFile(__dirname + '/dist/index.html');
 			});
-
 			swagger.configureSwaggerPaths('', 'api-docs', '');
 			var domain = 'localhost';
 			var applicationUrl = 'http://' + domain;
@@ -338,7 +347,34 @@ d.run(function () {
 
 			var server = require('http').createServer(app);
 			var io = require('socket.io')(server);
-	
+
+			//hotam: handled socket's connection event
+			//Function To Verify Whether A Socket Already Exists.
+			function acceptSocket(socket, sockets) {
+				var userFound = false;
+				if (sockets) {
+					for (var i = 0; i < sockets.length; i++) {
+						if (sockets[i] == socket.id) {
+							userFound = true;
+						}
+					}
+				}
+				if (!userFound) {
+					sockets.push(socket.id);
+				}
+				io.emit('updateConnected', sockets.length);
+			}
+			io.on('connection', function (socket) {
+				acceptSocket(socket, sockets);
+				socket.on('disconnect', function () {
+					sockets.forEach(function(socketId) {
+						if(socketId == socket.id) {
+							sockets.pop(socketId);
+							io.sockets.emit('updateConnected', sockets.length);
+						}
+					});
+				});
+			});
 
 			var privateKey, certificate, https, https_io;
 
@@ -409,11 +445,6 @@ d.run(function () {
 			var randomString = require('randomstring');
 			var session = require('express-session');
 			var RedisStore = require('connect-redis')(session);
-			var options = {
-				host: scope.cache.client.connection_options.host,
-				port: scope.cache.client.connection_options.port,
-				client: scope.cache.client
-			};
 
 			scope.nonce = randomString.generate(16);
 			scope.network.app.engine('html', require('ejs').renderFile);
@@ -426,21 +457,27 @@ d.run(function () {
 			scope.network.app.use(bodyParser.json({limit: '2mb'}));
 			scope.network.app.use(methodOverride());
 			scope.network.app.use(cookieParser());
+
+			//hotam: configured redis for session handling
+			var options = {
+				host: scope.cache.client.connection_options.host,
+				port: scope.cache.client.connection_options.port,
+				client: scope.cache.client
+			};
 			scope.network.app.use(session({ 
 				key: 'ETP.sess',
 				store: new RedisStore(options),
-				secret: "fd34s@!@dfa453f3DF#$D&W", 
-				resave: false, 
+				secret: scope.config.session.secret, 
+				resave: true, 
 				saveUninitialized: false,
 				cookie: {
 					path: '/',
 					httpOnly: true,
 					secure: false,
-					maxAge: 1 * 60 * 1000,
+					maxAge: 60 * 1000,
 					signed: false
 				} 
 			}));
-
 			scope.network.app.use(function(req, res, next) {
 				if(req.session.address) {
 					logman = new Logger(req.session.id, req.session.address);
@@ -576,14 +613,17 @@ d.run(function () {
 						block: genesisblock
 					});
 				},
-				contract : function(cb) {
-					cb(null, new Contract());
+				network: function (cb) {
+					cb(null, scope.network);
+				},
+				config: function (cb) {
+					cb(null, scope.config);
 				},
 				account: ['db', 'bus', 'ed', 'schema', 'genesisblock', 'logger', function (scope, cb) {
 					new Account(scope.db, scope.schema, scope.logger, cb);
 				}],
-				transaction: ['db', 'bus', 'ed', 'schema', 'genesisblock', 'account', 'logger', function (scope, cb) {
-					new Transaction(scope.db, scope.ed, scope.schema, scope.genesisblock, scope.account, scope.logger, cb);
+				transaction: ['db', 'bus', 'ed', 'schema', 'genesisblock', 'account', 'logger', 'config','network', function (scope, cb) {
+					new Transaction(scope.db, scope.ed, scope.schema, scope.genesisblock, scope.account, scope.logger, scope.config, scope.network, cb);
 				}],
 				block: ['db', 'bus', 'ed', 'schema', 'genesisblock', 'account', 'transaction', function (scope, cb) {
 					new Block(scope.ed, scope.schema, scope.transaction, cb);
@@ -591,11 +631,14 @@ d.run(function () {
 				peers: ['logger', function (scope, cb) {
 					new Peers(scope.logger, cb);
 				}],
-				frozen: ['logger','db', 'transaction', function (scope, cb) {
-					new Frozen(scope.logger,scope.db, scope.transaction, cb);
+				frozen: ['logger','db', 'transaction','network', 'config', function (scope, cb) {
+					new Frozen(scope.logger, scope.db, scope.transaction, scope.network, scope.config, cb);
 				}],
-				sendFreezeOrder: ['logger','db', function (scope, cb) {
-					new SendFreezeOrder(scope.logger,scope.db, cb);
+				sendFreezeOrder: ['logger','db', 'network', function (scope, cb) {
+					new SendFreezeOrder(scope.logger,scope.db, scope.network, cb);
+				}],
+				contract: ['config', function (scope, cb) {
+					new Contract(scope.config, cb);
 				}]
 			}, cb);
 		}],
@@ -675,8 +718,8 @@ d.run(function () {
 		 * @param {nodeStyleCallback} cb - Callback function with `scope.network`.
 		 */
 		listen: ['ready', function (scope, cb) {
-			scope.network.server.listen(scope.config.port, scope.config.address, function (err) {
-				scope.logger.info('ETP started: ' + scope.config.address + ':' + scope.config.port);
+			scope.network.server.listen(scope.config.app.port, scope.config.address, function (err) {
+				scope.logger.info('ETP started: ' + scope.config.address + ':' + scope.config.app.port);
 
 				if (!err) {
 					if (scope.config.ssl.enabled) {
@@ -698,16 +741,46 @@ d.run(function () {
 			logger.error(err);
 		} else {
 
-			//Navin : daily check and update stake_orders, if any Active order expired or not
-			setInterval(function () { // Set interval for checking
-				var date = new Date(); // Create a Date object to find out what time it is
-				
+			cron.schedule('* * * * *', function () {
+				var date = new Date();
+
+				//Navin : daily check and update stake_orders, if any Active order expired or not
 				scope.logic.frozen.checkFrozeOrders(); //For testing purpose only
 				if (date.getHours() === 10 && date.getMinutes() === 20) { // Check the time
-					
+
 					scope.logic.frozen.checkFrozeOrders();
 				}
-			}, 60000); // Repeat every 60000 milliseconds (1 minute)
+
+				//hotam: archive log files on first day of every new month
+				//const today = new Date();
+				var nextDate = new Date();
+				nextDate.setDate(nextDate.getDate() + 1);
+				logger.archive('start executing archiving files');
+
+				//hotam: Functionality to archive log files. It is not working as expected. There are some minor changes to be done.
+				if (date.getDate() === 17) {
+					logger.archive('checking date archiving files');
+					var createZip = require('./create-zip');
+					var year = date.getFullYear();
+					var month = date.toLocaleString("en-us", { month: "long" });
+					var dir = path.join(__dirname + '/archive/' + year + '/' + month);
+					createZip.createDir(dir, function (err) {
+						if (!err) {
+							createZip.archiveLogFiles(dir, function (err) {
+								if (!err) {
+									logger.archive('files are archived');
+								} else {
+									logger.archive('archive error : ' + err);
+								}
+							});
+						} else {
+							//console.log('directory creation error : ' + err);
+							logger.archive('directory creation error : ' + err);
+						}
+					});
+				}
+
+			});
 
 			/**
 			 * Handles app instance (acts as global variable, passed as parameter).

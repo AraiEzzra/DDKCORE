@@ -17,12 +17,16 @@ require('../../js/controllers/dappsController');
 require('../../js/controllers/dappController');
 require('../../js/controllers/dappsCategoryController');
 require('../../js/controllers/explorerController');
+require('../../js/controllers/stakeController');
+
 // Modals
 require('../../js/controllers/modals/blockModalController');
 require('../../js/controllers/modals/forgingModalController');
 require('../../js/controllers/modals/freeModalController');
 require('../../js/controllers/modals/secondPassphraseController');
 require('../../js/controllers/modals/sendTransactionController');
+require('../../js/controllers/modals/sendFreezeOrderController');
+require('../../js/controllers/modals/freezeAmountController');
 require('../../js/controllers/modals/voteController');
 require('../../js/controllers/modals/registrationDelegateModalController');
 require('../../js/controllers/modals/blockInfoController');

@@ -4,7 +4,7 @@
   "description": "ETP user-interface submodule",
   "repository": {
     "type": "git",
-    "url": "git@github.com:ETPHQ/ETP-ui.git"
+    "url": "git@github.com:LiskHQ/lisk-ui.git"
   },
   "private": true,
   "author": "ETP Foundation <admin@ETP.io>, lightcurve GmbH <admin@lightcurve.io>",
@@ -50,6 +50,6 @@
     "requests": "0.1.7",
     "socket.io": "=1.4.8",
     "buffer": "=4.9.1",
-    "ETP-js": "=0.2.3"
+    "lisk-js": "=0.2.3"
   }
 }

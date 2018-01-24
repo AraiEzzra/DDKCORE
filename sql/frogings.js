@@ -16,15 +16,9 @@ var TransactionsSql = {
 
   count: 'SELECT COUNT("id")::int AS "count" FROM stake_orders',
 
-  checkAccountStatus: 'SELECT "status" FROM mem_accounts where "address"=${senderId}',
-
-  disableAccount: 'UPDATE mem_accounts SET "status" = 0 WHERE "address" = ${senderId}',
-
-  enableAccount: 'UPDATE mem_accounts SET "status" = 1 WHERE "address" = ${senderId}',
-
   getMemoryAccounts: 'SELECT * FROM  mem_accounts',
 
-  updateFrozeAmount: 'UPDATE mem_accounts SET "totalFrozeAmount" = ${totalFrozeAmount} WHERE "address" = ${senderId}',
+  updateFrozeAmount: 'UPDATE mem_accounts SET "totalFrozeAmount" = ("totalFrozeAmount" + ${freezedAmount}) WHERE "address" = ${senderId}',
 
   getFrozeAmount: 'SELECT "totalFrozeAmount" FROM mem_accounts WHERE "address"=${senderId}',
 
@@ -38,11 +32,19 @@ var TransactionsSql = {
 
   getFrozeOrders: 'SELECT * FROM stake_orders WHERE "senderId"=${senderId}',
 
+  getActiveFrozeOrders: 'SELECT * FROM stake_orders WHERE "senderId"=${senderId} AND "status"=1',
+
   getActiveFrozeOrder: 'SELECT * FROM stake_orders WHERE "senderId"=${senderId} AND "id"=${frozeId} AND "status"=1',
 
   updateFrozeOrder : 'UPDATE stake_orders SET "status"=0,"recipientId"=${recipientId} WHERE "senderId"=${senderId} AND "id"=${frozeId} AND "status"=1',
 
-  createNewFrozeOrder : 'INSERT INTO stake_orders ("id","status","startTime","nextMilestone","endTime","senderId","freezedAmount","milestoneCount") VALUES (${frozeId},1,${startTime},${nextMilestone},${endTime},${senderId},${freezedAmount},${milestoneCount}) '
+  createNewFrozeOrder: 'INSERT INTO stake_orders ("id","status","startTime","nextMilestone","endTime","senderId","freezedAmount","milestoneCount") VALUES (${frozeId},1,${startTime},${nextMilestone},${endTime},${senderId},${freezedAmount},${milestoneCount}) ',
+
+  countStakeholders : 'SELECT count(DISTINCT "senderId") FROM stake_orders WHERE "status"=1',
+
+  getTotalStakedAmount : 'SELECT sum("freezedAmount") FROM stake_orders WHERE "status"=1',
+
+  getMyStakedAmount : 'SELECT sum("freezedAmount") FROM stake_orders WHERE "senderId"=${address} AND "status"=1'
 
 };
 

@@ -48,7 +48,7 @@ module.exports = {
 	blockHeaderLength: 248,
 	blockReceiptTimeOut: 20, // 2 blocks
 	confirmationLength: 77,
-	epochTime: new Date(Date.UTC(2016, 4, 24, 17, 0, 0, 0)),
+	epochTime: new Date(Date.UTC(2017, 9, 1, 17, 0, 0, 0)),
 	fees: {
 		send: 10000000,
 		vote: 100000000,
@@ -89,7 +89,7 @@ module.exports = {
 			200000000, // Milestone 3
 			100000000  // Milestone 4
 		],
-		offset: 2160,      // Start rewards at block (n)
+		offset: 2160,      // 2160 Start rewards at block (n)
 		distance: 3000000, // Distance between each milestone
 	},
 	signatureLength: 196,
@@ -110,10 +110,11 @@ module.exports = {
 			maxItems: 15
 		}
 	},
-	//Navin : Configurable froze order
+	//Navin : Configurable froze order : time here is in minutes
 	froze : {
 		endTime : 6,
-		milestone : 2 //1 month currently 2 min
+		milestone : 2, //for testing, taking 2 min
+		reward : 0.1 // Currently moonthly reward is 10%
 	},
 	defaultLock: 0
 };

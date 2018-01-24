@@ -69,7 +69,8 @@ function SendFreezeOrder (cb, scope) {
 		transactionTypes.SENDFREEZE, 
 		new sendFreezeOrder(
 			scope.logger,
-			scope.db
+			scope.db,
+			scope.network
 		)
 	);
 
@@ -568,9 +569,6 @@ SendFreezeOrder.prototype.onBind = function (scope) {
 SendFreezeOrder.prototype.shared = {
 
 	transferFreezeOrder: function (req, cb) {
-
-		console.log("yes i'm inside freeze code");
-
 		library.schema.validate(req.body, schema.transferFreezeOrder, function (err) {
 			if (err) {
 				return setImmediate(cb, err[0].message);

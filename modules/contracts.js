@@ -6,7 +6,7 @@
 //Requiring Modules 
 var Contract = require('../logic/contract.js');
 var transactionTypes = require('../helpers/transactionTypes.js');
-var sql = require('../sql/frogings.js');
+var sql = require('../sql/accounts.js');
 var contributorsStatus = true;
 var cache = require('./cache.js');
 
@@ -44,7 +44,7 @@ function Contracts(cb, scope) {
     self.type = transactionTypes.CONTRACT;
 
     __private.assetTypes[transactionTypes.CONTRACT] = library.logic.transaction.attachAssetType(
-		transactionTypes.CONTRACT, new Contract()
+		transactionTypes.CONTRACT, new Contract(scope.config)
 	);
     
     setImmediate(cb, null, self);
@@ -53,16 +53,24 @@ function Contracts(cb, scope) {
 //Unlock contributors/advisors/founders after a given time
 Contracts.prototype.onNewBlock = function (block, broadcast, cb) {
 	var REDIS_KEY_USER_TIME_HASH = "userInfo_" + block.timestamp;
-	cache.prototype.isExists(REDIS_KEY_USER_TIME_HASH, function(err, isExist) {
-		if(isExist) {
-			cache.prototype.hgetall(REDIS_KEY_USER_TIME_HASH, function(err, data) {
-				library.db.none(sql.enableAccount, { 
-					senderId: data.address 
-				}).then(function () {	   
-					library.logger.info(data.address + ' account is unlocked');	
+	cache.prototype.isExists(REDIS_KEY_USER_TIME_HASH, function (err, isExist) {
+		if (isExist) {
+
+			cache.prototype.hgetall(REDIS_KEY_USER_TIME_HASH, function (err, data) {
+				//Navin : set mined Contributors Balance on redis
+				cache.prototype.getJsonForKey("minedContributorsBalance", function (err, contributorsBalance) {
+					var totalContributorsBal = parseInt(data.transferedAmount) + parseInt(contributorsBalance);
+					cache.prototype.setJsonForKey("minedContributorsBalance", totalContributorsBal);
+				});
+
+
+				library.db.none(sql.enableAccount, {
+					senderId: data.address
+				}).then(function () {
+					library.logger.info(data.address + ' account is unlocked');
 					cache.prototype.delHash(REDIS_KEY_USER_TIME_HASH);
-				}).catch(function (err) {		 
-					library.logger.error(err.stack);			
+				}).catch(function (err) {
+					library.logger.error(err.stack);
 				});
 			});
 		}

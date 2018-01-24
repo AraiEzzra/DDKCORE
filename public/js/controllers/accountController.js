@@ -1,3 +1,4 @@
+
 require('angular');
 
 angular.module('ETPApp').controller('accountController', ['$state','$scope', '$rootScope', '$http', "userService", "$interval", "$timeout", "sendTransactionModal", "secondPassphraseModal", "delegateService", 'viewFactory', 'transactionInfo', 'userInfo', '$filter', 'gettextCatalog', function ($state, $rootScope, $scope, $http, userService, $interval, $timeout, sendTransactionModal, secondPassphraseModal, delegateService, viewFactory, transactionInfo, userInfo, $filter, gettextCatalog) {
@@ -16,6 +17,7 @@ angular.module('ETPApp').controller('accountController', ['$state','$scope', '$r
     $scope.unconfirmedPassphrase = userService.unconfirmedPassphrase;
     $scope.transactionsLoading = true;
     $scope.allVotes = 100 * 1000 * 1000 * 1000 * 1000 * 100;
+    $scope.rememberedPassphrase =  userService.rememberedPassphrase;
 
     $scope.graphs = {
         ETPPrice: {
@@ -107,11 +109,93 @@ angular.module('ETPApp').controller('accountController', ['$state','$scope', '$r
                 }
                 $scope.secondPassphrase = userService.secondPassphrase;
                 $scope.unconfirmedPassphrase = userService.unconfirmedPassphrase;
+                $scope.balanceDec = $scope.balance / 100000000;
+                $scope.balanceDecParseInt = parseInt($scope.balanceDec);
             } else {
                 $scope.resetAppData();
             }
         });
     }
+
+    /* For total stakeholders */
+    $scope.getStakeholdersCount = function () {
+        $http.get("/api/frogings/countStakeholders")
+            .then(function (resp) {
+                if (resp.data.success) {
+                    var countStakeholders = resp.data.countStakeholders.count;
+                    $scope.countStakeholders = JSON.parse(countStakeholders);
+                } else {
+                    console.log(resp.data.error);
+                }
+            });
+    }
+
+    /* For Circulating Supply */
+    $scope.getCirculatingSupply = function () {
+        $http.get("/api/accounts/getCirculatingSupply")
+            .then(function (resp) {
+                if (resp.data.success) {
+                    var circulatingSupply = resp.data.circulatingSupply / 100000000;
+                    $scope.circulatingSupply = parseInt(circulatingSupply);
+                } else {
+                    console.log(resp.data.error);
+                }
+            });
+    }
+
+    /* For Total Count*/
+    $scope.getAccountHolders = function () {
+        $http.get("/api/accounts/count")
+            .then(function (resp) {
+                if (resp.data.success) {
+                    var totalCount = resp.data.count;
+                    $scope.totalCount = JSON.parse(totalCount);
+                } else {
+                    console.log(resp.data.error);
+                }
+            });
+    }
+
+    /* For Your ETP Frozen */
+    $scope.getMyETPFrozen = function () {
+        $http.post("/api/frogings/getMyETPFrozen", { secret: $scope.rememberedPassphrase })
+            .then(function (resp) {
+                if (resp.data.success) {
+                    var myETPFrozen = resp.data.totalETPStaked.sum / 100000000;
+                    $scope.myETPFrozen = parseInt(myETPFrozen);
+                } else {
+                    console.log(resp.data.error);
+                }
+            });
+    }
+
+
+    /* For Your total supply */
+    $scope.getTotalSupply = function () {
+        $http.get("/api/accounts/totalSupply")
+            .then(function (resp) {
+                if (resp.data.success) {
+                    var totalSupply = resp.data.totalSupply / 100000000;
+                    $scope.totalSupply = JSON.parse(totalSupply);
+                } else {
+                    console.log(resp.data.error);
+                }
+            });
+    }
+
+    /* For total ETP staked by stakeholders */
+    $scope.getTotalETPStaked = function () {
+        $http.get("/api/frogings/getTotalETPStaked")
+            .then(function (resp) {
+                if (resp.data.success) {
+                    var totalETPStaked = resp.data.totalETPStaked.sum / 100000000;
+                    $scope.totalETPStaked = parseInt(totalETPStaked);
+                } else {
+                    console.log(resp.data.error);
+                }
+            });
+    }
+
 
     $scope.getCandles = function () {
         $http.get("https://explorer.ETP.io/api/candles/getCandles").then(function (response) {
@@ -147,6 +231,12 @@ angular.module('ETPApp').controller('accountController', ['$state','$scope', '$r
     $scope.updateAppView = function () {
         $scope.getAccount();
         $scope.getTransactions();
+        $scope.getStakeholdersCount();
+        $scope.getCirculatingSupply();
+        $scope.getAccountHolders();
+        $scope.getMyETPFrozen();
+        $scope.getTotalSupply();
+        $scope.getTotalETPStaked();
         delegateService.getDelegate($scope.publicKey, function (response) {
             $timeout(function () {
                 $scope.delegate = response;
@@ -163,5 +253,6 @@ angular.module('ETPApp').controller('accountController', ['$state','$scope', '$r
 
     $scope.updateAppView();
     $scope.getCandles();
+
 
 }]);

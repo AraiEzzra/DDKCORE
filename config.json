@@ -1,5 +1,4 @@
 {
-    "port": 7000,
     "address": "0.0.0.0",
     "version": "0.9.9a",
     "minVersion": ">=0.9.0",
@@ -14,7 +13,6 @@
         "port": 5432,
         "database": "ETP_test",
         "user": "",
-        "password": "password",
         "poolSize": 95,
         "poolIdleTimeout": 30000,
         "reapIntervalMillis": 1000,
@@ -25,8 +23,7 @@
     "redis": {
         "host": "127.0.0.1",
         "port": 6380,
-        "db": 0,
-        "password": null
+        "db": 0
     },
     "api": {
         "enabled": true,
@@ -49,6 +46,10 @@
     "peers": {
         "enabled": true,
         "list": [
+            {
+                "ip": "192.168.4.164",
+                "port": 7000
+            }
         ],
         "access": {
             "blackList": []
@@ -75,7 +76,6 @@
     },
     "forging": {
         "force": true,
-        "secret": ["hen worry two thank unfair salmon smile oven gospel grab latin reason"],
         "access": {
             "whiteList": [
                 "127.0.0.1",
@@ -91,52 +91,17 @@
         "enabled": false,
         "options": {
             "port": 443,
-            "address": "0.0.0.0",
-            "key": "./ssl/ETP.key",
-            "cert": "./ssl/ETP.crt"
+            "address": "0.0.0.0"
         }
     },
     "dapp": {
         "masterrequired": true,
-        "masterpassword": "Zn2bfetKiwDe",
         "autoexec": []
     },
-    "nethash": "da3ed6a45429278bac2666961289ca17ad86595d33b31037615d4b8e8f158bba",
-    "users": [
-        {
-            "secret": "hen worry two thank unfair salmon smile oven gospel grab latin reason",
-            "address": "4995063339468361088E",
-            "publicKey": "f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2"
-        },   
-        {
-            "c_secret": "hour butter soft spread kidney wise million tiger deputy thunder spoon reopen",
-            "c_address": "5143663806878841341E",
-            "c_publicKey": "38c17bc087ba27e29d4a06dc0ccc2e9d40b0022033f02d71e94b3d03dab34db2"
-        },
-        {
-            "etp_secret": "cactus away crime network vibrant weasel smart toe pyramid palace crew also",
-            "etp_address": "15546849747111093123E",
-            "etp_publicKey": "cbb0cf2bdd001ac36fdee015ad12720d7608f03e87cb51b40a676b1104570297"
-        },
-        {
-            "premine_a_secret": "sadness test pottery reflect invite jewel void suit error damp pill resist",
-            "premine_a_address": "8999840344646463126E",
-            "premine_a_publicKey": "0ffbd8ef561024e20ca356889b5be845759356492ac8237c9bc5159b9d1b0135"
-        },
-        {
-            "premine_b_secret": "faculty stand elite stool excite kingdom finish pitch wonder expire measure fly",
-            "premine_b_address": "10720340277000928808E",
-            "premine_b_publicKey" : "20a02e73aac9b258b5e3150a027470de21bcdc4e9db313d48f191f968e2c1c5f"
-        }
-    ],
-    "contributors": {
-        "users": [
-            "5143663806878841341E", 
-            "15546849747111093123E"
-        ],
-        "newUsers" : [],
-        "lockTime" : 3,
-        "lockStatus" : [],
-        "lockIndex" : 0
+    "initialPrimined":{
+        "total":55000000000000
+    },
+    "etpSupply":{
+        "totalSupply":2100000000000000
     }
 }

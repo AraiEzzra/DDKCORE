@@ -5,8 +5,8 @@ angular.module('ETPApp').controller('blockchainController', ['$scope', '$timeout
     $scope.view = viewFactory;
     $scope.view.inLoading = true;
     $scope.view.loadingText = gettextCatalog.getString('Loading blockchain');
-    $scope.view.page = {title: gettextCatalog.getString('Blockchain'), previous: null};
-    $scope.view.bar = {showBlockSearchBar: true};
+    $scope.view.page = { title: gettextCatalog.getString('Blockchain'), previous: null };
+    $scope.view.bar = { showBlockSearchBar: true };
     $scope.address = userService.address;
     $scope.loading = true;
     $scope.showAllColumns = false;
@@ -17,34 +17,36 @@ angular.module('ETPApp').controller('blockchainController', ['$scope', '$timeout
     // Blocks
     $scope.tableBlocks = new ngTableParams({
         page: 1,
-        count: 25,
+        count: 5,
         sorting: {
             height: 'desc'
         }
     }, {
-        total: 0,
-        counts: [],
-        getData: function ($defer, params) {
-            blockService.gettingBlocks = false;
-            $scope.loading = true;
-            blockService.getBlocks($scope.searchBlocks.searchForBlock, $defer, params, $scope.filter, function () {
-                $scope.searchBlocks.inSearch = false;
-                $scope.countForgingBlocks = params.total();
-                $scope.loading = false;
-                $scope.view.inLoading = false;
-            }, null, true);
-        }
-    });
+            total: 0,
+            counts: [],
+            getData: function ($defer, params) {
+                blockService.gettingBlocks = false;
+                $scope.loading = true;
+                blockService.getBlocks($scope.searchBlocks.searchForBlock, $defer, params, $scope.filter, function () {
+                    $scope.searchBlocks.inSearch = false;
+                    $scope.countForgingBlocks = params.total();
+                    $scope.loading = false;
+                    $scope.view.inLoading = false;
+                }, null, true);
+            }
+        });
+
+
 
     $scope.tableBlocks.cols = {
-        height : gettextCatalog.getString('Height'),
-        blockId : gettextCatalog.getString('Block ID'),
-        generator : gettextCatalog.getString('Generator'),
-        timestamp : gettextCatalog.getString('Time'),
-        numberOfTransactions : gettextCatalog.getString('Transactions'),
-        totalAmount : gettextCatalog.getString('Amount'),
-        totalFee : gettextCatalog.getString('Fee'),
-        reward : gettextCatalog.getString('Reward')
+        height: gettextCatalog.getString('Height'),
+        blockId: gettextCatalog.getString('Block ID'),
+        generator: gettextCatalog.getString('Generator'),
+        timestamp: gettextCatalog.getString('Time'),
+        numberOfTransactions: gettextCatalog.getString('Transactions'),
+        totalAmount: gettextCatalog.getString('Amount'),
+        totalFee: gettextCatalog.getString('Fee'),
+        reward: gettextCatalog.getString('Reward')
     };
 
     $scope.tableBlocks.settings().$scope = $scope;
@@ -72,15 +74,15 @@ angular.module('ETPApp').controller('blockchainController', ['$scope', '$timeout
     });
 
     $scope.showBlock = function (block) {
-        $scope.modal = blockModal.activate({block: block});
+        $scope.modal = blockModal.activate({ block: block });
     }
 
     $scope.blockInfo = function (block) {
-        $scope.modal = blockInfo.activate({block: block});
+        $scope.modal = blockInfo.activate({ block: block });
     }
 
     $scope.userInfo = function (userId) {
-        $scope.modal = userInfo.activate({userId: userId});
+        $scope.modal = userInfo.activate({ userId: userId });
     }
 
     // Search blocks watcher

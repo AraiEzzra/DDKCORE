@@ -1,4 +1,6 @@
-angular.module('ETPApp').service('AuthService', ['$q', '$timeout', '$http', 'userService', function ($q, $timeout, $http, userService) {
+//hotam: added new service to check status of an user
+
+angular.module('ETPApp').service('AuthService', ['$http', 'userService', function ($http, userService) {
 
     // create user variable to track user's status
     var user = null;

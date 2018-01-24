@@ -7,6 +7,7 @@ var ip = require('ip');
 var sandboxHelper = require('../helpers/sandbox.js');
 var schema = require('../schema/loader.js');
 var sql = require('../sql/loader.js');
+var esClient = require('../elasticsearch/cluster.js')
 
 require('colors');
 
@@ -322,6 +323,26 @@ __private.loadBlockChain = function () {
 		__private.total = count;
 
 		async.series({
+			deleteIndexes: function (seriesCb) {
+				esClient.indexExists().then(function(isExist) {
+					if(isExist) {
+						esClient.deleteIndex(function(err) {
+							library.logger.error('deleting an index error : ' + err);
+						});
+					}
+					return setImmediate(seriesCb);
+				});
+			},
+			createIndexes: function (seriesCb) {
+				esClient.indexExists().then(function(isExist) {
+					if(isExist) {
+						esClient.createIndex(function(err) {
+							library.logger.error('creating an index error : ' + err);
+						});
+					}
+					return setImmediate(seriesCb);
+				});
+			},
 			removeTables: function (seriesCb) {
 				library.logic.account.removeTables(function (err) {
 					if (err) {

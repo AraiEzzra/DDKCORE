@@ -31,23 +31,22 @@
 
         <script src="/static/js/vendor_app.js"></script>
         <script src="/socket.io/socket.io.js"></script>
-        <script type="application/javascript">
-            var socket = io.connect();
+        <!--script type="application/javascript">
+            //var socket = io.connect();
             socket.on('blocks/change', function (err, data) {
 
             });
-        </script>
-
-
-
-        
-
-
-
+        </script-->
     </head>
     <body>
         <!-- <div class="overflow-wrapper"> -->
         <div>
+            <div id="loader" style="display:none;">
+                <span class="loader-container">
+                    <div id="shadow"></div>
+                    <div id="box"></div>
+                </span>
+            </div>
             <div ui-view ng-class="lang.id" class="container-app"></div>
         </div>
     </body>

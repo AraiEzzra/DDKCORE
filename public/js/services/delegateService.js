@@ -19,7 +19,7 @@ angular.module('ETPApp').service('delegateService', function ($http, $filter, $q
     }
 
     var delegates = {
-        topRate: 101,
+        topRate: 1,
         gettingStandBy: false,
         gettingTop: false,
         gettingVoted: false,

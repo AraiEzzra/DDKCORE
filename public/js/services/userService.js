@@ -4,7 +4,7 @@ angular.module('ETPApp').service('userService', function () {
 
     this.rememberPassphrase = false;
     this.rememberedPassphrase = '';
-
+ 
     this.setData = function (address, publicKey, balance, unconfirmedBalance, effectiveBalance) {
         this.address = address;
         this.publicKey = publicKey;

@@ -143,7 +143,7 @@ angular.module('ETPApp').controller('sendTransactionController', ['$scope', 'sen
             }
         }
 
-        if (amount == '') {
+        if (currency == null) {
             return error('ETP amount can not be blank');
         }
 
@@ -198,6 +198,7 @@ angular.module('ETPApp').controller('sendTransactionController', ['$scope', 'sen
     }
 
     $scope.sendTransaction = function (secretPhrase, withSecond) {
+
         if ($scope.secondPassphrase && !withSecond) {
             $scope.checkSecondPass = true;
             $scope.focus = 'secondPhrase';

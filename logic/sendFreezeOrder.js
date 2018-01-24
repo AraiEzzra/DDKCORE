@@ -15,13 +15,14 @@ __private.types = {};
 var modules, library, self;
 
 // Constructor
-function SendFreezeOrder(logger, db, cb) {
+function SendFreezeOrder(logger, db, network, cb) {
 	self = this;
 	self.scope = {
 		logger: logger,
-		db: db
+		db: db,
+		network: network
 	};
-	
+
 	if (cb) {
 		return setImmediate(cb, null, this);
 	}
@@ -31,8 +32,8 @@ function SendFreezeOrder(logger, db, cb) {
 SendFreezeOrder.prototype.create = function (data, trs) {
 	trs.startTime = trs.timestamp;
 	var date = new Date(trs.timestamp * 1000);
-	trs.nextMilestone = (date.setMinutes(date.getMinutes() + constants.froze.milestone))/1000;
-	trs.endTime = (date.setMinutes(date.getMinutes() - constants.froze.milestone + constants.froze.endTime))/1000;
+	trs.nextMilestone = (date.setMinutes(date.getMinutes() + constants.froze.milestone)) / 1000;
+	trs.endTime = (date.setMinutes(date.getMinutes() - constants.froze.milestone + constants.froze.endTime)) / 1000;
 	trs.recipientId = data.recipientId;
 	trs.frozeId = data.frozeId;
 	return trs;
@@ -43,8 +44,8 @@ SendFreezeOrder.prototype.ready = function (frz, sender) {
 };
 
 
-SendFreezeOrder.prototype.inactive= '0';
-SendFreezeOrder.prototype.active= '1';
+SendFreezeOrder.prototype.inactive = '0';
+SendFreezeOrder.prototype.active = '1';
 
 SendFreezeOrder.prototype.dbSave = function (trs) {
 	return null;
@@ -68,7 +69,7 @@ SendFreezeOrder.prototype.applyUnconfirmed = function (trs, sender, cb) {
 };
 
 SendFreezeOrder.prototype.undo = function (trs, block, sender, cb) {
-	modules.accounts.setAccountAndGet({address: trs.recipientId}, function (err, recipient) {
+	modules.accounts.setAccountAndGet({ address: trs.recipientId }, function (err, recipient) {
 		if (err) {
 			return setImmediate(cb, err);
 		}
@@ -86,12 +87,14 @@ SendFreezeOrder.prototype.undo = function (trs, block, sender, cb) {
 };
 
 SendFreezeOrder.prototype.apply = function (trs, block, sender, cb) {
-	// var data = {
-	// 	address: sender.address
-	// };
+	modules.accounts.setAccountAndGet({ address: trs.recipientId }, function (err, recipient) {
+		if (err) {
+			return setImmediate(cb, err);
+		}
 
-	// modules.accounts.setAccountAndGet(data, cb);
-	return setImmediate(cb, null, trs);
+		// modules.accounts.setAccountAndGet(data, cb);
+		return setImmediate(cb, null, trs);
+	});
 };
 
 SendFreezeOrder.prototype.getBytes = function (trs) {
@@ -104,13 +107,13 @@ SendFreezeOrder.prototype.process = function (trs, sender, cb) {
 
 SendFreezeOrder.prototype.verify = function (trs, sender, cb) {
 
-  if (!trs.recipientId) {
+	if (!trs.recipientId) {
 		return setImmediate(cb, 'Missing recipient');
 	}
 
-	if (!trs.frozeId) {
-		return setImmediate(cb, 'Invalid transaction amount');
-	}
+	// if (trs.amount <= 0) {
+	// 	return setImmediate(cb, 'Invalid transaction amount');
+	// }
 
 	return setImmediate(cb, null, trs);
 };
@@ -126,66 +129,143 @@ SendFreezeOrder.prototype.bind = function (accounts, rounds) {
 	};
 };
 
+
 SendFreezeOrder.prototype.sendFreezedOrder = function (data, cb) {
 
-	var frozeId = data.req.body.frozeId;
+	function getActiveFrozeOrder() {
+		return new Promise(function (resolve, reject) {
+			self.scope.db.one(sql.getActiveFrozeOrder,
+				{
+					senderId: data.account.address,
+					frozeId: data.req.body.frozeId
+				}).then(function (row) {
+					resolve(row)
 
-	self.scope.db.one(sql.getActiveFrozeOrder,
-		{
-			senderId: data.account.address,
-			frozeId: frozeId
-		}).then(function (row) {
+				}).catch(function (err) {
+					self.scope.logger.error(err.stack);
+
+					if (err.name == "QueryResultError" && err.message == "No data returned from the query.") {
+						reject('Selected order is expired. Please send active order.');
+					} else {
+
+						reject(new Error(err.toString()));
+					}
+
+				});
+
+
+		});
+
+	}
+
+	function deductFrozeAmount() {
+		return new Promise(function (resolve, reject) {
+			//deduct froze Amount from totalFrozeAmount in mem_accounts table
+			self.scope.db.none(sql.deductFrozeAmount,
+				{
+					senderId: data.senderId,
+					FrozeAmount: data.freezedAmount
+				}).then(function () {
+					resolve();
+				}).catch(function (err) {
+					self.scope.logger.error(err.stack);
+					reject(cb, err.toString());
+				});
+
+		});
+
+	}
+
+	function updateFrozeAmount() {
+		return new Promise(function (resolve, reject) {
+
+			//update total Froze amount for recipient of froze order during sending order
+			self.scope.db.none(sql.updateFrozeAmount,
+				{
+					senderId: data.recipientId,
+					freezedAmount: data.freezedAmount
+				}).then(function () {
+					resolve();
+				}).catch(function (err) {
+					self.scope.logger.error(err.stack);
+					reject(new Error(err.toString()));
+				});
+
+		});
+
+	}
+
+	function updateFrozeOrder(row) {
+		return new Promise(function (resolve, reject) {
+
+			//Update old freeze order
+			self.scope.db.none(sql.updateFrozeOrder,
+				{
+					recipientId: data.req.body.recipientId,
+					senderId: row.senderId,
+					frozeId: data.req.body.frozeId
+				}).then(function () {
+					self.scope.logger.info("Successfully check for update froze order");
+					resolve();
+				}).catch(function (err) {
+					self.scope.logger.error(err.stack);
+					reject(new Error(err.toString()));
+				});
+		});
+
+	}
+
+	function createNewFrozeOrder(row) {
+		return new Promise(function (resolve, reject) {
+
+			//create new froze order according to send order
+			self.scope.db.none(sql.createNewFrozeOrder,
+				{
+					frozeId: data.req.body.frozeId,
+					startTime: row.startTime,
+					nextMilestone: row.nextMilestone,
+					endTime: row.endTime,
+					senderId: data.req.body.recipientId,
+					freezedAmount: row.freezedAmount,
+					milestoneCount: row.milestoneCount
+
+				}).then(function () {
+					self.scope.logger.info("Successfully inserted new row in stake_orders table");
+					resolve(row.freezedAmount);
+				}).catch(function (err) {
+					self.scope.logger.error(err.stack);
+					reject(new Error(err.toString()));
+				});
+
+		});
+
+	}
+
+
+	async function sendFreezedOrder() {
+		try {
+			var row = await getActiveFrozeOrder();
+
 			if (row) {
 				self.scope.logger.info("Successfully get froze order");
 
-				var senderId = row.senderId;
-				var recipientId = data.req.body.recipientId;
-				var startTime = row.startTime;
-				var nextMilestone = row.nextMilestone;
-				var endTime = row.endTime;
-				var freezedAmount = row.freezedAmount;
-				var milestoneCount = row.milestoneCount;
-
-				//Update nextMilesone in "stake_orders" table
-				self.scope.db.none(sql.updateFrozeOrder,
-					{
-						recipientId: recipientId,
-						senderId: senderId,
-						frozeId: frozeId
-					}).then(function () {
-						console.log("Successfully check for update froze order");
-
-						//change status and nextmilestone
-						self.scope.db.none(sql.createNewFrozeOrder,
-							{
-								frozeId: frozeId,
-								startTime: startTime,
-								nextMilestone: nextMilestone,
-								endTime: endTime,
-								senderId: recipientId,
-								freezedAmount: freezedAmount,
-								milestoneCount: milestoneCount
-
-							}).then(function () {
-								console.log("Successfully inserted new row in stake_orders table");
-								return setImmediate(cb, null);
-							}).catch(function (err) {
-								self.scope.logger.error(err.stack);
-								return setImmediate(cb, err.toString());
-							});
-
-					}).catch(function (err) {
-						self.scope.logger.error(err.stack);
-						return setImmediate(cb, err.toString());
-					});
-			} else {
-				self.scope.logger.info("Not getting any froze order for sending");
+				await deductFrozeAmount();
+				await updateFrozeAmount();
+				await updateFrozeOrder(row);
+				await createNewFrozeOrder(row);
 			}
-
-		}).catch(function (err) {
+			//Stake order event
+			self.scope.network.io.sockets.emit('stake/change', null);
+			
+			return setImmediate(cb, null);
+		} catch (err) {
 			self.scope.logger.error(err.stack);
 			return setImmediate(cb, err.toString());
-		});
+		}
+
+	};
+
+	sendFreezedOrder();
 
 };
 

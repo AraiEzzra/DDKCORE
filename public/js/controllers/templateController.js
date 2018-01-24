@@ -19,3 +19,6 @@ angular.module('ETPApp').controller('templateController', ['$scope', '$rootScope
     $scope.getInitialSync();
 
 }]);
+
+
+
