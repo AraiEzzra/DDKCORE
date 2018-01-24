@@ -14,7 +14,6 @@ var contracts = require('./contracts.js')
 var userGroups = require('../helpers/userGroups.js');
 var cache = require('./cache.js');
 var config = require('../config.json');
-var esClient = require('../elasticsearch/connection');
 
 // Private fields
 var modules, library, self, __private = {}, shared = {};
@@ -336,14 +335,7 @@ Accounts.prototype.shared = {
 									library.logger.info(account.address + ' account is locked');
 									library.logic.account.set(accountData.address, data, function (err) {
 										if (!err) {
-											esClient.index({
-												index: 'mem_accounts',
-												id: accountData.address,
-												type: 'mem_accounts',
-												body: accountData
-											}, function (err, resp, status) {
-												return setImmediate(cb, null, { account: accountData });
-											});
+											return setImmediate(cb, null, { account: accountData });
 										} else {
 											return setImmediate(cb, err);
 										}
@@ -353,27 +345,13 @@ Accounts.prototype.shared = {
 									return setImmediate(cb, err);
 								});
 							} else {
-								esClient.index({
-									index: 'mem_accounts',
-									id: accountData.address,
-									type: 'mem_accounts',
-									body: accountData
-								}, function (err, resp, status) {
-									return setImmediate(cb, null, { account: accountData });
-								});
+								return setImmediate(cb, null, { account: accountData });
 							}
 						});
 					} else {
 						library.logic.account.set(accountData.address, data, function (err) {
 							if (!err) {
-								esClient.index({
-									index: 'mem_accounts',
-									id: accountData.address,
-									type: 'mem_accounts',
-									body: accountData
-								}, function (err, resp, status) {
-									return setImmediate(cb, null, { account: accountData });
-								});
+								return setImmediate(cb, null, { account: accountData });
 							} else {
 								return setImmediate(cb, err);
 							}
