@@ -125,9 +125,9 @@ SendFreezeOrder.prototype.verify = function (trs, sender, cb) {
 		return setImmediate(cb, 'Missing recipient');
 	}
 
-	if (trs.amount <= 0) {
-		return setImmediate(cb, 'Invalid transaction amount');
-	}
+	// if (trs.amount <= 0) {
+	// 	return setImmediate(cb, 'Invalid transaction amount');
+	// }
 
 	return setImmediate(cb, null, trs);
 };
@@ -268,6 +268,7 @@ SendFreezeOrder.prototype.sendFreezedOrder = function (data, cb) {
 				await updateFrozeOrder(row);
 				await createNewFrozeOrder(row);
 			}
+			return setImmediate(cb,null);
 		} catch (err) {
 			self.scope.logger.error(err.stack);
 			return setImmediate(cb, err.toString());
