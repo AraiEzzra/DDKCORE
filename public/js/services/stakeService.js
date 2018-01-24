@@ -25,11 +25,11 @@ var blocks = {
             );
         },
         getBlocks: function (searchForBlock, $defer, params, filter, cb, publicKey, fromBlocks) {
-            console.log('demorrrrrrrrrrrrrrrrr'),
+            
             blocks.searchForBlock = searchForBlock.trim();
             if (blocks.searchForBlock != '') {
                 this.getBlock(blocks.searchForBlock, function (response) {
-                    console.log(response);
+                    
                     if (response.count) {
                         params.total(response.count);
                         $defer.resolve(response.blocks);
@@ -83,13 +83,11 @@ var blocks = {
                         params: queryParams
                     })
                         .then(function (response) {
-                            console.log('demo2222222222');
+                            
                             if (fromBlocks) {
                                 $http.get("/api/frogings/getAllOrders",{secret: $scope.rememberedPassphrase})
                                     .then(function (res) {
-                                       // this.gettingBlocks = false;
-                                        if (res.data.success) {
-                                           console.log(JSON.stringify(res.data)); 
+                                        if (res.data.success) { 
                                             params.total(res.data.height);
                                             cb({blocks: [response.data.block], count: 1});
                                             

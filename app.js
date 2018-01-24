@@ -622,8 +622,8 @@ d.run(function () {
 				account: ['db', 'bus', 'ed', 'schema', 'genesisblock', 'logger', function (scope, cb) {
 					new Account(scope.db, scope.schema, scope.logger, cb);
 				}],
-				transaction: ['db', 'bus', 'ed', 'schema', 'genesisblock', 'account', 'logger', 'config', function (scope, cb) {
-					new Transaction(scope.db, scope.ed, scope.schema, scope.genesisblock, scope.account, scope.logger, scope.config, cb);
+				transaction: ['db', 'bus', 'ed', 'schema', 'genesisblock', 'account', 'logger', 'config','network', function (scope, cb) {
+					new Transaction(scope.db, scope.ed, scope.schema, scope.genesisblock, scope.account, scope.logger, scope.config, scope.network, cb);
 				}],
 				block: ['db', 'bus', 'ed', 'schema', 'genesisblock', 'account', 'transaction', function (scope, cb) {
 					new Block(scope.ed, scope.schema, scope.transaction, cb);
@@ -634,8 +634,8 @@ d.run(function () {
 				frozen: ['logger','db', 'transaction','network', 'config', function (scope, cb) {
 					new Frozen(scope.logger, scope.db, scope.transaction, scope.network, scope.config, cb);
 				}],
-				sendFreezeOrder: ['logger','db', function (scope, cb) {
-					new SendFreezeOrder(scope.logger,scope.db, cb);
+				sendFreezeOrder: ['logger','db', 'network', function (scope, cb) {
+					new SendFreezeOrder(scope.logger,scope.db, scope.network, cb);
 				}],
 				contract: ['config', function (scope, cb) {
 					new Contract(scope.config, cb);

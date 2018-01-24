@@ -86,7 +86,7 @@ angular.module('ETPApp').controller('freezeAmountController', ['$scope', 'userSe
         return $scope.isCorrectValue(currency, true);
     }
 
-    function validateForm1 (onValid) {
+    function validateForm (onValid) {
     //    var isAddress = /^[0-9]+[E|e]$/g;
     //    var correctAddress = isAddress.test($scope.to);
       //  $scope.errorMessage = {};
@@ -120,15 +120,13 @@ angular.module('ETPApp').controller('freezeAmountController', ['$scope', 'userSe
             return;
         }
         if ($scope.rememberedPassphrase) {
-            validateForm1(function () {
-                console.log("22222");
+            validateForm(function () {
                 $scope.presendError = false;
                 $scope.errorMessage = {};
                 $scope.freezeOrder($scope.rememberedPassphrase);
             });
         } else {
-            validateForm1(function () {
-                console.log("111111");
+            validateForm(function () {
                 $scope.presendError = false;
                 $scope.errorMessage = {};
                 $scope.passmode = !$scope.passmode;
@@ -141,7 +139,6 @@ angular.module('ETPApp').controller('freezeAmountController', ['$scope', 'userSe
     /* For Total Count*/
 
     $scope.freezeOrder = function(secretPhrase,withSecond){
-        console.log("1"+$scope.secondPassphrase+"....."+secretPhrase);
         if ($scope.secondPassphrase && !withSecond) {
             $scope.checkSecondPass = true;
             $scope.focus = 'secondPhrase';
@@ -172,7 +169,6 @@ angular.module('ETPApp').controller('freezeAmountController', ['$scope', 'userSe
                         freezeAmountModal.deactivate();
 
                     } else {
-                        console.log(resp.data.error);
                         Materialize.toast('Freeze Error', 3000, 'red white-text');
                         $scope.errorMessage.fromServer = resp.data.error;
 
@@ -194,13 +190,11 @@ angular.module('ETPApp').controller('freezeAmountController', ['$scope', 'userSe
 
 
     $scope.close = function () {
-        console.log('close freeze amount');
         if ($scope.destroy) {
             $scope.destroy();
         }
     
         freezeAmountModal.deactivate();
-        console.log('close1 call 2');
     }
 
 

@@ -14,8 +14,7 @@ angular.module('ETPApp').controller('sendFreezeOrderController', ['$scope', 'use
     $scope.secondPassphrase = userService.secondPassphrase;
     
 
-    function validateForm2(onValid) {
-        console.log($scope.recipientAddress);
+    function validateForm(onValid) {
         var isAddress = /^[0-9]+[E|e]$/g;
         var correctAddress = isAddress.test($scope.recipientAddress);
         $scope.errorMessage = {};
@@ -43,13 +42,13 @@ angular.module('ETPApp').controller('sendFreezeOrderController', ['$scope', 'use
             return;
         }
         if ($scope.rememberedPassphrase) {
-            validateForm2(function () {
+            validateForm(function () {
                 $scope.presendError = false;
                 $scope.errorMessage = {};
                 $scope.sendFreezeOrder($scope.rememberedPassphrase);
             });
         } else {
-            validateForm2(function () {
+            validateForm(function () {
                 $scope.presendError = false;
                 $scope.errorMessage = {};
                 $scope.passmode = !$scope.passmode;
@@ -111,17 +110,14 @@ angular.module('ETPApp').controller('sendFreezeOrderController', ['$scope', 'use
     });
 
     $scope.close = function () {
-        console.log('close freeze amount');
         if ($scope.destroy) {
             $scope.destroy();
         }
         //sendTransactionModal.deactivate();
         sendFreezeOrderModal.deactivate();
-        console.log('close1 call 2');
     }
     
     $scope.recipAddress = function () {
-        console.log('blank click');
         $scope.recipientAddress = '';
     }
 

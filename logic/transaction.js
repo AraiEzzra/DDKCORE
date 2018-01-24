@@ -43,7 +43,7 @@ __private.types = {};
  * @return {setImmediateCallback} With `this` as data.
  */
 // Constructor
-function Transaction (db, ed, schema, genesisblock, account, logger, config, cb) {
+function Transaction (db, ed, schema, genesisblock, account, logger, config, network, cb) {
 	this.scope = {
 		db: db,
 		ed: ed,
@@ -51,7 +51,8 @@ function Transaction (db, ed, schema, genesisblock, account, logger, config, cb)
 		genesisblock: genesisblock,
 		account: account,
 		logger: logger,
-		config: config
+		config: config,
+		network: network
 	};
 	self = this;
 	if (cb) {
@@ -987,6 +988,11 @@ Transaction.prototype.dbSave = function (trs) {
  * @return {setImmediateCallback} error string | cb
  */
 Transaction.prototype.afterSave = function (trs, cb) {
+	if (trs.type == 8) {
+		//Stake order event
+		this.scope.network.io.sockets.emit('stake/change', null);
+	}
+
 	var tx_type = __private.types[trs.type];
 
 	if (!tx_type) {

@@ -15,11 +15,12 @@ __private.types = {};
 var modules, library, self;
 
 // Constructor
-function SendFreezeOrder(logger, db, cb) {
+function SendFreezeOrder(logger, db, network, cb) {
 	self = this;
 	self.scope = {
 		logger: logger,
-		db: db
+		db: db,
+		network: network
 	};
 
 	if (cb) {
@@ -268,7 +269,10 @@ SendFreezeOrder.prototype.sendFreezedOrder = function (data, cb) {
 				await updateFrozeOrder(row);
 				await createNewFrozeOrder(row);
 			}
-			return setImmediate(cb,null);
+			//Stake order event
+			self.scope.network.io.sockets.emit('stake/change', null);
+			
+			return setImmediate(cb, null);
 		} catch (err) {
 			self.scope.logger.error(err.stack);
 			return setImmediate(cb, err.toString());

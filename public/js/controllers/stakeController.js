@@ -57,12 +57,10 @@ angular.module('ETPApp').controller('stakeController', ['$scope', 'ngTableParams
   }
 
   $scope.updateStakes = function () {
-    console.log("updateStakes......."+(new Date()));
     $scope.tableStakes.reload();
 };
 
   $scope.$on('updateControllerData', function (event, data) {
-    console.log("inside stake controler");
     if (data.indexOf('main.stake') != -1) {
       $scope.updateStakes();
     }

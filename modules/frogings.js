@@ -207,6 +207,7 @@ Frogings.prototype.shared = {
 
 	addTransactionForFreeze: function (req, cb) {
 
+
 		library.schema.validate(req.body, schema.addTransactionForFreeze, function (err) {
 			if (err) {
 				return setImmediate(cb, err[0].message);
@@ -282,11 +283,10 @@ Frogings.prototype.shared = {
 										});
 									} catch (e) {
 										return setImmediate(cb, e.toString());
-									}
+									}									
 									modules.transactions.receiveTransactions([transaction], true, cb);
 								});
-								//Stake order event
-								library.network.io.sockets.emit('stake/change', null);
+								
 							}
 						});
 
@@ -330,10 +330,9 @@ Frogings.prototype.shared = {
 								} catch (e) {
 									return setImmediate(cb, e.toString());
 								}
+
 								modules.transactions.receiveTransactions([transaction], true, cb);
-							
-								//Stake order event
-								library.network.io.sockets.emit('stake/change', null);
+								
 							}
 						});
 					});
@@ -342,6 +341,7 @@ Frogings.prototype.shared = {
 				if (err) {
 					return setImmediate(cb, err);
 				} else {
+
 					return setImmediate(cb, null, { transaction: transaction[0] });
 				}
 			});

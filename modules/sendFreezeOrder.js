@@ -58,7 +58,8 @@ function SendFreezeOrder(cb, scope) {
 		transactionTypes.SENDFREEZE,
 		new sendFreezeOrder(
 			scope.logger,
-			scope.db
+			scope.db,
+			scope.network
 		)
 	);
 

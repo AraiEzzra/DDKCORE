@@ -221,7 +221,7 @@ Frozen.prototype.checkFrozeOrders = function () {
 		});
 	}
 
-	function deductFrozeAmount(rows) {
+	function deductFrozeAmountandSendReward(rows) {
 		var i;
 		return new Promise(function (resolve, reject) {
 
@@ -240,7 +240,7 @@ Frozen.prototype.checkFrozeOrders = function () {
 					});
 				}
 
-				//Request to send tarnsaction
+				//Request to send transaction
 				var transactionData = {
 					json: {
 						secret: self.scope.config.sender.secret,
@@ -262,7 +262,7 @@ Frozen.prototype.checkFrozeOrders = function () {
 			if (rows.length > 0) {
 				await checkAndUpdateMilestone();
 				await disableFrozeOrder();
-				await deductFrozeAmount(rows);
+				await deductFrozeAmountandSendReward(rows);
 			}
 		} catch (err) {
 			self.scope.logger.error(err.stack);
@@ -277,7 +277,7 @@ Frozen.prototype.checkFrozeOrders = function () {
 
 };
 
-//Navin: Update Froze amount into mem_accounts table on every single order
+//Update Froze amount into mem_accounts table on every single order
 Frozen.prototype.updateFrozeAmount = function (data, cb) {
 
 	self.scope.db.one(sql.getFrozeAmount, {
