@@ -266,6 +266,7 @@ Frozen.prototype.checkFrozeOrders = function () {
 			}
 		} catch (err) {
 			self.scope.logger.error(err.stack);
+			return setImmediate(cb, err.toString());
 		}
 
 	};

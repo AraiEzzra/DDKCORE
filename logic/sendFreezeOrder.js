@@ -143,112 +143,139 @@ SendFreezeOrder.prototype.bind = function (accounts, rounds) {
 	};
 };
 
-SendFreezeOrder.prototype.modifyFreezeBalance = function (data, cb) {
 
-	//deduct froze Amount from totalFrozeAmount in mem_accounts table
-	self.scope.db.none(sql.deductFrozeAmount,
-		{
-			senderId: data.senderId,
-			FrozeAmount: data.freezedAmount
-		}).then(function () {
+SendFreezeOrder.prototype.sendFreezedOrder = function (data, cb) {
+
+	function getActiveFrozeOrder() {
+		return new Promise(function (resolve, reject) {
+			self.scope.db.one(sql.getActiveFrozeOrder,
+				{
+					senderId: data.account.address,
+					frozeId: data.req.body.frozeId
+				}).then(function (row) {
+					resolve(row)
+
+				}).catch(function (err) {
+					self.scope.logger.error(err.stack);
+
+					if (err.name == "QueryResultError" && err.message == "No data returned from the query.") {
+						reject('Selected order is expired. Please send active order.');
+					} else {
+
+						reject(new Error(err.toString()));
+					}
+
+				});
+
+
+		});
+
+	}
+
+	function deductFrozeAmount() {
+		return new Promise(function (resolve, reject) {
+			//deduct froze Amount from totalFrozeAmount in mem_accounts table
+			self.scope.db.none(sql.deductFrozeAmount,
+				{
+					senderId: data.senderId,
+					FrozeAmount: data.freezedAmount
+				}).then(function () {
+					resolve();
+				}).catch(function (err) {
+					self.scope.logger.error(err.stack);
+					reject(cb, err.toString());
+				});
+
+		});
+
+	}
+
+	function updateFrozeAmount() {
+		return new Promise(function (resolve, reject) {
+
 			//update total Froze amount for recipient of froze order during sending order
 			self.scope.db.none(sql.updateFrozeAmount,
 				{
 					senderId: data.recipientId,
 					freezedAmount: data.freezedAmount
 				}).then(function () {
-					return setImmediate(cb, null);
+					resolve();
 				}).catch(function (err) {
 					self.scope.logger.error(err.stack);
-					return setImmediate(cb, err.toString());
+					reject(new Error(err.toString()));
 				});
-		}).catch(function (err) {
-			self.scope.logger.error(err.stack);
-			return setImmediate(cb, err.toString());
+
 		});
 
-};
+	}
 
-SendFreezeOrder.prototype.sendFreezedOrder = function (data, cb) {
+	function updateFrozeOrder(row) {
+		return new Promise(function (resolve, reject) {
 
-	var frozeId = data.req.body.frozeId;
+			//Update old freeze order
+			self.scope.db.none(sql.updateFrozeOrder,
+				{
+					recipientId: data.req.body.recipientId,
+					senderId: row.senderId,
+					frozeId: data.req.body.frozeId
+				}).then(function () {
+					self.scope.logger.info("Successfully check for update froze order");
+					resolve();
+				}).catch(function (err) {
+					self.scope.logger.error(err.stack);
+					reject(new Error(err.toString()));
+				});
+		});
 
-	self.scope.db.one(sql.getActiveFrozeOrder,
-		{
-			senderId: data.account.address,
-			frozeId: frozeId
-		}).then(function (row) {
+	}
+
+	function createNewFrozeOrder(row) {
+		return new Promise(function (resolve, reject) {
+
+			//create new froze order according to send order
+			self.scope.db.none(sql.createNewFrozeOrder,
+				{
+					frozeId: data.req.body.frozeId,
+					startTime: row.startTime,
+					nextMilestone: row.nextMilestone,
+					endTime: row.endTime,
+					senderId: data.req.body.recipientId,
+					freezedAmount: row.freezedAmount,
+					milestoneCount: row.milestoneCount
+
+				}).then(function () {
+					self.scope.logger.info("Successfully inserted new row in stake_orders table");
+					resolve(row.freezedAmount);
+				}).catch(function (err) {
+					self.scope.logger.error(err.stack);
+					reject(new Error(err.toString()));
+				});
+
+		});
+
+	}
+
+
+	async function sendFreezedOrder() {
+		try {
+			var row = await getActiveFrozeOrder();
+
 			if (row) {
 				self.scope.logger.info("Successfully get froze order");
 
-				var senderId = row.senderId;
-				var recipientId = data.req.body.recipientId;
-				var startTime = row.startTime;
-				var nextMilestone = row.nextMilestone;
-				var endTime = row.endTime;
-				var freezedAmount = row.freezedAmount;
-				var milestoneCount = row.milestoneCount;
-
-				self.modifyFreezeBalance({
-					senderId: senderId,
-					recipientId: recipientId,
-					freezedAmount: freezedAmount
-				}, function (err) {
-					if (err) {
-						return setImmediate(cb, err);
-					} else {
-
-						//Update old freeze order
-						self.scope.db.none(sql.updateFrozeOrder,
-							{
-								recipientId: recipientId,
-								senderId: senderId,
-								frozeId: frozeId
-							}).then(function () {
-								self.scope.logger.info("Successfully check for update froze order");
-
-
-								//create new froze order according to send order
-								self.scope.db.none(sql.createNewFrozeOrder,
-									{
-										frozeId: frozeId,
-										startTime: startTime,
-										nextMilestone: nextMilestone,
-										endTime: endTime,
-										senderId: recipientId,
-										freezedAmount: freezedAmount,
-										milestoneCount: milestoneCount
-
-									}).then(function () {
-										self.scope.logger.info("Successfully inserted new row in stake_orders table");
-										return setImmediate(cb, null, freezedAmount);
-									}).catch(function (err) {
-										self.scope.logger.error(err.stack);
-										return setImmediate(cb, err.toString());
-									});
-
-							}).catch(function (err) {
-								self.scope.logger.error(err.stack);
-								return setImmediate(cb, err.toString());
-							});
-					}
-				});
-
-			} else {
-				self.scope.logger.info("Not getting any froze order for sending");
+				await deductFrozeAmount();
+				await updateFrozeAmount();
+				await updateFrozeOrder(row);
+				await createNewFrozeOrder(row);
 			}
-
-		}).catch(function (err) {
+		} catch (err) {
 			self.scope.logger.error(err.stack);
+			return setImmediate(cb, err.toString());
+		}
 
-			if (err.name == "QueryResultError" && err.message == "No data returned from the query.") {
-				return setImmediate(cb,'Selected order is expired. Please send active order.');
-			} else {
+	};
 
-				return setImmediate(cb, err.toString());
-			}
-
-		});
+	sendFreezedOrder();
 
 };
 
