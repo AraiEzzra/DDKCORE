@@ -51,7 +51,8 @@ function Frogings (cb, scope) {
 			frozen: scope.logic.frozen
 		},
 		genesisblock: scope.genesisblock,
-		network: scope.network
+		network: scope.network,
+		config: scope.config
 	};
 
 	self = this;
@@ -67,7 +68,7 @@ function Frogings (cb, scope) {
 
 	//Add by navin
 	__private.assetTypes[transactionTypes.FROZE] = library.logic.transaction.attachAssetType(
-		transactionTypes.FROZE, new Frozen(scope.logger,scope.db,scope.logic.transaction,scope.network)
+		transactionTypes.FROZE, new Frozen(scope.logger, scope.db, scope.logic.transaction, scope.network, scope.config)
 	);
 
 	setImmediate(cb, null, self);
@@ -206,6 +207,7 @@ Frogings.prototype.shared = {
 
 	addTransactionForFreeze: function (req, cb) {
 
+
 		library.schema.validate(req.body, schema.addTransactionForFreeze, function (err) {
 			if (err) {
 				return setImmediate(cb, err[0].message);
@@ -281,11 +283,10 @@ Frogings.prototype.shared = {
 										});
 									} catch (e) {
 										return setImmediate(cb, e.toString());
-									}
+									}									
 									modules.transactions.receiveTransactions([transaction], true, cb);
 								});
-								//Stake order event
-								library.network.io.sockets.emit('stake/change', null);
+								
 							}
 						});
 
@@ -329,10 +330,9 @@ Frogings.prototype.shared = {
 								} catch (e) {
 									return setImmediate(cb, e.toString());
 								}
+
 								modules.transactions.receiveTransactions([transaction], true, cb);
-							
-								//Stake order event
-								library.network.io.sockets.emit('stake/change', null);
+								
 							}
 						});
 					});
@@ -341,6 +341,7 @@ Frogings.prototype.shared = {
 				if (err) {
 					return setImmediate(cb, err);
 				} else {
+
 					return setImmediate(cb, null, { transaction: transaction[0] });
 				}
 			});

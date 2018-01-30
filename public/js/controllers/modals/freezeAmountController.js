@@ -86,7 +86,7 @@ angular.module('ETPApp').controller('freezeAmountController', ['$scope', 'userSe
         return $scope.isCorrectValue(currency, true);
     }
 
-    function validateForm1 (onValid) {
+    function validateForm (onValid) {
     //    var isAddress = /^[0-9]+[E|e]$/g;
     //    var correctAddress = isAddress.test($scope.to);
       //  $scope.errorMessage = {};
@@ -120,13 +120,13 @@ angular.module('ETPApp').controller('freezeAmountController', ['$scope', 'userSe
             return;
         }
         if ($scope.rememberedPassphrase) {
-            validateForm1(function () {
+            validateForm(function () {
                 $scope.presendError = false;
                 $scope.errorMessage = {};
                 $scope.freezeOrder($scope.rememberedPassphrase);
             });
         } else {
-            validateForm1(function () {
+            validateForm(function () {
                 $scope.presendError = false;
                 $scope.errorMessage = {};
                 $scope.passmode = !$scope.passmode;

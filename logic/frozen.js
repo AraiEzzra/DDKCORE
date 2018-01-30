@@ -3,9 +3,10 @@
 var constants = require('../helpers/constants.js');
 var sql = require('../sql/frogings.js');
 var slots = require('../helpers/slots.js');
-var config = require('../config.json');
+
 var request = require('request');
 var async = require('async');
+var Promise = require('bluebird');
 
 // Private fields
 var __private = {};
@@ -15,7 +16,7 @@ __private.types = {};
 var modules, library, self;
 
 // Constructor
-function Frozen(logger, db, transaction, network, cb) {
+function Frozen(logger, db, transaction, network, config, cb) {
 	self = this;
 	self.scope = {
 		logger: logger,
@@ -23,7 +24,8 @@ function Frozen(logger, db, transaction, network, cb) {
 		logic: {
 			transaction: transaction
 		},
-		network: network
+		network: network,
+		config: config
 	};
 	
 	if (cb) {
@@ -158,78 +160,124 @@ Frozen.prototype.bind = function (accounts, rounds) {
 
 Frozen.prototype.checkFrozeOrders = function () {
 
-	var i, currentTime = slots.getTime();
-	var totalMilestone = constants.froze.endTime / constants.froze.milestone;
+	function frozeBenefit() {
+		return new Promise(function (resolve, reject) {
+			self.scope.db.query(sql.frozeBenefit,
+				{
+					milestone: constants.froze.milestone * 60,
+					currentTime: slots.getTime()
+				}).then(function (rows) {
+					self.scope.logger.info("Successfully get :" + rows.length + ", number of froze order");
+					resolve(rows);
 
-	self.scope.db.query(sql.frozeBenefit,
-		{
-			milestone: constants.froze.milestone * 60,
-			currentTime: currentTime
-		}).then(function (rows) {
-			self.scope.logger.info("Successfully get :" + rows.length + ", number of froze order");
+				}).catch(function (err) {
+					self.scope.logger.error(err.stack);
+					reject(new Error(err.stack));
+				});
+		});
 
-			if (rows.length > 0) {
-				//emit Stake order event when milestone change
-				self.scope.network.io.sockets.emit('milestone/change', null);
+	}
 
-				//Update nextMilesone in "stake_orders" table
-				self.scope.db.none(sql.checkAndUpdateMilestone,
-					{
-						milestone: constants.froze.milestone * 60,
-						currentTime: currentTime
-					}).then(function () {
 
-						//change status and nextmilestone
-						self.scope.db.none(sql.disableFrozeOrders,
-							{
-								currentTime: currentTime,
-								totalMilestone: totalMilestone
-							}).then(function () {
-								self.scope.logger.info("Successfully check status for disable froze orders");
+	function checkAndUpdateMilestone() {
 
-							}).catch(function (err) {
-								self.scope.logger.error(err.stack);
-							});
 
-					}).catch(function (err) {
-						self.scope.logger.error(err.stack);
-					});
-			}
+		//emit Stake order event when milestone change
+		self.scope.network.io.sockets.emit('milestone/change', null);
+
+		return new Promise(function (resolve, reject) {
+			//Update nextMilesone in "stake_orders" table
+			self.scope.db.none(sql.checkAndUpdateMilestone,
+				{
+					milestone: constants.froze.milestone * 60,
+					currentTime: slots.getTime()
+				}).then(function () {
+					resolve();
+
+				}).catch(function (err) {
+					self.scope.logger.error(err.stack);
+					reject(new Error(err.stack));
+				});
+
+
+		});
+	}
+
+	function disableFrozeOrder() {
+
+		return new Promise(function (resolve, reject) {
+			//change status and nextmilestone
+			self.scope.db.none(sql.disableFrozeOrders,
+				{
+					currentTime: slots.getTime(),
+					totalMilestone: constants.froze.endTime / constants.froze.milestone
+				}).then(function () {
+					self.scope.logger.info("Successfully check status for disable froze orders");
+					resolve();
+				}).catch(function (err) {
+					self.scope.logger.error(err.stack);
+					reject(new Error(err.stack));
+				});
+		});
+	}
+
+	function deductFrozeAmountandSendReward(rows) {
+		var i;
+		return new Promise(function (resolve, reject) {
 
 			for (i = 0; i < rows.length; i++) {
-
 				if (rows[i].nextMilestone === rows[i].endTime) {
+
 					self.scope.db.none(sql.deductFrozeAmount, {
 						FrozeAmount: rows[i].freezedAmount,
 						senderId: rows[i].senderId
 					}).then(function () {
 						self.scope.logger.info("Successfully check and if applicable, deduct froze amount from mem_account table");
-
+						resolve();
 					}).catch(function (err) {
 						self.scope.logger.error(err.stack);
+						reject(new Error(err.stack));
 					});
 				}
 
-				//Request to send tarnsaction
+				//Request to send transaction
 				var transactionData = {
 					json: {
-						secret: config.users[0].secret,
+						secret: self.scope.config.sender.secret,
 						amount: parseInt(rows[i].freezedAmount * constants.froze.reward),
 						recipientId: rows[i].senderId,
-						publicKey: config.users[0].publicKey
+						publicKey: self.scope.config.sender.publicKey
 					}
 				};
 				//Send froze monthly rewards to users
 				self.scope.logic.transaction.sendTransaction(transactionData);
 			}
-
-		}).catch(function (err) {
-			self.scope.logger.error(err.stack);
 		});
+	}
+
+	async function checkFrozeOrders() {
+		try {
+			var rows = await frozeBenefit();
+
+			if (rows.length > 0) {
+				await checkAndUpdateMilestone();
+				await disableFrozeOrder();
+				await deductFrozeAmountandSendReward(rows);
+			}
+		} catch (err) {
+			self.scope.logger.error(err.stack);
+			return setImmediate(cb, err.toString());
+		}
+
+	};
+
+	checkFrozeOrders();
+
+
 
 };
 
-//Navin: Update Froze amount into mem_accounts table on every single order
+//Update Froze amount into mem_accounts table on every single order
 Frozen.prototype.updateFrozeAmount = function (data, cb) {
 
 	self.scope.db.one(sql.getFrozeAmount, {

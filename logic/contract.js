@@ -8,14 +8,20 @@
 //Requiring Modules
 var request = require('request');
 var constants = require('../helpers/constants.js');
-var config = require('../config.json');
 
 // Private fields
 var modules, library, self;
 
 //Contract constructor initialized from modules/contracts.js's constructor
-function Contract() {
+function Contract(config, cb) {
     self = this;
+    self.scope = {
+		config: config
+	};
+
+    if (cb) {
+		return setImmediate(cb, null, this);
+	}
 };
 
 //To be implemented as per requirement
@@ -100,18 +106,21 @@ Contract.prototype.calcEndTime = function(accType, startTime) {
 Contract.prototype.sendToContrubutors = function(contributors) {
     contributors.forEach(function(recipient) {
        
+        var port = self.scope.config.app.port;
+        var address = self.scope.config.address;
+
         //Request to send tarnsaction
-        var jsonData = {
+        var transactionData = {
             json : {
-                secret: config.users[0].secret,
+                secret:  self.scope.config.sender.secret,
                 amount: recipient.transferedAmount,
                 recipientId: recipient.address,
-                publicKey: config.users[0].publicKey
+                publicKey:  self.scope.config.sender.publicKey
             }
         }; 
 
-        request.put('http://localhost:7000/api/transactions/', jsonData, function(error, response, body) {
-            if(error) throw error;
+        request.put('http://' + address + ':' + port + '/api/transactions/', transactionData, function (error, response, body) {
+            if (error) throw error;
         });
         
     });

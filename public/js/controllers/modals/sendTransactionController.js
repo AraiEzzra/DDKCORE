@@ -93,12 +93,10 @@ angular.module('ETPApp').controller('sendTransactionController', ['$scope', 'sen
     }
 
     $scope.close = function () {
-        console.log('close1 call');
         if ($scope.destroy) {
             $scope.destroy();
         }
         sendTransactionModal.deactivate();
-        console.log('close1 call 2');
     }
 
     $scope.accountChanged = function (e) {

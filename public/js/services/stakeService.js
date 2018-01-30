@@ -1,9 +1,6 @@
 
 require('angular');
 
-    
-
-
 
     angular.module('ETPApp').service("stakeService", function ($http, $filter) {
         
