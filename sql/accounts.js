@@ -10,7 +10,9 @@ var Accounts = {
 
   getTotalAccount : 'SELECT count("address") FROM mem_accounts WHERE "balance" > 0',
 
-  getCurrentUnmined : 'SELECT "balance" FROM mem_accounts where "address"=${address}'
+  getCurrentUnmined : 'SELECT "balance" FROM mem_accounts where "address"=${address}',
+
+  checkAlreadyMigrated : 'SELECT "isMigrated" FROM mem_accounts where "email"=${email} AND "phoneNumber"=${phoneNumber}'
 
 };
 

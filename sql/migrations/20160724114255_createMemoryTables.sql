@@ -37,7 +37,12 @@ CREATE TABLE IF NOT EXISTS "mem_accounts"(
   "acc_type" SMALLINT DEFAULT 0,
   "transferedAmount" BIGINT DEFAULT 0,
   "endTime" INT,
-  "totalFrozeAmount" BIGINT DEFAULT 0
+  "totalFrozeAmount" BIGINT DEFAULT 0,
+  "isMigrated" SMALLINT,
+  "name" VARCHAR(20),
+  "email" VARCHAR(40),
+  "country" VARCHAR(20),
+  "phoneNumber" BIGINT
 );
 
 CREATE INDEX IF NOT EXISTS "mem_accounts_balance" ON "mem_accounts"("balance");
