@@ -32,6 +32,7 @@ angular.module('ETPApp').controller('blockchainController', ['$scope', '$timeout
                     $scope.countForgingBlocks = params.total();
                     $scope.loading = false;
                     $scope.view.inLoading = false;
+                    
                 }, null, true);
             }
         });
@@ -87,7 +88,7 @@ angular.module('ETPApp').controller('blockchainController', ['$scope', '$timeout
 
     // Search blocks watcher
     var tempSearchBlockID = '',
-        searchBlockIDTimeout;
+    searchBlockIDTimeout;
 
     $scope.$watch('searchBlocks.searchForBlock', function (val) {
         if (searchBlockIDTimeout) $timeout.cancel(searchBlockIDTimeout);

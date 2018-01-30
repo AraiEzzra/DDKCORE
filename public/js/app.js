@@ -44,36 +44,6 @@ ETPApp.config([
                 templateUrl: "/partials/stake.html",
             	controller: "stakeController"
             })
-            // .state('main.multi', {
-            //     url: "/wallets",
-            //     templateUrl: "/partials/multi.html",
-            //     controller: "walletsController"
-            // })
-            // .state('main.dappstore', {
-            //     url: "/dappstore",
-            //     templateUrl: "/partials/dapps.html",
-            //     controller: "dappsController"
-            // })
-            // .state('main.dappsCategory', {
-            //     url: "/dappstore/:categoryId",
-            //     templateUrl: "/partials/dapps-category.html",
-            //     controller: "dappsCategoryController"
-            // })
-            // .state('main.dappentry', {
-            //     url: "/dapp/:dappId",
-            //     templateUrl: "/partials/dapp-entry.html",
-            //     controller: "dappController"
-            // })
-            // .state('main.multiPendings', {
-            //     url: "/wallets/pendings",
-            //     templateUrl: "/partials/wallet-pendings.html",
-            //     controller: "walletPendingsController"
-            // })
-            // .state('main.walletTransactions', {
-            //     url: "/wallets/:walletId",
-            //     templateUrl: "/partials/wallet-transactions.html",
-            //     controller: "walletTransactionsController"
-            // })
             .state('main.settings', {
                 url: "/settings",
                 templateUrl: "/partials/settings.html",
@@ -104,31 +74,59 @@ ETPApp.config([
                 templateUrl: "/partials/blockchain.html",
                 controller: "blockchainController"
             })
+            .state('exitETPSUser', {
+                url: "/exitETPSUser",
+                templateUrl: "/partials/exit-etps-user.html",
+                controller: "exitETPSUserController"
+            })
             .state('passphrase', {
-                url: "/",
+                url: "/login",
                 templateUrl: "/partials/passphrase.html",
                 controller: "passphraseController"
+            })
+            .state('loading', {
+                url: "/",
+                templateUrl: "/partials/loading.html"
             });
     }
-]).run(function (languageService, clipboardService, $rootScope, $state, AuthService) {
+]).run(function (languageService, clipboardService, $rootScope, $state, AuthService, $timeout) {
     languageService();
     clipboardService();
     $rootScope.$state = $state;
+
+    $rootScope.defaultLoaderScreen = false;
+
+    /* function callAtTimeout() {
+        console.log("Timeout occurred");
+        $rootScope.defaultLoaderScreen = false;
+    } */
+
     //hotam: render current logged-in user upon page refresh if currently logged-in
     AuthService.getUserStatus().then(function () {
         if (AuthService.isLoggedIn()) {
-            $state.go('main.dashboard');
+             $timeout(function(){
+                    $state.go('main.dashboard');
+            },1000);
         } else {
-            $state.go('passphrase');
+            $timeout(function(){
+                $state.go('passphrase');
+        },1000);          
         }
     });
+    
+    
     //hotam: user authentication upon page forward/back for currently logged-in user
     $rootScope.$on('$stateChangeStart', function (e, toState, toParams, fromState, fromParams) {
         AuthService.getUserStatus().then(function () {
-            if (AuthService.isLoggedIn()) {
-                $state.go(toState.name);
-            } else {
-                $state.go('passphrase');
+            //console.log(toState);
+            if(toState.url == '/exitETPSUser'){
+                $state.go('exitETPSUser');
+            }else{
+                if (AuthService.isLoggedIn()) {
+                    $state.go(toState.name);
+                } else {
+                    $state.go('passphrase');
+                }
             }
         });
     }); 

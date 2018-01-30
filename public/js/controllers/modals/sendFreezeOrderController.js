@@ -121,7 +121,6 @@ angular.module('ETPApp').controller('sendFreezeOrderController', ['$scope', 'use
     }
     
     $scope.recipAddress = function () {
-        console.log('blank click');
         $scope.recipientAddress = '';
     }
 

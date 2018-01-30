@@ -101,6 +101,7 @@ angular.module('ETPApp').controller('appController', ['dappsService', '$scope', 
         'main.forging',
         'main.blockchain',
         'passphrase',
+        'exitETPSUser',
         'main.dappstore',
         'main.multi',
         'main.explorer',
@@ -576,9 +577,11 @@ angular.module('ETPApp').controller('appController', ['dappsService', '$scope', 
 
     window.onpopstate = function (event) {
         if ($scope.myClass.length != 0) {
-            $scope.classAdd();
-        } else {
+            //console.log('Demo+++');
             $scope.classRemove();
+        } else {
+            $scope.classAdd();
+            //console.log('Demo2+++');
         }
     };
 

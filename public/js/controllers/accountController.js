@@ -19,6 +19,7 @@ angular.module('ETPApp').controller('accountController', ['$state','$scope', '$r
     $scope.allVotes = 100 * 1000 * 1000 * 1000 * 1000 * 100;
     $scope.rememberedPassphrase =  userService.rememberedPassphrase;
 
+    
     $scope.graphs = {
         ETPPrice: {
             labels: ['1', '2'],

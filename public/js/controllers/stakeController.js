@@ -1,14 +1,19 @@
 require('angular');
 
-angular.module('ETPApp').controller('stakeController', ['$scope', 'ngTableParams', 'NameService', '$http', "userService", 'gettextCatalog', 'sendFreezeOrderModal', function ($scope, ngTableParams, NameService, $http, userService, gettextCatalog, sendFreezeOrderModal) {
+angular.module('ETPApp').controller('stakeController', ['$scope', 'ngTableParams', 'stakeService', '$http', "userService", 'gettextCatalog', 'sendFreezeOrderModal','$timeout', function ($scope, ngTableParams, stakeService, $http, userService, gettextCatalog, sendFreezeOrderModal,$timeout) {
 
+  $scope.view.inLoading = true;
   $scope.rememberedPassphrase = userService.rememberedPassphrase;
   var resultData = [];
-  var data = NameService.data;
+  var data = stakeService.data;
   $scope.view.loadingText = gettextCatalog.getString('Staking blockchain');
   $scope.view.page = { title: gettextCatalog.getString('Staking'), previous: null };
   $scope.countFreezeOrders = 0;
   $scope.loading = true;
+  $scope.searchStake = stakeService;
+  $scope.view.bar = { showStakeSearchBar: true };
+  //console.log($scope.view.inLoading);
+  
 
 
 
@@ -23,9 +28,12 @@ angular.module('ETPApp').controller('stakeController', ['$scope', 'ngTableParams
       counts: [],
       getData: function ($defer, params) {
         $scope.loading = true;
-        NameService.getData($defer, params, $scope.filter, $scope.rememberedPassphrase, function () {
+        stakeService.getData($scope.searchStake.searchForStake, $defer, params, $scope.filter, $scope.rememberedPassphrase, function () {
+          $scope.searchStake.inSearch = false;
           $scope.countFreezeOrders = params.total();
           $scope.loading = false;
+          $scope.view.inLoading = false;
+          //console.log($scope.view.inLoading);
         });
       }
     });
@@ -57,77 +65,81 @@ angular.module('ETPApp').controller('stakeController', ['$scope', 'ngTableParams
   }
 
   $scope.updateStakes = function () {
-    console.log("updateStakes......."+(new Date()));
     $scope.tableStakes.reload();
 };
 
   $scope.$on('updateControllerData', function (event, data) {
-    console.log("inside stake controler");
     if (data.indexOf('main.stake') != -1) {
       $scope.updateStakes();
     }
   });
 
+  $scope.clearSearch = function () {
+    $scope.searchStake.searchForStake = '';
+}
+
+
 
   $scope.updateStakes();
+
+
+
+
+// Search blocks watcher
+var tempSearchBlockID = '',
+searchBlockIDTimeout;
+
+$scope.$watch('searchStake.searchForStake', function (val) {
+    console.log("Here search for stake");
+    if (searchBlockIDTimeout) $timeout.cancel(searchBlockIDTimeout);
+    console.log("Here search");
+    if (val.trim() != '') {
+        $scope.searchStake.inSearch = true;
+    } else {
+        $scope.searchStake.inSearch = false;
+        if (tempSearchBlockID != val) {
+            tempSearchBlockID = val;
+            $scope.updateStakes();
+            return;
+        }
+    }
+    tempSearchBlockID = val;
+    searchBlockIDTimeout = $timeout(function () {
+        $scope.searchStake.searchForStake = tempSearchBlockID;
+        $scope.updateStakes();
+    }, 2000); // Delay 2000 ms
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 }]);
 
 
 
-angular.module('ETPApp').service("NameService", function ($http, $filter) {
 
-  function filterData(data, filter) {
-    return $filter('filter')(data, filter)
-  }
-
-  function orderData(data, params) {
-    return params.sorting() ? $filter('orderBy')(data, params.orderBy()) : filteredData;
-  }
-
-  function sliceData(data, params) {
-    return data.slice((params.page() - 1) * params.count(), params.page() * params.count())
-  }
-
-  function transformData(data, filter, params) {
-    return sliceData(orderData(filterData(data, filter), params), params);
-  }
-
-  var service = {
-    cachedData: [],
-    getData: function ($defer, params, filter, secret, cb) {
-      // Remove below code because when we do multiple order and in between check stake,
-      //    html page then it cached it ,in future always displayed it using cache
-
-      // if(service.cachedData.length>0){
-      //   console.log("using cached data")
-      //   var filteredData = filterData(service.cachedData,filter);
-      //   var transformedData = sliceData(orderData(filteredData,params),params);
-      //   params.total(filteredData.length)
-      //   $defer.resolve(transformedData);
-      // }
-      // else{
-      //   console.log("fetching data")
-      $http.post('/api/frogings/getAllOrders', { secret: secret }).success(function (resp) {
-        var resultData = JSON.parse(resp.freezeOrders || null);
-        //angular.copy(resultData,service.cachedData)
-        if (resultData != null) {
-          params.total(resultData.length)
-          var filteredData = $filter('filter')(resultData, filter);
-          var transformedData = transformData(resultData, filter, params)
-
-          $defer.resolve(transformedData);
-        }
-
-        cb(null);
-      });
-
-
-    }
-  };
-  return service;
-});
 
 
 
