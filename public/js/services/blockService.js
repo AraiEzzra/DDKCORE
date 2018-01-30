@@ -1,11 +1,11 @@
 require('angular');
 
 angular.module('ETPApp').service('blockService', function ($http, esClient) {
-var blocks = {
+    var blocks = {
         lastBlockId: null,
         searchForBlock: '',
         gettingBlocks: false,
-        cached: {data: [], time: new Date()},
+        cached: { data: [], time: new Date() },
         getBlock: function (blockID, cb) {
             esClient.search({
                 index: 'blocks',
@@ -46,21 +46,21 @@ var blocks = {
                                 },
                             }
                         }, function (error, response, status) {
-                            if(error) {
+                            if (error) {
                                 params.total(0);
                                 $defer.resolve();
                                 cb({ blocks: [], count: 0 });
-                            }else {
+                            } else {
                                 if (response.hits.hits.length > 0) {
                                     params.total(1);
                                     $defer.resolve([response.hits.hits[0]._source]);
                                     cb(null);
-                                }else {
+                                } else {
                                     params.total(0);
                                     $defer.resolve();
                                     cb({ blocks: [], count: 0 });
                                 }
-                            }    
+                            }
                         });
                     }
                 });
@@ -71,34 +71,45 @@ var blocks = {
                         index: 'blocks',
                         type: 'blocks',
                         body: {
-                            from : (params.page() - 1) * params.count(), 
-                            size : params.count(),
+                            from: (params.page() - 1) * params.count(),
+                            size: params.count(),
                             query: {
-                                match_all : {}
+                                match_all: {}
                             },
-                            sort: [{ height: { order: 'desc' } } ],
+                            sort: [{ height: { order: 'desc' } }],
                         }
                     }, function (error, response, status) {
                         if (fromBlocks) {
-                            if (response.hits.hits[0]._source.height) {
-                                params.total(response.hits.hits[0]._source.height);
-                            } else {
-                                params.total(0);
-                            }
-                            if (response.hits.hits.length > 0) {
-                                blocksData = [];
-                                blocks.lastBlockId = response.hits.hits[0]._source.id;
-                                cb();
-                                response.hits.hits.forEach(function(block) {
-                                    blocksData.push(block._source);
-                                });
-                                $defer.resolve(blocksData);
-                            } else {
-                                blocks.lastBlockId = 0;
-                                cb();
-                                $defer.resolve([]);
-                            }
-                        }     
+                            esClient.search({
+                                index: 'blocks',
+                                type: 'blocks',
+                                body: {
+                                    query: {
+                                        match_all: {}
+                                    },
+                                    sort: [{ height: { order: 'desc' } }],
+                                }
+                            }, function (err, res) {
+                                if (res.hits.hits[0]._source.height) {
+                                    params.total(res.hits.hits[0]._source.height);
+                                } else {
+                                    params.total(0);
+                                }
+                                if (response.hits.hits.length > 0) {
+                                    blocksData = [];
+                                    blocks.lastBlockId = response.hits.hits[0]._source.id;
+                                    cb();
+                                    response.hits.hits.forEach(function (block) {
+                                        blocksData.push(block._source);
+                                    });
+                                    $defer.resolve(blocksData);
+                                } else {
+                                    blocks.lastBlockId = 0;
+                                    cb();
+                                    $defer.resolve([]);
+                                }
+                            });
+                        }
                     });
                 }
             }
