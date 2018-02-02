@@ -2,8 +2,8 @@
 
 angular.module('ETPApp').service('esClient', function (esFactory) {
     return esFactory({
-        host: 'localhost:9200',
-        log: 'trace'
+        host: '180.151.230.12:9200',
+        log: 'error'
     });
 });
 

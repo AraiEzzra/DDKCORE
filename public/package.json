@@ -47,6 +47,7 @@
     "buffer": "=4.9.1",
     "chart.js": "=1.0.2",
     "compare-version": "=0.1.2",
+    "elasticsearch": "^14.0.0",
     "elasticsearch-browser": "^14.0.0",
     "lisk-js": "=0.2.3",
     "ng-table": "=0.5.4",

@@ -1,8 +1,8 @@
 var elasticsearch = require('elasticsearch');
 
 var Client = new elasticsearch.Client({
-	hosts: 'localhost:9200',
-	log: 'trace'
+	hosts: '180.151.230.12:9200',
+	log: 'error'
 	
 	//configuration for production server
 	/*hosts: [
