@@ -10,3 +10,4 @@ node_modules/
 stage_server_setup.txt
 testUsers.json
 package-lock.json
+.vscode/

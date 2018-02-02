@@ -308,6 +308,28 @@ d.run(function () {
 			var cors = require('cors');
 			var app = express();
 
+			/**
+			 * This creates the module that we created in the step before.
+			 * In my case it is stored in the util folder.
+			 */
+			var Prometheus = require('./prometheus');
+
+			/**
+			 * The below arguments start the counter functions
+			 */
+			app.use(Prometheus.requestCounters);
+			app.use(Prometheus.responseCounters);
+
+			/**
+			 * Enable metrics endpoint
+			 */
+			Prometheus.injectMetricsRoute(app);
+
+			/**
+			 * Enable collection of default metrics
+			 */
+			Prometheus.startCollection();
+
 			//hotam: added swagger configuration
 			var subpath = express();
 			var swagger = require("swagger-node-express");
