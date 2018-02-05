@@ -17,7 +17,7 @@
                                 </div>
                                 <div><translate>You can find your passphrase below.</translate></div>
                             </div>
-                            <div class="modal-body clearfix">
+                            <div class="modal-body clearfix passphrase-form">
                                 <div class="left-margin-40 right-margin-40 top-margin-40">
                                     <div class="input-field passphraseGeneration">
                                         <textarea id="newPassphrase" class="materialize-textarea" ng-model="newPassphrase" autofocus readonly ng-trim="false"></textarea>
@@ -27,29 +27,43 @@
                                         <span><translate>Generate New</translate></span>
                                     </span>
                                 </div>
-                                <div class="row clearfix">
-                                    <div class="col-md-6">
-                                        <div class="input-field">
-                                            <input id="name" class="" ng-model="name">
-                                            <label for="name">Name</label>
+                                <div class="left-margin-40 right-margin-40">
+                                    <div class="row clearfix">
+                                        <div class="col-md-6">
+                                            <div class="input-field">
+                                                <input id="name" type="text">
+                                                <label for="name">
+                                                    <translate>Name</translate>
+                                                </label>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="input-field">
-                                            <input id="email" class="" ng-model="email">
-                                            <label for="email">Email</label>
+
+                                        <div class="col-md-6">
+                                            <div class="input-field">
+                                                <input id="email" type="text">
+                                                <label for="email">
+                                                    <translate>Email</translate>
+                                                </label>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="input-field">
-                                            <input id="Country" class="" ng-model="Country">
-                                            <label for="Country">Country</label>
+                                        <div class="clearfix"></div>
+
+                                        <div class="col-md-6">
+                                            <div class="input-field">
+                                                <input id="country" type="text">
+                                                <label for="country">
+                                                    <translate>Country</translate>
+                                                </label>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="input-field">
-                                            <input id="phone" class="" ng-model="phone">
-                                            <label for="phone">Phone</label>
+
+                                        <div class="col-md-6">
+                                            <div class="input-field">
+                                                <input id="phone" type="text">
+                                                <label for="phone">
+                                                    <translate>Phone</translate>
+                                                </label>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -86,7 +100,12 @@
                                 
 
 
-
+                                <select class="selectpicker" data-live-search="true">
+                                <option data-tokens="ketchup mustard">Hot Dog, Fries and a Soda</option>
+                                <option data-tokens="mustard">Burger, Shake and a Smile</option>
+                                <option data-tokens="frosting">Sugar, Spice and all things nice</option>
+                                </select>
+                                      
 
 
 
@@ -100,7 +119,7 @@
 
 
                             </div>
-                            <div class="modal-body bordered">
+                            <div class="modal-body bordered ">
                                 <span class="send-info-text"><translate>Make sure that you keep the passphrase safe. You will be asked to re-type it for confirmation.</translate></span>
                             </div>
                             <div class="modal-body bordered clearfix">

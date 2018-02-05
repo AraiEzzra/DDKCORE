@@ -1,47 +1,5 @@
 <div class="top-margin"></div>
 <div class="row clearfix">
-  <!-- <div class="col-md-4 col-sm-12 col-xs-12 pr7 dashboard-info">
-    <div class="panel widget widget-brown">
-      <div class="ETP-icon"></div>
-      <div class="panel-body">
-        <div class="wg-label">
-          {{'Total Supply'|translate}}
-        </div>
-        <div class="wg-data">
-          <span class="strong">{{balanceToShow[0] || 0}}<span class="small">{{balanceToShow[1]}}</span></span>&nbsp;ETP
-        </div>
-      </div>
-    </div>
-  </div> -->
- <!--  <div class="col-md-4 col-sm-12 col-xs-12 pr7 pl7 dashboard-info">
-    <div class="panel widget widget-brown">
-      <div class="ETP-icon"></div>
-      <div class="panel-body">
-        <div class="wg-label">
-          {{'Balance'|translate}}
-        </div>
-        <div class="wg-data">
-          <span class="strong">{{balanceToShow[0] || 0}}
-            <span class="small">{{balanceToShow[1]}}</span>
-          </span>&nbsp;ETP
-        </div>
-      </div>
-    </div>
-  </div> -->
-  <!-- <div class="col-md-4 col-sm-12 col-xs-12 pl7 dashboard-info">
-    <div class="panel widget widget-brown">
-      <div class="ETP-icon"></div>
-      <div class="panel-body">
-        <div class="wg-label">
-          {{'Your ETP balance'|translate}}
-        </div>
-        <div class="wg-data">
-          <span class="strong">{{balanceToShow[0] || 0}}<span class="small">{{balanceToShow[1]}}</span></span>&nbsp;ETP
-        </div>
-      </div>
-    </div>
-  </div> -->
- <!--  <a class="btn btn-white waves-effect btn-marging" ui-sref="exitETPSUser">Login</a> -->
     <div class="col-md-3 col-sm-6 col-xs-12 pr7 dashboard-info">
       <div class="panel widget widget-brown">
         <div class="panel-body">
@@ -131,78 +89,7 @@
         </div>
       </div>
     </div>
-  <!-- <div class="col-lg-3 col-md-6 col-sm-6 col-xs-12 dashboard-info">
-    <div class="panel  widget widget-violet">
-      <div class="dapp-icon"></div>
-      <div class="panel-body">
-        <div class="wg-label">
-          Dapps Installed
-        </div>
-        <div class="wg-data">
-          <span class="strong">13</span><span class="wg-legend">5 Updates Available</span>
-        </div>
-      </div>
-    </div>
-  </div> -->
-  <!-- <div class="col-md-6 col-sm-12 col-xs-12 pl7 dashboard-info">
-    <div class="panel  widget widget-brown" ng-show="diffVersion!=-1">
-      <div class="panel-body">
-        <div class="wg-label">
-          {{'ETP Client'|translate}}
-        </div>
-        <div class="wg-data version">
-          <span class="strong">v{{version}}</span>
-          <span class="wg-legend">
-            <translate>Latest version</translate>
-          </span>
-        </div>
-      </div>
-    </div>
-    <div class="panel widget widget-red" ng-show="diffVersion==-1">
-      <div class="panel-body">
-        <div class="wg-label">
-          <translate>ETP Client Outdated</translate>
-        </div>
-        <div class="wg-data version">
-          <span class="strong">v{{version}}</span>
-          <a href="https://ETP.io/download" target="_blank" class="btn btn-white waves-effect pull-right">
-            <translate>UPDATE</translate>
-          </a>
-        </div>
-      </div>
-    </div>
-  </div> -->
 </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 <div class="row">
   <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
@@ -235,8 +122,7 @@
             <th>
               <translate>Amount (Fee)</translate>
             </th>
-      
-          </tr>
+           </tr>
         </thead>
         <tbody>
           <tr ng-repeat="transaction in transactions">
@@ -264,160 +150,10 @@
         </tbody>
       </table>
       <div class="panel-body empty-body" ng-if="!transactions.length">
-        <!-- <div class="logo-grey"></div> -->
         <p class="empty-state-text">
           {{'You have not made any transactions yet.'|translate}}
         </p>
       </div>
     </div>
   </div>
-  
-  <!-- <div class="col-lg-3 col-md-6 col-sm-6 col-xs-12">
-    <div class="light-graph line-graph">
-      <div class="light-graph-heading">
-        No Data Available
-      </div>
-      <div class="light-graph-sub-heading">
-        Return when you have forged at least 100 ETP
-      </div>
-      <div class="light-graph-body">
-        <canvas id="line" class="chart chart-line" chart-data="graphs.ETPPrice.data" chart-colours="graphs.ETPPrice.colours" chart-labels="graphs.ETPPrice.labels" chart-legend="false" chart-series="graphs.ETPPrice.series" chart-options="graphs.ETPPrice.options"></canvas>
-      </div>
-      <div class="light-graph-footer">
-        <div class="row">
-          <div class="col-xs-6 col-md-6 col-lg-3 description">
-            Amount Forged
-            <br>
-            in last year
-          </div>
-          <div class="col-xs-6 forged-amount">
-            <span class="value">0.00 <span class="legend">ETP</span></span>
-          </div>
-          <div class="clearfix visible-lg visible-md visible-sm visible-xs"></div>
-        </div>
-      </div>
-    </div>
-  </div> -->
-  <!-- <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-    <div class="panel panel-default panel-list">
-      <div class="panel-heading cursor">
-        <h2>
-          News
-        </h2>
-        <div class="more">
-          <span class="sr-only">More</span>
-        </div>
-      </div>
-      <div class="panel-body" ng-if="true">
-        <ul class="media-list">
-          <li class="media">
-            <div class="media-left media-middle">
-              <a href="#"><img class="media-object" src="/images/roller_coaster.png" alt="RollerCoaster Tycoon"></a>
-            </div>
-            <div class="media-body">
-              <h4 class="media-heading">
-                RollerCoaster Tycoon
-              </h4>
-              <div class="pull-right icon">
-                <h4 class="media-heading"></h4>
-              </div><span class="text-opacity">I'm a one-line description of this Dapp</span>
-            </div>
-          </li>
-          <li class="media">
-            <div class="media-left media-middle">
-              <a href="#"><img class="media-object" src="/images/roller_coaster.png" alt="RollerCoaster Tycoon"></a>
-            </div>
-            <div class="media-body">
-              <h4 class="media-heading">
-                RollerCoaster Tycoon
-              </h4>
-              <div class="pull-right icon">
-                <h4 class="media-heading"></h4>
-              </div><span class="text-opacity">I'm a one-line description of this Dapp</span>
-            </div>
-          </li>
-          <li class="media">
-            <div class="media-left media-middle">
-              <a href="#"><img class="media-object" src="/images/roller_coaster.png" alt="RollerCoaster Tycoon"></a>
-            </div>
-            <div class="media-body">
-              <h4 class="media-heading">
-                RollerCoaster Tycoon
-              </h4>
-              <div class="pull-right icon">
-                <h4 class="media-heading"></h4>
-              </div><span class="text-opacity">I'm a one-line description of this Dapp</span>
-            </div>
-          </li>
-        </ul>
-      </div>
-      <div class="panel-body empty-body" ng-if="false">
-        <p class="empty-state-icon"></p>
-        <p class="empty-state-text">
-          There are no news right now.
-        </p>
-      </div>
-    </div>
-  </div>
-  <div class="col-lg-4 col-md-12 col-sm-6  col-xs-12">
-    <div class="panel  panel-default panel-list">
-      <div class="panel-heading cursor">
-        <h2>
-          Latest Messages
-        </h2>
-        <div class="more">
-          <span class="sr-only">More</span>
-        </div>
-      </div>
-      <div class="panel-body" ng-if="false">
-        <ul class="media-list">
-          <li class="media">
-            <div class="media-left media-middle">
-              <a href="#"><img class="media-object" src="/images/account.png" alt="RollerCoaster Tycoon"></a>
-            </div>
-            <div class="media-body">
-              <h4 class="media-heading">
-                Patrick Collins
-              </h4>
-              <div class="pull-right icon new-message padding-top-6">
-                <h4 class="media-heading"></h4>
-              </div>Yes I think it´s the best way to go
-            </div>
-          </li>
-          <li class="media">
-            <div class="media-left media-middle">
-              <a href="#"><img class="media-object" src="/images/account.png" alt="RollerCoaster Tycoon"></a>
-            </div>
-            <div class="media-body">
-              <h4 class="media-heading">
-                Patrick Collins
-              </h4>
-              <div class="pull-right icon padding-top-6">
-                <h4 class="media-heading"></h4>
-              </div>Yes I think it´s the best way to go
-            </div>
-          </li>
-          <li class="media">
-            <div class="media-left media-middle">
-              <a href="#"><img class="media-object" src="/images/account.png" alt="RollerCoaster Tycoon"></a>
-            </div>
-            <div class="media-body">
-              <h4 class="media-heading">
-                Patrick Collins
-              </h4>
-              <div class="pull-right icon padding-top-6">
-                <h4 class="media-heading"></h4>
-              </div>Yes I think it´s the best way to go
-            </div>
-          </li>
-        </ul>
-      </div>
-      <div class="panel-body empty-body" ng-if="true">
-        <p class="empty-state-icon"></p>
-        <p class="empty-state-text">
-          You haven't started any conversation yet.
-        </p>
-      </div>
-    </div>
-  </div> -->
 </div>
