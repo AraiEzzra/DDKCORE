@@ -17,7 +17,7 @@ module.exports = function (grunt) {
         nggettext_extract: {
             pot: {
                 files: {
-                    'po/template.pot': [
+                    'i18n/template.pot': [
                         'js/**/*.js',
                         '*.html',
                         'partials/*.html',
@@ -33,7 +33,7 @@ module.exports = function (grunt) {
                     module: 'ETPApp'
                 },
                 files: {
-                    'static/js/translations.js': ['po/*.po']
+                    'static/js/translations.js': ['i18n/*.po']
                 }
             }
         },
@@ -107,7 +107,7 @@ module.exports = function (grunt) {
                tasks: ["nggettext_extract"]
           },
           po_compile: {
-               files: ["po/*.mo", "po/*.po", "template.pot"],
+               files: ["i18n/*.mo", "i18n/*.po", "template.pot"],
                tasks: ["nggettext_compile"]
           },
           livereload: {

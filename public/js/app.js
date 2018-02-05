@@ -75,10 +75,10 @@ ETPApp.config([
                 templateUrl: "/partials/blockchain.html",
                 controller: "blockchainController"
             })
-            .state('exitETPSUser', {
-                url: "/exitETPSUser",
-                templateUrl: "/partials/exit-etps-user.html",
-                controller: "exitETPSUserController"
+            .state('existingETPSUser', {
+                url: "/existingETPSUser",
+                templateUrl: "/partials/existing-etps-user.html",
+                controller: "existingETPSUserController"
             })
             .state('passphrase', {
                 url: "/login",
@@ -120,8 +120,8 @@ ETPApp.config([
     $rootScope.$on('$stateChangeStart', function (e, toState, toParams, fromState, fromParams) {
         AuthService.getUserStatus().then(function () {
             //console.log(toState);
-            if(toState.url == '/exitETPSUser'){
-                $state.go('exitETPSUser');
+            if(toState.url == '/existingETPSUser'){
+                $state.go('existingETPSUser');
             }else{
                 if (AuthService.isLoggedIn()) {
                     $state.go(toState.name);

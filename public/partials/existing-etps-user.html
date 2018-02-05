@@ -8,22 +8,22 @@
             </div>
             <form class="clearfix pass-window-form">
               <div class="input-field">
-                  <input id="userName" type="text">
+                  <input id="userName" type="text" ng-model="username">
                   <label for="password"><translate>Your User Name</translate></label>
               </div>
 
               <div class="input-field">
-                <input id="password" type="password">
+                <input id="password" type="password" ng-model="password">
                 <label for="password"><translate>Your Password</translate></label>
+                <span class="pass-error" ng-show="errorMessage">{{errorMessage}}</span>
             </div>
               
               
               <div class="text-center">
-                  <a class="btn btn-blue waves-effect waves-light"><translate>Login</translate></a>
+                  <a class="btn btn-blue waves-effect waves-light" ng-click="login(username, password)" ng-disabled="!password"><translate>Login</translate></a>
               </div>
             </form>
         </div>
-
         <div class="pass-footer clearfix">ETP © 2017. All Rights Reserved.</div>
     </div>
 </div>

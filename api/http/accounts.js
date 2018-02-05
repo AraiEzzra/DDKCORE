@@ -44,7 +44,8 @@ function AccountsHttpApi (accountsModule, app) {
 		'post /logout': 'logout',
 		'get /count':'totalAccounts',
 		'get /getCirculatingSupply':'getCirculatingSupply',
-		'get /totalSupply' : 'totalSupply'
+		'get /totalSupply' : 'totalSupply',
+		'post /migrateData' : 'migrateData'
 	});
 
 	router.map(accountsModule.internal, {
