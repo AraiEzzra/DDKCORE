@@ -752,6 +752,29 @@ Accounts.prototype.shared = {
 			totalSupply: totalSupply
 		});
 
+	},
+
+	migrateData: function (req, cb) {
+
+		library.db.one(sql.updateBalance, {
+			address: req.body.address,
+			balance: req.body.data.balance
+		}
+		).then(function (data) {
+
+			library.db.one(sql.insertStakeOrder, req.body.address
+			).then(function (data) {
+
+				return setImmediate(cb, null);
+			}).catch(function (err) {
+				library.logger.error(err.stack);
+				return setImmediate(cb, err.toString());
+			});
+		}).catch(function (err) {
+			library.logger.error(err.stack);
+			return setImmediate(cb, err.toString());
+		});
+
 	}
 };
 

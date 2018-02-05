@@ -10,7 +10,9 @@ var Accounts = {
 
   getTotalAccount : 'SELECT count("address") FROM mem_accounts WHERE "balance" > 0',
 
-  getCurrentUnmined : 'SELECT "balance" FROM mem_accounts where "address"=${address}'
+  getCurrentUnmined : 'SELECT "balance" FROM mem_accounts where "address"=${address}',
+
+  updateBalance : 'UPDATE mem_accounts SET "balance" = ${balance},"u_balance"=${balance} WHERE "address" = ${address}'
 
 };
 
