@@ -32,7 +32,7 @@
             "public": true,
             "whiteList": [
                 "127.0.0.1",
-                "192.168.4.124"
+                "192.168.9.47"
             ]
         },
         "options": {
@@ -48,7 +48,7 @@
         "enabled": true,
         "list": [
             {
-                "ip": "192.168.4.101",
+                "ip": "192.168.9.35",
                 "port": 7000
             },
             {
@@ -89,7 +89,7 @@
         "access": {
             "whiteList": [
                 "127.0.0.1",
-                "192.168.4.124"
+                "192.168.9.47"
             ]
         }
     },
@@ -106,12 +106,17 @@
     },
     "dapp": {
         "masterrequired": true,
-        "autoexec": []
+        "autoexec": [],
+        "masterpassword": "GSne7ki1uzu6"
     },
-    "initialPrimined":{
-        "total":55000000000000
+    "initialPrimined": {
+        "total": 55000000000000
     },
-    "etpSupply":{
-        "totalSupply":2100000000000000
-    }
+    "etpSupply": {
+        "totalSupply": 2100000000000000
+    },
+    "session": {},
+    "app": {},
+    "sender": {},
+    "nethash": "da3ed6a45429278bac2666961289ca17ad86595d33b31037615d4b8e8f158bba"
 }
