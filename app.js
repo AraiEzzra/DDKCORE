@@ -308,6 +308,7 @@ d.run(function () {
 			var cors = require('cors');
 			var app = express();
 
+			//Hotam Singh
 			/**
 			 * This creates the module that we created in the step before.
 			 * In my case it is stored in the util folder.
@@ -762,6 +763,7 @@ d.run(function () {
 			logger.error(err);
 		} else {
 
+			//Hotam Singh
 			// cron job to save data on elasticsearch
 			cron.schedule('* * * * *', function () {
 				var tables = [

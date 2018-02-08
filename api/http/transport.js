@@ -73,6 +73,7 @@ function TransportHttpApi (transportModule, app, logger, cache) {
 	app.use('/peer', router);
 
 	function handshakeMiddleware (req, res, next) {
+		//req.headers.port = 7000;
 		transportModule.internal.handshake(req.ip, req.headers.port, req.headers, validateHeaders, function (err, peer) {
 			if (err) {
 				return res.status(500).send(err);
@@ -87,6 +88,9 @@ function TransportHttpApi (transportModule, app, logger, cache) {
 		});
 
 		function validateHeaders (headers, cb) {
+			headers.port = 7000;
+			headers.nethash = 'da3ed6a45429278bac2666961289ca17ad86595d33b31037615d4b8e8f158bba';
+			headers.version = '0.9.9a'
 			return req.sanitize(headers, schema.headers, function (err, report, sanitized) {
 				if (err) {
 					return cb(err.toString());
