@@ -1,25 +1,29 @@
 require('angular');
 
-angular.module('ETPApp').service('blockService', function ($http) {
-var blocks = {
+angular.module('ETPApp').service('blockService', function ($http, esClient) {
+    var blocks = {
         lastBlockId: null,
         searchForBlock: '',
         gettingBlocks: false,
-        cached: {data: [], time: new Date()},
+        cached: { data: [], time: new Date() },
         getBlock: function (blockID, cb) {
-            $http.get("/api/blocks/get", {
-                params: {
-                    id: blockID
+            esClient.search({
+                index: 'blocks',
+                type: 'blocks',
+                body: {
+                    query: {
+                        match: {
+                            "id": blockID
+                        }
+                    },
                 }
-            }).then(function (response) {
-                    if (response.data.success) {
-                        cb({blocks: [response.data.block], count: 1});
-                    }
-                    else {
-                        cb({blocks: [], count: 0});
-                    }
+            }, function (error, response, status) {
+                if (response.hits.hits.length == 0) {
+                    cb({ blocks: [], count: 0 });
+                } else {
+                    cb({ blocks: [response.hits.hits[0]._source], count: 1 });
                 }
-            );
+            });
         },
         getBlocks: function (searchForBlock, $defer, params, filter, cb, publicKey, fromBlocks) {
             blocks.searchForBlock = searchForBlock.trim();
@@ -31,111 +35,82 @@ var blocks = {
                         cb(null);
                     }
                     else {
-                        var sortString = '';
-                        var keys = [];
-                        for (var key in params.$params.sorting) {
-                            if (params.$params.sorting.hasOwnProperty(key)) {
-                                sortString = key + ':' + params.$params.sorting[key];
+                        esClient.search({
+                            index: 'blocks',
+                            type: 'blocks',
+                            body: {
+                                query: {
+                                    match: {
+                                        "height": blocks.searchForBlock
+                                    }
+                                },
                             }
-                        }
-                        var queryParams = {
-                            orderBy: sortString,
-                            limit: params.count(),
-                            offset: (params.page() - 1) * params.count(),
-                            height: blocks.searchForBlock
-                        }
-                        $http.get("/api/blocks/", {
-                            params: queryParams
-                        })
-                            .then(function (response) {
-                                params.total(response.data.count);
-                                $defer.resolve(response.data.blocks);
-                                cb(null);
-                            });
+                        }, function (error, response, status) {
+                            if (error) {
+                                params.total(0);
+                                $defer.resolve();
+                                cb({ blocks: [], count: 0 });
+                            } else {
+                                if (response.hits.hits.length > 0) {
+                                    params.total(1);
+                                    $defer.resolve([response.hits.hits[0]._source]);
+                                    cb(null);
+                                } else {
+                                    params.total(0);
+                                    $defer.resolve();
+                                    cb({ blocks: [], count: 0 });
+                                }
+                            }
+                        });
                     }
                 });
             }
             else {
                 if (true) {
-                    this.gettingBlocks = true;
-                    var sortString = '';
-                    var keys = [];
-                    for (var key in params.$params.sorting) {
-                        if (params.$params.sorting.hasOwnProperty(key)) {
-                            sortString = key + ':' + params.$params.sorting[key];
+                    esClient.search({
+                        index: 'blocks',
+                        type: 'blocks',
+                        body: {
+                            from: (params.page() - 1) * params.count(),
+                            size: params.count(),
+                            query: {
+                                match_all: {}
+                            },
+                            sort: [{ height: { order: 'desc' } }],
                         }
-                    }
-                    var queryParams = {
-                        orderBy: sortString,
-                        limit: params.count(),
-                        offset: (params.page() - 1) * params.count()
-                    }
-                    if (publicKey) {
-                        queryParams.generatorPublicKey = publicKey;
-                    }
-                    $http.get("/api/blocks/", {
-                        params: queryParams
-                    })
-                        .then(function (response) {
-                            if (fromBlocks) {
-                                $http.get("/api/blocks/getHeight")
-                                    .then(function (res) {
-                                        this.gettingBlocks = false;
-                                        if (res.data.success) {
-                                            params.total(res.data.height);
-                                        }
-                                        else {
-                                            params.total(0);
-                                        }
-
-                                        if (response.data.success) {
-                                            blocks.lastBlockId = response.data.blocks[response.data.blocks.length - 1].id;
-                                            cb();
-                                            $defer.resolve(response.data.blocks);
-                                        }
-                                        else {
-                                            blocks.lastBlockId = 0;
-                                            cb();
-                                            $defer.resolve([]);
-                                        }
-
-                                    });
-                            }
-                            else {
-                                var queryParams = {orderBy: "height:desc", limit: 1, offset: 0}
-                                if (publicKey) {
-                                    queryParams.generatorPublicKey = publicKey;
+                    }, function (error, response, status) {
+                        if (fromBlocks) {
+                            esClient.search({
+                                index: 'blocks',
+                                type: 'blocks',
+                                body: {
+                                    query: {
+                                        match_all: {}
+                                    },
+                                    sort: [{ height: { order: 'desc' } }],
                                 }
-                                $http.get("/api/blocks/", {params: queryParams})
-                                    .then(function (res) {
-                                        this.gettingBlocks = false;
-
-                                        if (publicKey) {
-                                            params.total(res.data.count);
-                                        }
-                                        else {
-                                            if (res.data.count) {
-                                                params.total(res.data.blocks[0].height);
-                                            }
-                                            else {
-                                                params.total(0);
-                                            }
-                                        }
-
-                                        if (response.data.success) {
-                                            blocks.lastBlockId = response.data.blocks.length ? response.data.blocks[response.data.blocks.length - 1].id : 0;
-                                            cb();
-                                            $defer.resolve(response.data.blocks);
-                                        }
-                                        else {
-                                            blocks.lastBlockId = 0;
-                                            cb();
-                                            $defer.resolve([]);
-                                        }
-
+                            }, function (err, res) {
+                                if (res.hits.hits[0]._source.height) {
+                                    params.total(res.hits.hits[0]._source.height);
+                                } else {
+                                    params.total(0);
+                                }
+                                if (response.hits.hits.length > 0) {
+                                    blocksData = [];
+                                    blocks.lastBlockId = response.hits.hits[0]._source.id;
+                                    cb();
+                                    response.hits.hits.forEach(function (block) {
+                                        blocksData.push(block._source);
                                     });
-                            }
-                        });
+                                    $defer.resolve(blocksData);
+                                } else {
+                                    blocks.lastBlockId = 0;
+                                    cb();
+                                    $defer.resolve([]);
+                                }
+                            });
+                        }
+                    });
                 }
             }
         }

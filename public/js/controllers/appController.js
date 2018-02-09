@@ -1,7 +1,7 @@
 require('angular');
 var compareVersion = require('../../node_modules/compare-version/index.js');
 
-angular.module('ETPApp').controller('appController', ['dappsService', '$scope', '$rootScope', '$http', "userService", "$interval", "$timeout", 'viewFactory', '$state', 'blockService', 'sendTransactionModal', 'registrationDelegateModal', 'serverSocket', 'delegateService', '$window', 'forgingModal', 'errorModal', 'userInfo', 'transactionsService', 'secondPassphraseModal', 'focusFactory', 'gettextCatalog', '$location', 'AuthService','freezeAmountModal', function (dappsService, $rootScope, $scope, $http, userService, $interval, $timeout, viewFactory, $state, blockService, sendTransactionModal, registrationDelegateModal, serverSocket, delegateService, $window, forgingModal, errorModal, userInfo, transactionsService, secondPassphraseModal, focusFactory, gettextCatalog, $location, AuthService,freezeAmountModal) {
+angular.module('ETPApp').controller('appController', ['dappsService', '$scope', '$rootScope', '$http', "userService", "$interval", "$timeout", 'viewFactory', '$state', 'blockService', 'sendTransactionModal', 'registrationDelegateModal', 'serverSocket', 'delegateService', '$window', 'forgingModal', 'errorModal', 'userInfo', 'transactionsService', 'secondPassphraseModal', 'focusFactory', 'gettextCatalog', '$location', 'AuthService', 'freezeAmountModal', function (dappsService, $rootScope, $scope, $http, userService, $interval, $timeout, viewFactory, $state, blockService, sendTransactionModal, registrationDelegateModal, serverSocket, delegateService, $window, forgingModal, errorModal, userInfo, transactionsService, secondPassphraseModal, focusFactory, gettextCatalog, $location, AuthService, freezeAmountModal) {
 
     $scope.searchTransactions = transactionsService;
     $scope.searchDapp = dappsService;
@@ -101,6 +101,7 @@ angular.module('ETPApp').controller('appController', ['dappsService', '$scope', 
         'main.forging',
         'main.blockchain',
         'passphrase',
+        'existingETPSUser',
         'main.dappstore',
         'main.multi',
         'main.explorer',
@@ -226,7 +227,7 @@ angular.module('ETPApp').controller('appController', ['dappsService', '$scope', 
 
     $scope.freezeAmount = function () {
         $scope.freezeAmountModal = freezeAmountModal.activate({
-           destroy: function () {
+            destroy: function () {
             }
         });
     }
@@ -538,7 +539,7 @@ angular.module('ETPApp').controller('appController', ['dappsService', '$scope', 
         ]);
     });
 
-    
+
     //Autoupdate stake Table info
     $scope.$on('socket:milestone/change', function (ev, data) {
         $scope.getAppData();
@@ -576,9 +577,11 @@ angular.module('ETPApp').controller('appController', ['dappsService', '$scope', 
 
     window.onpopstate = function (event) {
         if ($scope.myClass.length != 0) {
-            $scope.classAdd();
-        } else {
+            //console.log('Demo+++');
             $scope.classRemove();
+        } else {
+            $scope.classAdd();
+            //console.log('Demo2+++');
         }
     };
 

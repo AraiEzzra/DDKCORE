@@ -6,8 +6,8 @@ angular.module('ETPApp').controller('dappsCategoryController', ['$scope', 'viewF
     $scope.view.inLoading = true;
     $scope.view.loadingText = gettextCatalog.getString('Loading applications');
     $scope.category = $stateParams.categoryId;
-    $scope.view.page = {title: $scope.category, previous: 'main.dappstore'};
-    $scope.view.bar = {showDappsCategoryBar: true};
+    $scope.view.page = { title: $scope.category, previous: 'main.dappstore' };
+    $scope.view.bar = { showDappsCategoryBar: true };
     $scope.searchedText = '';
     $scope.searchDapp = dappsService;
     $scope.searchDapp.searchForDapp = '';
@@ -60,7 +60,7 @@ angular.module('ETPApp').controller('dappsCategoryController', ['$scope', 'viewF
             if ($scope.searchDapp.searchForDapp.trim() != '') {
                 $http.get("/api/dapps/search?q=" + $scope.searchDapp.searchForDapp + "&installed=1").then(function (response) {
                     $scope.dapps = $scope.shuffle(response.data.dapps);
-                    $scope.searchDapp.inSearch=false;
+                    $scope.searchDapp.inSearch = false;
                     $scope.view.inLoading = false;
                     $scope.searchedText = '(search for "' + $scope.searchDapp.searchForDapp + '")';
                 });

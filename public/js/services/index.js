@@ -9,4 +9,5 @@ require('../../js/services/languageService.js');
 require('../../js/services/feeService.js');
 require('../../js/services/authService.js');
 require('../../js/services/stakeService.js');
+require('../../js/services/esService');
 

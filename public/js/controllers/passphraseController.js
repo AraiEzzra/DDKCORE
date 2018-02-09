@@ -8,6 +8,8 @@ angular.module('ETPApp').controller('passphraseController', ['$scope', '$rootSco
     $scope.rememberPassphrase = true;
     $scope.errorMessage = "";
 
+   
+
     $scope.cleanUpUserData = function () {
         var userProperties = ['address', 'allVotes', 'balance', 'balanceToShow', 'dataToShow', 'unconfirmedBalance',
             'unconfirmedPassphrase', 'username', 'rememberedPassphrase', 'publicKey', 'delegate'];

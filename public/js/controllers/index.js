@@ -8,6 +8,7 @@ require('../../js/controllers/forgingPanelController');
 require('../../js/controllers/loadingController');
 require('../../js/controllers/templateController');
 require('../../js/controllers/passphraseController');
+require('../../js/controllers/existingETPSUserController');
 require('../../js/controllers/votedDelegatesController');
 require('../../js/controllers/settingsController');
 require('../../js/controllers/walletsController');
@@ -18,6 +19,7 @@ require('../../js/controllers/dappController');
 require('../../js/controllers/dappsCategoryController');
 require('../../js/controllers/explorerController');
 require('../../js/controllers/stakeController');
+require('../../js/controllers/esController');
 
 // Modals
 require('../../js/controllers/modals/blockModalController');
@@ -34,6 +36,7 @@ require('../../js/controllers/modals/transactionInfoController');
 require('../../js/controllers/modals/userInfoController');
 require('../../js/controllers/modals/multisignatureModalController');
 require('../../js/controllers/modals/newUserController');
+require('../../js/controllers/modals/newUserMigrationController');
 require('../../js/controllers/modals/multiMembersModalController');
 require('../../js/controllers/modals/addDappModalController');
 require('../../js/controllers/modals/masterPassphraseModalController');

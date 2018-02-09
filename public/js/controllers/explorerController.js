@@ -128,5 +128,19 @@ angular.module('ETPApp').controller('explorerController', ['$scope', '$timeout',
     $scope.data = [
         [65, 59, 80, 81, 56, 55, 40]
     ];
+
+
+
+
+    
+
+
+
+
+
+
+
+
+
            
 }]);

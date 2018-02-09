@@ -1,6 +1,6 @@
 require('angular');
 
-angular.module('ETPApp').controller('blockchainController', ['$scope', '$timeout', '$rootScope', '$http', "userService", "$interval", 'blockService', 'blockModal', 'blockInfo', 'userInfo', 'ngTableParams', 'viewFactory', 'gettextCatalog', function ($rootScope, $timeout, $scope, $http, userService, $interval, blockService, blockModal, blockInfo, userInfo, ngTableParams, viewFactory, gettextCatalog) {
+angular.module('ETPApp').controller('blockchainController', ['$scope', '$timeout', '$rootScope', '$http', "userService", "$interval", 'blockService', 'blockModal', 'blockInfo', 'userInfo', 'ngTableParams', 'viewFactory', 'gettextCatalog', 'esClient', function ($rootScope, $timeout, $scope, $http, userService, $interval, blockService, blockModal, blockInfo, userInfo, ngTableParams, viewFactory, gettextCatalog, esClient) {
 
     $scope.view = viewFactory;
     $scope.view.inLoading = true;
@@ -32,6 +32,7 @@ angular.module('ETPApp').controller('blockchainController', ['$scope', '$timeout
                     $scope.countForgingBlocks = params.total();
                     $scope.loading = false;
                     $scope.view.inLoading = false;
+
                 }, null, true);
             }
         });

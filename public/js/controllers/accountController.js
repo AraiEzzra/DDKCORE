@@ -1,12 +1,12 @@
 
 require('angular');
 
-angular.module('ETPApp').controller('accountController', ['$state','$scope', '$rootScope', '$http', "userService", "$interval", "$timeout", "sendTransactionModal", "secondPassphraseModal", "delegateService", 'viewFactory', 'transactionInfo', 'userInfo', '$filter', 'gettextCatalog', function ($state, $rootScope, $scope, $http, userService, $interval, $timeout, sendTransactionModal, secondPassphraseModal, delegateService, viewFactory, transactionInfo, userInfo, $filter, gettextCatalog) {
-    
+angular.module('ETPApp').controller('accountController', ['$state', '$scope', '$rootScope', '$http', "userService", "$interval", "$timeout", "sendTransactionModal", "secondPassphraseModal", "delegateService", 'viewFactory', 'transactionInfo', 'userInfo', '$filter', 'gettextCatalog', function ($state, $rootScope, $scope, $http, userService, $interval, $timeout, sendTransactionModal, secondPassphraseModal, delegateService, viewFactory, transactionInfo, userInfo, $filter, gettextCatalog) {
+
     $scope.view = viewFactory;
     $scope.view.inLoading = true;
     $scope.view.loadingText = gettextCatalog.getString('Loading dashboard');
-    $scope.view.page = {title: gettextCatalog.getString('Dashboard'), previous: null};
+    $scope.view.page = { title: gettextCatalog.getString('Dashboard'), previous: null };
     $scope.view.bar = {};
     $scope.delegate = undefined;
     $scope.address = userService.address;
@@ -17,14 +17,15 @@ angular.module('ETPApp').controller('accountController', ['$state','$scope', '$r
     $scope.unconfirmedPassphrase = userService.unconfirmedPassphrase;
     $scope.transactionsLoading = true;
     $scope.allVotes = 100 * 1000 * 1000 * 1000 * 1000 * 100;
-    $scope.rememberedPassphrase =  userService.rememberedPassphrase;
+    $scope.rememberedPassphrase = userService.rememberedPassphrase;
+
 
     $scope.graphs = {
         ETPPrice: {
             labels: ['1', '2'],
             series: ['Series B'],
             data: [
-                [60,  20]
+                [60, 20]
             ],
             colours: ['#29b6f6'],
             options: {
@@ -38,7 +39,7 @@ angular.module('ETPApp').controller('accountController', ['$state','$scope', '$r
     };
 
     $scope.transactionInfo = function (block) {
-        $scope.modal = transactionInfo.activate({block: block});
+        $scope.modal = transactionInfo.activate({ block: block });
     }
 
     $scope.resetAppData = function () {
@@ -59,7 +60,7 @@ angular.module('ETPApp').controller('accountController', ['$state','$scope', '$r
     }
 
     $scope.userInfo = function (userId) {
-        $scope.modal = userInfo.activate({userId: userId});
+        $scope.modal = userInfo.activate({ userId: userId });
     }
 
     $scope.getTransactions = function () {
@@ -91,21 +92,21 @@ angular.module('ETPApp').controller('accountController', ['$state','$scope', '$r
     }
 
     $scope.getAccount = function () {
-        $http.get("/api/accounts", {params: {address: userService.address}}).then(function (resp) {
+        $http.get("/api/accounts", { params: { address: userService.address } }).then(function (resp) {
             $scope.view.inLoading = false;
             if (resp.data.account) {
                 var account = resp.data.account;
                 userService.balance = account.balance;
                 userService.multisignatures = account.multisignatures;
                 userService.u_multisignatures = account.u_multisignatures;
-                userService.unconfirmedBalance = account.unconfirmedBalance ;
+                userService.unconfirmedBalance = account.unconfirmedBalance;
                 userService.secondPassphrase = account.secondSignature || account.unconfirmedSignature;
                 userService.unconfirmedPassphrase = account.unconfirmedSignature;
                 $scope.balance = userService.balance;
                 $scope.unconfirmedBalance = userService.unconfirmedBalance;
                 $scope.balanceToShow = $filter('decimalFilter')(userService.unconfirmedBalance);
                 if ($scope.balanceToShow[1]) {
-                    $scope.balanceToShow[1]='.'+ $scope.balanceToShow[1];
+                    $scope.balanceToShow[1] = '.' + $scope.balanceToShow[1];
                 }
                 $scope.secondPassphrase = userService.secondPassphrase;
                 $scope.unconfirmedPassphrase = userService.unconfirmedPassphrase;
@@ -120,85 +121,85 @@ angular.module('ETPApp').controller('accountController', ['$state','$scope', '$r
     /* For total stakeholders */
     $scope.getStakeholdersCount = function () {
         $http.get("/api/frogings/countStakeholders")
-            .then(function (resp) {
-                if (resp.data.success) {
-                    var countStakeholders = resp.data.countStakeholders.count;
-                    $scope.countStakeholders = JSON.parse(countStakeholders);
-                } else {
-                    console.log(resp.data.error);
-                }
-            });
+        .then(function (resp) {
+            if (resp.data.success) {
+                var countStakeholders = resp.data.countStakeholders.count;
+                $scope.countStakeholders = JSON.parse(countStakeholders);
+            } else {
+                console.log(resp.data.error);
+            }
+        });
     }
 
     /* For Circulating Supply */
     $scope.getCirculatingSupply = function () {
         $http.get("/api/accounts/getCirculatingSupply")
-            .then(function (resp) {
-                if (resp.data.success) {
-                    var circulatingSupply = resp.data.circulatingSupply / 100000000;
-                    $scope.circulatingSupply = parseInt(circulatingSupply);
-                } else {
-                    console.log(resp.data.error);
-                }
-            });
+        .then(function (resp) {
+            if (resp.data.success) {
+                var circulatingSupply = resp.data.circulatingSupply / 100000000;
+                $scope.circulatingSupply = parseInt(circulatingSupply);
+            } else {
+                console.log(resp.data.error);
+            }
+        });
     }
 
     /* For Total Count*/
     $scope.getAccountHolders = function () {
         $http.get("/api/accounts/count")
-            .then(function (resp) {
-                if (resp.data.success) {
-                    var totalCount = resp.data.count;
-                    $scope.totalCount = JSON.parse(totalCount);
-                } else {
-                    console.log(resp.data.error);
-                }
-            });
+        .then(function (resp) {
+            if (resp.data.success) {
+                var totalCount = resp.data.count;
+                $scope.totalCount = JSON.parse(totalCount);
+            } else {
+                console.log(resp.data.error);
+            }
+        });
     }
 
     /* For Your ETP Frozen */
     $scope.getMyETPFrozen = function () {
         $http.post("/api/frogings/getMyETPFrozen", { secret: $scope.rememberedPassphrase })
-            .then(function (resp) {
-                if (resp.data.success) {
-                    var myETPFrozen = resp.data.totalETPStaked.sum / 100000000;
-                    $scope.myETPFrozen = parseInt(myETPFrozen);
-                } else {
-                    console.log(resp.data.error);
-                }
-            });
+        .then(function (resp) {
+            if (resp.data.success) {
+                var myETPFrozen = resp.data.totalETPStaked.sum / 100000000;
+                $scope.myETPFrozen = parseInt(myETPFrozen);
+            } else {
+                console.log(resp.data.error);
+            }
+        });
     }
 
 
     /* For Your total supply */
     $scope.getTotalSupply = function () {
         $http.get("/api/accounts/totalSupply")
-            .then(function (resp) {
-                if (resp.data.success) {
-                    var totalSupply = resp.data.totalSupply / 100000000;
-                    $scope.totalSupply = JSON.parse(totalSupply);
-                } else {
-                    console.log(resp.data.error);
-                }
-            });
+        .then(function (resp) {
+            if (resp.data.success) {
+                var totalSupply = resp.data.totalSupply / 100000000;
+                $scope.totalSupply = JSON.parse(totalSupply);
+            } else {
+                console.log(resp.data.error);
+            }
+        });
     }
 
     /* For total ETP staked by stakeholders */
     $scope.getTotalETPStaked = function () {
         $http.get("/api/frogings/getTotalETPStaked")
-            .then(function (resp) {
-                if (resp.data.success) {
-                    var totalETPStaked = resp.data.totalETPStaked.sum / 100000000;
-                    $scope.totalETPStaked = parseInt(totalETPStaked);
-                } else {
-                    console.log(resp.data.error);
-                }
-            });
+        .then(function (resp) {
+            if (resp.data.success) {
+                var totalETPStaked = resp.data.totalETPStaked.sum / 100000000;
+                $scope.totalETPStaked = parseInt(totalETPStaked);
+            } else {
+                console.log(resp.data.error);
+            }
+        });
     }
 
-
     $scope.getCandles = function () {
-        $http.get("https://explorer.ETP.io/api/candles/getCandles").then(function (response) {
+        $http.get("https://explorer.ETP.io/api/candles/getCandles")
+        .then(function (response) {
             $scope.graphs.ETPPrice.data = (response.data && response.data.candles) ? [
                 response.data.candles.map(
                     function (candle) {

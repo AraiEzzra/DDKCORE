@@ -25,7 +25,7 @@
                   <div ng-include="'partials/shared/language-selector.html'"></div>
               </div>
               <div class="buttons-panel pull-right">
-                  <a class="btn btn-white waves-effect btn-marging"><translate>Existing ETPS User</translate></a>
+                  <a class="btn btn-white waves-effect btn-marging" ui-sref="existingETPSUser"><translate>Existing ETPS User</translate></a>
                   <a class="btn btn-white waves-effect btn-marging" ng-click="newUser()"><translate>NEW ACCOUNT</translate></a>
                   <a class="btn btn-blue waves-effect waves-light" ng-click="login(pass, rememberPassphrase)" ng-disabled="!pass"><translate>SIGN IN</translate></a>
               </div>

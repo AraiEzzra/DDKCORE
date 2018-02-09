@@ -32,25 +32,25 @@ var appmetrics = require('appmetrics');
 var monitoring = appmetrics.monitor();
 
 monitoring.on('initialized', function (env) {
-    //console.log(chalk.green('initialized') + ' : ' + chalk.yellow('[ETPCoinMetric] init'));
+	//console.log(chalk.green('initialized') + ' : ' + chalk.yellow('[ETPCoinMetric] init'));
 });
 
-monitoring.on('socketio', function(data) {
+monitoring.on('socketio', function (data) {
 	//console.log(chalk.green('socketio') + ' : ' + chalk.yellow('[ETPCoinMetric] duration='+data.duration+' ms url='+data.url+' method='+data.method+' event='+data.event));
 });
 
 monitoring.on('http', function (data) {
-   // console.log(chalk.green('http') + ' : ' +chalk.yellow('[ETPCoinMetric] duration='+data.duration+' ms url='+data.url));
+	// console.log(chalk.green('http') + ' : ' +chalk.yellow('[ETPCoinMetric] duration='+data.duration+' ms url='+data.url));
 });
 
-monitoring.on('postgres', function(data) {
-//	console.log(chalk.green('postgres') + ' : ' +chalk.yellow('[ETPCoinMetric] duration='+data.duration+' ms query='+data.query));
+monitoring.on('postgres', function (data) {
+	//	console.log(chalk.green('postgres') + ' : ' +chalk.yellow('[ETPCoinMetric] duration='+data.duration+' ms query='+data.query));
 });
 
-monitoring.on('redis', function(data) {
+monitoring.on('redis', function (data) {
 	//console.log(chalk.green('redis') + ' : ' +chalk.yellow('[ETPCoinMetric] duration='+data.duration+' ms cmd='+data.cmd));
 });
-	
+
 
 //Requiring Modules
 require('dotenv').config();
@@ -76,6 +76,7 @@ let logger = logman.logger;
 var sockets = [];
 var cron = require('node-cron');
 var utils = require('./utils');
+var sql = require('./sql/etp');
 
 process.stdin.resume();
 
@@ -180,8 +181,8 @@ var config = {
 		sql: './modules/sql.js',
 		cache: './modules/cache.js',
 		contracts: './modules/contracts.js',
-		frogings : './modules/frogings.js',
-		sendFreezeOrder : './modules/sendFreezeOrder.js'
+		frogings: './modules/frogings.js',
+		sendFreezeOrder: './modules/sendFreezeOrder.js'
 	},
 	api: {
 		accounts: { http: './api/http/accounts.js' },
@@ -195,8 +196,8 @@ var config = {
 		signatures: { http: './api/http/signatures.js' },
 		transactions: { http: './api/http/transactions.js' },
 		transport: { http: './api/http/transport.js' },
-		frogings : {http : './api/http/froging.js' },
-		sendFreezeOrder : { http : './api/http/transferorder.js'}
+		frogings: { http: './api/http/froging.js' },
+		sendFreezeOrder: { http: './api/http/transferorder.js' }
 	}
 };
 
@@ -260,10 +261,7 @@ d.run(function () {
 				cb(null, appConfig);
 			}
 		},
-		/* esInit: function(cb) {
-			var esInstance = require('./elasticsearch/esInit');
-			esInstance.initElasticSearch(cb);
-		}, */
+
 		logger: function (cb) {
 			cb(null, logger);
 		},
@@ -309,7 +307,29 @@ d.run(function () {
 			var compression = require('compression');
 			var cors = require('cors');
 			var app = express();
-		
+
+			/**
+			 * This creates the module that we created in the step before.
+			 * In my case it is stored in the util folder.
+			 */
+			var Prometheus = require('./prometheus');
+
+			/**
+			 * The below arguments start the counter functions
+			 */
+			app.use(Prometheus.requestCounters);
+			app.use(Prometheus.responseCounters);
+
+			/**
+			 * Enable metrics endpoint
+			 */
+			Prometheus.injectMetricsRoute(app);
+
+			/**
+			 * Enable collection of default metrics
+			 */
+			Prometheus.startCollection();
+
 			//hotam: added swagger configuration
 			var subpath = express();
 			var swagger = require("swagger-node-express");
@@ -331,7 +351,7 @@ d.run(function () {
 			var domain = 'localhost';
 			var applicationUrl = 'http://' + domain;
 			swagger.configure(applicationUrl, '1.0.0');
-			
+
 			if (appConfig.coverage) {
 				var im = require('istanbul-middleware');
 				logger.debug('Hook loader for coverage - do not use in production environment!');
@@ -367,8 +387,8 @@ d.run(function () {
 			io.on('connection', function (socket) {
 				acceptSocket(socket, sockets);
 				socket.on('disconnect', function () {
-					sockets.forEach(function(socketId) {
-						if(socketId == socket.id) {
+					sockets.forEach(function (socketId) {
+						if (socketId == socket.id) {
 							sockets.pop(socketId);
 							io.sockets.emit('updateConnected', sockets.length);
 						}
@@ -452,9 +472,9 @@ d.run(function () {
 			scope.network.app.set('view engine', 'ejs');
 			scope.network.app.set('views', path.join(__dirname, 'public'));
 			scope.network.app.use(scope.network.express.static(path.join(__dirname, 'public')));
-			scope.network.app.use(bodyParser.raw({limit: '2mb'}));
-			scope.network.app.use(bodyParser.urlencoded({extended: true, limit: '2mb', parameterLimit: 5000}));
-			scope.network.app.use(bodyParser.json({limit: '2mb'}));
+			scope.network.app.use(bodyParser.raw({ limit: '2mb' }));
+			scope.network.app.use(bodyParser.urlencoded({ extended: true, limit: '2mb', parameterLimit: 5000 }));
+			scope.network.app.use(bodyParser.json({ limit: '2mb' }));
 			scope.network.app.use(methodOverride());
 			scope.network.app.use(cookieParser());
 
@@ -464,31 +484,31 @@ d.run(function () {
 				port: scope.cache.client.connection_options.port,
 				client: scope.cache.client
 			};
-			scope.network.app.use(session({ 
+			scope.network.app.use(session({
 				key: 'ETP.sess',
 				store: new RedisStore(options),
-				secret: scope.config.session.secret, 
-				resave: true, 
+				secret: scope.config.session.secret,
+				resave: true,
 				saveUninitialized: false,
 				cookie: {
 					path: '/',
 					httpOnly: true,
 					secure: false,
-					maxAge: 60 * 1000,
+					maxAge: 5 * 60 * 1000,
 					signed: false
-				} 
+				}
 			}));
-			scope.network.app.use(function(req, res, next) {
-				if(req.session.address) {
+			scope.network.app.use(function (req, res, next) {
+				if (req.session.address) {
 					logman = new Logger(req.session.id, req.session.address);
 					logger = logman.logger;
 				} else {
 					logman = new Logger();
 					logger = logman.logger;
-				}  
+				}
 				next();
 			});
-			
+
 			var ignore = ['id', 'name', 'lastBlockId', 'blockId', 'transactionId', 'address', 'recipientId', 'senderId', 'previousBlock'];
 
 			scope.network.app.use(queryParser({
@@ -545,15 +565,15 @@ d.run(function () {
 					Array.prototype.push.apply(args, arguments);
 					var topic = args.shift();
 					var eventName = 'on' + changeCase.pascalCase(topic);
-					
+
 					// executes the each module onBind function
 					modules.forEach(function (module) {
-						if (typeof(module[eventName]) === 'function') {
+						if (typeof (module[eventName]) === 'function') {
 							module[eventName].apply(module[eventName], args);
 						}
 						if (module.submodules) {
 							async.each(module.submodules, function (submodule) {
-								if (submodule && typeof(submodule[eventName]) === 'function') {
+								if (submodule && typeof (submodule[eventName]) === 'function') {
 									submodule[eventName].apply(submodule[eventName], args);
 								}
 							});
@@ -566,6 +586,7 @@ d.run(function () {
 		db: function (cb) {
 			var db = require('./helpers/database.js');
 			db.connect(config.db, logger, cb);
+
 		},
 		/**
 		 * It tries to connect with redis server based on config. provided in config.json file
@@ -582,7 +603,7 @@ d.run(function () {
 		 * @param {object} scope - The results from current execution, 
 		 * at leats will contain the required elements.
 		 * @param {function} cb - Callback function.
-		 */	
+		 */
 		logic: ['db', 'bus', 'schema', 'genesisblock', function (scope, cb) {
 			var Transaction = require('./logic/transaction.js');
 			var Block = require('./logic/block.js');
@@ -631,7 +652,7 @@ d.run(function () {
 				peers: ['logger', function (scope, cb) {
 					new Peers(scope.logger, cb);
 				}],
-				frozen: ['logger','db', 'transaction','network', 'config', function (scope, cb) {
+				frozen: ['logger', 'db', 'transaction', 'network', 'config', function (scope, cb) {
 					new Frozen(scope.logger, scope.db, scope.transaction, scope.network, scope.config, cb);
 				}],
 				sendFreezeOrder: ['logger','db', 'network', function (scope, cb) {
@@ -660,7 +681,7 @@ d.run(function () {
 					var d = require('domain').create();
 
 					d.on('error', function (err) {
-						scope.logger.error('Domain ' + name, {message: err.message, stack: err.stack});
+						scope.logger.error('Domain ' + name, { message: err.message, stack: err.stack });
 					});
 
 					d.run(function () {
@@ -684,7 +705,7 @@ d.run(function () {
 		 * @param {object} scope - The results from current execution, 
 		 * at leats will contain the required elements.
 		 * @param {function} cb - Callback function.
-		 */	
+		 */
 		api: ['modules', 'logger', 'network', function (scope, cb) {
 			Object.keys(config.api).forEach(function (moduleName) {
 				Object.keys(config.api[moduleName]).forEach(function (protocol) {
@@ -741,6 +762,45 @@ d.run(function () {
 			logger.error(err);
 		} else {
 
+			// cron job to save data on elasticsearch
+			cron.schedule('* * * * *', function () {
+				var tables = [
+					'blocks',
+					'dapps',
+					'delegates',
+					'mem_accounts',
+					'migrations',
+					'rounds_fees',
+					'trs',
+					'votes',
+					'signatures',
+					'stake_orders',
+					'peers',
+					'peers_dapp',
+					'intransfer',
+					'outtransfer',
+					'multisignatures'
+				];
+
+				async function manageElasticSearch(arr) {
+					await Promise.all(arr.map(async function (tableName) {
+						scope.db.query('SELECT * FROM ' + tableName).then(function (rows) {
+							if (rows.length > 0) {
+								utils.makeBulk(rows, tableName, function (err, resp) {
+									utils.indexall(resp, tableName, function (err) {
+										if (err) {
+											console.log('err : ' + err);
+										}
+									});
+								});
+							}
+						});
+					}));
+				};
+				manageElasticSearch(tables);
+			});
+
+			// cron jon to check freezed order
 			cron.schedule('* * * * *', function () {
 				var date = new Date();
 
@@ -820,10 +880,10 @@ d.run(function () {
 			 * @listens cleanup
 			 */
 			process.once('cleanup', function () {
-				
+
 				scope.logger.info('Cleaning up...');
 				async.eachSeries(modules, function (module, cb) {
-					if (typeof(module.cleanup) === 'function') {
+					if (typeof (module.cleanup) === 'function') {
 						module.cleanup(cb);
 					} else {
 						setImmediate(cb);

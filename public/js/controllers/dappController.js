@@ -63,7 +63,7 @@ angular.module('ETPApp').controller('dappController', ['$scope', 'viewFactory', 
     };
 
     // previous != previous :)
-    $scope.view.page = {title: '', previous: 'main.dappstore'};
+    $scope.view.page = { title: '', previous: 'main.dappstore' };
     $scope.view.bar = {};
     $scope.showMore = false;
     $scope.changeShowMore = function () {
@@ -72,7 +72,7 @@ angular.module('ETPApp').controller('dappController', ['$scope', 'viewFactory', 
 
     $http.get("/api/dapps/get?id=" + $stateParams.dappId).then(function (response) {
         $scope.dapp = response.data.dapp;
-        $scope.view.page = {title: $scope.dapp.name, previous: 'main.dappstore'};
+        $scope.view.page = { title: $scope.dapp.name, previous: 'main.dappstore' };
         $scope.view.inLoading = false;
     });
 
@@ -208,7 +208,7 @@ angular.module('ETPApp').controller('dappController', ['$scope', 'viewFactory', 
         }
     }
 
-    function openDapp (openDapp) {
+    function openDapp(openDapp) {
         if (openDapp) {
             if ($scope.dapp.type == 1) {
                 var link = angular.element('<a href="' + $scope.dapp.link + '" target="_blank"></a>');

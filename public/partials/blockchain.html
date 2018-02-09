@@ -1,6 +1,7 @@
 <div class="top-margin"></div>
 <div class="row">
     <div class="col-xs-12">
+        <!-- For stake search bar -->
         <div class="search-bar" ng-show="view.bar.showBlockSearchBar">
             <div class="search-toggle" ng-if="searchBlocks.searchForBlock">
                 <i ng-click="clearSearch()" class="mdi-content-clear small"></i>
@@ -27,6 +28,12 @@
                 </span>
             </div>
         </div>
+        
+        
+
+
+
+        
         <div class="panel panel-default" ng-class="{'paginated': countForgingBlocks || !searchBlocks.searchForBlock}">
             <div class="panel-heading">
                 <h2>
@@ -55,7 +62,8 @@
                         </div>
                     </div>
                 </div>
-                <tr ng-repeat="block in $data" ng-class="{'voted': address == block.generatorId}">
+               <!--  <tr ng-repeat="block in $data" ng-class="{'voted': address == block.generatorId}"></tr> -->
+                <tr ng-repeat="block in $data">
                     <td data-title="tableBlocks.cols.height" sortable="'height'" ng-click="blockInfo(block)" class="pointer">
                         <a href="#">{{block.height}}</a>
                     </td>
