@@ -11,6 +11,7 @@ require('../node_modules/angular-socket-io/socket.js');
 require('../node_modules/ng-table/dist/ng-table.js');
 require('../node_modules/elasticsearch-browser/elasticsearch.angular.min.js');
 
+
 Mnemonic = require('bitcore-mnemonic');
 
 ETPApp = angular.module('ETPApp', ['ui.router', 'btford.modal', 'ngCookies', 'ngTable', 'ngAnimate', 'chart.js', 'btford.socket-io', 'ui.bootstrap', 'angular.filter', 'gettext', 'elasticsearch']);

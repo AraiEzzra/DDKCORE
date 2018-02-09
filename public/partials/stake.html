@@ -2,7 +2,7 @@
 <div class="row">
     <div class="col-xs-12">
         <!-- For stake search bar -->
-        <div class="search-bar" ng-show="view.bar.showStakeSearchBar">
+        <div class="search-bar" ng-show="countFreezeOrders">
             <div class="search-toggle" ng-if="searchStake.searchForStake">
                 <i ng-click="clearSearch()" class="mdi-content-clear small"></i>
             </div>
@@ -29,15 +29,14 @@
             </div>
         </div>
 
-
         <div class="panel panel-default" ng-class="{'paginated': countFreezeOrders || !searchStake.searchForStake}">
             <div class="panel-heading">
                 <h2>
                     {{'Latest Orders'|translate}}
                 </h2>
             </div>
-            <table ng-show="countFreezeOrders  || !searchStake.searchForStake" ng-table="tableStakes" ng-show="countFreezeOrders" border="0" width="100%" cellpadding="0"
-            cellspacing="0" template-pagination="custom/pager">
+            <table ng-show="countFreezeOrders  || !searchStake.searchForStake" ng-table="tableStakes" border="0" width="100%" cellpadding="0"
+            cellspacing="0" template-pagination="custom/pager" ng-if="countFreezeOrders.length">
                 <tr ng-repeat="fo in $data">
                     <td data-title="tableStakes.cols.freezedAmount" sortable="'freezedAmount'">{{fo.freezedAmount}}</td>
                     <td data-title="tableStakes.cols.status" sortable="'status'">{{fo.status ? 'Active' : 'Inactive'}}</td>
@@ -57,9 +56,14 @@
                     </td>
                 </tr>
             </table>
-            <div class="panel-body empty-body empty-table" ng-if="!countFreezeOrders && searchStake.searchForStake">
+            <div class="panel-body empty-body empty-table" ng-if="searchStake.searchForStake">
                 <p class="empty-state-text">
                     <translate>No results for this search.</translate>
+                </p>
+            </div>
+            <div class="panel-body empty-body" ng-if="!countFreezeOrders.length">
+                <p class="empty-state-text">
+                    {{'You have not made any Stake yet.'|translate}}
                 </p>
             </div>
             
