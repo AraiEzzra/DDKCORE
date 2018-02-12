@@ -567,24 +567,35 @@ body{
 }
 
 /* width */
-body::-webkit-scrollbar {
+body::-webkit-scrollbar,#sidebar-wrapper::-webkit-scrollbar {
   width: 6px;
 }
 
 /* Track */
-body::-webkit-scrollbar-track {
+body::-webkit-scrollbar-track,#sidebar-wrapper::-webkit-scrollbar-track{
   background: #fff; 
 }
 
 /* Handle */
-body::-webkit-scrollbar-thumb {
+body::-webkit-scrollbar-thumb,#sidebar-wrapper::-webkit-scrollbar-thumb {
   background: #d32f2f; 
 }
 
 /* Handle on hover */
-body::-webkit-scrollbar-thumb:hover {
+body::-webkit-scrollbar-thumb:hover,#sidebar-wrapper::-webkit-scrollbar-thumb:hover {
   background: #c41f1f; 
 }
 .top-header-section{
   z-index: 99;
 }
+
+
+/* #sidebar-wrapper::-webkit-scrollbar {
+  width: 5px;
+  height: 8px;
+  background-color: #aaa;
+}
+
+#sidebar-wrapper::-webkit-scrollbar-thumb {
+    background: #000; 
+} */

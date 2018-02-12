@@ -1,6 +1,6 @@
 require('angular');
 
-angular.module('ETPApp').controller('existingETPSUserController', ['$scope', '$rootScope', '$http', "$state", "userService", "newUserMigration", 'gettextCatalog', '$cookies', function ($rootScope, $scope, $http, $state, userService, newUserMigration, gettextCatalog, $cookies) {
+angular.module('ETPApp').controller('existingETPSUserController', ['$scope', '$rootScope', '$http', "$state", "userService", "newUserMigration", 'gettextCatalog', '$cookies','focus', function ($rootScope, $scope, $http, $state, userService, newUserMigration, gettextCatalog, $cookies,focus) {
 
     userService.setData();
     userService.rememberPassphrase = false;
@@ -8,7 +8,7 @@ angular.module('ETPApp').controller('existingETPSUserController', ['$scope', '$r
     $scope.rememberPassphrase = true;
     $scope.errorMessage = "";
 
-   
+    focus('focusMe');
 
     $scope.newUser = function (data) {
 
@@ -21,7 +21,6 @@ angular.module('ETPApp').controller('existingETPSUserController', ['$scope', '$r
 
     $scope.login = function (username, password) {
 
-        console.log("!!!!!!!!!" + username + "....." + password);
 
 
         var data = {

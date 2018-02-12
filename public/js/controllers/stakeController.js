@@ -1,6 +1,6 @@
 require('angular');
 
-angular.module('ETPApp').controller('stakeController', ['$scope', 'ngTableParams', 'stakeService', '$http', "userService", 'gettextCatalog', 'sendFreezeOrderModal', '$timeout', function ($scope, ngTableParams, stakeService, $http, userService, gettextCatalog, sendFreezeOrderModal, $timeout) {
+angular.module('ETPApp').controller('stakeController', ['$scope', 'ngTableParams', 'stakeService', '$http', "userService", 'gettextCatalog', 'sendFreezeOrderModal','$timeout', function ($scope, ngTableParams, stakeService, $http, userService, gettextCatalog, sendFreezeOrderModal,$timeout) {
 
   $scope.view.inLoading = true;
   $scope.rememberedPassphrase = userService.rememberedPassphrase;
@@ -12,6 +12,9 @@ angular.module('ETPApp').controller('stakeController', ['$scope', 'ngTableParams
   $scope.loading = true;
   $scope.searchStake = stakeService;
   $scope.view.bar = { showStakeSearchBar: true };
+  //console.log($scope.view.inLoading);
+  
+
 
 
   $scope.tableStakes = new ngTableParams(
@@ -46,11 +49,14 @@ angular.module('ETPApp').controller('stakeController', ['$scope', 'ngTableParams
   };
 
   $scope.tableStakes.settings().$scope = $scope;
+
   $scope.$watch("filter.$", function () {
     $scope.tableStakes.reload();
   });
 
+
   $scope.sendFreezeOrder = function (id) {
+
     $scope.sendFreezeOrderModal = sendFreezeOrderModal.activate({
       freezeId: id,
       destroy: function () {
@@ -60,7 +66,7 @@ angular.module('ETPApp').controller('stakeController', ['$scope', 'ngTableParams
 
   $scope.updateStakes = function () {
     $scope.tableStakes.reload();
-  };
+};
 
   $scope.$on('updateControllerData', function (event, data) {
     if (data.indexOf('main.stake') != -1) {
@@ -70,34 +76,63 @@ angular.module('ETPApp').controller('stakeController', ['$scope', 'ngTableParams
 
   $scope.clearSearch = function () {
     $scope.searchStake.searchForStake = '';
-  }
+}
+
+
 
   $scope.updateStakes();
 
-  // Search blocks watcher
-  var tempSearchBlockID = '',
-    searchBlockIDTimeout;
 
-  $scope.$watch('searchStake.searchForStake', function (val) {
+
+
+// Search blocks watcher
+var tempSearchBlockID = '',
+searchBlockIDTimeout;
+
+$scope.$watch('searchStake.searchForStake', function (val) {
     console.log("Here search for stake");
     if (searchBlockIDTimeout) $timeout.cancel(searchBlockIDTimeout);
     console.log("Here search");
     if (val.trim() != '') {
-      $scope.searchStake.inSearch = true;
+        $scope.searchStake.inSearch = true;
     } else {
-      $scope.searchStake.inSearch = false;
-      if (tempSearchBlockID != val) {
-        tempSearchBlockID = val;
-        $scope.updateStakes();
-        return;
-      }
+        $scope.searchStake.inSearch = false;
+        if (tempSearchBlockID != val) {
+            tempSearchBlockID = val;
+            $scope.updateStakes();
+            return;
+        }
     }
     tempSearchBlockID = val;
     searchBlockIDTimeout = $timeout(function () {
-      $scope.searchStake.searchForStake = tempSearchBlockID;
-      $scope.updateStakes();
+        $scope.searchStake.searchForStake = tempSearchBlockID;
+        $scope.updateStakes();
     }, 2000); // Delay 2000 ms
-  });
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 }]);
