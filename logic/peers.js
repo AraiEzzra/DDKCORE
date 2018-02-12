@@ -75,7 +75,7 @@ Peers.prototype.get = function (peer) {
 Peers.prototype.upsert = function (peer, insertOnly) {
 	// Insert new peer
 	var insert = function (peer) {
-		if (!_.isEmpty(modules.peers.acceptable([peer]))) {
+		if (_.isEmpty(modules.peers.acceptable([peer]))) {
 			peer.updated = Date.now();
 			__private.peers[peer.string] = peer;
 			library.logger.debug('Inserted new peer', peer.string);

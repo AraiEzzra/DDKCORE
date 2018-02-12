@@ -45,6 +45,7 @@ function AccountsHttpApi (accountsModule, app) {
 		'get /count':'totalAccounts',
 		'get /getCirculatingSupply':'getCirculatingSupply',
 		'get /totalSupply' : 'totalSupply',
+		'post /existingETPSUser' : 'existingETPSUser',
 		'post /migrateData' : 'migrateData'
 	});
 

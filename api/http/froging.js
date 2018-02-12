@@ -23,7 +23,6 @@ function FrogingsHttpApi (frogingsModule, app, logger, cache) {
 		'get /'
 	]);
 
-	//Hotam Singh
 	router.map(frogingsModule.shared, {
 		
 		'post /freeze' : 'addTransactionForFreeze',

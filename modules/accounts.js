@@ -753,6 +753,23 @@ Accounts.prototype.shared = {
 		});
 
 	},
+	existingETPSUser: function (req, cb) {
+
+		library.db.one(sql.checkAlreadyMigrated, {
+			email: req.body.email,
+			phoneNumber: req.body.phoneNumber
+		}).then(function (data) {
+			if (!data.isMigrated && data.isMigrated == 0) {
+				return setImmediate(cb, null, { isMigrated: data.isMigrated });
+			} else {
+				return setImmediate(cb, 'Already Migrated');
+			}
+		}).catch(function (err) {
+			library.logger.error(err.stack);
+			return setImmediate(cb, err.toString());
+		});
+
+	},
 
 	migrateData: function (req, cb) {
 

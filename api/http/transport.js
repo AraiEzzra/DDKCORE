@@ -73,6 +73,7 @@ function TransportHttpApi (transportModule, app, logger, cache) {
 	app.use('/peer', router);
 
 	function handshakeMiddleware (req, res, next) {
+		//req.headers.port = 7000;
 		transportModule.internal.handshake(req.ip, req.headers.port, req.headers, validateHeaders, function (err, peer) {
 			if (err) {
 				return res.status(500).send(err);
