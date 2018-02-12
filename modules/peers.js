@@ -14,6 +14,7 @@ var schema = require('../schema/peers.js');
 var Peer = require('../logic/peer.js');
 var sql = require('../sql/peers.js');
 var util = require('util');
+var Inserts = require('../helpers/inserts.js');
 
 // Private fields
 var modules, library, self, __private = {}, shared = {};
@@ -223,14 +224,20 @@ __private.dbLoad = function (cb) {
  * @param {function} cb - Callback function.
  * @returns {setImmediateCallback} cb
  */
-__private.dbSave = function (cb) {
-	var peers = library.logic.peers.list(true);
+__private.dbSave = function (peers, cb) {
+	//var peers = library.logic.peers.list(true);
 
 	// Do nothing when peers list is empty
-	if (!peers.length) {
+	/* if (!peers.length) {
 		library.logger.debug('Export peers to database failed: Peers list empty');
 		return setImmediate(cb);
-	}
+	}; */
+
+
+	if (!peers) {
+		library.logger.debug('Export peers to database failed: Peers list empty');
+		return setImmediate(cb);
+	};
 
 	// Creating set of columns
 	var cs = new pgp.helpers.ColumnSet([
@@ -252,7 +259,7 @@ __private.dbSave = function (cb) {
 			t.none(insert_peers)
 		];
 
-		// Inserting dapps peers
+		/* // Inserting dapps peers
 		_.each(peers, function (peer) {
 			if (peer.dappid) {
 				// If there are dapps on peer - push separately for every dapp
@@ -262,7 +269,7 @@ __private.dbSave = function (cb) {
 					queries.push(t.none(sql.addDapp, peer));
 				});
 			}
-		});
+		}); */
 
 		return t.batch(queries);
 	}).then(function (data) {
@@ -294,6 +301,19 @@ Peers.prototype.sandboxApi = function (call, args, cb) {
  */
 Peers.prototype.update = function (peer) {
 	peer.state = Peer.STATE.CONNECTED;
+	// Save peers
+	__private.dbSave ({
+		ip: peer.ip,
+		port: peer.port,
+		state: peer.state,
+		os: peer.os,
+		version: peer.version,
+		clock: peer.clock,
+		broadhash: peer.broadhash,
+		height: peer.height
+	}, function () {
+		return;
+	});
 	return library.logic.peers.upsert(peer);
 };
 
@@ -380,7 +400,7 @@ Peers.prototype.discover = function (cb) {
 				// Set peer state to disconnected
 				peer.state = Peer.STATE.DISCONNECTED;
 				// We rely on data from other peers only when new peer is discovered for the first time
-				library.logic.peers.upsert(peer, true);
+				var resp = library.logic.peers.upsert(peer, true);
 				return setImmediate(eachCb);
 			});
 		}, function (err) {

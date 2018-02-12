@@ -1,3 +1,4 @@
+//Hotam Singh: elastic search server connection
 var elasticsearch = require('elasticsearch');
 
 var Client = new elasticsearch.Client({

@@ -1,3 +1,4 @@
+// Hotam Singh: Generalised method to create, delete or check existence of an index
 var client = require('./connection.js');
 
 /**
@@ -43,3 +44,27 @@ function deleteIndex(cb) {
     });
 }
 exports.deleteIndex = deleteIndex;
+
+/**
+* Search in elastic search
+*/
+exports.searchQuery = function (index, queryMatch, cb) {
+    esClient.search({
+        index: index,
+        type: index,
+        body: {
+            query: {
+                match: queryMatch
+            },
+        }
+    }, function (error, response, status) {
+        if (error) {
+            cb(error);
+        }
+        else {
+            cb(null, response.hits.hits);
+        }
+    });
+};
+
+exports.searchQuery = searchQuery;
