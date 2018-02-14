@@ -158,13 +158,13 @@ SendFreezeOrder.prototype.sendFreezedOrder = function (data, cb) {
 
 	}
 
-	function deductFrozeAmount() {
+	function deductFrozeAmount(row) {
 		return new Promise(function (resolve, reject) {
 			//deduct froze Amount from totalFrozeAmount in mem_accounts table
 			self.scope.db.none(sql.deductFrozeAmount,
 				{
-					senderId: data.senderId,
-					FrozeAmount: data.freezedAmount
+					senderId: data.account.address,
+					FrozeAmount: row.freezedAmount
 				}).then(function () {
 					resolve();
 				}).catch(function (err) {
@@ -176,14 +176,14 @@ SendFreezeOrder.prototype.sendFreezedOrder = function (data, cb) {
 
 	}
 
-	function updateFrozeAmount() {
+	function updateFrozeAmount(row) {
 		return new Promise(function (resolve, reject) {
 
 			//update total Froze amount for recipient of froze order during sending order
 			self.scope.db.none(sql.updateFrozeAmount,
 				{
-					senderId: data.recipientId,
-					freezedAmount: data.freezedAmount
+					senderId: data.req.body.recipientId,
+					freezedAmount: row.freezedAmount
 				}).then(function () {
 					resolve();
 				}).catch(function (err) {
@@ -249,8 +249,8 @@ SendFreezeOrder.prototype.sendFreezedOrder = function (data, cb) {
 			if (row) {
 				self.scope.logger.info("Successfully get froze order");
 
-				await deductFrozeAmount();
-				await updateFrozeAmount();
+				await deductFrozeAmount(row);
+				await updateFrozeAmount(row);
 				await updateFrozeOrder(row);
 				await createNewFrozeOrder(row);
 			}
