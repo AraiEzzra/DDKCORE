@@ -83,6 +83,10 @@
                 <span class="forging-state" ng-class="{'disabled': !forgingEnabled}" ng-if="forgingStatus && view.bar.forgingMenu">{{forgingStatus}}</span>
             </div>
             <div id="top-menu">
+                <span class="margin-right-10 avlEtp-balance">
+                    <span>Available ETP</span>
+                    {{unconfirmedBalance | ETPFilter}}
+                </span>
                 <span id="balance" class="margin-right-10">
                     {{unconfirmedBalance | ETPFilter}} ETP
                 </span>
