@@ -38,7 +38,9 @@ exports.merge = function merge(a, b) {
 exports.makeBulk = function (list, index, cb) {
 	var bulk = [], indexId;
 	for (var current in list) {
-		if (list[current].id) {
+		if (list[current].stakeId) {
+			indexId = list[current].stakeId;
+		} else if (list[current].id) {
 			indexId = list[current].id;
 		} else if (list[current].transactionId) {
 			indexId = list[current].transactionId;
@@ -46,7 +48,8 @@ exports.makeBulk = function (list, index, cb) {
 			indexId = list[current].address;
 		} else {
 			indexId = list[current].height;
-		}
+		} 
+		
 		bulk.push(
 			{ index: { _index: index, _type: index, _id: indexId } },
 			list[current]

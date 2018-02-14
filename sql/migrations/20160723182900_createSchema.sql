@@ -49,6 +49,7 @@ CREATE TABLE IF NOT EXISTS "trs"(
 
 CREATE TABLE IF NOT EXISTS "stake_orders"(
   "id" VARCHAR(20) ,
+  "stakeId" SERIAL PRIMARY KEY,
   "status" SMALLINT NOT NULL,
   "startTime" INT NOT NULL,
   "nextMilestone" INT NOT NULL ,

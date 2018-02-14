@@ -2,7 +2,7 @@
 
 angular.module('ETPApp').service('esClient', function (esFactory) {
     return esFactory({
-        host: '180.151.230.12:9200',
+        host: 'localhost:9200',
         log: 'error'
     });
 });

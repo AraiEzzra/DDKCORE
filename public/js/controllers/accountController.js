@@ -17,11 +17,8 @@ angular.module('ETPApp').controller('accountController', ['$state', '$scope', '$
     $scope.unconfirmedPassphrase = userService.unconfirmedPassphrase;
     $scope.transactionsLoading = true;
     $scope.allVotes = 100 * 1000 * 1000 * 1000 * 1000 * 100;
-    $scope.rememberedPassphrase = userService.rememberedPassphrase;
-
-    
-
-
+    $scope.rememberedPassphrase = userService.rememberPassphrase ? userService.rememberedPassphrase : false;
+ 
     $scope.graphs = {
         ETPPrice: {
             labels: ['1', '2'],
@@ -161,12 +158,11 @@ angular.module('ETPApp').controller('accountController', ['$state', '$scope', '$
  
     /* For Your ETP Frozen */
     $scope.getMyETPFrozen = function () {
-        
-        if( $rootScope.secretPhrase !== 'undefined'){
 
+        if (($scope.rememberedPassphrase == undefined || $scope.rememberedPassphrase == false)) {
             $scope.rememberedPassphrase = $rootScope.secretPhrase;
         }
-
+       
         $http.post("/api/frogings/getMyETPFrozen", { secret: $scope.rememberedPassphrase })
         .then(function (resp) {
             if (resp.data.success) {

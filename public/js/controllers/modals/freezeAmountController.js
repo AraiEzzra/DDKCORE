@@ -136,7 +136,6 @@ angular.module('ETPApp').controller('freezeAmountController', ['$scope', '$rootS
         }
     }
 
-    /* For Total Count*/
 
     $scope.freezeOrder = function(secretPhrase,withSecond){
         $rootScope.secretPhrase = secretPhrase;
