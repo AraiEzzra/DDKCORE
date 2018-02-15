@@ -715,7 +715,6 @@ Accounts.prototype.shared = {
 	totalAccounts: function (req, cb) {
 
 		library.db.one(sql.getTotalAccount).then(function (data) {
-			library.logger.info('Total accounts in ETP :' + JSON.stringify(data));
 			return setImmediate(cb, null, data);
 		}).catch(function (err) {
 			library.logger.error(err.stack);
@@ -728,7 +727,6 @@ Accounts.prototype.shared = {
 		var publicAddress = library.config.sender.address;
 
 		library.db.one(sql.getCurrentUnmined, { address: publicAddress }).then(function (currentUnmined) {
-			library.logger.info('Current unmined ETP tokens in public address :' + JSON.stringify(currentUnmined));
 			var circulatingSupply = config.initialPrimined.total + initialUnmined - currentUnmined.balance;
 
 			cache.prototype.getJsonForKey("minedContributorsBalance", function (err, contributorsBalance) {
