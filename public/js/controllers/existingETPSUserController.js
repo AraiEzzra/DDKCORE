@@ -1,6 +1,6 @@
 require('angular');
 
-angular.module('ETPApp').controller('existingETPSUserController', ['$scope', '$rootScope', '$http', "$state", "userService", "newUserMigration", 'gettextCatalog', '$cookies', function ($rootScope, $scope, $http, $state, userService, newUserMigration, gettextCatalog, $cookies) {
+angular.module('ETPApp').controller('existingETPSUserController', ['$scope', '$rootScope', '$http', "$state", "userService", "newUserMigration", 'gettextCatalog', '$cookies','focus', function ($rootScope, $scope, $http, $state, userService, newUserMigration, gettextCatalog, $cookies,focus) {
 
     userService.setData();
     userService.rememberPassphrase = false;
@@ -10,7 +10,7 @@ angular.module('ETPApp').controller('existingETPSUserController', ['$scope', '$r
     $scope.URL_GLOBAL = "https://api.etpswallet.gold/";
     $scope.API_KEY_GLOBAL = "etps_2_etp_V1.1";
 
-   
+    focus('focusMe');
 
     $scope.newUser = function (data) {
         $scope.newUserModal = newUserMigration.activate({

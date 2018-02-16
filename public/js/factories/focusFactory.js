@@ -9,3 +9,13 @@ angular.module('ETPApp').factory('focusFactory', function ($timeout, $window) {
         });
     };
 });
+
+
+
+angular.module('ETPApp').factory('focus', function ($rootScope, $timeout) {
+    return function(name) {
+      $timeout(function (){
+        $rootScope.$broadcast('focusOn', name);
+      });
+    }
+  });

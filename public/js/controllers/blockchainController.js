@@ -17,7 +17,7 @@ angular.module('ETPApp').controller('blockchainController', ['$scope', '$timeout
     // Blocks
     $scope.tableBlocks = new ngTableParams({
         page: 1,
-        count: 5,
+        count: 15,
         sorting: {
             height: 'desc'
         }
@@ -68,6 +68,10 @@ angular.module('ETPApp').controller('blockchainController', ['$scope', '$timeout
     });
 
     $scope.updateBlocks();
+
+    $scope.$on('socket:blocks/change', function (ev, data) {
+        $scope.updateBlocks();
+    });
 
     $scope.$on('$destroy', function () {
         $interval.cancel($scope.blocksInterval);

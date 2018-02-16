@@ -42,6 +42,7 @@
     "angular-socket-io": "=0.7.0",
     "angular-ui-router": "=0.3.1",
     "bitcore-mnemonic": "=1.1.1",
+    "bootstrap-select": "^1.12.4",
     "bower": "=1.7.9",
     "browserify-angular-animate": "=1.2.18",
     "buffer": "=4.9.1",
@@ -52,6 +53,7 @@
     "lisk-js": "=0.2.3",
     "ng-table": "=0.5.4",
     "requests": "0.1.7",
-    "socket.io": "=1.4.8"
+    "socket.io": "=1.4.8",
+    "ui-select": "^0.19.8"
   }
 }

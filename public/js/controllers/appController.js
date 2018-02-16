@@ -440,7 +440,7 @@ angular.module('ETPApp').controller('appController', ['dappsService', '$scope', 
 
     $scope.logout = function () {
         $http.post('/api/accounts/logout').then(function (res) {
-            $location.path('/');
+            $location.path('passphrase');
         });
     }
 

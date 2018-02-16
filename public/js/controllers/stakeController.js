@@ -1,6 +1,6 @@
 require('angular');
 
-angular.module('ETPApp').controller('stakeController', ['$scope', 'ngTableParams', 'stakeService', '$http', "userService", 'gettextCatalog', 'sendFreezeOrderModal','$timeout', function ($scope, ngTableParams, stakeService, $http, userService, gettextCatalog, sendFreezeOrderModal,$timeout) {
+angular.module('ETPApp').controller('stakeController', ['$scope', '$rootScope', 'ngTableParams', 'stakeService', '$http', "userService", 'gettextCatalog', 'sendFreezeOrderModal','$timeout', function ($scope, $rootScope, ngTableParams, stakeService, $http, userService, gettextCatalog, sendFreezeOrderModal,$timeout) {
 
   $scope.view.inLoading = true;
   $scope.rememberedPassphrase = userService.rememberedPassphrase;
@@ -28,6 +28,9 @@ angular.module('ETPApp').controller('stakeController', ['$scope', 'ngTableParams
       counts: [],
       getData: function ($defer, params) {
         $scope.loading = true;
+        if($scope.rememberedPassphrase == ''){
+          $scope.rememberedPassphrase = $rootScope.secretPhrase;
+        }
         stakeService.getData($scope.searchStake.searchForStake, $defer, params, $scope.filter, $scope.rememberedPassphrase, function () {
           $scope.searchStake.inSearch = false;
           $scope.countFreezeOrders = params.total();
@@ -90,9 +93,8 @@ var tempSearchBlockID = '',
 searchBlockIDTimeout;
 
 $scope.$watch('searchStake.searchForStake', function (val) {
-    console.log("Here search for stake");
     if (searchBlockIDTimeout) $timeout.cancel(searchBlockIDTimeout);
-    console.log("Here search");
+    
     if (val.trim() != '') {
         $scope.searchStake.inSearch = true;
     } else {

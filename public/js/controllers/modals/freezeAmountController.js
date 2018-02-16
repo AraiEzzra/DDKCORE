@@ -1,6 +1,6 @@
 require('angular');
 
-angular.module('ETPApp').controller('freezeAmountController', ['$scope', 'userService', 'feeService','freezeAmountModal', '$http', function ($scope, userService,feeService,freezeAmountModal,$http) {
+angular.module('ETPApp').controller('freezeAmountController', ['$scope', '$rootScope', 'userService', 'feeService','freezeAmountModal', '$http', function ($scope, $rootScope, userService,feeService,freezeAmountModal,$http) {
 
     $scope.rememberedPassphrase = userService.rememberPassphrase ? userService.rememberedPassphrase : false;
     $scope.sending = false;
@@ -136,9 +136,9 @@ angular.module('ETPApp').controller('freezeAmountController', ['$scope', 'userSe
         }
     }
 
-    /* For Total Count*/
 
     $scope.freezeOrder = function(secretPhrase,withSecond){
+        $rootScope.secretPhrase = secretPhrase;
         if ($scope.secondPassphrase && !withSecond) {
             $scope.checkSecondPass = true;
             $scope.focus = 'secondPhrase';
