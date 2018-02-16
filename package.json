@@ -31,7 +31,7 @@
     "decompress-zip": "LiskHQ/decompress-zip#f46b0a3",
     "dotenv": "^4.0.0",
     "ejs": "=2.5.5",
-    "elasticsearch": "^14.0.0",
+    "elasticsearch": "^14.1.0",
     "express": "=4.14.1",
     "express-domain-middleware": "=0.1.0",
     "express-query-int": "=1.0.1",

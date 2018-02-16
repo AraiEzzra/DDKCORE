@@ -278,7 +278,6 @@ Transport.prototype.consensus = function () {
  * @return {boolean}
  */
 Transport.prototype.poorConsensus = function () {
-	return false;
 	if (__private.broadcaster.consensus === undefined) {
 		return false;
 	} else {
