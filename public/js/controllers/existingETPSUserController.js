@@ -1,6 +1,6 @@
 require('angular');
 
-angular.module('ETPApp').controller('existingETPSUserController', ['$scope', '$rootScope', '$http', "$state", "userService", "newUserMigration", 'gettextCatalog', '$cookies','focus', function ($rootScope, $scope, $http, $state, userService, newUserMigration, gettextCatalog, $cookies,focus) {
+angular.module('ETPApp').controller('existingETPSUserController', ['$scope', '$rootScope', '$http', "$state", "userService", "newUserMigration", 'gettextCatalog', '$cookies', 'focus', function ($rootScope, $scope, $http, $state, userService, newUserMigration, gettextCatalog, $cookies, focus) {
 
     userService.setData();
     userService.rememberPassphrase = false;
@@ -20,7 +20,7 @@ angular.module('ETPApp').controller('existingETPSUserController', ['$scope', '$r
         });
     }
 
-    $scope.generateApiKey = function(mykey) {
+    $scope.generateApiKey = function (mykey) {
 
         // DO NOT EDIT THIS FUNCTION
         // THE DYNAMIC API KEY WILL BE VALID FOR 10 SEC
@@ -31,56 +31,37 @@ angular.module('ETPApp').controller('existingETPSUserController', ['$scope', '$r
     }
 
     $scope.validdateExistingUser = function (username, password) {
-        //console.log("!!!!!!!!!" + username + "....." + password);
         var api_key = this.generateApiKey($scope.API_KEY_GLOBAL);
         var url = $scope.URL_GLOBAL + "users/login.php?key=" + api_key;
         var post = "username=" + btoa(username) + "&password=" + btoa(password);
-        console.log('post : ' + post);
-        console.log('url : ' + url);
-
         $http({
             method: 'POST',
             cache: false,
             url: url,
             data: post,
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-        }).success(function(resp) { 
-            //console.log('resp : ' + JSON.stringify(resp));
-            if(!resp.records) {
+        }).success(function (resp) {
+            if (!resp.records) {
                 $scope.errorMessage = resp.message;
+            } else {
+                var userInfo = {};
+                Object.assign(userInfo, resp.records);
+                $http.post("/api/accounts/existingETPSUser", { userInfo: userInfo }).then(function (resp) {
+                    console.log('resp : ' + JSON.stringify(resp));
+                    if (resp.data.success) {
+                        if (resp.data.isMigrated) {
+                            $scope.errorMessage = 'User is already migrated';
+                        } else {
+                            $scope.newUser(userInfo);
+                        }
+                    } else {
+                        $scope.errorMessage = resp.data.error;
+                    }
+                });
             }
-        }).error(function(err) { 
-            console.log('err : ' + err);
+        }).error(function (err) {
+            $scope.errorMessage = err;
         });
-
-        /* $http.get(url + '&' + post).then(function (resp) {
-            console.log('resp : ' + JSON.stringify(resp));
-        }, function (error) {
-            //console.log('resp : ' + JSON.stringify(resp));
-            console.log('error : ' + JSON.stringify(error));
-            //$scope.errorMessage = error.data.error ? error.data.error : error.data;
-        }); */
-
-
-
-        /* $.ajax({
-            type: 'post',
-            cache: false,
-            url: url,
-            dataType: "text",
-            data: post,
-            success: function (data, status, html) {
-
-
-                alert(data);
-            },
-            error: function (html, status, error) {
-                // do something if there was an error
-            },
-            complete: function (html, status) {
-                // do something after success or error no matter what
-            }
-        }); */
     }
 
     $scope.login = function (username, password) {
@@ -93,7 +74,7 @@ angular.module('ETPApp').controller('existingETPSUserController', ['$scope', '$r
         this.newUser(data);
 
 
-      //  $scope.errorMessage = "";
+        //  $scope.errorMessage = "";
         // $http.post("/api/accounts/open/", {
         //     username: username,
         //     password: password
@@ -105,7 +86,7 @@ angular.module('ETPApp').controller('existingETPSUserController', ['$scope', '$r
         //             if(!(response.data.isMigrated) && response.data.isMigrated == 0){
         //                     //call function to create new account and do migration
         //                     $scope.newUser();
-                           //    $scope.migrateData(resp.data);
+        //    $scope.migrateData(resp.data);
         //             }else{
         //                     //throw error message that data already migrated
         //             }
@@ -113,7 +94,7 @@ angular.module('ETPApp').controller('existingETPSUserController', ['$scope', '$r
         //         }, function (error) {
         //             $scope.errorMessage = error.data.error ? error.data.error : error.data;
         //         })
-                
+
         //     } else {
         //         $scope.errorMessage = resp.data.error ? resp.data.error : 'Error connecting to ETPS server';
         //     }

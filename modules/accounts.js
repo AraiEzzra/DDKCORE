@@ -752,17 +752,19 @@ Accounts.prototype.shared = {
 
 	},
 	existingETPSUser: function (req, cb) {
-
 		library.db.one(sql.checkAlreadyMigrated, {
-			email: req.body.email,
-			phoneNumber: req.body.phoneNumber
+			email: req.body.userInfo[0].email,
+			phoneNumber: req.body.userInfo[0].phone
 		}).then(function (data) {
 			if (!data.isMigrated && data.isMigrated == 0) {
 				return setImmediate(cb, null, { isMigrated: data.isMigrated });
 			} else {
-				return setImmediate(cb, 'Already Migrated');
+				return setImmediate(cb, null, {isMigrated: 1});
 			}
 		}).catch(function (err) {
+			if(err.code == 0) {
+				return setImmediate(cb, null, {isMigrated: 0});
+			}
 			library.logger.error(err.stack);
 			return setImmediate(cb, err.toString());
 		});
