@@ -160,7 +160,7 @@ Frozen.prototype.bind = function (accounts, rounds) {
 
 Frozen.prototype.checkFrozeOrders = function () {
 
-	function frozeBenefit() {
+	function getfrozeOrder() {
 		return new Promise(function (resolve, reject) {
 			self.scope.db.query(sql.frozeBenefit,
 				{
@@ -257,7 +257,7 @@ Frozen.prototype.checkFrozeOrders = function () {
 
 	async function checkFrozeOrders() {
 		try {
-			var rows = await frozeBenefit();
+			var rows = await getfrozeOrder();
 
 			if (rows.length > 0) {
 				await checkAndUpdateMilestone();

@@ -83,9 +83,9 @@
                 <span class="forging-state" ng-class="{'disabled': !forgingEnabled}" ng-if="forgingStatus && view.bar.forgingMenu">{{forgingStatus}}</span>
             </div>
             <div id="top-menu">
-                <span class="margin-right-10 avlEtp-balance">
+                <span id="balance" class="margin-right-10">
                     <span>Available ETP</span>
-                    {{unconfirmedBalance | ETPFilter}}
+                    {{availableBalance | ETPFilter}}
                 </span>
                 <span id="balance" class="margin-right-10">
                     {{unconfirmedBalance | ETPFilter}} ETP
@@ -105,7 +105,7 @@
 
 
                 <div class="mini-chart valign-wrapper" ng-show="syncState != undefined">
-                    <div class="mini-chart-label">{{syncState}}%</div>
+                    <div class="mini-chart-label" style="color:#000">{{syncState}}%</div>
                     <canvas id="total-forged" class="chart chart-doughnut" chart-data="loading.values" chart-labels="loading.labels" chart-options="loading.options"
                         chart-colours="loading.colours"></canvas>
                 </div>
