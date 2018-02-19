@@ -753,8 +753,7 @@ Accounts.prototype.shared = {
 	},
 	existingETPSUser: function (req, cb) {
 		library.db.one(sql.checkAlreadyMigrated, {
-			email: req.body.userInfo[0].email,
-			phoneNumber: req.body.userInfo[0].phone
+			username: req.body.userInfo[0].username
 		}).then(function (data) {
 			if (!data.isMigrated && data.isMigrated == 0) {
 				return setImmediate(cb, null, { isMigrated: data.isMigrated });
@@ -773,9 +772,13 @@ Accounts.prototype.shared = {
 
 	migrateData: function (req, cb) {
 
-		library.db.one(sql.updateBalance, {
+		library.db.one(sql.updateUserInfo, {
 			address: req.body.address,
-			balance: req.body.data.balance
+			balance: req.body.data[0].balance * 100000000,
+			email: req.body.data[0].email,
+			phone:req.body.data[0].phone,
+			username:req.body.data[0].username,
+			country:req.body.data[0].country
 		}
 		).then(function (data) {
 
