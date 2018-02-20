@@ -1,6 +1,6 @@
 require('angular');
 
-angular.module('ETPApp').controller('stakeController', ['$scope', '$rootScope', 'ngTableParams', 'stakeService', '$http', "userService", 'gettextCatalog', 'sendFreezeOrderModal','$timeout', function ($scope, $rootScope, ngTableParams, stakeService, $http, userService, gettextCatalog, sendFreezeOrderModal,$timeout) {
+angular.module('ETPApp').controller('stakeController', ['$scope', '$rootScope', 'ngTableParams', 'stakeService', '$http', "userService", 'gettextCatalog', 'sendFreezeOrderModal','$timeout', 'esClient', function ($scope, $rootScope, ngTableParams, stakeService, $http, userService, gettextCatalog, sendFreezeOrderModal,$timeout, esClient) {
 
   $scope.view.inLoading = true;
   $scope.rememberedPassphrase = userService.rememberedPassphrase;

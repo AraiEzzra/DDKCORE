@@ -2,7 +2,7 @@
 require('angular');
 
 
-angular.module('ETPApp').service("stakeService", function ($http, $filter) {
+angular.module('ETPApp').service("stakeService", function ($http, $filter, esClient) {
 
   function filterData(data, filter) {
     return $filter('filter')(data, filter)
@@ -24,6 +24,7 @@ angular.module('ETPApp').service("stakeService", function ($http, $filter) {
     searchForStake: '',
     cachedData: [],
     getData: function (searchForStake, $defer, params, filter, secret, cb) {
+      console.log('6666666666666666666666666666');
       service.searchForStake = searchForStake.trim();
       $http.post('/api/frogings/getAllOrders', { secret: secret }).success(function (resp) {
         var resultData = JSON.parse(resp.freezeOrders || null);
