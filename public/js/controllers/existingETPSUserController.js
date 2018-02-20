@@ -30,7 +30,8 @@ angular.module('ETPApp').controller('existingETPSUserController', ['$scope', '$r
         return btoa(dynamic_key);
     }
 
-    $scope.validdateExistingUser = function (username, password) {
+    //hotam: function to validate existing ETPS user
+    $scope.validateExistingUser = function (username, password) {
         var api_key = this.generateApiKey($scope.API_KEY_GLOBAL);
         var url = $scope.URL_GLOBAL + "users/login.php?key=" + api_key;
         var post = "username=" + btoa(username) + "&password=" + btoa(password);

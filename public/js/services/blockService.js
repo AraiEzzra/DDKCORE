@@ -1,6 +1,7 @@
 require('angular');
 
 angular.module('ETPApp').service('blockService', function ($http, esClient) {
+    //hotam: modified search with elasticsearch
     var blocks = {
         lastBlockId: null,
         searchForBlock: '',

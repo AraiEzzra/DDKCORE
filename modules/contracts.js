@@ -62,8 +62,6 @@ Contracts.prototype.onNewBlock = function (block, broadcast, cb) {
 					var totalContributorsBal = parseInt(data.transferedAmount) + parseInt(contributorsBalance);
 					cache.prototype.setJsonForKey("minedContributorsBalance", totalContributorsBal);
 				});
-
-
 				library.db.none(sql.enableAccount, {
 					senderId: data.address
 				}).then(function () {
