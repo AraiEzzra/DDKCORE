@@ -4,9 +4,9 @@ var client = require('./connection.js');
 /**
 * check if the index exists
 */
-function indexExists(cb) {  
+function indexExists(indexName, cb) {  
     var result = client.indices.exists({
-        index: 'etp'
+        index: indexName
     });
     return result;
 }
@@ -15,9 +15,9 @@ exports.indexExists = indexExists;
 /**
 * create an index
 */
-function createIndex(cb) { 
+function createIndex(indexName, cb) { 
     client.indices.create({
-        index: 'etp'
+        index: indexName
     }, function (err, resp, status) {
         if (err) {
             cb(err);
@@ -31,9 +31,9 @@ exports.createIndex = createIndex;
 /**
 * Delete an existing index
 */
-function deleteIndex(cb) {  
+function deleteIndex(indexName, cb) {  
     client.indices.delete({
-        index: 'etp'
+        index: indexName
     }, function (err, resp, status) {
         if (err) {
             cb(err);

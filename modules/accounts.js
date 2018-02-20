@@ -753,17 +753,14 @@ Accounts.prototype.shared = {
 
 	},
 	existingETPSUser: function (req, cb) {
-
 		library.db.one(sql.checkAlreadyMigrated, {
-			email: req.body.email,
-			phoneNumber: req.body.phoneNumber
+			username: req.body.userInfo[0].username
 		}).then(function (data) {
-			if (!data.isMigrated && data.isMigrated == 0) {
-				return setImmediate(cb, null, { isMigrated: data.isMigrated });
-			} else {
-				return setImmediate(cb, 'Already Migrated');
-			}
+			return setImmediate(cb, null, { isMigrated: data.isMigrated });
 		}).catch(function (err) {
+			if (err.code == 0) {
+				return setImmediate(cb, null, { isMigrated: 0 });
+			}
 			library.logger.error(err.stack);
 			return setImmediate(cb, err.toString());
 		});
@@ -772,20 +769,21 @@ Accounts.prototype.shared = {
 
 	migrateData: function (req, cb) {
 
-		library.db.one(sql.updateBalance, {
+		library.db.one(sql.updateUserInfo, {
 			address: req.body.address,
-			balance: req.body.data.balance
+			balance: req.body.data[0].balance * 100000000,
+			email: req.body.data[0].email,
+			phone:req.body.data[0].phone,
+			username:req.body.data[0].username,
+			country:req.body.data[0].country
 		}
 		).then(function (data) {
-
-			library.db.one(sql.insertStakeOrder, req.body.address
-			).then(function (data) {
-
-				return setImmediate(cb, null);
-			}).catch(function (err) {
-				library.logger.error(err.stack);
-				return setImmediate(cb, err.toString());
-			});
+			
+			/* 
+			**
+			* To Do// Insert into stake order table 
+			*/
+			
 		}).catch(function (err) {
 			library.logger.error(err.stack);
 			return setImmediate(cb, err.toString());

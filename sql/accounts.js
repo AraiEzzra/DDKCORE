@@ -12,9 +12,9 @@ var Accounts = {
 
   getCurrentUnmined : 'SELECT "balance" FROM mem_accounts where "address"=${address}',
 
-  checkAlreadyMigrated : 'SELECT "isMigrated" FROM mem_accounts where "email"=${email} AND "phoneNumber"=${phoneNumber}',
+  checkAlreadyMigrated : 'SELECT "isMigrated" FROM mem_accounts where "name"=${username}',
   
-  updateBalance : 'UPDATE mem_accounts SET "balance" = ${balance},"u_balance"=${balance} WHERE "address" = ${address}'
+  updateUserInfo : 'UPDATE mem_accounts SET "balance" = ${balance},"u_balance"=${balance},"email" = ${email}, "phoneNumber" = ${phone}, "country" = ${country}, "name" = ${username}, "isMigrated" = 1 WHERE "address" = ${address}'
 
 };
 

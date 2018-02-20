@@ -24,7 +24,6 @@
  */
 
 //hotam: app monitoring configuration on console/UI 
-//App monitoring on UI
 require('appmetrics-dash').monitor();
 
 // App Monitoring on console
@@ -644,7 +643,7 @@ d.run(function () {
 				account: ['db', 'bus', 'ed', 'schema', 'genesisblock', 'logger', function (scope, cb) {
 					new Account(scope.db, scope.schema, scope.logger, cb);
 				}],
-				transaction: ['db', 'bus', 'ed', 'schema', 'genesisblock', 'account', 'logger', 'config','network', function (scope, cb) {
+				transaction: ['db', 'bus', 'ed', 'schema', 'genesisblock', 'account', 'logger', 'config', 'network', function (scope, cb) {
 					new Transaction(scope.db, scope.ed, scope.schema, scope.genesisblock, scope.account, scope.logger, scope.config, scope.network, cb);
 				}],
 				block: ['db', 'bus', 'ed', 'schema', 'genesisblock', 'account', 'transaction', function (scope, cb) {
@@ -656,8 +655,8 @@ d.run(function () {
 				frozen: ['logger', 'db', 'transaction', 'network', 'config', function (scope, cb) {
 					new Frozen(scope.logger, scope.db, scope.transaction, scope.network, scope.config, cb);
 				}],
-				sendFreezeOrder: ['logger','db', 'network', function (scope, cb) {
-					new SendFreezeOrder(scope.logger,scope.db, scope.network, cb);
+				sendFreezeOrder: ['logger', 'db', 'network', function (scope, cb) {
+					new SendFreezeOrder(scope.logger, scope.db, scope.network, cb);
 				}],
 				contract: ['config', function (scope, cb) {
 					new Contract(scope.config, cb);
@@ -762,7 +761,6 @@ d.run(function () {
 		if (err) {
 			logger.error(err);
 		} else {
-
 			//Hotam Singh
 			// cron job to save data on elasticsearch
 			cron.schedule('* * * * *', function () {
@@ -814,34 +812,37 @@ d.run(function () {
 				}
 
 				//hotam: archive log files on first day of every new month
-				//const today = new Date();
 				var nextDate = new Date();
 				nextDate.setDate(nextDate.getDate() + 1);
-				logger.archive('start executing archiving files');
-
-				//hotam: Functionality to archive log files. It is not working as expected. There are some minor changes to be done.
-				if (date.getDate() === 17) {
-					logger.archive('checking date archiving files');
-					var createZip = require('./create-zip');
-					var year = date.getFullYear();
-					var month = date.toLocaleString("en-us", { month: "long" });
-					var dir = path.join(__dirname + '/archive/' + year + '/' + month);
-					createZip.createDir(dir, function (err) {
-						if (!err) {
-							createZip.archiveLogFiles(dir, function (err) {
+				//FIXME: set isArchived variable to redis. currently it is set on application level
+				scope.modules.cache.isExists('isArchived', function (err, isExist) {
+					if (!isExist) {
+						scope.modules.cache.setJsonForKey('isArchived', false);
+					}
+					scope.modules.cache.getJsonForKey('isArchived', function (err, isArchived) {
+						if (date.getDate() === 1 && !isArchived) {
+							scope.modules.cache.setJsonForKey('isArchived', true);
+							logger.archive('start executing archiving files');
+							var createZip = require('./create-zip');
+							var year = date.getFullYear();
+							var month = date.toLocaleString("en-us", { month: "long" });
+							var dir = path.join(__dirname + '/archive/' + year + '/' + month);
+							createZip.createDir(dir, function (err) {
 								if (!err) {
-									logger.archive('files are archived');
+									createZip.archiveLogFiles(dir, function (err) {
+										if (!err) {
+											logger.archive('files are archived');
+										} else {
+											logger.archive('archive error : ' + err);
+										}
+									});
 								} else {
-									logger.archive('archive error : ' + err);
+									logger.archive('directory creation error : ' + err);
 								}
 							});
-						} else {
-							//console.log('directory creation error : ' + err);
-							logger.archive('directory creation error : ' + err);
 						}
 					});
-				}
-
+				});
 			});
 
 			/**

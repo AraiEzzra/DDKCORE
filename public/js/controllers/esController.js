@@ -1,3 +1,5 @@
+//Hotam: controller configuration for elasticsearch to inject into services 
+
 require('angular');
 
 angular.module('ETPApp').controller('esController', ['$scope', '$http', 'esClient', function ($scope, $http, esClient) {
