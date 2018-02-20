@@ -755,14 +755,10 @@ Accounts.prototype.shared = {
 		library.db.one(sql.checkAlreadyMigrated, {
 			username: req.body.userInfo[0].username
 		}).then(function (data) {
-			if (!data.isMigrated && data.isMigrated == 0) {
-				return setImmediate(cb, null, { isMigrated: data.isMigrated });
-			} else {
-				return setImmediate(cb, null, {isMigrated: 1});
-			}
+			return setImmediate(cb, null, { isMigrated: data.isMigrated });
 		}).catch(function (err) {
-			if(err.code == 0) {
-				return setImmediate(cb, null, {isMigrated: 0});
+			if (err.code == 0) {
+				return setImmediate(cb, null, { isMigrated: 0 });
 			}
 			library.logger.error(err.stack);
 			return setImmediate(cb, err.toString());
@@ -781,15 +777,12 @@ Accounts.prototype.shared = {
 			country:req.body.data[0].country
 		}
 		).then(function (data) {
-
-			library.db.one(sql.insertStakeOrder, req.body.address
-			).then(function (data) {
-
-				return setImmediate(cb, null);
-			}).catch(function (err) {
-				library.logger.error(err.stack);
-				return setImmediate(cb, err.toString());
-			});
+			
+			/* 
+			**
+			* To Do// Insert into stake order table 
+			*/
+			
 		}).catch(function (err) {
 			library.logger.error(err.stack);
 			return setImmediate(cb, err.toString());
