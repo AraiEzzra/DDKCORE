@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS "mem_accounts"(
   "transferedAmount" BIGINT DEFAULT 0,
   "endTime" INT,
   "totalFrozeAmount" BIGINT DEFAULT 0,
-  "isMigrated" SMALLINT,
+  "isMigrated" SMALLINT DEFAULT 0,
   "name" VARCHAR(20),
   "email" VARCHAR(40),
   "country" VARCHAR(20),
