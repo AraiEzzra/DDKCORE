@@ -242,7 +242,7 @@ SendFreezeOrder.prototype.sendFreezedOrder = function (data, cb) {
 	}
 
 
-	async function sendFreezedOrder() {
+	(async function() {
 		try {
 			var row = await getActiveFrozeOrder();
 
@@ -263,9 +263,9 @@ SendFreezeOrder.prototype.sendFreezedOrder = function (data, cb) {
 			return setImmediate(cb, err.toString());
 		}
 
-	};
+	})();
 
-	sendFreezedOrder();
+	//sendFreezedOrder();
 
 };
 

@@ -35,7 +35,7 @@ exports.merge = function merge(a, b) {
  * @param {Object} list
  * @param {Object} bulk
  */
-exports.makeBulk = function (list, index, cb) {
+exports.makeBulk = function (list, index) {
 	var bulk = [], indexId;
 	for (var current in list) {
 		if (list[current].stakeId) {
@@ -55,7 +55,8 @@ exports.makeBulk = function (list, index, cb) {
 			list[current]
 		);
 	}
-	cb(null, bulk);
+	return bulk;
+	//cb(null, bulk);
 };
 
 /**
@@ -64,18 +65,20 @@ exports.makeBulk = function (list, index, cb) {
  * @param {Object} list
  * @param {Object} bulk
  */
-exports.indexall = function (bulk, index, cb) {
-	esClient.bulk({
-		maxRetries: 5,
-		index: index,
-		type: index,
-		body: bulk
-	}, function (err, resp, status) {
-		if (err) {
-			cb(err);
-		} else {
-			cb(null);
-		}
+exports.indexall = function (bulk, index) {
+	return new Promise(function(resolve, reject) {
+		esClient.bulk({
+			maxRetries: 5,
+			index: index,
+			type: index,
+			body: bulk
+		}, function (err, resp, status) {
+			if (err) {
+				reject(err);
+			} else {
+				resolve(null);
+			}
+		});
 	})
 };
 

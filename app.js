@@ -764,7 +764,7 @@ d.run(function () {
 			//Hotam Singh
 			// cron job to save data on elasticsearch
 			cron.schedule('* * * * *', function () {
-				var tables = [
+				var dbTables = [
 					'blocks',
 					'dapps',
 					'delegates',
@@ -781,23 +781,24 @@ d.run(function () {
 					'outtransfer',
 					'multisignatures'
 				];
-
-				async function manageElasticSearch(arr) {
-					await Promise.all(arr.map(async function (tableName) {
-						scope.db.query('SELECT * FROM ' + tableName).then(function (rows) {
-							if (rows.length > 0) {
-								utils.makeBulk(rows, tableName, function (err, resp) {
-									utils.indexall(resp, tableName, function (err) {
-										if (err) {
-											console.log('err : ' + err);
-										}
-									});
-								});
-							}
-						});
-					}));
-				};
-				manageElasticSearch(tables);
+				dbTables.forEach(function (tableName) {
+					scope.db.query('SELECT * FROM ' + tableName)
+					.then(function (rows) {
+						if (rows.length > 0) {
+							var bulk = utils.makeBulk(rows, tableName);
+							utils.indexall(bulk, tableName)
+							.then(function (result) {
+								console.log('success: ', result);
+							})
+							.catch(function (err) {
+								console.log('err : ', err);
+							});
+						}
+					})
+					.catch(function (err) {
+						console.log('err : ', err);
+					});
+				});
 			});
 
 			// cron jon to check freezed order
