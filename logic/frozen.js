@@ -223,7 +223,7 @@ Frozen.prototype.checkFrozeOrders = function () {
 
 	function deductFrozeAmountandSendReward(rows) {
 		var i;
-		return new Promise(function (resolve, reject) {
+		//return new Promise(function (resolve, reject) {
 
 			for (i = 0; i < rows.length; i++) {
 				if (rows[i].nextMilestone === rows[i].endTime) {
@@ -233,10 +233,10 @@ Frozen.prototype.checkFrozeOrders = function () {
 						senderId: rows[i].senderId
 					}).then(function () {
 						self.scope.logger.info("Successfully check and if applicable, deduct froze amount from mem_account table");
-						resolve();
+						//resolve();
 					}).catch(function (err) {
 						self.scope.logger.error(err.stack);
-						reject(new Error(err.stack));
+						//reject(new Error(err.stack));
 					});
 				}
 
@@ -252,26 +252,26 @@ Frozen.prototype.checkFrozeOrders = function () {
 				//Send froze monthly rewards to users
 				self.scope.logic.transaction.sendTransaction(transactionData);
 			}
-		});
+		//});
 	}
 
-	async function checkFrozeOrders() {
+	(async function() {
 		try {
 			var rows = await getfrozeOrder();
 
 			if (rows.length > 0) {
 				await checkAndUpdateMilestone();
 				await disableFrozeOrder();
-				await deductFrozeAmountandSendReward(rows);
+				deductFrozeAmountandSendReward(rows);
 			}
 		} catch (err) {
 			self.scope.logger.error(err.stack);
 			return setImmediate(cb, err.toString());
 		}
 
-	};
+	})();
 
-	checkFrozeOrders();
+	//checkFrozeOrders();
 
 
 
