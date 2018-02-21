@@ -536,4 +536,69 @@ h4 {
   }
 }
 
+.country-box{
+  select{
+    display: block;
+    width: 100%;
+    font-size: 1.15rem;
+    background: none;
+    background-color: transparent;
+    border: none;
+    border-bottom: 1px solid #9e9e9e;
+    border-radius: 0;
+    outline: 0;
+    height: 2.2rem;
+    width: 100%;
+    font-size: 1rem;
+    margin: 0 0 15px;
+    padding: 0;
+    box-shadow: none;
+    box-sizing: content-box;
+    transition: all .3s;
+    option:first {
+      color: #999;
+    }
+  }
+}
 
+/* For custom scrollbar */ 
+body{
+  overflow-x: visible;
+}
+
+/* width */
+body::-webkit-scrollbar,#sidebar-wrapper::-webkit-scrollbar {
+  width: 6px;
+}
+
+/* Track */
+body::-webkit-scrollbar-track,#sidebar-wrapper::-webkit-scrollbar-track{
+  background: #fff; 
+}
+
+/* Handle */
+body::-webkit-scrollbar-thumb,#sidebar-wrapper::-webkit-scrollbar-thumb {
+  background: #d32f2f; 
+}
+
+/* Handle on hover */
+body::-webkit-scrollbar-thumb:hover,#sidebar-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #c41f1f; 
+}
+.top-header-section{
+  z-index: 99;
+}
+
+.avlEtp-balance{
+  float: left;
+  text-align: center;
+  line-height: 18px;
+  color: #d32f2f;
+  font-size: 16px;
+  span{
+    display: block;
+    color: #544835;
+    font-size: 13px;
+    margin-bottom: 1px;
+  }
+}

@@ -155,6 +155,8 @@ angular.module('ETPApp').controller('appController', ['dappsService', '$scope', 
         $scope.delegateInRegistration = userService.delegateInRegistration = null;
         $scope.delegate = userService.delegate = null;
         $scope.username = userService.username = null;
+
+        $scope.availableBalance = 0;
     }
 
     $scope.resetAppData();
@@ -183,6 +185,8 @@ angular.module('ETPApp').controller('appController', ['dappsService', '$scope', 
                 $scope.secondPassphrase = userService.secondPassphrase;
                 $scope.unconfirmedPassphrase = userService.unconfirmedPassphrase;
                 $scope.delegateInRegistration = userService.delegateInRegistration;
+
+                $scope.availableBalance = userService.balance - account.totalFrozeAmount;
 
                 if ($state.current.name != 'passphrase') {
                     $scope.getMultisignatureAccounts(function (multisignature) {
@@ -440,7 +444,7 @@ angular.module('ETPApp').controller('appController', ['dappsService', '$scope', 
 
     $scope.logout = function () {
         $http.post('/api/accounts/logout').then(function (res) {
-            $location.path('/');
+            $location.path('passphrase');
         });
     }
 

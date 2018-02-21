@@ -7,15 +7,15 @@ require('winston-daily-rotate-file');
 
 //defined custom log levels for winston
 const levels = {
-  error: 0,
-  warn: 1,
-  info: 2,
-  http: 3,
-  verbose: 4,
-  debug: 5,
-  silly: 6,
-  trace: 7,
-  archive: 8
+  archive: 0,
+  error: 1,
+  warn: 2,
+  info: 3,
+  http: 4,
+  verbose: 5,
+  debug: 6,
+  silly: 7,
+  trace: 8,
 };
 
 //Creating file transport to write logs into a file. This file daily rotates
@@ -35,6 +35,7 @@ var transport = new (winston.transports.DailyRotateFile)({
 var traceTransport = new (winston.transports.File)({
   filename: './logs/archive.log',
   level: 'archive',
+  levelOnly: true,
   prepend: true,
   json: false,
   timestamp: function () {

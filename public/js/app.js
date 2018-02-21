@@ -11,6 +11,7 @@ require('../node_modules/angular-socket-io/socket.js');
 require('../node_modules/ng-table/dist/ng-table.js');
 require('../node_modules/elasticsearch-browser/elasticsearch.angular.min.js');
 
+
 Mnemonic = require('bitcore-mnemonic');
 
 ETPApp = angular.module('ETPApp', ['ui.router', 'btford.modal', 'ngCookies', 'ngTable', 'ngAnimate', 'chart.js', 'btford.socket-io', 'ui.bootstrap', 'angular.filter', 'gettext', 'elasticsearch']);
@@ -96,12 +97,6 @@ ETPApp.config([
     $rootScope.$state = $state;
 
     $rootScope.defaultLoaderScreen = false;
-
-    /* function callAtTimeout() {
-        console.log("Timeout occurred");
-        $rootScope.defaultLoaderScreen = false;
-    } */
-
     //hotam: render current logged-in user upon page refresh if currently logged-in
     AuthService.getUserStatus().then(function () {
         if (AuthService.isLoggedIn()) {
@@ -115,11 +110,9 @@ ETPApp.config([
         }
     });
     
-    
     //hotam: user authentication upon page forward/back for currently logged-in user
     $rootScope.$on('$stateChangeStart', function (e, toState, toParams, fromState, fromParams) {
         AuthService.getUserStatus().then(function () {
-            //console.log(toState);
             if(toState.url == '/existingETPSUser'){
                 $state.go('existingETPSUser');
             }else{
@@ -128,7 +121,7 @@ ETPApp.config([
                 } else {
                     $state.go('passphrase');
                 }
-            }
+            } 
         });
     }); 
 });

@@ -617,7 +617,8 @@ Accounts.prototype.shared = {
 						secondSignature: account.secondSignature,
 						secondPublicKey: account.secondPublicKey,
 						multisignatures: account.multisignatures || [],
-						u_multisignatures: account.u_multisignatures || []
+						u_multisignatures: account.u_multisignatures || [],
+						totalFrozeAmount: account.totalFrozeAmount
 					}
 				});
 			});
@@ -715,7 +716,6 @@ Accounts.prototype.shared = {
 	totalAccounts: function (req, cb) {
 
 		library.db.one(sql.getTotalAccount).then(function (data) {
-			library.logger.info('Total accounts in ETP :' + JSON.stringify(data));
 			return setImmediate(cb, null, data);
 		}).catch(function (err) {
 			library.logger.error(err.stack);
@@ -728,7 +728,6 @@ Accounts.prototype.shared = {
 		var publicAddress = library.config.sender.address;
 
 		library.db.one(sql.getCurrentUnmined, { address: publicAddress }).then(function (currentUnmined) {
-			library.logger.info('Current unmined ETP tokens in public address :' + JSON.stringify(currentUnmined));
 			var circulatingSupply = config.initialPrimined.total + initialUnmined - currentUnmined.balance;
 
 			cache.prototype.getJsonForKey("minedContributorsBalance", function (err, contributorsBalance) {
@@ -754,17 +753,14 @@ Accounts.prototype.shared = {
 
 	},
 	existingETPSUser: function (req, cb) {
-
 		library.db.one(sql.checkAlreadyMigrated, {
-			email: req.body.email,
-			phoneNumber: req.body.phoneNumber
+			username: req.body.userInfo[0].username
 		}).then(function (data) {
-			if (!data.isMigrated && data.isMigrated == 0) {
-				return setImmediate(cb, null, { isMigrated: data.isMigrated });
-			} else {
-				return setImmediate(cb, 'Already Migrated');
-			}
+			return setImmediate(cb, null, { isMigrated: data.isMigrated });
 		}).catch(function (err) {
+			if (err.code == 0) {
+				return setImmediate(cb, null, { isMigrated: 0 });
+			}
 			library.logger.error(err.stack);
 			return setImmediate(cb, err.toString());
 		});
@@ -773,20 +769,21 @@ Accounts.prototype.shared = {
 
 	migrateData: function (req, cb) {
 
-		library.db.one(sql.updateBalance, {
+		library.db.one(sql.updateUserInfo, {
 			address: req.body.address,
-			balance: req.body.data.balance
+			balance: req.body.data[0].balance * 100000000,
+			email: req.body.data[0].email,
+			phone:req.body.data[0].phone,
+			username:req.body.data[0].username,
+			country:req.body.data[0].country
 		}
 		).then(function (data) {
-
-			library.db.one(sql.insertStakeOrder, req.body.address
-			).then(function (data) {
-
-				return setImmediate(cb, null);
-			}).catch(function (err) {
-				library.logger.error(err.stack);
-				return setImmediate(cb, err.toString());
-			});
+			
+			/* 
+			**
+			* To Do// Insert into stake order table 
+			*/
+			
 		}).catch(function (err) {
 			library.logger.error(err.stack);
 			return setImmediate(cb, err.toString());

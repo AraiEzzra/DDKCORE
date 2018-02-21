@@ -58,4 +58,37 @@ angular.module('ETPApp').controller('newUserController', ["$scope", "$http", "ne
 
     $scope.generatePassphrase();
 
+
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }]);

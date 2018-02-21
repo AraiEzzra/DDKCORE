@@ -27,3 +27,5 @@ angular.module('ETPApp').filter('cut', function () {
         }
     };
 });
+
+
