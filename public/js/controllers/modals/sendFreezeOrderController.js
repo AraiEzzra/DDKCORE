@@ -71,7 +71,8 @@ angular.module('ETPApp').controller('sendFreezeOrderController', ['$scope', 'use
         var data = {
             secret: secretPhrase,
             frozeId: $scope.freezeId,
-            recipientId: $scope.recipientAddress
+            recipientId: $scope.recipientAddress,
+            freezedAmount: $scope.freezedAmount
         };
 
         if ($scope.secondPassphrase) {
