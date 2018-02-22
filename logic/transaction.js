@@ -1194,19 +1194,23 @@ Transaction.prototype.bindModules = function (__modules) {
 };
 
 //Navin : call add transaction API 
-Transaction.prototype.sendTransaction = function (data) {
+Transaction.prototype.sendTransaction = function (data, cb) {
 
 	var port = this.scope.config.app.port;
 	var address = this.scope.config.address;
 
-	request.put('http://' + address + ':' + port + '/api/transactions/', data, function (error, response, body) {
-		if (error) throw error;
-		if (response && response.statusCode == 200) {
-			self.scope.logger.info('Froze monthly reward Transaction : body:', body);
-		} else {
-			self.scope.logger.info('Froze monthly reward transaction status Code : ' + response.statusCode);
-			self.scope.logger.info('And its body : ' + JSON.stringify(body));
-		}
+	request.put('http://' + address + ':' + port + '/api/transactions/', data, function (error, transactionResponse) {
+		if (error)
+			return setImmediate(cb, error);
+
+		return setImmediate(cb, null, transactionResponse);
+
+		// if (response && response.statusCode == 200) {
+		// 	self.scope.logger.info('Froze monthly reward Transaction : body:', body);
+		// } else {
+		// 	self.scope.logger.info('Froze monthly reward transaction status Code : ' + response.statusCode);
+		// 	self.scope.logger.info('And its body : ' + JSON.stringify(body));
+		// }
 	});
 
 };

@@ -139,80 +139,70 @@ SendFreezeOrder.prototype.bind = function (accounts, rounds) {
 };
 
 
-SendFreezeOrder.prototype.sendFreezedOrder = function (data, cb) {
+SendFreezeOrder.prototype.sendFreezedOrder = function (userAndOrderData, cb) {
 
 	function getActiveFrozeOrder() {
 		return new Promise(function (resolve, reject) {
 			self.scope.db.one(sql.getActiveFrozeOrder,
 				{
-					senderId: data.account.address,
-					frozeId: data.req.body.frozeId
-				}).then(function (row) {
-					resolve(row)
-
+					senderId: userAndOrderData.account.address,
+					frozeId: userAndOrderData.frozeId
+				}).then(function (order) {
+					resolve(order)
 				}).catch(function (err) {
 					self.scope.logger.error(err.stack);
 
-					if (err.name == "QueryResultError" && err.message == "No data returned from the query.") {
+					if (err.code == 0 && err.message == "No data returned from the query.") {
 						reject('Selected order is expired. Please send active order.');
 					} else {
-
 						reject(new Error(err.toString()));
 					}
-
 				});
-
-
 		});
-
 	}
 
-	function deductFrozeAmount(row) {
+	function deductFrozeAmount(order) {
 		return new Promise(function (resolve, reject) {
 			//deduct froze Amount from totalFrozeAmount in mem_accounts table
 			self.scope.db.none(sql.deductFrozeAmount,
 				{
-					senderId: data.account.address,
-					FrozeAmount: row.freezedAmount
+					senderId: userAndOrderData.account.address,
+					FrozeAmount: order.freezedAmount
 				}).then(function () {
 					resolve();
 				}).catch(function (err) {
 					self.scope.logger.error(err.stack);
 					reject(cb, err.toString());
 				});
-
 		});
-
 	}
 
-	function updateFrozeAmount(row) {
+	function updateFrozeAmount(order) {
 		return new Promise(function (resolve, reject) {
 
 			//update total Froze amount for recipient of froze order during sending order
 			self.scope.db.none(sql.updateFrozeAmount,
 				{
-					senderId: data.req.body.recipientId,
-					freezedAmount: row.freezedAmount
+					senderId: userAndOrderData.recipientId,
+					freezedAmount: order.freezedAmount
 				}).then(function () {
 					resolve();
 				}).catch(function (err) {
 					self.scope.logger.error(err.stack);
 					reject(new Error(err.toString()));
 				});
-
 		});
-
 	}
 
-	function updateFrozeOrder(row) {
+	function updateFrozeOrder(order) {
 		return new Promise(function (resolve, reject) {
 
 			//Update old freeze order
 			self.scope.db.none(sql.updateFrozeOrder,
 				{
-					recipientId: data.req.body.recipientId,
-					senderId: row.senderId,
-					frozeId: data.req.body.frozeId
+					recipientId: userAndOrderData.recipientId,
+					senderId: order.senderId,
+					frozeId: userAndOrderData.frozeId
 				}).then(function () {
 					self.scope.logger.info("Successfully check for update froze order");
 					resolve();
@@ -221,47 +211,45 @@ SendFreezeOrder.prototype.sendFreezedOrder = function (data, cb) {
 					reject(new Error(err.toString()));
 				});
 		});
-
 	}
 
-	function createNewFrozeOrder(row) {
+	function createNewFrozeOrder(order) {
 		return new Promise(function (resolve, reject) {
 
 			//create new froze order according to send order
 			self.scope.db.none(sql.createNewFrozeOrder,
 				{
-					frozeId: data.req.body.frozeId,
-					startTime: row.startTime,
-					nextMilestone: row.nextMilestone,
-					endTime: row.endTime,
-					senderId: data.req.body.recipientId,
-					freezedAmount: row.freezedAmount,
-					milestoneCount: row.milestoneCount
+					frozeId: userAndOrderData.frozeId,
+					startTime: order.startTime,
+					nextMilestone: order.nextMilestone,
+					endTime: order.endTime,
+					senderId: userAndOrderData.recipientId,
+					freezedAmount: order.freezedAmount,
+					milestoneCount: order.milestoneCount
 
 				}).then(function () {
 					self.scope.logger.info("Successfully inserted new row in stake_orders table");
-					resolve(row.freezedAmount);
+					resolve(order.freezedAmount);
 				}).catch(function (err) {
 					self.scope.logger.error(err.stack);
 					reject(new Error(err.toString()));
 				});
-
 		});
-
 	}
 
-
+	//This async function take active froze order from table and deduct froze amount and update froze 
+	//amount in mem_account table & update old order and create new order in stake table
 	(async function() {
 		try {
-			var row = await getActiveFrozeOrder();
+			var order = await getActiveFrozeOrder();
 
-			if (row) {
-				self.scope.logger.info("Successfully get froze order");
+			if (order) {
+				self.scope.logger.info("Successfully get froze order"+JSON.stringify(order));
 
-				await deductFrozeAmount(row);
-				await updateFrozeAmount(row);
-				await updateFrozeOrder(row);
-				await createNewFrozeOrder(row);
+				await deductFrozeAmount(order);
+				await updateFrozeAmount(order);
+				await updateFrozeOrder(order);
+				await createNewFrozeOrder(order);
 			}
 			//Stake order event
 			self.scope.network.io.sockets.emit('stake/change', null);
@@ -273,8 +261,6 @@ SendFreezeOrder.prototype.sendFreezedOrder = function (data, cb) {
 		}
 
 	})();
-
-	//sendFreezedOrder();
 
 };
 

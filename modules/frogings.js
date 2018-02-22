@@ -225,15 +225,18 @@ Frogings.prototype.shared = {
 			library.balancesSequence.add(function (cb) {
 				if (req.body.multisigAccountPublicKey && req.body.multisigAccountPublicKey !== keypair.publicKey.toString('hex')) {
 					modules.accounts.getAccount({ publicKey: req.body.multisigAccountPublicKey }, function (err, account) {
+						if (err) {
+							return setImmediate(cb, err);
+						}
 						//*********************NAVIN******************* */
 						library.logic.frozen.updateFrozeAmount({
 							account: account,
-							req: req
+							freezedAmount: req.body.freezedAmount
 						}, function (err) {
 							if (err) {
 								return setImmediate(cb, err);
 							} else {
-								
+
 								if (!account || !account.publicKey) {
 									return setImmediate(cb, 'Multisignature account not found');
 								}
@@ -283,20 +286,23 @@ Frogings.prototype.shared = {
 										});
 									} catch (e) {
 										return setImmediate(cb, e.toString());
-									}									
+									}
 									modules.transactions.receiveTransactions([transaction], true, cb);
 								});
-								
+
 							}
 						});
 
 					});
 				} else {
 					modules.accounts.setAccountAndGet({ publicKey: keypair.publicKey.toString('hex') }, function (err, account) {
+						if (err) {
+							return setImmediate(cb, err);
+						}
 						//*********************NAVIN******************* */
 						library.logic.frozen.updateFrozeAmount({
 							account: account,
-							req: req
+							freezedAmount: req.body.freezedAmount
 						}, function (err) {
 							if (err) {
 								return setImmediate(cb, err);
@@ -332,7 +338,7 @@ Frogings.prototype.shared = {
 								}
 
 								modules.transactions.receiveTransactions([transaction], true, cb);
-								
+
 							}
 						});
 					});

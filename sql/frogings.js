@@ -26,7 +26,7 @@ var TransactionsSql = {
 
   checkAndUpdateMilestone: 'UPDATE stake_orders SET "nextMilestone"= ("nextMilestone" +${milestone}), "milestoneCount"=("milestoneCount" + 1) where "status"=1 AND ${currentTime} >= "nextMilestone" ',
 
-  frozeBenefit: 'SELECT "senderId" , "freezedAmount", "endTime","milestoneCount","nextMilestone" FROM stake_orders WHERE "status"=1 AND ${currentTime} >= "nextMilestone" ',
+  getfrozeOrder: 'SELECT "senderId" , "freezedAmount", "endTime","milestoneCount","nextMilestone" FROM stake_orders WHERE "status"=1 AND ${currentTime} >= "nextMilestone" ',
 
   deductFrozeAmount: 'UPDATE mem_accounts SET "totalFrozeAmount" = ("totalFrozeAmount" - ${FrozeAmount}) WHERE "address" = ${senderId}',
 

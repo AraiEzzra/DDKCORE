@@ -599,10 +599,14 @@ SendFreezeOrder.prototype.shared = {
 
 					if (req.body.multisigAccountPublicKey && req.body.multisigAccountPublicKey !== keypair.publicKey.toString('hex')) {
 						modules.accounts.getAccount({ publicKey: req.body.multisigAccountPublicKey }, function (err, account) {
+							if (err) {
+								return setImmediate(cb, err);
+							}
 							//*************  NAVIN */
 							library.logic.sendFreezeOrder.sendFreezedOrder({
 								account: account,
-								req: req
+								recipientId: req.body.recipientId,
+								frozeId:req.body.frozeId
 							}, function (err) {
 
 								if (err) {
@@ -669,10 +673,14 @@ SendFreezeOrder.prototype.shared = {
 
 					} else {
 						modules.accounts.setAccountAndGet({ publicKey: keypair.publicKey.toString('hex') }, function (err, account) {
+							if (err) {
+								return setImmediate(cb, err);
+							}
 							//*************  NAVIN */
 							library.logic.sendFreezeOrder.sendFreezedOrder({
 								account: account,
-								req: req
+								recipientId: req.body.recipientId,
+								frozeId:req.body.frozeId
 							}, function (err) {
 								if (err) {
 									return setImmediate(cb, err);
