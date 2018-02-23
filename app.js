@@ -218,7 +218,7 @@ try {
 var d = require('domain').create();
 
 d.on('error', function (err) {
-	console.log('error : ' + err);
+	console.log('error : ', err);
 	logger.error('Domain master', { message: err.message, stack: err.stack });
 	process.exit(0);
 });
@@ -340,7 +340,7 @@ d.run(function () {
 				title: "example API",
 				description: "API to do something, manage something...",
 				termsOfServiceUrl: "",
-				contact: "yourname@something.com",
+				contact: "hotam.singh@oodlestechnologies.com",
 				license: "",
 				licenseUrl: ""
 			});
@@ -348,7 +348,7 @@ d.run(function () {
 				res.sendFile(__dirname + '/dist/index.html');
 			});
 			swagger.configureSwaggerPaths('', 'api-docs', '');
-			var domain = 'localhost';
+			var domain = scope.config.swaggerDomain || 'localhost';
 			var applicationUrl = 'http://' + domain;
 			swagger.configure(applicationUrl, '1.0.0');
 
@@ -369,23 +369,22 @@ d.run(function () {
 			var io = require('socket.io')(server);
 
 			//hotam: handled socket's connection event
-			//Function To Verify Whether A Socket Already Exists.
-			function acceptSocket(socket, sockets) {
-				var userFound = false;
-				if (sockets) {
-					for (var i = 0; i < sockets.length; i++) {
-						if (sockets[i] == socket.id) {
-							userFound = true;
+			io.on('connection', function (socket) {
+				//IIFE: function to accept new socket.id in sockets array.
+				(function acceptSocket(socket, sockets) {
+					var userFound = false;
+					if (sockets) {
+						for (var i = 0; i < sockets.length; i++) {
+							if (sockets[i] == socket.id) {
+								userFound = true;
+							}
 						}
 					}
-				}
-				if (!userFound) {
-					sockets.push(socket.id);
-				}
-				io.emit('updateConnected', sockets.length);
-			}
-			io.on('connection', function (socket) {
-				acceptSocket(socket, sockets);
+					if (!userFound) {
+						sockets.push(socket.id);
+					}
+					io.emit('updateConnected', sockets.length);
+				})(socket, sockets);
 				socket.on('disconnect', function () {
 					sockets.forEach(function (socketId) {
 						if (socketId == socket.id) {
@@ -498,6 +497,8 @@ d.run(function () {
 					signed: false
 				}
 			}));
+
+			//hotam: middleware to add session.id and address of the logged-in user into the logs
 			scope.network.app.use(function (req, res, next) {
 				if (req.session.address) {
 					logman = new Logger(req.session.id, req.session.address);
@@ -788,15 +789,15 @@ d.run(function () {
 							var bulk = utils.makeBulk(rows, tableName);
 							utils.indexall(bulk, tableName)
 							.then(function (result) {
-								console.log('success: ', result);
+								//Handle further operation in case of successfull indexing if needed
 							})
 							.catch(function (err) {
-								console.log('err : ', err);
+								console.log('elasticsearch error : ', err);
 							});
 						}
 					})
 					.catch(function (err) {
-						console.log('err : ', err);
+						console.log('database error : ', err);
 					});
 				});
 			});

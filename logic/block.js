@@ -122,7 +122,7 @@ Block.prototype.create = function (data) {
 		generatorPublicKey: data.keypair.publicKey.toString('hex'),
 		transactions: blockTransactions
 	};
-	console.log('timestamp : '+block.timestamp);
+	console.log('timestamp : ', block.timestamp);
 	try {
 		block.blockSignature = this.sign(block, data.keypair);
 

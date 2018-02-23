@@ -426,8 +426,7 @@ Transaction.prototype.getAccountStatus = function(trs, cb) {
 	}).then(function (row) {		
 		if (row.status == 0) {	 
 			return setImmediate(cb,'Invalid transaction : account disabled');
-		} 	
-		//console.log("status : "+row.status);		 
+		} 			 
 		return setImmediate(cb, null, row.status);
 		cb(null);	
 	}).catch(function (err) {		 

@@ -208,7 +208,8 @@ __private.list = function (filter, cb) {
 	library.db.query(sql.countList({
 		where: where,
 		owner: owner
-	}), params).then(function (rows) {
+	}), params)
+	.then(function (rows) {
 		var count = rows.length ? rows[0].count : 0;
 
 		library.db.query(sql.list({
@@ -216,7 +217,8 @@ __private.list = function (filter, cb) {
 			owner: owner,
 			sortField: orderBy.sortField,
 			sortMethod: orderBy.sortMethod
-		}), params).then(function (rows) {
+		}), params)
+		.then(function (rows) {
 			var transactions = [];
 
 			for (var i = 0; i < rows.length; i++) {
@@ -229,11 +231,13 @@ __private.list = function (filter, cb) {
 			};
 
 			return setImmediate(cb, null, data);
-		}).catch(function (err) {
+		})
+		.catch(function (err) {
 			library.logger.error(err.stack);
 			return setImmediate(cb, 'Transactions#list error');
 		});
-	}).catch(function (err) {
+	})
+	.catch(function (err) {
 		library.logger.error(err.stack);
 		return setImmediate(cb, 'Transactions#list error');
 	});
@@ -247,7 +251,8 @@ __private.list = function (filter, cb) {
  * @returns {setImmediateCallback} error | data: {transaction}
  */
 __private.getById = function (id, cb) {
-	library.db.query(sql.getById, {id: id}).then(function (rows) {
+	library.db.query(sql.getById, {id: id})
+	.then(function (rows) {
 		if (!rows.length) {
 			return setImmediate(cb, 'Transaction not found: ' + id);
 		}
@@ -255,7 +260,8 @@ __private.getById = function (id, cb) {
 		var transacton = library.logic.transaction.dbRead(rows[0]);
 
 		return setImmediate(cb, null, transacton);
-	}).catch(function (err) {
+	})
+	.catch(function (err) {
 		library.logger.error(err.stack);
 		return setImmediate(cb, 'Transactions#getById error');
 	});
@@ -269,7 +275,8 @@ __private.getById = function (id, cb) {
  * @returns {setImmediateCallback} error | data: {added, deleted}
  */
 __private.getVotesById = function (transaction, cb) {
-	library.db.query(sql.getVotesById, {id: transaction.id}).then(function (rows) {
+	library.db.query(sql.getVotesById, {id: transaction.id})
+	.then(function (rows) {
 		if (!rows.length) {
 			return setImmediate(cb, 'Transaction not found: ' + transaction.id);
 		}
@@ -289,7 +296,8 @@ __private.getVotesById = function (transaction, cb) {
 		transaction.votes = {added: added, deleted: deleted};
 
 		return setImmediate(cb, null, transaction);
-	}).catch(function (err) {
+	})
+	.catch(function (err) {
 		library.logger.error(err.stack);
 		return setImmediate(cb, 'Transactions#getVotesById error');
 	});

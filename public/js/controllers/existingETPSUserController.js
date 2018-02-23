@@ -41,15 +41,14 @@ angular.module('ETPApp').controller('existingETPSUserController', ['$scope', '$r
             url: url,
             data: post,
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-        }).success(function (resp) {
-            console.log('resp : ' + JSON.stringify(resp));
+        })
+        .success(function (resp) {
             if (!resp.records) {
                 $scope.errorMessage = resp.message;
             } else {
                 var userInfo = {};
                 Object.assign(userInfo, resp.records);
                 $http.post("/api/accounts/existingETPSUser", { userInfo: userInfo }).then(function (response) {
-                    console.log('response : ' + JSON.stringify(response));
                     if (response.data.success) {
                         if (response.data.isMigrated) {
                             $scope.errorMessage = 'User is already migrated';
@@ -61,13 +60,13 @@ angular.module('ETPApp').controller('existingETPSUserController', ['$scope', '$r
                     }
                 });
             }
-        }).error(function (err) {
+        })
+        .error(function (err) {
             $scope.errorMessage = err;
         });
     }
 
     $scope.login = function (username, password) {
-        console.log("!!!!!!!!!" + username + "....." + password);
         var data = {
             balance: 10,
             username: "navin"

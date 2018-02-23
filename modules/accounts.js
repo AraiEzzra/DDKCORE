@@ -294,7 +294,7 @@ Accounts.prototype.shared = {
 					};
 					req.session.address = account.address;
 					/****************************************************************/
-					//Added By Hotam Singh
+					//Hotam Singh
 					var data = {
 						address: accountData.address,
 						u_isDelegate: 0,
@@ -328,21 +328,28 @@ Accounts.prototype.shared = {
 								};
 								cache.prototype.hmset(REDIS_KEY_USER_INFO_HASH, userInfo);
 								cache.prototype.hmset(REDIS_KEY_USER_TIME_HASH, userInfo);
-								library.logic.contract.sendToContrubutors([userInfo]);
-								library.db.none(sql.disableAccount, {
-									senderId: account.address
-								}).then(function () {
-									library.logger.info(account.address + ' account is locked');
-									library.logic.account.set(accountData.address, data, function (err) {
-										if (!err) {
-											return setImmediate(cb, null, { account: accountData });
-										} else {
-											return setImmediate(cb, err);
-										}
+								library.logic.contract.sendToContrubutors([userInfo], function(err, res) {
+									//FIXME: do further processing with "res" i.e send notification to the user
+									if(err) {
+										return setImmediate(cb, err);
+									}
+									library.db.none(sql.disableAccount, {
+										senderId: account.address
+									})
+									.then(function () {
+										library.logger.info(account.address + ' account is locked');
+										library.logic.account.set(accountData.address, data, function (err) {
+											if (!err) {
+												return setImmediate(cb, null, { account: accountData });
+											} else {
+												return setImmediate(cb, err);
+											}
+										});
+									})
+									.catch(function (err) {
+										library.logger.error(err.stack);
+										return setImmediate(cb, err);
 									});
-								}).catch(function (err) {
-									library.logger.error(err.stack);
-									return setImmediate(cb, err);
 								});
 							} else {
 								return setImmediate(cb, null, { account: accountData });
@@ -650,10 +657,12 @@ Accounts.prototype.shared = {
 								cache.prototype.hmset(REDIS_KEY_USER_TIME_HASH, userInfo);
 								library.db.none(sql.disableAccount, {
 									senderId: account.address
-								}).then(function () {
+								})
+								.then(function () {
 									library.logger.info(account.address + ' account is locked');
 									return setImmediate(cb, null, { account: account });
-								}).catch(function (err) {
+								})
+								.catch(function (err) {
 									library.logger.error(err.stack);
 									return setImmediate(cb, err);
 								});
@@ -664,10 +673,12 @@ Accounts.prototype.shared = {
 					} else {
 						library.db.none(sql.disableAccount, {
 							senderId: account.address
-						}).then(function () {
+						})
+						.then(function () {
 							library.logger.info(account.address + ' account is locked');
 							return setImmediate(cb, null, { account: account });
-						}).catch(function (err) {
+						})
+						.catch(function (err) {
 							library.logger.error(err.stack);
 							return setImmediate(cb, err);
 						});
@@ -690,10 +701,12 @@ Accounts.prototype.shared = {
 				var address = req.body.publicKey ? self.generateAddressByPublicKey(req.body.publicKey) : req.body.address;
 				library.db.none(sql.enableAccount, {
 					senderId: address
-				}).then(function () {
+				})
+				.then(function () {
 					library.logger.info(address + ' account is unlocked');
 					return setImmediate(cb, null);
-				}).catch(function (err) {
+				})
+				.catch(function (err) {
 					return setImmediate(cb, err);
 				});
 			} else {
@@ -714,10 +727,11 @@ Accounts.prototype.shared = {
 	},
 
 	totalAccounts: function (req, cb) {
-
-		library.db.one(sql.getTotalAccount).then(function (data) {
+		library.db.one(sql.getTotalAccount)
+		.then(function (data) {
 			return setImmediate(cb, null, data);
-		}).catch(function (err) {
+		})
+		.catch(function (err) {
 			library.logger.error(err.stack);
 			return setImmediate(cb, err.toString());
 		});
@@ -727,7 +741,8 @@ Accounts.prototype.shared = {
 		var initialUnmined = config.etpSupply.totalSupply - config.initialPrimined.total;
 		var publicAddress = library.config.sender.address;
 
-		library.db.one(sql.getCurrentUnmined, { address: publicAddress }).then(function (currentUnmined) {
+		library.db.one(sql.getCurrentUnmined, { address: publicAddress })
+		.then(function (currentUnmined) {
 			var circulatingSupply = config.initialPrimined.total + initialUnmined - currentUnmined.balance;
 
 			cache.prototype.getJsonForKey("minedContributorsBalance", function (err, contributorsBalance) {
@@ -739,7 +754,8 @@ Accounts.prototype.shared = {
 			});
 
 
-		}).catch(function (err) {
+		})
+		.catch(function (err) {
 			library.logger.error(err.stack);
 			return setImmediate(cb, err.toString());
 		});
@@ -755,9 +771,11 @@ Accounts.prototype.shared = {
 	existingETPSUser: function (req, cb) {
 		library.db.one(sql.checkAlreadyMigrated, {
 			username: req.body.userInfo[0].username
-		}).then(function (data) {
+		})
+		.then(function (data) {
 			return setImmediate(cb, null, { isMigrated: data.isMigrated });
-		}).catch(function (err) {
+		})
+		.catch(function (err) {
 			if (err.code == 0) {
 				return setImmediate(cb, null, { isMigrated: 0 });
 			}
@@ -777,14 +795,16 @@ Accounts.prototype.shared = {
 			username:req.body.data[0].username,
 			country:req.body.data[0].country
 		}
-		).then(function (data) {
+		)
+		.then(function (data) {
 			
 			/* 
 			**
 			* To Do// Insert into stake order table 
 			*/
 			
-		}).catch(function (err) {
+		})
+		.catch(function (err) {
 			library.logger.error(err.stack);
 			return setImmediate(cb, err.toString());
 		});

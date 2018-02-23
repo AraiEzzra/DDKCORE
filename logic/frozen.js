@@ -166,11 +166,13 @@ Frozen.prototype.checkFrozeOrders = function () {
 				{
 					milestone: constants.froze.milestone * 60,
 					currentTime: slots.getTime()
-				}).then(function (rows) {
+				})
+				.then(function (rows) {
 					self.scope.logger.info("Successfully get :" + rows.length + ", number of froze order");
 					resolve(rows);
 
-				}).catch(function (err) {
+				})
+				.catch(function (err) {
 					self.scope.logger.error(err.stack);
 					reject(new Error(err.stack));
 				});
@@ -191,10 +193,12 @@ Frozen.prototype.checkFrozeOrders = function () {
 				{
 					milestone: constants.froze.milestone * 60,
 					currentTime: slots.getTime()
-				}).then(function () {
+				})
+				.then(function () {
 					resolve();
 
-				}).catch(function (err) {
+				})
+				.catch(function (err) {
 					self.scope.logger.error(err.stack);
 					reject(new Error(err.stack));
 				});
@@ -211,10 +215,12 @@ Frozen.prototype.checkFrozeOrders = function () {
 				{
 					currentTime: slots.getTime(),
 					totalMilestone: constants.froze.endTime / constants.froze.milestone
-				}).then(function () {
+				})
+				.then(function () {
 					self.scope.logger.info("Successfully check status for disable froze orders");
 					resolve();
-				}).catch(function (err) {
+				})
+				.catch(function (err) {
 					self.scope.logger.error(err.stack);
 					reject(new Error(err.stack));
 				});
@@ -231,10 +237,12 @@ Frozen.prototype.checkFrozeOrders = function () {
 					self.scope.db.none(sql.deductFrozeAmount, {
 						FrozeAmount: rows[i].freezedAmount,
 						senderId: rows[i].senderId
-					}).then(function () {
+					})
+					.then(function () {
 						self.scope.logger.info("Successfully check and if applicable, deduct froze amount from mem_account table");
 						//resolve();
-					}).catch(function (err) {
+					})
+					.catch(function (err) {
 						self.scope.logger.error(err.stack);
 						//reject(new Error(err.stack));
 					});
@@ -282,7 +290,8 @@ Frozen.prototype.updateFrozeAmount = function (data, cb) {
 
 	self.scope.db.one(sql.getFrozeAmount, {
 		senderId: data.account.address
-	}).then(function (row) {
+	})
+	.then(function (row) {
 		if (row.count === 0) {
 			return setImmediate(cb, 'There is no Froze Amount ');
 		}
@@ -294,17 +303,20 @@ Frozen.prototype.updateFrozeAmount = function (data, cb) {
 			self.scope.db.none(sql.updateFrozeAmount, {
 				freezedAmount: data.req.body.freezedAmount,
 				senderId: data.account.address
-			}).then(function () {
+			})
+			.then(function () {
 				self.scope.logger.info(data.account.address + ': is update its froze amount in mem_accounts table ');
 				return setImmediate(cb, null);
-			}).catch(function (err) {
+			})
+			.catch(function (err) {
 				self.scope.logger.error(err.stack);
 				return setImmediate(cb, err.toString());
 			});
 		} else {
 			return setImmediate(cb, 'Not have enough balance');
 		}
-	}).catch(function (err) {
+	})
+	.catch(function (err) {
 		self.scope.logger.error(err.stack);
 		return setImmediate(cb, err.toString());
 	});

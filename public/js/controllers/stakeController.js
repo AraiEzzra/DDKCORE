@@ -12,7 +12,6 @@ angular.module('ETPApp').controller('stakeController', ['$scope', '$rootScope', 
   $scope.loading = true;
   $scope.searchStake = stakeService;
   $scope.view.bar = { showStakeSearchBar: true };
-  //console.log($scope.view.inLoading);
   
 
 
@@ -36,7 +35,6 @@ angular.module('ETPApp').controller('stakeController', ['$scope', '$rootScope', 
           $scope.countFreezeOrders = params.total();
           $scope.loading = false;
           $scope.view.inLoading = false;
-          //console.log($scope.view.inLoading);
         });
       }
     });

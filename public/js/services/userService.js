@@ -15,6 +15,10 @@ angular.module('ETPApp').service('userService', function () {
         this._unconfirmedBalance = unconfirmedBalance;
     }
 
+    this.getAddress = function () {
+       return this.address;
+    }
+
     this.setSessionPassphrase = function (pass) {
         this.rememberPassphrase = true;
         this.rememberedPassphrase = pass;

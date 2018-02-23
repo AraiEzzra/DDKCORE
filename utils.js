@@ -56,7 +56,6 @@ exports.makeBulk = function (list, index) {
 		);
 	}
 	return bulk;
-	//cb(null, bulk);
 };
 
 /**

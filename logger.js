@@ -5,7 +5,7 @@
 var winston = require('winston');
 require('winston-daily-rotate-file');
 
-//defined custom log levels for winston
+//defined custom log levels for winston logger
 const levels = {
   archive: 0,
   error: 1,
@@ -31,7 +31,7 @@ var transport = new (winston.transports.DailyRotateFile)({
   }
 });
 
-//creating file transport to write archived logs into a file.
+//creating file transport to write archived logs into a file. Only "archive" logs will be written in this file
 var traceTransport = new (winston.transports.File)({
   filename: './logs/archive.log',
   level: 'archive',

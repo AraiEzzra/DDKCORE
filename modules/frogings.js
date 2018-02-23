@@ -109,22 +109,26 @@ Frogings.prototype.shared = {
 
 	countStakeholders: function (req, cb) {
 
-		library.db.one(sql.countStakeholders).then(function (row) {
+		library.db.one(sql.countStakeholders)
+		.then(function (row) {
 			return setImmediate(cb, null, {
 				countStakeholders: row
 			});
-		}, function (err) {
+		})
+		.catch(function (err) {
 			return setImmediate(cb, 'Error while counting Stakeholders');
 		});
 
 	},
 
 	totalETPStaked: function (req, cb) {
-		library.db.one(sql.getTotalStakedAmount).then(function (row) {
+		library.db.one(sql.getTotalStakedAmount)
+		.then(function (row) {
 			return setImmediate(cb, null, {
 				totalETPStaked: row
 			});
-		}, function (err) {
+		})
+		.catch(function (err) {
 			return setImmediate(cb, 'Error in getting sum of ETP staked');
 		});
 	},
@@ -142,11 +146,13 @@ Frogings.prototype.shared = {
 					return setImmediate(cb, 'Address of account not found');
 				}
 
-				library.db.one(sql.getMyStakedAmount, { address: account.address }).then(function (row) {
+				library.db.one(sql.getMyStakedAmount, { address: account.address })
+				.then(function (row) {
 					return setImmediate(cb, null, {
 						totalETPStaked: row
 					});
-				}, function (err) {
+				})
+				.catch(function (err) {
 					return setImmediate(cb, 'Error in getting my sum of ETP staked');
 				});
 			});
@@ -167,11 +173,13 @@ Frogings.prototype.shared = {
 					return setImmediate(cb, 'Address of account not found');
 				}
 
-				library.db.query(sql.getFrozeOrders, { senderId: account.address }).then(function (rows) {
+				library.db.query(sql.getFrozeOrders, { senderId: account.address })
+				.then(function (rows) {
 					return setImmediate(cb, null, {
 						freezeOrders: JSON.stringify(rows)
 					});
-				}, function (err) {
+				})
+				.catch(function (err) {
 					return setImmediate(cb, 'Unable to get froze orders');
 				});
 			});
@@ -193,11 +201,13 @@ Frogings.prototype.shared = {
 					return setImmediate(cb, 'Address of account not found');
 				}
 				
-				library.db.one(sql.getActiveFrozeOrders, { senderId: account.address }).then(function (rows) {
+				library.db.one(sql.getActiveFrozeOrders, { senderId: account.address })
+				.then(function (rows) {
 					return setImmediate(cb, null, {
 						freezeOrders: JSON.stringify(rows)
 					});
-				}, function (err) {
+				})
+				.catch(function (err) {
 					return setImmediate(cb, 'Unable to get active froze orders');
 				});
 

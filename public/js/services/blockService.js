@@ -7,22 +7,22 @@ angular.module('ETPApp').service('blockService', function ($http, esClient) {
         searchForBlock: '',
         gettingBlocks: false,
         cached: { data: [], time: new Date() },
-        getBlock: function (blockID, cb) {
+        getBlock: function (blockId, cb) {
             esClient.search({
                 index: 'blocks',
                 type: 'blocks',
                 body: {
                     query: {
                         match: {
-                            "id": blockID
+                            "id": blockId
                         }
                     },
                 }
-            }, function (error, response, status) {
-                if (response.hits.hits.length == 0) {
+            }, function (error, blockResponse, status) {
+                if (blockResponse.hits.hits.length == 0) {
                     cb({ blocks: [], count: 0 });
                 } else {
-                    cb({ blocks: [response.hits.hits[0]._source], count: 1 });
+                    cb({ blocks: [blockResponse.hits.hits[0]._source], count: 1 });
                 }
             });
         },
@@ -46,15 +46,15 @@ angular.module('ETPApp').service('blockService', function ($http, esClient) {
                                     }
                                 },
                             }
-                        }, function (error, response, status) {
+                        }, function (error, blockResponse, status) {
                             if (error) {
                                 params.total(0);
                                 $defer.resolve();
                                 cb({ blocks: [], count: 0 });
                             } else {
-                                if (response.hits.hits.length > 0) {
+                                if (blockResponse.hits.hits.length > 0) {
                                     params.total(1);
-                                    $defer.resolve([response.hits.hits[0]._source]);
+                                    $defer.resolve([blockResponse.hits.hits[0]._source]);
                                     cb(null);
                                 } else {
                                     params.total(0);
@@ -79,7 +79,7 @@ angular.module('ETPApp').service('blockService', function ($http, esClient) {
                             },
                             sort: [{ height: { order: 'desc' } }],
                         }
-                    }, function (error, response, status) {
+                    }, function (error, blocksResponse, status) {
                         if (fromBlocks) {
                             esClient.search({
                                 index: 'blocks',
@@ -96,11 +96,11 @@ angular.module('ETPApp').service('blockService', function ($http, esClient) {
                                 } else {
                                     params.total(0);
                                 }
-                                if (response.hits.hits.length > 0) {
+                                if (blocksResponse.hits.hits.length > 0) {
                                     blocksData = [];
-                                    blocks.lastBlockId = response.hits.hits[0]._source.id;
+                                    blocks.lastBlockId = blocksResponse.hits.hits[0]._source.id;
                                     cb();
-                                    response.hits.hits.forEach(function (block) {
+                                    blocksResponse.hits.hits.forEach(function (block) {
                                         blocksData.push(block._source);
                                     });
                                     $defer.resolve(blocksData);
