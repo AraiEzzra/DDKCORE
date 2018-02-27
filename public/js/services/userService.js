@@ -5,7 +5,7 @@ angular.module('ETPApp').service('userService', function () {
     this.rememberPassphrase = false;
     this.rememberedPassphrase = '';
  
-    this.setData = function (address, publicKey, balance, unconfirmedBalance, effectiveBalance) {
+    this.setData = function (address, publicKey, balance, unconfirmedBalance, effectiveBalance, token) {
         this.address = address;
         this.publicKey = publicKey;
         this.balance = balance / 100000000;
@@ -13,6 +13,7 @@ angular.module('ETPApp').service('userService', function () {
         this.effectiveBalance = effectiveBalance / 100000000;
         this._balance = balance;
         this._unconfirmedBalance = unconfirmedBalance;
+        this.token = token;
     }
 
     this.getAddress = function () {

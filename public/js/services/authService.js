@@ -1,6 +1,6 @@
 //hotam: added new service to check status of an user
 
-angular.module('ETPApp').service('AuthService', ['$http', 'userService', function ($http, userService) {
+angular.module('ETPApp').service('AuthService', ['$http', 'userService', '$window', '$location', function ($http, userService, $window, $location) {
 
     // create user variable to track user's status
     var user = null;
@@ -19,10 +19,14 @@ angular.module('ETPApp').service('AuthService', ['$http', 'userService', functio
             return false;
         }
     }
-
+    
     // get user's status
     function getUserStatus() {
-        return $http.get('/user/status')
+        return $http.get('/user/status', {
+            params: {
+                token: $window.localStorage.getItem('token')
+            }
+        })
         .success(function (resp) {
             if (resp.status && resp.data.success) {
                 user = true;

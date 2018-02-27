@@ -30,7 +30,7 @@ var Router = function () {
 					ip: req.ip,
 					method: req.method,
 					path: req.path,
-					session: req.session
+					decoded: req.decoded
 				};
 				root[config[params]](extend({}, reqRelevantInfo, res, {'body': route[0] === 'get' ? req.query : req.body}), httpApi.respond.bind(null, res));
 			});

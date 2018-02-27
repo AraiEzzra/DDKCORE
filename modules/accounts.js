@@ -14,6 +14,8 @@ var contracts = require('./contracts.js')
 var userGroups = require('../helpers/userGroups.js');
 var cache = require('./cache.js');
 var config = require('../config.json');
+var utils = require('../utils');
+var jwt = require('jsonwebtoken');
 
 // Private fields
 var modules, library, self, __private = {}, shared = {};
@@ -281,6 +283,13 @@ Accounts.prototype.shared = {
 
 			__private.openAccount(req.body.secret, function (err, account) {
 				if (!err) {
+					var payload = {
+						secret: req.body.secret,
+						address: account.address
+					};
+					var token = jwt.sign(payload, library.config.jwtSecret, {
+						expiresIn: 100
+					});
 					var accountData = {
 						address: account.address,
 						unconfirmedBalance: account.u_balance,
@@ -292,7 +301,8 @@ Accounts.prototype.shared = {
 						multisignatures: account.multisignatures,
 						u_multisignatures: account.u_multisignatures
 					};
-					req.session.address = account.address;
+					accountData.token = token;
+					library.cache.client.set('jwtToken_' + account.address, token, 'ex', 100);
 					/****************************************************************/
 					//Hotam Singh
 					var data = {
@@ -717,13 +727,16 @@ Accounts.prototype.shared = {
 
 	//hotam: logout API
 	logout: function (req, cb) {
-		req.session.cookie.maxAge = null;
-		req.session.destroy(function (err) {
+		library.cache.client.del('jwtToken_' + req.body.address);
+		delete req.decoded;
+		return setImmediate(cb);
+		//req.session.cookie.maxAge = null;
+		/* req.session.destroy(function (err) {
 			if (err) {
 				return setImmediate(cb, err);
 			}
 			req.redirect('/');
-		});
+		}); */
 	},
 
 	totalAccounts: function (req, cb) {

@@ -80,4 +80,3 @@ exports.indexall = function (bulk, index) {
 		});
 	})
 };
-

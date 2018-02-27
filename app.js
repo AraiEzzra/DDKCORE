@@ -477,31 +477,10 @@ d.run(function () {
 			scope.network.app.use(methodOverride());
 			scope.network.app.use(cookieParser());
 
-			//hotam: configured redis for session handling
-			var options = {
-				host: scope.cache.client.connection_options.host,
-				port: scope.cache.client.connection_options.port,
-				client: scope.cache.client
-			};
-			scope.network.app.use(session({
-				key: 'ETP.sess',
-				store: new RedisStore(options),
-				secret: scope.config.session.secret,
-				resave: true,
-				saveUninitialized: false,
-				cookie: {
-					path: '/',
-					httpOnly: true,
-					secure: false,
-					maxAge: 5 * 60 * 1000,
-					signed: false
-				}
-			}));
-
 			//hotam: middleware to add session.id and address of the logged-in user into the logs
 			scope.network.app.use(function (req, res, next) {
-				if (req.session.address) {
-					logman = new Logger(req.session.id, req.session.address);
+				if (req.decoded.address) {
+					logman = new Logger('', req.session.address);
 					logger = logman.logger;
 				} else {
 					logman = new Logger();

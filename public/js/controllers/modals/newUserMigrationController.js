@@ -1,6 +1,6 @@
 require('angular');
 
-angular.module('ETPApp').controller('newUserMigrationController', ["$scope", "$http", "newUserMigration", "userService", "$state", "viewFactory", 'gettextCatalog', function ($scope, $http, newUserMigration, userService, $state, viewFactory, gettextCatalog) {
+angular.module('ETPApp').controller('newUserMigrationController', ["$scope", "$http", "newUserMigration", "userService", "$state", "viewFactory", 'gettextCatalog', '$window', function ($scope, $http, newUserMigration, userService, $state, viewFactory, gettextCatalog, $window) {
 
     $scope.step = 1;
     $scope.noMatch = false;
@@ -51,8 +51,9 @@ angular.module('ETPApp').controller('newUserMigrationController', ["$scope", "$h
             $http.post("/api/accounts/open/", { secret: pass }).then(function (resp) {
                 $scope.view.inLoading = false;
                 if (resp.data.success) {
+                    $window.localStorage.setItem('token', resp.data.account.token);
                     newUserMigration.deactivate();
-                    userService.setData(resp.data.account.address, resp.data.account.publicKey, resp.data.account.balance, resp.data.account.unconfirmedBalance, resp.data.account.effectiveBalance);
+                    userService.setData(resp.data.account.address, resp.data.account.publicKey, resp.data.account.balance, resp.data.account.unconfirmedBalance, resp.data.account.effectiveBalance, resp.data.account.token);
                     userService.setForging(resp.data.account.forging);
                     userService.setSecondPassphrase(resp.data.account.secondSignature);
                     userService.unconfirmedPassphrase = resp.data.account.unconfirmedSignature;

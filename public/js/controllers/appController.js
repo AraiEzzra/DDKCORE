@@ -443,7 +443,8 @@ angular.module('ETPApp').controller('appController', ['dappsService', '$scope', 
     }
 
     $scope.logout = function () {
-        $http.post('/api/accounts/logout').then(function (res) {
+        $http.post('/api/accounts/logout', { address: userService.getAddress(), token: $window.localStorage.getItem('token') }).then(function (res) {
+            $window.localStorage.setItem('token', '');
             $location.path('passphrase');
         });
     }

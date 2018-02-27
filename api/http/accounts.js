@@ -3,6 +3,7 @@
 var Router = require('../../helpers/router');
 var httpApi = require('../../helpers/httpApi');
 var schema = require('../../schema/accounts.js');
+var tokenValidator = require('../../tokenValidator');
 
 /**
  * Binds api with modules and creates common url.
@@ -60,8 +61,10 @@ function AccountsHttpApi (accountsModule, app) {
 	if (process.env.TOP && process.env.TOP.toUpperCase() === 'TRUE') {
 		router.get('/top', httpApi.middleware.sanitize('query', schema.top, accountsModule.internal.top));
 	}
-
+	app.use('/api/accounts/getBalance', tokenValidator);
+	app.use('/api/accounts/logout', tokenValidator);
 	httpApi.registerEndpoint('/api/accounts', app, router, accountsModule.isLoaded);
+	
 }
 
 module.exports = AccountsHttpApi;
