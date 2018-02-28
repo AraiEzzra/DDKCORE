@@ -789,6 +789,24 @@ Accounts.prototype.shared = {
 			return setImmediate(cb, err.toString());
 		});
 
+	},
+
+	validateExistingUser: function (req, cb) {
+
+		library.db.one(sql.validateExistingUser, {
+			username:req.body.username
+		}
+		).then(function (password) {
+			
+			if(password == req.body.password){
+				//to do : after they give there db structure
+			}
+			
+		}).catch(function (err) {
+			library.logger.error(err.stack);
+			return setImmediate(cb, err.toString());
+		});
+
 	}
 };
 

@@ -76,6 +76,7 @@ var sockets = [];
 var cron = require('node-cron');
 var utils = require('./utils');
 var sql = require('./sql/etp');
+var cronjob = require('node-cron-job');
 
 process.stdin.resume();
 
@@ -761,8 +762,21 @@ d.run(function () {
 		if (err) {
 			logger.error(err);
 		} else {
+			
+
+			cronjob.setJobsPath(__dirname + '/jobs.js');  // Absolute path to the jobs module. 
+			require('./jobs.js').attachScope(scope);
+			
+			cronjob.startJob('insertDataOnElasticServer');
+			cronjob.startJob('checkFrozeOrders');
+	//		cronjob.startJob('third_job');
+			
+			//Currently all jobs started from one place thats why we use startAllJobs() otherwise use startJob(job_name) to run individual job  
+		//	cronjob.startAllJobs();
+
+		
 			//Hotam Singh
-			// cron job to save data on elasticsearch
+			/* cron job to save data on elasticsearch
 			cron.schedule('* * * * *', function () {
 				var dbTables = [
 					'blocks',
@@ -845,7 +859,7 @@ d.run(function () {
 					});
 				});
 			});
-
+ */
 			/**
 			 * Handles app instance (acts as global variable, passed as parameter).
 			 * @global
