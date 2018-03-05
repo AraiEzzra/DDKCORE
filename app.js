@@ -308,10 +308,6 @@ d.run(function () {
 			var app = express();
 
 			//Hotam Singh
-			/**
-			 * This creates the module that we created in the step before.
-			 * In my case it is stored in the util folder.
-			 */
 			var Prometheus = require('./prometheus');
 
 			/**

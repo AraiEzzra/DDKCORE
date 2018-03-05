@@ -61,6 +61,7 @@ MacOS: /usr/local/etc/redis.conf
 
 # Go to ETPCoin directory
 > cd ETPCoin/
+> git checkout develoment
 
 # Install module dependencies
 > npm install 

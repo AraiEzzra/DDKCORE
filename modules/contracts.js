@@ -50,7 +50,6 @@ function Contracts(cb, scope) {
     setImmediate(cb, null, self);
 };
 
-//FIXME: handle unblocks when network is crashed or down
 //Unlock contributors/advisors/founders after a given time
 Contracts.prototype.onNewBlock = function (block, broadcast, cb) {
 	var REDIS_KEY_USER_TIME_HASH = "userInfo_" + block.timestamp;

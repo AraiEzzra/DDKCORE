@@ -11,3 +11,4 @@ stage_server_setup.txt
 testUsers.json
 package-lock.json
 .vscode/
+database_backup
