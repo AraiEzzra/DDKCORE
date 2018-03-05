@@ -36,6 +36,7 @@ SendFreezeOrder.prototype.create = function (data, trs) {
 	trs.endTime = (date.setMinutes(date.getMinutes() - constants.froze.milestone + constants.froze.endTime)) / 1000;
 	trs.recipientId = data.recipientId;
 	trs.frozeId = data.frozeId;
+	trs.amount = parseInt(data.freezedAmount);
 	return trs;
 };
 
@@ -91,9 +92,17 @@ SendFreezeOrder.prototype.apply = function (trs, block, sender, cb) {
 		if (err) {
 			return setImmediate(cb, err);
 		}
-
+		modules.accounts.mergeAccountAndGet({
+			address: trs.recipientId,
+			balance: trs.amount,
+			u_balance: trs.amount,
+			blockId: block.id,
+			round: modules.rounds.calc(block.height)
+		}, function (err) {
+			return setImmediate(cb, err);
+		});
 		// modules.accounts.setAccountAndGet(data, cb);
-		return setImmediate(cb, null, trs);
+		//return setImmediate(cb, null, trs);
 	});
 };
 

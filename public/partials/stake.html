@@ -46,7 +46,7 @@
                     <td data-title="tableStakes.cols.monthRemain" sortable="'monthRemain'">{{3-fo.milestoneCount}}</td>
                     <td data-title="tableStakes.cols.recipient" sortable="'recipient'">{{fo.recipientId || '-'}}</td>
                     <td data-title="tableStakes.cols.action">
-                        <a class="sendFreezeAmount-btn" ng-click="sendFreezeOrder(fo.id)">
+                        <a class="sendFreezeAmount-btn" ng-click="sendFreezeOrder(fo.id,fo.freezedAmount)">
                             <i class="mdi-content-send"></i>
                         </a>
                     </td>

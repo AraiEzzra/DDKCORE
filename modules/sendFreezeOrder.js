@@ -663,7 +663,8 @@ SendFreezeOrder.prototype.shared = {
 											keypair: keypair,
 											recipientId: recipientId,
 											secondKeypair: secondKeypair,
-											requester: keypair
+											requester: keypair,
+											freezedAmount : req.body.freezedAmount
 										});
 									} catch (e) {
 										return setImmediate(cb, e.toString());
@@ -709,7 +710,8 @@ SendFreezeOrder.prototype.shared = {
 										frozeId: req.body.frozeId,
 										keypair: keypair,
 										recipientId: recipientId,
-										secondKeypair: secondKeypair
+										secondKeypair: secondKeypair,
+										freezedAmount : req.body.freezedAmount
 									});
 								} catch (e) {
 									return setImmediate(cb, e.toString());

@@ -56,10 +56,11 @@ angular.module('ETPApp').controller('stakeController', ['$scope', '$rootScope', 
   });
 
 
-  $scope.sendFreezeOrder = function (id) {
+  $scope.sendFreezeOrder = function (id,freezedAmount) {
 
     $scope.sendFreezeOrderModal = sendFreezeOrderModal.activate({
       freezeId: id,
+      freezedAmount:freezedAmount,
       destroy: function () {
       }
     });
