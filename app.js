@@ -328,9 +328,8 @@ d.run(function () {
 
 			//hotam: added swagger configuration
 			var subpath = express();
-			var swagger = require("swagger-node-express");
+			var swagger = require("swagger-node-express").createNew(subpath);
 			app.use("/v1", subpath);
-			swagger.setAppHandler(subpath);
 			subpath.use(express.static('dist'));
 			swagger.setApiInfo({
 				title: "example API",
@@ -474,16 +473,16 @@ d.run(function () {
 			scope.network.app.use(cookieParser());
 
 			//hotam: middleware to add session.id and address of the logged-in user into the logs
-			scope.network.app.use(function (req, res, next) {
+			/* scope.network.app.use(function (req, res, next) {
 				if (req.decoded.address) {
-					logman = new Logger('', req.session.address);
+					logman = new Logger('', req.decoded.address);
 					logger = logman.logger;
 				} else {
 					logman = new Logger();
 					logger = logman.logger;
 				}
 				next();
-			});
+			}); */
 
 			var ignore = ['id', 'name', 'lastBlockId', 'blockId', 'transactionId', 'address', 'recipientId', 'senderId', 'previousBlock'];
 
