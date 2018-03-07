@@ -332,7 +332,7 @@ Transaction.prototype.checkConfirmed = function (trs, cb) {
  * @param {transaction} trs
  * @param {account} sender
  * @returns {Object} With exceeded boolean and error: address, balance
- * Navin : modify checkbalance according to froze amount avaliable to user
+ *  modify checkbalance according to froze amount avaliable to user
  */
 Transaction.prototype.checkBalance = function (amount, balance, trs, sender) {
 	var totalAmountWithFrozeAmount = new bignum(((sender.totalFrozeAmount)).toString()).plus(amount);
@@ -609,9 +609,6 @@ Transaction.prototype.verify = function (trs, sender, requester, cb) {
 	if (trs.amount < 0 || trs.amount > constants.totalAmount || String(trs.amount).indexOf('.') >= 0 || trs.amount.toString().indexOf('e') >= 0 ) {
 		return setImmediate(cb, 'Invalid transaction amount');
 	}
-
-
-//Navin *******************************************************************************
 
 	// //Check sender not able to do transaction on froze amount
 
@@ -1192,7 +1189,7 @@ Transaction.prototype.bindModules = function (__modules) {
 	};
 };
 
-//Navin : call add transaction API 
+// call add transaction API 
 Transaction.prototype.sendTransaction = function (data) {
 
 	var port = this.scope.config.app.port;

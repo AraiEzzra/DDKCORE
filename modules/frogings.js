@@ -7,14 +7,11 @@ var crypto = require('crypto');
 var extend = require('extend');
 var OrderBy = require('../helpers/orderBy.js');
 var sandboxHelper = require('../helpers/sandbox.js');
-//navin
 var schema = require('../schema/frogings.js');
-//var schema = require('../schema/transactions.js');
 var sql = require('../sql/frogings.js');
 var TransactionPool = require('../logic/transactionPool.js');
 var transactionTypes = require('../helpers/transactionTypes.js');
 var Transfer = require('../logic/transfer.js');
-//navin
 var Frozen = require('../logic/frozen.js');
 var bignum = require('../helpers/bignum.js');
 
@@ -65,8 +62,6 @@ function Frogings (cb, scope) {
 		scope.logger
 	);
 
-
-	//Add by navin
 	__private.assetTypes[transactionTypes.FROZE] = library.logic.transaction.attachAssetType(
 		transactionTypes.FROZE, new Frozen(scope.logger, scope.db, scope.logic.transaction, scope.network, scope.config)
 	);
@@ -235,7 +230,7 @@ Frogings.prototype.shared = {
 			library.balancesSequence.add(function (cb) {
 				if (req.body.multisigAccountPublicKey && req.body.multisigAccountPublicKey !== keypair.publicKey.toString('hex')) {
 					modules.accounts.getAccount({ publicKey: req.body.multisigAccountPublicKey }, function (err, account) {
-						//*********************NAVIN******************* */
+						//************************************ */
 						library.logic.frozen.updateFrozeAmount({
 							account: account,
 							req: req
@@ -303,7 +298,7 @@ Frogings.prototype.shared = {
 					});
 				} else {
 					modules.accounts.setAccountAndGet({ publicKey: keypair.publicKey.toString('hex') }, function (err, account) {
-						//*********************NAVIN******************* */
+						//************************************ */
 						library.logic.frozen.updateFrozeAmount({
 							account: account,
 							req: req

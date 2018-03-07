@@ -48,7 +48,7 @@ Frozen.prototype.ready = function (frz, sender) {
 	return true;
 };
 
-//Hotam Singh
+
 Frozen.prototype.dbTable = 'stake_orders';
 
 Frozen.prototype.dbFields = [

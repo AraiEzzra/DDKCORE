@@ -1,4 +1,4 @@
-//Hotam Singh
+
 /**
  * Module dependencies.
  */

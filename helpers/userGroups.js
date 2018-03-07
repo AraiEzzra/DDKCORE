@@ -1,6 +1,6 @@
 'use strict';
 
-//hotam: define user groups
+// define user groups
 module.exports = {
 	PUBLIC : 0,
 	CONTRIBUTORS : 1,

@@ -7,14 +7,11 @@ var crypto = require('crypto');
 var extend = require('extend');
 var OrderBy = require('../helpers/orderBy.js');
 var sandboxHelper = require('../helpers/sandbox.js');
-//navin
 var schema = require('../schema/frogeTransfer.js');
-//var schema = require('../schema/transactions.js');
 var sql = require('../sql/frogings.js');
 var TransactionPool = require('../logic/transactionPool.js');
 var transactionTypes = require('../helpers/transactionTypes.js');
 var Transfer = require('../logic/transfer.js');
-//navin
 var sendFreezeOrder = require('../logic/sendFreezeOrder.js');
 var bignum = require('../helpers/bignum.js');
 
@@ -607,7 +604,6 @@ SendFreezeOrder.prototype.shared = {
 
 					if (req.body.multisigAccountPublicKey && req.body.multisigAccountPublicKey !== keypair.publicKey.toString('hex')) {
 						modules.accounts.getAccount({ publicKey: req.body.multisigAccountPublicKey }, function (err, account) {
-							//*************  NAVIN */
 							library.logic.sendFreezeOrder.sendFreezedOrder({
 								account: account,
 								req: req
@@ -677,7 +673,6 @@ SendFreezeOrder.prototype.shared = {
 
 					} else {
 						modules.accounts.setAccountAndGet({ publicKey: keypair.publicKey.toString('hex') }, function (err, account) {
-							//*************  NAVIN */
 							library.logic.sendFreezeOrder.sendFreezedOrder({
 								account: account,
 								req: req

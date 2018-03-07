@@ -1,7 +1,4 @@
-/********************************************************************************
- * Hotam Singh
- * 
- *******************************************************************************/
+'use strict';
 
 //Requiring Modules 
 var Contract = require('../logic/contract.js');
@@ -57,7 +54,7 @@ Contracts.prototype.onNewBlock = function (block, broadcast, cb) {
 		if (isExist) {
 
 			cache.prototype.hgetall(REDIS_KEY_USER_TIME_HASH, function (err, data) {
-				//Navin : set mined Contributors Balance on redis
+				// set mined Contributors Balance on redis
 				cache.prototype.getJsonForKey("minedContributorsBalance", function (err, contributorsBalance) {
 					var totalContributorsBal = parseInt(data.transferedAmount) + parseInt(contributorsBalance);
 					cache.prototype.setJsonForKey("minedContributorsBalance", totalContributorsBal);

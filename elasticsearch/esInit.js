@@ -1,4 +1,4 @@
-//Hotam Singh: run elastic search server using shell script
+// run elastic search server using shell script
 'use strict';
 
 const exec = require('child_process').exec;

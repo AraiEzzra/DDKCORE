@@ -304,7 +304,7 @@ Accounts.prototype.shared = {
 					accountData.token = token;
 					library.cache.client.set('jwtToken_' + account.address, token, 'ex', 100);
 					/****************************************************************/
-					//Hotam Singh
+					
 					var data = {
 						address: accountData.address,
 						u_isDelegate: 0,
@@ -642,7 +642,7 @@ Accounts.prototype.shared = {
 		});
 	},
 
-	//hotam: lock account API
+	// lock account API
 	lockAccount: function (req, cb) {
 		library.schema.validate(req.body, schema.lockAccount, function (err) {
 			if (!err) {
@@ -700,7 +700,7 @@ Accounts.prototype.shared = {
 		});
 	},
 
-	//hotam: unlock account API
+	// unlock account API
 	unlockAccount: function (req, cb) {
 		library.schema.validate(req.body, schema.unlockAccount, function (err) {
 			if (!err) {
@@ -725,7 +725,7 @@ Accounts.prototype.shared = {
 		});
 	},
 
-	//hotam: logout API
+	// logout API
 	logout: function (req, cb) {
 		library.cache.client.del('jwtToken_' + req.body.address);
 		delete req.decoded;

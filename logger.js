@@ -1,6 +1,6 @@
 'use strict';
 
-//hotam: modified logger configuration
+// modified logger configuration
 //requiring dependencies
 var winston = require('winston');
 require('winston-daily-rotate-file');

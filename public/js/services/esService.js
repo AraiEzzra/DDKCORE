@@ -1,4 +1,4 @@
-//hotam: added new service to check status of elasticsearch server
+// added new service to check status of elasticsearch server
 
 var config = require('../../../config.json');
 var connectionHost = config.elasticsearchHost + ':9200' || 'localhost:9200';

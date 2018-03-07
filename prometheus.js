@@ -1,4 +1,4 @@
-//hotam: added to monitor application performance using prometheus
+// added to monitor application performance using prometheus
 /**
  * Newly added requires
  */

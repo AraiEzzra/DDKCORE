@@ -1,4 +1,4 @@
-//hotam: added new service to check status of an user
+// added new service to check status of an user
 
 angular.module('ETPApp').service('AuthService', ['$http', 'userService', '$window', '$location', function ($http, userService, $window, $location) {
 

@@ -26,7 +26,7 @@ function ServerHttpApi (serverModule, app) {
 		res.status(500).send({success: false, error: 'Blockchain is loading'});
 	});
 
-	//hotam: get user's status
+	//get user's status
 	router.get('/user/status', tokenValidator, function(req, res) {
 		if(req.decoded.address) {
 			Accounts.prototype.getAccount({address: req.decoded.address}, function(err, account) {

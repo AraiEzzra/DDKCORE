@@ -29,7 +29,7 @@ angular.module('ETPApp').service("stakeService", function ($http, $filter, esCli
       var startTime;
       var endTime;
       
-      //hotam: added search functionality for stake orders
+      // added search functionality for stake orders
       //FIXME: Search stake orders based on conditions
       if (searchForStake) {
         if (searchForStake.startTime && searchForStake.endTime) {

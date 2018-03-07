@@ -1,4 +1,4 @@
-// Hotam Singh: Generalised method to create, delete or check existence of an index
+// Generalised method to create, delete or check existence of an index
 var client = require('./connection.js');
 
 /**

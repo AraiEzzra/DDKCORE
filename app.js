@@ -23,7 +23,7 @@
  * @module app
  */
 
-//hotam: app monitoring configuration on console/UI 
+//app monitoring configuration on console/UI 
 require('appmetrics-dash').monitor();
 
 // App Monitoring on console
@@ -307,7 +307,7 @@ d.run(function () {
 			var cors = require('cors');
 			var app = express();
 
-			//Hotam Singh
+			
 			var Prometheus = require('./prometheus');
 
 			/**
@@ -326,7 +326,7 @@ d.run(function () {
 			 */
 			Prometheus.startCollection();
 
-			//hotam: added swagger configuration
+			// added swagger configuration
 			var subpath = express();
 			var swagger = require("swagger-node-express").createNew(subpath);
 			app.use("/v1", subpath);
@@ -363,7 +363,7 @@ d.run(function () {
 			var server = require('http').createServer(app);
 			var io = require('socket.io')(server);
 
-			//hotam: handled socket's connection event
+			// handled socket's connection event
 			io.on('connection', function (socket) {
 				//IIFE: function to accept new socket.id in sockets array.
 				(function acceptSocket(socket, sockets) {
@@ -472,7 +472,7 @@ d.run(function () {
 			scope.network.app.use(methodOverride());
 			scope.network.app.use(cookieParser());
 
-			//hotam: middleware to add session.id and address of the logged-in user into the logs
+			// middleware to add session.id and address of the logged-in user into the logs
 			/* scope.network.app.use(function (req, res, next) {
 				if (req.decoded.address) {
 					logman = new Logger('', req.decoded.address);
@@ -736,7 +736,7 @@ d.run(function () {
 		if (err) {
 			logger.error(err);
 		} else {
-			//Hotam Singh
+			
 			// cron job to save data on elasticsearch
 			cron.schedule('* * * * *', function () {
 				var dbTables = [
@@ -780,14 +780,14 @@ d.run(function () {
 			cron.schedule('* * * * *', function () {
 				var date = new Date();
 
-				//Navin : daily check and update stake_orders, if any Active order expired or not
+				// daily check and update stake_orders, if any Active order expired or not
 				scope.logic.frozen.checkFrozeOrders(); //For testing purpose only
 				if (date.getHours() === 10 && date.getMinutes() === 20) { // Check the time
 
 					scope.logic.frozen.checkFrozeOrders();
 				}
 
-				//hotam: archive log files on first day of every new month
+				// archive log files on first day of every new month
 				var nextDate = new Date();
 				nextDate.setDate(nextDate.getDate() + 1);
 				//FIXME: set isArchived variable to redis. currently it is set on application level

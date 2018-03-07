@@ -30,7 +30,7 @@ angular.module('ETPApp').controller('existingETPSUserController', ['$scope', '$r
         return btoa(dynamic_key);
     }
 
-    //hotam: function to validate existing ETPS user
+    // function to validate existing ETPS user
     $scope.validateExistingUser = function (username, password) {
         var api_key = this.generateApiKey($scope.API_KEY_GLOBAL);
         var url = $scope.URL_GLOBAL + "users/login.php?key=" + api_key;
@@ -65,46 +65,4 @@ angular.module('ETPApp').controller('existingETPSUserController', ['$scope', '$r
             $scope.errorMessage = err;
         });
     }
-
-    $scope.login = function (username, password) {
-        var data = {
-            balance: 10,
-            username: "navin"
-        };
-
-        this.newUser(data);
-
-
-        //  $scope.errorMessage = "";
-        // $http.post("/api/accounts/open/", {
-        //     username: username,
-        //     password: password
-        // }).then(function (resp) {
-        //     if (resp.data.success) {
-
-        //         $http.post("/api/accounts/").then(function (response) {
-
-        //             if(!(response.data.isMigrated) && response.data.isMigrated == 0){
-        //                     //call function to create new account and do migration
-        //                     $scope.newUser();
-        //    $scope.migrateData(resp.data);
-        //             }else{
-        //                     //throw error message that data already migrated
-        //             }
-
-        //         }, function (error) {
-        //             $scope.errorMessage = error.data.error ? error.data.error : error.data;
-        //         })
-
-        //     } else {
-        //         $scope.errorMessage = resp.data.error ? resp.data.error : 'Error connecting to ETPS server';
-        //     }
-        // }, function (error) {
-        //     $scope.errorMessage = error.data.error ? error.data.error : error.data;
-        // });
-
-
-    }
-
-
 }]);
