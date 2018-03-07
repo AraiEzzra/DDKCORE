@@ -176,8 +176,8 @@ Error: make nodesodium exited with code null
     at Process.ChildProcess._handle.onexit (internal/child_process.js:219:12)
 ```
 Follow these steps:
-1. remove sodium module from package.json
-2. remove node_modules/ directory and run:
+1. remove `sodium` module from `package.json`.
+2. remove `node_modules` directory from root folder and run:
 ```
 rm -rf ~/.node-gyp/
 npm install
@@ -239,14 +239,14 @@ Error: Can't open display: (null) when using Xclip to copy ssh public key
 ```
 cat ~/.ssh/id_rsa.pub 
 ```
-2. Copy this RSA key and add it to your github account in github -> settings -> SSH Keys and GPG Keysnano
+2. Copy `RSA key` and add it to your github account in `github -> settings -> SSH Keys and GPG Keysnano`
 
 **ERROR 8:** 
 ```
 Failed to load http://<IP_ADDRESS>:9200/blocks/blocks/_search: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. Origin 'http://<IP_ADDRESS>:7000' is therefore not allowed access.
 ```
 
-If you have that in your config file, then you should have seen an exception when you restarted the node, because * has special meaning in YAML. You should set your config as follows:
+If you have that in your config file, then you should have seen an exception when you restarted the node, because `*` has special meaning in YAML. You should set your config as follows:
 
 1. Edit your config file
 ```
