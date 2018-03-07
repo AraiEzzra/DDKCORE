@@ -1,7 +1,4 @@
-/********************************************************************************
- * Added By Hotam Singh
- * 
- *******************************************************************************/
+'use strict';
 
 //Requiring Modules 
 var Contract = require('../logic/contract.js');
@@ -57,17 +54,19 @@ Contracts.prototype.onNewBlock = function (block, broadcast, cb) {
 		if (isExist) {
 
 			cache.prototype.hgetall(REDIS_KEY_USER_TIME_HASH, function (err, data) {
-				//Navin : set mined Contributors Balance on redis
+				// set mined Contributors Balance on redis
 				cache.prototype.getJsonForKey("minedContributorsBalance", function (err, contributorsBalance) {
 					var totalContributorsBal = parseInt(data.transferedAmount) + parseInt(contributorsBalance);
 					cache.prototype.setJsonForKey("minedContributorsBalance", totalContributorsBal);
 				});
 				library.db.none(sql.enableAccount, {
 					senderId: data.address
-				}).then(function () {
+				})
+				.then(function () {
 					library.logger.info(data.address + ' account is unlocked');
 					cache.prototype.delHash(REDIS_KEY_USER_TIME_HASH);
-				}).catch(function (err) {
+				})
+				.catch(function (err) {
 					library.logger.error(err.stack);
 				});
 			});

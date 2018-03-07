@@ -147,9 +147,11 @@ SendFreezeOrder.prototype.sendFreezedOrder = function (userAndOrderData, cb) {
 				{
 					senderId: userAndOrderData.account.address,
 					frozeId: userAndOrderData.frozeId
-				}).then(function (order) {
+				})
+				.then(function (order) {
 					resolve(order)
-				}).catch(function (err) {
+				})
+				.catch(function (err) {
 					self.scope.logger.error(err.stack);
 
 					if (err.code == 0 && err.message == "No data returned from the query.") {
@@ -168,9 +170,11 @@ SendFreezeOrder.prototype.sendFreezedOrder = function (userAndOrderData, cb) {
 				{
 					senderId: userAndOrderData.account.address,
 					FrozeAmount: order.freezedAmount
-				}).then(function () {
+				})
+				.then(function () {
 					resolve();
-				}).catch(function (err) {
+				})
+				.catch(function (err) {
 					self.scope.logger.error(err.stack);
 					reject(cb, err.toString());
 				});
@@ -185,9 +189,11 @@ SendFreezeOrder.prototype.sendFreezedOrder = function (userAndOrderData, cb) {
 				{
 					senderId: userAndOrderData.recipientId,
 					freezedAmount: order.freezedAmount
-				}).then(function () {
+				})
+				.then(function () {
 					resolve();
-				}).catch(function (err) {
+				})
+				.catch(function (err) {
 					self.scope.logger.error(err.stack);
 					reject(new Error(err.toString()));
 				});
@@ -203,10 +209,12 @@ SendFreezeOrder.prototype.sendFreezedOrder = function (userAndOrderData, cb) {
 					recipientId: userAndOrderData.recipientId,
 					senderId: order.senderId,
 					frozeId: userAndOrderData.frozeId
-				}).then(function () {
+				})
+				.then(function () {
 					self.scope.logger.info("Successfully check for update froze order");
 					resolve();
-				}).catch(function (err) {
+				})
+				.catch(function (err) {
 					self.scope.logger.error(err.stack);
 					reject(new Error(err.toString()));
 				});
@@ -227,10 +235,12 @@ SendFreezeOrder.prototype.sendFreezedOrder = function (userAndOrderData, cb) {
 					freezedAmount: order.freezedAmount,
 					milestoneCount: order.milestoneCount
 
-				}).then(function () {
+				})
+				.then(function () {
 					self.scope.logger.info("Successfully inserted new row in stake_orders table");
 					resolve(order.freezedAmount);
-				}).catch(function (err) {
+				})
+				.catch(function (err) {
 					self.scope.logger.error(err.stack);
 					reject(new Error(err.toString()));
 				});

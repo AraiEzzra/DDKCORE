@@ -1,6 +1,6 @@
-//hotam: added new service to check status of an user
+// added new service to check status of an user
 
-angular.module('ETPApp').service('AuthService', ['$http', 'userService', function ($http, userService) {
+angular.module('ETPApp').service('AuthService', ['$http', 'userService', '$window', '$location', function ($http, userService, $window, $location) {
 
     // create user variable to track user's status
     var user = null;
@@ -19,26 +19,28 @@ angular.module('ETPApp').service('AuthService', ['$http', 'userService', functio
             return false;
         }
     }
-
+    
     // get user's status
     function getUserStatus() {
-        return $http.get('/user/status')
-            // handle success
-            .success(function (resp) {
-                if (resp.status && resp.data.success) {
-                    user = true;
-                    userService.setData();
-                    userService.setData(resp.data.account.address, resp.data.account.publicKey, resp.data.account.balance, resp.data.account.unconfirmedBalance, resp.data.account.effectiveBalance);
-                    userService.setForging(resp.data.account.forging);
-                    userService.setSecondPassphrase(resp.data.account.secondSignature || resp.data.account.unconfirmedSignature);
-                    userService.unconfirmedPassphrase = resp.data.account.unconfirmedSignature;
-                } else {
-                    user = false;
-                }
-            })
-            // handle error
-            .error(function (data) {
+        return $http.get('/user/status', {
+            params: {
+                token: $window.localStorage.getItem('token')
+            }
+        })
+        .success(function (resp) {
+            if (resp.status && resp.data.success) {
+                user = true;
+                userService.setData();
+                userService.setData(resp.data.account.address, resp.data.account.publicKey, resp.data.account.balance, resp.data.account.unconfirmedBalance, resp.data.account.effectiveBalance);
+                userService.setForging(resp.data.account.forging);
+                userService.setSecondPassphrase(resp.data.account.secondSignature || resp.data.account.unconfirmedSignature);
+                userService.unconfirmedPassphrase = resp.data.account.unconfirmedSignature;
+            } else {
                 user = false;
-            });
+            }
+        })
+        .error(function (data) {
+            user = false;
+        });
     }
 }]);

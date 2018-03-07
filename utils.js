@@ -1,7 +1,7 @@
 'use strict';
 var esClient = require('./elasticsearch/connection');
 
-//hotam: validate client
+// validate client
 exports.validateClient = function (req, res, next) {
 	//validate client here. currently not implemented
 	next();
@@ -56,7 +56,6 @@ exports.makeBulk = function (list, index) {
 		);
 	}
 	return bulk;
-	//cb(null, bulk);
 };
 
 /**
@@ -81,4 +80,3 @@ exports.indexall = function (bulk, index) {
 		});
 	})
 };
-

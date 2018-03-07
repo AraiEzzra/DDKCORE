@@ -30,7 +30,7 @@ angular.module('ETPApp').controller('existingETPSUserController', ['$scope', '$r
         return btoa(dynamic_key);
     }
 
-    /* //hotam: function to validate existing ETPS user
+    // function to validate existing ETPS user
     $scope.validateExistingUser = function (username, password) {
         var api_key = this.generateApiKey($scope.API_KEY_GLOBAL);
         var url = $scope.URL_GLOBAL + "users/login.php?key=" + api_key;
@@ -41,15 +41,14 @@ angular.module('ETPApp').controller('existingETPSUserController', ['$scope', '$r
             url: url,
             data: post,
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-        }).success(function (resp) {
-            console.log('resp : ' + JSON.stringify(resp));
+        })
+        .success(function (resp) {
             if (!resp.records) {
                 $scope.errorMessage = resp.message;
             } else {
                 var userInfo = {};
                 Object.assign(userInfo, resp.records);
                 $http.post("/api/accounts/existingETPSUser", { userInfo: userInfo }).then(function (response) {
-                    console.log('response : ' + JSON.stringify(response));
                     if (response.data.success) {
                         if (response.data.isMigrated) {
                             $scope.errorMessage = 'User is already migrated';
@@ -61,7 +60,8 @@ angular.module('ETPApp').controller('existingETPSUserController', ['$scope', '$r
                     }
                 });
             }
-        }).error(function (err) {
+        })
+        .error(function (err) {
             $scope.errorMessage = err;
         });
     } */
@@ -96,47 +96,4 @@ angular.module('ETPApp').controller('existingETPSUserController', ['$scope', '$r
             $scope.errorMessage = err;
         });
     }
-
-    $scope.login = function (username, password) {
-        console.log("!!!!!!!!!" + username + "....." + password);
-        var data = {
-            balance: 10,
-            username: "navin"
-        };
-
-        this.newUser(data);
-
-
-        //  $scope.errorMessage = "";
-        // $http.post("/api/accounts/open/", {
-        //     username: username,
-        //     password: password
-        // }).then(function (resp) {
-        //     if (resp.data.success) {
-
-        //         $http.post("/api/accounts/").then(function (response) {
-
-        //             if(!(response.data.isMigrated) && response.data.isMigrated == 0){
-        //                     //call function to create new account and do migration
-        //                     $scope.newUser();
-        //    $scope.migrateData(resp.data);
-        //             }else{
-        //                     //throw error message that data already migrated
-        //             }
-
-        //         }, function (error) {
-        //             $scope.errorMessage = error.data.error ? error.data.error : error.data;
-        //         })
-
-        //     } else {
-        //         $scope.errorMessage = resp.data.error ? resp.data.error : 'Error connecting to ETPS server';
-        //     }
-        // }, function (error) {
-        //     $scope.errorMessage = error.data.error ? error.data.error : error.data;
-        // });
-
-
-    }
-
-
 }]);

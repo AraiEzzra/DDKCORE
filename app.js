@@ -23,7 +23,7 @@
  * @module app
  */
 
-//hotam: app monitoring configuration on console/UI 
+//app monitoring configuration on console/UI 
 require('appmetrics-dash').monitor();
 
 // App Monitoring on console
@@ -219,7 +219,7 @@ try {
 var d = require('domain').create();
 
 d.on('error', function (err) {
-	console.log('error : ' + err);
+	console.log('error : ', err);
 	logger.error('Domain master', { message: err.message, stack: err.stack });
 	process.exit(0);
 });
@@ -308,11 +308,7 @@ d.run(function () {
 			var cors = require('cors');
 			var app = express();
 
-			//Hotam Singh
-			/**
-			 * This creates the module that we created in the step before.
-			 * In my case it is stored in the util folder.
-			 */
+			
 			var Prometheus = require('./prometheus');
 
 			/**
@@ -331,17 +327,16 @@ d.run(function () {
 			 */
 			Prometheus.startCollection();
 
-			//hotam: added swagger configuration
+			// added swagger configuration
 			var subpath = express();
-			var swagger = require("swagger-node-express");
+			var swagger = require("swagger-node-express").createNew(subpath);
 			app.use("/v1", subpath);
-			swagger.setAppHandler(subpath);
 			subpath.use(express.static('dist'));
 			swagger.setApiInfo({
 				title: "example API",
 				description: "API to do something, manage something...",
 				termsOfServiceUrl: "",
-				contact: "yourname@something.com",
+				contact: "hotam.singh@oodlestechnologies.com",
 				license: "",
 				licenseUrl: ""
 			});
@@ -349,7 +344,7 @@ d.run(function () {
 				res.sendFile(__dirname + '/dist/index.html');
 			});
 			swagger.configureSwaggerPaths('', 'api-docs', '');
-			var domain = 'localhost';
+			var domain = scope.config.swaggerDomain || 'localhost';
 			var applicationUrl = 'http://' + domain;
 			swagger.configure(applicationUrl, '1.0.0');
 
@@ -369,24 +364,23 @@ d.run(function () {
 			var server = require('http').createServer(app);
 			var io = require('socket.io')(server);
 
-			//hotam: handled socket's connection event
-			//Function To Verify Whether A Socket Already Exists.
-			function acceptSocket(socket, sockets) {
-				var userFound = false;
-				if (sockets) {
-					for (var i = 0; i < sockets.length; i++) {
-						if (sockets[i] == socket.id) {
-							userFound = true;
+			// handled socket's connection event
+			io.on('connection', function (socket) {
+				//IIFE: function to accept new socket.id in sockets array.
+				(function acceptSocket(socket, sockets) {
+					var userFound = false;
+					if (sockets) {
+						for (var i = 0; i < sockets.length; i++) {
+							if (sockets[i] == socket.id) {
+								userFound = true;
+							}
 						}
 					}
-				}
-				if (!userFound) {
-					sockets.push(socket.id);
-				}
-				io.emit('updateConnected', sockets.length);
-			}
-			io.on('connection', function (socket) {
-				acceptSocket(socket, sockets);
+					if (!userFound) {
+						sockets.push(socket.id);
+					}
+					io.emit('updateConnected', sockets.length);
+				})(socket, sockets);
 				socket.on('disconnect', function () {
 					sockets.forEach(function (socketId) {
 						if (socketId == socket.id) {
@@ -479,36 +473,17 @@ d.run(function () {
 			scope.network.app.use(methodOverride());
 			scope.network.app.use(cookieParser());
 
-			//hotam: configured redis for session handling
-			var options = {
-				host: scope.cache.client.connection_options.host,
-				port: scope.cache.client.connection_options.port,
-				client: scope.cache.client
-			};
-			scope.network.app.use(session({
-				key: 'ETP.sess',
-				store: new RedisStore(options),
-				secret: scope.config.session.secret,
-				resave: true,
-				saveUninitialized: false,
-				cookie: {
-					path: '/',
-					httpOnly: true,
-					secure: false,
-					maxAge: 5 * 60 * 1000,
-					signed: false
-				}
-			}));
-			scope.network.app.use(function (req, res, next) {
-				if (req.session.address) {
-					logman = new Logger(req.session.id, req.session.address);
+			// middleware to add session.id and address of the logged-in user into the logs
+			/* scope.network.app.use(function (req, res, next) {
+				if (req.decoded.address) {
+					logman = new Logger('', req.decoded.address);
 					logger = logman.logger;
 				} else {
 					logman = new Logger();
 					logger = logman.logger;
 				}
 				next();
-			});
+			}); */
 
 			var ignore = ['id', 'name', 'lastBlockId', 'blockId', 'transactionId', 'address', 'recipientId', 'senderId', 'previousBlock'];
 
@@ -802,15 +777,15 @@ d.run(function () {
 							var bulk = utils.makeBulk(rows, tableName);
 							utils.indexall(bulk, tableName)
 							.then(function (result) {
-								console.log('success: ', result);
+								//Handle further operation in case of successfull indexing if needed
 							})
 							.catch(function (err) {
-								console.log('err : ', err);
+								console.log('elasticsearch error : ', err);
 							});
 						}
 					})
 					.catch(function (err) {
-						console.log('err : ', err);
+						console.log('database error : ', err);
 					});
 				});
 			});
@@ -819,14 +794,14 @@ d.run(function () {
 			cron.schedule('* * * * *', function () {
 				var date = new Date();
 
-				//Navin : daily check and update stake_orders, if any Active order expired or not
+				// daily check and update stake_orders, if any Active order expired or not
 				scope.logic.frozen.checkFrozeOrders(); //For testing purpose only
 				if (date.getHours() === 10 && date.getMinutes() === 20) { // Check the time
 
 					scope.logic.frozen.checkFrozeOrders();
 				}
 
-				//hotam: archive log files on first day of every new month
+				// archive log files on first day of every new month
 				var nextDate = new Date();
 				nextDate.setDate(nextDate.getDate() + 1);
 				//FIXME: set isArchived variable to redis. currently it is set on application level

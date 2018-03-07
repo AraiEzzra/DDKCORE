@@ -1,6 +1,6 @@
 'use strict';
 
-//hotam: script that runs every fist day of a month and archives log files and removes from the project's log directory. 
+// script that runs every fist day of a month and archives log files and removes from the project's log directory. 
 // requiring modules and initializing required variables.
 var fs = require('fs'),
     path = require('path'),
@@ -30,7 +30,7 @@ exports.createDir = function (dir, cb) {
     }
 };
 
-//hotam: function to archive log files and removes from project's logs directory.
+// function to archive log files and removes from project's logs directory.
 exports.archiveLogFiles = function(dir, cb) {
     
     // create a file to stream archive data to.

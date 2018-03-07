@@ -4,7 +4,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Project-Id-Version: \n"
 
-#: partials/template.html:118
+#: partials/template.html:122
 msgid "2nd Passphrase"
 msgstr ""
 
@@ -35,7 +35,7 @@ msgstr ""
 msgid "Account Verification"
 msgstr ""
 
-#: js/controllers/stakeController.js:48
+#: js/controllers/stakeController.js:49
 msgid "Action"
 msgstr ""
 
@@ -54,7 +54,7 @@ msgstr ""
 msgid "Amount"
 msgstr ""
 
-#: partials/account.html:123
+#: partials/account.html:121
 msgid "Amount (Fee)"
 msgstr ""
 
@@ -73,7 +73,7 @@ msgstr ""
 msgid "Are you sure you want to delete this item?"
 msgstr ""
 
-#: partials/template.html:99
+#: partials/template.html:103
 msgid "Back"
 msgstr ""
 
@@ -92,7 +92,7 @@ msgid "Block ID"
 msgstr ""
 
 #: js/controllers/blockchainController.js:8
-#: partials/template.html:294
+#: partials/template.html:298
 msgid "Blockchain"
 msgstr ""
 
@@ -103,12 +103,13 @@ msgstr ""
 msgid "CANCEL"
 msgstr ""
 
-#: partials/template.html:166
+#: partials/template.html:170
 msgid "CATEGORIES"
 msgstr ""
 
 #: partials/modals/masterPassphraseModal.html:39
-#: partials/modals/newUser.html:192
+#: partials/modals/newUser.html:434
+#: partials/modals/newUserMigration.html:175
 #: partials/multi.html:31
 #: partials/wallet-pendings.html:28
 msgid "CONFIRM"
@@ -180,7 +181,9 @@ msgstr ""
 #: partials/modals/multisignatureModal.html:40
 #: partials/modals/multisignatureModal.html:8
 #: partials/modals/newUser.html:11
-#: partials/modals/newUser.html:164
+#: partials/modals/newUser.html:406
+#: partials/modals/newUserMigration.html:11
+#: partials/modals/newUserMigration.html:147
 #: partials/modals/openDappModal.html:8
 #: partials/modals/passphraseCheck.html:8
 #: partials/modals/registrationDelegateModal.html:47
@@ -276,10 +279,6 @@ msgstr ""
 msgid "Copy failed!"
 msgstr ""
 
-#: partials/modals/newUser.html:55
-msgid "Country"
-msgstr ""
-
 #: partials/dapp-entry.html:21
 #: partials/dapp-entry.html:31
 #: partials/dapp-entry.html:40
@@ -287,7 +286,7 @@ msgid "DOWNLOAD"
 msgstr ""
 
 #: js/controllers/accountController.js:9
-#: partials/template.html:241
+#: partials/template.html:245
 msgid "Dashboard"
 msgstr ""
 
@@ -297,7 +296,7 @@ msgstr ""
 
 #: partials/delegates.html:33
 #: partials/forging.html:33
-#: partials/template.html:277
+#: partials/template.html:281
 #: partials/votes.html:33
 msgid "Delegates"
 msgstr ""
@@ -311,7 +310,7 @@ msgstr ""
 msgid "Disable Forging"
 msgstr ""
 
-#: js/controllers/appController.js:327
+#: js/controllers/appController.js:331
 msgid "Disabled"
 msgstr ""
 
@@ -356,7 +355,7 @@ msgstr ""
 msgid "Enable Forging"
 msgstr ""
 
-#: js/controllers/appController.js:327
+#: js/controllers/appController.js:331
 msgid "Enabled"
 msgstr ""
 
@@ -365,7 +364,7 @@ msgid "Existing ETPS User"
 msgstr ""
 
 #: js/controllers/explorerController.js:8
-#: partials/template.html:303
+#: partials/template.html:307
 msgid "Explorer"
 msgstr ""
 
@@ -425,12 +424,12 @@ msgstr ""
 #: js/controllers/votedDelegatesController.js:8
 #: partials/delegates.html:28
 #: partials/forging.html:28
-#: partials/template.html:267
+#: partials/template.html:271
 #: partials/votes.html:28
 msgid "Forging"
 msgstr ""
 
-#: partials/template.html:90
+#: partials/template.html:94
 msgid "Freeze"
 msgstr ""
 
@@ -450,7 +449,7 @@ msgstr ""
 msgid "Freeze Id"
 msgstr ""
 
-#: js/controllers/stakeController.js:42
+#: js/controllers/stakeController.js:43
 msgid "FreezeAmount"
 msgstr ""
 
@@ -467,7 +466,8 @@ msgstr ""
 #: partials/modals/freezeAmount.html:77
 #: partials/modals/multisignatureModal.html:139
 #: partials/modals/multisignatureModal.html:178
-#: partials/modals/newUser.html:189
+#: partials/modals/newUser.html:431
+#: partials/modals/newUserMigration.html:172
 #: partials/modals/registrationDelegateModal.html:108
 #: partials/modals/registrationDelegateModal.html:69
 #: partials/modals/secondPassphraseModal.html:126
@@ -485,6 +485,7 @@ msgid "General"
 msgstr ""
 
 #: partials/modals/newUser.html:27
+#: partials/modals/newUserMigration.html:27
 #: partials/modals/secondPassphraseModal.html:31
 msgid "Generate New"
 msgstr ""
@@ -506,7 +507,7 @@ msgstr ""
 msgid "Group Name"
 msgstr ""
 
-#: partials/template.html:185
+#: partials/template.html:189
 msgid "HOME"
 msgstr ""
 
@@ -523,7 +524,7 @@ msgstr ""
 msgid "INSTALL"
 msgstr ""
 
-#: partials/template.html:192
+#: partials/template.html:196
 msgid "INSTALLED"
 msgstr ""
 
@@ -535,7 +536,7 @@ msgstr ""
 msgid "If you are confident the application can be deemed trustworthy, click <strong>Open Anyway</strong>, otherwise click <strong>Cancel</strong> now."
 msgstr ""
 
-#: js/controllers/stakeController.js:44
+#: js/controllers/stakeController.js:45
 msgid "InsertTime"
 msgstr ""
 
@@ -631,19 +632,21 @@ msgstr ""
 msgid "Loading..."
 msgstr ""
 
-#: partials/exit-etps-user.html:24
+#: partials/existing-etps-user.html:24
 msgid "Login"
 msgstr ""
 
-#: partials/template.html:128
+#: partials/template.html:132
 msgid "Logout"
 msgstr ""
 
-#: partials/modals/newUser.html:184
+#: partials/modals/newUser.html:426
+#: partials/modals/newUserMigration.html:167
 msgid "Make sure that you keep the passphrase safe. If you lose your passphrase later on, your account can't be restored and all your funds will be lost."
 msgstr ""
 
-#: partials/modals/newUser.html:123
+#: partials/modals/newUser.html:365
+#: partials/modals/newUserMigration.html:106
 msgid "Make sure that you keep the passphrase safe. You will be asked to re-type it for confirmation."
 msgstr ""
 
@@ -667,7 +670,7 @@ msgstr ""
 msgid "Master Passphrase"
 msgstr ""
 
-#: js/controllers/stakeController.js:45
+#: js/controllers/stakeController.js:46
 msgid "MatureTime"
 msgstr ""
 
@@ -675,7 +678,7 @@ msgstr ""
 msgid "Members"
 msgstr ""
 
-#: js/controllers/stakeController.js:46
+#: js/controllers/stakeController.js:47
 msgid "MonthRemain"
 msgstr ""
 
@@ -683,7 +686,7 @@ msgstr ""
 msgid "Monthly Reward"
 msgstr ""
 
-#: partials/account.html:103
+#: partials/account.html:102
 #: partials/dapps.html:165
 #: partials/dapps.html:225
 msgid "More"
@@ -710,11 +713,11 @@ msgstr ""
 msgid "My Multi-Signature Groups"
 msgstr ""
 
-#: partials/template.html:113
+#: partials/template.html:117
 msgid "My Profile"
 msgstr ""
 
-#: partials/template.html:285
+#: partials/template.html:289
 #: partials/votes.html:67
 msgid "My Votes"
 msgstr ""
@@ -737,7 +740,8 @@ msgstr ""
 msgid "NEXT"
 msgstr ""
 
-#: partials/modals/newUser.html:131
+#: partials/modals/newUser.html:373
+#: partials/modals/newUserMigration.html:114
 #: partials/modals/secondPassphraseModal.html:44
 msgid "NEXT STEP"
 msgstr ""
@@ -820,7 +824,8 @@ msgstr ""
 msgid "Others"
 msgstr ""
 
-#: partials/modals/newUser.html:178
+#: partials/modals/newUser.html:420
+#: partials/modals/newUserMigration.html:161
 msgid "Passphrase"
 msgstr ""
 
@@ -828,7 +833,7 @@ msgstr ""
 msgid "Pending transactions"
 msgstr ""
 
-#: partials/modals/newUser.html:64
+#: partials/modals/newUser.html:306
 msgid "Phone"
 msgstr ""
 
@@ -904,7 +909,8 @@ msgstr ""
 msgid "Please provide storage a link for your block application below."
 msgstr ""
 
-#: partials/modals/newUser.html:172
+#: partials/modals/newUser.html:414
+#: partials/modals/newUserMigration.html:155
 msgid "Please re-enter your passphrase below."
 msgstr ""
 
@@ -953,12 +959,12 @@ msgstr ""
 msgid "Rank"
 msgstr ""
 
-#: js/controllers/stakeController.js:47
+#: js/controllers/stakeController.js:48
 #: js/controllers/transactionsController.js:64
 #: js/controllers/walletPendingsController.js:45
 #: js/controllers/walletTransactionsController.js:68
 #: js/controllers/walletsController.js:146
-#: partials/account.html:117
+#: partials/account.html:115
 msgid "Recipient"
 msgstr ""
 
@@ -976,6 +982,7 @@ msgid "Registered on"
 msgstr ""
 
 #: js/controllers/modals/newUserController.js:8
+#: js/controllers/modals/newUserMigrationController.js:8
 msgid "Registering user"
 msgstr ""
 
@@ -993,12 +1000,13 @@ msgstr ""
 msgid "Reward"
 msgstr ""
 
-#: partials/modals/newUser.html:128
+#: partials/modals/newUser.html:370
+#: partials/modals/newUserMigration.html:111
 #: partials/modals/secondPassphraseModal.html:41
 msgid "SAVE PASSPHRASE"
 msgstr ""
 
-#: partials/template.html:95
+#: partials/template.html:99
 msgid "SEND"
 msgstr ""
 
@@ -1025,8 +1033,8 @@ msgstr ""
 msgid "Search for Stake"
 msgstr ""
 
-#: partials/template.html:219
-#: partials/template.html:343
+#: partials/template.html:223
+#: partials/template.html:347
 msgid "Search for applications"
 msgstr ""
 
@@ -1034,7 +1042,7 @@ msgstr ""
 msgid "Search for blocks"
 msgstr ""
 
-#: partials/template.html:141
+#: partials/template.html:145
 msgid "Search for transactions (Transaction ID, Sender address, Recipient address)"
 msgstr ""
 
@@ -1064,12 +1072,12 @@ msgid "Send Freeze Order"
 msgstr ""
 
 #: js/controllers/transactionsController.js:63
-#: partials/account.html:114
+#: partials/account.html:112
 msgid "Sender"
 msgstr ""
 
 #: js/controllers/settingsController.js:6
-#: partials/template.html:123
+#: partials/template.html:127
 msgid "Settings"
 msgstr ""
 
@@ -1093,7 +1101,7 @@ msgstr ""
 msgid "Sign"
 msgstr ""
 
-#: partials/template.html:311
+#: partials/template.html:315
 msgid "Stake"
 msgstr ""
 
@@ -1109,11 +1117,12 @@ msgstr ""
 msgid "Standby Delegates"
 msgstr ""
 
-#: js/controllers/stakeController.js:43
+#: js/controllers/stakeController.js:44
 msgid "Status"
 msgstr ""
 
 #: partials/modals/newUser.html:16
+#: partials/modals/newUserMigration.html:16
 msgid "Step 1/2 - Generate a Passphrase"
 msgstr ""
 
@@ -1129,7 +1138,8 @@ msgstr ""
 msgid "Step 1/4 - Preamble"
 msgstr ""
 
-#: partials/modals/newUser.html:170
+#: partials/modals/newUser.html:412
+#: partials/modals/newUserMigration.html:153
 msgid "Step 2/2 - Confirm your Passphrase"
 msgstr ""
 
@@ -1171,7 +1181,8 @@ msgstr ""
 msgid "The master passphrase is auto-generated upon first launching the ETP client. It can be found at the end of the config.json file. Therefore only node operators can install, launch or uninstall applications. Once applications are in a launched state, anyone is free to open and use them."
 msgstr ""
 
-#: partials/modals/newUser.html:180
+#: partials/modals/newUser.html:422
+#: partials/modals/newUserMigration.html:163
 msgid "The passphrase entered doesn't match with the one generated before. Please go back and generate a new one."
 msgstr ""
 
@@ -1189,7 +1200,7 @@ msgstr ""
 #: js/controllers/walletPendingsController.js:46
 #: js/controllers/walletTransactionsController.js:69
 #: js/controllers/walletsController.js:147
-#: partials/account.html:120
+#: partials/account.html:118
 #: partials/modals/blockInfo.html:41
 #: partials/modals/transactionInfo.html:28
 #: partials/modals/userInfo.html:70
@@ -1260,7 +1271,7 @@ msgstr ""
 #: js/controllers/walletPendingsController.js:44
 #: js/controllers/walletTransactionsController.js:67
 #: js/controllers/walletsController.js:145
-#: partials/account.html:111
+#: partials/account.html:109
 #: partials/modals/blockModal.html:17
 #: partials/modals/userInfo.html:51
 #: partials/modals/userInfo.html:77
@@ -1304,7 +1315,7 @@ msgstr ""
 msgid "Voting for delegates"
 msgstr ""
 
-#: partials/template.html:231
+#: partials/template.html:235
 msgid "Welcome back, {{username}}"
 msgstr ""
 
@@ -1317,6 +1328,7 @@ msgid "You are not a member of any one Multi-Signature group."
 msgstr ""
 
 #: partials/modals/newUser.html:18
+#: partials/modals/newUserMigration.html:18
 msgid "You can find your passphrase below."
 msgstr ""
 
@@ -1333,7 +1345,7 @@ msgstr ""
 msgid "You have not forged any blocks yet."
 msgstr ""
 
-#: partials/account.html:154
+#: partials/account.html:151
 msgid "You have not made any transactions yet."
 msgstr ""
 
@@ -1370,7 +1382,7 @@ msgstr ""
 msgid "Your Passphrase"
 msgstr ""
 
-#: partials/exit-etps-user.html:19
+#: partials/existing-etps-user.html:17
 msgid "Your Password"
 msgstr ""
 
@@ -1385,7 +1397,7 @@ msgstr ""
 msgid "Your Second Passphrase"
 msgstr ""
 
-#: partials/exit-etps-user.html:13
+#: partials/existing-etps-user.html:12
 msgid "Your User Name"
 msgstr ""
 

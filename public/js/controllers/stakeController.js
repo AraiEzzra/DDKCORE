@@ -1,6 +1,6 @@
 require('angular');
 
-angular.module('ETPApp').controller('stakeController', ['$scope', '$rootScope', 'ngTableParams', 'stakeService', '$http', "userService", 'gettextCatalog', 'sendFreezeOrderModal','$timeout', function ($scope, $rootScope, ngTableParams, stakeService, $http, userService, gettextCatalog, sendFreezeOrderModal,$timeout) {
+angular.module('ETPApp').controller('stakeController', ['$scope', '$rootScope', 'ngTableParams', 'stakeService', '$http', "userService", 'gettextCatalog', 'sendFreezeOrderModal','$timeout', 'esClient', function ($scope, $rootScope, ngTableParams, stakeService, $http, userService, gettextCatalog, sendFreezeOrderModal,$timeout, esClient) {
 
   $scope.view.inLoading = true;
   $scope.rememberedPassphrase = userService.rememberedPassphrase;
@@ -12,7 +12,6 @@ angular.module('ETPApp').controller('stakeController', ['$scope', '$rootScope', 
   $scope.loading = true;
   $scope.searchStake = stakeService;
   $scope.view.bar = { showStakeSearchBar: true };
-  //console.log($scope.view.inLoading);
   
 
 
@@ -36,7 +35,6 @@ angular.module('ETPApp').controller('stakeController', ['$scope', '$rootScope', 
           $scope.countFreezeOrders = params.total();
           $scope.loading = false;
           $scope.view.inLoading = false;
-          //console.log($scope.view.inLoading);
         });
       }
     });

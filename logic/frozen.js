@@ -48,7 +48,7 @@ Frozen.prototype.ready = function (frz, sender) {
 	return true;
 };
 
-//Hotam Singh
+
 Frozen.prototype.dbTable = 'stake_orders';
 
 Frozen.prototype.dbFields = [
@@ -190,9 +190,12 @@ Frozen.prototype.checkFrozeOrders = function () {
 				{
 					milestone: constants.froze.milestone * 60,
 					currentTime: slots.getTime()
-				}).then(function () {
+				})
+				.then(function () {
 					resolve();
-				}).catch(function (err) {
+
+				})
+				.catch(function (err) {
 					self.scope.logger.error(err.stack);
 					reject(new Error(err.stack));
 				});
@@ -209,10 +212,12 @@ Frozen.prototype.checkFrozeOrders = function () {
 				{
 					currentTime: slots.getTime(),
 					totalMilestone: constants.froze.endTime / constants.froze.milestone
-				}).then(function () {
+				})
+				.then(function () {
 					self.scope.logger.info("Successfully check status for disable froze orders");
 					resolve();
-				}).catch(function (err) {
+				})
+				.catch(function (err) {
 					self.scope.logger.error(err.stack);
 					reject(new Error(err.stack));
 				});
@@ -282,32 +287,36 @@ Frozen.prototype.updateFrozeAmount = function (userData, cb) {
 
 	self.scope.db.one(sql.getFrozeAmount, {
 		senderId: userData.account.address
-	}).then(function (totalFrozeAmount) {
-		if (!totalFrozeAmount) {
-			return setImmediate(cb, 'No Account Exist in mem_account table for'+userData.account.address);
-		}
-		var frozeAmountFromDB = totalFrozeAmount.totalFrozeAmount;
-		var totalFrozeAmount = parseInt(frozeAmountFromDB) + parseInt(userData.freezedAmount);
-		var totalFrozeAmountWithFees = totalFrozeAmount + parseInt(constants.fees.froze);
-		//verify that freeze order cannot more than available balance
-		if (totalFrozeAmountWithFees < userData.account.balance) {
-			self.scope.db.none(sql.updateFrozeAmount, {
-				freezedAmount: userData.freezedAmount,
-				senderId: userData.account.address
-			}).then(function () {
-				self.scope.logger.info(userData.account.address , ': is update its froze amount in mem_accounts table ');
-				return setImmediate(cb, null);
-			}).catch(function (err) {
-				self.scope.logger.error(err.stack);
-				return setImmediate(cb, err.toString());
-			});
-		} else {
-			return setImmediate(cb, 'Not have enough balance');
-		}
-	}).catch(function (err) {
-		self.scope.logger.error(err.stack);
-		return setImmediate(cb, err.toString());
-	});
+	})
+		.then(function (totalFrozeAmount) {
+			if (!totalFrozeAmount) {
+				return setImmediate(cb, 'No Account Exist in mem_account table for' + userData.account.address);
+			}
+			var frozeAmountFromDB = totalFrozeAmount.totalFrozeAmount;
+			var totalFrozeAmount = parseInt(frozeAmountFromDB) + parseInt(userData.freezedAmount);
+			var totalFrozeAmountWithFees = totalFrozeAmount + parseInt(constants.fees.froze);
+			//verify that freeze order cannot more than available balance
+			if (totalFrozeAmountWithFees < userData.account.balance) {
+				self.scope.db.none(sql.updateFrozeAmount, {
+					freezedAmount: userData.freezedAmount,
+					senderId: userData.account.address
+				})
+					.then(function () {
+						self.scope.logger.info(userData.account.address, ': is update its froze amount in mem_accounts table ');
+						return setImmediate(cb, null);
+					})
+					.catch(function (err) {
+						self.scope.logger.error(err.stack);
+						return setImmediate(cb, err.toString());
+					});
+			} else {
+				return setImmediate(cb, 'Not have enough balance');
+			}
+		})
+		.catch(function (err) {
+			self.scope.logger.error(err.stack);
+			return setImmediate(cb, err.toString());
+		});
 
 
 

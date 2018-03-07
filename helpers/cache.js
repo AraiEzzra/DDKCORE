@@ -31,7 +31,7 @@ module.exports.connect = function (cacheEnabled, config, logger, cb) {
 			return cb(null, { cacheEnabled: cacheEnabled, client: client });
 		}
 	});
-	//Added by navin
+	
 	client.get("minedContributorsBoolean", function (err, minedContributorsBoolean) {
 		if (!minedContributorsBoolean) {
 			client.set("minedContributorsBalance", 0);

@@ -1,4 +1,4 @@
-//Hotam Singh
+
 /**
  * Module dependencies.
  */
@@ -40,5 +40,6 @@ module.exports = {
     publicKey: env.ADMIN_PUBLICKEY,
     address: env.ADMIN_ADDRESS 
   },
-  nethash: env.NETHASH
+  nethash: env.NETHASH,
+  jwtSecret: env.JWT_SECRET
 };

@@ -7,14 +7,11 @@ var crypto = require('crypto');
 var extend = require('extend');
 var OrderBy = require('../helpers/orderBy.js');
 var sandboxHelper = require('../helpers/sandbox.js');
-//navin
 var schema = require('../schema/frogings.js');
-//var schema = require('../schema/transactions.js');
 var sql = require('../sql/frogings.js');
 var TransactionPool = require('../logic/transactionPool.js');
 var transactionTypes = require('../helpers/transactionTypes.js');
 var Transfer = require('../logic/transfer.js');
-//navin
 var Frozen = require('../logic/frozen.js');
 var bignum = require('../helpers/bignum.js');
 
@@ -65,8 +62,6 @@ function Frogings (cb, scope) {
 		scope.logger
 	);
 
-
-	//Add by navin
 	__private.assetTypes[transactionTypes.FROZE] = library.logic.transaction.attachAssetType(
 		transactionTypes.FROZE, new Frozen(scope.logger, scope.db, scope.logic.transaction, scope.network, scope.config)
 	);
@@ -109,22 +104,26 @@ Frogings.prototype.shared = {
 
 	countStakeholders: function (req, cb) {
 
-		library.db.one(sql.countStakeholders).then(function (row) {
+		library.db.one(sql.countStakeholders)
+		.then(function (row) {
 			return setImmediate(cb, null, {
 				countStakeholders: row
 			});
-		}, function (err) {
+		})
+		.catch(function (err) {
 			return setImmediate(cb, 'Error while counting Stakeholders');
 		});
 
 	},
 
 	totalETPStaked: function (req, cb) {
-		library.db.one(sql.getTotalStakedAmount).then(function (row) {
+		library.db.one(sql.getTotalStakedAmount)
+		.then(function (row) {
 			return setImmediate(cb, null, {
 				totalETPStaked: row
 			});
-		}, function (err) {
+		})
+		.catch(function (err) {
 			return setImmediate(cb, 'Error in getting sum of ETP staked');
 		});
 	},
@@ -142,11 +141,13 @@ Frogings.prototype.shared = {
 					return setImmediate(cb, 'Address of account not found');
 				}
 
-				library.db.one(sql.getMyStakedAmount, { address: account.address }).then(function (row) {
+				library.db.one(sql.getMyStakedAmount, { address: account.address })
+				.then(function (row) {
 					return setImmediate(cb, null, {
 						totalETPStaked: row
 					});
-				}, function (err) {
+				})
+				.catch(function (err) {
 					return setImmediate(cb, 'Error in getting my sum of ETP staked');
 				});
 			});
@@ -167,11 +168,13 @@ Frogings.prototype.shared = {
 					return setImmediate(cb, 'Address of account not found');
 				}
 
-				library.db.query(sql.getFrozeOrders, { senderId: account.address }).then(function (rows) {
+				library.db.query(sql.getFrozeOrders, { senderId: account.address })
+				.then(function (rows) {
 					return setImmediate(cb, null, {
 						freezeOrders: JSON.stringify(rows)
 					});
-				}, function (err) {
+				})
+				.catch(function (err) {
 					return setImmediate(cb, 'Unable to get froze orders');
 				});
 			});
@@ -193,11 +196,13 @@ Frogings.prototype.shared = {
 					return setImmediate(cb, 'Address of account not found');
 				}
 				
-				library.db.one(sql.getActiveFrozeOrders, { senderId: account.address }).then(function (rows) {
+				library.db.one(sql.getActiveFrozeOrders, { senderId: account.address })
+				.then(function (rows) {
 					return setImmediate(cb, null, {
 						freezeOrders: JSON.stringify(rows)
 					});
-				}, function (err) {
+				})
+				.catch(function (err) {
 					return setImmediate(cb, 'Unable to get active froze orders');
 				});
 
@@ -228,7 +233,6 @@ Frogings.prototype.shared = {
 						if (err) {
 							return setImmediate(cb, err);
 						}
-						//*********************NAVIN******************* */
 						library.logic.frozen.updateFrozeAmount({
 							account: account,
 							freezedAmount: req.body.freezedAmount
@@ -299,7 +303,6 @@ Frogings.prototype.shared = {
 						if (err) {
 							return setImmediate(cb, err);
 						}
-						//*********************NAVIN******************* */
 						library.logic.frozen.updateFrozeAmount({
 							account: account,
 							freezedAmount: req.body.freezedAmount

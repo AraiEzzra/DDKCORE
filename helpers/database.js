@@ -20,9 +20,11 @@ function Migrator (pgp, db) {
 	 * @return {function} waterCb with error | Boolean
 	 */
 	this.checkMigrations = function (waterCb) {
-		db.one('SELECT to_regclass(\'migrations\')').then(function (row) {
+		db.one('SELECT to_regclass(\'migrations\')')
+		.then(function (row) {
 			return waterCb(null, Boolean(row.to_regclass));
-		}).catch(function (err) {
+		})
+		.catch(function (err) {
 			return waterCb(err);
 		});
 	};
@@ -38,12 +40,14 @@ function Migrator (pgp, db) {
 		if (!hasMigrations) {
 			return waterCb(null, null);
 		}
-		db.query('SELECT * FROM migrations ORDER BY "id" DESC LIMIT 1').then(function (rows) {
+		db.query('SELECT * FROM migrations ORDER BY "id" DESC LIMIT 1')
+		.then(function (rows) {
 			if (rows[0]) {
 				rows[0].id = new bignum(rows[0].id);
 			}
 			return waterCb(null, rows[0]);
-		}).catch(function (err) {
+		})
+		.catch(function (err) {
 			return waterCb(err);
 		});
 	};
@@ -110,10 +114,12 @@ function Migrator (pgp, db) {
 		async.eachSeries(pendingMigrations, function (file, eachCb) {
 			var sql = new pgp.QueryFile(file.path, {minify: true});
 
-			db.query(sql).then(function () {
+			db.query(sql)
+			.then(function () {
 				appliedMigrations.push(file);
 				return eachCb();
-			}).catch(function (err) {
+			})
+			.catch(function (err) {
 				return eachCb(err);
 			});
 		}, function (err) {
@@ -130,9 +136,11 @@ function Migrator (pgp, db) {
 	 */
 	this.insertAppliedMigrations = function (appliedMigrations, waterCb) {
 		async.eachSeries(appliedMigrations, function (file, eachCb) {
-			db.query('INSERT INTO migrations(id, name) VALUES($1, $2) ON CONFLICT DO NOTHING', [file.id.toString(), file.name]).then(function () {
+			db.query('INSERT INTO migrations(id, name) VALUES($1, $2) ON CONFLICT DO NOTHING', [file.id.toString(), file.name])
+			.then(function () {
 				return eachCb();
-			}).catch(function (err) {
+			})
+			.catch(function (err) {
 				return eachCb(err);
 			});
 		}, function (err) {
@@ -150,9 +158,11 @@ function Migrator (pgp, db) {
 		var dirname = path.basename(__dirname) === 'helpers' ? path.join(__dirname, '..') : __dirname;
 		var sql = new pgp.QueryFile(path.join(dirname, 'sql', 'runtime.sql'), {minify: true});
 
-		db.query(sql).then(function () {
+		db.query(sql)
+		.then(function () {
 			return waterCb();
-		}).catch(function (err) {
+		})
+		.catch(function (err) {
 			return waterCb(err);
 		});
 	};
@@ -177,7 +187,7 @@ function Migrator (pgp, db) {
  * @return {function} error|cb
  */
 module.exports.connect = function (config, logger, cb) {
-	//hotam: handle appmetrics error by adding new promise library
+	// handle appmetrics error by adding new promise library
 	const promise = require('bluebird');
 	var pgOptions = {
 		promiseLib: promise

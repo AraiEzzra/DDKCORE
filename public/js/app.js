@@ -97,8 +97,9 @@ ETPApp.config([
     $rootScope.$state = $state;
 
     $rootScope.defaultLoaderScreen = false;
-    //hotam: render current logged-in user upon page refresh if currently logged-in
-    AuthService.getUserStatus().then(function () {
+    // render current logged-in user upon page refresh if currently logged-in
+    AuthService.getUserStatus()
+    .then(function () {
         if (AuthService.isLoggedIn()) {
              $timeout(function(){
                     $state.go('main.dashboard');
@@ -110,9 +111,10 @@ ETPApp.config([
         }
     });
     
-    //hotam: user authentication upon page forward/back for currently logged-in user
+    // user authentication upon page forward/back for currently logged-in user
     $rootScope.$on('$stateChangeStart', function (e, toState, toParams, fromState, fromParams) {
-        AuthService.getUserStatus().then(function () {
+        AuthService.getUserStatus()
+        .then(function () {
             if(toState.url == '/existingETPSUser'){
                 $state.go('existingETPSUser');
             }else{

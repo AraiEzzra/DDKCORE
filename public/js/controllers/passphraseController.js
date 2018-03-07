@@ -1,6 +1,6 @@
 require('angular');
 
-angular.module('ETPApp').controller('passphraseController', ['$scope', '$rootScope', '$http', "$state", "userService", "newUser", 'gettextCatalog', '$cookies', function ($rootScope, $scope, $http, $state, userService, newUser, gettextCatalog, $cookies) {
+angular.module('ETPApp').controller('passphraseController', ['$scope', '$rootScope', '$http', "$state", "userService", "newUser", 'gettextCatalog', '$cookies', '$window', function ($rootScope, $scope, $http, $state, userService, newUser, gettextCatalog, $cookies, $window) {
 
     userService.setData();
     userService.rememberPassphrase = false;
@@ -45,7 +45,8 @@ angular.module('ETPApp').controller('passphraseController', ['$scope', '$rootSco
         $scope.errorMessage = "";
         $http.post("/api/accounts/open/", { secret: pass }).then(function (resp) {
             if (resp.data.success) {
-                userService.setData(resp.data.account.address, resp.data.account.publicKey, resp.data.account.balance, resp.data.account.unconfirmedBalance, resp.data.account.effectiveBalance);
+                $window.localStorage.setItem('token', resp.data.account.token);
+                userService.setData(resp.data.account.address, resp.data.account.publicKey, resp.data.account.balance, resp.data.account.unconfirmedBalance, resp.data.account.effectiveBalance, resp.data.account.token);
                 userService.setForging(resp.data.account.forging);
                 userService.setSecondPassphrase(resp.data.account.secondSignature || resp.data.account.unconfirmedSignature);
                 userService.unconfirmedPassphrase = resp.data.account.unconfirmedSignature;

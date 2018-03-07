@@ -1,16 +1,16 @@
-// Hotam Singh: Generalised method to create, delete or check existence of an index
+// Generalised method to create, delete or check existence of an index
 var client = require('./connection.js');
 
 /**
 * check if the index exists
 */
-function indexExists(indexName, cb) {  
+function isIndexExists(indexName, cb) {  
     var result = client.indices.exists({
         index: indexName
     });
     return result;
 }
-exports.indexExists = indexExists; 
+exports.isIndexExists = isIndexExists; 
 
 /**
 * create an index

@@ -1,6 +1,5 @@
 'use strict';
 
-//Hotam Singh
 var TransactionsSql = {
   sortFields: [
     'id',

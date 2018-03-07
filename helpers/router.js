@@ -24,13 +24,13 @@ var Router = function () {
 			if (route.length !== 2 || ['post', 'get', 'put'].indexOf(route[0]) === -1) {
 				throw Error('Invalid map config');
 			}
-			//hotam: made changes to add session data and res object to the req object that is accessible in modules
+			// made changes to add session data and res object to the req object that is accessible in modules
 			router[route[0]](route[1], utils.validateClient, function (req, res, next) {
 				var reqRelevantInfo = {
 					ip: req.ip,
 					method: req.method,
 					path: req.path,
-					session: req.session
+					decoded: req.decoded
 				};
 				root[config[params]](extend({}, reqRelevantInfo, res, {'body': route[0] === 'get' ? req.query : req.body}), httpApi.respond.bind(null, res));
 			});

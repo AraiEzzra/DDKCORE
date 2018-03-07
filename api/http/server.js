@@ -3,6 +3,7 @@
 var Router = require('../../helpers/router');
 var httpApi = require('../../helpers/httpApi');
 var Accounts = require('../../modules/accounts');
+var tokenValidator = require('../../tokenValidator');
 
 /**
  * Renders main page wallet from public folder.
@@ -25,10 +26,10 @@ function ServerHttpApi (serverModule, app) {
 		res.status(500).send({success: false, error: 'Blockchain is loading'});
 	});
 
-	//hotam: get user's status
-	router.get('/user/status', function(req, res) {
-		if(req.session.address) {
-			Accounts.prototype.getAccount({address: req.session.address}, function(err, account) {
+	//get user's status
+	router.get('/user/status', tokenValidator, function(req, res) {
+		if(req.decoded.address) {
+			Accounts.prototype.getAccount({address: req.decoded.address}, function(err, account) {
 				if(!err) {
 					return res.status(200).json({
 						status: true,
