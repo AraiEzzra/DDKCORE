@@ -1,9 +1,9 @@
 'use strict';
+
 var esClient = require('./elasticsearch/connection');
 
-// validate client
+//FIXME: validate client here. currently not implemented 
 exports.validateClient = function (req, res, next) {
-	//validate client here. currently not implemented
 	next();
 };
 

@@ -1,3 +1,5 @@
+'use strict';
+
 // added to monitor application performance using prometheus
 /**
  * Newly added requires
