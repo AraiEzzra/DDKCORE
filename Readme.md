@@ -63,6 +63,7 @@ Update the launch configuration file on your system. Note that their a number of
         MacOS: /usr/local/etc/redis.conf
     ```
 3.  Start redis-server
+
 Now confirm that redis is running on port 6380:
 ```
 redis-cli -p 6380
