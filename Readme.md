@@ -131,18 +131,22 @@ Go to the project directory and run
 node app.js
 ```
 
-######################################### ISSUES ############################################
-# ERROR 1:
+# ISSUES
+
+**ERROR 1:**
+```
 You need to install postgresql-server-dev-X.Y for building a server-side extension or libpq-dev for building a client-side application. gyp: Call to '/usr/bin/pg_config --libdir' returned exit status 1 while in binding.gyp. while trying to load binding.gyp
+```
+Try to install below postgresql tools.
+From your project directory, run following commands:
+```
+sudo apt-get install postgresql
+sudo apt-get install python-psycopg2
+sudo apt-get install libpq-dev
+```
 
-# Solution:
-## from your project directory, run following commands:
-> sudo apt-get install postgresql
-> sudo apt-get install python-psycopg2
-> sudo apt-get install libpq-dev
-
-
-# ERROR 2:
+**ERROR 2:**
+```
 throw err;
     ^
     Error: Cannot find module './appmetrics'
@@ -156,116 +160,142 @@ throw err;
     at Module.load (module.js:554:32)
     at tryModuleLoad (module.js:497:12)
     at Function.Module._load (module.js:489:3)
- 
-# Solution:   
-## from your project directory, run below command:
-> npm install appmetrics
+``` 
+Install `appmetrics` module:    
+From your project directory, run below command:
+```
+npm install appmetrics
+```
 
-
-
-# ERROR 3:
+**ERROR 3:**
+```
 Error: make nodesodium exited with code null
     at ChildProcess.<anonymous> (/home/andrea/node_modules/sodium/install.js:288:19)
     at emitTwo (events.js:106:13)
     at ChildProcess.emit (events.js:191:7)
     at Process.ChildProcess._handle.onexit (internal/child_process.js:219:12)
+```
+Follow these steps:
+1. remove sodium module from package.json
+2. remove node_modules/ directory and run:
+```
+rm -rf ~/.node-gyp/
+npm install
+npm install sodium
+```
 
-# Solution:
-## remove sodium module from package.json
-## remove node_modules/ directory and run:
-> rm -rf ~/.node-gyp/
-> npm install
-> npm install sodium
 
-
-
-# ERROR 4:
+**ERROR 4:**
+```
 error : TypeError: Cannot read property 'connection_options' of null
+```
 
-# Solution:
-This is what you have not successfully connected redis on a port which application is using. Try to run redis-cli -p <port number>
-It will throw an error:
-could not connect to 127.0.01.1:<port here> . Connection refused.
+This is what you have not successfully connected redis on a port which application is using. Try to run `redis-cli -p <port here>`. It will throw an error: `could not connect to 127.0.01.1:<port here>`. Connection refused.
 Try to check whether redis is installed/connected properly and run application again.
 
 
 
-# ERROR 5:
+**ERROR 5:**
+```
 error : TypeError: Cannot read property '__appmetricsProbeAttached__' of null
+```
 
-# Solution:
-## drop ETP_test database and recreate ETP_test 
-## Run Following commands:
-> dropdb ETP_test
-> createdb ETP_test
-> sudo -u postgres psql -d ETP_test -c "alter user "$USER" with password 'password';"
+Run Following commands:
+```
+dropdb ETP_test
+createdb ETP_test
+sudo -u postgres psql -d ETP_test -c "alter user "$USER" with password 'password';"
+```
 
-# ERROR 6:
+**ERROR 6:**
+```
 npm ERR! git clone --template=/root/.npm/_git-remotes/_templates..
 npm ERR! Permission denied (publickey).
 Or something else with github or publickey inside.
+```
 
-# Solution:
-It is likely that git or ssh is not installed and configured.
+It is likely that git or ssh is not installed and configured. Follow below steps:
 
-## Step 1: Run below command
-> sudo apt-get install git ssh
-## Step 2: Generate a key pair for ssh 
-> ssh-keygen -t rsa
-## Step 3: Open the just created public key with 
-> nano ~/.ssh/id_rsa.pub // if not installed, first install nano
-## Step 4: Create a new SSH key at the GitHub SSH keys settings page. Copy your public key into the key field and click on Add SSH key.
+1. Run below command
+```
+sudo apt-get install git ssh
+```
+2. Generate a key pair for ssh 
+```
+ssh-keygen -t rsa
+```
+3. Open the just created public key with 
+```
+nano ~/.ssh/id_rsa.pub   //if not installed, first install nano
+``` 
+4. Create a new SSH key at the GitHub SSH keys settings page. Copy your public key into the key field and click on Add SSH key.
 
-# ERROR 7:
+**ERROR 7:**
+```
 Error: Can't open display: (null) when using Xclip to copy ssh public key
+```
 
-# Solution:
-## Run below command
-> cat ~/.ssh/id_rsa.pub from terminal and copy RSA key
-example: 
-ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCiTtK0fIgrNK0YCLb2m5pFQ/7vUNVDZ+ru1KNdVwj1FwH5RfVGlgF1TWww9gIQ2vdhQFPD26HstTNuFoQCA67x506CcC+fY3hdMhSQ6vBC9YuBHX0gBoc+nq1OS18wCjLtpLHwE2ZeQ6N7ZnQekDayxWLmxKnWNQZtBx1up0ov8+kjC3Q0PVnqsxjj54FJuRmNcxAvGv+Xj8T4+Xt4aC0nTAd7andMcwbN4lB42NKcooS4zDWPK3wWxrY9FdoKSEc1/h8lbsBoWpXsZ+yK3qCsuD0u7SfdgTMRQosME0VlF/wT9WlLPe+Z08vIZluChDZq5UyTcT1PRpSYkhJt9gn9 
+1. Run below command
+```
+cat ~/.ssh/id_rsa.pub 
+```
+2. Copy this RSA key and add it to your github account in github -> settings -> SSH Keys and GPG Keysnano
 
-## Copy this RSA key and add it to your github account in github->settings->SSH Keys and GPG Keysnano
-
-# ERROR 8: 
+**ERROR 8:** 
+```
 Failed to load http://<IP_ADDRESS>:9200/blocks/blocks/_search: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. Origin 'http://<IP_ADDRESS>:7000' is therefore not allowed access.
+```
 
-# Soluton:
 If you have that in your config file, then you should have seen an exception when you restarted the node, because * has special meaning in YAML. You should set your config as follows:
 
-## Edit your config file
-> sudo nano /etc/elasticsearch/elasticsearch.yml
+1. Edit your config file
+```
+sudo nano /etc/elasticsearch/elasticsearch.yml
+```
 
-## and set below configurations if not set already
+2. Set below configurations if not set already
 ```
 http.cors.enabled: true
 http.cors.allow-origin: "*"
 
 ```
 
-## Restart the server
-> sudo service elasticsearch restart
+3. Restart the server
+```
+sudo service elasticsearch restart
+```
 
-# ERROR 9: 
+**ERROR 9:** 
+```
 ERROR: syntax error at or near "'hotam-singh'" 
 LINE 1: alter user 'hotam-singh' with password 'password';
+```
 
+Follow below steps:
+1. Open postgreSQL from terminal
+```
+sudo -su postgres psql 
+```
+2. Insert your sudo password
+3. Run command:
+```
+ALTER USER "hotam-singh" with password 'password' ;
+```
 
-# Solution:
-## Open postgreSQL from terminal
-> sudo -su postgres psql 
-## insert your sudo password
-## Run next command for postgres=#
-> ALTER USER "hotam-singh" with password 'password' ;
-
-# ERROR 10: 
+**ERROR 10:** 
+```
 curl: (7) Failed to connect to 127.0.0.1 port 9200: Connection refused
+```
 
-# Soluton:
-## Check the status of elasticsearch server
-> sudo service elasticsearch status
-## and here we can check Loaded/Active state or the reason why elasticsearch not connecting to default port.
-## In my case I got this following error:
+Follow below steps:
+1. Check the status of elasticsearch server
+```
+sudo service elasticsearch status
+```
+
+2. We'll get the status like:
+```
+Loaded# ERROR 10:/Active state or the reason why elasticsearch not connecting to default port.
 ● elasticsearch.service - Elasticsearch
    Loaded: loaded (/usr/lib/systemd/system/elasticsearch.service; disabled; vendor preset: enabled)
    Active: failed (Result: exit-code) since Mon 2018-02-12 11:48:14 IST; 2s ago
@@ -283,14 +313,19 @@ Feb 12 11:48:14 hotamsingh elasticsearch[11315]:  in 'reader', line 92, column 2
 Feb 12 11:48:14 hotamsingh systemd[1]: elasticsearch.service: Main process exited, code=exited, status=1/FAILURE
 Feb 12 11:48:14 hotamsingh systemd[1]: elasticsearch.service: Unit entered failed state.
 Feb 12 11:48:14 hotamsingh systemd[1]: elasticsearch.service: Failed with result 'exit-code'.
+```
 
-## To resolve this issue I had to made changes in /etc/elasticsearch/elasticsearch.yml file.
-## To make changes run below command:
-> sudo nano /etc/elasticsearch/elasticsearch.yml 
-## and change http.cors.allow-origin: * to http.cors.allow-origin: '*'
-## This fixed my issue.
-## You can check status again. It will show active state
-$ sudo service elasticsearch status; i.e
+3. Update `/etc/elasticsearch/elasticsearch.yml` file.
+```
+sudo nano /etc/elasticsearch/elasticsearch.yml 
+```
+4. Set  `http.cors.allow-origin` to "*"
+5. You can check status again. It will show active state
+```
+sudo service elasticsearch status
+```
+You will get the status like:
+```
 ● elasticsearch.service - Elasticsearch
    Loaded: loaded (/usr/lib/systemd/system/elasticsearch.service; disabled; vendor preset: enabled)
    Active: active (running) since Mon 2018-02-12 12:02:52 IST; 14s ago
@@ -300,6 +335,7 @@ $ sudo service elasticsearch status; i.e
            └─12293 /usr/bin/java -Xms1g -Xmx1g -XX:+UseConcMarkSweepGC -XX:CMSInitiatingOccupancyFraction=75 -XX:+UseCMSInitiatingOccupancyOnly
 
 Feb 12 12:02:52 hotamsingh systemd[1]: Started Elasticsearch.
+```
 
 # Contributors
 [https://github.com/oodlestechnologies/ETPCoin/graphs/contributors](https://github.com/oodlestechnologies/ETPCoin/graphs/contributors)
