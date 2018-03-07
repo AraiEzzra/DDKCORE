@@ -4,27 +4,29 @@ Describe brief description about ETP here
 ## Prerequisite for ETP system
 This sections provides details on what you need install on your system in order to run ETP.
 
-### Supported Plateforms:
-   Ubuntu 14.04 x86_64
-   Ubuntu 16.04 (LTS) x86_64
+- ### Supported Plateforms:
+```
+Ubuntu 14.04 x86_64
+Ubuntu 16.04 (LTS) x86_64
+```
 
-### Tool chain components -- Used for compiling dependencies
+- ### Tool chain components -- Used for compiling dependencies
 ```
 sudo apt-get install -y python build-essential curl automake autoconf libtool
 ```
 
-### Git -- Used for cloning and updating ETP
+- ### Git -- Used for cloning and updating ETP
 ```
 sudo apt-get install -y git
 ```
 
-### Node.js -- Node.js serves as the underlying engine for code execution.
+- ### Node.js -- Node.js serves as the underlying engine for code execution.
 ```
 curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
 sudo apt-get install -y nodejs
 ```
 
-### PostgreSQL (version 9.6.2) -- PostgreSQL is the database used for this application
+- ### PostgreSQL (version 9.6.2) -- PostgreSQL is the database used for this application
 ```
 curl -sL "https://downloads.lisk.io/scripts/setup_postgresql.Linux" | bash -
 sudo -u postgres createuser --createdb $USER
@@ -32,7 +34,7 @@ sudo -u postgres createdb <database_name> //ETP_test in our system
 sudo -u postgres psql -d <database_name> -c "alter user "$USER" with password 'password';"
 ```
 
-### Installing Redis -- Redis is used for cached storage
+- ### Installing Redis -- Redis is used for cached storage
 Ubuntu/Debian:
 ```
 sudo apt-get install redis-server
@@ -67,17 +69,17 @@ redis-cli -p 6380
 ping
 ```
 
-### Bower -- Bower helps to install required JavaScript dependencies.
+- ### Bower -- Bower helps to install required JavaScript dependencies.
 ```
 npm install -g bower
 ```
 
-### Grunt.js -- Grunt is used to compile the frontend code and serves other functions.
+- ### Grunt.js -- Grunt is used to compile the frontend code and serves other functions.
 ```
 npm install -g grunt-cli
 ```
 
-### Elasticsearch -- Elasticsearch is used for search optimization 
+- ### Elasticsearch -- Elasticsearch is used for search optimization 
 ```
 sudo apt-get install openjdk-8-jre
 curl -L -O https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.2.2.deb
@@ -86,7 +88,7 @@ sudo /etc/init.d/elasticsearch start
 sudo service elasticsearch start
 ```
 
-### Prometheus -- Prometheus is used to monitor app's performance
+- ### Prometheus -- Prometheus is used to monitor app's performance
 [Reference to install prometheus](https://prometheus.io/docs/prometheus/latest/installation/)
 
 ## ETP Installation
