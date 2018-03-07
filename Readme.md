@@ -50,9 +50,11 @@ service redis stop
 **NOTE:** ETP does not run on the redis default port of 6379. Instead it is configured to run on port: 6380. Because of this, in order for ETP to run, you have one of two options:
 
 1. Change the Lisk configuration
+
 Update the redis port configuration in both `config.json` and `test/data/config.json`. Note that this is the easiest option, however, be mindful of reverting the changes should you make a pull request.
 
 2. Change the Redis launch configuration
+
 Update the launch configuration file on your system. Note that their a number of ways to do this. The following is one way:
 
    1. Stop redis-server
