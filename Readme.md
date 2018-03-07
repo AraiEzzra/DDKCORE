@@ -301,6 +301,12 @@ $ sudo service elasticsearch status; i.e
 
 Feb 12 12:02:52 hotamsingh systemd[1]: Started Elasticsearch.
 
+# Contributors
+[https://github.com/oodlestechnologies/ETPCoin/graphs/contributors](https://github.com/oodlestechnologies/ETPCoin/graphs/contributors)
+
+# License
+License info here
+
 # Authors 
 
 - Hotam Singh <hotam.singh@oodlestechnologies.com>
