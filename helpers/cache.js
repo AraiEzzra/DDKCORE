@@ -40,8 +40,6 @@ module.exports.connect = function (cacheEnabled, config, logger, cb) {
 
 	});
 
-
-
 	client.on('error', function (err) {
 		logger.error('Redis:', err);
 		// Only throw an error if cache was enabled in config but were unable to load it properly

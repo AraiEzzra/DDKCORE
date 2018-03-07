@@ -308,7 +308,7 @@ d.run(function () {
 			var cors = require('cors');
 			var app = express();
 
-			
+			// prometheus configuration
 			var Prometheus = require('./prometheus');
 
 			/**
@@ -473,6 +473,7 @@ d.run(function () {
 			scope.network.app.use(methodOverride());
 			scope.network.app.use(cookieParser());
 
+			//FIXME: Add address/token into log file
 			// middleware to add session.id and address of the logged-in user into the logs
 			/* scope.network.app.use(function (req, res, next) {
 				if (req.decoded.address) {
@@ -742,99 +743,10 @@ d.run(function () {
 			cronjob.setJobsPath(__dirname + '/jobs.js');  // Absolute path to the jobs module. 
 			require('./jobs.js').attachScope(scope);
 			
-			cronjob.startJob('insertDataOnElasticServer');
+			cronjob.startJob('updateDataOnElasticSearch');
 			cronjob.startJob('checkFrozeOrders');
-	//		cronjob.startJob('third_job');
+			cronjob.startJob('archiveLogFiles');
 			
-			//Currently all jobs started from one place thats why we use startAllJobs() otherwise use startJob(job_name) to run individual job  
-		//	cronjob.startAllJobs();
-
-		
-			//Hotam Singh
-			/* cron job to save data on elasticsearch
-			cron.schedule('* * * * *', function () {
-				var dbTables = [
-					'blocks',
-					'dapps',
-					'delegates',
-					'mem_accounts',
-					'migrations',
-					'rounds_fees',
-					'trs',
-					'votes',
-					'signatures',
-					'stake_orders',
-					'peers',
-					'peers_dapp',
-					'intransfer',
-					'outtransfer',
-					'multisignatures'
-				];
-				dbTables.forEach(function (tableName) {
-					scope.db.query('SELECT * FROM ' + tableName)
-					.then(function (rows) {
-						if (rows.length > 0) {
-							var bulk = utils.makeBulk(rows, tableName);
-							utils.indexall(bulk, tableName)
-							.then(function (result) {
-								//Handle further operation in case of successfull indexing if needed
-							})
-							.catch(function (err) {
-								console.log('elasticsearch error : ', err);
-							});
-						}
-					})
-					.catch(function (err) {
-						console.log('database error : ', err);
-					});
-				});
-			});
-
-			// cron jon to check freezed order
-			cron.schedule('* * * * *', function () {
-				var date = new Date();
-
-				// daily check and update stake_orders, if any Active order expired or not
-				scope.logic.frozen.checkFrozeOrders(); //For testing purpose only
-				if (date.getHours() === 10 && date.getMinutes() === 20) { // Check the time
-
-					scope.logic.frozen.checkFrozeOrders();
-				}
-
-				// archive log files on first day of every new month
-				var nextDate = new Date();
-				nextDate.setDate(nextDate.getDate() + 1);
-				//FIXME: set isArchived variable to redis. currently it is set on application level
-				scope.modules.cache.isExists('isArchived', function (err, isExist) {
-					if (!isExist) {
-						scope.modules.cache.setJsonForKey('isArchived', false);
-					}
-					scope.modules.cache.getJsonForKey('isArchived', function (err, isArchived) {
-						if (date.getDate() === 1 && !isArchived) {
-							scope.modules.cache.setJsonForKey('isArchived', true);
-							logger.archive('start executing archiving files');
-							var createZip = require('./create-zip');
-							var year = date.getFullYear();
-							var month = date.toLocaleString("en-us", { month: "long" });
-							var dir = path.join(__dirname + '/archive/' + year + '/' + month);
-							createZip.createDir(dir, function (err) {
-								if (!err) {
-									createZip.archiveLogFiles(dir, function (err) {
-										if (!err) {
-											logger.archive('files are archived');
-										} else {
-											logger.archive('archive error : ' + err);
-										}
-									});
-								} else {
-									logger.archive('directory creation error : ' + err);
-								}
-							});
-						}
-					});
-				});
-			});
- */
 			/**
 			 * Handles app instance (acts as global variable, passed as parameter).
 			 * @global
