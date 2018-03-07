@@ -4,27 +4,27 @@ Describe brief description about ETP here
 ## Prerequisite for ETP system
 This sections provides details on what you need install on your system in order to run ETP.
 
-1. Supported Plateforms:
+### Supported Plateforms:
    Ubuntu 14.04 x86_64
    Ubuntu 16.04 (LTS) x86_64
 
-2. Tool chain components -- Used for compiling dependencies
+### Tool chain components -- Used for compiling dependencies
 ```
 sudo apt-get install -y python build-essential curl automake autoconf libtool
 ```
 
-3. Git -- Used for cloning and updating ETP
+### Git -- Used for cloning and updating ETP
 ```
 sudo apt-get install -y git
 ```
 
-4. Node.js -- Node.js serves as the underlying engine for code execution.
+### Node.js -- Node.js serves as the underlying engine for code execution.
 ```
 curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
 sudo apt-get install -y nodejs
 ```
 
-5. PostgreSQL (version 9.6.2) -- PostgreSQL is the database used for this application
+### PostgreSQL (version 9.6.2) -- PostgreSQL is the database used for this application
 ```
 curl -sL "https://downloads.lisk.io/scripts/setup_postgresql.Linux" | bash -
 sudo -u postgres createuser --createdb $USER
@@ -32,7 +32,7 @@ sudo -u postgres createdb <database_name> //ETP_test in our system
 sudo -u postgres psql -d <database_name> -c "alter user "$USER" with password 'password';"
 ```
 
-6. Installing Redis -- Redis is used for cached storage
+### Installing Redis -- Redis is used for cached storage
 Ubuntu/Debian:
 ```
 sudo apt-get install redis-server
@@ -47,36 +47,37 @@ service redis stop
 ```
 **NOTE:** ETP does not run on the redis default port of 6379. Instead it is configured to run on port: 6380. Because of this, in order for ETP to run, you have one of two options:
 
-   1. Change the Lisk configuration
+1. Change the Lisk configuration
 Update the redis port configuration in both `config.json` and `test/data/config.json`. Note that this is the easiest option, however, be mindful of reverting the changes should you make a pull request.
 
-   2. Change the Redis launch configuration
+2. Change the Redis launch configuration
 Update the launch configuration file on your system. Note that their a number of ways to do this. The following is one way:
 
    1. Stop redis-server
    2. Edit the file `redis.conf` and change: `port 6379` to `port 6380`
+   
     ```
         Ubuntu/Debian: /etc/redis/redis.conf
         MacOS: /usr/local/etc/redis.conf
     ```
-   3.  Start redis-server
+3.  Start redis-server
 Now confirm that redis is running on port 6380:
 ```
 redis-cli -p 6380
 ping
 ```
 
-7. Bower -- Bower helps to install required JavaScript dependencies.
+### Bower -- Bower helps to install required JavaScript dependencies.
 ```
 npm install -g bower
 ```
 
-8. Grunt.js -- Grunt is used to compile the frontend code and serves other functions.
+### Grunt.js -- Grunt is used to compile the frontend code and serves other functions.
 ```
 npm install -g grunt-cli
 ```
 
-9. Elasticsearch -- Elasticsearch is used for search optimization 
+### Elasticsearch -- Elasticsearch is used for search optimization 
 ```
 sudo apt-get install openjdk-8-jre
 curl -L -O https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.2.2.deb
@@ -85,7 +86,7 @@ sudo /etc/init.d/elasticsearch start
 sudo service elasticsearch start
 ```
 
-10. Prometheus -- Prometheus is used to monitor app's performance
+### Prometheus -- Prometheus is used to monitor app's performance
 [Reference to install prometheus](https://prometheus.io/docs/prometheus/latest/installation/)
 
 ## ETP Installation
