@@ -24,7 +24,7 @@
  */
 
 //app monitoring configuration on console/UI 
-require('appmetrics-dash').monitor();
+/*require('appmetrics-dash').monitor();
 
 // App Monitoring on console
 var appmetrics = require('appmetrics');
@@ -48,7 +48,7 @@ monitoring.on('postgres', function (data) {
 
 monitoring.on('redis', function (data) {
 	//console.log(chalk.green('redis') + ' : ' +chalk.yellow('[ETPCoinMetric] duration='+data.duration+' ms cmd='+data.cmd));
-});
+});*/
 
 
 //Requiring Modules

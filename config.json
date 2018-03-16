@@ -1,6 +1,6 @@
 {
     "port":7000,
-    "address": "0.0.0.0",
+    "address": "159.65.139.248",
     "version": "0.9.9a",
     "minVersion": ">=0.9.0",
     "fileLogLevel": "info",
@@ -10,10 +10,10 @@
     "topAccounts": false,
     "cacheEnabled": true,
     "db": {
-        "host": "localhost",
+        "host": "159.65.135.70",
         "port": 5432,
         "database": "ETP_test",
-        "user": "",
+        "user": "root",
         "poolSize": 95,
         "poolIdleTimeout": 30000,
         "reapIntervalMillis": 1000,
@@ -22,7 +22,7 @@
         ]
     },
     "redis": {
-        "host": "127.0.0.1",
+        "host": "159.65.131.229",
         "port": 6380,
         "db": 0
     },
@@ -110,6 +110,6 @@
     "app": {},
     "sender": {},
     "nethash": "da3ed6a45429278bac2666961289ca17ad86595d33b31037615d4b8e8f158bba",
-    "elasticsearchHost": "127.0.0.1",
+    "elasticsearchHost": "159.65.139.247",
     "swaggerDomain": "192.168.9.91"
 }
