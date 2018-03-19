@@ -339,13 +339,38 @@ You will get the status like:
 Feb 12 12:02:52 hotamsingh systemd[1]: Started Elasticsearch.
 ```
 
-# Contributors
-[https://github.com/oodlestechnologies/ETPCoin/graphs/contributors](https://github.com/oodlestechnologies/ETPCoin/graphs/contributors)
+# ERROR 11:
+Make not found error
 
-# License
-License info here
+# Solution:
+If it's Ubuntu you'll need to install the build-essential package:
 
-# Authors 
+$ sudo apt-get install build-essential
+
+# ERROR 12:
+If sodium package not install with error:
+
+Static libsodium was not found at /root/ETPCoin/node_modules/sodium/deps/build/lib/libsodium so compiling libsodium from source.
+libtool is required, but wasn't found on this system
+Makefile:61: recipe for target 'libsodium' failed
+make: *** [libsodium] Error 1
+/root/ETPCoin/node_modules/sodium/install.js:288
+            throw new Error(cmdLine + ' exited with code ' + code);
+            ^
+
+Error: make libsodium exited with code 2
+    at ChildProcess.<anonymous> (/root/ETPCoin/node_modules/sodium/install.js:288:19)
+    at emitTwo (events.js:126:13)
+    at ChildProcess.emit (events.js:214:7)
+
+# Solution :
+
+Run two commands:-
+sudo apt-get install libtool
+
+sudo apt-get install autoconf
+
+################################# Authors #####################################
 
 - Hotam Singh <hotam.singh@oodlestechnologies.com>
 - Navin Purohit <navin.purohit@oodlestechnologies.com>
