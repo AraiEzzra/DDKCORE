@@ -366,9 +366,10 @@ Error: make libsodium exited with code 2
 # Solution :
 
 Run two commands:-
-sudo apt-get install libtool
-
-sudo apt-get install autoconf
+```
+$ sudo apt-get install libtool
+$ sudo apt-get install autoconf
+```
 
 ################################# Authors #####################################
 
