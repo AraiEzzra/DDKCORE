@@ -16,6 +16,7 @@ var cache = require('./cache.js');
 var config = require('../config.json');
 var utils = require('../utils');
 var jwt = require('jsonwebtoken');
+var slots = require('../helpers/slots.js');
 
 // Private fields
 var modules, library, self, __private = {}, shared = {};
@@ -800,6 +801,7 @@ Accounts.prototype.shared = {
 
 	migrateData: function (req, cb) {
 
+
 		try {
 			var balance;
 			if (req.body.data.balance_d == null) {
@@ -823,8 +825,43 @@ Accounts.prototype.shared = {
 		)
 			.then(function () {
 
-				console.log("migrattion");
+				//To-do
+			})
+			.catch(function (err) {
+				library.logger.error(err.stack);
+				return setImmediate(cb, err.toString());
+			});			
 
+		library.db.query(sql.getETPSStakeOrders, {
+			account_id: req.body.data.id
+		})
+			.then(function (orders) {
+
+				orders.forEach(function (order) {
+/* 
+					var date = new Date((slots.getTime(order.insert_time))*1000);
+					var m=(date.setMinutes(date.getMinutes() + constants.froze.milestone))/1000;
+					var n = (date.setMinutes(date.getMinutes() - constants.froze.milestone + constants.froze.endTime))/1000;
+					 */
+					library.db.none(sql.InsertStakeOrder, {
+						account_id: req.body.data.id,
+						startTime: (slots.getTime(order.insert_time)),
+						endTime: 0,
+						senderId: req.body.address,
+						freezedAmount: order.cost * 100000000,
+						milestoneCount: 0,
+						nextMilestone: 0,
+						status: order.status
+					})
+						.then(function () {
+
+						})
+						.catch(function (err) {
+							library.logger.error(err.stack);
+							return setImmediate(cb, err.toString());
+						});
+				});
+				return setImmediate(cb, null, { success: true, message: "Successfully migrated" });
 			})
 			.catch(function (err) {
 				library.logger.error(err.stack);

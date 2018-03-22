@@ -35,8 +35,14 @@ angular.module('ETPApp').controller('newUserMigrationController', ["$scope", "$h
         $http.post("/api/accounts/migrateData/", {
             data: data,
             address: address
-        }).then(function (resp) {
-
+        }).success(function (resp) {
+            if (!resp.success) {
+                console.log("Migration failed :",resp.error);
+            } else {
+                console.log(resp.message);
+            }
+        }).error(function (err) {
+            console.error("Migration failed : ",err.toString());
         });
 
     }
