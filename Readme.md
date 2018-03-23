@@ -344,9 +344,9 @@ Make not found error
 
 # Solution:
 If it's Ubuntu you'll need to install the build-essential package:
-
+```
 $ sudo apt-get install build-essential
-
+```
 # ERROR 12:
 If sodium package not install with error:
 
