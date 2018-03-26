@@ -709,6 +709,7 @@ Transactions.prototype.shared = {
 	},
 
 	addTransactions: function (req, cb) {
+		console.log("Navin");
 		library.schema.validate(req.body, schema.addTransactions, function (err) {
 			if (err) {
 				return setImmediate(cb, err[0].message);
