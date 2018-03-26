@@ -1,3 +1,5 @@
+'use strict';
+
 // elastic search server connection
 var elasticsearch = require('elasticsearch');
 var config = require('../config.json');
