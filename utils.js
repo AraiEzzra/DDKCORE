@@ -1,9 +1,10 @@
 'use strict';
-var esClient = require('./elasticsearch/connection');
 
-// validate client
+var esClient = require('./elasticsearch/connection');
+var Accounts = require('./modules/accounts');
+
+//FIXME: validate client here. currently not implemented 
 exports.validateClient = function (req, res, next) {
-	//validate client here. currently not implemented
 	next();
 };
 
@@ -49,6 +50,9 @@ exports.makeBulk = function (list, index) {
 		} else {
 			indexId = list[current].height;
 		} 
+		if(index === 'blocks') {
+			list[current].generatorId = Accounts.prototype.generateAddressByPublicKey(list[current].generatorPublicKey);
+		}
 		
 		bulk.push(
 			{ index: { _index: index, _type: index, _id: indexId } },

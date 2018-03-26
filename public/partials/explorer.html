@@ -2,10 +2,10 @@
 <!--For Top Bar-->
 <div class="row">
     <div class="col-md-3 col-sm-6 pr7">
-        <div class="widget smart-standard-widget ch-title-border-top">
+        <div class="widget smart-standard-widget ch-title-border-top min-h-83">
             <div class="widget-caption info">
                 <div class="widget-detail">
-                    <h3 class="cl-info ch-title">19901</h3>
+                    <h3 class="cl-info ch-title">{{blockchainHeight}}</h3>
                     <span class="info-heading">Chain Height</span>
                 </div>
             </div>
@@ -13,7 +13,7 @@
         </div>
     </div>
     <div class="col-md-3 col-sm-6 pr7 pl7">
-        <div class="widget smart-standard-widget red-border-top">
+        <div class="widget smart-standard-widget red-border-top min-h-83">
             <div class="widget-caption info">
                 <div class="widget-detail">
                     <h3 class="cl-info ch-title red-color">$63.5</h3>
@@ -25,7 +25,7 @@
     </div>
 
     <div class="col-md-3 col-sm-6 pr7 pl7">
-        <div class="widget smart-standard-widget orange-border-top">
+        <div class="widget smart-standard-widget orange-border-top min-h-83">
             <div class="widget-caption info">
                 <div class="widget-detail">
                     <h3 class="cl-info ch-title orange-color">$7877539.05</h3>
@@ -37,10 +37,10 @@
     </div>
 
     <div class="col-md-3 col-sm-6 pl7">
-        <div class="widget smart-standard-widget green-border-top">
+        <div class="widget smart-standard-widget green-border-top min-h-83">
             <div class="widget-caption info">
                 <div class="widget-detail">
-                    <h3 class="cl-info ch-title green-color">134259</h3>
+                    <h3 class="cl-info ch-title green-color">{{totalTransaction}}</h3>
                     <span class="info-heading">Transactions</span>
                 </div>
             </div>
@@ -51,9 +51,10 @@
 <!--End Top Bar-->
 
 <div class="row">
+
     <!-- For Latest Block Details -->
     <div class="col-xs-12">
-        <div class="panel panel-default" ng-class="{'paginated': countForgingBlocks || !searchBlocks.searchForBlock}">
+        <!-- <div class="panel panel-default" ng-class="{'paginated': countForgingBlocks || !searchBlocks.searchForBlock}">
             <div class="panel-heading">
                 <h2>
                     {{'Latest Block Details'|translate}}
@@ -79,7 +80,7 @@
                     <td data-title="tableBlocks.cols.generatedBy"><a href="#" ng-click="userInfo(block.generatorId)">{{block.generatorId}}</a></td>
                     <td data-title="tableBlocks.cols.amount"><a href="#">{{block.numberOfTransactions}}</a></td>
                     <td data-title="tableBlocks.cols.fee">{{block.totalAmount  | ETPFilter}}</td>
-                    <td data-title="tableBlocks.cols.monthlyReward" sortable="'reward'">{{block.reward | ETPFilter}}</td>
+                    <td data-title="tableBlocks.cols.Reward" sortable="'reward'">{{block.reward | ETPFilter}}</td>
                </tr>
                 <tr ng-show="!loading && (!$data || $data.length == 0) && !searchBlocks.searchForBlock">
                     <td colspan="8">
@@ -97,37 +98,61 @@
                 <div class="logo-grey"></div>
                 <p class="empty-state-text"><translate>No results for this search.</translate></p>
             </div>
-        </div>
-    </div>
-    
-    <!-- For Latest Block Details -->
-    <div class="col-xs-12">
+        </div> -->
+
+
+
+
+
+
+
+
         <div class="panel panel-default" ng-class="{'paginated': countForgingBlocks || !searchBlocks.searchForBlock}">
             <div class="panel-heading">
-                <h2>
-                    {{'Latest Transaction Details'|translate}}
-                </h2>
+                <h2>{{'Latest Block Details'|translate}}</h2>
             </div>
-            <table ng-show="countForgingBlocks  || !searchBlocks.searchForBlock" ng-table="tableBlocks" border="0" width="100%" cellpadding="0" cellspacing="0"
-                    template-pagination="custom/pager">
+            <table ng-show="countForgingBlocks  || !searchBlocks.searchForBlock" ng-table="tableBlocks" border="0" width="100%" cellpadding="0"
+                cellspacing="0" template-pagination="custom/pager">
                 <div class="table-menu" ng-show="countForgingBlocks || !searchBlocks.searchForBlock">
                     <div class="more-down-table" dropdown on-toggle="toggled(open)" is-open="moreDownTable.isopen">
                         <i class="mdi-navigation-more-vert" dropdown-toggle aria-haspopup="true" aria-expanded="false"></i>
 
                         <div class="dropdown-menu" role="menu">
-                            <p ng-click="check($event)"><input type="checkbox" class="filled-in violet" id="advanced" ng-model="showAllColumns"><label for="advanced"><translate>Show All Columns</translate></label></p>
-                            <p ng-click="check($event)"><input type="checkbox" class="filled-in violet" id="fulltime" ng-model="showFullTime"><label for="fulltime"><translate>Show Full Time</translate></label></p>
+                            <p ng-click="check($event)">
+                                <input type="checkbox" class="filled-in violet" id="advanced" ng-model="showAllColumns">
+                                <label for="advanced">
+                                    <translate>Show All Columns</translate>
+                                </label>
+                            </p>
+                            <p ng-click="check($event)">
+                                <input type="checkbox" class="filled-in violet" id="fulltime" ng-model="showFullTime">
+                                <label for="fulltime">
+                                    <translate>Show Full Time</translate>
+                                </label>
+                            </p>
                         </div>
                     </div>
                 </div>
-                <tr ng-repeat="block in $data" ng-class="{'voted': address == block.generatorId}">
-                    <td data-title="tableBlocks.cols.height" sortable="'height'" ng-click="blockInfo(block)" class="pointer"><a href="#">{{block.height}}</a></td>
-                    <td data-title="tableBlocks.cols.blockId" ng-click="blockInfo(block)" class="pointer" ng-show="showAllColumns"><a href="#">{{block.id}}</a></td>
-                    <td data-title="tableBlocks.cols.generator" ng-show="showAllColumns"><a href="#" ng-click="userInfo(block.generatorId)">{{block.generatorId}}</a></td>
-                    <td data-title="tableBlocks.cols.timestamp" sortable="'timestamp'"><span ng-show="block.timestamp > 0">{{block.timestamp | timeAgoFilter : showFullTime}}</span> <span ng-show="block.timestamp == 0">-</span></td>
-                    <td data-title="tableBlocks.cols.numberOfTransactions" ng-click="showBlock(block)" class="pointer"><a href="#">{{block.numberOfTransactions}}</a></td>
-                    <td data-title="tableBlocks.cols.totalAmount" sortable="'totalAmount'">{{block.totalAmount  | ETPFilter}}</td>
-                    <td data-title="tableBlocks.cols.totalFee" sortable="'totalFee'">{{block.totalFee  | ETPFilter}}</td>
+                <!--  <tr ng-repeat="block in $data" ng-class="{'voted': address == block.generatorId}"></tr> -->
+                <tr ng-repeat="block in $data">
+                    <td data-title="tableBlocks.cols.height" sortable="'height'" ng-click="blockInfo(block)" class="pointer">
+                        <a href="#">{{block.height}}</a>
+                    </td>
+                    <td data-title="tableBlocks.cols.blockId" ng-click="blockInfo(block)" class="pointer" ng-show="showAllColumns">
+                        <a href="#">{{block.id}}</a>
+                    </td>
+                    <td data-title="tableBlocks.cols.generator" ng-show="showAllColumns">
+                        <a href="#" ng-click="userInfo(block.generatorId)">{{block.generatorId}}</a>
+                    </td>
+                    <td data-title="tableBlocks.cols.timestamp" sortable="'timestamp'">
+                        <span ng-show="block.timestamp > 0">{{block.timestamp | timeAgoFilter : showFullTime}}</span>
+                        <span ng-show="block.timestamp == 0">-</span>
+                    </td>
+                    <td data-title="tableBlocks.cols.numberOfTransactions" ng-click="showBlock(block)" class="pointer">
+                        <a href="#">{{block.numberOfTransactions}}</a>
+                    </td>
+                    <td data-title="tableBlocks.cols.totalAmount" sortable="'totalAmount'">{{block.totalAmount | ETPFilter}}</td>
+                    <td data-title="tableBlocks.cols.totalFee" sortable="'totalFee'">{{block.totalFee | ETPFilter}}</td>
                     <td data-title="tableBlocks.cols.reward" sortable="'reward'">{{block.reward | ETPFilter}}</td>
                     <td data-title="''" class="width-80"></td>
                 </tr>
@@ -142,16 +167,102 @@
                     </td>
                 </tr>
             </table>
-            <div class="panel-body empty-body empty-table"
-                    ng-if="!countForgingBlocks && searchBlocks.searchForBlock">
+            <div class="panel-body empty-body empty-table" ng-if="!countForgingBlocks && searchBlocks.searchForBlock">
+                <p class="empty-state-text">
+                    <translate>No results for this search.</translate>
+                </p>
+            </div>
+        </div>
+
+
+
+
+
+
+
+
+
+
+
+
+    </div>
+    
+    <!-- For Latest Block Details -->
+    <div class="col-xs-12">
+        <div class="panel panel-default" ng-class="{'paginated': countForgingBlocks || !searchTransactions.searchForTransaction}">
+            <div class="panel-heading">
+                <h2>
+                    {{'Latest Transactions Details'|translate}}
+                </h2>
+            </div>
+            <table ng-show="countForgingBlocks || !searchTransactions.searchForTransaction" ng-table="tableTransactions" border="0" width="100%" cellpadding="0" cellspacing="0">
+                <div class="table-menu" ng-show="countForgingBlocks || !searchTransactions.searchForTransaction">
+                    <div class="more-down-table" dropdown on-toggle="toggled(open)" is-open="moreDownTable.isopen">
+                        <i class="mdi-navigation-more-vert" dropdown-toggle aria-haspopup="true" aria-expanded="false"></i>
+                        <div class="dropdown-menu" role="menu">
+                            <p ng-click="check($event)"><input type="checkbox" class="filled-in violet" id="advanced" ng-model="showAllColumns">
+                                <label for="advanced"><translate>Show All Columns</translate></label>
+                            </p>
+                            <p ng-click="check($event)"><input type="checkbox" class="filled-in violet" id="fulltime" ng-model="showFullTime">
+                                <label for="fulltime"><translate>Show Full Time</translate></label>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <tr ng-repeat="transaction in unconfirmedTransactions" class="checked">
+                    <td data-title="tableTransactions.cols.height" sortable="'height'"></td>
+                    <td class="td-amount" ng-show="showAllColumns" data-title="tableTransactions.cols.id" class="pointer">
+                        <a href="#" ng-click="transactionInfo(transaction)">{{transaction.id}}</a>
+                    </td>
+                    <td class="td-amount" data-title="tableTransactions.cols.senderId" class="pointer" sortable="'senderId'">
+                        <a href="#" ng-click="userInfo(transaction.senderId)">{{transaction.senderId}}</a>
+                    </td>
+                    <td class="td-amount" data-title="tableTransactions.cols.recipientId" class="pointer" sortable="'recipientId'">
+                        <a href="#" ng-click="userInfo(transaction.recipientId)">{{transaction.recipientId}}</a>
+                    </td>
+                    <td data-title="tableTransactions.cols.timestamp" sortable="'timestamp'">{{transaction.timestamp | timeAgoFilter : showFullTime}}
+                    </td>
+                    <td class="td-amount" data-title="tableTransactions.cols.amount" sortable="'amount'">
+                        <i ng-if="transaction.recipientId==transaction.senderId" class="vertical-text mdi-image-brightness-1 cloud-font"></i>
+                        <i ng-if="transaction.recipientId!=transaction.senderId" class="vertical-text" ng-class="{'mdi-content-add-circle dark-meent-font': transaction.recipientId==address, 'mdi-content-remove-circle dark-red-font': transaction.senderId==address}"></i>
+                        {{transaction.amount | ETPFilter}}
+                    </td>
+                    <td data-title="tableTransactions.cols.fee">{{transaction.fee | ETPFilter}}</td>
+                    <td data-title="''"></td>
+                </tr>
+                <tr ng-repeat="transaction in $data">
+                    <td data-title="tableTransactions.cols.height" sortable="'height'">{{transaction.height}}</td>
+                    <td class="td-amount" ng-show="showAllColumns" data-title="tableTransactions.cols.id" class="pointer">
+                        <a href="#" ng-click="transactionInfo(transaction)">{{transaction.id}}</a>
+                    </td>
+                    <td class="td-amount" data-title="tableTransactions.cols.senderId" class="pointer" sortable="'senderId'">
+                        <a href="#" ng-click="userInfo(transaction.senderId)">{{transaction.senderId}}</a>
+                    </td>
+                    <td class="td-amount" data-title="tableTransactions.cols.recipientId" class="pointer" sortable="'recipientId'">
+                        <a href="#" ng-click="userInfo(transaction.recipientId)">{{transaction.recipientId}}</a>
+                    </td>
+                    <td data-title="tableTransactions.cols.timestamp" sortable="'timestamp'">{{transaction.timestamp | timeAgoFilter : showFullTime}}
+                    </td>
+                    <td class="td-amount" data-title="tableTransactions.cols.amount" sortable="'amount'">
+                        <i ng-if="transaction.recipientId==transaction.senderId" class="vertical-text mdi-image-brightness-1 cloud-font"></i>
+                        <i ng-if="transaction.recipientId!=transaction.senderId" class="vertical-text" ng-class="{'mdi-content-add-circle dark-meent-font': transaction.recipientId==address, 'mdi-content-remove-circle dark-red-font': transaction.senderId==address}"></i>
+                        {{transaction.amount | ETPFilter}}
+                    </td>
+                    <td data-title="tableTransactions.cols.fee" sortable="'fee'">{{transaction.fee | ETPFilter}}
+                    </td>
+                    <td data-title="''"></td>
+                </tr>
+            </table>
+            <div class="panel-body empty-body empty-table without-margin-top" ng-if="!countForgingBlocks && searchTransactions.searchForTransaction">
                 <div class="logo-grey"></div>
-                <p class="empty-state-text"><translate>No results for this search.</translate></p>
+                <p class="empty-state-text">{{'No results for this search.'|translate}}</p>
             </div>
         </div>
     </div>
 </div>
 
-<div class="row">
+<!-- For ETP Tansaction Per Day and ETP Price -->
+<!-- <div class="row">
     <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
         <div class="panel panel-default">
             <div class="panel-heading">
@@ -179,4 +290,4 @@
                 </div>
             </div>
     </div>
-</div>
+</div> -->

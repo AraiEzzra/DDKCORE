@@ -1,7 +1,4 @@
-// added to monitor application performance using prometheus
-/**
- * Newly added requires
- */
+// added to monitor application performance using elastic search
 var Register = require('prom-client').register;  
 var Counter = require('prom-client').Counter;  
 var Histogram = require('prom-client').Histogram;  

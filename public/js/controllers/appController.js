@@ -1,7 +1,7 @@
 require('angular');
 var compareVersion = require('../../node_modules/compare-version/index.js');
 
-angular.module('ETPApp').controller('appController', ['dappsService', '$scope', '$rootScope', '$http', "userService", "$interval", "$timeout", 'viewFactory', '$state', 'blockService', 'sendTransactionModal', 'registrationDelegateModal', 'serverSocket', 'delegateService', '$window', 'forgingModal', 'errorModal', 'userInfo', 'transactionsService', 'secondPassphraseModal', 'focusFactory', 'gettextCatalog', '$location', 'AuthService', 'freezeAmountModal', function (dappsService, $rootScope, $scope, $http, userService, $interval, $timeout, viewFactory, $state, blockService, sendTransactionModal, registrationDelegateModal, serverSocket, delegateService, $window, forgingModal, errorModal, userInfo, transactionsService, secondPassphraseModal, focusFactory, gettextCatalog, $location, AuthService, freezeAmountModal) {
+angular.module('ETPApp').controller('appController', ['dappsService', '$scope', '$rootScope', '$http', "userService", "$interval", "$timeout", 'viewFactory', '$state', 'blockService', 'sendTransactionModal', 'registrationDelegateModal', 'serverSocket', 'delegateService', '$window', 'forgingModal', 'errorModal', 'userInfo', 'transactionsService', 'secondPassphraseModal', 'focusFactory', 'gettextCatalog', '$location', 'AuthService', 'freezeAmountModal', 'otpModal', function (dappsService, $rootScope, $scope, $http, userService, $interval, $timeout, viewFactory, $state, blockService, sendTransactionModal, registrationDelegateModal, serverSocket, delegateService, $window, forgingModal, errorModal, userInfo, transactionsService, secondPassphraseModal, focusFactory, gettextCatalog, $location, AuthService, freezeAmountModal, otpModal) {
 
     $scope.searchTransactions = transactionsService;
     $scope.searchDapp = dappsService;
@@ -235,6 +235,76 @@ angular.module('ETPApp').controller('appController', ['dappsService', '$scope', 
             }
         });
     }
+
+    function validateForm (onValid) {
+        var isAddress = /^[0-9]+[E|e]$/g;
+        var correctAddress = isAddress.test($scope.to);
+        $scope.errorMessage = {};
+
+        if ($scope.to.trim() == '') {
+            $scope.errorMessage.recipient = 'Empty recipient';
+            $scope.presendError = true;
+        } else {
+            if (correctAddress) {
+                if ($scope.isCorrectValue($scope.amount)) {
+                    return onValid();
+                } else {
+                    $scope.presendError = true;
+                }
+            } else {
+                $scope.errorMessage.recipient = 'Invalid recipient';
+                $scope.presendError = true;
+            }
+        }
+    }
+
+    $scope.passcheck=function(){
+        $scope.passcheck = function (fromSecondPass) {
+            if (fromSecondPass) {
+                $scope.checkSecondPass = false;
+                $scope.passmode = $scope.rememberedPassphrase ? false : true;
+                if ($scope.passmode) {
+                    $scope.focus = 'secretPhrase';
+                }
+                $scope.secondPhrase = '';
+                $scope.secretPhrase = '';
+                return;
+            }
+            if ($scope.rememberedPassphrase) {
+                validateForm(function () {
+                    $scope.presendError = false;
+                    $scope.errorMessage = {};
+                    $scope.sendTransaction($scope.rememberedPassphrase);
+                });
+            } else {
+                validateForm(function () {
+                    $scope.presendError = false;
+                    $scope.errorMessage = {};
+                    $scope.passmode = !$scope.passmode;
+                    $scope.focus = 'secretPhrase';
+                    $scope.secretPhrase = '';
+                });
+            }
+        }
+    }
+
+    /* $scope.OTPModalPopup = function () {
+        $http.post("api/transactions/generateOTP")
+        .then(function (resp) {
+            console.log('resp : ', resp);
+            /* if (resp.data.success) {
+                $scope.ismasterpasswordenabled = resp.data.enabled;
+            } 
+        });
+        $scope.otpModal = otpModal.activate({
+            destroy: function () {
+            }
+        });
+    } */
+
+
+
+
 
 
     $scope.setSecondPassphrase = function () {
@@ -572,6 +642,9 @@ angular.module('ETPApp').controller('appController', ['dappsService', '$scope', 
         $scope.getVersion();
     }, 60 * 10 * 1000);
 
+    
+    
+    
     $scope.myClass = [];
     $scope.classAdd = function () {
         $scope.myClass.push('test');
@@ -581,11 +654,22 @@ angular.module('ETPApp').controller('appController', ['dappsService', '$scope', 
     }
 
     window.onpopstate = function (event) {
-        if ($scope.myClass.length != 0) {
+
+       if ($scope.myClass.length != 0) {
             $scope.classRemove();
         } else {
+            if($state.current.name=='main.dashboard') return;
             $scope.classAdd();
         }
+
+
     };
+
+
+
+
+
+
+
 
 }]);
