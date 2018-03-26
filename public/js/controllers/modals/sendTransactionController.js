@@ -64,7 +64,14 @@ angular.module('ETPApp').controller('sendTransactionController', ['$scope', 'sen
         }
     }
 
-    $scope.passcheck = function (fromSecondPass) {
+    $scope.passcheck = function (fromSecondPass, otp) {
+        console.log('outside otp : ', otp);
+        if(otp) {
+            console.log('inside otp : ', otp);
+            $scope.otp = otp;
+        }
+        console.log('passcheck called');
+        $scope.OTP = false;
         if (fromSecondPass) {
             $scope.checkSecondPass = false;
             $scope.passmode = $scope.rememberedPassphrase ? false : true;
@@ -90,6 +97,21 @@ angular.module('ETPApp').controller('sendTransactionController', ['$scope', 'sen
                 $scope.secretPhrase = '';
             });
         }
+    }
+
+    $scope.OTPModalPopup = function () {
+        $http.post("api/transactions/generateOTP")
+        .then(function (resp) {
+            console.log('resp : ', resp);
+            $scope.OTP = true;
+            /* if (resp.data.success) {
+                $scope.ismasterpasswordenabled = resp.data.enabled;
+            } */
+        });
+        /* $scope.otpModal = otpModal.activate({
+            destroy: function () {
+            }
+        }); */
     }
 
     $scope.close = function () {
@@ -122,7 +144,33 @@ angular.module('ETPApp').controller('sendTransactionController', ['$scope', 'sen
         $http.get('/api/blocks/getFee').then(function (resp) {
                 $scope.currentFee = resp.data.fee;
                 $scope.fee = resp.data.fee;
-            });
+            });$scope.passcheck = function (fromSecondPass) {
+                if (fromSecondPass) {
+                    $scope.checkSecondPass = false;
+                    $scope.passmode = $scope.rememberedPassphrase ? false : true;
+                    if ($scope.passmode) {
+                        $scope.focus = 'secretPhrase';
+                    }
+                    $scope.secondPhrase = '';
+                    $scope.secretPhrase = '';
+                    return;
+                }
+                if ($scope.rememberedPassphrase) {
+                    validateForm(function () {
+                        $scope.presendError = false;
+                        $scope.errorMessage = {};
+                        $scope.sendTransaction($scope.rememberedPassphrase);
+                    });
+                } else {
+                    validateForm(function () {
+                        $scope.presendError = false;
+                        $scope.errorMessage = {};
+                        $scope.passmode = !$scope.passmode;
+                        $scope.focus = 'secretPhrase';
+                        $scope.secretPhrase = '';
+                    });
+                }
+            }
     }
 
     $scope.isCorrectValue = function (currency, throwError) {
@@ -211,7 +259,8 @@ angular.module('ETPApp').controller('sendTransactionController', ['$scope', 'sen
             secret: secretPhrase,
             amount: $scope.convertETP($scope.amount),
             recipientId: $scope.to,
-            publicKey: userService.publicKey
+            publicKey: userService.publicKey,
+            otp: $scope.otp
         };
 
         if ($scope.secondPassphrase) {

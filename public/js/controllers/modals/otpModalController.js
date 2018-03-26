@@ -1,0 +1,9 @@
+require('angular');
+
+angular.module('ETPApp').controller("otpModalController", ["$scope", "otpModal", function ($scope, otpModal) {
+
+    $scope.close = function () {
+        otpModal.deactivate();
+    }
+
+}]);
