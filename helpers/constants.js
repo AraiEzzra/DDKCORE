@@ -42,7 +42,7 @@
  * @property {number} unconfirmedTransactionTimeOut - 1080 blocks
  */
 module.exports = {
-	activeDelegates: 1,
+	activeDelegates: 3,
 	maxVotesPerTransaction: 33,
 	addressLength: 208,
 	blockHeaderLength: 248,
