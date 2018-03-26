@@ -77,6 +77,7 @@
     },
     "forging": {
         "force": true,
+        "secret": ["hen worry two thank unfair salmon smile oven gospel grab latin reason"],
         "access": {
             "whiteList": [
                 "127.0.0.1",
