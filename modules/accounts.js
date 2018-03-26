@@ -783,7 +783,7 @@ Accounts.prototype.shared = {
 	},
 	existingETPSUser: function (req, cb) {
 		library.db.one(sql.checkAlreadyMigrated, {
-			username: req.body.userInfo[0].username
+			username: req.body.userInfo.username
 		})
 		.then(function (data) {
 			return setImmediate(cb, null, { isMigrated: data.isMigrated });
@@ -800,44 +800,58 @@ Accounts.prototype.shared = {
 
 	migrateData: function (req, cb) {
 
-		library.db.one(sql.updateUserInfo, {
+		try {
+			var balance;
+			if (req.body.data.balance_d == null) {
+				balance = 0;
+			} else {
+				balance = parseFloat(req.body.data.balance_d) * 100000000;
+			}
+		} catch (err) {
+			return setImmediate(cb, err.toString());
+		}
+
+
+		library.db.none(sql.updateUserInfo, {
 			address: req.body.address,
-			balance: req.body.data[0].balance * 100000000,
-			email: req.body.data[0].email,
-			phone:req.body.data[0].phone,
-			username:req.body.data[0].username,
-			country:req.body.data[0].country
+			balance: parseInt(balance),
+			email: req.body.data.email,
+			phone: req.body.data.phone,
+			username: req.body.data.username,
+			country: req.body.data.country
 		}
 		)
-		.then(function (data) {
-			
-			/* 
-			**
-			* To Do// Insert into stake order table 
-			*/
-			
-		})
-		.catch(function (err) {
-			library.logger.error(err.stack);
-			return setImmediate(cb, err.toString());
-		});
+			.then(function () {
+
+				console.log("migrattion");
+
+			})
+			.catch(function (err) {
+				library.logger.error(err.stack);
+				return setImmediate(cb, err.toString());
+			});
 
 	},
 
 	validateExistingUser: function (req, cb) {
 
+		var data =req.body.data;
+		var username = Buffer.from((data.split("&")[0]).split("=")[1], 'base64').toString();
+		var password = Buffer.from((data.split("&")[1]).split("=")[1], 'base64').toString();
+
+		var hashPassword = crypto.createHash('md5').update(password).digest('hex');
+
 		library.db.one(sql.validateExistingUser, {
-			username:req.body.username
+			username: username,
+			password: hashPassword
 		}
-		).then(function (password) {
-			
-			if(password == req.body.password){
-				//to do : after they give there db structure
-			}
+		).then(function (userInfo) {
+
+			return setImmediate(cb, null,{ success: true, userInfo: userInfo });
 			
 		}).catch(function (err) {
 			library.logger.error(err.stack);
-			return setImmediate(cb, err.toString());
+			return setImmediate(cb, "Invalid username or password");
 		});
 
 	}
