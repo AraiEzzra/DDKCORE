@@ -42,7 +42,7 @@ angular.module('ETPApp').controller('stakeController', ['$scope', '$rootScope', 
   $scope.tableStakes.cols = {
     freezedAmount: gettextCatalog.getString('FreezeAmount'),
     status: gettextCatalog.getString('Status'),
-    insertTime: gettextCatalog.getString('InsertTime'),
+    startTime: gettextCatalog.getString('StartTime'),
     matureTime: gettextCatalog.getString('MatureTime'),
     monthRemain: gettextCatalog.getString('MonthRemain'),
     recipient: gettextCatalog.getString('Recipient'),

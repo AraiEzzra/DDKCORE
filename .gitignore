@@ -12,4 +12,4 @@ testUsers.json
 package-lock.json
 .vscode/
 database_backup
-public/
+config.json

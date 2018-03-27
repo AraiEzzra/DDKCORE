@@ -41,7 +41,7 @@
                 <tr ng-repeat="fo in $data">
                     <td data-title="tableStakes.cols.freezedAmount" sortable="'freezedAmount'">{{fo.freezedAmount / 100000000}}</td>
                     <td data-title="tableStakes.cols.status" sortable="'status'">{{fo.status ? 'Active' : 'Inactive'}}</td>
-                    <td data-title="tableStakes.cols.insertTime" sortable="'insertTime'">{{ fo.startTime | timestampFilter}}</td>
+                    <td data-title="tableStakes.cols.startTime" sortable="'startTime'">{{ fo.startTime | timestampFilter}}</td>
                     <td data-title="tableStakes.cols.matureTime" sortable="'matureTime'">{{fo.endTime | timestampFilter}}</td>
                     <td data-title="tableStakes.cols.monthRemain" sortable="'monthRemain'">{{3-fo.milestoneCount}}</td>
                     <td data-title="tableStakes.cols.recipient" sortable="'recipient'">{{fo.recipientId || '-'}}</td>

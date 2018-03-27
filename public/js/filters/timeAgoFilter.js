@@ -7,7 +7,7 @@ angular.module('ETPApp').filter('timeAgoFilter', function ($filter) {
         }
 
         // Epoch time
-        var d = new Date(Date.UTC(2017, 9, 1, 17, 0, 0, 0));
+        var d = new Date(Date.UTC(2016, 0, 1, 17, 0, 0, 0));
         var t = parseInt(d.getTime() / 1000);
 
         time = new Date((time + t) * 1000);

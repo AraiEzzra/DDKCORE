@@ -52,13 +52,14 @@ CREATE TABLE IF NOT EXISTS "stake_orders"(
   "stakeId" SERIAL PRIMARY KEY,
   "status" SMALLINT NOT NULL,
   "startTime" INT NOT NULL,
+  "insertTime" INT NOT NULL,
+  "rewardTime" INT NOT NULL,
   "nextMilestone" INT NOT NULL ,
   "endTime" INT NOT NULL,
   "senderId" VARCHAR(22) NOT NULL,
   "recipientId" VARCHAR(22),
   "freezedAmount" BIGINT DEFAULT 0,
-  "milestoneCount" INT DEFAULT 0,
-  FOREIGN KEY("id") REFERENCES "trs"("id") ON DELETE CASCADE
+  "milestoneCount" INT DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS "signatures"(
