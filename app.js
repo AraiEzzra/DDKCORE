@@ -22,7 +22,7 @@
  * CLI options available.
  * @module app
  */
-
+/*
 //app monitoring configuration on console/UI 
 require('appmetrics-dash').monitor();
 
@@ -50,7 +50,7 @@ monitoring.on('redis', function (data) {
 	//console.log(chalk.green('redis') + ' : ' +chalk.yellow('[ETPCoinMetric] duration='+data.duration+' ms cmd='+data.cmd));
 });
 
-
+*/
 //Requiring Modules
 require('dotenv').config();
 var async = require('async');
@@ -659,7 +659,7 @@ d.run(function () {
 					var d = require('domain').create();
 
 					d.on('error', function (err) {
-						console.log('error : ', err);
+						console.log('error : ' , err);
 						scope.logger.error('Domain ' + name, { message: err.message, stack: err.stack });
 					});
 
@@ -739,6 +739,7 @@ d.run(function () {
 	}, function (err, scope) {
 		if (err) {
 			logger.error(err);
+			console.log("err1",err);
 		} else {
 			
 
