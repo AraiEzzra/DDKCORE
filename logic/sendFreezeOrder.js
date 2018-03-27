@@ -229,6 +229,8 @@ SendFreezeOrder.prototype.sendFreezedOrder = function (userAndOrderData, cb) {
 				{
 					frozeId: userAndOrderData.frozeId,
 					startTime: order.startTime,
+					insertTime: order.insertTime,
+					rewardTime: 0,
 					nextMilestone: order.nextMilestone,
 					endTime: order.endTime,
 					senderId: userAndOrderData.recipientId,

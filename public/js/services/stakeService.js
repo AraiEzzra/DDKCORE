@@ -39,7 +39,7 @@ angular.module('ETPApp').service("stakeService", function ($http, $filter, esCli
             var year = date[2];
             var month = date[1];
             var day = date[0];
-            var d1 = new Date(Date.UTC(2017, 9, 1, 17, 0, 0, 0));
+            var d1 = new Date(Date.UTC(2016, 0, 1, 17, 0, 0, 0));
             var d2 = new Date(Date.UTC(year, (month - 1), day, 17, 0, 0, 0));
             return parseInt((d2.getTime() - d1.getTime()) / 1000);
           }

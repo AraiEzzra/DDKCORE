@@ -52,6 +52,8 @@ CREATE TABLE IF NOT EXISTS "stake_orders"(
   "stakeId" SERIAL PRIMARY KEY,
   "status" SMALLINT NOT NULL,
   "startTime" INT NOT NULL,
+  "insertTime" INT NOT NULL,
+  "rewardTime" INT NOT NULL,
   "nextMilestone" INT NOT NULL ,
   "endTime" INT NOT NULL,
   "senderId" VARCHAR(22) NOT NULL,

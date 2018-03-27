@@ -801,7 +801,6 @@ Accounts.prototype.shared = {
 
 	migrateData: function (req, cb) {
 
-
 		try {
 			var balance;
 			if (req.body.data.balance_d == null) {
@@ -813,61 +812,112 @@ Accounts.prototype.shared = {
 			return setImmediate(cb, err.toString());
 		}
 
-
-		library.db.none(sql.updateUserInfo, {
-			address: req.body.address,
-			balance: parseInt(balance),
-			email: req.body.data.email,
-			phone: req.body.data.phone,
-			username: req.body.data.username,
-			country: req.body.data.country
-		}
-		)
-			.then(function () {
-
-				//To-do
-			})
-			.catch(function (err) {
-				library.logger.error(err.stack);
-				return setImmediate(cb, err.toString());
-			});			
-
-		library.db.query(sql.getETPSStakeOrders, {
-			account_id: req.body.data.id
-		})
-			.then(function (orders) {
-
-				orders.forEach(function (order) {
-/* 
-					var date = new Date((slots.getTime(order.insert_time))*1000);
-					var m=(date.setMinutes(date.getMinutes() + constants.froze.milestone))/1000;
-					var n = (date.setMinutes(date.getMinutes() - constants.froze.milestone + constants.froze.endTime))/1000;
-					 */
-					library.db.none(sql.InsertStakeOrder, {
-						account_id: req.body.data.id,
-						startTime: (slots.getTime(order.insert_time)),
-						endTime: 0,
-						senderId: req.body.address,
-						freezedAmount: order.cost * 100000000,
-						milestoneCount: 0,
-						nextMilestone: 0,
-						status: order.status
-					})
-						.then(function () {
-
-						})
-						.catch(function (err) {
-							library.logger.error(err.stack);
-							return setImmediate(cb, err.toString());
-						});
-				});
-				return setImmediate(cb, null, { success: true, message: "Successfully migrated" });
-			})
-			.catch(function (err) {
-				library.logger.error(err.stack);
-				return setImmediate(cb, err.toString());
+		function getStakeOrderFromETPS() {
+			return new Promise(function (resolve, reject) {
+				library.db.query(sql.getETPSStakeOrders, {
+					account_id: req.body.data.id
+				})
+					.then(function (orders) {
+						resolve(orders);
+					}).catch(function (err) {
+						library.logger.error(err.stack);
+						reject(new Error(err.stack));
+					});
 			});
+		}
 
+		function insertstakeOrder(order) {
+			return new Promise(function (resolve, reject) {
+
+				var date = new Date((slots.getTime(order.insert_time)) * 1000);
+				var milestone = (date.setMinutes(date.getMinutes() + constants.froze.milestone)) / 1000;
+				var endTime = (date.setMinutes(date.getMinutes() - constants.froze.milestone + constants.froze.endTime)) / 1000;
+
+				library.db.none(sql.InsertStakeOrder, {
+					account_id: req.body.data.id,
+					startTime: (slots.getTime(order.insert_time)),
+					insertTime: slots.getTime(),
+					rewardTime:0,
+					endTime: endTime,
+					senderId: req.body.address,
+					freezedAmount: order.cost * 100000000,
+					milestoneCount: 0,
+					nextMilestone: milestone,
+					status: order.status
+				})
+					.then(function () {
+						resolve();
+					})
+					.catch(function (err) {
+						library.logger.error(err.stack);
+						reject((new Error(err.stack)));
+					});
+			});
+		}
+
+		async function insertStakeOrdersInETP(orders) {
+
+			try {
+				for (var order in orders) {
+					await insertstakeOrder(orders[order]);
+				}
+			} catch (err) {
+				library.logger.error(err.stack);
+				reject((new Error(err.stack)));
+			}
+		}
+
+		function checkFrozeAmountsInStakeOrders() {
+			return new Promise(function (resolve, reject) {
+
+				library.db.one(sql.totalFrozeAmount, {
+					account_id: (req.body.data.id).toString()
+				})
+					.then(function (totalFrozeAmount) {
+						resolve(totalFrozeAmount);
+					}).catch(function (err) {
+						library.logger.error(err.stack);
+						reject(new Error(err.stack));
+					});
+			});
+		}
+
+		function updateMemAccountTable(totalFrozeAmount) {
+			return new Promise(function (resolve, reject) {
+
+				library.db.none(sql.updateUserInfo, {
+					address: req.body.address,
+					balance: parseInt(balance),
+					email: req.body.data.email,
+					phone: req.body.data.phone,
+					username: req.body.data.username,
+					country: req.body.data.country,
+					totalFrozeAmount: parseInt(totalFrozeAmount.sum)
+				})
+					.then(function () {
+						resolve();
+					})
+					.catch(function (err) {
+						library.logger.error(err.stack);
+						reject(new Error(err.stack));
+					});
+			});
+		}
+
+
+		(async function () {
+			try {
+				var orders = await getStakeOrderFromETPS();
+				await insertStakeOrdersInETP(orders);
+				var totalFrozeAmount = await checkFrozeAmountsInStakeOrders();
+				await updateMemAccountTable(totalFrozeAmount);
+
+				return setImmediate(cb, null, { success: true, message: "Successfully migrated" });
+			} catch (err) {
+				library.logger.error(err.stack);
+				return setImmediate(cb, err.toString());
+			}
+		})();
 	},
 
 	validateExistingUser: function (req, cb) {
