@@ -40,6 +40,7 @@ __private.assetTypes = {};
 function Transactions(cb, scope) {
 	library = {
 		cache: scope.cache,
+		config: scope.config,
 		logger: scope.logger,
 		db: scope.db,
 		schema: scope.schema,
@@ -713,9 +714,6 @@ Transactions.prototype.shared = {
 	},
 
 	addTransactions: function (req, cb) {
-		if (!req.body.otp) {
-			return setImmediate(cb, 'No OTP Sent To Verify');
-		}
 		cache.prototype.getJsonForKey("userKey_" + req.body.otp, function (err, base32Secret) {
 			var verified = speakeasy.totp.verify({
 				secret: base32Secret,
@@ -724,7 +722,7 @@ Transactions.prototype.shared = {
 				window: 6
 			});
 			if (!verified) {
-				return setImmediate(cb, 'Invalid OTP');
+				return setImmediate(cb, 'Invalid OTP!. Please enter valid OTP to SEND Transaction');
 			}
 			library.schema.validate(req.body, schema.addTransactions, function (err) {
 				if (err) {
@@ -867,14 +865,13 @@ Transactions.prototype.shared = {
 	},
 
 	generateOTP: function (req, cb) {
-		//console.log('backend to generate OTP');
 		var options = {
 			"method": "POST",
 			"hostname": "api.msg91.com",
 			"port": null,
 			"path": "/api/v2/sendsms",
 			"headers": {
-				"authkey": "199676A4cGzKDlK0N5a91461",
+				"authkey": library.config.msgServiceAuthKey,
 				"content-type": "application/json"
 			}
 		};
@@ -883,13 +880,7 @@ Transactions.prototype.shared = {
 			secret: secret.base32,
 			encoding: 'base32',
 		});
-		//library.cache.client.set('userKey_' + token, secret);
-		/* library.modules.cache.setJsonForKey('userKey_' + token, secret, function(err) {
-			console.log(err);
-		}); */
-		//library.cache.client.set('userKey_' + token, secret, 'ex', 100);
-		//cache.prototype.setJsonForKey('userKey_' + token, secret.base32, 'ex', 100);
-		//library.cache.client.set('userKey_' + token, secret.base32);
+		
 		cache.prototype.setJsonForKey("userKey_" + token, secret.base32);
 		var req = http.request(options, function (res) {
 			var chunks = [];
@@ -904,6 +895,7 @@ Transactions.prototype.shared = {
 			});
 		});
 
+		//FIXME: get mobile number from the database and send OTP accordingly
 		req.write(JSON.stringify({
 			sender: 'SOCKET',
 			route: '4',
