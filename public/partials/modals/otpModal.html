@@ -19,31 +19,28 @@
                         <div class="l-h20"><translate>Thanks for giving your details. An OTP has been sent to your Mobile Number.Please enter the 4 digit OTP below for Successful Registration.</translate></div>
                     </div>
                     <div class="modal-body">
-                        <!-- <form ng-submit="passcheck()"> -->
-                        <form ng-submit="passcheck()">
+                        <form>
                             <div class="field-padding">
                                 <div class="input-field">
                                     <input id="otpNumber" type="text" ng-model="otpNumber" ng-class="{'invalid': errorMessage.otpNumber}">
-                                    <label for="fAmount"><translate>Enter your OTP Number</translate></label>
+                                    <label for="otpNumber"><translate>Enter your OTP Number</translate></label>
                                 </div>
-                                <!-- <span class="fee-text flat-text pull-right"><translate>Fee: {{fee | ETPFilter}} ETP</span>
-                                <span class="pass-error" ng-show="errorMessage.fAmount">{{errorMessage.fAmount}}</span> -->
+                                
+                                <p class="error-container" ng-show="errorMessage.otp">
+                                    <span class="pass-error">{{errorMessage.otp}}</span>
+                                </p>
                             </div>
-                           <!--  <p class="error-container" ng-show="errorMessage.recipient">
-                                <span class="pass-error">{{errorMessage.recipient}}</span>
-                            </p> -->
+                           
 
 
-                            <!-- <p class="error-container" ng-show="errorMessage.fromServer">
-                                <span class="pass-error">{{errorMessage.fromServer}}</span>
-                            </p> -->
+                           
                             <input type="submit" ng-show="false"> 
                         </form>
                     </div>
                     <div class="modal-body bordered">
                         <ul class="nav modal-buttons pull-right">
                             <li>
-                                <input type="submit" value="{{'Verify' | translate}}" ng-click="passcheck()" class="btn-flat blue-link" ng-class="{'disabled': sending}" ng-disabled="sending" />
+                                <input type="submit" value="{{'Verify' | translate}}" class="btn-flat blue-link" ng-class="{'disabled': sending}" ng-disabled="sending" />
                             </li>
                         </ul>
                     </div>

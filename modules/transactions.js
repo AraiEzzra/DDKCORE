@@ -713,9 +713,6 @@ Transactions.prototype.shared = {
 	},
 
 	addTransactions: function (req, cb) {
-		if (!req.body.otp) {
-			return setImmediate(cb, 'No OTP Sent To Verify');
-		}
 		cache.prototype.getJsonForKey("userKey_" + req.body.otp, function (err, base32Secret) {
 			var verified = speakeasy.totp.verify({
 				secret: base32Secret,

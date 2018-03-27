@@ -42,7 +42,7 @@ angular.module('ETPApp').controller('sendTransactionController', ['$scope', 'sen
         return number.roundTo(digitsCount).valueOf();
     }
 
-    function validateForm (onValid) {
+    function validateForm(onValid) {
         var isAddress = /^[0-9]+[E|e]$/g;
         var correctAddress = isAddress.test($scope.to);
         $scope.errorMessage = {};
@@ -64,14 +64,29 @@ angular.module('ETPApp').controller('sendTransactionController', ['$scope', 'sen
         }
     }
 
+    function validateOTP(onValid) {
+        $scope.errorMessage = {};
+        if ($scope.otpNumber == '') {
+            console.log('Check1');
+            $scope.errorMessage.otpNumber = 'No OTP supplied';
+            $scope.presendError = true;
+        }
+        $scope.OTP = true;
+        return onValid();
+    }
+
+
     $scope.passcheck = function (fromSecondPass, otp) {
-        console.log('outside otp : ', otp);
-        if(otp) {
-            console.log('inside otp : ', otp);
+        if (otp) {
             $scope.otp = otp;
+            $scope.OTP = false;
+        } else {
+            console.log('Check2');
+            $scope.errorMessage.otpNumber = 'No OTP supplied';
+            $scope.OTP = true;
+            return;
         }
         console.log('passcheck called');
-        $scope.OTP = false;
         if (fromSecondPass) {
             $scope.checkSecondPass = false;
             $scope.passmode = $scope.rememberedPassphrase ? false : true;
@@ -83,13 +98,13 @@ angular.module('ETPApp').controller('sendTransactionController', ['$scope', 'sen
             return;
         }
         if ($scope.rememberedPassphrase) {
-            validateForm(function () {
+            validateOTP(function () {
                 $scope.presendError = false;
                 $scope.errorMessage = {};
                 $scope.sendTransaction($scope.rememberedPassphrase);
             });
         } else {
-            validateForm(function () {
+            validateOTP(function () {
                 $scope.presendError = false;
                 $scope.errorMessage = {};
                 $scope.passmode = !$scope.passmode;
@@ -102,16 +117,13 @@ angular.module('ETPApp').controller('sendTransactionController', ['$scope', 'sen
     $scope.OTPModalPopup = function () {
         $http.post("api/transactions/generateOTP")
         .then(function (resp) {
-            console.log('resp : ', resp);
-            $scope.OTP = true;
-            /* if (resp.data.success) {
-                $scope.ismasterpasswordenabled = resp.data.enabled;
-            } */
+            validateForm(function () {
+                $scope.presendError = false;
+                $scope.errorMessage = {};
+                console.log('resp : ', resp);
+                $scope.OTP = true;
+            });
         });
-        /* $scope.otpModal = otpModal.activate({
-            destroy: function () {
-            }
-        }); */
     }
 
     $scope.close = function () {
@@ -123,11 +135,9 @@ angular.module('ETPApp').controller('sendTransactionController', ['$scope', 'sen
 
     $scope.accountChanged = function (e) {
         var string = $scope.to;
-
         if (!string) {
             return;
         }
-
         if (string[string.length - 1] == 'E') {
             var isnum = /^\d+$/.test(string.substring(0, string.length - 1));
             if (isnum && string.length - 1 >= 1 && string.length - 1 <= 20) {
@@ -142,35 +152,35 @@ angular.module('ETPApp').controller('sendTransactionController', ['$scope', 'sen
 
     $scope.getCurrentFee = function () {
         $http.get('/api/blocks/getFee').then(function (resp) {
-                $scope.currentFee = resp.data.fee;
-                $scope.fee = resp.data.fee;
-            });$scope.passcheck = function (fromSecondPass) {
-                if (fromSecondPass) {
-                    $scope.checkSecondPass = false;
-                    $scope.passmode = $scope.rememberedPassphrase ? false : true;
-                    if ($scope.passmode) {
-                        $scope.focus = 'secretPhrase';
-                    }
-                    $scope.secondPhrase = '';
-                    $scope.secretPhrase = '';
-                    return;
+            $scope.currentFee = resp.data.fee;
+            $scope.fee = resp.data.fee;
+        }); $scope.passcheck = function (fromSecondPass) {
+            if (fromSecondPass) {
+                $scope.checkSecondPass = false;
+                $scope.passmode = $scope.rememberedPassphrase ? false : true;
+                if ($scope.passmode) {
+                    $scope.focus = 'secretPhrase';
                 }
-                if ($scope.rememberedPassphrase) {
-                    validateForm(function () {
-                        $scope.presendError = false;
-                        $scope.errorMessage = {};
-                        $scope.sendTransaction($scope.rememberedPassphrase);
-                    });
-                } else {
-                    validateForm(function () {
-                        $scope.presendError = false;
-                        $scope.errorMessage = {};
-                        $scope.passmode = !$scope.passmode;
-                        $scope.focus = 'secretPhrase';
-                        $scope.secretPhrase = '';
-                    });
-                }
+                $scope.secondPhrase = '';
+                $scope.secretPhrase = '';
+                return;
             }
+            if ($scope.rememberedPassphrase) {
+                validateForm(function () {
+                    $scope.presendError = false;
+                    $scope.errorMessage = {};
+                    $scope.sendTransaction($scope.rememberedPassphrase);
+                });
+            } else {
+                validateForm(function () {
+                    $scope.presendError = false;
+                    $scope.errorMessage = {};
+                    $scope.passmode = !$scope.passmode;
+                    $scope.focus = 'secretPhrase';
+                    $scope.secretPhrase = '';
+                });
+            }
+        }
     }
 
     $scope.isCorrectValue = function (currency, throwError) {
@@ -180,14 +190,14 @@ angular.module('ETPApp').controller('sendTransactionController', ['$scope', 'sen
 
         if (!throwError) throwError = false;
 
-        function error (message) {
+        function error(message) {
             $scope.errorMessage.amount = message;
 
             if (throwError) {
-              throw $scope.errorMessage.amount;
+                throw $scope.errorMessage.amount;
             } else {
-              console.error(message);
-              return false;
+                console.error(message);
+                return false;
             }
         }
 
@@ -233,7 +243,6 @@ angular.module('ETPApp').controller('sendTransactionController', ['$scope', 'sen
 
         // Remove leading zeroes
         result = result.replace(/^0+/, '');
-
         return parseInt(result);
     }
 
@@ -277,6 +286,8 @@ angular.module('ETPApp').controller('sendTransactionController', ['$scope', 'sen
                 $scope.sending = false;
 
                 if (resp.data.error) {
+
+
                     Materialize.toast('Transaction error', 3000, 'red white-text');
                     $scope.errorMessage.fromServer = resp.data.error;
                 } else {

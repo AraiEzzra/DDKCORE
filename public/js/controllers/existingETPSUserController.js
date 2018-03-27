@@ -20,21 +20,29 @@ angular.module('ETPApp').controller('existingETPSUserController', ['$scope', '$r
         });
     }
 
+    $scope.generateApiKey = function (mykey) {
+
+        // DO NOT EDIT THIS FUNCTION
+        // THE DYNAMIC API KEY WILL BE VALID FOR 10 SEC
+        var time_sec = Math.floor(Date.now() / 1000) + 10;
+        var dynamic_key = mykey + "####" + time_sec;
+
+        return btoa(dynamic_key);
+    }
+
     // function to validate existing ETPS user from ETP_test database
     $scope.validateExistingUser = function (username, password) {
-        var post = "username=" + btoa(username) + "&password=" + btoa(password);
 
         $http.post("/api/accounts/existingETPSUser/validate", {
-
-            data: post
+            username: btoa(username),
+            password: btoa(password)
         })
             .success(function (resp) {
-
-                if (!resp.success) {
-                    $scope.errorMessage = resp.error;
+                if (!resp.records) {
+                    $scope.errorMessage = resp.message;
                 } else {
                     var userInfo = {};
-                    Object.assign(userInfo, resp.userInfo);
+                    Object.assign(userInfo, resp.records);
                     $http.post("/api/accounts/existingETPSUser", { userInfo: userInfo }).then(function (response) {
                         if (response.data.success) {
                             if (response.data.isMigrated) {
@@ -49,7 +57,6 @@ angular.module('ETPApp').controller('existingETPSUserController', ['$scope', '$r
                 }
             })
             .error(function (err) {
-                console.log("2");
                 $scope.errorMessage = err;
             });
     }
