@@ -20,7 +20,7 @@ var Accounts = {
 
   InsertStakeOrder: 'INSERT INTO stake_orders ("id", "status", "startTime", "insertTime", "rewardTime", "nextMilestone", "endTime", "senderId", "freezedAmount", "milestoneCount") VALUES (${account_id},${status},${startTime},${insertTime},${rewardTime},${nextMilestone},${endTime},${senderId},${freezedAmount},${milestoneCount}) ',
 
-  getETPSStakeOrders: 'SELECT * FROM existing_etps_assets WHERE "account_id"=${account_id}',
+  getETPSStakeOrders: 'SELECT * FROM existing_etps_assets WHERE "account_id"=${account_id} AND "status"=0 AND "month_count" < 6',
 
   totalFrozeAmount: 'SELECT sum("freezedAmount") FROM stake_orders WHERE "id"=${account_id} and "status"=1'
 };
