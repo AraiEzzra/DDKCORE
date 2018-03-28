@@ -841,9 +841,9 @@ Accounts.prototype.shared = {
 					endTime: endTime,
 					senderId: req.body.address,
 					freezedAmount: order.cost * 100000000,
-					milestoneCount: 0,
+					milestoneCount: order.month_count,
 					nextMilestone: milestone,
-					status: order.status
+					status: 1
 				})
 					.then(function () {
 						resolve();
@@ -874,7 +874,12 @@ Accounts.prototype.shared = {
 					account_id: (req.body.data.id).toString()
 				})
 					.then(function (totalFrozeAmount) {
-						resolve(totalFrozeAmount);
+						if(totalFrozeAmount){
+							resolve(totalFrozeAmount);
+						}else{
+							resolve(0);
+						}
+						
 					}).catch(function (err) {
 						library.logger.error(err.stack);
 						reject(new Error(err.stack));
@@ -910,6 +915,9 @@ Accounts.prototype.shared = {
 				var orders = await getStakeOrderFromETPS();
 				await insertStakeOrdersInETP(orders);
 				var totalFrozeAmount = await checkFrozeAmountsInStakeOrders();
+				if (!totalFrozeAmount.sum) {
+					totalFrozeAmount.sum = 0;
+				}
 				await updateMemAccountTable(totalFrozeAmount);
 
 				return setImmediate(cb, null, { success: true, message: "Successfully migrated" });

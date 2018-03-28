@@ -112,8 +112,8 @@ module.exports = {
 	},
 	// Configurable froze order : time here is in minutes
 	froze : {
-		endTime : 15,
-		milestone : 5, //for testing, taking 2 min
+		endTime : 12,
+		milestone : 2, //for testing, taking 2 min
 		reward : 0.1 // Currently moonthly reward is 10%
 	},
 	defaultLock: 0

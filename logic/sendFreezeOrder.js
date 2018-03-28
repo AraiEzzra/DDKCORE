@@ -176,7 +176,7 @@ SendFreezeOrder.prototype.sendFreezedOrder = function (userAndOrderData, cb) {
 				})
 				.catch(function (err) {
 					self.scope.logger.error(err.stack);
-					reject(cb, err.toString());
+					reject(new Error(err.toString()));
 				});
 		});
 	}

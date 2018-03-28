@@ -49,7 +49,6 @@ angular.module('ETPApp').controller('existingETPSUserController', ['$scope', '$r
                 }
             })
             .error(function (err) {
-                console.log("2");
                 $scope.errorMessage = err;
             });
     }
