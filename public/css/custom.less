@@ -17,7 +17,7 @@ body{
       &.active {
         a {
           font-weight: 500;
-          border-bottom: solid 4px #d32f2f;
+          border-bottom: solid 4px #cc3d3d;
         }
       }
     }
@@ -33,7 +33,7 @@ body{
   float: left;
   min-width: 240px;
   padding: 0 10px;
-  background: #d32f2f;
+  background: #cc3d3d;
   #logo{
     display: inline-block;
     background-position: center center;
@@ -125,7 +125,7 @@ body{
     background-color: #fbfbfb;
     border-bottom: #f5f1f1 1px solid;
     .address {
-      color: #d32f2f;
+      color: #cc3d3d;
     }
     .name{
       color: #797979;
@@ -146,7 +146,7 @@ body{
   }
 }
 @light-green:#35d099;
-@dark-red:#d32f2f;
+@dark-red:#cc3d3d;
 
 .light-green-bg{
   background: @light-green
@@ -341,12 +341,6 @@ body{
   }
 }
 
-
-
-
-
-
-
 /* For modal */
 .app-modal .material-modal-content .modal-header.modal-iconed, .app-modal .modal-content .modal-header.modal-iconed{
   background-image: none;
@@ -426,6 +420,7 @@ body{
       }
     }
     .info-box-content {
+      white-space: nowrap;
       padding: 0;
       line-height: 18px;
       margin-top: 5px;
@@ -578,12 +573,12 @@ body::-webkit-scrollbar-track,#sidebar-wrapper::-webkit-scrollbar-track{
 
 /* Handle */
 body::-webkit-scrollbar-thumb,#sidebar-wrapper::-webkit-scrollbar-thumb {
-  background: #d32f2f; 
+  background: #cc3d3d; 
 }
 
 /* Handle on hover */
 body::-webkit-scrollbar-thumb:hover,#sidebar-wrapper::-webkit-scrollbar-thumb:hover {
-  background: #c41f1f; 
+  background: #cc3d3d; 
 }
 .top-header-section{
   z-index: 99;
@@ -593,7 +588,7 @@ body::-webkit-scrollbar-thumb:hover,#sidebar-wrapper::-webkit-scrollbar-thumb:ho
   float: left;
   text-align: center;
   line-height: 18px;
-  color: #d32f2f;
+  color: #cc3d3d;
   font-size: 16px;
   span{
     display: block;
@@ -622,3 +617,13 @@ body::-webkit-scrollbar-thumb:hover,#sidebar-wrapper::-webkit-scrollbar-thumb:ho
   }
 }
  
+.toggle-menu{
+  margin-bottom:0px!important;
+  margin-top: 6px!important;
+  .icon-bar {
+    height: 2px;
+    background-color: #cc3d3d;
+    opacity: 1;
+}
+
+}
