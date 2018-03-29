@@ -48,7 +48,7 @@ module.exports = {
 	blockHeaderLength: 248,
 	blockReceiptTimeOut: 20, // 2 blocks
 	confirmationLength: 77,
-	epochTime: new Date(Date.UTC(2017, 9, 1, 17, 0, 0, 0)),
+	epochTime: new Date(Date.UTC(2016, 0, 1, 17, 0, 0, 0)),
 	fees: {
 		send: 10000000,
 		vote: 100000000,
@@ -112,7 +112,7 @@ module.exports = {
 	},
 	// Configurable froze order : time here is in minutes
 	froze : {
-		endTime : 6,
+		endTime : 12,
 		milestone : 2, //for testing, taking 2 min
 		reward : 0.1 // Currently moonthly reward is 10%
 	},

@@ -204,6 +204,7 @@ var config = {
 //merge environment variables
 var env = require('./config/env');
 utils.merge(appConfig, env);
+appConfig.forging.secret = appConfig.forging.secret.split(',');
 
 // Trying to get last git commit
 try {

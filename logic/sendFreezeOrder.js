@@ -176,7 +176,7 @@ SendFreezeOrder.prototype.sendFreezedOrder = function (userAndOrderData, cb) {
 				})
 				.catch(function (err) {
 					self.scope.logger.error(err.stack);
-					reject(cb, err.toString());
+					reject(new Error(err.toString()));
 				});
 		});
 	}
@@ -229,6 +229,8 @@ SendFreezeOrder.prototype.sendFreezedOrder = function (userAndOrderData, cb) {
 				{
 					frozeId: userAndOrderData.frozeId,
 					startTime: order.startTime,
+					insertTime: order.insertTime,
+					rewardTime: 0,
 					nextMilestone: order.nextMilestone,
 					endTime: order.endTime,
 					senderId: userAndOrderData.recipientId,
