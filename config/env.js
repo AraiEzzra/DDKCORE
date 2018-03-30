@@ -41,5 +41,6 @@ module.exports = {
     address: env.ADMIN_ADDRESS 
   },
   nethash: env.NETHASH,
-  jwtSecret: env.JWT_SECRET
+  jwtSecret: env.JWT_SECRET,
+  msgServiceAuthKey: env.MSG91_AUTH_KEY
 };
