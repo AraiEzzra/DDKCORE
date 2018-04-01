@@ -42,7 +42,7 @@
  * @property {number} unconfirmedTransactionTimeOut - 1080 blocks
  */
 module.exports = {
-	activeDelegates: 1,
+	activeDelegates: 5,
 	maxVotesPerTransaction: 33,
 	addressLength: 208,
 	blockHeaderLength: 248,
@@ -70,7 +70,7 @@ module.exports = {
 	maxRequests: 10000 * 12,
 	maxSharedTxs: 100,
 	maxSignaturesLength: 196 * 256,
-	maxTxsPerBlock: 6,
+	maxTxsPerBlock: 10,
 	minBroadhashConsensus: 0,
 	nethashes: [
 		// Mainnet
@@ -94,7 +94,7 @@ module.exports = {
 	},
 	signatureLength: 196,
 	// WARNING: When changing totalAmount you also need to change getBlockRewards(int) SQL function!
-	totalAmount: 10000000000000000,
+	totalAmount: 2100000000000000,
 	unconfirmedTransactionTimeOut: 10800, // 1080 blocks
 	multisigConstraints: {
 		min: {
