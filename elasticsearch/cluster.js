@@ -1,4 +1,10 @@
-// Generalised method to create, delete or check existence of an index
+'use strict';
+
+/*
+* Generalised method to create, delete, search or check existence of an index
+* @isIndexExists
+*/
+
 var client = require('./connection.js');
 
 /**

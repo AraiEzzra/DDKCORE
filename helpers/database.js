@@ -187,7 +187,6 @@ function Migrator (pgp, db) {
  * @return {function} error|cb
  */
 module.exports.connect = function (config, logger, cb) {
-	// handle appmetrics error by adding new promise library
 	const promise = require('bluebird');
 	var pgOptions = {
 		promiseLib: promise

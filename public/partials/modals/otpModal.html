@@ -1,0 +1,51 @@
+<div class="app-modal valign-wrapper">
+    <div class="container height100">
+        <div class="row height100">
+            <div class="col-md-6 col-md-offset-4 height100 valign-wrapper">
+                <div class="modal-content">
+                    <div class="modal-header modal-iconed">
+                        <div class="close-modal" ng-click="close()">
+                            <span class="sr-only"><translate>Close modal</translate></span>
+                        </div>
+                        <span class="modal-log">ETP</span>
+                    </div>
+                    <div class="modal-header clearfix">
+                            <span class="verify-icon"><img src="images/verify.png"></span>
+                        
+                        <div class="m-b-20">
+                            <h2>{{'OTP'|translate}}</h2>
+                            <h1>Verify your mobile number</h1>
+                        </div>
+                        <div class="l-h20"><translate>Thanks for giving your details. An OTP has been sent to your Mobile Number.Please enter the 4 digit OTP below for Successful Registration.</translate></div>
+                    </div>
+                    <div class="modal-body">
+                        <form>
+                            <div class="field-padding">
+                                <div class="input-field">
+                                    <input id="otpNumber" type="text" ng-model="otpNumber" ng-class="{'invalid': errorMessage.otpNumber}">
+                                    <label for="otpNumber"><translate>Enter your OTP Number</translate></label>
+                                </div>
+                                
+                                <p class="error-container" ng-show="errorMessage.otp">
+                                    <span class="pass-error">{{errorMessage.otp}}</span>
+                                </p>
+                            </div>
+                           
+
+
+                           
+                            <input type="submit" ng-show="false"> 
+                        </form>
+                    </div>
+                    <div class="modal-body bordered">
+                        <ul class="nav modal-buttons pull-right">
+                            <li>
+                                <input type="submit" value="{{'Verify' | translate}}" class="btn-flat blue-link" ng-class="{'disabled': sending}" ng-disabled="sending" />
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

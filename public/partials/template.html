@@ -72,7 +72,7 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <h1 id="title">
+                <h1 id="title" class="des-title">
                     <span class="title-icon" ng-show="view.page.previous" ng-click="goToPrevious()">
                         <span class="sr-only">
                             <translate>Go to previous page</translate>
@@ -137,6 +137,16 @@
             </div>
 
         </div>
+
+        <h1 id="title" class="mob-title">
+            <span class="title-icon" ng-show="view.page.previous" ng-click="goToPrevious()">
+                <span class="sr-only">
+                    <translate>Go to previous page</translate>
+                </span>
+            </span>
+            {{view.page.title}}
+        </h1>
+        
         <!--div class="search-bar" ng-show="view.bar.showTransactionsSearchBar">
            <div class="search-toggle" ng-if="searchTransactions.searchForTransaction">
               <i ng-click="clearSearch()" class="mdi-content-clear small"></i>

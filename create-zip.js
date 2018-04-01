@@ -1,6 +1,10 @@
 'use strict';
 
-// script that runs every fist day of a month and archives log files and removes from the project's log directory. 
+/* 
+*  script that runs every fist day of a month and archives log files and removes them from the 
+*  project's logs directory. 
+*/
+
 // requiring modules and initializing required variables.
 var fs = require('fs'),
     path = require('path'),

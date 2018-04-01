@@ -29,6 +29,7 @@ require('../../js/controllers/modals/secondPassphraseController');
 require('../../js/controllers/modals/sendTransactionController');
 require('../../js/controllers/modals/sendFreezeOrderController');
 require('../../js/controllers/modals/freezeAmountController');
+require('../../js/controllers/modals/otpModalController');
 require('../../js/controllers/modals/voteController');
 require('../../js/controllers/modals/registrationDelegateModalController');
 require('../../js/controllers/modals/blockInfoController');
