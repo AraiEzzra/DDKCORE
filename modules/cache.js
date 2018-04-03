@@ -93,7 +93,7 @@ Cache.prototype.hmset = function(key, value, cb) {
 	if (!self.isConnected()) {
 		return cb(errorCacheDisabled);
 	} 
-	client.hmset(key, value, cb);
+	client.hmset(key, JSON.stringify(value), cb);
 };
 
 /**

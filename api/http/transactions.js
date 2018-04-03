@@ -44,8 +44,7 @@ function TransactionsHttpApi (transactionsModule, app, logger, cache) {
 		'get /multisignatures': 'getMultisignatureTransactions',
 		'get /unconfirmed/get': 'getUnconfirmedTransaction',
 		'get /unconfirmed': 'getUnconfirmedTransactions',
-		'put /': 'addTransactions',
-		'post /generateOTP': 'generateOTP'
+		'put /': 'addTransactions'
 	});
 
 	httpApi.registerEndpoint('/api/transactions', app, router, transactionsModule.isLoaded);

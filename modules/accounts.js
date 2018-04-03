@@ -16,6 +16,9 @@ var cache = require('./cache.js');
 var config = require('../config.json');
 var utils = require('../utils');
 var jwt = require('jsonwebtoken');
+var QRCode = require('qrcode');
+var cache = require('./cache.js');
+var speakeasy = require("speakeasy");
 
 // Private fields
 var modules, library, self, __private = {}, shared = {};
@@ -304,7 +307,7 @@ Accounts.prototype.shared = {
 					accountData.token = token;
 					library.cache.client.set('jwtToken_' + account.address, token, 'ex', 100);
 					/****************************************************************/
-					
+
 					var data = {
 						address: accountData.address,
 						u_isDelegate: 0,
@@ -338,28 +341,28 @@ Accounts.prototype.shared = {
 								};
 								cache.prototype.hmset(REDIS_KEY_USER_INFO_HASH, userInfo);
 								cache.prototype.hmset(REDIS_KEY_USER_TIME_HASH, userInfo);
-								library.logic.contract.sendToContrubutors([userInfo], function(err, res) {
+								library.logic.contract.sendToContrubutors([userInfo], function (err, res) {
 									//FIXME: do further processing with "res" i.e send notification to the user
-									if(err) {
+									if (err) {
 										return setImmediate(cb, err);
 									}
 									library.db.none(sql.disableAccount, {
 										senderId: account.address
 									})
-									.then(function () {
-										library.logger.info(account.address + ' account is locked');
-										library.logic.account.set(accountData.address, data, function (err) {
-											if (!err) {
-												return setImmediate(cb, null, { account: accountData });
-											} else {
-												return setImmediate(cb, err);
-											}
+										.then(function () {
+											library.logger.info(account.address + ' account is locked');
+											library.logic.account.set(accountData.address, data, function (err) {
+												if (!err) {
+													return setImmediate(cb, null, { account: accountData });
+												} else {
+													return setImmediate(cb, err);
+												}
+											});
+										})
+										.catch(function (err) {
+											library.logger.error(err.stack);
+											return setImmediate(cb, err);
 										});
-									})
-									.catch(function (err) {
-										library.logger.error(err.stack);
-										return setImmediate(cb, err);
-									});
 								});
 							} else {
 								return setImmediate(cb, null, { account: accountData });
@@ -668,14 +671,14 @@ Accounts.prototype.shared = {
 								library.db.none(sql.disableAccount, {
 									senderId: account.address
 								})
-								.then(function () {
-									library.logger.info(account.address + ' account is locked');
-									return setImmediate(cb, null, { account: account });
-								})
-								.catch(function (err) {
-									library.logger.error(err.stack);
-									return setImmediate(cb, err);
-								});
+									.then(function () {
+										library.logger.info(account.address + ' account is locked');
+										return setImmediate(cb, null, { account: account });
+									})
+									.catch(function (err) {
+										library.logger.error(err.stack);
+										return setImmediate(cb, err);
+									});
 							} else {
 								return setImmediate(cb, null, { account: account });
 							}
@@ -684,14 +687,14 @@ Accounts.prototype.shared = {
 						library.db.none(sql.disableAccount, {
 							senderId: account.address
 						})
-						.then(function () {
-							library.logger.info(account.address + ' account is locked');
-							return setImmediate(cb, null, { account: account });
-						})
-						.catch(function (err) {
-							library.logger.error(err.stack);
-							return setImmediate(cb, err);
-						});
+							.then(function () {
+								library.logger.info(account.address + ' account is locked');
+								return setImmediate(cb, null, { account: account });
+							})
+							.catch(function (err) {
+								library.logger.error(err.stack);
+								return setImmediate(cb, err);
+							});
 					}
 				});
 			} else {
@@ -712,13 +715,13 @@ Accounts.prototype.shared = {
 				library.db.none(sql.enableAccount, {
 					senderId: address
 				})
-				.then(function () {
-					library.logger.info(address + ' account is unlocked');
-					return setImmediate(cb, null);
-				})
-				.catch(function (err) {
-					return setImmediate(cb, err);
-				});
+					.then(function () {
+						library.logger.info(address + ' account is unlocked');
+						return setImmediate(cb, null);
+					})
+					.catch(function (err) {
+						return setImmediate(cb, err);
+					});
 			} else {
 				return setImmediate(cb, err);
 			}
@@ -741,13 +744,13 @@ Accounts.prototype.shared = {
 
 	totalAccounts: function (req, cb) {
 		library.db.one(sql.getTotalAccount)
-		.then(function (data) {
-			return setImmediate(cb, null, data);
-		})
-		.catch(function (err) {
-			library.logger.error(err.stack);
-			return setImmediate(cb, err.toString());
-		});
+			.then(function (data) {
+				return setImmediate(cb, null, data);
+			})
+			.catch(function (err) {
+				library.logger.error(err.stack);
+				return setImmediate(cb, err.toString());
+			});
 	},
 
 	getCirculatingSupply: function (req, cb) {
@@ -755,23 +758,23 @@ Accounts.prototype.shared = {
 		var publicAddress = library.config.sender.address;
 
 		library.db.one(sql.getCurrentUnmined, { address: publicAddress })
-		.then(function (currentUnmined) {
-			var circulatingSupply = config.initialPrimined.total + initialUnmined - currentUnmined.balance;
+			.then(function (currentUnmined) {
+				var circulatingSupply = config.initialPrimined.total + initialUnmined - currentUnmined.balance;
 
-			cache.prototype.getJsonForKey("minedContributorsBalance", function (err, contributorsBalance) {
-				var totalCirculatingSupply = parseInt(contributorsBalance) + circulatingSupply;
+				cache.prototype.getJsonForKey("minedContributorsBalance", function (err, contributorsBalance) {
+					var totalCirculatingSupply = parseInt(contributorsBalance) + circulatingSupply;
 
-				return setImmediate(cb, null, {
-					circulatingSupply: totalCirculatingSupply
+					return setImmediate(cb, null, {
+						circulatingSupply: totalCirculatingSupply
+					});
 				});
+
+
+			})
+			.catch(function (err) {
+				library.logger.error(err.stack);
+				return setImmediate(cb, err.toString());
 			});
-
-
-		})
-		.catch(function (err) {
-			library.logger.error(err.stack);
-			return setImmediate(cb, err.toString());
-		});
 	},
 	totalSupply: function (req, cb) {
 		var totalSupply = config.etpSupply.totalSupply;
@@ -785,16 +788,16 @@ Accounts.prototype.shared = {
 		library.db.one(sql.checkAlreadyMigrated, {
 			username: req.body.userInfo.username
 		})
-		.then(function (data) {
-			return setImmediate(cb, null, { isMigrated: data.isMigrated });
-		})
-		.catch(function (err) {
-			if (err.code == 0) {
-				return setImmediate(cb, null, { isMigrated: 0 });
-			}
-			library.logger.error(err.stack);
-			return setImmediate(cb, err.toString());
-		});
+			.then(function (data) {
+				return setImmediate(cb, null, { isMigrated: data.isMigrated });
+			})
+			.catch(function (err) {
+				if (err.code == 0) {
+					return setImmediate(cb, null, { isMigrated: 0 });
+				}
+				library.logger.error(err.stack);
+				return setImmediate(cb, err.toString());
+			});
 
 	},
 
@@ -835,7 +838,7 @@ Accounts.prototype.shared = {
 
 	validateExistingUser: function (req, cb) {
 
-		var data =req.body.data;
+		var data = req.body.data;
 		var username = Buffer.from((data.split("&")[0]).split("=")[1], 'base64').toString();
 		var password = Buffer.from((data.split("&")[1]).split("=")[1], 'base64').toString();
 
@@ -847,13 +850,121 @@ Accounts.prototype.shared = {
 		}
 		).then(function (userInfo) {
 
-			return setImmediate(cb, null,{ success: true, userInfo: userInfo });
-			
+			return setImmediate(cb, null, { success: true, userInfo: userInfo });
+
 		}).catch(function (err) {
 			library.logger.error(err.stack);
 			return setImmediate(cb, "Invalid username or password");
 		});
 
+	},
+
+	generateQRCode: function (req, cb) {
+		var user = {};
+		if (!req.body.publicKey) {
+			return setImmediate(cb, 'Missing address or public key');
+		}
+		user.address = modules.accounts.generateAddressByPublicKey(req.body.publicKey);
+		var secret = speakeasy.generateSecret({ length: 30 });
+		QRCode.toDataURL(secret.otpauth_url, function (err, data_url) {
+			user.twofactor = {
+				secret: "",
+				tempSecret: secret.base32,
+				dataURL: data_url,
+				otpURL: secret.otpauth_url
+			};
+			cache.prototype.isExists('2fa_user_' + user.address, function (err, isExist) {
+				if (!isExist) {
+					cache.prototype.hmset('2fa_user_' + user.address, user, 'ex', 30);
+					return setImmediate(cb, null, { success: true, dataUrl: data_url });
+				} else {
+					cache.prototype.delHash('2fa_user_' + user.address, function (isdel) {
+						cache.prototype.hmset('2fa_user_' + user.address, user, 'ex', 30);
+						return setImmediate(cb, null, { success: true, dataUrl: data_url });
+					});
+				}
+			});
+
+		});
+	},
+
+	verifyOTP: function (req, cb) {
+		var user = {};
+		if (!req.body.publicKey) {
+			return setImmediate(cb, 'Missing address or public key');
+		}
+		user.address = modules.accounts.generateAddressByPublicKey(req.body.publicKey);
+		cache.prototype.hgetall('2fa_user_' + user.address, function (err, userCred) {
+			if (!userCred) {
+				return setImmediate(cb, 'Token expired or invalid OTP. Click resend to continue');
+			}
+			if (err) {
+				return setImmediate(cb, err);
+			}
+			var user_2FA = JSON.parse(Object.keys(userCred));
+			var verified = speakeasy.totp.verify({
+				secret: user_2FA.twofactor.tempSecret,
+				encoding: 'base32',
+				token: req.body.otp,
+				window: 6
+			});
+			if (!verified) {
+				return setImmediate(cb, 'Invalid OTP!. Please enter valid OTP to SEND Transaction');
+			}
+			return setImmediate(cb, null, { success: true, key: user_2FA.twofactor.tempSecret });
+		});
+	},
+
+	enableTwoFactor: function (req, cb) {
+		var user = {};
+		if (!req.body.key) {
+			return setImmediate(cb, 'Key is missing');
+		}
+		if (!req.body.secret) {
+			return setImmediate(cb, 'secret is missing');
+		}
+		if (!req.body.otp) {
+			return setImmediate(cb, 'otp is missing');
+		}
+		var hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
+		var keypair = library.ed.makeKeypair(hash);
+		var publicKey = keypair.publicKey.toString('hex');
+		user.address = modules.accounts.generateAddressByPublicKey(publicKey);
+		cache.prototype.hgetall('2fa_user_' + user.address, function (err, userCred) {
+			if (err) {
+				return setImmediate(cb, err);
+			}
+			if (!userCred) {
+				return setImmediate(cb, 'Key expired');
+			}
+			var user_2FA = JSON.parse(Object.keys(userCred));
+			var verified = speakeasy.totp.verify({
+				secret: req.body.key,
+				encoding: 'base32',
+				token: req.body.otp,
+				window: 6
+			});
+			if (!verified && user.address !== user_2FA.address) {
+				return setImmediate(cb, 'Invalid OTP!. Please enter valid OTP to SEND Transaction');
+			}
+			user_2FA.twofactor.secret = req.body.key;
+			cache.prototype.hmset('2fa_user_' + user.address, user_2FA);
+			return setImmediate(cb, null, { success: true, key: user_2FA.twofactor.tempSecret });
+		});
+	},
+
+	disableTwoFactor: function (req, cb) {
+		var user = {};
+		if (!req.body.publicKey) {
+			return setImmediate(cb, 'Missing address or public key');
+		}
+		user.address = modules.accounts.generateAddressByPublicKey(req.body.publicKey);
+		cache.prototype.isExists('2fa_user_' + user.address, function (err, isExist) {
+			if (isExist) {
+				cache.prototype.delHash('2fa_user_' + user.address);
+			}
+			return setImmediate(cb, null, { success: true, message: "Two Factor Authentication Disabled For " + user.address });
+		});
 	}
 };
 
