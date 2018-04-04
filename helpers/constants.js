@@ -48,7 +48,7 @@ module.exports = {
 	blockHeaderLength: 248,
 	blockReceiptTimeOut: 20, // 2 blocks
 	confirmationLength: 77,
-	epochTime: new Date(Date.UTC(2017, 9, 1, 17, 0, 0, 0)),
+	epochTime: new Date(Date.UTC(2016, 0, 1, 17, 0, 0, 0)),
 	fees: {
 		send: 10000000,
 		vote: 100000000,
@@ -70,7 +70,7 @@ module.exports = {
 	maxRequests: 10000 * 12,
 	maxSharedTxs: 100,
 	maxSignaturesLength: 196 * 256,
-	maxTxsPerBlock: 6,
+	maxTxsPerBlock: 10,
 	minBroadhashConsensus: 0,
 	nethashes: [
 		// Mainnet
@@ -94,7 +94,7 @@ module.exports = {
 	},
 	signatureLength: 196,
 	// WARNING: When changing totalAmount you also need to change getBlockRewards(int) SQL function!
-	totalAmount: 10000000000000000,
+	totalAmount: 2100000000000000,
 	unconfirmedTransactionTimeOut: 10800, // 1080 blocks
 	multisigConstraints: {
 		min: {
@@ -112,7 +112,7 @@ module.exports = {
 	},
 	// Configurable froze order : time here is in minutes
 	froze : {
-		endTime : 6,
+		endTime : 12,
 		milestone : 2, //for testing, taking 2 min
 		reward : 0.1 // Currently moonthly reward is 10%
 	},

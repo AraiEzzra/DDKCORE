@@ -735,29 +735,33 @@ Transactions.prototype.shared = {
 			if (err) {
 				return setImmediate(cb, err[0].message);
 			}
-
-			var hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
-			var keypair = library.ed.makeKeypair(hash);
-
-			if (req.body.publicKey) {
-				if (keypair.publicKey.toString('hex') !== req.body.publicKey) {
-					return setImmediate(cb, 'Invalid passphrase');
+			library.schema.validate(req.body, schema.addTransactions, function (err) {
+				if (err) {
+					return setImmediate(cb, err[0].message);
 				}
-			}
+
+				var hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
+				var keypair = library.ed.makeKeypair(hash);
+
+				if (req.body.publicKey) {
+					if (keypair.publicKey.toString('hex') !== req.body.publicKey) {
+						return setImmediate(cb, 'Invalid passphrase');
+					}
+				}
 
 			var query = { address: req.body.recipientId };
 
-			library.balancesSequence.add(function (cb) {
-				modules.accounts.getAccount(query, function (err, recipient) {
-					if (err) {
-						return setImmediate(cb, err);
-					}
+				library.balancesSequence.add(function (cb) {
+					modules.accounts.getAccount(query, function (err, recipient) {
+						if (err) {
+							return setImmediate(cb, err);
+						}
 
-					var recipientId = recipient ? recipient.address : req.body.recipientId;
+						var recipientId = recipient ? recipient.address : req.body.recipientId;
 
-					if (!recipientId) {
-						return setImmediate(cb, 'Invalid recipient');
-					}
+						if (!recipientId) {
+							return setImmediate(cb, 'Invalid recipient');
+						}
 
 					if (req.body.multisigAccountPublicKey && req.body.multisigAccountPublicKey !== keypair.publicKey.toString('hex')) {
 						modules.accounts.getAccount({ publicKey: req.body.multisigAccountPublicKey }, function (err, account) {
@@ -765,38 +769,34 @@ Transactions.prototype.shared = {
 								return setImmediate(cb, err);
 							}
 
-							if (!account || !account.publicKey) {
-								return setImmediate(cb, 'Multisignature account not found');
-							}
+								if (!account || !account.publicKey) {
+									return setImmediate(cb, 'Multisignature account not found');
+								}
 
-							if (!Array.isArray(account.multisignatures)) {
-								return setImmediate(cb, 'Account does not have multisignatures enabled');
-							}
+								if (!Array.isArray(account.multisignatures)) {
+									return setImmediate(cb, 'Account does not have multisignatures enabled');
+								}
 
-							if (account.multisignatures.indexOf(keypair.publicKey.toString('hex')) < 0) {
-								return setImmediate(cb, 'Account does not belong to multisignature group');
-							}
+								if (account.multisignatures.indexOf(keypair.publicKey.toString('hex')) < 0) {
+									return setImmediate(cb, 'Account does not belong to multisignature group');
+								}
 
 							modules.accounts.getAccount({ publicKey: keypair.publicKey }, function (err, requester) {
 								if (err) {
 									return setImmediate(cb, err);
 								}
 
-								if (!requester || !requester.publicKey) {
-									return setImmediate(cb, 'Requester not found');
+								if (!account || !account.publicKey) {
+									return setImmediate(cb, 'Account not found');
 								}
 
-								if (requester.secondSignature && !req.body.secondSecret) {
-									return setImmediate(cb, 'Missing requester second passphrase');
-								}
-
-								if (requester.publicKey === account.publicKey) {
-									return setImmediate(cb, 'Invalid requester public key');
+								if (account.secondSignature && !req.body.secondSecret) {
+									return setImmediate(cb, 'Missing second passphrase');
 								}
 
 								var secondKeypair = null;
 
-								if (requester.secondSignature) {
+								if (account.secondSignature) {
 									var secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
 									secondKeypair = library.ed.makeKeypair(secondHash);
 								}
@@ -810,7 +810,6 @@ Transactions.prototype.shared = {
 										sender: account,
 										recipientId: recipientId,
 										keypair: keypair,
-										requester: keypair,
 										secondKeypair: secondKeypair
 									});
 								} catch (e) {
@@ -858,17 +857,66 @@ Transactions.prototype.shared = {
 
 							modules.transactions.receiveTransactions([transaction], true, cb);
 						});
+						}
+					});
+				}, function (err, transaction) {
+					if (err) {
+						return setImmediate(cb, err);
 					}
-				});
-			}, function (err, transaction) {
-				if (err) {
-					return setImmediate(cb, err);
-				}
 
-				return setImmediate(cb, null, { transactionId: transaction[0].id });
+					return setImmediate(cb, null, { transactionId: transaction[0].id });
+				});
 			});
 		});
-		//});
+	},
+
+	generateOTP: function (req, cb) {
+		//console.log('backend to generate OTP');
+		var options = {
+			"method": "POST",
+			"hostname": "api.msg91.com",
+			"port": null,
+			"path": "/api/v2/sendsms",
+			"headers": {
+				"authkey": "199676A4cGzKDlK0N5a91461",
+				"content-type": "application/json"
+			}
+		};
+		var secret = speakeasy.generateSecret({ length: 30 });
+		var token = speakeasy.totp({
+			secret: secret.base32,
+			encoding: 'base32',
+		});
+		//library.cache.client.set('userKey_' + token, secret);
+		/* library.modules.cache.setJsonForKey('userKey_' + token, secret, function(err) {
+			console.log(err);
+		}); */
+		//library.cache.client.set('userKey_' + token, secret, 'ex', 100);
+		//cache.prototype.setJsonForKey('userKey_' + token, secret.base32, 'ex', 100);
+		//library.cache.client.set('userKey_' + token, secret.base32);
+		cache.prototype.setJsonForKey("userKey_" + token, secret.base32);
+		var req = http.request(options, function (res) {
+			var chunks = [];
+
+			res.on("data", function (chunk) {
+				chunks.push(chunk);
+			});
+
+			res.on("end", function () {
+				var body = Buffer.concat(chunks);
+				console.log(body.toString());
+			});
+		});
+
+		req.write(JSON.stringify({
+			sender: 'SOCKET',
+			route: '4',
+			country: '91',
+			sms:
+				[{ message: 'OTP : ' + token, to: ['9205726015'] }]
+		}));
+		req.end();
+		return setImmediate(cb, null);
 	}
 };
 

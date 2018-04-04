@@ -50,6 +50,13 @@ exports.makeBulk = function (list, index) {
 		} else {
 			indexId = list[current].height;
 		} 
+		if(index === 'blocks') {
+			list[current].generatorId = Accounts.prototype.generateAddressByPublicKey(list[current].generatorPublicKey);
+		}
+		
+		if (index === 'blocks') {
+			list[current].generatorId = Accounts.prototype.generateAddressByPublicKey(list[current].generatorPublicKey);
+		}
 		
 		if (index === 'blocks') {
 			list[current].generatorId = Accounts.prototype.generateAddressByPublicKey(list[current].generatorPublicKey);

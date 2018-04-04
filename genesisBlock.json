@@ -2,29 +2,24 @@
 	"version": 0,
 	"totalAmount": 2100000000000000,
 	"totalFee": 0,
-	"reward": 2100000000000000,
+	"reward": 0,
 	"payloadHash": "da3ed6a45429278bac2666961289ca17ad86595d33b31037615d4b8e8f158bba",
 	"timestamp": 0,
-	"numberOfTransactions": 6,
-	"payloadLength": 250,
+	"numberOfTransactions": 9,
+	"payloadLength": 20326,
 	"previousBlock": null,
-	"generatorPublicKey": "f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2",
+	"generatorPublicKey": "f50fe1582173dc30869ca3357daeec3ec3608a7517c0ea388c50c5e3afcc8041",
 	"transactions": [
 		{
-			"type": 2,
-			"amount": 0,
+			"type": 0,
+			"amount": "2100000000000000",
 			"fee": 0,
 			"timestamp": 0,
-			"recipientId": null,
-			"senderId": "4995063339468361088E",
-			"senderPublicKey": "f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2",
-			"asset": {
-				"delegate": {
-					"username": "hotam"
-				}
-			},
-			"signature": "319b520e647be6ed47ebecbbe2f47d7dd4ca12690aaa4e36ee60493d89953519fea08b9d089850941c5b60b662f982a8890affa071e16847af406280bdee7e05",
-			"id": "8904615286204140458"
+			"recipientId": "4995063339468361088E",
+			"senderId": "12817390500414975490E",
+			"senderPublicKey": "f50fe1582173dc30869ca3357daeec3ec3608a7517c0ea388c50c5e3afcc8041",
+			"signature": "c1e1e02f5128fa79e913356b5db18dce1626f5f740416431fe669345c5669497b974bc16d978a83142ed36cc7d2f6a9b764e609b24372f412fea8ecd476f9507",
+			"id": "2525816115293971625"
 		},
 		{
 			"type": 0,
@@ -71,26 +66,74 @@
 			"id": "16794796872512157174"
 		},
 		{
-			"type": 5,
+			"type": 2,
 			"amount": 0,
 			"fee": 0,
 			"timestamp": 0,
 			"recipientId": null,
-			"senderId": "4995063339468361088E",
-			"senderPublicKey": "f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2",
+			"senderId": "16313739661670634666E",
+			"senderPublicKey": "c094ebee7ec0c50ebee32918655e089f6e1a604b83bcaa760293c61e0f18ab6f",
 			"asset": {
-				"dapp": {
-					"name": "test",
-					"description": "test",
-					"link": "https://github.com/hotam-singh/guestbookDapp/archive/master.zip",
-					"git": "https://github.com/hotam-singh/guestbookDapp.git",
-					"type": 0,
-					"category": 0
+				"delegate": {
+					"username": "delegate_1"
 				}
 			},
-			"signature": "790fd33b4b5e8750fee2e759809401eeef613fd2f71900363da9060b526d31f771dd811b4fa455bd8d19bec189e8a5814c7033b5967cc2e03f480915db936b07",
-			"id": "1525995439672587201"
-		}
+			"signature": "319b520e647be6ed47ebecbbe2f47d7dd4ca12690aaa4e36ee60493d89953519fea08b9d089850941c5b60b662f982a8890affa071e16847af406280bdee7e05",
+			"id": "8904615286204140458"
+		},
+		{
+            "type": 2,
+            "amount": 0,
+            "fee": 0,
+            "timestamp": 0,
+            "recipientId": null,
+            "senderId": "16863581701775438665E",
+            "senderPublicKey": "722c48aa6e68788b580b5f10a4c86d395e9cbb1b24e570958f0d02f1d5c9e250",
+            "asset": {
+                "delegate": {
+                    "username": "delegate_2"
+                }
+            },
+            "signature": "a8c76646f01ce88449d3843b3542bc0caee19b960e8b35cb725afedd67f700635f4039ff42c90f00474f1c14e12712f50402f11c7659179ef54efaf501e7cb0d",
+            "id": "4911459127686575758"
+		},
+		{
+            "type": 2,
+            "amount": 0,
+            "fee": 0,
+            "timestamp": 0,
+            "recipientId": null,
+            "senderId": "4654565460128291637E",
+            "senderPublicKey": "faf82dd8a232b7878df262846bcfa24d90b02d154d380bfcc412eaf2de6c3268",
+            "asset": {
+                "delegate": {
+                    "username": "delegate_3"
+                }
+            },
+            "signature": "cdc37f77c466b8a1d5d6741472b500d768972c61eee97a63f8101f71f2426ee2c4244052ba74d10bbbb7d7bea92cbef74a0e3b997caa8065ea650b96f1d1e802",
+            "id": "5378826836118387760"
+		},
+		{
+            "type": 3,
+            "amount": 0,
+            "fee": 0,
+            "timestamp": 0,
+            "recipientId": "4995063339468361088E",
+            "senderId": "4995063339468361088E",
+            "senderPublicKey": "f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2",
+            "asset": {
+              
+                "votes": [
+                    "+c094ebee7ec0c50ebee32918655e089f6e1a604b83bcaa760293c61e0f18ab6f",
+                    "+722c48aa6e68788b580b5f10a4c86d395e9cbb1b24e570958f0d02f1d5c9e250",
+                    "+faf82dd8a232b7878df262846bcfa24d90b02d154d380bfcc412eaf2de6c3268"
+                ]
+              
+            },
+            "signature": "a8edb3af3ff7e864ce610ea92ea44454ebc3ed3195cbd325d0eb59a1c8fc27cff851af2784f71d836f161abf3d92e44e888acad5473ea9a93f51767953d2560c",
+            "id": "7018275140629949519"
+        }
+		
 	],
 	"height": 1,
 	"blockSignature": "a47d07d3a8d8024eb44672bc6d07cdcd1cd03803d9612b7b10c10d5a844fb8f6ed11fab5159b6d9826b7302c3d3f5d7d29d13b40e6fe59c9374f4ec94af4eb0f",
