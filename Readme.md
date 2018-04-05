@@ -344,9 +344,9 @@ Make not found error
 
 # Solution:
 If it's Ubuntu you'll need to install the build-essential package:
-
+```
 $ sudo apt-get install build-essential
-
+```
 # ERROR 12:
 If sodium package not install with error:
 
@@ -366,9 +366,10 @@ Error: make libsodium exited with code 2
 # Solution :
 
 Run two commands:-
-sudo apt-get install libtool
-
-sudo apt-get install autoconf
+```
+$ sudo apt-get install libtool
+$ sudo apt-get install autoconf
+```
 
 ################################# Authors #####################################
 

@@ -50,7 +50,6 @@ monitoring.on('redis', function (data) {
 	//console.log(chalk.green('redis') + ' : ' +chalk.yellow('[ETPCoinMetric] duration='+data.duration+' ms cmd='+data.cmd));
 });*/
 
-*/
 //Requiring Modules
 require('dotenv').config();
 var async = require('async');
