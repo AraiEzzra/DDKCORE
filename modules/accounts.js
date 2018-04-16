@@ -19,6 +19,7 @@ var jwt = require('jsonwebtoken');
 var QRCode = require('qrcode');
 var cache = require('./cache.js');
 var speakeasy = require("speakeasy");
+var httpApi = require('../helpers/httpApi');
 
 // Private fields
 var modules, library, self, __private = {}, shared = {};
@@ -229,7 +230,11 @@ Accounts.prototype.mergeAccountAndGet = function (data, cb) {
 			throw err;
 		}
 	}
-
+	/* library.logic.account.merge('4995063339468361088E', {
+		balance: -'500000000'
+	}, function (err, sender) {
+		//console.log('sender : ', sender);
+	}); */
 	return library.logic.account.merge(address, data, cb);
 };
 
@@ -279,6 +284,7 @@ Accounts.prototype.isLoaded = function () {
  */
 Accounts.prototype.shared = {
 	open: function (req, cb) {
+		req.setTimeout(100);
 		library.schema.validate(req.body, schema.open, function (err) {
 			if (err) {
 				return setImmediate(cb, err[0].message);
@@ -331,7 +337,7 @@ Accounts.prototype.shared = {
 							data.transferedAmount = req.body.transferedAmount;
 						}
 						var REDIS_KEY_USER_INFO_HASH = "userInfo_" + data.address;
-						var REDIS_KEY_USER_TIME_HASH = "userInfo_" + data.endTime;
+						var REDIS_KEY_USER_TIME_HASH = "userTimeHash_" + data.endTime;
 						cache.prototype.isExists(REDIS_KEY_USER_INFO_HASH, function (err, isExist) {
 							if (!isExist) {
 								var userInfo = {
@@ -349,20 +355,20 @@ Accounts.prototype.shared = {
 									library.db.none(sql.disableAccount, {
 										senderId: account.address
 									})
-										.then(function () {
-											library.logger.info(account.address + ' account is locked');
-											library.logic.account.set(accountData.address, data, function (err) {
-												if (!err) {
-													return setImmediate(cb, null, { account: accountData });
-												} else {
-													return setImmediate(cb, err);
-												}
-											});
-										})
-										.catch(function (err) {
-											library.logger.error(err.stack);
-											return setImmediate(cb, err);
+									.then(function () {
+										library.logger.info(account.address + ' account is locked');
+										library.logic.account.set(accountData.address, data, function (err) {
+											if (!err) {
+												return setImmediate(cb, null, { account: accountData });
+											} else {
+												return setImmediate(cb, err);
+											}
 										});
+									})
+									.catch(function (err) {
+										library.logger.error(err.stack);
+										return setImmediate(cb, err);
+									});
 								});
 							} else {
 								return setImmediate(cb, null, { account: accountData });
@@ -645,103 +651,6 @@ Accounts.prototype.shared = {
 		});
 	},
 
-	// lock account API
-	lockAccount: function (req, cb) {
-		library.schema.validate(req.body, schema.lockAccount, function (err) {
-			if (!err) {
-				if (!req.body.address) {
-					return setImmediate(cb, 'Missing required property: address');
-				}
-				var address = req.body.publicKey ? self.generateAddressByPublicKey(req.body.publicKey) : req.body.address;
-				self.getAccount({ address: address }, function (err, account) {
-					if (err) {
-						return setImmediate(cb, err);
-					}
-					if (account.acc_type) {
-						var lastBlock = modules.blocks.lastBlock.get();
-						var endTime = library.logic.contract.calcEndTime(account.acc_type, lastBlock.timestamp);
-						var REDIS_KEY_USER_TIME_HASH = "userInfo_" + endTime;
-						cache.prototype.isExists(REDIS_KEY_USER_TIME_HASH, function (err, isExist) {
-							if (!isExist) {
-								var userInfo = {
-									address: account.address,
-									endTime: endTime
-								};
-								cache.prototype.hmset(REDIS_KEY_USER_TIME_HASH, userInfo);
-								library.db.none(sql.disableAccount, {
-									senderId: account.address
-								})
-									.then(function () {
-										library.logger.info(account.address + ' account is locked');
-										return setImmediate(cb, null, { account: account });
-									})
-									.catch(function (err) {
-										library.logger.error(err.stack);
-										return setImmediate(cb, err);
-									});
-							} else {
-								return setImmediate(cb, null, { account: account });
-							}
-						});
-					} else {
-						library.db.none(sql.disableAccount, {
-							senderId: account.address
-						})
-							.then(function () {
-								library.logger.info(account.address + ' account is locked');
-								return setImmediate(cb, null, { account: account });
-							})
-							.catch(function (err) {
-								library.logger.error(err.stack);
-								return setImmediate(cb, err);
-							});
-					}
-				});
-			} else {
-				return setImmediate(cb, err);
-			}
-		});
-	},
-
-	// unlock account API
-	unlockAccount: function (req, cb) {
-		library.schema.validate(req.body, schema.unlockAccount, function (err) {
-			if (!err) {
-				if (!req.body.address) {
-					return setImmediate(cb, 'Missing required property: address');
-				}
-
-				var address = req.body.publicKey ? self.generateAddressByPublicKey(req.body.publicKey) : req.body.address;
-				library.db.none(sql.enableAccount, {
-					senderId: address
-				})
-					.then(function () {
-						library.logger.info(address + ' account is unlocked');
-						return setImmediate(cb, null);
-					})
-					.catch(function (err) {
-						return setImmediate(cb, err);
-					});
-			} else {
-				return setImmediate(cb, err);
-			}
-		});
-	},
-
-	// logout API
-	logout: function (req, cb) {
-		library.cache.client.del('jwtToken_' + req.body.address);
-		delete req.decoded;
-		return setImmediate(cb);
-		//req.session.cookie.maxAge = null;
-		/* req.session.destroy(function (err) {
-			if (err) {
-				return setImmediate(cb, err);
-			}
-			req.redirect('/');
-		}); */
-	},
-
 	totalAccounts: function (req, cb) {
 		library.db.one(sql.getTotalAccount)
 			.then(function (data) {
@@ -944,7 +853,7 @@ Accounts.prototype.shared = {
 				token: req.body.otp,
 				window: 6
 			});
-			if (!verified && user.address !== user_2FA.address) {
+			if (!verified) {
 				return setImmediate(cb, 'Invalid OTP!. Please enter valid OTP to SEND Transaction');
 			}
 			user_2FA.twofactor.secret = req.body.key;
@@ -1004,6 +913,97 @@ Accounts.prototype.internal = {
 
 	getAllAccounts: function (req, cb) {
 		return setImmediate(cb, null, { success: true, accounts: __private.accounts });
+	},
+
+	// lock account API
+	lockAccount: function (req, cb) {
+		library.schema.validate(req.body, schema.lockAccount, function (err) {
+			if (!err) {
+				if (!req.body.address) {
+					return setImmediate(cb, 'Missing required property: address');
+				}
+				var address = req.body.publicKey ? self.generateAddressByPublicKey(req.body.publicKey) : req.body.address;
+				self.getAccount({ address: address }, function (err, account) {
+					if (err) {
+						return setImmediate(cb, err);
+					}
+					//FIXME: Uncomment this condition if you want to unlock any contributors/founders automatically via smart contract when you lock them manually.
+					/* if (account.acc_type) {
+						var lastBlock = modules.blocks.lastBlock.get();
+						var endTime = library.logic.contract.calcEndTime(account.acc_type, lastBlock.timestamp);
+						var REDIS_KEY_USER_TIME_HASH = "userInfo_" + endTime;
+						cache.prototype.isExists(REDIS_KEY_USER_TIME_HASH, function (err, isExist) {
+							if (!isExist) {
+								var userInfo = {
+									address: account.address,
+									endTime: endTime
+								};
+								cache.prototype.hmset(REDIS_KEY_USER_TIME_HASH, userInfo);
+								library.db.none(sql.disableAccount, {
+									senderId: account.address
+								})
+									.then(function () {
+										library.logger.info(account.address + ' account is locked');
+										return setImmediate(cb, null, { account: account });
+									})
+									.catch(function (err) {
+										library.logger.error(err.stack);
+										return setImmediate(cb, err);
+									});
+							} else {
+								return setImmediate(cb, null, { account: account });
+							}
+						});
+					} else { */
+						library.db.none(sql.disableAccount, {
+							senderId: account.address
+						})
+						.then(function () {
+							library.logger.info(account.address + ' account is locked');
+							return setImmediate(cb, null, { account: account });
+						})
+						.catch(function (err) {
+							library.logger.error(err.stack);
+							return setImmediate(cb, err);
+						});
+					//}
+				});
+			} else {
+				return setImmediate(cb, err);
+			}
+		});
+	},
+
+	// unlock account API
+	unlockAccount: function (req, cb) {
+		library.schema.validate(req.body, schema.unlockAccount, function (err) {
+			if (!err) {
+				if (!req.body.address) {
+					return setImmediate(cb, 'Missing required property: address');
+				}
+
+				var address = req.body.publicKey ? self.generateAddressByPublicKey(req.body.publicKey) : req.body.address;
+				library.db.none(sql.enableAccount, {
+					senderId: address
+				})
+				.then(function () {
+					library.logger.info(address + ' account is unlocked');
+					return setImmediate(cb, null);
+				})
+				.catch(function (err) {
+					return setImmediate(cb, err);
+				});
+			} else {
+				return setImmediate(cb, err);
+			}
+		});
+	},
+
+	// logout API
+	logout: function (req, cb) {
+		library.cache.client.del('jwtToken_' + req.body.address);
+		delete req.decoded;
+		return setImmediate(cb);
 	}
 };
 

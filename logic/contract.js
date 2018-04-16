@@ -86,14 +86,14 @@ Contract.prototype.process = function (trs, sender, cb) {
 //Calculate end time based on current timestamp
 Contract.prototype.calcEndTime = function (accType, startTime) {
     var date = new Date(startTime * 1000);
-    if (accType == 1 || accType == 0) {
+   /*  if (accType == 1 || accType == 0) {
         var endTime = (date.setMinutes(date.getMinutes() + 90 * 24 * 60 * 60)) / 1000;
     } else if (accType == 2) {
         var endTime = (date.setMinutes(date.getMinutes() + 90 * 24 * 60 * 60)) / 1000;
     } else if (accType == 3) {
         var endTime = (date.setMinutes(date.getMinutes() + 365 * 24 * 60 * 60)) / 1000;
-    }
-    //var endTime = (date.setMinutes(date.getMinutes() + 2 ))/1000;
+    } */
+    var endTime = (date.setMinutes(date.getMinutes() + 2 ))/1000;
     return endTime;
 };
 

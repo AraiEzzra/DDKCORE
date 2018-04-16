@@ -27,7 +27,7 @@ function ServerHttpApi (serverModule, app) {
 	});
 
 	//get user's status
-	router.get('/user/status', tokenValidator, function(req, res) {
+	router.get('/user/status', tokenValidator, httpApi.middleware.attachInfoToLogger, function(req, res) {
 		if(req.decoded.address) {
 			Accounts.prototype.getAccount({address: req.decoded.address}, function(err, account) {
 				if(!err) {

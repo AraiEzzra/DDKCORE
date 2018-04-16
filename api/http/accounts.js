@@ -40,9 +40,6 @@ function AccountsHttpApi (accountsModule, app) {
 		'get /delegates/fee': 'getDelegatesFee',
 		'put /delegates': 'addDelegates',
 		'get /': 'getAccount',
-		'post /lock': 'lockAccount',
-		'post /unlock': 'unlockAccount',
-		'post /logout': 'logout',
 		'get /count':'totalAccounts',
 		'get /getCirculatingSupply':'getCirculatingSupply',
 		'get /totalSupply' : 'totalSupply',
@@ -57,7 +54,10 @@ function AccountsHttpApi (accountsModule, app) {
 	});
 
 	router.map(accountsModule.internal, {
-		'get /count': 'count'
+		'get /count': 'count',
+		'post /lock': 'lockAccount',
+		'post /unlock': 'unlockAccount',
+		'post /logout': 'logout'
 	});
 
 	if (process.env.DEBUG && process.env.DEBUG.toUpperCase() === 'TRUE') {
@@ -69,8 +69,8 @@ function AccountsHttpApi (accountsModule, app) {
 	}
 	app.use('/api/accounts/getBalance', tokenValidator);
 	app.use('/api/accounts/logout', tokenValidator);
+	//app.use('/api/accounts', httpApi.middleware.attachInfoToLogger);
 	httpApi.registerEndpoint('/api/accounts', app, router, accountsModule.isLoaded);
-	
 }
 
 module.exports = AccountsHttpApi;
