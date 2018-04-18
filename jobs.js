@@ -42,7 +42,7 @@ exports.updateDataOnElasticSearch = {
                             console.log("1");
                             })
                             .catch(function (err) {
-                            console.log("2");
+                            console.log("2"+err);
                                 library.logger.error('elasticsearch error :', err);
                             });
                     }
