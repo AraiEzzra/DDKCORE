@@ -39,10 +39,8 @@ exports.updateDataOnElasticSearch = {
                         utils.indexall(bulk, tableName)
                             .then(function (result) {
                                 //FIXME: Do further processing on successful indexing on elasticsearch server
-                            console.log("1");
                             })
                             .catch(function (err) {
-                            console.log("2"+err);
                                 library.logger.error('elasticsearch error :', err);
                             });
                     }
