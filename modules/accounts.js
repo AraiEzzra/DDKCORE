@@ -834,7 +834,7 @@ Accounts.prototype.shared = {
 
 				var date = new Date((slots.getTime(order.insert_time)) * 1000);
 				var milestone = (date.setMinutes(date.getMinutes() + constants.froze.milestone)) / 1000;
-				var endTime = (date.setMinutes(date.getMinutes() - constants.froze.milestone + constants.froze.endTime)) / 1000;
+				var endTime = (date.setMinutes(date.getMinutes() - constants.froze.milestone + constants.froze.endTime - (order.month_count)*(constants.froze.milestone))) / 1000;
 
 				library.db.none(sql.InsertStakeOrder, {
 					account_id: req.body.data.id,
@@ -895,7 +895,7 @@ Accounts.prototype.shared = {
 
 				library.db.none(sql.updateUserInfo, {
 					address: req.body.address,
-					balance: parseInt(balance),
+					balance: parseInt(totalFrozeAmount.sum),
 					email: req.body.data.email,
 					phone: req.body.data.phone,
 					username: req.body.data.username,
