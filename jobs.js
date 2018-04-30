@@ -107,7 +107,7 @@ exports.archiveLogFiles = {
     spawn: false
 }
 
-// Unlock pending users everyday at midnight
+// Unlock pending users everyday at midnight i.e 12AM
 exports.unlockLockedUsers = {
 
     on: "00 00 00 * * *",

@@ -41,6 +41,15 @@ module.exports = {
     address: env.ADMIN_ADDRESS 
   },
   nethash: env.NETHASH,
-  jwtSecret: env.JWT_SECRET,
-  msgServiceAuthKey: env.MSG91_AUTH_KEY
+  jwt: {
+    secret: env.JWT_SECRET,
+  },
+  msgServiceAuthKey: env.MSG91_AUTH_KEY,
+  mailFrom: env.MAILFROM,
+  mailTo: env.MAILTO,
+  refershToken: env.REFRESHTOKEN,
+  accessToken: env.ACCESSTOKEN,
+  clientId: env.CLIENT_ID,
+  clientSecret: env.CLIENT_SECRET,
+  hashSecret: env.HASH_SECRET
 };

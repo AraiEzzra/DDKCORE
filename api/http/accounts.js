@@ -45,19 +45,20 @@ function AccountsHttpApi (accountsModule, app) {
 		'get /totalSupply' : 'totalSupply',
 		'post /existingETPSUser' : 'existingETPSUser',
 		'post /migrateData' : 'migrateData', 
-		'post /existingETPSUser/validate' : 'validateExistingUser',
-		'post /generateQRCode': 'generateQRCode',
-		'post /verifyOTP': 'verifyOTP',
-		'post /enableTwoFactor': 'enableTwoFactor',
-		'post /disableTwoFactor': 'disableTwoFactor'
-
+		'post /existingETPSUser/validate' : 'validateExistingUser'
 	});
 
 	router.map(accountsModule.internal, {
 		'get /count': 'count',
-		'post /lock': 'lockAccount',
-		'post /unlock': 'unlockAccount',
-		'post /logout': 'logout'
+		'get /lock': 'lockAccount',
+		'get /unlock': 'unlockAccount',
+		'post /logout': 'logout',
+		'post /generateQRCode': 'generateQRCode',
+		'post /verifyOTP': 'verifyOTP',
+		'post /enableTwoFactor': 'enableTwoFactor',
+		'post /disableTwoFactor': 'disableTwoFactor',
+		'get /checkTwoFactorStatus': 'checkTwoFactorStatus',
+		'post /sendMailForConfirmation': 'sendMailForConfirmation'
 	});
 
 	if (process.env.DEBUG && process.env.DEBUG.toUpperCase() === 'TRUE') {
@@ -69,7 +70,6 @@ function AccountsHttpApi (accountsModule, app) {
 	}
 	app.use('/api/accounts/getBalance', tokenValidator);
 	app.use('/api/accounts/logout', tokenValidator);
-	//app.use('/api/accounts', httpApi.middleware.attachInfoToLogger);
 	httpApi.registerEndpoint('/api/accounts', app, router, accountsModule.isLoaded);
 }
 

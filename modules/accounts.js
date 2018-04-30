@@ -20,6 +20,8 @@ var QRCode = require('qrcode');
 var cache = require('./cache.js');
 var speakeasy = require("speakeasy");
 var httpApi = require('../helpers/httpApi');
+var mailServices = require('../helpers/nodemailer');
+var Cryptr = require('cryptr');
 
 // Private fields
 var modules, library, self, __private = {}, shared = {};
@@ -105,6 +107,29 @@ __private.openAccount = function (secret, cb) {
 			return setImmediate(cb, null, account);
 		}
 	});
+};
+
+/**
+ * Encrypts secret based on text provided.
+ * @param {cryptcr} Cryptr instance - encrypt/decrypt text.
+ * @param {encryptedString} Hashed string.
+ */
+Accounts.prototype.encrypt = function (text) {
+    var cryptr = new Cryptr(library.config.hashSecret);
+	var encryptedString = cryptr.encrypt(text);
+	return encryptedString;
+};
+
+/**
+ * Decrypts encrypted string.
+ * @param {cryptcr} Cryptr instance - encrypt/decrypt text.
+ * @param {encryptedString} Hashed string.
+ * @param {decryptedString} Decrypted string.
+ */
+Accounts.prototype.decrypt = function (encryptedString) {
+    var cryptr = new Cryptr(library.config.hashSecret);
+	var decryptedString = cryptr.decrypt(encryptedString);
+	return decryptedString;
 };
 
 /**
@@ -284,7 +309,6 @@ Accounts.prototype.isLoaded = function () {
  */
 Accounts.prototype.shared = {
 	open: function (req, cb) {
-		req.setTimeout(100);
 		library.schema.validate(req.body, schema.open, function (err) {
 			if (err) {
 				return setImmediate(cb, err[0].message);
@@ -296,8 +320,9 @@ Accounts.prototype.shared = {
 						secret: req.body.secret,
 						address: account.address
 					};
-					var token = jwt.sign(payload, library.config.jwtSecret, {
-						expiresIn: 100
+					var token = jwt.sign(payload, library.config.jwt.secret, {
+						expiresIn: library.config.jwt.tokenLife,
+						mutatePayload: true
 					});
 					var accountData = {
 						address: account.address,
@@ -311,7 +336,7 @@ Accounts.prototype.shared = {
 						u_multisignatures: account.u_multisignatures
 					};
 					accountData.token = token;
-					library.cache.client.set('jwtToken_' + account.address, token, 'ex', 100);
+					//library.cache.client.set('jwtToken_' + account.address, token, 'ex', 100);
 					/****************************************************************/
 
 					var data = {
@@ -355,20 +380,20 @@ Accounts.prototype.shared = {
 									library.db.none(sql.disableAccount, {
 										senderId: account.address
 									})
-									.then(function () {
-										library.logger.info(account.address + ' account is locked');
-										library.logic.account.set(accountData.address, data, function (err) {
-											if (!err) {
-												return setImmediate(cb, null, { account: accountData });
-											} else {
-												return setImmediate(cb, err);
-											}
+										.then(function () {
+											library.logger.info(account.address + ' account is locked');
+											library.logic.account.set(accountData.address, data, function (err) {
+												if (!err) {
+													return setImmediate(cb, null, { account: accountData });
+												} else {
+													return setImmediate(cb, err);
+												}
+											});
+										})
+										.catch(function (err) {
+											library.logger.error(err.stack);
+											return setImmediate(cb, err);
 										});
-									})
-									.catch(function (err) {
-										library.logger.error(err.stack);
-										return setImmediate(cb, err);
-									});
 								});
 							} else {
 								return setImmediate(cb, null, { account: accountData });
@@ -766,6 +791,151 @@ Accounts.prototype.shared = {
 			return setImmediate(cb, "Invalid username or password");
 		});
 
+	}
+};
+
+// Internal API
+/**
+ * @todo implement API comments with apidoc.
+ * @see {@link http://apidocjs.com/}
+ */
+Accounts.prototype.internal = {
+	count: function (req, cb) {
+		return setImmediate(cb, null, { success: true, count: Object.keys(__private.accounts).length });
+	},
+
+	top: function (query, cb) {
+		self.getAccounts({
+			sort: {
+				balance: -1
+			},
+			offset: query.offset,
+			limit: (query.limit || 100)
+		}, function (err, raw) {
+			if (err) {
+				return setImmediate(cb, err);
+			}
+
+			var accounts = raw.map(function (account) {
+				return {
+					address: account.address,
+					balance: account.balance,
+					publicKey: account.publicKey
+				};
+			});
+
+			return setImmediate(cb, null, { success: true, accounts: accounts });
+		});
+	},
+
+	getAllAccounts: function (req, cb) {
+		return setImmediate(cb, null, { success: true, accounts: __private.accounts });
+	},
+
+	// lock account API
+	lockAccount: function (req, cb) {
+		library.schema.validate(req.body, schema.lockAccount, function (err) {
+			if (!err) {
+				if (!req.body.address) {
+					return setImmediate(cb, 'Missing required property: address');
+				}
+				var address = req.body.publicKey ? self.generateAddressByPublicKey(req.body.publicKey) : req.body.address;
+				self.getAccount({ address: address }, function (err, account) {
+					if (err) {
+						return setImmediate(cb, err);
+					}
+					//FIXME: Uncomment this condition if you want to unlock any contributors/founders automatically via smart contract when you lock them manually.
+					/* if (account.acc_type) {
+						var lastBlock = modules.blocks.lastBlock.get();
+						var endTime = library.logic.contract.calcEndTime(account.acc_type, lastBlock.timestamp);
+						var REDIS_KEY_USER_TIME_HASH = "userInfo_" + endTime;
+						cache.prototype.isExists(REDIS_KEY_USER_TIME_HASH, function (err, isExist) {
+							if (!isExist) {
+								var userInfo = {
+									address: account.address,
+									endTime: endTime
+								};
+								cache.prototype.hmset(REDIS_KEY_USER_TIME_HASH, userInfo);
+								library.db.none(sql.disableAccount, {
+									senderId: account.address
+								})
+									.then(function () {
+										library.logger.info(account.address + ' account is locked');
+										return setImmediate(cb, null, { account: account });
+									})
+									.catch(function (err) {
+										library.logger.error(err.stack);
+										return setImmediate(cb, err);
+									});
+							} else {
+								return setImmediate(cb, null, { account: account });
+							}
+						});
+					} else { */
+					this.scope.db.one(sql.checkAccountStatus, {
+						senderId: account.senderId
+					})
+					.then(function (row) {
+						if (row.status == 0) {
+							return setImmediate(cb, null, 'Account is already disabled');
+						}
+						library.db.none(sql.disableAccount, {
+							senderId: account.address
+						})
+						.then(function () {
+							library.logger.info(account.address + ' account is locked');
+							return setImmediate(cb, null, { message: "Account is locked" });
+						})
+						.catch(function (err) {
+							library.logger.error(err.stack);
+							return setImmediate(cb, err);
+						});
+						//return setImmediate(cb, null, row.status);
+						//cb(null);
+					})
+					.catch(function (err) {
+						this.scope.logger.error(err.stack);
+						return setImmediate(cb, 'Transaction#checkAccountStatus error');
+					});
+
+					//}
+				});
+			} else {
+				return setImmediate(cb, err);
+			}
+		});
+	},
+
+	// unlock account API
+	unlockAccount: function (req, cb) {
+		library.schema.validate(req.body, schema.unlockAccount, function (err) {
+			if (!err) {
+				if (!req.body.address) {
+					return setImmediate(cb, 'Missing required property: address');
+				}
+
+				var address = req.body.publicKey ? self.generateAddressByPublicKey(req.body.publicKey) : req.body.address;
+				library.db.none(sql.enableAccount, {
+					senderId: address
+				})
+					.then(function () {
+						library.logger.info(address + ' account is unlocked');
+						return setImmediate(cb, null);
+					})
+					.catch(function (err) {
+						return setImmediate(cb, err);
+					});
+			} else {
+				return setImmediate(cb, err);
+			}
+		});
+	},
+
+	// logout API
+	logout: function (req, cb) {
+		//library.cache.client.del('jwtToken_' + req.body.address);
+		delete req.decoded;
+		return setImmediate(cb);
 	},
 
 	generateQRCode: function (req, cb) {
@@ -784,11 +954,11 @@ Accounts.prototype.shared = {
 			};
 			cache.prototype.isExists('2fa_user_' + user.address, function (err, isExist) {
 				if (!isExist) {
-					cache.prototype.hmset('2fa_user_' + user.address, user, 'ex', 30);
+					cache.prototype.hmset('2fa_user_' + user.address, JSON.stringify(user), 'ex', 30);
 					return setImmediate(cb, null, { success: true, dataUrl: data_url });
 				} else {
 					cache.prototype.delHash('2fa_user_' + user.address, function (isdel) {
-						cache.prototype.hmset('2fa_user_' + user.address, user, 'ex', 30);
+						cache.prototype.hmset('2fa_user_' + user.address, JSON.stringify(user), 'ex', 30);
 						return setImmediate(cb, null, { success: true, dataUrl: data_url });
 					});
 				}
@@ -874,136 +1044,55 @@ Accounts.prototype.shared = {
 			}
 			return setImmediate(cb, null, { success: true, message: "Two Factor Authentication Disabled For " + user.address });
 		});
-	}
-};
-
-// Internal API
-/**
- * @todo implement API comments with apidoc.
- * @see {@link http://apidocjs.com/}
- */
-Accounts.prototype.internal = {
-	count: function (req, cb) {
-		return setImmediate(cb, null, { success: true, count: Object.keys(__private.accounts).length });
 	},
 
-	top: function (query, cb) {
-		self.getAccounts({
-			sort: {
-				balance: -1
-			},
-			offset: query.offset,
-			limit: (query.limit || 100)
-		}, function (err, raw) {
+	checkTwoFactorStatus: function (req, cb) {
+		var user = {};
+		if (!req.body.publicKey) {
+			return setImmediate(cb, 'Missing address or public key');
+		}
+		user.address = modules.accounts.generateAddressByPublicKey(req.body.publicKey);
+		cache.prototype.isExists('2fa_user_' + user.address, function (err, isExist) {
+			if (isExist) {
+				return setImmediate(cb, null, { success: true });
+			}
+			return setImmediate(cb, null, { success: false });
+		});
+	},
+
+	//FIXME: fix before commit
+	sendMailForConfirmation: function (req, cb) {
+		//console.log('sending mail for comfirmation');
+		if (!req.body.secret) {
+			return setImmediate(cb, 'secret is missing');
+		}
+		var hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
+		var keypair = library.ed.makeKeypair(hash);
+		var publicKey = keypair.publicKey.toString('hex');
+		var address = modules.accounts.generateAddressByPublicKey(publicKey);
+		var rand = Math.floor((Math.random() * 100000) + 54);
+		var hashsecret = modules.account.encrypt(req.body.secret);
+		var link = req.protocol + "://" + req.host + "/api/accounts/lock?id=" + rand + "&address=" + address + "&type=" + req.body.type;
+		var mailOptions = {
+			from: library.config.mailFrom, // sender address
+			to: library.config.mailTo, // req.body.email list of receivers, fix this before commit
+			subject: 'Account Verification Link', // Subject line
+			text: '', // plain text body
+			html: 'Hello, '+ req.body.username + ' <br><br>\
+			<br> Please Click on the below button to verify your account.<br><br>\
+			<a href="'+ link + '">Click here to verify</a>', // https://drive.google.com/open?id=1NXO7RZFijpRBNTGLHWJ_ITlweT7gHRdphtml body
+			auth: {
+				user: library.config.mailFrom,
+				refreshToken: library.config.refershToken,
+				accessToken: library.config.accessToken
+			}
+		};
+		mailServices.sendMail(mailOptions, library.config, function (err) {
 			if (err) {
 				return setImmediate(cb, err);
 			}
-
-			var accounts = raw.map(function (account) {
-				return {
-					address: account.address,
-					balance: account.balance,
-					publicKey: account.publicKey
-				};
-			});
-
-			return setImmediate(cb, null, { success: true, accounts: accounts });
+			return setImmediate(cb, null);
 		});
-	},
-
-	getAllAccounts: function (req, cb) {
-		return setImmediate(cb, null, { success: true, accounts: __private.accounts });
-	},
-
-	// lock account API
-	lockAccount: function (req, cb) {
-		library.schema.validate(req.body, schema.lockAccount, function (err) {
-			if (!err) {
-				if (!req.body.address) {
-					return setImmediate(cb, 'Missing required property: address');
-				}
-				var address = req.body.publicKey ? self.generateAddressByPublicKey(req.body.publicKey) : req.body.address;
-				self.getAccount({ address: address }, function (err, account) {
-					if (err) {
-						return setImmediate(cb, err);
-					}
-					//FIXME: Uncomment this condition if you want to unlock any contributors/founders automatically via smart contract when you lock them manually.
-					/* if (account.acc_type) {
-						var lastBlock = modules.blocks.lastBlock.get();
-						var endTime = library.logic.contract.calcEndTime(account.acc_type, lastBlock.timestamp);
-						var REDIS_KEY_USER_TIME_HASH = "userInfo_" + endTime;
-						cache.prototype.isExists(REDIS_KEY_USER_TIME_HASH, function (err, isExist) {
-							if (!isExist) {
-								var userInfo = {
-									address: account.address,
-									endTime: endTime
-								};
-								cache.prototype.hmset(REDIS_KEY_USER_TIME_HASH, userInfo);
-								library.db.none(sql.disableAccount, {
-									senderId: account.address
-								})
-									.then(function () {
-										library.logger.info(account.address + ' account is locked');
-										return setImmediate(cb, null, { account: account });
-									})
-									.catch(function (err) {
-										library.logger.error(err.stack);
-										return setImmediate(cb, err);
-									});
-							} else {
-								return setImmediate(cb, null, { account: account });
-							}
-						});
-					} else { */
-						library.db.none(sql.disableAccount, {
-							senderId: account.address
-						})
-						.then(function () {
-							library.logger.info(account.address + ' account is locked');
-							return setImmediate(cb, null, { account: account });
-						})
-						.catch(function (err) {
-							library.logger.error(err.stack);
-							return setImmediate(cb, err);
-						});
-					//}
-				});
-			} else {
-				return setImmediate(cb, err);
-			}
-		});
-	},
-
-	// unlock account API
-	unlockAccount: function (req, cb) {
-		library.schema.validate(req.body, schema.unlockAccount, function (err) {
-			if (!err) {
-				if (!req.body.address) {
-					return setImmediate(cb, 'Missing required property: address');
-				}
-
-				var address = req.body.publicKey ? self.generateAddressByPublicKey(req.body.publicKey) : req.body.address;
-				library.db.none(sql.enableAccount, {
-					senderId: address
-				})
-				.then(function () {
-					library.logger.info(address + ' account is unlocked');
-					return setImmediate(cb, null);
-				})
-				.catch(function (err) {
-					return setImmediate(cb, err);
-				});
-			} else {
-				return setImmediate(cb, err);
-			}
-		});
-	},
-
-	// logout API
-	logout: function (req, cb) {
-		library.cache.client.del('jwtToken_' + req.body.address);
-		delete req.decoded;
-		return setImmediate(cb);
 	}
 };
 
