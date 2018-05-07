@@ -313,7 +313,8 @@ Accounts.prototype.shared = {
 						address: accountData.address,
 						u_isDelegate: 0,
 						isDelegate: 0,
-						vote: 0
+						vote: 0,
+						publicKey:accountData.publicKey
 					};
 					if (account.u_isDelegate) {
 						data.u_isDelegate = account.u_isDelegate;
