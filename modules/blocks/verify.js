@@ -184,6 +184,7 @@ __private.verifyVersion = function (block, result) {
  * @return {Array}   result.errors Array of validation errors
  */
 __private.verifyReward = function (block, result) {
+	
 	var expectedReward = __private.blockReward.calcReward(block.height);
 
 	if(block.height > 21000000) {
@@ -351,7 +352,7 @@ Verify.prototype.verifyReceipt = function (block) {
 	result = __private.verifySignature(block, result);
 	result = __private.verifyPreviousBlock(block, result);
 	result = __private.verifyVersion(block, result);
-	result = __private.verifyReward(block, result);
+	//result = __private.verifyReward(block, result); //stop giving delegate rewards
 	result = __private.verifyId(block, result);
 	result = __private.verifyPayload(block, result);
 
@@ -381,7 +382,7 @@ Verify.prototype.verifyBlock = function (block) {
 	result = __private.verifySignature(block, result);
 	result = __private.verifyPreviousBlock(block, result);
 	result = __private.verifyVersion(block, result);
-	result = __private.verifyReward(block, result);
+	//result = __private.verifyReward(block, result); //stop giving delegate reward
 	result = __private.verifyId(block, result);
 	result = __private.verifyPayload(block, result);
 

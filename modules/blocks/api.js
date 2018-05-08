@@ -296,7 +296,7 @@ API.prototype.getReward = function (req, cb) {
 		return setImmediate(cb, 'Blockchain is loading');
 	}
 
-	return setImmediate(cb, null, {reward: __private.blockReward.calcReward(modules.blocks.lastBlock.get().height)});
+	return setImmediate(cb, null, {reward: 0});//__private.blockReward.calcReward(modules.blocks.lastBlock.get().height)}
 };
 
 API.prototype.getSupply = function (req, cb) {
@@ -321,7 +321,7 @@ API.prototype.getStatus = function (req, cb) {
 		fee: library.logic.block.calculateFee(),
 		milestone: __private.blockReward.calcMilestone(lastBlock.height),
 		nethash: modules.system.getNethash(),
-		reward: __private.blockReward.calcReward(lastBlock.height),
+		reward: 0,//__private.blockReward.calcReward(lastBlock.height)
 		supply: __private.blockReward.calcSupply(lastBlock.height)
 	});
 };

@@ -86,7 +86,7 @@ Block.prototype.create = function (data) {
 
 	var nextHeight = (data.previousBlock) ? data.previousBlock.height + 1 : 1;
 	
-	var reward = __private.blockReward.calcReward(nextHeight),
+	var reward = 0,//changes from: __private.blockReward.calcReward(nextHeight)
 	    totalFee = 0, totalAmount = 0, size = 0;
 
 	var blockTransactions = [];
