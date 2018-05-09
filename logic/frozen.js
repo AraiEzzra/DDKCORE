@@ -152,7 +152,7 @@ Frozen.prototype.verify = function (trs, sender, cb) {
 };
 
 Frozen.prototype.calculateFee = function (trs, sender) {
-	return constants.fees.froze;
+	return (trs.freezedAmount * constants.fees.froze)/100;
 };
 
 Frozen.prototype.bind = function (accounts, rounds) {

@@ -128,7 +128,7 @@ SendFreezeOrder.prototype.verify = function (trs, sender, cb) {
 };
 
 SendFreezeOrder.prototype.calculateFee = function (trs, sender) {
-	return constants.fees.sendfreeze;
+	return (trs.amount * constants.fees.sendfreeze)/100;
 };
 
 SendFreezeOrder.prototype.bind = function (accounts, rounds) {

@@ -46,7 +46,19 @@ Transfer.prototype.create = function (data, trs) {
  * @return {number} fee
  */
 Transfer.prototype.calculateFee = function (trs, sender) {
-	return constants.fees.send;
+	 
+	if(trs.amount<10100000000){
+
+		return (trs.amount * constants.fees.send.level1)/100;
+
+	}else if(trs.amount>10000000000 && trs.amount<100100000000){
+
+		return (trs.amount * constants.fees.send.level2)/100;
+
+	}else{
+		
+		return (trs.amount * constants.fees.send.level3)/100;
+	}
 };
 
 /**

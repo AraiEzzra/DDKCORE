@@ -50,14 +50,18 @@ module.exports = {
 	confirmationLength: 77,
 	epochTime: new Date(Date.UTC(2016, 0, 1, 17, 0, 0, 0)),
 	fees: {
-		send: 10000000,
+		send: {
+			level1: 0.01,  //1-100 DDK
+			level2: 0.005, //101-1000 DDK
+			level3: 0.001  //1001-above DDK
+		},
 		vote: 100000000,
-		secondsignature: 500000000,
-		delegate: 2500000000,
-		multisignature: 500000000,
+		secondsignature: 1000000, 
+		delegate: 1000000000,
+		multisignature: 1000000,
 		dapp: 2500000000,
-		froze: 100000000,
-		sendfreeze: 200000000
+		froze: 0.001,  
+		sendfreeze: 0.01
 	},
 	feeStart: 1,
 	feeStartVolume: 10000 * 100000000,
