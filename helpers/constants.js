@@ -55,7 +55,7 @@ module.exports = {
 			level2: 0.005, //101-1000 DDK
 			level3: 0.001  //1001-above DDK
 		},
-		vote: 100000000,
+		vote: 0.01,
 		secondsignature: 1000000, 
 		delegate: 1000000000,
 		multisignature: 1000000,

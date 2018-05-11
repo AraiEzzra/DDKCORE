@@ -20,6 +20,7 @@ var QRCode = require('qrcode');
 var cache = require('./cache.js');
 var speakeasy = require("speakeasy");
 var slots = require('../helpers/slots.js');
+var sqlFroging = require('../sql/frogings.js');
 
 // Private fields
 var modules, library, self, __private = {}, shared = {};
@@ -518,6 +519,10 @@ Accounts.prototype.shared = {
 								return setImmediate(cb, err);
 							}
 
+							if (account.totalFrozeAmount == 0) {
+								return setImmediate(cb, 'No Stake available');
+							}
+
 							if (!requester || !requester.publicKey) {
 								return setImmediate(cb, 'Requester not found');
 							}
@@ -561,6 +566,10 @@ Accounts.prototype.shared = {
 							return setImmediate(cb, err);
 						}
 
+						if (account.totalFrozeAmount == 0) {
+							return setImmediate(cb, 'No Stake available');
+						}
+
 						if (!account || !account.publicKey) {
 							return setImmediate(cb, 'Account not found');
 						}
@@ -591,6 +600,7 @@ Accounts.prototype.shared = {
 						}
 
 						modules.transactions.receiveTransactions([transaction], true, cb);
+
 					});
 				}
 			}, function (err, transaction) {
