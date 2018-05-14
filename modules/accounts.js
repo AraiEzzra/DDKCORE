@@ -20,7 +20,6 @@ var QRCode = require('qrcode');
 var cache = require('./cache.js');
 var speakeasy = require("speakeasy");
 var slots = require('../helpers/slots.js');
-var sqlFroging = require('../sql/frogings.js');
 
 // Private fields
 var modules, library, self, __private = {}, shared = {};
