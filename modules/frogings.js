@@ -79,7 +79,7 @@ function Frogings (cb, scope) {
 Frogings.prototype.onBind = function (scope) {
 	modules = {
 		accounts: scope.accounts,
-		transactions: scope.transactions,
+		transactions: scope.transactions
 	};
 
 	__private.transactionPool.bind(
@@ -89,7 +89,8 @@ Frogings.prototype.onBind = function (scope) {
 	);
 	__private.assetTypes[transactionTypes.FROZE].bind(
 		scope.accounts,
-		scope.rounds
+		scope.rounds,
+		scope.blocks
 	);
 
 };

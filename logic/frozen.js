@@ -3,6 +3,7 @@
 var constants = require('../helpers/constants.js');
 var sql = require('../sql/frogings.js');
 var slots = require('../helpers/slots.js');
+var StakeReward = require('../logic/stakeReward.js');
 
 var request = require('request');
 var async = require('async');
@@ -32,6 +33,13 @@ function Frozen(logger, db, transaction, network, config, cb) {
 		return setImmediate(cb, null, this);
 	}
 }
+
+// Private methods
+/**
+ * Creates a stakeReward instance.
+ * @private
+ */
+__private.stakeReward = new StakeReward();
 
 
 Frozen.prototype.create = function (data, trs) {
@@ -155,10 +163,11 @@ Frozen.prototype.calculateFee = function (trs, sender) {
 	return (trs.freezedAmount * constants.fees.froze)/100;
 };
 
-Frozen.prototype.bind = function (accounts, rounds) {
+Frozen.prototype.bind = function (accounts, rounds, blocks) {
 	modules = {
 		accounts: accounts,
 		rounds: rounds,
+		blocks: blocks
 	};
 };
 
@@ -251,7 +260,7 @@ Frozen.prototype.checkFrozeOrders = function () {
 			var transactionData = {
 				json: {
 					secret: self.scope.config.sender.secret,
-					amount: parseInt(freezeOrders[i].freezedAmount * constants.froze.reward),
+					amount: parseInt(freezeOrders[i].freezedAmount * __private.stakeReward.calcReward(modules.blocks.lastBlock.get().height)/100),
 					recipientId: freezeOrders[i].senderId,
 					publicKey: self.scope.config.sender.publicKey
 				}
