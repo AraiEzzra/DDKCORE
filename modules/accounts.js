@@ -20,8 +20,6 @@ var QRCode = require('qrcode');
 var cache = require('./cache.js');
 var speakeasy = require("speakeasy");
 var httpApi = require('../helpers/httpApi');
-var mailServices = require('../helpers/nodemailer');
-var Cryptr = require('cryptr');
 
 // Private fields
 var modules, library, self, __private = {}, shared = {};
@@ -107,29 +105,6 @@ __private.openAccount = function (secret, cb) {
 			return setImmediate(cb, null, account);
 		}
 	});
-};
-
-/**
- * Encrypts secret based on text provided.
- * @param {cryptcr} Cryptr instance - encrypt/decrypt text.
- * @param {encryptedString} Hashed string.
- */
-Accounts.prototype.encrypt = function (text) {
-    var cryptr = new Cryptr(library.config.hashSecret);
-	var encryptedString = cryptr.encrypt(text);
-	return encryptedString;
-};
-
-/**
- * Decrypts encrypted string.
- * @param {cryptcr} Cryptr instance - encrypt/decrypt text.
- * @param {encryptedString} Hashed string.
- * @param {decryptedString} Decrypted string.
- */
-Accounts.prototype.decrypt = function (encryptedString) {
-    var cryptr = new Cryptr(library.config.hashSecret);
-	var decryptedString = cryptr.decrypt(encryptedString);
-	return decryptedString;
 };
 
 /**
@@ -354,60 +329,13 @@ Accounts.prototype.shared = {
 					if (account.vote) {
 						data.vote = account.vote;
 					}
-					if (req.body.accType) {
-						data.acc_type = req.body.accType;
-						var lastBlock = modules.blocks.lastBlock.get();
-						data.endTime = library.logic.contract.calcEndTime(req.body.accType, lastBlock.timestamp);
-						if (req.body.transferedAmount) {
-							data.transferedAmount = req.body.transferedAmount;
+					library.logic.account.set(accountData.address, data, function (err) {
+						if (!err) {
+							return setImmediate(cb, null, { account: accountData });
+						} else {
+							return setImmediate(cb, err);
 						}
-						var REDIS_KEY_USER_INFO_HASH = "userInfo_" + data.address;
-						var REDIS_KEY_USER_TIME_HASH = "userTimeHash_" + data.endTime;
-						cache.prototype.isExists(REDIS_KEY_USER_INFO_HASH, function (err, isExist) {
-							if (!isExist) {
-								var userInfo = {
-									address: data.address,
-									transferedAmount: data.transferedAmount,
-									endTime: data.endTime
-								};
-								cache.prototype.hmset(REDIS_KEY_USER_INFO_HASH, userInfo);
-								cache.prototype.hmset(REDIS_KEY_USER_TIME_HASH, userInfo);
-								library.logic.contract.sendToContrubutors([userInfo], function (err, res) {
-									//FIXME: do further processing with "res" i.e send notification to the user
-									if (err) {
-										return setImmediate(cb, err);
-									}
-									library.db.none(sql.disableAccount, {
-										senderId: account.address
-									})
-										.then(function () {
-											library.logger.info(account.address + ' account is locked');
-											library.logic.account.set(accountData.address, data, function (err) {
-												if (!err) {
-													return setImmediate(cb, null, { account: accountData });
-												} else {
-													return setImmediate(cb, err);
-												}
-											});
-										})
-										.catch(function (err) {
-											library.logger.error(err.stack);
-											return setImmediate(cb, err);
-										});
-								});
-							} else {
-								return setImmediate(cb, null, { account: accountData });
-							}
-						});
-					} else {
-						library.logic.account.set(accountData.address, data, function (err) {
-							if (!err) {
-								return setImmediate(cb, null, { account: accountData });
-							} else {
-								return setImmediate(cb, err);
-							}
-						});
-					}
+					});
 				} else {
 					return setImmediate(cb, err);
 				}
@@ -844,61 +772,73 @@ Accounts.prototype.internal = {
 					if (err) {
 						return setImmediate(cb, err);
 					}
-					//FIXME: Uncomment this condition if you want to unlock any contributors/founders automatically via smart contract when you lock them manually.
-					/* if (account.acc_type) {
-						var lastBlock = modules.blocks.lastBlock.get();
-						var endTime = library.logic.contract.calcEndTime(account.acc_type, lastBlock.timestamp);
-						var REDIS_KEY_USER_TIME_HASH = "userInfo_" + endTime;
-						cache.prototype.isExists(REDIS_KEY_USER_TIME_HASH, function (err, isExist) {
-							if (!isExist) {
-								var userInfo = {
-									address: account.address,
-									endTime: endTime
-								};
-								cache.prototype.hmset(REDIS_KEY_USER_TIME_HASH, userInfo);
+					if (!account) {
+						let data = {};
+						data.status = 0;
+						data.address = req.body.address;
+						if (req.body.accType) {
+							data.acc_type = req.body.accType;
+							var lastBlock = modules.blocks.lastBlock.get();
+							data.endTime = library.logic.contract.calcEndTime(req.body.accType, lastBlock.timestamp);
+							if (req.body.amount) {
+								data.transferedAmount = req.body.amount;
+							}
+							var REDIS_KEY_USER_INFO_HASH = "userInfo_" + data.address;
+							var REDIS_KEY_USER_TIME_HASH = "userTimeHash_" + data.endTime;
+							cache.prototype.isExists(REDIS_KEY_USER_INFO_HASH, function (err, isExist) {
+								if (!isExist) {
+									var userInfo = {
+										address: data.address,
+										transferedAmount: data.transferedAmount,
+										endTime: data.endTime
+									};
+									cache.prototype.hmset(REDIS_KEY_USER_INFO_HASH, userInfo);
+									cache.prototype.hmset(REDIS_KEY_USER_TIME_HASH, userInfo);
+									library.logic.contract.sendToContrubutors([userInfo], function (err, res) {
+										//FIXME: do further processing with "res" i.e send notification to the user
+										if (err) {
+											return setImmediate(cb, err);
+										}
+										library.logic.account.set(data.address, data, function (err) {
+											if (!err) {
+												return setImmediate(cb, null, { account: data.address });
+											} else {
+												return setImmediate(cb, err);
+											}
+										});
+									});
+								} else {
+									return setImmediate(cb, null, { account: data.address });
+								}
+							});
+						}
+					} else {
+						library.db.one(sql.checkAccountStatus, {
+							senderId: account.address
+						})
+							.then(function (row) {
+								if (row.status == 0) {
+									return setImmediate(cb, null, 'Account is already locked');
+								}
 								library.db.none(sql.disableAccount, {
 									senderId: account.address
 								})
 									.then(function () {
 										library.logger.info(account.address + ' account is locked');
-										return setImmediate(cb, null, { account: account });
+										return setImmediate(cb, null, { message: "Account is locked" });
 									})
 									.catch(function (err) {
 										library.logger.error(err.stack);
 										return setImmediate(cb, err);
 									});
-							} else {
-								return setImmediate(cb, null, { account: account });
-							}
-						});
-					} else { */
-					this.scope.db.one(sql.checkAccountStatus, {
-						senderId: account.senderId
-					})
-					.then(function (row) {
-						if (row.status == 0) {
-							return setImmediate(cb, null, 'Account is already disabled');
-						}
-						library.db.none(sql.disableAccount, {
-							senderId: account.address
-						})
-						.then(function () {
-							library.logger.info(account.address + ' account is locked');
-							return setImmediate(cb, null, { message: "Account is locked" });
-						})
-						.catch(function (err) {
-							library.logger.error(err.stack);
-							return setImmediate(cb, err);
-						});
-						//return setImmediate(cb, null, row.status);
-						//cb(null);
-					})
-					.catch(function (err) {
-						this.scope.logger.error(err.stack);
-						return setImmediate(cb, 'Transaction#checkAccountStatus error');
-					});
-
-					//}
+								//return setImmediate(cb, null, row.status);
+								//cb(null);
+							})
+							.catch(function (err) {
+								library.logger.error(err.stack);
+								return setImmediate(cb, 'Transaction#checkAccountStatus error');
+							});
+					}
 				});
 			} else {
 				return setImmediate(cb, err);
@@ -933,9 +873,8 @@ Accounts.prototype.internal = {
 
 	// logout API
 	logout: function (req, cb) {
-		//library.cache.client.del('jwtToken_' + req.body.address);
 		delete req.decoded;
-		return setImmediate(cb);
+		return setImmediate(cb, null);
 	},
 
 	generateQRCode: function (req, cb) {
@@ -1057,41 +996,6 @@ Accounts.prototype.internal = {
 				return setImmediate(cb, null, { success: true });
 			}
 			return setImmediate(cb, null, { success: false });
-		});
-	},
-
-	//FIXME: fix before commit
-	sendMailForConfirmation: function (req, cb) {
-		//console.log('sending mail for comfirmation');
-		if (!req.body.secret) {
-			return setImmediate(cb, 'secret is missing');
-		}
-		var hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
-		var keypair = library.ed.makeKeypair(hash);
-		var publicKey = keypair.publicKey.toString('hex');
-		var address = modules.accounts.generateAddressByPublicKey(publicKey);
-		var rand = Math.floor((Math.random() * 100000) + 54);
-		var hashsecret = modules.account.encrypt(req.body.secret);
-		var link = req.protocol + "://" + req.host + "/api/accounts/lock?id=" + rand + "&address=" + address + "&type=" + req.body.type;
-		var mailOptions = {
-			from: library.config.mailFrom, // sender address
-			to: library.config.mailTo, // req.body.email list of receivers, fix this before commit
-			subject: 'Account Verification Link', // Subject line
-			text: '', // plain text body
-			html: 'Hello, '+ req.body.username + ' <br><br>\
-			<br> Please Click on the below button to verify your account.<br><br>\
-			<a href="'+ link + '">Click here to verify</a>', // https://drive.google.com/open?id=1NXO7RZFijpRBNTGLHWJ_ITlweT7gHRdphtml body
-			auth: {
-				user: library.config.mailFrom,
-				refreshToken: library.config.refershToken,
-				accessToken: library.config.accessToken
-			}
-		};
-		mailServices.sendMail(mailOptions, library.config, function (err) {
-			if (err) {
-				return setImmediate(cb, err);
-			}
-			return setImmediate(cb, null);
 		});
 	}
 };
