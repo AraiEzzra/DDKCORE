@@ -606,8 +606,50 @@ Accounts.prototype.shared = {
 				if (err) {
 					return setImmediate(cb, err);
 				}
+				//Check isVoteDone
+				var vCount;
+				var votes = req.body.delegates;
 
-				return setImmediate(cb, null, { transaction: transaction[0] });
+				//check that vote transaction have atleast one upvote
+				votes.some(function (vote) {
+
+					if (vote[0] === '+') {
+						vCount = 1;
+						return true;
+					}
+
+				});
+
+				if (vCount === 1) {
+					library.db.many(sql.checkWeeklyVote, {
+						senderId: transaction[0].senderId
+					})
+						.then(function (resp) {
+							if ((resp.length !== 0) && parseInt(resp[0].count) > 0) {
+
+								library.db.none(sql.updateStakeOrder, {
+									senderId: transaction[0].senderId
+								})
+									.then(function () {
+										library.logger.info(transaction[0].senderId + ': update stake orders isvoteDone and count');
+										return setImmediate(cb, null, { transaction: transaction[0] });
+									})
+									.catch(function (err) {
+										library.logger.error(err.stack);
+										return setImmediate(cb, err);
+									});
+							} else {
+								return setImmediate(cb, null, { transaction: transaction[0] });
+							}
+						})
+						.catch(function (err) {
+							library.logger.error(err.stack);
+							return setImmediate(cb, err);
+						});
+				} else {
+					return setImmediate(cb, null, { transaction: transaction[0] });
+				}
+
 			});
 		});
 	},

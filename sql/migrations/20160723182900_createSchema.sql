@@ -59,7 +59,10 @@ CREATE TABLE IF NOT EXISTS "stake_orders"(
   "senderId" VARCHAR(22) NOT NULL,
   "recipientId" VARCHAR(22),
   "freezedAmount" BIGINT DEFAULT 0,
-  "milestoneCount" INT DEFAULT 0
+  "milestoneCount" INT DEFAULT 0,
+  "voteCount" INT DEFAULT 0,
+  "nextVoteMilestone" INT ,
+  "isVoteDone" BOOLEAN DEFAULT FALSE
 );
 
 CREATE TABLE IF NOT EXISTS "signatures"(

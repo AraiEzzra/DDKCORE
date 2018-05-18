@@ -116,8 +116,10 @@ module.exports = {
 	},
 	// Configurable froze order : time here is in minutes
 	froze : {
-		endTime : 12,
-		milestone : 2, //for testing, taking 2 min
+		endTime : 8,
+		rTime : 6,
+		vTime : 2,
+		milestone : 4, //for testing, taking 2 min
 		rewards: {
 			milestones: [
 				10, // 10% For 0-6 months

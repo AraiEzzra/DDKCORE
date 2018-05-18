@@ -49,6 +49,7 @@ Frozen.prototype.create = function (data, trs) {
 	trs.endTime = (date.setMinutes(date.getMinutes() - constants.froze.milestone + constants.froze.endTime))/1000;
 	trs.recipientId = null;
 	trs.freezedAmount = data.freezedAmount;
+	trs.nextVoteMilestone = (date.setMinutes(date.getMinutes() - constants.froze.endTime + constants.froze.vTime))/1000;
 	return trs;
 };
 
@@ -69,7 +70,8 @@ Frozen.prototype.dbFields = [
 	"endTime",
 	"senderId",
 	"recipientId",
-	"freezedAmount" 
+	"freezedAmount",
+	"nextVoteMilestone" 
 ];
 
 Frozen.prototype.inactive= '0';
@@ -89,7 +91,8 @@ Frozen.prototype.dbSave = function (trs) {
 			endTime : trs.endTime,
 			senderId: trs.senderId,
 			recipientId: trs.recipientId,
-			freezedAmount: trs.freezedAmount
+			freezedAmount: trs.freezedAmount,
+			nextVoteMilestone: trs.nextVoteMilestone
 		}
 	};
 };
@@ -171,7 +174,7 @@ Frozen.prototype.bind = function (accounts, rounds, blocks) {
 	};
 };
 
-Frozen.prototype.checkFrozeOrders = function () {
+/* Frozen.prototype.checkFrozeOrders = function () {
 
 	function getfrozeOrder() {
 		return new Promise(function (resolve, reject) {
@@ -286,6 +289,162 @@ Frozen.prototype.checkFrozeOrders = function () {
 				await checkAndUpdateMilestone();
 				await disableFrozeOrder();
 				deductFrozeAmountandSendReward(freezeOrders);
+			}
+		} catch (err) {
+			self.scope.logger.error(err.stack);
+			return setImmediate(cb, err.toString());
+		}
+
+	})();
+}; */
+
+Frozen.prototype.checkFrozeOrders = function () {
+
+	function getfrozeOrder() {
+		return new Promise(function (resolve, reject) {
+			self.scope.db.query(sql.getfrozeOrder,
+				{
+					milestone: constants.froze.vTime * 60,
+					currentTime: slots.getTime()
+				}).then(function (freezeOrders) {
+					if (freezeOrders.length > 0) {
+						self.scope.logger.info("Successfully get :" + freezeOrders.length + ", number of froze order");
+					}
+					resolve(freezeOrders);
+				}).catch(function (err) {
+					self.scope.logger.error(err.stack);
+					reject(new Error(err.stack));
+				});
+		});
+
+	}
+
+
+	function checkAndUpdateMilestone() {
+
+
+		//emit Stake order event when milestone change
+		self.scope.network.io.sockets.emit('milestone/change', null);
+
+		return new Promise(function (resolve, reject) {
+			//Update nextMilesone in "stake_orders" table
+			self.scope.db.none(sql.checkAndUpdateMilestone,
+				{
+					milestone: constants.froze.vTime * 60,
+					currentTime: slots.getTime()
+				})
+				.then(function () {
+					resolve();
+				})
+				.catch(function (err) {
+					self.scope.logger.error(err.stack);
+					reject(new Error(err.stack));
+				});
+
+
+		});
+	}
+
+	async function deductFrozeAmountandSendReward(freezeOrders) {
+		try {
+			for (var order in freezeOrders) {
+				await updateOrderAndSendReward(freezeOrders[order]);
+				await deductFrozeAmount(freezeOrders[order]);	
+			}
+		} catch (err) {
+			library.logger.error(err.stack);
+			reject((new Error(err.stack)));
+		}
+	}
+
+	function deductFrozeAmount(order) {
+
+		return new Promise(function (resolve, reject) {
+
+			if (((order.milestoneCount + 1) === (constants.froze.endTime / constants.froze.milestone)) && (order.voteCount === (constants.froze.milestone/constants.froze.vTime))) {
+
+				self.scope.db.none(sql.deductFrozeAmount, {
+					FrozeAmount: order.freezedAmount,
+					senderId: order.senderId
+				}).then(function () {
+					resolve();
+				}).catch(function (err) {
+					self.scope.logger.error(err.stack);
+					reject(new Error(err.stack));
+				});
+			} else {
+				resolve();
+			}
+		});
+	}
+
+	function updateOrderAndSendReward(order) {
+
+		return new Promise(function (resolve, reject) {
+
+			if (order.voteCount === (constants.froze.milestone/constants.froze.vTime)) {
+
+				self.scope.db.none(sql.updateOrder, {
+					senderId: order.senderId
+				}).then(function () {
+					//Request to send transaction
+					var transactionData = {
+						json: {
+							secret: self.scope.config.sender.secret,
+							amount: parseInt(order.freezedAmount * __private.stakeReward.calcReward(modules.blocks.lastBlock.get().height) / 100),
+							recipientId: order.senderId,
+							publicKey: self.scope.config.sender.publicKey
+						}
+					};
+					//Send froze monthly rewards to users
+					self.scope.logic.transaction.sendTransaction(transactionData, function (error, transactionResponse) {
+						if (error)
+							throw error;
+						else {
+							self.scope.logger.info("Successfully transfered reward for freezing an amount and transaction ID is : " + transactionResponse.body.transactionId);
+							resolve();
+						}
+
+					});
+				}).catch(function (err) {
+					self.scope.logger.error(err.stack);
+					reject(new Error(err.stack));
+				});
+			}else{
+				resolve();
+			}
+		});
+	}
+
+	function disableFrozeOrder() {
+
+		return new Promise(function (resolve, reject) {
+			//change status and nextmilestone
+			self.scope.db.none(sql.disableFrozeOrders,
+				{
+					currentTime: slots.getTime(),
+					totalMilestone: constants.froze.endTime / constants.froze.milestone
+				})
+				.then(function () {
+					self.scope.logger.info("Successfully check status for disable froze orders");
+					resolve();
+				})
+				.catch(function (err) {
+					self.scope.logger.error(err.stack);
+					reject(new Error(err.stack));
+				});
+		});
+	}
+
+	//function to check froze orders using async/await
+	(async function () {
+		try {
+			var freezeOrders = await getfrozeOrder();
+
+			if (freezeOrders.length > 0) {
+				await checkAndUpdateMilestone();
+				await deductFrozeAmountandSendReward(freezeOrders);
+				await disableFrozeOrder();
 			}
 		} catch (err) {
 			self.scope.logger.error(err.stack);
