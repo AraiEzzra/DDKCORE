@@ -235,7 +235,10 @@ SendFreezeOrder.prototype.sendFreezedOrder = function (userAndOrderData, cb) {
 					endTime: order.endTime,
 					senderId: userAndOrderData.recipientId,
 					freezedAmount: order.freezedAmount,
-					milestoneCount: order.milestoneCount
+					milestoneCount: order.milestoneCount,
+					voteCount: order.voteCount,
+					nextVoteMilestone: order.nextVoteMilestone,
+					isVoteDone: order.isVoteDone
 
 				})
 				.then(function () {
