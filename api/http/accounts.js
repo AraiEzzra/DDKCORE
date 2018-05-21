@@ -49,6 +49,7 @@ function AccountsHttpApi (accountsModule, app) {
 		'post /existingETPSUser' : 'existingETPSUser',
 		'post /migrateData' : 'migrateData', 
 		'post /existingETPSUser/validate' : 'validateExistingUser',
+		'post /verifyUserToComment': 'verifyUserToComment',
 		'post /generateQRCode': 'generateQRCode',
 		'post /verifyOTP': 'verifyOTP',
 		'post /enableTwoFactor': 'enableTwoFactor',

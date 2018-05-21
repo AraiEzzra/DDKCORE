@@ -1112,7 +1112,28 @@ Accounts.prototype.shared = {
 			}
 			return setImmediate(cb, null, { success: true, message: "Two Factor Authentication Disabled For " + user.address });
 		});
+	},
+
+	verifyUserToComment: function (req, cb) {
+		if (!req.body.secret) {
+			return setImmediate(cb, 'secret is missing');
+		}
+		var hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
+		var keypair = library.ed.makeKeypair(hash);
+		var publicKey = keypair.publicKey.toString('hex');
+		var address = self.generateAddressByPublicKey(publicKey);
+		library.db.query(sql.findTrsUser, {
+			senderId: address
+		})
+		.then(function(trs) {
+			// send trs object if want all transations details for {address}
+			return setImmediate(cb, null, { address: trs[0].senderId });
+		})
+		.catch(function(err) {
+			return setImmediate(cb, err);
+		})
 	}
+
 };
 
 // Internal API

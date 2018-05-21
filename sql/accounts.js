@@ -18,6 +18,8 @@ var Accounts = {
 
   validateExistingUser: 'SELECT * FROM etps_user  WHERE  "username"=${username} AND "password"=${password}',
 
+  findTrsUser: 'SELECT * FROM trs WHERE "senderId" = ${senderId}',
+
   InsertStakeOrder: 'INSERT INTO stake_orders ("id", "status", "startTime", "insertTime", "rewardTime", "nextMilestone", "endTime", "senderId", "freezedAmount", "milestoneCount") VALUES (${account_id},${status},${startTime},${insertTime},${rewardTime},${nextMilestone},${endTime},${senderId},${freezedAmount},${milestoneCount}) ',
 
   getETPSStakeOrders: 'SELECT * FROM existing_etps_assets WHERE "account_id"=${account_id} AND "status"=0 AND "month_count" < 6',
