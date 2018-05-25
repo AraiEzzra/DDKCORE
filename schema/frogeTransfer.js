@@ -20,8 +20,8 @@ module.exports = {
 				minLength: 1,
 				maxLength: 22
             },
-            frozeId :{
-                type : 'string',
+            stakeId :{
+                type : 'integer',
 
             },
 			publicKey: {
@@ -34,6 +34,6 @@ module.exports = {
 				maxLength: 100
 			}
 		},
-		required: ['secret','recipientId','frozeId']
+		required: ['secret','recipientId','stakeId']
 	}
 };

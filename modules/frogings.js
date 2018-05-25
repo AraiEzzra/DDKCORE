@@ -213,7 +213,7 @@ Frogings.prototype.shared = {
 
 	addTransactionForFreeze: function (req, cb) {
 
-
+		let accountData;
 		library.schema.validate(req.body, schema.addTransactionForFreeze, function (err) {
 			if (err) {
 				return setImmediate(cb, err[0].message);
@@ -234,68 +234,59 @@ Frogings.prototype.shared = {
 						if (err) {
 							return setImmediate(cb, err);
 						}
-						library.logic.frozen.updateFrozeAmount({
-							account: account,
-							freezedAmount: req.body.freezedAmount
-						}, function (err) {
+						accountData = account;
+
+						if (!account || !account.publicKey) {
+							return setImmediate(cb, 'Multisignature account not found');
+						}
+
+						if (!account.multisignatures || !account.multisignatures) {
+							return setImmediate(cb, 'Account does not have multisignatures enabled');
+						}
+
+						if (account.multisignatures.indexOf(keypair.publicKey.toString('hex')) < 0) {
+							return setImmediate(cb, 'Account does not belong to multisignature group');
+						}
+
+						modules.accounts.getAccount({ publicKey: keypair.publicKey }, function (err, requester) {
 							if (err) {
 								return setImmediate(cb, err);
-							} else {
-
-								if (!account || !account.publicKey) {
-									return setImmediate(cb, 'Multisignature account not found');
-								}
-
-								if (!account.multisignatures || !account.multisignatures) {
-									return setImmediate(cb, 'Account does not have multisignatures enabled');
-								}
-
-								if (account.multisignatures.indexOf(keypair.publicKey.toString('hex')) < 0) {
-									return setImmediate(cb, 'Account does not belong to multisignature group');
-								}
-
-								modules.accounts.getAccount({ publicKey: keypair.publicKey }, function (err, requester) {
-									if (err) {
-										return setImmediate(cb, err);
-									}
-
-									if (!requester || !requester.publicKey) {
-										return setImmediate(cb, 'Requester not found');
-									}
-
-									if (requester.secondSignature && !req.body.secondSecret) {
-										return setImmediate(cb, 'Missing requester second passphrase');
-									}
-
-									if (requester.publicKey === account.publicKey) {
-										return setImmediate(cb, 'Invalid requester public key');
-									}
-
-									var secondKeypair = null;
-
-									if (requester.secondSignature) {
-										var secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
-										secondKeypair = library.ed.makeKeypair(secondHash);
-									}
-
-									var transaction;
-
-									try {
-										transaction = library.logic.transaction.create({
-											type: transactionTypes.FROZE,
-											freezedAmount: req.body.freezedAmount,
-											sender: account,
-											keypair: keypair,
-											secondKeypair: secondKeypair,
-											requester: keypair
-										});
-									} catch (e) {
-										return setImmediate(cb, e.toString());
-									}
-									modules.transactions.receiveTransactions([transaction], true, cb);
-								});
-
 							}
+
+							if (!requester || !requester.publicKey) {
+								return setImmediate(cb, 'Requester not found');
+							}
+
+							if (requester.secondSignature && !req.body.secondSecret) {
+								return setImmediate(cb, 'Missing requester second passphrase');
+							}
+
+							if (requester.publicKey === account.publicKey) {
+								return setImmediate(cb, 'Invalid requester public key');
+							}
+
+							var secondKeypair = null;
+
+							if (requester.secondSignature) {
+								var secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
+								secondKeypair = library.ed.makeKeypair(secondHash);
+							}
+
+							var transaction;
+
+							try {
+								transaction = library.logic.transaction.create({
+									type: transactionTypes.FROZE,
+									freezedAmount: req.body.freezedAmount,
+									sender: account,
+									keypair: keypair,
+									secondKeypair: secondKeypair,
+									requester: keypair
+								});
+							} catch (e) {
+								return setImmediate(cb, e.toString());
+							}
+							modules.transactions.receiveTransactions([transaction], true, cb);
 						});
 
 					});
@@ -304,56 +295,55 @@ Frogings.prototype.shared = {
 						if (err) {
 							return setImmediate(cb, err);
 						}
-						library.logic.frozen.updateFrozeAmount({
-							account: account,
-							freezedAmount: req.body.freezedAmount
-						}, function (err) {
-							if (err) {
-								return setImmediate(cb, err);
-							} else {
+						accountData = account;
+						if (!account || !account.publicKey) {
+							return setImmediate(cb, 'Account not found');
+						}
 
-								if (!account || !account.publicKey) {
-									return setImmediate(cb, 'Account not found');
-								}
+						if (account.secondSignature && !req.body.secondSecret) {
+							return setImmediate(cb, 'Invalid second passphrase');
+						}
 
-								if (account.secondSignature && !req.body.secondSecret) {
-									return setImmediate(cb, 'Invalid second passphrase');
-								}
+						var secondKeypair = null;
 
-								var secondKeypair = null;
+						if (account.secondSignature) {
+							var secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
+							secondKeypair = library.ed.makeKeypair(secondHash);
+						}
 
-								if (account.secondSignature) {
-									var secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
-									secondKeypair = library.ed.makeKeypair(secondHash);
-								}
+						var transaction;
 
-								var transaction;
+						try {
+							transaction = library.logic.transaction.create({
+								type: transactionTypes.FROZE,
+								freezedAmount: req.body.freezedAmount,
+								sender: account,
+								keypair: keypair,
+								secondKeypair: secondKeypair
+							});
+						} catch (e) {
+							return setImmediate(cb, e.toString());
+						}
 
-								try {
-									transaction = library.logic.transaction.create({
-										type: transactionTypes.FROZE,
-										freezedAmount: req.body.freezedAmount,
-										sender: account,
-										keypair: keypair,
-										secondKeypair: secondKeypair
-									});
-								} catch (e) {
-									return setImmediate(cb, e.toString());
-								}
-
-								modules.transactions.receiveTransactions([transaction], true, cb);
-
-							}
-						});
+						modules.transactions.receiveTransactions([transaction], true, cb);
 					});
 				}
 			}, function (err, transaction) {
 				if (err) {
 					return setImmediate(cb, err);
-				} else {
+				}
+
+				library.logic.frozen.updateFrozeAmount({
+					account: accountData,
+					freezedAmount: req.body.freezedAmount
+				}, function (err) {
+					if (err) {
+						return setImmediate(cb, err);
+					}
 
 					return setImmediate(cb, null, { transaction: transaction[0] });
-				}
+
+				});
 			});
 		});
 

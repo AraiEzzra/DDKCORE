@@ -53,16 +53,14 @@ CREATE TABLE IF NOT EXISTS "stake_orders"(
   "status" SMALLINT NOT NULL,
   "startTime" INT NOT NULL,
   "insertTime" INT NOT NULL,
-  "rewardTime" INT NOT NULL,
-  "nextMilestone" INT NOT NULL ,
-  "endTime" INT NOT NULL,
   "senderId" VARCHAR(22) NOT NULL,
   "recipientId" VARCHAR(22),
   "freezedAmount" BIGINT DEFAULT 0,
-  "milestoneCount" INT DEFAULT 0,
+  "rewardCount" INT DEFAULT 0,
   "voteCount" INT DEFAULT 0,
-  "nextVoteMilestone" INT ,
-  "isVoteDone" BOOLEAN DEFAULT FALSE
+  "nextVoteMilestone" INT NOT NULL,
+  "isVoteDone" BOOLEAN DEFAULT FALSE,
+  "isTransferred" BOOLEAN DEFAULT FALSE
 );
 
 CREATE TABLE IF NOT EXISTS "signatures"(

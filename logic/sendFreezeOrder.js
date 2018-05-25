@@ -31,11 +31,8 @@ function SendFreezeOrder(logger, db, network, cb) {
 
 SendFreezeOrder.prototype.create = function (data, trs) {
 	trs.startTime = trs.timestamp;
-	var date = new Date(trs.timestamp * 1000);
-	trs.nextMilestone = (date.setMinutes(date.getMinutes() + constants.froze.milestone)) / 1000;
-	trs.endTime = (date.setMinutes(date.getMinutes() - constants.froze.milestone + constants.froze.endTime)) / 1000;
 	trs.recipientId = data.recipientId;
-	trs.frozeId = data.frozeId;
+	trs.stakeId = data.stakeId;
 	trs.amount = parseInt(data.freezedAmount);
 	return trs;
 };
@@ -146,7 +143,7 @@ SendFreezeOrder.prototype.sendFreezedOrder = function (userAndOrderData, cb) {
 			self.scope.db.one(sql.getActiveFrozeOrder,
 				{
 					senderId: userAndOrderData.account.address,
-					frozeId: userAndOrderData.frozeId
+					stakeId: userAndOrderData.stakeId
 				})
 				.then(function (order) {
 					resolve(order)
@@ -208,7 +205,7 @@ SendFreezeOrder.prototype.sendFreezedOrder = function (userAndOrderData, cb) {
 				{
 					recipientId: userAndOrderData.recipientId,
 					senderId: order.senderId,
-					frozeId: userAndOrderData.frozeId
+					stakeId: userAndOrderData.stakeId
 				})
 				.then(function () {
 					self.scope.logger.info("Successfully check for update froze order");
@@ -227,15 +224,12 @@ SendFreezeOrder.prototype.sendFreezedOrder = function (userAndOrderData, cb) {
 			//create new froze order according to send order
 			self.scope.db.none(sql.createNewFrozeOrder,
 				{
-					frozeId: userAndOrderData.frozeId,
+					id: order.id,
 					startTime: order.startTime,
 					insertTime: order.insertTime,
-					rewardTime: 0,
-					nextMilestone: order.nextMilestone,
-					endTime: order.endTime,
 					senderId: userAndOrderData.recipientId,
 					freezedAmount: order.freezedAmount,
-					milestoneCount: order.milestoneCount,
+					rewardCount: order.rewardCount,
 					voteCount: order.voteCount,
 					nextVoteMilestone: order.nextVoteMilestone,
 					isVoteDone: order.isVoteDone
@@ -258,8 +252,10 @@ SendFreezeOrder.prototype.sendFreezedOrder = function (userAndOrderData, cb) {
 		try {
 			var order = await getActiveFrozeOrder();
 
-			if (order) {
-				self.scope.logger.info("Successfully get froze order"+JSON.stringify(order));
+			if (order && order.isTransferred) {
+				return setImmediate(cb, 'Order can be send only Once');
+			} else {
+				self.scope.logger.info("Successfully get froze order" + JSON.stringify(order));
 
 				await deductFrozeAmount(order);
 				await updateFrozeAmount(order);

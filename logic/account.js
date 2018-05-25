@@ -372,14 +372,6 @@ function Account (db, schema, logger, cb) {
 			expression: '("totalFrozeAmount")::bigint'
 
 		},
-		{
-			name: 'endTime',
-			type: 'BigInt',
-			filter: {
-				type: 'integer'
-			},
-			conv: Number
-		},
 		{ 
 			name: 'totalFrozeAmount', 
 			type: 'BigInt', 

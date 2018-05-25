@@ -821,8 +821,6 @@ Accounts.prototype.shared = {
 						circulatingSupply: totalCirculatingSupply
 					});
 				});
-
-
 			})
 			.catch(function (err) {
 				library.logger.error(err.stack);
@@ -835,22 +833,6 @@ Accounts.prototype.shared = {
 		return setImmediate(cb, null, {
 			totalSupply: totalSupply
 		});
-
-	},
-	existingETPSUser: function (req, cb) {
-		library.db.one(sql.checkAlreadyMigrated, {
-			username: req.body.userInfo.username
-		})
-			.then(function (data) {
-				return setImmediate(cb, null, { isMigrated: data.isMigrated });
-			})
-			.catch(function (err) {
-				if (err.code == 0) {
-					return setImmediate(cb, null, { isMigrated: 0 });
-				}
-				library.logger.error(err.stack);
-				return setImmediate(cb, err.toString());
-			});
 
 	},
 
@@ -884,21 +866,20 @@ Accounts.prototype.shared = {
 		function insertstakeOrder(order) {
 			return new Promise(function (resolve, reject) {
 
-				var date = new Date((slots.getTime(order.insert_time)) * 1000);
-				var milestone = (date.setMinutes(date.getMinutes() + constants.froze.milestone)) / 1000;
-				var endTime = (date.setMinutes(date.getMinutes() - constants.froze.milestone + constants.froze.endTime - (order.month_count)*(constants.froze.milestone))) / 1000;
+				var date = new Date((slots.getTime()) * 1000);
+				var milestone =0;
+				var endTime = 0;
+				var nextVoteMilestone = (date.setMinutes(date.getMinutes() + constants.froze.vTime)) / 1000;
 
 				library.db.none(sql.InsertStakeOrder, {
 					account_id: req.body.data.id,
 					startTime: (slots.getTime(order.insert_time)),
 					insertTime: slots.getTime(),
-					rewardTime:0,
-					endTime: endTime,
 					senderId: req.body.address,
 					freezedAmount: order.cost * 100000000,
-					milestoneCount: order.month_count,
-					nextMilestone: milestone,
-					status: 1
+					rewardCount: order.month_count,
+					status: 1,
+					nextVoteMilestone: nextVoteMilestone
 				})
 					.then(function () {
 						resolve();
@@ -964,6 +945,24 @@ Accounts.prototype.shared = {
 			});
 		}
 
+		function updateETPSUserDetail() {
+			return new Promise(function (resolve, reject) {
+				var date = new Date((slots.getRealTime()));
+
+				library.db.none(sql.updateETPSUserInfo, {
+					userId: req.body.data.id,
+					insertTime: date
+				})
+					.then(function () {
+						resolve();
+					})
+					.catch(function (err) {
+						library.logger.error(err.stack);
+						reject(new Error(err.stack));
+					});
+			});
+		}
+
 
 		(async function () {
 			try {
@@ -974,6 +973,7 @@ Accounts.prototype.shared = {
 					totalFrozeAmount.sum = 0;
 				}
 				await updateMemAccountTable(totalFrozeAmount);
+				await updateETPSUserDetail();
 
 				return setImmediate(cb, null, { success: true, message: "Successfully migrated" });
 			} catch (err) {

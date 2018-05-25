@@ -20,7 +20,7 @@ var Accounts = {
 
   findTrsUser: 'SELECT * FROM trs WHERE "senderId" = ${senderId}',
 
-  InsertStakeOrder: 'INSERT INTO stake_orders ("id", "status", "startTime", "insertTime", "rewardTime", "nextMilestone", "endTime", "senderId", "freezedAmount", "milestoneCount") VALUES (${account_id},${status},${startTime},${insertTime},${rewardTime},${nextMilestone},${endTime},${senderId},${freezedAmount},${milestoneCount}) ',
+  InsertStakeOrder: 'INSERT INTO stake_orders ("id", "status", "startTime", "insertTime", "senderId", "freezedAmount", "rewardCount", "nextVoteMilestone") VALUES (${account_id},${status},${startTime},${insertTime},${senderId},${freezedAmount},${rewardCount},${nextVoteMilestone}) ',
 
   getETPSStakeOrders: 'SELECT * FROM existing_etps_assets WHERE "account_id"=${account_id} AND "status"=0 AND "month_count" < 6',
 
@@ -28,7 +28,9 @@ var Accounts = {
 
   updateStakeOrder: 'UPDATE stake_orders SET "isVoteDone"= true , "voteCount"="voteCount"+1 WHERE "senderId"=${senderId} AND "status"=1 AND "isVoteDone" <> true',
 
-  checkWeeklyVote: 'SELECT count(*) FROM stake_orders WHERE "senderId"=${senderId} AND "status"=1 AND "isVoteDone"=false'
+  checkWeeklyVote: 'SELECT count(*) FROM stake_orders WHERE "senderId"=${senderId} AND "status"=1 AND "isVoteDone"=false',
+
+  updateETPSUserInfo: 'UPDATE etps_user SET "transferred_time"=${insertTime}, "transferred_etp"=1 WHERE "id"=${userId} '
 };
 
 module.exports = Accounts;

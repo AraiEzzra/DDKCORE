@@ -45,11 +45,9 @@ __private.stakeReward = new StakeReward();
 Frozen.prototype.create = function (data, trs) {
 	trs.startTime = trs.timestamp;
 	var date = new Date(trs.timestamp * 1000);
-	trs.nextMilestone = (date.setMinutes(date.getMinutes() + constants.froze.milestone))/1000;
-	trs.endTime = (date.setMinutes(date.getMinutes() - constants.froze.milestone + constants.froze.endTime))/1000;
 	trs.recipientId = null;
 	trs.freezedAmount = data.freezedAmount;
-	trs.nextVoteMilestone = (date.setMinutes(date.getMinutes() - constants.froze.endTime + constants.froze.vTime))/1000;
+	trs.nextVoteMilestone = (date.setMinutes(date.getMinutes() + constants.froze.vTime))/1000;
 	return trs;
 };
 
@@ -65,9 +63,6 @@ Frozen.prototype.dbFields = [
 	"status",
 	"startTime",
 	"insertTime",
-	"rewardTime",
-	"nextMilestone",
-	"endTime",
 	"senderId",
 	"recipientId",
 	"freezedAmount",
@@ -86,9 +81,6 @@ Frozen.prototype.dbSave = function (trs) {
 			status: this.active,
 			startTime: trs.startTime,
 			insertTime:trs.startTime,
-			rewardTime:0,
-			nextMilestone: trs.nextMilestone,
-			endTime : trs.endTime,
 			senderId: trs.senderId,
 			recipientId: trs.recipientId,
 			freezedAmount: trs.freezedAmount,
@@ -174,130 +166,6 @@ Frozen.prototype.bind = function (accounts, rounds, blocks) {
 	};
 };
 
-/* Frozen.prototype.checkFrozeOrders = function () {
-
-	function getfrozeOrder() {
-		return new Promise(function (resolve, reject) {
-			self.scope.db.query(sql.getfrozeOrder,
-				{
-					milestone: constants.froze.milestone * 60,
-					currentTime: slots.getTime()
-				}).then(function (freezeOrders) {
-					self.scope.logger.info("Successfully get :" + freezeOrders.length + ", number of froze order");
-					resolve(freezeOrders);
-				}).catch(function (err) {
-					self.scope.logger.error(err.stack);
-					reject(new Error(err.stack));
-				});
-		});
-
-	}
-
-
-	function checkAndUpdateMilestone() {
-
-
-		//emit Stake order event when milestone change
-		self.scope.network.io.sockets.emit('milestone/change', null);
-
-		return new Promise(function (resolve, reject) {
-			//Update nextMilesone in "stake_orders" table
-			self.scope.db.none(sql.checkAndUpdateMilestone,
-				{
-					milestone: constants.froze.milestone * 60,
-					currentTime: slots.getTime()
-				})
-				.then(function () {
-					resolve();
-
-				})
-				.catch(function (err) {
-					self.scope.logger.error(err.stack);
-					reject(new Error(err.stack));
-				});
-
-
-		});
-	}
-
-	function disableFrozeOrder() {
-
-		return new Promise(function (resolve, reject) {
-			//change status and nextmilestone
-			self.scope.db.none(sql.disableFrozeOrders,
-				{
-					currentTime: slots.getTime(),
-					totalMilestone: constants.froze.endTime / constants.froze.milestone
-				})
-				.then(function () {
-					self.scope.logger.info("Successfully check status for disable froze orders");
-					resolve();
-				})
-				.catch(function (err) {
-					self.scope.logger.error(err.stack);
-					reject(new Error(err.stack));
-				});
-		});
-	}
-
-	function deductFrozeAmountandSendReward(freezeOrders) {
-		var i;
-		//return new Promise(function (resolve, reject) {
-
-		for (i = 0; i < freezeOrders.length; i++) {
-			if (freezeOrders[i].nextMilestone === freezeOrders[i].endTime) {
-
-				self.scope.db.none(sql.deductFrozeAmount, {
-					FrozeAmount: freezeOrders[i].freezedAmount,
-					senderId: freezeOrders[i].senderId
-				}).then(function () {
-					self.scope.logger.info("Successfully check and if applicable, deduct froze amount from mem_account table");
-					//resolve();
-				}).catch(function (err) {
-					self.scope.logger.error(err.stack);
-					//reject(new Error(err.stack));
-				});
-			}
-
-			//Request to send transaction
-			var transactionData = {
-				json: {
-					secret: self.scope.config.sender.secret,
-					amount: parseInt(freezeOrders[i].freezedAmount * __private.stakeReward.calcReward(modules.blocks.lastBlock.get().height)/100),
-					recipientId: freezeOrders[i].senderId,
-					publicKey: self.scope.config.sender.publicKey
-				}
-			};
-			//Send froze monthly rewards to users
-			self.scope.logic.transaction.sendTransaction(transactionData, function (error, transactionResponse) {
-				if (error)
-					throw error;
-				else {
-					self.scope.logger.info("Successfully transfered reward for freezing an amount and transaction ID is : "+ transactionResponse.body.transactionId);
-				}
-
-			});
-		}
-		//});
-	}
-	//function to check froze orders using async/await
-	(async function () {
-		try {
-			var freezeOrders = await getfrozeOrder();
-
-			if (freezeOrders.length > 0) {
-				await checkAndUpdateMilestone();
-				await disableFrozeOrder();
-				deductFrozeAmountandSendReward(freezeOrders);
-			}
-		} catch (err) {
-			self.scope.logger.error(err.stack);
-			return setImmediate(cb, err.toString());
-		}
-
-	})();
-}; */
-
 Frozen.prototype.checkFrozeOrders = function () {
 
 	function getfrozeOrder() {
@@ -340,8 +208,6 @@ Frozen.prototype.checkFrozeOrders = function () {
 					self.scope.logger.error(err.stack);
 					reject(new Error(err.stack));
 				});
-
-
 		});
 	}
 
@@ -361,7 +227,7 @@ Frozen.prototype.checkFrozeOrders = function () {
 
 		return new Promise(function (resolve, reject) {
 
-			if (((order.milestoneCount + 1) === (constants.froze.endTime / constants.froze.milestone)) && (order.voteCount === (constants.froze.milestone/constants.froze.vTime))) {
+			if (((order.rewardCount + 1) === (constants.froze.endTime / constants.froze.milestone)) && (order.voteCount === (constants.froze.milestone/constants.froze.vTime))) {
 
 				self.scope.db.none(sql.deductFrozeAmount, {
 					FrozeAmount: order.freezedAmount,
@@ -450,7 +316,6 @@ Frozen.prototype.checkFrozeOrders = function () {
 			self.scope.logger.error(err.stack);
 			return setImmediate(cb, err.toString());
 		}
-
 	})();
 };
 
@@ -465,10 +330,10 @@ Frozen.prototype.updateFrozeAmount = function (userData, cb) {
 				return setImmediate(cb, 'No Account Exist in mem_account table for' + userData.account.address);
 			}
 			var frozeAmountFromDB = totalFrozeAmount.totalFrozeAmount;
-			var totalFrozeAmount = parseInt(frozeAmountFromDB) + parseInt(userData.freezedAmount);
-			var totalFrozeAmountWithFees = totalFrozeAmount + parseInt(constants.fees.froze);
+			var totalFrozeAmount = parseInt(frozeAmountFromDB) + userData.freezedAmount;
+			var totalFrozeAmountWithFees = totalFrozeAmount + (parseFloat(constants.fees.froze)*(userData.freezedAmount))/100;
 			//verify that freeze order cannot more than available balance
-			if (totalFrozeAmountWithFees < userData.account.balance) {
+			if (totalFrozeAmountWithFees <= userData.account.balance) {
 				self.scope.db.none(sql.updateFrozeAmount, {
 					freezedAmount: userData.freezedAmount,
 					senderId: userData.account.address
