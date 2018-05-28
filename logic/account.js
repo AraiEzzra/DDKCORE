@@ -22,7 +22,7 @@ var self, library, __private = {};
  * @param {function} cb - Callback function.
  * @return {setImmediateCallback} With `this` as data.
  */
-function Account (db, schema, logger, cb) {
+function Account(db, schema, logger, cb) {
 	this.scope = {
 		db: db,
 		schema: schema
@@ -372,17 +372,25 @@ function Account (db, schema, logger, cb) {
 			expression: '("totalFrozeAmount")::bigint'
 
 		},
-		{ 
-			name: 'totalFrozeAmount', 
-			type: 'BigInt', 
-			filter: { 
-				type: 'integer' 
-			}, 
-			conv: Number, 
-			expression: '("totalFrozeAmount")::bigint' 
+		{
+			name: 'endTime',
+			type: 'BigInt',
+			filter: {
+				type: 'integer'
+			},
+			conv: Number
+		},
+		{
+			name: 'totalFrozeAmount',
+			type: 'BigInt',
+			filter: {
+				type: 'integer'
+			},
+			conv: Number,
+			expression: '("totalFrozeAmount")::bigint'
 		}
 	];
-	
+
 	// Obtains fields from model
 	this.fields = this.model.map(function (field) {
 		var _tmp = {};
@@ -401,7 +409,7 @@ function Account (db, schema, logger, cb) {
 
 		return _tmp;
 	});
-	
+
 	// Obtains bynary fields from model
 	this.binary = [];
 	this.model.forEach(function (field) {
@@ -409,7 +417,7 @@ function Account (db, schema, logger, cb) {
 			this.binary.push(field.name);
 		}
 	}.bind(this));
-	
+
 	// Obtains filters from model
 	this.filter = {};
 	this.model.forEach(function (field) {
@@ -445,7 +453,7 @@ function Account (db, schema, logger, cb) {
  * @returns {setImmediateCallback} cb|error.
  */
 Account.prototype.createTables = function (cb) {
-	var sql = new pgp.QueryFile(path.join(process.cwd(), 'sql', 'memoryTables.sql'), {minify: true});
+	var sql = new pgp.QueryFile(path.join(process.cwd(), 'sql', 'memoryTables.sql'), { minify: true });
 
 	this.scope.db.query(sql).then(function () {
 		return setImmediate(cb);
@@ -561,7 +569,7 @@ Account.prototype.toDB = function (raw) {
  * @returns {setImmediateCallback} Returns null or Object with database data.
  */
 Account.prototype.get = function (filter, fields, cb) {
-	if (typeof(fields) === 'function') {
+	if (typeof (fields) === 'function') {
 		cb = fields;
 		fields = this.fields.map(function (field) {
 			return field.alias || field.field;
@@ -581,7 +589,7 @@ Account.prototype.get = function (filter, fields, cb) {
  * @returns {setImmediateCallback} data with rows | 'Account#getAll error'.
  */
 Account.prototype.getAll = function (filter, fields, cb) {
-	if (typeof(fields) === 'function') {
+	if (typeof (fields) === 'function') {
 		cb = fields;
 		fields = this.fields.map(function (field) {
 			return field.alias || field.field;
@@ -696,118 +704,131 @@ Account.prototype.merge = function (address, diff, cb) {
 		if (diff[value] !== undefined) {
 			var trueValue = diff[value];
 			switch (self.conv[value]) {
-			case String:
-				update[value] = trueValue;
-				break;
-			case Number:
-				if (isNaN(trueValue) || trueValue === Infinity) {
-					return setImmediate(cb, 'Encountered unsane number: ' + trueValue);
-				} else if (Math.abs(trueValue) === trueValue && trueValue !== 0) {
-					update.$inc = update.$inc || {};
-					update.$inc[value] = Math.floor(trueValue);
-					if (value === 'balance') {
-						round.push({
-							query: 'INSERT INTO mem_round ("address", "amount", "delegate", "blockId", "round") SELECT ${address}, (${amount})::bigint, "dependentId", ${blockId}, ${round} FROM mem_accounts2delegates WHERE "accountId" = ${address};',
-							values: {
-								address: address,
-								amount: trueValue,
-								blockId: diff.blockId,
-								round: diff.round
-							}
-						});
-					}
-				} else if (trueValue < 0) {
-					update.$dec = update.$dec || {};
-					update.$dec[value] = Math.floor(Math.abs(trueValue));
+				case String:
+					update[value] = trueValue;
+					break;
+				case Number:
+					if (isNaN(trueValue) || trueValue === Infinity) {
+						return setImmediate(cb, 'Encountered unsane number: ' + trueValue);
+					} else if (Math.abs(trueValue) === trueValue && trueValue !== 0) {
+						update.$inc = update.$inc || {};
+						update.$inc[value] = Math.floor(trueValue);
+						if (value === 'balance') {
+							round.push({
+								query: 'INSERT INTO mem_round ("address", "amount", "delegate", "blockId", "round") SELECT ${address}, (${amount})::bigint, "dependentId", ${blockId}, ${round} FROM mem_accounts2delegates WHERE "accountId" = ${address};',
+								values: {
+									address: address,
+									amount: trueValue,
+									blockId: diff.blockId,
+									round: diff.round
+								}
+							});
+							/* if (diff['rewards']) {
+								update.$dec = update.$dec || {};
+								update.$dec[value] = Math.floor(Math.abs(trueValue));
+								if (value === 'balance') {
+									round.push({
+										query: 'INSERT INTO mem_round ("address", "amount") SELECT ${address}, (${amount})::bigint FROM mem_accounts2delegates WHERE "accountId" = ${address};',
+										values: {
+											address: '4995063339468361088E',
+											amount: trueValue
+										}
+									});
+								}
+							} */
+						}
+					} else if (trueValue < 0) {
+						update.$dec = update.$dec || {};
+						update.$dec[value] = Math.floor(Math.abs(trueValue));
 						// If decrementing u_balance on account
-					if (update.$dec.u_balance) {
+						if (update.$dec.u_balance) {
 							// Remove virginity and ensure marked columns become immutable
-						update.virgin = 0;
-					}
-					if (value === 'balance') {
-						round.push({
-							query: 'INSERT INTO mem_round ("address", "amount", "delegate", "blockId", "round") SELECT ${address}, (${amount})::bigint, "dependentId", ${blockId}, ${round} FROM mem_accounts2delegates WHERE "accountId" = ${address};',
-							values: {
-								address: address,
-								amount: trueValue,
-								blockId: diff.blockId,
-								round: diff.round
-							}
-						});
-					}
-				}
-				break;
-			case Array:
-				if (Object.prototype.toString.call(trueValue[0]) === '[object Object]') {
-					for (i = 0; i < trueValue.length; i++) {
-						val = trueValue[i];
-						if (val.action === '-') {
-							delete val.action;
-							remove_object[value] = remove_object[value] || [];
-							remove_object[value].push(val);
-						} else if (val.action === '+') {
-							delete val.action;
-							insert_object[value] = insert_object[value] || [];
-							insert_object[value].push(val);
-						} else {
-							delete val.action;
-							insert_object[value] = insert_object[value] || [];
-							insert_object[value].push(val);
+							update.virgin = 0;
+						}
+						if (value === 'balance') {
+							round.push({
+								query: 'INSERT INTO mem_round ("address", "amount", "delegate", "blockId", "round") SELECT ${address}, (${amount})::bigint, "dependentId", ${blockId}, ${round} FROM mem_accounts2delegates WHERE "accountId" = ${address};',
+								values: {
+									address: address,
+									amount: trueValue,
+									blockId: diff.blockId,
+									round: diff.round
+								}
+							});
 						}
 					}
-				} else {
-					for (i = 0; i < trueValue.length; i++) {
-						var math = trueValue[i][0];
-						val = null;
-						if (math === '-') {
-							val = trueValue[i].slice(1);
-							remove[value] = remove[value] || [];
-							remove[value].push(val);
-							if (value === 'delegates') {
-								round.push({
-									query: 'INSERT INTO mem_round ("address", "amount", "delegate", "blockId", "round") SELECT ${address}, (-balance)::bigint, ${delegate}, ${blockId}, ${round} FROM mem_accounts WHERE address = ${address};',
-									values: {
-										address: address,
-										delegate: val,
-										blockId: diff.blockId,
-										round: diff.round
-									}
-								});
-							}
-						} else if (math === '+') {
-							val = trueValue[i].slice(1);
-							insert[value] = insert[value] || [];
-							insert[value].push(val);
-							if (value === 'delegates') {
-								round.push({
-									query: 'INSERT INTO mem_round ("address", "amount", "delegate", "blockId", "round") SELECT ${address}, (balance)::bigint, ${delegate}, ${blockId}, ${round} FROM mem_accounts WHERE address = ${address};',
-									values: {
-										address: address,
-										delegate: val,
-										blockId: diff.blockId,
-										round: diff.round
-									}
-								});
-							}
-						} else {
+					break;
+				case Array:
+					if (Object.prototype.toString.call(trueValue[0]) === '[object Object]') {
+						for (i = 0; i < trueValue.length; i++) {
 							val = trueValue[i];
-							insert[value] = insert[value] || [];
-							insert[value].push(val);
-							if (value === 'delegates') {
-								round.push({
-									query: 'INSERT INTO mem_round ("address", "amount", "delegate", "blockId", "round") SELECT ${address}, (balance)::bigint, ${delegate}, ${blockId}, ${round} FROM mem_accounts WHERE address = ${address};',
-									values: {
-										address: address,
-										delegate: val,
-										blockId: diff.blockId,
-										round: diff.round
-									}
-								});
+							if (val.action === '-') {
+								delete val.action;
+								remove_object[value] = remove_object[value] || [];
+								remove_object[value].push(val);
+							} else if (val.action === '+') {
+								delete val.action;
+								insert_object[value] = insert_object[value] || [];
+								insert_object[value].push(val);
+							} else {
+								delete val.action;
+								insert_object[value] = insert_object[value] || [];
+								insert_object[value].push(val);
+							}
+						}
+					} else {
+						for (i = 0; i < trueValue.length; i++) {
+							var math = trueValue[i][0];
+							val = null;
+							if (math === '-') {
+								val = trueValue[i].slice(1);
+								remove[value] = remove[value] || [];
+								remove[value].push(val);
+								if (value === 'delegates') {
+									round.push({
+										query: 'INSERT INTO mem_round ("address", "amount", "delegate", "blockId", "round") SELECT ${address}, (-balance)::bigint, ${delegate}, ${blockId}, ${round} FROM mem_accounts WHERE address = ${address};',
+										values: {
+											address: address,
+											delegate: val,
+											blockId: diff.blockId,
+											round: diff.round
+										}
+									});
+								}
+							} else if (math === '+') {
+								val = trueValue[i].slice(1);
+								insert[value] = insert[value] || [];
+								insert[value].push(val);
+								if (value === 'delegates') {
+									round.push({
+										query: 'INSERT INTO mem_round ("address", "amount", "delegate", "blockId", "round") SELECT ${address}, (balance)::bigint, ${delegate}, ${blockId}, ${round} FROM mem_accounts WHERE address = ${address};',
+										values: {
+											address: address,
+											delegate: val,
+											blockId: diff.blockId,
+											round: diff.round
+										}
+									});
+								}
+							} else {
+								val = trueValue[i];
+								insert[value] = insert[value] || [];
+								insert[value].push(val);
+								if (value === 'delegates') {
+									round.push({
+										query: 'INSERT INTO mem_round ("address", "amount", "delegate", "blockId", "round") SELECT ${address}, (balance)::bigint, ${delegate}, ${blockId}, ${round} FROM mem_accounts WHERE address = ${address};',
+										values: {
+											address: address,
+											delegate: val,
+											blockId: diff.blockId,
+											round: diff.round
+										}
+									});
+								}
 							}
 						}
 					}
-				}
-				break;
+					break;
 			}
 		}
 	});
@@ -820,7 +841,7 @@ Account.prototype.merge = function (address, diff, cb) {
 				type: 'remove',
 				table: self.table + '2' + el,
 				condition: {
-					dependentId: {$in: remove[el]},
+					dependentId: { $in: remove[el] },
 					accountId: address
 				}
 			});
@@ -882,14 +903,14 @@ Account.prototype.merge = function (address, diff, cb) {
 		sqles.push(sql);
 	}
 
-	function done (err) {
+	function done(err) {
 		if (cb.length !== 2) {
 			return setImmediate(cb, err);
 		} else {
 			if (err) {
 				return setImmediate(cb, err);
 			}
-			self.get({address: address}, cb);
+			self.get({ address: address }, cb);
 		}
 	}
 

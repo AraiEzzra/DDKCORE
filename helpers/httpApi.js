@@ -1,4 +1,5 @@
 'use strict';
+const Logger = require('../logger.js');
 
 /**
  * Middleware functions to add cors, log errors and conections, send status
@@ -172,6 +173,23 @@ var middleware = {
 				res.json(cachedValue);
 			}
 		});
+	},
+
+	/**
+	 * Passes address/token and attach it to logger.
+	 * @param {Object} req
+	 * @param {Object} res
+	 * @param {Function} next
+	 */
+	attachInfoToLogger: function(req, res, next) {
+		if(req.decoded) {
+			var logman = new Logger('', req.decoded.address);
+			var logger = logman.logger;
+		}else {
+			var logman = new Logger();
+			var logger = logman.logger;
+		}
+		return next();
 	}
 };
 

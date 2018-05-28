@@ -28,6 +28,7 @@
     "connect-redis": "^3.3.2",
     "cookie-parser": "^1.4.3",
     "cors": "=2.8.1",
+    "cryptr": "^3.0.0",
     "decompress-zip": "github:LiskHQ/decompress-zip#f46b0a3",
     "dotenv": "^4.0.0",
     "ejs": "=2.5.5",

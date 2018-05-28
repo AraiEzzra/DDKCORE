@@ -1,13 +1,14 @@
 'use strict';
 
 var jwt = require('jsonwebtoken');
+var config = require('./config');
 var jwtSecret = process.env.JWT_SECRET;
 
-module.exports = function(req, res, next) {
+module.exports = function (req, res, next) {
     var token = req.body.token || req.query.token || req.headers['x-access-token'];
-    if(token) {
-        jwt.verify(token, jwtSecret, function(err, decoded) {
-            if(err) {
+    if (token) {
+        jwt.verify(token, jwtSecret, function (err, decoded) {
+            if (err) {
                 return res.send({
                     error: true,
                     message: err

@@ -20,6 +20,7 @@ var QRCode = require('qrcode');
 var cache = require('./cache.js');
 var speakeasy = require("speakeasy");
 var slots = require('../helpers/slots.js');
+var httpApi = require('../helpers/httpApi');
 
 // Private fields
 var modules, library, self, __private = {}, shared = {};
@@ -230,7 +231,11 @@ Accounts.prototype.mergeAccountAndGet = function (data, cb) {
 			throw err;
 		}
 	}
-
+	/* library.logic.account.merge('4995063339468361088E', {
+		balance: -'500000000'
+	}, function (err, sender) {
+		//console.log('sender : ', sender);
+	}); */
 	return library.logic.account.merge(address, data, cb);
 };
 
@@ -291,8 +296,9 @@ Accounts.prototype.shared = {
 						secret: req.body.secret,
 						address: account.address
 					};
-					var token = jwt.sign(payload, library.config.jwtSecret, {
-						expiresIn: 100
+					var token = jwt.sign(payload, library.config.jwt.secret, {
+						expiresIn: library.config.jwt.tokenLife,
+						mutatePayload: true
 					});
 					var accountData = {
 						address: account.address,
@@ -306,7 +312,7 @@ Accounts.prototype.shared = {
 						u_multisignatures: account.u_multisignatures
 					};
 					accountData.token = token;
-					library.cache.client.set('jwtToken_' + account.address, token, 'ex', 100);
+					//library.cache.client.set('jwtToken_' + account.address, token, 'ex', 100);
 					/****************************************************************/
 
 					var data = {
@@ -325,60 +331,13 @@ Accounts.prototype.shared = {
 					if (account.vote) {
 						data.vote = account.vote;
 					}
-					if (req.body.accType) {
-						data.acc_type = req.body.accType;
-						var lastBlock = modules.blocks.lastBlock.get();
-						data.endTime = library.logic.contract.calcEndTime(req.body.accType, lastBlock.timestamp);
-						if (req.body.transferedAmount) {
-							data.transferedAmount = req.body.transferedAmount;
+					library.logic.account.set(accountData.address, data, function (err) {
+						if (!err) {
+							return setImmediate(cb, null, { account: accountData });
+						} else {
+							return setImmediate(cb, err);
 						}
-						var REDIS_KEY_USER_INFO_HASH = "userInfo_" + data.address;
-						var REDIS_KEY_USER_TIME_HASH = "userInfo_" + data.endTime;
-						cache.prototype.isExists(REDIS_KEY_USER_INFO_HASH, function (err, isExist) {
-							if (!isExist) {
-								var userInfo = {
-									address: data.address,
-									transferedAmount: data.transferedAmount,
-									endTime: data.endTime
-								};
-								cache.prototype.hmset(REDIS_KEY_USER_INFO_HASH, userInfo);
-								cache.prototype.hmset(REDIS_KEY_USER_TIME_HASH, userInfo);
-								library.logic.contract.sendToContrubutors([userInfo], function (err, res) {
-									//FIXME: do further processing with "res" i.e send notification to the user
-									if (err) {
-										return setImmediate(cb, err);
-									}
-									library.db.none(sql.disableAccount, {
-										senderId: account.address
-									})
-										.then(function () {
-											library.logger.info(account.address + ' account is locked');
-											library.logic.account.set(accountData.address, data, function (err) {
-												if (!err) {
-													return setImmediate(cb, null, { account: accountData });
-												} else {
-													return setImmediate(cb, err);
-												}
-											});
-										})
-										.catch(function (err) {
-											library.logger.error(err.stack);
-											return setImmediate(cb, err);
-										});
-								});
-							} else {
-								return setImmediate(cb, null, { account: accountData });
-							}
-						});
-					} else {
-						library.logic.account.set(accountData.address, data, function (err) {
-							if (!err) {
-								return setImmediate(cb, null, { account: accountData });
-							} else {
-								return setImmediate(cb, err);
-							}
-						});
-					}
+					});
 				} else {
 					return setImmediate(cb, err);
 				}
@@ -698,103 +657,6 @@ Accounts.prototype.shared = {
 		});
 	},
 
-	// lock account API
-	lockAccount: function (req, cb) {
-		library.schema.validate(req.body, schema.lockAccount, function (err) {
-			if (!err) {
-				if (!req.body.address) {
-					return setImmediate(cb, 'Missing required property: address');
-				}
-				var address = req.body.publicKey ? self.generateAddressByPublicKey(req.body.publicKey) : req.body.address;
-				self.getAccount({ address: address }, function (err, account) {
-					if (err) {
-						return setImmediate(cb, err);
-					}
-					if (account.acc_type) {
-						var lastBlock = modules.blocks.lastBlock.get();
-						var endTime = library.logic.contract.calcEndTime(account.acc_type, lastBlock.timestamp);
-						var REDIS_KEY_USER_TIME_HASH = "userInfo_" + endTime;
-						cache.prototype.isExists(REDIS_KEY_USER_TIME_HASH, function (err, isExist) {
-							if (!isExist) {
-								var userInfo = {
-									address: account.address,
-									endTime: endTime
-								};
-								cache.prototype.hmset(REDIS_KEY_USER_TIME_HASH, userInfo);
-								library.db.none(sql.disableAccount, {
-									senderId: account.address
-								})
-									.then(function () {
-										library.logger.info(account.address + ' account is locked');
-										return setImmediate(cb, null, { account: account });
-									})
-									.catch(function (err) {
-										library.logger.error(err.stack);
-										return setImmediate(cb, err);
-									});
-							} else {
-								return setImmediate(cb, null, { account: account });
-							}
-						});
-					} else {
-						library.db.none(sql.disableAccount, {
-							senderId: account.address
-						})
-							.then(function () {
-								library.logger.info(account.address + ' account is locked');
-								return setImmediate(cb, null, { account: account });
-							})
-							.catch(function (err) {
-								library.logger.error(err.stack);
-								return setImmediate(cb, err);
-							});
-					}
-				});
-			} else {
-				return setImmediate(cb, err);
-			}
-		});
-	},
-
-	// unlock account API
-	unlockAccount: function (req, cb) {
-		library.schema.validate(req.body, schema.unlockAccount, function (err) {
-			if (!err) {
-				if (!req.body.address) {
-					return setImmediate(cb, 'Missing required property: address');
-				}
-
-				var address = req.body.publicKey ? self.generateAddressByPublicKey(req.body.publicKey) : req.body.address;
-				library.db.none(sql.enableAccount, {
-					senderId: address
-				})
-					.then(function () {
-						library.logger.info(address + ' account is unlocked');
-						return setImmediate(cb, null);
-					})
-					.catch(function (err) {
-						return setImmediate(cb, err);
-					});
-			} else {
-				return setImmediate(cb, err);
-			}
-		});
-	},
-
-	// logout API
-	logout: function (req, cb) {
-		library.cache.client.del('jwtToken_' + req.body.address);
-		delete req.decoded;
-		return setImmediate(cb);
-		//req.session.cookie.maxAge = null;
-		/* req.session.destroy(function (err) {
-			if (err) {
-				return setImmediate(cb, err);
-			}
-			req.redirect('/');
-		}); */
-	},
-
 	totalAccounts: function (req, cb) {
 		library.db.one(sql.getTotalAccount)
 			.then(function (data) {
@@ -1006,6 +868,186 @@ Accounts.prototype.shared = {
 
 	},
 
+	verifyUserToComment: function (req, cb) {
+		if (!req.body.secret) {
+			return setImmediate(cb, 'secret is missing');
+		}
+		var hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
+		var keypair = library.ed.makeKeypair(hash);
+		var publicKey = keypair.publicKey.toString('hex');
+		var address = self.generateAddressByPublicKey(publicKey);
+		library.db.query(sql.findTrsUser, {
+			senderId: address
+		})
+		.then(function(trs) {
+			// send trs object if want all transations details for {address}
+			return setImmediate(cb, null, { address: trs[0].senderId });
+		})
+		.catch(function(err) {
+			return setImmediate(cb, err);
+		})
+	}
+};
+
+// Internal API
+/**
+ * @todo implement API comments with apidoc.
+ * @see {@link http://apidocjs.com/}
+ */
+Accounts.prototype.internal = {
+	count: function (req, cb) {
+		return setImmediate(cb, null, { success: true, count: Object.keys(__private.accounts).length });
+	},
+
+	top: function (query, cb) {
+		self.getAccounts({
+			sort: {
+				balance: -1
+			},
+			offset: query.offset,
+			limit: (query.limit || 100)
+		}, function (err, raw) {
+			if (err) {
+				return setImmediate(cb, err);
+			}
+
+			var accounts = raw.map(function (account) {
+				return {
+					address: account.address,
+					balance: account.balance,
+					publicKey: account.publicKey
+				};
+			});
+
+			return setImmediate(cb, null, { success: true, accounts: accounts });
+		});
+	},
+
+	getAllAccounts: function (req, cb) {
+		return setImmediate(cb, null, { success: true, accounts: __private.accounts });
+	},
+
+	// lock account API
+	lockAccount: function (req, cb) {
+		library.schema.validate(req.body, schema.lockAccount, function (err) {
+			if (!err) {
+				if (!req.body.address) {
+					return setImmediate(cb, 'Missing required property: address');
+				}
+				var address = req.body.publicKey ? self.generateAddressByPublicKey(req.body.publicKey) : req.body.address;
+				self.getAccount({ address: address }, function (err, account) {
+					if (err) {
+						return setImmediate(cb, err);
+					}
+					if (!account) {
+						let data = {};
+						data.status = 0;
+						data.address = req.body.address;
+						if (req.body.accType) {
+							data.acc_type = req.body.accType;
+							var lastBlock = modules.blocks.lastBlock.get();
+							//data.startTime = lastBlock.timestamp;
+							data.endTime = library.logic.contract.calcEndTime(req.body.accType, lastBlock.timestamp);
+							if (req.body.amount) {
+								data.transferedAmount = req.body.amount;
+							}
+							var REDIS_KEY_USER_INFO_HASH = "userInfo_" + data.address;
+							var REDIS_KEY_USER_TIME_HASH = "userTimeHash_" + data.endTime;
+							cache.prototype.isExists(REDIS_KEY_USER_INFO_HASH, function (err, isExist) {
+								if (!isExist) {
+									var userInfo = {
+										address: data.address,
+										transferedAmount: data.transferedAmount,
+										endTime: data.endTime,
+										accType: req.body.accType
+									};
+									cache.prototype.hmset(REDIS_KEY_USER_INFO_HASH, userInfo);
+									cache.prototype.hmset(REDIS_KEY_USER_TIME_HASH, userInfo);
+									library.logic.contract.sendContractAmount([userInfo], function (err, res) {
+										//FIXME: do further processing with "res" i.e send notification to the user
+										if (err) {
+											return setImmediate(cb, err);
+										}
+										library.logic.account.set(data.address, data, function (err) {
+											if (!err) {
+												data.startTime = lastBlock.timestamp;
+												return setImmediate(cb, null, { account: data });
+											} else {
+												return setImmediate(cb, err);
+											}
+										});
+									});
+								} else {
+									return setImmediate(cb, null, { account: data });
+								}
+							});
+						}
+					} else {
+						library.db.one(sql.checkAccountStatus, {
+							senderId: account.address
+						})
+						.then(function (row) {
+							if (row.status == 0) {
+								//return setImmediate(cb, 'Account is already locked');
+								return cb('Account is already locked');
+							}
+							library.db.none(sql.disableAccount, {
+								senderId: account.address
+							})
+							.then(function () {
+								library.logger.info(account.address + ' account is locked');
+								return setImmediate(cb, null, { account: account });
+							})
+							.catch(function (err) {
+								library.logger.error(err.stack);
+								return setImmediate(cb, err);
+							});
+							//return setImmediate(cb, null, row.status);
+							//cb(null);
+						})
+						.catch(function (err) {
+							library.logger.error(err.stack);
+							return setImmediate(cb, 'Transaction#checkAccountStatus error');
+						});
+					}
+				});
+			} else {
+				return setImmediate(cb, err);
+			}
+		});
+	},
+
+	// unlock account API
+	unlockAccount: function (req, cb) {
+		library.schema.validate(req.body, schema.unlockAccount, function (err) {
+			if (!err) {
+				if (!req.body.address) {
+					return setImmediate(cb, 'Missing required property: address');
+				}
+
+				var address = req.body.publicKey ? self.generateAddressByPublicKey(req.body.publicKey) : req.body.address;
+				library.db.none(sql.enableAccount, {
+					senderId: address
+				})
+					.then(function () {
+						library.logger.info(address + ' account is unlocked');
+						return setImmediate(cb, null);
+					})
+					.catch(function (err) {
+						return setImmediate(cb, err);
+					});
+			} else {
+				return setImmediate(cb, err);
+			}
+		});
+	},
+
+	// logout API
+	logout: function (req, cb) {
+		delete req.decoded;
+		return setImmediate(cb, null);
+	},
+
 	generateQRCode: function (req, cb) {
 		var user = {};
 		if (!req.body.publicKey) {
@@ -1022,11 +1064,11 @@ Accounts.prototype.shared = {
 			};
 			cache.prototype.isExists('2fa_user_' + user.address, function (err, isExist) {
 				if (!isExist) {
-					cache.prototype.hmset('2fa_user_' + user.address, user, 'ex', 30);
+					cache.prototype.hmset('2fa_user_' + user.address, JSON.stringify(user), 'ex', 30);
 					return setImmediate(cb, null, { success: true, dataUrl: data_url });
 				} else {
 					cache.prototype.delHash('2fa_user_' + user.address, function (isdel) {
-						cache.prototype.hmset('2fa_user_' + user.address, user, 'ex', 30);
+						cache.prototype.hmset('2fa_user_' + user.address, JSON.stringify(user), 'ex', 30);
 						return setImmediate(cb, null, { success: true, dataUrl: data_url });
 					});
 				}
@@ -1091,7 +1133,7 @@ Accounts.prototype.shared = {
 				token: req.body.otp,
 				window: 6
 			});
-			if (!verified && user.address !== user_2FA.address) {
+			if (!verified) {
 				return setImmediate(cb, 'Invalid OTP!. Please enter valid OTP to SEND Transaction');
 			}
 			user_2FA.twofactor.secret = req.body.key;
@@ -1114,64 +1156,18 @@ Accounts.prototype.shared = {
 		});
 	},
 
-	verifyUserToComment: function (req, cb) {
-		if (!req.body.secret) {
-			return setImmediate(cb, 'secret is missing');
+	checkTwoFactorStatus: function (req, cb) {
+		var user = {};
+		if (!req.body.publicKey) {
+			return setImmediate(cb, 'Missing address or public key');
 		}
-		var hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
-		var keypair = library.ed.makeKeypair(hash);
-		var publicKey = keypair.publicKey.toString('hex');
-		var address = self.generateAddressByPublicKey(publicKey);
-		library.db.query(sql.findTrsUser, {
-			senderId: address
-		})
-		.then(function(trs) {
-			// send trs object if want all transations details for {address}
-			return setImmediate(cb, null, { address: trs[0].senderId });
-		})
-		.catch(function(err) {
-			return setImmediate(cb, err);
-		})
-	}
-
-};
-
-// Internal API
-/**
- * @todo implement API comments with apidoc.
- * @see {@link http://apidocjs.com/}
- */
-Accounts.prototype.internal = {
-	count: function (req, cb) {
-		return setImmediate(cb, null, { success: true, count: Object.keys(__private.accounts).length });
-	},
-
-	top: function (query, cb) {
-		self.getAccounts({
-			sort: {
-				balance: -1
-			},
-			offset: query.offset,
-			limit: (query.limit || 100)
-		}, function (err, raw) {
-			if (err) {
-				return setImmediate(cb, err);
+		user.address = modules.accounts.generateAddressByPublicKey(req.body.publicKey);
+		cache.prototype.isExists('2fa_user_' + user.address, function (err, isExist) {
+			if (isExist) {
+				return setImmediate(cb, null, { success: true });
 			}
-
-			var accounts = raw.map(function (account) {
-				return {
-					address: account.address,
-					balance: account.balance,
-					publicKey: account.publicKey
-				};
-			});
-
-			return setImmediate(cb, null, { success: true, accounts: accounts });
+			return setImmediate(cb, null, { success: false });
 		});
-	},
-
-	getAllAccounts: function (req, cb) {
-		return setImmediate(cb, null, { success: true, accounts: __private.accounts });
 	}
 };
 
