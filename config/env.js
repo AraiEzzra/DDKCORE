@@ -51,5 +51,34 @@ module.exports = {
   accessToken: env.ACCESSTOKEN,
   clientId: env.CLIENT_ID,
   clientSecret: env.CLIENT_SECRET,
-  hashSecret: env.HASH_SECRET
+  hashSecret: env.HASH_SECRET,
+
+  /*  TYPE_0: PUBLIC Account 
+      TYPE_1: CONTRIBUTORS Account
+      TYPE_2: ADVISORS Account
+      TYPE_3: TEAMS Account
+      TYPE_4: FOUNDERS Account
+  */
+  users: [
+    {
+      secret: env.TYPE_0_SECRET,
+      publicKey: env.TYPE_0_KEY
+    },
+    {
+      secret: env.TYPE_1_SECRET,
+      publicKey: env.TYPE_1_KEY
+    },
+    {
+      secret: env.TYPE_2_SECRET,
+      publicKey: env.TYPE_2_KEY
+    },
+    {
+      secret: env.TYPE_3_SECRET,
+      publicKey: env.TYPE_3_KEY
+    },
+    {
+      secret: env.TYPE_4_SECRET,
+      publicKey: env.TYPE_4_KEY
+    }
+  ]
 };

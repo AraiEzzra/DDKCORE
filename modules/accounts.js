@@ -719,6 +719,26 @@ Accounts.prototype.shared = {
 			return setImmediate(cb, "Invalid username or password");
 		});
 
+	},
+
+	verifyUserToComment: function (req, cb) {
+		if (!req.body.secret) {
+			return setImmediate(cb, 'secret is missing');
+		}
+		var hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
+		var keypair = library.ed.makeKeypair(hash);
+		var publicKey = keypair.publicKey.toString('hex');
+		var address = self.generateAddressByPublicKey(publicKey);
+		library.db.query(sql.findTrsUser, {
+			senderId: address
+		})
+		.then(function(trs) {
+			// send trs object if want all transations details for {address}
+			return setImmediate(cb, null, { address: trs[0].senderId });
+		})
+		.catch(function(err) {
+			return setImmediate(cb, err);
+		})
 	}
 };
 
@@ -779,6 +799,7 @@ Accounts.prototype.internal = {
 						if (req.body.accType) {
 							data.acc_type = req.body.accType;
 							var lastBlock = modules.blocks.lastBlock.get();
+							//data.startTime = lastBlock.timestamp;
 							data.endTime = library.logic.contract.calcEndTime(req.body.accType, lastBlock.timestamp);
 							if (req.body.amount) {
 								data.transferedAmount = req.body.amount;
@@ -790,25 +811,27 @@ Accounts.prototype.internal = {
 									var userInfo = {
 										address: data.address,
 										transferedAmount: data.transferedAmount,
-										endTime: data.endTime
+										endTime: data.endTime,
+										accType: req.body.accType
 									};
 									cache.prototype.hmset(REDIS_KEY_USER_INFO_HASH, userInfo);
 									cache.prototype.hmset(REDIS_KEY_USER_TIME_HASH, userInfo);
-									library.logic.contract.sendToContrubutors([userInfo], function (err, res) {
+									library.logic.contract.sendContractAmount([userInfo], function (err, res) {
 										//FIXME: do further processing with "res" i.e send notification to the user
 										if (err) {
 											return setImmediate(cb, err);
 										}
 										library.logic.account.set(data.address, data, function (err) {
 											if (!err) {
-												return setImmediate(cb, null, { account: data.address });
+												data.startTime = lastBlock.timestamp;
+												return setImmediate(cb, null, { account: data });
 											} else {
 												return setImmediate(cb, err);
 											}
 										});
 									});
 								} else {
-									return setImmediate(cb, null, { account: data.address });
+									return setImmediate(cb, null, { account: data });
 								}
 							});
 						}
@@ -816,28 +839,29 @@ Accounts.prototype.internal = {
 						library.db.one(sql.checkAccountStatus, {
 							senderId: account.address
 						})
-							.then(function (row) {
-								if (row.status == 0) {
-									return setImmediate(cb, null, 'Account is already locked');
-								}
-								library.db.none(sql.disableAccount, {
-									senderId: account.address
-								})
-									.then(function () {
-										library.logger.info(account.address + ' account is locked');
-										return setImmediate(cb, null, { message: "Account is locked" });
-									})
-									.catch(function (err) {
-										library.logger.error(err.stack);
-										return setImmediate(cb, err);
-									});
-								//return setImmediate(cb, null, row.status);
-								//cb(null);
+						.then(function (row) {
+							if (row.status == 0) {
+								//return setImmediate(cb, 'Account is already locked');
+								return cb('Account is already locked');
+							}
+							library.db.none(sql.disableAccount, {
+								senderId: account.address
+							})
+							.then(function () {
+								library.logger.info(account.address + ' account is locked');
+								return setImmediate(cb, null, { account: account });
 							})
 							.catch(function (err) {
 								library.logger.error(err.stack);
-								return setImmediate(cb, 'Transaction#checkAccountStatus error');
+								return setImmediate(cb, err);
 							});
+							//return setImmediate(cb, null, row.status);
+							//cb(null);
+						})
+						.catch(function (err) {
+							library.logger.error(err.stack);
+							return setImmediate(cb, 'Transaction#checkAccountStatus error');
+						});
 					}
 				});
 			} else {

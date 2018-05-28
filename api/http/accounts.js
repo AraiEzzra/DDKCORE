@@ -45,7 +45,8 @@ function AccountsHttpApi (accountsModule, app) {
 		'get /totalSupply' : 'totalSupply',
 		'post /existingETPSUser' : 'existingETPSUser',
 		'post /migrateData' : 'migrateData', 
-		'post /existingETPSUser/validate' : 'validateExistingUser'
+		'post /existingETPSUser/validate' : 'validateExistingUser',
+		'post /verifyUserToComment': 'verifyUserToComment'
 	});
 
 	router.map(accountsModule.internal, {

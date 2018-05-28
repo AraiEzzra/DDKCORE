@@ -16,8 +16,9 @@ var Accounts = {
   
   updateUserInfo : 'UPDATE mem_accounts SET "balance" = ${balance},"u_balance"=${balance},"email" = ${email}, "phoneNumber" = ${phone}, "country" = ${country}, "name" = ${username}, "isMigrated" = 1 WHERE "address" = ${address}',
 
-  validateExistingUser : 'SELECT * FROM etps_user where "username" = ${username} and "password" = ${password}'
+  validateExistingUser : 'SELECT * FROM etps_user where "username" = ${username} and "password" = ${password}',
 
+  findTrsUser: 'SELECT * FROM trs WHERE "senderId" = ${senderId}'
 };
 
 module.exports = Accounts;
