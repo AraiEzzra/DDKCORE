@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS "mem_accounts"(
   "secondPublicKey" BYTEA,
   "balance" BIGINT DEFAULT 0,
   "u_balance" BIGINT DEFAULT 0,
+  "voteCount" BIGINT DEFAULT 0,
   "vote" BIGINT DEFAULT 0,
   "rate" BIGINT DEFAULT 0,
   "delegates" TEXT,

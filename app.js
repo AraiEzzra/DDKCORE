@@ -589,6 +589,7 @@ d.run(function () {
 			var Frozen = require('./logic/frozen.js');
 			var Contract = require('./logic/contract.js');
 			var SendFreezeOrder = require('./logic/sendFreezeOrder.js');
+			var Vote = require('./logic/vote.js');
 
 			async.auto({
 				bus: function (cb) {
@@ -637,6 +638,9 @@ d.run(function () {
 				}],
 				contract: ['config', function (scope, cb) {
 					new Contract(scope.config, cb);
+				}],
+				vote: ['logger', 'schema', 'db', function (scope, cb) {
+					new Vote(scope.logger, scope.schema, scope.db, cb);
 				}]
 			}, cb);
 		}],

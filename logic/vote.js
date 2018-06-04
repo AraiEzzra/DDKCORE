@@ -5,6 +5,7 @@ var constants = require('../helpers/constants.js');
 var exceptions = require('../helpers/exceptions.js');
 var Diff = require('../helpers/diff.js');
 var _ = require('lodash');
+var sql = require('../sql/accounts.js');
 
 // Private fields
 var modules, library, self;
@@ -20,13 +21,16 @@ var modules, library, self;
  * @param {Object} logger
  * @param {ZSchema} schema
  */
-function Vote (logger, schema) {
+function Vote(logger, schema, db, cb) {
 	self = this;
 	library = {
+		db: db,
 		logger: logger,
 		schema: schema,
 	};
-
+	if (cb) {
+		return setImmediate(cb, null, this);
+	}
 }
 
 // Public methods
@@ -35,10 +39,11 @@ function Vote (logger, schema) {
  * @param {Delegates} delegates
  * @param {Rounds} rounds
  */
-Vote.prototype.bind = function (delegates, rounds) {
+Vote.prototype.bind = function (delegates, rounds, accounts) {
 	modules = {
 		delegates: delegates,
 		rounds: rounds,
+		accounts: accounts,
 	};
 };
 
@@ -62,7 +67,7 @@ Vote.prototype.create = function (data, trs) {
  * @return {number} fee
  */
 Vote.prototype.calculateFee = function (trs, sender) {
-	return (sender.totalFrozeAmount * constants.fees.vote)/100;
+	return (sender.totalFrozeAmount * constants.fees.vote) / 100;
 };
 
 /**
@@ -232,9 +237,25 @@ Vote.prototype.apply = function (trs, block, sender, cb) {
 				delegates: trs.asset.votes,
 				blockId: block.id,
 				round: modules.rounds.calc(block.height)
-			}, function (err) {
-				return setImmediate(cb, err);
-			});
+			}, seriesCb);
+		},
+		// call to updateAndCheckVote only for genesis block 
+		function (seriesCb) {
+			if (block.height !== 1) {
+				return setImmediate(cb, null);
+			}
+
+			self.updateAndCheckVote(
+				{
+					votes: trs.asset.votes,
+					senderId: trs.senderId
+				}
+				, function (err) {
+					if (err) {
+						return setImmediate(cb, err);
+					}
+					return setImmediate(cb, null);
+				});
 		}
 	], cb);
 };
@@ -256,13 +277,29 @@ Vote.prototype.undo = function (trs, block, sender, cb) {
 
 	var votesInvert = Diff.reverse(trs.asset.votes);
 
-	this.scope.account.merge(sender.address, {
-		delegates: votesInvert,
-		blockId: block.id,
-		round: modules.rounds.calc(block.height)
-	}, function (err) {
-		return setImmediate(cb, err);
-	});
+	async.series([
+		function (seriesCb) {
+			this.scope.account.merge(sender.address, {
+				delegates: votesInvert,
+				blockId: block.id,
+				round: modules.rounds.calc(block.height)
+			}, seriesCb);
+		}, 
+		//added to remove vote count from mem_accounts table
+		function (seriesCb) {
+			self.updateAndCheckVote(
+				{
+					votes: votesInvert,
+					senderId: trs.senderId
+				}
+				, function (err) {
+					if (err) {
+						return setImmediate(cb, err);
+					}
+					return setImmediate(cb, null);
+				});
+		}
+	], cb);
 };
 
 /**
@@ -308,7 +345,7 @@ Vote.prototype.undoUnconfirmed = function (trs, sender, cb) {
 
 	var votesInvert = Diff.reverse(trs.asset.votes);
 
-	this.scope.account.merge(sender.address, {u_delegates: votesInvert}, function (err) {
+	this.scope.account.merge(sender.address, { u_delegates: votesInvert }, function (err) {
 		return setImmediate(cb, err);
 	});
 };
@@ -364,7 +401,7 @@ Vote.prototype.dbRead = function (raw) {
 	} else {
 		var votes = raw.v_votes.split(',');
 
-		return {votes: votes};
+		return { votes: votes };
 	}
 };
 
@@ -407,6 +444,129 @@ Vote.prototype.ready = function (trs, sender) {
 	} else {
 		return true;
 	}
+};
+
+/**
+ * Check and update vote milestone, vote count from stake_order and mem_accounts table
+ * @param {voteInfo} voteInfo voteInfo have votes and senderId
+ * @return {null|err} return null if success else err 
+ * 
+ */
+Vote.prototype.updateAndCheckVote = function (voteInfo, cb) {
+	var votes = voteInfo.votes;
+	var senderId = voteInfo.senderId;
+
+	function checkUpvoteDownvote(votes) {
+
+		return new Promise(function (resolve, reject) {
+
+			//To check that its upvote or downvote
+			if ((votes[0])[0] === '+') {
+				resolve(1);
+			} else {
+				resolve(0);
+			}
+		});
+	}
+
+	function checkWeeklyVote() {
+
+		return new Promise(function (resolve, reject) {
+
+			library.db.many(sql.checkWeeklyVote, {
+				senderId: senderId
+			})
+				.then(function (resp) {
+					if ((resp.length !== 0) && parseInt(resp[0].count) > 0) {
+						resolve(true);
+					} else {
+						resolve(false);
+					}
+				})
+				.catch(function (err) {
+					library.logger.error(err.stack);
+					reject(new Error(cb, err));
+				});
+
+		});
+	}
+
+	function updateStakeOrder() {
+
+		return new Promise(function (resolve, reject) {
+
+			library.db.none(sql.updateStakeOrder, {
+				senderId: senderId
+			})
+				.then(function () {
+					library.logger.info(senderId + ': update stake orders isvoteDone and count');
+					resolve();
+				})
+				.catch(function (err) {
+					library.logger.error(err.stack);
+					//return setImmediate(cb, err);
+					reject(new Error(cb, err));
+				});
+		});
+	}
+
+	function prepareQuery(voteType) {
+
+		return new Promise(function (resolve, reject) {
+
+			var inCondition = "";
+			votes.forEach(function (vote) {
+				var address = modules.accounts.generateAddressByPublicKey(vote.substring(1));
+				inCondition += '\'' + address + '\' ,';
+			});
+			inCondition = inCondition.substring(0, inCondition.length - 1);
+			var query;
+			var sign = voteType === 1 ? '+' : '-';
+
+			query = 'UPDATE mem_accounts SET "voteCount"="voteCount"' + sign + '1  WHERE "address" IN ( ' + inCondition + ')';
+
+			resolve(query);
+
+		});
+	}
+
+	function updateVoteCount(query) {
+
+		return new Promise(function (resolve, reject) {
+
+			library.db.query(query)
+				.then(function () {
+					resolve();
+				})
+				.catch(function (err) {
+					library.logger.error(err.stack);
+					//return setImmediate(cb, 'vote updation in mem_accounts table error');
+					reject(new Error(cb, 'vote updation in mem_accounts table error'));
+				});
+
+		});
+	}
+
+	// Async/await function 
+	(async function () {
+		try {
+			var voteType = await checkUpvoteDownvote(votes);
+
+			if (voteType === 1) {
+				var found = await checkWeeklyVote();
+				if (found) {
+					await updateStakeOrder();
+				}
+			}
+			var query = await prepareQuery(voteType);
+			await updateVoteCount(query);
+			return setImmediate(cb, null);
+		} catch (err) {
+			self.scope.logger.error(err.stack);
+			return setImmediate(cb, err.toString());
+		}
+	})();
+
 };
 
 // Export

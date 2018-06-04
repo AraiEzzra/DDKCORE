@@ -49,7 +49,8 @@ function Accounts(cb, scope) {
 		logic: {
 			account: scope.logic.account,
 			transaction: scope.logic.transaction,
-			contract: scope.logic.contract
+			contract: scope.logic.contract,
+			vote: scope.logic.vote
 		},
 		config: scope.config
 	};
@@ -59,7 +60,8 @@ function Accounts(cb, scope) {
 		transactionTypes.VOTE,
 		new Vote(
 			scope.logger,
-			scope.schema
+			scope.schema,
+			scope.db
 		)
 	);
 
@@ -262,7 +264,8 @@ Accounts.prototype.onBind = function (scope) {
 
 	__private.assetTypes[transactionTypes.VOTE].bind(
 		scope.delegates,
-		scope.rounds
+		scope.rounds,
+		scope.accounts
 	);
 };
 /**
@@ -606,50 +609,18 @@ Accounts.prototype.shared = {
 				if (err) {
 					return setImmediate(cb, err);
 				}
-				//Check isVoteDone
-				var vCount;
-				var votes = req.body.delegates;
 
-				//check that vote transaction have atleast one upvote
-				votes.some(function (vote) {
-
-					if (vote[0] === '+') {
-						vCount = 1;
-						return true;
-					}
-
-				});
-
-				if (vCount === 1) {
-					library.db.many(sql.checkWeeklyVote, {
+				library.logic.vote.updateAndCheckVote(
+					{
+						votes: req.body.delegates,
 						senderId: transaction[0].senderId
-					})
-						.then(function (resp) {
-							if ((resp.length !== 0) && parseInt(resp[0].count) > 0) {
-
-								library.db.none(sql.updateStakeOrder, {
-									senderId: transaction[0].senderId
-								})
-									.then(function () {
-										library.logger.info(transaction[0].senderId + ': update stake orders isvoteDone and count');
-										return setImmediate(cb, null, { transaction: transaction[0] });
-									})
-									.catch(function (err) {
-										library.logger.error(err.stack);
-										return setImmediate(cb, err);
-									});
-							} else {
-								return setImmediate(cb, null, { transaction: transaction[0] });
-							}
-						})
-						.catch(function (err) {
-							library.logger.error(err.stack);
+					}
+					, function (err) {
+						if (err) {
 							return setImmediate(cb, err);
-						});
-				} else {
-					return setImmediate(cb, null, { transaction: transaction[0] });
-				}
-
+						}
+						return setImmediate(cb, null, { transaction: transaction[0] });
+					});
 			});
 		});
 	},

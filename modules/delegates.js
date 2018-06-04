@@ -80,7 +80,7 @@ function Delegates (cb, scope) {
 __private.getKeysSortByVote = function (cb) {
 	modules.accounts.getAccounts({
 		isDelegate: 1,
-		sort: {'vote': -1, 'publicKey': 1},
+		sort: {'voteCount':-1,'vote': -1, 'publicKey': 1},
 		limit: slots.delegates
 	}, ['publicKey'], function (err, rows) {
 		if (err) {
