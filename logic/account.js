@@ -42,7 +42,7 @@ function Account(db, schema, logger, cb) {
 	 * @property {boolean} secondSignature
 	 * @property {boolean} u_secondSignature
 	 * @property {string} u_username
-	 * @property {address} address - Uppercase, between 1 and 22 chars.
+	 * @property {address} address - Uppercase, between 1 and 25 chars.
 	 * @property {publicKey} publicKey
 	 * @property {publicKey} secondPublicKey
 	 * @property {number} balance - Between 0 and totalAmount from constants.
@@ -131,7 +131,7 @@ function Account(db, schema, logger, cb) {
 				type: 'string',
 				case: 'upper',
 				minLength: 1,
-				maxLength: 22
+				maxLength: 25
 			},
 			conv: String,
 			immutable: true,
@@ -388,7 +388,39 @@ function Account(db, schema, logger, cb) {
 			},
 			conv: Number,
 			expression: '("totalFrozeAmount")::bigint'
-		}
+		},
+		{
+			name: 'group_bonus',
+			type: 'BigInt',
+			filter: {
+				type: 'integer'
+			},
+			conv: Number,
+			expression: '("group_bonus")::bigint'
+		},
+		{
+			name: 'pending_group_bonus',
+			type: 'BigInt',
+			filter: {
+				type: 'integer'
+			},
+			conv: Number,
+			expression: '("pending_group_bonus")::bigint'
+		},
+		{
+			name: 'introducer',
+			type: 'String',
+			filter: {
+				required: false,
+				type: 'string',
+				case: 'upper',
+				minLength: 1,
+				maxLength: 25
+			},
+			conv: String,
+			immutable: true,
+			expression: 'UPPER("introducer")'
+		},
 	];
 
 	// Obtains fields from model

@@ -21,6 +21,9 @@ var cache = require('./cache.js');
 var speakeasy = require("speakeasy");
 var slots = require('../helpers/slots.js');
 var httpApi = require('../helpers/httpApi');
+var Promise = require('bluebird');
+var async = require('async');
+var nextBonus = 0;
 
 // Private fields
 var modules, library, self, __private = {}, shared = {};
@@ -122,7 +125,7 @@ Accounts.prototype.generateAddressByPublicKey = function (publicKey) {
 		temp[i] = publicKeyHash[7 - i];
 	}
 
-	var address = bignum.fromBuffer(temp).toString() + 'E';
+	var address = 'DDK' + bignum.fromBuffer(temp).toString();
 
 	if (!address) {
 		throw 'Invalid public key: ' + publicKey;
@@ -320,7 +323,7 @@ Accounts.prototype.shared = {
 						u_isDelegate: 0,
 						isDelegate: 0,
 						vote: 0,
-						publicKey:accountData.publicKey
+						publicKey: accountData.publicKey
 					};
 					if (account.u_isDelegate) {
 						data.u_isDelegate = account.u_isDelegate;
@@ -583,28 +586,28 @@ Accounts.prototype.shared = {
 					library.db.many(sql.checkWeeklyVote, {
 						senderId: transaction[0].senderId
 					})
-						.then(function (resp) {
-							if ((resp.length !== 0) && parseInt(resp[0].count) > 0) {
+					.then(function (resp) {
+						if ((resp.length !== 0) && parseInt(resp[0].count) > 0) {
 
-								library.db.none(sql.updateStakeOrder, {
-									senderId: transaction[0].senderId
-								})
-									.then(function () {
-										library.logger.info(transaction[0].senderId + ': update stake orders isvoteDone and count');
-										return setImmediate(cb, null, { transaction: transaction[0] });
-									})
-									.catch(function (err) {
-										library.logger.error(err.stack);
-										return setImmediate(cb, err);
-									});
-							} else {
+							library.db.none(sql.updateStakeOrder, {
+								senderId: transaction[0].senderId
+							})
+							.then(function () {
+								library.logger.info(transaction[0].senderId + ': update stake orders isvoteDone and count');
 								return setImmediate(cb, null, { transaction: transaction[0] });
-							}
-						})
-						.catch(function (err) {
-							library.logger.error(err.stack);
-							return setImmediate(cb, err);
-						});
+							})
+							.catch(function (err) {
+								library.logger.error(err.stack);
+								return setImmediate(cb, err);
+							});
+						} else {
+							return setImmediate(cb, null, { transaction: transaction[0] });
+						}
+					})
+					.catch(function (err) {
+						library.logger.error(err.stack);
+						return setImmediate(cb, err);
+					});
 				} else {
 					return setImmediate(cb, null, { transaction: transaction[0] });
 				}
@@ -659,13 +662,13 @@ Accounts.prototype.shared = {
 
 	totalAccounts: function (req, cb) {
 		library.db.one(sql.getTotalAccount)
-			.then(function (data) {
-				return setImmediate(cb, null, data);
-			})
-			.catch(function (err) {
-				library.logger.error(err.stack);
-				return setImmediate(cb, err.toString());
-			});
+		.then(function (data) {
+			return setImmediate(cb, null, data);
+		})
+		.catch(function (err) {
+			library.logger.error(err.stack);
+			return setImmediate(cb, err.toString());
+		});
 	},
 
 	getCirculatingSupply: function (req, cb) {
@@ -673,21 +676,21 @@ Accounts.prototype.shared = {
 		var publicAddress = library.config.sender.address;
 
 		library.db.one(sql.getCurrentUnmined, { address: publicAddress })
-			.then(function (currentUnmined) {
-				var circulatingSupply = config.initialPrimined.total + initialUnmined - currentUnmined.balance;
+		.then(function (currentUnmined) {
+			var circulatingSupply = config.initialPrimined.total + initialUnmined - currentUnmined.balance;
 
-				cache.prototype.getJsonForKey("minedContributorsBalance", function (err, contributorsBalance) {
-					var totalCirculatingSupply = parseInt(contributorsBalance) + circulatingSupply;
+			cache.prototype.getJsonForKey("minedContributorsBalance", function (err, contributorsBalance) {
+				var totalCirculatingSupply = parseInt(contributorsBalance) + circulatingSupply;
 
-					return setImmediate(cb, null, {
-						circulatingSupply: totalCirculatingSupply
-					});
+				return setImmediate(cb, null, {
+					circulatingSupply: totalCirculatingSupply
 				});
-			})
-			.catch(function (err) {
-				library.logger.error(err.stack);
-				return setImmediate(cb, err.toString());
 			});
+		})
+		.catch(function (err) {
+			library.logger.error(err.stack);
+			return setImmediate(cb, err.toString());
+		});
 	},
 	totalSupply: function (req, cb) {
 		var totalSupply = config.etpSupply.totalSupply;
@@ -716,12 +719,12 @@ Accounts.prototype.shared = {
 				library.db.query(sql.getETPSStakeOrders, {
 					account_id: req.body.data.id
 				})
-					.then(function (orders) {
-						resolve(orders);
-					}).catch(function (err) {
-						library.logger.error(err.stack);
-						reject(new Error(err.stack));
-					});
+				.then(function (orders) {
+					resolve(orders);
+				}).catch(function (err) {
+					library.logger.error(err.stack);
+					reject(new Error(err.stack));
+				});
 			});
 		}
 
@@ -729,7 +732,7 @@ Accounts.prototype.shared = {
 			return new Promise(function (resolve, reject) {
 
 				var date = new Date((slots.getTime()) * 1000);
-				var milestone =0;
+				var milestone = 0;
 				var endTime = 0;
 				var nextVoteMilestone = (date.setMinutes(date.getMinutes() + constants.froze.vTime)) / 1000;
 
@@ -743,13 +746,13 @@ Accounts.prototype.shared = {
 					status: 1,
 					nextVoteMilestone: nextVoteMilestone
 				})
-					.then(function () {
-						resolve();
-					})
-					.catch(function (err) {
-						library.logger.error(err.stack);
-						reject((new Error(err.stack)));
-					});
+				.then(function () {
+					resolve();
+				})
+				.catch(function (err) {
+					library.logger.error(err.stack);
+					reject((new Error(err.stack)));
+				});
 			});
 		}
 
@@ -771,17 +774,17 @@ Accounts.prototype.shared = {
 				library.db.one(sql.totalFrozeAmount, {
 					account_id: (req.body.data.id).toString()
 				})
-					.then(function (totalFrozeAmount) {
-						if(totalFrozeAmount){
-							resolve(totalFrozeAmount);
-						}else{
-							resolve(0);
-						}
-						
-					}).catch(function (err) {
-						library.logger.error(err.stack);
-						reject(new Error(err.stack));
-					});
+				.then(function (totalFrozeAmount) {
+					if (totalFrozeAmount) {
+						resolve(totalFrozeAmount);
+					} else {
+						resolve(0);
+					}
+
+				}).catch(function (err) {
+					library.logger.error(err.stack);
+					reject(new Error(err.stack));
+				});
 			});
 		}
 
@@ -795,15 +798,16 @@ Accounts.prototype.shared = {
 					phone: req.body.data.phone,
 					username: req.body.data.username,
 					country: req.body.data.country,
-					totalFrozeAmount: parseInt(totalFrozeAmount.sum)
+					totalFrozeAmount: parseInt(totalFrozeAmount.sum),
+					group_bonus: req.body.group_bonus
 				})
-					.then(function () {
-						resolve();
-					})
-					.catch(function (err) {
-						library.logger.error(err.stack);
-						reject(new Error(err.stack));
-					});
+				.then(function () {
+					resolve();
+				})
+				.catch(function (err) {
+					library.logger.error(err.stack);
+					reject(new Error(err.stack));
+				});
 			});
 		}
 
@@ -815,13 +819,13 @@ Accounts.prototype.shared = {
 					userId: req.body.data.id,
 					insertTime: date
 				})
-					.then(function () {
-						resolve();
-					})
-					.catch(function (err) {
-						library.logger.error(err.stack);
-						reject(new Error(err.stack));
-					});
+				.then(function () {
+					resolve();
+				})
+				.catch(function (err) {
+					library.logger.error(err.stack);
+					reject(new Error(err.stack));
+				});
 			});
 		}
 
@@ -879,11 +883,11 @@ Accounts.prototype.shared = {
 		library.db.query(sql.findTrsUser, {
 			senderId: address
 		})
-		.then(function(trs) {
+		.then(function (trs) {
 			// send trs object if want all transations details for {address}
 			return setImmediate(cb, null, { address: trs[0].senderId });
 		})
-		.catch(function(err) {
+		.catch(function (err) {
 			return setImmediate(cb, err);
 		})
 	}
@@ -1029,13 +1033,13 @@ Accounts.prototype.internal = {
 				library.db.none(sql.enableAccount, {
 					senderId: address
 				})
-					.then(function () {
-						library.logger.info(address + ' account is unlocked');
-						return setImmediate(cb, null);
-					})
-					.catch(function (err) {
-						return setImmediate(cb, err);
-					});
+				.then(function () {
+					library.logger.info(address + ' account is unlocked');
+					return setImmediate(cb, null);
+				})
+				.catch(function (err) {
+					return setImmediate(cb, err);
+				});
 			} else {
 				return setImmediate(cb, err);
 			}
@@ -1137,7 +1141,7 @@ Accounts.prototype.internal = {
 				return setImmediate(cb, 'Invalid OTP!. Please enter valid OTP to SEND Transaction');
 			}
 			user_2FA.twofactor.secret = req.body.key;
-			cache.prototype.hmset('2fa_user_' + user.address, user_2FA);
+			cache.prototype.hmset('2fa_user_s' + user.address, user_2FA);
 			return setImmediate(cb, null, { success: true, key: user_2FA.twofactor.tempSecret });
 		});
 	},
@@ -1167,6 +1171,182 @@ Accounts.prototype.internal = {
 				return setImmediate(cb, null, { success: true });
 			}
 			return setImmediate(cb, null, { success: false });
+		});
+	},
+
+	// Get user's status before sending pending group bonus 
+	getWithdrawlStatus: function (req, cb) {
+		library.schema.validate(req.body, schema.enablePendingGroupBonus, function (err) {
+			if (err) {
+				return setImmediate(cb, err);
+			}
+
+			let stakedAmount = 0, groupBonus = 0, pendingGroupBonus = 0, failedRule = 0;
+			async.series({
+				checkLastWithdrawl: function (seriesCb) {
+					library.cache.client.exists(req.body.address + '_pending_group_bonus_trs_id', function (err, isExists) {
+						if (isExists) {
+							library.cache.client.get(req.body.address + '_pending_group_bonus_trs_id', function (err, transactionId) {
+								if (err) {
+									failedRule = 1;
+									seriesCb(err);
+								}
+								library.db.one(sql.findTrs, {
+									transactionId: transactionId
+								})
+								.then(function (transationData) {
+									var d = constants.epochTime;
+									var t = parseInt(d.getTime() / 1000);
+									var d = new Date((transationData.timestamp + t) * 1000);
+									const timeDiff = (d - Date.now());
+									const days = Math.ceil(Math.abs(timeDiff / (1000 * 60 * 60 * 24)));
+									if (days > 7) {
+										seriesCb(null);
+									} else {
+										failedRule = 1;
+										seriesCb('This week\'s withdrawl is already processed. You can try next withdrawl after ' + 7 - days + ' days.')
+									}
+								})
+								.catch(function (err) {
+									failedRule = 1;
+									seriesCb(err);
+								});
+							});
+						} else {
+							seriesCb(null);
+						}
+					});
+				},
+				checkActiveStake: function (seriesCb) {
+					library.db.query(sql.findActiveStake, {
+						senderId: req.body.address
+					})
+					.then(function (stakeOrders) {
+						if (stakeOrders.length > 0) {
+							seriesCb(null);
+						} else {
+							failedRule = 2;
+							seriesCb('Rule 2 failed: You need to have at least one active stake order');
+						}
+					})
+					.catch(function (err) {
+						failedRule = 2;
+						seriesCb(err);
+					});
+				},
+				checkActiveStakeOfLeftAndRightSponsor: function (seriesCb) {
+					library.db.query(sql.findDirectSponsor, {
+						introducer: req.body.address
+					})
+					.then(function (directSponsors) {
+						if (directSponsors.length >= 2) {
+
+							//check at least two active stake orders
+							let activeStakeCount = 0;
+							directSponsors.forEach(function (directSponsor, index) {
+								library.db.query(sql.findActiveStakeAmount, {
+									senderId: directSponsor[index].address
+								})
+								.then(function (stakeInfo) {
+									stakedAmount = parseInt(stakeInfo[0].sum) / 100000000;
+									var d = constants.epochTime;
+									var t = parseInt(d.getTime() / 1000);
+									var d = new Date((stakeInfo[0].startTime + t) * 1000);
+									const timeDiff = (d - Date.now());
+									const days = Math.ceil(Math.abs(timeDiff / (1000 * 60 * 60 * 24)));
+									if (stakedAmount && days <= 31) {
+										activeStakeCount++;
+									}
+								})
+								.catch(function (err) {
+									failedRule = 3;
+									seriesCb(err);
+								});
+							});
+							if (activeStakeCount >= 2) {
+								seriesCb(null);
+							} else {
+								failedRule = 3;
+								seriesCb('Rule 3 failed: Direct sponsors don\'t have active stake orders');
+							}
+						} else {
+							failedRule = 3;
+							seriesCb('Rule 3 failed: User doesn\'t have two direct sponsor')
+						}
+					})
+					.catch(function (err) {
+						failedRule = 3;
+						seriesCb(err);
+					})
+				},
+				checkRatio: function (seriesCb) {
+
+					// check ratio 1:10 to qualify for enabling token distribution
+					library.db.query(sql.findGroupBonus, {
+						senderId: req.body.address
+					})
+					.then(function (groupBonus) {
+						groupBonus = groupBonus[0].group_bonus;
+						pendingGroupBonus = groupBonus[0].pending_group_bonus;
+						if (pendingGroupBonus < groupBonus) {
+							nextBonus = (groupBonus - pendingGroupBonus) > 15 ? 15 : (groupBonus - pendingGroupBonus);
+							if ((groupBonus - pendingGroupBonus + nextBonus) < stakedAmount * 10) {
+								pendingGroupBonus = pendingGroupBonus + nextBonus;
+								seriesCb(null)
+							} else {
+								failedRule = 4;
+								seriesCb('Rule 4 failed: Ratio withdrawal is 1:10 from own staking DDK.');
+							}
+						} else {
+							failedRule = 4;
+							seriesCb('Either you don\'t have group bonus reserved or exhausted your withdrawl limit');
+						}
+					})
+					.catch(function (err) {
+						failedRule = 4;
+						seriesCb(err);
+					});
+				}
+			}, function (err) {
+				if (err) {
+					return setImmediate(cb, { message: err, code: failedRule });
+				}
+				return setImmediate(cb, null);
+			});
+		});
+	},
+
+	// Send withdrawl amount to respective address
+	sendWithdrawlAmount: function (req, cb) {
+		library.schema.validate(req.body, schema.enablePendingGroupBonus, function (err) {
+			if (err) {
+				return setImmediate(cb, err);
+			}
+			if (!nextBonus) {
+				return setImmediate(cb, 'You don\'t have pending group bonus remaining');
+			}
+			let userInfo = {
+				address: req.body.address,
+				transferedAmount: nextBonus,
+				accType: 5
+			};
+			//Send amount through smart contract
+			library.logic.contract.sendContractAmount([userInfo], function (err, trsResponse) {
+				if (err) {
+					return setImmediate(cb, err);
+				}
+				library.cache.client.set(req.body.address + '_pending_group_bonus_trs_id', trsResponse.transactionId);
+				library.db.none(sql.updatePendingGroupBonus, {
+					nextBonus: nextBonus,
+					address: req.body.address
+				})
+				.then(function () {
+					return setImmediate(cb, null);
+				})
+				.catch(function (err) {
+					return setImmediate(cb, err);
+				});
+			});
 		});
 	}
 };

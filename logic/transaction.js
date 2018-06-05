@@ -1067,13 +1067,13 @@ Transaction.prototype.schema = {
 			type: 'string',
 			format: 'address',
 			minLength: 1,
-			maxLength: 22
+			maxLength: 25
 		},
 		recipientId: {
 			type: 'string',
 			format: 'address',
 			minLength: 1,
-			maxLength: 22
+			maxLength: 25
 		},
 		amount: {
 			type: 'integer',
