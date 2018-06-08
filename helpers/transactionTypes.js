@@ -11,5 +11,6 @@ module.exports = {
 	OUT_TRANSFER: 7,
 	FROZE: 8,
 	CONTRACT: 9,
-	SENDFREEZE : 10
+	SENDFREEZE : 10,
+	REFER	:	11
 };

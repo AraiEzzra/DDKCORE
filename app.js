@@ -731,7 +731,9 @@ d.run(function () {
 
 			cronjob.setJobsPath(__dirname + '/jobs.js');  // Absolute path to the jobs module. 
 			require('./jobs.js').attachScope(scope);
-			
+			//AFFILIATE AIRDROP
+			require('./helpers/referal').Referals(scope);
+		
 			cronjob.startJob('updateDataOnElasticSearch');
 			cronjob.startJob('checkFrozeOrders');
 			cronjob.startJob('archiveLogFiles');

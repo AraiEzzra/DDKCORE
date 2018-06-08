@@ -47,6 +47,9 @@ function ServerHttpApi (serverModule, app) {
 		}
 	});  
 
+	// Referral API's
+	require('../../helpers/referal').api(app);
+
 	router.get('/', function (req, res) {
 		if (serverModule.isLoaded()) {
 			res.render('wallet.html', { layout: false });
@@ -54,9 +57,11 @@ function ServerHttpApi (serverModule, app) {
 			res.render('loading.html');
 		}
 	});
+	 
+	//router.use('referals', )
 
 	router.use(function (req, res, next) {
-		if (req.url.indexOf('/api/') === -1 && req.url.indexOf('/peer/') === -1) {
+		if (req.url.indexOf('/api/') === -1 && req.url.indexOf('/peer/') === -1 && req.url.indexOf('/referral/') === -1) {
 			return res.redirect('/');
 		}
 		next();

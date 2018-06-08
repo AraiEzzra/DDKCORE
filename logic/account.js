@@ -22,7 +22,10 @@ var self, library, __private = {};
  * @param {function} cb - Callback function.
  * @return {setImmediateCallback} With `this` as data.
  */
+
+//  var library = {};
 function Account(db, schema, logger, cb) {
+
 	this.scope = {
 		db: db,
 		schema: schema
@@ -679,6 +682,33 @@ Account.prototype.set = function (address, fields, cb) {
 		return setImmediate(cb, 'Account#set error');
 	});
 };
+
+
+Account.prototype.insertLevel = function(levelDetails,cb) {
+	if(levelDetails.level.length === 0){
+		levelDetails.level = null;
+	}
+	this.scope.db.none('INSERT INTO referals ("address","level") VALUES (${address},${level})',{
+		address: levelDetails.address,
+		level : levelDetails.level
+	}).then(function(){
+		return setImmediate(cb,null);
+	}).catch(function(err){
+		console.log(err);
+		return setImmediate(cb, err);
+	});
+}
+
+Account.prototype.findReferralLevel= function(address,cb) {
+	this.scope.db.one('SELECT level from referals WHERE "address" = ${address}',{
+		address:address
+	}).then(function(user){
+		return setImmediate(cb,null,user);
+	}).catch(function(err){
+		console.log(err);
+		return setImmediate(cb,err);
+	});
+}
 
 /**
  * Updates account from mem_account with diff data belonging to an editable field.

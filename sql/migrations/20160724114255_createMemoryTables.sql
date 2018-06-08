@@ -42,7 +42,8 @@ CREATE TABLE IF NOT EXISTS "mem_accounts"(
   "name" VARCHAR(20),
   "email" VARCHAR(40),
   "country" VARCHAR(20),
-  "phoneNumber" BIGINT
+  "phoneNumber" BIGINT,
+  "referralLink" VARCHAR(100)
 );
 
 CREATE INDEX IF NOT EXISTS "mem_accounts_balance" ON "mem_accounts"("balance");

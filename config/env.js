@@ -52,6 +52,7 @@ module.exports = {
   clientId: env.CLIENT_ID,
   clientSecret: env.CLIENT_SECRET,
   hashSecret: env.HASH_SECRET,
+  mailFrom: env.MAIL_FROM,
 
   /*  TYPE_0: PUBLIC Account 
       TYPE_1: CONTRIBUTORS Account
@@ -80,5 +81,5 @@ module.exports = {
       secret: env.TYPE_4_SECRET,
       publicKey: env.TYPE_4_KEY
     }
-  ]
+  ],  
 };

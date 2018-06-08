@@ -21,6 +21,7 @@ var cache = require('./cache.js');
 var speakeasy = require("speakeasy");
 var slots = require('../helpers/slots.js');
 var httpApi = require('../helpers/httpApi');
+var async = require('async');
 
 // Private fields
 var modules, library, self, __private = {}, shared = {};
@@ -146,6 +147,86 @@ Accounts.prototype.getAccount = function (filter, fields, cb) {
 
 	library.logic.account.get(filter, fields, cb);
 };
+
+
+Accounts.prototype.referralLinkChain = function(referalLink,address,cb) {
+
+	var referralLink = "MTI0Njk4OTMwNjczOTc1NTEwNDZF";
+	if(referrsalLink == undefined) {
+		referralLink = "";
+	}
+	var decoded = new Buffer(referralLink, 'base64').toString('ascii');
+	var level =[];
+
+	level.unshift(decoded);
+
+	if(decoded == address)
+	{
+		var err = "Introducer and sponsor can't be same";
+		return setImmediate(cb, err);
+	}		
+
+		async.series([
+
+			function(callback){
+				if (referralLink != "") {
+					library.db.one('SELECT count(*) AS address FROM mem_accounts WHERE "referralLink" = ${referLink}', {
+						referLink: referralLink
+					}).then(function (user) {
+						if (parseInt(user.address)) {
+							callback();
+						} else {
+							var error = "Referral Link is Invalid";
+							return setImmediate(cb, error);
+						}
+					}).catch(function (err) {
+						return setImmediate(cb, err);
+					});
+				} else {
+					callback();
+				}
+			},
+			function(callback) {
+				if(referralLink!="") {
+					library.logic.account.findReferralLevel(decoded,function(err,resp){
+						if (err) {
+							console.log(err);							
+							return setImmediate(cb, err);
+						}
+						if(resp.level !=null && resp.level[0] !="0") {
+							level=level.concat(resp.level);
+						}
+						console.log(level);
+						callback();
+					});
+				}
+				else {
+					level.length = 0;	
+					callback();
+				}			
+			},
+			function(callback){
+				var levelDetails = {
+					address: address,
+					level:level
+				};
+	
+				library.logic.account.insertLevel(levelDetails,function(err){
+					if (err) {
+						console.log(err);
+						return setImmediate(cb, err);
+						// return res.status(400).json({ data: { success: false, err: err.detail } });
+					}
+					level.length = 0;
+					// return res.status(200).json({ data: { success: true, info: 'Level Updated Successfully.' } });				
+					callback();
+				});
+			}
+		],function(err){
+			if(err) return err;
+			else return setImmediate(cb, null);
+		});
+}
 
 /**
  * Gets accounts information, calls logic.account.getAll().
@@ -300,6 +381,9 @@ Accounts.prototype.shared = {
 						expiresIn: library.config.jwt.tokenLife,
 						mutatePayload: true
 					});
+
+					var REDIS_KEY_USER_INFO_HASH = "userInfo_" + account.address;
+
 					var accountData = {
 						address: account.address,
 						unconfirmedBalance: account.u_balance,
@@ -311,35 +395,56 @@ Accounts.prototype.shared = {
 						multisignatures: account.multisignatures,
 						u_multisignatures: account.u_multisignatures
 					};
+
 					accountData.token = token;
+
 					//library.cache.client.set('jwtToken_' + account.address, token, 'ex', 100);
 					/****************************************************************/
 
-					var data = {
-						address: accountData.address,
-						u_isDelegate: 0,
-						isDelegate: 0,
-						vote: 0,
-						publicKey:accountData.publicKey
-					};
-					if (account.u_isDelegate) {
-						data.u_isDelegate = account.u_isDelegate;
-					}
-					if (account.isDelegate) {
-						data.isDelegate = account.isDelegate;
-					}
-					if (account.vote) {
-						data.vote = account.vote;
-					}
-					library.logic.account.set(accountData.address, data, function (err) {
-						if (!err) {
-							return setImmediate(cb, null, { account: accountData });
+					cache.prototype.isExists(REDIS_KEY_USER_INFO_HASH, function (err, isExist) {
+						
+						if (!isExist) {
+							self.referralLinkChain(req.body.referal, account.address, function (error) {
+								if (error) {
+									return setImmediate(cb, error);
+								} else {
+									var data = {
+										address: accountData.address,
+										u_isDelegate: 0,
+										isDelegate: 0,
+										vote: 0,
+										publicKey: accountData.publicKey
+									};
+									if (account.u_isDelegate) {
+										data.u_isDelegate = account.u_isDelegate;
+									}
+									if (account.isDelegate) {
+										data.isDelegate = account.isDelegate;
+									}
+									if (account.vote) {
+										data.vote = account.vote;
+									}
+									library.logic.account.set(accountData.address, data, function (error) {
+										if (!error) {
+											cache.prototype.setJsonForKey(REDIS_KEY_USER_INFO_HASH, accountData.address);
+											return setImmediate(cb, null, {
+												account: accountData
+											});
+										} else {
+											return setImmediate(cb, error);
+										}
+									});
+								}
+							});
 						} else {
-							return setImmediate(cb, err);
+							return setImmediate(cb, null, {
+								account: accountData
+							});
 						}
 					});
+
 				} else {
-					return setImmediate(cb, err);
+					return setImmediate(cb, error);
 				}
 			});
 		});
