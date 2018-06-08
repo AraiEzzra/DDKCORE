@@ -34,7 +34,7 @@ function Rounds (cb, scope) {
 			loading: {
 				snapshot: scope.config.loading.snapshot,
 			},
-		},
+		}
 	};
 	self = this;
 

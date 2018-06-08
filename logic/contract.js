@@ -3,6 +3,7 @@
 //Requiring Modules
 var request = require('request');
 var constants = require('../helpers/constants.js');
+let env = process.env;
 
 // Private fields
 var modules, library, self;
@@ -86,31 +87,32 @@ Contract.prototype.process = function (trs, sender, cb) {
 //Calculate end time based on current timestamp
 Contract.prototype.calcEndTime = function (accType, startTime) {
     var date = new Date(startTime * 1000);
-    if (accType == 1 || accType == 0) {
+   /*  if (accType == 1 || accType == 0) {
         var endTime = (date.setMinutes(date.getMinutes() + 90 * 24 * 60 * 60)) / 1000;
     } else if (accType == 2) {
         var endTime = (date.setMinutes(date.getMinutes() + 90 * 24 * 60 * 60)) / 1000;
     } else if (accType == 3) {
         var endTime = (date.setMinutes(date.getMinutes() + 365 * 24 * 60 * 60)) / 1000;
-    }
-    //var endTime = (date.setMinutes(date.getMinutes() + 2 ))/1000;
+    } */
+    var endTime = (date.setMinutes(date.getMinutes() + 2 ))/1000;
     return endTime;
 };
 
-//Contract will run to transfer amount to contributors after 3 months once the network up
-Contract.prototype.sendToContrubutors = function (contributors, cb) {
-    contributors.forEach(function (recipient) {
-
+//Contract will run to transfer amount to users after 3 months once the network up
+Contract.prototype.sendContractAmount = function (data, cb) {
+    data.forEach(function (recipient) {
+        let sender = self.scope.config.users[recipient.accType];
         var port = self.scope.config.app.port;
         var address = self.scope.config.address;
         var url = 'http://' + address + ':' + port + '/api/transactions';
-
+        //let secret = 'type_' + recipient.accType + '_secret';
+        //let key = 'type_' + recipient.accType + '_key';
         var transactionData = {
             json: {
-                secret: self.scope.config.sender.secret,
+                secret: sender.secret,
+                publicKey: sender.publicKey,
                 amount: recipient.transferedAmount,
-                recipientId: recipient.address,
-                publicKey: self.scope.config.sender.publicKey
+                recipientId: recipient.address
             }
         };
 

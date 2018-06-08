@@ -28,6 +28,8 @@ var Router = function () {
 			router[route[0]](route[1], utils.validateClient, function (req, res, next) {
 				var reqRelevantInfo = {
 					ip: req.ip,
+					host: req.get('host'),
+					protocol: req.protocol,
 					method: req.method,
 					path: req.path,
 					decoded: req.decoded

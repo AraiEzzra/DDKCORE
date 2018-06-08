@@ -473,19 +473,6 @@ d.run(function () {
 			scope.network.app.use(methodOverride());
 			scope.network.app.use(cookieParser());
 
-			//FIXME: Add address/token into log file
-			// middleware to add session.id and address of the logged-in user into the logs
-			/* scope.network.app.use(function (req, res, next) {
-				if (req.decoded.address) {
-					logman = new Logger('', req.decoded.address);
-					logger = logman.logger;
-				} else {
-					logman = new Logger();
-					logger = logman.logger;
-				}
-				next();
-			}); */
-
 			var ignore = ['id', 'name', 'lastBlockId', 'blockId', 'transactionId', 'address', 'recipientId', 'senderId', 'previousBlock'];
 
 			scope.network.app.use(queryParser({
@@ -752,6 +739,7 @@ d.run(function () {
 			cronjob.startJob('updateDataOnElasticSearch');
 			cronjob.startJob('checkFrozeOrders');
 			cronjob.startJob('archiveLogFiles');
+			cronjob.startJob('unlockLockedUsers');
 			
 			/**
 			 * Handles app instance (acts as global variable, passed as parameter).
