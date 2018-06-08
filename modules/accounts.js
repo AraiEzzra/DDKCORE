@@ -151,8 +151,8 @@ Accounts.prototype.getAccount = function (filter, fields, cb) {
 
 Accounts.prototype.referralLinkChain = function(referalLink,address,cb) {
 
-	var referralLink = "MTI0Njk4OTMwNjczOTc1NTEwNDZF";
-	if(referrsalLink == undefined) {
+	var referralLink = referalLink;
+	if(referralLink == undefined) {
 		referralLink = "";
 	}
 	var decoded = new Buffer(referralLink, 'base64').toString('ascii');
