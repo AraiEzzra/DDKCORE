@@ -386,7 +386,7 @@ Delegates.prototype.getDelegates = function (query, cb) {
 	}
 	modules.accounts.getAccounts({
 		isDelegate: 1,
-		sort: { 'vote': -1, 'publicKey': 1 }
+		sort: {'voteCount':-1,'vote': -1, 'publicKey': 1}
 	}, ['username', 'address', 'publicKey', 'vote', 'missedblocks', 'producedblocks'], function (err, delegates) {
 		if (err) {
 			return setImmediate(cb, err);

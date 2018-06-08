@@ -306,7 +306,8 @@ Accounts.prototype.shared = {
 						secondSignature: account.secondSignature,
 						secondPublicKey: account.secondPublicKey,
 						multisignatures: account.multisignatures,
-						u_multisignatures: account.u_multisignatures
+						u_multisignatures: account.u_multisignatures,
+						totalFrozeAmount: account.totalFrozeAmount
 					};
 					accountData.token = token;
 					library.cache.client.set('jwtToken_' + account.address, token, 'ex', 100);
