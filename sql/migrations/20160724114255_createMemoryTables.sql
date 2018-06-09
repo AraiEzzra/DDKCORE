@@ -43,7 +43,10 @@ CREATE TABLE IF NOT EXISTS "mem_accounts"(
   "name" VARCHAR(20),
   "email" VARCHAR(40),
   "country" VARCHAR(20),
-  "phoneNumber" BIGINT
+  "phoneNumber" BIGINT,
+  "group_bonus" BIGINT DEFAULT 0,
+  "pending_group_bonus" BIGINT DEFAULT 0,
+  "introducer" VARCHAR(25)
 );
 
 CREATE INDEX IF NOT EXISTS "mem_accounts_balance" ON "mem_accounts"("balance");

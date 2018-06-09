@@ -134,6 +134,23 @@ module.exports = {
 		},
 		required: ['address']
 	},
+	enablePendingGroupBonus: {
+		id: 'accounts.enablePendingGroupBonus',
+		type: 'object',
+		properties: {
+			address: {
+				type: 'string',
+				format: 'address',
+				minLength: 1,
+				maxLength: 25
+			},
+			publicKey: {
+				type: 'string',
+				format: 'publicKey'
+			}
+		},
+		required: ['address']
+	},
 	top: {
 		id: 'accounts.top',
 		type: 'object',

@@ -53,7 +53,9 @@ function DelegatesHttpApi (delegatesModule, app, logger, cache) {
 	router.map(delegatesModule.internal, {
 		'post /forging/enable': 'forgingEnable',
 		'post /forging/disable': 'forgingDisable',
-		'get /forging/status': 'forgingStatus'
+		'get /forging/status': 'forgingStatus',
+		'get /getLatestVoters': 'getLatestVoters',
+		'get /getLatestDelegates': 'getLatestDelegates'
 	});
 
 	if (process.env.DEBUG) {

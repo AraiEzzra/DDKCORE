@@ -60,24 +60,28 @@ module.exports = {
   */
   users: [
     {
-      secret: env.TYPE_0_SECRET,
-      publicKey: env.TYPE_0_KEY
+      secret: env.PUBLIC_SECRET,
+      publicKey: env.PUBLIC_KEY
     },
     {
-      secret: env.TYPE_1_SECRET,
-      publicKey: env.TYPE_1_KEY
+      secret: env.CONTRIBUTORS_SECRET,
+      publicKey: env.CONTRIBUTORS_KEY
     },
     {
-      secret: env.TYPE_2_SECRET,
-      publicKey: env.TYPE_2_KEY
+      secret: env.ADVISORS_SECRET,
+      publicKey: env.ADVISORS_KEY
     },
     {
-      secret: env.TYPE_3_SECRET,
-      publicKey: env.TYPE_3_KEY
+      secret: env.TEAMS_SECRET,
+      publicKey: env.TEAMS_KEY
     },
     {
-      secret: env.TYPE_4_SECRET,
-      publicKey: env.TYPE_4_KEY
+      secret: env.FOUNDERS_SECRET,
+      publicKey: env.FOUNDERS_KEY
+    },
+    {
+      secret: env.PENDING_GROUP_BONUS_SECRET,
+      publicKey: env.PENDING_GROUP_BONUS_KEY
     }
   ]
 };
