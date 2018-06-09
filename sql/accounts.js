@@ -4,6 +4,16 @@ var Accounts = {
 
   checkAccountStatus : 'SELECT "status" FROM mem_accounts where "address"=${senderId}',
 
+  findActiveStakeAmount: 'SELECT SUM("freezedAmount") FROM stake_orders WHERE "senderId" = ${senderId} AND "status" = 1',
+
+  findActiveStake: 'SELECT * FROM stake_orders WHERE "senderId" = ${senderId} AND "status" = 1',
+  
+  findGroupBonus: 'SELECT "group_bonus", "pending_group_bonus" FROM mem_accounts WHERE "address"=${senderId}',
+
+  findDirectSponsor: 'SELECT * FROM mem_accounts WHERE "introducer" = ${introducer}',
+
+  updatePendingGroupBonus: 'UPDATE mem_accounts SET "pending_group_bonus" = "pending_group_bonus" + ${nextBonus} WHERE "address"=${senderId}',
+
   disableAccount : 'UPDATE mem_accounts SET "status" = 0 WHERE "address" = ${senderId}',
 
   enableAccount : 'UPDATE mem_accounts SET "status" = 1 WHERE "address" = ${senderId}',
@@ -14,11 +24,13 @@ var Accounts = {
 
   checkAlreadyMigrated : 'SELECT "isMigrated" FROM mem_accounts where "name"=${username}',
   
-  updateUserInfo : 'UPDATE mem_accounts SET "balance" = ${balance},"u_balance"=${balance},"email" = ${email}, "phoneNumber" = ${phone}, "country" = ${country}, "name" = ${username}, "totalFrozeAmount"=${totalFrozeAmount}, "isMigrated" = 1 WHERE "address" = ${address}',
+  updateUserInfo : 'UPDATE mem_accounts SET "balance" = ${balance},"u_balance"=${balance},"email" = ${email}, "phoneNumber" = ${phone}, "country" = ${country}, "name" = ${username}, "totalFrozeAmount"=${totalFrozeAmount}, "isMigrated" = 1, "group_bonus" = ${group_bonus} WHERE "address" = ${address}',
 
   validateExistingUser: 'SELECT * FROM etps_user  WHERE  "username"=${username} AND "password"=${password}',
 
   findTrsUser: 'SELECT * FROM trs WHERE "senderId" = ${senderId}',
+
+  findTrs: 'SELECT * FROM trs WHERE "id" = ${transactionId}',
 
   InsertStakeOrder: 'INSERT INTO stake_orders ("id", "status", "startTime", "insertTime", "senderId", "freezedAmount", "rewardCount", "nextVoteMilestone") VALUES (${account_id},${status},${startTime},${insertTime},${senderId},${freezedAmount},${rewardCount},${nextVoteMilestone}) ',
 

@@ -58,7 +58,9 @@ function AccountsHttpApi (accountsModule, app) {
 		'post /enableTwoFactor': 'enableTwoFactor',
 		'post /disableTwoFactor': 'disableTwoFactor',
 		'get /checkTwoFactorStatus': 'checkTwoFactorStatus',
-		'post /sendMailForConfirmation': 'sendMailForConfirmation'
+		'get /getWithdrawlStatus': 'getWithdrawlStatus',
+		'post /sendWithdrawlAmount': 'sendWithdrawlAmount',
+		'post /enablePendingGroupBonus': 'enablePendingGroupBonus'
 	});
 
 	if (process.env.DEBUG && process.env.DEBUG.toUpperCase() === 'TRUE') {

@@ -9,7 +9,6 @@ var constants = require('../helpers/constants.js');
 var jobsQueue = require('../helpers/jobsQueue.js');
 var crypto = require('crypto');
 var Delegate = require('../logic/delegate.js');
-var extend = require('extend');
 var OrderBy = require('../helpers/orderBy.js');
 var sandboxHelper = require('../helpers/sandbox.js');
 var schema = require('../schema/delegates.js');
@@ -394,16 +393,14 @@ Delegates.prototype.getDelegates = function (query, cb) {
 
 		var limit = query.limit || constants.activeDelegates;
 		var offset = query.offset || 0;
-		var active = query.active;
 
 		limit = limit > constants.activeDelegates ? constants.activeDelegates : limit;
 
 		var count = delegates.length;
-		var length = Math.min(limit, count);
 		var realLimit = Math.min(offset + limit, count);
 
 		var lastBlock   = modules.blocks.lastBlock.get(),
-		    totalSupply = __private.blockReward.calcSupply(lastBlock.height);
+		totalSupply = __private.blockReward.calcSupply(lastBlock.height);
 
 		for (var i = 0; i < delegates.length; i++) {
 			// TODO: 'rate' property is deprecated and need to be removed after transitional period
@@ -696,6 +693,30 @@ Delegates.prototype.internal = {
 		__private.tmpKeypairs = __private.keypairs;
 		__private.keypairs = {};
 		return setImmediate(cb);
+	},
+
+	getLatestVoters: function(req, cb) {
+		library.db.query(sql.getLatestVoters, {
+			limit: req.body.limit
+		})
+		.then(function(voters) {
+			return setImmediate(cb, null, { voters: voters });
+		})
+		.catch(function(err) {
+			return setImmediate(cb, err);
+		});
+	},
+
+	getLatestDelegates: function(req, cb) {
+		library.db.query(sql.getLatestDelegates, {
+			limit: req.body.limit
+		})
+		.then(function(delegates) {
+			return setImmediate(cb, null, { delegates: delegates });
+		})
+		.catch(function(err) {
+			return setImmediate(cb, err);
+		});
 	}
 };
 
@@ -835,23 +856,23 @@ Delegates.prototype.shared = {
 					return setImmediate(cb, err);
 				}
 
-				function compareNumber (a, b) {
+				function compareNumber(a, b) {
 					var sorta = parseFloat(a[data.sortField]);
 					var sortb = parseFloat(b[data.sortField]);
 					if (data.sortMethod === 'ASC') {
 						return sorta - sortb;
 					} else {
-				 	return sortb - sorta;
+						return sortb - sorta;
 					}
 				}
 
-				function compareString (a, b) {
+				function compareString(a, b) {
 					var sorta = a[data.sortField];
 					var sortb = b[data.sortField];
 					if (data.sortMethod === 'ASC') {
-				  return sorta.localeCompare(sortb);
+						return sorta.localeCompare(sortb);
 					} else {
-				  return sortb.localeCompare(sorta);
+						return sortb.localeCompare(sorta);
 					}
 				}
 
@@ -868,7 +889,7 @@ Delegates.prototype.shared = {
 
 				var delegates = data.delegates.slice(data.offset, data.limit);
 
-				return setImmediate(cb, null, {delegates: delegates, totalCount: data.count});
+				return setImmediate(cb, null, { delegates: delegates, totalCount: data.count });
 			});
 		});
 	},

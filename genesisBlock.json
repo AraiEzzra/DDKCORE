@@ -15,8 +15,8 @@
 			"amount": "4500000000000000",
 			"fee": 0,
 			"timestamp": 0,
-			"recipientId": "4995063339468361088E",
-			"senderId": "12817390500414975490E",
+			"recipientId": "DDK4995063339468361088",
+			"senderId": "DDK12817390500414975490",
 			"senderPublicKey": "f50fe1582173dc30869ca3357daeec3ec3608a7517c0ea388c50c5e3afcc8041",
 			"signature": "c1e1e02f5128fa79e913356b5db18dce1626f5f740416431fe669345c5669497b974bc16d978a83142ed36cc7d2f6a9b764e609b24372f412fea8ecd476f9507",
 			"id": "2525816115293971625"
@@ -26,8 +26,8 @@
 			"amount": "157500000000000",
 			"fee": 0,
 			"timestamp": 0,
-			"recipientId": "8999840344646463126E",
-			"senderId": "4995063339468361088E",
+			"recipientId": "DDK8999840344646463126",
+			"senderId": "DDK4995063339468361088",
 			"senderPublicKey": "f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2",
 			"signature": "ad2ed14b42899c8b4a827e7e8afd081162c1b7de1fccf46c9a0ec68e382f467d775a6eecd560244bc3da6beba15fe386955a77e8176aec405844d199520be009",
 			"id": "4164649425208084448"
@@ -37,8 +37,8 @@
 			"amount": "22500000000000",
 			"fee": 0,
 			"timestamp": 0,
-			"recipientId": "15546849747111093123E",
-			"senderId": "4995063339468361088E",
+			"recipientId": "DDK15546849747111093123",
+			"senderId": "DDK4995063339468361088",
 			"senderPublicKey": "f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2",
 			"signature": "9b09dcdb61db43bcc7b789177c415b1d78b4033a783577d905f12568cc3b9434fb5999ecacf9a027eaa5444fce374681010dcce3ff87e6eca2f28a4ef9c83b03",
 			"id": "12166312224816013186"
@@ -48,8 +48,8 @@
 			"amount": "90000000000000",
 			"fee": 0,
 			"timestamp": 0,
-			"recipientId": "10720340277000928808E",
-			"senderId": "4995063339468361088E",
+			"recipientId": "DDK10720340277000928808",
+			"senderId": "DDK4995063339468361088",
 			"senderPublicKey": "f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2",
 			"signature": "f9ff9ee3b8312ff3825b4d37322779e1edb2ef50844f09f1935a03e9075d7eae93a71cb1181bf48a45148450ecce7a44aa91741a501c1ee42debdef2da377500",
 			"id": "16794796872512157174"
@@ -59,8 +59,8 @@
 			"amount": "11250000000000",
 			"fee": 0,
 			"timestamp": 0,
-			"recipientId": "5143663806878841341E",
-			"senderId": "4995063339468361088E",
+			"recipientId": "DDK5143663806878841341",
+			"senderId": "DDK4995063339468361088",
 			"senderPublicKey": "f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2",
 			"signature": "d648d8d5173e42a4e7cac208b4e53eb54656b1cd98ac342c3e6888338d3660c1891f18300e63b7e777ddb355c619c792cce895bf08d7fd6bbb2ce3fdcebc1e0a",
 			"id": "12945087750653182687"
@@ -70,8 +70,8 @@
 			"amount": "11250000000000",
 			"fee": 0,
 			"timestamp": 0,
-			"recipientId": "14224602569244644359E",
-			"senderId": "4995063339468361088E",
+			"recipientId": "DDK14224602569244644359",
+			"senderId": "DDK4995063339468361088",
 			"senderPublicKey": "f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2",
 			"signature": "dcb362ae9393ef69ac2b5c50d9cb605b126defd7623e9eaa22bd3d377feaeae226463cd3326fade770d94c280b86d47c18ccee33a35bbaafdd3e31cf0b910d07",
 			"id": "771831816220047333"
@@ -81,8 +81,8 @@
 			"amount": "11250000000000",
 			"fee": 0,
 			"timestamp": 0,
-			"recipientId": "9758601670400927807E",
-			"senderId": "4995063339468361088E",
+			"recipientId": "DDK9758601670400927807",
+			"senderId": "DDK4995063339468361088",
 			"senderPublicKey": "f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2",
 			"signature": "bb503ca5a7cea4330bdc10c13ef6619d6609936b181003c3b0eb76521750ab8088840a2e5fdc8bedcb08a37bb58f916f643a2e5f9d7ff13de6a764f39e591d08",
 			"id": "8226427494934824916"
@@ -92,8 +92,8 @@
 			"amount": "11250000000000",
 			"fee": 0,
 			"timestamp": 0,
-			"recipientId": "12671171770945235882E",
-			"senderId": "4995063339468361088E",
+			"recipientId": "DDK12671171770945235882",
+			"senderId": "DDK4995063339468361088",
 			"senderPublicKey": "f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2",
 			"signature": "db4eec2efab2f15e8a1b2cc514ce31ef26b4c444bc4f5a7b0b9a64742d423486a0c162d953af214a63eec108c9a1d460cc1145dfb02f0fad8648991db1bab40e",
 			"id": "1522947044527641725"
@@ -103,8 +103,8 @@
 			"amount": "45000000000000",
 			"fee": 0,
 			"timestamp": 0,
-			"recipientId": "5216737955302030643E",
-			"senderId": "4995063339468361088E",
+			"recipientId": "DDK5216737955302030643",
+			"senderId": "DDK4995063339468361088",
 			"senderPublicKey": "f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2",
 			"signature": "1fff1072c183f2eaa02b51270f3a8693cd4d4a058c5c5dd350cbd71daf910d2549ba82f2cb4e216723a5ea814d3d607d1cf5ba3f31614c261f7d88c9726dc904",
 			"id": "3648295464450764925"
@@ -115,7 +115,7 @@
 			"fee": 0,
 			"timestamp": 0,
 			"recipientId": null,
-			"senderId": "16313739661670634666E",
+			"senderId": "DDK16313739661670634666",
 			"senderPublicKey": "c094ebee7ec0c50ebee32918655e089f6e1a604b83bcaa760293c61e0f18ab6f",
 			"asset": {
 				"delegate": {
@@ -131,7 +131,7 @@
             "fee": 0,
             "timestamp": 0,
             "recipientId": null,
-            "senderId": "16863581701775438665E",
+            "senderId": "DDK16863581701775438665",
             "senderPublicKey": "722c48aa6e68788b580b5f10a4c86d395e9cbb1b24e570958f0d02f1d5c9e250",
             "asset": {
                 "delegate": {
@@ -147,7 +147,7 @@
             "fee": 0,
             "timestamp": 0,
             "recipientId": null,
-            "senderId": "4654565460128291637E",
+            "senderId": "DDK4654565460128291637",
             "senderPublicKey": "faf82dd8a232b7878df262846bcfa24d90b02d154d380bfcc412eaf2de6c3268",
             "asset": {
                 "delegate": {
@@ -162,8 +162,8 @@
             "amount": 0,
             "fee": 0,
             "timestamp": 0,
-            "recipientId": "4995063339468361088E",
-            "senderId": "4995063339468361088E",
+            "recipientId": "DDK4995063339468361088",
+            "senderId": "DDK4995063339468361088",
             "senderPublicKey": "f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2",
             "asset": {
               
