@@ -22,59 +22,24 @@
  * CLI options available.
  * @module app
  */
-/*
-//app monitoring configuration on console/UI 
-/*require('appmetrics-dash').monitor();
-
-// App Monitoring on console
-var appmetrics = require('appmetrics');
-var monitoring = appmetrics.monitor();
-
-monitoring.on('initialized', function (env) {
-	//console.log(chalk.green('initialized') + ' : ' + chalk.yellow('[ETPCoinMetric] init'));
-});
-
-monitoring.on('socketio', function (data) {
-	//console.log(chalk.green('socketio') + ' : ' + chalk.yellow('[ETPCoinMetric] duration='+data.duration+' ms url='+data.url+' method='+data.method+' event='+data.event));
-});
-
-monitoring.on('http', function (data) {
-	// console.log(chalk.green('http') + ' : ' +chalk.yellow('[ETPCoinMetric] duration='+data.duration+' ms url='+data.url));
-});
-
-monitoring.on('postgres', function (data) {
-	//	console.log(chalk.green('postgres') + ' : ' +chalk.yellow('[ETPCoinMetric] duration='+data.duration+' ms query='+data.query));
-});
-
-monitoring.on('redis', function (data) {
-	//console.log(chalk.green('redis') + ' : ' +chalk.yellow('[ETPCoinMetric] duration='+data.duration+' ms cmd='+data.cmd));
-});*/
 
 //Requiring Modules
 require('dotenv').config();
 var async = require('async');
-var extend = require('extend');
 var fs = require('fs');
-var chalk = require('chalk');
-var checkIpInList = require('./helpers/checkIpInList.js');
 var genesisblock = require('./genesisBlock.json');
 var git = require('./helpers/git.js');
-var https = require('https');
 var packageJson = require('./package.json');
 var path = require('path');
 var program = require('commander');
 var httpApi = require('./helpers/httpApi.js');
 var Sequence = require('./helpers/sequence.js');
-var util = require('util');
 var z_schema = require('./helpers/z_schema.js');
-var currentDay = '';
 const Logger = require('./logger.js');
 let logman = new Logger();
 let logger = logman.logger;
 var sockets = [];
-var cron = require('node-cron');
 var utils = require('./utils');
-var sql = require('./sql/etp');
 var cronjob = require('node-cron-job');
 
 process.stdin.resume();
@@ -86,11 +51,6 @@ var versionBuild = fs.readFileSync(path.join(__dirname, 'build'), 'utf8');
  */
 var lastCommit = '';
 
-if (typeof gc !== 'undefined') {
-	setInterval(function () {
-		gc();
-	}, 60000);
-}
 
 
 
@@ -219,7 +179,6 @@ try {
 var d = require('domain').create();
 
 d.on('error', function (err) {
-	console.log('error : ', err);
 	logger.error('Domain master', { message: err.message, stack: err.stack });
 	process.exit(0);
 });
@@ -303,7 +262,6 @@ d.run(function () {
 		 */
 		network: ['config', function (scope, cb) {
 			var express = require('express');
-			var http = require('http');
 			var compression = require('compression');
 			var cors = require('cors');
 			var app = express();
@@ -418,7 +376,7 @@ d.run(function () {
 
 		dbSequence: ['logger', function (scope, cb) {
 			var sequence = new Sequence({
-				onWarning: function (current, limit) {
+				onWarning: function (current) {
 					scope.logger.warn('DB queue', current);
 				}
 			});
@@ -427,7 +385,7 @@ d.run(function () {
 
 		sequence: ['logger', function (scope, cb) {
 			var sequence = new Sequence({
-				onWarning: function (current, limit) {
+				onWarning: function (current) {
 					scope.logger.warn('Main queue', current);
 				}
 			});
@@ -436,7 +394,7 @@ d.run(function () {
 
 		balancesSequence: ['logger', function (scope, cb) {
 			var sequence = new Sequence({
-				onWarning: function (current, limit) {
+				onWarning: function (current) {
 					scope.logger.warn('Balance queue', current);
 				}
 			});
@@ -458,8 +416,6 @@ d.run(function () {
 			var methodOverride = require('method-override');
 			var queryParser = require('express-query-int');
 			var randomString = require('randomstring');
-			var session = require('express-session');
-			var RedisStore = require('connect-redis')(session);
 
 			scope.nonce = randomString.generate(16);
 			scope.network.app.engine('html', require('ejs').renderFile);
@@ -645,7 +601,6 @@ d.run(function () {
 					var d = require('domain').create();
 
 					d.on('error', function (err) {
-						console.log('error : ' , err);
 						scope.logger.error('Domain ' + name, { message: err.message, stack: err.stack });
 					});
 
@@ -725,7 +680,6 @@ d.run(function () {
 	}, function (err, scope) {
 		if (err) {
 			logger.error(err);
-			console.log("err1",err);
 		} else {
 			
 

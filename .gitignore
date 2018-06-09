@@ -14,3 +14,4 @@ package-lock.json
 database_backup
 public
 config.json
+.eslintrc.json

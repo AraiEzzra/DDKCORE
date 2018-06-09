@@ -50,7 +50,11 @@ var DelegatesSql = {
 
   insertFork: 'INSERT INTO forks_stat ("delegatePublicKey", "blockTimestamp", "blockId", "blockHeight", "previousBlock", "cause") VALUES (${delegatePublicKey}, ${blockTimestamp}, ${blockId}, ${blockHeight}, ${previousBlock}, ${cause});',
 
-  getVoters: 'SELECT ARRAY_AGG("accountId") AS "accountIds" FROM mem_accounts2delegates WHERE "dependentId" = ${publicKey}'
+  getVoters: 'SELECT ARRAY_AGG("accountId") AS "accountIds" FROM mem_accounts2delegates WHERE "dependentId" = ${publicKey}',
+
+  getLatestVoters: 'SELECT * from trs WHERE type = 3 ORDER BY timestamp DESC LIMIT ${limit}',
+
+  getLatestDelegates: 'SELECT * from trs INNER JOIN delegates ON trs."id" = delegates."transactionId" WHERE type = 2 ORDER BY timestamp DESC LIMIT ${limit}'
 };
 
 module.exports = DelegatesSql;
