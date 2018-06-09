@@ -12,11 +12,12 @@ CREATE TABLE IF NOT EXISTS "mem_accounts"(
   "secondSignature" SMALLINT DEFAULT 0,
   "u_secondSignature" SMALLINT DEFAULT 0,
   "u_username" VARCHAR(20),
-  "address" VARCHAR(22) NOT NULL UNIQUE PRIMARY KEY,
+  "address" VARCHAR(25) NOT NULL UNIQUE PRIMARY KEY,
   "publicKey" BYTEA,
   "secondPublicKey" BYTEA,
   "balance" BIGINT DEFAULT 0,
   "u_balance" BIGINT DEFAULT 0,
+  "voteCount" BIGINT DEFAULT 0,
   "vote" BIGINT DEFAULT 0,
   "rate" BIGINT DEFAULT 0,
   "delegates" TEXT,
@@ -43,13 +44,16 @@ CREATE TABLE IF NOT EXISTS "mem_accounts"(
   "email" VARCHAR(40),
   "country" VARCHAR(20),
   "phoneNumber" BIGINT,
-  "referralLink" VARCHAR(100)
+  "referralLink" VARCHAR(100),
+  "group_bonus" BIGINT DEFAULT 0,
+  "pending_group_bonus" BIGINT DEFAULT 0,
+  "introducer" VARCHAR(25)
 );
 
 CREATE INDEX IF NOT EXISTS "mem_accounts_balance" ON "mem_accounts"("balance");
 
 CREATE TABLE IF NOT EXISTS "mem_round"(
-  "address" VARCHAR(22),
+  "address" VARCHAR(25),
   "amount" BIGINT,
   "delegate" VARCHAR(64),
   "blockId" VARCHAR(20),
@@ -57,25 +61,25 @@ CREATE TABLE IF NOT EXISTS "mem_round"(
 );
 
 CREATE TABLE IF NOT EXISTS "mem_accounts2delegates"(
-  "accountId" VARCHAR(22) NOT NULL,
+  "accountId" VARCHAR(25) NOT NULL,
   "dependentId" VARCHAR(64) NOT NULL,
   FOREIGN KEY ("accountId") REFERENCES mem_accounts("address") ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS "mem_accounts2u_delegates"(
-  "accountId" VARCHAR(22) NOT NULL,
+  "accountId" VARCHAR(25) NOT NULL,
   "dependentId" VARCHAR(64) NOT NULL,
   FOREIGN KEY ("accountId") REFERENCES mem_accounts("address") ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS "mem_accounts2multisignatures"(
-  "accountId" VARCHAR(22) NOT NULL,
+  "accountId" VARCHAR(25) NOT NULL,
   "dependentId" VARCHAR(64) NOT NULL,
   FOREIGN KEY ("accountId") REFERENCES mem_accounts("address") ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS "mem_accounts2u_multisignatures"(
-  "accountId" VARCHAR(22) NOT NULL,
+  "accountId" VARCHAR(25) NOT NULL,
   "dependentId" VARCHAR(64) NOT NULL,
   FOREIGN KEY ("accountId") REFERENCES mem_accounts("address") ON DELETE CASCADE
 );

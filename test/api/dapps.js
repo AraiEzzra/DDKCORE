@@ -728,12 +728,12 @@ describe('PUT /api/dapps/withdrawal', function () {
 		});
 	});
 
-	it('using recipientId with length > 22 should fail', function (done) {
+	it('using recipientId with length > 25 should fail', function (done) {
 		validParams.recipientId = '0123456789012345678901L';
 
 		putWithdrawal(validParams, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.not.be.ok;
-			node.expect(res.body).to.have.property('error').to.equal('String is too long (23 chars), maximum 22');
+			node.expect(res.body).to.have.property('error').to.equal('String is too long (23 chars), maximum 25');
 			done();
 		});
 	});

@@ -230,7 +230,7 @@ Transaction.prototype.getBytes = function (trs, skipSignature, skipSecondSignatu
 		}
 
 		if (trs.recipientId) {
-			var recipient = trs.recipientId.slice(0, -1);
+			var recipient = trs.recipientId.slice(3);
 			recipient = new bignum(recipient).toBuffer({size: 8});
 
 			for (i = 0; i < 8; i++) {
@@ -1086,13 +1086,13 @@ Transaction.prototype.schema = {
 			type: 'string',
 			format: 'address',
 			minLength: 1,
-			maxLength: 22
+			maxLength: 25
 		},
 		recipientId: {
 			type: 'string',
 			format: 'address',
 			minLength: 1,
-			maxLength: 22
+			maxLength: 25
 		},
 		amount: {
 			type: 'integer',

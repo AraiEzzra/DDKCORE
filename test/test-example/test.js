@@ -88,7 +88,7 @@ node.randomAccount = function () {
 	account.publicKey = node.lisk.crypto.getKeys(account.password).publicKey;
     account.address = node.lisk.crypto.getAddress(account.publicKey);
     account.address = account.address.split('L')[0];
-    account.address = account.address + 'E';
+    account.address = 'DDK' + account.address;
 
 	return account;
 };

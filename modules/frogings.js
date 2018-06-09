@@ -340,7 +340,7 @@ Frogings.prototype.shared = {
 					if (err) {
 						return setImmediate(cb, err);
 					}
-
+					library.network.io.sockets.emit('updateTotalStakeAmount', null);
 					return setImmediate(cb, null, { transaction: transaction[0] });
 
 				});
