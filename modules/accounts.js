@@ -124,7 +124,7 @@ Accounts.prototype.generateAddressByPublicKey = function (publicKey) {
 		temp[i] = publicKeyHash[7 - i];
 	}
 
-	var address = bignum.fromBuffer(temp).toString() + 'E';
+	var address = 'DDK' + bignum.fromBuffer(temp).toString();
 
 	if (!address) {
 		throw 'Invalid public key: ' + publicKey;

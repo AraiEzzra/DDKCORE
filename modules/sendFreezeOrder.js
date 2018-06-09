@@ -249,7 +249,7 @@ SendFreezeOrder.prototype.onBind = function (scope) {
 SendFreezeOrder.prototype.shared = {
 
 	transferFreezeOrder: function (req, cb) {
-		let accountData;
+		var accountData;
 		library.schema.validate(req.body, schema.transferFreezeOrder, function (err) {
 			if (err) {
 				return setImmediate(cb, err[0].message);
@@ -326,7 +326,7 @@ SendFreezeOrder.prototype.shared = {
 
 								try {
 									transaction = library.logic.transaction.create({
-										type: transactionType.SENDFREEZE,
+										type: transactionTypes.SENDFREEZE,
 										sender: account,
 										stakeId: req.body.stakeId,
 										keypair: keypair,

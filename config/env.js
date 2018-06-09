@@ -47,7 +47,6 @@ module.exports = {
   msgServiceAuthKey: env.MSG91_AUTH_KEY,
   mailFrom: env.MAILFROM,
   mailTo: env.MAILTO,
-  refershToken: env.REFRESHTOKEN,
   accessToken: env.ACCESSTOKEN,
   clientId: env.CLIENT_ID,
   clientSecret: env.CLIENT_SECRET,
