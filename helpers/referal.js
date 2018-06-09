@@ -131,7 +131,7 @@ var library = {};
 
     });
 
-    app.post('/referral/overridingReward',function(req,res){
+    app.post('/referral/overridingReward', function (req, res) {
 
         //address, amount
         var sponsor_address = req.body.sponser;
@@ -139,93 +139,95 @@ var library = {};
         var overrideReward = {};
         var i = 0;
 
-        library.db.one('SELECT level from referals WHERE "address" = ${address}',{
-            address:sponsor_address
-        }).then(function(user){
+        library.db.one('SELECT level from referals WHERE "address" = ${address}', {
+            address: sponsor_address
+        }).then(function (user) {
 
             if (user.level != null && user.level[0] != "0") {
 
-            //     async.eachSeries(user.level,function(level,callback){
+                async.eachSeries(user.level, function (level, callback) {
 
-            //         if(i < 15)
-            //         {
-            //             overrideReward[level] = (((rewards.level[i]) * amount) / 100) * 100000000;
+                    if (i < 15) {
+                        overrideReward[level] = (((100000000 * rewards.level[i]) * amount) / 100);
 
-            //             library.db.one('SELECT balance from mem_accounts WHERE "address" = ${sender_address}', {
-            //                 sender_address: rewards.sender_address
-            //             }).then(function (bal) {
+                        library.db.one('SELECT balance from mem_accounts WHERE "address" = ${sender_address}', {
+                            sender_address: env.SENDER_ADDRESS
+                        }).then(function (bal) {
 
-            //                 if (parseInt(bal.balance) > 0) {
+                            if (parseInt(bal.balance) > 0 && parseInt(bal.balance) >= overrideReward[level]) {
 
-            //                     var transactionData = {
-            //                         json: {
-            //                             secret: rewards.secret,
-            //                             amount: overrideReward[level],
-            //                             recipientId: level,
-            //                             transactionRefer: 11
-            //                         }
-            //                     };
+                                var transactionData = {
+                                    json: {
+                                        secret: env.SENDER_SECRET,
+                                        amount: overrideReward[level],
+                                        recipientId: level,
+                                        transactionRefer: 11
+                                    }
+                                };
 
-            //                     library.logic.transaction.sendTransaction(transactionData, function (err, transactionResponse) {
-            //                         if (err) return err;
-            //                         console.log(transactionResponse.body);
-            //                     });
+                                library.logic.transaction.sendTransaction(transactionData, function (err, transactionResponse) {
+                                    if (err) return err;
+                                    console.log(transactionResponse.body);
+                                });
+                            } else {
+                                if (parseInt(bal.balance) == 0) {
+                                    return res.status(400).json({
+                                        data: {
+                                            success: false,
+                                            message: "No reward"
+                                        }
+                                    });
+                                }
+                            }
+                            callback();
 
-            //                 } else {
-            //                     return res.status(200).json({
-            //                         data: {
-            //                             success: true,
-            //                             rewards: 0,
-            //                             message: "Allocation is empty No reward"
-            //                         }
-            //                     });
+                        }).catch(function (err) {
+                            return res.status(400).json({
+                                data: {
+                                    success: false,
+                                    err: err.message,
+                                    reward: 0
+                                }
+                            });
+                        });
+                    } else {
+                        callback(null);
+                    }
+                    i++;
+                }, function (err) {
+                    if (err) {
+                        return res.status(400).json({
+                            data: {
+                                success: false,
+                                err: err
+                            }
+                        });
+                    }
+                    return res.status(200).json({
+                        data: {
+                            success: true,
+                            message: "Reward awarded successfully"
+                        }
+                    });
+                });
 
-            //                 }
+            } else {
+                return res.status(200).json({
+                    data: {
+                        success: true,
+                        message: "No Introducer Found"
+                    }
+                });
+            }
 
-            //                 callback();
-
-            //             }).catch(function (err) {
-            //                 return res.status(400).json({
-            //                     data: {
-            //                         success: false,
-            //                         err: err.message,
-            //                         reward: 0
-            //                     }
-            //                 });
-            //             });
-            //         }
-            //         else{
-            //             callback();
-            //         }
-            //         i++;
-            //     });
-
-            for(i=0;i<user.level.length;i++)
-            {
-                if(i<15)
-                {
-                    overrideReward[user.level[i]] = (((rewards.level[i]) * amount) / 100) * 100000000;
+        }).catch(function (err) {
+            return res.status(400).json({
+                data: {
+                    success: false,
+                    err: err.message,
+                    overrideReward: 0
                 }
-                else
-                    overrideReward[user.level[i]] = 0;
-                
-            }
-
-
-
-            }
-
-            // return res.status(200).json({
-            //     data: {
-            //         success: true,
-            //         message: "Reward awarded successfully"
-            //     }
-            // });
-
-            return res.status(200).json({ data: { success: true, reward: overrideReward } });            
-
-        }).catch(function(err){
-            return res.status(400).json({ data: { success: false, err: err.message, overrideReward: 0 } });
+            });
         });
 
     });
