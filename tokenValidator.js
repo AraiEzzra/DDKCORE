@@ -1,7 +1,6 @@
 'use strict';
 
 var jwt = require('jsonwebtoken');
-var config = require('./config');
 var jwtSecret = process.env.JWT_SECRET;
 
 module.exports = function (req, res, next) {

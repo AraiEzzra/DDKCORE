@@ -304,7 +304,7 @@ Accounts.prototype.shared = {
 					};
 					var token = jwt.sign(payload, library.config.jwt.secret, {
 						expiresIn: library.config.jwt.tokenLife,
-						mutatePayload: true
+						mutatePayload: false
 					});
 					var accountData = {
 						address: account.address,
@@ -1140,7 +1140,13 @@ Accounts.prototype.internal = {
 		user.address = modules.accounts.generateAddressByPublicKey(req.body.publicKey);
 		cache.prototype.isExists('2fa_user_' + user.address, function (err, isExist) {
 			if (isExist) {
-				return setImmediate(cb, null, { success: true });
+				cache.prototype.hgetall('2fa_user_' + user.address, function (err, userCred) {
+					var user_2FA = JSON.parse(Object.keys(userCred));
+					if(user_2FA.twofactor.secret) {
+						return setImmediate(cb, null, { success: true });
+					}
+					return setImmediate(cb, null, { success: false });
+				});
 			}
 			return setImmediate(cb, null, { success: false });
 		});

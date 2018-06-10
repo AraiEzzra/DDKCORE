@@ -1,9 +1,11 @@
 'use strict';
 
 var Router = require('../../helpers/router');
-var httpApi = require('../../helpers/httpApi');
 var Accounts = require('../../modules/accounts');
 var tokenValidator = require('../../tokenValidator');
+var config = require('../../config');
+var jwt = require('jsonwebtoken');
+var jwtSecret = process.env.JWT_SECRET;
 
 /**
  * Renders main page wallet from public folder.
@@ -30,12 +32,22 @@ function ServerHttpApi (serverModule, app) {
 	router.get('/user/status', tokenValidator, function(req, res) {
 		if(req.decoded.address) {
 			Accounts.prototype.getAccount({address: req.decoded.address}, function(err, account) {
-				if(!err) {
+				if (!err) {
+					var payload = {
+						secret: req.decoded.secret,
+						address: req.decoded.address
+					};
+					var refreshToken = jwt.sign(payload, jwtSecret, {
+						expiresIn: config.jwt.tokenLife,
+						mutatePayload: false
+					});
+
 					return res.status(200).json({
 						status: true,
 						data: {
 							success: true,
-							account: account
+							account: account,
+							refreshToken: refreshToken || ''
 						}
 					});
 				}
