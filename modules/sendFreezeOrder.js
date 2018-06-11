@@ -321,7 +321,7 @@ SendFreezeOrder.prototype.shared = {
 									}
 
 									if (requester.secondSignature && !req.body.secondSecret) {
-										return setImmediate(cb, 'Missing requester second passphrase');
+										return setImmediate(cb, 'Missing second passphrase');
 									}
 
 									if (requester.publicKey === account.publicKey) {

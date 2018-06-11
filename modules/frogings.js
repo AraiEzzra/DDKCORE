@@ -258,7 +258,7 @@ Frogings.prototype.shared = {
 							}
 
 							if (requester.secondSignature && !req.body.secondSecret) {
-								return setImmediate(cb, 'Missing requester second passphrase');
+								return setImmediate(cb, 'Missing second passphrase');
 							}
 
 							if (requester.publicKey === account.publicKey) {
@@ -301,7 +301,7 @@ Frogings.prototype.shared = {
 						}
 
 						if (account.secondSignature && !req.body.secondSecret) {
-							return setImmediate(cb, 'Invalid second passphrase');
+							return setImmediate(cb, 'Missing second passphrase');
 						}
 
 						var secondKeypair = null;
