@@ -1033,22 +1033,23 @@ Accounts.prototype.internal = {
 		var secret = speakeasy.generateSecret({ length: 30 });
 		QRCode.toDataURL(secret.otpauth_url, function (err, data_url) {
 			user.twofactor = {
-				secret: "",
+				secret: '',
 				tempSecret: secret.base32,
 				dataURL: data_url,
 				otpURL: secret.otpauth_url
 			};
-			cache.prototype.isExists('2fa_user_' + user.address, function (err, isExist) {
+			library.cache.client.set('2fa_user_' + user.address, JSON.stringify(user));
+			return setImmediate(cb, null, { success: true, dataUrl: data_url });
+			/* library.cache.client.exists('2fa_user_' + user.address, function (err, isExist) {
 				if (!isExist) {
-					cache.prototype.hmset('2fa_user_' + user.address, JSON.stringify(user), 'ex', 30);
-					return setImmediate(cb, null, { success: true, dataUrl: data_url });
+					
 				} else {
 					cache.prototype.delHash('2fa_user_' + user.address, function (isdel) {
 						cache.prototype.hmset('2fa_user_' + user.address, JSON.stringify(user), 'ex', 30);
 						return setImmediate(cb, null, { success: true, dataUrl: data_url });
 					});
 				}
-			});
+			}); */
 
 		});
 	},
@@ -1059,14 +1060,14 @@ Accounts.prototype.internal = {
 			return setImmediate(cb, 'Missing address or public key');
 		}
 		user.address = modules.accounts.generateAddressByPublicKey(req.body.publicKey);
-		cache.prototype.hgetall('2fa_user_' + user.address, function (err, userCred) {
+		library.cache.client.get('2fa_user_' + user.address, function (err, userCred) {
 			if (!userCred) {
 				return setImmediate(cb, 'Token expired or invalid OTP. Click resend to continue');
 			}
 			if (err) {
 				return setImmediate(cb, err);
 			}
-			var user_2FA = JSON.parse(Object.keys(userCred));
+			var user_2FA = JSON.parse(userCred);
 			var verified = speakeasy.totp.verify({
 				secret: user_2FA.twofactor.tempSecret,
 				encoding: 'base32',
@@ -1095,14 +1096,14 @@ Accounts.prototype.internal = {
 		var keypair = library.ed.makeKeypair(hash);
 		var publicKey = keypair.publicKey.toString('hex');
 		user.address = modules.accounts.generateAddressByPublicKey(publicKey);
-		cache.prototype.hgetall('2fa_user_' + user.address, function (err, userCred) {
+		library.cache.client.get('2fa_user_' + user.address, function (err, userCred) {
 			if (err) {
 				return setImmediate(cb, err);
 			}
 			if (!userCred) {
 				return setImmediate(cb, 'Key expired');
 			}
-			var user_2FA = JSON.parse(Object.keys(userCred));
+			var user_2FA = JSON.parse(userCred);
 			var verified = speakeasy.totp.verify({
 				secret: req.body.key,
 				encoding: 'base32',
@@ -1113,7 +1114,7 @@ Accounts.prototype.internal = {
 				return setImmediate(cb, 'Invalid OTP!. Please enter valid OTP to SEND Transaction');
 			}
 			user_2FA.twofactor.secret = req.body.key;
-			cache.prototype.hmset('2fa_user_s' + user.address, user_2FA);
+			library.cache.client.set('2fa_user_' + user.address, JSON.stringify(user_2FA));
 			return setImmediate(cb, null, { success: true, key: user_2FA.twofactor.tempSecret });
 		});
 	},
@@ -1124,9 +1125,9 @@ Accounts.prototype.internal = {
 			return setImmediate(cb, 'Missing address or public key');
 		}
 		user.address = modules.accounts.generateAddressByPublicKey(req.body.publicKey);
-		cache.prototype.isExists('2fa_user_' + user.address, function (err, isExist) {
+		library.cache.client.exists('2fa_user_' + user.address, function (err, isExist) {
 			if (isExist) {
-				cache.prototype.delHash('2fa_user_' + user.address);
+				library.cache.client.del('2fa_user_' + user.address);
 			}
 			return setImmediate(cb, null, { success: true, message: "Two Factor Authentication Disabled For " + user.address });
 		});
@@ -1138,17 +1139,18 @@ Accounts.prototype.internal = {
 			return setImmediate(cb, 'Missing address or public key');
 		}
 		user.address = modules.accounts.generateAddressByPublicKey(req.body.publicKey);
-		cache.prototype.isExists('2fa_user_' + user.address, function (err, isExist) {
+		library.cache.client.exists('2fa_user_' + user.address, function (err, isExist) {
 			if (isExist) {
-				cache.prototype.hgetall('2fa_user_' + user.address, function (err, userCred) {
-					var user_2FA = JSON.parse(Object.keys(userCred));
+				library.cache.client.get('2fa_user_' + user.address, function (err, userCred) {
+					var user_2FA = JSON.parse(userCred);
 					if(user_2FA.twofactor.secret) {
 						return setImmediate(cb, null, { success: true });
 					}
 					return setImmediate(cb, null, { success: false });
 				});
+			}else {
+				return setImmediate(cb, null, { success: false });
 			}
-			return setImmediate(cb, null, { success: false });
 		});
 	},
 
