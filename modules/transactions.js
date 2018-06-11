@@ -727,22 +727,24 @@ Transactions.prototype.shared = {
 				if (err) {
 					return setImmediate(cb, err);
 				}
-				userTwoFaCred = JSON.parse(userTwoFaCred)
-				if (userTwoFaCred.twofactor.secret) {
-					var verified = speakeasy.totp.verify({
-						secret: userTwoFaCred.twofactor.secret,
-						encoding: 'base32',
-						token: req.body.otp,
-						window: 6
-					});
-					if (!verified) {
-						return setImmediate(cb, 'Invalid OTP!. Please enter valid OTP to SEND Transaction');
+				if (userTwoFaCred) {
+					userTwoFaCred = JSON.parse(userTwoFaCred)
+					if (userTwoFaCred.twofactor.secret) {
+						var verified = speakeasy.totp.verify({
+							secret: userTwoFaCred.twofactor.secret,
+							encoding: 'base32',
+							token: req.body.otp,
+							window: 6
+						});
+						if (!verified) {
+							return setImmediate(cb, 'Invalid OTP!. Please enter valid OTP to SEND Transaction');
+						}
 					}
-				}
 
-				if (req.body.publicKey) {
-					if (keypair.publicKey.toString('hex') !== req.body.publicKey) {
-						return setImmediate(cb, 'Invalid passphrase');
+					if (req.body.publicKey) {
+						if (keypair.publicKey.toString('hex') !== req.body.publicKey) {
+							return setImmediate(cb, 'Invalid passphrase');
+						}
 					}
 				}
 
