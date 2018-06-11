@@ -42,7 +42,9 @@ var Accounts = {
 
   checkWeeklyVote: 'SELECT count(*) FROM stake_orders WHERE "senderId"=${senderId} AND "status"=1 AND "isVoteDone"=false',
 
-  updateETPSUserInfo: 'UPDATE etps_user SET "transferred_time"=${insertTime}, "transferred_etp"=1 WHERE "id"=${userId} '
+  updateETPSUserInfo: 'UPDATE etps_user SET "transferred_time"=${insertTime}, "transferred_etp"=1 WHERE "id"=${userId} ',
+
+  findReferLink : 'SELECT count(*) AS address FROM mem_accounts WHERE "referralLink" = ${referLink}'
 };
 
 module.exports = Accounts;

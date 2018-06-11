@@ -174,7 +174,7 @@ Accounts.prototype.referralLinkChain = function(referalLink,address,cb) {
 
 			function(callback){
 				if (referralLink != "") {
-					library.db.one('SELECT count(*) AS address FROM mem_accounts WHERE "referralLink" = ${referLink}', {
+					library.db.one(sql.findReferLink, {
 						referLink: referralLink
 					}).then(function (user) {
 						if (parseInt(user.address)) {
@@ -219,10 +219,8 @@ Accounts.prototype.referralLinkChain = function(referalLink,address,cb) {
 					if (err) {
 						console.log(err);
 						return setImmediate(cb, err);
-						// return res.status(400).json({ data: { success: false, err: err.detail } });
 					}
 					level.length = 0;
-					// return res.status(200).json({ data: { success: true, info: 'Level Updated Successfully.' } });				
 					callback();
 				});
 			}
