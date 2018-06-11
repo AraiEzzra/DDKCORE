@@ -15,7 +15,7 @@ var library = {};
 
     app.post('/referral/generateReferalLink', function(req, res) {
 
-        var user_address = req.body.referralLink;
+        var user_address = req.body.secret;
         var encoded = new Buffer(user_address).toString('base64');
         // var decoded = new Buffer(encoded, 'base64').toString('ascii');
         
@@ -23,9 +23,9 @@ var library = {};
             referralLink: encoded,
             address: user_address
         }).then(function(){
-            return res.status(200).json({ data: { success: true, referralLink: encoded } });
+            return res.status(200).json({ success: true, referralLink: encoded } );
         }).catch(function (err) {
-            return res.status(400).json({ data: { success: false, err: err.detail } });
+            return res.status(400).json( { success: false, err: err.detail } );
         });
 
     });
@@ -47,9 +47,9 @@ var library = {};
 
         mailServices.sendMail(mailOptions, library.config, function (err) {
             if (err) {
-                return res.status(400).json({ data: { success: false, err: err } });
+                return res.status(400).json({ success: false, error: err });
             }
-            return res.status(200).json({ data: { success: true, info: 'Mail sent successfully.' } });
+            return res.status(200).json({ success: true, info: 'Mail sent successfully.' } );
         });
     });
 
@@ -62,10 +62,10 @@ var library = {};
         library.db.one('SELECT level from referals WHERE "address" = ${address}',{
             address:sponsor_address
         }).then(function(user){
-            
+
                 if (user.level != null && user.level[0] != "0") {
 
-                    overrideReward[user.level[i]] = (((env.STAKE_REWARD) * amount)/100)*100000000;
+                    overrideReward[user.level[i]] = ((100000000*(env.STAKE_REWARD) * amount)/100);
 
                     library.db.one('SELECT balance from mem_accounts WHERE "address" = ${sender_address}', {
                         sender_address: env.SENDER_ADDRESS
@@ -85,48 +85,50 @@ var library = {};
                             library.logic.transaction.sendTransaction(transactionData, function (err, transactionResponse) {
                                 if (err) return err;
                                 console.log(transactionResponse.body);
-                            });
-
-                            return res.status(200).json({
-                                data: {
-                                    success: true,
-                                    message: "Reward awarded successfully"
+                                if(transactionResponse.body.success == false)
+                                {
+                                    return res.status(400).json(
+                                        {
+                                            success: false,
+                                            message: "Allocation is not sufficient No reward"
+                                        }
+                                    );
+                                }
+                                else
+                                {
+                                    return res.status(200).json({
+                                            success: true,
+                                            message: "Reward awarded successfully"
+                                        }
+                                    );
                                 }
                             });
 
                         } else {
-                            return res.status(200).json({
-                                data: {
-                                    success: true,
-                                    rewards: 0,
+                            return res.status(400).json({
+                                    success: false,
                                     message: "Allocation is empty No reward"
-                                }
                             });
 
                         }
 
                     }).catch(function (err) {
                         return res.status(400).json({
-                            data: {
                                 success: false,
                                 err: err.message,
                                 reward: 0
-                            }
                         });
                     });
                 }
             else {
-                return res.status(200).json({
-                    data: {
-                        success: true,
-                        reward: overrideReward,
+                return res.status(400).json({
+                        success: false,
                         message: "No Introducer Found"
-                    }
                 });
             }
 
         }).catch(function(err){
-            return res.status(400).json({ data: { success: false, err: err.message, reward: 0 } });
+            return res.status(400).json({ success: false, err: err.message, reward: 0 } );
         });
 
     });
@@ -172,61 +174,49 @@ var library = {};
                             } else {
                                 if (parseInt(bal.balance) == 0) {
                                     return res.status(400).json({
-                                        data: {
                                             success: false,
-                                            message: "No reward"
-                                        }
+                                            message: "Allocation is empty No reward"
                                     });
                                 }
                             }
                             callback();
 
-                        }).catch(function (err) {
+                        }).catch(function (err) { 
                             return res.status(400).json({
-                                data: {
                                     success: false,
                                     err: err.message,
                                     reward: 0
-                                }
                             });
                         });
                     } else {
-                        callback(null);
+                        callback();
                     }
                     i++;
                 }, function (err) {
                     if (err) {
                         return res.status(400).json({
-                            data: {
                                 success: false,
                                 err: err
-                            }
                         });
                     }
                     return res.status(200).json({
-                        data: {
                             success: true,
                             message: "Reward awarded successfully"
-                        }
                     });
                 });
 
             } else {
-                return res.status(200).json({
-                    data: {
-                        success: true,
+                return res.status(400).json({
+                        success: false,
                         message: "No Introducer Found"
-                    }
                 });
             }
 
         }).catch(function (err) {
             return res.status(400).json({
-                data: {
                     success: false,
                     err: err.message,
                     overrideReward: 0
-                }
             });
         });
 
