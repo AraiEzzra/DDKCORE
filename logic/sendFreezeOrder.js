@@ -135,30 +135,28 @@ SendFreezeOrder.prototype.bind = function (accounts, rounds) {
 	};
 };
 
+SendFreezeOrder.prototype.getActiveFrozeOrder = function (userData, cb) {
+
+	self.scope.db.one(sql.getActiveFrozeOrder,
+		{
+			senderId: userData.address,
+			stakeId: userData.stakeId
+		})
+		.then(function (order) {
+			return setImmediate(cb, null, order);
+		})
+		.catch(function (err) {
+			self.scope.logger.error(err.stack);
+
+			if (err.code == 0 && err.message == "No data returned from the query.") {
+				return setImmediate(cb, 'Selected order is expired. Please send active order.');
+			} else {
+				return setImmediate(cb, err.toString());
+			}
+		});
+}
 
 SendFreezeOrder.prototype.sendFreezedOrder = function (userAndOrderData, cb) {
-
-	function getActiveFrozeOrder() {
-		return new Promise(function (resolve, reject) {
-			self.scope.db.one(sql.getActiveFrozeOrder,
-				{
-					senderId: userAndOrderData.account.address,
-					stakeId: userAndOrderData.stakeId
-				})
-				.then(function (order) {
-					resolve(order)
-				})
-				.catch(function (err) {
-					self.scope.logger.error(err.stack);
-
-					if (err.code == 0 && err.message == "No data returned from the query.") {
-						reject('Selected order is expired. Please send active order.');
-					} else {
-						reject(new Error(err.toString()));
-					}
-				});
-		});
-	}
 
 	function deductFrozeAmount(order) {
 		return new Promise(function (resolve, reject) {
@@ -250,12 +248,9 @@ SendFreezeOrder.prototype.sendFreezedOrder = function (userAndOrderData, cb) {
 	//amount in mem_account table & update old order and create new order in stake table
 	(async function() {
 		try {
-			var order = await getActiveFrozeOrder();
+			var order = userAndOrderData.stakeOrder;
 
-			if (order && order.isTransferred) {
-				return setImmediate(cb, 'Order can be send only Once');
-			} else {
-				self.scope.logger.info("Successfully get froze order" + JSON.stringify(order));
+			 if(order) {
 
 				await deductFrozeAmount(order);
 				await updateFrozeAmount(order);
