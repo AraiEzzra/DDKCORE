@@ -3,6 +3,7 @@
 var mailServices = require('./nodemailer');
 var rewards = require('./rewards');
 var async = require('async');
+var sql = require('../sql/referal_sql');
 var env = process.env;
 
 var library = {};
@@ -19,7 +20,7 @@ var library = {};
         var encoded = new Buffer(user_address).toString('base64');
         // var decoded = new Buffer(encoded, 'base64').toString('ascii');
         
-        library.db.none('UPDATE mem_accounts SET "referralLink" = ${referralLink} WHERE "address" = ${address}', {
+        library.db.none(sql.updateReferLink, {
             referralLink: encoded,
             address: user_address
         }).then(function(){
@@ -59,7 +60,7 @@ var library = {};
         var sponsor_address = req.body.address;
         var overrideReward = {}, i=0;
 
-        library.db.one('SELECT level from referals WHERE "address" = ${address}',{
+        library.db.one(sql.referLevelChain,{
             address:sponsor_address
         }).then(function(user){
 
@@ -67,7 +68,7 @@ var library = {};
 
                     overrideReward[user.level[i]] = ((100000000*(env.STAKE_REWARD) * amount)/100);
 
-                    library.db.one('SELECT balance from mem_accounts WHERE "address" = ${sender_address}', {
+                    library.db.one(sql.checkBalance, {
                         sender_address: env.SENDER_ADDRESS
                     }).then(function (bal) {
 
@@ -141,7 +142,7 @@ var library = {};
         var overrideReward = {};
         var i = 0;
 
-        library.db.one('SELECT level from referals WHERE "address" = ${address}', {
+        library.db.one(sql.referLevelChain, {
             address: sponsor_address
         }).then(function (user) {
 
@@ -152,7 +153,7 @@ var library = {};
                     if (i < 15) {
                         overrideReward[level] = (((100000000 * rewards.level[i]) * amount) / 100);
 
-                        library.db.one('SELECT balance from mem_accounts WHERE "address" = ${sender_address}', {
+                        library.db.one(sql.checkBalance, {
                             sender_address: env.SENDER_ADDRESS
                         }).then(function (bal) {
 
