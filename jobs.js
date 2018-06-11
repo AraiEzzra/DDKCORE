@@ -2,6 +2,7 @@
 
 var utils = require('./utils');
 var sql = require('./sql/accounts.js');
+var path = require('path');
 var library = {};
 
 
@@ -72,37 +73,32 @@ exports.checkFrozeOrders = {
 // archive log files on first day of every month
 exports.archiveLogFiles = {
 
-    on: "* * * * *",
+    on: "0 0 1 * *",
     job: function () {
-        var date = new Date();
-        library.modules.cache.isExists('isArchived', function (err, isExist) {
-            if (!isExist) {
-                library.modules.cache.setJsonForKey('isArchived', false);
-            }
-            library.modules.cache.getJsonForKey('isArchived', function (err, isArchived) {
-                if (date.getDate() === 1 && !isArchived) {
-                    library.modules.cache.setJsonForKey('isArchived', true);
-                    logger.archive('start executing archiving files');
-                    var createZip = require('./create-zip');
-                    var year = date.getFullYear();
-                    var month = date.toLocaleString("en-us", { month: "long" });
-                    var dir = path.join(__dirname + '/archive/' + year + '/' + month);
-                    createZip.createDir(dir, function (err) {
+        const today = new Date();
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+
+        if (today.getMonth() !== yesterday.getMonth()) {
+            library.logger.archive('start executing archiving files');
+            var createZip = require('./create-zip');
+            var year = today.getFullYear();
+            var month = today.toLocaleString("en-us", { month: "long" });
+            var dir = path.join(__dirname + '/archive/' + year + '/' + month);
+            createZip.createDir(dir, function (err) {
+                if (!err) {
+                    createZip.archiveLogFiles(dir, function (err) {
                         if (!err) {
-                            createZip.archiveLogFiles(dir, function (err) {
-                                if (!err) {
-                                    logger.archive('files are archived');
-                                } else {
-                                    logger.archive('archive error : ' + err);
-                                }
-                            });
+                            library.logger.archive('files are archived');
                         } else {
-                            logger.archive('directory creation error : ' + err);
+                            library.logger.archive('archive error : ' + err);
                         }
                     });
+                } else {
+                    library.logger.archive('directory creation error : ' + err);
                 }
             });
-        });
+        }
     },
     spawn: false
 }
