@@ -5,9 +5,15 @@ var sql = require('../sql/frogings.js');
 var slots = require('../helpers/slots.js');
 var StakeReward = require('../logic/stakeReward.js');
 
+var reward_sql = require('../sql/referal_sql');
+
 var request = require('request');
 var async = require('async');
 var Promise = require('bluebird');
+
+var rewards = require('../helpers/rewards');
+
+var env = process.env;
 
 // Private fields
 var __private = {};
@@ -166,6 +172,80 @@ Frozen.prototype.bind = function (accounts, rounds, blocks) {
 	};
 };
 
+
+Frozen.prototype.sendStakingReward = function (address, amount,cb) {
+
+	var sponsor_address = address;
+	var amount = amount;
+	var overrideReward = {};
+	var i = 0;
+
+	self.scope.db.one(reward_sql.referLevelChain, {
+		address: sponsor_address
+	}).then(function (user) {
+
+		if (user.level != null && user.level[0] != "0") {
+
+			async.eachSeries(user.level, function (level, callback) {
+				if (i < 15) {
+					overrideReward[level] = (((rewards.level[i]) * amount) / 100);
+
+					self.scope.db.one(reward_sql.checkBalance, {
+						sender_address: env.SENDER_ADDRESS
+					}).then(function (bal) {
+						var senderBal = parseInt(bal.u_balance);
+
+						if (senderBal > 0 && senderBal >= overrideReward[level]) {
+
+							var transactionData = {
+								json: {
+									secret: env.SENDER_SECRET,
+									amount: overrideReward[level],
+									recipientId: level,
+									transactionRefer: 11
+								}
+							};
+
+							self.scope.logic.transaction.sendTransaction(transactionData, function (err, transactionResponse) {
+								if (err) return err;
+								console.log(transactionResponse.body);
+							});
+						} else {
+							var err = ((user.level.length)<15)?(user.level.length):14;							
+							if (senderBal == 0 || i == err) {
+								var error = "No reward";
+								var balance = senderBal;
+								return setImmediate(cb, error,balance);
+							}
+						}
+						callback();
+
+					}).catch(function (err) {
+						return setImmediate(cb, err);
+					});
+				} else {
+					callback();
+				}
+				i++;
+			}, function (err) {
+				if (err) {
+					return setImmediate(cb, err);
+				}
+				return setImmediate(cb,null);
+			});
+
+		} else {
+			var error = "No Introducer Found";
+			return setImmediate(cb, error);
+		}
+
+	}).catch(function (err) {
+		return setImmediate(cb, err);
+	});
+}
+
+
+
 Frozen.prototype.checkFrozeOrders = function () {
 
 	function getfrozeOrder() {
@@ -267,10 +347,17 @@ Frozen.prototype.checkFrozeOrders = function () {
 						if (error)
 							throw error;
 						else {
-							self.scope.logger.info("Successfully transfered reward for freezing an amount and transaction ID is : " + transactionResponse.body.transactionId);
-							resolve();
-						}
+							self.sendStakingReward(order.senderId,transactionData.json.amount,function(err,bal){
+								if(err){
+									console.log(err);
+									if(bal == 0)
+										library.logger.info("Allocation finished With balance : " + bal);
+								}
 
+							self.scope.logger.info("Successfully transfered reward for freezing an amount and transaction ID is : " + transactionResponse.body.transactionId);								
+							resolve();
+							});							
+						}
 					});
 				}).catch(function (err) {
 					self.scope.logger.error(err.stack);
@@ -318,6 +405,9 @@ Frozen.prototype.checkFrozeOrders = function () {
 		}
 	})();
 };
+
+
+
 
 //Update Froze amount into mem_accounts table on every single order
 Frozen.prototype.updateFrozeAmount = function (userData, cb) {

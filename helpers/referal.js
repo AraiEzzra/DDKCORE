@@ -8,33 +8,38 @@ var env = process.env;
 
 var library = {};
 
- exports.Referals =function(scope) {
+exports.Referals = function(scope) {
     library = scope;
- }
+}
 
- module.exports.api = function(app) {
+module.exports.api = function(app) {
 
     app.post('/referral/generateReferalLink', function(req, res) {
 
         var user_address = req.body.secret;
         var encoded = new Buffer(user_address).toString('base64');
         // var decoded = new Buffer(encoded, 'base64').toString('ascii');
-        
+
         library.db.none(sql.updateReferLink, {
             referralLink: encoded,
             address: user_address
-        }).then(function(){
-            return res.status(200).json({ success: true, referralLink: encoded } );
-        }).catch(function (err) {
-            return res.status(400).json( { success: false, err: err.detail } );
+        }).then(function() {
+            return res.status(200).json({
+                success: true,
+                referralLink: encoded
+            });
+        }).catch(function(err) {
+            console.log(err);
+            return res.status(400).json({
+                success: false,
+                err: err.detail
+            });
         });
 
     });
 
-    app.post('/referral/sendEmail',function(req,res){
+    app.post('/referral/sendEmail', function(req, res) {
 
-        // Link to be get from request.
-        // var link = req.protocol + "://" + req.host + ":" + library.config.app.port + '/login';
         var link = req.body.referlink;
         var mailOptions = {
             from: library.config.mailFrom, // sender address
@@ -43,100 +48,99 @@ var library = {};
             text: '', // plmodule.exportsain text body
             html: 'Hello, ' + req.body.email + ' <br><br>\
             <br> Please click on the Referral link below to register.<br><br>\
-            <a href="'+ link + '">Click here to confirm</a>'
+            <a href="' + link + '">Click here to confirm</a>'
         };
 
-        mailServices.sendMail(mailOptions, library.config, function (err) {
+        mailServices.sendMail(mailOptions, library.config, function(err) {
             if (err) {
-                return res.status(400).json({ success: false, error: err });
+                return res.status(400).json({
+                    success: false,
+                    error: err
+                });
             }
-            return res.status(200).json({ success: true, info: 'Mail sent successfully.' } );
+            return res.status(200).json({
+                success: true,
+                info: 'Mail sent successfully'
+            });
         });
     });
 
-    app.post('/referral/stakeReward',function(req,res){
+    app.post('/referral/stakeReward', function(req, res) {
 
         var amount = req.body.amount;
         var sponsor_address = req.body.address;
-        var overrideReward = {}, i=0;
+        var overrideReward = {},
+            i = 0;
 
-        library.db.one(sql.referLevelChain,{
-            address:sponsor_address
-        }).then(function(user){
+        library.db.one(sql.referLevelChain, {
+            address: sponsor_address
+        }).then(function(user) {
 
-                if (user.level != null && user.level[0] != "0") {
+            if (user.level != null && user.level[0] != "0") {
 
-                    overrideReward[user.level[i]] = ((100000000*(env.STAKE_REWARD) * amount)/100);
+                overrideReward[user.level[i]] = ((100000000 * (env.STAKE_REWARD) * amount) / 100);
 
-                    library.db.one(sql.checkBalance, {
-                        sender_address: env.SENDER_ADDRESS
-                    }).then(function (bal) {
+                library.db.one(sql.checkBalance, {
+                    sender_address: env.SENDER_ADDRESS
+                }).then(function(bal) {
 
-                        if (parseInt(bal.balance) > 0) {
+                    if (parseInt(bal.u_balance) > 0) {
 
-                            var transactionData = {
-                                json: {
-                                    secret: env.SENDER_SECRET,
-                                    amount: overrideReward[user.level[i]],
-                                    recipientId: user.level[i],
-                                    transactionRefer: 11
-                                }
-                            };
+                        var transactionData = {
+                            json: {
+                                secret: env.SENDER_SECRET,
+                                amount: overrideReward[user.level[i]],
+                                recipientId: user.level[i],
+                                transactionRefer: 11
+                            }
+                        };
 
-                            library.logic.transaction.sendTransaction(transactionData, function (err, transactionResponse) {
-                                if (err) return err;
-                                console.log(transactionResponse.body);
-                                if(transactionResponse.body.success == false)
-                                {
-                                    return res.status(400).json(
-                                        {
-                                            success: false,
-                                            message: "Allocation is not sufficient No reward"
-                                        }
-                                    );
-                                }
-                                else
-                                {
-                                    return res.status(200).json({
-                                            success: true,
-                                            message: "Reward awarded successfully"
-                                        }
-                                    );
-                                }
-                            });
-
-                        } else {
-                            return res.status(400).json({
+                        library.logic.transaction.sendTransaction(transactionData, function(err, transactionResponse) {
+                            if (err) return err;
+                            console.log(transactionResponse.body);
+                            if (transactionResponse.body.success == false)
+                                return res.status(400).json({
                                     success: false,
-                                    message: "Allocation is empty No reward"
-                            });
-
-                        }
-
-                    }).catch(function (err) {
-                        return res.status(400).json({
-                                success: false,
-                                err: err.message,
-                                reward: 0
+                                    message: "Allocation is not sufficient No reward"
+                                });
+                            else
+                                return res.status(200).json({
+                                    success: true,
+                                    message: "Reward awarded successfully"
+                                });
                         });
-                    });
-                }
-            else {
-                return res.status(400).json({
+
+                    } else {
+                        return res.status(400).json({
+                            success: false,
+                            message: "Allocation is empty No reward"
+                        });
+                    }
+
+                }).catch(function(err) {
+                    return res.status(400).json({
                         success: false,
-                        message: "No Introducer Found"
+                        err: err.message
+                    });
+                });
+            } else {
+                return res.status(400).json({
+                    success: false,
+                    message: "No Introducer Found"
                 });
             }
 
-        }).catch(function(err){
-            return res.status(400).json({ success: false, err: err.message, reward: 0 } );
+        }).catch(function(err) {
+            return res.status(400).json({
+                success: false,
+                err: err.message
+            });
         });
 
     });
 
-    app.post('/referral/overridingReward', function (req, res) {
+    app.post('/referral/overridingReward', function(req, res) {
 
-        //address, amount
         var sponsor_address = req.body.sponser;
         var amount = req.body.amount;
         var overrideReward = {};
@@ -144,20 +148,20 @@ var library = {};
 
         library.db.one(sql.referLevelChain, {
             address: sponsor_address
-        }).then(function (user) {
+        }).then(function(user) {
 
             if (user.level != null && user.level[0] != "0") {
 
-                async.eachSeries(user.level, function (level, callback) {
+                async.eachSeries(user.level, function(level, callback) {
 
                     if (i < 15) {
                         overrideReward[level] = (((100000000 * rewards.level[i]) * amount) / 100);
 
                         library.db.one(sql.checkBalance, {
                             sender_address: env.SENDER_ADDRESS
-                        }).then(function (bal) {
+                        }).then(function(bal) {
 
-                            if (parseInt(bal.balance) > 0 && parseInt(bal.balance) >= overrideReward[level]) {
+                            if (parseInt(bal.u_balance) > 0 && parseInt(bal.u_balance) >= overrideReward[level]) {
 
                                 var transactionData = {
                                     json: {
@@ -168,62 +172,61 @@ var library = {};
                                     }
                                 };
 
-                                library.logic.transaction.sendTransaction(transactionData, function (err, transactionResponse) {
+                                library.logic.transaction.sendTransaction(transactionData, function(err, transactionResponse) {
                                     if (err) return err;
                                     console.log(transactionResponse.body);
                                 });
                             } else {
-                                if (parseInt(bal.balance) == 0) {
+                                var err = ((user.level.length)<=15)?(user.level.length):14;
+                                if (parseInt(bal.u_balance) == 0 || i == err) {
                                     return res.status(400).json({
-                                            success: false,
-                                            message: "Allocation is empty No reward"
+                                        success: false,
+                                        balance: parseInt(bal.u_balance)/100000000,
+                                        message: "Allocation is empty No reward"
                                     });
                                 }
                             }
                             callback();
 
-                        }).catch(function (err) { 
+                        }).catch(function(err) {
                             return res.status(400).json({
-                                    success: false,
-                                    err: err.message,
-                                    reward: 0
+                                success: false,
+                                err: err.message,
+                                reward: 0
                             });
                         });
                     } else {
                         callback();
                     }
                     i++;
-                }, function (err) {
+                }, function(err) {
                     if (err) {
                         return res.status(400).json({
-                                success: false,
-                                err: err
+                            success: false,
+                            err: err
                         });
                     }
                     return res.status(200).json({
-                            success: true,
-                            message: "Reward awarded successfully"
+                        success: true,
+                        message: "Reward awarded successfully"
                     });
                 });
 
             } else {
                 return res.status(400).json({
-                        success: false,
-                        message: "No Introducer Found"
+                    success: false,
+                    message: "No Introducer Found"
                 });
             }
 
-        }).catch(function (err) {
+        }).catch(function(err) {
             return res.status(400).json({
-                    success: false,
-                    err: err.message,
-                    overrideReward: 0
+                success: false,
+                err: err.message,
+                overrideReward: 0
             });
         });
 
     });
 
- }
-
-
-
+}

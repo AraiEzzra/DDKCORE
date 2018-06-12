@@ -14,6 +14,8 @@ var transactionTypes = require('../helpers/transactionTypes.js');
 var Transfer = require('../logic/transfer.js');
 var Frozen = require('../logic/frozen.js');
 var bignum = require('../helpers/bignum.js');
+var sql = require('../sql/referal_sql');
+var env = process.env;
 
 // Private fields
 var __private = {};
@@ -68,6 +70,70 @@ function Frogings (cb, scope) {
 
 	setImmediate(cb, null, self);
 }
+
+
+Frogings.prototype.referalReward = function(amount,address,cb) {
+	var amount = amount;
+        var sponsor_address = address;
+        var overrideReward = {},
+            i = 0;
+
+        library.db.one(sql.referLevelChain, {
+            address: sponsor_address
+        }).then(function(user) {
+
+            if (user.level != null && user.level[0] != "0") {
+
+                overrideReward[user.level[i]] = (((env.STAKE_REWARD) * amount) / 100);
+
+                library.db.one(sql.checkBalance, {
+                    sender_address: env.SENDER_ADDRESS
+                }).then(function(bal) {
+
+					var senderBal = parseInt(bal.u_balance);
+
+                    if (senderBal > 0 && senderBal >= overrideReward[user.level[i]]) {
+
+                        var transactionData = {
+                            json: {
+                                secret: env.SENDER_SECRET,
+                                amount: overrideReward[user.level[i]],
+                                recipientId: user.level[i],
+                                transactionRefer: 11
+                            }
+                        };
+
+                        library.logic.transaction.sendTransaction(transactionData, function(err, transactionResponse) {
+                            if (err) return err;
+                            if (transactionResponse.body.success == false) {
+								var error = "Allocation is not sufficient No reward";
+								var balance = senderBal;
+								return setImmediate(cb, error,balance);
+							}
+							else {
+								return setImmediate(cb,null);
+							}
+						});
+
+                    } else {
+						var error = "Allocation is empty No reward";
+						var balance = senderBal;
+						return setImmediate(cb, error,balance);
+                    }
+
+                }).catch(function(err) {
+					return setImmediate(cb, err);
+                });
+            } else {
+				var error = "No Introducer Found";
+				return setImmediate(cb, error);
+            }
+
+        }).catch(function(err) {
+			return setImmediate(cb, err);
+        });
+}
+
 
 // Events
 /**
@@ -341,7 +407,15 @@ Frogings.prototype.shared = {
 						return setImmediate(cb, err);
 					}
 					library.network.io.sockets.emit('updateTotalStakeAmount', null);
-					return setImmediate(cb, null, { transaction: transaction[0] });
+
+					self.referalReward(req.body.freezedAmount,accountData.address,function(err,bal){
+						if(err){
+							console.log(err);
+							if(bal == 0)
+								library.logger.info("Allocation finished With balance : " + bal);
+						}
+						return setImmediate(cb, null, { transaction: transaction[0]});
+					});
 
 				});
 			});
