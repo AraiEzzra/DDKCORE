@@ -1,4 +1,3 @@
-
 /**
  * @memberof module:helpers
  * @module helpers/diff

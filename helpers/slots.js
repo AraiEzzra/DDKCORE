@@ -1,6 +1,5 @@
-
-
 let constants = require('./constants.js');
+
 /**
  * @memberof module:helpers
  * @module helpers/slots

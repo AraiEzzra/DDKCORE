@@ -9,16 +9,33 @@ let tokenValidator = require('../../tokenValidator');
  * Binds api with modules and creates common url.
  * - End point: `/api/accounts`
  * - Public API:
-	- post 	/open
-	- get 	/getBalance
-	- get 	/getPublicKey
-	- post 	/generatePublicKey
-	- get 	/delegates
-	- get 	/delegates/fee
-	- put 	/delegates
-	- get 	/
+	- post /open
+	- get /getBalance
+	- get /getPublicKey
+	- post /generatePublicKey
+	- get /delegates
+	- get /delegates/fee
+	- put /delegates
+	- get /
+	- get /count
+	- get /getCirculatingSupply
+	- get /totalSupply
+	- post /migrateData 
+	- post /existingETPSUser/validate
+	- post /verifyUserToComment
  * - Private API:
- * 	- get 	/count
+ * 	- get /count
+	- get /lock
+	- get /unlock
+	- post /logout
+	- post /generateQRCode
+	- post /verifyOTP
+	- post /enableTwoFactor
+	- post /disableTwoFactor
+	- get /checkTwoFactorStatus
+	- get /getWithdrawlStatus
+	- post /sendWithdrawlAmount
+	- post /enablePendingGroupBonus
  * @memberof module:accounts
  * @requires helpers/Router
  * @requires helpers/httpApi

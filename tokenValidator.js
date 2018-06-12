@@ -3,6 +3,14 @@
 let jwt = require('jsonwebtoken');
 let jwtSecret = process.env.JWT_SECRET;
 
+/**
+ * @desc verify token validation
+ * @implements {jwt.verify}
+ * @param {Object} req 
+ * @param {Object} res 
+ * @param {function} next 
+ * @return {function} next
+ */
 module.exports = function (req, res, next) {
 	let token = req.body.token || req.query.token || req.headers['x-access-token'];
 	if (token) {

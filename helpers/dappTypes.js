@@ -1,4 +1,3 @@
-
 /**
  * @typedef {Object} dappType
  * - 0: DAPP

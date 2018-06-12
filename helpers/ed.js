@@ -1,6 +1,5 @@
-
-
 let sodium = require('sodium').api;
+
 /**
  * Crypto functions that implements sodium.
  * @memberof module:helpers

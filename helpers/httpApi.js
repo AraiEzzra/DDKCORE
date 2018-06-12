@@ -1,4 +1,3 @@
-
 /**
  * Middleware functions to add cors, log errors and conections, send status
  * and setup router.

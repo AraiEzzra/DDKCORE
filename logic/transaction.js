@@ -1,5 +1,3 @@
-
-
 let bignum = require('../helpers/bignum.js');
 let ByteBuffer = require('bytebuffer');
 let constants = require('../helpers/constants.js');

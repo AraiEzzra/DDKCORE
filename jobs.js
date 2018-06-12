@@ -10,7 +10,24 @@ exports.attachScope = function (scope) {
 	library = scope;
 };
 
-// Save data on elasticsearch server
+/** 
+ * @desc update elasticsearch server data every one minute.
+ * @desc get data from DDK_test database.
+ * @param {Table} blocks
+ * @param {Table} dapps
+ * @param {Table} delegates
+ * @param {Table} mem_accounts
+ * @param {Table} migrations
+ * @param {Table} rounds_fees
+ * @param {Table} trs
+ * @param {Table} signatures
+ * @param {Table} stake_orders
+ * @param {Table} peers
+ * @param {Table} peers_dapp
+ * @param {Table} intransfer
+ * @param {Table} outtransfer
+ * @param {Table} multisignatures
+*/
 exports.updateDataOnElasticSearch = {
 
 	on: '* * * * *',
@@ -55,22 +72,26 @@ exports.updateDataOnElasticSearch = {
 	spawn: false
 };
 
-// daily check and update stake_orders, if any Active order expired or not
+/** 
+ * @desc checks pending stake rewards functionality every day at mid night.
+*/
 exports.checkFrozeOrders = {
 
 	on: '* * * * *',
 	job: function () {
 		let date = new Date();
-		library.logic.frozen.checkFrozeOrders(); //For testing purpose only
-		if (date.getHours() === 10 && date.getMinutes() === 20) { // Check the time
-
+		//FIXME: comment or remove below statement once this goes live
+		library.logic.frozen.checkFrozeOrders();
+		if (date.getHours() === 10 && date.getMinutes() === 20) {
 			library.logic.frozen.checkFrozeOrders();
 		}
 	},
 	spawn: false
 };
 
-// archive log files on first day of every month
+/** 
+ * @desc archive log files every first day of a month
+*/
 exports.archiveLogFiles = {
 
 	on: '0 0 1 * *',
@@ -103,7 +124,9 @@ exports.archiveLogFiles = {
 	spawn: false
 };
 
-// Unlock pending users everyday at midnight i.e 12AM
+/** 
+ * @desc checks for pending users and unlocks them everyday at midnight
+*/
 exports.unlockLockedUsers = {
 
 	on: '00 00 00 * * *',

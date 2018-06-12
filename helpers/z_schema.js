@@ -1,5 +1,3 @@
-
-
 let ip = require('ip');
 /**
  * Uses JSON Schema validator z_schema to register custom formats.

@@ -1,15 +1,18 @@
-
-
-/*
-* Generalised method to create, delete, search or check existence of an index
-* @isIndexExists
+/**
+  * @desc permorms cluster operations
+  * @param {module} client - elasticsearch module
 */
 
 let client = require('./connection.js');
 
 /**
-* check if the index exists
+* 
+* @desc check if an index already exists in the cluster
+* @param {String} indexName - index name
+* @return bool - true or false
+* 
 */
+
 function isIndexExists(indexName) {  
 	let result = client.indices.exists({
 		index: indexName
@@ -19,8 +22,14 @@ function isIndexExists(indexName) {
 exports.isIndexExists = isIndexExists; 
 
 /**
-* create an index
+* 
+* @desc create an index
+* @param {String} indexName - index name
+* @param {function} cb - Callback function.
+* @return {String} - err or null
+* 
 */
+
 function createIndex(indexName, cb) { 
 	client.indices.create({
 		index: indexName
@@ -35,7 +44,12 @@ function createIndex(indexName, cb) {
 exports.createIndex = createIndex;
 
 /**
-* Delete an existing index
+* 
+* @desc Delete an existing index
+* @param {String} indexName - index name
+* @param {function} cb - Callback function.
+* @return {String} - err or null
+* 
 */
 function deleteIndex(indexName, cb) {  
 	client.indices.delete({
@@ -52,7 +66,13 @@ function deleteIndex(indexName, cb) {
 exports.deleteIndex = deleteIndex;
 
 /**
-* Search in elastic search
+* 
+* @desc Search in elastic search
+* @param {String} index - index name
+* @param {Object} queryMatch - search query
+* @param {function} cb - Callback function.
+* @return {String} - err or null
+* 
 */
 function searchQuery(index, queryMatch, cb) {
 	client.search({

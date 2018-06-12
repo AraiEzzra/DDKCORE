@@ -1,5 +1,3 @@
-
-
 /**
  * Validates sort options, methods and fields.
  * @memberof module:helpers

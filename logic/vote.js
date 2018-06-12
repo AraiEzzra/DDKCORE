@@ -1,5 +1,3 @@
-
-
 let async = require('async');
 let constants = require('../helpers/constants.js');
 let exceptions = require('../helpers/exceptions.js');
@@ -460,7 +458,6 @@ Vote.prototype.updateAndCheckVote = function (voteInfo, cb) {
 
 		return new Promise(function (resolve, reject) {
 
-			//To check that its upvote or downvote
 			if ((votes[0])[0] === '+') {
 				resolve(1);
 			} else {
@@ -504,7 +501,6 @@ Vote.prototype.updateAndCheckVote = function (voteInfo, cb) {
 				})
 				.catch(function (err) {
 					library.logger.error(err.stack);
-					//return setImmediate(cb, err);
 					reject(new Error(cb, err));
 				});
 		});
@@ -540,14 +536,12 @@ Vote.prototype.updateAndCheckVote = function (voteInfo, cb) {
 				})
 				.catch(function (err) {
 					library.logger.error(err.stack);
-					//return setImmediate(cb, 'vote updation in mem_accounts table error');
 					reject(new Error(cb, 'vote updation in mem_accounts table error'));
 				});
 
 		});
 	}
 
-	// Async/await function 
 	(async function () {
 		try {
 			let voteType = await checkUpvoteDownvote(votes);

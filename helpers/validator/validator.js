@@ -1,5 +1,3 @@
-
-
 // Dependencies
 let utils = require('./utils.js');
 let extend = utils.extend;

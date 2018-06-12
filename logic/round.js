@@ -1,5 +1,3 @@
-
-
 let pgp = require('pg-promise');
 let RoundChanges = require('../helpers/RoundChanges.js');
 let sql = require('../sql/rounds.js');

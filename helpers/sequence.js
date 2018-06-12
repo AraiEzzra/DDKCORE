@@ -1,5 +1,3 @@
-
-
 let extend = require('extend');
 let util = require('util');
 

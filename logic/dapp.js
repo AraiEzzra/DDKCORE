@@ -1,5 +1,3 @@
-
-
 let ByteBuffer = require('bytebuffer');
 let constants = require('../helpers/constants.js');
 let dappCategories = require('../helpers/dappCategories.js');

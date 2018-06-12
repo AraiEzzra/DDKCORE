@@ -1,5 +1,3 @@
-
-
 /**
  * Applies methods from parameters.
  * @memberof module:helpers

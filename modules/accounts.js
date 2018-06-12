@@ -318,8 +318,6 @@ Accounts.prototype.shared = {
 						totalFrozeAmount: account.totalFrozeAmount
 					};
 					accountData.token = token;
-					//library.cache.client.set('jwtToken_' + account.address, token, 'ex', 100);
-					/****************************************************************/
 
 					let data = {
 						address: accountData.address,
@@ -597,8 +595,6 @@ Accounts.prototype.shared = {
 				return setImmediate(cb, 'Missing required property: address or publicKey');
 			}
 
-			// self.getAccount can accept publicKey as argument, but we also compare here
-			// if account publicKey match address (when both are supplied)
 			let address = req.body.publicKey ? self.generateAddressByPublicKey(req.body.publicKey) : req.body.address;
 			if (req.body.address && req.body.publicKey && address !== req.body.address) {
 				return setImmediate(cb, 'Account publicKey does not match address');
@@ -855,7 +851,6 @@ Accounts.prototype.shared = {
 			senderId: address
 		})
 		.then(function (trs) {
-			// send trs object if want all transations details for {address}
 			return setImmediate(cb, null, { address: trs[0].senderId });
 		})
 		.catch(function (err) {
@@ -902,7 +897,6 @@ Accounts.prototype.internal = {
 		return setImmediate(cb, null, { success: true, accounts: __private.accounts });
 	},
 
-	// lock account API
 	lockAccount: function (req, cb) {
 		library.schema.validate(req.body, schema.lockAccount, function (err) {
 			if (!err) {
@@ -921,7 +915,6 @@ Accounts.prototype.internal = {
 						if (req.body.accType) {
 							data.acc_type = req.body.accType;
 							let lastBlock = modules.blocks.lastBlock.get();
-							//data.startTime = lastBlock.timestamp;
 							data.endTime = library.logic.contract.calcEndTime(req.body.accType, lastBlock.timestamp);
 							if (req.body.amount) {
 								data.transferedAmount = req.body.amount;
@@ -963,7 +956,6 @@ Accounts.prototype.internal = {
 						})
 						.then(function (row) {
 							if (row.status == 0) {
-								//return setImmediate(cb, 'Account is already locked');
 								return cb('Account is already locked');
 							}
 							library.db.none(sql.disableAccount, {
@@ -977,8 +969,6 @@ Accounts.prototype.internal = {
 								library.logger.error(err.stack);
 								return setImmediate(cb, err);
 							});
-							//return setImmediate(cb, null, row.status);
-							//cb(null);
 						})
 						.catch(function (err) {
 							library.logger.error(err.stack);
@@ -992,7 +982,6 @@ Accounts.prototype.internal = {
 		});
 	},
 
-	// unlock account API
 	unlockAccount: function (req, cb) {
 		library.schema.validate(req.body, schema.unlockAccount, function (err) {
 			if (!err) {
@@ -1017,7 +1006,6 @@ Accounts.prototype.internal = {
 		});
 	},
 
-	// logout API
 	logout: function (req, cb) {
 		delete req.decoded;
 		return setImmediate(cb, null);
@@ -1039,17 +1027,6 @@ Accounts.prototype.internal = {
 			};
 			library.cache.client.set('2fa_user_' + user.address, JSON.stringify(user));
 			return setImmediate(cb, null, { success: true, dataUrl: data_url });
-			/* library.cache.client.exists('2fa_user_' + user.address, function (err, isExist) {
-				if (!isExist) {
-					
-				} else {
-					cache.prototype.delHash('2fa_user_' + user.address, function (isdel) {
-						cache.prototype.hmset('2fa_user_' + user.address, JSON.stringify(user), 'ex', 30);
-						return setImmediate(cb, null, { success: true, dataUrl: data_url });
-					});
-				}
-			}); */
-
 		});
 	},
 
@@ -1153,7 +1130,6 @@ Accounts.prototype.internal = {
 		});
 	},
 
-	// Get user's status before sending pending group bonus 
 	getWithdrawlStatus: function (req, cb) {
 		library.schema.validate(req.body, schema.enablePendingGroupBonus, function (err) {
 			if (err) {
@@ -1220,7 +1196,6 @@ Accounts.prototype.internal = {
 					.then(function (directSponsors) {
 						if (directSponsors.length >= 2) {
 
-							//check at least two active stake orders
 							let activeStakeCount = 0;
 							directSponsors.forEach(function (directSponsor, index) {
 								library.db.query(sql.findActiveStakeAmount, {
@@ -1260,7 +1235,6 @@ Accounts.prototype.internal = {
 				},
 				checkRatio: function (seriesCb) {
 
-					// check ratio 1:10 to qualify for enabling token distribution
 					library.db.query(sql.findGroupBonus, {
 						senderId: req.body.address
 					})
@@ -1295,7 +1269,6 @@ Accounts.prototype.internal = {
 		});
 	},
 
-	// Send withdrawl amount to respective address
 	sendWithdrawlAmount: function (req, cb) {
 		library.schema.validate(req.body, schema.enablePendingGroupBonus, function (err) {
 			if (err) {
@@ -1309,7 +1282,6 @@ Accounts.prototype.internal = {
 				transferedAmount: nextBonus,
 				accType: 5
 			};
-			//Send amount through smart contract
 			library.logic.contract.sendContractAmount([userInfo], function (err, trsResponse) {
 				if (err) {
 					return setImmediate(cb, err);

@@ -1,5 +1,3 @@
-
-
 /**
  * Buffer functions that implements bignumber.
  * @memberof module:helpers

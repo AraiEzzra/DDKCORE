@@ -1,5 +1,3 @@
-
-
 /**
  * @typedef {Object} dappCategory
  * - 0: Education

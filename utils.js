@@ -9,8 +9,7 @@ exports.validateClient = function (req, res, next) {
 };
 
 /**
- * Merge object `b` into `a`.
- *
+ * @desc Merge object `b` into `a`.
  * @param {Object} a
  * @param {Object} b
  * @return {Object} a
@@ -31,10 +30,11 @@ exports.merge = function merge(a, b) {
 };
 
 /**
- * Make bulk data to be saved on elasticsearch server.
- *
- * @param {Object} list
- * @param {Object} bulk
+ * @desc Make bulk data to be saved on elasticsearch server.
+ * @param {Array} list
+ * @param {String} index
+ * @param {Array} bulk
+ * @returns {Array} bulk
  */
 exports.makeBulk = function (list, index) {
 	let bulk = [], indexId;
@@ -50,14 +50,6 @@ exports.makeBulk = function (list, index) {
 		} else {
 			indexId = list[current].height;
 		} 
-		if(index === 'blocks') {
-			list[current].generatorId = Accounts.prototype.generateAddressByPublicKey(list[current].generatorPublicKey);
-		}
-		
-		if (index === 'blocks') {
-			list[current].generatorId = Accounts.prototype.generateAddressByPublicKey(list[current].generatorPublicKey);
-		}
-		
 		if (index === 'blocks') {
 			list[current].generatorId = Accounts.prototype.generateAddressByPublicKey(list[current].generatorPublicKey);
 		}
@@ -71,10 +63,10 @@ exports.makeBulk = function (list, index) {
 };
 
 /**
- * Index data on elasticsearch server.
- *
- * @param {Object} list
+ * @desc creating bulk index based on data on elasticsearch server.
+ * @param {String} index
  * @param {Object} bulk
+ * @returns {Promise} {Resolve|Reject}
  */
 exports.indexall = function (bulk, index) {
 	return new Promise(function(resolve, reject) {

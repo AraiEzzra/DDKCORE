@@ -1,4 +1,3 @@
-
 /**
  * @namespace exceptions
  * @memberof module:helpers

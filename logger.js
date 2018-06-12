@@ -1,11 +1,9 @@
-
-
-// modified logger configuration
-//requiring dependencies
 let winston = require('winston');
 require('winston-daily-rotate-file');
 
-//defined custom log levels for winston logger
+/** 
+ * @desc custom levels for winston logger
+*/
 const levels = {
 	archive: 0,
 	error: 1,
@@ -18,7 +16,9 @@ const levels = {
 	trace: 8,
 };
 
-//Creating file transport to write logs into a file. This file daily rotates
+/** 
+ * @desc Creating file transport to write logs into a file. This file daily rotates
+*/
 let transport = new (winston.transports.DailyRotateFile)({
 	filename: 'logs/./log',
 	datePattern: 'yyyy-MM-dd.',
@@ -31,7 +31,10 @@ let transport = new (winston.transports.DailyRotateFile)({
 	}
 });
 
-//creating file transport to write archived logs into a file. Only "archive" logs will be written in this file
+/** 
+ * @desc creating file transport to write archived logs into a file. 
+ * @desc Only "archive" logs will be written in this file.
+*/
 let traceTransport = new (winston.transports.File)({
 	filename: './logs/archive.log',
 	level: 'archive',
@@ -44,7 +47,12 @@ let traceTransport = new (winston.transports.File)({
 	}
 });
 
-//Logger constructor
+/** 
+ * @desc logger Constructor
+ * @param {String} sessionId - session is to be written in each log
+ * @param {String} address - address od the current logged-in user
+ * @returns {Transport}  
+*/
 class Logger {
 	constructor(sessionId, address) {
 		this.transport = transport;
@@ -70,4 +78,5 @@ class Logger {
 	}
 }
 
+//exports module
 module.exports = Logger;

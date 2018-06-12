@@ -1,5 +1,3 @@
-
-
 let async = require('async');
 let bignum = require('./bignum');
 let fs = require('fs');

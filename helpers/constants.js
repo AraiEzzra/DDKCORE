@@ -1,5 +1,3 @@
-
-
 /**
  * @namespace constants
  * @memberof module:helpers

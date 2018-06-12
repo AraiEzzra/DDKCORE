@@ -1,6 +1,13 @@
+/** 
+ * @desc user groups
+ * @param {Integer} PUBLIC - public users
+ * @param {Integer} CONTRIBUTORS - contributors
+ * @param {Integer} ADVISORS - advisors
+ * @param {Integer} TEAMS - DDK team members
+ * @param {Integer} FOUNDERS - founders
+ * @returns {Object}
+*/
 
-
-// define user groups
 module.exports = {
 	PUBLIC : 0,
 	CONTRIBUTORS : 1,

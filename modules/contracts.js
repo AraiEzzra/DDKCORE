@@ -9,7 +9,17 @@ let __private = {}, self = null,
 	library = null, modules = null;
 __private.assetTypes = {};
 
-//Contracts Constuctor Initialized from app.js
+/**
+ * Initializes library with scope content and generates a Contract instance.
+ * Calls logic.transaction.attachAssetType().
+ * @memberof module:contracts
+ * @class
+ * @classdesc Main contracts methods.
+ * @implements module:contracts.Contract#Contract
+  * @param {scope} scope - App instance.
+ * @param {function} cb - Callback function.
+ * @return {setImmediateCallback} With `this` as data.
+ */
 function Contracts(cb, scope) {
 	library = {
 		logger: scope.logger,
@@ -44,7 +54,11 @@ function Contracts(cb, scope) {
 	setImmediate(cb, null, self);
 }
 
-//OnBInd Event called from app.js
+/**
+ * on bind called when modules are ready and launched.
+ * attach required modules to be used.
+  * @param {scope} scope - App instance.
+ */
 Contracts.prototype.onBind = function (scope) {
 	modules = {
 		loader: scope.loader,

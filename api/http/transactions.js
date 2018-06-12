@@ -45,7 +45,6 @@ function TransactionsHttpApi (transactionsModule, app, logger, cache) {
 		'get /unconfirmed/get': 'getUnconfirmedTransaction',
 		'get /unconfirmed': 'getUnconfirmedTransactions',
 		'put /': 'addTransactions',
-		'post /generateOTP': 'generateOTP'
 	});
 
 	httpApi.registerEndpoint('/api/transactions', app, router, transactionsModule.isLoaded);

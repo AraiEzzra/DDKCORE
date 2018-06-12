@@ -1,5 +1,3 @@
-
-
 let utils = require('../validator/utils');
 
 module.exports = JsonSchema;

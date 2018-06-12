@@ -11,6 +11,7 @@ let jwtSecret = process.env.JWT_SECRET;
  * Renders main page wallet from public folder.
  * - Public API:
  * 	- get	/
+ *  - get /user/status
  * @memberof module:server
  * @requires helpers/Router
  * @requires helpers/httpApi

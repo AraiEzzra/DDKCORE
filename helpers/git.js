@@ -1,4 +1,3 @@
-
 /*
 * Helper module for parsing git commit information
 *

@@ -1,5 +1,3 @@
-
-
 let constants = require('../helpers/constants.js');
 
 // Private fields
@@ -123,7 +121,7 @@ BlockReward.prototype.calcSupply = function (height) {
 		}
 	}
 
-	for (i = 0; i < rewards.length; i++) {
+	for (var i = 0; i < rewards.length; i++) {
 		let reward = rewards[i];
 		supply += reward[0] * reward[1];
 	}

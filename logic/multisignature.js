@@ -1,5 +1,3 @@
-
-
 let async = require('async');
 let ByteBuffer = require('bytebuffer');
 let constants = require('../helpers/constants.js');

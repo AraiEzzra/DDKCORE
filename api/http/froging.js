@@ -7,6 +7,13 @@ let httpApi = require('../../helpers/httpApi');
  * Binds api with modules and creates common url.
  * - End point: `/api/froging`
  * - Public API:
+	- post /freeze
+	- get /count
+	- post /getAllOrders
+	- post /getAllActiveOrders
+	- get /countStakeholders
+	- get /getTotalETPStaked
+	- post /getMyETPFrozen
  * @memberof module:frogings
  * @requires helpers/Router
  * @requires helpers/httpApi

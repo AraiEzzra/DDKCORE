@@ -1,5 +1,3 @@
-
-
 let _ = require('lodash');
 let Peer = require('../logic/peer.js');
 

@@ -6,8 +6,24 @@
 let env = process.env;
 
 /**
- * Expose environment configuration
- */
+ * 
+ * @desc loads environment variables
+ * @param String redisURL - redis URL to connect to
+ * @param Object db - get db password
+ * @param Object redis - get redis password
+ * @param Object session - get session secret
+ * @param Object forging - get forging secret
+ * @param Object ssl - get ssl key & cert
+ * @param Object dapp - get dapp master pasowrd
+ * @param Object sender - get sender(public address) details required to send transation
+ * @param String nethash - get blockchain's nethash
+ * @param String jwt - get secret for JSON Web Token 
+ * @param Object mailFrom, mailTo, accessToken, clientId, clientSecret, hashSecret - cridentials required for emails service
+ * @param Object users - users list
+ * @return Object - with environment credentials
+ * 
+*/
+ 
 
 module.exports = {
 	redisURL: env.REDIS_URL || env.REDISTOGO_URL || '',
@@ -44,20 +60,12 @@ module.exports = {
 	jwt: {
 		secret: env.JWT_SECRET,
 	},
-	msgServiceAuthKey: env.MSG91_AUTH_KEY,
 	mailFrom: env.MAILFROM,
 	mailTo: env.MAILTO,
 	accessToken: env.ACCESSTOKEN,
 	clientId: env.CLIENT_ID,
 	clientSecret: env.CLIENT_SECRET,
 	hashSecret: env.HASH_SECRET,
-
-	/*  TYPE_0: PUBLIC Account 
-      TYPE_1: CONTRIBUTORS Account
-      TYPE_2: ADVISORS Account
-      TYPE_3: TEAMS Account
-      TYPE_4: FOUNDERS Account
-  */
 	users: [
 		{
 			secret: env.PUBLIC_SECRET,

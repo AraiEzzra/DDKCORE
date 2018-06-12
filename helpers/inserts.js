@@ -1,5 +1,3 @@
-
-
 let pgp = require('pg-promise');
 
 /**

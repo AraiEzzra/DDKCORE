@@ -1,5 +1,3 @@
-
-
 let util = require('util');
 
 module.exports = JsonSchemaField;

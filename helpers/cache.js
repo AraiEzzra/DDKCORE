@@ -1,5 +1,3 @@
-
-
 let redis = require('redis');
 
 /**

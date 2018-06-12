@@ -1,5 +1,3 @@
-
-
 let RateLimit = require('express-rate-limit');
 
 let defaults = {

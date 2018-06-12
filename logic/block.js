@@ -6,8 +6,6 @@ let ByteBuffer = require('bytebuffer');
 let BlockReward = require('../logic/blockReward.js');
 let Contract = require('../logic/contract.js');
 let constants = require('../helpers/constants.js');
-
-// Private fields
 let __private = {};
 
 /**

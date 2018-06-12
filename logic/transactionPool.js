@@ -1,5 +1,3 @@
-
-
 let async = require('async');
 let config = require('../config.json');
 let constants = require('../helpers/constants.js');

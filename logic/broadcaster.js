@@ -1,5 +1,3 @@
-
-
 let async = require('async');
 let constants = require('../helpers/constants.js');
 let jobsQueue = require('../helpers/jobsQueue.js');

@@ -17,9 +17,11 @@ let httpApi = require('../../helpers/httpApi');
 	- put	/
 	- get	/getNextForgers
  * - Private API:
- * 	- post 	/forging/enable
- * 	- post 	/forging/disable
- * 	- get 	/forging/status
+  	- post 	/forging/enable
+  	- post 	/forging/disable
+  	- get 	/forging/status
+  	- get /getLatestVoters
+ 	- get /getLatestDelegates
  * - Debug API:
  * 	- get	/forging/disableAll
  * 	- get	/forging/enableAll

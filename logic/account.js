@@ -1,12 +1,8 @@
-
-
 let pgp = require('pg-promise');
 let path = require('path');
 let jsonSql = require('json-sql')();
 jsonSql.setDialect('postgresql');
 let constants = require('../helpers/constants.js');
-
-// Private fields
 let self, library;
 
 /**
@@ -753,19 +749,6 @@ Account.prototype.merge = function (address, diff, cb) {
 								round: diff.round
 							}
 						});
-						/* if (diff['rewards']) {
-								update.$dec = update.$dec || {};
-								update.$dec[value] = Math.floor(Math.abs(trueValue));
-								if (value === 'balance') {
-									round.push({
-										query: 'INSERT INTO mem_round ("address", "amount") SELECT ${address}, (${amount})::bigint FROM mem_accounts2delegates WHERE "accountId" = ${address};',
-										values: {
-											address: '4995063339468361088E',
-											amount: trueValue
-										}
-									});
-								}
-							} */
 					}
 				} else if (trueValue < 0) {
 					update.$dec = update.$dec || {};

@@ -1,5 +1,3 @@
-
-
 let constants = require('../helpers/constants.js');
 let sql = require('../sql/dapps.js');
 

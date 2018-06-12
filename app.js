@@ -37,7 +37,7 @@ let program = require('commander');
 let httpApi = require('./helpers/httpApi.js');
 let Sequence = require('./helpers/sequence.js');
 let z_schema = require('./helpers/z_schema.js');
-const Logger = require('./logger.js');
+let Logger = require('./logger.js');
 let logman = new Logger();
 let logger = logman.logger;
 let sockets = [];
@@ -267,24 +267,12 @@ d.run(function () {
 			let compression = require('compression');
 			let cors = require('cors');
 			let app = express();
-
-			// prometheus configuration
 			let Prometheus = require('./prometheus');
 
-			/**
-			 * The below arguments start the counter functions
-			 */
+			//prometheus configuration
 			app.use(Prometheus.requestCounters);
 			app.use(Prometheus.responseCounters);
-
-			/**
-			 * Enable metrics endpoint
-			 */
 			Prometheus.injectMetricsRoute(app);
-
-			/**
-			 * Enable collection of default metrics
-			 */
 			Prometheus.startCollection();
 
 			// added swagger configuration
