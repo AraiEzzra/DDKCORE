@@ -1,8 +1,8 @@
 
 
-var pgp = require('pg-promise');
+let pgp = require('pg-promise');
 
-var DelegatesSql = {
+let DelegatesSql = {
 	sortFields: [
 		'username',
 		'address',
@@ -19,7 +19,7 @@ var DelegatesSql = {
 	count: 'SELECT COUNT(*)::int FROM delegates',
 
 	search: function (params) {
-		var sql = [
+		let sql = [
 			'WITH',
 			'supply AS (SELECT calcSupply((SELECT height FROM blocks ORDER BY height DESC LIMIT 1))::numeric),',
 			'delegates AS (SELECT row_number() OVER (ORDER BY vote DESC, m."publicKey" ASC)::int AS rank,',

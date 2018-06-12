@@ -1,11 +1,11 @@
 
 
 // elastic search server connection
-var elasticsearch = require('elasticsearch');
-var config = require('../config.json');
-var connectionHost = config.elasticsearchHost + ':9200' || 'localhost:9200';
+let elasticsearch = require('elasticsearch');
+let config = require('../config.json');
+let connectionHost = config.elasticsearchHost + ':9200' || 'localhost:9200';
 
-var Client = new elasticsearch.Client({
+let Client = new elasticsearch.Client({
 	hosts: connectionHost, // We can put an array here as well to provide more than one hosts. See below example
 	log: 'error'
 	

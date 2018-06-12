@@ -1,6 +1,6 @@
 
 
-var RoundsSql = {
+let RoundsSql = {
 	flush: 'DELETE FROM mem_round WHERE "round" = (${round})::bigint;',
 
 	truncateBlocks: 'DELETE FROM blocks WHERE "height" > (${height})::bigint;',

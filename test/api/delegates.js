@@ -1,8 +1,8 @@
 
 
-var node = require('./../node.js');
-var modulesLoader = require('./../common/initModule.js').modulesLoader;
-var genesisDelegates = require('../genesisDelegates.json');
+let node = require('./../node.js');
+let modulesLoader = require('./../common/initModule.js').modulesLoader;
+let genesisDelegates = require('../genesisDelegates.json');
 
 function openAccount (params, done) {
 	node.post('/api/accounts/open', params, function (err, res) {
@@ -29,7 +29,7 @@ function putDelegates (params, done) {
 }
 
 describe('PUT /api/accounts/delegates without funds', function () {
-	var account;
+	let account;
 
 	beforeEach(function (done) {
 		account = node.randomAccount();
@@ -60,7 +60,7 @@ describe('PUT /api/accounts/delegates without funds', function () {
 });
 
 describe('PUT /api/delegates without funds', function () {
-	var account;
+	let account;
 
 	beforeEach(function (done) {
 		account = node.randomAccount();
@@ -80,7 +80,7 @@ describe('PUT /api/delegates without funds', function () {
 });
 
 describe('PUT /api/accounts/delegates with funds', function () {
-	var account = node.randomAccount();
+	let account = node.randomAccount();
 
 	before(function (done) {
 		sendLISK({
@@ -102,7 +102,7 @@ describe('PUT /api/accounts/delegates with funds', function () {
 	});
 
 	it('when upvoting same delegate multiple times should fail', function (done) {
-		var votedDelegate = Array.apply(null, Array(2)).map(function () { return '+' + node.eAccount.publicKey;});
+		let votedDelegate = Array.apply(null, Array(2)).map(function () { return '+' + node.eAccount.publicKey;});
 
 		putAccountsDelegates({
 			secret: account.password,
@@ -115,7 +115,7 @@ describe('PUT /api/accounts/delegates with funds', function () {
 	});
 
 	it('when downvoting same delegate multiple times should fail', function (done) {
-		var votedDelegate = Array.apply(null, Array(2)).map(function () { return '-' + node.eAccount.publicKey;});
+		let votedDelegate = Array.apply(null, Array(2)).map(function () { return '-' + node.eAccount.publicKey;});
 
 		putAccountsDelegates({
 			secret: account.password,
@@ -128,7 +128,7 @@ describe('PUT /api/accounts/delegates with funds', function () {
 	});
 
 	it('when upvoting and downvoting within same request should fail', function (done) {
-		var votedDelegate = ['-' + node.eAccount.publicKey, '+' + node.eAccount.publicKey];
+		let votedDelegate = ['-' + node.eAccount.publicKey, '+' + node.eAccount.publicKey];
 
 		putAccountsDelegates({
 			secret: account.password,
@@ -252,7 +252,7 @@ describe('PUT /api/accounts/delegates with funds', function () {
 });
 
 describe('PUT /api/delegates with funds', function () {
-	var account, validParams;
+	let account, validParams;
 
 	beforeEach(function (done) {
 		account = node.randomAccount();
@@ -377,7 +377,7 @@ describe('PUT /api/delegates with funds', function () {
 });
 
 describe('GET /api/delegates (cache)', function () {
-	var cache;
+	let cache;
 
 	before(function (done) {
 		node.config.cacheEnabled = true;
@@ -406,13 +406,13 @@ describe('GET /api/delegates (cache)', function () {
 	});
 
 	it('cache delegates when response is a success', function (done) {
-		var url;
+		let url;
 		url = '/api/delegates';
 
 		node.get(url, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
 			node.expect(res.body).to.have.property('delegates').that.is.an('array');
-			var response = res.body;
+			let response = res.body;
 			cache.getJsonForKey(url, function (err, res) {
 				node.expect(err).to.not.exist;
 				node.expect(res).to.eql(response);
@@ -422,7 +422,7 @@ describe('GET /api/delegates (cache)', function () {
 	});
 
 	it('should not cache if response is not a success', function (done) {
-		var url, orderBy, params;
+		let url, orderBy, params;
 		url = '/api/delegates?';
 		orderBy = 'unknown:asc';
 		params = 'orderBy=' + orderBy;
@@ -439,13 +439,13 @@ describe('GET /api/delegates (cache)', function () {
 	});
 
 	it('should flush cache on the next round', function (done) {
-		var url;
+		let url;
 		url = '/api/delegates';
 
 		node.get(url, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
 			node.expect(res.body).to.have.property('delegates').that.is.an('array');
-			var response = res.body;
+			let response = res.body;
 			cache.getJsonForKey(url, function (err, res) {
 				node.expect(err).to.not.exist;
 				node.expect(res).to.eql(response);
@@ -480,8 +480,8 @@ describe('GET /api/delegates', function () {
 	});
 
 	it('using orderBy == "unknown:asc" should fail', function (done) {
-		var orderBy = 'unknown:asc';
-		var params = 'orderBy=' + orderBy;
+		let orderBy = 'unknown:asc';
+		let params = 'orderBy=' + orderBy;
 
 		node.get('/api/delegates?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -491,8 +491,8 @@ describe('GET /api/delegates', function () {
 	});
 
 	it('using orderBy == "approval:asc" should be ok', function (done) {
-		var orderBy = 'approval:asc';
-		var params = 'orderBy=' + orderBy;
+		let orderBy = 'approval:asc';
+		let params = 'orderBy=' + orderBy;
 
 		node.get('/api/delegates?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -503,8 +503,8 @@ describe('GET /api/delegates', function () {
 	});
 
 	it('using orderBy == "productivity:asc" should be ok', function (done) {
-		var orderBy = 'productivity:asc';
-		var params = 'orderBy=' + orderBy;
+		let orderBy = 'productivity:asc';
+		let params = 'orderBy=' + orderBy;
 
 		node.get('/api/delegates?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -515,14 +515,14 @@ describe('GET /api/delegates', function () {
 	});
 
 	it('using orderBy == "rank:asc" should be ok', function (done) {
-		var orderBy = 'rank:asc';
-		var params = 'orderBy=' + orderBy;
+		let orderBy = 'rank:asc';
+		let params = 'orderBy=' + orderBy;
 
 		node.get('/api/delegates?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
 			node.expect(res.body).to.have.property('delegates').that.is.an('array');
 			node.expect(res.body.delegates).to.have.lengthOf(101);
-			for (var i = 0; i < res.body.delegates.length; i++) {
+			for (let i = 0; i < res.body.delegates.length; i++) {
 				if (res.body.delegates[i + 1] != null) {
 					node.expect(res.body.delegates[i].rank).to.be.at.below(res.body.delegates[i + 1].rank);
 				}
@@ -532,14 +532,14 @@ describe('GET /api/delegates', function () {
 	});
 
 	it('using orderBy == "rank:desc" should be ok', function (done) {
-		var orderBy = 'rank:desc';
-		var params = 'orderBy=' + orderBy;
+		let orderBy = 'rank:desc';
+		let params = 'orderBy=' + orderBy;
 
 		node.get('/api/delegates?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
 			node.expect(res.body).to.have.property('delegates').that.is.an('array');
 			node.expect(res.body.delegates).to.have.lengthOf(101);
-			for (var i = 0; i < res.body.delegates.length; i++) {
+			for (let i = 0; i < res.body.delegates.length; i++) {
 				if (res.body.delegates[i + 1] != null) {
 					node.expect(res.body.delegates[i].rank).to.be.at.above(res.body.delegates[i + 1].rank);
 				}
@@ -549,14 +549,14 @@ describe('GET /api/delegates', function () {
 	});
 
 	it('using orderBy == "vote:asc" should be ok', function (done) {
-		var orderBy = 'vote:asc';
-		var params = 'orderBy=' + orderBy;
+		let orderBy = 'vote:asc';
+		let params = 'orderBy=' + orderBy;
 
 		node.get('/api/delegates?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
 			node.expect(res.body).to.have.property('delegates').that.is.an('array');
 			node.expect(res.body.delegates).to.have.lengthOf(101);
-			for (var i = 0; i < res.body.delegates.length; i++) {
+			for (let i = 0; i < res.body.delegates.length; i++) {
 				if (res.body.delegates[i + 1] != null) {
 					node.expect(res.body.delegates[i].vote).to.be.at.most(res.body.delegates[i + 1].vote);
 				}
@@ -566,14 +566,14 @@ describe('GET /api/delegates', function () {
 	});
 
 	it('using orderBy == "vote:desc" should be ok', function (done) {
-		var orderBy = 'vote:desc';
-		var params = 'orderBy=' + orderBy;
+		let orderBy = 'vote:desc';
+		let params = 'orderBy=' + orderBy;
 
 		node.get('/api/delegates?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
 			node.expect(res.body).to.have.property('delegates').that.is.an('array');
 			node.expect(res.body.delegates).to.have.lengthOf(101);
-			for (var i = 0; i < res.body.delegates.length; i++) {
+			for (let i = 0; i < res.body.delegates.length; i++) {
 				if (res.body.delegates[i + 1] != null) {
 					node.expect(res.body.delegates[i].vote).to.be.at.least(res.body.delegates[i + 1].vote);
 				}
@@ -583,8 +583,8 @@ describe('GET /api/delegates', function () {
 	});
 
 	it('using orderBy == "username:asc" should be ok', function (done) {
-		var orderBy = 'username:asc';
-		var params = 'orderBy=' + orderBy;
+		let orderBy = 'username:asc';
+		let params = 'orderBy=' + orderBy;
 
 		node.get('/api/delegates?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -595,8 +595,8 @@ describe('GET /api/delegates', function () {
 	});
 
 	it('using orderBy == "address:asc" should be ok', function (done) {
-		var orderBy = 'address:asc';
-		var params = 'orderBy=' + orderBy;
+		let orderBy = 'address:asc';
+		let params = 'orderBy=' + orderBy;
 
 		node.get('/api/delegates?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -607,8 +607,8 @@ describe('GET /api/delegates', function () {
 	});
 
 	it('using orderBy == "publicKey:asc" should be ok', function (done) {
-		var orderBy = 'publicKey:asc';
-		var params = 'orderBy=' + orderBy;
+		let orderBy = 'publicKey:asc';
+		let params = 'orderBy=' + orderBy;
 
 		node.get('/api/delegates?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -619,8 +619,8 @@ describe('GET /api/delegates', function () {
 	});
 
 	it('using string limit should fail', function (done) {
-		var limit = 'one';
-		var params = 'limit=' + limit;
+		let limit = 'one';
+		let params = 'limit=' + limit;
 
 		node.get('/api/delegates?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -630,8 +630,8 @@ describe('GET /api/delegates', function () {
 	});
 
 	it('using limit == -1 should fail', function (done) {
-		var limit = -1;
-		var params = 'limit=' + limit;
+		let limit = -1;
+		let params = 'limit=' + limit;
 
 		node.get('/api/delegates?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -641,8 +641,8 @@ describe('GET /api/delegates', function () {
 	});
 
 	it('using limit == 0 should fail', function (done) {
-		var limit = 0;
-		var params = 'limit=' + limit;
+		let limit = 0;
+		let params = 'limit=' + limit;
 
 		node.get('/api/delegates?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -652,8 +652,8 @@ describe('GET /api/delegates', function () {
 	});
 
 	it('using limit == 1 should be ok', function (done) {
-		var limit = 1;
-		var params = 'limit=' + limit;
+		let limit = 1;
+		let params = 'limit=' + limit;
 
 		node.get('/api/delegates?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -664,8 +664,8 @@ describe('GET /api/delegates', function () {
 	});
 
 	it('using limit == 101 should be ok', function (done) {
-		var limit = 101;
-		var params = 'limit=' + limit;
+		let limit = 101;
+		let params = 'limit=' + limit;
 
 		node.get('/api/delegates?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -676,8 +676,8 @@ describe('GET /api/delegates', function () {
 	});
 
 	it('using limit > 101 should fail', function (done) {
-		var limit = 102;
-		var params = 'limit=' + limit;
+		let limit = 102;
+		let params = 'limit=' + limit;
 
 		node.get('/api/delegates?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -687,8 +687,8 @@ describe('GET /api/delegates', function () {
 	});
 
 	it('using string offset should fail', function (done) {
-		var limit = 'one';
-		var params = 'offset=' + limit;
+		let limit = 'one';
+		let params = 'offset=' + limit;
 
 		node.get('/api/delegates?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -698,8 +698,8 @@ describe('GET /api/delegates', function () {
 	});
 
 	it('using offset == 1 should be ok', function (done) {
-		var offset = 1;
-		var params = 'offset=' + offset;
+		let offset = 1;
+		let params = 'offset=' + offset;
 
 		node.get('/api/delegates?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -710,8 +710,8 @@ describe('GET /api/delegates', function () {
 	});
 
 	it('using offset == -1 should fail', function (done) {
-		var offset = -1;
-		var params = 'offset=' + offset;
+		let offset = -1;
+		let params = 'offset=' + offset;
 
 		node.get('/api/delegates?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -721,19 +721,19 @@ describe('GET /api/delegates', function () {
 	});
 
 	it('using orderBy with any of sort fields should not place NULLs first', function (done) {
-		var delegatesSortFields = ['approval', 'productivity', 'rank', 'vote'];
+		let delegatesSortFields = ['approval', 'productivity', 'rank', 'vote'];
 		node.async.each(delegatesSortFields, function (sortField, cb) {
 			node.get('/api/delegates?orderBy=' + sortField, function (err, res) {
 				node.expect(res.body).to.have.property('success').to.be.ok;
 				node.expect(res.body).to.have.property('delegates').that.is.an('array');
 
-				var dividedIndices = res.body.delegates.reduce(function (memo, peer, index) {
+				let dividedIndices = res.body.delegates.reduce(function (memo, peer, index) {
 					memo[peer[sortField] === null ? 'nullIndices' : 'notNullIndices'].push(index);
 					return memo;
 				}, {notNullIndices: [], nullIndices: []});
 
 				if (dividedIndices.nullIndices.length && dividedIndices.notNullIndices.length) {
-					var ascOrder = function (a, b) { return a - b; };
+					let ascOrder = function (a, b) { return a - b; };
 					dividedIndices.notNullIndices.sort(ascOrder);
 					dividedIndices.nullIndices.sort(ascOrder);
 
@@ -760,7 +760,7 @@ describe('GET /api/delegates/count', function () {
 });
 
 describe('GET /api/delegates/voters', function () {
-	var account = node.randomAccount();
+	let account = node.randomAccount();
 
 	before(function (done) {
 		sendLISK({
@@ -790,7 +790,7 @@ describe('GET /api/delegates/voters', function () {
 	});
 
 	it('using no publicKey should be ok', function (done) {
-		var params = 'publicKey=';
+		let params = 'publicKey=';
 
 		node.get('/api/delegates/voters?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -800,7 +800,7 @@ describe('GET /api/delegates/voters', function () {
 	});
 
 	it('using invalid publicKey should fail', function (done) {
-		var params = 'publicKey=' + 'notAPublicKey';
+		let params = 'publicKey=' + 'notAPublicKey';
 
 		node.get('/api/delegates/voters?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -810,14 +810,14 @@ describe('GET /api/delegates/voters', function () {
 	});
 
 	it('using valid publicKey should be ok', function (done) {
-		var params = 'publicKey=' + node.eAccount.publicKey;
+		let params = 'publicKey=' + node.eAccount.publicKey;
 
 		node.onNewBlock(function (err) {
 			node.get('/api/delegates/voters?' + params, function (err, res) {
 				node.expect(res.body).to.have.property('success').to.be.ok;
 				node.expect(res.body).to.have.property('accounts').that.is.an('array');
-				var flag = 0;
-				for (var i = 0; i < res.body.accounts.length; i++) {
+				let flag = 0;
+				for (let i = 0; i < res.body.accounts.length; i++) {
 					if (res.body.accounts[i].address === account.address) {
 						flag = 1;
 					}
@@ -840,7 +840,7 @@ describe('GET /api/delegates/search', function () {
 	});
 
 	it('using blank criteria should fail', function (done) {
-		var q = '';
+		let q = '';
 
 		node.get('/api/delegates/search?q=' + q, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -850,7 +850,7 @@ describe('GET /api/delegates/search', function () {
 	});
 
 	it('using wildcard criteria should be ok', function (done) {
-		var q = '%'; // 1 character
+		let q = '%'; // 1 character
 
 		node.get('/api/delegates/search?q=' + q, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -860,7 +860,7 @@ describe('GET /api/delegates/search', function () {
 	});
 
 	it('using criteria with length == 1 should be ok', function (done) {
-		var q = 'g'; // 1 character
+		let q = 'g'; // 1 character
 
 		node.get('/api/delegates/search?q=' + q, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -870,7 +870,7 @@ describe('GET /api/delegates/search', function () {
 	});
 
 	it('using criteria with length == 20 should be ok', function (done) {
-		var q = 'genesis_123456789012'; // 20 characters
+		let q = 'genesis_123456789012'; // 20 characters
 
 		node.get('/api/delegates/search?q=' + q, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -880,7 +880,7 @@ describe('GET /api/delegates/search', function () {
 	});
 
 	it('using criteria with length > 20 should fail', function (done) {
-		var q = 'genesis_1234567890123'; // 21 characters
+		let q = 'genesis_1234567890123'; // 21 characters
 
 		node.get('/api/delegates/search?q=' + q, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -890,7 +890,7 @@ describe('GET /api/delegates/search', function () {
 	});
 
 	it('using critera == "genesis_1" should return 13 delegates', function (done) {
-		var q = 'genesis_1';
+		let q = 'genesis_1';
 
 		node.get('/api/delegates/search?q=' + q, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -901,7 +901,7 @@ describe('GET /api/delegates/search', function () {
 	});
 
 	it('using critera == "genesis_10" should return 3 delegates', function (done) {
-		var q = 'genesis_10';
+		let q = 'genesis_10';
 
 		node.get('/api/delegates/search?q=' + q, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -912,7 +912,7 @@ describe('GET /api/delegates/search', function () {
 	});
 
 	it('using critera == "genesis_101" should return 1 delegate', function (done) {
-		var q = 'genesis_101';
+		let q = 'genesis_101';
 
 		node.get('/api/delegates/search?q=' + q, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -923,7 +923,7 @@ describe('GET /api/delegates/search', function () {
 	});
 
 	it('using critera == "genesis_101" should have all properties', function (done) {
-		var q = 'genesis_101';
+		let q = 'genesis_101';
 
 		node.get('/api/delegates/search?q=' + q, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -945,7 +945,7 @@ describe('GET /api/delegates/search', function () {
 	});
 
 	it('using no limit should be ok', function (done) {
-		var q = 'genesis_';
+		let q = 'genesis_';
 
 		node.get('/api/delegates/search?q=' + q, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -956,8 +956,8 @@ describe('GET /api/delegates/search', function () {
 	});
 
 	it('using string limit should fail', function (done) {
-		var q = 'genesis_';
-		var limit = 'one';
+		let q = 'genesis_';
+		let limit = 'one';
 
 		node.get('/api/delegates/search?q=' + q + '&limit=' + limit, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -967,8 +967,8 @@ describe('GET /api/delegates/search', function () {
 	});
 
 	it('using limit == -100 should fail', function (done) {
-		var q = 'genesis_';
-		var limit = -100;
+		let q = 'genesis_';
+		let limit = -100;
 
 		node.get('/api/delegates/search?q=' + q + '&limit=' + limit, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -978,8 +978,8 @@ describe('GET /api/delegates/search', function () {
 	});
 
 	it('using limit == -1 should fail', function (done) {
-		var q = 'genesis_';
-		var limit = -1;
+		let q = 'genesis_';
+		let limit = -1;
 
 		node.get('/api/delegates/search?q=' + q + '&limit=' + limit, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -989,8 +989,8 @@ describe('GET /api/delegates/search', function () {
 	});
 
 	it('using limit == 0 should fail', function (done) {
-		var q = 'genesis_';
-		var limit = 0;
+		let q = 'genesis_';
+		let limit = 0;
 
 		node.get('/api/delegates/search?q=' + q + '&limit=' + limit, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -1000,8 +1000,8 @@ describe('GET /api/delegates/search', function () {
 	});
 
 	it('using limit == 1 should be ok', function (done) {
-		var q = 'genesis_';
-		var limit = 1;
+		let q = 'genesis_';
+		let limit = 1;
 
 		node.get('/api/delegates/search?q=' + q + '&limit=' + limit, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -1012,8 +1012,8 @@ describe('GET /api/delegates/search', function () {
 	});
 
 	it('using limit == 1000 should be ok', function (done) {
-		var q = 'genesis_';
-		var limit = 1000;
+		let q = 'genesis_';
+		let limit = 1000;
 
 		node.get('/api/delegates/search?q=' + q + '&limit=' + limit, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -1024,8 +1024,8 @@ describe('GET /api/delegates/search', function () {
 	});
 
 	it('using limit > 1000 should fail', function (done) {
-		var q = 'genesis_';
-		var limit = 1001;
+		let q = 'genesis_';
+		let limit = 1001;
 
 		node.get('/api/delegates/search?q=' + q + '&limit=' + limit, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -1035,7 +1035,7 @@ describe('GET /api/delegates/search', function () {
 	});
 
 	it('using orderBy == "unknown:asc" should fail', function (done) {
-		var q = 'genesis_';
+		let q = 'genesis_';
 
 		node.get('/api/delegates/search?q=' + q + '&orderBy=unknown:asc', function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -1045,7 +1045,7 @@ describe('GET /api/delegates/search', function () {
 	});
 
 	it('using no orderBy should be ordered by ascending username', function (done) {
-		var q = 'genesis_';
+		let q = 'genesis_';
 
 		node.get('/api/delegates/search?q=' + q, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -1060,7 +1060,7 @@ describe('GET /api/delegates/search', function () {
 	});
 
 	it('using orderBy == "username:asc" should be ordered by ascending username', function (done) {
-		var q = 'genesis_';
+		let q = 'genesis_';
 
 		node.get('/api/delegates/search?q=' + q + '&orderBy=username:asc', function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -1075,7 +1075,7 @@ describe('GET /api/delegates/search', function () {
 	});
 
 	it('using orderBy == "username:desc" should be ordered by descending username', function (done) {
-		var q = 'genesis_';
+		let q = 'genesis_';
 
 		node.get('/api/delegates/search?q=' + q + '&orderBy=username:desc', function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -1135,7 +1135,7 @@ describe('GET /api/delegates/forging/status', function () {
 });
 
 describe('POST /api/delegates/forging/disable', function () {
-	var testDelegate = genesisDelegates.delegates[0];
+	let testDelegate = genesisDelegates.delegates[0];
 
 	before(function (done) {
 		node.get('/api/delegates/forging/status?publicKey=' + testDelegate.publicKey, function (err, res) {
@@ -1187,7 +1187,7 @@ describe('POST /api/delegates/forging/disable', function () {
 });
 
 describe('POST /api/delegates/forging/enable', function () {
-	var testDelegate = genesisDelegates.delegates[0];
+	let testDelegate = genesisDelegates.delegates[0];
 
 	before(function (done) {
 		node.get('/api/delegates/forging/status?publicKey=' + testDelegate.publicKey, function (err, res) {
@@ -1240,7 +1240,7 @@ describe('POST /api/delegates/forging/enable', function () {
 
 describe('GET /api/delegates/forging/getForgedByAccount', function () {
 
-	var validParams;
+	let validParams;
 
 	beforeEach(function () {
 		validParams = {

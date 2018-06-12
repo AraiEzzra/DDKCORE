@@ -1,13 +1,13 @@
 
 
-var async = require('async');
-var constants = require('../helpers/constants.js');
-var jobsQueue = require('../helpers/jobsQueue.js');
-var extend = require('extend');
-var _ = require('lodash');
+let async = require('async');
+let constants = require('../helpers/constants.js');
+let jobsQueue = require('../helpers/jobsQueue.js');
+let extend = require('extend');
+let _ = require('lodash');
 
 // Private fields
-var modules, library, self, __private = {};
+let modules, library, self, __private = {};
 
 /**
  * Initializes variables, sets Broadcast routes and timer based on
@@ -103,7 +103,7 @@ Broadcaster.prototype.getPeers = function (params, cb) {
 	params.limit = params.limit || self.config.peerLimit;
 	params.broadhash = params.broadhash || null;
 
-	var originalLimit = params.limit;
+	let originalLimit = params.limit;
 
 	modules.peers.list(params, function (err, peers, consensus) {
 		if (err) {
@@ -213,7 +213,7 @@ __private.filterQueue = function (cb) {
 		if (broadcast.options.immediate) {
 			return setImmediate(filterCb, null, false);
 		} else if (broadcast.options.data) {
-			var transaction = (broadcast.options.data.transaction || broadcast.options.data.signature);
+			let transaction = (broadcast.options.data.transaction || broadcast.options.data.signature);
 			return __private.filterTransaction(transaction, filterCb);
 		} else {
 			return setImmediate(filterCb, null, true);
@@ -256,15 +256,15 @@ __private.filterTransaction = function (transaction, cb) {
  * @return {Object[]} squashed routes
  */
 __private.squashQueue = function (broadcasts) {
-	var grouped = _.groupBy(broadcasts, function (broadcast) {
+	let grouped = _.groupBy(broadcasts, function (broadcast) {
 		return broadcast.options.api;
 	});
 
-	var squashed = [];
+	let squashed = [];
 
 	self.routes.forEach(function (route) {
 		if (Array.isArray(grouped[route.path])) {
-			var data = {};
+			let data = {};
 
 			data[route.collection] = grouped[route.path].map(function (broadcast) {
 				return broadcast.options.data[route.object];
@@ -306,7 +306,7 @@ __private.releaseQueue = function (cb) {
 			return __private.filterQueue(waterCb);
 		},
 		function squashQueue (waterCb) {
-			var broadcasts = self.queue.splice(0, self.config.releaseLimit);
+			let broadcasts = self.queue.splice(0, self.config.releaseLimit);
 			return setImmediate(waterCb, null, __private.squashQueue(broadcasts));
 		},
 		function getPeers (broadcasts, waterCb) {

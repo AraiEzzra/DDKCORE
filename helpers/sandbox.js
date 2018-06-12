@@ -15,7 +15,7 @@ function callMethod (shared, call, args, cb) {
 		return cb('Function not found in module: ' + call);
 	}
 
-	var callArgs = [args, cb];
+	let callArgs = [args, cb];
 	shared[call].apply(null, callArgs);
 }
 

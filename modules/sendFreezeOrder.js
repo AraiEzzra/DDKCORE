@@ -1,19 +1,19 @@
 
 
-var crypto = require('crypto');
-var sandboxHelper = require('../helpers/sandbox.js');
-var schema = require('../schema/frogeTransfer.js');
-var sql = require('../sql/frogings.js');
-var TransactionPool = require('../logic/transactionPool.js');
-var transactionTypes = require('../helpers/transactionTypes.js');
-var sendFreezeOrder = require('../logic/sendFreezeOrder.js');
+let crypto = require('crypto');
+let sandboxHelper = require('../helpers/sandbox.js');
+let schema = require('../schema/frogeTransfer.js');
+let sql = require('../sql/frogings.js');
+let TransactionPool = require('../logic/transactionPool.js');
+let transactionTypes = require('../helpers/transactionTypes.js');
+let sendFreezeOrder = require('../logic/sendFreezeOrder.js');
 
 // Private fields
-var __private = {};
-var shared = {};
-var modules;
-var library;
-var self;
+let __private = {};
+let shared = {};
+let modules;
+let library;
+let self;
 
 __private.assetTypes = {};
 
@@ -82,7 +82,7 @@ __private.getById = function (id, cb) {
 			return setImmediate(cb, 'Transaction not found: ' + id);
 		}
 
-		var transacton = library.logic.transaction.dbRead(rows[0]);
+		let transacton = library.logic.transaction.dbRead(rows[0]);
 
 		return setImmediate(cb, null, transacton);
 	})
@@ -242,14 +242,14 @@ SendFreezeOrder.prototype.onBind = function (scope) {
 SendFreezeOrder.prototype.shared = {
 
 	transferFreezeOrder: function (req, cb) {
-		var accountData;
+		let accountData;
 		library.schema.validate(req.body, schema.transferFreezeOrder, function (err) {
 			if (err) {
 				return setImmediate(cb, err[0].message);
 			}
 
-			var hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
-			var keypair = library.ed.makeKeypair(hash);
+			let hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
+			let keypair = library.ed.makeKeypair(hash);
 
 			if (req.body.publicKey) {
 				if (keypair.publicKey.toString('hex') !== req.body.publicKey) {
@@ -257,7 +257,7 @@ SendFreezeOrder.prototype.shared = {
 				}
 			}
 
-			var query = { address: req.body.recipientId };
+			let query = { address: req.body.recipientId };
 
 			library.balancesSequence.add(function (cb) {
 				modules.accounts.getAccount(query, function (err, recipient) {
@@ -265,7 +265,7 @@ SendFreezeOrder.prototype.shared = {
 						return setImmediate(cb, err);
 					}
 
-					var recipientId = recipient ? recipient.address : req.body.recipientId;
+					let recipientId = recipient ? recipient.address : req.body.recipientId;
 
 					if (!recipientId) {
 						return setImmediate(cb, 'Invalid recipient');
@@ -308,14 +308,14 @@ SendFreezeOrder.prototype.shared = {
 									return setImmediate(cb, 'Invalid requester public key');
 								}
 
-								var secondKeypair = null;
+								let secondKeypair = null;
 
 								if (requester.secondSignature) {
-									var secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
+									let secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
 									secondKeypair = library.ed.makeKeypair(secondHash);
 								}
 
-								var transaction;
+								let transaction;
 
 								try {
 									transaction = library.logic.transaction.create({
@@ -351,14 +351,14 @@ SendFreezeOrder.prototype.shared = {
 								return setImmediate(cb, 'Missing second passphrase');
 							}
 
-							var secondKeypair = null;
+							let secondKeypair = null;
 
 							if (account.secondSignature) {
-								var secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
+								let secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
 								secondKeypair = library.ed.makeKeypair(secondHash);
 							}
 
-							var transaction;
+							let transaction;
 
 							try {
 								transaction = library.logic.transaction.create({

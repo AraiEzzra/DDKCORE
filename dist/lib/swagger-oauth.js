@@ -1,27 +1,27 @@
-var appName;
-var popupMask;
-var popupDialog;
-var clientId;
-var realm;
-var redirect_uri;
-var clientSecret;
-var scopeSeparator;
-var additionalQueryStringParams;
+let appName;
+let popupMask;
+let popupDialog;
+let clientId;
+let realm;
+let redirect_uri;
+let clientSecret;
+let scopeSeparator;
+let additionalQueryStringParams;
 
 function handleLogin() {
-	var scopes = [];
+	let scopes = [];
 
-	var auths = window.swaggerUi.api.authSchemes || window.swaggerUi.api.securityDefinitions;
+	let auths = window.swaggerUi.api.authSchemes || window.swaggerUi.api.securityDefinitions;
 	if(auths) {
-		var key;
-		var defs = auths;
+		let key;
+		let defs = auths;
 		for(key in defs) {
-			var auth = defs[key];
+			let auth = defs[key];
 			if(auth.type === 'oauth2' && auth.scopes) {
-				var scope;
+				let scope;
 				if(Array.isArray(auth.scopes)) {
 					// 1.2 support
-					var i;
+					let i;
 					for(i = 0; i < auth.scopes.length; i++) {
 						scopes.push(auth.scopes[i]);
 					}
@@ -74,7 +74,7 @@ function handleLogin() {
 		popup.append(str);
 	}
 
-	var $win = $(window),
+	let $win = $(window),
 		dw = $win.width(),
 		dh = $win.height(),
 		st = $win.scrollTop(),
@@ -100,21 +100,21 @@ function handleLogin() {
 		popupMask.hide();
 		popupDialog.hide();
 
-		var authSchemes = window.swaggerUi.api.authSchemes;
-		var host = window.location;
-		var pathname = location.pathname.substring(0, location.pathname.lastIndexOf('/'));
-		var defaultRedirectUrl = host.protocol + '//' + host.host + pathname + '/o2c.html';
-		var redirectUrl = window.oAuthRedirectUrl || defaultRedirectUrl;
-		var url = null;
-		var scopes = [];
-		var o = popup.find('input:checked'); 
-		var OAuthSchemeKeys = [];
-		var state;
+		let authSchemes = window.swaggerUi.api.authSchemes;
+		let host = window.location;
+		let pathname = location.pathname.substring(0, location.pathname.lastIndexOf('/'));
+		let defaultRedirectUrl = host.protocol + '//' + host.host + pathname + '/o2c.html';
+		let redirectUrl = window.oAuthRedirectUrl || defaultRedirectUrl;
+		let url = null;
+		let scopes = [];
+		let o = popup.find('input:checked'); 
+		let OAuthSchemeKeys = [];
+		let state;
 		for(k =0; k < o.length; k++) {
-			var scope = $(o[k]).attr('scope');
+			let scope = $(o[k]).attr('scope');
 			if (scopes.indexOf(scope) === -1)
 				scopes.push(scope);
-			var OAuthSchemeKey = $(o[k]).attr('oauthtype');      
+			let OAuthSchemeKey = $(o[k]).attr('oauthtype');      
 			if (OAuthSchemeKeys.indexOf(OAuthSchemeKey) === -1)
 				OAuthSchemeKeys.push(OAuthSchemeKey);
 		}
@@ -123,36 +123,36 @@ function handleLogin() {
 		//(needs to be aware of schemes to do so correctly)
 		window.enabledScopes=scopes;    
     
-		for (var key in authSchemes) { 
+		for (let key in authSchemes) { 
 			if (authSchemes.hasOwnProperty(key) && OAuthSchemeKeys.indexOf(key) != -1) { //only look at keys that match this scope.
-				var flow = authSchemes[key].flow;
+				let flow = authSchemes[key].flow;
 
 				if(authSchemes[key].type === 'oauth2' && flow && (flow === 'implicit' || flow === 'accessCode')) {
-					var dets = authSchemes[key];
+					let dets = authSchemes[key];
 					url = dets.authorizationUrl + '?response_type=' + (flow === 'implicit' ? 'token' : 'code');
 					window.swaggerUi.tokenName = dets.tokenName || 'access_token';
 					window.swaggerUi.tokenUrl = (flow === 'accessCode' ? dets.tokenUrl : null);
 					state = key;
 				}
 				else if(authSchemes[key].type === 'oauth2' && flow && (flow === 'application')) {
-					var dets = authSchemes[key];
+					let dets = authSchemes[key];
 					window.swaggerUi.tokenName = dets.tokenName || 'access_token';
 					clientCredentialsFlow(scopes, dets.tokenUrl, key);
 					return;
 				}        
 				else if(authSchemes[key].grantTypes) {
 					// 1.2 support
-					var o = authSchemes[key].grantTypes;
-					for(var t in o) {
+					let o = authSchemes[key].grantTypes;
+					for(let t in o) {
 						if(o.hasOwnProperty(t) && t === 'implicit') {
-							var dets = o[t];
-							var ep = dets.loginEndpoint.url;
+							let dets = o[t];
+							let ep = dets.loginEndpoint.url;
 							url = dets.loginEndpoint.url + '?response_type=token';
 							window.swaggerUi.tokenName = dets.tokenName;
 						}
 						else if (o.hasOwnProperty(t) && t === 'accessCode') {
-							var dets = o[t];
-							var ep = dets.tokenRequestEndpoint.url;
+							let dets = o[t];
+							let ep = dets.tokenRequestEndpoint.url;
 							url = dets.tokenRequestEndpoint.url + '?response_type=code';
 							window.swaggerUi.tokenName = dets.tokenName;
 						}
@@ -168,7 +168,7 @@ function handleLogin() {
 		url += '&client_id=' + encodeURIComponent(clientId);
 		url += '&scope=' + encodeURIComponent(scopes.join(scopeSeparator));
 		url += '&state=' + encodeURIComponent(state);
-		for (var key in additionalQueryStringParams) {
+		for (let key in additionalQueryStringParams) {
 			url += '&' + key + '=' + encodeURIComponent(additionalQueryStringParams[key]);
 		}
 
@@ -195,8 +195,8 @@ function handleLogout() {
 }
 
 function initOAuth(opts) {
-	var o = (opts||{});
-	var errors = [];
+	let o = (opts||{});
+	let errors = [];
 
 	appName = (o.appName||errors.push('missing appName'));
 	popupMask = (o.popupMask||$('#api-common-mask'));
@@ -225,7 +225,7 @@ function initOAuth(opts) {
 }
 
 function clientCredentialsFlow(scopes, tokenUrl, OAuthSchemeKey) {
-	var params = {
+	let params = {
 		'client_id': clientId,
 		'client_secret': clientSecret,
 		'scope': scopes.join(' '),
@@ -249,16 +249,16 @@ function clientCredentialsFlow(scopes, tokenUrl, OAuthSchemeKey) {
 }
 
 window.processOAuthCode = function processOAuthCode(data) {
-	var OAuthSchemeKey = data.state;
+	let OAuthSchemeKey = data.state;
 
 	// redirect_uri is required in auth code flow 
 	// see https://tools.ietf.org/html/draft-ietf-oauth-v2-31#section-4.1.3
-	var host = window.location;
-	var pathname = location.pathname.substring(0, location.pathname.lastIndexOf('/'));
-	var defaultRedirectUrl = host.protocol + '//' + host.host + pathname + '/o2c.html';
-	var redirectUrl = window.oAuthRedirectUrl || defaultRedirectUrl;
+	let host = window.location;
+	let pathname = location.pathname.substring(0, location.pathname.lastIndexOf('/'));
+	let defaultRedirectUrl = host.protocol + '//' + host.host + pathname + '/o2c.html';
+	let redirectUrl = window.oAuthRedirectUrl || defaultRedirectUrl;
 
-	var params = {
+	let params = {
 		'client_id': clientId,
 		'code': data.code,
 		'grant_type': 'authorization_code',
@@ -288,32 +288,32 @@ window.processOAuthCode = function processOAuthCode(data) {
 window.onOAuthComplete = function onOAuthComplete(token,OAuthSchemeKey) {
 	if(token) {
 		if(token.error) {
-			var checkbox = $('input[type=checkbox],.secured');
+			let checkbox = $('input[type=checkbox],.secured');
 			checkbox.each(function(pos){
 				checkbox[pos].checked = false;
 			});
 			alert(token.error);
 		}
 		else {
-			var b = token[window.swaggerUi.tokenName];      
+			let b = token[window.swaggerUi.tokenName];      
 			if (!OAuthSchemeKey){
 				OAuthSchemeKey = token.state;
 			}
 			if(b){
 				// if all roles are satisfied
-				var o = null;
+				let o = null;
 				$.each($('.auth .api-ic .api_information_panel'), function(k, v) { 
-					var children = v;
+					let children = v;
 					if(children && children.childNodes) {
-						var requiredScopes = [];
+						let requiredScopes = [];
 						$.each((children.childNodes), function (k1, v1){
-							var inner = v1.innerHTML;
+							let inner = v1.innerHTML;
 							if(inner)
 								requiredScopes.push(inner);
 						});
-						var diff = [];
-						for(var i=0; i < requiredScopes.length; i++) {
-							var s = requiredScopes[i];
+						let diff = [];
+						for(let i=0; i < requiredScopes.length; i++) {
+							let s = requiredScopes[i];
 							if(window.enabledScopes && window.enabledScopes.indexOf(s) == -1) {
 								diff.push(s);
 							}

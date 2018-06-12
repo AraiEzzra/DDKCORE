@@ -1,6 +1,6 @@
 
 
-var FrogingsSql = {
+let FrogingsSql = {
 	sortFields: [
 		'id',
 		'status',

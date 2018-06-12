@@ -1,6 +1,6 @@
 
 
-var BlocksSql = {
+let BlocksSql = {
 	sortFields: [
 		'id',
 		'timestamp',
@@ -82,7 +82,7 @@ var BlocksSql = {
 	getHeightByLastId: 'SELECT "height" FROM blocks WHERE "id" = ${lastId}',
 
 	loadBlocksData: function (params) {
-		var limitPart;
+		let limitPart;
 
 		if (!params.id && !params.lastId) {
 			limitPart = 'WHERE "b_height" < ${limit}';

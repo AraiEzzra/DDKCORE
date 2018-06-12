@@ -1,6 +1,6 @@
 
 
-var TransactionsSql = {
+let TransactionsSql = {
 	sortFields: [
 		'id',
 		'blockId',

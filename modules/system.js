@@ -1,16 +1,16 @@
 
 
-var async = require('async');
-var crypto = require('crypto');
-var os = require('os');
-var sandboxHelper = require('../helpers/sandbox.js');
-var semver = require('semver');
-var sql = require('../sql/system.js');
+let async = require('async');
+let crypto = require('crypto');
+let os = require('os');
+let sandboxHelper = require('../helpers/sandbox.js');
+let semver = require('semver');
+let sql = require('../sql/system.js');
 
 // Private fields
-var modules, library, self, __private = {}, shared = {};
+let modules, library, self, __private = {}, shared = {};
 
-var rcRegExp = /[a-z]+$/;
+let rcRegExp = /[a-z]+$/;
 
 /**
  * Initializes library with scope content and private variables:
@@ -142,7 +142,7 @@ System.prototype.getMinVersion = function () {
  * @return {boolean}
  */
 System.prototype.versionCompatible = function (version) {
-	var versionChar;
+	let versionChar;
 
 	if (rcRegExp.test(version)) {
 		versionChar = version.charAt(version.length - 1);
@@ -150,7 +150,7 @@ System.prototype.versionCompatible = function (version) {
 	}
 
 	// if no range specifier is used for minVersion, check the complete version string (inclusive versionChar)
-	var rangeRegExp = /[\^~\*]/;
+	let rangeRegExp = /[\^~\*]/;
 	if (this.minVersionChar && versionChar && !rangeRegExp.test(this.minVersion)) {
 		return (version + versionChar) === (this.minVersion + this.minVersionChar);
 	}
@@ -175,8 +175,8 @@ System.prototype.getBroadhash = function (cb) {
 		if (rows.length <= 1) {
 			return setImmediate(cb, null, __private.nethash);
 		} else {
-			var seed = rows.map(function (row) { return row.id; }).join('');
-			var hash = crypto.createHash('sha256').update(seed, 'utf8').digest();
+			let seed = rows.map(function (row) { return row.id; }).join('');
+			let hash = crypto.createHash('sha256').update(seed, 'utf8').digest();
 
 			return setImmediate(cb, null, hash.toString('hex'));
 		}

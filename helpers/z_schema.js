@@ -1,6 +1,6 @@
 
 
-var ip = require('ip');
+let ip = require('ip');
 /**
  * Uses JSON Schema validator z_schema to register custom formats.
  * - id
@@ -22,7 +22,7 @@ var ip = require('ip');
  * @constructor
  * @return {Boolean} True if the format is valid
  */
-var z_schema = require('z-schema');
+let z_schema = require('z-schema');
 
 z_schema.registerFormat('id', function (str) {
 	if (str.length === 0) {
@@ -64,7 +64,7 @@ z_schema.registerFormat('publicKey', function (str) {
 	}
 
 	try {
-		var publicKey = Buffer.from(str, 'hex');
+		let publicKey = Buffer.from(str, 'hex');
 
 		return publicKey.length === 32;
 	} catch (e) {
@@ -74,7 +74,7 @@ z_schema.registerFormat('publicKey', function (str) {
 
 z_schema.registerFormat('csv', function (str) {
 	try {
-		var a = str.split(',');
+		let a = str.split(',');
 		if (a.length > 0 && a.length <= 1000) {
 			return true;
 		} else {
@@ -91,7 +91,7 @@ z_schema.registerFormat('signature', function (str) {
 	}
 
 	try {
-		var signature = Buffer.from(str, 'hex');
+		let signature = Buffer.from(str, 'hex');
 		return signature.length === 64;
 	} catch (e) {
 		return false;

@@ -1,11 +1,11 @@
 
 
-var utils = require('../validator/utils');
+let utils = require('../validator/utils');
 
 module.exports = JsonSchema;
 
-var Validator = require('../validator');
-var Field = require('./field');
+let Validator = require('../validator');
+let Field = require('./field');
 
 function JsonSchema (options) {
 	Validator.call(this, options);
@@ -131,8 +131,8 @@ JsonSchema.addRule('properties', {
 		if (!field.isObject()) { return; }
 
 		field.async(function (done) {
-			var result = {};
-			var properties = Object.getOwnPropertyNames(accept);
+			let result = {};
+			let properties = Object.getOwnPropertyNames(accept);
 
 			Object.keys(value).forEach(function (property) {
 				if (properties.indexOf(property) < 0) {
@@ -140,9 +140,9 @@ JsonSchema.addRule('properties', {
 				}
 			});
 
-			var l = properties.length;
+			let l = properties.length;
 
-			var additionalProperty = field.rules.additionalProperties || false;
+			let additionalProperty = field.rules.additionalProperties || false;
 
 			function end (err) {
 				if (l === null) { return; }
@@ -157,7 +157,7 @@ JsonSchema.addRule('properties', {
 			}
 
 			properties.forEach(function (property) {
-				var acceptProperty;
+				let acceptProperty;
 
 				if (!accept.hasOwnProperty(property)) {
 					if (additionalProperty === true) {
@@ -178,7 +178,7 @@ JsonSchema.addRule('properties', {
 					acceptProperty = accept[property];
 				}
 
-				var child = field.child(property, value[property], acceptProperty, value);
+				let child = field.child(property, value[property], acceptProperty, value);
 				child.validate(function (err, report, value) {
 					result[property] = value;
 
@@ -226,8 +226,8 @@ JsonSchema.addRule('items', {
 		if (!Array.isArray(value)) { return; }
 
 		field.async(function (done) {
-			var result = [];
-			var l = value.length;
+			let result = [];
+			let l = value.length;
 
 			function end (err) {
 				if (l === null) { return; }
@@ -242,7 +242,7 @@ JsonSchema.addRule('items', {
 			}
 
 			value.forEach(function (item, i) {
-				var child = field.child(i, item, accept, value);
+				let child = field.child(i, item, accept, value);
 				child.validate(function (err, report, value) {
 					if (err) { return end(err); }
 
@@ -273,10 +273,10 @@ JsonSchema.addRule('uniqueItems', {
 		if (!accept) { return; }
 		if (!Array.isArray(value)) { return; }
 
-		var i = -1;
-		var l = value.length;
-		var unique = [];
-		var item;
+		let i = -1;
+		let l = value.length;
+		let unique = [];
+		let item;
 
 		while(++i < l) {
 			item = value[i];

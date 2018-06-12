@@ -1,7 +1,7 @@
 
 
-var esClient = require('./elasticsearch/connection');
-var Accounts = require('./modules/accounts');
+let esClient = require('./elasticsearch/connection');
+let Accounts = require('./modules/accounts');
 
 //FIXME: validate client here. currently not implemented 
 exports.validateClient = function (req, res, next) {
@@ -17,7 +17,7 @@ exports.validateClient = function (req, res, next) {
  */
 
 exports.merge = function merge(a, b) {
-	for (var key in b) {
+	for (let key in b) {
 		if (exports.merge.call(b, key) && b[key]) {
 			if ('object' === typeof (b[key])) {
 				if ('undefined' === typeof (a[key])) a[key] = {};
@@ -37,8 +37,8 @@ exports.merge = function merge(a, b) {
  * @param {Object} bulk
  */
 exports.makeBulk = function (list, index) {
-	var bulk = [], indexId;
-	for (var current in list) {
+	let bulk = [], indexId;
+	for (let current in list) {
 		if (list[current].stakeId) {
 			indexId = list[current].stakeId;
 		} else if (list[current].id) {

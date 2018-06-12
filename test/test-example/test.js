@@ -1,5 +1,5 @@
 // Root object
-var node = {};
+let node = {};
 
 //Adding Properties To Root Object
 node.config = require('../../config.json');
@@ -22,7 +22,7 @@ node.lisk = require('lisk-js');
 
 // Abstract Request
 function abstractRequest (options, done) {
-	var request = node.api[options.verb.toLowerCase()](options.path);
+	let request = node.api[options.verb.toLowerCase()](options.path);
 
 	request.set('Accept', 'application/json');
 	request.set('version', node.version);
@@ -37,7 +37,7 @@ function abstractRequest (options, done) {
 		request.send(options.params);
 	}
 
-	var verb = options.verb.toUpperCase();
+	let verb = options.verb.toUpperCase();
 	node.debug(['> Path:'.grey, verb, options.path].join(' '));
 	if (verb === 'POST' || verb === 'PUT') {
 		node.debug(['> Data:'.grey, JSON.stringify(options.params)].join(' '));
@@ -60,11 +60,11 @@ node.randomNumber = function (min, max) {
 
 // Returns a random delegate name
 node.randomDelegateName = function () {
-	var size = node.randomNumber(1, 20); // Min. delegate name size is 1, Max. delegate name is 20
-	var delegateName = '';
-	var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@$&_.';
+	let size = node.randomNumber(1, 20); // Min. delegate name size is 1, Max. delegate name is 20
+	let delegateName = '';
+	let possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@$&_.';
 
-	for (var i = 0; i < size; i++) {
+	for (let i = 0; i < size; i++) {
 		delegateName += possible.charAt(Math.floor(Math.random() * possible.length));
 	}
 
@@ -78,7 +78,7 @@ node.randomPassword = function () {
 
 // Returns a basic random account
 node.randomAccount = function () {
-	var account = {
+	let account = {
 		balance: '0'
 	};
 
@@ -130,7 +130,7 @@ describe('POST /api/accounts/open', function () {
 	});
 
 	it('using unknown passphrase should be ok', function (done) {
-		var account = node.randomAccount();
+		let account = node.randomAccount();
 
 		openAccount({
 			secret: account.password
@@ -197,7 +197,7 @@ describe('GET /api/accounts/getBalance?address=<address>', function () {
 	});
 
 	it('using unknown address should be ok', function (done) {
-		var account = node.randomAccount();
+		let account = node.randomAccount();
 		getBalance(node.invalidAccount.address, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
 			node.expect(res.body).to.have.property('balance').that.is.a('string');
@@ -240,7 +240,7 @@ describe('GET /api/accounts/getPublicKey?address=<address>', function () {
 	});
 
 	it('using unknown address should be ok', function (done) {
-		var account = node.randomAccount();
+		let account = node.randomAccount();
 		getPublicKey(node.invalidAccount.address, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
 			node.expect(res.body).to.have.property('error').to.contain('Account not found');
@@ -282,7 +282,7 @@ describe('GET /api/accounts/getPublicKey?address=', function () {
 	});
 
 	it('using unknown address should be ok', function (done) {
-		var account = node.randomAccount();
+		let account = node.randomAccount();
 		getPublicKey(account.address, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
 			node.expect(res.body).to.have.property('error').to.contain('Account not found');
@@ -326,7 +326,7 @@ describe('POST /api/accounts/generatePublicKey', function () {
 	});
 
 	it('using unknown passphrase should be ok', function (done) {
-		var account = node.randomAccount();
+		let account = node.randomAccount();
 		generatePublicKey({
 			secret: account.password
 		}, function (err, res) {
@@ -424,7 +424,7 @@ describe('GET /accounts', function () {
 	});
 
 	it('using unknown address should fail', function (done) {
-		var account = node.randomAccount();
+		let account = node.randomAccount();
 		getAccounts('address=' + account.address, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
 			node.expect(res.body).to.have.property('error').to.eql('Account not found');
@@ -476,7 +476,7 @@ describe('GET /accounts', function () {
 	});
 
 	it('using unknown publicKey should fail', function (done) {
-		var account = node.randomAccount();
+		let account = node.randomAccount();
 		getAccounts('publicKey=' + account.publicKey, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
 			node.expect(res.body).to.have.property('error').to.eql('Account not found');
@@ -538,7 +538,7 @@ describe('GET /accounts', function () {
 	});
 
 	it('using known address and not matching publicKey should fail', function (done) {
-		var account = node.randomAccount();
+		let account = node.randomAccount();
 		getAccounts('address=' + node.gAccount.address + '&publicKey=' + account.publicKey, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
 			node.expect(res.body).to.have.property('error');

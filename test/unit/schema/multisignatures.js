@@ -1,10 +1,10 @@
-var node = require('../../node.js');
+let node = require('../../node.js');
 
-var ZSchema = require('../../../helpers/z_schema.js');
-var schema = require('../../../schema/multisignatures.js');
-var expect = require('chai').expect;
+let ZSchema = require('../../../helpers/z_schema.js');
+let schema = require('../../../schema/multisignatures.js');
+let expect = require('chai').expect;
 
-var validator = new ZSchema();
+let validator = new ZSchema();
 
 describe('multisignatures', function () {
 
@@ -22,10 +22,10 @@ describe('multisignatures', function () {
 	});
 
 	describe('addMultisignatures', function () {
-		var testBody;
+		let testBody;
 
 		beforeEach(function () {
-			var secret = node.randomPassword();
+			let secret = node.randomPassword();
 			testBody = {
 				secret: secret,
 				publicKey: node.lisk.crypto.getKeys(secret).publicKey,

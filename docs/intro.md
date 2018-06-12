@@ -27,7 +27,7 @@ Tags available should be declared in the following order:
 @global
 
 @typedef
-@var
+@let
 @name
 @namespace
 @constructor
@@ -163,7 +163,7 @@ hgm.cookie = {
  * @property {object} defaults.treasure - The default treasure.
  * @property {number} defaults.treasure.gold - How much gold the party starts with.
  */
-var config = {
+let config = {
     defaults: {
         players: 1,
         level:   'beginner',

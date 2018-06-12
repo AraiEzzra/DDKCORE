@@ -1,9 +1,9 @@
 
 
-var Router = require('../../helpers/router');
-var httpApi = require('../../helpers/httpApi');
-var schema = require('../../schema/accounts.js');
-var tokenValidator = require('../../tokenValidator');
+let Router = require('../../helpers/router');
+let httpApi = require('../../helpers/httpApi');
+let schema = require('../../schema/accounts.js');
+let tokenValidator = require('../../tokenValidator');
 
 /**
  * Binds api with modules and creates common url.
@@ -29,7 +29,7 @@ var tokenValidator = require('../../tokenValidator');
 
 function AccountsHttpApi (accountsModule, app) {
 
-	var router = new Router();
+	let router = new Router();
 
 	router.map(accountsModule.shared, {
 		'post /open': 'open',

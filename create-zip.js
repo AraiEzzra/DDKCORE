@@ -6,7 +6,7 @@
 */
 
 // requiring modules and initializing required variables.
-var fs = require('fs'),
+let fs = require('fs'),
 	path = require('path'),
 	archiver = require('archiver'),
 	currDate = new Date(),
@@ -38,9 +38,9 @@ exports.createDir = function (dir, cb) {
 exports.archiveLogFiles = function(dir, cb) {
     
 	// create a file to stream archive data to.
-	var output = fs.createWriteStream(path.join(dir, currDate.getTime() + '.zip'));
-	var archive = archiver('zip', {});
-	var logPath = __dirname + '/logs';
+	let output = fs.createWriteStream(path.join(dir, currDate.getTime() + '.zip'));
+	let archive = archiver('zip', {});
+	let logPath = __dirname + '/logs';
 
 	// listen for all archive data to be written.
 	// 'close' event is fired only when a file descriptor is involved.
@@ -49,7 +49,7 @@ exports.archiveLogFiles = function(dir, cb) {
 		try {
 			if (fs.existsSync(logPath)) {
 				fs.readdirSync(logPath).forEach(function (file) {
-					var curPath = logPath + '/' + file;
+					let curPath = logPath + '/' + file;
 					if (!fs.lstatSync(logPath).isFile()) {
 						// delete file
 						if(!(file == ignoredFile || file == 'archive.log')) {

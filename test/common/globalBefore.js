@@ -1,6 +1,6 @@
 
 
-var node = require('./../node.js');
+let node = require('./../node.js');
 
 /**
  * @param {string} table

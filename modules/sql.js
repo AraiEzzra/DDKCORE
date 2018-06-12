@@ -1,13 +1,13 @@
 
 
-var async = require('async');
-var extend = require('extend');
-var jsonSql = require('json-sql')();
+let async = require('async');
+let extend = require('extend');
+let jsonSql = require('json-sql')();
 jsonSql.setDialect('postgresql');
-var sandboxHelper = require('../helpers/sandbox.js');
+let sandboxHelper = require('../helpers/sandbox.js');
 
 // Private fields
-var library, self, __private = {}, shared = {};
+let library, self, __private = {}, shared = {};
 
 __private.loaded = false;
 __private.SINGLE_QUOTES = /'/g;
@@ -81,7 +81,7 @@ __private.escape2 = function (str) {
  * @param {string} dappid
  */
 __private.pass = function (obj, dappid) {
-	for (var property in obj) {
+	for (let property in obj) {
 		if (typeof obj[property] === 'object') {
 			__private.pass(obj[property], dappid);
 		}
@@ -89,21 +89,21 @@ __private.pass = function (obj, dappid) {
 			obj[property] = 'dapp_' + dappid + '_' + obj[property];
 		}
 		if (property === 'join' && obj[property].length === undefined) {
-			for (var table in obj[property]) {
-				var tmp = obj[property][table];
+			for (let table in obj[property]) {
+				let tmp = obj[property][table];
 				delete obj[property][table];
 				obj[property]['dapp_' + dappid + '_' + table] = tmp;
 			}
 		}
 		if (property === 'on' && !obj.alias) {
-			for (var firstTable in obj[property]) {
-				var secondTable = obj[property][firstTable];
+			for (let firstTable in obj[property]) {
+				let secondTable = obj[property][firstTable];
 				delete obj[property][firstTable];
 
-				var firstTableRaw = firstTable.split('.');
+				let firstTableRaw = firstTable.split('.');
 				firstTable = 'dapp_' + dappid + '_' + firstTableRaw[0];
 
-				var secondTableRaw = secondTable.split('.');
+				let secondTableRaw = secondTable.split('.');
 				secondTable = 'dapp_' + dappid + '_' + secondTableRaw[0];
 
 				obj[property][firstTable] = secondTable;
@@ -123,7 +123,7 @@ __private.pass = function (obj, dappid) {
  * @return {setImmediateCallback} cb, err, data
  */
 __private.query = function (action, config, cb) {
-	var sql = null;
+	let sql = null;
 
 	function done (err, data) {
 		if (err) {
@@ -136,7 +136,7 @@ __private.query = function (action, config, cb) {
 	if (action !== 'batch') {
 		__private.pass(config, config.dappid);
 
-		var defaultConfig = {
+		let defaultConfig = {
 			type: action
 		};
 
@@ -154,21 +154,21 @@ __private.query = function (action, config, cb) {
 			return done('Sql#query error');
 		});
 	} else {
-		var batchPack = [];
+		let batchPack = [];
 		async.until(
 			function () {
 				batchPack = config.values.splice(0, 10);
 				return batchPack.length === 0;
 			}, function (cb) {
-			var fields = Object.keys(config.fields).map(function (field) {
+			let fields = Object.keys(config.fields).map(function (field) {
 				return __private.escape2(config.fields[field]);	// Add double quotes to field identifiers
 			});
 			sql = 'INSERT INTO ' + 'dapp_' + config.dappid + '_' + config.table + ' (' + fields.join(',') + ') ';
-			var rows = [];
+			let rows = [];
 			batchPack.forEach(function (value, rowIndex) {
-				var currentRow = batchPack[rowIndex];
-				var fields = [];
-				for (var i = 0; i < currentRow.length; i++) {
+				let currentRow = batchPack[rowIndex];
+				let fields = [];
+				for (let i = 0; i < currentRow.length; i++) {
 					fields.push(__private.escape(currentRow[i]));
 				}
 				rows.push('SELECT ' + fields.join(','));
@@ -200,13 +200,13 @@ Sql.prototype.createTables = function (dappid, config, cb) {
 		return setImmediate(cb, 'Invalid table format');
 	}
 
-	var sqles = [];
-	for (var i = 0; i < config.length; i++) {
+	let sqles = [];
+	for (let i = 0; i < config.length; i++) {
 		config[i].table = 'dapp_' + dappid + '_' + config[i].table;
 		if (config[i].type === 'table') {
 			config[i].type = 'create';
 			if (config[i].foreignKeys) {
-				for (var n = 0; n < config[i].foreignKeys.length; n++) {
+				for (let n = 0; n < config[i].foreignKeys.length; n++) {
 					config[i].foreignKeys[n].table = 'dapp_' + dappid + '_' + config[i].foreignKeys[n].table;
 				}
 			}
@@ -216,7 +216,7 @@ Sql.prototype.createTables = function (dappid, config, cb) {
 			return setImmediate(cb, 'Unknown table type: ' + config[i].type);
 		}
 
-		var sql = jsonSql.build(config[i]);
+		let sql = jsonSql.build(config[i]);
 		sqles.push(sql.query);
 	}
 
@@ -245,8 +245,8 @@ Sql.prototype.createTables = function (dappid, config, cb) {
  * @return {setImmediateCallback} err message | cb
  */
 Sql.prototype.dropTables = function (dappid, config, cb) {
-	var tables = [];
-	for (var i = 0; i < config.length; i++) {
+	let tables = [];
+	for (let i = 0; i < config.length; i++) {
 		tables.push({name: config[i].table.replace(/[^\w_]/gi, ''), type: config[i].type});
 	}
 
@@ -304,7 +304,7 @@ Sql.prototype.onBlockchainReady = function () {
  * @param {function} cb
  */
 shared.select = function (req, cb) {
-	var config = extend({}, req.body, {dappid: req.dappid});
+	let config = extend({}, req.body, {dappid: req.dappid});
 	__private.query.call(this, 'select', config, cb);
 };
 
@@ -314,7 +314,7 @@ shared.select = function (req, cb) {
  * @param {function} cb
  */
 shared.batch = function (req, cb) {
-	var config = extend({}, req.body, {dappid: req.dappid});
+	let config = extend({}, req.body, {dappid: req.dappid});
 	__private.query.call(this, 'batch', config, cb);
 };
 
@@ -324,7 +324,7 @@ shared.batch = function (req, cb) {
  * @param {function} cb
  */
 shared.insert = function (req, cb) {
-	var config = extend({}, req.body, {dappid: req.dappid});
+	let config = extend({}, req.body, {dappid: req.dappid});
 	__private.query.call(this, 'insert', config, cb);
 };
 
@@ -334,7 +334,7 @@ shared.insert = function (req, cb) {
  * @param {function} cb
  */
 shared.update = function (req, cb) {
-	var config = extend({}, req.body, {dappid: req.dappid});
+	let config = extend({}, req.body, {dappid: req.dappid});
 	__private.query.call(this, 'update', config, cb);
 };
 
@@ -344,7 +344,7 @@ shared.update = function (req, cb) {
  * @param {function} cb
  */
 shared.remove = function (req, cb) {
-	var config = extend({}, req.body, {dappid: req.dappid});
+	let config = extend({}, req.body, {dappid: req.dappid});
 	__private.query.call(this, 'remove', config, cb);
 };
 

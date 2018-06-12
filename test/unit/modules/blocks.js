@@ -1,16 +1,16 @@
 
 
-var chai = require('chai');
-var expect = require('chai').expect;
+let chai = require('chai');
+let expect = require('chai').expect;
 
-var express = require('express');
-var sinon = require('sinon');
+let express = require('express');
+let sinon = require('sinon');
 
-var modulesLoader = require('../../common/initModule').modulesLoader;
+let modulesLoader = require('../../common/initModule').modulesLoader;
 
 describe('blocks', function () {
 
-	var blocks;
+	let blocks;
 
 	before(function (done) {
 		modulesLoader.initModules([
@@ -31,7 +31,7 @@ describe('blocks', function () {
 	describe('getBlockProgressLogger', function () {
 
 		it('should logs correctly', function () {
-			var tracker = blocks.utils.getBlockProgressLogger(5, 2, '');
+			let tracker = blocks.utils.getBlockProgressLogger(5, 2, '');
 			tracker.log = sinon.spy();
 			expect(tracker.applied).to.equals(0);
 			expect(tracker.step).to.equals(2);

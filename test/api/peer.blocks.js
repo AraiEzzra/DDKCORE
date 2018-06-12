@@ -1,9 +1,9 @@
 
 
-var node = require('./../node.js');
-var genesisblock = require('../../genesisBlock.json');
+let node = require('./../node.js');
+let genesisblock = require('../../genesisBlock.json');
 
-var testBlock = {
+let testBlock = {
 	id: '2807833455815592401',
 	version: 0,
 	timestamp: 39997040,
@@ -211,7 +211,7 @@ describe('POST /peer/blocks', function () {
 	});
 
 	it('using invalid block schema should fail', function (done) {
-		var blockSignature = genesisblock.blockSignature;
+		let blockSignature = genesisblock.blockSignature;
 		genesisblock.blockSignature = null;
 
 		node.post('/peer/blocks', { block: genesisblock })

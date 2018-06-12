@@ -1,12 +1,12 @@
 
 
-var chai = require('chai');
-var expect = require('chai').expect;
+let chai = require('chai');
+let expect = require('chai').expect;
 
-var sql = require('../../sql/blockRewards.js');
-var constants = require('../../../helpers/constants.js');
-var modulesLoader = require('../../common/initModule').modulesLoader;
-var db;
+let sql = require('../../sql/blockRewards.js');
+let constants = require('../../../helpers/constants.js');
+let modulesLoader = require('../../common/initModule').modulesLoader;
+let db;
 
 before(function (done) {
 	modulesLoader.getDbConnection(function (err, db_handle) {

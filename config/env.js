@@ -3,7 +3,7 @@
  * Module dependencies.
  */
 
-var env = process.env;
+let env = process.env;
 
 /**
  * Expose environment configuration

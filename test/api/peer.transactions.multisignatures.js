@@ -1,9 +1,9 @@
 
 
-var crypto = require('crypto');
-var node = require('./../node.js');
+let crypto = require('crypto');
+let node = require('./../node.js');
 
-var multisigAccount = node.randomAccount();
+let multisigAccount = node.randomAccount();
 
 function postTransaction (transaction, done) {
 	node.post('/peer/transactions', {
@@ -14,7 +14,7 @@ function postTransaction (transaction, done) {
 }
 
 function sendLISK (params, done) {
-	var transaction = node.lisk.transaction.createTransaction(params.recipientId, params.amount, params.secret);
+	let transaction = node.lisk.transaction.createTransaction(params.recipientId, params.amount, params.secret);
 
 	postTransaction(transaction, function (err, res) {
 		node.expect(res.body).to.have.property('success').to.be.ok;
@@ -31,7 +31,7 @@ describe('POST /peer/transactions', function () {
 		describe('when account has no funds', function () {
 
 			it('should fail', function (done) {
-				var multiSigTx = node.lisk.multisignature.createMultisignature(multisigAccount.password, null, [node.lisk.crypto.getKeys(node.randomPassword()).publicKey], 1, 2);
+				let multiSigTx = node.lisk.multisignature.createMultisignature(multisigAccount.password, null, [node.lisk.crypto.getKeys(node.randomPassword()).publicKey], 1, 2);
 
 				postTransaction(multiSigTx, function (err, res) {
 					node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -52,7 +52,7 @@ describe('POST /peer/transactions', function () {
 			});
 
 			it('using null member in keysgroup should fail', function (done) {
-				var multiSigTx = node.lisk.multisignature.createMultisignature(multisigAccount.password, null, ['+' + node.eAccount.publicKey, null], 1, 2);
+				let multiSigTx = node.lisk.multisignature.createMultisignature(multisigAccount.password, null, ['+' + node.eAccount.publicKey, null], 1, 2);
 
 				postTransaction(multiSigTx, function (err, res) {
 					node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -62,10 +62,10 @@ describe('POST /peer/transactions', function () {
 			});
 
 			it('using invalid member in keysgroup should fail', function (done) {
-				var memberAccount1 = node.randomAccount();
-				var memberAccount2 = node.randomAccount();
+				let memberAccount1 = node.randomAccount();
+				let memberAccount2 = node.randomAccount();
 
-				var multiSigTx = node.lisk.multisignature.createMultisignature(multisigAccount.password, null, ['+' + node.eAccount.publicKey + 'A', '+' + memberAccount1.publicKey, '+' + memberAccount2.publicKey], 1, 2);
+				let multiSigTx = node.lisk.multisignature.createMultisignature(multisigAccount.password, null, ['+' + node.eAccount.publicKey + 'A', '+' + memberAccount1.publicKey, '+' + memberAccount2.publicKey], 1, 2);
 
 				postTransaction(multiSigTx, function (err, res) {
 					node.expect(res.body).to.have.property('success').to.be.not.ok;

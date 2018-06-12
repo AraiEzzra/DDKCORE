@@ -1,7 +1,7 @@
 
 
-var node = require('./../node.js');
-var peersSortFields = require('../../sql/peers').sortFields;
+let node = require('./../node.js');
+let peersSortFields = require('../../sql/peers').sortFields;
 
 describe('GET /api/peers/version', function () {
 
@@ -32,8 +32,8 @@ describe('GET /api/peers/count', function () {
 describe('GET /api/peers', function () {
 
 	it('using invalid ip should fail', function (done) {
-		var ip = 'invalid';
-		var params = 'ip=' + ip;
+		let ip = 'invalid';
+		let params = 'ip=' + ip;
 
 		node.get('/api/peers?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -43,8 +43,8 @@ describe('GET /api/peers', function () {
 	});
 
 	it('using valid ip should be ok', function (done) {
-		var ip = '0.0.0.0';
-		var params = 'ip=' + ip;
+		let ip = '0.0.0.0';
+		let params = 'ip=' + ip;
 
 		node.get('/api/peers?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -53,8 +53,8 @@ describe('GET /api/peers', function () {
 	});
 
 	it('using port < 1 should fail', function (done) {
-		var port = 0;
-		var params = 'port=' + port;
+		let port = 0;
+		let params = 'port=' + port;
 
 		node.get('/api/peers?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -64,8 +64,8 @@ describe('GET /api/peers', function () {
 	});
 
 	it('using port == 65535 be ok', function (done) {
-		var port = 65535;
-		var params = 'port=' + port;
+		let port = 65535;
+		let params = 'port=' + port;
 
 		node.get('/api/peers?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -74,8 +74,8 @@ describe('GET /api/peers', function () {
 	});
 
 	it('using port > 65535 should fail', function (done) {
-		var port = 65536;
-		var params = 'port=' + port;
+		let port = 65536;
+		let params = 'port=' + port;
 
 		node.get('/api/peers?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -85,14 +85,14 @@ describe('GET /api/peers', function () {
 	});
 
 	it('using state == 0 should be ok', function (done) {
-		var state = 0;
-		var params = 'state=' + state;
+		let state = 0;
+		let params = 'state=' + state;
 
 		node.get('/api/peers?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
 			node.expect(res.body).to.have.property('peers').that.is.an('array');
 			if (res.body.peers.length > 0) {
-				for (var i = 0; i < res.body.peers.length; i++) {
+				for (let i = 0; i < res.body.peers.length; i++) {
 					 node.expect(res.body.peers[i].state).to.equal(parseInt(state));
 				}
 			}
@@ -101,14 +101,14 @@ describe('GET /api/peers', function () {
 	});
 
 	it('using state == 1 should be ok', function (done) {
-		var state = 1;
-		var params = 'state=' + state;
+		let state = 1;
+		let params = 'state=' + state;
 
 		node.get('/api/peers?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
 			node.expect(res.body).to.have.property('peers').that.is.an('array');
 			if (res.body.peers.length > 0) {
-				for (var i = 0; i < res.body.peers.length; i++) {
+				for (let i = 0; i < res.body.peers.length; i++) {
 					 node.expect(res.body.peers[i].state).to.equal(parseInt(state));
 				}
 			}
@@ -117,14 +117,14 @@ describe('GET /api/peers', function () {
 	});
 
 	it('using state == 2 should be ok', function (done) {
-		var state = 2;
-		var params = 'state=' + state;
+		let state = 2;
+		let params = 'state=' + state;
 
 		node.get('/api/peers?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
 			node.expect(res.body).to.have.property('peers').that.is.an('array');
 			if (res.body.peers.length > 0) {
-				for (var i = 0; i < res.body.peers.length; i++) {
+				for (let i = 0; i < res.body.peers.length; i++) {
 					 node.expect(res.body.peers[i].state).to.equal(parseInt(state));
 				}
 			}
@@ -133,8 +133,8 @@ describe('GET /api/peers', function () {
 	});
 
 	it('using state > 2 should fail', function (done) {
-		var state = 3;
-		var params = 'state=' + state;
+		let state = 3;
+		let params = 'state=' + state;
 
 		node.get('/api/peers?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -144,8 +144,8 @@ describe('GET /api/peers', function () {
 	});
 
 	it('using os with length == 1 should be ok', function (done) {
-		var os = 'b';
-		var params = 'os=' + os;
+		let os = 'b';
+		let params = 'os=' + os;
 
 		node.get('/api/peers?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -154,8 +154,8 @@ describe('GET /api/peers', function () {
 	});
 
 	it('using os with length == 64 should be ok', function (done) {
-		var os = 'battle-claw-lunch-confirm-correct-limb-siege-erode-child-libert';
-		var params = 'os=' + os;
+		let os = 'battle-claw-lunch-confirm-correct-limb-siege-erode-child-libert';
+		let params = 'os=' + os;
 
 		node.get('/api/peers?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -164,8 +164,8 @@ describe('GET /api/peers', function () {
 	});
 
 	it('using os with length > 64 should be ok', function (done) {
-		var os = 'battle-claw-lunch-confirm-correct-limb-siege-erode-child-liberty-';
-		var params = 'os=' + os;
+		let os = 'battle-claw-lunch-confirm-correct-limb-siege-erode-child-liberty-';
+		let params = 'os=' + os;
 
 		node.get('/api/peers?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -175,8 +175,8 @@ describe('GET /api/peers', function () {
 	});
 
 	it('using os == "freebsd10" should be ok', function (done) {
-		var os = 'freebsd10';
-		var params = 'os=' + os;
+		let os = 'freebsd10';
+		let params = 'os=' + os;
 
 		node.get('/api/peers?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -185,8 +185,8 @@ describe('GET /api/peers', function () {
 	});
 
 	it('using os == "freebsd10.3" should be ok', function (done) {
-		var os = 'freebsd10.3';
-		var params = 'os=' + os;
+		let os = 'freebsd10.3';
+		let params = 'os=' + os;
 
 		node.get('/api/peers?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -195,8 +195,8 @@ describe('GET /api/peers', function () {
 	});
 
 	it('using os == "freebsd10.3-" should be ok', function (done) {
-		var os = 'freebsd10.3-';
-		var params = 'os=' + os;
+		let os = 'freebsd10.3-';
+		let params = 'os=' + os;
 
 		node.get('/api/peers?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -205,8 +205,8 @@ describe('GET /api/peers', function () {
 	});
 
 	it('using os == "freebsd10.3_" should be ok', function (done) {
-		var os = 'freebsd10.3_';
-		var params = 'os=' + os;
+		let os = 'freebsd10.3_';
+		let params = 'os=' + os;
 
 		node.get('/api/peers?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -215,8 +215,8 @@ describe('GET /api/peers', function () {
 	});
 
 	it('using os == "freebsd10.3_RELEASE" should be ok', function (done) {
-		var os = 'freebsd10.3_RELEASE';
-		var params = 'os=' + os;
+		let os = 'freebsd10.3_RELEASE';
+		let params = 'os=' + os;
 
 		node.get('/api/peers?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -225,8 +225,8 @@ describe('GET /api/peers', function () {
 	});
 
 	it('using os == "freebsd10.3_RELEASE-p7" should be ok', function (done) {
-		var os = 'freebsd10.3_RELEASE-p7';
-		var params = 'os=' + os;
+		let os = 'freebsd10.3_RELEASE-p7';
+		let params = 'os=' + os;
 
 		node.get('/api/peers?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -235,8 +235,8 @@ describe('GET /api/peers', function () {
 	});
 
 	it('using os == "freebsd10.3_RELEASE-p7-@" should fail', function (done) {
-		var os = 'freebsd10.3_RELEASE-p7-@';
-		var params = 'os=' + os;
+		let os = 'freebsd10.3_RELEASE-p7-@';
+		let params = 'os=' + os;
 
 		node.get('/api/peers?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -246,8 +246,8 @@ describe('GET /api/peers', function () {
 	});
 
 	it('using version == "999.999.999" characters should be ok', function (done) {
-		var version = '999.999.999';
-		var params = 'version=' + version;
+		let version = '999.999.999';
+		let params = 'version=' + version;
 
 		node.get('/api/peers?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -256,8 +256,8 @@ describe('GET /api/peers', function () {
 	});
 
 	it('using version == "9999.999.999" characters should fail', function (done) {
-		var version = '9999.999.999';
-		var params = 'version=' + version;
+		let version = '9999.999.999';
+		let params = 'version=' + version;
 
 		node.get('/api/peers?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -267,8 +267,8 @@ describe('GET /api/peers', function () {
 	});
 
 	it('using version == "999.9999.999" characters should fail', function (done) {
-		var version = '999.9999.999';
-		var params = 'version=' + version;
+		let version = '999.9999.999';
+		let params = 'version=' + version;
 
 		node.get('/api/peers?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -278,8 +278,8 @@ describe('GET /api/peers', function () {
 	});
 
 	it('using version == "999.999.9999" characters should fail', function (done) {
-		var version = '999.999.9999';
-		var params = 'version=' + version;
+		let version = '999.999.9999';
+		let params = 'version=' + version;
 
 		node.get('/api/peers?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -289,8 +289,8 @@ describe('GET /api/peers', function () {
 	});
 
 	it('using version == "999.999.999a" characters should be ok', function (done) {
-		var version = '999.999.999a';
-		var params = 'version=' + version;
+		let version = '999.999.999a';
+		let params = 'version=' + version;
 
 		node.get('/api/peers?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -299,8 +299,8 @@ describe('GET /api/peers', function () {
 	});
 
 	it('using version == "999.999.999ab" characters should fail', function (done) {
-		var version = '999.999.999ab';
-		var params = 'version=' + version;
+		let version = '999.999.999ab';
+		let params = 'version=' + version;
 
 		node.get('/api/peers?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -310,8 +310,8 @@ describe('GET /api/peers', function () {
 	});
 
 	it('using invalid broadhash should fail', function (done) {
-		var broadhash = 'invalid';
-		var params = 'broadhash=' + broadhash;
+		let broadhash = 'invalid';
+		let params = 'broadhash=' + broadhash;
 
 		node.get('/api/peers?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -321,8 +321,8 @@ describe('GET /api/peers', function () {
 	});
 
 	it('using valid broadhash should be ok', function (done) {
-		var broadhash = node.config.nethash;
-		var params = 'broadhash=' + broadhash;
+		let broadhash = node.config.nethash;
+		let params = 'broadhash=' + broadhash;
 
 		node.get('/api/peers?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -331,15 +331,15 @@ describe('GET /api/peers', function () {
 	});
 
 	it('using orderBy == "state:desc" should be ok', function (done) {
-		var orderBy = 'state:desc';
-		var params = 'orderBy=' + orderBy;
+		let orderBy = 'state:desc';
+		let params = 'orderBy=' + orderBy;
 
 		node.get('/api/peers?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
 			node.expect(res.body).to.have.property('peers').that.is.an('array');
 
 			if (res.body.peers.length > 0) {
-				for (var i = 0; i < res.body.peers.length; i++) {
+				for (let i = 0; i < res.body.peers.length; i++) {
 					if (res.body.peers[i + 1] != null) {
 						node.expect(res.body.peers[i + 1].state).to.be.at.most(res.body.peers[i].state);
 					}
@@ -356,13 +356,13 @@ describe('GET /api/peers', function () {
 			    node.expect(res.body).to.have.property('success').to.be.ok;
 			    node.expect(res.body).to.have.property('peers').that.is.an('array');
 
-			    var dividedIndices = res.body.peers.reduce(function (memo, peer, index) {
+			    let dividedIndices = res.body.peers.reduce(function (memo, peer, index) {
 				    memo[peer[sortField] === null ? 'nullIndices' : 'notNullIndices'].push(index);
 				    return memo;
 			    }, {notNullIndices: [], nullIndices: []});
 
 			    if (dividedIndices.nullIndices.length && dividedIndices.notNullIndices.length) {
-				    var ascOrder = function (a, b) { return a - b; };
+				    let ascOrder = function (a, b) { return a - b; };
 				    dividedIndices.notNullIndices.sort(ascOrder);
 				    dividedIndices.nullIndices.sort(ascOrder);
 
@@ -377,8 +377,8 @@ describe('GET /api/peers', function () {
 	});
 
 	it('using string limit should fail', function (done) {
-		var limit = 'one';
-		var params = 'limit=' + limit;
+		let limit = 'one';
+		let params = 'limit=' + limit;
 
 		node.get('/api/peers?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -388,8 +388,8 @@ describe('GET /api/peers', function () {
 	});
 
 	it('using limit == -1 should fail', function (done) {
-		var limit = -1;
-		var params = 'limit=' + limit;
+		let limit = -1;
+		let params = 'limit=' + limit;
 
 		node.get('/api/peers?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -399,8 +399,8 @@ describe('GET /api/peers', function () {
 	});
 
 	it('using limit == 0 should fail', function (done) {
-		var limit = 0;
-		var params = 'limit=' + limit;
+		let limit = 0;
+		let params = 'limit=' + limit;
 
 		node.get('/api/peers?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -410,8 +410,8 @@ describe('GET /api/peers', function () {
 	});
 
 	it('using limit == 1 should be ok', function (done) {
-		var limit = 1;
-		var params = 'limit=' + limit;
+		let limit = 1;
+		let params = 'limit=' + limit;
 
 		node.get('/api/peers?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -422,8 +422,8 @@ describe('GET /api/peers', function () {
 	});
 
 	it('using limit == 100 should be ok', function (done) {
-		var limit = 100;
-		var params = 'limit=' + limit;
+		let limit = 100;
+		let params = 'limit=' + limit;
 
 		node.get('/api/peers?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -434,8 +434,8 @@ describe('GET /api/peers', function () {
 	});
 
 	it('using limit > 100 should fail', function (done) {
-		var limit = 101;
-		var params = 'limit=' + limit;
+		let limit = 101;
+		let params = 'limit=' + limit;
 
 		node.get('/api/peers?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -445,8 +445,8 @@ describe('GET /api/peers', function () {
 	});
 
 	it('using string offset should fail', function (done) {
-		var offset = 'one';
-		var params = 'offset=' + offset;
+		let offset = 'one';
+		let params = 'offset=' + offset;
 
 		node.get('/api/peers?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -456,8 +456,8 @@ describe('GET /api/peers', function () {
 	});
 
 	it('using offset == -1 should fail', function (done) {
-		var offset = -1;
-		var params = 'offset=' + offset;
+		let offset = -1;
+		let params = 'offset=' + offset;
 
 		node.get('/api/peers?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -467,8 +467,8 @@ describe('GET /api/peers', function () {
 	});
 
 	it('using offset == 1 should be ok', function (done) {
-		var offset = 1;
-		var params = 'offset=' + offset;
+		let offset = 1;
+		let params = 'offset=' + offset;
 
 		node.get('/api/peers?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -479,7 +479,7 @@ describe('GET /api/peers', function () {
 
 describe('GET /api/peers/get', function () {
 
-	var validParams, frozenPeerPort = 9999;
+	let validParams, frozenPeerPort = 9999;
 
 	before(function (done) {
 		node.addPeers(1, '127.0.0.1', function (err, headers) {

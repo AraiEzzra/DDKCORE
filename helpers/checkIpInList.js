@@ -1,7 +1,7 @@
 
 
-var _ = require('lodash');
-var ip = require('ip');
+let _ = require('lodash');
+let ip = require('ip');
 
 /**
  * Checks if ip address is in list (e.g. whitelist, blacklist).
@@ -13,7 +13,7 @@ var ip = require('ip');
  * @return {boolean} True if ip is in the list, false otherwise.
  */
 function CheckIpInList (list, addr, returnListIsEmpty) {
-	var i, n;
+	let i, n;
 
 	if (!_.isBoolean(returnListIsEmpty)) {
 		returnListIsEmpty = true;
@@ -26,14 +26,14 @@ function CheckIpInList (list, addr, returnListIsEmpty) {
 	if (!list._subNets) { // First call, create subnet list
 		list._subNets = [];
 		for (i = list.length - 1; i >= 0; i--) {
-			var entry = list[i];
+			let entry = list[i];
 			if (ip.isV4Format(entry)) { // IPv4 host entry
 				entry = entry + '/32';
 			} else if (ip.isV6Format(entry)) { // IPv6 host entry
 				entry = entry + '/128';
 			}
 			try {
-				var subnet = ip.cidrSubnet(entry);
+				let subnet = ip.cidrSubnet(entry);
 				list._subNets.push(subnet);
 			} catch (err) {
 				console.error('CheckIpInList ERROR :', err.toString());

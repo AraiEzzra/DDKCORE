@@ -1,6 +1,6 @@
 
 
-var pgp = require('pg-promise');
+let pgp = require('pg-promise');
 
 /**
  * Creates and returns an insert instance
@@ -19,7 +19,7 @@ function Inserts (record, values, concat) {
 		return new Inserts(record, values, concat);
 	}
 
-	var self = this;
+	let self = this;
 
 	if (!record || !record.table || !record.values) {
 		throw 'Inserts: Invalid record argument';
@@ -42,8 +42,8 @@ function Inserts (record, values, concat) {
 	 * @return {string} Sql sentence
 	 */
 	this.template = function () {
-		var values;
-		var fields = record.fields.map(pgp.as.name).join(',');
+		let values;
+		let fields = record.fields.map(pgp.as.name).join(',');
 		if (concat) {
 			values = '$1';
 		} else {

@@ -1,7 +1,7 @@
 
 
-var extend = require('extend');
-var util = require('util');
+let extend = require('extend');
+let util = require('util');
 
 /**
  * Creates a FIFO sequence array and default settings with config values.
@@ -11,12 +11,12 @@ var util = require('util');
  * @param {string} config
  */
 function Sequence (config) {
-	var _default = {
+	let _default = {
 		onWarning: null,
 		warningLimit: 50
 	};
 	_default = extend(_default, config);
-	var self = this;
+	let self = this;
 	this.sequence = [];
 
 	setImmediate(function nextSequenceTick () {
@@ -35,11 +35,11 @@ function Sequence (config) {
  * @return {setImmediateCallback} With cb or task.done
  */
 Sequence.prototype.__tick = function (cb) {
-	var task = this.sequence.shift();
+	let task = this.sequence.shift();
 	if (!task) {
 		return setImmediate(cb);
 	}
-	var args = [function (err, res) {
+	let args = [function (err, res) {
 		if (task.done) {
 			setImmediate(task.done, err, res);
 		}
@@ -63,7 +63,7 @@ Sequence.prototype.add = function (worker, args, done) {
 		args = undefined;
 	}
 	if (worker && typeof(worker) === 'function') {
-		var task = {worker: worker, done: done};
+		let task = {worker: worker, done: done};
 		if (util.isArray(args)) {
 			task.args = args;
 		}

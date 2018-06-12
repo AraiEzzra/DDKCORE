@@ -1,10 +1,10 @@
 
 
-var constants = require('../helpers/constants.js');
-var sql = require('../sql/dapps.js');
+let constants = require('../helpers/constants.js');
+let sql = require('../sql/dapps.js');
 
 // Private fields
-var modules, library, __private = {};
+let modules, library, __private = {};
 
 __private.unconfirmedOutTansfers = {};
 
@@ -147,12 +147,12 @@ OutTransfer.prototype.process = function (trs, sender, cb) {
  * @throws {e} Error
  */
 OutTransfer.prototype.getBytes = function (trs) {
-	var buf;
+	let buf;
 
 	try {
 		buf = Buffer.from([]);
-		var dappIdBuf = Buffer.from(trs.asset.outTransfer.dappId, 'utf8');
-		var transactionIdBuff = Buffer.from(trs.asset.outTransfer.transactionId, 'utf8');
+		let dappIdBuf = Buffer.from(trs.asset.outTransfer.dappId, 'utf8');
+		let transactionIdBuff = Buffer.from(trs.asset.outTransfer.transactionId, 'utf8');
 		buf = Buffer.concat([buf, dappIdBuf, transactionIdBuff]);
 	} catch (e) {
 		throw e;
@@ -278,7 +278,7 @@ OutTransfer.prototype.schema = {
  * @throws {string} error message
  */
 OutTransfer.prototype.objectNormalize = function (trs) {
-	var report = library.schema.validate(trs.asset.outTransfer, OutTransfer.prototype.schema);
+	let report = library.schema.validate(trs.asset.outTransfer, OutTransfer.prototype.schema);
 
 	if (!report) {
 		throw 'Failed to validate outTransfer schema: ' + this.scope.schema.getLastErrors().map(function (err) {
@@ -298,7 +298,7 @@ OutTransfer.prototype.dbRead = function (raw) {
 	if (!raw.ot_dappId) {
 		return null;
 	} else {
-		var outTransfer = {
+		let outTransfer = {
 			dappId: raw.ot_dappId,
 			transactionId: raw.ot_outTransactionId
 		};

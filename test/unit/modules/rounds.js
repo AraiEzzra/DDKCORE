@@ -1,15 +1,15 @@
 
 
-var chai = require('chai');
-var express = require('express');
-var _  = require('lodash');
-var node = require('../../node.js');
-var Rounds = require('../../../modules/rounds.js');
-var modulesLoader = require('../../common/initModule').modulesLoader;
+let chai = require('chai');
+let express = require('express');
+let _  = require('lodash');
+let node = require('../../node.js');
+let Rounds = require('../../../modules/rounds.js');
+let modulesLoader = require('../../common/initModule').modulesLoader;
 
 describe('rounds', function () {
 
-	var rounds;
+	let rounds;
 
 	before(function (done) {
 		modulesLoader.initModuleWithDb(Rounds, function (err, __rounds) {
@@ -31,7 +31,7 @@ describe('rounds', function () {
 		});
 
 		it('should calculate round number from Number.MAX_VALUE', function () {
-			var res = rounds.calc(Number.MAX_VALUE);
+			let res = rounds.calc(Number.MAX_VALUE);
 			node.expect(_.isNumber(res)).to.be.ok;
 			node.expect(res).to.be.below(Number.MAX_VALUE);
 		});

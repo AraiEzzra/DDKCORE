@@ -1,13 +1,13 @@
 
 
-var async = require('async');
-var ByteBuffer = require('bytebuffer');
-var constants = require('../helpers/constants.js');
-var Diff = require('../helpers/diff.js');
-var exceptions = require('../helpers/exceptions.js');
+let async = require('async');
+let ByteBuffer = require('bytebuffer');
+let constants = require('../helpers/constants.js');
+let Diff = require('../helpers/diff.js');
+let exceptions = require('../helpers/exceptions.js');
 
 // Private fields
-var modules, library, __private = {};
+let modules, library, __private = {};
 
 __private.unconfirmedSignatures = {};
 
@@ -103,7 +103,7 @@ Multisignature.prototype.verify = function (trs, sender, cb) {
 	}
 
 	if (trs.asset.multisignature.min > trs.asset.multisignature.keysgroup.length) {
-		var err = 'Invalid multisignature min. Must be less than or equal to keysgroup size';
+		let err = 'Invalid multisignature min. Must be less than or equal to keysgroup size';
 
 		if (exceptions.multisignatures.indexOf(trs.id) > -1) {
 			this.scope.logger.debug(err);
@@ -125,11 +125,11 @@ Multisignature.prototype.verify = function (trs, sender, cb) {
 
 	if (this.ready(trs, sender)) {
 		try {
-			for (var s = 0; s < trs.asset.multisignature.keysgroup.length; s++) {
-				var valid = false;
+			for (let s = 0; s < trs.asset.multisignature.keysgroup.length; s++) {
+				let valid = false;
 
 				if (trs.signatures) {
-					for (var d = 0; d < trs.signatures.length && !valid; d++) {
+					for (let d = 0; d < trs.signatures.length && !valid; d++) {
 						if (trs.asset.multisignature.keysgroup[s][0] !== '-' && trs.asset.multisignature.keysgroup[s][0] !== '+') {
 							valid = false;
 						} else {
@@ -157,15 +157,15 @@ Multisignature.prototype.verify = function (trs, sender, cb) {
 			return setImmediate(cb, 'Invalid member in keysgroup');
 		}
 
-		var math = key[0];
-		var publicKey = key.slice(1);
+		let math = key[0];
+		let publicKey = key.slice(1);
 
 		if (math !== '+') {
 			return setImmediate(cb, 'Invalid math operator in multisignature keysgroup');
 		}
 
 		try {
-			var b = Buffer.from(publicKey, 'hex');
+			let b = Buffer.from(publicKey, 'hex');
 			if (b.length !== 32) {
 				return setImmediate(cb, 'Invalid public key in multisignature keysgroup');
 			}
@@ -180,7 +180,7 @@ Multisignature.prototype.verify = function (trs, sender, cb) {
 			return setImmediate(cb, err);
 		}
 
-		var keysgroup = trs.asset.multisignature.keysgroup.reduce(function (p, c) {
+		let keysgroup = trs.asset.multisignature.keysgroup.reduce(function (p, c) {
 			if (p.indexOf(c) < 0) { p.push(c); }
 			return p;
 		}, []);
@@ -214,12 +214,12 @@ Multisignature.prototype.process = function (trs, sender, cb) {
  * @returns {!Array} Contents as an ArrayBuffer.
  */
 Multisignature.prototype.getBytes = function (trs) {
-	var keysgroupBuffer = Buffer.from(trs.asset.multisignature.keysgroup.join(''), 'utf8');
+	let keysgroupBuffer = Buffer.from(trs.asset.multisignature.keysgroup.join(''), 'utf8');
 
-	var bb = new ByteBuffer(1 + 1 + keysgroupBuffer.length, true);
+	let bb = new ByteBuffer(1 + 1 + keysgroupBuffer.length, true);
 	bb.writeByte(trs.asset.multisignature.min);
 	bb.writeByte(trs.asset.multisignature.lifetime);
-	for (var i = 0; i < keysgroupBuffer.length; i++) {
+	for (let i = 0; i < keysgroupBuffer.length; i++) {
 		bb.writeByte(keysgroupBuffer[i]);
 	}
 	bb.flip();
@@ -253,8 +253,8 @@ Multisignature.prototype.apply = function (trs, block, sender, cb) {
 
 		// Get public keys
 		async.eachSeries(trs.asset.multisignature.keysgroup, function (transaction, cb) {
-			var key = transaction.substring(1);
-			var address = modules.accounts.generateAddressByPublicKey(key);
+			let key = transaction.substring(1);
+			let address = modules.accounts.generateAddressByPublicKey(key);
 
 			// Create accounts
 			modules.accounts.setAccountAndGet({
@@ -277,7 +277,7 @@ Multisignature.prototype.apply = function (trs, block, sender, cb) {
  * @return {setImmediateCallback} For error.
  */
 Multisignature.prototype.undo = function (trs, block, sender, cb) {
-	var multiInvert = Diff.reverse(trs.asset.multisignature.keysgroup);
+	let multiInvert = Diff.reverse(trs.asset.multisignature.keysgroup);
 
 	__private.unconfirmedSignatures[sender.address] = true;
 
@@ -327,7 +327,7 @@ Multisignature.prototype.applyUnconfirmed = function (trs, sender, cb) {
  * @return {setImmediateCallback} For error.
  */
 Multisignature.prototype.undoUnconfirmed = function (trs, sender, cb) {
-	var multiInvert = Diff.reverse(trs.asset.multisignature.keysgroup);
+	let multiInvert = Diff.reverse(trs.asset.multisignature.keysgroup);
 
 	__private.unconfirmedSignatures[sender.address] = false;
 
@@ -376,7 +376,7 @@ Multisignature.prototype.schema = {
  * @throws {string} Error message.
  */
 Multisignature.prototype.objectNormalize = function (trs) {
-	var report = library.schema.validate(trs.asset.multisignature, Multisignature.prototype.schema);
+	let report = library.schema.validate(trs.asset.multisignature, Multisignature.prototype.schema);
 
 	if (!report) {
 		throw 'Failed to validate multisignature schema: ' + this.scope.schema.getLastErrors().map(function (err) {
@@ -397,7 +397,7 @@ Multisignature.prototype.dbRead = function (raw) {
 	if (!raw.m_keysgroup) {
 		return null;
 	} else {
-		var multisignature = {
+		let multisignature = {
 			min: raw.m_min,
 			lifetime: raw.m_lifetime,
 		};

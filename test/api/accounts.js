@@ -1,8 +1,8 @@
 
 
-var node = require('./../node.js');
+let node = require('./../node.js');
 
-var account = node.randomAccount();
+let account = node.randomAccount();
 
 describe('POST /api/accounts/open', function () {
 
@@ -30,7 +30,7 @@ describe('POST /api/accounts/open', function () {
 	});
 
 	it('using unknown passphrase should be ok', function (done) {
-		var account = node.randomAccount();
+		let account = node.randomAccount();
 
 		openAccount({
 			secret: account.password
@@ -80,8 +80,8 @@ describe('POST /api/accounts/open', function () {
 	});
 
 	it('when payload is over 2Mb should fail', function (done) {
-		var data = 'qs';
-		for (var i = 0; i < 20; i++) {
+		let data = 'qs';
+		for (let i = 0; i < 20; i++) {
 			data += data;
 		}
 		openAccount({

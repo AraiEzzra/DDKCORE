@@ -1,9 +1,9 @@
 
 
-var sandboxHelper = require('../helpers/sandbox.js');
+let sandboxHelper = require('../helpers/sandbox.js');
 
 // Private fields
-var self, __private = {}, shared = {};
+let self, __private = {}, shared = {};
 
 __private.loaded = false;
 

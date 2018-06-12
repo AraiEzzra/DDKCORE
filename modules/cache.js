@@ -1,11 +1,11 @@
-var async = require('async');
-var transactionTypes = require('../helpers/transactionTypes.js');
-var cacheReady = true;
-var errorCacheDisabled = 'Cache Unavailable';
-var client;
-var self;
-var logger;
-var cacheEnabled;
+let async = require('async');
+let transactionTypes = require('../helpers/transactionTypes.js');
+let cacheReady = true;
+let errorCacheDisabled = 'Cache Unavailable';
+let client;
+let self;
+let logger;
+let cacheEnabled;
 
 /**
  * Cache module
@@ -147,7 +147,7 @@ Cache.prototype.removeByPattern = function (pattern, cb) {
 	if (!self.isConnected()) {
 		return cb(errorCacheDisabled);
 	}
-	var keys, cursor = 0;
+	let keys, cursor = 0;
 	async.doWhilst(function iteratee (whilstCb) {
 		client.scan(cursor, 'MATCH', pattern, function (err, res) {
 			if (err) {
@@ -229,7 +229,7 @@ Cache.prototype.onFinishRound = function (round, cb) {
 	cb = cb || function () {};
 
 	if(!self.isReady()) { return cb(errorCacheDisabled); }
-	var pattern = '/api/delegates*';
+	let pattern = '/api/delegates*';
 	self.removeByPattern(pattern, function (err) {
 		if (err) {
 			logger.error(['Error clearing keys with pattern:', pattern, ' round finish'].join(' '));
@@ -250,9 +250,9 @@ Cache.prototype.onTransactionsSaved = function (transactions, cb) {
 	cb = cb || function () {};
 
 	if(!self.isReady()) { return cb(errorCacheDisabled); }
-	var pattern = '/api/delegates*';
+	let pattern = '/api/delegates*';
 
-	var delegateTransaction = transactions.find(function (trs) {
+	let delegateTransaction = transactions.find(function (trs) {
 		return !!trs && trs.type === transactionTypes.DELEGATE;
 	});
 

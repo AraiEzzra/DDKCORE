@@ -1,18 +1,18 @@
 
 
-var constants = require('../helpers/constants.js');
-var sql = require('../sql/frogings.js');
-var slots = require('../helpers/slots.js');
-var config = require('../config.json');
-var request = require('request');
-var async = require('async');
+let constants = require('../helpers/constants.js');
+let sql = require('../sql/frogings.js');
+let slots = require('../helpers/slots.js');
+let config = require('../config.json');
+let request = require('request');
+let async = require('async');
 
 // Private fields
-var __private = {};
+let __private = {};
 __private.types = {};
 
 // Private fields
-var modules, library, self;
+let modules, library, self;
 
 // Constructor
 function SendFreezeOrder(logger, db, network, cb) {
@@ -250,7 +250,7 @@ SendFreezeOrder.prototype.sendFreezedOrder = function (userAndOrderData, cb) {
 	//amount in mem_account table & update old order and create new order in stake table
 	(async function() {
 		try {
-			var order = await getActiveFrozeOrder();
+			let order = await getActiveFrozeOrder();
 
 			if (order && order.isTransferred) {
 				return setImmediate(cb, 'Order can be send only Once');

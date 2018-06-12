@@ -1,14 +1,14 @@
 
 
-var crypto = require('crypto');
-var bignum = require('../helpers/bignum.js');
-var ByteBuffer = require('bytebuffer');
-var BlockReward = require('../logic/blockReward.js');
-var Contract = require('../logic/contract.js');
-var constants = require('../helpers/constants.js');
+let crypto = require('crypto');
+let bignum = require('../helpers/bignum.js');
+let ByteBuffer = require('bytebuffer');
+let BlockReward = require('../logic/blockReward.js');
+let Contract = require('../logic/contract.js');
+let constants = require('../helpers/constants.js');
 
 // Private fields
-var __private = {};
+let __private = {};
 
 /**
  * Main Block logic.
@@ -50,14 +50,14 @@ __private.Contract = new Contract();
  * @return {address} address
  */
 __private.getAddressByPublicKey = function (publicKey) {
-	var publicKeyHash = crypto.createHash('sha256').update(publicKey, 'hex').digest();
-	var temp = Buffer.alloc(8);
+	let publicKeyHash = crypto.createHash('sha256').update(publicKey, 'hex').digest();
+	let temp = Buffer.alloc(8);
 
-	for (var i = 0; i < 8; i++) {
+	for (let i = 0; i < 8; i++) {
 		temp[i] = publicKeyHash[7 - i];
 	}
 
-	var address =  'DDK' + bignum.fromBuffer(temp).toString();
+	let address =  'DDK' + bignum.fromBuffer(temp).toString();
 	return address;
 };
 
@@ -75,7 +75,7 @@ __private.getAddressByPublicKey = function (publicKey) {
  * @returns {block} block
  */
 Block.prototype.create = function (data) {
-	var transactions = data.transactions.sort(function compare (a, b) {
+	let transactions = data.transactions.sort(function compare (a, b) {
 		if (a.type < b.type) { return -1; }
 		if (a.type > b.type) { return 1; }
 		if (a.amount < b.amount) { return -1; }
@@ -83,15 +83,15 @@ Block.prototype.create = function (data) {
 		return 0;
 	});
 
-	var reward = 0,//changes from: __private.blockReward.calcReward(nextHeight)
+	let reward = 0,//changes from: __private.blockReward.calcReward(nextHeight)
 		totalFee = 0, totalAmount = 0, size = 0;
 
-	var blockTransactions = [];
-	var payloadHash = crypto.createHash('sha256');
+	let blockTransactions = [];
+	let payloadHash = crypto.createHash('sha256');
 
-	for (var i = 0; i < transactions.length; i++) {
-		var transaction = transactions[i];
-		var bytes = this.scope.transaction.getBytes(transaction);
+	for (let i = 0; i < transactions.length; i++) {
+		let transaction = transactions[i];
+		let bytes = this.scope.transaction.getBytes(transaction);
 
 		if (size + bytes.length > constants.maxPayloadLength) {
 			break;
@@ -106,7 +106,7 @@ Block.prototype.create = function (data) {
 		payloadHash.update(bytes);
 	}
 
-	var block = {
+	let block = {
 		version: 0,
 		totalAmount: totalAmount,
 		totalFee: totalFee,
@@ -139,7 +139,7 @@ Block.prototype.create = function (data) {
  * @returns {signature} block signature
  */
 Block.prototype.sign = function (block, keypair) {
-	var hash = this.getHash(block);
+	let hash = this.getHash(block);
 
 	return this.scope.ed.sign(hash, keypair).toString('hex');
 };
@@ -152,16 +152,16 @@ Block.prototype.sign = function (block, keypair) {
  * @throws {error} If buffer fails
  */
 Block.prototype.getBytes = function (block) {
-	var size = 4 + 4 + 8 + 4 + 4 + 8 + 8 + 4 + 4 + 4 + 32 + 32 + 64;
-	var b, i;
+	let size = 4 + 4 + 8 + 4 + 4 + 8 + 8 + 4 + 4 + 4 + 32 + 32 + 64;
+	let b, i;
 
 	try {
-		var bb = new ByteBuffer(size, true);
+		let bb = new ByteBuffer(size, true);
 		bb.writeInt(block.version);
 		bb.writeInt(block.timestamp);
 
 		if (block.previousBlock) {
-			var pb = new bignum(block.previousBlock).toBuffer({size: '8'});
+			let pb = new bignum(block.previousBlock).toBuffer({size: '8'});
 
 			for (i = 0; i < 8; i++) {
 				bb.writeByte(pb[i]);
@@ -179,18 +179,18 @@ Block.prototype.getBytes = function (block) {
 
 		bb.writeInt(block.payloadLength);
 
-		var payloadHashBuffer = Buffer.from(block.payloadHash, 'hex');
+		let payloadHashBuffer = Buffer.from(block.payloadHash, 'hex');
 		for (i = 0; i < payloadHashBuffer.length; i++) {
 			bb.writeByte(payloadHashBuffer[i]);
 		}
 
-		var generatorPublicKeyBuffer = Buffer.from(block.generatorPublicKey, 'hex');
+		let generatorPublicKeyBuffer = Buffer.from(block.generatorPublicKey, 'hex');
 		for (i = 0; i < generatorPublicKeyBuffer.length; i++) {
 			bb.writeByte(generatorPublicKeyBuffer[i]);
 		}
 
 		if (block.blockSignature) {
-			var blockSignatureBuffer = Buffer.from(block.blockSignature, 'hex');
+			let blockSignatureBuffer = Buffer.from(block.blockSignature, 'hex');
 			for (i = 0; i < blockSignatureBuffer.length; i++) {
 				bb.writeByte(blockSignatureBuffer[i]);
 			}
@@ -215,19 +215,19 @@ Block.prototype.getBytes = function (block) {
  * @throws {error} catch error
  */
 Block.prototype.verifySignature = function (block) {
-	var remove = 64;
-	var res;
+	let remove = 64;
+	let res;
 
 	try {
-		var data = this.getBytes(block);
-		var data2 = Buffer.alloc(data.length - remove);
+		let data = this.getBytes(block);
+		let data2 = Buffer.alloc(data.length - remove);
 
-		for (var i = 0; i < data2.length; i++) {
+		for (let i = 0; i < data2.length; i++) {
 			data2[i] = data[i];
 		}
-		var hash = crypto.createHash('sha256').update(data2).digest();
-		var blockSignatureBuffer = Buffer.from(block.blockSignature, 'hex');
-		var generatorPublicKeyBuffer = Buffer.from(block.generatorPublicKey, 'hex');
+		let hash = crypto.createHash('sha256').update(data2).digest();
+		let blockSignatureBuffer = Buffer.from(block.blockSignature, 'hex');
+		let generatorPublicKeyBuffer = Buffer.from(block.generatorPublicKey, 'hex');
 		res = this.scope.ed.verify(hash, blockSignatureBuffer || ' ', generatorPublicKeyBuffer || ' ');
 	} catch (e) {
 		throw e;
@@ -261,7 +261,7 @@ Block.prototype.dbFields = [
  * @throws {error} catch error
  */
 Block.prototype.dbSave = function (block) {
-	var payloadHash, generatorPublicKey, blockSignature;
+	let payloadHash, generatorPublicKey, blockSignature;
 
 	try {
 		payloadHash = Buffer.from(block.payloadHash, 'hex');
@@ -381,7 +381,7 @@ Block.prototype.schema = {
  * @throws {string|error} error message | catch error
  */
 Block.prototype.objectNormalize = function (block) {
-	var i;
+	let i;
 
 	for (i in block) {
 		if (block[i] == null || typeof block[i] === 'undefined') {
@@ -389,7 +389,7 @@ Block.prototype.objectNormalize = function (block) {
 		}
 	}
 
-	var report = this.scope.schema.validate(block, Block.prototype.schema);
+	let report = this.scope.schema.validate(block, Block.prototype.schema);
 
 	if (!report) {
 		throw 'Failed to validate block schema: ' + this.scope.schema.getLastErrors().map(function (err) {
@@ -417,13 +417,13 @@ Block.prototype.objectNormalize = function (block) {
  * @return {string} id string
  */
 Block.prototype.getId = function (block) {
-	var hash = crypto.createHash('sha256').update(this.getBytes(block)).digest();
-	var temp = Buffer.alloc(8);
-	for (var i = 0; i < 8; i++) {
+	let hash = crypto.createHash('sha256').update(this.getBytes(block)).digest();
+	let temp = Buffer.alloc(8);
+	for (let i = 0; i < 8; i++) {
 		temp[i] = hash[7 - i];
 	}
 
-	var id = new bignum.fromBuffer(temp).toString();
+	let id = new bignum.fromBuffer(temp).toString();
 	return id;
 };
 
@@ -458,7 +458,7 @@ Block.prototype.dbRead = function (raw) {
 	if (!raw.b_id) {
 		return null;
 	} else {
-		var block = {
+		let block = {
 			id: raw.b_id,
 			version: parseInt(raw.b_version),
 			timestamp: parseInt(raw.b_timestamp),

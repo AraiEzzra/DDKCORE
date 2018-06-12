@@ -33,7 +33,7 @@ function Field (validator, path, value, rules, thisArg) {
  * @returns {Validator.Field}
  */
 Field.prototype.child = function (path, value, rules, thisArg) {
-	var field = this.validator.createField(this.path.concat(path), value, rules, thisArg);
+	let field = this.validator.createField(this.path.concat(path), value, rules, thisArg);
 	field.report = this.report;
 	return field;
 };
@@ -43,10 +43,10 @@ Field.prototype.child = function (path, value, rules, thisArg) {
  * @param callback
  */
 Field.prototype.validate = function (callback) {
-	var stack = this._stack;
+	let stack = this._stack;
 	// TODO copy value
-	var report = this.report;
-	var thisArg = this.thisArg;
+	let report = this.report;
+	let thisArg = this.thisArg;
 	this.inProgress = true;
 
 	if (typeof callback === 'function') {
@@ -57,9 +57,9 @@ Field.prototype.validate = function (callback) {
 		this.hasCallback = false;
 	}
 
-	var descriptor, result, accept, value;
+	let descriptor, result, accept, value;
 	while (stack.length) {
-		var rule = stack.shift();
+		let rule = stack.shift();
 		value = this.value;
 		accept = this.rules[rule];
 
@@ -143,7 +143,7 @@ Field.prototype.end = function (err) {
  */
 Field.prototype.async = function (callback) {
 	this.isAsync = true;
-	var self = this;
+	let self = this;
 	callback(function (err){
 		if (arguments.length > 1) {
 			self.value = arguments[1];

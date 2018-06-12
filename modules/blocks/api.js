@@ -1,12 +1,12 @@
 
 
-var BlockReward = require('../../logic/blockReward.js');
-var constants = require('../../helpers/constants.js');
-var OrderBy = require('../../helpers/orderBy.js');
-var schema = require('../../schema/blocks.js');
-var sql = require('../../sql/blocks.js');
+let BlockReward = require('../../logic/blockReward.js');
+let constants = require('../../helpers/constants.js');
+let OrderBy = require('../../helpers/orderBy.js');
+let schema = require('../../schema/blocks.js');
+let sql = require('../../sql/blocks.js');
 
-var modules, library, self, __private = {};
+let modules, library, self, __private = {};
 
 __private.blockReward = new BlockReward();
 
@@ -57,7 +57,7 @@ __private.getById = function (id, cb) {
 		}
 
 		// Normalize block
-		var block = library.logic.block.dbRead(rows[0]);
+		let block = library.logic.block.dbRead(rows[0]);
 
 		return setImmediate(cb, null, block);
 	}).catch(function (err) {
@@ -89,7 +89,7 @@ __private.getById = function (id, cb) {
  * @return {Object}   cb.data List of normalized blocks
  */
 __private.list = function (filter, cb) {
-	var params = {}, where = [];
+	let params = {}, where = [];
 
 	if (filter.generatorPublicKey) {
 		where.push('"b_generatorPublicKey"::bytea = ${generatorPublicKey}');
@@ -146,7 +146,7 @@ __private.list = function (filter, cb) {
 		return setImmediate(cb, 'Invalid limit. Maximum is 100');
 	}
 
-	var orderBy = OrderBy(
+	let orderBy = OrderBy(
 		(filter.orderBy || 'height:desc'), {
 			sortFields: sql.sortFields,
 			fieldPrefix: 'b_'
@@ -160,22 +160,22 @@ __private.list = function (filter, cb) {
 	library.db.query(sql.countList({
 		where: where
 	}), params).then(function (rows) {
-		var count = rows[0].count;
+		let count = rows[0].count;
 
 		library.db.query(sql.list({
 			where: where,
 			sortField: orderBy.sortField,
 			sortMethod: orderBy.sortMethod
 		}), params).then(function (rows) {
-			var blocks = [];
+			let blocks = [];
 
 			// Normalize blocks
-			for (var i = 0; i < rows.length; i++) {
+			for (let i = 0; i < rows.length; i++) {
 				// FIXME: Can have poor performance because it performs SHA256 hash calculation for each block
 				blocks.push(library.logic.block.dbRead(rows[i]));
 			}
 
-			var data = {
+			let data = {
 				blocks: blocks,
 				count: count
 			};
@@ -311,7 +311,7 @@ API.prototype.getStatus = function (req, cb) {
 		return setImmediate(cb, 'Blockchain is loading');
 	}
 
-	var lastBlock = modules.blocks.lastBlock.get();
+	let lastBlock = modules.blocks.lastBlock.get();
 
 	return setImmediate(cb, null, {
 		broadhash: modules.system.getBroadhash(),

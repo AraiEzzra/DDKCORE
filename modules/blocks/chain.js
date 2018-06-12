@@ -1,13 +1,13 @@
 
 
-var _ = require('lodash');
-var async = require('async');
-var Inserts = require('../../helpers/inserts.js');
-var sql = require('../../sql/blocks.js');
-var transactionTypes = require('../../helpers/transactionTypes.js');
-var slots = require('../../helpers/slots.js');
+let _ = require('lodash');
+let async = require('async');
+let Inserts = require('../../helpers/inserts.js');
+let sql = require('../../sql/blocks.js');
+let transactionTypes = require('../../helpers/transactionTypes.js');
+let slots = require('../../helpers/slots.js');
 
-var modules, library, self, __private = {};
+let modules, library, self, __private = {};
 
 /**
  * Initializes library.
@@ -53,7 +53,7 @@ Chain.prototype.saveGenesisBlock = function (cb) {
 	// Check if genesis block ID already exists in the database
 	// FIXME: Duplicated, there is another SQL query that we can use for that
 	library.db.query(sql.getGenesisBlockId, { id: library.genesisblock.block.id }).then(function (rows) {
-		var blockId = rows.length && rows[0].id;
+		let blockId = rows.length && rows[0].id;
 
 		if (!blockId) {
 			// If there is no block with genesis ID - save to database
@@ -86,11 +86,11 @@ Chain.prototype.saveBlock = function (block, cb) {
 	// WARNING: DB_WRITE
 	library.db.tx(function (t) {
 		// Create bytea fields (buffers), and returns pseudo-row object promise-like
-		var promise = library.logic.block.dbSave(block);
+		let promise = library.logic.block.dbSave(block);
 		// Initialize insert helper
-		var inserts = new Inserts(promise, promise.values);
+		let inserts = new Inserts(promise, promise.values);
 
-		var promises = [
+		let promises = [
 			// Prepare insert SQL query
 			t.none(inserts.template(), promise.values)
 		];
@@ -147,7 +147,7 @@ __private.promiseTransactions = function (t, block) {
 		return t;
 	}
 
-	var transactionIterator = function (transaction) {
+	let transactionIterator = function (transaction) {
 		// Apply block ID to transaction
 		transaction.blockId = block.id;
 		// Create bytea fileds (buffers), and returns pseudo-row promise-like object
@@ -158,7 +158,7 @@ __private.promiseTransactions = function (t, block) {
 		return library.logic.transaction.dbSave(transaction);
 	};
 
-	var promiseGrouper = function (promise) {
+	let promiseGrouper = function (promise) {
 		if (promise && promise.table) {
 			return promise.table;
 		} else {
@@ -166,8 +166,8 @@ __private.promiseTransactions = function (t, block) {
 		}
 	};
 
-	var typeIterator = function (type) {
-		var values = [];
+	let typeIterator = function (type) {
+		let values = [];
 		_.each(type, function (promise) {
 			if (promise && promise.values) {
 				values = values.concat(promise.values);
@@ -177,12 +177,12 @@ __private.promiseTransactions = function (t, block) {
 		});
 
 		// Initialize insert helper
-		var inserts = new Inserts(type[0], values, true);
+		let inserts = new Inserts(type[0], values, true);
 		// Prepare insert SQL query
 		t.none(inserts.template(), inserts);
 	};
 
-	var promises = _.flatMap(block.transactions, transactionIterator);
+	let promises = _.flatMap(block.transactions, transactionIterator);
 	_.each(_.groupBy(promises, promiseGrouper), typeIterator);
 
 	return t;
@@ -253,7 +253,7 @@ Chain.prototype.applyGenesisBlock = function (block, cb) {
 		}
 	});
 	// Initialize block progress tracker
-	var tracker = modules.blocks.utils.getBlockProgressLogger(block.transactions.length, block.transactions.length / 100, 'Genesis block loading');
+	let tracker = modules.blocks.utils.getBlockProgressLogger(block.transactions.length, block.transactions.length / 100, 'Genesis block loading');
 	async.eachSeries(block.transactions, function (transaction, cb) {
 		// Apply transactions through setAccountAndGet, bypassing unconfirmed/confirmed states
 		// FIXME: Poor performance - every transaction cause SQL query to be executed
@@ -342,10 +342,10 @@ Chain.prototype.applyBlock = function (block, broadcast, cb, saveBlock) {
 	modules.blocks.isActive.set(true);
 
 	// Transactions to rewind in case of error.
-	var appliedTransactions = {};
+	let appliedTransactions = {};
 
 	// List of unconfirmed transactions ids.
-	var unconfirmedTransactionIds;
+	let unconfirmedTransactionIds;
 
 	async.series({
 		// Rewind any unconfirmed transactions before applying block.
@@ -381,7 +381,7 @@ Chain.prototype.applyBlock = function (block, broadcast, cb, saveBlock) {
 						appliedTransactions[transaction.id] = transaction;
 
 						// Remove the transaction from the node queue, if it was present.
-						var index = unconfirmedTransactionIds.indexOf(transaction.id);
+						let index = unconfirmedTransactionIds.indexOf(transaction.id);
 						if (index >= 0) {
 							unconfirmedTransactionIds.splice(index, 1);
 						}
@@ -593,7 +593,7 @@ __private.popLastBlock = function (oldLastBlock, cb) {
  * @return {Object}   cb.obj New last block
  */
 Chain.prototype.deleteLastBlock = function (cb) {
-	var lastBlock = modules.blocks.lastBlock.get();
+	let lastBlock = modules.blocks.lastBlock.get();
 	library.logger.warn('Deleting last block', lastBlock);
 
 	if (lastBlock.height === 1) {

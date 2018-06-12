@@ -1,8 +1,8 @@
 
 
-var Router = require('../../helpers/router');
-var httpApi = require('../../helpers/httpApi');
-var schema = require('../../schema/transport');
+let Router = require('../../helpers/router');
+let httpApi = require('../../helpers/httpApi');
+let schema = require('../../schema/transport');
 
 /**
  * Binds api with modules and creates common url.
@@ -31,7 +31,7 @@ var schema = require('../../schema/transport');
 // Constructor
 function TransportHttpApi (transportModule, app, logger) {
 
-	var router = new Router();
+	let router = new Router();
 
 	router.use(httpApi.middleware.attachResponseHeaders.bind(null, transportModule.headers));
 	router.use(httpApi.middleware.blockchainReady.bind(null, transportModule.isLoaded));

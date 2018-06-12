@@ -1,8 +1,8 @@
 
 
-var Router = require('../../helpers/router');
-var httpApi = require('../../helpers/httpApi');
-var schema = require('../../schema/dapps');
+let Router = require('../../helpers/router');
+let httpApi = require('../../helpers/httpApi');
+let schema = require('../../schema/dapps');
 
 /**
  * Binds api with modules and creates common url.
@@ -37,7 +37,7 @@ var schema = require('../../schema/dapps');
 // Constructor
 function DappsHttpApi (dappsModule, app) {
 
-	var router = new Router();
+	let router = new Router();
 
 	router.map(dappsModule.internal, {
 		'get /categories': 'categories',

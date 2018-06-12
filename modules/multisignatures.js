@@ -1,16 +1,16 @@
 
 
-var async = require('async');
-var crypto = require('crypto');
-var genesisblock = null;
-var Multisignature = require('../logic/multisignature.js');
-var sandboxHelper = require('../helpers/sandbox.js');
-var schema = require('../schema/multisignatures.js');
-var sql = require('../sql/multisignatures.js');
-var transactionTypes = require('../helpers/transactionTypes.js');
+let async = require('async');
+let crypto = require('crypto');
+let genesisblock = null;
+let Multisignature = require('../logic/multisignature.js');
+let sandboxHelper = require('../helpers/sandbox.js');
+let schema = require('../schema/multisignatures.js');
+let sql = require('../sql/multisignatures.js');
+let transactionTypes = require('../helpers/transactionTypes.js');
 
 // Private fields
-var modules, library, self, __private = {}, shared = {};
+let modules, library, self, __private = {}, shared = {};
 
 __private.assetTypes = {};
 
@@ -63,11 +63,11 @@ function Multisignatures (cb, scope) {
  * @todo test function!.
  */
 Multisignatures.prototype.processSignature = function (tx, cb) {
-	var transaction = modules.transactions.getMultisignatureTransaction(tx.transaction);
+	let transaction = modules.transactions.getMultisignatureTransaction(tx.transaction);
 
 	function done (cb) {
 		library.balancesSequence.add(function (cb) {
-			var transaction = modules.transactions.getMultisignatureTransaction(tx.transaction);
+			let transaction = modules.transactions.getMultisignatureTransaction(tx.transaction);
 
 			if (!transaction) {
 				return setImmediate(cb, 'Transaction not found');
@@ -104,11 +104,11 @@ Multisignatures.prototype.processSignature = function (tx, cb) {
 		}
 
 		// Find public key
-		var verify = false;
+		let verify = false;
 
 		try {
-			for (var i = 0; i < transaction.asset.multisignature.keysgroup.length && !verify; i++) {
-				var key = transaction.asset.multisignature.keysgroup[i].substring(1);
+			for (let i = 0; i < transaction.asset.multisignature.keysgroup.length && !verify; i++) {
+				let key = transaction.asset.multisignature.keysgroup[i].substring(1);
 				verify = library.logic.transaction.verifySignature(transaction, key, tx.signature);
 			}
 		} catch (e) {
@@ -129,8 +129,8 @@ Multisignatures.prototype.processSignature = function (tx, cb) {
 				return setImmediate(cb, 'Multisignature account not found');
 			}
 
-			var verify = false;
-			var multisignatures = account.multisignatures;
+			let verify = false;
+			let multisignatures = account.multisignatures;
 
 			if (transaction.requesterPublicKey) {
 				multisignatures.push(transaction.senderPublicKey);
@@ -147,7 +147,7 @@ Multisignatures.prototype.processSignature = function (tx, cb) {
 			}
 
 			try {
-				for (var i = 0; i < multisignatures.length && !verify; i++) {
+				for (let i = 0; i < multisignatures.length && !verify; i++) {
 					verify = library.logic.transaction.verifySignature(transaction, multisignatures[i], tx.signature);
 				}
 			} catch (e) {
@@ -209,7 +209,7 @@ Multisignatures.prototype.isLoaded = function () {
  */
 Multisignatures.prototype.shared = {
 	getAccounts: function (req, cb) {
-		var scope = {};
+		let scope = {};
 
 		async.series({
 			validateSchema: function (seriesCb) {
@@ -245,9 +245,9 @@ Multisignatures.prototype.shared = {
 			},
 			buildAccounts: function (seriesCb) {
 				async.eachSeries(scope.accounts, function (account, eachSeriesCb) {
-					var addresses = [];
+					let addresses = [];
 
-					for (var i = 0; i < account.multisignatures.length; i++) {
+					for (let i = 0; i < account.multisignatures.length; i++) {
 						addresses.push(modules.accounts.generateAddressByPublicKey(account.multisignatures[i]));
 					}
 
@@ -273,7 +273,7 @@ Multisignatures.prototype.shared = {
 	},
 
 	pending: function (req, cb) {
-		var scope = { pending: [] };
+		let scope = { pending: [] };
 
 		async.series({
 			validateSchema: function (seriesCb) {
@@ -295,12 +295,12 @@ Multisignatures.prototype.shared = {
 			},
 			buildTransactions: function (seriesCb) {
 				async.eachSeries(scope.transactions, function (transaction, eachSeriesCb) {
-					var signed = false;
+					let signed = false;
 
 					if (transaction.signatures && transaction.signatures.length > 0) {
-						var verify = false;
+						let verify = false;
 
-						for (var i in transaction.signatures) {
+						for (let i in transaction.signatures) {
 
 							try {
 								verify = library.logic.transaction.verifySignature(transaction, req.body.publicKey, transaction.signatures[i]);
@@ -334,9 +334,9 @@ Multisignatures.prototype.shared = {
 							return setImmediate(cb, 'Sender not found');
 						}
 
-						var min = sender.u_multimin || sender.multimin;
-						var lifetime = sender.u_multilifetime || sender.multilifetime;
-						var signatures = sender.u_multisignatures || [];
+						let min = sender.u_multimin || sender.multimin;
+						let lifetime = sender.u_multilifetime || sender.multilifetime;
+						let signatures = sender.u_multisignatures || [];
 
 						scope.pending.push({
 							max: signatures.length,
@@ -358,10 +358,10 @@ Multisignatures.prototype.shared = {
 	},
 
 	sign: function (req, cb) {
-		var scope = {};
+		let scope = {};
 
 		function checkGroupPermisions (cb) {
-			var permissionDenied = (
+			let permissionDenied = (
 			scope.transaction.asset.multisignature.keysgroup.indexOf('+' + scope.keypair.publicKey.toString('hex')) === -1
 		);
 
@@ -369,7 +369,7 @@ Multisignatures.prototype.shared = {
 				return setImmediate(cb, 'Permission to sign transaction denied');
 			}
 
-			var alreadySigned = (
+			let alreadySigned = (
 			Array.isArray(scope.transaction.signatures) &&
 			scope.transaction.signatures.indexOf(scope.signature.toString('hex')) !== -1
 		);
@@ -382,7 +382,7 @@ Multisignatures.prototype.shared = {
 		}
 
 		function checkTransactionPermissions (cb) {
-			var permissionDenied = true;
+			let permissionDenied = true;
 
 			if (!scope.transaction.requesterPublicKey) {
 				permissionDenied = (
@@ -398,7 +398,7 @@ Multisignatures.prototype.shared = {
 				return setImmediate(cb, 'Permission to sign transaction denied');
 			}
 
-			var alreadySigned = (scope.transaction.signatures && scope.transaction.signatures.indexOf(scope.signature) !== -1);
+			let alreadySigned = (scope.transaction.signatures && scope.transaction.signatures.indexOf(scope.signature) !== -1);
 
 			if (alreadySigned) {
 				return setImmediate(cb, 'Transaction already signed');
@@ -463,7 +463,7 @@ Multisignatures.prototype.shared = {
 					return setImmediate(cb, err);
 				}
 
-				var transaction = modules.transactions.getMultisignatureTransaction(req.body.transactionId);
+				let transaction = modules.transactions.getMultisignatureTransaction(req.body.transactionId);
 
 				if (!transaction) {
 					return setImmediate(cb, 'Transaction not found');
@@ -482,7 +482,7 @@ Multisignatures.prototype.shared = {
 	},
 
 	addMultisignature: function (req, cb) {
-		var scope = {};
+		let scope = {};
 
 		library.balancesSequence.add(function (cb) {
 			async.series({

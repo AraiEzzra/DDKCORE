@@ -1,20 +1,20 @@
 
 
-var constants = require('../helpers/constants.js');
-var sql = require('../sql/frogings.js');
-var slots = require('../helpers/slots.js');
-var StakeReward = require('../logic/stakeReward.js');
+let constants = require('../helpers/constants.js');
+let sql = require('../sql/frogings.js');
+let slots = require('../helpers/slots.js');
+let StakeReward = require('../logic/stakeReward.js');
 
-var request = require('request');
-var async = require('async');
-var Promise = require('bluebird');
+let request = require('request');
+let async = require('async');
+let Promise = require('bluebird');
 
 // Private fields
-var __private = {};
+let __private = {};
 __private.types = {};
 
 // Private fields
-var modules, library, self;
+let modules, library, self;
 
 // Constructor
 function Frozen(logger, db, transaction, network, config, cb) {
@@ -44,7 +44,7 @@ __private.stakeReward = new StakeReward();
 
 Frozen.prototype.create = function (data, trs) {
 	trs.startTime = trs.timestamp;
-	var date = new Date(trs.timestamp * 1000);
+	let date = new Date(trs.timestamp * 1000);
 	trs.recipientId = null;
 	trs.freezedAmount = data.freezedAmount;
 	trs.nextVoteMilestone = (date.setMinutes(date.getMinutes() + constants.froze.vTime))/1000;
@@ -125,7 +125,7 @@ Frozen.prototype.undo = function (trs, block, sender, cb) {
 };
 
 Frozen.prototype.apply = function (trs, block, sender, cb) {
-	// var data = {
+	// let data = {
 	// 	address: sender.address
 	// };
 
@@ -213,7 +213,7 @@ Frozen.prototype.checkFrozeOrders = function () {
 
 	async function deductFrozeAmountandSendReward(freezeOrders) {
 		try {
-			for (var order in freezeOrders) {
+			for (let order in freezeOrders) {
 				await updateOrderAndSendReward(freezeOrders[order]);
 				await deductFrozeAmount(freezeOrders[order]);	
 			}
@@ -254,7 +254,7 @@ Frozen.prototype.checkFrozeOrders = function () {
 					senderId: order.senderId
 				}).then(function () {
 					//Request to send transaction
-					var transactionData = {
+					let transactionData = {
 						json: {
 							secret: self.scope.config.sender.secret,
 							amount: parseInt(order.freezedAmount * __private.stakeReward.calcReward(modules.blocks.lastBlock.get().height) / 100),
@@ -305,7 +305,7 @@ Frozen.prototype.checkFrozeOrders = function () {
 	//function to check froze orders using async/await
 	(async function () {
 		try {
-			var freezeOrders = await getfrozeOrder();
+			let freezeOrders = await getfrozeOrder();
 
 			if (freezeOrders.length > 0) {
 				await checkAndUpdateMilestone();
@@ -329,9 +329,9 @@ Frozen.prototype.updateFrozeAmount = function (userData, cb) {
 			if (!totalFrozeAmount) {
 				return setImmediate(cb, 'No Account Exist in mem_account table for' + userData.account.address);
 			}
-			var frozeAmountFromDB = totalFrozeAmount.totalFrozeAmount;
-			var totalFrozeAmount = parseInt(frozeAmountFromDB) + userData.freezedAmount;
-			var totalFrozeAmountWithFees = totalFrozeAmount + (parseFloat(constants.fees.froze)*(userData.freezedAmount))/100;
+			let frozeAmountFromDB = totalFrozeAmount.totalFrozeAmount;
+			totalFrozeAmount = parseInt(frozeAmountFromDB) + userData.freezedAmount;
+			let totalFrozeAmountWithFees = totalFrozeAmount + (parseFloat(constants.fees.froze)*(userData.freezedAmount))/100;
 			//verify that freeze order cannot more than available balance
 			if (totalFrozeAmountWithFees <= userData.account.balance) {
 				self.scope.db.none(sql.updateFrozeAmount, {

@@ -1,14 +1,14 @@
 
 
-var chai = require('chai');
-var expect = require('chai').expect;
-var express = require('express');
+let chai = require('chai');
+let expect = require('chai').expect;
+let express = require('express');
 
-var RequestLimiter = require('../../../helpers/request-limiter.js');
+let RequestLimiter = require('../../../helpers/request-limiter.js');
 
 describe('RequestLimiter', function () {
 
-	var app;
+	let app;
 
 	beforeEach(function () {
 		app = express();
@@ -40,7 +40,7 @@ describe('RequestLimiter', function () {
 
 	describe('when limits are undefined', function () {
 
-		var limiter;
+		let limiter;
 
 		beforeEach(function () {
 			limiter = RequestLimiter(app, {});
@@ -77,7 +77,7 @@ describe('RequestLimiter', function () {
 
 	describe('when limits are defined', function () {
 
-		var limits, options, limiter;
+		let limits, options, limiter;
 
 		beforeEach(function () {
 			limits = {

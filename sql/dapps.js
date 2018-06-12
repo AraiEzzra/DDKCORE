@@ -1,6 +1,6 @@
 
 
-var DappsSql = {
+let DappsSql = {
 	sortFields: ['type', 'name', 'category', 'link'],
 
 	countByTransactionId: 'SELECT COUNT(*)::int AS "count" FROM dapps WHERE "transactionId" = ${id}',

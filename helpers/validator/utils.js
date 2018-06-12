@@ -1,6 +1,6 @@
 
 
-var util = require('util');
+let util = require('util');
 
 exports.extend = extend;
 exports.copy = copy;
@@ -24,7 +24,7 @@ function copy (target) {
 	if (Array.isArray(target)) {
 		return target.map(copy);
 	} else if (target.constructor === Object) {
-		var result = {};
+		let result = {};
 		Object.getOwnPropertyNames(target).forEach(function (name){
 			result[name] = copy(target[name]);
 		});

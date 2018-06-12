@@ -1,7 +1,7 @@
 
 
-var Router = require('../../helpers/router');
-var httpApi = require('../../helpers/httpApi');
+let Router = require('../../helpers/router');
+let httpApi = require('../../helpers/httpApi');
 
 /**
  * Binds api with modules and creates common url.
@@ -29,7 +29,7 @@ var httpApi = require('../../helpers/httpApi');
 // Constructor
 function BlocksHttpApi (blocksModule, app, logger, cache) {
 
-	var router = new Router();
+	let router = new Router();
 
 	// attach a middlware to endpoints
 	router.attachMiddlwareForUrls(httpApi.middleware.useCache.bind(null, logger, cache), [

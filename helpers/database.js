@@ -1,9 +1,9 @@
 
 
-var async = require('async');
-var bignum = require('./bignum');
-var fs = require('fs');
-var path = require('path');
+let async = require('async');
+let bignum = require('./bignum');
+let fs = require('fs');
+let path = require('path');
 
 /**
  * Migrator functions
@@ -61,17 +61,17 @@ function Migrator (pgp, db) {
 	 * @return {function} waterCb with error | pendingMigrations
 	 */
 	this.readPendingMigrations = function (lastMigration, waterCb) {
-		var migrationsPath = path.join(process.cwd(), 'sql', 'migrations');
-		var pendingMigrations = [];
+		let migrationsPath = path.join(process.cwd(), 'sql', 'migrations');
+		let pendingMigrations = [];
 
 		function matchMigrationName (file) {
-			var name = file.match(/_.+\.sql$/);
+			let name = file.match(/_.+\.sql$/);
 
 			return Array.isArray(name) ? name[0].replace(/_/, '').replace(/\.sql$/, '') : null;
 		}
 
 		function matchMigrationId (file) {
-			var id = file.match(/^[0-9]+/);
+			let id = file.match(/^[0-9]+/);
 
 			return Array.isArray(id) ? new bignum(id[0]) : null;
 		}
@@ -109,10 +109,10 @@ function Migrator (pgp, db) {
 	 * @return {function} waterCb with error | appliedMigrations
 	 */
 	this.applyPendingMigrations = function (pendingMigrations, waterCb) {
-		var appliedMigrations = [];
+		let appliedMigrations = [];
 
 		async.eachSeries(pendingMigrations, function (file, eachCb) {
-			var sql = new pgp.QueryFile(file.path, {minify: true});
+			let sql = new pgp.QueryFile(file.path, {minify: true});
 
 			db.query(sql)
 				.then(function () {
@@ -155,8 +155,8 @@ function Migrator (pgp, db) {
 	 * @return {function} waterCb with error
 	 */
 	this.applyRuntimeQueryFile = function (waterCb) {
-		var dirname = path.basename(__dirname) === 'helpers' ? path.join(__dirname, '..') : __dirname;
-		var sql = new pgp.QueryFile(path.join(dirname, 'sql', 'runtime.sql'), {minify: true});
+		let dirname = path.basename(__dirname) === 'helpers' ? path.join(__dirname, '..') : __dirname;
+		let sql = new pgp.QueryFile(path.join(dirname, 'sql', 'runtime.sql'), {minify: true});
 
 		db.query(sql)
 			.then(function () {
@@ -188,12 +188,12 @@ function Migrator (pgp, db) {
  */
 module.exports.connect = function (config, logger, cb) {
 	const promise = require('bluebird');
-	var pgOptions = {
+	let pgOptions = {
 		promiseLib: promise
 	};
 
-	var pgp = require('pg-promise')(pgOptions);
-	var monitor = require('pg-monitor');
+	let pgp = require('pg-promise')(pgOptions);
+	let monitor = require('pg-monitor');
 
 	monitor.attach(pgOptions);
 	monitor.setTheme('matrix');
@@ -204,9 +204,9 @@ module.exports.connect = function (config, logger, cb) {
 
 	config.user = config.user || process.env.USER;
 
-	var db = pgp(config);
+	let db = pgp(config);
 
-	var migrator = new Migrator(pgp, db);
+	let migrator = new Migrator(pgp, db);
 
 	async.waterfall([
 		migrator.checkMigrations,

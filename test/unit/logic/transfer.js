@@ -1,31 +1,31 @@
 /*eslint*/
 
-var node = require('./../../node.js');
-var ed = require('../../../helpers/ed');
-var bignum = require('../../../helpers/bignum.js');
-var crypto = require('crypto');
-var async = require('async');
+let node = require('./../../node.js');
+let ed = require('../../../helpers/ed');
+let bignum = require('../../../helpers/bignum.js');
+let crypto = require('crypto');
+let async = require('async');
 
-var chai = require('chai');
-var expect = require('chai').expect;
-var _  = require('lodash');
-var transactionTypes = require('../../../helpers/transactionTypes');
+let chai = require('chai');
+let expect = require('chai').expect;
+let _  = require('lodash');
+let transactionTypes = require('../../../helpers/transactionTypes');
 
-var modulesLoader = require('../../common/initModule').modulesLoader;
-var TransactionLogic = require('../../../logic/transaction.js');
-var Transfer = require('../../../logic/transfer.js');
-var Rounds = require('../../../modules/rounds.js');
-var AccountLogic = require('../../../logic/account.js');
-var AccountModule = require('../../../modules/accounts.js');
-var DelegateModule = require('../../../modules/delegates.js');
+let modulesLoader = require('../../common/initModule').modulesLoader;
+let TransactionLogic = require('../../../logic/transaction.js');
+let Transfer = require('../../../logic/transfer.js');
+let Rounds = require('../../../modules/rounds.js');
+let AccountLogic = require('../../../logic/account.js');
+let AccountModule = require('../../../modules/accounts.js');
+let DelegateModule = require('../../../modules/delegates.js');
 
-var validPassword = 'robust weapon course unknown head trial pencil latin acid';
-var validKeypair = ed.makeKeypair(crypto.createHash('sha256').update(validPassword, 'utf8').digest());
+let validPassword = 'robust weapon course unknown head trial pencil latin acid';
+let validKeypair = ed.makeKeypair(crypto.createHash('sha256').update(validPassword, 'utf8').digest());
 
-var senderHash = crypto.createHash('sha256').update(node.gAccount.password, 'utf8').digest();
-var senderKeypair = ed.makeKeypair(senderHash);
+let senderHash = crypto.createHash('sha256').update(node.gAccount.password, 'utf8').digest();
+let senderKeypair = ed.makeKeypair(senderHash);
 
-var validSender = {
+let validSender = {
 	username: null,
 	isDelegate: 0,
 	secondSignature: 0,
@@ -47,7 +47,7 @@ var validSender = {
 	virgin: 0
 };
 
-var validTransactionData = {
+let validTransactionData = {
 	type: 0,
 	amount: 8067474861277,
 	sender: validSender,
@@ -58,7 +58,7 @@ var validTransactionData = {
 	publicKey: 'c094ebee7ec0c50ebee32918655e089f6e1a604b83bcaa760293c61e0f18ab6f',
 };
 
-var validTransaction = {
+let validTransaction = {
 	id: '16140284222734558289',
 	rowId: 133,
 	blockId: '1462190441827192029',
@@ -76,7 +76,7 @@ var validTransaction = {
 	asset: {},
 };
 
-var rawValidTransaction = {
+let rawValidTransaction = {
 	t_id: '16140284222734558289',
 	b_height: 981,
 	t_blockId: '1462190441827192029',
@@ -94,10 +94,10 @@ var rawValidTransaction = {
 
 
 describe('transfer', function () {
-	var transfer;
-	var transaction;
-	var transferBindings;
-	var accountModule;
+	let transfer;
+	let transaction;
+	let transferBindings;
+	let accountModule;
 
 	before(function (done) {
 		async.auto({
@@ -172,7 +172,7 @@ describe('transfer', function () {
 
 	describe('verify', function () {
 		it('should return error if recipientId is not set', function (done) {
-			var trs = _.cloneDeep(validTransaction);
+			let trs = _.cloneDeep(validTransaction);
 			delete trs.recipientId;
 			transfer.verify(trs, validSender, function (err) {
 				expect(err).to.equal('Missing recipient');
@@ -181,7 +181,7 @@ describe('transfer', function () {
 		});
 
 		it('should return error if amount is less than 0', function (done) {
-			var trs = _.cloneDeep(validTransaction);
+			let trs = _.cloneDeep(validTransaction);
 			trs.amount = -10;
 
 			transfer.verify(trs, validSender, function (err) {
@@ -208,7 +208,7 @@ describe('transfer', function () {
 	});
 
 	describe('apply', function () {
-		var dummyBlock = {
+		let dummyBlock = {
 			id: '9314232245035524467',
 			height: 1
 		};
@@ -218,7 +218,7 @@ describe('transfer', function () {
 		}
 		
 		it('should return error if recipientid is not set', function (done) {
-			var trs = _.cloneDeep(validTransaction);
+			let trs = _.cloneDeep(validTransaction);
 			delete trs.recipientId;
 			transfer.apply.call(transaction, trs, dummyBlock, validSender, function (err) {
 				expect(err).to.equal('Invalid public key');
@@ -231,8 +231,8 @@ describe('transfer', function () {
 				expect(err).to.not.exist;
 				expect(accountBefore).to.exist;
 
-				var amount = new bignum(validTransaction.amount.toString());
-				var balanceBefore = new bignum(accountBefore.balance.toString());
+				let amount = new bignum(validTransaction.amount.toString());
+				let balanceBefore = new bignum(accountBefore.balance.toString());
 
 				transfer.apply.call(transaction, validTransaction, dummyBlock, validSender, function (err) {
 					expect(err).to.not.exist;
@@ -241,7 +241,7 @@ describe('transfer', function () {
 						expect(err).to.not.exist;
 						expect(accountAfter).to.exist;
 
-						var balanceAfter = new bignum(accountAfter.balance.toString());
+						let balanceAfter = new bignum(accountAfter.balance.toString());
 						expect(balanceBefore.plus(amount).toString()).to.equal(balanceAfter.toString());
 						undoTransaction(validTransaction, validSender, done);
 					});
@@ -251,7 +251,7 @@ describe('transfer', function () {
 	});
 
 	describe('undo', function () {
-		var dummyBlock = {
+		let dummyBlock = {
 			id: '9314232245035524467',
 			height: 1
 		};
@@ -261,7 +261,7 @@ describe('transfer', function () {
 		}
 		
 		it('should return error if recipientid is not set', function (done) {
-			var trs = _.cloneDeep(validTransaction);
+			let trs = _.cloneDeep(validTransaction);
 			delete trs.recipientId;
 			transfer.undo.call(transaction, trs, dummyBlock, validSender, function (err) {
 				expect(err).to.equal('Invalid public key');
@@ -273,8 +273,8 @@ describe('transfer', function () {
 			accountModule.getAccount({address: validTransaction.recipientId}, function (err, accountBefore) {
 				expect(err).to.not.exist;
 
-				var amount = new bignum(validTransaction.amount.toString());
-				var balanceBefore = new bignum(accountBefore.balance.toString());
+				let amount = new bignum(validTransaction.amount.toString());
+				let balanceBefore = new bignum(accountBefore.balance.toString());
 
 				transfer.undo.call(transaction, validTransaction, dummyBlock, validSender, function (err) { 
 					expect(err).to.not.exist;
@@ -282,7 +282,7 @@ describe('transfer', function () {
 					accountModule.getAccount({address: validTransaction.recipientId}, function (err, accountAfter) {
 						expect(err).to.not.exist;
 
-						var balanceAfter = new bignum(accountAfter.balance.toString());
+						let balanceAfter = new bignum(accountAfter.balance.toString());
 						expect(balanceAfter.plus(amount).toString()).to.equal(balanceBefore.toString());
 						applyTransaction(validTransaction, validSender, done);
 					});
@@ -307,7 +307,7 @@ describe('transfer', function () {
 
 	describe('objectNormalize', function () {
 		it('should remove blockId from trs', function () {
-			var trs = _.cloneDeep(validTransaction);
+			let trs = _.cloneDeep(validTransaction);
 			trs.blockId = '9314232245035524467';
 			expect(transfer.objectNormalize(trs)).to.not.have.key('blockId');
 		});
@@ -331,15 +331,15 @@ describe('transfer', function () {
 		});
 
 		it('should return false for multi signature transaction with less signatures', function () {
-			var trs = _.cloneDeep(validTransaction);
-			var vs = _.cloneDeep(validSender);
+			let trs = _.cloneDeep(validTransaction);
+			let vs = _.cloneDeep(validSender);
 			vs.multisignatures = [validKeypair.publicKey.toString('hex')];
 			expect(transaction.ready(trs, vs)).to.equal(false);
 		});
 
 		it('should return true for multi signature transaction with alteast min signatures', function () {
-			var trs = _.cloneDeep(validTransaction);
-			var vs = _.cloneDeep(validSender);
+			let trs = _.cloneDeep(validTransaction);
+			let vs = _.cloneDeep(validSender);
 			vs.multisignatures = [validKeypair.publicKey.toString('hex')];
 			vs.multimin = 1;
 			delete trs.signature;

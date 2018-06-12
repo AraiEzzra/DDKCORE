@@ -1,6 +1,6 @@
 
 
-var SystemSql = {
+let SystemSql = {
 	getBroadhash: 'SELECT "id" FROM blocks ORDER BY "height" DESC LIMIT ${limit}'
 };
 

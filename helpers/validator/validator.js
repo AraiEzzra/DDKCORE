@@ -1,11 +1,11 @@
 
 
 // Dependencies
-var utils = require('./utils.js');
-var extend = utils.extend;
+let utils = require('./utils.js');
+let extend = utils.extend;
 
 // Implementation
-var Field = require('./field.js');
+let Field = require('./field.js');
 
 module.exports = Validator;
 exports.Field = Field;
@@ -26,7 +26,7 @@ function Validator (options) {
 	this.execRules = this.execRules || options.execRules;
 	this.rules = extend(Object.create(this.rules), options.rules);
 
-	var reporter = this.reporter || options.reporter;
+	let reporter = this.reporter || options.reporter;
 	if (typeof reporter === 'function') {
 		reporter = new reporter(this);
 	}
@@ -92,10 +92,10 @@ Validator.prototype.getRule = function (name) {
  * @todo debug this function and adjust callback function parameter
  */
 Validator.prototype.validate = function (value, rules, callback) {
-	var self = this;
+	let self = this;
 
-	var field = this.createField(null, value, rules);
-	var async, finished, report;
+	let field = this.createField(null, value, rules);
+	let async, finished, report;
 
 	report = {};
 
@@ -188,7 +188,7 @@ Validator.addRule = function (name, descriptor) {
 		throw new Error('Rule descriptor should be an object');
 	}
 
-	var self = this;
+	let self = this;
 
 	this.prototype.rules[name] = descriptor;
 
@@ -246,7 +246,7 @@ Validator.validate = function (value, rules, customRules, callback) {
 		customRules = {};
 	}
 
-	var instance = new this(extend({}, this.options, {
+	let instance = new this(extend({}, this.options, {
 		rules : customRules
 	}));
 

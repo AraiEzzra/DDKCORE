@@ -1,12 +1,12 @@
 
 
-var node = require('./../node.js');
-var clearDatabaseTable = require('../common/globalBefore').clearDatabaseTable;
-var modulesLoader = require('../common/initModule').modulesLoader;
+let node = require('./../node.js');
+let clearDatabaseTable = require('../common/globalBefore').clearDatabaseTable;
+let modulesLoader = require('../common/initModule').modulesLoader;
 
-var dapp = {};
-var account = node.randomTxAccount();
-var account2 = node.randomTxAccount();
+let dapp = {};
+let account = node.randomTxAccount();
+let account2 = node.randomTxAccount();
 
 function openAccount (account, done) {
 	node.post('/api/accounts/open', {
@@ -45,8 +45,8 @@ before(function (done) {
 before(function (done) {
 	// Send to LISK to account 1 address
 	setTimeout(function () {
-		var randomLISK = node.randomLISK();
-		var expectedFee = node.expectedFee(randomLISK);
+		let randomLISK = node.randomLISK();
+		let expectedFee = node.expectedFee(randomLISK);
 
 		putTransaction({
 			secret: node.gAccount.password,
@@ -59,8 +59,8 @@ before(function (done) {
 before(function (done) {
 	// Send to LISK to account 2 address
 	setTimeout(function () {
-		var randomLISK = node.randomLISK();
-		var expectedFee = node.expectedFee(randomLISK);
+		let randomLISK = node.randomLISK();
+		let expectedFee = node.expectedFee(randomLISK);
 
 		putTransaction({
 			secret: node.gAccount.password,
@@ -70,7 +70,7 @@ before(function (done) {
 	}, 2000);
 });
 
-var validDapp;
+let validDapp;
 
 beforeEach(function (done) {
 	validDapp = {
@@ -88,7 +88,7 @@ beforeEach(function (done) {
 
 describe('PUT /dapps', function () {
 
-	var validParams;
+	let validParams;
 
 	beforeEach(function (done) {
 		validParams = validDapp;
@@ -293,7 +293,7 @@ describe('PUT /api/dapps/transaction', function () {
 		done();
 	});
 
-	var validParams;
+	let validParams;
 
 	beforeEach(function (done) {
 		validParams = {
@@ -477,13 +477,13 @@ describe('PUT /api/dapps/withdrawal', function () {
 		done();
 	});
 
-	var validParams;
+	let validParams;
 
 	beforeEach(function (done) {
-		var randomAccount = node.randomTxAccount();
-		var keys = node.lisk.crypto.getKeys(randomAccount.password);
-		var recipientId = node.lisk.crypto.getAddress(keys.publicKey);
-		var transaction = node.lisk.transaction.createTransaction(randomAccount.address, 100000000, account.password);
+		let randomAccount = node.randomTxAccount();
+		let keys = node.lisk.crypto.getKeys(randomAccount.password);
+		let recipientId = node.lisk.crypto.getAddress(keys.publicKey);
+		let transaction = node.lisk.transaction.createTransaction(randomAccount.address, 100000000, account.password);
 
 		validParams = {
 			secret: account.password,
@@ -810,7 +810,7 @@ describe('GET /dapps', function () {
 			node.expect(res.body).to.have.property('success').to.be.ok;
 			node.expect(res.body).to.have.property('dapps').that.is.an('array');
 			if (res.body.dapps[0] != null) {
-				for (var i = 0; i < res.body.dapps.length; i++) {
+				for (let i = 0; i < res.body.dapps.length; i++) {
 					if (res.body.dapps[i + 1] != null) {
 						node.expect(res.body.dapps[i].category).to.be.at.most(res.body.dapps[i + 1].category);
 					}
@@ -825,7 +825,7 @@ describe('GET /dapps', function () {
 			node.expect(res.body).to.have.property('success').to.be.ok;
 			node.expect(res.body).to.have.property('dapps').that.is.an('array');
 			if (res.body.dapps[0] != null) {
-				for (var i = 0; i < res.body.dapps.length; i++) {
+				for (let i = 0; i < res.body.dapps.length; i++) {
 					if (res.body.dapps[i + 1] != null) {
 						node.expect(res.body.dapps[i].category).to.be.at.least(res.body.dapps[i + 1].category);
 					}
@@ -836,7 +836,7 @@ describe('GET /dapps', function () {
 	});
 
 	it('using category should be ok', function (done) {
-		var randomCategory = node.randomProperty(node.dappCategories, true);
+		let randomCategory = node.randomProperty(node.dappCategories, true);
 
 		getDapps('category=' + randomCategory, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -849,7 +849,7 @@ describe('GET /dapps', function () {
 	});
 
 	it('using name should be ok', function (done) {
-		var name = '';
+		let name = '';
 
 		if (dapp !== {} && dapp != null) {
 			name = dapp.name;
@@ -869,12 +869,12 @@ describe('GET /dapps', function () {
 	});
 
 	it('using type should be ok', function (done) {
-		var type = node.randomProperty(node.dappTypes);
+		let type = node.randomProperty(node.dappTypes);
 
 		getDapps('type=' + type, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
 			node.expect(res.body).to.have.property('dapps').that.is.an('array');
-			for (var i = 0; i < res.body.dapps.length; i++) {
+			for (let i = 0; i < res.body.dapps.length; i++) {
 				if (res.body.dapps[i] != null) {
 					node.expect(res.body.dapps[i].type).to.equal(type);
 				}
@@ -884,7 +884,7 @@ describe('GET /dapps', function () {
 	});
 
 	it('using numeric link should fail', function (done) {
-		var link = 12345;
+		let link = 12345;
 
 		getDapps('link=' + link, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -894,12 +894,12 @@ describe('GET /dapps', function () {
 	});
 
 	it('using string link should be ok', function (done) {
-		var link = node.guestbookDapp.link;
+		let link = node.guestbookDapp.link;
 
 		getDapps('link=' + link, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
 			node.expect(res.body).to.have.property('dapps').that.is.an('array');
-			for (var i = 0; i < res.body.dapps.length; i++) {
+			for (let i = 0; i < res.body.dapps.length; i++) {
 				if (res.body.dapps[i] != null) {
 					node.expect(res.body.dapps[i].link).to.equal(link);
 				}
@@ -921,7 +921,7 @@ describe('GET /dapps', function () {
 	});
 
 	it('using limit == 3 should be ok', function (done) {
-		var limit = 3;
+		let limit = 3;
 
 		getDapps('limit=' + limit, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -932,8 +932,8 @@ describe('GET /dapps', function () {
 	});
 
 	it('using offset should be ok', function (done) {
-		var offset = 1;
-		var secondDapp;
+		let offset = 1;
+		let secondDapp;
 
 		getDapps('', function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -975,7 +975,7 @@ describe('GET /dapps?id=', function () {
 	});
 
 	it('using unknown id should be ok', function (done) {
-		var dappId = '8713095156789756398';
+		let dappId = '8713095156789756398';
 
 		getDapps(dappId, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -1006,7 +1006,7 @@ describe('POST /api/dapps/install', function () {
 		done();
 	});
 
-	var validParams;
+	let validParams;
 
 	beforeEach(function (done) {
 		validParams = {
@@ -1046,7 +1046,7 @@ describe('POST /api/dapps/install', function () {
 	});
 
 	describe('when link is 404 not found', function () {
-		var toBeNotFound;
+		let toBeNotFound;
 
 		beforeEach(function (done) {
 			toBeNotFound = validDapp;
@@ -1075,12 +1075,12 @@ describe('POST /api/dapps/install', function () {
 describe('GET /api/dapps/installed', function () {
 
 	it('should be ok', function (done) {
-		var flag = 0;
+		let flag = 0;
 
 		node.get('/api/dapps/installed', function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
 			node.expect(res.body).to.have.property('dapps').that.is.an('array');
-			for (var i = 0; i < res.body.dapps.length; i++) {
+			for (let i = 0; i < res.body.dapps.length; i++) {
 				if (res.body.dapps[i] != null) {
 					if (res.body.dapps[i].transactionId === dapp.transactionId) {
 						flag += 1;
@@ -1096,12 +1096,12 @@ describe('GET /api/dapps/installed', function () {
 describe('GET /api/dapps/installedIds', function () {
 
 	it('should be ok', function (done) {
-		var flag = 0;
+		let flag = 0;
 
 		node.get('/api/dapps/installedIds', function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
 			node.expect(res.body).to.have.property('ids').that.is.an('array');
-			for (var i = 0; i < res.body.ids.length; i++) {
+			for (let i = 0; i < res.body.ids.length; i++) {
 				if (res.body.ids[i] != null) {
 					if (res.body.ids[i] === dapp.transactionId) {
 						flag += 1;
@@ -1121,11 +1121,11 @@ describe('GET /api/dapps/search?q=', function () {
 	}
 
 	it('using invalid params should fail', function (done) {
-		var q = 1234;
-		var category = 'good';
-		var installed = 'true';
+		let q = 1234;
+		let category = 'good';
+		let installed = 'true';
 
-		var params = 'q=' + q + '&category=' + category + '&installed=' + installed;
+		let params = 'q=' + q + '&category=' + category + '&installed=' + installed;
 
 		getSearch(params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -1135,11 +1135,11 @@ describe('GET /api/dapps/search?q=', function () {
 	});
 
 	it('using valid parameters should be ok', function (done) {
-		var q = 'a';
-		var category = node.randomProperty(node.dappCategories, true);
-		var installed = 1;
+		let q = 'a';
+		let category = node.randomProperty(node.dappCategories, true);
+		let installed = 1;
 
-		var params = 'q=' + q + '&installed='+ installed + '&category=' + node.dappCategories[category];
+		let params = 'q=' + q + '&installed='+ installed + '&category=' + node.dappCategories[category];
 
 		getSearch(params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -1149,11 +1149,11 @@ describe('GET /api/dapps/search?q=', function () {
 	});
 
 	it('using installed = 0 should be ok', function (done) {
-		var q = 's';
-		var category = node.randomProperty(node.dappCategories);
-		var installed = 0;
+		let q = 's';
+		let category = node.randomProperty(node.dappCategories);
+		let installed = 0;
 
-		var params = 'q=' + q + '&installed='+ installed + '&category=' + category;
+		let params = 'q=' + q + '&installed='+ installed + '&category=' + category;
 
 		getSearch(params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -1175,7 +1175,7 @@ describe('POST /api/dapps/launch', function () {
 		done();
 	});
 
-	var validParams;
+	let validParams;
 
 	beforeEach(function (done) {
 		validParams = {
@@ -1221,9 +1221,9 @@ describe('POST /api/dapps/launch', function () {
 			node.get('/api/dapps/launched', function (err, res) {
 				node.expect(res.body).to.have.property('success').to.be.ok;
 				node.expect(res.body).to.have.property('launched').that.is.an('array');
-				var flag = 0;
+				let flag = 0;
 
-				for (var i = 0; i < res.body.launched.length; i++) {
+				for (let i = 0; i < res.body.launched.length; i++) {
 					if (res.body.launched[i] != null) {
 						if (res.body.launched[i] === dapp.transactionId) {
 							flag += 1;
@@ -1249,7 +1249,7 @@ describe('POST /api/dapps/stop', function () {
 		done();
 	});
 
-	var validParams;
+	let validParams;
 
 	beforeEach(function (done) {
 		validParams = {
@@ -1293,7 +1293,7 @@ describe('GET /api/dapps/categories', function () {
 		node.get('/api/dapps/categories', function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
 			node.expect(res.body).to.have.property('categories').that.is.an('object');
-			for (var i in node.dappCategories) {
+			for (let i in node.dappCategories) {
 				node.expect(res.body.categories[i]).to.equal(node.dappCategories[i]);
 			}
 			done();
@@ -1313,7 +1313,7 @@ describe('POST /api/dapps/uninstall', function () {
 		done();
 	});
 
-	var validParams;
+	let validParams;
 
 	beforeEach(function (done) {
 		validParams = {

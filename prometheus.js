@@ -1,12 +1,12 @@
 // added to monitor application performance using elastic search
-var Register = require('prom-client').register;  
-var Counter = require('prom-client').Counter; 
-var Summary = require('prom-client').Summary;  
-var ResponseTime = require('response-time');  
+let Register = require('prom-client').register;  
+let Counter = require('prom-client').Counter; 
+let Summary = require('prom-client').Summary;  
+let ResponseTime = require('response-time');  
 const Logger = require('./logger.js');
 let logman = new Logger();
 let logger = logman.logger;
-var numOfRequests, pathsTaken, responses;
+let numOfRequests, pathsTaken, responses;
 
 /**
  * A Prometheus counter that counts the invocations of the different HTTP verbs

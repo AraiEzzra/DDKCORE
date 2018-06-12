@@ -1,9 +1,9 @@
 
 
-var constants = require('../helpers/constants.js');
+let constants = require('../helpers/constants.js');
 
 // Private fields
-var modules;
+let modules;
 
 /**
  * Main transfer logic.

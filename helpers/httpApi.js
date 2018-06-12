@@ -5,13 +5,13 @@
  * @memberof module:helpers
  * @module helpers/httpApi
  */
-var extend = require('extend');
-var checkIpInList = require('./checkIpInList');
+let extend = require('extend');
+let checkIpInList = require('./checkIpInList');
 
 /**
  * @namespace middleware
  */
-var middleware = {
+let middleware = {
 
 	/**
 	 * Adds CORS header to all requests.
@@ -114,10 +114,10 @@ var middleware = {
 	 */
 	applyAPIAccessRules: function (config, req, res, next) {
 		if (req.url.match(/^\/peer[\/]?.*/)) {
-			var internalApiAllowed = config.peers.enabled && !checkIpInList(config.peers.access.blackList, req.ip, false);
+			let internalApiAllowed = config.peers.enabled && !checkIpInList(config.peers.access.blackList, req.ip, false);
 			rejectDisallowed(internalApiAllowed, config.peers.enabled);
 		} else {
-			var publicApiAllowed = config.api.enabled && (config.api.access.public || checkIpInList(config.api.access.whiteList, req.ip, false));
+			let publicApiAllowed = config.api.enabled && (config.api.access.public || checkIpInList(config.api.access.whiteList, req.ip, false));
 			rejectDisallowed(publicApiAllowed, config.api.enabled);
 		}
 
@@ -152,12 +152,12 @@ var middleware = {
 			return next();
 		}
 
-		var key = req.originalUrl;
+		let key = req.originalUrl;
 		cache.getJsonForKey(key, function (err, cachedValue) {
 			//there was an error or value doesn't exist for key
 			if (err || !cachedValue) {
 				// Monkey patching res.json function only if we expect to cache response
-				var expressSendJson = res.json;
+				let expressSendJson = res.json;
 				res.json = function (response) {
 					if (response.success) {
 						logger.debug('cached response for key: ', req.url);

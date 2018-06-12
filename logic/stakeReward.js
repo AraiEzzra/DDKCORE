@@ -1,9 +1,9 @@
 
 
-var constants = require('../helpers/constants.js');
+let constants = require('../helpers/constants.js');
 
 // Private fields
-var __private = {};
+let __private = {};
 
 /**
  * Initializes variables:
@@ -47,8 +47,8 @@ __private.parseHeight = function (height) {
 StakeReward.prototype.calcMilestone = function (height) {
 //	height = __private.parseHeight(height);
 
-	var location = Math.trunc((height ) / this.distance);
-	var lastMile = this.milestones[this.milestones.length - 1];
+	let location = Math.trunc((height ) / this.distance);
+	let lastMile = this.milestones[this.milestones.length - 1];
 
 	if (location > (this.milestones.length - 1)) {
 		return this.milestones.lastIndexOf(lastMile);

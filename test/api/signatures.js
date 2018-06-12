@@ -1,10 +1,10 @@
 
 
-var node = require('./../node.js');
+let node = require('./../node.js');
 
-var account = node.randomTxAccount();
-var account2 = node.randomTxAccount();
-var account3 = node.randomTxAccount();
+let account = node.randomTxAccount();
+let account2 = node.randomTxAccount();
+let account3 = node.randomTxAccount();
 
 function putSignature (params, done) {
 	node.put('/api/signatures', params, done);
@@ -19,8 +19,8 @@ function putDelegate (params, done) {
 }
 
 function sendLISK (account, done) {
-	var randomLISK = node.randomLISK();
-	var expectedFee = node.expectedFee(randomLISK);
+	let randomLISK = node.randomLISK();
+	let expectedFee = node.expectedFee(randomLISK);
 
 	putTransaction({
 		secret: node.gAccount.password,
@@ -50,7 +50,7 @@ describe('PUT /api/signatures', function () {
 		node.onNewBlock(done);
 	});
 
-	var validParams;
+	let validParams;
 
 	beforeEach(function (done) {
 		validParams = {
@@ -110,7 +110,7 @@ describe('PUT /api/transactions from account with second signature enabled', fun
 		node.onNewBlock(done);
 	});
 
-	var validParams;
+	let validParams;
 
 	beforeEach(function (done) {
 		validParams = {
@@ -145,7 +145,7 @@ describe('PUT /api/transactions from account with second signature enabled', fun
 
 describe('PUT /api/delegates from account with second signature enabled', function () {
 
-	var validParams;
+	let validParams;
 
 	beforeEach(function (done) {
 		validParams = {

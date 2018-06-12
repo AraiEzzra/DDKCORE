@@ -1,9 +1,9 @@
 
 
-var utils = require('./utils');
-var sql = require('./sql/accounts.js');
-var path = require('path');
-var library = {};
+let utils = require('./utils');
+let sql = require('./sql/accounts.js');
+let path = require('path');
+let library = {};
 
 
 exports.attachScope = function (scope) {
@@ -15,7 +15,7 @@ exports.updateDataOnElasticSearch = {
 
 	on: '* * * * *',
 	job: function () {
-		var dbTables = [
+		let dbTables = [
 			'blocks',
 			'dapps',
 			'delegates',
@@ -37,7 +37,7 @@ exports.updateDataOnElasticSearch = {
 			library.db.query('SELECT * FROM ' + tableName)
 				.then(function (rows) {
 					if (rows.length > 0) {
-						var bulk = utils.makeBulk(rows, tableName);
+						let bulk = utils.makeBulk(rows, tableName);
 						utils.indexall(bulk, tableName)
 							.then(function (result) {
 								//FIXME: Do further processing on successful indexing on elasticsearch server
@@ -60,7 +60,7 @@ exports.checkFrozeOrders = {
 
 	on: '* * * * *',
 	job: function () {
-		var date = new Date();
+		let date = new Date();
 		library.logic.frozen.checkFrozeOrders(); //For testing purpose only
 		if (date.getHours() === 10 && date.getMinutes() === 20) { // Check the time
 
@@ -81,10 +81,10 @@ exports.archiveLogFiles = {
 
 		if (today.getMonth() !== yesterday.getMonth()) {
 			library.logger.archive('start executing archiving files');
-			var createZip = require('./create-zip');
-			var year = today.getFullYear();
-			var month = today.toLocaleString('en-us', { month: 'long' });
-			var dir = path.join(__dirname + '/archive/' + year + '/' + month);
+			let createZip = require('./create-zip');
+			let year = today.getFullYear();
+			let month = today.toLocaleString('en-us', { month: 'long' });
+			let dir = path.join(__dirname + '/archive/' + year + '/' + month);
 			createZip.createDir(dir, function (err) {
 				if (!err) {
 					createZip.archiveLogFiles(dir, function (err) {
@@ -112,10 +112,10 @@ exports.unlockLockedUsers = {
 		library.cache.client.keys('*userTimeHash_*', function (err, userKeys) {
 			userKeys.forEach(function (key) {
 				library.modules.cache.hgetall(key, function (err, data) {
-					var lastBlock = library.modules.blocks.lastBlock.get();
+					let lastBlock = library.modules.blocks.lastBlock.get();
 					if (data.endTime < lastBlock.timestamp) {
 						library.modules.cache.getJsonForKey('minedContributorsBalance', function (err, contributorsBalance) {
-							var totalContributorsBal = parseInt(data.transferedAmount) + parseInt(contributorsBalance);
+							let totalContributorsBal = parseInt(data.transferedAmount) + parseInt(contributorsBalance);
 							library.modules.cache.setJsonForKey('minedContributorsBalance', totalContributorsBal);
 						});
 						library.db.none(sql.enableAccount, {

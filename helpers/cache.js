@@ -1,6 +1,6 @@
 
 
-var redis = require('redis');
+let redis = require('redis');
 
 /**
  * Connects with redis server using the config provided via parameters
@@ -10,7 +10,7 @@ var redis = require('redis');
  * @param {Function} cb
  */
 module.exports.connect = function (cacheEnabled, config, logger, cb) {
-	var isRedisLoaded = false;
+	let isRedisLoaded = false;
 
 	if (!cacheEnabled) {
 		return cb(null, { cacheEnabled: cacheEnabled, client: null });
@@ -20,7 +20,7 @@ module.exports.connect = function (cacheEnabled, config, logger, cb) {
 	if (config.password === null) {
 		delete config.password;
 	}
-	var client = redis.createClient(config);
+	let client = redis.createClient(config);
 
 	client.on('ready', function () {
 		logger.info('App connected with redis server');

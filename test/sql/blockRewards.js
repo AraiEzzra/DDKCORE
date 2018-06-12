@@ -1,6 +1,6 @@
 
 
-var BlockRewards = {
+let BlockRewards = {
 	getBlockRewards: 'SELECT * FROM getBlockRewards();',
 
 	calcBlockReward: 'SELECT calcBlockReward AS reward FROM calcBlockReward(${height});',

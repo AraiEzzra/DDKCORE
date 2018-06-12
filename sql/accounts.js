@@ -1,6 +1,6 @@
 
 
-var Accounts = {
+let Accounts = {
 
 	checkAccountStatus : 'SELECT "status" FROM mem_accounts where "address"=${senderId}',
 

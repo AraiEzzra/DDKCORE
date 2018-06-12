@@ -1,6 +1,6 @@
 
 
-var ETP = {
+let ETP = {
 
 	query : 'SELECT * FROM ${tableName}',
 

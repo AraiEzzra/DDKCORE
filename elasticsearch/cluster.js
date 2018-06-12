@@ -5,13 +5,13 @@
 * @isIndexExists
 */
 
-var client = require('./connection.js');
+let client = require('./connection.js');
 
 /**
 * check if the index exists
 */
 function isIndexExists(indexName) {  
-	var result = client.indices.exists({
+	let result = client.indices.exists({
 		index: indexName
 	});
 	return result;

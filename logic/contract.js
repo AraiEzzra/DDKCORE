@@ -1,10 +1,10 @@
 
 
 //Requiring Modules
-var request = require('request');
+let request = require('request');
 
 // Private fields
-var modules, self;
+let modules, self;
 
 //Contract constructor initialized from modules/contracts.js's constructor
 function Contract(config, cb) {
@@ -84,15 +84,15 @@ Contract.prototype.process = function (trs, sender, cb) {
 
 //Calculate end time based on current timestamp
 Contract.prototype.calcEndTime = function (accType, startTime) {
-	var date = new Date(startTime * 1000);
+	let date = new Date(startTime * 1000);
 	/*  if (accType == 1 || accType == 0) {
-        var endTime = (date.setMinutes(date.getMinutes() + 90 * 24 * 60 * 60)) / 1000;
+        let endTime = (date.setMinutes(date.getMinutes() + 90 * 24 * 60 * 60)) / 1000;
     } else if (accType == 2) {
-        var endTime = (date.setMinutes(date.getMinutes() + 90 * 24 * 60 * 60)) / 1000;
+        let endTime = (date.setMinutes(date.getMinutes() + 90 * 24 * 60 * 60)) / 1000;
     } else if (accType == 3) {
-        var endTime = (date.setMinutes(date.getMinutes() + 365 * 24 * 60 * 60)) / 1000;
+        let endTime = (date.setMinutes(date.getMinutes() + 365 * 24 * 60 * 60)) / 1000;
     } */
-	var endTime = (date.setMinutes(date.getMinutes() + 2 ))/1000;
+	let endTime = (date.setMinutes(date.getMinutes() + 2 ))/1000;
 	return endTime;
 };
 
@@ -100,12 +100,12 @@ Contract.prototype.calcEndTime = function (accType, startTime) {
 Contract.prototype.sendContractAmount = function (data, cb) {
 	data.forEach(function (recipient) {
 		let sender = self.scope.config.users[recipient.accType];
-		var port = self.scope.config.app.port;
-		var address = self.scope.config.address;
-		var url = 'http://' + address + ':' + port + '/api/transactions';
+		let port = self.scope.config.app.port;
+		let address = self.scope.config.address;
+		let url = 'http://' + address + ':' + port + '/api/transactions';
 		//let secret = 'type_' + recipient.accType + '_secret';
 		//let key = 'type_' + recipient.accType + '_key';
-		var transactionData = {
+		let transactionData = {
 			json: {
 				secret: sender.secret,
 				publicKey: sender.publicKey,

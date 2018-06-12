@@ -1,11 +1,11 @@
 
 
 //Requiring Modules 
-var Contract = require('../logic/contract.js');
-var transactionTypes = require('../helpers/transactionTypes.js');
+let Contract = require('../logic/contract.js');
+let transactionTypes = require('../helpers/transactionTypes.js');
 
 //Private Fields
-var __private = {}, self = null,
+let __private = {}, self = null,
 	library = null, modules = null;
 __private.assetTypes = {};
 
