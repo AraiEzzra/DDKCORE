@@ -1,4 +1,4 @@
-'use strict';
+
 
 /**
  * Validates sort options, methods and fields.

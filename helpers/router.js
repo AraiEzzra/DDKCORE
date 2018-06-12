@@ -1,8 +1,8 @@
-'use strict';
+
 
 var httpApi = require('./httpApi');
 var extend = require('extend');
-var utils = require('../utils.js')
+var utils = require('../utils.js');
 
 /**
  * Express.js router wrapper.

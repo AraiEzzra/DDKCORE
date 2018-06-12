@@ -1,4 +1,4 @@
-'use strict';
+
 
 var crypto = require('crypto');
 var node = require('./../node.js');

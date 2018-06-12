@@ -1,6 +1,5 @@
-'use strict';
 
-var _ = require('lodash');
+
 var bignum = require('../helpers/bignum.js');
 var ByteBuffer = require('bytebuffer');
 var constants = require('../helpers/constants.js');
@@ -428,7 +427,6 @@ Transaction.prototype.getAccountStatus = function(trs, cb) {
 			return setImmediate(cb,'Invalid transaction : account disabled');
 		} 			 
 		return setImmediate(cb, null, row.status);
-		cb(null);	
 	}).catch(function (err) {		 
 		this.scope.logger.error(err.stack);	 
 		return setImmediate(cb, 'Transaction#checkAccountStatus error');	
@@ -796,7 +794,7 @@ Transaction.prototype.apply = function (trs, block, sender, cb) {
  */
 Transaction.prototype.undo = function (trs, block, sender, cb) {
 	var amount = new bignum(trs.amount.toString());
-	    amount = amount.plus(trs.fee.toString()).toNumber();
+	amount = amount.plus(trs.fee.toString()).toNumber();
 
 	this.scope.logger.trace('Logic/Transaction->undo', {sender: sender.address, balance: amount, blockId: block.id, round: modules.rounds.calc(block.height)});
 	this.scope.account.merge(sender.address, {
@@ -885,7 +883,7 @@ Transaction.prototype.applyUnconfirmed = function (trs, sender, requester, cb) {
  */
 Transaction.prototype.undoUnconfirmed = function (trs, sender, cb) {
 	var amount = new bignum(trs.amount.toString());
-	    amount = amount.plus(trs.fee.toString()).toNumber();
+	amount = amount.plus(trs.fee.toString()).toNumber();
 
 	this.scope.account.merge(sender.address, {u_balance: amount}, function (err, sender) {
 		if (err) {

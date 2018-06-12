@@ -1,4 +1,4 @@
-'use strict';
+
 
 var BlockRewards = {
 	getBlockRewards: 'SELECT * FROM getBlockRewards();',

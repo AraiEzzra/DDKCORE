@@ -1,7 +1,5 @@
-'use strict';
 
-var async = require('async');
-var path = require('path');
+
 var sandboxHelper = require('../helpers/sandbox.js');
 
 // Private fields
@@ -19,7 +17,7 @@ __private.loaded = false;
  * @return {setImmediateCallback} Callback function with `self` as data.
  */
 // Constructor
-function Server (cb, scope) {
+function Server (cb) {
 	self = this;
 
 	setImmediate(cb, null, self);
@@ -42,7 +40,7 @@ Server.prototype.sandboxApi = function (call, args, cb) {
  * Modules are not required in this file.
  * @param {modules} scope - Loaded modules.
  */
-Server.prototype.onBind = function (scope) {
+Server.prototype.onBind = function () {
 	modules = true;
 };
 

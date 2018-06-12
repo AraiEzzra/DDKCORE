@@ -1,4 +1,4 @@
-'use strict';
+
 
 var _ = require('lodash');
 var ip = require('ip');
@@ -36,7 +36,7 @@ function CheckIpInList (list, addr, returnListIsEmpty) {
 				var subnet = ip.cidrSubnet(entry);
 				list._subNets.push(subnet);
 			} catch (err) {
-				console.error('CheckIpInList:', err.toString());
+				console.error('CheckIpInList ERROR :', err.toString());
 			}
 		}
 	}

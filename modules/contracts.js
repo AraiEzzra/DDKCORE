@@ -1,22 +1,17 @@
-'use strict';
+
 
 //Requiring Modules 
 var Contract = require('../logic/contract.js');
 var transactionTypes = require('../helpers/transactionTypes.js');
-var sql = require('../sql/accounts.js');
-var contributorsStatus = true;
-var cache = require('./cache.js');
-//var cronjob = require('node-cron-job');
-//var path = require('path');
 
 //Private Fields
 var __private = {}, self = null,
-library = null, modules = null;
+	library = null, modules = null;
 __private.assetTypes = {};
 
 //Contracts Constuctor Initialized from app.js
 function Contracts(cb, scope) {
-    library = {
+	library = {
 		logger: scope.logger,
 		sequence: scope.sequence,
 		ed: scope.ed,
@@ -37,21 +32,21 @@ function Contracts(cb, scope) {
 			},
 			contributors: scope.config.contributors
 		},
-    };
-    
-    self = this;
-    self.type = transactionTypes.CONTRACT;
+	};
 
-    __private.assetTypes[transactionTypes.CONTRACT] = library.logic.transaction.attachAssetType(
+	self = this;
+	self.type = transactionTypes.CONTRACT;
+
+	__private.assetTypes[transactionTypes.CONTRACT] = library.logic.transaction.attachAssetType(
 		transactionTypes.CONTRACT, new Contract(scope.config)
 	);
-    
-    setImmediate(cb, null, self);
-};
+
+	setImmediate(cb, null, self);
+}
 
 //OnBInd Event called from app.js
 Contracts.prototype.onBind = function (scope) {
-    modules = {
+	modules = {
 		loader: scope.loader,
 		rounds: scope.rounds,
 		accounts: scope.accounts,
@@ -59,10 +54,10 @@ Contracts.prototype.onBind = function (scope) {
 		transport: scope.transport,
 		transactions: scope.transactions,
 		delegates: scope.delegates,
-    };
-    __private.assetTypes[transactionTypes.CONTRACT].bind(
+	};
+	__private.assetTypes[transactionTypes.CONTRACT].bind(
 		scope.accounts, scope.logger
 	);
-}
+};
 
 module.exports = Contracts;

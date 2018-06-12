@@ -1,4 +1,4 @@
-'use strict';
+
 /**
  * @memberof module:helpers
  * @module helpers/diff

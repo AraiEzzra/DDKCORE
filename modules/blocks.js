@@ -1,4 +1,4 @@
-'use strict';
+
 
 var constants     = require('../helpers/constants.js');
 var sandboxHelper = require('../helpers/sandbox.js');
@@ -10,7 +10,7 @@ var blocksUtils   = require('./blocks/utils');
 var blocksChain   = require('./blocks/chain');
 
 // Private fields
-var modules, library, self, __private = {};
+var library, self, __private = {};
 
 __private.lastBlock = {};
 __private.lastReceipt = null;
@@ -165,7 +165,7 @@ Blocks.prototype.sandboxApi = function (call, args, cb) {
  * Modules are not required in this file.
  * @param {modules} scope Exposed modules
  */
-Blocks.prototype.onBind = function (scope) {
+Blocks.prototype.onBind = function () {
 	// TODO: move here blocks submodules modules load from app.js.
 	// Set module as loaded
 	__private.loaded = true;

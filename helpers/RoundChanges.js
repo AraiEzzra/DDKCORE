@@ -1,4 +1,4 @@
-'use strict';
+
 
 var bignum = require('./bignum');
 var slots = require('./slots');

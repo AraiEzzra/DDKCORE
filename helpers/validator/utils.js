@@ -1,4 +1,4 @@
-'use strict';
+
 
 var util = require('util');
 
@@ -6,7 +6,7 @@ exports.extend = extend;
 exports.copy = copy;
 exports.inherits = util.inherits;
 
-function extend (target, source) {
+function extend (target) {
 	if (!target || typeof target !== 'object') { return target; }
 
 	Array.prototype.slice.call(arguments).forEach(function (source){

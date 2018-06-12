@@ -1,4 +1,4 @@
-'use strict';
+
 
 // Dependencies
 var utils = require('./utils.js');
@@ -171,9 +171,9 @@ Validator.prototype.rules = {};
 
 // Internal event handlers
 Validator.prototype.onInit = function () {};
-Validator.prototype.onError = function (field, err) {};
-Validator.prototype.onValid = function (field) {};
-Validator.prototype.onInvalid = function (field) {};
+Validator.prototype.onError = function () {};
+Validator.prototype.onValid = function () {};
+Validator.prototype.onInvalid = function () {};
 Validator.prototype.onEnd = function () {};
 
 // Constructor methods

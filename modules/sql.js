@@ -1,4 +1,4 @@
-'use strict';
+
 
 var async = require('async');
 var extend = require('extend');
@@ -57,7 +57,6 @@ __private.escape = function (what) {
 					__private.SINGLE_QUOTES, __private.SINGLE_QUOTES_DOUBLED
 				) + '\'');
 		}
-		break;
 	case 'boolean':
 		return what ? '1' : '0'; // 1 => true, 0 => false
 	case 'number':
@@ -128,10 +127,10 @@ __private.query = function (action, config, cb) {
 
 	function done (err, data) {
 		if (err) {
-			err = err;
+			return setImmediate(cb, err);
 		}
 
-		return setImmediate(cb, err, data);
+		return setImmediate(cb, null, data);
 	}
 
 	if (action !== 'batch') {
@@ -288,7 +287,7 @@ Sql.prototype.sandboxApi = function (call, args, cb) {
  * Modules are not required in this file.
  * @param {modules} scope - Loaded modules.
  */
-Sql.prototype.onBind = function (scope) {
+Sql.prototype.onBind = function () {
 };
 
 /**

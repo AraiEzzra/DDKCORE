@@ -1,14 +1,10 @@
 var _ = require('lodash');
 var async = require('async');
-var constants = require('../helpers/constants.js');
 var crypto = require('crypto');
 var DApp = require('../logic/dapp.js');
 var dappCategories = require('../helpers/dappCategories.js');
-var dappTypes = require('../helpers/dappTypes.js');
 var DecompressZip = require('decompress-zip');
-var extend = require('extend');
 var fs = require('fs');
-var ip = require('ip');
 var InTransfer = require('../logic/inTransfer.js');
 var npm = require('npm');
 var OrderBy = require('../helpers/orderBy.js');
@@ -52,7 +48,7 @@ __private.routes = {};
  * @param {scope} scope - App instance.
  * @return {setImmediateCallback} Callback function with `self` as data.
  * @todo apply node pattern for callbacks: callback always at the end.
- * @todo add 'use strict';
+ * @todo add 
  */
 // Constructor
 function DApps (cb, scope) {
@@ -133,7 +129,7 @@ function DApps (cb, scope) {
 				});
 			});
 		} else {
-			__private.createBasePaths(function (err) {
+			__private.createBasePaths(function () {
 				return setImmediate(cb, null, self);
 			});
 		}
@@ -313,7 +309,7 @@ __private.installDependencies = function (dapp, cb) {
 		npm.root = path.join(dappPath, 'node_modules');
 		npm.prefix = dappPath;
 
-		npm.commands.install(function (err, data) {
+		npm.commands.install(function () {
 			return setImmediate(cb, null);
 		});
 	});
@@ -469,7 +465,7 @@ __private.downloadLink = function (dapp, dappPath, cb) {
 				});
 			});
 
-			unzipper.on('extract', function (log) {
+			unzipper.on('extract', function () {
 				library.logger.info(dapp.transactionId, 'Finished extracting');
 				fs.exists(tmpPath, function (exists) {
 					if (exists) { fs.unlink(tmpPath); }
@@ -756,7 +752,7 @@ __private.launchDApp = function (body, cb) {
 				}
 			});
 		}
-	], function (err, dapp) {
+	], function (err) {
 		if (err) {
 			library.logger.error('Failed to launch application', err);
 		} else {
@@ -783,8 +779,6 @@ __private.launchDApp = function (body, cb) {
  */
 __private.createSandbox = function (dapp, params, cb) {
 	var dappPath = path.join(__private.dappsPath, dapp.transactionId);
-	var dappPublicPath = path.join(dappPath, 'public');
-	var dappPublicLink = path.join(__private.appPath, 'public', 'dapps', dapp.transactionId);
 
 	var dappConfig;
 
@@ -820,7 +814,7 @@ __private.createSandbox = function (dapp, params, cb) {
 			}
 
 			var withDebug = false;
-			process.execArgv.forEach(function (item, index) {
+			process.execArgv.forEach(function (item) {
 				if (item.indexOf('--debug') >= 0) {
 					withDebug = true;
 				}
@@ -1159,7 +1153,7 @@ DApps.prototype.internal = {
 	},
 
 	search: function (query, cb) {
-		__private.getInstalledIds(function (err, ids) {
+		__private.getInstalledIds(function (err) {
 			if (err) {
 				library.logger.error(err);
 				return setImmediate(cb, 'Failed to get installed application ids');
@@ -1458,8 +1452,6 @@ DApps.prototype.internal = {
 				}
 			}
 
-			var query = {};
-
 			library.balancesSequence.add(function (cb) {
 				if (req.body.multisigAccountPublicKey && req.body.multisigAccountPublicKey !== keypair.publicKey.toString('hex')) {
 					modules.accounts.getAccount({publicKey: req.body.multisigAccountPublicKey}, function (err, account) {
@@ -1580,7 +1572,6 @@ DApps.prototype.internal = {
 
 			var hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
 			var keypair = library.ed.makeKeypair(hash);
-			var query = {};
 
 			library.balancesSequence.add(function (cb) {
 				if (req.body.multisigAccountPublicKey && req.body.multisigAccountPublicKey !== keypair.publicKey.toString('hex')) {

@@ -1,4 +1,4 @@
-'use strict';
+
 
 var constants = require('../helpers/constants.js');
 
@@ -56,7 +56,7 @@ Delegate.prototype.create = function (data, trs) {
  * @returns {number} constants.fees.delegate
  * @todo delete unnecessary function parameters trs, sender.
  */
-Delegate.prototype.calculateFee = function (trs, sender) {
+Delegate.prototype.calculateFee = function () {
 	return constants.fees.delegate;
 };
 

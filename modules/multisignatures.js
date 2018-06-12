@@ -1,8 +1,7 @@
-'use strict';
+
 
 var async = require('async');
 var crypto = require('crypto');
-var extend = require('extend');
 var genesisblock = null;
 var Multisignature = require('../logic/multisignature.js');
 var sandboxHelper = require('../helpers/sandbox.js');
@@ -302,7 +301,6 @@ Multisignatures.prototype.shared = {
 						var verify = false;
 
 						for (var i in transaction.signatures) {
-							var signature = transaction.signatures[i];
 
 							try {
 								verify = library.logic.transaction.verifySignature(transaction, req.body.publicKey, transaction.signatures[i]);

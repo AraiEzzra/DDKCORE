@@ -1,4 +1,4 @@
-'use strict';
+
 
 var fs = require('fs');
 var path = require('path');
@@ -45,7 +45,6 @@ function validateForce (configData) {
 		var index = constants.nethashes.indexOf(configData.nethash);
 
 		if (index !== -1) {
-			console.log('Forced forging disabled for nethash', configData.nethash);
 			configData.forging.force = false;
 		}
 	}

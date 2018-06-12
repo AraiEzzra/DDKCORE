@@ -1,8 +1,7 @@
-'use strict';
+
 
 var _ = require('lodash');
 var async = require('async');
-var crypto = require('crypto');
 var Inserts = require('../../helpers/inserts.js');
 var sql = require('../../sql/blocks.js');
 var transactionTypes = require('../../helpers/transactionTypes.js');
@@ -143,7 +142,7 @@ __private.afterSave = function (block, cb) {
  * @return {Object} t SQL connection object filled with inserts
  * @throws Will throw 'Invalid promise' when no promise, promise.values or promise.table
  */
-__private.promiseTransactions = function (t, block, blockPromises) {
+__private.promiseTransactions = function (t, block) {
 	if (_.isEmpty(block.transactions)) {
 		return t;
 	}
@@ -246,7 +245,7 @@ Chain.prototype.deleteAfterBlock = function (blockId, cb) {
  */
 Chain.prototype.applyGenesisBlock = function (block, cb) {
 	// Sort transactions included in block
-	block.transactions = block.transactions.sort(function (a, b) {
+	block.transactions = block.transactions.sort(function (a) {
 		if (a.type === transactionTypes.VOTE) {
 			return 1;
 		} else {

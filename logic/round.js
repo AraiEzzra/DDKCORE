@@ -1,4 +1,4 @@
-'use strict';
+
 
 var pgp = require('pg-promise');
 var RoundChanges = require('../helpers/RoundChanges.js');
@@ -209,7 +209,7 @@ Round.prototype.applyRound = function () {
 	var remainderDelegate = delegates[remainderIndex];
 
 	// Get round changes for chosen delegate
-	var changes = roundChanges.at(remainderIndex);
+	changes = roundChanges.at(remainderIndex);
 
 	// Apply fees remaining to chosen delegate
 	if (changes.feesRemaining > 0) {

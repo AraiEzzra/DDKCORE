@@ -1,4 +1,4 @@
-'use strict';
+
 
 var RoundsSql = {
 	flush: 'DELETE FROM mem_round WHERE "round" = (${round})::bigint;',

@@ -30,90 +30,90 @@ THE SOFTWARE.
 	else if(typeof define === 'function' && define.amd)
 		define([], factory);
 	else if(typeof exports === 'object')
-		exports["Handlebars"] = factory();
+		exports['Handlebars'] = factory();
 	else
-		root["Handlebars"] = factory();
+		root['Handlebars'] = factory();
 })(this, function() {
-return /******/ (function(modules) { // webpackBootstrap
-/******/ 	// The module cache
-/******/ 	var installedModules = {};
+	return /******/ (function(modules) { // webpackBootstrap
+		/******/ 	// The module cache
+		/******/ 	var installedModules = {};
 
-/******/ 	// The require function
-/******/ 	function __webpack_require__(moduleId) {
+		/******/ 	// The require function
+		/******/ 	function __webpack_require__(moduleId) {
 
-/******/ 		// Check if module is in cache
-/******/ 		if(installedModules[moduleId])
-/******/ 			return installedModules[moduleId].exports;
+			/******/ 		// Check if module is in cache
+			/******/ 		if(installedModules[moduleId])
+			/******/ 			return installedModules[moduleId].exports;
 
-/******/ 		// Create a new module (and put it into the cache)
-/******/ 		var module = installedModules[moduleId] = {
-/******/ 			exports: {},
-/******/ 			id: moduleId,
-/******/ 			loaded: false
-/******/ 		};
+			/******/ 		// Create a new module (and put it into the cache)
+			/******/ 		var module = installedModules[moduleId] = {
+				/******/ 			exports: {},
+				/******/ 			id: moduleId,
+				/******/ 			loaded: false
+				/******/ 		};
 
-/******/ 		// Execute the module function
-/******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
+			/******/ 		// Execute the module function
+			/******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
 
-/******/ 		// Flag the module as loaded
-/******/ 		module.loaded = true;
+			/******/ 		// Flag the module as loaded
+			/******/ 		module.loaded = true;
 
-/******/ 		// Return the exports of the module
-/******/ 		return module.exports;
-/******/ 	}
+			/******/ 		// Return the exports of the module
+			/******/ 		return module.exports;
+			/******/ 	}
 
 
-/******/ 	// expose the modules object (__webpack_modules__)
-/******/ 	__webpack_require__.m = modules;
+		/******/ 	// expose the modules object (__webpack_modules__)
+		/******/ 	__webpack_require__.m = modules;
 
-/******/ 	// expose the module cache
-/******/ 	__webpack_require__.c = installedModules;
+		/******/ 	// expose the module cache
+		/******/ 	__webpack_require__.c = installedModules;
 
-/******/ 	// __webpack_public_path__
-/******/ 	__webpack_require__.p = "";
+		/******/ 	// __webpack_public_path__
+		/******/ 	__webpack_require__.p = '';
 
-/******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(0);
-/******/ })
-/************************************************************************/
-/******/ ([
-/* 0 */
-/***/ function(module, exports, __webpack_require__) {
+		/******/ 	// Load entry module and return exports
+		/******/ 	return __webpack_require__(0);
+		/******/ })
+	/************************************************************************/
+	/******/ ([
+		/* 0 */
+		/***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
+			
 
-	var _interopRequireDefault = __webpack_require__(1)['default'];
+			var _interopRequireDefault = __webpack_require__(1)['default'];
 
-	exports.__esModule = true;
+			exports.__esModule = true;
 
-	var _handlebarsRuntime = __webpack_require__(2);
+			var _handlebarsRuntime = __webpack_require__(2);
 
-	var _handlebarsRuntime2 = _interopRequireDefault(_handlebarsRuntime);
+			var _handlebarsRuntime2 = _interopRequireDefault(_handlebarsRuntime);
 
-	// Compiler imports
+			// Compiler imports
 
-	var _handlebarsCompilerAst = __webpack_require__(21);
+			var _handlebarsCompilerAst = __webpack_require__(21);
 
-	var _handlebarsCompilerAst2 = _interopRequireDefault(_handlebarsCompilerAst);
+			var _handlebarsCompilerAst2 = _interopRequireDefault(_handlebarsCompilerAst);
 
-	var _handlebarsCompilerBase = __webpack_require__(22);
+			var _handlebarsCompilerBase = __webpack_require__(22);
 
-	var _handlebarsCompilerCompiler = __webpack_require__(27);
+			var _handlebarsCompilerCompiler = __webpack_require__(27);
 
-	var _handlebarsCompilerJavascriptCompiler = __webpack_require__(28);
+			var _handlebarsCompilerJavascriptCompiler = __webpack_require__(28);
 
-	var _handlebarsCompilerJavascriptCompiler2 = _interopRequireDefault(_handlebarsCompilerJavascriptCompiler);
+			var _handlebarsCompilerJavascriptCompiler2 = _interopRequireDefault(_handlebarsCompilerJavascriptCompiler);
 
-	var _handlebarsCompilerVisitor = __webpack_require__(25);
+			var _handlebarsCompilerVisitor = __webpack_require__(25);
 
-	var _handlebarsCompilerVisitor2 = _interopRequireDefault(_handlebarsCompilerVisitor);
+			var _handlebarsCompilerVisitor2 = _interopRequireDefault(_handlebarsCompilerVisitor);
 
-	var _handlebarsNoConflict = __webpack_require__(20);
+			var _handlebarsNoConflict = __webpack_require__(20);
 
-	var _handlebarsNoConflict2 = _interopRequireDefault(_handlebarsNoConflict);
+			var _handlebarsNoConflict2 = _interopRequireDefault(_handlebarsNoConflict);
 
-	var _create = _handlebarsRuntime2['default'].create;
-	function create() {
+			var _create = _handlebarsRuntime2['default'].create;
+			function create() {
 	  var hb = _create();
 
 	  hb.compile = function (input, options) {
@@ -130,75 +130,75 @@ return /******/ (function(modules) { // webpackBootstrap
 	  hb.parse = _handlebarsCompilerBase.parse;
 
 	  return hb;
-	}
+			}
 
-	var inst = create();
-	inst.create = create;
+			var inst = create();
+			inst.create = create;
 
-	_handlebarsNoConflict2['default'](inst);
+			_handlebarsNoConflict2['default'](inst);
 
-	inst.Visitor = _handlebarsCompilerVisitor2['default'];
+			inst.Visitor = _handlebarsCompilerVisitor2['default'];
 
-	inst['default'] = inst;
+			inst['default'] = inst;
 
-	exports['default'] = inst;
-	module.exports = exports['default'];
+			exports['default'] = inst;
+			module.exports = exports['default'];
 
-/***/ },
-/* 1 */
-/***/ function(module, exports) {
+			/***/ },
+		/* 1 */
+		/***/ function(module, exports) {
 
-	"use strict";
+			
 
-	exports["default"] = function (obj) {
+			exports['default'] = function (obj) {
 	  return obj && obj.__esModule ? obj : {
-	    "default": obj
+	    'default': obj
 	  };
-	};
+			};
 
-	exports.__esModule = true;
+			exports.__esModule = true;
 
-/***/ },
-/* 2 */
-/***/ function(module, exports, __webpack_require__) {
+			/***/ },
+		/* 2 */
+		/***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
+			
 
-	var _interopRequireWildcard = __webpack_require__(3)['default'];
+			var _interopRequireWildcard = __webpack_require__(3)['default'];
 
-	var _interopRequireDefault = __webpack_require__(1)['default'];
+			var _interopRequireDefault = __webpack_require__(1)['default'];
 
-	exports.__esModule = true;
+			exports.__esModule = true;
 
-	var _handlebarsBase = __webpack_require__(4);
+			var _handlebarsBase = __webpack_require__(4);
 
-	var base = _interopRequireWildcard(_handlebarsBase);
+			var base = _interopRequireWildcard(_handlebarsBase);
 
-	// Each of these augment the Handlebars object. No need to setup here.
-	// (This is done to easily share code between commonjs and browse envs)
+			// Each of these augment the Handlebars object. No need to setup here.
+			// (This is done to easily share code between commonjs and browse envs)
 
-	var _handlebarsSafeString = __webpack_require__(18);
+			var _handlebarsSafeString = __webpack_require__(18);
 
-	var _handlebarsSafeString2 = _interopRequireDefault(_handlebarsSafeString);
+			var _handlebarsSafeString2 = _interopRequireDefault(_handlebarsSafeString);
 
-	var _handlebarsException = __webpack_require__(6);
+			var _handlebarsException = __webpack_require__(6);
 
-	var _handlebarsException2 = _interopRequireDefault(_handlebarsException);
+			var _handlebarsException2 = _interopRequireDefault(_handlebarsException);
 
-	var _handlebarsUtils = __webpack_require__(5);
+			var _handlebarsUtils = __webpack_require__(5);
 
-	var Utils = _interopRequireWildcard(_handlebarsUtils);
+			var Utils = _interopRequireWildcard(_handlebarsUtils);
 
-	var _handlebarsRuntime = __webpack_require__(19);
+			var _handlebarsRuntime = __webpack_require__(19);
 
-	var runtime = _interopRequireWildcard(_handlebarsRuntime);
+			var runtime = _interopRequireWildcard(_handlebarsRuntime);
 
-	var _handlebarsNoConflict = __webpack_require__(20);
+			var _handlebarsNoConflict = __webpack_require__(20);
 
-	var _handlebarsNoConflict2 = _interopRequireDefault(_handlebarsNoConflict);
+			var _handlebarsNoConflict2 = _interopRequireDefault(_handlebarsNoConflict);
 
-	// For compatibility and usage outside of module systems, make the Handlebars object a namespace
-	function create() {
+			// For compatibility and usage outside of module systems, make the Handlebars object a namespace
+			function create() {
 	  var hb = new base.HandlebarsEnvironment();
 
 	  Utils.extend(hb, base);
@@ -213,25 +213,25 @@ return /******/ (function(modules) { // webpackBootstrap
 	  };
 
 	  return hb;
-	}
+			}
 
-	var inst = create();
-	inst.create = create;
+			var inst = create();
+			inst.create = create;
 
-	_handlebarsNoConflict2['default'](inst);
+			_handlebarsNoConflict2['default'](inst);
 
-	inst['default'] = inst;
+			inst['default'] = inst;
 
-	exports['default'] = inst;
-	module.exports = exports['default'];
+			exports['default'] = inst;
+			module.exports = exports['default'];
 
-/***/ },
-/* 3 */
-/***/ function(module, exports) {
+			/***/ },
+		/* 3 */
+		/***/ function(module, exports) {
 
-	"use strict";
+			
 
-	exports["default"] = function (obj) {
+			exports['default'] = function (obj) {
 	  if (obj && obj.__esModule) {
 	    return obj;
 	  } else {
@@ -243,44 +243,44 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }
 	    }
 
-	    newObj["default"] = obj;
+	    newObj['default'] = obj;
 	    return newObj;
 	  }
-	};
+			};
 
-	exports.__esModule = true;
+			exports.__esModule = true;
 
-/***/ },
-/* 4 */
-/***/ function(module, exports, __webpack_require__) {
+			/***/ },
+		/* 4 */
+		/***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
+			
 
-	var _interopRequireDefault = __webpack_require__(1)['default'];
+			var _interopRequireDefault = __webpack_require__(1)['default'];
 
-	exports.__esModule = true;
-	exports.HandlebarsEnvironment = HandlebarsEnvironment;
+			exports.__esModule = true;
+			exports.HandlebarsEnvironment = HandlebarsEnvironment;
 
-	var _utils = __webpack_require__(5);
+			var _utils = __webpack_require__(5);
 
-	var _exception = __webpack_require__(6);
+			var _exception = __webpack_require__(6);
 
-	var _exception2 = _interopRequireDefault(_exception);
+			var _exception2 = _interopRequireDefault(_exception);
 
-	var _helpers = __webpack_require__(7);
+			var _helpers = __webpack_require__(7);
 
-	var _decorators = __webpack_require__(15);
+			var _decorators = __webpack_require__(15);
 
-	var _logger = __webpack_require__(17);
+			var _logger = __webpack_require__(17);
 
-	var _logger2 = _interopRequireDefault(_logger);
+			var _logger2 = _interopRequireDefault(_logger);
 
-	var VERSION = '4.0.5';
-	exports.VERSION = VERSION;
-	var COMPILER_REVISION = 7;
+			var VERSION = '4.0.5';
+			exports.VERSION = VERSION;
+			var COMPILER_REVISION = 7;
 
-	exports.COMPILER_REVISION = COMPILER_REVISION;
-	var REVISION_CHANGES = {
+			exports.COMPILER_REVISION = COMPILER_REVISION;
+			var REVISION_CHANGES = {
 	  1: '<= 1.0.rc.2', // 1.0.rc.2 is actually rev2 but doesn't report it
 	  2: '== 1.0.0-rc.3',
 	  3: '== 1.0.0-rc.4',
@@ -288,21 +288,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	  5: '== 2.0.0-alpha.x',
 	  6: '>= 2.0.0-beta.1',
 	  7: '>= 4.0.0'
-	};
+			};
 
-	exports.REVISION_CHANGES = REVISION_CHANGES;
-	var objectType = '[object Object]';
+			exports.REVISION_CHANGES = REVISION_CHANGES;
+			var objectType = '[object Object]';
 
-	function HandlebarsEnvironment(helpers, partials, decorators) {
+			function HandlebarsEnvironment(helpers, partials, decorators) {
 	  this.helpers = helpers || {};
 	  this.partials = partials || {};
 	  this.decorators = decorators || {};
 
 	  _helpers.registerDefaultHelpers(this);
 	  _decorators.registerDefaultDecorators(this);
-	}
+			}
 
-	HandlebarsEnvironment.prototype = {
+			HandlebarsEnvironment.prototype = {
 	  constructor: HandlebarsEnvironment,
 
 	  logger: _logger2['default'],
@@ -349,46 +349,46 @@ return /******/ (function(modules) { // webpackBootstrap
 	  unregisterDecorator: function unregisterDecorator(name) {
 	    delete this.decorators[name];
 	  }
-	};
+			};
 
-	var log = _logger2['default'].log;
+			var log = _logger2['default'].log;
 
-	exports.log = log;
-	exports.createFrame = _utils.createFrame;
-	exports.logger = _logger2['default'];
+			exports.log = log;
+			exports.createFrame = _utils.createFrame;
+			exports.logger = _logger2['default'];
 
-/***/ },
-/* 5 */
-/***/ function(module, exports) {
+			/***/ },
+		/* 5 */
+		/***/ function(module, exports) {
 
-	'use strict';
+			
 
-	exports.__esModule = true;
-	exports.extend = extend;
-	exports.indexOf = indexOf;
-	exports.escapeExpression = escapeExpression;
-	exports.isEmpty = isEmpty;
-	exports.createFrame = createFrame;
-	exports.blockParams = blockParams;
-	exports.appendContextPath = appendContextPath;
-	var escape = {
+			exports.__esModule = true;
+			exports.extend = extend;
+			exports.indexOf = indexOf;
+			exports.escapeExpression = escapeExpression;
+			exports.isEmpty = isEmpty;
+			exports.createFrame = createFrame;
+			exports.blockParams = blockParams;
+			exports.appendContextPath = appendContextPath;
+			var escape = {
 	  '&': '&amp;',
 	  '<': '&lt;',
 	  '>': '&gt;',
 	  '"': '&quot;',
-	  "'": '&#x27;',
+	  '\'': '&#x27;',
 	  '`': '&#x60;',
 	  '=': '&#x3D;'
-	};
+			};
 
-	var badChars = /[&<>"'`=]/g,
+			var badChars = /[&<>"'`=]/g,
 	    possible = /[&<>"'`=]/;
 
-	function escapeChar(chr) {
+			function escapeChar(chr) {
 	  return escape[chr];
-	}
+			}
 
-	function extend(obj /* , ...source */) {
+			function extend(obj /* , ...source */) {
 	  for (var i = 1; i < arguments.length; i++) {
 	    for (var key in arguments[i]) {
 	      if (Object.prototype.hasOwnProperty.call(arguments[i], key)) {
@@ -398,46 +398,46 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  return obj;
-	}
+			}
 
-	var toString = Object.prototype.toString;
+			var toString = Object.prototype.toString;
 
-	exports.toString = toString;
-	// Sourced from lodash
-	// https://github.com/bestiejs/lodash/blob/master/LICENSE.txt
-	/* eslint-disable func-style */
-	var isFunction = function isFunction(value) {
+			exports.toString = toString;
+			// Sourced from lodash
+			// https://github.com/bestiejs/lodash/blob/master/LICENSE.txt
+			/* eslint-disable func-style */
+			var isFunction = function isFunction(value) {
 	  return typeof value === 'function';
-	};
-	// fallback for older versions of Chrome and Safari
-	/* istanbul ignore next */
-	if (isFunction(/x/)) {
+			};
+			// fallback for older versions of Chrome and Safari
+			/* istanbul ignore next */
+			if (isFunction(/x/)) {
 	  exports.isFunction = isFunction = function (value) {
 	    return typeof value === 'function' && toString.call(value) === '[object Function]';
 	  };
-	}
-	exports.isFunction = isFunction;
+			}
+			exports.isFunction = isFunction;
 
-	/* eslint-enable func-style */
+			/* eslint-enable func-style */
 
-	/* istanbul ignore next */
-	var isArray = Array.isArray || function (value) {
+			/* istanbul ignore next */
+			var isArray = Array.isArray || function (value) {
 	  return value && typeof value === 'object' ? toString.call(value) === '[object Array]' : false;
-	};
+			};
 
-	exports.isArray = isArray;
-	// Older IE versions do not directly support indexOf so we must implement our own, sadly.
+			exports.isArray = isArray;
+			// Older IE versions do not directly support indexOf so we must implement our own, sadly.
 
-	function indexOf(array, value) {
+			function indexOf(array, value) {
 	  for (var i = 0, len = array.length; i < len; i++) {
 	    if (array[i] === value) {
 	      return i;
 	    }
 	  }
 	  return -1;
-	}
+			}
 
-	function escapeExpression(string) {
+			function escapeExpression(string) {
 	  if (typeof string !== 'string') {
 	    // don't escape SafeStrings, since they're already safe
 	    if (string && string.toHTML) {
@@ -458,9 +458,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return string;
 	  }
 	  return string.replace(badChars, escapeChar);
-	}
+			}
 
-	function isEmpty(value) {
+			function isEmpty(value) {
 	  if (!value && value !== 0) {
 	    return true;
 	  } else if (isArray(value) && value.length === 0) {
@@ -468,34 +468,34 @@ return /******/ (function(modules) { // webpackBootstrap
 	  } else {
 	    return false;
 	  }
-	}
+			}
 
-	function createFrame(object) {
+			function createFrame(object) {
 	  var frame = extend({}, object);
 	  frame._parent = object;
 	  return frame;
-	}
+			}
 
-	function blockParams(params, ids) {
+			function blockParams(params, ids) {
 	  params.path = ids;
 	  return params;
-	}
+			}
 
-	function appendContextPath(contextPath, id) {
+			function appendContextPath(contextPath, id) {
 	  return (contextPath ? contextPath + '.' : '') + id;
-	}
+			}
 
-/***/ },
-/* 6 */
-/***/ function(module, exports) {
+			/***/ },
+		/* 6 */
+		/***/ function(module, exports) {
 
-	'use strict';
+			
 
-	exports.__esModule = true;
+			exports.__esModule = true;
 
-	var errorProps = ['description', 'fileName', 'lineNumber', 'message', 'name', 'number', 'stack'];
+			var errorProps = ['description', 'fileName', 'lineNumber', 'message', 'name', 'number', 'stack'];
 
-	function Exception(message, node) {
+			function Exception(message, node) {
 	  var loc = node && node.loc,
 	      line = undefined,
 	      column = undefined;
@@ -522,53 +522,53 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.lineNumber = line;
 	    this.column = column;
 	  }
-	}
+			}
 
-	Exception.prototype = new Error();
+			Exception.prototype = new Error();
 
-	exports['default'] = Exception;
-	module.exports = exports['default'];
+			exports['default'] = Exception;
+			module.exports = exports['default'];
 
-/***/ },
-/* 7 */
-/***/ function(module, exports, __webpack_require__) {
+			/***/ },
+		/* 7 */
+		/***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
+			
 
-	var _interopRequireDefault = __webpack_require__(1)['default'];
+			var _interopRequireDefault = __webpack_require__(1)['default'];
 
-	exports.__esModule = true;
-	exports.registerDefaultHelpers = registerDefaultHelpers;
+			exports.__esModule = true;
+			exports.registerDefaultHelpers = registerDefaultHelpers;
 
-	var _helpersBlockHelperMissing = __webpack_require__(8);
+			var _helpersBlockHelperMissing = __webpack_require__(8);
 
-	var _helpersBlockHelperMissing2 = _interopRequireDefault(_helpersBlockHelperMissing);
+			var _helpersBlockHelperMissing2 = _interopRequireDefault(_helpersBlockHelperMissing);
 
-	var _helpersEach = __webpack_require__(9);
+			var _helpersEach = __webpack_require__(9);
 
-	var _helpersEach2 = _interopRequireDefault(_helpersEach);
+			var _helpersEach2 = _interopRequireDefault(_helpersEach);
 
-	var _helpersHelperMissing = __webpack_require__(10);
+			var _helpersHelperMissing = __webpack_require__(10);
 
-	var _helpersHelperMissing2 = _interopRequireDefault(_helpersHelperMissing);
+			var _helpersHelperMissing2 = _interopRequireDefault(_helpersHelperMissing);
 
-	var _helpersIf = __webpack_require__(11);
+			var _helpersIf = __webpack_require__(11);
 
-	var _helpersIf2 = _interopRequireDefault(_helpersIf);
+			var _helpersIf2 = _interopRequireDefault(_helpersIf);
 
-	var _helpersLog = __webpack_require__(12);
+			var _helpersLog = __webpack_require__(12);
 
-	var _helpersLog2 = _interopRequireDefault(_helpersLog);
+			var _helpersLog2 = _interopRequireDefault(_helpersLog);
 
-	var _helpersLookup = __webpack_require__(13);
+			var _helpersLookup = __webpack_require__(13);
 
-	var _helpersLookup2 = _interopRequireDefault(_helpersLookup);
+			var _helpersLookup2 = _interopRequireDefault(_helpersLookup);
 
-	var _helpersWith = __webpack_require__(14);
+			var _helpersWith = __webpack_require__(14);
 
-	var _helpersWith2 = _interopRequireDefault(_helpersWith);
+			var _helpersWith2 = _interopRequireDefault(_helpersWith);
 
-	function registerDefaultHelpers(instance) {
+			function registerDefaultHelpers(instance) {
 	  _helpersBlockHelperMissing2['default'](instance);
 	  _helpersEach2['default'](instance);
 	  _helpersHelperMissing2['default'](instance);
@@ -576,19 +576,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	  _helpersLog2['default'](instance);
 	  _helpersLookup2['default'](instance);
 	  _helpersWith2['default'](instance);
-	}
+			}
 
-/***/ },
-/* 8 */
-/***/ function(module, exports, __webpack_require__) {
+			/***/ },
+		/* 8 */
+		/***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
+			
 
-	exports.__esModule = true;
+			exports.__esModule = true;
 
-	var _utils = __webpack_require__(5);
+			var _utils = __webpack_require__(5);
 
-	exports['default'] = function (instance) {
+			exports['default'] = function (instance) {
 	  instance.registerHelper('blockHelperMissing', function (context, options) {
 	    var inverse = options.inverse,
 	        fn = options.fn;
@@ -617,27 +617,27 @@ return /******/ (function(modules) { // webpackBootstrap
 	      return fn(context, options);
 	    }
 	  });
-	};
+			};
 
-	module.exports = exports['default'];
+			module.exports = exports['default'];
 
-/***/ },
-/* 9 */
-/***/ function(module, exports, __webpack_require__) {
+			/***/ },
+		/* 9 */
+		/***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
+			
 
-	var _interopRequireDefault = __webpack_require__(1)['default'];
+			var _interopRequireDefault = __webpack_require__(1)['default'];
 
-	exports.__esModule = true;
+			exports.__esModule = true;
 
-	var _utils = __webpack_require__(5);
+			var _utils = __webpack_require__(5);
 
-	var _exception = __webpack_require__(6);
+			var _exception = __webpack_require__(6);
 
-	var _exception2 = _interopRequireDefault(_exception);
+			var _exception2 = _interopRequireDefault(_exception);
 
-	exports['default'] = function (instance) {
+			exports['default'] = function (instance) {
 	  instance.registerHelper('each', function (context, options) {
 	    if (!options) {
 	      throw new _exception2['default']('Must pass iterator to #each');
@@ -714,25 +714,25 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    return ret;
 	  });
-	};
+			};
 
-	module.exports = exports['default'];
+			module.exports = exports['default'];
 
-/***/ },
-/* 10 */
-/***/ function(module, exports, __webpack_require__) {
+			/***/ },
+		/* 10 */
+		/***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
+			
 
-	var _interopRequireDefault = __webpack_require__(1)['default'];
+			var _interopRequireDefault = __webpack_require__(1)['default'];
 
-	exports.__esModule = true;
+			exports.__esModule = true;
 
-	var _exception = __webpack_require__(6);
+			var _exception = __webpack_require__(6);
 
-	var _exception2 = _interopRequireDefault(_exception);
+			var _exception2 = _interopRequireDefault(_exception);
 
-	exports['default'] = function (instance) {
+			exports['default'] = function (instance) {
 	  instance.registerHelper('helperMissing', function () /* [args, ]options */{
 	    if (arguments.length === 1) {
 	      // A missing field in a {{foo}} construct.
@@ -742,21 +742,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	      throw new _exception2['default']('Missing helper: "' + arguments[arguments.length - 1].name + '"');
 	    }
 	  });
-	};
+			};
 
-	module.exports = exports['default'];
+			module.exports = exports['default'];
 
-/***/ },
-/* 11 */
-/***/ function(module, exports, __webpack_require__) {
+			/***/ },
+		/* 11 */
+		/***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
+			
 
-	exports.__esModule = true;
+			exports.__esModule = true;
 
-	var _utils = __webpack_require__(5);
+			var _utils = __webpack_require__(5);
 
-	exports['default'] = function (instance) {
+			exports['default'] = function (instance) {
 	  instance.registerHelper('if', function (conditional, options) {
 	    if (_utils.isFunction(conditional)) {
 	      conditional = conditional.call(this);
@@ -775,19 +775,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	  instance.registerHelper('unless', function (conditional, options) {
 	    return instance.helpers['if'].call(this, conditional, { fn: options.inverse, inverse: options.fn, hash: options.hash });
 	  });
-	};
+			};
 
-	module.exports = exports['default'];
+			module.exports = exports['default'];
 
-/***/ },
-/* 12 */
-/***/ function(module, exports) {
+			/***/ },
+		/* 12 */
+		/***/ function(module, exports) {
 
-	'use strict';
+			
 
-	exports.__esModule = true;
+			exports.__esModule = true;
 
-	exports['default'] = function (instance) {
+			exports['default'] = function (instance) {
 	  instance.registerHelper('log', function () /* message, options */{
 	    var args = [undefined],
 	        options = arguments[arguments.length - 1];
@@ -805,37 +805,37 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    instance.log.apply(instance, args);
 	  });
-	};
+			};
 
-	module.exports = exports['default'];
+			module.exports = exports['default'];
 
-/***/ },
-/* 13 */
-/***/ function(module, exports) {
+			/***/ },
+		/* 13 */
+		/***/ function(module, exports) {
 
-	'use strict';
+			
 
-	exports.__esModule = true;
+			exports.__esModule = true;
 
-	exports['default'] = function (instance) {
+			exports['default'] = function (instance) {
 	  instance.registerHelper('lookup', function (obj, field) {
 	    return obj && obj[field];
 	  });
-	};
+			};
 
-	module.exports = exports['default'];
+			module.exports = exports['default'];
 
-/***/ },
-/* 14 */
-/***/ function(module, exports, __webpack_require__) {
+			/***/ },
+		/* 14 */
+		/***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
+			
 
-	exports.__esModule = true;
+			exports.__esModule = true;
 
-	var _utils = __webpack_require__(5);
+			var _utils = __webpack_require__(5);
 
-	exports['default'] = function (instance) {
+			exports['default'] = function (instance) {
 	  instance.registerHelper('with', function (context, options) {
 	    if (_utils.isFunction(context)) {
 	      context = context.call(this);
@@ -858,40 +858,40 @@ return /******/ (function(modules) { // webpackBootstrap
 	      return options.inverse(this);
 	    }
 	  });
-	};
+			};
 
-	module.exports = exports['default'];
+			module.exports = exports['default'];
 
-/***/ },
-/* 15 */
-/***/ function(module, exports, __webpack_require__) {
+			/***/ },
+		/* 15 */
+		/***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
+			
 
-	var _interopRequireDefault = __webpack_require__(1)['default'];
+			var _interopRequireDefault = __webpack_require__(1)['default'];
 
-	exports.__esModule = true;
-	exports.registerDefaultDecorators = registerDefaultDecorators;
+			exports.__esModule = true;
+			exports.registerDefaultDecorators = registerDefaultDecorators;
 
-	var _decoratorsInline = __webpack_require__(16);
+			var _decoratorsInline = __webpack_require__(16);
 
-	var _decoratorsInline2 = _interopRequireDefault(_decoratorsInline);
+			var _decoratorsInline2 = _interopRequireDefault(_decoratorsInline);
 
-	function registerDefaultDecorators(instance) {
+			function registerDefaultDecorators(instance) {
 	  _decoratorsInline2['default'](instance);
-	}
+			}
 
-/***/ },
-/* 16 */
-/***/ function(module, exports, __webpack_require__) {
+			/***/ },
+		/* 16 */
+		/***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
+			
 
-	exports.__esModule = true;
+			exports.__esModule = true;
 
-	var _utils = __webpack_require__(5);
+			var _utils = __webpack_require__(5);
 
-	exports['default'] = function (instance) {
+			exports['default'] = function (instance) {
 	  instance.registerDecorator('inline', function (fn, props, container, options) {
 	    var ret = fn;
 	    if (!props.partials) {
@@ -910,21 +910,21 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    return ret;
 	  });
-	};
+			};
 
-	module.exports = exports['default'];
+			module.exports = exports['default'];
 
-/***/ },
-/* 17 */
-/***/ function(module, exports, __webpack_require__) {
+			/***/ },
+		/* 17 */
+		/***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
+			
 
-	exports.__esModule = true;
+			exports.__esModule = true;
 
-	var _utils = __webpack_require__(5);
+			var _utils = __webpack_require__(5);
 
-	var logger = {
+			var logger = {
 	  methodMap: ['debug', 'info', 'warn', 'error'],
 	  level: 'info',
 
@@ -960,59 +960,59 @@ return /******/ (function(modules) { // webpackBootstrap
 	      console[method].apply(console, message); // eslint-disable-line no-console
 	    }
 	  }
-	};
+			};
 
-	exports['default'] = logger;
-	module.exports = exports['default'];
+			exports['default'] = logger;
+			module.exports = exports['default'];
 
-/***/ },
-/* 18 */
-/***/ function(module, exports) {
+			/***/ },
+		/* 18 */
+		/***/ function(module, exports) {
 
-	// Build out our basic SafeString type
-	'use strict';
+			// Build out our basic SafeString type
+			
 
-	exports.__esModule = true;
-	function SafeString(string) {
+			exports.__esModule = true;
+			function SafeString(string) {
 	  this.string = string;
-	}
+			}
 
-	SafeString.prototype.toString = SafeString.prototype.toHTML = function () {
+			SafeString.prototype.toString = SafeString.prototype.toHTML = function () {
 	  return '' + this.string;
-	};
+			};
 
-	exports['default'] = SafeString;
-	module.exports = exports['default'];
+			exports['default'] = SafeString;
+			module.exports = exports['default'];
 
-/***/ },
-/* 19 */
-/***/ function(module, exports, __webpack_require__) {
+			/***/ },
+		/* 19 */
+		/***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
+			
 
-	var _interopRequireWildcard = __webpack_require__(3)['default'];
+			var _interopRequireWildcard = __webpack_require__(3)['default'];
 
-	var _interopRequireDefault = __webpack_require__(1)['default'];
+			var _interopRequireDefault = __webpack_require__(1)['default'];
 
-	exports.__esModule = true;
-	exports.checkRevision = checkRevision;
-	exports.template = template;
-	exports.wrapProgram = wrapProgram;
-	exports.resolvePartial = resolvePartial;
-	exports.invokePartial = invokePartial;
-	exports.noop = noop;
+			exports.__esModule = true;
+			exports.checkRevision = checkRevision;
+			exports.template = template;
+			exports.wrapProgram = wrapProgram;
+			exports.resolvePartial = resolvePartial;
+			exports.invokePartial = invokePartial;
+			exports.noop = noop;
 
-	var _utils = __webpack_require__(5);
+			var _utils = __webpack_require__(5);
 
-	var Utils = _interopRequireWildcard(_utils);
+			var Utils = _interopRequireWildcard(_utils);
 
-	var _exception = __webpack_require__(6);
+			var _exception = __webpack_require__(6);
 
-	var _exception2 = _interopRequireDefault(_exception);
+			var _exception2 = _interopRequireDefault(_exception);
 
-	var _base = __webpack_require__(4);
+			var _base = __webpack_require__(4);
 
-	function checkRevision(compilerInfo) {
+			function checkRevision(compilerInfo) {
 	  var compilerRevision = compilerInfo && compilerInfo[0] || 1,
 	      currentRevision = _base.COMPILER_REVISION;
 
@@ -1026,9 +1026,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	      throw new _exception2['default']('Template was precompiled with a newer version of Handlebars than the current runtime. ' + 'Please update your runtime to a newer version (' + compilerInfo[1] + ').');
 	    }
 	  }
-	}
+			}
 
-	function template(templateSpec, env) {
+			function template(templateSpec, env) {
 	  /* istanbul ignore next */
 	  if (!env) {
 	    throw new _exception2['default']('No environment passed to template');
@@ -1192,9 +1192,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return wrapProgram(container, i, templateSpec[i], data, 0, blockParams, depths);
 	  };
 	  return ret;
-	}
+			}
 
-	function wrapProgram(container, i, fn, data, declaredBlockParams, blockParams, depths) {
+			function wrapProgram(container, i, fn, data, declaredBlockParams, blockParams, depths) {
 	  function prog(context) {
 	    var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
@@ -1212,9 +1212,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	  prog.depth = depths ? depths.length : 0;
 	  prog.blockParams = declaredBlockParams || 0;
 	  return prog;
-	}
+			}
 
-	function resolvePartial(partial, context, options) {
+			function resolvePartial(partial, context, options) {
 	  if (!partial) {
 	    if (options.name === '@partial-block') {
 	      partial = options.data['partial-block'];
@@ -1227,9 +1227,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    partial = options.partials[partial];
 	  }
 	  return partial;
-	}
+			}
 
-	function invokePartial(partial, context, options) {
+			function invokePartial(partial, context, options) {
 	  options.partial = true;
 	  if (options.ids) {
 	    options.data.contextPath = options.ids[0] || options.data.contextPath;
@@ -1254,39 +1254,39 @@ return /******/ (function(modules) { // webpackBootstrap
 	  } else if (partial instanceof Function) {
 	    return partial(context, options);
 	  }
-	}
+			}
 
-	function noop() {
+			function noop() {
 	  return '';
-	}
+			}
 
-	function initData(context, data) {
+			function initData(context, data) {
 	  if (!data || !('root' in data)) {
 	    data = data ? _base.createFrame(data) : {};
 	    data.root = context;
 	  }
 	  return data;
-	}
+			}
 
-	function executeDecorators(fn, prog, container, depths, data, blockParams) {
+			function executeDecorators(fn, prog, container, depths, data, blockParams) {
 	  if (fn.decorator) {
 	    var props = {};
 	    prog = fn.decorator(prog, props, container, depths && depths[0], data, blockParams, depths);
 	    Utils.extend(prog, props);
 	  }
 	  return prog;
-	}
+			}
 
-/***/ },
-/* 20 */
-/***/ function(module, exports) {
+			/***/ },
+		/* 20 */
+		/***/ function(module, exports) {
 
-	/* WEBPACK VAR INJECTION */(function(global) {/* global window */
-	'use strict';
+			/* WEBPACK VAR INJECTION */(function(global) {/* global window */
+				
 
-	exports.__esModule = true;
+				exports.__esModule = true;
 
-	exports['default'] = function (Handlebars) {
+				exports['default'] = function (Handlebars) {
 	  /* istanbul ignore next */
 	  var root = typeof global !== 'undefined' ? global : window,
 	      $Handlebars = root.Handlebars;
@@ -1297,19 +1297,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	    return Handlebars;
 	  };
-	};
+				};
 
-	module.exports = exports['default'];
-	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
+				module.exports = exports['default'];
+				/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())));
 
-/***/ },
-/* 21 */
-/***/ function(module, exports) {
+			/***/ },
+		/* 21 */
+		/***/ function(module, exports) {
 
-	'use strict';
+			
 
-	exports.__esModule = true;
-	var AST = {
+			exports.__esModule = true;
+			var AST = {
 	  // Public API used to evaluate derived attributes regarding AST nodes
 	  helpers: {
 	    // a mustache is definitely a helper if:
@@ -1330,46 +1330,46 @@ return /******/ (function(modules) { // webpackBootstrap
 	      return path.parts.length === 1 && !AST.helpers.scopedId(path) && !path.depth;
 	    }
 	  }
-	};
+			};
 
-	// Must be exported as an object rather than the root of the module as the jison lexer
-	// must modify the object to operate properly.
-	exports['default'] = AST;
-	module.exports = exports['default'];
+			// Must be exported as an object rather than the root of the module as the jison lexer
+			// must modify the object to operate properly.
+			exports['default'] = AST;
+			module.exports = exports['default'];
 
-/***/ },
-/* 22 */
-/***/ function(module, exports, __webpack_require__) {
+			/***/ },
+		/* 22 */
+		/***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
+			
 
-	var _interopRequireDefault = __webpack_require__(1)['default'];
+			var _interopRequireDefault = __webpack_require__(1)['default'];
 
-	var _interopRequireWildcard = __webpack_require__(3)['default'];
+			var _interopRequireWildcard = __webpack_require__(3)['default'];
 
-	exports.__esModule = true;
-	exports.parse = parse;
+			exports.__esModule = true;
+			exports.parse = parse;
 
-	var _parser = __webpack_require__(23);
+			var _parser = __webpack_require__(23);
 
-	var _parser2 = _interopRequireDefault(_parser);
+			var _parser2 = _interopRequireDefault(_parser);
 
-	var _whitespaceControl = __webpack_require__(24);
+			var _whitespaceControl = __webpack_require__(24);
 
-	var _whitespaceControl2 = _interopRequireDefault(_whitespaceControl);
+			var _whitespaceControl2 = _interopRequireDefault(_whitespaceControl);
 
-	var _helpers = __webpack_require__(26);
+			var _helpers = __webpack_require__(26);
 
-	var Helpers = _interopRequireWildcard(_helpers);
+			var Helpers = _interopRequireWildcard(_helpers);
 
-	var _utils = __webpack_require__(5);
+			var _utils = __webpack_require__(5);
 
-	exports.parser = _parser2['default'];
+			exports.parser = _parser2['default'];
 
-	var yy = {};
-	_utils.extend(yy, Helpers);
+			var yy = {};
+			_utils.extend(yy, Helpers);
 
-	function parse(input, options) {
+			function parse(input, options) {
 	  // Just return if an already-compiled AST was passed in.
 	  if (input.type === 'Program') {
 	    return input;
@@ -1384,21 +1384,21 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  var strip = new _whitespaceControl2['default'](options);
 	  return strip.accept(_parser2['default'].parse(input));
-	}
+			}
 
-/***/ },
-/* 23 */
-/***/ function(module, exports) {
+			/***/ },
+		/* 23 */
+		/***/ function(module, exports) {
 
-	/* istanbul ignore next */
-	/* Jison generated parser */
-	"use strict";
+			/* istanbul ignore next */
+			/* Jison generated parser */
+			
 
-	var handlebars = (function () {
+			var handlebars = (function () {
 	    var parser = { trace: function trace() {},
 	        yy: {},
-	        symbols_: { "error": 2, "root": 3, "program": 4, "EOF": 5, "program_repetition0": 6, "statement": 7, "mustache": 8, "block": 9, "rawBlock": 10, "partial": 11, "partialBlock": 12, "content": 13, "COMMENT": 14, "CONTENT": 15, "openRawBlock": 16, "rawBlock_repetition_plus0": 17, "END_RAW_BLOCK": 18, "OPEN_RAW_BLOCK": 19, "helperName": 20, "openRawBlock_repetition0": 21, "openRawBlock_option0": 22, "CLOSE_RAW_BLOCK": 23, "openBlock": 24, "block_option0": 25, "closeBlock": 26, "openInverse": 27, "block_option1": 28, "OPEN_BLOCK": 29, "openBlock_repetition0": 30, "openBlock_option0": 31, "openBlock_option1": 32, "CLOSE": 33, "OPEN_INVERSE": 34, "openInverse_repetition0": 35, "openInverse_option0": 36, "openInverse_option1": 37, "openInverseChain": 38, "OPEN_INVERSE_CHAIN": 39, "openInverseChain_repetition0": 40, "openInverseChain_option0": 41, "openInverseChain_option1": 42, "inverseAndProgram": 43, "INVERSE": 44, "inverseChain": 45, "inverseChain_option0": 46, "OPEN_ENDBLOCK": 47, "OPEN": 48, "mustache_repetition0": 49, "mustache_option0": 50, "OPEN_UNESCAPED": 51, "mustache_repetition1": 52, "mustache_option1": 53, "CLOSE_UNESCAPED": 54, "OPEN_PARTIAL": 55, "partialName": 56, "partial_repetition0": 57, "partial_option0": 58, "openPartialBlock": 59, "OPEN_PARTIAL_BLOCK": 60, "openPartialBlock_repetition0": 61, "openPartialBlock_option0": 62, "param": 63, "sexpr": 64, "OPEN_SEXPR": 65, "sexpr_repetition0": 66, "sexpr_option0": 67, "CLOSE_SEXPR": 68, "hash": 69, "hash_repetition_plus0": 70, "hashSegment": 71, "ID": 72, "EQUALS": 73, "blockParams": 74, "OPEN_BLOCK_PARAMS": 75, "blockParams_repetition_plus0": 76, "CLOSE_BLOCK_PARAMS": 77, "path": 78, "dataName": 79, "STRING": 80, "NUMBER": 81, "BOOLEAN": 82, "UNDEFINED": 83, "NULL": 84, "DATA": 85, "pathSegments": 86, "SEP": 87, "$accept": 0, "$end": 1 },
-	        terminals_: { 2: "error", 5: "EOF", 14: "COMMENT", 15: "CONTENT", 18: "END_RAW_BLOCK", 19: "OPEN_RAW_BLOCK", 23: "CLOSE_RAW_BLOCK", 29: "OPEN_BLOCK", 33: "CLOSE", 34: "OPEN_INVERSE", 39: "OPEN_INVERSE_CHAIN", 44: "INVERSE", 47: "OPEN_ENDBLOCK", 48: "OPEN", 51: "OPEN_UNESCAPED", 54: "CLOSE_UNESCAPED", 55: "OPEN_PARTIAL", 60: "OPEN_PARTIAL_BLOCK", 65: "OPEN_SEXPR", 68: "CLOSE_SEXPR", 72: "ID", 73: "EQUALS", 75: "OPEN_BLOCK_PARAMS", 77: "CLOSE_BLOCK_PARAMS", 80: "STRING", 81: "NUMBER", 82: "BOOLEAN", 83: "UNDEFINED", 84: "NULL", 85: "DATA", 87: "SEP" },
+	        symbols_: { 'error': 2, 'root': 3, 'program': 4, 'EOF': 5, 'program_repetition0': 6, 'statement': 7, 'mustache': 8, 'block': 9, 'rawBlock': 10, 'partial': 11, 'partialBlock': 12, 'content': 13, 'COMMENT': 14, 'CONTENT': 15, 'openRawBlock': 16, 'rawBlock_repetition_plus0': 17, 'END_RAW_BLOCK': 18, 'OPEN_RAW_BLOCK': 19, 'helperName': 20, 'openRawBlock_repetition0': 21, 'openRawBlock_option0': 22, 'CLOSE_RAW_BLOCK': 23, 'openBlock': 24, 'block_option0': 25, 'closeBlock': 26, 'openInverse': 27, 'block_option1': 28, 'OPEN_BLOCK': 29, 'openBlock_repetition0': 30, 'openBlock_option0': 31, 'openBlock_option1': 32, 'CLOSE': 33, 'OPEN_INVERSE': 34, 'openInverse_repetition0': 35, 'openInverse_option0': 36, 'openInverse_option1': 37, 'openInverseChain': 38, 'OPEN_INVERSE_CHAIN': 39, 'openInverseChain_repetition0': 40, 'openInverseChain_option0': 41, 'openInverseChain_option1': 42, 'inverseAndProgram': 43, 'INVERSE': 44, 'inverseChain': 45, 'inverseChain_option0': 46, 'OPEN_ENDBLOCK': 47, 'OPEN': 48, 'mustache_repetition0': 49, 'mustache_option0': 50, 'OPEN_UNESCAPED': 51, 'mustache_repetition1': 52, 'mustache_option1': 53, 'CLOSE_UNESCAPED': 54, 'OPEN_PARTIAL': 55, 'partialName': 56, 'partial_repetition0': 57, 'partial_option0': 58, 'openPartialBlock': 59, 'OPEN_PARTIAL_BLOCK': 60, 'openPartialBlock_repetition0': 61, 'openPartialBlock_option0': 62, 'param': 63, 'sexpr': 64, 'OPEN_SEXPR': 65, 'sexpr_repetition0': 66, 'sexpr_option0': 67, 'CLOSE_SEXPR': 68, 'hash': 69, 'hash_repetition_plus0': 70, 'hashSegment': 71, 'ID': 72, 'EQUALS': 73, 'blockParams': 74, 'OPEN_BLOCK_PARAMS': 75, 'blockParams_repetition_plus0': 76, 'CLOSE_BLOCK_PARAMS': 77, 'path': 78, 'dataName': 79, 'STRING': 80, 'NUMBER': 81, 'BOOLEAN': 82, 'UNDEFINED': 83, 'NULL': 84, 'DATA': 85, 'pathSegments': 86, 'SEP': 87, '$accept': 0, '$end': 1 },
+	        terminals_: { 2: 'error', 5: 'EOF', 14: 'COMMENT', 15: 'CONTENT', 18: 'END_RAW_BLOCK', 19: 'OPEN_RAW_BLOCK', 23: 'CLOSE_RAW_BLOCK', 29: 'OPEN_BLOCK', 33: 'CLOSE', 34: 'OPEN_INVERSE', 39: 'OPEN_INVERSE_CHAIN', 44: 'INVERSE', 47: 'OPEN_ENDBLOCK', 48: 'OPEN', 51: 'OPEN_UNESCAPED', 54: 'CLOSE_UNESCAPED', 55: 'OPEN_PARTIAL', 60: 'OPEN_PARTIAL_BLOCK', 65: 'OPEN_SEXPR', 68: 'CLOSE_SEXPR', 72: 'ID', 73: 'EQUALS', 75: 'OPEN_BLOCK_PARAMS', 77: 'CLOSE_BLOCK_PARAMS', 80: 'STRING', 81: 'NUMBER', 82: 'BOOLEAN', 83: 'UNDEFINED', 84: 'NULL', 85: 'DATA', 87: 'SEP' },
 	        productions_: [0, [3, 2], [4, 1], [7, 1], [7, 1], [7, 1], [7, 1], [7, 1], [7, 1], [7, 1], [13, 1], [10, 3], [16, 5], [9, 4], [9, 4], [24, 6], [27, 6], [38, 6], [43, 2], [45, 3], [45, 1], [26, 3], [8, 5], [8, 5], [11, 5], [12, 3], [59, 5], [63, 1], [63, 1], [64, 5], [69, 1], [71, 3], [74, 3], [20, 1], [20, 1], [20, 1], [20, 1], [20, 1], [20, 1], [20, 1], [56, 1], [56, 1], [79, 2], [78, 1], [86, 3], [86, 1], [6, 0], [6, 2], [17, 1], [17, 2], [21, 0], [21, 2], [22, 0], [22, 1], [25, 0], [25, 1], [28, 0], [28, 1], [30, 0], [30, 2], [31, 0], [31, 1], [32, 0], [32, 1], [35, 0], [35, 2], [36, 0], [36, 1], [37, 0], [37, 1], [40, 0], [40, 2], [41, 0], [41, 1], [42, 0], [42, 1], [46, 0], [46, 1], [49, 0], [49, 2], [50, 0], [50, 1], [52, 0], [52, 2], [53, 0], [53, 1], [57, 0], [57, 2], [58, 0], [58, 1], [61, 0], [61, 2], [62, 0], [62, 1], [66, 0], [66, 2], [67, 0], [67, 1], [70, 1], [70, 2], [76, 1], [76, 2]],
 	        performAction: function anonymous(yytext, yyleng, yylineno, yy, yystate, $$, _$
 	        /**/) {
@@ -1664,7 +1664,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                vstack = [null],
 	                lstack = [],
 	                table = this.table,
-	                yytext = "",
+	                yytext = '',
 	                yylineno = 0,
 	                yyleng = 0,
 	                recovering = 0,
@@ -1674,11 +1674,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	            this.lexer.yy = this.yy;
 	            this.yy.lexer = this.lexer;
 	            this.yy.parser = this;
-	            if (typeof this.lexer.yylloc == "undefined") this.lexer.yylloc = {};
+	            if (typeof this.lexer.yylloc == 'undefined') this.lexer.yylloc = {};
 	            var yyloc = this.lexer.yylloc;
 	            lstack.push(yyloc);
 	            var ranges = this.lexer.options && this.lexer.options.ranges;
-	            if (typeof this.yy.parseError === "function") this.parseError = this.yy.parseError;
+	            if (typeof this.yy.parseError === 'function') this.parseError = this.yy.parseError;
 	            function popStack(n) {
 	                stack.length = stack.length - 2 * n;
 	                vstack.length = vstack.length - n;
@@ -1687,7 +1687,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            function lex() {
 	                var token;
 	                token = self.lexer.lex() || 1;
-	                if (typeof token !== "number") {
+	                if (typeof token !== 'number') {
 	                    token = self.symbols_[token] || token;
 	                }
 	                return token;
@@ -1708,28 +1708,28 @@ return /******/ (function(modules) { // webpackBootstrap
 	                if (this.defaultActions[state]) {
 	                    action = this.defaultActions[state];
 	                } else {
-	                    if (symbol === null || typeof symbol == "undefined") {
+	                    if (symbol === null || typeof symbol == 'undefined') {
 	                        symbol = lex();
 	                    }
 	                    action = table[state] && table[state][symbol];
 	                }
-	                if (typeof action === "undefined" || !action.length || !action[0]) {
-	                    var errStr = "";
+	                if (typeof action === 'undefined' || !action.length || !action[0]) {
+	                    var errStr = '';
 	                    if (!recovering) {
 	                        expected = [];
 	                        for (p in table[state]) if (this.terminals_[p] && p > 2) {
-	                            expected.push("'" + this.terminals_[p] + "'");
+	                            expected.push('\'' + this.terminals_[p] + '\'');
 	                        }
 	                        if (this.lexer.showPosition) {
-	                            errStr = "Parse error on line " + (yylineno + 1) + ":\n" + this.lexer.showPosition() + "\nExpecting " + expected.join(", ") + ", got '" + (this.terminals_[symbol] || symbol) + "'";
+	                            errStr = 'Parse error on line ' + (yylineno + 1) + ':\n' + this.lexer.showPosition() + '\nExpecting ' + expected.join(', ') + ', got \'' + (this.terminals_[symbol] || symbol) + '\'';
 	                        } else {
-	                            errStr = "Parse error on line " + (yylineno + 1) + ": Unexpected " + (symbol == 1 ? "end of input" : "'" + (this.terminals_[symbol] || symbol) + "'");
+	                            errStr = 'Parse error on line ' + (yylineno + 1) + ': Unexpected ' + (symbol == 1 ? 'end of input' : '\'' + (this.terminals_[symbol] || symbol) + '\'');
 	                        }
 	                        this.parseError(errStr, { text: this.lexer.match, token: this.terminals_[symbol] || symbol, line: this.lexer.yylineno, loc: yyloc, expected: expected });
 	                    }
 	                }
 	                if (action[0] instanceof Array && action.length > 1) {
-	                    throw new Error("Parse Error: multiple actions possible at state: " + state + ", token: " + symbol);
+	                    throw new Error('Parse Error: multiple actions possible at state: ' + state + ', token: ' + symbol);
 	                }
 	                switch (action[0]) {
 	                    case 1:
@@ -1757,7 +1757,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                            yyval._$.range = [lstack[lstack.length - (len || 1)].range[0], lstack[lstack.length - 1].range[1]];
 	                        }
 	                        r = this.performAction.call(yyval, yytext, yyleng, yylineno, this.yy, action[1], vstack, lstack);
-	                        if (typeof r !== "undefined") {
+	                        if (typeof r !== 'undefined') {
 	                            return r;
 	                        }
 	                        if (len) {
@@ -1853,19 +1853,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	            },
 	            pastInput: function pastInput() {
 	                var past = this.matched.substr(0, this.matched.length - this.match.length);
-	                return (past.length > 20 ? '...' : '') + past.substr(-20).replace(/\n/g, "");
+	                return (past.length > 20 ? '...' : '') + past.substr(-20).replace(/\n/g, '');
 	            },
 	            upcomingInput: function upcomingInput() {
 	                var next = this.match;
 	                if (next.length < 20) {
 	                    next += this._input.substr(0, 20 - next.length);
 	                }
-	                return (next.substr(0, 20) + (next.length > 20 ? '...' : '')).replace(/\n/g, "");
+	                return (next.substr(0, 20) + (next.length > 20 ? '...' : '')).replace(/\n/g, '');
 	            },
 	            showPosition: function showPosition() {
 	                var pre = this.pastInput();
-	                var c = new Array(pre.length + 1).join("-");
-	                return pre + this.upcomingInput() + "\n" + c + "^";
+	                var c = new Array(pre.length + 1).join('-');
+	                return pre + this.upcomingInput() + '\n' + c + '^';
 	            },
 	            next: function next() {
 	                if (this.done) {
@@ -1908,10 +1908,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    if (this.done && this._input) this.done = false;
 	                    if (token) return token;else return;
 	                }
-	                if (this._input === "") {
+	                if (this._input === '') {
 	                    return this.EOF;
 	                } else {
-	                    return this.parseError('Lexical error on line ' + (this.yylineno + 1) + '. Unrecognized text.\n' + this.showPosition(), { text: "", token: null, line: this.yylineno });
+	                    return this.parseError('Lexical error on line ' + (this.yylineno + 1) + '. Unrecognized text.\n' + this.showPosition(), { text: '', token: null, line: this.yylineno });
 	                }
 	            },
 	            lex: function lex() {
@@ -1948,14 +1948,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var YYSTATE = YY_START;
 	            switch ($avoiding_name_collisions) {
 	                case 0:
-	                    if (yy_.yytext.slice(-2) === "\\\\") {
+	                    if (yy_.yytext.slice(-2) === '\\\\') {
 	                        strip(0, 1);
-	                        this.begin("mu");
-	                    } else if (yy_.yytext.slice(-1) === "\\") {
+	                        this.begin('mu');
+	                    } else if (yy_.yytext.slice(-1) === '\\') {
 	                        strip(0, 1);
-	                        this.begin("emu");
+	                        this.begin('emu');
 	                    } else {
-	                        this.begin("mu");
+	                        this.begin('mu');
 	                    }
 	                    if (yy_.yytext) return 15;
 
@@ -2076,7 +2076,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    yy_.yytext = strip(1, 2).replace(/\\"/g, '"');return 80;
 	                    break;
 	                case 32:
-	                    yy_.yytext = strip(1, 2).replace(/\\'/g, "'");return 80;
+	                    yy_.yytext = strip(1, 2).replace(/\\'/g, '\'');return 80;
 	                    break;
 	                case 33:
 	                    return 85;
@@ -2117,7 +2117,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 	        };
 	        lexer.rules = [/^(?:[^\x00]*?(?=(\{\{)))/, /^(?:[^\x00]+)/, /^(?:[^\x00]{2,}?(?=(\{\{|\\\{\{|\\\\\{\{|$)))/, /^(?:\{\{\{\{(?=[^\/]))/, /^(?:\{\{\{\{\/[^\s!"#%-,\.\/;->@\[-\^`\{-~]+(?=[=}\s\/.])\}\}\}\})/, /^(?:[^\x00]*?(?=(\{\{\{\{)))/, /^(?:[\s\S]*?--(~)?\}\})/, /^(?:\()/, /^(?:\))/, /^(?:\{\{\{\{)/, /^(?:\}\}\}\})/, /^(?:\{\{(~)?>)/, /^(?:\{\{(~)?#>)/, /^(?:\{\{(~)?#\*?)/, /^(?:\{\{(~)?\/)/, /^(?:\{\{(~)?\^\s*(~)?\}\})/, /^(?:\{\{(~)?\s*else\s*(~)?\}\})/, /^(?:\{\{(~)?\^)/, /^(?:\{\{(~)?\s*else\b)/, /^(?:\{\{(~)?\{)/, /^(?:\{\{(~)?&)/, /^(?:\{\{(~)?!--)/, /^(?:\{\{(~)?![\s\S]*?\}\})/, /^(?:\{\{(~)?\*?)/, /^(?:=)/, /^(?:\.\.)/, /^(?:\.(?=([=~}\s\/.)|])))/, /^(?:[\/.])/, /^(?:\s+)/, /^(?:\}(~)?\}\})/, /^(?:(~)?\}\})/, /^(?:"(\\["]|[^"])*")/, /^(?:'(\\[']|[^'])*')/, /^(?:@)/, /^(?:true(?=([~}\s)])))/, /^(?:false(?=([~}\s)])))/, /^(?:undefined(?=([~}\s)])))/, /^(?:null(?=([~}\s)])))/, /^(?:-?[0-9]+(?:\.[0-9]+)?(?=([~}\s)])))/, /^(?:as\s+\|)/, /^(?:\|)/, /^(?:([^\s!"#%-,\.\/;->@\[-\^`\{-~]+(?=([=~}\s\/.)|]))))/, /^(?:\[(\\\]|[^\]])*\])/, /^(?:.)/, /^(?:$)/];
-	        lexer.conditions = { "mu": { "rules": [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44], "inclusive": false }, "emu": { "rules": [2], "inclusive": false }, "com": { "rules": [6], "inclusive": false }, "raw": { "rules": [3, 4, 5], "inclusive": false }, "INITIAL": { "rules": [0, 1, 44], "inclusive": true } };
+	        lexer.conditions = { 'mu': { 'rules': [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44], 'inclusive': false }, 'emu': { 'rules': [2], 'inclusive': false }, 'com': { 'rules': [6], 'inclusive': false }, 'raw': { 'rules': [3, 4, 5], 'inclusive': false }, 'INITIAL': { 'rules': [0, 1, 44], 'inclusive': true } };
 	        return lexer;
 	    })();
 	    parser.lexer = lexer;
@@ -2125,31 +2125,31 @@ return /******/ (function(modules) { // webpackBootstrap
 	        this.yy = {};
 	    }Parser.prototype = parser;parser.Parser = Parser;
 	    return new Parser();
-	})();exports.__esModule = true;
-	exports['default'] = handlebars;
+			})();exports.__esModule = true;
+			exports['default'] = handlebars;
 
-/***/ },
-/* 24 */
-/***/ function(module, exports, __webpack_require__) {
+			/***/ },
+		/* 24 */
+		/***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
+			
 
-	var _interopRequireDefault = __webpack_require__(1)['default'];
+			var _interopRequireDefault = __webpack_require__(1)['default'];
 
-	exports.__esModule = true;
+			exports.__esModule = true;
 
-	var _visitor = __webpack_require__(25);
+			var _visitor = __webpack_require__(25);
 
-	var _visitor2 = _interopRequireDefault(_visitor);
+			var _visitor2 = _interopRequireDefault(_visitor);
 
-	function WhitespaceControl() {
+			function WhitespaceControl() {
 	  var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
 	  this.options = options;
-	}
-	WhitespaceControl.prototype = new _visitor2['default']();
+			}
+			WhitespaceControl.prototype = new _visitor2['default']();
 
-	WhitespaceControl.prototype.Program = function (program) {
+			WhitespaceControl.prototype.Program = function (program) {
 	  var doStandalone = !this.options.ignoreStandalone;
 
 	  var isRoot = !this.isRootSeen;
@@ -2203,9 +2203,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  return program;
-	};
+			};
 
-	WhitespaceControl.prototype.BlockStatement = WhitespaceControl.prototype.DecoratorBlock = WhitespaceControl.prototype.PartialBlockStatement = function (block) {
+			WhitespaceControl.prototype.BlockStatement = WhitespaceControl.prototype.DecoratorBlock = WhitespaceControl.prototype.PartialBlockStatement = function (block) {
 	  this.accept(block.program);
 	  this.accept(block.inverse);
 
@@ -2262,13 +2262,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  return strip;
-	};
+			};
 
-	WhitespaceControl.prototype.Decorator = WhitespaceControl.prototype.MustacheStatement = function (mustache) {
+			WhitespaceControl.prototype.Decorator = WhitespaceControl.prototype.MustacheStatement = function (mustache) {
 	  return mustache.strip;
-	};
+			};
 
-	WhitespaceControl.prototype.PartialStatement = WhitespaceControl.prototype.CommentStatement = function (node) {
+			WhitespaceControl.prototype.PartialStatement = WhitespaceControl.prototype.CommentStatement = function (node) {
 	  /* istanbul ignore next */
 	  var strip = node.strip || {};
 	  return {
@@ -2276,9 +2276,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    open: strip.open,
 	    close: strip.close
 	  };
-	};
+			};
 
-	function isPrevWhitespace(body, i, isRoot) {
+			function isPrevWhitespace(body, i, isRoot) {
 	  if (i === undefined) {
 	    i = body.length;
 	  }
@@ -2294,8 +2294,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  if (prev.type === 'ContentStatement') {
 	    return (sibling || !isRoot ? /\r?\n\s*?$/ : /(^|\r?\n)\s*?$/).test(prev.original);
 	  }
-	}
-	function isNextWhitespace(body, i, isRoot) {
+			}
+			function isNextWhitespace(body, i, isRoot) {
 	  if (i === undefined) {
 	    i = -1;
 	  }
@@ -2309,16 +2309,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	  if (next.type === 'ContentStatement') {
 	    return (sibling || !isRoot ? /^\s*?\r?\n/ : /^\s*?(\r?\n|$)/).test(next.original);
 	  }
-	}
+			}
 
-	// Marks the node to the right of the position as omitted.
-	// I.e. {{foo}}' ' will mark the ' ' node as omitted.
-	//
-	// If i is undefined, then the first child will be marked as such.
-	//
-	// If mulitple is truthy then all whitespace will be stripped out until non-whitespace
-	// content is met.
-	function omitRight(body, i, multiple) {
+			// Marks the node to the right of the position as omitted.
+			// I.e. {{foo}}' ' will mark the ' ' node as omitted.
+			//
+			// If i is undefined, then the first child will be marked as such.
+			//
+			// If mulitple is truthy then all whitespace will be stripped out until non-whitespace
+			// content is met.
+			function omitRight(body, i, multiple) {
 	  var current = body[i == null ? 0 : i + 1];
 	  if (!current || current.type !== 'ContentStatement' || !multiple && current.rightStripped) {
 	    return;
@@ -2327,16 +2327,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var original = current.value;
 	  current.value = current.value.replace(multiple ? /^\s+/ : /^[ \t]*\r?\n?/, '');
 	  current.rightStripped = current.value !== original;
-	}
+			}
 
-	// Marks the node to the left of the position as omitted.
-	// I.e. ' '{{foo}} will mark the ' ' node as omitted.
-	//
-	// If i is undefined then the last child will be marked as such.
-	//
-	// If mulitple is truthy then all whitespace will be stripped out until non-whitespace
-	// content is met.
-	function omitLeft(body, i, multiple) {
+			// Marks the node to the left of the position as omitted.
+			// I.e. ' '{{foo}} will mark the ' ' node as omitted.
+			//
+			// If i is undefined then the last child will be marked as such.
+			//
+			// If mulitple is truthy then all whitespace will be stripped out until non-whitespace
+			// content is met.
+			function omitLeft(body, i, multiple) {
 	  var current = body[i == null ? body.length - 1 : i - 1];
 	  if (!current || current.type !== 'ContentStatement' || !multiple && current.leftStripped) {
 	    return;
@@ -2347,30 +2347,30 @@ return /******/ (function(modules) { // webpackBootstrap
 	  current.value = current.value.replace(multiple ? /\s+$/ : /[ \t]+$/, '');
 	  current.leftStripped = current.value !== original;
 	  return current.leftStripped;
-	}
+			}
 
-	exports['default'] = WhitespaceControl;
-	module.exports = exports['default'];
+			exports['default'] = WhitespaceControl;
+			module.exports = exports['default'];
 
-/***/ },
-/* 25 */
-/***/ function(module, exports, __webpack_require__) {
+			/***/ },
+		/* 25 */
+		/***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
+			
 
-	var _interopRequireDefault = __webpack_require__(1)['default'];
+			var _interopRequireDefault = __webpack_require__(1)['default'];
 
-	exports.__esModule = true;
+			exports.__esModule = true;
 
-	var _exception = __webpack_require__(6);
+			var _exception = __webpack_require__(6);
 
-	var _exception2 = _interopRequireDefault(_exception);
+			var _exception2 = _interopRequireDefault(_exception);
 
-	function Visitor() {
+			function Visitor() {
 	  this.parents = [];
-	}
+			}
 
-	Visitor.prototype = {
+			Visitor.prototype = {
 	  constructor: Visitor,
 	  mutating: false,
 
@@ -2473,63 +2473,63 @@ return /******/ (function(modules) { // webpackBootstrap
 	  HashPair: function HashPair(pair) {
 	    this.acceptRequired(pair, 'value');
 	  }
-	};
+			};
 
-	function visitSubExpression(mustache) {
+			function visitSubExpression(mustache) {
 	  this.acceptRequired(mustache, 'path');
 	  this.acceptArray(mustache.params);
 	  this.acceptKey(mustache, 'hash');
-	}
-	function visitBlock(block) {
+			}
+			function visitBlock(block) {
 	  visitSubExpression.call(this, block);
 
 	  this.acceptKey(block, 'program');
 	  this.acceptKey(block, 'inverse');
-	}
-	function visitPartial(partial) {
+			}
+			function visitPartial(partial) {
 	  this.acceptRequired(partial, 'name');
 	  this.acceptArray(partial.params);
 	  this.acceptKey(partial, 'hash');
-	}
+			}
 
-	exports['default'] = Visitor;
-	module.exports = exports['default'];
+			exports['default'] = Visitor;
+			module.exports = exports['default'];
 
-/***/ },
-/* 26 */
-/***/ function(module, exports, __webpack_require__) {
+			/***/ },
+		/* 26 */
+		/***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
+			
 
-	var _interopRequireDefault = __webpack_require__(1)['default'];
+			var _interopRequireDefault = __webpack_require__(1)['default'];
 
-	exports.__esModule = true;
-	exports.SourceLocation = SourceLocation;
-	exports.id = id;
-	exports.stripFlags = stripFlags;
-	exports.stripComment = stripComment;
-	exports.preparePath = preparePath;
-	exports.prepareMustache = prepareMustache;
-	exports.prepareRawBlock = prepareRawBlock;
-	exports.prepareBlock = prepareBlock;
-	exports.prepareProgram = prepareProgram;
-	exports.preparePartialBlock = preparePartialBlock;
+			exports.__esModule = true;
+			exports.SourceLocation = SourceLocation;
+			exports.id = id;
+			exports.stripFlags = stripFlags;
+			exports.stripComment = stripComment;
+			exports.preparePath = preparePath;
+			exports.prepareMustache = prepareMustache;
+			exports.prepareRawBlock = prepareRawBlock;
+			exports.prepareBlock = prepareBlock;
+			exports.prepareProgram = prepareProgram;
+			exports.preparePartialBlock = preparePartialBlock;
 
-	var _exception = __webpack_require__(6);
+			var _exception = __webpack_require__(6);
 
-	var _exception2 = _interopRequireDefault(_exception);
+			var _exception2 = _interopRequireDefault(_exception);
 
-	function validateClose(open, close) {
+			function validateClose(open, close) {
 	  close = close.path ? close.path.original : close;
 
 	  if (open.path.original !== close) {
 	    var errorNode = { loc: open.path.loc };
 
-	    throw new _exception2['default'](open.path.original + " doesn't match " + close, errorNode);
+	    throw new _exception2['default'](open.path.original + ' doesn\'t match ' + close, errorNode);
 	  }
-	}
+			}
 
-	function SourceLocation(source, locInfo) {
+			function SourceLocation(source, locInfo) {
 	  this.source = source;
 	  this.start = {
 	    line: locInfo.first_line,
@@ -2539,28 +2539,28 @@ return /******/ (function(modules) { // webpackBootstrap
 	    line: locInfo.last_line,
 	    column: locInfo.last_column
 	  };
-	}
+			}
 
-	function id(token) {
+			function id(token) {
 	  if (/^\[.*\]$/.test(token)) {
 	    return token.substr(1, token.length - 2);
 	  } else {
 	    return token;
 	  }
-	}
+			}
 
-	function stripFlags(open, close) {
+			function stripFlags(open, close) {
 	  return {
 	    open: open.charAt(2) === '~',
 	    close: close.charAt(close.length - 3) === '~'
 	  };
-	}
+			}
 
-	function stripComment(comment) {
+			function stripComment(comment) {
 	  return comment.replace(/^\{\{~?\!-?-?/, '').replace(/-?-?~?\}\}$/, '');
-	}
+			}
 
-	function preparePath(data, parts, loc) {
+			function preparePath(data, parts, loc) {
 	  loc = this.locInfo(loc);
 
 	  var original = data ? '@' : '',
@@ -2596,9 +2596,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    original: original,
 	    loc: loc
 	  };
-	}
+			}
 
-	function prepareMustache(path, params, hash, open, strip, locInfo) {
+			function prepareMustache(path, params, hash, open, strip, locInfo) {
 	  // Must use charAt to support IE pre-10
 	  var escapeFlag = open.charAt(3) || open.charAt(2),
 	      escaped = escapeFlag !== '{' && escapeFlag !== '&';
@@ -2613,9 +2613,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    strip: strip,
 	    loc: this.locInfo(locInfo)
 	  };
-	}
+			}
 
-	function prepareRawBlock(openRawBlock, contents, close, locInfo) {
+			function prepareRawBlock(openRawBlock, contents, close, locInfo) {
 	  validateClose(openRawBlock, close);
 
 	  locInfo = this.locInfo(locInfo);
@@ -2637,9 +2637,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    closeStrip: {},
 	    loc: locInfo
 	  };
-	}
+			}
 
-	function prepareBlock(openBlock, program, inverseAndProgram, close, inverted, locInfo) {
+			function prepareBlock(openBlock, program, inverseAndProgram, close, inverted, locInfo) {
 	  if (close && close.path) {
 	    validateClose(openBlock, close);
 	  }
@@ -2682,9 +2682,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    closeStrip: close && close.strip,
 	    loc: this.locInfo(locInfo)
 	  };
-	}
+			}
 
-	function prepareProgram(statements, loc) {
+			function prepareProgram(statements, loc) {
 	  if (!loc && statements.length) {
 	    var firstLoc = statements[0].loc,
 	        lastLoc = statements[statements.length - 1].loc;
@@ -2711,9 +2711,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    strip: {},
 	    loc: loc
 	  };
-	}
+			}
 
-	function preparePartialBlock(open, program, close, locInfo) {
+			function preparePartialBlock(open, program, close, locInfo) {
 	  validateClose(open, close);
 
 	  return {
@@ -2726,43 +2726,43 @@ return /******/ (function(modules) { // webpackBootstrap
 	    closeStrip: close && close.strip,
 	    loc: this.locInfo(locInfo)
 	  };
-	}
+			}
 
-/***/ },
-/* 27 */
-/***/ function(module, exports, __webpack_require__) {
+			/***/ },
+		/* 27 */
+		/***/ function(module, exports, __webpack_require__) {
 
-	/* eslint-disable new-cap */
+			/* eslint-disable new-cap */
 
-	'use strict';
+			
 
-	var _interopRequireDefault = __webpack_require__(1)['default'];
+			var _interopRequireDefault = __webpack_require__(1)['default'];
 
-	exports.__esModule = true;
-	exports.Compiler = Compiler;
-	exports.precompile = precompile;
-	exports.compile = compile;
+			exports.__esModule = true;
+			exports.Compiler = Compiler;
+			exports.precompile = precompile;
+			exports.compile = compile;
 
-	var _exception = __webpack_require__(6);
+			var _exception = __webpack_require__(6);
 
-	var _exception2 = _interopRequireDefault(_exception);
+			var _exception2 = _interopRequireDefault(_exception);
 
-	var _utils = __webpack_require__(5);
+			var _utils = __webpack_require__(5);
 
-	var _ast = __webpack_require__(21);
+			var _ast = __webpack_require__(21);
 
-	var _ast2 = _interopRequireDefault(_ast);
+			var _ast2 = _interopRequireDefault(_ast);
 
-	var slice = [].slice;
+			var slice = [].slice;
 
-	function Compiler() {}
+			function Compiler() {}
 
-	// the foundHelper register will disambiguate helper lookup from finding a
-	// function in a context. This is necessary for mustache compatibility, which
-	// requires that context functions in blocks are evaluated by blockHelperMissing,
-	// and then proceed as if the resulting value was provided to blockHelperMissing.
+			// the foundHelper register will disambiguate helper lookup from finding a
+			// function in a context. This is necessary for mustache compatibility, which
+			// requires that context functions in blocks are evaluated by blockHelperMissing,
+			// and then proceed as if the resulting value was provided to blockHelperMissing.
 
-	Compiler.prototype = {
+			Compiler.prototype = {
 	  compiler: Compiler,
 
 	  equals: function equals(other) {
@@ -3207,9 +3207,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }
 	    }
 	  }
-	};
+			};
 
-	function precompile(input, options, env) {
+			function precompile(input, options, env) {
 	  if (input == null || typeof input !== 'string' && input.type !== 'Program') {
 	    throw new _exception2['default']('You must pass a string or Handlebars AST to Handlebars.precompile. You passed ' + input);
 	  }
@@ -3225,9 +3225,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var ast = env.parse(input, options),
 	      environment = new env.Compiler().compile(ast, options);
 	  return new env.JavaScriptCompiler().compile(environment, options);
-	}
+			}
 
-	function compile(input, options, env) {
+			function compile(input, options, env) {
 	  if (options === undefined) options = {};
 
 	  if (input == null || typeof input !== 'string' && input.type !== 'Program') {
@@ -3270,9 +3270,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return compiled._child(i, data, blockParams, depths);
 	  };
 	  return ret;
-	}
+			}
 
-	function argEquals(a, b) {
+			function argEquals(a, b) {
 	  if (a === b) {
 	    return true;
 	  }
@@ -3285,9 +3285,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	    return true;
 	  }
-	}
+			}
 
-	function transformLiteralToPath(sexpr) {
+			function transformLiteralToPath(sexpr) {
 	  if (!sexpr.path.parts) {
 	    var literal = sexpr.path;
 	    // Casting to string here to make false and 0 literal values play nicely with the rest
@@ -3301,37 +3301,37 @@ return /******/ (function(modules) { // webpackBootstrap
 	      loc: literal.loc
 	    };
 	  }
-	}
+			}
 
-/***/ },
-/* 28 */
-/***/ function(module, exports, __webpack_require__) {
+			/***/ },
+		/* 28 */
+		/***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
+			
 
-	var _interopRequireDefault = __webpack_require__(1)['default'];
+			var _interopRequireDefault = __webpack_require__(1)['default'];
 
-	exports.__esModule = true;
+			exports.__esModule = true;
 
-	var _base = __webpack_require__(4);
+			var _base = __webpack_require__(4);
 
-	var _exception = __webpack_require__(6);
+			var _exception = __webpack_require__(6);
 
-	var _exception2 = _interopRequireDefault(_exception);
+			var _exception2 = _interopRequireDefault(_exception);
 
-	var _utils = __webpack_require__(5);
+			var _utils = __webpack_require__(5);
 
-	var _codeGen = __webpack_require__(29);
+			var _codeGen = __webpack_require__(29);
 
-	var _codeGen2 = _interopRequireDefault(_codeGen);
+			var _codeGen2 = _interopRequireDefault(_codeGen);
 
-	function Literal(value) {
+			function Literal(value) {
 	  this.value = value;
-	}
+			}
 
-	function JavaScriptCompiler() {}
+			function JavaScriptCompiler() {}
 
-	JavaScriptCompiler.prototype = {
+			JavaScriptCompiler.prototype = {
 	  // PUBLIC API: You can override these methods in a subclass to provide
 	  // alternative compiled forms for name lookup and buffering semantics
 	  nameLookup: function nameLookup(parent, name /* , type*/) {
@@ -3698,7 +3698,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var local = this.popStack();
 	      this.pushSource(['if (', local, ' != null) { ', this.appendToBuffer(local, undefined, true), ' }']);
 	      if (this.environment.isSimple) {
-	        this.pushSource(['else { ', this.appendToBuffer("''", undefined, true), ' }']);
+	        this.pushSource(['else { ', this.appendToBuffer('\'\'', undefined, true), ' }']);
 	      }
 	    }
 	  },
@@ -4394,9 +4394,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	      return options;
 	    }
 	  }
-	};
+			};
 
-	(function () {
+			(function () {
 	  var reservedWords = ('break else new var' + ' case finally return void' + ' catch for switch while' + ' continue function this with' + ' default if throw' + ' delete in try' + ' do instanceof typeof' + ' abstract enum int short' + ' boolean export interface static' + ' byte extends long super' + ' char final native synchronized' + ' class float package throws' + ' const goto private transient' + ' debugger implements protected volatile' + ' double import public let yield await' + ' null true false').split(' ');
 
 	  var compilerWords = JavaScriptCompiler.RESERVED_WORDS = {};
@@ -4404,13 +4404,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	  for (var i = 0, l = reservedWords.length; i < l; i++) {
 	    compilerWords[reservedWords[i]] = true;
 	  }
-	})();
+			})();
 
-	JavaScriptCompiler.isValidJavaScriptVariableName = function (name) {
+			JavaScriptCompiler.isValidJavaScriptVariableName = function (name) {
 	  return !JavaScriptCompiler.RESERVED_WORDS[name] && /^[a-zA-Z_$][0-9a-zA-Z_$]*$/.test(name);
-	};
+			};
 
-	function strictLookup(requireTerminal, compiler, parts, type) {
+			function strictLookup(requireTerminal, compiler, parts, type) {
 	  var stack = compiler.popStack(),
 	      i = 0,
 	      len = parts.length;
@@ -4427,25 +4427,25 @@ return /******/ (function(modules) { // webpackBootstrap
 	  } else {
 	    return stack;
 	  }
-	}
+			}
 
-	exports['default'] = JavaScriptCompiler;
-	module.exports = exports['default'];
+			exports['default'] = JavaScriptCompiler;
+			module.exports = exports['default'];
 
-/***/ },
-/* 29 */
-/***/ function(module, exports, __webpack_require__) {
+			/***/ },
+		/* 29 */
+		/***/ function(module, exports, __webpack_require__) {
 
-	/* global define */
-	'use strict';
+			/* global define */
+			
 
-	exports.__esModule = true;
+			exports.__esModule = true;
 
-	var _utils = __webpack_require__(5);
+			var _utils = __webpack_require__(5);
 
-	var SourceNode = undefined;
+			var SourceNode = undefined;
 
-	try {
+			try {
 	  /* istanbul ignore next */
 	  if (false) {
 	    // We don't support this in AMD environments. For these environments, we asusme that
@@ -4453,11 +4453,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var SourceMap = require('source-map');
 	    SourceNode = SourceMap.SourceNode;
 	  }
-	} catch (err) {}
-	/* NOP */
+			} catch (err) {}
+			/* NOP */
 
-	/* istanbul ignore if: tested but not covered in istanbul due to dist build  */
-	if (!SourceNode) {
+			/* istanbul ignore if: tested but not covered in istanbul due to dist build  */
+			if (!SourceNode) {
 	  SourceNode = function (line, column, srcFile, chunks) {
 	    this.src = '';
 	    if (chunks) {
@@ -4485,9 +4485,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	      return this.src;
 	    }
 	  };
-	}
+			}
 
-	function castChunk(chunk, codeGen, loc) {
+			function castChunk(chunk, codeGen, loc) {
 	  if (_utils.isArray(chunk)) {
 	    var ret = [];
 
@@ -4500,14 +4500,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return chunk + '';
 	  }
 	  return chunk;
-	}
+			}
 
-	function CodeGen(srcFile) {
+			function CodeGen(srcFile) {
 	  this.srcFile = srcFile;
 	  this.source = [];
-	}
+			}
 
-	CodeGen.prototype = {
+			CodeGen.prototype = {
 	  isEmpty: function isEmpty() {
 	    return !this.source.length;
 	  },
@@ -4597,12 +4597,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    return ret;
 	  }
-	};
+			};
 
-	exports['default'] = CodeGen;
-	module.exports = exports['default'];
+			exports['default'] = CodeGen;
+			module.exports = exports['default'];
 
-/***/ }
-/******/ ])
+			/***/ }
+		/******/ ]);
 });
-;

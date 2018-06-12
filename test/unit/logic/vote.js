@@ -1,4 +1,4 @@
-'use strict';/*eslint*/
+/*eslint*/
 
 var crypto = require('crypto');
 var async = require('async');

@@ -1,4 +1,4 @@
-'use strict';
+
 
 var node = require('./../node.js');
 var constants = require('../../helpers/constants.js');

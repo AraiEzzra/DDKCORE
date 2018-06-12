@@ -1,4 +1,4 @@
-'use strict';
+
 
 var chai = require('chai');
 var express = require('express');

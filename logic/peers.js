@@ -1,9 +1,7 @@
-'use strict';
+
 
 var _ = require('lodash');
-var async = require('async');
 var Peer = require('../logic/peer.js');
-var schema = require('../schema/peers.js');
 
 // Private fields
 var __private = {};
@@ -97,7 +95,7 @@ Peers.prototype.upsert = function (peer, insertOnly) {
 	var cnt_empty_height = 0;
 	var cnt_empty_broadhash = 0;
 
-	_.each(__private.peers, function (peer, index) {
+	_.each(__private.peers, function (peer) {
 		++cnt_total;
 		if (peer.state === 2) {
 			++cnt_active;

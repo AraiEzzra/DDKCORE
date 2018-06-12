@@ -1,4 +1,4 @@
-'use strict';
+
 
 var RateLimit = require('express-rate-limit');
 

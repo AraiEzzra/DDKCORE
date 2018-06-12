@@ -1,4 +1,4 @@
-'use strict';
+
 
 var _ = require('lodash');
 var async = require('async');
@@ -324,7 +324,7 @@ Process.prototype.generateBlock = function (keypair, timestamp, cb) {
 			// Check transaction depends on type
 			if (library.logic.transaction.ready(transaction, sender)) {
 				// Verify transaction
-				library.logic.transaction.verify(transaction, sender, function (err) {
+				library.logic.transaction.verify(transaction, sender, function () {
 					ready.push(transaction);
 					return setImmediate(cb);
 				});

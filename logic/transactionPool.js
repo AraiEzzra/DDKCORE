@@ -1,4 +1,4 @@
-'use strict';
+
 
 var async = require('async');
 var config = require('../config.json');
@@ -420,7 +420,7 @@ TransactionPool.prototype.processBundled = function (cb) {
 		self.removeBundledTransaction(transaction.id);
 		delete transaction.bundled;
 
-		__private.processVerifyTransaction(transaction, true, function (err, sender) {
+		__private.processVerifyTransaction(transaction, true, function (err) {
 			if (err) {
 				library.logger.debug('Failed to process / verify bundled transaction: ' + transaction.id, err);
 				self.removeUnconfirmedTransaction(transaction);

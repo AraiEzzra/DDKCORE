@@ -1,4 +1,4 @@
-'use strict';
+
 
 /**
  * Applies z_schema to validate schema.

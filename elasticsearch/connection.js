@@ -1,9 +1,9 @@
-'use strict';
+
 
 // elastic search server connection
 var elasticsearch = require('elasticsearch');
 var config = require('../config.json');
-var connectionHost = config.elasticsearchHost + ':9200' || 'localhost:9200'
+var connectionHost = config.elasticsearchHost + ':9200' || 'localhost:9200';
 
 var Client = new elasticsearch.Client({
 	hosts: connectionHost, // We can put an array here as well to provide more than one hosts. See below example

@@ -1,4 +1,4 @@
-'use strict';
+
 
 var async = require('async');
 var ByteBuffer = require('bytebuffer');
@@ -71,7 +71,7 @@ Multisignature.prototype.create = function (data, trs) {
  * @param {account} sender - Unnecessary parameter.
  * @returns {number} Quantity of multisignature keysgroup * multisignature fees.
  */
-Multisignature.prototype.calculateFee = function (trs, sender) {
+Multisignature.prototype.calculateFee = function (trs) {
 	return (trs.asset.multisignature.keysgroup.length + 1) * constants.fees.multisignature;
 };
 
@@ -213,7 +213,7 @@ Multisignature.prototype.process = function (trs, sender, cb) {
  * @param {boolean} skip
  * @returns {!Array} Contents as an ArrayBuffer.
  */
-Multisignature.prototype.getBytes = function (trs, skip) {
+Multisignature.prototype.getBytes = function (trs) {
 	var keysgroupBuffer = Buffer.from(trs.asset.multisignature.keysgroup.join(''), 'utf8');
 
 	var bb = new ByteBuffer(1 + 1 + keysgroupBuffer.length, true);
@@ -311,7 +311,7 @@ Multisignature.prototype.applyUnconfirmed = function (trs, sender, cb) {
 		u_multisignatures: trs.asset.multisignature.keysgroup,
 		u_multimin: trs.asset.multisignature.min,
 		u_multilifetime: trs.asset.multisignature.lifetime
-	}, function (err) {
+	}, function () {
 		return setImmediate(cb);
 	});
 };

@@ -1,4 +1,4 @@
-'use strict';
+
 
 var ByteBuffer = require('bytebuffer');
 var constants = require('../helpers/constants.js');
@@ -55,7 +55,7 @@ Signature.prototype.create = function (data, trs) {
  * @param {account} sender - Unnecessary parameter.
  * @returns {number} Secondsignature fee.
  */
-Signature.prototype.calculateFee = function (trs, sender) {
+Signature.prototype.calculateFee = function () {
 	return constants.fees.secondsignature;
 };
 

@@ -1,4 +1,4 @@
-'use strict';
+
 
 var constants = require('../helpers/constants.js');
 
@@ -45,7 +45,7 @@ Transfer.prototype.create = function (data, trs) {
  * @param {account} sender
  * @return {number} fee
  */
-Transfer.prototype.calculateFee = function (trs, sender) {
+Transfer.prototype.calculateFee = function (trs) {
 
 	if (trs.amount <= 10000000000) {
 
@@ -94,7 +94,7 @@ Transfer.prototype.process = function (trs, sender, cb) {
  * @param {transaction} trs
  * @return {null}
  */
-Transfer.prototype.getBytes = function (trs) {
+Transfer.prototype.getBytes = function () {
 	return null;
 };
 
@@ -111,7 +111,7 @@ Transfer.prototype.getBytes = function (trs) {
  * @return {setImmediateCallback} error, cb
  */
 Transfer.prototype.apply = function (trs, block, sender, cb) {
-	modules.accounts.setAccountAndGet({address: trs.recipientId}, function (err, recipient) {
+	modules.accounts.setAccountAndGet({address: trs.recipientId}, function (err) {
 		if (err) {
 			return setImmediate(cb, err);
 		}
@@ -141,7 +141,7 @@ Transfer.prototype.apply = function (trs, block, sender, cb) {
  * @return {setImmediateCallback} error, cb
  */
 Transfer.prototype.undo = function (trs, block, sender, cb) {
-	modules.accounts.setAccountAndGet({address: trs.recipientId}, function (err, recipient) {
+	modules.accounts.setAccountAndGet({address: trs.recipientId}, function (err) {
 		if (err) {
 			return setImmediate(cb, err);
 		}
@@ -192,7 +192,7 @@ Transfer.prototype.objectNormalize = function (trs) {
  * @param {Object} raw
  * @return {null}
  */
-Transfer.prototype.dbRead = function (raw) {
+Transfer.prototype.dbRead = function () {
 	return null;
 };
 
@@ -200,7 +200,7 @@ Transfer.prototype.dbRead = function (raw) {
  * @param {transaction} trs
  * @return {null}
  */
-Transfer.prototype.dbSave = function (trs) {
+Transfer.prototype.dbSave = function () {
 	return null;
 };
 

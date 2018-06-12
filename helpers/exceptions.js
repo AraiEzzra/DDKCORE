@@ -1,4 +1,4 @@
-'use strict';
+
 /**
  * @namespace exceptions
  * @memberof module:helpers

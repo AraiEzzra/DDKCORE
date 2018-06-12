@@ -1,4 +1,4 @@
-'use strict';
+
 
 /**
  * Applies methods from parameters.

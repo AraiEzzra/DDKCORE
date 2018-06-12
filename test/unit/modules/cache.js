@@ -1,4 +1,4 @@
-'use strict';
+
 
 var node = require('./../../node.js'); 
 var chai = require('chai');
@@ -125,9 +125,9 @@ describe('cache', function () {
 						return callback(err, result);
 					});
 				}],
-				function (err) {
-					done(err);
-				}
+			function (err) {
+				done(err);
+			}
 			);
 		});
 	});

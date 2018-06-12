@@ -1,4 +1,4 @@
-'use strict';
+
 
 var chai = require('chai');
 var expect = require('chai').expect;
@@ -35,7 +35,7 @@ function calcBlockReward (height, reward, done) {
 	}).catch(function (err) {
 		done(err);
 	});
-};
+}
 
 function calcSupply (height, supply, done) {
 	return db.query(sql.calcSupply, {height: height}).then(function (rows) {
@@ -51,7 +51,7 @@ function calcSupply (height, supply, done) {
 	}).catch(function (err) {
 		done(err);
 	});
-};
+}
 
 function calcSupply_test (height_start, height_end, expected_reward, done) {
 	return db.query(sql.calcSupply_test, {height_start: height_start, height_end: height_end, expected_reward: expected_reward}).then(function (rows) {
@@ -63,7 +63,7 @@ function calcSupply_test (height_start, height_end, expected_reward, done) {
 	}).catch(function (err) {
 		done(err);
 	});
-};
+}
 
 function calcSupply_test_fail (height_start, height_end, expected_reward, done) {
 	return db.query(sql.calcSupply_test, {height_start: height_start, height_end: height_end, expected_reward: expected_reward}).then(function (rows) {
@@ -75,7 +75,7 @@ function calcSupply_test_fail (height_start, height_end, expected_reward, done) 
 	}).catch(function (err) {
 		done(err);
 	});
-};
+}
 
 function calcBlockReward_test (height_start, height_end, expected_reward, done) {
 	return db.query(sql.calcBlockReward_test, {height_start: height_start, height_end: height_end, expected_reward: expected_reward}).then(function (rows) {
@@ -87,7 +87,7 @@ function calcBlockReward_test (height_start, height_end, expected_reward, done) 
 	}).catch(function (err) {
 		done(err);
 	});
-};
+}
 
 describe('BlockRewardsSQL', function () {
 

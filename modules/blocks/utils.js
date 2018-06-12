@@ -1,4 +1,4 @@
-'use strict';
+
 
 var _ = require('lodash');
 var constants = require('../../helpers/constants.js');
@@ -142,7 +142,7 @@ Utils.prototype.loadLastBlock = function (cb) {
 			var block = modules.blocks.utils.readDbRows(rows)[0];
 
 			// Sort block's transactions
-			block.transactions = block.transactions.sort(function (a, b) {
+			block.transactions = block.transactions.sort(function (a) {
 				if (block.id === library.genesisblock.block.id) {
 					if (a.type === transactionTypes.VOTE) {
 						return 1;

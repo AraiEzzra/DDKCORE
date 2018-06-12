@@ -1,4 +1,4 @@
-'use strict';
+
 
 /**
  * Buffer functions that implements bignumber.
@@ -33,8 +33,8 @@ BigNumber.fromBuffer = function (buf, opts) {
 		var chunk = [];
 		for (var j = 0; j < size; j++) {
 			chunk.push(buf[
-			i + (endian === 'big' ? j : (size - j - 1))
-				]);
+				i + (endian === 'big' ? j : (size - j - 1))
+			]);
 		}
 
 		hex.push(chunk
@@ -95,15 +95,15 @@ BigNumber.prototype.toBuffer = function ( opts ) {
 
 	var size = opts.size === 'auto' ? Math.ceil(hex.length / 2) : (opts.size || 1);
 
-	var len = Math.ceil(hex.length / (2 * size)) * size;
-	var buf = Buffer.alloc(len);
+	len = Math.ceil(hex.length / (2 * size)) * size;
+	buf = Buffer.alloc(len);
 
 	// Zero-pad the hex string so the chunks are all `size` long
 	while (hex.length < 2 * len) hex = '0' + hex;
 
 	var hx = hex
-			.split(new RegExp('(.{' + (2 * size) + '})'))
-			.filter(function (s) { return s.length > 0 });
+		.split(new RegExp('(.{' + (2 * size) + '})'))
+		.filter(function (s) { return s.length > 0; });
 
 	hx.forEach(function (chunk, i) {
 		for (var j = 0; j < size; j++) {

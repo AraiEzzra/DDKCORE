@@ -1,4 +1,4 @@
-'use strict';/*eslint*/
+/*eslint*/
 
 var node = require('./../../node.js');
 var ed = require('../../../helpers/ed');

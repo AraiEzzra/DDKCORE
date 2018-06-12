@@ -1,4 +1,4 @@
-'use strict';
+
 
 var constants = require('../helpers/constants.js');
 var sql = require('../sql/dapps.js');
@@ -66,7 +66,7 @@ OutTransfer.prototype.create = function (data, trs) {
  * @param {account} sender
  * @return {number} fee
  */
-OutTransfer.prototype.calculateFee = function (trs, sender) {
+OutTransfer.prototype.calculateFee = function () {
 	return constants.fees.send;
 };
 
@@ -177,7 +177,7 @@ OutTransfer.prototype.getBytes = function (trs) {
 OutTransfer.prototype.apply = function (trs, block, sender, cb) {
 	__private.unconfirmedOutTansfers[trs.asset.outTransfer.transactionId] = false;
 
-	modules.accounts.setAccountAndGet({address: trs.recipientId}, function (err, recipient) {
+	modules.accounts.setAccountAndGet({address: trs.recipientId}, function (err) {
 		if (err) {
 			return setImmediate(cb, err);
 		}
@@ -210,7 +210,7 @@ OutTransfer.prototype.apply = function (trs, block, sender, cb) {
 OutTransfer.prototype.undo = function (trs, block, sender, cb) {
 	__private.unconfirmedOutTansfers[trs.asset.outTransfer.transactionId] = true;
 
-	modules.accounts.setAccountAndGet({address: trs.recipientId}, function (err, recipient) {
+	modules.accounts.setAccountAndGet({address: trs.recipientId}, function (err) {
 		if (err) {
 			return setImmediate(cb, err);
 		}

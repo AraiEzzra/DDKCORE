@@ -1,4 +1,4 @@
-'use strict';
+
 
 var constants = require('../helpers/constants.js');
 var sql = require('../sql/dapps.js');
@@ -61,7 +61,7 @@ InTransfer.prototype.create = function (data, trs) {
  * @param {account} sender
  * @return {number} fee
  */
-InTransfer.prototype.calculateFee = function (trs, sender) {
+InTransfer.prototype.calculateFee = function () {
 	return constants.fees.send;
 };
 

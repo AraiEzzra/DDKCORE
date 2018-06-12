@@ -1,4 +1,4 @@
-'use strict';
+
 
 var pgp = require('pg-promise');
 
@@ -30,7 +30,7 @@ function Inserts (record, values, concat) {
 	}
 
 	this.namedTemplate = function () {
-		return record.fields.map(function (field, index) {
+		return record.fields.map(function (field) {
 			return '${' + field + '}';
 		}).join(',');
 	};

@@ -1,4 +1,4 @@
-'use strict';
+
 
 var bignum = require('../helpers/bignum.js');
 var BlockReward = require('../logic/blockReward.js');

@@ -1,4 +1,4 @@
-'use strict';
+
 
 var constants = require('../helpers/constants.js');
 
@@ -66,7 +66,7 @@ StakeReward.prototype.calcMilestone = function (height) {
 StakeReward.prototype.calcReward = function (height) {
 	height = __private.parseHeight(height);
 
-		return this.milestones[this.calcMilestone(height)];
+	return this.milestones[this.calcMilestone(height)];
 	
 };
 

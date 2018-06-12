@@ -1,4 +1,4 @@
-'use strict';
+
 
 var Router = require('../../helpers/router');
 var Accounts = require('../../modules/accounts');

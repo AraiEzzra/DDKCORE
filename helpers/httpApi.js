@@ -1,5 +1,3 @@
-'use strict';
-const Logger = require('../logger.js');
 
 /**
  * Middleware functions to add cors, log errors and conections, send status

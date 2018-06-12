@@ -1,9 +1,8 @@
-'use strict';
+
 
 var async = require('async');
 var constants = require('../helpers/constants.js');
 var jobsQueue = require('../helpers/jobsQueue.js');
-var ip = require('ip');
 var sandboxHelper = require('../helpers/sandbox.js');
 var schema = require('../schema/loader.js');
 var sql = require('../sql/loader.js');
@@ -188,7 +187,7 @@ __private.loadSignatures = function (cb) {
 							signature: s,
 							transaction: signature.transaction
 						}, function (err) {
-							return setImmediate(eachSeriesCb);
+							return setImmediate(eachSeriesCb(err));
 						});
 					}, eachSeriesCb);
 				}, cb);
@@ -368,7 +367,7 @@ __private.loadBlockChain = function () {
 				library.logger.error(err);
 				if (err.block) {
 					library.logger.error('Blockchain failed at: ' + err.block.height);
-					modules.blocks.chain.deleteAfterBlock(err.block.id, function (err, res) {
+					modules.blocks.chain.deleteAfterBlock(err.block.id, function () {
 						library.logger.error('Blockchain clipped');
 						library.bus.message('blockchainReady');
 					});

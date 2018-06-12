@@ -1,4 +1,4 @@
-'use strict';
+
 /*
 * Helper module for parsing git commit information
 *

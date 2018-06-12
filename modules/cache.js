@@ -256,7 +256,7 @@ Cache.prototype.onTransactionsSaved = function (transactions, cb) {
 		return !!trs && trs.type === transactionTypes.DELEGATE;
 	});
 
-	if (!!delegateTransaction) {
+	if (!delegateTransaction) {
 		self.removeByPattern(pattern, function (err) {
 			if (err) {
 				logger.error(['Error clearing keys with pattern:', pattern, ' on delegate trs'].join(' '));

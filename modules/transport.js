@@ -1,6 +1,5 @@
-'use strict';
 
-var _ = require('lodash');
+
 var async = require('async');
 var Broadcaster = require('../logic/broadcaster.js');
 var Peer = require('../logic/peer.js');
@@ -8,12 +7,10 @@ var bignum = require('../helpers/bignum.js');
 var constants = require('../helpers/constants.js');
 var crypto = require('crypto');
 var extend = require('extend');
-var ip = require('ip');
 var popsicle = require('popsicle');
 var schema = require('../schema/transport.js');
 var sandboxHelper = require('../helpers/sandbox.js');
 var sql = require('../sql/transport.js');
-var zlib = require('zlib');
 
 // Private fields
 var modules, library, self, __private = {}, shared = {};
@@ -631,7 +628,7 @@ Transport.prototype.internal = {
 				}
 			});
 		} else {
-			__private.receiveSignature(query.signature, function (err, id) {
+			__private.receiveSignature(query.signature, function (err) {
 				if (err) {
 					return setImmediate(cb, null, {success: false, message: err});
 				} else {
@@ -761,7 +758,7 @@ Transport.prototype.internal = {
 			}
 		);
 
-		var headers = peer.applyHeaders(headers);
+		headers = peer.applyHeaders(headers);
 
 		validateHeaders(headers, function (error, extraMessage) {
 			if (error) {

@@ -1,4 +1,4 @@
-'use strict';
+
 
 var ByteBuffer = require('bytebuffer');
 var constants = require('../helpers/constants.js');
@@ -68,7 +68,7 @@ DApp.prototype.create = function (data, trs) {
  * @param {account} sender
  * @return {number} fee
  */
-DApp.prototype.calculateFee = function (trs, sender) {
+DApp.prototype.calculateFee = function () {
 	return constants.fees.dapp;
 };
 

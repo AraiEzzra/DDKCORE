@@ -1,4 +1,4 @@
-'use strict';
+
 
 var extend = require('extend');
 var util = require('util');

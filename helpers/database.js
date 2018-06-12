@@ -1,4 +1,4 @@
-'use strict';
+
 
 var async = require('async');
 var bignum = require('./bignum');
@@ -21,12 +21,12 @@ function Migrator (pgp, db) {
 	 */
 	this.checkMigrations = function (waterCb) {
 		db.one('SELECT to_regclass(\'migrations\')')
-		.then(function (row) {
-			return waterCb(null, Boolean(row.to_regclass));
-		})
-		.catch(function (err) {
-			return waterCb(err);
-		});
+			.then(function (row) {
+				return waterCb(null, Boolean(row.to_regclass));
+			})
+			.catch(function (err) {
+				return waterCb(err);
+			});
 	};
 
 	/**
@@ -41,15 +41,15 @@ function Migrator (pgp, db) {
 			return waterCb(null, null);
 		}
 		db.query('SELECT * FROM migrations ORDER BY "id" DESC LIMIT 1')
-		.then(function (rows) {
-			if (rows[0]) {
-				rows[0].id = new bignum(rows[0].id);
-			}
-			return waterCb(null, rows[0]);
-		})
-		.catch(function (err) {
-			return waterCb(err);
-		});
+			.then(function (rows) {
+				if (rows[0]) {
+					rows[0].id = new bignum(rows[0].id);
+				}
+				return waterCb(null, rows[0]);
+			})
+			.catch(function (err) {
+				return waterCb(err);
+			});
 	};
 
 	/**
@@ -115,13 +115,13 @@ function Migrator (pgp, db) {
 			var sql = new pgp.QueryFile(file.path, {minify: true});
 
 			db.query(sql)
-			.then(function () {
-				appliedMigrations.push(file);
-				return eachCb();
-			})
-			.catch(function (err) {
-				return eachCb(err);
-			});
+				.then(function () {
+					appliedMigrations.push(file);
+					return eachCb();
+				})
+				.catch(function (err) {
+					return eachCb(err);
+				});
 		}, function (err) {
 			return waterCb(err, appliedMigrations);
 		});
@@ -137,12 +137,12 @@ function Migrator (pgp, db) {
 	this.insertAppliedMigrations = function (appliedMigrations, waterCb) {
 		async.eachSeries(appliedMigrations, function (file, eachCb) {
 			db.query('INSERT INTO migrations(id, name) VALUES($1, $2) ON CONFLICT DO NOTHING', [file.id.toString(), file.name])
-			.then(function () {
-				return eachCb();
-			})
-			.catch(function (err) {
-				return eachCb(err);
-			});
+				.then(function () {
+					return eachCb();
+				})
+				.catch(function (err) {
+					return eachCb(err);
+				});
 		}, function (err) {
 			return waterCb(err);
 		});
@@ -159,12 +159,12 @@ function Migrator (pgp, db) {
 		var sql = new pgp.QueryFile(path.join(dirname, 'sql', 'runtime.sql'), {minify: true});
 
 		db.query(sql)
-		.then(function () {
-			return waterCb();
-		})
-		.catch(function (err) {
-			return waterCb(err);
-		});
+			.then(function () {
+				return waterCb();
+			})
+			.catch(function (err) {
+				return waterCb(err);
+			});
 	};
 }
 

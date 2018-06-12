@@ -1,4 +1,4 @@
-'use strict';
+
 
 var _ = require('lodash');
 var async = require('async');
@@ -181,12 +181,9 @@ __private.forge = function (cb) {
 				}
 			});
 		}, function (err) {
-			console.log("*****************************************   Start Block Generation ****************************************");
 			if (err) {
-				console.log("*****************************************   Error ****************************************");
 				library.logger.error('Failed to generate block within delegate slot', err);
 			} else {
-				console.log("*****************************************  Success ****************************************");
 
 				var forgedBlock = modules.blocks.lastBlock.get();
 				modules.blocks.lastReceipt.update();
@@ -399,8 +396,8 @@ Delegates.prototype.getDelegates = function (query, cb) {
 		var count = delegates.length;
 		var realLimit = Math.min(offset + limit, count);
 
-		var lastBlock   = modules.blocks.lastBlock.get(),
-		totalSupply = __private.blockReward.calcSupply(lastBlock.height);
+		var lastBlock = modules.blocks.lastBlock.get(),
+			totalSupply = __private.blockReward.calcSupply(lastBlock.height);
 
 		for (var i = 0; i < delegates.length; i++) {
 			// TODO: 'rate' property is deprecated and need to be removed after transitional period

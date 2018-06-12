@@ -1,4 +1,4 @@
-'use strict';
+
 
 var moment = require('moment');
 var fs = require('fs');

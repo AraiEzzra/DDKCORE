@@ -1,19 +1,12 @@
-'use strict';
 
-var _ = require('lodash');
-var async = require('async');
-var constants = require('../helpers/constants.js');
+
 var crypto = require('crypto');
-var extend = require('extend');
-var OrderBy = require('../helpers/orderBy.js');
 var sandboxHelper = require('../helpers/sandbox.js');
 var schema = require('../schema/frogeTransfer.js');
 var sql = require('../sql/frogings.js');
 var TransactionPool = require('../logic/transactionPool.js');
 var transactionTypes = require('../helpers/transactionTypes.js');
-var Transfer = require('../logic/transfer.js');
 var sendFreezeOrder = require('../logic/sendFreezeOrder.js');
-var bignum = require('../helpers/bignum.js');
 
 // Private fields
 var __private = {};

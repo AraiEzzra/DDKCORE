@@ -1,4 +1,4 @@
-'use strict';
+
 
 var utils = require('../validator/utils');
 
@@ -42,13 +42,13 @@ JsonSchema.addRule('type', {
 });
 
 JsonSchema.addRule('default', {
-	 filter : function (accept, value) {
-		 if (typeof value === 'undefined') {
-			 return accept;
-		 } else {
-			 return value;
-		 }
-	 }
+	filter: function (accept, value) {
+		if (typeof value === 'undefined') {
+			return accept;
+		} else {
+			return value;
+		}
+	}
 });
 
 JsonSchema.addRule('enum', {

@@ -1,4 +1,4 @@
-'use strict';
+
 
 var esClient = require('./elasticsearch/connection');
 var Accounts = require('./modules/accounts');
@@ -83,12 +83,12 @@ exports.indexall = function (bulk, index) {
 			index: index,
 			type: index,
 			body: bulk
-		}, function (err, resp, status) {
+		}, function (err) {
 			if (err) {
 				reject(err);
 			} else {
 				resolve(null);
 			}
 		});
-	})
+	});
 };

@@ -1,6 +1,5 @@
-'use strict';
 
-var slots = require('../helpers/slots.js');
+
 var crypto = require('crypto');
 var bignum = require('../helpers/bignum.js');
 var ByteBuffer = require('bytebuffer');
@@ -84,10 +83,8 @@ Block.prototype.create = function (data) {
 		return 0;
 	});
 
-	var nextHeight = (data.previousBlock) ? data.previousBlock.height + 1 : 1;
-	
 	var reward = 0,//changes from: __private.blockReward.calcReward(nextHeight)
-	    totalFee = 0, totalAmount = 0, size = 0;
+		totalFee = 0, totalAmount = 0, size = 0;
 
 	var blockTransactions = [];
 	var payloadHash = crypto.createHash('sha256');
@@ -122,7 +119,6 @@ Block.prototype.create = function (data) {
 		generatorPublicKey: data.keypair.publicKey.toString('hex'),
 		transactions: blockTransactions
 	};
-	console.log('timestamp : ', block.timestamp);
 	try {
 		block.blockSignature = this.sign(block, data.keypair);
 
@@ -448,7 +444,7 @@ Block.prototype.getHash = function (block) {
  * @return {number} fee
  * @todo delete unused input parameter
  */
-Block.prototype.calculateFee = function (block) {
+Block.prototype.calculateFee = function () {
 	return constants.fees.send;
 };
 

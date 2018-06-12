@@ -1,4 +1,4 @@
-'use strict';
+
 
 var LoaderSql = {
 	countBlocks: 'SELECT COUNT("rowId")::int FROM blocks',

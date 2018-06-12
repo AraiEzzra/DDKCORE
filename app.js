@@ -1,4 +1,4 @@
-'use strict';
+
 /**
  * A node-style callback as used by {@link logic} and {@link modules}.
  * @see {@link https://nodejs.org/api/errors.html#errors_node_js_style_callbacks}
@@ -25,6 +25,8 @@
 
 //Requiring Modules
 require('dotenv').config();
+
+require('auto-strict');
 var async = require('async');
 var fs = require('fs');
 var genesisblock = require('./genesisBlock.json');
@@ -287,16 +289,16 @@ d.run(function () {
 
 			// added swagger configuration
 			var subpath = express();
-			var swagger = require("swagger-node-express").createNew(subpath);
-			app.use("/v1", subpath);
+			var swagger = require('swagger-node-express').createNew(subpath);
+			app.use('/v1', subpath);
 			subpath.use(express.static('dist'));
 			swagger.setApiInfo({
-				title: "example API",
-				description: "API to do something, manage something...",
-				termsOfServiceUrl: "",
-				contact: "hotam.singh@oodlestechnologies.com",
-				license: "",
-				licenseUrl: ""
+				title: 'example API',
+				description: 'API to do something, manage something...',
+				termsOfServiceUrl: '',
+				contact: 'hotam.singh@oodlestechnologies.com',
+				license: '',
+				licenseUrl: ''
 			});
 			subpath.get('/', function (req, res) {
 				res.sendFile(__dirname + '/dist/index.html');
