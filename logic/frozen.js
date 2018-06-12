@@ -142,13 +142,9 @@ Frozen.prototype.process = function (trs, sender, cb) {
 };
 
 Frozen.prototype.verify = function (trs, sender, cb) {
-/*
-  if (!trs.recipientId) {
-		return setImmediate(cb, 'Missing recipient');
-	}
-*/
-	if (trs.amount < 0) {
-		return setImmediate(cb, 'Invalid transaction amount');
+
+	if ((trs.freezedAmount + trs.fee + parseInt(sender.totalFrozeAmount)) > sender.balance) {
+		return setImmediate(cb, 'Insufficient balance');
 	}
 
 	return setImmediate(cb, null, trs);

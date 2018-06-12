@@ -339,7 +339,7 @@ Transaction.prototype.checkBalance = function (amount, balance, trs, sender) {
 	var exceededBalance = new bignum(sender[balance].toString()).lessThan(totalAmountWithFrozeAmount);
 	var exceeded = (trs.blockId !== this.scope.genesisblock.block.id && exceededBalance);
 
-	if (sender.totalFrozeAmount > 0) {
+	if (parseInt(sender.totalFrozeAmount) > 0) {
 		return {
 			exceeded: exceeded,
 			error: exceeded ? [

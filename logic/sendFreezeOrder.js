@@ -117,10 +117,6 @@ SendFreezeOrder.prototype.verify = function (trs, sender, cb) {
 		return setImmediate(cb, 'Missing recipient');
 	}
 
-	// if (trs.amount <= 0) {
-	// 	return setImmediate(cb, 'Invalid transaction amount');
-	// }
-
 	return setImmediate(cb, null, trs);
 };
 
