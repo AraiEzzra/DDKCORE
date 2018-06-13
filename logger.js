@@ -80,3 +80,5 @@ class Logger {
 
 //exports module
 module.exports = Logger;
+
+/*************************************** END OF FILE *************************************/

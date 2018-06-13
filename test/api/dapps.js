@@ -43,7 +43,7 @@ before(function (done) {
 });
 
 before(function (done) {
-	// Send to LISK to account 1 address
+	// Send to DDK to account 1 address
 	setTimeout(function () {
 		let randomLISK = node.randomLISK();
 		let expectedFee = node.expectedFee(randomLISK);
@@ -57,7 +57,7 @@ before(function (done) {
 });
 
 before(function (done) {
-	// Send to LISK to account 2 address
+	// Send to DDK to account 2 address
 	setTimeout(function () {
 		let randomLISK = node.randomLISK();
 		let expectedFee = node.expectedFee(randomLISK);

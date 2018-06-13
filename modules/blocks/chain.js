@@ -656,3 +656,5 @@ Chain.prototype.onBind = function (scope) {
 };
 
 module.exports = Chain;
+
+/*************************************** END OF FILE *************************************/

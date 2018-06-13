@@ -556,3 +556,5 @@ Multisignatures.prototype.shared = {
 
 // Export
 module.exports = Multisignatures;
+
+/*************************************** END OF FILE *************************************/

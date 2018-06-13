@@ -185,7 +185,6 @@ d.on('error', function (err) {
 	process.exit(0);
 });
 
-// runs domain
 d.run(function () {
 	let modules = [];
 	async.auto({
@@ -319,7 +318,7 @@ d.run(function () {
 					let userFound = false;
 					if (sockets) {
 						for (let i = 0; i < sockets.length; i++) {
-							if (sockets[i] == socket.id) {
+							if (sockets[i] === socket.id) {
 								userFound = true;
 							}
 						}
@@ -331,7 +330,7 @@ d.run(function () {
 				})(socket, sockets);
 				socket.on('disconnect', function () {
 					sockets.forEach(function (socketId) {
-						if (socketId == socket.id) {
+						if (socketId === socket.id) {
 							sockets.pop(socketId);
 							io.sockets.emit('updateConnected', sockets.length);
 						}
@@ -714,6 +713,7 @@ d.run(function () {
 			 * @todo description for nonce and ready
 			 */
 			scope.logger.info('Modules ready and launched');
+			console.log('app started on port : ', scope.config.app.port);
 			/**
 			 * Event reporting a cleanup.
 			 * @event cleanup
@@ -809,3 +809,5 @@ process.on('uncaughtException', function (err) {
 	 */
 	process.emit('cleanup');
 });
+
+/*************************************** END OF FILE *************************************/

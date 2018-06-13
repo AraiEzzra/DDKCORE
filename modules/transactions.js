@@ -868,3 +868,5 @@ Transactions.prototype.shared = {
 
 // Export
 module.exports = Transactions;
+
+/*************************************** END OF FILE *************************************/

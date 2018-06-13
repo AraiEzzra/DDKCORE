@@ -50,3 +50,5 @@ RoundChanges.prototype.at = function (index) {
 };
 
 module.exports = RoundChanges;
+
+/*************************************** END OF FILE *************************************/

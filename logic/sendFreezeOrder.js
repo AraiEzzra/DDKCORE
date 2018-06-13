@@ -96,8 +96,6 @@ SendFreezeOrder.prototype.apply = function (trs, block, sender, cb) {
 		}, function (err) {
 			return setImmediate(cb, err);
 		});
-		// modules.accounts.setAccountAndGet(data, cb);
-		//return setImmediate(cb, null, trs);
 	});
 };
 
@@ -114,10 +112,6 @@ SendFreezeOrder.prototype.verify = function (trs, sender, cb) {
 	if (!trs.recipientId) {
 		return setImmediate(cb, 'Missing recipient');
 	}
-
-	// if (trs.amount <= 0) {
-	// 	return setImmediate(cb, 'Invalid transaction amount');
-	// }
 
 	return setImmediate(cb, null, trs);
 };
@@ -149,7 +143,7 @@ SendFreezeOrder.prototype.sendFreezedOrder = function (userAndOrderData, cb) {
 				.catch(function (err) {
 					self.scope.logger.error(err.stack);
 
-					if (err.code == 0 && err.message == "No data returned from the query.") {
+					if (err.code === 0 && err.message === "No data returned from the query.") {
 						reject('Selected order is expired. Please send active order.');
 					} else {
 						reject(new Error(err.toString()));
@@ -275,3 +269,5 @@ SendFreezeOrder.prototype.sendFreezedOrder = function (userAndOrderData, cb) {
 
 // Export
 module.exports = SendFreezeOrder
+
+/*************************************** END OF FILE *************************************/

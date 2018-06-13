@@ -223,3 +223,5 @@ Transfer.prototype.ready = function (trs, sender) {
 
 // Export
 module.exports = Transfer;
+
+/*************************************** END OF FILE *************************************/

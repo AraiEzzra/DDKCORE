@@ -78,3 +78,5 @@ Sequence.prototype.count = function () {
 };
 
 module.exports = Sequence;
+
+/*************************************** END OF FILE *************************************/

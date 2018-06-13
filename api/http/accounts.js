@@ -93,3 +93,5 @@ function AccountsHttpApi (accountsModule, app) {
 }
 
 module.exports = AccountsHttpApi;
+
+/*************************************** END OF FILE *************************************/

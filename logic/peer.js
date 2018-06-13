@@ -192,3 +192,5 @@ Peer.prototype.object = function () {
 
 // Export
 module.exports = Peer;
+
+/*************************************** END OF FILE *************************************/

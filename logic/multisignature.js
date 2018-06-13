@@ -469,3 +469,5 @@ Multisignature.prototype.ready = function (trs, sender) {
 
 // Export
 module.exports = Multisignature;
+
+/*************************************** END OF FILE *************************************/

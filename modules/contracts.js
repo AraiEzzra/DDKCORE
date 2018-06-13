@@ -75,3 +75,5 @@ Contracts.prototype.onBind = function (scope) {
 };
 
 module.exports = Contracts;
+
+/*************************************** END OF FILE *************************************/

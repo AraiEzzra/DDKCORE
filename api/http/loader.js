@@ -36,3 +36,5 @@ function LoaderHttpApi (loaderModule, app) {
 }
 
 module.exports = LoaderHttpApi;
+
+/*************************************** END OF FILE *************************************/

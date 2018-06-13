@@ -50,3 +50,5 @@ function validateForce (configData) {
 
 // Exports
 module.exports = Config;
+
+/*************************************** END OF FILE *************************************/

@@ -345,3 +345,5 @@ Frogings.prototype.shared = {
 
 // Export
 module.exports = Frogings;
+
+/*************************************** END OF FILE *************************************/

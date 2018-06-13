@@ -49,3 +49,5 @@ Crypto.prototype.onBlockchainReady = function () {
 
 // Export
 module.exports = Crypto;
+
+/*************************************** END OF FILE *************************************/

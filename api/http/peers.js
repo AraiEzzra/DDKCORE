@@ -34,3 +34,5 @@ function PeersHttpApi (peersModule, app) {
 }
 
 module.exports = PeersHttpApi;
+
+/*************************************** END OF FILE *************************************/

@@ -55,3 +55,5 @@ function BlocksHttpApi (blocksModule, app, logger, cache) {
 }
 
 module.exports = BlocksHttpApi;
+
+/*************************************** END OF FILE *************************************/

@@ -2,7 +2,8 @@ let fs = require('fs'),
 	path = require('path'),
 	archiver = require('archiver'),
 	currDate = new Date(),
-	ignoredFile = currDate.getFullYear()+'-'+('0' + (currDate.getMonth() + 1)).slice(-2)+'-'+('0' + currDate.getDate()).slice(-2)+'.log';
+	utils = require('./utils'),
+	ignoredFile = utils.getIgnoredFile(currDate);
 
 /**
  * @desc Creates a directory if not exists already
@@ -49,7 +50,7 @@ exports.archiveLogFiles = function(dir, cb) {
 				fs.readdirSync(logPath).forEach(function (file) {
 					let curPath = logPath + '/' + file;
 					if (!fs.lstatSync(logPath).isFile()) {
-						if(!(file == ignoredFile || file == 'archive.log')) {
+						if(!(file === ignoredFile || file === 'archive.log')) {
 							fs.unlinkSync(curPath);
 						}
 					}
@@ -63,7 +64,8 @@ exports.archiveLogFiles = function(dir, cb) {
 
 	output.on('end', function () {});
 
-	archive.on('warning', function (err) {
+	const onWarning = archive.on;
+	onWarning('warning', function (err) {
 		if (err.code === 'ENOENT') {
 			return cb(err);
 		} else {
@@ -83,3 +85,5 @@ exports.archiveLogFiles = function(dir, cb) {
 		})
 		.finalize();
 };
+
+/*************************************** END OF FILE *************************************/

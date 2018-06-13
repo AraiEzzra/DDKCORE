@@ -35,3 +35,5 @@ function MultisignaturesHttpApi (mutlisignaturesModule, app) {
 }
 
 module.exports = MultisignaturesHttpApi;
+
+/*************************************** END OF FILE *************************************/

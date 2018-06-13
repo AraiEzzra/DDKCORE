@@ -60,3 +60,5 @@ function Inserts (record, values, concat) {
 }
 
 module.exports = Inserts;
+
+/*************************************** END OF FILE *************************************/

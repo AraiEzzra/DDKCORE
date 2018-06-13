@@ -46,3 +46,5 @@ module.exports.connect = function (cacheEnabled, config, logger, cb) {
 		}
 	});
 };
+
+/*************************************** END OF FILE *************************************/

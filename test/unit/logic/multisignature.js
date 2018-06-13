@@ -1,5 +1,3 @@
-/*eslint*/
-
 let node = require('./../../node.js');
 let ed = require('../../../helpers/ed');
 let crypto = require('crypto');

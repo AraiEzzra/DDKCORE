@@ -900,3 +900,6 @@ Loader.prototype.shared = {
 
 // Export
 module.exports = Loader;
+
+
+/*************************************** END OF FILE *************************************/

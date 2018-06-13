@@ -512,3 +512,5 @@ Verify.prototype.onBind = function (scope) {
 };
 
 module.exports = Verify;
+
+/*************************************** END OF FILE *************************************/

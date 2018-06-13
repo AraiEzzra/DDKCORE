@@ -565,3 +565,5 @@ Vote.prototype.updateAndCheckVote = function (voteInfo, cb) {
 
 // Export
 module.exports = Vote;
+
+/*************************************** END OF FILE *************************************/

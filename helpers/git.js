@@ -27,3 +27,5 @@ function getLastCommit () {
 module.exports = {
 	getLastCommit: getLastCommit
 };
+
+/*************************************** END OF FILE *************************************/

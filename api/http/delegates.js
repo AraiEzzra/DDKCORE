@@ -71,3 +71,5 @@ function DelegatesHttpApi (delegatesModule, app, logger, cache) {
 }
 
 module.exports = DelegatesHttpApi;
+
+/*************************************** END OF FILE *************************************/

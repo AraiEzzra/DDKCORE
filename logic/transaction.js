@@ -421,7 +421,7 @@ Transaction.prototype.getAccountStatus = function(trs, cb) {
 	this.scope.db.one(sqlAccount.checkAccountStatus, { 
 		senderId: trs.senderId 
 	}).then(function (row) {		
-		if (row.status == 0) {	 
+		if (row.status === 0) {	 
 			return setImmediate(cb,'Invalid transaction : account disabled');
 		} 			 
 		return setImmediate(cb, null, row.status);
@@ -984,7 +984,7 @@ Transaction.prototype.dbSave = function (trs) {
  * @return {setImmediateCallback} error string | cb
  */
 Transaction.prototype.afterSave = function (trs, cb) {
-	if (trs.type == 8) {
+	if (trs.type === 8) {
 		//Stake order event
 		this.scope.network.io.sockets.emit('stake/change', null);
 	}
@@ -1200,16 +1200,10 @@ Transaction.prototype.sendTransaction = function (data, cb) {
 			return setImmediate(cb, error);
 
 		return setImmediate(cb, null, transactionResponse);
-
-		// if (response && response.statusCode == 200) {
-		// 	self.scope.logger.info('Froze monthly reward Transaction : body:', body);
-		// } else {
-		// 	self.scope.logger.info('Froze monthly reward transaction status Code : ' + response.statusCode);
-		// 	self.scope.logger.info('And its body : ' + JSON.stringify(body));
-		// }
 	});
-
 };
 
 // Export
 module.exports = Transaction;
+
+/*************************************** END OF FILE *************************************/

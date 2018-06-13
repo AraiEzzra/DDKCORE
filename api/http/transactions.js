@@ -51,3 +51,5 @@ function TransactionsHttpApi (transactionsModule, app, logger, cache) {
 }
 
 module.exports = TransactionsHttpApi;
+
+/*************************************** END OF FILE *************************************/

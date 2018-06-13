@@ -1048,3 +1048,5 @@ Delegates.prototype.shared = {
 
 // Export
 module.exports = Delegates;
+
+/*************************************** END OF FILE *************************************/

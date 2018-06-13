@@ -205,3 +205,5 @@ module.exports = {
 	registerEndpoint: registerEndpoint,
 	respond: respond
 };
+
+/*************************************** END OF FILE *************************************/

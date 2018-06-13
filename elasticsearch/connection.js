@@ -20,3 +20,5 @@ let Client = new elasticsearch.Client({
 });
 
 module.exports = Client;
+
+/*************************************** END OF FILE *************************************/

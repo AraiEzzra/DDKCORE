@@ -114,3 +114,5 @@ BigNumber.prototype.toBuffer = function ( opts ) {
 };
 
 module.exports = BigNumber;
+
+/*************************************** END OF FILE *************************************/

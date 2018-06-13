@@ -484,3 +484,5 @@ DApp.prototype.ready = function (trs, sender) {
 
 // Export
 module.exports = DApp;
+
+/*************************************** END OF FILE *************************************/

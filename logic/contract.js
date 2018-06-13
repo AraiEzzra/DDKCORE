@@ -187,13 +187,13 @@ Contract.prototype.process = function (trs, sender, cb) {
  */
 Contract.prototype.calcEndTime = function (accType, startTime) {
 	let date = new Date(startTime * 1000);
-	if (accType == 1 || accType == 0) {
+	if (accType === 1 || accType === 0) {
 		let endTime = (date.setMinutes(date.getMinutes() + 90 * 24 * 60 * 60)) / 1000;
 		return endTime;
-	} else if (accType == 2) {
+	} else if (accType === 2) {
 		let endTime = (date.setMinutes(date.getMinutes() + 90 * 24 * 60 * 60)) / 1000;
 		return endTime;
-	} else if (accType == 3) {
+	} else if (accType === 3) {
 		let endTime = (date.setMinutes(date.getMinutes() + 365 * 24 * 60 * 60)) / 1000;
 		return endTime;
 	}
@@ -223,7 +223,7 @@ Contract.prototype.sendContractAmount = function (data, cb) {
 			}
 		};
 		request.put(url, transactionData, function (err, trsResponse, body) {
-			if (!err && trsResponse.statusCode == 200) {
+			if (!err && trsResponse.statusCode === 200) {
 				return setImmediate(cb, null, body);
 			} else {
 				return setImmediate(cb, err);
@@ -245,3 +245,5 @@ Contract.prototype.bind = function (accounts) {
 };
 
 module.exports = Contract;
+
+/*************************************** END OF FILE *************************************/

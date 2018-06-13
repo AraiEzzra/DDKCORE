@@ -191,15 +191,6 @@ Round.prototype.applyRound = function () {
 			fees: (this.scope.backwards ? -changes.fees : changes.fees),
 			rewards: (this.scope.backwards ? -changes.rewards : changes.rewards)
 		}));
-
-		//FIXME: uncomment this to deduct reward amount(i.e Amount goes to thin air) from main account
-		/* queries.push(this.scope.modules.accounts.mergeAccountAndGet({
-			publicKey: 'f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2',
-			balance: -changes.rewards,
-			u_balance: -changes.rewards,
-			rewards: -changes.rewards
-		})); */
-
 	}
 
 	// Decide which delegate receives fees remainder
@@ -294,3 +285,5 @@ Round.prototype.backwardLand = function () {
 
 // Export
 module.exports = Round;
+
+/*************************************** END OF FILE *************************************/

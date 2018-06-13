@@ -242,3 +242,5 @@ System.prototype.onBind = function (scope) {
 
 // Export
 module.exports = System;
+
+/*************************************** END OF FILE *************************************/

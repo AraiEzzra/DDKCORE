@@ -76,3 +76,5 @@ module.exports.injectMetricsRoute = function (App) {
 		res.end(Register.metrics());
 	});
 };
+
+/*************************************** END OF FILE *************************************/

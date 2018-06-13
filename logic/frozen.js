@@ -480,3 +480,5 @@ Frozen.prototype.updateFrozeAmount = function (userData, cb) {
 
 // Export
 module.exports = Frozen;
+
+/*************************************** END OF FILE *************************************/

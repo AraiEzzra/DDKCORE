@@ -20,3 +20,5 @@ function callMethod (shared, call, args, cb) {
 module.exports = {
 	callMethod: callMethod
 };
+
+/*************************************** END OF FILE *************************************/

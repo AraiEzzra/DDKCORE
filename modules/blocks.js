@@ -95,7 +95,6 @@ Blocks.prototype.lastBlock = {
 	 */
 	isFresh: function () {
 		if (!__private.lastBlock) { return false; }
-		// Current time in seconds - (epoch start in seconds + block timestamp)
 		let secondsAgo = Math.floor(Date.now() / 1000) - (Math.floor(constants.epochTime / 1000) + __private.lastBlock.timestamp);
 		return (secondsAgo < constants.blockReceiptTimeOut);
 	}
@@ -124,7 +123,6 @@ Blocks.prototype.lastReceipt = {
 	 */
 	isStale: function () {
 		if (!__private.lastReceipt) { return true; }
-		// Current time in seconds - lastReceipt (seconds)
 		let secondsAgo = Math.floor(Date.now() / 1000) - __private.lastReceipt;
 		return (secondsAgo > constants.blockReceiptTimeOut);
 	}
@@ -215,3 +213,5 @@ Blocks.prototype.isLoaded = function () {
 
 // Export
 module.exports = Blocks;
+
+/*************************************** END OF FILE *************************************/

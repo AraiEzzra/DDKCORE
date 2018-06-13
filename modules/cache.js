@@ -285,3 +285,5 @@ Cache.prototype.onSyncFinished = function () {
 };
 
 module.exports = Cache;
+
+/*************************************** END OF FILE *************************************/

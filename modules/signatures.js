@@ -214,3 +214,5 @@ Signatures.prototype.shared = {
 
 // Export
 module.exports = Signatures;
+
+/*************************************** END OF FILE *************************************/

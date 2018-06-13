@@ -45,7 +45,6 @@ __private.parseHeight = function (height) {
  * @return {number}
  */
 StakeReward.prototype.calcMilestone = function (height) {
-//	height = __private.parseHeight(height);
 
 	let location = Math.trunc((height ) / this.distance);
 	let lastMile = this.milestones[this.milestones.length - 1];
@@ -72,3 +71,5 @@ StakeReward.prototype.calcReward = function (height) {
 
 // Export
 module.exports = StakeReward;
+
+/*************************************** END OF FILE *************************************/

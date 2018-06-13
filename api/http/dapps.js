@@ -64,3 +64,5 @@ function DappsHttpApi (dappsModule, app) {
 }
 
 module.exports = DappsHttpApi;
+
+/*************************************** END OF FILE *************************************/

@@ -294,3 +294,5 @@ Signature.prototype.ready = function (trs, sender) {
 
 // Export
 module.exports = Signature;
+
+/*************************************** END OF FILE *************************************/

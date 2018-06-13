@@ -293,3 +293,5 @@ JsonSchema.addRule('uniqueItems', {
 		return Array.isArray(value) && value.length >= accept;
 	}
 });
+
+/*************************************** END OF FILE *************************************/

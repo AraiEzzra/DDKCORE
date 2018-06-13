@@ -346,3 +346,5 @@ Delegate.prototype.ready = function (trs, sender) {
 
 // Export
 module.exports = Delegate;
+
+/*************************************** END OF FILE *************************************/

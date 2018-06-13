@@ -33,3 +33,5 @@ function sendFreezeOrderHttpApi (sendFreezeOrderModule, app, logger, cache) {
 }
 
 module.exports = sendFreezeOrderHttpApi;
+
+/*************************************** END OF FILE *************************************/

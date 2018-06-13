@@ -836,3 +836,5 @@ __private.expireTransactions = function (transactions, parentIds, cb) {
 
 // Export
 module.exports = TransactionPool;
+
+/*************************************** END OF FILE *************************************/

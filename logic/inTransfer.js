@@ -312,3 +312,5 @@ InTransfer.prototype.ready = function (trs, sender) {
 
 // Export
 module.exports = InTransfer;
+
+/*************************************** END OF FILE *************************************/

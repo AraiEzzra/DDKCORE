@@ -138,3 +138,5 @@ z_schema.registerFormat('version', function (str) {
 
 // Exports
 module.exports = z_schema;
+
+/*************************************** END OF FILE *************************************/

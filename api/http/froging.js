@@ -45,3 +45,5 @@ function FrogingsHttpApi (frogingsModule, app, logger, cache) {
 }
 
 module.exports = FrogingsHttpApi;
+
+/*************************************** END OF FILE *************************************/

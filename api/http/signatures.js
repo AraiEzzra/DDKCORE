@@ -30,3 +30,5 @@ function SignaturesHttpApi (signaturesModule, app) {
 }
 
 module.exports = SignaturesHttpApi;
+
+/*************************************** END OF FILE *************************************/

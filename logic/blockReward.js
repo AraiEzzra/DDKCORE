@@ -131,3 +131,5 @@ BlockReward.prototype.calcSupply = function (height) {
 
 // Export
 module.exports = BlockReward;
+
+/*************************************** END OF FILE *************************************/

@@ -350,3 +350,5 @@ shared.remove = function (req, cb) {
 
 // Export
 module.exports = Sql;
+
+/*************************************** END OF FILE *************************************/

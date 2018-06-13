@@ -372,3 +372,5 @@ OutTransfer.prototype.ready = function (trs, sender) {
 
 // Export
 module.exports = OutTransfer;
+
+/*************************************** END OF FILE *************************************/

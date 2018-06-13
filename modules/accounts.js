@@ -235,11 +235,6 @@ Accounts.prototype.mergeAccountAndGet = function (data, cb) {
 			throw err;
 		}
 	}
-	/* library.logic.account.merge('4995063339468361088E', {
-		balance: -'500000000'
-	}, function (err, sender) {
-		//console.log('sender : ', sender);
-	}); */
 	return library.logic.account.merge(address, data, cb);
 };
 
@@ -481,7 +476,7 @@ Accounts.prototype.shared = {
 								return setImmediate(cb, err);
 							}
 
-							if (account.totalFrozeAmount == 0) {
+							if (account.totalFrozeAmount === 0) {
 								return setImmediate(cb, 'No Stake available');
 							}
 
@@ -528,7 +523,7 @@ Accounts.prototype.shared = {
 							return setImmediate(cb, err);
 						}
 
-						if (account.totalFrozeAmount == 0) {
+						if (account.totalFrozeAmount === 0) {
 							return setImmediate(cb, 'No Stake available');
 						}
 
@@ -672,7 +667,7 @@ Accounts.prototype.shared = {
 
 		try {
 			let balance;
-			if (req.body.data.balance_d == null) {
+			if (req.body.data.balance_d === null) {
 				balance = 0;
 			} else {
 				balance = parseFloat(req.body.data.balance_d) * 100000000;
@@ -955,7 +950,7 @@ Accounts.prototype.internal = {
 							senderId: account.address
 						})
 						.then(function (row) {
-							if (row.status == 0) {
+							if (row.status === 0) {
 								return cb('Account is already locked');
 							}
 							library.db.none(sql.disableAccount, {
@@ -1304,3 +1299,5 @@ Accounts.prototype.internal = {
 
 // Export
 module.exports = Accounts;
+
+/*************************************** END OF FILE *************************************/

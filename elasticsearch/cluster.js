@@ -94,3 +94,5 @@ function searchQuery(index, queryMatch, cb) {
 }
 
 exports.searchQuery = searchQuery;
+
+/*************************************** END OF FILE *************************************/

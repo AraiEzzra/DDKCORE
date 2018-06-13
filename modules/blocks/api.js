@@ -343,3 +343,5 @@ API.prototype.onBind = function (scope) {
 };
 
 module.exports = API;
+
+/*************************************** END OF FILE *************************************/

@@ -403,3 +403,5 @@ SendFreezeOrder.prototype.shared = {
 
 // Export
 module.exports = SendFreezeOrder;
+
+/*************************************** END OF FILE *************************************/

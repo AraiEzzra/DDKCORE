@@ -46,3 +46,5 @@ ed.verify = function (hash, signatureBuffer, publicKeyBuffer) {
 };
 
 module.exports = ed;
+
+/*************************************** END OF FILE *************************************/

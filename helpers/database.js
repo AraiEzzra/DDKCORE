@@ -217,3 +217,5 @@ module.exports.connect = function (config, logger, cb) {
 		return cb(err, db);
 	});
 };
+
+/*************************************** END OF FILE *************************************/

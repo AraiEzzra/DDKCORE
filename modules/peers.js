@@ -570,3 +570,5 @@ Peers.prototype.shared = {
 
 // Export
 module.exports = Peers;
+
+/*************************************** END OF FILE *************************************/

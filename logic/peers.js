@@ -164,3 +164,5 @@ Peers.prototype.bindModules = function (scope) {
 
 // Export
 module.exports = Peers;
+
+/*************************************** END OF FILE *************************************/

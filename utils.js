@@ -17,12 +17,14 @@ exports.validateClient = function (req, res, next) {
 
 exports.merge = function merge(a, b) {
 	for (let key in b) {
-		if (exports.merge.call(b, key) && b[key]) {
-			if ('object' === typeof (b[key])) {
-				if ('undefined' === typeof (a[key])) a[key] = {};
-				exports.merge(a[key], b[key]);
-			} else {
-				a[key] = b[key];
+		if (b.hasOwnProperty(key)) {
+			if (exports.merge.call(b, key) && b[key]) {
+				if ('object' === typeof (b[key])) {
+					if ('undefined' === typeof (a[key])) a[key] = {};
+					exports.merge(a[key], b[key]);
+				} else {
+					a[key] = b[key];
+				}
 			}
 		}
 	}
@@ -83,4 +85,14 @@ exports.indexall = function (bulk, index) {
 			}
 		});
 	});
+};
+
+/**
+ * @desc generate a file based on today's date and ignore this file before archiving
+ * @implements {formatted date based file name}
+ * @param {Date} currDate 
+ * @returns {String}
+ */
+exports.getIgnoredFile = function(currDate) {
+	return currDate.getFullYear()+'-'+('0' + (currDate.getMonth() + 1)).slice(-2)+'-'+('0' + currDate.getDate()).slice(-2)+'.log';
 };
