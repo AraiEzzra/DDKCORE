@@ -117,6 +117,10 @@ SendFreezeOrder.prototype.verify = function (trs, sender, cb) {
 		return setImmediate(cb, 'Missing recipient');
 	}
 
+	if ((trs.fee) > (sender.balance - parseInt(sender.totalFrozeAmount))) {
+		return setImmediate(cb, 'Insufficient balance');
+	}
+
 	return setImmediate(cb, null, trs);
 };
 
