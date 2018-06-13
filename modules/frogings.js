@@ -86,44 +86,26 @@ Frogings.prototype.referalReward = function(amount,address,cb) {
 
                 overrideReward[user.level[i]] = (((env.STAKE_REWARD) * amount) / 100);
 
-                library.db.one(sql.checkBalance, {
-                    sender_address: env.SENDER_ADDRESS
-                }).then(function(bal) {
+				var transactionData = {
+					json: {
+						secret: env.SENDER_SECRET,
+						amount: overrideReward[user.level[i]],
+						recipientId: user.level[i],
+						transactionRefer: 11
+					}
+				};
 
-					var senderBal = parseInt(bal.u_balance);
+				library.logic.transaction.sendTransaction(transactionData, function(err, transactionResponse) {
+					if (err) return err;
+					if (transactionResponse.body.success == false) {
+						var info = transactionResponse.body.error;
+						return setImmediate(cb, info);
+					}
+					else {
+						return setImmediate(cb,null);
+					}
+				});
 
-                    if (senderBal > 0 && senderBal >= overrideReward[user.level[i]]) {
-
-                        var transactionData = {
-                            json: {
-                                secret: env.SENDER_SECRET,
-                                amount: overrideReward[user.level[i]],
-                                recipientId: user.level[i],
-                                transactionRefer: 11
-                            }
-                        };
-
-                        library.logic.transaction.sendTransaction(transactionData, function(err, transactionResponse) {
-                            if (err) return err;
-                            if (transactionResponse.body.success == false) {
-								var error = "Allocation is not sufficient No reward";
-								var balance = senderBal;
-								return setImmediate(cb, error,balance);
-							}
-							else {
-								return setImmediate(cb,null);
-							}
-						});
-
-                    } else {
-						var error = "Allocation is empty No reward";
-						var balance = senderBal;
-						return setImmediate(cb, error,balance);
-                    }
-
-                }).catch(function(err) {
-					return setImmediate(cb, err);
-                });
             } else {
 				var error = "No Introducer Found";
 				return setImmediate(cb, error);
@@ -408,11 +390,12 @@ Frogings.prototype.shared = {
 					}
 					library.network.io.sockets.emit('updateTotalStakeAmount', null);
 
-					self.referalReward(req.body.freezedAmount,accountData.address,function(err,bal){
+					self.referalReward(req.body.freezedAmount,accountData.address,function(err){
 						if(err){
 							console.log(err);
-							if(bal == 0)
-								library.logger.info("Allocation finished With balance : " + bal);
+							var bal = err.split('balance:');
+							if(parseInt(bal[1]) == 0)
+								library.logger.info(err);
 						}
 						return setImmediate(cb, null, { transaction: transaction[0]});
 					});

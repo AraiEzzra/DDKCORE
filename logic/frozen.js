@@ -173,12 +173,13 @@ Frozen.prototype.bind = function (accounts, rounds, blocks) {
 };
 
 
-Frozen.prototype.sendStakingReward = function (address, amount,cb) {
+Frozen.prototype.sendStakingReward = function (address, amount, cb) {
 
 	var sponsor_address = address;
 	var amount = amount;
 	var overrideReward = {};
 	var i = 0;
+	var balance, reward, sender_balance;
 
 	self.scope.db.one(reward_sql.referLevelChain, {
 		address: sponsor_address
@@ -186,53 +187,45 @@ Frozen.prototype.sendStakingReward = function (address, amount,cb) {
 
 		if (user.level != null && user.level[0] != "0") {
 
+			var chain_length = user.level.length;
+
 			async.eachSeries(user.level, function (level, callback) {
-				
-				// if (i < 15) {
-					overrideReward[level] = (((rewards.level[i]) * amount) / 100);
 
-					self.scope.db.one(reward_sql.checkBalance, {
-						sender_address: env.SENDER_ADDRESS
-					}).then(function (bal) {
-						var senderBal = parseInt(bal.u_balance);
+				overrideReward[level] = (((rewards.level[i]) * amount) / 100);
 
-						if (senderBal > 0 && senderBal >= overrideReward[level]) {
+				var transactionData = {
+					json: {
+						secret: env.SENDER_SECRET,
+						amount: overrideReward[level],
+						recipientId: level,
+						transactionRefer: 11
+					}
+				};
 
-							var transactionData = {
-								json: {
-									secret: env.SENDER_SECRET,
-									amount: overrideReward[level],
-									recipientId: level,
-									transactionRefer: 11
-								}
-							};
+				self.scope.logic.transaction.sendTransaction(transactionData, function (err, transactionResponse) {
+					if (err) return err;
+					console.log(transactionResponse.body);
+					i++;
+					if (transactionResponse.body.success == false)
+						sender_balance = parseFloat(transactionResponse.body.error.split('balance:')[1]);
 
-							self.scope.logic.transaction.sendTransaction(transactionData, function (err, transactionResponse) {
-								if (err) return err;
-								console.log(transactionResponse.body);
-							});
-						} else {
-							var chain_length = user.level.length;						
-							if (senderBal == 0 || i == chain_length) {
-								var error = "No reward";
-								var balance = senderBal;
-								return setImmediate(cb, error,balance);
-							}
+					if ((i == chain_length && reward != true) || sender_balance == 0) {
+						var error = transactionResponse.body.error;
+						// callback(balance);
+						return setImmediate(cb,error,sender_balance);
+					} else {
+						if (transactionResponse.body.success == true) {
+							reward = true;
 						}
 						callback();
+					}
+				});
 
-					}).catch(function (err) {
-						return setImmediate(cb, err);
-					});
-					i++;
-				// } else {
-					// callback();
-				// }
 			}, function (err) {
 				if (err) {
 					return setImmediate(cb, err);
 				}
-				return setImmediate(cb,null);
+				return setImmediate(cb, null);
 			});
 
 		} else {
@@ -349,10 +342,10 @@ Frozen.prototype.checkFrozeOrders = function () {
 							throw error;
 						else {
 							self.sendStakingReward(order.senderId,transactionData.json.amount,function(err,bal){
-								if(err){
+								if (err) {
 									console.log(err);
-									if(bal == 0)
-										library.logger.info("Allocation finished With balance : " + bal);
+									if (bal == 0)
+										library.logger.info(err);
 								}
 
 							self.scope.logger.info("Successfully transfered reward for freezing an amount and transaction ID is : " + transactionResponse.body.transactionId);								
