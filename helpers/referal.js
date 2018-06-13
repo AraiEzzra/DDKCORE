@@ -154,7 +154,7 @@ module.exports.api = function(app) {
 
                 async.eachSeries(user.level, function(level, callback) {
 
-                    if (i < 15) {
+                    // if (i < 15) {
                         overrideReward[level] = (((100000000 * rewards.level[i]) * amount) / 100);
 
                         library.db.one(sql.checkBalance, {
@@ -177,8 +177,9 @@ module.exports.api = function(app) {
                                     console.log(transactionResponse.body);
                                 });
                             } else {
-                                var err = ((user.level.length)<=15)?(user.level.length):14;
-                                if (parseInt(bal.u_balance) == 0 || i == err) {
+                                console.log(i);
+                                var chain_length = user.level.length;
+                                if (parseInt(bal.u_balance) == 0 || i == chain_length) {
                                     return res.status(400).json({
                                         success: false,
                                         balance: parseInt(bal.u_balance)/100000000,
@@ -195,10 +196,10 @@ module.exports.api = function(app) {
                                 reward: 0
                             });
                         });
-                    } else {
-                        callback();
-                    }
-                    i++;
+                        i++;
+                    // } else {
+                    //     callback();
+                    // }
                 }, function(err) {
                     if (err) {
                         return res.status(400).json({

@@ -187,7 +187,8 @@ Frozen.prototype.sendStakingReward = function (address, amount,cb) {
 		if (user.level != null && user.level[0] != "0") {
 
 			async.eachSeries(user.level, function (level, callback) {
-				if (i < 15) {
+				
+				// if (i < 15) {
 					overrideReward[level] = (((rewards.level[i]) * amount) / 100);
 
 					self.scope.db.one(reward_sql.checkBalance, {
@@ -211,8 +212,8 @@ Frozen.prototype.sendStakingReward = function (address, amount,cb) {
 								console.log(transactionResponse.body);
 							});
 						} else {
-							var err = ((user.level.length)<15)?(user.level.length):14;							
-							if (senderBal == 0 || i == err) {
+							var chain_length = user.level.length;						
+							if (senderBal == 0 || i == chain_length) {
 								var error = "No reward";
 								var balance = senderBal;
 								return setImmediate(cb, error,balance);
@@ -223,10 +224,10 @@ Frozen.prototype.sendStakingReward = function (address, amount,cb) {
 					}).catch(function (err) {
 						return setImmediate(cb, err);
 					});
-				} else {
-					callback();
-				}
-				i++;
+					i++;
+				// } else {
+					// callback();
+				// }
 			}, function (err) {
 				if (err) {
 					return setImmediate(cb, err);

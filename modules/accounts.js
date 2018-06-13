@@ -198,7 +198,9 @@ Accounts.prototype.referralLinkChain = function(referalLink,address,cb) {
 							return setImmediate(cb, err);
 						}
 						if(resp.level !=null && resp.level[0] !="0") {
-							level=level.concat(resp.level);
+							var chain_length = ((resp.level.length)<15)?(resp.level.length):14;
+
+							level=level.concat(resp.level.slice(0,chain_length))
 						}
 						console.log(level);
 						callback();
