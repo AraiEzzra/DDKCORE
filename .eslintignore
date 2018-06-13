@@ -1,0 +1,8 @@
+test
+testUsers.json
+Readme.md
+package.json
+package-lock.json
+Jenkinsfile
+dist
+node_modules

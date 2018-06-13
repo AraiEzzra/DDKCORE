@@ -1,14 +1,14 @@
-'use strict';
 
-var async = require('async');
-var constants = require('../helpers/constants.js');
-var Round = require('../logic/round.js');
-var sandboxHelper = require('../helpers/sandbox.js');
-var slots = require('../helpers/slots.js');
-var sql = require('../sql/rounds.js');
+
+let async = require('async');
+let constants = require('../helpers/constants.js');
+let Round = require('../logic/round.js');
+let sandboxHelper = require('../helpers/sandbox.js');
+let slots = require('../helpers/slots.js');
+let sql = require('../sql/rounds.js');
 
 // Private fields
-var modules, library, self, __private = {}, shared = {};
+let modules, library, self, __private = {}, shared = {};
 
 __private.loaded = false;
 __private.ticking = false;
@@ -96,11 +96,11 @@ Rounds.prototype.flush = function (round, cb) {
  * @return {function} done with error if any
  */
 Rounds.prototype.backwardTick = function (block, previousBlock, done) {
-	var round = self.calc(block.height);
-	var prevRound = self.calc(previousBlock.height);
-	var nextRound = self.calc(block.height + 1);
+	let round = self.calc(block.height);
+	let prevRound = self.calc(previousBlock.height);
+	let nextRound = self.calc(block.height + 1);
 
-	var scope = {
+	let scope = {
 		library: library,
 		modules: modules,
 		block: block,
@@ -114,7 +114,7 @@ Rounds.prototype.backwardTick = function (block, previousBlock, done) {
 	);
 
 	function BackwardTick (t) {
-		var promised = new Round(scope, t);
+		let promised = new Round(scope, t);
 
 		library.logger.debug('Performing backward tick');
 		library.logger.trace(scope);
@@ -187,10 +187,10 @@ Rounds.prototype.setSnapshotRounds = function (rounds) {
  * @return {function} done message | err
  */
 Rounds.prototype.tick = function (block, done) {
-	var round = self.calc(block.height);
-	var nextRound = self.calc(block.height + 1);
+	let round = self.calc(block.height);
+	let nextRound = self.calc(block.height + 1);
 
-	var scope = {
+	let scope = {
 		library: library,
 		modules: modules,
 		block: block,
@@ -209,7 +209,7 @@ Rounds.prototype.tick = function (block, done) {
 	);
 
 	function Tick (t) {
-		var promised = new Round(scope, t);
+		let promised = new Round(scope, t);
 
 		library.logger.debug('Performing forward tick');
 		library.logger.trace(scope);
@@ -395,7 +395,7 @@ __private.sumRound = function (scope, cb) {
 	library.logger.debug('Summing round', scope.round);
 
 	library.db.query(sql.summedRound, { round: scope.round, activeDelegates: constants.activeDelegates }).then(function (rows) {
-		var rewards = [];
+		let rewards = [];
 
 		rows[0].rewards.forEach(function (reward) {
 			rewards.push(Math.floor(reward));
@@ -419,3 +419,6 @@ __private.sumRound = function (scope, cb) {
 
 // Export
 module.exports = Rounds;
+
+
+/*************************************** END OF FILE *************************************/

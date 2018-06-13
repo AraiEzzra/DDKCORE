@@ -1,9 +1,9 @@
-'use strict';
 
-var node = require('./../node.js');
-var modulesLoader = require('./../common/initModule.js').modulesLoader;
 
-var block = {
+let node = require('./../node.js');
+let modulesLoader = require('./../common/initModule.js').modulesLoader;
+
+let block = {
 	blockHeight: 0,
 	id: 0,
 	generatorPublicKey: '',
@@ -11,7 +11,7 @@ var block = {
 	totalFee: 0
 };
 
-var testBlocksUnder101 = false;
+let testBlocksUnder101 = false;
 
 describe('GET /api/blocks/getBroadhash', function () {
 
@@ -142,7 +142,7 @@ describe('GET /api/blocks/getStatus', function () {
 
 describe('GET /blocks (cache)', function () {
 
-	var cache;
+	let cache;
 
 	before(function (done) {
 		node.config.cacheEnabled = true;
@@ -171,14 +171,14 @@ describe('GET /blocks (cache)', function () {
 	});
 
 	it('cache blocks by the url and parameters when response is a success', function (done) {
-		var url, params;
+		let url, params;
 		url = '/api/blocks?';
 		params = 'height=' + block.blockHeight;
 		node.get(url + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
 			node.expect(res.body).to.have.property('blocks').that.is.an('array');
 			node.expect(res.body).to.have.property('count').to.equal(1);
-			var response = res.body;
+			let response = res.body;
 			cache.getJsonForKey(url + params, function (err, res) {
 				node.expect(err).to.not.exist;
 				node.expect(res).to.eql(response);
@@ -188,7 +188,7 @@ describe('GET /blocks (cache)', function () {
 	});
 
 	it('should not cache if response is not a success', function (done) {
-		var url, params;
+		let url, params;
 		url = '/api/blocks?';
 		params = 'height=' + -1000;
 		node.get(url + params, function (err, res) {
@@ -202,14 +202,14 @@ describe('GET /blocks (cache)', function () {
 	});
 
 	it('should remove entry from cache on new block', function (done) {
-		var url, params;
+		let url, params;
 		url = '/api/blocks?';
 		params = 'height=' + block.blockHeight;
 		node.get(url + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
 			node.expect(res.body).to.have.property('blocks').that.is.an('array');
 			node.expect(res.body).to.have.property('count').to.equal(1);
-			var response = res.body;
+			let response = res.body;
 			cache.getJsonForKey(url + params, function (err, res) {
 				node.expect(err).to.not.exist;
 				node.expect(res).to.eql(response);
@@ -284,7 +284,7 @@ describe('GET /blocks', function () {
 		getBlocks('generatorPublicKey=' + block.generatorPublicKey, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
 			node.expect(res.body).to.have.property('blocks').that.is.an('array');
-			for (var i = 0; i < res.body.blocks.length; i++) {
+			for (let i = 0; i < res.body.blocks.length; i++) {
 				node.expect(res.body.blocks[i].generatorPublicKey).to.equal(block.generatorPublicKey);
 			}
 			done();
@@ -295,7 +295,7 @@ describe('GET /blocks', function () {
 		getBlocks('totalFee=' + block.totalFee, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
 			node.expect(res.body).to.have.property('blocks').that.is.an('array');
-			for (var i = 0; i < res.body.blocks.length; i++) {
+			for (let i = 0; i < res.body.blocks.length; i++) {
 				node.expect(res.body.blocks[i].totalFee).to.equal(block.totalFee);
 			}
 			done();
@@ -306,7 +306,7 @@ describe('GET /blocks', function () {
 		getBlocks('totalAmount=' + block.totalAmount, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
 			node.expect(res.body).to.have.property('blocks').that.is.an('array');
-			for (var i = 0; i < res.body.blocks.length; i++) {
+			for (let i = 0; i < res.body.blocks.length; i++) {
 				node.expect(res.body.blocks[i].totalAmount).to.equal(block.totalAmount);
 			}
 			done();
@@ -318,7 +318,7 @@ describe('GET /blocks', function () {
 			return this.skip();
 		}
 
-		var previousBlock = block.id;
+		let previousBlock = block.id;
 
 		node.onNewBlock(function (err) {
 			getBlocks('previousBlock=' + block.id, function (err, res) {
@@ -335,7 +335,7 @@ describe('GET /blocks', function () {
 		getBlocks('orderBy=' + 'height:asc', function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
 			node.expect(res.body).to.have.property('blocks').that.is.an('array');
-			for (var i = 0; i < res.body.blocks.length; i++) {
+			for (let i = 0; i < res.body.blocks.length; i++) {
 				if (res.body.blocks[i + 1] != null) {
 					node.expect(res.body.blocks[i].height).to.be.below(res.body.blocks[i + 1].height);
 				}
@@ -348,7 +348,7 @@ describe('GET /blocks', function () {
 		getBlocks('orderBy=' + 'height:desc', function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
 			node.expect(res.body).to.have.property('blocks').that.is.an('array');
-			for (var i = 0; i < res.body.blocks.length; i++) {
+			for (let i = 0; i < res.body.blocks.length; i++) {
 				if (res.body.blocks[i + 1] != null) {
 					node.expect(res.body.blocks[i].height).to.be.above(res.body.blocks[i + 1].height);
 				}
@@ -361,7 +361,7 @@ describe('GET /blocks', function () {
 		getBlocks('', function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
 			node.expect(res.body).to.have.property('blocks').that.is.an('array');
-			for (var i = 0; i < res.body.blocks.length; i++) {
+			for (let i = 0; i < res.body.blocks.length; i++) {
 				if (res.body.blocks[i + 1] != null) {
 					node.expect(res.body.blocks[i].height).to.be.above(res.body.blocks[i + 1].height);
 				}

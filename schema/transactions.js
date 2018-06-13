@@ -1,6 +1,6 @@
-'use strict';
 
-var constants = require('../helpers/constants.js');
+
+let constants = require('../helpers/constants.js');
 
 module.exports = {
 	getTransactions: {

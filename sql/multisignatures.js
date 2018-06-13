@@ -1,6 +1,6 @@
-'use strict';
 
-var MultisignaturesSql = {
+
+let MultisignaturesSql = {
 	getAccountIds: 'SELECT ARRAY_AGG("accountId") AS "accountIds" FROM mem_accounts2multisignatures WHERE "dependentId" = ${publicKey}'
 };
 

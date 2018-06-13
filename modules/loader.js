@@ -1,17 +1,16 @@
-'use strict';
 
-var async = require('async');
-var constants = require('../helpers/constants.js');
-var jobsQueue = require('../helpers/jobsQueue.js');
-var ip = require('ip');
-var sandboxHelper = require('../helpers/sandbox.js');
-var schema = require('../schema/loader.js');
-var sql = require('../sql/loader.js');
+
+let async = require('async');
+let constants = require('../helpers/constants.js');
+let jobsQueue = require('../helpers/jobsQueue.js');
+let sandboxHelper = require('../helpers/sandbox.js');
+let schema = require('../schema/loader.js');
+let sql = require('../sql/loader.js');
 
 require('colors');
 
 // Private fields
-var modules, library, self, __private = {}, shared = {};
+let modules, library, self, __private = {}, shared = {};
 
 __private.loaded = false;
 __private.isActive = false;
@@ -159,7 +158,7 @@ __private.loadSignatures = function (cb) {
 				if (err) {
 					return setImmediate(waterCb, err);
 				} else {
-					var peer = network.peers[Math.floor(Math.random() * network.peers.length)];
+					let peer = network.peers[Math.floor(Math.random() * network.peers.length)];
 					return setImmediate(waterCb, null, peer);
 				}
 			});
@@ -188,7 +187,7 @@ __private.loadSignatures = function (cb) {
 							signature: s,
 							transaction: signature.transaction
 						}, function (err) {
-							return setImmediate(eachSeriesCb);
+							return setImmediate(eachSeriesCb(err));
 						});
 					}, eachSeriesCb);
 				}, cb);
@@ -223,7 +222,7 @@ __private.loadTransactions = function (cb) {
 				if (err) {
 					return setImmediate(waterCb, err);
 				} else {
-					var peer = network.peers[Math.floor(Math.random() * network.peers.length)];
+					let peer = network.peers[Math.floor(Math.random() * network.peers.length)];
 					return setImmediate(waterCb, null, peer);
 				}
 			});
@@ -250,7 +249,7 @@ __private.loadTransactions = function (cb) {
 		},
 		function (peer, transactions, waterCb) {
 			async.eachSeries(transactions, function (transaction, eachSeriesCb) {
-				var id = (transaction ? transactions.id : 'null');
+				let id = (transaction ? transactions.id : 'null');
 
 				try {
 					transaction = library.logic.transaction.objectNormalize(transaction);
@@ -314,8 +313,8 @@ __private.loadTransactions = function (cb) {
  * @throws {string} When fails to match genesis block with database
  */
 __private.loadBlockChain = function () {
-	var offset = 0, limit = Number(library.config.loading.loadPerIteration) || 1000;
-	var verify = Boolean(library.config.loading.verifyOnLoading);
+	let offset = 0, limit = Number(library.config.loading.loadPerIteration) || 1000;
+	let verify = Boolean(library.config.loading.verifyOnLoading);
 
 	function load (count) {
 		verify = true;
@@ -368,7 +367,7 @@ __private.loadBlockChain = function () {
 				library.logger.error(err);
 				if (err.block) {
 					library.logger.error('Blockchain failed at: ' + err.block.height);
-					modules.blocks.chain.deleteAfterBlock(err.block.id, function (err, res) {
+					modules.blocks.chain.deleteAfterBlock(err.block.id, function () {
 						library.logger.error('Blockchain clipped');
 						library.bus.message('blockchainReady');
 					});
@@ -390,7 +389,7 @@ __private.loadBlockChain = function () {
 	}
 
 	function checkMemTables (t) {
-		var promises = [
+		let promises = [
 			t.one(sql.countBlocks),
 			t.query(sql.getGenesisBlock),
 			t.one(sql.countMemAccounts),
@@ -403,7 +402,7 @@ __private.loadBlockChain = function () {
 
 	function matchGenesisBlock (row) {
 		if (row) {
-			var matched = (
+			let matched = (
 				row.id === __private.genesisBlock.block.id &&
 				row.payloadHash.toString('hex') === __private.genesisBlock.block.payloadHash &&
 				row.blockSignature.toString('hex')  === __private.genesisBlock.block.blockSignature
@@ -438,11 +437,11 @@ __private.loadBlockChain = function () {
 	}
 
 	library.db.task(checkMemTables).then(function (results) {
-		var count = results[0].count;
+		let count = results[0].count;
 
 		library.logger.info('Blocks ' + count);
 
-		var round = modules.rounds.calc(count);
+		let round = modules.rounds.calc(count);
 
 		if (count === 1) {
 			return reload(count);
@@ -456,13 +455,13 @@ __private.loadBlockChain = function () {
 			return reload(count, 'Blocks verification enabled');
 		}
 
-		var missed = !(results[2].count);
+		let missed = !(results[2].count);
 
 		if (missed) {
 			return reload(count, 'Detected missed blocks in mem_accounts');
 		}
 
-		var unapplied = results[3].filter(function (row) {
+		let unapplied = results[3].filter(function (row) {
 			return (row.round !== String(round));
 		});
 
@@ -470,7 +469,7 @@ __private.loadBlockChain = function () {
 			return reload(count, 'Detected unapplied rounds in mem_round');
 		}
 
-		var duplicatedDelegates = +results[4][0].count;
+		let duplicatedDelegates = +results[4][0].count;
 
 		if (duplicatedDelegates > 0) {
 			library.logger.error('Delegates table corrupted with duplicated entries');
@@ -478,7 +477,7 @@ __private.loadBlockChain = function () {
 		}
 
 		function updateMemAccounts (t) {
-			var promises = [
+			let promises = [
 				t.none(sql.updateMemAccounts),
 				t.query(sql.getOrphanedMemAccounts),
 				t.query(sql.getDelegates)
@@ -524,8 +523,8 @@ __private.loadBlockChain = function () {
  * @return {setImmediateCallback} cb, err
  */
 __private.loadBlocksFromNetwork = function (cb) {
-	var errorCount = 0;
-	var loaded = false;
+	let errorCount = 0;
+	let loaded = false;
 
 	self.getNetwork(function (err, network) {
 		if (err) {
@@ -536,8 +535,8 @@ __private.loadBlocksFromNetwork = function (cb) {
 					return !loaded && errorCount < 5;
 				},
 				function (next) {
-					var peer = network.peers[Math.floor(Math.random() * network.peers.length)];
-					var lastBlock = modules.blocks.lastBlock.get();
+					let peer = network.peers[Math.floor(Math.random() * network.peers.length)];
+					let lastBlock = modules.blocks.lastBlock.get();
 
 					function loadBlocks () {
 						__private.blocksToSync = peer.height;
@@ -661,7 +660,7 @@ __private.sync = function (cb) {
  * @return {Object} {height number, peers array}
  */
 __private.findGoodPeers = function (heights) {
-	var lastBlockHeight = modules.blocks.lastBlock.get().height;
+	let lastBlockHeight = modules.blocks.lastBlock.get().height;
 	library.logger.trace('Good peers - received', {count: heights.length});
 
 	heights = heights.filter(function (item) {
@@ -680,16 +679,16 @@ __private.findGoodPeers = function (heights) {
 			return b.height - a.height;
 		});
 
-		var histogram = {};
-		var max = 0;
-		var height;
+		let histogram = {};
+		let max = 0;
+		let height;
 
 		// Aggregating height by 2. TODO: To be changed if node latency increases?
-		var aggregation = 2;
+		let aggregation = 2;
 
 		// Histogram calculation, together with histogram maximum
-		for (var i in heights) {
-			var val = parseInt(heights[i].height / aggregation) * aggregation;
+		for (let i in heights) {
+			let val = parseInt(heights[i].height / aggregation) * aggregation;
 			histogram[val] = (histogram[val] ? histogram[val] : 0) + 1;
 
 			if (histogram[val] > max) {
@@ -699,7 +698,7 @@ __private.findGoodPeers = function (heights) {
 		}
 
 		// Performing histogram cut of peers too far from histogram maximum
-		var peers = heights.filter(function (item) {
+		let peers = heights.filter(function (item) {
 			return item && Math.abs(height - item.height) < aggregation + 1;
 		}).map(function (item) {
 			return library.logic.peers.create(item);
@@ -901,3 +900,6 @@ Loader.prototype.shared = {
 
 // Export
 module.exports = Loader;
+
+
+/*************************************** END OF FILE *************************************/

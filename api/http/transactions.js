@@ -1,7 +1,7 @@
-'use strict';
 
-var Router = require('../../helpers/router');
-var httpApi = require('../../helpers/httpApi');
+
+let Router = require('../../helpers/router');
+let httpApi = require('../../helpers/httpApi');
 
 /**
  * Binds api with modules and creates common url.
@@ -27,7 +27,7 @@ var httpApi = require('../../helpers/httpApi');
 // Constructor
 function TransactionsHttpApi (transactionsModule, app, logger, cache) {
 
-	var router = new Router();
+	let router = new Router();
 
 	// attach a middlware to endpoints
 	router.attachMiddlwareForUrls(httpApi.middleware.useCache.bind(null, logger, cache), [
@@ -45,10 +45,11 @@ function TransactionsHttpApi (transactionsModule, app, logger, cache) {
 		'get /unconfirmed/get': 'getUnconfirmedTransaction',
 		'get /unconfirmed': 'getUnconfirmedTransactions',
 		'put /': 'addTransactions',
-		'post /generateOTP': 'generateOTP'
 	});
 
 	httpApi.registerEndpoint('/api/transactions', app, router, transactionsModule.isLoaded);
 }
 
 module.exports = TransactionsHttpApi;
+
+/*************************************** END OF FILE *************************************/

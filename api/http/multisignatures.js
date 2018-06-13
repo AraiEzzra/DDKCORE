@@ -1,7 +1,7 @@
-'use strict';
 
-var Router = require('../../helpers/router');
-var httpApi = require('../../helpers/httpApi');
+
+let Router = require('../../helpers/router');
+let httpApi = require('../../helpers/httpApi');
 
 /**
  * Binds api with modules and creates common url.
@@ -22,7 +22,7 @@ var httpApi = require('../../helpers/httpApi');
 // Constructor
 function MultisignaturesHttpApi (mutlisignaturesModule, app) {
 
-	var router = new Router();
+	let router = new Router();
 
 	router.map(mutlisignaturesModule.shared, {
 		'get /pending': 'pending',
@@ -35,3 +35,5 @@ function MultisignaturesHttpApi (mutlisignaturesModule, app) {
 }
 
 module.exports = MultisignaturesHttpApi;
+
+/*************************************** END OF FILE *************************************/

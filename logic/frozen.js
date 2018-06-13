@@ -1,21 +1,27 @@
-'use strict';
-
-var constants = require('../helpers/constants.js');
-var sql = require('../sql/frogings.js');
-var slots = require('../helpers/slots.js');
-var StakeReward = require('../logic/stakeReward.js');
-
-var request = require('request');
-var async = require('async');
-var Promise = require('bluebird');
-
-// Private fields
-var __private = {};
+let constants = require('../helpers/constants.js');
+let sql = require('../sql/frogings.js');
+let slots = require('../helpers/slots.js');
+let StakeReward = require('../logic/stakeReward.js');
+let request = require('request');
+let async = require('async');
+let Promise = require('bluebird');
+let __private = {};
 __private.types = {};
+let modules, library, self;
 
-// Private fields
-var modules, library, self;
-
+/**
+ * Main Frozen logic.
+ * @memberof module:frogings
+ * @class
+ * @classdesc Main Frozen logic.
+ * @param {Object} logger
+ * @param {Dataabase} db
+ * @param {Transaction} transaction
+ * @param {Network} network
+ * @param {Object} config
+ * @param {function} cb - Callback function.
+ * @return {setImmediateCallback} With `this` as data.
+ */
 // Constructor
 function Frozen(logger, db, transaction, network, config, cb) {
 	self = this;
@@ -41,23 +47,42 @@ function Frozen(logger, db, transaction, network, config, cb) {
  */
 __private.stakeReward = new StakeReward();
 
-
+/**
+ * create stake_orders table records
+ * @param {Object} data - stake order data
+ * @param {Object} trs - transaction data
+ * @returns {trs} trs
+ */
 Frozen.prototype.create = function (data, trs) {
 	trs.startTime = trs.timestamp;
-	var date = new Date(trs.timestamp * 1000);
+	let date = new Date(trs.timestamp * 1000);
 	trs.recipientId = null;
 	trs.freezedAmount = data.freezedAmount;
 	trs.nextVoteMilestone = (date.setMinutes(date.getMinutes() + constants.froze.vTime))/1000;
 	return trs;
 };
 
+/**
+ * @desc on modules ready
+ * @private
+ * @implements 
+ * @param {Object} sender - sender data
+ * @param {Object} frz - stake order data
+ * @param {function} cb - Callback function.
+ * @return {bool} true
+ */
 Frozen.prototype.ready = function (frz, sender) {
 	return true;
 };
 
-
+/**
+ * @desc stake_order table name
+ */
 Frozen.prototype.dbTable = 'stake_orders';
 
+/**
+ * @desc stake_order table fields
+ */
 Frozen.prototype.dbFields = [
 	"id",
 	"status",
@@ -72,6 +97,12 @@ Frozen.prototype.dbFields = [
 Frozen.prototype.inactive= '0';
 Frozen.prototype.active= '1';
 
+/**
+ * Creates db object transaction to `stake_orders` table.
+ * @param {trs} trs
+ * @return {Object} created object {table, fields, values}
+ * @throws {error} catch error
+ */
 Frozen.prototype.dbSave = function (trs) {
 	return {
 		table: this.dbTable,
@@ -89,23 +120,61 @@ Frozen.prototype.dbSave = function (trs) {
 	};
 };
 
+/**
+ * Creates froze object based on raw data.
+ * @param {Object} raw
+ * @return {null|froze} blcok object
+ */
 Frozen.prototype.dbRead = function (raw) {
 	return null;
 };
 
+/**
+ * @param {trs} trs
+ * @return {error|transaction} error string | trs normalized
+ * @throws {string|error} error message | catch error
+ */
 Frozen.prototype.objectNormalize = function (trs) {
 	delete trs.blockId;
 	return trs;
 };
 
+/**
+ * @desc undo unconfirmed transations
+ * @private
+ * @implements 
+ * @param {Object} sender - sender data
+ * @param {Object} trs - transation data
+ * @param {function} cb - Callback function.
+ * @return {function} cb
+ */
 Frozen.prototype.undoUnconfirmed = function (trs, sender, cb) {
 	return setImmediate(cb);
 };
 
+/**
+ * @desc apply unconfirmed transations
+ * @private
+ * @implements 
+ * @param {Object} sender - sender data
+ * @param {Object} trs - transation data
+ * @param {function} cb - Callback function.
+ * @return {function} cb
+ */
 Frozen.prototype.applyUnconfirmed = function (trs, sender, cb) {
 	return setImmediate(cb);
 };
 
+/**
+ * @desc undo confirmed transations
+ * @private
+ * @implements 
+ * @param {Object} block - block data
+ * @param {Object} sender - sender data
+ * @param {Object} trs - transation data
+ * @param {function} cb - Callback function.
+ * @return {function} {cb, err}
+ */
 Frozen.prototype.undo = function (trs, block, sender, cb) {
 	modules.accounts.setAccountAndGet({address: trs.recipientId}, function (err, recipient) {
 		if (err) {
@@ -124,23 +193,52 @@ Frozen.prototype.undo = function (trs, block, sender, cb) {
 	});
 };
 
+/**
+ * @desc appliy
+ * @private
+ * @implements 
+ *  @param {Object} block - block data
+ * @param {Object} sender - sender data
+ * @param {Object} trs - transation data
+ * @param {function} cb - Callback function.
+ * @return {function} cb
+ */
 Frozen.prototype.apply = function (trs, block, sender, cb) {
-	// var data = {
-	// 	address: sender.address
-	// };
-
-	// modules.accounts.setAccountAndGet(data, cb);
 	return setImmediate(cb, null, trs);
 };
 
+/**
+ * @desc get bytes
+ * @private
+ * @implements 
+ * @return {null}
+ */
 Frozen.prototype.getBytes = function (trs) {
 	return null;
 };
 
+/**
+ * @desc process transaction
+ * @private
+ * @implements 
+ * @param {Object} sender - sender data
+ * @param {Object} trs - transation data
+ * @param {function} cb - Callback function.
+ * @return {function} cb
+ */
 Frozen.prototype.process = function (trs, sender, cb) {
 	return setImmediate(cb, null, trs);
 };
 
+/**
+ * @desc verify
+ * @private
+ * @implements 
+ * @param {Object} sender - sender data
+ * @param {Object} trs - transation data
+ * @param {function} cb - Callback function.
+ * @return {function} {cb, err, trs}
+ */
 Frozen.prototype.verify = function (trs, sender, cb) {
 
 	if ((trs.freezedAmount + trs.fee + parseInt(sender.totalFrozeAmount)) > sender.balance) {
@@ -150,10 +248,23 @@ Frozen.prototype.verify = function (trs, sender, cb) {
 	return setImmediate(cb, null, trs);
 };
 
+/**
+ * @desc calculate fee for transaction type 9
+ * @private
+ * @param {Object} sender - sender data
+ * @param {Object} trs - transation data
+ * @return % based on amount
+ */
 Frozen.prototype.calculateFee = function (trs, sender) {
 	return (trs.freezedAmount * constants.fees.froze)/100;
 };
 
+/**
+ * @desc on bine
+ * @private
+ * @implements 
+ * @param {Object} accounts - modules:accounts
+ */
 Frozen.prototype.bind = function (accounts, rounds, blocks) {
 	modules = {
 		accounts: accounts,
@@ -162,6 +273,15 @@ Frozen.prototype.bind = function (accounts, rounds, blocks) {
 	};
 };
 
+/**
+ * @desc checkFrozeOrders
+ * @private
+ * @implements {Frozen#getfrozeOrder}
+ * @implements {Frozen#checkAndUpdateMilestone}
+ * @implements {Frozen#deductFrozeAmountandSendReward}
+ * @implements {Frozen#disableFrozeOrder}
+ * @return {Promise} {Resolve|Reject}
+ */
 Frozen.prototype.checkFrozeOrders = function () {
 
 	function getfrozeOrder() {
@@ -209,7 +329,7 @@ Frozen.prototype.checkFrozeOrders = function () {
 
 	async function deductFrozeAmountandSendReward(freezeOrders) {
 		try {
-			for (var order in freezeOrders) {
+			for (let order in freezeOrders) {
 				await updateOrderAndSendReward(freezeOrders[order]);
 				await deductFrozeAmount(freezeOrders[order]);	
 			}
@@ -250,7 +370,7 @@ Frozen.prototype.checkFrozeOrders = function () {
 					senderId: order.senderId
 				}).then(function () {
 					//Request to send transaction
-					var transactionData = {
+					let transactionData = {
 						json: {
 							secret: self.scope.config.sender.secret,
 							amount: parseInt(order.freezedAmount * __private.stakeReward.calcReward(modules.blocks.lastBlock.get().height) / 100),
@@ -298,10 +418,9 @@ Frozen.prototype.checkFrozeOrders = function () {
 		});
 	}
 
-	//function to check froze orders using async/await
 	(async function () {
 		try {
-			var freezeOrders = await getfrozeOrder();
+			let freezeOrders = await getfrozeOrder();
 
 			if (freezeOrders.length > 0) {
 				await checkAndUpdateMilestone();
@@ -315,7 +434,13 @@ Frozen.prototype.checkFrozeOrders = function () {
 	})();
 };
 
-//Update Froze amount into mem_accounts table on every single order
+/**
+ * @desc updateFrozeAmount
+ * @private
+ * @param {Object} userData - user data
+ * @param {function} cb - Callback function.
+ * @return {function} {cb, err}
+ */
 Frozen.prototype.updateFrozeAmount = function (userData, cb) {
 
 	self.scope.db.one(sql.getFrozeAmount, {
@@ -325,10 +450,9 @@ Frozen.prototype.updateFrozeAmount = function (userData, cb) {
 			if (!totalFrozeAmount) {
 				return setImmediate(cb, 'No Account Exist in mem_account table for' + userData.account.address);
 			}
-			var frozeAmountFromDB = totalFrozeAmount.totalFrozeAmount;
-			var totalFrozeAmount = parseInt(frozeAmountFromDB) + userData.freezedAmount;
-			var totalFrozeAmountWithFees = totalFrozeAmount + (parseFloat(constants.fees.froze)*(userData.freezedAmount))/100;
-			//verify that freeze order cannot more than available balance
+			let frozeAmountFromDB = totalFrozeAmount.totalFrozeAmount;
+			totalFrozeAmount = parseInt(frozeAmountFromDB) + userData.freezedAmount;
+			let totalFrozeAmountWithFees = totalFrozeAmount + (parseFloat(constants.fees.froze)*(userData.freezedAmount))/100;
 			if (totalFrozeAmountWithFees <= userData.account.balance) {
 				self.scope.db.none(sql.updateFrozeAmount, {
 					freezedAmount: userData.freezedAmount,
@@ -357,3 +481,5 @@ Frozen.prototype.updateFrozeAmount = function (userData, cb) {
 
 // Export
 module.exports = Frozen;
+
+/*************************************** END OF FILE *************************************/

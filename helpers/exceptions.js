@@ -1,4 +1,3 @@
-'use strict';
 /**
  * @namespace exceptions
  * @memberof module:helpers
@@ -40,3 +39,5 @@ module.exports = {
 		'18231026627962552928'  // 917323
 	]
 };
+
+/*************************************** END OF FILE *************************************/

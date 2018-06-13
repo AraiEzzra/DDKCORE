@@ -1,10 +1,10 @@
-'use strict';
 
-var crypto = require('crypto');
-var node = require('./../node.js');
 
-var modulesLoader = require('../common/initModule').modulesLoader;
-var Account = require('../../logic/account');
+let crypto = require('crypto');
+let node = require('./../node.js');
+
+let modulesLoader = require('../common/initModule').modulesLoader;
+let Account = require('../../logic/account');
 
 function postTransaction (transaction, done) {
 	node.post('/peer/transactions', {
@@ -16,7 +16,7 @@ describe('POST /peer/transactions', function () {
 
 	describe('when two passphrases collide into the same address', function () {
 
-		var collision = {
+		let collision = {
 			address: '13555181540209512417L',
 			passphrases: [
 				'merry field slogan sibling convince gold coffee town fold glad mix page',
@@ -38,7 +38,7 @@ describe('POST /peer/transactions', function () {
 
 		before(function (done) {
 			// Send funds to collision account
-			var transaction = node.lisk.transaction.createTransaction(collision.address, 220000000, node.gAccount.password);
+			let transaction = node.lisk.transaction.createTransaction(collision.address, 220000000, node.gAccount.password);
 			postTransaction(transaction, function (err, res) {
 				node.expect(res.body).to.have.property('success').to.be.ok;
 				node.onNewBlock(done);
@@ -48,7 +48,7 @@ describe('POST /peer/transactions', function () {
 		describe('when transaction is invalid', function () {
 
 			it('should fail for passphrase two', function (done) {
-				var transaction = node.lisk.transaction.createTransaction(node.gAccount.address, 100000000, collision.passphrases[1]);
+				let transaction = node.lisk.transaction.createTransaction(node.gAccount.address, 100000000, collision.passphrases[1]);
 				transaction.signature = crypto.randomBytes(64).toString('hex');
 				transaction.id = node.lisk.crypto.getId(transaction);
 
@@ -60,7 +60,7 @@ describe('POST /peer/transactions', function () {
 			});
 
 			it('should fail for passphrase one', function (done) {
-				var transaction = node.lisk.transaction.createTransaction(node.gAccount.address, 100000000, collision.passphrases[0]);
+				let transaction = node.lisk.transaction.createTransaction(node.gAccount.address, 100000000, collision.passphrases[0]);
 				transaction.signature = crypto.randomBytes(64).toString('hex');
 				transaction.id = node.lisk.crypto.getId(transaction);
 
@@ -79,7 +79,7 @@ describe('POST /peer/transactions', function () {
 			});
 
 			it('should be ok for passphrase one', function (done) {
-				var transaction = node.lisk.transaction.createTransaction(node.gAccount.address, 100000000, collision.passphrases[0]);
+				let transaction = node.lisk.transaction.createTransaction(node.gAccount.address, 100000000, collision.passphrases[0]);
 
 				postTransaction(transaction, function (err, res) {
 					node.expect(res.body).to.have.property('success').to.be.ok;
@@ -88,7 +88,7 @@ describe('POST /peer/transactions', function () {
 			});
 
 			it('should fail for passphrase two', function (done) {
-				var transaction = node.lisk.transaction.createTransaction(node.gAccount.address, 100000000, collision.passphrases[1]);
+				let transaction = node.lisk.transaction.createTransaction(node.gAccount.address, 100000000, collision.passphrases[1]);
 
 				postTransaction(transaction, function (err, res) {
 					node.expect(res.body).to.have.property('success').to.be.not.ok;

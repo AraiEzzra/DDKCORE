@@ -1,20 +1,20 @@
-'use strict';
 
-var async = require('async');
-var node = require('./../node.js');
 
-var constants = require('../../helpers/constants.js');
+let async = require('async');
+let node = require('./../node.js');
 
-var totalMembers = 15;
-var requiredSignatures = 15;
-var multisigAccount = node.randomAccount();
+let constants = require('../../helpers/constants.js');
 
-var accounts = [];
-for (var i = 0; i < totalMembers; i++) {
+let totalMembers = 15;
+let requiredSignatures = 15;
+let multisigAccount = node.randomAccount();
+
+let accounts = [];
+for (let i = 0; i < totalMembers; i++) {
 	accounts[i] = node.randomAccount();
 }
 
-var multiSigTx = {
+let multiSigTx = {
 	lifetime: 0,
 	min: 0,
 	members: [],
@@ -22,7 +22,7 @@ var multiSigTx = {
 };
 
 function sendLISK (account, i, done) {
-	var randomLISK = node.randomLISK();
+	let randomLISK = node.randomLISK();
 
 	node.put('/api/transactions/', {
 		secret: node.gAccount.password,
@@ -50,14 +50,14 @@ function sendLISKFromMultisigAccount (password, amount, recipient, done) {
 }
 
 function confirmTransaction (transactionId, passphrases, done) {
-	var count = 0;
+	let count = 0;
 
 	async.until(
 		function () {
 			return (count >= passphrases.length);
 		},
 		function (untilCb) {
-			var passphrase = passphrases[count];
+			let passphrase = passphrases[count];
 
 			node.post('/api/multisignatures/sign', {
 				secret: passphrase,
@@ -78,19 +78,19 @@ function confirmTransaction (transactionId, passphrases, done) {
 }
 
 // Used for KeysGroup
-var Keys;
+let Keys;
 
 function makeKeysGroup () {
-	var keysgroup = [];
-	for (var i = 0; i < totalMembers; i++) {
-		var member = '+' + accounts[i].publicKey;
+	let keysgroup = [];
+	for (let i = 0; i < totalMembers; i++) {
+		let member = '+' + accounts[i].publicKey;
 		keysgroup.push(member);
 	}
 	return keysgroup;
 }
 
 before(function (done) {
-	var i = 0;
+	let i = 0;
 	async.eachSeries(accounts, function (account, eachCb) {
 		sendLISK(account, i, function () {
 			i++;
@@ -117,7 +117,7 @@ describe('PUT /api/multisignatures', function () {
 		Keys = makeKeysGroup();
 	});
 
-	var validParams;
+	let validParams;
 
 	beforeEach(function () {
 		validParams = {
@@ -289,7 +289,7 @@ describe('PUT /api/multisignatures', function () {
 	});
 
 	it('using null member in keysgroup should fail', function (done) {
-		var multiSigTx = {
+		let multiSigTx = {
 			secret: multisigAccount.password,
 			lifetime: parseInt(node.randomNumber(1,72)),
 			min: requiredSignatures,
@@ -306,7 +306,7 @@ describe('PUT /api/multisignatures', function () {
 	});
 
 	it('using invalid member in keysgroup should fail', function (done) {
-		var multiSigTx = {
+		let multiSigTx = {
 			secret: multisigAccount.password,
 			lifetime: parseInt(node.randomNumber(1,72)),
 			min: requiredSignatures,
@@ -443,9 +443,9 @@ describe('PUT /api/multisignatures', function () {
 	});
 
 	describe('valid multisigs transactions with different min and keysgroup values', function () {
-		var multisigAccount1 = node.randomAccount();
-		var multisigAccount2 = node.randomAccount();
-		var multisigAccount3 = node.randomAccount();
+		let multisigAccount1 = node.randomAccount();
+		let multisigAccount2 = node.randomAccount();
+		let multisigAccount3 = node.randomAccount();
 
 		before(function (done) {
 			async.every([multisigAccount1, multisigAccount2, multisigAccount3], function (acc, cb) {
@@ -458,7 +458,7 @@ describe('PUT /api/multisignatures', function () {
 		});
 
 		it('using valid params should be ok for min 1 and keysgroup array 1', function (done) {
-			var params = {
+			let params = {
 				secret: multisigAccount1.password,
 				lifetime: 11,
 				min: 1,
@@ -473,7 +473,7 @@ describe('PUT /api/multisignatures', function () {
 		});
 
 		it('using valid params should be ok when min 5 and keysgroup array 5', function (done) {
-			var params = {
+			let params = {
 				secret: multisigAccount2.password,
 				lifetime: 11,
 				min: 5,
@@ -508,7 +508,7 @@ describe('GET /api/multisignatures/pending', function () {
 	});
 
 	it('using invalid public key should fail', function (done) {
-		var publicKey = 1234;
+		let publicKey = 1234;
 
 		node.get('/api/multisignatures/pending?publicKey=' + publicKey, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -533,11 +533,11 @@ describe('GET /api/multisignatures/pending', function () {
 			node.expect(res.body).to.have.property('transactions').that.is.an('array');
 			node.expect(res.body.transactions.length).to.be.at.least(1);
 
-			var flag = 0;
-			for (var i = 0; i < res.body.transactions.length; i++) {
+			let flag = 0;
+			for (let i = 0; i < res.body.transactions.length; i++) {
 				flag += 1;
 
-				var pending = res.body.transactions[i];
+				let pending = res.body.transactions[i];
 
 				node.expect(pending).to.have.property('max').that.is.equal(0);
 				node.expect(pending).to.have.property('min').that.is.equal(0);
@@ -583,9 +583,9 @@ describe('PUT /api/transactions', function () {
 
 describe('POST /api/multisignatures/sign (group)', function () {
 
-	var validParams;
+	let validParams;
 
-	var passphrases = accounts.map(function (account) {
+	let passphrases = accounts.map(function (account) {
 		return account.password;
 	});
 
@@ -670,9 +670,9 @@ describe('POST /api/multisignatures/sign (group)', function () {
 
 describe('POST /api/multisignatures/sign (transaction)', function () {
 
-	var validParams;
+	let validParams;
 
-	var passphrases = accounts.map(function (account) {
+	let passphrases = accounts.map(function (account) {
 		return account.password;
 	});
 
@@ -739,7 +739,7 @@ describe('POST /api/multisignatures/sign (transaction)', function () {
 
 describe('POST /api/multisignatures/sign (regular account)', function () {
 
-	var transactionId;
+	let transactionId;
 
 	before(function (done) {
 		node.put('/api/transactions/', {

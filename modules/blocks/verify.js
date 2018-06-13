@@ -1,14 +1,14 @@
-'use strict';
 
-var async = require('async');
-var BlockReward = require('../../logic/blockReward.js');
-var constants = require('../../helpers/constants.js');
-var crypto = require('crypto');
-var slots = require('../../helpers/slots.js');
-var sql = require('../../sql/blocks.js');
-var exceptions = require('../../helpers/exceptions.js');
 
-var modules, library, self, __private = {};
+let async = require('async');
+let BlockReward = require('../../logic/blockReward.js');
+let constants = require('../../helpers/constants.js');
+let crypto = require('crypto');
+let slots = require('../../helpers/slots.js');
+let sql = require('../../sql/blocks.js');
+let exceptions = require('../../helpers/exceptions.js');
+
+let modules, library, self, __private = {};
 
 __private.blockReward = new BlockReward();
 
@@ -116,7 +116,7 @@ __private.setHeight = function (block, lastBlock) {
  * @return {Array}   result.errors Array of validation errors
  */
 __private.verifySignature = function (block, result) {
-	var valid;
+	let valid;
 
 	try {
 		valid = library.logic.block.verifySignature(block);
@@ -185,7 +185,7 @@ __private.verifyVersion = function (block, result) {
  */
 __private.verifyReward = function (block, result) {
 	
-	var expectedReward = __private.blockReward.calcReward(block.height);
+	let expectedReward = __private.blockReward.calcReward(block.height);
 
 	if(block.height > 21000000) {
 		expectedReward = 0;
@@ -248,14 +248,14 @@ __private.verifyPayload = function (block, result) {
 		result.errors.push('Number of transactions exceeds maximum per block');
 	}
 
-	var totalAmount = 0;
-	var totalFee = 0;
-	var payloadHash = crypto.createHash('sha256');
-	var appliedTransactions = {};
+	let totalAmount = 0;
+	let totalFee = 0;
+	let payloadHash = crypto.createHash('sha256');
+	let appliedTransactions = {};
 
-	for (var i in block.transactions) {
-		var transaction = block.transactions[i];
-		var bytes;
+	for (let i in block.transactions) {
+		let transaction = block.transactions[i];
+		let bytes;
 
 		try {
 			bytes = library.logic.transaction.getBytes(transaction);
@@ -322,8 +322,8 @@ __private.verifyForkOne = function (block, lastBlock, result) {
  * @return {Array}   result.errors Array of validation errors
  */
 __private.verifyBlockSlot = function (block, lastBlock, result) {
-	var blockSlotNumber = slots.getSlotNumber(block.timestamp);
-	var lastBlockSlotNumber = slots.getSlotNumber(lastBlock.timestamp);
+	let blockSlotNumber = slots.getSlotNumber(block.timestamp);
+	let lastBlockSlotNumber = slots.getSlotNumber(lastBlock.timestamp);
 
 	if (blockSlotNumber > slots.getSlotNumber() || blockSlotNumber <= lastBlockSlotNumber) {
 		result.errors.push('Invalid block timestamp');
@@ -343,11 +343,11 @@ __private.verifyBlockSlot = function (block, lastBlock, result) {
  * @return {Array}   result.errors Array of validation errors
  */
 Verify.prototype.verifyReceipt = function (block) {
-	var lastBlock = modules.blocks.lastBlock.get();
+	let lastBlock = modules.blocks.lastBlock.get();
 
 	block = __private.setHeight(block, lastBlock);
 
-	var result = { verified: false, errors: [] };
+	let result = { verified: false, errors: [] };
 
 	result = __private.verifySignature(block, result);
 	result = __private.verifyPreviousBlock(block, result);
@@ -373,11 +373,11 @@ Verify.prototype.verifyReceipt = function (block) {
  * @return {Array}   result.errors Array of validation errors
  */
 Verify.prototype.verifyBlock = function (block) {
-	var lastBlock = modules.blocks.lastBlock.get();
+	let lastBlock = modules.blocks.lastBlock.get();
 
 	block = __private.setHeight(block, lastBlock);
 
-	var result = { verified: false, errors: [] };
+	let result = { verified: false, errors: [] };
 
 	result = __private.verifySignature(block, result);
 	result = __private.verifyPreviousBlock(block, result);
@@ -434,7 +434,7 @@ Verify.prototype.processBlock = function (block, broadcast, cb, saveBlock) {
 		verifyBlock: function (seriesCb) {
 			// Sanity check of the block, if values are coherent
 			// No access to database
-			var check = self.verifyBlock(block);
+			let check = self.verifyBlock(block);
 
 			if (!check.verified) {
 				library.logger.error(['Block', block.id, 'verification failed'].join(' '), check.errors.join(', '));
@@ -512,3 +512,5 @@ Verify.prototype.onBind = function (scope) {
 };
 
 module.exports = Verify;
+
+/*************************************** END OF FILE *************************************/

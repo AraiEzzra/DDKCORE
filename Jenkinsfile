@@ -68,7 +68,7 @@ lock(resource: "ETP-Core-Nodes", inversePrecedence: true) {
       "Initialize Master Workspace" : {
         node('master-01'){
           sh '''
-          cd /var/lib/jenkins/coverage/
+          cd /let/lib/jenkins/coverage/
           rm -rf node-0*
           rm -rf *.zip
           rm -rf coverage-unit/*
@@ -350,7 +350,7 @@ lock(resource: "ETP-Core-Nodes", inversePrecedence: true) {
           export HOST=127.0.0.1:4000
           npm run fetchCoverage
           # Submit coverage reports to Master
-          scp test/.coverage-func.zip jenkins@master-01:/var/lib/jenkins/coverage/coverage-func-node-01.zip
+          scp test/.coverage-func.zip jenkins@master-01:/let/lib/jenkins/coverage/coverage-func-node-01.zip
           '''
         }
       },
@@ -360,7 +360,7 @@ lock(resource: "ETP-Core-Nodes", inversePrecedence: true) {
           export HOST=127.0.0.1:4000
           npm run fetchCoverage
           # Submit coverage reports to Master
-          scp test/.coverage-func.zip jenkins@master-01:/var/lib/jenkins/coverage/coverage-func-node-02.zip
+          scp test/.coverage-func.zip jenkins@master-01:/let/lib/jenkins/coverage/coverage-func-node-02.zip
           '''
         }
       },
@@ -370,8 +370,8 @@ lock(resource: "ETP-Core-Nodes", inversePrecedence: true) {
           export HOST=127.0.0.1:4000
           npm run fetchCoverage
           # Submit coverage reports to Master
-          scp test/.coverage-unit/* jenkins@master-01:/var/lib/jenkins/coverage/coverage-unit/
-          scp test/.coverage-func.zip jenkins@master-01:/var/lib/jenkins/coverage/coverage-func-node-03.zip
+          scp test/.coverage-unit/* jenkins@master-01:/let/lib/jenkins/coverage/coverage-unit/
+          scp test/.coverage-func.zip jenkins@master-01:/let/lib/jenkins/coverage/coverage-func-node-03.zip
           '''
         }
       }
@@ -381,7 +381,7 @@ lock(resource: "ETP-Core-Nodes", inversePrecedence: true) {
   stage ('Submit Coverage') {
     node('master-01'){
       sh '''
-      cd /var/lib/jenkins/coverage/
+      cd /let/lib/jenkins/coverage/
       unzip coverage-func-node-01.zip -d node-01
       unzip coverage-func-node-02.zip -d node-02
       unzip coverage-func-node-03.zip -d node-03
@@ -420,7 +420,7 @@ lock(resource: "ETP-Core-Nodes", inversePrecedence: true) {
       "Cleanup Master" : {
         node('master-01'){
         sh '''
-        cd /var/lib/jenkins/coverage/
+        cd /let/lib/jenkins/coverage/
         rm -rf node-0*
         rm -rf *.zip
         rm -rf coverage-unit/*

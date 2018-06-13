@@ -1,12 +1,13 @@
-'use strict';
 
-var Router = require('../../helpers/router');
-var httpApi = require('../../helpers/httpApi');
+
+let Router = require('../../helpers/router');
+let httpApi = require('../../helpers/httpApi');
 
 /**
  * Binds api with modules and creates common url.
- * - End point: `/api/froging`
+ * - End point: `/api/shiftOrder`
  * - Public API:
+ *  - post /sendFreezeOrder
  * @memberof module:frogings
  * @requires helpers/Router
  * @requires helpers/httpApi
@@ -16,7 +17,7 @@ var httpApi = require('../../helpers/httpApi');
  */
 // Constructor
 function sendFreezeOrderHttpApi (sendFreezeOrderModule, app, logger, cache) {
-	var router = new Router();
+	let router = new Router();
 
 	// attach a middlware to endpoints
 	router.attachMiddlwareForUrls(httpApi.middleware.useCache.bind(null, logger, cache), [
@@ -32,3 +33,5 @@ function sendFreezeOrderHttpApi (sendFreezeOrderModule, app, logger, cache) {
 }
 
 module.exports = sendFreezeOrderHttpApi;
+
+/*************************************** END OF FILE *************************************/

@@ -1,4 +1,3 @@
-'use strict';
 /**
  * @typedef {Object} dappType
  * - 0: DAPP
@@ -8,3 +7,5 @@ module.exports = {
 	DAPP : 0,
 	FILE: 1
 };
+
+/*************************************** END OF FILE *************************************/

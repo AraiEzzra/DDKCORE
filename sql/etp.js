@@ -1,38 +1,38 @@
-'use strict';
 
-var ETP = {
 
-    query : 'SELECT * FROM ${tableName}',
+let ETP = {
 
-    getBlocksData: 'SELECT * FROM blocks',
+	query : 'SELECT * FROM ${tableName}',
 
-    getDappsData: 'SELECT * FROM dapps',
+	getBlocksData: 'SELECT * FROM blocks',
 
-    getDelegatesData: 'SELECT * FROM delegates',
+	getDappsData: 'SELECT * FROM dapps',
 
-    getMemAccountsData: 'SELECT * FROM mem_accounts',
+	getDelegatesData: 'SELECT * FROM delegates',
 
-    getMigrationsData: 'SELECT * FROM migrations',
+	getMemAccountsData: 'SELECT * FROM mem_accounts',
 
-    getRoundsFeesData: 'SELECT * FROM rounds_fees',
+	getMigrationsData: 'SELECT * FROM migrations',
 
-    getTrsData: 'SELECT * from trs',
+	getRoundsFeesData: 'SELECT * FROM rounds_fees',
 
-    getVotesData: 'SELECT * from votes',
+	getTrsData: 'SELECT * from trs',
 
-    getSignaturesData: 'SELECT * FROM signatures',
+	getVotesData: 'SELECT * from votes',
 
-    getStakeOrdersData: 'SELECT * FROM stake_orders',
+	getSignaturesData: 'SELECT * FROM signatures',
 
-    getPeersData: 'SELECT * FROM peers',
+	getStakeOrdersData: 'SELECT * FROM stake_orders',
 
-    getPeersDappData: 'SELECT * FROM peers_dapp',
+	getPeersData: 'SELECT * FROM peers',
 
-    getInTransferData: 'SELECT * FROM intransfer',
+	getPeersDappData: 'SELECT * FROM peers_dapp',
 
-    getOutTransferData: 'SELECT * FROM outtransfer',
+	getInTransferData: 'SELECT * FROM intransfer',
 
-    getMultisignaturesData: 'SELECT * FROM multisignatures'
+	getOutTransferData: 'SELECT * FROM outtransfer',
+
+	getMultisignaturesData: 'SELECT * FROM multisignatures'
 
 };
 

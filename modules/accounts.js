@@ -1,32 +1,31 @@
-'use strict';
 
-var bignum = require('../helpers/bignum.js');
-var BlockReward = require('../logic/blockReward.js');
-var constants = require('../helpers/constants.js');
-var crypto = require('crypto');
-var extend = require('extend');
-var schema = require('../schema/accounts.js');
-var sandboxHelper = require('../helpers/sandbox.js');
-var transactionTypes = require('../helpers/transactionTypes.js');
-var Vote = require('../logic/vote.js');
-var sql = require('../sql/accounts.js');
-var contracts = require('./contracts.js')
-var userGroups = require('../helpers/userGroups.js');
-var cache = require('./cache.js');
-var config = require('../config.json');
-var utils = require('../utils');
-var jwt = require('jsonwebtoken');
-var QRCode = require('qrcode');
-var cache = require('./cache.js');
-var speakeasy = require("speakeasy");
-var slots = require('../helpers/slots.js');
-var httpApi = require('../helpers/httpApi');
-var Promise = require('bluebird');
-var async = require('async');
-var nextBonus = 0;
+
+let bignum = require('../helpers/bignum.js');
+let BlockReward = require('../logic/blockReward.js');
+let constants = require('../helpers/constants.js');
+let crypto = require('crypto');
+let extend = require('extend');
+let schema = require('../schema/accounts.js');
+let sandboxHelper = require('../helpers/sandbox.js');
+let transactionTypes = require('../helpers/transactionTypes.js');
+let Vote = require('../logic/vote.js');
+let sql = require('../sql/accounts.js');
+let contracts = require('./contracts.js')
+let userGroups = require('../helpers/userGroups.js');
+let cache = require('./cache.js');
+let config = require('../config.json');
+let utils = require('../utils');
+let jwt = require('jsonwebtoken');
+let QRCode = require('qrcode');
+let speakeasy = require("speakeasy");
+let slots = require('../helpers/slots.js');
+let httpApi = require('../helpers/httpApi');
+let Promise = require('bluebird');
+let async = require('async');
+let nextBonus = 0;
 
 // Private fields
-var modules, library, self, __private = {}, shared = {};
+let modules, library, self, __private = {}, shared = {};
 
 __private.assetTypes = {};
 __private.blockReward = new BlockReward();
@@ -82,9 +81,9 @@ function Accounts(cb, scope) {
  * @returns {setImmediateCallback} As per logic new|current account data object.
  */
 __private.openAccount = function (secret, cb) {
-	var hash = crypto.createHash('sha256').update(secret, 'utf8').digest();
-	var keypair = library.ed.makeKeypair(hash);
-	var publicKey = keypair.publicKey.toString('hex');
+	let hash = crypto.createHash('sha256').update(secret, 'utf8').digest();
+	let keypair = library.ed.makeKeypair(hash);
+	let publicKey = keypair.publicKey.toString('hex');
 
 	self.getAccount({ publicKey: publicKey }, function (err, account) {
 		if (err) {
@@ -97,7 +96,7 @@ __private.openAccount = function (secret, cb) {
 			}
 			return setImmediate(cb, null, account);
 		} else {
-			var account = {
+			let account = {
 				address: self.generateAddressByPublicKey(publicKey),
 				u_balance: '0',
 				balance: '0',
@@ -120,14 +119,14 @@ __private.openAccount = function (secret, cb) {
  * @throws {string} If address is invalid throws `Invalid public key`.
  */
 Accounts.prototype.generateAddressByPublicKey = function (publicKey) {
-	var publicKeyHash = crypto.createHash('sha256').update(publicKey, 'hex').digest();
-	var temp = Buffer.alloc(8);
+	let publicKeyHash = crypto.createHash('sha256').update(publicKey, 'hex').digest();
+	let temp = Buffer.alloc(8);
 
-	for (var i = 0; i < 8; i++) {
+	for (let i = 0; i < 8; i++) {
 		temp[i] = publicKeyHash[7 - i];
 	}
 
-	var address = 'DDK' + bignum.fromBuffer(temp).toString();
+	let address = 'DDK' + bignum.fromBuffer(temp).toString();
 
 	if (!address) {
 		throw 'Invalid public key: ' + publicKey;
@@ -173,8 +172,8 @@ Accounts.prototype.getAccounts = function (filter, fields, cb) {
  * @returns {function()} Call to logic.account.get().
  */
 Accounts.prototype.setAccountAndGet = function (data, cb) {
-	var address = data.address || null;
-	var err;
+	let address = data.address || null;
+	let err;
 
 	if (address === null) {
 		if (data.publicKey) {
@@ -214,8 +213,8 @@ Accounts.prototype.setAccountAndGet = function (data, cb) {
  * @todo improve publicKey validation try/catch
  */
 Accounts.prototype.mergeAccountAndGet = function (data, cb) {
-	var address = data.address || null;
-	var err;
+	let address = data.address || null;
+	let err;
 
 	if (address === null) {
 		if (data.publicKey) {
@@ -236,11 +235,6 @@ Accounts.prototype.mergeAccountAndGet = function (data, cb) {
 			throw err;
 		}
 	}
-	/* library.logic.account.merge('4995063339468361088E', {
-		balance: -'500000000'
-	}, function (err, sender) {
-		//console.log('sender : ', sender);
-	}); */
 	return library.logic.account.merge(address, data, cb);
 };
 
@@ -298,15 +292,15 @@ Accounts.prototype.shared = {
 
 			__private.openAccount(req.body.secret, function (err, account) {
 				if (!err) {
-					var payload = {
+					let payload = {
 						secret: req.body.secret,
 						address: account.address
 					};
-					var token = jwt.sign(payload, library.config.jwt.secret, {
+					let token = jwt.sign(payload, library.config.jwt.secret, {
 						expiresIn: library.config.jwt.tokenLife,
 						mutatePayload: false
 					});
-					var accountData = {
+					let accountData = {
 						address: account.address,
 						unconfirmedBalance: account.u_balance,
 						balance: account.balance,
@@ -319,10 +313,8 @@ Accounts.prototype.shared = {
 						totalFrozeAmount: account.totalFrozeAmount
 					};
 					accountData.token = token;
-					//library.cache.client.set('jwtToken_' + account.address, token, 'ex', 100);
-					/****************************************************************/
 
-					var data = {
+					let data = {
 						address: accountData.address,
 						u_isDelegate: 0,
 						isDelegate: 0,
@@ -363,8 +355,8 @@ Accounts.prototype.shared = {
 					return setImmediate(cb, err);
 				}
 
-				var balance = account ? account.balance : '0';
-				var unconfirmedBalance = account ? account.u_balance : '0';
+				let balance = account ? account.balance : '0';
+				let unconfirmedBalance = account ? account.u_balance : '0';
 
 				return setImmediate(cb, null, { balance: balance, unconfirmedBalance: unconfirmedBalance });
 			});
@@ -398,7 +390,7 @@ Accounts.prototype.shared = {
 			}
 
 			__private.openAccount(req.body.secret, function (err, account) {
-				var publicKey = null;
+				let publicKey = null;
 
 				if (!err && account) {
 					publicKey = account.publicKey;
@@ -428,7 +420,7 @@ Accounts.prototype.shared = {
 
 				if (account.delegates) {
 					modules.delegates.getDelegates(req.body, function (err, res) {
-						var delegates = res.delegates.filter(function (delegate) {
+						let delegates = res.delegates.filter(function (delegate) {
 							return account.delegates.indexOf(delegate.publicKey) !== -1;
 						});
 
@@ -451,8 +443,8 @@ Accounts.prototype.shared = {
 				return setImmediate(cb, err[0].message);
 			}
 
-			var hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
-			var keypair = library.ed.makeKeypair(hash);
+			let hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
+			let keypair = library.ed.makeKeypair(hash);
 
 			if (req.body.publicKey) {
 				if (keypair.publicKey.toString('hex') !== req.body.publicKey) {
@@ -484,7 +476,7 @@ Accounts.prototype.shared = {
 								return setImmediate(cb, err);
 							}
 
-							if (account.totalFrozeAmount == 0) {
+							if (account.totalFrozeAmount === 0) {
 								return setImmediate(cb, 'No Stake available');
 							}
 
@@ -500,14 +492,14 @@ Accounts.prototype.shared = {
 								return setImmediate(cb, 'Invalid requester public key');
 							}
 
-							var secondKeypair = null;
+							let secondKeypair = null;
 
 							if (requester.secondSignature) {
-								var secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
+								let secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
 								secondKeypair = library.ed.makeKeypair(secondHash);
 							}
 
-							var transaction;
+							let transaction;
 
 							try {
 								transaction = library.logic.transaction.create({
@@ -531,7 +523,7 @@ Accounts.prototype.shared = {
 							return setImmediate(cb, err);
 						}
 
-						if (account.totalFrozeAmount == 0) {
+						if (account.totalFrozeAmount === 0) {
 							return setImmediate(cb, 'No Stake available');
 						}
 
@@ -543,14 +535,14 @@ Accounts.prototype.shared = {
 							return setImmediate(cb, 'Invalid second passphrase');
 						}
 
-						var secondKeypair = null;
+						let secondKeypair = null;
 
 						if (account.secondSignature) {
-							var secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
+							let secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
 							secondKeypair = library.ed.makeKeypair(secondHash);
 						}
 
-						var transaction;
+						let transaction;
 
 						try {
 							transaction = library.logic.transaction.create({
@@ -598,9 +590,7 @@ Accounts.prototype.shared = {
 				return setImmediate(cb, 'Missing required property: address or publicKey');
 			}
 
-			// self.getAccount can accept publicKey as argument, but we also compare here
-			// if account publicKey match address (when both are supplied)
-			var address = req.body.publicKey ? self.generateAddressByPublicKey(req.body.publicKey) : req.body.address;
+			let address = req.body.publicKey ? self.generateAddressByPublicKey(req.body.publicKey) : req.body.address;
 			if (req.body.address && req.body.publicKey && address !== req.body.address) {
 				return setImmediate(cb, 'Account publicKey does not match address');
 			}
@@ -644,15 +634,15 @@ Accounts.prototype.shared = {
 	},
 
 	getCirculatingSupply: function (req, cb) {
-		var initialUnmined = config.etpSupply.totalSupply - config.initialPrimined.total;
-		var publicAddress = library.config.sender.address;
+		let initialUnmined = config.etpSupply.totalSupply - config.initialPrimined.total;
+		let publicAddress = library.config.sender.address;
 
 		library.db.one(sql.getCurrentUnmined, { address: publicAddress })
 		.then(function (currentUnmined) {
-			var circulatingSupply = config.initialPrimined.total + initialUnmined - currentUnmined.balance;
+			let circulatingSupply = config.initialPrimined.total + initialUnmined - currentUnmined.balance;
 
 			cache.prototype.getJsonForKey("minedContributorsBalance", function (err, contributorsBalance) {
-				var totalCirculatingSupply = parseInt(contributorsBalance) + circulatingSupply;
+				let totalCirculatingSupply = parseInt(contributorsBalance) + circulatingSupply;
 
 				return setImmediate(cb, null, {
 					circulatingSupply: totalCirculatingSupply
@@ -665,7 +655,7 @@ Accounts.prototype.shared = {
 		});
 	},
 	totalSupply: function (req, cb) {
-		var totalSupply = config.etpSupply.totalSupply;
+		let totalSupply = config.etpSupply.totalSupply;
 
 		return setImmediate(cb, null, {
 			totalSupply: totalSupply
@@ -676,8 +666,8 @@ Accounts.prototype.shared = {
 	migrateData: function (req, cb) {
 
 		try {
-			var balance;
-			if (req.body.data.balance_d == null) {
+			let balance;
+			if (req.body.data.balance_d === null) {
 				balance = 0;
 			} else {
 				balance = parseFloat(req.body.data.balance_d) * 100000000;
@@ -703,10 +693,10 @@ Accounts.prototype.shared = {
 		function insertstakeOrder(order) {
 			return new Promise(function (resolve, reject) {
 
-				var date = new Date((slots.getTime()) * 1000);
-				var milestone = 0;
-				var endTime = 0;
-				var nextVoteMilestone = (date.setMinutes(date.getMinutes() + constants.froze.vTime)) / 1000;
+				let date = new Date((slots.getTime()) * 1000);
+				let milestone = 0;
+				let endTime = 0;
+				let nextVoteMilestone = (date.setMinutes(date.getMinutes() + constants.froze.vTime)) / 1000;
 
 				library.db.none(sql.InsertStakeOrder, {
 					account_id: req.body.data.id,
@@ -731,7 +721,7 @@ Accounts.prototype.shared = {
 		async function insertStakeOrdersInETP(orders) {
 
 			try {
-				for (var order in orders) {
+				for (let order in orders) {
 					await insertstakeOrder(orders[order]);
 				}
 			} catch (err) {
@@ -785,7 +775,7 @@ Accounts.prototype.shared = {
 
 		function updateETPSUserDetail() {
 			return new Promise(function (resolve, reject) {
-				var date = new Date((slots.getRealTime()));
+				let date = new Date((slots.getRealTime()));
 
 				library.db.none(sql.updateETPSUserInfo, {
 					userId: req.body.data.id,
@@ -804,9 +794,9 @@ Accounts.prototype.shared = {
 
 		(async function () {
 			try {
-				var orders = await getStakeOrderFromETPS();
+				let orders = await getStakeOrderFromETPS();
 				await insertStakeOrdersInETP(orders);
-				var totalFrozeAmount = await checkFrozeAmountsInStakeOrders();
+				let totalFrozeAmount = await checkFrozeAmountsInStakeOrders();
 				if (!totalFrozeAmount.sum) {
 					totalFrozeAmount.sum = 0;
 				}
@@ -823,11 +813,11 @@ Accounts.prototype.shared = {
 
 	validateExistingUser: function (req, cb) {
 
-		var data = req.body.data;
-		var username = Buffer.from((data.split("&")[0]).split("=")[1], 'base64').toString();
-		var password = Buffer.from((data.split("&")[1]).split("=")[1], 'base64').toString();
+		let data = req.body.data;
+		let username = Buffer.from((data.split("&")[0]).split("=")[1], 'base64').toString();
+		let password = Buffer.from((data.split("&")[1]).split("=")[1], 'base64').toString();
 
-		var hashPassword = crypto.createHash('md5').update(password).digest('hex');
+		let hashPassword = crypto.createHash('md5').update(password).digest('hex');
 
 		library.db.one(sql.validateExistingUser, {
 			username: username,
@@ -848,15 +838,14 @@ Accounts.prototype.shared = {
 		if (!req.body.secret) {
 			return setImmediate(cb, 'secret is missing');
 		}
-		var hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
-		var keypair = library.ed.makeKeypair(hash);
-		var publicKey = keypair.publicKey.toString('hex');
-		var address = self.generateAddressByPublicKey(publicKey);
+		let hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
+		let keypair = library.ed.makeKeypair(hash);
+		let publicKey = keypair.publicKey.toString('hex');
+		let address = self.generateAddressByPublicKey(publicKey);
 		library.db.query(sql.findTrsUser, {
 			senderId: address
 		})
 		.then(function (trs) {
-			// send trs object if want all transations details for {address}
 			return setImmediate(cb, null, { address: trs[0].senderId });
 		})
 		.catch(function (err) {
@@ -887,7 +876,7 @@ Accounts.prototype.internal = {
 				return setImmediate(cb, err);
 			}
 
-			var accounts = raw.map(function (account) {
+			let accounts = raw.map(function (account) {
 				return {
 					address: account.address,
 					balance: account.balance,
@@ -903,14 +892,13 @@ Accounts.prototype.internal = {
 		return setImmediate(cb, null, { success: true, accounts: __private.accounts });
 	},
 
-	// lock account API
 	lockAccount: function (req, cb) {
 		library.schema.validate(req.body, schema.lockAccount, function (err) {
 			if (!err) {
 				if (!req.body.address) {
 					return setImmediate(cb, 'Missing required property: address');
 				}
-				var address = req.body.publicKey ? self.generateAddressByPublicKey(req.body.publicKey) : req.body.address;
+				let address = req.body.publicKey ? self.generateAddressByPublicKey(req.body.publicKey) : req.body.address;
 				self.getAccount({ address: address }, function (err, account) {
 					if (err) {
 						return setImmediate(cb, err);
@@ -921,17 +909,16 @@ Accounts.prototype.internal = {
 						data.address = req.body.address;
 						if (req.body.accType) {
 							data.acc_type = req.body.accType;
-							var lastBlock = modules.blocks.lastBlock.get();
-							//data.startTime = lastBlock.timestamp;
+							let lastBlock = modules.blocks.lastBlock.get();
 							data.endTime = library.logic.contract.calcEndTime(req.body.accType, lastBlock.timestamp);
 							if (req.body.amount) {
 								data.transferedAmount = req.body.amount;
 							}
-							var REDIS_KEY_USER_INFO_HASH = "userInfo_" + data.address;
-							var REDIS_KEY_USER_TIME_HASH = "userTimeHash_" + data.endTime;
+							let REDIS_KEY_USER_INFO_HASH = "userInfo_" + data.address;
+							let REDIS_KEY_USER_TIME_HASH = "userTimeHash_" + data.endTime;
 							cache.prototype.isExists(REDIS_KEY_USER_INFO_HASH, function (err, isExist) {
 								if (!isExist) {
-									var userInfo = {
+									let userInfo = {
 										address: data.address,
 										transferedAmount: data.transferedAmount,
 										endTime: data.endTime,
@@ -963,8 +950,7 @@ Accounts.prototype.internal = {
 							senderId: account.address
 						})
 						.then(function (row) {
-							if (row.status == 0) {
-								//return setImmediate(cb, 'Account is already locked');
+							if (row.status === 0) {
 								return cb('Account is already locked');
 							}
 							library.db.none(sql.disableAccount, {
@@ -978,8 +964,6 @@ Accounts.prototype.internal = {
 								library.logger.error(err.stack);
 								return setImmediate(cb, err);
 							});
-							//return setImmediate(cb, null, row.status);
-							//cb(null);
 						})
 						.catch(function (err) {
 							library.logger.error(err.stack);
@@ -993,7 +977,6 @@ Accounts.prototype.internal = {
 		});
 	},
 
-	// unlock account API
 	unlockAccount: function (req, cb) {
 		library.schema.validate(req.body, schema.unlockAccount, function (err) {
 			if (!err) {
@@ -1001,7 +984,7 @@ Accounts.prototype.internal = {
 					return setImmediate(cb, 'Missing required property: address');
 				}
 
-				var address = req.body.publicKey ? self.generateAddressByPublicKey(req.body.publicKey) : req.body.address;
+				let address = req.body.publicKey ? self.generateAddressByPublicKey(req.body.publicKey) : req.body.address;
 				library.db.none(sql.enableAccount, {
 					senderId: address
 				})
@@ -1018,19 +1001,18 @@ Accounts.prototype.internal = {
 		});
 	},
 
-	// logout API
 	logout: function (req, cb) {
 		delete req.decoded;
 		return setImmediate(cb, null);
 	},
 
 	generateQRCode: function (req, cb) {
-		var user = {};
+		let user = {};
 		if (!req.body.publicKey) {
 			return setImmediate(cb, 'Missing address or public key');
 		}
 		user.address = modules.accounts.generateAddressByPublicKey(req.body.publicKey);
-		var secret = speakeasy.generateSecret({ length: 30 });
+		let secret = speakeasy.generateSecret({ length: 30 });
 		QRCode.toDataURL(secret.otpauth_url, function (err, data_url) {
 			user.twofactor = {
 				secret: '',
@@ -1040,22 +1022,11 @@ Accounts.prototype.internal = {
 			};
 			library.cache.client.set('2fa_user_' + user.address, JSON.stringify(user));
 			return setImmediate(cb, null, { success: true, dataUrl: data_url });
-			/* library.cache.client.exists('2fa_user_' + user.address, function (err, isExist) {
-				if (!isExist) {
-					
-				} else {
-					cache.prototype.delHash('2fa_user_' + user.address, function (isdel) {
-						cache.prototype.hmset('2fa_user_' + user.address, JSON.stringify(user), 'ex', 30);
-						return setImmediate(cb, null, { success: true, dataUrl: data_url });
-					});
-				}
-			}); */
-
 		});
 	},
 
 	verifyOTP: function (req, cb) {
-		var user = {};
+		let user = {};
 		if (!req.body.publicKey) {
 			return setImmediate(cb, 'Missing address or public key');
 		}
@@ -1067,8 +1038,8 @@ Accounts.prototype.internal = {
 			if (err) {
 				return setImmediate(cb, err);
 			}
-			var user_2FA = JSON.parse(userCred);
-			var verified = speakeasy.totp.verify({
+			let user_2FA = JSON.parse(userCred);
+			let verified = speakeasy.totp.verify({
 				secret: user_2FA.twofactor.tempSecret,
 				encoding: 'base32',
 				token: req.body.otp,
@@ -1082,7 +1053,7 @@ Accounts.prototype.internal = {
 	},
 
 	enableTwoFactor: function (req, cb) {
-		var user = {};
+		let user = {};
 		if (!req.body.key) {
 			return setImmediate(cb, 'Key is missing');
 		}
@@ -1092,9 +1063,9 @@ Accounts.prototype.internal = {
 		if (!req.body.otp) {
 			return setImmediate(cb, 'otp is missing');
 		}
-		var hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
-		var keypair = library.ed.makeKeypair(hash);
-		var publicKey = keypair.publicKey.toString('hex');
+		let hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
+		let keypair = library.ed.makeKeypair(hash);
+		let publicKey = keypair.publicKey.toString('hex');
 		user.address = modules.accounts.generateAddressByPublicKey(publicKey);
 		library.cache.client.get('2fa_user_' + user.address, function (err, userCred) {
 			if (err) {
@@ -1103,8 +1074,8 @@ Accounts.prototype.internal = {
 			if (!userCred) {
 				return setImmediate(cb, 'Key expired');
 			}
-			var user_2FA = JSON.parse(userCred);
-			var verified = speakeasy.totp.verify({
+			let user_2FA = JSON.parse(userCred);
+			let verified = speakeasy.totp.verify({
 				secret: req.body.key,
 				encoding: 'base32',
 				token: req.body.otp,
@@ -1120,7 +1091,7 @@ Accounts.prototype.internal = {
 	},
 
 	disableTwoFactor: function (req, cb) {
-		var user = {};
+		let user = {};
 		if (!req.body.publicKey) {
 			return setImmediate(cb, 'Missing address or public key');
 		}
@@ -1134,7 +1105,7 @@ Accounts.prototype.internal = {
 	},
 
 	checkTwoFactorStatus: function (req, cb) {
-		var user = {};
+		let user = {};
 		if (!req.body.publicKey) {
 			return setImmediate(cb, 'Missing address or public key');
 		}
@@ -1142,7 +1113,7 @@ Accounts.prototype.internal = {
 		library.cache.client.exists('2fa_user_' + user.address, function (err, isExist) {
 			if (isExist) {
 				library.cache.client.get('2fa_user_' + user.address, function (err, userCred) {
-					var user_2FA = JSON.parse(userCred);
+					let user_2FA = JSON.parse(userCred);
 					if(user_2FA.twofactor.secret) {
 						return setImmediate(cb, null, { success: true });
 					}
@@ -1154,7 +1125,6 @@ Accounts.prototype.internal = {
 		});
 	},
 
-	// Get user's status before sending pending group bonus 
 	getWithdrawlStatus: function (req, cb) {
 		library.schema.validate(req.body, schema.enablePendingGroupBonus, function (err) {
 			if (err) {
@@ -1175,9 +1145,9 @@ Accounts.prototype.internal = {
 									transactionId: transactionId
 								})
 								.then(function (transationData) {
-									var d = constants.epochTime;
-									var t = parseInt(d.getTime() / 1000);
-									var d = new Date((transationData.timestamp + t) * 1000);
+									let d = constants.epochTime;
+									let t = parseInt(d.getTime() / 1000);
+									d = new Date((transationData.timestamp + t) * 1000);
 									const timeDiff = (d - Date.now());
 									const days = Math.ceil(Math.abs(timeDiff / (1000 * 60 * 60 * 24)));
 									if (days > 7) {
@@ -1221,7 +1191,6 @@ Accounts.prototype.internal = {
 					.then(function (directSponsors) {
 						if (directSponsors.length >= 2) {
 
-							//check at least two active stake orders
 							let activeStakeCount = 0;
 							directSponsors.forEach(function (directSponsor, index) {
 								library.db.query(sql.findActiveStakeAmount, {
@@ -1229,9 +1198,9 @@ Accounts.prototype.internal = {
 								})
 								.then(function (stakeInfo) {
 									stakedAmount = parseInt(stakeInfo[0].sum) / 100000000;
-									var d = constants.epochTime;
-									var t = parseInt(d.getTime() / 1000);
-									var d = new Date((stakeInfo[0].startTime + t) * 1000);
+									let d = constants.epochTime;
+									let t = parseInt(d.getTime() / 1000);
+									d = new Date((stakeInfo[0].startTime + t) * 1000);
 									const timeDiff = (d - Date.now());
 									const days = Math.ceil(Math.abs(timeDiff / (1000 * 60 * 60 * 24)));
 									if (stakedAmount && days <= 31) {
@@ -1261,7 +1230,6 @@ Accounts.prototype.internal = {
 				},
 				checkRatio: function (seriesCb) {
 
-					// check ratio 1:10 to qualify for enabling token distribution
 					library.db.query(sql.findGroupBonus, {
 						senderId: req.body.address
 					})
@@ -1296,7 +1264,6 @@ Accounts.prototype.internal = {
 		});
 	},
 
-	// Send withdrawl amount to respective address
 	sendWithdrawlAmount: function (req, cb) {
 		library.schema.validate(req.body, schema.enablePendingGroupBonus, function (err) {
 			if (err) {
@@ -1310,7 +1277,6 @@ Accounts.prototype.internal = {
 				transferedAmount: nextBonus,
 				accType: 5
 			};
-			//Send amount through smart contract
 			library.logic.contract.sendContractAmount([userInfo], function (err, trsResponse) {
 				if (err) {
 					return setImmediate(cb, err);
@@ -1333,3 +1299,5 @@ Accounts.prototype.internal = {
 
 // Export
 module.exports = Accounts;
+
+/*************************************** END OF FILE *************************************/

@@ -1,6 +1,6 @@
-'use strict';
 
-var LoaderSql = {
+
+let LoaderSql = {
 	countBlocks: 'SELECT COUNT("rowId")::int FROM blocks',
 
 	getGenesisBlock: 'SELECT "id", "payloadHash", "blockSignature" FROM blocks WHERE "height" = 1',

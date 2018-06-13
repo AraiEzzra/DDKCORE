@@ -1,13 +1,11 @@
-'use strict';
-
-var ByteBuffer = require('bytebuffer');
-var constants = require('../helpers/constants.js');
-var dappCategories = require('../helpers/dappCategories.js');
-var sql = require('../sql/dapps.js');
-var valid_url = require('valid-url');
+let ByteBuffer = require('bytebuffer');
+let constants = require('../helpers/constants.js');
+let dappCategories = require('../helpers/dappCategories.js');
+let sql = require('../sql/dapps.js');
+let valid_url = require('valid-url');
 
 // Private fields
-var library, __private = {};
+let library, __private = {};
 
 __private.unconfirmedNames = {};
 __private.unconfirmedLinks = {};
@@ -68,7 +66,7 @@ DApp.prototype.create = function (data, trs) {
  * @param {account} sender
  * @return {number} fee
  */
-DApp.prototype.calculateFee = function (trs, sender) {
+DApp.prototype.calculateFee = function () {
 	return constants.fees.dapp;
 };
 
@@ -82,7 +80,7 @@ DApp.prototype.calculateFee = function (trs, sender) {
  * @return {setImmediateCallback} errors | trs
  */
 DApp.prototype.verify = function (trs, sender, cb) {
-	var i;
+	let i;
 
 	if (trs.recipientId) {
 		return setImmediate(cb, 'Invalid recipient');
@@ -100,7 +98,7 @@ DApp.prototype.verify = function (trs, sender, cb) {
 		return setImmediate(cb, 'Invalid application category');
 	}
 
-	var foundCategory = false;
+	let foundCategory = false;
 	for (i in dappCategories) {
 		if (dappCategories[i] === trs.asset.dapp.category) {
 			foundCategory = true;
@@ -117,7 +115,7 @@ DApp.prototype.verify = function (trs, sender, cb) {
 			return setImmediate(cb, 'Invalid application icon link');
 		}
 
-		var length = trs.asset.dapp.icon.length;
+		let length = trs.asset.dapp.icon.length;
 
 		if (
 			trs.asset.dapp.icon.indexOf('.png') !== length - 4 &&
@@ -157,7 +155,7 @@ DApp.prototype.verify = function (trs, sender, cb) {
 	}
 
 	if (trs.asset.dapp.tags) {
-		var tags = trs.asset.dapp.tags.split(',');
+		let tags = trs.asset.dapp.tags.split(',');
 
 		tags = tags.map(function (tag) {
 			return tag.trim();
@@ -175,7 +173,7 @@ DApp.prototype.verify = function (trs, sender, cb) {
 		link: trs.asset.dapp.link || null,
 		transactionId: trs.id
 	}).then(function (rows) {
-		var dapp = rows[0];
+		let dapp = rows[0];
 
 		if (dapp) {
 			if (dapp.name === trs.asset.dapp.name) {
@@ -218,20 +216,20 @@ DApp.prototype.process = function (trs, sender, cb) {
  * @throws {e} error
  */
 DApp.prototype.getBytes = function (trs) {
-	var buf;
+	let buf;
 
 	try {
 		buf = Buffer.from([]);
-		var nameBuf = Buffer.from(trs.asset.dapp.name, 'utf8');
+		let nameBuf = Buffer.from(trs.asset.dapp.name, 'utf8');
 		buf = Buffer.concat([buf, nameBuf]);
 
 		if (trs.asset.dapp.description) {
-			var descriptionBuf = Buffer.from(trs.asset.dapp.description, 'utf8');
+			let descriptionBuf = Buffer.from(trs.asset.dapp.description, 'utf8');
 			buf = Buffer.concat([buf, descriptionBuf]);
 		}
 
 		if (trs.asset.dapp.tags) {
-			var tagsBuf = Buffer.from(trs.asset.dapp.tags, 'utf8');
+			let tagsBuf = Buffer.from(trs.asset.dapp.tags, 'utf8');
 			buf = Buffer.concat([buf, tagsBuf]);
 		}
 
@@ -243,7 +241,7 @@ DApp.prototype.getBytes = function (trs) {
 			buf = Buffer.concat([buf, Buffer.from(trs.asset.dapp.icon, 'utf8')]);
 		}
 
-		var bb = new ByteBuffer(4 + 4, true);
+		let bb = new ByteBuffer(4 + 4, true);
 		bb.writeInt(trs.asset.dapp.type);
 		bb.writeInt(trs.asset.dapp.category);
 		bb.flip();
@@ -376,13 +374,13 @@ DApp.prototype.schema = {
  * @throws {string} Failed to validate dapp schema.
  */
 DApp.prototype.objectNormalize = function (trs) {
-	for (var i in trs.asset.dapp) {
+	for (let i in trs.asset.dapp) {
 		if (trs.asset.dapp[i] === null || typeof trs.asset.dapp[i] === 'undefined') {
 			delete trs.asset.dapp[i];
 		}
 	}
 
-	var report = library.schema.validate(trs.asset.dapp, DApp.prototype.schema);
+	let report = library.schema.validate(trs.asset.dapp, DApp.prototype.schema);
 
 	if (!report) {
 		throw 'Failed to validate dapp schema: ' + this.scope.schema.getLastErrors().map(function (err) {
@@ -402,7 +400,7 @@ DApp.prototype.dbRead = function (raw) {
 	if (!raw.dapp_name) {
 		return null;
 	} else {
-		var dapp = {
+		let dapp = {
 			name: raw.dapp_name,
 			description: raw.dapp_description,
 			tags: raw.dapp_tags,
@@ -486,3 +484,5 @@ DApp.prototype.ready = function (trs, sender) {
 
 // Export
 module.exports = DApp;
+
+/*************************************** END OF FILE *************************************/

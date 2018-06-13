@@ -1,8 +1,6 @@
-'use strict';
+let RateLimit = require('express-rate-limit');
 
-var RateLimit = require('express-rate-limit');
-
-var defaults = {
+let defaults = {
 	max: 0, // Disabled
 	delayMs: 0, // Disabled
 	delayAfter: 0, // Disabled
@@ -48,7 +46,7 @@ module.exports = function (app, config) {
 	config.peers = config.peers || {};
 	config.peers.options = config.peers.options || {};
 
-	var limits = {
+	let limits = {
 		client: applyLimits(config.api.options.limits),
 		peer: applyLimits(config.peers.options.limits)
 	};
@@ -60,3 +58,5 @@ module.exports = function (app, config) {
 
 	return limits;
 };
+
+/*************************************** END OF FILE *************************************/

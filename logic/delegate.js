@@ -1,9 +1,7 @@
-'use strict';
-
-var constants = require('../helpers/constants.js');
+let constants = require('../helpers/constants.js');
 
 // Private fields
-var modules, library;
+let modules, library;
 
 /**
  * Initializes library.
@@ -56,7 +54,7 @@ Delegate.prototype.create = function (data, trs) {
  * @returns {number} constants.fees.delegate
  * @todo delete unnecessary function parameters trs, sender.
  */
-Delegate.prototype.calculateFee = function (trs, sender) {
+Delegate.prototype.calculateFee = function () {
 	return constants.fees.delegate;
 };
 
@@ -94,10 +92,10 @@ Delegate.prototype.verify = function (trs, sender, cb) {
 		return setImmediate(cb, 'Username must be lowercase');
 	}
 
-	var isAddress = /^[DDK|ddk][0-9]{1,25}$/g;
-	var allowSymbols = /^[a-z0-9!@$&_.]+$/g;
+	let isAddress = /^[DDK|ddk][0-9]{1,25}$/g;
+	let allowSymbols = /^[a-z0-9!@$&_.]+$/g;
 
-	var username = String(trs.asset.delegate.username).toLowerCase().trim();
+	let username = String(trs.asset.delegate.username).toLowerCase().trim();
 
 	if (username === '') {
 		return setImmediate(cb, 'Empty username');
@@ -153,7 +151,7 @@ Delegate.prototype.getBytes = function (trs) {
 		return null;
 	}
 
-	var buf;
+	let buf;
 
 	try {
 		buf = Buffer.from(trs.asset.delegate.username, 'utf8');
@@ -173,7 +171,7 @@ Delegate.prototype.getBytes = function (trs) {
  * @todo delete extra parameter block.
  */
 Delegate.prototype.apply = function (trs, block, sender, cb) {
-	var data = {
+	let data = {
 		address: sender.address,
 		u_isDelegate: 0,
 		isDelegate: 1,
@@ -197,7 +195,7 @@ Delegate.prototype.apply = function (trs, block, sender, cb) {
  * @todo delete extra parameter block.
  */
 Delegate.prototype.undo = function (trs, block, sender, cb) {
-	var data = {
+	let data = {
 		address: sender.address,
 		u_isDelegate: 1,
 		isDelegate: 0,
@@ -220,7 +218,7 @@ Delegate.prototype.undo = function (trs, block, sender, cb) {
  * @param {function} cb - Callback function.
  */
 Delegate.prototype.applyUnconfirmed = function (trs, sender, cb) {
-	var data = {
+	let data = {
 		address: sender.address,
 		u_isDelegate: 1,
 		isDelegate: 0
@@ -243,7 +241,7 @@ Delegate.prototype.applyUnconfirmed = function (trs, sender, cb) {
  * @param {function} cb - Callback function.
  */
 Delegate.prototype.undoUnconfirmed = function (trs, sender, cb) {
-	var data = {
+	let data = {
 		address: sender.address,
 		u_isDelegate: 0,
 		isDelegate: 0
@@ -276,7 +274,7 @@ Delegate.prototype.schema = {
  * @throws {string} Failed to validate delegate schema.
  */
 Delegate.prototype.objectNormalize = function (trs) {
-	var report = library.schema.validate(trs.asset.delegate, Delegate.prototype.schema);
+	let report = library.schema.validate(trs.asset.delegate, Delegate.prototype.schema);
 
 	if (!report) {
 		throw 'Failed to validate delegate schema: ' + this.scope.schema.getLastErrors().map(function (err) {
@@ -296,7 +294,7 @@ Delegate.prototype.dbRead = function (raw) {
 	if (!raw.d_username) {
 		return null;
 	} else {
-		var delegate = {
+		let delegate = {
 			username: raw.d_username,
 			publicKey: raw.t_senderPublicKey,
 			address: raw.t_senderId
@@ -348,3 +346,5 @@ Delegate.prototype.ready = function (trs, sender) {
 
 // Export
 module.exports = Delegate;
+
+/*************************************** END OF FILE *************************************/

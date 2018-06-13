@@ -1,10 +1,8 @@
-'use strict';
-
-var constants = require('../helpers/constants.js');
-var sql = require('../sql/dapps.js');
+let constants = require('../helpers/constants.js');
+let sql = require('../sql/dapps.js');
 
 // Private fields
-var modules, library, shared;
+let modules, library, shared;
 
 /**
  * Initializes library.
@@ -61,7 +59,7 @@ InTransfer.prototype.create = function (data, trs) {
  * @param {account} sender
  * @return {number} fee
  */
-InTransfer.prototype.calculateFee = function (trs, sender) {
+InTransfer.prototype.calculateFee = function () {
 	return constants.fees.send;
 };
 
@@ -118,11 +116,11 @@ InTransfer.prototype.process = function (trs, sender, cb) {
  * @throws {e} Error
  */
 InTransfer.prototype.getBytes = function (trs) {
-	var buf;
+	let buf;
 
 	try {
 		buf = Buffer.from([]);
-		var nameBuf = Buffer.from(trs.asset.inTransfer.dappId, 'utf8');
+		let nameBuf = Buffer.from(trs.asset.inTransfer.dappId, 'utf8');
 		buf = Buffer.concat([buf, nameBuf]);
 	} catch (e) {
 		throw e;
@@ -233,7 +231,7 @@ InTransfer.prototype.schema = {
  * @throws {string} error message
  */
 InTransfer.prototype.objectNormalize = function (trs) {
-	var report = library.schema.validate(trs.asset.inTransfer, InTransfer.prototype.schema);
+	let report = library.schema.validate(trs.asset.inTransfer, InTransfer.prototype.schema);
 
 	if (!report) {
 		throw 'Failed to validate inTransfer schema: ' + this.scope.schema.getLastErrors().map(function (err) {
@@ -253,7 +251,7 @@ InTransfer.prototype.dbRead = function (raw) {
 	if (!raw.in_dappId) {
 		return null;
 	} else {
-		var inTransfer = {
+		let inTransfer = {
 			dappId: raw.in_dappId
 		};
 
@@ -314,3 +312,5 @@ InTransfer.prototype.ready = function (trs, sender) {
 
 // Export
 module.exports = InTransfer;
+
+/*************************************** END OF FILE *************************************/

@@ -1,7 +1,7 @@
-'use strict';
 
-var Router = require('../../helpers/router');
-var httpApi = require('../../helpers/httpApi');
+
+let Router = require('../../helpers/router');
+let httpApi = require('../../helpers/httpApi');
 /**
  * Binds api with modules and creates common url.
  * - End point: `/api/loader`
@@ -20,7 +20,7 @@ var httpApi = require('../../helpers/httpApi');
 // Constructor
 function LoaderHttpApi (loaderModule, app) {
 
-	var router = new Router();
+	let router = new Router();
 
 	router.map(loaderModule.shared, {
 		'get /status': 'status',
@@ -28,7 +28,7 @@ function LoaderHttpApi (loaderModule, app) {
 	});
 
 	router.get('/status/ping', function (req, res) {
-		var status = loaderModule.internal.statusPing();
+		let status = loaderModule.internal.statusPing();
 		return res.status(status ? 200 : 503).json({success: status});
 	});
 
@@ -36,3 +36,5 @@ function LoaderHttpApi (loaderModule, app) {
 }
 
 module.exports = LoaderHttpApi;
+
+/*************************************** END OF FILE *************************************/

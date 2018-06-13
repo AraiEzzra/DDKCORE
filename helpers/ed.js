@@ -1,13 +1,12 @@
-'use strict';
+let sodium = require('sodium').api;
 
-var sodium = require('sodium').api;
 /**
  * Crypto functions that implements sodium.
  * @memberof module:helpers
  * @requires sodium
  * @namespace
  */
-var ed = {};
+let ed = {};
 
 /**
  * Creates a keypar based on a hash.
@@ -16,7 +15,7 @@ var ed = {};
  * @return {Object} publicKey, privateKey
  */
 ed.makeKeypair = function (hash) {
-	var keypair = sodium.crypto_sign_seed_keypair(hash);
+	let keypair = sodium.crypto_sign_seed_keypair(hash);
 
 	return {
 		publicKey: keypair.publicKey,
@@ -47,3 +46,5 @@ ed.verify = function (hash, signatureBuffer, publicKeyBuffer) {
 };
 
 module.exports = ed;
+
+/*************************************** END OF FILE *************************************/

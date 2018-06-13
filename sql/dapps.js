@@ -1,6 +1,6 @@
-'use strict';
 
-var DappsSql = {
+
+let DappsSql = {
 	sortFields: ['type', 'name', 'category', 'link'],
 
 	countByTransactionId: 'SELECT COUNT(*)::int AS "count" FROM dapps WHERE "transactionId" = ${id}',
@@ -13,7 +13,7 @@ var DappsSql = {
 		return [
 			'SELECT "transactionId", "name", "description", "tags", "link", "type", "category", "icon"',
 			'FROM dapps WHERE to_tsvector("name" || \' \' || "description" || \' \' || "tags") @@ to_tsquery(${q})',
-      (params.category ? 'AND "category" = ${category}' : ''),
+			(params.category ? 'AND "category" = ${category}' : ''),
 			'LIMIT ${limit}'
 		].filter(Boolean).join(' ');
 	},
@@ -22,12 +22,12 @@ var DappsSql = {
 
 	getByIds: 'SELECT "name", "description", "tags", "link", "type", "category", "icon", "transactionId" FROM dapps WHERE "transactionId" IN ($1:csv)',
 
-  // Need to fix "or" or "and" in query
+	// Need to fix "or" or "and" in query
 	list: function (params) {
 		return [
 			'SELECT "name", "description", "tags", "link", "type", "category", "icon", "transactionId" FROM dapps',
-      (params.where.length ? 'WHERE ' + params.where.join(' OR ') : ''),
-      (params.sortField ? 'ORDER BY ' + [params.sortField, params.sortMethod].join(' ') : ''),
+			(params.where.length ? 'WHERE ' + params.where.join(' OR ') : ''),
+			(params.sortField ? 'ORDER BY ' + [params.sortField, params.sortMethod].join(' ') : ''),
 			'LIMIT ${limit} OFFSET ${offset}'
 		].filter(Boolean).join(' ');
 	},
@@ -43,7 +43,7 @@ var DappsSql = {
 			'SELECT t."id" AS "id", ENCODE(t."senderPublicKey", \'hex\') AS "senderPublicKey", t."amount" AS "amount" FROM trs t',
 			'INNER JOIN blocks b ON t."blockId" = b."id" AND t."type" = ${type}',
 			'INNER JOIN intransfer dt ON dt."transactionId" = t."id" AND dt."dappId" = ${dappid}',
-      (params.lastId ? 'WHERE b."height" > (SELECT "height" FROM blocks ib INNER JOIN trs it ON ib."id" = it."blockId" AND it."id" = ${lastId})' : ''),
+			(params.lastId ? 'WHERE b."height" > (SELECT "height" FROM blocks ib INNER JOIN trs it ON ib."id" = it."blockId" AND it."id" = ${lastId})' : ''),
 			'ORDER BY b."height"'
 		].filter(Boolean).join(' ');
 	}

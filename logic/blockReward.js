@@ -1,9 +1,7 @@
-'use strict';
-
-var constants = require('../helpers/constants.js');
+let constants = require('../helpers/constants.js');
 
 // Private fields
-var __private = {};
+let __private = {};
 
 /**
  * Initializes variables:
@@ -51,8 +49,8 @@ __private.parseHeight = function (height) {
 BlockReward.prototype.calcMilestone = function (height) {
 	height = __private.parseHeight(height);
 
-	var location = Math.trunc((height - this.rewardOffset) / this.distance);
-	var lastMile = this.milestones[this.milestones.length - 1];
+	let location = Math.trunc((height - this.rewardOffset) / this.distance);
+	let lastMile = this.milestones[this.milestones.length - 1];
 
 	if (location > (this.milestones.length - 1)) {
 		return this.milestones.lastIndexOf(lastMile);
@@ -91,16 +89,16 @@ BlockReward.prototype.calcSupply = function (height) {
 		return constants.totalAmount;
 	}
 
-	var milestone = this.calcMilestone(height);
-	var supply    = constants.totalAmount;
-	var rewards   = [];
+	let milestone = this.calcMilestone(height);
+	let supply    = constants.totalAmount;
+	let rewards   = [];
 
-	var amount = 0, multiplier = 0;
+	let amount = 0, multiplier = 0;
 
 	// Remove offset from height
 	height -= this.rewardOffset - 1;
 
-	for (var i = 0; i < this.milestones.length; i++) {
+	for (let i = 0; i < this.milestones.length; i++) {
 		if (milestone >= i) {
 			multiplier = this.milestones[i];
 
@@ -123,8 +121,8 @@ BlockReward.prototype.calcSupply = function (height) {
 		}
 	}
 
-	for (i = 0; i < rewards.length; i++) {
-		var reward = rewards[i];
+	for (var i = 0; i < rewards.length; i++) {
+		let reward = rewards[i];
 		supply += reward[0] * reward[1];
 	}
 
@@ -133,3 +131,5 @@ BlockReward.prototype.calcSupply = function (height) {
 
 // Export
 module.exports = BlockReward;
+
+/*************************************** END OF FILE *************************************/

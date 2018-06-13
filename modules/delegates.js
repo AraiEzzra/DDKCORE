@@ -1,23 +1,23 @@
-'use strict';
 
-var _ = require('lodash');
-var async = require('async');
-var bignum = require('../helpers/bignum.js');
-var BlockReward = require('../logic/blockReward.js');
-var checkIpInList = require('../helpers/checkIpInList.js');
-var constants = require('../helpers/constants.js');
-var jobsQueue = require('../helpers/jobsQueue.js');
-var crypto = require('crypto');
-var Delegate = require('../logic/delegate.js');
-var OrderBy = require('../helpers/orderBy.js');
-var sandboxHelper = require('../helpers/sandbox.js');
-var schema = require('../schema/delegates.js');
-var slots = require('../helpers/slots.js');
-var sql = require('../sql/delegates.js');
-var transactionTypes = require('../helpers/transactionTypes.js');
+
+let _ = require('lodash');
+let async = require('async');
+let bignum = require('../helpers/bignum.js');
+let BlockReward = require('../logic/blockReward.js');
+let checkIpInList = require('../helpers/checkIpInList.js');
+let constants = require('../helpers/constants.js');
+let jobsQueue = require('../helpers/jobsQueue.js');
+let crypto = require('crypto');
+let Delegate = require('../logic/delegate.js');
+let OrderBy = require('../helpers/orderBy.js');
+let sandboxHelper = require('../helpers/sandbox.js');
+let schema = require('../schema/delegates.js');
+let slots = require('../helpers/slots.js');
+let sql = require('../sql/delegates.js');
+let transactionTypes = require('../helpers/transactionTypes.js');
 
 // Private fields
-var modules, library, self, __private = {}, shared = {};
+let modules, library, self, __private = {}, shared = {};
 
 __private.assetTypes = {};
 __private.loaded = false;
@@ -105,12 +105,12 @@ __private.getBlockSlotData = function (slot, height, cb) {
 			return setImmediate(cb, err);
 		}
 
-		var currentSlot = slot;
-		var lastSlot = slots.getLastSlot(currentSlot);
+		let currentSlot = slot;
+		let lastSlot = slots.getLastSlot(currentSlot);
 
 		for (; currentSlot < lastSlot; currentSlot += 1) {
-			var delegate_pos = currentSlot % slots.delegates;
-			var delegate_id = activeDelegates[delegate_pos];
+			let delegate_pos = currentSlot % slots.delegates;
+			let delegate_id = activeDelegates[delegate_pos];
 
 			if (delegate_id && __private.keypairs[delegate_id]) {
 				return setImmediate(cb, null, {time: slots.getSlotTime(currentSlot), keypair: __private.keypairs[delegate_id]});
@@ -141,8 +141,8 @@ __private.forge = function (cb) {
 		return setImmediate(cb);
 	}
 
-	var currentSlot = slots.getSlotNumber();
-	var lastBlock = modules.blocks.lastBlock.get();
+	let currentSlot = slots.getSlotNumber();
+	let lastBlock = modules.blocks.lastBlock.get();
 
 	if (currentSlot === slots.getSlotNumber(lastBlock.timestamp)) {
 		library.logger.debug('Waiting for next delegate slot');
@@ -181,14 +181,11 @@ __private.forge = function (cb) {
 				}
 			});
 		}, function (err) {
-			console.log("*****************************************   Start Block Generation ****************************************");
 			if (err) {
-				console.log("*****************************************   Error ****************************************");
 				library.logger.error('Failed to generate block within delegate slot', err);
 			} else {
-				console.log("*****************************************  Success ****************************************");
 
-				var forgedBlock = modules.blocks.lastBlock.get();
+				let forgedBlock = modules.blocks.lastBlock.get();
 				modules.blocks.lastReceipt.update();
 
 				library.logger.info([
@@ -230,12 +227,12 @@ __private.checkDelegates = function (publicKey, votes, state, cb) {
 			return setImmediate(cb, 'Account not found');
 		}
 
-		var delegates = (state === 'confirmed') ? account.delegates : account.u_delegates;
-		var existing_votes = Array.isArray(delegates) ? delegates.length : 0;
-		var additions = 0, removals = 0;
+		let delegates = (state === 'confirmed') ? account.delegates : account.u_delegates;
+		let existing_votes = Array.isArray(delegates) ? delegates.length : 0;
+		let additions = 0, removals = 0;
 
 		async.eachSeries(votes, function (action, cb) {
-			var math = action[0];
+			let math = action[0];
 
 			if (math === '+') {
 				additions += 1;
@@ -245,7 +242,7 @@ __private.checkDelegates = function (publicKey, votes, state, cb) {
 				return setImmediate(cb, 'Invalid math operator');
 			}
 
-			var publicKey = action.slice(1);
+			let publicKey = action.slice(1);
 
 			try {
 				Buffer.from(publicKey, 'hex');
@@ -278,10 +275,10 @@ __private.checkDelegates = function (publicKey, votes, state, cb) {
 				return setImmediate(cb, err);
 			}
 
-			var total_votes = (existing_votes + additions) - removals;
+			let total_votes = (existing_votes + additions) - removals;
 
 			if (total_votes > constants.activeDelegates) {
-				var exceeded = total_votes - constants.activeDelegates;
+				let exceeded = total_votes - constants.activeDelegates;
 
 				return setImmediate(cb, 'Maximum number of ' + constants.activeDelegates + ' votes exceeded (' + exceeded + ' too many)');
 			} else {
@@ -298,7 +295,7 @@ __private.checkDelegates = function (publicKey, votes, state, cb) {
  * @returns {setImmediateCallback}
  */
 __private.loadDelegates = function (cb) {
-	var secrets;
+	let secrets;
 
 	if (library.config.forging.secret) {
 		if (Array.isArray(library.config.forging.secret)) {
@@ -315,7 +312,7 @@ __private.loadDelegates = function (cb) {
 	}
 
 	async.eachSeries(secrets, function (secret, cb) {
-		var keypair = library.ed.makeKeypair(crypto.createHash('sha256').update(secret, 'utf8').digest());
+		let keypair = library.ed.makeKeypair(crypto.createHash('sha256').update(secret, 'utf8').digest());
 
 		modules.accounts.getAccount({
 			publicKey: keypair.publicKey.toString('hex')
@@ -354,13 +351,13 @@ Delegates.prototype.generateDelegateList = function (height, cb) {
 			return setImmediate(cb, err);
 		}
 
-		var seedSource = modules.rounds.calc(height).toString();
-		var currentSeed = crypto.createHash('sha256').update(seedSource, 'utf8').digest();
+		let seedSource = modules.rounds.calc(height).toString();
+		let currentSeed = crypto.createHash('sha256').update(seedSource, 'utf8').digest();
 
-		for (var i = 0, delCount = truncDelegateList.length; i < delCount; i++) {
-			for (var x = 0; x < 4 && i < delCount; i++, x++) {
-				var newIndex = currentSeed[x] % delCount;
-				var b = truncDelegateList[newIndex];
+		for (let i = 0, delCount = truncDelegateList.length; i < delCount; i++) {
+			for (let x = 0; x < 4 && i < delCount; i++, x++) {
+				let newIndex = currentSeed[x] % delCount;
+				let b = truncDelegateList[newIndex];
 				truncDelegateList[newIndex] = truncDelegateList[i];
 				truncDelegateList[i] = b;
 			}
@@ -391,32 +388,32 @@ Delegates.prototype.getDelegates = function (query, cb) {
 			return setImmediate(cb, err);
 		}
 
-		var limit = query.limit || constants.activeDelegates;
-		var offset = query.offset || 0;
+		let limit = query.limit || constants.activeDelegates;
+		let offset = query.offset || 0;
 
 		limit = limit > constants.activeDelegates ? constants.activeDelegates : limit;
 
-		var count = delegates.length;
-		var realLimit = Math.min(offset + limit, count);
+		let count = delegates.length;
+		let realLimit = Math.min(offset + limit, count);
 
-		var lastBlock   = modules.blocks.lastBlock.get(),
-		totalSupply = __private.blockReward.calcSupply(lastBlock.height);
+		let lastBlock = modules.blocks.lastBlock.get(),
+			totalSupply = __private.blockReward.calcSupply(lastBlock.height);
 
-		for (var i = 0; i < delegates.length; i++) {
+		for (let i = 0; i < delegates.length; i++) {
 			// TODO: 'rate' property is deprecated and need to be removed after transitional period
 			delegates[i].rate = i + 1;
 			delegates[i].rank = i + 1;
 			delegates[i].approval = (delegates[i].vote / totalSupply) * 100;
 			delegates[i].approval = Math.round(delegates[i].approval * 1e2) / 1e2;
 
-			var percent = 100 - (delegates[i].missedblocks / ((delegates[i].producedblocks + delegates[i].missedblocks) / 100));
+			let percent = 100 - (delegates[i].missedblocks / ((delegates[i].producedblocks + delegates[i].missedblocks) / 100));
 			percent = Math.abs(percent) || 0;
 
-			var outsider = i + 1 > slots.delegates;
+			let outsider = i + 1 > slots.delegates;
 			delegates[i].productivity = (!outsider) ? Math.round(percent * 1e2) / 1e2 : 0;
 		}
 
-		var orderBy = OrderBy(query.orderBy, {quoteField: false});
+		let orderBy = OrderBy(query.orderBy, {quoteField: false});
 
 		if (orderBy.error) {
 			return setImmediate(cb, orderBy.error);
@@ -466,7 +463,7 @@ Delegates.prototype.fork = function (block, cause) {
 		cause: cause
 	});
 
-	var fork = {
+	let fork = {
 		delegatePublicKey: block.generatorPublicKey,
 		blockTimestamp: block.timestamp,
 		blockId: block.id,
@@ -493,10 +490,10 @@ Delegates.prototype.validateBlockSlot = function (block, cb) {
 			return setImmediate(cb, err);
 		}
 
-		var currentSlot = slots.getSlotNumber(block.timestamp);
-		var delegate_id = activeDelegates[currentSlot % slots.delegates];
-		// var nextDelegate_id = activeDelegates[(currentSlot + 1) % slots.delegates];
-		// var previousDelegate_id = activeDelegates[(currentSlot - 1) % slots.delegates];
+		let currentSlot = slots.getSlotNumber(block.timestamp);
+		let delegate_id = activeDelegates[currentSlot % slots.delegates];
+		// let nextDelegate_id = activeDelegates[(currentSlot + 1) % slots.delegates];
+		// let previousDelegate_id = activeDelegates[(currentSlot - 1) % slots.delegates];
 
 		if (delegate_id && block.generatorPublicKey === delegate_id) {
 			return setImmediate(cb);
@@ -596,7 +593,7 @@ Delegates.prototype.internal = {
 				return setImmediate(cb, err[0].message);
 			}
 
-			var keypair = library.ed.makeKeypair(crypto.createHash('sha256').update(req.body.secret, 'utf8').digest());
+			let keypair = library.ed.makeKeypair(crypto.createHash('sha256').update(req.body.secret, 'utf8').digest());
 
 			if (req.body.publicKey) {
 				if (keypair.publicKey.toString('hex') !== req.body.publicKey) {
@@ -629,7 +626,7 @@ Delegates.prototype.internal = {
 				return setImmediate(cb, err[0].message);
 			}
 
-			var keypair = library.ed.makeKeypair(crypto.createHash('sha256').update(req.body.secret, 'utf8').digest());
+			let keypair = library.ed.makeKeypair(crypto.createHash('sha256').update(req.body.secret, 'utf8').digest());
 
 			if (req.body.publicKey) {
 				if (keypair.publicKey.toString('hex') !== req.body.publicKey) {
@@ -669,7 +666,7 @@ Delegates.prototype.internal = {
 			if (req.body.publicKey) {
 				return setImmediate(cb, null, {enabled: !!__private.keypairs[req.body.publicKey]});
 			} else {
-				var delegates_cnt = _.keys(__private.keypairs).length;
+				let delegates_cnt = _.keys(__private.keypairs).length;
 				return setImmediate(cb, null, {enabled: delegates_cnt > 0, delegates: _.keys(__private.keypairs)});
 			}
 		});
@@ -737,7 +734,7 @@ Delegates.prototype.shared = {
 					return setImmediate(cb, err);
 				}
 
-				var delegate = _.find(data.delegates, function (delegate) {
+				let delegate = _.find(data.delegates, function (delegate) {
 					if (req.body.publicKey) {
 						return delegate.publicKey === req.body.publicKey;
 					} else if (req.body.username) {
@@ -757,19 +754,19 @@ Delegates.prototype.shared = {
 	},
 
 	getNextForgers: function (req, cb) {
-		var currentBlock = modules.blocks.lastBlock.get();
-		var limit = req.body.limit || 10;
+		let currentBlock = modules.blocks.lastBlock.get();
+		let limit = req.body.limit || 10;
 
 		modules.delegates.generateDelegateList(currentBlock.height, function (err, activeDelegates) {
 			if (err) {
 				return setImmediate(cb, err);
 			}
 
-			var currentBlockSlot = slots.getSlotNumber(currentBlock.timestamp);
-			var currentSlot = slots.getSlotNumber();
-			var nextForgers = [];
+			let currentBlockSlot = slots.getSlotNumber(currentBlock.timestamp);
+			let currentSlot = slots.getSlotNumber();
+			let nextForgers = [];
 
-			for (var i = 1; i <= slots.delegates && i <= limit; i++) {
+			for (let i = 1; i <= slots.delegates && i <= limit; i++) {
 				if (activeDelegates[(currentSlot + i) % slots.delegates]) {
 					nextForgers.push (activeDelegates[(currentSlot + i) % slots.delegates]);
 				}
@@ -785,7 +782,7 @@ Delegates.prototype.shared = {
 				return setImmediate(cb, err[0].message);
 			}
 
-			var orderBy = OrderBy(
+			let orderBy = OrderBy(
 				req.body.orderBy, {
 					sortFields: sql.sortFields,
 					sortField: 'username'
@@ -826,7 +823,7 @@ Delegates.prototype.shared = {
 			}
 
 			library.db.one(sql.getVoters, { publicKey: req.body.publicKey }).then(function (row) {
-				var addresses = (row.accountIds) ? row.accountIds : [];
+				let addresses = (row.accountIds) ? row.accountIds : [];
 
 				modules.accounts.getAccounts({
 					address: { $in: addresses },
@@ -857,8 +854,8 @@ Delegates.prototype.shared = {
 				}
 
 				function compareNumber(a, b) {
-					var sorta = parseFloat(a[data.sortField]);
-					var sortb = parseFloat(b[data.sortField]);
+					let sorta = parseFloat(a[data.sortField]);
+					let sortb = parseFloat(b[data.sortField]);
 					if (data.sortMethod === 'ASC') {
 						return sorta - sortb;
 					} else {
@@ -867,8 +864,8 @@ Delegates.prototype.shared = {
 				}
 
 				function compareString(a, b) {
-					var sorta = a[data.sortField];
-					var sortb = b[data.sortField];
+					let sorta = a[data.sortField];
+					let sortb = b[data.sortField];
 					if (data.sortMethod === 'ASC') {
 						return sorta.localeCompare(sortb);
 					} else {
@@ -887,7 +884,7 @@ Delegates.prototype.shared = {
 					}
 				}
 
-				var delegates = data.delegates.slice(data.offset, data.limit);
+				let delegates = data.delegates.slice(data.offset, data.limit);
 
 				return setImmediate(cb, null, { delegates: delegates, totalCount: data.count });
 			});
@@ -910,7 +907,7 @@ Delegates.prototype.shared = {
 						return setImmediate(cb, err);
 					}
 
-					var forged = new bignum(reward.fees).plus(new bignum(reward.rewards)).toString();
+					let forged = new bignum(reward.fees).plus(new bignum(reward.rewards)).toString();
 					return setImmediate(cb, null, {fees: reward.fees, rewards: reward.rewards, forged: forged, count: reward.count});
 				});
 			} else {
@@ -919,7 +916,7 @@ Delegates.prototype.shared = {
 						return setImmediate(cb, err || 'Account not found');
 					}
 
-					var forged = new bignum(account.fees).plus(new bignum(account.rewards)).toString();
+					let forged = new bignum(account.fees).plus(new bignum(account.rewards)).toString();
 					return setImmediate(cb, null, {fees: account.fees, rewards: account.rewards, forged: forged});
 				});
 			}
@@ -932,8 +929,8 @@ Delegates.prototype.shared = {
 				return setImmediate(cb, err[0].message);
 			}
 
-			var hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
-			var keypair = library.ed.makeKeypair(hash);
+			let hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
+			let keypair = library.ed.makeKeypair(hash);
 
 			if (req.body.publicKey) {
 				if (keypair.publicKey.toString('hex') !== req.body.publicKey) {
@@ -977,14 +974,14 @@ Delegates.prototype.shared = {
 								return setImmediate(cb, 'Invalid requester public key');
 							}
 
-							var secondKeypair = null;
+							let secondKeypair = null;
 
 							if (requester.secondSignature) {
-								var secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
+								let secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
 								secondKeypair = library.ed.makeKeypair(secondHash);
 							}
 
-							var transaction;
+							let transaction;
 
 							try {
 								transaction = library.logic.transaction.create({
@@ -1015,14 +1012,14 @@ Delegates.prototype.shared = {
 							return setImmediate(cb, 'Invalid second passphrase');
 						}
 
-						var secondKeypair = null;
+						let secondKeypair = null;
 
 						if (account.secondSignature) {
-							var secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
+							let secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
 							secondKeypair = library.ed.makeKeypair(secondHash);
 						}
 
-						var transaction;
+						let transaction;
 
 						try {
 							transaction = library.logic.transaction.create({
@@ -1051,3 +1048,5 @@ Delegates.prototype.shared = {
 
 // Export
 module.exports = Delegates;
+
+/*************************************** END OF FILE *************************************/

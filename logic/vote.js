@@ -1,14 +1,12 @@
-'use strict';
-
-var async = require('async');
-var constants = require('../helpers/constants.js');
-var exceptions = require('../helpers/exceptions.js');
-var Diff = require('../helpers/diff.js');
-var _ = require('lodash');
-var sql = require('../sql/accounts.js');
+let async = require('async');
+let constants = require('../helpers/constants.js');
+let exceptions = require('../helpers/exceptions.js');
+let Diff = require('../helpers/diff.js');
+let _ = require('lodash');
+let sql = require('../sql/accounts.js');
 
 // Private fields
-var modules, library, self;
+let modules, library, self;
 
 // Constructor
 /**
@@ -202,7 +200,7 @@ Vote.prototype.process = function (trs, sender, cb) {
  * @throws {e} error
  */
 Vote.prototype.getBytes = function (trs) {
-	var buf;
+	let buf;
 
 	try {
 		buf = trs.asset.votes ? Buffer.from(trs.asset.votes.join(''), 'utf8') : null;
@@ -223,10 +221,10 @@ Vote.prototype.getBytes = function (trs) {
  * @param {block} block
  * @param {account} sender
  * @param {function} cb - Callback function
- * @todo delete unnecessary var parent = this
+ * @todo delete unnecessary let parent = this
  */
 Vote.prototype.apply = function (trs, block, sender, cb) {
-	var parent = this;
+	let parent = this;
 
 	async.series([
 		function (seriesCb) {
@@ -275,7 +273,7 @@ Vote.prototype.apply = function (trs, block, sender, cb) {
 Vote.prototype.undo = function (trs, block, sender, cb) {
 	if (trs.asset.votes === null) { return setImmediate(cb); }
 
-	var votesInvert = Diff.reverse(trs.asset.votes);
+	let votesInvert = Diff.reverse(trs.asset.votes);
 
 	async.series([
 		function (seriesCb) {
@@ -310,10 +308,10 @@ Vote.prototype.undo = function (trs, block, sender, cb) {
  * @param {transaction} trs
  * @param {account} sender
  * @param {function} cb - Callback function
- * @todo delete unnecessary var parent = this
+ * @todo delete unnecessary let parent = this
  */
 Vote.prototype.applyUnconfirmed = function (trs, sender, cb) {
-	var parent = this;
+	let parent = this;
 
 	async.series([
 		function (seriesCb) {
@@ -343,7 +341,7 @@ Vote.prototype.applyUnconfirmed = function (trs, sender, cb) {
 Vote.prototype.undoUnconfirmed = function (trs, sender, cb) {
 	if (trs.asset.votes === null) { return setImmediate(cb); }
 
-	var votesInvert = Diff.reverse(trs.asset.votes);
+	let votesInvert = Diff.reverse(trs.asset.votes);
 
 	this.scope.account.merge(sender.address, { u_delegates: votesInvert }, function (err) {
 		return setImmediate(cb, err);
@@ -378,7 +376,7 @@ Vote.prototype.schema = {
  * @todo should pass trs.asset.vote to validate?
  */
 Vote.prototype.objectNormalize = function (trs) {
-	var report = library.schema.validate(trs.asset, Vote.prototype.schema);
+	let report = library.schema.validate(trs.asset, Vote.prototype.schema);
 
 	if (!report) {
 		throw 'Failed to validate vote schema: ' + this.scope.schema.getLastErrors().map(function (err) {
@@ -399,7 +397,7 @@ Vote.prototype.dbRead = function (raw) {
 	if (!raw.v_votes) {
 		return null;
 	} else {
-		var votes = raw.v_votes.split(',');
+		let votes = raw.v_votes.split(',');
 
 		return { votes: votes };
 	}
@@ -453,14 +451,13 @@ Vote.prototype.ready = function (trs, sender) {
  * 
  */
 Vote.prototype.updateAndCheckVote = function (voteInfo, cb) {
-	var votes = voteInfo.votes;
-	var senderId = voteInfo.senderId;
+	let votes = voteInfo.votes;
+	let senderId = voteInfo.senderId;
 
 	function checkUpvoteDownvote(votes) {
 
 		return new Promise(function (resolve, reject) {
 
-			//To check that its upvote or downvote
 			if ((votes[0])[0] === '+') {
 				resolve(1);
 			} else {
@@ -504,7 +501,6 @@ Vote.prototype.updateAndCheckVote = function (voteInfo, cb) {
 				})
 				.catch(function (err) {
 					library.logger.error(err.stack);
-					//return setImmediate(cb, err);
 					reject(new Error(cb, err));
 				});
 		});
@@ -514,14 +510,14 @@ Vote.prototype.updateAndCheckVote = function (voteInfo, cb) {
 
 		return new Promise(function (resolve, reject) {
 
-			var inCondition = "";
+			let inCondition = "";
 			votes.forEach(function (vote) {
-				var address = modules.accounts.generateAddressByPublicKey(vote.substring(1));
+				let address = modules.accounts.generateAddressByPublicKey(vote.substring(1));
 				inCondition += '\'' + address + '\' ,';
 			});
 			inCondition = inCondition.substring(0, inCondition.length - 1);
-			var query;
-			var sign = voteType === 1 ? '+' : '-';
+			let query;
+			let sign = voteType === 1 ? '+' : '-';
 
 			query = 'UPDATE mem_accounts SET "voteCount"="voteCount"' + sign + '1  WHERE "address" IN ( ' + inCondition + ')';
 
@@ -540,25 +536,23 @@ Vote.prototype.updateAndCheckVote = function (voteInfo, cb) {
 				})
 				.catch(function (err) {
 					library.logger.error(err.stack);
-					//return setImmediate(cb, 'vote updation in mem_accounts table error');
 					reject(new Error(cb, 'vote updation in mem_accounts table error'));
 				});
 
 		});
 	}
 
-	// Async/await function 
 	(async function () {
 		try {
-			var voteType = await checkUpvoteDownvote(votes);
+			let voteType = await checkUpvoteDownvote(votes);
 
 			if (voteType === 1) {
-				var found = await checkWeeklyVote();
+				let found = await checkWeeklyVote();
 				if (found) {
 					await updateStakeOrder();
 				}
 			}
-			var query = await prepareQuery(voteType);
+			let query = await prepareQuery(voteType);
 			await updateVoteCount(query);
 			return setImmediate(cb, null);
 		} catch (err) {
@@ -571,3 +565,5 @@ Vote.prototype.updateAndCheckVote = function (voteInfo, cb) {
 
 // Export
 module.exports = Vote;
+
+/*************************************** END OF FILE *************************************/

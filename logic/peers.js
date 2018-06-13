@@ -1,15 +1,11 @@
-'use strict';
-
-var _ = require('lodash');
-var async = require('async');
-var Peer = require('../logic/peer.js');
-var schema = require('../schema/peers.js');
+let _ = require('lodash');
+let Peer = require('../logic/peer.js');
 
 // Private fields
-var __private = {};
-var self;
-var modules;
-var library;
+let __private = {};
+let self;
+let modules;
+let library;
 
 // Constructor
 function Peers (logger, cb) {
@@ -44,7 +40,7 @@ Peers.prototype.get = function (peer) {
 
 Peers.prototype.upsert = function (peer, insertOnly) {
 	// Insert new peer
-	var insert = function (peer) {
+	let insert = function (peer) {
 		peer.updated = Date.now();
 		__private.peers[peer.string] = peer;
 
@@ -53,10 +49,10 @@ Peers.prototype.upsert = function (peer, insertOnly) {
 	};
 
 	// Update existing peer
-	var update = function (peer) {
+	let update = function (peer) {
 		peer.updated = Date.now();
 
-		var diff = {};
+		let diff = {};
 		_.each(peer, function (value, key) {
 			if (key !== 'updated' && __private.peers[peer.string][key] !== value) {
 				diff[key] = value;
@@ -92,12 +88,12 @@ Peers.prototype.upsert = function (peer, insertOnly) {
 	}
 
 	// Stats for tracking changes
-	var cnt_total = 0;
-	var cnt_active = 0;
-	var cnt_empty_height = 0;
-	var cnt_empty_broadhash = 0;
+	let cnt_total = 0;
+	let cnt_active = 0;
+	let cnt_empty_height = 0;
+	let cnt_empty_broadhash = 0;
 
-	_.each(__private.peers, function (peer, index) {
+	_.each(__private.peers, function (peer) {
 		++cnt_total;
 		if (peer.state === 2) {
 			++cnt_active;
@@ -168,3 +164,5 @@ Peers.prototype.bindModules = function (scope) {
 
 // Export
 module.exports = Peers;
+
+/*************************************** END OF FILE *************************************/

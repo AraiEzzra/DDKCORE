@@ -1,25 +1,25 @@
-'use strict';
 
-var express = require('express');
-var path = require('path');
-var randomString = require('randomstring');
 
-var _ = require('lodash');
+let express = require('express');
+let path = require('path');
+let randomString = require('randomstring');
 
-var async = require('../node').async;
-var dirname = path.join(__dirname, '..', '..');
-var config = require(path.join(dirname, '/config.json'));
-var database = require(path.join(dirname, '/helpers', 'database.js'));
-var genesisblock = require(path.join(dirname, '/genesisBlock.json'));
-var logger = require(dirname + '/logger.js');
-var z_schema = require('../../helpers/z_schema.js');
-var cacheHelper = require('../../helpers/cache.js');
-var Cache = require('../../modules/cache.js');
-var ed = require('../../helpers/ed');
-var Transaction = require('../../logic/transaction.js');
-var Account = require('../../logic/account.js');
+let _ = require('lodash');
 
-var modulesLoader = new function () {
+let async = require('../node').async;
+let dirname = path.join(__dirname, '..', '..');
+let config = require(path.join(dirname, '/config.json'));
+let database = require(path.join(dirname, '/helpers', 'database.js'));
+let genesisblock = require(path.join(dirname, '/genesisBlock.json'));
+let logger = require(dirname + '/logger.js');
+let z_schema = require('../../helpers/z_schema.js');
+let cacheHelper = require('../../helpers/cache.js');
+let Cache = require('../../modules/cache.js');
+let ed = require('../../helpers/ed');
+let Transaction = require('../../logic/transaction.js');
+let Account = require('../../logic/account.js');
+
+let modulesLoader = new function () {
 
 	this.db = null;
 	//this.logger = new Logger({ echo: null, errorLevel: config.fileLogLevel, filename: config.logFileName });
@@ -107,7 +107,7 @@ var modulesLoader = new function () {
 			function (db, waterCb) {
 				scope = _.merge(this.scope, {db: db}, scope);
 				async.reduce(logic, {}, function (memo, logicObj, mapCb) {
-					var name = _.keys(logicObj)[0];
+					let name = _.keys(logicObj)[0];
 					return this.initLogic(logicObj[name], scope, function (err, initializedLogic) {
 						memo[name] = initializedLogic;
 						return mapCb(err, memo);
@@ -117,7 +117,7 @@ var modulesLoader = new function () {
 			function (logic, waterCb) {
 				scope = _.merge(this.scope, {logic: logic}, scope);
 				async.reduce(modules, {}, function (memo, moduleObj, mapCb) {
-					var name = _.keys(moduleObj)[0];
+					let name = _.keys(moduleObj)[0];
 					return this.initModule(moduleObj[name], scope, function (err, module) {
 						memo[name] = module;
 						return mapCb(err, memo);
@@ -232,7 +232,7 @@ var modulesLoader = new function () {
 	 * @param {Function} cb
 	 */
 	this.initCache = function (cb) {
-		var cacheEnabled, cacheConfig;
+		let cacheEnabled, cacheConfig;
 		cacheEnabled = this.scope.config.cacheEnabled;
 		cacheConfig = this.scope.config.redis;
 		cacheHelper.connect(cacheEnabled, cacheConfig, this.logger, function (err, __cache) {

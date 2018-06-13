@@ -1,10 +1,10 @@
-'use strict';
 
-var node = require('./../node.js');
 
-var owner = node.randomAccount();
-var coSigner1 = node.randomAccount();
-var coSigner2 = node.randomAccount();
+let node = require('./../node.js');
+
+let owner = node.randomAccount();
+let coSigner1 = node.randomAccount();
+let coSigner2 = node.randomAccount();
 
 function postTransaction (transaction, done) {
 	node.post('/peer/transactions', {
@@ -66,9 +66,9 @@ describe('GET /peer/signatures', function () {
 
 describe('POST /peer/signatures', function () {
 
-	var validParams;
+	let validParams;
 
-	var transaction = node.lisk.transaction.createTransaction('1L', 1, node.gAccount.password);
+	let transaction = node.lisk.transaction.createTransaction('1L', 1, node.gAccount.password);
 
 	beforeEach(function (done) {
 		validParams = {
@@ -132,11 +132,11 @@ describe('POST /peer/signatures', function () {
 
 	describe('creating a new multisignature account', function () {
 
-		var transaction;
+		let transaction;
 
 		// Fund accounts
 		before(function (done) {
-			var transactions = [];
+			let transactions = [];
 
 			node.async.eachSeries([owner, coSigner1, coSigner2], function (account, eachSeriesCb) {
 				transactions.push(
@@ -155,9 +155,9 @@ describe('POST /peer/signatures', function () {
 
 		// Create multisignature group
 		before(function (done) {
-			var keysgroup = ['+' + coSigner1.publicKey, '+' + coSigner2.publicKey];
-			var lifetime = 72;
-			var min = 2;
+			let keysgroup = ['+' + coSigner1.publicKey, '+' + coSigner2.publicKey];
+			let lifetime = 72;
+			let min = 2;
 
 			transaction = node.lisk.multisignature.createMultisignature(owner.password, null, keysgroup, lifetime, min);
 
@@ -170,7 +170,7 @@ describe('POST /peer/signatures', function () {
 		});
 
 		it('using processable signature for owner should fail', function (done) {
-			var signature = node.lisk.multisignature.signTransaction(transaction, owner.password);
+			let signature = node.lisk.multisignature.signTransaction(transaction, owner.password);
 
 			postSignature(transaction, signature, function (err, res) {
 				node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -180,7 +180,7 @@ describe('POST /peer/signatures', function () {
 		});
 
 		it('using processable signature for coSigner1 should be ok', function (done) {
-			var signature = node.lisk.multisignature.signTransaction(transaction, coSigner1.password);
+			let signature = node.lisk.multisignature.signTransaction(transaction, coSigner1.password);
 
 			postSignature(transaction, signature, function (err, res) {
 				node.expect(res.body).to.have.property('success').to.be.ok;
@@ -200,7 +200,7 @@ describe('POST /peer/signatures', function () {
 		});
 
 		it('using processable signature for coSigner2 should be ok', function (done) {
-			var signature = node.lisk.multisignature.signTransaction(transaction, coSigner2.password);
+			let signature = node.lisk.multisignature.signTransaction(transaction, coSigner2.password);
 
 			postSignature(transaction, signature, function (err, res) {
 				node.expect(res.body).to.have.property('success').to.be.ok;
@@ -222,7 +222,7 @@ describe('POST /peer/signatures', function () {
 
 	describe('sending transaction from multisignature account', function () {
 
-		var transaction;
+		let transaction;
 
 		before(function (done) {
 			node.onNewBlock(done);
@@ -241,7 +241,7 @@ describe('POST /peer/signatures', function () {
 		});
 
 		it('using processable signature for coSigner1 should be ok', function (done) {
-			var signature = node.lisk.multisignature.signTransaction(transaction, coSigner1.password);
+			let signature = node.lisk.multisignature.signTransaction(transaction, coSigner1.password);
 
 			postSignature(transaction, signature, function (err, res) {
 				node.expect(res.body).to.have.property('success').to.be.ok;
@@ -261,7 +261,7 @@ describe('POST /peer/signatures', function () {
 		});
 
 		it('using processable signature for coSigner2 should be ok', function (done) {
-			var signature = node.lisk.multisignature.signTransaction(transaction, coSigner2.password);
+			let signature = node.lisk.multisignature.signTransaction(transaction, coSigner2.password);
 
 			postSignature(transaction, signature, function (err, res) {
 				node.expect(res.body).to.have.property('success').to.be.ok;

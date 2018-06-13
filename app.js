@@ -1,4 +1,4 @@
-'use strict';
+
 /**
  * A node-style callback as used by {@link logic} and {@link modules}.
  * @see {@link https://nodejs.org/api/errors.html#errors_node_js_style_callbacks}
@@ -25,31 +25,33 @@
 
 //Requiring Modules
 require('dotenv').config();
-var async = require('async');
-var fs = require('fs');
-var genesisblock = require('./genesisBlock.json');
-var git = require('./helpers/git.js');
-var packageJson = require('./package.json');
-var path = require('path');
-var program = require('commander');
-var httpApi = require('./helpers/httpApi.js');
-var Sequence = require('./helpers/sequence.js');
-var z_schema = require('./helpers/z_schema.js');
-const Logger = require('./logger.js');
+
+require('auto-strict');
+let async = require('async');
+let fs = require('fs');
+let genesisblock = require('./genesisBlock.json');
+let git = require('./helpers/git.js');
+let packageJson = require('./package.json');
+let path = require('path');
+let program = require('commander');
+let httpApi = require('./helpers/httpApi.js');
+let Sequence = require('./helpers/sequence.js');
+let z_schema = require('./helpers/z_schema.js');
+let Logger = require('./logger.js');
 let logman = new Logger();
 let logger = logman.logger;
-var sockets = [];
-var utils = require('./utils');
-var cronjob = require('node-cron-job');
+let sockets = [];
+let utils = require('./utils');
+let cronjob = require('node-cron-job');
 
 process.stdin.resume();
 
-var versionBuild = fs.readFileSync(path.join(__dirname, 'build'), 'utf8');
+let versionBuild = fs.readFileSync(path.join(__dirname, 'build'), 'utf8');
 
 /**
  * @property {string} - Hash of last git commit.
  */
-var lastCommit = '';
+let lastCommit = '';
 
 
 
@@ -69,7 +71,7 @@ program
  * @property {object} - The default list of configuration options. Can be updated by CLI.
  * @default 'config.json'
  */
-var appConfig = require('./helpers/config.js')(program.config);
+let appConfig = require('./helpers/config.js')(program.config);
 
 if (program.port) {
 	appConfig.port = program.port;
@@ -118,7 +120,7 @@ process.env.TOP = appConfig.topAccounts;
  * @property {object} modules - `modules` folder content.
  * @property {object} api - `api/http` folder content.
  */
-var config = {
+let config = {
 	db: appConfig.db,
 	cache: appConfig.redis,
 	cacheEnabled: appConfig.cacheEnabled,
@@ -161,7 +163,7 @@ var config = {
 };
 
 //merge environment variables
-var env = require('./config/env');
+let env = require('./config/env');
 utils.merge(appConfig, env);
 appConfig.forging.secret = appConfig.forging.secret.split(',');
 
@@ -176,16 +178,15 @@ try {
  * Creates the express server and loads all the Modules and logic.
  * @property {object} - Domain instance.
  */
-var d = require('domain').create();
+let d = require('domain').create();
 
 d.on('error', function (err) {
 	logger.error('Domain master', { message: err.message, stack: err.stack });
 	process.exit(0);
 });
 
-// runs domain
 d.run(function () {
-	var modules = [];
+	let modules = [];
 	async.auto({
 		/**
 		 * Loads `payloadHash` and generate dapp password if it is empty and required.
@@ -203,7 +204,7 @@ d.run(function () {
 			}
 
 			if (appConfig.dapp.masterrequired && !appConfig.dapp.masterpassword) {
-				var randomstring = require('randomstring');
+				let randomstring = require('randomstring');
 
 				appConfig.dapp.masterpassword = randomstring.generate({
 					length: 12,
@@ -261,53 +262,41 @@ d.run(function () {
 		 * `{express, app, server, io, https, https_io}`.
 		 */
 		network: ['config', function (scope, cb) {
-			var express = require('express');
-			var compression = require('compression');
-			var cors = require('cors');
-			var app = express();
+			let express = require('express');
+			let compression = require('compression');
+			let cors = require('cors');
+			let app = express();
+			let Prometheus = require('./prometheus');
 
-			// prometheus configuration
-			var Prometheus = require('./prometheus');
-
-			/**
-			 * The below arguments start the counter functions
-			 */
+			//prometheus configuration
 			app.use(Prometheus.requestCounters);
 			app.use(Prometheus.responseCounters);
-
-			/**
-			 * Enable metrics endpoint
-			 */
 			Prometheus.injectMetricsRoute(app);
-
-			/**
-			 * Enable collection of default metrics
-			 */
 			Prometheus.startCollection();
 
 			// added swagger configuration
-			var subpath = express();
-			var swagger = require("swagger-node-express").createNew(subpath);
-			app.use("/v1", subpath);
+			let subpath = express();
+			let swagger = require('swagger-node-express').createNew(subpath);
+			app.use('/v1', subpath);
 			subpath.use(express.static('dist'));
 			swagger.setApiInfo({
-				title: "example API",
-				description: "API to do something, manage something...",
-				termsOfServiceUrl: "",
-				contact: "hotam.singh@oodlestechnologies.com",
-				license: "",
-				licenseUrl: ""
+				title: 'example API',
+				description: 'API to do something, manage something...',
+				termsOfServiceUrl: '',
+				contact: 'hotam.singh@oodlestechnologies.com',
+				license: '',
+				licenseUrl: ''
 			});
 			subpath.get('/', function (req, res) {
 				res.sendFile(__dirname + '/dist/index.html');
 			});
 			swagger.configureSwaggerPaths('', 'api-docs', '');
-			var domain = scope.config.swaggerDomain || 'localhost';
-			var applicationUrl = 'http://' + domain;
+			let domain = scope.config.swaggerDomain || 'localhost';
+			let applicationUrl = 'http://' + domain;
 			swagger.configure(applicationUrl, '1.0.0');
 
 			if (appConfig.coverage) {
-				var im = require('istanbul-middleware');
+				let im = require('istanbul-middleware');
 				logger.debug('Hook loader for coverage - do not use in production environment!');
 				im.hookLoader(__dirname);
 				app.use('/coverage', im.createHandler());
@@ -319,17 +308,17 @@ d.run(function () {
 			app.use(cors());
 			app.options('*', cors());
 
-			var server = require('http').createServer(app);
-			var io = require('socket.io')(server);
+			let server = require('http').createServer(app);
+			let io = require('socket.io')(server);
 
 			// handled socket's connection event
 			io.on('connection', function (socket) {
 				//IIFE: function to accept new socket.id in sockets array.
 				(function acceptSocket(socket, sockets) {
-					var userFound = false;
+					let userFound = false;
 					if (sockets) {
-						for (var i = 0; i < sockets.length; i++) {
-							if (sockets[i] == socket.id) {
+						for (let i = 0; i < sockets.length; i++) {
+							if (sockets[i] === socket.id) {
 								userFound = true;
 							}
 						}
@@ -341,7 +330,7 @@ d.run(function () {
 				})(socket, sockets);
 				socket.on('disconnect', function () {
 					sockets.forEach(function (socketId) {
-						if (socketId == socket.id) {
+						if (socketId === socket.id) {
 							sockets.pop(socketId);
 							io.sockets.emit('updateConnected', sockets.length);
 						}
@@ -349,7 +338,7 @@ d.run(function () {
 				});
 			});
 
-			var privateKey, certificate, https, https_io;
+			let privateKey, certificate, https, https_io;
 
 			if (scope.config.ssl.enabled) {
 				privateKey = fs.readFileSync(scope.config.ssl.options.key);
@@ -375,7 +364,7 @@ d.run(function () {
 		}],
 
 		dbSequence: ['logger', function (scope, cb) {
-			var sequence = new Sequence({
+			let sequence = new Sequence({
 				onWarning: function (current) {
 					scope.logger.warn('DB queue', current);
 				}
@@ -384,7 +373,7 @@ d.run(function () {
 		}],
 
 		sequence: ['logger', function (scope, cb) {
-			var sequence = new Sequence({
+			let sequence = new Sequence({
 				onWarning: function (current) {
 					scope.logger.warn('Main queue', current);
 				}
@@ -393,7 +382,7 @@ d.run(function () {
 		}],
 
 		balancesSequence: ['logger', function (scope, cb) {
-			var sequence = new Sequence({
+			let sequence = new Sequence({
 				onWarning: function (current) {
 					scope.logger.warn('Balance queue', current);
 				}
@@ -410,12 +399,12 @@ d.run(function () {
 		 * @param {function} cb - Callback function.
 		 */
 		connect: ['config', 'public', 'genesisblock', 'logger', 'build', 'network', 'cache', function (scope, cb) {
-			var path = require('path');
-			var bodyParser = require('body-parser');
-			var cookieParser = require('cookie-parser');
-			var methodOverride = require('method-override');
-			var queryParser = require('express-query-int');
-			var randomString = require('randomstring');
+			let path = require('path');
+			let bodyParser = require('body-parser');
+			let cookieParser = require('cookie-parser');
+			let methodOverride = require('method-override');
+			let queryParser = require('express-query-int');
+			let randomString = require('randomstring');
 
 			scope.nonce = randomString.generate(16);
 			scope.network.app.engine('html', require('ejs').renderFile);
@@ -429,7 +418,7 @@ d.run(function () {
 			scope.network.app.use(methodOverride());
 			scope.network.app.use(cookieParser());
 
-			var ignore = ['id', 'name', 'lastBlockId', 'blockId', 'transactionId', 'address', 'recipientId', 'senderId', 'previousBlock'];
+			let ignore = ['id', 'name', 'lastBlockId', 'blockId', 'transactionId', 'address', 'recipientId', 'senderId', 'previousBlock'];
 
 			scope.network.app.use(queryParser({
 				parser: function (value, radix, name) {
@@ -478,13 +467,13 @@ d.run(function () {
 		},
 
 		bus: ['ed', function (scope, cb) {
-			var changeCase = require('change-case');
-			var bus = function () {
+			let changeCase = require('change-case');
+			let bus = function () {
 				this.message = function () {
-					var args = [];
+					let args = [];
 					Array.prototype.push.apply(args, arguments);
-					var topic = args.shift();
-					var eventName = 'on' + changeCase.pascalCase(topic);
+					let topic = args.shift();
+					let eventName = 'on' + changeCase.pascalCase(topic);
 
 					// executes the each module onBind function
 					modules.forEach(function (module) {
@@ -504,7 +493,7 @@ d.run(function () {
 			cb(null, new bus());
 		}],
 		db: function (cb) {
-			var db = require('./helpers/database.js');
+			let db = require('./helpers/database.js');
 			db.connect(config.db, logger, cb);
 
 		},
@@ -513,7 +502,7 @@ d.run(function () {
 		 * @param {function} cb
 		 */
 		cache: function (cb) {
-			var cache = require('./helpers/cache.js');
+			let cache = require('./helpers/cache.js');
 			cache.connect(config.cacheEnabled, config.cache, logger, cb);
 		},
 		/**
@@ -525,14 +514,14 @@ d.run(function () {
 		 * @param {function} cb - Callback function.
 		 */
 		logic: ['db', 'bus', 'schema', 'genesisblock', function (scope, cb) {
-			var Transaction = require('./logic/transaction.js');
-			var Block = require('./logic/block.js');
-			var Account = require('./logic/account.js');
-			var Peers = require('./logic/peers.js');
-			var Frozen = require('./logic/frozen.js');
-			var Contract = require('./logic/contract.js');
-			var SendFreezeOrder = require('./logic/sendFreezeOrder.js');
-			var Vote = require('./logic/vote.js');
+			let Transaction = require('./logic/transaction.js');
+			let Block = require('./logic/block.js');
+			let Account = require('./logic/account.js');
+			let Peers = require('./logic/peers.js');
+			let Frozen = require('./logic/frozen.js');
+			let Contract = require('./logic/contract.js');
+			let SendFreezeOrder = require('./logic/sendFreezeOrder.js');
+			let Vote = require('./logic/vote.js');
 
 			async.auto({
 				bus: function (cb) {
@@ -598,11 +587,11 @@ d.run(function () {
 		 */
 		modules: ['network', 'connect', 'config', 'logger', 'bus', 'sequence', 'dbSequence', 'balancesSequence', 'db', 'logic', 'cache', function (scope, cb) {
 
-			var tasks = {};
+			let tasks = {};
 
 			Object.keys(config.modules).forEach(function (name) {
 				tasks[name] = function (cb) {
-					var d = require('domain').create();
+					let d = require('domain').create();
 
 					d.on('error', function (err) {
 						scope.logger.error('Domain ' + name, { message: err.message, stack: err.stack });
@@ -610,8 +599,8 @@ d.run(function () {
 
 					d.run(function () {
 						logger.debug('Loading module', name);
-						var Klass = require(config.modules[name]);
-						var obj = new Klass(cb, scope);
+						let Klass = require(config.modules[name]);
+						let obj = new Klass(cb, scope);
 						modules.push(obj);
 					});
 				};
@@ -633,9 +622,9 @@ d.run(function () {
 		api: ['modules', 'logger', 'network', function (scope, cb) {
 			Object.keys(config.api).forEach(function (moduleName) {
 				Object.keys(config.api[moduleName]).forEach(function (protocol) {
-					var apiEndpointPath = config.api[moduleName][protocol];
+					let apiEndpointPath = config.api[moduleName][protocol];
 					try {
-						var ApiEndpoint = require(apiEndpointPath);
+						let ApiEndpoint = require(apiEndpointPath);
 						new ApiEndpoint(scope.modules[moduleName], scope.network.app, scope.logger, scope.modules.cache);
 					} catch (e) {
 						scope.logger.error('Unable to load API endpoint for ' + moduleName + ' of ' + protocol, e);
@@ -724,6 +713,7 @@ d.run(function () {
 			 * @todo description for nonce and ready
 			 */
 			scope.logger.info('Modules ready and launched');
+			console.log('app started on port : ', scope.config.app.port);
 			/**
 			 * Event reporting a cleanup.
 			 * @event cleanup
@@ -819,3 +809,5 @@ process.on('uncaughtException', function (err) {
 	 */
 	process.emit('cleanup');
 });
+
+/*************************************** END OF FILE *************************************/

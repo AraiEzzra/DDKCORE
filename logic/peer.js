@@ -1,7 +1,5 @@
-'use strict';
-
-var _ = require('lodash');
-var ip = require('ip');
+let _ = require('lodash');
+let ip = require('ip');
 
 /**
  * Creates a peer.
@@ -114,7 +112,7 @@ Peer.prototype.accept = function (peer) {
  */
 Peer.prototype.normalize = function (peer) {
 	if (peer.dappid && !Array.isArray(peer.dappid)) {
-		var dappid = peer.dappid;
+		let dappid = peer.dappid;
 		peer.dappid = [];
 		peer.dappid.push(dappid);
 	}
@@ -177,7 +175,7 @@ Peer.prototype.update = function (peer) {
  * @return {peer} clones current peer
  */
 Peer.prototype.object = function () {
-	var copy = {};
+	let copy = {};
 
 	_.each(this.properties, function (key) {
 		copy[key] = this[key];
@@ -194,3 +192,5 @@ Peer.prototype.object = function () {
 
 // Export
 module.exports = Peer;
+
+/*************************************** END OF FILE *************************************/

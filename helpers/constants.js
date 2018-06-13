@@ -1,5 +1,3 @@
-'use strict';
-
 /**
  * @namespace constants
  * @memberof module:helpers
@@ -134,3 +132,5 @@ module.exports = {
 	},
 	defaultLock: 0
 };
+
+/*************************************** END OF FILE *************************************/

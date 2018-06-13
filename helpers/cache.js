@@ -1,7 +1,4 @@
-'use strict';
-
-var redis = require('redis');
-var cache = require('../modules/cache.js');
+let redis = require('redis');
 
 /**
  * Connects with redis server using the config provided via parameters
@@ -11,7 +8,7 @@ var cache = require('../modules/cache.js');
  * @param {Function} cb
  */
 module.exports.connect = function (cacheEnabled, config, logger, cb) {
-	var isRedisLoaded = false;
+	let isRedisLoaded = false;
 
 	if (!cacheEnabled) {
 		return cb(null, { cacheEnabled: cacheEnabled, client: null });
@@ -21,7 +18,7 @@ module.exports.connect = function (cacheEnabled, config, logger, cb) {
 	if (config.password === null) {
 		delete config.password;
 	}
-	var client = redis.createClient(config);
+	let client = redis.createClient(config);
 
 	client.on('ready', function () {
 		logger.info('App connected with redis server');
@@ -32,10 +29,10 @@ module.exports.connect = function (cacheEnabled, config, logger, cb) {
 		}
 	});
 	
-	client.get("minedContributorsBoolean", function (err, minedContributorsBoolean) {
+	client.get('minedContributorsBoolean', function (err, minedContributorsBoolean) {
 		if (!minedContributorsBoolean) {
-			client.set("minedContributorsBalance", 0);
-			client.set("minedContributorsBoolean", 1);
+			client.set('minedContributorsBalance', 0);
+			client.set('minedContributorsBoolean', 1);
 		}
 
 	});
@@ -49,3 +46,5 @@ module.exports.connect = function (cacheEnabled, config, logger, cb) {
 		}
 	});
 };
+
+/*************************************** END OF FILE *************************************/

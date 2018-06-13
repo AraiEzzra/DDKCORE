@@ -1,11 +1,11 @@
-var expect = require('chai').expect;
+let expect = require('chai').expect;
 
-var node = require('../../node.js');
-var ZSchema = require('../../../helpers/z_schema.js');
-var schema = require('../../../schema/transactions.js');
+let node = require('../../node.js');
+let ZSchema = require('../../../helpers/z_schema.js');
+let schema = require('../../../schema/transactions.js');
 
-var constants = require('../../../helpers/constants.js');
-var validator = new ZSchema();
+let constants = require('../../../helpers/constants.js');
+let validator = new ZSchema();
 
 describe('transactions', function () {
 
@@ -28,11 +28,11 @@ describe('transactions', function () {
 
 	describe('getTransactions', function () {
 		// TODO: Add tests for other schemas properties
-		var testBody;
+		let testBody;
 
 		beforeEach(function () {
-			var account1PublicKey = node.lisk.crypto.getKeys(node.randomPassword()).publicKey;
-			var account2PublicKey = node.lisk.crypto.getKeys(node.randomPassword()).publicKey;
+			let account1PublicKey = node.lisk.crypto.getKeys(node.randomPassword()).publicKey;
+			let account2PublicKey = node.lisk.crypto.getKeys(node.randomPassword()).publicKey;
 
 			testBody = {
 				blockId: '1465651642158264047',

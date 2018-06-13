@@ -1,10 +1,8 @@
-'use strict';
-
-var ByteBuffer = require('bytebuffer');
-var constants = require('../helpers/constants.js');
+let ByteBuffer = require('bytebuffer');
+let constants = require('../helpers/constants.js');
 
 // Private fields
-var modules, library;
+let modules, library;
 
 /**
  * Initializes library.
@@ -55,7 +53,7 @@ Signature.prototype.create = function (data, trs) {
  * @param {account} sender - Unnecessary parameter.
  * @returns {number} Secondsignature fee.
  */
-Signature.prototype.calculateFee = function (trs, sender) {
+Signature.prototype.calculateFee = function () {
 	return constants.fees.secondsignature;
 };
 
@@ -111,13 +109,13 @@ Signature.prototype.process = function (trs, sender, cb) {
  * @todo check if this function is called.
  */
 Signature.prototype.getBytes = function (trs) {
-	var bb;
+	let bb;
 
 	try {
 		bb = new ByteBuffer(32, true);
-		var publicKeyBuffer = Buffer.from(trs.asset.signature.publicKey, 'hex');
+		let publicKeyBuffer = Buffer.from(trs.asset.signature.publicKey, 'hex');
 
-		for (var i = 0; i < publicKeyBuffer.length; i++) {
+		for (let i = 0; i < publicKeyBuffer.length; i++) {
 			bb.writeByte(publicKeyBuffer[i]);
 		}
 
@@ -214,7 +212,7 @@ Signature.prototype.schema = {
  * @throws {string} Error message.
  */
 Signature.prototype.objectNormalize = function (trs) {
-	var report = library.schema.validate(trs.asset.signature, Signature.prototype.schema);
+	let report = library.schema.validate(trs.asset.signature, Signature.prototype.schema);
 
 	if (!report) {
 		throw 'Failed to validate signature schema: ' + this.scope.schema.getLastErrors().map(function (err) {
@@ -235,7 +233,7 @@ Signature.prototype.dbRead = function (raw) {
 	if (!raw.s_publicKey) {
 		return null;
 	} else {
-		var signature = {
+		let signature = {
 			transactionId: raw.t_id,
 			publicKey: raw.s_publicKey
 		};
@@ -258,7 +256,7 @@ Signature.prototype.dbFields = [
  * @todo check if this function is called.
  */
 Signature.prototype.dbSave = function (trs) {
-	var publicKey;
+	let publicKey;
 
 	try {
 		publicKey = Buffer.from(trs.asset.signature.publicKey, 'hex');
@@ -296,3 +294,5 @@ Signature.prototype.ready = function (trs, sender) {
 
 // Export
 module.exports = Signature;
+
+/*************************************** END OF FILE *************************************/

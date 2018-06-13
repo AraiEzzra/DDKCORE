@@ -1,7 +1,7 @@
-'use strict';
 
-var Router = require('../../helpers/router');
-var httpApi = require('../../helpers/httpApi');
+
+let Router = require('../../helpers/router');
+let httpApi = require('../../helpers/httpApi');
 
 /**
  * Binds api with modules and creates common url.
@@ -19,7 +19,7 @@ var httpApi = require('../../helpers/httpApi');
 // Constructor
 function SignaturesHttpApi (signaturesModule, app) {
 
-	var router = new Router();
+	let router = new Router();
 
 	router.map(signaturesModule.shared, {
 		'get /fee': 'getFee',
@@ -30,3 +30,5 @@ function SignaturesHttpApi (signaturesModule, app) {
 }
 
 module.exports = SignaturesHttpApi;
+
+/*************************************** END OF FILE *************************************/

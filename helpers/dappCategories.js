@@ -1,5 +1,3 @@
-'use strict';
-
 /**
  * @typedef {Object} dappCategory
  * - 0: Education
@@ -23,3 +21,5 @@ module.exports = {
 	Social: 7,
 	Utilities: 8
 };
+
+/*************************************** END OF FILE *************************************/

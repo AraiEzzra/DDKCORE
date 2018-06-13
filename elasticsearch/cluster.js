@@ -1,76 +1,98 @@
-'use strict';
-
-/*
-* Generalised method to create, delete, search or check existence of an index
-* @isIndexExists
+/**
+  * @desc permorms cluster operations
+  * @param {module} client - elasticsearch module
 */
 
-var client = require('./connection.js');
+let client = require('./connection.js');
 
 /**
-* check if the index exists
+* 
+* @desc check if an index already exists in the cluster
+* @param {String} indexName - index name
+* @return bool - true or false
+* 
 */
-function isIndexExists(indexName, cb) {  
-    var result = client.indices.exists({
-        index: indexName
-    });
-    return result;
+
+function isIndexExists(indexName) {  
+	let result = client.indices.exists({
+		index: indexName
+	});
+	return result;
 }
 exports.isIndexExists = isIndexExists; 
 
 /**
-* create an index
+* 
+* @desc create an index
+* @param {String} indexName - index name
+* @param {function} cb - Callback function.
+* @return {String} - err or null
+* 
 */
+
 function createIndex(indexName, cb) { 
-    client.indices.create({
-        index: indexName
-    }, function (err, resp, status) {
-        if (err) {
-            cb(err);
-        }else {
-            cb(null);
-        }
-    });
-};
+	client.indices.create({
+		index: indexName
+	}, function (err) {
+		if (err) {
+			cb(err);
+		}else {
+			cb(null);
+		}
+	});
+}
 exports.createIndex = createIndex;
 
 /**
-* Delete an existing index
+* 
+* @desc Delete an existing index
+* @param {String} indexName - index name
+* @param {function} cb - Callback function.
+* @return {String} - err or null
+* 
 */
 function deleteIndex(indexName, cb) {  
-    client.indices.delete({
-        index: indexName
-    }, function (err, resp, status) {
-        if (err) {
-            cb(err);
-        }
-        else {
-            cb(null);
-        }
-    });
+	client.indices.delete({
+		index: indexName
+	}, function (err) {
+		if (err) {
+			cb(err);
+		}
+		else {
+			cb(null);
+		}
+	});
 }
 exports.deleteIndex = deleteIndex;
 
 /**
-* Search in elastic search
+* 
+* @desc Search in elastic search
+* @param {String} index - index name
+* @param {Object} queryMatch - search query
+* @param {function} cb - Callback function.
+* @return {String} - err or null
+* 
 */
-exports.searchQuery = function (index, queryMatch, cb) {
-    esClient.search({
-        index: index,
-        type: index,
-        body: {
-            query: {
-                match: queryMatch
-            },
-        }
-    }, function (error, response, status) {
-        if (error) {
-            cb(error);
-        }
-        else {
-            cb(null, response.hits.hits);
-        }
-    });
-};
+function searchQuery(index, queryMatch, cb) {
+	client.search({
+		index: index,
+		type: index,
+		body: {
+			query: {
+				match: queryMatch
+			},
+		}
+	}, function (error, response) {
+		if (error) {
+			cb(error);
+		}
+		else {
+			cb(null, response.hits.hits);
+		}
+	});
+}
 
 exports.searchQuery = searchQuery;
+
+/*************************************** END OF FILE *************************************/

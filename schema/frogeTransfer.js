@@ -1,6 +1,4 @@
-'use strict';
 
-var constants = require('../helpers/constants.js');
 
 module.exports = {
 	
@@ -19,11 +17,11 @@ module.exports = {
 				format: 'address',
 				minLength: 1,
 				maxLength: 25
-            },
-            stakeId :{
-                type : 'integer',
+			},
+			stakeId :{
+				type : 'integer',
 
-            },
+			},
 			publicKey: {
 				type: 'string',
 				format: 'publicKey'

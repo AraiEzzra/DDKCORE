@@ -1,4 +1,3 @@
-'use strict';
 /**
  * @memberof module:helpers
  * @module helpers/diff
@@ -10,9 +9,9 @@ module.exports = {
 	 * @return {Array} reverse sign.
 	 */
 	reverse: function (diff) {
-		var copyDiff = diff.slice();
-		for (var i = 0; i < copyDiff.length; i++) {
-			var math = copyDiff[i][0] === '-' ? '+' : '-';
+		let copyDiff = diff.slice();
+		for (let i = 0; i < copyDiff.length; i++) {
+			let math = copyDiff[i][0] === '-' ? '+' : '-';
 			copyDiff[i] = math + copyDiff[i].slice(1);
 		}
 		return copyDiff;
@@ -25,12 +24,12 @@ module.exports = {
 	 * @return {Array} Source data without -publicKeys and with +publicKeys from diff.
 	 */
 	merge: function (source, diff) {
-		var res = source ? source.slice() : [];
-		var index;
+		let res = source ? source.slice() : [];
+		let index;
 
-		for (var i = 0; i < diff.length; i++) {
-			var math = diff[i][0];
-			var publicKey = diff[i].slice(1);
+		for (let i = 0; i < diff.length; i++) {
+			let math = diff[i][0];
+			let publicKey = diff[i].slice(1);
 
 			if (math === '+') {
 				res = res || [];
@@ -62,3 +61,5 @@ module.exports = {
 		return res;
 	}
 };
+
+/*************************************** END OF FILE *************************************/
