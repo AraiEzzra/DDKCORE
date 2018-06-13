@@ -240,8 +240,9 @@ Frozen.prototype.process = function (trs, sender, cb) {
  * @return {function} {cb, err, trs}
  */
 Frozen.prototype.verify = function (trs, sender, cb) {
-	if (trs.amount < 0) {
-		return setImmediate(cb, 'Invalid transaction amount');
+
+	if ((trs.freezedAmount + trs.fee + parseInt(sender.totalFrozeAmount)) > sender.balance) {
+		return setImmediate(cb, 'Insufficient balance');
 	}
 
 	return setImmediate(cb, null, trs);

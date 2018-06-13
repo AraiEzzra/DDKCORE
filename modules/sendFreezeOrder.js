@@ -242,7 +242,7 @@ SendFreezeOrder.prototype.onBind = function (scope) {
 SendFreezeOrder.prototype.shared = {
 
 	transferFreezeOrder: function (req, cb) {
-		let accountData;
+		let accountData, stakeOrder;
 		library.schema.validate(req.body, schema.transferFreezeOrder, function (err) {
 			if (err) {
 				return setImmediate(cb, err[0].message);
@@ -296,16 +296,86 @@ SendFreezeOrder.prototype.shared = {
 									return setImmediate(cb, err);
 								}
 
-								if (!requester || !requester.publicKey) {
-									return setImmediate(cb, 'Requester not found');
+								library.logic.sendFreezeOrder.getActiveFrozeOrder({
+									address: account.address,
+									stakeId: req.body.stakeId
+								}, function (err, order) {
+									if (err) {
+										return setImmediate(cb, err);
+									}
+
+									if (order !== null && order.isTransferred) {
+										return setImmediate(cb, 'Order can be send only Once');
+									}
+									stakeOrder = order;
+
+									if (!requester || !requester.publicKey) {
+										return setImmediate(cb, 'Requester not found');
+									}
+
+									if (requester.secondSignature && !req.body.secondSecret) {
+										return setImmediate(cb, 'Missing second passphrase');
+									}
+
+									if (requester.publicKey === account.publicKey) {
+										return setImmediate(cb, 'Invalid requester public key');
+									}
+
+									var secondKeypair = null;
+
+									if (requester.secondSignature) {
+										var secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
+										secondKeypair = library.ed.makeKeypair(secondHash);
+									}
+
+									var transaction;
+
+									try {
+										transaction = library.logic.transaction.create({
+											type: transactionTypes.SENDFREEZE,
+											sender: account,
+											stakeId: req.body.stakeId,
+											keypair: keypair,
+											recipientId: recipientId,
+											secondKeypair: secondKeypair,
+											requester: keypair,
+											freezedAmount: req.body.freezedAmount
+										});
+									} catch (e) {
+										return setImmediate(cb, e.toString());
+									}
+
+									modules.transactions.receiveTransactions([transaction], true, cb);
+								});
+							});
+						});
+
+					} else {
+						modules.accounts.setAccountAndGet({ publicKey: keypair.publicKey.toString('hex') }, function (err, account) {
+							if (err) {
+								return setImmediate(cb, err);
+							}
+
+							library.logic.sendFreezeOrder.getActiveFrozeOrder({
+								address: account.address,
+								stakeId: req.body.stakeId
+							}, function (err, order) {
+								if (err) {
+									return setImmediate(cb, err);
 								}
 
-								if (requester.secondSignature && !req.body.secondSecret) {
-									return setImmediate(cb, 'Missing requester second passphrase');
+								if(order !== null && order.isTransferred){
+									return setImmediate(cb, 'Order can be send only Once');
+								}
+								stakeOrder = order;
+
+								accountData = account;
+								if (!account || !account.publicKey) {
+									return setImmediate(cb, 'Account not found');
 								}
 
-								if (requester.publicKey === account.publicKey) {
-									return setImmediate(cb, 'Invalid requester public key');
+								if (account.secondSignature && !req.body.secondSecret) {
+									return setImmediate(cb, 'Missing second passphrase');
 								}
 
 								let secondKeypair = null;
@@ -325,7 +395,6 @@ SendFreezeOrder.prototype.shared = {
 										keypair: keypair,
 										recipientId: recipientId,
 										secondKeypair: secondKeypair,
-										requester: keypair,
 										freezedAmount: req.body.freezedAmount
 									});
 								} catch (e) {
@@ -333,48 +402,8 @@ SendFreezeOrder.prototype.shared = {
 								}
 
 								modules.transactions.receiveTransactions([transaction], true, cb);
+
 							});
-						});
-
-					} else {
-						modules.accounts.setAccountAndGet({ publicKey: keypair.publicKey.toString('hex') }, function (err, account) {
-							if (err) {
-								return setImmediate(cb, err);
-							}
-
-							accountData = account;
-							if (!account || !account.publicKey) {
-								return setImmediate(cb, 'Account not found');
-							}
-
-							if (account.secondSignature && !req.body.secondSecret) {
-								return setImmediate(cb, 'Missing second passphrase');
-							}
-
-							let secondKeypair = null;
-
-							if (account.secondSignature) {
-								let secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
-								secondKeypair = library.ed.makeKeypair(secondHash);
-							}
-
-							let transaction;
-
-							try {
-								transaction = library.logic.transaction.create({
-									type: transactionTypes.SENDFREEZE,
-									sender: account,
-									stakeId: req.body.stakeId,
-									keypair: keypair,
-									recipientId: recipientId,
-									secondKeypair: secondKeypair,
-									freezedAmount: req.body.freezedAmount
-								});
-							} catch (e) {
-								return setImmediate(cb, e.toString());
-							}
-
-							modules.transactions.receiveTransactions([transaction], true, cb);
 						});
 					}
 
@@ -387,7 +416,8 @@ SendFreezeOrder.prototype.shared = {
 				library.logic.sendFreezeOrder.sendFreezedOrder({
 					account: accountData,
 					recipientId: req.body.recipientId,
-					stakeId: req.body.stakeId
+					stakeId: req.body.stakeId,
+					stakeOrder: stakeOrder
 				}, function (err) {
 
 					if (err) {
