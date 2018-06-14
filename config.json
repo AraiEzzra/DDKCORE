@@ -1,6 +1,6 @@
 {
     "port":7000,
-    "address": "159.65.139.248",
+    "address": "0.0.0.0",
     "version": "0.9.9a",
     "minVersion": ">=0.9.0",
     "fileLogLevel": "info",
@@ -10,10 +10,10 @@
     "topAccounts": false,
     "cacheEnabled": true,
     "db": {
-        "host": "159.65.135.70",
+        "host": "localhost",
         "port": 5432,
         "database": "ETP_test",
-        "user": "root",
+        "user": "",
         "poolSize": 95,
         "poolIdleTimeout": 30000,
         "reapIntervalMillis": 1000,
@@ -22,17 +22,16 @@
         ]
     },
     "redis": {
-        "host": "159.65.131.229",
+        "host": "127.0.0.1",
         "port": 6380,
         "db": 0
     },
     "api": {
         "enabled": true,
         "access": {
-            "public": true,
+            "public": false,
             "whiteList": [
-                "127.0.0.1",
-                "192.168.9.91"
+                "127.0.0.1"
             ]
         },
         "options": {
@@ -47,10 +46,7 @@
     "peers": {
         "enabled": true,
         "list": [
-            {
-                "ip": "192.168.9.50",
-                "port": 7000
-            }
+            
         ],
         "access": {
             "blackList": []
@@ -77,11 +73,10 @@
     },
     "forging": {
         "force": true,
-        "secret": ["hen worry two thank unfair salmon smile oven gospel grab latin reason"],
+        "secret": [],
         "access": {
             "whiteList": [
-                "127.0.0.1",
-                "192.168.9.91"
+                "127.0.0.1"
             ]
         }
     },
@@ -111,6 +106,9 @@
     "app": {},
     "sender": {},
     "nethash": "da3ed6a45429278bac2666961289ca17ad86595d33b31037615d4b8e8f158bba",
-    "elasticsearchHost": "159.65.139.247",
-    "swaggerDomain": "192.168.9.91"
+    "elasticsearchHost": "127.0.0.1",
+    "swaggerDomain": "127.0.0.1",
+     "jwt": {
+        "tokenLife": 30
+    }
 }

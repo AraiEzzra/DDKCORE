@@ -60,7 +60,8 @@ function AccountsHttpApi (accountsModule, app) {
 		'get /checkTwoFactorStatus': 'checkTwoFactorStatus',
 		'get /getWithdrawlStatus': 'getWithdrawlStatus',
 		'post /sendWithdrawlAmount': 'sendWithdrawlAmount',
-		'post /enablePendingGroupBonus': 'enablePendingGroupBonus'
+		'post /enablePendingGroupBonus': 'enablePendingGroupBonus',
+		'get /generatenpNewPassphase':'generatenpNewPassphase'
 	});
 
 	if (process.env.DEBUG && process.env.DEBUG.toUpperCase() === 'TRUE') {
