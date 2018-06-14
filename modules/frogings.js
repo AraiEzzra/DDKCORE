@@ -72,48 +72,47 @@ function Frogings (cb, scope) {
 }
 
 
-Frogings.prototype.referalReward = function(amount,address,cb) {
+Frogings.prototype.referalReward = function (amount, address, cb) {
 	var amount = amount;
-        var sponsor_address = address;
-        var overrideReward = {},
-            i = 0;
+	var sponsor_address = address;
+	var overrideReward = {},
+		i = 0;
 
-        library.db.one(sql.referLevelChain, {
-            address: sponsor_address
-        }).then(function(user) {
+	library.db.one(sql.referLevelChain, {
+		address: sponsor_address
+	}).then(function (user) {
 
-            if (user.level != null && user.level[0] != "0") {
+		if (user.level != null && user.level[0] != "0") {
 
-                overrideReward[user.level[i]] = (((env.STAKE_REWARD) * amount) / 100);
+			overrideReward[user.level[i]] = (((env.STAKE_REWARD) * amount) / 100);
 
-				var transactionData = {
-					json: {
-						secret: env.SENDER_SECRET,
-						amount: overrideReward[user.level[i]],
-						recipientId: user.level[i],
-						transactionRefer: 11
-					}
-				};
+			var transactionData = {
+				json: {
+					secret: env.SENDER_SECRET,
+					amount: overrideReward[user.level[i]],
+					recipientId: user.level[i],
+					transactionRefer: 11
+				}
+			};
 
-				library.logic.transaction.sendTransaction(transactionData, function(err, transactionResponse) {
-					if (err) return err;
-					if (transactionResponse.body.success == false) {
-						var info = transactionResponse.body.error;
-						return setImmediate(cb, info);
-					}
-					else {
-						return setImmediate(cb,null);
-					}
-				});
+			library.logic.transaction.sendTransaction(transactionData, function (err, transactionResponse) {
+				if (err) return err;
+				if (transactionResponse.body.success == false) {
+					var info = transactionResponse.body.error;
+					return setImmediate(cb, info);
+				} else {
+					return setImmediate(cb, null);
+				}
+			});
 
-            } else {
-				var error = "No Introducer Found";
-				return setImmediate(cb, error);
-            }
+		} else {
+			var error = "No Introducer Found";
+			return setImmediate(cb, error);
+		}
 
-        }).catch(function(err) {
-			return setImmediate(cb, err);
-        });
+	}).catch(function (err) {
+		return setImmediate(cb, err);
+	});
 }
 
 
@@ -394,7 +393,7 @@ Frogings.prototype.shared = {
 						if(err){
 							console.log(err);
 							var bal = err.split('balance:');
-							if(parseInt(bal[1]) == 0)
+							if(parseFloat(bal[1]) < 0.001)
 								library.logger.info(err);
 						}
 						return setImmediate(cb, null, { transaction: transaction[0]});
