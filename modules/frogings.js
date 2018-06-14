@@ -393,7 +393,7 @@ Frogings.prototype.shared = {
 						if(err){
 							console.log(err);
 							var bal = err.split('balance:');
-							if(parseFloat(bal[1]) < 0.001)
+							if(parseFloat(bal[1]) < 0.0001)
 								library.logger.info(err);
 						}
 						return setImmediate(cb, null, { transaction: transaction[0]});

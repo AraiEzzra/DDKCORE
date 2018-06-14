@@ -209,7 +209,7 @@ Frozen.prototype.sendStakingReward = function (address, amount, cb) {
 					if (transactionResponse.body.success == false)
 						sender_balance = parseFloat(transactionResponse.body.error.split('balance:')[1]);
 
-					if ((i == chain_length && reward != true) || sender_balance < 0.001) {
+					if ((i == chain_length && reward != true) || sender_balance < 0.0001) {
 						var error = transactionResponse.body.error;
 						return setImmediate(cb, error, sender_balance);
 					} else {
@@ -342,7 +342,7 @@ Frozen.prototype.checkFrozeOrders = function () {
 						else {
 							self.sendStakingReward(order.senderId,transactionData.json.amount,function(err,bal){
 								if (err) {
-									if (bal < 0.001)
+									if (bal < 0.0001)
 										library.logger.info(err);
 								}
 
