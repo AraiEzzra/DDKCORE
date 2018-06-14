@@ -1,5 +1,3 @@
-'use strict';
-
 /**
  * Validates sort options, methods and fields.
  * @memberof module:helpers
@@ -20,10 +18,10 @@ function OrderBy (orderBy, options) {
 		options.quoteField = Boolean(options.quoteField);
 	}
 
-	var sortField, sortMethod;
+	let sortField, sortMethod;
 
 	if (orderBy) {
-		var sort = String(orderBy).split(':');
+		let sort = String(orderBy).split(':');
 		sortField = sort[0].replace(/[^\w\s]/gi, '');
 
 		if (sort.length === 2) {
@@ -51,9 +49,9 @@ function OrderBy (orderBy, options) {
 		}
 	}
 
-	var emptyWhiteList = options.sortFields.length === 0;
+	let emptyWhiteList = options.sortFields.length === 0;
 
-	var inWhiteList = options.sortFields.length >= 1 && options.sortFields.indexOf(sortField) > -1;
+	let inWhiteList = options.sortFields.length >= 1 && options.sortFields.indexOf(sortField) > -1;
 
 	if (sortField) {
 		if (emptyWhiteList || inWhiteList) {
@@ -78,3 +76,5 @@ function OrderBy (orderBy, options) {
 }
 
 module.exports = OrderBy;
+
+/*************************************** END OF FILE *************************************/

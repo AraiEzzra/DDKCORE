@@ -1,22 +1,19 @@
-'use strict';
 
-var _ = require('lodash');
-var async = require('async');
-var Broadcaster = require('../logic/broadcaster.js');
-var Peer = require('../logic/peer.js');
-var bignum = require('../helpers/bignum.js');
-var constants = require('../helpers/constants.js');
-var crypto = require('crypto');
-var extend = require('extend');
-var ip = require('ip');
-var popsicle = require('popsicle');
-var schema = require('../schema/transport.js');
-var sandboxHelper = require('../helpers/sandbox.js');
-var sql = require('../sql/transport.js');
-var zlib = require('zlib');
+
+let async = require('async');
+let Broadcaster = require('../logic/broadcaster.js');
+let Peer = require('../logic/peer.js');
+let bignum = require('../helpers/bignum.js');
+let constants = require('../helpers/constants.js');
+let crypto = require('crypto');
+let extend = require('extend');
+let popsicle = require('popsicle');
+let schema = require('../schema/transport.js');
+let sandboxHelper = require('../helpers/sandbox.js');
+let sql = require('../sql/transport.js');
 
 // Private fields
-var modules, library, self, __private = {}, shared = {};
+let modules, library, self, __private = {}, shared = {};
 
 __private.headers = {};
 __private.loaded = false;
@@ -76,10 +73,10 @@ function Transport (cb, scope) {
  * @return {string} Buffer array to string
  */
 __private.hashsum = function (obj) {
-	var buf = Buffer.from(JSON.stringify(obj), 'utf8');
-	var hashdig = crypto.createHash('sha256').update(buf).digest();
-	var temp = Buffer.alloc(8);
-	for (var i = 0; i < 8; i++) {
+	let buf = Buffer.from(JSON.stringify(obj), 'utf8');
+	let hashdig = crypto.createHash('sha256').update(buf).digest();
+	let temp = Buffer.alloc(8);
+	for (let i = 0; i < 8; i++) {
 		temp[i] = hashdig[7 - i];
 	}
 
@@ -108,7 +105,7 @@ __private.removePeer = function (options, extraMessage) {
  * @return {setImmediateCallback} cb, err
  */
 __private.receiveSignatures = function (query, cb) {
-	var signatures;
+	let signatures;
 
 	async.series({
 		validateSchema: function (seriesCb) {
@@ -175,7 +172,7 @@ __private.receiveSignature = function (signature, cb) {
  * @return {setImmediateCallback} cb, err
  */
 __private.receiveTransactions = function (query, peer, extraLogMessage, cb) {
-	var transactions;
+	let transactions;
 
 	async.series({
 		validateSchema: function (seriesCb) {
@@ -223,7 +220,7 @@ __private.receiveTransactions = function (query, peer, extraLogMessage, cb) {
  * @return {setImmediateCallback} cb, error message
  */
 __private.receiveTransaction = function (transaction, peer, extraLogMessage, cb) {
-	var id = (transaction ? transaction.id : 'null');
+	let id = (transaction ? transaction.id : 'null');
 
 	try {
 		transaction = library.logic.transaction.objectNormalize(transaction);
@@ -344,7 +341,7 @@ Transport.prototype.getFromRandomPeer = function (config, options, cb) {
  * @todo implements secure http request with https
  */
 Transport.prototype.getFromPeer = function (peer, options, cb) {
-	var url;
+	let url;
 
 	if (options.api) {
 		url = '/peer' + options.api;
@@ -354,7 +351,7 @@ Transport.prototype.getFromPeer = function (peer, options, cb) {
 
 	peer = library.logic.peers.create(peer);
 	__private.headers.port = 7000;
-	var req = {
+	let req = {
 		url: 'http://' + peer.ip + ':' + peer.port + url,
 		method: options.method,
 		headers: __private.headers,
@@ -374,9 +371,9 @@ Transport.prototype.getFromPeer = function (peer, options, cb) {
 
 				return setImmediate(cb, ['Received bad response code', res.status, req.method, req.url].join(' '));
 			} else {
-				var headers = peer.applyHeaders(res.headers);
+				let headers = peer.applyHeaders(res.headers);
 
-				var report = library.schema.validate(headers, schema.headers);
+				let report = library.schema.validate(headers, schema.headers);
 				if (!report) {
 					// Remove peer
 					__private.removePeer({peer: peer, code: 'EHEADERS'}, req.method + ' ' + req.url);
@@ -498,7 +495,7 @@ Transport.prototype.onUnconfirmedTransaction = function (transaction, broadcast)
  */
 Transport.prototype.onNewBlock = function (block, broadcast) {
 	if (broadcast) {
-		var broadhash = modules.system.getBroadhash();
+		let broadhash = modules.system.getBroadhash();
 
 		modules.system.update(function () {
 			if (!__private.broadcaster.maxRelays(block)) {
@@ -547,7 +544,7 @@ Transport.prototype.isLoaded = function () {
  */
 Transport.prototype.internal = {
 	blocksCommon: function (ids, peer, extraLogMessage, cb) {
-		var escapedIds = ids
+		let escapedIds = ids
 			// Remove quotes
 			.replace(/['"]+/g, '')
 			// Separate by comma into an array
@@ -631,7 +628,7 @@ Transport.prototype.internal = {
 				}
 			});
 		} else {
-			__private.receiveSignature(query.signature, function (err, id) {
+			__private.receiveSignature(query.signature, function (err) {
 				if (err) {
 					return setImmediate(cb, null, {success: false, message: err});
 				} else {
@@ -642,8 +639,8 @@ Transport.prototype.internal = {
 	},
 
 	getSignatures: function (req, cb) {
-		var transactions = modules.transactions.getMultisignatureTransactionList(true, constants.maxSharedTxs);
-		var signatures = [];
+		let transactions = modules.transactions.getMultisignatureTransactionList(true, constants.maxSharedTxs);
+		let signatures = [];
 
 		async.eachSeries(transactions, function (trs, __cb) {
 			if (trs.signatures && trs.signatures.length) {
@@ -660,7 +657,7 @@ Transport.prototype.internal = {
 	},
 
 	getTransactions: function (req, cb) {
-		var transactions = modules.transactions.getMergedTransactionList(true, constants.maxSharedTxs);
+		let transactions = modules.transactions.getMergedTransactionList(true, constants.maxSharedTxs);
 
 		return setImmediate(cb, null, {success: true, transactions: transactions});
 	},
@@ -693,7 +690,7 @@ Transport.prototype.internal = {
 			if (!query.timestamp || !query.hash) {
 				return setImmediate(cb, null, {success: false, message: 'Missing hash sum'});
 			}
-			var newHash = __private.hashsum(query.body, query.timestamp);
+			let newHash = __private.hashsum(query.body, query.timestamp);
 			if (newHash !== query.hash) {
 				return setImmediate(cb, null, {success: false, message: 'Invalid hash sum'});
 			}
@@ -731,7 +728,7 @@ Transport.prototype.internal = {
 				return setImmediate(cb, null, {success: false, message: 'Missing hash sum'});
 			}
 
-			var newHash = __private.hashsum(query.body, query.timestamp);
+			let newHash = __private.hashsum(query.body, query.timestamp);
 			if (newHash !== query.hash) {
 				return setImmediate(cb, null, {success: false, message: 'Invalid hash sum'});
 			}
@@ -754,14 +751,14 @@ Transport.prototype.internal = {
 	},
 
 	handshake: function (ip, port, headers, validateHeaders, cb) {
-		var peer = library.logic.peers.create(
+		let peer = library.logic.peers.create(
 			{
 				ip: ip,
 				port: port
 			}
 		);
 
-		var headers = peer.applyHeaders(headers);
+		headers = peer.applyHeaders(headers);
 
 		validateHeaders(headers, function (error, extraMessage) {
 			if (error) {
@@ -832,3 +829,5 @@ shared.request = function (msg, cb) {
 
 // Export
 module.exports = Transport;
+
+/*************************************** END OF FILE *************************************/

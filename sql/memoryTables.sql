@@ -1,4 +1,4 @@
-/* ETP Memory Tables
+/* DDK Memory Tables
  *
  */
 

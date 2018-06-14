@@ -1,16 +1,16 @@
-'use strict';
 
-var constants     = require('../helpers/constants.js');
-var sandboxHelper = require('../helpers/sandbox.js');
+
+let constants     = require('../helpers/constants.js');
+let sandboxHelper = require('../helpers/sandbox.js');
 // Submodules
-var blocksAPI     = require('./blocks/api');
-var blocksVerify  = require('./blocks/verify');
-var blocksProcess = require('./blocks/process');
-var blocksUtils   = require('./blocks/utils');
-var blocksChain   = require('./blocks/chain');
+let blocksAPI     = require('./blocks/api');
+let blocksVerify  = require('./blocks/verify');
+let blocksProcess = require('./blocks/process');
+let blocksUtils   = require('./blocks/utils');
+let blocksChain   = require('./blocks/chain');
 
 // Private fields
-var modules, library, self, __private = {};
+let library, self, __private = {};
 
 __private.lastBlock = {};
 __private.lastReceipt = null;
@@ -95,8 +95,7 @@ Blocks.prototype.lastBlock = {
 	 */
 	isFresh: function () {
 		if (!__private.lastBlock) { return false; }
-		// Current time in seconds - (epoch start in seconds + block timestamp)
-		var secondsAgo = Math.floor(Date.now() / 1000) - (Math.floor(constants.epochTime / 1000) + __private.lastBlock.timestamp);
+		let secondsAgo = Math.floor(Date.now() / 1000) - (Math.floor(constants.epochTime / 1000) + __private.lastBlock.timestamp);
 		return (secondsAgo < constants.blockReceiptTimeOut);
 	}
 };
@@ -124,8 +123,7 @@ Blocks.prototype.lastReceipt = {
 	 */
 	isStale: function () {
 		if (!__private.lastReceipt) { return true; }
-		// Current time in seconds - lastReceipt (seconds)
-		var secondsAgo = Math.floor(Date.now() / 1000) - __private.lastReceipt;
+		let secondsAgo = Math.floor(Date.now() / 1000) - __private.lastReceipt;
 		return (secondsAgo > constants.blockReceiptTimeOut);
 	}
 };
@@ -165,7 +163,7 @@ Blocks.prototype.sandboxApi = function (call, args, cb) {
  * Modules are not required in this file.
  * @param {modules} scope Exposed modules
  */
-Blocks.prototype.onBind = function (scope) {
+Blocks.prototype.onBind = function () {
 	// TODO: move here blocks submodules modules load from app.js.
 	// Set module as loaded
 	__private.loaded = true;
@@ -215,3 +213,5 @@ Blocks.prototype.isLoaded = function () {
 
 // Export
 module.exports = Blocks;
+
+/*************************************** END OF FILE *************************************/

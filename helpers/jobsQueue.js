@@ -1,6 +1,4 @@
-'use strict';
-
-var jobsQueue = {
+let jobsQueue = {
 
 	jobs: {},
 
@@ -9,7 +7,7 @@ var jobsQueue = {
 			throw new Error('Synchronous job ' + name  + ' already registered');
 		}
 
-		var nextJob = function () {
+		let nextJob = function () {
 			return job(function () {
 				jobsQueue.jobs[name] = setTimeout(nextJob, time);
 			});
@@ -22,3 +20,5 @@ var jobsQueue = {
 };
 
 module.exports = jobsQueue;
+
+/*************************************** END OF FILE *************************************/

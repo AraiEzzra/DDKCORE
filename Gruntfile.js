@@ -1,10 +1,10 @@
-'use strict';
 
-var moment = require('moment');
-var util = require('util');
+
+let moment = require('moment');
+let util = require('util');
 
 module.exports = function (grunt) {
-	var files = [
+	let files = [
 		'logger.js',
 		'api/**/*.js',
 		'helpers/**/*.js',
@@ -15,14 +15,14 @@ module.exports = function (grunt) {
 		'app.js'
 	];
 
-	var today = moment().format('HH:mm:ss DD/MM/YYYY');
+	let today = moment().format('HH:mm:ss DD/MM/YYYY');
 
-	var config = require('./config.json');
+	let config = require('./config.json');
 
-	var release_dir = __dirname + '/release/';
-	var version_dir = release_dir + config.version;
+	let release_dir = __dirname + '/release/';
+	let version_dir = release_dir + config.version;
 
-	var maxBufferSize = require('buffer').kMaxLength - 1;
+	let maxBufferSize = require('buffer').kMaxLength - 1;
 
 	grunt.initConfig({
 		obfuscator: {

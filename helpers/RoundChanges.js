@@ -1,8 +1,6 @@
-'use strict';
-
-var bignum = require('./bignum');
-var slots = require('./slots');
-var exceptions = require('./exceptions');
+let bignum = require('./bignum');
+let slots = require('./slots');
+let exceptions = require('./exceptions');
 
 /**
  * Sets round fees and rewards
@@ -39,9 +37,9 @@ function RoundChanges (scope) {
  * @return {Object} Contains fees, feesRemaining, rewards, balance
  */
 RoundChanges.prototype.at = function (index) {
-	var fees = new bignum(this.roundFees.toPrecision(15)).dividedBy(slots.delegates).floor();
-	var feesRemaining = new bignum(this.roundFees.toPrecision(15)).minus(fees.times(slots.delegates));
-	var rewards = new bignum(this.roundRewards[index].toPrecision(15)).floor() || 0;
+	let fees = new bignum(this.roundFees.toPrecision(15)).dividedBy(slots.delegates).floor();
+	let feesRemaining = new bignum(this.roundFees.toPrecision(15)).minus(fees.times(slots.delegates));
+	let rewards = new bignum(this.roundRewards[index].toPrecision(15)).floor() || 0;
 
 	return {
 		fees: Number(fees.toFixed()),
@@ -52,3 +50,5 @@ RoundChanges.prototype.at = function (index) {
 };
 
 module.exports = RoundChanges;
+
+/*************************************** END OF FILE *************************************/

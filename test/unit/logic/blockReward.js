@@ -1,17 +1,17 @@
-'use strict';
 
-var chai = require('chai');
-var expect = require('chai').expect;
 
-var BlockReward = require('../../../logic/blockReward.js');
-var constants = require('../../../helpers/constants.js');
+let chai = require('chai');
+let expect = require('chai').expect;
+
+let BlockReward = require('../../../logic/blockReward.js');
+let constants = require('../../../helpers/constants.js');
 
 constants.rewards.distance = 3000000;
 constants.rewards.offset = 1451520;
 
 describe('BlockReward', function () {
 
-	var blockReward = new BlockReward();
+	let blockReward = new BlockReward();
 
 	describe('returning calcMilestone', function () {
 
@@ -362,10 +362,10 @@ describe('BlockReward', function () {
 			describe('before reward offset', function () {
 
 				it('should be ok', function () {
-					var supply = blockReward.calcSupply(1);
-					var prev = supply;
+					let supply = blockReward.calcSupply(1);
+					let prev = supply;
 
-					for (var i = 1; i < 1451520; i++) {
+					for (let i = 1; i < 1451520; i++) {
 						supply = blockReward.calcSupply(i);
 						expect(supply).to.equal(constants.totalAmount);
 						prev = supply;
@@ -376,10 +376,10 @@ describe('BlockReward', function () {
 			describe('for milestone 0', function () {
 
 				it('should be ok', function () {
-					var supply = blockReward.calcSupply(1451519);
-					var prev = supply;
+					let supply = blockReward.calcSupply(1451519);
+					let prev = supply;
 
-					for (var i = 1451520; i < 4451520; i++) {
+					for (let i = 1451520; i < 4451520; i++) {
 						supply = blockReward.calcSupply(i);
 						expect(supply).to.equal(prev + constants.rewards.milestones[0]);
 						prev = supply;
@@ -390,10 +390,10 @@ describe('BlockReward', function () {
 			describe('for milestone 1', function () {
 
 				it('should be ok', function () {
-					var supply = blockReward.calcSupply(4451519);
-					var prev = supply;
+					let supply = blockReward.calcSupply(4451519);
+					let prev = supply;
 
-					for (var i = 4451520; i < 7451520; i++) {
+					for (let i = 4451520; i < 7451520; i++) {
 						supply = blockReward.calcSupply(i);
 						expect(supply).to.equal(prev + constants.rewards.milestones[1]);
 						prev = supply;
@@ -404,10 +404,10 @@ describe('BlockReward', function () {
 			describe('for milestone 2', function () {
 
 				it('should be ok', function () {
-					var supply = blockReward.calcSupply(7451519);
-					var prev = supply;
+					let supply = blockReward.calcSupply(7451519);
+					let prev = supply;
 
-					for (var i = 7451520; i < 10451520; i++) {
+					for (let i = 7451520; i < 10451520; i++) {
 						supply = blockReward.calcSupply(i);
 						expect(supply).to.equal(prev + constants.rewards.milestones[2]);
 						prev = supply;
@@ -418,10 +418,10 @@ describe('BlockReward', function () {
 			describe('for milestone 3', function () {
 
 				it('should be ok', function () {
-					var supply = blockReward.calcSupply(10451519);
-					var prev = supply;
+					let supply = blockReward.calcSupply(10451519);
+					let prev = supply;
 
-					for (var i = 10451520; i < 13451520; i++) {
+					for (let i = 10451520; i < 13451520; i++) {
 						supply = blockReward.calcSupply(i);
 						expect(supply).to.equal(prev + constants.rewards.milestones[3]);
 						prev = supply;
@@ -432,10 +432,10 @@ describe('BlockReward', function () {
 			describe('for milestone 4 and beyond', function () {
 
 				it('should be ok', function () {
-					var supply = blockReward.calcSupply(13451519);
-					var prev = supply;
+					let supply = blockReward.calcSupply(13451519);
+					let prev = supply;
 
-					for (var i = 13451520; i < (13451520 + 100); i++) {
+					for (let i = 13451520; i < (13451520 + 100); i++) {
 						supply = blockReward.calcSupply(i);
 						expect(supply).to.equal(prev + constants.rewards.milestones[4]);
 						prev = supply;

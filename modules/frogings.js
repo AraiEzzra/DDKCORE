@@ -1,28 +1,20 @@
-'use strict';
 
-var _ = require('lodash');
-var async = require('async');
-var constants = require('../helpers/constants.js');
-var crypto = require('crypto');
-var extend = require('extend');
-var OrderBy = require('../helpers/orderBy.js');
-var sandboxHelper = require('../helpers/sandbox.js');
-var schema = require('../schema/frogings.js');
-var sql = require('../sql/frogings.js');
-var TransactionPool = require('../logic/transactionPool.js');
-var transactionTypes = require('../helpers/transactionTypes.js');
-var Transfer = require('../logic/transfer.js');
-var Frozen = require('../logic/frozen.js');
-var bignum = require('../helpers/bignum.js');
-var sql = require('../sql/referal_sql');
-var env = process.env;
+
+let crypto = require('crypto');
+let schema = require('../schema/frogings.js');
+let sql = require('../sql/frogings.js');
+let TransactionPool = require('../logic/transactionPool.js');
+let transactionTypes = require('../helpers/transactionTypes.js');
+let Frozen = require('../logic/frozen.js');
+let ref_sql = require('../sql/referal_sql');
+let env = process.env;
 
 // Private fields
-var __private = {};
-var shared = {};
-var modules;
-var library;
-var self;
+let __private = {};
+let shared = {};
+let modules;
+let library;
+let self;
 
 __private.assetTypes = {};
 
@@ -78,7 +70,7 @@ Frogings.prototype.referalReward = function (amount, address, cb) {
 	var overrideReward = {},
 		i = 0;
 
-	library.db.one(sql.referLevelChain, {
+	library.db.one(ref_sql.referLevelChain, {
 		address: sponsor_address
 	}).then(function (user) {
 
@@ -160,7 +152,7 @@ Frogings.prototype.shared = {
 			});
 		})
 		.catch(function (err) {
-			return setImmediate(cb, 'Error while counting Stakeholders');
+			return setImmediate(cb, err);
 		});
 
 	},
@@ -173,7 +165,7 @@ Frogings.prototype.shared = {
 			});
 		})
 		.catch(function (err) {
-			return setImmediate(cb, 'Error in getting sum of ETP staked');
+			return setImmediate(cb, err);
 		});
 	},
 
@@ -182,8 +174,8 @@ Frogings.prototype.shared = {
 			if (err) {
 				return setImmediate(cb, err[0].message);
 			}
-			var hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
-			var keypair = library.ed.makeKeypair(hash);
+			let hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
+			let keypair = library.ed.makeKeypair(hash);
 
 			modules.accounts.getAccount({ publicKey: keypair.publicKey.toString('hex') }, function (err, account) {
 				if (!account || !account.address) {
@@ -197,7 +189,7 @@ Frogings.prototype.shared = {
 					});
 				})
 				.catch(function (err) {
-					return setImmediate(cb, 'Error in getting my sum of ETP staked');
+					return setImmediate(cb, err);
 				});
 			});
 		});
@@ -209,8 +201,8 @@ Frogings.prototype.shared = {
 			if (err) {
 				return setImmediate(cb, err[0].message);
 			}
-			var hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
-			var keypair = library.ed.makeKeypair(hash);
+			let hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
+			let keypair = library.ed.makeKeypair(hash);
 
 			modules.accounts.getAccount({ publicKey: keypair.publicKey.toString('hex') }, function (err, account) {
 				if (!account || !account.address) {
@@ -224,7 +216,7 @@ Frogings.prototype.shared = {
 					});
 				})
 				.catch(function (err) {
-					return setImmediate(cb, 'Unable to get froze orders');
+					return setImmediate(cb, err);
 				});
 			});
 		});
@@ -237,8 +229,8 @@ Frogings.prototype.shared = {
 			if (err) {
 				return setImmediate(cb, err[0].message);
 			}
-			var hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
-			var keypair = library.ed.makeKeypair(hash);
+			let hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
+			let keypair = library.ed.makeKeypair(hash);
 
 			modules.accounts.getAccount({ publicKey: keypair.publicKey.toString('hex') }, function (err, account) {
 				if (!account || !account.address) {
@@ -252,7 +244,7 @@ Frogings.prototype.shared = {
 					});
 				})
 				.catch(function (err) {
-					return setImmediate(cb, 'Unable to get active froze orders');
+					return setImmediate(cb, err);
 				});
 
 			});
@@ -267,8 +259,8 @@ Frogings.prototype.shared = {
 				return setImmediate(cb, err[0].message);
 			}
 
-			var hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
-			var keypair = library.ed.makeKeypair(hash);
+			let hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
+			let keypair = library.ed.makeKeypair(hash);
 
 			if (req.body.publicKey) {
 				if (keypair.publicKey.toString('hex') !== req.body.publicKey) {
@@ -306,21 +298,21 @@ Frogings.prototype.shared = {
 							}
 
 							if (requester.secondSignature && !req.body.secondSecret) {
-								return setImmediate(cb, 'Missing requester second passphrase');
+								return setImmediate(cb, 'Missing second passphrase');
 							}
 
 							if (requester.publicKey === account.publicKey) {
 								return setImmediate(cb, 'Invalid requester public key');
 							}
 
-							var secondKeypair = null;
+							let secondKeypair = null;
 
 							if (requester.secondSignature) {
-								var secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
+								let secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
 								secondKeypair = library.ed.makeKeypair(secondHash);
 							}
 
-							var transaction;
+							let transaction;
 
 							try {
 								transaction = library.logic.transaction.create({
@@ -349,17 +341,17 @@ Frogings.prototype.shared = {
 						}
 
 						if (account.secondSignature && !req.body.secondSecret) {
-							return setImmediate(cb, 'Invalid second passphrase');
+							return setImmediate(cb, 'Missing second passphrase');
 						}
 
-						var secondKeypair = null;
+						let secondKeypair = null;
 
 						if (account.secondSignature) {
-							var secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
+							let secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
 							secondKeypair = library.ed.makeKeypair(secondHash);
 						}
 
-						var transaction;
+						let transaction;
 
 						try {
 							transaction = library.logic.transaction.create({
@@ -408,3 +400,5 @@ Frogings.prototype.shared = {
 
 // Export
 module.exports = Frogings;
+
+/*************************************** END OF FILE *************************************/

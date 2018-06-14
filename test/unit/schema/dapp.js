@@ -1,8 +1,8 @@
-var ZSchema = require('../../../helpers/z_schema.js');
-var schema = require('../../../schema/dapps.js');
-var expect = require('chai').expect;
+let ZSchema = require('../../../helpers/z_schema.js');
+let schema = require('../../../schema/dapps.js');
+let expect = require('chai').expect;
 
-var validator = new ZSchema();
+let validator = new ZSchema();
 
 describe('dapp', function () {
 
@@ -44,7 +44,7 @@ describe('dapp', function () {
 	});
 
 	describe('launch', function () {
-		var testBody;
+		let testBody;
 
 		beforeEach(function () {
 			testBody = {

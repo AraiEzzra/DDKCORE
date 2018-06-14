@@ -1,29 +1,24 @@
-'use strict';
 
-var _ = require('lodash');
-var async = require('async');
-var http = require("http");
-var speakeasy = require("speakeasy");
-var constants = require('../helpers/constants.js');
-var crypto = require('crypto');
-var extend = require('extend');
-var OrderBy = require('../helpers/orderBy.js');
-var sandboxHelper = require('../helpers/sandbox.js');
-var schema = require('../schema/transactions.js');
-var sql = require('../sql/transactions.js');
-var TransactionPool = require('../logic/transactionPool.js');
-var transactionTypes = require('../helpers/transactionTypes.js');
-var Transfer = require('../logic/transfer.js');
-var ReferTransfer = require('../logic/referralTransaction.js');
-var cache = require('./cache.js');
-var QRCode = require('qrcode');
+let _ = require('lodash');
+let async = require('async');
+let speakeasy = require('speakeasy');
+let constants = require('../helpers/constants.js');
+let crypto = require('crypto');
+let OrderBy = require('../helpers/orderBy.js');
+let sandboxHelper = require('../helpers/sandbox.js');
+let schema = require('../schema/transactions.js');
+let sql = require('../sql/transactions.js');
+let TransactionPool = require('../logic/transactionPool.js');
+let transactionTypes = require('../helpers/transactionTypes.js');
+let Transfer = require('../logic/transfer.js');
+let ReferTransfer = require('../logic/referralTransaction.js');
 
 // Private fields
-var __private = {};
-var shared = {};
-var modules;
-var library;
-var self;
+let __private = {};
+let shared = {};
+let modules;
+let library;
+let self;
 
 __private.assetTypes = {};
 
@@ -84,9 +79,9 @@ function Transactions(cb, scope) {
  * @returns {setImmediateCallback} error | data: {transactions, count}
  */
 __private.list = function (filter, cb) {
-	var params = {};
-	var where = [];
-	var allowedFieldsMap = {
+	let params = {};
+	let where = [];
+	let allowedFieldsMap = {
 		blockId: '"t_blockId" = ${blockId}',
 		senderPublicKey: '"t_senderPublicKey" = DECODE (${senderPublicKey}, \'hex\')',
 		recipientPublicKey: '"m_recipientPublicKey" = DECODE (${recipientPublicKey}, \'hex\')',
@@ -111,11 +106,11 @@ __private.list = function (filter, cb) {
 		ownerAddress: null,
 		ownerPublicKey: null
 	};
-	var owner = '';
-	var isFirstWhere = true;
+	let owner = '';
+	let isFirstWhere = true;
 
-	var processParams = function (value, key) {
-		var field = String(key).split(':');
+	let processParams = function (value, key) {
+		let field = String(key).split(':');
 		if (field.length === 1) {
 			// Only field identifier, so using default 'OR' condition
 			field.unshift('OR');
@@ -184,7 +179,7 @@ __private.list = function (filter, cb) {
 		return setImmediate(cb, 'Invalid limit, maximum is 1000');
 	}
 
-	var orderBy = OrderBy(
+	let orderBy = OrderBy(
 		filter.orderBy, {
 			sortFields: sql.sortFields,
 			fieldPrefix: function (sortField) {
@@ -207,7 +202,7 @@ __private.list = function (filter, cb) {
 		where: where,
 		owner: owner
 	}), params).then(function (rows) {
-		var count = rows.length ? rows[0].count : 0;
+		let count = rows.length ? rows[0].count : 0;
 
 		library.db.query(sql.list({
 			where: where,
@@ -215,13 +210,13 @@ __private.list = function (filter, cb) {
 			sortField: orderBy.sortField,
 			sortMethod: orderBy.sortMethod
 		}), params).then(function (rows) {
-			var transactions = [];
+			let transactions = [];
 
-			for (var i = 0; i < rows.length; i++) {
+			for (let i = 0; i < rows.length; i++) {
 				transactions.push(library.logic.transaction.dbRead(rows[i]));
 			}
 
-			var data = {
+			let data = {
 				transactions: transactions,
 				count: count
 			};
@@ -250,7 +245,7 @@ __private.getById = function (id, cb) {
 			return setImmediate(cb, 'Transaction not found: ' + id);
 		}
 
-		var transacton = library.logic.transaction.dbRead(rows[0]);
+		let transacton = library.logic.transaction.dbRead(rows[0]);
 
 		return setImmediate(cb, null, transacton);
 	}).catch(function (err) {
@@ -272,11 +267,11 @@ __private.getVotesById = function (transaction, cb) {
 			return setImmediate(cb, 'Transaction not found: ' + transaction.id);
 		}
 
-		var votes = rows[0].votes.split(',');
-		var added = [];
-		var deleted = [];
+		let votes = rows[0].votes.split(',');
+		let added = [];
+		let deleted = [];
 
-		for (var i = 0; i < votes.length; i++) {
+		for (let i = 0; i < votes.length; i++) {
 			if (votes[i].substring(0, 1) === '+') {
 				added.push(votes[i].substring(1));
 			} else if (votes[i].substring(0, 1) === '-') {
@@ -307,7 +302,7 @@ __private.getPooledTransaction = function (method, req, cb) {
 			return setImmediate(cb, err[0].message);
 		}
 
-		var transaction = self[method](req.body.id);
+		let transaction = self[method](req.body.id);
 
 		if (!transaction) {
 			return setImmediate(cb, 'Transaction not found');
@@ -332,8 +327,8 @@ __private.getPooledTransactions = function (method, req, cb) {
 			return setImmediate(cb, err[0].message);
 		}
 
-		var transactions = self[method](true);
-		var i, toSend = [];
+		let transactions = self[method](true);
+		let i, toSend = [];
 
 		if (req.body.senderPublicKey || req.body.address) {
 			for (i = 0; i < transactions.length; i++) {
@@ -628,12 +623,12 @@ Transactions.prototype.shared = {
 	getTransactions: function (req, cb) {
 		async.waterfall([
 			function (waterCb) {
-				var params = {};
-				var pattern = /(and|or){1}:/i;
+				let params = {};
+				let pattern = /(and|or){1}:/i;
 
 				// Filter out 'and:'/'or:' from params to perform schema validation
 				_.each(req.body, function (value, key) {
-					var param = String(key).replace(pattern, '');
+					let param = String(key).replace(pattern, '');
 					// Dealing with array-like parameters (csv comma separated)
 					if (_.includes(['senderIds', 'recipientIds', 'senderPublicKeys', 'recipientPublicKeys'], param)) {
 						value = String(value).split(',');
@@ -695,7 +690,7 @@ Transactions.prototype.shared = {
 				queued: __private.transactionPool.queued.transactions.length
 			});
 		}, function (err) {
-			return setImmediate(cb, 'Unable to count transactions');
+			return setImmediate(cb, err);
 		});
 	},
 
@@ -724,41 +719,40 @@ Transactions.prototype.shared = {
 	},
 
 	addTransactions: function (req, cb) {
-		//library.cache.client.get('otpSecret', function (err, base32Secret) {
-		/* if (err) {
-			return setImmediate(cb, err);
-		}
-		if (!base32Secret) {
-			return setImmediate(cb, 'Token expired or invalid OTP. Click resend to continue');
-		}
-		var verified = speakeasy.totp.verify({
-			secret: base32Secret,
-			encoding: 'base32',
-			token: req.body.otp,
-			window: 6
-		});
-		if (!verified) {
-			return setImmediate(cb, 'Invalid OTP!. Please enter valid OTP to SEND Transaction');
-		} */
 		library.schema.validate(req.body, schema.addTransactions, function (err) {
 			if (err) {
 				return setImmediate(cb, err[0].message);
 			}
-			library.schema.validate(req.body, schema.addTransactions, function (err) {
+
+			let hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
+			let keypair = library.ed.makeKeypair(hash);
+			let publicKey = keypair.publicKey.toString('hex');
+			library.cache.client.get('2fa_user_' + modules.accounts.generateAddressByPublicKey(publicKey), function (err, userTwoFaCred) {
 				if (err) {
-					return setImmediate(cb, err[0].message);
+					return setImmediate(cb, err);
 				}
+				if (userTwoFaCred) {
+					userTwoFaCred = JSON.parse(userTwoFaCred);
+					if (userTwoFaCred.twofactor.secret) {
+						let verified = speakeasy.totp.verify({
+							secret: userTwoFaCred.twofactor.secret,
+							encoding: 'base32',
+							token: req.body.otp,
+							window: 6
+						});
+						if (!verified) {
+							return setImmediate(cb, 'Invalid OTP!. Please enter valid OTP to SEND Transaction');
+						}
+					}
 
-				var hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
-				var keypair = library.ed.makeKeypair(hash);
-
-				if (req.body.publicKey) {
-					if (keypair.publicKey.toString('hex') !== req.body.publicKey) {
-						return setImmediate(cb, 'Invalid passphrase');
+					if (req.body.publicKey) {
+						if (keypair.publicKey.toString('hex') !== req.body.publicKey) {
+							return setImmediate(cb, 'Invalid passphrase');
+						}
 					}
 				}
 
-			var query = { address: req.body.recipientId };
+				let query = { address: req.body.recipientId };
 
 				library.balancesSequence.add(function (cb) {
 					modules.accounts.getAccount(query, function (err, recipient) {
@@ -766,17 +760,17 @@ Transactions.prototype.shared = {
 							return setImmediate(cb, err);
 						}
 
-						var recipientId = recipient ? recipient.address : req.body.recipientId;
+						let recipientId = recipient ? recipient.address : req.body.recipientId;
 
 						if (!recipientId) {
 							return setImmediate(cb, 'Invalid recipient');
 						}
 
-					if (req.body.multisigAccountPublicKey && req.body.multisigAccountPublicKey !== keypair.publicKey.toString('hex')) {
-						modules.accounts.getAccount({ publicKey: req.body.multisigAccountPublicKey }, function (err, account) {
-							if (err) {
-								return setImmediate(cb, err);
-							}
+						if (req.body.multisigAccountPublicKey && req.body.multisigAccountPublicKey !== keypair.publicKey.toString('hex')) {
+							modules.accounts.getAccount({ publicKey: req.body.multisigAccountPublicKey }, function (err, account) {
+								if (err) {
+									return setImmediate(cb, err);
+								}
 
 								if (!account || !account.publicKey) {
 									return setImmediate(cb, 'Multisignature account not found');
@@ -790,7 +784,46 @@ Transactions.prototype.shared = {
 									return setImmediate(cb, 'Account does not belong to multisignature group');
 								}
 
-							modules.accounts.getAccount({ publicKey: keypair.publicKey }, function (err, requester) {
+								modules.accounts.getAccount({ publicKey: keypair.publicKey }, function (err) {
+									if (err) {
+										return setImmediate(cb, err);
+									}
+
+									if (!account || !account.publicKey) {
+										return setImmediate(cb, 'Account not found');
+									}
+
+									if (account.secondSignature && !req.body.secondSecret) {
+										return setImmediate(cb, 'Missing second passphrase');
+									}
+
+									let secondKeypair = null;
+
+									if (account.secondSignature) {
+										let secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
+										secondKeypair = library.ed.makeKeypair(secondHash);
+									}
+
+									let transaction;
+
+									try {
+										transaction = library.logic.transaction.create({
+											type: (req.body.transactionRefer) ? (transactionTypes.REFER) : (transactionTypes.SEND),
+											amount: req.body.amount,
+											sender: account,
+											recipientId: recipientId,
+											keypair: keypair,
+											secondKeypair: secondKeypair
+										});
+									} catch (e) {
+										return setImmediate(cb, e.toString());
+									}
+
+									modules.transactions.receiveTransactions([transaction], true, cb);
+								});
+							});
+						} else {
+							modules.accounts.setAccountAndGet({ publicKey: keypair.publicKey.toString('hex') }, function (err, account) {
 								if (err) {
 									return setImmediate(cb, err);
 								}
@@ -803,14 +836,14 @@ Transactions.prototype.shared = {
 									return setImmediate(cb, 'Missing second passphrase');
 								}
 
-								var secondKeypair = null;
+								let secondKeypair = null;
 
 								if (account.secondSignature) {
-									var secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
+									let secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
 									secondKeypair = library.ed.makeKeypair(secondHash);
 								}
 
-								var transaction;
+								let transaction;
 
 								try {
 									transaction = library.logic.transaction.create({
@@ -827,45 +860,6 @@ Transactions.prototype.shared = {
 
 								modules.transactions.receiveTransactions([transaction], true, cb);
 							});
-						});
-					} else {
-						modules.accounts.setAccountAndGet({ publicKey: keypair.publicKey.toString('hex') }, function (err, account) {
-							if (err) {
-								return setImmediate(cb, err);
-							}
-
-							if (!account || !account.publicKey) {
-								return setImmediate(cb, 'Account not found');
-							}
-
-							if (account.secondSignature && !req.body.secondSecret) {
-								return setImmediate(cb, 'Missing second passphrase');
-							}
-
-							var secondKeypair = null;
-
-							if (account.secondSignature) {
-								var secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
-								secondKeypair = library.ed.makeKeypair(secondHash);
-							}
-
-							var transaction;
-
-							try {
-								transaction = library.logic.transaction.create({
-									type: (req.body.transactionRefer) ? (transactionTypes.REFER) : transactionTypes.SEND,
-									amount: req.body.amount,
-									sender: account,
-									recipientId: recipientId,
-									keypair: keypair,
-									secondKeypair: secondKeypair
-								});
-							} catch (e) {
-								return setImmediate(cb, e.toString());
-							}
-
-							modules.transactions.receiveTransactions([transaction], true, cb);
-						});
 						}
 					});
 				}, function (err, transaction) {
@@ -877,57 +871,10 @@ Transactions.prototype.shared = {
 				});
 			});
 		});
-	},
-
-	generateOTP: function (req, cb) {
-		//console.log('backend to generate OTP');
-		var options = {
-			"method": "POST",
-			"hostname": "api.msg91.com",
-			"port": null,
-			"path": "/api/v2/sendsms",
-			"headers": {
-				"authkey": "199676A4cGzKDlK0N5a91461",
-				"content-type": "application/json"
-			}
-		};
-		var secret = speakeasy.generateSecret({ length: 30 });
-		var token = speakeasy.totp({
-			secret: secret.base32,
-			encoding: 'base32',
-		});
-		//library.cache.client.set('userKey_' + token, secret);
-		/* library.modules.cache.setJsonForKey('userKey_' + token, secret, function(err) {
-			console.log(err);
-		}); */
-		//library.cache.client.set('userKey_' + token, secret, 'ex', 100);
-		//cache.prototype.setJsonForKey('userKey_' + token, secret.base32, 'ex', 100);
-		//library.cache.client.set('userKey_' + token, secret.base32);
-		cache.prototype.setJsonForKey("userKey_" + token, secret.base32);
-		var req = http.request(options, function (res) {
-			var chunks = [];
-
-			res.on("data", function (chunk) {
-				chunks.push(chunk);
-			});
-
-			res.on("end", function () {
-				var body = Buffer.concat(chunks);
-				console.log(body.toString());
-			});
-		});
-
-		req.write(JSON.stringify({
-			sender: 'SOCKET',
-			route: '4',
-			country: '91',
-			sms:
-				[{ message: 'OTP : ' + token, to: ['9205726015'] }]
-		}));
-		req.end();
-		return setImmediate(cb, null);
 	}
 };
 
 // Export
 module.exports = Transactions;
+
+/*************************************** END OF FILE *************************************/

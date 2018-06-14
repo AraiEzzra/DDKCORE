@@ -1,8 +1,6 @@
-'use strict';
-
-var pgp = require('pg-promise');
-var RoundChanges = require('../helpers/RoundChanges.js');
-var sql = require('../sql/rounds.js');
+let pgp = require('pg-promise');
+let RoundChanges = require('../helpers/RoundChanges.js');
+let sql = require('../sql/rounds.js');
 
 /**
  * Validates required scope properties.
@@ -37,7 +35,7 @@ function Round (scope, t) {
 	this.t = t;
 
 	// List of required scope properties
-	var requiredProperties = ['library', 'modules', 'block', 'round', 'backwards'];
+	let requiredProperties = ['library', 'modules', 'block', 'round', 'backwards'];
 
 	// Require extra scope properties when finishing round
 	if (scope.finishRound) {
@@ -97,10 +95,10 @@ Round.prototype.getVotes = function () {
  * @return {function} Promise
  */
 Round.prototype.updateVotes = function () {
-	var self = this;
+	let self = this;
 
 	return self.getVotes(self.scope.round).then(function (votes) {
-		var queries = votes.map(function (vote) {
+		let queries = votes.map(function (vote) {
 			return pgp.as.format(sql.updateVotes, {
 				address: self.scope.modules.accounts.generateAddressByPublicKey(vote.delegate),
 				amount: Math.floor(vote.amount)
@@ -171,16 +169,16 @@ Round.prototype.restoreVotesSnapshot = function () {
  * @return {function} Promise with address array
  */
 Round.prototype.applyRound = function () {
-	var roundChanges = new RoundChanges(this.scope);
-	var queries = [];
+	let roundChanges = new RoundChanges(this.scope);
+	let queries = [];
 
 	// Reverse delegates if going backwards
-	var delegates = (this.scope.backwards) ? this.scope.roundDelegates.reverse() : this.scope.roundDelegates;
+	let delegates = (this.scope.backwards) ? this.scope.roundDelegates.reverse() : this.scope.roundDelegates;
 
 	// Apply round changes to each delegate
-	for (var i = 0; i < this.scope.roundDelegates.length; i++) {
-		var delegate = this.scope.roundDelegates[i];
-		var changes = roundChanges.at(i);
+	for (let i = 0; i < this.scope.roundDelegates.length; i++) {
+		let delegate = this.scope.roundDelegates[i];
+		let changes = roundChanges.at(i);
 
 		this.scope.library.logger.trace('Delegate changes', { delegate: delegate, changes: changes });
 
@@ -193,27 +191,18 @@ Round.prototype.applyRound = function () {
 			fees: (this.scope.backwards ? -changes.fees : changes.fees),
 			rewards: (this.scope.backwards ? -changes.rewards : changes.rewards)
 		}));
-
-		//FIXME: uncomment this to deduct reward amount(i.e Amount goes to thin air) from main account
-		/* queries.push(this.scope.modules.accounts.mergeAccountAndGet({
-			publicKey: 'f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2',
-			balance: -changes.rewards,
-			u_balance: -changes.rewards,
-			rewards: -changes.rewards
-		})); */
-
 	}
 
 	// Decide which delegate receives fees remainder
-	var remainderIndex = (this.scope.backwards) ? 0 : delegates.length - 1;
-	var remainderDelegate = delegates[remainderIndex];
+	let remainderIndex = (this.scope.backwards) ? 0 : delegates.length - 1;
+	let remainderDelegate = delegates[remainderIndex];
 
 	// Get round changes for chosen delegate
-	var changes = roundChanges.at(remainderIndex);
+	let changes = roundChanges.at(remainderIndex);
 
 	// Apply fees remaining to chosen delegate
 	if (changes.feesRemaining > 0) {
-		var feesRemaining = (this.scope.backwards ? -changes.feesRemaining : changes.feesRemaining);
+		let feesRemaining = (this.scope.backwards ? -changes.feesRemaining : changes.feesRemaining);
 
 		this.scope.library.logger.trace('Fees remaining', { index: remainderIndex, delegate: remainderDelegate, fees: feesRemaining });
 
@@ -296,3 +285,5 @@ Round.prototype.backwardLand = function () {
 
 // Export
 module.exports = Round;
+
+/*************************************** END OF FILE *************************************/

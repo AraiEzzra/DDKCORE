@@ -1,13 +1,13 @@
-'use strict';
 
-var _ = require('lodash');
-var async = require('async');
-var constants = require('../../helpers/constants.js');
-var schema = require('../../schema/blocks.js');
-var slots = require('../../helpers/slots.js');
-var sql = require('../../sql/blocks.js');
 
-var modules, library, self, __private = {};
+let _ = require('lodash');
+let async = require('async');
+let constants = require('../../helpers/constants.js');
+let schema = require('../../schema/blocks.js');
+let slots = require('../../helpers/slots.js');
+let sql = require('../../sql/blocks.js');
+
+let modules, library, self, __private = {};
 
 /**
  * Initializes library.
@@ -60,7 +60,7 @@ function Process (logger, block, peers, transaction, schema, db, dbSequence, seq
  * @return {Object}   cb.res Result object
  */
 Process.prototype.getCommonBlock = function (peer, height, cb) {
-	var comparisionFailed = false;
+	let comparisionFailed = false;
 
 	async.waterfall([
 		function (waterCb) {
@@ -70,7 +70,7 @@ Process.prototype.getCommonBlock = function (peer, height, cb) {
 			});
 		},
 		function (res, waterCb) {
-			var ids = res.ids;
+			let ids = res.ids;
 
 			// Perform request to supplied remote peer
 			modules.transport.getFromPeer(peer, {
@@ -151,8 +151,8 @@ Process.prototype.getCommonBlock = function (peer, height, cb) {
  */
 Process.prototype.loadBlocksOffset = function (limit, offset, verify, cb) {
 	// Calculate limit if offset is supplied
-	var newLimit = limit + (offset || 0);
-	var params = { limit: newLimit, offset: offset || 0 };
+	let newLimit = limit + (offset || 0);
+	let params = { limit: newLimit, offset: offset || 0 };
 
 	library.logger.debug('Loading blocks offset', {limit: limit, offset: offset, verify: verify});
 	// Execute in sequence via dbSequence
@@ -161,7 +161,7 @@ Process.prototype.loadBlocksOffset = function (limit, offset, verify, cb) {
 		// FIXME: Weird logic in that SQL query, also ordering used can be performance bottleneck - to rewrite
 		library.db.query(sql.loadBlocksOffset, params).then(function (rows) {
 			// Normalize blocks
-			var blocks = modules.blocks.utils.readDbRows(rows);
+			let blocks = modules.blocks.utils.readDbRows(rows);
 
 			async.eachSeries(blocks, function (block, cb) {
 				// Stop processing if node shutdown was requested
@@ -173,7 +173,7 @@ Process.prototype.loadBlocksOffset = function (limit, offset, verify, cb) {
 				if (verify && block.id !== library.genesisblock.block.id) {
 					// Sanity check of the block, if values are coherent.
 					// No access to database.
-					var check = modules.blocks.verify.verifyBlock(block);
+					let check = modules.blocks.verify.verifyBlock(block);
 
 					if (!check.verified) {
 						library.logger.error(['Block', block.id, 'verification failed'].join(' '), check.errors.join(', '));
@@ -215,7 +215,7 @@ Process.prototype.loadBlocksOffset = function (limit, offset, verify, cb) {
  */
 Process.prototype.loadBlocksFromPeer = function (peer, cb) {
 	// Set current last block as last valid block
-	var lastValidBlock = modules.blocks.lastBlock.get();
+	let lastValidBlock = modules.blocks.lastBlock.get();
 
 	// Normalize peer
 	peer = library.logic.peers.create(peer);
@@ -238,7 +238,7 @@ Process.prototype.loadBlocksFromPeer = function (peer, cb) {
 
 	// Validate remote peer response via schema
 	function validateBlocks (blocks, seriesCb) {
-		var report = library.schema.validate(blocks, schema.loadBlocksFromPeer);
+		let report = library.schema.validate(blocks, schema.loadBlocksFromPeer);
 
 		if (!report) {
 			return setImmediate(seriesCb, 'Received invalid blocks data');
@@ -276,7 +276,7 @@ Process.prototype.loadBlocksFromPeer = function (peer, cb) {
 				lastValidBlock = block;
 				library.logger.info(['Block', block.id, 'loaded from:', peer.string].join(' '), 'height: ' + block.height);
 			} else {
-				var id = (block ? block.id : 'null');
+				let id = (block ? block.id : 'null');
 
 				library.logger.debug('Block processing failed', {id: id, err: err.toString(), module: 'blocks', block: block});
 			}
@@ -312,8 +312,8 @@ Process.prototype.loadBlocksFromPeer = function (peer, cb) {
  */
 Process.prototype.generateBlock = function (keypair, timestamp, cb) {
 	// Get transactions that will be included in block
-	var transactions = modules.transactions.getUnconfirmedTransactionList(false, constants.maxTxsPerBlock);
-	var ready = [];
+	let transactions = modules.transactions.getUnconfirmedTransactionList(false, constants.maxTxsPerBlock);
+	let ready = [];
 
 	async.eachSeries(transactions, function (transaction, cb) {
 		modules.accounts.getAccount({ publicKey: transaction.senderPublicKey }, function (err, sender) {
@@ -324,7 +324,7 @@ Process.prototype.generateBlock = function (keypair, timestamp, cb) {
 			// Check transaction depends on type
 			if (library.logic.transaction.ready(transaction, sender)) {
 				// Verify transaction
-				library.logic.transaction.verify(transaction, sender, function (err) {
+				library.logic.transaction.verify(transaction, sender, function () {
 					ready.push(transaction);
 					return setImmediate(cb);
 				});
@@ -333,7 +333,7 @@ Process.prototype.generateBlock = function (keypair, timestamp, cb) {
 			}
 		});
 	}, function () {
-		var block;
+		let block;
 		try {
 			// Create a block
 			block = library.logic.block.create({
@@ -365,7 +365,7 @@ Process.prototype.generateBlock = function (keypair, timestamp, cb) {
  * @param   {block} block New block
  */
 Process.prototype.onReceiveBlock = function (block) {
-	var lastBlock;
+	let lastBlock;
 
 	// Execute in sequence via sequence
 	library.sequence.add(function (cb) {
@@ -442,7 +442,7 @@ __private.receiveBlock = function (block, cb) {
  * @param {Function} cb Callback function
  */
 __private.receiveForkOne = function (block, lastBlock, cb) {
-	var tmp_block = _.clone(block);
+	let tmp_block = _.clone(block);
 
 	// Fork: Consecutive height but different previous block id
 	modules.delegates.fork(block, 1);
@@ -464,7 +464,7 @@ __private.receiveForkOne = function (block, lastBlock, cb) {
 			},
 			// Check received block before any deletion
 			function (seriesCb) {
-				var check = modules.blocks.verify.verifyReceipt(tmp_block);
+				let check = modules.blocks.verify.verifyReceipt(tmp_block);
 
 				if (!check.verified) {
 					library.logger.error(['Block', tmp_block.id, 'verification failed'].join(' '), check.errors.join(', '));
@@ -496,7 +496,7 @@ __private.receiveForkOne = function (block, lastBlock, cb) {
  * @param {Function} cb Callback function
  */
 __private.receiveForkFive = function (block, lastBlock, cb) {
-	var tmp_block = _.clone(block);
+	let tmp_block = _.clone(block);
 
 	// Fork: Same height and previous block id, but different block id
 	modules.delegates.fork(block, 5);
@@ -523,7 +523,7 @@ __private.receiveForkFive = function (block, lastBlock, cb) {
 			},
 			// Check received block before any deletion
 			function (seriesCb) {
-				var check = modules.blocks.verify.verifyReceipt(tmp_block);
+				let check = modules.blocks.verify.verifyReceipt(tmp_block);
 
 				if (!check.verified) {
 					library.logger.error(['Block', tmp_block.id, 'verification failed'].join(' '), check.errors.join(', '));
@@ -578,3 +578,5 @@ Process.prototype.onBind = function (scope) {
 };
 
 module.exports = Process;
+
+/*************************************** END OF FILE *************************************/

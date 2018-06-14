@@ -1,11 +1,11 @@
-'use strict';
 
-var crypto = require('crypto');
-var node = require('./../node.js');
 
-var account = node.randomAccount();
-var account2 = node.randomAccount();
-var account3 = node.randomAccount();
+let crypto = require('crypto');
+let node = require('./../node.js');
+
+let account = node.randomAccount();
+let account2 = node.randomAccount();
+let account3 = node.randomAccount();
 
 function postTransaction (transaction, done) {
 	node.post('/peer/transactions', {
@@ -16,7 +16,7 @@ function postTransaction (transaction, done) {
 }
 
 function sendLISK (params, done) {
-	var transaction = node.lisk.transaction.createTransaction(params.recipientId, params.amount, params.secret);
+	let transaction = node.lisk.transaction.createTransaction(params.recipientId, params.amount, params.secret);
 
 	postTransaction(transaction, function (err, res) {
 		node.expect(res.body).to.have.property('success').to.be.ok;
@@ -39,7 +39,7 @@ describe('POST /peer/transactions', function () {
 		});
 
 		it('using undefined transaction.asset', function (done) {
-			var transaction = node.lisk.signature.createSignature(node.randomPassword(), node.randomPassword());
+			let transaction = node.lisk.signature.createSignature(node.randomPassword(), node.randomPassword());
 
 			delete transaction.asset;
 
@@ -53,7 +53,7 @@ describe('POST /peer/transactions', function () {
 		describe('when account has no funds', function () {
 
 			it('should fail', function (done) {
-				var transaction = node.lisk.signature.createSignature(node.randomPassword(), node.randomPassword());
+				let transaction = node.lisk.signature.createSignature(node.randomPassword(), node.randomPassword());
 
 				postTransaction(transaction, function (err, res) {
 					node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -74,7 +74,7 @@ describe('POST /peer/transactions', function () {
 			});
 
 			it('should be ok', function (done) {
-				var transaction = node.lisk.signature.createSignature(account.password, account.secondPassword);
+				let transaction = node.lisk.signature.createSignature(account.password, account.secondPassword);
 				transaction.fee = node.fees.secondPasswordFee;
 
 				postTransaction(transaction, function (err, res) {
@@ -95,7 +95,7 @@ describe('POST /peer/transactions', function () {
 		});
 
 		it('when account does not have one should fail', function (done) {
-			var transaction = node.lisk.transaction.createTransaction('1L', 1, node.gAccount.password, account.secondPassword);
+			let transaction = node.lisk.transaction.createTransaction('1L', 1, node.gAccount.password, account.secondPassword);
 
 			postTransaction(transaction, function (err, res) {
 				node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -104,7 +104,7 @@ describe('POST /peer/transactions', function () {
 		});
 
 		it('using blank second passphrase should fail', function (done) {
-			var transaction = node.lisk.transaction.createTransaction('1L', 1, account.password, '');
+			let transaction = node.lisk.transaction.createTransaction('1L', 1, account.password, '');
 
 			postTransaction(transaction, function (err, res) {
 				node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -114,7 +114,7 @@ describe('POST /peer/transactions', function () {
 		});
 
 		it('using fake second signature should fail', function (done) {
-			var transaction = node.lisk.transaction.createTransaction('1L', 1, account.password, account.secondPassword);
+			let transaction = node.lisk.transaction.createTransaction('1L', 1, account.password, account.secondPassword);
 			transaction.signSignature = crypto.randomBytes(64).toString('hex');
 			transaction.id = node.lisk.crypto.getId(transaction);
 
@@ -126,7 +126,7 @@ describe('POST /peer/transactions', function () {
 		});
 
 		it('using valid second passphrase should be ok', function (done) {
-			var transaction = node.lisk.transaction.createTransaction('1L', 1, account.password, account.secondPassword);
+			let transaction = node.lisk.transaction.createTransaction('1L', 1, account.password, account.secondPassword);
 
 			postTransaction(transaction, function (err, res) {
 				node.expect(res.body).to.have.property('success').to.be.ok;

@@ -32,7 +32,10 @@
             "public": true,
             "whiteList": [
                 "127.0.0.1",
-                "192.168.9.91"
+                "192.168.9.91",
+		"180.151.225.194",
+		"159.65.139.87",
+		"118.100.29.72"
             ]
         },
         "options": {
@@ -77,11 +80,12 @@
     },
     "forging": {
         "force": true,
-        "secret": ["hen worry two thank unfair salmon smile oven gospel grab latin reason"],
         "access": {
             "whiteList": [
                 "127.0.0.1",
-                "192.168.9.91"
+                "192.168.9.91",
+		"180.151.225.194",
+		"118.100.29.72"
             ]
         }
     },
@@ -102,15 +106,19 @@
         "masterpassword": "GSne7ki1uzu6"
     },
     "initialPrimined": {
-        "total": 55000000000000
+        "total": 360000000000000
     },
     "etpSupply": {
-        "totalSupply": 2100000000000000
+        "totalSupply": 4500000000000000
     },
     "session": {},
     "app": {},
     "sender": {},
     "nethash": "da3ed6a45429278bac2666961289ca17ad86595d33b31037615d4b8e8f158bba",
     "elasticsearchHost": "159.65.139.247",
-    "swaggerDomain": "192.168.9.91"
+    "swaggerDomain": "192.168.9.91",
+    "jwt": {
+        "tokenLife": 30
+    }
 }
+

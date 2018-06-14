@@ -1,5 +1,3 @@
-'use strict';
-
 /**
  * Applies z_schema to validate schema.
  * @memberof module:helpers
@@ -23,3 +21,5 @@ module.exports = function (z_schema) {
 		next();
 	};
 };
+
+/*************************************** END OF FILE *************************************/

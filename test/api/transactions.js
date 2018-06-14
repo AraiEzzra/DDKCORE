@@ -1,15 +1,15 @@
-'use strict';
 
-var node = require('./../node.js');
-var modulesLoader = require('./../common/initModule.js').modulesLoader;
-var transactionSortFields = require('../../sql/transactions').sortFields;
 
-var account = node.randomTxAccount();
-var account2 = node.randomTxAccount();
-var account3 = node.randomTxAccount();
+let node = require('./../node.js');
+let modulesLoader = require('./../common/initModule.js').modulesLoader;
+let transactionSortFields = require('../../sql/transactions').sortFields;
 
-var transactionList = [];
-var offsetTimestamp = 0;
+let account = node.randomTxAccount();
+let account2 = node.randomTxAccount();
+let account3 = node.randomTxAccount();
+
+let transactionList = [];
+let offsetTimestamp = 0;
 
 function openAccount (params, done) {
 	node.post('/api/accounts/open', params, function (err, res) {
@@ -22,7 +22,7 @@ function putTransaction (params, done) {
 }
 
 function sendLISK (account, amount, done) {
-	var expectedFee = node.expectedFee(amount);
+	let expectedFee = node.expectedFee(amount);
 
 	putTransaction({
 		secret: node.gAccount.password,
@@ -77,7 +77,7 @@ before(function (done) {
 });
 
 describe('GET /api/transactions (cache)', function () {
-	var cache;
+	let cache;
 
 	before(function (done) {
 		node.config.cacheEnabled = true;
@@ -106,7 +106,7 @@ describe('GET /api/transactions (cache)', function () {
 	});
 
 	it('cache transactions by the url and parameters when response is a success', function (done) {
-		var url, params;
+		let url, params;
 
 		url = '/api/transactions?';
 		params = [
@@ -118,7 +118,7 @@ describe('GET /api/transactions (cache)', function () {
 		node.get(url + params.join('&'), function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
 			node.expect(res.body).to.have.property('transactions').that.is.an('array');
-			var response = res.body;
+			let response = res.body;
 			cache.getJsonForKey(url + params.join('&'), function (err, res) {
 				node.expect(err).to.not.exist;
 				node.expect(res).to.eql(response);
@@ -128,7 +128,7 @@ describe('GET /api/transactions (cache)', function () {
 	});
 
 	it('should not cache if response is not a success', function (done) {
-		var url, params;
+		let url, params;
 		url = '/api/transactions?';
 		params = [
 			'whatever:senderId=' + node.gAccount.address
@@ -153,11 +153,11 @@ describe('GET /api/transactions', function () {
 	});
 
 	it('using valid parameters should be ok', function (done) {
-		var limit = 10;
-		var offset = 0;
-		var orderBy = 'amount:asc';
+		let limit = 10;
+		let offset = 0;
+		let orderBy = 'amount:asc';
 
-		var params = [
+		let params = [
 			'blockId=' + '1',
 			'senderId=' + node.gAccount.address,
 			'recipientId=' + account.address,
@@ -170,7 +170,7 @@ describe('GET /api/transactions', function () {
 			node.expect(res.body).to.have.property('success').to.be.ok;
 			node.expect(res.body).to.have.property('transactions').that.is.an('array');
 			node.expect(res.body.transactions).to.have.length.within(transactionList.length, limit);
-			for (var i = 0; i < res.body.transactions.length; i++) {
+			for (let i = 0; i < res.body.transactions.length; i++) {
 				if (res.body.transactions[i + 1]) {
 					node.expect(res.body.transactions[i].amount).to.be.at.most(res.body.transactions[i + 1].amount);
 				}
@@ -180,11 +180,11 @@ describe('GET /api/transactions', function () {
 	});
 
 	it('using valid parameters with and/or should be ok', function (done) {
-		var limit = 10;
-		var offset = 0;
-		var orderBy = 'amount:asc';
+		let limit = 10;
+		let offset = 0;
+		let orderBy = 'amount:asc';
 
-		var params = [
+		let params = [
 			'and:blockId=' + '1',
 			'or:senderId=' + node.gAccount.address,
 			'or:recipientId=' + account.address,
@@ -197,7 +197,7 @@ describe('GET /api/transactions', function () {
 			node.expect(res.body).to.have.property('success').to.be.ok;
 			node.expect(res.body).to.have.property('transactions').that.is.an('array');
 			node.expect(res.body.transactions).to.have.length.within(transactionList.length, limit);
-			for (var i = 0; i < res.body.transactions.length; i++) {
+			for (let i = 0; i < res.body.transactions.length; i++) {
 				if (res.body.transactions[i + 1]) {
 					node.expect(res.body.transactions[i].amount).to.be.at.most(res.body.transactions[i + 1].amount);
 				}
@@ -207,13 +207,13 @@ describe('GET /api/transactions', function () {
 	});
 
 	it('using minAmount with and:maxAmount ordered by amount and limited should be ok', function (done) {
-		var limit = 10;
-		var offset = 0;
-		var orderBy = 'amount:asc';
-		var minAmount = 20*100000000; // 20 LSK
-		var maxAmount = 100*100000000; // 100 LSK
+		let limit = 10;
+		let offset = 0;
+		let orderBy = 'amount:asc';
+		let minAmount = 20*100000000; // 20 LSK
+		let maxAmount = 100*100000000; // 100 LSK
 
-		var params = [
+		let params = [
 			'minAmount=' + minAmount,
 			'and:maxAmount=' + maxAmount,
 			'limit=' + limit,
@@ -227,7 +227,7 @@ describe('GET /api/transactions', function () {
 			node.expect(res.body.transactions).to.have.length.within(2, limit);
 			node.expect(res.body.transactions[0].amount).to.be.equal(minAmount);
 			node.expect(res.body.transactions[res.body.transactions.length-1].amount).to.be.equal(maxAmount);
-			for (var i = 0; i < res.body.transactions.length; i++) {
+			for (let i = 0; i < res.body.transactions.length; i++) {
 				if (res.body.transactions[i + 1]) {
 					node.expect(res.body.transactions[i].amount).to.be.at.most(res.body.transactions[i + 1].amount);
 				}
@@ -237,11 +237,11 @@ describe('GET /api/transactions', function () {
 	});
 
 	it('using valid parameters with/without and/or should be ok', function (done) {
-		var limit = 10;
-		var offset = 0;
-		var orderBy = 'amount:asc';
+		let limit = 10;
+		let offset = 0;
+		let orderBy = 'amount:asc';
 
-		var params = [
+		let params = [
 			'and:blockId=' + '1',
 			'or:senderId=' + node.gAccount.address,
 			'or:recipientId=' + account.address,
@@ -258,7 +258,7 @@ describe('GET /api/transactions', function () {
 			node.expect(res.body).to.have.property('success').to.be.ok;
 			node.expect(res.body).to.have.property('transactions').that.is.an('array');
 			node.expect(res.body.transactions).to.have.length.within(transactionList.length, limit);
-			for (var i = 0; i < res.body.transactions.length; i++) {
+			for (let i = 0; i < res.body.transactions.length; i++) {
 				if (res.body.transactions[i + 1]) {
 					node.expect(res.body.transactions[i].amount).to.be.at.most(res.body.transactions[i + 1].amount);
 				}
@@ -268,11 +268,11 @@ describe('GET /api/transactions', function () {
 	});
 
 	it('using valid array-like parameters should be ok', function (done) {
-		var limit = 10;
-		var offset = 0;
-		var orderBy = 'amount:asc';
+		let limit = 10;
+		let offset = 0;
+		let orderBy = 'amount:asc';
 
-		var params = [
+		let params = [
 			'blockId=' + '1',
 			'or:senderIds=' + node.gAccount.address + ',' + account.address,
 			'or:recipientIds=' + account.address + ',' + account2.address,
@@ -287,7 +287,7 @@ describe('GET /api/transactions', function () {
 			node.expect(res.body).to.have.property('success').to.be.ok;
 			node.expect(res.body).to.have.property('transactions').that.is.an('array');
 			node.expect(res.body.transactions).to.have.length.within(transactionList.length, limit);
-			for (var i = 0; i < res.body.transactions.length; i++) {
+			for (let i = 0; i < res.body.transactions.length; i++) {
 				if (res.body.transactions[i + 1]) {
 					node.expect(res.body.transactions[i].amount).to.be.at.most(res.body.transactions[i + 1].amount);
 				}
@@ -297,11 +297,11 @@ describe('GET /api/transactions', function () {
 	});
 
 	it('using one invalid field name with and/or should fail', function (done) {
-		var limit = 10;
-		var offset = 0;
-		var orderBy = 'amount:asc';
+		let limit = 10;
+		let offset = 0;
+		let orderBy = 'amount:asc';
 
-		var params = [
+		let params = [
 			'and:blockId=' + '1',
 			'or:senderId=' + node.gAccount.address,
 			'or:whatever=' + account.address,
@@ -318,7 +318,7 @@ describe('GET /api/transactions', function () {
 	});
 
 	it('using invalid condition should fail', function (done) {
-		var params = [
+		let params = [
 			'whatever:senderId=' + node.gAccount.address
 		];
 
@@ -330,7 +330,7 @@ describe('GET /api/transactions', function () {
 	});
 
 	it('using invalid field name (x:y:z) should fail', function (done) {
-		var params = [
+		let params = [
 			'or:whatever:senderId=' + node.gAccount.address
 		];
 
@@ -342,7 +342,7 @@ describe('GET /api/transactions', function () {
 	});
 
 	it('using empty parameter should fail', function (done) {
-		var params = [
+		let params = [
 			'and:publicKey='
 		];
 
@@ -354,13 +354,13 @@ describe('GET /api/transactions', function () {
 	});
 
 	it('using type should be ok', function (done) {
-		var type = node.txTypes.SEND;
-		var params = 'type=' + type;
+		let type = node.txTypes.SEND;
+		let params = 'type=' + type;
 
 		node.get('/api/transactions?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
 			node.expect(res.body).to.have.property('transactions').that.is.an('array');
-			for (var i = 0; i < res.body.transactions.length; i++) {
+			for (let i = 0; i < res.body.transactions.length; i++) {
 				if (res.body.transactions[i]) {
 					node.expect(res.body.transactions[i].type).to.equal(type);
 				}
@@ -373,7 +373,7 @@ describe('GET /api/transactions', function () {
 		node.get('/api/transactions', function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
 			node.expect(res.body).to.have.property('transactions').that.is.an('array');
-			for (var i = 0; i < res.body.transactions.length; i++) {
+			for (let i = 0; i < res.body.transactions.length; i++) {
 				if (res.body.transactions[i + 1]) {
 					node.expect(res.body.transactions[i].amount).to.be.at.least(res.body.transactions[i + 1].amount);
 				}
@@ -383,7 +383,7 @@ describe('GET /api/transactions', function () {
 	});
 
 	it('using too small fromUnixTime should fail', function (done) {
-		var params = 'fromUnixTime=1464109199';
+		let params = 'fromUnixTime=1464109199';
 
 		node.get('/api/transactions?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -393,7 +393,7 @@ describe('GET /api/transactions', function () {
 	});
 
 	it('using too small toUnixTime should fail', function (done) {
-		var params = 'toUnixTime=1464109200';
+		let params = 'toUnixTime=1464109200';
 
 		node.get('/api/transactions?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -403,8 +403,8 @@ describe('GET /api/transactions', function () {
 	});
 
 	it('using limit > 1000 should fail', function (done) {
-		var limit = 1001;
-		var params = 'limit=' + limit;
+		let limit = 1001;
+		let params = 'limit=' + limit;
 
 		node.get('/api/transactions?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -414,15 +414,15 @@ describe('GET /api/transactions', function () {
 	});
 
 	it('ordered by ascending timestamp should be ok', function (done) {
-		var orderBy = 'timestamp:asc';
-		var params = 'orderBy=' + orderBy;
+		let orderBy = 'timestamp:asc';
+		let params = 'orderBy=' + orderBy;
 
 		node.get('/api/transactions?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
 			node.expect(res.body).to.have.property('transactions').that.is.an('array');
 
-			var flag = 0;
-			for (var i = 0; i < res.body.transactions.length; i++) {
+			let flag = 0;
+			for (let i = 0; i < res.body.transactions.length; i++) {
 				if (res.body.transactions[i + 1]) {
 					node.expect(res.body.transactions[i].timestamp).to.be.at.most(res.body.transactions[i + 1].timestamp);
 					if (flag === 0) {
@@ -437,8 +437,8 @@ describe('GET /api/transactions', function () {
 	});
 
 	it('using offset == 1 should be ok', function (done) {
-		var offset = 1;
-		var params = 'offset=' + offset;
+		let offset = 1;
+		let params = 'offset=' + offset;
 
 		node.get('/api/transactions?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -451,8 +451,8 @@ describe('GET /api/transactions', function () {
 	});
 
 	it('using offset == "one" should fail', function (done) {
-		var offset = 'one';
-		var params = 'offset=' + offset;
+		let offset = 'one';
+		let params = 'offset=' + offset;
 
 		node.get('/api/transactions?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -462,7 +462,7 @@ describe('GET /api/transactions', function () {
 	});
 
 	it('using completely invalid fields should fail', function (done) {
-		var params = [
+		let params = [
 			'blockId=invalid',
 			'senderId=invalid',
 			'recipientId=invalid',
@@ -479,7 +479,7 @@ describe('GET /api/transactions', function () {
 	});
 
 	it('using partially invalid fields should fail', function (done) {
-		var params = [
+		let params = [
 			'blockId=invalid',
 			'senderId=invalid',
 			'recipientId=' + account.address,
@@ -501,13 +501,13 @@ describe('GET /api/transactions', function () {
 				node.expect(res.body).to.have.property('success').to.be.ok;
 				node.expect(res.body).to.have.property('transactions').that.is.an('array');
 
-				var dividedIndices = res.body.transactions.reduce(function (memo, peer, index) {
+				let dividedIndices = res.body.transactions.reduce(function (memo, peer, index) {
 					memo[peer[sortField] === null ? 'nullIndices' : 'notNullIndices'].push(index);
 					return memo;
 				}, {notNullIndices: [], nullIndices: []});
 
 				if (dividedIndices.nullIndices.length && dividedIndices.notNullIndices.length) {
-					var ascOrder = function (a, b) { return a - b; };
+					let ascOrder = function (a, b) { return a - b; };
 					dividedIndices.notNullIndices.sort(ascOrder);
 					dividedIndices.nullIndices.sort(ascOrder);
 
@@ -525,8 +525,8 @@ describe('GET /api/transactions', function () {
 describe('GET /api/transactions/get?id=', function () {
 
 	it('using valid id should be ok', function (done) {
-		var transactionInCheck = transactionList[0];
-		var params = 'id=' + transactionInCheck.txId;
+		let transactionInCheck = transactionList[0];
+		let params = 'id=' + transactionInCheck.txId;
 
 		node.get('/api/transactions/get?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -542,7 +542,7 @@ describe('GET /api/transactions/get?id=', function () {
 	});
 
 	it('using invalid id should fail', function (done) {
-		var params = 'id=invalid';
+		let params = 'id=invalid';
 
 		node.get('/api/transactions/get?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -569,7 +569,7 @@ describe('GET /api/transactions/count', function () {
 describe('GET /api/transactions/queued/get?id=', function () {
 
 	it('using unknown id should be ok', function (done) {
-		var params = 'id=' + '1234';
+		let params = 'id=' + '1234';
 
 		node.get('/api/transactions/queued/get?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.false;
@@ -594,7 +594,7 @@ describe('GET /api/transactions/queued', function () {
 describe('GET /api/transactions/multisignatures/get?id=', function () {
 
 	it('using unknown id should be ok', function (done) {
-		var params = 'id=' + '1234';
+		let params = 'id=' + '1234';
 
 		node.get('/api/transactions/multisignatures/get?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.false;
@@ -619,7 +619,7 @@ describe('GET /api/transactions/multisignatures', function () {
 describe('GET /api/transactions/unconfirmed/get?id=', function () {
 
 	it('using valid id should be ok', function (done) {
-		var params = 'id=' + transactionList[transactionList.length - 1].txId;
+		let params = 'id=' + transactionList[transactionList.length - 1].txId;
 
 		node.get('/api/transactions/unconfirmed/get?' + params, function (err, res) {
 			node.expect(res.body).to.have.property('success');
@@ -649,8 +649,8 @@ describe('GET /api/transactions/unconfirmed', function () {
 describe('PUT /api/transactions', function () {
 
 	it('using valid parameters should be ok', function (done) {
-		var amountToSend = 100000000;
-		var expectedFee = node.expectedFee(amountToSend);
+		let amountToSend = 100000000;
+		let expectedFee = node.expectedFee(amountToSend);
 
 		putTransaction({
 			secret: account.password,
@@ -673,7 +673,7 @@ describe('PUT /api/transactions', function () {
 	});
 
 	it('using negative amount should fail', function (done) {
-		var amountToSend = -100000000;
+		let amountToSend = -100000000;
 
 		putTransaction({
 			secret: account.password,
@@ -687,7 +687,7 @@ describe('PUT /api/transactions', function () {
 	});
 
 	it('using float amount should fail', function (done) {
-		var amountToSend = 1.2;
+		let amountToSend = 1.2;
 
 		putTransaction({
 			secret: account.password,
@@ -767,7 +767,7 @@ describe('PUT /api/transactions', function () {
 	});
 
 	it('using no passphase should fail', function (done) {
-		var amountToSend = 100000000;
+		let amountToSend = 100000000;
 
 		putTransaction({
 			amount: amountToSend,
@@ -780,7 +780,7 @@ describe('PUT /api/transactions', function () {
 	});
 
 	it('using no recipient should fail', function (done) {
-		var amountToSend = 100000000;
+		let amountToSend = 100000000;
 
 		putTransaction({
 			secret: account.password,
@@ -793,10 +793,10 @@ describe('PUT /api/transactions', function () {
 	});
 
 	describe('to a cold address', function (done) {
-		var recipientId = '13896491535841206186L';
+		let recipientId = '13896491535841206186L';
 
 		it('should be ok', function (done) {
-			var amountToSend = 110000000;
+			let amountToSend = 110000000;
 
 			putTransaction({
 				secret: node.gAccount.password,
@@ -810,14 +810,14 @@ describe('PUT /api/transactions', function () {
 	});
 
 	describe('from a cold address', function (done) {
-		var passphrase = 'fiber diet blind uncover crunch breeze bicycle globe attack chalk cousin divert';
+		let passphrase = 'fiber diet blind uncover crunch breeze bicycle globe attack chalk cousin divert';
 
 		before(function (done) {
 			node.onNewBlock(done);
 		});
 
 		it('should be ok', function (done) {
-			var amountToSend = 100000000;
+			let amountToSend = 100000000;
 
 			putTransaction({
 				secret: passphrase,

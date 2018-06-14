@@ -1,15 +1,14 @@
-'use strict';
 
-var async = require('async');
-var constants = require('../helpers/constants.js');
-var crypto = require('crypto');
-var sandboxHelper = require('../helpers/sandbox.js');
-var schema = require('../schema/signatures.js');
-var Signature = require('../logic/signature.js');
-var transactionTypes = require('../helpers/transactionTypes.js');
+
+let constants = require('../helpers/constants.js');
+let crypto = require('crypto');
+let sandboxHelper = require('../helpers/sandbox.js');
+let schema = require('../schema/signatures.js');
+let Signature = require('../logic/signature.js');
+let transactionTypes = require('../helpers/transactionTypes.js');
 
 // Private fields
-var modules, library, self, __private = {}, shared = {};
+let modules, library, self, __private = {}, shared = {};
 
 __private.assetTypes = {};
 
@@ -90,7 +89,7 @@ Signatures.prototype.onBind = function (scope) {
  */
 Signatures.prototype.shared = {
 	getFee: function (req, cb) {
-		var fee = constants.fees.secondsignature;
+		let fee = constants.fees.secondsignature;
 
 		return setImmediate(cb, null, {fee: fee});
 	},
@@ -101,8 +100,8 @@ Signatures.prototype.shared = {
 				return setImmediate(cb, err[0].message);
 			}
 
-			var hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
-			var keypair = library.ed.makeKeypair(hash);
+			let hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
+			let keypair = library.ed.makeKeypair(hash);
 
 			if (req.body.publicKey) {
 				if (keypair.publicKey.toString('hex') !== req.body.publicKey) {
@@ -150,9 +149,9 @@ Signatures.prototype.shared = {
 								return setImmediate(cb, 'Invalid requester public key');
 							}
 
-							var secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
-							var secondKeypair = library.ed.makeKeypair(secondHash);
-							var transaction;
+							let secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
+							let secondKeypair = library.ed.makeKeypair(secondHash);
+							let transaction;
 
 							try {
 								transaction = library.logic.transaction.create({
@@ -184,9 +183,9 @@ Signatures.prototype.shared = {
 							return setImmediate(cb, 'Account already has a second passphrase');
 						}
 
-						var secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
-						var secondKeypair = library.ed.makeKeypair(secondHash);
-						var transaction;
+						let secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
+						let secondKeypair = library.ed.makeKeypair(secondHash);
+						let transaction;
 
 						try {
 							transaction = library.logic.transaction.create({
@@ -215,3 +214,5 @@ Signatures.prototype.shared = {
 
 // Export
 module.exports = Signatures;
+
+/*************************************** END OF FILE *************************************/

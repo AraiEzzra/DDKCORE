@@ -1,18 +1,16 @@
-'use strict';
-
-var constants = require('../helpers/constants.js');
-var sql = require('../sql/frogings.js');
-var slots = require('../helpers/slots.js');
-var config = require('../config.json');
-var request = require('request');
-var async = require('async');
+let constants = require('../helpers/constants.js');
+let sql = require('../sql/frogings.js');
+let slots = require('../helpers/slots.js');
+let config = require('../config.json');
+let request = require('request');
+let async = require('async');
 
 // Private fields
-var __private = {};
+let __private = {};
 __private.types = {};
 
 // Private fields
-var modules, library, self;
+let modules, library, self;
 
 // Constructor
 function SendFreezeOrder(logger, db, network, cb) {
@@ -98,8 +96,6 @@ SendFreezeOrder.prototype.apply = function (trs, block, sender, cb) {
 		}, function (err) {
 			return setImmediate(cb, err);
 		});
-		// modules.accounts.setAccountAndGet(data, cb);
-		//return setImmediate(cb, null, trs);
 	});
 };
 
@@ -117,9 +113,9 @@ SendFreezeOrder.prototype.verify = function (trs, sender, cb) {
 		return setImmediate(cb, 'Missing recipient');
 	}
 
-	// if (trs.amount <= 0) {
-	// 	return setImmediate(cb, 'Invalid transaction amount');
-	// }
+	if ((trs.fee) > (sender.balance - parseInt(sender.totalFrozeAmount))) {
+		return setImmediate(cb, 'Insufficient balance');
+	}
 
 	return setImmediate(cb, null, trs);
 };
@@ -135,30 +131,28 @@ SendFreezeOrder.prototype.bind = function (accounts, rounds) {
 	};
 };
 
+SendFreezeOrder.prototype.getActiveFrozeOrder = function (userData, cb) {
+
+	self.scope.db.one(sql.getActiveFrozeOrder,
+		{
+			senderId: userData.address,
+			stakeId: userData.stakeId
+		})
+		.then(function (order) {
+			return setImmediate(cb, null, order);
+		})
+		.catch(function (err) {
+			self.scope.logger.error(err.stack);
+
+			if (err.code == 0 && err.message == "No data returned from the query.") {
+				return setImmediate(cb, 'Selected order is expired. Please send active order.');
+			} else {
+				return setImmediate(cb, err.toString());
+			}
+		});
+}
 
 SendFreezeOrder.prototype.sendFreezedOrder = function (userAndOrderData, cb) {
-
-	function getActiveFrozeOrder() {
-		return new Promise(function (resolve, reject) {
-			self.scope.db.one(sql.getActiveFrozeOrder,
-				{
-					senderId: userAndOrderData.account.address,
-					stakeId: userAndOrderData.stakeId
-				})
-				.then(function (order) {
-					resolve(order)
-				})
-				.catch(function (err) {
-					self.scope.logger.error(err.stack);
-
-					if (err.code == 0 && err.message == "No data returned from the query.") {
-						reject('Selected order is expired. Please send active order.');
-					} else {
-						reject(new Error(err.toString()));
-					}
-				});
-		});
-	}
 
 	function deductFrozeAmount(order) {
 		return new Promise(function (resolve, reject) {
@@ -250,12 +244,9 @@ SendFreezeOrder.prototype.sendFreezedOrder = function (userAndOrderData, cb) {
 	//amount in mem_account table & update old order and create new order in stake table
 	(async function() {
 		try {
-			var order = await getActiveFrozeOrder();
+			let order = userAndOrderData.stakeOrder;
 
-			if (order && order.isTransferred) {
-				return setImmediate(cb, 'Order can be send only Once');
-			} else {
-				self.scope.logger.info("Successfully get froze order" + JSON.stringify(order));
+			 if(order) {
 
 				await deductFrozeAmount(order);
 				await updateFrozeAmount(order);
@@ -277,3 +268,5 @@ SendFreezeOrder.prototype.sendFreezedOrder = function (userAndOrderData, cb) {
 
 // Export
 module.exports = SendFreezeOrder
+
+/*************************************** END OF FILE *************************************/

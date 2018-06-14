@@ -1,12 +1,10 @@
-'use strict';
-
-var util = require('util');
+let util = require('util');
 
 exports.extend = extend;
 exports.copy = copy;
 exports.inherits = util.inherits;
 
-function extend (target, source) {
+function extend (target) {
 	if (!target || typeof target !== 'object') { return target; }
 
 	Array.prototype.slice.call(arguments).forEach(function (source){
@@ -24,7 +22,7 @@ function copy (target) {
 	if (Array.isArray(target)) {
 		return target.map(copy);
 	} else if (target.constructor === Object) {
-		var result = {};
+		let result = {};
 		Object.getOwnPropertyNames(target).forEach(function (name){
 			result[name] = copy(target[name]);
 		});
@@ -33,3 +31,5 @@ function copy (target) {
 		return target;
 	}
 }
+
+/*************************************** END OF FILE *************************************/

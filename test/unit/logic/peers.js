@@ -1,19 +1,19 @@
-'use strict';
 
-var chai = require('chai');
-var expect = require('chai').expect;
 
-var express = require('express');
-var _  = require('lodash');
-var sinon = require('sinon');
-var modulesLoader = require('../../common/initModule').modulesLoader;
-var randomPeer = require('../../common/objectStubs').randomPeer;
-var Peers = require('../../../logic/peers.js');
-var Peer = require('../../../logic/peer.js');
+let chai = require('chai');
+let expect = require('chai').expect;
+
+let express = require('express');
+let _  = require('lodash');
+let sinon = require('sinon');
+let modulesLoader = require('../../common/initModule').modulesLoader;
+let randomPeer = require('../../common/objectStubs').randomPeer;
+let Peers = require('../../../logic/peers.js');
+let Peer = require('../../../logic/peer.js');
 
 describe('peers', function () {
 
-	var peers;
+	let peers;
 
 	before(function (done) {
 		modulesLoader.initAllModules(function (err, __modules) {
@@ -40,7 +40,7 @@ describe('peers', function () {
 	}
 
 	function arePeersEqual (peerA, peerB) {
-		var allPeersProperties = function (peer) {
+		let allPeersProperties = function (peer) {
 			return 	_.keys(peer).every(function (property) {
 				return Peer.prototype.properties.concat(['string']).indexOf(property) !== -1;
 			});
@@ -54,7 +54,7 @@ describe('peers', function () {
 			throw new Error('Not a peer: ', peerB);
 		}
 
-		var commonProperties = _.intersection(_.keys(peerA), _.keys(peerB));
+		let commonProperties = _.intersection(_.keys(peerA), _.keys(peerB));
 
 		if (commonProperties.indexOf('ip') === -1 || commonProperties.indexOf('port') === -1) {
 			throw new Error('Insufficient data to compare the peers (no port or ip provided)');
@@ -104,7 +104,7 @@ describe('peers', function () {
 
 		it('should not insert new peer with lisk-js-api os', function () {
 			removeAll();
-			var modifiedPeer = _.clone(randomPeer);
+			let modifiedPeer = _.clone(randomPeer);
 			modifiedPeer.os = 'lisk-js-api';
 			peers.upsert(modifiedPeer);
 			expect(peers.list().length).equal(0);
@@ -115,16 +115,16 @@ describe('peers', function () {
 			removeAll();
 
 			peers.upsert(randomPeer);
-			var list = peers.list();
-			var inserted = list[0];
+			let list = peers.list();
+			let inserted = list[0];
 			expect(list.length).equal(1);
 			expect(arePeersEqual(inserted, randomPeer)).to.be.ok;
 
-			var modifiedPeer = _.clone(randomPeer);
+			let modifiedPeer = _.clone(randomPeer);
 			modifiedPeer.height += 1;
 			peers.upsert(modifiedPeer);
 			list = peers.list();
-			var updated = list[0];
+			let updated = list[0];
 			expect(list.length).equal(1);
 			expect(arePeersEqual(updated, modifiedPeer)).to.be.ok;
 			expect(arePeersEqual(updated, randomPeer)).to.be.not.ok;
@@ -136,16 +136,16 @@ describe('peers', function () {
 			removeAll();
 
 			peers.upsert(randomPeer);
-			var list = peers.list();
-			var inserted = list[0];
+			let list = peers.list();
+			let inserted = list[0];
 			expect(list.length).equal(1);
 			expect(arePeersEqual(inserted, randomPeer)).to.be.ok;
 
-			var modifiedPeer = _.clone(randomPeer);
+			let modifiedPeer = _.clone(randomPeer);
 			modifiedPeer.height += 1;
 			peers.upsert(modifiedPeer, true);
 			list = peers.list();
-			var updated = list[0];
+			let updated = list[0];
 			expect(list.length).equal(1);
 			expect(arePeersEqual(updated, modifiedPeer)).to.be.not.ok;
 			expect(arePeersEqual(updated, randomPeer)).to.be.ok;
@@ -159,14 +159,14 @@ describe('peers', function () {
 			peers.upsert(randomPeer);
 			expect(peers.list().length).equal(1);
 
-			var differentPortPeer = _.clone(randomPeer);
+			let differentPortPeer = _.clone(randomPeer);
 			differentPortPeer.port += 1;
 			peers.upsert(differentPortPeer);
-			var list = peers.list();
+			let list = peers.list();
 			expect(list.length).equal(2);
 
-			var demandedPorts = _.map([randomPeer, differentPortPeer], 'port');
-			var listPorts = _.map(list, 'port');
+			let demandedPorts = _.map([randomPeer, differentPortPeer], 'port');
+			let listPorts = _.map(list, 'port');
 
 			expect(_.isEqual(demandedPorts.sort(), listPorts.sort())).to.be.ok;
 
@@ -179,15 +179,15 @@ describe('peers', function () {
 			peers.upsert(randomPeer);
 			expect(peers.list().length).equal(1);
 
-			var differentIpPeer = _.clone(randomPeer);
+			let differentIpPeer = _.clone(randomPeer);
 			differentIpPeer.ip = '40.40.40.41';
 			expect(differentIpPeer.ip).to.not.equal(randomPeer);
 			peers.upsert(differentIpPeer);
-			var list = peers.list();
+			let list = peers.list();
 			expect(list.length).equal(2);
 
-			var demandedIps = _.map([randomPeer, differentIpPeer], 'ip');
-			var listIps = _.map(list, 'ip');
+			let demandedIps = _.map([randomPeer, differentIpPeer], 'ip');
+			let listIps = _.map(list, 'ip');
 
 			expect(_.isEqual(demandedIps.sort(), listIps.sort())).to.be.ok;
 
@@ -201,11 +201,11 @@ describe('peers', function () {
 			removeAll();
 
 			peers.upsert(randomPeer);
-			var list = peers.list(true);
+			let list = peers.list(true);
 			expect(list.length).equal(1);
 			expect(peers.exists(randomPeer)).to.be.ok;
 
-			var differentPortPeer = _.clone(randomPeer);
+			let differentPortPeer = _.clone(randomPeer);
 			differentPortPeer.port += 1;
 			expect(peers.exists(differentPortPeer)).to.be.not.ok;
 		});
@@ -216,14 +216,14 @@ describe('peers', function () {
 		it('should return inserted peer', function () {
 			removeAll();
 			peers.upsert(randomPeer);
-			var insertedPeer = peers.get(randomPeer);
+			let insertedPeer = peers.get(randomPeer);
 			expect(arePeersEqual(insertedPeer, randomPeer)).to.be.ok;
 		});
 
 		it('should return inserted peer by address', function () {
 			removeAll();
 			peers.upsert(randomPeer);
-			var insertedPeer = peers.get(randomPeer.ip + ':' + randomPeer.port);
+			let insertedPeer = peers.get(randomPeer.ip + ':' + randomPeer.port);
 			expect(arePeersEqual(insertedPeer, randomPeer)).to.be.ok;
 
 		});
@@ -240,14 +240,14 @@ describe('peers', function () {
 			removeAll();
 			peers.upsert(randomPeer);
 			expect(peers.list().length).equal(1);
-			var result = peers.remove(randomPeer);
+			let result = peers.remove(randomPeer);
 			expect(result).to.be.ok;
 			expect(peers.list().length).equal(0);
 		});
 
 		it('should return false when trying to remove non inserted peer', function () {
 			removeAll();
-			var result = peers.remove(randomPeer);
+			let result = peers.remove(randomPeer);
 			expect(result).to.be.not.ok;
 			expect(peers.list().length).equal(0);
 		});

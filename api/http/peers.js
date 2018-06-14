@@ -1,7 +1,7 @@
-'use strict';
 
-var Router = require('../../helpers/router');
-var httpApi = require('../../helpers/httpApi');
+
+let Router = require('../../helpers/router');
+let httpApi = require('../../helpers/httpApi');
 
 /**
  * Binds api with modules and creates common url.
@@ -21,7 +21,7 @@ var httpApi = require('../../helpers/httpApi');
 // Constructor
 function PeersHttpApi (peersModule, app) {
 
-	var router = new Router();
+	let router = new Router();
 
 	router.map(peersModule.shared, {
 		'get /': 'getPeers',
@@ -34,3 +34,5 @@ function PeersHttpApi (peersModule, app) {
 }
 
 module.exports = PeersHttpApi;
+
+/*************************************** END OF FILE *************************************/

@@ -1,6 +1,5 @@
-'use strict';
+let constants = require('./constants.js');
 
-var constants = require('./constants.js');
 /**
  * @memberof module:helpers
  * @module helpers/slots
@@ -10,7 +9,7 @@ var constants = require('./constants.js');
  * @returns {number} epochTime from constants.
  */
 function beginEpochTime () {
-	var d = constants.epochTime;
+	let d = constants.epochTime;
 
 	return d;
 }
@@ -25,8 +24,8 @@ function getEpochTime (time) {
 		time = Date.now();
 	}
 
-	var d = beginEpochTime();
-	var t = d.getTime();
+	let d = beginEpochTime();
+	let t = d.getTime();
 
 	return Math.floor((time - t) / 1000);
 }
@@ -63,8 +62,8 @@ module.exports = {
 			epochTime = this.getTime();
 		}
 
-		var d = beginEpochTime();
-		var t = Math.floor(d.getTime() / 1000) * 1000;
+		let d = beginEpochTime();
+		let t = Math.floor(d.getTime() / 1000) * 1000;
 
 		return t + epochTime * 1000;
 	},
@@ -96,7 +95,7 @@ module.exports = {
 	 * @return {number} current slot number + 1.
 	 */
 	getNextSlot: function () {
-		var slot = this.getSlotNumber();
+		let slot = this.getSlotNumber();
 
 		return slot + 1;
 	},
@@ -114,3 +113,5 @@ module.exports = {
 		return Math.floor(date.getTime() / 1000) * 1000;
 	}
 };
+
+/*************************************** END OF FILE *************************************/

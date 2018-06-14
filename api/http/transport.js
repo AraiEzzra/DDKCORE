@@ -1,8 +1,8 @@
-'use strict';
 
-var Router = require('../../helpers/router');
-var httpApi = require('../../helpers/httpApi');
-var schema = require('../../schema/transport');
+
+let Router = require('../../helpers/router');
+let httpApi = require('../../helpers/httpApi');
+let schema = require('../../schema/transport');
 
 /**
  * Binds api with modules and creates common url.
@@ -29,9 +29,9 @@ var schema = require('../../schema/transport');
  * @param {function} logger
  */
 // Constructor
-function TransportHttpApi (transportModule, app, logger, cache) {
+function TransportHttpApi (transportModule, app, logger) {
 
-	var router = new Router();
+	let router = new Router();
 
 	router.use(httpApi.middleware.attachResponseHeaders.bind(null, transportModule.headers));
 	router.use(httpApi.middleware.blockchainReady.bind(null, transportModule.isLoaded));
@@ -89,8 +89,8 @@ function TransportHttpApi (transportModule, app, logger, cache) {
 		function validateHeaders (headers, cb) {
 			headers.port = 7000;
 			headers.nethash = 'da3ed6a45429278bac2666961289ca17ad86595d33b31037615d4b8e8f158bba';
-			headers.version = '0.9.9a'
-			return req.sanitize(headers, schema.headers, function (err, report, sanitized) {
+			headers.version = '0.9.9a';
+			return req.sanitize(headers, schema.headers, function (err, report) {
 				if (err) {
 					return cb(err.toString());
 				} else if (!report.isValid) {
@@ -119,3 +119,5 @@ function TransportHttpApi (transportModule, app, logger, cache) {
 }
 
 module.exports = TransportHttpApi;
+
+/*************************************** END OF FILE *************************************/

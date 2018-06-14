@@ -1,9 +1,9 @@
-'use strict';
+
 
 // Root object
-var node = {};
-var Rounds = require('../modules/rounds.js');
-var slots = require('../helpers/slots.js');
+let node = {};
+let Rounds = require('../modules/rounds.js');
+let slots = require('../helpers/slots.js');
 
 // Requires
 node.bignum = require('../helpers/bignum.js');
@@ -78,11 +78,11 @@ node.LISK = Math.floor(Math.random() * (100000 * 100000000)) + 1;
 
 // Returns a random delegate name
 node.randomDelegateName = function () {
-	var size = node.randomNumber(1, 20); // Min. delegate name size is 1, Max. delegate name is 20
-	var delegateName = '';
-	var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@$&_.';
+	let size = node.randomNumber(1, 20); // Min. delegate name size is 1, Max. delegate name is 20
+	let delegateName = '';
+	let possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@$&_.';
 
-	for (var i = 0; i < size; i++) {
+	for (let i = 0; i < size; i++) {
 		delegateName += possible.charAt(Math.floor(Math.random() * possible.length));
 	}
 
@@ -91,7 +91,7 @@ node.randomDelegateName = function () {
 
 // Returns a random property from the given object
 node.randomProperty = function (obj, needKey) {
-	var keys = Object.keys(obj);
+	let keys = Object.keys(obj);
 
 	if (!needKey) {
 		return obj[keys[keys.length * Math.random() << 0]];
@@ -107,7 +107,7 @@ node.randomLISK = function () {
 
 // Returns current block height
 node.getHeight = function (cb) {
-	var request = node.popsicle.get(node.baseUrl + '/api/blocks/getHeight');
+	let request = node.popsicle.get(node.baseUrl + '/api/blocks/getHeight');
 
 	request.use(node.popsicle.plugins.parse(['json']));
 
@@ -130,8 +130,8 @@ node.onNewRound = function (cb) {
 		if (err) {
 			return cb(err);
 		} else {
-			var nextRound = Math.ceil(height / slots.delegates);
-			var blocksToWait = nextRound * slots.delegates - height;
+			let nextRound = Math.ceil(height / slots.delegates);
+			let blocksToWait = nextRound * slots.delegates - height;
 			node.debug('blocks to wait: '.grey, blocksToWait);
 			node.waitForNewBlock(height, blocksToWait, cb);
 		}
@@ -166,13 +166,13 @@ node.waitForNewBlock = function (height, blocksToWait, cb) {
 		return setImmediate(cb, null, height);
 	}
 
-	var actualHeight = height;
-	var counter = 1;
-	var target = height + blocksToWait;
+	let actualHeight = height;
+	let counter = 1;
+	let target = height + blocksToWait;
 
 	node.async.doWhilst(
 		function (cb) {
-			var request = node.popsicle.get(node.baseUrl + '/api/blocks/getHeight');
+			let request = node.popsicle.get(node.baseUrl + '/api/blocks/getHeight');
 
 			request.use(node.popsicle.plugins.parse(['json']));
 
@@ -209,10 +209,10 @@ node.waitForNewBlock = function (height, blocksToWait, cb) {
 
 // Adds peers to local node
 node.addPeers = function (numOfPeers, ip, cb) {
-	var operatingSystems = ['win32','win64','ubuntu','debian', 'centos'];
-	var port = 9999; // Frozen peer port
-	var os, version;
-	var i = 0;
+	let operatingSystems = ['win32','win64','ubuntu','debian', 'centos'];
+	let port = 9999; // Frozen peer port
+	let os, version;
+	let i = 0;
 
 	node.async.whilst(function () {
 		return i < numOfPeers;
@@ -220,7 +220,7 @@ node.addPeers = function (numOfPeers, ip, cb) {
 		os = operatingSystems[node.randomizeSelection(operatingSystems.length)];
 		version = node.version;
 
-		var request = node.popsicle.get({
+		let request = node.popsicle.get({
 			url: node.baseUrl + '/peer/height',
 			headers: {
 				broadhash: node.config.nethash,
@@ -273,11 +273,11 @@ node.expectedFee = function (amount) {
 
 // Returns a random username
 node.randomUsername = function () {
-	var size = node.randomNumber(1, 16); // Min. username size is 1, Max. username size is 16
-	var username = '';
-	var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@$&_.';
+	let size = node.randomNumber(1, 16); // Min. username size is 1, Max. username size is 16
+	let username = '';
+	let possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@$&_.';
 
-	for (var i = 0; i < size; i++) {
+	for (let i = 0; i < size; i++) {
 		username += possible.charAt(Math.floor(Math.random() * possible.length));
 	}
 
@@ -286,11 +286,11 @@ node.randomUsername = function () {
 
 // Returns a random capitialized username
 node.randomCapitalUsername = function () {
-	var size = node.randomNumber(1, 16); // Min. username size is 1, Max. username size is 16
-	var username = 'A';
-	var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@$&_.';
+	let size = node.randomNumber(1, 16); // Min. username size is 1, Max. username size is 16
+	let username = 'A';
+	let possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@$&_.';
 
-	for (var i = 0; i < size - 1; i++) {
+	for (let i = 0; i < size - 1; i++) {
 		username += possible.charAt(Math.floor(Math.random() * possible.length));
 	}
 
@@ -299,11 +299,11 @@ node.randomCapitalUsername = function () {
 
 // Returns a random application name
 node.randomApplicationName = function () {
-	var size = node.randomNumber(1, 32); // Min. username size is 1, Max. username size is 32
-	var name = 'A';
-	var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+	let size = node.randomNumber(1, 32); // Min. username size is 1, Max. username size is 32
+	let name = 'A';
+	let possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
-	for (var i = 0; i < size - 1; i++) {
+	for (let i = 0; i < size - 1; i++) {
 		name += possible.charAt(Math.floor(Math.random() * possible.length));
 	}
 
@@ -312,7 +312,7 @@ node.randomApplicationName = function () {
 
 // Returns a basic random account
 node.randomAccount = function () {
-	var account = {
+	let account = {
 		balance: '0'
 	};
 
@@ -342,7 +342,7 @@ node.randomPassword = function () {
 
 // Abstract request
 function abstractRequest (options, done) {
-	var request = node.api[options.verb.toLowerCase()](options.path);
+	let request = node.api[options.verb.toLowerCase()](options.path);
 
 	request.set('Accept', 'application/json');
 	request.set('version', node.version);
@@ -357,7 +357,7 @@ function abstractRequest (options, done) {
 		request.send(options.params);
 	}
 
-	var verb = options.verb.toUpperCase();
+	let verb = options.verb.toUpperCase();
 	node.debug(['> Path:'.grey, verb, options.path].join(' '));
 	if (verb === 'POST' || verb === 'PUT') {
 		node.debug(['> Data:'.grey, JSON.stringify(options.params)].join(' '));

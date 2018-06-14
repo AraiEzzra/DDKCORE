@@ -1,14 +1,17 @@
-'use strict';
 
-var Router = require('../../helpers/router');
-var httpApi = require('../../helpers/httpApi');
-var Accounts = require('../../modules/accounts');
-var tokenValidator = require('../../tokenValidator');
+
+let Router = require('../../helpers/router');
+let Accounts = require('../../modules/accounts');
+let tokenValidator = require('../../tokenValidator');
+let config = require('../../config');
+let jwt = require('jsonwebtoken');
+let jwtSecret = process.env.JWT_SECRET;
 
 /**
  * Renders main page wallet from public folder.
  * - Public API:
  * 	- get	/
+ *  - get /user/status
  * @memberof module:server
  * @requires helpers/Router
  * @requires helpers/httpApi
@@ -19,23 +22,32 @@ var tokenValidator = require('../../tokenValidator');
 // Constructor
 function ServerHttpApi (serverModule, app) {
 
-	var router = new Router();
+	let router = new Router();
 
 	router.use(function (req, res, next) {
 		if (serverModule.areModulesReady()) { return next(); }
 		res.status(500).send({success: false, error: 'Blockchain is loading'});
 	});
 
-	//get user's status
 	router.get('/user/status', tokenValidator, function(req, res) {
 		if(req.decoded.address) {
 			Accounts.prototype.getAccount({address: req.decoded.address}, function(err, account) {
-				if(!err) {
+				if (!err) {
+					let payload = {
+						secret: req.decoded.secret,
+						address: req.decoded.address
+					};
+					let refreshToken = jwt.sign(payload, jwtSecret, {
+						expiresIn: config.jwt.tokenLife,
+						mutatePayload: false
+					});
+
 					return res.status(200).json({
 						status: true,
 						data: {
 							success: true,
-							account: account
+							account: account,
+							refreshToken: refreshToken || ''
 						}
 					});
 				}

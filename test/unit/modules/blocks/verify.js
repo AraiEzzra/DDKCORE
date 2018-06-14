@@ -1,16 +1,16 @@
-'use strict';
 
-var expect = require('chai').expect;
-var async = require('async');
 
-var modulesLoader = require('../../../common/initModule').modulesLoader;
-var BlockLogic = require('../../../../logic/block.js');
-var exceptions = require('../../../../helpers/exceptions.js');
-var clearDatabaseTable = require('../../../common/globalBefore').clearDatabaseTable;
+let expect = require('chai').expect;
+let async = require('async');
 
-var crypto = require('crypto');
+let modulesLoader = require('../../../common/initModule').modulesLoader;
+let BlockLogic = require('../../../../logic/block.js');
+let exceptions = require('../../../../helpers/exceptions.js');
+let clearDatabaseTable = require('../../../common/globalBefore').clearDatabaseTable;
 
-var previousBlock = {
+let crypto = require('crypto');
+
+let previousBlock = {
 	blockSignature: '696f78bed4d02faae05224db64e964195c39f715471ebf416b260bc01fa0148f3bddf559127b2725c222b01cededb37c7652293eb1a81affe2acdc570266b501',
 	generatorPublicKey:'86499879448d1b0215d59cbf078836e3d7d9d2782d56a2274a568761bff36f19',
 	height: 488,
@@ -28,7 +28,7 @@ var previousBlock = {
 	version: 0,
 };
 
-var validBlock = {
+let validBlock = {
 	blockSignature: '56d63b563e00332ec31451376f5f2665fcf7e118d45e68f8db0b00db5963b56bc6776a42d520978c1522c39545c9aff62a7d5bdcf851bf65904b2c2158870f00',
 	generatorPublicKey: '9d3058175acab969f41ad9b86f7a2926c74258670fe56b37c429c01fca9f2f0f',
 	numberOfTransactions: 2,
@@ -75,7 +75,7 @@ var validBlock = {
 	id: '884740302254229983'
 };
 
-var blockRewardInvalid = {
+let blockRewardInvalid = {
 	blockSignature: 'd06c1a17c701e55aef78cefb8ce17340411d9a1a7b3bd9b6c66f815dfd7546e2ca81b3371646fcead908db57a6492e1d6910eafa0a96060760a2796aff637401',
 	generatorPublicKey: '904c294899819cce0283d8d351cb10febfa0e9f0acd90a820ec8eb90a7084c37',
 	numberOfTransactions: 2,
@@ -122,7 +122,7 @@ var blockRewardInvalid = {
 	id: '15635779876149546284'
 };
 
-var testAccount = {
+let testAccount = {
 	account: {
 		username: 'test_verify',
 		isDelegate: 1,
@@ -133,7 +133,7 @@ var testAccount = {
 	secret: 'message crash glance horror pear opera hedgehog monitor connect vague chuckle advice',
 };
 
-var userAccount = {
+let userAccount = {
 	account: {
 		username: 'test_verify_user',
 		isDelegate: 0,
@@ -144,7 +144,7 @@ var userAccount = {
 	secret: 'joy ethics cruise churn ozone asset quote renew dutch erosion seed pioneer',
 };
 
-var previousBlock1 = {
+let previousBlock1 = {
 	blockSignature: '696f78bed4d02faae05224db64e964195c39f715471ebf416b260bc01fa0148f3bddf559127b2725c222b01cededb37c7652293eb1a81affe2acdc570266b501',
 	generatorPublicKey: '86499879448d1b0215d59cbf078836e3d7d9d2782d56a2274a568761bff36f19',
 	height: 488,
@@ -162,8 +162,8 @@ var previousBlock1 = {
 	version: 0,
 };
 
-var block1;
-var transactionsBlock1 = [
+let block1;
+let transactionsBlock1 = [
 	{
 		'type': 0,
 		'amount': 10000000000000000,
@@ -177,8 +177,8 @@ var transactionsBlock1 = [
 	}
 ];
 
-var block2;
-var transactionsBlock2 = [
+let block2;
+let transactionsBlock2 = [
 	{
 		'type': 0,
 		'amount': 100000000,
@@ -192,12 +192,12 @@ var transactionsBlock2 = [
 	}
 ];
 
-var block3;
+let block3;
 
 function createBlock (blocksModule, blockLogic, secret, timestamp, transactions, previousBlock) {
-	var keypair = blockLogic.scope.ed.makeKeypair(crypto.createHash('sha256').update(secret, 'utf8').digest());
+	let keypair = blockLogic.scope.ed.makeKeypair(crypto.createHash('sha256').update(secret, 'utf8').digest());
 	blocksModule.lastBlock.set(previousBlock);
-	var newBlock = blockLogic.create({
+	let newBlock = blockLogic.create({
 		keypair: keypair,
 		timestamp: timestamp,
 		previousBlock: blocksModule.lastBlock.get(),
@@ -209,11 +209,11 @@ function createBlock (blocksModule, blockLogic, secret, timestamp, transactions,
 
 describe('blocks/verify', function () {
 
-	var blocksVerify;
-	var blocks;
-	var blockLogic;
-	var accounts;
-	var delegates;
+	let blocksVerify;
+	let blocks;
+	let blockLogic;
+	let accounts;
+	let delegates;
 
 	before(function (done) {
 		modulesLoader.initLogic(BlockLogic, modulesLoader.scope, function (err, __blockLogic) {
@@ -256,7 +256,7 @@ describe('blocks/verify', function () {
 		it('should be ok', function () {
 			blocks.lastBlock.set(previousBlock);
 
-			var result = blocksVerify[functionName](validBlock);
+			let result = blocksVerify[functionName](validBlock);
 
 			expect(result.verified).to.be.true;
 			expect(result.errors).to.be.an('array').that.is.empty;
@@ -265,7 +265,7 @@ describe('blocks/verify', function () {
 		it('should be ok when block is invalid but block id is excepted for having invalid block reward', function () {
 			exceptions.blockRewards.push(blockRewardInvalid.id);
 
-			var result = blocksVerify[functionName](blockRewardInvalid);
+			let result = blocksVerify[functionName](blockRewardInvalid);
 
 			expect(result.verified).to.be.true;
 			expect(result.errors).to.be.an('array').that.is.empty;
@@ -276,7 +276,7 @@ describe('blocks/verify', function () {
 		it('should set height from lastBlock', function () {
 			blocks.lastBlock.set(previousBlock);
 
-			var result = blocksVerify[functionName](validBlock);
+			let result = blocksVerify[functionName](validBlock);
 
 			expect(result.verified).to.be.true;
 			expect(result.errors).to.be.an('array').that.is.empty;
@@ -286,10 +286,10 @@ describe('blocks/verify', function () {
 
 	function testVerifySignature (functionName) {
 		it('should fail when blockSignature property is not a hex string', function () {
-			var blockSignature = validBlock.blockSignature;
+			let blockSignature = validBlock.blockSignature;
 			validBlock.blockSignature = 'invalidBlockSignature';
 
-			var result = blocksVerify[functionName](validBlock);
+			let result = blocksVerify[functionName](validBlock);
 
 			expect(result.errors).to.be.an('array').with.lengthOf(3);
 
@@ -301,10 +301,10 @@ describe('blocks/verify', function () {
 		});
 
 		it('should fail when blockSignature property is an invalid hex string', function () {
-			var blockSignature = validBlock.blockSignature;
+			let blockSignature = validBlock.blockSignature;
 			validBlock.blockSignature = 'bfaaabdc8612e177f1337d225a8a5af18cf2534f9e41b66c114850aa50ca2ea2621c4b2d34c4a8b62ea7d043e854c8ae3891113543f84f437e9d3c9cb24c0e05';
 
-			var result = blocksVerify[functionName](validBlock);
+			let result = blocksVerify[functionName](validBlock);
 
 			expect(result.errors).to.be.an('array').with.lengthOf(1);
 			expect(result.errors[0]).to.equal('Failed to verify block signature');
@@ -313,10 +313,10 @@ describe('blocks/verify', function () {
 		});
 
 		it('should fail when generatorPublicKey property is not a hex string', function () {
-			var generatorPublicKey = validBlock.generatorPublicKey;
+			let generatorPublicKey = validBlock.generatorPublicKey;
 			validBlock.generatorPublicKey = 'invalidBlockSignature';
 
-			var result = blocksVerify[functionName](validBlock);
+			let result = blocksVerify[functionName](validBlock);
 
 			expect(result.errors).to.be.an('array').with.lengthOf(3);
 			expect(result.errors[0]).to.equal('TypeError: Invalid hex string');
@@ -327,10 +327,10 @@ describe('blocks/verify', function () {
 		});
 
 		it('should fail when generatorPublicKey property is an invalid hex string', function () {
-			var generatorPublicKey = validBlock.generatorPublicKey;
+			let generatorPublicKey = validBlock.generatorPublicKey;
 			validBlock.generatorPublicKey = '948b8b509579306694c00db2206ddb1517bfeca2b0dc833ec1c0f81e9644871b';
 
-			var result = blocksVerify[functionName](validBlock);
+			let result = blocksVerify[functionName](validBlock);
 
 			expect(result.errors).to.be.an('array').with.lengthOf(1);
 			expect(result.errors[0]).to.equal('Failed to verify block signature');
@@ -341,10 +341,10 @@ describe('blocks/verify', function () {
 
 	function testPreviousBlock (functionName) {
 		it('should fail when previousBlock property is missing', function () {
-			var previousBlock = validBlock.previousBlock;
+			let previousBlock = validBlock.previousBlock;
 			delete validBlock.previousBlock;
 
-			var result = blocksVerify[functionName](validBlock);
+			let result = blocksVerify[functionName](validBlock);
 
 			expect(result.verified).to.be.false;
 			expect(result.errors).to.be.an('array').with.lengthOf(2);
@@ -357,10 +357,10 @@ describe('blocks/verify', function () {
 
 	function testVerifyVersion (functionName) {
 		it('should fail when block version != 0', function () {
-			var version = validBlock.version;
+			let version = validBlock.version;
 			validBlock.version = 99;
 
-			var result = blocksVerify[functionName](validBlock);
+			let result = blocksVerify[functionName](validBlock);
 
 			expect(result.verified).to.be.false;
 			expect(result.errors).to.be.an('array').with.lengthOf(2);
@@ -375,7 +375,7 @@ describe('blocks/verify', function () {
 		it('should fail when block reward is invalid', function () {
 			validBlock.reward = 99;
 
-			var result = blocksVerify[functionName](validBlock);
+			let result = blocksVerify[functionName](validBlock);
 
 			expect(result.errors).to.be.an('array').with.lengthOf(2);
 			expect(result.errors[0]).to.equal(['Invalid block reward:', 99, 'expected:', 0].join(' '));
@@ -386,40 +386,40 @@ describe('blocks/verify', function () {
 
 	function testVerifyId (functionName) {
 		it('should reset block id when block id is an invalid alpha-numeric string value', function () {
-			var blockId = '884740302254229983';
+			let blockId = '884740302254229983';
 			validBlock.id = 'invalid-block-id';
 
-			var result = blocksVerify[functionName](validBlock);
+			let result = blocksVerify[functionName](validBlock);
 
 			expect(validBlock.id).to.equal(blockId);
 			expect(validBlock.id).to.not.equal('invalid-block-id');
 		});
 
 		it('should reset block id when block id is an invalid numeric string value', function () {
-			var blockId = '884740302254229983';
+			let blockId = '884740302254229983';
 			validBlock.id = '11850828211026019526';
 
-			var result = blocksVerify[functionName](validBlock);
+			let result = blocksVerify[functionName](validBlock);
 
 			expect(validBlock.id).to.equal(blockId);
 			expect(validBlock.id).to.not.equal('11850828211026019526');
 		});
 
 		it('should reset block id when block id is an invalid integer value', function () {
-			var blockId = '884740302254229983';
+			let blockId = '884740302254229983';
 			validBlock.id = 11850828211026019526;
 
-			var result = blocksVerify[functionName](validBlock);
+			let result = blocksVerify[functionName](validBlock);
 
 			expect(validBlock.id).to.equal(blockId);
 			expect(validBlock.id).to.not.equal(11850828211026019526);
 		});
 
 		it('should reset block id when block id is a valid integer value', function () {
-			var blockId = '884740302254229983';
+			let blockId = '884740302254229983';
 			validBlock.id = 11850828211026019525;
 
-			var result = blocksVerify[functionName](validBlock);
+			let result = blocksVerify[functionName](validBlock);
 
 			expect(validBlock.id).to.equal(blockId);
 			expect(validBlock.id).to.not.equal(11850828211026019525);
@@ -428,10 +428,10 @@ describe('blocks/verify', function () {
 
 	function testVerifyPayload (functionName) {
 		it('should fail when payload length greater than maxPayloadLength constant value', function () {
-			var payloadLength = validBlock.payloadLength;
+			let payloadLength = validBlock.payloadLength;
 			validBlock.payloadLength = 1024 * 1024 * 2;
 
-			var result = blocksVerify[functionName](validBlock);
+			let result = blocksVerify[functionName](validBlock);
 
 			expect(result.errors).to.be.an('array').with.lengthOf(2);
 			expect(result.errors[0]).to.equal('Payload length is too long');
@@ -443,7 +443,7 @@ describe('blocks/verify', function () {
 		it('should fail when transactions length is not equal to numberOfTransactions property', function () {
 			validBlock.numberOfTransactions = validBlock.transactions.length + 1;
 
-			var result = blocksVerify[functionName](validBlock);
+			let result = blocksVerify[functionName](validBlock);
 
 			expect(result.errors).to.be.an('array').with.lengthOf(2);
 			expect(result.errors[0]).to.equal('Included transactions do not match block transactions count');
@@ -453,11 +453,11 @@ describe('blocks/verify', function () {
 		});
 
 		it('should fail when transactions length greater than maxTxsPerBlock constant value', function () {
-			var transactions = validBlock.transactions;
+			let transactions = validBlock.transactions;
 			validBlock.transactions = new Array(26);
 			validBlock.numberOfTransactions = validBlock.transactions.length;
 
-			var result = blocksVerify[functionName](validBlock);
+			let result = blocksVerify[functionName](validBlock);
 
 			expect(result.errors).to.be.an('array').with.lengthOf(4);
 			expect(result.errors[0]).to.equal('Invalid total amount');
@@ -470,10 +470,10 @@ describe('blocks/verify', function () {
 		});
 
 		it('should fail when a transaction is of an unknown type', function () {
-			var trsType = validBlock.transactions[0].type;
+			let trsType = validBlock.transactions[0].type;
 			validBlock.transactions[0].type = 555;
 
-			var result = blocksVerify[functionName](validBlock);
+			let result = blocksVerify[functionName](validBlock);
 
 			expect(result.errors).to.be.an('array').with.lengthOf(2);
 			expect(result.errors[0]).to.equal('Invalid payload hash');
@@ -483,10 +483,10 @@ describe('blocks/verify', function () {
 		});
 
 		it('should fail when a transaction is duplicated', function () {
-			var secondTrs = validBlock.transactions[1];
+			let secondTrs = validBlock.transactions[1];
 			validBlock.transactions[1] = validBlock.transactions[0];
 
-			var result = blocksVerify[functionName](validBlock);
+			let result = blocksVerify[functionName](validBlock);
 
 			expect(result.errors).to.be.an('array').with.lengthOf(3);
 			expect(result.errors[0]).to.equal('Invalid total amount');
@@ -497,10 +497,10 @@ describe('blocks/verify', function () {
 		});
 
 		it('should fail when payload hash is invalid', function () {
-			var payloadHash = validBlock.payloadHash;
+			let payloadHash = validBlock.payloadHash;
 			validBlock.payloadHash = 'invalidPayloadHash';
 
-			var result = blocksVerify[functionName](validBlock);
+			let result = blocksVerify[functionName](validBlock);
 
 			expect(result.errors).to.be.an('array').with.lengthOf(2);
 			expect(result.errors[0]).to.equal('Invalid payload hash');
@@ -510,10 +510,10 @@ describe('blocks/verify', function () {
 		});
 
 		it('should fail when summed transaction amounts do not match totalAmount property', function () {
-			var totalAmount = validBlock.totalAmount;
+			let totalAmount = validBlock.totalAmount;
 			validBlock.totalAmount = 99;
 
-			var result = blocksVerify[functionName](validBlock);
+			let result = blocksVerify[functionName](validBlock);
 
 			expect(result.errors).to.be.an('array').with.lengthOf(2);
 			expect(result.errors[0]).to.equal('Invalid total amount');
@@ -523,10 +523,10 @@ describe('blocks/verify', function () {
 		});
 
 		it('should fail when summed transaction fees do not match totalFee property', function () {
-			var totalFee = validBlock.totalFee;
+			let totalFee = validBlock.totalFee;
 			validBlock.totalFee = 99;
 
-			var result = blocksVerify[functionName](validBlock);
+			let result = blocksVerify[functionName](validBlock);
 
 			expect(result.errors).to.be.an('array').with.lengthOf(2);
 			expect(result.errors[0]).to.equal('Invalid total fee');
@@ -538,10 +538,10 @@ describe('blocks/verify', function () {
 
 	function testVerifyForkOne (functionName) {
 		it('should fail when previousBlock value is invalid', function () {
-			var previousBlock = blocks.lastBlock.get().id;
+			let previousBlock = blocks.lastBlock.get().id;
 			validBlock.previousBlock = '10937893559311260102';
 
-			var result = blocksVerify[functionName](validBlock);
+			let result = blocksVerify[functionName](validBlock);
 
 			expect(result.errors).to.be.an('array').with.lengthOf(2);
 			expect(result.errors[0]).to.equal(['Invalid previous block:', validBlock.previousBlock, 'expected:', previousBlock].join(' '));
@@ -553,10 +553,10 @@ describe('blocks/verify', function () {
 
 	function testVerifyBlockSlot (functionName) {
 		it('should fail when block timestamp is less than previousBlock timestamp', function () {
-			var timestamp = validBlock.timestamp;
+			let timestamp = validBlock.timestamp;
 			validBlock.timestamp = 32578350;
 
-			var result = blocksVerify[functionName](validBlock);
+			let result = blocksVerify[functionName](validBlock);
 
 			expect(result.verified).to.be.false;
 			expect(result.errors).to.be.an('array').with.lengthOf(2);

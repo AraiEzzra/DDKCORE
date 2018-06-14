@@ -1,6 +1,4 @@
-'use strict';
 
-var constants = require('../helpers/constants.js');
 
 module.exports = {
 	headers: {

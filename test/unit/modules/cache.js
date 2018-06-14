@@ -1,16 +1,16 @@
-'use strict';
 
-var node = require('./../../node.js'); 
-var chai = require('chai');
-var expect = require('chai').expect;
-var async = require('async');
-var sinon = require('sinon');
-var modulesLoader = require('../../common/initModule').modulesLoader;
-var Cache = require('../../../modules/cache.js');
+
+let node = require('./../../node.js'); 
+let chai = require('chai');
+let expect = require('chai').expect;
+let async = require('async');
+let sinon = require('sinon');
+let modulesLoader = require('../../common/initModule').modulesLoader;
+let Cache = require('../../../modules/cache.js');
 
 describe('cache', function () {
 
-	var cache;
+	let cache;
 
 	before(function (done) {
 		node.config.cacheEnabled = true;
@@ -42,8 +42,8 @@ describe('cache', function () {
 	describe('setJsonForKey', function () {
 
 		it('should set the key value correctly', function (done) {
-			var key = 'test_key';
-			var value = {testObject: 'testValue'};
+			let key = 'test_key';
+			let value = {testObject: 'testValue'};
 
 			cache.setJsonForKey(key, value, function (err, status) {
 				expect(err).to.not.exist;
@@ -61,7 +61,7 @@ describe('cache', function () {
 	describe('getJsonForKey', function () {
 
 		it('should return null for non-existent key', function (done) {
-			var key = 'test_key';
+			let key = 'test_key';
 
 			cache.getJsonForKey(key, function (err, value) {
 				expect(err).to.not.exist;
@@ -71,8 +71,8 @@ describe('cache', function () {
 		});
 
 		it('should get the correct value for the key', function (done) {
-			var key = 'test_key';
-			var value = {testObject: 'testValue'};
+			let key = 'test_key';
+			let value = {testObject: 'testValue'};
 
 			cache.setJsonForKey(key, value, function (err, status) {
 				expect(err).to.not.exist;
@@ -89,9 +89,9 @@ describe('cache', function () {
 	describe('flushDb', function () {
 
 		it('should remove all keys from cache', function (done) {
-			var key1 = 'test_key1';
-			var key2 = 'test_key2';
-			var dummyValue = { a: 'dummyValue' };
+			let key1 = 'test_key1';
+			let key2 = 'test_key2';
+			let dummyValue = { a: 'dummyValue' };
 			async.series([
 				// save new entries in cache
 				function (callback) {
@@ -125,9 +125,9 @@ describe('cache', function () {
 						return callback(err, result);
 					});
 				}],
-				function (err) {
-					done(err);
-				}
+			function (err) {
+				done(err);
+			}
 			);
 		});
 	});
@@ -135,9 +135,9 @@ describe('cache', function () {
 	describe('removeByPattern', function () {
 
 		it('should remove keys matching the pattern', function (done) {
-			var key = '/api/transactions?123';
-			var value = {testObject: 'testValue'};
-			var pattern = '/api/transactions*';
+			let key = '/api/transactions?123';
+			let value = {testObject: 'testValue'};
+			let pattern = '/api/transactions*';
 
 			cache.setJsonForKey(key, value, function (err, status) {
 				expect(err).to.not.exist;
@@ -154,9 +154,9 @@ describe('cache', function () {
 		});
 
 		it('should not remove keys that dont match pattern', function (done) {
-			var key = '/api/transactions?123';
-			var value = {testObject: 'testValue'};
-			var pattern = '/api/delegate*';
+			let key = '/api/transactions?123';
+			let value = {testObject: 'testValue'};
+			let pattern = '/api/delegate*';
 
 			cache.setJsonForKey(key, value, function (err, status) {
 				expect(err).to.not.exist;
@@ -177,8 +177,8 @@ describe('cache', function () {
 	describe('onNewBlock', function () {
 
 		it('should remove all keys matching pattern /api/transactions', function (done) {
-			var key = '/api/transactions?123';
-			var value = {testObject: 'testValue'};
+			let key = '/api/transactions?123';
+			let value = {testObject: 'testValue'};
 			cache.setJsonForKey(key, value, function (err, status) {
 				expect(err).to.not.exist;
 				expect(status).to.equal('OK');
@@ -194,8 +194,8 @@ describe('cache', function () {
 		});
 
 		it('should remove all keys matching pattern /api/blocks', function (done) {
-			var key = '/api/blocks';
-			var value = {testObject: 'testValue'};
+			let key = '/api/blocks';
+			let value = {testObject: 'testValue'};
 
 			cache.setJsonForKey(key, value, function (err, status) {
 				expect(err).to.not.exist;
@@ -213,8 +213,8 @@ describe('cache', function () {
 		});
 
 		it('should not remove keys that dont match pattern /api/blocks or /api/transactions', function (done) {
-			var key = '/api/delegates';
-			var value = {testObject: 'testValue'};
+			let key = '/api/delegates';
+			let value = {testObject: 'testValue'};
 
 			cache.setJsonForKey(key, value, function (err, status) {
 				expect(err).to.not.exist;
@@ -232,8 +232,8 @@ describe('cache', function () {
 		});
 
 		it('should not remove keys when cacheReady = false', function (done) {
-			var key = '/api/transactions';
-			var value = {testObject: 'testValue'};
+			let key = '/api/transactions';
+			let value = {testObject: 'testValue'};
 
 			cache.setJsonForKey(key, value, function (err, status) {
 				expect(err).to.not.exist;
@@ -256,8 +256,8 @@ describe('cache', function () {
 	describe('onFinishRound', function (done) {
 
 		it('should remove all keys matching pattern /api/delegates', function (done) {
-			var key = '/api/delegates?123';
-			var value = {testObject: 'testValue'};
+			let key = '/api/delegates?123';
+			let value = {testObject: 'testValue'};
 
 			cache.setJsonForKey(key, value, function (err, status) {
 				expect(err).to.not.exist;
@@ -274,8 +274,8 @@ describe('cache', function () {
 		});
 
 		it('should not remove keys that dont match pattern /api/delegates', function (done) {
-			var key = '/api/blocks';
-			var value = {testObject: 'testValue'};
+			let key = '/api/blocks';
+			let value = {testObject: 'testValue'};
 
 			cache.setJsonForKey(key, value, function (err, status) {
 				expect(err).to.not.exist;
@@ -293,8 +293,8 @@ describe('cache', function () {
 		});
 
 		it('should not remove keys when cacheReady = false', function (done) {
-			var key = '/api/delegates';
-			var value = {testObject: 'testValue'};
+			let key = '/api/delegates';
+			let value = {testObject: 'testValue'};
 
 			cache.setJsonForKey(key, value, function (err, status) {
 				expect(err).to.not.exist;
@@ -318,13 +318,13 @@ describe('cache', function () {
 	describe('onTransactionsSaved', function (done) {
 
 		it('shouldnt remove keys with pattern /api/delegate if there is no type 2 trs', function (done) {
-			var key = '/api/delegates?123';
-			var value = {testObject: 'testValue'};
+			let key = '/api/delegates?123';
+			let value = {testObject: 'testValue'};
 
 			cache.setJsonForKey(key, value, function (err, status) {
 				expect(err).to.not.exist;
 				expect(status).to.equal('OK');
-				var transaction = node.lisk.transaction.createTransaction('1L', 1, node.gAccount.password, node.gAccount.secondPassword);
+				let transaction = node.lisk.transaction.createTransaction('1L', 1, node.gAccount.password, node.gAccount.secondPassword);
 
 				cache.onTransactionsSaved([transaction], function (err) {
 					cache.getJsonForKey(key, function (err, res) {
@@ -337,13 +337,13 @@ describe('cache', function () {
 		});
 
 		it('should remove keys that match pattern /api/delegate on type 2 trs', function (done) {
-			var key = '/api/delegates?123';
-			var value = {testObject: 'testValue'};
+			let key = '/api/delegates?123';
+			let value = {testObject: 'testValue'};
 
 			cache.setJsonForKey(key, value, function (err, status) {
 				expect(err).to.not.exist;
 				expect(status).to.equal('OK');
-				var transaction = node.lisk.delegate.createDelegate(node.randomPassword(), node.randomDelegateName().toLowerCase());
+				let transaction = node.lisk.delegate.createDelegate(node.randomPassword(), node.randomDelegateName().toLowerCase());
 
 				cache.onTransactionsSaved([transaction], function (err) {
 					cache.getJsonForKey(key, function (err, res) {
@@ -356,13 +356,13 @@ describe('cache', function () {
 		});
 
 		it('should not remove keys when cacheReady = false', function (done) {
-			var key = '/api/delegates?123';
-			var value = {testObject: 'testValue'};
+			let key = '/api/delegates?123';
+			let value = {testObject: 'testValue'};
 
 			cache.setJsonForKey(key, value, function (err, status) {
 				expect(err).to.not.exist;
 				expect(status).to.equal('OK');
-				var transaction = node.lisk.delegate.createDelegate(node.randomPassword(), node.randomDelegateName().toLowerCase());
+				let transaction = node.lisk.delegate.createDelegate(node.randomPassword(), node.randomDelegateName().toLowerCase());
 
 				cache.onSyncStarted();
 				cache.onTransactionsSaved([transaction], function (err) {

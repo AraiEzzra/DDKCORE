@@ -1,11 +1,9 @@
-'use strict';
 
-var crypto = require('crypto');
-var fs = require('fs');
-var sandboxHelper = require('../helpers/sandbox.js');
+
+let sandboxHelper = require('../helpers/sandbox.js');
 
 // Private fields
-var self, __private = {}, shared = {};
+let self, __private = {}, shared = {};
 
 __private.loaded = false;
 
@@ -16,7 +14,7 @@ __private.loaded = false;
  * @param {scope} scope - App instance.
  */
 // Constructor
-function Crypto (cb, scope) {
+function Crypto (cb) {
 	self = this;
 
 	setImmediate(cb, null, self);
@@ -39,7 +37,7 @@ Crypto.prototype.sandboxApi = function (call, args, cb) {
  * Modules are not required in this file.
  * @param {modules} scope - Loaded modules.
  */
-Crypto.prototype.onBind = function (scope) {
+Crypto.prototype.onBind = function () {
 };
 
 /**
@@ -51,3 +49,5 @@ Crypto.prototype.onBlockchainReady = function () {
 
 // Export
 module.exports = Crypto;
+
+/*************************************** END OF FILE *************************************/

@@ -1,30 +1,26 @@
-var _ = require('lodash');
-var async = require('async');
-var constants = require('../helpers/constants.js');
-var crypto = require('crypto');
-var DApp = require('../logic/dapp.js');
-var dappCategories = require('../helpers/dappCategories.js');
-var dappTypes = require('../helpers/dappTypes.js');
-var DecompressZip = require('decompress-zip');
-var extend = require('extend');
-var fs = require('fs');
-var ip = require('ip');
-var InTransfer = require('../logic/inTransfer.js');
-var npm = require('npm');
-var OrderBy = require('../helpers/orderBy.js');
-var OutTransfer = require('../logic/outTransfer.js');
-var path = require('path');
-var popsicle = require('popsicle');
-var rmdir = require('rimraf');
-var Router = require('../helpers/router.js');
-var Sandbox = require('lisk-sandbox');
-var sandboxHelper = require('../helpers/sandbox.js');
-var schema = require('../schema/dapps.js');
-var sql = require('../sql/dapps.js');
-var transactionTypes = require('../helpers/transactionTypes.js');
+let _ = require('lodash');
+let async = require('async');
+let crypto = require('crypto');
+let DApp = require('../logic/dapp.js');
+let dappCategories = require('../helpers/dappCategories.js');
+let DecompressZip = require('decompress-zip');
+let fs = require('fs');
+let InTransfer = require('../logic/inTransfer.js');
+let npm = require('npm');
+let OrderBy = require('../helpers/orderBy.js');
+let OutTransfer = require('../logic/outTransfer.js');
+let path = require('path');
+let popsicle = require('popsicle');
+let rmdir = require('rimraf');
+let Router = require('../helpers/router.js');
+let Sandbox = require('lisk-sandbox');
+let sandboxHelper = require('../helpers/sandbox.js');
+let schema = require('../schema/dapps.js');
+let sql = require('../sql/dapps.js');
+let transactionTypes = require('../helpers/transactionTypes.js');
 
 // Private fields
-var modules, library, self, __private = {}, shared = {};
+let modules, library, self, __private = {}, shared = {};
 
 __private.assetTypes = {};
 __private.launched = {};
@@ -52,7 +48,7 @@ __private.routes = {};
  * @param {scope} scope - App instance.
  * @return {setImmediateCallback} Callback function with `self` as data.
  * @todo apply node pattern for callbacks: callback always at the end.
- * @todo add 'use strict';
+ * @todo add 
  */
 // Constructor
 function DApps (cb, scope) {
@@ -104,7 +100,7 @@ function DApps (cb, scope) {
 	 * @listens exit
 	 */
 	process.on('exit', function () {
-		var keys = Object.keys(__private.launched);
+		let keys = Object.keys(__private.launched);
 
 		async.eachSeries(keys, function (id, eachSeriesCb) {
 			if (!__private.launched[id]) {
@@ -133,7 +129,7 @@ function DApps (cb, scope) {
 				});
 			});
 		} else {
-			__private.createBasePaths(function (err) {
+			__private.createBasePaths(function () {
 				return setImmediate(cb, null, self);
 			});
 		}
@@ -189,7 +185,7 @@ __private.getByIds = function (ids, cb) {
  * @return {setImmediateCallback} error description | rows data
  */
 __private.list = function (filter, cb) {
-	var params = {}, where = [];
+	let params = {}, where = [];
 
 	if (filter.type >= 0) {
 		where.push('"type" = ${type}');
@@ -202,7 +198,7 @@ __private.list = function (filter, cb) {
 	}
 
 	if (filter.category) {
-		var category = dappCategories[filter.category];
+		let category = dappCategories[filter.category];
 		if (category != null && category !== undefined) {
 			where.push('"category" = ${category}');
 			params.category = category;
@@ -232,7 +228,7 @@ __private.list = function (filter, cb) {
 		return setImmediate(cb, 'Invalid limit. Maximum is 100');
 	}
 
-	var orderBy = OrderBy(
+	let orderBy = OrderBy(
 		filter.orderBy, {
 			sortFields: sql.sortFields
 		}
@@ -264,7 +260,7 @@ __private.list = function (filter, cb) {
  * @return {setImmediateCallback} if error
  */
 __private.createBasePaths = function (cb) {
-	var basePaths = [
+	let basePaths = [
 		__private.dappsPath,                             // -> /dapps
 		path.join(__private.appPath, 'public', 'dapps'), // -> /public/dapps
 		path.join(library.public, 'images', 'dapps'),    // -> /public/images/dapps
@@ -294,10 +290,10 @@ __private.createBasePaths = function (cb) {
  * @return {setImmediateCallback} if error
  */
 __private.installDependencies = function (dapp, cb) {
-	var dappPath = path.join(__private.dappsPath, dapp.transactionId);
+	let dappPath = path.join(__private.dappsPath, dapp.transactionId);
 
-	var packageJson = path.join(dappPath, 'package.json');
-	var config = null;
+	let packageJson = path.join(dappPath, 'package.json');
+	let config = null;
 
 	try {
 		config = JSON.parse(fs.readFileSync(packageJson));
@@ -313,7 +309,7 @@ __private.installDependencies = function (dapp, cb) {
 		npm.root = path.join(dappPath, 'node_modules');
 		npm.prefix = dappPath;
 
-		npm.commands.install(function (err, data) {
+		npm.commands.install(function () {
 			return setImmediate(cb, null);
 		});
 	});
@@ -330,7 +326,7 @@ __private.getInstalledIds = function (cb) {
 		if (err) {
 			return setImmediate(cb, err);
 		} else {
-			var regExp = new RegExp(/[0-9]{1,20}/);
+			let regExp = new RegExp(/[0-9]{1,20}/);
 
 			ids = _.filter(ids, function (f) {
 				return regExp.test(f.toString());
@@ -352,7 +348,7 @@ __private.getInstalledIds = function (cb) {
  * @todo Implement dropTables
  */
 __private.removeDApp = function (dapp, cb) {
-	var dappPath = path.join(__private.dappsPath, dapp.transactionId);
+	let dappPath = path.join(__private.dappsPath, dapp.transactionId);
 
 	function remove (err) {
 		if (err) {
@@ -372,7 +368,7 @@ __private.removeDApp = function (dapp, cb) {
 		if (!exists) {
 			return setImmediate(cb, 'Application not found');
 		} else {
-			var blockchain;
+			let blockchain;
 
 			try {
 				blockchain = require(path.join(dappPath, 'blockchain.json'));
@@ -401,8 +397,8 @@ __private.removeDApp = function (dapp, cb) {
  * @return {setImmediateCallback} error message | cb
  */
 __private.downloadLink = function (dapp, dappPath, cb) {
-	var tmpDir = 'tmp';
-	var tmpPath = path.join(__private.appPath, tmpDir, dapp.transactionId + '.zip');
+	let tmpDir = 'tmp';
+	let tmpPath = path.join(__private.appPath, tmpDir, dapp.transactionId + '.zip');
 
 	async.series({
 		makeDirectory: function (serialCb) {
@@ -432,7 +428,7 @@ __private.downloadLink = function (dapp, dappPath, cb) {
 				});
 			}
 
-			var request = popsicle.get({
+			let request = popsicle.get({
 				url: dapp.link,
 				transport: popsicle.createTransport({type: 'stream'})
 			});
@@ -442,7 +438,7 @@ __private.downloadLink = function (dapp, dappPath, cb) {
 					return setImmediate(serialCb, ['Received bad response code', res.status].join(' '));
 				}
 
-				var stream = fs.createWriteStream(tmpPath);
+				let stream = fs.createWriteStream(tmpPath);
 
 				stream.on('error', cleanup);
 
@@ -457,7 +453,7 @@ __private.downloadLink = function (dapp, dappPath, cb) {
 			request.catch(cleanup);
 		},
 		decompressZip: function (serialCb) {
-			var unzipper = new DecompressZip(tmpPath);
+			let unzipper = new DecompressZip(tmpPath);
 
 			library.logger.info(dapp.transactionId, 'Decompressing zip file');
 
@@ -469,7 +465,7 @@ __private.downloadLink = function (dapp, dappPath, cb) {
 				});
 			});
 
-			unzipper.on('extract', function (log) {
+			unzipper.on('extract', function () {
 				library.logger.info(dapp.transactionId, 'Finished extracting');
 				fs.exists(tmpPath, function (exists) {
 					if (exists) { fs.unlink(tmpPath); }
@@ -504,7 +500,7 @@ __private.downloadLink = function (dapp, dappPath, cb) {
  * @return {setImmediateCallback} error message | cb
  */
 __private.installDApp = function (dapp, cb) {
-	var dappPath = path.join(__private.dappsPath, dapp.transactionId);
+	let dappPath = path.join(__private.dappsPath, dapp.transactionId);
 
 	async.series({
 		checkInstalled: function (serialCb) {
@@ -547,9 +543,9 @@ __private.installDApp = function (dapp, cb) {
  * @return {setImmediateCallback} cb
  */
 __private.createSymlink = function (dapp, cb) {
-	var dappPath = path.join(__private.dappsPath, dapp.transactionId);
-	var dappPublicPath = path.join(dappPath, 'public');
-	var dappPublicLink = path.join(__private.appPath, 'public', 'dapps', dapp.transactionId);
+	let dappPath = path.join(__private.dappsPath, dapp.transactionId);
+	let dappPublicPath = path.join(dappPath, 'public');
+	let dappPublicLink = path.join(__private.appPath, 'public', 'dapps', dapp.transactionId);
 
 	fs.exists(dappPublicPath, function (exists) {
 		if (exists) {
@@ -576,8 +572,8 @@ __private.createSymlink = function (dapp, cb) {
  */
 __private.apiHandler = function (message, callback) {
 	try {
-		var strs = message.call.split('#');
-		var module = strs[0], call = strs[1];
+		let strs = message.call.split('#');
+		let module = strs[0], call = strs[1];
 
 		if (!modules[module]) {
 			return setImmediate(callback, 'Invalid module in call: ' + message.call);
@@ -603,12 +599,12 @@ __private.apiHandler = function (message, callback) {
  * @return {setImmediateCallback} error messages | cb
  */
 __private.createRoutes = function (dapp, cb) {
-	var dappPath = path.join(__private.dappsPath, dapp.transactionId);
-	var dappRoutesPath = path.join(dappPath, 'routes.json');
+	let dappPath = path.join(__private.dappsPath, dapp.transactionId);
+	let dappRoutesPath = path.join(dappPath, 'routes.json');
 
 	fs.exists(dappRoutesPath, function (exists) {
 		if (exists) {
-			var routes;
+			let routes;
 
 			try {
 				routes = require(dappRoutesPath);
@@ -756,7 +752,7 @@ __private.launchDApp = function (body, cb) {
 				}
 			});
 		}
-	], function (err, dapp) {
+	], function (err) {
 		if (err) {
 			library.logger.error('Failed to launch application', err);
 		} else {
@@ -782,11 +778,9 @@ __private.launchDApp = function (body, cb) {
  * @return {setImmediateCallback} cb, error
  */
 __private.createSandbox = function (dapp, params, cb) {
-	var dappPath = path.join(__private.dappsPath, dapp.transactionId);
-	var dappPublicPath = path.join(dappPath, 'public');
-	var dappPublicLink = path.join(__private.appPath, 'public', 'dapps', dapp.transactionId);
+	let dappPath = path.join(__private.dappsPath, dapp.transactionId);
 
-	var dappConfig;
+	let dappConfig;
 
 	try {
 		dappConfig = require(path.join(dappPath, 'config.json'));
@@ -806,7 +800,7 @@ __private.createSandbox = function (dapp, params, cb) {
 			return setImmediate(cb, err);
 		}
 
-		var blockchain;
+		let blockchain;
 
 		try {
 			blockchain = require(path.join(dappPath, 'blockchain.json'));
@@ -819,14 +813,14 @@ __private.createSandbox = function (dapp, params, cb) {
 				return setImmediate(cb, err);
 			}
 
-			var withDebug = false;
-			process.execArgv.forEach(function (item, index) {
+			let withDebug = false;
+			process.execArgv.forEach(function (item) {
 				if (item.indexOf('--debug') >= 0) {
 					withDebug = true;
 				}
 			});
 
-			var sandbox = new Sandbox(path.join(dappPath, 'index.js'), dapp.transactionId, params, __private.apiHandler, withDebug);
+			let sandbox = new Sandbox(path.join(dappPath, 'index.js'), dapp.transactionId, params, __private.apiHandler, withDebug);
 			__private.sandboxes[dapp.transactionId] = sandbox;
 
 			sandbox.on('exit', function () {
@@ -869,7 +863,7 @@ __private.createSandbox = function (dapp, params, cb) {
  * @return {setImmediateCallback} cb, error
  */
 __private.stopDApp = function (dapp, cb) {
-	var dappPublicLink = path.join(__private.appPath, 'public', 'dapps', dapp.transactionId);
+	let dappPublicLink = path.join(__private.appPath, 'public', 'dapps', dapp.transactionId);
 
 	async.series({
 		checkInstalled: function (seriesCb) {
@@ -1055,8 +1049,8 @@ DApps.prototype.isLoaded = function () {
  */
 DApps.prototype.internal = {
 	put: function (dapp, cb) {
-		var hash = crypto.createHash('sha256').update(dapp.secret, 'utf8').digest();
-		var keypair = library.ed.makeKeypair(hash);
+		let hash = crypto.createHash('sha256').update(dapp.secret, 'utf8').digest();
+		let keypair = library.ed.makeKeypair(hash);
 
 		if (dapp.publicKey) {
 			if (keypair.publicKey.toString('hex') !== dapp.publicKey) {
@@ -1078,14 +1072,14 @@ DApps.prototype.internal = {
 					return setImmediate(cb, 'Invalid second passphrase');
 				}
 
-				var secondKeypair = null;
+				let secondKeypair = null;
 
 				if (account.secondSignature) {
-					var secondHash = crypto.createHash('sha256').update(dapp.secondSecret, 'utf8').digest();
+					let secondHash = crypto.createHash('sha256').update(dapp.secondSecret, 'utf8').digest();
 					secondKeypair = library.ed.makeKeypair(secondHash);
 				}
 
-				var transaction;
+				let transaction;
 
 				try {
 					transaction = library.logic.transaction.create({
@@ -1159,13 +1153,13 @@ DApps.prototype.internal = {
 	},
 
 	search: function (query, cb) {
-		__private.getInstalledIds(function (err, ids) {
+		__private.getInstalledIds(function (err) {
 			if (err) {
 				library.logger.error(err);
 				return setImmediate(cb, 'Failed to get installed application ids');
 			}
 
-			var params = { q: '%' + query.q + '%', limit: 50 };
+			let params = { q: '%' + query.q + '%', limit: 50 };
 
 			if (query.category) {
 				if (query.category === 0 || query.category > 0) {
@@ -1189,7 +1183,7 @@ DApps.prototype.internal = {
 							});
 						}
 
-						var dapps = [];
+						let dapps = [];
 
 						rows.forEach(function (dapp) {
 							if (installed.indexOf(dapp.transactionId) >= 0) {
@@ -1208,7 +1202,7 @@ DApps.prototype.internal = {
 							});
 						}
 
-						var dapps = [];
+						let dapps = [];
 						rows.forEach(function (dapp) {
 							if (installed.indexOf(dapp.transactionId) < 0) {
 								dapps.push(dapp);
@@ -1378,8 +1372,8 @@ DApps.prototype.internal = {
 	},
 
 	installing: function (req, cb) {
-		var ids = [];
-		for (var i in __private.loading) {
+		let ids = [];
+		for (let i in __private.loading) {
 			if (__private.loading[i]) {
 				ids.push(i);
 			}
@@ -1389,8 +1383,8 @@ DApps.prototype.internal = {
 	},
 
 	uninstalling: function (req, cb) {
-		var ids = [];
-		for (var i in __private.uninstalling) {
+		let ids = [];
+		for (let i in __private.uninstalling) {
 			if (__private.uninstalling[i]) {
 				ids.push(i);
 			}
@@ -1400,8 +1394,8 @@ DApps.prototype.internal = {
 	},
 
 	launched: function (req, cb) {
-		var ids = [];
-		for (var i in __private.launched) {
+		let ids = [];
+		for (let i in __private.launched) {
 			if (__private.launched[i]) {
 				ids.push(i);
 			}
@@ -1449,16 +1443,14 @@ DApps.prototype.internal = {
 				return setImmediate(cb, err[0].message);
 			}
 
-			var hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
-			var keypair = library.ed.makeKeypair(hash);
+			let hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
+			let keypair = library.ed.makeKeypair(hash);
 
 			if (req.body.publicKey) {
 				if (keypair.publicKey.toString('hex') !== req.body.publicKey) {
 					return setImmediate(cb, 'Invalid passphrase');
 				}
 			}
-
-			var query = {};
 
 			library.balancesSequence.add(function (cb) {
 				if (req.body.multisigAccountPublicKey && req.body.multisigAccountPublicKey !== keypair.publicKey.toString('hex')) {
@@ -1496,14 +1488,14 @@ DApps.prototype.internal = {
 								return setImmediate(cb, 'Invalid requester public key');
 							}
 
-							var secondKeypair = null;
+							let secondKeypair = null;
 
 							if (requester.secondSignature) {
-								var secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
+								let secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
 								secondKeypair = library.ed.makeKeypair(secondHash);
 							}
 
-							var transaction;
+							let transaction;
 
 							try {
 								transaction = library.logic.transaction.create({
@@ -1536,14 +1528,14 @@ DApps.prototype.internal = {
 							return setImmediate(cb, 'Invalid second passphrase');
 						}
 
-						var secondKeypair = null;
+						let secondKeypair = null;
 
 						if (account.secondSignature) {
-							var secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
+							let secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
 							secondKeypair = library.ed.makeKeypair(secondHash);
 						}
 
-						var transaction;
+						let transaction;
 
 						try {
 							transaction = library.logic.transaction.create({
@@ -1578,9 +1570,8 @@ DApps.prototype.internal = {
 				return setImmediate(cb, err[0].message);
 			}
 
-			var hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
-			var keypair = library.ed.makeKeypair(hash);
-			var query = {};
+			let hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
+			let keypair = library.ed.makeKeypair(hash);
 
 			library.balancesSequence.add(function (cb) {
 				if (req.body.multisigAccountPublicKey && req.body.multisigAccountPublicKey !== keypair.publicKey.toString('hex')) {
@@ -1618,14 +1609,14 @@ DApps.prototype.internal = {
 								return setImmediate(cb, 'Invalid requester public key');
 							}
 
-							var secondKeypair = null;
+							let secondKeypair = null;
 
 							if (requester.secondSignature) {
-								var secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
+								let secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
 								secondKeypair = library.ed.makeKeypair(secondHash);
 							}
 
-							var transaction;
+							let transaction;
 
 							try {
 								transaction = library.logic.transaction.create({
@@ -1660,14 +1651,14 @@ DApps.prototype.internal = {
 							return setImmediate(cb, 'Missing second passphrase');
 						}
 
-						var secondKeypair = null;
+						let secondKeypair = null;
 
 						if (account.secondSignature) {
-							var secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
+							let secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
 							secondKeypair = library.ed.makeKeypair(secondHash);
 						}
 
-						var transaction;
+						let transaction;
 
 						try {
 							transaction = library.logic.transaction.create({
@@ -1704,7 +1695,7 @@ shared.getGenesis = function (req, cb) {
 		if (rows.length === 0) {
 			return setImmediate(cb, 'Application genesis block not found');
 		} else {
-			var row = rows[0];
+			let row = rows[0];
 
 			return setImmediate(cb, null, {
 				pointId: row.id,
@@ -1769,3 +1760,5 @@ shared.getBalanceTransactions = function (req, cb) {
 
 // Export
 module.exports = DApps;
+
+/*************************************** END OF FILE *************************************/

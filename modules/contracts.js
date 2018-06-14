@@ -1,22 +1,27 @@
-'use strict';
+
 
 //Requiring Modules 
-var Contract = require('../logic/contract.js');
-var transactionTypes = require('../helpers/transactionTypes.js');
-var sql = require('../sql/accounts.js');
-var contributorsStatus = true;
-var cache = require('./cache.js');
-//var cronjob = require('node-cron-job');
-//var path = require('path');
+let Contract = require('../logic/contract.js');
+let transactionTypes = require('../helpers/transactionTypes.js');
 
 //Private Fields
-var __private = {}, self = null,
-library = null, modules = null;
+let __private = {}, self = null,
+	library = null, modules = null;
 __private.assetTypes = {};
 
-//Contracts Constuctor Initialized from app.js
+/**
+ * Initializes library with scope content and generates a Contract instance.
+ * Calls logic.transaction.attachAssetType().
+ * @memberof module:contracts
+ * @class
+ * @classdesc Main contracts methods.
+ * @implements module:contracts.Contract#Contract
+  * @param {scope} scope - App instance.
+ * @param {function} cb - Callback function.
+ * @return {setImmediateCallback} With `this` as data.
+ */
 function Contracts(cb, scope) {
-    library = {
+	library = {
 		logger: scope.logger,
 		sequence: scope.sequence,
 		ed: scope.ed,
@@ -37,21 +42,25 @@ function Contracts(cb, scope) {
 			},
 			contributors: scope.config.contributors
 		},
-    };
-    
-    self = this;
-    self.type = transactionTypes.CONTRACT;
+	};
 
-    __private.assetTypes[transactionTypes.CONTRACT] = library.logic.transaction.attachAssetType(
+	self = this;
+	self.type = transactionTypes.CONTRACT;
+
+	__private.assetTypes[transactionTypes.CONTRACT] = library.logic.transaction.attachAssetType(
 		transactionTypes.CONTRACT, new Contract(scope.config)
 	);
-    
-    setImmediate(cb, null, self);
-};
 
-//OnBInd Event called from app.js
+	setImmediate(cb, null, self);
+}
+
+/**
+ * on bind called when modules are ready and launched.
+ * attach required modules to be used.
+  * @param {scope} scope - App instance.
+ */
 Contracts.prototype.onBind = function (scope) {
-    modules = {
+	modules = {
 		loader: scope.loader,
 		rounds: scope.rounds,
 		accounts: scope.accounts,
@@ -59,10 +68,12 @@ Contracts.prototype.onBind = function (scope) {
 		transport: scope.transport,
 		transactions: scope.transactions,
 		delegates: scope.delegates,
-    };
-    __private.assetTypes[transactionTypes.CONTRACT].bind(
+	};
+	__private.assetTypes[transactionTypes.CONTRACT].bind(
 		scope.accounts, scope.logger
 	);
-}
+};
 
 module.exports = Contracts;
+
+/*************************************** END OF FILE *************************************/
