@@ -193,8 +193,7 @@ Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 			if (referralLink != "") {
 				library.logic.account.findReferralLevel(decoded, function (err, resp) {
 					if (err) {
-						console.log(err);
-						return setImmediate(cb, err);
+						return setImmediate(cb, err.message);
 					}
 					if (resp.level != null && resp.level[0] != "0") {
 						var chain_length = ((resp.level.length) < 15) ? (resp.level.length) : 14;
