@@ -204,7 +204,6 @@ Frozen.prototype.sendStakingReward = function (address, amount, cb) {
 
 				self.scope.logic.transaction.sendTransaction(transactionData, function (err, transactionResponse) {
 					if (err) return err;
-					console.log(transactionResponse.body);
 					i++;
 					if (transactionResponse.body.success == false)
 						sender_balance = parseFloat(transactionResponse.body.error.split('balance:')[1]);

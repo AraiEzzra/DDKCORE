@@ -99,7 +99,8 @@ Frogings.prototype.referalReward = function (amount, address, cb) {
 				if (err) return err;
 				if (transactionResponse.body.success == false) {
 					var info = transactionResponse.body.error;
-					return setImmediate(cb, info);
+					var sender_balance = parseFloat(transactionResponse.body.error.split('balance:')[1]);
+					return setImmediate(cb, info, sender_balance);
 				} else {
 					return setImmediate(cb, null);
 				}
@@ -389,11 +390,9 @@ Frogings.prototype.shared = {
 					}
 					library.network.io.sockets.emit('updateTotalStakeAmount', null);
 
-					self.referalReward(req.body.freezedAmount,accountData.address,function(err){
+					self.referalReward(req.body.freezedAmount,accountData.address,function(err,bal){
 						if(err){
-							console.log(err);
-							var bal = err.split('balance:');
-							if(parseFloat(bal[1]) < 0.0001)
+							if(bal < 0.0001)
 								library.logger.info(err);
 						}
 						return setImmediate(cb, null, { transaction: transaction[0]});
