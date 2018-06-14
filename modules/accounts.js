@@ -153,83 +153,81 @@ Accounts.prototype.getAccount = function (filter, fields, cb) {
 };
 
 
-Accounts.prototype.referralLinkChain = function(referalLink,address,cb) {
+Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 
 	var referralLink = referalLink;
-	if(referralLink == undefined) {
+	if (referralLink == undefined) {
 		referralLink = "";
 	}
 	var decoded = new Buffer(referralLink, 'base64').toString('ascii');
-	var level =[];
+	var level = [];
 
 	level.unshift(decoded);
 
-	if(decoded == address)
-	{
+	if (decoded == address) {
 		var err = "Introducer and sponsor can't be same";
 		return setImmediate(cb, err);
-	}		
+	}
 
-		async.series([
+	async.series([
 
-			function(callback){
-				if (referralLink != "") {
-					library.db.one(sql.findReferLink, {
-						referLink: referralLink
-					}).then(function (user) {
-						if (parseInt(user.address)) {
-							callback();
-						} else {
-							var error = "Referral Link is Invalid";
-							return setImmediate(cb, error);
-						}
-					}).catch(function (err) {
-						return setImmediate(cb, err);
-					});
-				} else {
-					callback();
-				}
-			},
-			function(callback) {
-				if(referralLink!="") {
-					library.logic.account.findReferralLevel(decoded,function(err,resp){
-						if (err) {
-							console.log(err);							
-							return setImmediate(cb, err);
-						}
-						if(resp.level !=null && resp.level[0] !="0") {
-							var chain_length = ((resp.level.length)<15)?(resp.level.length):14;
-
-							level=level.concat(resp.level.slice(0,chain_length))
-						}
-						console.log(level);
+		function (callback) {
+			if (referralLink != "") {
+				library.db.one(sql.findReferLink, {
+					referLink: referralLink
+				}).then(function (user) {
+					if (parseInt(user.address)) {
 						callback();
-					});
-				}
-				else {
-					level.length = 0;	
-					callback();
-				}			
-			},
-			function(callback){
-				var levelDetails = {
-					address: address,
-					level:level
-				};
-	
-				library.logic.account.insertLevel(levelDetails,function(err){
+					} else {
+						var error = "Referral Link is Invalid";
+						return setImmediate(cb, error);
+					}
+				}).catch(function (err) {
+					return setImmediate(cb, err);
+				});
+			} else {
+				callback();
+			}
+		},
+		function (callback) {
+			if (referralLink != "") {
+				library.logic.account.findReferralLevel(decoded, function (err, resp) {
 					if (err) {
 						console.log(err);
 						return setImmediate(cb, err);
 					}
-					level.length = 0;
+					if (resp.level != null && resp.level[0] != "0") {
+						var chain_length = ((resp.level.length) < 15) ? (resp.level.length) : 14;
+
+						level = level.concat(resp.level.slice(0, chain_length))
+					}
+					console.log(level);
 					callback();
 				});
+			} else {
+				level.length = 0;
+				callback();
 			}
-		],function(err){
-			if(err) return err;
-			else return setImmediate(cb, null);
-		});
+		},
+		function (callback) {
+			var levelDetails = {
+				address: address,
+				level: level
+			};
+
+			library.logic.account.insertLevel(levelDetails, function (err) {
+				if (err) {
+					console.log(err);
+					return setImmediate(cb, err);
+				}
+				level.length = 0;
+				callback();
+			});
+		}
+	], function (err) {
+		if (err) return err;
+		else return setImmediate(cb, null);
+	});
 }
 
 /**
