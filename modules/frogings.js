@@ -6,6 +6,7 @@ let sql = require('../sql/frogings.js');
 let TransactionPool = require('../logic/transactionPool.js');
 let transactionTypes = require('../helpers/transactionTypes.js');
 let Frozen = require('../logic/frozen.js');
+let constants = require('../helpers/constants.js');
 
 // Private fields
 let __private = {};
@@ -264,6 +265,10 @@ Frogings.prototype.shared = {
 								secondKeypair = library.ed.makeKeypair(secondHash);
 							}
 
+							if ((req.body.freezedAmount + (constants.fees.froze * req.body.freezedAmount)/100 + parseInt(account.totalFrozeAmount)) > account.balance) {
+								return setImmediate(cb, 'Insufficient balance');
+							} 
+
 							let transaction;
 
 							try {
@@ -302,6 +307,10 @@ Frogings.prototype.shared = {
 							let secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
 							secondKeypair = library.ed.makeKeypair(secondHash);
 						}
+						
+						if ((req.body.freezedAmount + (constants.fees.froze * req.body.freezedAmount)/100 + parseInt(account.totalFrozeAmount)) > account.balance) {
+							return setImmediate(cb, 'Insufficient balance');
+						} 
 
 						let transaction;
 
