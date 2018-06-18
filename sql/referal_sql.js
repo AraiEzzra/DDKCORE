@@ -1,6 +1,6 @@
 'use strict';
 
-var Referals = {
+let Referals = {
 
     updateReferLink : 'UPDATE mem_accounts SET "referralLink" = ${referralLink} WHERE "address" = ${address}',
     referLevelChain : 'SELECT level from referals WHERE "address" = ${address}',

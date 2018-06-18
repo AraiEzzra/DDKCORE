@@ -154,17 +154,17 @@ Accounts.prototype.getAccount = function (filter, fields, cb) {
 
 Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 
-	var referralLink = referalLink;
+	let referralLink = referalLink;
 	if (referralLink == undefined) {
 		referralLink = "";
 	}
-	var decoded = new Buffer(referralLink, 'base64').toString('ascii');
-	var level = [];
+	let decoded = new Buffer(referralLink, 'base64').toString('ascii');
+	let level = [];
 
 	level.unshift(decoded);
 
 	if (decoded == address) {
-		var err = "Introducer and sponsor can't be same";
+		let err = "Introducer and sponsor can't be same";
 		return setImmediate(cb, err);
 	}
 
@@ -178,7 +178,7 @@ Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 					if (parseInt(user.address)) {
 						callback();
 					} else {
-						var error = "Referral Link is Invalid";
+						let error = "Referral Link is Invalid";
 						return setImmediate(cb, error);
 					}
 				}).catch(function (err) {
@@ -195,11 +195,10 @@ Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 						return setImmediate(cb, err.message);
 					}
 					if (resp.level != null && resp.level[0] != "0") {
-						var chain_length = ((resp.level.length) < 15) ? (resp.level.length) : 14;
+						let chain_length = ((resp.level.length) < 15) ? (resp.level.length) : 14;
 
 						level = level.concat(resp.level.slice(0, chain_length))
 					}
-					console.log(level);
 					callback();
 				});
 			} else {
@@ -208,7 +207,7 @@ Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 			}
 		},
 		function (callback) {
-			var levelDetails = {
+			let levelDetails = {
 				address: address,
 				level: level
 			};

@@ -1,12 +1,12 @@
 'use strict';
 
-var mailServices = require('./nodemailer');
-var rewards = require('./rewards');
-var async = require('async');
-var sql = require('../sql/referal_sql');
-var env = process.env;
+let mailServices = require('./nodemailer');
+let rewards = require('./rewards');
+let async = require('async');
+let sql = require('../sql/referal_sql');
+let env = process.env;
 
-var library = {};
+let library = {};
 
 exports.Referals = function (scope) {
     library = scope;
@@ -16,8 +16,8 @@ module.exports.api = function (app) {
 
     app.post('/referral/generateReferalLink', function (req, res) {
 
-        var user_address = req.body.secret;
-        var encoded = new Buffer(user_address).toString('base64');
+        let user_address = req.body.secret;
+        let encoded = new Buffer(user_address).toString('base64');
         // var decoded = new Buffer(encoded, 'base64').toString('ascii');
 
         library.db.none(sql.updateReferLink, {
@@ -40,8 +40,8 @@ module.exports.api = function (app) {
 
     app.post('/referral/sendEmail', function (req, res) {
 
-        var link = req.body.referlink;
-        var mailOptions = {
+        let link = req.body.referlink;
+        let mailOptions = {
             from: library.config.mailFrom, // sender address
             to: req.body.email, //req.body.email list of receivers, fix this before commit
             subject: 'Referral Link', // Subject line

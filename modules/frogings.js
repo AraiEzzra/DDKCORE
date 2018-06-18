@@ -65,10 +65,10 @@ function Frogings (cb, scope) {
 }
 
 
-Frogings.prototype.referalReward = function (amount, address, cb) {
-	var amount = amount;
-	var sponsor_address = address;
-	var overrideReward = {},
+Frogings.prototype.referalReward = function (stake_amount, address, cb) {
+	let amount = stake_amount;
+	let sponsor_address = address;
+	let overrideReward = {},
 		i = 0;
 
 	library.db.one(ref_sql.referLevelChain, {
@@ -79,7 +79,7 @@ Frogings.prototype.referalReward = function (amount, address, cb) {
 
 			overrideReward[user.level[i]] = (((env.STAKE_REWARD) * amount) / 100);
 
-			var transactionData = {
+			let transactionData = {
 				json: {
 					secret: env.SENDER_SECRET,
 					amount: overrideReward[user.level[i]],
@@ -91,8 +91,8 @@ Frogings.prototype.referalReward = function (amount, address, cb) {
 			library.logic.transaction.sendTransaction(transactionData, function (err, transactionResponse) {
 				if (err) return err;
 				if (transactionResponse.body.success == false) {
-					var info = transactionResponse.body.error;
-					var sender_balance = parseFloat(transactionResponse.body.error.split('balance:')[1]);
+					let info = transactionResponse.body.error;
+					let sender_balance = parseFloat(transactionResponse.body.error.split('balance:')[1]);
 					return setImmediate(cb, info, sender_balance);
 				} else {
 					return setImmediate(cb, null);
@@ -100,7 +100,7 @@ Frogings.prototype.referalReward = function (amount, address, cb) {
 			});
 
 		} else {
-			var error = "No Introducer Found";
+			let error = "No Introducer Found";
 			return setImmediate(cb, error);
 		}
 

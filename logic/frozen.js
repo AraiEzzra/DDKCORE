@@ -274,13 +274,13 @@ Frozen.prototype.bind = function (accounts, rounds, blocks) {
 };
 
 
-Frozen.prototype.sendStakingReward = function (address, amount, cb) {
+Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 
-	var sponsor_address = address;
-	var amount = amount;
-	var overrideReward = {};
-	var i = 0;
-	var balance, reward, sender_balance;
+	let sponsor_address = address;
+	let amount = reward_amount;
+	let overrideReward = {};
+	let i = 0;
+	let balance, reward, sender_balance;
 
 	self.scope.db.one(reward_sql.referLevelChain, {
 		address: sponsor_address
@@ -288,13 +288,13 @@ Frozen.prototype.sendStakingReward = function (address, amount, cb) {
 
 		if (user.level != null && user.level[0] != "0") {
 
-			var chain_length = user.level.length;
+			let chain_length = user.level.length;
 
 			async.eachSeries(user.level, function (level, callback) {
 
 				overrideReward[level] = (((rewards.level[i]) * amount) / 100);
 
-				var transactionData = {
+				let transactionData = {
 					json: {
 						secret: env.SENDER_SECRET,
 						amount: overrideReward[level],
@@ -310,7 +310,7 @@ Frozen.prototype.sendStakingReward = function (address, amount, cb) {
 						sender_balance = parseFloat(transactionResponse.body.error.split('balance:')[1]);
 
 					if ((i == chain_length && reward != true) || sender_balance < 0.0001) {
-						var error = transactionResponse.body.error;
+						let error = transactionResponse.body.error;
 						return setImmediate(cb, error, sender_balance);
 					} else {
 						if (transactionResponse.body.success == true) {
@@ -328,7 +328,7 @@ Frozen.prototype.sendStakingReward = function (address, amount, cb) {
 			});
 
 		} else {
-			var error = "No Introducer Found";
+			let error = "No Introducer Found";
 			return setImmediate(cb, error);
 		}
 

@@ -1,8 +1,8 @@
-var nodemailer = require('nodemailer');
-var env = process.env;
+let nodemailer = require('nodemailer');
+let env = process.env;
 
 // Define SMTP configuration
-var smtpConfig = {
+let smtpConfig = {
     host: env.SMTP_HOST,
     port: 587,
     secure: false,
@@ -16,7 +16,7 @@ var smtpConfig = {
 };
 
 // Create Transporter
-var transporter = nodemailer.createTransport(smtpConfig);
+let transporter = nodemailer.createTransport(smtpConfig);
 
 //Verify transporter
 transporter.verify(function (error, success) {
