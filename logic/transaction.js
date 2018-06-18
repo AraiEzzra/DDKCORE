@@ -610,9 +610,9 @@ Transaction.prototype.verify = function (trs, sender, requester, cb) {
 
 	// Check confirmed sender balance
 	if (trs.type !== 11) {
-		let amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
+		var amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
 	} else {
-		let amount = new bignum(trs.amount.toString());
+		var amount = new bignum(trs.amount.toString());
 	}
 	
 	let senderBalance = this.checkBalance(amount, 'balance', trs, sender);
@@ -746,9 +746,9 @@ Transaction.prototype.apply = function (trs, block, sender, cb) {
 
 	// Check confirmed sender balance
 	if (trs.type !== 11) {
-		let amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
+		var amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
 	} else {
-		let amount = new bignum(trs.amount.toString());
+		var amount = new bignum(trs.amount.toString());
 	}
 	let senderBalance = this.checkBalance(amount, 'balance', trs, sender);
 
@@ -853,9 +853,9 @@ Transaction.prototype.applyUnconfirmed = function (trs, sender, requester, cb) {
 
 	// Check unconfirmed sender balance
 	if (trs.type !== 11) {
-		let amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
+		var amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
 	} else {
-		let amount = new bignum(trs.amount.toString());
+		var amount = new bignum(trs.amount.toString());
 	}
 	let senderBalance = this.checkBalance(amount, 'u_balance', trs, sender);
 
@@ -1206,9 +1206,9 @@ Transaction.prototype.objectNormalize = function (trs) {
 		}
 	}
 	if(trs.type !== 11)
-		let report = this.scope.schema.validate(trs, Transaction.prototype.schema);
+		var report = this.scope.schema.validate(trs, Transaction.prototype.schema);
 	else
-		let report = this.scope.schema.validate(trs, Transaction.prototype.Referschema);
+		var report = this.scope.schema.validate(trs, Transaction.prototype.Referschema);
 		
 	if (!report) {
 		throw 'Failed to validate transaction schema: ' + this.scope.schema.getLastErrors().map(function (err) {
