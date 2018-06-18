@@ -277,7 +277,7 @@ Vote.prototype.undo = function (trs, block, sender, cb) {
 
 	async.series([
 		function (seriesCb) {
-			this.scope.account.merge(sender.address, {
+			self.scope.account.merge(sender.address, {
 				delegates: votesInvert,
 				blockId: block.id,
 				round: modules.rounds.calc(block.height)
