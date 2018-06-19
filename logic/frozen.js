@@ -308,7 +308,9 @@ Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 					i++;
 					if (transactionResponse.body.success == false)
 						sender_balance = parseFloat(transactionResponse.body.error.split('balance:')[1]);
-
+					else
+						reward = true;
+						
 					if ((i == chain_length && reward != true) || sender_balance < 0.0001) {
 						let error = transactionResponse.body.error;
 						return setImmediate(cb, error, sender_balance);
