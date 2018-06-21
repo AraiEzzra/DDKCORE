@@ -124,7 +124,7 @@ __private.list = function (filter, cb) {
 
 		// Mutating parametres when unix timestamp is supplied
 		if (_.includes(['fromUnixTime', 'toUnixTime'], field[1])) {
-			// ETP epoch is 1464109200 as unix timestamp
+			// ddk epoch is 1464109200 as unix timestamp
 			value = value - constants.epochTime.getTime() / 1000;
 			field[1] = field[1].replace('UnixTime', 'Timestamp');
 		}

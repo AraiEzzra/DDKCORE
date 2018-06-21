@@ -1,6 +1,6 @@
-![ETP Logo](https://ETP.io/i/mediakit/logo_1.png)
+![ddk Logo](https://ddk.io/i/mediakit/logo_1.png)
 
-# ETP JSDoc Source code documentation
+# ddk JSDoc Source code documentation
 
 This is an ongoing process
 ## Best Practices
@@ -202,7 +202,7 @@ Example: Account module is composed by:
 - [ ] Markdown plugin
 - [ ] Use categories tag: `@categories`
 - [ ] Patterns examples
-- [ ] More ETP examples: callback, throws, class, nested objects
+- [ ] More ddk examples: callback, throws, class, nested objects
 - [ ] JSDoc tutorials for best practices
 - [ ] Callback patterns
     * node style: cb(err, data); - `app.js`

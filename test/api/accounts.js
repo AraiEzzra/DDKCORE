@@ -119,9 +119,9 @@ describe('GET /api/accounts/getBalance?address=', function () {
 	});
 
 	it('using invalid address should fail', function (done) {
-		getBalance('thisIsNOTALiskAddress', function (err, res) {
+		getBalance('thisIsNOTADDKAddress', function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
-			node.expect(res.body).to.have.property('error').to.eql('Object didn\'t pass validation for format address: thisIsNOTALiskAddress');
+			node.expect(res.body).to.have.property('error').to.eql('Object didn\'t pass validation for format address: thisIsNOTADDKAddress');
 			done();
 		});
 	});
@@ -159,9 +159,9 @@ describe('GET /api/accounts/getPublicKey?address=', function () {
 	});
 
 	it('using invalid address should fail', function (done) {
-		getPublicKey('thisIsNOTALiskAddress', function (err, res) {
+		getPublicKey('thisIsNOTADDKAddress', function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
-			node.expect(res.body).to.have.property('error').to.contain('Object didn\'t pass validation for format address: thisIsNOTALiskAddress');
+			node.expect(res.body).to.have.property('error').to.contain('Object didn\'t pass validation for format address: thisIsNOTADDKAddress');
 			done();
 		});
 	});
@@ -298,10 +298,10 @@ describe('GET /accounts', function () {
 	});
 
 	it('using invalid address should fail', function (done) {
-		getAccounts('address=' + 'thisIsNOTALiskAddress', function (err, res) {
+		getAccounts('address=' + 'thisIsNOTADDKAddress', function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
 			node.expect(res.body).to.have.property('error');
-			node.expect(res.body.error).to.contain('Object didn\'t pass validation for format address: thisIsNOTALiskAddress');
+			node.expect(res.body.error).to.contain('Object didn\'t pass validation for format address: thisIsNOTADDKAddress');
 			done();
 		});
 	});
@@ -349,10 +349,10 @@ describe('GET /accounts', function () {
 	});
 
 	it('using invalid publicKey should fail', function (done) {
-		getAccounts('publicKey=' + 'thisIsNOTALiskAccountPublicKey', function (err, res) {
+		getAccounts('publicKey=' + 'thisIsNOTADDKAccountPublicKey', function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
 			node.expect(res.body).to.have.property('error');
-			node.expect(res.body.error).to.contain('Object didn\'t pass validation for format publicKey: thisIsNOTALiskAccountPublicKey');
+			node.expect(res.body.error).to.contain('Object didn\'t pass validation for format publicKey: thisIsNOTADDKAccountPublicKey');
 			done();
 		});
 	});

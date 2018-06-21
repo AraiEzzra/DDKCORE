@@ -634,7 +634,7 @@ Accounts.prototype.shared = {
 	},
 
 	getCirculatingSupply: function (req, cb) {
-		let initialUnmined = config.etpSupply.totalSupply - config.initialPrimined.total;
+		let initialUnmined = config.ddkSupply.totalSupply - config.initialPrimined.total;
 		let publicAddress = library.config.sender.address;
 
 		library.db.one(sql.getCurrentUnmined, { address: publicAddress })
@@ -655,7 +655,7 @@ Accounts.prototype.shared = {
 		});
 	},
 	totalSupply: function (req, cb) {
-		let totalSupply = config.etpSupply.totalSupply;
+		let totalSupply = config.ddkSupply.totalSupply;
 
 		return setImmediate(cb, null, {
 			totalSupply: totalSupply
@@ -718,7 +718,7 @@ Accounts.prototype.shared = {
 			});
 		}
 
-		async function insertStakeOrdersInETP(orders) {
+		async function insertStakeOrdersInDDK(orders) {
 
 			try {
 				for (let order in orders) {
@@ -795,7 +795,7 @@ Accounts.prototype.shared = {
 		(async function () {
 			try {
 				let orders = await getStakeOrderFromETPS();
-				await insertStakeOrdersInETP(orders);
+				await insertStakeOrdersInDDK(orders);
 				let totalFrozeAmount = await checkFrozeAmountsInStakeOrders();
 				if (!totalFrozeAmount.sum) {
 					totalFrozeAmount.sum = 0;

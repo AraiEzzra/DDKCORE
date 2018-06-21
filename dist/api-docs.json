@@ -2,8 +2,8 @@
   "swagger": "2.0",
   "info": {
     "version": "1.0.0",
-    "title": "ETP",
-    "description": "ETP API's from Swagger",
+    "title": "ddk",
+    "description": "ddk API's from Swagger",
     "termsOfService": "http://swagger.io/terms/"
   },
   "basePath": "/",
@@ -547,12 +547,12 @@
         }
       }
     },
-    "/api/frogings/getTotalETPStaked": {
+    "/api/frogings/getTotalDDKStaked": {
       "get": {
         "tags": [
           "Freeze"
         ],
-        "description": "sum of ETP staked",
+        "description": "sum of ddk staked",
         "operationId": "for the URL",
         "produces": [
           "application/json"
@@ -561,7 +561,7 @@
           {
             "name": "none",
             "in": "query",
-            "description": "Get total ETP staked",
+            "description": "Get total ddk staked",
             "required": false,
             "type": "string"
           }

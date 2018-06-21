@@ -14,8 +14,8 @@ function postTransaction (transaction, done) {
 	});
 }
 
-function sendLISK (params, done) {
-	let transaction = node.lisk.transaction.createTransaction(params.recipientId, params.amount, params.secret);
+function sendDDK (params, done) {
+	let transaction = node.ddk.transaction.createTransaction(params.recipientId, params.amount, params.secret);
 
 	postTransaction(transaction, function (err, res) {
 		node.expect(res.body).to.have.property('success').to.be.ok;
@@ -38,7 +38,7 @@ describe('POST /peer/transactions', function () {
 		});
 
 		it('using undefined transaction.asset', function (done) {
-			let transaction = node.lisk.delegate.createDelegate(node.randomPassword(), node.randomDelegateName().toLowerCase());
+			let transaction = node.ddk.delegate.createDelegate(node.randomPassword(), node.randomDelegateName().toLowerCase());
 			transaction.fee = node.fees.delegateRegistrationFee;
 
 			delete transaction.asset;
@@ -53,7 +53,7 @@ describe('POST /peer/transactions', function () {
 		describe('when account has no funds', function () {
 
 			it('should fail', function (done) {
-				let transaction = node.lisk.delegate.createDelegate(node.randomPassword(), node.randomDelegateName().toLowerCase());
+				let transaction = node.ddk.delegate.createDelegate(node.randomPassword(), node.randomDelegateName().toLowerCase());
 				transaction.fee = node.fees.delegateRegistrationFee;
 
 				postTransaction(transaction, function (err, res) {
@@ -67,7 +67,7 @@ describe('POST /peer/transactions', function () {
 		describe('when account has funds', function () {
 
 			before(function (done) {
-				sendLISK({
+				sendDDK({
 					secret: node.gAccount.password,
 					amount: node.fees.delegateRegistrationFee,
 					recipientId: account.address
@@ -75,7 +75,7 @@ describe('POST /peer/transactions', function () {
 			});
 
 			it('using invalid username should fail', function (done) {
-				let transaction = node.lisk.delegate.createDelegate(account.password, crypto.randomBytes(64).toString('hex'));
+				let transaction = node.ddk.delegate.createDelegate(account.password, crypto.randomBytes(64).toString('hex'));
 				transaction.fee = node.fees.delegateRegistrationFee;
 
 				postTransaction(transaction, function (err, res) {
@@ -86,7 +86,7 @@ describe('POST /peer/transactions', function () {
 
 			it('using uppercase username should fail', function (done) {
 				account.username = 'UPPER_DELEGATE';
-				let transaction = node.lisk.delegate.createDelegate(account.password, account.username);
+				let transaction = node.ddk.delegate.createDelegate(account.password, account.username);
 
 				postTransaction(transaction, function (err, res) {
 					node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -96,7 +96,7 @@ describe('POST /peer/transactions', function () {
 
 			describe('when lowercased username already registered', function () {
 				it('using uppercase username should fail', function (done) {
-					let transaction = node.lisk.delegate.createDelegate(account2.password, account.username.toUpperCase());
+					let transaction = node.ddk.delegate.createDelegate(account2.password, account.username.toUpperCase());
 
 					postTransaction(transaction, function (err, res) {
 						node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -107,7 +107,7 @@ describe('POST /peer/transactions', function () {
 
 			it('using lowercase username should be ok', function (done) {
 				account.username = node.randomDelegateName().toLowerCase();
-				let transaction = node.lisk.delegate.createDelegate(account.password, account.username);
+				let transaction = node.ddk.delegate.createDelegate(account.password, account.username);
 
 				postTransaction(transaction, function (err, res) {
 					node.expect(res.body).to.have.property('success').to.be.ok;
@@ -120,7 +120,7 @@ describe('POST /peer/transactions', function () {
 		describe('twice for the same account', function () {
 
 			before(function (done) {
-				sendLISK({
+				sendDDK({
 					secret: node.gAccount.password,
 					amount: (node.fees.delegateRegistrationFee * 2),
 					recipientId: account2.address
@@ -129,10 +129,10 @@ describe('POST /peer/transactions', function () {
 
 			it('should fail', function (done) {
 				account2.username = node.randomDelegateName().toLowerCase();
-				let transaction = node.lisk.delegate.createDelegate(account2.password, account2.username);
+				let transaction = node.ddk.delegate.createDelegate(account2.password, account2.username);
 
 				account2.username = node.randomDelegateName().toLowerCase();
-				let transaction2 = node.lisk.delegate.createDelegate(account2.password, account2.username);
+				let transaction2 = node.ddk.delegate.createDelegate(account2.password, account2.username);
 
 				postTransaction(transaction, function (err, res) {
 					node.expect(res.body).to.have.property('success').to.be.ok;

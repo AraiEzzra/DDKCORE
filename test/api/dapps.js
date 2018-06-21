@@ -45,12 +45,12 @@ before(function (done) {
 before(function (done) {
 	// Send to DDK to account 1 address
 	setTimeout(function () {
-		let randomLISK = node.randomLISK();
-		let expectedFee = node.expectedFee(randomLISK);
+		let randomDDK = node.randomDDK();
+		let expectedFee = node.expectedFee(randomDDK);
 
 		putTransaction({
 			secret: node.gAccount.password,
-			amount: randomLISK,
+			amount: randomDDK,
 			recipientId: account.address
 		}, done);
 	}, 2000);
@@ -59,12 +59,12 @@ before(function (done) {
 before(function (done) {
 	// Send to DDK to account 2 address
 	setTimeout(function () {
-		let randomLISK = node.randomLISK();
-		let expectedFee = node.expectedFee(randomLISK);
+		let randomDDK = node.randomDDK();
+		let expectedFee = node.expectedFee(randomDDK);
 
 		putTransaction({
 			secret: node.gAccount.password,
-			amount: randomLISK,
+			amount: randomDDK,
 			recipientId: account2.address
 		}, done);
 	}, 2000);
@@ -481,9 +481,9 @@ describe('PUT /api/dapps/withdrawal', function () {
 
 	beforeEach(function (done) {
 		let randomAccount = node.randomTxAccount();
-		let keys = node.lisk.crypto.getKeys(randomAccount.password);
-		let recipientId = node.lisk.crypto.getAddress(keys.publicKey);
-		let transaction = node.lisk.transaction.createTransaction(randomAccount.address, 100000000, account.password);
+		let keys = node.ddk.crypto.getKeys(randomAccount.password);
+		let recipientId = node.ddk.crypto.getAddress(keys.publicKey);
+		let transaction = node.ddk.transaction.createTransaction(randomAccount.address, 100000000, account.password);
 
 		validParams = {
 			secret: account.password,

@@ -11,7 +11,7 @@
     "jsdoc": "jsdoc -c docs/conf.json --verbose --pedantic",
     "server-docs": "npm run jsdoc && http-server docs/jsdoc/"
   },
-  "author": "Lisk Foundation <admin@ETP.io>, lightcurve GmbH <admin@lightcurve.io>",
+  "author": "DDK Foundation <http://www.ddkoin.com/>",
   "license": "GPL-3.0",
   "dependencies": {
     "appmetrics-dash": "^3.3.6",
