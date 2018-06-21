@@ -899,6 +899,9 @@ Transaction.prototype.undoUnconfirmed = function (trs, sender, cb) {
 	if (trs.type !== 11) {
 		amount = amount.plus(trs.fee.toString()).toNumber();
 	}
+	else {
+		amount = amount.toNumber();
+	}
 
 	this.scope.account.merge(sender.address, {u_balance: amount}, function (err, sender) {
 		if (err) {
