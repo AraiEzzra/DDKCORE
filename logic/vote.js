@@ -271,13 +271,14 @@ Vote.prototype.apply = function (trs, block, sender, cb) {
  * @return {setImmediateCallback} cb, err
  */
 Vote.prototype.undo = function (trs, block, sender, cb) {
+	let parent = this;
 	if (trs.asset.votes === null) { return setImmediate(cb); }
 
 	let votesInvert = Diff.reverse(trs.asset.votes);
 
 	async.series([
 		function (seriesCb) {
-			self.scope.account.merge(sender.address, {
+			parent.scope.account.merge(sender.address, {
 				delegates: votesInvert,
 				blockId: block.id,
 				round: modules.rounds.calc(block.height)
@@ -454,112 +455,98 @@ Vote.prototype.updateAndCheckVote = function (voteInfo, cb) {
 	let votes = voteInfo.votes;
 	let senderId = voteInfo.senderId;
 
-	function checkUpvoteDownvote(votes) {
+	function checkUpvoteDownvote(waterCb) {
 
-		return new Promise(function (resolve, reject) {
-
-			if ((votes[0])[0] === '+') {
-				resolve(1);
-			} else {
-				resolve(0);
-			}
-		});
+		if ((votes[0])[0] === '+') {
+			return setImmediate(waterCb, null, 1);
+		} else {
+			return setImmediate(waterCb, null, 0);
+		}
 	}
 
-	function checkWeeklyVote() {
+	function checkWeeklyVote(voteType, waterCb) {
 
-		return new Promise(function (resolve, reject) {
-
+		if (voteType === 1) {
 			library.db.many(sql.checkWeeklyVote, {
 				senderId: senderId
 			})
 				.then(function (resp) {
 					if ((resp.length !== 0) && parseInt(resp[0].count) > 0) {
-						resolve(true);
+						return setImmediate(waterCb, null, true, voteType);
 					} else {
-						resolve(false);
+						return setImmediate(waterCb, null, false, voteType);
 					}
 				})
 				.catch(function (err) {
 					library.logger.error(err.stack);
-					reject(new Error(cb, err));
+					return setImmediate(waterCb, err.toString());
 				});
-
-		});
+		} else {
+			return setImmediate(waterCb, null, false, voteType);
+		}
 	}
 
-	function updateStakeOrder() {
-
-		return new Promise(function (resolve, reject) {
-
+	function updateStakeOrder(found, voteType, waterCb) {
+		if (found) {
 			library.db.none(sql.updateStakeOrder, {
 				senderId: senderId
 			})
 				.then(function () {
 					library.logger.info(senderId + ': update stake orders isvoteDone and count');
-					resolve();
+					return setImmediate(waterCb, null, voteType);
 				})
 				.catch(function (err) {
 					library.logger.error(err.stack);
-					reject(new Error(cb, err));
+					return setImmediate(waterCb, err.toString());
 				});
-		});
-	}
-
-	function prepareQuery(voteType) {
-
-		return new Promise(function (resolve, reject) {
-
-			let inCondition = "";
-			votes.forEach(function (vote) {
-				let address = modules.accounts.generateAddressByPublicKey(vote.substring(1));
-				inCondition += '\'' + address + '\' ,';
-			});
-			inCondition = inCondition.substring(0, inCondition.length - 1);
-			let query;
-			let sign = voteType === 1 ? '+' : '-';
-
-			query = 'UPDATE mem_accounts SET "voteCount"="voteCount"' + sign + '1  WHERE "address" IN ( ' + inCondition + ')';
-
-			resolve(query);
-
-		});
-	}
-
-	function updateVoteCount(query) {
-
-		return new Promise(function (resolve, reject) {
-
-			library.db.query(query)
-				.then(function () {
-					resolve();
-				})
-				.catch(function (err) {
-					library.logger.error(err.stack);
-					reject(new Error(cb, 'vote updation in mem_accounts table error'));
-				});
-
-		});
-	}
-
-	(async function () {
-		try {
-			let voteType = await checkUpvoteDownvote(votes);
-
-			if (voteType === 1) {
-				let found = await checkWeeklyVote();
-				if (found) {
-					await updateStakeOrder();
-				}
-			}
-			let query = await prepareQuery(voteType);
-			await updateVoteCount(query);
-			return setImmediate(cb, null);
-		} catch (err) {
-			self.scope.logger.error(err.stack);
-			return setImmediate(cb, err.toString());
+		} else {
+			return setImmediate(waterCb, null, voteType);
 		}
-	})();
+
+	}
+
+	function prepareQuery(voteType, waterCb) {
+
+		let inCondition = "";
+		votes.forEach(function (vote) {
+			let address = modules.accounts.generateAddressByPublicKey(vote.substring(1));
+			inCondition += '\'' + address + '\' ,';
+		});
+		inCondition = inCondition.substring(0, inCondition.length - 1);
+		let query;
+		let sign = voteType === 1 ? '+' : '-';
+
+		query = 'UPDATE mem_accounts SET "voteCount"="voteCount"' + sign + '1  WHERE "address" IN ( ' + inCondition + ')';
+
+		return setImmediate(waterCb, null, query);
+
+	}
+
+	function updateVoteCount(query, waterCb) {
+
+		library.db.query(query)
+			.then(function () {
+				return setImmediate(waterCb);
+			})
+			.catch(function (err) {
+				library.logger.error(err.stack);
+				return setImmediate(waterCb, 'vote updation in mem_accounts table error');
+			});
+	}
+
+	async.waterfall([
+		checkUpvoteDownvote,
+		checkWeeklyVote,
+		updateStakeOrder,
+		prepareQuery,
+		updateVoteCount
+	], function (err) {
+		if (err) {
+			library.logger.warn(err);
+			return setImmediate(cb, err);
+		}
+		return setImmediate(cb, null);
+	});
 
 };
 

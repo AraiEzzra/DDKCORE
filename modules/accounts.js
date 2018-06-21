@@ -779,21 +779,21 @@ Accounts.prototype.shared = {
 			return setImmediate(cb, err.toString());
 		}
 
-		function getStakeOrderFromETPS() {
+		function getStakeOrderFromETPS(next) {
 			return new Promise(function (resolve, reject) {
 				library.db.query(sql.getETPSStakeOrders, {
 					account_id: req.body.data.id
 				})
 				.then(function (orders) {
-					resolve(orders);
+					next(null,orders);
 				}).catch(function (err) {
 					library.logger.error(err.stack);
-					reject(new Error(err.stack));
+					next(err,null);
 				});
 			});
 		}
 
-		function insertstakeOrder(order) {
+		function insertstakeOrder(order, next) {
 			return new Promise(function (resolve, reject) {
 
 				let date = new Date((slots.getTime()) * 1000);
@@ -812,28 +812,32 @@ Accounts.prototype.shared = {
 					nextVoteMilestone: nextVoteMilestone
 				})
 				.then(function () {
-					resolve();
+					next(null,null);
 				})
 				.catch(function (err) {
 					library.logger.error(err.stack);
-					reject((new Error(err.stack)));
+					next(err,null);
 				});
 			});
 		}
 
-		async function insertStakeOrdersInETP(orders) {
+		function insertStakeOrdersInETP(next, orders) {
 
-			try {
-				for (let order in orders) {
-					await insertstakeOrder(orders[order]);
-				}
-			} catch (err) {
-				library.logger.error(err.stack);
-				reject((new Error(err.stack)));
-			}
+			async.eachSeries(orders, function (order, eachSeriesCb) {
+
+				insertstakeOrder(order, function (err, Success) {
+					if (err) {
+						next(err, null);
+					}else {
+						eachSeriesCb();
+					}
+				});
+			}, function (err) {
+				next(err, null);
+			});
 		}
 
-		function checkFrozeAmountsInStakeOrders() {
+		function checkFrozeAmountsInStakeOrders(next) {
 			return new Promise(function (resolve, reject) {
 
 				library.db.one(sql.totalFrozeAmount, {
@@ -841,19 +845,18 @@ Accounts.prototype.shared = {
 				})
 				.then(function (totalFrozeAmount) {
 					if (totalFrozeAmount) {
-						resolve(totalFrozeAmount);
+						next(null, totalFrozeAmount);
 					} else {
-						resolve(0);
+						next(null, 0);
 					}
-
 				}).catch(function (err) {
 					library.logger.error(err.stack);
-					reject(new Error(err.stack));
+					next(err, null);
 				});
 			});
 		}
 
-		function updateMemAccountTable(totalFrozeAmount) {
+		function updateMemAccountTable(next, totalFrozeAmount) {
 			return new Promise(function (resolve, reject) {
 
 				library.db.none(sql.updateUserInfo, {
@@ -867,16 +870,16 @@ Accounts.prototype.shared = {
 					group_bonus: req.body.group_bonus
 				})
 				.then(function () {
-					resolve();
+					next(null,null);
 				})
 				.catch(function (err) {
 					library.logger.error(err.stack);
-					reject(new Error(err.stack));
+					next(err, null);
 				});
 			});
 		}
 
-		function updateETPSUserDetail() {
+		function updateETPSUserDetail(next) {
 			return new Promise(function (resolve, reject) {
 				let date = new Date((slots.getRealTime()));
 
@@ -885,33 +888,39 @@ Accounts.prototype.shared = {
 					insertTime: date
 				})
 				.then(function () {
-					resolve();
+					next(null,null);
 				})
 				.catch(function (err) {
 					library.logger.error(err.stack);
-					reject(new Error(err.stack));
+					next(err,null);
 				});
 			});
 		}
 
-
-		(async function () {
-			try {
-				let orders = await getStakeOrderFromETPS();
-				await insertStakeOrdersInETP(orders);
-				let totalFrozeAmount = await checkFrozeAmountsInStakeOrders();
-				if (!totalFrozeAmount.sum) {
-					totalFrozeAmount.sum = 0;
-				}
-				await updateMemAccountTable(totalFrozeAmount);
-				await updateETPSUserDetail();
-
-				return setImmediate(cb, null, { success: true, message: "Successfully migrated" });
-			} catch (err) {
-				library.logger.error(err.stack);
+		async.auto({
+			getStakeOrderFromETPS: function (next) {
+				getStakeOrderFromETPS(next)
+			},
+			insertStakeOrdersInETP: ['getStakeOrderFromETPS', function (results, next) {
+				insertStakeOrdersInETP(next, results.getStakeOrderFromETPS);
+			}],
+			checkFrozeAmountsInStakeOrders: ['insertStakeOrdersInETP', function (results, next) {
+				checkFrozeAmountsInStakeOrders(next, results);
+			}],
+			updateMemAccountTable: ['checkFrozeAmountsInStakeOrders', function (results, next) {
+				updateMemAccountTable(next, results.checkFrozeAmountsInStakeOrders)
+			}],
+			updateETPSUserDetail: ['updateMemAccountTable', function (results, next) {
+				updateETPSUserDetail(next, results)
+			}]
+		}, function (err, results) {
+			if (err){
+				self.scope.logger.error(err.stack);
 				return setImmediate(cb, err.toString());
-			}
-		})();
+			}	
+			return setImmediate(cb, null, { success: true, message: "Successfully migrated" });
+		})
+
 	},
 
 	validateExistingUser: function (req, cb) {
@@ -1228,7 +1237,7 @@ Accounts.prototype.internal = {
 		});
 	},
 	generatenpNewPassphase: function (req, cb) {
-		var code = new Mnemonic(Mnemonic.Words.ENGLISH);
+		let code = new Mnemonic(Mnemonic.Words.ENGLISH);
 		code = code.toString();
 		return setImmediate(cb, null, { success: true, passphase: code });
 	},
