@@ -3,6 +3,7 @@ let path = require('path');
 let jsonSql = require('json-sql')();
 jsonSql.setDialect('postgresql');
 let constants = require('../helpers/constants.js');
+let sql = require('../sql/referal_sql');
 let self, library;
 
 /**
@@ -16,7 +17,9 @@ let self, library;
  * @param {function} cb - Callback function.
  * @return {setImmediateCallback} With `this` as data.
  */
+
 function Account(db, schema, logger, cb) {
+
 	this.scope = {
 		db: db,
 		schema: schema
@@ -705,6 +708,33 @@ Account.prototype.set = function (address, fields, cb) {
 		return setImmediate(cb, 'Account#set error');
 	});
 };
+
+
+Account.prototype.insertLevel = function(levelDetails,cb) {
+	if(levelDetails.level.length === 0){
+		levelDetails.level = null;
+	}
+	this.scope.db.none(sql.insertLevelChain,{
+		address: levelDetails.address,
+		level : levelDetails.level
+	}).then(function(){
+		return setImmediate(cb,null);
+	}).catch(function(err){
+		console.log(err);
+		return setImmediate(cb, err);
+	});
+}
+
+Account.prototype.findReferralLevel= function(address,cb) {
+	this.scope.db.one(sql.referLevelChain,{
+		address:address
+	}).then(function(user){
+		return setImmediate(cb,null,user);
+	}).catch(function(err){
+		console.log(err);
+		return setImmediate(cb,err);
+	});
+}
 
 /**
  * Updates account from mem_account with diff data belonging to an editable field.

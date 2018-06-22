@@ -321,14 +321,14 @@ SendFreezeOrder.prototype.shared = {
 										return setImmediate(cb, 'Invalid requester public key');
 									}
 
-									var secondKeypair = null;
+									let secondKeypair = null;
 
 									if (requester.secondSignature) {
-										var secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
+										let secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
 										secondKeypair = library.ed.makeKeypair(secondHash);
 									}
 
-									var transaction;
+									let transaction;
 
 									try {
 										transaction = library.logic.transaction.create({
@@ -380,7 +380,7 @@ SendFreezeOrder.prototype.shared = {
 
 								let secondKeypair = null;
 
-								if (requester.secondSignature) {
+								if (account.secondSignature) {
 									let secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
 									secondKeypair = library.ed.makeKeypair(secondHash);
 								}

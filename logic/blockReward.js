@@ -121,7 +121,7 @@ BlockReward.prototype.calcSupply = function (height) {
 		}
 	}
 
-	for (var i = 0; i < rewards.length; i++) {
+	for (let i = 0; i < rewards.length; i++) {
 		let reward = rewards[i];
 		supply += reward[0] * reward[1];
 	}

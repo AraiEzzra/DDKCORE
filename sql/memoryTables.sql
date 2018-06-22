@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS "mem_accounts"(
   "email" VARCHAR(20),
   "country" VARCHAR(20),
   "phoneNumber" BIGINT,
+  "referralLink" VARCHAR(100),
   "group_bonus" BIGINT DEFAULT 0,
   "pending_group_bonus" BIGINT DEFAULT 0,
   "introducer" VARCHAR(25)
@@ -99,5 +100,10 @@ DELETE FROM "mem_accounts2u_multisignatures";
 
 INSERT INTO "mem_accounts2u_delegates" SELECT * FROM "mem_accounts2delegates";
 INSERT INTO "mem_accounts2u_multisignatures" SELECT * FROM "mem_accounts2multisignatures";
+
+CREATE TABLE IF NOT EXISTS "referals"(
+  "address" VARCHAR(100) NOT NULL UNIQUE PRIMARY KEY,
+  "level"   VARCHAR(250)[]
+);
 
 COMMIT;

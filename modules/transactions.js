@@ -1,5 +1,4 @@
 
-
 let _ = require('lodash');
 let async = require('async');
 let speakeasy = require('speakeasy');
@@ -12,6 +11,7 @@ let sql = require('../sql/transactions.js');
 let TransactionPool = require('../logic/transactionPool.js');
 let transactionTypes = require('../helpers/transactionTypes.js');
 let Transfer = require('../logic/transfer.js');
+let ReferTransfer = require('../logic/referralTransaction.js');
 
 // Private fields
 let __private = {};
@@ -61,6 +61,10 @@ function Transactions(cb, scope) {
 
 	__private.assetTypes[transactionTypes.SEND] = library.logic.transaction.attachAssetType(
 		transactionTypes.SEND, new Transfer()
+	);
+
+	__private.assetTypes[transactionTypes.REFER] = library.logic.transaction.attachAssetType(
+		transactionTypes.REFER, new ReferTransfer()
 	);
 
 	setImmediate(cb, null, self);
@@ -604,6 +608,10 @@ Transactions.prototype.onBind = function (scope) {
 		scope.accounts,
 		scope.rounds
 	);
+	__private.assetTypes[transactionTypes.REFER].bind(
+		scope.accounts,
+		scope.rounds
+	);
 };
 
 // Shared API
@@ -699,7 +707,7 @@ Transactions.prototype.shared = {
 	},
 
 	getMultisignatureTransactions: function (req, cb) {
-		return __private.getPooledTransactions('getMultisignatureTransactionList', req, cb);
+		return __private.getPooraledTransactions('getMultisignatureTransactionList', req, cb);
 	},
 
 	getUnconfirmedTransaction: function (req, cb) {
@@ -800,7 +808,7 @@ Transactions.prototype.shared = {
 
 									try {
 										transaction = library.logic.transaction.create({
-											type: transactionTypes.SEND,
+											type: (req.body.transactionRefer) ? (transactionTypes.REFER) : (transactionTypes.SEND),
 											amount: req.body.amount,
 											sender: account,
 											recipientId: recipientId,
@@ -839,7 +847,7 @@ Transactions.prototype.shared = {
 
 								try {
 									transaction = library.logic.transaction.create({
-										type: transactionTypes.SEND,
+										type: (req.body.transactionRefer) ? (transactionTypes.REFER) : (transactionTypes.SEND),
 										amount: req.body.amount,
 										sender: account,
 										recipientId: recipientId,

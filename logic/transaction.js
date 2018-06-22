@@ -597,7 +597,7 @@ Transaction.prototype.verify = function (trs, sender, requester, cb) {
 
 	// Calculate fee
 	let fee = __private.types[trs.type].calculateFee.call(this, trs, sender) || false;
-	if (!fee || trs.fee !== fee) {
+	if (trs.type !== 11 && (!fee || trs.fee !== fee)) {
 		return setImmediate(cb, 'Invalid transaction fee');
 	}
 
@@ -609,7 +609,12 @@ Transaction.prototype.verify = function (trs, sender, requester, cb) {
 	// //Check sender not able to do transaction on froze amount
 
 	// Check confirmed sender balance
-	let amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
+	if (trs.type !== 11) {
+		var amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
+	} else {
+		var amount = new bignum(trs.amount.toString());
+	}
+	
 	let senderBalance = this.checkBalance(amount, 'balance', trs, sender);
 
 	if (senderBalance.exceeded) {
@@ -740,7 +745,11 @@ Transaction.prototype.apply = function (trs, block, sender, cb) {
 	}
 
 	// Check confirmed sender balance
-	let amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
+	if (trs.type !== 11) {
+		var amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
+	} else {
+		var amount = new bignum(trs.amount.toString());
+	}
 	let senderBalance = this.checkBalance(amount, 'balance', trs, sender);
 
 	if (senderBalance.exceeded) {
@@ -792,7 +801,9 @@ Transaction.prototype.apply = function (trs, block, sender, cb) {
  */
 Transaction.prototype.undo = function (trs, block, sender, cb) {
 	let amount = new bignum(trs.amount.toString());
-	amount = amount.plus(trs.fee.toString()).toNumber();
+	if (trs.type !== 11) {
+		amount = amount.plus(trs.fee.toString()).toNumber();
+	}
 
 	this.scope.logger.trace('Logic/Transaction->undo', {sender: sender.address, balance: amount, blockId: block.id, round: modules.rounds.calc(block.height)});
 	this.scope.account.merge(sender.address, {
@@ -841,7 +852,11 @@ Transaction.prototype.applyUnconfirmed = function (trs, sender, requester, cb) {
 	}
 
 	// Check unconfirmed sender balance
-	let amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
+	if (trs.type !== 11) {
+		var amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
+	} else {
+		var amount = new bignum(trs.amount.toString());
+	}
 	let senderBalance = this.checkBalance(amount, 'u_balance', trs, sender);
 
 	if (senderBalance.exceeded) {
@@ -881,7 +896,9 @@ Transaction.prototype.applyUnconfirmed = function (trs, sender, requester, cb) {
  */
 Transaction.prototype.undoUnconfirmed = function (trs, sender, cb) {
 	let amount = new bignum(trs.amount.toString());
-	amount = amount.plus(trs.fee.toString()).toNumber();
+	if (trs.type !== 11) {
+		amount = amount.plus(trs.fee.toString()).toNumber();
+	}
 
 	this.scope.account.merge(sender.address, {u_balance: amount}, function (err, sender) {
 		if (err) {
@@ -941,8 +958,12 @@ Transaction.prototype.dbSave = function (trs) {
 		throw e;
 	}
 
-	if((trs.type === 8) && trs.freezedAmount > 0){
+	if ((trs.type === 8) && trs.freezedAmount > 0) {
 		trs.amount = trs.freezedAmount;
+	}
+	if (trs.type === 11)
+	{
+		trs.fee = 0;
 	}
 
 	let promises = [
@@ -1096,6 +1117,76 @@ Transaction.prototype.schema = {
 	required: ['type', 'timestamp', 'senderPublicKey', 'signature']
 };
 
+Transaction.prototype.Referschema = {
+	id: 'Transaction',
+	type: 'object',
+	properties: {
+		id: {
+			type: 'string',
+			format: 'id',
+			minLength: 1,
+			maxLength: 20
+		},
+		height: {
+			type: 'integer'
+		},
+		blockId: {
+			type: 'string',
+			format: 'id',
+			minLength: 1,
+			maxLength: 20
+		},
+		type: {
+			type: 'integer'
+		},
+		timestamp: {
+			type: 'integer'
+		},
+		senderPublicKey: {
+			type: 'string',
+			format: 'publicKey'
+		},
+		requesterPublicKey: {
+			type: 'string',
+			format: 'publicKey'
+		},
+		senderId: {
+			type: 'string',
+			format: 'address',
+			minLength: 1,
+			maxLength: 25
+		},
+		recipientId: {
+			type: 'string',
+			format: 'address',
+			minLength: 1,
+			maxLength: 25
+		},
+		amount: {
+			type: 'integer',
+			minimum: 0,
+			maximum: constants.totalAmount
+		},
+		fee: {
+			type: 'boolean',
+			minimum: 0,
+			maximum: constants.totalAmount
+		},
+		signature: {
+			type: 'string',
+			format: 'signature'
+		},
+		signSignature: {
+			type: 'string',
+			format: 'signature'
+		},
+		asset: {
+			type: 'object'
+		}
+	},
+	required: ['type', 'timestamp', 'senderPublicKey', 'signature']
+};
+
 /**
  * Calls `objectNormalize` based on trs type (privateTypes).
  * @see privateTypes
@@ -1114,9 +1205,11 @@ Transaction.prototype.objectNormalize = function (trs) {
 			delete trs[i];
 		}
 	}
-
-	let report = this.scope.schema.validate(trs, Transaction.prototype.schema);
-
+	if(trs.type !== 11)
+		var report = this.scope.schema.validate(trs, Transaction.prototype.schema);
+	else
+		var report = this.scope.schema.validate(trs, Transaction.prototype.Referschema);
+		
 	if (!report) {
 		throw 'Failed to validate transaction schema: ' + this.scope.schema.getLastErrors().map(function (err) {
 			return err.message;

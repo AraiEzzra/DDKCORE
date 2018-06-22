@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS "mem_accounts"(
   "email" VARCHAR(40),
   "country" VARCHAR(20),
   "phoneNumber" BIGINT,
+  "referralLink" VARCHAR(100),
   "group_bonus" BIGINT DEFAULT 0,
   "pending_group_bonus" BIGINT DEFAULT 0,
   "introducer" VARCHAR(25)

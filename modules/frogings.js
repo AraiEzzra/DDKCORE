@@ -6,6 +6,8 @@ let sql = require('../sql/frogings.js');
 let TransactionPool = require('../logic/transactionPool.js');
 let transactionTypes = require('../helpers/transactionTypes.js');
 let Frozen = require('../logic/frozen.js');
+let ref_sql = require('../sql/referal_sql');
+let env = process.env;
 let constants = require('../helpers/constants.js');
 
 // Private fields
@@ -61,6 +63,52 @@ function Frogings (cb, scope) {
 
 	setImmediate(cb, null, self);
 }
+
+
+Frogings.prototype.referalReward = function (stake_amount, address, cb) {
+	let amount = stake_amount;
+	let sponsor_address = address;
+	let overrideReward = {},
+		i = 0;
+
+	library.db.one(ref_sql.referLevelChain, {
+		address: sponsor_address
+	}).then(function (user) {
+
+		if (user.level != null && user.level[0] != "0") {
+
+			overrideReward[user.level[i]] = (((env.STAKE_REWARD) * amount) / 100);
+
+			let transactionData = {
+				json: {
+					secret: env.SENDER_SECRET,
+					amount: overrideReward[user.level[i]],
+					recipientId: user.level[i],
+					transactionRefer: 11
+				}
+			};
+
+			library.logic.transaction.sendTransaction(transactionData, function (err, transactionResponse) {
+				if (err) return err;
+				if (transactionResponse.body.success == false) {
+					let info = transactionResponse.body.error;
+					let sender_balance = parseFloat(transactionResponse.body.error.split('balance:')[1]);
+					return setImmediate(cb, info, sender_balance);
+				} else {
+					return setImmediate(cb, null);
+				}
+			});
+
+		} else {
+			let error = "No Introducer Found";
+			return setImmediate(cb, error);
+		}
+
+	}).catch(function (err) {
+		return setImmediate(cb, err);
+	});
+}
+
 
 // Events
 /**
@@ -342,7 +390,14 @@ Frogings.prototype.shared = {
 						return setImmediate(cb, err);
 					}
 					library.network.io.sockets.emit('updateTotalStakeAmount', null);
-					return setImmediate(cb, null, { transaction: transaction[0] });
+
+					self.referalReward(req.body.freezedAmount,accountData.address,function(err,bal){
+						if(err){
+							if(bal < 0.0001)
+								library.logger.info(err);
+						}
+						return setImmediate(cb, null, { transaction: transaction[0]});
+					});
 
 				});
 			});
