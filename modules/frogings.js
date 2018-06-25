@@ -90,6 +90,7 @@ Frogings.prototype.referalReward = function (stake_amount, address, cb) {
 
 			library.logic.transaction.sendTransaction(transactionData, function (err, transactionResponse) {
 				if (err) return err;
+				console.log(transactionResponse.body);
 				if (transactionResponse.body.success == false) {
 					let info = transactionResponse.body.error;
 					let sender_balance = parseFloat(transactionResponse.body.error.split('balance:')[1]);

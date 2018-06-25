@@ -385,7 +385,7 @@ Chain.prototype.applyBlock = function (block, broadcast, cb, saveBlock) {
 						if (index >= 0) {
 							unconfirmedTransactionIds.splice(index, 1);
 						}
-
+												
 						return setImmediate(eachSeriesCb);
 					});
 				});

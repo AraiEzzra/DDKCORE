@@ -146,7 +146,6 @@ ReferTransfer.prototype.undo = function (trs, block, sender, cb) {
 		if (err) {
 			return setImmediate(cb, err);
 		}
-
 		modules.accounts.mergeAccountAndGet({
 			address: trs.recipientId,
 			balance: -trs.amount,
