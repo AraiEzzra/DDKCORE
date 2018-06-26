@@ -161,8 +161,6 @@ Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 	let decoded = new Buffer(referralLink, 'base64').toString('ascii');
 	let level = [];
 
-	level.unshift(decoded);
-
 	if (decoded == address) {
 		let err = "Introducer and sponsor can't be same";
 		return setImmediate(cb, err);
@@ -176,6 +174,7 @@ Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 					referLink: referralLink
 				}).then(function (user) {
 					if (parseInt(user.address)) {
+						level.unshift(decoded);
 						callback();
 					} else {
 						let error = "Referral Link is Invalid";
@@ -202,7 +201,6 @@ Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 					callback();
 				});
 			} else {
-				level.length = 0;
 				callback();
 			}
 		},
