@@ -286,7 +286,7 @@ Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 		address: sponsor_address
 	}).then(function (user) {
 
-		if (user.level != null && user.level[0] != "0") {
+		if (user.level != null) {
 
 			let chain_length = user.level.length;
 

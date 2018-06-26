@@ -75,7 +75,7 @@ Frogings.prototype.referalReward = function (stake_amount, address, cb) {
 		address: sponsor_address
 	}).then(function (user) {
 
-		if (user.level != null && user.level[0] != "0") {
+		if (user.level != null) {
 
 			overrideReward[user.level[i]] = (((env.STAKE_REWARD) * amount) / 100);
 

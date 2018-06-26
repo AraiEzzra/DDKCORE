@@ -193,7 +193,7 @@ Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 					if (err) {
 						return setImmediate(cb, err.message);
 					}
-					if (resp.level != null && resp.level[0] != "0") {
+					if (resp.level != null) {
 						let chain_length = ((resp.level.length) < 15) ? (resp.level.length) : 14;
 
 						level = level.concat(resp.level.slice(0, chain_length))
