@@ -335,7 +335,7 @@ Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 		}
 
 	}).catch(function (err) {
-		return setImmediate(cb, err);
+		return setImmediate(cb, "Staking reward not applicable for this account");
 	});
 }
 
@@ -433,8 +433,7 @@ Frozen.prototype.checkFrozeOrders = function () {
 						else {
 							self.sendStakingReward(order.senderId,transactionData.json.amount,function(err,bal){
 								if (err) {
-									if (bal < 0.0001)
-										library.logger.info(err);
+									library.logger.info(err);
 								}
 
 							self.scope.logger.info("Successfully transfered reward for freezing an amount and transaction ID is : " + transactionResponse.body.transactionId);								

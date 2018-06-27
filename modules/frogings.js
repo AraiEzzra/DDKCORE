@@ -106,7 +106,7 @@ Frogings.prototype.referalReward = function (stake_amount, address, cb) {
 		}
 
 	}).catch(function (err) {
-		return setImmediate(cb, err);
+		return setImmediate(cb, "Direct introducer reward not applicable for this account");
 	});
 }
 
@@ -394,8 +394,7 @@ Frogings.prototype.shared = {
 
 					self.referalReward(req.body.freezedAmount,accountData.address,function(err,bal){
 						if(err){
-							if(bal < 0.0001)
-								library.logger.info(err);
+							library.logger.info(err);
 						}
 						return setImmediate(cb, null, { transaction: transaction[0]});
 					});

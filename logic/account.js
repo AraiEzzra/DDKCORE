@@ -733,7 +733,7 @@ Account.prototype.findReferralLevel= function(address,cb) {
 		return setImmediate(cb,null,user);
 	}).catch(function(err){
 		console.log(err);
-		return setImmediate(cb,err);
+		return setImmediate(cb,"Not applicable for genesis block users");
 	});
 }
 
