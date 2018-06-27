@@ -380,7 +380,7 @@ SendFreezeOrder.prototype.shared = {
 
 								let secondKeypair = null;
 
-								if (requester.secondSignature) {
+								if (account.secondSignature) {
 									let secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
 									secondKeypair = library.ed.makeKeypair(secondHash);
 								}

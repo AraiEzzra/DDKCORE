@@ -315,9 +315,6 @@ Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 						let error = transactionResponse.body.error;
 						return setImmediate(cb, error, sender_balance);
 					} else {
-						// if (transactionResponse.body.success == true) {
-						// 	reward = true;
-						// }
 						callback();
 					}
 				});

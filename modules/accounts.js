@@ -23,6 +23,7 @@ let httpApi = require('../helpers/httpApi');
 let Promise = require('bluebird');
 let async = require('async');
 let nextBonus = 0;
+let Mnemonic = require('bitcore-mnemonic');
 
 // Private fields
 let modules, library, self, __private = {}, shared = {};
@@ -1223,6 +1224,11 @@ Accounts.prototype.internal = {
 				return setImmediate(cb, null, { success: false });
 			}
 		});
+	},
+	generatenpNewPassphase: function (req, cb) {
+		var code = new Mnemonic(Mnemonic.Words.ENGLISH);
+		code = code.toString();
+		return setImmediate(cb, null, { success: true, passphase: code });
 	},
 
 	getWithdrawlStatus: function (req, cb) {
