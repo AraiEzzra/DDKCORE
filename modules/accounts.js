@@ -192,12 +192,15 @@ Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 			if (referralLink != "") {
 				library.logic.account.findReferralLevel(decoded, function (err, resp) {
 					if (err) {
-						return setImmediate(cb, err);
+						return setImmediate(cb,err);
 					}
-					if (resp.level != null) {
-						let chain_length = ((resp.level.length) < 15) ? (resp.level.length) : 14;
+					if (resp.length != 0 && resp[0].level != null) {
+						let chain_length = ((resp[0].level.length) < 15) ? (resp[0].level.length) : 14;
 
-						level = level.concat(resp.level.slice(0, chain_length))
+						level = level.concat(resp[0].level.slice(0, chain_length));
+					}
+					else if(resp.length == 0) {
+						return setImmediate(cb, "Referral link source not eligible");
 					}
 					callback();
 				});

@@ -282,15 +282,15 @@ Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 	let i = 0;
 	let balance, reward, sender_balance;
 
-	self.scope.db.one(reward_sql.referLevelChain, {
+	self.scope.db.query(reward_sql.referLevelChain, {
 		address: sponsor_address
 	}).then(function (user) {
 
-		if (user.level != null) {
+		if (user[0].level != null) {
 
-			let chain_length = user.level.length;
+			let chain_length = user[0].level.length;
 
-			async.eachSeries(user.level, function (level, callback) {
+			async.eachSeries(user[0].level, function (level, callback) {
 
 				overrideReward[level] = (((rewards.level[i]) * amount) / 100);
 
@@ -313,7 +313,7 @@ Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 						
 					if ((i == chain_length && reward != true) || sender_balance < 0.0001) {
 						let error = transactionResponse.body.error;
-						return setImmediate(cb, error, sender_balance);
+						return setImmediate(cb, error,sender_balance);
 					} else {
 						callback();
 					}
@@ -332,7 +332,7 @@ Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 		}
 
 	}).catch(function (err) {
-		return setImmediate(cb, "Staking reward not applicable for this account");
+		return setImmediate(cb, err);
 	});
 }
 
@@ -430,7 +430,10 @@ Frozen.prototype.checkFrozeOrders = function () {
 						else {
 							self.sendStakingReward(order.senderId,transactionData.json.amount,function(err,bal){
 								if (err) {
-									library.logger.info(err);
+									if(bal < 0.0001)
+										library.logger.info("Sender Account Balance Info: "+ err);
+									else									
+										library.logger.info(err);
 								}
 
 							self.scope.logger.info("Successfully transfered reward for freezing an amount and transaction ID is : " + transactionResponse.body.transactionId);								

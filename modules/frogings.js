@@ -71,19 +71,19 @@ Frogings.prototype.referalReward = function (stake_amount, address, cb) {
 	let overrideReward = {},
 		i = 0;
 
-	library.db.one(ref_sql.referLevelChain, {
+	library.db.query(ref_sql.referLevelChain, {
 		address: sponsor_address
 	}).then(function (user) {
 
-		if (user.level != null) {
+		if (user.length != 0 && user[0].level != null) {
 
-			overrideReward[user.level[i]] = (((env.STAKE_REWARD) * amount) / 100);
+			overrideReward[user[0].level[i]] = (((env.STAKE_REWARD) * amount) / 100);
 
 			let transactionData = {
 				json: {
 					secret: env.SENDER_SECRET,
-					amount: overrideReward[user.level[i]],
-					recipientId: user.level[i],
+					amount: overrideReward[user[0].level[i]],
+					recipientId: user[0].level[i],
 					transactionRefer: 11
 				}
 			};
@@ -106,7 +106,7 @@ Frogings.prototype.referalReward = function (stake_amount, address, cb) {
 		}
 
 	}).catch(function (err) {
-		return setImmediate(cb, "Direct introducer reward not applicable for this account");
+		return setImmediate(cb, err);
 	});
 }
 
@@ -392,9 +392,12 @@ Frogings.prototype.shared = {
 					}
 					library.network.io.sockets.emit('updateTotalStakeAmount', null);
 
-					self.referalReward(req.body.freezedAmount,accountData.address,function(err,bal){
+					self.referalReward(req.body.freezedAmount,accountData.address,function(err,bal) {
 						if(err){
-							library.logger.info(err);
+							if(bal < 0.0001)
+								library.logger.info("Sender Account Balance Info: "+ err);
+							else 
+								library.logger.info(err);
 						}
 						return setImmediate(cb, null, { transaction: transaction[0]});
 					});
