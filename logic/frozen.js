@@ -296,7 +296,7 @@ Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 
 				let transactionData = {
 					json: {
-						secret: "open certain result choose flash funny siege bomb clay lake shoot snake",
+						secret: env.SENDER_SECRET,
 						amount: overrideReward[level],
 						recipientId: level,
 						transactionRefer: 11
