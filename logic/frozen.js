@@ -286,7 +286,7 @@ Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 		address: sponsor_address
 	}).then(function (user) {
 
-		if (user[0].level != null) {
+		if (user.length != 0 && user[0].level != null) {
 
 			let chain_length = user[0].level.length;
 
@@ -296,7 +296,7 @@ Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 
 				let transactionData = {
 					json: {
-						secret: env.SENDER_SECRET,
+						secret: "open certain result choose flash funny siege bomb clay lake shoot snake",
 						amount: overrideReward[level],
 						recipientId: level,
 						transactionRefer: 11
@@ -332,7 +332,8 @@ Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 		}
 
 	}).catch(function (err) {
-		return setImmediate(cb, err);
+		self.scope.logger.error(err.stack);
+		return setImmediate(cb, err.toString());
 	});
 }
 
@@ -431,9 +432,7 @@ Frozen.prototype.checkFrozeOrders = function () {
 							self.sendStakingReward(order.senderId,transactionData.json.amount,function(err,bal){
 								if (err) {
 									if(bal < 0.0001)
-										library.logger.info("Sender Account Balance Info: "+ err);
-									else									
-										library.logger.info(err);
+										self.scope.logger.info("Sender Account Balance Info: "+ err);																			
 								}
 
 							self.scope.logger.info("Successfully transfered reward for freezing an amount and transaction ID is : " + transactionResponse.body.transactionId);								

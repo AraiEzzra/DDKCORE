@@ -106,7 +106,7 @@ Frogings.prototype.referalReward = function (stake_amount, address, cb) {
 		}
 
 	}).catch(function (err) {
-		return setImmediate(cb, err);
+		return setImmediate(cb, err.toString());
 	});
 }
 
