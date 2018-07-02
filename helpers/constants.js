@@ -41,6 +41,7 @@
  */
 module.exports = {
 	activeDelegates: 3,
+	maxVotes:4,
 	maxVotesPerTransaction: 3,
 	addressLength: 208,
 	blockHeaderLength: 248,

@@ -171,7 +171,6 @@ Frozen.prototype.applyUnconfirmed = function (trs, sender, cb) {
 };
 
 /**
- * @desc undo confirmed transations
  * @private
  * @implements 
  * @param {Object} block - block data
@@ -181,25 +180,34 @@ Frozen.prototype.applyUnconfirmed = function (trs, sender, cb) {
  * @return {function} {cb, err}
  */
 Frozen.prototype.undo = function (trs, block, sender, cb) {
-	modules.accounts.setAccountAndGet({ address: trs.recipientId }, function (err, recipient) {
-		if (err) {
-			return setImmediate(cb, err);
-		}
 
-		modules.accounts.mergeAccountAndGet({
-			address: trs.recipientId,
-			balance: -trs.amount,
-			u_balance: -trs.amount,
-			blockId: block.id,
-			round: modules.rounds.calc(block.height)
-		}, function (err) {
-			return setImmediate(cb, err);
+	self.scope.db.none(sql.RemoveOrder,
+		{
+			id: trs.id,
+			address: trs.senderId
+		})
+		.then(function () {
+			self.scope.db.none(sql.deductFrozeAmount,
+				{
+					senderId: trs.senderId,
+					FrozeAmount:trs.freezedAmount
+				})
+				.then(function () {
+					return setImmediate(cb);
+				})
+				.catch(function (err) {
+					self.scope.logger.error(err.stack);
+					return setImmediate(cb, 'Stake#DeductStakeAmount from mem_account error');
+				});
+		})
+		.catch(function (err) {
+			self.scope.logger.error(err.stack);
+			return setImmediate(cb, 'Stake#deleteOrder error');
 		});
-	});
 };
 
 /**
- * @desc appliy
+ * @desc apply
  * @private
  * @implements 
  *  @param {Object} block - block data
@@ -245,6 +253,15 @@ Frozen.prototype.process = function (trs, sender, cb) {
  * @return {function} {cb, err, trs}
  */
 Frozen.prototype.verify = function (trs, sender, cb) {
+	let amount = trs.freezedAmount / 100000000;
+
+	if (amount < 1) {
+		return setImmediate(cb, 'Invalid stake amount');
+	}
+
+	if((amount%1)!= 0){
+		return setImmediate(cb, 'Invalid stake amount: Decimal value');
+	}
 
 	return setImmediate(cb, null, trs);
 };
@@ -429,8 +446,6 @@ Frozen.prototype.checkFrozeOrders = function () {
 
 	function updateOrderAndSendReward(order, next) {
 
-		return new Promise(function (resolve, reject) {
-
 			if (order.voteCount === (constants.froze.milestone / constants.froze.vTime)) {
 
 				self.scope.db.none(sql.updateOrder, {
@@ -469,12 +484,9 @@ Frozen.prototype.checkFrozeOrders = function () {
 			} else {
 				next(null, null);
 			}
-		});
 	}
 
 	function deductFrozeAmount(order, _next) {
-
-		return new Promise(function (resolve, reject) {
 
 			if (((order.rewardCount + 1) >= (constants.froze.endTime / constants.froze.milestone)) && (order.voteCount === (constants.froze.milestone / constants.froze.vTime))) {
 
@@ -490,7 +502,6 @@ Frozen.prototype.checkFrozeOrders = function () {
 			} else {
 				_next(null, null);
 			}
-		});
 	}
 
 	function disableFrozeOrder(next, freezeOrders) {
