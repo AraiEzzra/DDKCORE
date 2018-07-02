@@ -158,11 +158,11 @@ Frogings.prototype.shared = {
 
 	},
 
-	totalETPStaked: function (req, cb) {
+	totalDDKStaked: function (req, cb) {
 		library.db.one(sql.getTotalStakedAmount)
 		.then(function (row) {
 			return setImmediate(cb, null, {
-				totalETPStaked: row
+				totalDDKStaked: row
 			});
 		})
 		.catch(function (err) {
@@ -170,8 +170,8 @@ Frogings.prototype.shared = {
 		});
 	},
 
-	getMyETPFrozen: function (req, cb) {
-		library.schema.validate(req.body, schema.getMyETPFrozen, function (err) {
+	getMyDDKFrozen: function (req, cb) {
+		library.schema.validate(req.body, schema.getMyDDKFrozen, function (err) {
 			if (err) {
 				return setImmediate(cb, err[0].message);
 			}
@@ -186,7 +186,7 @@ Frogings.prototype.shared = {
 				library.db.one(sql.getMyStakedAmount, { address: account.address })
 				.then(function (row) {
 					return setImmediate(cb, null, {
-						totalETPStaked: row
+						totalDDKStaked: row
 					});
 				})
 				.catch(function (err) {

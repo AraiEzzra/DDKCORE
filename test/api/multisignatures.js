@@ -21,23 +21,23 @@ let multiSigTx = {
 	txId: ''
 };
 
-function sendLISK (account, i, done) {
-	let randomLISK = node.randomLISK();
+function sendDDK (account, i, done) {
+	let randomDDK = node.randomDDK();
 
 	node.put('/api/transactions/', {
 		secret: node.gAccount.password,
-		amount: randomLISK,
+		amount: randomDDK,
 		recipientId: account.address
 	}, function (err, res) {
 		node.expect(res.body).to.have.property('success').to.be.ok;
 		if (res.body.success && i != null) {
-			accounts[i].balance = randomLISK / node.normalizer;
+			accounts[i].balance = randomDDK / node.normalizer;
 		}
 		done();
 	});
 }
 
-function sendLISKFromMultisigAccount (password, amount, recipient, done) {
+function sendDDKFromMultisigAccount (password, amount, recipient, done) {
 	node.put('/api/transactions/', {
 		secret: password,
 		amount: amount,
@@ -92,7 +92,7 @@ function makeKeysGroup () {
 before(function (done) {
 	let i = 0;
 	async.eachSeries(accounts, function (account, eachCb) {
-		sendLISK(account, i, function () {
+		sendDDK(account, i, function () {
 			i++;
 			return eachCb();
 		});
@@ -102,7 +102,7 @@ before(function (done) {
 });
 
 before(function (done) {
-	sendLISK(multisigAccount, null, done);
+	sendDDK(multisigAccount, null, done);
 });
 
 before(function (done) {
@@ -217,7 +217,7 @@ describe('PUT /api/multisignatures', function () {
 
 	it('using keysgroup length greater than maximum acceptable length should fail', function (done) {
 		validParams.keysgroup = Array.apply(null, new Array(constants.multisigConstraints.keysgroup.maxItems + 1)).map(function () {
-			return '+' + node.lisk.crypto.getKeys(node.randomPassword()).publicKey;
+			return '+' + node.ddk.crypto.getKeys(node.randomPassword()).publicKey;
 		});
 
 		node.put('/api/multisignatures', validParams, function (err, res) {
@@ -449,7 +449,7 @@ describe('PUT /api/multisignatures', function () {
 
 		before(function (done) {
 			async.every([multisigAccount1, multisigAccount2, multisigAccount3], function (acc, cb) {
-				sendLISK(acc, 0, cb);
+				sendDDK(acc, 0, cb);
 			}, done);
 		});
 
@@ -462,7 +462,7 @@ describe('PUT /api/multisignatures', function () {
 				secret: multisigAccount1.password,
 				lifetime: 11,
 				min: 1,
-				keysgroup: ['+' + node.lisk.crypto.getKeys(node.randomPassword()).publicKey]
+				keysgroup: ['+' + node.ddk.crypto.getKeys(node.randomPassword()).publicKey]
 			};
 
 			node.put('/api/multisignatures', params, function (err, res) {
@@ -477,7 +477,7 @@ describe('PUT /api/multisignatures', function () {
 				secret: multisigAccount2.password,
 				lifetime: 11,
 				min: 5,
-				keysgroup: Array.apply(null, Array(5)).map(function () { return '+' + node.lisk.crypto.getKeys(node.randomPassword()).publicKey; })
+				keysgroup: Array.apply(null, Array(5)).map(function () { return '+' + node.ddk.crypto.getKeys(node.randomPassword()).publicKey; })
 			};
 
 			node.put('/api/multisignatures', params, function (err, res) {
@@ -568,7 +568,7 @@ describe('GET /api/multisignatures/pending', function () {
 describe('PUT /api/transactions', function () {
 
 	it('when group transaction is pending should be ok', function (done) {
-		sendLISKFromMultisigAccount(multisigAccount.password, 100000000, node.gAccount.address, function (err, transactionId) {
+		sendDDKFromMultisigAccount(multisigAccount.password, 100000000, node.gAccount.address, function (err, transactionId) {
 			node.onNewBlock(function (err) {
 				node.get('/api/transactions/get?id=' + transactionId, function (err, res) {
 					node.expect(res.body).to.have.property('success').to.be.ok;
@@ -677,7 +677,7 @@ describe('POST /api/multisignatures/sign (transaction)', function () {
 	});
 
 	before(function (done) {
-		sendLISKFromMultisigAccount(multisigAccount.password, 100000000, node.gAccount.address, function (err, transactionId) {
+		sendDDKFromMultisigAccount(multisigAccount.password, 100000000, node.gAccount.address, function (err, transactionId) {
 			multiSigTx.txId = transactionId;
 			node.onNewBlock(function (err) {
 				done();

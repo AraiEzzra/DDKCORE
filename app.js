@@ -18,14 +18,13 @@
 
 /**
  * Main entry point.
- * Loads the ETP modules, the ETP api and run the express server as Domain master.
+ * Loads the ddk modules, the ddk api and run the express server as Domain master.
  * CLI options available.
  * @module app
  */
 
 //Requiring Modules
 require('dotenv').config();
-
 require('auto-strict');
 let async = require('async');
 let fs = require('fs');
@@ -113,7 +112,7 @@ if (process.env.NODE_ENV === 'test') {
 process.env.TOP = appConfig.topAccounts;
 
 /**
- * The config object to handle ETP modules and ETP api.
+ * The config object to handle ddk modules and ddk api.
  * It loads `modules` and `api` folders content.
  * Also contains db configuration from config.json.
  * @property {object} db - Config values for database.
@@ -653,12 +652,12 @@ d.run(function () {
 		 */
 		listen: ['ready', function (scope, cb) {
 			scope.network.server.listen(scope.config.app.port, scope.config.address, function (err) {
-				scope.logger.info('ETP started: ' + scope.config.address + ':' + scope.config.app.port);
+				scope.logger.info('ddk started: ' + scope.config.address + ':' + scope.config.app.port);
 
 				if (!err) {
 					if (scope.config.ssl.enabled) {
 						scope.network.https.listen(scope.config.ssl.options.port, scope.config.ssl.options.address, function (err) {
-							scope.logger.info('ETP https started: ' + scope.config.ssl.options.address + ':' + scope.config.ssl.options.port);
+							scope.logger.info('ddk https started: ' + scope.config.ssl.options.address + ':' + scope.config.ssl.options.port);
 
 							cb(err, scope.network);
 						});
@@ -672,7 +671,7 @@ d.run(function () {
 		}]
 	}, function (err, scope) {
 		if (err) {
-			logger.error(err);
+			scope.logger.error(err.message);
 		} else {
 			
 			cronjob.setJobsPath(__dirname + '/jobs.js');  // Absolute path to the jobs module. 
@@ -697,7 +696,7 @@ d.run(function () {
 			 * @property {undefined} connect - Undefined.
 			 * @property {Object} db - Database constructor, database functions.
 			 * @property {function} dbSequence - Database function.
-			 * @property {Object} ed - Crypto functions from ETP node-sodium.
+			 * @property {Object} ed - Crypto functions from ddk node-sodium.
 			 * @property {Object} genesisblock - Block information.
 			 * @property {string} lastCommit - Hash transaction.
 			 * @property {Object} listen - Network information.
@@ -706,7 +705,7 @@ d.run(function () {
 			 * @property {Object} modules - Several modules functions.
 			 * @property {Object} network - Several network functions.
 			 * @property {string} nonce
-			 * @property {string} public - Path to ETP public folder.
+			 * @property {string} public - Path to ddk public folder.
 			 * @property {undefined} ready
 			 * @property {Object} schema - ZSchema with objects.
 			 * @property {Object} sequence - Sequence function, sequence Array.
@@ -714,7 +713,6 @@ d.run(function () {
 			 * @todo description for nonce and ready
 			 */
 			scope.logger.info('Modules ready and launched');
-			console.log('app started on port : ', scope.config.app.port);
 			/**
 			 * Event reporting a cleanup.
 			 * @event cleanup

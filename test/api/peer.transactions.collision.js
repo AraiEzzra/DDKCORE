@@ -38,7 +38,7 @@ describe('POST /peer/transactions', function () {
 
 		before(function (done) {
 			// Send funds to collision account
-			let transaction = node.lisk.transaction.createTransaction(collision.address, 220000000, node.gAccount.password);
+			let transaction = node.ddk.transaction.createTransaction(collision.address, 220000000, node.gAccount.password);
 			postTransaction(transaction, function (err, res) {
 				node.expect(res.body).to.have.property('success').to.be.ok;
 				node.onNewBlock(done);
@@ -48,9 +48,9 @@ describe('POST /peer/transactions', function () {
 		describe('when transaction is invalid', function () {
 
 			it('should fail for passphrase two', function (done) {
-				let transaction = node.lisk.transaction.createTransaction(node.gAccount.address, 100000000, collision.passphrases[1]);
+				let transaction = node.ddk.transaction.createTransaction(node.gAccount.address, 100000000, collision.passphrases[1]);
 				transaction.signature = crypto.randomBytes(64).toString('hex');
-				transaction.id = node.lisk.crypto.getId(transaction);
+				transaction.id = node.ddk.crypto.getId(transaction);
 
 				postTransaction(transaction, function (err, res) {
 					node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -60,9 +60,9 @@ describe('POST /peer/transactions', function () {
 			});
 
 			it('should fail for passphrase one', function (done) {
-				let transaction = node.lisk.transaction.createTransaction(node.gAccount.address, 100000000, collision.passphrases[0]);
+				let transaction = node.ddk.transaction.createTransaction(node.gAccount.address, 100000000, collision.passphrases[0]);
 				transaction.signature = crypto.randomBytes(64).toString('hex');
-				transaction.id = node.lisk.crypto.getId(transaction);
+				transaction.id = node.ddk.crypto.getId(transaction);
 
 				postTransaction(transaction, function (err, res) {
 					node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -79,7 +79,7 @@ describe('POST /peer/transactions', function () {
 			});
 
 			it('should be ok for passphrase one', function (done) {
-				let transaction = node.lisk.transaction.createTransaction(node.gAccount.address, 100000000, collision.passphrases[0]);
+				let transaction = node.ddk.transaction.createTransaction(node.gAccount.address, 100000000, collision.passphrases[0]);
 
 				postTransaction(transaction, function (err, res) {
 					node.expect(res.body).to.have.property('success').to.be.ok;
@@ -88,7 +88,7 @@ describe('POST /peer/transactions', function () {
 			});
 
 			it('should fail for passphrase two', function (done) {
-				let transaction = node.lisk.transaction.createTransaction(node.gAccount.address, 100000000, collision.passphrases[1]);
+				let transaction = node.ddk.transaction.createTransaction(node.gAccount.address, 100000000, collision.passphrases[1]);
 
 				postTransaction(transaction, function (err, res) {
 					node.expect(res.body).to.have.property('success').to.be.not.ok;

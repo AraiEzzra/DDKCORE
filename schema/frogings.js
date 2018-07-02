@@ -40,8 +40,8 @@ module.exports = {
 		},
 		required: ['secret']
 	},
-	getMyETPFrozen: {
-		id: 'frogings.getAllMyETPFrozen',
+	getMyDDKFrozen: {
+		id: 'frogings.getAllMyDDKFrozen',
 		type: 'object',
 		properties: {
 			secret: {

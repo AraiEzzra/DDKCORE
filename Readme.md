@@ -1,8 +1,8 @@
-# ETP
-Describe brief description about ETP here
+# ddk
+Describe brief description about ddk here
 
-## Prerequisite for ETP system
-This sections provides details on what you need install on your system in order to run ETP.
+## Prerequisite for ddk system
+This sections provides details on what you need install on your system in order to run ddk.
 
 - ### Supported Plateforms:
 ```
@@ -15,7 +15,7 @@ Ubuntu 16.04 (LTS) x86_64
 sudo apt-get install -y python build-essential curl automake autoconf libtool
 ```
 
-- ### Git -- Used for cloning and updating ETP
+- ### Git -- Used for cloning and updating ddk
 ```
 sudo apt-get install -y git
 ```
@@ -28,9 +28,9 @@ sudo apt-get install -y nodejs
 
 - ### PostgreSQL (version 9.6.2) -- PostgreSQL is the database used for this application
 ```
-curl -sL "https://downloads.lisk.io/scripts/setup_postgresql.Linux" | bash -
+curl -sL "https://downloads.ddk.io/scripts/setup_postgresql.Linux" | bash -
 sudo -u postgres createuser --createdb $USER
-sudo -u postgres createdb <database_name> //ETP_test in our system
+sudo -u postgres createdb <database_name> //DDK_test in our system
 sudo -u postgres psql -d <database_name> -c "alter user "$USER" with password 'password';"
 ```
 
@@ -47,9 +47,9 @@ Stop Redis:
 ```
 service redis stop
 ```
-**NOTE:** ETP does not run on the redis default port of 6379. Instead it is configured to run on port: 6380. Because of this, in order for ETP to run, you have one of two options:
+**NOTE:** ddk does not run on the redis default port of 6379. Instead it is configured to run on port: 6380. Because of this, in order for ddk to run, you have one of two options:
 
-1. Change the Lisk configuration
+1. Change the DDK configuration
 
 Update the redis port configuration in both `config.json` and `test/data/config.json`. Note that this is the easiest option, however, be mindful of reverting the changes should you make a pull request.
 
@@ -94,15 +94,15 @@ sudo service elasticsearch start
 - ### Prometheus -- Prometheus is used to monitor app's performance
 [Reference to install prometheus](https://prometheus.io/docs/prometheus/latest/installation/)
 
-## ETP Installation
+## ddk Installation
 1. Clone code from GitHub
 ```
-git clone https://github.com/oodlestechnologies/ETPCoin
+git clone https://github.com/oodlestechnologies/DDKCoin
 ```
 
-2. Go to ETPCoin directory
+2. Go to DDKCoin directory
 ```
-cd ETPCoin/
+cd DDKCoin/
 git checkout develoment
 ```
 
@@ -112,12 +112,12 @@ npm install
 ```
 
 4. Create environment file
-Create a new file i.e `.env` and place this file in root directory and put all required information. Please see sample file `.env_sample` file for ETP to work properly.
+Create a new file i.e `.env` and place this file in root directory and put all required information. Please see sample file `.env_sample` file for ddk to work properly.
 
 **NOTE:** You can place `.env` file according to your choice but make sure to provide path of this file in `app.js`.
 
-## Set up UI for ETP
-Inside your project directory `ETPCoin`, run following commands
+## Set up UI for ddk
+Inside your project directory `DDKCoin`, run following commands
 ```
 git submodule init 
 git submodule update
@@ -156,7 +156,7 @@ throw err;
     at Function.Module._load (module.js:466:25)
     at Module.require (module.js:579:17)
     at require (internal/module.js:11:18)
-    at Object.<anonymous> (/home/rajwadhwa/project/ETPCoin/node_modules/appmetrics/index.js:23:13)
+    at Object.<anonymous> (/home/rajwadhwa/project/DDKCoin/node_modules/appmetrics/index.js:23:13)
     at Module._compile (module.js:635:30)
     at Object.Module._extensions..js (module.js:646:10)
     at Module.load (module.js:554:32)
@@ -204,9 +204,9 @@ error : TypeError: Cannot read property '__appmetricsProbeAttached__' of null
 
 Run Following commands:
 ```
-dropdb ETP_test
-createdb ETP_test
-sudo -u postgres psql -d ETP_test -c "alter user "$USER" with password 'password';"
+dropdb DDK_test
+createdb DDK_test
+sudo -u postgres psql -d DDK_test -c "alter user "$USER" with password 'password';"
 ```
 
 **ERROR 6:**
@@ -350,16 +350,16 @@ $ sudo apt-get install build-essential
 # ERROR 12:
 If sodium package not install with error:
 
-Static libsodium was not found at /root/ETPCoin/node_modules/sodium/deps/build/lib/libsodium so compiling libsodium from source.
+Static libsodium was not found at /root/DDKCoin/node_modules/sodium/deps/build/lib/libsodium so compiling libsodium from source.
 libtool is required, but wasn't found on this system
 Makefile:61: recipe for target 'libsodium' failed
 make: *** [libsodium] Error 1
-/root/ETPCoin/node_modules/sodium/install.js:288
+/root/DDKCoin/node_modules/sodium/install.js:288
             throw new Error(cmdLine + ' exited with code ' + code);
             ^
 
 Error: make libsodium exited with code 2
-    at ChildProcess.<anonymous> (/root/ETPCoin/node_modules/sodium/install.js:288:19)
+    at ChildProcess.<anonymous> (/root/DDKCoin/node_modules/sodium/install.js:288:19)
     at emitTwo (events.js:126:13)
     at ChildProcess.emit (events.js:214:7)
 

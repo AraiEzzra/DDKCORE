@@ -100,7 +100,7 @@ describe('multisignature', function () {
 
 			it('should return error when value is not an integer', function () {
 				let min = '2';
-				let trs	= node.lisk.multisignature.createMultisignature(node.gAccount.password, null, ['+' + multiSigAccount1.publicKey, '+' + multiSigAccount2.publicKey], 1, 2);
+				let trs	= node.ddk.multisignature.createMultisignature(node.gAccount.password, null, ['+' + multiSigAccount1.publicKey, '+' + multiSigAccount2.publicKey], 1, 2);
 				trs.asset.multisignature.min = min;
 
 				expect(function () {
@@ -110,7 +110,7 @@ describe('multisignature', function () {
 
 			it('should return error when value is a negative integer', function () {
 				let min = -1;
-				let trs	= node.lisk.multisignature.createMultisignature(node.gAccount.password, null, ['+' + multiSigAccount1.publicKey, '+' + multiSigAccount2.publicKey], 1, 2);
+				let trs	= node.ddk.multisignature.createMultisignature(node.gAccount.password, null, ['+' + multiSigAccount1.publicKey, '+' + multiSigAccount2.publicKey], 1, 2);
 				trs.asset.multisignature.min = min;
 
 				expect(function () {
@@ -120,7 +120,7 @@ describe('multisignature', function () {
 
 			it('should return error when value is smaller than minimum acceptable value', function () {
 				let min = constants.multisigConstraints.min.minimum - 1;
-				let trs	= node.lisk.multisignature.createMultisignature(node.gAccount.password, null, ['+' + multiSigAccount1.publicKey, '+' + multiSigAccount2.publicKey], 1, min);
+				let trs	= node.ddk.multisignature.createMultisignature(node.gAccount.password, null, ['+' + multiSigAccount1.publicKey, '+' + multiSigAccount2.publicKey], 1, min);
 
 				expect(function () {
 					multisignature.objectNormalize.call(transaction, trs);
@@ -129,7 +129,7 @@ describe('multisignature', function () {
 
 			it('should return error when value is greater than maximum acceptable value', function () {
 				let min = constants.multisigConstraints.min.maximum + 1;
-				let trs	= node.lisk.multisignature.createMultisignature(node.gAccount.password, null, ['+' + multiSigAccount1.publicKey, '-' + multiSigAccount2.publicKey], 1, min);
+				let trs	= node.ddk.multisignature.createMultisignature(node.gAccount.password, null, ['+' + multiSigAccount1.publicKey, '-' + multiSigAccount2.publicKey], 1, min);
 
 				expect(function () {
 					multisignature.objectNormalize.call(transaction, trs);
@@ -138,7 +138,7 @@ describe('multisignature', function () {
 
 			it('should return error when value is an overflow number', function () {
 				let min = Number.MAX_VALUE + 1;
-				let trs	= node.lisk.multisignature.createMultisignature(node.gAccount.password, null, ['+' + multiSigAccount1.publicKey, '-' + multiSigAccount2.publicKey], 1, 2);
+				let trs	= node.ddk.multisignature.createMultisignature(node.gAccount.password, null, ['+' + multiSigAccount1.publicKey, '-' + multiSigAccount2.publicKey], 1, 2);
 				trs.asset.multisignature.min = min;
 
 				expect(function () {
@@ -151,7 +151,7 @@ describe('multisignature', function () {
 
 			it('should return error when value is not an integer', function () {
 				let lifetime = '2';
-				let trs	= node.lisk.multisignature.createMultisignature(node.gAccount.password, null, ['+' + multiSigAccount1.publicKey, '-' + multiSigAccount2.publicKey], 1, 2);
+				let trs	= node.ddk.multisignature.createMultisignature(node.gAccount.password, null, ['+' + multiSigAccount1.publicKey, '-' + multiSigAccount2.publicKey], 1, 2);
 				trs.asset.multisignature.lifetime = lifetime;
 
 				expect(function () {
@@ -161,7 +161,7 @@ describe('multisignature', function () {
 
 			it('should return error when value is smaller than minimum acceptable value', function () {
 				let lifetime = node.constants.multisigConstraints.lifetime.minimum - 1;
-				let trs	= node.lisk.multisignature.createMultisignature(node.gAccount.password, null, ['+' + multiSigAccount1.publicKey, '-' + multiSigAccount2.publicKey], lifetime, 2);
+				let trs	= node.ddk.multisignature.createMultisignature(node.gAccount.password, null, ['+' + multiSigAccount1.publicKey, '-' + multiSigAccount2.publicKey], lifetime, 2);
 
 				expect(function () {
 					multisignature.objectNormalize.call(transaction, trs);
@@ -170,7 +170,7 @@ describe('multisignature', function () {
 
 			it('should return error when value is greater than maximum acceptable value', function () {
 				let lifetime = node.constants.multisigConstraints.lifetime.maximum + 1;
-				let trs	= node.lisk.multisignature.createMultisignature(node.gAccount.password, null, ['+' + multiSigAccount1.publicKey, '-' + multiSigAccount2.publicKey], lifetime, 2);
+				let trs	= node.ddk.multisignature.createMultisignature(node.gAccount.password, null, ['+' + multiSigAccount1.publicKey, '-' + multiSigAccount2.publicKey], lifetime, 2);
 
 				expect(function () {
 					multisignature.objectNormalize.call(transaction, trs);
@@ -179,7 +179,7 @@ describe('multisignature', function () {
 
 			it('should return error when value is an overflow number', function () {
 				let lifetime = Number.MAX_VALUE;
-				let trs	= node.lisk.multisignature.createMultisignature(node.gAccount.password, null, ['+' + multiSigAccount1.publicKey, '-' + multiSigAccount2.publicKey], 1, 2);
+				let trs	= node.ddk.multisignature.createMultisignature(node.gAccount.password, null, ['+' + multiSigAccount1.publicKey, '-' + multiSigAccount2.publicKey], 1, 2);
 				trs.asset.multisignature.lifetime = lifetime;
 
 				expect(function () {
@@ -191,7 +191,7 @@ describe('multisignature', function () {
 		describe('keysgroup', function () {
 
 			it('should return error when it is not an array', function () {
-				let trs	= node.lisk.multisignature.createMultisignature(node.gAccount.password, null, [''], 1, 2);
+				let trs	= node.ddk.multisignature.createMultisignature(node.gAccount.password, null, [''], 1, 2);
 				trs.asset.multisignature.keysgroup = '';
 
 				expect(function () {
@@ -201,7 +201,7 @@ describe('multisignature', function () {
 
 			it('should return error when array length is smaller than minimum acceptable value', function () {
 				let keysgroup = [];
-				let trs	= node.lisk.multisignature.createMultisignature(node.gAccount.password, null, keysgroup, 1, 2);
+				let trs	= node.ddk.multisignature.createMultisignature(node.gAccount.password, null, keysgroup, 1, 2);
 
 				expect(function () {
 					multisignature.objectNormalize.call(transaction, trs);
@@ -210,9 +210,9 @@ describe('multisignature', function () {
 
 			it('should return error when array length is greater than maximum acceptable value', function () {
 				let keysgroup = Array.apply(null, Array(constants.multisigConstraints.keysgroup.maxItems + 1)).map(function () {
-					return '+' + node.lisk.crypto.getKeys(node.randomPassword()).publicKey;
+					return '+' + node.ddk.crypto.getKeys(node.randomPassword()).publicKey;
 				});
-				let trs	= node.lisk.multisignature.createMultisignature(node.gAccount.password, null, keysgroup, 1, 2);
+				let trs	= node.ddk.multisignature.createMultisignature(node.gAccount.password, null, keysgroup, 1, 2);
 
 				expect(function () {
 					multisignature.objectNormalize.call(transaction, trs);
@@ -221,8 +221,8 @@ describe('multisignature', function () {
 		});
 
 		it('should return transaction when asset is valid', function () {
-			let trs	= node.lisk.multisignature.createMultisignature(node.gAccount.password, null, Array.apply(null, Array(10)).map(function () {
-				return '+' + node.lisk.crypto.getKeys(node.randomPassword()).publicKey;
+			let trs	= node.ddk.multisignature.createMultisignature(node.gAccount.password, null, Array.apply(null, Array(10)).map(function () {
+				return '+' + node.ddk.crypto.getKeys(node.randomPassword()).publicKey;
 			}), 1, 2);
 
 			expect(multisignature.objectNormalize(trs)).to.eql(trs);
@@ -234,7 +234,7 @@ describe('multisignature', function () {
 		describe('from transaction.verify tests', function () {
 
 			it('should return error when multisignature keysgroup has an entry which does not start with + character', function (done) {
-				let trs	= node.lisk.multisignature.createMultisignature(node.gAccount.password, null, ['+' + multiSigAccount1.publicKey, '-' + multiSigAccount2.publicKey], 1, 2);
+				let trs	= node.ddk.multisignature.createMultisignature(node.gAccount.password, null, ['+' + multiSigAccount1.publicKey, '-' + multiSigAccount2.publicKey], 1, 2);
 				trs.senderId = node.gAccount.address;
 
 				transaction.verify(trs, node.gAccount, function (err, trs) {
@@ -244,7 +244,7 @@ describe('multisignature', function () {
 			});
 
 			it('should return error when multisignature keysgroup has an entry which is null', function (done) {
-				let trs	= node.lisk.multisignature.createMultisignature(node.gAccount.password, null, ['+' + multiSigAccount1.publicKey, null], 1, 2);
+				let trs	= node.ddk.multisignature.createMultisignature(node.gAccount.password, null, ['+' + multiSigAccount1.publicKey, null], 1, 2);
 				trs.senderId = node.gAccount.address;
 
 				transaction.verify(trs, node.gAccount, function (err, trs) {
@@ -254,7 +254,7 @@ describe('multisignature', function () {
 			});
 
 			it('should return error when multisignature keysgroup has an entry which is undefined', function (done) {
-				let trs	= node.lisk.multisignature.createMultisignature(node.gAccount.password, null, ['+' + multiSigAccount1.publicKey, undefined], 1, 2);
+				let trs	= node.ddk.multisignature.createMultisignature(node.gAccount.password, null, ['+' + multiSigAccount1.publicKey, undefined], 1, 2);
 				trs.senderId = node.gAccount.address;
 
 				transaction.verify(trs, node.gAccount, function (err, trs) {
@@ -264,7 +264,7 @@ describe('multisignature', function () {
 			});
 
 			it('should return error when multisignature keysgroup has an entry which is an integer', function (done) {
-				let trs	= node.lisk.multisignature.createMultisignature(node.gAccount.password, null, ['+' + multiSigAccount1.publicKey, 12], 1, 2);
+				let trs	= node.ddk.multisignature.createMultisignature(node.gAccount.password, null, ['+' + multiSigAccount1.publicKey, 12], 1, 2);
 				trs.senderId = node.gAccount.address;
 
 				transaction.verify(trs, node.gAccount, function (err, trs) {
@@ -274,7 +274,7 @@ describe('multisignature', function () {
 			});
 
 			it('should be okay for valid transaction', function (done) {
-				let trs	= node.lisk.multisignature.createMultisignature(node.gAccount.password, null, ['+' + multiSigAccount1.publicKey, '+' + multiSigAccount2.publicKey], 1, 2);
+				let trs	= node.ddk.multisignature.createMultisignature(node.gAccount.password, null, ['+' + multiSigAccount1.publicKey, '+' + multiSigAccount2.publicKey], 1, 2);
 				trs.senderId = node.gAccount.address;
 
 				transaction.verify(trs, node.gAccount, function (err, trs) {
@@ -289,7 +289,7 @@ describe('multisignature', function () {
 
 		it('should return error when min value is smaller than minimum acceptable value', function (done) {
 			let min = constants.multisigConstraints.min.minimum - 1;
-			let trs	= node.lisk.multisignature.createMultisignature(node.gAccount.password, null, ['+' + multiSigAccount1.publicKey, '+' + multiSigAccount2.publicKey], 1, 1);
+			let trs	= node.ddk.multisignature.createMultisignature(node.gAccount.password, null, ['+' + multiSigAccount1.publicKey, '+' + multiSigAccount2.publicKey], 1, 1);
 			trs.asset.multisignature.min = min;
 
 			multisignature.verify(trs, node.gAccount, function (err) {
@@ -300,7 +300,7 @@ describe('multisignature', function () {
 
 		it('should return error when min value is greater than maximum acceptable value', function (done) {
 			let min = constants.multisigConstraints.min.maximum + 1;
-			let trs	= node.lisk.multisignature.createMultisignature(node.gAccount.password, null, ['+' + multiSigAccount1.publicKey, '+' + multiSigAccount2.publicKey], 1, min);
+			let trs	= node.ddk.multisignature.createMultisignature(node.gAccount.password, null, ['+' + multiSigAccount1.publicKey, '+' + multiSigAccount2.publicKey], 1, min);
 
 			multisignature.verify(trs, node.gAccount, function (err) {
 				expect(err).to.equal('Invalid multisignature min. Must be between 1 and 15');
@@ -309,7 +309,7 @@ describe('multisignature', function () {
 		});
 
 		it('should return error when multisignature keysgroup has an entry which does not start with + character', function (done) {
-			let trs	= node.lisk.multisignature.createMultisignature(node.gAccount.password, null, ['+' + multiSigAccount1.publicKey, '-' + multiSigAccount2.publicKey], 1, 2);
+			let trs	= node.ddk.multisignature.createMultisignature(node.gAccount.password, null, ['+' + multiSigAccount1.publicKey, '-' + multiSigAccount2.publicKey], 1, 2);
 			trs.senderId = node.gAccount.address;
 
 			multisignature.verify(trs, node.gAccount, function (err, trs) {
@@ -319,7 +319,7 @@ describe('multisignature', function () {
 		});
 
 		it('should return error when multisignature keysgroup has an entry which is null', function (done) {
-			let trs	= node.lisk.multisignature.createMultisignature(node.gAccount.password, null, ['+' + multiSigAccount1.publicKey, null], 1, 2);
+			let trs	= node.ddk.multisignature.createMultisignature(node.gAccount.password, null, ['+' + multiSigAccount1.publicKey, null], 1, 2);
 			trs.senderId = node.gAccount.address;
 
 			multisignature.verify(trs, node.gAccount, function (err, trs) {
@@ -329,7 +329,7 @@ describe('multisignature', function () {
 		});
 
 		it('should return error when multisignature keysgroup has an entry which is undefined', function (done) {
-			let trs	= node.lisk.multisignature.createMultisignature(node.gAccount.password, null, ['+' + multiSigAccount1.publicKey, undefined], 1, 2);
+			let trs	= node.ddk.multisignature.createMultisignature(node.gAccount.password, null, ['+' + multiSigAccount1.publicKey, undefined], 1, 2);
 			trs.senderId = node.gAccount.address;
 
 			multisignature.verify(trs, node.gAccount, function (err, trs) {
@@ -339,7 +339,7 @@ describe('multisignature', function () {
 		});
 
 		it('should return error when multisignature keysgroup has an entry which is an integer', function (done) {
-			let trs	= node.lisk.multisignature.createMultisignature(node.gAccount.password, null, ['+' + multiSigAccount1.publicKey, 12], 1, 2);
+			let trs	= node.ddk.multisignature.createMultisignature(node.gAccount.password, null, ['+' + multiSigAccount1.publicKey, 12], 1, 2);
 			trs.senderId = node.gAccount.address;
 
 			multisignature.verify(trs, node.gAccount, function (err, trs) {
@@ -349,7 +349,7 @@ describe('multisignature', function () {
 		});
 
 		it('should be okay for valid transaction', function (done) {
-			let trs	= node.lisk.multisignature.createMultisignature(node.gAccount.password, null, ['+' + multiSigAccount1.publicKey, '+' + multiSigAccount2.publicKey], 1, 2);
+			let trs	= node.ddk.multisignature.createMultisignature(node.gAccount.password, null, ['+' + multiSigAccount1.publicKey, '+' + multiSigAccount2.publicKey], 1, 2);
 			trs.senderId = node.gAccount.address;
 
 			multisignature.verify(trs, node.gAccount, function (err, trs) {

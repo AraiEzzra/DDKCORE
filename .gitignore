@@ -1,17 +1,12 @@
 build
 npm-debug.log
 .env
-ETPDump
-ETPSchema
 archive/
-etp_change.txt
 logs/
 node_modules/
-stage_server_setup.txt
 testUsers.json
 package-lock.json
 .vscode/
-database_backup
 public
 config.json
 .eslintrc.json

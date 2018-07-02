@@ -28,10 +28,10 @@ describe('multisignatures', function () {
 			let secret = node.randomPassword();
 			testBody = {
 				secret: secret,
-				publicKey: node.lisk.crypto.getKeys(secret).publicKey,
+				publicKey: node.ddk.crypto.getKeys(secret).publicKey,
 				min: 2,
 				lifetime: 1,
-				keysgroup: Array.apply(null, Array(4)).map(function () { return '+' + node.lisk.crypto.getKeys(node.randomPassword()).publicKey;})
+				keysgroup: Array.apply(null, Array(4)).map(function () { return '+' + node.ddk.crypto.getKeys(node.randomPassword()).publicKey;})
 			};
 		});
 
@@ -81,7 +81,7 @@ describe('multisignatures', function () {
 			});
 
 			it('should return error when keysgroup length is greater than maximum acceptable length', function () {
-				testBody.keysgroup = Array.apply(null, Array(16)).map(function () { return node.lisk.crypto.getKeys(node.randomPassword()).publicKey; });
+				testBody.keysgroup = Array.apply(null, Array(16)).map(function () { return node.ddk.crypto.getKeys(node.randomPassword()).publicKey; });
 				validator.validate(testBody, schema.addMultisignature);
 				expect(validator.getLastErrors().map(function (e) {
 					return e.message;

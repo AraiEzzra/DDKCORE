@@ -12,8 +12,8 @@ let httpApi = require('../../helpers/httpApi');
 	- post /getAllOrders
 	- post /getAllActiveOrders
 	- get /countStakeholders
-	- get /getTotalETPStaked
-	- post /getMyETPFrozen
+	- get /getTotalDDKStaked
+	- post /getMyDDKFrozen
  * @memberof module:frogings
  * @requires helpers/Router
  * @requires helpers/httpApi
@@ -37,8 +37,8 @@ function FrogingsHttpApi (frogingsModule, app, logger, cache) {
 		'post /getAllOrders' : 'getAllFreezeOrders',
 		'post /getAllActiveOrders' : 'getAllActiveFreezeOrders',
 		'get /countStakeholders' : 'countStakeholders',
-		'get /getTotalETPStaked' : 'totalETPStaked'	,
-		'post /getMyETPFrozen' : 'getMyETPFrozen'
+		'get /getTotalDDKStaked' : 'totalDDKStaked'	,
+		'post /getMyDDKFrozen' : 'getMyDDKFrozen'
 	});
 
 	httpApi.registerEndpoint('/api/frogings', app, router, frogingsModule.isLoaded);
