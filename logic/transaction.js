@@ -332,11 +332,17 @@ Transaction.prototype.checkConfirmed = function (trs, cb) {
  *  modify checkbalance according to froze amount avaliable to user
  */
 Transaction.prototype.checkBalance = function (amount, balance, trs, sender) {
-	let totalAmountWithFrozeAmount = new bignum(((sender.totalFrozeAmount)).toString()).plus(amount);
-	let exceededBalance = new bignum(sender[balance].toString()).lessThan(totalAmountWithFrozeAmount);
+	let totalAmount;
+	if (trs.type == 8) {
+		totalAmount = new bignum(((sender.totalFrozeAmount)).toString()).plus(amount);
+	} else {
+		totalAmount = amount;
+	}
+
+	let exceededBalance = new bignum(sender[balance].toString()).lessThan(totalAmount);
 	let exceeded = (trs.blockId !== this.scope.genesisblock.block.id && exceededBalance);
 
-	if (parseInt(sender.totalFrozeAmount) > 0) {
+	if (parseInt(trs.type == 8 && sender.totalFrozeAmount) > 0) {
 		return {
 			exceeded: exceeded,
 			error: exceeded ? [

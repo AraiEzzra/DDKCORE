@@ -191,7 +191,21 @@ SendFreezeOrder.prototype.undo = function (trs, block, sender, cb) {
 };
 
 SendFreezeOrder.prototype.apply = function (trs, block, sender, cb) {
-	return setImmediate(cb, null, trs);
+	modules.accounts.setAccountAndGet({ address: trs.recipientId }, function (err) {
+		if (err) {
+			return setImmediate(cb, err);
+		}
+
+		modules.accounts.mergeAccountAndGet({
+			address: trs.recipientId,
+			balance: trs.amount,
+			u_balance: trs.amount,
+			blockId: block.id,
+			round: modules.rounds.calc(block.height)
+		}, function (err) {
+			return setImmediate(cb, err);
+		});
+	});
 };
 
 SendFreezeOrder.prototype.getBytes = function (trs) {
