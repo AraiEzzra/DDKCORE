@@ -711,6 +711,7 @@ Account.prototype.set = function (address, fields, cb) {
 
 
 Account.prototype.insertLevel = function(levelDetails,cb) {
+
 	if(levelDetails.level.length === 0){
 		levelDetails.level = null;
 	}
@@ -726,7 +727,7 @@ Account.prototype.insertLevel = function(levelDetails,cb) {
 }
 
 Account.prototype.findReferralLevel= function(address,cb) {
-	this.scope.db.one(sql.referLevelChain,{
+	this.scope.db.query(sql.referLevelChain,{
 		address:address
 	}).then(function(user){
 		return setImmediate(cb,null,user);

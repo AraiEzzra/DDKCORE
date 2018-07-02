@@ -300,15 +300,15 @@ Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 	let i = 0;
 	let balance, reward, sender_balance;
 
-	self.scope.db.one(reward_sql.referLevelChain, {
+	self.scope.db.query(reward_sql.referLevelChain, {
 		address: sponsor_address
 	}).then(function (user) {
 
-		if (user.level != null && user.level[0] != "0") {
+		if (user.length != 0 && user[0].level != null) {
 
-			let chain_length = user.level.length;
+			let chain_length = user[0].level.length;
 
-			async.eachSeries(user.level, function (level, callback) {
+			async.eachSeries(user[0].level, function (level, callback) {
 
 				overrideReward[level] = (((rewards.level[i]) * amount) / 100);
 
@@ -326,14 +326,13 @@ Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 					i++;
 					if (transactionResponse.body.success == false)
 						sender_balance = parseFloat(transactionResponse.body.error.split('balance:')[1]);
-
+					else
+						reward = true;
+						
 					if ((i == chain_length && reward != true) || sender_balance < 0.0001) {
 						let error = transactionResponse.body.error;
-						return setImmediate(cb, error, sender_balance);
+						return setImmediate(cb, error,sender_balance);
 					} else {
-						if (transactionResponse.body.success == true) {
-							reward = true;
-						}
 						callback();
 					}
 				});
@@ -351,7 +350,8 @@ Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 		}
 
 	}).catch(function (err) {
-		return setImmediate(cb, err);
+		self.scope.logger.error(err.stack);
+		return setImmediate(cb, err.toString());
 	});
 }
 
@@ -468,8 +468,8 @@ Frozen.prototype.checkFrozeOrders = function () {
 						else {
 							self.sendStakingReward(order.senderId, transactionData.json.amount, function (err, bal) {
 								if (err) {
-									if (bal < 0.0001)
-										library.logger.info(err);
+									if(bal < 0.0001)
+										self.scope.logger.info("Sender Account Balance Info: "+ err);																			
 								}
 
 								self.scope.logger.info("Successfully transfered reward for freezing an amount and transaction ID is : " + transactionResponse.body.transactionId);
