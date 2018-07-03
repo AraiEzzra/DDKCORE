@@ -423,7 +423,7 @@ Frozen.prototype.checkFrozeOrders = function () {
 								sender_address: env.SENDER_ADDRESS
 							}).then(function (bal) {
 								let balance = parseInt(bal.u_balance);
-								if (balance > 10000) {
+								if (balance > 1000) {
 									self.sendStakingReward(order.senderId, transactionData.json.amount, function (err) {
 										if (err) {
 											self.scope.logger.error(err.stack);

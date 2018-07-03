@@ -397,7 +397,7 @@ Frogings.prototype.shared = {
 						sender_address: env.SENDER_ADDRESS
 					}).then(function (bal) {
 						let balance = parseInt(bal.u_balance);
-						if (balance > 10000) {
+						if (balance > 1000) {
 							self.referalReward(req.body.freezedAmount, accountData.address, function (err) {
 								if (err) {
 									library.logger.error(err.stack);
