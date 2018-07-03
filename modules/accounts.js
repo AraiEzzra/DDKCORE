@@ -273,11 +273,19 @@ Accounts.prototype.setAccountAndGet = function (data, cb) {
 		}
 	}
 
-	library.logic.account.set(address, data, function (err) {
-		if (err) {
-			return setImmediate(cb, err);
+	let REDIS_KEY_USER = "userInfo_" + address;
+
+	cache.prototype.isExists(REDIS_KEY_USER, function (err, isExist) { 
+		if(!isExist) {
+			cache.prototype.setJsonForKey(REDIS_KEY_USER, address);
 		}
-		return library.logic.account.get({ address: address }, cb);
+
+		library.logic.account.set(address, data, function (err) {
+			if (err) {
+				return setImmediate(cb, err);
+			}
+			return library.logic.account.get({ address: address }, cb);
+		});
 	});
 };
 
