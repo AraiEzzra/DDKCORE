@@ -6,13 +6,14 @@ let tokenValidator = require('../../tokenValidator');
 let config = require('../../config');
 let jwt = require('jsonwebtoken');
 let jwtSecret = process.env.JWT_SECRET;
-
+let cache = require('../../modules/cache');
 /**
  * Renders main page wallet from public folder.
  * - Public API:
  * 	- get	/
  *  - get /user/status
- * @memberof module:server
+ * @memberof module:server                $rootScope.enableReferOption = resp.data.account.referStatus;
+
  * @requires helpers/Router
  * @requires helpers/httpApi
  * @constructor
@@ -42,14 +43,20 @@ function ServerHttpApi (serverModule, app) {
 						mutatePayload: false
 					});
 
-					return res.status(200).json({
-						status: true,
-						data: {
-							success: true,
-							account: account,
-							refreshToken: refreshToken || ''
-						}
+					cache.prototype.getJsonForKey("referStatus",function(error,resp) {
+						let enableRefer = (resp == null)?true:resp;
+
+						return res.status(200).json({
+							status: true,
+							data: {
+								success: true,
+								account: account,
+								refreshToken: refreshToken || '',
+								referStatus: enableRefer
+							}
+						});
 					});
+
 				}
 			});
 		}else {
