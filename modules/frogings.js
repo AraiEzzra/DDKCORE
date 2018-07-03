@@ -93,6 +93,9 @@ Frogings.prototype.referalReward = function (stake_amount, address, cb) {
 			library.logic.transaction.sendTransaction(transactionData, function (err, transactionResponse) {
 				if (err) return err;
 				console.log(transactionResponse.body);
+				if(transactionResponse.body.success == false) {
+					library.logger.info("Direct Introducer Reward Info : "+ transactionResponse.body.error);					
+				}
 				return setImmediate(cb, null);
 			});
 
@@ -392,7 +395,7 @@ Frogings.prototype.shared = {
 						sender_address: env.SENDER_ADDRESS
 					}).then(function (bal) {
 						let balance = parseInt(bal.u_balance);
-						if (balance > 1000) {
+						if (balance > 10000) {
 							self.referalReward(req.body.freezedAmount, accountData.address, function (err) {
 								if (err) {
 									library.logger.error(err.stack);

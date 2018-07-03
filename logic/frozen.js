@@ -8,6 +8,7 @@ let Promise = require('bluebird');
 let rewards = require('../helpers/rewards');
 let reward_sql = require('../sql/referal_sql');
 let env = process.env;
+let cache = require('../modules/cache');
 
 let __private = {};
 __private.types = {};
@@ -306,6 +307,22 @@ Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 				self.scope.logic.transaction.sendTransaction(transactionData, function (err, transactionResponse) {
 					if (err) return err;
 					i++;
+
+					if(transactionResponse.body.success == false) {
+                        sender_balance = parseFloat(transactionResponse.body.error.split('balance:')[1]);
+						if(sender_balance < 0.0001) {
+							cache.prototype.setJsonForKey("referStatus", false);
+							self.scope.logger.info("Staking Reward Info : "+ transactionResponse.body.error);													
+							return setImmediate(cb,null);
+						}
+					} else {
+						reward = true;
+					}
+						
+					if(i == chain_length && reward != true) {
+						self.scope.logger.info("Staking Reward Info : "+ transactionResponse.body.error);						
+					}
+
 					callback();
 				});
 
@@ -423,7 +440,7 @@ Frozen.prototype.checkFrozeOrders = function () {
 								sender_address: env.SENDER_ADDRESS
 							}).then(function (bal) {
 								let balance = parseInt(bal.u_balance);
-								if (balance > 1000) {
+								if (balance > 10000) {
 									self.sendStakingReward(order.senderId, transactionData.json.amount, function (err) {
 										if (err) {
 											self.scope.logger.error(err.stack);
