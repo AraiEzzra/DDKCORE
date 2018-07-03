@@ -93,12 +93,7 @@ Frogings.prototype.referalReward = function (stake_amount, address, cb) {
 			library.logic.transaction.sendTransaction(transactionData, function (err, transactionResponse) {
 				if (err) return err;
 				console.log(transactionResponse.body);
-				// if (transactionResponse.body.success == false) {
-				// 	let info = transactionResponse.body.error;
-				// 	return setImmediate(cb, info);
-				// } else {
-					return setImmediate(cb, null);
-				// }
+				return setImmediate(cb, null);
 			});
 
 		} else {
