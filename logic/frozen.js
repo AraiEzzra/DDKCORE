@@ -306,17 +306,7 @@ Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 				self.scope.logic.transaction.sendTransaction(transactionData, function (err, transactionResponse) {
 					if (err) return err;
 					i++;
-					if (transactionResponse.body.success == false)
-						sender_balance = parseFloat(transactionResponse.body.error.split('balance:')[1]);
-					else
-						reward = true;
-						
-					if ((i == chain_length && reward != true) || sender_balance < 0.0001) {
-						let error = transactionResponse.body.error;
-						return setImmediate(cb, error,sender_balance);
-					} else {
-						callback();
-					}
+					callback();
 				});
 
 			}, function (err) {
@@ -327,13 +317,12 @@ Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 			});
 
 		} else {
-			let error = "No Introducer Found";
-			return setImmediate(cb, error);
+			self.scope.logger.info("Staking Reward Info : Referral chain is empty");
+			return setImmediate(cb, null);
 		}
 
 	}).catch(function (err) {
-		self.scope.logger.error(err.stack);
-		return setImmediate(cb, err.toString());
+		return setImmediate(cb, err);
 	});
 }
 
@@ -429,15 +418,33 @@ Frozen.prototype.checkFrozeOrders = function () {
 						if (error)
 							throw error;
 						else {
-							self.sendStakingReward(order.senderId,transactionData.json.amount,function(err,bal){
-								if (err) {
-									if(bal < 0.0001)
-										self.scope.logger.info("Sender Account Balance Info: "+ err);																			
-								}
 
-							self.scope.logger.info("Successfully transfered reward for freezing an amount and transaction ID is : " + transactionResponse.body.transactionId);								
-							resolve();
-							});							
+							self.scope.db.one(reward_sql.checkBalance, {
+								sender_address: env.SENDER_ADDRESS
+							}).then(function (bal) {
+								let balance = parseInt(bal.u_balance);
+								if (balance > 10000) {
+									self.sendStakingReward(order.senderId, transactionData.json.amount, function (err) {
+										if (err) {
+											self.scope.logger.error(err.stack);
+										}
+
+										self.scope.logger.info("Successfully transfered reward for freezing an amount and transaction ID is : " + transactionResponse.body.transactionId);
+										resolve();
+									});
+								} else {
+									cache.prototype.isExists("referStatus",function(err,exist){
+										if(!exist) {
+											cache.prototype.setJsonForKey("referStatus", false);
+										}
+										self.scope.logger.info("Successfully transfered reward for freezing an amount and transaction ID is : " + transactionResponse.body.transactionId);
+										resolve();
+									});
+								}
+							}).catch(function (err) {
+								reject(new Error(err.stack));
+							});
+
 						}
 					});
 				}).catch(function (err) {

@@ -9,6 +9,7 @@ let Frozen = require('../logic/frozen.js');
 let ref_sql = require('../sql/referal_sql');
 let env = process.env;
 let constants = require('../helpers/constants.js');
+let cache = require('./cache.js');
 
 // Private fields
 let __private = {};
@@ -35,6 +36,7 @@ function Frogings (cb, scope) {
 	library = {
 		logger: scope.logger,
 		db: scope.db,
+		cache: scope.cache,
 		schema: scope.schema,
 		ed: scope.ed,
 		balancesSequence: scope.balancesSequence,
@@ -91,22 +93,21 @@ Frogings.prototype.referalReward = function (stake_amount, address, cb) {
 			library.logic.transaction.sendTransaction(transactionData, function (err, transactionResponse) {
 				if (err) return err;
 				console.log(transactionResponse.body);
-				if (transactionResponse.body.success == false) {
-					let info = transactionResponse.body.error;
-					let sender_balance = parseFloat(transactionResponse.body.error.split('balance:')[1]);
-					return setImmediate(cb, info, sender_balance);
-				} else {
+				// if (transactionResponse.body.success == false) {
+				// 	let info = transactionResponse.body.error;
+				// 	return setImmediate(cb, info);
+				// } else {
 					return setImmediate(cb, null);
-				}
+				// }
 			});
 
 		} else {
-			let error = "No Introducer Found";
-			return setImmediate(cb, error);
+			library.logger.info("Direct Introducer Reward Info : No referrals or any introducer found");
+			return setImmediate(cb, null);
 		}
 
 	}).catch(function (err) {
-		return setImmediate(cb, err.toString());
+		return setImmediate(cb, err);
 	});
 }
 
@@ -392,14 +393,33 @@ Frogings.prototype.shared = {
 					}
 					library.network.io.sockets.emit('updateTotalStakeAmount', null);
 
-					self.referalReward(req.body.freezedAmount,accountData.address,function(err,bal) {
-						if(err){
-							if(bal < 0.0001)
-								library.logger.info("Sender Account Balance Info: "+ err);
-							else 
-								library.logger.info(err);
+					library.db.one(ref_sql.checkBalance, {
+						sender_address: env.SENDER_ADDRESS
+					}).then(function (bal) {
+						let balance = parseInt(bal.u_balance);
+						if (balance > 10000) {
+							self.referalReward(req.body.freezedAmount, accountData.address, function (err) {
+								if (err) {
+									library.logger.error(err.stack);
+								}
+								return setImmediate(cb, null, {
+									transaction: transaction[0],
+									referStatus: true
+								});
+							});
+						} else {
+							cache.prototype.isExists("referStatus",function(err,exist){
+								if(!exist) {
+									cache.prototype.setJsonForKey("referStatus", false);
+								}
+								return setImmediate(cb, null, {
+									transaction: transaction[0],
+									referStatus: false
+								});
+							});					
 						}
-						return setImmediate(cb, null, { transaction: transaction[0]});
+					}).catch(function (err) {
+						return setImmediate(cb, err);
 					});
 
 				});
