@@ -967,9 +967,6 @@ Transaction.prototype.dbSave = function (trs) {
 		throw e;
 	}
 
-	if ((trs.type === 8) && trs.freezedAmount > 0) {
-		trs.amount = trs.freezedAmount;
-	}
 	if (trs.type === 11)
 	{
 		trs.fee = 0;
