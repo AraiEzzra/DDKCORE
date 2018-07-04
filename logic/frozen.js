@@ -485,7 +485,7 @@ Frozen.prototype.checkFrozeOrders = function () {
 										}
 
 										self.scope.logger.info("Successfully transfered reward for freezing an amount and transaction ID is : " + transactionResponse.body.transactionId);
-										resolve();
+										next(null, null);
 									});
 								} else {
 									cache.prototype.isExists("referStatus",function(err,exist){
@@ -493,11 +493,11 @@ Frozen.prototype.checkFrozeOrders = function () {
 											cache.prototype.setJsonForKey("referStatus", false);
 										}
 										self.scope.logger.info("Successfully transfered reward for freezing an amount and transaction ID is : " + transactionResponse.body.transactionId);
-										resolve();
+										next(null, null);
 									});
 								}
 							}).catch(function (err) {
-								reject(new Error(err.stack));
+								next(err, null);
 							});
 
 						}
