@@ -65,7 +65,7 @@ Frozen.prototype.create = function (data, trs) {
 	trs.recipientId = null;
 	trs.freezedAmount = data.freezedAmount;
 	trs.nextVoteMilestone = (date.setMinutes(date.getMinutes() + constants.froze.vTime)) / 1000;
-	trs.amount = data.freezedAmount;
+	// trs.amount = data.freezedAmount;
 	return trs;
 };
 
