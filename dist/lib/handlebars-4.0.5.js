@@ -30,91 +30,91 @@ THE SOFTWARE.
 	else if(typeof define === 'function' && define.amd)
 		define([], factory);
 	else if(typeof exports === 'object')
-		exports['Handlebars'] = factory();
+		exports["Handlebars"] = factory();
 	else
-		root['Handlebars'] = factory();
+		root["Handlebars"] = factory();
 })(this, function() {
-	return /******/ (function(modules) { // webpackBootstrap
-		/******/ 	// The module cache
-		/******/ 	let installedModules = {};
+return /******/ (function(modules) { // webpackBootstrap
+/******/ 	// The module cache
+/******/ 	var installedModules = {};
 
-		/******/ 	// The require function
-		/******/ 	function __webpack_require__(moduleId) {
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
 
-			/******/ 		// Check if module is in cache
-			/******/ 		if(installedModules[moduleId])
-			/******/ 			return installedModules[moduleId].exports;
+/******/ 		// Check if module is in cache
+/******/ 		if(installedModules[moduleId])
+/******/ 			return installedModules[moduleId].exports;
 
-			/******/ 		// Create a new module (and put it into the cache)
-			/******/ 		let module = installedModules[moduleId] = {
-				/******/ 			exports: {},
-				/******/ 			id: moduleId,
-				/******/ 			loaded: false
-				/******/ 		};
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = installedModules[moduleId] = {
+/******/ 			exports: {},
+/******/ 			id: moduleId,
+/******/ 			loaded: false
+/******/ 		};
 
-			/******/ 		// Execute the module function
-			/******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
+/******/ 		// Execute the module function
+/******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
 
-			/******/ 		// Flag the module as loaded
-			/******/ 		module.loaded = true;
+/******/ 		// Flag the module as loaded
+/******/ 		module.loaded = true;
 
-			/******/ 		// Return the exports of the module
-			/******/ 		return module.exports;
-			/******/ 	}
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
 
 
-		/******/ 	// expose the modules object (__webpack_modules__)
-		/******/ 	__webpack_require__.m = modules;
+/******/ 	// expose the modules object (__webpack_modules__)
+/******/ 	__webpack_require__.m = modules;
 
-		/******/ 	// expose the module cache
-		/******/ 	__webpack_require__.c = installedModules;
+/******/ 	// expose the module cache
+/******/ 	__webpack_require__.c = installedModules;
 
-		/******/ 	// __webpack_public_path__
-		/******/ 	__webpack_require__.p = '';
+/******/ 	// __webpack_public_path__
+/******/ 	__webpack_require__.p = "";
 
-		/******/ 	// Load entry module and return exports
-		/******/ 	return __webpack_require__(0);
-		/******/ })
-	/************************************************************************/
-	/******/ ([
-		/* 0 */
-		/***/ function(module, exports, __webpack_require__) {
+/******/ 	// Load entry module and return exports
+/******/ 	return __webpack_require__(0);
+/******/ })
+/************************************************************************/
+/******/ ([
+/* 0 */
+/***/ function(module, exports, __webpack_require__) {
 
-			
+	'use strict';
 
-			let _interopRequireDefault = __webpack_require__(1)['default'];
+	var _interopRequireDefault = __webpack_require__(1)['default'];
 
-			exports.__esModule = true;
+	exports.__esModule = true;
 
-			let _handlebarsRuntime = __webpack_require__(2);
+	var _handlebarsRuntime = __webpack_require__(2);
 
-			let _handlebarsRuntime2 = _interopRequireDefault(_handlebarsRuntime);
+	var _handlebarsRuntime2 = _interopRequireDefault(_handlebarsRuntime);
 
-			// Compiler imports
+	// Compiler imports
 
-			let _handlebarsCompilerAst = __webpack_require__(21);
+	var _handlebarsCompilerAst = __webpack_require__(21);
 
-			let _handlebarsCompilerAst2 = _interopRequireDefault(_handlebarsCompilerAst);
+	var _handlebarsCompilerAst2 = _interopRequireDefault(_handlebarsCompilerAst);
 
-			let _handlebarsCompilerBase = __webpack_require__(22);
+	var _handlebarsCompilerBase = __webpack_require__(22);
 
-			let _handlebarsCompilerCompiler = __webpack_require__(27);
+	var _handlebarsCompilerCompiler = __webpack_require__(27);
 
-			let _handlebarsCompilerJavascriptCompiler = __webpack_require__(28);
+	var _handlebarsCompilerJavascriptCompiler = __webpack_require__(28);
 
-			let _handlebarsCompilerJavascriptCompiler2 = _interopRequireDefault(_handlebarsCompilerJavascriptCompiler);
+	var _handlebarsCompilerJavascriptCompiler2 = _interopRequireDefault(_handlebarsCompilerJavascriptCompiler);
 
-			let _handlebarsCompilerVisitor = __webpack_require__(25);
+	var _handlebarsCompilerVisitor = __webpack_require__(25);
 
-			let _handlebarsCompilerVisitor2 = _interopRequireDefault(_handlebarsCompilerVisitor);
+	var _handlebarsCompilerVisitor2 = _interopRequireDefault(_handlebarsCompilerVisitor);
 
-			let _handlebarsNoConflict = __webpack_require__(20);
+	var _handlebarsNoConflict = __webpack_require__(20);
 
-			let _handlebarsNoConflict2 = _interopRequireDefault(_handlebarsNoConflict);
+	var _handlebarsNoConflict2 = _interopRequireDefault(_handlebarsNoConflict);
 
-			let _create = _handlebarsRuntime2['default'].create;
-			function create() {
-	  let hb = _create();
+	var _create = _handlebarsRuntime2['default'].create;
+	function create() {
+	  var hb = _create();
 
 	  hb.compile = function (input, options) {
 	    return _handlebarsCompilerCompiler.compile(input, options, hb);
@@ -130,76 +130,76 @@ THE SOFTWARE.
 	  hb.parse = _handlebarsCompilerBase.parse;
 
 	  return hb;
-			}
+	}
 
-			let inst = create();
-			inst.create = create;
+	var inst = create();
+	inst.create = create;
 
-			_handlebarsNoConflict2['default'](inst);
+	_handlebarsNoConflict2['default'](inst);
 
-			inst.Visitor = _handlebarsCompilerVisitor2['default'];
+	inst.Visitor = _handlebarsCompilerVisitor2['default'];
 
-			inst['default'] = inst;
+	inst['default'] = inst;
 
-			exports['default'] = inst;
-			module.exports = exports['default'];
+	exports['default'] = inst;
+	module.exports = exports['default'];
 
-			/***/ },
-		/* 1 */
-		/***/ function(module, exports) {
+/***/ },
+/* 1 */
+/***/ function(module, exports) {
 
-			
+	"use strict";
 
-			exports['default'] = function (obj) {
+	exports["default"] = function (obj) {
 	  return obj && obj.__esModule ? obj : {
-	    'default': obj
+	    "default": obj
 	  };
-			};
+	};
 
-			exports.__esModule = true;
+	exports.__esModule = true;
 
-			/***/ },
-		/* 2 */
-		/***/ function(module, exports, __webpack_require__) {
+/***/ },
+/* 2 */
+/***/ function(module, exports, __webpack_require__) {
 
-			
+	'use strict';
 
-			let _interopRequireWildcard = __webpack_require__(3)['default'];
+	var _interopRequireWildcard = __webpack_require__(3)['default'];
 
-			let _interopRequireDefault = __webpack_require__(1)['default'];
+	var _interopRequireDefault = __webpack_require__(1)['default'];
 
-			exports.__esModule = true;
+	exports.__esModule = true;
 
-			let _handlebarsBase = __webpack_require__(4);
+	var _handlebarsBase = __webpack_require__(4);
 
-			let base = _interopRequireWildcard(_handlebarsBase);
+	var base = _interopRequireWildcard(_handlebarsBase);
 
-			// Each of these augment the Handlebars object. No need to setup here.
-			// (This is done to easily share code between commonjs and browse envs)
+	// Each of these augment the Handlebars object. No need to setup here.
+	// (This is done to easily share code between commonjs and browse envs)
 
-			let _handlebarsSafeString = __webpack_require__(18);
+	var _handlebarsSafeString = __webpack_require__(18);
 
-			let _handlebarsSafeString2 = _interopRequireDefault(_handlebarsSafeString);
+	var _handlebarsSafeString2 = _interopRequireDefault(_handlebarsSafeString);
 
-			let _handlebarsException = __webpack_require__(6);
+	var _handlebarsException = __webpack_require__(6);
 
-			let _handlebarsException2 = _interopRequireDefault(_handlebarsException);
+	var _handlebarsException2 = _interopRequireDefault(_handlebarsException);
 
-			let _handlebarsUtils = __webpack_require__(5);
+	var _handlebarsUtils = __webpack_require__(5);
 
-			let Utils = _interopRequireWildcard(_handlebarsUtils);
+	var Utils = _interopRequireWildcard(_handlebarsUtils);
 
-			let _handlebarsRuntime = __webpack_require__(19);
+	var _handlebarsRuntime = __webpack_require__(19);
 
-			let runtime = _interopRequireWildcard(_handlebarsRuntime);
+	var runtime = _interopRequireWildcard(_handlebarsRuntime);
 
-			let _handlebarsNoConflict = __webpack_require__(20);
+	var _handlebarsNoConflict = __webpack_require__(20);
 
-			let _handlebarsNoConflict2 = _interopRequireDefault(_handlebarsNoConflict);
+	var _handlebarsNoConflict2 = _interopRequireDefault(_handlebarsNoConflict);
 
-			// For compatibility and usage outside of module systems, make the Handlebars object a namespace
-			function create() {
-	  let hb = new base.HandlebarsEnvironment();
+	// For compatibility and usage outside of module systems, make the Handlebars object a namespace
+	function create() {
+	  var hb = new base.HandlebarsEnvironment();
 
 	  Utils.extend(hb, base);
 	  hb.SafeString = _handlebarsSafeString2['default'];
@@ -213,74 +213,74 @@ THE SOFTWARE.
 	  };
 
 	  return hb;
-			}
+	}
 
-			let inst = create();
-			inst.create = create;
+	var inst = create();
+	inst.create = create;
 
-			_handlebarsNoConflict2['default'](inst);
+	_handlebarsNoConflict2['default'](inst);
 
-			inst['default'] = inst;
+	inst['default'] = inst;
 
-			exports['default'] = inst;
-			module.exports = exports['default'];
+	exports['default'] = inst;
+	module.exports = exports['default'];
 
-			/***/ },
-		/* 3 */
-		/***/ function(module, exports) {
+/***/ },
+/* 3 */
+/***/ function(module, exports) {
 
-			
+	"use strict";
 
-			exports['default'] = function (obj) {
+	exports["default"] = function (obj) {
 	  if (obj && obj.__esModule) {
 	    return obj;
 	  } else {
-	    let newObj = {};
+	    var newObj = {};
 
 	    if (obj != null) {
-	      for (let key in obj) {
+	      for (var key in obj) {
 	        if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key];
 	      }
 	    }
 
-	    newObj['default'] = obj;
+	    newObj["default"] = obj;
 	    return newObj;
 	  }
-			};
+	};
 
-			exports.__esModule = true;
+	exports.__esModule = true;
 
-			/***/ },
-		/* 4 */
-		/***/ function(module, exports, __webpack_require__) {
+/***/ },
+/* 4 */
+/***/ function(module, exports, __webpack_require__) {
 
-			
+	'use strict';
 
-			let _interopRequireDefault = __webpack_require__(1)['default'];
+	var _interopRequireDefault = __webpack_require__(1)['default'];
 
-			exports.__esModule = true;
-			exports.HandlebarsEnvironment = HandlebarsEnvironment;
+	exports.__esModule = true;
+	exports.HandlebarsEnvironment = HandlebarsEnvironment;
 
-			let _utils = __webpack_require__(5);
+	var _utils = __webpack_require__(5);
 
-			let _exception = __webpack_require__(6);
+	var _exception = __webpack_require__(6);
 
-			let _exception2 = _interopRequireDefault(_exception);
+	var _exception2 = _interopRequireDefault(_exception);
 
-			let _helpers = __webpack_require__(7);
+	var _helpers = __webpack_require__(7);
 
-			let _decorators = __webpack_require__(15);
+	var _decorators = __webpack_require__(15);
 
-			let _logger = __webpack_require__(17);
+	var _logger = __webpack_require__(17);
 
-			let _logger2 = _interopRequireDefault(_logger);
+	var _logger2 = _interopRequireDefault(_logger);
 
-			let VERSION = '4.0.5';
-			exports.VERSION = VERSION;
-			let COMPILER_REVISION = 7;
+	var VERSION = '4.0.5';
+	exports.VERSION = VERSION;
+	var COMPILER_REVISION = 7;
 
-			exports.COMPILER_REVISION = COMPILER_REVISION;
-			let REVISION_CHANGES = {
+	exports.COMPILER_REVISION = COMPILER_REVISION;
+	var REVISION_CHANGES = {
 	  1: '<= 1.0.rc.2', // 1.0.rc.2 is actually rev2 but doesn't report it
 	  2: '== 1.0.0-rc.3',
 	  3: '== 1.0.0-rc.4',
@@ -288,21 +288,21 @@ THE SOFTWARE.
 	  5: '== 2.0.0-alpha.x',
 	  6: '>= 2.0.0-beta.1',
 	  7: '>= 4.0.0'
-			};
+	};
 
-			exports.REVISION_CHANGES = REVISION_CHANGES;
-			let objectType = '[object Object]';
+	exports.REVISION_CHANGES = REVISION_CHANGES;
+	var objectType = '[object Object]';
 
-			function HandlebarsEnvironment(helpers, partials, decorators) {
+	function HandlebarsEnvironment(helpers, partials, decorators) {
 	  this.helpers = helpers || {};
 	  this.partials = partials || {};
 	  this.decorators = decorators || {};
 
 	  _helpers.registerDefaultHelpers(this);
 	  _decorators.registerDefaultDecorators(this);
-			}
+	}
 
-			HandlebarsEnvironment.prototype = {
+	HandlebarsEnvironment.prototype = {
 	  constructor: HandlebarsEnvironment,
 
 	  logger: _logger2['default'],
@@ -349,48 +349,48 @@ THE SOFTWARE.
 	  unregisterDecorator: function unregisterDecorator(name) {
 	    delete this.decorators[name];
 	  }
-			};
+	};
 
-			let log = _logger2['default'].log;
+	var log = _logger2['default'].log;
 
-			exports.log = log;
-			exports.createFrame = _utils.createFrame;
-			exports.logger = _logger2['default'];
+	exports.log = log;
+	exports.createFrame = _utils.createFrame;
+	exports.logger = _logger2['default'];
 
-			/***/ },
-		/* 5 */
-		/***/ function(module, exports) {
+/***/ },
+/* 5 */
+/***/ function(module, exports) {
 
-			
+	'use strict';
 
-			exports.__esModule = true;
-			exports.extend = extend;
-			exports.indexOf = indexOf;
-			exports.escapeExpression = escapeExpression;
-			exports.isEmpty = isEmpty;
-			exports.createFrame = createFrame;
-			exports.blockParams = blockParams;
-			exports.appendContextPath = appendContextPath;
-			let escape = {
+	exports.__esModule = true;
+	exports.extend = extend;
+	exports.indexOf = indexOf;
+	exports.escapeExpression = escapeExpression;
+	exports.isEmpty = isEmpty;
+	exports.createFrame = createFrame;
+	exports.blockParams = blockParams;
+	exports.appendContextPath = appendContextPath;
+	var escape = {
 	  '&': '&amp;',
 	  '<': '&lt;',
 	  '>': '&gt;',
 	  '"': '&quot;',
-	  '\'': '&#x27;',
+	  "'": '&#x27;',
 	  '`': '&#x60;',
 	  '=': '&#x3D;'
-			};
+	};
 
-			let badChars = /[&<>"'`=]/g,
+	var badChars = /[&<>"'`=]/g,
 	    possible = /[&<>"'`=]/;
 
-			function escapeChar(chr) {
+	function escapeChar(chr) {
 	  return escape[chr];
-			}
+	}
 
-			function extend(obj /* , ...source */) {
-	  for (let i = 1; i < arguments.length; i++) {
-	    for (let key in arguments[i]) {
+	function extend(obj /* , ...source */) {
+	  for (var i = 1; i < arguments.length; i++) {
+	    for (var key in arguments[i]) {
 	      if (Object.prototype.hasOwnProperty.call(arguments[i], key)) {
 	        obj[key] = arguments[i][key];
 	      }
@@ -398,46 +398,46 @@ THE SOFTWARE.
 	  }
 
 	  return obj;
-			}
+	}
 
-			let toString = Object.prototype.toString;
+	var toString = Object.prototype.toString;
 
-			exports.toString = toString;
-			// Sourced from lodash
-			// https://github.com/bestiejs/lodash/blob/master/LICENSE.txt
-			/* eslint-disable func-style */
-			let isFunction = function isFunction(value) {
+	exports.toString = toString;
+	// Sourced from lodash
+	// https://github.com/bestiejs/lodash/blob/master/LICENSE.txt
+	/* eslint-disable func-style */
+	var isFunction = function isFunction(value) {
 	  return typeof value === 'function';
-			};
-			// fallback for older versions of Chrome and Safari
-			/* istanbul ignore next */
-			if (isFunction(/x/)) {
+	};
+	// fallback for older versions of Chrome and Safari
+	/* istanbul ignore next */
+	if (isFunction(/x/)) {
 	  exports.isFunction = isFunction = function (value) {
 	    return typeof value === 'function' && toString.call(value) === '[object Function]';
 	  };
-			}
-			exports.isFunction = isFunction;
+	}
+	exports.isFunction = isFunction;
 
-			/* eslint-enable func-style */
+	/* eslint-enable func-style */
 
-			/* istanbul ignore next */
-			let isArray = Array.isArray || function (value) {
+	/* istanbul ignore next */
+	var isArray = Array.isArray || function (value) {
 	  return value && typeof value === 'object' ? toString.call(value) === '[object Array]' : false;
-			};
+	};
 
-			exports.isArray = isArray;
-			// Older IE versions do not directly support indexOf so we must implement our own, sadly.
+	exports.isArray = isArray;
+	// Older IE versions do not directly support indexOf so we must implement our own, sadly.
 
-			function indexOf(array, value) {
-	  for (let i = 0, len = array.length; i < len; i++) {
+	function indexOf(array, value) {
+	  for (var i = 0, len = array.length; i < len; i++) {
 	    if (array[i] === value) {
 	      return i;
 	    }
 	  }
 	  return -1;
-			}
+	}
 
-			function escapeExpression(string) {
+	function escapeExpression(string) {
 	  if (typeof string !== 'string') {
 	    // don't escape SafeStrings, since they're already safe
 	    if (string && string.toHTML) {
@@ -458,9 +458,9 @@ THE SOFTWARE.
 	    return string;
 	  }
 	  return string.replace(badChars, escapeChar);
-			}
+	}
 
-			function isEmpty(value) {
+	function isEmpty(value) {
 	  if (!value && value !== 0) {
 	    return true;
 	  } else if (isArray(value) && value.length === 0) {
@@ -468,35 +468,35 @@ THE SOFTWARE.
 	  } else {
 	    return false;
 	  }
-			}
+	}
 
-			function createFrame(object) {
-	  let frame = extend({}, object);
+	function createFrame(object) {
+	  var frame = extend({}, object);
 	  frame._parent = object;
 	  return frame;
-			}
+	}
 
-			function blockParams(params, ids) {
+	function blockParams(params, ids) {
 	  params.path = ids;
 	  return params;
-			}
+	}
 
-			function appendContextPath(contextPath, id) {
+	function appendContextPath(contextPath, id) {
 	  return (contextPath ? contextPath + '.' : '') + id;
-			}
+	}
 
-			/***/ },
-		/* 6 */
-		/***/ function(module, exports) {
+/***/ },
+/* 6 */
+/***/ function(module, exports) {
 
-			
+	'use strict';
 
-			exports.__esModule = true;
+	exports.__esModule = true;
 
-			let errorProps = ['description', 'fileName', 'lineNumber', 'message', 'name', 'number', 'stack'];
+	var errorProps = ['description', 'fileName', 'lineNumber', 'message', 'name', 'number', 'stack'];
 
-			function Exception(message, node) {
-	  let loc = node && node.loc,
+	function Exception(message, node) {
+	  var loc = node && node.loc,
 	      line = undefined,
 	      column = undefined;
 	  if (loc) {
@@ -506,10 +506,10 @@ THE SOFTWARE.
 	    message += ' - ' + line + ':' + column;
 	  }
 
-	  let tmp = Error.prototype.constructor.call(this, message);
+	  var tmp = Error.prototype.constructor.call(this, message);
 
 	  // Unfortunately errors are not enumerable in Chrome (at least), so `for prop in tmp` doesn't work.
-	  for (let idx = 0; idx < errorProps.length; idx++) {
+	  for (var idx = 0; idx < errorProps.length; idx++) {
 	    this[errorProps[idx]] = tmp[errorProps[idx]];
 	  }
 
@@ -522,53 +522,53 @@ THE SOFTWARE.
 	    this.lineNumber = line;
 	    this.column = column;
 	  }
-			}
+	}
 
-			Exception.prototype = new Error();
+	Exception.prototype = new Error();
 
-			exports['default'] = Exception;
-			module.exports = exports['default'];
+	exports['default'] = Exception;
+	module.exports = exports['default'];
 
-			/***/ },
-		/* 7 */
-		/***/ function(module, exports, __webpack_require__) {
+/***/ },
+/* 7 */
+/***/ function(module, exports, __webpack_require__) {
 
-			
+	'use strict';
 
-			let _interopRequireDefault = __webpack_require__(1)['default'];
+	var _interopRequireDefault = __webpack_require__(1)['default'];
 
-			exports.__esModule = true;
-			exports.registerDefaultHelpers = registerDefaultHelpers;
+	exports.__esModule = true;
+	exports.registerDefaultHelpers = registerDefaultHelpers;
 
-			let _helpersBlockHelperMissing = __webpack_require__(8);
+	var _helpersBlockHelperMissing = __webpack_require__(8);
 
-			let _helpersBlockHelperMissing2 = _interopRequireDefault(_helpersBlockHelperMissing);
+	var _helpersBlockHelperMissing2 = _interopRequireDefault(_helpersBlockHelperMissing);
 
-			let _helpersEach = __webpack_require__(9);
+	var _helpersEach = __webpack_require__(9);
 
-			let _helpersEach2 = _interopRequireDefault(_helpersEach);
+	var _helpersEach2 = _interopRequireDefault(_helpersEach);
 
-			let _helpersHelperMissing = __webpack_require__(10);
+	var _helpersHelperMissing = __webpack_require__(10);
 
-			let _helpersHelperMissing2 = _interopRequireDefault(_helpersHelperMissing);
+	var _helpersHelperMissing2 = _interopRequireDefault(_helpersHelperMissing);
 
-			let _helpersIf = __webpack_require__(11);
+	var _helpersIf = __webpack_require__(11);
 
-			let _helpersIf2 = _interopRequireDefault(_helpersIf);
+	var _helpersIf2 = _interopRequireDefault(_helpersIf);
 
-			let _helpersLog = __webpack_require__(12);
+	var _helpersLog = __webpack_require__(12);
 
-			let _helpersLog2 = _interopRequireDefault(_helpersLog);
+	var _helpersLog2 = _interopRequireDefault(_helpersLog);
 
-			let _helpersLookup = __webpack_require__(13);
+	var _helpersLookup = __webpack_require__(13);
 
-			let _helpersLookup2 = _interopRequireDefault(_helpersLookup);
+	var _helpersLookup2 = _interopRequireDefault(_helpersLookup);
 
-			let _helpersWith = __webpack_require__(14);
+	var _helpersWith = __webpack_require__(14);
 
-			let _helpersWith2 = _interopRequireDefault(_helpersWith);
+	var _helpersWith2 = _interopRequireDefault(_helpersWith);
 
-			function registerDefaultHelpers(instance) {
+	function registerDefaultHelpers(instance) {
 	  _helpersBlockHelperMissing2['default'](instance);
 	  _helpersEach2['default'](instance);
 	  _helpersHelperMissing2['default'](instance);
@@ -576,21 +576,21 @@ THE SOFTWARE.
 	  _helpersLog2['default'](instance);
 	  _helpersLookup2['default'](instance);
 	  _helpersWith2['default'](instance);
-			}
+	}
 
-			/***/ },
-		/* 8 */
-		/***/ function(module, exports, __webpack_require__) {
+/***/ },
+/* 8 */
+/***/ function(module, exports, __webpack_require__) {
 
-			
+	'use strict';
 
-			exports.__esModule = true;
+	exports.__esModule = true;
 
-			let _utils = __webpack_require__(5);
+	var _utils = __webpack_require__(5);
 
-			exports['default'] = function (instance) {
+	exports['default'] = function (instance) {
 	  instance.registerHelper('blockHelperMissing', function (context, options) {
-	    let inverse = options.inverse,
+	    var inverse = options.inverse,
 	        fn = options.fn;
 
 	    if (context === true) {
@@ -609,7 +609,7 @@ THE SOFTWARE.
 	      }
 	    } else {
 	      if (options.data && options.ids) {
-	        let data = _utils.createFrame(options.data);
+	        var data = _utils.createFrame(options.data);
 	        data.contextPath = _utils.appendContextPath(options.data.contextPath, options.name);
 	        options = { data: data };
 	      }
@@ -617,33 +617,33 @@ THE SOFTWARE.
 	      return fn(context, options);
 	    }
 	  });
-			};
+	};
 
-			module.exports = exports['default'];
+	module.exports = exports['default'];
 
-			/***/ },
-		/* 9 */
-		/***/ function(module, exports, __webpack_require__) {
+/***/ },
+/* 9 */
+/***/ function(module, exports, __webpack_require__) {
 
-			
+	'use strict';
 
-			let _interopRequireDefault = __webpack_require__(1)['default'];
+	var _interopRequireDefault = __webpack_require__(1)['default'];
 
-			exports.__esModule = true;
+	exports.__esModule = true;
 
-			let _utils = __webpack_require__(5);
+	var _utils = __webpack_require__(5);
 
-			let _exception = __webpack_require__(6);
+	var _exception = __webpack_require__(6);
 
-			let _exception2 = _interopRequireDefault(_exception);
+	var _exception2 = _interopRequireDefault(_exception);
 
-			exports['default'] = function (instance) {
+	exports['default'] = function (instance) {
 	  instance.registerHelper('each', function (context, options) {
 	    if (!options) {
 	      throw new _exception2['default']('Must pass iterator to #each');
 	    }
 
-	    let fn = options.fn,
+	    var fn = options.fn,
 	        inverse = options.inverse,
 	        i = 0,
 	        ret = '',
@@ -682,15 +682,15 @@ THE SOFTWARE.
 
 	    if (context && typeof context === 'object') {
 	      if (_utils.isArray(context)) {
-	        for (let j = context.length; i < j; i++) {
+	        for (var j = context.length; i < j; i++) {
 	          if (i in context) {
 	            execIteration(i, i, i === context.length - 1);
 	          }
 	        }
 	      } else {
-	        let priorKey = undefined;
+	        var priorKey = undefined;
 
-	        for (let key in context) {
+	        for (var key in context) {
 	          if (context.hasOwnProperty(key)) {
 	            // We're running the iterations one step out of sync so we can detect
 	            // the last iteration without have to scan the object twice and create
@@ -714,25 +714,25 @@ THE SOFTWARE.
 
 	    return ret;
 	  });
-			};
+	};
 
-			module.exports = exports['default'];
+	module.exports = exports['default'];
 
-			/***/ },
-		/* 10 */
-		/***/ function(module, exports, __webpack_require__) {
+/***/ },
+/* 10 */
+/***/ function(module, exports, __webpack_require__) {
 
-			
+	'use strict';
 
-			let _interopRequireDefault = __webpack_require__(1)['default'];
+	var _interopRequireDefault = __webpack_require__(1)['default'];
 
-			exports.__esModule = true;
+	exports.__esModule = true;
 
-			let _exception = __webpack_require__(6);
+	var _exception = __webpack_require__(6);
 
-			let _exception2 = _interopRequireDefault(_exception);
+	var _exception2 = _interopRequireDefault(_exception);
 
-			exports['default'] = function (instance) {
+	exports['default'] = function (instance) {
 	  instance.registerHelper('helperMissing', function () /* [args, ]options */{
 	    if (arguments.length === 1) {
 	      // A missing field in a {{foo}} construct.
@@ -742,21 +742,21 @@ THE SOFTWARE.
 	      throw new _exception2['default']('Missing helper: "' + arguments[arguments.length - 1].name + '"');
 	    }
 	  });
-			};
+	};
 
-			module.exports = exports['default'];
+	module.exports = exports['default'];
 
-			/***/ },
-		/* 11 */
-		/***/ function(module, exports, __webpack_require__) {
+/***/ },
+/* 11 */
+/***/ function(module, exports, __webpack_require__) {
 
-			
+	'use strict';
 
-			exports.__esModule = true;
+	exports.__esModule = true;
 
-			let _utils = __webpack_require__(5);
+	var _utils = __webpack_require__(5);
 
-			exports['default'] = function (instance) {
+	exports['default'] = function (instance) {
 	  instance.registerHelper('if', function (conditional, options) {
 	    if (_utils.isFunction(conditional)) {
 	      conditional = conditional.call(this);
@@ -775,27 +775,27 @@ THE SOFTWARE.
 	  instance.registerHelper('unless', function (conditional, options) {
 	    return instance.helpers['if'].call(this, conditional, { fn: options.inverse, inverse: options.fn, hash: options.hash });
 	  });
-			};
+	};
 
-			module.exports = exports['default'];
+	module.exports = exports['default'];
 
-			/***/ },
-		/* 12 */
-		/***/ function(module, exports) {
+/***/ },
+/* 12 */
+/***/ function(module, exports) {
 
-			
+	'use strict';
 
-			exports.__esModule = true;
+	exports.__esModule = true;
 
-			exports['default'] = function (instance) {
+	exports['default'] = function (instance) {
 	  instance.registerHelper('log', function () /* message, options */{
-	    let args = [undefined],
+	    var args = [undefined],
 	        options = arguments[arguments.length - 1];
-	    for (let i = 0; i < arguments.length - 1; i++) {
+	    for (var i = 0; i < arguments.length - 1; i++) {
 	      args.push(arguments[i]);
 	    }
 
-	    let level = 1;
+	    var level = 1;
 	    if (options.hash.level != null) {
 	      level = options.hash.level;
 	    } else if (options.data && options.data.level != null) {
@@ -805,46 +805,46 @@ THE SOFTWARE.
 
 	    instance.log.apply(instance, args);
 	  });
-			};
+	};
 
-			module.exports = exports['default'];
+	module.exports = exports['default'];
 
-			/***/ },
-		/* 13 */
-		/***/ function(module, exports) {
+/***/ },
+/* 13 */
+/***/ function(module, exports) {
 
-			
+	'use strict';
 
-			exports.__esModule = true;
+	exports.__esModule = true;
 
-			exports['default'] = function (instance) {
+	exports['default'] = function (instance) {
 	  instance.registerHelper('lookup', function (obj, field) {
 	    return obj && obj[field];
 	  });
-			};
+	};
 
-			module.exports = exports['default'];
+	module.exports = exports['default'];
 
-			/***/ },
-		/* 14 */
-		/***/ function(module, exports, __webpack_require__) {
+/***/ },
+/* 14 */
+/***/ function(module, exports, __webpack_require__) {
 
-			
+	'use strict';
 
-			exports.__esModule = true;
+	exports.__esModule = true;
 
-			let _utils = __webpack_require__(5);
+	var _utils = __webpack_require__(5);
 
-			exports['default'] = function (instance) {
+	exports['default'] = function (instance) {
 	  instance.registerHelper('with', function (context, options) {
 	    if (_utils.isFunction(context)) {
 	      context = context.call(this);
 	    }
 
-	    let fn = options.fn;
+	    var fn = options.fn;
 
 	    if (!_utils.isEmpty(context)) {
-	      let data = options.data;
+	      var data = options.data;
 	      if (options.data && options.ids) {
 	        data = _utils.createFrame(options.data);
 	        data.contextPath = _utils.appendContextPath(options.data.contextPath, options.ids[0]);
@@ -858,49 +858,49 @@ THE SOFTWARE.
 	      return options.inverse(this);
 	    }
 	  });
-			};
+	};
 
-			module.exports = exports['default'];
+	module.exports = exports['default'];
 
-			/***/ },
-		/* 15 */
-		/***/ function(module, exports, __webpack_require__) {
+/***/ },
+/* 15 */
+/***/ function(module, exports, __webpack_require__) {
 
-			
+	'use strict';
 
-			let _interopRequireDefault = __webpack_require__(1)['default'];
+	var _interopRequireDefault = __webpack_require__(1)['default'];
 
-			exports.__esModule = true;
-			exports.registerDefaultDecorators = registerDefaultDecorators;
+	exports.__esModule = true;
+	exports.registerDefaultDecorators = registerDefaultDecorators;
 
-			let _decoratorsInline = __webpack_require__(16);
+	var _decoratorsInline = __webpack_require__(16);
 
-			let _decoratorsInline2 = _interopRequireDefault(_decoratorsInline);
+	var _decoratorsInline2 = _interopRequireDefault(_decoratorsInline);
 
-			function registerDefaultDecorators(instance) {
+	function registerDefaultDecorators(instance) {
 	  _decoratorsInline2['default'](instance);
-			}
+	}
 
-			/***/ },
-		/* 16 */
-		/***/ function(module, exports, __webpack_require__) {
+/***/ },
+/* 16 */
+/***/ function(module, exports, __webpack_require__) {
 
-			
+	'use strict';
 
-			exports.__esModule = true;
+	exports.__esModule = true;
 
-			let _utils = __webpack_require__(5);
+	var _utils = __webpack_require__(5);
 
-			exports['default'] = function (instance) {
+	exports['default'] = function (instance) {
 	  instance.registerDecorator('inline', function (fn, props, container, options) {
-	    let ret = fn;
+	    var ret = fn;
 	    if (!props.partials) {
 	      props.partials = {};
 	      ret = function (context, options) {
 	        // Create a new partials stack frame prior to exec.
-	        let original = container.partials;
+	        var original = container.partials;
 	        container.partials = _utils.extend({}, original, props.partials);
-	        let ret = fn(context, options);
+	        var ret = fn(context, options);
 	        container.partials = original;
 	        return ret;
 	      };
@@ -910,28 +910,28 @@ THE SOFTWARE.
 
 	    return ret;
 	  });
-			};
+	};
 
-			module.exports = exports['default'];
+	module.exports = exports['default'];
 
-			/***/ },
-		/* 17 */
-		/***/ function(module, exports, __webpack_require__) {
+/***/ },
+/* 17 */
+/***/ function(module, exports, __webpack_require__) {
 
-			
+	'use strict';
 
-			exports.__esModule = true;
+	exports.__esModule = true;
 
-			let _utils = __webpack_require__(5);
+	var _utils = __webpack_require__(5);
 
-			let logger = {
+	var logger = {
 	  methodMap: ['debug', 'info', 'warn', 'error'],
 	  level: 'info',
 
 	  // Maps a given level value to the `methodMap` indexes above.
 	  lookupLevel: function lookupLevel(level) {
 	    if (typeof level === 'string') {
-	      let levelMap = _utils.indexOf(logger.methodMap, level.toLowerCase());
+	      var levelMap = _utils.indexOf(logger.methodMap, level.toLowerCase());
 	      if (levelMap >= 0) {
 	        level = levelMap;
 	      } else {
@@ -947,78 +947,78 @@ THE SOFTWARE.
 	    level = logger.lookupLevel(level);
 
 	    if (typeof console !== 'undefined' && logger.lookupLevel(logger.level) <= level) {
-	      let method = logger.methodMap[level];
+	      var method = logger.methodMap[level];
 	      if (!console[method]) {
 	        // eslint-disable-line no-console
 	        method = 'log';
 	      }
 
-	      for (let _len = arguments.length, message = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+	      for (var _len = arguments.length, message = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
 	        message[_key - 1] = arguments[_key];
 	      }
 
 	      console[method].apply(console, message); // eslint-disable-line no-console
 	    }
 	  }
-			};
+	};
 
-			exports['default'] = logger;
-			module.exports = exports['default'];
+	exports['default'] = logger;
+	module.exports = exports['default'];
 
-			/***/ },
-		/* 18 */
-		/***/ function(module, exports) {
+/***/ },
+/* 18 */
+/***/ function(module, exports) {
 
-			// Build out our basic SafeString type
-			
+	// Build out our basic SafeString type
+	'use strict';
 
-			exports.__esModule = true;
-			function SafeString(string) {
+	exports.__esModule = true;
+	function SafeString(string) {
 	  this.string = string;
-			}
+	}
 
-			SafeString.prototype.toString = SafeString.prototype.toHTML = function () {
+	SafeString.prototype.toString = SafeString.prototype.toHTML = function () {
 	  return '' + this.string;
-			};
+	};
 
-			exports['default'] = SafeString;
-			module.exports = exports['default'];
+	exports['default'] = SafeString;
+	module.exports = exports['default'];
 
-			/***/ },
-		/* 19 */
-		/***/ function(module, exports, __webpack_require__) {
+/***/ },
+/* 19 */
+/***/ function(module, exports, __webpack_require__) {
 
-			
+	'use strict';
 
-			let _interopRequireWildcard = __webpack_require__(3)['default'];
+	var _interopRequireWildcard = __webpack_require__(3)['default'];
 
-			let _interopRequireDefault = __webpack_require__(1)['default'];
+	var _interopRequireDefault = __webpack_require__(1)['default'];
 
-			exports.__esModule = true;
-			exports.checkRevision = checkRevision;
-			exports.template = template;
-			exports.wrapProgram = wrapProgram;
-			exports.resolvePartial = resolvePartial;
-			exports.invokePartial = invokePartial;
-			exports.noop = noop;
+	exports.__esModule = true;
+	exports.checkRevision = checkRevision;
+	exports.template = template;
+	exports.wrapProgram = wrapProgram;
+	exports.resolvePartial = resolvePartial;
+	exports.invokePartial = invokePartial;
+	exports.noop = noop;
 
-			let _utils = __webpack_require__(5);
+	var _utils = __webpack_require__(5);
 
-			let Utils = _interopRequireWildcard(_utils);
+	var Utils = _interopRequireWildcard(_utils);
 
-			let _exception = __webpack_require__(6);
+	var _exception = __webpack_require__(6);
 
-			let _exception2 = _interopRequireDefault(_exception);
+	var _exception2 = _interopRequireDefault(_exception);
 
-			let _base = __webpack_require__(4);
+	var _base = __webpack_require__(4);
 
-			function checkRevision(compilerInfo) {
-	  let compilerRevision = compilerInfo && compilerInfo[0] || 1,
+	function checkRevision(compilerInfo) {
+	  var compilerRevision = compilerInfo && compilerInfo[0] || 1,
 	      currentRevision = _base.COMPILER_REVISION;
 
 	  if (compilerRevision !== currentRevision) {
 	    if (compilerRevision < currentRevision) {
-	      let runtimeVersions = _base.REVISION_CHANGES[currentRevision],
+	      var runtimeVersions = _base.REVISION_CHANGES[currentRevision],
 	          compilerVersions = _base.REVISION_CHANGES[compilerRevision];
 	      throw new _exception2['default']('Template was precompiled with an older version of Handlebars than the current runtime. ' + 'Please update your precompiler to a newer version (' + runtimeVersions + ') or downgrade your runtime to an older version (' + compilerVersions + ').');
 	    } else {
@@ -1026,9 +1026,9 @@ THE SOFTWARE.
 	      throw new _exception2['default']('Template was precompiled with a newer version of Handlebars than the current runtime. ' + 'Please update your runtime to a newer version (' + compilerInfo[1] + ').');
 	    }
 	  }
-			}
+	}
 
-			function template(templateSpec, env) {
+	function template(templateSpec, env) {
 	  /* istanbul ignore next */
 	  if (!env) {
 	    throw new _exception2['default']('No environment passed to template');
@@ -1039,7 +1039,7 @@ THE SOFTWARE.
 
 	  templateSpec.main.decorator = templateSpec.main_d;
 
-	  // Note: Using env.VM references rather than local let references throughout this section to allow
+	  // Note: Using env.VM references rather than local var references throughout this section to allow
 	  // for external users to override these as psuedo-supported APIs.
 	  env.VM.checkRevision(templateSpec.compiler);
 
@@ -1052,7 +1052,7 @@ THE SOFTWARE.
 	    }
 
 	    partial = env.VM.resolvePartial.call(this, partial, context, options);
-	    let result = env.VM.invokePartial.call(this, partial, context, options);
+	    var result = env.VM.invokePartial.call(this, partial, context, options);
 
 	    if (result == null && env.compile) {
 	      options.partials[options.name] = env.compile(partial, templateSpec.compilerOptions, env);
@@ -1060,8 +1060,8 @@ THE SOFTWARE.
 	    }
 	    if (result != null) {
 	      if (options.indent) {
-	        let lines = result.split('\n');
-	        for (let i = 0, l = lines.length; i < l; i++) {
+	        var lines = result.split('\n');
+	        for (var i = 0, l = lines.length; i < l; i++) {
 	          if (!lines[i] && i + 1 === l) {
 	            break;
 	          }
@@ -1077,7 +1077,7 @@ THE SOFTWARE.
 	  }
 
 	  // Just add water
-	  let container = {
+	  var container = {
 	    strict: function strict(obj, name) {
 	      if (!(name in obj)) {
 	        throw new _exception2['default']('"' + name + '" not defined in ' + obj);
@@ -1085,8 +1085,8 @@ THE SOFTWARE.
 	      return obj[name];
 	    },
 	    lookup: function lookup(depths, name) {
-	      let len = depths.length;
-	      for (let i = 0; i < len; i++) {
+	      var len = depths.length;
+	      for (var i = 0; i < len; i++) {
 	        if (depths[i] && depths[i][name] != null) {
 	          return depths[i][name];
 	        }
@@ -1100,14 +1100,14 @@ THE SOFTWARE.
 	    invokePartial: invokePartialWrapper,
 
 	    fn: function fn(i) {
-	      let ret = templateSpec[i];
+	      var ret = templateSpec[i];
 	      ret.decorator = templateSpec[i + '_d'];
 	      return ret;
 	    },
 
 	    programs: [],
 	    program: function program(i, data, declaredBlockParams, blockParams, depths) {
-	      let programWrapper = this.programs[i],
+	      var programWrapper = this.programs[i],
 	          fn = this.fn(i);
 	      if (data || depths || blockParams || declaredBlockParams) {
 	        programWrapper = wrapProgram(this, i, fn, data, declaredBlockParams, blockParams, depths);
@@ -1124,7 +1124,7 @@ THE SOFTWARE.
 	      return value;
 	    },
 	    merge: function merge(param, common) {
-	      let obj = param || common;
+	      var obj = param || common;
 
 	      if (param && common && param !== common) {
 	        obj = Utils.extend({}, common, param);
@@ -1138,15 +1138,15 @@ THE SOFTWARE.
 	  };
 
 	  function ret(context) {
-	    let options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+	    var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
-	    let data = options.data;
+	    var data = options.data;
 
 	    ret._setup(options);
 	    if (!options.partial && templateSpec.useData) {
 	      data = initData(context, data);
 	    }
-	    let depths = undefined,
+	    var depths = undefined,
 	        blockParams = templateSpec.useBlockParams ? [] : undefined;
 	    if (templateSpec.useDepths) {
 	      if (options.depths) {
@@ -1192,13 +1192,13 @@ THE SOFTWARE.
 	    return wrapProgram(container, i, templateSpec[i], data, 0, blockParams, depths);
 	  };
 	  return ret;
-			}
+	}
 
-			function wrapProgram(container, i, fn, data, declaredBlockParams, blockParams, depths) {
+	function wrapProgram(container, i, fn, data, declaredBlockParams, blockParams, depths) {
 	  function prog(context) {
-	    let options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+	    var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
-	    let currentDepths = depths;
+	    var currentDepths = depths;
 	    if (depths && context !== depths[0]) {
 	      currentDepths = [context].concat(depths);
 	    }
@@ -1212,9 +1212,9 @@ THE SOFTWARE.
 	  prog.depth = depths ? depths.length : 0;
 	  prog.blockParams = declaredBlockParams || 0;
 	  return prog;
-			}
+	}
 
-			function resolvePartial(partial, context, options) {
+	function resolvePartial(partial, context, options) {
 	  if (!partial) {
 	    if (options.name === '@partial-block') {
 	      partial = options.data['partial-block'];
@@ -1227,15 +1227,15 @@ THE SOFTWARE.
 	    partial = options.partials[partial];
 	  }
 	  return partial;
-			}
+	}
 
-			function invokePartial(partial, context, options) {
+	function invokePartial(partial, context, options) {
 	  options.partial = true;
 	  if (options.ids) {
 	    options.data.contextPath = options.ids[0] || options.data.contextPath;
 	  }
 
-	  let partialBlock = undefined;
+	  var partialBlock = undefined;
 	  if (options.fn && options.fn !== noop) {
 	    options.data = _base.createFrame(options.data);
 	    partialBlock = options.data['partial-block'] = options.fn;
@@ -1254,41 +1254,41 @@ THE SOFTWARE.
 	  } else if (partial instanceof Function) {
 	    return partial(context, options);
 	  }
-			}
+	}
 
-			function noop() {
+	function noop() {
 	  return '';
-			}
+	}
 
-			function initData(context, data) {
+	function initData(context, data) {
 	  if (!data || !('root' in data)) {
 	    data = data ? _base.createFrame(data) : {};
 	    data.root = context;
 	  }
 	  return data;
-			}
+	}
 
-			function executeDecorators(fn, prog, container, depths, data, blockParams) {
+	function executeDecorators(fn, prog, container, depths, data, blockParams) {
 	  if (fn.decorator) {
-	    let props = {};
+	    var props = {};
 	    prog = fn.decorator(prog, props, container, depths && depths[0], data, blockParams, depths);
 	    Utils.extend(prog, props);
 	  }
 	  return prog;
-			}
+	}
 
-			/***/ },
-		/* 20 */
-		/***/ function(module, exports) {
+/***/ },
+/* 20 */
+/***/ function(module, exports) {
 
-			/* WEBPACK VAR INJECTION */(function(global) {/* global window */
-				
+	/* WEBPACK VAR INJECTION */(function(global) {/* global window */
+	'use strict';
 
-				exports.__esModule = true;
+	exports.__esModule = true;
 
-				exports['default'] = function (Handlebars) {
+	exports['default'] = function (Handlebars) {
 	  /* istanbul ignore next */
-	  let root = typeof global !== 'undefined' ? global : window,
+	  var root = typeof global !== 'undefined' ? global : window,
 	      $Handlebars = root.Handlebars;
 	  /* istanbul ignore next */
 	  Handlebars.noConflict = function () {
@@ -1297,19 +1297,19 @@ THE SOFTWARE.
 	    }
 	    return Handlebars;
 	  };
-				};
+	};
 
-				module.exports = exports['default'];
-				/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())));
+	module.exports = exports['default'];
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
-			/***/ },
-		/* 21 */
-		/***/ function(module, exports) {
+/***/ },
+/* 21 */
+/***/ function(module, exports) {
 
-			
+	'use strict';
 
-			exports.__esModule = true;
-			let AST = {
+	exports.__esModule = true;
+	var AST = {
 	  // Public API used to evaluate derived attributes regarding AST nodes
 	  helpers: {
 	    // a mustache is definitely a helper if:
@@ -1330,46 +1330,46 @@ THE SOFTWARE.
 	      return path.parts.length === 1 && !AST.helpers.scopedId(path) && !path.depth;
 	    }
 	  }
-			};
+	};
 
-			// Must be exported as an object rather than the root of the module as the jison lexer
-			// must modify the object to operate properly.
-			exports['default'] = AST;
-			module.exports = exports['default'];
+	// Must be exported as an object rather than the root of the module as the jison lexer
+	// must modify the object to operate properly.
+	exports['default'] = AST;
+	module.exports = exports['default'];
 
-			/***/ },
-		/* 22 */
-		/***/ function(module, exports, __webpack_require__) {
+/***/ },
+/* 22 */
+/***/ function(module, exports, __webpack_require__) {
 
-			
+	'use strict';
 
-			let _interopRequireDefault = __webpack_require__(1)['default'];
+	var _interopRequireDefault = __webpack_require__(1)['default'];
 
-			let _interopRequireWildcard = __webpack_require__(3)['default'];
+	var _interopRequireWildcard = __webpack_require__(3)['default'];
 
-			exports.__esModule = true;
-			exports.parse = parse;
+	exports.__esModule = true;
+	exports.parse = parse;
 
-			let _parser = __webpack_require__(23);
+	var _parser = __webpack_require__(23);
 
-			let _parser2 = _interopRequireDefault(_parser);
+	var _parser2 = _interopRequireDefault(_parser);
 
-			let _whitespaceControl = __webpack_require__(24);
+	var _whitespaceControl = __webpack_require__(24);
 
-			let _whitespaceControl2 = _interopRequireDefault(_whitespaceControl);
+	var _whitespaceControl2 = _interopRequireDefault(_whitespaceControl);
 
-			let _helpers = __webpack_require__(26);
+	var _helpers = __webpack_require__(26);
 
-			let Helpers = _interopRequireWildcard(_helpers);
+	var Helpers = _interopRequireWildcard(_helpers);
 
-			let _utils = __webpack_require__(5);
+	var _utils = __webpack_require__(5);
 
-			exports.parser = _parser2['default'];
+	exports.parser = _parser2['default'];
 
-			let yy = {};
-			_utils.extend(yy, Helpers);
+	var yy = {};
+	_utils.extend(yy, Helpers);
 
-			function parse(input, options) {
+	function parse(input, options) {
 	  // Just return if an already-compiled AST was passed in.
 	  if (input.type === 'Program') {
 	    return input;
@@ -1382,28 +1382,28 @@ THE SOFTWARE.
 	    return new yy.SourceLocation(options && options.srcName, locInfo);
 	  };
 
-	  let strip = new _whitespaceControl2['default'](options);
+	  var strip = new _whitespaceControl2['default'](options);
 	  return strip.accept(_parser2['default'].parse(input));
-			}
+	}
 
-			/***/ },
-		/* 23 */
-		/***/ function(module, exports) {
+/***/ },
+/* 23 */
+/***/ function(module, exports) {
 
-			/* istanbul ignore next */
-			/* Jison generated parser */
-			
+	/* istanbul ignore next */
+	/* Jison generated parser */
+	"use strict";
 
-			let handlebars = (function () {
-	    let parser = { trace: function trace() {},
+	var handlebars = (function () {
+	    var parser = { trace: function trace() {},
 	        yy: {},
-	        symbols_: { 'error': 2, 'root': 3, 'program': 4, 'EOF': 5, 'program_repetition0': 6, 'statement': 7, 'mustache': 8, 'block': 9, 'rawBlock': 10, 'partial': 11, 'partialBlock': 12, 'content': 13, 'COMMENT': 14, 'CONTENT': 15, 'openRawBlock': 16, 'rawBlock_repetition_plus0': 17, 'END_RAW_BLOCK': 18, 'OPEN_RAW_BLOCK': 19, 'helperName': 20, 'openRawBlock_repetition0': 21, 'openRawBlock_option0': 22, 'CLOSE_RAW_BLOCK': 23, 'openBlock': 24, 'block_option0': 25, 'closeBlock': 26, 'openInverse': 27, 'block_option1': 28, 'OPEN_BLOCK': 29, 'openBlock_repetition0': 30, 'openBlock_option0': 31, 'openBlock_option1': 32, 'CLOSE': 33, 'OPEN_INVERSE': 34, 'openInverse_repetition0': 35, 'openInverse_option0': 36, 'openInverse_option1': 37, 'openInverseChain': 38, 'OPEN_INVERSE_CHAIN': 39, 'openInverseChain_repetition0': 40, 'openInverseChain_option0': 41, 'openInverseChain_option1': 42, 'inverseAndProgram': 43, 'INVERSE': 44, 'inverseChain': 45, 'inverseChain_option0': 46, 'OPEN_ENDBLOCK': 47, 'OPEN': 48, 'mustache_repetition0': 49, 'mustache_option0': 50, 'OPEN_UNESCAPED': 51, 'mustache_repetition1': 52, 'mustache_option1': 53, 'CLOSE_UNESCAPED': 54, 'OPEN_PARTIAL': 55, 'partialName': 56, 'partial_repetition0': 57, 'partial_option0': 58, 'openPartialBlock': 59, 'OPEN_PARTIAL_BLOCK': 60, 'openPartialBlock_repetition0': 61, 'openPartialBlock_option0': 62, 'param': 63, 'sexpr': 64, 'OPEN_SEXPR': 65, 'sexpr_repetition0': 66, 'sexpr_option0': 67, 'CLOSE_SEXPR': 68, 'hash': 69, 'hash_repetition_plus0': 70, 'hashSegment': 71, 'ID': 72, 'EQUALS': 73, 'blockParams': 74, 'OPEN_BLOCK_PARAMS': 75, 'blockParams_repetition_plus0': 76, 'CLOSE_BLOCK_PARAMS': 77, 'path': 78, 'dataName': 79, 'STRING': 80, 'NUMBER': 81, 'BOOLEAN': 82, 'UNDEFINED': 83, 'NULL': 84, 'DATA': 85, 'pathSegments': 86, 'SEP': 87, '$accept': 0, '$end': 1 },
-	        terminals_: { 2: 'error', 5: 'EOF', 14: 'COMMENT', 15: 'CONTENT', 18: 'END_RAW_BLOCK', 19: 'OPEN_RAW_BLOCK', 23: 'CLOSE_RAW_BLOCK', 29: 'OPEN_BLOCK', 33: 'CLOSE', 34: 'OPEN_INVERSE', 39: 'OPEN_INVERSE_CHAIN', 44: 'INVERSE', 47: 'OPEN_ENDBLOCK', 48: 'OPEN', 51: 'OPEN_UNESCAPED', 54: 'CLOSE_UNESCAPED', 55: 'OPEN_PARTIAL', 60: 'OPEN_PARTIAL_BLOCK', 65: 'OPEN_SEXPR', 68: 'CLOSE_SEXPR', 72: 'ID', 73: 'EQUALS', 75: 'OPEN_BLOCK_PARAMS', 77: 'CLOSE_BLOCK_PARAMS', 80: 'STRING', 81: 'NUMBER', 82: 'BOOLEAN', 83: 'UNDEFINED', 84: 'NULL', 85: 'DATA', 87: 'SEP' },
+	        symbols_: { "error": 2, "root": 3, "program": 4, "EOF": 5, "program_repetition0": 6, "statement": 7, "mustache": 8, "block": 9, "rawBlock": 10, "partial": 11, "partialBlock": 12, "content": 13, "COMMENT": 14, "CONTENT": 15, "openRawBlock": 16, "rawBlock_repetition_plus0": 17, "END_RAW_BLOCK": 18, "OPEN_RAW_BLOCK": 19, "helperName": 20, "openRawBlock_repetition0": 21, "openRawBlock_option0": 22, "CLOSE_RAW_BLOCK": 23, "openBlock": 24, "block_option0": 25, "closeBlock": 26, "openInverse": 27, "block_option1": 28, "OPEN_BLOCK": 29, "openBlock_repetition0": 30, "openBlock_option0": 31, "openBlock_option1": 32, "CLOSE": 33, "OPEN_INVERSE": 34, "openInverse_repetition0": 35, "openInverse_option0": 36, "openInverse_option1": 37, "openInverseChain": 38, "OPEN_INVERSE_CHAIN": 39, "openInverseChain_repetition0": 40, "openInverseChain_option0": 41, "openInverseChain_option1": 42, "inverseAndProgram": 43, "INVERSE": 44, "inverseChain": 45, "inverseChain_option0": 46, "OPEN_ENDBLOCK": 47, "OPEN": 48, "mustache_repetition0": 49, "mustache_option0": 50, "OPEN_UNESCAPED": 51, "mustache_repetition1": 52, "mustache_option1": 53, "CLOSE_UNESCAPED": 54, "OPEN_PARTIAL": 55, "partialName": 56, "partial_repetition0": 57, "partial_option0": 58, "openPartialBlock": 59, "OPEN_PARTIAL_BLOCK": 60, "openPartialBlock_repetition0": 61, "openPartialBlock_option0": 62, "param": 63, "sexpr": 64, "OPEN_SEXPR": 65, "sexpr_repetition0": 66, "sexpr_option0": 67, "CLOSE_SEXPR": 68, "hash": 69, "hash_repetition_plus0": 70, "hashSegment": 71, "ID": 72, "EQUALS": 73, "blockParams": 74, "OPEN_BLOCK_PARAMS": 75, "blockParams_repetition_plus0": 76, "CLOSE_BLOCK_PARAMS": 77, "path": 78, "dataName": 79, "STRING": 80, "NUMBER": 81, "BOOLEAN": 82, "UNDEFINED": 83, "NULL": 84, "DATA": 85, "pathSegments": 86, "SEP": 87, "$accept": 0, "$end": 1 },
+	        terminals_: { 2: "error", 5: "EOF", 14: "COMMENT", 15: "CONTENT", 18: "END_RAW_BLOCK", 19: "OPEN_RAW_BLOCK", 23: "CLOSE_RAW_BLOCK", 29: "OPEN_BLOCK", 33: "CLOSE", 34: "OPEN_INVERSE", 39: "OPEN_INVERSE_CHAIN", 44: "INVERSE", 47: "OPEN_ENDBLOCK", 48: "OPEN", 51: "OPEN_UNESCAPED", 54: "CLOSE_UNESCAPED", 55: "OPEN_PARTIAL", 60: "OPEN_PARTIAL_BLOCK", 65: "OPEN_SEXPR", 68: "CLOSE_SEXPR", 72: "ID", 73: "EQUALS", 75: "OPEN_BLOCK_PARAMS", 77: "CLOSE_BLOCK_PARAMS", 80: "STRING", 81: "NUMBER", 82: "BOOLEAN", 83: "UNDEFINED", 84: "NULL", 85: "DATA", 87: "SEP" },
 	        productions_: [0, [3, 2], [4, 1], [7, 1], [7, 1], [7, 1], [7, 1], [7, 1], [7, 1], [7, 1], [13, 1], [10, 3], [16, 5], [9, 4], [9, 4], [24, 6], [27, 6], [38, 6], [43, 2], [45, 3], [45, 1], [26, 3], [8, 5], [8, 5], [11, 5], [12, 3], [59, 5], [63, 1], [63, 1], [64, 5], [69, 1], [71, 3], [74, 3], [20, 1], [20, 1], [20, 1], [20, 1], [20, 1], [20, 1], [20, 1], [56, 1], [56, 1], [79, 2], [78, 1], [86, 3], [86, 1], [6, 0], [6, 2], [17, 1], [17, 2], [21, 0], [21, 2], [22, 0], [22, 1], [25, 0], [25, 1], [28, 0], [28, 1], [30, 0], [30, 2], [31, 0], [31, 1], [32, 0], [32, 1], [35, 0], [35, 2], [36, 0], [36, 1], [37, 0], [37, 1], [40, 0], [40, 2], [41, 0], [41, 1], [42, 0], [42, 1], [46, 0], [46, 1], [49, 0], [49, 2], [50, 0], [50, 1], [52, 0], [52, 2], [53, 0], [53, 1], [57, 0], [57, 2], [58, 0], [58, 1], [61, 0], [61, 2], [62, 0], [62, 1], [66, 0], [66, 2], [67, 0], [67, 1], [70, 1], [70, 2], [76, 1], [76, 2]],
 	        performAction: function anonymous(yytext, yyleng, yylineno, yy, yystate, $$, _$
 	        /**/) {
 
-	            let $0 = $$.length - 1;
+	            var $0 = $$.length - 1;
 	            switch (yystate) {
 	                case 1:
 	                    return $$[$0 - 1];
@@ -1472,7 +1472,7 @@ THE SOFTWARE.
 	                    this.$ = { strip: yy.stripFlags($$[$0 - 1], $$[$0 - 1]), program: $$[$0] };
 	                    break;
 	                case 19:
-	                    let inverse = yy.prepareBlock($$[$0 - 2], $$[$0 - 1], $$[$0], $$[$0], false, this._$),
+	                    var inverse = yy.prepareBlock($$[$0 - 2], $$[$0 - 1], $$[$0], $$[$0], false, this._$),
 	                        program = yy.prepareProgram([inverse], $$[$0 - 1].loc);
 	                    program.chained = true;
 
@@ -1659,12 +1659,12 @@ THE SOFTWARE.
 	            throw new Error(str);
 	        },
 	        parse: function parse(input) {
-	            let self = this,
+	            var self = this,
 	                stack = [0],
 	                vstack = [null],
 	                lstack = [],
 	                table = this.table,
-	                yytext = '',
+	                yytext = "",
 	                yylineno = 0,
 	                yyleng = 0,
 	                recovering = 0,
@@ -1674,25 +1674,25 @@ THE SOFTWARE.
 	            this.lexer.yy = this.yy;
 	            this.yy.lexer = this.lexer;
 	            this.yy.parser = this;
-	            if (typeof this.lexer.yylloc == 'undefined') this.lexer.yylloc = {};
-	            let yyloc = this.lexer.yylloc;
+	            if (typeof this.lexer.yylloc == "undefined") this.lexer.yylloc = {};
+	            var yyloc = this.lexer.yylloc;
 	            lstack.push(yyloc);
-	            let ranges = this.lexer.options && this.lexer.options.ranges;
-	            if (typeof this.yy.parseError === 'function') this.parseError = this.yy.parseError;
+	            var ranges = this.lexer.options && this.lexer.options.ranges;
+	            if (typeof this.yy.parseError === "function") this.parseError = this.yy.parseError;
 	            function popStack(n) {
 	                stack.length = stack.length - 2 * n;
 	                vstack.length = vstack.length - n;
 	                lstack.length = lstack.length - n;
 	            }
 	            function lex() {
-	                let token;
+	                var token;
 	                token = self.lexer.lex() || 1;
-	                if (typeof token !== 'number') {
+	                if (typeof token !== "number") {
 	                    token = self.symbols_[token] || token;
 	                }
 	                return token;
 	            }
-	            let symbol,
+	            var symbol,
 	                preErrorSymbol,
 	                state,
 	                action,
@@ -1708,28 +1708,28 @@ THE SOFTWARE.
 	                if (this.defaultActions[state]) {
 	                    action = this.defaultActions[state];
 	                } else {
-	                    if (symbol === null || typeof symbol == 'undefined') {
+	                    if (symbol === null || typeof symbol == "undefined") {
 	                        symbol = lex();
 	                    }
 	                    action = table[state] && table[state][symbol];
 	                }
-	                if (typeof action === 'undefined' || !action.length || !action[0]) {
-	                    let errStr = '';
+	                if (typeof action === "undefined" || !action.length || !action[0]) {
+	                    var errStr = "";
 	                    if (!recovering) {
 	                        expected = [];
 	                        for (p in table[state]) if (this.terminals_[p] && p > 2) {
-	                            expected.push('\'' + this.terminals_[p] + '\'');
+	                            expected.push("'" + this.terminals_[p] + "'");
 	                        }
 	                        if (this.lexer.showPosition) {
-	                            errStr = 'Parse error on line ' + (yylineno + 1) + ':\n' + this.lexer.showPosition() + '\nExpecting ' + expected.join(', ') + ', got \'' + (this.terminals_[symbol] || symbol) + '\'';
+	                            errStr = "Parse error on line " + (yylineno + 1) + ":\n" + this.lexer.showPosition() + "\nExpecting " + expected.join(", ") + ", got '" + (this.terminals_[symbol] || symbol) + "'";
 	                        } else {
-	                            errStr = 'Parse error on line ' + (yylineno + 1) + ': Unexpected ' + (symbol == 1 ? 'end of input' : '\'' + (this.terminals_[symbol] || symbol) + '\'');
+	                            errStr = "Parse error on line " + (yylineno + 1) + ": Unexpected " + (symbol == 1 ? "end of input" : "'" + (this.terminals_[symbol] || symbol) + "'");
 	                        }
 	                        this.parseError(errStr, { text: this.lexer.match, token: this.terminals_[symbol] || symbol, line: this.lexer.yylineno, loc: yyloc, expected: expected });
 	                    }
 	                }
 	                if (action[0] instanceof Array && action.length > 1) {
-	                    throw new Error('Parse Error: multiple actions possible at state: ' + state + ', token: ' + symbol);
+	                    throw new Error("Parse Error: multiple actions possible at state: " + state + ", token: " + symbol);
 	                }
 	                switch (action[0]) {
 	                    case 1:
@@ -1757,7 +1757,7 @@ THE SOFTWARE.
 	                            yyval._$.range = [lstack[lstack.length - (len || 1)].range[0], lstack[lstack.length - 1].range[1]];
 	                        }
 	                        r = this.performAction.call(yyval, yytext, yyleng, yylineno, this.yy, action[1], vstack, lstack);
-	                        if (typeof r !== 'undefined') {
+	                        if (typeof r !== "undefined") {
 	                            return r;
 	                        }
 	                        if (len) {
@@ -1779,8 +1779,8 @@ THE SOFTWARE.
 	        }
 	    };
 	    /* Jison generated lexer */
-	    let lexer = (function () {
-	        let lexer = { EOF: 1,
+	    var lexer = (function () {
+	        var lexer = { EOF: 1,
 	            parseError: function parseError(str, hash) {
 	                if (this.yy.parser) {
 	                    this.yy.parser.parseError(str, hash);
@@ -1800,13 +1800,13 @@ THE SOFTWARE.
 	                return this;
 	            },
 	            input: function input() {
-	                let ch = this._input[0];
+	                var ch = this._input[0];
 	                this.yytext += ch;
 	                this.yyleng++;
 	                this.offset++;
 	                this.match += ch;
 	                this.matched += ch;
-	                let lines = ch.match(/(?:\r\n?|\n).*/g);
+	                var lines = ch.match(/(?:\r\n?|\n).*/g);
 	                if (lines) {
 	                    this.yylineno++;
 	                    this.yylloc.last_line++;
@@ -1819,19 +1819,19 @@ THE SOFTWARE.
 	                return ch;
 	            },
 	            unput: function unput(ch) {
-	                let len = ch.length;
-	                let lines = ch.split(/(?:\r\n?|\n)/g);
+	                var len = ch.length;
+	                var lines = ch.split(/(?:\r\n?|\n)/g);
 
 	                this._input = ch + this._input;
 	                this.yytext = this.yytext.substr(0, this.yytext.length - len - 1);
 	                //this.yyleng -= len;
 	                this.offset -= len;
-	                let oldLines = this.match.split(/(?:\r\n?|\n)/g);
+	                var oldLines = this.match.split(/(?:\r\n?|\n)/g);
 	                this.match = this.match.substr(0, this.match.length - 1);
 	                this.matched = this.matched.substr(0, this.matched.length - 1);
 
 	                if (lines.length - 1) this.yylineno -= lines.length - 1;
-	                let r = this.yylloc.range;
+	                var r = this.yylloc.range;
 
 	                this.yylloc = { first_line: this.yylloc.first_line,
 	                    last_line: this.yylineno + 1,
@@ -1852,20 +1852,20 @@ THE SOFTWARE.
 	                this.unput(this.match.slice(n));
 	            },
 	            pastInput: function pastInput() {
-	                let past = this.matched.substr(0, this.matched.length - this.match.length);
-	                return (past.length > 20 ? '...' : '') + past.substr(-20).replace(/\n/g, '');
+	                var past = this.matched.substr(0, this.matched.length - this.match.length);
+	                return (past.length > 20 ? '...' : '') + past.substr(-20).replace(/\n/g, "");
 	            },
 	            upcomingInput: function upcomingInput() {
-	                let next = this.match;
+	                var next = this.match;
 	                if (next.length < 20) {
 	                    next += this._input.substr(0, 20 - next.length);
 	                }
-	                return (next.substr(0, 20) + (next.length > 20 ? '...' : '')).replace(/\n/g, '');
+	                return (next.substr(0, 20) + (next.length > 20 ? '...' : '')).replace(/\n/g, "");
 	            },
 	            showPosition: function showPosition() {
-	                let pre = this.pastInput();
-	                let c = new Array(pre.length + 1).join('-');
-	                return pre + this.upcomingInput() + '\n' + c + '^';
+	                var pre = this.pastInput();
+	                var c = new Array(pre.length + 1).join("-");
+	                return pre + this.upcomingInput() + "\n" + c + "^";
 	            },
 	            next: function next() {
 	                if (this.done) {
@@ -1873,13 +1873,13 @@ THE SOFTWARE.
 	                }
 	                if (!this._input) this.done = true;
 
-	                let token, match, tempMatch, index, col, lines;
+	                var token, match, tempMatch, index, col, lines;
 	                if (!this._more) {
 	                    this.yytext = '';
 	                    this.match = '';
 	                }
-	                let rules = this._currentRules();
-	                for (let i = 0; i < rules.length; i++) {
+	                var rules = this._currentRules();
+	                for (var i = 0; i < rules.length; i++) {
 	                    tempMatch = this._input.match(this.rules[rules[i]]);
 	                    if (tempMatch && (!match || tempMatch[0].length > match[0].length)) {
 	                        match = tempMatch;
@@ -1908,14 +1908,14 @@ THE SOFTWARE.
 	                    if (this.done && this._input) this.done = false;
 	                    if (token) return token;else return;
 	                }
-	                if (this._input === '') {
+	                if (this._input === "") {
 	                    return this.EOF;
 	                } else {
-	                    return this.parseError('Lexical error on line ' + (this.yylineno + 1) + '. Unrecognized text.\n' + this.showPosition(), { text: '', token: null, line: this.yylineno });
+	                    return this.parseError('Lexical error on line ' + (this.yylineno + 1) + '. Unrecognized text.\n' + this.showPosition(), { text: "", token: null, line: this.yylineno });
 	                }
 	            },
 	            lex: function lex() {
-	                let r = this.next();
+	                var r = this.next();
 	                if (typeof r !== 'undefined') {
 	                    return r;
 	                } else {
@@ -1945,17 +1945,17 @@ THE SOFTWARE.
 	                return yy_.yytext = yy_.yytext.substr(start, yy_.yyleng - end);
 	            }
 
-	            let YYSTATE = YY_START;
+	            var YYSTATE = YY_START;
 	            switch ($avoiding_name_collisions) {
 	                case 0:
-	                    if (yy_.yytext.slice(-2) === '\\\\') {
+	                    if (yy_.yytext.slice(-2) === "\\\\") {
 	                        strip(0, 1);
-	                        this.begin('mu');
-	                    } else if (yy_.yytext.slice(-1) === '\\') {
+	                        this.begin("mu");
+	                    } else if (yy_.yytext.slice(-1) === "\\") {
 	                        strip(0, 1);
-	                        this.begin('emu');
+	                        this.begin("emu");
 	                    } else {
-	                        this.begin('mu');
+	                        this.begin("mu");
 	                    }
 	                    if (yy_.yytext) return 15;
 
@@ -2076,7 +2076,7 @@ THE SOFTWARE.
 	                    yy_.yytext = strip(1, 2).replace(/\\"/g, '"');return 80;
 	                    break;
 	                case 32:
-	                    yy_.yytext = strip(1, 2).replace(/\\'/g, '\'');return 80;
+	                    yy_.yytext = strip(1, 2).replace(/\\'/g, "'");return 80;
 	                    break;
 	                case 33:
 	                    return 85;
@@ -2117,7 +2117,7 @@ THE SOFTWARE.
 	            }
 	        };
 	        lexer.rules = [/^(?:[^\x00]*?(?=(\{\{)))/, /^(?:[^\x00]+)/, /^(?:[^\x00]{2,}?(?=(\{\{|\\\{\{|\\\\\{\{|$)))/, /^(?:\{\{\{\{(?=[^\/]))/, /^(?:\{\{\{\{\/[^\s!"#%-,\.\/;->@\[-\^`\{-~]+(?=[=}\s\/.])\}\}\}\})/, /^(?:[^\x00]*?(?=(\{\{\{\{)))/, /^(?:[\s\S]*?--(~)?\}\})/, /^(?:\()/, /^(?:\))/, /^(?:\{\{\{\{)/, /^(?:\}\}\}\})/, /^(?:\{\{(~)?>)/, /^(?:\{\{(~)?#>)/, /^(?:\{\{(~)?#\*?)/, /^(?:\{\{(~)?\/)/, /^(?:\{\{(~)?\^\s*(~)?\}\})/, /^(?:\{\{(~)?\s*else\s*(~)?\}\})/, /^(?:\{\{(~)?\^)/, /^(?:\{\{(~)?\s*else\b)/, /^(?:\{\{(~)?\{)/, /^(?:\{\{(~)?&)/, /^(?:\{\{(~)?!--)/, /^(?:\{\{(~)?![\s\S]*?\}\})/, /^(?:\{\{(~)?\*?)/, /^(?:=)/, /^(?:\.\.)/, /^(?:\.(?=([=~}\s\/.)|])))/, /^(?:[\/.])/, /^(?:\s+)/, /^(?:\}(~)?\}\})/, /^(?:(~)?\}\})/, /^(?:"(\\["]|[^"])*")/, /^(?:'(\\[']|[^'])*')/, /^(?:@)/, /^(?:true(?=([~}\s)])))/, /^(?:false(?=([~}\s)])))/, /^(?:undefined(?=([~}\s)])))/, /^(?:null(?=([~}\s)])))/, /^(?:-?[0-9]+(?:\.[0-9]+)?(?=([~}\s)])))/, /^(?:as\s+\|)/, /^(?:\|)/, /^(?:([^\s!"#%-,\.\/;->@\[-\^`\{-~]+(?=([=~}\s\/.)|]))))/, /^(?:\[(\\\]|[^\]])*\])/, /^(?:.)/, /^(?:$)/];
-	        lexer.conditions = { 'mu': { 'rules': [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44], 'inclusive': false }, 'emu': { 'rules': [2], 'inclusive': false }, 'com': { 'rules': [6], 'inclusive': false }, 'raw': { 'rules': [3, 4, 5], 'inclusive': false }, 'INITIAL': { 'rules': [0, 1, 44], 'inclusive': true } };
+	        lexer.conditions = { "mu": { "rules": [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44], "inclusive": false }, "emu": { "rules": [2], "inclusive": false }, "com": { "rules": [6], "inclusive": false }, "raw": { "rules": [3, 4, 5], "inclusive": false }, "INITIAL": { "rules": [0, 1, 44], "inclusive": true } };
 	        return lexer;
 	    })();
 	    parser.lexer = lexer;
@@ -2125,46 +2125,46 @@ THE SOFTWARE.
 	        this.yy = {};
 	    }Parser.prototype = parser;parser.Parser = Parser;
 	    return new Parser();
-			})();exports.__esModule = true;
-			exports['default'] = handlebars;
+	})();exports.__esModule = true;
+	exports['default'] = handlebars;
 
-			/***/ },
-		/* 24 */
-		/***/ function(module, exports, __webpack_require__) {
+/***/ },
+/* 24 */
+/***/ function(module, exports, __webpack_require__) {
 
-			
+	'use strict';
 
-			let _interopRequireDefault = __webpack_require__(1)['default'];
+	var _interopRequireDefault = __webpack_require__(1)['default'];
 
-			exports.__esModule = true;
+	exports.__esModule = true;
 
-			let _visitor = __webpack_require__(25);
+	var _visitor = __webpack_require__(25);
 
-			let _visitor2 = _interopRequireDefault(_visitor);
+	var _visitor2 = _interopRequireDefault(_visitor);
 
-			function WhitespaceControl() {
-	  let options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+	function WhitespaceControl() {
+	  var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
 	  this.options = options;
-			}
-			WhitespaceControl.prototype = new _visitor2['default']();
+	}
+	WhitespaceControl.prototype = new _visitor2['default']();
 
-			WhitespaceControl.prototype.Program = function (program) {
-	  let doStandalone = !this.options.ignoreStandalone;
+	WhitespaceControl.prototype.Program = function (program) {
+	  var doStandalone = !this.options.ignoreStandalone;
 
-	  let isRoot = !this.isRootSeen;
+	  var isRoot = !this.isRootSeen;
 	  this.isRootSeen = true;
 
-	  let body = program.body;
-	  for (let i = 0, l = body.length; i < l; i++) {
-	    let current = body[i],
+	  var body = program.body;
+	  for (var i = 0, l = body.length; i < l; i++) {
+	    var current = body[i],
 	        strip = this.accept(current);
 
 	    if (!strip) {
 	      continue;
 	    }
 
-	    let _isPrevWhitespace = isPrevWhitespace(body, i, isRoot),
+	    var _isPrevWhitespace = isPrevWhitespace(body, i, isRoot),
 	        _isNextWhitespace = isNextWhitespace(body, i, isRoot),
 	        openStandalone = strip.openStandalone && _isPrevWhitespace,
 	        closeStandalone = strip.closeStandalone && _isNextWhitespace,
@@ -2203,14 +2203,14 @@ THE SOFTWARE.
 	  }
 
 	  return program;
-			};
+	};
 
-			WhitespaceControl.prototype.BlockStatement = WhitespaceControl.prototype.DecoratorBlock = WhitespaceControl.prototype.PartialBlockStatement = function (block) {
+	WhitespaceControl.prototype.BlockStatement = WhitespaceControl.prototype.DecoratorBlock = WhitespaceControl.prototype.PartialBlockStatement = function (block) {
 	  this.accept(block.program);
 	  this.accept(block.inverse);
 
 	  // Find the inverse program that is involed with whitespace stripping.
-	  let program = block.program || block.inverse,
+	  var program = block.program || block.inverse,
 	      inverse = block.program && block.inverse,
 	      firstInverse = inverse,
 	      lastInverse = inverse;
@@ -2224,7 +2224,7 @@ THE SOFTWARE.
 	    }
 	  }
 
-	  let strip = {
+	  var strip = {
 	    open: block.openStrip.open,
 	    close: block.closeStrip.close,
 
@@ -2239,7 +2239,7 @@ THE SOFTWARE.
 	  }
 
 	  if (inverse) {
-	    let inverseStrip = block.inverseStrip;
+	    var inverseStrip = block.inverseStrip;
 
 	    if (inverseStrip.open) {
 	      omitLeft(program.body, null, true);
@@ -2262,30 +2262,30 @@ THE SOFTWARE.
 	  }
 
 	  return strip;
-			};
+	};
 
-			WhitespaceControl.prototype.Decorator = WhitespaceControl.prototype.MustacheStatement = function (mustache) {
+	WhitespaceControl.prototype.Decorator = WhitespaceControl.prototype.MustacheStatement = function (mustache) {
 	  return mustache.strip;
-			};
+	};
 
-			WhitespaceControl.prototype.PartialStatement = WhitespaceControl.prototype.CommentStatement = function (node) {
+	WhitespaceControl.prototype.PartialStatement = WhitespaceControl.prototype.CommentStatement = function (node) {
 	  /* istanbul ignore next */
-	  let strip = node.strip || {};
+	  var strip = node.strip || {};
 	  return {
 	    inlineStandalone: true,
 	    open: strip.open,
 	    close: strip.close
 	  };
-			};
+	};
 
-			function isPrevWhitespace(body, i, isRoot) {
+	function isPrevWhitespace(body, i, isRoot) {
 	  if (i === undefined) {
 	    i = body.length;
 	  }
 
 	  // Nodes that end with newlines are considered whitespace (but are special
 	  // cased for strip operations)
-	  let prev = body[i - 1],
+	  var prev = body[i - 1],
 	      sibling = body[i - 2];
 	  if (!prev) {
 	    return isRoot;
@@ -2294,13 +2294,13 @@ THE SOFTWARE.
 	  if (prev.type === 'ContentStatement') {
 	    return (sibling || !isRoot ? /\r?\n\s*?$/ : /(^|\r?\n)\s*?$/).test(prev.original);
 	  }
-			}
-			function isNextWhitespace(body, i, isRoot) {
+	}
+	function isNextWhitespace(body, i, isRoot) {
 	  if (i === undefined) {
 	    i = -1;
 	  }
 
-	  let next = body[i + 1],
+	  var next = body[i + 1],
 	      sibling = body[i + 2];
 	  if (!next) {
 	    return isRoot;
@@ -2309,74 +2309,74 @@ THE SOFTWARE.
 	  if (next.type === 'ContentStatement') {
 	    return (sibling || !isRoot ? /^\s*?\r?\n/ : /^\s*?(\r?\n|$)/).test(next.original);
 	  }
-			}
+	}
 
-			// Marks the node to the right of the position as omitted.
-			// I.e. {{foo}}' ' will mark the ' ' node as omitted.
-			//
-			// If i is undefined, then the first child will be marked as such.
-			//
-			// If mulitple is truthy then all whitespace will be stripped out until non-whitespace
-			// content is met.
-			function omitRight(body, i, multiple) {
-	  let current = body[i == null ? 0 : i + 1];
+	// Marks the node to the right of the position as omitted.
+	// I.e. {{foo}}' ' will mark the ' ' node as omitted.
+	//
+	// If i is undefined, then the first child will be marked as such.
+	//
+	// If mulitple is truthy then all whitespace will be stripped out until non-whitespace
+	// content is met.
+	function omitRight(body, i, multiple) {
+	  var current = body[i == null ? 0 : i + 1];
 	  if (!current || current.type !== 'ContentStatement' || !multiple && current.rightStripped) {
 	    return;
 	  }
 
-	  let original = current.value;
+	  var original = current.value;
 	  current.value = current.value.replace(multiple ? /^\s+/ : /^[ \t]*\r?\n?/, '');
 	  current.rightStripped = current.value !== original;
-			}
+	}
 
-			// Marks the node to the left of the position as omitted.
-			// I.e. ' '{{foo}} will mark the ' ' node as omitted.
-			//
-			// If i is undefined then the last child will be marked as such.
-			//
-			// If mulitple is truthy then all whitespace will be stripped out until non-whitespace
-			// content is met.
-			function omitLeft(body, i, multiple) {
-	  let current = body[i == null ? body.length - 1 : i - 1];
+	// Marks the node to the left of the position as omitted.
+	// I.e. ' '{{foo}} will mark the ' ' node as omitted.
+	//
+	// If i is undefined then the last child will be marked as such.
+	//
+	// If mulitple is truthy then all whitespace will be stripped out until non-whitespace
+	// content is met.
+	function omitLeft(body, i, multiple) {
+	  var current = body[i == null ? body.length - 1 : i - 1];
 	  if (!current || current.type !== 'ContentStatement' || !multiple && current.leftStripped) {
 	    return;
 	  }
 
 	  // We omit the last node if it's whitespace only and not preceeded by a non-content node.
-	  let original = current.value;
+	  var original = current.value;
 	  current.value = current.value.replace(multiple ? /\s+$/ : /[ \t]+$/, '');
 	  current.leftStripped = current.value !== original;
 	  return current.leftStripped;
-			}
+	}
 
-			exports['default'] = WhitespaceControl;
-			module.exports = exports['default'];
+	exports['default'] = WhitespaceControl;
+	module.exports = exports['default'];
 
-			/***/ },
-		/* 25 */
-		/***/ function(module, exports, __webpack_require__) {
+/***/ },
+/* 25 */
+/***/ function(module, exports, __webpack_require__) {
 
-			
+	'use strict';
 
-			let _interopRequireDefault = __webpack_require__(1)['default'];
+	var _interopRequireDefault = __webpack_require__(1)['default'];
 
-			exports.__esModule = true;
+	exports.__esModule = true;
 
-			let _exception = __webpack_require__(6);
+	var _exception = __webpack_require__(6);
 
-			let _exception2 = _interopRequireDefault(_exception);
+	var _exception2 = _interopRequireDefault(_exception);
 
-			function Visitor() {
+	function Visitor() {
 	  this.parents = [];
-			}
+	}
 
-			Visitor.prototype = {
+	Visitor.prototype = {
 	  constructor: Visitor,
 	  mutating: false,
 
 	  // Visits a given value. If mutating, will replace the value if necessary.
 	  acceptKey: function acceptKey(node, name) {
-	    let value = this.accept(node[name]);
+	    var value = this.accept(node[name]);
 	    if (this.mutating) {
 	      // Hacky sanity check: This may have a few false positives for type for the helper
 	      // methods but will generally do the right thing without a lot of overhead.
@@ -2400,7 +2400,7 @@ THE SOFTWARE.
 	  // Traverses a given array. If mutating, empty respnses will be removed
 	  // for child elements.
 	  acceptArray: function acceptArray(array) {
-	    for (let i = 0, l = array.length; i < l; i++) {
+	    for (var i = 0, l = array.length; i < l; i++) {
 	      this.acceptKey(array, i);
 
 	      if (!array[i]) {
@@ -2426,7 +2426,7 @@ THE SOFTWARE.
 	    }
 	    this.current = object;
 
-	    let ret = this[object.type](object);
+	    var ret = this[object.type](object);
 
 	    this.current = this.parents.shift();
 
@@ -2473,63 +2473,63 @@ THE SOFTWARE.
 	  HashPair: function HashPair(pair) {
 	    this.acceptRequired(pair, 'value');
 	  }
-			};
+	};
 
-			function visitSubExpression(mustache) {
+	function visitSubExpression(mustache) {
 	  this.acceptRequired(mustache, 'path');
 	  this.acceptArray(mustache.params);
 	  this.acceptKey(mustache, 'hash');
-			}
-			function visitBlock(block) {
+	}
+	function visitBlock(block) {
 	  visitSubExpression.call(this, block);
 
 	  this.acceptKey(block, 'program');
 	  this.acceptKey(block, 'inverse');
-			}
-			function visitPartial(partial) {
+	}
+	function visitPartial(partial) {
 	  this.acceptRequired(partial, 'name');
 	  this.acceptArray(partial.params);
 	  this.acceptKey(partial, 'hash');
-			}
+	}
 
-			exports['default'] = Visitor;
-			module.exports = exports['default'];
+	exports['default'] = Visitor;
+	module.exports = exports['default'];
 
-			/***/ },
-		/* 26 */
-		/***/ function(module, exports, __webpack_require__) {
+/***/ },
+/* 26 */
+/***/ function(module, exports, __webpack_require__) {
 
-			
+	'use strict';
 
-			let _interopRequireDefault = __webpack_require__(1)['default'];
+	var _interopRequireDefault = __webpack_require__(1)['default'];
 
-			exports.__esModule = true;
-			exports.SourceLocation = SourceLocation;
-			exports.id = id;
-			exports.stripFlags = stripFlags;
-			exports.stripComment = stripComment;
-			exports.preparePath = preparePath;
-			exports.prepareMustache = prepareMustache;
-			exports.prepareRawBlock = prepareRawBlock;
-			exports.prepareBlock = prepareBlock;
-			exports.prepareProgram = prepareProgram;
-			exports.preparePartialBlock = preparePartialBlock;
+	exports.__esModule = true;
+	exports.SourceLocation = SourceLocation;
+	exports.id = id;
+	exports.stripFlags = stripFlags;
+	exports.stripComment = stripComment;
+	exports.preparePath = preparePath;
+	exports.prepareMustache = prepareMustache;
+	exports.prepareRawBlock = prepareRawBlock;
+	exports.prepareBlock = prepareBlock;
+	exports.prepareProgram = prepareProgram;
+	exports.preparePartialBlock = preparePartialBlock;
 
-			let _exception = __webpack_require__(6);
+	var _exception = __webpack_require__(6);
 
-			let _exception2 = _interopRequireDefault(_exception);
+	var _exception2 = _interopRequireDefault(_exception);
 
-			function validateClose(open, close) {
+	function validateClose(open, close) {
 	  close = close.path ? close.path.original : close;
 
 	  if (open.path.original !== close) {
-	    let errorNode = { loc: open.path.loc };
+	    var errorNode = { loc: open.path.loc };
 
-	    throw new _exception2['default'](open.path.original + ' doesn\'t match ' + close, errorNode);
+	    throw new _exception2['default'](open.path.original + " doesn't match " + close, errorNode);
 	  }
-			}
+	}
 
-			function SourceLocation(source, locInfo) {
+	function SourceLocation(source, locInfo) {
 	  this.source = source;
 	  this.start = {
 	    line: locInfo.first_line,
@@ -2539,37 +2539,37 @@ THE SOFTWARE.
 	    line: locInfo.last_line,
 	    column: locInfo.last_column
 	  };
-			}
+	}
 
-			function id(token) {
+	function id(token) {
 	  if (/^\[.*\]$/.test(token)) {
 	    return token.substr(1, token.length - 2);
 	  } else {
 	    return token;
 	  }
-			}
+	}
 
-			function stripFlags(open, close) {
+	function stripFlags(open, close) {
 	  return {
 	    open: open.charAt(2) === '~',
 	    close: close.charAt(close.length - 3) === '~'
 	  };
-			}
+	}
 
-			function stripComment(comment) {
+	function stripComment(comment) {
 	  return comment.replace(/^\{\{~?\!-?-?/, '').replace(/-?-?~?\}\}$/, '');
-			}
+	}
 
-			function preparePath(data, parts, loc) {
+	function preparePath(data, parts, loc) {
 	  loc = this.locInfo(loc);
 
-	  let original = data ? '@' : '',
+	  var original = data ? '@' : '',
 	      dig = [],
 	      depth = 0,
 	      depthString = '';
 
-	  for (let i = 0, l = parts.length; i < l; i++) {
-	    let part = parts[i].part,
+	  for (var i = 0, l = parts.length; i < l; i++) {
+	    var part = parts[i].part,
 
 	    // If we have [] syntax then we do not treat path references as operators,
 	    // i.e. foo.[this] resolves to approximately context.foo['this']
@@ -2596,14 +2596,14 @@ THE SOFTWARE.
 	    original: original,
 	    loc: loc
 	  };
-			}
+	}
 
-			function prepareMustache(path, params, hash, open, strip, locInfo) {
+	function prepareMustache(path, params, hash, open, strip, locInfo) {
 	  // Must use charAt to support IE pre-10
-	  let escapeFlag = open.charAt(3) || open.charAt(2),
+	  var escapeFlag = open.charAt(3) || open.charAt(2),
 	      escaped = escapeFlag !== '{' && escapeFlag !== '&';
 
-	  let decorator = /\*/.test(open);
+	  var decorator = /\*/.test(open);
 	  return {
 	    type: decorator ? 'Decorator' : 'MustacheStatement',
 	    path: path,
@@ -2613,13 +2613,13 @@ THE SOFTWARE.
 	    strip: strip,
 	    loc: this.locInfo(locInfo)
 	  };
-			}
+	}
 
-			function prepareRawBlock(openRawBlock, contents, close, locInfo) {
+	function prepareRawBlock(openRawBlock, contents, close, locInfo) {
 	  validateClose(openRawBlock, close);
 
 	  locInfo = this.locInfo(locInfo);
-	  let program = {
+	  var program = {
 	    type: 'Program',
 	    body: contents,
 	    strip: {},
@@ -2637,18 +2637,18 @@ THE SOFTWARE.
 	    closeStrip: {},
 	    loc: locInfo
 	  };
-			}
+	}
 
-			function prepareBlock(openBlock, program, inverseAndProgram, close, inverted, locInfo) {
+	function prepareBlock(openBlock, program, inverseAndProgram, close, inverted, locInfo) {
 	  if (close && close.path) {
 	    validateClose(openBlock, close);
 	  }
 
-	  let decorator = /\*/.test(openBlock.open);
+	  var decorator = /\*/.test(openBlock.open);
 
 	  program.blockParams = openBlock.blockParams;
 
-	  let inverse = undefined,
+	  var inverse = undefined,
 	      inverseStrip = undefined;
 
 	  if (inverseAndProgram) {
@@ -2682,11 +2682,11 @@ THE SOFTWARE.
 	    closeStrip: close && close.strip,
 	    loc: this.locInfo(locInfo)
 	  };
-			}
+	}
 
-			function prepareProgram(statements, loc) {
+	function prepareProgram(statements, loc) {
 	  if (!loc && statements.length) {
-	    let firstLoc = statements[0].loc,
+	    var firstLoc = statements[0].loc,
 	        lastLoc = statements[statements.length - 1].loc;
 
 	    /* istanbul ignore else */
@@ -2711,9 +2711,9 @@ THE SOFTWARE.
 	    strip: {},
 	    loc: loc
 	  };
-			}
+	}
 
-			function preparePartialBlock(open, program, close, locInfo) {
+	function preparePartialBlock(open, program, close, locInfo) {
 	  validateClose(open, close);
 
 	  return {
@@ -2726,53 +2726,53 @@ THE SOFTWARE.
 	    closeStrip: close && close.strip,
 	    loc: this.locInfo(locInfo)
 	  };
-			}
+	}
 
-			/***/ },
-		/* 27 */
-		/***/ function(module, exports, __webpack_require__) {
+/***/ },
+/* 27 */
+/***/ function(module, exports, __webpack_require__) {
 
-			/* eslint-disable new-cap */
+	/* eslint-disable new-cap */
 
-			
+	'use strict';
 
-			let _interopRequireDefault = __webpack_require__(1)['default'];
+	var _interopRequireDefault = __webpack_require__(1)['default'];
 
-			exports.__esModule = true;
-			exports.Compiler = Compiler;
-			exports.precompile = precompile;
-			exports.compile = compile;
+	exports.__esModule = true;
+	exports.Compiler = Compiler;
+	exports.precompile = precompile;
+	exports.compile = compile;
 
-			let _exception = __webpack_require__(6);
+	var _exception = __webpack_require__(6);
 
-			let _exception2 = _interopRequireDefault(_exception);
+	var _exception2 = _interopRequireDefault(_exception);
 
-			let _utils = __webpack_require__(5);
+	var _utils = __webpack_require__(5);
 
-			let _ast = __webpack_require__(21);
+	var _ast = __webpack_require__(21);
 
-			let _ast2 = _interopRequireDefault(_ast);
+	var _ast2 = _interopRequireDefault(_ast);
 
-			let slice = [].slice;
+	var slice = [].slice;
 
-			function Compiler() {}
+	function Compiler() {}
 
-			// the foundHelper register will disambiguate helper lookup from finding a
-			// function in a context. This is necessary for mustache compatibility, which
-			// requires that context functions in blocks are evaluated by blockHelperMissing,
-			// and then proceed as if the resulting value was provided to blockHelperMissing.
+	// the foundHelper register will disambiguate helper lookup from finding a
+	// function in a context. This is necessary for mustache compatibility, which
+	// requires that context functions in blocks are evaluated by blockHelperMissing,
+	// and then proceed as if the resulting value was provided to blockHelperMissing.
 
-			Compiler.prototype = {
+	Compiler.prototype = {
 	  compiler: Compiler,
 
 	  equals: function equals(other) {
-	    let len = this.opcodes.length;
+	    var len = this.opcodes.length;
 	    if (other.opcodes.length !== len) {
 	      return false;
 	    }
 
-	    for (let i = 0; i < len; i++) {
-	      let opcode = this.opcodes[i],
+	    for (var i = 0; i < len; i++) {
+	      var opcode = this.opcodes[i],
 	          otherOpcode = other.opcodes[i];
 	      if (opcode.opcode !== otherOpcode.opcode || !argEquals(opcode.args, otherOpcode.args)) {
 	        return false;
@@ -2782,7 +2782,7 @@ THE SOFTWARE.
 	    // We know that length is the same between the two arrays because they are directly tied
 	    // to the opcode behavior above.
 	    len = this.children.length;
-	    for (let i = 0; i < len; i++) {
+	    for (var i = 0; i < len; i++) {
 	      if (!this.children[i].equals(other.children[i])) {
 	        return false;
 	      }
@@ -2804,7 +2804,7 @@ THE SOFTWARE.
 	    options.blockParams = options.blockParams || [];
 
 	    // These changes will propagate to the other compiler components
-	    let knownHelpers = options.knownHelpers;
+	    var knownHelpers = options.knownHelpers;
 	    options.knownHelpers = {
 	      'helperMissing': true,
 	      'blockHelperMissing': true,
@@ -2816,7 +2816,7 @@ THE SOFTWARE.
 	      'lookup': true
 	    };
 	    if (knownHelpers) {
-	      for (let _name in knownHelpers) {
+	      for (var _name in knownHelpers) {
 	        /* istanbul ignore else */
 	        if (_name in knownHelpers) {
 	          options.knownHelpers[_name] = knownHelpers[_name];
@@ -2828,7 +2828,7 @@ THE SOFTWARE.
 	  },
 
 	  compileProgram: function compileProgram(program) {
-	    let childCompiler = new this.compiler(),
+	    var childCompiler = new this.compiler(),
 	        // eslint-disable-line new-cap
 	    result = childCompiler.compile(program, this.options),
 	        guid = this.guid++;
@@ -2848,7 +2848,7 @@ THE SOFTWARE.
 	    }
 
 	    this.sourceNode.unshift(node);
-	    let ret = this[node.type](node);
+	    var ret = this[node.type](node);
 	    this.sourceNode.shift();
 	    return ret;
 	  },
@@ -2856,9 +2856,9 @@ THE SOFTWARE.
 	  Program: function Program(program) {
 	    this.options.blockParams.unshift(program.blockParams);
 
-	    let body = program.body,
+	    var body = program.body,
 	        bodyLength = body.length;
-	    for (let i = 0; i < bodyLength; i++) {
+	    for (var i = 0; i < bodyLength; i++) {
 	      this.accept(body[i]);
 	    }
 
@@ -2873,13 +2873,13 @@ THE SOFTWARE.
 	  BlockStatement: function BlockStatement(block) {
 	    transformLiteralToPath(block);
 
-	    let program = block.program,
+	    var program = block.program,
 	        inverse = block.inverse;
 
 	    program = program && this.compileProgram(program);
 	    inverse = inverse && this.compileProgram(inverse);
 
-	    let type = this.classifySexpr(block);
+	    var type = this.classifySexpr(block);
 
 	    if (type === 'helper') {
 	      this.helperSexpr(block, program, inverse);
@@ -2907,8 +2907,8 @@ THE SOFTWARE.
 	  },
 
 	  DecoratorBlock: function DecoratorBlock(decorator) {
-	    let program = decorator.program && this.compileProgram(decorator.program);
-	    let params = this.setupFullMustacheParams(decorator, program, undefined),
+	    var program = decorator.program && this.compileProgram(decorator.program);
+	    var params = this.setupFullMustacheParams(decorator, program, undefined),
 	        path = decorator.path;
 
 	    this.useDecorators = true;
@@ -2918,12 +2918,12 @@ THE SOFTWARE.
 	  PartialStatement: function PartialStatement(partial) {
 	    this.usePartial = true;
 
-	    let program = partial.program;
+	    var program = partial.program;
 	    if (program) {
 	      program = this.compileProgram(partial.program);
 	    }
 
-	    let params = partial.params;
+	    var params = partial.params;
 	    if (params.length > 1) {
 	      throw new _exception2['default']('Unsupported number of partial arguments: ' + params.length, partial);
 	    } else if (!params.length) {
@@ -2934,7 +2934,7 @@ THE SOFTWARE.
 	      }
 	    }
 
-	    let partialName = partial.name.original,
+	    var partialName = partial.name.original,
 	        isDynamic = partial.name.type === 'SubExpression';
 	    if (isDynamic) {
 	      this.accept(partial.name);
@@ -2942,7 +2942,7 @@ THE SOFTWARE.
 
 	    this.setupFullMustacheParams(partial, program, undefined, true);
 
-	    let indent = partial.indent || '';
+	    var indent = partial.indent || '';
 	    if (this.options.preventIndent && indent) {
 	      this.opcode('appendContent', indent);
 	      indent = '';
@@ -2978,7 +2978,7 @@ THE SOFTWARE.
 
 	  SubExpression: function SubExpression(sexpr) {
 	    transformLiteralToPath(sexpr);
-	    let type = this.classifySexpr(sexpr);
+	    var type = this.classifySexpr(sexpr);
 
 	    if (type === 'simple') {
 	      this.simpleSexpr(sexpr);
@@ -2989,7 +2989,7 @@ THE SOFTWARE.
 	    }
 	  },
 	  ambiguousSexpr: function ambiguousSexpr(sexpr, program, inverse) {
-	    let path = sexpr.path,
+	    var path = sexpr.path,
 	        name = path.parts[0],
 	        isBlock = program != null || inverse != null;
 
@@ -3005,14 +3005,14 @@ THE SOFTWARE.
 	  },
 
 	  simpleSexpr: function simpleSexpr(sexpr) {
-	    let path = sexpr.path;
+	    var path = sexpr.path;
 	    path.strict = true;
 	    this.accept(path);
 	    this.opcode('resolvePossibleLambda');
 	  },
 
 	  helperSexpr: function helperSexpr(sexpr, program, inverse) {
-	    let params = this.setupFullMustacheParams(sexpr, program, inverse),
+	    var params = this.setupFullMustacheParams(sexpr, program, inverse),
 	        path = sexpr.path,
 	        name = path.parts[0];
 
@@ -3033,7 +3033,7 @@ THE SOFTWARE.
 	    this.addDepth(path.depth);
 	    this.opcode('getContext', path.depth);
 
-	    let name = path.parts[0],
+	    var name = path.parts[0],
 	        scoped = _ast2['default'].helpers.scopedId(path),
 	        blockParamId = !path.depth && !scoped && this.blockParamIndex(name);
 
@@ -3071,7 +3071,7 @@ THE SOFTWARE.
 	  },
 
 	  Hash: function Hash(hash) {
-	    let pairs = hash.pairs,
+	    var pairs = hash.pairs,
 	        i = 0,
 	        l = pairs.length;
 
@@ -3100,23 +3100,23 @@ THE SOFTWARE.
 	  },
 
 	  classifySexpr: function classifySexpr(sexpr) {
-	    let isSimple = _ast2['default'].helpers.simpleId(sexpr.path);
+	    var isSimple = _ast2['default'].helpers.simpleId(sexpr.path);
 
-	    let isBlockParam = isSimple && !!this.blockParamIndex(sexpr.path.parts[0]);
+	    var isBlockParam = isSimple && !!this.blockParamIndex(sexpr.path.parts[0]);
 
 	    // a mustache is an eligible helper if:
 	    // * its id is simple (a single part, not `this` or `..`)
-	    let isHelper = !isBlockParam && _ast2['default'].helpers.helperExpression(sexpr);
+	    var isHelper = !isBlockParam && _ast2['default'].helpers.helperExpression(sexpr);
 
 	    // if a mustache is an eligible helper but not a definite
 	    // helper, it is ambiguous, and will be resolved in a later
 	    // pass or at runtime.
-	    let isEligible = !isBlockParam && (isHelper || isSimple);
+	    var isEligible = !isBlockParam && (isHelper || isSimple);
 
 	    // if ambiguous, we can possibly resolve the ambiguity now
 	    // An eligible helper is one that does not have a complex path, i.e. `this.foo`, `../foo` etc.
 	    if (isEligible && !isHelper) {
-	      let _name2 = sexpr.path.parts[0],
+	      var _name2 = sexpr.path.parts[0],
 	          options = this.options;
 
 	      if (options.knownHelpers[_name2]) {
@@ -3136,13 +3136,13 @@ THE SOFTWARE.
 	  },
 
 	  pushParams: function pushParams(params) {
-	    for (let i = 0, l = params.length; i < l; i++) {
+	    for (var i = 0, l = params.length; i < l; i++) {
 	      this.pushParam(params[i]);
 	    }
 	  },
 
 	  pushParam: function pushParam(val) {
-	    let value = val.value != null ? val.value : val.original || '';
+	    var value = val.value != null ? val.value : val.original || '';
 
 	    if (this.stringParams) {
 	      if (value.replace) {
@@ -3162,12 +3162,12 @@ THE SOFTWARE.
 	      }
 	    } else {
 	      if (this.trackIds) {
-	        let blockParamIndex = undefined;
+	        var blockParamIndex = undefined;
 	        if (val.parts && !_ast2['default'].helpers.scopedId(val) && !val.depth) {
 	          blockParamIndex = this.blockParamIndex(val.parts[0]);
 	        }
 	        if (blockParamIndex) {
-	          let blockParamChild = val.parts.slice(1).join('.');
+	          var blockParamChild = val.parts.slice(1).join('.');
 	          this.opcode('pushId', 'BlockParam', blockParamIndex, blockParamChild);
 	        } else {
 	          value = val.original || value;
@@ -3183,7 +3183,7 @@ THE SOFTWARE.
 	  },
 
 	  setupFullMustacheParams: function setupFullMustacheParams(sexpr, program, inverse, omitEmpty) {
-	    let params = sexpr.params;
+	    var params = sexpr.params;
 	    this.pushParams(params);
 
 	    this.opcode('pushProgram', program);
@@ -3199,17 +3199,17 @@ THE SOFTWARE.
 	  },
 
 	  blockParamIndex: function blockParamIndex(name) {
-	    for (let depth = 0, len = this.options.blockParams.length; depth < len; depth++) {
-	      let blockParams = this.options.blockParams[depth],
+	    for (var depth = 0, len = this.options.blockParams.length; depth < len; depth++) {
+	      var blockParams = this.options.blockParams[depth],
 	          param = blockParams && _utils.indexOf(blockParams, name);
 	      if (blockParams && param >= 0) {
 	        return [depth, param];
 	      }
 	    }
 	  }
-			};
+	};
 
-			function precompile(input, options, env) {
+	function precompile(input, options, env) {
 	  if (input == null || typeof input !== 'string' && input.type !== 'Program') {
 	    throw new _exception2['default']('You must pass a string or Handlebars AST to Handlebars.precompile. You passed ' + input);
 	  }
@@ -3222,12 +3222,12 @@ THE SOFTWARE.
 	    options.useDepths = true;
 	  }
 
-	  let ast = env.parse(input, options),
+	  var ast = env.parse(input, options),
 	      environment = new env.Compiler().compile(ast, options);
 	  return new env.JavaScriptCompiler().compile(environment, options);
-			}
+	}
 
-			function compile(input, options, env) {
+	function compile(input, options, env) {
 	  if (options === undefined) options = {};
 
 	  if (input == null || typeof input !== 'string' && input.type !== 'Program') {
@@ -3241,10 +3241,10 @@ THE SOFTWARE.
 	    options.useDepths = true;
 	  }
 
-	  let compiled = undefined;
+	  var compiled = undefined;
 
 	  function compileInput() {
-	    let ast = env.parse(input, options),
+	    var ast = env.parse(input, options),
 	        environment = new env.Compiler().compile(ast, options),
 	        templateSpec = new env.JavaScriptCompiler().compile(environment, options, undefined, true);
 	    return env.template(templateSpec);
@@ -3270,26 +3270,26 @@ THE SOFTWARE.
 	    return compiled._child(i, data, blockParams, depths);
 	  };
 	  return ret;
-			}
+	}
 
-			function argEquals(a, b) {
+	function argEquals(a, b) {
 	  if (a === b) {
 	    return true;
 	  }
 
 	  if (_utils.isArray(a) && _utils.isArray(b) && a.length === b.length) {
-	    for (let i = 0; i < a.length; i++) {
+	    for (var i = 0; i < a.length; i++) {
 	      if (!argEquals(a[i], b[i])) {
 	        return false;
 	      }
 	    }
 	    return true;
 	  }
-			}
+	}
 
-			function transformLiteralToPath(sexpr) {
+	function transformLiteralToPath(sexpr) {
 	  if (!sexpr.path.parts) {
-	    let literal = sexpr.path;
+	    var literal = sexpr.path;
 	    // Casting to string here to make false and 0 literal values play nicely with the rest
 	    // of the system.
 	    sexpr.path = {
@@ -3301,37 +3301,37 @@ THE SOFTWARE.
 	      loc: literal.loc
 	    };
 	  }
-			}
+	}
 
-			/***/ },
-		/* 28 */
-		/***/ function(module, exports, __webpack_require__) {
+/***/ },
+/* 28 */
+/***/ function(module, exports, __webpack_require__) {
 
-			
+	'use strict';
 
-			let _interopRequireDefault = __webpack_require__(1)['default'];
+	var _interopRequireDefault = __webpack_require__(1)['default'];
 
-			exports.__esModule = true;
+	exports.__esModule = true;
 
-			let _base = __webpack_require__(4);
+	var _base = __webpack_require__(4);
 
-			let _exception = __webpack_require__(6);
+	var _exception = __webpack_require__(6);
 
-			let _exception2 = _interopRequireDefault(_exception);
+	var _exception2 = _interopRequireDefault(_exception);
 
-			let _utils = __webpack_require__(5);
+	var _utils = __webpack_require__(5);
 
-			let _codeGen = __webpack_require__(29);
+	var _codeGen = __webpack_require__(29);
 
-			let _codeGen2 = _interopRequireDefault(_codeGen);
+	var _codeGen2 = _interopRequireDefault(_codeGen);
 
-			function Literal(value) {
+	function Literal(value) {
 	  this.value = value;
-			}
+	}
 
-			function JavaScriptCompiler() {}
+	function JavaScriptCompiler() {}
 
-			JavaScriptCompiler.prototype = {
+	JavaScriptCompiler.prototype = {
 	  // PUBLIC API: You can override these methods in a subclass to provide
 	  // alternative compiled forms for name lookup and buffering semantics
 	  nameLookup: function nameLookup(parent, name /* , type*/) {
@@ -3346,7 +3346,7 @@ THE SOFTWARE.
 	  },
 
 	  compilerInfo: function compilerInfo() {
-	    let revision = _base.COMPILER_REVISION,
+	    var revision = _base.COMPILER_REVISION,
 	        versions = _base.REVISION_CHANGES[revision];
 	    return [revision, versions];
 	  },
@@ -3407,7 +3407,7 @@ THE SOFTWARE.
 	    this.useDepths = this.useDepths || environment.useDepths || environment.useDecorators || this.options.compat;
 	    this.useBlockParams = this.useBlockParams || environment.useBlockParams;
 
-	    let opcodes = environment.opcodes,
+	    var opcodes = environment.opcodes,
 	        opcode = undefined,
 	        firstLoc = undefined,
 	        i = undefined,
@@ -3433,7 +3433,7 @@ THE SOFTWARE.
 	    if (!this.decorators.isEmpty()) {
 	      this.useDecorators = true;
 
-	      this.decorators.prepend('let decorators = container.decorators;\n');
+	      this.decorators.prepend('var decorators = container.decorators;\n');
 	      this.decorators.push('return fn;');
 
 	      if (asObject) {
@@ -3447,9 +3447,9 @@ THE SOFTWARE.
 	      this.decorators = undefined;
 	    }
 
-	    let fn = this.createFunctionContext(asObject);
+	    var fn = this.createFunctionContext(asObject);
 	    if (!this.isChild) {
-	      let ret = {
+	      var ret = {
 	        compiler: this.compilerInfo(),
 	        main: fn
 	      };
@@ -3459,9 +3459,9 @@ THE SOFTWARE.
 	        ret.useDecorators = true;
 	      }
 
-	      let _context = this.context;
-	      let programs = _context.programs;
-	      let decorators = _context.decorators;
+	      var _context = this.context;
+	      var programs = _context.programs;
+	      var decorators = _context.decorators;
 
 	      for (i = 0, l = programs.length; i < l; i++) {
 	        if (programs[i]) {
@@ -3520,9 +3520,9 @@ THE SOFTWARE.
 	  },
 
 	  createFunctionContext: function createFunctionContext(asObject) {
-	    let varDeclarations = '';
+	    var varDeclarations = '';
 
-	    let locals = this.stackVars.concat(this.registers.list);
+	    var locals = this.stackVars.concat(this.registers.list);
 	    if (locals.length > 0) {
 	      varDeclarations += ', ' + locals.join(', ');
 	    }
@@ -3533,10 +3533,10 @@ THE SOFTWARE.
 	    // as the source nodes are reused in situ. For the non-source node compilation mode,
 	    // aliases will not be used, but this case is already being run on the client and
 	    // we aren't concern about minimizing the template size.
-	    let aliasCount = 0;
-	    for (let alias in this.aliases) {
+	    var aliasCount = 0;
+	    for (var alias in this.aliases) {
 	      // eslint-disable-line guard-for-in
-	      let node = this.aliases[alias];
+	      var node = this.aliases[alias];
 
 	      if (this.aliases.hasOwnProperty(alias) && node.children && node.referenceCount > 1) {
 	        varDeclarations += ', alias' + ++aliasCount + '=' + alias;
@@ -3544,7 +3544,7 @@ THE SOFTWARE.
 	      }
 	    }
 
-	    let params = ['container', 'depth0', 'helpers', 'partials', 'data'];
+	    var params = ['container', 'depth0', 'helpers', 'partials', 'data'];
 
 	    if (this.useBlockParams || this.useDepths) {
 	      params.push('blockParams');
@@ -3554,7 +3554,7 @@ THE SOFTWARE.
 	    }
 
 	    // Perform a second pass over the output to merge content when possible
-	    let source = this.mergeSource(varDeclarations);
+	    var source = this.mergeSource(varDeclarations);
 
 	    if (asObject) {
 	      params.push(source);
@@ -3565,7 +3565,7 @@ THE SOFTWARE.
 	    }
 	  },
 	  mergeSource: function mergeSource(varDeclarations) {
-	    let isSimple = this.environment.isSimple,
+	    var isSimple = this.environment.isSimple,
 	        appendOnly = !this.forceBuffer,
 	        appendFirst = undefined,
 	        sourceSeen = undefined,
@@ -3616,7 +3616,7 @@ THE SOFTWARE.
 	    }
 
 	    if (varDeclarations) {
-	      this.source.prepend('let ' + varDeclarations.substring(2) + (appendFirst ? '' : ';\n'));
+	      this.source.prepend('var ' + varDeclarations.substring(2) + (appendFirst ? '' : ';\n'));
 	    }
 
 	    return this.source.merge();
@@ -3632,11 +3632,11 @@ THE SOFTWARE.
 	  // replace it on the stack with the result of properly
 	  // invoking blockHelperMissing.
 	  blockValue: function blockValue(name) {
-	    let blockHelperMissing = this.aliasable('helpers.blockHelperMissing'),
+	    var blockHelperMissing = this.aliasable('helpers.blockHelperMissing'),
 	        params = [this.contextName(0)];
 	    this.setupHelperArgs(name, 0, params);
 
-	    let blockName = this.popStack();
+	    var blockName = this.popStack();
 	    params.splice(1, 0, blockName);
 
 	    this.push(this.source.functionCall(blockHelperMissing, 'call', params));
@@ -3650,13 +3650,13 @@ THE SOFTWARE.
 	  // On stack, after, if lastHelper: value
 	  ambiguousBlockValue: function ambiguousBlockValue() {
 	    // We're being a bit cheeky and reusing the options value from the prior exec
-	    let blockHelperMissing = this.aliasable('helpers.blockHelperMissing'),
+	    var blockHelperMissing = this.aliasable('helpers.blockHelperMissing'),
 	        params = [this.contextName(0)];
 	    this.setupHelperArgs('', 0, params, true);
 
 	    this.flushInline();
 
-	    let current = this.topStack();
+	    var current = this.topStack();
 	    params.splice(1, 0, current);
 
 	    this.pushSource(['if (!', this.lastHelper, ') { ', current, ' = ', this.source.functionCall(blockHelperMissing, 'call', params), '}']);
@@ -3695,10 +3695,10 @@ THE SOFTWARE.
 
 	      this.pushSource(this.appendToBuffer(this.popStack()));
 	    } else {
-	      let local = this.popStack();
+	      var local = this.popStack();
 	      this.pushSource(['if (', local, ' != null) { ', this.appendToBuffer(local, undefined, true), ' }']);
 	      if (this.environment.isSimple) {
-	        this.pushSource(['else { ', this.appendToBuffer('\'\'', undefined, true), ' }']);
+	        this.pushSource(['else { ', this.appendToBuffer("''", undefined, true), ' }']);
 	      }
 	    }
 	  },
@@ -3742,7 +3742,7 @@ THE SOFTWARE.
 	  // Looks up the value of `name` on the current context and pushes
 	  // it onto the stack.
 	  lookupOnContext: function lookupOnContext(parts, falsy, strict, scoped) {
-	    let i = 0;
+	    var i = 0;
 
 	    if (!scoped && this.options.compat && !this.lastContext) {
 	      // The depthed query is expected to handle the undefined logic for the root level that
@@ -3788,18 +3788,18 @@ THE SOFTWARE.
 	  resolvePath: function resolvePath(type, parts, i, falsy, strict) {
 	    // istanbul ignore next
 
-	    let _this = this;
+	    var _this = this;
 
 	    if (this.options.strict || this.options.assumeObjects) {
 	      this.push(strictLookup(this.options.strict && strict, this, parts, type));
 	      return;
 	    }
 
-	    let len = parts.length;
+	    var len = parts.length;
 	    for (; i < len; i++) {
 	      /* eslint-disable no-loop-func */
 	      this.replaceStack(function (current) {
-	        let lookup = _this.nameLookup(current, parts[i], type);
+	        var lookup = _this.nameLookup(current, parts[i], type);
 	        // We want to ensure that zero and false are handled properly if the context (falsy flag)
 	        // needs to have the special handling for these values.
 	        if (!falsy) {
@@ -3864,7 +3864,7 @@ THE SOFTWARE.
 	    this.hash = { values: [], types: [], contexts: [], ids: [] };
 	  },
 	  popHash: function popHash() {
-	    let hash = this.hash;
+	    var hash = this.hash;
 	    this.hash = this.hashes.pop();
 
 	    if (this.trackIds) {
@@ -3924,7 +3924,7 @@ THE SOFTWARE.
 	  // Pops off the decorator's parameters, invokes the decorator,
 	  // and inserts the decorator into the decorators list.
 	  registerDecorator: function registerDecorator(paramSize, name) {
-	    let foundDecorator = this.nameLookup('decorators', name, 'decorator'),
+	    var foundDecorator = this.nameLookup('decorators', name, 'decorator'),
 	        options = this.setupHelperArgs(name, paramSize);
 
 	    this.decorators.push(['fn = ', this.decorators.functionCall(foundDecorator, '', ['fn', 'props', 'container', options]), ' || fn;']);
@@ -3940,11 +3940,11 @@ THE SOFTWARE.
 	  //
 	  // If the helper is not found, `helperMissing` is called.
 	  invokeHelper: function invokeHelper(paramSize, name, isSimple) {
-	    let nonHelper = this.popStack(),
+	    var nonHelper = this.popStack(),
 	        helper = this.setupHelper(paramSize, name),
 	        simple = isSimple ? [helper.name, ' || '] : '';
 
-	    let lookup = ['('].concat(simple, nonHelper);
+	    var lookup = ['('].concat(simple, nonHelper);
 	    if (!this.options.strict) {
 	      lookup.push(' || ', this.aliasable('helpers.helperMissing'));
 	    }
@@ -3961,7 +3961,7 @@ THE SOFTWARE.
 	  // This operation is used when the helper is known to exist,
 	  // so a `helperMissing` fallback is not required.
 	  invokeKnownHelper: function invokeKnownHelper(paramSize, name) {
-	    let helper = this.setupHelper(paramSize, name);
+	    var helper = this.setupHelper(paramSize, name);
 	    this.push(this.source.functionCall(helper.name, 'call', helper.callParams));
 	  },
 
@@ -3980,14 +3980,14 @@ THE SOFTWARE.
 	  invokeAmbiguous: function invokeAmbiguous(name, helperCall) {
 	    this.useRegister('helper');
 
-	    let nonHelper = this.popStack();
+	    var nonHelper = this.popStack();
 
 	    this.emptyHash();
-	    let helper = this.setupHelper(0, name, helperCall);
+	    var helper = this.setupHelper(0, name, helperCall);
 
-	    let helperName = this.lastHelper = this.nameLookup('helpers', name, 'helper');
+	    var helperName = this.lastHelper = this.nameLookup('helpers', name, 'helper');
 
-	    let lookup = ['(', '(helper = ', helperName, ' || ', nonHelper, ')'];
+	    var lookup = ['(', '(helper = ', helperName, ' || ', nonHelper, ')'];
 	    if (!this.options.strict) {
 	      lookup[0] = '(helper = ';
 	      lookup.push(' != null ? helper : ', this.aliasable('helpers.helperMissing'));
@@ -4004,7 +4004,7 @@ THE SOFTWARE.
 	  // This operation pops off a context, invokes a partial with that context,
 	  // and pushes the result of the invocation back.
 	  invokePartial: function invokePartial(isDynamic, name, indent) {
-	    let params = [],
+	    var params = [],
 	        options = this.setupParams(name, 1, params);
 
 	    if (isDynamic) {
@@ -4041,7 +4041,7 @@ THE SOFTWARE.
 	  //
 	  // Pops a value off the stack and assigns it to the current hash
 	  assignToHash: function assignToHash(key) {
-	    let value = this.popStack(),
+	    var value = this.popStack(),
 	        context = undefined,
 	        type = undefined,
 	        id = undefined;
@@ -4054,7 +4054,7 @@ THE SOFTWARE.
 	      context = this.popStack();
 	    }
 
-	    let hash = this.hash;
+	    var hash = this.hash;
 	    if (context) {
 	      hash.contexts[key] = context;
 	    }
@@ -4084,15 +4084,15 @@ THE SOFTWARE.
 	  compiler: JavaScriptCompiler,
 
 	  compileChildren: function compileChildren(environment, options) {
-	    let children = environment.children,
+	    var children = environment.children,
 	        child = undefined,
 	        compiler = undefined;
 
-	    for (let i = 0, l = children.length; i < l; i++) {
+	    for (var i = 0, l = children.length; i < l; i++) {
 	      child = children[i];
 	      compiler = new this.compiler(); // eslint-disable-line new-cap
 
-	      let index = this.matchExistingProgram(child);
+	      var index = this.matchExistingProgram(child);
 
 	      if (index == null) {
 	        this.context.programs.push(''); // Placeholder to prevent name conflicts for nested children
@@ -4115,8 +4115,8 @@ THE SOFTWARE.
 	    }
 	  },
 	  matchExistingProgram: function matchExistingProgram(child) {
-	    for (let i = 0, len = this.context.environments.length; i < len; i++) {
-	      let environment = this.context.environments[i];
+	    for (var i = 0, len = this.context.environments.length; i < len; i++) {
+	      var environment = this.context.environments[i];
 	      if (environment && environment.equals(child)) {
 	        return i;
 	      }
@@ -4124,7 +4124,7 @@ THE SOFTWARE.
 	  },
 
 	  programExpression: function programExpression(guid) {
-	    let child = this.environment.children[guid],
+	    var child = this.environment.children[guid],
 	        programParams = [child.index, 'data', child.blockParams];
 
 	    if (this.useBlockParams || this.useDepths) {
@@ -4169,7 +4169,7 @@ THE SOFTWARE.
 	  },
 
 	  replaceStack: function replaceStack(callback) {
-	    let prefix = ['('],
+	    var prefix = ['('],
 	        stack = undefined,
 	        createdStack = undefined,
 	        usedLiteral = undefined;
@@ -4180,7 +4180,7 @@ THE SOFTWARE.
 	    }
 
 	    // We want to merge the inline statement into the replacement statement via ','
-	    let top = this.popStack(true);
+	    var top = this.popStack(true);
 
 	    if (top instanceof Literal) {
 	      // Literals do not need to be inlined
@@ -4190,13 +4190,13 @@ THE SOFTWARE.
 	    } else {
 	      // Get or create the current stack name for use by the inline
 	      createdStack = true;
-	      let _name = this.incrStack();
+	      var _name = this.incrStack();
 
 	      prefix = ['((', this.push(_name), ' = ', top, ')'];
 	      stack = this.topStack();
 	    }
 
-	    let item = callback.call(this, stack);
+	    var item = callback.call(this, stack);
 
 	    if (!usedLiteral) {
 	      this.popStack();
@@ -4218,15 +4218,15 @@ THE SOFTWARE.
 	    return 'stack' + this.stackSlot;
 	  },
 	  flushInline: function flushInline() {
-	    let inlineStack = this.inlineStack;
+	    var inlineStack = this.inlineStack;
 	    this.inlineStack = [];
-	    for (let i = 0, len = inlineStack.length; i < len; i++) {
-	      let entry = inlineStack[i];
+	    for (var i = 0, len = inlineStack.length; i < len; i++) {
+	      var entry = inlineStack[i];
 	      /* istanbul ignore if */
 	      if (entry instanceof Literal) {
 	        this.compileStack.push(entry);
 	      } else {
-	        let stack = this.incrStack();
+	        var stack = this.incrStack();
 	        this.pushSource([stack, ' = ', entry, ';']);
 	        this.compileStack.push(stack);
 	      }
@@ -4237,7 +4237,7 @@ THE SOFTWARE.
 	  },
 
 	  popStack: function popStack(wrapped) {
-	    let inline = this.isInline(),
+	    var inline = this.isInline(),
 	        item = (inline ? this.inlineStack : this.compileStack).pop();
 
 	    if (!wrapped && item instanceof Literal) {
@@ -4255,7 +4255,7 @@ THE SOFTWARE.
 	  },
 
 	  topStack: function topStack() {
-	    let stack = this.isInline() ? this.inlineStack : this.compileStack,
+	    var stack = this.isInline() ? this.inlineStack : this.compileStack,
 	        item = stack[stack.length - 1];
 
 	    /* istanbul ignore if */
@@ -4283,7 +4283,7 @@ THE SOFTWARE.
 	  },
 
 	  aliasable: function aliasable(name) {
-	    let ret = this.aliases[name];
+	    var ret = this.aliases[name];
 	    if (ret) {
 	      ret.referenceCount++;
 	      return ret;
@@ -4297,9 +4297,9 @@ THE SOFTWARE.
 	  },
 
 	  setupHelper: function setupHelper(paramSize, name, blockHelper) {
-	    let params = [],
+	    var params = [],
 	        paramsInit = this.setupHelperArgs(name, paramSize, params, blockHelper);
-	    let foundHelper = this.nameLookup('helpers', name, 'helper'),
+	    var foundHelper = this.nameLookup('helpers', name, 'helper'),
 	        callContext = this.aliasable(this.contextName(0) + ' != null ? ' + this.contextName(0) + ' : {}');
 
 	    return {
@@ -4311,7 +4311,7 @@ THE SOFTWARE.
 	  },
 
 	  setupParams: function setupParams(helper, paramSize, params) {
-	    let options = {},
+	    var options = {},
 	        contexts = [],
 	        types = [],
 	        ids = [],
@@ -4333,7 +4333,7 @@ THE SOFTWARE.
 	      options.hashContexts = this.popStack();
 	    }
 
-	    let inverse = this.popStack(),
+	    var inverse = this.popStack(),
 	        program = this.popStack();
 
 	    // Avoid setting fn and inverse if neither are set. This allows
@@ -4345,7 +4345,7 @@ THE SOFTWARE.
 
 	    // The parameters go on to the stack in order (making sure that they are evaluated in order)
 	    // so we need to pop them off the stack in reverse order
-	    let i = paramSize;
+	    var i = paramSize;
 	    while (i--) {
 	      param = this.popStack();
 	      params[i] = param;
@@ -4381,7 +4381,7 @@ THE SOFTWARE.
 	  },
 
 	  setupHelperArgs: function setupHelperArgs(helper, paramSize, params, useRegister) {
-	    let options = this.setupParams(helper, paramSize, params);
+	    var options = this.setupParams(helper, paramSize, params);
 	    options = this.objectLiteral(options);
 	    if (useRegister) {
 	      this.useRegister('options');
@@ -4394,24 +4394,24 @@ THE SOFTWARE.
 	      return options;
 	    }
 	  }
-			};
+	};
 
-			(function () {
-	  let reservedWords = ('break else new let' + ' case finally return void' + ' catch for switch while' + ' continue function this with' + ' default if throw' + ' delete in try' + ' do instanceof typeof' + ' abstract enum int short' + ' boolean export interface static' + ' byte extends long super' + ' char final native synchronized' + ' class float package throws' + ' const goto private transient' + ' debugger implements protected volatile' + ' double import public let yield await' + ' null true false').split(' ');
+	(function () {
+	  var reservedWords = ('break else new var' + ' case finally return void' + ' catch for switch while' + ' continue function this with' + ' default if throw' + ' delete in try' + ' do instanceof typeof' + ' abstract enum int short' + ' boolean export interface static' + ' byte extends long super' + ' char final native synchronized' + ' class float package throws' + ' const goto private transient' + ' debugger implements protected volatile' + ' double import public let yield await' + ' null true false').split(' ');
 
-	  let compilerWords = JavaScriptCompiler.RESERVED_WORDS = {};
+	  var compilerWords = JavaScriptCompiler.RESERVED_WORDS = {};
 
-	  for (let i = 0, l = reservedWords.length; i < l; i++) {
+	  for (var i = 0, l = reservedWords.length; i < l; i++) {
 	    compilerWords[reservedWords[i]] = true;
 	  }
-			})();
+	})();
 
-			JavaScriptCompiler.isValidJavaScriptVariableName = function (name) {
+	JavaScriptCompiler.isValidJavaScriptVariableName = function (name) {
 	  return !JavaScriptCompiler.RESERVED_WORDS[name] && /^[a-zA-Z_$][0-9a-zA-Z_$]*$/.test(name);
-			};
+	};
 
-			function strictLookup(requireTerminal, compiler, parts, type) {
-	  let stack = compiler.popStack(),
+	function strictLookup(requireTerminal, compiler, parts, type) {
+	  var stack = compiler.popStack(),
 	      i = 0,
 	      len = parts.length;
 	  if (requireTerminal) {
@@ -4427,37 +4427,37 @@ THE SOFTWARE.
 	  } else {
 	    return stack;
 	  }
-			}
+	}
 
-			exports['default'] = JavaScriptCompiler;
-			module.exports = exports['default'];
+	exports['default'] = JavaScriptCompiler;
+	module.exports = exports['default'];
 
-			/***/ },
-		/* 29 */
-		/***/ function(module, exports, __webpack_require__) {
+/***/ },
+/* 29 */
+/***/ function(module, exports, __webpack_require__) {
 
-			/* global define */
-			
+	/* global define */
+	'use strict';
 
-			exports.__esModule = true;
+	exports.__esModule = true;
 
-			let _utils = __webpack_require__(5);
+	var _utils = __webpack_require__(5);
 
-			let SourceNode = undefined;
+	var SourceNode = undefined;
 
-			try {
+	try {
 	  /* istanbul ignore next */
 	  if (false) {
 	    // We don't support this in AMD environments. For these environments, we asusme that
 	    // they are running on the browser and thus have no need for the source-map library.
-	    let SourceMap = require('source-map');
+	    var SourceMap = require('source-map');
 	    SourceNode = SourceMap.SourceNode;
 	  }
-			} catch (err) {}
-			/* NOP */
+	} catch (err) {}
+	/* NOP */
 
-			/* istanbul ignore if: tested but not covered in istanbul due to dist build  */
-			if (!SourceNode) {
+	/* istanbul ignore if: tested but not covered in istanbul due to dist build  */
+	if (!SourceNode) {
 	  SourceNode = function (line, column, srcFile, chunks) {
 	    this.src = '';
 	    if (chunks) {
@@ -4485,13 +4485,13 @@ THE SOFTWARE.
 	      return this.src;
 	    }
 	  };
-			}
+	}
 
-			function castChunk(chunk, codeGen, loc) {
+	function castChunk(chunk, codeGen, loc) {
 	  if (_utils.isArray(chunk)) {
-	    let ret = [];
+	    var ret = [];
 
-	    for (let i = 0, len = chunk.length; i < len; i++) {
+	    for (var i = 0, len = chunk.length; i < len; i++) {
 	      ret.push(codeGen.wrap(chunk[i], loc));
 	    }
 	    return ret;
@@ -4500,14 +4500,14 @@ THE SOFTWARE.
 	    return chunk + '';
 	  }
 	  return chunk;
-			}
+	}
 
-			function CodeGen(srcFile) {
+	function CodeGen(srcFile) {
 	  this.srcFile = srcFile;
 	  this.source = [];
-			}
+	}
 
-			CodeGen.prototype = {
+	CodeGen.prototype = {
 	  isEmpty: function isEmpty() {
 	    return !this.source.length;
 	  },
@@ -4519,7 +4519,7 @@ THE SOFTWARE.
 	  },
 
 	  merge: function merge() {
-	    let source = this.empty();
+	    var source = this.empty();
 	    this.each(function (line) {
 	      source.add(['  ', line, '\n']);
 	    });
@@ -4527,17 +4527,17 @@ THE SOFTWARE.
 	  },
 
 	  each: function each(iter) {
-	    for (let i = 0, len = this.source.length; i < len; i++) {
+	    for (var i = 0, len = this.source.length; i < len; i++) {
 	      iter(this.source[i]);
 	    }
 	  },
 
 	  empty: function empty() {
-	    let loc = this.currentLocation || { start: {} };
+	    var loc = this.currentLocation || { start: {} };
 	    return new SourceNode(loc.start.line, loc.start.column, this.srcFile);
 	  },
 	  wrap: function wrap(chunk) {
-	    let loc = arguments.length <= 1 || arguments[1] === undefined ? this.currentLocation || { start: {} } : arguments[1];
+	    var loc = arguments.length <= 1 || arguments[1] === undefined ? this.currentLocation || { start: {} } : arguments[1];
 
 	    if (chunk instanceof SourceNode) {
 	      return chunk;
@@ -4559,27 +4559,27 @@ THE SOFTWARE.
 	  },
 
 	  objectLiteral: function objectLiteral(obj) {
-	    let pairs = [];
+	    var pairs = [];
 
-	    for (let key in obj) {
+	    for (var key in obj) {
 	      if (obj.hasOwnProperty(key)) {
-	        let value = castChunk(obj[key], this);
+	        var value = castChunk(obj[key], this);
 	        if (value !== 'undefined') {
 	          pairs.push([this.quotedString(key), ':', value]);
 	        }
 	      }
 	    }
 
-	    let ret = this.generateList(pairs);
+	    var ret = this.generateList(pairs);
 	    ret.prepend('{');
 	    ret.add('}');
 	    return ret;
 	  },
 
 	  generateList: function generateList(entries) {
-	    let ret = this.empty();
+	    var ret = this.empty();
 
-	    for (let i = 0, len = entries.length; i < len; i++) {
+	    for (var i = 0, len = entries.length; i < len; i++) {
 	      if (i) {
 	        ret.add(',');
 	      }
@@ -4591,17 +4591,18 @@ THE SOFTWARE.
 	  },
 
 	  generateArray: function generateArray(entries) {
-	    let ret = this.generateList(entries);
+	    var ret = this.generateList(entries);
 	    ret.prepend('[');
 	    ret.add(']');
 
 	    return ret;
 	  }
-			};
+	};
 
-			exports['default'] = CodeGen;
-			module.exports = exports['default'];
+	exports['default'] = CodeGen;
+	module.exports = exports['default'];
 
-			/***/ }
-		/******/ ]);
+/***/ }
+/******/ ])
 });
+;
