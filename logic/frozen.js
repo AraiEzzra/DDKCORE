@@ -63,9 +63,8 @@ Frozen.prototype.create = function (data, trs) {
 	trs.startTime = trs.timestamp;
 	let date = new Date(trs.timestamp * 1000);
 	trs.recipientId = null;
-	trs.freezedAmount = data.freezedAmount;
+	trs.stakedAmount = data.freezedAmount;
 	trs.nextVoteMilestone = (date.setMinutes(date.getMinutes() + constants.froze.vTime)) / 1000;
-	trs.amount = data.freezedAmount;
 	return trs;
 };
 
@@ -121,7 +120,7 @@ Frozen.prototype.dbSave = function (trs) {
 			insertTime: trs.startTime,
 			senderId: trs.senderId,
 			recipientId: trs.recipientId,
-			freezedAmount: trs.freezedAmount,
+			freezedAmount: trs.stakedAmount,
 			nextVoteMilestone: trs.nextVoteMilestone
 		}
 	};
@@ -192,7 +191,7 @@ Frozen.prototype.undo = function (trs, block, sender, cb) {
 			self.scope.db.none(sql.deductFrozeAmount,
 				{
 					senderId: trs.senderId,
-					FrozeAmount:trs.freezedAmount
+					FrozeAmount:trs.stakedAmount
 				})
 				.then(function () {
 					return setImmediate(cb);
@@ -255,7 +254,7 @@ Frozen.prototype.process = function (trs, sender, cb) {
  * @return {function} {cb, err, trs}
  */
 Frozen.prototype.verify = function (trs, sender, cb) {
-	let amount = trs.freezedAmount / 100000000;
+	let amount = trs.stakedAmount / 100000000;
 
 	if (amount < 1) {
 		return setImmediate(cb, 'Invalid stake amount');
@@ -276,7 +275,7 @@ Frozen.prototype.verify = function (trs, sender, cb) {
  * @return % based on amount
  */
 Frozen.prototype.calculateFee = function (trs, sender) {
-	return (trs.freezedAmount * constants.fees.froze) / 100;
+	return (trs.stakedAmount * constants.fees.froze) / 100;
 };
 
 /**
