@@ -89,7 +89,8 @@ Transaction.prototype.create = function (data) {
 		senderPublicKey: data.sender.publicKey,
 		requesterPublicKey: data.requester ? data.requester.publicKey.toString('hex') : null,
 		timestamp: slots.getTime(),
-		asset: {}
+		asset: {},
+		stakedAmount: 0
 	};
 
 	trs = __private.types[trs.type].create.call(this, data, trs);
@@ -332,11 +333,13 @@ Transaction.prototype.checkConfirmed = function (trs, cb) {
  *  modify checkbalance according to froze amount avaliable to user
  */
 Transaction.prototype.checkBalance = function (amount, balance, trs, sender) {
-	let totalAmountWithFrozeAmount = new bignum(((sender.totalFrozeAmount)).toString()).plus(amount);
+	
+	let totalAmountWithFrozeAmount = new bignum(sender.totalFrozeAmount).plus(amount);
+
 	let exceededBalance = new bignum(sender[balance].toString()).lessThan(totalAmountWithFrozeAmount);
 	let exceeded = (trs.blockId !== this.scope.genesisblock.block.id && exceededBalance);
 
-	if (parseInt(sender.totalFrozeAmount) > 0) {
+	if (parseInt( sender.totalFrozeAmount) > 0) {
 		return {
 			exceeded: exceeded,
 			error: exceeded ? [
@@ -899,6 +902,9 @@ Transaction.prototype.undoUnconfirmed = function (trs, sender, cb) {
 	if (trs.type !== 11) {
 		amount = amount.plus(trs.fee.toString()).toNumber();
 	}
+	else {
+		amount = amount.toNumber();
+	}
 
 	this.scope.account.merge(sender.address, {u_balance: amount}, function (err, sender) {
 		if (err) {
@@ -929,6 +935,7 @@ Transaction.prototype.dbFields = [
 	'senderId',
 	'recipientId',
 	'amount',
+	'stakedAmount',
 	'fee',
 	'signature',
 	'signSignature',
@@ -958,9 +965,6 @@ Transaction.prototype.dbSave = function (trs) {
 		throw e;
 	}
 
-	if ((trs.type === 8) && trs.freezedAmount > 0) {
-		trs.amount = trs.freezedAmount;
-	}
 	if (trs.type === 11)
 	{
 		trs.fee = 0;
@@ -980,10 +984,11 @@ Transaction.prototype.dbSave = function (trs) {
 				senderId: trs.senderId,
 				recipientId: trs.recipientId || null,
 				amount: trs.amount,
+				stakedAmount: trs.stakedAmount,
 				fee: trs.fee,
 				signature: signature,
 				signSignature: signSignature,
-				signatures: trs.signatures ? trs.signatures.join(',') : null,
+				signatures: trs.signatures ? trs.signatures.join(',') : null,				
 			}
 		}
 	];
@@ -1248,6 +1253,7 @@ Transaction.prototype.dbRead = function (raw) {
 			recipientId: raw.t_recipientId,
 			recipientPublicKey: raw.m_recipientPublicKey || null,
 			amount: parseInt(raw.t_amount),
+			stakedAmount: parseInt(raw.t_stakedAmount),
 			fee: parseInt(raw.t_fee),
 			signature: raw.t_signature,
 			signSignature: raw.t_signSignature,

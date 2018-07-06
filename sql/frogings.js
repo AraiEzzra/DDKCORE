@@ -52,7 +52,15 @@ let FrogingsSql = {
 
 	checkRewardCount: 'SELECT "rewardCount" FROM stake_orders WHERE "status"=1 AND "senderId"=${senderId}',
 
-	getSelectedOrder: 'SELECT "senderId" , "freezedAmount", "rewardCount", "nextVoteMilestone", "voteCount", "stakeId" FROM stake_orders WHERE "status"=1 AND "stakeId"=${id}'
+	getSelectedOrder: 'SELECT "senderId" , "freezedAmount", "rewardCount", "nextVoteMilestone", "voteCount", "stakeId" FROM stake_orders WHERE "status"=1 AND "stakeId"=${id}',
+
+	RemoveOrder: 'DELETE FROM stake_orders WHERE "id" = ${id} AND "senderId"=${address}',
+
+	getOldOrderID: 'SELECT "id" FROM stake_orders WHERE "stakeId"=${stakeId}',
+
+	getNewOrderNextVoteMilestone: 'SELECT "nextVoteMilestone" FROM stake_orders WHERE "id"=${id} AND "senderId"=${senderId}',
+
+	updateOldOrder: 'UPDATE stake_orders SET "status"=1, "nextVoteMilestone"=${nextVoteMilestone}, "isVoteDone"=false WHERE "stakeId"=${stakeId} '
 };
 
 module.exports = FrogingsSql;
