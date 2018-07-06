@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS "trs"(
   "senderId" VARCHAR(25) NOT NULL,
   "recipientId" VARCHAR(25),
   "amount" BIGINT NOT NULL,
+  "stakedAmount" BIGINT NOT NULL,
   "fee" BIGINT NOT NULL,
   "signature" bytea NOT NULL,
   "signSignature" bytea,
