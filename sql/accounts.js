@@ -10,7 +10,7 @@ let Accounts = {
   
 	findGroupBonus: 'SELECT "group_bonus", "pending_group_bonus" FROM mem_accounts WHERE "address"=${senderId}',
 
-	findDirectSponsor: 'SELECT address FROM referals WHERE "level[1]" = ${introducer}',
+	findDirectSponsor: 'SELECT address FROM referals WHERE level[1] = ${introducer}',
 
 	updatePendingGroupBonus: 'UPDATE mem_accounts SET "pending_group_bonus" = "pending_group_bonus" + ${nextBonus} WHERE "address"=${senderId}',
 
