@@ -13,8 +13,8 @@ function postTransaction (transaction, done) {
 	});
 }
 
-function sendLISK (params, done) {
-	let transaction = node.lisk.transaction.createTransaction(params.recipientId, params.amount, params.secret);
+function sendDDK (params, done) {
+	let transaction = node.ddk.transaction.createTransaction(params.recipientId, params.amount, params.secret);
 
 	postTransaction(transaction, function (err, res) {
 		node.expect(res.body).to.have.property('success').to.be.ok;
@@ -31,7 +31,7 @@ describe('POST /peer/transactions', function () {
 		describe('when account has no funds', function () {
 
 			it('should fail', function (done) {
-				let multiSigTx = node.lisk.multisignature.createMultisignature(multisigAccount.password, null, [node.lisk.crypto.getKeys(node.randomPassword()).publicKey], 1, 2);
+				let multiSigTx = node.ddk.multisignature.createMultisignature(multisigAccount.password, null, [node.ddk.crypto.getKeys(node.randomPassword()).publicKey], 1, 2);
 
 				postTransaction(multiSigTx, function (err, res) {
 					node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -44,7 +44,7 @@ describe('POST /peer/transactions', function () {
 		describe('when account has funds', function () {
 
 			before(function (done) {
-				sendLISK({
+				sendDDK({
 					secret: node.gAccount.password,
 					amount: node.fees.multisignatureRegistrationFee * 10,
 					recipientId: multisigAccount.address
@@ -52,7 +52,7 @@ describe('POST /peer/transactions', function () {
 			});
 
 			it('using null member in keysgroup should fail', function (done) {
-				let multiSigTx = node.lisk.multisignature.createMultisignature(multisigAccount.password, null, ['+' + node.eAccount.publicKey, null], 1, 2);
+				let multiSigTx = node.ddk.multisignature.createMultisignature(multisigAccount.password, null, ['+' + node.eAccount.publicKey, null], 1, 2);
 
 				postTransaction(multiSigTx, function (err, res) {
 					node.expect(res.body).to.have.property('success').to.be.not.ok;
@@ -65,7 +65,7 @@ describe('POST /peer/transactions', function () {
 				let memberAccount1 = node.randomAccount();
 				let memberAccount2 = node.randomAccount();
 
-				let multiSigTx = node.lisk.multisignature.createMultisignature(multisigAccount.password, null, ['+' + node.eAccount.publicKey + 'A', '+' + memberAccount1.publicKey, '+' + memberAccount2.publicKey], 1, 2);
+				let multiSigTx = node.ddk.multisignature.createMultisignature(multisigAccount.password, null, ['+' + node.eAccount.publicKey + 'A', '+' + memberAccount1.publicKey, '+' + memberAccount2.publicKey], 1, 2);
 
 				postTransaction(multiSigTx, function (err, res) {
 					node.expect(res.body).to.have.property('success').to.be.not.ok;

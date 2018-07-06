@@ -2,8 +2,8 @@ def initBuild() {
   sh '''#!/bin/bash
   pkill -f app.js -9 || true
   sudo service postgresql restart
-  dropdb ETP_test || true
-  createdb ETP_test
+  dropdb DDK_test || true
+  createdb DDK_test
   '''
   deleteDir()
   checkout scm
@@ -17,7 +17,7 @@ def buildDependency() {
     npm install
 
     # Install Nodejs
-    tar -zxf ~/ETP-node-Linux-x86_64.tar.gz
+    tar -zxf ~/ddk-node-Linux-x86_64.tar.gz
 
     # Build submodules
     git submodule init
@@ -33,21 +33,21 @@ def buildDependency() {
   }
 }
 
-def startETP() {
+def startDDK() {
   try {
     sh '''#!/bin/bash
-    cd test/ETP-js/; npm install; cd ../..
+    cd test/ddk-js/; npm install; cd ../..
     cp test/config.json test/genesisBlock.json .
     export NODE_ENV=test
-    JENKINS_NODE_COOKIE=dontKillMe ~/start_ETP.sh
+    JENKINS_NODE_COOKIE=dontKillMe ~/start_DDK.sh
     '''
   } catch (err) {
     currentBuild.result = 'FAILURE'
-    error('Stopping build, ETP failed')
+    error('Stopping build, ddk failed')
   }
 }
 
-lock(resource: "ETP-Core-Nodes", inversePrecedence: true) {
+lock(resource: "ddk-Core-Nodes", inversePrecedence: true) {
   stage ('Prepare Workspace') {
     parallel(
       "Build Node-01" : {
@@ -72,7 +72,7 @@ lock(resource: "ETP-Core-Nodes", inversePrecedence: true) {
           rm -rf node-0*
           rm -rf *.zip
           rm -rf coverage-unit/*
-          rm -rf ETP/*
+          rm -rf ddk/*
           rm -f merged-lcov.info
           '''
           deleteDir()
@@ -102,21 +102,21 @@ lock(resource: "ETP-Core-Nodes", inversePrecedence: true) {
     )
   }
 
-  stage ('Start ETP') {
+  stage ('Start ddk') {
     parallel(
-      "Start ETP Node-01" : {
+      "Start ddk Node-01" : {
         node('node-01'){
-          startETP()
+          startDDK()
         }
       },
-      "Start ETP Node-02" : {
+      "Start ddk Node-02" : {
         node('node-02'){
-          startETP()
+          startDDK()
         }
       },
-      "Start ETP Node-03" : {
+      "Start ddk Node-03" : {
         node('node-03'){
-          startETP()
+          startDDK()
         }
       }
     )
@@ -425,7 +425,7 @@ lock(resource: "ETP-Core-Nodes", inversePrecedence: true) {
         rm -rf *.zip
         rm -rf coverage-unit/*
         rm -f merged-lcov.info
-        rm -rf ETP/*
+        rm -rf ddk/*
         '''
         }
       }

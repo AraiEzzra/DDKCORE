@@ -10,7 +10,7 @@ function openAccount (params, done) {
 	});
 }
 
-function sendLISK (params, done) {
+function sendDDK (params, done) {
 	node.put('/api/transactions/', params, function (err, res) {
 		done(err, res);
 	});
@@ -83,9 +83,9 @@ describe('PUT /api/accounts/delegates with funds', function () {
 	let account = node.randomAccount();
 
 	before(function (done) {
-		sendLISK({
+		sendDDK({
 			secret: node.gAccount.password,
-			amount: node.LISK,
+			amount: node.DDK,
 			recipientId: account.address
 		}, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -264,9 +264,9 @@ describe('PUT /api/delegates with funds', function () {
 	});
 
 	beforeEach(function (done) {
-		sendLISK({
+		sendDDK({
 			secret: node.gAccount.password,
-			amount: node.LISK,
+			amount: node.DDK,
 			recipientId: account.address
 		}, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;
@@ -763,9 +763,9 @@ describe('GET /api/delegates/voters', function () {
 	let account = node.randomAccount();
 
 	before(function (done) {
-		sendLISK({
+		sendDDK({
 			secret: node.gAccount.password,
-			amount: node.LISK,
+			amount: node.DDK,
 			recipientId: account.address
 		}, function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.ok;

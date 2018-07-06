@@ -5,7 +5,7 @@ let constants = require('./constants.js');
  * @module helpers/slots
  */
 /**
- * Gets constant time from ETP epoch.
+ * Gets constant time from ddk epoch.
  * @returns {number} epochTime from constants.
  */
 function beginEpochTime () {
@@ -15,9 +15,9 @@ function beginEpochTime () {
 }
 
 /**
- * Calculates time since ETP epoch.
+ * Calculates time since ddk epoch.
  * @param {number|undefined} time - Time in unix seconds.
- * @returns {number} current time - ETP epoch time.
+ * @returns {number} current time - ddk epoch time.
  */
 function getEpochTime (time) {
 	if (time === undefined) {
@@ -46,7 +46,7 @@ module.exports = {
 	/**
 	 * @method
 	 * @param {number} time
-	 * @return {number} ETP epoch time constant.
+	 * @return {number} ddk epoch time constant.
 	 */
 	getTime: function (time) {
 		return getEpochTime(time);
@@ -55,7 +55,7 @@ module.exports = {
 	/**
 	 * @method
 	 * @param {number} [epochTime]
-	 * @return {number} constant time from ETP epoch + input time.
+	 * @return {number} constant time from ddk epoch + input time.
 	 */
 	getRealTime: function (epochTime) {
 		if (epochTime === undefined) {

@@ -41,7 +41,7 @@
  */
 module.exports = {
 	activeDelegates: 3,
-	maxVotesPerTransaction: 2,
+	maxVotesPerTransaction: 3,
 	addressLength: 208,
 	blockHeaderLength: 248,
 	blockReceiptTimeOut: 20, // 2 blocks
@@ -58,8 +58,8 @@ module.exports = {
 		delegate: 1000000000,
 		multisignature: 1000000,
 		dapp: 2500000000,
-		froze: 0.001,  
-		sendfreeze: 0.01
+		froze: 0.01,  
+		sendfreeze: 0.1
 	},
 	feeStart: 1,
 	feeStartVolume: 10000 * 100000000,
@@ -114,10 +114,10 @@ module.exports = {
 	},
 	// Configurable froze order : time here is in minutes
 	froze : {
-		endTime : 12,
-		rTime : 6,
-		vTime : 3,
-		milestone : 6, //for testing, taking 2 min
+		endTime : 8,
+		rTime : 4,
+		vTime : 2,
+		milestone : 4, //for testing, taking 2 min
 		rewards: {
 			milestones: [
 				10, // 10% For 0-6 months

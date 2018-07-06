@@ -18,7 +18,7 @@ node.invalidAccount = {
 node.debug = console.log;
 node.version = node.config.version;
 node.expect = require('chai').expect;
-node.lisk = require('lisk-js');
+node.ddk = require('ddk-js');
 
 // Abstract Request
 function abstractRequest (options, done) {
@@ -85,8 +85,8 @@ node.randomAccount = function () {
 	account.password = node.randomPassword();
 	account.secondPassword = node.randomPassword();
 	account.username = node.randomDelegateName();
-	account.publicKey = node.lisk.crypto.getKeys(account.password).publicKey;
-	account.address = node.lisk.crypto.getAddress(account.publicKey);
+	account.publicKey = node.ddk.crypto.getKeys(account.password).publicKey;
+	account.address = node.ddk.crypto.getAddress(account.publicKey);
 	account.address = account.address.split('L')[0];
 	account.address = 'DDK' + account.address;
 
@@ -207,9 +207,9 @@ describe('GET /api/accounts/getBalance?address=<address>', function () {
 	});
 
 	it('using invalid address should fail', function (done) {
-		getBalance('thisIsNOTAETPAddress', function (err, res) {
+		getBalance('thisIsNOTADDKAddress', function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
-			node.expect(res.body).to.have.property('error').to.eql('Object didn\'t pass validation for format address: thisIsNOTAETPAddress');
+			node.expect(res.body).to.have.property('error').to.eql('Object didn\'t pass validation for format address: thisIsNOTADDKAddress');
 			done();
 		});
 	});
@@ -249,9 +249,9 @@ describe('GET /api/accounts/getPublicKey?address=<address>', function () {
 	});
 
 	it('using invalid address should fail', function (done) {
-		getPublicKey('thisIsNOTAETPAddress', function (err, res) {
+		getPublicKey('thisIsNOTADDKAddress', function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
-			node.expect(res.body).to.have.property('error').to.contain('Object didn\'t pass validation for format address: thisIsNOTAETPAddress');
+			node.expect(res.body).to.have.property('error').to.contain('Object didn\'t pass validation for format address: thisIsNOTADDKAddress');
 			done();
 		});
 	});
@@ -291,9 +291,9 @@ describe('GET /api/accounts/getPublicKey?address=', function () {
 	});
 
 	it('using invalid address should fail', function (done) {
-		getPublicKey('thisIsNOTAETPAddress', function (err, res) {
+		getPublicKey('thisIsNOTADDKAddress', function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
-			node.expect(res.body).to.have.property('error').to.contain('Object didn\'t pass validation for format address: thisIsNOTAETPAddress');
+			node.expect(res.body).to.have.property('error').to.contain('Object didn\'t pass validation for format address: thisIsNOTADDKAddress');
 			done();
 		});
 	});
@@ -433,10 +433,10 @@ describe('GET /accounts', function () {
 	});
 
 	it('using invalid address should fail', function (done) {
-		getAccounts('address=' + 'thisIsNOTALiskAddress', function (err, res) {
+		getAccounts('address=' + 'thisIsNOTADDKAddress', function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
 			node.expect(res.body).to.have.property('error');
-			node.expect(res.body.error).to.contain('Object didn\'t pass validation for format address: thisIsNOTALiskAddress');
+			node.expect(res.body.error).to.contain('Object didn\'t pass validation for format address: thisIsNOTADDKAddress');
 			done();
 		});
 	});
@@ -485,10 +485,10 @@ describe('GET /accounts', function () {
 	});
 
 	it('using invalid publicKey should fail', function (done) {
-		getAccounts('publicKey=' + 'thisIsNOTALiskAccountPublicKey', function (err, res) {
+		getAccounts('publicKey=' + 'thisIsNOTADDKAccountPublicKey', function (err, res) {
 			node.expect(res.body).to.have.property('success').to.be.not.ok;
 			node.expect(res.body).to.have.property('error');
-			node.expect(res.body.error).to.contain('Object didn\'t pass validation for format publicKey: thisIsNOTALiskAccountPublicKey');
+			node.expect(res.body.error).to.contain('Object didn\'t pass validation for format publicKey: thisIsNOTADDKAccountPublicKey');
 			done();
 		});
 	});

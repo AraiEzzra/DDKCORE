@@ -324,7 +324,7 @@ describe('cache', function () {
 			cache.setJsonForKey(key, value, function (err, status) {
 				expect(err).to.not.exist;
 				expect(status).to.equal('OK');
-				let transaction = node.lisk.transaction.createTransaction('1L', 1, node.gAccount.password, node.gAccount.secondPassword);
+				let transaction = node.ddk.transaction.createTransaction('1L', 1, node.gAccount.password, node.gAccount.secondPassword);
 
 				cache.onTransactionsSaved([transaction], function (err) {
 					cache.getJsonForKey(key, function (err, res) {
@@ -343,7 +343,7 @@ describe('cache', function () {
 			cache.setJsonForKey(key, value, function (err, status) {
 				expect(err).to.not.exist;
 				expect(status).to.equal('OK');
-				let transaction = node.lisk.delegate.createDelegate(node.randomPassword(), node.randomDelegateName().toLowerCase());
+				let transaction = node.ddk.delegate.createDelegate(node.randomPassword(), node.randomDelegateName().toLowerCase());
 
 				cache.onTransactionsSaved([transaction], function (err) {
 					cache.getJsonForKey(key, function (err, res) {
@@ -362,7 +362,7 @@ describe('cache', function () {
 			cache.setJsonForKey(key, value, function (err, status) {
 				expect(err).to.not.exist;
 				expect(status).to.equal('OK');
-				let transaction = node.lisk.delegate.createDelegate(node.randomPassword(), node.randomDelegateName().toLowerCase());
+				let transaction = node.ddk.delegate.createDelegate(node.randomPassword(), node.randomDelegateName().toLowerCase());
 
 				cache.onSyncStarted();
 				cache.onTransactionsSaved([transaction], function (err) {

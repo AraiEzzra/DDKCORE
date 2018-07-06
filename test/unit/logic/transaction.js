@@ -302,10 +302,10 @@ describe('transaction', function () {
 			expect(firstCalculation.equals(secondCalculation)).to.be.ok;
 		});
 
-		it('should return same result of getBytes using /logic/transaction and lisk-js package (without data field)', function () {
+		it('should return same result of getBytes using /logic/transaction and ddk-js package (without data field)', function () {
 			let trsBytesFromLogic = transaction.getBytes(validTransaction);
-			let trsBytesFromLiskJs = node.lisk.crypto.getBytes(validTransaction);
-			expect(trsBytesFromLogic.equals(trsBytesFromLiskJs)).to.be.ok;
+			let trsBytesFromDDKJs = node.ddk.crypto.getBytes(validTransaction);
+			expect(trsBytesFromLogic.equals(trsBytesFromDDKJs)).to.be.ok;
 		});
 
 		it('should skip signature, second signature for getting bytes', function () {

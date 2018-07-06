@@ -18,7 +18,6 @@ let self, library;
  * @return {setImmediateCallback} With `this` as data.
  */
 
-//  var library = {};
 function Account(db, schema, logger, cb) {
 
 	this.scope = {
