@@ -1296,20 +1296,20 @@ Accounts.prototype.internal = {
 						.then(function (directSponsors) {
 							if (directSponsors.length >= 2) {
 
-								let activeStakeCount = 0;
-								directSponsors.forEach(function (directSponsor, index) {
+								var activeStakeCount = 0;
+								directSponsors.forEach(function (directSponsor) {
 									library.db.query(sql.findActiveStakeAmount, {
-										senderId: directSponsor[index].address
+										senderId: directSponsor.address
 									})
 										.then(function (stakeInfo) {
-											stakedAmount = parseInt(stakeInfo[0].sum) / 100000000;
-											let d = constants.epochTime;
-											let t = parseInt(d.getTime() / 1000);
-											d = new Date((stakeInfo[0].startTime + t) * 1000);
-											const timeDiff = (d - Date.now());
+											stakedAmount = parseInt(stakeInfo[1].value) / 100000000;
+											const timeDiff = (slots.getTime() - stakeInfo[0].value);
 											const days = Math.ceil(Math.abs(timeDiff / (1000 * 60 * 60 * 24)));
 											if (stakedAmount && days <= 31) {
 												activeStakeCount++;
+											}
+											if (activeStakeCount >= 2) {
+												seriesCb(null);
 											}
 										})
 										.catch(function (err) {
@@ -1317,15 +1317,13 @@ Accounts.prototype.internal = {
 											seriesCb(err);
 										});
 								});
-								if (activeStakeCount >= 2) {
-									seriesCb(null);
-								} else {
-									failedRule = 3;
-									seriesCb('Rule 3 failed: Direct sponsors don\'t have active stake orders');
-								}
-							} else {
+								
+							} else if(activeStakeCount < 2){
 								failedRule = 3;
 								seriesCb('Rule 3 failed: User doesn\'t have two direct sponsor');
+							}else {
+								failedRule = 3;
+								seriesCb('Rule 3 failed: Direct sponsors don\'t have active stake orders');
 							}
 						})
 						.catch(function (err) {
@@ -1338,9 +1336,9 @@ Accounts.prototype.internal = {
 					library.db.query(sql.findGroupBonus, {
 						senderId: req.body.address
 					})
-						.then(function (groupBonus) {
-							groupBonus = groupBonus[0].group_bonus;
-							pendingGroupBonus = groupBonus[0].pending_group_bonus;
+						.then(function (bonusInfo) {
+							groupBonus = bonusInfo[0].group_bonus;
+							pendingGroupBonus = bonusInfo[0].pending_group_bonus;
 							if (pendingGroupBonus < groupBonus) {
 								nextBonus = (groupBonus - pendingGroupBonus) > 15 ? 15 : (groupBonus - pendingGroupBonus);
 								if ((groupBonus - pendingGroupBonus + nextBonus) < stakedAmount * 10) {

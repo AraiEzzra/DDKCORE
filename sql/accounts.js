@@ -4,7 +4,7 @@ let Accounts = {
 
 	checkAccountStatus : 'SELECT "status" FROM mem_accounts where "address"=${senderId}',
 
-	findActiveStakeAmount: 'SELECT SUM("freezedAmount") FROM stake_orders WHERE "senderId" = ${senderId} AND "status" = 1',
+	findActiveStakeAmount: '(SELECT "startTime" AS "value" FROM stake_orders where "senderId" = ${senderId} ORDER BY "startTime" DESC LIMIT 1) UNION ALL (SELECT SUM("freezedAmount") as "value" FROM stake_orders WHERE "senderId" = ${senderId} AND "status" = 1);',
 
 	findActiveStake: 'SELECT * FROM stake_orders WHERE "senderId" = ${senderId} AND "status" = 1',
   

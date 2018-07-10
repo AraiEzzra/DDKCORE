@@ -17,6 +17,8 @@ let TransactionsSql = {
 
 	count: 'SELECT COUNT("id")::int AS "count" FROM trs',
 
+	getTransactionHistory: 'SELECT * FROM trs WHERE "timestamp" >= ${timestamp} ORDER BY "timestamp" DESC',
+
 	countById: 'SELECT COUNT("id")::int AS "count" FROM trs WHERE "id" = ${id}',
 
 	countList: function (params) {
