@@ -58,7 +58,7 @@ Multisignature.prototype.create = function (data, trs) {
 		keysgroup: data.keysgroup,
 		lifetime: data.lifetime
 	};
-
+	trs.trsName = "MULTI";
 	return trs;
 };
 

@@ -55,8 +55,8 @@ function SendFreezeOrder (cb, scope) {
 	);
 
 
-	__private.assetTypes[transactionTypes.SENDFREEZE] = library.logic.transaction.attachAssetType(
-		transactionTypes.SENDFREEZE, 
+	__private.assetTypes[transactionTypes.SENDSTAKE] = library.logic.transaction.attachAssetType(
+		transactionTypes.SENDSTAKE, 
 		new sendFreezeOrder(
 			scope.logger,
 			scope.db,
@@ -227,7 +227,7 @@ SendFreezeOrder.prototype.onBind = function (scope) {
 		scope.transactions,
 		scope.loader
 	);
-	__private.assetTypes[transactionTypes.SENDFREEZE].bind(
+	__private.assetTypes[transactionTypes.SENDSTAKE].bind(
 		scope.accounts,
 		scope.rounds
 	);
@@ -332,7 +332,7 @@ SendFreezeOrder.prototype.shared = {
 
 									try {
 										transaction = library.logic.transaction.create({
-											type: transactionTypes.SENDFREEZE,
+											type: transactionTypes.SENDSTAKE,
 											sender: account,
 											stakeId: req.body.stakeId,
 											keypair: keypair,
@@ -389,7 +389,7 @@ SendFreezeOrder.prototype.shared = {
 
 								try {
 									transaction = library.logic.transaction.create({
-										type: transactionTypes.SENDFREEZE,
+										type: transactionTypes.SENDSTAKE,
 										sender: account,
 										stakeId: req.body.stakeId,
 										keypair: keypair,

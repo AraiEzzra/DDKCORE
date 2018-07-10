@@ -56,7 +56,7 @@ DApp.prototype.create = function (data, trs) {
 		link: data.link,
 		icon: data.icon
 	};
-
+	trs.trsName = "DAPP";
 	return trs;
 };
 

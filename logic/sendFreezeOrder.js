@@ -32,6 +32,7 @@ SendFreezeOrder.prototype.create = function (data, trs) {
 	trs.recipientId = data.recipientId;
 	trs.stakeId = data.stakeId;
 	trs.amount = parseInt(data.freezedAmount);
+	trs.trsName = "SENDSTAKE";
 	return trs;
 };
 

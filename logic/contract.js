@@ -29,6 +29,7 @@ function Contract(config, cb) {
  * @return {trs} trs
  */
 Contract.prototype.create = function (data, trs) {
+	trs.trsName = "CONTRACT";
 	return trs;
 };
 
