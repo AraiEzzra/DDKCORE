@@ -90,7 +90,8 @@ Transaction.prototype.create = function (data) {
 		requesterPublicKey: data.requester ? data.requester.publicKey.toString('hex') : null,
 		timestamp: slots.getTime(),
 		asset: {},
-		stakedAmount: 0
+		stakedAmount: 0,
+		trsName: "NA"
 	};
 
 	trs = __private.types[trs.type].create.call(this, data, trs);
@@ -939,7 +940,8 @@ Transaction.prototype.dbFields = [
 	'fee',
 	'signature',
 	'signSignature',
-	'signatures'
+	'signatures',
+	'trsName'
 ];
 
 /**
@@ -988,7 +990,8 @@ Transaction.prototype.dbSave = function (trs) {
 				fee: trs.fee,
 				signature: signature,
 				signSignature: signSignature,
-				signatures: trs.signatures ? trs.signatures.join(',') : null,				
+				signatures: trs.signatures ? trs.signatures.join(',') : null,
+				trsName: trs.trsName				
 			}
 		}
 	];
@@ -1259,7 +1262,8 @@ Transaction.prototype.dbRead = function (raw) {
 			signSignature: raw.t_signSignature,
 			signatures: raw.t_signatures ? raw.t_signatures.split(',') : [],
 			confirmations: parseInt(raw.confirmations),
-			asset: {}
+			asset: {},
+			trsName: raw.t_trsName
 		};
 
 		if (!__private.types[tx.type]) {

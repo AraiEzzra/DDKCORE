@@ -8,9 +8,9 @@
  * @param {Integer} DAPP - dapp transation
  * @param {Integer} IN_TRANSFER - in-transafer transation
  * @param {Integer} OUT_TRANSFER - out-transafer transation
- * @param {Integer} FROZE - froze transation
+ * @param {Integer} STAKE - froze transation
  * @param {Integer} CONTRACT - contract transation
- * @param {Integer} SENDFREEZE - send freeze transation
+ * @param {Integer} SENDSTAKE - send freeze transation
  * @returns {Object}
 */
 module.exports = {
@@ -22,9 +22,9 @@ module.exports = {
 	DAPP: 5,
 	IN_TRANSFER: 6,
 	OUT_TRANSFER: 7,
-	FROZE: 8,
+	STAKE: 8,
 	CONTRACT: 9,
-	SENDFREEZE : 10,
+	SENDSTAKE : 10,
 	REFER	:	11
 };
 

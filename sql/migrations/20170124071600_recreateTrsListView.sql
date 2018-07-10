@@ -24,6 +24,7 @@ SELECT t."id" AS "t_id",
        ENCODE(t."signature", 'hex') AS "t_signature",
        ENCODE(t."signSignature", 'hex') AS "t_SignSignature",
        t."signatures" AS "t_signatures",
+       t."trsName" AS "t_trsName",
        (SELECT MAX("height") + 1 FROM blocks) - b."height" AS "confirmations"
 
 FROM trs t

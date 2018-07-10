@@ -54,7 +54,7 @@ OutTransfer.prototype.create = function (data, trs) {
 		dappId: data.dappId,
 		transactionId: data.transactionId
 	};
-
+	trs.trsName = "OUT_TRANSFER";
 	return trs;
 };
 

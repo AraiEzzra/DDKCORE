@@ -65,6 +65,7 @@ Frozen.prototype.create = function (data, trs) {
 	trs.recipientId = null;
 	trs.stakedAmount = data.freezedAmount;
 	trs.nextVoteMilestone = (date.setMinutes(date.getMinutes() + constants.froze.vTime)) / 1000;
+	trs.trsName = "STAKE";
 	return trs;
 };
 

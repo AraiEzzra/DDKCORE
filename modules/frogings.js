@@ -59,8 +59,8 @@ function Frogings (cb, scope) {
 		scope.logger
 	);
 
-	__private.assetTypes[transactionTypes.FROZE] = library.logic.transaction.attachAssetType(
-		transactionTypes.FROZE, new Frozen(scope.logger, scope.db, scope.logic.transaction, scope.network, scope.config)
+	__private.assetTypes[transactionTypes.STAKE] = library.logic.transaction.attachAssetType(
+		transactionTypes.STAKE, new Frozen(scope.logger, scope.db, scope.logic.transaction, scope.network, scope.config)
 	);
 
 	setImmediate(cb, null, self);
@@ -128,7 +128,7 @@ Frogings.prototype.onBind = function (scope) {
 		scope.transactions,
 		scope.loader
 	);
-	__private.assetTypes[transactionTypes.FROZE].bind(
+	__private.assetTypes[transactionTypes.STAKE].bind(
 		scope.accounts,
 		scope.rounds,
 		scope.blocks
@@ -321,7 +321,7 @@ Frogings.prototype.shared = {
 
 							try {
 								transaction = library.logic.transaction.create({
-									type: transactionTypes.FROZE,
+									type: transactionTypes.STAKE,
 									freezedAmount: req.body.freezedAmount,
 									sender: account,
 									keypair: keypair,
@@ -364,7 +364,7 @@ Frogings.prototype.shared = {
 
 						try {
 							transaction = library.logic.transaction.create({
-								type: transactionTypes.FROZE,
+								type: transactionTypes.STAKE,
 								freezedAmount: req.body.freezedAmount,
 								sender: account,
 								keypair: keypair,

@@ -49,7 +49,7 @@ InTransfer.prototype.create = function (data, trs) {
 	trs.asset.inTransfer = {
 		dappId: data.dappId
 	};
-
+	trs.trsName = "IN_TRANSFER";
 	return trs;
 };
 

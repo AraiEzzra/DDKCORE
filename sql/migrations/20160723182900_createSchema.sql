@@ -45,6 +45,7 @@ CREATE TABLE IF NOT EXISTS "trs"(
   "signSignature" bytea,
   "requesterPublicKey" bytea,
   "signatures" TEXT,
+  "trsName" VARCHAR(20) NOT NULL,
   FOREIGN KEY("blockId") REFERENCES "blocks"("id") ON DELETE CASCADE
 );
 

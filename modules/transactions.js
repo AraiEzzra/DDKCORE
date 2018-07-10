@@ -105,7 +105,8 @@ __private.list = function (filter, cb) {
 		// FIXME: Backward compatibility, should be removed after transitional period
 		ownerAddress: null,
 		ownerPublicKey: null,
-		stakedAmount: '"t_stakedAmount" = ${stakedAmount}'
+		stakedAmount: '"t_stakedAmount" = ${stakedAmount}',
+		trsName: '"t_trsName" = ${trsName}'
 	};
 	let owner = '';
 	let isFirstWhere = true;
