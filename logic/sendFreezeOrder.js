@@ -10,7 +10,7 @@ let __private = {};
 __private.types = {};
 
 // Private fields
-let modules, library, self;
+let modules, self;
 
 // Constructor
 function SendFreezeOrder(logger, db, network, cb) {
@@ -159,7 +159,7 @@ SendFreezeOrder.prototype.undo = function (trs, block, sender, cb) {
 				}
 			], function (err) {
 				if (err) {
-					library.logger.warn(err);
+					self.scope.logger.warn(err);
 					return setImmediate(seriesCb, err);
 				}
 				return setImmediate(seriesCb, null);
@@ -168,7 +168,7 @@ SendFreezeOrder.prototype.undo = function (trs, block, sender, cb) {
 
 	}, function (err) {
 		if (err) {
-			library.logger.warn(err);
+			self.scope.logger.warn(err);
 			return setImmediate(cb, err);
 		}
 
@@ -332,8 +332,8 @@ SendFreezeOrder.prototype.sendFreezedOrder = function (userAndOrderData, cb) {
 						rewardCount: order.rewardCount,
 						voteCount: order.voteCount,
 						nextVoteMilestone: order.nextVoteMilestone,
-						isVoteDone: order.isVoteDone
-
+						isVoteDone: order.isVoteDone,
+						isTransferred: order.isTransferred
 					})
 					.then(function () {
 						self.scope.logger.info("Successfully inserted new row in stake_orders table");
@@ -347,7 +347,7 @@ SendFreezeOrder.prototype.sendFreezedOrder = function (userAndOrderData, cb) {
 			}
 		}, function (err) {
 			if (err) {
-				library.logger.warn(err);
+				self.scope.logger.warn(err);
 				return setImmediate(cb, err);
 			}
 			return setImmediate(cb, null);

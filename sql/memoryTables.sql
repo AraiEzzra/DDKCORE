@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS "mem_accounts"(
   "status" SMALLINT DEFAULT 1,
   "isDelegate" SMALLINT DEFAULT 0,
   "u_isDelegate" SMALLINT DEFAULT 0,
+  "url" VARCHAR(30),
   "secondSignature" SMALLINT DEFAULT 0,
   "u_secondSignature" SMALLINT DEFAULT 0,
   "u_username" VARCHAR(20),
