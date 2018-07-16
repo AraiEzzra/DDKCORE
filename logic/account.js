@@ -219,6 +219,17 @@ function Account(db, schema, logger, cb) {
 			expression: '(SELECT ARRAY_AGG("dependentId") FROM ' + this.table + '2u_delegates WHERE "accountId" = a."address")'
 		},
 		{
+			name: 'url',
+			type: 'String',
+			filter: {
+				type: 'string',
+				case: 'lower',
+				maxLength: 30,
+				minLength: 1
+			},
+			conv: String
+		},
+		{
 			name: 'multisignatures',
 			type: 'Text',
 			filter: {
@@ -688,7 +699,6 @@ Account.prototype.getAll = function (filter, fields, cb) {
 Account.prototype.set = function (address, fields, cb) {
 	// Verify public key
 	this.verifyPublicKey(fields.publicKey);
-
 	// Normalize address
 	address = String(address).toUpperCase();
 	fields.address = address;

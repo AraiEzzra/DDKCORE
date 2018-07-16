@@ -217,8 +217,11 @@ Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 			});
 		}
 	], function (err) {
-		if (err) return err;
-		else return setImmediate(cb, null);
+		if (err) {
+			setImmediate(cb, err);
+		}
+
+		return setImmediate(cb, null);
 	});
 };
 
@@ -922,10 +925,31 @@ Accounts.prototype.shared = {
 		library.db.one(sql.validateExistingUser, {
 			username: username,
 			password: hashPassword
-		}
-		).then(function (userInfo) {
+		}).then(function (userInfo) {
 
-			return setImmediate(cb, null, { success: true, userInfo: userInfo });
+			library.db.one(sql.findPassPhrase, {
+				userName: username
+			}).then(function (user) {
+				if (user.transferred_etp == 0) {
+					(async function () {
+						await library.db.none(sql.updateEtp, {
+							transfer_time: slots.getTime(),
+							userName: username
+						}).then(function () {
+							console.log('Migrated Table Updated Successfully');
+						}).catch(function (err) {
+							return setImmediate(cb, 'Invalid username or password');
+						});
+					}());
+				}
+				return setImmediate(cb, null, {
+					success: true,
+					userInfo: user
+				})
+			}).catch(function (err) {
+				library.logger.error(err.stack);
+				return setImmediate(cb, 'Invalid username or password');
+			});
 
 		}).catch(function (err) {
 			library.logger.error(err.stack);
