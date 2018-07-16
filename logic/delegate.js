@@ -38,7 +38,8 @@ Delegate.prototype.create = function (data, trs) {
 	trs.amount = 0;
 	trs.asset.delegate = {
 		username: data.username,
-		publicKey: data.sender.publicKey
+		publicKey: data.sender.publicKey,
+		URL: data.URL
 	};
 
 	if (trs.asset.delegate.username) {
@@ -181,6 +182,7 @@ Delegate.prototype.apply = function (trs, block, sender, cb) {
 	if (trs.asset.delegate.username) {
 		data.u_username = null;
 		data.username = trs.asset.delegate.username;
+		data.url = trs.asset.delegate.URL;
 	}
 
 	modules.accounts.setAccountAndGet(data, cb);

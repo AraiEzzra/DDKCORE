@@ -383,7 +383,7 @@ Delegates.prototype.getDelegates = function (query, cb) {
 	modules.accounts.getAccounts({
 		isDelegate: 1,
 		sort: {'voteCount':-1,'vote': -1, 'publicKey': 1}
-	}, ['username', 'address', 'publicKey', 'vote', 'missedblocks', 'producedblocks'], function (err, delegates) {
+	}, ['username', 'address', 'publicKey', 'vote', 'missedblocks', 'producedblocks', 'url'], function (err, delegates) {
 		if (err) {
 			return setImmediate(cb, err);
 		}
@@ -987,6 +987,7 @@ Delegates.prototype.shared = {
 								transaction = library.logic.transaction.create({
 									type: transactionTypes.DELEGATE,
 									username: req.body.username,
+									URL: req.body.URL,
 									sender: account,
 									keypair: keypair,
 									secondKeypair: secondKeypair,
@@ -1025,6 +1026,7 @@ Delegates.prototype.shared = {
 							transaction = library.logic.transaction.create({
 								type: transactionTypes.DELEGATE,
 								username: req.body.username,
+								URL: req.body.URL,
 								sender: account,
 								keypair: keypair,
 								secondKeypair: secondKeypair

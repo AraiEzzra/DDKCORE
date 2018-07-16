@@ -304,8 +304,8 @@ SendFreezeOrder.prototype.shared = {
 										return setImmediate(cb, err);
 									}
 
-									if (order !== null && order.isTransferred) {
-										return setImmediate(cb, 'Order can be send only Once');
+									if (order !== null && order.isTransferred == 3) {
+										return setImmediate(cb, 'Order can be send only 3 times');
 									}
 									stakeOrder = order;
 
@@ -364,8 +364,8 @@ SendFreezeOrder.prototype.shared = {
 									return setImmediate(cb, err);
 								}
 
-								if(order !== null && order.isTransferred){
-									return setImmediate(cb, 'Order can be send only Once');
+								if(order !== null && order.isTransferred == 3){
+									return setImmediate(cb, 'Order can be send only 3 times');
 								}
 								stakeOrder = order;
 
