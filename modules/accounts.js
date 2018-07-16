@@ -906,7 +906,7 @@ Accounts.prototype.shared = {
 			}]
 		}, function (err) {
 			if (err){
-				self.scope.logger.error(err.stack);
+				library.logger.error(err.stack);
 				return setImmediate(cb, err.toString());
 			}	
 			return setImmediate(cb, null, { success: true, message: 'Successfully migrated' });

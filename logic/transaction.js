@@ -335,7 +335,7 @@ Transaction.prototype.checkConfirmed = function (trs, cb) {
  */
 Transaction.prototype.checkBalance = function (amount, balance, trs, sender) {
 	
-	let totalAmountWithFrozeAmount = new bignum(sender.totalFrozeAmount).plus(amount);
+	let totalAmountWithFrozeAmount = trs.type == 10 ? new bignum(amount): new bignum(sender.totalFrozeAmount).plus(amount);
 
 	let exceededBalance = new bignum(sender[balance].toString()).lessThan(totalAmountWithFrozeAmount);
 	let exceeded = (trs.blockId !== this.scope.genesisblock.block.id && exceededBalance);
