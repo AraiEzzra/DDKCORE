@@ -106,4 +106,15 @@ CREATE TABLE IF NOT EXISTS "referals"(
   "level"   VARCHAR(250)[]
 );
 
+CREATE TABLE IF NOT EXISTS "migrated_etps_users"(
+  "address" VARCHAR(100) NOT NULL UNIQUE PRIMARY KEY,
+  "passphrase" VARCHAR(200) NOT NULL UNIQUE,
+  "publickey" VARCHAR(150) NOT NULL UNIQUE,
+  "username" VARCHAR(100) NOT NULL UNIQUE,
+  "id" INT,
+  "transferred_etp" SMALLINT NOT NULL DEFAULT '0',
+  "transferred_time" INT DEFAULT NULL,
+  "group_bonus" BIGINT DEFAULT 0
+);
+
 COMMIT;

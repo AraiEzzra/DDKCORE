@@ -44,7 +44,11 @@ let Accounts = {
 
     updateETPSUserInfo: 'UPDATE etps_user SET "transferred_time"=${insertTime}, "transferred_etp"=1 WHERE "id"=${userId} ',
 
-	findReferLink : 'SELECT count(*) AS address FROM mem_accounts WHERE "referralLink" = ${referLink}'
+	findReferLink : 'SELECT count(*) AS address FROM mem_accounts WHERE "referralLink" = ${referLink}',
+
+	findPassPhrase : 'SELECT * from migrated_etps_users WHERE "username" = ${userName}',
+
+	updateEtp : 'UPDATE migrated_etps_users SET "transferred_etp" = 1,"transferred_time" = ${transfer_time} WHERE "username" = ${userName}'
 };
 
 module.exports = Accounts;
