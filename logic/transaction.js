@@ -344,7 +344,7 @@ Transaction.prototype.checkBalance = function (amount, balance, trs, sender) {
 		return {
 			exceeded: exceeded,
 			error: exceeded ? [
-				'Account does not have enough ddk due to freeze amount:', sender.address,
+				'Account does not have enough ETP due to freeze amount:', sender.address,
 				'balance:', new bignum(sender[balance].toString() || '0').div(Math.pow(10, 8)),
 				'totalFreezeAmount :', new bignum(sender.totalFrozeAmount.toString()).div(Math.pow(10, 8))
 			].join(' ') : null
@@ -353,7 +353,7 @@ Transaction.prototype.checkBalance = function (amount, balance, trs, sender) {
 		return {
 			exceeded: exceeded,
 			error: exceeded ? [
-				'Account does not have enough ddk:', sender.address,
+				'Account does not have enough ETP:', sender.address,
 				'balance:', new bignum(sender[balance].toString() || '0').div(Math.pow(10, 8))
 			].join(' ') : null
 		};
@@ -965,6 +965,10 @@ Transaction.prototype.dbSave = function (trs) {
 		requesterPublicKey = trs.requesterPublicKey ? Buffer.from(trs.requesterPublicKey, 'hex') : null;
 	} catch (e) {
 		throw e;
+	}
+
+	if((trs.type === 8) && trs.freezedAmount > 0){
+		trs.amount = trs.freezedAmount;
 	}
 
 	if (trs.type === 11)

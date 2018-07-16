@@ -688,7 +688,6 @@ Account.prototype.getAll = function (filter, fields, cb) {
 Account.prototype.set = function (address, fields, cb) {
 	// Verify public key
 	this.verifyPublicKey(fields.publicKey);
-
 	// Normalize address
 	address = String(address).toUpperCase();
 	fields.address = address;
