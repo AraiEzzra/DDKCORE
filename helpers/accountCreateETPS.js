@@ -62,7 +62,7 @@ async.series([
 
                 db.none('INSERT INTO migrated_etps_users ("address","passphrase","publickey","username","id","group_bonus") VALUES (${address},${passphrase},${publickey},${username},${id},${group_bonus})', {
                     address: user_address,
-                    passphrase: secret,
+                    passphrase: Buffer.from(secret).toString('base64'),
                     username: etps_user.username,
                     id: etps_user.id,
                     publickey: publicKey,
