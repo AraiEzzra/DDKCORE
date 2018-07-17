@@ -4,13 +4,13 @@ let Accounts = {
 
 	checkAccountStatus : 'SELECT "status" FROM mem_accounts where "address"=${senderId}',
 
-	findActiveStakeAmount: 'SELECT SUM("freezedAmount") FROM stake_orders WHERE "senderId" = ${senderId} AND "status" = 1',
+	findActiveStakeAmount: '(SELECT "startTime" AS "value" FROM stake_orders where "senderId" = ${senderId} ORDER BY "startTime" DESC LIMIT 1) UNION ALL (SELECT SUM("freezedAmount") as "value" FROM stake_orders WHERE "senderId" = ${senderId} AND "status" = 1);',
 
 	findActiveStake: 'SELECT * FROM stake_orders WHERE "senderId" = ${senderId} AND "status" = 1',
   
 	findGroupBonus: 'SELECT "group_bonus", "pending_group_bonus" FROM mem_accounts WHERE "address"=${senderId}',
 
-	findDirectSponsor: 'SELECT * FROM mem_accounts WHERE "introducer" = ${introducer}',
+	findDirectSponsor: 'SELECT address FROM referals WHERE level[1] = ${introducer}',
 
 	updatePendingGroupBonus: 'UPDATE mem_accounts SET "pending_group_bonus" = "pending_group_bonus" + ${nextBonus} WHERE "address"=${senderId}',
 
