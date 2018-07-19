@@ -47,6 +47,10 @@ function TransactionsHttpApi (transactionsModule, app, logger, cache) {
 		'put /': 'addTransactions',
 	});
 
+	router.map(transactionsModule.internal, {
+		'get /getTransactionHistory': 'getTransactionHistory'
+	});
+
 	httpApi.registerEndpoint('/api/transactions', app, router, transactionsModule.isLoaded);
 }
 
