@@ -123,13 +123,14 @@ module.exports.api = function (app) {
                     }
                     return res.status(200).json({
                         success: true,
-                        info: hierarchy
+                        ReferList: hierarchy
                     });
                 });
             } else {
                 return res.status(200).json({
                     success: true,
-                    info: "No Sponsor Found"
+                    ReferList: hierarchy,
+                    info: "No sponsor Found"
                 });
             }
         });
