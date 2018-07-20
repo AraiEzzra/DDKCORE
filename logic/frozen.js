@@ -297,8 +297,7 @@ Frozen.prototype.bind = function (accounts, rounds, blocks) {
 Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 
 	let sponsor_address = address;
-	let amount = reward_amount;
-	let overrideReward = {};
+	let stakeReward = {};
 	let i = 0;
 	let balance, reward, sender_balance;
 
@@ -312,12 +311,12 @@ Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 
 			async.eachSeries(user[0].level, function (level, callback) {
 
-				overrideReward[level] = (((rewards.level[i]) * amount) / 100);
+				stakeReward[level] = (((rewards.level[i]) * reward_amount) / 100);
 
 				let transactionData = {
 					json: {
 						secret: env.SENDER_SECRET,
-						amount: overrideReward[level],
+						amount: stakeReward[level],
 						recipientId: level,
 						transactionRefer: 11
 					}
@@ -327,19 +326,19 @@ Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 					if (err) return err;
 					i++;
 
-					if(transactionResponse.body.success == false) {
-                        sender_balance = parseFloat(transactionResponse.body.error.split('balance:')[1]);
-						if(sender_balance < 0.0001) {
+					if (transactionResponse.body.success == false) {
+						sender_balance = parseFloat(transactionResponse.body.error.split('balance:')[1]);
+						if (sender_balance < 0.0001) {
 							cache.prototype.setJsonForKey("referStatus", false);
-							self.scope.logger.info("Staking Reward Info : "+ transactionResponse.body.error);													
-							return setImmediate(cb,null);
+							self.scope.logger.info("Staking Reward Info : " + transactionResponse.body.error);
+							return setImmediate(cb, null);
 						}
 					} else {
 						reward = true;
 					}
-						
-					if(i == chain_length && reward != true) {
-						self.scope.logger.info("Staking Reward Info : "+ transactionResponse.body.error);						
+
+					if (i == chain_length && reward != true) {
+						self.scope.logger.info("Staking Reward Info : " + transactionResponse.body.error);
 					}
 
 					callback();

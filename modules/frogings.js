@@ -67,10 +67,10 @@ function Frogings (cb, scope) {
 }
 
 
-Frogings.prototype.referalReward = function (stake_amount, address, cb) {
-	let amount = stake_amount;
+Frogings.prototype.referralReward = function (stake_amount, address, cb) {
+
 	let sponsor_address = address;
-	let overrideReward = {},
+	let introducerReward = {},
 		i = 0;
 
 	library.db.query(ref_sql.referLevelChain, {
@@ -79,12 +79,12 @@ Frogings.prototype.referalReward = function (stake_amount, address, cb) {
 
 		if (user.length != 0 && user[0].level != null) {
 
-			overrideReward[user[0].level[i]] = (((env.STAKE_REWARD) * amount) / 100);
+			introducerReward[user[0].level[i]] = (((env.STAKE_REWARD) * stake_amount) / 100);
 
 			let transactionData = {
 				json: {
 					secret: env.SENDER_SECRET,
-					amount: overrideReward[user[0].level[i]],
+					amount: introducerReward[user[0].level[i]],
 					recipientId: user[0].level[i],
 					transactionRefer: 11
 				}
@@ -93,8 +93,8 @@ Frogings.prototype.referalReward = function (stake_amount, address, cb) {
 			library.logic.transaction.sendTransaction(transactionData, function (err, transactionResponse) {
 				if (err) return err;
 				console.log(transactionResponse.body);
-				if(transactionResponse.body.success == false) {
-					library.logger.info("Direct Introducer Reward Info : "+ transactionResponse.body.error);					
+				if (transactionResponse.body.success == false) {
+					library.logger.info("Direct Introducer Reward Info : " + transactionResponse.body.error);
 				}
 				return setImmediate(cb, null);
 			});
@@ -396,7 +396,7 @@ Frogings.prototype.shared = {
 					}).then(function (bal) {
 						let balance = parseInt(bal.u_balance);
 						if (balance > 10000) {
-							self.referalReward(req.body.freezedAmount, accountData.address, function (err) {
+							self.referralReward(req.body.freezedAmount, accountData.address, function (err) {
 								if (err) {
 									library.logger.error(err.stack);
 								}
