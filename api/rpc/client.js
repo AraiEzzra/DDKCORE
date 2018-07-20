@@ -1,27 +1,80 @@
 var WebSocket = require('rpc-websockets').Client;
-var ws = new WebSocket('ws://localhost:8080');
+
+const URL = 'ws://localhost:8080';
 
 
-ws.on('open', function() {
+class ClientRPCApi {
 
-  ws.call('say', ['hello']).then(function(result) {
-    console.log('client result', result);
-  });
+  constructor() {
+    this.counter = 0;
+    this.webSocket = new WebSocket(URL);
+    this.registered = {};
+  }
 
-  // ws.notify('openedNewsModule');
+  getWebSocket() {
+    return this.webSocket;
+  }
 
-  ws.subscribe('feedUpdated');
 
-  ws.on('feedUpdated', function() {
-    console.log('on.feedUpdated');
-  });
 
-  setInterval(function () {
-    ws.call('say', ['hi']).then(function(result) {
-      console.log('client result', result);
+  close() {
+    if (this.webSocket.ready) {
+      this.webSocket.close();
+    }
+  }
+
+  openRemaster() {
+    if (this.webSocket.ready) {
+      this.webSocket.close();
+    }
+
+
+
+  }
+
+  calling (method, args, callback) {
+    if (!this.webSocket.ready) {
+      this.open(method, args, callback);
+    } else {
+        this.webSocket.call(method, this.prepare(method, args))
+          .then((result) => {
+            callback.call(this, result);
+        });
+    }
+  }
+
+  open(method, args, callback) {
+    this.webSocket.on('open', () => {
+      this.webSocket.call(method, this.prepare(method, args))
+        .then((result) => {
+          callback.call(this, result);
+        });
     });
-  }, 1000);
+  }
 
-  // ws.unsubscribe('feedUpdated');
-  // ws.close()
+  prepare(method, params = []) {
+    return {
+      jsonrpc: "2.0",
+      method: method,
+      params: params,
+      id: ++ this.counter,
+    };
+  }
+
+}
+
+const client = new ClientRPCApi();
+
+client.calling('header', {
+    source: 'FILL NOT DIGGER',
+    trx: 'AS23DWF3L4I65FR62GY',
+  }, function (result)  {
+  client.close();
+});
+
+client.calling('headers', {
+    source: 'FILL NOT DIGGER',
+    trx: 'AS23DWF3L4I65FR62GY',
+  }, function (result)  {
+  client.close();
 });
