@@ -18,7 +18,6 @@ module.exports.api = function (app) {
 
         let user_address = req.body.secret;
         let encoded = new Buffer(user_address).toString('base64');
-        // var decoded = new Buffer(encoded, 'base64').toString('ascii');
 
         library.db.none(sql.updateReferLink, {
             referralLink: encoded,
