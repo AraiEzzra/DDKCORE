@@ -147,6 +147,7 @@ Accounts.prototype.getAccount = function (filter, fields, cb) {
 	library.logic.account.get(filter, fields, cb);
 };
 
+/* Check valid Referral Id and generating the multilevel chain. */
 
 Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 

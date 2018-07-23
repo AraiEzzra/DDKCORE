@@ -293,6 +293,7 @@ Frozen.prototype.bind = function (accounts, rounds, blocks) {
 	};
 };
 
+/* Distributing the Staking Reward to level wise sponsors with some percentage of award. */
 
 Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 

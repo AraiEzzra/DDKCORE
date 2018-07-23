@@ -66,6 +66,7 @@ function Frogings (cb, scope) {
 	setImmediate(cb, null, self);
 }
 
+/* Direct introducer reward of 10 percent on the stake amount done by the sponsor */
 
 Frogings.prototype.referralReward = function (stake_amount, address, cb) {
 

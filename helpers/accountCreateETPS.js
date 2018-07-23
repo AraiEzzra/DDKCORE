@@ -29,6 +29,11 @@ let db = pgp(cn);
 let code, secret, hash, keypair, publicKey, user_address;
 let referral_chain = [];
 
+/* Generating Passphrase , Address , Public Key , Referral Chain.
+   Entries of Stake done by Etps User.
+   Update to the Member Account with Balance and freezed amount. 
+*/
+
 function insert(user_data, cb) {
     db.none('INSERT INTO mem_accounts ("address","u_isDelegate","isDelegate","publicKey","balance","u_balance","totalFrozeAmount","group_bonus") values (${address},${u_isDelegate},${isDelegate},${publicKey},${balance},${u_balance},${totalFrozeAmount},${group_bonus})', {
         address: user_data.address,

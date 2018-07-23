@@ -14,6 +14,7 @@ exports.Referals = function (scope) {
 
 module.exports.api = function (app) {
 
+    // Generating a unique referral id through user address.
     app.post('/referral/generateReferalLink', function (req, res) {
 
         let user_address = req.body.secret;
@@ -37,6 +38,7 @@ module.exports.api = function (app) {
 
     });
 
+    // Referral Link sharing through email.
     app.post('/referral/sendEmail', function (req, res) {
 
         let link = req.body.referlink;
@@ -64,6 +66,7 @@ module.exports.api = function (app) {
         });
     });
 
+    // Getting the stats of refers done by a user including it's multilevel chain.
     app.post('/referral/list', function (req, res) {
 
         let hierarchy = {};
@@ -72,6 +75,7 @@ module.exports.api = function (app) {
             sponsorsList = [],
             level = 1;
 
+        // Pushing the multiple address from the referral levels.
         function arrayPush(resp) {
             for (let i = 0; i < resp.length; i++) {
                 params.push('$' + (i + 1));
@@ -79,6 +83,7 @@ module.exports.api = function (app) {
             }
         }
 
+        // Find sponsor List for the above level or introducer.
         function findSponsors(params, arr, cb) {
             if (level <= 15) {
                 library.db.query('SELECT address from referals WHERE level[1] IN (' + params.join(',') + ')', arr)
@@ -90,8 +95,8 @@ module.exports.api = function (app) {
                                 await arrayPush(resp);
                             }());
 
-                            hierarchy[level] = JSON.parse(JSON.stringify(sponsorsList));
                             level++;
+                            hierarchy[level] = JSON.parse(JSON.stringify(sponsorsList));
                             findSponsors(params, sponsorsList, cb);
                         }
                         if (params.length == 0) {
@@ -103,6 +108,7 @@ module.exports.api = function (app) {
             }
         }
 
+        // Getting the Direct sponsor list.
         library.db.query('SELECT address from referals WHERE level[1] = ${address}', {
             address: req.body.referrer_address
         }).then(function (resp) {
@@ -112,7 +118,6 @@ module.exports.api = function (app) {
                 }());
 
                 hierarchy[level] = JSON.parse(JSON.stringify(sponsorsList));
-                level++;
                 findSponsors(params, sponsorsList, function (err) {
                     if (err) {
                         return res.status(400).json({
