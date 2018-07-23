@@ -18,6 +18,7 @@ let slots = require('../helpers/slots.js');
 let async = require('async');
 let nextBonus = 0;
 let Mnemonic = require('bitcore-mnemonic');
+let mailServices = require('../helpers/nodemailer');
 
 // Private fields
 let modules, library, self, __private = {}, shared = {};
@@ -945,7 +946,7 @@ Accounts.prototype.shared = {
 				return setImmediate(cb, null, {
 					success: true,
 					userInfo: user
-				})
+				});
 			}).catch(function (err) {
 				library.logger.error(err.stack);
 				return setImmediate(cb, 'Invalid username or password');
@@ -954,6 +955,53 @@ Accounts.prototype.shared = {
 		}).catch(function (err) {
 			library.logger.error(err.stack);
 			return setImmediate(cb, 'Invalid username or password');
+		});
+
+	},
+
+	forgotEtpsPassword: function (req, cb) {
+		let data = req.body.data;
+		let userName = Buffer.from((data.split('&')[0]).split('=')[1], 'base64').toString();
+		let email = Buffer.from((data.split('&')[1]).split('=')[1], 'base64').toString();
+
+		library.db.one(sql.validateEtpsUser, {
+			username: userName,
+			emailId: email
+		}).then(function (user) {
+			let newPassword = Math.random().toString(36).substr(2, 8);
+			let hash = crypto.createHash('md5').update(newPassword).digest('hex');
+
+			library.db.none(sql.updateEtpsPassword, {
+				password: hash,
+				username: userName
+			}).then(function () {
+
+				let link = 'http://localhost:7001/existingETPSUser';
+				let mailOptions = {
+					from: library.config.mailFrom,
+					to: email,
+					subject: 'New Password',
+					text: '',
+					html: 'Hello, ' + userName + ' <br><br>\
+					<br> Your Newly Generated Password for login is : <strong>' + newPassword + '</strong><br><br>\
+					<a href="' + link + '">Click here to login</a>'
+				};
+
+				mailServices.sendMail(mailOptions, library.config, function (err) {
+					if (err) {
+						return setImmediate(cb, err.toString());
+					}
+					return setImmediate(cb, null, {
+						success: true,
+						info: "Mail Sent Successfully"
+					});
+				});
+			}).catch(function (err) {
+				return setImmediate(cb, err);
+			});
+
+		}).catch(function (err) {
+			return setImmediate(cb, 'Invalid username or email');
 		});
 
 	},
