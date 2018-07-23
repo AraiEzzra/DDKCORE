@@ -81,6 +81,10 @@ Delegate.prototype.verify = function (trs, sender, cb) {
 		return setImmediate(cb, 'Account is already a delegate');
 	}
 
+	if (sender.u_isDelegate) {
+		return setImmediate(cb, 'Account is under process for delegate registration');
+	} 
+
 	if (!trs.asset || !trs.asset.delegate) {
 		return setImmediate(cb, 'Invalid transaction asset');
 	}
