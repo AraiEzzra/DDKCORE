@@ -1,11 +1,15 @@
 const ReservedErrorCodes = require('./../errors');
+const {
+  createServerApiMethod,
+  prepareServerError
+} = require('./../util');
 
 
-// Method of ServerRPCApi
-function MethodHeader (params) {
 
-  const webSocketServer = this.getWebSocketServer();
-  const createError = this.createError;
+const METHOD_NAME = 'header';
+
+
+function MethodHeader (wss, params) {
 
   let response = {};
   let errorCode = false;
@@ -13,17 +17,15 @@ function MethodHeader (params) {
 
   if (params) {
     response.title = 'Title Header';
-    response.data = 'Data resend';
+    response.data = 'Data resend ' +  params.trx + params.source ;
   } else {
     errorCode = ReservedErrorCodes.ServerErrorInvalidMethodParameters;
     errorMessage = ReservedErrorCodes[errorCode];
   }
 
   return errorCode
-    ? createError(errorCode, errorMessage, response)
+    ? prepareServerError(errorCode, errorMessage, response)
     : response;
 }
 
-MethodHeader.methodName = 'header';
-
-module.exports = MethodHeader;
+module.exports = createServerApiMethod(METHOD_NAME, MethodHeader);

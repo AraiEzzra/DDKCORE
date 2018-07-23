@@ -1,9 +1,12 @@
 const WebSocket = require('rpc-websockets').Client;
 const WebSocketServer = require('rpc-websockets').Server;
 
+const ReservedErrorCodes = require('./errors');
+const {
+  prepareServerRequest,
+} = require('./util');
 const MethodHeader = require('./methods/header');
 const MethodHeaders = require('./methods/headers');
-const ReservedErrorCodes = require('./errors');
 
 const methods = [
   MethodHeader,
@@ -35,44 +38,26 @@ class ServerRPCApi {
       callback: callback,
       args: args
     };
-
     this.webSocketServer.register(method, this.registered[method].callback);
   }
 
-  createError (code, message, data) {
-    return {
-      code: code,
-      message: message,
-      data: data,
-    };
-  }
 
-  prepare(result, error, id) {
-    return {
-      jsonrpc: "2.0",
-      result: result,
-      error: error,
-      id: id,
-    };
-  }
 
 }
 
-const serverApi = new ServerRPCApi();
+const server = new ServerRPCApi();
 
 methods.map((method) => {
 
-  serverApi.register(method.methodName, (args) => {
-
-    if (args.jsonrpc === '2.0') {}
-
-    method.methodID = args.id;
-    let result = method.call(api, args.params);
-    let error = result.error ? result.error : false;
-
-    return serverApi.prepare(result, error, method.methodID);
-  } );
+  server.register(method.methodName, (args) => {
+    if (args.jsonrpc === '2.0') {
+      method.methodId = args.id;
+      let result = method.call({},  server.getWebSocketServer(), args.params);
+      let error = result.error ? result.error : false;
+      return prepareServerRequest(result, error, method.methodId);
+    }
+  });
 
 });
 
-console.info(`[ServerRPCApi] Server started!`);
+console.info(`[ServerRPCApi] Started!`);

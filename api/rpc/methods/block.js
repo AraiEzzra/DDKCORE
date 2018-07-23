@@ -6,18 +6,18 @@ const {
 
 
 
-const METHOD_NAME = 'headers';
+const METHOD_NAME = 'block';
 
 
-function MethodHeaders (wss, params) {
+function Block (wss, params) {
 
   let response = {};
   let errorCode = false;
   let errorMessage = 'Error Message';
 
-  if (params.trx) {
-    response.title = 'Title Headers';
-    response.data = 'Data resend';
+  if (params) {
+    response.title = 'Title block';
+    response.data = 'Data block resend';
   } else {
     errorCode = ReservedErrorCodes.ServerErrorInvalidMethodParameters;
     errorMessage = ReservedErrorCodes[errorCode];
@@ -28,4 +28,4 @@ function MethodHeaders (wss, params) {
     : response;
 }
 
-module.exports = createServerApiMethod(METHOD_NAME, MethodHeaders);
+module.exports = createServerApiMethod(METHOD_NAME, Block);

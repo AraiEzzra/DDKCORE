@@ -1,4 +1,5 @@
-var WebSocket = require('rpc-websockets').Client;
+const WebSocket = require('rpc-websockets').Client;
+
 
 const URL = 'ws://localhost:8080';
 
@@ -8,14 +9,11 @@ class ClientRPCApi {
   constructor() {
     this.counter = 0;
     this.webSocket = new WebSocket(URL);
-    this.registered = {};
   }
 
   getWebSocket() {
     return this.webSocket;
   }
-
-
 
   close() {
     if (this.webSocket.ready) {
@@ -23,16 +21,7 @@ class ClientRPCApi {
     }
   }
 
-  openRemaster() {
-    if (this.webSocket.ready) {
-      this.webSocket.close();
-    }
-
-
-
-  }
-
-  calling (method, args, callback) {
+  call (method, args, callback) {
     if (!this.webSocket.ready) {
       this.open(method, args, callback);
     } else {
@@ -63,18 +52,25 @@ class ClientRPCApi {
 
 }
 
+
 const client = new ClientRPCApi();
 
-client.calling('header', {
+client.call('header', {
     source: 'FILL NOT DIGGER',
     trx: 'AS23DWF3L4I65FR62GY',
   }, function (result)  {
-  client.close();
+    console.log('header result: ', result);
+    client.close();
 });
 
-client.calling('headers', {
+
+client.call('headers', {
     source: 'FILL NOT DIGGER',
     trx: 'AS23DWF3L4I65FR62GY',
   }, function (result)  {
-  client.close();
+    console.log('headers result: ', result);
+    client.close();
 });
+
+
+
