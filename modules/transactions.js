@@ -12,6 +12,7 @@ let TransactionPool = require('../logic/transactionPool.js');
 let transactionTypes = require('../helpers/transactionTypes.js');
 let Transfer = require('../logic/transfer.js');
 let ReferTransfer = require('../logic/referralTransaction.js');
+let slots = require('../helpers/slots');
 
 // Private fields
 let __private = {};
@@ -614,6 +615,27 @@ Transactions.prototype.onBind = function (scope) {
 		scope.accounts,
 		scope.rounds
 	);
+};
+
+// Internal API
+/**
+ * @todo implement API comments with apidoc.
+ * @see {@link http://apidocjs.com/}
+ */
+Transactions.prototype.internal = {
+	getTransactionHistory: function(req, cb) {
+		let  fortnightBack = new Date(+new Date - 12096e5);
+		let timestamp = slots.getTime(fortnightBack);
+		library.db.query(sql.getTransactionHistory, {
+			timestamp: timestamp
+		})
+		.then(function(trsHistory) {
+			return setImmediate(cb, null, {success: true, trsData: trsHistory});
+		})
+		.catch(function(err) {
+			return setImmediate(cb, {success: false, err: err});
+		});
+	}
 };
 
 // Shared API
