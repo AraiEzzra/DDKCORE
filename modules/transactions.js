@@ -747,10 +747,16 @@ Transactions.prototype.shared = {
 			if (err) {
 				return setImmediate(cb, err[0].message);
 			}
-
 			let hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
 			let keypair = library.ed.makeKeypair(hash);
 			let publicKey = keypair.publicKey.toString('hex');
+
+			if (req.body.publicKey) {
+				if (keypair.publicKey.toString('hex') !== req.body.publicKey) {
+					return setImmediate(cb, 'Invalid passphrase');
+				}
+			}
+			
 			library.cache.client.get('2fa_user_' + modules.accounts.generateAddressByPublicKey(publicKey), function (err, userTwoFaCred) {
 				if (err) {
 					return setImmediate(cb, err);
@@ -766,12 +772,6 @@ Transactions.prototype.shared = {
 						});
 						if (!verified) {
 							return setImmediate(cb, 'Invalid OTP!. Please enter valid OTP to SEND Transaction');
-						}
-					}
-
-					if (req.body.publicKey) {
-						if (keypair.publicKey.toString('hex') !== req.body.publicKey) {
-							return setImmediate(cb, 'Invalid passphrase');
 						}
 					}
 				}
