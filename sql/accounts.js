@@ -48,7 +48,11 @@ let Accounts = {
 
 	findPassPhrase : 'SELECT * from migrated_etps_users WHERE "username" = ${userName}',
 
-	updateEtp : 'UPDATE migrated_etps_users SET "transferred_etp" = 1,"transferred_time" = ${transfer_time} WHERE "username" = ${userName}'
+	updateEtp : 'UPDATE migrated_etps_users SET "transferred_etp" = 1,"transferred_time" = ${transfer_time} WHERE "username" = ${userName}',
+	
+	validateEtpsUser : 'SELECT * from etps_user WHERE "username" = ${username} AND "email" = ${emailId}',
+
+	updateEtpsPassword: 'UPDATE etps_user SET "password" = ${password} WHERE "username" = ${username}'
 };
 
 module.exports = Accounts;

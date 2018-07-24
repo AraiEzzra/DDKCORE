@@ -26,7 +26,7 @@ transporter.verify(function (error, success) {
 });
 
 //send mail based on {@Object mailOptions}
-nodemailer.sendMail = function (mailOptions, config, callback) {
+nodemailer.sendMail = function (mailOptions, callback) {
     transporter.sendMail(mailOptions, function (err, info) {
         if (err) {
             return callback(err);

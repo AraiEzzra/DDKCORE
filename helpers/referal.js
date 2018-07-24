@@ -51,7 +51,7 @@ module.exports.api = function (app) {
             <a href="' + link + '">Click here to confirm</a>'
         };
 
-        mailServices.sendMail(mailOptions, library.config, function (err) {
+        mailServices.sendMail(mailOptions, function (err) {
             if (err) {
                 return res.status(400).json({
                     success: false,
