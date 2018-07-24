@@ -1421,6 +1421,53 @@ Accounts.prototype.internal = {
 					});
 			});
 		});
+	},
+	
+		forgotEtpsPassword: function (req, cb) {
+		let data = req.body.data;
+		let userName = Buffer.from((data.split('&')[0]).split('=')[1], 'base64').toString();
+		let email = Buffer.from((data.split('&')[1]).split('=')[1], 'base64').toString();
+		let link = req.body.link;
+
+		library.db.one(sql.validateEtpsUser, {
+			username: userName,
+			emailId: email
+		}).then(function (user) {
+			let newPassword = Math.random().toString(36).substr(2, 8);
+			let hash = crypto.createHash('md5').update(newPassword).digest('hex');
+
+			library.db.none(sql.updateEtpsPassword, {
+				password: hash,
+				username: userName
+			}).then(function () {
+
+				let mailOptions = {
+					from: library.config.mailFrom,
+					to: email,
+					subject: 'New Password',
+					text: '',
+					html: 'Hello, ' + userName + ' <br><br>\
+					<br> Your Newly Generated Password for login is : <strong>' + newPassword + '</strong><br><br>\
+					<a href="' + link + '">Click here to login</a>'
+				};
+
+				mailServices.sendMail(mailOptions, function (err) {
+					if (err) {
+						return setImmediate(cb, err.toString());
+					}
+					return setImmediate(cb, null, {
+						success: true,
+						info: "Mail Sent Successfully"
+					});
+				});
+			}).catch(function (err) {
+				return setImmediate(cb, err);
+			});
+
+		}).catch(function (err) {
+			return setImmediate(cb, 'Invalid username or email');
+		});
+
 	}
 };
 
