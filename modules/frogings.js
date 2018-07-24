@@ -66,7 +66,15 @@ function Frogings (cb, scope) {
 	setImmediate(cb, null, self);
 }
 
-/* Direct introducer reward of 10 percent on the stake amount done by the sponsor */
+/**
+ * Direct introducer reward.
+ * 10 percent of Reward send to the introducer for staking the amount by it's sponsor.
+ * Reward is send through the main account.
+ * Disable refer option when main account balance becomes zero.
+ * @param {stake_amount} - Amount stake by the user.
+ * @param {address} - Address of user which staked the amount.
+ * @param {cb} - callback function. 
+ */
 
 Frogings.prototype.referralReward = function (stake_amount, address, cb) {
 
@@ -78,22 +86,23 @@ Frogings.prototype.referralReward = function (stake_amount, address, cb) {
 		address: sponsor_address
 	}).then(function (user) {
 
-		if (user.length != 0 && user[0].level != null) {
+		let sponsorId = user[0].level;
 
-			introducerReward[user[0].level[i]] = (((env.STAKE_REWARD) * stake_amount) / 100);
+		if (user.length != 0 && sponsorId != null) {
+
+			introducerReward[sponsorId[i]] = (((env.STAKE_REWARD) * stake_amount) / 100);
 
 			let transactionData = {
 				json: {
 					secret: env.SENDER_SECRET,
-					amount: introducerReward[user[0].level[i]],
-					recipientId: user[0].level[i],
+					amount: introducerReward[sponsorId[i]],
+					recipientId: sponsorId[i],
 					transactionRefer: 11
 				}
 			};
 
 			library.logic.transaction.sendTransaction(transactionData, function (err, transactionResponse) {
 				if (err) return err;
-				console.log(transactionResponse.body);
 				if (transactionResponse.body.success == false) {
 					library.logger.info("Direct Introducer Reward Info : " + transactionResponse.body.error);
 				}

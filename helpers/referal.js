@@ -14,7 +14,12 @@ exports.Referals = function (scope) {
 
 module.exports.api = function (app) {
 
-    /* Generating a unique referral id through user address. */
+    /**
+     * Generating a unique referral id through user address.
+     * @param {req} - contains the address.
+     * @param {res} - return the response with status of success or failure.
+    */ 
+
     app.post('/referral/generateReferalLink', function (req, res) {
 
         let user_address = req.body.secret;
@@ -29,7 +34,6 @@ module.exports.api = function (app) {
                 referralLink: encoded
             });
         }).catch(function (err) {
-            console.log(err);
             return res.status(400).json({
                 success: false,
                 err: err.detail
@@ -38,21 +42,26 @@ module.exports.api = function (app) {
 
     });
 
-    /* Referral Link sharing through email. */
+    /** 
+     * Referral Link sharing through email with the help of Nodemailer.
+     * @param {req} - contains the referral link , email id.
+     * @param {res} - return the response with status of success or failure. 
+    */
+
     app.post('/referral/sendEmail', function (req, res) {
 
         let link = req.body.referlink;
         let mailOptions = {
             from: library.config.mailFrom, // sender address
-            to: req.body.email, //req.body.email list of receivers, fix this before commit
+            to: req.body.email, //req.body.email list of receivers
             subject: 'Referral Link', // Subject line
-            text: '', // plmodule.exportsain text body
+            text: '',
             html: 'Hello, ' + req.body.email + ' <br><br>\
             <br> Please click on the Referral link below to register.<br><br>\
             <a href="' + link + '">Click here to confirm</a>'
         };
 
-        mailServices.sendMail(mailOptions, library.config, function (err) {
+        mailServices.sendMail(mailOptions, function (err) {
             if (err) {
                 return res.status(400).json({
                     success: false,
@@ -66,77 +75,66 @@ module.exports.api = function (app) {
         });
     });
 
-    /* Getting the stats of refers done by a user including it's multilevel chain. */
+    /** 
+     * Getting the stats of refers done by a user including it's referral chain.
+     * @param {req} - contains the referrer address.
+     * @param {res} - return the response with status of success or failure.
+     */
+
     app.post('/referral/list', function (req, res) {
 
         let hierarchy = {};
 
         let params = [],
-            sponsorsList = [],
+            referList = [],
             level = 1;
 
-        // Pushing the multiple address from the referral levels.
         function arrayPush(resp) {
             for (let i = 0; i < resp.length; i++) {
                 params.push('$' + (i + 1));
-                sponsorsList.push(resp[i].address);
+                referList.push(resp[i].address);
             }
         }
 
-        // Find sponsor List for the above level or introducer.
         function findSponsors(params, arr, cb) {
             if (level <= 15) {
                 library.db.query('SELECT address from referals WHERE level[1] IN (' + params.join(',') + ')', arr)
                     .then(function (resp) {
                         params.length = 0;
-                        sponsorsList.length = 0;
+                        referList.length = 0;
                         if (resp.length) {
-                            (async function () {
-                                await arrayPush(resp);
-                            }());
-
+                            arrayPush(resp);
+                            hierarchy[level] = JSON.parse(JSON.stringify(referList));
                             level++;
-                            hierarchy[level] = JSON.parse(JSON.stringify(sponsorsList));
-                            findSponsors(params, sponsorsList, cb);
+                            findSponsors(params, referList, cb);
                         }
                         if (params.length == 0) {
                             return setImmediate(cb, null);
                         }
-                    });
+                    })
+                    .catch(function (err) {
+                        return setImmediate(cb, err);
+                    })
             } else {
                 return setImmediate(cb, null);
             }
         }
 
-        // Getting the Direct sponsor list.
-        library.db.query('SELECT address from referals WHERE level[1] = ${address}', {
-            address: req.body.referrer_address
-        }).then(function (resp) {
-            if (resp.length) {
-                (async function () {
-                    await arrayPush(resp);
-                }());
+        // Intitally the user which chain we have to find.
+        params = ['$1'];
+        referList = [req.body.referrer_address];
 
-                hierarchy[level] = JSON.parse(JSON.stringify(sponsorsList));
-                findSponsors(params, sponsorsList, function (err) {
-                    if (err) {
-                        return res.status(400).json({
-                            success: false,
-                            error: err
-                        });
-                    }
-                    return res.status(200).json({
-                        success: true,
-                        ReferList: hierarchy
-                    });
-                });
-            } else {
-                return res.status(200).json({
-                    success: true,
-                    ReferList: hierarchy,
-                    info: "No sponsor Found"
+        findSponsors(params, referList, function (err) {
+            if (err) {
+                return res.status(400).json({
+                    success: false,
+                    error: err
                 });
             }
+            return res.status(200).json({
+                success: true,
+                ReferList: hierarchy
+            });
         });
 
     });

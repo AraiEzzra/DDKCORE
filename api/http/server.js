@@ -44,7 +44,7 @@ function ServerHttpApi (serverModule, app) {
 					});
 
 					cache.prototype.getJsonForKey("referStatus",function(error,resp) {
-						let enableRefer = (resp == null)?true:resp;
+						let enableRefer = (resp == null) ? true : resp;
 
 						return res.status(200).json({
 							status: true,

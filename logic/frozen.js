@@ -293,7 +293,14 @@ Frozen.prototype.bind = function (accounts, rounds, blocks) {
 	};
 };
 
-/* Distributing the Staking Reward to level wise sponsors with some percentage of award. */
+/**
+ * Distributing the Staking Reward their sponsors.
+ * Award being sent on level basis.
+ * Disable refer option when main account balance becomes zero.
+ * @param {address} - Address which get the staking reward.
+ * @param {reward_amount} - Reward amount received.
+ * @param {cb} - callback function.
+*/
 
 Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 
@@ -310,15 +317,15 @@ Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 
 			let chain_length = user[0].level.length;
 
-			async.eachSeries(user[0].level, function (level, callback) {
+			async.eachSeries(user[0].level, function (sponsorId, callback) {
 
-				stakeReward[level] = (((rewards.level[i]) * reward_amount) / 100);
+				stakeReward[sponsorId] = (((rewards.level[i]) * reward_amount) / 100);
 
 				let transactionData = {
 					json: {
 						secret: env.SENDER_SECRET,
-						amount: stakeReward[level],
-						recipientId: level,
+						amount: stakeReward[sponsorId],
+						recipientId: sponsorId,
 						transactionRefer: 11
 					}
 				};

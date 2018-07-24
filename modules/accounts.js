@@ -147,7 +147,14 @@ Accounts.prototype.getAccount = function (filter, fields, cb) {
 	library.logic.account.get(filter, fields, cb);
 };
 
-/* Check valid Referral Id and generating the multilevel chain. */
+/**  
+ * Check whether the referal id is valid or not.
+ * If valid Generate referral chain for that user.
+ * In case of no referral, chain will contain the null value I.e; Blank. 
+ * @param {referalLink} - Refer Id
+ * @param {address} - Address of user during registration.
+ * @param {cb} - callback function which return success or failure to the caller.
+*/
 
 Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 
@@ -938,7 +945,6 @@ Accounts.prototype.shared = {
 							transfer_time: slots.getTime(),
 							userName: username
 						}).then(function () {
-							console.log('Migrated Table Updated Successfully');
 						}).catch(function (err) {
 							return setImmediate(cb, 'Invalid username or password');
 						});
@@ -956,53 +962,6 @@ Accounts.prototype.shared = {
 		}).catch(function (err) {
 			library.logger.error(err.stack);
 			return setImmediate(cb, 'Invalid username or password');
-		});
-
-	},
-
-	forgotEtpsPassword: function (req, cb) {
-		let data = req.body.data;
-		let userName = Buffer.from((data.split('&')[0]).split('=')[1], 'base64').toString();
-		let email = Buffer.from((data.split('&')[1]).split('=')[1], 'base64').toString();
-
-		library.db.one(sql.validateEtpsUser, {
-			username: userName,
-			emailId: email
-		}).then(function (user) {
-			let newPassword = Math.random().toString(36).substr(2, 8);
-			let hash = crypto.createHash('md5').update(newPassword).digest('hex');
-
-			library.db.none(sql.updateEtpsPassword, {
-				password: hash,
-				username: userName
-			}).then(function () {
-
-				let link = 'http://localhost:7001/existingETPSUser';
-				let mailOptions = {
-					from: library.config.mailFrom,
-					to: email,
-					subject: 'New Password',
-					text: '',
-					html: 'Hello, ' + userName + ' <br><br>\
-					<br> Your Newly Generated Password for login is : <strong>' + newPassword + '</strong><br><br>\
-					<a href="' + link + '">Click here to login</a>'
-				};
-
-				mailServices.sendMail(mailOptions, library.config, function (err) {
-					if (err) {
-						return setImmediate(cb, err.toString());
-					}
-					return setImmediate(cb, null, {
-						success: true,
-						info: "Mail Sent Successfully"
-					});
-				});
-			}).catch(function (err) {
-				return setImmediate(cb, err);
-			});
-
-		}).catch(function (err) {
-			return setImmediate(cb, 'Invalid username or email');
 		});
 
 	},
@@ -1472,6 +1431,53 @@ Accounts.prototype.internal = {
 					});
 			});
 		});
+	},
+
+	forgotEtpsPassword: function (req, cb) {
+		let data = req.body.data;
+		let userName = Buffer.from((data.split('&')[0]).split('=')[1], 'base64').toString();
+		let email = Buffer.from((data.split('&')[1]).split('=')[1], 'base64').toString();
+		let link = req.body.link;
+
+		library.db.one(sql.validateEtpsUser, {
+			username: userName,
+			emailId: email
+		}).then(function (user) {
+			let newPassword = Math.random().toString(36).substr(2, 8);
+			let hash = crypto.createHash('md5').update(newPassword).digest('hex');
+
+			library.db.none(sql.updateEtpsPassword, {
+				password: hash,
+				username: userName
+			}).then(function () {
+
+				let mailOptions = {
+					from: library.config.mailFrom,
+					to: email,
+					subject: 'New Password',
+					text: '',
+					html: 'Hello, ' + userName + ' <br><br>\
+					<br> Your Newly Generated Password for login is : <strong>' + newPassword + '</strong><br><br>\
+					<a href="' + link + '">Click here to login</a>'
+				};
+
+				mailServices.sendMail(mailOptions, function (err) {
+					if (err) {
+						return setImmediate(cb, err.toString());
+					}
+					return setImmediate(cb, null, {
+						success: true,
+						info: "Mail Sent Successfully"
+					});
+				});
+			}).catch(function (err) {
+				return setImmediate(cb, err);
+			});
+
+		}).catch(function (err) {
+			return setImmediate(cb, 'Invalid username or email');
+		});
+
 	}
 };
 
