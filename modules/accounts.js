@@ -18,6 +18,7 @@ let slots = require('../helpers/slots.js');
 let async = require('async');
 let nextBonus = 0;
 let Mnemonic = require('bitcore-mnemonic');
+let mailServices = require('../helpers/nodemailer');
 
 // Private fields
 let modules, library, self, __private = {}, shared = {};
