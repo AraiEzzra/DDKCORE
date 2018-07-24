@@ -82,6 +82,10 @@ function Transactions(cb, scope) {
 __private.list = function (filter, cb) {
 	let params = {};
 	let where = [];
+	if (filter.height === 0 || filter.height > 0) {
+		where.push('"b_height" >= ${height}');
+		params.height = filter.height;
+	}
 	let allowedFieldsMap = {
 		blockId: '"t_blockId" = ${blockId}',
 		senderPublicKey: '"t_senderPublicKey" = DECODE (${senderPublicKey}, \'hex\')',
