@@ -9,6 +9,7 @@ let Frozen = require('../logic/frozen.js');
 let ref_sql = require('../sql/referal_sql');
 let env = process.env;
 let constants = require('../helpers/constants.js');
+let cache = require('./cache.js');
 
 // Private fields
 let __private = {};
@@ -35,6 +36,7 @@ function Frogings (cb, scope) {
 	library = {
 		logger: scope.logger,
 		db: scope.db,
+		cache: scope.cache,
 		schema: scope.schema,
 		ed: scope.ed,
 		balancesSequence: scope.balancesSequence,
@@ -57,8 +59,8 @@ function Frogings (cb, scope) {
 		scope.logger
 	);
 
-	__private.assetTypes[transactionTypes.FROZE] = library.logic.transaction.attachAssetType(
-		transactionTypes.FROZE, new Frozen(scope.logger, scope.db, scope.logic.transaction, scope.network, scope.config)
+	__private.assetTypes[transactionTypes.STAKE] = library.logic.transaction.attachAssetType(
+		transactionTypes.STAKE, new Frozen(scope.logger, scope.db, scope.logic.transaction, scope.network, scope.config)
 	);
 
 	setImmediate(cb, null, self);
@@ -71,19 +73,19 @@ Frogings.prototype.referalReward = function (stake_amount, address, cb) {
 	let overrideReward = {},
 		i = 0;
 
-	library.db.one(ref_sql.referLevelChain, {
+	library.db.query(ref_sql.referLevelChain, {
 		address: sponsor_address
 	}).then(function (user) {
 
-		if (user.level != null && user.level[0] != "0") {
+		if (user.length != 0 && user[0].level != null) {
 
-			overrideReward[user.level[i]] = (((env.STAKE_REWARD) * amount) / 100);
+			overrideReward[user[0].level[i]] = (((env.STAKE_REWARD) * amount) / 100);
 
 			let transactionData = {
 				json: {
 					secret: env.SENDER_SECRET,
-					amount: overrideReward[user.level[i]],
-					recipientId: user.level[i],
+					amount: overrideReward[user[0].level[i]],
+					recipientId: user[0].level[i],
 					transactionRefer: 11
 				}
 			};
@@ -91,18 +93,15 @@ Frogings.prototype.referalReward = function (stake_amount, address, cb) {
 			library.logic.transaction.sendTransaction(transactionData, function (err, transactionResponse) {
 				if (err) return err;
 				console.log(transactionResponse.body);
-				if (transactionResponse.body.success == false) {
-					let info = transactionResponse.body.error;
-					let sender_balance = parseFloat(transactionResponse.body.error.split('balance:')[1]);
-					return setImmediate(cb, info, sender_balance);
-				} else {
-					return setImmediate(cb, null);
+				if(transactionResponse.body.success == false) {
+					library.logger.info("Direct Introducer Reward Info : "+ transactionResponse.body.error);					
 				}
+				return setImmediate(cb, null);
 			});
 
 		} else {
-			let error = "No Introducer Found";
-			return setImmediate(cb, error);
+			library.logger.info("Direct Introducer Reward Info : No referrals or any introducer found");
+			return setImmediate(cb, null);
 		}
 
 	}).catch(function (err) {
@@ -129,7 +128,7 @@ Frogings.prototype.onBind = function (scope) {
 		scope.transactions,
 		scope.loader
 	);
-	__private.assetTypes[transactionTypes.FROZE].bind(
+	__private.assetTypes[transactionTypes.STAKE].bind(
 		scope.accounts,
 		scope.rounds,
 		scope.blocks
@@ -322,7 +321,7 @@ Frogings.prototype.shared = {
 
 							try {
 								transaction = library.logic.transaction.create({
-									type: transactionTypes.FROZE,
+									type: transactionTypes.STAKE,
 									freezedAmount: req.body.freezedAmount,
 									sender: account,
 									keypair: keypair,
@@ -365,7 +364,7 @@ Frogings.prototype.shared = {
 
 						try {
 							transaction = library.logic.transaction.create({
-								type: transactionTypes.FROZE,
+								type: transactionTypes.STAKE,
 								freezedAmount: req.body.freezedAmount,
 								sender: account,
 								keypair: keypair,
@@ -392,12 +391,33 @@ Frogings.prototype.shared = {
 					}
 					library.network.io.sockets.emit('updateTotalStakeAmount', null);
 
-					self.referalReward(req.body.freezedAmount,accountData.address,function(err,bal){
-						if(err){
-							if(bal < 0.0001)
-								library.logger.info(err);
+					library.db.one(ref_sql.checkBalance, {
+						sender_address: env.SENDER_ADDRESS
+					}).then(function (bal) {
+						let balance = parseInt(bal.u_balance);
+						if (balance > 10000) {
+							self.referalReward(req.body.freezedAmount, accountData.address, function (err) {
+								if (err) {
+									library.logger.error(err.stack);
+								}
+								return setImmediate(cb, null, {
+									transaction: transaction[0],
+									referStatus: true
+								});
+							});
+						} else {
+							cache.prototype.isExists("referStatus",function(err,exist){
+								if(!exist) {
+									cache.prototype.setJsonForKey("referStatus", false);
+								}
+								return setImmediate(cb, null, {
+									transaction: transaction[0],
+									referStatus: false
+								});
+							});					
 						}
-						return setImmediate(cb, null, { transaction: transaction[0]});
+					}).catch(function (err) {
+						return setImmediate(cb, err);
 					});
 
 				});

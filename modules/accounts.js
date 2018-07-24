@@ -156,8 +156,6 @@ Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 	let decoded = new Buffer(referralLink, 'base64').toString('ascii');
 	let level = [];
 
-	level.unshift(decoded);
-
 	if (decoded == address) {
 		let err = 'Introducer and sponsor can\'t be same';
 		return setImmediate(cb, err);
@@ -171,6 +169,7 @@ Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 					referLink: referralLink
 				}).then(function (user) {
 					if (parseInt(user.address)) {
+						level.unshift(decoded);
 						callback();
 					} else {
 						let error = 'Referral Link is Invalid';
@@ -187,17 +186,19 @@ Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 			if (referralLink != '') {
 				library.logic.account.findReferralLevel(decoded, function (err, resp) {
 					if (err) {
-						return setImmediate(cb, err.message);
+						return setImmediate(cb,err);
 					}
-					if (resp.level != null && resp.level[0] != '0') {
-						let chain_length = ((resp.level.length) < 15) ? (resp.level.length) : 14;
+					if (resp.length != 0 && resp[0].level != null) {
+						let chain_length = ((resp[0].level.length) < 15) ? (resp[0].level.length) : 14;
 
-						level = level.concat(resp.level.slice(0, chain_length));
+						level = level.concat(resp[0].level.slice(0, chain_length));
+					}
+					else if(resp.length == 0) {
+						return setImmediate(cb, "Referral link source not eligible");
 					}
 					callback();
 				});
 			} else {
-				level.length = 0;
 				callback();
 			}
 		},
@@ -216,8 +217,11 @@ Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 			});
 		}
 	], function (err) {
-		if (err) return err;
-		else return setImmediate(cb, null);
+		if (err) {
+			setImmediate(cb, err);
+		}
+
+		return setImmediate(cb, null);
 	});
 };
 
@@ -264,12 +268,20 @@ Accounts.prototype.setAccountAndGet = function (data, cb) {
 			throw err;
 		}
 	}
+	
+	let REDIS_KEY_USER = "userInfo_" + address;
 
-	library.logic.account.set(address, data, function (err) {
-		if (err) {
-			return setImmediate(cb, err);
+	cache.prototype.isExists(REDIS_KEY_USER, function (err, isExist) { 
+		if(!isExist) {
+			cache.prototype.setJsonForKey(REDIS_KEY_USER, address);
 		}
-		return library.logic.account.get({ address: address }, cb);
+
+		library.logic.account.set(address, data, function (err) {
+			if (err) {
+				return setImmediate(cb, err);
+			}
+			return library.logic.account.get({ address: address }, cb);
+		});
 	});
 };
 
@@ -894,7 +906,7 @@ Accounts.prototype.shared = {
 			}]
 		}, function (err) {
 			if (err){
-				self.scope.logger.error(err.stack);
+				library.logger.error(err.stack);
 				return setImmediate(cb, err.toString());
 			}	
 			return setImmediate(cb, null, { success: true, message: 'Successfully migrated' });
@@ -913,10 +925,31 @@ Accounts.prototype.shared = {
 		library.db.one(sql.validateExistingUser, {
 			username: username,
 			password: hashPassword
-		}
-		).then(function (userInfo) {
+		}).then(function (userInfo) {
 
-			return setImmediate(cb, null, { success: true, userInfo: userInfo });
+			library.db.one(sql.findPassPhrase, {
+				userName: username
+			}).then(function (user) {
+				if (user.transferred_etp == 0) {
+					(async function () {
+						await library.db.none(sql.updateEtp, {
+							transfer_time: slots.getTime(),
+							userName: username
+						}).then(function () {
+							console.log('Migrated Table Updated Successfully');
+						}).catch(function (err) {
+							return setImmediate(cb, 'Invalid username or password');
+						});
+					}());
+				}
+				return setImmediate(cb, null, {
+					success: true,
+					userInfo: user
+				})
+			}).catch(function (err) {
+				library.logger.error(err.stack);
+				return setImmediate(cb, 'Invalid username or password');
+			});
 
 		}).catch(function (err) {
 			library.logger.error(err.stack);
@@ -1287,20 +1320,20 @@ Accounts.prototype.internal = {
 						.then(function (directSponsors) {
 							if (directSponsors.length >= 2) {
 
-								let activeStakeCount = 0;
-								directSponsors.forEach(function (directSponsor, index) {
+								var activeStakeCount = 0;
+								directSponsors.forEach(function (directSponsor) {
 									library.db.query(sql.findActiveStakeAmount, {
-										senderId: directSponsor[index].address
+										senderId: directSponsor.address
 									})
 										.then(function (stakeInfo) {
-											stakedAmount = parseInt(stakeInfo[0].sum) / 100000000;
-											let d = constants.epochTime;
-											let t = parseInt(d.getTime() / 1000);
-											d = new Date((stakeInfo[0].startTime + t) * 1000);
-											const timeDiff = (d - Date.now());
+											stakedAmount = parseInt(stakeInfo[1].value) / 100000000;
+											const timeDiff = (slots.getTime() - stakeInfo[0].value);
 											const days = Math.ceil(Math.abs(timeDiff / (1000 * 60 * 60 * 24)));
 											if (stakedAmount && days <= 31) {
 												activeStakeCount++;
+											}
+											if (activeStakeCount >= 2) {
+												seriesCb(null);
 											}
 										})
 										.catch(function (err) {
@@ -1308,15 +1341,13 @@ Accounts.prototype.internal = {
 											seriesCb(err);
 										});
 								});
-								if (activeStakeCount >= 2) {
-									seriesCb(null);
-								} else {
-									failedRule = 3;
-									seriesCb('Rule 3 failed: Direct sponsors don\'t have active stake orders');
-								}
-							} else {
+								
+							} else if(activeStakeCount < 2){
 								failedRule = 3;
 								seriesCb('Rule 3 failed: User doesn\'t have two direct sponsor');
+							}else {
+								failedRule = 3;
+								seriesCb('Rule 3 failed: Direct sponsors don\'t have active stake orders');
 							}
 						})
 						.catch(function (err) {
@@ -1329,9 +1360,9 @@ Accounts.prototype.internal = {
 					library.db.query(sql.findGroupBonus, {
 						senderId: req.body.address
 					})
-						.then(function (groupBonus) {
-							groupBonus = groupBonus[0].group_bonus;
-							pendingGroupBonus = groupBonus[0].pending_group_bonus;
+						.then(function (bonusInfo) {
+							groupBonus = bonusInfo[0].group_bonus;
+							pendingGroupBonus = bonusInfo[0].pending_group_bonus;
 							if (pendingGroupBonus < groupBonus) {
 								nextBonus = (groupBonus - pendingGroupBonus) > 15 ? 15 : (groupBonus - pendingGroupBonus);
 								if ((groupBonus - pendingGroupBonus + nextBonus) < stakedAmount * 10) {

@@ -42,7 +42,7 @@ Signature.prototype.create = function (data, trs) {
 	trs.asset.signature = {
 		publicKey: data.secondKeypair.publicKey.toString('hex')
 	};
-
+	trs.trsName = "SIGNATURE";
 	return trs;
 };
 

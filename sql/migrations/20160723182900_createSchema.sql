@@ -39,11 +39,13 @@ CREATE TABLE IF NOT EXISTS "trs"(
   "senderId" VARCHAR(25) NOT NULL,
   "recipientId" VARCHAR(25),
   "amount" BIGINT NOT NULL,
+  "stakedAmount" BIGINT NOT NULL,
   "fee" BIGINT NOT NULL,
   "signature" bytea NOT NULL,
   "signSignature" bytea,
   "requesterPublicKey" bytea,
   "signatures" TEXT,
+  "trsName" VARCHAR(20) NOT NULL,
   FOREIGN KEY("blockId") REFERENCES "blocks"("id") ON DELETE CASCADE
 );
 
@@ -60,7 +62,7 @@ CREATE TABLE IF NOT EXISTS "stake_orders"(
   "voteCount" INT DEFAULT 0,
   "nextVoteMilestone" INT NOT NULL,
   "isVoteDone" BOOLEAN DEFAULT FALSE,
-  "isTransferred" BOOLEAN DEFAULT FALSE
+  "isTransferred" INT DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS "signatures"(

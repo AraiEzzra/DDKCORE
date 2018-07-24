@@ -674,7 +674,6 @@ d.run(function () {
 			scope.logger.error(err.message);
 		} else {
 			
-
 			cronjob.setJobsPath(__dirname + '/jobs.js');  // Absolute path to the jobs module. 
 			require('./jobs.js').attachScope(scope);
 			//AFFILIATE AIRDROP

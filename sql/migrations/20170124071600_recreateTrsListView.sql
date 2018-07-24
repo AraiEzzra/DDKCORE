@@ -19,10 +19,12 @@ SELECT t."id" AS "t_id",
        t."senderId" AS "t_senderId",
        t."recipientId" AS "t_recipientId",
        t."amount" AS "t_amount",
+       t."stakedAmount" AS "t_stakedAmount",
        t."fee" AS "t_fee",
        ENCODE(t."signature", 'hex') AS "t_signature",
        ENCODE(t."signSignature", 'hex') AS "t_SignSignature",
        t."signatures" AS "t_signatures",
+       t."trsName" AS "t_trsName",
        (SELECT MAX("height") + 1 FROM blocks) - b."height" AS "confirmations"
 
 FROM trs t

@@ -9,6 +9,7 @@ let Promise = require('bluebird');
 let rewards = require('../helpers/rewards');
 let reward_sql = require('../sql/referal_sql');
 let env = process.env;
+let cache = require('../modules/cache');
 
 let __private = {};
 __private.types = {};
@@ -62,8 +63,9 @@ Frozen.prototype.create = function (data, trs) {
 	trs.startTime = trs.timestamp;
 	let date = new Date(trs.timestamp * 1000);
 	trs.recipientId = null;
-	trs.freezedAmount = data.freezedAmount;
+	trs.stakedAmount = data.freezedAmount;
 	trs.nextVoteMilestone = (date.setMinutes(date.getMinutes() + constants.froze.vTime)) / 1000;
+	trs.trsName = "STAKE";
 	return trs;
 };
 
@@ -119,7 +121,7 @@ Frozen.prototype.dbSave = function (trs) {
 			insertTime: trs.startTime,
 			senderId: trs.senderId,
 			recipientId: trs.recipientId,
-			freezedAmount: trs.freezedAmount,
+			freezedAmount: trs.stakedAmount,
 			nextVoteMilestone: trs.nextVoteMilestone
 		}
 	};
@@ -171,7 +173,6 @@ Frozen.prototype.applyUnconfirmed = function (trs, sender, cb) {
 };
 
 /**
- * @desc undo confirmed transations
  * @private
  * @implements 
  * @param {Object} block - block data
@@ -181,25 +182,34 @@ Frozen.prototype.applyUnconfirmed = function (trs, sender, cb) {
  * @return {function} {cb, err}
  */
 Frozen.prototype.undo = function (trs, block, sender, cb) {
-	modules.accounts.setAccountAndGet({ address: trs.recipientId }, function (err, recipient) {
-		if (err) {
-			return setImmediate(cb, err);
-		}
 
-		modules.accounts.mergeAccountAndGet({
-			address: trs.recipientId,
-			balance: -trs.amount,
-			u_balance: -trs.amount,
-			blockId: block.id,
-			round: modules.rounds.calc(block.height)
-		}, function (err) {
-			return setImmediate(cb, err);
+	self.scope.db.none(sql.RemoveOrder,
+		{
+			id: trs.id,
+			address: trs.senderId
+		})
+		.then(function () {
+			self.scope.db.none(sql.deductFrozeAmount,
+				{
+					senderId: trs.senderId,
+					FrozeAmount:trs.stakedAmount
+				})
+				.then(function () {
+					return setImmediate(cb);
+				})
+				.catch(function (err) {
+					self.scope.logger.error(err.stack);
+					return setImmediate(cb, 'Stake#DeductStakeAmount from mem_account error');
+				});
+		})
+		.catch(function (err) {
+			self.scope.logger.error(err.stack);
+			return setImmediate(cb, 'Stake#deleteOrder error');
 		});
-	});
 };
 
 /**
- * @desc appliy
+ * @desc apply
  * @private
  * @implements 
  *  @param {Object} block - block data
@@ -245,6 +255,15 @@ Frozen.prototype.process = function (trs, sender, cb) {
  * @return {function} {cb, err, trs}
  */
 Frozen.prototype.verify = function (trs, sender, cb) {
+	let amount = trs.stakedAmount / 100000000;
+
+	if (amount < 1) {
+		return setImmediate(cb, 'Invalid stake amount');
+	}
+
+	if((amount%1)!= 0){
+		return setImmediate(cb, 'Invalid stake amount: Decimal value');
+	}
 
 	return setImmediate(cb, null, trs);
 };
@@ -257,7 +276,7 @@ Frozen.prototype.verify = function (trs, sender, cb) {
  * @return % based on amount
  */
 Frozen.prototype.calculateFee = function (trs, sender) {
-	return (trs.freezedAmount * constants.fees.froze) / 100;
+	return (trs.stakedAmount * constants.fees.froze) / 100;
 };
 
 /**
@@ -283,15 +302,15 @@ Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 	let i = 0;
 	let balance, reward, sender_balance;
 
-	self.scope.db.one(reward_sql.referLevelChain, {
+	self.scope.db.query(reward_sql.referLevelChain, {
 		address: sponsor_address
 	}).then(function (user) {
 
-		if (user.level != null && user.level[0] != "0") {
+		if (user.length != 0 && user[0].level != null) {
 
-			let chain_length = user.level.length;
+			let chain_length = user[0].level.length;
 
-			async.eachSeries(user.level, function (level, callback) {
+			async.eachSeries(user[0].level, function (level, callback) {
 
 				overrideReward[level] = (((rewards.level[i]) * amount) / 100);
 
@@ -307,17 +326,23 @@ Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 				self.scope.logic.transaction.sendTransaction(transactionData, function (err, transactionResponse) {
 					if (err) return err;
 					i++;
-					if (transactionResponse.body.success == false)
-						sender_balance = parseFloat(transactionResponse.body.error.split('balance:')[1]);
-					else
-						reward = true;
-						
-					if ((i == chain_length && reward != true) || sender_balance < 0.0001) {
-						let error = transactionResponse.body.error;
-						return setImmediate(cb, error, sender_balance);
+
+					if(transactionResponse.body.success == false) {
+                        sender_balance = parseFloat(transactionResponse.body.error.split('balance:')[1]);
+						if(sender_balance < 0.0001) {
+							cache.prototype.setJsonForKey("referStatus", false);
+							self.scope.logger.info("Staking Reward Info : "+ transactionResponse.body.error);													
+							return setImmediate(cb,null);
+						}
 					} else {
-						callback();
+						reward = true;
 					}
+						
+					if(i == chain_length && reward != true) {
+						self.scope.logger.info("Staking Reward Info : "+ transactionResponse.body.error);						
+					}
+
+					callback();
 				});
 
 			}, function (err) {
@@ -328,8 +353,8 @@ Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 			});
 
 		} else {
-			let error = "No Introducer Found";
-			return setImmediate(cb, error);
+			self.scope.logger.info("Staking Reward Info : Referral chain is empty");
+			return setImmediate(cb, null);
 		}
 
 	}).catch(function (err) {
@@ -428,8 +453,6 @@ Frozen.prototype.checkFrozeOrders = function () {
 
 	function updateOrderAndSendReward(order, next) {
 
-		return new Promise(function (resolve, reject) {
-
 			if (order.voteCount === (constants.froze.milestone / constants.froze.vTime)) {
 
 				self.scope.db.none(sql.updateOrder, {
@@ -450,15 +473,33 @@ Frozen.prototype.checkFrozeOrders = function () {
 						if (error)
 							throw error;
 						else {
-							self.sendStakingReward(order.senderId, transactionData.json.amount, function (err, bal) {
-								if (err) {
-									if (bal < 0.0001)
-										library.logger.info(err);
-								}
 
-								self.scope.logger.info("Successfully transfered reward for freezing an amount and transaction ID is : " + transactionResponse.body.transactionId);
-								next(null, null);
+							self.scope.db.one(reward_sql.checkBalance, {
+								sender_address: env.SENDER_ADDRESS
+							}).then(function (bal) {
+								let balance = parseInt(bal.u_balance);
+								if (balance > 10000) {
+									self.sendStakingReward(order.senderId, transactionData.json.amount, function (err) {
+										if (err) {
+											self.scope.logger.error(err.stack);
+										}
+
+										self.scope.logger.info("Successfully transfered reward for freezing an amount and transaction ID is : " + transactionResponse.body.transactionId);
+										next(null, null);
+									});
+								} else {
+									cache.prototype.isExists("referStatus",function(err,exist){
+										if(!exist) {
+											cache.prototype.setJsonForKey("referStatus", false);
+										}
+										self.scope.logger.info("Successfully transfered reward for freezing an amount and transaction ID is : " + transactionResponse.body.transactionId);
+										next(null, null);
+									});
+								}
+							}).catch(function (err) {
+								next(err, null);
 							});
+
 						}
 					});
 				}).catch(function (err) {
@@ -468,12 +509,9 @@ Frozen.prototype.checkFrozeOrders = function () {
 			} else {
 				next(null, null);
 			}
-		});
 	}
 
 	function deductFrozeAmount(order, _next) {
-
-		return new Promise(function (resolve, reject) {
 
 			if (((order.rewardCount + 1) >= (constants.froze.endTime / constants.froze.milestone)) && (order.voteCount === (constants.froze.milestone / constants.froze.vTime))) {
 
@@ -489,7 +527,6 @@ Frozen.prototype.checkFrozeOrders = function () {
 			} else {
 				_next(null, null);
 			}
-		});
 	}
 
 	function disableFrozeOrder(next, freezeOrders) {

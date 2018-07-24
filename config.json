@@ -29,7 +29,7 @@
     "api": {
         "enabled": true,
         "access": {
-            "public":false,
+            "public":true,
             "whiteList": [
                 "127.0.0.1",
                 "192.168.9.91",
@@ -105,7 +105,7 @@
     "initialPrimined": {
         "total": 360000000000000
     },
-    "etpSupply": {
+    "ddkSupply": {
         "totalSupply": 4500000000000000
     },
     "session": {},
@@ -113,8 +113,8 @@
     "sender": {},
     "nethash": "da3ed6a45429278bac2666961289ca17ad86595d33b31037615d4b8e8f158bba",
     "elasticsearchHost": "159.65.139.247",
-    "swaggerDomain": "192.168.9.91",
+    "swaggerDomain": "159.65.139.248",
     "jwt": {
-        "tokenLife": 30
+        "tokenLife": 300
     }
 }

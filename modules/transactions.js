@@ -12,6 +12,7 @@ let TransactionPool = require('../logic/transactionPool.js');
 let transactionTypes = require('../helpers/transactionTypes.js');
 let Transfer = require('../logic/transfer.js');
 let ReferTransfer = require('../logic/referralTransaction.js');
+let slots = require('../helpers/slots');
 
 // Private fields
 let __private = {};
@@ -81,6 +82,10 @@ function Transactions(cb, scope) {
 __private.list = function (filter, cb) {
 	let params = {};
 	let where = [];
+	if (filter.height === 0 || filter.height > 0) {
+		where.push('"b_height" >= ${height}');
+		params.height = filter.height;
+	}
 	let allowedFieldsMap = {
 		blockId: '"t_blockId" = ${blockId}',
 		senderPublicKey: '"t_senderPublicKey" = DECODE (${senderPublicKey}, \'hex\')',
@@ -104,7 +109,9 @@ __private.list = function (filter, cb) {
 		orderBy: null,
 		// FIXME: Backward compatibility, should be removed after transitional period
 		ownerAddress: null,
-		ownerPublicKey: null
+		ownerPublicKey: null,
+		stakedAmount: '"t_stakedAmount" = ${stakedAmount}',
+		trsName: '"t_trsName" = ${trsName}'
 	};
 	let owner = '';
 	let isFirstWhere = true;
@@ -612,6 +619,27 @@ Transactions.prototype.onBind = function (scope) {
 		scope.accounts,
 		scope.rounds
 	);
+};
+
+// Internal API
+/**
+ * @todo implement API comments with apidoc.
+ * @see {@link http://apidocjs.com/}
+ */
+Transactions.prototype.internal = {
+	getTransactionHistory: function(req, cb) {
+		let  fortnightBack = new Date(+new Date - 12096e5);
+		let timestamp = slots.getTime(fortnightBack);
+		library.db.query(sql.getTransactionHistory, {
+			timestamp: timestamp
+		})
+		.then(function(trsHistory) {
+			return setImmediate(cb, null, {success: true, trsData: trsHistory});
+		})
+		.catch(function(err) {
+			return setImmediate(cb, {success: false, err: err});
+		});
+	}
 };
 
 // Shared API

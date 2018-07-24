@@ -41,6 +41,7 @@
  */
 module.exports = {
 	activeDelegates: 3,
+	maxVotes:4,
 	maxVotesPerTransaction: 3,
 	addressLength: 208,
 	blockHeaderLength: 248,
@@ -114,10 +115,10 @@ module.exports = {
 	},
 	// Configurable froze order : time here is in minutes
 	froze : {
-		endTime : 8,
-		rTime : 4,
+		endTime : 48,
+		rTime : 8,
 		vTime : 2,
-		milestone : 4, //for testing, taking 2 min
+		milestone : 8, //for testing, taking 2 min
 		rewards: {
 			milestones: [
 				10, // 10% For 0-6 months

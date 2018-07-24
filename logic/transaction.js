@@ -89,7 +89,9 @@ Transaction.prototype.create = function (data) {
 		senderPublicKey: data.sender.publicKey,
 		requesterPublicKey: data.requester ? data.requester.publicKey.toString('hex') : null,
 		timestamp: slots.getTime(),
-		asset: {}
+		asset: {},
+		stakedAmount: 0,
+		trsName: "NA"
 	};
 
 	trs = __private.types[trs.type].create.call(this, data, trs);
@@ -332,15 +334,17 @@ Transaction.prototype.checkConfirmed = function (trs, cb) {
  *  modify checkbalance according to froze amount avaliable to user
  */
 Transaction.prototype.checkBalance = function (amount, balance, trs, sender) {
-	let totalAmountWithFrozeAmount = new bignum(((sender.totalFrozeAmount)).toString()).plus(amount);
+	
+	let totalAmountWithFrozeAmount = trs.type == 10 ? new bignum(amount): new bignum(sender.totalFrozeAmount).plus(amount);
+
 	let exceededBalance = new bignum(sender[balance].toString()).lessThan(totalAmountWithFrozeAmount);
 	let exceeded = (trs.blockId !== this.scope.genesisblock.block.id && exceededBalance);
 
-	if (parseInt(sender.totalFrozeAmount) > 0) {
+	if (parseInt( sender.totalFrozeAmount) > 0) {
 		return {
 			exceeded: exceeded,
 			error: exceeded ? [
-				'Account does not have enough ddk due to freeze amount:', sender.address,
+				'Account does not have enough ETP due to freeze amount:', sender.address,
 				'balance:', new bignum(sender[balance].toString() || '0').div(Math.pow(10, 8)),
 				'totalFreezeAmount :', new bignum(sender.totalFrozeAmount.toString()).div(Math.pow(10, 8))
 			].join(' ') : null
@@ -349,7 +353,7 @@ Transaction.prototype.checkBalance = function (amount, balance, trs, sender) {
 		return {
 			exceeded: exceeded,
 			error: exceeded ? [
-				'Account does not have enough ddk:', sender.address,
+				'Account does not have enough ETP:', sender.address,
 				'balance:', new bignum(sender[balance].toString() || '0').div(Math.pow(10, 8))
 			].join(' ') : null
 		};
@@ -932,10 +936,12 @@ Transaction.prototype.dbFields = [
 	'senderId',
 	'recipientId',
 	'amount',
+	'stakedAmount',
 	'fee',
 	'signature',
 	'signSignature',
-	'signatures'
+	'signatures',
+	'trsName'
 ];
 
 /**
@@ -961,9 +967,10 @@ Transaction.prototype.dbSave = function (trs) {
 		throw e;
 	}
 
-	if ((trs.type === 8) && trs.freezedAmount > 0) {
+	if((trs.type === 8) && trs.freezedAmount > 0){
 		trs.amount = trs.freezedAmount;
 	}
+
 	if (trs.type === 11)
 	{
 		trs.fee = 0;
@@ -983,10 +990,12 @@ Transaction.prototype.dbSave = function (trs) {
 				senderId: trs.senderId,
 				recipientId: trs.recipientId || null,
 				amount: trs.amount,
+				stakedAmount: trs.stakedAmount,
 				fee: trs.fee,
 				signature: signature,
 				signSignature: signSignature,
 				signatures: trs.signatures ? trs.signatures.join(',') : null,
+				trsName: trs.trsName				
 			}
 		}
 	];
@@ -1251,12 +1260,14 @@ Transaction.prototype.dbRead = function (raw) {
 			recipientId: raw.t_recipientId,
 			recipientPublicKey: raw.m_recipientPublicKey || null,
 			amount: parseInt(raw.t_amount),
+			stakedAmount: parseInt(raw.t_stakedAmount),
 			fee: parseInt(raw.t_fee),
 			signature: raw.t_signature,
 			signSignature: raw.t_signSignature,
 			signatures: raw.t_signatures ? raw.t_signatures.split(',') : [],
 			confirmations: parseInt(raw.confirmations),
-			asset: {}
+			asset: {},
+			trsName: raw.t_trsName
 		};
 
 		if (!__private.types[tx.type]) {
