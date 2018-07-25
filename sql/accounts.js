@@ -34,7 +34,7 @@ let Accounts = {
 
 	InsertStakeOrder: 'INSERT INTO stake_orders ("id", "status", "startTime", "insertTime", "senderId", "freezedAmount", "rewardCount", "nextVoteMilestone") VALUES (${account_id},${status},${startTime},${insertTime},${senderId},${freezedAmount},${rewardCount},${nextVoteMilestone}) ',
 
-	getETPSStakeOrders: 'SELECT * FROM existing_etps_assets WHERE "account_id"=${account_id} AND "status"=0 AND "month_count" < 6',
+	getETPSStakeOrders: 'SELECT * FROM existing_etps_assets_m WHERE "account_id"=${account_id} AND "status"=0 AND "month_count" < 6',
 
 	totalFrozeAmount: 'SELECT sum("freezedAmount") FROM stake_orders WHERE "id"=${account_id} and "status"=1',
 
