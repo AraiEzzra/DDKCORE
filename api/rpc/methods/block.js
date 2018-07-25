@@ -1,7 +1,10 @@
 const ReservedErrorCodes = require('./../errors');
 const {
-  createServerApiMethod,
-  prepareServerError
+  METHOD_RESULT_STATUS,
+  createServerMethod,
+  prepareServerError,
+  prepareServerMethodResult,
+  hasProperties,
 } = require('./../util');
 
 
@@ -23,9 +26,13 @@ function Block (wss, params) {
     errorMessage = ReservedErrorCodes[errorCode];
   }
 
-  return errorCode
-    ? prepareServerError(errorCode, errorMessage, response)
-    : response;
+  if (errorCode) {
+    return prepareServerMethodResult(METHOD_RESULT_STATUS.ERROR, {},
+      prepareServerError(errorCode, errorMessage, response));
+  } else {
+    return prepareServerMethodResult(METHOD_RESULT_STATUS.SUCCESS, response,
+      false);
+  }
 }
 
-module.exports = createServerApiMethod(METHOD_NAME, Block);
+module.exports = createServerMethod(METHOD_NAME, Block);

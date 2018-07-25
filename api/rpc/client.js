@@ -55,22 +55,17 @@ class ClientRPCApi {
 
 const client = new ClientRPCApi();
 
-client.call('header', {
-    source: 'FILL NOT DIGGER',
-    trx: 'AS23DWF3L4I65FR62GY',
-  }, function (result)  {
-    console.log('header result: ', result);
-    client.close();
-});
+client.call('blocks', {
 
+    limit: 10,
+    offset: '0',
+    sort: 'height:desc',
 
-client.call('headers', {
-    source: 'FILL NOT DIGGER',
-    trx: 'AS23DWF3L4I65FR62GY',
   }, function (result)  {
     console.log('headers result: ', result);
     client.close();
 });
+
 
 
 

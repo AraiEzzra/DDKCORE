@@ -5,31 +5,25 @@ const {
   prepareServerError,
   prepareServerMethodResult,
   hasProperties,
+  getDDKCoinConfig,
+  objectToGetQuery,
 } = require('./../util');
 
 
+const METHOD_NAME = 'blocks';
 
-const METHOD_NAME = 'headers';
-
-
-function Headers (wss, params) {
+function Blocks (wss, params) {
 
   let response = {};
   let errorCode = false;
-  let errorMessage = 'Error Message';
+  let errorMessage = 'Blocks Error';
 
-  if (params.trx) {
-    response.title = 'Title Headers';
-    response.data = 'Data resend';
+  if (!params) {
+
   } else {
     errorCode = ReservedErrorCodes.ServerErrorInvalidMethodParameters;
     errorMessage = ReservedErrorCodes[errorCode];
   }
-
-
-
-
-
 
   if (errorCode) {
     return prepareServerMethodResult(METHOD_RESULT_STATUS.ERROR, {},
@@ -40,4 +34,4 @@ function Headers (wss, params) {
   }
 }
 
-module.exports = createServerMethod(METHOD_NAME, Headers);
+module.exports = createServerMethod(METHOD_NAME, Blocks);

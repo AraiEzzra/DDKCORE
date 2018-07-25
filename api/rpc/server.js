@@ -2,20 +2,12 @@ const WebSocket = require('rpc-websockets').Client;
 const WebSocketServer = require('rpc-websockets').Server;
 
 const ReservedErrorCodes = require('./errors');
+const { methods, port, host, version } = require('./server.config');
 const {
+  METHOD_RESULT_STATUS,
   prepareServerRequest,
+  getDDKCoinConfig,
 } = require('./util');
-const MethodHeader = require('./methods/header');
-const MethodHeaders = require('./methods/headers');
-
-const methods = [
-  MethodHeader,
-  MethodHeaders,
-];
-
-const PORT = 8080;
-const HOST = 'localhost';
-const VERSION = 1;
 
 
 class ServerRPCApi {
@@ -23,8 +15,8 @@ class ServerRPCApi {
   constructor() {
     this.registered = {};
     this.webSocketServer = new WebSocketServer({
-      port: PORT,
-      host: HOST
+      port: port,
+      host: host
     });
   }
 
@@ -41,9 +33,8 @@ class ServerRPCApi {
     this.webSocketServer.register(method, this.registered[method].callback);
   }
 
-
-
 }
+
 
 const server = new ServerRPCApi();
 
@@ -52,9 +43,16 @@ methods.map((method) => {
   server.register(method.methodName, (args) => {
     if (args.jsonrpc === '2.0') {
       method.methodId = args.id;
-      let result = method.call({},  server.getWebSocketServer(), args.params);
-      let error = result.error ? result.error : false;
-      return prepareServerRequest(result, error, method.methodId);
+
+      let error = false;
+      let methodResult = method.call({}, server.getWebSocketServer(), args.params);
+
+      if (methodResult.status === undefined || methodResult.result === undefined) {
+        throw new Error(`Result of [${method.methodName}] not has api structure`);
+      } else {
+        return prepareServerRequest(methodResult.result, methodResult.error, method.methodId);
+      }
+
     }
   });
 

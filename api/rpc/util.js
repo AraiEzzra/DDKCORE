@@ -1,5 +1,11 @@
 
-module.exports.createServerApiMethod = function (methodName, callback) {
+module.exports.METHOD_RESULT_STATUS = {
+  DONE: 'done',
+  ERROR: 'error',
+  SUCCESS: 'success',
+};
+
+module.exports.createServerMethod = function (methodName, callback) {
 
   Object.defineProperty(callback, 'methodName', {
     enumerable: false,
@@ -39,6 +45,10 @@ module.exports.prepareServerRequest = function(result, error, id) {
   };
 };
 
+module.exports.prepareServerMethodResult = function(status, result, error) {
+  return {status, result, error};
+};
+
 module.exports.prepareClientRequest = function(method, params, id) {
     return {
       jsonrpc: "2.0",
@@ -48,4 +58,24 @@ module.exports.prepareClientRequest = function(method, params, id) {
     };
 };
 
+module.exports.hasProperties = function(obj, props) {
+  return props.every((prop) => {
+    return obj.hasOwnProperty(prop);
+  });
+};
 
+module.exports.objectToGetQuery = function(obj) {
+  let result = '?';
+  for (let key in Object.keys(obj)) {
+    result += '&' + key + '=' + (encodeURIComponent(obj[key]));
+  }
+  return result;
+};
+
+module.exports.getDDKCoinConfig = function(name) {
+  let config = require('./../../config');
+  if ( !name ) {
+    return config;
+  }
+  return config[name];
+};
