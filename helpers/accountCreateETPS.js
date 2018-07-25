@@ -53,6 +53,12 @@ function insert(user_data, cb) {
     });
 }
 
+/**
+ * Generates the address with the help of publick key.
+ * @param {publicKey} - Generated publick key.
+ * @returns {address} - Returns user address generated through public key.
+ */
+
 function generateAddressByPublicKey(publicKey) {
     let publicKeyHash = crypto.createHash('sha256').update(publicKey, 'hex').digest();
 	let temp = Buffer.alloc(8);
