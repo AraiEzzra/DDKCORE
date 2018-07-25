@@ -14,6 +14,7 @@ let constants = require('./constants');
 let Logger = require('../logger.js');
 let logman = new Logger();
 let logger = logman.logger;
+let sql = require('../sql/referal_sql');
 
 let client = redis.createClient(config.redis.port, config.redis.host);
 
@@ -29,8 +30,15 @@ let db = pgp(cn);
 let code, secret, hash, keypair, publicKey, user_address;
 let referral_chain = [];
 
+/**
+ * Registration process of Etps user in the DDK system.
+ * Insert the fields to the member account.
+ * @param {user_data} - Contains the address, balance, total freezed amount of Etps user.
+ * @param {cb} - callback function.
+ */
+
 function insert(user_data, cb) {
-    db.none('INSERT INTO mem_accounts ("address","u_isDelegate","isDelegate","publicKey","balance","u_balance","totalFrozeAmount","group_bonus") values (${address},${u_isDelegate},${isDelegate},${publicKey},${balance},${u_balance},${totalFrozeAmount},${group_bonus})', {
+    db.none(sql.insertMemberAccount, {
         address: user_data.address,
         u_isDelegate: 0,
         isDelegate: 0,
@@ -46,9 +54,16 @@ function insert(user_data, cb) {
     });
 }
 
+/** 
+ * Generating the Passphrase , Address , Public Key , Referral Chain of Etps User.
+ * Entries of Stake done by Etps User.
+ * Update to the Member Account with Balance and freezed amount.
+ * @method async.series - Contains the array of functions or tasks with callback.
+ */
+
 async.series([
     function (main_callback) {
-        db.many('SELECT * from etps_user').then(function (resp) {
+        db.many(sql.selectEtpsList).then(function (resp) {
 
             async.eachSeries(resp, function (etps_user, callback) {
                 code = new Mnemonic(Mnemonic.Words.ENGLISH);
@@ -60,9 +75,9 @@ async.series([
 
                 user_address = modules.prototype.generateAddressByPublicKey(publicKey);
 
-                db.none('INSERT INTO migrated_etps_users ("address","passphrase","publickey","username","id","group_bonus") VALUES (${address},${passphrase},${publickey},${username},${id},${group_bonus})', {
+                db.none(sql.insertMigratedUsers, {
                     address: user_address,
-                    passphrase: secret,
+                    passphrase: Buffer.from(secret).toString('base64'),
                     username: etps_user.username,
                     id: etps_user.id,
                     publickey: publicKey,
@@ -78,10 +93,10 @@ async.series([
                                 referral_chain.length = 0;
                                 series_callback();
                             } else {
-                                db.query('SELECT address,COUNT(*) As username from migrated_etps_users WHERE username = $1 GROUP BY address;', etps_user.upline).then(function (user) {
+                                db.query(sql.getDirectIntroducer, etps_user.upline).then(function (user) {
                                     if (user.length) {
                                         referral_chain.unshift(user[0].address);
-                                        db.query('SELECT level from referals WHERE "address" = ${address}', {
+                                        db.query(sql.referLevelChain, {
                                             address: user[0].address
                                         }).then(function (resp) {
                                             if (resp.length != 0 && resp[0].level != null) {
@@ -111,7 +126,7 @@ async.series([
                                 levelDetails.level = null;
                             }
 
-                            db.none('INSERT INTO referals ("address","level") VALUES (${address},${level})', {
+                            db.none(sql.insertReferalChain, {
                                 address: levelDetails.address,
                                 level: levelDetails.level
                             }).then(function () {
@@ -148,10 +163,10 @@ async.series([
     function (main_callback) {
         let etps_balance = 0,
             frozeAmount = 0;
-        let date = new Date((slots.getTime()) * 1000);
-        db.query('SELECT * from migrated_etps_users').then(function (res) {
+        db.query(sql.getMigratedUsers).then(function (res) {
             async.eachSeries(res, function (migrated_details, callback) {
-                db.query('SELECT * from existing_etps_assets_m WHERE account_id = $1', migrated_details.id).then(function (resp) {
+                let date = new Date((slots.getTime()) * 1000);
+                db.query(sql.getStakeOrders, migrated_details.id).then(function (resp) {
                     if (resp.length) {
                         async.eachSeries(resp, function (account, callback2) {
                             let stake_details = {
@@ -163,7 +178,7 @@ async.series([
                                 rewardCount: 6 - account.remain_month,
                                 nextVoteMilestone: (date.setMinutes(date.getMinutes() + constants.froze.vTime)) / 1000
                             }
-                            db.none('INSERT INTO stake_orders ("id","status","startTime","insertTime","senderId","recipientId","freezedAmount","rewardCount","nextVoteMilestone") VALUES (${id},${status},${startTime},${insertTime},${senderId},${recipientId},${freezedAmount},${rewardCount},${nextVoteMilestone})', {
+                            db.none(sql.insertStakeOrder, {
                                 id: stake_details.id,
                                 status: 1,
                                 startTime: stake_details.startTime,
@@ -237,7 +252,6 @@ async.series([
     }
 ], function (err) {
     if (err) {
-        console.log(err);
         logger.error('Migration Error : ', err.stack);
         return err;
     }

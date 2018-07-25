@@ -720,7 +720,7 @@ Account.prototype.set = function (address, fields, cb) {
 };
 
 
-Account.prototype.insertLevel = function(levelDetails,cb) {
+Account.prototype.insertLevel = function (levelDetails, cb) {
 
 	if(levelDetails.level.length === 0){
 		levelDetails.level = null;
@@ -731,7 +731,6 @@ Account.prototype.insertLevel = function(levelDetails,cb) {
 	}).then(function(){
 		return setImmediate(cb,null);
 	}).catch(function(err){
-		console.log(err);
 		return setImmediate(cb, err);
 	});
 }
@@ -742,7 +741,6 @@ Account.prototype.findReferralLevel= function(address,cb) {
 	}).then(function(user){
 		return setImmediate(cb,null,user);
 	}).catch(function(err){
-		console.log(err);
 		return setImmediate(cb,err);
 	});
 }
