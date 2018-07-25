@@ -27,14 +27,3 @@ class ServerRPCApi {
   }
 
 }
-
-
-const server = new ServerRPCApi();
-
-methods.map((method) => {
-  server.register(method.methodName, function (params) {
-      return method.call({}, server.getWebSocketServer(), params);
-  });
-});
-
-console.info(`[ServerRPCApi] Started!`);
