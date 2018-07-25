@@ -668,7 +668,23 @@ d.run(function () {
 					cb(err, scope.network);
 				}
 			});
-		}]
+		}],
+
+		// todo: rpc in progress
+    listenWs: [
+      'ready',
+      function (scope, cb) {
+    		const config = require('./api/rpc/server.config');
+    		const ServerRPCApi = require('./api/rpc/server');
+    		const server = new ServerRPCApi(scope);
+				config.methods.map((method) => {
+					server.register(method.methodName, function (params) {
+							return method.call(null, server.getWebSocketServer(), params);
+					});
+				});
+      }
+    ]
+
 	}, function (err, scope) {
 		if (err) {
 			scope.logger.error(err.message);
