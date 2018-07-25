@@ -1,9 +1,7 @@
 'use strict';
-
 let Mnemonic = require('bitcore-mnemonic');
 let crypto = require('crypto');
 let ed = require('./ed.js');
-let modules = require('../modules/accounts.js');
 let pgp = require("pg-promise")({});
 let config = require('../config');
 var async = require('async');
@@ -15,6 +13,7 @@ let Logger = require('../logger.js');
 let logman = new Logger();
 let logger = logman.logger;
 let sql = require('../sql/referal_sql');
+let bignum = require('./bignum.js');
 
 let client = redis.createClient(config.redis.port, config.redis.host);
 
@@ -54,6 +53,25 @@ function insert(user_data, cb) {
     });
 }
 
+/**
+ * Generates the address with the help of publick key.
+ * @param {publicKey} - Generated publick key.
+ * @returns {address} - Returns user address generated through public key.
+ */
+
+function generateAddressByPublicKey(publicKey) {
+    let publicKeyHash = crypto.createHash('sha256').update(publicKey, 'hex').digest();
+	let temp = Buffer.alloc(8);
+
+	for (let i = 0; i < 8; i++) {
+		temp[i] = publicKeyHash[7 - i];
+	}
+
+    let address = 'DDK' + bignum.fromBuffer(temp).toString();
+
+    return address;
+}
+
 /** 
  * Generating the Passphrase , Address , Public Key , Referral Chain of Etps User.
  * Entries of Stake done by Etps User.
@@ -73,7 +91,7 @@ async.series([
                 keypair = ed.makeKeypair(hash);
                 publicKey = keypair.publicKey.toString('hex');
 
-                user_address = modules.prototype.generateAddressByPublicKey(publicKey);
+                user_address = generateAddressByPublicKey(publicKey);
 
                 db.none(sql.insertMigratedUsers, {
                     address: user_address,
