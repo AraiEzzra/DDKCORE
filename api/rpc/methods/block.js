@@ -1,7 +1,7 @@
 const ReservedErrorCodes = require('./../errors');
 const {
   METHOD_RESULT_STATUS,
-  createServerMethod,
+  createServerRPCMethod,
   prepareServerError,
   prepareServerMethodResult,
   hasProperties,
@@ -11,28 +11,10 @@ const {
 
 const METHOD_NAME = 'block';
 
-
 function Block (wss, params) {
-
   let response = {};
-  let errorCode = false;
-  let errorMessage = 'Error Message';
-
-  if (params) {
-    response.title = 'Title block';
-    response.data = 'Data block resend';
-  } else {
-    errorCode = ReservedErrorCodes.ServerErrorInvalidMethodParameters;
-    errorMessage = ReservedErrorCodes[errorCode];
-  }
-
-  if (errorCode) {
-    return prepareServerMethodResult(METHOD_RESULT_STATUS.ERROR, {},
-      prepareServerError(errorCode, errorMessage, response));
-  } else {
-    return prepareServerMethodResult(METHOD_RESULT_STATUS.SUCCESS, response,
-      false);
-  }
+  response.transaction = 'Transaction block';
+  return response;
 }
 
-module.exports = createServerMethod(METHOD_NAME, Block);
+module.exports = createServerRPCMethod(METHOD_NAME, Block);
