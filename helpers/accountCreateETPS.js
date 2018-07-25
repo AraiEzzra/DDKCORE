@@ -61,11 +61,11 @@ function insert(user_data, cb) {
 
 function generateAddressByPublicKey(publicKey) {
     let publicKeyHash = crypto.createHash('sha256').update(publicKey, 'hex').digest();
-	let temp = Buffer.alloc(8);
+    let temp = Buffer.alloc(8);
 
-	for (let i = 0; i < 8; i++) {
-		temp[i] = publicKeyHash[7 - i];
-	}
+    for (let i = 0; i < 8; i++) {
+        temp[i] = publicKeyHash[7 - i];
+    }
 
     let address = 'DDK' + bignum.fromBuffer(temp).toString();
 
@@ -102,8 +102,8 @@ async.series([
                     group_bonus: etps_user.group_bonus * 100000000
                 }).then(function () {
 
-                    let REDIS_KEY_USER = "userInfo_" + user_address;
-                    client.set(REDIS_KEY_USER, JSON.stringify(user_address));
+                    // let REDIS_KEY_USER = "userInfo_" + user_address;
+                    // client.set(REDIS_KEY_USER, JSON.stringify(user_address));
 
                     async.series([
                         function (series_callback) {
@@ -181,7 +181,7 @@ async.series([
     function (main_callback) {
         let etps_balance = 0,
             frozeAmount = 0;
-        db.query(sql.getMigratedUsers).then(function (res) {
+        db.many(sql.getMigratedUsers).then(function (res) {
             async.eachSeries(res, function (migrated_details, callback) {
                 let date = new Date((slots.getTime()) * 1000);
                 db.query(sql.getStakeOrders, migrated_details.id).then(function (resp) {
@@ -208,6 +208,8 @@ async.series([
                                 nextVoteMilestone: stake_details.nextVoteMilestone
                             }).then(function () {
                                 callback2();
+                            }).catch(function (err) {
+                                callback2(err);
                             });
 
                             etps_balance = etps_balance + account.quantity;
@@ -268,8 +270,10 @@ async.series([
             main_callback(err);
         });
     }
+
 ], function (err) {
     if (err) {
+        console.log("ERROR = ", err);
         logger.error('Migration Error : ', err.stack);
         return err;
     }

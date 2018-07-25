@@ -22,9 +22,9 @@ let Referals = {
     
     insertReferalChain : 'INSERT INTO referals ("address","level") VALUES (${address},${level})',
     
-    getMigratedUsers : 'SELECT * from migrated_etps_users',
+    getMigratedUsers : 'SELECT id,address,publickey,group_bonus from migrated_etps_users',
     
-    getStakeOrders :  'SELECT * from existing_etps_assets_m WHERE account_id = $1',
+    getStakeOrders :  'SELECT insert_time,quantity,remain_month from existing_etps_assets_m WHERE account_id IN ($1)',
     
     insertStakeOrder : 'INSERT INTO stake_orders ("id","status","startTime","insertTime","senderId","recipientId","freezedAmount","rewardCount","nextVoteMilestone") VALUES (${id},${status},${startTime},${insertTime},${senderId},${recipientId},${freezedAmount},${rewardCount},${nextVoteMilestone})'
 }
