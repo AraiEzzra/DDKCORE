@@ -224,7 +224,7 @@ function Account(db, schema, logger, cb) {
 			filter: {
 				type: 'string',
 				case: 'lower',
-				maxLength: 30,
+				maxLength: 100,
 				minLength: 1
 			},
 			conv: String
