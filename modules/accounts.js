@@ -18,7 +18,7 @@ let slots = require('../helpers/slots.js');
 let async = require('async');
 let nextBonus = 0;
 let Mnemonic = require('bitcore-mnemonic');
-let mailServices = require('../helpers/nodemailer');
+let mailServices = require('../helpers/postmark');
 
 // Private fields
 let modules, library, self, __private = {}, shared = {};
@@ -147,6 +147,14 @@ Accounts.prototype.getAccount = function (filter, fields, cb) {
 	library.logic.account.get(filter, fields, cb);
 };
 
+/**  
+ * Check whether the referal id is valid or not.
+ * If valid Generate referral chain for that user.
+ * In case of no referral, chain will contain the null value I.e; Blank. 
+ * @param {referalLink} - Refer Id
+ * @param {address} - Address of user during registration.
+ * @param {cb} - callback function which return success or failure to the caller.
+*/
 
 Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 
@@ -937,7 +945,6 @@ Accounts.prototype.shared = {
 							transfer_time: slots.getTime(),
 							userName: username
 						}).then(function () {
-							console.log('Migrated Table Updated Successfully');
 						}).catch(function (err) {
 							return setImmediate(cb, 'Invalid username or password');
 						});
@@ -946,7 +953,7 @@ Accounts.prototype.shared = {
 				return setImmediate(cb, null, {
 					success: true,
 					userInfo: user
-				})
+				});
 			}).catch(function (err) {
 				library.logger.error(err.stack);
 				return setImmediate(cb, 'Invalid username or password');
@@ -1423,8 +1430,8 @@ Accounts.prototype.internal = {
 			});
 		});
 	},
-	
-		forgotEtpsPassword: function (req, cb) {
+
+	forgotEtpsPassword: function (req, cb) {
 		let data = req.body.data;
 		let userName = Buffer.from((data.split('&')[0]).split('=')[1], 'base64').toString();
 		let email = Buffer.from((data.split('&')[1]).split('=')[1], 'base64').toString();
@@ -1443,11 +1450,11 @@ Accounts.prototype.internal = {
 			}).then(function () {
 
 				let mailOptions = {
-					from: library.config.mailFrom,
-					to: email,
-					subject: 'New Password',
-					text: '',
-					html: 'Hello, ' + userName + ' <br><br>\
+					From: library.config.mailFrom,
+					To: email,
+					Subject: 'New Password',
+					TextBody: '',
+					HtmlBody: 'Hello, ' + userName + ' <br><br>\
 					<br> Your Newly Generated Password for login is : <strong>' + newPassword + '</strong><br><br>\
 					<a href="' + link + '">Click here to login</a>'
 				};
