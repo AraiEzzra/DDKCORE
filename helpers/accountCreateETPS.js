@@ -34,7 +34,8 @@ let referral_chain = [];
  * Registration process of Etps user in the DDK system.
  * Insert the fields to the member account.
  * @param {user_data} - Contains the address, balance, total freezed amount of Etps user.
-*/
+ * @param {cb} - callback function.
+ */
 
 function insert(user_data, cb) {
     db.none(sql.insertMemberAccount, {
@@ -56,8 +57,9 @@ function insert(user_data, cb) {
 /** 
  * Generating the Passphrase , Address , Public Key , Referral Chain of Etps User.
  * Entries of Stake done by Etps User.
- * Update to the Member Account with Balance and freezed amount. 
-*/
+ * Update to the Member Account with Balance and freezed amount.
+ * @method async.series - Contains the array of functions or tasks with callback.
+ */
 
 async.series([
     function (main_callback) {
