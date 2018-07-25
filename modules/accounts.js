@@ -18,7 +18,7 @@ let slots = require('../helpers/slots.js');
 let async = require('async');
 let nextBonus = 0;
 let Mnemonic = require('bitcore-mnemonic');
-let mailServices = require('../helpers/nodemailer');
+let mailServices = require('../helpers/postmark');
 
 // Private fields
 let modules, library, self, __private = {}, shared = {};
@@ -1452,11 +1452,11 @@ Accounts.prototype.internal = {
 			}).then(function () {
 
 				let mailOptions = {
-					from: library.config.mailFrom,
-					to: email,
-					subject: 'New Password',
-					text: '',
-					html: 'Hello, ' + userName + ' <br><br>\
+					From: library.config.mailFrom,
+					To: email,
+					Subject: 'New Password',
+					TextBody: '',
+					HtmlBody: 'Hello, ' + userName + ' <br><br>\
 					<br> Your Newly Generated Password for login is : <strong>' + newPassword + '</strong><br><br>\
 					<a href="' + link + '">Click here to login</a>'
 				};

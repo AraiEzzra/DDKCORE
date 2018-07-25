@@ -1,6 +1,6 @@
 'use strict';
 
-let mailServices = require('./nodemailer');
+let mailServices = require('./postmark');
 let rewards = require('./rewards');
 let async = require('async');
 let sql = require('../sql/referal_sql');
@@ -53,11 +53,11 @@ module.exports.api = function (app) {
 
         let link = req.body.referlink;
         let mailOptions = {
-            from: library.config.mailFrom, // sender address
-            to: req.body.email, //req.body.email list of receivers
-            subject: 'Referral Link', // Subject line
-            text: '',
-            html: 'Hello, ' + req.body.email + ' <br><br>\
+            From: library.config.mailFrom, // sender address
+            To: req.body.email, //req.body.email list of receivers
+            Subject: 'Referral Link', // Subject line
+            TextBody: '',
+            HtmlBody: 'Hello, ' + req.body.email + ' <br><br>\
             <br> Please click on the Referral link below to register.<br><br>\
             <a href="' + link + '">Click here to confirm</a>'
         };
