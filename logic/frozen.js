@@ -437,13 +437,15 @@ Frozen.prototype.checkFrozeOrders = function () {
 
 				updateOrderAndSendReward(order, function (err, Success) {
 					if (err) {
-						next(err, null);
+						eachSeriesCb(err);
+						//next(err, null);
 					} else {
 						deductFrozeAmount(order, function (_err, _Success) {
 							if (_err) {
-								next(_err, null);
+								eachSeriesCb(_err);
+								// next(_err, null);
 							} else {
-								eachSeriesCb();
+								async.setImmediate(eachSeriesCb);
 							}
 						});
 					}
