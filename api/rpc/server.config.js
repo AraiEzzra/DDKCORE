@@ -1,9 +1,13 @@
-const Block = require('./methods/block');
-const Header = require('./methods/header');
+const GetBlock = require('./methods/getblock');
+const GetBlocks = require('./methods/getblocks');
+const GetRawTransaction = require('./methods/getrawtransaction');
+const SendRawTransaction = require('./methods/sendrawtransaction');
 
 const methods = [
-  Block,
-  Header,
+  GetBlock,
+  GetBlocks,
+  GetRawTransaction,
+  SendRawTransaction,
 ];
 
 const PORT = 8080;

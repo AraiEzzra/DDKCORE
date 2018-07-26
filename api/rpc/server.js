@@ -7,9 +7,11 @@ class ServerRPCApi {
 
   constructor() {
     this.registered = {};
+    this.port = port;
+    this.host = host;
     this.webSocketServer = new WebSocketServer({
-      port: port,
-      host: host
+      port: this.port,
+      host: this.host
     });
   }
 
@@ -27,3 +29,5 @@ class ServerRPCApi {
   }
 
 }
+
+module.exports = ServerRPCApi;
