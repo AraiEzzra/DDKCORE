@@ -33,7 +33,7 @@ exports.updateDataOnElasticSearch = {
 	on: '* * * * *',
 	job: function () {
 		let dbTables = [
-			'blocks',
+			'blocks_list',
 			'dapps',
 			'delegates',
 			'mem_accounts',

@@ -48,7 +48,9 @@ let TransactionsSql = {
 
 	getById: 'SELECT *, ENCODE ("t_senderPublicKey", \'hex\') AS "t_senderPublicKey", ENCODE ("m_recipientPublicKey", \'hex\') AS "m_recipientPublicKey" FROM trs_list WHERE "t_id" = ${id}',
 
-	getVotesById: 'SELECT * FROM votes WHERE "transactionId" = ${id}'
+	getVotesById: 'SELECT * FROM votes WHERE "transactionId" = ${id}',
+
+	getDelegates: 'SELECT * from trs INNER JOIN delegates ON trs."id" = delegates."transactionId"'
 };
 
 module.exports = TransactionsSql;
