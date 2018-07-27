@@ -471,7 +471,8 @@ Block.prototype.dbRead = function (raw) {
 			generatorPublicKey: raw.b_generatorPublicKey,
 			generatorId: __private.getAddressByPublicKey(raw.b_generatorPublicKey),
 			blockSignature: raw.b_blockSignature,
-			confirmations: parseInt(raw.b_confirmations)
+			confirmations: parseInt(raw.b_confirmations),
+			username: raw.m_username
 		};
 		block.totalForged = new bignum(block.totalFee).plus(new bignum(block.reward)).toString();
 		return block;
