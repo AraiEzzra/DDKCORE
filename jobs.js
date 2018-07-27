@@ -77,7 +77,7 @@ exports.updateDataOnElasticSearch = {
 */
 exports.checkFrozeOrders = {
 
-	on: '* * * * *',
+	on: '*/30 * * * *',
 	job: function () {
 		let date = new Date();
 		//FIXME: comment or remove below statement once this goes live
