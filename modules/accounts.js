@@ -396,6 +396,7 @@ Accounts.prototype.shared = {
 
 					let accountData = {
 						address: account.address,
+						username: account.username,
 						unconfirmedBalance: account.u_balance,
 						balance: account.balance,
 						publicKey: account.publicKey,

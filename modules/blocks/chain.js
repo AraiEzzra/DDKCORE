@@ -6,6 +6,8 @@ let Inserts = require('../../helpers/inserts.js');
 let sql = require('../../sql/blocks.js');
 let transactionTypes = require('../../helpers/transactionTypes.js');
 let slots = require('../../helpers/slots.js');
+let pgp = require('pg-promise');
+let path = require('path');
 
 let modules, library, self, __private = {};
 
@@ -82,30 +84,46 @@ Chain.prototype.saveGenesisBlock = function (cb) {
  * @return {String}   cb.err Error if occurred
  */
 Chain.prototype.saveBlock = function (block, cb) {
-	// Prepare and execute SQL transaction
-	// WARNING: DB_WRITE
-	library.db.tx(function (t) {
-		// Create bytea fields (buffers), and returns pseudo-row object promise-like
-		let promise = library.logic.block.dbSave(block);
-		// Initialize insert helper
-		let inserts = new Inserts(promise, promise.values);
+	//update users_list view
+	if (block.height === 2) {
+		let sql = new pgp.QueryFile(path.join(process.cwd(), 'sql', 'updateUsersListView.sql'), { minify: true });
 
-		let promises = [
-			// Prepare insert SQL query
-			t.none(inserts.template(), promise.values)
-		];
+		library.db.query(sql).then(function () {
+			//return setImmediate(cb);
+			saveBlock();
+		}).catch(function (err) {
+			library.logger.error(err.stack);
+			return setImmediate(cb, 'Account#createTables error');
+		});
+	} else {
+		saveBlock();
+	}
+	function saveBlock() {
+		// Prepare and execute SQL transaction
+		// WARNING: DB_WRITE
+		library.db.tx(function (t) {
+			// Create bytea fields (buffers), and returns pseudo-row object promise-like
+			let promise = library.logic.block.dbSave(block);
+			// Initialize insert helper
+			let inserts = new Inserts(promise, promise.values);
 
-		// Apply transactions inserts
-		t = __private.promiseTransactions(t, block, promises);
-		// Exec inserts as batch
-		t.batch(promises);
-	}).then(function () {
-		// Execute afterSave for transactions
-		return __private.afterSave(block, cb);
-	}).catch(function (err) {
-		library.logger.error(err.stack);
-		return setImmediate(cb, 'Blocks#saveBlock error');
-	});
+			let promises = [
+				// Prepare insert SQL query
+				t.none(inserts.template(), promise.values)
+			];
+
+			// Apply transactions inserts
+			t = __private.promiseTransactions(t, block, promises);
+			// Exec inserts as batch
+			t.batch(promises);
+		}).then(function () {
+			// Execute afterSave for transactions
+			return __private.afterSave(block, cb);
+		}).catch(function (err) {
+			library.logger.error(err.stack);
+			return setImmediate(cb, 'Blocks#saveBlock error');
+		});
+	}
 };
 
 /**

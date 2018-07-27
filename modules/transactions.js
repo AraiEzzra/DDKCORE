@@ -218,17 +218,30 @@ __private.list = function (filter, cb) {
 			sortMethod: orderBy.sortMethod
 		}), params).then(function (rows) {
 			let transactions = [];
-
-			for (let i = 0; i < rows.length; i++) {
-				transactions.push(library.logic.transaction.dbRead(rows[i]));
-			}
-
-			let data = {
-				transactions: transactions,
-				count: count
-			};
-
-			return setImmediate(cb, null, data);
+			library.db.query(sql.getUserNames)
+			.then(function(delegates) {
+				for (let i = 0; i < rows.length; i++) {
+					transactions.push(library.logic.transaction.dbRead(rows[i]));
+					for (let j = 0; j < delegates.length; j++) {
+						if(rows[i].t_senderId === delegates[j].m_address) {
+							transactions[i].senderName = delegates[j].m_username;
+						}
+						if(rows[i].t_recipientId === delegates[j].m_address) {
+							transactions[i].recipientName = delegates[j].m_username;
+						}
+					}
+				}
+	
+				let data = {
+					transactions: transactions,
+					count: count
+				};
+	
+				return setImmediate(cb, null, data);
+			})
+			.catch(function(err) {
+				return setImmediate(cb, err.message);
+			});
 		}).catch(function (err) {
 			library.logger.error(err.stack);
 			return setImmediate(cb, 'Transactions#list error');
