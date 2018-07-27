@@ -50,7 +50,7 @@ let TransactionsSql = {
 
 	getVotesById: 'SELECT * FROM votes WHERE "transactionId" = ${id}',
 
-	getDelegates: 'SELECT * from trs INNER JOIN delegates ON trs."id" = delegates."transactionId"'
+	getUserNames: 'SELECT * from users_list'
 };
 
 module.exports = TransactionsSql;

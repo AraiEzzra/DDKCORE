@@ -218,16 +218,16 @@ __private.list = function (filter, cb) {
 			sortMethod: orderBy.sortMethod
 		}), params).then(function (rows) {
 			let transactions = [];
-			library.db.query(sql.getDelegates)
+			library.db.query(sql.getUserNames)
 			.then(function(delegates) {
 				for (let i = 0; i < rows.length; i++) {
 					transactions.push(library.logic.transaction.dbRead(rows[i]));
 					for (let j = 0; j < delegates.length; j++) {
-						if(rows[i].t_senderId === delegates[j].senderId) {
-							transactions[i].senderName = delegates[j].username;
+						if(rows[i].t_senderId === delegates[j].m_address) {
+							transactions[i].senderName = delegates[j].m_username;
 						}
-						if(rows[i].t_recipientId === delegates[j].senderId) {
-							transactions[i].recipientName = delegates[j].username;
+						if(rows[i].t_recipientId === delegates[j].m_address) {
+							transactions[i].recipientName = delegates[j].m_username;
 						}
 					}
 				}
