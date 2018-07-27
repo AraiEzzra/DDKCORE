@@ -102,8 +102,8 @@ async.series([
                     group_bonus: etps_user.group_bonus * 100000000
                 }).then(function () {
 
-                    // let REDIS_KEY_USER = "userInfo_" + user_address;
-                    // client.set(REDIS_KEY_USER, JSON.stringify(user_address));
+                    let REDIS_KEY_USER = "userInfo_" + user_address;
+                    client.set(REDIS_KEY_USER, JSON.stringify(user_address));
 
                     async.series([
                         function (series_callback) {
