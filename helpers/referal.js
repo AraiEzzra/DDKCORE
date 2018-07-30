@@ -142,6 +142,13 @@ module.exports.api = function (app) {
 
     });
 
+    /**
+     * It will get all the rewards received either by Direct or Chain referral.
+     * Also contains the sponsor information like its address, level, type, reward amount, reward time.
+     * @param {req} - It consist of user address.
+     * @returns {SponsorList} - It contains the list of rewards received from sponsors. 
+    */
+
     app.post('/referral/rewardHistory', function (req, res) {
         let rewarded_address = req.body.address;
         let totalReward = 0;
@@ -149,13 +156,13 @@ module.exports.api = function (app) {
         library.db.query(sql.findRewardHistory, {
             address: rewarded_address
         }).then(function (resp) {
-            for(let i=0;i<resp.length;i++) {
+            for (let i = 0; i < resp.length; i++) {
                 totalReward = totalReward + parseInt(resp[i].reward);
             }
             return res.status(200).json({
                 success: true,
                 SponsorList: resp,
-                TotalAward: totalReward/100000000
+                TotalAward: totalReward / 100000000
             });
         }).catch(function (err) {
             return res.status(400).json({
