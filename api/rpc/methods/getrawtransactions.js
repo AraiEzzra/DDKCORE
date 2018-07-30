@@ -1,9 +1,11 @@
 const ReservedErrorCodes = require('./../errors');
+const Transactions = require('../../../modules/transactions');
+const Blocks = require('../../../modules/blocks');
 const { createServerRPCMethod, validator } = require('./../util');
-const { addTransactions } = require('../../../schema/transactions');
+const { getTransactions } = require('../../../schema/transactions');
 
 
-const METHOD_NAME = 'sendrawtransaction';
+const METHOD_NAME = 'getrawtransactions';
 
 /**
  *
@@ -12,14 +14,14 @@ const METHOD_NAME = 'sendrawtransaction';
  * @param {object} scope - The results from current execution,
  * @constructor
  */
-function SendRawTransaction (wss, params, scope) {
+function GetRawTransactions (wss, params, scope) {
 
   return new Promise(function (resolve) {
 
     let error;
 
-    if (validator(params, addTransactions)) {
-      scope.modules.transactions.shared.addTransactions({body: params}, (errorMessage, result) => {
+    if (validator(params, getTransactions)) {
+      scope.modules.transactions.shared.getTransactions({body: params}, (errorMessage, result) => {
 
         resolve(errorMessage
           ? {error: wss.createError(ReservedErrorCodes.ApplicationError, errorMessage)}
@@ -32,7 +34,6 @@ function SendRawTransaction (wss, params, scope) {
     }
 
   });
-
 }
 
-module.exports = createServerRPCMethod(METHOD_NAME, SendRawTransaction);
+module.exports = createServerRPCMethod(METHOD_NAME, GetRawTransactions);

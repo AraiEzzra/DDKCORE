@@ -1,6 +1,7 @@
 const ReservedErrorCodes = require('./../errors');
 const Blocks = require('../../../modules/blocks');
-const { createServerRPCMethod } = require('./../util');
+const { createServerRPCMethod, validator } = require('./../util');
+const { getBlock } = require('../../../schema/blocks');
 
 
 const METHOD_NAME = 'getblock';
@@ -15,13 +16,20 @@ function GetBlock (wss, params, scope, cb) {
 
   return new Promise(function (resolve) {
 
-    scope.modules.blocks.submodules.api.getBlock({body: params}, (err, result) => {
-      if (!err) {
-        resolve(result);
-      } else {
-        err(new Error('Error of GetBlock method'))
-      }
-    });
+    let error;
+
+    if (validator(params, getBlock)) {
+      scope.modules.blocks.submodules.api.getBlock({body: params}, (errorMessage, result) => {
+
+        resolve(errorMessage
+          ? {error: wss.createError(ReservedErrorCodes.ApplicationError, String(errorMessage))}
+          : result);
+      });
+    }
+    else {
+      error = wss.createError(ReservedErrorCodes.ServerErrorInvalidMethodParameters, 'Failed operation');
+      return {error}
+    }
 
   });
 

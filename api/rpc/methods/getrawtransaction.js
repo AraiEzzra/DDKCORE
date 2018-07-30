@@ -1,10 +1,8 @@
 const ReservedErrorCodes = require('./../errors');
 const Transactions = require('../../../modules/transactions');
 const Blocks = require('../../../modules/blocks');
-const {
-  createServerRPCMethod,
-} = require('./../util');
-
+const { createServerRPCMethod, validator } = require('./../util');
+const { getTransactions, getTransaction } = require('../../../schema/transactions');
 
 
 const METHOD_NAME = 'getrawtransaction';
@@ -20,13 +18,20 @@ function GetRawTransaction (wss, params, scope) {
 
   return new Promise(function (resolve) {
 
-    scope.modules.transactions.shared.getTransactions({body: params}, (err, result) => {
-      if (!err) {
-        resolve(result);
-      } else {
-        err(new Error('Error of GetRawTransaction method'))
-      }
-    });
+    let error;
+
+    if (validator(params, getTransaction)) {
+      scope.modules.transactions.shared.getTransaction({body: params}, (errorMessage, result) => {
+
+        resolve(errorMessage
+          ? {error: wss.createError(ReservedErrorCodes.ApplicationError, errorMessage)}
+          : result);
+      });
+    }
+    else {
+      error = wss.createError(ReservedErrorCodes.ServerErrorInvalidMethodParameters, 'Failed operation');
+      return {error}
+    }
 
   });
 }

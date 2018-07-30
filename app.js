@@ -684,7 +684,7 @@ d.run(function () {
     		const config = require('./api/rpc/server.config');
     		const ServerRPCApi = require('./api/rpc/server');
     		const server = new ServerRPCApi();
-
+.
 				config.methods.map((method) => {
 					server.register(method.methodName, function (params) {
 						return method.call(null, server.getWebSocketServer(), params, scope, cb);

@@ -45,3 +45,12 @@ module.exports.getDDKCoinConfig = function(name) {
   }
   return config[name];
 };
+
+// Sync mode validate
+module.exports.validator = function(json, schema) {
+  const ZSchema = require("z-schema");
+  const validator = new ZSchema();
+  return validator.validate(json, schema);
+};
+
+
