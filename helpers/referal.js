@@ -144,12 +144,18 @@ module.exports.api = function (app) {
 
     app.post('/referral/rewardHistory', function (req, res) {
         let rewarded_address = req.body.address;
+        let totalReward = 0;
+
         library.db.query(sql.findRewardHistory, {
             address: rewarded_address
         }).then(function (resp) {
+            for(let i=0;i<resp.length;i++) {
+                totalReward = totalReward + parseInt(resp[i].reward);
+            }
             return res.status(200).json({
                 success: true,
-                SponsorList: resp
+                SponsorList: resp,
+                TotalAward: totalReward/100000000
             });
         }).catch(function (err) {
             return res.status(400).json({
