@@ -11,26 +11,26 @@ const METHOD_NAME = 'getrawtransactions';
  *
  * @param {WebSocketServer} wss
  * @param {object} params
- * @param {object} scope - The results from current execution,
+ * @param {object} scope - Application instance
+ * @param {function} cdError - Application Error callback
  * @constructor
  */
-function GetRawTransactions (wss, params, scope) {
+function GetRawTransactions (wss, params, scope, cdError) {
 
   return new Promise(function (resolve) {
 
     let error;
 
     if (validator(params, getTransactions)) {
-      scope.modules.transactions.shared.getTransactions({body: params}, (errorMessage, result) => {
+      scope.modules.transactions.shared.getTransactions({body: params}, (error, result) => {
 
-        resolve(errorMessage
-          ? {error: wss.createError(ReservedErrorCodes.ApplicationError, errorMessage)}
+        resolve(error
+          ? {error}
           : result);
       });
     }
     else {
-      error = wss.createError(ReservedErrorCodes.ServerErrorInvalidMethodParameters, 'Failed operation');
-      return {error}
+      return {error: 'Failed operation'}
     }
 
   });

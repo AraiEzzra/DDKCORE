@@ -6,12 +6,16 @@ const { methods, port, host, version } = require('./server.config');
 class ServerRPCApi {
 
   constructor() {
+
     this.registered = {};
     this.port = port;
     this.host = host;
+    this.path = 'v' + version;
+
     this.webSocketServer = new WebSocketServer({
       port: this.port,
-      host: this.host
+      host: this.host,
+      path: this.path,
     });
   }
 
