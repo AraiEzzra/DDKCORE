@@ -983,6 +983,16 @@ Accounts.prototype.shared = {
 			.catch(function (err) {
 				return setImmediate(cb, err);
 			});
+	},
+
+	senderAccountBalance: function(req,cb) {
+		library.db.query(sql.checkSenderBalance,{
+			sender_address: req.body.address
+		}).then(function(bal){
+			return setImmediate(cb, null, { balance: bal[0].u_balance});
+		}).catch(function(err){
+			return setImmediate(cb, err);
+		});
 	}
 };
 

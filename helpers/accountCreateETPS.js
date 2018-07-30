@@ -26,6 +26,7 @@ let cn = {
 };
 
 let db = pgp(cn);
+
 let code, secret, hash, keypair, publicKey, user_address;
 let referral_chain = [];
 
@@ -278,4 +279,5 @@ async.series([
         return err;
     }
     console.log('Migration successfully Done');
+    pgp.end();
 });

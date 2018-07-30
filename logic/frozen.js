@@ -343,6 +343,20 @@ Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 						}
 					} else {
 						reward = true;
+						(async function(){
+							await self.scope.db.none(reward_sql.updateRewardTypeTransaction,{
+								sponsorAddress: sponsor_address,
+								introducer_address: sponsorId,
+								reward: stakeReward[sponsorId],
+								level: "Level "+(i),
+								transaction_type: "CHAINREF",
+								time: slots.getTime()
+							}).then(function(){
+	
+							}).catch(function(err){
+								return setImmediate(cb,err);
+							});
+						}());
 					}
 
 					if (i == chain_length && reward != true) {

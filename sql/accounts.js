@@ -52,7 +52,9 @@ let Accounts = {
 
 	validateEtpsUser : 'SELECT * from etps_user WHERE "username" = ${username} AND "email" = ${emailId}',
 
-	updateEtpsPassword: 'UPDATE etps_user SET "password" = ${password} WHERE "username" = ${username}'
+	updateEtpsPassword: 'UPDATE etps_user SET "password" = ${password} WHERE "username" = ${username}',
+
+	checkSenderBalance: 'SELECT u_balance FROM mem_accounts WHERE "address" = ${sender_address}'
 };
 
 module.exports = Accounts;
