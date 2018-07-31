@@ -34,6 +34,7 @@ module.exports.api = function (app) {
                 referralLink: encoded
             });
         }).catch(function (err) {
+            library.logger.error('Generate Refer Id Error : '+err.stack);
             return res.status(400).json({
                 success: false,
                 err: err.detail
@@ -63,6 +64,7 @@ module.exports.api = function (app) {
 
         mailServices.sendMail(mailOptions, function (err) {
             if (err) {
+                library.logger.error('Send Email Error : '+err.stack);
                 return res.status(400).json({
                     success: false,
                     error: err
@@ -122,12 +124,13 @@ module.exports.api = function (app) {
             }
         }
 
-        // Intitally the user which chain we have to find.
+        // Intitally the user whose chain we have to find.
         params = ['$1'];
         referList = [req.body.referrer_address];
 
         findSponsors(params, referList, function (err) {
             if (err) {
+                library.logger.error('Referral List Error : '+err.stack);
                 return res.status(400).json({
                     success: false,
                     error: err
@@ -164,6 +167,7 @@ module.exports.api = function (app) {
                 TotalAward: totalReward / 100000000
             });
         }).catch(function (err) {
+            library.logger.error('Referral Rewards List Error : '+err.stack);
             return res.status(400).json({
                 success: false,
                 error: err

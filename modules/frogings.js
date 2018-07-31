@@ -444,6 +444,7 @@ Frogings.prototype.shared = {
 							});					
 						}
 					}).catch(function (err) {
+						library.logger.error(err.stack);
 						return setImmediate(cb, err);
 					});
 

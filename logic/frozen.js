@@ -518,6 +518,7 @@ Frozen.prototype.checkFrozeOrders = function () {
 									});
 								}
 							}).catch(function (err) {
+								self.scope.logger.error(err.stack);
 								next(err, null);
 							});
 

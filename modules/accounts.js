@@ -418,6 +418,7 @@ Accounts.prototype.shared = {
 						if (!isExist) {
 							self.referralLinkChain(req.body.referal, account.address, function (error) {
 								if (error) {
+									library.logger.error("Referral API Error : "+error.stack);
 									return setImmediate(cb, error);
 								} else {
 									let data = {
@@ -947,7 +948,8 @@ Accounts.prototype.shared = {
 							userName: username
 						}).then(function () {
 						}).catch(function (err) {
-							return setImmediate(cb, 'Invalid username or password');
+							library.logger.error(err.stack);
+							return setImmediate(cb, err);
 						});
 					}());
 				}
@@ -957,7 +959,7 @@ Accounts.prototype.shared = {
 				});
 			}).catch(function (err) {
 				library.logger.error(err.stack);
-				return setImmediate(cb, 'Invalid username or password');
+				return setImmediate(cb, err);
 			});
 
 		}).catch(function (err) {
@@ -1472,6 +1474,7 @@ Accounts.prototype.internal = {
 
 				mailServices.sendMail(mailOptions, function (err) {
 					if (err) {
+						library.logger.error(err.stack);
 						return setImmediate(cb, err.toString());
 					}
 					return setImmediate(cb, null, {
@@ -1480,10 +1483,12 @@ Accounts.prototype.internal = {
 					});
 				});
 			}).catch(function (err) {
+				library.logger.error(err.stack);
 				return setImmediate(cb, err);
 			});
 
 		}).catch(function (err) {
+			library.logger.error(err.stack);
 			return setImmediate(cb, 'Invalid username or email');
 		});
 
