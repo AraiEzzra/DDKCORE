@@ -4,7 +4,6 @@ let mailServices = require('./postmark');
 let rewards = require('./rewards');
 let async = require('async');
 let sql = require('../sql/referal_sql');
-let env = process.env;
 
 let library = {};
 
@@ -78,9 +77,10 @@ module.exports.api = function (app) {
 
     /** 
      * Getting the stats of refers done by a user including it's referral chain.
+     * Also the total referral reward amount.
      * @param {req} - contains the referrer address.
      * @param {res} - return the response with status of success or failure.
-     * @returns {hierarchy} - contains the list of referals and its chain.
+     * @returns {hierarchy} - contains the list of referals and its level info.
      */
 
     app.post('/referral/list', function (req, res) {
@@ -135,10 +135,40 @@ module.exports.api = function (app) {
             }
             return res.status(200).json({
                 success: true,
-                ReferList: hierarchy
+                SponsorList: hierarchy
             });
         });
 
+    });
+
+    /**
+     * It will get all the rewards received either by Direct or Chain referral.
+     * Also contains the sponsor information like its address, level, type, reward amount, reward time.
+     * @param {req} - It consist of user address.
+     * @returns {SponsorList} - It contains the list of rewards received from sponsors. 
+    */
+
+    app.post('/referral/rewardHistory', function (req, res) {
+        let rewarded_address = req.body.address;
+        let totalReward = 0;
+
+        library.db.query(sql.findRewardHistory, {
+            address: rewarded_address
+        }).then(function (resp) {
+            for (let i = 0; i < resp.length; i++) {
+                totalReward = totalReward + parseInt(resp[i].reward);
+            }
+            return res.status(200).json({
+                success: true,
+                SponsorList: resp,
+                TotalAward: totalReward / 100000000
+            });
+        }).catch(function (err) {
+            return res.status(400).json({
+                success: false,
+                error: err
+            });
+        });
     });
 
 }
