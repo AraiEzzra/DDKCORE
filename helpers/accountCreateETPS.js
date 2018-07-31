@@ -2,7 +2,6 @@
 let Mnemonic = require('bitcore-mnemonic');
 let crypto = require('crypto');
 let ed = require('./ed.js');
-let pgp = require("pg-promise")({});
 let config = require('../config');
 var async = require('async');
 let redis = require('redis');
@@ -16,6 +15,13 @@ let sql = require('../sql/referal_sql');
 let bignum = require('./bignum.js');
 
 let client = redis.createClient(config.redis.port, config.redis.host);
+
+const promise = require('bluebird');
+let pgOptions = {
+    promiseLib: promise
+};
+
+let pgp = require('pg-promise')(pgOptions);
 
 let cn = {
     host: config.db.host, // server name or IP address;
@@ -273,11 +279,11 @@ async.series([
     }
 
 ], function (err) {
+    pgp.end();
     if (err) {
         console.log("ERROR = ", err);
         logger.error('Migration Error : ', err.stack);
         return err;
     }
     console.log('Migration successfully Done');
-    pgp.end();
 });

@@ -4,7 +4,6 @@ let mailServices = require('./postmark');
 let rewards = require('./rewards');
 let async = require('async');
 let sql = require('../sql/referal_sql');
-let env = process.env;
 
 let library = {};
 
