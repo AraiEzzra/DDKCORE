@@ -118,4 +118,15 @@ CREATE TABLE IF NOT EXISTS "migrated_etps_users"(
   "group_bonus" BIGINT DEFAULT 0
 );
 
+CREATE TABLE IF NOT EXISTS "referral_transactions"(
+  "sponsor_address" VARCHAR(100) NOT NULL,
+  "introducer_address" VARCHAR(100) NOT NULL,
+  "reward" BIGINT DEFAULT 0,
+  "sponsor_level" VARCHAR(50),
+  "transaction_type" VARCHAR(30),
+  "reward_time" INT
+);
+
+CREATE INDEX IF NOT EXISTS "referral_introducer_address" ON "referral_transactions"("introducer_address");
+
 COMMIT;
