@@ -147,6 +147,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS "blocks_previousBlock" ON "blocks"("previousBl
 CREATE UNIQUE INDEX IF Not EXISTS "out_transaction_id" ON "outtransfer"("outTransactionId");
 CREATE UNIQUE INDEX IF NOT EXISTS "peers_unique" ON "peers"("ip", "port");
 CREATE UNIQUE INDEX IF NOT EXISTS "peers_dapp_unique" ON "peers_dapp"("peerId", "dappid");
+CREATE UNIQUE INDEX IF NOT EXISTS "stake_id" ON "stake_orders"("stakeId");
 
 /* Indexes */
 CREATE INDEX IF NOT EXISTS "blocks_rowId" ON "blocks"("rowId");
@@ -169,5 +170,6 @@ CREATE INDEX IF NOT EXISTS "delegates_trs_id" ON "delegates"("transactionId");
 CREATE INDEX IF NOT EXISTS "multisignatures_trs_id" ON "multisignatures"("transactionId");
 CREATE INDEX IF NOT EXISTS "dapps_trs_id" ON "dapps"("transactionId");
 CREATE INDEX IF NOT EXISTS "dapps_name" ON "dapps"("name");
+CREATE INDEX IF NOT EXISTS "stake_orders_sAddress" ON "stake_orders"("senderId");
 
 COMMIT;
