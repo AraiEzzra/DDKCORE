@@ -87,9 +87,9 @@ Frogings.prototype.referralReward = function (stake_amount, address, cb) {
 		address: sponsor_address
 	}).then(function (user) {
 
-		let sponsorId = user[0].level;
-
 		if (user.length != 0 && sponsorId != null) {
+
+			let sponsorId = user[0].level;
 
 			introducerReward[sponsorId[i]] = (((env.STAKE_REWARD) * stake_amount) / 100);
 

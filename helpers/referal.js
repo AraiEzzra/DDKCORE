@@ -34,7 +34,7 @@ module.exports.api = function (app) {
                 referralLink: encoded
             });
         }).catch(function (err) {
-            library.logger.error('Generate Refer Id Error : '+err.stack);
+            library.logger.error('Generate Refer Id Error : ' + err.stack);
             return res.status(400).json({
                 success: false,
                 err: err.detail
@@ -64,7 +64,7 @@ module.exports.api = function (app) {
 
         mailServices.sendMail(mailOptions, function (err) {
             if (err) {
-                library.logger.error('Send Email Error : '+err.stack);
+                library.logger.error('Send Email Error : ' + err.stack);
                 return res.status(400).json({
                     success: false,
                     error: err
@@ -130,7 +130,7 @@ module.exports.api = function (app) {
 
         findSponsors(params, referList, function (err) {
             if (err) {
-                library.logger.error('Referral List Error : '+err.stack);
+                library.logger.error('Referral List Error : ' + err.stack);
                 return res.status(400).json({
                     success: false,
                     error: err
@@ -149,7 +149,7 @@ module.exports.api = function (app) {
      * Also contains the sponsor information like its address, level, type, reward amount, reward time.
      * @param {req} - It consist of user address.
      * @returns {SponsorList} - It contains the list of rewards received from sponsors. 
-    */
+     */
 
     app.post('/referral/rewardHistory', function (req, res) {
         let rewarded_address = req.body.address;
@@ -167,7 +167,7 @@ module.exports.api = function (app) {
                 TotalAward: totalReward / 100000000
             });
         }).catch(function (err) {
-            library.logger.error('Referral Rewards List Error : '+err.stack);
+            library.logger.error('Referral Rewards List Error : ' + err.stack);
             return res.status(400).json({
                 success: false,
                 error: err
