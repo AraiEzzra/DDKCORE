@@ -4,6 +4,15 @@
 
 BEGIN;
 
+DROP VIEW IF EXISTS users_list;
+
+CREATE VIEW users_list AS
+
+SELECT m."username" AS "m_username",
+       m."address" AS "m_address"
+
+FROM mem_accounts m;
+
 UPDATE users_list SET "m_username" = 'DSTAKEREWARD' WHERE "m_address" = 'DDK4995063339468361088';
 
 UPDATE users_list SET "m_username" = 'DPENDINGGB' WHERE "m_address" = 'DDK15546849747111093123';
