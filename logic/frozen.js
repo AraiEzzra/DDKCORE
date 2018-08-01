@@ -343,6 +343,20 @@ Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 						}
 					} else {
 						reward = true;
+						(async function(){
+							await self.scope.db.none(reward_sql.updateRewardTypeTransaction,{
+								sponsorAddress: sponsor_address,
+								introducer_address: sponsorId,
+								reward: stakeReward[sponsorId],
+								level: "Level "+(i),
+								transaction_type: "CHAINREF",
+								time: slots.getTime()
+							}).then(function(){
+	
+							}).catch(function(err){
+								return setImmediate(cb,err);
+							});
+						}());
 					}
 
 					if (i == chain_length && reward != true) {
@@ -438,12 +452,10 @@ Frozen.prototype.checkFrozeOrders = function () {
 				updateOrderAndSendReward(order, function (err, Success) {
 					if (err) {
 						eachSeriesCb(err);
-						//next(err, null);
 					} else {
 						deductFrozeAmount(order, function (_err, _Success) {
 							if (_err) {
 								eachSeriesCb(_err);
-								// next(_err, null);
 							} else {
 								async.setImmediate(eachSeriesCb);
 							}
@@ -506,6 +518,7 @@ Frozen.prototype.checkFrozeOrders = function () {
 									});
 								}
 							}).catch(function (err) {
+								self.scope.logger.error(err.stack);
 								next(err, null);
 							});
 

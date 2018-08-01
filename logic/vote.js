@@ -55,7 +55,7 @@ Vote.prototype.bind = function (delegates, rounds, accounts) {
 Vote.prototype.create = function (data, trs) {
 	trs.recipientId = data.sender.address;
 	trs.asset.votes = data.votes;
-	trs.trsName = "VOTE";
+	trs.trsName = data.votes[0][0] == "+" ? "VOTE" : "DOWNVOTE";
 	return trs;
 };
 

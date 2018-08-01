@@ -24,9 +24,13 @@ let Referals = {
     
     getMigratedUsers : 'SELECT id,address,publickey,group_bonus from migrated_etps_users',
     
-    getStakeOrders :  'SELECT insert_time,quantity,remain_month from existing_etps_assets_m WHERE account_id IN ($1)',
+    getStakeOrders :  'SELECT insert_time,quantity,remain_month from existing_etps_assets_m WHERE account_id = $1',
     
-    insertStakeOrder : 'INSERT INTO stake_orders ("id","status","startTime","insertTime","senderId","recipientId","freezedAmount","rewardCount","nextVoteMilestone") VALUES (${id},${status},${startTime},${insertTime},${senderId},${recipientId},${freezedAmount},${rewardCount},${nextVoteMilestone})'
+    insertStakeOrder : 'INSERT INTO stake_orders ("id","status","startTime","insertTime","senderId","recipientId","freezedAmount","rewardCount","nextVoteMilestone") VALUES (${id},${status},${startTime},${insertTime},${senderId},${recipientId},${freezedAmount},${rewardCount},${nextVoteMilestone})',
+
+    updateRewardTypeTransaction : 'INSERT INTO referral_transactions ("sponsor_address","introducer_address","reward","sponsor_level","transaction_type","reward_time") VALUES (${sponsorAddress},${introducer_address},${reward},${level},${transaction_type},${time})',
+
+    findRewardHistory : 'SELECT * from referral_transactions WHERE "introducer_address" = ${address} ORDER BY reward_time ASC'
 }
 
 module.exports = Referals;

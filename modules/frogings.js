@@ -10,6 +10,7 @@ let ref_sql = require('../sql/referal_sql');
 let env = process.env;
 let constants = require('../helpers/constants.js');
 let cache = require('./cache.js');
+let slots = require('../helpers/slots');
 
 // Private fields
 let __private = {};
@@ -86,9 +87,11 @@ Frogings.prototype.referralReward = function (stake_amount, address, cb) {
 		address: sponsor_address
 	}).then(function (user) {
 
-		let sponsorId = user[0].level;
-
 		if (user.length != 0 && sponsorId != null) {
+			
+			let sponsorId = user[0].level;
+
+			let sponsorId = user[0].level;
 
 			introducerReward[sponsorId[i]] = (((env.STAKE_REWARD) * stake_amount) / 100);
 
@@ -105,6 +108,22 @@ Frogings.prototype.referralReward = function (stake_amount, address, cb) {
 				if (err) return err;
 				if (transactionResponse.body.success == false) {
 					library.logger.info("Direct Introducer Reward Info : " + transactionResponse.body.error);
+				}
+				else {
+					(async function(){
+						await library.db.none(ref_sql.updateRewardTypeTransaction,{
+							sponsorAddress: sponsor_address,
+							introducer_address: sponsorId[i],
+							reward: introducerReward[sponsorId[i]],
+							level: "Level 1",
+							transaction_type: "DIRECTREF",
+							time: slots.getTime()
+						}).then(function(){
+
+						}).catch(function(err){
+							return setImmediate(cb,err);
+						});
+					}());
 				}
 				return setImmediate(cb, null);
 			});
@@ -427,6 +446,7 @@ Frogings.prototype.shared = {
 							});					
 						}
 					}).catch(function (err) {
+						library.logger.error(err.stack);
 						return setImmediate(cb, err);
 					});
 
