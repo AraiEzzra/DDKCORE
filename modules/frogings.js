@@ -69,7 +69,7 @@ function Frogings (cb, scope) {
 
 /**
  * Direct introducer reward.
- * 10 percent of Reward send to the introducer for staking the amount by it's sponsor.
+ * 10 percent of Reward send to the Direct introducer for staking the amount by it's sponsor.
  * Reward is send through the main account.
  * Disable refer option when main account balance becomes zero.
  * @param {stake_amount} - Amount stake by the user.

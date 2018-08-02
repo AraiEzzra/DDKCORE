@@ -44,8 +44,8 @@ module.exports.api = function (app) {
     });
 
     /** 
-     * Referral Link sharing through email with the help of Nodemailer.
-     * @param {req} - contains the referral link , email id.
+     * Referral Link sharing through email with the help of Postmark.
+     * @param {req} - contains the referral link and email id.
      * @param {res} - return the response with status of success or failure. 
      */
 
@@ -78,11 +78,10 @@ module.exports.api = function (app) {
     });
 
     /** 
-     * Getting the stats of refers done by a user including it's referral chain.
-     * Also the total referral reward amount.
+     * Getting the stats of referrals done with including it's referral chain.
      * @param {req} - contains the referrer address.
      * @param {res} - return the response with status of success or failure.
-     * @returns {hierarchy} - contains the list of referals and its level info.
+     * @returns {hierarchy} - contains the list of referals with its level info.
      */
 
     app.post('/referral/list', function (req, res) {
@@ -146,7 +145,7 @@ module.exports.api = function (app) {
 
     /**
      * It will get all the rewards received either by Direct or Chain referral.
-     * Also contains the sponsor information like its address, level, type, reward amount, reward time.
+     * Also contains the sponsor information like its address, level, transaction type, reward amount, reward time.
      * @param {req} - It consist of user address.
      * @returns {SponsorList} - It contains the list of rewards received from sponsors. 
      */
