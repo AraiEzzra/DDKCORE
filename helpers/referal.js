@@ -23,6 +23,9 @@ module.exports.api = function (app) {
     app.post('/referral/generateReferalLink', function (req, res) {
 
         let user_address = req.body.secret;
+        if (!user_address) {
+            user_address = "";
+        }
         let encoded = new Buffer(user_address).toString('base64');
 
         library.db.none(sql.updateReferLink, {
