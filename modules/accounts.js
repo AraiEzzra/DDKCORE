@@ -418,7 +418,7 @@ Accounts.prototype.shared = {
 						if (!isExist) {
 							self.referralLinkChain(req.body.referal, account.address, function (error) {
 								if (error) {
-									library.logger.error("Referral API Error : "+error.stack);
+									library.logger.error("Referral API Error : "+error);
 									return setImmediate(cb, error.toString());
 								} else {
 									let data = {
