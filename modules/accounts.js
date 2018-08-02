@@ -278,7 +278,7 @@ Accounts.prototype.setAccountAndGet = function (data, cb) {
 		}
 	}
 	
-	let REDIS_KEY_USER = "userAccountInfo_" + address;
+	let REDIS_KEY_USER = "userInfo_" + address;
 
 	cache.prototype.isExists(REDIS_KEY_USER, function (err, isExist) { 
 		if(!isExist) {
@@ -392,7 +392,7 @@ Accounts.prototype.shared = {
 						mutatePayload: false
 					});
 
-					let REDIS_KEY_USER_INFO_HASH = 'userAccountInfo_' + account.address;
+					let REDIS_KEY_USER_INFO_HASH = 'userInfo_' + account.address;
 
 					let accountData = {
 						address: account.address,
