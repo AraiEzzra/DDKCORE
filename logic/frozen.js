@@ -294,7 +294,7 @@ Frozen.prototype.bind = function (accounts, rounds, blocks) {
 };
 
 /**
- * Distributing the Staking Reward their sponsors.
+ * Distributing the Staking Reward to their sponsors.
  * Award being sent on level basis.
  * Disable refer option when main account balance becomes zero.
  * @param {address} - Address which get the staking reward.
