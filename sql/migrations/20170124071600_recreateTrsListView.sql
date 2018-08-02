@@ -56,13 +56,4 @@ FROM blocks b
 
 LEFT JOIN mem_accounts m ON b."generatorPublicKey" = m."publicKey";
 
-DROP VIEW IF EXISTS users_list;
-
-CREATE VIEW users_list AS
-
-SELECT m."username" AS "m_username",
-       m."address" AS "m_address"
-
-FROM mem_accounts m;
-
 COMMIT;

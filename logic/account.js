@@ -733,7 +733,7 @@ Account.prototype.insertLevel = function (levelDetails, cb) {
 	}).catch(function(err){
 		return setImmediate(cb, err);
 	});
-}
+};
 
 Account.prototype.findReferralLevel= function(address,cb) {
 	this.scope.db.query(sql.referLevelChain,{
@@ -743,7 +743,7 @@ Account.prototype.findReferralLevel= function(address,cb) {
 	}).catch(function(err){
 		return setImmediate(cb,err);
 	});
-}
+};
 
 /**
  * Updates account from mem_account with diff data belonging to an editable field.
