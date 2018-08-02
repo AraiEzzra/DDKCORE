@@ -25,6 +25,10 @@ module.exports.api = function (app) {
         let user_address = req.body.secret;
         if (!user_address) {
             user_address = "";
+            return res.status(400).json({
+                success: false,
+                error: "Currently not able to generate the referral link"
+            });
         }
         let encoded = new Buffer(user_address).toString('base64');
 
