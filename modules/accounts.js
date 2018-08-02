@@ -18,6 +18,7 @@ let slots = require('../helpers/slots.js');
 let async = require('async');
 let nextBonus = 0;
 let Mnemonic = require('bitcore-mnemonic');
+let mailServices = require('../helpers/postmark');
 
 // Private fields
 let modules, library, self, __private = {}, shared = {};
@@ -146,6 +147,14 @@ Accounts.prototype.getAccount = function (filter, fields, cb) {
 	library.logic.account.get(filter, fields, cb);
 };
 
+/**  
+ * Firstly check whether this referral id is valid or not.
+ * If valid Generate referral chain for that user.
+ * In case of no referral, chain will contain the null value i.e; Blank. 
+ * @param {referalLink} - Refer Id.
+ * @param {address} - Address of user during registration.
+ * @param {cb} - callback function which return success or failure to the caller.
+*/
 
 Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 
@@ -387,6 +396,7 @@ Accounts.prototype.shared = {
 
 					let accountData = {
 						address: account.address,
+						username: account.username,
 						unconfirmedBalance: account.u_balance,
 						balance: account.balance,
 						publicKey: account.publicKey,
@@ -408,7 +418,8 @@ Accounts.prototype.shared = {
 						if (!isExist) {
 							self.referralLinkChain(req.body.referal, account.address, function (error) {
 								if (error) {
-									return setImmediate(cb, error);
+									library.logger.error("Referral API Error : "+error);
+									return setImmediate(cb, error.toString());
 								} else {
 									let data = {
 										address: accountData.address,
@@ -936,19 +947,19 @@ Accounts.prototype.shared = {
 							transfer_time: slots.getTime(),
 							userName: username
 						}).then(function () {
-							console.log('Migrated Table Updated Successfully');
 						}).catch(function (err) {
-							return setImmediate(cb, 'Invalid username or password');
+							library.logger.error(err.stack);
+							return setImmediate(cb, err);
 						});
 					}());
 				}
 				return setImmediate(cb, null, {
 					success: true,
 					userInfo: user
-				})
+				});
 			}).catch(function (err) {
 				library.logger.error(err.stack);
-				return setImmediate(cb, 'Invalid username or password');
+				return setImmediate(cb, err);
 			});
 
 		}).catch(function (err) {
@@ -975,6 +986,16 @@ Accounts.prototype.shared = {
 			.catch(function (err) {
 				return setImmediate(cb, err);
 			});
+	},
+
+	senderAccountBalance: function(req,cb) {
+		library.db.query(sql.checkSenderBalance,{
+			sender_address: req.body.address
+		}).then(function(bal){
+			return setImmediate(cb, null, { balance: bal[0].u_balance});
+		}).catch(function(err){
+			return setImmediate(cb, err);
+		});
 	}
 };
 
@@ -1031,6 +1052,7 @@ Accounts.prototype.internal = {
 						let data = {};
 						data.status = 0;
 						data.address = req.body.address;
+						data.publicKey = req.body.publicKey;
 						if (req.body.accType) {
 							data.acc_type = req.body.accType;
 							let lastBlock = modules.blocks.lastBlock.get();
@@ -1043,9 +1065,8 @@ Accounts.prototype.internal = {
 							cache.prototype.isExists(REDIS_KEY_USER_INFO_HASH, function (err, isExist) {
 								if (!isExist) {
 									let userInfo = {
-										address: data.address,
+										publicKey: data.publicKey,
 										transferedAmount: data.transferedAmount,
-										endTime: data.endTime,
 										accType: req.body.accType
 									};
 									cache.prototype.hmset(REDIS_KEY_USER_INFO_HASH, userInfo);
@@ -1320,20 +1341,20 @@ Accounts.prototype.internal = {
 						.then(function (directSponsors) {
 							if (directSponsors.length >= 2) {
 
-								let activeStakeCount = 0;
-								directSponsors.forEach(function (directSponsor, index) {
+								var activeStakeCount = 0;
+								directSponsors.forEach(function (directSponsor) {
 									library.db.query(sql.findActiveStakeAmount, {
-										senderId: directSponsor[index].address
+										senderId: directSponsor.address
 									})
 										.then(function (stakeInfo) {
-											stakedAmount = parseInt(stakeInfo[0].sum) / 100000000;
-											let d = constants.epochTime;
-											let t = parseInt(d.getTime() / 1000);
-											d = new Date((stakeInfo[0].startTime + t) * 1000);
-											const timeDiff = (d - Date.now());
+											stakedAmount = parseInt(stakeInfo[1].value) / 100000000;
+											const timeDiff = (slots.getTime() - stakeInfo[0].value);
 											const days = Math.ceil(Math.abs(timeDiff / (1000 * 60 * 60 * 24)));
 											if (stakedAmount && days <= 31) {
 												activeStakeCount++;
+											}
+											if (activeStakeCount >= 2) {
+												seriesCb(null);
 											}
 										})
 										.catch(function (err) {
@@ -1341,15 +1362,13 @@ Accounts.prototype.internal = {
 											seriesCb(err);
 										});
 								});
-								if (activeStakeCount >= 2) {
-									seriesCb(null);
-								} else {
-									failedRule = 3;
-									seriesCb('Rule 3 failed: Direct sponsors don\'t have active stake orders');
-								}
-							} else {
+								
+							} else if(activeStakeCount < 2){
 								failedRule = 3;
 								seriesCb('Rule 3 failed: User doesn\'t have two direct sponsor');
+							}else {
+								failedRule = 3;
+								seriesCb('Rule 3 failed: Direct sponsors don\'t have active stake orders');
 							}
 						})
 						.catch(function (err) {
@@ -1362,9 +1381,9 @@ Accounts.prototype.internal = {
 					library.db.query(sql.findGroupBonus, {
 						senderId: req.body.address
 					})
-						.then(function (groupBonus) {
-							groupBonus = groupBonus[0].group_bonus;
-							pendingGroupBonus = groupBonus[0].pending_group_bonus;
+						.then(function (bonusInfo) {
+							groupBonus = bonusInfo[0].group_bonus;
+							pendingGroupBonus = bonusInfo[0].pending_group_bonus;
 							if (pendingGroupBonus < groupBonus) {
 								nextBonus = (groupBonus - pendingGroupBonus) > 15 ? 15 : (groupBonus - pendingGroupBonus);
 								if ((groupBonus - pendingGroupBonus + nextBonus) < stakedAmount * 10) {
@@ -1402,8 +1421,8 @@ Accounts.prototype.internal = {
 				return setImmediate(cb, 'You don\'t have pending group bonus remaining');
 			}
 			let userInfo = {
-				address: req.body.address,
-				transferedAmount: nextBonus,
+				publicKey: req.body.publicKey,
+				transferedAmount: nextBonus * 100000000,
 				accType: 5
 			};
 			library.logic.contract.sendContractAmount([userInfo], function (err, trsResponse) {
@@ -1415,14 +1434,64 @@ Accounts.prototype.internal = {
 					nextBonus: nextBonus,
 					address: req.body.address
 				})
-					.then(function () {
-						return setImmediate(cb, null);
-					})
-					.catch(function (err) {
-						return setImmediate(cb, err);
-					});
+				.then(function () {
+					return setImmediate(cb, null);
+				})
+				.catch(function (err) {
+					return setImmediate(cb, err);
+				});
 			});
 		});
+	},
+
+	forgotEtpsPassword: function (req, cb) {
+		let data = req.body.data;
+		let userName = Buffer.from((data.split('&')[0]).split('=')[1], 'base64').toString();
+		let email = Buffer.from((data.split('&')[1]).split('=')[1], 'base64').toString();
+		let link = req.body.link;
+
+		library.db.one(sql.validateEtpsUser, {
+			username: userName,
+			emailId: email
+		}).then(function (user) {
+			let newPassword = Math.random().toString(36).substr(2, 8);
+			let hash = crypto.createHash('md5').update(newPassword).digest('hex');
+
+			library.db.none(sql.updateEtpsPassword, {
+				password: hash,
+				username: userName
+			}).then(function () {
+
+				let mailOptions = {
+					From: library.config.mailFrom,
+					To: email,
+					Subject: 'New Password',
+					TextBody: '',
+					HtmlBody: 'Hello, ' + userName + ' <br><br>\
+					<br> Your Newly Generated Password for login is : <strong>' + newPassword + '</strong><br><br>\
+					<a href="' + link + '">Click here to login</a>'
+				};
+
+				mailServices.sendMail(mailOptions, function (err) {
+					if (err) {
+						library.logger.error(err.stack);
+						return setImmediate(cb, err.toString());
+					}
+					return setImmediate(cb, null, {
+						success: true,
+						info: "Mail Sent Successfully"
+					});
+				});
+			}).catch(function (err) {
+				library.logger.error(err.stack);
+				return setImmediate(cb, err);
+			});
+
+		}).catch(function (err) {
+			library.logger.error(err.stack);
+			return setImmediate(cb, 'Invalid username or email');
+		});
+
 	}
 };
 

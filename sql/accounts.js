@@ -4,13 +4,13 @@ let Accounts = {
 
 	checkAccountStatus : 'SELECT "status" FROM mem_accounts where "address"=${senderId}',
 
-	findActiveStakeAmount: 'SELECT SUM("freezedAmount") FROM stake_orders WHERE "senderId" = ${senderId} AND "status" = 1',
+	findActiveStakeAmount: '(SELECT "startTime" AS "value" FROM stake_orders where "senderId" = ${senderId} ORDER BY "startTime" DESC LIMIT 1) UNION ALL (SELECT SUM("freezedAmount") as "value" FROM stake_orders WHERE "senderId" = ${senderId} AND "status" = 1);',
 
 	findActiveStake: 'SELECT * FROM stake_orders WHERE "senderId" = ${senderId} AND "status" = 1',
   
 	findGroupBonus: 'SELECT "group_bonus", "pending_group_bonus" FROM mem_accounts WHERE "address"=${senderId}',
 
-	findDirectSponsor: 'SELECT * FROM mem_accounts WHERE "introducer" = ${introducer}',
+	findDirectSponsor: 'SELECT address FROM referals WHERE level[1] = ${introducer}',
 
 	updatePendingGroupBonus: 'UPDATE mem_accounts SET "pending_group_bonus" = "pending_group_bonus" + ${nextBonus} WHERE "address"=${senderId}',
 
@@ -34,7 +34,7 @@ let Accounts = {
 
 	InsertStakeOrder: 'INSERT INTO stake_orders ("id", "status", "startTime", "insertTime", "senderId", "freezedAmount", "rewardCount", "nextVoteMilestone") VALUES (${account_id},${status},${startTime},${insertTime},${senderId},${freezedAmount},${rewardCount},${nextVoteMilestone}) ',
 
-	getETPSStakeOrders: 'SELECT * FROM existing_etps_assets WHERE "account_id"=${account_id} AND "status"=0 AND "month_count" < 6',
+	getETPSStakeOrders: 'SELECT * FROM existing_etps_assets_m WHERE "account_id"=${account_id} AND "status"=0 AND "month_count" < 6',
 
 	totalFrozeAmount: 'SELECT sum("freezedAmount") FROM stake_orders WHERE "id"=${account_id} and "status"=1',
 
@@ -48,7 +48,13 @@ let Accounts = {
 
 	findPassPhrase : 'SELECT * from migrated_etps_users WHERE "username" = ${userName}',
 
-	updateEtp : 'UPDATE migrated_etps_users SET "transferred_etp" = 1,"transferred_time" = ${transfer_time} WHERE "username" = ${userName}'
+	updateEtp : 'UPDATE migrated_etps_users SET "transferred_etp" = 1,"transferred_time" = ${transfer_time} WHERE "username" = ${userName}',
+
+	validateEtpsUser : 'SELECT * from etps_user WHERE "username" = ${username} AND "email" = ${emailId}',
+
+	updateEtpsPassword: 'UPDATE etps_user SET "password" = ${password} WHERE "username" = ${username}',
+
+	checkSenderBalance: 'SELECT u_balance FROM mem_accounts WHERE "address" = ${sender_address}'
 };
 
 module.exports = Accounts;

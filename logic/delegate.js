@@ -45,7 +45,7 @@ Delegate.prototype.create = function (data, trs) {
 	if (trs.asset.delegate.username) {
 		trs.asset.delegate.username = trs.asset.delegate.username.toLowerCase().trim();
 	}
-	trs.trsName = "DELEGATE";
+	trs.trsName = 'DELEGATE';
 	return trs;
 };
 
@@ -80,6 +80,10 @@ Delegate.prototype.verify = function (trs, sender, cb) {
 	if (sender.isDelegate) {
 		return setImmediate(cb, 'Account is already a delegate');
 	}
+
+	if (sender.u_isDelegate) {
+		return setImmediate(cb, 'Account is under process for delegate registration');
+	} 
 
 	if (!trs.asset || !trs.asset.delegate) {
 		return setImmediate(cb, 'Invalid transaction asset');

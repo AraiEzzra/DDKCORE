@@ -62,7 +62,8 @@ function AccountsHttpApi (accountsModule, app) {
 		'get /totalSupply' : 'totalSupply',
 		'post /migrateData' : 'migrateData', 
 		'post /existingETPSUser/validate' : 'validateExistingUser',
-		'post /verifyUserToComment': 'verifyUserToComment'
+		'post /verifyUserToComment': 'verifyUserToComment',
+		'post /senderBalance': 'senderAccountBalance'
 	});
 
 	router.map(accountsModule.internal, {
@@ -78,7 +79,8 @@ function AccountsHttpApi (accountsModule, app) {
 		'get /getWithdrawlStatus': 'getWithdrawlStatus',
 		'post /sendWithdrawlAmount': 'sendWithdrawlAmount',
 		'post /enablePendingGroupBonus': 'enablePendingGroupBonus',
-		'get /generatenpNewPassphase':'generatenpNewPassphase'
+		'get /generatenpNewPassphase':'generatenpNewPassphase',
+		'post /forgotEtpsPassword': 'forgotEtpsPassword'
 	});
 
 	if (process.env.DEBUG && process.env.DEBUG.toUpperCase() === 'TRUE') {

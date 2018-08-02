@@ -12,6 +12,7 @@ let TransactionPool = require('../logic/transactionPool.js');
 let transactionTypes = require('../helpers/transactionTypes.js');
 let Transfer = require('../logic/transfer.js');
 let ReferTransfer = require('../logic/referralTransaction.js');
+let slots = require('../helpers/slots');
 
 // Private fields
 let __private = {};
@@ -82,11 +83,13 @@ __private.list = function (filter, cb) {
 	let params = {};
 	let where = [];
 	let allowedFieldsMap = {
+		id: '"t_id" = ${id}',
 		blockId: '"t_blockId" = ${blockId}',
 		senderPublicKey: '"t_senderPublicKey" = DECODE (${senderPublicKey}, \'hex\')',
 		recipientPublicKey: '"m_recipientPublicKey" = DECODE (${recipientPublicKey}, \'hex\')',
 		senderId: '"t_senderId" = ${senderId}',
 		recipientId: '"t_recipientId" = ${recipientId}',
+		height: '"b_height" = ${height}',
 		fromHeight: '"b_height" >= ${fromHeight}',
 		toHeight: '"b_height" <= ${toHeight}',
 		fromTimestamp: '"t_timestamp" >= ${fromTimestamp}',
@@ -213,17 +216,30 @@ __private.list = function (filter, cb) {
 			sortMethod: orderBy.sortMethod
 		}), params).then(function (rows) {
 			let transactions = [];
-
-			for (let i = 0; i < rows.length; i++) {
-				transactions.push(library.logic.transaction.dbRead(rows[i]));
-			}
-
-			let data = {
-				transactions: transactions,
-				count: count
-			};
-
-			return setImmediate(cb, null, data);
+			library.db.query(sql.getUserNames)
+			.then(function(delegates) {
+				for (let i = 0; i < rows.length; i++) {
+					transactions.push(library.logic.transaction.dbRead(rows[i]));
+					for (let j = 0; j < delegates.length; j++) {
+						if(rows[i].t_senderId === delegates[j].m_address) {
+							transactions[i].senderName = delegates[j].m_username;
+						}
+						if(rows[i].t_recipientId === delegates[j].m_address) {
+							transactions[i].recipientName = delegates[j].m_username;
+						}
+					}
+				}
+	
+				let data = {
+					transactions: transactions,
+					count: count
+				};
+	
+				return setImmediate(cb, null, data);
+			})
+			.catch(function(err) {
+				return setImmediate(cb, err.message);
+			});
 		}).catch(function (err) {
 			library.logger.error(err.stack);
 			return setImmediate(cb, 'Transactions#list error');
@@ -616,6 +632,27 @@ Transactions.prototype.onBind = function (scope) {
 	);
 };
 
+// Internal API
+/**
+ * @todo implement API comments with apidoc.
+ * @see {@link http://apidocjs.com/}
+ */
+Transactions.prototype.internal = {
+	getTransactionHistory: function(req, cb) {
+		let  fortnightBack = new Date(+new Date - 12096e5);
+		let timestamp = slots.getTime(fortnightBack);
+		library.db.query(sql.getTransactionHistory, {
+			timestamp: timestamp
+		})
+		.then(function(trsHistory) {
+			return setImmediate(cb, null, {success: true, trsData: trsHistory});
+		})
+		.catch(function(err) {
+			return setImmediate(cb, {success: false, err: err});
+		});
+	}
+};
+
 // Shared API
 /**
  * @todo implement API comments with apidoc.
@@ -725,10 +762,16 @@ Transactions.prototype.shared = {
 			if (err) {
 				return setImmediate(cb, err[0].message);
 			}
-
 			let hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
 			let keypair = library.ed.makeKeypair(hash);
 			let publicKey = keypair.publicKey.toString('hex');
+
+			if (req.body.publicKey) {
+				if (keypair.publicKey.toString('hex') !== req.body.publicKey) {
+					return setImmediate(cb, 'Invalid passphrase');
+				}
+			}
+			
 			library.cache.client.get('2fa_user_' + modules.accounts.generateAddressByPublicKey(publicKey), function (err, userTwoFaCred) {
 				if (err) {
 					return setImmediate(cb, err);
@@ -744,12 +787,6 @@ Transactions.prototype.shared = {
 						});
 						if (!verified) {
 							return setImmediate(cb, 'Invalid OTP!. Please enter valid OTP to SEND Transaction');
-						}
-					}
-
-					if (req.body.publicKey) {
-						if (keypair.publicKey.toString('hex') !== req.body.publicKey) {
-							return setImmediate(cb, 'Invalid passphrase');
 						}
 					}
 				}
@@ -799,6 +836,10 @@ Transactions.prototype.shared = {
 										return setImmediate(cb, 'Missing second passphrase');
 									}
 
+									if(account.address == req.body.recipientId){
+										return setImmediate(cb, 'Sender and Recipient can\'t be same');
+									}
+
 									let secondKeypair = null;
 
 									if (account.secondSignature) {
@@ -836,6 +877,10 @@ Transactions.prototype.shared = {
 
 								if (account.secondSignature && !req.body.secondSecret) {
 									return setImmediate(cb, 'Missing second passphrase');
+								}
+
+								if(account.address == req.body.recipientId){
+									return setImmediate(cb, 'Sender and Recipient can\'t be same');
 								}
 
 								let secondKeypair = null;

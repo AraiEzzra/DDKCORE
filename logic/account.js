@@ -224,7 +224,7 @@ function Account(db, schema, logger, cb) {
 			filter: {
 				type: 'string',
 				case: 'lower',
-				maxLength: 30,
+				maxLength: 100,
 				minLength: 1
 			},
 			conv: String
@@ -720,7 +720,7 @@ Account.prototype.set = function (address, fields, cb) {
 };
 
 
-Account.prototype.insertLevel = function(levelDetails,cb) {
+Account.prototype.insertLevel = function (levelDetails, cb) {
 
 	if(levelDetails.level.length === 0){
 		levelDetails.level = null;
@@ -731,10 +731,9 @@ Account.prototype.insertLevel = function(levelDetails,cb) {
 	}).then(function(){
 		return setImmediate(cb,null);
 	}).catch(function(err){
-		console.log(err);
 		return setImmediate(cb, err);
 	});
-}
+};
 
 Account.prototype.findReferralLevel= function(address,cb) {
 	this.scope.db.query(sql.referLevelChain,{
@@ -742,10 +741,9 @@ Account.prototype.findReferralLevel= function(address,cb) {
 	}).then(function(user){
 		return setImmediate(cb,null,user);
 	}).catch(function(err){
-		console.log(err);
 		return setImmediate(cb,err);
 	});
-}
+};
 
 /**
  * Updates account from mem_account with diff data belonging to an editable field.

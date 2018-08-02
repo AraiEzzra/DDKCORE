@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS "mem_accounts"(
   "status" SMALLINT DEFAULT 1,
   "isDelegate" SMALLINT DEFAULT 0,
   "u_isDelegate" SMALLINT DEFAULT 0,
-  "url" VARCHAR(30),
+  "url" VARCHAR(100),
   "secondSignature" SMALLINT DEFAULT 0,
   "u_secondSignature" SMALLINT DEFAULT 0,
   "u_username" VARCHAR(20),
@@ -117,5 +117,16 @@ CREATE TABLE IF NOT EXISTS "migrated_etps_users"(
   "transferred_time" INT DEFAULT NULL,
   "group_bonus" BIGINT DEFAULT 0
 );
+
+CREATE TABLE IF NOT EXISTS "referral_transactions"(
+  "sponsor_address" VARCHAR(100) NOT NULL,
+  "introducer_address" VARCHAR(100) NOT NULL,
+  "reward" BIGINT DEFAULT 0,
+  "sponsor_level" VARCHAR(50),
+  "transaction_type" VARCHAR(30),
+  "reward_time" INT
+);
+
+CREATE INDEX IF NOT EXISTS "referral_introducer_address" ON "referral_transactions"("introducer_address");
 
 COMMIT;

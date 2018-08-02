@@ -293,12 +293,19 @@ Frozen.prototype.bind = function (accounts, rounds, blocks) {
 	};
 };
 
+/**
+ * Distributing the Staking Reward to their sponsors.
+ * Award being sent on level basis.
+ * Disable refer option when main account balance becomes zero.
+ * @param {address} - Address which get the staking reward.
+ * @param {reward_amount} - Reward amount received.
+ * @param {cb} - callback function.
+*/
 
 Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 
 	let sponsor_address = address;
-	let amount = reward_amount;
-	let overrideReward = {};
+	let stakeReward = {};
 	let i = 0;
 	let balance, reward, sender_balance;
 
@@ -310,15 +317,15 @@ Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 
 			let chain_length = user[0].level.length;
 
-			async.eachSeries(user[0].level, function (level, callback) {
+			async.eachSeries(user[0].level, function (sponsorId, callback) {
 
-				overrideReward[level] = (((rewards.level[i]) * amount) / 100);
+				stakeReward[sponsorId] = (((rewards.level[i]) * reward_amount) / 100);
 
 				let transactionData = {
 					json: {
 						secret: env.SENDER_SECRET,
-						amount: overrideReward[level],
-						recipientId: level,
+						amount: stakeReward[sponsorId],
+						recipientId: sponsorId,
 						transactionRefer: 11
 					}
 				};
@@ -327,19 +334,33 @@ Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 					if (err) return err;
 					i++;
 
-					if(transactionResponse.body.success == false) {
-                        sender_balance = parseFloat(transactionResponse.body.error.split('balance:')[1]);
-						if(sender_balance < 0.0001) {
+					if (transactionResponse.body.success == false) {
+						sender_balance = parseFloat(transactionResponse.body.error.split('balance:')[1]);
+						if (sender_balance < 0.0001) {
 							cache.prototype.setJsonForKey("referStatus", false);
-							self.scope.logger.info("Staking Reward Info : "+ transactionResponse.body.error);													
-							return setImmediate(cb,null);
+							self.scope.logger.info("Staking Reward Info : " + transactionResponse.body.error);
+							return setImmediate(cb, null);
 						}
 					} else {
 						reward = true;
+						(async function(){
+							await self.scope.db.none(reward_sql.updateRewardTypeTransaction,{
+								sponsorAddress: sponsor_address,
+								introducer_address: sponsorId,
+								reward: stakeReward[sponsorId],
+								level: "Level "+(i),
+								transaction_type: "CHAINREF",
+								time: slots.getTime()
+							}).then(function(){
+	
+							}).catch(function(err){
+								return setImmediate(cb,err);
+							});
+						}());
 					}
-						
-					if(i == chain_length && reward != true) {
-						self.scope.logger.info("Staking Reward Info : "+ transactionResponse.body.error);						
+
+					if (i == chain_length && reward != true) {
+						self.scope.logger.info("Staking Reward Info : " + transactionResponse.body.error);
 					}
 
 					callback();
@@ -430,13 +451,13 @@ Frozen.prototype.checkFrozeOrders = function () {
 
 				updateOrderAndSendReward(order, function (err, Success) {
 					if (err) {
-						next(err, null);
+						eachSeriesCb(err);
 					} else {
 						deductFrozeAmount(order, function (_err, _Success) {
 							if (_err) {
-								next(_err, null);
+								eachSeriesCb(_err);
 							} else {
-								eachSeriesCb();
+								async.setImmediate(eachSeriesCb);
 							}
 						});
 					}
@@ -497,6 +518,7 @@ Frozen.prototype.checkFrozeOrders = function () {
 									});
 								}
 							}).catch(function (err) {
+								self.scope.logger.error(err.stack);
 								next(err, null);
 							});
 

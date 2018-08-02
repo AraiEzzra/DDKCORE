@@ -17,6 +17,8 @@ let TransactionsSql = {
 
 	count: 'SELECT COUNT("id")::int AS "count" FROM trs',
 
+	getTransactionHistory: 'SELECT * FROM trs WHERE "timestamp" >= ${timestamp} ORDER BY "timestamp" DESC',
+
 	countById: 'SELECT COUNT("id")::int AS "count" FROM trs WHERE "id" = ${id}',
 
 	countList: function (params) {
@@ -46,7 +48,9 @@ let TransactionsSql = {
 
 	getById: 'SELECT *, ENCODE ("t_senderPublicKey", \'hex\') AS "t_senderPublicKey", ENCODE ("m_recipientPublicKey", \'hex\') AS "m_recipientPublicKey" FROM trs_list WHERE "t_id" = ${id}',
 
-	getVotesById: 'SELECT * FROM votes WHERE "transactionId" = ${id}'
+	getVotesById: 'SELECT * FROM votes WHERE "transactionId" = ${id}',
+
+	getUserNames: 'SELECT * from users_list'
 };
 
 module.exports = TransactionsSql;

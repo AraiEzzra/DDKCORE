@@ -10,6 +10,7 @@ let ref_sql = require('../sql/referal_sql');
 let env = process.env;
 let constants = require('../helpers/constants.js');
 let cache = require('./cache.js');
+let slots = require('../helpers/slots');
 
 // Private fields
 let __private = {};
@@ -66,11 +67,20 @@ function Frogings (cb, scope) {
 	setImmediate(cb, null, self);
 }
 
+/**
+ * Direct introducer reward.
+ * 10 percent of Reward send to the Direct introducer for staking the amount by it's sponsor.
+ * Reward is send through the main account.
+ * Disable refer option when main account balance becomes zero.
+ * @param {stake_amount} - Amount stake by the user.
+ * @param {address} - Address of user which staked the amount.
+ * @param {cb} - callback function. 
+ */
 
-Frogings.prototype.referalReward = function (stake_amount, address, cb) {
-	let amount = stake_amount;
+Frogings.prototype.referralReward = function (stake_amount, address, cb) {
+
 	let sponsor_address = address;
-	let overrideReward = {},
+	let introducerReward = {},
 		i = 0;
 
 	library.db.query(ref_sql.referLevelChain, {
@@ -78,23 +88,40 @@ Frogings.prototype.referalReward = function (stake_amount, address, cb) {
 	}).then(function (user) {
 
 		if (user.length != 0 && user[0].level != null) {
+			
+			let sponsorId = user[0].level;
 
-			overrideReward[user[0].level[i]] = (((env.STAKE_REWARD) * amount) / 100);
+			introducerReward[sponsorId[i]] = (((env.STAKE_REWARD) * stake_amount) / 100);
 
 			let transactionData = {
 				json: {
 					secret: env.SENDER_SECRET,
-					amount: overrideReward[user[0].level[i]],
-					recipientId: user[0].level[i],
+					amount: introducerReward[sponsorId[i]],
+					recipientId: sponsorId[i],
 					transactionRefer: 11
 				}
 			};
 
 			library.logic.transaction.sendTransaction(transactionData, function (err, transactionResponse) {
 				if (err) return err;
-				console.log(transactionResponse.body);
-				if(transactionResponse.body.success == false) {
-					library.logger.info("Direct Introducer Reward Info : "+ transactionResponse.body.error);					
+				if (transactionResponse.body.success == false) {
+					library.logger.info("Direct Introducer Reward Info : " + transactionResponse.body.error);
+				}
+				else {
+					(async function(){
+						await library.db.none(ref_sql.updateRewardTypeTransaction,{
+							sponsorAddress: sponsor_address,
+							introducer_address: sponsorId[i],
+							reward: introducerReward[sponsorId[i]],
+							level: "Level 1",
+							transaction_type: "DIRECTREF",
+							time: slots.getTime()
+						}).then(function(){
+
+						}).catch(function(err){
+							return setImmediate(cb,err);
+						});
+					}());
 				}
 				return setImmediate(cb, null);
 			});
@@ -396,7 +423,7 @@ Frogings.prototype.shared = {
 					}).then(function (bal) {
 						let balance = parseInt(bal.u_balance);
 						if (balance > 10000) {
-							self.referalReward(req.body.freezedAmount, accountData.address, function (err) {
+							self.referralReward(req.body.freezedAmount, accountData.address, function (err) {
 								if (err) {
 									library.logger.error(err.stack);
 								}
@@ -417,6 +444,7 @@ Frogings.prototype.shared = {
 							});					
 						}
 					}).catch(function (err) {
+						library.logger.error(err.stack);
 						return setImmediate(cb, err);
 					});
 

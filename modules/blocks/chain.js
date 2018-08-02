@@ -6,6 +6,8 @@ let Inserts = require('../../helpers/inserts.js');
 let sql = require('../../sql/blocks.js');
 let transactionTypes = require('../../helpers/transactionTypes.js');
 let slots = require('../../helpers/slots.js');
+let pgp = require('pg-promise');
+let path = require('path');
 
 let modules, library, self, __private = {};
 
