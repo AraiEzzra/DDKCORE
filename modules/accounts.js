@@ -1040,6 +1040,7 @@ Accounts.prototype.internal = {
 						let data = {};
 						data.status = 0;
 						data.address = req.body.address;
+						data.publicKey = req.body.publicKey;
 						if (req.body.accType) {
 							data.acc_type = req.body.accType;
 							let lastBlock = modules.blocks.lastBlock.get();
@@ -1052,9 +1053,8 @@ Accounts.prototype.internal = {
 							cache.prototype.isExists(REDIS_KEY_USER_INFO_HASH, function (err, isExist) {
 								if (!isExist) {
 									let userInfo = {
-										address: data.address,
+										publicKey: data.publicKey,
 										transferedAmount: data.transferedAmount,
-										endTime: data.endTime,
 										accType: req.body.accType
 									};
 									cache.prototype.hmset(REDIS_KEY_USER_INFO_HASH, userInfo);
@@ -1409,8 +1409,8 @@ Accounts.prototype.internal = {
 				return setImmediate(cb, 'You don\'t have pending group bonus remaining');
 			}
 			let userInfo = {
-				address: req.body.address,
-				transferedAmount: nextBonus,
+				publicKey: req.body.publicKey,
+				transferedAmount: nextBonus * 100000000,
 				accType: 5
 			};
 			library.logic.contract.sendContractAmount([userInfo], function (err, trsResponse) {
@@ -1422,12 +1422,12 @@ Accounts.prototype.internal = {
 					nextBonus: nextBonus,
 					address: req.body.address
 				})
-					.then(function () {
-						return setImmediate(cb, null);
-					})
-					.catch(function (err) {
-						return setImmediate(cb, err);
-					});
+				.then(function () {
+					return setImmediate(cb, null);
+				})
+				.catch(function (err) {
+					return setImmediate(cb, err);
+				});
 			});
 		});
 	},

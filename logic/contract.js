@@ -1,4 +1,3 @@
-let request = require('request');
 let modules, self;
 
 /**
@@ -10,10 +9,11 @@ let modules, self;
  * @param {function} cb - Callback function.
  * @return {setImmediateCallback} With `this` as data.
  */
-function Contract(config, cb) {
+function Contract(config, db, cb) {
 	self = this;
 	self.scope = {
-		config: config
+		config: config,
+		db: db
 	};
 
 	if (cb) {
@@ -29,7 +29,7 @@ function Contract(config, cb) {
  * @return {trs} trs
  */
 Contract.prototype.create = function (data, trs) {
-	trs.trsName = "CONTRACT";
+	trs.trsName = 'CONTRACT';
 	return trs;
 };
 
@@ -210,25 +210,28 @@ Contract.prototype.calcEndTime = function (accType, startTime) {
  * @return {function} cb
  */
 Contract.prototype.sendContractAmount = function (data, cb) {
+	let query = [];
 	data.forEach(function (recipient) {
 		let sender = self.scope.config.users[recipient.accType];
-		let port = self.scope.config.app.port;
-		let address = self.scope.config.address;
-		let url = 'http://' + address + ':' + port + '/api/transactions';
-		let transactionData = {
-			json: {
-				secret: sender.secret,
-				publicKey: sender.publicKey,
-				amount: recipient.transferedAmount,
-				recipientId: recipient.address
-			}
-		};
-		request.put(url, transactionData, function (err, trsResponse, body) {
-			if (!err && trsResponse.statusCode === 200) {
-				return setImmediate(cb, null, body);
-			} else {
-				return setImmediate(cb, err);
-			}
+		query.push(modules.accounts.mergeAccountAndGet({
+			publicKey: sender.publicKey,
+			balance: -recipient.transferedAmount,
+			u_balance: -recipient.transferedAmount
+		}));
+		query.push(modules.accounts.mergeAccountAndGet({
+			publicKey: recipient.publicKey,
+			balance: recipient.transferedAmount,
+			u_balance: recipient.transferedAmount
+		}));
+		function Tick(t) {
+			return t.none(query.join(''));
+		}
+		self.scope.db.tx(Tick)
+		.then(function () {
+			setImmediate(cb, null);
+		})
+		.catch(function (err) {
+			setImmediate(cb, err);
 		});  
 	});
 };

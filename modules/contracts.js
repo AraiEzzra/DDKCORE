@@ -48,7 +48,7 @@ function Contracts(cb, scope) {
 	self.type = transactionTypes.CONTRACT;
 
 	__private.assetTypes[transactionTypes.CONTRACT] = library.logic.transaction.attachAssetType(
-		transactionTypes.CONTRACT, new Contract(scope.config)
+		transactionTypes.CONTRACT, new Contract(scope.config, scope.db)
 	);
 
 	setImmediate(cb, null, self);

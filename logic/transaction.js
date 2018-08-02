@@ -91,7 +91,7 @@ Transaction.prototype.create = function (data) {
 		timestamp: slots.getTime(),
 		asset: {},
 		stakedAmount: 0,
-		trsName: "NA"
+		trsName: 'NA'
 	};
 
 	trs = __private.types[trs.type].create.call(this, data, trs);

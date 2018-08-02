@@ -45,7 +45,7 @@ Delegate.prototype.create = function (data, trs) {
 	if (trs.asset.delegate.username) {
 		trs.asset.delegate.username = trs.asset.delegate.username.toLowerCase().trim();
 	}
-	trs.trsName = "DELEGATE";
+	trs.trsName = 'DELEGATE';
 	return trs;
 };
 
