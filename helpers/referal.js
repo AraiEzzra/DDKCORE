@@ -44,7 +44,7 @@ module.exports.api = function (app) {
             library.logger.error('Generate Refer Id Error : ' + err.stack);
             return res.status(400).json({
                 success: false,
-                err: err.detail
+                error: err.detail
             });
         });
 
@@ -74,7 +74,7 @@ module.exports.api = function (app) {
                 library.logger.error('Send Email Error : ' + err.stack);
                 return res.status(400).json({
                     success: false,
-                    error: err
+                    error: err.toString()
                 });
             }
             return res.status(200).json({
@@ -139,7 +139,7 @@ module.exports.api = function (app) {
                 library.logger.error('Referral List Error : ' + err.stack);
                 return res.status(400).json({
                     success: false,
-                    error: err
+                    error: err.toString()
                 });
             }
             return res.status(200).json({
@@ -176,7 +176,7 @@ module.exports.api = function (app) {
             library.logger.error('Referral Rewards List Error : ' + err.stack);
             return res.status(400).json({
                 success: false,
-                error: err
+                error: err.toString()
             });
         });
     });
