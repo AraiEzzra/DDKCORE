@@ -419,7 +419,7 @@ Accounts.prototype.shared = {
 							self.referralLinkChain(req.body.referal, account.address, function (error) {
 								if (error) {
 									library.logger.error("Referral API Error : "+error.stack);
-									return setImmediate(cb, error);
+									return setImmediate(cb, error.toString());
 								} else {
 									let data = {
 										address: accountData.address,
