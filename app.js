@@ -568,7 +568,7 @@ d.run(function () {
 					new SendFreezeOrder(scope.logger, scope.db, scope.network, cb);
 				}],
 				contract: ['config', function (scope, cb) {
-					new Contract(scope.config, cb);
+					new Contract(scope.config, scope.db, cb);
 				}],
 				vote: ['logger', 'schema', 'db', function (scope, cb) {
 					new Vote(scope.logger, scope.schema, scope.db, cb);
