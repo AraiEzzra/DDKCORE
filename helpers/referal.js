@@ -23,6 +23,13 @@ module.exports.api = function (app) {
     app.post('/referral/generateReferalLink', function (req, res) {
 
         let user_address = req.body.secret;
+        if (!user_address) {
+            user_address = "";
+            return res.status(400).json({
+                success: false,
+                error: "Currently not able to generate the referral link"
+            });
+        }
         let encoded = new Buffer(user_address).toString('base64');
 
         library.db.none(sql.updateReferLink, {
@@ -37,7 +44,7 @@ module.exports.api = function (app) {
             library.logger.error('Generate Refer Id Error : ' + err.stack);
             return res.status(400).json({
                 success: false,
-                err: err.detail
+                error: "Error connecting to server"
             });
         });
 

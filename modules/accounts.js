@@ -159,7 +159,7 @@ Accounts.prototype.getAccount = function (filter, fields, cb) {
 Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 
 	let referralLink = referalLink;
-	if (referralLink == undefined) {
+	if (!referralLink) {
 		referralLink = '';
 	}
 	let decoded = new Buffer(referralLink, 'base64').toString('ascii');
@@ -195,14 +195,13 @@ Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 			if (referralLink != '') {
 				library.logic.account.findReferralLevel(decoded, function (err, resp) {
 					if (err) {
-						return setImmediate(cb,err);
+						return setImmediate(cb, err);
 					}
 					if (resp.length != 0 && resp[0].level != null) {
 						let chain_length = ((resp[0].level.length) < 15) ? (resp[0].level.length) : 14;
 
 						level = level.concat(resp[0].level.slice(0, chain_length));
-					}
-					else if(resp.length == 0) {
+					} else if (resp.length == 0) {
 						return setImmediate(cb, "Referral link source not eligible");
 					}
 					callback();
@@ -418,7 +417,7 @@ Accounts.prototype.shared = {
 						if (!isExist) {
 							self.referralLinkChain(req.body.referal, account.address, function (error) {
 								if (error) {
-									library.logger.error("Referral API Error : "+error.stack);
+									library.logger.error("Referral API Error : "+ error);
 									return setImmediate(cb, error.toString());
 								} else {
 									let data = {
