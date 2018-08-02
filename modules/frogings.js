@@ -69,7 +69,7 @@ function Frogings (cb, scope) {
 
 /**
  * Direct introducer reward.
- * 10 percent of Reward send to the introducer for staking the amount by it's sponsor.
+ * 10 percent of Reward send to the Direct introducer for staking the amount by it's sponsor.
  * Reward is send through the main account.
  * Disable refer option when main account balance becomes zero.
  * @param {stake_amount} - Amount stake by the user.
@@ -87,7 +87,7 @@ Frogings.prototype.referralReward = function (stake_amount, address, cb) {
 		address: sponsor_address
 	}).then(function (user) {
 
-		if (user.length != 0 && sponsorId != null) {
+		if (user.length != 0 && user[0].level != null) {
 			
 			let sponsorId = user[0].level;
 

@@ -148,10 +148,10 @@ Accounts.prototype.getAccount = function (filter, fields, cb) {
 };
 
 /**  
- * Check whether the referal id is valid or not.
+ * Firstly check whether this referral id is valid or not.
  * If valid Generate referral chain for that user.
- * In case of no referral, chain will contain the null value I.e; Blank. 
- * @param {referalLink} - Refer Id
+ * In case of no referral, chain will contain the null value i.e; Blank. 
+ * @param {referalLink} - Refer Id.
  * @param {address} - Address of user during registration.
  * @param {cb} - callback function which return success or failure to the caller.
 */
@@ -419,7 +419,7 @@ Accounts.prototype.shared = {
 							self.referralLinkChain(req.body.referal, account.address, function (error) {
 								if (error) {
 									library.logger.error("Referral API Error : "+error.stack);
-									return setImmediate(cb, error);
+									return setImmediate(cb, error.toString());
 								} else {
 									let data = {
 										address: accountData.address,
