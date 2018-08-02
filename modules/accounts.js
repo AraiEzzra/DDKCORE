@@ -278,7 +278,7 @@ Accounts.prototype.setAccountAndGet = function (data, cb) {
 		}
 	}
 	
-	let REDIS_KEY_USER = "userInfo_" + address;
+	let REDIS_KEY_USER = "userAccountInfo_" + address;
 
 	cache.prototype.isExists(REDIS_KEY_USER, function (err, isExist) { 
 		if(!isExist) {
@@ -392,7 +392,7 @@ Accounts.prototype.shared = {
 						mutatePayload: false
 					});
 
-					let REDIS_KEY_USER_INFO_HASH = 'userInfo_' + account.address;
+					let REDIS_KEY_USER_INFO_HASH = 'userAccountInfo_' + account.address;
 
 					let accountData = {
 						address: account.address,
@@ -419,7 +419,7 @@ Accounts.prototype.shared = {
 							self.referralLinkChain(req.body.referal, account.address, function (error) {
 								if (error) {
 									library.logger.error("Referral API Error : "+error.stack);
-									return setImmediate(cb, error);
+									return setImmediate(cb, error.toString());
 								} else {
 									let data = {
 										address: accountData.address,
