@@ -97,12 +97,15 @@ module.exports.api = function (app) {
 
         let params = [],
             referList = [],
-            level = 1;
+            level = 1,
+            index = 0;
 
         function arrayPush(resp) {
             for (let i = 0; i < resp.length; i++) {
                 params.push('$' + (i + 1));
                 referList.push(resp[i].address);
+                hierarchy[index] = { "level": level,"address": resp[i].address };
+                index++;
             }
         }
 
@@ -114,7 +117,6 @@ module.exports.api = function (app) {
                         referList.length = 0;
                         if (resp.length) {
                             arrayPush(resp);
-                            hierarchy[level] = JSON.parse(JSON.stringify(referList));
                             level++;
                             findSponsors(params, referList, cb);
                         }
