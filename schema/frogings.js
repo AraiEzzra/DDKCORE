@@ -15,15 +15,14 @@ module.exports = {
 			freezedAmount: {
 				type: 'integer'
 			},
-			
-			publicKey: {
-				type: 'string',
-				format: 'publicKey'
-			},
 			secondSecret: {
 				type: 'string',
 				minLength: 1,
 				maxLength: 100
+			},
+			multisigAccountPublicKey: {
+				type: 'string',
+				format: 'publicKey'
 			}
 		},
 		required: ['secret','freezedAmount']

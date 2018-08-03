@@ -87,10 +87,8 @@ Frogings.prototype.referralReward = function (stake_amount, address, cb) {
 		address: sponsor_address
 	}).then(function (user) {
 
-		if (user.length != 0 && sponsorId != null) {
+		if (user.length != 0 && user[0].level != null) {
 			
-			let sponsorId = user[0].level;
-
 			let sponsorId = user[0].level;
 
 			introducerReward[sponsorId[i]] = (((env.STAKE_REWARD) * stake_amount) / 100);
@@ -291,6 +289,7 @@ Frogings.prototype.shared = {
 
 			let hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
 			let keypair = library.ed.makeKeypair(hash);
+			let publicKey = keypair.publicKey.toString('hex');
 
 			if (req.body.publicKey) {
 				if (keypair.publicKey.toString('hex') !== req.body.publicKey) {
