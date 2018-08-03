@@ -838,6 +838,10 @@ Transactions.prototype.shared = {
 										return setImmediate(cb, 'Missing second passphrase');
 									}
 
+									if(account.address == req.body.recipientId){
+										return setImmediate(cb, 'Sender and Recipient can\'t be same');
+									}
+
 									let secondKeypair = null;
 
 									if (account.secondSignature) {
@@ -875,6 +879,10 @@ Transactions.prototype.shared = {
 
 								if (account.secondSignature && !req.body.secondSecret) {
 									return setImmediate(cb, 'Missing second passphrase');
+								}
+
+								if(account.address == req.body.recipientId){
+									return setImmediate(cb, 'Sender and Recipient can\'t be same');
 								}
 
 								let secondKeypair = null;
