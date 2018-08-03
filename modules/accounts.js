@@ -564,6 +564,7 @@ Accounts.prototype.shared = {
 
 			let hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
 			let keypair = library.ed.makeKeypair(hash);
+			let publicKey = keypair.publicKey.toString('hex');
 
 			if (req.body.publicKey) {
 				if (keypair.publicKey.toString('hex') !== req.body.publicKey) {
@@ -609,6 +610,10 @@ Accounts.prototype.shared = {
 
 							if (requester.publicKey === account.publicKey) {
 								return setImmediate(cb, 'Invalid requester public key');
+							}
+
+							if (requester.totalFrozeAmount == 0) {
+								return setImmediate(cb, 'Please Stake before vote/unvote');
 							}
 
 							let secondKeypair = null;
@@ -659,6 +664,10 @@ Accounts.prototype.shared = {
 						if (account.secondSignature) {
 							let secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
 							secondKeypair = library.ed.makeKeypair(secondHash);
+						}
+
+						if (account.totalFrozeAmount == 0) {
+							return setImmediate(cb, 'Please Stake before vote/unvote');
 						}
 
 						let transaction;
