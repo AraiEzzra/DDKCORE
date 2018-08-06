@@ -968,7 +968,7 @@ Accounts.prototype.shared = {
 				});
 			}).catch(function (err) {
 				library.logger.error(err.stack);
-				return setImmediate(cb, err);
+				return setImmediate(cb, 'Invalid username or password');
 			});
 
 		}).catch(function (err) {
