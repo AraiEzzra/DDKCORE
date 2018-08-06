@@ -1,5 +1,9 @@
 'use strict';
 
+/** 
+ * @author - Satish Joshi
+ */
+
 let mailServices = require('./postmark');
 let rewards = require('./rewards');
 let async = require('async');

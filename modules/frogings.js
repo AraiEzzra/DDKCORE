@@ -74,7 +74,8 @@ function Frogings (cb, scope) {
  * Disable refer option when main account balance becomes zero.
  * @param {stake_amount} - Amount stake by the user.
  * @param {address} - Address of user which staked the amount.
- * @param {cb} - callback function. 
+ * @param {cb} - callback function.
+ * @author - Satish Joshi 
  */
 
 Frogings.prototype.referralReward = function (stake_amount, address, cb) {

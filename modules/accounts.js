@@ -154,7 +154,8 @@ Accounts.prototype.getAccount = function (filter, fields, cb) {
  * @param {referalLink} - Refer Id.
  * @param {address} - Address of user during registration.
  * @param {cb} - callback function which return success or failure to the caller.
-*/
+ * @author - Satish Joshi
+ */
 
 Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 

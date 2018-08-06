@@ -1,4 +1,9 @@
 'use strict';
+
+/** 
+ * @author - Satish Joshi
+ */
+
 let Mnemonic = require('bitcore-mnemonic');
 let crypto = require('crypto');
 let ed = require('./ed.js');
