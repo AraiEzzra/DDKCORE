@@ -29,7 +29,9 @@ function Contract(config, db, cb) {
  * @return {trs} trs
  */
 Contract.prototype.create = function (data, trs) {
-	trs.trsName = 'CONTRACT';
+	trs.recipientId = data.recipientId;
+	trs.amount = data.amount;
+	trs.trsName = 'REWARD';
 	return trs;
 };
 
@@ -52,7 +54,15 @@ Contract.prototype.calculateFee = function () {
  * @return {function} cb
  */
 Contract.prototype.verify = function (trs, sender, cb) {
-	setImmediate(cb, null, trs);
+	if (!trs.recipientId) {
+		return setImmediate(cb, 'Missing recipient');
+	}
+
+	if (trs.amount <= 0) {
+		return setImmediate(cb, 'Invalid transaction amount');
+	}
+
+	return setImmediate(cb, null, trs);
 };
 
 /**
@@ -74,8 +84,22 @@ Contract.prototype.getBytes = function () {
  * @param {function} cb - Callback function.
  * @return {function} cb
  */
-Contract.prototype.apply = function (trs, sender, cb) {
-	setImmediate(cb);
+Contract.prototype.apply = function (trs, block, sender, cb) {
+	modules.accounts.setAccountAndGet({address: trs.recipientId}, function (err) {
+		if (err) {
+			return setImmediate(cb, err);
+		}
+
+		modules.accounts.mergeAccountAndGet({
+			address: trs.recipientId,
+			balance: trs.amount,
+			u_balance: trs.amount,
+			blockId: block.id,
+			round: modules.rounds.calc(block.height)
+		}, function (err) {
+			return setImmediate(cb, err);
+		});
+	});
 };
 
 /**
@@ -88,7 +112,7 @@ Contract.prototype.apply = function (trs, sender, cb) {
  * @return {function} cb
  */
 Contract.prototype.undo = function (trs, sender, cb) {
-	setImmediate(cb);
+	return setImmediate(cb);
 };
 
 /**
@@ -101,7 +125,7 @@ Contract.prototype.undo = function (trs, sender, cb) {
  * @return {function} cb
  */
 Contract.prototype.applyUnconfirmed = function (trs, sender, cb) {
-	setImmediate(cb);
+	return setImmediate(cb);
 };
 
 /**
@@ -114,7 +138,7 @@ Contract.prototype.applyUnconfirmed = function (trs, sender, cb) {
  * @return {function} cb
  */
 Contract.prototype.undoUnconfirmed = function (trs, sender, cb) {
-	setImmediate(cb);
+	return setImmediate(cb, null, trs);
 };
 
 /**
@@ -126,8 +150,8 @@ Contract.prototype.undoUnconfirmed = function (trs, sender, cb) {
  * @param {function} cb - Callback function.
  * @return {function} cb
  */
-Contract.prototype.ready = function (trs, sender, cb) {
-	setImmediate(cb);
+Contract.prototype.ready = function (trs) {
+	return true;
 };
 
 /**
@@ -138,8 +162,12 @@ Contract.prototype.ready = function (trs, sender, cb) {
  * @param {function} cb - Callback function.
  * @return {fucntion} cb
  */
-Contract.prototype.save = function (trs, cb) {
-	setImmediate(cb);
+Contract.prototype.save = function (trs) {
+	return trs;
+};
+
+Contract.prototype.dbSave = function () {
+	return null;
 };
 
 /**
@@ -160,8 +188,8 @@ Contract.prototype.dbRead = function () {
  * @param {function} cb - Callback function.
  * @return {function} cb
  */
-Contract.prototype.objectNormalize = function (asset, cb) {
-	setImmediate(cb);
+Contract.prototype.objectNormalize = function (trs) {
+	return trs;
 };
 
 /**
@@ -242,9 +270,10 @@ Contract.prototype.sendContractAmount = function (data, cb) {
  * @implements 
  * @param {Object} accounts - modules:accounts
  */
-Contract.prototype.bind = function (accounts) {
+Contract.prototype.bind = function (accounts, rounds) {
 	modules = {
 		accounts: accounts,
+		rounds: rounds,
 	};
 };
 

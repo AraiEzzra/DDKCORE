@@ -1405,15 +1405,59 @@ Accounts.prototype.internal = {
 			if (err) {
 				return setImmediate(cb, err);
 			}
-			if (!nextBonus) {
+			/* if (!nextBonus) {
 				return setImmediate(cb, 'You don\'t have pending group bonus remaining');
-			}
-			let userInfo = {
+			} */
+			/* let userInfo = {
 				publicKey: req.body.publicKey,
 				transferedAmount: nextBonus * 100000000,
 				accType: 5
-			};
-			library.logic.contract.sendContractAmount([userInfo], function (err, trsResponse) {
+			}; */
+			let hash = Buffer.from(JSON.parse(library.config.users[5].keys));
+			let keypair = library.ed.makeKeypair(hash);
+			let publicKey = keypair.publicKey.toString('hex');
+			library.balancesSequence.add(function (cb) {
+				self.getAccount({publicKey: publicKey}, function(err, account) {
+					if (err) {
+						return setImmediate(cb, err)
+					}
+					let transaction;
+					let secondKeypair = null;
+					account.publicKey = publicKey;
+	
+					try {
+						transaction = library.logic.transaction.create({
+							type: transactionTypes.REWARD,
+							amount: 5 * 100000000,
+							sender: account,
+							recipientId: req.body.address,
+							keypair: keypair,
+							secondKeypair: secondKeypair
+						});
+					} catch (e) {
+						return setImmediate(cb, e.toString());
+					}
+					modules.transactions.receiveTransactions([transaction], true, cb);
+				});
+			}, function (err, transaction) {
+				if (err) {
+					return setImmediate(cb, err);
+				}
+				library.cache.client.set(req.body.address + '_pending_group_bonus_trs_id', transaction[0].id);
+				library.db.none(sql.updatePendingGroupBonus, {
+					nextBonus: nextBonus,
+					senderId: req.body.address
+				})
+				.then(function () {
+					return setImmediate(cb, null, { transactionId: transaction[0].id });
+				})
+				.catch(function (err) {
+					return setImmediate(cb, err);
+				});
+			});
+			
+			
+			/* library.logic.contract.sendContractAmount([userInfo], function (err, trsResponse) {
 				if (err) {
 					return setImmediate(cb, err);
 				}
@@ -1428,7 +1472,7 @@ Accounts.prototype.internal = {
 				.catch(function (err) {
 					return setImmediate(cb, err);
 				});
-			});
+			}); */
 		});
 	},
 

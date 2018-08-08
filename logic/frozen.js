@@ -65,7 +65,7 @@ Frozen.prototype.create = function (data, trs) {
 	trs.recipientId = null;
 	trs.stakedAmount = data.freezedAmount;
 	trs.nextVoteMilestone = (date.setMinutes(date.getMinutes() + constants.froze.vTime)) / 1000;
-	trs.trsName = "STAKE";
+	trs.trsName = 'STAKE';
 	return trs;
 };
 
@@ -91,14 +91,14 @@ Frozen.prototype.dbTable = 'stake_orders';
  * @desc stake_order table fields
  */
 Frozen.prototype.dbFields = [
-	"id",
-	"status",
-	"startTime",
-	"insertTime",
-	"senderId",
-	"recipientId",
-	"freezedAmount",
-	"nextVoteMilestone"
+	'id',
+	'status',
+	'startTime',
+	'insertTime',
+	'senderId',
+	'recipientId',
+	'freezedAmount',
+	'nextVoteMilestone'
 ];
 
 Frozen.prototype.inactive = '0';

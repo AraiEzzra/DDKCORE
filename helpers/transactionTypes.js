@@ -23,7 +23,7 @@ module.exports = {
 	IN_TRANSFER: 6,
 	OUT_TRANSFER: 7,
 	STAKE: 8,
-	CONTRACT: 9,
+	REWARD: 9,
 	SENDSTAKE : 10,
 	REFER	:	11
 };

@@ -22,7 +22,7 @@ let env = process.env;
  
 
 module.exports = {
-  redisURL: env.REDIS_URL || env.REDISTOGO_URL || "",
+  redisURL: env.REDIS_URL || env.REDISTOGO_URL || '',
   db: {
     password: env.DB_PASSWORD
   },
@@ -84,8 +84,7 @@ module.exports = {
       publicKey: env.FOUNDERS_KEY
     },
     {
-      secret: env.PENDING_GROUP_BONUS_SECRET,
-      publicKey: env.PENDING_GROUP_BONUS_KEY
+      keys: env.PENDING_GROUP_BONUS_KEYS
     }
   ],  
 };

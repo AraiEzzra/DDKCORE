@@ -60,7 +60,8 @@ module.exports = {
 		multisignature: 1000000,
 		dapp: 2500000000,
 		froze: 0.01,  
-		sendfreeze: 0.1
+		sendfreeze: 0.1,
+		reward: 0
 	},
 	feeStart: 1,
 	feeStartVolume: 10000 * 100000000,
