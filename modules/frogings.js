@@ -409,51 +409,39 @@ Frogings.prototype.shared = {
 				if (err) {
 					return setImmediate(cb, err);
 				}
+				library.network.io.sockets.emit('updateTotalStakeAmount', null);
 
-				library.logic.frozen.updateFrozeAmount({
-					account: accountData,
-					freezedAmount: req.body.freezedAmount
-				}, function (err) {
-					if (err) {
-						return setImmediate(cb, err);
-					}
-					library.network.io.sockets.emit('updateTotalStakeAmount', null);
-
-					library.db.one(ref_sql.checkBalance, {
-						sender_address: env.SENDER_ADDRESS
-					}).then(function (bal) {
-						let balance = parseInt(bal.u_balance);
-						if (balance > 10000) {
-							self.referralReward(req.body.freezedAmount, accountData.address, function (err) {
-								if (err) {
-									library.logger.error(err.stack);
-								}
-								return setImmediate(cb, null, {
-									transaction: transaction[0],
-									referStatus: true
-								});
+				library.db.one(ref_sql.checkBalance, {
+					sender_address: env.SENDER_ADDRESS
+				}).then(function (bal) {
+					let balance = parseInt(bal.u_balance);
+					if (balance > 10000) {
+						self.referralReward(req.body.freezedAmount, accountData.address, function (err) {
+							if (err) {
+								library.logger.error(err.stack);
+							}
+							return setImmediate(cb, null, {
+								transaction: transaction[0],
+								referStatus: true
 							});
-						} else {
-							cache.prototype.isExists("referStatus",function(err,exist){
-								if(!exist) {
-									cache.prototype.setJsonForKey("referStatus", false);
-								}
-								return setImmediate(cb, null, {
-									transaction: transaction[0],
-									referStatus: false
-								});
-							});					
-						}
-					}).catch(function (err) {
-						library.logger.error(err.stack);
-						return setImmediate(cb, err);
-					});
-
+						});
+					} else {
+						cache.prototype.isExists("referStatus", function (err, exist) {
+							if (!exist) {
+								cache.prototype.setJsonForKey("referStatus", false);
+							}
+							return setImmediate(cb, null, {
+								transaction: transaction[0],
+								referStatus: false
+							});
+						});
+					}
+				}).catch(function (err) {
+					library.logger.error(err.stack);
+					return setImmediate(cb, err);
 				});
 			});
 		});
-
-
 	}
 };
 

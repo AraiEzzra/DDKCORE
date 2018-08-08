@@ -237,12 +237,8 @@ Vote.prototype.apply = function (trs, block, sender, cb) {
 				round: modules.rounds.calc(block.height)
 			}, seriesCb);
 		},
-		// call to updateAndCheckVote only for genesis block 
+		// call to logic during apply-> updateAndCheckVote
 		function (seriesCb) {
-			if (block.height !== 1) {
-				return setImmediate(cb, null);
-			}
-
 			self.updateAndCheckVote(
 				{
 					votes: trs.asset.votes,
