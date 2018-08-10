@@ -310,7 +310,8 @@ Frozen.prototype.bind = function (accounts, rounds, blocks) {
  * @param {address} - Address which get the staking reward.
  * @param {reward_amount} - Reward amount received.
  * @param {cb} - callback function.
-*/
+ * @author - Satish Joshi
+ */
 
 Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 

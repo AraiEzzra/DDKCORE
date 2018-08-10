@@ -17,7 +17,9 @@ let TransactionsSql = {
 
 	count: 'SELECT COUNT("id")::int AS "count" FROM trs',
 
-	getTransactionHistory: 'SELECT * FROM trs WHERE "timestamp" >= ${timestamp} ORDER BY "timestamp" DESC',
+	// getTransactionHistory: 'SELECT * FROM trs WHERE "timestamp" >= ${timestamp} ORDER BY "timestamp" DESC',
+
+	getTransactionHistory : 'SELECT serie.day AS time, COUNT(t."timestamp") AS created FROM ( SELECT date_series::date AS day FROM generate_series(to_timestamp(${startTimestamp})::date,to_timestamp(${endTimestamp})::date, \'1 day\') AS date_series) AS serie LEFT JOIN trs t ON (t."timestamp"+${epochTime})::abstime::date = serie.day::date GROUP  BY serie.day order by time',
 
 	countById: 'SELECT COUNT("id")::int AS "count" FROM trs WHERE "id" = ${id}',
 
