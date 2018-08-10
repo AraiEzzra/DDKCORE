@@ -1,4 +1,9 @@
 'use strict';
+
+/** 
+ * @author - Satish Joshi
+ */
+
 let Mnemonic = require('bitcore-mnemonic');
 let crypto = require('crypto');
 let ed = require('./ed.js');
@@ -175,7 +180,7 @@ async.series([
 
             }, function (err) {
                 if (err) {
-                    main_callback(err);
+                    return main_callback(err);
                 }
                 main_callback();
                 console.log('Successfully Inserted');
@@ -186,11 +191,11 @@ async.series([
         });
     },
     function (main_callback) {
-        let etps_balance = 0,
-            frozeAmount = 0;
+        let etps_balance = 0;
         db.many(sql.getMigratedUsers).then(function (res) {
             async.eachSeries(res, function (migrated_details, callback) {
                 let date = new Date((slots.getTime()) * 1000);
+
                 db.query(sql.getStakeOrders, migrated_details.id).then(function (resp) {
                     if (resp.length) {
                         async.eachSeries(resp, function (account, callback2) {
@@ -225,14 +230,13 @@ async.series([
                             if (err) {
                                 callback(err);
                             }
-                            frozeAmount = etps_balance * 100000000;
                             etps_balance = etps_balance * 100000000;
                             let user_data = {
                                 address: migrated_details.address,
                                 publicKey: Buffer.from(migrated_details.publickey, 'hex'),
                                 balance: etps_balance,
                                 u_balance: etps_balance,
-                                totalFrozeAmount: frozeAmount,
+                                totalFrozeAmount: etps_balance,
                                 group_bonus: migrated_details.group_bonus
                             };
 
@@ -245,6 +249,7 @@ async.series([
                                 callback();
                             });
 
+
                         });
                     } else {
                         let data = {
@@ -255,6 +260,7 @@ async.series([
                             totalFrozeAmount: 0,
                             group_bonus: migrated_details.group_bonus
                         }
+
                         insert(data, function (err) {
                             if (err) {
                                 callback(err);
@@ -268,7 +274,7 @@ async.series([
                 });
             }, function (err) {
                 if (err) {
-                    main_callback(err);
+                    return main_callback(err);
                 }
                 console.log('Stake Orders and Member Account created Successfully');
                 main_callback();
