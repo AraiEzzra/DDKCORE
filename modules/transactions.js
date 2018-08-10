@@ -641,7 +641,7 @@ Transactions.prototype.onBind = function (scope) {
 Transactions.prototype.internal = {
 	getTransactionHistory: function(req, cb) {
 
-		let trsDate=[],trsCount=[];
+		//let trsDate=[],trsCount=[];
 
 		let  fortnightBack = new Date(+new Date - 12096e5);
 
@@ -662,12 +662,12 @@ Transactions.prototype.internal = {
 		})
 		.then(function(trsHistory) {
 
-			for(let i=0;i<trsHistory.length;i++) {
-				trsDate[i] = new Date(trsHistory[i].time).toDateString();
-				trsCount[i] = trsHistory[i].created;
-			}
+			//for(let i=0;i<trsHistory.length;i++) {
+			//	trsDate[i] = new Date(trsHistory[i].time).toDateString();
+			//	trsCount[i] = trsHistory[i].created;
+			//}
 
-			return setImmediate(cb, null, {success: true, trsDate: trsDate, trsCount: trsCount });
+			return setImmediate(cb, null, {success: true, trsData: trsHistory });
 		})
 		.catch(function(err) {
 			return setImmediate(cb, {success: false, err: err});
