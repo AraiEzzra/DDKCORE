@@ -239,7 +239,7 @@ Vote.prototype.apply = function (trs, block, sender, cb) {
 		},
 		// call to logic during apply-> updateAndCheckVote
 		function (seriesCb) {
-			self.updateAndCheckVote(
+			self.updateMemAccounts(
 				{
 					votes: trs.asset.votes,
 					senderId: trs.senderId
@@ -282,7 +282,7 @@ Vote.prototype.undo = function (trs, block, sender, cb) {
 		}, 
 		//added to remove vote count from mem_accounts table
 		function (seriesCb) {
-			self.updateAndCheckVote(
+			self.updateMemAccounts(
 				{
 					votes: votesInvert,
 					senderId: trs.senderId
@@ -501,6 +501,39 @@ Vote.prototype.updateAndCheckVote = function (voteInfo, cb) {
 
 	}
 
+	async.waterfall([
+		checkUpvoteDownvote,
+		checkWeeklyVote,
+		updateStakeOrder
+	], function (err) {
+		if (err) {
+			library.logger.warn(err);
+			return setImmediate(cb, err);
+		}
+		return setImmediate(cb, null);
+	});
+
+};
+
+/**
+ * Update vote count from stake_order and mem_accounts table
+ * @param {voteInfo} voteInfo voteInfo have votes and senderId
+ * @return {null|err} return null if success else err 
+ * 
+ */
+Vote.prototype.updateMemAccounts = function (voteInfo, cb) {
+	let votes = voteInfo.votes;
+	let senderId = voteInfo.senderId;
+
+	function checkUpvoteDownvote(waterCb) {
+
+		if ((votes[0])[0] === '+') {
+			return setImmediate(waterCb, null, 1);
+		} else {
+			return setImmediate(waterCb, null, 0);
+		}
+	}
+
 	function prepareQuery(voteType, waterCb) {
 
 		let inCondition = "";
@@ -532,8 +565,6 @@ Vote.prototype.updateAndCheckVote = function (voteInfo, cb) {
 
 	async.waterfall([
 		checkUpvoteDownvote,
-		checkWeeklyVote,
-		updateStakeOrder,
 		prepareQuery,
 		updateVoteCount
 	], function (err) {
