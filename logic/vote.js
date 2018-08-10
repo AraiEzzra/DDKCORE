@@ -55,7 +55,7 @@ Vote.prototype.bind = function (delegates, rounds, accounts) {
 Vote.prototype.create = function (data, trs) {
 	trs.recipientId = data.sender.address;
 	trs.asset.votes = data.votes;
-	trs.trsName = "VOTE";
+	trs.trsName = data.votes[0][0] == "+" ? "VOTE" : "DOWNVOTE";
 	return trs;
 };
 
@@ -65,7 +65,7 @@ Vote.prototype.create = function (data, trs) {
  * @return {number} fee
  */
 Vote.prototype.calculateFee = function (trs, sender) {
-	return (sender.totalFrozeAmount * constants.fees.vote) / 100;
+	return (parseInt(sender.totalFrozeAmount) * constants.fees.vote) / 100;
 };
 
 /**
@@ -237,13 +237,9 @@ Vote.prototype.apply = function (trs, block, sender, cb) {
 				round: modules.rounds.calc(block.height)
 			}, seriesCb);
 		},
-		// call to updateAndCheckVote only for genesis block 
+		// call to logic during apply-> updateAndCheckVote
 		function (seriesCb) {
-			if (block.height !== 1) {
-				return setImmediate(cb, null);
-			}
-
-			self.updateAndCheckVote(
+			self.updateMemAccounts(
 				{
 					votes: trs.asset.votes,
 					senderId: trs.senderId
@@ -286,7 +282,7 @@ Vote.prototype.undo = function (trs, block, sender, cb) {
 		}, 
 		//added to remove vote count from mem_accounts table
 		function (seriesCb) {
-			self.updateAndCheckVote(
+			self.updateMemAccounts(
 				{
 					votes: votesInvert,
 					senderId: trs.senderId
@@ -505,6 +501,39 @@ Vote.prototype.updateAndCheckVote = function (voteInfo, cb) {
 
 	}
 
+	async.waterfall([
+		checkUpvoteDownvote,
+		checkWeeklyVote,
+		updateStakeOrder
+	], function (err) {
+		if (err) {
+			library.logger.warn(err);
+			return setImmediate(cb, err);
+		}
+		return setImmediate(cb, null);
+	});
+
+};
+
+/**
+ * Update vote count from stake_order and mem_accounts table
+ * @param {voteInfo} voteInfo voteInfo have votes and senderId
+ * @return {null|err} return null if success else err 
+ * 
+ */
+Vote.prototype.updateMemAccounts = function (voteInfo, cb) {
+	let votes = voteInfo.votes;
+	let senderId = voteInfo.senderId;
+
+	function checkUpvoteDownvote(waterCb) {
+
+		if ((votes[0])[0] === '+') {
+			return setImmediate(waterCb, null, 1);
+		} else {
+			return setImmediate(waterCb, null, 0);
+		}
+	}
+
 	function prepareQuery(voteType, waterCb) {
 
 		let inCondition = "";
@@ -536,8 +565,6 @@ Vote.prototype.updateAndCheckVote = function (voteInfo, cb) {
 
 	async.waterfall([
 		checkUpvoteDownvote,
-		checkWeeklyVote,
-		updateStakeOrder,
 		prepareQuery,
 		updateVoteCount
 	], function (err) {

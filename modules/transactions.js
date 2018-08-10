@@ -20,6 +20,7 @@ let shared = {};
 let modules;
 let library;
 let self;
+let epochTime = 1451667600; 
 
 __private.assetTypes = {};
 
@@ -639,13 +640,34 @@ Transactions.prototype.onBind = function (scope) {
  */
 Transactions.prototype.internal = {
 	getTransactionHistory: function(req, cb) {
+
+		//let trsDate=[],trsCount=[];
+
 		let  fortnightBack = new Date(+new Date - 12096e5);
-		let timestamp = slots.getTime(fortnightBack);
+
+		fortnightBack.setHours(0,0,0,0);	
+
+		let startTimestamp = slots.getTime(fortnightBack);
+		
+		let endDate = new Date(+new Date - (60 * 60 * 24 * 1000));
+		
+		endDate.setHours(0,0,0,0);
+		
+		let endTimestamp = slots.getTime(endDate);
+
 		library.db.query(sql.getTransactionHistory, {
-			timestamp: timestamp
+			startTimestamp: startTimestamp + epochTime,
+			endTimestamp: endTimestamp + epochTime,
+			epochTime: epochTime
 		})
 		.then(function(trsHistory) {
-			return setImmediate(cb, null, {success: true, trsData: trsHistory});
+
+			//for(let i=0;i<trsHistory.length;i++) {
+			//	trsDate[i] = new Date(trsHistory[i].time).toDateString();
+			//	trsCount[i] = trsHistory[i].created;
+			//}
+
+			return setImmediate(cb, null, {success: true, trsData: trsHistory });
 		})
 		.catch(function(err) {
 			return setImmediate(cb, {success: false, err: err});
@@ -836,6 +858,10 @@ Transactions.prototype.shared = {
 										return setImmediate(cb, 'Missing second passphrase');
 									}
 
+									if(account.address == req.body.recipientId){
+										return setImmediate(cb, 'Sender and Recipient can\'t be same');
+									}
+
 									let secondKeypair = null;
 
 									if (account.secondSignature) {
@@ -873,6 +899,10 @@ Transactions.prototype.shared = {
 
 								if (account.secondSignature && !req.body.secondSecret) {
 									return setImmediate(cb, 'Missing second passphrase');
+								}
+
+								if(account.address == req.body.recipientId){
+									return setImmediate(cb, 'Sender and Recipient can\'t be same');
 								}
 
 								let secondKeypair = null;

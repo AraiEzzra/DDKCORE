@@ -222,7 +222,17 @@ Frozen.prototype.undo = function (trs, block, sender, cb) {
  * @return {function} cb
  */
 Frozen.prototype.apply = function (trs, block, sender, cb) {
-	return setImmediate(cb, null, trs);
+
+	self.updateFrozeAmount({
+		account: sender,
+		freezedAmount: trs.stakedAmount
+	}, function (err) {
+		if (err) {
+			return setImmediate(cb, err);
+		}
+
+		return setImmediate(cb, null, trs);
+	});
 };
 
 /**
@@ -283,7 +293,7 @@ Frozen.prototype.calculateFee = function (trs, sender) {
 };
 
 /**
- * @desc on bine
+ * @desc on bind
  * @private
  * @implements 
  * @param {Object} accounts - modules:accounts
@@ -298,13 +308,14 @@ Frozen.prototype.bind = function (accounts, rounds, blocks, transactions) {
 };
 
 /**
- * Distributing the Staking Reward their sponsors.
+ * Distributing the Staking Reward to their sponsors.
  * Award being sent on level basis.
  * Disable refer option when main account balance becomes zero.
  * @param {address} - Address which get the staking reward.
  * @param {reward_amount} - Reward amount received.
  * @param {cb} - callback function.
-*/
+ * @author - Satish Joshi
+ */
 
 Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 
@@ -346,6 +357,20 @@ Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 						}
 					} else {
 						reward = true;
+						(async function(){
+							await self.scope.db.none(reward_sql.updateRewardTypeTransaction,{
+								sponsorAddress: sponsor_address,
+								introducer_address: sponsorId,
+								reward: stakeReward[sponsorId],
+								level: "Level "+(i),
+								transaction_type: "CHAINREF",
+								time: slots.getTime()
+							}).then(function(){
+	
+							}).catch(function(err){
+								return setImmediate(cb,err);
+							});
+						}());
 					}
 
 					if (i == chain_length && reward != true) {
@@ -471,12 +496,10 @@ Frozen.prototype.checkFrozeOrders = function () {
 				updateOrderAndSendReward(order, function (err, Success) {
 					if (err) {
 						eachSeriesCb(err);
-						//next(err, null);
 					} else {
 						deductFrozeAmount(order, function (_err, _Success) {
 							if (_err) {
 								eachSeriesCb(_err);
-								// next(_err, null);
 							} else {
 								async.setImmediate(eachSeriesCb);
 							}
@@ -539,6 +562,7 @@ Frozen.prototype.checkFrozeOrders = function () {
 									});
 								}
 							}).catch(function (err) {
+								self.scope.logger.error(err.stack);
 								next(err, null);
 							});
 

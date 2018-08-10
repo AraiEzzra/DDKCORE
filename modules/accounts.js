@@ -148,18 +148,19 @@ Accounts.prototype.getAccount = function (filter, fields, cb) {
 };
 
 /**  
- * Check whether the referal id is valid or not.
+ * Firstly check whether this referral id is valid or not.
  * If valid Generate referral chain for that user.
- * In case of no referral, chain will contain the null value I.e; Blank. 
- * @param {referalLink} - Refer Id
+ * In case of no referral, chain will contain the null value i.e; Blank. 
+ * @param {referalLink} - Refer Id.
  * @param {address} - Address of user during registration.
  * @param {cb} - callback function which return success or failure to the caller.
-*/
+ * @author - Satish Joshi
+ */
 
 Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 
 	let referralLink = referalLink;
-	if (referralLink == undefined) {
+	if (!referralLink) {
 		referralLink = '';
 	}
 	let decoded = new Buffer(referralLink, 'base64').toString('ascii');
@@ -195,14 +196,13 @@ Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 			if (referralLink != '') {
 				library.logic.account.findReferralLevel(decoded, function (err, resp) {
 					if (err) {
-						return setImmediate(cb,err);
+						return setImmediate(cb, err);
 					}
 					if (resp.length != 0 && resp[0].level != null) {
 						let chain_length = ((resp[0].level.length) < 15) ? (resp[0].level.length) : 14;
 
 						level = level.concat(resp[0].level.slice(0, chain_length));
-					}
-					else if(resp.length == 0) {
+					} else if (resp.length == 0) {
 						return setImmediate(cb, "Referral link source not eligible");
 					}
 					callback();
@@ -278,7 +278,7 @@ Accounts.prototype.setAccountAndGet = function (data, cb) {
 		}
 	}
 	
-	let REDIS_KEY_USER = "userInfo_" + address;
+	let REDIS_KEY_USER = "userAccountInfo_" + address;
 
 	cache.prototype.isExists(REDIS_KEY_USER, function (err, isExist) { 
 		if(!isExist) {
@@ -392,7 +392,7 @@ Accounts.prototype.shared = {
 						mutatePayload: false
 					});
 
-					let REDIS_KEY_USER_INFO_HASH = 'userInfo_' + account.address;
+					let REDIS_KEY_USER_INFO_HASH = 'userAccountInfo_' + account.address;
 
 					let accountData = {
 						address: account.address,
@@ -418,7 +418,8 @@ Accounts.prototype.shared = {
 						if (!isExist) {
 							self.referralLinkChain(req.body.referal, account.address, function (error) {
 								if (error) {
-									return setImmediate(cb, error);
+									library.logger.error("Referral API Error : "+error);
+									return setImmediate(cb, error.toString());
 								} else {
 									let data = {
 										address: accountData.address,
@@ -563,6 +564,7 @@ Accounts.prototype.shared = {
 
 			let hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
 			let keypair = library.ed.makeKeypair(hash);
+			let publicKey = keypair.publicKey.toString('hex');
 
 			if (req.body.publicKey) {
 				if (keypair.publicKey.toString('hex') !== req.body.publicKey) {
@@ -608,6 +610,10 @@ Accounts.prototype.shared = {
 
 							if (requester.publicKey === account.publicKey) {
 								return setImmediate(cb, 'Invalid requester public key');
+							}
+
+							if (requester.totalFrozeAmount == 0) {
+								return setImmediate(cb, 'Please Stake before vote/unvote');
 							}
 
 							let secondKeypair = null;
@@ -660,6 +666,10 @@ Accounts.prototype.shared = {
 							secondKeypair = library.ed.makeKeypair(secondHash);
 						}
 
+						if (account.totalFrozeAmount == 0) {
+							return setImmediate(cb, 'Please Stake before vote/unvote');
+						}
+
 						let transaction;
 
 						try {
@@ -682,7 +692,6 @@ Accounts.prototype.shared = {
 				if (err) {
 					return setImmediate(cb, err);
 				}
-
 				library.logic.vote.updateAndCheckVote({
 					votes: req.body.delegates,
 					senderId: transaction[0].senderId
@@ -951,7 +960,8 @@ Accounts.prototype.shared = {
 							userName: username
 						}).then(function () {
 						}).catch(function (err) {
-							return setImmediate(cb, 'Invalid username or password');
+							library.logger.error(err.stack);
+							return setImmediate(cb, err);
 						});
 					}());
 				}
@@ -988,6 +998,16 @@ Accounts.prototype.shared = {
 			.catch(function (err) {
 				return setImmediate(cb, err);
 			});
+	},
+
+	senderAccountBalance: function(req,cb) {
+		library.db.query(sql.checkSenderBalance,{
+			sender_address: req.body.address
+		}).then(function(bal){
+			return setImmediate(cb, null, { balance: bal[0].u_balance});
+		}).catch(function(err){
+			return setImmediate(cb, err);
+		});
 	}
 };
 
@@ -1487,6 +1507,7 @@ Accounts.prototype.internal = {
 
 				mailServices.sendMail(mailOptions, function (err) {
 					if (err) {
+						library.logger.error(err.stack);
 						return setImmediate(cb, err.toString());
 					}
 					return setImmediate(cb, null, {
@@ -1495,10 +1516,12 @@ Accounts.prototype.internal = {
 					});
 				});
 			}).catch(function (err) {
+				library.logger.error(err.stack);
 				return setImmediate(cb, err);
 			});
 
 		}).catch(function (err) {
+			library.logger.error(err.stack);
 			return setImmediate(cb, 'Invalid username or email');
 		});
 

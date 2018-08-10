@@ -11,6 +11,7 @@
  * @param {Integer} STAKE - froze transation
  * @param {Integer} CONTRACT - contract transation
  * @param {Integer} SENDSTAKE - send freeze transation
+ * @param {Integer} REFER - Referral reward transaction. 
  * @returns {Object}
 */
 module.exports = {

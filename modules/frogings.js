@@ -10,6 +10,7 @@ let ref_sql = require('../sql/referal_sql');
 let env = process.env;
 let constants = require('../helpers/constants.js');
 let cache = require('./cache.js');
+let slots = require('../helpers/slots');
 
 // Private fields
 let __private = {};
@@ -68,12 +69,13 @@ function Frogings (cb, scope) {
 
 /**
  * Direct introducer reward.
- * 10 percent of Reward send to the introducer for staking the amount by it's sponsor.
+ * 10 percent of Reward send to the Direct introducer for staking the amount by it's sponsor.
  * Reward is send through the main account.
  * Disable refer option when main account balance becomes zero.
  * @param {stake_amount} - Amount stake by the user.
  * @param {address} - Address of user which staked the amount.
- * @param {cb} - callback function. 
+ * @param {cb} - callback function.
+ * @author - Satish Joshi 
  */
 
 Frogings.prototype.referralReward = function (stake_amount, address, cb) {
@@ -86,10 +88,8 @@ Frogings.prototype.referralReward = function (stake_amount, address, cb) {
 		address: sponsor_address
 	}).then(function (user) {
 
-		
-
 		if (user.length != 0 && user[0].level != null) {
-
+			
 			let sponsorId = user[0].level;
 
 			introducerReward[sponsorId[i]] = (((env.STAKE_REWARD) * stake_amount) / 100);
@@ -124,7 +124,23 @@ Frogings.prototype.referralReward = function (stake_amount, address, cb) {
 				if (err) {
 					return setImmediate(cb, err);
 				}
-				return setImmediate(cb, null, { transactionId: transaction[0].id });
+				else {
+					(async function(){
+						await library.db.none(ref_sql.updateRewardTypeTransaction,{
+							sponsorAddress: sponsor_address,
+							introducer_address: sponsorId[i],
+							reward: introducerReward[sponsorId[i]],
+							level: "Level 1",
+							transaction_type: "DIRECTREF",
+							time: slots.getTime()
+						}).then(function(){
+
+						}).catch(function(err){
+							return setImmediate(cb,err);
+						});
+					}());
+				}
+				return setImmediate(cb, null);
 			});
 		} else {
 			library.logger.info("Direct Introducer Reward Info : No referrals or any introducer found");
@@ -290,6 +306,7 @@ Frogings.prototype.shared = {
 
 			let hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
 			let keypair = library.ed.makeKeypair(hash);
+			let publicKey = keypair.publicKey.toString('hex');
 
 			if (req.body.publicKey) {
 				if (keypair.publicKey.toString('hex') !== req.body.publicKey) {
@@ -409,48 +426,36 @@ Frogings.prototype.shared = {
 				if (err) {
 					return setImmediate(cb, err);
 				}
+				library.network.io.sockets.emit('updateTotalStakeAmount', null);
 
-				library.logic.frozen.updateFrozeAmount({
-					account: accountData,
-					freezedAmount: req.body.freezedAmount
-				}, function (err) {
-					if (err) {
-						return setImmediate(cb, err);
-					}
-					library.network.io.sockets.emit('updateTotalStakeAmount', null);
-					let hash = Buffer.from(JSON.parse(library.config.users[6].keys));
-					let keypair = library.ed.makeKeypair(hash);
-					let publicKey = keypair.publicKey.toString('hex');
-					modules.accounts.getAccount({ publicKey: publicKey }, function (err, account) {
-						library.db.one(ref_sql.checkBalance, {
-							sender_address: account.address
-						}).then(function (bal) {
-							let balance = parseInt(bal.u_balance);
-							if (balance > 10000) {
-								self.referralReward(req.body.freezedAmount, accountData.address, function (err) {
-									if (err) {
-										library.logger.error(err.stack);
-									}
-									return setImmediate(cb, null, {
-										transaction: transaction[0],
-										referStatus: true
-									});
-								});
-							} else {
-								cache.prototype.isExists("referStatus", function (err, exist) {
-									if (!exist) {
-										cache.prototype.setJsonForKey("referStatus", false);
-									}
-									return setImmediate(cb, null, {
-										transaction: transaction[0],
-										referStatus: false
-									});
-								});
+				library.db.one(ref_sql.checkBalance, {
+					sender_address: env.SENDER_ADDRESS
+				}).then(function (bal) {
+					let balance = parseInt(bal.u_balance);
+					if (balance > 10000) {
+						self.referralReward(req.body.freezedAmount, accountData.address, function (err) {
+							if (err) {
+								library.logger.error(err.stack);
 							}
-						}).catch(function (err) {
-							return setImmediate(cb, err);
+							return setImmediate(cb, null, {
+								transaction: transaction[0],
+								referStatus: true
+							});
 						});
-					});
+					} else {
+						cache.prototype.isExists("referStatus", function (err, exist) {
+							if (!exist) {
+								cache.prototype.setJsonForKey("referStatus", false);
+							}
+							return setImmediate(cb, null, {
+								transaction: transaction[0],
+								referStatus: false
+							});
+						});
+					}
+				}).catch(function (err) {
+					library.logger.error(err.stack);
+					return setImmediate(cb, err);
 				});
 			});
 		});
