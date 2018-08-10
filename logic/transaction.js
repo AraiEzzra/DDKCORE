@@ -615,7 +615,7 @@ Transaction.prototype.verify = function (trs, sender, requester, cb) {
 	// //Check sender not able to do transaction on froze amount
 	let amount;
 	// Check confirmed sender balance
-	if (trs.type !== 11 || trs.type !== 9) {
+	if (trs.type !== 11 && trs.type !== 9) {
 		amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
 	} else {
 		amount = new bignum(trs.amount.toString());
@@ -752,7 +752,7 @@ Transaction.prototype.apply = function (trs, block, sender, cb) {
 
 	let amount;
 	// Check confirmed sender balance
-	if (trs.type !== 11 || trs.type !==9 ) {
+	if (trs.type !== 11 && trs.type !==9 ) {
 		amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
 	} else {
 		amount = new bignum(trs.amount.toString());
@@ -808,7 +808,7 @@ Transaction.prototype.apply = function (trs, block, sender, cb) {
  */
 Transaction.prototype.undo = function (trs, block, sender, cb) {
 	let amount = new bignum(trs.amount.toString());
-	if (trs.type !== 11 || trs.type !== 9) {
+	if (trs.type !== 11 && trs.type !== 9) {
 		amount = amount.plus(trs.fee.toString()).toNumber();
 	}
 
@@ -903,7 +903,7 @@ Transaction.prototype.applyUnconfirmed = function (trs, sender, requester, cb) {
  */
 Transaction.prototype.undoUnconfirmed = function (trs, sender, cb) {
 	let amount = new bignum(trs.amount.toString());
-	if (trs.type !== 11 || trs.type !== 9) {
+	if (trs.type !== 11 && trs.type !== 9) {
 		amount = amount.plus(trs.fee.toString()).toNumber();
 	}
 	else {

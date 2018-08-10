@@ -751,9 +751,12 @@ Accounts.prototype.shared = {
 
 	getCirculatingSupply: function (req, cb) {
 		let initialUnmined = config.ddkSupply.totalSupply - config.initialPrimined.total;
-		let publicAddress = library.config.sender.address;
-
-		library.db.one(sql.getCurrentUnmined, { address: publicAddress })
+		//let publicAddress = library.config.sender.address;
+		let hash = Buffer.from(JSON.parse(library.config.users[0].keys));
+		let keypair = library.ed.makeKeypair(hash);
+		let publicKey = keypair.publicKey.toString('hex');
+		self.getAccount({publicKey: publicKey}, function(err, account) {
+			library.db.one(sql.getCurrentUnmined, { address: account.address })
 			.then(function (currentUnmined) {
 				let circulatingSupply = config.initialPrimined.total + initialUnmined - currentUnmined.balance;
 
@@ -769,6 +772,7 @@ Accounts.prototype.shared = {
 				library.logger.error(err.stack);
 				return setImmediate(cb, err.toString());
 			});
+		});
 	},
 	totalSupply: function (req, cb) {
 		let totalSupply = config.ddkSupply.totalSupply;
@@ -1405,14 +1409,9 @@ Accounts.prototype.internal = {
 			if (err) {
 				return setImmediate(cb, err);
 			}
-			/* if (!nextBonus) {
+			if (!nextBonus) {
 				return setImmediate(cb, 'You don\'t have pending group bonus remaining');
-			} */
-			/* let userInfo = {
-				publicKey: req.body.publicKey,
-				transferedAmount: nextBonus * 100000000,
-				accType: 5
-			}; */
+			}
 			let hash = Buffer.from(JSON.parse(library.config.users[5].keys));
 			let keypair = library.ed.makeKeypair(hash);
 			let publicKey = keypair.publicKey.toString('hex');
@@ -1428,7 +1427,7 @@ Accounts.prototype.internal = {
 					try {
 						transaction = library.logic.transaction.create({
 							type: transactionTypes.REWARD,
-							amount: 5 * 100000000,
+							amount: nextBonus * 100000000,
 							sender: account,
 							recipientId: req.body.address,
 							keypair: keypair,
@@ -1455,24 +1454,6 @@ Accounts.prototype.internal = {
 					return setImmediate(cb, err);
 				});
 			});
-			
-			
-			/* library.logic.contract.sendContractAmount([userInfo], function (err, trsResponse) {
-				if (err) {
-					return setImmediate(cb, err);
-				}
-				library.cache.client.set(req.body.address + '_pending_group_bonus_trs_id', trsResponse.transactionId);
-				library.db.none(sql.updatePendingGroupBonus, {
-					nextBonus: nextBonus,
-					address: req.body.address
-				})
-				.then(function () {
-					return setImmediate(cb, null);
-				})
-				.catch(function (err) {
-					return setImmediate(cb, err);
-				});
-			}); */
 		});
 	},
 
