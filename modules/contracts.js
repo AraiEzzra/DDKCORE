@@ -45,10 +45,10 @@ function Contracts(cb, scope) {
 	};
 
 	self = this;
-	self.type = transactionTypes.CONTRACT;
+	self.type = transactionTypes.REWARD;
 
-	__private.assetTypes[transactionTypes.CONTRACT] = library.logic.transaction.attachAssetType(
-		transactionTypes.CONTRACT, new Contract(scope.config)
+	__private.assetTypes[transactionTypes.REWARD] = library.logic.transaction.attachAssetType(
+		transactionTypes.REWARD, new Contract(scope.config, scope.db)
 	);
 
 	setImmediate(cb, null, self);
@@ -69,8 +69,8 @@ Contracts.prototype.onBind = function (scope) {
 		transactions: scope.transactions,
 		delegates: scope.delegates,
 	};
-	__private.assetTypes[transactionTypes.CONTRACT].bind(
-		scope.accounts, scope.logger
+	__private.assetTypes[transactionTypes.REWARD].bind(
+		scope.accounts, scope.rounds
 	);
 };
 

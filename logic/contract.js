@@ -1,4 +1,3 @@
-let request = require('request');
 let modules, self;
 
 /**
@@ -10,10 +9,11 @@ let modules, self;
  * @param {function} cb - Callback function.
  * @return {setImmediateCallback} With `this` as data.
  */
-function Contract(config, cb) {
+function Contract(config, db, cb) {
 	self = this;
 	self.scope = {
-		config: config
+		config: config,
+		db: db
 	};
 
 	if (cb) {
@@ -29,7 +29,9 @@ function Contract(config, cb) {
  * @return {trs} trs
  */
 Contract.prototype.create = function (data, trs) {
-	trs.trsName = "CONTRACT";
+	trs.recipientId = data.recipientId;
+	trs.amount = data.amount;
+	trs.trsName = 'REWARD';
 	return trs;
 };
 
@@ -52,7 +54,15 @@ Contract.prototype.calculateFee = function () {
  * @return {function} cb
  */
 Contract.prototype.verify = function (trs, sender, cb) {
-	setImmediate(cb, null, trs);
+	if (!trs.recipientId) {
+		return setImmediate(cb, 'Missing recipient');
+	}
+
+	if (trs.amount <= 0) {
+		return setImmediate(cb, 'Invalid transaction amount');
+	}
+
+	return setImmediate(cb, null, trs);
 };
 
 /**
@@ -74,8 +84,22 @@ Contract.prototype.getBytes = function () {
  * @param {function} cb - Callback function.
  * @return {function} cb
  */
-Contract.prototype.apply = function (trs, sender, cb) {
-	setImmediate(cb);
+Contract.prototype.apply = function (trs, block, sender, cb) {
+	modules.accounts.setAccountAndGet({address: trs.recipientId}, function (err) {
+		if (err) {
+			return setImmediate(cb, err);
+		}
+
+		modules.accounts.mergeAccountAndGet({
+			address: trs.recipientId,
+			balance: trs.amount,
+			u_balance: trs.amount,
+			blockId: block.id,
+			round: modules.rounds.calc(block.height)
+		}, function (err) {
+			return setImmediate(cb, err);
+		});
+	});
 };
 
 /**
@@ -88,7 +112,7 @@ Contract.prototype.apply = function (trs, sender, cb) {
  * @return {function} cb
  */
 Contract.prototype.undo = function (trs, sender, cb) {
-	setImmediate(cb);
+	return setImmediate(cb);
 };
 
 /**
@@ -101,7 +125,7 @@ Contract.prototype.undo = function (trs, sender, cb) {
  * @return {function} cb
  */
 Contract.prototype.applyUnconfirmed = function (trs, sender, cb) {
-	setImmediate(cb);
+	return setImmediate(cb);
 };
 
 /**
@@ -114,7 +138,7 @@ Contract.prototype.applyUnconfirmed = function (trs, sender, cb) {
  * @return {function} cb
  */
 Contract.prototype.undoUnconfirmed = function (trs, sender, cb) {
-	setImmediate(cb);
+	return setImmediate(cb, null, trs);
 };
 
 /**
@@ -126,8 +150,8 @@ Contract.prototype.undoUnconfirmed = function (trs, sender, cb) {
  * @param {function} cb - Callback function.
  * @return {function} cb
  */
-Contract.prototype.ready = function (trs, sender, cb) {
-	setImmediate(cb);
+Contract.prototype.ready = function (trs) {
+	return true;
 };
 
 /**
@@ -138,8 +162,12 @@ Contract.prototype.ready = function (trs, sender, cb) {
  * @param {function} cb - Callback function.
  * @return {fucntion} cb
  */
-Contract.prototype.save = function (trs, cb) {
-	setImmediate(cb);
+Contract.prototype.save = function (trs) {
+	return trs;
+};
+
+Contract.prototype.dbSave = function () {
+	return null;
 };
 
 /**
@@ -160,8 +188,8 @@ Contract.prototype.dbRead = function () {
  * @param {function} cb - Callback function.
  * @return {function} cb
  */
-Contract.prototype.objectNormalize = function (asset, cb) {
-	setImmediate(cb);
+Contract.prototype.objectNormalize = function (trs) {
+	return trs;
 };
 
 /**
@@ -210,25 +238,28 @@ Contract.prototype.calcEndTime = function (accType, startTime) {
  * @return {function} cb
  */
 Contract.prototype.sendContractAmount = function (data, cb) {
+	let query = [];
 	data.forEach(function (recipient) {
 		let sender = self.scope.config.users[recipient.accType];
-		let port = self.scope.config.app.port;
-		let address = self.scope.config.address;
-		let url = 'http://' + address + ':' + port + '/api/transactions';
-		let transactionData = {
-			json: {
-				secret: sender.secret,
-				publicKey: sender.publicKey,
-				amount: recipient.transferedAmount,
-				recipientId: recipient.address
-			}
-		};
-		request.put(url, transactionData, function (err, trsResponse, body) {
-			if (!err && trsResponse.statusCode === 200) {
-				return setImmediate(cb, null, body);
-			} else {
-				return setImmediate(cb, err);
-			}
+		query.push(modules.accounts.mergeAccountAndGet({
+			publicKey: sender.publicKey,
+			balance: -recipient.transferedAmount,
+			u_balance: -recipient.transferedAmount
+		}));
+		query.push(modules.accounts.mergeAccountAndGet({
+			publicKey: recipient.publicKey,
+			balance: recipient.transferedAmount,
+			u_balance: recipient.transferedAmount
+		}));
+		function Tick(t) {
+			return t.none(query.join(''));
+		}
+		self.scope.db.tx(Tick)
+		.then(function () {
+			setImmediate(cb, null);
+		})
+		.catch(function (err) {
+			setImmediate(cb, err);
 		});  
 	});
 };
@@ -239,9 +270,10 @@ Contract.prototype.sendContractAmount = function (data, cb) {
  * @implements 
  * @param {Object} accounts - modules:accounts
  */
-Contract.prototype.bind = function (accounts) {
+Contract.prototype.bind = function (accounts, rounds) {
 	modules = {
 		accounts: accounts,
+		rounds: rounds,
 	};
 };
 

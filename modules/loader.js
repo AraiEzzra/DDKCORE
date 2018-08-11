@@ -5,6 +5,8 @@ let constants = require('../helpers/constants.js');
 let jobsQueue = require('../helpers/jobsQueue.js');
 let sandboxHelper = require('../helpers/sandbox.js');
 let schema = require('../schema/loader.js');
+let pgp = require('pg-promise');
+let path = require('path');
 let sql = require('../sql/loader.js');
 
 require('colors');
@@ -361,6 +363,15 @@ __private.loadBlockChain = function () {
 					return setImmediate(seriesCb, err);
 				}
 				);
+			},
+			updateUsersListView: function (seriesCb) {
+				let sql = new pgp.QueryFile(path.join(process.cwd(), 'sql', 'updateUsersListView.sql'), { minify: true });
+
+				library.db.query(sql).then(function () {
+					return setImmediate(seriesCb);
+				}).catch(function (err) {
+					throw err;
+				});
 			}
 		}, function (err) {
 			if (err) {
@@ -487,6 +498,7 @@ __private.loadBlockChain = function () {
 		}
 
 		library.db.task(updateMemAccounts).then(function (results) {
+
 			if (results[1].length > 0) {
 				return reload(count, 'Detected orphaned blocks in mem_accounts');
 			}

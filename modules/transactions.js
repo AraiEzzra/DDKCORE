@@ -83,16 +83,14 @@ function Transactions(cb, scope) {
 __private.list = function (filter, cb) {
 	let params = {};
 	let where = [];
-	if (filter.height === 0 || filter.height > 0) {
-		where.push('"b_height" >= ${height}');
-		params.height = filter.height;
-	}
 	let allowedFieldsMap = {
+		id: '"t_id" = ${id}',
 		blockId: '"t_blockId" = ${blockId}',
 		senderPublicKey: '"t_senderPublicKey" = DECODE (${senderPublicKey}, \'hex\')',
 		recipientPublicKey: '"m_recipientPublicKey" = DECODE (${recipientPublicKey}, \'hex\')',
 		senderId: '"t_senderId" = ${senderId}',
 		recipientId: '"t_recipientId" = ${recipientId}',
+		height: '"b_height" = ${height}',
 		fromHeight: '"b_height" >= ${fromHeight}',
 		toHeight: '"b_height" <= ${toHeight}',
 		fromTimestamp: '"t_timestamp" >= ${fromTimestamp}',
@@ -643,7 +641,7 @@ Transactions.prototype.onBind = function (scope) {
 Transactions.prototype.internal = {
 	getTransactionHistory: function(req, cb) {
 
-		// let trsDate=[],trsCount=[];
+		//let trsDate=[],trsCount=[];
 
 		let  fortnightBack = new Date(+new Date - 12096e5);
 
@@ -664,12 +662,12 @@ Transactions.prototype.internal = {
 		})
 		.then(function(trsHistory) {
 
-			// for(let i=0;i<trsHistory.length;i++) {
-			// 	trsDate[i] = new Date(trsHistory[i].time).toDateString();
-			// 	trsCount[i] = trsHistory[i].created;
-			// }
+			//for(let i=0;i<trsHistory.length;i++) {
+			//	trsDate[i] = new Date(trsHistory[i].time).toDateString();
+			//	trsCount[i] = trsHistory[i].created;
+			//}
 
-			return setImmediate(cb, null, {success: true, trsData: trsHistory});
+			return setImmediate(cb, null, {success: true, trsData: trsHistory });
 		})
 		.catch(function(err) {
 			return setImmediate(cb, {success: false, err: err});

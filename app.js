@@ -562,13 +562,13 @@ d.run(function () {
 					new Peers(scope.logger, cb);
 				}],
 				frozen: ['logger', 'db', 'transaction', 'network', 'config', function (scope, cb) {
-					new Frozen(scope.logger, scope.db, scope.transaction, scope.network, scope.config, cb);
+					new Frozen(scope.logger, scope.db, scope.transaction, scope.network, scope.config, scope.balancesSequence, scope.ed, cb);
 				}],
 				sendFreezeOrder: ['logger', 'db', 'network', function (scope, cb) {
 					new SendFreezeOrder(scope.logger, scope.db, scope.network, cb);
 				}],
 				contract: ['config', function (scope, cb) {
-					new Contract(scope.config, cb);
+					new Contract(scope.config, scope.db, cb);
 				}],
 				vote: ['logger', 'schema', 'db', function (scope, cb) {
 					new Vote(scope.logger, scope.schema, scope.db, cb);

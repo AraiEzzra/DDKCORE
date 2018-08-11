@@ -418,7 +418,7 @@ Accounts.prototype.shared = {
 						if (!isExist) {
 							self.referralLinkChain(req.body.referal, account.address, function (error) {
 								if (error) {
-									library.logger.error("Referral API Error : "+ error);
+									library.logger.error("Referral API Error : "+error);
 									return setImmediate(cb, error.toString());
 								} else {
 									let data = {
@@ -564,6 +564,7 @@ Accounts.prototype.shared = {
 
 			let hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
 			let keypair = library.ed.makeKeypair(hash);
+			let publicKey = keypair.publicKey.toString('hex');
 
 			if (req.body.publicKey) {
 				if (keypair.publicKey.toString('hex') !== req.body.publicKey) {
@@ -609,6 +610,10 @@ Accounts.prototype.shared = {
 
 							if (requester.publicKey === account.publicKey) {
 								return setImmediate(cb, 'Invalid requester public key');
+							}
+
+							if (requester.totalFrozeAmount == 0) {
+								return setImmediate(cb, 'Please Stake before vote/unvote');
 							}
 
 							let secondKeypair = null;
@@ -661,6 +666,10 @@ Accounts.prototype.shared = {
 							secondKeypair = library.ed.makeKeypair(secondHash);
 						}
 
+						if (account.totalFrozeAmount == 0) {
+							return setImmediate(cb, 'Please Stake before vote/unvote');
+						}
+
 						let transaction;
 
 						try {
@@ -683,7 +692,6 @@ Accounts.prototype.shared = {
 				if (err) {
 					return setImmediate(cb, err);
 				}
-
 				library.logic.vote.updateAndCheckVote({
 					votes: req.body.delegates,
 					senderId: transaction[0].senderId
@@ -752,9 +760,12 @@ Accounts.prototype.shared = {
 
 	getCirculatingSupply: function (req, cb) {
 		let initialUnmined = config.ddkSupply.totalSupply - config.initialPrimined.total;
-		let publicAddress = library.config.sender.address;
-
-		library.db.one(sql.getCurrentUnmined, { address: publicAddress })
+		//let publicAddress = library.config.sender.address;
+		let hash = Buffer.from(JSON.parse(library.config.users[0].keys));
+		let keypair = library.ed.makeKeypair(hash);
+		let publicKey = keypair.publicKey.toString('hex');
+		self.getAccount({publicKey: publicKey}, function(err, account) {
+			library.db.one(sql.getCurrentUnmined, { address: account.address })
 			.then(function (currentUnmined) {
 				let circulatingSupply = config.initialPrimined.total + initialUnmined - currentUnmined.balance;
 
@@ -770,6 +781,7 @@ Accounts.prototype.shared = {
 				library.logger.error(err.stack);
 				return setImmediate(cb, err.toString());
 			});
+		});
 	},
 	totalSupply: function (req, cb) {
 		let totalSupply = config.ddkSupply.totalSupply;
@@ -1052,6 +1064,7 @@ Accounts.prototype.internal = {
 						let data = {};
 						data.status = 0;
 						data.address = req.body.address;
+						data.publicKey = req.body.publicKey;
 						if (req.body.accType) {
 							data.acc_type = req.body.accType;
 							let lastBlock = modules.blocks.lastBlock.get();
@@ -1064,9 +1077,8 @@ Accounts.prototype.internal = {
 							cache.prototype.isExists(REDIS_KEY_USER_INFO_HASH, function (err, isExist) {
 								if (!isExist) {
 									let userInfo = {
-										address: data.address,
+										publicKey: data.publicKey,
 										transferedAmount: data.transferedAmount,
-										endTime: data.endTime,
 										accType: req.body.accType
 									};
 									cache.prototype.hmset(REDIS_KEY_USER_INFO_HASH, userInfo);
@@ -1420,26 +1432,47 @@ Accounts.prototype.internal = {
 			if (!nextBonus) {
 				return setImmediate(cb, 'You don\'t have pending group bonus remaining');
 			}
-			let userInfo = {
-				address: req.body.address,
-				transferedAmount: nextBonus,
-				accType: 5
-			};
-			library.logic.contract.sendContractAmount([userInfo], function (err, trsResponse) {
+			let hash = Buffer.from(JSON.parse(library.config.users[5].keys));
+			let keypair = library.ed.makeKeypair(hash);
+			let publicKey = keypair.publicKey.toString('hex');
+			library.balancesSequence.add(function (cb) {
+				self.getAccount({publicKey: publicKey}, function(err, account) {
+					if (err) {
+						return setImmediate(cb, err)
+					}
+					let transaction;
+					let secondKeypair = null;
+					account.publicKey = publicKey;
+	
+					try {
+						transaction = library.logic.transaction.create({
+							type: transactionTypes.REWARD,
+							amount: nextBonus * 100000000,
+							sender: account,
+							recipientId: req.body.address,
+							keypair: keypair,
+							secondKeypair: secondKeypair
+						});
+					} catch (e) {
+						return setImmediate(cb, e.toString());
+					}
+					modules.transactions.receiveTransactions([transaction], true, cb);
+				});
+			}, function (err, transaction) {
 				if (err) {
 					return setImmediate(cb, err);
 				}
-				library.cache.client.set(req.body.address + '_pending_group_bonus_trs_id', trsResponse.transactionId);
+				library.cache.client.set(req.body.address + '_pending_group_bonus_trs_id', transaction[0].id);
 				library.db.none(sql.updatePendingGroupBonus, {
 					nextBonus: nextBonus,
-					address: req.body.address
+					senderId: req.body.address
 				})
-					.then(function () {
-						return setImmediate(cb, null);
-					})
-					.catch(function (err) {
-						return setImmediate(cb, err);
-					});
+				.then(function () {
+					return setImmediate(cb, null, { transactionId: transaction[0].id });
+				})
+				.catch(function (err) {
+					return setImmediate(cb, err);
+				});
 			});
 		});
 	},

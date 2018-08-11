@@ -54,7 +54,7 @@ let DelegatesSql = {
 
 	getLatestVoters: 'SELECT * from trs WHERE type = 3 ORDER BY timestamp DESC LIMIT ${limit}',
 
-	getLatestDelegates: 'SELECT * from trs INNER JOIN delegates ON trs."id" = delegates."transactionId" WHERE type = 2 ORDER BY timestamp DESC LIMIT ${limit}'
+	getLatestDelegates: 'SELECT d."username" AS "username", t."t_senderId" AS "address", ENCODE(t."t_senderPublicKey", \'hex\') AS "publicKey", t."t_timestamp" AS "timestamp" FROM trs_list t INNER JOIN delegates d ON t."t_id" = d."transactionId" WHERE t."t_type" = 2 ORDER BY "t_timestamp" DESC LIMIT ${limit}'
 };
 
 module.exports = DelegatesSql;

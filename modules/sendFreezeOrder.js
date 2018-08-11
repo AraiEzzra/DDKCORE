@@ -250,6 +250,7 @@ SendFreezeOrder.prototype.shared = {
 
 			let hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
 			let keypair = library.ed.makeKeypair(hash);
+			let publicKey = keypair.publicKey.toString('hex');
 
 			if (req.body.publicKey) {
 				if (keypair.publicKey.toString('hex') !== req.body.publicKey) {
