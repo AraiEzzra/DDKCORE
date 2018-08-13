@@ -335,55 +335,14 @@ Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 			async.eachSeries(user[0].level, function (sponsorId, callback) {
 
 				stakeReward[sponsorId] = (((rewards.level[i]) * reward_amount) / 100);
-				/* let transactionData = {
-					json: {
-						secret: env.SENDER_SECRET,
-						amount: stakeReward[sponsorId],
-						recipientId: sponsorId,
-						transactionRefer: 11
-					}
-				};
 
-				self.scope.logic.transaction.sendTransaction(transactionData, function (err, transactionResponse) {
-					if (err) return err;
-					i++;
-
-					if (transactionResponse.body.success == false) {
-						sender_balance = parseFloat(transactionResponse.body.error.split('balance:')[1]);
-						if (sender_balance < 0.0001) {
-							cache.prototype.setJsonForKey("referStatus", false);
-							self.scope.logger.info("Staking Reward Info : " + transactionResponse.body.error);
-							return setImmediate(cb, null);
-						}
-					} else {
-						reward = true;
-						(async function(){
-							await self.scope.db.none(reward_sql.updateRewardTypeTransaction,{
-								sponsorAddress: sponsor_address,
-								introducer_address: sponsorId,
-								reward: stakeReward[sponsorId],
-								level: "Level "+(i),
-								transaction_type: "CHAINREF",
-								time: slots.getTime()
-							}).then(function(){
-	
-							}).catch(function(err){
-								return setImmediate(cb,err);
-							});
-						}());
-					}
-
-					if (i == chain_length && reward != true) {
-						self.scope.logger.info("Staking Reward Info : " + transactionResponse.body.error);
-					}
-
-					callback();
-				}); */
 				let hash = Buffer.from(JSON.parse(self.scope.config.users[6].keys));
 				let keypair = self.scope.ed.makeKeypair(hash);
 				let publicKey = keypair.publicKey.toString('hex');
-				self.scope.balancesSequence.add(function (cb) {
-					modules.accounts.getAccount({ publicKey: publicKey }, function (err, account) {
+				self.scope.balancesSequence.add(function (reward_cb) {
+					modules.accounts.getAccount({
+						publicKey: publicKey
+					}, function (err, account) {
 						if (err) {
 							return setImmediate(cb, err);
 						}
@@ -403,14 +362,46 @@ Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 						} catch (e) {
 							return setImmediate(cb, e.toString());
 						}
-						modules.transactions.receiveTransactions([transaction], true, callback);
+						modules.transactions.receiveTransactions([transaction], true, reward_cb);
+						i++;
 					});
 				}, function (err, transaction) {
 					if (err) {
-						callback(err);
+						let subString = err.toString().indexOf('balance:');
+						if (subString != -1) {
+							sender_balance = parseFloat(err.split('balance:')[1]);
+							if (!sender_balance) {
+								cache.prototype.setJsonForKey("referStatus", false);
+								self.scope.logger.info("Staking Reward Info : " + err);
+								return setImmediate(cb, null);
+							}
+							if (i == chain_length && reward != true) {
+								self.scope.logger.info("Staking Reward Info : " + err);
+							}
+						} else {
+							return callback(err);
+						}
+					} else {
+						reward = true;
+						(async function () {
+							await self.scope.db.none(reward_sql.updateRewardTypeTransaction, {
+								trsId: transaction[0].id,
+								sponsorAddress: sponsor_address,
+								introducer_address: sponsorId,
+								reward: stakeReward[sponsorId],
+								level: "Level " + (i),
+								transaction_type: "CHAINREF",
+								time: slots.getTime()
+							}).then(function () {
+
+							}).catch(function (err) {
+								return setImmediate(cb, err);
+							});
+						}());
 					}
-					callback(null, transaction[0].id);
+					callback();
 				});
+
 			}, function (err) {
 				if (err) {
 					return setImmediate(cb, err);
@@ -599,19 +590,19 @@ Frozen.prototype.checkFrozeOrders = function () {
 							return setImmediate(next, err);
 						}
 						//return setImmediate(next, null, transaction[0].id);
-						self.scope.logger.debug('TransactionId : ', transaction[0].id);
+						// self.scope.logger.debug('TransactionId : ', transaction[0].id);
 						self.scope.db.one(reward_sql.checkBalance, {
 							sender_address: env.SENDER_ADDRESS
 						}).then(function (bal) {
-							let balance = parseInt(bal.u_balance);
-							if (balance > 10000) {
+							let balance = parseFloat(bal.u_balance);
+							if (balance > 1000) {
 								let amount = parseInt(order.freezedAmount * __private.stakeReward.calcReward(modules.blocks.lastBlock.get().height) / 100);
 								self.sendStakingReward(order.senderId, amount, function (err) {
 									if (err) {
-										self.scope.logger.error(err.stack);
+										self.scope.logger.error(err);
 									}
 
-									self.scope.logger.info("Successfully transfered reward for freezing an amount and transaction ID is : " + transactionResponse.body.transactionId);
+									self.scope.logger.info("Successfully transfered reward for freezing an amount and transaction ID is : " + transaction[0].id);
 									next(null, null);
 								});
 							} else {
@@ -619,7 +610,7 @@ Frozen.prototype.checkFrozeOrders = function () {
 									if(!exist) {
 										cache.prototype.setJsonForKey("referStatus", false);
 									}
-									self.scope.logger.info("Successfully transfered reward for freezing an amount and transaction ID is : " + transactionResponse.body.transactionId);
+									self.scope.logger.info("Successfully transfered reward for freezing an amount and transaction ID is : " + transaction[0].id);
 									next(null, null);
 								});
 							}
