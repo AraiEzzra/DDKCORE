@@ -705,45 +705,14 @@ Delegates.prototype.internal = {
 	},
 
 	getLatestDelegates: function(req, cb) {
-		modules.delegates.getDelegates(req.body, function (err, data) {
-			if (err) {
-				return setImmediate(cb, err);
-			}
-
-			function compareNumber(a, b) {
-				let sorta = parseFloat(a[data.sortField]);
-				let sortb = parseFloat(b[data.sortField]);
-				if (data.sortMethod === 'ASC') {
-					return sorta - sortb;
-				} else {
-					return sortb - sorta;
-				}
-			}
-
-			function compareString(a, b) {
-				let sorta = a[data.sortField];
-				let sortb = b[data.sortField];
-				if (data.sortMethod === 'ASC') {
-					return sorta.localeCompare(sortb);
-				} else {
-					return sortb.localeCompare(sorta);
-				}
-			}
-
-			if (data.sortField) {
-				// TODO: 'rate' property is deprecated and need to be removed after transitional period
-				if (['approval', 'productivity', 'rate', 'rank', 'vote'].indexOf(data.sortField) > -1) {
-					data.delegates = data.delegates.sort(compareNumber);
-				} else if (['username', 'address', 'publicKey'].indexOf(data.sortField) > -1) {
-					data.delegates = data.delegates.sort(compareString);
-				} else {
-					return setImmediate(cb, 'Invalid sort field');
-				}
-			}
-
-			let delegates = data.delegates.slice(data.offset, data.limit);
-
-			return setImmediate(cb, null, { delegates: delegates, totalCount: data.count });
+		library.db.query(sql.getLatestDelegates, {
+			limit: req.body.limit
+		})
+		.then(function(delegates) {
+			return setImmediate(cb, null, { delegates: delegates });
+		})
+		.catch(function(err) {
+			return setImmediate(cb, err);
 		});
 	}
 };

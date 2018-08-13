@@ -154,12 +154,13 @@ Accounts.prototype.getAccount = function (filter, fields, cb) {
  * @param {referalLink} - Refer Id.
  * @param {address} - Address of user during registration.
  * @param {cb} - callback function which return success or failure to the caller.
-*/
+ * @author - Satish Joshi
+ */
 
 Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 
 	let referralLink = referalLink;
-	if (referralLink == undefined) {
+	if (!referralLink) {
 		referralLink = '';
 	}
 	let decoded = new Buffer(referralLink, 'base64').toString('ascii');
@@ -195,14 +196,13 @@ Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 			if (referralLink != '') {
 				library.logic.account.findReferralLevel(decoded, function (err, resp) {
 					if (err) {
-						return setImmediate(cb,err);
+						return setImmediate(cb, err);
 					}
 					if (resp.length != 0 && resp[0].level != null) {
 						let chain_length = ((resp[0].level.length) < 15) ? (resp[0].level.length) : 14;
 
 						level = level.concat(resp[0].level.slice(0, chain_length));
-					}
-					else if(resp.length == 0) {
+					} else if (resp.length == 0) {
 						return setImmediate(cb, "Referral link source not eligible");
 					}
 					callback();
@@ -278,7 +278,7 @@ Accounts.prototype.setAccountAndGet = function (data, cb) {
 		}
 	}
 	
-	let REDIS_KEY_USER = "userInfo_" + address;
+	let REDIS_KEY_USER = "userAccountInfo_" + address;
 
 	cache.prototype.isExists(REDIS_KEY_USER, function (err, isExist) { 
 		if(!isExist) {
@@ -392,7 +392,7 @@ Accounts.prototype.shared = {
 						mutatePayload: false
 					});
 
-					let REDIS_KEY_USER_INFO_HASH = 'userInfo_' + account.address;
+					let REDIS_KEY_USER_INFO_HASH = 'userAccountInfo_' + account.address;
 
 					let accountData = {
 						address: account.address,
@@ -564,6 +564,7 @@ Accounts.prototype.shared = {
 
 			let hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
 			let keypair = library.ed.makeKeypair(hash);
+			let publicKey = keypair.publicKey.toString('hex');
 
 			if (req.body.publicKey) {
 				if (keypair.publicKey.toString('hex') !== req.body.publicKey) {
@@ -609,6 +610,10 @@ Accounts.prototype.shared = {
 
 							if (requester.publicKey === account.publicKey) {
 								return setImmediate(cb, 'Invalid requester public key');
+							}
+
+							if (requester.totalFrozeAmount == 0) {
+								return setImmediate(cb, 'Please Stake before vote/unvote');
 							}
 
 							let secondKeypair = null;
@@ -661,6 +666,10 @@ Accounts.prototype.shared = {
 							secondKeypair = library.ed.makeKeypair(secondHash);
 						}
 
+						if (account.totalFrozeAmount == 0) {
+							return setImmediate(cb, 'Please Stake before vote/unvote');
+						}
+
 						let transaction;
 
 						try {
@@ -683,7 +692,6 @@ Accounts.prototype.shared = {
 				if (err) {
 					return setImmediate(cb, err);
 				}
-
 				library.logic.vote.updateAndCheckVote({
 					votes: req.body.delegates,
 					senderId: transaction[0].senderId
@@ -752,9 +760,12 @@ Accounts.prototype.shared = {
 
 	getCirculatingSupply: function (req, cb) {
 		let initialUnmined = config.ddkSupply.totalSupply - config.initialPrimined.total;
-		let publicAddress = library.config.sender.address;
-
-		library.db.one(sql.getCurrentUnmined, { address: publicAddress })
+		//let publicAddress = library.config.sender.address;
+		let hash = Buffer.from(JSON.parse(library.config.users[0].keys));
+		let keypair = library.ed.makeKeypair(hash);
+		let publicKey = keypair.publicKey.toString('hex');
+		self.getAccount({publicKey: publicKey}, function(err, account) {
+			library.db.one(sql.getCurrentUnmined, { address: account.address })
 			.then(function (currentUnmined) {
 				let circulatingSupply = config.initialPrimined.total + initialUnmined - currentUnmined.balance;
 
@@ -770,6 +781,7 @@ Accounts.prototype.shared = {
 				library.logger.error(err.stack);
 				return setImmediate(cb, err.toString());
 			});
+		});
 	},
 	totalSupply: function (req, cb) {
 		let totalSupply = config.ddkSupply.totalSupply;
@@ -959,7 +971,7 @@ Accounts.prototype.shared = {
 				});
 			}).catch(function (err) {
 				library.logger.error(err.stack);
-				return setImmediate(cb, err);
+				return setImmediate(cb, 'Invalid username or password');
 			});
 
 		}).catch(function (err) {
@@ -1420,22 +1432,43 @@ Accounts.prototype.internal = {
 			if (!nextBonus) {
 				return setImmediate(cb, 'You don\'t have pending group bonus remaining');
 			}
-			let userInfo = {
-				publicKey: req.body.publicKey,
-				transferedAmount: nextBonus * 100000000,
-				accType: 5
-			};
-			library.logic.contract.sendContractAmount([userInfo], function (err, trsResponse) {
+			let hash = Buffer.from(JSON.parse(library.config.users[5].keys));
+			let keypair = library.ed.makeKeypair(hash);
+			let publicKey = keypair.publicKey.toString('hex');
+			library.balancesSequence.add(function (cb) {
+				self.getAccount({publicKey: publicKey}, function(err, account) {
+					if (err) {
+						return setImmediate(cb, err)
+					}
+					let transaction;
+					let secondKeypair = null;
+					account.publicKey = publicKey;
+	
+					try {
+						transaction = library.logic.transaction.create({
+							type: transactionTypes.REWARD,
+							amount: nextBonus * 100000000,
+							sender: account,
+							recipientId: req.body.address,
+							keypair: keypair,
+							secondKeypair: secondKeypair
+						});
+					} catch (e) {
+						return setImmediate(cb, e.toString());
+					}
+					modules.transactions.receiveTransactions([transaction], true, cb);
+				});
+			}, function (err, transaction) {
 				if (err) {
 					return setImmediate(cb, err);
 				}
-				library.cache.client.set(req.body.address + '_pending_group_bonus_trs_id', trsResponse.transactionId);
+				library.cache.client.set(req.body.address + '_pending_group_bonus_trs_id', transaction[0].id);
 				library.db.none(sql.updatePendingGroupBonus, {
 					nextBonus: nextBonus,
-					address: req.body.address
+					senderId: req.body.address
 				})
 				.then(function () {
-					return setImmediate(cb, null);
+					return setImmediate(cb, null, { transactionId: transaction[0].id });
 				})
 				.catch(function (err) {
 					return setImmediate(cb, err);

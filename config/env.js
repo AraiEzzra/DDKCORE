@@ -22,7 +22,7 @@ let env = process.env;
  
 
 module.exports = {
-  redisURL: env.REDIS_URL || env.REDISTOGO_URL || "",
+  redisURL: env.REDIS_URL || env.REDISTOGO_URL || '',
   db: {
     password: env.DB_PASSWORD
   },
@@ -47,11 +47,6 @@ module.exports = {
   dapp: {
     masterpassword: env.DAPP_MASTERPASSWORD
   },
-  sender: {
-    secret: env.ADMIN_SECRET,
-    publicKey: env.ADMIN_PUBLICKEY,
-    address: env.ADMIN_ADDRESS 
-  },
   nethash: env.NETHASH,
   jwt: {
     secret: env.JWT_SECRET,
@@ -64,28 +59,31 @@ module.exports = {
   hashSecret: env.HASH_SECRET,
   users: [
     {
-      secret: env.PUBLIC_SECRET,
-      publicKey: env.PUBLIC_KEY
+      keys: env.DSTAKEREWARD
     },
     {
-      secret: env.CONTRIBUTORS_SECRET,
-      publicKey: env.CONTRIBUTORS_KEY
+      keys: env.DCONTRIBUTOR
     },
     {
-      secret: env.ADVISORS_SECRET,
-      publicKey: env.ADVISORS_KEY
+      keys: env.DADVISOR
     },
     {
-      secret: env.TEAMS_SECRET,
-      publicKey: env.TEAMS_KEY
+      keys: env.DTEAM
     },
     {
-      secret: env.FOUNDERS_SECRET,
-      publicKey: env.FOUNDERS_KEY
+      keys: env.DFOUNDER
     },
     {
-      secret: env.PENDING_GROUP_BONUS_SECRET,
-      publicKey: env.PENDING_GROUP_BONUS_KEY
+      keys: env.DPENDINGGB
+    },
+    {
+      keys: env.DAIRDROP
+    },
+    {
+      keys: env.DRESERVEDEX
+    },
+    {
+      keys: env.DDKFOUNDATION
     }
   ],  
 };

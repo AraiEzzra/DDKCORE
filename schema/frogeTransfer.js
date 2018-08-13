@@ -22,10 +22,6 @@ module.exports = {
 				type : 'integer',
 
 			},
-			publicKey: {
-				type: 'string',
-				format: 'publicKey'
-			},
 			secondSecret: {
 				type: 'string',
 				minLength: 1,

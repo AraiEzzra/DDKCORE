@@ -313,24 +313,34 @@ d.run(function () {
 			// handled socket's connection event
 			io.on('connection', function (socket) {
 				//IIFE: function to accept new socket.id in sockets array.
-				(function acceptSocket(socket, sockets) {
+				function acceptSocket(user, sockets) {
 					let userFound = false;
 					if (sockets) {
 						for (let i = 0; i < sockets.length; i++) {
-							if (sockets[i] === socket.id) {
+							if (sockets[i].address === user.address) {
 								userFound = true;
 							}
 						}
 					}
 					if (!userFound) {
-						sockets.push(socket.id);
+						sockets.push(user);
 					}
 					io.emit('updateConnected', sockets.length);
-				})(socket, sockets);
+				}
+
+				socket.on('setUserAddress', function (data) {
+					var user = {
+						address: data.address,
+						status: 'online',
+						socketId: socket.id
+					};
+					acceptSocket(user, sockets);
+				});
+
 				socket.on('disconnect', function () {
-					sockets.forEach(function (socketId) {
-						if (socketId === socket.id) {
-							sockets.pop(socketId);
+					sockets.forEach(function (user) {
+						if (user.socketId === socket.id) {
+							sockets.pop(user);
 							io.sockets.emit('updateConnected', sockets.length);
 						}
 					});
@@ -562,7 +572,7 @@ d.run(function () {
 					new Peers(scope.logger, cb);
 				}],
 				frozen: ['logger', 'db', 'transaction', 'network', 'config', function (scope, cb) {
-					new Frozen(scope.logger, scope.db, scope.transaction, scope.network, scope.config, cb);
+					new Frozen(scope.logger, scope.db, scope.transaction, scope.network, scope.config, scope.balancesSequence, scope.ed, cb);
 				}],
 				sendFreezeOrder: ['logger', 'db', 'network', function (scope, cb) {
 					new SendFreezeOrder(scope.logger, scope.db, scope.network, cb);

@@ -1,5 +1,9 @@
 'use strict';
 
+/** 
+ * @author - Satish Joshi
+ */
+
 let mailServices = require('./postmark');
 let rewards = require('./rewards');
 let async = require('async');
@@ -93,16 +97,22 @@ module.exports.api = function (app) {
 
     app.post('/referral/list', function (req, res) {
 
-        let hierarchy = {};
+        let hierarchy = [];
 
         let params = [],
             referList = [],
-            level = 1;
+            level = 1,
+            index = 0;
 
         function arrayPush(resp) {
             for (let i = 0; i < resp.length; i++) {
                 params.push('$' + (i + 1));
                 referList.push(resp[i].address);
+                hierarchy[index] = {
+                    "level": level,
+                    "address": resp[i].address
+                };
+                index++;
             }
         }
 
@@ -114,7 +124,6 @@ module.exports.api = function (app) {
                         referList.length = 0;
                         if (resp.length) {
                             arrayPush(resp);
-                            hierarchy[level] = JSON.parse(JSON.stringify(referList));
                             level++;
                             findSponsors(params, referList, cb);
                         }

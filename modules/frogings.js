@@ -61,7 +61,7 @@ function Frogings (cb, scope) {
 	);
 
 	__private.assetTypes[transactionTypes.STAKE] = library.logic.transaction.attachAssetType(
-		transactionTypes.STAKE, new Frozen(scope.logger, scope.db, scope.logic.transaction, scope.network, scope.config)
+		transactionTypes.STAKE, new Frozen(scope.logger, scope.db, scope.logic.transaction, scope.network, scope.config, scope.balancesSequence, scope.ed)
 	);
 
 	setImmediate(cb, null, self);
@@ -74,7 +74,8 @@ function Frogings (cb, scope) {
  * Disable refer option when main account balance becomes zero.
  * @param {stake_amount} - Amount stake by the user.
  * @param {address} - Address of user which staked the amount.
- * @param {cb} - callback function. 
+ * @param {cb} - callback function.
+ * @author - Satish Joshi 
  */
 
 Frogings.prototype.referralReward = function (stake_amount, address, cb) {
@@ -93,19 +94,35 @@ Frogings.prototype.referralReward = function (stake_amount, address, cb) {
 
 			introducerReward[sponsorId[i]] = (((env.STAKE_REWARD) * stake_amount) / 100);
 
-			let transactionData = {
-				json: {
-					secret: env.SENDER_SECRET,
-					amount: introducerReward[sponsorId[i]],
-					recipientId: sponsorId[i],
-					transactionRefer: 11
-				}
-			};
-
-			library.logic.transaction.sendTransaction(transactionData, function (err, transactionResponse) {
-				if (err) return err;
-				if (transactionResponse.body.success == false) {
-					library.logger.info("Direct Introducer Reward Info : " + transactionResponse.body.error);
+			let hash = Buffer.from(JSON.parse(library.config.users[6].keys));
+			let keypair = library.ed.makeKeypair(hash);
+			let publicKey = keypair.publicKey.toString('hex');
+			library.balancesSequence.add(function (cb) {
+				modules.accounts.getAccount({publicKey: publicKey}, function(err, account) {
+					if (err) {
+						return setImmediate(cb, err);
+					}
+					let transaction;
+					let secondKeypair = null;
+					account.publicKey = publicKey;
+	
+					try {
+						transaction = library.logic.transaction.create({
+							type: transactionTypes.REFER,
+							amount: introducerReward[sponsorId[i]],
+							sender: account,
+							recipientId: sponsorId[i],
+							keypair: keypair,
+							secondKeypair: secondKeypair
+						});
+					} catch (e) {
+						return setImmediate(cb, e.toString());
+					}
+					modules.transactions.receiveTransactions([transaction], true, cb);
+				});
+			}, function (err, transaction) {
+				if (err) {
+					return setImmediate(cb, err);
 				}
 				else {
 					(async function(){
@@ -125,7 +142,6 @@ Frogings.prototype.referralReward = function (stake_amount, address, cb) {
 				}
 				return setImmediate(cb, null);
 			});
-
 		} else {
 			library.logger.info("Direct Introducer Reward Info : No referrals or any introducer found");
 			return setImmediate(cb, null);
@@ -134,7 +150,7 @@ Frogings.prototype.referralReward = function (stake_amount, address, cb) {
 	}).catch(function (err) {
 		return setImmediate(cb, err);
 	});
-}
+};
 
 
 // Events
@@ -158,7 +174,8 @@ Frogings.prototype.onBind = function (scope) {
 	__private.assetTypes[transactionTypes.STAKE].bind(
 		scope.accounts,
 		scope.rounds,
-		scope.blocks
+		scope.blocks,
+		scope.transactions
 	);
 
 };
@@ -289,6 +306,7 @@ Frogings.prototype.shared = {
 
 			let hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
 			let keypair = library.ed.makeKeypair(hash);
+			let publicKey = keypair.publicKey.toString('hex');
 
 			if (req.body.publicKey) {
 				if (keypair.publicKey.toString('hex') !== req.body.publicKey) {
@@ -408,51 +426,39 @@ Frogings.prototype.shared = {
 				if (err) {
 					return setImmediate(cb, err);
 				}
+				library.network.io.sockets.emit('updateTotalStakeAmount', null);
 
-				library.logic.frozen.updateFrozeAmount({
-					account: accountData,
-					freezedAmount: req.body.freezedAmount
-				}, function (err) {
-					if (err) {
-						return setImmediate(cb, err);
-					}
-					library.network.io.sockets.emit('updateTotalStakeAmount', null);
-
-					library.db.one(ref_sql.checkBalance, {
-						sender_address: env.SENDER_ADDRESS
-					}).then(function (bal) {
-						let balance = parseInt(bal.u_balance);
-						if (balance > 10000) {
-							self.referralReward(req.body.freezedAmount, accountData.address, function (err) {
-								if (err) {
-									library.logger.error(err.stack);
-								}
-								return setImmediate(cb, null, {
-									transaction: transaction[0],
-									referStatus: true
-								});
+				library.db.one(ref_sql.checkBalance, {
+					sender_address: env.SENDER_ADDRESS
+				}).then(function (bal) {
+					let balance = parseInt(bal.u_balance);
+					if (balance > 10000) {
+						self.referralReward(req.body.freezedAmount, accountData.address, function (err) {
+							if (err) {
+								library.logger.error(err.stack);
+							}
+							return setImmediate(cb, null, {
+								transaction: transaction[0],
+								referStatus: true
 							});
-						} else {
-							cache.prototype.isExists("referStatus",function(err,exist){
-								if(!exist) {
-									cache.prototype.setJsonForKey("referStatus", false);
-								}
-								return setImmediate(cb, null, {
-									transaction: transaction[0],
-									referStatus: false
-								});
-							});					
-						}
-					}).catch(function (err) {
-						library.logger.error(err.stack);
-						return setImmediate(cb, err);
-					});
-
+						});
+					} else {
+						cache.prototype.isExists("referStatus", function (err, exist) {
+							if (!exist) {
+								cache.prototype.setJsonForKey("referStatus", false);
+							}
+							return setImmediate(cb, null, {
+								transaction: transaction[0],
+								referStatus: false
+							});
+						});
+					}
+				}).catch(function (err) {
+					library.logger.error(err.stack);
+					return setImmediate(cb, err);
 				});
 			});
 		});
-
-
 	}
 };
 
