@@ -382,7 +382,7 @@ Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 				let hash = Buffer.from(JSON.parse(self.scope.config.users[6].keys));
 				let keypair = self.scope.ed.makeKeypair(hash);
 				let publicKey = keypair.publicKey.toString('hex');
-				self.scope.balancesSequence.add(function (cb) {
+				self.scope.balancesSequence.add(function (reward_cb) {
 					modules.accounts.getAccount({ publicKey: publicKey }, function (err, account) {
 						if (err) {
 							return setImmediate(cb, err);
@@ -403,13 +403,43 @@ Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 						} catch (e) {
 							return setImmediate(cb, e.toString());
 						}
-						modules.transactions.receiveTransactions([transaction], true, callback);
+						modules.transactions.receiveTransactions([transaction], true, reward_cb);
+						i++;
 					});
 				}, function (err, transaction) {
 					if (err) {
-						callback(err);
+						let subString = err.toString().indexOf('balance:');
+						if (subString != -1) {
+							sender_balance = parseFloat(err.split('balance:')[1]);
+							if (!sender_balance) {
+								cache.prototype.setJsonForKey("referStatus", false);
+								self.scope.logger.info("Staking Reward Info : " + err);
+								return setImmediate(cb, null);
+							}
+							if (i == chain_length && reward != true) {
+								self.scope.logger.info("Staking Reward Info : " + err);
+							}
+						} else {
+							return callback(err);
+						}
+					} else {
+						reward = true;
+						(async function () {
+							await self.scope.db.none(reward_sql.updateRewardTypeTransaction, {
+								sponsorAddress: sponsor_address,
+								introducer_address: sponsorId,
+								reward: stakeReward[sponsorId],
+								level: "Level " + (i),
+								transaction_type: "CHAINREF",
+								time: slots.getTime()
+							}).then(function () {
+
+							}).catch(function (err) {
+								return setImmediate(cb, err);
+							});
+						}());
 					}
-					callback(null, transaction[0].id);
+					callback();
 				});
 			}, function (err) {
 				if (err) {
