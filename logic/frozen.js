@@ -322,7 +322,7 @@ Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 	let sponsor_address = address;
 	let stakeReward = {};
 	let i = 0;
-	let balance, reward, sender_balance;
+	let reward, sender_balance;
 
 	self.scope.db.query(reward_sql.referLevelChain, {
 		address: sponsor_address
