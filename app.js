@@ -318,6 +318,7 @@ d.run(function () {
 					if (sockets) {
 						for (let i = 0; i < sockets.length; i++) {
 							if (sockets[i].address === user.address) {
+								sockets[i] = user;
 								userFound = true;
 							}
 						}
