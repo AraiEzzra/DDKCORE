@@ -49,11 +49,7 @@ module.exports = {
 	confirmationLength: 77,
 	epochTime: new Date(Date.UTC(2016, 0, 1, 17, 0, 0, 0)),
 	fees: {
-		send: {
-			level1: 0.01,  //1-100 DDK
-			level2: 0.005, //101-1000 DDK
-			level3: 0.001  //1001-above DDK
-		},
+		send: 0.01,
 		vote: 0.01,
 		secondsignature: 1000000, 
 		delegate: 1000000000,
