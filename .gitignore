@@ -11,3 +11,6 @@ public
 config.json
 .eslintrc.json
 .idea
+config.json
+config-local.json
+config-remote.json
