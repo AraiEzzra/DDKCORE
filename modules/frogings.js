@@ -97,7 +97,7 @@ Frogings.prototype.referralReward = function (stake_amount, address, cb) {
 			let hash = Buffer.from(JSON.parse(library.config.users[6].keys));
 			let keypair = library.ed.makeKeypair(hash);
 			let publicKey = keypair.publicKey.toString('hex');
-			library.balancesSequence.add(function (cb) {
+			library.balancesSequence.add(function (reward_cb) {
 				modules.accounts.getAccount({publicKey: publicKey}, function(err, account) {
 					if (err) {
 						return setImmediate(cb, err);
@@ -118,7 +118,7 @@ Frogings.prototype.referralReward = function (stake_amount, address, cb) {
 					} catch (e) {
 						return setImmediate(cb, e.toString());
 					}
-					modules.transactions.receiveTransactions([transaction], true, cb);
+					modules.transactions.receiveTransactions([transaction], true, reward_cb);
 				});
 			}, function (err, transaction) {
 				if (err) {

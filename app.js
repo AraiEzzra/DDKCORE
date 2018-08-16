@@ -337,9 +337,17 @@ d.run(function () {
 					acceptSocket(user, sockets);
 				});
 
-				socket.on('disconnect', function () {
+				socket.on('logout', function(data) {
+					var user = {
+						address: data.address,
+						socketId: socket.id
+					};
+					socket.disconnect(user);
+				});
+
+				socket.on('disconnect', function (data) {
 					sockets.forEach(function (user) {
-						if (user.socketId === socket.id) {
+						if (user.address === data.address || user.socketId === socket.id) {
 							sockets.pop(user);
 							io.sockets.emit('updateConnected', sockets.length);
 						}
