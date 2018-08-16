@@ -10,7 +10,6 @@ let ed = require('./ed.js');
 let config = require('../config');
 var async = require('async');
 let redis = require('redis');
-let logic = require('../logic/account');
 let slots = require('./slots');
 let constants = require('./constants');
 let Logger = require('../logger.js');
