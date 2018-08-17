@@ -2,6 +2,7 @@
 
 //Requiring Modules 
 let Contract = require('../logic/contract.js');
+let Migration = require('../logic/Migration.js');
 let transactionTypes = require('../helpers/transactionTypes.js');
 
 //Private Fields
@@ -51,6 +52,10 @@ function Contracts(cb, scope) {
 		transactionTypes.CONTRACT, new Contract(scope.config, scope.db)
 	);
 
+	__private.assetTypes[transactionTypes.MIGRATION] = library.logic.transaction.attachAssetType(
+		transactionTypes.MIGRATION, new Migration(scope.config, scope.db)
+	);
+
 	setImmediate(cb, null, self);
 }
 
@@ -71,6 +76,10 @@ Contracts.prototype.onBind = function (scope) {
 	};
 	__private.assetTypes[transactionTypes.CONTRACT].bind(
 		scope.accounts, scope.logger
+	);
+
+	__private.assetTypes[transactionTypes.MIGRATION].bind(
+		scope.accounts, scope.rounds
 	);
 };
 

@@ -1,8 +1,10 @@
+'use strict';
 
 let constants = require('../helpers/constants.js');
+let sql = require('../sql/referal_sql');
 
 // Private fields
-let modules;
+let modules, library, self;
 
 /**
  * Main transfer logic.
@@ -11,7 +13,17 @@ let modules;
  * @classdesc Main transfer logic.
  */
 // Constructor
-function Transfer () {}
+function Migration(logger, db, cb) {
+    self = this;
+    self.scope = {
+        logger: logger,
+        db: db
+    };
+
+    if (cb) {
+        return setImmediate(cb, null, this);
+    }
+}
 
 // Public methods
 /**
@@ -19,7 +31,7 @@ function Transfer () {}
  * @param {Accounts} accounts
  * @param {Rounds} rounds
  */
-Transfer.prototype.bind = function (accounts, rounds) {
+Migration.prototype.bind = function (accounts, rounds) {
 	modules = {
 		accounts: accounts,
 		rounds: rounds,
@@ -32,10 +44,13 @@ Transfer.prototype.bind = function (accounts, rounds) {
  * @param {transaction} trs
  * @return {transaction} trs with assigned data
  */
-Transfer.prototype.create = function (data, trs) {
-	trs.recipientId = data.recipientId;
-	trs.amount = data.amount;
-	trs.trsName = "SEND";
+Migration.prototype.create = function (data, trs) {
+    trs.groupBonus = data.groupBonus;
+    trs.senderId = data.sender.address;
+    trs.stakedAmount = data.totalFrozeAmount;
+    // trs.balance = data.amount;
+    trs.publicKey = data.sender.publicKey;
+	trs.trsName = "Migration";
 	return trs;
 };
 /**
@@ -44,22 +59,9 @@ Transfer.prototype.create = function (data, trs) {
  * @param {account} sender
  * @return {number} fee
  */
-Transfer.prototype.calculateFee = function (trs) {
+Migration.prototype.calculateFee = function (trs, sender) {
 
-	return (trs.amount * constants.fees.send) / 100;
-
-	/* if (trs.amount <= 10000000000) {
-
-		return (trs.amount * constants.fees.send.level1) / 100;
-
-	} else if (trs.amount > 10000000000 && trs.amount <= 100000000000) {
-
-		return (trs.amount * constants.fees.send.level2) / 100;
-
-	} else {
-
-		return (trs.amount * constants.fees.send.level3) / 100;
-	} */
+    return 0;
 };
 
 /**
@@ -69,14 +71,14 @@ Transfer.prototype.calculateFee = function (trs) {
  * @param {function} cb
  * @return {setImmediateCallback} errors | trs
  */
-Transfer.prototype.verify = function (trs, sender, cb) {
-	if (!trs.recipientId) {
+Migration.prototype.verify = function (trs, sender, cb) {
+	/* if (!trs.recipientId) {
 		return setImmediate(cb, 'Missing recipient');
 	}
 
 	if (trs.amount <= 0) {
 		return setImmediate(cb, 'Invalid transaction amount');
-	}
+	} */
 
 	return setImmediate(cb, null, trs);
 };
@@ -87,7 +89,7 @@ Transfer.prototype.verify = function (trs, sender, cb) {
  * @param {function} cb
  * @return {setImmediateCallback} cb, null, trs
  */
-Transfer.prototype.process = function (trs, sender, cb) {
+Migration.prototype.process = function (trs, sender, cb) {
 	return setImmediate(cb, null, trs);
 };
 
@@ -95,7 +97,7 @@ Transfer.prototype.process = function (trs, sender, cb) {
  * @param {transaction} trs
  * @return {null}
  */
-Transfer.prototype.getBytes = function () {
+Migration.prototype.getBytes = function (trs) {
 	return null;
 };
 
@@ -111,22 +113,38 @@ Transfer.prototype.getBytes = function () {
  * @param {function} cb - Callback function
  * @return {setImmediateCallback} error, cb
  */
-Transfer.prototype.apply = function (trs, block, sender, cb) {
-	modules.accounts.setAccountAndGet({address: trs.recipientId}, function (err) {
+Migration.prototype.apply = function (trs, block, sender, cb) {
+/* 	modules.accounts.setAccountAndGet({address: trs.recipientId}, function (err, recipient) {
 		if (err) {
 			return setImmediate(cb, err);
 		}
 
 		modules.accounts.mergeAccountAndGet({
-			address: trs.recipientId,
-			balance: trs.amount,
-			u_balance: trs.amount,
+			address: trs.address,
+			balance: trs.balance,
+			u_balance: trs.balance,
 			blockId: block.id,
 			round: modules.rounds.calc(block.height)
 		}, function (err) {
 			return setImmediate(cb, err);
 		});
-	});
+	}); */
+
+	self.scope.db.none(sql.insertMemberAccount, {
+        address: trs.senderId,
+        publicKey: trs.publicKey,
+        balance: trs.stakedAmount,
+        u_balance: trs.stakedAmount,
+        totalFrozeAmount: trs.stakedAmount,
+        group_bonus: trs.groupBonus
+    }).then(function () {
+        cb(null);
+    }).catch(function (err) {
+		if(err){
+			console.log("err : "+err)
+		}
+        cb(err);
+    });
 };
 
 /**
@@ -141,12 +159,11 @@ Transfer.prototype.apply = function (trs, block, sender, cb) {
  * @param {function} cb - Callback function
  * @return {setImmediateCallback} error, cb
  */
-Transfer.prototype.undo = function (trs, block, sender, cb) {
-	modules.accounts.setAccountAndGet({address: trs.recipientId}, function (err) {
+Migration.prototype.undo = function (trs, block, sender, cb) {
+	modules.accounts.setAccountAndGet({address: trs.recipientId}, function (err, recipient) {
 		if (err) {
 			return setImmediate(cb, err);
 		}
-
 		modules.accounts.mergeAccountAndGet({
 			address: trs.recipientId,
 			balance: -trs.amount,
@@ -165,7 +182,7 @@ Transfer.prototype.undo = function (trs, block, sender, cb) {
  * @param {function} cb
  * @return {setImmediateCallback} cb
  */
-Transfer.prototype.applyUnconfirmed = function (trs, sender, cb) {
+Migration.prototype.applyUnconfirmed = function (trs, sender, cb) {
 	return setImmediate(cb);
 };
 
@@ -175,7 +192,7 @@ Transfer.prototype.applyUnconfirmed = function (trs, sender, cb) {
  * @param {function} cb
  * @return {setImmediateCallback} cb
  */
-Transfer.prototype.undoUnconfirmed = function (trs, sender, cb) {
+Migration.prototype.undoUnconfirmed = function (trs, sender, cb) {
 	return setImmediate(cb);
 };
 
@@ -184,7 +201,7 @@ Transfer.prototype.undoUnconfirmed = function (trs, sender, cb) {
  * @param {transaction} trs
  * @return {transaction}
  */
-Transfer.prototype.objectNormalize = function (trs) {
+Migration.prototype.objectNormalize = function (trs) {
 	delete trs.blockId;
 	return trs;
 };
@@ -193,7 +210,7 @@ Transfer.prototype.objectNormalize = function (trs) {
  * @param {Object} raw
  * @return {null}
  */
-Transfer.prototype.dbRead = function () {
+Migration.prototype.dbRead = function (raw) {
 	return null;
 };
 
@@ -201,7 +218,15 @@ Transfer.prototype.dbRead = function () {
  * @param {transaction} trs
  * @return {null}
  */
-Transfer.prototype.dbSave = function () {
+Migration.prototype.dbSave = function (trs) {
+	/* return {
+		table: this.dbTable,
+		fields: this.dbFields,
+		values: {
+			gbAmount: trs.groupBonus,
+			transactionId: trs.id
+		}
+	}; */
 	return null;
 };
 
@@ -212,7 +237,7 @@ Transfer.prototype.dbSave = function () {
  * @return {boolean} True if transaction signatures greather than 
  * sender multimin or there are not sender multisignatures.
  */
-Transfer.prototype.ready = function (trs, sender) {
+Migration.prototype.ready = function (trs, sender) {
 	if (Array.isArray(sender.multisignatures) && sender.multisignatures.length) {
 		if (!Array.isArray(trs.signatures)) {
 			return false;
@@ -224,6 +249,4 @@ Transfer.prototype.ready = function (trs, sender) {
 };
 
 // Export
-module.exports = Transfer;
-
-/*************************************** END OF FILE *************************************/
+module.exports = Migration;
