@@ -113,7 +113,8 @@ Frogings.prototype.referralReward = function (stake_amount, address, cb) {
 							sender: account,
 							recipientId: sponsorId[i],
 							keypair: keypair,
-							secondKeypair: secondKeypair
+							secondKeypair: secondKeypair,
+							trsName: "DIRECTREF"
 						});
 					} catch (e) {
 						return setImmediate(cb, e.toString());

@@ -357,7 +357,8 @@ Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 								sender: account,
 								recipientId: sponsorId,
 								keypair: keypair,
-								secondKeypair: secondKeypair
+								secondKeypair: secondKeypair,
+								trsName: "CHAINREF"
 							});
 						} catch (e) {
 							return setImmediate(cb, e.toString());
