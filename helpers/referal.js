@@ -191,6 +191,12 @@ module.exports.api = function (app) {
         });
     });
 
+    /**
+     * It will gather the status of the sponsors stake orders.
+     * It will return the status either Active or Inactive.
+     * @param {req} - It consist of user address.
+     * @returns {sponsorStatus} - Returns the status of stake order.
+     */
 
     app.post('/sponsor/stakeStatus', function (req, res) {
         let address = req.body.address;
