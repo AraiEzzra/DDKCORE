@@ -1,4 +1,3 @@
-
 /**
  * A node-style callback as used by {@link logic} and {@link modules}.
  * @see {@link https://nodejs.org/api/errors.html#errors_node_js_style_callbacks}
@@ -180,6 +179,7 @@ try {
 let d = require('domain').create();
 
 d.on('error', function (err) {
+	console.log('error : ', err.stack);
 	logger.error('Domain master', { message: err.message, stack: err.stack });
 	process.exit(0);
 });
@@ -317,12 +317,12 @@ d.run(function () {
 					let userFound = false;
 					if (sockets) {
 						for (let i = 0; i < sockets.length; i++) {
-							if (sockets[i].address === user.address) {
+							if (sockets[i].address == user.address) {
 								userFound = true;
 							}
 						}
 					}
-					if (!userFound) {
+					if (!userFound && user.address) {
 						sockets.push(user);
 					}
 					io.emit('updateConnected', sockets.length);
@@ -337,18 +337,10 @@ d.run(function () {
 					acceptSocket(user, sockets);
 				});
 
-				socket.on('logout', function(data) {
-					var user = {
-						address: data.address,
-						socketId: socket.id
-					};
-					socket.disconnect(user);
-				});
-
-				socket.on('disconnect', function (data) {
-					sockets.forEach(function (user) {
-						if (user.address === data.address || user.socketId === socket.id) {
-							sockets.pop(user);
+				socket.on('disconnect', function () {
+					sockets.forEach(function (user, index) {
+						if (user.socketId == socket.id) {
+							sockets.splice(index, 1);
 							io.sockets.emit('updateConnected', sockets.length);
 						}
 					});
@@ -611,6 +603,7 @@ d.run(function () {
 					let d = require('domain').create();
 
 					d.on('error', function (err) {
+						console.log('error : ', err.stack);
 						scope.logger.error('Domain ' + name, { message: err.message, stack: err.stack });
 					});
 
