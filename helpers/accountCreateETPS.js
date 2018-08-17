@@ -208,7 +208,7 @@ async.series([
                         },
                     ], function (err) {
                         if (err) {
-                            callback(err);
+                            return callback(err);
                         }
                         console.log('Address , Passphrase and Referral chain created successfully');
                         callback();
@@ -268,7 +268,7 @@ async.series([
 
                         }, function (err) {
                             if (err) {
-                                callback(err);
+                                return callback(err);
                             }
                             etps_balance = etps_balance * 100000000;
                             let user_data = {

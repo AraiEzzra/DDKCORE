@@ -1,7 +1,5 @@
-
-
-let moment = require('moment');
-let util = require('util');
+var moment = require('moment');
+var util = require('util');
 
 module.exports = function (grunt) {
 	let files = [

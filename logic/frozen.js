@@ -10,6 +10,7 @@ let rewards = require('../helpers/rewards');
 let reward_sql = require('../sql/referal_sql');
 let env = process.env;
 let cache = require('../modules/cache');
+let transactionTypes = require('../helpers/transactionTypes.js');
 
 let __private = {};
 __private.types = {};
@@ -29,7 +30,7 @@ let modules, library, self;
  * @return {setImmediateCallback} With `this` as data.
  */
 // Constructor
-function Frozen(logger, db, transaction, network, config, cb) {
+function Frozen(logger, db, transaction, network, config, balancesSequence, ed, cb) {
 	self = this;
 	self.scope = {
 		logger: logger,
@@ -38,7 +39,9 @@ function Frozen(logger, db, transaction, network, config, cb) {
 			transaction: transaction
 		},
 		network: network,
-		config: config
+		config: config,
+		balancesSequence: balancesSequence,
+		ed: ed
 	};
 
 	if (cb) {
@@ -65,7 +68,7 @@ Frozen.prototype.create = function (data, trs) {
 	trs.recipientId = null;
 	trs.stakedAmount = data.freezedAmount;
 	trs.nextVoteMilestone = (date.setMinutes(date.getMinutes() + constants.froze.vTime)) / 1000;
-	trs.trsName = "STAKE";
+	trs.trsName = 'STAKE';
 	return trs;
 };
 
@@ -91,14 +94,14 @@ Frozen.prototype.dbTable = 'stake_orders';
  * @desc stake_order table fields
  */
 Frozen.prototype.dbFields = [
-	"id",
-	"status",
-	"startTime",
-	"insertTime",
-	"senderId",
-	"recipientId",
-	"freezedAmount",
-	"nextVoteMilestone"
+	'id',
+	'status',
+	'startTime',
+	'insertTime',
+	'senderId',
+	'recipientId',
+	'freezedAmount',
+	'nextVoteMilestone'
 ];
 
 Frozen.prototype.inactive = '0';
@@ -295,11 +298,12 @@ Frozen.prototype.calculateFee = function (trs, sender) {
  * @implements 
  * @param {Object} accounts - modules:accounts
  */
-Frozen.prototype.bind = function (accounts, rounds, blocks) {
+Frozen.prototype.bind = function (accounts, rounds, blocks, transactions) {
 	modules = {
 		accounts: accounts,
 		rounds: rounds,
-		blocks: blocks
+		blocks: blocks,
+		transactions: transactions
 	};
 };
 
@@ -318,7 +322,7 @@ Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 	let sponsor_address = address;
 	let stakeReward = {};
 	let i = 0;
-	let balance, reward, sender_balance;
+	let reward, sender_balance;
 
 	self.scope.db.query(reward_sql.referLevelChain, {
 		address: sponsor_address
@@ -332,48 +336,70 @@ Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 
 				stakeReward[sponsorId] = (((rewards.level[i]) * reward_amount) / 100);
 
-				let transactionData = {
-					json: {
-						secret: env.SENDER_SECRET,
-						amount: stakeReward[sponsorId],
-						recipientId: sponsorId,
-						transactionRefer: 11
-					}
-				};
+				let hash = Buffer.from(JSON.parse(self.scope.config.users[6].keys));
+				let keypair = self.scope.ed.makeKeypair(hash);
+				let publicKey = keypair.publicKey.toString('hex');
+				self.scope.balancesSequence.add(function (reward_cb) {
+					modules.accounts.getAccount({
+						publicKey: publicKey
+					}, function (err, account) {
+						if (err) {
+							return setImmediate(cb, err);
+						}
+						let transaction;
+						let secondKeypair = null;
+						account.publicKey = publicKey;
 
-				self.scope.logic.transaction.sendTransaction(transactionData, function (err, transactionResponse) {
-					if (err) return err;
-					i++;
-
-					if (transactionResponse.body.success == false) {
-						sender_balance = parseFloat(transactionResponse.body.error.split('balance:')[1]);
-						if (sender_balance < 0.0001) {
-							cache.prototype.setJsonForKey("referStatus", false);
-							self.scope.logger.info("Staking Reward Info : " + transactionResponse.body.error);
-							return setImmediate(cb, null);
+						try {
+							transaction = self.scope.logic.transaction.create({
+								type: transactionTypes.REFER,
+								amount: stakeReward[sponsorId],
+								sender: account,
+								recipientId: sponsorId,
+								keypair: keypair,
+								secondKeypair: secondKeypair,
+								trsName: "CHAINREF"
+							});
+						} catch (e) {
+							return setImmediate(cb, e.toString());
+						}
+						modules.transactions.receiveTransactions([transaction], true, reward_cb);
+						i++;
+					});
+				}, function (err, transaction) {
+					if (err) {
+						let subString = err.toString().indexOf('balance:');
+						if (subString != -1) {
+							sender_balance = parseFloat(err.split('balance:')[1]);
+							if (!sender_balance) {
+								cache.prototype.setJsonForKey("referStatus", false);
+								self.scope.logger.info("Staking Reward Info : " + err);
+								return setImmediate(cb, null);
+							}
+							if (i == chain_length && reward != true) {
+								self.scope.logger.info("Staking Reward Info : " + err);
+							}
+						} else {
+							return callback(err);
 						}
 					} else {
 						reward = true;
-						(async function(){
-							await self.scope.db.none(reward_sql.updateRewardTypeTransaction,{
+						(async function () {
+							await self.scope.db.none(reward_sql.updateRewardTypeTransaction, {
+								trsId: transaction[0].id,
 								sponsorAddress: sponsor_address,
 								introducer_address: sponsorId,
 								reward: stakeReward[sponsorId],
-								level: "Level "+(i),
+								level: "Level " + (i),
 								transaction_type: "CHAINREF",
 								time: slots.getTime()
-							}).then(function(){
-	
-							}).catch(function(err){
-								return setImmediate(cb,err);
+							}).then(function () {
+
+							}).catch(function (err) {
+								return setImmediate(cb, err);
 							});
 						}());
 					}
-
-					if (i == chain_length && reward != true) {
-						self.scope.logger.info("Staking Reward Info : " + transactionResponse.body.error);
-					}
-
 					callback();
 				});
 
@@ -388,7 +414,6 @@ Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 			self.scope.logger.info("Staking Reward Info : Referral chain is empty");
 			return setImmediate(cb, null);
 		}
-
 	}).catch(function (err) {
 		return setImmediate(cb, err);
 	});
@@ -492,16 +517,16 @@ Frozen.prototype.checkFrozeOrders = function () {
 					id: order.stakeId
 				}).then(function () {
 					//Request to send transaction
-					let transactionData = {
+					/* let transactionData = {
 						json: {
 							secret: self.scope.config.sender.secret,
 							amount: parseInt(order.freezedAmount * __private.stakeReward.calcReward(modules.blocks.lastBlock.get().height) / 100),
 							recipientId: order.senderId,
 							publicKey: self.scope.config.sender.publicKey
 						}
-					};
+					}; */
 					//Send froze monthly rewards to users
-					self.scope.logic.transaction.sendTransaction(transactionData, function (error, transactionResponse) {
+					/* self.scope.logic.transaction.sendTransaction(transactionData, function (error, transactionResponse) {
 						if (error)
 							throw error;
 						else {
@@ -534,6 +559,65 @@ Frozen.prototype.checkFrozeOrders = function () {
 							});
 
 						}
+					}); */
+					let hash = Buffer.from(JSON.parse(self.scope.config.users[0].keys));
+					let keypair = self.scope.ed.makeKeypair(hash);
+					let publicKey = keypair.publicKey.toString('hex');
+					self.scope.balancesSequence.add(function (cb) {
+						modules.accounts.getAccount({ publicKey: publicKey }, function (err, account) {
+							if (err) {
+								return setImmediate(cb, err);
+							}
+							let transaction;
+							let secondKeypair = null;
+							account.publicKey = publicKey;
+
+							try {
+								transaction = self.scope.logic.transaction.create({
+									type: transactionTypes.REWARD,
+									amount: parseInt(order.freezedAmount * __private.stakeReward.calcReward(modules.blocks.lastBlock.get().height) / 100),
+									sender: account,
+									recipientId: order.senderId,
+									keypair: keypair,
+									secondKeypair: secondKeypair
+								});
+							} catch (e) {
+								return setImmediate(cb, e.toString());
+							}
+							modules.transactions.receiveTransactions([transaction], true, cb);
+						});
+					}, function (err, transaction) {
+						if (err) {
+							return setImmediate(next, err);
+						}
+						//return setImmediate(next, null, transaction[0].id);
+						// self.scope.logger.debug('TransactionId : ', transaction[0].id);
+						self.scope.db.one(reward_sql.checkBalance, {
+							sender_address: env.SENDER_ADDRESS
+						}).then(function (bal) {
+							let balance = parseFloat(bal.u_balance);
+							if (balance > 1000) {
+								let amount = parseInt(order.freezedAmount * __private.stakeReward.calcReward(modules.blocks.lastBlock.get().height) / 100);
+								self.sendStakingReward(order.senderId, amount, function (err) {
+									if (err) {
+										self.scope.logger.error(err);
+									}
+
+									self.scope.logger.info("Successfully transfered reward for freezing an amount and transaction ID is : " + transaction[0].id);
+									next(null, null);
+								});
+							} else {
+								cache.prototype.isExists("referStatus",function(err,exist){
+									if(!exist) {
+										cache.prototype.setJsonForKey("referStatus", false);
+									}
+									self.scope.logger.info("Successfully transfered reward for freezing an amount and transaction ID is : " + transaction[0].id);
+									next(null, null);
+								});
+							}
+						}).catch(function (err) {
+							next(err, null);
+						});
 					});
 				}).catch(function (err) {
 					self.scope.logger.error(err.stack);
@@ -587,7 +671,7 @@ Frozen.prototype.checkFrozeOrders = function () {
 
 	async.auto({
 		getfrozeOrders: function (next) {
-			getfrozeOrders(next)
+			getfrozeOrders(next);
 		},
 		checkAndUpdateMilestone: ['getfrozeOrders', function (results, next) {
 			checkAndUpdateMilestone(next, results.getfrozeOrders);
@@ -601,7 +685,7 @@ Frozen.prototype.checkFrozeOrders = function () {
 	}, function (err, results) {
 		if (err)
 			self.scope.logger.error(err);
-	})
+	});
 
 };
 

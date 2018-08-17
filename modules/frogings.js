@@ -61,7 +61,7 @@ function Frogings (cb, scope) {
 	);
 
 	__private.assetTypes[transactionTypes.STAKE] = library.logic.transaction.attachAssetType(
-		transactionTypes.STAKE, new Frozen(scope.logger, scope.db, scope.logic.transaction, scope.network, scope.config)
+		transactionTypes.STAKE, new Frozen(scope.logger, scope.db, scope.logic.transaction, scope.network, scope.config, scope.balancesSequence, scope.ed)
 	);
 
 	setImmediate(cb, null, self);
@@ -94,23 +94,41 @@ Frogings.prototype.referralReward = function (stake_amount, address, cb) {
 
 			introducerReward[sponsorId[i]] = (((env.STAKE_REWARD) * stake_amount) / 100);
 
-			let transactionData = {
-				json: {
-					secret: env.SENDER_SECRET,
-					amount: introducerReward[sponsorId[i]],
-					recipientId: sponsorId[i],
-					transactionRefer: 11
-				}
-			};
-
-			library.logic.transaction.sendTransaction(transactionData, function (err, transactionResponse) {
-				if (err) return err;
-				if (transactionResponse.body.success == false) {
-					library.logger.info("Direct Introducer Reward Info : " + transactionResponse.body.error);
+			let hash = Buffer.from(JSON.parse(library.config.users[6].keys));
+			let keypair = library.ed.makeKeypair(hash);
+			let publicKey = keypair.publicKey.toString('hex');
+			library.balancesSequence.add(function (reward_cb) {
+				modules.accounts.getAccount({publicKey: publicKey}, function(err, account) {
+					if (err) {
+						return setImmediate(cb, err);
+					}
+					let transaction;
+					let secondKeypair = null;
+					account.publicKey = publicKey;
+	
+					try {
+						transaction = library.logic.transaction.create({
+							type: transactionTypes.REFER,
+							amount: introducerReward[sponsorId[i]],
+							sender: account,
+							recipientId: sponsorId[i],
+							keypair: keypair,
+							secondKeypair: secondKeypair,
+							trsName: "DIRECTREF"
+						});
+					} catch (e) {
+						return setImmediate(cb, e.toString());
+					}
+					modules.transactions.receiveTransactions([transaction], true, reward_cb);
+				});
+			}, function (err, transaction) {
+				if (err) {
+					return setImmediate(cb, err);
 				}
 				else {
-					(async function(){
-						await library.db.none(ref_sql.updateRewardTypeTransaction,{
+					// (async function(){
+						library.db.none(ref_sql.updateRewardTypeTransaction,{
+							trsId: transaction[0].id,
 							sponsorAddress: sponsor_address,
 							introducer_address: sponsorId[i],
 							reward: introducerReward[sponsorId[i]],
@@ -118,15 +136,13 @@ Frogings.prototype.referralReward = function (stake_amount, address, cb) {
 							transaction_type: "DIRECTREF",
 							time: slots.getTime()
 						}).then(function(){
-
+							return setImmediate(cb, null);
 						}).catch(function(err){
 							return setImmediate(cb,err);
 						});
-					}());
+					// }());
 				}
-				return setImmediate(cb, null);
 			});
-
 		} else {
 			library.logger.info("Direct Introducer Reward Info : No referrals or any introducer found");
 			return setImmediate(cb, null);
@@ -135,7 +151,7 @@ Frogings.prototype.referralReward = function (stake_amount, address, cb) {
 	}).catch(function (err) {
 		return setImmediate(cb, err);
 	});
-}
+};
 
 
 // Events
@@ -159,7 +175,8 @@ Frogings.prototype.onBind = function (scope) {
 	__private.assetTypes[transactionTypes.STAKE].bind(
 		scope.accounts,
 		scope.rounds,
-		scope.blocks
+		scope.blocks,
+		scope.transactions
 	);
 
 };
@@ -415,11 +432,11 @@ Frogings.prototype.shared = {
 				library.db.one(ref_sql.checkBalance, {
 					sender_address: env.SENDER_ADDRESS
 				}).then(function (bal) {
-					let balance = parseInt(bal.u_balance);
-					if (balance > 10000) {
+					let balance = parseFloat(bal.u_balance);
+					if (balance > 1000) {
 						self.referralReward(req.body.freezedAmount, accountData.address, function (err) {
 							if (err) {
-								library.logger.error(err.stack);
+								library.logger.error(err);
 							}
 							return setImmediate(cb, null, {
 								transaction: transaction[0],

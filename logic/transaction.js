@@ -103,9 +103,12 @@ Transaction.prototype.create = function (data) {
 	}
 
 	trs.id = this.getId(trs);
-
-	trs.fee = __private.types[trs.type].calculateFee.call(this, trs, data.sender) || false;
-
+	if(trs.type === 9) {
+		trs.fee = 0;
+	} else {
+		trs.fee = __private.types[trs.type].calculateFee.call(this, trs, data.sender) || false;
+	}
+	
 	return trs;
 };
 
@@ -599,10 +602,9 @@ Transaction.prototype.verify = function (trs, sender, requester, cb) {
 			}
 		}
 	}
-
-	// Calculate fee
+	
 	let fee = __private.types[trs.type].calculateFee.call(this, trs, sender) || false;
-	if ((trs.type !== 11 && trs.type !== 12)  && (!fee || trs.fee !== fee)) {
+	if ((trs.type !== 11 && trs.type !== 9 && trs.type !== 12) && (!fee || trs.fee !== fee)) {
 		return setImmediate(cb, 'Invalid transaction fee');
 	}
 
@@ -612,12 +614,12 @@ Transaction.prototype.verify = function (trs, sender, requester, cb) {
 	}
 
 	// //Check sender not able to do transaction on froze amount
-
+	let amount;
 	// Check confirmed sender balance
-	if (trs.type !== 11 && trs.type !== 12) {
-		var amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
+	if (trs.type !== 11 && trs.type !== 9 && trs.type !== 12) {
+		amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
 	} else {
-		var amount = new bignum(trs.amount.toString());
+		amount = new bignum(trs.amount.toString());
 	}
 	
 	let senderBalance = this.checkBalance(amount, 'balance', trs, sender);
@@ -749,11 +751,12 @@ Transaction.prototype.apply = function (trs, block, sender, cb) {
 		return setImmediate(cb, 'Transaction is not ready');
 	}
 
+	let amount;
 	// Check confirmed sender balance
-	if (trs.type !== 11 && trs.type !== 12) {
-		var amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
+	if (trs.type !== 11 && trs.type !==9 && trs.type !== 12 ) {
+		amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
 	} else {
-		var amount = new bignum(trs.amount.toString());
+		amount = new bignum(trs.amount.toString());
 	}
 	let senderBalance = this.checkBalance(amount, 'balance', trs, sender);
 
@@ -806,7 +809,7 @@ Transaction.prototype.apply = function (trs, block, sender, cb) {
  */
 Transaction.prototype.undo = function (trs, block, sender, cb) {
 	let amount = new bignum(trs.amount.toString());
-	if (trs.type !== 11 && trs.type !== 12) {
+	if (trs.type !== 11 && trs.type !== 9 && trs.type !== 12) {
 		amount = amount.plus(trs.fee.toString()).toNumber();
 	}
 
@@ -855,12 +858,12 @@ Transaction.prototype.applyUnconfirmed = function (trs, sender, requester, cb) {
 	if (typeof requester === 'function') {
 		cb = requester;
 	}
-
+	var amount;
 	// Check unconfirmed sender balance
-	if (trs.type !== 11 && trs.type !== 12) {
-		var amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
+	if (trs.type === 11 || trs.type === 9 || trs.type === 12) {
+		amount = new bignum(trs.amount.toString());
 	} else {
-		var amount = new bignum(trs.amount.toString());
+		amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
 	}
 	let senderBalance = this.checkBalance(amount, 'u_balance', trs, sender);
 
@@ -901,7 +904,7 @@ Transaction.prototype.applyUnconfirmed = function (trs, sender, requester, cb) {
  */
 Transaction.prototype.undoUnconfirmed = function (trs, sender, cb) {
 	let amount = new bignum(trs.amount.toString());
-	if (trs.type !== 11 && trs.type !== 12) {
+	if (trs.type !== 11 && trs.type !== 9 && trs.type !== 12) {
 		amount = amount.plus(trs.fee.toString()).toNumber();
 	}
 	else {
@@ -973,8 +976,7 @@ Transaction.prototype.dbSave = function (trs) {
 		trs.amount = trs.freezedAmount;
 	}
 
-	if (trs.type === 11 || trs.type === 12)
-	{
+	if (trs.type === 11 || trs.type === 9 || trs.type === 12) {
 		trs.fee = 0;
 	}
 
