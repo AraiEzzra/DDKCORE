@@ -97,7 +97,7 @@ Frogings.prototype.referralReward = function (stake_amount, address, cb) {
 			let hash = Buffer.from(JSON.parse(library.config.users[6].keys));
 			let keypair = library.ed.makeKeypair(hash);
 			let publicKey = keypair.publicKey.toString('hex');
-			library.balancesSequence.add(function (cb) {
+			library.balancesSequence.add(function (reward_cb) {
 				modules.accounts.getAccount({publicKey: publicKey}, function(err, account) {
 					if (err) {
 						return setImmediate(cb, err);
@@ -113,20 +113,22 @@ Frogings.prototype.referralReward = function (stake_amount, address, cb) {
 							sender: account,
 							recipientId: sponsorId[i],
 							keypair: keypair,
-							secondKeypair: secondKeypair
+							secondKeypair: secondKeypair,
+							trsName: "DIRECTREF"
 						});
 					} catch (e) {
 						return setImmediate(cb, e.toString());
 					}
-					modules.transactions.receiveTransactions([transaction], true, cb);
+					modules.transactions.receiveTransactions([transaction], true, reward_cb);
 				});
 			}, function (err, transaction) {
 				if (err) {
 					return setImmediate(cb, err);
 				}
 				else {
-					(async function(){
-						await library.db.none(ref_sql.updateRewardTypeTransaction,{
+					// (async function(){
+						library.db.none(ref_sql.updateRewardTypeTransaction,{
+							trsId: transaction[0].id,
 							sponsorAddress: sponsor_address,
 							introducer_address: sponsorId[i],
 							reward: introducerReward[sponsorId[i]],
@@ -134,13 +136,12 @@ Frogings.prototype.referralReward = function (stake_amount, address, cb) {
 							transaction_type: "DIRECTREF",
 							time: slots.getTime()
 						}).then(function(){
-
+							return setImmediate(cb, null);
 						}).catch(function(err){
 							return setImmediate(cb,err);
 						});
-					}());
+					// }());
 				}
-				return setImmediate(cb, null);
 			});
 		} else {
 			library.logger.info("Direct Introducer Reward Info : No referrals or any introducer found");
@@ -431,11 +432,11 @@ Frogings.prototype.shared = {
 				library.db.one(ref_sql.checkBalance, {
 					sender_address: env.SENDER_ADDRESS
 				}).then(function (bal) {
-					let balance = parseInt(bal.u_balance);
-					if (balance > 10000) {
+					let balance = parseFloat(bal.u_balance);
+					if (balance > 1000) {
 						self.referralReward(req.body.freezedAmount, accountData.address, function (err) {
 							if (err) {
-								library.logger.error(err.stack);
+								library.logger.error(err);
 							}
 							return setImmediate(cb, null, {
 								transaction: transaction[0],
