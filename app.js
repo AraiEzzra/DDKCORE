@@ -531,6 +531,7 @@ d.run(function () {
 			let Contract = require('./logic/contract.js');
 			let SendFreezeOrder = require('./logic/sendFreezeOrder.js');
 			let Vote = require('./logic/vote.js');
+			let Migration = require('./logic/Migration.js');
 
 			async.auto({
 				bus: function (cb) {
@@ -582,6 +583,9 @@ d.run(function () {
 				}],
 				vote: ['logger', 'schema', 'db', function (scope, cb) {
 					new Vote(scope.logger, scope.schema, scope.db, cb);
+				}],
+				migration: ['logger', 'db', function (scope, cb) {
+					new Migration(scope.logger, scope.db, cb);
 				}]
 			}, cb);
 		}],
@@ -689,6 +693,8 @@ d.run(function () {
 			require('./jobs.js').attachScope(scope);
 			//AFFILIATE AIRDROP
 			require('./helpers/referal').Referals(scope);
+			//Migration Process
+			//require('./helpers/accountCreateETPS').AccountCreateETPS(scope);
 		
 			cronjob.startJob('updateDataOnElasticSearch');
 			cronjob.startJob('checkFrozeOrders');
