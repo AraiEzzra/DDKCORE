@@ -95,7 +95,7 @@
         "enabled": true,
         "options": {
             "port": 443,
-            "address": "0.0.0.0"
+            "address": "159.65.139.248"
         }
     },
     "dapp": {
