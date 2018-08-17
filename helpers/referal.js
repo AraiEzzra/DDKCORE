@@ -108,11 +108,6 @@ module.exports.api = function (app) {
             for (let i = 0; i < resp.length; i++) {
                 params.push('$' + (i + 1));
                 referList.push(resp[i].address);
-                hierarchy[index] = {
-                    "level": level,
-                    "address": resp[i].address
-                };
-                index++;
             }
         }
 
@@ -124,7 +119,13 @@ module.exports.api = function (app) {
                         referList.length = 0;
                         if (resp.length) {
                             arrayPush(resp);
+                            hierarchy[index] = {
+                                Level: level,
+                                addressList: JSON.parse(JSON.stringify(referList)),
+                                count: referList.length
+                            };
                             level++;
+                            index++;
                             findSponsors(params, referList, cb);
                         }
                         if (params.length == 0) {
@@ -183,6 +184,31 @@ module.exports.api = function (app) {
             });
         }).catch(function (err) {
             library.logger.error('Referral Rewards List Error : ' + err.stack);
+            return res.status(400).json({
+                success: false,
+                error: err
+            });
+        });
+    });
+
+
+    app.post('/sponsor/stakeStatus', function (req, res) {
+        let address = req.body.address;
+        let status = 'Inactive';
+
+        library.db.query(sql.findSponsorStakeStatus, {
+            sponsor_address: address
+        }).then(function (stake_status) {
+
+            if (stake_status.length && stake_status[0].status) {
+                status = "Active";
+            }
+
+            return res.status(200).json({
+                success: true,
+                sponsorStatus: status,
+            });
+        }).catch(function (err) {
             return res.status(400).json({
                 success: false,
                 error: err
