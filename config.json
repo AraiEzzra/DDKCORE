@@ -23,7 +23,7 @@
     },
     "redis": {
         "host": "ddk-prod-redis.kuqhw8.ng.0001.apse1.cache.amazonaws.com",
-        "port": 6380,
+        "port": 6379,
         "db": 0
     },
     "api": {
