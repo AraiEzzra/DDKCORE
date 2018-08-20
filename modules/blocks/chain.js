@@ -60,7 +60,7 @@ Chain.prototype.saveGenesisBlock = function (cb) {
 		if (!blockId) {
 			// If there is no block with genesis ID - save to database
 			// WARNING: DB_WRITE
-			library.genesisblock.block.timestamp=slots.getTime();
+			/* library.genesisblock.block.timestamp=slots.getTime(); */
 			self.saveBlock(library.genesisblock.block, function (err) {
 				return setImmediate(cb, err);
 			});
@@ -153,9 +153,9 @@ __private.promiseTransactions = function (t, block) {
 		// Apply block ID to transaction
 		transaction.blockId = block.id;
 		// Create bytea fileds (buffers), and returns pseudo-row promise-like object
-		if(block.height === 1){
+		/* if(block.height === 1){
 			transaction.timestamp=slots.getTime();
-		}
+		} */
 		
 		return library.logic.transaction.dbSave(transaction);
 	};
