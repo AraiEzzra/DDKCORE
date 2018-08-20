@@ -180,6 +180,7 @@ try {
 let d = require('domain').create();
 
 d.on('error', function (err) {
+	console.log('error : ', err.stack);
 	logger.error('Domain master', { message: err.message, stack: err.stack });
 	process.exit(0);
 });
@@ -611,6 +612,7 @@ d.run(function () {
 					let d = require('domain').create();
 
 					d.on('error', function (err) {
+						console.log('error : ', err.stack);
 						scope.logger.error('Domain ' + name, { message: err.message, stack: err.stack });
 					});
 

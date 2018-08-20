@@ -1,19 +1,19 @@
 {
-    "port": 7000,
-    "address": "159.65.139.248",
+    "port":7000,
+    "address": "13.251.251.219",
     "version": "0.9.9a",
     "minVersion": ">=0.9.0",
     "fileLogLevel": "info",
-    "logFileName": "logs/ETP.log",
+    "logFileName": "logs/ddk.log",
     "consoleLogLevel": "none",
     "trustProxy": false,
     "topAccounts": false,
     "cacheEnabled": true,
     "db": {
-        "host": "159.65.135.70",
+        "host": "ddk-prod-mainnet-db-cluster.cluster-co8hc4mf5osu.ap-southeast-1.rds.amazonaws.com",
         "port": 5432,
-        "database": "ETP_test",
-        "user": "",
+        "database": "ddk_mainnet_db",
+        "user": "ddkMasterUser",
         "poolSize": 95,
         "poolIdleTimeout": 30000,
         "reapIntervalMillis": 1000,
@@ -22,23 +22,15 @@
         ]
     },
     "redis": {
-        "host": "159.65.131.229",
+        "host": "ddk-prod-redis.kuqhw8.ng.0001.apse1.cache.amazonaws.com",
         "port": 6380,
         "db": 0
     },
     "api": {
         "enabled": true,
         "access": {
-            "public": true,
+            "public": false,
             "whiteList": [
-                "127.0.0.1",
-                "192.168.9.91",
-                "180.151.225.194",
-                "159.65.139.87",
-                "118.100.29.72",
-                "124.29.212.104",
-                "103.201.142.50",
-                "18.218.25.187"
             ]
         },
         "options": {
@@ -52,7 +44,8 @@
     },
     "peers": {
         "enabled": true,
-        "list": [],
+        "list": [
+        ],
         "access": {
             "blackList": []
         },
@@ -80,10 +73,6 @@
         "force": true,
         "access": {
             "whiteList": [
-                "127.0.0.1",
-                "192.168.9.91",
-                "180.151.225.194",
-                "118.100.29.72"
             ]
         }
     },
@@ -95,7 +84,7 @@
         "enabled": false,
         "options": {
             "port": 443,
-            "address": "0.0.0.0"
+            "address": "13.251.251.219"
         }
     },
     "dapp": {
@@ -104,18 +93,19 @@
         "masterpassword": "GSne7ki1uzu6"
     },
     "initialPrimined": {
-        "total": 360000000000000
+        "total": 55000000000000
     },
     "ddkSupply": {
-        "totalSupply": 4500000000000000
+        "totalSupply": 2100000000000000
     },
     "session": {},
     "app": {},
     "sender": {},
     "nethash": "da3ed6a45429278bac2666961289ca17ad86595d33b31037615d4b8e8f158bba",
-    "elasticsearchHost": "159.65.139.247",
-    "swaggerDomain": "159.65.139.248",
+    "elasticsearchHost": "https://vpc-ddk-es-32wbyx4zu5hb5udvelaf44sxlu.ap-southeast-1.es.amazonaws.com",
+    "swaggerDomain": "13.251.251.219",
     "jwt": {
         "tokenLife": 300
     }
 }
+
