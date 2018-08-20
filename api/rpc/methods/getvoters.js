@@ -1,24 +1,24 @@
 const { createServerRPCMethod, validator } = require('./../util');
-const { getStatus } = require('../../../schema/blocks');
+const { getVoters } = require('../../../schema/delegates');
 
 
-const METHOD_NAME = 'status';
+const METHOD_NAME = 'getvoters';
 
 /**
  * @param {WebSocketServer} wss
  * @param {object} params
- * @param {object} scope - Application instance,
+ * @param {object} scope - Application instance
  * @param {function} cdError - Application Error callback
  * @constructor
  */
-function Status (wss, params, scope, cdError) {
+function GetVoters (wss, params, scope, cdError) {
 
   return new Promise(function (resolve) {
 
     let error;
 
-    if (validator(params, getStatus)) {
-      scope.modules.blocks.submodules.api.getStatus({body: params}, (error, result) => {
+    if (validator(params, getVoters)) {
+      scope.modules.delegates.shared.getVoters({body: params}, (error, result) => {
 
         resolve(error
           ? {error}
@@ -33,4 +33,4 @@ function Status (wss, params, scope, cdError) {
 
 }
 
-module.exports = createServerRPCMethod(METHOD_NAME, Status);
+module.exports = createServerRPCMethod(METHOD_NAME, GetVoters);

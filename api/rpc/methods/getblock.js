@@ -1,5 +1,3 @@
-const ReservedErrorCodes = require('./../errors');
-const Blocks = require('../../../modules/blocks');
 const { createServerRPCMethod, validator } = require('./../util');
 const { getBlock } = require('../../../schema/blocks');
 

@@ -1,8 +1,5 @@
-const ReservedErrorCodes = require('./../errors');
-const Transactions = require('../../../modules/transactions');
-const Blocks = require('../../../modules/blocks');
 const { createServerRPCMethod, validator } = require('./../util');
-const { getTransactions, getTransaction } = require('../../../schema/transactions');
+const { getTransaction } = require('../../../schema/transactions');
 
 
 const METHOD_NAME = 'getrawtransaction';

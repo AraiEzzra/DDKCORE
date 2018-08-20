@@ -1,25 +1,24 @@
 const { createServerRPCMethod, validator } = require('./../util');
-const { addTransactions } = require('../../../schema/transactions');
+const { getPeer } = require('../../../schema/peers');
 
 
-const METHOD_NAME = 'sendrawtransaction';
+const METHOD_NAME = 'getpeer';
 
 /**
- *
  * @param {WebSocketServer} wss
  * @param {object} params
  * @param {object} scope - Application instance
  * @param {function} cdError - Application Error callback
  * @constructor
  */
-function SendRawTransaction (wss, params, scope, cdError) {
+function GetPeer (wss, params, scope, cdError) {
 
   return new Promise(function (resolve) {
 
     let error;
 
-    if (validator(params, addTransactions)) {
-      scope.modules.transactions.shared.addTransactions({body: params}, (error, result) => {
+    if (validator(params, getPeer)) {
+      scope.modules.peers.shared.getPeer({body: params}, (error, result) => {
 
         resolve(error
           ? {error}
@@ -34,4 +33,4 @@ function SendRawTransaction (wss, params, scope, cdError) {
 
 }
 
-module.exports = createServerRPCMethod(METHOD_NAME, SendRawTransaction);
+module.exports = createServerRPCMethod(METHOD_NAME, GetPeer);
