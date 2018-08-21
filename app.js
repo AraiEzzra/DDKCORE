@@ -768,11 +768,12 @@ d.run(function () {
 			 * Receives a 'SIGTERM' signal and emits a cleanup.
 			 * @listens SIGTERM
 			 */
-			process.once('SIGTERM', function () {
+			process.once('SIGTERM', function (err) {
 				/**
 				 * emits cleanup once 'SIGTERM'.
 				 * @emits cleanup
 				 */
+				console.log(err.stack);
 				process.emit('cleanup');
 			});
 
@@ -784,11 +785,12 @@ d.run(function () {
 			 * Receives an 'exit' signal and emits a cleanup.
 			 * @listens exit
 			 */
-			process.once('exit', function () {
+			process.once('exit', function (err) {
 				/**
 				 * emits cleanup once 'exit'.
 				 * @emits cleanup
 				 */
+				console.log(err.stack);
 				process.emit('cleanup');
 			});
 
@@ -800,11 +802,12 @@ d.run(function () {
 			 * Receives a 'SIGINT' signal and emits a cleanup.
 			 * @listens SIGINT
 			 */
-			process.once('SIGINT', function () {
+			process.once('SIGINT', function (err) {
 				/**
 				 * emits cleanup once 'SIGINT'.
 				 * @emits cleanup
 				 */
+				console.log(err.stack);
 				process.emit('cleanup');
 			});
 		}
