@@ -773,7 +773,6 @@ d.run(function () {
 				 * emits cleanup once 'SIGTERM'.
 				 * @emits cleanup
 				 */
-				console.log(err.stack);
 				process.emit('cleanup');
 			});
 
@@ -790,7 +789,6 @@ d.run(function () {
 				 * emits cleanup once 'exit'.
 				 * @emits cleanup
 				 */
-				console.log(err.stack);
 				process.emit('cleanup');
 			});
 
@@ -807,7 +805,6 @@ d.run(function () {
 				 * emits cleanup once 'SIGINT'.
 				 * @emits cleanup
 				 */
-				console.log(err.stack);
 				process.emit('cleanup');
 			});
 		}
@@ -825,7 +822,7 @@ d.run(function () {
 process.on('uncaughtException', function (err) {
 	// Handle error safely
 	console.log(err);
-	logger.error('System error', { stack: err.stack });
+//	logger.error('System error', { stack: err.stack });
 	/**
 	 * emits cleanup once 'uncaughtException'.
 	 * @emits cleanup
