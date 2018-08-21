@@ -824,7 +824,7 @@ d.run(function () {
  */
 process.on('uncaughtException', function (err) {
 	// Handle error safely
-	logger.error('System error', { message: err.message, stack: err.stack });
+	logger.error('System error', { stack: err.stack });
 	/**
 	 * emits cleanup once 'uncaughtException'.
 	 * @emits cleanup
