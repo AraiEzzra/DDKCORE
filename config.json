@@ -12,7 +12,7 @@
     "db": {
         "host": "ddk-prod-mainnet-db-cluster.cluster-co8hc4mf5osu.ap-southeast-1.rds.amazonaws.com",
         "port": 5432,
-        "database": "ddk_mainnet_db",
+        "database": "ddk_mainnet_database",
         "user": "ddkMasterUser",
         "poolSize": 95,
         "poolIdleTimeout": 30000,
