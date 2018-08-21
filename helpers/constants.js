@@ -128,7 +128,9 @@ module.exports = {
 			distance: 30, // Distance between each milestone is 6 months
 		}
 	},
-	defaultLock: 0
+	defaultLock: 0,
+	stakeReward: 10,
+	levelwiseReward: [5, 3, 2, 2, 1, 1, 1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.5, 0.5, 0.5]
 };
 
 /*************************************** END OF FILE *************************************/
