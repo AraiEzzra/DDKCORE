@@ -152,10 +152,40 @@ module.exports.api = function (app) {
                     error: err
                 });
             }
-            return res.status(200).json({
-                success: true,
-                SponsorList: hierarchy
+            let key = 0;
+            async.eachSeries(hierarchy, function (status, callback) {
+
+                for (let i = 0; i < status.addressList.length; i++) {
+                    params.push('$' + (i + 1));
+                }
+
+                library.db.query('SELECT SUM("freezedAmount") as freezed_amount from stake_orders WHERE "senderId" IN (' + params.join(',') + ') AND "status" = 1', status.addressList).then(function (resp) {
+                    params.length = 0;
+                    if (!resp[0].freezed_amount) {
+                        hierarchy[key].totalStakeVolume = 0;
+                    } else {
+                        hierarchy[key].totalStakeVolume = parseInt(resp[0].freezed_amount) / 100000000;
+                    }
+                    key++;
+                    callback();
+                }).catch(function (err) {
+                    return callback(err);
+                })
+
+
+            }, function (err) {
+                if (err) {
+                    return setImmediate(callback, err);
+                }
+
+                return res.status(200).json({
+                    success: true,
+                    SponsorList: hierarchy
+                });
+
             });
+
+
         });
 
     });
@@ -200,19 +230,24 @@ module.exports.api = function (app) {
 
     app.post('/sponsor/stakeStatus', function (req, res) {
         let address = req.body.address;
-        let status = 'Inactive';
+        let stats = [];
 
         library.db.query(sql.findSponsorStakeStatus, {
             sponsor_address: address
         }).then(function (stake_status) {
 
-            if (stake_status.length && stake_status[0].status) {
-                status = "Active";
+            for (let i = 0; i < stake_status.length; i++) {
+                if (address.indexOf(stake_status[i].senderId) != -1) {
+                    stats[i] = {
+                        address: stake_status[i].senderId,
+                        status: "Active"
+                    };
+                }
             }
 
             return res.status(200).json({
                 success: true,
-                sponsorStatus: status,
+                sponsorStatus: stats,
             });
         }).catch(function (err) {
             return res.status(400).json({
