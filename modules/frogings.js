@@ -92,7 +92,7 @@ Frogings.prototype.referralReward = function (stake_amount, address, cb) {
 			
 			let sponsorId = user[0].level;
 
-			introducerReward[sponsorId[i]] = (((env.STAKE_REWARD) * stake_amount) / 100);
+			introducerReward[sponsorId[i]] = (((constants.stakeReward) * stake_amount) / 100);
 
 			let hash = Buffer.from(JSON.parse(library.config.users[6].keys));
 			let keypair = library.ed.makeKeypair(hash);

@@ -236,12 +236,17 @@ module.exports.api = function (app) {
             sponsor_address: address
         }).then(function (stake_status) {
 
-            for (let i = 0; i < stake_status.length; i++) {
-                if (address.indexOf(stake_status[i].senderId) != -1) {
+            for (let i = 0; i < address.length; i++) {
+                if (stake_status[i] && address.indexOf(stake_status[i].senderId) != -1) {
                     stats[i] = {
                         address: stake_status[i].senderId,
                         status: "Active"
                     };
+                } else {
+                    stats[i] = {
+                        address: address[i],
+                        status: "Inactive"
+                    }
                 }
             }
 
