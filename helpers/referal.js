@@ -108,11 +108,6 @@ module.exports.api = function (app) {
             for (let i = 0; i < resp.length; i++) {
                 params.push('$' + (i + 1));
                 referList.push(resp[i].address);
-                hierarchy[index] = {
-                    "level": level,
-                    "address": resp[i].address
-                };
-                index++;
             }
         }
 
@@ -124,7 +119,13 @@ module.exports.api = function (app) {
                         referList.length = 0;
                         if (resp.length) {
                             arrayPush(resp);
+                            hierarchy[index] = {
+                                Level: level,
+                                addressList: JSON.parse(JSON.stringify(referList)),
+                                count: referList.length
+                            };
                             level++;
+                            index++;
                             findSponsors(params, referList, cb);
                         }
                         if (params.length == 0) {
@@ -151,10 +152,40 @@ module.exports.api = function (app) {
                     error: err
                 });
             }
-            return res.status(200).json({
-                success: true,
-                SponsorList: hierarchy
+            let key = 0;
+            async.eachSeries(hierarchy, function (status, callback) {
+
+                for (let i = 0; i < status.addressList.length; i++) {
+                    params.push('$' + (i + 1));
+                }
+
+                library.db.query('SELECT SUM("freezedAmount") as freezed_amount from stake_orders WHERE "senderId" IN (' + params.join(',') + ') AND "status" = 1', status.addressList).then(function (resp) {
+                    params.length = 0;
+                    if (!resp[0].freezed_amount) {
+                        hierarchy[key].totalStakeVolume = 0;
+                    } else {
+                        hierarchy[key].totalStakeVolume = parseInt(resp[0].freezed_amount) / 100000000;
+                    }
+                    key++;
+                    callback();
+                }).catch(function (err) {
+                    return callback(err);
+                })
+
+
+            }, function (err) {
+                if (err) {
+                    return setImmediate(callback, err);
+                }
+
+                return res.status(200).json({
+                    success: true,
+                    SponsorList: hierarchy
+                });
+
             });
+
+
         });
 
     });
@@ -183,6 +214,42 @@ module.exports.api = function (app) {
             });
         }).catch(function (err) {
             library.logger.error('Referral Rewards List Error : ' + err.stack);
+            return res.status(400).json({
+                success: false,
+                error: err
+            });
+        });
+    });
+
+    /**
+     * It will gather the status of the sponsors stake orders.
+     * It will return the status either Active or Inactive.
+     * @param {req} - It consist of user address.
+     * @returns {sponsorStatus} - Returns the status of stake order.
+     */
+
+    app.post('/sponsor/stakeStatus', function (req, res) {
+        let address = req.body.address;
+        let stats = [];
+
+        library.db.query(sql.findSponsorStakeStatus, {
+            sponsor_address: address
+        }).then(function (stake_status) {
+
+            for (let i = 0; i < stake_status.length; i++) {
+                if (address.indexOf(stake_status[i].senderId) != -1) {
+                    stats[i] = {
+                        address: stake_status[i].senderId,
+                        status: "Active"
+                    };
+                }
+            }
+
+            return res.status(200).json({
+                success: true,
+                sponsorStatus: stats,
+            });
+        }).catch(function (err) {
             return res.status(400).json({
                 success: false,
                 error: err

@@ -110,7 +110,8 @@ __private.list = function (filter, cb) {
 		ownerAddress: null,
 		ownerPublicKey: null,
 		stakedAmount: '"t_stakedAmount" = ${stakedAmount}',
-		trsName: '"t_trsName" = ${trsName}'
+		trsName: '"t_trsName" = ${trsName}',
+		groupBonus: '"t_groupBonus" = ${groupBonus}'
 	};
 	let owner = '';
 	let isFirstWhere = true;

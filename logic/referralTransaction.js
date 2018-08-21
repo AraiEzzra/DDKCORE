@@ -36,7 +36,7 @@ ReferTransfer.prototype.bind = function (accounts, rounds) {
 ReferTransfer.prototype.create = function (data, trs) {
 	trs.recipientId = data.recipientId;
 	trs.amount = data.amount;
-	trs.trsName = "REFER";
+	trs.trsName = data.trsName;
 	return trs;
 };
 /**
