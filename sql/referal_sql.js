@@ -34,7 +34,7 @@ let Referals = {
 
     findRewardHistory : 'SELECT * from trs_refer WHERE "introducer_address" = ${address} ORDER BY reward_time ASC',
 
-    findSponsorStakeStatus : 'SELECT count(*)::int as status from stake_orders WHERE "senderId" = ${sponsor_address} AND "status" = 1'
+    findSponsorStakeStatus : 'SELECT "senderId",count(*)::int as status from stake_orders WHERE "senderId" = ANY(ARRAY[${sponsor_address}]) AND "status" = 1 GROUP BY "senderId"'
 }
 
 module.exports = Referals;
