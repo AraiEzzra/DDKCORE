@@ -15,7 +15,7 @@ class ServerRPCApi {
     this.webSocketServer = new WebSocketServer({
       port: this.port,
       host: this.host,
-      path: this.path,
+      // path: this.path,
     });
   }
 
