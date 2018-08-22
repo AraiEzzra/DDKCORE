@@ -99,23 +99,22 @@ module.exports.api = function (app) {
 
         let hierarchy = [];
 
-        let params = [],
-            referList = [],
+        let referList = [],
             level = 1,
             index = 0;
 
         function arrayPush(resp) {
             for (let i = 0; i < resp.length; i++) {
-                params.push('$' + (i + 1));
                 referList.push(resp[i].address);
             }
         }
 
-        function findSponsors(params, arr, cb) {
+        function findSponsors(arr, cb) {
             if (level <= 15) {
-                library.db.query('SELECT address from referals WHERE level[1] IN (' + params.join(',') + ')', arr)
+                library.db.query(sql.findReferralList, {
+                        refer_list: arr
+                    })
                     .then(function (resp) {
-                        params.length = 0;
                         referList.length = 0;
                         if (resp.length) {
                             arrayPush(resp);
@@ -126,9 +125,9 @@ module.exports.api = function (app) {
                             };
                             level++;
                             index++;
-                            findSponsors(params, referList, cb);
+                            findSponsors(referList, cb);
                         }
-                        if (params.length == 0) {
+                        if (referList.length == 0) {
                             return setImmediate(cb, null);
                         }
                     })
@@ -141,10 +140,9 @@ module.exports.api = function (app) {
         }
 
         // Intitally the user whose chain we have to find.
-        params = ['$1'];
         referList = [req.body.referrer_address];
 
-        findSponsors(params, referList, function (err) {
+        findSponsors(referList, function (err) {
             if (err) {
                 library.logger.error('Referral List Error : ' + err.stack);
                 return res.status(400).json({
@@ -155,12 +153,9 @@ module.exports.api = function (app) {
             let key = 0;
             async.eachSeries(hierarchy, function (status, callback) {
 
-                for (let i = 0; i < status.addressList.length; i++) {
-                    params.push('$' + (i + 1));
-                }
-
-                library.db.query('SELECT SUM("freezedAmount") as freezed_amount from stake_orders WHERE "senderId" IN (' + params.join(',') + ') AND "status" = 1', status.addressList).then(function (resp) {
-                    params.length = 0;
+                library.db.query(sql.findTotalStakeVolume, {
+                    address_list: status.addressList
+                }).then(function (resp) {
                     if (!resp[0].freezed_amount) {
                         hierarchy[key].totalStakeVolume = 0;
                     } else {
