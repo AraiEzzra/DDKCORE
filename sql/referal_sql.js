@@ -2,6 +2,15 @@
 
 let Referals = {
 
+    sortFields: [
+		'sponsor_address',
+		'introducer_address',
+		'reward',
+		'sponsor_level',
+		'transaction_type',
+		'reward_time'
+	],
+
     updateReferLink : 'UPDATE mem_accounts SET "referralLink" = ${referralLink} WHERE "address" = ${address}',
     
     referLevelChain : 'SELECT level from referals WHERE "address" = ${address}',
@@ -38,7 +47,25 @@ let Referals = {
 
     findTotalStakeVolume : 'SELECT SUM("freezedAmount") as freezed_amount from stake_orders WHERE "senderId" = ANY(ARRAY[${address_list}]) AND "status" =1',
 
-    findSponsorStakeStatus : 'SELECT "senderId",count(*)::int as status from stake_orders WHERE "senderId" = ANY(ARRAY[${sponsor_address}]) AND "status" = 1 GROUP BY "senderId"'
+    findSponsorStakeStatus : 'SELECT "senderId",count(*)::int as status from stake_orders WHERE "senderId" = ANY(ARRAY[${sponsor_address}]) AND "status" = 1 GROUP BY "senderId"',
+
+    countList: function (params) {
+		return [
+			'SELECT COUNT(1) FROM trs_refer',
+			(params.where.length || params.owner ? 'WHERE' : ''),
+			(params.where.length ? '(' + params.where.join(' ') + ')' : ''),
+			(params.where.length && params.owner ? ' AND ' + params.owner : params.owner)
+		].filter(Boolean).join(' ');
+    },
+    
+    list: function (params) {
+		return [
+			'SELECT * FROM trs_refer',
+			(params.where.length ? 'WHERE ' + params.where.join(' AND ') : ''),
+			(params.sortField ? 'ORDER BY ' + [params.sortField, params.sortMethod].join(' ') : ''),
+			'LIMIT ${limit} OFFSET ${offset}'
+		].filter(Boolean).join(' ');
+	}
 }
 
 module.exports = Referals;

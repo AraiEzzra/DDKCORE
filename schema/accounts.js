@@ -161,5 +161,17 @@ module.exports = {
 				minimum: 0
 			}
 		}
+	},
+	reward: {
+		id: 'accounts.getReward',
+		type: 'object',
+		properties: {
+			address: {
+				type: 'string',
+				format: 'address',
+				minLength: 1,
+				maxLength: 25
+			},
+		}
 	}
 };
