@@ -509,7 +509,7 @@ Frozen.prototype.checkFrozeOrders = function () {
 
 	function updateOrderAndSendReward(order, next) {
 
-			if (order.voteCount === (constants.froze.milestone / constants.froze.vTime)) {
+			if (order.voteCount >= (constants.froze.milestone / constants.froze.vTime)) {
 
 				self.scope.db.none(sql.updateOrder, {
 					senderId: order.senderId,
@@ -586,7 +586,7 @@ Frozen.prototype.checkFrozeOrders = function () {
 
 	function deductFrozeAmount(order, _next) {
 
-			if (((order.rewardCount + 1) >= (constants.froze.endTime / constants.froze.milestone)) && (order.voteCount === (constants.froze.milestone / constants.froze.vTime))) {
+			if (((order.rewardCount + 1) >= (constants.froze.endTime / constants.froze.milestone)) && (order.voteCount >= (constants.froze.milestone / constants.froze.vTime))) {
 
 				self.scope.db.none(sql.deductFrozeAmount, {
 					FrozeAmount: order.freezedAmount,
