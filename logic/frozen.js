@@ -320,7 +320,7 @@ Frozen.prototype.bind = function (accounts, rounds, blocks, transactions) {
 Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 
 	let sponsor_address = address;
-	let stakeReward = {};
+	let chainReward = {};
 	let i = 0;
 	let reward, sender_balance;
 
@@ -334,7 +334,7 @@ Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 
 			async.eachSeries(user[0].level, function (sponsorId, callback) {
 
-				stakeReward[sponsorId] = (((Reward.level[i]) * reward_amount) / 100);
+				chainReward[sponsorId] = (((Reward.level[i]) * reward_amount) / 100);
 
 				let hash = Buffer.from(JSON.parse(self.scope.config.users[6].keys));
 				let keypair = self.scope.ed.makeKeypair(hash);
@@ -353,13 +353,13 @@ Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 						try {
 							transaction = self.scope.logic.transaction.create({
 								type: transactionTypes.REFER,
-								amount: stakeReward[sponsorId],
+								amount: chainReward[sponsorId],
 								sender: account,
 								recipientId: sponsorId,
 								keypair: keypair,
 								secondKeypair: secondKeypair,
 								trsName: "CHAINREF",
-								chainRewardPercentage: "level"+(i+1)+"&"+Reward.level[i]
+								rewardPercentage: "level"+(i+1)+"&"+Reward.level[i]
 							});
 						} catch (e) {
 							return setImmediate(cb, e.toString());
@@ -390,7 +390,7 @@ Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 								trsId: transaction[0].id,
 								sponsorAddress: sponsor_address,
 								introducer_address: sponsorId,
-								reward: stakeReward[sponsorId],
+								reward: chainReward[sponsorId],
 								level: "Level " + (i),
 								transaction_type: "CHAINREF",
 								time: slots.getTime()
@@ -521,6 +521,7 @@ Frozen.prototype.checkFrozeOrders = function () {
 					let hash = Buffer.from(JSON.parse(self.scope.config.users[0].keys));
 					let keypair = self.scope.ed.makeKeypair(hash);
 					let publicKey = keypair.publicKey.toString('hex');
+					let stakeReward = __private.stakeReward.calcReward(modules.blocks.lastBlock.get().height);
 					self.scope.balancesSequence.add(function (cb) {
 						modules.accounts.getAccount({ publicKey: publicKey }, function (err, account) {
 							if (err) {
@@ -533,7 +534,7 @@ Frozen.prototype.checkFrozeOrders = function () {
 							try {
 								transaction = self.scope.logic.transaction.create({
 									type: transactionTypes.REWARD,
-									amount: parseInt(order.freezedAmount * __private.stakeReward.calcReward(modules.blocks.lastBlock.get().height) / 100),
+									amount: parseInt(order.freezedAmount * stakeReward / 100),
 									sender: account,
 									recipientId: order.senderId,
 									keypair: keypair,

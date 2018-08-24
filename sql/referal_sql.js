@@ -41,8 +41,6 @@ let Referals = {
 
     findReferralList : 'SELECT address from referals WHERE level[1] = ANY(ARRAY[${refer_list}])',
 
-    findRewardHistory : 'SELECT * from trs_refer WHERE "introducer_address" = ${address} ORDER BY reward_time ASC',
-
     findTotalStakeVolume : 'SELECT SUM("freezedAmount") as freezed_amount from stake_orders WHERE "senderId" = ANY(ARRAY[${address_list}]) AND "status" =1',
 
     findSponsorStakeStatus : 'SELECT "senderId",count(*)::int as status from stake_orders WHERE "senderId" = ANY(ARRAY[${sponsor_address}]) AND "status" = 1 GROUP BY "senderId"',

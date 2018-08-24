@@ -93,8 +93,7 @@ Transaction.prototype.create = function (data) {
 		stakedAmount: 0,
 		trsName: 'NA',
 		groupBonus:0,
-		stakeRewardPercentage: data.stakeRewardPercentage || null,
-		chainRewardPercentage: data.chainRewardPercentage || null
+		reward: data.rewardPercentage || null,
 	};
 
 	trs = __private.types[trs.type].create.call(this, data, trs);
@@ -610,29 +609,6 @@ Transaction.prototype.verify = function (trs, sender, requester, cb) {
 		return setImmediate(cb, 'Invalid transaction fee');
 	}
 
-	if(trs.type === 11) {
-
-		if(!trs.stakeRewardPercentage && !trs.chainRewardPercentage) {
-			return setImmediate(cb,'Invalid reward percentage');
-		}
-
-		if(trs.stakeRewardPercentage) {
-			if(trs.stakeRewardPercentage != constants.stakeReward) {
-				return setImmediate(cb,'Invalid percentage for stake reward');
-			}
-		}
-
-		if(trs.chainRewardPercentage) {
-			let split = trs.chainRewardPercentage.split('&');
-			let level = split[0];
-			let rewardPercent = split[1];
-			let data = constants.validateLevelReward;
-			if(data[level] != rewardPercent) {
-				return setImmediate(cb,'Invalid percentage for referral chain reward');
-			}
-		}
-	}
-
 	// Check amount
 	if (trs.amount < 0 || trs.amount > constants.totalAmount || String(trs.amount).indexOf('.') >= 0 || trs.amount.toString().indexOf('e') >= 0 ) {
 		return setImmediate(cb, 'Invalid transaction amount');
@@ -971,7 +947,8 @@ Transaction.prototype.dbFields = [
 	'signature',
 	'signSignature',
 	'signatures',
-	'trsName'
+	'trsName',
+	'reward'
 ];
 
 /**
@@ -1025,7 +1002,8 @@ Transaction.prototype.dbSave = function (trs) {
 				signature: signature,
 				signSignature: signSignature,
 				signatures: trs.signatures ? trs.signatures.join(',') : null,
-				trsName: trs.trsName				
+				trsName: trs.trsName,
+				reward: trs.reward,
 			}
 		}
 	];

@@ -116,7 +116,7 @@ Frogings.prototype.referralReward = function (stake_amount, address, cb) {
 							keypair: keypair,
 							secondKeypair: secondKeypair,
 							trsName: "DIRECTREF",
-							stakeRewardPercentage: reward.stakeReward
+							rewardPercentage: reward.stakeReward.toString()
 						});
 					} catch (e) {
 						return setImmediate(cb, e.toString());
