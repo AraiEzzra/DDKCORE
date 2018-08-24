@@ -20,9 +20,7 @@ let Referals = {
     insertLevelChain : 'INSERT INTO referals ("address","level") VALUES (${address},${level})',
     
     getDirectSponsor : 'SELECT address from referals WHERE level[1] = ${address}',
-    
-    //insertMemberAccount : 'INSERT INTO mem_accounts ("address","publicKey","balance","u_balance","totalFrozeAmount","group_bonus") values (${address},${publicKey},${balance},${u_balance},${totalFrozeAmount},${group_bonus})',
-    
+        
     insertMemberAccount : 'UPDATE mem_accounts SET "balance" = ${balance},"u_balance" = ${u_balance},"totalFrozeAmount"=${totalFrozeAmount},"group_bonus"=${group_bonus} WHERE "address"= ${address}',
 
     selectEtpsList : 'SELECT * from etps_user',

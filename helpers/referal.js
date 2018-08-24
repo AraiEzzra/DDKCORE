@@ -5,11 +5,9 @@
  */
 
 let mailServices = require('./postmark');
-let rewards = require('./rewards');
 let async = require('async');
 let sql = require('../sql/referal_sql');
 let OrderBy = require('./orderBy.js');
-let schema = require('../schema/accounts');
 
 let library = {},
     __private = {};
@@ -18,13 +16,30 @@ exports.Referals = function (scope) {
     library = scope;
 }
 
+/**
+ * Get filtered list of rewards history
+ *
+ * @private
+ * @async
+ * @method list
+ * @param  {Object}   filter Conditions to filter with
+ * @param  {string}   filter.address addres of user whose reward we have to get
+ * @param  {number}   filter.limit Limit of rewards to retrieve, default: 100, max: 100
+ * @param  {number}   filter.offset Offset from where to start
+ * @param  {string}   filter.orderBy Sort order, default: reward_time:desc
+ * @param  {Function} cb Callback function
+ * @return {Function} cb Callback function from params (through setImmediate)
+ * @return {Object}   cb.err Error if occurred
+ * @return {Object}   cb.data List of referral rewards received.
+ */
+
 __private.list = function (filter, cb) {
     let params = {},
         where = [];
 
-    if (filter.introducer_address) {
+    if (filter.address) {
         where.push('"introducer_address"=${introducer_address}');
-        params.introducer_address = filter.introducer_address;
+        params.introducer_address = filter.address;
     }
 
     if (!filter.limit) {
@@ -255,49 +270,26 @@ module.exports.api = function (app) {
      * It will get all the rewards received either by Direct or Chain referral.
      * Also contains the sponsor information like its address, level, transaction type, reward amount, reward time.
      * @param {req} - It consist of user address.
-     * @returns {SponsorList} - It contains the list of rewards received from sponsors. 
+     * @returns {SponsorList} - It contains the list of rewards received from sponsors.
+     * @returns {count} - It contains the total count of rewards received.
      */
 
     app.post('/referral/rewardHistory', function (req, res) {
-        // let rewarded_address = req.body.introducer_address;
 
-        /*                  library.db.query(sql.findRewardHistory, {
-                            address: rewarded_address
-                        }).then(function (resp) {
-
-                            return res.status(200).json({
-                                success: true,
-                                SponsorList: resp
-                            });
-                        }).catch(function (err) {
-                            library.logger.error('Referral Rewards List Error : ' + err.stack);
-                            return res.status(400).json({
-                                success: false,
-                                error: err
-                            });
-                        });  */
-
-        library.schema.validate(req.body, schema.reward, function (err) {
+        __private.list(req.body, function (err, data) {
             if (err) {
-                return setImmediate(cb, err[0].message);
-            }
-
-            __private.list(req.body, function (err, data) {
-                if (err) {
-                    return res.status(400).json({
-                        success: false,
-                        error: err
-                    });
-                }
-                return res.status(200).json({
-                    success: true,
-                    SponsorList: data.rewards,
-                    count: data.count
+                return res.status(400).json({
+                    success: false,
+                    error: err
                 });
-
+            }
+            return res.status(200).json({
+                success: true,
+                SponsorList: data.rewards,
+                count: data.count
             });
-        });
 
+        });
     });
 
     /**
@@ -334,6 +326,7 @@ module.exports.api = function (app) {
                 sponsorStatus: stats,
             });
         }).catch(function (err) {
+            library.logger.error(err.stack);
             return res.status(400).json({
                 success: false,
                 error: err
