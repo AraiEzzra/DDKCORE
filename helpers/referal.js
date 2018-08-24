@@ -5,15 +5,96 @@
  */
 
 let mailServices = require('./postmark');
-let rewards = require('./rewards');
 let async = require('async');
 let sql = require('../sql/referal_sql');
+let OrderBy = require('./orderBy.js');
 
-let library = {};
+let library = {},
+    __private = {};
 
 exports.Referals = function (scope) {
     library = scope;
 }
+
+/**
+ * Get filtered list of rewards history
+ *
+ * @private
+ * @async
+ * @method list
+ * @param  {Object}   filter Conditions to filter with
+ * @param  {string}   filter.address addres of user whose reward we have to get
+ * @param  {number}   filter.limit Limit of rewards to retrieve, default: 100, max: 100
+ * @param  {number}   filter.offset Offset from where to start
+ * @param  {string}   filter.orderBy Sort order, default: reward_time:desc
+ * @param  {Function} cb Callback function
+ * @return {Function} cb Callback function from params (through setImmediate)
+ * @return {Object}   cb.err Error if occurred
+ * @return {Object}   cb.data List of referral rewards received.
+ */
+
+__private.list = function (filter, cb) {
+    let params = {},
+        where = [];
+
+    if (filter.address) {
+        where.push('"introducer_address"=${introducer_address}');
+        params.introducer_address = filter.address;
+    }
+
+    if (!filter.limit) {
+        params.limit = 100;
+    } else {
+        params.limit = Math.abs(filter.limit);
+    }
+
+    if (!filter.offset) {
+        params.offset = 0;
+    } else {
+        params.offset = Math.abs(filter.offset);
+    }
+
+    if (params.limit > 100) {
+        return setImmediate(cb, 'Invalid limit. Maximum is 100');
+    }
+
+    let orderBy = OrderBy(
+        (filter.orderBy || 'reward_time:desc'), {
+            sortFields: sql.sortFields
+        }
+    );
+
+    if (orderBy.error) {
+        return setImmediate(cb, orderBy.error);
+    }
+
+    library.db.query(sql.countList({
+        where: where
+    }), params).then(function (rows) {
+        let count = rows[0].count;
+
+        library.db.query(sql.list({
+            where: where,
+            sortField: orderBy.sortField,
+            sortMethod: orderBy.sortMethod
+        }), params).then(function (rows) {
+
+            let data = {
+                rewards: rows,
+                count: count
+            };
+
+            return setImmediate(cb, null, data);
+        }).catch(function (err) {
+            library.logger.error(err.stack);
+            return setImmediate(cb, 'Rewards#list error');
+        });
+    }).catch(function (err) {
+        library.logger.error(err.stack);
+        return setImmediate(cb, 'Rewards#list error');
+    });
+
+};
 
 module.exports.api = function (app) {
 
@@ -133,7 +214,7 @@ module.exports.api = function (app) {
                     })
                     .catch(function (err) {
                         return setImmediate(cb, err);
-                    })
+                    });
             } else {
                 return setImmediate(cb, null);
             }
@@ -165,7 +246,7 @@ module.exports.api = function (app) {
                     callback();
                 }).catch(function (err) {
                     return callback(err);
-                })
+                });
 
 
             }, function (err) {
@@ -189,30 +270,25 @@ module.exports.api = function (app) {
      * It will get all the rewards received either by Direct or Chain referral.
      * Also contains the sponsor information like its address, level, transaction type, reward amount, reward time.
      * @param {req} - It consist of user address.
-     * @returns {SponsorList} - It contains the list of rewards received from sponsors. 
+     * @returns {SponsorList} - It contains the list of rewards received from sponsors.
+     * @returns {count} - It contains the total count of rewards received.
      */
 
     app.post('/referral/rewardHistory', function (req, res) {
-        let rewarded_address = req.body.address;
-        let totalReward = 0;
 
-        library.db.query(sql.findRewardHistory, {
-            address: rewarded_address
-        }).then(function (resp) {
-            for (let i = 0; i < resp.length; i++) {
-                totalReward = totalReward + parseInt(resp[i].reward);
+        __private.list(req.body, function (err, data) {
+            if (err) {
+                return res.status(400).json({
+                    success: false,
+                    error: err
+                });
             }
             return res.status(200).json({
                 success: true,
-                SponsorList: resp,
-                TotalAward: totalReward / 100000000
+                SponsorList: data.rewards,
+                count: data.count
             });
-        }).catch(function (err) {
-            library.logger.error('Referral Rewards List Error : ' + err.stack);
-            return res.status(400).json({
-                success: false,
-                error: err
-            });
+
         });
     });
 
@@ -250,6 +326,7 @@ module.exports.api = function (app) {
                 sponsorStatus: stats,
             });
         }).catch(function (err) {
+            library.logger.error(err.stack);
             return res.status(400).json({
                 success: false,
                 error: err

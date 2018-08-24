@@ -11,6 +11,7 @@ let env = process.env;
 let constants = require('../helpers/constants.js');
 let cache = require('./cache.js');
 let slots = require('../helpers/slots');
+let reward = require('../helpers/rewards');
 
 // Private fields
 let __private = {};
@@ -92,7 +93,7 @@ Frogings.prototype.referralReward = function (stake_amount, address, cb) {
 			
 			let sponsorId = user[0].level;
 
-			introducerReward[sponsorId[i]] = (((constants.stakeReward) * stake_amount) / 100);
+			introducerReward[sponsorId[i]] = (((reward.stakeReward) * stake_amount) / 100);
 
 			let hash = Buffer.from(JSON.parse(library.config.users[6].keys));
 			let keypair = library.ed.makeKeypair(hash);
@@ -114,7 +115,8 @@ Frogings.prototype.referralReward = function (stake_amount, address, cb) {
 							recipientId: sponsorId[i],
 							keypair: keypair,
 							secondKeypair: secondKeypair,
-							trsName: "DIRECTREF"
+							trsName: "DIRECTREF",
+							rewardPercentage: reward.stakeReward.toString()
 						});
 					} catch (e) {
 						return setImmediate(cb, e.toString());

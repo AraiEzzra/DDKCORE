@@ -130,7 +130,23 @@ module.exports = {
 	},
 	defaultLock: 0,
 	stakeReward: 10,
-	levelwiseReward: [5, 3, 2, 2, 1, 1, 1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.5, 0.5, 0.5]
+	validateLevelReward: {
+		'level1': 5,
+		'level2': 3,
+		'level3': 2,
+		'level4': 2,
+		'level5': 1,
+		'level6': 1,
+		'level7': 1,
+		'level8': 0.9,
+		'level9': 0.8,
+		'level10': 0.7,
+		'level11': 0.6,
+		'level12': 0.5,
+		'level13': 0.5,
+		'level14': 0.5,
+		'level15': 0.5
+	}
 };
 
 /*************************************** END OF FILE *************************************/
