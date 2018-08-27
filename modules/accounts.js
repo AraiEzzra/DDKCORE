@@ -174,8 +174,8 @@ Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 
 		function (callback) {
 			if (referrer_address != '') {
-				library.db.one(sql.findReferLink, {
-					referLink: referrer_address
+				library.db.one(sql.validateReferSource, {
+					referSource: referrer_address
 				}).then(function (user) {
 					if (parseInt(user.address)) {
 						level.unshift(referrer_address);
