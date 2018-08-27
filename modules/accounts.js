@@ -159,14 +159,13 @@ Accounts.prototype.getAccount = function (filter, fields, cb) {
 
 Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 
-	let referralLink = referalLink;
-	if (!referralLink) {
-		referralLink = '';
+	let referrer_address = referalLink;
+	if (!referrer_address) {
+		referrer_address = '';
 	}
-	let decoded = new Buffer(referralLink, 'base64').toString('ascii');
 	let level = [];
 
-	if (decoded == address) {
+	if (referrer_address == address) {
 		let err = 'Introducer and sponsor can\'t be same';
 		return setImmediate(cb, err);
 	}
@@ -174,12 +173,12 @@ Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 	async.series([
 
 		function (callback) {
-			if (referralLink != '') {
+			if (referrer_address != '') {
 				library.db.one(sql.findReferLink, {
-					referLink: referralLink
+					referLink: referrer_address
 				}).then(function (user) {
 					if (parseInt(user.address)) {
-						level.unshift(decoded);
+						level.unshift(referrer_address);
 						callback();
 					} else {
 						let error = 'Referral Link is Invalid';
@@ -193,8 +192,8 @@ Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 			}
 		},
 		function (callback) {
-			if (referralLink != '') {
-				library.logic.account.findReferralLevel(decoded, function (err, resp) {
+			if (referrer_address != '') {
+				library.logic.account.findReferralLevel(referrer_address, function (err, resp) {
 					if (err) {
 						return setImmediate(cb, err);
 					}

@@ -115,18 +115,16 @@ module.exports.api = function (app) {
                 error: "Currently not able to generate the referral link"
             });
         }
-        let encoded = new Buffer(user_address).toString('base64');
-
         library.db.none(sql.updateReferLink, {
-            referralLink: encoded,
+            referralLink: user_address,
             address: user_address
         }).then(function () {
             return res.status(200).json({
                 success: true,
-                referralLink: encoded
+                referralLink: user_address
             });
         }).catch(function (err) {
-            library.logger.error('Generate Refer Id Error : ' + err.stack);
+            library.logger.error('Refer Id Error : ' + err.stack);
             return res.status(400).json({
                 success: false,
                 error: "Error connecting to server"
