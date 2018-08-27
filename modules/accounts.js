@@ -163,10 +163,10 @@ Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 	if (!referralLink) {
 		referralLink = '';
 	}
-	let decoded = new Buffer(referralLink, 'base64').toString('ascii');
+	let referrer_address = referralLink;
 	let level = [];
 
-	if (decoded == address) {
+	if (referrer_address == address) {
 		let err = 'Introducer and sponsor can\'t be same';
 		return setImmediate(cb, err);
 	}
@@ -179,7 +179,7 @@ Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 					referLink: referralLink
 				}).then(function (user) {
 					if (parseInt(user.address)) {
-						level.unshift(decoded);
+						level.unshift(referrer_address);
 						callback();
 					} else {
 						let error = 'Referral Link is Invalid';
@@ -194,7 +194,7 @@ Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 		},
 		function (callback) {
 			if (referralLink != '') {
-				library.logic.account.findReferralLevel(decoded, function (err, resp) {
+				library.logic.account.findReferralLevel(referrer_address, function (err, resp) {
 					if (err) {
 						return setImmediate(cb, err);
 					}
@@ -203,7 +203,7 @@ Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 
 						level = level.concat(resp[0].level.slice(0, chain_length));
 					} else if (resp.length == 0) {
-						return setImmediate(cb, "Referral link source not eligible");
+						return setImmediate(cb, "Referral link source is not eligible");
 					}
 					callback();
 				});
