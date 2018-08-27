@@ -124,7 +124,7 @@ module.exports.api = function (app) {
                 referralLink: user_address
             });
         }).catch(function (err) {
-            library.logger.error('Generate Refer Id Error : ' + err.stack);
+            library.logger.error('Refer Id Error : ' + err.stack);
             return res.status(400).json({
                 success: false,
                 error: "Error connecting to server"

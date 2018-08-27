@@ -159,11 +159,10 @@ Accounts.prototype.getAccount = function (filter, fields, cb) {
 
 Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 
-	let referralLink = referalLink;
-	if (!referralLink) {
-		referralLink = '';
+	let referrer_address = referalLink;
+	if (!referrer_address) {
+		referrer_address = '';
 	}
-	let referrer_address = referralLink;
 	let level = [];
 
 	if (referrer_address == address) {
@@ -174,9 +173,9 @@ Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 	async.series([
 
 		function (callback) {
-			if (referralLink != '') {
+			if (referrer_address != '') {
 				library.db.one(sql.findReferLink, {
-					referLink: referralLink
+					referLink: referrer_address
 				}).then(function (user) {
 					if (parseInt(user.address)) {
 						level.unshift(referrer_address);
@@ -193,7 +192,7 @@ Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 			}
 		},
 		function (callback) {
-			if (referralLink != '') {
+			if (referrer_address != '') {
 				library.logic.account.findReferralLevel(referrer_address, function (err, resp) {
 					if (err) {
 						return setImmediate(cb, err);
