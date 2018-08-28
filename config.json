@@ -12,7 +12,7 @@
     "db": {
         "host": "159.65.135.70",
         "port": 5432,
-        "database": "ETP_test",
+        "database": "DDK_test",
         "user": "",
         "poolSize": 95,
         "poolIdleTimeout": 30000,
@@ -52,7 +52,8 @@
     },
     "peers": {
         "enabled": true,
-        "list": [],
+        "list": [
+	],
         "access": {
             "blackList": []
         },
