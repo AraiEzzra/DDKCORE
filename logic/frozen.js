@@ -62,11 +62,15 @@ __private.stakeReward = new StakeReward();
  * @returns {trs} trs
  */
 Frozen.prototype.create = function (data, trs) {
-	trs.startTime = trs.timestamp;
+	
 	let date = new Date(trs.timestamp * 1000);
 	trs.recipientId = null;
+	trs.asset.stakeOrder = {
+		stakedAmount: data.freezedAmount,
+		nextVoteMilestone: (date.setMinutes(date.getMinutes() + constants.froze.vTime)) / 1000,
+		startTime: trs.timestamp
+	};
 	trs.stakedAmount = data.freezedAmount;
-	trs.nextVoteMilestone = (date.setMinutes(date.getMinutes() + constants.froze.vTime)) / 1000;
 	trs.trsName = 'STAKE';
 	return trs;
 };
@@ -119,12 +123,12 @@ Frozen.prototype.dbSave = function (trs) {
 		values: {
 			id: trs.id,
 			status: this.active,
-			startTime: trs.startTime,
-			insertTime: trs.startTime,
+			startTime: trs.asset.stakeOrder.startTime,
+			insertTime: trs.asset.stakeOrder.startTime,
 			senderId: trs.senderId,
 			recipientId: trs.recipientId,
-			freezedAmount: trs.stakedAmount,
-			nextVoteMilestone: trs.nextVoteMilestone
+			freezedAmount: trs.asset.stakeOrder.stakedAmount,
+			nextVoteMilestone: trs.asset.stakeOrder.nextVoteMilestone
 		}
 	};
 };
@@ -135,7 +139,22 @@ Frozen.prototype.dbSave = function (trs) {
  * @return {null|froze} blcok object
  */
 Frozen.prototype.dbRead = function (raw) {
-	return null;
+	if (!raw.so_id) {
+		return null;
+	} else {
+		let stakeOrder = {
+			id: raw.so_id,
+			status: raw.so_status,
+			startTime: raw.so_startTime,
+			insertTime: raw.so_startTime,
+			senderId: raw.so_senderId,
+			recipientId: raw.so_recipientId,
+			freezedAmount: raw.so_freezedAmount,
+			nextVoteMilestone: raw.so_nextVoteMilestone
+		};
+
+		return { stakeOrder: stakeOrder };
+	}
 };
 
 /**

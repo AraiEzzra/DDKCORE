@@ -110,6 +110,7 @@ __private.list = function (filter, cb) {
 		ownerAddress: null,
 		ownerPublicKey: null,
 		stakedAmount: '"t_stakedAmount" = ${stakedAmount}',
+		stakeId: '"t_stakedId" = ${stakedId}',
 		trsName: '"t_trsName" = ${trsName}',
 		groupBonus: '"t_groupBonus" = ${groupBonus}'
 	};

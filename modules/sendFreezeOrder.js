@@ -421,8 +421,8 @@ SendFreezeOrder.prototype.shared = {
 				if (err) {
 					return setImmediate(cb, err);
 				}
-
-				library.logic.sendFreezeOrder.sendFreezedOrder({
+				return setImmediate(cb, null, { transactionId: transaction[0].id });
+				/* library.logic.sendFreezeOrder.sendFreezedOrder({
 					account: accountData,
 					recipientId: req.body.recipientId,
 					stakeId: req.body.stakeId,
@@ -434,7 +434,7 @@ SendFreezeOrder.prototype.shared = {
 					}
 					return setImmediate(cb, null, { transactionId: transaction[0].id });
 
-				});
+				}); */
 			});
 		});
 	}

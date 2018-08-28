@@ -246,9 +246,9 @@ Vote.prototype.apply = function (trs, block, sender, cb) {
 				}
 				, function (err) {
 					if (err) {
-						return setImmediate(cb, err);
+						return setImmediate(seriesCb, err);
 					}
-					return setImmediate(cb, null);
+					return setImmediate(seriesCb, null);
 				});
 		}
 	], cb);

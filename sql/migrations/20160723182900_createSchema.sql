@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS "trs"(
   "recipientId" VARCHAR(25),
   "amount" BIGINT NOT NULL,
   "stakedAmount" BIGINT NOT NULL,
+  "stakeId" VARCHAR(20),
   "groupBonus" BIGINT,
   "fee" BIGINT NOT NULL,
   "signature" bytea NOT NULL,
