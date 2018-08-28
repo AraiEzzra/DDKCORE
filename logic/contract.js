@@ -1,4 +1,7 @@
 let modules, self;
+let StakeReward = require('./stakeReward.js');
+
+let reward = new StakeReward();
 
 /**
  * Main Contract logic.
@@ -60,6 +63,20 @@ Contract.prototype.verify = function (trs, sender, cb) {
 
 	if (trs.amount <= 0) {
 		return setImmediate(cb, 'Invalid transaction amount');
+	}
+
+	if(!trs.reward) {
+		return setImmediate(cb,'Invalid stake reward percentage');
+	}
+
+	let split = trs.reward.split('&');
+	let height = parseInt(split[0]);
+	let stake_reward = parseInt(split[1]);
+
+	let stakeReward = reward.calcReward(height);
+
+	if(stake_reward !== stakeReward) {
+		return setImmediate(cb,'Invalid stake reward percentage');
 	}
 
 	return setImmediate(cb, null, trs);

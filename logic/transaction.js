@@ -92,7 +92,8 @@ Transaction.prototype.create = function (data) {
 		asset: {},
 		stakedAmount: 0,
 		trsName: 'NA',
-		groupBonus:0
+		groupBonus:0,
+		reward: data.rewardPercentage || null,
 	};
 
 	trs = __private.types[trs.type].create.call(this, data, trs);
@@ -946,7 +947,8 @@ Transaction.prototype.dbFields = [
 	'signature',
 	'signSignature',
 	'signatures',
-	'trsName'
+	'trsName',
+	'reward'
 ];
 
 /**
@@ -1000,7 +1002,8 @@ Transaction.prototype.dbSave = function (trs) {
 				signature: signature,
 				signSignature: signSignature,
 				signatures: trs.signatures ? trs.signatures.join(',') : null,
-				trsName: trs.trsName				
+				trsName: trs.trsName,
+				reward: trs.reward,
 			}
 		}
 	];
