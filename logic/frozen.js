@@ -149,7 +149,7 @@ Frozen.prototype.dbRead = function (raw) {
 			insertTime: raw.so_startTime,
 			senderId: raw.so_senderId,
 			recipientId: raw.so_recipientId,
-			freezedAmount: raw.so_freezedAmount,
+			stakedAmount: raw.so_freezedAmount,
 			nextVoteMilestone: raw.so_nextVoteMilestone
 		};
 
