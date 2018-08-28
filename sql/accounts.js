@@ -44,7 +44,7 @@ let Accounts = {
 
     updateETPSUserInfo: 'UPDATE etps_user SET "transferred_time"=${insertTime}, "transferred_etp"=1 WHERE "id"=${userId} ',
 
-	findReferLink : 'SELECT count(*) AS address FROM mem_accounts WHERE "referralLink" = ${referLink}',
+	validateReferSource : 'SELECT count(*) AS address FROM mem_accounts WHERE "address" = ${referSource}',
 
 	findPassPhrase : 'SELECT * from migrated_etps_users WHERE "username" = ${userName}',
 

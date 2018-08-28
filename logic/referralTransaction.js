@@ -66,6 +66,26 @@ ReferTransfer.prototype.verify = function (trs, sender, cb) {
 		return setImmediate(cb, 'Invalid transaction amount');
 	}
 
+	if(!trs.reward) {
+		return setImmediate(cb,'Invalid reward percentage');
+	}
+
+	let reward_type = trs.reward.indexOf('level');
+
+	if(reward_type != -1) {
+		let split = trs.reward.split('&');
+		let level = split[0];
+		let rewardPercent = split[1];
+		let data = constants.validateLevelReward;
+		if(data[level] !== parseFloat(rewardPercent)) {
+			return setImmediate(cb,'Invalid percentage for referral chain reward');
+		}
+	} else {
+		if(parseInt(trs.reward) != constants.stakeReward) {
+			return setImmediate(cb,'Invalid percentage for referral stake reward');
+		}
+	}
+
 	return setImmediate(cb, null, trs);
 };
 
