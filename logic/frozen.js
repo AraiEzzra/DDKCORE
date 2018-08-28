@@ -555,7 +555,7 @@ Frozen.prototype.checkFrozeOrders = function () {
 						//return setImmediate(next, null, transaction[0].id);
 						// self.scope.logger.debug('TransactionId : ', transaction[0].id);
 						self.scope.db.one(reward_sql.checkBalance, {
-							sender_address: env.SENDER_ADDRESS
+							sender_address: constants.airdropAccount
 						}).then(function (bal) {
 							let balance = parseFloat(bal.u_balance);
 							if (balance > 1000) {

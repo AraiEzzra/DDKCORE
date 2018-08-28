@@ -432,7 +432,7 @@ Frogings.prototype.shared = {
 				library.network.io.sockets.emit('updateTotalStakeAmount', null);
 
 				library.db.one(ref_sql.checkBalance, {
-					sender_address: env.SENDER_ADDRESS
+					sender_address: constants.airdropAccount
 				}).then(function (bal) {
 					let balance = parseFloat(bal.u_balance);
 					if (balance > 1000) {

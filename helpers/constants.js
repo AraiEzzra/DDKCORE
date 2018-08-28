@@ -112,10 +112,10 @@ module.exports = {
 	},
 	// Configurable froze order : time here is in minutes
 	froze : {
-		endTime : 48,
-		rTime : 8,
+		endTime : 8,
+		rTime : 4,
 		vTime : 2,
-		milestone : 8, //for testing, taking 2 min
+		milestone : 4, //for testing, taking 2 min
 		rewards: {
 			milestones: [
 				10, // 10% For 0-6 months
@@ -146,7 +146,8 @@ module.exports = {
 		'level13': 0.5,
 		'level14': 0.5,
 		'level15': 0.5
-	}
+	},
+	airdropAccount: 'DDK10720340277000928808'
 };
 
 /*************************************** END OF FILE *************************************/
