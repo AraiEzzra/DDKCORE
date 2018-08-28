@@ -521,7 +521,8 @@ Frozen.prototype.checkFrozeOrders = function () {
 					let hash = Buffer.from(JSON.parse(self.scope.config.users[0].keys));
 					let keypair = self.scope.ed.makeKeypair(hash);
 					let publicKey = keypair.publicKey.toString('hex');
-					let stakeReward = __private.stakeReward.calcReward(modules.blocks.lastBlock.get().height);
+					let blockHeight = modules.blocks.lastBlock.get().height;
+					let stakeReward = __private.stakeReward.calcReward(blockHeight);
 					self.scope.balancesSequence.add(function (cb) {
 						modules.accounts.getAccount({ publicKey: publicKey }, function (err, account) {
 							if (err) {
@@ -538,7 +539,9 @@ Frozen.prototype.checkFrozeOrders = function () {
 									sender: account,
 									recipientId: order.senderId,
 									keypair: keypair,
-									secondKeypair: secondKeypair
+									secondKeypair: secondKeypair,
+									rewardPercentage: blockHeight+'&'+stakeReward
+
 								});
 							} catch (e) {
 								return setImmediate(cb, e.toString());
@@ -552,7 +555,7 @@ Frozen.prototype.checkFrozeOrders = function () {
 						//return setImmediate(next, null, transaction[0].id);
 						// self.scope.logger.debug('TransactionId : ', transaction[0].id);
 						self.scope.db.one(reward_sql.checkBalance, {
-							sender_address: env.SENDER_ADDRESS
+							sender_address: constants.airdropAccount
 						}).then(function (bal) {
 							let balance = parseFloat(bal.u_balance);
 							if (balance > 1000) {
