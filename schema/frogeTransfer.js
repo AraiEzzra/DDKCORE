@@ -19,7 +19,7 @@ module.exports = {
 				maxLength: 25
 			},
 			stakeId :{
-				type : 'integer',
+				type : 'string',
 
 			},
 			secondSecret: {
