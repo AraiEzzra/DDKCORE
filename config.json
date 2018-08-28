@@ -29,7 +29,7 @@
     "api": {
         "enabled": true,
         "access": {
-            "public": false,
+            "public": true,
             "whiteList": [
             ]
         },
