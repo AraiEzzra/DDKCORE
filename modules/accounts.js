@@ -405,7 +405,8 @@ Accounts.prototype.shared = {
 						secondPublicKey: account.secondPublicKey,
 						multisignatures: account.multisignatures,
 						u_multisignatures: account.u_multisignatures,
-						totalFrozeAmount: account.totalFrozeAmount
+						totalFrozeAmount: account.totalFrozeAmount,
+						groupBonus: account.group_bonus
 					};
 
 					accountData.token = token;
