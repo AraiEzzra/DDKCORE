@@ -250,6 +250,19 @@ Vote.prototype.apply = function (trs, block, sender, cb) {
 					}
 					return setImmediate(seriesCb, null);
 				});
+		},
+		function (seriesCb) {
+			self.updateAndCheckVote(
+				{
+					votes: trs.asset.votes,
+					senderId: trs.senderId
+				}
+				, function (err) {
+					if (err) {
+						return setImmediate(seriesCb, err);
+					}
+					return setImmediate(seriesCb, null);
+				});
 		}
 	], cb);
 };

@@ -692,7 +692,8 @@ Accounts.prototype.shared = {
 				if (err) {
 					return setImmediate(cb, err);
 				}
-				library.logic.vote.updateAndCheckVote({
+				return setImmediate(cb, null, { transaction: transaction[0] });
+				/* library.logic.vote.updateAndCheckVote({
 					votes: req.body.delegates,
 					senderId: transaction[0].senderId
 				}, function (err) {
@@ -700,7 +701,7 @@ Accounts.prototype.shared = {
 						return setImmediate(cb, err);
 					}
 					return setImmediate(cb, null, { transaction: transaction[0] });
-				});
+				}); */
 			});
 		});
 	},
