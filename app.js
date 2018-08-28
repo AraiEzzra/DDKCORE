@@ -1,4 +1,3 @@
-
 /**
  * A node-style callback as used by {@link logic} and {@link modules}.
  * @see {@link https://nodejs.org/api/errors.html#errors_node_js_style_callbacks}
@@ -318,12 +317,12 @@ d.run(function () {
 					let userFound = false;
 					if (sockets) {
 						for (let i = 0; i < sockets.length; i++) {
-							if (sockets[i].address === user.address) {
+							if (sockets[i].address == user.address) {
 								userFound = true;
 							}
 						}
 					}
-					if (!userFound) {
+					if (!userFound && user.address) {
 						sockets.push(user);
 					}
 					io.emit('updateConnected', sockets.length);
@@ -338,18 +337,10 @@ d.run(function () {
 					acceptSocket(user, sockets);
 				});
 
-				socket.on('logout', function(data) {
-					var user = {
-						address: data.address,
-						socketId: socket.id
-					};
-					socket.disconnect(user);
-				});
-
-				socket.on('disconnect', function (data) {
-					sockets.forEach(function (user) {
-						if (user.address === data.address || user.socketId === socket.id) {
-							sockets.pop(user);
+				socket.on('disconnect', function () {
+					sockets.forEach(function (user, index) {
+						if (user.socketId == socket.id) {
+							sockets.splice(index, 1);
 							io.sockets.emit('updateConnected', sockets.length);
 						}
 					});
@@ -540,6 +531,7 @@ d.run(function () {
 			let Contract = require('./logic/contract.js');
 			let SendFreezeOrder = require('./logic/sendFreezeOrder.js');
 			let Vote = require('./logic/vote.js');
+			let Migration = require('./logic/Migration.js');
 
 			async.auto({
 				bus: function (cb) {
@@ -591,6 +583,9 @@ d.run(function () {
 				}],
 				vote: ['logger', 'schema', 'db', function (scope, cb) {
 					new Vote(scope.logger, scope.schema, scope.db, cb);
+				}],
+				migration: ['logger', 'db', function (scope, cb) {
+					new Migration(scope.logger, scope.db, cb);
 				}]
 			}, cb);
 		}],
@@ -698,6 +693,8 @@ d.run(function () {
 			require('./jobs.js').attachScope(scope);
 			//AFFILIATE AIRDROP
 			require('./helpers/referal').Referals(scope);
+			//Migration Process
+			//require('./helpers/accountCreateETPS').AccountCreateETPS(scope);
 		
 			cronjob.startJob('updateDataOnElasticSearch');
 			cronjob.startJob('checkFrozeOrders');

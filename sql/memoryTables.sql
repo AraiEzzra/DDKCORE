@@ -119,6 +119,7 @@ CREATE TABLE IF NOT EXISTS "migrated_etps_users"(
 );
 
 CREATE TABLE IF NOT EXISTS "referral_transactions"(
+  "id" VARCHAR(100) NOT NULL UNIQUE PRIMARY KEY,
   "sponsor_address" VARCHAR(100) NOT NULL,
   "introducer_address" VARCHAR(100) NOT NULL,
   "reward" BIGINT DEFAULT 0,
@@ -128,5 +129,20 @@ CREATE TABLE IF NOT EXISTS "referral_transactions"(
 );
 
 CREATE INDEX IF NOT EXISTS "referral_introducer_address" ON "referral_transactions"("introducer_address");
+
+DROP VIEW IF EXISTS trs_refer;
+
+CREATE VIEW trs_refer AS
+
+SELECT r."sponsor_address" AS "sponsor_address", 
+       r."introducer_address" AS "introducer_address", 
+       r."reward" AS "reward", 
+       r."sponsor_level" AS "sponsor_level", 
+       r."transaction_type" AS "transaction_type", 
+       r."reward_time" AS "reward_time"
+       
+FROM referral_transactions r
+
+INNER JOIN trs t ON r."id" = t."id";
 
 COMMIT;
