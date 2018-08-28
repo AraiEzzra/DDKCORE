@@ -996,7 +996,7 @@ Transaction.prototype.dbSave = function (trs) {
 				recipientId: trs.recipientId || null,
 				amount: trs.amount,
 				stakedAmount: trs.stakedAmount,
-				stakeId: trs.id || null,
+				stakeId: trs.stakeId || null,
 				groupBonus: trs.groupBonus,
 				fee: trs.fee,
 				signature: signature,
