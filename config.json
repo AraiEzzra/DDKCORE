@@ -81,7 +81,7 @@
         "loadPerIteration": 5000
     },
     "ssl": {
-        "enabled": false,
+        "enabled": true,
         "options": {
             "port": 443,
             "address": "13.251.251.219"
@@ -93,10 +93,10 @@
         "masterpassword": "GSne7ki1uzu6"
     },
     "initialPrimined": {
-        "total": 55000000000000
+        "total": 360000000000000
     },
     "ddkSupply": {
-        "totalSupply": 2100000000000000
+        "totalSupply": 4500000000000000
     },
     "session": {},
     "app": {},
