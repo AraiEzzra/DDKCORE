@@ -77,7 +77,7 @@ ReferTransfer.prototype.verify = function (trs, sender, cb) {
 		let level = split[0];
 		let rewardPercent = split[1];
 		let data = constants.validateLevelReward;
-		if(data[level] != rewardPercent) {
+		if(data[level] !== parseFloat(rewardPercent)) {
 			return setImmediate(cb,'Invalid percentage for referral chain reward');
 		}
 	} else {

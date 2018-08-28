@@ -521,7 +521,8 @@ Frozen.prototype.checkFrozeOrders = function () {
 					let hash = Buffer.from(JSON.parse(self.scope.config.users[0].keys));
 					let keypair = self.scope.ed.makeKeypair(hash);
 					let publicKey = keypair.publicKey.toString('hex');
-					let stakeReward = __private.stakeReward.calcReward(modules.blocks.lastBlock.get().height);
+					let blockHeight = modules.blocks.lastBlock.get().height;
+					let stakeReward = __private.stakeReward.calcReward(blockHeight);
 					self.scope.balancesSequence.add(function (cb) {
 						modules.accounts.getAccount({ publicKey: publicKey }, function (err, account) {
 							if (err) {
@@ -538,7 +539,9 @@ Frozen.prototype.checkFrozeOrders = function () {
 									sender: account,
 									recipientId: order.senderId,
 									keypair: keypair,
-									secondKeypair: secondKeypair
+									secondKeypair: secondKeypair,
+									rewardPercentage: blockHeight+'&'+stakeReward
+
 								});
 							} catch (e) {
 								return setImmediate(cb, e.toString());
