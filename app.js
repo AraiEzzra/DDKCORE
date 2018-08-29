@@ -306,12 +306,32 @@ d.run(function () {
 			app.use(compression({ level: 9 }));
 			app.use(cors());
 			app.options('*', cors());
+			let socketIO;
 
 			let server = require('http').createServer(app);
 			let io = require('socket.io')(server);
+			socketIO = require('socket.io')(server);
+
+			
+
+			let privateKey, certificate, https, https_io;
+
+			if (scope.config.ssl.enabled) {
+				privateKey = fs.readFileSync(scope.config.ssl.options.key);
+				certificate = fs.readFileSync(scope.config.ssl.options.cert);
+
+				https = require('https').createServer({
+					key: privateKey,
+					cert: certificate,
+					ciphers: 'ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:' + 'ECDHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:DHE-RSA-AES256-SHA384:ECDHE-RSA-AES256-SHA256:DHE-RSA-AES256-SHA256:HIGH:' + '!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!SRP:!CAMELLIA'
+				}, app);
+
+				https_io = require('socket.io')(https);
+				socketIO = require('socket.io')(https);
+			}
 
 			// handled socket's connection event
-			io.on('connection', function (socket) {
+			socketIO.on('connection', function (socket) {
 				//IIFE: function to accept new socket.id in sockets array.
 				function acceptSocket(user, sockets) {
 					let userFound = false;
@@ -346,21 +366,6 @@ d.run(function () {
 					});
 				});
 			});
-
-			let privateKey, certificate, https, https_io;
-
-			if (scope.config.ssl.enabled) {
-				privateKey = fs.readFileSync(scope.config.ssl.options.key);
-				certificate = fs.readFileSync(scope.config.ssl.options.cert);
-
-				https = require('https').createServer({
-					key: privateKey,
-					cert: certificate,
-					ciphers: 'ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:' + 'ECDHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:DHE-RSA-AES256-SHA384:ECDHE-RSA-AES256-SHA256:DHE-RSA-AES256-SHA256:HIGH:' + '!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!SRP:!CAMELLIA'
-				}, app);
-
-				https_io = require('socket.io')(https);
-			}
 
 			cb(null, {
 				express: express,
