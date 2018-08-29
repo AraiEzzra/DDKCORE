@@ -81,7 +81,7 @@
         "loadPerIteration": 5000
     },
     "ssl": {
-        "enabled": true,
+        "enabled": false,
         "options": {
             "port": 443,
             "address": "13.251.251.219"
@@ -102,7 +102,7 @@
     "app": {},
     "sender": {},
     "nethash": "da3ed6a45429278bac2666961289ca17ad86595d33b31037615d4b8e8f158bba",
-    "elasticsearchHost": "https://vpc-ddk-es-32wbyx4zu5hb5udvelaf44sxlu.ap-southeast-1.es.amazonaws.com",
+    "elasticsearchHost": "https://search-ddkoin-es-4qcgobakdvymdnnjibppa5qttu.ap-southeast-1.es.amazonaws.com",
     "swaggerDomain": "0.0.0.0",
     "jwt": {
         "tokenLife": 300
