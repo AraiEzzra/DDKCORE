@@ -16,7 +16,7 @@
 			"fee": 0,
 			"timestamp": 0,
 			"recipientId": "DDK4995063339468361088",
-			"senderId": "DDK12817390500414975490",
+			"senderId": "DDK00000000000000000000",
 			"senderPublicKey": "f50fe1582173dc30869ca3357daeec3ec3608a7517c0ea388c50c5e3afcc8041",
 			"signature": "c1e1e02f5128fa79e913356b5db18dce1626f5f740416431fe669345c5669497b974bc16d978a83142ed36cc7d2f6a9b764e609b24372f412fea8ecd476f9507",
 			"id": "2525816115293971625",
@@ -146,11 +146,11 @@
 			"fee": 0,
 			"timestamp": 0,
 			"recipientId": null,
-			"senderId": "DDK16313739661670634666",
-			"senderPublicKey": "c094ebee7ec0c50ebee32918655e089f6e1a604b83bcaa760293c61e0f18ab6f",
+			"senderId": "DDK3955937947011006122",
+			"senderPublicKey": "276f0d09e64b68566fb458b7c71aeb62411d0b633ad6c038e5a4a042ec588af9",
 			"asset": {
 				"delegate": {
-					"username": "delegate_1"
+					"username": "TDALLIANCE1"
 				}
 			},
 			"signature": "319b520e647be6ed47ebecbbe2f47d7dd4ca12690aaa4e36ee60493d89953519fea08b9d089850941c5b60b662f982a8890affa071e16847af406280bdee7e05",
@@ -164,11 +164,11 @@
             "fee": 0,
             "timestamp": 0,
             "recipientId": null,
-            "senderId": "DDK16863581701775438665",
-            "senderPublicKey": "722c48aa6e68788b580b5f10a4c86d395e9cbb1b24e570958f0d02f1d5c9e250",
+            "senderId": "DDK14521323608713415449",
+            "senderPublicKey": "3f0348b6d3ecaeaeca0a05ee4c2d7b4b7895ef0a12d8023ba245b6b8022833e5",
             "asset": {
                 "delegate": {
-                    "username": "delegate_2"
+                    "username": "TDALLIANCE2"
                 }
             },
             "signature": "a8c76646f01ce88449d3843b3542bc0caee19b960e8b35cb725afedd67f700635f4039ff42c90f00474f1c14e12712f50402f11c7659179ef54efaf501e7cb0d",
@@ -182,11 +182,11 @@
             "fee": 0,
             "timestamp": 0,
             "recipientId": null,
-            "senderId": "DDK4654565460128291637",
-            "senderPublicKey": "faf82dd8a232b7878df262846bcfa24d90b02d154d380bfcc412eaf2de6c3268",
+            "senderId": "DDK12458159079905364672",
+            "senderPublicKey": "3f1ecf6de517a6bf2f5c7a8226a478dc571ed0100d53ee104842f4d443e49806",
             "asset": {
                 "delegate": {
-                    "username": "delegate_3"
+                    "username": "DDKFOUNDATION"
                 }
             },
             "signature": "cdc37f77c466b8a1d5d6741472b500d768972c61eee97a63f8101f71f2426ee2c4244052ba74d10bbbb7d7bea92cbef74a0e3b997caa8065ea650b96f1d1e802",
@@ -205,9 +205,9 @@
             "asset": {
               
                 "votes": [
-                    "+c094ebee7ec0c50ebee32918655e089f6e1a604b83bcaa760293c61e0f18ab6f",
-                    "+722c48aa6e68788b580b5f10a4c86d395e9cbb1b24e570958f0d02f1d5c9e250",
-                    "+faf82dd8a232b7878df262846bcfa24d90b02d154d380bfcc412eaf2de6c3268"
+                    "+276f0d09e64b68566fb458b7c71aeb62411d0b633ad6c038e5a4a042ec588af9",
+                    "+3f0348b6d3ecaeaeca0a05ee4c2d7b4b7895ef0a12d8023ba245b6b8022833e5",
+                    "+3f1ecf6de517a6bf2f5c7a8226a478dc571ed0100d53ee104842f4d443e49806"
                 ]
               
             },

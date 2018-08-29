@@ -404,7 +404,8 @@ Accounts.prototype.shared = {
 						secondPublicKey: account.secondPublicKey,
 						multisignatures: account.multisignatures,
 						u_multisignatures: account.u_multisignatures,
-						totalFrozeAmount: account.totalFrozeAmount
+						totalFrozeAmount: account.totalFrozeAmount,
+						groupBonus: account.group_bonus
 					};
 
 					accountData.token = token;
@@ -691,7 +692,8 @@ Accounts.prototype.shared = {
 				if (err) {
 					return setImmediate(cb, err);
 				}
-				library.logic.vote.updateAndCheckVote({
+				return setImmediate(cb, null, { transaction: transaction[0] });
+				/* library.logic.vote.updateAndCheckVote({
 					votes: req.body.delegates,
 					senderId: transaction[0].senderId
 				}, function (err) {
@@ -699,7 +701,7 @@ Accounts.prototype.shared = {
 						return setImmediate(cb, err);
 					}
 					return setImmediate(cb, null, { transaction: transaction[0] });
-				});
+				}); */
 			});
 		});
 	},
