@@ -310,10 +310,10 @@ d.run(function () {
 
 			let server = require('http').createServer(app);
 			let io = require('socket.io')(server);
-			socketIO = require('socket.io')(server);
-
+			if (!scope.config.ssl.enabled) {
+				socketIO = require('socket.io')(server);
+			}
 			
-
 			let privateKey, certificate, https, https_io;
 
 			if (scope.config.ssl.enabled) {
