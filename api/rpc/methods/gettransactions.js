@@ -1,8 +1,8 @@
 const { createServerRPCMethod, validator } = require('./../util');
-const { getTransaction } = require('../../../schema/transactions');
+const { getTransactions } = require('../../../schema/transactions');
 
 
-const METHOD_NAME = 'getrawtransaction';
+const METHOD_NAME = 'gettransactions';
 
 /**
  *
@@ -12,14 +12,14 @@ const METHOD_NAME = 'getrawtransaction';
  * @param {function} cdError - Application Error callback
  * @constructor
  */
-function GetRawTransaction (wss, params, scope, cdError) {
+function GetTransactions (wss, params, scope, cdError) {
 
   return new Promise(function (resolve) {
 
     let error;
 
-    if (validator(params, getTransaction)) {
-      scope.modules.transactions.shared.getTransaction({body: params}, (error, result) => {
+    if (validator(params, getTransactions)) {
+      scope.modules.transactions.shared.getTransactions({body: params}, (error, result) => {
 
         resolve(error
           ? {error}
@@ -33,4 +33,4 @@ function GetRawTransaction (wss, params, scope, cdError) {
   });
 }
 
-module.exports = createServerRPCMethod(METHOD_NAME, GetRawTransaction);
+module.exports = createServerRPCMethod(METHOD_NAME, GetTransactions);

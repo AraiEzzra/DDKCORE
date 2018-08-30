@@ -1,21 +1,40 @@
-const GetStatus = require('./methods/getstatus');
+/**
+ * modules.blocks.submodules.api
+ */
 const GetBlock = require('./methods/getblock');
 const GetBlocks = require('./methods/getblocks');
-const GetRawTransaction = require('./methods/getrawtransaction');
-const GetRawTransactions = require('./methods/getrawtransactions');
-const SendRawTransaction = require('./methods/sendrawtransaction');
-const GetPeer = require('./methods/getpeer');
-const GetPeers = require('./methods/getpeers');
 const GetBroadhash = require('./methods/getbroadhash');
 const GetEpoch = require('./methods/getepoch');
+const GetHeight = require('./methods/getheight');
 const GetFee = require('./methods/getfee');
 const GetFees = require('./methods/getfees');
-const GetForgingStatus = require('./methods/getforgingstatus');
-const GetHeight = require('./methods/getheight');
-const GetMilestone = require('./methods/getmilestone');
 const GetNethash = require('./methods/getnethash');
+const GetMilestone = require('./methods/getmilestone');
 const GetReward = require('./methods/getreward');
 const GetSupply = require('./methods/getsupply');
+const GetStatus = require('./methods/getstatus');
+
+/**
+ * modules.delegates.internal
+ */
+const GetForgingStatus = require('./methods/getforgingstatus');
+
+/**
+ * modules.transactions.shared
+ */
+const GetTransaction = require('./methods/gettransaction');
+const GetTransactions = require('./methods/gettransactions');
+const AddTransaction = require('./methods/addtransaction');
+
+/**
+ * modules.peers.shared
+ */
+const GetPeer = require('./methods/getpeer');
+const GetPeers = require('./methods/getpeers');
+
+/**
+ * modules.delegates.shared
+ */
 const GetVoters = require('./methods/getvoters');
 const GetDelegate = require('./methods/getdelegate');
 const GetDelegates = require('./methods/getdelegates');
@@ -23,14 +42,16 @@ const GetNextForgers = require('./methods/getnextforgers');
 const Search = require('./methods/search');
 const Count = require('./methods/count');
 const GetForgedByAccount = require('./methods/getforgedbyaccount');
+const AddDelegate = require('./methods/adddelegate');
+
 
 const methods = [
   GetStatus,
   GetBlock,
   GetBlocks,
-  GetRawTransaction,
-  GetRawTransactions,
-  SendRawTransaction,
+  GetTransaction,
+  GetTransactions,
+  AddTransaction,
   GetPeer,
   GetPeers,
   GetBroadhash,
@@ -50,8 +71,10 @@ const methods = [
   Search,
   Count,
   GetForgedByAccount,
+  AddDelegate,
 ];
 
+// todo: replace me to config.json
 const PORT = 8080;
 const HOST = '127.0.0.1';
 const VERSION = 1;
@@ -62,4 +85,3 @@ module.exports = {
   host: HOST,
   version: VERSION,
 };
-

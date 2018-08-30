@@ -2,7 +2,7 @@ const { createServerRPCMethod, validator } = require('./../util');
 const { addTransactions } = require('../../../schema/transactions');
 
 
-const METHOD_NAME = 'sendrawtransaction';
+const METHOD_NAME = 'addtransaction';
 
 /**
  *
@@ -12,7 +12,7 @@ const METHOD_NAME = 'sendrawtransaction';
  * @param {function} cdError - Application Error callback
  * @constructor
  */
-function SendRawTransaction (wss, params, scope, cdError) {
+function AddTransaction (wss, params, scope, cdError) {
 
   return new Promise(function (resolve) {
 
@@ -34,4 +34,4 @@ function SendRawTransaction (wss, params, scope, cdError) {
 
 }
 
-module.exports = createServerRPCMethod(METHOD_NAME, SendRawTransaction);
+module.exports = createServerRPCMethod(METHOD_NAME, AddTransaction);
