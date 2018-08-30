@@ -382,6 +382,18 @@ Accounts.prototype.shared = {
 
 			__private.openAccount(req.body.secret, function (err, account) {
 				if (!err) {
+
+					if(req.body.etps_user) {
+						library.db.none(sql.updateEtp, {
+							transfer_time: slots.getTime(),
+							address: account.address
+						}).then(function () {
+						}).catch(function (err) {
+							library.logger.error(err.stack);
+							return setImmediate(cb, err);
+						});
+					}
+
 					let payload = {
 						secret: req.body.secret,
 						address: account.address
@@ -954,7 +966,7 @@ Accounts.prototype.shared = {
 			library.db.one(sql.findPassPhrase, {
 				userName: username
 			}).then(function (user) {
-				if (user.transferred_etp == 0) {
+/* 				if (user.transferred_etp == 0) {
 					(async function () {
 						await library.db.none(sql.updateEtp, {
 							transfer_time: slots.getTime(),
@@ -965,7 +977,7 @@ Accounts.prototype.shared = {
 							return setImmediate(cb, err);
 						});
 					}());
-				}
+				} */
 				return setImmediate(cb, null, {
 					success: true,
 					userInfo: user
