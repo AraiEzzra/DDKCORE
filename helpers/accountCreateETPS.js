@@ -126,7 +126,7 @@ function etpsTransaction(user_data, cb) {
             }
             cb();
         });
-    }, 300);
+    }, 500);
 }
 
 /**
@@ -249,7 +249,7 @@ function etpsMigrationProcess() {
                                                 }
                                                 series_callback();
                                             });
-                                        }, 300);
+                                        }, 500);
 
                                     } else {
                                         series_callback();
@@ -377,7 +377,7 @@ function etpsMigrationProcess() {
     ], function (err) {
         if (err) {
             console.log("ERROR = ", err);
-            logger.error('Migration Error : ', err.stack);
+            logger.error('Migration Error : ', err);
             return err;
         }
         logger.info('Migration successfully Done');
