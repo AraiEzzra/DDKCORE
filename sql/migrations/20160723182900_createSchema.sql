@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS "trs"(
   "requesterPublicKey" bytea,
   "signatures" TEXT,
   "trsName" VARCHAR(20) NOT NULL,
-  "reward" VARCHAR(100),
+  "reward" TEXT,
   FOREIGN KEY("blockId") REFERENCES "blocks"("id") ON DELETE CASCADE
 );
 
