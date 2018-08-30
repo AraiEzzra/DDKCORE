@@ -349,7 +349,7 @@ Transaction.prototype.checkBalance = function (amount, balance, trs, sender) {
 		return {
 			exceeded: exceeded,
 			error: exceeded ? [
-				'Account does not have enough ETP due to freeze amount:', sender.address,
+				'Account does not have enough DDK due to freeze amount:', sender.address,
 				'balance:', new bignum(sender[balance].toString() || '0').div(Math.pow(10, 8)),
 				'totalFreezeAmount :', new bignum(sender.totalFrozeAmount.toString()).div(Math.pow(10, 8))
 			].join(' ') : null
@@ -358,7 +358,7 @@ Transaction.prototype.checkBalance = function (amount, balance, trs, sender) {
 		return {
 			exceeded: exceeded,
 			error: exceeded ? [
-				'Account does not have enough ETP:', sender.address,
+				'Account does not have enough DDK:', sender.address,
 				'balance:', new bignum(sender[balance].toString() || '0').div(Math.pow(10, 8))
 			].join(' ') : null
 		};
@@ -942,6 +942,7 @@ Transaction.prototype.dbFields = [
 	'recipientId',
 	'amount',
 	'stakedAmount',
+	'stakeId',
 	'groupBonus',
 	'fee',
 	'signature',
@@ -997,6 +998,7 @@ Transaction.prototype.dbSave = function (trs) {
 				recipientId: trs.recipientId || null,
 				amount: trs.amount,
 				stakedAmount: trs.stakedAmount,
+				stakeId: trs.stakeId || null,
 				groupBonus: trs.groupBonus,
 				fee: trs.fee,
 				signature: signature,
@@ -1269,6 +1271,7 @@ Transaction.prototype.dbRead = function (raw) {
 			recipientPublicKey: raw.m_recipientPublicKey || null,
 			amount: parseInt(raw.t_amount),
 			stakedAmount: parseInt(raw.t_stakedAmount),
+			stakeId: raw.t_stakeId,
 			groupBonus: parseInt(raw.t_groupBonus),
 			fee: parseInt(raw.t_fee),
 			signature: raw.t_signature,
@@ -1276,7 +1279,9 @@ Transaction.prototype.dbRead = function (raw) {
 			signatures: raw.t_signatures ? raw.t_signatures.split(',') : [],
 			confirmations: parseInt(raw.confirmations),
 			asset: {},
-			trsName: raw.t_trsName
+			trsName: raw.t_trsName,
+			reward: raw.t_reward,
+			pendingGroupBonus: raw.t_pendingGroupBonus
 		};
 
 		if (!__private.types[tx.type]) {

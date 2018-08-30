@@ -46,6 +46,7 @@ SELECT b."id" AS "b_id",
        t."rowId" AS "t_rowId",
        t."type" AS "t_type",
        t."timestamp" AS "t_timestamp",
+       t."trsName" As "t_trsName",
        ENCODE(t."senderPublicKey", 'hex') AS "t_senderPublicKey",
        t."senderId" AS "t_senderId",
        t."recipientId" AS "t_recipientId",
@@ -54,7 +55,9 @@ SELECT b."id" AS "b_id",
        ENCODE(t."signature", 'hex') AS "t_signature",
        ENCODE(t."signSignature", 'hex') AS "t_signSignature",
        t."stakedAmount" AS "t_stakedAmount",
+       t."stakeId" AS "t_stakeId",
        t."groupBonus" AS "t_groupBonus",
+       t."pendingGroupBonus" AS "t_pendingGroupBonus",
        ENCODE(s."publicKey", 'hex') AS "s_publicKey",
        d."username" AS "d_username",
        v."votes" AS "v_votes",
@@ -72,7 +75,16 @@ SELECT b."id" AS "b_id",
        ot."dappId" AS "ot_dappId",
        ot."outTransactionId" AS "ot_outTransactionId",
        ENCODE(t."requesterPublicKey", 'hex') AS "t_requesterPublicKey",
-       t."signatures" AS "t_signatures"
+       t."signatures" AS "t_signatures",
+       so."id" AS "so_id",
+       so."status" AS "so_status",
+       so."startTime" AS "so_startTime",
+       so."insertTime" AS "so_insertTime",
+       so."senderId" AS "so_senderId",
+       so."recipientId" AS "so_recipientId",
+       so."freezedAmount" AS "so_freezedAmount",
+       so."nextVoteMilestone" AS "so_nextVoteMilestone",
+        t."reward" AS "t_reward"
 
 FROM blocks b
 
@@ -83,7 +95,8 @@ LEFT OUTER JOIN signatures AS s ON s."transactionId" = t."id"
 LEFT OUTER JOIN multisignatures AS m ON m."transactionId" = t."id"
 LEFT OUTER JOIN dapps AS dapp ON dapp."transactionId" = t."id"
 LEFT OUTER JOIN intransfer AS it ON it."transactionId" = t."id"
-LEFT OUTER JOIN outtransfer AS ot ON ot."transactionId" = t."id";
+LEFT OUTER JOIN outtransfer AS ot ON ot."transactionId" = t."id"
+LEFT JOIN stake_orders so ON so."id" = t."id";
 
 DROP VIEW IF EXISTS trs_list;
 
@@ -99,16 +112,20 @@ SELECT t."id" AS "t_id",
        t."recipientId" AS "t_recipientId",
        t."amount" AS "t_amount",
        t."stakedAmount" AS "t_stakedAmount",
+       t."stakeId" AS "t_stakeId",
        t."groupBonus" AS "t_groupBonus",
        t."fee" AS "t_fee",
        ENCODE(t."signature", 'hex') AS "t_signature",
        ENCODE(t."signSignature", 'hex') AS "t_SignSignature",
        t."signatures" AS "t_signatures",
        t."trsName" AS "t_trsName",
-       (SELECT MAX("height") + 1 FROM blocks) - b."height" AS "confirmations"
+       (SELECT MAX("height") + 1 FROM blocks) - b."height" AS "confirmations",
+       s."id" AS "s_id",
+       t."reward" AS "t_reward"
 
 FROM trs t
 
-INNER JOIN blocks b ON t."blockId" = b."id";
+INNER JOIN blocks b ON t."blockId" = b."id"
+LEFT JOIN stake_orders s ON s."id" = t."id";
 
 COMMIT;
