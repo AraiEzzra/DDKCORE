@@ -40,7 +40,7 @@
  * @property {number} unconfirmedTransactionTimeOut - 1080 blocks
  */
 module.exports = {
-	activeDelegates: 201,
+	activeDelegates: 3,
 	maxVotes:101,
 	maxVotesPerTransaction: 3,
 	addressLength: 208,
@@ -71,7 +71,7 @@ module.exports = {
 	maxSharedTxs: 100,
 	maxSignaturesLength: 196 * 256,
 	maxTxsPerBlock: 25,
-	minBroadhashConsensus: 51,
+	minBroadhashConsensus: 0,
 	nethashes: [
 		// Mainnet
 		'ed14889723f24ecc54871d058d98ce91ff2f973192075c0155ba2b7b70ad2511',
