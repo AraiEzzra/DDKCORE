@@ -80,7 +80,7 @@ module.exports = {
       keys: env.DRESERVEDEX
     },
     {
-      keys: env.DDKFOUNDATION
+      keys: env.DPREORDERDNC
     }
   ],  
 };

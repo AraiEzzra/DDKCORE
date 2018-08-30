@@ -40,8 +40,8 @@
  * @property {number} unconfirmedTransactionTimeOut - 1080 blocks
  */
 module.exports = {
-	activeDelegates: 3,
-	maxVotes:4,
+	activeDelegates: 201,
+	maxVotes:101,
 	maxVotesPerTransaction: 3,
 	addressLength: 208,
 	blockHeaderLength: 248,
@@ -71,7 +71,7 @@ module.exports = {
 	maxSharedTxs: 100,
 	maxSignaturesLength: 196 * 256,
 	maxTxsPerBlock: 25,
-	minBroadhashConsensus: 0,
+	minBroadhashConsensus: 51,
 	nethashes: [
 		// Mainnet
 		'ed14889723f24ecc54871d058d98ce91ff2f973192075c0155ba2b7b70ad2511',
@@ -112,10 +112,10 @@ module.exports = {
 	},
 	// Configurable froze order : time here is in minutes
 	froze : {
-		endTime : 48,
-		rTime : 8,
-		vTime : 2,
-		milestone : 8, //for testing, taking 2 min
+		endTime : 241920,
+		rTime : 40320,
+		vTime : 10080,
+		milestone : 10080, 
 		rewards: {
 			milestones: [
 				10, // 10% For 0-6 months
@@ -125,7 +125,7 @@ module.exports = {
 				4, // 4% For 25-30 months
 				2  // 2% For 31 months and above
 			],
-			distance: 30, // Distance between each milestone is 6 months
+			distance: 1451520, // Distance between each milestone is 6 months
 		}
 	},
 	defaultLock: 0,

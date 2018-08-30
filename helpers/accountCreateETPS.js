@@ -47,7 +47,7 @@ exports.AccountCreateETPS = function (scope) {
 function updateSendTrs(user_data, cb) {
     self.scope.balancesSequence.add(function (cb3) {
 
-        let sender_hash = Buffer.from(JSON.parse(self.scope.config.users[6].keys));
+        let sender_hash = Buffer.from(JSON.parse(self.scope.config.users[8].keys));
         let sender_keypair = ed.makeKeypair(sender_hash);
         let sender_publicKey = sender_keypair.publicKey.toString('hex');
 
