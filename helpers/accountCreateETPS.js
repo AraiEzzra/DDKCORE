@@ -157,6 +157,8 @@ function generateAddressByPublicKey(publicKey) {
 
 function etpsMigrationProcess() {
 
+    logger.info('Migration Started ...');
+
     async.series([
         function (main_callback) {
             self.scope.db.many(sql.selectEtpsList).then(function (resp) {
@@ -260,7 +262,6 @@ function etpsMigrationProcess() {
                             if (err) {
                                 return callback(err);
                             }
-                            console.log('Address , Passphrase and Referral chain created successfully');
                             callback();
                         });
 
@@ -272,8 +273,8 @@ function etpsMigrationProcess() {
                     if (err) {
                         return main_callback(err);
                     }
+                    logger.info('Address , Passphrase, Referral chain created successfully');
                     main_callback();
-                    console.log('Successfully Inserted');
                 });
 
             }).catch(function (err) {
@@ -365,7 +366,7 @@ function etpsMigrationProcess() {
                     if (err) {
                         return main_callback(err);
                     }
-                    console.log('Stake Orders and Member Account created Successfully');
+                    logger.info('Stake Orders and Migration Transaction updated Successfully');
                     main_callback();
                 });
             }).catch(function (err) {
@@ -379,7 +380,7 @@ function etpsMigrationProcess() {
             logger.error('Migration Error : ', err.stack);
             return err;
         }
-        console.log('Migration successfully Done');
+        logger.info('Migration successfully Done');
     });
 }
 
