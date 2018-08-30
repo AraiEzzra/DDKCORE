@@ -32,9 +32,6 @@ module.exports = {
   session: {
     secret: env.SESSION_SECRET
   },
-  app: {
-    port: env.PORT
-  },
   forging: {
     secret: env.FORGE_SECRET
   },

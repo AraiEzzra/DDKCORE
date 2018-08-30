@@ -666,8 +666,8 @@ d.run(function () {
 		 * @param {nodeStyleCallback} cb - Callback function with `scope.network`.
 		 */
 		listen: ['ready', function (scope, cb) {
-			scope.network.server.listen(scope.config.app.port, scope.config.address, function (err) {
-				scope.logger.info('ddk started: ' + scope.config.address + ':' + scope.config.app.port);
+			scope.network.server.listen(scope.config.port, scope.config.address, function (err) {
+				scope.logger.info('ddk started: ' + scope.config.address + ':' + scope.config.port);
 
 				if (!err) {
 					if (scope.config.ssl.enabled) {
