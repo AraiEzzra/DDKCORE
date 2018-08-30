@@ -112,7 +112,9 @@ __private.list = function (filter, cb) {
 		stakedAmount: '"t_stakedAmount" = ${stakedAmount}',
 		stakeId: '"t_stakedId" = ${stakedId}',
 		trsName: '"t_trsName" = ${trsName}',
-		groupBonus: '"t_groupBonus" = ${groupBonus}'
+		groupBonus: '"t_groupBonus" = ${groupBonus}',
+		reward: '"t_reward" = ${reward}',
+		pendingGroupBonus: '"t_pendingGroupBonus" = ${pendingGroupBonus}'
 	};
 	let owner = '';
 	let isFirstWhere = true;

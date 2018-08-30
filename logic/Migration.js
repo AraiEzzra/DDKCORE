@@ -182,7 +182,7 @@ Migration.prototype.dbSave = function (trs) {
  * @return null
  */
 Migration.prototype.ready = function (trs, sender) {
-	return null;
+	return true;
 };
 
 // Export
