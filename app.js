@@ -345,7 +345,7 @@ d.run(function () {
 					if (!userFound && user.address) {
 						sockets.push(user);
 					}
-					io.emit('updateConnected', sockets.length);
+					socketIO.sockets.emit('updateConnected', sockets.length);
 				}
 
 				socket.on('setUserAddress', function (data) {
@@ -361,7 +361,7 @@ d.run(function () {
 					sockets.forEach(function (user, index) {
 						if (user.socketId == socket.id) {
 							sockets.splice(index, 1);
-							io.sockets.emit('updateConnected', sockets.length);
+							socketIO.sockets.emit('updateConnected', sockets.length);
 						}
 					});
 				});
