@@ -12,7 +12,7 @@ let Accounts = {
 
 	findDirectSponsor: 'SELECT address FROM referals WHERE level[1] = ${introducer}',
 
-	updatePendingGroupBonus: 'UPDATE mem_accounts SET "pending_group_bonus" = "pending_group_bonus" + ${nextBonus} WHERE "address"=${senderId}',
+	updatePendingGroupBonus: 'UPDATE mem_accounts SET "pending_group_bonus" = "pending_group_bonus" - ${nextBonus} WHERE "address"=${senderId}',
 
 	disableAccount : 'UPDATE mem_accounts SET "status" = 0 WHERE "address" = ${senderId}',
 
