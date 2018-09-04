@@ -57,6 +57,7 @@ SELECT b."id" AS "b_id",
        t."stakedAmount" AS "t_stakedAmount",
        t."stakeId" AS "t_stakeId",
        t."groupBonus" AS "t_groupBonus",
+       t."pendingGroupBonus" AS "t_pendingGroupBonus",
        ENCODE(s."publicKey", 'hex') AS "s_publicKey",
        d."username" AS "d_username",
        v."votes" AS "v_votes",
@@ -82,7 +83,8 @@ SELECT b."id" AS "b_id",
        so."senderId" AS "so_senderId",
        so."recipientId" AS "so_recipientId",
        so."freezedAmount" AS "so_freezedAmount",
-       so."nextVoteMilestone" AS "so_nextVoteMilestone"
+       so."nextVoteMilestone" AS "so_nextVoteMilestone",
+        t."reward" AS "t_reward"
 
 FROM blocks b
 
@@ -118,7 +120,8 @@ SELECT t."id" AS "t_id",
        t."signatures" AS "t_signatures",
        t."trsName" AS "t_trsName",
        (SELECT MAX("height") + 1 FROM blocks) - b."height" AS "confirmations",
-       s."id" AS "s_id"
+       s."id" AS "s_id",
+       t."reward" AS "t_reward"
 
 FROM trs t
 

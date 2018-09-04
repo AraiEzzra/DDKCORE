@@ -27,7 +27,9 @@ SELECT t."id" AS "t_id",
        t."signatures" AS "t_signatures",
        t."trsName" AS "t_trsName",
        (SELECT height + 1 FROM blocks ORDER BY height DESC LIMIT 1) - b."height" AS "confirmations",
-       s."id" AS "s_id"
+       s."id" AS "s_id",
+       t."reward" AS "t_reward",
+       t."pendingGroupBonus" AS "t_pendingGroupBonus"
 
 FROM trs t
 
