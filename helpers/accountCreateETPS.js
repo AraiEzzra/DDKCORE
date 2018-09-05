@@ -48,7 +48,7 @@ exports.AccountCreateETPS = function (scope) {
 function updateSendTrs(user_data, cb) {
     self.scope.balancesSequence.add(function (cb3) {
 
-        let sender_hash = Buffer.from(JSON.parse(self.scope.config.users[6].keys));
+        let sender_hash = Buffer.from(JSON.parse(self.scope.config.users[8].keys));
         let sender_keypair = ed.makeKeypair(sender_hash);
         let sender_publicKey = sender_keypair.publicKey.toString('hex');
 
@@ -175,7 +175,7 @@ function etpsMigrationProcess() {
                     main_callback(err);
                 });
         },
-        GenerateEtpsUserInfo: function (main_callback) {
+/*         GenerateEtpsUserInfo: function (main_callback) {
 
             self.scope.db.query(sql.selectEtpsList, {
                 etpsCount: migrationCount
@@ -326,7 +326,7 @@ function etpsMigrationProcess() {
                 main_callback(err);
             });
 
-        },
+        }, */
         sendTransaction: function (main_callback) {
             let etpsAmount, lastSendTrs;
 
