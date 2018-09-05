@@ -202,7 +202,7 @@ Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 
 						level = level.concat(resp[0].level.slice(0, chain_length));
 					} else if (resp.length == 0) {
-						return setImmediate(cb, "Referral link source not eligible");
+						return setImmediate(cb, "Referral link source is not eligible");
 					}
 					callback();
 				});
@@ -382,6 +382,16 @@ Accounts.prototype.shared = {
 
 			__private.openAccount(req.body.secret, function (err, account) {
 				if (!err) {
+					if (req.body.etps_user) {
+						library.db.none(sql.updateEtp, {
+							transfer_time: slots.getTime(),
+							address: account.address
+						}).then(function () {
+						}).catch(function (err) {
+							library.logger.error(err.stack);
+							return setImmediate(cb, err);
+						});
+					}
 					let payload = {
 						secret: req.body.secret,
 						address: account.address
@@ -404,7 +414,8 @@ Accounts.prototype.shared = {
 						secondPublicKey: account.secondPublicKey,
 						multisignatures: account.multisignatures,
 						u_multisignatures: account.u_multisignatures,
-						totalFrozeAmount: account.totalFrozeAmount
+						totalFrozeAmount: account.totalFrozeAmount,
+						groupBonus: account.group_bonus
 					};
 
 					accountData.token = token;
@@ -691,7 +702,8 @@ Accounts.prototype.shared = {
 				if (err) {
 					return setImmediate(cb, err);
 				}
-				library.logic.vote.updateAndCheckVote({
+				return setImmediate(cb, null, { transaction: transaction[0] });
+				/* library.logic.vote.updateAndCheckVote({
 					votes: req.body.delegates,
 					senderId: transaction[0].senderId
 				}, function (err) {
@@ -699,7 +711,7 @@ Accounts.prototype.shared = {
 						return setImmediate(cb, err);
 					}
 					return setImmediate(cb, null, { transaction: transaction[0] });
-				});
+				}); */
 			});
 		});
 	},
@@ -952,18 +964,7 @@ Accounts.prototype.shared = {
 			library.db.one(sql.findPassPhrase, {
 				userName: username
 			}).then(function (user) {
-				if (user.transferred_etp == 0) {
-					(async function () {
-						await library.db.none(sql.updateEtp, {
-							transfer_time: slots.getTime(),
-							userName: username
-						}).then(function () {
-						}).catch(function (err) {
-							library.logger.error(err.stack);
-							return setImmediate(cb, err);
-						});
-					}());
-				}
+				
 				return setImmediate(cb, null, {
 					success: true,
 					userInfo: user

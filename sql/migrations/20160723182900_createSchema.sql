@@ -40,14 +40,16 @@ CREATE TABLE IF NOT EXISTS "trs"(
   "recipientId" VARCHAR(25),
   "amount" BIGINT NOT NULL,
   "stakedAmount" BIGINT NOT NULL,
+  "stakeId" VARCHAR(20),
   "groupBonus" BIGINT,
+  "pendingGroupBonus" BIGINT,
   "fee" BIGINT NOT NULL,
   "signature" bytea NOT NULL,
   "signSignature" bytea,
   "requesterPublicKey" bytea,
   "signatures" TEXT,
   "trsName" VARCHAR(20) NOT NULL,
-  "reward" VARCHAR(20),
+  "reward" TEXT,
   FOREIGN KEY("blockId") REFERENCES "blocks"("id") ON DELETE CASCADE
 );
 

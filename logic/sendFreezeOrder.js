@@ -192,20 +192,56 @@ SendFreezeOrder.prototype.undo = function (trs, block, sender, cb) {
 };
 
 SendFreezeOrder.prototype.apply = function (trs, block, sender, cb) {
-	modules.accounts.setAccountAndGet({ address: trs.recipientId }, function (err) {
-		if (err) {
-			return setImmediate(cb, err);
+
+	async.waterfall([
+		function (waterCb) {
+			modules.accounts.setAccountAndGet({ address: trs.recipientId }, function (err) {
+				if (err) {
+					return setImmediate(waterCb, err);
+				}
+
+				modules.accounts.mergeAccountAndGet({
+					address: trs.recipientId,
+					balance: trs.amount,
+					u_balance: trs.amount,
+					blockId: block.id,
+					round: modules.rounds.calc(block.height)
+				}, function (err) {
+					return setImmediate(waterCb, err);
+				});
+			});
+		},
+		function (waterCb) {
+
+			self.getActiveFrozeOrder({
+				address: trs.senderId,
+				stakeId: trs.stakeId
+			}, function (err, order) {
+				if (err) {
+					return setImmediate(waterCb, err);
+				}
+				return setImmediate(waterCb, null, order);
+			});
+
+		},
+		function (order, waterCb) {
+
+			self.sendFreezedOrder({
+				senderId: trs.senderID,
+				recipientId: trs.recipientId,
+				stakeId: trs.stakeId,
+				stakeOrder: order
+			}, function (err) {
+
+				if (err) {
+					return setImmediate(waterCb, err);
+				}
+				return setImmediate(waterCb, null);
+			});
 		}
 
-		modules.accounts.mergeAccountAndGet({
-			address: trs.recipientId,
-			balance: trs.amount,
-			u_balance: trs.amount,
-			blockId: block.id,
-			round: modules.rounds.calc(block.height)
-		}, function (err) {
-			return setImmediate(cb, err);
-		});
+	], function (err) {
+		return setImmediate(cb, err);
 	});
 };
 
@@ -277,7 +313,7 @@ SendFreezeOrder.prototype.sendFreezedOrder = function (userAndOrderData, cb) {
 				//deduct froze Amount from totalFrozeAmount in mem_accounts table
 				self.scope.db.none(sql.deductFrozeAmount,
 					{
-						senderId: userAndOrderData.account.address,
+						senderId: userAndOrderData.senderId,
 						FrozeAmount: order.freezedAmount
 					})
 					.then(function () {

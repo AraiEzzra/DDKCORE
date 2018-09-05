@@ -1,5 +1,3 @@
-'use strict';
-
 /** 
  * @author - Satish Joshi 
  */
@@ -21,43 +19,88 @@ let bignum = require('./bignum.js');
 let transactionLog = require('../logic/transaction');
 let transactionMod = require('../modules/transactions');
 let transactionTypes = require('./transactionTypes');
+let accounts = require('../modules/accounts');
 
-let code, secret, hash, keypair, publicKey, user_address;
+let code, secret, hash, keypair, publicKey, user_address, migrationCount, lastId;
 let referral_chain = [];
 let self;
 // Constructor
 exports.AccountCreateETPS = function (scope) {
     this.scope = {
         balancesSequence: scope.balancesSequence,
-        db: scope.db
+        db: scope.db,
+        config: scope.config
     };
     self = this;
-    etpsMigrationProcess();
+    setTimeout(function () {
+        etpsMigrationProcess()
+    }, 8000);
 }
 
 /**
  * Registration process of Etps user in the DDK system.
- * Generated passphrase, address, referral chain of all the etps user.
- * Make an transaction of total stake amount for migrated users. 
- * @param {user_data} - Contains the address, balance, total freezed amount of Etps user.
+ * First send an transaction from an specific account to all etps users.
+ * Then make an transaction of total stake amount for migrated users. 
+ * @param {user_data} - Contains the address, passphrase, balance, total freezed amount, group bonus of Etps user.
  * @param {cb} - callback function which will return the status.
  */
 
+function updateSendTrs(user_data, cb) {
+    self.scope.balancesSequence.add(function (cb3) {
+
+        let sender_hash = Buffer.from(JSON.parse(self.scope.config.users[6].keys));
+        let sender_keypair = ed.makeKeypair(sender_hash);
+        let sender_publicKey = sender_keypair.publicKey.toString('hex');
+
+        accounts.prototype.setAccountAndGet({
+            publicKey: sender_publicKey
+        }, function (err, account) {
+            if (err) {
+                return setImmediate(cb, err);
+            }
+
+            let secondKeypair = null;
+
+            let transaction;
+
+            try {
+                transaction = transactionLog.prototype.create({
+                    type: (transactionTypes.SEND),
+                    amount: user_data.balance,
+                    sender: account,
+                    recipientId: user_data.address,
+                    keypair: sender_keypair,
+                    secondKeypair: secondKeypair
+                });
+            } catch (e) {
+                return setImmediate(cb, e.toString());
+            }
+
+            transactionMod.prototype.receiveTransactions([transaction], true, cb3);
+        });
+    }, function (err, transaction) {
+        if (err) {
+            return setImmediate(cb, err);
+        }
+        cb();
+    });
+}
+
+
 function etpsTransaction(user_data, cb) {
+
     let etpsSecret = Buffer.from(user_data.passphrase, "base64").toString("ascii");
 
     let etphash = crypto.createHash('sha256').update(etpsSecret, 'utf8').digest();
 
     let etpskeypair = ed.makeKeypair(etphash);
 
-    let publicKey = user_data.publicKey;
-
     let etps_account = {
         address: user_data.address,
         publicKey: user_data.publicKey
     };
 
-    self.scope.balancesSequence.add(function (cb3) {
+    self.scope.balancesSequence.add(function (cb4) {
         let transaction;
 
         try {
@@ -74,12 +117,51 @@ function etpsTransaction(user_data, cb) {
             return setImmediate(cb, e.toString());
         }
 
-        transactionMod.prototype.receiveTransactions([transaction], true, cb3);
+        transactionMod.prototype.receiveTransactions([transaction], true, cb4);
 
     }, function (err, transaction) {
         if (err) {
             return setImmediate(cb, err);
         }
+        cb();
+    });
+}
+
+function updateTrs(user_data, cb) {
+    async.series([
+        function (trscallback) {
+
+            if (user_data.balance) {
+
+                updateSendTrs(user_data, function (err) {
+                    if (err) {
+                        return trscallback(err);
+                    }
+
+                    trscallback();
+
+                });
+            } else {
+                trscallback();
+            }
+        },
+        function (trscallback) {
+
+            etpsTransaction(user_data, function (err) {
+                if (err) {
+                    return trscallback(err);
+                }
+
+                trscallback();
+
+            });
+
+        }
+    ], function (err) {
+        if (err) {
+            return cb(err);
+        }
+
         cb();
     });
 }
@@ -112,201 +194,252 @@ function generateAddressByPublicKey(publicKey) {
 
 function etpsMigrationProcess() {
 
+    logger.info('Migration Started ...');
+
     async.series([
         function (main_callback) {
-            self.scope.db.many(sql.selectEtpsList).then(function (resp) {
+            self.scope.db.query(sql.lastMigratedId)
+                .then(function (lastInfo) {
+                    if (lastInfo.length && lastInfo[0].max) {
+                        migrationCount = lastInfo[0].max;
+                    } else {
+                        migrationCount = 0;
+                    }
 
-                async.eachSeries(resp, function (etps_user, callback) {
-                    code = new Mnemonic(Mnemonic.Words.ENGLISH);
-                    secret = code.toString();
+                    self.scope.db.query(sql.lastTrsId)
+                        .then(function (resp) {
 
-                    hash = crypto.createHash('sha256').update(secret, 'utf8').digest();
-                    keypair = ed.makeKeypair(hash);
-                    publicKey = keypair.publicKey.toString('hex');
-
-                    user_address = generateAddressByPublicKey(publicKey);
-
-                    self.scope.db.none(sql.insertMigratedUsers, {
-                        address: user_address,
-                        passphrase: Buffer.from(secret).toString('base64'),
-                        username: etps_user.username,
-                        id: etps_user.id,
-                        publickey: publicKey,
-                        group_bonus: etps_user.group_bonus * 100000000
-                    }).then(function () {
-
-                        let REDIS_KEY_USER = "userAccountInfo_" + user_address;
-                        redis.prototype.setJsonForKey(REDIS_KEY_USER, JSON.stringify(user_address));
-
-                        async.series([
-                            function (series_callback) {
-                                if (etps_user.upline == '') {
-                                    referral_chain.length = 0;
-                                    series_callback();
-                                } else {
-                                    self.scope.db.query(sql.getDirectIntroducer, etps_user.upline).then(function (user) {
-                                        if (user.length) {
-                                            referral_chain.unshift(user[0].address);
-                                            self.scope.db.query(sql.referLevelChain, {
-                                                address: user[0].address
-                                            }).then(function (resp) {
-                                                if (resp.length != 0 && resp[0].level != null) {
-                                                    let chain_length = ((resp[0].level.length) < 15) ? (resp[0].level.length) : 14;
-
-                                                    referral_chain = referral_chain.concat(resp[0].level.slice(0, chain_length));
-                                                }
-                                                series_callback();
-                                            }).catch(function (err) {
-                                                series_callback(err);
-                                            });
-                                        } else {
-                                            referral_chain.length = 0;
-                                            series_callback();
-                                        }
-                                    });
-                                }
-                            },
-                            function (series_callback) {
-                                let levelDetails = {
-                                    address: user_address,
-                                    level: referral_chain
-                                };
-
-                                if (levelDetails.level.length === 0) {
-                                    levelDetails.level = null;
-                                }
-
-                                self.scope.db.none(sql.insertReferalChain, {
-                                    address: levelDetails.address,
-                                    level: levelDetails.level
-                                }).then(function () {
-                                    referral_chain.length = 0;
-                                    series_callback();
-                                }).catch(function (err) {
-                                    series_callback(err);
-                                });
-                            },
-                        ], function (err) {
-                            if (err) {
-                                return callback(err);
+                            if (!resp.length) {
+                                lastId = 0;
+                            } else {
+                                lastId = parseInt(resp[0].id);
                             }
-                            console.log('Address , Passphrase and Referral chain created successfully');
-                            callback();
+
+                            main_callback();
+
+                        }).catch(function (err) {
+                            main_callback(err);
                         });
 
-                    }).catch(function (err) {
-                        callback(err);
-                    });
-
-                }, function (err) {
-                    if (err) {
-                        return main_callback(err);
-                    }
-                    main_callback();
-                    console.log('Successfully Inserted');
+                }).catch(function (err) {
+                    main_callback(err);
                 });
+        },
+        function (main_callback) {
+
+            self.scope.db.query(sql.selectEtpsList, {
+                etpsCount: migrationCount
+            }).then(function (resp) {
+
+                if (resp.length) {
+
+                    async.eachSeries(resp, function (etps_user, callback) {
+                        code = new Mnemonic(Mnemonic.Words.ENGLISH);
+                        secret = code.toString();
+
+                        hash = crypto.createHash('sha256').update(secret, 'utf8').digest();
+                        keypair = ed.makeKeypair(hash);
+                        publicKey = keypair.publicKey.toString('hex');
+
+                        user_address = generateAddressByPublicKey(publicKey);
+
+                        self.scope.db.none(sql.insertMigratedUsers, {
+                            address: user_address,
+                            passphrase: Buffer.from(secret).toString('base64'),
+                            username: etps_user.username,
+                            id: etps_user.id,
+                            publickey: publicKey,
+                            group_bonus: etps_user.group_bonus * 100000000
+                        }).then(function () {
+
+                            let REDIS_KEY_USER = "userAccountInfo_" + user_address;
+                            redis.prototype.setJsonForKey(REDIS_KEY_USER, JSON.stringify(user_address));
+
+                            async.series([
+                                function (series_callback) {
+                                    if (etps_user.upline == '') {
+                                        referral_chain.length = 0;
+                                        series_callback();
+                                    } else {
+                                        self.scope.db.query(sql.getDirectIntroducer, etps_user.upline).then(function (user) {
+                                            if (user.length) {
+                                                referral_chain.unshift(user[0].address);
+                                                self.scope.db.query(sql.referLevelChain, {
+                                                    address: user[0].address
+                                                }).then(function (resp) {
+                                                    if (resp.length != 0 && resp[0].level != null) {
+                                                        let chain_length = ((resp[0].level.length) < 15) ? (resp[0].level.length) : 14;
+
+                                                        referral_chain = referral_chain.concat(resp[0].level.slice(0, chain_length));
+                                                    }
+                                                    series_callback();
+                                                }).catch(function (err) {
+                                                    series_callback(err);
+                                                });
+                                            } else {
+                                                referral_chain.length = 0;
+                                                series_callback();
+                                            }
+                                        });
+                                    }
+                                },
+                                function (series_callback) {
+                                    let levelDetails = {
+                                        address: user_address,
+                                        level: referral_chain
+                                    };
+
+                                    if (levelDetails.level.length === 0) {
+                                        levelDetails.level = null;
+                                    }
+
+                                    self.scope.db.none(sql.insertReferalChain, {
+                                        address: levelDetails.address,
+                                        level: levelDetails.level
+                                    }).then(function () {
+                                        referral_chain.length = 0;
+                                        series_callback();
+                                    }).catch(function (err) {
+                                        return series_callback(err);
+                                    });
+                                },
+                                function (series_callback) {
+                                    let date = new Date((slots.getTime()) * 1000);
+                                    self.scope.db.query(sql.getStakeOrders, etps_user.id).then(function (resp) {
+                                        if (resp.length) {
+                                            async.eachSeries(resp, function (account, callback2) {
+                                                let stake_details = {
+                                                    id: etps_user.id,
+                                                    startTime: slots.getTime(account.insert_time),
+                                                    insertTime: slots.getTime(),
+                                                    senderId: user_address,
+                                                    freezedAmount: account.quantity * 100000000,
+                                                    rewardCount: 6 - account.remain_month,
+                                                    nextVoteMilestone: (date.setMinutes(date.getMinutes() + constants.froze.vTime)) / 1000
+                                                }
+                                                self.scope.db.none(sql.insertStakeOrder, {
+                                                    id: stake_details.id,
+                                                    status: 1,
+                                                    startTime: stake_details.startTime,
+                                                    insertTime: stake_details.insertTime,
+                                                    senderId: stake_details.senderId,
+                                                    recipientId: null,
+                                                    freezedAmount: stake_details.freezedAmount,
+                                                    rewardCount: stake_details.rewardCount,
+                                                    nextVoteMilestone: stake_details.nextVoteMilestone
+                                                }).then(function () {
+                                                    callback2();
+                                                }).catch(function (err) {
+                                                    callback2(err);
+                                                });
+
+                                            }, function (err) {
+                                                if (err) {
+                                                    return series_callback(err);
+                                                }
+                                                series_callback();
+
+                                            });
+                                        } else {
+                                            series_callback();
+                                        }
+
+                                    }).catch(function (err) {
+                                        series_callback(err);
+                                    });
+
+                                }
+                            ], function (err) {
+                                if (err) {
+                                    return callback(err);
+                                }
+                                callback();
+                            });
+
+                        }).catch(function (err) {
+                            callback(err);
+                        });
+
+                    }, function (err) {
+                        if (err) {
+                            return main_callback(err);
+                        }
+                        etpsUserStatus = true;
+                        logger.info('Address , Passphrase, Referral chain and Stake Orders created successfully');
+                        main_callback();
+                    });
+                } else {
+                    main_callback();
+                }
 
             }).catch(function (err) {
                 main_callback(err);
             });
         },
         function (main_callback) {
-            let etps_balance = 0;
-            self.scope.db.many(sql.getMigratedUsers).then(function (res) {
-                async.eachSeries(res, function (migrated_details, callback) {
-                    let date = new Date((slots.getTime()) * 1000);
+            let etpsAmount;
+            self.scope.db.query(sql.getMigratedUsers, {
+                lastetpsId: lastId
+            }).then(function (res) {
+                if (res.length) {
+                    async.eachSeries(res, function (migrated_details, callback) {
 
-                    self.scope.db.query(sql.getStakeOrders, migrated_details.id).then(function (resp) {
-                        if (resp.length) {
-                            async.eachSeries(resp, function (account, callback2) {
-                                let stake_details = {
-                                    id: migrated_details.id,
-                                    startTime: slots.getTime(account.insert_time),
-                                    insertTime: slots.getTime(),
-                                    senderId: migrated_details.address,
-                                    freezedAmount: account.quantity * 100000000,
-                                    rewardCount: 6 - account.remain_month,
-                                    nextVoteMilestone: (date.setMinutes(date.getMinutes() + constants.froze.vTime)) / 1000
+                        self.scope.db.query(sql.etpsuserAmount, {
+                            account_id: migrated_details.id
+                        }).then(function (user) {
+                            if (user.length) {
+                                if (!user[0].amount) {
+                                    etpsAmount = 0;
+                                } else {
+                                    etpsAmount = user[0].amount;
                                 }
-                                self.scope.db.none(sql.insertStakeOrder, {
-                                    id: stake_details.id,
-                                    status: 1,
-                                    startTime: stake_details.startTime,
-                                    insertTime: stake_details.insertTime,
-                                    senderId: stake_details.senderId,
-                                    recipientId: null,
-                                    freezedAmount: stake_details.freezedAmount,
-                                    rewardCount: stake_details.rewardCount,
-                                    nextVoteMilestone: stake_details.nextVoteMilestone
-                                }).then(function () {
-                                    callback2();
-                                }).catch(function (err) {
-                                    callback2(err);
-                                });
 
-                                etps_balance = etps_balance + account.quantity;
-
-                            }, function (err) {
-                                if (err) {
-                                    return callback(err);
-                                }
-                                etps_balance = etps_balance * 100000000;
-                                let user_data = {
+                                let user_details = {
+                                    balance: Math.round(((etpsAmount).toFixed(4)) * 100000000),
                                     address: migrated_details.address,
+                                    passphrase: migrated_details.passphrase,
                                     publicKey: migrated_details.publickey,
-                                    balance: etps_balance,
-                                    group_bonus: migrated_details.group_bonus,
-                                    passphrase: migrated_details.passphrase
-                                };
-
-                                etpsTransaction(user_data, function (err) {
-                                    if (err) {
-                                        return callback(err);
-                                    }
-                                    etps_balance = 0;
-                                    callback();
-                                });
-
-                            });
-                        } else {
-                            let data = {
-                                address: migrated_details.address,
-                                publicKey: migrated_details.publickey,
-                                balance: 0,
-                                group_bonus: migrated_details.group_bonus,
-                                passphrase: migrated_details.passphrase
-                            }
-
-                            etpsTransaction(data, function (err) {
-                                if (err) {
-                                    return callback(err);
+                                    group_bonus: migrated_details.group_bonus
                                 }
-                                etps_balance = 0;
-                                callback();
-                            });
-                        }
+                                setTimeout(function () {
+                                    updateTrs(user_details, function (err) {
+                                        if (err) {
+                                            return callback(err);
+                                        }
+                                        callback();
+                                    });
+                                }, 500);
 
-                    }).catch(function (err) {
-                        callback(err);
+                            } else {
+                                callback();
+                            }
+                        }).catch(function (err) {
+                            callback(err);
+                        });
+
+
+                    }, function (err) {
+                        if (err) {
+                            return main_callback(err);
+                        }
+                        logger.info('Send and Migration Type Transaction updated Successfully');
+                        main_callback();
                     });
-                }, function (err) {
-                    if (err) {
-                        return main_callback(err);
-                    }
-                    console.log('Stake Orders and Member Account created Successfully');
+                } else {
                     main_callback();
-                });
+                }
             }).catch(function (err) {
                 main_callback(err);
             });
+
         }
 
     ], function (err) {
         if (err) {
             console.log("ERROR = ", err);
-            logger.error('Migration Error : ', err.stack);
+            logger.error('Migration Error : ', err);
             return err;
         }
-        console.log('Migration successfully Done');
+        logger.info('Migration successfully Done');
     });
 }
