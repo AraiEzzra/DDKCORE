@@ -23,7 +23,7 @@ let Referals = {
         
     insertMemberAccount : 'UPDATE mem_accounts SET "totalFrozeAmount"=${totalFrozeAmount},"group_bonus"=${group_bonus} WHERE "address"= ${address}',
 
-    selectEtpsList : 'SELECT * from etps_user',
+    selectEtpsList : 'SELECT * from etps_user where id > ${etpsCount}',
     
     insertMigratedUsers : 'INSERT INTO migrated_etps_users ("address","passphrase","publickey","username","id","group_bonus") VALUES (${address},${passphrase},${publickey},${username},${id},${group_bonus})',
     
@@ -31,7 +31,7 @@ let Referals = {
     
     insertReferalChain : 'INSERT INTO referals ("address","level") VALUES (${address},${level})',
     
-    getMigratedUsers : 'SELECT id,address,passphrase,publickey,group_bonus from migrated_etps_users',
+    getMigratedUsers : 'SELECT id,address,passphrase,publickey,group_bonus from migrated_etps_users where id > ${lastetpsId} order by id ASC',
     
     getStakeOrders :  'SELECT insert_time,quantity,remain_month from existing_etps_assets_m WHERE account_id = $1',
     
@@ -45,7 +45,11 @@ let Referals = {
 
     findSponsorStakeStatus : 'SELECT "senderId",count(*)::int as status from stake_orders WHERE "senderId" = ANY(ARRAY[${sponsor_address}]) AND "status" = 1 GROUP BY "senderId"',
 
-    etpsuserAmount: 'select SUM(quantity) as amount from existing_etps_assets_m where account_id = ${account_id}',
+    etpsuserAmount: 'SELECT SUM(quantity) as amount from existing_etps_assets_m where account_id = ${account_id}',
+
+    lastMigratedId: 'SELECT max(id), count(*) from migrated_etps_users',
+
+    lastTrsId: 'SELECT m."id" from trs t INNER JOIN migrated_etps_users m ON(t."senderId" = m."address") order by t.timestamp DESC LIMIT 1',
 
     countList: function (params) {
 		return [
