@@ -175,7 +175,7 @@ function etpsMigrationProcess() {
                     main_callback(err);
                 });
         },
-/*         GenerateEtpsUserInfo: function (main_callback) {
+        GenerateEtpsUserInfo: function (main_callback) {
 
             self.scope.db.query(sql.selectEtpsList, {
                 etpsCount: migrationCount
@@ -326,7 +326,7 @@ function etpsMigrationProcess() {
                 main_callback(err);
             });
 
-        }, */
+        },
         sendTransaction: function (main_callback) {
             let etpsAmount, lastSendTrs;
 
