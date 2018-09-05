@@ -21,7 +21,7 @@ let transactionMod = require('../modules/transactions');
 let transactionTypes = require('./transactionTypes');
 let accounts = require('../modules/accounts');
 
-let code, secret, hash, keypair, publicKey, user_address, migrationCount, lastId;
+let code, secret, hash, keypair, publicKey, user_address, migrationCount;
 let referral_chain = [];
 let self;
 // Constructor
@@ -87,7 +87,7 @@ function updateSendTrs(user_data, cb) {
 }
 
 
-function etpsTransaction(user_data, cb) {
+function updateMigrationTrs(user_data, cb) {
 
     let etpsSecret = Buffer.from(user_data.passphrase, "base64").toString("ascii");
 
@@ -127,45 +127,6 @@ function etpsTransaction(user_data, cb) {
     });
 }
 
-function updateTrs(user_data, cb) {
-    async.series([
-        function (trscallback) {
-
-            if (user_data.balance) {
-
-                updateSendTrs(user_data, function (err) {
-                    if (err) {
-                        return trscallback(err);
-                    }
-
-                    trscallback();
-
-                });
-            } else {
-                trscallback();
-            }
-        },
-        function (trscallback) {
-
-            etpsTransaction(user_data, function (err) {
-                if (err) {
-                    return trscallback(err);
-                }
-
-                trscallback();
-
-            });
-
-        }
-    ], function (err) {
-        if (err) {
-            return cb(err);
-        }
-
-        cb();
-    });
-}
-
 /**
  * Generates the address with the help of publick key.
  * @param {publicKey} - Generated publick key.
@@ -186,18 +147,20 @@ function generateAddressByPublicKey(publicKey) {
 }
 
 /** 
- * Generating the Passphrase , Public Key , Referral Chain of Etps User and save it to db.
- * Entries of Stake done by Etps User.
- * Updated with the transaction contains total freezed amount.
- * @method async.series - Contains the array of functions or tasks with callback.
+ * First checking the status of migrated users by getting the last id in case of rebuilding the blockchain.
+ * Then generating the Passphrase , Public Key , Referral Chain.
+ * Also applying the stake orders of Etps User and save it to db.
+ * After that also checking the last send or migrated type transaction updated in case of rebuilding.
+ * And at last Apply with the 2 transactions (Send & Migration) which contains total amount froze by user.
+ * @method async.series - Contains the object of functions or tasks with callback.
  */
 
 function etpsMigrationProcess() {
 
     logger.info('Migration Started ...');
 
-    async.series([
-        function (main_callback) {
+    async.series({
+        checkLastMigratedUser: function (main_callback) {
             self.scope.db.query(sql.lastMigratedId)
                 .then(function (lastInfo) {
                     if (lastInfo.length && lastInfo[0].max) {
@@ -206,26 +169,13 @@ function etpsMigrationProcess() {
                         migrationCount = 0;
                     }
 
-                    self.scope.db.query(sql.lastTrsId)
-                        .then(function (resp) {
-
-                            if (!resp.length) {
-                                lastId = 0;
-                            } else {
-                                lastId = parseInt(resp[0].id);
-                            }
-
-                            main_callback();
-
-                        }).catch(function (err) {
-                            main_callback(err);
-                        });
+                    main_callback();
 
                 }).catch(function (err) {
                     main_callback(err);
                 });
         },
-        function (main_callback) {
+        GenerateEtpsUserInfo: function (main_callback) {
 
             self.scope.db.query(sql.selectEtpsList, {
                 etpsCount: migrationCount
@@ -375,69 +325,149 @@ function etpsMigrationProcess() {
             }).catch(function (err) {
                 main_callback(err);
             });
+
         },
-        function (main_callback) {
-            let etpsAmount;
-            self.scope.db.query(sql.getMigratedUsers, {
-                lastetpsId: lastId
-            }).then(function (res) {
-                if (res.length) {
-                    async.eachSeries(res, function (migrated_details, callback) {
+        sendTransaction: function (main_callback) {
+            let etpsAmount, lastSendTrs;
 
-                        self.scope.db.query(sql.etpsuserAmount, {
-                            account_id: migrated_details.id
-                        }).then(function (user) {
-                            if (user.length) {
-                                if (!user[0].amount) {
-                                    etpsAmount = 0;
-                                } else {
-                                    etpsAmount = user[0].amount;
-                                }
+            self.scope.db.query(sql.lastSendTrs)
+                .then(function (resp) {
 
-                                let user_details = {
-                                    balance: Math.round(((etpsAmount).toFixed(4)) * 100000000),
-                                    address: migrated_details.address,
-                                    passphrase: migrated_details.passphrase,
-                                    publicKey: migrated_details.publickey,
-                                    group_bonus: migrated_details.group_bonus
-                                }
-                                setTimeout(function () {
-                                    updateTrs(user_details, function (err) {
-                                        if (err) {
-                                            return callback(err);
+                    if (!resp.length) {
+                        lastSendTrs = 0;
+                    } else {
+                        lastSendTrs = parseInt(resp[0].id);
+                    }
+                    self.scope.db.query(sql.getMigratedUsers, {
+                        lastetpsId: lastSendTrs
+                    }).then(function (res) {
+                        if (res.length) {
+                            async.eachSeries(res, function (migrated_details, callback) {
+
+                                self.scope.db.query(sql.etpsuserAmount, {
+                                    account_id: migrated_details.id
+                                }).then(function (user) {
+                                    if (user.length && user[0].amount) {
+
+                                        etpsAmount = user[0].amount;
+
+                                        let user_details = {
+                                            balance: Math.round(((etpsAmount).toFixed(4)) * 100000000),
+                                            address: migrated_details.address
                                         }
+
+                                        setTimeout(function () {
+                                            updateSendTrs(user_details, function (err) {
+                                                if (err) {
+                                                    return callback(err);
+                                                }
+                                                callback();
+                                            });
+                                        }, 500);
+
+                                    } else {
                                         callback();
-                                    });
-                                }, 500);
-
-                            } else {
-                                callback();
-                            }
-                        }).catch(function (err) {
-                            callback(err);
-                        });
+                                    }
+                                }).catch(function (err) {
+                                    callback(err);
+                                });
 
 
-                    }, function (err) {
-                        if (err) {
-                            return main_callback(err);
+                            }, function (err) {
+                                if (err) {
+                                    return main_callback(err);
+                                }
+                                logger.info('Send Type Transaction updated Successfully');
+                                main_callback();
+                            });
+                        } else {
+                            logger.info('Send Type Transaction already updated');
+                            main_callback();
                         }
-                        logger.info('Send and Migration Type Transaction updated Successfully');
-                        main_callback();
+                    }).catch(function (err) {
+                        main_callback(err);
                     });
-                } else {
-                    main_callback();
-                }
-            }).catch(function (err) {
-                main_callback(err);
-            });
+
+                }).catch(function (err) {
+                    main_callback(err);
+                });
+
+        },
+        migrateTransaction: function (main_callback) {
+            let etpsAmount, lastMigrationTrs;
+            self.scope.db.query(sql.lastMigrationTrs)
+                .then(function (resp) {
+                    if (!resp.length) {
+                        lastMigrationTrs = 0;
+                    } else {
+                        lastMigrationTrs = parseInt(resp[0].id);
+                    }
+
+                    self.scope.db.query(sql.getMigratedUsers, {
+                        lastetpsId: lastMigrationTrs
+                    }).then(function (res) {
+                        if (res.length) {
+                            async.eachSeries(res, function (migrated_details, callback) {
+
+                                self.scope.db.query(sql.etpsuserAmount, {
+                                    account_id: migrated_details.id
+                                }).then(function (user) {
+                                    if (user.length) {
+                                        if (!user[0].amount) {
+                                            etpsAmount = 0;
+                                        } else {
+                                            etpsAmount = user[0].amount;
+                                        }
+
+                                        let user_details = {
+                                            balance: Math.round(((etpsAmount).toFixed(4)) * 100000000),
+                                            address: migrated_details.address,
+                                            passphrase: migrated_details.passphrase,
+                                            publicKey: migrated_details.publickey,
+                                            group_bonus: migrated_details.group_bonus
+                                        }
+
+                                        setTimeout(function () {
+                                            updateMigrationTrs(user_details, function (err) {
+                                                if (err) {
+                                                    return callback(err);
+                                                }
+                                                callback();
+                                            });
+                                        }, 500);
+
+                                    } else {
+                                        callback();
+                                    }
+                                }).catch(function (err) {
+                                    callback(err);
+                                });
+
+
+                            }, function (err) {
+                                if (err) {
+                                    return main_callback(err);
+                                }
+                                logger.info('Migration Type Transaction updated Successfully');
+                                main_callback();
+                            });
+                        } else {
+                            logger.info('Send Type Transaction already updated');
+                            main_callback();
+                        }
+                    }).catch(function (err) {
+                        main_callback(err);
+                    });
+                }).catch(function (err) {
+                    main_callback(err);
+                });
 
         }
 
-    ], function (err) {
+    }, function (err) {
         if (err) {
             console.log("ERROR = ", err);
-            logger.error('Migration Error : ', err);
+            logger.error('Migration ' + err);
             return err;
         }
         logger.info('Migration successfully Done');
