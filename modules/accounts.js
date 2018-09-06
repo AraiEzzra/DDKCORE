@@ -1293,15 +1293,15 @@ Accounts.prototype.internal = {
 				return setImmediate(cb, err);
 			}
 
-			var stakedAmount = 0, groupBonus = 0, pendingGroupBonus = 0, failedRule = 0;
-			async.series({
+			var stakedAmount = 0, groupBonus = 0, pendingGroupBonus = 0, failedRule = [];
+			async.auto({
 				checkLastWithdrawl: function (seriesCb) {
 					library.cache.client.exists(req.body.address + '_pending_group_bonus_trs_id', function (err, isExists) {
 						if (isExists) {
 							library.cache.client.get(req.body.address + '_pending_group_bonus_trs_id', function (err, transactionId) {
 								if (err) {
-									failedRule = 1;
-									seriesCb(err);
+									//failedRule[0] = false;
+									seriesCb(null, false);
 								}
 								library.db.one(sql.findTrs, {
 									transactionId: transactionId
@@ -1313,41 +1313,38 @@ Accounts.prototype.internal = {
 										const timeDiff = (d - Date.now());
 										const days = Math.ceil(Math.abs(timeDiff / (1000 * 60 * 60 * 24)));
 										if (days > 7) {
-											seriesCb(null);
+											seriesCb(null, true);
 										} else {
-											failedRule = 1;
-											seriesCb('This week\'s withdrawl is already processed. You can try next withdrawl after ' + 7 - days + ' days.');
+											seriesCb(null, false);
 										}
 									})
 									.catch(function (err) {
-										failedRule = 1;
-										seriesCb(err);
+										seriesCb(err, false);
 									});
 							});
 						} else {
-							seriesCb(null);
+							seriesCb(null, true);
 						}
 					});
 				},
-				checkActiveStake: function (seriesCb) {
+				checkActiveStake: ['checkLastWithdrawl', function (result, seriesCb) {
 					library.db.query(sql.findActiveStakeAmount, {
 						senderId: req.body.address
 					})
 					.then(function (stakeOrders) {
 						if (stakeOrders.length > 0) {
 							stakedAmount = parseInt(stakeOrders[1].value) / 100000000;
-							seriesCb(null);
+							seriesCb(null, true);
 						} else {
-							failedRule = 2;
-							seriesCb('Rule 2 failed: You need to have at least one active stake order');
+							seriesCb(null, false);
+							//seriesCb('Rule 2 failed: You need to have at least one active stake order');
 						}
 					})
 					.catch(function (err) {
-						failedRule = 2;
-						seriesCb(err);
+						seriesCb(err, false);
 					});
-				},
-				checkActiveStakeOfLeftAndRightSponsor: function (seriesCb) {
+				}],
+				checkActiveStakeOfLeftAndRightSponsor: ['checkActiveStake', function (result, seriesCb) {
 					library.db.query(sql.findDirectSponsor, {
 						introducer: req.body.address
 					})
@@ -1366,29 +1363,25 @@ Accounts.prototype.internal = {
 												activeStakeCount++;
 											}
 											if (activeStakeCount >= 2) {
-												seriesCb(null);
+												seriesCb(null, true);
 											}
 										})
 										.catch(function (err) {
-											failedRule = 3;
-											seriesCb(err);
+											seriesCb(err, false);
 										});
 								});
 								
 							} else if(activeStakeCount < 2){
-								failedRule = 3;
-								seriesCb('Rule 3 failed: User doesn\'t have two direct sponsor');
+								seriesCb(null, false);
 							}else {
-								failedRule = 3;
-								seriesCb('Rule 3 failed: Direct sponsors don\'t have active stake orders');
+								seriesCb(null, false);
 							}
 						})
 						.catch(function (err) {
-							failedRule = 3;
-							seriesCb(err);
+							seriesCb(err, false);
 						});
-				},
-				checkRatio: function (seriesCb) {
+				}],
+				checkRatio: ['checkActiveStakeOfLeftAndRightSponsor', function (result, seriesCb) {
 
 					library.db.query(sql.findGroupBonus, {
 						senderId: req.body.address
@@ -1401,33 +1394,32 @@ Accounts.prototype.internal = {
 							if(nextBonus > stakedAmount * 10) {
 								nextBonus = stakedAmount * 10;
 								pendingGroupBonus = groupBonus - nextBonus;
-								seriesCb(null);
+								seriesCb(null, true);
 							} else if ((groupBonus - pendingGroupBonus + nextBonus) < stakedAmount * 10) {
 								pendingGroupBonus = groupBonus - nextBonus;
-								seriesCb(null);
+								seriesCb(null, true);
 							} else if(stakedAmount * 10 - (groupBonus - pendingGroupBonus) > 0) {
 								nextBonus = stakedAmount * 10 - (groupBonus - pendingGroupBonus);
 								pendingGroupBonus = groupBonus - nextBonus;
-								seriesCb(null);
+								seriesCb(null, true);
 							} else {
-								failedRule = 4;
-								seriesCb('Rule 4 failed: Ratio withdrawal is 1:10 from own staking DDK.');
+								seriesCb(null, false);
+								//seriesCb('Rule 4 failed: Ratio withdrawal is 1:10 from own staking DDK.');
 							}
 						} else {
-							failedRule = 4;
-							seriesCb('Either you don\'t have group bonus reserved or exhausted your withdrawl limit');
+							seriesCb(null, false);
+							//seriesCb('Either you don\'t have group bonus reserved or exhausted your withdrawl limit');
 						}
 					})
 					.catch(function (err) {
-						failedRule = 4;
-						seriesCb(err);
+						seriesCb(err, false);
 					});
-				}
-			}, function (err) {
+				}]
+			}, function (err, data) {
 				if (err) {
-					return setImmediate(cb, { message: err, code: failedRule });
+					return setImmediate(cb, { success: false, status: data });
 				}
-				return setImmediate(cb, null);
+				return setImmediate(cb, { success: true, status: data });
 			});
 		});
 	},
