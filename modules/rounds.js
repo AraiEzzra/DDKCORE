@@ -415,6 +415,11 @@ __private.sumRound = function (scope, cb) {
 		library.logger.error(err.stack);
 		return setImmediate(cb, err);
 	});
+
+	const used = process.memoryUsage();
+	for (let key in used) {
+	  library.logger.info('Application Memory Allocation : '+`${key} ${Math.round(used[key] / 1024 / 1024 * 100) / 100} MB`);
+	}
 };
 
 // Export
