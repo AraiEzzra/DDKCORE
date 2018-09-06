@@ -175,15 +175,15 @@ function etpsMigrationProcess() {
                     main_callback(err);
                 });
         },
-/*         GenerateEtpsUserInfo: function (main_callback) {
+        GenerateEtpsUserInfo: function (main_callback) {
 
             self.scope.db.query(sql.selectEtpsList, {
                 etpsCount: migrationCount
-            }).then(function (resp) {
+            }).then(function (etps_list) {
 
-                if (resp.length) {
+                if (etps_list.length) {
 
-                    async.eachSeries(resp, function (etps_user, callback) {
+                    async.eachSeries(etps_list, function (etps_user, callback) {
                         code = new Mnemonic(Mnemonic.Words.ENGLISH);
                         secret = code.toString();
 
@@ -193,128 +193,131 @@ function etpsMigrationProcess() {
 
                         user_address = generateAddressByPublicKey(publicKey);
 
-                        self.scope.db.none(sql.insertMigratedUsers, {
-                            address: user_address,
-                            passphrase: Buffer.from(secret).toString('base64'),
-                            username: etps_user.username,
-                            id: etps_user.id,
-                            publickey: publicKey,
-                            group_bonus: etps_user.group_bonus * 100000000
-                        }).then(function () {
+                        async.series({
 
-                            let REDIS_KEY_USER = "userAccountInfo_" + user_address;
-                            redis.prototype.setJsonForKey(REDIS_KEY_USER, JSON.stringify(user_address));
+                            updateEtpsPassphrase: function (series_callback) {
+                                self.scope.db.none(sql.insertMigratedUsers, {
+                                    address: user_address,
+                                    passphrase: Buffer.from(secret).toString('base64'),
+                                    username: etps_user.username,
+                                    id: etps_user.id,
+                                    publickey: publicKey,
+                                    group_bonus: etps_user.group_bonus * 100000000
+                                }).then(function () {
 
-                            async.series([
-                                function (series_callback) {
-                                    if (etps_user.upline == '') {
-                                        referral_chain.length = 0;
-                                        series_callback();
-                                    } else {
-                                        self.scope.db.query(sql.getDirectIntroducer, etps_user.upline).then(function (user) {
-                                            if (user.length) {
-                                                referral_chain.unshift(user[0].address);
-                                                self.scope.db.query(sql.referLevelChain, {
-                                                    address: user[0].address
-                                                }).then(function (resp) {
-                                                    if (resp.length != 0 && resp[0].level != null) {
-                                                        let chain_length = ((resp[0].level.length) < 15) ? (resp[0].level.length) : 14;
+                                    let REDIS_KEY_USER = "userAccountInfo_" + user_address;
+                                    redis.prototype.setJsonForKey(REDIS_KEY_USER, JSON.stringify(user_address));
 
-                                                        referral_chain = referral_chain.concat(resp[0].level.slice(0, chain_length));
-                                                    }
-                                                    series_callback();
-                                                }).catch(function (err) {
-                                                    series_callback(err);
-                                                });
-                                            } else {
-                                                referral_chain.length = 0;
-                                                series_callback();
-                                            }
-                                        });
-                                    }
-                                },
-                                function (series_callback) {
-                                    let levelDetails = {
-                                        address: user_address,
-                                        level: referral_chain
-                                    };
+                                    series_callback();
 
-                                    if (levelDetails.level.length === 0) {
-                                        levelDetails.level = null;
-                                    }
+                                }).catch(function (err) {
+                                    callback(err);
+                                });
+                            },
+                            getDirectIntroducer: function (series_callback) {
+                                if (etps_user.upline == '') {
+                                    referral_chain.length = 0;
+                                    series_callback();
+                                } else {
+                                    self.scope.db.query(sql.getDirectIntroducer, etps_user.upline).then(function (user) {
+                                        if (user.length) {
+                                            referral_chain.unshift(user[0].address);
+                                            self.scope.db.query(sql.referLevelChain, {
+                                                address: user[0].address
+                                            }).then(function (etps_upline) {
+                                                if (etps_upline.length != 0 && etps_upline[0].level != null) {
+                                                    let chain_length = ((etps_upline[0].level.length) < 15) ? (etps_upline[0].level.length) : 14;
 
-                                    self.scope.db.none(sql.insertReferalChain, {
-                                        address: levelDetails.address,
-                                        level: levelDetails.level
-                                    }).then(function () {
-                                        referral_chain.length = 0;
-                                        series_callback();
-                                    }).catch(function (err) {
-                                        return series_callback(err);
-                                    });
-                                },
-                                function (series_callback) {
-                                    let date = new Date((slots.getTime()) * 1000);
-                                    self.scope.db.query(sql.getStakeOrders, etps_user.id).then(function (resp) {
-                                        if (resp.length) {
-                                            async.eachSeries(resp, function (account, callback2) {
-                                                let stake_details = {
-                                                    id: etps_user.id,
-                                                    startTime: slots.getTime(account.insert_time),
-                                                    insertTime: slots.getTime(),
-                                                    senderId: user_address,
-                                                    freezedAmount: account.quantity * 100000000,
-                                                    rewardCount: 6 - account.remain_month,
-                                                    nextVoteMilestone: (date.setMinutes(date.getMinutes() + constants.froze.vTime)) / 1000
-                                                }
-                                                self.scope.db.none(sql.insertStakeOrder, {
-                                                    id: stake_details.id,
-                                                    status: 1,
-                                                    startTime: stake_details.startTime,
-                                                    insertTime: stake_details.insertTime,
-                                                    senderId: stake_details.senderId,
-                                                    recipientId: null,
-                                                    freezedAmount: stake_details.freezedAmount,
-                                                    rewardCount: stake_details.rewardCount,
-                                                    nextVoteMilestone: stake_details.nextVoteMilestone
-                                                }).then(function () {
-                                                    callback2();
-                                                }).catch(function (err) {
-                                                    callback2(err);
-                                                });
-
-                                            }, function (err) {
-                                                if (err) {
-                                                    return series_callback(err);
+                                                    referral_chain = referral_chain.concat(etps_upline[0].level.slice(0, chain_length));
                                                 }
                                                 series_callback();
-
+                                            }).catch(function (err) {
+                                                series_callback(err);
                                             });
                                         } else {
+                                            referral_chain.length = 0;
                                             series_callback();
                                         }
-
-                                    }).catch(function (err) {
-                                        series_callback(err);
                                     });
-
                                 }
-                            ], function (err) {
-                                if (err) {
-                                    return callback(err);
-                                }
-                                callback();
-                            });
+                            },
+                            updateReferralChain: function (series_callback) {
+                                let levelDetails = {
+                                    address: user_address,
+                                    level: referral_chain
+                                };
 
-                        }).catch(function (err) {
-                            callback(err);
+                                if (levelDetails.level.length === 0) {
+                                    levelDetails.level = null;
+                                }
+
+                                self.scope.db.none(sql.insertReferalChain, {
+                                    address: levelDetails.address,
+                                    level: levelDetails.level
+                                }).then(function () {
+                                    referral_chain.length = 0;
+                                    series_callback();
+                                }).catch(function (err) {
+                                    return series_callback(err);
+                                });
+                            },
+                            updateStakeOrders: function (series_callback) {
+                                let date = new Date((slots.getTime()) * 1000);
+                                self.scope.db.query(sql.getStakeOrders, etps_user.id).then(function (stake_list) {
+                                    if (stake_list.length) {
+                                        async.eachSeries(stake_list, function (account, stakeCallback) {
+                                            let stake_details = {
+                                                id: etps_user.id,
+                                                startTime: slots.getTime(account.insert_time),
+                                                insertTime: slots.getTime(),
+                                                senderId: user_address,
+                                                freezedAmount: account.quantity * 100000000,
+                                                rewardCount: 6 - account.remain_month,
+                                                nextVoteMilestone: (date.setMinutes(date.getMinutes() + constants.froze.vTime)) / 1000
+                                            }
+                                            self.scope.db.none(sql.insertStakeOrder, {
+                                                id: stake_details.id,
+                                                status: 1,
+                                                startTime: stake_details.startTime,
+                                                insertTime: stake_details.insertTime,
+                                                senderId: stake_details.senderId,
+                                                recipientId: null,
+                                                freezedAmount: stake_details.freezedAmount,
+                                                rewardCount: stake_details.rewardCount,
+                                                nextVoteMilestone: stake_details.nextVoteMilestone
+                                            }).then(function () {
+                                                stakeCallback();
+                                            }).catch(function (err) {
+                                                stakeCallback(err);
+                                            });
+
+                                        }, function (err) {
+                                            if (err) {
+                                                return series_callback(err);
+                                            }
+                                            series_callback();
+
+                                        });
+                                    } else {
+                                        series_callback();
+                                    }
+
+                                }).catch(function (err) {
+                                    series_callback(err);
+                                });
+
+                            }
+                        }, function (err) {
+                            if (err) {
+                                return callback(err);
+                            }
+                            callback();
                         });
 
                     }, function (err) {
                         if (err) {
                             return main_callback(err);
                         }
-                        etpsUserStatus = true;
                         logger.info('Address , Passphrase, Referral chain and Stake Orders created successfully');
                         main_callback();
                     });
@@ -326,7 +329,7 @@ function etpsMigrationProcess() {
                 main_callback(err);
             });
 
-        }, */
+        },
         sendTransaction: function (main_callback) {
             let etpsAmount, lastSendTrs;
 
@@ -340,9 +343,9 @@ function etpsMigrationProcess() {
                     }
                     self.scope.db.query(sql.getMigratedUsers, {
                         lastetpsId: lastSendTrs
-                    }).then(function (res) {
-                        if (res.length) {
-                            async.eachSeries(res, function (migrated_details, callback) {
+                    }).then(function (migrated_user) {
+                        if (migrated_user.length) {
+                            async.eachSeries(migrated_user, function (migrated_details, callback) {
 
                                 self.scope.db.query(sql.etpsuserAmount, {
                                     account_id: migrated_details.id
@@ -363,7 +366,7 @@ function etpsMigrationProcess() {
                                                 }
                                                 callback();
                                             });
-                                        }, 500);
+                                        }, 400);
 
                                     } else {
                                         callback();
@@ -405,9 +408,9 @@ function etpsMigrationProcess() {
 
                     self.scope.db.query(sql.getMigratedUsers, {
                         lastetpsId: lastMigrationTrs
-                    }).then(function (res) {
-                        if (res.length) {
-                            async.eachSeries(res, function (migrated_details, callback) {
+                    }).then(function (migrated_user) {
+                        if (migrated_user.length) {
+                            async.eachSeries(migrated_user, function (migrated_details, callback) {
 
                                 self.scope.db.query(sql.etpsuserAmount, {
                                     account_id: migrated_details.id
@@ -434,7 +437,7 @@ function etpsMigrationProcess() {
                                                 }
                                                 callback();
                                             });
-                                        }, 500);
+                                        }, 400);
 
                                     } else {
                                         callback();
