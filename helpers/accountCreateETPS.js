@@ -366,7 +366,7 @@ function etpsMigrationProcess() {
                                                 }
                                                 callback();
                                             });
-                                        }, 350);
+                                        }, 400);
 
                                     } else {
                                         callback();
@@ -437,7 +437,7 @@ function etpsMigrationProcess() {
                                                 }
                                                 callback();
                                             });
-                                        }, 350);
+                                        }, 400);
 
                                     } else {
                                         callback();
