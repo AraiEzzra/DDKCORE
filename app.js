@@ -163,9 +163,9 @@ let config = {
 //merge environment variables
 let env = require('./config/env');
 utils.merge(appConfig, env);
-if( appConfig.forging.secret.length > 0)
-appConfig.forging.secret = appConfig.forging.secret.split(',');
-
+if (appConfig.forging.hasOwnProperty('secret') && appConfig.forging.secret.length > 0) {
+	appConfig.forging.secret = appConfig.forging.secret.split(',');
+}
 // Trying to get last git commit
 try {
 	lastCommit = git.getLastCommit();

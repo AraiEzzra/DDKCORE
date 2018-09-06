@@ -39,41 +39,38 @@ function ServerHttpApi (serverModule, app) {
 	});
 
 	router.get('/user/status', tokenValidator, function (req, res) {
-		if (!serverModule.isLoaded()) {
-			res.render('loading.html');
+
+		if (req.decoded.address) {
+			Accounts.prototype.getAccount({ address: req.decoded.address }, function (err, account) {
+				if (!err) {
+					let payload = {
+						secret: req.decoded.secret,
+						address: req.decoded.address
+					};
+					let refreshToken = jwt.sign(payload, jwtSecret, {
+						expiresIn: config.jwt.tokenLife,
+						mutatePayload: false
+					});
+
+					cache.prototype.getJsonForKey("referStatus", function (error, resp) {
+						let enableRefer = (resp == null) ? true : resp;
+
+						return res.status(200).json({
+							status: true,
+							data: {
+								success: true,
+								account: account,
+								refreshToken: refreshToken || '',
+								referStatus: enableRefer
+							}
+						});
+					});
+				}
+			});
 		} else {
-			if (req.decoded.address) {
-				Accounts.prototype.getAccount({ address: req.decoded.address }, function (err, account) {
-					if (!err) {
-						let payload = {
-							secret: req.decoded.secret,
-							address: req.decoded.address
-						};
-						let refreshToken = jwt.sign(payload, jwtSecret, {
-							expiresIn: config.jwt.tokenLife,
-							mutatePayload: false
-						});
-
-						cache.prototype.getJsonForKey("referStatus", function (error, resp) {
-							let enableRefer = (resp == null) ? true : resp;
-
-							return res.status(200).json({
-								status: true,
-								data: {
-									success: true,
-									account: account,
-									refreshToken: refreshToken || '',
-									referStatus: enableRefer
-								}
-							});
-						});
-					}
-				});
-			} else {
-				return res.status(200).json({
-					status: false
-				});
-			}
+			return res.status(200).json({
+				status: false
+			});
 		}
 	});  
 
