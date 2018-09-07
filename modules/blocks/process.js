@@ -121,11 +121,8 @@ Process.prototype.getCommonBlock = function (peer, height, cb) {
 		}
 	], function (err, res) {
 		// If comparison failed and current consensus is low - perform chain recovery
-		/*
-		* Removed poor consensus check in order to sync data
-		*/
-		//if (comparisionFailed && modules.transport.poorConsensus()) {
-		if (comparisionFailed) {
+		// if (comparisionFailed && modules.transport.poorConsensus()) {
+			if (comparisionFailed ) {
 			return modules.blocks.chain.recoverChain(cb);
 		} else {
 			return setImmediate(cb, err, res);

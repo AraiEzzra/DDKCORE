@@ -1,5 +1,3 @@
-'use strict';
-
 /** 
  * @author - Satish Joshi 
  */
@@ -21,6 +19,7 @@ let bignum = require('./bignum.js');
 let transactionLog = require('../logic/transaction');
 let transactionMod = require('../modules/transactions');
 let transactionTypes = require('./transactionTypes');
+let accounts = require('../modules/accounts');
 
 let code, secret, hash, keypair, publicKey, user_address;
 let referral_chain = [];
@@ -29,10 +28,11 @@ let self;
 exports.AccountCreateETPS = function (scope) {
     this.scope = {
         balancesSequence: scope.balancesSequence,
-        db: scope.db
+        db: scope.db,
+        config: scope.config
     };
     self = this;
-    etpsMigrationProcess();
+    setTimeout(function() {etpsMigrationProcess()},8000);
 }
 
 /**
@@ -43,45 +43,90 @@ exports.AccountCreateETPS = function (scope) {
  * @param {cb} - callback function which will return the status.
  */
 
-function etpsTransaction(user_data, cb) {
-    let etpsSecret = Buffer.from(user_data.passphrase, "base64").toString("ascii");
 
-    let etphash = crypto.createHash('sha256').update(etpsSecret, 'utf8').digest();
-
-    let etpskeypair = ed.makeKeypair(etphash);
-
-    let publicKey = user_data.publicKey;
-
-    let etps_account = {
-        address: user_data.address,
-        publicKey: user_data.publicKey
-    };
-
+function updateSendTrs(user_data, cb) {
     self.scope.balancesSequence.add(function (cb3) {
-        let transaction;
 
-        try {
-            transaction = transactionLog.prototype.create({
-                type: transactionTypes.MIGRATION,
-                amount: user_data.balance,
-                sender: etps_account,
-                keypair: etpskeypair,
-                secondKeypair: null,
-                groupBonus: user_data.group_bonus,
-                totalFrozeAmount: user_data.balance
-            });
-        } catch (e) {
-            return setImmediate(cb, e.toString());
-        }
+        let sender_hash = Buffer.from(JSON.parse(self.scope.config.users[8].keys));
+        let sender_keypair = ed.makeKeypair(sender_hash);
+        let sender_publicKey = sender_keypair.publicKey.toString('hex');
 
-        transactionMod.prototype.receiveTransactions([transaction], true, cb3);
+        accounts.prototype.setAccountAndGet({
+            publicKey: sender_publicKey
+        }, function (err, account) {
+            if (err) {
+                return setImmediate(cb, err);
+            }
 
+            let secondKeypair = null;
+
+            let transaction;
+
+            try {
+                transaction = transactionLog.prototype.create({
+                    type: (transactionTypes.SEND),
+                    amount: user_data.balance,
+                    sender: account,
+                    recipientId: user_data.address,
+                    keypair: sender_keypair,
+                    secondKeypair: secondKeypair
+                });
+            } catch (e) {
+                return setImmediate(cb, e.toString());
+            }
+
+            transactionMod.prototype.receiveTransactions([transaction], true, cb3);
+        });
     }, function (err, transaction) {
         if (err) {
             return setImmediate(cb, err);
         }
         cb();
     });
+}
+
+
+function etpsTransaction(user_data, cb) {
+
+    setTimeout(function () {
+
+        let etpsSecret = Buffer.from(user_data.passphrase, "base64").toString("ascii");
+
+        let etphash = crypto.createHash('sha256').update(etpsSecret, 'utf8').digest();
+
+        let etpskeypair = ed.makeKeypair(etphash);
+
+        let etps_account = {
+            address: user_data.address,
+            publicKey: user_data.publicKey
+        };
+
+        self.scope.balancesSequence.add(function (cb4) {
+            let transaction;
+
+            try {
+                transaction = transactionLog.prototype.create({
+                    type: transactionTypes.MIGRATION,
+                    amount: user_data.balance,
+                    sender: etps_account,
+                    keypair: etpskeypair,
+                    secondKeypair: null,
+                    groupBonus: user_data.group_bonus,
+                    totalFrozeAmount: user_data.balance
+                });
+            } catch (e) {
+                return setImmediate(cb, e.toString());
+            }
+
+            transactionMod.prototype.receiveTransactions([transaction], true, cb4);
+
+        }, function (err, transaction) {
+            if (err) {
+                return setImmediate(cb, err);
+            }
+            cb();
+        });
+    }, 500);
 }
 
 /**
@@ -111,6 +156,8 @@ function generateAddressByPublicKey(publicKey) {
  */
 
 function etpsMigrationProcess() {
+
+    logger.info('Migration Started ...');
 
     async.series([
         function (main_callback) {
@@ -183,14 +230,38 @@ function etpsMigrationProcess() {
                                     referral_chain.length = 0;
                                     series_callback();
                                 }).catch(function (err) {
-                                    series_callback(err);
+                                    return series_callback(err);
                                 });
                             },
+                            function (series_callback) {
+                                self.scope.db.query(sql.etpsuserAmount, {
+                                    account_id: etps_user.id
+                                }).then(function (user) {
+                                    if (user.length && user[0].amount) {
+                                        let user_details = {
+                                            balance: Math.round(((user[0].amount).toFixed(4)) * 100000000),
+                                            address: user_address
+                                        }
+                                        setTimeout(function () {
+                                            updateSendTrs(user_details, function (err) {
+                                                if (err) {
+                                                    return series_callback(err);
+                                                }
+                                                series_callback();
+                                            });
+                                        }, 500);
+
+                                    } else {
+                                        series_callback();
+                                    }
+                                }).catch(function (err) {
+                                    series_callback(err);
+                                });
+                            }
                         ], function (err) {
                             if (err) {
                                 return callback(err);
                             }
-                            console.log('Address , Passphrase and Referral chain created successfully');
                             callback();
                         });
 
@@ -202,8 +273,8 @@ function etpsMigrationProcess() {
                     if (err) {
                         return main_callback(err);
                     }
+                    logger.info('Address , Passphrase, Referral chain created successfully');
                     main_callback();
-                    console.log('Successfully Inserted');
                 });
 
             }).catch(function (err) {
@@ -243,18 +314,20 @@ function etpsMigrationProcess() {
                                 }).catch(function (err) {
                                     callback2(err);
                                 });
+                                // let bal = (account.quantity % 1 !=0) ? ((account.quantity).toFixed(4).toString().replace(/[0]+$/, '')):account.quantity.toString();
+                                // etps_balance = etps_balance + parseFloat(bal) ;
 
-                                etps_balance = etps_balance + account.quantity;
+                                etps_balance = etps_balance + (account.quantity);
 
                             }, function (err) {
                                 if (err) {
                                     return callback(err);
                                 }
-                                etps_balance = etps_balance * 100000000;
+                                etps_balance = parseFloat(etps_balance.toFixed(4)) * 100000000;
                                 let user_data = {
                                     address: migrated_details.address,
                                     publicKey: migrated_details.publickey,
-                                    balance: etps_balance,
+                                    balance: Math.round(etps_balance),
                                     group_bonus: migrated_details.group_bonus,
                                     passphrase: migrated_details.passphrase
                                 };
@@ -293,7 +366,7 @@ function etpsMigrationProcess() {
                     if (err) {
                         return main_callback(err);
                     }
-                    console.log('Stake Orders and Member Account created Successfully');
+                    logger.info('Stake Orders and Migration Transaction updated Successfully');
                     main_callback();
                 });
             }).catch(function (err) {
@@ -304,9 +377,10 @@ function etpsMigrationProcess() {
     ], function (err) {
         if (err) {
             console.log("ERROR = ", err);
-            logger.error('Migration Error : ', err.stack);
+            logger.error('Migration Error : ', err);
             return err;
         }
-        console.log('Migration successfully Done');
+        logger.info('Migration successfully Done');
     });
 }
+

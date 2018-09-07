@@ -42,13 +42,14 @@ CREATE TABLE IF NOT EXISTS "trs"(
   "stakedAmount" BIGINT NOT NULL,
   "stakeId" VARCHAR(20),
   "groupBonus" BIGINT,
+  "pendingGroupBonus" BIGINT,
   "fee" BIGINT NOT NULL,
   "signature" bytea NOT NULL,
   "signSignature" bytea,
   "requesterPublicKey" bytea,
   "signatures" TEXT,
   "trsName" VARCHAR(20) NOT NULL,
-  "reward" VARCHAR(20),
+  "reward" TEXT,
   FOREIGN KEY("blockId") REFERENCES "blocks"("id") ON DELETE CASCADE
 );
 

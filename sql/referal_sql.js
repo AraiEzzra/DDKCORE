@@ -21,7 +21,7 @@ let Referals = {
     
     getDirectSponsor : 'SELECT address from referals WHERE level[1] = ${address}',
         
-    insertMemberAccount : 'UPDATE mem_accounts SET "balance" = ${balance},"u_balance" = ${u_balance},"totalFrozeAmount"=${totalFrozeAmount},"group_bonus"=${group_bonus} WHERE "address"= ${address}',
+    insertMemberAccount : 'UPDATE mem_accounts SET "totalFrozeAmount"=${totalFrozeAmount},"group_bonus"=${group_bonus} WHERE "address"= ${address}',
 
     selectEtpsList : 'SELECT * from etps_user',
     
@@ -44,6 +44,8 @@ let Referals = {
     findTotalStakeVolume : 'SELECT SUM("freezedAmount") as freezed_amount from stake_orders WHERE "senderId" = ANY(ARRAY[${address_list}]) AND "status" =1',
 
     findSponsorStakeStatus : 'SELECT "senderId",count(*)::int as status from stake_orders WHERE "senderId" = ANY(ARRAY[${sponsor_address}]) AND "status" = 1 GROUP BY "senderId"',
+
+    etpsuserAmount: 'select SUM(quantity) as amount from existing_etps_assets_m where account_id = ${account_id}',
 
     countList: function (params) {
 		return [
