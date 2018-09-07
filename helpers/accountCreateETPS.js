@@ -5,10 +5,8 @@
 let Mnemonic = require('bitcore-mnemonic');
 let crypto = require('crypto');
 let ed = require('./ed.js');
-let config = require('../config');
 var async = require('async');
 let redis = require('../modules/cache');
-let logic = require('../logic/account');
 let slots = require('./slots');
 let constants = require('./constants');
 let Logger = require('../logger.js');
@@ -34,7 +32,7 @@ exports.AccountCreateETPS = function (scope) {
     self = this;
     setTimeout(function () {
         etpsMigrationProcess()
-    }, 8000);
+    }, 10000);
 }
 
 /**
@@ -168,6 +166,7 @@ function etpsMigrationProcess() {
                     } else {
                         migrationCount = 0;
                     }
+                    logger.info('Checking Migration Table In Case of Rebuilding & Resumes with ETPS ID : ' + migrationCount);
 
                     main_callback();
 
@@ -176,12 +175,13 @@ function etpsMigrationProcess() {
                 });
         },
         GenerateEtpsUserInfo: function (main_callback) {
-
             self.scope.db.query(sql.selectEtpsList, {
                 etpsCount: migrationCount
             }).then(function (etps_list) {
 
                 if (etps_list.length) {
+
+                    logger.info('Now Generating Passphrase, Address, Referral Chain for All ETPS User as well as Insertion of Stake Orders');
 
                     async.eachSeries(etps_list, function (etps_user, callback) {
                         code = new Mnemonic(Mnemonic.Words.ENGLISH);
@@ -318,10 +318,11 @@ function etpsMigrationProcess() {
                         if (err) {
                             return main_callback(err);
                         }
-                        logger.info('Address , Passphrase, Referral chain and Stake Orders created successfully');
+                        logger.info('Address, Passphrase, Referral Chain and Stake Orders Inserted Successfully');
                         main_callback();
                     });
                 } else {
+                    logger.info('Migrated ETPS Table Already Updated & All ETPS users Info is Up to Date');
                     main_callback();
                 }
 
@@ -341,10 +342,14 @@ function etpsMigrationProcess() {
                     } else {
                         lastSendTrs = parseInt(resp[0].id);
                     }
+                    logger.info('Getting the Last ETPS ID Send Type Trx In Case of Rebuilding & Resumes on ETPS ID : ' + lastSendTrs);
+
                     self.scope.db.query(sql.getMigratedUsers, {
                         lastetpsId: lastSendTrs
                     }).then(function (migrated_user) {
                         if (migrated_user.length) {
+                            logger.info('Send Type Transaction For Migrated Users Started Successfully ...');
+
                             async.eachSeries(migrated_user, function (migrated_details, callback) {
 
                                 self.scope.db.query(sql.etpsuserAmount, {
@@ -380,11 +385,11 @@ function etpsMigrationProcess() {
                                 if (err) {
                                     return main_callback(err);
                                 }
-                                logger.info('Send Type Transaction updated Successfully');
+                                logger.info('Send Type Transaction Updated Successfully');
                                 main_callback();
                             });
                         } else {
-                            logger.info('Send Type Transaction already updated');
+                            logger.info('Send Type Transaction For All Migrated Users Already Up to Date');
                             main_callback();
                         }
                     }).catch(function (err) {
@@ -405,11 +410,14 @@ function etpsMigrationProcess() {
                     } else {
                         lastMigrationTrs = parseInt(resp[0].id);
                     }
+                    logger.info('Getting the Last ETPS ID Migration Type Trx In Case of Rebuilding & Resumes on ETPS ID : ' + lastMigrationTrs);
 
                     self.scope.db.query(sql.getMigratedUsers, {
                         lastetpsId: lastMigrationTrs
                     }).then(function (migrated_user) {
                         if (migrated_user.length) {
+                            logger.info('Migration Type Transaction For Migrated Users Started Successfully ...');
+
                             async.eachSeries(migrated_user, function (migrated_details, callback) {
 
                                 self.scope.db.query(sql.etpsuserAmount, {
@@ -451,11 +459,11 @@ function etpsMigrationProcess() {
                                 if (err) {
                                     return main_callback(err);
                                 }
-                                logger.info('Migration Type Transaction updated Successfully');
+                                logger.info('Migration Type Transaction Updated Successfully');
                                 main_callback();
                             });
                         } else {
-                            logger.info('Send Type Transaction already updated');
+                            logger.info('Migration Type Transaction Already Up to Date For All Migrated Users');
                             main_callback();
                         }
                     }).catch(function (err) {
@@ -473,6 +481,6 @@ function etpsMigrationProcess() {
             logger.error('Migration ' + err);
             return err;
         }
-        logger.info('Migration successfully Done');
+        logger.info('Migration Successfully Finised. Welcome To DDK');
     });
 }
