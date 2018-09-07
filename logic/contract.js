@@ -34,7 +34,12 @@ function Contract(config, db, cb) {
 Contract.prototype.create = function (data, trs) {
 	trs.recipientId = data.recipientId;
 	trs.amount = data.amount;
-	trs.trsName = 'REWARD';
+	if(data.trsName) {
+		trs.trsName = data.trsName;
+	} else {
+		trs.trsName = 'REWARD';
+	}
+	
 	return trs;
 };
 
@@ -65,18 +70,19 @@ Contract.prototype.verify = function (trs, sender, cb) {
 		return setImmediate(cb, 'Invalid transaction amount');
 	}
 
-	if(!trs.reward) {
-		return setImmediate(cb,'Invalid stake reward percentage');
-	}
+	if (trs.trsName === 'REWARD') {
+		if (!trs.reward) {
+			return setImmediate(cb, 'Invalid stake reward percentage');
+		}
+		let split = trs.reward.split('&');
+		let height = parseInt(split[0]);
+		let stake_reward = parseInt(split[1]);
 
-	let split = trs.reward.split('&');
-	let height = parseInt(split[0]);
-	let stake_reward = parseInt(split[1]);
+		let stakeReward = reward.calcReward(height);
 
-	let stakeReward = reward.calcReward(height);
-
-	if(stake_reward !== stakeReward) {
-		return setImmediate(cb,'Invalid stake reward percentage');
+		if (stake_reward !== stakeReward) {
+			return setImmediate(cb, 'Invalid stake reward percentage');
+		}
 	}
 
 	return setImmediate(cb, null, trs);

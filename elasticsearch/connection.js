@@ -12,7 +12,7 @@
 
 let elasticsearch = require('elasticsearch');
 let config = require('../config.json');
-let connectionHost = config.elasticsearchHost + ':9200' || 'localhost:9200';
+let connectionHost = config.elasticsearchHost || 'localhost:9200';
 
 let Client = new elasticsearch.Client({
 	hosts: connectionHost,

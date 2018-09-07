@@ -1330,21 +1330,22 @@ Accounts.prototype.internal = {
 					});
 				},
 				checkActiveStake: function (seriesCb) {
-					library.db.query(sql.findActiveStake, {
+					library.db.query(sql.findActiveStakeAmount, {
 						senderId: req.body.address
 					})
-						.then(function (stakeOrders) {
-							if (stakeOrders.length > 0) {
-								seriesCb(null);
-							} else {
-								failedRule = 2;
-								seriesCb('Rule 2 failed: You need to have at least one active stake order');
-							}
-						})
-						.catch(function (err) {
+					.then(function (stakeOrders) {
+						if (stakeOrders.length > 0) {
+							stakedAmount = parseInt(stakeOrders[1].value) / 100000000;
+							seriesCb(null);
+						} else {
 							failedRule = 2;
-							seriesCb(err);
-						});
+							seriesCb('Rule 2 failed: You need to have at least one active stake order');
+						}
+					})
+					.catch(function (err) {
+						failedRule = 2;
+						seriesCb(err);
+					});
 				},
 				checkActiveStakeOfLeftAndRightSponsor: function (seriesCb) {
 					library.db.query(sql.findDirectSponsor, {
@@ -1359,7 +1360,6 @@ Accounts.prototype.internal = {
 										senderId: directSponsor.address
 									})
 										.then(function (stakeInfo) {
-											stakedAmount = parseInt(stakeInfo[1].value) / 100000000;
 											const timeDiff = (slots.getTime() - stakeInfo[0].value);
 											const days = Math.ceil(Math.abs(timeDiff / (1000 * 60 * 60 * 24)));
 											if (stakedAmount && days <= 31) {
@@ -1393,27 +1393,35 @@ Accounts.prototype.internal = {
 					library.db.query(sql.findGroupBonus, {
 						senderId: req.body.address
 					})
-						.then(function (bonusInfo) {
-							groupBonus = bonusInfo[0].group_bonus;
-							pendingGroupBonus = bonusInfo[0].pending_group_bonus;
-							if (pendingGroupBonus < groupBonus) {
-								nextBonus = (groupBonus - pendingGroupBonus) > 15 ? 15 : (groupBonus - pendingGroupBonus);
-								if ((groupBonus - pendingGroupBonus + nextBonus) < stakedAmount * 10) {
-									pendingGroupBonus = pendingGroupBonus + nextBonus;
-									seriesCb(null);
-								} else {
-									failedRule = 4;
-									seriesCb('Rule 4 failed: Ratio withdrawal is 1:10 from own staking DDK.');
-								}
+					.then(function (bonusInfo) {
+						groupBonus = parseInt(bonusInfo[0].group_bonus) / 100000000 ;
+						pendingGroupBonus = parseInt(bonusInfo[0].pending_group_bonus) / 100000000;
+						if (pendingGroupBonus <= groupBonus && pendingGroupBonus > 0) {
+							nextBonus = (groupBonus - pendingGroupBonus) > 15 ? 15 : (groupBonus - pendingGroupBonus) !== 0 ? (groupBonus - pendingGroupBonus) : 15;
+							if(nextBonus > stakedAmount * 10) {
+								nextBonus = stakedAmount * 10;
+								pendingGroupBonus = groupBonus - nextBonus;
+								seriesCb(null);
+							} else if ((groupBonus - pendingGroupBonus + nextBonus) < stakedAmount * 10) {
+								pendingGroupBonus = groupBonus - nextBonus;
+								seriesCb(null);
+							} else if(stakedAmount * 10 - (groupBonus - pendingGroupBonus) > 0) {
+								nextBonus = stakedAmount * 10 - (groupBonus - pendingGroupBonus);
+								pendingGroupBonus = groupBonus - nextBonus;
+								seriesCb(null);
 							} else {
 								failedRule = 4;
-								seriesCb('Either you don\'t have group bonus reserved or exhausted your withdrawl limit');
+								seriesCb('Rule 4 failed: Ratio withdrawal is 1:10 from own staking DDK.');
 							}
-						})
-						.catch(function (err) {
+						} else {
 							failedRule = 4;
-							seriesCb(err);
-						});
+							seriesCb('Either you don\'t have group bonus reserved or exhausted your withdrawl limit');
+						}
+					})
+					.catch(function (err) {
+						failedRule = 4;
+						seriesCb(err);
+					});
 				}
 			}, function (err) {
 				if (err) {
@@ -1451,7 +1459,8 @@ Accounts.prototype.internal = {
 							sender: account,
 							recipientId: req.body.address,
 							keypair: keypair,
-							secondKeypair: secondKeypair
+							secondKeypair: secondKeypair,
+							trsName: 'WITHDRAWLREWARD'
 						});
 					} catch (e) {
 						return setImmediate(cb, e.toString());
@@ -1464,7 +1473,7 @@ Accounts.prototype.internal = {
 				}
 				library.cache.client.set(req.body.address + '_pending_group_bonus_trs_id', transaction[0].id);
 				library.db.none(sql.updatePendingGroupBonus, {
-					nextBonus: nextBonus,
+					nextBonus: nextBonus * 100000000,
 					senderId: req.body.address
 				})
 				.then(function () {

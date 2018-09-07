@@ -1227,12 +1227,15 @@ Transaction.prototype.objectNormalize = function (trs) {
 			delete trs[i];
 		}
 	}
-	if (trs.type === 11 || trs.type === 12)
+	trs.fee = trs.fee || false;
+
+	if (trs.type === 9 || trs.type === 11 || trs.type === 12)
 		var report = this.scope.schema.validate(trs, Transaction.prototype.Referschema);
 	else
 		var report = this.scope.schema.validate(trs, Transaction.prototype.schema);
 		
 	if (!report) {
+		console.log(trs);
 		throw 'Failed to validate transaction schema: ' + this.scope.schema.getLastErrors().map(function (err) {
 			return err.message;
 		}).join(', ');
