@@ -23,7 +23,7 @@ let Referals = {
         
     insertMemberAccount : 'UPDATE mem_accounts SET "totalFrozeAmount"=${totalFrozeAmount},"group_bonus"=${group_bonus} WHERE "address"= ${address}',
 
-    selectEtpsList : 'SELECT * from etps_user where id > ${etpsCount}',
+    selectEtpsList : 'SELECT * from etps_user where id > ${etpsCount} order by id asc',
     
     insertMigratedUsers : 'INSERT INTO migrated_etps_users ("address","passphrase","publickey","username","id","group_bonus") VALUES (${address},${passphrase},${publickey},${username},${id},${group_bonus})',
     
