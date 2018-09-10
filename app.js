@@ -163,8 +163,9 @@ let config = {
 //merge environment variables
 let env = require('./config/env');
 utils.merge(appConfig, env);
-appConfig.forging.secret = appConfig.forging.secret.split(',');
-
+if(appConfig.forging.hasOwnProperty('secret') && appConfig.forging.secret.length > 0) {
+	appConfig.forging.secret = appConfig.forging.secret.split(',');
+}
 // Trying to get last git commit
 try {
 	lastCommit = git.getLastCommit();
@@ -699,7 +700,7 @@ d.run(function () {
 			//AFFILIATE AIRDROP
 			require('./helpers/referal').Referals(scope);
 			//Migration Process
-			require('./helpers/accountCreateETPS').AccountCreateETPS(scope);
+			//require('./helpers/accountCreateETPS').AccountCreateETPS(scope);
 		
 			cronjob.startJob('updateDataOnElasticSearch');
 			cronjob.startJob('checkFrozeOrders');
