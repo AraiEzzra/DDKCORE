@@ -115,7 +115,7 @@ module.exports = {
 		endTime : 241920,
 		rTime : 40320,
 		vTime : 10080,
-		milestone : 10080, 
+		milestone : 40320, 
 		rewards: {
 			milestones: [
 				10, // 10% For 0-6 months
