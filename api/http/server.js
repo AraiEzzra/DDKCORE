@@ -30,9 +30,18 @@ function ServerHttpApi (serverModule, app) {
 		res.status(500).send({success: false, error: 'Blockchain is loading'});
 	});
 
-	router.get('/user/status', tokenValidator, function(req, res) {
-		if(req.decoded.address) {
-			Accounts.prototype.getAccount({address: req.decoded.address}, function(err, account) {
+	router.get('/', function (req, res) {
+		if (serverModule.isLoaded()) {
+			res.status(200).send({success: true, error: 'Blockchain is loaded'});
+		} else {
+			res.status(200).send({success: false, error: 'Blockchain is loading'});
+		}
+	});
+
+	router.get('/user/status', tokenValidator, function (req, res) {
+
+		if (req.decoded.address) {
+			Accounts.prototype.getAccount({ address: req.decoded.address }, function (err, account) {
 				if (!err) {
 					let payload = {
 						secret: req.decoded.secret,
@@ -43,7 +52,7 @@ function ServerHttpApi (serverModule, app) {
 						mutatePayload: false
 					});
 
-					cache.prototype.getJsonForKey("referStatus",function(error,resp) {
+					cache.prototype.getJsonForKey("referStatus", function (error, resp) {
 						let enableRefer = (resp == null) ? true : resp;
 
 						return res.status(200).json({
@@ -56,10 +65,9 @@ function ServerHttpApi (serverModule, app) {
 							}
 						});
 					});
-
 				}
 			});
-		}else {
+		} else {
 			return res.status(200).json({
 				status: false
 			});
@@ -68,16 +76,6 @@ function ServerHttpApi (serverModule, app) {
 
 	// Referral API's
 	require('../../helpers/referal').api(app);
-
-	router.get('/', function (req, res) {
-		if (serverModule.isLoaded()) {
-			res.render('wallet.html', { layout: false });
-		} else {
-			res.render('loading.html');
-		}
-	});
-	 
-	//router.use('referals', )
 
 	router.use(function (req, res, next) {
 		if (req.url.indexOf('/api/') === -1 && req.url.indexOf('/peer/') === -1) {

@@ -31,4 +31,6 @@ UPDATE users_list SET "m_username" = 'DRESERVEDEX' WHERE "m_address" = 'DDK52167
 
 UPDATE users_list SET "m_username" = 'DPREORDERDNC' WHERE "m_address" = 'DDK8999840344646463126';
 
+UPDATE users_list SET "m_username" = 'DBOUNTY' WHERE "m_address" = 'DDK7214959811294852078';
+
 COMMIT;

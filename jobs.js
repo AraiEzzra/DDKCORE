@@ -65,7 +65,7 @@ exports.updateDataOnElasticSearch = {
 					}
 				})
 				.catch(function (err) {
-					library.logger.error('database error : ', err);
+					library.logger.error('database error : '+ err);
 				});
 		});
 	},
