@@ -114,7 +114,7 @@
     "app": {},
     "sender": {},
     "nethash": "da3ed6a45429278bac2666961289ca17ad86595d33b31037615d4b8e8f158bba",
-    "elasticsearchHost": "159.65.139.247",
+    "elasticsearchHost": "159.65.139.247:9200",
     "swaggerDomain": "159.65.139.248",
     "jwt": {
         "tokenLife": 300
