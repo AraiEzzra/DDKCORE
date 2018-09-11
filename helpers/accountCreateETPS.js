@@ -264,7 +264,7 @@ function etpsMigrationProcess() {
                             updateStakeOrders: function (series_callback) {
                                 let date = new Date((slots.getTime()) * 1000);
                                 self.scope.db.query(sql.getStakeOrders, etps_user.id).then(function (stake_list) {
-                                    if (stake_list.length) {
+                                    if (stake_list.length && stake_list[0].quantity) {
                                         async.eachSeries(stake_list, function (account, stakeCallback) {
                                             let stake_details = {
                                                 id: etps_user.id,

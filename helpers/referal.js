@@ -106,18 +106,20 @@ module.exports.api = function (app) {
 
     app.post('/referral/sendEmail', function (req, res) {
 
-        let link = req.body.referlink;
+        let referral_link = req.body.referlink;
         let mailOptions = {
             From: library.config.mailFrom, // sender address
             To: req.body.email, //req.body.email list of receivers
-            Subject: 'Referral Link', // Subject line
-            TextBody: '',
-            HtmlBody: 'Hello, ' + req.body.email + ' <br><br>\
-            <br> Please click on the Referral link below to register.<br><br>\
-            <a href="' + link + '">Click here to confirm</a>'
+            TemplateId: 8257936,
+            TemplateModel: {
+                "person": {
+                    "username": req.body.email,
+                    "referral_link": referral_link
+                }
+            }
         };
 
-        mailServices.sendMail(mailOptions, function (err) {
+        mailServices.sendEmailWithTemplate(mailOptions, function (err) {
             if (err) {
                 library.logger.error('Send Email Error : ' + err.stack);
                 return res.status(400).json({
