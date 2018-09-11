@@ -87,7 +87,7 @@ function TransportHttpApi (transportModule, app, logger) {
 		});
 
 		function validateHeaders (headers, cb) {
-			headers.port = 7000;
+			headers.port = 7007;
 			headers.nethash = 'da3ed6a45429278bac2666961289ca17ad86595d33b31037615d4b8e8f158bba';
 			headers.version = '0.9.9a';
 			return req.sanitize(headers, schema.headers, function (err, report) {

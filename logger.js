@@ -47,15 +47,19 @@ let traceTransport = new (winston.transports.File)({
 	}
 });
 
-/** 
+const consoleTransport = new winston.transports.Console();
+
+
+/**
  * @desc logger Constructor
  * @param {String} sessionId - session is to be written in each log
  * @param {String} address - address od the current logged-in user
- * @returns {Transport}  
+ * @returns {Transport}
 */
 class Logger {
 	constructor(sessionId, address) {
 		this.transport = transport;
+		this.consoleTransport = consoleTransport;
 		this.transport.formatter = function (options) {
 			if (sessionId && address) {
 				return options.timestamp() + ' - ' + sessionId + ' - ' + address + ' - [' + options.level + '] : ' + options.message;
@@ -73,7 +77,7 @@ class Logger {
 		};
 		this.logger = new (winston.Logger)({
 			levels: levels,
-			transports: [this.traceTransport, this.transport]
+			transports: [this.traceTransport, this.transport, this.consoleTransport]
 		});
 	}
 }

@@ -56,7 +56,7 @@ module.exports = {
 		multisignature: 1000000,
 		dapp: 2500000000,
 		froze: 0.01,  
-		sendfreeze: 10,
+		sendfreeze: 0.1,
 		reward: 0
 	},
 	feeStart: 1,
@@ -71,7 +71,7 @@ module.exports = {
 	maxSharedTxs: 100,
 	maxSignaturesLength: 196 * 256,
 	maxTxsPerBlock: 25,
-	minBroadhashConsensus: 0,
+	minBroadhashConsensus: 51,
 	nethashes: [
 		// Mainnet
 		'ed14889723f24ecc54871d058d98ce91ff2f973192075c0155ba2b7b70ad2511',
@@ -128,26 +128,7 @@ module.exports = {
 			distance: 30, // Distance between each milestone is 6 months
 		}
 	},
-	defaultLock: 0,
-	stakeReward: 10,
-	validateLevelReward: {
-		'level1': 5,
-		'level2': 3,
-		'level3': 2,
-		'level4': 2,
-		'level5': 1,
-		'level6': 1,
-		'level7': 1,
-		'level8': 0.9,
-		'level9': 0.8,
-		'level10': 0.7,
-		'level11': 0.6,
-		'level12': 0.5,
-		'level13': 0.5,
-		'level14': 0.5,
-		'level15': 0.5
-	},
-	airdropAccount: 'DDK10720340277000928808'
+	defaultLock: 0
 };
 
 /*************************************** END OF FILE *************************************/

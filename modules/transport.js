@@ -350,7 +350,7 @@ Transport.prototype.getFromPeer = function (peer, options, cb) {
 	}
 
 	peer = library.logic.peers.create(peer);
-	__private.headers.port = 7000;
+	__private.headers.port = 7007;
 	let req = {
 		url: 'http://' + peer.ip + ':' + peer.port + url,
 		method: options.method,
