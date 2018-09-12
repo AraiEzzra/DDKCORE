@@ -1417,9 +1417,9 @@ Accounts.prototype.internal = {
 				}]
 			}, function (err, data) {
 				if (err) {
-					return setImmediate(cb, { success: false, status: data });
+					return setImmediate(cb, err, { success: false, status: data });
 				}
-				return setImmediate(cb, { success: true, status: data });
+				return setImmediate(cb, null, { success: true, status: data });
 			});
 		});
 	},
