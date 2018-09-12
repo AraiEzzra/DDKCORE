@@ -1542,14 +1542,16 @@ Accounts.prototype.internal = {
 				let mailOptions = {
 					From: library.config.mailFrom,
 					To: email,
-					Subject: 'New Password',
-					TextBody: '',
-					HtmlBody: 'Hello, ' + userName + ' <br><br>\
-					<br> Your Newly Generated Password for login is : <strong>' + newPassword + '</strong><br><br>\
-					<a href="' + link + '">Click here to login</a>'
+					TemplateId: 8276287,
+					TemplateModel: {
+						"ddk": {
+						  "username": userName,
+						  "password": newPassword
+						}
+					  }
 				};
 
-				mailServices.sendMail(mailOptions, function (err) {
+				mailServices.sendEmailWithTemplate(mailOptions, function (err) {
 					if (err) {
 						library.logger.error(err.stack);
 						return setImmediate(cb, err.toString());
