@@ -35,6 +35,9 @@ module.exports = {
   app: {
     port: env.PORT
   },
+  peers: {
+    list: (env.PEERS || '').split(',').map(peer => peer.split(':')).map(([ip, port]) => ({ ip, port })),
+  },
   forging: {
     secret: env.FORGE_SECRET
   },
