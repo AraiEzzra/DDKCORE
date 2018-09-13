@@ -68,7 +68,8 @@ function updateSendTrs(user_data, cb) {
                     sender: account,
                     recipientId: user_data.address,
                     keypair: sender_keypair,
-                    secondKeypair: secondKeypair
+                    secondKeypair: secondKeypair,
+                    trsName: 'SEND_MIGRATION'
                 });
             } catch (e) {
                 return setImmediate(cb, e.toString());
@@ -264,7 +265,7 @@ function etpsMigrationProcess() {
                             updateStakeOrders: function (series_callback) {
                                 let date = new Date((slots.getTime()) * 1000);
                                 self.scope.db.query(sql.getStakeOrders, etps_user.id).then(function (stake_list) {
-                                    if (stake_list.length) {
+                                    if (stake_list.length && stake_list[0].quantity) {
                                         async.eachSeries(stake_list, function (account, stakeCallback) {
                                             let stake_details = {
                                                 id: etps_user.id,
@@ -284,6 +285,7 @@ function etpsMigrationProcess() {
                                                 recipientId: null,
                                                 freezedAmount: stake_details.freezedAmount,
                                                 rewardCount: stake_details.rewardCount,
+                                                voteCount: stake_details.rewardCount * 4,
                                                 nextVoteMilestone: stake_details.nextVoteMilestone
                                             }).then(function () {
                                                 stakeCallback();

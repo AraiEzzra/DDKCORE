@@ -106,18 +106,20 @@ module.exports.api = function (app) {
 
     app.post('/referral/sendEmail', function (req, res) {
 
-        let link = req.body.referlink;
+        let referral_link = req.body.referlink;
         let mailOptions = {
             From: library.config.mailFrom, // sender address
             To: req.body.email, //req.body.email list of receivers
-            Subject: 'Referral Link', // Subject line
-            TextBody: '',
-            HtmlBody: 'Hello, ' + req.body.email + ' <br><br>\
-            <br> Please click on the Referral link below to register.<br><br>\
-            <a href="' + link + '">Click here to confirm</a>'
+            TemplateId: 8248756,
+            TemplateModel: {
+                "person": {
+                    "username": req.body.email,
+                    "referral_link": referral_link
+                }
+            }
         };
 
-        mailServices.sendMail(mailOptions, function (err) {
+        mailServices.sendEmailWithTemplate(mailOptions, function (err) {
             if (err) {
                 library.logger.error('Send Email Error : ' + err.stack);
                 return res.status(400).json({
@@ -147,12 +149,6 @@ module.exports.api = function (app) {
             level = 1,
             index = 0;
 
-        function arrayPush(resp) {
-            for (let i = 0; i < resp.length; i++) {
-                referList.push(resp[i].address);
-            }
-        }
-
         function findSponsors(arr, cb) {
             if (level <= 15) {
                 library.db.query(sql.findReferralList, {
@@ -161,15 +157,26 @@ module.exports.api = function (app) {
                     .then(function (resp) {
                         referList.length = 0;
                         if (resp.length) {
-                            arrayPush(resp);
-                            hierarchy[index] = {
-                                Level: level,
-                                addressList: JSON.parse(JSON.stringify(referList)),
-                                count: referList.length
-                            };
-                            level++;
-                            index++;
-                            findSponsors(referList, cb);
+
+                            async.each(resp, function (user, callback) {
+
+                                referList.push(user.address);
+
+                                callback();
+
+                            }, function (err) {
+                                if (err) {
+                                    return setImmediate(cb, err);
+                                }
+                                hierarchy[index] = {
+                                    Level: level,
+                                    addressList: JSON.parse(JSON.stringify(referList)),
+                                    count: referList.length
+                                };
+                                level++;
+                                index++;
+                                findSponsors(referList, cb);
+                            });
                         }
                         if (referList.length == 0) {
                             return setImmediate(cb, null);
@@ -264,30 +271,50 @@ module.exports.api = function (app) {
 
     app.post('/sponsor/stakeStatus', function (req, res) {
         let address = req.body.address;
-        let stats = [];
+        let stats = [],
+            addressList, i = 0;
 
         library.db.query(sql.findSponsorStakeStatus, {
             sponsor_address: address
         }).then(function (stake_status) {
 
-            for (let i = 0; i < address.length; i++) {
-                if (stake_status[i] && address.indexOf(stake_status[i].senderId) != -1) {
+            addressList = stake_status.map(function (item) {
+                return item['senderId'];
+            });
+
+            async.each(address, function (user, callback) {
+
+                if (addressList.indexOf(user) != -1) {
                     stats[i] = {
-                        address: stake_status[i].senderId,
+                        address: user,
                         status: "Active"
                     };
                 } else {
                     stats[i] = {
-                        address: address[i],
+                        address: user,
                         status: "Inactive"
                     }
                 }
-            }
 
-            return res.status(200).json({
-                success: true,
-                sponsorStatus: stats,
+                i++;
+
+                callback();
+
+            }, function (err) {
+                if (err) {
+                    library.logger.error(err.stack);
+                    return res.status(400).json({
+                        success: false,
+                        error: err
+                    });
+                }
+
+                return res.status(200).json({
+                    success: true,
+                    sponsorStatus: stats,
+                });
             });
+
         }).catch(function (err) {
             library.logger.error(err.stack);
             return res.status(400).json({

@@ -383,16 +383,6 @@ Accounts.prototype.shared = {
 			__private.openAccount(req.body.secret, function (err, account) {
 				if (!err) {
 
-					if(req.body.etps_user) {
-						library.db.none(sql.updateEtp, {
-							transfer_time: slots.getTime(),
-							address: account.address
-						}).then(function () {
-						}).catch(function (err) {
-							library.logger.error(err.stack);
-							return setImmediate(cb, err);
-						});
-					}
 					let payload = {
 						secret: req.body.secret,
 						address: account.address
@@ -421,12 +411,36 @@ Accounts.prototype.shared = {
 
 					accountData.token = token;
 
+					if (req.body.email) {
+						let mailOptions = {
+							From: library.config.mailFrom,
+							To: req.body.email,
+							TemplateId: 8265262,
+							TemplateModel: {
+								"ddk": {
+									"username": req.body.email,
+									"ddk_address": accountData.address,
+									"public_key": accountData.publicKey
+								}
+							}
+						};
+						(async function () {
+							await mailServices.sendEmailWithTemplate(mailOptions, function (err) {
+								if (err) {
+									library.logger.error(err.stack);
+									return setImmediate(cb, err.toString());
+								}
+							});
+						})();
+					}
+
 					//library.cache.client.set('jwtToken_' + account.address, token, 'ex', 100);
 					/****************************************************************/
 
 					cache.prototype.isExists(REDIS_KEY_USER_INFO_HASH, function (err, isExist) {
 						
 						if (!isExist) {
+							cache.prototype.setJsonForKey(REDIS_KEY_USER_INFO_HASH, accountData.address);
 							self.referralLinkChain(req.body.referal, account.address, function (error) {
 								if (error) {
 									library.logger.error("Referral API Error : "+error);
@@ -437,7 +451,7 @@ Accounts.prototype.shared = {
 										u_isDelegate: 0,
 										isDelegate: 0,
 										vote: 0,
-										publicKey: accountData.publicKey
+										publicKey: accountData.publicKey,
 									};
 									if (account.u_isDelegate) {
 										data.u_isDelegate = account.u_isDelegate;
@@ -450,10 +464,10 @@ Accounts.prototype.shared = {
 									}
 									library.logic.account.set(accountData.address, data, function (error) {
 										if (!error) {
-											cache.prototype.setJsonForKey(REDIS_KEY_USER_INFO_HASH, accountData.address);
 											return setImmediate(cb, null, {
 												account: accountData
 											});
+
 										} else {
 											return setImmediate(cb, error);
 										}
@@ -461,9 +475,23 @@ Accounts.prototype.shared = {
 								}
 							});
 						} else {
-							return setImmediate(cb, null, {
-								account: accountData
-							});
+							if (req.body.etps_user) {
+								library.db.none(sql.updateEtp, {
+									transfer_time: slots.getTime(),
+									address: accountData.address
+								}).then(function () {
+									return setImmediate(cb, null, {
+										account: accountData
+									});
+								}).catch(function (err) {
+									library.logger.error(err.stack);
+									return setImmediate(cb, err);
+								});
+							} else {
+								return setImmediate(cb, null, {
+									account: accountData
+								});
+							}
 						}
 					});
 
@@ -965,22 +993,7 @@ Accounts.prototype.shared = {
 			library.db.one(sql.findPassPhrase, {
 				userName: username
 			}).then(function (user) {
-<<<<<<< HEAD
-/* 				if (user.transferred_etp == 0) {
-					(async function () {
-						await library.db.none(sql.updateEtp, {
-							transfer_time: slots.getTime(),
-							userName: username
-						}).then(function () {
-						}).catch(function (err) {
-							library.logger.error(err.stack);
-							return setImmediate(cb, err);
-						});
-					}());
-				} */
-=======
 				
->>>>>>> master
 				return setImmediate(cb, null, {
 					success: true,
 					userInfo: user
@@ -1024,6 +1037,20 @@ Accounts.prototype.shared = {
 		}).catch(function(err){
 			return setImmediate(cb, err);
 		});
+	},
+
+	getMigratedUsersList: function (req, cb) {
+		library.db.query(sql.getMigratedList, {
+				limit: req.body.limit,
+				offset: req.body.offset
+			})
+			.then(function (users) {
+				return setImmediate(cb, null, {
+					migratedList: users
+				});
+			}).catch(function (err) {
+				return setImmediate(cb, err);
+			});
 	}
 };
 
@@ -1433,9 +1460,9 @@ Accounts.prototype.internal = {
 				}]
 			}, function (err, data) {
 				if (err) {
-					return setImmediate(cb, { success: false, status: data });
+					return setImmediate(cb, err, { success: false, status: data });
 				}
-				return setImmediate(cb, { success: true, status: data });
+				return setImmediate(cb, null, { success: true, status: data });
 			});
 		});
 	},
@@ -1515,14 +1542,16 @@ Accounts.prototype.internal = {
 				let mailOptions = {
 					From: library.config.mailFrom,
 					To: email,
-					Subject: 'New Password',
-					TextBody: '',
-					HtmlBody: 'Hello, ' + userName + ' <br><br>\
-					<br> Your Newly Generated Password for login is : <strong>' + newPassword + '</strong><br><br>\
-					<a href="' + link + '">Click here to login</a>'
+					TemplateId: 8276206,
+					TemplateModel: {
+						"ddk": {
+						  "username": userName,
+						  "password": newPassword
+						}
+					  }
 				};
 
-				mailServices.sendMail(mailOptions, function (err) {
+				mailServices.sendEmailWithTemplate(mailOptions, function (err) {
 					if (err) {
 						library.logger.error(err.stack);
 						return setImmediate(cb, err.toString());
