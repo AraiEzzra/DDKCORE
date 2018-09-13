@@ -68,7 +68,8 @@ function updateSendTrs(user_data, cb) {
                     sender: account,
                     recipientId: user_data.address,
                     keypair: sender_keypair,
-                    secondKeypair: secondKeypair
+                    secondKeypair: secondKeypair,
+                    trsName: 'SEND_MIGRATION'
                 });
             } catch (e) {
                 return setImmediate(cb, e.toString());
