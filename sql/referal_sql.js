@@ -49,9 +49,9 @@ let Referals = {
 
     lastMigratedId: 'SELECT max(id), count(*) from migrated_etps_users',
 
-    lastSendTrs: 'SELECT m."id" from trs t INNER JOIN migrated_etps_users m ON(t."recipientId" = m."address") order by t.timestamp DESC LIMIT 1',
+    lastSendTrs: 'SELECT m."id" from trs t INNER JOIN migrated_etps_users m ON(t."recipientId" = m."address" AND t."trsName" = \'SEND_MIGRATION\') order by t.timestamp DESC LIMIT 1',
 
-    lastMigrationTrs: 'SELECT m."id" from trs t INNER JOIN migrated_etps_users m ON(t."senderId" = m."address") order by t.timestamp DESC LIMIT 1',
+    lastMigrationTrs: 'SELECT m."id" from trs t INNER JOIN migrated_etps_users m ON(t."senderId" = m."address" AND t."trsName" = \'MIGRATION\') order by t.timestamp DESC LIMIT 1',
 
     countList: function (params) {
 		return [

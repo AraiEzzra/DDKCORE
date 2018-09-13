@@ -428,7 +428,7 @@ function Account(db, schema, logger, cb) {
 			conv: String,
 			immutable: true,
 			expression: 'UPPER("introducer")'
-		},
+		}
 	];
 
 	// Obtains fields from model

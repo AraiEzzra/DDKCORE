@@ -54,7 +54,9 @@ let Accounts = {
 
 	updateEtpsPassword: 'UPDATE etps_user SET "password" = ${password} WHERE "username" = ${username}',
 
-	checkSenderBalance: 'SELECT u_balance FROM mem_accounts WHERE "address" = ${sender_address}'
+	checkSenderBalance: 'SELECT u_balance FROM mem_accounts WHERE "address" = ${sender_address}',
+
+	getMigratedList: 'select m."address",e."username",m."totalFrozeAmount",m."balance" from migrated_etps_users e INNER JOIN mem_accounts m ON(e."address" = m."address" AND e.transferred_etp = 1) LIMIT ${limit} OFFSET ${offset}'
 };
 
 module.exports = Accounts;

@@ -702,7 +702,7 @@ d.run(function () {
 			//require('./helpers/accountCreateETPS').AccountCreateETPS(scope);
 		
 			cronjob.startJob('updateDataOnElasticSearch');
-			cronjob.startJob('checkFrozeOrders');
+			//cronjob.startJob('checkFrozeOrders');
 			cronjob.startJob('archiveLogFiles');
 			cronjob.startJob('unlockLockedUsers');
 			
