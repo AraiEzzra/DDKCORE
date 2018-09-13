@@ -4,6 +4,7 @@ let exceptions = require('../helpers/exceptions.js');
 let Diff = require('../helpers/diff.js');
 let _ = require('lodash');
 let sql = require('../sql/accounts.js');
+let slots = require('../helpers/slots.js');
 
 // Private fields
 let modules, library, self;
@@ -477,7 +478,8 @@ Vote.prototype.updateAndCheckVote = function (voteInfo, cb) {
 
 		if (voteType === 1) {
 			library.db.many(sql.checkWeeklyVote, {
-				senderId: senderId
+				senderId: senderId,
+				currentTime: slots.getTime()
 			})
 				.then(function (resp) {
 					if ((resp.length !== 0) && parseInt(resp[0].count) > 0) {
@@ -498,7 +500,9 @@ Vote.prototype.updateAndCheckVote = function (voteInfo, cb) {
 	function updateStakeOrder(found, voteType, waterCb) {
 		if (found) {
 			library.db.none(sql.updateStakeOrder, {
-				senderId: senderId
+				senderId: senderId,
+				milestone: constants.froze.vTime * 60,
+				currentTime: slots.getTime()
 			})
 				.then(function () {
 					library.logger.info(senderId + ': update stake orders isvoteDone and count');
