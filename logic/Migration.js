@@ -50,7 +50,7 @@ Migration.prototype.create = function (data, trs) {
 	trs.stakedAmount = data.totalFrozeAmount;
 	// trs.balance = data.amount;
 	trs.publicKey = data.sender.publicKey;
-	trs.trsName = "Migration";
+	trs.trsName = "MIGRATION";
 	return trs;
 };
 /**
