@@ -510,7 +510,6 @@ d.run(function () {
 		db: function (cb) {
 			let db = require('./helpers/database.js');
 			db.connect(config.db, logger, cb);
-
 		},
 		/**
 		 * It tries to connect with redis server based on config. provided in config.json file
@@ -672,7 +671,7 @@ d.run(function () {
 		 * @param {nodeStyleCallback} cb - Callback function with `scope.network`.
 		 */
 		listen: ['ready', function (scope, cb) {
-			scope.network.server.listen(scope.config.app.port, scope.config.address, function (err) {
+			scope.network.server.listen(scope.config.port, scope.config.address, function (err) {
 				scope.logger.info('ddk started: ' + scope.config.address + ':' + scope.config.app.port);
 
 				if (!err) {

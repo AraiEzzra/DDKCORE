@@ -450,7 +450,7 @@ Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
  * @implements {Frozen#disableFrozeOrders}
  * @return {Promise} {Resolve|Reject}
  */
-Frozen.prototype.checkFrozeOrders = function () {
+Frozen.prototype.checkFrozeOrders = function (cb) {
 
 
 	function getfrozeOrders(next) {
@@ -470,7 +470,9 @@ Frozen.prototype.checkFrozeOrders = function () {
 					next(null, freezeOrders);
 				}
 				
-			}).catch(function (err) {
+			})
+			.asCallback(done)
+			.catch(function (err) {
 				self.scope.logger.error(err);
 				next(err, null);
 			});
@@ -652,20 +654,23 @@ Frozen.prototype.checkFrozeOrders = function () {
 
 	async.auto({
 		getfrozeOrders: function (next) {
-			getfrozeOrders(next);
+			return getfrozeOrders(next);
 		},
 		checkAndUpdateMilestone: ['getfrozeOrders', function (results, next) {
-			checkAndUpdateMilestone(next, results.getfrozeOrders);
+			return checkAndUpdateMilestone(next, results.getfrozeOrders);
 		}],
 		deductFrozeAmountandSendReward: ['checkAndUpdateMilestone', function (results, next) {
-			deductFrozeAmountandSendReward(next, results.getfrozeOrders);
+			return deductFrozeAmountandSendReward(next, results.getfrozeOrders);
 		}],
 		disableFrozeOrder: ['deductFrozeAmountandSendReward', function (results, next) {
-			disableFrozeOrder(next, results.getfrozeOrders)
+			return disableFrozeOrder(next, results.getfrozeOrders)
 		}]
 	}, function (err, results) {
-		if (err)
+		if (err) {
 			self.scope.logger.error(err);
+			return null;
+		}
+		return null;
 	});
 
 };
