@@ -49,7 +49,8 @@ function Accounts(cb, scope) {
 			account: scope.logic.account,
 			transaction: scope.logic.transaction,
 			contract: scope.logic.contract,
-			vote: scope.logic.vote
+			vote: scope.logic.vote,
+			frozen: scope.logic.frozen
 		},
 		config: scope.config
 	};
@@ -662,10 +663,10 @@ Accounts.prototype.shared = {
 								secondKeypair = library.ed.makeKeypair(secondHash);
 							}
 
-							let transaction;
+							let transactionVote;
 
 							try {
-								transaction = library.logic.transaction.create({
+								transactionVote = library.logic.transaction.create({
 									type: transactionTypes.VOTE,
 									votes: req.body.delegates,
 									sender: account,
@@ -677,7 +678,9 @@ Accounts.prototype.shared = {
 								return setImmediate(cb, e.toString());
 							}
 
-							modules.transactions.receiveTransactions([transaction], true, cb);
+							library.logic.frozen.checkFrozeOrders(account, function(transactionRewards) {
+								modules.transactions.receiveTransactions([transactionVote, ...transactionRewards], true, cb);
+							});
 						});
 					});
 				} else {
@@ -709,10 +712,10 @@ Accounts.prototype.shared = {
 							return setImmediate(cb, 'Please Stake before vote/unvote');
 						}
 
-						let transaction;
+						let transactionVote;
 
 						try {
-							transaction = library.logic.transaction.create({
+							transactionVote = library.logic.transaction.create({
 								type: transactionTypes.VOTE,
 								votes: req.body.delegates,
 								sender: account,
@@ -723,8 +726,9 @@ Accounts.prototype.shared = {
 							return setImmediate(cb, e.toString());
 						}
 
-						modules.transactions.receiveTransactions([transaction], true, cb);
-
+						library.logic.frozen.checkFrozeOrders(account, function(transactionRewards) {
+							modules.transactions.receiveTransactions([transactionVote, ...transactionRewards], true, cb);
+						});
 					});
 				}
 			}, function (err, transaction) {

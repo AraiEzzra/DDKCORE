@@ -224,6 +224,7 @@ Vote.prototype.getBytes = function (trs) {
  * @todo delete unnecessary let parent = this
  */
 Vote.prototype.apply = function (trs, block, sender, cb) {
+	console.log('Vote apply');
 	let parent = this;
 
 	async.series([
@@ -280,6 +281,7 @@ Vote.prototype.apply = function (trs, block, sender, cb) {
  * @return {setImmediateCallback} cb, err
  */
 Vote.prototype.undo = function (trs, block, sender, cb) {
+	console.log('Vote undo');
 	let parent = this;
 	if (trs.asset.votes === null) { return setImmediate(cb); }
 
@@ -321,6 +323,7 @@ Vote.prototype.undo = function (trs, block, sender, cb) {
  * @todo delete unnecessary let parent = this
  */
 Vote.prototype.applyUnconfirmed = function (trs, sender, cb) {
+	console.log('Vote apply unconfirmed');
 	let parent = this;
 
 	async.series([
@@ -349,6 +352,7 @@ Vote.prototype.applyUnconfirmed = function (trs, sender, cb) {
  * @return {setImmediateCallback} cb, err
  */
 Vote.prototype.undoUnconfirmed = function (trs, sender, cb) {
+	console.log('Vote undo unconfirmed');
 	if (trs.asset.votes === null) { return setImmediate(cb); }
 
 	let votesInvert = Diff.reverse(trs.asset.votes);
