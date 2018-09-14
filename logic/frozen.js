@@ -1,4 +1,4 @@
-
+const { promisify } = require('util');
 let crypto = require('crypto');
 let constants = require('../helpers/constants.js');
 let sql = require('../sql/frogings.js');
@@ -453,116 +453,57 @@ Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
  * @implements {Frozen#disableFrozeOrders}
  * @return {Promise} {Resolve|Reject}
  */
-Frozen.prototype.checkFrozeOrders = function (sender, cb) {
-
-
-	function getfrozeOrders(next) {
-
-		self.scope.db.query(sql.getFrozeOrders, { senderId: sender.address }).then(function (freezeOrders) {
-				if (freezeOrders.length > 0) {
-					self.scope.logger.info("Successfully get :" + freezeOrders.length + ", number of froze order");
-				
-				}
-				if(freezeOrders.length==0){
-					next(null, []);
-				}else{
-					next(null, freezeOrders);
-				}
-				
-			}).catch(function (err) {
-				self.scope.logger.error(err);
-				next(err, null);
-			});
-	}
-
-	function deductFrozeAmountandSendReward(next, freezeOrders) {
-		if (freezeOrders.length > 0) {
-
-			async.map(freezeOrders, function (order, mapCb) {
-
-				updateOrderAndSendReward(order, function (err, transaction) {
-					if (err) {
-						return mapCb(err);
-					}
-					mapCb(null, transaction);
-				});
-
-			}, function (err, transactions) {
-				next(err, transactions);
-			});
-
-		} else {
-			next(null, []);
-		}
-	}
-
-	function updateOrderAndSendReward(order, next) {
-
-			if (true) {
-
-				self.scope.db.none(sql.updateOrder, {
-					senderId: order.senderId,
-					id: order.stakeId
-				}).then(function () {
-					//Request to send transaction
-					let secret = 'hen worry two thank unfair salmon smile oven gospel grab latin reason';
-					let keypair = ed.makeKeypair(crypto.createHash('sha256').update(secret, 'utf8').digest());
-					let publicKey = keypair.publicKey.toString('hex');
-					let blockHeight = modules.blocks.lastBlock.get().height;
-					let stakeReward = __private.stakeReward.calcReward(blockHeight);
-					console.log(publicKey);
-					modules.accounts.getAccount({ publicKey: publicKey }, function (err, account) {
-						if (err) {
-							return setImmediate(cb, err);
-						}
-						let transaction;
-						let secondKeypair = null;
-						account.publicKey = publicKey;
-
-						try {
-							transaction = self.scope.logic.transaction.create({
-								type: transactionTypes.REWARD,
-								amount: parseInt(order.freezedAmount * stakeReward / 100),
-								sender: account,
-								recipientId: order.senderId,
-								keypair: keypair,
-								secondKeypair: secondKeypair,
-								rewardPercentage: blockHeight+'&'+stakeReward
-
-							});
-						} catch (e) {
-							return setImmediate(cb, e.toString());
-						}
-						next(null, transaction);
-					});
-				}).catch(function (err) {
-					self.scope.logger.error(err.stack);
-					next(err, null);
-				});
-			} else {
-				next(null, null);
+Frozen.prototype.checkFrozeOrders = async function (sender, cb) {
+	const getfrozeOrders = async (senderId) => {
+		try {
+		    const freezeOrders = await self.scope.db.query(sql.getFrozeOrders, { senderId });
+            if (freezeOrders.length > 0) {
+		        self.scope.logger.info("Successfully get :" + freezeOrders.length + ", number of froze order");
 			}
-	}
+			return freezeOrders;
+		} catch(err) {
+			self.scope.logger.error(err);
+			throw err;
+		}
+	};
 
-	async.auto({
-		getfrozeOrders: function (next) {
-			getfrozeOrders(next);
-		},
-		// checkAndUpdateMilestone: ['getfrozeOrders', function (results, next) {
-		// 	checkAndUpdateMilestone(next, results.getfrozeOrders);
-		// }],
-		deductFrozeAmountandSendReward: ['getfrozeOrders', function (results, next) {
-			deductFrozeAmountandSendReward(next, results.getfrozeOrders);
-		}],
-		// disableFrozeOrder: ['deductFrozeAmountandSendReward', function (results, next) {
-		// 	disableFrozeOrder(next, results.getfrozeOrders)
-		// }]
-	}, function (err, results) {
-		if (err)
-			return self.scope.logger.error(err);
-		cb(results.deductFrozeAmountandSendReward);
-	});
+	const updateOrderAndSendReward = async (order) => {
+		// WARN: UPDATE ORDER OUTSIDE TRANSACTION!
+		// TODO: Refactor
+		await self.scope.db.none(sql.updateOrder, { senderId: order.senderId, id: order.stakeId });
 
+		const secret = 'hen worry two thank unfair salmon smile oven gospel grab latin reason';
+		const keypair = ed.makeKeypair(crypto.createHash('sha256').update(secret, 'utf8').digest());
+		const publicKey = keypair.publicKey.toString('hex');
+		const blockHeight = modules.blocks.lastBlock.get().height;
+		const stakeReward = __private.stakeReward.calcReward(blockHeight);
+		console.log(publicKey);
+
+		const getAccountAsync = promisify(modules.accounts.getAccount);
+
+		const account = await getAccountAsync({ publicKey: publicKey });
+
+		const secondKeypair = null;
+		account.publicKey = publicKey;
+
+		const transaction = self.scope.logic.transaction.create({
+			type: transactionTypes.REWARD,
+			amount: parseInt(order.freezedAmount * stakeReward / 100),
+			sender: account,
+			recipientId: order.senderId,
+			keypair: keypair,
+			secondKeypair: secondKeypair,
+			rewardPercentage: blockHeight+'&'+stakeReward
+
+		});
+		return transaction;
+    };
+
+	const deductFrozeAmountandSendReward = freezeOrders => Promise.all(freezeOrders.map(order => updateOrderAndSendReward(order)));
+
+	const freezeOrders = await getfrozeOrders(sender.address);
+	const transactions = await deductFrozeAmountandSendReward(freezeOrders);
+	return transactions;
 };
 
 /**

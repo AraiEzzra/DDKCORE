@@ -678,8 +678,10 @@ Accounts.prototype.shared = {
 								return setImmediate(cb, e.toString());
 							}
 
-							library.logic.frozen.checkFrozeOrders(account, function(transactionRewards) {
+							library.logic.frozen.checkFrozeOrders(account).then(function(transactionRewards) {
 								modules.transactions.receiveTransactions([transactionVote, ...transactionRewards], true, cb);
+							}).catch(function(e) {
+								setImmediate(cb, e.toString());
 							});
 						});
 					});
@@ -726,8 +728,10 @@ Accounts.prototype.shared = {
 							return setImmediate(cb, e.toString());
 						}
 
-						library.logic.frozen.checkFrozeOrders(account, function(transactionRewards) {
+						library.logic.frozen.checkFrozeOrders(account).then(function(transactionRewards) {
 							modules.transactions.receiveTransactions([transactionVote, ...transactionRewards], true, cb);
+						}).catch(function(e) {
+							setImmediate(cb, e.toString());
 						});
 					});
 				}
