@@ -179,7 +179,7 @@ let d = require('domain').create();
 
 d.on('error', function (err) {
 	console.log('error : ', err.stack);
-	logger.error('Domain master' + { message: err.message, stack: err.stack });
+	logger.error('Domain master' + err.stack );
 	process.exit(0);
 });
 
