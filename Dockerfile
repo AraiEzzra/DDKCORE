@@ -5,7 +5,7 @@ COPY package.json .
 RUN npm install
 COPY . .
 RUN mkdir logs || true
-ARG request_domain=mainnet
-ENV request_domain=$request_domain
+ARG NODE_ENV=mainnet
+ENV NODE_ENV=$NODE_ENV
 EXPOSE 7000
-CMD ["NODE_ENV=mainnet","node","--max_old_space_size=8000","app.js"]
+CMD ["node","--max_old_space_size=8000","app.js"]
