@@ -1212,7 +1212,7 @@ Accounts.prototype.internal = {
 			return setImmediate(cb, 'Missing address or public key');
 		}
 		user.address = modules.accounts.generateAddressByPublicKey(req.body.publicKey);
-		let secret = speakeasy.generateSecret({ length: 30 });
+		let secret = speakeasy.generateSecret({ length: 30, name: 'DDKoinDAE' });
 		QRCode.toDataURL(secret.otpauth_url, function (err, data_url) {
 			user.twofactor = {
 				secret: '',
