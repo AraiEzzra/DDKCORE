@@ -11,7 +11,7 @@
 */
 
 let elasticsearch = require('elasticsearch');
-let config = require('../config.json');
+let config = process.env.NODE_ENV === 'development' ? require('../config/default') : process.env.NODE_ENV === 'testnet' ? require('../config/testnet') : require('../config/mainnet');
 let connectionHost = config.elasticsearchHost || 'localhost:9200';
 
 let Client = new elasticsearch.Client({

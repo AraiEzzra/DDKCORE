@@ -10,7 +10,7 @@ let transactionTypes = require('../helpers/transactionTypes.js');
 let Vote = require('../logic/vote.js');
 let sql = require('../sql/accounts.js');
 let cache = require('./cache.js');
-let config = require('../config.json');
+let config = process.env.NODE_ENV === 'development' ? require('../config/default') : process.env.NODE_ENV === 'testnet' ? require('../config/testnet') : require('../config/mainnet');
 let jwt = require('jsonwebtoken');
 let QRCode = require('qrcode');
 let speakeasy = require('speakeasy');

@@ -7,7 +7,7 @@ let slots = require('../helpers/slots.js');
 
 // Requires
 node.bignum = require('../helpers/bignum.js');
-node.config = require('../config.json');
+let config = process.env.NODE_ENV === 'development' ? require('../config/default') : process.env.NODE_ENV === 'testnet' ? require('../config/testnet') : require('../config/mainnet');
 node.constants = require('../helpers/constants.js');
 node.dappCategories = require('../helpers/dappCategories.js');
 node.dappTypes = require('../helpers/dappTypes.js');
