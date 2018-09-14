@@ -32,7 +32,7 @@ function Config (configPath) {
 		configData = require('../config/mainnet');
 		//configData = fs.readFileSync(path.resolve(process.cwd(), (configPath || 'config/mainnet.js')), 'utf8');
 	}
-	
+	console.log("DDK-Config-Check : " + configData);
 
 	/* if (!configData.length) {
 		console.log('Failed to read config file');
