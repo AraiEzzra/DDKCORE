@@ -224,7 +224,7 @@ SendFreezeOrder.prototype.apply = function (trs, block, sender, cb) {
 		function (order, waterCb) {
 
 			self.sendFreezedOrder({
-				senderId: trs.senderID,
+				senderId: trs.senderId,
 				recipientId: trs.recipientId,
 				stakeId: trs.stakeId,
 				stakeOrder: order
