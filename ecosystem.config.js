@@ -10,7 +10,13 @@ module.exports = {
       watch: true,
       env: {
         NODE_ENV: 'development',
-      }
+      },
+      env_mainnet : {
+        NODE_ENV: 'mainnet'
+     },
+     env_testnet : {
+        NODE_ENV : 'testnet'
+     }
     }
   ],
 
