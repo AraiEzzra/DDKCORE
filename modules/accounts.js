@@ -1046,7 +1046,8 @@ Accounts.prototype.shared = {
 			})
 			.then(function (users) {
 				return setImmediate(cb, null, {
-					migratedList: users
+					migratedList: users,
+					count: users.length ? users[0].user_count : 0
 				});
 			}).catch(function (err) {
 				return setImmediate(cb, err);
