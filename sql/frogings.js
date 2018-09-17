@@ -26,7 +26,8 @@ let FrogingsSql = {
 
 	disableFrozeOrders: 'UPDATE stake_orders SET "status"=0, "nextVoteMilestone"=-1 where "status"=1 AND ${totalMilestone} = "rewardCount"',
 
-	checkAndUpdateMilestone: 'UPDATE stake_orders SET "nextVoteMilestone"= ("nextVoteMilestone" +${milestone}), "isVoteDone"= false where "status"=1 AND  ${currentTime} >= "nextVoteMilestone" ',
+    // RESTORE isVoteDone = false if really needed
+    checkAndUpdateMilestone: 'UPDATE stake_orders SET "nextVoteMilestone"= ("nextVoteMilestone" +${milestone}) where "status"=1 AND "senderId"=${senderId} AND ${currentTime} >= "nextVoteMilestone" ',
 
 	getfrozeOrder: 'SELECT "senderId" , "freezedAmount", "rewardCount", "nextVoteMilestone", "voteCount", "stakeId" FROM stake_orders WHERE "status"=1 AND ${currentTime} >= "nextVoteMilestone" ',
 
@@ -34,7 +35,7 @@ let FrogingsSql = {
 
 	getFrozeOrders: 'SELECT * FROM stake_orders WHERE "senderId"=${senderId}',
 
-	getActiveFrozeOrders: 'SELECT * FROM stake_orders WHERE "senderId"=${senderId} AND "status"=1',
+	getActiveFrozeOrders: 'SELECT * FROM stake_orders WHERE "senderId"=${senderId} AND "status"=1 AND ${currentTime} >= "nextVoteMilestone"',
 
 	getActiveFrozeOrder: 'SELECT * FROM stake_orders WHERE "senderId"=${senderId} AND "id"=${stakeId} AND "status"=1',
 

@@ -38,7 +38,8 @@ let Accounts = {
 
 	totalFrozeAmount: 'SELECT sum("freezedAmount") FROM stake_orders WHERE "id"=${account_id} and "status"=1',
 
-	updateStakeOrder: 'UPDATE stake_orders SET "isVoteDone"= true , "voteCount"="voteCount"+1 WHERE "senderId"=${senderId} AND "status"=1 AND "isVoteDone" <> true',
+	// RESTORE isVoteDone <> true if really needed
+	updateStakeOrder: 'UPDATE stake_orders SET "isVoteDone"= true , "voteCount"="voteCount"+1 WHERE "senderId"=${senderId} AND "status"=1',
 
 	checkWeeklyVote: 'SELECT count(*) FROM stake_orders WHERE "senderId"=${senderId} AND "status"=1 AND "isVoteDone"=false',
 

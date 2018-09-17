@@ -453,10 +453,12 @@ Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
  * @implements {Frozen#disableFrozeOrders}
  * @return {Promise} {Resolve|Reject}
  */
-Frozen.prototype.checkFrozeOrders = async function (sender, cb) {
-	const getfrozeOrders = async (senderId) => {
+Frozen.prototype.checkFrozeOrders = async function (sender) {
+	const getAccountAsync = promisify(modules.accounts.getAccount);
+
+	const getFrozeOrders = async (senderId) => {
 		try {
-		    const freezeOrders = await self.scope.db.query(sql.getFrozeOrders, { senderId });
+		    const freezeOrders = await self.scope.db.query(sql.getActiveFrozeOrders, { senderId, currentTime: slots.getTime() });
             if (freezeOrders.length > 0) {
 		        self.scope.logger.info("Successfully get :" + freezeOrders.length + ", number of froze order");
 			}
@@ -468,10 +470,11 @@ Frozen.prototype.checkFrozeOrders = async function (sender, cb) {
 	};
 
 	const updateOrderAndSendReward = async (order) => {
-		// WARN: UPDATE ORDER OUTSIDE TRANSACTION!
-		// TODO: Refactor
-		await self.scope.db.none(sql.updateOrder, { senderId: order.senderId, id: order.stakeId });
-
+		if (order.voteCount % 4 !== 3) {
+			return null;
+		}
+		
+		await self.scope.db.query(sql.checkAndUpdateMilestone, { senderId: sender.address, milestone: 1, currentTime: slots.getTime() });
 		const secret = 'hen worry two thank unfair salmon smile oven gospel grab latin reason';
 		const keypair = ed.makeKeypair(crypto.createHash('sha256').update(secret, 'utf8').digest());
 		const publicKey = keypair.publicKey.toString('hex');
@@ -479,9 +482,7 @@ Frozen.prototype.checkFrozeOrders = async function (sender, cb) {
 		const stakeReward = __private.stakeReward.calcReward(blockHeight);
 		console.log(publicKey);
 
-		const getAccountAsync = promisify(modules.accounts.getAccount);
-
-		const account = await getAccountAsync({ publicKey: publicKey });
+		const account = await getAccountAsync({ publicKey });
 
 		const secondKeypair = null;
 		account.publicKey = publicKey;
@@ -501,9 +502,9 @@ Frozen.prototype.checkFrozeOrders = async function (sender, cb) {
 
 	const deductFrozeAmountandSendReward = freezeOrders => Promise.all(freezeOrders.map(order => updateOrderAndSendReward(order)));
 
-	const freezeOrders = await getfrozeOrders(sender.address);
+	const freezeOrders = await getFrozeOrders(sender.address);
 	const transactions = await deductFrozeAmountandSendReward(freezeOrders);
-	return transactions;
+	return transactions.filter(t => !!t);
 };
 
 /**

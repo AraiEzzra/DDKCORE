@@ -487,7 +487,8 @@ Vote.prototype.updateAndCheckVote = function (voteInfo, cb) {
 					if ((resp.length !== 0) && parseInt(resp[0].count) > 0) {
 						return setImmediate(waterCb, null, true, voteType);
 					} else {
-						return setImmediate(waterCb, null, false, voteType);
+						// !!! REMOVE LATER, set false temporary
+						return setImmediate(waterCb, null, true, voteType);
 					}
 				})
 				.catch(function (err) {
@@ -495,7 +496,8 @@ Vote.prototype.updateAndCheckVote = function (voteInfo, cb) {
 					return setImmediate(waterCb, err.toString());
 				});
 		} else {
-			return setImmediate(waterCb, null, false, voteType);
+			// !!! REMOVE LATER, set false temporary
+			return setImmediate(waterCb, null, true, voteType);
 		}
 	}
 
