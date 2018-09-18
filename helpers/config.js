@@ -3,6 +3,8 @@ let path = require('path');
 let z_schema = require('./z_schema.js');
 let configSchema = require('../schema/config.js');
 let constants = require('../helpers/constants.js');
+let env = process.env;
+let configData = {};
 
 /**
  * Loads config.json file
@@ -12,14 +14,32 @@ let constants = require('../helpers/constants.js');
  * @returns {Object} configData
  */
 function Config (configPath) {
-	let configData = fs.readFileSync(path.resolve(process.cwd(), (configPath || 'config.json')), 'utf8');
 
-	if (!configData.length) {
+	// For development mode
+	if(env.NODE_ENV === 'development') {
+		configData = require('../config/default');
+		//configData = fs.readFileSync(path.resolve(process.cwd(), (configPath || 'config/default.js')), 'utf8');
+	}
+
+	// For staging environment
+	if(env.NODE_ENV === 'testnet') {
+		configData = require('../config/testnet');
+		//configData = fs.readFileSync(path.resolve(process.cwd(), (configPath || 'config/testnet.js')), 'utf8');
+	}
+
+	// For production 
+	if(env.NODE_ENV === 'mainnet') {
+		configData = require('../config/mainnet');
+		//configData = fs.readFileSync(path.resolve(process.cwd(), (configPath || 'config/mainnet.js')), 'utf8');
+	}
+	
+
+	/* if (!configData.length) {
 		console.log('Failed to read config file');
 		process.exit(1);
 	} else {
-		configData = JSON.parse(configData);
-	}
+		configData = configData;
+	} */
 
 	let validator = new z_schema();
 	let valid = validator.validate(configData, configSchema.config);

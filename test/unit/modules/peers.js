@@ -7,7 +7,7 @@ let sinon = require('sinon');
 let randomString = require('randomstring');
 let _  = require('lodash');
 
-let config = require('../../config.json');
+let config = process.env.NODE_ENV === 'development' ? require('../config/default') : process.env.NODE_ENV === 'testnet' ? require('../config/testnet') : require('../config/mainnet');
 let randomPeer = require('../../common/objectStubs').randomPeer;
 let modulesLoader = require('../../common/initModule').modulesLoader;
 
@@ -269,7 +269,7 @@ describe('peers', function () {
 
 		it('should update peers during onBlockchainReady', function (done) {
 			sinon.stub(peers, 'discover').callsArgWith(0, null);
-			let config = require('../../config.json');
+			let config = process.env.NODE_ENV === 'development' ? require('../config/default') : process.env.NODE_ENV === 'testnet' ? require('../config/testnet') : require('../config/mainnet');
 			let initialPeers = _.clone(config.peers.list);
 			if (initialPeers.length === 0) {
 				config.peers.list.push(randomPeer);

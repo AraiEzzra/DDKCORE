@@ -1,8 +1,5 @@
 let constants = require('../helpers/constants.js');
 let sql = require('../sql/frogings.js');
-let slots = require('../helpers/slots.js');
-let config = require('../config.json');
-let request = require('request');
 let async = require('async');
 
 // Private fields
