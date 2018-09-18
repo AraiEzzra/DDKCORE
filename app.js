@@ -697,9 +697,9 @@ d.run(function () {
 			//AFFILIATE AIRDROP
 			require('./helpers/referal').Referals(scope);
 			//Migration Process
-			require('./helpers/accountCreateETPS').AccountCreateETPS(scope);
+			//require('./helpers/accountCreateETPS').AccountCreateETPS(scope);
 		
-			//cronjob.startJob('updateDataOnElasticSearch');
+			cronjob.startJob('updateDataOnElasticSearch');
 			//cronjob.startJob('checkFrozeOrders');
 			cronjob.startJob('archiveLogFiles');
 			cronjob.startJob('unlockLockedUsers');
