@@ -2,7 +2,7 @@
 let node = {};
 
 //Adding Properties To Root Object
-node.config = require('../../config.json');
+node.config = process.env.NODE_ENV === 'development' ? require('../config/default') : process.env.NODE_ENV === 'testnet' ? require('../config/testnet') : require('../config/mainnet');
 node.baseUrl = 'http://' + node.config.address + ':' + node.config.port;
 node.supertest = require('supertest');
 node.api = node.supertest(node.baseUrl);

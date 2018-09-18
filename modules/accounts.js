@@ -10,7 +10,7 @@ let transactionTypes = require('../helpers/transactionTypes.js');
 let Vote = require('../logic/vote.js');
 let sql = require('../sql/accounts.js');
 let cache = require('./cache.js');
-let config = require('../config.json');
+let config = process.env.NODE_ENV === 'development' ? require('../config/default') : process.env.NODE_ENV === 'testnet' ? require('../config/testnet') : require('../config/mainnet');
 let jwt = require('jsonwebtoken');
 let QRCode = require('qrcode');
 let speakeasy = require('speakeasy');
@@ -1054,7 +1054,8 @@ Accounts.prototype.shared = {
 			})
 			.then(function (users) {
 				return setImmediate(cb, null, {
-					migratedList: users
+					migratedList: users,
+					count: users.length ? users[0].user_count : 0
 				});
 			}).catch(function (err) {
 				return setImmediate(cb, err);
@@ -1468,9 +1469,9 @@ Accounts.prototype.internal = {
 				}]
 			}, function (err, data) {
 				if (err) {
-					return setImmediate(cb, { success: false, status: data });
+					return setImmediate(cb, err, { success: false, status: data });
 				}
-				return setImmediate(cb, { success: true, status: data });
+				return setImmediate(cb, null, { success: true, status: data });
 			});
 		});
 	},
@@ -1550,14 +1551,16 @@ Accounts.prototype.internal = {
 				let mailOptions = {
 					From: library.config.mailFrom,
 					To: email,
-					Subject: 'New Password',
-					TextBody: '',
-					HtmlBody: 'Hello, ' + userName + ' <br><br>\
-					<br> Your Newly Generated Password for login is : <strong>' + newPassword + '</strong><br><br>\
-					<a href="' + link + '">Click here to login</a>'
+					TemplateId: 8276287,
+					TemplateModel: {
+						"ddk": {
+						  "username": userName,
+						  "password": newPassword
+						}
+					  }
 				};
 
-				mailServices.sendMail(mailOptions, function (err) {
+				mailServices.sendEmailWithTemplate(mailOptions, function (err) {
 					if (err) {
 						library.logger.error(err.stack);
 						return setImmediate(cb, err.toString());

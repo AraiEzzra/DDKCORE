@@ -1,5 +1,5 @@
 let async = require('async');
-let config = require('../config.json');
+let config = process.env.NODE_ENV === 'development' ? require('../config/default') : process.env.NODE_ENV === 'testnet' ? require('../config/testnet') : require('../config/mainnet');
 let constants = require('../helpers/constants.js');
 let jobsQueue = require('../helpers/jobsQueue.js');
 let transactionTypes = require('../helpers/transactionTypes.js');

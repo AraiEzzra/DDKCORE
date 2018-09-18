@@ -71,7 +71,7 @@ Frozen.prototype.create = function (data, trs) {
 	trs.recipientId = null;
 	trs.asset.stakeOrder = {
 		stakedAmount: data.freezedAmount,
-		nextVoteMilestone: (date.setMinutes(date.getMinutes() + constants.froze.vTime)) / 1000,
+		nextVoteMilestone: (date.setMinutes(date.getMinutes())) / 1000,
 		startTime: trs.timestamp
 	};
 	trs.stakedAmount = data.freezedAmount;

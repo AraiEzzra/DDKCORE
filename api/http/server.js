@@ -3,7 +3,7 @@
 let Router = require('../../helpers/router');
 let Accounts = require('../../modules/accounts');
 let tokenValidator = require('../../tokenValidator');
-let config = require('../../config');
+let config = process.env.NODE_ENV === 'development' ? require('../../config/default') : process.env.NODE_ENV === 'testnet' ? require('../../config/testnet') : require('../../config/mainnet');
 let jwt = require('jsonwebtoken');
 let jwtSecret = process.env.JWT_SECRET;
 let cache = require('../../modules/cache');
