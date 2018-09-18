@@ -440,12 +440,13 @@ Accounts.prototype.shared = {
 					cache.prototype.isExists(REDIS_KEY_USER_INFO_HASH, function (err, isExist) {
 						
 						if (!isExist) {
+							cache.prototype.setJsonForKey(REDIS_KEY_USER_INFO_HASH, accountData.address);
 							self.referralLinkChain(req.body.referal, account.address, function (error) {
 								if (error) {
+									cache.prototype.deleteJsonForKey(REDIS_KEY_USER_INFO_HASH);
 									library.logger.error("Referral API Error : "+error);
 									return setImmediate(cb, error.toString());
 								} else {
-									cache.prototype.setJsonForKey(REDIS_KEY_USER_INFO_HASH, accountData.address);
 									let data = {
 										address: accountData.address,
 										u_isDelegate: 0,
