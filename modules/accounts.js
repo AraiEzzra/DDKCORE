@@ -160,9 +160,7 @@ Accounts.prototype.getAccount = function (filter, fields, cb) {
 Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 
 	let referrer_address = referalLink;
-	if (!referrer_address) {
-		referrer_address = '';
-	}
+
 	let level = [];
 
 	if (referrer_address == address) {
@@ -173,7 +171,7 @@ Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 	async.series([
 
 		function (callback) {
-			if (referrer_address != '') {
+			if (referrer_address) {
 				library.db.one(sql.validateReferSource, {
 					referSource: referrer_address
 				}).then(function (user) {
@@ -192,7 +190,7 @@ Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 			}
 		},
 		function (callback) {
-			if (referrer_address != '') {
+			if (referrer_address) {
 				library.logic.account.findReferralLevel(referrer_address, function (err, resp) {
 					if (err) {
 						return setImmediate(cb, err);
@@ -216,17 +214,30 @@ Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 				level: level
 			};
 
-			library.logic.account.insertLevel(levelDetails, function (err) {
-				if (err) {
-					return setImmediate(cb, err);
+			library.db.query(sql.checkReferStatus, {
+				address: levelDetails.address
+			}).then(function (user) {
+
+				if (user[0].address) {
+					callback();
+				} else {
+					library.logic.account.insertLevel(levelDetails, function (err) {
+						if (err) {
+							console.log(err);
+							return setImmediate(cb, err);
+						}
+						level.length = 0;
+						callback();
+					});
 				}
-				level.length = 0;
-				callback();
+
+			}).catch(function (err) {
+				return setImmediate(cb, err);
 			});
 		}
 	], function (err) {
 		if (err) {
-			setImmediate(cb, err);
+			return setImmediate(cb, err);
 		}
 
 		return setImmediate(cb, null);
@@ -443,6 +454,7 @@ Accounts.prototype.shared = {
 							cache.prototype.setJsonForKey(REDIS_KEY_USER_INFO_HASH, accountData.address);
 							self.referralLinkChain(req.body.referal, account.address, function (error) {
 								if (error) {
+									cache.prototype.deleteJsonForKey(REDIS_KEY_USER_INFO_HASH);
 									library.logger.error("Referral API Error : "+error);
 									return setImmediate(cb, error.toString());
 								} else {
@@ -1046,7 +1058,8 @@ Accounts.prototype.shared = {
 			})
 			.then(function (users) {
 				return setImmediate(cb, null, {
-					migratedList: users
+					migratedList: users,
+					count: users.length ? users[0].user_count : 0
 				});
 			}).catch(function (err) {
 				return setImmediate(cb, err);

@@ -57,15 +57,18 @@ exports.updateDataOnElasticSearch = {
 						let bulk = utils.makeBulk(rows, tableName);
 						utils.indexall(bulk, tableName)
 							.then(function (result) {
+								return null;
 								//FIXME: Do further processing on successful indexing on elasticsearch server
 							})
 							.catch(function (err) {
 								library.logger.error('elasticsearch error :'+ err);
+								return null;
 							});
 					}
 				})
 				.catch(function (err) {
 					library.logger.error('database error : '+ err);
+					return null;
 				});
 		});
 	},
@@ -148,9 +151,11 @@ exports.unlockLockedUsers = {
 								library.logger.info(data.address + ' account is unlocked');
 								library.cache.client.del('userInfo_' + data.address);
 								library.cache.client.del('userTimeHash_' + data.endTime);
+								return null;
 							})
 							.catch(function (err) {
 								library.logger.error(err.stack);
+								return null;
 							});
 					}
 				});

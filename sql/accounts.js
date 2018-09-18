@@ -56,7 +56,9 @@ let Accounts = {
 
 	checkSenderBalance: 'SELECT u_balance FROM mem_accounts WHERE "address" = ${sender_address}',
 
-	getMigratedList: 'select m."address",e."username",m."totalFrozeAmount",m."balance" from migrated_etps_users e INNER JOIN mem_accounts m ON(e."address" = m."address" AND e.transferred_etp = 1) LIMIT ${limit} OFFSET ${offset}'
+	getMigratedList: 'select m."address",e."username",m."totalFrozeAmount",m."balance",count(*) OVER() AS user_count from migrated_etps_users e INNER JOIN mem_accounts m ON(e."address" = m."address" AND e.transferred_etp = 1) LIMIT ${limit} OFFSET ${offset}',
+
+	checkReferStatus: 'SELECT count(*)::int as address from referals WHERE "address"= ${address}'
 };
 
 module.exports = Accounts;
