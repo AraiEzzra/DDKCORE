@@ -14,7 +14,7 @@ let library = {},
 
 exports.Referals = function (scope) {
     library = scope;
-}
+};
 
 /**
  * Get filtered list of rewards history
