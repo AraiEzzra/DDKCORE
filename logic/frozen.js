@@ -473,8 +473,6 @@ Frozen.prototype.checkFrozeOrders = async function (sender) {
 		if (order.voteCount % 4 !== 3) {
 			return null;
 		}
-		
-		await self.scope.db.query(sql.checkAndUpdateMilestone, { senderId: sender.address, milestone: 1, currentTime: slots.getTime() });
 		const secret = 'hen worry two thank unfair salmon smile oven gospel grab latin reason';
 		const keypair = ed.makeKeypair(crypto.createHash('sha256').update(secret, 'utf8').digest());
 		const publicKey = keypair.publicKey.toString('hex');
