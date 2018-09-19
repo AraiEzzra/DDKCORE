@@ -20,7 +20,6 @@ let tokenValidator = require('../../tokenValidator');
 	- get /count
 	- get /getCirculatingSupply
 	- get /totalSupply
-	- post /migrateData 
 	- post /existingETPSUser/validate
 	- post /verifyUserToComment
  * - Private API:
@@ -60,7 +59,6 @@ function AccountsHttpApi (accountsModule, app) {
 		'get /count':'totalAccounts',
 		'get /getCirculatingSupply':'getCirculatingSupply',
 		'get /totalSupply' : 'totalSupply',
-		'post /migrateData' : 'migrateData', 
 		'post /existingETPSUser/validate' : 'validateExistingUser',
 		'post /verifyUserToComment': 'verifyUserToComment',
 		'post /senderBalance': 'senderAccountBalance',

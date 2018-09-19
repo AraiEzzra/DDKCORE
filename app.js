@@ -701,7 +701,7 @@ d.run(function () {
 			//Migration Process
 			//require('./helpers/accountCreateETPS').AccountCreateETPS(scope);
 		
-			cronjob.startJob('updateDataOnElasticSearch');
+			//cronjob.startJob('updateDataOnElasticSearch');
 			//cronjob.startJob('checkFrozeOrders');
 			cronjob.startJob('archiveLogFiles');
 			cronjob.startJob('unlockLockedUsers');
