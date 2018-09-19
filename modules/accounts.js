@@ -496,7 +496,7 @@ Accounts.prototype.shared = {
 										account: accountData
 									});
 								}).catch(function (err) {
-									library.logger.error(err.stack);
+									library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 									return setImmediate(cb, err);
 								});
 							} else {
@@ -805,7 +805,7 @@ Accounts.prototype.shared = {
 				return setImmediate(cb, null, data);
 			})
 			.catch(function (err) {
-				library.logger.error(err.stack);
+				library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 				return setImmediate(cb, err.toString());
 			});
 	},
@@ -830,7 +830,7 @@ Accounts.prototype.shared = {
 				});
 			})
 			.catch(function (err) {
-				library.logger.error(err.stack);
+				library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 				return setImmediate(cb, err.toString());
 			});
 		});
@@ -864,7 +864,7 @@ Accounts.prototype.shared = {
 				.then(function (orders) {
 					next(null, orders);
 				}).catch(function (err) {
-					library.logger.error(err.stack);
+					library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 					next(err, null);
 				});
 		}
@@ -888,7 +888,7 @@ Accounts.prototype.shared = {
 					next(null, null);
 				})
 				.catch(function (err) {
-					library.logger.error(err.stack);
+					library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 					next(err, null);
 				});
 		}
@@ -921,7 +921,7 @@ Accounts.prototype.shared = {
 						next(null, 0);
 					}
 				}).catch(function (err) {
-					library.logger.error(err.stack);
+					library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 					next(err, null);
 				});
 		}
@@ -942,7 +942,7 @@ Accounts.prototype.shared = {
 					next(null, null);
 				})
 				.catch(function (err) {
-					library.logger.error(err.stack);
+					library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 					next(err, null);
 				});
 		}
@@ -958,7 +958,7 @@ Accounts.prototype.shared = {
 					next(null, null);
 				})
 				.catch(function (err) {
-					library.logger.error(err.stack);
+					library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 					next(err, null);
 				});
 		}
@@ -1011,12 +1011,12 @@ Accounts.prototype.shared = {
 					userInfo: user
 				});
 			}).catch(function (err) {
-				library.logger.error(err.stack);
+				library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 				return setImmediate(cb, 'Invalid username or password');
 			});
 
 		}).catch(function (err) {
-			library.logger.error(err.stack);
+			library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 			return setImmediate(cb, 'Invalid username or password');
 		});
 
@@ -1174,12 +1174,12 @@ Accounts.prototype.internal = {
 										return setImmediate(cb, null, { account: account });
 									})
 									.catch(function (err) {
-										library.logger.error(err.stack);
+										library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 										return setImmediate(cb, err);
 									});
 							})
 							.catch(function (err) {
-								library.logger.error(err.stack);
+								library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 								return setImmediate(cb, 'Transaction#checkAccountStatus error');
 							});
 					}
@@ -1575,12 +1575,12 @@ Accounts.prototype.internal = {
 					});
 				});
 			}).catch(function (err) {
-				library.logger.error(err.stack);
+				library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 				return setImmediate(cb, err);
 			});
 
 		}).catch(function (err) {
-			library.logger.error(err.stack);
+			library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 			return setImmediate(cb, 'Invalid username or email');
 		});
 

@@ -115,7 +115,7 @@ Process.prototype.getCommonBlock = function (peer, height, cb) {
 				}
 			}).catch(function (err) {
 				// SQL error occurred
-				library.logger.error(err.stack);
+				library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 				return setImmediate(waterCb, 'Blocks#getCommonBlock error');
 			});
 		}
@@ -192,7 +192,7 @@ Process.prototype.loadBlocksOffset = function (limit, offset, verify, cb) {
 				return setImmediate(cb, err, modules.blocks.lastBlock.get());
 			});
 		}).catch(function (err) {
-			library.logger.error(err.stack);
+			library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 			return setImmediate(cb, 'Blocks#loadBlocksOffset error');
 		});
 	}, cb);
@@ -339,9 +339,9 @@ Process.prototype.generateBlock = function (keypair, timestamp, cb) {
 				previousBlock: modules.blocks.lastBlock.get(),
 				transactions: ready
 			});
-		} catch (e) {
-			library.logger.error(e.stack);
-			return setImmediate(cb, e);
+		} catch (err) {
+			library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
+			return setImmediate(cb, err);
 		}
 
 		// Start block processing - broadcast: true, saveBlock: true

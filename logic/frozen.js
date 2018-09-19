@@ -220,12 +220,12 @@ Frozen.prototype.undo = function (trs, block, sender, cb) {
 					return setImmediate(cb);
 				})
 				.catch(function (err) {
-					self.scope.logger.error(err.stack);
+					self.scope.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 					return setImmediate(cb, 'Stake#DeductStakeAmount from mem_account error');
 				});
 		})
 		.catch(function (err) {
-			self.scope.logger.error(err.stack);
+			self.scope.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 			return setImmediate(cb, 'Stake#deleteOrder error');
 		});
 };
@@ -493,7 +493,7 @@ Frozen.prototype.checkFrozeOrders = function (cb) {
 					next(null, freezeOrders);
 				})
 				.catch(function (err) {
-					self.scope.logger.error(err.stack);
+					self.scope.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 					next(err, null);
 				});
 		} else {
@@ -603,7 +603,7 @@ Frozen.prototype.checkFrozeOrders = function (cb) {
 						});
 					});
 				}).catch(function (err) {
-					self.scope.logger.error(err.stack);
+					self.scope.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 					next(err, null);
 				});
 			} else {
@@ -621,7 +621,7 @@ Frozen.prototype.checkFrozeOrders = function (cb) {
 				}).then(function () {
 					_next(null, null);
 				}).catch(function (err) {
-					self.scope.logger.error(err.stack);
+					self.scope.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 					_next(err, null);
 				});
 			} else {
@@ -644,7 +644,7 @@ Frozen.prototype.checkFrozeOrders = function (cb) {
 
 				})
 				.catch(function (err) {
-					self.scope.logger.error(err.stack);
+					self.scope.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 					next(err, null);
 				});
 		} else {
@@ -704,7 +704,7 @@ Frozen.prototype.updateFrozeAmount = function (userData, cb) {
 						return setImmediate(cb, null);
 					})
 					.catch(function (err) {
-						self.scope.logger.error(err.stack);
+						self.scope.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 						return setImmediate(cb, err.toString());
 					});
 			} else {
@@ -712,7 +712,7 @@ Frozen.prototype.updateFrozeAmount = function (userData, cb) {
 			}
 		})
 		.catch(function (err) {
-			self.scope.logger.error(err.stack);
+			self.scope.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 			return setImmediate(cb, err.toString());
 		});
 

@@ -246,11 +246,11 @@ __private.list = function (filter, cb) {
 				return setImmediate(cb, err.message);
 			});
 		}).catch(function (err) {
-			library.logger.error(err.stack);
+			library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 			return setImmediate(cb, 'Transactions#list error');
 		});
 	}).catch(function (err) {
-		library.logger.error(err.stack);
+		library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 		return setImmediate(cb, 'Transactions#list error');
 	});
 };
@@ -272,7 +272,7 @@ __private.getById = function (id, cb) {
 
 		return setImmediate(cb, null, transacton);
 	}).catch(function (err) {
-		library.logger.error(err.stack);
+		library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 		return setImmediate(cb, 'Transactions#getById error');
 	});
 };
@@ -306,7 +306,7 @@ __private.getVotesById = function (transaction, cb) {
 
 		return setImmediate(cb, null, transaction);
 	}).catch(function (err) {
-		library.logger.error(err.stack);
+		library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 		return setImmediate(cb, 'Transactions#getVotesById error');
 	});
 };

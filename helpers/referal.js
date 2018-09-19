@@ -86,11 +86,11 @@ __private.list = function (filter, cb) {
 
             return setImmediate(cb, null, data);
         }).catch(function (err) {
-            library.logger.error(err.stack);
+            library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
             return setImmediate(cb, 'Rewards#list error');
         });
     }).catch(function (err) {
-        library.logger.error(err.stack);
+        library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
         return setImmediate(cb, 'Rewards#list error');
     });
 
@@ -316,7 +316,7 @@ module.exports.api = function (app) {
             });
 
         }).catch(function (err) {
-            library.logger.error(err.stack);
+            library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
             return res.status(400).json({
                 success: false,
                 error: err
