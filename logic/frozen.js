@@ -485,7 +485,7 @@ Frozen.prototype.checkFrozeOrders = async function (sender) {
 		const secondKeypair = null;
 		account.publicKey = publicKey;
 
-		const transaction = self.scope.logic.transaction.create({
+    return self.scope.logic.transaction.create({
 			type: transactionTypes.REWARD,
 			amount: parseInt(order.freezedAmount * stakeReward / 100),
 			sender: account,
@@ -493,16 +493,35 @@ Frozen.prototype.checkFrozeOrders = async function (sender) {
 			keypair: keypair,
 			secondKeypair: secondKeypair,
 			rewardPercentage: blockHeight+'&'+stakeReward
-
 		});
-		return transaction;
-    };
+	};
 
 	const deductFrozeAmountandSendReward = freezeOrders => Promise.all(freezeOrders.map(order => updateOrderAndSendReward(order)));
 
+	const VOTE_COUNT_LIMIT = 27;
+
+  const disableFrozeOrder = async (freezeOrders) => {
+    let ordersIds = '';
+
+    freezeOrders.map((order) => {
+      if (order.voteCount >= VOTE_COUNT_LIMIT)
+        ordersIds += !ordersIds ? order.stakeId : ',' + order.stakeId
+    });
+
+    await self.scope.db.none(sql.unstackOrders, {
+      stakeIds: ordersIds,
+      currentTime: slots.getTime(),
+      totalMilestone: constants.froze.endTime / constants.froze.milestone
+    });
+
+    self.scope.logger.info("Successfully unstack orders.");
+  };
+
 	const freezeOrders = await getFrozeOrders(sender.address);
-	const transactions = await deductFrozeAmountandSendReward(freezeOrders);
-	return transactions.filter(t => !!t);
+	const transactionsReward = await deductFrozeAmountandSendReward(freezeOrders);
+  await disableFrozeOrder(freezeOrders);
+
+  return transactionsReward.filter(t => !!t);
 };
 
 /**
