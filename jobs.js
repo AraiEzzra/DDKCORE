@@ -61,13 +61,13 @@ exports.updateDataOnElasticSearch = {
 								//FIXME: Do further processing on successful indexing on elasticsearch server
 							})
 							.catch(function (err) {
-								library.logger.error('elasticsearch error :'+ err);
+								library.logger.error('elasticsearch error :'+ err.message);
 								return null;
 							});
 					}
 				})
 				.catch(function (err) {
-					library.logger.error('database error : '+ err);
+					library.logger.error('database error : '+ err.message);
 					return null;
 				});
 		});
