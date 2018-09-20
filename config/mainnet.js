@@ -51,7 +51,7 @@ module.exports = {
         enabled: true,
         list: (env.MAINNET_PEERS || '').split(',').map(peer => peer.split(':')).map(([ip, port]) => ({ ip, port })),
         access: {
-            blackList: []
+            blackList: (env.MAINNET_PEERS_BLACKLIST || '').split(','),
         },
         options: {
             limits: {
