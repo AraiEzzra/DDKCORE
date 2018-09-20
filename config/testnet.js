@@ -59,7 +59,7 @@ module.exports = {
         enabled: true,
         list:  (env.TESTNET_PEERS || '').split(',').map(peer => peer.split(':')).map(([ip, port]) => ({ ip, port })),
         access: {
-            blackList: []
+            blackList: (env.TESTNET_PEERS_BLACKLIST || '').split(','),
         },
         options: {
             limits: {
