@@ -256,15 +256,13 @@ Vote.prototype.apply = function (trs, block, sender, cb) {
 		function (seriesCb) {
 			self.updateAndCheckVote(
 				{
+					timestamp: trs.timestamp,
 					votes: trs.asset.votes,
 					senderId: trs.senderId
-				}
-				, function (err) {
-					if (err) {
-						return setImmediate(seriesCb, err);
-					}
-					return setImmediate(seriesCb, null);
-				});
+				}).then(
+					() => setImmediate(seriesCb, null),
+					err => setImmediate(seriesCb, err),
+				);
 		}
 	], cb);
 };
@@ -465,77 +463,37 @@ Vote.prototype.ready = function (trs, sender) {
  * @return {null|err} return null if success else err 
  * 
  */
-Vote.prototype.updateAndCheckVote = function (voteInfo, cb) {
+Vote.prototype.updateAndCheckVote = async (voteInfo, cb) => {
 	let votes = voteInfo.votes;
 	let senderId = voteInfo.senderId;
-
-	function checkUpvoteDownvote(waterCb) {
-
-		if ((votes[0])[0] === '+') {
-			return setImmediate(waterCb, null, 1);
-		} else {
-			return setImmediate(waterCb, null, 0);
-		}
-	}
-
-	function checkWeeklyVote(voteType, waterCb) {
-
-		if (voteType === 1) {
-			library.db.many(sql.checkWeeklyVote, {
+	let timestamp = voteInfo.timestamp;
+    console.log('TIMESTAMP', timestamp);
+	const voteType = (votes[0][0] === '+') ? 1 : 0;
+    
+	const checkWeeklyVoteAndUpdate = async (t) => {
+		// UNCOMMENT LATER
+		if (true) { // if (voteType === 1)
+			const resp = await t.many(sql.checkWeeklyVote, {
 				senderId: senderId,
-				currentTime: slots.getTime()
-			})
-				.then(function (resp) {
-					if ((resp.length !== 0) && parseInt(resp[0].count) > 0) {
-						return setImmediate(waterCb, null, true, voteType);
-					} else {
-						// !!! REMOVE LATER, set false temporary
-						return setImmediate(waterCb, null, true, voteType);
-					}
-				})
-				.catch(function (err) {
-					library.logger.error(err.stack);
-					return setImmediate(waterCb, err.toString());
+				currentTime: timestamp
+			});
+			if ((resp.length !== 0) && parseInt(resp[0].count) > 0) {
+				await t.none(sql.updateStakeOrder, {
+					senderId: senderId,
+					milestone: constants.froze.vTime * 60,
+					currentTime: timestamp
 				});
-		} else {
-			// !!! REMOVE LATER, set false temporary
-			return setImmediate(waterCb, null, true, voteType);
+				library.logger.info(senderId + ': update stake orders isvoteDone and count');
+			}
 		}
+	};
+
+    try {
+	    await library.db.tx(checkWeeklyVoteAndUpdate);
+	} catch (err) {
+		library.logger.warn(err);
+		throw err;
 	}
-
-	function updateStakeOrder(found, voteType, waterCb) {
-		if (found) {
-			library.db.none(sql.updateStakeOrder, {
-				senderId: senderId,
-				milestone: constants.froze.vTime * 60,
-				currentTime: slots.getTime()
-			})
-				.then(function () {
-					library.logger.info(senderId + ': update stake orders isvoteDone and count');
-					return setImmediate(waterCb, null, voteType);
-				})
-				.catch(function (err) {
-					library.logger.error(err.stack);
-					return setImmediate(waterCb, err.toString());
-				});
-		} else {
-			return setImmediate(waterCb, null, voteType);
-		}
-
-	}
-
-	async.waterfall([
-		checkUpvoteDownvote,
-		checkWeeklyVote,
-		updateStakeOrder
-	], function (err) {
-		if (err) {
-			library.logger.warn(err);
-			return setImmediate(cb, err);
-		}
-		return setImmediate(cb, null);
-	});
-
 };
 
 /**
