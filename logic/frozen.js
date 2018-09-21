@@ -66,7 +66,7 @@ __private.stakeReward = new StakeReward();
  * @returns {trs} trs
  */
 Frozen.prototype.create = function (data, trs) {
-	
+
 	let date = new Date(trs.timestamp * 1000);
 	trs.recipientId = null;
 	trs.asset.stakeOrder = {
@@ -217,7 +217,7 @@ Frozen.prototype.undo = function (trs, block, sender, cb) {
 			self.scope.db.none(sql.deductFrozeAmount,
 				{
 					senderId: trs.senderId,
-					FrozeAmount:trs.stakedAmount
+					FrozeAmount: trs.stakedAmount
 				})
 				.then(function () {
 					return setImmediate(cb);
@@ -296,7 +296,7 @@ Frozen.prototype.verify = function (trs, sender, cb) {
 		return setImmediate(cb, 'Invalid stake amount');
 	}
 
-	if((amount%1)!= 0){
+	if ((amount % 1) != 0) {
 		return setImmediate(cb, 'Invalid stake amount: Decimal value');
 	}
 
@@ -381,7 +381,7 @@ Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 								keypair: keypair,
 								secondKeypair: secondKeypair,
 								trsName: "CHAINREF",
-								rewardPercentage: "level"+(i+1)+"&"+Reward.level[i]
+								rewardPercentage: "level" + (i + 1) + "&" + Reward.level[i]
 							});
 						} catch (e) {
 							return setImmediate(cb, e.toString());
@@ -458,12 +458,12 @@ Frozen.prototype.checkFrozeOrders = async function (sender) {
 
 	const getFrozeOrders = async (senderId) => {
 		try {
-		    const freezeOrders = await self.scope.db.query(sql.getActiveFrozeOrders, { senderId, currentTime: slots.getTime() });
-            if (freezeOrders.length > 0) {
-		        self.scope.logger.info("Successfully get :" + freezeOrders.length + ", number of froze order");
+			const freezeOrders = await self.scope.db.query(sql.getActiveFrozeOrders, { senderId, currentTime: slots.getTime() });
+			if (freezeOrders.length > 0) {
+				self.scope.logger.info("Successfully get :" + freezeOrders.length + ", number of froze order");
 			}
 			return freezeOrders;
-		} catch(err) {
+		} catch (err) {
 			self.scope.logger.error(err);
 			throw err;
 		}
@@ -485,24 +485,49 @@ Frozen.prototype.checkFrozeOrders = async function (sender) {
 		const secondKeypair = null;
 		account.publicKey = publicKey;
 
-		const transaction = self.scope.logic.transaction.create({
+		return self.scope.logic.transaction.create({
 			type: transactionTypes.REWARD,
 			amount: parseInt(order.freezedAmount * stakeReward / 100),
 			sender: account,
 			recipientId: order.senderId,
 			keypair: keypair,
 			secondKeypair: secondKeypair,
-			rewardPercentage: blockHeight+'&'+stakeReward
-
+			rewardPercentage: blockHeight + '&' + stakeReward
 		});
-		return transaction;
-    };
+	};
 
-	const deductFrozeAmountandSendReward = freezeOrders => Promise.all(freezeOrders.map(order => updateOrderAndSendReward(order)));
+	const deductFrozeAmountandSendReward = (orders) =>
+		Promise.all(orders.map(order => updateOrderAndSendReward(order)));
+
+	const deductFrozeAmount = (orders) =>
+		Promise.all(orders.map(order => self.scope.db.none(sql.deductFrozeAmount, {
+			FrozeAmount: order.freezedAmount,
+			senderId: sender.address
+		})));
+
+	const VOTE_COUNT_LIMIT = 27;
+
+	const disableFrozeOrder = async (freezeOrders) => {
+		const unstakeOrders = freezeOrders.filter(order => order.voteCount >= VOTE_COUNT_LIMIT);
+
+		const ordersIds = unstakeOrders.map(order => order.stakeId).join(',');
+
+		await self.scope.db.none(sql.unstackOrders, {
+			stakeIds: ordersIds,
+			currentTime: slots.getTime(),
+			totalMilestone: constants.froze.endTime / constants.froze.milestone
+		});
+		self.scope.logger.info("Successfully unstack orders.");
+
+		return unstakeOrders;
+	};
 
 	const freezeOrders = await getFrozeOrders(sender.address);
-	const transactions = await deductFrozeAmountandSendReward(freezeOrders);
-	return transactions.filter(t => !!t);
+	const transactionsReward = await deductFrozeAmountandSendReward(freezeOrders);
+	const unstakeOrders = await disableFrozeOrder(freezeOrders);
+	await deductFrozeAmount(unstakeOrders);
+
+	return transactionsReward.filter(t => !!t);
 };
 
 /**
