@@ -13,6 +13,8 @@ let transactionTypes = require('../helpers/transactionTypes.js');
 let Transfer = require('../logic/transfer.js');
 let ReferTransfer = require('../logic/referralTransaction.js');
 let slots = require('../helpers/slots');
+let trsCache = require('memory-cache');
+let expCache = new trsCache.Cache();
 
 // Private fields
 let __private = {};
@@ -643,39 +645,52 @@ Transactions.prototype.onBind = function (scope) {
  * @see {@link http://apidocjs.com/}
  */
 Transactions.prototype.internal = {
-	getTransactionHistory: function(req, cb) {
 
-		//let trsDate=[],trsCount=[];
+	getTransactionHistory: function (req, cb) {
 
-		let  fortnightBack = new Date(+new Date - 12096e5);
+		if (expCache.get('trsHistoryCache')) {
+			return setImmediate(cb, null, {
+				success: true,
+				trsData: expCache.get('trsHistoryCache'),
+				info: 'caching'
+			});
+		} else {
 
-		fortnightBack.setHours(0,0,0,0);	
+			let fortnightBack = new Date(+new Date - 12096e5);
 
-		let startTimestamp = slots.getTime(fortnightBack);
-		
-		let endDate = new Date(+new Date - (60 * 60 * 24 * 1000));
-		
-		endDate.setHours(0,0,0,0);
-		
-		let endTimestamp = slots.getTime(endDate);
+			fortnightBack.setHours(0, 0, 0, 0);
 
-		library.db.query(sql.getTransactionHistory, {
-			startTimestamp: startTimestamp + epochTime,
-			endTimestamp: endTimestamp + epochTime,
-			epochTime: epochTime
-		})
-		.then(function(trsHistory) {
+			let startTimestamp = slots.getTime(fortnightBack);
 
-			//for(let i=0;i<trsHistory.length;i++) {
-			//	trsDate[i] = new Date(trsHistory[i].time).toDateString();
-			//	trsCount[i] = trsHistory[i].created;
-			//}
+			let endDate = new Date(+new Date - (60 * 60 * 24 * 1000));
 
-			return setImmediate(cb, null, {success: true, trsData: trsHistory });
-		})
-		.catch(function(err) {
-			return setImmediate(cb, {success: false, err: err});
-		});
+			endDate.setHours(0, 0, 0, 0);
+
+			let endTimestamp = slots.getTime(endDate);
+
+			library.db.query(sql.getTransactionHistory, {
+				startTimestamp: startTimestamp + epochTime,
+				endTimestamp: endTimestamp + epochTime,
+				epochTime: epochTime
+			})
+				.then(function (trsHistory) {
+
+					let leftTime = (24 - new Date().getUTCHours()) * 60 * 60 * 1000;
+
+					expCache.put('trsHistoryCache', trsHistory, leftTime);
+
+					return setImmediate(cb, null, {
+						success: true,
+						trsData: trsHistory
+					});
+				})
+				.catch(function (err) {
+					return setImmediate(cb, {
+						success: false,
+						err: err
+					});
+				});
+		}
 	}
 };
 
