@@ -214,13 +214,13 @@ Frozen.prototype.applyUnconfirmed = function (trs, sender, cb) {
  */
 Frozen.prototype.undo = function (trs, block, sender, cb) {
 	console.log('Frozen undo');
-    const undoUnstake = async () => {
+	const undoUnstake = async () => {
 		const orders = await self.scope.db.query(sql.selectOrder, { id: trs.id, address: trs.senderId });
 		const order = orders[0];
 		await self.scope.db.query(sql.enableOrder, { id: trs.id, address: trs.senderId });
 		await self.scope.db.query(sql.incrementFrozeAmount, { freezedAmount: order.freezedAmount, address: trs.senderId });
 	};
-    const undoStake = async () => {
+	const undoStake = async () => {
 		const orders = await self.scope.db.query(sql.selectOrder, { id: trs.id, address: trs.senderId });
 		const order = orders[0];
 		await self.scope.db.query(sql.RemoveOrder, { id: trs.id, address: trs.senderId });
@@ -249,13 +249,13 @@ Frozen.prototype.undo = function (trs, block, sender, cb) {
 Frozen.prototype.apply = function (trs, block, sender, cb) {
 	console.log('Frozen undo');
 
-    const applyUnstake = async () => {
+	const applyUnstake = async () => {
 		const orders = await self.scope.db.query(sql.selectOrder, { id: trs.id, address: trs.senderId });
 		const order = orders[0];
 		await self.scope.db.query(sql.disableOrder, { id: trs.id, address: trs.senderId });
 		await self.scope.db.query(sql.decrementFrozeAmount, { freezedAmount: order.freezedAmount, address: trs.senderId });
 	};
-    const applyStake = async () => {
+	const applyStake = async () => {
 		// create order
 		const orders = await self.scope.db.query(sql.selectOrder, { id: trs.id, address: trs.senderId });
 		const order = orders[0];
@@ -394,35 +394,27 @@ Frozen.prototype.checkFrozeOrders = async function (sender) {
 	const deductFrozeAmountandSendReward = (orders) =>
 		Promise.all(orders.map(order => updateOrderAndSendReward(order)));
 
-	const deductFrozeAmount = (orders) =>
-		Promise.all(orders.map(order => self.scope.db.none(sql.deductFrozeAmount, {
-			FrozeAmount: order.freezedAmount,
-			senderId: sender.address
-		})));
-
 	const VOTE_COUNT_LIMIT = 27;
 
-	const disableFrozeOrder = async (freezeOrders) => {
-		const unstakeOrders = freezeOrders.filter(order => order.voteCount >= VOTE_COUNT_LIMIT);
-
-		const ordersIds = unstakeOrders.map(order => order.stakeId).join(',');
-
-		await self.scope.db.none(sql.unstackOrders, {
-			stakeIds: ordersIds,
-			currentTime: slots.getTime(),
-			totalMilestone: constants.froze.endTime / constants.froze.milestone
+	const disableFrozeOrder = async (order) => {
+		const secret = 'obvious illness service health witness useful correct brave asthma food install next';
+		const keypair = ed.makeKeypair(crypto.createHash('sha256').update(secret, 'utf8').digest());
+		const transaction = library.logic.transaction.create({
+			type: transactionTypes.STAKE,
+			freezedAmount: -order.freezedAmount,
+			sender,
+			keypair: keypair,
+			secondKeypair: null,
 		});
-		self.scope.logger.info("Successfully unstack orders.");
-
-		return unstakeOrders;
+		return transaction;
 	};
+	const disableFrozeOrders = (order) => Promise.all(orders.map(order => disableFrozeOrder(order)));
 
 	const freezeOrders = await getFrozeOrders(sender.address);
-	const transactionsReward = await deductFrozeAmountandSendReward(freezeOrders);
-	const unstakeOrders = await disableFrozeOrder(freezeOrders);
-	await deductFrozeAmount(unstakeOrders);
+	const rewardTransactions = await deductFrozeAmountandSendReward(freezeOrders);
+	const unstakeTransactions = await disableFrozeOrders(freezeOrders.filter(o => o.voteCount >= VOTE_COUNT_LIMIT));
 
-	return transactionsReward.filter(t => !!t);
+	return [...rewardTransactions, ...unstakeTransactions].filter(t => !!t);
 };
 
 /**
