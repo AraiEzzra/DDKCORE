@@ -307,13 +307,13 @@ d.run(function () {
 			app.use(compression({ level: 9 }));
 			app.use(cors());
 			app.options('*', cors());
-			let socketIO;
+			//let socketIO;
 
 			let server = require('http').createServer(app);
 			let io = require('socket.io')(server);
-			if (!scope.config.ssl.enabled) {
+			/* if (!scope.config.ssl.enabled) {
 				socketIO = require('socket.io')(server);
-			}
+			} */
 			
 			let privateKey, certificate, https, https_io;
 
