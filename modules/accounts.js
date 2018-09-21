@@ -19,6 +19,9 @@ let async = require('async');
 let nextBonus = 0;
 let Mnemonic = require('bitcore-mnemonic');
 let mailServices = require('../helpers/postmark');
+let dbcache = require('memory-cache');
+let newCache = new dbcache.Cache();
+let frogings_sql = require('../sql/frogings');
 
 // Private fields
 let modules, library, self, __private = {}, shared = {};
@@ -160,9 +163,7 @@ Accounts.prototype.getAccount = function (filter, fields, cb) {
 Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 
 	let referrer_address = referalLink;
-	if (!referrer_address) {
-		referrer_address = '';
-	}
+
 	let level = [];
 
 	if (referrer_address == address) {
@@ -173,7 +174,7 @@ Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 	async.series([
 
 		function (callback) {
-			if (referrer_address != '') {
+			if (referrer_address) {
 				library.db.one(sql.validateReferSource, {
 					referSource: referrer_address
 				}).then(function (user) {
@@ -192,7 +193,7 @@ Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 			}
 		},
 		function (callback) {
-			if (referrer_address != '') {
+			if (referrer_address) {
 				library.logic.account.findReferralLevel(referrer_address, function (err, resp) {
 					if (err) {
 						return setImmediate(cb, err);
@@ -216,17 +217,30 @@ Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 				level: level
 			};
 
-			library.logic.account.insertLevel(levelDetails, function (err) {
-				if (err) {
-					return setImmediate(cb, err);
+			library.db.query(sql.checkReferStatus, {
+				address: levelDetails.address
+			}).then(function (user) {
+
+				if (user[0].address) {
+					callback();
+				} else {
+					library.logic.account.insertLevel(levelDetails, function (err) {
+						if (err) {
+							console.log(err);
+							return setImmediate(cb, err);
+						}
+						level.length = 0;
+						callback();
+					});
 				}
-				level.length = 0;
-				callback();
+
+			}).catch(function (err) {
+				return setImmediate(cb, err);
 			});
 		}
 	], function (err) {
 		if (err) {
-			setImmediate(cb, err);
+			return setImmediate(cb, err);
 		}
 
 		return setImmediate(cb, null);
@@ -368,6 +382,35 @@ Accounts.prototype.isLoaded = function () {
 	return !!modules;
 };
 
+
+
+Accounts.prototype.circulatingSupply = function(cb) {
+	let initialUnmined = config.ddkSupply.totalSupply - config.initialPrimined.total;
+	//let publicAddress = library.config.sender.address;
+	let hash = Buffer.from(JSON.parse(library.config.users[0].keys));
+	let keypair = library.ed.makeKeypair(hash);
+	let publicKey = keypair.publicKey.toString('hex');
+	self.getAccount({publicKey: publicKey}, function(err, account) {
+		library.db.one(sql.getCurrentUnmined, { address: account.address })
+		.then(function (currentUnmined) {
+			let circulatingSupply = config.initialPrimined.total + initialUnmined - currentUnmined.balance;
+
+			cache.prototype.getJsonForKey('minedContributorsBalance', function (err, contributorsBalance) {
+				let totalCirculatingSupply = parseInt(contributorsBalance) + circulatingSupply;
+
+				return setImmediate(cb, null, {
+					circulatingSupply: totalCirculatingSupply
+				});
+			});
+		})
+		.catch(function (err) {
+			library.logger.error(err.stack);
+			return setImmediate(cb, err.toString());
+		});
+	});
+}
+
+
 // Shared API
 /**
  * @todo implement API comments with apidoc.
@@ -443,6 +486,7 @@ Accounts.prototype.shared = {
 							cache.prototype.setJsonForKey(REDIS_KEY_USER_INFO_HASH, accountData.address);
 							self.referralLinkChain(req.body.referal, account.address, function (error) {
 								if (error) {
+									cache.prototype.deleteJsonForKey(REDIS_KEY_USER_INFO_HASH);
 									library.logger.error("Referral API Error : "+error);
 									return setImmediate(cb, error.toString());
 								} else {
@@ -1052,6 +1096,60 @@ Accounts.prototype.shared = {
 			}).catch(function (err) {
 				return setImmediate(cb, err);
 			});
+	},
+
+	getDashboardDDKData: function (req, cb) {
+
+		if (newCache.get('ddkCache')) {
+
+			return setImmediate(cb, {
+				success: true,
+				data: newCache.get('ddkCache'),
+				info: 'Caching'
+			});
+		} else {
+
+			function getDDKData(t) {
+				let promises = [
+					t.one(frogings_sql.countStakeholders),
+					t.one(frogings_sql.getTotalStakedAmount),
+					t.one(sql.getTotalAccount)
+				];
+
+				return t.batch(promises);
+			}
+
+			library.db.task(getDDKData)
+				.then(function (results) {
+
+					self.circulatingSupply(function (err, data) {
+						if (err) {
+							return setImmediate(cb, err);
+						}
+
+						let ddkData = {
+							countStakeholders: results[0].count,
+							totalDDKStaked: results[1].sum,
+							totalAccountHolders: results[2].count,
+							totalCirculatingSupply: data.circulatingSupply
+						};
+
+						newCache.put('ddkCache', ddkData, 40000);
+
+						return setImmediate(cb, {
+							success: true,
+							data: ddkData,
+							info: 'No caching'
+						});
+
+					});
+
+				})
+				.catch(function (err) {
+					return setImmediate(cb, err);
+				});
+		}
+
 	}
 };
 
