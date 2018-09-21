@@ -310,7 +310,7 @@ d.run(function () {
 			//let socketIO;
 
 			let server = require('http').createServer(app);
-			//let io = require('socket.io')(server);
+			let io = require('socket.io')(server);
 			/* if (!scope.config.ssl.enabled) {
 				socketIO = require('socket.io')(server);
 			} */
@@ -328,11 +328,11 @@ d.run(function () {
 				}, app);
 
 				https_io = require('socket.io')(https);
-				socketIO = require('socket.io')(https);
+				//socketIO = require('socket.io')(https);
 			}
 
 			// handled socket's connection event
-			socketIO.on('connection', function (socket) {
+			io.on('connection', function (socket) {
 				//IIFE: function to accept new socket.id in sockets array.
 				function acceptSocket(user, sockets) {
 					let userFound = false;
@@ -346,7 +346,7 @@ d.run(function () {
 					if (!userFound && user.address) {
 						sockets.push(user);
 					}
-					socketIO.sockets.emit('updateConnected', sockets.length);
+					io.sockets.emit('updateConnected', sockets.length);
 				}
 
 				socket.on('setUserAddress', function (data) {
@@ -362,7 +362,7 @@ d.run(function () {
 					sockets.forEach(function (user, index) {
 						if (user.socketId == socket.id) {
 							sockets.splice(index, 1);
-							socketIO.sockets.emit('updateConnected', sockets.length);
+							io.sockets.emit('updateConnected', sockets.length);
 						}
 					});
 				});
