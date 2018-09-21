@@ -508,15 +508,9 @@ Frozen.prototype.checkFrozeOrders = async function (sender) {
 	const VOTE_COUNT_LIMIT = 27;
 
 	const disableFrozeOrder = async (freezeOrders) => {
-		const unstakeOrders = [];
-		let ordersIds = '';
+		const unstakeOrders = freezeOrders.filter(order.voteCount >= VOTE_COUNT_LIMIT);
 
-		freezeOrders.map((order) => {
-			if (order.voteCount >= VOTE_COUNT_LIMIT) {
-				unstakeOrders.push(order);
-				ordersIds += !ordersIds ? order.stakeId : ',' + order.stakeId
-			}
-		});
+		const ordersIds = unstakeOrders.map(order => order.stakeId).join(',');
 
 		await self.scope.db.none(sql.unstackOrders, {
 			stakeIds: ordersIds,
