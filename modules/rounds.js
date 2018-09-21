@@ -77,7 +77,7 @@ Rounds.prototype.flush = function (round, cb) {
 	library.db.none(sql.flush, {round: round}).then(function () {
 		return setImmediate(cb);
 	}).catch(function (err) {
-		library.logger.error(err.stack);
+		library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 		return setImmediate(cb, 'Rounds#flush error');
 	});
 };
@@ -155,7 +155,7 @@ Rounds.prototype.backwardTick = function (block, previousBlock, done) {
 			library.db.tx(BackwardTick).then(function () {
 				return setImmediate(cb);
 			}).catch(function (err) {
-				library.logger.error(err.stack);
+				library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 				return setImmediate(cb, err);
 			});
 		}

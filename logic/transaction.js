@@ -305,7 +305,7 @@ Transaction.prototype.countById = function (trs, cb) {
 	this.scope.db.one(sql.countById, { id: trs.id }).then(function (row) {
 		return setImmediate(cb, null, row.count);
 	}).catch(function (err) {
-		this.scope.logger.error(err.stack);
+		this.scope.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 		return setImmediate(cb, 'Transaction#countById error');
 	});
 };
@@ -401,8 +401,8 @@ Transaction.prototype.process = function (trs, sender, requester, cb) {
 
 	try {
 		txId = this.getId(trs);
-	} catch (e) {
-		this.scope.logger.error(e.stack);
+	} catch (err) {
+		this.scope.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 		return setImmediate(cb, 'Failed to get transaction id');
 	}
 
@@ -435,7 +435,7 @@ Transaction.prototype.getAccountStatus = function(trs, cb) {
 		} 			 
 		return setImmediate(cb, null, row.status);
 	}).catch(function (err) {		 
-		this.scope.logger.error(err.stack);	 
+		this.scope.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);	 
 		return setImmediate(cb, 'Transaction#checkAccountStatus error');	
 	});	
 };
@@ -539,9 +539,9 @@ Transaction.prototype.verify = function (trs, sender, requester, cb) {
 	try {
 		valid = false;
 		valid = this.verifySignature(trs, (trs.requesterPublicKey || trs.senderPublicKey), trs.signature);
-	} catch (e) {
-		this.scope.logger.error(e.stack);
-		return setImmediate(cb, e.toString());
+	} catch (err) {
+		this.scope.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
+		return setImmediate(cb, err.toString());
 	}
 
 	if (!valid) {

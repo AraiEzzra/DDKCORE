@@ -431,7 +431,7 @@ Frogings.prototype.shared = {
 						});
 					}
 				}).catch(function (err) {
-					library.logger.error(err.stack);
+					library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 					return setImmediate(cb, err);
 				});
 			});

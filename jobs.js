@@ -61,13 +61,13 @@ exports.updateDataOnElasticSearch = {
 								//FIXME: Do further processing on successful indexing on elasticsearch server
 							})
 							.catch(function (err) {
-								library.logger.error('elasticsearch error :'+ err.message);
+								library.logger.error('Elasticsearch error :'+ err.message);
 								return null;
 							});
 					}
 				})
 				.catch(function (err) {
-					library.logger.error('database error : '+ err.message);
+					library.logger.error('Database error : '+ err.message + ' , Error query : '+ err.query);
 					return null;
 				});
 		});
@@ -154,7 +154,7 @@ exports.unlockLockedUsers = {
 								return null;
 							})
 							.catch(function (err) {
-								library.logger.error(err.stack);
+								library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 								return null;
 							});
 					}
