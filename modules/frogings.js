@@ -429,7 +429,7 @@ Frogings.prototype.shared = {
 				if (err) {
 					return setImmediate(cb, err);
 				}
-				library.network.io.sockets.emit('updateTotalStakeAmount', null);
+				library.network.io.sockets.emit('stake/create', null);
 
 				library.db.one(ref_sql.checkBalance, {
 					sender_address: constants.airdropAccount
