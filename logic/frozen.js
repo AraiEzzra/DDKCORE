@@ -75,8 +75,11 @@ Frozen.prototype.create = function (data, trs) {
 		startTime: trs.timestamp
 	};
 	trs.stakedAmount = data.freezedAmount;
-	trs.trsName = 'STAKE';
+	if (data.stakeId) {
+		trs.stakeId = data.stakeId;
+	}
 	console.log('Frozen CREATE');
+	trs.trsName = trs.stakedAmount > 0 ? 'STAKE' : 'UNSTAKE';
 	return trs;
 };
 
@@ -211,30 +214,26 @@ Frozen.prototype.applyUnconfirmed = function (trs, sender, cb) {
  */
 Frozen.prototype.undo = function (trs, block, sender, cb) {
 	console.log('Frozen undo');
+    const undoUnstake = async () => {
+		const orders = await self.scope.db.query(sql.selectOrder, { id: trs.id, address: trs.senderId });
+		const order = orders[0];
+		await self.scope.db.query(sql.enableOrder, { id: trs.id, address: trs.senderId });
+		await self.scope.db.query(sql.incrementFrozeAmount, { freezedAmount: order.freezedAmount, address: trs.senderId });
+	};
+    const undoStake = async () => {
+		const orders = await self.scope.db.query(sql.selectOrder, { id: trs.id, address: trs.senderId });
+		const order = orders[0];
+		await self.scope.db.query(sql.RemoveOrder, { id: trs.id, address: trs.senderId });
+		await self.scope.db.query(sql.decrementFrozeAmount, { freezedAmount: order.freezedAmount, address: trs.senderId });
+	};
+	const doUndo = trs.name === 'STAKE' ? undoStake : undoUnstake;
 
-	self.scope.db.none(sql.RemoveOrder,
-		{
-			id: trs.id,
-			address: trs.senderId
-		})
-		.then(function () {
-			self.scope.db.none(sql.deductFrozeAmount,
-				{
-					senderId: trs.senderId,
-					FrozeAmount: trs.stakedAmount
-				})
-				.then(function () {
-					return setImmediate(cb);
-				})
-				.catch(function (err) {
-					self.scope.logger.error(err.stack);
-					return setImmediate(cb, 'Stake#DeductStakeAmount from mem_account error');
-				});
-		})
-		.catch(function (err) {
-			self.scope.logger.error(err.stack);
-			return setImmediate(cb, 'Stake#deleteOrder error');
-		});
+	doUndo().then(() => {
+		return setImmediate(cb);
+	}, (err) => {
+		self.scope.logger.error(err.stack);
+		return setImmediate(cb, 'Stake#DeductStakeAmount from mem_account error');
+	});
 };
 
 /**
@@ -250,15 +249,24 @@ Frozen.prototype.undo = function (trs, block, sender, cb) {
 Frozen.prototype.apply = function (trs, block, sender, cb) {
 	console.log('Frozen undo');
 
-	self.updateFrozeAmount({
-		account: sender,
-		freezedAmount: trs.stakedAmount
-	}, function (err) {
-		if (err) {
-			return setImmediate(cb, err);
-		}
+    const applyUnstake = async () => {
+		const orders = await self.scope.db.query(sql.selectOrder, { id: trs.id, address: trs.senderId });
+		const order = orders[0];
+		await self.scope.db.query(sql.disableOrder, { id: trs.id, address: trs.senderId });
+		await self.scope.db.query(sql.decrementFrozeAmount, { freezedAmount: order.freezedAmount, address: trs.senderId });
+	};
+    const applyStake = async () => {
+		// create order
+		const orders = await self.scope.db.query(sql.selectOrder, { id: trs.id, address: trs.senderId });
+		const order = orders[0];
+		await self.scope.db.query(sql.incrementFrozeAmount, { freezedAmount: order.freezedAmount, address: trs.senderId });
+	};
+	const doApply = trs.name === 'STAKE' ? applyStake : applyUnstake;
 
+	doApply().then(() => {
 		return setImmediate(cb, null, trs);
+	}, (err) => {
+		return setImmediate(cb, err);
 	});
 };
 
@@ -297,10 +305,6 @@ Frozen.prototype.process = function (trs, sender, cb) {
 Frozen.prototype.verify = function (trs, sender, cb) {
 	let amount = trs.stakedAmount / 100000000;
 
-	if (amount < 1) {
-		return setImmediate(cb, 'Invalid stake amount');
-	}
-
 	if ((amount % 1) != 0) {
 		return setImmediate(cb, 'Invalid stake amount: Decimal value');
 	}
@@ -333,120 +337,6 @@ Frozen.prototype.bind = function (accounts, rounds, blocks, transactions) {
 		transactions: transactions
 	};
 };
-
-/**
- * Distributing the Staking Reward to their sponsors.
- * Award being sent on level basis.
- * Disable refer option when main account balance becomes zero.
- * @param {address} - Address which get the staking reward.
- * @param {reward_amount} - Reward amount received.
- * @param {cb} - callback function.
- * @author - Satish Joshi
- */
-
-Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
-
-	let sponsor_address = address;
-	let chainReward = {};
-	let i = 0;
-	let reward, sender_balance;
-
-	self.scope.db.query(reward_sql.referLevelChain, {
-		address: sponsor_address
-	}).then(function (user) {
-
-		if (user.length != 0 && user[0].level != null) {
-
-			let chain_length = user[0].level.length;
-
-			async.eachSeries(user[0].level, function (sponsorId, callback) {
-
-				chainReward[sponsorId] = (((Reward.level[i]) * reward_amount) / 100);
-
-				let hash = Buffer.from(JSON.parse(self.scope.config.users[6].keys));
-				let keypair = self.scope.ed.makeKeypair(hash);
-				let publicKey = keypair.publicKey.toString('hex');
-				self.scope.balancesSequence.add(function (reward_cb) {
-					modules.accounts.getAccount({
-						publicKey: publicKey
-					}, function (err, account) {
-						if (err) {
-							return setImmediate(cb, err);
-						}
-						let transaction;
-						let secondKeypair = null;
-						account.publicKey = publicKey;
-
-						try {
-							transaction = self.scope.logic.transaction.create({
-								type: transactionTypes.REFER,
-								amount: chainReward[sponsorId],
-								sender: account,
-								recipientId: sponsorId,
-								keypair: keypair,
-								secondKeypair: secondKeypair,
-								trsName: "CHAINREF",
-								rewardPercentage: "level" + (i + 1) + "&" + Reward.level[i]
-							});
-						} catch (e) {
-							return setImmediate(cb, e.toString());
-						}
-						modules.transactions.receiveTransactions([transaction], true, reward_cb);
-						i++;
-					});
-				}, function (err, transaction) {
-					if (err) {
-						let subString = err.toString().indexOf('balance:');
-						if (subString != -1) {
-							sender_balance = parseFloat(err.split('balance:')[1]);
-							if (!sender_balance) {
-								cache.prototype.setJsonForKey("referStatus", false);
-								self.scope.logger.info("Staking Reward Info : " + err);
-								return setImmediate(cb, null);
-							}
-							if (i == chain_length && reward != true) {
-								self.scope.logger.info("Staking Reward Info : " + err);
-							}
-						} else {
-							return callback(err);
-						}
-					} else {
-						reward = true;
-						(async function () {
-							await self.scope.db.none(reward_sql.updateRewardTypeTransaction, {
-								trsId: transaction[0].id,
-								sponsorAddress: sponsor_address,
-								introducer_address: sponsorId,
-								reward: chainReward[sponsorId],
-								level: "Level " + (i),
-								transaction_type: "CHAINREF",
-								time: slots.getTime()
-							}).then(function () {
-
-							}).catch(function (err) {
-								return setImmediate(cb, err);
-							});
-						}());
-					}
-					callback();
-				});
-
-			}, function (err) {
-				if (err) {
-					return setImmediate(cb, err);
-				}
-				return setImmediate(cb, null);
-			});
-
-		} else {
-			self.scope.logger.info("Staking Reward Info : Referral chain is empty");
-			return setImmediate(cb, null);
-		}
-	}).catch(function (err) {
-		return setImmediate(cb, err);
-	});
-}
-
 
 
 /**
