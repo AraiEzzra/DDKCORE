@@ -30,6 +30,8 @@ let FrogingsSql = {
 	
 	enableOrder: 'UPDATE stake_orders SET "status"=1 WHERE "id" = ${id} AND "senderId"=${address}',
 
+	selectOrder: 'SELECT * FROM stake_orders WHERE "id" = ${id} AND "senderId"=${address}',
+
 	getFrozeAmount: 'SELECT "totalFrozeAmount" FROM mem_accounts WHERE "address"=${senderId}',
 
 	disableFrozeOrders: 'UPDATE stake_orders SET "status"=0, "nextVoteMilestone"=-1 where "status"=1 AND ${totalMilestone} = "rewardCount"',
