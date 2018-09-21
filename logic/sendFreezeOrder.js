@@ -30,6 +30,7 @@ SendFreezeOrder.prototype.create = function (data, trs) {
 	trs.stakeId = data.stakeId;
 	trs.amount = parseInt(data.freezedAmount);
 	trs.trsName = "SENDSTAKE";
+	console.log('SendFreezeOrder CREATE');
 	return trs;
 };
 
@@ -54,14 +55,17 @@ SendFreezeOrder.prototype.objectNormalize = function (trs) {
 };
 
 SendFreezeOrder.prototype.undoUnconfirmed = function (trs, sender, cb) {
+	console.log('SendFreezeOrder undoUnconfirmed');
 	return setImmediate(cb);
 };
 
 SendFreezeOrder.prototype.applyUnconfirmed = function (trs, sender, cb) {
+	console.log('SendFreezeOrder applyUnconfirmed');
 	return setImmediate(cb);
 };
 
 SendFreezeOrder.prototype.undo = function (trs, block, sender, cb) {
+	console.log('SendFreezeOrder undo');
 
 	async.series({
 		addFrozeAmount: function (seriesCb) {
@@ -189,6 +193,7 @@ SendFreezeOrder.prototype.undo = function (trs, block, sender, cb) {
 };
 
 SendFreezeOrder.prototype.apply = function (trs, block, sender, cb) {
+	console.log('SendFreezeOrder apply');
 
 	async.waterfall([
 		function (waterCb) {

@@ -76,6 +76,7 @@ Frozen.prototype.create = function (data, trs) {
 	};
 	trs.stakedAmount = data.freezedAmount;
 	trs.trsName = 'STAKE';
+	console.log('Frozen CREATE');
 	return trs;
 };
 
@@ -181,6 +182,7 @@ Frozen.prototype.objectNormalize = function (trs) {
  * @return {function} cb
  */
 Frozen.prototype.undoUnconfirmed = function (trs, sender, cb) {
+	console.log('Frozen undoUnconfirmed');
 	return setImmediate(cb);
 };
 
@@ -194,6 +196,7 @@ Frozen.prototype.undoUnconfirmed = function (trs, sender, cb) {
  * @return {function} cb
  */
 Frozen.prototype.applyUnconfirmed = function (trs, sender, cb) {
+	console.log('Frozen applyUnconfirmed');
 	return setImmediate(cb);
 };
 
@@ -207,6 +210,7 @@ Frozen.prototype.applyUnconfirmed = function (trs, sender, cb) {
  * @return {function} {cb, err}
  */
 Frozen.prototype.undo = function (trs, block, sender, cb) {
+	console.log('Frozen undo');
 
 	self.scope.db.none(sql.RemoveOrder,
 		{
@@ -244,6 +248,7 @@ Frozen.prototype.undo = function (trs, block, sender, cb) {
  * @return {function} cb
  */
 Frozen.prototype.apply = function (trs, block, sender, cb) {
+	console.log('Frozen undo');
 
 	self.updateFrozeAmount({
 		account: sender,
