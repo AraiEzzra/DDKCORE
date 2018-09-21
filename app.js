@@ -310,7 +310,7 @@ d.run(function () {
 			//let socketIO;
 
 			let server = require('http').createServer(app);
-			let io = require('socket.io')(server);
+			//let io = require('socket.io')(server);
 			/* if (!scope.config.ssl.enabled) {
 				socketIO = require('socket.io')(server);
 			} */
