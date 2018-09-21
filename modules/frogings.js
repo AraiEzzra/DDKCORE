@@ -191,32 +191,6 @@ Frogings.prototype.onBind = function (scope) {
  */
 Frogings.prototype.shared = {
 
-	countStakeholders: function (req, cb) {
-
-		library.db.one(sql.countStakeholders)
-		.then(function (row) {
-			return setImmediate(cb, null, {
-				countStakeholders: row
-			});
-		})
-		.catch(function (err) {
-			return setImmediate(cb, err);
-		});
-
-	},
-
-	totalDDKStaked: function (req, cb) {
-		library.db.one(sql.getTotalStakedAmount)
-		.then(function (row) {
-			return setImmediate(cb, null, {
-				totalDDKStaked: row
-			});
-		})
-		.catch(function (err) {
-			return setImmediate(cb, err);
-		});
-	},
-
 	getMyDDKFrozen: function (req, cb) {
 		library.schema.validate(req.body, schema.getMyDDKFrozen, function (err) {
 			if (err) {
@@ -429,7 +403,7 @@ Frogings.prototype.shared = {
 				if (err) {
 					return setImmediate(cb, err);
 				}
-				library.network.io.sockets.emit('updateTotalStakeAmount', null);
+				library.network.io.sockets.emit('stake/create', null);
 
 				library.db.one(ref_sql.checkBalance, {
 					sender_address: constants.airdropAccount

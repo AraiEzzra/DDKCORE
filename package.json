@@ -50,6 +50,7 @@
     "lisk-js": "^0.5.0",
     "lisk-sandbox": "github:LiskHQ/lisk-sandbox#162da38",
     "lodash": "^4.17.10",
+    "memory-cache": "^0.2.0",
     "method-override": "^2.3.10",
     "minimist": "*",
     "node-cron": "^1.2.1",

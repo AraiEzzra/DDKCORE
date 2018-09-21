@@ -3556,6 +3556,11 @@
         "timers-ext": "^0.1.5"
       }
     },
+    "memory-cache": {
+      "version": "0.2.0",
+      "resolved": "https://registry.npmjs.org/memory-cache/-/memory-cache-0.2.0.tgz",
+      "integrity": "sha1-eJCwHVLADI68nVM+H46xfjA0hxo="
+    },
     "meow": {
       "version": "3.7.0",
       "resolved": "https://registry.npmjs.org/meow/-/meow-3.7.0.tgz",

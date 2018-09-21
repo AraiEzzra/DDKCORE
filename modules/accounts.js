@@ -19,6 +19,9 @@ let async = require('async');
 let nextBonus = 0;
 let Mnemonic = require('bitcore-mnemonic');
 let mailServices = require('../helpers/postmark');
+let dbcache = require('memory-cache');
+let newCache = new dbcache.Cache(); 
+let frogings_sql = require('../sql/frogings');
 
 // Private fields
 let modules, library, self, __private = {}, shared = {};
@@ -378,6 +381,32 @@ Accounts.prototype.onBind = function (scope) {
 Accounts.prototype.isLoaded = function () {
 	return !!modules;
 };
+
+Accounts.prototype.circulatingSupply = function(cb) {
+	let initialUnmined = config.ddkSupply.totalSupply - config.initialPrimined.total;
+	//let publicAddress = library.config.sender.address;
+	let hash = Buffer.from(JSON.parse(library.config.users[0].keys));
+	let keypair = library.ed.makeKeypair(hash);
+	let publicKey = keypair.publicKey.toString('hex');
+	self.getAccount({publicKey: publicKey}, function(err, account) {
+		library.db.one(sql.getCurrentUnmined, { address: account.address })
+		.then(function (currentUnmined) {
+			let circulatingSupply = config.initialPrimined.total + initialUnmined - currentUnmined.balance;
+
+			cache.prototype.getJsonForKey('minedContributorsBalance', function (err, contributorsBalance) {
+				let totalCirculatingSupply = parseInt(contributorsBalance) + circulatingSupply;
+
+				return setImmediate(cb, null, {
+					circulatingSupply: totalCirculatingSupply
+				});
+			});
+		})
+		.catch(function (err) {
+			library.logger.error(err.stack);
+			return setImmediate(cb, err.toString());
+		});
+	});
+}
 
 // Shared API
 /**
@@ -799,42 +828,6 @@ Accounts.prototype.shared = {
 		});
 	},
 
-	totalAccounts: function (req, cb) {
-		library.db.one(sql.getTotalAccount)
-			.then(function (data) {
-				return setImmediate(cb, null, data);
-			})
-			.catch(function (err) {
-				library.logger.error(err.stack);
-				return setImmediate(cb, err.toString());
-			});
-	},
-
-	getCirculatingSupply: function (req, cb) {
-		let initialUnmined = config.ddkSupply.totalSupply - config.initialPrimined.total;
-		//let publicAddress = library.config.sender.address;
-		let hash = Buffer.from(JSON.parse(library.config.users[0].keys));
-		let keypair = library.ed.makeKeypair(hash);
-		let publicKey = keypair.publicKey.toString('hex');
-		self.getAccount({publicKey: publicKey}, function(err, account) {
-			library.db.one(sql.getCurrentUnmined, { address: account.address })
-			.then(function (currentUnmined) {
-				let circulatingSupply = config.initialPrimined.total + initialUnmined - currentUnmined.balance;
-
-				cache.prototype.getJsonForKey('minedContributorsBalance', function (err, contributorsBalance) {
-					let totalCirculatingSupply = parseInt(contributorsBalance) + circulatingSupply;
-
-					return setImmediate(cb, null, {
-						circulatingSupply: totalCirculatingSupply
-					});
-				});
-			})
-			.catch(function (err) {
-				library.logger.error(err.stack);
-				return setImmediate(cb, err.toString());
-			});
-		});
-	},
 	totalSupply: function (req, cb) {
 		let totalSupply = config.ddkSupply.totalSupply;
 
@@ -919,6 +912,52 @@ Accounts.prototype.shared = {
 			}).catch(function (err) {
 				return setImmediate(cb, err);
 			});
+	},
+
+	getDashboardDDKData: function (req, cb) {
+
+		if (newCache.get('ddkCache')) {
+
+			return setImmediate(cb, null, newCache.get('ddkCache'));
+		} else {
+
+			function getDDKData(t) {
+				let promises = [
+					t.one(frogings_sql.countStakeholders),
+					t.one(frogings_sql.getTotalStakedAmount),
+					t.one(sql.getTotalAccount)
+				];
+
+				return t.batch(promises);
+			}
+
+			library.db.task(getDDKData)
+				.then(function (results) {
+
+					self.circulatingSupply(function (err, data) {
+						if (err) {
+							return setImmediate(cb, err);
+						}
+
+						let ddkData = {
+							countStakeholders: results[0].count,
+							totalDDKStaked: results[1].sum,
+							totalAccountHolders: results[2].count,
+							totalCirculatingSupply: data.circulatingSupply
+						};
+
+						newCache.put('ddkCache', ddkData, 40000);
+
+						return setImmediate(cb, null, ddkData);
+
+					});
+
+				})
+				.catch(function (err) {
+					return setImmediate(cb, err);
+				});
+		}
+
 	}
 };
 

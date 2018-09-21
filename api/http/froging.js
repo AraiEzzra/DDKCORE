@@ -11,8 +11,6 @@ let httpApi = require('../../helpers/httpApi');
 	- get /count
 	- post /getAllOrders
 	- post /getAllActiveOrders
-	- get /countStakeholders
-	- get /getTotalDDKStaked
 	- post /getMyDDKFrozen
  * @memberof module:frogings
  * @requires helpers/Router
@@ -36,8 +34,6 @@ function FrogingsHttpApi (frogingsModule, app, logger, cache) {
 		'get /count': 'getFrozensCount',
 		'post /getAllOrders' : 'getAllFreezeOrders',
 		'post /getAllActiveOrders' : 'getAllActiveFreezeOrders',
-		'get /countStakeholders' : 'countStakeholders',
-		'get /getTotalDDKStaked' : 'totalDDKStaked'	,
 		'post /getMyDDKFrozen' : 'getMyDDKFrozen'
 	});
 
