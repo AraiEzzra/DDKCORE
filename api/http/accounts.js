@@ -64,7 +64,8 @@ function AccountsHttpApi (accountsModule, app) {
 		'post /existingETPSUser/validate' : 'validateExistingUser',
 		'post /verifyUserToComment': 'verifyUserToComment',
 		'post /senderBalance': 'senderAccountBalance',
-		'post /getMigratedUsers': 'getMigratedUsersList'
+		'post /getMigratedUsers': 'getMigratedUsersList',
+		'get /getDashboardDDKData': 'getDashboardDDKData'
 	});
 
 	router.map(accountsModule.internal, {
