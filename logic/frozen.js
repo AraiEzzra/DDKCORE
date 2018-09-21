@@ -408,7 +408,7 @@ Frozen.prototype.checkFrozeOrders = async function (sender) {
 		});
 		return transaction;
 	};
-	const disableFrozeOrders = (order) => Promise.all(orders.map(order => disableFrozeOrder(order)));
+	const disableFrozeOrders = orders => Promise.all(orders.map(order => disableFrozeOrder(order)));
 
 	const freezeOrders = await getFrozeOrders(sender.address);
 	const rewardTransactions = await deductFrozeAmountandSendReward(freezeOrders);
