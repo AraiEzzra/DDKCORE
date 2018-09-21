@@ -1102,11 +1102,7 @@ Accounts.prototype.shared = {
 
 		if (newCache.get('ddkCache')) {
 
-			return setImmediate(cb, {
-				success: true,
-				data: newCache.get('ddkCache'),
-				info: 'Caching'
-			});
+			return setImmediate(cb, null, newCache.get('ddkCache'));
 		} else {
 
 			function getDDKData(t) {
@@ -1136,11 +1132,7 @@ Accounts.prototype.shared = {
 
 						newCache.put('ddkCache', ddkData, 40000);
 
-						return setImmediate(cb, {
-							success: true,
-							data: ddkData,
-							info: 'No caching'
-						});
+						return setImmediate(cb, null, ddkData);
 
 					});
 
