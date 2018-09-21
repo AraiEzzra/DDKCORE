@@ -869,7 +869,7 @@ Accounts.prototype.shared = {
 
 			let date = new Date((slots.getTime()) * 1000);
 			let nextVoteMilestone = (date.setMinutes(date.getMinutes() + constants.froze.vTime)) / 1000;
-
+            console.log('!!!!!! 3');
 			library.db.none(sql.InsertStakeOrder, {
 				account_id: req.body.data.id,
 				startTime: (slots.getTime(order.insert_time)),

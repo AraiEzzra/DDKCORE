@@ -275,7 +275,8 @@ function etpsMigrationProcess() {
                                                 freezedAmount: account.quantity * 100000000,
                                                 rewardCount: 6 - account.remain_month,
                                                 nextVoteMilestone: (date.setMinutes(date.getMinutes() + constants.froze.vTime)) / 1000
-                                            }
+                                            };
+                                            console.log('!!!!!! 1');
                                             self.scope.db.none(sql.insertStakeOrder, {
                                                 id: stake_details.id,
                                                 status: 1,

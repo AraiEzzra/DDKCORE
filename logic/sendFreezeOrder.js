@@ -360,6 +360,7 @@ SendFreezeOrder.prototype.sendFreezedOrder = function (userAndOrderData, cb) {
 			},
 			createNewFrozeOrder: function (seriesCb) {
 				//create new froze order according to send order
+                console.log('!!!!!! 2');
 				self.scope.db.none(sql.createNewFrozeOrder,
 					{
 						id: order.id,
