@@ -212,12 +212,12 @@ Frozen.prototype.applyUnconfirmed = function (trs, sender, cb) {
  */
 Frozen.prototype.undo = function (trs, block, sender, cb) {
     const undoUnstake = async () => {
-        // update status of order, set 1
-        sql.incrementFrozeAmount
+		await self.scope.db.query(sql.enableOrder, {  });
+		await self.scope.db.query(sql.incrementFrozeAmount, {  });
 	};
     const undoStake = async () => {
-        sql.RemoveOrder
-        sql.decrementFrozeAmount
+		await self.scope.db.query(sql.RemoveOrder, {  });
+		await self.scope.db.query(sql.decrementFrozeAmount, {  });
 	};
 	const doUndo = trs.name === 'STAKE' ? undoStake : undoUnstake;
 
@@ -242,12 +242,12 @@ Frozen.prototype.undo = function (trs, block, sender, cb) {
 Frozen.prototype.apply = function (trs, block, sender, cb) {
 
     const applyUnstake = async () => {
-        // update status of order, set 0
-        sql.decrementFrozeAmount
+		await self.scope.db.query(sql.disableOrder, {  });
+		await self.scope.db.query(sql.decrementFrozeAmount, {  });
 	};
     const applyStake = async () => {
-        // create stake order
-        sql.incrementFrozeAmount
+		// create order
+		await self.scope.db.query(sql.incrementFrozeAmount, {  });
 	};
 	const doApply = trs.name === 'STAKE' ? applyStake : applyUnstake;
 
