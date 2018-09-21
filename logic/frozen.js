@@ -508,7 +508,7 @@ Frozen.prototype.checkFrozeOrders = async function (sender) {
 	const VOTE_COUNT_LIMIT = 27;
 
 	const disableFrozeOrder = async (freezeOrders) => {
-		const unstakeOrders = freezeOrders.filter(order.voteCount >= VOTE_COUNT_LIMIT);
+		const unstakeOrders = freezeOrders.filter(order => order.voteCount >= VOTE_COUNT_LIMIT);
 
 		const ordersIds = unstakeOrders.map(order => order.stakeId).join(',');
 
