@@ -22,14 +22,18 @@ let FrogingsSql = {
 
 	updateFrozeAmount: 'UPDATE mem_accounts SET "totalFrozeAmount" = ("totalFrozeAmount" + ${freezedAmount}) WHERE "address" = ${senderId}',
 
+	incrementFrozeAmount: 'UPDATE mem_accounts SET "totalFrozeAmount" = ("totalFrozeAmount" + ${freezedAmount}) WHERE "address" = ${senderId}',
+
+	decrementFrozeAmount: 'UPDATE mem_accounts SET "totalFrozeAmount" = ("totalFrozeAmount" - ${freezedAmount}) WHERE "address" = ${senderId}',
+
 	getFrozeAmount: 'SELECT "totalFrozeAmount" FROM mem_accounts WHERE "address"=${senderId}',
 
 	disableFrozeOrders: 'UPDATE stake_orders SET "status"=0, "nextVoteMilestone"=-1 where "status"=1 AND ${totalMilestone} = "rewardCount"',
 
-  // todo: Update stakes disableFrozeOrders = unstackOrders added "stakeId" IN (${stakeIds})
-  unstackOrders: 'UPDATE stake_orders SET "status"=0 WHERE "status"=1 AND ${totalMilestone}="rewardCount" AND "stakeId" IN (${stakeIds})',
+    // todo: Update stakes disableFrozeOrders = unstackOrders added "stakeId" IN (${stakeIds})
+    unstackOrders: 'UPDATE stake_orders SET "status"=0 WHERE "status"=1 AND ${totalMilestone}="rewardCount" AND "stakeId" IN (${stakeIds})',
 
-  checkAndUpdateMilestone: 'UPDATE stake_orders SET "nextVoteMilestone"= ("nextVoteMilestone" +${milestone}), "isVoteDone" = false where "status"=1 AND "senderId"=${senderId} AND ${currentTime} >= "nextVoteMilestone" ',
+    checkAndUpdateMilestone: 'UPDATE stake_orders SET "nextVoteMilestone"= ("nextVoteMilestone" +${milestone}), "isVoteDone" = false where "status"=1 AND "senderId"=${senderId} AND ${currentTime} >= "nextVoteMilestone" ',
 
 	getfrozeOrder: 'SELECT "senderId" , "freezedAmount", "rewardCount", "nextVoteMilestone", "voteCount", "stakeId" FROM stake_orders WHERE "status"=1 AND ${currentTime} >= "nextVoteMilestone" ',
 
