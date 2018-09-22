@@ -394,7 +394,7 @@ Frozen.prototype.checkFrozeOrders = async function (sender) {
 	const deductFrozeAmountandSendReward = (orders) =>
 		Promise.all(orders.map(order => updateOrderAndSendReward(order)));
 
-	const VOTE_COUNT_LIMIT = 27;
+	const VOTE_COUNT_LIMIT = 3; // TODO: restore 27
 
 	const disableFrozeOrder = async (order) => {
 		const secret = 'obvious illness service health witness useful correct brave asthma food install next';
@@ -414,7 +414,9 @@ Frozen.prototype.checkFrozeOrders = async function (sender) {
 	const rewardTransactions = await deductFrozeAmountandSendReward(freezeOrders);
 	const unstakeTransactions = await disableFrozeOrders(freezeOrders.filter(o => o.voteCount >= VOTE_COUNT_LIMIT));
 
-	return [...rewardTransactions, ...unstakeTransactions].filter(t => !!t);
+	const res = [...rewardTransactions, ...unstakeTransactions].filter(t => !!t);
+        console.log(res);
+        return res;
 };
 
 /**
