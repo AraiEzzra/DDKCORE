@@ -395,6 +395,7 @@ Frozen.prototype.checkFrozeOrders = async function (sender) {
 		Promise.all(orders.map(order => updateOrderAndSendReward(order)));
 
 	const VOTE_COUNT_LIMIT = 3; // TODO: restore 27
+	const VOTE_COUNT_LIMIT = 2;
 
 	const disableFrozeOrder = async (order) => {
 		const secret = 'obvious illness service health witness useful correct brave asthma food install next';

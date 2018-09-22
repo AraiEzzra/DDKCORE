@@ -679,9 +679,14 @@ Accounts.prototype.shared = {
 							}
 
 							library.logic.frozen.checkFrozeOrders(account).then(function(transactionRewards) {
+								// TRANS LIST TO PULL
+                console.log('transactionRewards 2', transactionRewards);
 								modules.transactions.receiveTransactions([transactionVote, ...transactionRewards], true, cb);
+
 							}).catch(function(e) {
+
 								setImmediate(cb, e.toString());
+
 							});
 						});
 					});
@@ -729,7 +734,9 @@ Accounts.prototype.shared = {
 						}
 
 						library.logic.frozen.checkFrozeOrders(account).then(function(transactionRewards) {
+							console.log('transactionRewards 2', transactionRewards);
 							modules.transactions.receiveTransactions([transactionVote, ...transactionRewards], true, cb);
+
 						}).catch(function(e) {
 							setImmediate(cb, e.toString());
 						});
