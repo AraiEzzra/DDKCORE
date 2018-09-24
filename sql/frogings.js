@@ -26,9 +26,9 @@ let FrogingsSql = {
 
 	decrementFrozeAmount: 'UPDATE mem_accounts SET "totalFrozeAmount" = ("totalFrozeAmount" - ${freezedAmount}) WHERE "address" = ${senderId}',
 
-	disableOrder: 'UPDATE stake_orders SET "status"=0 WHERE "id" = ${id} AND "senderId"=${address}',
+	disableOrder: 'UPDATE stake_orders SET "status"=0 WHERE "stakeId" = ${stakeId} AND "senderId"=${address}',
 	
-	enableOrder: 'UPDATE stake_orders SET "status"=1 WHERE "id" = ${id} AND "senderId"=${address}',
+	enableOrder: 'UPDATE stake_orders SET "status"=1 WHERE "stakeId" = ${stakeId} AND "senderId"=${address}',
 
 	selectOrder: 'SELECT * FROM stake_orders WHERE "id" = ${id} AND "senderId"=${address}',
 
@@ -47,7 +47,7 @@ let FrogingsSql = {
 
 	getFrozeOrders: 'SELECT * FROM stake_orders WHERE "senderId"=${senderId}',
 
-	getActiveFrozeOrders: 'SELECT * FROM stake_orders WHERE "senderId"=${senderId} AND "status"=1 AND ${currentTime} >= "nextVoteMilestone"',
+	getActiveFrozeOrders: 'SELECT * FROM stake_orders WHERE "senderId"=${senderId} AND "status"=1 AND "isVoteDone" = false AND ${currentTime} >= "nextVoteMilestone"',
 
 	getActiveFrozeOrder: 'SELECT * FROM stake_orders WHERE "senderId"=${senderId} AND "id"=${stakeId} AND "status"=1',
 
