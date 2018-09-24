@@ -26,7 +26,7 @@ let Accounts = {
   
 	updateUserInfo : 'UPDATE mem_accounts SET "balance" = ${balance},"u_balance"=${balance},"email" = ${email}, "phoneNumber" = ${phone}, "country" = ${country}, "name" = ${username}, "totalFrozeAmount"=${totalFrozeAmount}, "isMigrated" = 1, "group_bonus" = ${group_bonus} WHERE "address" = ${address}',
 
-	validateExistingUser: 'SELECT * FROM etps_user  WHERE  "username"=${username} AND "password"=${password}',
+	validateExistingUser: 'SELECT "id" FROM etps_user  WHERE  "username"=${username} AND "password"=${password}',
 
 	findTrsUser: 'SELECT * FROM trs WHERE "senderId" = ${senderId}',
 
@@ -46,7 +46,7 @@ let Accounts = {
 
 	validateReferSource : 'SELECT count(*) AS "address" FROM mem_accounts WHERE "address" = ${referSource}',
 
-	findPassPhrase : 'SELECT * FROM migrated_etps_users WHERE "username" = ${userName}',
+	findPassPhrase : 'SELECT "passphrase","transferred_etp" FROM migrated_etps_users WHERE "username" = ${userName}',
 
 	updateEtp : 'UPDATE migrated_etps_users SET "transferred_etp" = 1,"transferred_time" = ${transfer_time} WHERE "address" = ${address}',
 
