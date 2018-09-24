@@ -247,7 +247,7 @@ Frozen.prototype.undo = function (trs, block, sender, cb) {
  * @return {function} cb
  */
 Frozen.prototype.apply = function (trs, block, sender, cb) {
-	console.log('Frozen undo');
+	console.log('Frozen apply');
 
 	const applyUnstake = async () => {
 		const orders = await self.scope.db.query(sql.selectOrder, { id: trs.id, address: trs.senderId });
