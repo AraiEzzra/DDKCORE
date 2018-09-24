@@ -219,8 +219,6 @@ Frozen.prototype.undo = function (trs, block, sender, cb) {
 		await self.scope.db.query(sql.decrementFrozeAmount, { freezedAmount: trs.stakedAmount, senderId: trs.senderId });
 	};
 	const undoStake = async () => {
-		const orders = await self.scope.db.query(sql.selectOrder, { id: trs.id, address: trs.senderId });
-		const order = orders[0];
 		await self.scope.db.query(sql.RemoveOrder, { id: trs.id, address: trs.senderId });
 		await self.scope.db.query(sql.decrementFrozeAmount, { freezedAmount: trs.stakedAmount, senderId: trs.senderId });
 	};
