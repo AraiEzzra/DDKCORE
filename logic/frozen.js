@@ -322,7 +322,7 @@ Frozen.prototype.verify = function (trs, sender, cb) {
  * @return % based on amount
  */
 Frozen.prototype.calculateFee = function (trs, sender) {
-	return (trs.stakedAmount * constants.fees.froze) / 100;
+	return trs.stakedAmount > 0 ? (trs.stakedAmount * constants.fees.froze) / 100 : 0;
 };
 
 /**
