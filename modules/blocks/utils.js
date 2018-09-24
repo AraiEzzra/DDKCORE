@@ -160,7 +160,7 @@ Utils.prototype.loadLastBlock = function (cb) {
 			modules.blocks.lastBlock.set(block);
 			return setImmediate(cb, null, block);
 		}).catch(function (err) {
-			library.logger.error(err.stack);
+			library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 			return setImmediate(cb, 'Blocks#loadLastBlock error');
 		});
 	}, cb);
@@ -221,7 +221,7 @@ Utils.prototype.getIdSequence = function (height, cb) {
 
 		return setImmediate(cb, null, { firstHeight: rows[0].height, ids: ids.join(',') });
 	}).catch(function (err) {
-		library.logger.error(err.stack);
+		library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 		return setImmediate(cb, 'Blocks#getIdSequence error');
 	});
 };
@@ -279,7 +279,7 @@ Utils.prototype.loadBlocksData = function (filter, options, cb) {
 				return setImmediate(cb, null, rows);
 			});
 		}).catch(function (err ) {
-			library.logger.error(err.stack);
+			library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 			return setImmediate(cb, 'Blocks#loadBlockData error');
 		});
 	}, cb);
@@ -374,7 +374,7 @@ Utils.prototype.aggregateBlocksReward = function (filter, cb) {
 		data = { fees: data.fees || '0', rewards: data.rewards || '0', count: data.count || '0' };
 		return setImmediate(cb, null, data);
 	}).catch(function (err) {
-		library.logger.error(err.stack);
+		library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 		return setImmediate(cb, 'Blocks#aggregateBlocksReward error');
 	});
 };

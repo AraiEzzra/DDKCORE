@@ -1,6 +1,6 @@
 let winston = require('winston');
 require('winston-daily-rotate-file');
-
+let env = process.env;
 /** 
  * @desc custom levels for winston logger
 */
@@ -47,6 +47,17 @@ let traceTransport = new (winston.transports.File)({
 	}
 });
 
+let consoleTransport = new (winston.transports.Console)({
+	level: env.DEBUG ? 'debug' : 'info',
+	handleExceptions: true,
+	json: false,
+	colorize: true,
+	timestamp: function () {
+		let today = new Date();
+		return today.toISOString();
+	}
+});
+
 /** 
  * @desc logger Constructor
  * @param {String} sessionId - session is to be written in each log
@@ -71,9 +82,14 @@ class Logger {
 		this.traceTransport.formatter = function (options) {
 			return options.timestamp() + '  - [' + options.level + '] : ' + options.message;
 		};
+
+		this.consoleTransport = consoleTransport;
+		this.consoleTransport.formatter = function (options) {
+			return options.timestamp() + '  - [' + options.level + '] : ' + options.message;
+		};
 		this.logger = new (winston.Logger)({
 			levels: levels,
-			transports: [this.traceTransport, this.transport]
+			transports: [this.traceTransport, this.transport, this.consoleTransport],
 		});
 	}
 }

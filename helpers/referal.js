@@ -14,7 +14,7 @@ let library = {},
 
 exports.Referals = function (scope) {
     library = scope;
-}
+};
 
 /**
  * Get filtered list of rewards history
@@ -86,11 +86,11 @@ __private.list = function (filter, cb) {
 
             return setImmediate(cb, null, data);
         }).catch(function (err) {
-            library.logger.error(err.stack);
+            library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
             return setImmediate(cb, 'Rewards#list error');
         });
     }).catch(function (err) {
-        library.logger.error(err.stack);
+        library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
         return setImmediate(cb, 'Rewards#list error');
     });
 
@@ -110,7 +110,7 @@ module.exports.api = function (app) {
         let mailOptions = {
             From: library.config.mailFrom, // sender address
             To: req.body.email, //req.body.email list of receivers
-            TemplateId: 8257936,
+            TemplateId: 8248756,
             TemplateModel: {
                 "person": {
                     "username": req.body.email,
@@ -316,7 +316,7 @@ module.exports.api = function (app) {
             });
 
         }).catch(function (err) {
-            library.logger.error(err.stack);
+            library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
             return res.status(400).json({
                 success: false,
                 error: err

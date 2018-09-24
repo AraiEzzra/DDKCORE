@@ -16,7 +16,9 @@ let connectionHost = config.elasticsearchHost || 'localhost:9200';
 
 let Client = new elasticsearch.Client({
 	hosts: connectionHost,
-	log: 'error'
+	log: 'error',
+	requestTimeout: 1000*60*60,
+	keepAlive: false
 });
 
 module.exports = Client;
