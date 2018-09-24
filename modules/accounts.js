@@ -1441,10 +1441,12 @@ Accounts.prototype.internal = {
 		let email = Buffer.from((data.split('&')[1]).split('=')[1], 'base64').toString();
 		let link = req.body.link;
 
-		library.db.one(sql.validateEtpsUser, {
+		library.db.query(sql.validateEtpsUser, {
 			username: userName,
 			emailId: email
 		}).then(function (user) {
+			if(user.length) {
+				
 			let newPassword = Math.random().toString(36).substr(2, 8);
 			let hash = crypto.createHash('md5').update(newPassword).digest('hex');
 
@@ -1479,6 +1481,11 @@ Accounts.prototype.internal = {
 				library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 				return setImmediate(cb, err);
 			});
+				
+			} else {
+				library.logger.error('Invalid username or email');
+				return setImmediate(cb, 'Invalid username or email');
+			}
 
 		}).catch(function (err) {
 			library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
