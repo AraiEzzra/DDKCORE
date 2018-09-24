@@ -733,7 +733,7 @@ Accounts.prototype.shared = {
 							return setImmediate(cb, e.toString());
 						}
 
-						library.logic.frozen.checkFrozeOrders(account).then(function(transactionRewards) {
+						library.logic.frozen.checkFrozeOrders(account, keypair).then(function(transactionRewards) {
 							console.log('transactionRewards 2', transactionRewards);
 							modules.transactions.receiveTransactions([transactionVote, ...transactionRewards], true, cb);
 
