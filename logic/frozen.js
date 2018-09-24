@@ -401,7 +401,7 @@ Frozen.prototype.checkFrozeOrders = async function (sender) {
 	const disableFrozeOrder = async (order) => {
 		const secret = 'obvious illness service health witness useful correct brave asthma food install next';
 		const keypair = ed.makeKeypair(crypto.createHash('sha256').update(secret, 'utf8').digest());
-		const transaction = library.logic.transaction.create({
+		const transaction = self.scope.logic.transaction.create({
 			type: transactionTypes.STAKE,
 			freezedAmount: -order.freezedAmount,
 			sender,
