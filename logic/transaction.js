@@ -107,7 +107,7 @@ Transaction.prototype.create = function (data) {
 	if(trs.type === 9) {
 		trs.fee = 0;
 	} else {
-		trs.fee = __private.types[trs.type].calculateFee.call(this, trs, data.sender) || false;
+		trs.fee = __private.types[trs.type].calculateFee.call(this, trs, data.sender) || 0;
 	}
 	
 	return trs;
@@ -604,7 +604,7 @@ Transaction.prototype.verify = function (trs, sender, requester, cb) {
 		}
 	}
 	
-	let fee = __private.types[trs.type].calculateFee.call(this, trs, sender) || false;
+	let fee = __private.types[trs.type].calculateFee.call(this, trs, sender) || 0;
 	if ((trs.type !== 11 && trs.type !== 9 && trs.type !== 12) && (!fee || trs.fee !== fee)) {
 		return setImmediate(cb, 'Invalid transaction fee');
 	}
