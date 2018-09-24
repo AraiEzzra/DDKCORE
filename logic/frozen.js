@@ -216,13 +216,13 @@ Frozen.prototype.undo = function (trs, block, sender, cb) {
 	console.log('Frozen undo');
 	const undoUnstake = async () => {
 		await self.scope.db.query(sql.enableOrder, { stakeId: trs.stakeId, address: trs.senderId });
-		await self.scope.db.query(sql.incrementFrozeAmount, { freezedAmount: order.freezedAmount, senderId: trs.senderId });
+		await self.scope.db.query(sql.decrementFrozeAmount, { freezedAmount: trs.stakedAmount, senderId: trs.senderId });
 	};
 	const undoStake = async () => {
 		const orders = await self.scope.db.query(sql.selectOrder, { id: trs.id, address: trs.senderId });
 		const order = orders[0];
 		await self.scope.db.query(sql.RemoveOrder, { id: trs.id, address: trs.senderId });
-		await self.scope.db.query(sql.decrementFrozeAmount, { freezedAmount: order.freezedAmount, senderId: trs.senderId });
+		await self.scope.db.query(sql.decrementFrozeAmount, { freezedAmount: trs.stakedAmount, senderId: trs.senderId });
 	};
 	const doUndo = trs.name === 'STAKE' ? undoStake : undoUnstake;
 
@@ -249,7 +249,7 @@ Frozen.prototype.apply = function (trs, block, sender, cb) {
 
 	const applyUnstake = async () => {
 		await self.scope.db.query(sql.disableOrder, { stakeId: trs.stakeId, address: trs.senderId });
-		await self.scope.db.query(sql.decrementFrozeAmount, { freezedAmount: trs.stakedAmount, senderId: trs.senderId });
+		await self.scope.db.query(sql.incrementFrozeAmount, { freezedAmount: trs.stakedAmount, senderId: trs.senderId });
 		console.log('Unstake applied');
 	};
 	const applyStake = async () => {
