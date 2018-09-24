@@ -605,7 +605,7 @@ Transaction.prototype.verify = function (trs, sender, requester, cb) {
 	}
 	
 	let fee = __private.types[trs.type].calculateFee.call(this, trs, sender) || 0;
-	if ((trs.type !== 11 && trs.type !== 9 && trs.type !== 12) && (!fee || trs.fee !== fee)) {
+	if ((trs.type !== 11 && trs.type !== 9 && trs.type !== 12) && !(trs.type === 8 && trs.stakedAmount < 0) && (!fee || trs.fee !== fee)) {
 		return setImmediate(cb, 'Invalid transaction fee');
 	}
 
