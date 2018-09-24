@@ -215,9 +215,7 @@ Frozen.prototype.applyUnconfirmed = function (trs, sender, cb) {
 Frozen.prototype.undo = function (trs, block, sender, cb) {
 	console.log('Frozen undo');
 	const undoUnstake = async () => {
-		const orders = await self.scope.db.query(sql.selectOrder, { id: trs.id, address: trs.senderId });
-		const order = orders[0];
-		await self.scope.db.query(sql.enableOrder, { id: trs.id, address: trs.senderId });
+		await self.scope.db.query(sql.enableOrder, { stakeId: trs.stakeId, address: trs.senderId });
 		await self.scope.db.query(sql.incrementFrozeAmount, { freezedAmount: order.freezedAmount, senderId: trs.senderId });
 	};
 	const undoStake = async () => {
@@ -250,10 +248,8 @@ Frozen.prototype.apply = function (trs, block, sender, cb) {
 	console.log('Frozen apply');
 
 	const applyUnstake = async () => {
-		const orders = await self.scope.db.query(sql.selectOrder, { id: trs.id, address: trs.senderId });
-		const order = orders[0];
-		await self.scope.db.query(sql.disableOrder, { id: trs.id, address: trs.senderId });
-		await self.scope.db.query(sql.decrementFrozeAmount, { freezedAmount: order.freezedAmount, senderId: trs.senderId });
+		await self.scope.db.query(sql.disableOrder, { stakeId: trs.stakeId, address: trs.senderId });
+		await self.scope.db.query(sql.decrementFrozeAmount, { freezedAmount: trs.stakedAmount, senderId: trs.senderId });
 		console.log('Unstake applied');
 	};
 	const applyStake = async () => {
@@ -353,7 +349,7 @@ Frozen.prototype.bind = function (accounts, rounds, blocks, transactions) {
  * @implements {Frozen#disableFrozeOrders}
  * @return {Promise} {Resolve|Reject}
  */
-Frozen.prototype.checkFrozeOrders = async function (sender) {
+Frozen.prototype.checkFrozeOrders = async function (sender, senderKeypair) {
 	const getAccountAsync = promisify(modules.accounts.getAccount);
 
 	const getFrozeOrders = async (senderId) => {
@@ -402,13 +398,11 @@ Frozen.prototype.checkFrozeOrders = async function (sender) {
 	const VOTE_COUNT_LIMIT = 7; // TODO: restore 27
 
 	const disableFrozeOrder = async (order) => {
-		const secret = 'obvious illness service health witness useful correct brave asthma food install next';
-		const keypair = ed.makeKeypair(crypto.createHash('sha256').update(secret, 'utf8').digest());
 		const transaction = self.scope.logic.transaction.create({
 			type: transactionTypes.STAKE,
 			freezedAmount: -order.freezedAmount,
 			sender,
-			keypair: keypair,
+			keypair: senderKeypair,
 			secondKeypair: null,
 		});
 		return transaction;
