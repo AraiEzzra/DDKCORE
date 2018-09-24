@@ -1190,7 +1190,7 @@ Transaction.prototype.Referschema = {
 			maximum: constants.totalAmount
 		},
 		fee: {
-			type: 'boolean',
+			type: 'integer',
 			minimum: 0,
 			maximum: constants.totalAmount
 		},
