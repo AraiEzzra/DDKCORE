@@ -258,9 +258,7 @@ Frozen.prototype.apply = function (trs, block, sender, cb) {
 	};
 	const applyStake = async () => {
 		// create order
-		const orders = await self.scope.db.query(sql.selectOrder, { id: trs.id, address: trs.senderId });
-		const order = orders[0];
-		await self.scope.db.query(sql.incrementFrozeAmount, { freezedAmount: order.freezedAmount, address: trs.senderId });
+		await self.scope.db.query(sql.incrementFrozeAmount, { freezedAmount: trs.stakedAmount, address: trs.senderId });
 		console.log('Stake applied');
 	};
 	const doApply = trs.trsName === 'STAKE' ? applyStake : applyUnstake;
