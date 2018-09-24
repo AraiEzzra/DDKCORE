@@ -50,7 +50,7 @@ let Accounts = {
 
 	updateEtp : 'UPDATE migrated_etps_users SET "transferred_etp" = 1,"transferred_time" = ${transfer_time} WHERE "address" = ${address}',
 
-	validateEtpsUser : 'SELECT * FROM etps_user WHERE "username" = ${username} AND "email" = ${emailId}',
+	validateEtpsUser : 'SELECT "id" FROM etps_user WHERE "username" = ${username} AND "email" = ${emailId}',
 
 	updateEtpsPassword: 'UPDATE etps_user SET "password" = ${password} WHERE "username" = ${username}',
 
