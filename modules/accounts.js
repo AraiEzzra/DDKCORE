@@ -845,23 +845,30 @@ Accounts.prototype.shared = {
 
 		let hashPassword = crypto.createHash('md5').update(password).digest('hex');
 
-		library.db.one(sql.validateExistingUser, {
+		library.db.query(sql.validateExistingUser, {
 			username: username,
 			password: hashPassword
-		}).then(function (userInfo) {
+		}).then(function (etps_user) {
+			
+			if(etps_user.length) {
 
-			library.db.one(sql.findPassPhrase, {
-				userName: username
-			}).then(function (user) {
+				library.db.one(sql.findPassPhrase, {
+					userName: username
+				}).then(function (user) {
 				
-				return setImmediate(cb, null, {
-					success: true,
-					userInfo: user
+					return setImmediate(cb, null, {
+						success: true,
+						userInfo: user
+					});
+				}).catch(function (err) {
+					library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
+					return setImmediate(cb, 'Invalid username or password');
 				});
-			}).catch(function (err) {
-				library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
+			
+			} else {
+				library.logger.error('Invalid Etps User');
 				return setImmediate(cb, 'Invalid username or password');
-			});
+			}
 
 		}).catch(function (err) {
 			library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
