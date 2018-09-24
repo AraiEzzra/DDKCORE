@@ -1227,7 +1227,7 @@ Transaction.prototype.objectNormalize = function (trs) {
 			delete trs[i];
 		}
 	}
-	trs.fee = trs.fee || false;
+	trs.fee = trs.fee || 0;
 
 	if (trs.type === 9 || trs.type === 11 || trs.type === 12)
 		var report = this.scope.schema.validate(trs, Transaction.prototype.Referschema);
