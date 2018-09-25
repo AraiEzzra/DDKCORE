@@ -53,6 +53,7 @@
     "memory-cache": "^0.2.0",
     "method-override": "^2.3.10",
     "minimist": "*",
+    "node-cache": "^4.2.0",
     "node-cron": "^1.2.1",
     "node-cron-job": "^0.2.3",
     "nodemailer": "^4.6.6",

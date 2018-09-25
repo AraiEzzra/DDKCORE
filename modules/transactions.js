@@ -645,7 +645,6 @@ Transactions.prototype.onBind = function (scope) {
  * @see {@link http://apidocjs.com/}
  */
 Transactions.prototype.internal = {
-
 	getTransactionHistory: function (req, cb) {
 
 		if (expCache.get('trsHistoryCache')) {
