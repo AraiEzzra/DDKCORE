@@ -83,6 +83,7 @@ module.exports = {
     },
     forging: {
         force: true,
+        minBroadhashConsensus: parseInt(env.TESTNET_MIN_CONSENSUS, 10) || 0,
         secret: env.TESTNET_FORGE_SECRET,
         access: {
             whiteList: [

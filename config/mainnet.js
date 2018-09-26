@@ -75,6 +75,7 @@ module.exports = {
     },
     forging: {
         force: true,
+        minBroadhashConsensus: parseInt(env.MAINNET_MIN_CONSENSUS, 10) || 51,
         secret: env.MAINNET_FORGE_SECRET,
         access: {
             whiteList: [

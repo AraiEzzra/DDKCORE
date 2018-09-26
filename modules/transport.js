@@ -48,6 +48,9 @@ function Transport (cb, scope) {
 					timeout: scope.config.peers.options.timeout,
 				},
 			},
+			forging: {
+				minBroadhashConsensus: scope.config.forging.minBroadhashConsensus,
+			}
 		},
 	};
 	self = this;
@@ -278,7 +281,7 @@ Transport.prototype.poorConsensus = function () {
 	if (__private.broadcaster.consensus === undefined) {
 		return false;
 	} else {
-		return (__private.broadcaster.consensus < constants.minBroadhashConsensus);
+		return (__private.broadcaster.consensus < library.config.forging.minBroadhashConsensus);
 	}
 };
 
