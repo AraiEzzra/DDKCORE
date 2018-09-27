@@ -214,6 +214,12 @@ Chain.prototype.deleteBlock = function (blockId, cb) {
 					term: { id: blockId }
 				}
 			}
+		}, function(err) {
+			if(err) {
+				library.logger.error('Elasticsearch: document deletion error: ' + err);
+			} else {
+				library.logger.info('Elasticsearch: document deleted successfully');
+			}
 		});
 		return setImmediate(cb);
 	}).catch(function (err) {

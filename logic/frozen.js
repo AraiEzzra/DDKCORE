@@ -215,6 +215,12 @@ Frozen.prototype.undo = function (trs, block, sender, cb) {
 				index: 'stake_orders',
 				type: 'stake_orders',
 				id: trs.id
+			}, function(err) {
+				if(err) {
+					self.scope.logger.error('Elasticsearch: document deletion error : ' + err);
+				} else {
+					self.scope.logger.info('Elasticsearch: document deleted successfullly');
+				}
 			});
 			self.scope.db.none(sql.deductFrozeAmount,
 				{

@@ -45,13 +45,13 @@ exports.makeBulk = function (list, index) {
 			indexId = list[current].stakeId;
 		} else {
 			indexId = list[current].b_height;
-		}
+		} 
 		if (index === 'blocks_list') {
 			list[current].b_generatorId = Accounts.prototype.generateAddressByPublicKey(list[current].b_generatorPublicKey);
 		}
 		
 		bulk.push(
-			{ index: { _index: index, _type: index, _id: indexId } }, 
+			{ index: { _index: index, _type: index, _id: indexId } },
 			list[current]
 		);
 	}
@@ -106,8 +106,13 @@ exports.deleteDocument = function (doc) {
 			index: doc.index,
 			type: doc.type,
 			id: doc.id
+		}, function (err, res) {
+			if (err) {
+				return err.message;
+			} else {
+				return null;
+			}
 		});
-		return;
 	})();
 };
 
@@ -117,28 +122,28 @@ exports.deleteDocumentByQuery = function (doc) {
 			index: doc.index,
 			type: doc.type,
 			body: doc.body
-		  });
-		return;
+		}, function (err, res) {
+			if (err) {
+				return err.message;
+			} else {
+				return null;
+			}
+		});
 	})();
 };
 
 exports.updateDocument = function (doc) {
 	(async function () {
-		/* let script = {
-			"inline": "ctx._source.color = 'pink'; ctx._source.weight = 500; ctx._source.diet = 'omnivore';"
-		} */
-
 		await esClient.updateByQuery({
 			index: doc.index,
 			type: doc.type,
-			id: doc.id,
 			body: doc.body
 		}, function (err, res) {
 			if (err) {
-				console.log('elastic updation error : ', err.message);
+				return err.message;
+			} else {
+				return null;
 			}
-			console.log('document updated successfully');
 		});
-		return;
 	})();
 }

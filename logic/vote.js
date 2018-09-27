@@ -541,8 +541,14 @@ Vote.prototype.updateAndCheckVote = function (voteInfo, cb) {
 					}
 				},
 				script: {
-					inline: 'if (ctx._source.currentTime >= ctx._source.nextVoteMilestone) { ctx._source.voteCount = ctx._source.voteCount + 1; ctx._source.nextVoteMilestone = ctx._source.nextVoteMilestone ' + constants.froze.vTime * 60 + '; ctx._source.isTransferred = ctx._source.isTransferred + 1; }'
+					inline: 'if (' + slots.getTime() + ' >= ctx._source.nextVoteMilestone) { ctx._source.voteCount = ctx._source.voteCount + 1; ctx._source.nextVoteMilestone = ctx._source.nextVoteMilestone +' + constants.froze.vTime * 60 + '; ctx._source.isTransferred = ctx._source.isTransferred + 1; }'
 				}
+			}
+		}, function(err) {
+			if(err) {
+				library.logger.error('Elasticsearch: document updation error : ' + err);
+			} else {
+				library.logger.info('Elasticsearch: document updated successfully');
 			}
 		});
 		return setImmediate(cb, null);
