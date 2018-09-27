@@ -43,21 +43,15 @@ exports.makeBulk = function (list, index) {
 	for (let current in list) {
 		if (list[current].stakeId) {
 			indexId = list[current].stakeId;
-		} else if (list[current].id) {
-			indexId = list[current].id;
-		} else if (list[current].transactionId) {
-			indexId = list[current].transactionId;
-		} else if (list[current].address) {
-			indexId = list[current].address;
 		} else {
 			indexId = list[current].b_height;
-		} 
+		}
 		if (index === 'blocks_list') {
 			list[current].b_generatorId = Accounts.prototype.generateAddressByPublicKey(list[current].b_generatorPublicKey);
 		}
 		
 		bulk.push(
-			{ index: { _index: index, _type: index, _id: indexId } },
+			{ index: { _index: index, _type: index, _id: indexId } }, 
 			list[current]
 		);
 	}
