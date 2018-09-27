@@ -5,6 +5,7 @@ let Diff = require('../helpers/diff.js');
 let _ = require('lodash');
 let sql = require('../sql/accounts.js');
 let slots = require('../helpers/slots.js');
+let utils = require('../utils');
 
 // Private fields
 let modules, library, self;
@@ -293,7 +294,7 @@ Vote.prototype.undo = function (trs, block, sender, cb) {
 				blockId: block.id,
 				round: modules.rounds.calc(block.height)
 			}, seriesCb);
-		}, 
+		},
 		//added to remove vote count from mem_accounts table
 		function (seriesCb) {
 			self.updateMemAccounts(
@@ -505,8 +506,27 @@ Vote.prototype.updateAndCheckVote = function (voteInfo, cb) {
 				currentTime: slots.getTime()
 			})
 				.then(function () {
-					library.logger.info(senderId + ': update stake orders isvoteDone and count');
-					return setImmediate(waterCb, null, voteType);
+					library.db.query(sql.GetOrders, {
+						senderId: senderId
+					})
+						.then(function (rows) {
+							if (rows.length > 0) {
+								let bulk = utils.makeBulk(rows, 'stake_orders');
+								utils.indexall(bulk, 'stake_orders')
+									.then(function (result) {
+										library.logger.info(senderId + ': update stake orders isvoteDone and count');
+										return setImmediate(waterCb, null, voteType);
+									})
+									.catch(function (err) {
+										library.logger.error('elasticsearch error :' + err.message);
+										return setImmediate(waterCb, err.message);
+									});
+							}
+						})
+						.catch(function (err) {
+							library.logger.error('database error :' + err.message);
+							return setImmediate(waterCb, err.message);
+						});
 				})
 				.catch(function (err) {
 					library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);

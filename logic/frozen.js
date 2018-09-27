@@ -11,6 +11,7 @@ let env = process.env;
 let cache = require('../modules/cache');
 let transactionTypes = require('../helpers/transactionTypes.js');
 let Reward = require('../helpers/rewards');
+let utils = require('../utils')
 
 let __private = {};
 __private.types = {};
@@ -211,6 +212,17 @@ Frozen.prototype.undo = function (trs, block, sender, cb) {
 			address: trs.senderId
 		})
 		.then(function () {
+			utils.deleteDocument({
+				index: 'stake_orders',
+				type: 'stake_orders',
+				id: trs.id
+			}, function (err) {
+				if (err) {
+					self.scope.logger.error('Elasticsearch: document deletion error : ' + err);
+				} else {
+					self.scope.logger.info('Elasticsearch: document deleted successfullly');
+				}
+			});
 			self.scope.db.none(sql.deductFrozeAmount,
 				{
 					senderId: trs.senderId,

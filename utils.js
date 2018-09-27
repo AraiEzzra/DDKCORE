@@ -87,6 +87,77 @@ exports.indexall = function (bulk, index) {
  * @param {Date} currDate 
  * @returns {String}
  */
-exports.getIgnoredFile = function(currDate) {
-	return currDate.getFullYear()+'-'+('0' + (currDate.getMonth() + 1)).slice(-2)+'-'+('0' + currDate.getDate()).slice(-2)+'.log';
+exports.getIgnoredFile = function (currDate) {
+	return currDate.getFullYear() + '-' + ('0' + (currDate.getMonth() + 1)).slice(-2) + '-' + ('0' + currDate.getDate()).slice(-2) + '.log';
 };
+
+/**
+* @author Hotam Singh
+* @desc Deletes a record from elasticsearch if removed from the database
+* @implements {Deletes records from esClient}
+* @param {doc} containes info regarding document to be deleted i.e index, type, id
+* @returns {String} || null
+*/
+
+exports.deleteDocument = function (doc) {
+	(async function () {
+		await esClient.delete({
+			index: doc.index,
+			type: doc.type,
+			id: doc.id
+		}, function (err, res) {
+			if (err) {
+				return err.message;
+			} else {
+				return null;
+			}
+		});
+	})();
+};
+
+/**
+* @author Hotam Singh
+* @desc Deletes a record from elasticsearch if removed from the database based on query
+* @implements {Deletes records from esClient}
+* @param {doc} containes info regarding document to be deleted i.e index, type, id, body
+* @returns {String} || null
+*/
+exports.deleteDocumentByQuery = function (doc) {
+	(async function () {
+		await client.deleteByQuery({
+			index: doc.index,
+			type: doc.type,
+			body: doc.body
+		}, function (err, res) {
+			if (err) {
+				return err.message;
+			} else {
+				return null;
+			}
+		});
+	})();
+};
+
+/**
+* @author Hotam Singh
+* @desc Updates a record from elasticsearch if updated in the database
+* @implements {updates records in esClient}
+* @param {doc} containes info regarding document to be deleted i.e index, type, id, body
+* @returns {String} || null
+*/
+
+exports.updateDocument = function (doc) {
+	(async function () {
+		await esClient.updateByQuery({
+			index: doc.index,
+			type: doc.type,
+			body: doc.body
+		}, function (err, res) {
+			if (err) {
+				return err.message;
+			} else {
+				return null;
+			}
+		});
+	})();
+}

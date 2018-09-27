@@ -40,6 +40,8 @@ let Accounts = {
 
 	updateStakeOrder: 'UPDATE stake_orders SET "voteCount"="voteCount"+1, "nextVoteMilestone"=${currentTime}+${milestone} WHERE "senderId"=${senderId} AND "status"=1 AND ( "nextVoteMilestone" = 0 OR ${currentTime} >= "nextVoteMilestone")',
 
+	GetOrders: 'SELECT * FROM stake_orders WHERE "senderId"=${senderId} AND "status" = 1',
+	
 	checkWeeklyVote: 'SELECT count(*) FROM stake_orders WHERE "senderId"=${senderId} AND "status"=1 AND ( "nextVoteMilestone" = 0 OR ${currentTime} >= "nextVoteMilestone")',
 
     updateETPSUserInfo: 'UPDATE etps_user SET "transferred_time"=${insertTime}, "transferred_etp"=1 WHERE "id"=${userId} ',
