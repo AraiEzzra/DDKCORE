@@ -48,7 +48,9 @@ function TransactionsHttpApi (transactionsModule, app, logger, cache) {
 	});
 
 	router.map(transactionsModule.internal, {
-		'get /getTransactionHistory': 'getTransactionHistory'
+		'get /getTransactionHistory': 'getTransactionHistory',
+		'put /enableSendTransaction': 'enableSendTransaction',
+		'put /disableSendTransaction': 'disableSendTransaction'
 	});
 
 	httpApi.registerEndpoint('/api/transactions', app, router, transactionsModule.isLoaded);

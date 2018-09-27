@@ -41,6 +41,11 @@ function FrogingsHttpApi (frogingsModule, app, logger, cache) {
 		'post /getMyDDKFrozen' : 'getMyDDKFrozen'
 	});
 
+	router.map(frogingsModule.internal, {
+		'put /enableStakeTransaction': 'enableStakeTransaction',
+		'put /disableStakeTransaction': 'disableStakeTransaction'
+	});
+
 	httpApi.registerEndpoint('/api/frogings', app, router, frogingsModule.isLoaded);
 }
 

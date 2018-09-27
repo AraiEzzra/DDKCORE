@@ -5,6 +5,7 @@ let Diff = require('../helpers/diff.js');
 let _ = require('lodash');
 let sql = require('../sql/accounts.js');
 let slots = require('../helpers/slots.js');
+let utils = require('../utils');
 
 // Private fields
 let modules, library, self;
@@ -527,6 +528,23 @@ Vote.prototype.updateAndCheckVote = function (voteInfo, cb) {
 			library.logger.warn(err);
 			return setImmediate(cb, err);
 		}
+		utils.updateDocument({
+			index: 'stake_orders',
+			type: 'stake_orders',
+			body: {
+				query: {
+					bool: {
+						should: [
+							{ match: { senderId: senderId } },
+							{ match: { status: 1 } }
+						]
+					}
+				},
+				script: {
+					inline: 'if (ctx._source.currentTime >= ctx._source.nextVoteMilestone) { ctx._source.voteCount = ctx._source.voteCount + 1; ctx._source.nextVoteMilestone = ctx._source.nextVoteMilestone ' + constants.froze.vTime * 60 + '; ctx._source.isTransferred = ctx._source.isTransferred + 1; }'
+				}
+			}
+		});
 		return setImmediate(cb, null);
 	});
 

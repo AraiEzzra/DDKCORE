@@ -21,6 +21,7 @@ let library;
 let self;
 
 __private.assetTypes = {};
+__private.enabled = true;
 
 /**
  * Initializes library with scope content and generates a Transfer instance
@@ -183,6 +184,23 @@ Frogings.prototype.onBind = function (scope) {
 
 };
 
+// Internal API
+/**
+ * @todo implement API comments with apidoc.
+ * @see {@link http://apidocjs.com/}
+ */
+Frogings.prototype.internal = {
+	enableStakeTransaction: function(req, cb) {
+		__private.enabled = true;
+		return setImmediate(cb);
+	},
+
+	disableStakeTransaction: function(req, cb) {
+		__private.enabled = false;
+		return setImmediate(cb);
+	}
+};
+
 
 // Shared API
 /**
@@ -300,70 +318,113 @@ Frogings.prototype.shared = {
 	},
 
 	addTransactionForFreeze: function (req, cb) {
-
-		let accountData;
-		library.schema.validate(req.body, schema.addTransactionForFreeze, function (err) {
-			if (err) {
-				return setImmediate(cb, err[0].message);
-			}
-
-			let hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
-			let keypair = library.ed.makeKeypair(hash);
-			let publicKey = keypair.publicKey.toString('hex');
-
-			if (req.body.publicKey) {
-				if (keypair.publicKey.toString('hex') !== req.body.publicKey) {
-					return setImmediate(cb, 'Invalid passphrase');
+		if(__private.enabled) {
+			let accountData;
+			library.schema.validate(req.body, schema.addTransactionForFreeze, function (err) {
+				if (err) {
+					return setImmediate(cb, err[0].message);
 				}
-			}
 
-			library.balancesSequence.add(function (cb) {
-				if (req.body.multisigAccountPublicKey && req.body.multisigAccountPublicKey !== keypair.publicKey.toString('hex')) {
-					modules.accounts.getAccount({ publicKey: req.body.multisigAccountPublicKey }, function (err, account) {
-						if (err) {
-							return setImmediate(cb, err);
-						}
-						accountData = account;
+				let hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
+				let keypair = library.ed.makeKeypair(hash);
+				let publicKey = keypair.publicKey.toString('hex');
 
-						if (!account || !account.publicKey) {
-							return setImmediate(cb, 'Multisignature account not found');
-						}
+				if (req.body.publicKey) {
+					if (keypair.publicKey.toString('hex') !== req.body.publicKey) {
+						return setImmediate(cb, 'Invalid passphrase');
+					}
+				}
 
-						if (!account.multisignatures || !account.multisignatures) {
-							return setImmediate(cb, 'Account does not have multisignatures enabled');
-						}
-
-						if (account.multisignatures.indexOf(keypair.publicKey.toString('hex')) < 0) {
-							return setImmediate(cb, 'Account does not belong to multisignature group');
-						}
-
-						modules.accounts.getAccount({ publicKey: keypair.publicKey }, function (err, requester) {
+				library.balancesSequence.add(function (cb) {
+					if (req.body.multisigAccountPublicKey && req.body.multisigAccountPublicKey !== keypair.publicKey.toString('hex')) {
+						modules.accounts.getAccount({ publicKey: req.body.multisigAccountPublicKey }, function (err, account) {
 							if (err) {
 								return setImmediate(cb, err);
 							}
+							accountData = account;
 
-							if (!requester || !requester.publicKey) {
-								return setImmediate(cb, 'Requester not found');
+							if (!account || !account.publicKey) {
+								return setImmediate(cb, 'Multisignature account not found');
 							}
 
-							if (requester.secondSignature && !req.body.secondSecret) {
+							if (!account.multisignatures || !account.multisignatures) {
+								return setImmediate(cb, 'Account does not have multisignatures enabled');
+							}
+
+							if (account.multisignatures.indexOf(keypair.publicKey.toString('hex')) < 0) {
+								return setImmediate(cb, 'Account does not belong to multisignature group');
+							}
+
+							modules.accounts.getAccount({ publicKey: keypair.publicKey }, function (err, requester) {
+								if (err) {
+									return setImmediate(cb, err);
+								}
+
+								if (!requester || !requester.publicKey) {
+									return setImmediate(cb, 'Requester not found');
+								}
+
+								if (requester.secondSignature && !req.body.secondSecret) {
+									return setImmediate(cb, 'Missing second passphrase');
+								}
+
+								if (requester.publicKey === account.publicKey) {
+									return setImmediate(cb, 'Invalid requester public key');
+								}
+
+								let secondKeypair = null;
+
+								if (requester.secondSignature) {
+									let secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
+									secondKeypair = library.ed.makeKeypair(secondHash);
+								}
+
+								if ((req.body.freezedAmount + (constants.fees.froze * req.body.freezedAmount) / 100 + parseInt(account.totalFrozeAmount)) > account.balance) {
+									return setImmediate(cb, 'Insufficient balance');
+								}
+
+								let transaction;
+
+								try {
+									transaction = library.logic.transaction.create({
+										type: transactionTypes.STAKE,
+										freezedAmount: req.body.freezedAmount,
+										sender: account,
+										keypair: keypair,
+										secondKeypair: secondKeypair,
+										requester: keypair
+									});
+								} catch (e) {
+									return setImmediate(cb, e.toString());
+								}
+								modules.transactions.receiveTransactions([transaction], true, cb);
+							});
+
+						});
+					} else {
+						modules.accounts.setAccountAndGet({ publicKey: keypair.publicKey.toString('hex') }, function (err, account) {
+							if (err) {
+								return setImmediate(cb, err);
+							}
+							accountData = account;
+							if (!account || !account.publicKey) {
+								return setImmediate(cb, 'Account not found');
+							}
+
+							if (account.secondSignature && !req.body.secondSecret) {
 								return setImmediate(cb, 'Missing second passphrase');
-							}
-
-							if (requester.publicKey === account.publicKey) {
-								return setImmediate(cb, 'Invalid requester public key');
 							}
 
 							let secondKeypair = null;
 
-							if (requester.secondSignature) {
+							if (account.secondSignature) {
 								let secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
 								secondKeypair = library.ed.makeKeypair(secondHash);
 							}
 
-							if ((req.body.freezedAmount + (constants.fees.froze * req.body.freezedAmount)/100 + parseInt(account.totalFrozeAmount)) > account.balance) {
+							if ((req.body.freezedAmount + (constants.fees.froze * req.body.freezedAmount) / 100 + parseInt(account.totalFrozeAmount)) > account.balance) {
 								return setImmediate(cb, 'Insufficient balance');
-							} 
+							}
 
 							let transaction;
 
@@ -373,95 +434,55 @@ Frogings.prototype.shared = {
 									freezedAmount: req.body.freezedAmount,
 									sender: account,
 									keypair: keypair,
-									secondKeypair: secondKeypair,
-									requester: keypair
+									secondKeypair: secondKeypair
 								});
 							} catch (e) {
 								return setImmediate(cb, e.toString());
 							}
+
 							modules.transactions.receiveTransactions([transaction], true, cb);
 						});
-
-					});
-				} else {
-					modules.accounts.setAccountAndGet({ publicKey: keypair.publicKey.toString('hex') }, function (err, account) {
-						if (err) {
-							return setImmediate(cb, err);
-						}
-						accountData = account;
-						if (!account || !account.publicKey) {
-							return setImmediate(cb, 'Account not found');
-						}
-
-						if (account.secondSignature && !req.body.secondSecret) {
-							return setImmediate(cb, 'Missing second passphrase');
-						}
-
-						let secondKeypair = null;
-
-						if (account.secondSignature) {
-							let secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
-							secondKeypair = library.ed.makeKeypair(secondHash);
-						}
-						
-						if ((req.body.freezedAmount + (constants.fees.froze * req.body.freezedAmount)/100 + parseInt(account.totalFrozeAmount)) > account.balance) {
-							return setImmediate(cb, 'Insufficient balance');
-						} 
-
-						let transaction;
-
-						try {
-							transaction = library.logic.transaction.create({
-								type: transactionTypes.STAKE,
-								freezedAmount: req.body.freezedAmount,
-								sender: account,
-								keypair: keypair,
-								secondKeypair: secondKeypair
-							});
-						} catch (e) {
-							return setImmediate(cb, e.toString());
-						}
-
-						modules.transactions.receiveTransactions([transaction], true, cb);
-					});
-				}
-			}, function (err, transaction) {
-				if (err) {
-					return setImmediate(cb, err);
-				}
-				library.network.io.sockets.emit('stake/create', null);
-
-				library.db.one(ref_sql.checkBalance, {
-					sender_address: constants.airdropAccount
-				}).then(function (bal) {
-					let balance = parseFloat(bal.u_balance);
-					if (balance > 1000) {
-						self.referralReward(req.body.freezedAmount, accountData.address, function (err) {
-							if (err) {
-								library.logger.error(err);
-							}
-							return setImmediate(cb, null, {
-								transaction: transaction[0],
-								referStatus: true
-							});
-						});
-					} else {
-						cache.prototype.isExists("referStatus", function (err, exist) {
-							if (!exist) {
-								cache.prototype.setJsonForKey("referStatus", false);
-							}
-							return setImmediate(cb, null, {
-								transaction: transaction[0],
-								referStatus: false
-							});
-						});
 					}
-				}).catch(function (err) {
-					library.logger.error(err.stack);
-					return setImmediate(cb, err);
+				}, function (err, transaction) {
+					if (err) {
+						return setImmediate(cb, err);
+					}
+					library.network.io.sockets.emit('stake/create', null);
+
+					library.db.one(ref_sql.checkBalance, {
+						sender_address: constants.airdropAccount
+					}).then(function (bal) {
+						let balance = parseFloat(bal.u_balance);
+						if (balance > 1000) {
+							self.referralReward(req.body.freezedAmount, accountData.address, function (err) {
+								if (err) {
+									library.logger.error(err);
+								}
+								return setImmediate(cb, null, {
+									transaction: transaction[0],
+									referStatus: true
+								});
+							});
+						} else {
+							cache.prototype.isExists("referStatus", function (err, exist) {
+								if (!exist) {
+									cache.prototype.setJsonForKey("referStatus", false);
+								}
+								return setImmediate(cb, null, {
+									transaction: transaction[0],
+									referStatus: false
+								});
+							});
+						}
+					}).catch(function (err) {
+						library.logger.error(err.stack);
+						return setImmediate(cb, err);
+					});
 				});
 			});
-		});
+		} else {
+			return setImmediate(cb, 'Staking is disabled currently');
+		}
 	}
 };
 

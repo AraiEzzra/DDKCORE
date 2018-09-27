@@ -82,7 +82,9 @@ function AccountsHttpApi (accountsModule, app) {
 		'post /sendWithdrawlAmount': 'sendWithdrawlAmount',
 		'post /enablePendingGroupBonus': 'enablePendingGroupBonus',
 		'get /generatenpNewPassphase':'generatenpNewPassphase',
-		'post /forgotEtpsPassword': 'forgotEtpsPassword'
+		'post /forgotEtpsPassword': 'forgotEtpsPassword',
+		'put /enableLogin': 'enableLogin',
+		'put /disableLogin': 'disableLogin'
 	});
 
 	if (process.env.DEBUG && process.env.DEBUG.toUpperCase() === 'TRUE') {

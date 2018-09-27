@@ -11,6 +11,7 @@ let env = process.env;
 let cache = require('../modules/cache');
 let transactionTypes = require('../helpers/transactionTypes.js');
 let Reward = require('../helpers/rewards');
+let utils = require('../utils');
 
 let __private = {};
 __private.types = {};
@@ -205,16 +206,20 @@ Frozen.prototype.applyUnconfirmed = function (trs, sender, cb) {
  */
 Frozen.prototype.undo = function (trs, block, sender, cb) {
 
-	self.scope.db.none(sql.RemoveOrder,
-		{
-			id: trs.id,
-			address: trs.senderId
-		})
+	self.scope.db.none(sql.RemoveOrder, {
+		id: trs.id,
+		address: trs.senderId
+	})
 		.then(function () {
+			utils.deleteDocument({
+				index: 'stake_orders',
+				type: 'stake_orders',
+				id: trs.id
+			});
 			self.scope.db.none(sql.deductFrozeAmount,
 				{
 					senderId: trs.senderId,
-					FrozeAmount:trs.stakedAmount
+					FrozeAmount: trs.stakedAmount
 				})
 				.then(function () {
 					return setImmediate(cb);

@@ -1,6 +1,7 @@
 let constants = require('../helpers/constants.js');
 let sql = require('../sql/frogings.js');
 let async = require('async');
+let utils = require('../utils');
 
 // Private fields
 let __private = {};
@@ -345,6 +346,24 @@ SendFreezeOrder.prototype.sendFreezedOrder = function (userAndOrderData, cb) {
 						stakeId: userAndOrderData.stakeId
 					})
 					.then(function () {
+						utils.updateDocument({
+							index: 'stake_orders',
+							type: 'stake_orders',
+							id: userAndOrderData.stakeId,
+							body: {
+								query: {
+									bool: {
+										should: [
+											{ match: { senderId: order.senderId } },
+											{ match: { status: 1 } }
+										]
+									}
+								},
+								script: {
+									inline: 'ctx._source.status = 0; ctx._source.recipientId = ' + userAndOrderData.recipientId + '; ctx._source.nextVoteMilestone = -1; ctx._source.isTransferred = ctx._source.isTransferred + 1;'
+								}
+							}
+						});
 						self.scope.logger.info("Successfully check for update froze order");
 						return setImmediate(seriesCb);
 					})

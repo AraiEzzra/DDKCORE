@@ -96,3 +96,55 @@ exports.indexall = function (bulk, index) {
 exports.getIgnoredFile = function(currDate) {
 	return currDate.getFullYear()+'-'+('0' + (currDate.getMonth() + 1)).slice(-2)+'-'+('0' + currDate.getDate()).slice(-2)+'.log';
 };
+
+/**
+ * @desc Deletes a record from elasticsearch if removed from the database
+ * @implements {Deletes records from esClient}
+ * @param {index} index of which a document to be deleted
+ * @param {type} type of document to be deleted
+ * @param {id} id of document to be deleted 
+ * @returns {String}
+ */
+
+exports.deleteDocument = function (doc) {
+	(async function () {
+		await esClient.delete({
+			index: doc.index,
+			type: doc.type,
+			id: doc.id
+		});
+		return;
+	})();
+};
+
+exports.deleteDocumentByQuery = function (doc) {
+	(async function () {
+		await client.deleteByQuery({
+			index: doc.index,
+			type: doc.type,
+			body: doc.body
+		  });
+		return;
+	})();
+};
+
+exports.updateDocument = function (doc) {
+	(async function () {
+		/* let script = {
+			"inline": "ctx._source.color = 'pink'; ctx._source.weight = 500; ctx._source.diet = 'omnivore';"
+		} */
+
+		await esClient.updateByQuery({
+			index: doc.index,
+			type: doc.type,
+			id: doc.id,
+			body: doc.body
+		}, function (err, res) {
+			if (err) {
+				console.log('elastic updation error : ', err.message);
+			}
+			console.log('document updated successfully');
+		});
+		return;
+	})();
+}

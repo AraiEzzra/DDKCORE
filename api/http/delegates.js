@@ -57,7 +57,9 @@ function DelegatesHttpApi (delegatesModule, app, logger, cache) {
 		'post /forging/disable': 'forgingDisable',
 		'get /forging/status': 'forgingStatus',
 		'get /getLatestVoters': 'getLatestVoters',
-		'get /getLatestDelegates': 'getLatestDelegates'
+		'get /getLatestDelegates': 'getLatestDelegates',
+		'put /enableDelegateRegistration': 'enableDelegateRegistration',
+		'put /disableDelegateRegistration': 'disableDelegateRegistration'
 	});
 
 	if (process.env.DEBUG) {

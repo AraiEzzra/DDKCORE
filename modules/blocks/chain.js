@@ -8,6 +8,7 @@ let transactionTypes = require('../../helpers/transactionTypes.js');
 let slots = require('../../helpers/slots.js');
 let pgp = require('pg-promise');
 let path = require('path');
+let utils = require('../../utils');
 
 let modules, library, self, __private = {};
 
@@ -205,6 +206,15 @@ Chain.prototype.deleteBlock = function (blockId, cb) {
 	// Delete block with ID from blocks table
 	// WARNING: DB_WRITE
 	library.db.none(sql.deleteBlock, {id: blockId}).then(function () {
+		utils.deleteDocumentByQuery({
+			index: 'blocks_list',
+			type: 'blocks_list',
+			body: {
+				query: {
+					term: { id: blockId }
+				}
+			}
+		});
 		return setImmediate(cb);
 	}).catch(function (err) {
 		library.logger.error(err.stack);

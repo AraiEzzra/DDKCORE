@@ -27,6 +27,7 @@ let frogings_sql = require('../sql/frogings');
 let modules, library, self, __private = {}, shared = {};
 
 __private.assetTypes = {};
+__private.enabled = true;
 __private.blockReward = new BlockReward();
 
 /**
@@ -418,132 +419,136 @@ Accounts.prototype.circulatingSupply = function(cb) {
  */
 Accounts.prototype.shared = {
 	open: function (req, cb) {
-		library.schema.validate(req.body, schema.open, function (err) {
-			if (err) {
-				return setImmediate(cb, err[0].message);
-			}
+		if (__private.enabled) {
+			library.schema.validate(req.body, schema.open, function (err) {
+				if (err) {
+					return setImmediate(cb, err[0].message);
+				}
 
-			__private.openAccount(req.body.secret, function (err, account) {
-				if (!err) {
+				__private.openAccount(req.body.secret, function (err, account) {
+					if (!err) {
 
-					let payload = {
-						secret: req.body.secret,
-						address: account.address
-					};
-					let token = jwt.sign(payload, library.config.jwt.secret, {
-						expiresIn: library.config.jwt.tokenLife,
-						mutatePayload: false
-					});
-
-					let REDIS_KEY_USER_INFO_HASH = 'userAccountInfo_' + account.address;
-
-					let accountData = {
-						address: account.address,
-						username: account.username,
-						unconfirmedBalance: account.u_balance,
-						balance: account.balance,
-						publicKey: account.publicKey,
-						unconfirmedSignature: account.u_secondSignature,
-						secondSignature: account.secondSignature,
-						secondPublicKey: account.secondPublicKey,
-						multisignatures: account.multisignatures,
-						u_multisignatures: account.u_multisignatures,
-						totalFrozeAmount: account.totalFrozeAmount,
-						groupBonus: account.group_bonus
-					};
-
-					accountData.token = token;
-
-					if (req.body.email) {
-						let mailOptions = {
-							From: library.config.mailFrom,
-							To: req.body.email,
-							TemplateId: 8265220,
-							TemplateModel: {
-								"ddk": {
-									"username": req.body.email,
-									"ddk_address": accountData.address,
-									"public_key": accountData.publicKey
-								}
-							}
+						let payload = {
+							secret: req.body.secret,
+							address: account.address
 						};
-						(async function () {
-							await mailServices.sendEmailWithTemplate(mailOptions, function (err) {
-								if (err) {
-									library.logger.error(err.stack);
-									return setImmediate(cb, err.toString());
+						let token = jwt.sign(payload, library.config.jwt.secret, {
+							expiresIn: library.config.jwt.tokenLife,
+							mutatePayload: false
+						});
+
+						let REDIS_KEY_USER_INFO_HASH = 'userAccountInfo_' + account.address;
+
+						let accountData = {
+							address: account.address,
+							username: account.username,
+							unconfirmedBalance: account.u_balance,
+							balance: account.balance,
+							publicKey: account.publicKey,
+							unconfirmedSignature: account.u_secondSignature,
+							secondSignature: account.secondSignature,
+							secondPublicKey: account.secondPublicKey,
+							multisignatures: account.multisignatures,
+							u_multisignatures: account.u_multisignatures,
+							totalFrozeAmount: account.totalFrozeAmount,
+							groupBonus: account.group_bonus
+						};
+
+						accountData.token = token;
+
+						if (req.body.email) {
+							let mailOptions = {
+								From: library.config.mailFrom,
+								To: req.body.email,
+								TemplateId: 8265220,
+								TemplateModel: {
+									"ddk": {
+										"username": req.body.email,
+										"ddk_address": accountData.address,
+										"public_key": accountData.publicKey
+									}
 								}
-							});
-						})();
-					}
-
-					//library.cache.client.set('jwtToken_' + account.address, token, 'ex', 100);
-					/****************************************************************/
-
-					cache.prototype.isExists(REDIS_KEY_USER_INFO_HASH, function (err, isExist) {
-						
-						if (!isExist) {
-							cache.prototype.setJsonForKey(REDIS_KEY_USER_INFO_HASH, accountData.address);
-							self.referralLinkChain(req.body.referal, account.address, function (error) {
-								if (error) {
-									cache.prototype.deleteJsonForKey(REDIS_KEY_USER_INFO_HASH);
-									library.logger.error("Referral API Error : "+error);
-									return setImmediate(cb, error.toString());
-								} else {
-									let data = {
-										address: accountData.address,
-										u_isDelegate: 0,
-										isDelegate: 0,
-										vote: 0,
-										publicKey: accountData.publicKey,
-									};
-									if (account.u_isDelegate) {
-										data.u_isDelegate = account.u_isDelegate;
+							};
+							(async function () {
+								await mailServices.sendEmailWithTemplate(mailOptions, function (err) {
+									if (err) {
+										library.logger.error(err.stack);
+										return setImmediate(cb, err.toString());
 									}
-									if (account.isDelegate) {
-										data.isDelegate = account.isDelegate;
-									}
-									if (account.vote) {
-										data.vote = account.vote;
-									}
-									library.logic.account.set(accountData.address, data, function (error) {
-										if (!error) {
-											return setImmediate(cb, null, {
-												account: accountData
-											});
+								});
+							})();
+						}
 
-										} else {
-											return setImmediate(cb, error);
+						//library.cache.client.set('jwtToken_' + account.address, token, 'ex', 100);
+						/****************************************************************/
+
+						cache.prototype.isExists(REDIS_KEY_USER_INFO_HASH, function (err, isExist) {
+
+							if (!isExist) {
+								cache.prototype.setJsonForKey(REDIS_KEY_USER_INFO_HASH, accountData.address);
+								self.referralLinkChain(req.body.referal, account.address, function (error) {
+									if (error) {
+										cache.prototype.deleteJsonForKey(REDIS_KEY_USER_INFO_HASH);
+										library.logger.error("Referral API Error : " + error);
+										return setImmediate(cb, error.toString());
+									} else {
+										let data = {
+											address: accountData.address,
+											u_isDelegate: 0,
+											isDelegate: 0,
+											vote: 0,
+											publicKey: accountData.publicKey,
+										};
+										if (account.u_isDelegate) {
+											data.u_isDelegate = account.u_isDelegate;
 										}
+										if (account.isDelegate) {
+											data.isDelegate = account.isDelegate;
+										}
+										if (account.vote) {
+											data.vote = account.vote;
+										}
+										library.logic.account.set(accountData.address, data, function (error) {
+											if (!error) {
+												return setImmediate(cb, null, {
+													account: accountData
+												});
+
+											} else {
+												return setImmediate(cb, error);
+											}
+										});
+									}
+								});
+							} else {
+								if (req.body.etps_user) {
+									library.db.none(sql.updateEtp, {
+										transfer_time: slots.getTime(),
+										address: accountData.address
+									}).then(function () {
+										return setImmediate(cb, null, {
+											account: accountData
+										});
+									}).catch(function (err) {
+										library.logger.error(err.stack);
+										return setImmediate(cb, err);
 									});
-								}
-							});
-						} else {
-							if (req.body.etps_user) {
-								library.db.none(sql.updateEtp, {
-									transfer_time: slots.getTime(),
-									address: accountData.address
-								}).then(function () {
+								} else {
 									return setImmediate(cb, null, {
 										account: accountData
 									});
-								}).catch(function (err) {
-									library.logger.error(err.stack);
-									return setImmediate(cb, err);
-								});
-							} else {
-								return setImmediate(cb, null, {
-									account: accountData
-								});
+								}
 							}
-						}
-					});
+						});
 
-				} else {
-					return setImmediate(cb, err);
-				}
+					} else {
+						return setImmediate(cb, err);
+					}
+				});
 			});
-		});
+		} else {
+			return setImmediate(cb, 'Login is disabled');
+		}
 	},
 
 	getBalance: function (req, cb) {
@@ -1662,6 +1667,16 @@ Accounts.prototype.internal = {
 			return setImmediate(cb, 'Invalid username or email');
 		});
 
+	},
+
+	enableLogin: function(req, cb) {
+		__private.enabled = true;
+		return setImmediate(cb);
+	},
+
+	disableLogin: function(req, cb) {
+		__private.enabled = false;
+		return setImmediate(cb);
 	}
 };
 
