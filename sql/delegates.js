@@ -52,7 +52,7 @@ let DelegatesSql = {
 
 	getVoters: 'SELECT ARRAY_AGG("accountId") AS "accountIds" FROM mem_accounts2delegates WHERE "dependentId" = ${publicKey}',
 
-	getLatestVoters: 'SELECT * from trs WHERE type = 3 ORDER BY timestamp DESC LIMIT ${limit}',
+	getLatestVoters: 'SELECT "id","senderId","timestamp" FROM trs WHERE type = 3 ORDER BY timestamp DESC LIMIT ${limit}',
 
 	getLatestDelegates: 'SELECT d."username" AS "username", t."t_senderId" AS "address", ENCODE(t."t_senderPublicKey", \'hex\') AS "publicKey", t."t_timestamp" AS "timestamp" FROM trs_list t INNER JOIN delegates d ON t."t_id" = d."transactionId" WHERE t."t_type" = 2 ORDER BY "t_timestamp" DESC LIMIT ${limit}'
 };

@@ -490,7 +490,7 @@ Vote.prototype.updateAndCheckVote = function (voteInfo, cb) {
 					}
 				})
 				.catch(function (err) {
-					library.logger.error(err.stack);
+					library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 					return setImmediate(waterCb, err.toString());
 				});
 		} else {
@@ -510,7 +510,7 @@ Vote.prototype.updateAndCheckVote = function (voteInfo, cb) {
 					return setImmediate(waterCb, null, voteType);
 				})
 				.catch(function (err) {
-					library.logger.error(err.stack);
+					library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 					return setImmediate(waterCb, err.toString());
 				});
 		} else {
@@ -599,7 +599,7 @@ Vote.prototype.updateMemAccounts = function (voteInfo, cb) {
 				return setImmediate(waterCb);
 			})
 			.catch(function (err) {
-				library.logger.error(err.stack);
+				library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 				return setImmediate(waterCb, 'vote updation in mem_accounts table error');
 			});
 	}

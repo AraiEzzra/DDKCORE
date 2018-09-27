@@ -79,8 +79,8 @@ Signature.prototype.verify = function (trs, sender, cb) {
 		if (!trs.asset.signature.publicKey || Buffer.from(trs.asset.signature.publicKey, 'hex').length !== 32) {
 			return setImmediate(cb, 'Invalid public key');
 		}
-	} catch (e) {
-		library.logger.error(e.stack);
+	} catch (err) {
+		library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 		return setImmediate(cb, 'Invalid public key');
 	}
 

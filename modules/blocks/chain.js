@@ -69,7 +69,7 @@ Chain.prototype.saveGenesisBlock = function (cb) {
 			return setImmediate(cb);
 		}
 	}).catch(function (err) {
-		library.logger.error(err.stack);
+		library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 		return setImmediate(cb, 'Blocks#saveGenesisBlock error');
 	});
 };
@@ -106,7 +106,7 @@ Chain.prototype.saveBlock = function (block, cb) {
 		// Execute afterSave for transactions
 		return __private.afterSave(block, cb);
 	}).catch(function (err) {
-		library.logger.error(err.stack);
+		library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 		return setImmediate(cb, 'Blocks#saveBlock error');
 	});
 };
@@ -223,7 +223,7 @@ Chain.prototype.deleteBlock = function (blockId, cb) {
 		});
 		return setImmediate(cb);
 	}).catch(function (err) {
-		library.logger.error(err.stack);
+		library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 		return setImmediate(cb, 'Blocks#deleteBlock error');
 	});
 };
@@ -244,7 +244,7 @@ Chain.prototype.deleteAfterBlock = function (blockId, cb) {
 	library.db.query(sql.deleteAfterBlock, {id: blockId}).then(function (res) {
 		return setImmediate(cb, null, res);
 	}).catch(function (err) {
-		library.logger.error(err.stack);
+		library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 		return setImmediate(cb, 'Blocks#deleteAfterBlock error');
 	});
 };

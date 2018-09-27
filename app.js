@@ -161,8 +161,6 @@ let config = {
 };
 
 //merge environment variables
-let env = require('./config/env');
-utils.merge(appConfig, env);
 if(appConfig.forging.hasOwnProperty('secret') && appConfig.forging.secret.length > 0) {
 	appConfig.forging.secret = appConfig.forging.secret.split(',');
 }
@@ -181,7 +179,7 @@ let d = require('domain').create();
 
 d.on('error', function (err) {
 	console.log('error : ', err.stack);
-	logger.error('Domain master', { message: err.message, stack: err.stack });
+	logger.error('Domain master' + err.stack );
 	process.exit(0);
 });
 
@@ -672,7 +670,7 @@ d.run(function () {
 		 */
 		listen: ['ready', function (scope, cb) {
 			scope.network.server.listen(scope.config.port, scope.config.address, function (err) {
-				scope.logger.info('ddk started: ' + scope.config.address + ':' + scope.config.app.port);
+				scope.logger.info('ddk started: ' + scope.config.address + ':' + scope.config.port);
 
 				if (!err) {
 					if (scope.config.ssl.enabled) {
@@ -701,7 +699,7 @@ d.run(function () {
 			//Migration Process
 			//require('./helpers/accountCreateETPS').AccountCreateETPS(scope);
 		
-			cronjob.startJob('updateDataOnElasticSearch');
+			//cronjob.startJob('updateDataOnElasticSearch');
 			//cronjob.startJob('checkFrozeOrders');
 			cronjob.startJob('archiveLogFiles');
 			cronjob.startJob('unlockLockedUsers');
@@ -770,7 +768,7 @@ d.run(function () {
 			 * Receives a 'SIGTERM' signal and emits a cleanup.
 			 * @listens SIGTERM
 			 */
-			process.once('SIGTERM', function () {
+			process.once('SIGTERM', function (err) {
 				/**
 				 * emits cleanup once 'SIGTERM'.
 				 * @emits cleanup
@@ -786,7 +784,7 @@ d.run(function () {
 			 * Receives an 'exit' signal and emits a cleanup.
 			 * @listens exit
 			 */
-			process.once('exit', function () {
+			process.once('exit', function (err) {
 				/**
 				 * emits cleanup once 'exit'.
 				 * @emits cleanup
@@ -802,7 +800,7 @@ d.run(function () {
 			 * Receives a 'SIGINT' signal and emits a cleanup.
 			 * @listens SIGINT
 			 */
-			process.once('SIGINT', function () {
+			process.once('SIGINT', function (err) {
 				/**
 				 * emits cleanup once 'SIGINT'.
 				 * @emits cleanup
@@ -823,7 +821,8 @@ d.run(function () {
  */
 process.on('uncaughtException', function (err) {
 	// Handle error safely
-	logger.error('System error', { message: err.message, stack: err.stack });
+	console.log(err);
+//	logger.error('System error', { stack: err.stack });
 	/**
 	 * emits cleanup once 'uncaughtException'.
 	 * @emits cleanup

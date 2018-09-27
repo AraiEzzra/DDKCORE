@@ -105,8 +105,8 @@ exports.checkFrozeOrders = {
 	job: function () {
 		let date = new Date();
 		//FIXME: comment or remove below statement once this goes live
-		library.logic.frozen.checkFrozeOrders();
-		if (date.getHours() === 10 && date.getMinutes() === 20) {
+		//library.logic.frozen.checkFrozeOrders();
+		if (date.getHours() === 11 && date.getMinutes() === 30) {
 			library.logic.frozen.checkFrozeOrders();
 		}
 	},
@@ -175,7 +175,7 @@ exports.unlockLockedUsers = {
 								return null;
 							})
 							.catch(function (err) {
-								library.logger.error(err.stack);
+								library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 								return null;
 							});
 					}

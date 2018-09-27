@@ -209,32 +209,6 @@ Frogings.prototype.internal = {
  */
 Frogings.prototype.shared = {
 
-	countStakeholders: function (req, cb) {
-
-		library.db.one(sql.countStakeholders)
-		.then(function (row) {
-			return setImmediate(cb, null, {
-				countStakeholders: row
-			});
-		})
-		.catch(function (err) {
-			return setImmediate(cb, err);
-		});
-
-	},
-
-	totalDDKStaked: function (req, cb) {
-		library.db.one(sql.getTotalStakedAmount)
-		.then(function (row) {
-			return setImmediate(cb, null, {
-				totalDDKStaked: row
-			});
-		})
-		.catch(function (err) {
-			return setImmediate(cb, err);
-		});
-	},
-
 	getMyDDKFrozen: function (req, cb) {
 		library.schema.validate(req.body, schema.getMyDDKFrozen, function (err) {
 			if (err) {
