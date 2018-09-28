@@ -11,6 +11,7 @@ let env = process.env;
 let cache = require('../modules/cache');
 let transactionTypes = require('../helpers/transactionTypes.js');
 let Reward = require('../helpers/rewards');
+let utils = require('../utils')
 
 let __private = {};
 __private.types = {};
@@ -129,7 +130,7 @@ Frozen.prototype.dbSave = function (trs) {
 			senderId: trs.senderId,
 			recipientId: trs.recipientId,
 			freezedAmount: trs.asset.stakeOrder.stakedAmount,
-			nextVoteMilestone: trs.asset.stakeOrder.nextVoteMilestone
+			nextVoteMilestone: 0
 		}
 	};
 };
@@ -211,6 +212,17 @@ Frozen.prototype.undo = function (trs, block, sender, cb) {
 			address: trs.senderId
 		})
 		.then(function () {
+			utils.deleteDocument({
+				index: 'stake_orders',
+				type: 'stake_orders',
+				id: trs.id
+			}, function (err) {
+				if (err) {
+					self.scope.logger.error('Elasticsearch: document deletion error : ' + err);
+				} else {
+					self.scope.logger.info('Elasticsearch: document deleted successfullly');
+				}
+			});
 			self.scope.db.none(sql.deductFrozeAmount,
 				{
 					senderId: trs.senderId,
@@ -220,12 +232,12 @@ Frozen.prototype.undo = function (trs, block, sender, cb) {
 					return setImmediate(cb);
 				})
 				.catch(function (err) {
-					self.scope.logger.error(err.stack);
+					self.scope.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 					return setImmediate(cb, 'Stake#DeductStakeAmount from mem_account error');
 				});
 		})
 		.catch(function (err) {
-			self.scope.logger.error(err.stack);
+			self.scope.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 			return setImmediate(cb, 'Stake#deleteOrder error');
 		});
 };
@@ -493,7 +505,7 @@ Frozen.prototype.checkFrozeOrders = function (cb) {
 					next(null, freezeOrders);
 				})
 				.catch(function (err) {
-					self.scope.logger.error(err.stack);
+					self.scope.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 					next(err, null);
 				});
 		} else {
@@ -603,7 +615,7 @@ Frozen.prototype.checkFrozeOrders = function (cb) {
 						});
 					});
 				}).catch(function (err) {
-					self.scope.logger.error(err.stack);
+					self.scope.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 					next(err, null);
 				});
 			} else {
@@ -621,7 +633,7 @@ Frozen.prototype.checkFrozeOrders = function (cb) {
 				}).then(function () {
 					_next(null, null);
 				}).catch(function (err) {
-					self.scope.logger.error(err.stack);
+					self.scope.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 					_next(err, null);
 				});
 			} else {
@@ -644,7 +656,7 @@ Frozen.prototype.checkFrozeOrders = function (cb) {
 
 				})
 				.catch(function (err) {
-					self.scope.logger.error(err.stack);
+					self.scope.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 					next(err, null);
 				});
 		} else {
@@ -704,7 +716,7 @@ Frozen.prototype.updateFrozeAmount = function (userData, cb) {
 						return setImmediate(cb, null);
 					})
 					.catch(function (err) {
-						self.scope.logger.error(err.stack);
+						self.scope.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 						return setImmediate(cb, err.toString());
 					});
 			} else {
@@ -712,7 +724,7 @@ Frozen.prototype.updateFrozeAmount = function (userData, cb) {
 			}
 		})
 		.catch(function (err) {
-			self.scope.logger.error(err.stack);
+			self.scope.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 			return setImmediate(cb, err.toString());
 		});
 

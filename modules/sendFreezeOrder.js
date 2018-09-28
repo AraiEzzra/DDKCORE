@@ -87,7 +87,7 @@ __private.getById = function (id, cb) {
 		return setImmediate(cb, null, transacton);
 	})
 	.catch(function (err) {
-		library.logger.error(err.stack);
+		library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 		return setImmediate(cb, 'Transactions#getById error');
 	});
 };
@@ -242,6 +242,7 @@ SendFreezeOrder.prototype.onBind = function (scope) {
 SendFreezeOrder.prototype.shared = {
 
 	transferFreezeOrder: function (req, cb) {
+		return setImmediate(cb, 'Send Stake Order functionality is disabled.');
 		let accountData, stakeOrder;
 		library.schema.validate(req.body, schema.transferFreezeOrder, function (err) {
 			if (err) {

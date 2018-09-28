@@ -75,7 +75,7 @@ SendFreezeOrder.prototype.undo = function (trs, block, sender, cb) {
 					return setImmediate(seriesCb);
 				})
 				.catch(function (err) {
-					self.scope.logger.error(err.stack);
+					self.scope.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 					return setImmediate(seriesCb, err.toString());
 				});
 		},
@@ -92,7 +92,7 @@ SendFreezeOrder.prototype.undo = function (trs, block, sender, cb) {
 					return setImmediate(seriesCb);
 				})
 				.catch(function (err) {
-					self.scope.logger.error(err.stack);
+					self.scope.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 					return setImmediate(seriesCb, err.toString());
 				});
 		},
@@ -108,7 +108,7 @@ SendFreezeOrder.prototype.undo = function (trs, block, sender, cb) {
 							return setImmediate(waterCb, null, id);
 						})
 						.catch(function (err) {
-							self.scope.logger.error(err.stack);
+							self.scope.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 							return setImmediate(waterCb, err.toString());
 						});
 				},
@@ -122,7 +122,7 @@ SendFreezeOrder.prototype.undo = function (trs, block, sender, cb) {
 							return setImmediate(waterCb, null, id, nextVoteMilestone);
 						})
 						.catch(function (err) {
-							self.scope.logger.error(err.stack);
+							self.scope.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 							return setImmediate(waterCb, err.toString());
 						});
 				},
@@ -136,7 +136,7 @@ SendFreezeOrder.prototype.undo = function (trs, block, sender, cb) {
 							return setImmediate(waterCb, null, id);
 						})
 						.catch(function (err) {
-							self.scope.logger.error(err.stack);
+							self.scope.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 							return setImmediate(waterCb, err.toString());
 						});
 				},
@@ -150,7 +150,7 @@ SendFreezeOrder.prototype.undo = function (trs, block, sender, cb) {
 							return setImmediate(waterCb, null, nextVoteMilestone);
 						})
 						.catch(function (err) {
-							self.scope.logger.error(err.stack);
+							self.scope.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 							return setImmediate(waterCb, err.toString());
 						});
 				}
@@ -224,7 +224,7 @@ SendFreezeOrder.prototype.apply = function (trs, block, sender, cb) {
 		function (order, waterCb) {
 
 			self.sendFreezedOrder({
-				senderId: trs.senderID,
+				senderId: trs.senderId,
 				recipientId: trs.recipientId,
 				stakeId: trs.stakeId,
 				stakeOrder: order
@@ -285,7 +285,7 @@ SendFreezeOrder.prototype.getActiveFrozeOrder = function (userData, cb) {
 			return setImmediate(cb, null, order);
 		})
 		.catch(function (err) {
-			self.scope.logger.error(err.stack);
+			self.scope.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 
 			if (err.code == 0 && err.message == "No data returned from the query.") {
 				return setImmediate(cb, 'Selected order is expired. Please send active order.');
@@ -317,7 +317,7 @@ SendFreezeOrder.prototype.sendFreezedOrder = function (userAndOrderData, cb) {
 						return setImmediate(seriesCb);
 					})
 					.catch(function (err) {
-						self.scope.logger.error(err.stack);
+						self.scope.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 						return setImmediate(seriesCb, err.toString());
 					});
 			},
@@ -332,7 +332,7 @@ SendFreezeOrder.prototype.sendFreezedOrder = function (userAndOrderData, cb) {
 						return setImmediate(seriesCb);
 					})
 					.catch(function (err) {
-						self.scope.logger.error(err.stack);
+						self.scope.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 						return setImmediate(seriesCb, err.toString());
 					});
 			},
@@ -349,7 +349,7 @@ SendFreezeOrder.prototype.sendFreezedOrder = function (userAndOrderData, cb) {
 						return setImmediate(seriesCb);
 					})
 					.catch(function (err) {
-						self.scope.logger.error(err.stack);
+						self.scope.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 						return setImmediate(seriesCb, err.toString());
 					});
 			},
@@ -374,7 +374,7 @@ SendFreezeOrder.prototype.sendFreezedOrder = function (userAndOrderData, cb) {
 						return setImmediate(seriesCb);
 					})
 					.catch(function (err) {
-						self.scope.logger.error(err.stack);
+						self.scope.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 						return setImmediate(seriesCb, err.toString());
 					});
 			}

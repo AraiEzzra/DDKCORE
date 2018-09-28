@@ -246,8 +246,8 @@ __private.checkDelegates = function (publicKey, votes, state, cb) {
 
 			try {
 				Buffer.from(publicKey, 'hex');
-			} catch (e) {
-				library.logger.error(e.stack);
+			} catch (err) {
+				library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 				return setImmediate(cb, 'Invalid public key');
 			}
 
@@ -801,7 +801,7 @@ Delegates.prototype.shared = {
 			})).then(function (rows) {
 				return setImmediate(cb, null, {delegates: rows});
 			}).catch(function (err) {
-				library.logger.error(err.stack);
+				library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 				return setImmediate(cb, 'Database search failed');
 			});
 		});
@@ -811,7 +811,7 @@ Delegates.prototype.shared = {
 		library.db.one(sql.count).then(function (row) {
 			return setImmediate(cb, null, { count: row.count });
 		}).catch(function (err) {
-			library.logger.error(err.stack);
+			library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 			return setImmediate(cb, 'Failed to count delegates');
 		});
 	},
@@ -836,7 +836,7 @@ Delegates.prototype.shared = {
 					}
 				});
 			}).catch(function (err) {
-				library.logger.error(err.stack);
+				library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 				return setImmediate(cb, 'Failed to get voters for delegate: ' + req.body.publicKey);
 			});
 		});
@@ -924,6 +924,7 @@ Delegates.prototype.shared = {
 	},
 
 	addDelegate: function (req, cb) {
+		return setImmediate(cb, 'Delegate registration is disabled');
 		library.schema.validate(req.body, schema.addDelegate, function (err) {
 			if (err) {
 				return setImmediate(cb, err[0].message);

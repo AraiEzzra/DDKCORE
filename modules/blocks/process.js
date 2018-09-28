@@ -115,17 +115,14 @@ Process.prototype.getCommonBlock = function (peer, height, cb) {
 				}
 			}).catch(function (err) {
 				// SQL error occurred
-				library.logger.error(err.stack);
+				library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 				return setImmediate(waterCb, 'Blocks#getCommonBlock error');
 			});
 		}
 	], function (err, res) {
 		// If comparison failed and current consensus is low - perform chain recovery
-		/*
-		* Removed poor consensus check in order to sync data
-		*/
-		//if (comparisionFailed && modules.transport.poorConsensus()) {
-		if (comparisionFailed) {
+		// if (comparisionFailed && modules.transport.poorConsensus()) {
+			if (comparisionFailed ) {
 			return modules.blocks.chain.recoverChain(cb);
 		} else {
 			return setImmediate(cb, err, res);
@@ -195,7 +192,7 @@ Process.prototype.loadBlocksOffset = function (limit, offset, verify, cb) {
 				return setImmediate(cb, err, modules.blocks.lastBlock.get());
 			});
 		}).catch(function (err) {
-			library.logger.error(err.stack);
+			library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 			return setImmediate(cb, 'Blocks#loadBlocksOffset error');
 		});
 	}, cb);
@@ -342,9 +339,9 @@ Process.prototype.generateBlock = function (keypair, timestamp, cb) {
 				previousBlock: modules.blocks.lastBlock.get(),
 				transactions: ready
 			});
-		} catch (e) {
-			library.logger.error(e.stack);
-			return setImmediate(cb, e);
+		} catch (err) {
+			library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
+			return setImmediate(cb, err);
 		}
 
 		// Start block processing - broadcast: true, saveBlock: true

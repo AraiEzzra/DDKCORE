@@ -61,7 +61,7 @@ __private.getById = function (id, cb) {
 
 		return setImmediate(cb, null, block);
 	}).catch(function (err) {
-		library.logger.error(err.stack);
+		library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 		return setImmediate(cb, 'Blocks#getById error');
 	});
 };
@@ -182,11 +182,11 @@ __private.list = function (filter, cb) {
 
 			return setImmediate(cb, null, data);
 		}).catch(function (err) {
-			library.logger.error(err.stack);
+			library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 			return setImmediate(cb, 'Blocks#list error');
 		});
 	}).catch(function (err) {
-		library.logger.error(err.stack);
+		library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 		return setImmediate(cb, 'Blocks#list error');
 	});
 };

@@ -565,7 +565,7 @@ Transport.prototype.internal = {
 		library.db.query(sql.getCommonBlock, escapedIds).then(function (rows) {
 			return setImmediate(cb, null, { success: true, common: rows[0] || null });
 		}).catch(function (err) {
-			library.logger.error(err.stack);
+			library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 			return setImmediate(cb, 'Failed to get common block');
 		});
 	},
@@ -694,9 +694,9 @@ Transport.prototype.internal = {
 			if (newHash !== query.hash) {
 				return setImmediate(cb, null, {success: false, message: 'Invalid hash sum'});
 			}
-		} catch (e) {
-			library.logger.error(e.stack);
-			return setImmediate(cb, null, {success: false, message: e.toString()});
+		} catch (err) {
+			library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
+			return setImmediate(cb, null, {success: false, message: err.toString()});
 		}
 
 		if (__private.messages[query.hash]) {
@@ -732,9 +732,9 @@ Transport.prototype.internal = {
 			if (newHash !== query.hash) {
 				return setImmediate(cb, null, {success: false, message: 'Invalid hash sum'});
 			}
-		} catch (e) {
-			library.logger.error(e.stack);
-			return setImmediate(cb, null, {success: false, message: e.toString()});
+		} catch (err) {
+			library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
+			return setImmediate(cb, null, {success: false, message: err.toString()});
 		}
 
 		modules.dapps.request(query.dappid, query.body.method, query.body.path, query.body.query, function (err, body) {

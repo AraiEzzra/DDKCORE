@@ -41,7 +41,7 @@
  */
 module.exports = {
 	activeDelegates: 3,
-	maxVotes:4,
+	maxVotes:101,
 	maxVotesPerTransaction: 3,
 	addressLength: 208,
 	blockHeaderLength: 248,
@@ -112,10 +112,10 @@ module.exports = {
 	},
 	// Configurable froze order : time here is in minutes
 	froze : {
-		endTime : 48,
-		rTime : 8,
-		vTime : 2,
-		milestone : 8, //for testing, taking 2 min
+		endTime : 241920,
+		rTime : 40320,
+		vTime : 10080,
+		milestone : 40320, 
 		rewards: {
 			milestones: [
 				10, // 10% For 0-6 months
@@ -125,7 +125,7 @@ module.exports = {
 				4, // 4% For 25-30 months
 				2  // 2% For 31 months and above
 			],
-			distance: 30, // Distance between each milestone is 6 months
+			distance: 1451520, // Distance between each milestone is 6 months
 		}
 	},
 	defaultLock: 0,

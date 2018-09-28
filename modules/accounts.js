@@ -20,7 +20,7 @@ let nextBonus = 0;
 let Mnemonic = require('bitcore-mnemonic');
 let mailServices = require('../helpers/postmark');
 let dbcache = require('memory-cache');
-let newCache = new dbcache.Cache();
+let newCache = new dbcache.Cache(); 
 let frogings_sql = require('../sql/frogings');
 
 // Private fields
@@ -382,8 +382,6 @@ Accounts.prototype.isLoaded = function () {
 	return !!modules;
 };
 
-
-
 Accounts.prototype.circulatingSupply = function(cb) {
 	let initialUnmined = config.ddkSupply.totalSupply - config.initialPrimined.total;
 	//let publicAddress = library.config.sender.address;
@@ -409,7 +407,6 @@ Accounts.prototype.circulatingSupply = function(cb) {
 		});
 	});
 }
-
 
 // Shared API
 /**
@@ -458,7 +455,7 @@ Accounts.prototype.shared = {
 						let mailOptions = {
 							From: library.config.mailFrom,
 							To: req.body.email,
-							TemplateId: 8265220,
+							TemplateId: 8265262,
 							TemplateModel: {
 								"ddk": {
 									"username": req.body.email,
@@ -470,8 +467,8 @@ Accounts.prototype.shared = {
 						(async function () {
 							await mailServices.sendEmailWithTemplate(mailOptions, function (err) {
 								if (err) {
-									library.logger.error(err.stack);
-									return setImmediate(cb, err.toString());
+									library.logger.error(err.message);
+									//return setImmediate(cb, err.toString());
 								}
 							});
 						})();
@@ -528,7 +525,7 @@ Accounts.prototype.shared = {
 										account: accountData
 									});
 								}).catch(function (err) {
-									library.logger.error(err.stack);
+									library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 									return setImmediate(cb, err);
 								});
 							} else {
@@ -831,192 +828,11 @@ Accounts.prototype.shared = {
 		});
 	},
 
-	totalAccounts: function (req, cb) {
-		library.db.one(sql.getTotalAccount)
-			.then(function (data) {
-				return setImmediate(cb, null, data);
-			})
-			.catch(function (err) {
-				library.logger.error(err.stack);
-				return setImmediate(cb, err.toString());
-			});
-	},
-
-	getCirculatingSupply: function (req, cb) {
-		let initialUnmined = config.ddkSupply.totalSupply - config.initialPrimined.total;
-		//let publicAddress = library.config.sender.address;
-		let hash = Buffer.from(JSON.parse(library.config.users[0].keys));
-		let keypair = library.ed.makeKeypair(hash);
-		let publicKey = keypair.publicKey.toString('hex');
-		self.getAccount({publicKey: publicKey}, function(err, account) {
-			library.db.one(sql.getCurrentUnmined, { address: account.address })
-			.then(function (currentUnmined) {
-				let circulatingSupply = config.initialPrimined.total + initialUnmined - currentUnmined.balance;
-
-				cache.prototype.getJsonForKey('minedContributorsBalance', function (err, contributorsBalance) {
-					let totalCirculatingSupply = parseInt(contributorsBalance) + circulatingSupply;
-
-					return setImmediate(cb, null, {
-						circulatingSupply: totalCirculatingSupply
-					});
-				});
-			})
-			.catch(function (err) {
-				library.logger.error(err.stack);
-				return setImmediate(cb, err.toString());
-			});
-		});
-	},
 	totalSupply: function (req, cb) {
 		let totalSupply = config.ddkSupply.totalSupply;
 
 		return setImmediate(cb, null, {
 			totalSupply: totalSupply
-		});
-
-	},
-
-	migrateData: function (req, cb) {
-
-		try {
-			var balance;
-			if (req.body.data.balance_d === null) {
-				balance = 0;
-			} else {
-				balance = parseFloat(req.body.data.balance_d) * 100000000;
-			}
-		} catch (err) {
-			return setImmediate(cb, err.toString());
-		}
-
-		function getStakeOrderFromETPS(next) {
-			library.db.query(sql.getETPSStakeOrders, {
-				account_id: req.body.data.id
-			})
-				.then(function (orders) {
-					next(null, orders);
-				}).catch(function (err) {
-					library.logger.error(err.stack);
-					next(err, null);
-				});
-		}
-
-		function insertstakeOrder(order, next) {
-
-			let date = new Date((slots.getTime()) * 1000);
-			let nextVoteMilestone = (date.setMinutes(date.getMinutes() + constants.froze.vTime)) / 1000;
-
-			library.db.none(sql.InsertStakeOrder, {
-				account_id: req.body.data.id,
-				startTime: (slots.getTime(order.insert_time)),
-				insertTime: slots.getTime(),
-				senderId: req.body.address,
-				freezedAmount: order.cost * 100000000,
-				rewardCount: order.month_count,
-				status: 1,
-				nextVoteMilestone: nextVoteMilestone
-			})
-				.then(function () {
-					next(null, null);
-				})
-				.catch(function (err) {
-					library.logger.error(err.stack);
-					next(err, null);
-				});
-		}
-
-		function insertStakeOrdersInETP(next, orders) {
-
-			async.eachSeries(orders, function (order, eachSeriesCb) {
-
-				insertstakeOrder(order, function (err) {
-					if (err) {
-						next(err, null);
-					}else {
-						eachSeriesCb();
-					}
-				});
-			}, function (err) {
-				next(err, null);
-			});
-		}
-
-		function checkFrozeAmountsInStakeOrders(next) {
-
-			library.db.one(sql.totalFrozeAmount, {
-				account_id: (req.body.data.id).toString()
-			})
-				.then(function (totalFrozeAmount) {
-					if (totalFrozeAmount) {
-						next(null, totalFrozeAmount);
-					} else {
-						next(null, 0);
-					}
-				}).catch(function (err) {
-					library.logger.error(err.stack);
-					next(err, null);
-				});
-		}
-
-		function updateMemAccountTable(next, totalFrozeAmount) {
-
-			library.db.none(sql.updateUserInfo, {
-				address: req.body.address,
-				balance: parseInt(totalFrozeAmount.sum),
-				email: req.body.data.email,
-				phone: req.body.data.phone,
-				username: req.body.data.username,
-				country: req.body.data.country,
-				totalFrozeAmount: parseInt(totalFrozeAmount.sum),
-				group_bonus: req.body.group_bonus
-			})
-				.then(function () {
-					next(null, null);
-				})
-				.catch(function (err) {
-					library.logger.error(err.stack);
-					next(err, null);
-				});
-		}
-
-		function updateETPSUserDetail(next) {
-			let date = new Date((slots.getRealTime()));
-
-			library.db.none(sql.updateETPSUserInfo, {
-				userId: req.body.data.id,
-				insertTime: date
-			})
-				.then(function () {
-					next(null, null);
-				})
-				.catch(function (err) {
-					library.logger.error(err.stack);
-					next(err, null);
-				});
-		}
-
-		async.auto({
-			getStakeOrderFromETPS: function (next) {
-				getStakeOrderFromETPS(next);
-			},
-			insertStakeOrdersInETP: ['getStakeOrderFromETPS', function (results, next) {
-				insertStakeOrdersInETP(next, results.getStakeOrderFromETPS);
-			}],
-			checkFrozeAmountsInStakeOrders: ['insertStakeOrdersInETP', function (results, next) {
-				checkFrozeAmountsInStakeOrders(next, results);
-			}],
-			updateMemAccountTable: ['checkFrozeAmountsInStakeOrders', function (results, next) {
-				updateMemAccountTable(next, results.checkFrozeAmountsInStakeOrders);
-			}],
-			updateETPSUserDetail: ['updateMemAccountTable', function (results, next) {
-				updateETPSUserDetail(next, results);
-			}]
-		}, function (err) {
-			if (err){
-				library.logger.error(err.stack);
-				return setImmediate(cb, err.toString());
-			}	
-			return setImmediate(cb, null, { success: true, message: 'Successfully migrated' });
 		});
 
 	},
@@ -1029,26 +845,33 @@ Accounts.prototype.shared = {
 
 		let hashPassword = crypto.createHash('md5').update(password).digest('hex');
 
-		library.db.one(sql.validateExistingUser, {
+		library.db.query(sql.validateExistingUser, {
 			username: username,
 			password: hashPassword
-		}).then(function (userInfo) {
+		}).then(function (etps_user) {
+			
+			if(etps_user.length) {
 
-			library.db.one(sql.findPassPhrase, {
-				userName: username
-			}).then(function (user) {
+				library.db.one(sql.findPassPhrase, {
+					userName: username
+				}).then(function (user) {
 				
-				return setImmediate(cb, null, {
-					success: true,
-					userInfo: user
+					return setImmediate(cb, null, {
+						success: true,
+						userInfo: user
+					});
+				}).catch(function (err) {
+					library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
+					return setImmediate(cb, 'Invalid username or password');
 				});
-			}).catch(function (err) {
-				library.logger.error(err.stack);
+			
+			} else {
+				library.logger.error('Invalid Etps User');
 				return setImmediate(cb, 'Invalid username or password');
-			});
+			}
 
 		}).catch(function (err) {
-			library.logger.error(err.stack);
+			library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 			return setImmediate(cb, 'Invalid username or password');
 		});
 
@@ -1142,7 +965,60 @@ Accounts.prototype.shared = {
 				});
 		}
 
+	},
+	
+	updateEtpsUser: function (req, cb) {
+
+	library.db.query(sql.checkValidEtpsUser, {
+		username: req.body.etps_username
+	}).then(function (user) {
+		if (user[0].count) {
+			library.db.none(sql.updateMigratedUserInfo, {
+				username: req.body.etps_username
+			}).then(function () {
+				return setImmediate(cb, null);
+			}).catch(function (err) {
+				library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
+				return setImmediate(cb, err);
+			});
+		} else {
+			return setImmediate(cb, 'Invalid Etps User');
+		}
+	}).catch(function (err) {
+		return setImmediate(cb, err);
+	});
+
+},
+searchMigrateUser: function (req, cb) {
+	var query = req.body.searchKey;
+	if (query.indexOf('DDK') !== -1) {
+		//search based on Address
+		library.db.query(sql.addressBasedSearch, {
+				address: query
+			})
+			.then(function (data) {
+				return setImmediate(cb, null, {
+					result: data
+				});
+			})
+			.catch(function (err) {
+				return setImmediate(cb, err);
+			});
+	} else {
+		//saerch based on email
+		library.db.query(sql.usernameBasedSearch, {
+				username: query
+			})
+			.then(function (data) {
+				return setImmediate(cb, null, {
+					result: data
+				});
+			})
+			.catch(function (err) {
+				return setImmediate(cb, err);
+			});
 	}
+}
 };
 
 // Internal API
@@ -1252,12 +1128,12 @@ Accounts.prototype.internal = {
 										return setImmediate(cb, null, { account: account });
 									})
 									.catch(function (err) {
-										library.logger.error(err.stack);
+										library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 										return setImmediate(cb, err);
 									});
 							})
 							.catch(function (err) {
-								library.logger.error(err.stack);
+								library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 								return setImmediate(cb, 'Transaction#checkAccountStatus error');
 							});
 					}
@@ -1303,7 +1179,7 @@ Accounts.prototype.internal = {
 			return setImmediate(cb, 'Missing address or public key');
 		}
 		user.address = modules.accounts.generateAddressByPublicKey(req.body.publicKey);
-		let secret = speakeasy.generateSecret({ length: 30 });
+		let secret = speakeasy.generateSecret({ length: 30, name: 'DDKoinDAE' });
 		QRCode.toDataURL(secret.otpauth_url, function (err, data_url) {
 			user.twofactor = {
 				secret: '',
@@ -1618,10 +1494,12 @@ Accounts.prototype.internal = {
 		let email = Buffer.from((data.split('&')[1]).split('=')[1], 'base64').toString();
 		let link = req.body.link;
 
-		library.db.one(sql.validateEtpsUser, {
+		library.db.query(sql.validateEtpsUser, {
 			username: userName,
 			emailId: email
 		}).then(function (user) {
+			if(user.length) {
+				
 			let newPassword = Math.random().toString(36).substr(2, 8);
 			let hash = crypto.createHash('md5').update(newPassword).digest('hex');
 
@@ -1633,7 +1511,7 @@ Accounts.prototype.internal = {
 				let mailOptions = {
 					From: library.config.mailFrom,
 					To: email,
-					TemplateId: 8276287,
+					TemplateId: 8276206,
 					TemplateModel: {
 						"ddk": {
 						  "username": userName,
@@ -1653,12 +1531,17 @@ Accounts.prototype.internal = {
 					});
 				});
 			}).catch(function (err) {
-				library.logger.error(err.stack);
+				library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 				return setImmediate(cb, err);
 			});
+				
+			} else {
+				library.logger.error('Invalid username or email');
+				return setImmediate(cb, 'Invalid username or email');
+			}
 
 		}).catch(function (err) {
-			library.logger.error(err.stack);
+			library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 			return setImmediate(cb, 'Invalid username or email');
 		});
 
