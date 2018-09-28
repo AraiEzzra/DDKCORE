@@ -60,7 +60,8 @@ function AccountsHttpApi (accountsModule, app) {
 		'post /senderBalance': 'senderAccountBalance',
 		'post /getMigratedUsers': 'getMigratedUsersList',
 		'get /getDashboardDDKData': 'getDashboardDDKData',
-		'post /updateEtpsInfo': 'updateEtpsUser'
+		'post /updateEtpsInfo': 'updateEtpsUser',
+		'post /searchMigrateUser': 'searchMigrateUser'
 
 	});
 

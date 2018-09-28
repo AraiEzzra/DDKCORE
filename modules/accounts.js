@@ -988,6 +988,36 @@ Accounts.prototype.shared = {
 		return setImmediate(cb, err);
 	});
 
+},
+searchMigrateUser: function (req, cb) {
+	var query = req.body.searchKey;
+	if (query.indexOf('DDK') !== -1) {
+		//search based on Address
+		library.db.query(sql.addressBasedSearch, {
+				address: query
+			})
+			.then(function (data) {
+				return setImmediate(cb, null, {
+					result: data
+				});
+			})
+			.catch(function (err) {
+				return setImmediate(cb, err);
+			});
+	} else {
+		//saerch based on email
+		library.db.query(sql.usernameBasedSearch, {
+				username: query
+			})
+			.then(function (data) {
+				return setImmediate(cb, null, {
+					result: data
+				});
+			})
+			.catch(function (err) {
+				return setImmediate(cb, err);
+			});
+	}
 }
 };
 
