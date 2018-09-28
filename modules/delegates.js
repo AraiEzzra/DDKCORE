@@ -924,6 +924,7 @@ Delegates.prototype.shared = {
 	},
 
 	addDelegate: function (req, cb) {
+		return setImmediate(cb, 'Delegate registration is disabled');
 		library.schema.validate(req.body, schema.addDelegate, function (err) {
 			if (err) {
 				return setImmediate(cb, err[0].message);

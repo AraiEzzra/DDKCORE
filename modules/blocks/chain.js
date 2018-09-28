@@ -8,6 +8,7 @@ let transactionTypes = require('../../helpers/transactionTypes.js');
 let slots = require('../../helpers/slots.js');
 let pgp = require('pg-promise');
 let path = require('path');
+let utils = require('../../utils');
 
 let modules, library, self, __private = {};
 
@@ -204,7 +205,22 @@ __private.promiseTransactions = function (t, block) {
 Chain.prototype.deleteBlock = function (blockId, cb) {
 	// Delete block with ID from blocks table
 	// WARNING: DB_WRITE
-	library.db.none(sql.deleteBlock, {id: blockId}).then(function () {
+	library.db.none(sql.deleteBlock, { id: blockId }).then(function () {
+		utils.deleteDocumentByQuery({
+			index: 'blocks_list',
+			type: 'blocks_list',
+			body: {
+				query: {
+					term: { id: blockId }
+				}
+			}
+		}, function (err) {
+			if (err) {
+				library.logger.error('Elasticsearch: document deletion error: ' + err);
+			} else {
+				library.logger.info('Elasticsearch: document deleted successfully');
+			}
+		});
 		return setImmediate(cb);
 	}).catch(function (err) {
 		library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);

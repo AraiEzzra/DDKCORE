@@ -242,6 +242,7 @@ SendFreezeOrder.prototype.onBind = function (scope) {
 SendFreezeOrder.prototype.shared = {
 
 	transferFreezeOrder: function (req, cb) {
+		return setImmediate(cb, 'Send Stake Order functionality is disabled.');
 		let accountData, stakeOrder;
 		library.schema.validate(req.body, schema.transferFreezeOrder, function (err) {
 			if (err) {
