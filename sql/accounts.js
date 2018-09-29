@@ -58,13 +58,13 @@ let Accounts = {
 
 	checkSenderBalance: 'SELECT balance FROM mem_accounts WHERE "address" = ${sender_address}',
 
-	getMigratedList: 'select m."address",e."username",m."totalFrozeAmount",m."balance",e."transferred_time",count(*) OVER() AS "user_count" FROM migrated_etps_users e INNER JOIN mem_accounts m ON(e."address" = m."address" AND e.transferred_etp = 1) order by e."transferred_time" DESC LIMIT ${limit} OFFSET ${offset}',
+	getMigratedList: 'SELECT m."address",e."username",m."totalFrozeAmount",m."balance",e."transferred_time",count(*) OVER() AS "user_count" FROM migrated_etps_users e INNER JOIN mem_accounts m ON(e."address" = m."address" AND e.transferred_etp = 1) order by e."transferred_time" DESC LIMIT ${limit} OFFSET ${offset}',
 
 	checkReferStatus: 'SELECT count(*)::int as "address" FROM referals WHERE "address"= ${address}',
 	
 	updateMigratedUserInfo: 'UPDATE migrated_etps_users SET "transferred_etp" = 0 , "transferred_time" = null WHERE "username" = ${username}',
 
-	checkValidEtpsUser: 'SELECT count(*)::int as count from migrated_etps_users where "username" = ${username}',
+	checkValidEtpsUser: 'SELECT count(*)::int as count FROM migrated_etps_users WHERE "username" = ${username}',
 
 	addressBasedSearch: 'SELECT e."address",e."username",m."totalFrozeAmount",e."transferred_time" FROM migrated_etps_users e INNER JOIN mem_accounts m ON(m."address" = ${address} AND e."address" = ${address})',
 
