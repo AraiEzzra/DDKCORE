@@ -590,7 +590,7 @@ Frozen.prototype.checkFrozeOrders = function (cb) {
 						self.scope.db.one(reward_sql.checkBalance, {
 							sender_address: constants.airdropAccount
 						}).then(function (bal) {
-							let balance = parseFloat(bal.u_balance);
+							let balance = parseFloat(bal.balance);
 							if (balance > 1000) {
 								let amount = parseInt(order.freezedAmount * __private.stakeReward.calcReward(modules.blocks.lastBlock.get().height) / 100);
 								self.sendStakingReward(order.senderId, amount, function (err) {

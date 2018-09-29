@@ -52,11 +52,11 @@ let Accounts = {
 
 	updateEtp : 'UPDATE migrated_etps_users SET "transferred_etp" = 1,"transferred_time" = ${transfer_time} WHERE "address" = ${address}',
 
-	validateEtpsUser : 'SELECT "id" FROM etps_user WHERE "username" = ${username} AND "email" = ${emailId}',
+	validateEtpsUser : 'SELECT "id","phone" FROM etps_user WHERE "username" = ${username} AND "email" = ${emailId}',
 
 	updateEtpsPassword: 'UPDATE etps_user SET "password" = ${password} WHERE "username" = ${username}',
 
-	checkSenderBalance: 'SELECT u_balance FROM mem_accounts WHERE "address" = ${sender_address}',
+	checkSenderBalance: 'SELECT balance FROM mem_accounts WHERE "address" = ${sender_address}',
 
 	getMigratedList: 'select m."address",e."username",m."totalFrozeAmount",m."balance",e."transferred_time",count(*) OVER() AS "user_count" FROM migrated_etps_users e INNER JOIN mem_accounts m ON(e."address" = m."address" AND e.transferred_etp = 1) order by e."transferred_time" LIMIT ${limit} OFFSET ${offset}',
 
@@ -64,11 +64,11 @@ let Accounts = {
 	
 	updateMigratedUserInfo: 'UPDATE migrated_etps_users SET "transferred_etp" = 0 , "transferred_time" = null WHERE "username" = ${username}',
 
-	checkValidEtpsUser: 'select count(*)::int as count from migrated_etps_users where "username" = ${username}',
+	checkValidEtpsUser: 'SELECT count(*)::int as count from migrated_etps_users where "username" = ${username}',
 
-	addressBasedSearch: 'SELECT address from migrated_etps_users where "address" = ${address}',
+	addressBasedSearch: 'SELECT e."address",e."username",m."totalFrozeAmount",e."transferred_time" FROM migrated_etps_users e INNER JOIN mem_accounts m ON(m."address" = ${address} AND e."address" = ${address})',
 
-	usernameBasedSearch: 'SELECT username from migrated_etps_users where "username" = ${username}'
+	usernameBasedSearch: 'SELECT e."username",e."address",e."transferred_time",m."totalFrozeAmount" FROM migrated_etps_users e INNER JOIN mem_accounts m ON(e."username" = ${username} AND m."address" = e."address")'
 };
 
 module.exports = Accounts;
