@@ -33,6 +33,7 @@ function System (cb, scope) {
 	library = {
 		logger: scope.logger,
 		db: scope.db,
+		dbReplica: scope.dbReplica,
 		nonce: scope.nonce,
 		config: {
 			version: scope.config.version,

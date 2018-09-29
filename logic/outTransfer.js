@@ -16,9 +16,10 @@ __private.unconfirmedOutTansfers = {};
  * @param {Object} logger
  */
 // Constructor
-function OutTransfer (db, schema, logger) {
+function OutTransfer (db, dbReplica, schema, logger) {
 	library = {
 		db: db,
+		dbReplica: dbReplica,
 		schema: schema,
 		logger: logger,
 	};

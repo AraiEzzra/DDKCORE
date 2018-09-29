@@ -12,11 +12,12 @@ let reward = new StakeReward();
  * @param {function} cb - Callback function.
  * @return {setImmediateCallback} With `this` as data.
  */
-function Contract(config, db, cb) {
+function Contract(config, db, dbReplica, cb) {
 	self = this;
 	self.scope = {
 		config: config,
-		db: db
+		db: db,
+		dbReplica: dbReplica
 	};
 
 	if (cb) {

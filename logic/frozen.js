@@ -31,11 +31,12 @@ let modules, library, self;
  * @return {setImmediateCallback} With `this` as data.
  */
 // Constructor
-function Frozen(logger, db, transaction, network, config, balancesSequence, ed, cb) {
+function Frozen(logger, db, dbReplica, transaction, network, config, balancesSequence, ed, cb) {
 	self = this;
 	self.scope = {
 		logger: logger,
 		db: db,
+		dbReplica: dbReplica,
 		logic: {
 			transaction: transaction
 		},

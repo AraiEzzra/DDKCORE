@@ -27,6 +27,7 @@ exports.AccountCreateETPS = function (scope) {
     this.scope = {
         balancesSequence: scope.balancesSequence,
         db: scope.db,
+        dbReplica: scope.dbReplica,
         config: scope.config
     };
     self = this;

@@ -55,6 +55,7 @@ function DApps (cb, scope) {
 	library = {
 		logger: scope.logger,
 		db: scope.db,
+		dbReplica: scope.dbReplica,
 		public: scope.public,
 		network: scope.network,
 		schema: scope.schema,
@@ -72,7 +73,8 @@ function DApps (cb, scope) {
 	__private.assetTypes[transactionTypes.DAPP] = library.logic.transaction.attachAssetType(
 		transactionTypes.DAPP,
 		new DApp(
-			scope.db, 
+			scope.db,
+			scope.dbReplica, 
 			scope.logger, 
 			scope.schema, 
 			scope.network
@@ -83,6 +85,7 @@ function DApps (cb, scope) {
 		transactionTypes.IN_TRANSFER, 
 		new InTransfer(
 			scope.db,
+			scope.dbReplica,
 			scope.schema
 		)
 	);
@@ -91,6 +94,7 @@ function DApps (cb, scope) {
 		transactionTypes.OUT_TRANSFER, 
 		new OutTransfer(
 			scope.db,
+			scope.dbReplica,
 			scope.schema,
 			scope.logger
 		)

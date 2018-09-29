@@ -22,9 +22,10 @@ __private.unconfirmedAscii = {};
  * @param {Object} network
  */
 // Constructor
-function DApp (db, logger, schema, network) {
+function DApp (db, dbReplica, logger, schema, network) {
 	library = {
 		db: db,
+		dbReplica: dbReplica,
 		logger: logger,
 		schema: schema,
 		network: network,

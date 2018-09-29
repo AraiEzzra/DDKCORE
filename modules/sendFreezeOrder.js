@@ -33,6 +33,7 @@ function SendFreezeOrder (cb, scope) {
 	library = {
 		logger: scope.logger,
 		db: scope.db,
+		dbReplica: scope.dbReplica,
 		schema: scope.schema,
 		ed: scope.ed,
 		balancesSequence: scope.balancesSequence,
@@ -60,6 +61,7 @@ function SendFreezeOrder (cb, scope) {
 		new sendFreezeOrder(
 			scope.logger,
 			scope.db,
+			scope.dbReplica,
 			scope.network
 		)
 	);

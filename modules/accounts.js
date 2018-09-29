@@ -44,6 +44,7 @@ function Accounts(cb, scope) {
 	library = {
 		ed: scope.ed,
 		db: scope.db,
+		dbReplica: scope.dbReplica,
 		cache: scope.cache,
 		logger: scope.logger,
 		schema: scope.schema,

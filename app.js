@@ -120,6 +120,7 @@ process.env.TOP = appConfig.topAccounts;
  */
 let config = {
 	db: appConfig.db,
+	dbReplica: appConfig.dbReplica,
 	cache: appConfig.redis,
 	cacheEnabled: appConfig.cacheEnabled,
 	modules: {
@@ -509,6 +510,10 @@ d.run(function () {
 			let db = require('./helpers/database.js');
 			db.connect(config.db, logger, cb);
 		},
+		dbReplica: function (cb) {
+			let dbReplica = require('./helpers/dbRead.js');
+			dbReplica.connect(config.dbReplica, logger, cb);
+		},
 		/**
 		 * It tries to connect with redis server based on config. provided in config.json file
 		 * @param {function} cb
@@ -525,7 +530,7 @@ d.run(function () {
 		 * at leats will contain the required elements.
 		 * @param {function} cb - Callback function.
 		 */
-		logic: ['db', 'bus', 'schema', 'genesisblock', function (scope, cb) {
+		logic: ['db', 'dbReplica', 'bus', 'schema', 'genesisblock', function (scope, cb) {
 			let Transaction = require('./logic/transaction.js');
 			let Block = require('./logic/block.js');
 			let Account = require('./logic/account.js');
@@ -564,10 +569,10 @@ d.run(function () {
 					cb(null, scope.config);
 				},
 				account: ['db', 'bus', 'ed', 'schema', 'genesisblock', 'logger', function (scope, cb) {
-					new Account(scope.db, scope.schema, scope.logger, cb);
+					new Account(scope.db, scope.dbReplica, scope.schema, scope.logger, cb);
 				}],
 				transaction: ['db', 'bus', 'ed', 'schema', 'genesisblock', 'account', 'logger', 'config', 'network', function (scope, cb) {
-					new Transaction(scope.db, scope.ed, scope.schema, scope.genesisblock, scope.account, scope.logger, scope.config, scope.network, cb);
+					new Transaction(scope.db, scope.dbReplica, scope.ed, scope.schema, scope.genesisblock, scope.account, scope.logger, scope.config, scope.network, cb);
 				}],
 				block: ['db', 'bus', 'ed', 'schema', 'genesisblock', 'account', 'transaction', function (scope, cb) {
 					new Block(scope.ed, scope.schema, scope.transaction, cb);
@@ -576,19 +581,19 @@ d.run(function () {
 					new Peers(scope.logger, cb);
 				}],
 				frozen: ['logger', 'db', 'transaction', 'network', 'config', function (scope, cb) {
-					new Frozen(scope.logger, scope.db, scope.transaction, scope.network, scope.config, scope.balancesSequence, scope.ed, cb);
+					new Frozen(scope.logger, scope.db, scope.dbReplica, scope.transaction, scope.network, scope.config, scope.balancesSequence, scope.ed, cb);
 				}],
 				sendFreezeOrder: ['logger', 'db', 'network', function (scope, cb) {
-					new SendFreezeOrder(scope.logger, scope.db, scope.network, cb);
+					new SendFreezeOrder(scope.logger, scope.db, scope.dbReplica, scope.network, cb);
 				}],
 				contract: ['config', function (scope, cb) {
-					new Contract(scope.config, scope.db, cb);
+					new Contract(scope.config, scope.db, scope.dbReplica, cb);
 				}],
 				vote: ['logger', 'schema', 'db', function (scope, cb) {
-					new Vote(scope.logger, scope.schema, scope.db, cb);
+					new Vote(scope.logger, scope.schema, scope.db, scope.dbReplica, cb);
 				}],
 				migration: ['logger', 'db', function (scope, cb) {
-					new Migration(scope.logger, scope.db, cb);
+					new Migration(scope.logger, scope.db, scope.dbReplica, cb);
 				}]
 			}, cb);
 		}],

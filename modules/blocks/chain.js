@@ -26,10 +26,11 @@ let modules, library, self, __private = {};
  * @param {bus} bus
  * @param {Sequence} balancesSequence
  */
-function Chain (logger, block, transaction, db, genesisblock, bus, balancesSequence) {
+function Chain (logger, block, transaction, db, dbReplica, genesisblock, bus, balancesSequence) {
 	library = {
 		logger: logger,
 		db: db,
+		dbReplica: dbReplica,
 		genesisblock: genesisblock,
 		bus: bus,
 		balancesSequence: balancesSequence,

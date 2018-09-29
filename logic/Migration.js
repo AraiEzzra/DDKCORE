@@ -13,11 +13,12 @@ let modules, library, self;
  * @classdesc Main migration logic.
  */
 // Constructor
-function Migration(logger, db, cb) {
+function Migration(logger, db,dbReplica,  cb) {
 	self = this;
 	self.scope = {
 		logger: logger,
-		db: db
+		db: db,
+		dbReplica: dbReplica
 	};
 
 	if (cb) {

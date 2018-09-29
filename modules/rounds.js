@@ -28,6 +28,7 @@ function Rounds (cb, scope) {
 	library = {
 		logger: scope.logger,
 		db: scope.db,
+		dbReplica: scope.dbReplica,
 		bus: scope.bus,
 		network: scope.network,
 		config: {

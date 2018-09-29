@@ -39,6 +39,7 @@ function Loader (cb, scope) {
 	library = {
 		logger: scope.logger,
 		db: scope.db,
+		dbReplica: scope.dbReplica,
 		network: scope.network,
 		schema: scope.schema,
 		sequence: scope.sequence,

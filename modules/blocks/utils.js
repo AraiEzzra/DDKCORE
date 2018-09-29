@@ -20,10 +20,11 @@ let modules, library, self, __private = {};
  * @param {Sequence} dbSequence
  * @param {Object} genesisblock
  */
-function Utils (logger, block, transaction, db, dbSequence, genesisblock) {
+function Utils (logger, block, transaction, db, dbReplica, dbSequence, genesisblock) {
 	library = {
 		logger: logger,
 		db: db,
+		dbReplica: dbReplica,
 		dbSequence: dbSequence,
 		genesisblock: genesisblock,
 		logic: {

@@ -38,21 +38,20 @@ function Blocks (cb, scope) {
 	// Initialize submodules with library content
 	this.submodules = {
 		api:     new blocksAPI(
-			scope.logger, scope.db, scope.logic.block, scope.schema, scope.dbSequence
+			scope.logger, scope.db, scope.dbReplica, scope.logic.block, scope.schema, scope.dbSequence
 		),
 		verify:  new blocksVerify(scope.logger, scope.logic.block, 
-			scope.logic.transaction, scope.db
+			scope.logic.transaction, scope.db, scope.dbReplica
 		),
 		process: new blocksProcess(
 			scope.logger, scope.logic.block, scope.logic.peers, scope.logic.transaction,
-			scope.schema, scope.db, scope.dbSequence, scope.sequence, scope.genesisblock
+			scope.schema, scope.db, scope.dbReplica, scope.dbSequence, scope.sequence, scope.genesisblock
 		),
 		utils:   new blocksUtils(scope.logger, scope.logic.block, scope.logic.transaction, 
-			scope.db, scope.dbSequence, scope.genesisblock
+			scope.db, scope.dbReplica, scope.dbSequence, scope.genesisblock
 		),
 		chain:   new blocksChain(
-			scope.logger, scope.logic.block, scope.logic.transaction, scope.db,
-			scope.genesisblock, scope.bus, scope.balancesSequence
+			scope.logger, scope.logic.block, scope.logic.transaction, scope.db, scope.dbReplica, scope.genesisblock, scope.bus, scope.balancesSequence
 		)
 	};
 

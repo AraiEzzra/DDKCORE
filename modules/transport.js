@@ -33,6 +33,7 @@ function Transport (cb, scope) {
 	library = {
 		logger: scope.logger,
 		db: scope.db,
+		dbReplica: scope.dbReplica,
 		bus: scope.bus,
 		schema: scope.schema,
 		network: scope.network,

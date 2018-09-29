@@ -44,6 +44,7 @@ function Transactions(cb, scope) {
 		config: scope.config,
 		logger: scope.logger,
 		db: scope.db,
+		dbReplica: scope.dbReplica,
 		schema: scope.schema,
 		ed: scope.ed,
 		balancesSequence: scope.balancesSequence,

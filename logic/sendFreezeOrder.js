@@ -10,11 +10,12 @@ __private.types = {};
 let modules, self;
 
 // Constructor
-function SendFreezeOrder(logger, db, network, cb) {
+function SendFreezeOrder(logger, db, dbReplica, network, cb) {
 	self = this;
 	self.scope = {
 		logger: logger,
 		db: db,
+		dbReplica: dbReplica,
 		network: network
 	};
 

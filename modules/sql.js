@@ -27,6 +27,7 @@ function Sql (cb, scope) {
 	library = {
 		logger: scope.logger,
 		db: scope.db,
+		dbReplica: scope.dbReplica
 	};
 	self = this;
 

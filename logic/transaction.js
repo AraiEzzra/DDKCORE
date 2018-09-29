@@ -40,9 +40,10 @@ __private.types = {};
  * @return {setImmediateCallback} With `this` as data.
  */
 // Constructor
-function Transaction (db, ed, schema, genesisblock, account, logger, config, network, cb) {
+function Transaction (db, dbReplica, ed, schema, genesisblock, account, logger, config, network, cb) {
 	this.scope = {
 		db: db,
+		dbReplica: dbReplica,
 		ed: ed,
 		schema: schema,
 		genesisblock: genesisblock,

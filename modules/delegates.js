@@ -42,6 +42,7 @@ function Delegates (cb, scope) {
 		sequence: scope.sequence,
 		ed: scope.ed,
 		db: scope.db,
+		dbReplica: scope.dbReplica,
 		network: scope.network,
 		schema: scope.schema,
 		balancesSequence: scope.balancesSequence,

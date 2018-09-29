@@ -12,10 +12,11 @@ let modules, library, self, __private = {};
 
 __private.blockReward = new BlockReward();
 
-function Verify (logger, block, transaction, db) {
+function Verify (logger, block, transaction, db, dbReplica) {
 	library = {
 		logger: logger,
 		db: db,
+		dbReplica: dbReplica,
 		logic: {
 			block: block,
 			transaction: transaction,

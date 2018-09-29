@@ -25,11 +25,12 @@ let modules, library, self, __private = {};
  * @param {Sequence} sequence
  * @param {Object} genesisblock
  */
-function Process (logger, block, peers, transaction, schema, db, dbSequence, sequence, genesisblock) {
+function Process (logger, block, peers, transaction, schema, db, dbReplica, dbSequence, sequence, genesisblock) {
 	library = {
 		logger: logger,
 		schema: schema,
 		db: db,
+		dbReplica: dbReplica,
 		dbSequence: dbSequence,
 		sequence: sequence,
 		genesisblock: genesisblock,

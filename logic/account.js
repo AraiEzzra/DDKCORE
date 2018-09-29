@@ -18,10 +18,11 @@ let self, library;
  * @return {setImmediateCallback} With `this` as data.
  */
 
-function Account(db, schema, logger, cb) {
+function Account(db, dbReplica, schema, logger, cb) {
 
 	this.scope = {
 		db: db,
+		dbReplica: dbReplica,
 		schema: schema
 	};
 

@@ -21,10 +21,11 @@ let modules, library, self;
  * @param {Object} logger
  * @param {ZSchema} schema
  */
-function Vote(logger, schema, db, cb) {
+function Vote(logger, schema, db, dbReplica, cb) {
 	self = this;
 	library = {
 		db: db,
+		dbReplica: dbReplica,
 		logger: logger,
 		schema: schema,
 	};

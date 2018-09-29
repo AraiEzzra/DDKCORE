@@ -38,6 +38,7 @@ function Frogings (cb, scope) {
 	library = {
 		logger: scope.logger,
 		db: scope.db,
+		dbReplica: scope.dbReplica,
 		cache: scope.cache,
 		schema: scope.schema,
 		ed: scope.ed,
@@ -62,7 +63,7 @@ function Frogings (cb, scope) {
 	);
 
 	__private.assetTypes[transactionTypes.STAKE] = library.logic.transaction.attachAssetType(
-		transactionTypes.STAKE, new Frozen(scope.logger, scope.db, scope.logic.transaction, scope.network, scope.config, scope.balancesSequence, scope.ed)
+		transactionTypes.STAKE, new Frozen(scope.logger, scope.db, scope.dbReplica, scope.logic.transaction, scope.network, scope.config, scope.balancesSequence, scope.ed)
 	);
 
 	setImmediate(cb, null, self);

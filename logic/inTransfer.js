@@ -13,9 +13,10 @@ let modules, library, shared;
  * @param {ZSchema} schema
  */
 // Constructor
-function InTransfer (db, schema) {
+function InTransfer (db, dbReplica, schema) {
 	library = {
 		db: db,
+		dbReplica: dbReplica,
 		schema: schema,
 	};
 }
