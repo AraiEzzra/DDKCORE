@@ -58,7 +58,7 @@ let Accounts = {
 
 	checkSenderBalance: 'SELECT balance FROM mem_accounts WHERE "address" = ${sender_address}',
 
-	getMigratedList: 'select m."address",e."username",m."totalFrozeAmount",m."balance",e."transferred_time",count(*) OVER() AS "user_count" FROM migrated_etps_users e INNER JOIN mem_accounts m ON(e."address" = m."address" AND e.transferred_etp = 1) order by e."transferred_time" LIMIT ${limit} OFFSET ${offset}',
+	getMigratedList: 'select m."address",e."username",m."totalFrozeAmount",m."balance",e."transferred_time",count(*) OVER() AS "user_count" FROM migrated_etps_users e INNER JOIN mem_accounts m ON(e."address" = m."address" AND e.transferred_etp = 1) order by e."transferred_time" DESC LIMIT ${limit} OFFSET ${offset}',
 
 	checkReferStatus: 'SELECT count(*)::int as "address" FROM referals WHERE "address"= ${address}',
 	
