@@ -970,7 +970,30 @@ Accounts.prototype.shared = {
 				});
 		}
 
-	}
+	},
+	
+	updateEtpsUser: function (req, cb) {
+
+	library.db.query(sql.checkValidEtpsUser, {
+		username: req.body.etps_username
+	}).then(function (user) {
+		if (user[0].count) {
+			library.db.none(sql.updateMigratedUserInfo, {
+				username: req.body.etps_username
+			}).then(function () {
+				return setImmediate(cb, null);
+			}).catch(function (err) {
+				library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
+				return setImmediate(cb, err);
+			});
+		} else {
+			return setImmediate(cb, 'Invalid Etps User');
+		}
+	}).catch(function (err) {
+		return setImmediate(cb, err);
+	});
+
+}
 };
 
 // Internal API

@@ -130,7 +130,7 @@ Frozen.prototype.dbSave = function (trs) {
 			senderId: trs.senderId,
 			recipientId: trs.recipientId,
 			freezedAmount: trs.asset.stakeOrder.stakedAmount,
-			nextVoteMilestone: trs.asset.stakeOrder.nextVoteMilestone
+			nextVoteMilestone: 0
 		}
 	};
 };

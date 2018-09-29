@@ -59,7 +59,9 @@ function AccountsHttpApi (accountsModule, app) {
 		'post /verifyUserToComment': 'verifyUserToComment',
 		'post /senderBalance': 'senderAccountBalance',
 		'post /getMigratedUsers': 'getMigratedUsersList',
-		'get /getDashboardDDKData': 'getDashboardDDKData'
+		'get /getDashboardDDKData': 'getDashboardDDKData',
+		'post /updateEtpsInfo': 'updateEtpsUser'
+
 	});
 
 	router.map(accountsModule.internal, {
