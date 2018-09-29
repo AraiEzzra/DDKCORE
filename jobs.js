@@ -78,18 +78,18 @@ exports.updateDataOnElasticSearch = {
 					let bulk = utils.makeBulk(rows, tableName);
 					utils.indexall(bulk, tableName)
 						.then(function (result) {
-							return null;
+							// return null;
 							//FIXME: Do further processing on successful indexing on elasticsearch server
 						})
 						.catch(function (err) {
 							library.logger.error('elasticsearch error :'+ err.message);
-							return null;
+							// return null;
 						});
 				}
 			})
 			.catch(function (err) {
 				library.logger.error('database error : '+ err.message);
-				return null;
+				// return null;
 			});
 		});
 	},
@@ -103,12 +103,12 @@ exports.checkFrozeOrders = {
 
 	on: '* * * * *',
 	job: function () {
-		let date = new Date();
+		// let date = new Date();
 		//FIXME: comment or remove below statement once this goes live
-		//library.logic.frozen.checkFrozeOrders();
-		if (date.getHours() === 11 && date.getMinutes() === 30) {
+		library.logic.frozen.checkFrozeOrders();
+		/* if (date.getHours() === 11 && date.getMinutes() === 30) {
 			library.logic.frozen.checkFrozeOrders();
-		}
+		} */
 	},
 	spawn: false
 };

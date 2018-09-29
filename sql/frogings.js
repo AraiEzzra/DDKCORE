@@ -24,7 +24,7 @@ let FrogingsSql = {
 
 	getFrozeAmount: 'SELECT "totalFrozeAmount" FROM mem_accounts WHERE "address"=${senderId}',
 
-	disableFrozeOrders: 'UPDATE stake_orders SET "status"=0, "nextVoteMilestone"=-1 where "status"=1 AND ${totalMilestone} = "rewardCount"',
+	disableFrozeOrders: 'UPDATE stake_orders SET "status"=0, "nextVoteMilestone"=-1 where "status"=1 AND ${totalMilestone} = "voteCount"',
 
 	checkAndUpdateMilestone: 'UPDATE stake_orders SET "nextVoteMilestone"= ("nextVoteMilestone" +${milestone}), "isVoteDone"= false where "status"=1 AND  ${currentTime} >= "nextVoteMilestone" ',
 
@@ -48,7 +48,7 @@ let FrogingsSql = {
 
 	getMyStakedAmount: 'SELECT sum("freezedAmount") FROM stake_orders WHERE "senderId"=${address} AND "status"=1',
 
-	updateOrder: 'UPDATE stake_orders SET "rewardCount" = ("rewardCount" + 1), "voteCount"=0, "isVoteDone"=false WHERE "senderId" = ${senderId} AND "stakeId"=${id}',
+	updateOrder: 'UPDATE stake_orders SET "rewardCount" = ("rewardCount" + 1), "isVoteDone"=false WHERE "senderId" = ${senderId} AND "stakeId"=${id}',
 
 	checkRewardCount: 'SELECT "rewardCount" FROM stake_orders WHERE "status"=1 AND "senderId"=${senderId}',
 
