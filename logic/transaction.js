@@ -814,7 +814,7 @@ Transaction.prototype.undo = function (trs, block, sender, cb) {
 		amount = amount.plus(trs.fee.toString()).toNumber();
 	}
 
-	this.scope.logger.trace('Logic/Transaction->undo', {sender: sender.address, balance: amount, blockId: block.id, round: modules.rounds.calc(block.height)});
+	this.scope.logger.trace('Logic/Transaction->undo', { sender: sender.address, balance: amount, blockId: block.id, round: modules.rounds.calc(block.height) });
 	this.scope.account.merge(sender.address, {
 		balance: amount,
 		blockId: block.id,
@@ -838,6 +838,7 @@ Transaction.prototype.undo = function (trs, block, sender, cb) {
 			}
 		}.bind(this));
 	}.bind(this));
+
 };
 
 /**
@@ -860,11 +861,15 @@ Transaction.prototype.applyUnconfirmed = function (trs, sender, requester, cb) {
 		cb = requester;
 	}
 	var amount;
+
 	// Check unconfirmed sender balance
 	if (trs.type === 11 || trs.type === 9 || trs.type === 12) {
 		amount = new bignum(trs.amount.toString());
 	} else {
 		amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
+	}
+	if(trs.type == 8 && (parseInt(sender.u_balance) - parseInt(sender.u_totalFrozeAmount)) < (trs.stakedAmount + trs.fee)){
+			return setImmediate(cb, 'Failed because of Frozen DDK');
 	}
 	let senderBalance = this.checkBalance(amount, 'u_balance', trs, sender);
 
@@ -874,21 +879,41 @@ Transaction.prototype.applyUnconfirmed = function (trs, sender, requester, cb) {
 
 	amount = amount.toNumber();
 
-	this.scope.account.merge(sender.address, {u_balance: -amount}, function (err, sender) {
-		if (err) {
-			return setImmediate(cb, err);
-		}
-
-		__private.types[trs.type].applyUnconfirmed.call(this, trs, sender, function (err) {
+	if (trs.type == 8) {
+		this.scope.account.merge(sender.address, {u_balance: -amount, u_totalFrozeAmount: trs.stakedAmount }, function (err, sender) {
 			if (err) {
-				this.scope.account.merge(sender.address, {u_balance: amount}, function (err2) {
-					return setImmediate(cb, err2 || err);
-				});
-			} else {
-				return setImmediate(cb);
+				return setImmediate(cb, err);
 			}
+
+			__private.types[trs.type].applyUnconfirmed.call(this, trs, sender, function (err) {
+				if (err) {
+					this.scope.account.merge(sender.address, {u_balance: amount, u_totalFrozeAmount: -trs.stakedAmount }, function (err2) {
+						return setImmediate(cb, err2 || err);
+					});
+				} else {
+					return setImmediate(cb);
+				}
+			}.bind(this));
 		}.bind(this));
-	}.bind(this));
+	} else {
+		this.scope.account.merge(sender.address, { u_balance: -amount }, function (err, sender) {
+			if (err) {
+				return setImmediate(cb, err);
+			}
+
+			__private.types[trs.type].applyUnconfirmed.call(this, trs, sender, function (err) {
+				if (err) {
+					this.scope.account.merge(sender.address, { u_balance: amount }, function (err2) {
+						return setImmediate(cb, err2 || err);
+					});
+				} else {
+					return setImmediate(cb);
+				}
+			}.bind(this));
+		}.bind(this));
+	}
+
+
 };
 
 /**
@@ -912,21 +937,40 @@ Transaction.prototype.undoUnconfirmed = function (trs, sender, cb) {
 		amount = amount.toNumber();
 	}
 
-	this.scope.account.merge(sender.address, {u_balance: amount}, function (err, sender) {
-		if (err) {
-			return setImmediate(cb, err);
-		}
-
-		__private.types[trs.type].undoUnconfirmed.call(this, trs, sender, function (err) {
+	if(trs.type == 8){
+		this.scope.account.merge(sender.address, {u_balance: amount, u_totalFrozeAmount: -trs.stakedAmount}, function (err, sender) {
 			if (err) {
-				this.scope.account.merge(sender.address, {u_balance: -amount}, function (err2) {
-					return setImmediate(cb, err2 || err);
-				});
-			} else {
-				return setImmediate(cb);
+				return setImmediate(cb, err);
 			}
+	
+			__private.types[trs.type].undoUnconfirmed.call(this, trs, sender, function (err) {
+				if (err) {
+					this.scope.account.merge(sender.address, {u_balance: -amount, u_totalFrozeAmount: trs.stakedAmount}, function (err2) {
+						return setImmediate(cb, err2 || err);
+					});
+				} else {
+					return setImmediate(cb);
+				}
+			}.bind(this));
 		}.bind(this));
-	}.bind(this));
+	}else{
+		this.scope.account.merge(sender.address, {u_balance: amount}, function (err, sender) {
+			if (err) {
+				return setImmediate(cb, err);
+			}
+	
+			__private.types[trs.type].undoUnconfirmed.call(this, trs, sender, function (err) {
+				if (err) {
+					this.scope.account.merge(sender.address, {u_balance: -amount}, function (err2) {
+						return setImmediate(cb, err2 || err);
+					});
+				} else {
+					return setImmediate(cb);
+				}
+			}.bind(this));
+		}.bind(this));
+	}
+	
 };
 
 Transaction.prototype.dbTable = 'trs';

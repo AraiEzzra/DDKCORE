@@ -309,6 +309,10 @@ Frozen.prototype.verify = function (trs, sender, cb) {
 		return setImmediate(cb, 'Invalid stake amount: Decimal value');
 	}
 
+	if ((parseInt(sender.balance) - parseInt(sender.totalFrozeAmount)) < (trs.stakedAmount + trs.fee)) {
+		return setImmediate(cb, 'Insufficient balance');
+	}
+
 	return setImmediate(cb, null, trs);
 };
 
