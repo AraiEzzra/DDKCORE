@@ -218,7 +218,7 @@ Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 				level: level
 			};
 
-			library.db.query(sql.checkReferStatus, {
+			library.dbReplica.query(sql.checkReferStatus, {
 				address: levelDetails.address
 			}).then(function (user) {
 
@@ -846,7 +846,7 @@ Accounts.prototype.shared = {
 
 		let hashPassword = crypto.createHash('md5').update(password).digest('hex');
 
-		library.db.query(sql.validateExistingUser, {
+		library.dbReplica.query(sql.validateExistingUser, {
 			username: username,
 			password: hashPassword
 		}).then(function (etps_user) {
@@ -886,7 +886,7 @@ Accounts.prototype.shared = {
 		let keypair = library.ed.makeKeypair(hash);
 		let publicKey = keypair.publicKey.toString('hex');
 		let address = self.generateAddressByPublicKey(publicKey);
-		library.db.query(sql.findTrsUser, {
+		library.dbReplica.query(sql.findTrsUser, {
 			senderId: address
 		})
 			.then(function (trs) {
@@ -898,7 +898,7 @@ Accounts.prototype.shared = {
 	},
 
 	senderAccountBalance: function(req,cb) {
-		library.db.query(sql.checkSenderBalance,{
+		library.dbReplica.query(sql.checkSenderBalance,{
 			sender_address: req.body.address
 		}).then(function(bal){
 			return setImmediate(cb, null, { balance: bal[0].u_balance});
@@ -908,7 +908,7 @@ Accounts.prototype.shared = {
 	},
 
 	getMigratedUsersList: function (req, cb) {
-		library.db.query(sql.getMigratedList, {
+		library.dbReplica.query(sql.getMigratedList, {
 				limit: req.body.limit,
 				offset: req.body.offset
 			})
@@ -970,7 +970,7 @@ Accounts.prototype.shared = {
 	
 	updateEtpsUser: function (req, cb) {
 
-	library.db.query(sql.checkValidEtpsUser, {
+	library.dbReplica.query(sql.checkValidEtpsUser, {
 		username: req.body.etps_username
 	}).then(function (user) {
 		if (user[0].count) {
@@ -994,7 +994,7 @@ searchMigrateUser: function (req, cb) {
 	var query = req.body.searchKey;
 	if (query.indexOf('DDK') !== -1) {
 		//search based on Address
-		library.db.query(sql.addressBasedSearch, {
+		library.dbReplica.query(sql.addressBasedSearch, {
 				address: query
 			})
 			.then(function (data) {
@@ -1007,7 +1007,7 @@ searchMigrateUser: function (req, cb) {
 			});
 	} else {
 		//saerch based on email
-		library.db.query(sql.usernameBasedSearch, {
+		library.dbReplica.query(sql.usernameBasedSearch, {
 				username: query
 			})
 			.then(function (data) {
@@ -1339,7 +1339,7 @@ Accounts.prototype.internal = {
 					});
 				},
 				checkActiveStake: ['checkLastWithdrawl', function (result, seriesCb) {
-					library.db.query(sql.findActiveStakeAmount, {
+					library.dbReplica.query(sql.findActiveStakeAmount, {
 						senderId: req.body.address
 					})
 					.then(function (stakeOrders) {
@@ -1356,7 +1356,7 @@ Accounts.prototype.internal = {
 					});
 				}],
 				checkActiveStakeOfLeftAndRightSponsor: ['checkActiveStake', function (result, seriesCb) {
-					library.db.query(sql.findDirectSponsor, {
+					library.dbReplica.query(sql.findDirectSponsor, {
 						introducer: req.body.address
 					})
 						.then(function (directSponsors) {
@@ -1364,7 +1364,7 @@ Accounts.prototype.internal = {
 
 								var activeStakeCount = 0;
 								directSponsors.forEach(function (directSponsor) {
-									library.db.query(sql.findActiveStakeAmount, {
+									library.dbReplica.query(sql.findActiveStakeAmount, {
 										senderId: directSponsor.address
 									})
 										.then(function (stakeInfo) {
@@ -1394,7 +1394,7 @@ Accounts.prototype.internal = {
 				}],
 				checkRatio: ['checkActiveStakeOfLeftAndRightSponsor', function (result, seriesCb) {
 
-					library.db.query(sql.findGroupBonus, {
+					library.dbReplica.query(sql.findGroupBonus, {
 						senderId: req.body.address
 					})
 					.then(function (bonusInfo) {
@@ -1495,7 +1495,7 @@ Accounts.prototype.internal = {
 		let email = Buffer.from((data.split('&')[1]).split('=')[1], 'base64').toString();
 		let link = req.body.link;
 
-		library.db.query(sql.validateEtpsUser, {
+		library.dbReplica.query(sql.validateEtpsUser, {
 			username: userName,
 			emailId: email
 		}).then(function (user) {

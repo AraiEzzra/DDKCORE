@@ -211,20 +211,20 @@ __private.list = function (filter, cb) {
 		return setImmediate(cb, orderBy.error);
 	}
 
-	library.db.query(sql.countList({
+	library.dbReplica.query(sql.countList({
 		where: where,
 		owner: owner
 	}), params).then(function (rows) {
 		let count = rows.length ? rows[0].count : 0;
 
-		library.db.query(sql.list({
+		library.dbReplica.query(sql.list({
 			where: where,
 			owner: owner,
 			sortField: orderBy.sortField,
 			sortMethod: orderBy.sortMethod
 		}), params).then(function (rows) {
 			let transactions = [];
-			library.db.query(sql.getUserNames)
+			library.dbReplica.query(sql.getUserNames)
 			.then(function(delegates) {
 				for (let i = 0; i < rows.length; i++) {
 					transactions.push(library.logic.transaction.dbRead(rows[i]));
@@ -668,7 +668,7 @@ Transactions.prototype.internal = {
 
 			let endTimestamp = slots.getTime(endDate);
 
-			library.db.query(sql.getTransactionHistory, {
+			library.dbReplica.query(sql.getTransactionHistory, {
 				startTimestamp: startTimestamp + epochTime,
 				endTimestamp: endTimestamp + epochTime,
 				epochTime: epochTime
@@ -954,7 +954,6 @@ Transactions.prototype.shared = {
 					if (err) {
 						return setImmediate(cb, err);
 					}
-
 					return setImmediate(cb, null, { transactionId: transaction[0].id });
 				});
 			});

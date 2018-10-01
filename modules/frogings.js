@@ -86,7 +86,7 @@ Frogings.prototype.referralReward = function (stake_amount, address, cb) {
 	let introducerReward = {},
 		i = 0;
 
-	library.db.query(ref_sql.referLevelChain, {
+	library.dbReplica.query(ref_sql.referLevelChain, {
 		address: sponsor_address
 	}).then(function (user) {
 
@@ -232,7 +232,7 @@ Frogings.prototype.shared = {
 					return setImmediate(cb, 'Address of account not found');
 				}
 
-				library.db.query(sql.getFrozeOrders, { senderId: account.address })
+				library.dbReplica.query(sql.getFrozeOrders, { senderId: account.address })
 				.then(function (rows) {
 					return setImmediate(cb, null, {
 						freezeOrders: JSON.stringify(rows)
@@ -396,7 +396,6 @@ Frogings.prototype.shared = {
 						} catch (e) {
 							return setImmediate(cb, e.toString());
 						}
-
 						modules.transactions.receiveTransactions([transaction], true, cb);
 					});
 				}

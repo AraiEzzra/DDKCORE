@@ -68,12 +68,12 @@ __private.list = function (filter, cb) {
         return setImmediate(cb, orderBy.error);
     }
 
-    library.db.query(sql.countList({
+    library.dbReplica.query(sql.countList({
         where: where
     }), params).then(function (rows) {
         let count = rows[0].count;
 
-        library.db.query(sql.list({
+        library.dbReplica.query(sql.list({
             where: where,
             sortField: orderBy.sortField,
             sortMethod: orderBy.sortMethod
@@ -157,7 +157,7 @@ module.exports.api = function (app) {
 
         function findSponsors(arr, cb) {
             if (limit <= 5 && level <= 15) {
-                library.db.query(sql.findReferralList, {
+                library.dbReplica.query(sql.findReferralList, {
                     refer_list: arr
                 })
                     .then(function (resp) {
@@ -210,7 +210,7 @@ module.exports.api = function (app) {
             let key = 0;
             async.eachSeries(hierarchy, function (status, callback) {
 
-                library.db.query(sql.findTotalStakeVolume, {
+                library.dbReplica.query(sql.findTotalStakeVolume, {
                     address_list: status.addressList
                 }).then(function (resp) {
                     if (!resp[0].freezed_amount) {
@@ -280,7 +280,7 @@ module.exports.api = function (app) {
         let stats = [],
             addressList, i = 0;
 
-        library.db.query(sql.findSponsorStakeStatus, {
+        library.dbReplica.query(sql.findSponsorStakeStatus, {
             sponsor_address: address
         }).then(function (stake_status) {
 

@@ -158,12 +158,12 @@ __private.list = function (filter, cb) {
 		return setImmediate(cb, orderBy.error);
 	}
 
-	library.db.query(sql.countList({
+	library.dbReplica.query(sql.countList({
 		where: where
 	}), params).then(function (rows) {
 		let count = rows[0].count;
 
-		library.db.query(sql.list({
+		library.dbReplica.query(sql.list({
 			where: where,
 			sortField: orderBy.sortField,
 			sortMethod: orderBy.sortMethod

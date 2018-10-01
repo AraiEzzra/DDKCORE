@@ -254,8 +254,8 @@ Frozen.prototype.undo = function (trs, block, sender, cb) {
  * @return {function} cb
  */
 Frozen.prototype.apply = function (trs, block, sender, cb) {
-
-	self.updateFrozeAmount({
+	return setImmediate(cb, null, trs);
+	/* self.updateFrozeAmount({
 		account: sender,
 		freezedAmount: trs.stakedAmount
 	}, function (err) {
@@ -264,7 +264,7 @@ Frozen.prototype.apply = function (trs, block, sender, cb) {
 		}
 
 		return setImmediate(cb, null, trs);
-	});
+	}); */
 };
 
 /**
@@ -356,7 +356,7 @@ Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
 	let i = 0;
 	let reward, sender_balance;
 
-	self.scope.db.query(reward_sql.referLevelChain, {
+	self.scope.dbReplica.query(reward_sql.referLevelChain, {
 		address: sponsor_address
 	}).then(function (user) {
 
@@ -468,7 +468,7 @@ Frozen.prototype.checkFrozeOrders = function (cb) {
 
 	function getfrozeOrders(next) {
 
-		self.scope.db.query(sql.getfrozeOrder,
+		self.scope.dbReplica.query(sql.getfrozeOrder,
 			{
 				milestone: constants.froze.vTime * 60,
 				currentTime: slots.getTime()

@@ -548,6 +548,9 @@ d.run(function () {
 				db: function (cb) {
 					cb(null, scope.db);
 				},
+				dbReplica: function (cb) {
+					cb(null, scope.dbReplica);
+				},
 				ed: function (cb) {
 					cb(null, scope.ed);
 				},

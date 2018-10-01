@@ -694,7 +694,7 @@ Delegates.prototype.internal = {
 	},
 
 	getLatestVoters: function(req, cb) {
-		library.db.query(sql.getLatestVoters, {
+		library.dbReplica.query(sql.getLatestVoters, {
 			limit: req.body.limit
 		})
 		.then(function(voters) {
@@ -706,7 +706,7 @@ Delegates.prototype.internal = {
 	},
 
 	getLatestDelegates: function(req, cb) {
-		library.db.query(sql.getLatestDelegates, {
+		library.dbReplica.query(sql.getLatestDelegates, {
 			limit: req.body.limit
 		})
 		.then(function(delegates) {
@@ -794,7 +794,7 @@ Delegates.prototype.shared = {
 				return setImmediate(cb, orderBy.error);
 			}
 
-			library.db.query(sql.search({
+			library.dbReplica.query(sql.search({
 				q: req.body.q,
 				limit: req.body.limit || 101,
 				sortField: orderBy.sortField,

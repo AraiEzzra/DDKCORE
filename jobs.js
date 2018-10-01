@@ -67,7 +67,7 @@ exports.updateDataOnElasticSearch = {
 				columnName = 'startTime';
 				offset = stakeOffset;
 			}
-			library.db.query('SELECT * FROM ' + tableName + ' ORDER BY "' + columnName + '" ASC OFFSET ' + offset + ' LIMIT ' + limit)
+			library.dbReplica.query('SELECT * FROM ' + tableName + ' ORDER BY "' + columnName + '" ASC OFFSET ' + offset + ' LIMIT ' + limit)
 			.then(function (rows) {
 				if (rows.length > 0) {
 					if(tableName === 'blocks_list') {

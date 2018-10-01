@@ -682,7 +682,7 @@ Account.prototype.getAll = function (filter, fields, cb) {
 		fields: realFields
 	});
 
-	this.scope.db.query(sql.query, sql.values).then(function (rows) {
+	this.scope.dbReplica.query(sql.query, sql.values).then(function (rows) {
 		return setImmediate(cb, null, rows);
 	}).catch(function (err) {
 		library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
@@ -737,7 +737,7 @@ Account.prototype.insertLevel = function (levelDetails, cb) {
 };
 
 Account.prototype.findReferralLevel= function(address,cb) {
-	this.scope.db.query(sql.referLevelChain,{
+	this.scope.dbReplica.query(sql.referLevelChain,{
 		address:address
 	}).then(function(user){
 		return setImmediate(cb,null,user);

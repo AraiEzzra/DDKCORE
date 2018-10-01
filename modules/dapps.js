@@ -242,7 +242,7 @@ __private.list = function (filter, cb) {
 		return setImmediate(cb, orderBy.error);
 	}
 
-	library.db.query(sql.list({
+	library.dbReplica.query(sql.list({
 		where: where,
 		sortField: orderBy.sortField,
 		sortMethod: orderBy.sortMethod
@@ -1171,7 +1171,7 @@ DApps.prototype.internal = {
 				}
 			}
 
-			library.db.query(sql.search(params), params).then(function (rows) {
+			library.dbReplica.query(sql.search(params), params).then(function (rows) {
 				if (rows.length === 0) {
 					return setImmediate(cb, null, {success: true, dapps: rows});
 				}
@@ -1695,7 +1695,7 @@ DApps.prototype.internal = {
 
 // Shared API
 shared.getGenesis = function (req, cb) {
-	library.db.query(sql.getGenesis, { id: req.dappid }).then(function (rows) {
+	library.dbReplica.query(sql.getGenesis, { id: req.dappid }).then(function (rows) {
 		if (rows.length === 0) {
 			return setImmediate(cb, 'Application genesis block not found');
 		} else {
@@ -1736,7 +1736,7 @@ shared.sendWithdrawal = function (req, cb) {
 };
 
 shared.getWithdrawalLastTransaction = function (req, cb) {
-	library.db.query(sql.getWithdrawalLastTransaction, {
+	library.dbReplica.query(sql.getWithdrawalLastTransaction, {
 		dappid: req.dappid,
 		type: transactionTypes.OUT_TRANSFER
 	}).then(function (rows) {
@@ -1748,7 +1748,7 @@ shared.getWithdrawalLastTransaction = function (req, cb) {
 };
 
 shared.getBalanceTransactions = function (req, cb) {
-	library.db.query(sql.getBalanceTransactions({
+	library.dbReplica.query(sql.getBalanceTransactions({
 		lastId: req.body.lastTransactionId
 	}), {
 		dappid: req.dappid,
