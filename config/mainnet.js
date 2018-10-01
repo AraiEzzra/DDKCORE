@@ -25,6 +25,19 @@ module.exports = {
             'error'
         ]
     },
+    dbReplica: {
+        host: env.MAINNET_DBREPLICA_HOST || '0.0.0.0',
+        port: parseInt(env.MAINNET_DB_PORT, 10) || 5432,
+        database: env.MAINNET_DB_NAME || 'ddk_mainnet_database',
+        password: env.MAINNET_DB_PASSWORD,
+        user: env.MAINNET_DB_USER,
+        poolSize: 95,
+        poolIdleTimeout: 30000,
+        reapIntervalMillis: 1000,
+        logEvents: [
+            'error'
+        ]
+    },
     redis: {
         host: env.MAINNET_REDIS_HOST || '0.0.0.0',
         port: parseInt(env.MAINNET_REDIS_PORT, 10) || 6379,

@@ -15,12 +15,19 @@ module.exports = function (grunt) {
 
 	let today = moment().format('HH:mm:ss DD/MM/YYYY');
 
-	let config = require('./config.json');
+	let config = process.env.NODE_ENV === 'development' ? require('./config/default') : process.env.NODE_ENV === 'testnet' ? require('./config/testnet') : require('./config/mainnet');
 
 	let release_dir = __dirname + '/release/';
 	let version_dir = release_dir + config.version;
 
 	let maxBufferSize = require('buffer').kMaxLength - 1;
+	var dbConnection = {
+		user: config.db.user,
+		password: config.db.password,
+		database: config.db.database,
+		host: config.db.host,
+		port: config.db.port
+	};
 
 	grunt.initConfig({
 		obfuscator: {
@@ -118,6 +125,15 @@ module.exports = function (grunt) {
 				'tasks',
 				'test'
 			]
+		},
+
+		'run-sql': {
+			'add-column': {
+				src: './sql/addColumn.sql',
+				options: {
+					connection: dbConnection
+				}
+			}
 		}
 	});
 
@@ -127,8 +143,10 @@ module.exports = function (grunt) {
 	grunt.loadNpmTasks('grunt-exec');
 	grunt.loadNpmTasks('grunt-contrib-compress');
 	grunt.loadNpmTasks('grunt-eslint');
+	grunt.loadNpmTasks('grunt-pg-utils');
 
 	grunt.registerTask('default', ['release']);
+	grunt.registerTask('addColumn', ['run-sql:add-column']);
 	grunt.registerTask('release', ['exec:folder', 'obfuscator', 'exec:package', 'exec:build', 'compress']);
 	grunt.registerTask('jenkins', ['exec:coverageSingle']);
 	grunt.registerTask('eslint-nofix', ['eslint']);
