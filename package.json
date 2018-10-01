@@ -23,6 +23,7 @@
     "body-parser": "^1.18.3",
     "bytebuffer": "=5.0.1",
     "change-case": "=3.0.1",
+    "clickatell-platform": "^2.0.11",
     "colors": "=1.1.2",
     "commander": "=2.9.0",
     "compression": "^1.7.2",

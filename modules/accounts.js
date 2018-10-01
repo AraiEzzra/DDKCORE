@@ -22,6 +22,7 @@ let mailServices = require('../helpers/postmark');
 let dbcache = require('memory-cache');
 let newCache = new dbcache.Cache(); 
 let frogings_sql = require('../sql/frogings');
+let clickatell = require("clickatell-platform");
 
 // Private fields
 let modules, library, self, __private = {}, shared = {};
@@ -900,7 +901,7 @@ Accounts.prototype.shared = {
 		library.db.query(sql.checkSenderBalance,{
 			sender_address: req.body.address
 		}).then(function(bal){
-			return setImmediate(cb, null, { balance: bal[0].u_balance});
+			return setImmediate(cb, null, { balance: bal[0].balance});
 		}).catch(function(err){
 			return setImmediate(cb, err);
 		});
@@ -1498,43 +1499,49 @@ Accounts.prototype.internal = {
 			username: userName,
 			emailId: email
 		}).then(function (user) {
-			if(user.length) {
-				
-			let newPassword = Math.random().toString(36).substr(2, 8);
-			let hash = crypto.createHash('md5').update(newPassword).digest('hex');
+			if (user.length) {
 
-			library.db.none(sql.updateEtpsPassword, {
-				password: hash,
-				username: userName
-			}).then(function () {
+				let newPassword = Math.random().toString(36).substr(2, 8);
+				let hash = crypto.createHash('md5').update(newPassword).digest('hex');
 
-				let mailOptions = {
-					From: library.config.mailFrom,
-					To: email,
-					TemplateId: 8276206,
-					TemplateModel: {
-						"ddk": {
-						  "username": userName,
-						  "password": newPassword
+				let mobileLength = user[0].phone.length;
+
+				if (mobileLength >= 8 && mobileLength <= 15) {
+					// clickatell.sendMessageHttp("Your newly generated password is "+ newPassword, ["8447807866"], "oYKI0Vtv9pEnxBY5fKbpUm0FhvifSHtDuyxgv.n7l6zBUtO7Su_mvl74roFmxvxTWVfaHZ2GUfEfG");
+				}
+
+				library.db.none(sql.updateEtpsPassword, {
+					password: hash,
+					username: userName
+				}).then(function () {
+
+					let mailOptions = {
+						From: library.config.mailFrom,
+						To: email,
+						TemplateId: 8276206,
+						TemplateModel: {
+							"ddk": {
+								"username": userName,
+								"password": newPassword
+							}
 						}
-					  }
-				};
+					};
 
-				mailServices.sendEmailWithTemplate(mailOptions, function (err) {
-					if (err) {
-						library.logger.error(err.stack);
-						return setImmediate(cb, err.toString());
-					}
-					return setImmediate(cb, null, {
-						success: true,
-						info: "Mail Sent Successfully"
+					mailServices.sendEmailWithTemplate(mailOptions, function (err) {
+						if (err) {
+							library.logger.error(err.stack);
+							return setImmediate(cb, err.toString());
+						}
+						return setImmediate(cb, null, {
+							success: true,
+							info: "Mail Sent Successfully"
+						});
 					});
+				}).catch(function (err) {
+					library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
+					return setImmediate(cb, err);
 				});
-			}).catch(function (err) {
-				library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
-				return setImmediate(cb, err);
-			});
-				
+
 			} else {
 				library.logger.error('Invalid username or email');
 				return setImmediate(cb, 'Invalid username or email');
