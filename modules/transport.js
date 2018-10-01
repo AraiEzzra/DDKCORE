@@ -11,6 +11,7 @@ let popsicle = require('popsicle');
 let schema = require('../schema/transport.js');
 let sandboxHelper = require('../helpers/sandbox.js');
 let sql = require('../sql/transport.js');
+let usersList = require('../app.js');
 
 // Private fields
 let modules, library, self, __private = {}, shared = {};
@@ -480,7 +481,12 @@ Transport.prototype.onSignature = function (signature, broadcast) {
 Transport.prototype.onUnconfirmedTransaction = function (transaction, broadcast) {
 	if (broadcast && !__private.broadcaster.maxRelays(transaction)) {
 		__private.broadcaster.enqueue({}, {api: '/transactions', data: {transaction: transaction}, method: 'POST'});
-		library.network.io.sockets.emit('transactions/change', transaction);
+		let users = usersList.getUsersList();
+		users.map(function(user) {
+			if(user.address === transaction.senderId || user.address === transaction.recipientId) {
+				library.network.io.to(user.socketId).emit('transactions/change', transaction);
+			}
+		})
 	}
 };
 

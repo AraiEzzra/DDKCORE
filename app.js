@@ -41,6 +41,9 @@ let logger = logman.logger;
 let sockets = [];
 let utils = require('./utils');
 let cronjob = require('node-cron-job');
+exports.getUsersList = function() {
+	return sockets;
+};
 
 process.stdin.resume();
 

@@ -15,7 +15,7 @@ let Referals = {
     
     referLevelChain : 'SELECT level FROM referals WHERE "address" = ${address}',
     
-    checkBalance : 'SELECT u_balance FROM mem_accounts WHERE "address" = ${sender_address}',
+    checkBalance : 'SELECT balance FROM mem_accounts WHERE "address" = ${sender_address}',
     
     insertLevelChain : 'INSERT INTO referals ("address","level") VALUES (${address},${level})',
     

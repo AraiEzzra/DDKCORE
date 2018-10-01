@@ -399,6 +399,15 @@ function Account(db, dbReplica, schema, logger, cb) {
 			expression: '("totalFrozeAmount")::bigint'
 		},
 		{
+			name: 'u_totalFrozeAmount',
+			type: 'BigInt',
+			filter: {
+				type: 'integer'
+			},
+			conv: Number,
+			expression: '("u_totalFrozeAmount")::bigint'
+		},
+		{
 			name: 'group_bonus',
 			type: 'BigInt',
 			filter: {

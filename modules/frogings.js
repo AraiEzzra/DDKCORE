@@ -408,7 +408,7 @@ Frogings.prototype.shared = {
 				library.db.one(ref_sql.checkBalance, {
 					sender_address: constants.airdropAccount
 				}).then(function (bal) {
-					let balance = parseFloat(bal.u_balance);
+					let balance = parseFloat(bal.balance);
 					if (balance > 1000) {
 						self.referralReward(req.body.freezedAmount, accountData.address, function (err) {
 							if (err) {
