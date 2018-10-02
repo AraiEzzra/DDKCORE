@@ -685,31 +685,23 @@ d.run(function () {
 			});
 		}],
 
-		/**
-		 * @method listenWs
-		 * @param {object} scope - The results from current execution,
-		 * at leats will contain the required elements.
-		 * @param {nodeStyleCallback} cb - Callback function with `scope.network`.
-		 */
-    listenWs: [
-
-      'listen',
-
-      function (scope, cb) {
-    		const config = require('./api/rpc/server.config');
-    		const ServerRPCApi = require('./api/rpc/server');
-    		const server = new ServerRPCApi();
-
-				config.methods.map((method) => {
-					server.register(method.methodName, function (params) {
-						return method.call(null, server.getWebSocketServer(), params, scope, cb);
-					});
-				});
-
-				scope.logger.info('RPC Server started on: ' + server.host + ':' + server.port);
-      }
-    ]
-
+    /**
+     * Realisation of RPC protocol
+     * @method listenWs
+     * @param {object} scope - The results from current execution, at leats will contain the required elements.
+     * @param {nodeStyleCallback} cb - Callback function with `scope.network`.
+     */
+    listenRPC: ['listen', function (scope, cb) {
+      const config = require('./api/rpc/server.config');
+      const ServerRPCApi = require('./api/rpc/server');
+      const server = new ServerRPCApi();
+      config.methods.map(function (method) {
+        server.register(method.methodName, function (params) {
+          return method.call(null, server.getWebSocketServer(), params, scope, cb);
+        });
+      });
+      scope.logger.info('RPC Server started on: ' + server.host + ':' + server.port);
+    }]
 
 	}, function (err, scope) {
 		if (err) {

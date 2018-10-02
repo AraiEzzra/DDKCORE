@@ -83,5 +83,5 @@ module.exports = {
   methods: methods,
   port: PORT,
   host: HOST,
-  version: VERSION,
+  version: VERSION
 };
