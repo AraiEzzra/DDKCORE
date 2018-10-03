@@ -78,7 +78,7 @@ function SendFreezeOrder (cb, scope) {
  * @returns {setImmediateCallback} error | data: {transaction}
  */
 __private.getById = function (id, cb) {
-	library.dbReplica.query(sql.getById, {id: id})
+	library.db.query(sql.getById, {id: id})
 	.then(function (rows) {
 		if (!rows.length) {
 			return setImmediate(cb, 'Transaction not found: ' + id);

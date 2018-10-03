@@ -691,7 +691,7 @@ Account.prototype.getAll = function (filter, fields, cb) {
 		fields: realFields
 	});
 
-	this.scope.dbReplica.query(sql.query, sql.values).then(function (rows) {
+	this.scope.db.query(sql.query, sql.values).then(function (rows) {
 		return setImmediate(cb, null, rows);
 	}).catch(function (err) {
 		library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);

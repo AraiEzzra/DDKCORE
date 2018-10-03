@@ -254,8 +254,7 @@ Frozen.prototype.undo = function (trs, block, sender, cb) {
  * @return {function} cb
  */
 Frozen.prototype.apply = function (trs, block, sender, cb) {
-	return setImmediate(cb, null, trs);
-	/* self.updateFrozeAmount({
+	self.updateFrozeAmount({
 		account: sender,
 		freezedAmount: trs.stakedAmount
 	}, function (err) {
@@ -264,7 +263,7 @@ Frozen.prototype.apply = function (trs, block, sender, cb) {
 		}
 
 		return setImmediate(cb, null, trs);
-	}); */
+	});
 };
 
 /**

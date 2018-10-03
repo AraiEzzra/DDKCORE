@@ -65,7 +65,8 @@ function Accounts(cb, scope) {
 		new Vote(
 			scope.logger,
 			scope.schema,
-			scope.db
+			scope.db,
+			scope.dbReplica
 		)
 	);
 

@@ -507,7 +507,7 @@ Vote.prototype.updateAndCheckVote = function (voteInfo, cb) {
 				currentTime: slots.getTime()
 			})
 				.then(function () {
-					library.dbReplica.query(sql.GetOrders, {
+					library.db.query(sql.GetOrders, {
 						senderId: senderId
 					})
 						.then(function (rows) {
