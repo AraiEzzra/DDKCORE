@@ -154,8 +154,9 @@ Accounts.prototype.getAccount = function (filter, fields, cb) {
 };
 
 /**  
- * Firstly check whether this referral id is valid or not.
+ * Firstly check whether the referral id is valid or not.
  * If valid Generate referral chain for that user.
+ * Check whether the user referral info already exist to avoid override referral info
  * In case of no referral, chain will contain the null value i.e; Blank. 
  * @param {referalLink} - Refer Id.
  * @param {address} - Address of user during registration.
@@ -176,45 +177,45 @@ Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 
 	async.series([
 
-		function (callback) {
+		function (valid_referral) {
 			if (referrer_address) {
 				library.db.one(sql.validateReferSource, {
 					referSource: referrer_address
 				}).then(function (user) {
 					if (parseInt(user.address)) {
 						level.unshift(referrer_address);
-						callback();
+						valid_referral();
 					} else {
-						let error = 'Referral Link is Invalid';
-						return setImmediate(cb, error);
+						let invalidError = 'Referral Link is Invalid';
+						return valid_referral(invalidError);
 					}
-				}).catch(function (err) {
-					return setImmediate(cb, err);
+				}).catch(function (error) {
+					valid_referral(error);
 				});
 			} else {
-				callback();
+				valid_referral();
 			}
 		},
-		function (callback) {
+		function (referral_chain) {
 			if (referrer_address) {
-				library.logic.account.findReferralLevel(referrer_address, function (err, resp) {
-					if (err) {
-						return setImmediate(cb, err);
+				library.logic.account.findReferralLevel(referrer_address, function (error, resp) {
+					if (error) {
+						return referral_chain(error);
 					}
 					if (resp.length != 0 && resp[0].level != null) {
 						let chain_length = ((resp[0].level.length) < 15) ? (resp[0].level.length) : 14;
 
 						level = level.concat(resp[0].level.slice(0, chain_length));
 					} else if (resp.length == 0) {
-						return setImmediate(cb, "Referral link source is not eligible");
+						return referral_chain("Referral link source is not eligible");
 					}
-					callback();
+					referral_chain();
 				});
 			} else {
-				callback();
+				referral_chain();
 			}
 		},
-		function (callback) {
+		function (insertReferralInfo) {
 			let levelDetails = {
 				address: address,
 				level: level
@@ -225,20 +226,19 @@ Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 			}).then(function (user) {
 
 				if (user[0].address) {
-					callback();
+					insertReferralInfo();
 				} else {
-					library.logic.account.insertLevel(levelDetails, function (err) {
-						if (err) {
-							console.log(err);
-							return setImmediate(cb, err);
+					library.logic.account.insertLevel(levelDetails, function (error) {
+						if (error) {
+							return insertReferralInfo(error);
 						}
 						level.length = 0;
-						callback();
+						insertReferralInfo();
 					});
 				}
 
-			}).catch(function (err) {
-				return setImmediate(cb, err);
+			}).catch(function (error) {
+				insertReferralInfo(error);
 			});
 		}
 	], function (err) {
