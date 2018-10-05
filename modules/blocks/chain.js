@@ -391,7 +391,7 @@ Chain.prototype.applyBlock = function (block, broadcast, cb, saveBlock) {
 					// DATABASE: write
 					modules.transactions.applyUnconfirmed(transaction, sender, function (err) {
 						if (err) {
-							err = ['Failed to apply transaction:', transaction.id, '-', err].join(' ');
+							err = ['Failed to apply Unconfirmed transaction:', transaction.id, '-', err].join(' ');
 							library.logger.error(err);
 							library.logger.error('Transaction', transaction);
 							return setImmediate(eachSeriesCb, err);
@@ -440,7 +440,7 @@ Chain.prototype.applyBlock = function (block, broadcast, cb, saveBlock) {
 				modules.accounts.getAccount({publicKey: transaction.senderPublicKey}, function (err, sender) {
 					if (err) {
 						// Fatal error, memory tables will be inconsistent
-						err = ['Failed to apply transaction:', transaction.id, '-', err].join(' ');
+						err = ['Failed to apply transaction during getAccount:', transaction.id, '-', err].join(' ');
 						library.logger.error(err);
 						library.logger.error('Transaction', transaction);
 
