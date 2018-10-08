@@ -20,7 +20,7 @@ let nextBonus = 0;
 let Mnemonic = require('bitcore-mnemonic');
 let mailServices = require('../helpers/postmark');
 let dbcache = require('memory-cache');
-let newCache = new dbcache.Cache(); 
+let newCache = new dbcache.Cache();
 let frogings_sql = require('../sql/frogings');
 let clickatell = require("clickatell-platform");
 
@@ -293,11 +293,11 @@ Accounts.prototype.setAccountAndGet = function (data, cb) {
 			throw err;
 		}
 	}
-	
+
 	let REDIS_KEY_USER = "userAccountInfo_" + address;
 
-	cache.prototype.isExists(REDIS_KEY_USER, function (err, isExist) { 
-		if(!isExist) {
+	cache.prototype.isExists(REDIS_KEY_USER, function (err, isExist) {
+		if (!isExist) {
 			cache.prototype.setJsonForKey(REDIS_KEY_USER, address);
 		}
 
@@ -385,29 +385,29 @@ Accounts.prototype.isLoaded = function () {
 	return !!modules;
 };
 
-Accounts.prototype.circulatingSupply = function(cb) {
+Accounts.prototype.circulatingSupply = function (cb) {
 	let initialUnmined = config.ddkSupply.totalSupply - config.initialPrimined.total;
 	//let publicAddress = library.config.sender.address;
 	let hash = Buffer.from(JSON.parse(library.config.users[0].keys));
 	let keypair = library.ed.makeKeypair(hash);
 	let publicKey = keypair.publicKey.toString('hex');
-	self.getAccount({publicKey: publicKey}, function(err, account) {
+	self.getAccount({ publicKey: publicKey }, function (err, account) {
 		library.db.one(sql.getCurrentUnmined, { address: account.address })
-		.then(function (currentUnmined) {
-			let circulatingSupply = config.initialPrimined.total + initialUnmined - currentUnmined.balance;
+			.then(function (currentUnmined) {
+				let circulatingSupply = config.initialPrimined.total + initialUnmined - currentUnmined.balance;
 
-			cache.prototype.getJsonForKey('minedContributorsBalance', function (err, contributorsBalance) {
-				let totalCirculatingSupply = parseInt(contributorsBalance) + circulatingSupply;
+				cache.prototype.getJsonForKey('minedContributorsBalance', function (err, contributorsBalance) {
+					let totalCirculatingSupply = parseInt(contributorsBalance) + circulatingSupply;
 
-				return setImmediate(cb, null, {
-					circulatingSupply: totalCirculatingSupply
+					return setImmediate(cb, null, {
+						circulatingSupply: totalCirculatingSupply
+					});
 				});
+			})
+			.catch(function (err) {
+				library.logger.error(err.stack);
+				return setImmediate(cb, err.toString());
 			});
-		})
-		.catch(function (err) {
-			library.logger.error(err.stack);
-			return setImmediate(cb, err.toString());
-		});
 	});
 }
 
@@ -481,13 +481,13 @@ Accounts.prototype.shared = {
 					/****************************************************************/
 
 					cache.prototype.isExists(REDIS_KEY_USER_INFO_HASH, function (err, isExist) {
-						
+
 						if (!isExist) {
 							cache.prototype.setJsonForKey(REDIS_KEY_USER_INFO_HASH, accountData.address);
 							self.referralLinkChain(req.body.referal, account.address, function (error) {
 								if (error) {
 									cache.prototype.deleteJsonForKey(REDIS_KEY_USER_INFO_HASH);
-									library.logger.error("Referral API Error : "+error);
+									library.logger.error("Referral API Error : " + error);
 									return setImmediate(cb, error.toString());
 								} else {
 									let data = {
@@ -640,7 +640,7 @@ Accounts.prototype.shared = {
 	},
 
 	addDelegates: function (req, cb) {
-		return setImmediate(cb, 'Voting is Disabled');
+		/* return setImmediate(cb, 'Voting is Disabled'); */
 		library.schema.validate(req.body, schema.addDelegates, function (err) {
 			if (err) {
 				return setImmediate(cb, err[0].message);
@@ -655,137 +655,149 @@ Accounts.prototype.shared = {
 					return setImmediate(cb, 'Invalid passphrase');
 				}
 			}
-
-			library.balancesSequence.add(function (cb) {
-				if (req.body.multisigAccountPublicKey && req.body.multisigAccountPublicKey !== keypair.publicKey.toString('hex')) {
-					modules.accounts.getAccount({ publicKey: req.body.multisigAccountPublicKey }, function (err, account) {
-						if (err) {
-							return setImmediate(cb, err);
-						}
-
-						if (!account || !account.publicKey) {
-							return setImmediate(cb, 'Multisignature account not found');
-						}
-
-						if (!account.multisignatures || !account.multisignatures) {
-							return setImmediate(cb, 'Account does not have multisignatures enabled');
-						}
-
-						if (account.multisignatures.indexOf(keypair.publicKey.toString('hex')) < 0) {
-							return setImmediate(cb, 'Account does not belong to multisignature group');
-						}
-
-						modules.accounts.getAccount({ publicKey: keypair.publicKey }, function (err, requester) {
-							if (err) {
-								return setImmediate(cb, err);
-							}
-
-							if (account.totalFrozeAmount === 0) {
-								return setImmediate(cb, 'No Stake available');
-							}
-
-							if (!requester || !requester.publicKey) {
-								return setImmediate(cb, 'Requester not found');
-							}
-
-							if (requester.secondSignature && !req.body.secondSecret) {
-								return setImmediate(cb, 'Missing requester second passphrase');
-							}
-
-							if (requester.publicKey === account.publicKey) {
-								return setImmediate(cb, 'Invalid requester public key');
-							}
-
-							if (requester.totalFrozeAmount == 0) {
-								return setImmediate(cb, 'Please Stake before vote/unvote');
-							}
-
-							let secondKeypair = null;
-
-							if (requester.secondSignature) {
-								let secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
-								secondKeypair = library.ed.makeKeypair(secondHash);
-							}
-
-							let transaction;
-
-							try {
-								transaction = library.logic.transaction.create({
-									type: transactionTypes.VOTE,
-									votes: req.body.delegates,
-									sender: account,
-									keypair: keypair,
-									secondKeypair: secondKeypair,
-									requester: keypair
-								});
-							} catch (e) {
-								return setImmediate(cb, e.toString());
-							}
-
-							modules.transactions.receiveTransactions([transaction], true, cb);
-						});
-					});
-				} else {
-					self.setAccountAndGet({ publicKey: keypair.publicKey.toString('hex') }, function (err, account) {
-						if (err) {
-							return setImmediate(cb, err);
-						}
-
-						if (account.totalFrozeAmount === 0) {
-							return setImmediate(cb, 'No Stake available');
-						}
-
-						if (!account || !account.publicKey) {
-							return setImmediate(cb, 'Account not found');
-						}
-
-						if (account.secondSignature && !req.body.secondSecret) {
-							return setImmediate(cb, 'Invalid second passphrase');
-						}
-
-						let secondKeypair = null;
-
-						if (account.secondSignature) {
-							let secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
-							secondKeypair = library.ed.makeKeypair(secondHash);
-						}
-
-						if (account.totalFrozeAmount == 0) {
-							return setImmediate(cb, 'Please Stake before vote/unvote');
-						}
-
-						let transaction;
-
-						try {
-							transaction = library.logic.transaction.create({
-								type: transactionTypes.VOTE,
-								votes: req.body.delegates,
-								sender: account,
-								keypair: keypair,
-								secondKeypair: secondKeypair
-							});
-						} catch (e) {
-							return setImmediate(cb, e.toString());
-						}
-
-						modules.transactions.receiveTransactions([transaction], true, cb);
-
-					});
+			modules.transactions.getUserUnconfirmedTransactions('getUnconfirmedTransactionList', {
+				body: {
+					senderPublicKey: req.body.publicKey
 				}
-			}, function (err, transaction) {
+			}, function (err, unconfirmedTrsList) {
 				if (err) {
 					return setImmediate(cb, err);
 				}
-				return setImmediate(cb, null, { transaction: transaction[0] });
-				/* library.logic.vote.updateAndCheckVote({
-					votes: req.body.delegates,
-					senderId: transaction[0].senderId
-				}, function (err) {
-					if (err) {
-						return setImmediate(cb, err);
-					}
-					return setImmediate(cb, null, { transaction: transaction[0] });
-				}); */
+				if (unconfirmedTrsList.transactions.length > 1) {
+					return setImmediate(cb, 'Your transaction is in pending state. Wait untill it is confirmed and try again!');
+				} else {
+					library.balancesSequence.add(function (cb) {
+						if (req.body.multisigAccountPublicKey && req.body.multisigAccountPublicKey !== keypair.publicKey.toString('hex')) {
+							modules.accounts.getAccount({ publicKey: req.body.multisigAccountPublicKey }, function (err, account) {
+								if (err) {
+									return setImmediate(cb, err);
+								}
+
+								if (!account || !account.publicKey) {
+									return setImmediate(cb, 'Multisignature account not found');
+								}
+
+								if (!account.multisignatures || !account.multisignatures) {
+									return setImmediate(cb, 'Account does not have multisignatures enabled');
+								}
+
+								if (account.multisignatures.indexOf(keypair.publicKey.toString('hex')) < 0) {
+									return setImmediate(cb, 'Account does not belong to multisignature group');
+								}
+
+								modules.accounts.getAccount({ publicKey: keypair.publicKey }, function (err, requester) {
+									if (err) {
+										return setImmediate(cb, err);
+									}
+
+									if (account.totalFrozeAmount === 0) {
+										return setImmediate(cb, 'No Stake available');
+									}
+
+									if (!requester || !requester.publicKey) {
+										return setImmediate(cb, 'Requester not found');
+									}
+
+									if (requester.secondSignature && !req.body.secondSecret) {
+										return setImmediate(cb, 'Missing requester second passphrase');
+									}
+
+									if (requester.publicKey === account.publicKey) {
+										return setImmediate(cb, 'Invalid requester public key');
+									}
+
+									if (requester.totalFrozeAmount == 0) {
+										return setImmediate(cb, 'Please Stake before vote/unvote');
+									}
+
+									let secondKeypair = null;
+
+									if (requester.secondSignature) {
+										let secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
+										secondKeypair = library.ed.makeKeypair(secondHash);
+									}
+
+									let transaction;
+
+									try {
+										transaction = library.logic.transaction.create({
+											type: transactionTypes.VOTE,
+											votes: req.body.delegates,
+											sender: account,
+											keypair: keypair,
+											secondKeypair: secondKeypair,
+											requester: keypair
+										});
+									} catch (e) {
+										return setImmediate(cb, e.toString());
+									}
+
+									modules.transactions.receiveTransactions([transaction], true, cb);
+								});
+							});
+						} else {
+							self.setAccountAndGet({ publicKey: keypair.publicKey.toString('hex') }, function (err, account) {
+								if (err) {
+									return setImmediate(cb, err);
+								}
+
+								if (account.totalFrozeAmount === 0) {
+									return setImmediate(cb, 'No Stake available');
+								}
+
+								if (!account || !account.publicKey) {
+									return setImmediate(cb, 'Account not found');
+								}
+
+								if (account.secondSignature && !req.body.secondSecret) {
+									return setImmediate(cb, 'Invalid second passphrase');
+								}
+
+								let secondKeypair = null;
+
+								if (account.secondSignature) {
+									let secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
+									secondKeypair = library.ed.makeKeypair(secondHash);
+								}
+
+								if (account.totalFrozeAmount == 0) {
+									return setImmediate(cb, 'Please Stake before vote/unvote');
+								}
+
+								let transaction;
+
+								try {
+									transaction = library.logic.transaction.create({
+										type: transactionTypes.VOTE,
+										votes: req.body.delegates,
+										sender: account,
+										keypair: keypair,
+										secondKeypair: secondKeypair
+									});
+								} catch (e) {
+									return setImmediate(cb, e.toString());
+								}
+
+								modules.transactions.receiveTransactions([transaction], true, cb);
+
+							});
+						}
+					}, function (err, transaction) {
+						if (err) {
+							return setImmediate(cb, err);
+						}
+						return setImmediate(cb, null, { transaction: transaction[0] });
+						/* library.logic.vote.updateAndCheckVote({
+							votes: req.body.delegates,
+							senderId: transaction[0].senderId
+						}, function (err) {
+							if (err) {
+								return setImmediate(cb, err);
+							}
+							return setImmediate(cb, null, { transaction: transaction[0] });
+						}); */
+					});
+				}
 			});
 		});
 	},
@@ -853,13 +865,13 @@ Accounts.prototype.shared = {
 			username: username,
 			password: hashPassword
 		}).then(function (etps_user) {
-			
-			if(etps_user.length) {
+
+			if (etps_user.length) {
 
 				library.db.one(sql.findPassPhrase, {
 					userName: username
 				}).then(function (user) {
-				
+
 					return setImmediate(cb, null, {
 						success: true,
 						userInfo: user
@@ -868,7 +880,7 @@ Accounts.prototype.shared = {
 					library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
 					return setImmediate(cb, 'Invalid username or password');
 				});
-			
+
 			} else {
 				library.logger.error('Invalid Etps User');
 				return setImmediate(cb, 'Invalid username or password');
@@ -900,21 +912,21 @@ Accounts.prototype.shared = {
 			});
 	},
 
-	senderAccountBalance: function(req,cb) {
-		library.dbReplica.query(sql.checkSenderBalance,{
+	senderAccountBalance: function (req, cb) {
+		library.dbReplica.query(sql.checkSenderBalance, {
 			sender_address: req.body.address
-		}).then(function(bal){
-			return setImmediate(cb, null, { balance: bal[0].balance});
-		}).catch(function(err){
+		}).then(function (bal) {
+			return setImmediate(cb, null, { balance: bal[0].balance });
+		}).catch(function (err) {
 			return setImmediate(cb, err);
 		});
 	},
 
 	getMigratedUsersList: function (req, cb) {
 		library.dbReplica.query(sql.getMigratedList, {
-				limit: req.body.limit,
-				offset: req.body.offset
-			})
+			limit: req.body.limit,
+			offset: req.body.offset
+		})
 			.then(function (users) {
 				return setImmediate(cb, null, {
 					migratedList: users,
@@ -970,59 +982,59 @@ Accounts.prototype.shared = {
 		}
 
 	},
-	
+
 	updateEtpsUser: function (req, cb) {
 
-	library.dbReplica.query(sql.checkValidEtpsUser, {
-		username: req.body.etps_username
-	}).then(function (user) {
-		if (user[0].count) {
-			library.db.none(sql.updateMigratedUserInfo, {
-				username: req.body.etps_username
-			}).then(function () {
-				return setImmediate(cb, null);
-			}).catch(function (err) {
-				library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
-				return setImmediate(cb, err);
-			});
-		} else {
-			return setImmediate(cb, 'Invalid Etps User');
-		}
-	}).catch(function (err) {
-		return setImmediate(cb, err);
-	});
+		library.dbReplica.query(sql.checkValidEtpsUser, {
+			username: req.body.etps_username
+		}).then(function (user) {
+			if (user[0].count) {
+				library.db.none(sql.updateMigratedUserInfo, {
+					username: req.body.etps_username
+				}).then(function () {
+					return setImmediate(cb, null);
+				}).catch(function (err) {
+					library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
+					return setImmediate(cb, err);
+				});
+			} else {
+				return setImmediate(cb, 'Invalid Etps User');
+			}
+		}).catch(function (err) {
+			return setImmediate(cb, err);
+		});
 
-},
-searchMigrateUser: function (req, cb) {
-	var query = req.body.searchKey;
-	if (query.indexOf('DDK') !== -1) {
-		//search based on Address
-		library.dbReplica.query(sql.addressBasedSearch, {
+	},
+	searchMigrateUser: function (req, cb) {
+		var query = req.body.searchKey;
+		if (query.indexOf('DDK') !== -1) {
+			//search based on Address
+			library.dbReplica.query(sql.addressBasedSearch, {
 				address: query
 			})
-			.then(function (data) {
-				return setImmediate(cb, null, {
-					result: data
+				.then(function (data) {
+					return setImmediate(cb, null, {
+						result: data
+					});
+				})
+				.catch(function (err) {
+					return setImmediate(cb, err);
 				});
-			})
-			.catch(function (err) {
-				return setImmediate(cb, err);
-			});
-	} else {
-		//saerch based on email
-		library.dbReplica.query(sql.usernameBasedSearch, {
+		} else {
+			//saerch based on email
+			library.dbReplica.query(sql.usernameBasedSearch, {
 				username: query
 			})
-			.then(function (data) {
-				return setImmediate(cb, null, {
-					result: data
+				.then(function (data) {
+					return setImmediate(cb, null, {
+						result: data
+					});
+				})
+				.catch(function (err) {
+					return setImmediate(cb, err);
 				});
-			})
-			.catch(function (err) {
-				return setImmediate(cb, err);
-			});
+		}
 	}
-}
 };
 
 // Internal API
@@ -1285,12 +1297,12 @@ Accounts.prototype.internal = {
 			if (isExist) {
 				library.cache.client.get('2fa_user_' + user.address, function (err, userCred) {
 					let user_2FA = JSON.parse(userCred);
-					if(user_2FA.twofactor.secret) {
+					if (user_2FA.twofactor.secret) {
 						return setImmediate(cb, null, { success: true });
 					}
 					return setImmediate(cb, null, { success: false });
 				});
-			}else {
+			} else {
 				return setImmediate(cb, null, { success: false });
 			}
 		});
@@ -1345,18 +1357,18 @@ Accounts.prototype.internal = {
 					library.dbReplica.query(sql.findActiveStakeAmount, {
 						senderId: req.body.address
 					})
-					.then(function (stakeOrders) {
-						if (stakeOrders.length > 0) {
-							stakedAmount = parseInt(stakeOrders[1].value) / 100000000;
-							seriesCb(null, true);
-						} else {
-							seriesCb(null, false);
-							//seriesCb('Rule 2 failed: You need to have at least one active stake order');
-						}
-					})
-					.catch(function (err) {
-						seriesCb(err, false);
-					});
+						.then(function (stakeOrders) {
+							if (stakeOrders.length > 0) {
+								stakedAmount = parseInt(stakeOrders[1].value) / 100000000;
+								seriesCb(null, true);
+							} else {
+								seriesCb(null, false);
+								//seriesCb('Rule 2 failed: You need to have at least one active stake order');
+							}
+						})
+						.catch(function (err) {
+							seriesCb(err, false);
+						});
 				}],
 				checkActiveStakeOfLeftAndRightSponsor: ['checkActiveStake', function (result, seriesCb) {
 					library.dbReplica.query(sql.findDirectSponsor, {
@@ -1384,10 +1396,10 @@ Accounts.prototype.internal = {
 											seriesCb(err, false);
 										});
 								});
-								
-							} else if(activeStakeCount < 2){
+
+							} else if (activeStakeCount < 2) {
 								seriesCb(null, false);
-							}else {
+							} else {
 								seriesCb(null, false);
 							}
 						})
@@ -1400,34 +1412,34 @@ Accounts.prototype.internal = {
 					library.dbReplica.query(sql.findGroupBonus, {
 						senderId: req.body.address
 					})
-					.then(function (bonusInfo) {
-						groupBonus = parseInt(bonusInfo[0].group_bonus) / 100000000 ;
-						pendingGroupBonus = parseInt(bonusInfo[0].pending_group_bonus) / 100000000;
-						if (pendingGroupBonus <= groupBonus && pendingGroupBonus > 0) {
-							nextBonus = (groupBonus - pendingGroupBonus) > 15 ? 15 : (groupBonus - pendingGroupBonus) !== 0 ? (groupBonus - pendingGroupBonus) : 15;
-							if(nextBonus > stakedAmount * 10) {
-								nextBonus = stakedAmount * 10;
-								pendingGroupBonus = groupBonus - nextBonus;
-								seriesCb(null, true);
-							} else if ((groupBonus - pendingGroupBonus + nextBonus) < stakedAmount * 10) {
-								pendingGroupBonus = groupBonus - nextBonus;
-								seriesCb(null, true);
-							} else if(stakedAmount * 10 - (groupBonus - pendingGroupBonus) > 0) {
-								nextBonus = stakedAmount * 10 - (groupBonus - pendingGroupBonus);
-								pendingGroupBonus = groupBonus - nextBonus;
-								seriesCb(null, true);
+						.then(function (bonusInfo) {
+							groupBonus = parseInt(bonusInfo[0].group_bonus) / 100000000;
+							pendingGroupBonus = parseInt(bonusInfo[0].pending_group_bonus) / 100000000;
+							if (pendingGroupBonus <= groupBonus && pendingGroupBonus > 0) {
+								nextBonus = (groupBonus - pendingGroupBonus) > 15 ? 15 : (groupBonus - pendingGroupBonus) !== 0 ? (groupBonus - pendingGroupBonus) : 15;
+								if (nextBonus > stakedAmount * 10) {
+									nextBonus = stakedAmount * 10;
+									pendingGroupBonus = groupBonus - nextBonus;
+									seriesCb(null, true);
+								} else if ((groupBonus - pendingGroupBonus + nextBonus) < stakedAmount * 10) {
+									pendingGroupBonus = groupBonus - nextBonus;
+									seriesCb(null, true);
+								} else if (stakedAmount * 10 - (groupBonus - pendingGroupBonus) > 0) {
+									nextBonus = stakedAmount * 10 - (groupBonus - pendingGroupBonus);
+									pendingGroupBonus = groupBonus - nextBonus;
+									seriesCb(null, true);
+								} else {
+									seriesCb(null, false);
+									//seriesCb('Rule 4 failed: Ratio withdrawal is 1:10 from own staking DDK.');
+								}
 							} else {
 								seriesCb(null, false);
-								//seriesCb('Rule 4 failed: Ratio withdrawal is 1:10 from own staking DDK.');
+								//seriesCb('Either you don\'t have group bonus reserved or exhausted your withdrawl limit');
 							}
-						} else {
-							seriesCb(null, false);
-							//seriesCb('Either you don\'t have group bonus reserved or exhausted your withdrawl limit');
-						}
-					})
-					.catch(function (err) {
-						seriesCb(err, false);
-					});
+						})
+						.catch(function (err) {
+							seriesCb(err, false);
+						});
 				}]
 			}, function (err, data) {
 				if (err) {
@@ -1450,14 +1462,14 @@ Accounts.prototype.internal = {
 			let keypair = library.ed.makeKeypair(hash);
 			let publicKey = keypair.publicKey.toString('hex');
 			library.balancesSequence.add(function (cb) {
-				self.getAccount({publicKey: publicKey}, function(err, account) {
+				self.getAccount({ publicKey: publicKey }, function (err, account) {
 					if (err) {
 						return setImmediate(cb, err)
 					}
 					let transaction;
 					let secondKeypair = null;
 					account.publicKey = publicKey;
-	
+
 					try {
 						transaction = library.logic.transaction.create({
 							type: transactionTypes.REWARD,
@@ -1482,12 +1494,12 @@ Accounts.prototype.internal = {
 					nextBonus: nextBonus * 100000000,
 					senderId: req.body.address
 				})
-				.then(function () {
-					return setImmediate(cb, null, { transactionId: transaction[0].id });
-				})
-				.catch(function (err) {
-					return setImmediate(cb, err);
-				});
+					.then(function () {
+						return setImmediate(cb, null, { transactionId: transaction[0].id });
+					})
+					.catch(function (err) {
+						return setImmediate(cb, err);
+					});
 			});
 		});
 	},
