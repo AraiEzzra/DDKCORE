@@ -52,7 +52,9 @@ let TransactionsSql = {
 
 	getVotesById: 'SELECT * FROM votes WHERE "transactionId" = ${id}',
 
-	getUserNames: 'SELECT * FROM users_list WHERE m_username IS NOT NULL'
+	getUserNames: 'SELECT * FROM users_list WHERE m_username IS NOT NULL',
+
+	getLastTransactionConfirmations: 'SELECT b."b_confirmations" FROM trs t LEFT OUTER JOIN blocks_list AS b ON t."blockId" = b."b_id" WHERE t."senderId" = ${senderId} ORDER BY t."timestamp" DESC LIMIT 1'
 };
 
 module.exports = TransactionsSql;

@@ -613,6 +613,18 @@ Transactions.prototype.getUserUnconfirmedTransactions = function (method, req, c
 	return __private.getPooledTransactions(method, req, cb);
 };
 
+Transactions.prototype.getLastTransactionConfirmations = function (senderId, cb) {
+	library.db.query(sql.getLastTransactionConfirmations, {
+		senderId: senderId
+	})
+		.then(function (data) {
+			return setImmediate(cb, null, data);
+		})
+		.catch(function (err) {
+			return setImmediate(cb, err);
+		});
+};
+
 /**
  * Checks if `modules` is loaded.
  * @return {boolean} True if `modules` is loaded.
@@ -817,12 +829,12 @@ Transactions.prototype.shared = {
 			let publicKey = keypair.publicKey.toString('hex');
 			__private.getPooledTransactions('getUnconfirmedTransactionList', {
 				body: {
-					senderPublicKey: req.body.publicKey
+					senderPublicKey: publicKey
 				}
 			}, function (err, unconfirmedTrsList) {
 				if (err) {
 					return setImmediate(cb, err);
-				} 
+				}
 				if (unconfirmedTrsList.transactions.length > 1) {
 					return setImmediate(cb, 'Your transaction is in pending state. Wait untill it is confirmed and try again!');
 				} else {
@@ -831,59 +843,109 @@ Transactions.prototype.shared = {
 							return setImmediate(cb, 'Invalid passphrase');
 						}
 					}
-
-					library.cache.client.get('2fa_user_' + modules.accounts.generateAddressByPublicKey(publicKey), function (err, userTwoFaCred) {
+					let senderAddress = modules.accounts.generateAddressByPublicKey(publicKey);
+					self.getLastTransactionConfirmations(senderAddress, function (err, data) {
 						if (err) {
 							return setImmediate(cb, err);
 						}
-						if (userTwoFaCred) {
-							userTwoFaCred = JSON.parse(userTwoFaCred);
-							if (userTwoFaCred.twofactor.secret) {
-								let verified = speakeasy.totp.verify({
-									secret: userTwoFaCred.twofactor.secret,
-									encoding: 'base32',
-									token: req.body.otp,
-									window: 6
-								});
-								if (!verified) {
-									return setImmediate(cb, 'Invalid OTP!. Please enter valid OTP to SEND Transaction');
+						if (data.length === 1 && data[0].b_confirmations < 7) {
+							return setImmediate(cb, 'Your last transactions is getting verified. Please wait untill block confirmations becomes 7 and try again. Current confirmations : '+ data[0].b_confirmations);
+						}
+						library.cache.client.get('2fa_user_' + senderAddress, function (err, userTwoFaCred) {
+							if (err) {
+								return setImmediate(cb, err);
+							}
+							if (userTwoFaCred) {
+								userTwoFaCred = JSON.parse(userTwoFaCred);
+								if (userTwoFaCred.twofactor.secret) {
+									let verified = speakeasy.totp.verify({
+										secret: userTwoFaCred.twofactor.secret,
+										encoding: 'base32',
+										token: req.body.otp,
+										window: 6
+									});
+									if (!verified) {
+										return setImmediate(cb, 'Invalid OTP!. Please enter valid OTP to SEND Transaction');
+									}
 								}
 							}
-						}
 
-						let query = { address: req.body.recipientId };
+							let query = { address: req.body.recipientId };
 
-						library.balancesSequence.add(function (cb) {
-							modules.accounts.getAccount(query, function (err, recipient) {
-								if (err) {
-									return setImmediate(cb, err);
-								}
+							library.balancesSequence.add(function (cb) {
+								modules.accounts.getAccount(query, function (err, recipient) {
+									if (err) {
+										return setImmediate(cb, err);
+									}
 
-								let recipientId = recipient ? recipient.address : req.body.recipientId;
+									let recipientId = recipient ? recipient.address : req.body.recipientId;
 
-								if (!recipientId) {
-									return setImmediate(cb, 'Invalid recipient');
-								}
+									if (!recipientId) {
+										return setImmediate(cb, 'Invalid recipient');
+									}
 
-								if (req.body.multisigAccountPublicKey && req.body.multisigAccountPublicKey !== keypair.publicKey.toString('hex')) {
-									modules.accounts.getAccount({ publicKey: req.body.multisigAccountPublicKey }, function (err, account) {
-										if (err) {
-											return setImmediate(cb, err);
-										}
+									if (req.body.multisigAccountPublicKey && req.body.multisigAccountPublicKey !== keypair.publicKey.toString('hex')) {
+										modules.accounts.getAccount({ publicKey: req.body.multisigAccountPublicKey }, function (err, account) {
+											if (err) {
+												return setImmediate(cb, err);
+											}
 
-										if (!account || !account.publicKey) {
-											return setImmediate(cb, 'Multisignature account not found');
-										}
+											if (!account || !account.publicKey) {
+												return setImmediate(cb, 'Multisignature account not found');
+											}
 
-										if (!Array.isArray(account.multisignatures)) {
-											return setImmediate(cb, 'Account does not have multisignatures enabled');
-										}
+											if (!Array.isArray(account.multisignatures)) {
+												return setImmediate(cb, 'Account does not have multisignatures enabled');
+											}
 
-										if (account.multisignatures.indexOf(keypair.publicKey.toString('hex')) < 0) {
-											return setImmediate(cb, 'Account does not belong to multisignature group');
-										}
+											if (account.multisignatures.indexOf(keypair.publicKey.toString('hex')) < 0) {
+												return setImmediate(cb, 'Account does not belong to multisignature group');
+											}
 
-										modules.accounts.getAccount({ publicKey: keypair.publicKey }, function (err) {
+											modules.accounts.getAccount({ publicKey: keypair.publicKey }, function (err) {
+												if (err) {
+													return setImmediate(cb, err);
+												}
+
+												if (!account || !account.publicKey) {
+													return setImmediate(cb, 'Account not found');
+												}
+
+												if (account.secondSignature && !req.body.secondSecret) {
+													return setImmediate(cb, 'Missing second passphrase');
+												}
+
+												if (account.address == req.body.recipientId) {
+													return setImmediate(cb, 'Sender and Recipient can\'t be same');
+												}
+
+												let secondKeypair = null;
+
+												if (account.secondSignature) {
+													let secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
+													secondKeypair = library.ed.makeKeypair(secondHash);
+												}
+
+												let transaction;
+
+												try {
+													transaction = library.logic.transaction.create({
+														type: (req.body.transactionRefer) ? (transactionTypes.REFER) : (transactionTypes.SEND),
+														amount: req.body.amount,
+														sender: account,
+														recipientId: recipientId,
+														keypair: keypair,
+														secondKeypair: secondKeypair
+													});
+												} catch (e) {
+													return setImmediate(cb, e.toString());
+												}
+
+												modules.transactions.receiveTransactions([transaction], true, cb);
+											});
+										});
+									} else {
+										modules.accounts.setAccountAndGet({ publicKey: keypair.publicKey.toString('hex') }, function (err, account) {
 											if (err) {
 												return setImmediate(cb, err);
 											}
@@ -924,56 +986,14 @@ Transactions.prototype.shared = {
 
 											modules.transactions.receiveTransactions([transaction], true, cb);
 										});
-									});
-								} else {
-									modules.accounts.setAccountAndGet({ publicKey: keypair.publicKey.toString('hex') }, function (err, account) {
-										if (err) {
-											return setImmediate(cb, err);
-										}
-
-										if (!account || !account.publicKey) {
-											return setImmediate(cb, 'Account not found');
-										}
-
-										if (account.secondSignature && !req.body.secondSecret) {
-											return setImmediate(cb, 'Missing second passphrase');
-										}
-
-										if (account.address == req.body.recipientId) {
-											return setImmediate(cb, 'Sender and Recipient can\'t be same');
-										}
-
-										let secondKeypair = null;
-
-										if (account.secondSignature) {
-											let secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
-											secondKeypair = library.ed.makeKeypair(secondHash);
-										}
-
-										let transaction;
-
-										try {
-											transaction = library.logic.transaction.create({
-												type: (req.body.transactionRefer) ? (transactionTypes.REFER) : (transactionTypes.SEND),
-												amount: req.body.amount,
-												sender: account,
-												recipientId: recipientId,
-												keypair: keypair,
-												secondKeypair: secondKeypair
-											});
-										} catch (e) {
-											return setImmediate(cb, e.toString());
-										}
-
-										modules.transactions.receiveTransactions([transaction], true, cb);
-									});
+									}
+								});
+							}, function (err, transaction) {
+								if (err) {
+									return setImmediate(cb, err);
 								}
+								return setImmediate(cb, null, { transactionId: transaction[0].id });
 							});
-						}, function (err, transaction) {
-							if (err) {
-								return setImmediate(cb, err);
-							}
-							return setImmediate(cb, null, { transactionId: transaction[0].id });
 						});
 					});
 				}
