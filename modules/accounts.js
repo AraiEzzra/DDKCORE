@@ -640,7 +640,7 @@ Accounts.prototype.shared = {
 	},
 
 	addDelegates: function (req, cb) {
-		/* return setImmediate(cb, 'Voting is Disabled'); */
+		return setImmediate(cb, 'Voting is Disabled'); 
 		library.schema.validate(req.body, schema.addDelegates, function (err) {
 			if (err) {
 				return setImmediate(cb, err[0].message);
