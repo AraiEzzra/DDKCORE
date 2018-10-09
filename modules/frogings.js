@@ -275,7 +275,7 @@ Frogings.prototype.shared = {
 	},
 
 	addTransactionForFreeze: function (req, cb) {
-		/* return setImmediate(cb, 'Stake Transaction Disabled'); */
+		return setImmediate(cb, 'Stake Transaction Disabled'); 
 		let accountData;
 		library.schema.validate(req.body, schema.addTransactionForFreeze, function (err) {
 			if (err) {
