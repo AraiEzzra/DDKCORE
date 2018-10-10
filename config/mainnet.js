@@ -79,10 +79,10 @@ module.exports = {
     },
     broadcasts: {
         broadcastInterval: 5000,
-        broadcastLimit: 20,
+        broadcastLimit: 25,
         parallelLimit: 20,
         releaseLimit: 25,
-        relayLimit: 2
+        relayLimit: 3
     },
     transactions: {
         maxTxsPerQueue: 1000
