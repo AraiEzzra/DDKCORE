@@ -798,12 +798,8 @@ Loader.prototype.isLoaded = function () {
  */
 Loader.prototype.onPeersReady = function () {
 	library.logger.trace('Peers ready', {module: 'loader'});
-	/**
-	 * @Hotam Singh FIXME When enable multiple nodes
-	 * Uncomment __private.syncTimer(); method
-	 */
 	// Enforce sync early
-	//__private.syncTimer();  
+	__private.syncTimer();  
 
 	setImmediate(function load () {
 		async.series({

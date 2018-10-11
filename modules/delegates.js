@@ -178,12 +178,13 @@ __private.forge = function (cb) {
 					library.logger.warn(err);
 					return setImmediate(cb, err);
 				} else {
+					library.logger.info('starting block generation: ' + currentBlockData.time);
 					return modules.blocks.process.generateBlock(currentBlockData.keypair, currentBlockData.time, cb);
 				}
 			});
 		}, function (err) {
 			if (err) {
-				library.logger.error('Failed to generate block within delegate slot', err);
+				library.logger.error('Failed to generate block within delegate slot' + err);
 			} else {
 
 				let forgedBlock = modules.blocks.lastBlock.get();
@@ -194,7 +195,7 @@ __private.forge = function (cb) {
 					'height:', forgedBlock.height,
 					'round:', modules.rounds.calc(forgedBlock.height),
 					'slot:', slots.getSlotNumber(currentBlockData.time),
-					'reward:' + forgedBlock.reward
+					'Number of Tx:' + forgedBlock.numberOfTransactions
 				].join(' '));
 			}
 

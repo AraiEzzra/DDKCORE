@@ -413,7 +413,7 @@ Peers.prototype.onBlockchainReady = function () {
 			});
 		}
 	}, function () {
-		library.bus.message('peersReady');
+		//library.bus.message('peersReady');
 	});
 };
 
