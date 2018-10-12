@@ -640,7 +640,7 @@ Accounts.prototype.shared = {
 	},
 
 	addDelegates: function (req, cb) {
-		return setImmediate(cb, 'Voting is Disabled'); 
+		//return setImmediate(cb, 'Voting is Disabled'); 
 		library.schema.validate(req.body, schema.addDelegates, function (err) {
 			if (err) {
 				return setImmediate(cb, err[0].message);
@@ -671,7 +671,7 @@ Accounts.prototype.shared = {
 						if (err) {
 							return setImmediate(cb, err);
 						}
-						if (data.length === 1 && data[0].b_confirmations < 7) {
+						if (data.length === 1 && data[0].b_confirmations < 10) {
 							return setImmediate(cb, 'Your last transactions is getting verified. Please wait untill block confirmations becomes 7 and try again. Current confirmations : ' + data[0].b_confirmations);
 						}
 						library.balancesSequence.add(function (cb) {

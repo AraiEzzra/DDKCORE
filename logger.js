@@ -24,7 +24,7 @@ let transport = new (winston.transports.DailyRotateFile)({
 	datePattern: 'yyyy-MM-dd.',
 	prepend: true,
 	json: false,
-	level: process.env.ENV === 'development' ? 'info' : 'debug',
+	level: process.env.ENV === 'development' ? 'debug' : 'info',
 	timestamp: function () {
 		let today = new Date();
 		return today.toISOString();
