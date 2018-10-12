@@ -24,7 +24,7 @@ let transport = new (winston.transports.DailyRotateFile)({
 	datePattern: 'yyyy-MM-dd.',
 	prepend: true,
 	json: false,
-	level: process.env.ENV === 'development' ? 'info' : 'debug',
+	level: process.env.NODE_ENV === 'development' ? 'debug' : 'info',
 	timestamp: function () {
 		let today = new Date();
 		return today.toISOString();
@@ -38,7 +38,7 @@ let transport = new (winston.transports.DailyRotateFile)({
 let traceTransport = new (winston.transports.File)({
 	filename: './logs/archive.log',
 	level: 'archive',
-	levelOnly: true,
+	levelOnly: true
 	prepend: true,
 	json: false,
 	timestamp: function () {
@@ -48,7 +48,7 @@ let traceTransport = new (winston.transports.File)({
 });
 
 let consoleTransport = new (winston.transports.Console)({
-	level: env.DEBUG ? 'debug' : 'info',
+	level: process.env.NODE_ENV === 'development' ? 'info' : 'debug',
 	handleExceptions: true,
 	json: false,
 	colorize: true,
