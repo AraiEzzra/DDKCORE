@@ -38,7 +38,7 @@ let transport = new (winston.transports.DailyRotateFile)({
 let traceTransport = new (winston.transports.File)({
 	filename: './logs/archive.log',
 	level: 'archive',
-	levelOnly: true
+	levelOnly: true,
 	prepend: true,
 	json: false,
 	timestamp: function () {
