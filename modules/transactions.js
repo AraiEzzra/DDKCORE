@@ -820,7 +820,7 @@ Transactions.prototype.shared = {
 	},
 
 	addTransactions: function (req, cb) {
-		//return setImmediate(cb, 'Send Transaction Disabled');
+		return setImmediate(cb, 'Send Transaction Disabled');
 		library.schema.validate(req.body, schema.addTransactions, function (err) {
 			if (err) {
 				return setImmediate(cb, err[0].message);
