@@ -820,7 +820,7 @@ Transactions.prototype.shared = {
 	},
 
 	addTransactions: function (req, cb) {
-		return setImmediate(cb, 'Send Transaction Disabled');
+		//return setImmediate(cb, 'Send Transaction Disabled');
 		library.schema.validate(req.body, schema.addTransactions, function (err) {
 			if (err) {
 				return setImmediate(cb, err[0].message);
@@ -828,6 +828,11 @@ Transactions.prototype.shared = {
 			let hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
 			let keypair = library.ed.makeKeypair(hash);
 			let publicKey = keypair.publicKey.toString('hex');
+			let senderAddress = modules.accounts.generateAddressByPublicKey(publicKey);
+			let publicSendAllowed = library.config.transactions.send.enabled && (library.config.transactions.send.access.public || library.config.transactions.send.access.whiteList.indexOf(senderAddress) !== -1);
+			if (!publicSendAllowed) {
+				return setImmediate(cb, 'send transaction is not enabled for ' + senderAddress);
+			}
 			__private.getPooledTransactions('getUnconfirmedTransactionList', {
 				body: {
 					senderPublicKey: publicKey
@@ -844,7 +849,7 @@ Transactions.prototype.shared = {
 							return setImmediate(cb, 'Invalid passphrase');
 						}
 					}
-					let senderAddress = modules.accounts.generateAddressByPublicKey(publicKey);
+					
 					self.getLastTransactionConfirmations(senderAddress, function (err, data) {
 						if (err) {
 							return setImmediate(cb, err);
