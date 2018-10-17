@@ -3,6 +3,8 @@ let config = process.env.NODE_ENV === 'development' ? require('../config/default
 let constants = require('../helpers/constants.js');
 let jobsQueue = require('../helpers/jobsQueue.js');
 let transactionTypes = require('../helpers/transactionTypes.js');
+let producer = require('../kafka/producer');
+//let consumer = require('../kafka/consumer');
 
 // Private fields
 let modules, library, self, __private = {};
@@ -305,9 +307,20 @@ TransactionPool.prototype.countBundled = function () {
  */
 TransactionPool.prototype.addQueuedTransaction = function (transaction) {
 	if (self.queued.index[transaction.id] === undefined) {
-		self.queued.transactions.push(transaction);
+		/* self.queued.transactions.push(transaction);
 		let index = self.queued.transactions.indexOf(transaction);
-		self.queued.index[transaction.id] = index;
+		self.queued.index[transaction.id] = index; */
+		producer.isTopicExists('transactions', function (isExists) {
+			if (!isExists) {
+				library.logger.error('topic dosent exist');
+			} else {
+				producer.send('transactions', transaction, 0, function (err) {
+					if (err) {
+						library.logger.error('Kafka error', err);
+					}
+				});
+			}
+		});
 	}
 };
 
