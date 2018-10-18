@@ -552,7 +552,6 @@ Delegates.prototype.onBlockchainReady = function () {
 			if (err) {
 				library.logger.error('Failed to load delegates', err);
 			}
-			library.logger.info('Preparing next forge');
 			async.series([
 				__private.forge,
 				modules.transactions.fillPool
