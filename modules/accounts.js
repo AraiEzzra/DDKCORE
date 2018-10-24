@@ -387,7 +387,7 @@ Accounts.prototype.isLoaded = function () {
 };
 
 Accounts.prototype.circulatingSupply = function (cb) {
-	let initialUnmined = config.ddkSupply.totalSupply - config.initialPrimined.total;
+	// let initialUnmined = config.ddkSupply.totalSupply - config.initialPrimined.total;
 	//let publicAddress = library.config.sender.address;
 	let hash = Buffer.from(JSON.parse(library.config.users[0].keys));
 	let keypair = library.ed.makeKeypair(hash);
@@ -395,7 +395,7 @@ Accounts.prototype.circulatingSupply = function (cb) {
 	self.getAccount({ publicKey: publicKey }, function (err, account) {
 		library.db.one(sql.getCurrentUnmined, { address: account.address })
 			.then(function (currentUnmined) {
-				let circulatingSupply = config.initialPrimined.total + initialUnmined - currentUnmined.balance;
+				let circulatingSupply = config.ddkSupply.totalSupply - currentUnmined.balance;
 
 				cache.prototype.getJsonForKey('minedContributorsBalance', function (err, contributorsBalance) {
 					let totalCirculatingSupply = parseInt(contributorsBalance) + circulatingSupply;
