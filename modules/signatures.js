@@ -95,7 +95,7 @@ Signatures.prototype.shared = {
 	},
 
 	addSignature: function (req, cb) {
-		return setImmediate(cb, 'Second signature transaction Disabled');
+		//return setImmediate(cb, 'Second signature transaction Disabled');
 		library.schema.validate(req.body, schema.addSignature, function (err) {
 			if (err) {
 				return setImmediate(cb, err[0].message);
