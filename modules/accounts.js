@@ -23,6 +23,7 @@ let dbcache = require('memory-cache');
 let newCache = new dbcache.Cache();
 let frogings_sql = require('../sql/frogings');
 let clickatell = require("clickatell-platform");
+let request = require('request');
 
 // Private fields
 let modules, library, self, __private = {}, shared = {};
@@ -1527,43 +1528,74 @@ Accounts.prototype.internal = {
 
 				let newPassword = Math.random().toString(36).substr(2, 8);
 				let hash = crypto.createHash('md5').update(newPassword).digest('hex');
+				let mobileNumber = user[0].phone;
 
-				let mobileLength = user[0].phone.length;
+				let mobileLength = mobileNumber ? mobileNumber.length : 0;
 
-				if (mobileLength >= 8 && mobileLength <= 15) {
-					// clickatell.sendMessageHttp("Your newly generated password is "+ newPassword, ["8447807866"], "oYKI0Vtv9pEnxBY5fKbpUm0FhvifSHtDuyxgv.n7l6zBUtO7Su_mvl74roFmxvxTWVfaHZ2GUfEfG");
-				}
+				async.series({
 
-				library.db.none(sql.updateEtpsPassword, {
-					password: hash,
-					username: userName
-				}).then(function () {
+					sendPasswordSMS: function (smsCallback) {
+						if (mobileLength >= 8 && mobileLength <= 15) {
+							let url = 'http://backoffice.etpswallet.gold/sms.php';
+							let propertiesObject = {
+								phone: mobileNumber,
+								content: newPassword
+							};
 
-					let mailOptions = {
-						From: library.config.mailFrom,
-						To: email,
-						TemplateId: 8276206,
-						TemplateModel: {
-							"ddk": {
-								"username": userName,
-								"password": newPassword
-							}
+							request({
+								url: url,
+								qs: propertiesObject
+							}, function (err, response, body) {
+								if (err) {
+									return smsCallback(err);
+								}
+								library.logger.info("SMS Code Status Response: " + body.trim());
+								smsCallback();
+								// body=="1" sms sent
+							});
+						} else {
+							smsCallback();
 						}
-					};
+					},
+					sendPasswordMail: function (mailCallback) {
+						library.db.none(sql.updateEtpsPassword, {
+							password: hash,
+							username: userName
+						}).then(function () {
 
-					mailServices.sendEmailWithTemplate(mailOptions, function (err) {
-						if (err) {
-							library.logger.error(err.stack);
-							return setImmediate(cb, err.toString());
-						}
-						return setImmediate(cb, null, {
-							success: true,
-							info: "Mail Sent Successfully"
+							let mailOptions = {
+								From: library.config.mailFrom,
+								To: email,
+								TemplateId: 8276206,
+								TemplateModel: {
+									"ddk": {
+										"username": userName,
+										"password": newPassword
+									}
+								}
+							};
+
+							mailServices.sendEmailWithTemplate(mailOptions, function (err) {
+								if (err) {
+									library.logger.error(err.stack);
+									return mailCallback(err);
+								}
+								mailCallback();
+							});
+						}).catch(function (err) {
+							library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
+							return mailCallback(err);
 						});
-					});
-				}).catch(function (err) {
-					library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
-					return setImmediate(cb, err);
+					}
+
+				}, function (err) {
+					if (err) {
+						return setImmediate(cb, err);
+					}
+					return setImmediate(cb, null, {
+						success: true,
+						info: "Mail Sent Successfully"
+					})
 				});
 
 			} else {
