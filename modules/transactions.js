@@ -828,6 +828,11 @@ Transactions.prototype.shared = {
 			let hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
 			let keypair = library.ed.makeKeypair(hash);
 			let publicKey = keypair.publicKey.toString('hex');
+			let senderAddress = modules.accounts.generateAddressByPublicKey(publicKey);
+			let publicSendAllowed = library.config.transactions.send.enabled && (library.config.transactions.send.access.public || library.config.transactions.send.access.whiteList.indexOf(senderAddress) !== -1);
+			if (!publicSendAllowed) {
+				return setImmediate(cb, 'send transaction is not enabled for ' + senderAddress);
+			}
 			__private.getPooledTransactions('getUnconfirmedTransactionList', {
 				body: {
 					senderPublicKey: publicKey
@@ -844,13 +849,13 @@ Transactions.prototype.shared = {
 							return setImmediate(cb, 'Invalid passphrase');
 						}
 					}
-					let senderAddress = modules.accounts.generateAddressByPublicKey(publicKey);
+					
 					self.getLastTransactionConfirmations(senderAddress, function (err, data) {
 						if (err) {
 							return setImmediate(cb, err);
 						}
-						if (data.length === 1 && data[0].b_confirmations < 7) {
-							return setImmediate(cb, 'Your last transactions is getting verified. Please wait untill block confirmations becomes 7 and try again. Current confirmations : '+ data[0].b_confirmations);
+						if (data.length === 1 && data[0].b_confirmations < 10) {
+							return setImmediate(cb, 'Your last transactions is getting verified. Please wait untill block confirmations becomes 10 and try again. Current confirmations : '+ data[0].b_confirmations);
 						}
 						library.cache.client.get('2fa_user_' + senderAddress, function (err, userTwoFaCred) {
 							if (err) {

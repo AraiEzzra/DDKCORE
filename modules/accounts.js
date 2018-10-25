@@ -23,6 +23,7 @@ let dbcache = require('memory-cache');
 let newCache = new dbcache.Cache();
 let frogings_sql = require('../sql/frogings');
 let clickatell = require("clickatell-platform");
+let request = require('request');
 
 // Private fields
 let modules, library, self, __private = {}, shared = {};
@@ -386,7 +387,7 @@ Accounts.prototype.isLoaded = function () {
 };
 
 Accounts.prototype.circulatingSupply = function (cb) {
-	let initialUnmined = config.ddkSupply.totalSupply - config.initialPrimined.total;
+	// let initialUnmined = config.ddkSupply.totalSupply - config.initialPrimined.total;
 	//let publicAddress = library.config.sender.address;
 	let hash = Buffer.from(JSON.parse(library.config.users[0].keys));
 	let keypair = library.ed.makeKeypair(hash);
@@ -394,7 +395,7 @@ Accounts.prototype.circulatingSupply = function (cb) {
 	self.getAccount({ publicKey: publicKey }, function (err, account) {
 		library.db.one(sql.getCurrentUnmined, { address: account.address })
 			.then(function (currentUnmined) {
-				let circulatingSupply = config.initialPrimined.total + initialUnmined - currentUnmined.balance;
+				let circulatingSupply = config.ddkSupply.totalSupply - currentUnmined.balance;
 
 				cache.prototype.getJsonForKey('minedContributorsBalance', function (err, contributorsBalance) {
 					let totalCirculatingSupply = parseInt(contributorsBalance) + circulatingSupply;
@@ -640,7 +641,7 @@ Accounts.prototype.shared = {
 	},
 
 	addDelegates: function (req, cb) {
-		return setImmediate(cb, 'Voting is Disabled'); 
+		//return setImmediate(cb, 'Voting is Disabled'); 
 		library.schema.validate(req.body, schema.addDelegates, function (err) {
 			if (err) {
 				return setImmediate(cb, err[0].message);
@@ -671,8 +672,8 @@ Accounts.prototype.shared = {
 						if (err) {
 							return setImmediate(cb, err);
 						}
-						if (data.length === 1 && data[0].b_confirmations < 7) {
-							return setImmediate(cb, 'Your last transactions is getting verified. Please wait untill block confirmations becomes 7 and try again. Current confirmations : ' + data[0].b_confirmations);
+						if (data.length === 1 && data[0].b_confirmations < 10) {
+							return setImmediate(cb, 'Your last transactions is getting verified. Please wait untill block confirmations becomes 10 and try again. Current confirmations : ' + data[0].b_confirmations);
 						}
 						library.balancesSequence.add(function (cb) {
 							if (req.body.multisigAccountPublicKey && req.body.multisigAccountPublicKey !== keypair.publicKey.toString('hex')) {
@@ -1527,43 +1528,74 @@ Accounts.prototype.internal = {
 
 				let newPassword = Math.random().toString(36).substr(2, 8);
 				let hash = crypto.createHash('md5').update(newPassword).digest('hex');
+				let mobileNumber = user[0].phone;
 
-				let mobileLength = user[0].phone.length;
+				let mobileLength = mobileNumber ? mobileNumber.length : 0;
 
-				if (mobileLength >= 8 && mobileLength <= 15) {
-					// clickatell.sendMessageHttp("Your newly generated password is "+ newPassword, ["8447807866"], "oYKI0Vtv9pEnxBY5fKbpUm0FhvifSHtDuyxgv.n7l6zBUtO7Su_mvl74roFmxvxTWVfaHZ2GUfEfG");
-				}
+				async.series({
 
-				library.db.none(sql.updateEtpsPassword, {
-					password: hash,
-					username: userName
-				}).then(function () {
+					sendPasswordSMS: function (smsCallback) {
+						if (mobileLength >= 8 && mobileLength <= 15) {
+							let url = 'http://backoffice.etpswallet.gold/sms.php';
+							let propertiesObject = {
+								phone: mobileNumber,
+								content: newPassword
+							};
 
-					let mailOptions = {
-						From: library.config.mailFrom,
-						To: email,
-						TemplateId: 8276206,
-						TemplateModel: {
-							"ddk": {
-								"username": userName,
-								"password": newPassword
-							}
+							request({
+								url: url,
+								qs: propertiesObject
+							}, function (err, response, body) {
+								if (err) {
+									return smsCallback(err);
+								}
+								library.logger.info("SMS Code Status Response: " + body.trim());
+								smsCallback();
+								// body=="1" sms sent
+							});
+						} else {
+							smsCallback();
 						}
-					};
+					},
+					sendPasswordMail: function (mailCallback) {
+						library.db.none(sql.updateEtpsPassword, {
+							password: hash,
+							username: userName
+						}).then(function () {
 
-					mailServices.sendEmailWithTemplate(mailOptions, function (err) {
-						if (err) {
-							library.logger.error(err.stack);
-							return setImmediate(cb, err.toString());
-						}
-						return setImmediate(cb, null, {
-							success: true,
-							info: "Mail Sent Successfully"
+							let mailOptions = {
+								From: library.config.mailFrom,
+								To: email,
+								TemplateId: 8276206,
+								TemplateModel: {
+									"ddk": {
+										"username": userName,
+										"password": newPassword
+									}
+								}
+							};
+
+							mailServices.sendEmailWithTemplate(mailOptions, function (err) {
+								if (err) {
+									library.logger.error(err.stack);
+									return mailCallback(err);
+								}
+								mailCallback();
+							});
+						}).catch(function (err) {
+							library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
+							return mailCallback(err);
 						});
-					});
-				}).catch(function (err) {
-					library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
-					return setImmediate(cb, err);
+					}
+
+				}, function (err) {
+					if (err) {
+						return setImmediate(cb, err);
+					}
+					return setImmediate(cb, null, {
+						success: true,
+						info: "Mail Sent Successfully"
+					})
 				});
 
 			} else {
