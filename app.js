@@ -103,10 +103,6 @@ if (program.snapshot) {
 	);
 }
 
-if (process.env.NODE_ENV === 'test') {
-	appConfig.coverage = true;
-}
-
 /**
  * The config object to handle ddk modules and ddk api.
  * It loads `modules` and `api` folders content.

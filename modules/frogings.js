@@ -7,7 +7,6 @@ let TransactionPool = require('../logic/transactionPool.js');
 let transactionTypes = require('../helpers/transactionTypes.js');
 let Frozen = require('../logic/frozen.js');
 let ref_sql = require('../sql/referal_sql');
-let env = process.env;
 let constants = require('../helpers/constants.js');
 let cache = require('./cache.js');
 let slots = require('../helpers/slots');
@@ -56,6 +55,7 @@ function Frogings (cb, scope) {
 	__private.transactionPool = new TransactionPool(
 		scope.config.broadcasts.broadcastInterval,
 		scope.config.broadcasts.releaseLimit,
+		scope.config.transactions.maxTxsPerQueue,
 		scope.logic.transaction,
 		scope.bus,
 		scope.logger

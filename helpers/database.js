@@ -200,8 +200,6 @@ module.exports.connect = function (config, logger, cb) {
 		info.display = false;
 	};
 
-	config.user = config.user || process.env.USER;
-
 	let db = pgp(config);
 
 	let migrator = new Migrator(pgp, db);

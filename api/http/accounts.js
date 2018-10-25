@@ -91,8 +91,8 @@ function AccountsHttpApi (accountsModule, app, logger, cache, config) {
 	if (config.topAccounts) {
 		router.get('/top', httpApi.middleware.sanitize('query', schema.top, accountsModule.internal.top));
 	}
-	app.use('/api/accounts/getBalance', tokenValidator);
-	app.use('/api/accounts/logout', tokenValidator);
+	app.use('/api/accounts/getBalance', (req, res, next) => tokenValidator(req, res, next, config.jwt.secret));
+	app.use('/api/accounts/logout', (req, res, next) => tokenValidator(req, res, next, config.jwt.secret));
 	httpApi.registerEndpoint('/api/accounts', app, router, accountsModule.isLoaded);
 }
 

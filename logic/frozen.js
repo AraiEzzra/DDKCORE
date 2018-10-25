@@ -7,7 +7,6 @@ let request = require('request');
 let async = require('async');
 let Promise = require('bluebird');
 let reward_sql = require('../sql/referal_sql');
-let env = process.env;
 let cache = require('../modules/cache');
 let transactionTypes = require('../helpers/transactionTypes.js');
 let Reward = require('../helpers/rewards');

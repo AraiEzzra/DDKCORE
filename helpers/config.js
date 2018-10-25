@@ -32,7 +32,11 @@ function Config (configPath) {
 		configData = require('../config/mainnet');
 		//configData = fs.readFileSync(path.resolve(process.cwd(), (configPath || 'config/mainnet.js')), 'utf8');
 	}
-	
+
+	if(env.NODE_ENV === 'test') {
+		configData = { coverage: true };
+		//configData = fs.readFileSync(path.resolve(process.cwd(), (configPath || 'config/mainnet.js')), 'utf8');
+	}
 
 	/* if (!configData.length) {
 		console.log('Failed to read config file');

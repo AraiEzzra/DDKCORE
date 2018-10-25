@@ -4,10 +4,10 @@
 let node = {};
 let Rounds = require('../modules/rounds.js');
 let slots = require('../helpers/slots.js');
-
+const modulesLoader = require('./common/initModule').modulesLoader;
 // Requires
 node.bignum = require('../helpers/bignum.js');
-node.config = process.env.NODE_ENV === 'development' ? require('../config/default') : process.env.NODE_ENV === 'testnet' ? require('../config/testnet') : require('../config/mainnet');
+node.config = modulesLoader.config;
 node.constants = require('../helpers/constants.js');
 node.dappCategories = require('../helpers/dappCategories.js');
 node.dappTypes = require('../helpers/dappTypes.js');
@@ -66,8 +66,7 @@ node.gAccount = {
 	balance: '10000000000000000'
 };
 
-// Optional logging
-if (node.config.SILENT === 'true') {
+if (node.config.silent === 'true') {
 	node.debug = function () {};
 } else {
 	node.debug = console.log;

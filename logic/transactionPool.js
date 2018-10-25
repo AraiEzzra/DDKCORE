@@ -16,12 +16,13 @@ let modules, library, self, __private = {};
  * @implements {expireTransactions}
  * @param {number} broadcastInterval
  * @param {number} releaseLimit
+ * @param {number} maxTxsPerQueue
  * @param {Transaction} transaction - Logic instance
  * @param {bus} bus
  * @param {Object} logger
  */
 // Constructor
-function TransactionPool (broadcastInterval, releaseLimit, transaction, bus, logger) {
+function TransactionPool (broadcastInterval, releaseLimit, maxTxsPerQueue, transaction, bus, logger) {
 	library = {
 		logger: logger,
 		bus: bus,
@@ -33,6 +34,9 @@ function TransactionPool (broadcastInterval, releaseLimit, transaction, bus, log
 				broadcastInterval: broadcastInterval,
 				releaseLimit: releaseLimit,
 			},
+			transactions: {
+				maxTxsPerQueue,
+			}
 		},
 	};
 	self = this;
