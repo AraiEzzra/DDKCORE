@@ -31,9 +31,10 @@ let httpApi = require('../../helpers/httpApi');
  * @constructor
  * @param {Object} delegatesModule - Module delegate instance.
  * @param {scope} app - Network app.
+ * @param config appConfig
  */
 // Constructor
-function DelegatesHttpApi (delegatesModule, app, logger, cache) {
+function DelegatesHttpApi (delegatesModule, app, logger, cache, config) {
 
 	let router = new Router();
 
@@ -60,7 +61,7 @@ function DelegatesHttpApi (delegatesModule, app, logger, cache) {
 		'get /getLatestDelegates': 'getLatestDelegates'
 	});
 
-	if (process.env.DEBUG) {
+	if (config.debug) {
 		router.map(delegatesModule.internal, {
 			'get /forging/disableAll': 'forgingDisableAll',
 			'get /forging/enableAll': 'forgingEnableAll'

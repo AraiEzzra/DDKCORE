@@ -1,5 +1,8 @@
 {
     "port": 7007,
+    "serverProtocol": "http",
+    "serverHost": "10.5.0.5",
+    "serverPort": 7007,
     "address": "10.5.0.5",
     "version": "0.9.9a",
     "minVersion": ">=0.9.0",
@@ -103,7 +106,7 @@
     "app": {},
     "sender": {},
     "nethash": "da3ed6a45429278bac2666961289ca17ad86595d33b31037615d4b8e8f158bba",
-    "elasticsearchHost": "10.5.0.2",
+    "elasticsearchHost": "10.5.0.2:9200",
     "swaggerDomain": "159.65.139.248",
     "jwt": {
         "tokenLife": 300

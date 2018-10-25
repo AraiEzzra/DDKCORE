@@ -3,7 +3,7 @@ let env = process.env;
 
 module.exports = {
     port: parseInt(env.PORT, 10) || 7000,
-    address: env.DEFAULT_ADDRESS || '0.0.0.0',
+    address: env.ADDRESS || '0.0.0.0',
     version: '0.9.9a',
     minVersion: '>=0.9.0',
     fileLogLevel: 'info',
@@ -13,11 +13,11 @@ module.exports = {
     topAccounts: false,
     cacheEnabled: true,
     db: {
-        host: env.DEFAULT_DB_HOST || '0.0.0.0',
-        port: parseInt(env.DEFAULT_DB_PORT, 10) || 5432,
-        database: env.DEFAULT_DB_NAME || 'DDK_test',
-        password: env.DEFAULT_DB_PASSWORD || 'password',
-        user: env.DEFAULT_DB_USER || '',
+        host: env.DB_HOST || '0.0.0.0',
+        port: parseInt(env.DB_PORT, 10) || 5432,
+        database: env.DB_NAME || 'DDK_test',
+        password: env.DB_PASSWORD || 'password',
+        user: env.DB_USER || '',
         poolSize: 95,
         poolIdleTimeout: 30000,
         reapIntervalMillis: 1000,
@@ -26,8 +26,8 @@ module.exports = {
         ]
     },
     redis: {
-        host: env.DEFAULT_REDIS_HOST || '0.0.0.0',
-        port: parseInt(env.DEFAULT_REDIS_PORT, 10) || 6380,
+        host: env.REDIS_HOST || '0.0.0.0',
+        port: parseInt(env.REDIS_PORT, 10) || 6380,
         db: 0
     },
     api: {
@@ -50,9 +50,9 @@ module.exports = {
     },
     peers: {
         enabled: true,
-        list: (env.DEFAULT_PEERS || '').split(',').map(peer => peer.split(':')).map(([ip, port]) => ({ ip, port })),
+        list: (env.PEERS || '').split(',').map(peer => peer.split(':')).map(([ip, port]) => ({ ip, port })),
         access: {
-            blackList: (env.DEFAULT_PEERS_BLACKLIST || '').split(','),
+            blackList: (env.PEERS_BLACKLIST || '').split(','),
         },
         options: {
             limits: {
@@ -76,8 +76,8 @@ module.exports = {
     },
     forging: {
         force: true,
-        minBroadhashConsensus: parseInt(env.DEFAULT_MIN_CONSENSUS, 10) || 0,
-        secret: env.DEFAULT_FORGE_SECRET || [],
+        minBroadhashConsensus: parseInt(env.MIN_CONSENSUS, 10) || 0,
+        secret: env.FORGE_SECRET || [],
         access: {
             whiteList: [
                 '127.0.0.1',
@@ -93,9 +93,9 @@ module.exports = {
         enabled: false,
         options: {
             port: 443,
-            address: env.DEFAULT_ADDRESS || '0.0.0.0',
-            key: env.DEFAULT_SSL_KEY,
-            cert: env.DEFAULT_SSL_CERT
+            address: env.ADDRESS || '0.0.0.0',
+            key: env.SSL_KEY,
+            cert: env.SSL_CERT
         }
     },
     dapp: {
@@ -115,8 +115,8 @@ module.exports = {
     app: {},
     sender: {},
     nethash: env.NETHASH,
-    elasticsearchHost: env.DEFAULT_ELASTICSEARCH_HOST + ':9200'|| '0.0.0.0:9200',
-    swaggerDomain: env.DEFAULT_ADDRESS,
+    elasticsearchHost: env.ELASTICSEARCH_HOST || '0.0.0.0:9200',
+    swaggerDomain: env.ADDRESS,
     jwt: {
         secret: env.JWT_SECRET,
         tokenLife: 300

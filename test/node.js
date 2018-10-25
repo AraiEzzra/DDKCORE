@@ -67,7 +67,7 @@ node.gAccount = {
 };
 
 // Optional logging
-if (process.env.SILENT === 'true') {
+if (node.config.SILENT === 'true') {
 	node.debug = function () {};
 } else {
 	node.debug = console.log;

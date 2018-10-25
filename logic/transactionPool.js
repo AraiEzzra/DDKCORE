@@ -1,5 +1,4 @@
 let async = require('async');
-let config = process.env.NODE_ENV === 'development' ? require('../config/default') : process.env.NODE_ENV === 'testnet' ? require('../config/testnet') : require('../config/mainnet');
 let constants = require('../helpers/constants.js');
 let jobsQueue = require('../helpers/jobsQueue.js');
 let transactionTypes = require('../helpers/transactionTypes.js');
@@ -492,19 +491,19 @@ TransactionPool.prototype.queueTransaction = function (transaction, cb) {
 	transaction.receivedAt = new Date();
 
 	if (transaction.bundled) {
-		if (self.countBundled() >= config.transactions.maxTxsPerQueue) {
+		if (self.countBundled() >= library.config.transactions.maxTxsPerQueue) {
 			return setImmediate(cb, 'Transaction pool is full');
 		} else {
 			self.addBundledTransaction(transaction);
 		}
 	} else if (transaction.type === transactionTypes.MULTI || Array.isArray(transaction.signatures)) {
-		if (self.countMultisignature() >= config.transactions.maxTxsPerQueue) {
+		if (self.countMultisignature() >= library.config.transactions.maxTxsPerQueue) {
 			return setImmediate(cb, 'Transaction pool is full');
 		} else {
 			self.addMultisignatureTransaction(transaction);
 		}
 	} else {
-		if (self.countQueued() >= config.transactions.maxTxsPerQueue) {
+		if (self.countQueued() >= library.config.transactions.maxTxsPerQueue) {
 			return setImmediate(cb, 'Transaction pool is full');
 		} else {
 			self.addQueuedTransaction(transaction);

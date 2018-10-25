@@ -107,9 +107,6 @@ if (process.env.NODE_ENV === 'test') {
 	appConfig.coverage = true;
 }
 
-// Define top endpoint availability
-process.env.TOP = appConfig.topAccounts;
-
 /**
  * The config object to handle ddk modules and ddk api.
  * It loads `modules` and `api` folders content.
@@ -644,7 +641,9 @@ d.run(function () {
 					let apiEndpointPath = config.api[moduleName][protocol];
 					try {
 						let ApiEndpoint = require(apiEndpointPath);
-						new ApiEndpoint(scope.modules[moduleName], scope.network.app, scope.logger, scope.modules.cache);
+						new ApiEndpoint(
+							scope.modules[moduleName], scope.network.app, scope.logger, scope.modules.cache, scope.config
+						);
 					} catch (e) {
 						scope.logger.error('Unable to load API endpoint for ' + moduleName + ' of ' + protocol, e);
 					}
