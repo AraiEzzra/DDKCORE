@@ -68,7 +68,9 @@ let Accounts = {
 
 	addressBasedSearch: 'SELECT e."address",e."username",m."totalFrozeAmount",e."transferred_time" FROM migrated_etps_users e INNER JOIN mem_accounts m ON(m."address" = ${address} AND e."address" = ${address})',
 
-	usernameBasedSearch: 'SELECT e."username",e."address",e."transferred_time",m."totalFrozeAmount" FROM migrated_etps_users e INNER JOIN mem_accounts m ON(e."username" = ${username} AND m."address" = e."address")'
+	usernameBasedSearch: 'SELECT e."username",e."address",e."transferred_time",m."totalFrozeAmount" FROM migrated_etps_users e INNER JOIN mem_accounts m ON(e."username" = ${username} AND m."address" = e."address")',
+
+	checkVoteCount: 'SELECT count("id") FROM stake_orders WHERE "senderId" = ${senderId} AND "status" = 1 AND "voteCount" IN (3 , 7, 11, 15, 19, 23)'
 };
 
 module.exports = Accounts;
