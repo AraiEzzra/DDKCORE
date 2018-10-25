@@ -4,7 +4,7 @@ let constants = require('../helpers/constants.js');
 let jobsQueue = require('../helpers/jobsQueue.js');
 let transactionTypes = require('../helpers/transactionTypes.js');
 let producer = require('../kafka/producer');
-//let consumer = require('../kafka/consumer');
+let consumer = require('../kafka/consumer');
 
 // Private fields
 let modules, library, self, __private = {};
@@ -73,6 +73,38 @@ function TransactionPool (broadcastInterval, releaseLimit, transaction, bus, log
 
 	jobsQueue.register('transactionPoolNextExpiry', nextExpiry, self.expiryInterval);
 }
+
+consumer.connect();
+consumer
+    .on('ready', function () {
+        // Subscribe to the Multibrokerapplication topic
+        // This makes subsequent consumes read from that topic.
+        consumer.subscribe(['queuedTransactions', 'bundeledTransactions', 'multisignatureTransaction']);
+
+        // Read one message every 1000 milliseconds
+        setInterval(function () {
+            consumer.consume(10);
+        }, 20000);
+    })
+    .on('data', function (data) {
+		library.logger.info('adding transaction into the queue');
+		if (data.topic === 'queuedTransactions') {
+			let queuedTransaction = JSON.parse(data.value.toString());
+			self.queued.transactions.push(queuedTransaction);
+			let index = self.queued.transactions.indexOf(queuedTransaction);
+			self.queued.index[queuedTransaction.id] = index;
+		} else if (data.topic === 'bundeledTransactions') {
+			let bundledTransaction = JSON.parse(data.value.toString());
+			self.bundled.transactions.push(bundledTransaction);
+			let index = self.bundled.transactions.indexOf(bundledTransaction);
+			self.bundled.index[bundledTransaction.id] = index;
+		} else {
+			let multisignatureTransaction = JSON.parse(data.value.toString());
+			self.multisignature.transactions.push(multisignatureTransaction);
+			let index = self.multisignature.transactions.indexOf(multisignatureTransaction);
+			self.multisignature.index[multisignatureTransaction.id] = index;
+		}
+    });
 
 // Public methods
 /**
@@ -274,9 +306,20 @@ TransactionPool.prototype.countUnconfirmed = function () {
  */
 TransactionPool.prototype.addBundledTransaction = function (transaction) {
 	if (self.bundled.index[transaction.id] === undefined) {
-		self.bundled.transactions.push(transaction);
+		/* self.bundled.transactions.push(transaction);
 		let index = self.bundled.transactions.indexOf(transaction);
-		self.bundled.index[transaction.id] = index;
+		self.bundled.index[transaction.id] = index; */
+		producer.isTopicExists('bundeledTransactions', function (isExists) {
+			if (!isExists) {
+				library.logger.error('topic bundeledTransactions doesn\'t exist');
+			} else {
+				producer.send('bundeledTransactions', transaction, 0, function (err) {
+					if (err) {
+						library.logger.error('Kafka error', err);
+					}
+				});
+			}
+		});
 	}
 };
 
@@ -310,11 +353,11 @@ TransactionPool.prototype.addQueuedTransaction = function (transaction) {
 		/* self.queued.transactions.push(transaction);
 		let index = self.queued.transactions.indexOf(transaction);
 		self.queued.index[transaction.id] = index; */
-		producer.isTopicExists('transactions', function (isExists) {
+		producer.isTopicExists('queuedTransactions', function (isExists) {
 			if (!isExists) {
-				library.logger.error('topic dosent exist');
+				library.logger.error('topic queuedTransactions doesn\'t exist');
 			} else {
-				producer.send('transactions', transaction, 0, function (err) {
+				producer.send('queuedTransactions', transaction, 0, function (err) {
 					if (err) {
 						library.logger.error('Kafka error', err);
 					}
@@ -351,9 +394,20 @@ TransactionPool.prototype.countQueued = function () {
  */
 TransactionPool.prototype.addMultisignatureTransaction = function (transaction) {
 	if (self.multisignature.index[transaction.id] === undefined) {
-		self.multisignature.transactions.push(transaction);
+		/* self.multisignature.transactions.push(transaction);
 		let index = self.multisignature.transactions.indexOf(transaction);
-		self.multisignature.index[transaction.id] = index;
+		self.multisignature.index[transaction.id] = index; */
+		producer.isTopicExists('multisignatureTransaction', function (isExists) {
+			if (!isExists) {
+				library.logger.error('topic multisignatureTransaction doesn\'t exist');
+			} else {
+				producer.send('multisignatureTransaction', transaction, 0, function (err) {
+					if (err) {
+						library.logger.error('Kafka error', err);
+					}
+				});
+			}
+		});
 	}
 };
 

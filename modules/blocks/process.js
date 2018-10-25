@@ -314,9 +314,9 @@ Process.prototype.generateBlock = function (keypair, timestamp, cb) {
 	let transactions = modules.transactions.getUnconfirmedTransactionList(false, constants.maxTxsPerBlock);
 	let ready = [];
 
-	consumer.on('message', function (message) {
+	/* consumer.on('message', function (message) {
 		library.logger.info('Message Topic : ' + message.topic + ', Message Value: ' + message.value);
-	});
+	}); */
 
 	async.eachSeries(transactions, function (transaction, cb) {
 		modules.accounts.getAccount({ publicKey: transaction.senderPublicKey }, function (err, sender) {

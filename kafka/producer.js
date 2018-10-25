@@ -1,23 +1,51 @@
-var kafka = require('kafka-node');
+const Kafka = require('node-rdkafka');
 let Logger = require('../logger.js');
 let logman = new Logger();
 let logger = logman.logger;
 
 
-var Producer = kafka.Producer,
+/* var Producer = kafka.Producer,
     client = new kafka.Client(),
-    producer = new Producer(client);
+    producer = new Producer(client); */
+
+
+var producer = new Kafka.Producer({
+    'metadata.broker.list': 'localhost:9092',
+    'socket.keepalive.enable': true,
+    'dr_cb': true
+});
+
+//logging debug messages, if debug is enabled
+producer.on('event.log', function (log) {
+    logger.info('Log: ' + log);
+});
+
+//logging all errors
+producer.on('event.error', function (err) {
+    logger.error('Error from producer : ' + err);
+});
+
+producer.on('delivery-report', function (err, report) {
+    if (err) {
+        logger.error('delivery-report Error : ' + err);
+    } else {
+        logger.info('delivery-report: ' + JSON.stringify(report));
+    }
+});
 
 producer.on('ready', function () {
     logger.info('Producer is ready');
+    //producer.Topic(['queuedTransactions', 'bundeledTransactions', 'multisignatureTransaction']);
 });
 
-producer.on('error', function (err) {
-    logger.error(err);
+producer.on('disconnected', function (arg) {
+    logger.info('producer disconnected ' + JSON.stringify(arg));
 });
+
+producer.connect();
 
 exports.isTopicExists = function (topic, cb) {
-    client.loadMetadataForTopics([topic], function(err, resp) {
+    producer.getMetadata(topic, function(err) {
         if(err) {
             return setImmediate(cb, false);
         }
@@ -26,17 +54,10 @@ exports.isTopicExists = function (topic, cb) {
 };
 
 exports.send = function(topic, message, partition, cb) {
-    //producer.createTopics([topic]);
-    let payloads = [
-        { topic: topic, messages: JSON.stringify(message), partition: partition }
-    ];
-    producer.send(payloads, function (err, data) {
+    producer.produce(topic, partition, Buffer.from(JSON.stringify(message)), function(err) {
         if(err) {
-            logger.error('error : ', err);
             return setImmediate(cb, err);
-        } else {
-            logger.info('data : ' + data);
-            return setImmediate(cb, null, data);
-        }
+        } 
+        return setImmediate(cb, null);
     });
 };
