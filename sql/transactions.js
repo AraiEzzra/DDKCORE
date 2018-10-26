@@ -36,7 +36,7 @@ let TransactionsSql = {
 	list: function (params) {
 		return [
 			'SELECT "t_id", "b_height", "t_blockId", "t_type", "t_timestamp", "t_senderId", "t_recipientId",',
-			'"t_amount", "t_stakedAmount","t_stakeId","t_groupBonus", "t_fee", "t_signature", "t_SignSignature", "t_signatures", "t_trsName", "t_reward", "t_pendingGroupBonus" "confirmations",',
+			'"t_amount", "t_stakedAmount","t_stakeId","t_groupBonus", "t_fee", "t_signature", "t_SignSignature", "t_signatures", "t_trsName", "t_reward", "t_pendingGroupBonus", "confirmations",',
 			'ENCODE ("t_senderPublicKey", \'hex\') AS "t_senderPublicKey", ENCODE ("m_recipientPublicKey", \'hex\') AS "m_recipientPublicKey"',
 			'FROM trs_list',
 			(params.where.length || params.owner ? 'WHERE' : ''),
