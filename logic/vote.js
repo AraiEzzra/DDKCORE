@@ -20,12 +20,13 @@ let modules, library, self;
  * @param {Object} logger
  * @param {ZSchema} schema
  */
-function Vote(logger, schema, db, cb) {
+function Vote(logger, schema, db, frozen, cb) {
 	self = this;
 	library = {
 		db: db,
 		logger: logger,
 		schema: schema,
+        frozen: frozen
 	};
 	if (cb) {
 		return setImmediate(cb, null, this);
@@ -66,7 +67,8 @@ Vote.prototype.create = function (data, trs) {
  * @return {number} fee
  */
 Vote.prototype.calculateFee = function (trs, sender) {
-	return (parseInt(sender.totalFrozeAmount) * constants.fees.vote) / 100;
+	return 1;
+	// return (parseInt(sender.totalFrozeAmount) * constants.fees.vote) / 100;
 };
 
 /**
@@ -464,36 +466,32 @@ Vote.prototype.ready = function (trs, sender) {
  * 
  */
 Vote.prototype.updateAndCheckVote = async (voteInfo, cb) => {
-	let votes = voteInfo.votes;
-	let senderId = voteInfo.senderId;
-	let timestamp = voteInfo.timestamp;
-    console.log('TIMESTAMP', timestamp);
-	const voteType = (votes[0][0] === '+') ? 1 : 0;
-    
-	const checkWeeklyVoteAndUpdate = async (t) => {
-		// UNCOMMENT LATER
-		if (true) { // if (voteType === 1)
-			const resp = await t.many(sql.checkWeeklyVote, {
-				senderId: senderId,
-				currentTime: timestamp
-			});
-			if ((resp.length !== 0) && parseInt(resp[0].count) > 0) {
-				await t.none(sql.updateStakeOrder, {
-					senderId: senderId,
-					milestone: constants.froze.vTime * 60,
-					currentTime: timestamp
-				});
-				library.logger.info(senderId + ': update stake orders isvoteDone and count');
-			}
-		}
-	};
-
+    let senderId = voteInfo.senderId;
     try {
-	    await library.db.tx(checkWeeklyVoteAndUpdate);
-	} catch (err) {
-		library.logger.warn(err);
-		throw err;
-	}
+        // todo check if could change to tx
+        await library.db.task(async () =>{
+            let availableToVote = true;
+            const queryResult = await library.db.one(sql.countAvailableStakeOrdersForVote, {
+                senderId: senderId,
+                currentTime: slots.getTime()
+            });
+            if(queryResult && queryResult.hasOwnProperty("count")) {
+                const count = parseInt(queryResult.count, 10);
+                availableToVote = count !== 0;
+            }
+            if(availableToVote) {
+                let order = await library.db.one(sql.updateStakeOrder, {
+                    senderId: senderId,
+                    milestone: constants.froze.vTime, //back to vTime * 60
+                    currentTime: slots.getTime()
+                });
+                await library.frozen.checkFrozeOrders({address: senderId});
+            }
+        });
+    } catch (err) {
+        library.logger.warn(err);
+        throw err;
+    }
 };
 
 /**

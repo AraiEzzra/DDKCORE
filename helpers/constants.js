@@ -127,7 +127,8 @@ module.exports = {
 			distance: 30, // Distance between each milestone is 6 months
 		}
 	},
-	defaultLock: 0
+	defaultLock: 0,
+    airdropAccount: 'DDK10720340277000928808'
 };
 
 /*************************************** END OF FILE *************************************/

@@ -73,7 +73,7 @@ SendFreezeOrder.prototype.undo = function (trs, block, sender, cb) {
 			self.scope.db.none(sql.deductFrozeAmount,
 				{
 					senderId: sender.address,
-					FrozeAmount: -trs.amount
+					reward: -trs.amount
 				})
 				.then(function () {
 					return setImmediate(seriesCb);
@@ -90,7 +90,7 @@ SendFreezeOrder.prototype.undo = function (trs, block, sender, cb) {
 			self.scope.db.none(sql.deductFrozeAmount,
 				{
 					senderId: trs.recipientId,
-					FrozeAmount: trs.amount
+					reward: trs.amount
 				})
 				.then(function () {
 					return setImmediate(seriesCb);
@@ -316,7 +316,7 @@ SendFreezeOrder.prototype.sendFreezedOrder = function (userAndOrderData, cb) {
 				self.scope.db.none(sql.deductFrozeAmount,
 					{
 						senderId: userAndOrderData.senderId,
-						FrozeAmount: order.freezedAmount
+						reward: order.freezedAmount
 					})
 					.then(function () {
 						return setImmediate(seriesCb);

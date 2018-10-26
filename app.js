@@ -586,8 +586,8 @@ d.run(function () {
 				contract: ['config', function (scope, cb) {
 					new Contract(scope.config, scope.db, cb);
 				}],
-				vote: ['logger', 'schema', 'db', function (scope, cb) {
-					new Vote(scope.logger, scope.schema, scope.db, cb);
+				vote: ['logger', 'schema', 'db', 'frozen', function (scope, cb) {
+					new Vote(scope.logger, scope.schema, scope.db, scope.frozen, cb);
 				}],
 				migration: ['logger', 'db', function (scope, cb) {
 					new Migration(scope.logger, scope.db, cb);

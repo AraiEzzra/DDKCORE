@@ -20,6 +20,7 @@ let Transfer = require('../../../logic/transfer.js');
 let Delegate = require('../../../logic/delegate.js');
 let Rounds = require('../../../modules/rounds.js');
 let AccountLogic = require('../../../logic/account.js');
+let FrozenLogic = require('../../../logic/frozen.js');
 let AccountModule = require('../../../modules/accounts.js');
 let DelegateModule = require('../../../modules/delegates.js');
 
@@ -129,6 +130,9 @@ describe('vote', function () {
 			accountLogic: function (cb) {
 				modulesLoader.initLogicWithDb(AccountLogic, cb, {});
 			},
+            frozenLogic: function (cb) {
+                modulesLoader.initLogicWithDb(FrozenLogic, cb, {});
+            },
 			transactionLogic: ['rounds', 'accountLogic', function (result, cb) {
 				modulesLoader.initLogicWithDb(TransactionLogic, function (err, __transaction) {
 					__transaction.bindModules(result);
@@ -165,7 +169,7 @@ describe('vote', function () {
 			}]
 		}, function (err, result) {
 			expect(err).to.not.exist;
-			vote = new Vote(modulesLoader.scope.logger, modulesLoader.scope.schema);
+			vote = new Vote(modulesLoader.scope.logger, modulesLoader.scope.schema, null, result.frozenLogic);
 			voteBindings = {
 				delegate: result.delegateModule,
 				rounds: result.rounds,

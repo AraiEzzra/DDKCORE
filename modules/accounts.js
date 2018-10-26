@@ -61,7 +61,8 @@ function Accounts(cb, scope) {
 		new Vote(
 			scope.logger,
 			scope.schema,
-			scope.db
+            scope.db,
+			scope.logic.frozen
 		)
 	);
 
@@ -678,16 +679,7 @@ Accounts.prototype.shared = {
 								return setImmediate(cb, e.toString());
 							}
 
-							library.logic.frozen.checkFrozeOrders(account, keypair).then(function(transactionRewards) {
-								// TRANS LIST TO PULL
-                console.log('transactionRewards 2', transactionRewards);
-								modules.transactions.receiveTransactions([transactionVote, ...transactionRewards], true, cb);
-
-							}).catch(function(e) {
-
-								setImmediate(cb, e.toString());
-
-							});
+                            modules.transactions.receiveTransactions([transactionVote], true, cb);
 						});
 					});
 				} else {
@@ -733,13 +725,7 @@ Accounts.prototype.shared = {
 							return setImmediate(cb, e.toString());
 						}
 
-						library.logic.frozen.checkFrozeOrders(account, keypair).then(function(transactionRewards) {
-							console.log('transactionRewards 2', transactionRewards);
-							modules.transactions.receiveTransactions([transactionVote, ...transactionRewards], true, cb);
-
-						}).catch(function(e) {
-							setImmediate(cb, e.toString());
-						});
+                        modules.transactions.receiveTransactions([transactionVote], true, cb);
 					});
 				}
 			}, function (err, transaction) {

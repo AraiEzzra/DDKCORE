@@ -146,8 +146,8 @@
 			"fee": 0,
 			"timestamp": 0,
 			"recipientId": null,
-			"senderId": "DDK3955937947011006122",
-			"senderPublicKey": "276f0d09e64b68566fb458b7c71aeb62411d0b633ad6c038e5a4a042ec588af9",
+			"senderId": "DDK16313739661670634666",
+			"senderPublicKey": "c094ebee7ec0c50ebee32918655e089f6e1a604b83bcaa760293c61e0f18ab6f",
 			"asset": {
 				"delegate": {
 					"username": "TDALLIANCE1"
@@ -164,8 +164,8 @@
             "fee": 0,
             "timestamp": 0,
             "recipientId": null,
-            "senderId": "DDK14521323608713415449",
-            "senderPublicKey": "3f0348b6d3ecaeaeca0a05ee4c2d7b4b7895ef0a12d8023ba245b6b8022833e5",
+            "senderId": "DDK16863581701775438665",
+            "senderPublicKey": "722c48aa6e68788b580b5f10a4c86d395e9cbb1b24e570958f0d02f1d5c9e250",
             "asset": {
                 "delegate": {
                     "username": "TDALLIANCE2"
@@ -182,8 +182,8 @@
             "fee": 0,
             "timestamp": 0,
             "recipientId": null,
-            "senderId": "DDK12458159079905364672",
-            "senderPublicKey": "3f1ecf6de517a6bf2f5c7a8226a478dc571ed0100d53ee104842f4d443e49806",
+            "senderId": "DDK4654565460128291637",
+            "senderPublicKey": "faf82dd8a232b7878df262846bcfa24d90b02d154d380bfcc412eaf2de6c3268",
             "asset": {
                 "delegate": {
                     "username": "DDKFOUNDATION"
@@ -205,9 +205,9 @@
             "asset": {
               
                 "votes": [
-                    "+276f0d09e64b68566fb458b7c71aeb62411d0b633ad6c038e5a4a042ec588af9",
-                    "+3f0348b6d3ecaeaeca0a05ee4c2d7b4b7895ef0a12d8023ba245b6b8022833e5",
-                    "+3f1ecf6de517a6bf2f5c7a8226a478dc571ed0100d53ee104842f4d443e49806"
+                    "+c094ebee7ec0c50ebee32918655e089f6e1a604b83bcaa760293c61e0f18ab6f",
+                    "+722c48aa6e68788b580b5f10a4c86d395e9cbb1b24e570958f0d02f1d5c9e250",
+                    "+faf82dd8a232b7878df262846bcfa24d90b02d154d380bfcc412eaf2de6c3268"
                 ]
               
             },
@@ -215,8 +215,20 @@
 			"id": "7018275140629949519",
 			"stakedAmount": 0,
 			"trsName": "VOTE"
+        },
+		{
+            "type": 0,
+            "amount": "11250000000000",
+            "fee": 0,
+            "timestamp": 0,
+            "recipientId": "DDK16313739661670634666",
+            "senderId": "DDK4995063339468361088",
+            "senderPublicKey": "f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2",
+            "signature": "4994fcde56cbe450c2b7ca8ef34aed4e86a3936bcb74ae01d49fd8be27e2282c67086039346108c7ac3bdc8ecce374da65d93536271942c1eb9dd7b67a95e105",
+            "id": "2437054327650338075",
+            "stakedAmount": 0,
+            "trsName": "SEND"
         }
-		
 	],
 	"height": 1,
 	"blockSignature": "a47d07d3a8d8024eb44672bc6d07cdcd1cd03803d9612b7b10c10d5a844fb8f6ed11fab5159b6d9826b7302c3d3f5d7d29d13b40e6fe59c9374f4ec94af4eb0f",
