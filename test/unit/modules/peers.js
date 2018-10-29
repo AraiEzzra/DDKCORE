@@ -7,7 +7,11 @@ let sinon = require('sinon');
 let randomString = require('randomstring');
 let _  = require('lodash');
 
-let config = process.env.NODE_ENV === 'development' ? require('../config/default') : process.env.NODE_ENV === 'testnet' ? require('../config/testnet') : require('../config/mainnet');
+let config = process.env.NODE_ENV === 'development'
+  ? require('../../../config/default')
+  : process.env.NODE_ENV === 'testnet'
+    ? require('../../../config/testnet')
+    : require('../../../config/mainnet');
 let randomPeer = require('../../common/objectStubs').randomPeer;
 let modulesLoader = require('../../common/initModule').modulesLoader;
 
