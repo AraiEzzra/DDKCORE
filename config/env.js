@@ -60,6 +60,8 @@ module.exports = {
   clientId: env.CLIENT_ID,
   clientSecret: env.CLIENT_SECRET,
   hashSecret: env.HASH_SECRET,
+  silent: env.SILENT,
+  debug: env.DEBUG,
   users: [
     {
       keys: env.DSTAKEREWARD

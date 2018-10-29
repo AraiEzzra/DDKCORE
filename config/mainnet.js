@@ -3,7 +3,7 @@ let env = process.env;
 
 module.exports = {
     port: parseInt(env.PORT, 10) || 7000,
-    address: env.MAINNET_ADDRESS || '0.0.0.0',
+    address: env.ADDRESS || '0.0.0.0',
     version: '0.9.9a',
     minVersion: '>=0.9.0',
     fileLogLevel: 'info',
@@ -13,11 +13,11 @@ module.exports = {
     topAccounts: false,
     cacheEnabled: true,
     db: {
-        host: env.MAINNET_DB_HOST || '0.0.0.0',
-        port: parseInt(env.MAINNET_DB_PORT, 10) || 5432,
-        database: env.MAINNET_DB_NAME || 'ddk_mainnet_database',
-        password: env.MAINNET_DB_PASSWORD,
-        user: env.MAINNET_DB_USER,
+        host: env.DB_HOST || '0.0.0.0',
+        port: parseInt(env.DB_PORT, 10) || 5432,
+        database: env.DB_NAME || 'ddk_mainnet_database',
+        password: env.DB_PASSWORD,
+        user: env.DB_USER,
         poolSize: 95,
         poolIdleTimeout: 30000,
         reapIntervalMillis: 1000,
@@ -26,9 +26,9 @@ module.exports = {
         ]
     },
     redis: {
-        host: env.MAINNET_REDIS_HOST || '0.0.0.0',
-        port: parseInt(env.MAINNET_REDIS_PORT, 10) || 6379,
-        password: env.MAINNET_REDIS_PASSWORD,
+        host: env.REDIS_HOST || '0.0.0.0',
+        port: parseInt(env.REDIS_PORT, 10) || 6379,
+        password: env.REDIS_PASSWORD,
         db: 0
     },
     api: {
@@ -49,9 +49,9 @@ module.exports = {
     },
     peers: {
         enabled: true,
-        list: (env.MAINNET_PEERS || '').split(',').map(peer => peer.split(':')).map(([ip, port]) => ({ ip, port })),
+        list: (env.PEERS || '').split(',').map(peer => peer.split(':')).map(([ip, port]) => ({ ip, port })),
         access: {
-            blackList: (env.MAINNET_PEERS_BLACKLIST || '').split(','),
+            blackList: (env.PEERS_BLACKLIST || '').split(','),
         },
         options: {
             limits: {
@@ -75,8 +75,8 @@ module.exports = {
     },
     forging: {
         force: true,
-        minBroadhashConsensus: parseInt(env.MAINNET_MIN_CONSENSUS, 10) || 51,
-        secret: env.MAINNET_FORGE_SECRET,
+        minBroadhashConsensus: parseInt(env.MIN_CONSENSUS, 10) || 51,
+        secret: env.FORGE_SECRET,
         access: {
             whiteList: [
             ]
@@ -90,9 +90,9 @@ module.exports = {
         enabled: true,
         options: {
             port: 443,
-            address: env.MAINNET_ADDRESS || '0.0.0.0',
-            key: env.MAINNET_SSL_KEY,
-            cert: env.MAINNET_SSL_CERT
+            address: env.ADDRESS || '0.0.0.0',
+            key: env.SSL_KEY,
+            cert: env.SSL_CERT
         }
     },
     dapp: {
@@ -111,8 +111,8 @@ module.exports = {
     },
     sender: {},
     nethash: env.NETHASH,
-    elasticsearchHost: env.MAINNET_ELASTICSEARCH_HOST || '0.0.0.0:9200',
-    swaggerDomain: env.MAINNET_ADDRESS || '0.0.0.0',
+    elasticsearchHost: env.ELASTICSEARCH_HOST || '0.0.0.0:9200',
+    swaggerDomain: env.ADDRESS || '0.0.0.0',
     jwt: {
         secret: env.JWT_SECRET,
         tokenLife: 300

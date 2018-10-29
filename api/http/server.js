@@ -3,25 +3,24 @@
 let Router = require('../../helpers/router');
 let Accounts = require('../../modules/accounts');
 let tokenValidator = require('../../tokenValidator');
-let config = process.env.NODE_ENV === 'development' ? require('../../config/default') : process.env.NODE_ENV === 'testnet' ? require('../../config/testnet') : require('../../config/mainnet');
 let jwt = require('jsonwebtoken');
-let jwtSecret = process.env.JWT_SECRET;
-let cache = require('../../modules/cache');
+let Cache = require('../../modules/cache');
 /**
  * Renders main page wallet from public folder.
  * - Public API:
  * 	- get	/
  *  - get /user/status
- * @memberof module:server                $rootScope.enableReferOption = resp.data.account.referStatus;
+  * @memberof module:server                $rootScope.enableReferOption = resp.data.account.referStatus;
 
  * @requires helpers/Router
  * @requires helpers/httpApi
  * @constructor
  * @param {Object} serverModule - Module server instance.
  * @param {scope} app - Main app.
+ * @param config appConfig
  */
 // Constructor
-function ServerHttpApi (serverModule, app) {
+function ServerHttpApi (serverModule, app, logger, cache, config) {
 
 	let router = new Router();
 
@@ -38,41 +37,44 @@ function ServerHttpApi (serverModule, app) {
 		}
 	});
 
-	router.get('/user/status', tokenValidator, function (req, res) {
-
-		if (req.decoded.address) {
-			Accounts.prototype.getAccount({ address: req.decoded.address }, function (err, account) {
-				if (!err) {
-					let payload = {
-						secret: req.decoded.secret,
-						address: req.decoded.address
-					};
-					let refreshToken = jwt.sign(payload, jwtSecret, {
-						expiresIn: config.jwt.tokenLife,
-						mutatePayload: false
-					});
-
-					cache.prototype.getJsonForKey("referStatus", function (error, resp) {
-						let enableRefer = (resp == null) ? true : resp;
-
-						return res.status(200).json({
-							status: true,
-							data: {
-								success: true,
-								account: account,
-								refreshToken: refreshToken || '',
-								referStatus: enableRefer
-							}
+	router.get(
+		'/user/status',
+		(req, res, next) => tokenValidator(req, res, next, config.jwt.secret),
+		function (req, res) {
+			if (req.decoded.address) {
+				Accounts.prototype.getAccount({ address: req.decoded.address }, function (err, account) {
+					if (!err) {
+						let payload = {
+							secret: req.decoded.secret,
+							address: req.decoded.address
+						};
+						let refreshToken = jwt.sign(payload, config.jwt.secret, {
+							expiresIn: config.jwt.tokenLife,
+							mutatePayload: false
 						});
-					});
-				}
-			});
-		} else {
-			return res.status(200).json({
-				status: false
-			});
+
+						Cache.prototype.getJsonForKey("referStatus", function (error, resp) {
+							let enableRefer = (resp == null) ? true : resp;
+
+							return res.status(200).json({
+								status: true,
+								data: {
+									success: true,
+									account: account,
+									refreshToken: refreshToken || '',
+									referStatus: enableRefer
+								}
+							});
+						});
+					}
+				});
+			} else {
+				return res.status(200).json({
+					status: false
+				});
+			}
 		}
-	});  
+	);
 
 	// Referral API's
 	require('../../helpers/referal').api(app);

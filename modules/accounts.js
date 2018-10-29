@@ -10,7 +10,6 @@ let transactionTypes = require('../helpers/transactionTypes.js');
 let Vote = require('../logic/vote.js');
 let sql = require('../sql/accounts.js');
 let cache = require('./cache.js');
-let config = process.env.NODE_ENV === 'development' ? require('../config/default') : process.env.NODE_ENV === 'testnet' ? require('../config/testnet') : require('../config/mainnet');
 let jwt = require('jsonwebtoken');
 let QRCode = require('qrcode');
 let speakeasy = require('speakeasy');
@@ -799,7 +798,7 @@ Accounts.prototype.shared = {
 	},
 
 	getCirculatingSupply: function (req, cb) {
-		let initialUnmined = config.ddkSupply.totalSupply - config.initialPrimined.total;
+		let initialUnmined = library.config.ddkSupply.totalSupply - library.config.initialPrimined.total;
 		//let publicAddress = library.config.sender.address;
 		let hash = Buffer.from(JSON.parse(library.config.users[0].keys));
 		let keypair = library.ed.makeKeypair(hash);
@@ -807,7 +806,7 @@ Accounts.prototype.shared = {
 		self.getAccount({publicKey: publicKey}, function(err, account) {
 			library.db.one(sql.getCurrentUnmined, { address: account.address })
 			.then(function (currentUnmined) {
-				let circulatingSupply = config.initialPrimined.total + initialUnmined - currentUnmined.balance;
+				let circulatingSupply = library.config.initialPrimined.total + initialUnmined - currentUnmined.balance;
 
 				cache.prototype.getJsonForKey('minedContributorsBalance', function (err, contributorsBalance) {
 					let totalCirculatingSupply = parseInt(contributorsBalance) + circulatingSupply;
@@ -824,7 +823,7 @@ Accounts.prototype.shared = {
 		});
 	},
 	totalSupply: function (req, cb) {
-		let totalSupply = config.ddkSupply.totalSupply;
+		let totalSupply = library.config.ddkSupply.totalSupply;
 
 		return setImmediate(cb, null, {
 			totalSupply: totalSupply

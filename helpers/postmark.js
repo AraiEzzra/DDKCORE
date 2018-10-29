@@ -1,8 +1,8 @@
 let postmark = require("postmark");
-let env = process.env;
 
 // Send an email:
-let client = new postmark.Client(env.POSTMARK_KEY);
+// TODO change to bootstrapPostmark in which will be use in app.js
+let client = new postmark.Client(process.env.POSTMARK_KEY);
 
 postmark.sendEmailWithTemplate = function(mailOptions,callback) {
     client.sendEmailWithTemplate(mailOptions,function(err){

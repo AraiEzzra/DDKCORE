@@ -2,6 +2,8 @@ let nodemailer = require('nodemailer');
 let env = process.env;
 
 // Define SMTP configuration
+// TODO change to bootstrapSMTP in app.js like
+// (https://github.com/LiskHQ/lisk/blob/5d5af525eec7f2ee687ca921a6a2d1457c471da9/app.js#L398)
 let smtpConfig = {
     host: env.SMTP_HOST,
     port: 587,

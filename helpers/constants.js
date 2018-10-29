@@ -40,6 +40,7 @@
  * @property {number} unconfirmedTransactionTimeOut - 1080 blocks
  */
 module.exports = {
+	airdropAccount: 'DDK10720340277000928808',
 	activeDelegates: 3,
 	maxVotes:4,
 	maxVotesPerTransaction: 3,
