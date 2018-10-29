@@ -74,15 +74,15 @@ module.exports = function (grunt) {
 				command: 'cd ' + version_dir + '/ && touch build && echo "v' + today + '" > build'
 			},
 
-			coverage: {
-				command: 'export NODE_ENV=TEST && node_modules/.bin/istanbul cover --dir test/.coverage-unit ./node_modules/.bin/_mocha',
-				maxBuffer: maxBufferSize
-			},
+      coverage: {
+        command: 'export NODE_ENV=testnet && ./node_modules/.bin/nyc ./node_modules/.bin/_mocha',
+        maxBuffer: maxBufferSize
+      },
 
-			coverageSingle: {
-				command: 'export NODE_ENV=TEST && node_modules/.bin/istanbul cover --dir test/.coverage-unit ./node_modules/.bin/_mocha $TEST',
-				maxBuffer: maxBufferSize
-			},
+      coverageSingle: {
+        command: 'export NODE_ENV=testnet && ./node_modules/.bin/nyc cover --dir test/.coverage-unit ./node_modules/.bin/_mocha $TEST',
+        maxBuffer: maxBufferSize
+      },
 
 			fetchCoverage: {
 				command: 'rm -rf ./test/.coverage-func.zip; curl -o ./test/.coverage-func.zip $HOST/coverage/download',
