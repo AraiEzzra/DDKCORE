@@ -676,25 +676,83 @@ Accounts.prototype.shared = {
 							return setImmediate(cb, 'Your last transactions is getting verified. Please wait untill block confirmations becomes 10 and try again. Current confirmations : ' + data[0].b_confirmations);
 						}
 						library.balancesSequence.add(function (cb) {
-							if (req.body.multisigAccountPublicKey && req.body.multisigAccountPublicKey !== keypair.publicKey.toString('hex')) {
-								modules.accounts.getAccount({ publicKey: req.body.multisigAccountPublicKey }, function (err, account) {
-									if (err) {
-										return setImmediate(cb, err);
-									}
+							library.db.one(sql.checkVoteCount, {
+								senderId: senderAddress
+							}).then(function (orderCount) {
+								if (orderCount.count >= 1) {
+									return setImmediate(cb, 'You have voted 3 times for a total of 3 weeks in total. Please wait when Multiple Node is ready to vote for the next delegate.');
+								}
 
-									if (!account || !account.publicKey) {
-										return setImmediate(cb, 'Multisignature account not found');
-									}
+								if (req.body.multisigAccountPublicKey && req.body.multisigAccountPublicKey !== keypair.publicKey.toString('hex')) {
+									modules.accounts.getAccount({ publicKey: req.body.multisigAccountPublicKey }, function (err, account) {
+										if (err) {
+											return setImmediate(cb, err);
+										}
 
-									if (!account.multisignatures || !account.multisignatures) {
-										return setImmediate(cb, 'Account does not have multisignatures enabled');
-									}
+										if (!account || !account.publicKey) {
+											return setImmediate(cb, 'Multisignature account not found');
+										}
 
-									if (account.multisignatures.indexOf(keypair.publicKey.toString('hex')) < 0) {
-										return setImmediate(cb, 'Account does not belong to multisignature group');
-									}
+										if (!account.multisignatures || !account.multisignatures) {
+											return setImmediate(cb, 'Account does not have multisignatures enabled');
+										}
 
-									modules.accounts.getAccount({ publicKey: keypair.publicKey }, function (err, requester) {
+										if (account.multisignatures.indexOf(keypair.publicKey.toString('hex')) < 0) {
+											return setImmediate(cb, 'Account does not belong to multisignature group');
+										}
+
+										modules.accounts.getAccount({ publicKey: keypair.publicKey }, function (err, requester) {
+											if (err) {
+												return setImmediate(cb, err);
+											}
+
+											if (account.totalFrozeAmount === 0) {
+												return setImmediate(cb, 'No Stake available');
+											}
+
+											if (!requester || !requester.publicKey) {
+												return setImmediate(cb, 'Requester not found');
+											}
+
+											if (requester.secondSignature && !req.body.secondSecret) {
+												return setImmediate(cb, 'Missing requester second passphrase');
+											}
+
+											if (requester.publicKey === account.publicKey) {
+												return setImmediate(cb, 'Invalid requester public key');
+											}
+
+											if (requester.totalFrozeAmount == 0) {
+												return setImmediate(cb, 'Please Stake before vote/unvote');
+											}
+
+											let secondKeypair = null;
+
+											if (requester.secondSignature) {
+												let secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
+												secondKeypair = library.ed.makeKeypair(secondHash);
+											}
+
+											let transaction;
+
+											try {
+												transaction = library.logic.transaction.create({
+													type: transactionTypes.VOTE,
+													votes: req.body.delegates,
+													sender: account,
+													keypair: keypair,
+													secondKeypair: secondKeypair,
+													requester: keypair
+												});
+											} catch (e) {
+												return setImmediate(cb, e.toString());
+											}
+
+											modules.transactions.receiveTransactions([transaction], true, cb);
+										});
+									});
+								} else {
+									self.setAccountAndGet({ publicKey: keypair.publicKey.toString('hex') }, function (err, account) {
 										if (err) {
 											return setImmediate(cb, err);
 										}
@@ -703,27 +761,23 @@ Accounts.prototype.shared = {
 											return setImmediate(cb, 'No Stake available');
 										}
 
-										if (!requester || !requester.publicKey) {
-											return setImmediate(cb, 'Requester not found');
+										if (!account || !account.publicKey) {
+											return setImmediate(cb, 'Account not found');
 										}
 
-										if (requester.secondSignature && !req.body.secondSecret) {
-											return setImmediate(cb, 'Missing requester second passphrase');
-										}
-
-										if (requester.publicKey === account.publicKey) {
-											return setImmediate(cb, 'Invalid requester public key');
-										}
-
-										if (requester.totalFrozeAmount == 0) {
-											return setImmediate(cb, 'Please Stake before vote/unvote');
+										if (account.secondSignature && !req.body.secondSecret) {
+											return setImmediate(cb, 'Invalid second passphrase');
 										}
 
 										let secondKeypair = null;
 
-										if (requester.secondSignature) {
+										if (account.secondSignature) {
 											let secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
 											secondKeypair = library.ed.makeKeypair(secondHash);
+										}
+
+										if (account.totalFrozeAmount == 0) {
+											return setImmediate(cb, 'Please Stake before vote/unvote');
 										}
 
 										let transaction;
@@ -734,63 +788,21 @@ Accounts.prototype.shared = {
 												votes: req.body.delegates,
 												sender: account,
 												keypair: keypair,
-												secondKeypair: secondKeypair,
-												requester: keypair
+												secondKeypair: secondKeypair
 											});
 										} catch (e) {
 											return setImmediate(cb, e.toString());
 										}
 
 										modules.transactions.receiveTransactions([transaction], true, cb);
+
 									});
-								});
-							} else {
-								self.setAccountAndGet({ publicKey: keypair.publicKey.toString('hex') }, function (err, account) {
-									if (err) {
-										return setImmediate(cb, err);
-									}
+								}
+							}).catch(function (err) {
+								library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
+								return setImmediate(cb, 'voteCount query error');
+							});
 
-									if (account.totalFrozeAmount === 0) {
-										return setImmediate(cb, 'No Stake available');
-									}
-
-									if (!account || !account.publicKey) {
-										return setImmediate(cb, 'Account not found');
-									}
-
-									if (account.secondSignature && !req.body.secondSecret) {
-										return setImmediate(cb, 'Invalid second passphrase');
-									}
-
-									let secondKeypair = null;
-
-									if (account.secondSignature) {
-										let secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
-										secondKeypair = library.ed.makeKeypair(secondHash);
-									}
-
-									if (account.totalFrozeAmount == 0) {
-										return setImmediate(cb, 'Please Stake before vote/unvote');
-									}
-
-									let transaction;
-
-									try {
-										transaction = library.logic.transaction.create({
-											type: transactionTypes.VOTE,
-											votes: req.body.delegates,
-											sender: account,
-											keypair: keypair,
-											secondKeypair: secondKeypair
-										});
-									} catch (e) {
-										return setImmediate(cb, e.toString());
-									}
-
-									modules.transactions.receiveTransactions([transaction], true, cb);
-
-								});
-							}
 						}, function (err, transaction) {
 							if (err) {
 								return setImmediate(cb, err);
