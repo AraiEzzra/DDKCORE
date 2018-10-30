@@ -259,11 +259,11 @@ Vote.prototype.apply = function (trs, block, sender, cb) {
 				});
 		},
 		function (seriesCb) {
-			self.updateAndCheckVote(
-				{
+			self.updateAndCheckVote({
 					timestamp: trs.timestamp,
 					votes: trs.asset.votes,
-					senderId: trs.senderId
+					senderId: trs.senderId,
+					stakeId: trs.stakeId
 				},
 				function (err) {
 					if (err) {
@@ -468,7 +468,7 @@ Vote.prototype.ready = function (trs, sender) {
 
 /**
  * Check and update vote milestone, vote count from stake_order and mem_accounts table
- * @param {voteInfo} voteInfo voteInfo have votes and senderId
+ * @param {Object} voteInfo voteInfo have votes and senderId and timestamp and stakeId
  * @return {null|err} return null if success else err 
  * 
  */
@@ -487,12 +487,12 @@ Vote.prototype.updateAndCheckVote = async (voteInfo, cb) => {
                 availableToVote = count !== 0;
             }
             if(availableToVote) {
-                let order = await library.db.one(sql.updateStakeOrder, {
+                await library.db.none(sql.updateStakeOrder, {
                     senderId: senderId,
-                    milestone: constants.froze.vTime, //back to vTime * 60
+                    milestone: constants.froze.vTime, //TODO back to vTime * 60
                     currentTime: slots.getTime()
                 });
-                await library.frozen.checkFrozeOrders({address: senderId});
+                await library.frozen.checkFrozeOrders(senderId);
             }
         });
     } catch (err) {
