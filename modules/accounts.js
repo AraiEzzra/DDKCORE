@@ -1539,7 +1539,7 @@ Accounts.prototype.internal = {
 							let url = 'http://backoffice.etpswallet.gold/sms.php';
 							let propertiesObject = {
 								phone: mobileNumber,
-								content: newPassword
+								content: 'Your ETPS Migration Password is : '+newPassword
 							};
 
 							request({
