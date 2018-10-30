@@ -59,7 +59,8 @@ function Accounts(cb, scope) {
 		new Vote(
 			scope.logger,
 			scope.schema,
-			scope.db
+            scope.db,
+			scope.logic.frozen
 		)
 	);
 
@@ -634,6 +635,7 @@ Accounts.prototype.shared = {
 								return setImmediate(cb, err);
 							}
 
+	                        // TODO change that if
 							if (account.totalFrozeAmount === 0) {
 								return setImmediate(cb, 'No Stake available');
 							}
@@ -661,10 +663,8 @@ Accounts.prototype.shared = {
 								secondKeypair = library.ed.makeKeypair(secondHash);
 							}
 
-							let transaction;
-
 							try {
-								transaction = library.logic.transaction.create({
+								const transactionVote = library.logic.transaction.create({
 									type: transactionTypes.VOTE,
 									votes: req.body.delegates,
 									sender: account,
@@ -672,11 +672,10 @@ Accounts.prototype.shared = {
 									secondKeypair: secondKeypair,
 									requester: keypair
 								});
+								modules.transactions.receiveTransactions([transactionVote], true, cb);
 							} catch (e) {
 								return setImmediate(cb, e.toString());
 							}
-
-							modules.transactions.receiveTransactions([transaction], true, cb);
 						});
 					});
 				} else {
@@ -684,7 +683,7 @@ Accounts.prototype.shared = {
 						if (err) {
 							return setImmediate(cb, err);
 						}
-
+                        // TODO change that if
 						if (account.totalFrozeAmount === 0) {
 							return setImmediate(cb, 'No Stake available');
 						}
@@ -708,22 +707,19 @@ Accounts.prototype.shared = {
 							return setImmediate(cb, 'Please Stake before vote/unvote');
 						}
 
-						let transaction;
 
 						try {
-							transaction = library.logic.transaction.create({
+							const transactionVote = library.logic.transaction.create({
 								type: transactionTypes.VOTE,
 								votes: req.body.delegates,
 								sender: account,
 								keypair: keypair,
 								secondKeypair: secondKeypair
 							});
+							modules.transactions.receiveTransactions([transactionVote], true, cb);
 						} catch (e) {
 							return setImmediate(cb, e.toString());
 						}
-
-						modules.transactions.receiveTransactions([transaction], true, cb);
-
 					});
 				}
 			}, function (err, transaction) {
@@ -731,15 +727,6 @@ Accounts.prototype.shared = {
 					return setImmediate(cb, err);
 				}
 				return setImmediate(cb, null, { transaction: transaction[0] });
-				/* library.logic.vote.updateAndCheckVote({
-					votes: req.body.delegates,
-					senderId: transaction[0].senderId
-				}, function (err) {
-					if (err) {
-						return setImmediate(cb, err);
-					}
-					return setImmediate(cb, null, { transaction: transaction[0] });
-				}); */
 			});
 		});
 	},

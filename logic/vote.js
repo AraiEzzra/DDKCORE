@@ -19,13 +19,17 @@ let modules, library, self;
  * @constructor
  * @param {Object} logger
  * @param {ZSchema} schema
+ * @param {Object} db
+ * @param {Object} frozen
+ * @param {Function} cb
  */
-function Vote(logger, schema, db, cb) {
+function Vote(logger, schema, db, frozen, cb) {
 	self = this;
 	library = {
 		db: db,
 		logger: logger,
 		schema: schema,
+        frozen: frozen
 	};
 	if (cb) {
 		return setImmediate(cb, null, this);
@@ -66,7 +70,8 @@ Vote.prototype.create = function (data, trs) {
  * @return {number} fee
  */
 Vote.prototype.calculateFee = function (trs, sender) {
-	return (parseInt(sender.totalFrozeAmount) * constants.fees.vote) / 100;
+	return 1;
+	// return (parseInt(sender.totalFrozeAmount) * constants.fees.vote) / 100;
 };
 
 /**
@@ -225,6 +230,7 @@ Vote.prototype.getBytes = function (trs) {
  * @todo delete unnecessary let parent = this
  */
 Vote.prototype.apply = function (trs, block, sender, cb) {
+	library.logger.info('Vote apply');
 	let parent = this;
 
 	async.series([
@@ -255,15 +261,20 @@ Vote.prototype.apply = function (trs, block, sender, cb) {
 		function (seriesCb) {
 			self.updateAndCheckVote(
 				{
+					timestamp: trs.timestamp,
 					votes: trs.asset.votes,
 					senderId: trs.senderId
-				}
-				, function (err) {
+				},
+				function (err) {
 					if (err) {
 						return setImmediate(seriesCb, err);
 					}
 					return setImmediate(seriesCb, null);
-				});
+				}
+			).then(
+				() => setImmediate(seriesCb, null),
+				err => setImmediate(seriesCb, err),
+			);
 		}
 	], cb);
 };
@@ -461,75 +472,33 @@ Vote.prototype.ready = function (trs, sender) {
  * @return {null|err} return null if success else err 
  * 
  */
-Vote.prototype.updateAndCheckVote = function (voteInfo, cb) {
-	let votes = voteInfo.votes;
-	let senderId = voteInfo.senderId;
-
-	function checkUpvoteDownvote(waterCb) {
-
-		if ((votes[0])[0] === '+') {
-			return setImmediate(waterCb, null, 1);
-		} else {
-			return setImmediate(waterCb, null, 0);
-		}
-	}
-
-	function checkWeeklyVote(voteType, waterCb) {
-
-		if (voteType === 1) {
-			library.db.many(sql.checkWeeklyVote, {
-				senderId: senderId,
-				currentTime: slots.getTime()
-			})
-				.then(function (resp) {
-					if ((resp.length !== 0) && parseInt(resp[0].count) > 0) {
-						return setImmediate(waterCb, null, true, voteType);
-					} else {
-						return setImmediate(waterCb, null, false, voteType);
-					}
-				})
-				.catch(function (err) {
-					library.logger.error(err.stack);
-					return setImmediate(waterCb, err.toString());
-				});
-		} else {
-			return setImmediate(waterCb, null, false, voteType);
-		}
-	}
-
-	function updateStakeOrder(found, voteType, waterCb) {
-		if (found) {
-			library.db.none(sql.updateStakeOrder, {
-				senderId: senderId,
-				milestone: constants.froze.vTime * 60,
-				currentTime: slots.getTime()
-			})
-				.then(function () {
-					library.logger.info(senderId + ': update stake orders isvoteDone and count');
-					return setImmediate(waterCb, null, voteType);
-				})
-				.catch(function (err) {
-					library.logger.error(err.stack);
-					return setImmediate(waterCb, err.toString());
-				});
-		} else {
-			return setImmediate(waterCb, null, voteType);
-		}
-
-	}
-
-	async.waterfall([
-		checkUpvoteDownvote,
-		checkWeeklyVote,
-		updateStakeOrder
-	], function (err) {
-		if (err) {
-			library.logger.warn(err);
-			return setImmediate(cb, err);
-		}
-		return setImmediate(cb, null);
-	});
-
+Vote.prototype.updateAndCheckVote = async (voteInfo, cb) => {
+    let senderId = voteInfo.senderId;
+    try {
+        // todo check if could change to tx
+        await library.db.task(async () => {
+            let availableToVote = true;
+            const queryResult = await library.db.one(sql.countAvailableStakeOrdersForVote, {
+                senderId: senderId,
+                currentTime: slots.getTime()
+            });
+            if(queryResult && queryResult.hasOwnProperty("count")) {
+                const count = parseInt(queryResult.count, 10);
+                availableToVote = count !== 0;
+            }
+            if(availableToVote) {
+                let order = await library.db.one(sql.updateStakeOrder, {
+                    senderId: senderId,
+                    milestone: constants.froze.vTime, //back to vTime * 60
+                    currentTime: slots.getTime()
+                });
+                await library.frozen.checkFrozeOrders({address: senderId});
+            }
+        });
+    } catch (err) {
+        library.logger.warn(err);
+        throw err;
+    }
 };
 
 /**

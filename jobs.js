@@ -73,23 +73,6 @@ exports.updateDataOnElasticSearch = {
 };
 
 /** 
- * @desc checks pending stake rewards functionality every day at mid night.
-*/
-exports.checkFrozeOrders = {
-
-	on: '* * * * *',
-	job: function () {
-		let date = new Date();
-		//FIXME: comment or remove below statement once this goes live
-		library.logic.frozen.checkFrozeOrders();
-		if (date.getHours() === 10 && date.getMinutes() === 20) {
-			library.logic.frozen.checkFrozeOrders();
-		}
-	},
-	spawn: false
-};
-
-/** 
  * @desc archive log files every first day of a month
 */
 exports.archiveLogFiles = {
