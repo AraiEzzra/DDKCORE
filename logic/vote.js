@@ -64,7 +64,7 @@ Vote.prototype.create = async function (data, trs) {
 	trs.asset.votes = data.votes;
 	trs.trsName = data.votes[0][0] == "+" ? "VOTE" : "DOWNVOTE";
 	trs.body.reward = totals.reward || 0;
-	trs.body.freeze = totals.unstakeAmount || 0;
+	trs.body.freeze = totals.freeze || 0;
 	return trs;
 };
 

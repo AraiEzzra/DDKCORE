@@ -448,14 +448,16 @@ Frozen.prototype.calculateTotalRewardAndUnstake = async function (senderId) {
     let unstakeAmount = 0;
     const freezeOrders = await self.scope.db.query(sql.getActiveFrozeOrders, { senderId, currentTime: slots.getTime() });
     await Promise.all(freezeOrders.map(async order => {
-        if (order.voteCount > 0 && order.voteCount % constants.froze.rewardVoteCount === 0) {
+        if (order.voteCount > 0 && (parseInt(order.voteCount, 10) + 1) % constants.froze.rewardVoteCount === 0) {
             const blockHeight = modules.blocks.lastBlock.get().height;
             const stakeRewardPercent = __private.stakeReward.calcReward(blockHeight);
             reward += parseInt(order.freezedAmount, 10) * stakeRewardPercent / 100;
         }
     }));
-    const readyToUnstakeOrders = freezeOrders.filter(o => o.voteCount === constants.froze.unstakeVoteCount);
-    await Promise.all(readyToUnstakeOrders.map(order => {unstakeAmount -= order.freezedAmount;}));
+    const readyToUnstakeOrders = freezeOrders.filter(o => (parseInt(o.voteCount, 10) + 1) === constants.froze.unstakeVoteCount);
+    await Promise.all(readyToUnstakeOrders.map(order => {
+    	unstakeAmount -= parseInt(order.freezedAmount, 10);
+    }));
     return {reward: reward, freeze: unstakeAmount};
 };
 
