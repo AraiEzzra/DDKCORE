@@ -23,7 +23,7 @@ function Sequence (config) {
 			_default.onWarning(self.sequence.length, _default.warningLimit);
 		}
 		self.__tick(function () {
-			setTimeout(nextSequenceTick, 600);
+			setTimeout(nextSequenceTick, 30);
 		});
 	});
 }

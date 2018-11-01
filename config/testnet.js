@@ -31,6 +31,10 @@ module.exports = {
         password: env.TESTNET_REDIS_PASSWORD,
         db: 0
     },
+    kafka: {
+        host: env.TESTNET_KAFKA_HOST || '0.0.0.0',
+        port: parseInt(env.TESTNET_KAFKA_PORT, 10) || 9092
+    },
     api: {
         enabled: true,
         access: {
