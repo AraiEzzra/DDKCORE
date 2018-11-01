@@ -876,20 +876,19 @@ Transactions.prototype.shared = {
 
 									let transaction;
 
-									try {
-										transaction = library.logic.transaction.create({
-											type: (req.body.transactionRefer) ? (transactionTypes.REFER) : (transactionTypes.SEND),
-											amount: req.body.amount,
-											sender: account,
-											recipientId: recipientId,
-											keypair: keypair,
-											secondKeypair: secondKeypair
-										});
-									} catch (e) {
+									library.logic.transaction.create({
+										type: (req.body.transactionRefer) ? (transactionTypes.REFER) : (transactionTypes.SEND),
+										amount: req.body.amount,
+										sender: account,
+										recipientId: recipientId,
+										keypair: keypair,
+										secondKeypair: secondKeypair
+									}).then((transactionReferSend) => {
+										transaction = transactionReferSend;
+										modules.transactions.receiveTransactions([transaction], true, cb);
+									}).catch((e) => {
 										return setImmediate(cb, e.toString());
-									}
-
-									modules.transactions.receiveTransactions([transaction], true, cb);
+									});
 								});
 							});
 						} else {
@@ -919,20 +918,19 @@ Transactions.prototype.shared = {
 
 								let transaction;
 
-								try {
-									transaction = library.logic.transaction.create({
-										type: (req.body.transactionRefer) ? (transactionTypes.REFER) : (transactionTypes.SEND),
-										amount: req.body.amount,
-										sender: account,
-										recipientId: recipientId,
-										keypair: keypair,
-										secondKeypair: secondKeypair
-									});
-								} catch (e) {
+								library.logic.transaction.create({
+									type: (req.body.transactionRefer) ? (transactionTypes.REFER) : (transactionTypes.SEND),
+									amount: req.body.amount,
+									sender: account,
+									recipientId: recipientId,
+									keypair: keypair,
+									secondKeypair: secondKeypair
+								}).then((transactionReferSend) => {
+									transaction = transactionReferSend;
+									modules.transactions.receiveTransactions([transaction], true, cb);
+								}).catch((e) => {
 									return setImmediate(cb, e.toString());
-								}
-
-								modules.transactions.receiveTransactions([transaction], true, cb);
+								});
 							});
 						}
 					});

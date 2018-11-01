@@ -126,7 +126,9 @@ module.exports = {
 				2  // 2% For 31 months and above
 			],
 			distance: 30, // Distance between each milestone is 6 months
-		}
+		},
+        rewardVoteCount: 2,  // TODO: restore 4 and up to footer of file
+        unstakeVoteCount :4  // TODO: restore 27 and up to footer of file
 	},
 	defaultLock: 0
 };

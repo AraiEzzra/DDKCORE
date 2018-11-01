@@ -71,7 +71,7 @@ function Transaction (db, ed, schema, genesisblock, account, logger, config, net
  * @param {Object} data
  * @return {transaction} trs
  */
-Transaction.prototype.create = function (data) {
+Transaction.prototype.create = async function (data) {
 	if (!__private.types[data.type]) {
 		throw 'Unknown transaction type ' + data.type;
 	}
@@ -95,9 +95,10 @@ Transaction.prototype.create = function (data) {
 		trsName: 'NA',
 		groupBonus:0,
 		reward: data.rewardPercentage || null,
+		body: {}
 	};
 
-	trs = __private.types[trs.type].create.call(this, data, trs);
+	trs = await __private.types[trs.type].create.call(this, data, trs);
 	trs.signature = this.sign(data.keypair, trs);
 
 	if (data.sender.secondSignature && data.secondKeypair) {
@@ -954,7 +955,8 @@ Transaction.prototype.dbFields = [
 	'signSignature',
 	'signatures',
 	'trsName',
-	'reward'
+	'reward',
+	'body'
 ];
 
 /**
@@ -1011,6 +1013,7 @@ Transaction.prototype.dbSave = function (trs) {
 				signatures: trs.signatures ? trs.signatures.join(',') : null,
 				trsName: trs.trsName,
 				reward: trs.reward,
+                body: trs.body || {}
 			}
 		}
 	];
@@ -1289,7 +1292,8 @@ Transaction.prototype.dbRead = function (raw) {
 			asset: {},
 			trsName: raw.t_trsName,
 			reward: raw.t_reward,
-			pendingGroupBonus: raw.t_pendingGroupBonus
+			pendingGroupBonus: raw.t_pendingGroupBonus,
+            body: raw.body
 		};
 
 		if (!__private.types[tx.type]) {

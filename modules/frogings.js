@@ -106,22 +106,21 @@ Frogings.prototype.referralReward = function (stake_amount, address, cb) {
 					let transaction;
 					let secondKeypair = null;
 					account.publicKey = publicKey;
-	
-					try {
-						transaction = library.logic.transaction.create({
-							type: transactionTypes.REFER,
-							amount: introducerReward[sponsorId[i]],
-							sender: account,
-							recipientId: sponsorId[i],
-							keypair: keypair,
-							secondKeypair: secondKeypair,
-							trsName: "DIRECTREF",
-							rewardPercentage: reward.stakeReward.toString()
-						});
-					} catch (e) {
-						return setImmediate(cb, e.toString());
-					}
-					modules.transactions.receiveTransactions([transaction], true, reward_cb);
+					library.logic.transaction.create({
+						type: transactionTypes.REFER,
+						amount: introducerReward[sponsorId[i]],
+						sender: account,
+						recipientId: sponsorId[i],
+						keypair: keypair,
+						secondKeypair: secondKeypair,
+						trsName: "DIRECTREF",
+						rewardPercentage: reward.stakeReward.toString()
+					}).then((transactionRefer) => {
+                        transaction = transactionRefer;
+						modules.transactions.receiveTransactions([transaction], true, reward_cb);
+					}).catch((e) => {
+						return setImmediate(reward_cb, e.toString());
+					});
 				});
 			}, function (err, transaction) {
 				if (err) {
@@ -367,19 +366,19 @@ Frogings.prototype.shared = {
 
 							let transaction;
 
-							try {
-								transaction = library.logic.transaction.create({
-									type: transactionTypes.STAKE,
-									freezedAmount: req.body.freezedAmount,
-									sender: account,
-									keypair: keypair,
-									secondKeypair: secondKeypair,
-									requester: keypair
-								});
-							} catch (e) {
+							library.logic.transaction.create({
+								type: transactionTypes.STAKE,
+								freezedAmount: req.body.freezedAmount,
+								sender: account,
+								keypair: keypair,
+								secondKeypair: secondKeypair,
+								requester: keypair
+							}).then((transactionStake) => {
+								transaction = transactionStake;
+								modules.transactions.receiveTransactions([transaction], true, cb);
+							}).catch((e) => {
 								return setImmediate(cb, e.toString());
-							}
-							modules.transactions.receiveTransactions([transaction], true, cb);
+							});
 						});
 
 					});
@@ -410,19 +409,18 @@ Frogings.prototype.shared = {
 
 						let transaction;
 
-						try {
-							transaction = library.logic.transaction.create({
-								type: transactionTypes.STAKE,
-								freezedAmount: req.body.freezedAmount,
-								sender: account,
-								keypair: keypair,
-								secondKeypair: secondKeypair
-							});
-						} catch (e) {
+						library.logic.transaction.create({
+							type: transactionTypes.STAKE,
+							freezedAmount: req.body.freezedAmount,
+							sender: account,
+							keypair: keypair,
+							secondKeypair: secondKeypair
+						}).then((transactionStake) => {
+							transaction = transactionStake;
+							modules.transactions.receiveTransactions([transaction], true, cb);
+						}).catch((e) => {
 							return setImmediate(cb, e.toString());
-						}
-
-						modules.transactions.receiveTransactions([transaction], true, cb);
+						});
 					});
 				}
 			}, function (err, transaction) {

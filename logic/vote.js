@@ -57,10 +57,14 @@ Vote.prototype.bind = function (delegates, rounds, accounts) {
  * @param {transaction} trs
  * @return {transaction} trs with new data
  */
-Vote.prototype.create = function (data, trs) {
+Vote.prototype.create = async function (data, trs) {
+    const senderId = data.sender.address;
+    const totals = await library.frozen.calculateTotalRewardAndUnstake(senderId);
 	trs.recipientId = data.sender.address;
 	trs.asset.votes = data.votes;
 	trs.trsName = data.votes[0][0] == "+" ? "VOTE" : "DOWNVOTE";
+	trs.body.reward = totals.reward || 0;
+	trs.body.freeze = totals.unstakeAmount || 0;
 	return trs;
 };
 
@@ -76,7 +80,7 @@ Vote.prototype.calculateFee = function (trs, sender) {
 
 /**
  * Validates transaction votes fields and for each vote calls verifyVote.
- * @implements {verifyVote}
+ * @implements {verifysendStakingRewardVote}
  * @implements {checkConfirmedDelegates}
  * @param {transaction} trs
  * @param {account} sender
@@ -230,7 +234,6 @@ Vote.prototype.getBytes = function (trs) {
  * @todo delete unnecessary let parent = this
  */
 Vote.prototype.apply = function (trs, block, sender, cb) {
-	library.logger.info('Vote apply');
 	let parent = this;
 
 	async.series([
@@ -263,7 +266,8 @@ Vote.prototype.apply = function (trs, block, sender, cb) {
 					timestamp: trs.timestamp,
 					votes: trs.asset.votes,
 					senderId: trs.senderId,
-					stakeId: trs.stakeId
+					reward: trs.amount,
+					freeze: trs.stakedAmount
 				},
 				function (err) {
 					if (err) {
@@ -474,6 +478,8 @@ Vote.prototype.ready = function (trs, sender) {
  */
 Vote.prototype.updateAndCheckVote = async (voteInfo, cb) => {
     let senderId = voteInfo.senderId;
+    let reward = voteInfo.reward;
+    let freeze = voteInfo.freeze;
     try {
         // todo check if could change to tx
         await library.db.task(async () => {
