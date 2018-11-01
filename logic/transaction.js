@@ -22,6 +22,7 @@ let self, modules, __private = {};
  * - 5: DApp
  * - 6: InTransfer
  * - 7: OutTransfer
+ * - 8: STAKE
  */
 __private.types = {};
 
@@ -107,7 +108,7 @@ Transaction.prototype.create = function (data) {
 	if(trs.type === 9) {
 		trs.fee = 0;
 	} else {
-		trs.fee = __private.types[trs.type].calculateFee.call(this, trs, data.sender) || false;
+		trs.fee = __private.types[trs.type].calculateFee.call(this, trs, data.sender) || 0;
 	}
 	
 	return trs;
@@ -604,8 +605,12 @@ Transaction.prototype.verify = function (trs, sender, requester, cb) {
 		}
 	}
 	
-	let fee = __private.types[trs.type].calculateFee.call(this, trs, sender) || false;
-	if ((trs.type !== 11 && trs.type !== 9 && trs.type !== 12) && (!fee || trs.fee !== fee)) {
+	let fee = __private.types[trs.type].calculateFee.call(this, trs, sender) || 0;
+	if (
+		(trs.type !== 11 && trs.type !== 9 && trs.type !== 12) &&
+		!(trs.type === 8 && trs.stakedAmount < 0) &&
+		(!fee || trs.fee !== fee)
+	) {
 		return setImmediate(cb, 'Invalid transaction fee');
 	}
 
@@ -1190,7 +1195,7 @@ Transaction.prototype.Referschema = {
 			maximum: constants.totalAmount
 		},
 		fee: {
-			type: 'boolean',
+			type: 'integer',
 			minimum: 0,
 			maximum: constants.totalAmount
 		},
@@ -1227,7 +1232,7 @@ Transaction.prototype.objectNormalize = function (trs) {
 			delete trs[i];
 		}
 	}
-	trs.fee = trs.fee || false;
+	trs.fee = trs.fee || 0;
 
 	if (trs.type === 9 || trs.type === 11 || trs.type === 12)
 		var report = this.scope.schema.validate(trs, Transaction.prototype.Referschema);
