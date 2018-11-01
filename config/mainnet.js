@@ -92,7 +92,7 @@ module.exports = {
         send: {
             enabled: true,
             access: {
-                public: false,
+                public: true,
                 whiteList: [
                     'DDK5962989209662165330',
                     'DDK2361885483816819618',
