@@ -2583,14 +2583,6 @@
         }
       }
     },
-    "grunt-mysql-query": {
-      "version": "0.0.1",
-      "resolved": "https://registry.npmjs.org/grunt-mysql-query/-/grunt-mysql-query-0.0.1.tgz",
-      "integrity": "sha1-J4kEGKmihWYBTGwNHlueA5oxZ94=",
-      "requires": {
-        "shelljs": "~0.1.4"
-      }
-    },
     "grunt-pg-utils": {
       "version": "0.1.4",
       "resolved": "https://registry.npmjs.org/grunt-pg-utils/-/grunt-pg-utils-0.1.4.tgz",
@@ -3331,6 +3323,10 @@
         }
       }
     },
+    "js-nacl": {
+      "version": "github:LiskHQ/js-nacl#6dc1417057cd81381d332b370e82ceab1f2416af",
+      "from": "github:LiskHQ/js-nacl#6dc1417"
+    },
     "js-string-escape": {
       "version": "1.0.1",
       "resolved": "https://registry.npmjs.org/js-string-escape/-/js-string-escape-1.0.1.tgz",
@@ -3568,6 +3564,7 @@
         "bytebuffer": "=5.0.1",
         "crypto-browserify": "=3.11.0",
         "ed2curve": "=0.2.1",
+        "js-nacl": "github:LiskHQ/js-nacl#6dc1417057cd81381d332b370e82ceab1f2416af",
         "popsicle": "=9.1.0"
       },
       "dependencies": {
@@ -3596,10 +3593,6 @@
             "public-encrypt": "^4.0.0",
             "randombytes": "^2.0.0"
           }
-        },
-        "js-nacl": {
-          "version": "github:LiskHQ/js-nacl#6dc1417057cd81381d332b370e82ceab1f2416af",
-          "from": "github:LiskHQ/js-nacl#6dc1417057cd81381d332b370e82ceab1f2416af"
         },
         "popsicle": {
           "version": "9.1.0",
@@ -4127,6 +4120,15 @@
           "dev": true,
           "optional": true
         }
+      }
+    },
+    "node-rdkafka": {
+      "version": "2.4.2",
+      "resolved": "https://registry.npmjs.org/node-rdkafka/-/node-rdkafka-2.4.2.tgz",
+      "integrity": "sha512-sOfVLlLUChJZqmJV5lTdL/psAg4TvkDnSprly6UQenCK8W69ee7Q20v8nzFESsdZWTRgpNHu3WEmz9I+Ef6Bog==",
+      "requires": {
+        "bindings": "1.x",
+        "nan": "2.x"
       }
     },
     "node-report": {
@@ -6694,11 +6696,6 @@
       "version": "1.0.0",
       "resolved": "https://registry.npmjs.org/shebang-regex/-/shebang-regex-1.0.0.tgz",
       "integrity": "sha1-2kL0l0DAtC2yypcoVxyxkMmO/qM="
-    },
-    "shelljs": {
-      "version": "0.1.4",
-      "resolved": "https://registry.npmjs.org/shelljs/-/shelljs-0.1.4.tgz",
-      "integrity": "sha1-37vnjVbDwBaNL7eeEOzR28sH7A4="
     },
     "sigmund": {
       "version": "1.0.1",

@@ -6,6 +6,7 @@ let constants = require('../../helpers/constants.js');
 let schema = require('../../schema/blocks.js');
 let slots = require('../../helpers/slots.js');
 let sql = require('../../sql/blocks.js');
+let consumer = require('../../kafka/consumer');
 
 let modules, library, self, __private = {};
 
@@ -312,6 +313,10 @@ Process.prototype.generateBlock = function (keypair, timestamp, cb) {
 	// Get transactions that will be included in block
 	let transactions = modules.transactions.getUnconfirmedTransactionList(false, constants.maxTxsPerBlock);
 	let ready = [];
+
+	/* consumer.on('message', function (message) {
+		library.logger.info('Message Topic : ' + message.topic + ', Message Value: ' + message.value);
+	}); */
 
 	async.eachSeries(transactions, function (transaction, cb) {
 		modules.accounts.getAccount({ publicKey: transaction.senderPublicKey }, function (err, sender) {

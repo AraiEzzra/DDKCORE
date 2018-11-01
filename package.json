@@ -58,6 +58,7 @@
     "node-cache": "^4.2.0",
     "node-cron": "^1.2.1",
     "node-cron-job": "^0.2.3",
+    "node-rdkafka": "^2.4.2",
     "nodemailer": "^4.6.6",
     "npm": "=2.15.10",
     "pg": "^7.3.0",

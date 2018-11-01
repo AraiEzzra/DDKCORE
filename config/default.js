@@ -43,6 +43,10 @@ module.exports = {
         port: parseInt(env.DEFAULT_REDIS_PORT, 10) || 6380,
         db: 0
     },
+    kafka: {
+        host: env.DEFAULT_KAFKA_HOST || '0.0.0.0',
+        port: parseInt(env.DEFAULT_KAFKA_PORT, 10) || 9092
+    },
     api: {
         enabled: true,
         access: {

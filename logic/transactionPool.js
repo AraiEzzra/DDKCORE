@@ -3,6 +3,8 @@ let config = process.env.NODE_ENV === 'development' ? require('../config/default
 let constants = require('../helpers/constants.js');
 let jobsQueue = require('../helpers/jobsQueue.js');
 let transactionTypes = require('../helpers/transactionTypes.js');
+let producer = require('../kafka/producer');
+let consumer = require('../kafka/consumer');
 
 // Private fields
 let modules, library, self, __private = {};
@@ -42,6 +44,7 @@ function TransactionPool (broadcastInterval, releaseLimit, transaction, bus, log
 	self.bundled = { transactions: [], index: {} };
 	self.queued = { transactions: [], index: {} };
 	self.multisignature = { transactions: [], index: {} };
+	self.kafka = { transactions: [], index: {} };
 	self.expiryInterval = 30000;
 	self.bundledInterval = library.config.broadcasts.broadcastInterval;
 	self.bundleLimit = library.config.broadcasts.releaseLimit;
@@ -72,6 +75,78 @@ function TransactionPool (broadcastInterval, releaseLimit, transaction, bus, log
 	jobsQueue.register('transactionPoolNextExpiry', nextExpiry, self.expiryInterval);
 }
 
+consumer.connect();
+consumer
+    .on('ready', function () {
+        // Subscribe to the Multibrokerapplication topic
+        // This makes subsequent consumes read from that topic.
+        consumer.subscribe(['queuedTransactions', 'bundeledTransactions', 'multisignatureTransaction', 'unconfirmedTransaction']);
+
+        // Read one message every 1000 milliseconds
+        setInterval(function () {
+			let trs = self.countBundled() + self.countMultisignature() + self.countQueued() + self.countUnconfirmed();
+			if(!trs) {
+				consumer.consume(10);
+			}
+        }, 10000);
+    })
+    .on('data', function (data) {
+		library.logger.info('adding transaction into the queue');
+		if (data.topic === 'queuedTransactions') {
+			let queuedTransaction = JSON.parse(data.value.toString());
+			__private.processVerifyTransaction(queuedTransaction, false, function (err) {
+				if (err) {
+					library.logger.error('Failed to process / verify unconfirmed transaction: ' + queuedTransaction.id, err);
+					self.removeQueuedTransaction(queuedTransaction.id);
+					self.removeKafkaTransaction(queuedTransaction.id);
+				} else {
+					self.queued.transactions.push(queuedTransaction);
+					let index = self.queued.transactions.indexOf(queuedTransaction);
+					self.queued.index[queuedTransaction.id] = index;
+				}
+			});
+		} else if (data.topic === 'bundeledTransactions') {
+			let bundledTransaction = JSON.parse(data.value.toString());
+			__private.processVerifyTransaction(bundledTransaction, false, function (err) {
+				if (err) {
+					library.logger.error('Failed to process / verify unconfirmed transaction: ' + bundledTransaction.id, err);
+					self.removeBundledTransaction(bundledTransaction.id);
+					self.removeKafkaTransaction(bundledTransaction.id);
+				} else {
+					self.bundled.transactions.push(bundledTransaction);
+					let index = self.bundled.transactions.indexOf(bundledTransaction);
+					self.bundled.index[bundledTransaction.id] = index;
+				}
+			});
+		} else if (data.topic === 'multisignatureTransaction') {
+			let multisignatureTransaction = JSON.parse(data.value.toString());
+			__private.processVerifyTransaction(multisignatureTransaction, false, function (err) {
+				if (err) {
+					library.logger.error('Failed to process / verify unconfirmed transaction: ' + multisignatureTransaction.id, err);
+					self.removeMultisignatureTransaction(multisignatureTransaction.id);
+					self.removeKafkaTransaction(multisignatureTransaction.id);
+				} else {
+					self.multisignature.transactions.push(multisignatureTransaction);
+					let index = self.multisignature.transactions.indexOf(multisignatureTransaction);
+					self.multisignature.index[multisignatureTransaction.id] = index;
+				}
+			});
+		} else {
+			let unconfirmedTransaction = JSON.parse(data.value.toString());
+			__private.processVerifyTransaction(unconfirmedTransaction, false, function (err) {
+				if (err) {
+					library.logger.error('Failed to process / verify unconfirmed transaction: ' + unconfirmedTransaction.id, err);
+					self.removeUnconfirmedTransaction(unconfirmedTransaction.id);
+					self.removeKafkaTransaction(unconfirmedTransaction.id);
+				} else {
+					self.unconfirmed.transactions.push(unconfirmedTransaction);
+					let index = self.unconfirmed.transactions.indexOf(unconfirmedTransaction);
+					self.unconfirmed.index[unconfirmedTransaction.id] = index;
+				}
+			});
+		}
+    });
+
 // Public methods
 /**
  * Bounds input parameters to private variable modules.
@@ -95,10 +170,7 @@ TransactionPool.prototype.bind = function (accounts, transactions, loader) {
  */
 TransactionPool.prototype.transactionInPool = function (id) {
 	return [
-		self.unconfirmed.index[id],
-		self.bundled.index[id],
-		self.queued.index[id],
-		self.multisignature.index[id]
+		self.kafka.index[id]
 	].filter(Boolean).length > 0;
 };
 
@@ -170,7 +242,11 @@ TransactionPool.prototype.getBundledTransactionList  = function (reverse, limit)
  * @return {getTransactionList} Calls getTransactionList
  */
 TransactionPool.prototype.getQueuedTransactionList  = function (reverse, limit) {
-	return __private.getTransactionList(self.queued.transactions, reverse, limit);
+	if(self.countQueued()) {
+		return __private.getTransactionList(self.queued.transactions, reverse, limit);
+	} else {
+		return [];
+	}
 };
 
 /**
@@ -234,9 +310,16 @@ TransactionPool.prototype.addUnconfirmedTransaction = function (transaction) {
 	}
 
 	if (self.unconfirmed.index[transaction.id] === undefined) {
-		self.unconfirmed.transactions.push(transaction);
-		let index = self.unconfirmed.transactions.indexOf(transaction);
-		self.unconfirmed.index[transaction.id] = index;
+		producer.isTopicExists('unconfirmedTransaction', function (isExists) {
+			if (!isExists) {
+				library.logger.error('topic unconfirmedTransaction doesn\'t exist');
+			} else {
+				self.kafka.transactions.push(transaction);
+				let index = self.kafka.transactions.indexOf(transaction);
+				self.kafka.index[transaction.id] = index;
+				producer.send('unconfirmedTransaction', transaction, 0);
+			}
+		});
 	}
 };
 /**
@@ -256,6 +339,7 @@ TransactionPool.prototype.removeUnconfirmedTransaction = function (id) {
 
 	self.removeQueuedTransaction(id);
 	self.removeMultisignatureTransaction(id);
+	self.removeKafkaTransaction(id);
 };
 
 /**
@@ -272,9 +356,16 @@ TransactionPool.prototype.countUnconfirmed = function () {
  */
 TransactionPool.prototype.addBundledTransaction = function (transaction) {
 	if (self.bundled.index[transaction.id] === undefined) {
-		self.bundled.transactions.push(transaction);
-		let index = self.bundled.transactions.indexOf(transaction);
-		self.bundled.index[transaction.id] = index;
+		producer.isTopicExists('bundeledTransactions', function (isExists) {
+			if (!isExists) {
+				library.logger.error('topic bundeledTransactions doesn\'t exist');
+			} else {
+				self.kafka.transactions.push(transaction);
+				let index = self.kafka.transactions.indexOf(transaction);
+				self.kafka.index[transaction.id] = index;
+				producer.send('bundeledTransactions', transaction, 0);
+			}
+		});
 	}
 };
 
@@ -305,9 +396,16 @@ TransactionPool.prototype.countBundled = function () {
  */
 TransactionPool.prototype.addQueuedTransaction = function (transaction) {
 	if (self.queued.index[transaction.id] === undefined) {
-		self.queued.transactions.push(transaction);
-		let index = self.queued.transactions.indexOf(transaction);
-		self.queued.index[transaction.id] = index;
+		producer.isTopicExists('queuedTransactions', function (isExists) {
+			if (!isExists) {
+				library.logger.error('topic queuedTransactions doesn\'t exist');
+			} else {
+				self.kafka.transactions.push(transaction);
+				let index = self.kafka.transactions.indexOf(transaction);
+				self.kafka.index[transaction.id] = index;
+				producer.send('queuedTransactions', transaction, 0);
+			}
+		});
 	}
 };
 
@@ -325,6 +423,19 @@ TransactionPool.prototype.removeQueuedTransaction = function (id) {
 };
 
 /**
+ * Removes id from queued index and transactions. 
+ * @param {string} id
+ */
+TransactionPool.prototype.removeKafkaTransaction = function (id) {
+	let index = self.kafka.index[id];
+
+	if (index !== undefined) {
+		self.kafka.transactions[index] = false;
+		delete self.kafka.index[id];
+	}
+};
+
+/**
  * Counts queued index list.
  * @return {number} total queued index
  */
@@ -338,9 +449,16 @@ TransactionPool.prototype.countQueued = function () {
  */
 TransactionPool.prototype.addMultisignatureTransaction = function (transaction) {
 	if (self.multisignature.index[transaction.id] === undefined) {
-		self.multisignature.transactions.push(transaction);
-		let index = self.multisignature.transactions.indexOf(transaction);
-		self.multisignature.index[transaction.id] = index;
+		producer.isTopicExists('multisignatureTransaction', function (isExists) {
+			if (!isExists) {
+				library.logger.error('topic multisignatureTransaction doesn\'t exist');
+			} else {
+				self.kafka.transactions.push(transaction);
+				let index = self.kafka.transactions.indexOf(transaction);
+				self.kafka.index[transaction.id] = index;
+				producer.send('multisignatureTransaction', transaction, 0);
+			}
+		});
 	}
 };
 
@@ -489,6 +607,9 @@ TransactionPool.prototype.processUnconfirmedTransaction = function (transaction,
  * @return {setImmediateCallback} error | cb
  */
 TransactionPool.prototype.queueTransaction = function (transaction, cb) {
+	if (self.transactionInPool(transaction.id)) {
+		return setImmediate(cb, 'Transaction is already processed: ' + transaction.id);
+	}
 	transaction.receivedAt = new Date();
 
 	if (transaction.bundled) {
@@ -771,13 +892,13 @@ __private.applyUnconfirmedList = function (transactions, cb) {
 				self.removeUnconfirmedTransaction(transaction.id);
 				return setImmediate(eachSeriesCb);
 			}
-				modules.transactions.applyUnconfirmed(transaction, sender, function (err) {
-					if (err) {
-						library.logger.error('Failed to apply unconfirmed transaction: ' + transaction.id, err);
-						self.removeUnconfirmedTransaction(transaction.id);
-					}
-					return setImmediate(eachSeriesCb);
-				});
+			modules.transactions.applyUnconfirmed(transaction, sender, function (err) {
+				if (err) {
+					library.logger.error('Failed to apply unconfirmed transaction: ' + transaction.id, err);
+					self.removeUnconfirmedTransaction(transaction.id);
+				}
+				return setImmediate(eachSeriesCb);
+			});
 		});
 	}, cb);
 };
