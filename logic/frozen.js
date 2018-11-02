@@ -458,7 +458,7 @@ Frozen.prototype.calculateTotalRewardAndUnstake = async function (senderId) {
     await Promise.all(readyToUnstakeOrders.map(order => {
     	unstakeAmount -= parseInt(order.freezedAmount, 10);
     }));
-    return {reward: reward, freeze: unstakeAmount};
+    return {reward: reward, unstake: unstakeAmount};
 };
 
 /**

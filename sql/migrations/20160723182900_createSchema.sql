@@ -84,6 +84,8 @@ CREATE TABLE IF NOT EXISTS "delegates"(
 CREATE TABLE IF NOT EXISTS "votes"(
   "votes" TEXT,
   "transactionId" VARCHAR(20) NOT NULL,
+  "reward" BIGINT,
+  "unstake" BIGINT,
   FOREIGN KEY("transactionId") REFERENCES "trs"("id") ON DELETE CASCADE
 );
 

@@ -60,11 +60,12 @@ Vote.prototype.bind = function (delegates, rounds, accounts) {
 Vote.prototype.create = async function (data, trs) {
     const senderId = data.sender.address;
     const totals = await library.frozen.calculateTotalRewardAndUnstake(senderId);
-	trs.recipientId = data.sender.address;
 	trs.asset.votes = data.votes;
-	trs.trsName = data.votes[0][0] == "+" ? "VOTE" : "DOWNVOTE";
-	trs.body.reward = totals.reward || 0;
-	trs.body.freeze = totals.freeze || 0;
+	trs.asset.reward = totals.reward || 0;
+	trs.asset.unstake = totals.unstake || 0;
+	trs.amount += totals.reward;
+    trs.recipientId = data.sender.address;
+    trs.trsName = data.votes[0][0] == "+" ? "VOTE" : "DOWNVOTE";
 	return trs;
 };
 
@@ -266,8 +267,6 @@ Vote.prototype.apply = function (trs, block, sender, cb) {
 					timestamp: trs.timestamp,
 					votes: trs.asset.votes,
 					senderId: trs.senderId,
-					reward: trs.amount,
-					freeze: trs.stakedAmount
 				},
 				function (err) {
 					if (err) {
@@ -423,9 +422,11 @@ Vote.prototype.dbRead = function (raw) {
 	if (!raw.v_votes) {
 		return null;
 	} else {
-		let votes = raw.v_votes.split(',');
+		const votes = raw.v_votes.split(',');
+        const reward = raw.v_reward || 0;
+		const unstake =  raw.unstake || 0;
 
-		return { votes: votes };
+		return { votes: votes, reward: reward, unstake: unstake };
 	}
 };
 
@@ -433,7 +434,9 @@ Vote.prototype.dbTable = 'votes';
 
 Vote.prototype.dbFields = [
 	'votes',
-	'transactionId'
+	'transactionId',
+    'reward',
+    'unstake'
 ];
 
 /**
@@ -447,7 +450,9 @@ Vote.prototype.dbSave = function (trs) {
 		fields: this.dbFields,
 		values: {
 			votes: Array.isArray(trs.asset.votes) ? trs.asset.votes.join(',') : null,
-			transactionId: trs.id
+			transactionId: trs.id,
+			reward: trs.asset.reward || 0,
+            unstake: trs.asset.unstake || 0,
 		}
 	};
 };
@@ -478,8 +483,6 @@ Vote.prototype.ready = function (trs, sender) {
  */
 Vote.prototype.updateAndCheckVote = async (voteInfo, cb) => {
     let senderId = voteInfo.senderId;
-    let reward = voteInfo.reward;
-    let freeze = voteInfo.freeze;
     try {
         // todo check if could change to tx
         await library.db.task(async () => {
