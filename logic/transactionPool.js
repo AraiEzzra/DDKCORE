@@ -88,7 +88,7 @@ consumer
 			if(!trs) {
 				consumer.consume(10);
 			}
-        }, 10000);
+        }, 1000);
     })
     .on('data', function (data) {
 		library.logger.info('adding transaction into the queue');
