@@ -383,9 +383,13 @@ Frozen.prototype.getAirdropReward = async function (recipientAddress, voteReward
         allowed: false
 	};
 
-    if (!await cache.prototype.getJsonForKeyAsync("referStatus")) {
-        return result;
-    }
+	try {
+        if (!await cache.prototype.getJsonForKeyAsync("referStatus")) {
+            return result;
+        }
+	} catch (err){
+        self.scope.logger.error(err);
+	}
 
     // TODO use u_balance
     const availableAirdropBalance = await self.scope.db.one(account_sql.getCurrentUnmined, {
@@ -401,17 +405,19 @@ Frozen.prototype.getAirdropReward = async function (recipientAddress, voteReward
     }
 
     let airdropRewardAmount = 0;
-    let i = 0;
     const sponsors = {};
-    user.level.map((sponsorAddress) => {
+    user.level.map((sponsorAddress, i) => {
         const amount = (((Reward.level[i]) * voteReward) / 100);
         sponsors[sponsorAddress] = amount;
         airdropRewardAmount += amount;
-        i++;
 	});
 
     if (availableAirdropBalance < airdropRewardAmount) {
-        cache.prototype.setJsonForKey("referStatus", false);
+        try {
+            await cache.prototype.setJsonForKeyAsync("referStatus", false);
+        } catch (err) {
+            self.scope.logger.error(err);
+        }
         return result;
     }
 
@@ -467,7 +473,11 @@ Frozen.prototype.checkFrozeOrders = async function (voteTransaction) {
     };
 
     const sendRewards = async (orders) => {
-        const readyToRewardOrders = orders.filter(order => (order.voteCount > 0 && order.voteCount % constants.froze.rewardVoteCount === 0));
+        const readyToRewardOrders = orders.filter(order => {
+            if (order.voteCount <= 0)
+            	return false;
+            return order.voteCount % constants.froze.rewardVoteCount === 0;
+		});
 
         if (readyToRewardOrders.length > 0) {
             await Promise.all(readyToRewardOrders.map(async order => {
@@ -510,7 +520,9 @@ Frozen.prototype.checkFrozeOrders = async function (voteTransaction) {
 
     const freezeOrders = await getFrozeOrders(senderId);
     await sendRewards(freezeOrders);
-    const readyToUnstakeOrders = freezeOrders.filter(o => o.voteCount === constants.froze.unstakeVoteCount);
+    const readyToUnstakeOrders = freezeOrders.filter(o => {
+        return o.voteCount === constants.froze.unstakeVoteCount;
+	});
     await Promise.all(readyToUnstakeOrders.map(order => unstakeOrder(order)));
     return [];
 };

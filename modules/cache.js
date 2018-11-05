@@ -83,6 +83,19 @@ Cache.prototype.setJsonForKey = function (key, value, cb) {
 	client.set(key, JSON.stringify(value), cb);
 };
 
+Cache.prototype.setJsonForKeyAsync = async function (key, value) {
+    if (!self.isConnected()) {
+        return Promise.reject(errorCacheDisabled);
+    }
+    // redis calls toString on objects, which converts it to object [object] so calling stringify before saving
+    client.set(key, JSON.stringify(value), function (err){
+        if (err) {
+            return Promise.reject(err);
+        }
+    	return true;
+	});
+};
+
 /**
  * It checks existance for a key in redis
  * @param {String} key
