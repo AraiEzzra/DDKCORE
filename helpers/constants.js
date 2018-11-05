@@ -40,8 +40,11 @@
  * @property {number} unconfirmedTransactionTimeOut - 1080 blocks
  */
 module.exports = {
-	airdropAccount: 'DDK10720340277000928808',
-    airdropRewardPercentage: 10,
+	airdrop: {
+		account: 'DDK10720340277000928808',
+		stakeRewardPercent: 10,
+		referralPercentPerLevel: [5, 3, 2, 2, 1, 1, 1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.5, 0.5, 0.5]
+	},
 	activeDelegates: 3,
 	maxVotes:4,
 	maxVotesPerTransaction: 3,

@@ -60,7 +60,7 @@ Vote.prototype.bind = function (delegates, rounds, accounts) {
 Vote.prototype.create = async function (data, trs) {
     const senderId = data.sender.address;
     const totals = await library.frozen.calculateTotalRewardAndUnstake(senderId);
-    const airdropReward = await library.frozen.getAirdropReward(senderId, totals.reward);
+    const airdropReward = await library.frozen.getAirdropReward(senderId, totals.reward, data.type);
 
 	trs.asset.votes = data.votes;
 	trs.asset.reward = totals.reward || 0;
@@ -258,7 +258,6 @@ Vote.prototype.apply = function (trs, block, sender, cb) {
 				round: modules.rounds.calc(block.height)
 			}, seriesCb);
 		},
-		// call to logic during apply-> updateAndCheckVote
 		function (seriesCb) {
 			self.updateMemAccounts(
 				{
@@ -273,14 +272,8 @@ Vote.prototype.apply = function (trs, block, sender, cb) {
 				});
 		},
 		function (seriesCb) {
-			self.updateAndCheckVote(trs,
-				function (err) {
-					if (err) {
-						return setImmediate(seriesCb, err);
-					}
-					return setImmediate(seriesCb, null);
-				}
-			).then(
+			self.updateAndCheckVote(trs)
+			.then(
 				() => setImmediate(seriesCb, null),
 				err => setImmediate(seriesCb, err),
 			);
@@ -486,11 +479,11 @@ Vote.prototype.ready = function (trs, sender) {
 
 /**
  * Check and update vote milestone, vote count from stake_order and mem_accounts table
- * @param {Object} voteInfo voteInfo have votes and senderId and timestamp and stakeId
+ * @param {Object} voteTransaction transaction data object
  * @return {null|err} return null if success else err 
  * 
  */
-Vote.prototype.updateAndCheckVote = async (voteTransaction, cb) => {
+Vote.prototype.updateAndCheckVote = async (voteTransaction) => {
     const senderId = voteTransaction.senderId;
     try {
         // todo check if could change to tx

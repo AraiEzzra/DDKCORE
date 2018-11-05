@@ -10,7 +10,6 @@ let reward_sql = require('../sql/referal_sql');
 let account_sql = require('../sql/accounts');
 let cache = require('../modules/cache');
 let transactionTypes = require('../helpers/transactionTypes.js');
-let Reward = require('../helpers/rewards');
 
 let __private = {};
 __private.types = {};
@@ -62,15 +61,28 @@ __private.stakeReward = new StakeReward();
  * @param {Object} trs - transaction data
  * @returns {trs} trs
  */
-Frozen.prototype.create = function (data, trs) {
-	
-	let date = new Date(trs.timestamp * 1000);
+Frozen.prototype.create = async function (data, trs) {
+
+	const senderId = data.sender.address;
+    const airdropReward = await self.getAirdropReward(senderId, data.freezedAmount, data.type);
+
+	const date = new Date(trs.timestamp * 1000);
 	trs.recipientId = null;
 	trs.asset.stakeOrder = {
 		stakedAmount: data.freezedAmount,
 		nextVoteMilestone: (date.setMinutes(date.getMinutes())) / 1000,
 		startTime: trs.timestamp
 	};
+	trs.asset.airdropReward = {
+        withAirdropReward : airdropReward.allowed,
+        sponsors: airdropReward.sponsors,
+		totalReward: airdropReward.total
+    };
+
+    if (airdropReward.allowed) {
+        trs.amount = airdropReward.total;
+    }
+
 	if (data.stakeId) {
 		trs.stakeId = data.stakeId;
 	}
@@ -109,7 +121,8 @@ Frozen.prototype.dbFields = [
 	'senderId',
 	'recipientId',
 	'freezedAmount',
-	'nextVoteMilestone'
+	'nextVoteMilestone',
+	'airdropReward'
 ];
 
 Frozen.prototype.inactive = '0';
@@ -133,7 +146,8 @@ Frozen.prototype.dbSave = function (trs) {
 			senderId: trs.senderId,
 			recipientId: trs.recipientId,
 			freezedAmount: trs.asset.stakeOrder.stakedAmount,
-			nextVoteMilestone: trs.asset.stakeOrder.nextVoteMilestone
+			nextVoteMilestone: trs.asset.stakeOrder.nextVoteMilestone,
+			airdropReward: trs.asset.airdropReward || {}
 		}
 	};
 };
@@ -155,7 +169,8 @@ Frozen.prototype.dbRead = function (raw) {
 			senderId: raw.so_senderId,
 			recipientId: raw.so_recipientId,
 			stakedAmount: raw.so_freezedAmount,
-			nextVoteMilestone: raw.so_nextVoteMilestone
+			nextVoteMilestone: raw.so_nextVoteMilestone,
+			airdropReward: raw.so_airdropReward || {}
 		};
 
 		return { stakeOrder: stakeOrder };
@@ -200,7 +215,7 @@ Frozen.prototype.applyUnconfirmed = function (trs, sender, cb) {
 
 /**
  * @private
- * @implements 
+ * @implements
  * @param {Object} block - block data
  * @param {Object} sender - sender data
  * @param {Object} trs - transation data
@@ -245,17 +260,27 @@ Frozen.prototype.undo = function (trs, block, sender, cb) {
  * @return {function} cb
  */
 Frozen.prototype.apply = function (trs, block, sender, cb) {
+	async.series([
+		function (seriesCb) {
+			self.updateFrozeAmount({
+				account: sender,
+				freezedAmount: trs.stakedAmount
+			}, function (err) {
+				if (err) {
+					return setImmediate(seriesCb, err);
+				}
 
-	self.updateFrozeAmount({
-		account: sender,
-		freezedAmount: trs.stakedAmount
-	}, function (err) {
-		if (err) {
-			return setImmediate(cb, err);
+				return setImmediate(seriesCb, null, trs);
+			});
+		},
+		function (seriesCb) {
+			self.sendAirdropReward(trs)
+			.then(
+				() => setImmediate(seriesCb, null),
+				err => setImmediate(seriesCb, err),
+			);
 		}
-
-		return setImmediate(cb, null, trs);
-	});
+	], cb);
 };
 
 /**
@@ -341,7 +366,7 @@ Frozen.prototype.bind = function (accounts, rounds, blocks, transactions) {
 Frozen.prototype.sendAirdropReward = async function (trs) {
 
     const transactionAirdropReward = trs.asset.airdropReward;
-    const recipientAddress = trs.recipientId;
+
     let i = 0;
 
     for(let sponsorId in transactionAirdropReward.sponsors) {
@@ -355,17 +380,17 @@ Frozen.prototype.sendAirdropReward = async function (trs) {
             });
 
             await self.scope.db.none(reward_sql.updateAccountBalance, {
-                address: constants.airdropAccount,
+                address: constants.airdrop.account,
                 reward: -rewardAmount
             });
 
             await self.scope.db.none(reward_sql.updateRewardTypeTransaction, {
                 trsId: trs.id,
-                sponsorAddress: recipientAddress,
+                sponsorAddress: trs.senderId,
                 introducer_address: sponsorId,
                 reward: rewardAmount,
                 level: "Level " + (iterator),
-                transaction_type: "CHAINREF",
+                transaction_type: trs.type === transactionTypes.STAKE ? "DIRECTREF" : "CHAINREF",
                 time: slots.getTime()
             });
 
@@ -376,7 +401,7 @@ Frozen.prototype.sendAirdropReward = async function (trs) {
     return true;
 };
 
-Frozen.prototype.getAirdropReward = async function (recipientAddress, voteReward) {
+Frozen.prototype.getAirdropReward = async function (recipientAddress, amount, transactionType) {
 	const result = {
         total: 0,
         sponsors: {},
@@ -393,26 +418,35 @@ Frozen.prototype.getAirdropReward = async function (recipientAddress, voteReward
 
     // TODO use u_balance
     const availableAirdropBalance = await self.scope.db.one(account_sql.getCurrentUnmined, {
-        address: constants.airdropAccount
+        address: constants.airdrop.account
     });
+    self.scope.logger.info(`availableAirdropBalance: ${availableAirdropBalance.balance / 100000000}`);
 
     const user = await self.scope.db.one(reward_sql.referLevelChain, {
         address: recipientAddress
     });
 
-    if (user.length === 0 || !user.level) {
+    if (!user || !user.level || (user.level.length === 0)) {
         return result;
     }
 
-    let airdropRewardAmount = 0;
+    if (transactionType === transactionTypes.STAKE) {
+    	user.level = [user.level[0]]
+	}
+
+	let airdropRewardAmount = 0;
     const sponsors = {};
-    user.level.map((sponsorAddress, i) => {
-        const amount = (((Reward.level[i]) * voteReward) / 100);
-        sponsors[sponsorAddress] = amount;
-        airdropRewardAmount += amount;
+
+    user.level.forEach((sponsorAddress, i) => {
+        const reward = transactionType === transactionTypes.STAKE ?
+			((amount * constants.airdrop.stakeRewardPercent) / 100)
+			:
+			(((constants.airdrop.referralPercentPerLevel[i]) * amount) / 100);
+        sponsors[sponsorAddress] = reward;
+        airdropRewardAmount += reward;
 	});
 
-    if (availableAirdropBalance < airdropRewardAmount) {
+    if (availableAirdropBalance.balance < airdropRewardAmount) {
         try {
             await cache.prototype.setJsonForKeyAsync("referStatus", false);
         } catch (err) {
@@ -538,34 +572,34 @@ Frozen.prototype.updateFrozeAmount = function (userData, cb) {
 	self.scope.db.one(sql.getFrozeAmount, {
 		senderId: userData.account.address
 	})
-		.then(function (totalFrozeAmount) {
-			if (!totalFrozeAmount) {
-				return setImmediate(cb, 'No Account Exist in mem_account table for' + userData.account.address);
-			}
-			let frozeAmountFromDB = totalFrozeAmount.totalFrozeAmount;
-			totalFrozeAmount = parseInt(frozeAmountFromDB) + userData.freezedAmount;
-			let totalFrozeAmountWithFees = totalFrozeAmount + (parseFloat(constants.fees.froze) * (userData.freezedAmount)) / 100;
-			if (totalFrozeAmountWithFees <= userData.account.balance) {
-				self.scope.db.none(sql.updateFrozeAmount, {
-					reward: userData.freezedAmount,
-					senderId: userData.account.address
-				})
-					.then(function () {
-						self.scope.logger.info(userData.account.address, ': is update its froze amount in mem_accounts table ');
-						return setImmediate(cb, null);
-					})
-					.catch(function (err) {
-						self.scope.logger.error(err.stack);
-						return setImmediate(cb, err.toString());
-					});
-			} else {
-				return setImmediate(cb, 'Not have enough balance');
-			}
-		})
-		.catch(function (err) {
-			self.scope.logger.error(err.stack);
-			return setImmediate(cb, err.toString());
-		});
+	.then(function (totalFrozeAmount) {
+		if (!totalFrozeAmount) {
+			return setImmediate(cb, 'No Account Exist in mem_account table for' + userData.account.address);
+		}
+		let frozeAmountFromDB = totalFrozeAmount.totalFrozeAmount;
+		totalFrozeAmount = parseInt(frozeAmountFromDB) + userData.freezedAmount;
+		let totalFrozeAmountWithFees = totalFrozeAmount + (parseFloat(constants.fees.froze) * (userData.freezedAmount)) / 100;
+		if (totalFrozeAmountWithFees <= userData.account.balance) {
+			self.scope.db.none(sql.updateFrozeAmount, {
+				reward: userData.freezedAmount,
+				senderId: userData.account.address
+			})
+			.then(function () {
+				self.scope.logger.info(userData.account.address, ': is update its froze amount in mem_accounts table ');
+				return setImmediate(cb, null);
+			})
+			.catch(function (err) {
+				self.scope.logger.error(err.stack);
+				return setImmediate(cb, err.toString());
+			});
+		} else {
+			return setImmediate(cb, 'Not have enough balance');
+		}
+	})
+	.catch(function (err) {
+		self.scope.logger.error(err.stack);
+		return setImmediate(cb, err.toString());
+	});
 
 };
 
