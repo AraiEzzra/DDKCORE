@@ -60,7 +60,7 @@ Vote.prototype.bind = function (delegates, rounds, accounts) {
 Vote.prototype.create = async function (data, trs) {
     const senderId = data.sender.address;
     const totals = await library.frozen.calculateTotalRewardAndUnstake(senderId);
-    const airdropReward = await library.frozen.getAirdropReward(totals.reward);
+    const airdropReward = await library.frozen.getAirdropReward(senderId, totals.reward);
 
 	trs.asset.votes = data.votes;
 	trs.asset.reward = totals.reward || 0;

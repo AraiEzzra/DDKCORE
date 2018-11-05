@@ -58,15 +58,17 @@ Cache.prototype.getJsonForKey = function (key, cb) {
 };
 
 Cache.prototype.getJsonForKeyAsync = async function (key) {
-    if (!self.isConnected()) {
-        return Promise.reject(errorCacheDisabled);
-    }
-    client.get(key, function (err, value) {
-        if (err) {
-            return Promise.reject(err);
+	return new Promise((resolve, reject) => {
+        if (!self.isConnected()) {
+            reject(errorCacheDisabled);
         }
-        return JSON.parse(value);
-    });
+        client.get(key, (err, value) => {
+            if (err) {
+                reject(err);
+            }
+            resolve(JSON.parse(value));
+        });
+	});
 };
  
 /**
@@ -84,15 +86,16 @@ Cache.prototype.setJsonForKey = function (key, value, cb) {
 };
 
 Cache.prototype.setJsonForKeyAsync = async function (key, value) {
-    if (!self.isConnected()) {
-        return Promise.reject(errorCacheDisabled);
-    }
-    // redis calls toString on objects, which converts it to object [object] so calling stringify before saving
-    client.set(key, JSON.stringify(value), function (err){
-        if (err) {
-            return Promise.reject(err);
+    return new Promise((resolve, reject) => {
+        if (!self.isConnected()) {
+            reject(errorCacheDisabled);
         }
-    	return true;
+        client.set(key, JSON.stringify(value), function (err){
+            if (err) {
+                reject(err);
+            }
+            resolve(true);
+        });
 	});
 };
 

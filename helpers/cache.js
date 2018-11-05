@@ -1,4 +1,6 @@
 let redis = require('redis');
+const async = require('async');
+
 
 /**
  * Connects with redis server using the config provided via parameters
@@ -20,12 +22,14 @@ module.exports.connect = function (cacheEnabled, config, logger, cb) {
 	}
 	let client = redis.createClient(config);
 
-	client.on('ready', function () {
+	client.on('ready', () => {
 		logger.info('App connected with redis server');
 
 		if (!isRedisLoaded) {
 			isRedisLoaded = true;
-			return cb(null, { cacheEnabled: cacheEnabled, client: client });
+			setDefaultValues(() => {
+                return cb(null, { cacheEnabled: cacheEnabled, client: client });
+			});
 		}
 	});
 	
@@ -45,6 +49,29 @@ module.exports.connect = function (cacheEnabled, config, logger, cb) {
 			return cb(null, { cacheEnabled: cacheEnabled, client: null });
 		}
 	});
+
+	const defaultValues = {
+        "referStatus": true
+	};
+
+	function setDefaultValues(cb) {
+        async.eachOfSeries(defaultValues, function(value, key, callback){
+            logger.info('key: ' + key + ' value: ' + value);
+            client.set(key, JSON.stringify(value), function(err){
+            	if (err){
+                    logger.warn('Can\'t set redis default variable: ' + key);
+				}
+				callback();
+			});
+		}, function(err) {
+        	if (err) {
+                logger.warn('Redis default variables are not set.');
+			} else {
+                logger.info('Redis default variables are set successfully.');
+			}
+            cb();
+        });
+	}
 };
 
 /*************************************** END OF FILE *************************************/
