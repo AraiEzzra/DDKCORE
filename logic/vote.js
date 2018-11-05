@@ -60,10 +60,20 @@ Vote.prototype.bind = function (delegates, rounds, accounts) {
 Vote.prototype.create = async function (data, trs) {
     const senderId = data.sender.address;
     const totals = await library.frozen.calculateTotalRewardAndUnstake(senderId);
+    const airdropReward = await library.frozen.getAirdropReward(totals.reward);
+
 	trs.asset.votes = data.votes;
 	trs.asset.reward = totals.reward || 0;
 	trs.asset.unstake = totals.unstake || 0;
-	trs.amount += totals.reward;
+    trs.amount = totals.reward;
+    trs.asset.airdropReward = {
+        withAirdropReward : airdropReward.allowed,
+        sponsors: airdropReward.sponsors,
+		totalReward: airdropReward.total
+    };
+    if (airdropReward.allowed) {
+        trs.amount += airdropReward.total;
+    }
     trs.recipientId = data.sender.address;
     trs.trsName = data.votes[0][0] == "+" ? "VOTE" : "DOWNVOTE";
 	return trs;
@@ -263,11 +273,7 @@ Vote.prototype.apply = function (trs, block, sender, cb) {
 				});
 		},
 		function (seriesCb) {
-			self.updateAndCheckVote({
-					timestamp: trs.timestamp,
-					votes: trs.asset.votes,
-					senderId: trs.senderId,
-				},
+			self.updateAndCheckVote(trs,
 				function (err) {
 					if (err) {
 						return setImmediate(seriesCb, err);
@@ -424,9 +430,10 @@ Vote.prototype.dbRead = function (raw) {
 	} else {
 		const votes = raw.v_votes.split(',');
         const reward = raw.v_reward || 0;
-		const unstake =  raw.unstake || 0;
+		const unstake = raw.v_unstake || 0;
+        const airdropReward = raw.v_airdropReward || 0;
 
-		return { votes: votes, reward: reward, unstake: unstake };
+		return { votes: votes, reward: reward, unstake: unstake, airdropReward: airdropReward };
 	}
 };
 
@@ -436,7 +443,8 @@ Vote.prototype.dbFields = [
 	'votes',
 	'transactionId',
     'reward',
-    'unstake'
+    'unstake',
+    'airdropReward'
 ];
 
 /**
@@ -453,6 +461,7 @@ Vote.prototype.dbSave = function (trs) {
 			transactionId: trs.id,
 			reward: trs.asset.reward || 0,
             unstake: trs.asset.unstake || 0,
+            airdropReward: trs.asset.airdropReward || {}
 		}
 	};
 };
@@ -481,8 +490,8 @@ Vote.prototype.ready = function (trs, sender) {
  * @return {null|err} return null if success else err 
  * 
  */
-Vote.prototype.updateAndCheckVote = async (voteInfo, cb) => {
-    let senderId = voteInfo.senderId;
+Vote.prototype.updateAndCheckVote = async (voteTransaction, cb) => {
+    const senderId = voteTransaction.senderId;
     try {
         // todo check if could change to tx
         await library.db.task(async () => {
@@ -501,7 +510,7 @@ Vote.prototype.updateAndCheckVote = async (voteInfo, cb) => {
                     milestone: constants.froze.vTime, //TODO back to vTime * 60
                     currentTime: slots.getTime()
                 });
-                await library.frozen.checkFrozeOrders(senderId);
+                await library.frozen.checkFrozeOrders(voteTransaction);
             }
         });
     } catch (err) {

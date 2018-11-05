@@ -7,6 +7,7 @@ let request = require('request');
 let async = require('async');
 let Promise = require('bluebird');
 let reward_sql = require('../sql/referal_sql');
+let account_sql = require('../sql/accounts');
 let cache = require('../modules/cache');
 let transactionTypes = require('../helpers/transactionTypes.js');
 let Reward = require('../helpers/rewards');
@@ -330,117 +331,96 @@ Frozen.prototype.bind = function (accounts, rounds, blocks, transactions) {
 };
 
 /**
- * Distributing the Staking Reward to their sponsors.
+ * Distributing the Airdrop Reward to their sponsors.
  * Award being sent on level basis.
  * Disable refer option when main account balance becomes zero.
- * @param {address} - Address which get the staking reward.
- * @param {reward_amount} - Reward amount received.
- * @param {cb} - callback function.
+ * @param {trs} - Transaction.
  * @author - Satish Joshi
  */
 
-Frozen.prototype.sendStakingReward = function (address, reward_amount, cb) {
+Frozen.prototype.sendAirdropReward = async function (trs) {
 
-	let sponsor_address = address;
-	let chainReward = {};
-	let i = 0;
-	let reward, sender_balance;
+    const transactionAirdropReward = trs.asset.airdropReward;
+    const recipientAddress = trs.recipientId;
+    let i = 0;
 
-	self.scope.db.query(reward_sql.referLevelChain, {
-		address: sponsor_address
-	}).then(function (user) {
+    for(let sponsorId in transactionAirdropReward.sponsors) {
+        const rewardAmount = transactionAirdropReward.sponsors[sponsorId];
+        await self.scope.db.task(async () => {
 
-		if (user.length != 0 && user[0].level != null) {
+        	const iterator = i;
+            await self.scope.db.none(reward_sql.updateAccountBalance, {
+                address: sponsorId,
+                reward: rewardAmount
+            });
 
-			let chain_length = user[0].level.length;
+            await self.scope.db.none(reward_sql.updateAccountBalance, {
+                address: constants.airdropAccount,
+                reward: -rewardAmount
+            });
 
-			async.eachSeries(user[0].level, function (sponsorId, callback) {
+            await self.scope.db.none(reward_sql.updateRewardTypeTransaction, {
+                trsId: trs.id,
+                sponsorAddress: recipientAddress,
+                introducer_address: sponsorId,
+                reward: rewardAmount,
+                level: "Level " + (iterator),
+                transaction_type: "CHAINREF",
+                time: slots.getTime()
+            });
 
-				chainReward[sponsorId] = (((Reward.level[i]) * reward_amount) / 100);
+        });
+        i++;
+    }
 
-				let hash = Buffer.from(JSON.parse(self.scope.config.users[6].keys));
-				let keypair = self.scope.ed.makeKeypair(hash);
-				let publicKey = keypair.publicKey.toString('hex');
-				self.scope.balancesSequence.add(function (reward_cb) {
-					modules.accounts.getAccount({
-						publicKey: publicKey
-					}, function (err, account) {
-						if (err) {
-							return setImmediate(cb, err);
-						}
-						let transaction;
-						let secondKeypair = null;
-						account.publicKey = publicKey;
+    return true;
+};
 
-						self.scope.logic.transaction.create({
-							type: transactionTypes.REFER,
-							amount: chainReward[sponsorId],
-							sender: account,
-							recipientId: sponsorId,
-							keypair: keypair,
-							secondKeypair: secondKeypair,
-							trsName: "CHAINREF",
-							rewardPercentage: "level"+(i+1)+"&"+Reward.level[i]
-						}).then((transactionRefer) =>{
-							transaction = transactionRefer;
-							modules.transactions.receiveTransactions([transaction], true, reward_cb);
-						}).catch((e) => {
-							return setImmediate(reward_cb, e.toString());
-						});
-						i++;
-					});
-				}, function (err, transaction) {
-					if (err) {
-						let subString = err.toString().indexOf('balance:');
-						if (subString != -1) {
-							sender_balance = parseFloat(err.split('balance:')[1]);
-							if (!sender_balance) {
-								cache.prototype.setJsonForKey("referStatus", false);
-								self.scope.logger.info("Staking Reward Info : " + err);
-								return setImmediate(cb, null);
-							}
-							if (i == chain_length && reward != true) {
-								self.scope.logger.info("Staking Reward Info : " + err);
-							}
-						} else {
-							return callback(err);
-						}
-					} else {
-						reward = true;
-						(async function () {
-							await self.scope.db.none(reward_sql.updateRewardTypeTransaction, {
-								trsId: transaction[0].id,
-								sponsorAddress: sponsor_address,
-								introducer_address: sponsorId,
-								reward: chainReward[sponsorId],
-								level: "Level " + (i),
-								transaction_type: "CHAINREF",
-								time: slots.getTime()
-							}).then(function () {
+Frozen.prototype.getAirdropReward = async function (recipientAddress, voteReward) {
+	const result = {
+        total: 0,
+        sponsors: {},
+        allowed: false
+	};
 
-							}).catch(function (err) {
-								return setImmediate(cb, err);
-							});
-						}());
-					}
-					callback();
-				});
+    if (!await cache.prototype.getJsonForKeyAsync("referStatus")) {
+        return result;
+    }
 
-			}, function (err) {
-				if (err) {
-					return setImmediate(cb, err);
-				}
-				return setImmediate(cb, null);
-			});
+    // TODO use u_balance
+    const availableAirdropBalance = await self.scope.db.one(account_sql.getCurrentUnmined, {
+        address: constants.airdropAccount
+    });
 
-		} else {
-			self.scope.logger.info("Staking Reward Info : Referral chain is empty");
-			return setImmediate(cb, null);
-		}
-	}).catch(function (err) {
-		return setImmediate(cb, err);
+    const user = await self.scope.db.one(reward_sql.referLevelChain, {
+        address: recipientAddress
+    });
+
+    if (user.length === 0 || !user.level) {
+        return result;
+    }
+
+    let airdropRewardAmount = 0;
+    let i = 0;
+    const sponsors = {};
+    user.level.map((sponsorAddress) => {
+        const amount = (((Reward.level[i]) * voteReward) / 100);
+        sponsors[sponsorAddress] = amount;
+        airdropRewardAmount += amount;
+        i++;
 	});
-}
+
+    if (availableAirdropBalance < airdropRewardAmount) {
+        cache.prototype.setJsonForKey("referStatus", false);
+        return result;
+    }
+
+    result.total = airdropRewardAmount;
+    result.sponsors = sponsors;
+    result.allowed = true;
+
+    return result;
+};
 
 
 Frozen.prototype.calculateTotalRewardAndUnstake = async function (senderId) {
@@ -470,7 +450,8 @@ Frozen.prototype.calculateTotalRewardAndUnstake = async function (senderId) {
  * @implements {Frozen#disableFrozeOrders}
  * @return {Promise} {Resolve|Reject}
  */
-Frozen.prototype.checkFrozeOrders = async function (senderId) {
+Frozen.prototype.checkFrozeOrders = async function (voteTransaction) {
+    const senderId = voteTransaction.senderId;
 
     const getFrozeOrders = async (senderId) => {
         try {
@@ -483,6 +464,19 @@ Frozen.prototype.checkFrozeOrders = async function (senderId) {
             self.scope.logger.error(err);
             throw err;
         }
+    };
+
+    const sendRewards = async (orders) => {
+        const readyToRewardOrders = orders.filter(order => (order.voteCount > 0 && order.voteCount % constants.froze.rewardVoteCount === 0));
+
+        if (readyToRewardOrders.length > 0) {
+            await Promise.all(readyToRewardOrders.map(async order => {
+                await sendOrderReward(order);
+            }));
+        }
+
+        if (voteTransaction.asset.airdropReward.allowed)
+        	await self.sendAirdropReward(voteTransaction);
     };
 
     const sendOrderReward = async (order) => {
@@ -515,11 +509,7 @@ Frozen.prototype.checkFrozeOrders = async function (senderId) {
     };
 
     const freezeOrders = await getFrozeOrders(senderId);
-    await Promise.all(freezeOrders.map(async order => {
-        if (order.voteCount > 0 && order.voteCount % constants.froze.rewardVoteCount === 0) {
-            await sendOrderReward(order);
-        }
-    }));
+    await sendRewards(freezeOrders);
     const readyToUnstakeOrders = freezeOrders.filter(o => o.voteCount === constants.froze.unstakeVoteCount);
     await Promise.all(readyToUnstakeOrders.map(order => unstakeOrder(order)));
     return [];

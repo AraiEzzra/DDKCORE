@@ -86,6 +86,7 @@ CREATE TABLE IF NOT EXISTS "votes"(
   "transactionId" VARCHAR(20) NOT NULL,
   "reward" BIGINT,
   "unstake" BIGINT,
+  "airdropReward" json,
   FOREIGN KEY("transactionId") REFERENCES "trs"("id") ON DELETE CASCADE
 );
 

@@ -56,6 +56,18 @@ Cache.prototype.getJsonForKey = function (key, cb) {
 		return cb(null, JSON.parse(value));
 	});
 };
+
+Cache.prototype.getJsonForKeyAsync = async function (key) {
+    if (!self.isConnected()) {
+        return Promise.reject(errorCacheDisabled);
+    }
+    client.get(key, function (err, value) {
+        if (err) {
+            return Promise.reject(err);
+        }
+        return JSON.parse(value);
+    });
+};
  
 /**
  * It sets json value for a key in redis

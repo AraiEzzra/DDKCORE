@@ -41,6 +41,7 @@
  */
 module.exports = {
 	airdropAccount: 'DDK10720340277000928808',
+    airdropRewardPercentage: 10,
 	activeDelegates: 3,
 	maxVotes:4,
 	maxVotesPerTransaction: 3,
