@@ -483,10 +483,10 @@ Frozen.prototype.checkFrozeOrders = async function (voteTransaction) {
             await Promise.all(readyToRewardOrders.map(async order => {
                 await sendOrderReward(order);
             }));
-        }
 
-        if (voteTransaction.asset.airdropReward.allowed)
-        	await self.sendAirdropReward(voteTransaction);
+            if (voteTransaction.asset.airdropReward.withAirdropReward)
+                await self.sendAirdropReward(voteTransaction);
+        }
     };
 
     const sendOrderReward = async (order) => {
