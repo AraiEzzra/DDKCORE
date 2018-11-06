@@ -94,8 +94,7 @@ Transaction.prototype.create = async function (data) {
 		stakedAmount: 0,
 		trsName: 'NA',
 		groupBonus:0,
-		reward: data.rewardPercentage || null,
-		body: {}
+		reward: data.rewardPercentage || null
 	};
 
 	trs = await __private.types[trs.type].create.call(this, data, trs);
@@ -955,8 +954,7 @@ Transaction.prototype.dbFields = [
 	'signSignature',
 	'signatures',
 	'trsName',
-	'reward',
-	'body'
+	'reward'
 ];
 
 /**
@@ -1012,8 +1010,7 @@ Transaction.prototype.dbSave = function (trs) {
 				signSignature: signSignature,
 				signatures: trs.signatures ? trs.signatures.join(',') : null,
 				trsName: trs.trsName,
-				reward: trs.reward,
-                body: trs.body || {}
+				reward: trs.reward
 			}
 		}
 	];
@@ -1292,8 +1289,7 @@ Transaction.prototype.dbRead = function (raw) {
 			asset: {},
 			trsName: raw.t_trsName,
 			reward: raw.t_reward,
-			pendingGroupBonus: raw.t_pendingGroupBonus,
-            body: raw.body
+			pendingGroupBonus: raw.t_pendingGroupBonus
 		};
 
 		if (!__private.types[tx.type]) {
