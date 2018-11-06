@@ -87,6 +87,7 @@ SELECT b."id" AS "b_id",
        so."recipientId" AS "so_recipientId",
        so."freezedAmount" AS "so_freezedAmount",
        so."nextVoteMilestone" AS "so_nextVoteMilestone",
+       so."airdropReward" AS "so_airdropReward",
         t."reward" AS "t_reward"
 
 FROM blocks b
