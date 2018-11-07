@@ -5,6 +5,7 @@ let Diff = require('../helpers/diff.js');
 let _ = require('lodash');
 let sql = require('../sql/accounts.js');
 let slots = require('../helpers/slots.js');
+const transactionTypes = require('../helpers/transactionTypes');
 
 // Private fields
 let modules, library, self;
@@ -120,25 +121,51 @@ Vote.prototype.verify = function (trs, sender, cb) {
 		return setImmediate(cb, ['Voting limit exceeded. Maximum is', constants.maxVotesPerTransaction, 'votes per transaction'].join(' '));
 	}
 
-	async.eachSeries(trs.asset.votes, function (vote, eachSeriesCb) {
-		self.verifyVote(vote, function (err) {
-			if (err) {
-				return setImmediate(eachSeriesCb, ['Invalid vote at index', trs.asset.votes.indexOf(vote), '-', err].join(' '));
-			} else {
-				return setImmediate(eachSeriesCb);
-			}
-		});
-	}, function (err) {
-		if (err) {
-			return setImmediate(cb, err);
-		} else {
+	(new Promise((resolve, reject) => {
+        async.eachSeries(trs.asset.votes, function (vote, eachSeriesCb) {
+            self.verifyVote(vote, function (err) {
+                if (err) {
+                    return setImmediate(eachSeriesCb, ['Invalid vote at index', trs.asset.votes.indexOf(vote), '-', err].join(' '));
+                } else {
+                    return setImmediate(eachSeriesCb);
+                }
+            });
+        }, function (err) {
+            if (err) {
+                reject(err);
+            }
+            resolve();
+        });
+	})).then( async () => {
 
-			if (trs.asset.votes.length > _.uniqBy(trs.asset.votes, function (v) { return v.slice(1); }).length) {
-				return setImmediate(cb, 'Multiple votes for same delegate are not allowed');
-			}
+        let amount = 0;
 
-			return self.checkConfirmedDelegates(trs, cb);
+		if (trs.asset.votes.length > _.uniqBy(trs.asset.votes, function (v) { return v.slice(1); }).length) {
+			throw 'Multiple votes for same delegate are not allowed';
 		}
+        const totals = await library.frozen.calculateTotalRewardAndUnstake(trs.recipientId);
+        if (totals.reward !== trs.asset.reward) {
+            throw 'Verify failed: vote reward is corrupted';
+        }
+        if (totals.unstake !== trs.asset.unstake) {
+            throw 'Verify failed: vote unstake is corrupted';
+        }
+        amount += (+trs.asset.reward);
+        const airdropReward = await library.frozen.getAirdropReward(trs.recipientId, totals.reward, transactionTypes.VOTE);
+        if (
+			airdropReward.allowed !== trs.asset.airdropReward.withAirdropReward ||
+			JSON.stringify(airdropReward.sponsors) !== JSON.stringify(trs.asset.airdropReward.sponsors) ||
+			airdropReward.total !== trs.asset.airdropReward.totalReward
+		) {
+            throw 'Verify failed: vote airdrop reward is corrupted';
+        }
+		amount += (+trs.asset.airdropReward.totalReward);
+		if (amount !== trs.amount){
+			throw 'Verify failed: vote amount is corrupted';
+		}
+        return self.checkConfirmedDelegates(trs, cb);
+	}).catch((err) => {
+        return setImmediate(cb, err);
 	});
 };
 
