@@ -983,20 +983,20 @@ Delegates.prototype.shared = {
 
 							let transaction;
 
-							try {
-								transaction = library.logic.transaction.create({
-									type: transactionTypes.DELEGATE,
-									username: req.body.username,
-									URL: req.body.URL,
-									sender: account,
-									keypair: keypair,
-									secondKeypair: secondKeypair,
-									requester: keypair
-								});
-							} catch (e) {
+							library.logic.transaction.create({
+								type: transactionTypes.DELEGATE,
+								username: req.body.username,
+								URL: req.body.URL,
+								sender: account,
+								keypair: keypair,
+								secondKeypair: secondKeypair,
+								requester: keypair
+							}).then((transactionDelegate) =>{
+								transaction = transactionDelegate;
+								modules.transactions.receiveTransactions([transaction], true, cb);
+							}).catch((e) => {
 								return setImmediate(cb, e.toString());
-							}
-							modules.transactions.receiveTransactions([transaction], true, cb);
+							});
 						});
 					});
 				} else {
@@ -1022,19 +1022,19 @@ Delegates.prototype.shared = {
 
 						let transaction;
 
-						try {
-							transaction = library.logic.transaction.create({
-								type: transactionTypes.DELEGATE,
-								username: req.body.username,
-								URL: req.body.URL,
-								sender: account,
-								keypair: keypair,
-								secondKeypair: secondKeypair
-							});
-						} catch (e) {
+						library.logic.transaction.create({
+							type: transactionTypes.DELEGATE,
+							username: req.body.username,
+							URL: req.body.URL,
+							sender: account,
+							keypair: keypair,
+							secondKeypair: secondKeypair
+						}).then((transactionDelegate) =>{
+							transaction = transactionDelegate;
+							modules.transactions.receiveTransactions([transaction], true, cb);
+						}).catch((e) => {
 							return setImmediate(cb, e.toString());
-						}
-						modules.transactions.receiveTransactions([transaction], true, cb);
+						});
 					});
 				}
 			}, function (err, transaction) {

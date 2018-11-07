@@ -663,19 +663,18 @@ Accounts.prototype.shared = {
 								secondKeypair = library.ed.makeKeypair(secondHash);
 							}
 
-							try {
-								const transactionVote = library.logic.transaction.create({
-									type: transactionTypes.VOTE,
-									votes: req.body.delegates,
-									sender: account,
-									keypair: keypair,
-									secondKeypair: secondKeypair,
-									requester: keypair
-								});
+							library.logic.transaction.create({
+								type: transactionTypes.VOTE,
+								votes: req.body.delegates,
+								sender: account,
+								keypair: keypair,
+								secondKeypair: secondKeypair,
+								requester: keypair
+							}).then((transactionVote) =>{
 								modules.transactions.receiveTransactions([transactionVote], true, cb);
-							} catch (e) {
+							}).catch((e) => {
 								return setImmediate(cb, e.toString());
-							}
+							});
 						});
 					});
 				} else {
@@ -707,19 +706,17 @@ Accounts.prototype.shared = {
 							return setImmediate(cb, 'Please Stake before vote/unvote');
 						}
 
-
-						try {
-							const transactionVote = library.logic.transaction.create({
-								type: transactionTypes.VOTE,
-								votes: req.body.delegates,
-								sender: account,
-								keypair: keypair,
-								secondKeypair: secondKeypair
-							});
-							modules.transactions.receiveTransactions([transactionVote], true, cb);
-						} catch (e) {
-							return setImmediate(cb, e.toString());
-						}
+                        library.logic.transaction.create({
+                            type: transactionTypes.VOTE,
+                            votes: req.body.delegates,
+                            sender: account,
+                            keypair: keypair,
+                            secondKeypair: secondKeypair
+                        }).then((transactionVote) =>{
+                            modules.transactions.receiveTransactions([transactionVote], true, cb);
+                        }).catch((e) => {
+                            return setImmediate(cb, e.toString());
+                        });
 					});
 				}
 			}, function (err, transaction) {
@@ -1473,21 +1470,21 @@ Accounts.prototype.internal = {
 					let transaction;
 					let secondKeypair = null;
 					account.publicKey = publicKey;
-	
-					try {
-						transaction = library.logic.transaction.create({
-							type: transactionTypes.REWARD,
-							amount: nextBonus * 100000000,
-							sender: account,
-							recipientId: req.body.address,
-							keypair: keypair,
-							secondKeypair: secondKeypair,
-							trsName: 'WITHDRAWLREWARD'
-						});
-					} catch (e) {
+
+					library.logic.transaction.create({
+						type: transactionTypes.REWARD,
+						amount: nextBonus * 100000000,
+						sender: account,
+						recipientId: req.body.address,
+						keypair: keypair,
+						secondKeypair: secondKeypair,
+						trsName: 'WITHDRAWLREWARD'
+					}).then((transactionReward) =>{
+						transaction = transactionReward;
+						modules.transactions.receiveTransactions([transaction], true, cb);
+					}).catch((e) => {
 						return setImmediate(cb, e.toString());
-					}
-					modules.transactions.receiveTransactions([transaction], true, cb);
+					});
 				});
 			}, function (err, transaction) {
 				if (err) {

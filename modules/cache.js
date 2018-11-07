@@ -56,6 +56,20 @@ Cache.prototype.getJsonForKey = function (key, cb) {
 		return cb(null, JSON.parse(value));
 	});
 };
+
+Cache.prototype.getJsonForKeyAsync = async function (key) {
+	return new Promise((resolve, reject) => {
+        if (!self.isConnected()) {
+            reject(errorCacheDisabled);
+        }
+        client.get(key, (err, value) => {
+            if (err) {
+                reject(err);
+            }
+            resolve(JSON.parse(value));
+        });
+	});
+};
  
 /**
  * It sets json value for a key in redis
@@ -69,6 +83,20 @@ Cache.prototype.setJsonForKey = function (key, value, cb) {
 	} 
 	// redis calls toString on objects, which converts it to object [object] so calling stringify before saving
 	client.set(key, JSON.stringify(value), cb);
+};
+
+Cache.prototype.setJsonForKeyAsync = async function (key, value) {
+    return new Promise((resolve, reject) => {
+        if (!self.isConnected()) {
+            reject(errorCacheDisabled);
+        }
+        client.set(key, JSON.stringify(value), function (err){
+            if (err) {
+                reject(err);
+            }
+            resolve(true);
+        });
+	});
 };
 
 /**

@@ -5,6 +5,7 @@ let Diff = require('../helpers/diff.js');
 let _ = require('lodash');
 let sql = require('../sql/accounts.js');
 let slots = require('../helpers/slots.js');
+const transactionTypes = require('../helpers/transactionTypes');
 
 // Private fields
 let modules, library, self;
@@ -57,10 +58,25 @@ Vote.prototype.bind = function (delegates, rounds, accounts) {
  * @param {transaction} trs
  * @return {transaction} trs with new data
  */
-Vote.prototype.create = function (data, trs) {
-	trs.recipientId = data.sender.address;
+Vote.prototype.create = async function (data, trs) {
+    const senderId = data.sender.address;
+    const totals = await library.frozen.calculateTotalRewardAndUnstake(senderId);
+    const airdropReward = await library.frozen.getAirdropReward(senderId, totals.reward, data.type);
+
 	trs.asset.votes = data.votes;
-	trs.trsName = data.votes[0][0] == "+" ? "VOTE" : "DOWNVOTE";
+	trs.asset.reward = totals.reward || 0;
+	trs.asset.unstake = totals.unstake || 0;
+    trs.amount = totals.reward;
+    trs.asset.airdropReward = {
+        withAirdropReward : airdropReward.allowed,
+        sponsors: airdropReward.sponsors,
+		totalReward: airdropReward.total
+    };
+    if (airdropReward.allowed) {
+        trs.amount += airdropReward.total;
+    }
+    trs.recipientId = data.sender.address;
+    trs.trsName = data.votes[0][0] == "+" ? "VOTE" : "DOWNVOTE";
 	return trs;
 };
 
@@ -76,7 +92,7 @@ Vote.prototype.calculateFee = function (trs, sender) {
 
 /**
  * Validates transaction votes fields and for each vote calls verifyVote.
- * @implements {verifyVote}
+ * @implements {verifysendStakingRewardVote}
  * @implements {checkConfirmedDelegates}
  * @param {transaction} trs
  * @param {account} sender
@@ -105,25 +121,38 @@ Vote.prototype.verify = function (trs, sender, cb) {
 		return setImmediate(cb, ['Voting limit exceeded. Maximum is', constants.maxVotesPerTransaction, 'votes per transaction'].join(' '));
 	}
 
-	async.eachSeries(trs.asset.votes, function (vote, eachSeriesCb) {
-		self.verifyVote(vote, function (err) {
-			if (err) {
-				return setImmediate(eachSeriesCb, ['Invalid vote at index', trs.asset.votes.indexOf(vote), '-', err].join(' '));
-			} else {
-				return setImmediate(eachSeriesCb);
-			}
-		});
-	}, function (err) {
-		if (err) {
-			return setImmediate(cb, err);
-		} else {
+	(new Promise((resolve, reject) => {
+        async.eachSeries(trs.asset.votes, function (vote, eachSeriesCb) {
+            self.verifyVote(vote, function (err) {
+                if (err) {
+                    return setImmediate(eachSeriesCb, ['Invalid vote at index', trs.asset.votes.indexOf(vote), '-', err].join(' '));
+                } else {
+                    return setImmediate(eachSeriesCb);
+                }
+            });
+        }, function (err) {
+            if (err) {
+                reject(err);
+            }
+            resolve();
+        });
+	})).then( async () => {
 
-			if (trs.asset.votes.length > _.uniqBy(trs.asset.votes, function (v) { return v.slice(1); }).length) {
-				return setImmediate(cb, 'Multiple votes for same delegate are not allowed');
-			}
-
-			return self.checkConfirmedDelegates(trs, cb);
+		if (trs.asset.votes.length > _.uniqBy(trs.asset.votes, function (v) { return v.slice(1); }).length) {
+			throw 'Multiple votes for same delegate are not allowed';
 		}
+        const totals = await library.frozen.calculateTotalRewardAndUnstake(trs.senderId);
+        if (totals.reward !== trs.asset.reward) {
+            throw 'Verify failed: vote reward is corrupted';
+        }
+        if (totals.unstake !== trs.asset.unstake) {
+            throw 'Verify failed: vote unstake is corrupted';
+        }
+
+        await library.frozen.verifyAirdrop(trs);
+        return self.checkConfirmedDelegates(trs, cb);
+	}).catch((err) => {
+        return setImmediate(cb, err);
 	});
 };
 
@@ -230,7 +259,6 @@ Vote.prototype.getBytes = function (trs) {
  * @todo delete unnecessary let parent = this
  */
 Vote.prototype.apply = function (trs, block, sender, cb) {
-	library.logger.info('Vote apply');
 	let parent = this;
 
 	async.series([
@@ -244,7 +272,6 @@ Vote.prototype.apply = function (trs, block, sender, cb) {
 				round: modules.rounds.calc(block.height)
 			}, seriesCb);
 		},
-		// call to logic during apply-> updateAndCheckVote
 		function (seriesCb) {
 			self.updateMemAccounts(
 				{
@@ -259,19 +286,8 @@ Vote.prototype.apply = function (trs, block, sender, cb) {
 				});
 		},
 		function (seriesCb) {
-			self.updateAndCheckVote({
-					timestamp: trs.timestamp,
-					votes: trs.asset.votes,
-					senderId: trs.senderId,
-					stakeId: trs.stakeId
-				},
-				function (err) {
-					if (err) {
-						return setImmediate(seriesCb, err);
-					}
-					return setImmediate(seriesCb, null);
-				}
-			).then(
+			self.updateAndCheckVote(trs)
+			.then(
 				() => setImmediate(seriesCb, null),
 				err => setImmediate(seriesCb, err),
 			);
@@ -419,9 +435,12 @@ Vote.prototype.dbRead = function (raw) {
 	if (!raw.v_votes) {
 		return null;
 	} else {
-		let votes = raw.v_votes.split(',');
+		const votes = raw.v_votes.split(',');
+        const reward = raw.v_reward || 0;
+		const unstake = raw.v_unstake || 0;
+        const airdropReward = raw.v_airdropReward || 0;
 
-		return { votes: votes };
+		return { votes: votes, reward: reward, unstake: unstake, airdropReward: airdropReward };
 	}
 };
 
@@ -429,7 +448,10 @@ Vote.prototype.dbTable = 'votes';
 
 Vote.prototype.dbFields = [
 	'votes',
-	'transactionId'
+	'transactionId',
+    'reward',
+    'unstake',
+    'airdropReward'
 ];
 
 /**
@@ -443,7 +465,10 @@ Vote.prototype.dbSave = function (trs) {
 		fields: this.dbFields,
 		values: {
 			votes: Array.isArray(trs.asset.votes) ? trs.asset.votes.join(',') : null,
-			transactionId: trs.id
+			transactionId: trs.id,
+			reward: trs.asset.reward || 0,
+            unstake: trs.asset.unstake || 0,
+            airdropReward: trs.asset.airdropReward || {}
 		}
 	};
 };
@@ -468,12 +493,12 @@ Vote.prototype.ready = function (trs, sender) {
 
 /**
  * Check and update vote milestone, vote count from stake_order and mem_accounts table
- * @param {Object} voteInfo voteInfo have votes and senderId and timestamp and stakeId
+ * @param {Object} voteTransaction transaction data object
  * @return {null|err} return null if success else err 
  * 
  */
-Vote.prototype.updateAndCheckVote = async (voteInfo, cb) => {
-    let senderId = voteInfo.senderId;
+Vote.prototype.updateAndCheckVote = async (voteTransaction) => {
+    const senderId = voteTransaction.senderId;
     try {
         // todo check if could change to tx
         await library.db.task(async () => {
@@ -492,7 +517,7 @@ Vote.prototype.updateAndCheckVote = async (voteInfo, cb) => {
                     milestone: constants.froze.vTime, //TODO back to vTime * 60
                     currentTime: slots.getTime()
                 });
-                await library.frozen.checkFrozeOrders(senderId);
+                await library.frozen.checkFrozeOrders(voteTransaction);
             }
         });
     } catch (err) {

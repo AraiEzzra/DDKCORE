@@ -153,20 +153,18 @@ Signatures.prototype.shared = {
 							let secondKeypair = library.ed.makeKeypair(secondHash);
 							let transaction;
 
-							try {
-								transaction = library.logic.transaction.create({
-									type: transactionTypes.SIGNATURE,
-									sender: account,
-									keypair: keypair,
-									requester: keypair,
-									secondKeypair: secondKeypair,
-
-								});
-							} catch (e) {
+							library.logic.transaction.create({
+								type: transactionTypes.SIGNATURE,
+								sender: account,
+								keypair: keypair,
+								requester: keypair,
+								secondKeypair: secondKeypair
+							}).then((transactionSignature) => {
+								transaction = transactionSignature;
+								modules.transactions.receiveTransactions([transaction], true, cb);
+							}).catch((e) => {
 								return setImmediate(cb, e.toString());
-							}
-
-							modules.transactions.receiveTransactions([transaction], true, cb);
+							});
 						});
 					});
 				} else {
@@ -187,17 +185,17 @@ Signatures.prototype.shared = {
 						let secondKeypair = library.ed.makeKeypair(secondHash);
 						let transaction;
 
-						try {
-							transaction = library.logic.transaction.create({
-								type: transactionTypes.SIGNATURE,
-								sender: account,
-								keypair: keypair,
-								secondKeypair: secondKeypair
-							});
-						} catch (e) {
+						library.logic.transaction.create({
+							type: transactionTypes.SIGNATURE,
+							sender: account,
+							keypair: keypair,
+							secondKeypair: secondKeypair
+						}).then((transactionSignature) => {
+							transaction = transactionSignature;
+							modules.transactions.receiveTransactions([transaction], true, cb);
+						}).catch((e) => {
 							return setImmediate(cb, e.toString());
-						}
-						modules.transactions.receiveTransactions([transaction], true, cb);
+						});
 					});
 				}
 

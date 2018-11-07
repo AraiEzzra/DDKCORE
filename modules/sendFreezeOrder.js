@@ -336,22 +336,21 @@ SendFreezeOrder.prototype.shared = {
 
 									let transaction;
 
-									try {
-										transaction = library.logic.transaction.create({
-											type: transactionTypes.SENDSTAKE,
-											sender: account,
-											stakeId: req.body.stakeId,
-											keypair: keypair,
-											recipientId: recipientId,
-											secondKeypair: secondKeypair,
-											requester: keypair,
-											freezedAmount: req.body.freezedAmount
-										});
-									} catch (e) {
+									library.logic.transaction.create({
+										type: transactionTypes.SENDSTAKE,
+										sender: account,
+										stakeId: req.body.stakeId,
+										keypair: keypair,
+										recipientId: recipientId,
+										secondKeypair: secondKeypair,
+										requester: keypair,
+										freezedAmount: req.body.freezedAmount
+									}).then((transactionSendStake) => {
+										transaction = transactionSendStake;
+										modules.transactions.receiveTransactions([transaction], true, cb);
+									}).catch((e) => {
 										return setImmediate(cb, e.toString());
-									}
-
-									modules.transactions.receiveTransactions([transaction], true, cb);
+									});
 								});
 							});
 						});
@@ -397,22 +396,20 @@ SendFreezeOrder.prototype.shared = {
 
 								let transaction;
 
-								try {
-									transaction = library.logic.transaction.create({
-										type: transactionTypes.SENDSTAKE,
-										sender: account,
-										stakeId: req.body.stakeId,
-										keypair: keypair,
-										recipientId: recipientId,
-										secondKeypair: secondKeypair,
-										freezedAmount: req.body.freezedAmount
-									});
-								} catch (e) {
+								library.logic.transaction.create({
+									type: transactionTypes.SENDSTAKE,
+									sender: account,
+									stakeId: req.body.stakeId,
+									keypair: keypair,
+									recipientId: recipientId,
+									secondKeypair: secondKeypair,
+									freezedAmount: req.body.freezedAmount
+								}).then((transactionSendStake) => {
+									transaction = transactionSendStake;
+									modules.transactions.receiveTransactions([transaction], true, cb);
+								}).catch((e) => {
 									return setImmediate(cb, e.toString());
-								}
-
-								modules.transactions.receiveTransactions([transaction], true, cb);
-
+								});
 							});
 						});
 					}

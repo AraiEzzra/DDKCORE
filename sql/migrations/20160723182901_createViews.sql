@@ -61,6 +61,9 @@ SELECT b."id" AS "b_id",
        ENCODE(s."publicKey", 'hex') AS "s_publicKey",
        d."username" AS "d_username",
        v."votes" AS "v_votes",
+       v."reward" AS "v_reward",
+       v."unstake" AS "v_unstake",
+       v."airdropReward" AS "v_airdropReward",
        m."min" AS "m_min",
        m."lifetime" AS "m_lifetime",
        m."keysgroup" AS "m_keysgroup",
@@ -84,6 +87,7 @@ SELECT b."id" AS "b_id",
        so."recipientId" AS "so_recipientId",
        so."freezedAmount" AS "so_freezedAmount",
        so."nextVoteMilestone" AS "so_nextVoteMilestone",
+       so."airdropReward" AS "so_airdropReward",
         t."reward" AS "t_reward"
 
 FROM blocks b
