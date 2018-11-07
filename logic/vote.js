@@ -138,31 +138,18 @@ Vote.prototype.verify = function (trs, sender, cb) {
         });
 	})).then( async () => {
 
-        let amount = 0;
-
 		if (trs.asset.votes.length > _.uniqBy(trs.asset.votes, function (v) { return v.slice(1); }).length) {
 			throw 'Multiple votes for same delegate are not allowed';
 		}
-        const totals = await library.frozen.calculateTotalRewardAndUnstake(trs.recipientId);
+        const totals = await library.frozen.calculateTotalRewardAndUnstake(trs.senderId);
         if (totals.reward !== trs.asset.reward) {
             throw 'Verify failed: vote reward is corrupted';
         }
         if (totals.unstake !== trs.asset.unstake) {
             throw 'Verify failed: vote unstake is corrupted';
         }
-        amount += (+trs.asset.reward);
-        const airdropReward = await library.frozen.getAirdropReward(trs.recipientId, totals.reward, transactionTypes.VOTE);
-        if (
-			airdropReward.allowed !== trs.asset.airdropReward.withAirdropReward ||
-			JSON.stringify(airdropReward.sponsors) !== JSON.stringify(trs.asset.airdropReward.sponsors) ||
-			airdropReward.total !== trs.asset.airdropReward.totalReward
-		) {
-            throw 'Verify failed: vote airdrop reward is corrupted';
-        }
-		amount += (+trs.asset.airdropReward.totalReward);
-		if (amount !== trs.amount){
-			throw 'Verify failed: vote amount is corrupted';
-		}
+
+        await library.frozen.verifyAirdrop(trs);
         return self.checkConfirmedDelegates(trs, cb);
 	}).catch((err) => {
         return setImmediate(cb, err);

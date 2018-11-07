@@ -1,17 +1,18 @@
 
-let constants = require('../helpers/constants.js');
-let sql = require('../sql/frogings.js');
-let slots = require('../helpers/slots.js');
-let StakeReward = require('../logic/stakeReward.js');
-let request = require('request');
-let async = require('async');
-let Promise = require('bluebird');
-let reward_sql = require('../sql/referal_sql');
-let account_sql = require('../sql/accounts');
-let cache = require('../modules/cache');
-let transactionTypes = require('../helpers/transactionTypes.js');
+const constants = require('../helpers/constants.js');
+const sql = require('../sql/frogings.js');
+const accountSql = require('../sql/accounts.js');
+const slots = require('../helpers/slots.js');
+const StakeReward = require('../logic/stakeReward.js');
+const request = require('request');
+const async = require('async');
+const Promise = require('bluebird');
+const reward_sql = require('../sql/referal_sql');
+const account_sql = require('../sql/accounts');
+const cache = require('../modules/cache');
+const transactionTypes = require('../helpers/transactionTypes.js');
 
-let __private = {};
+const __private = {};
 __private.types = {};
 let modules, library, self;
 
@@ -88,7 +89,6 @@ Frozen.prototype.create = async function (data, trs) {
 	}
 	trs.stakedAmount = data.freezedAmount;
 	trs.trsName = 'STAKE';
-	self.scope.logger.info('STAKE CREATE');
 	return trs;
 };
 
@@ -316,17 +316,48 @@ Frozen.prototype.process = function (trs, sender, cb) {
  * @return {function} {cb, err, trs}
  */
 Frozen.prototype.verify = function (trs, sender, cb) {
-	let amount = trs.stakedAmount / 100000000;
+	const stakedAmount = trs.stakedAmount / 100000000;
 
-	if (amount < 1) {
+	if (stakedAmount < 1) {
 		return setImmediate(cb, 'Invalid stake amount');
 	}
 
-	if((amount%1)!= 0){
+	if((stakedAmount % 1)!== 0){
 		return setImmediate(cb, 'Invalid stake amount: Decimal value');
 	}
 
-	return setImmediate(cb, null, trs);
+	if (trs.stakedAmount + sender.totalFrozeAmount > sender.u_balance ) {
+		return setImmediate(cb, 'Verify failed: Insufficient balance for stake');
+	}
+
+	self.verifyAirdrop(trs)
+	.then(() => {
+		return setImmediate(cb, null);
+	})
+	.catch((err) => {
+        return setImmediate(cb, err);
+	});
+};
+
+
+Frozen.prototype.verifyAirdrop = async (trs) => {
+	const airdropReward = await self.getAirdropReward(
+		trs.senderId,
+		trs.type === transactionTypes.STAKE ? trs.stakedAmount : trs.asset.reward,
+		trs.type
+	);
+
+	if (
+		airdropReward.allowed !== trs.asset.airdropReward.withAirdropReward ||
+		JSON.stringify(airdropReward.sponsors) !== JSON.stringify(trs.asset.airdropReward.sponsors) ||
+		airdropReward.total !== trs.asset.airdropReward.totalReward
+	) {
+		throw `Verify failed: ${trs.type === transactionTypes.STAKE ? 'stake': 'vote'} airdrop reward is corrupted`;
+	}
+	const totalTransactionAmount = (trs.asset.reward || 0) + trs.asset.airdropReward.totalReward;
+	if (totalTransactionAmount !== trs.amount) {
+		throw `Verify failed: ${trs.type === transactionTypes.STAKE ? 'stake': 'vote'} amount is corrupted`;
+	}
 };
 
 /**
@@ -401,7 +432,7 @@ Frozen.prototype.sendAirdropReward = async function (trs) {
     return true;
 };
 
-Frozen.prototype.getAirdropReward = async function (recipientAddress, amount, transactionType) {
+Frozen.prototype.getAirdropReward = async function (senderAddress, amount, transactionType) {
 	const result = {
         total: 0,
         sponsors: {},
@@ -423,7 +454,7 @@ Frozen.prototype.getAirdropReward = async function (recipientAddress, amount, tr
     self.scope.logger.info(`availableAirdropBalance: ${availableAirdropBalance.balance / 100000000}`);
 
     const user = await self.scope.db.one(reward_sql.referLevelChain, {
-        address: recipientAddress
+        address: senderAddress
     });
 
     if (!user || !user.level || (user.level.length === 0)) {
