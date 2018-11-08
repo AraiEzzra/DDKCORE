@@ -6,7 +6,7 @@ let randomString = require('randomstring');
 
 let _ = require('lodash');
 
-let async = require('../node').async;
+let async = require('async');
 let dirname = path.join(__dirname, '..', '..');
 let config = require(path.join(dirname, '/config.json'));
 let database = require(path.join(dirname, '/helpers', 'database.js'));
@@ -19,7 +19,7 @@ let ed = require('../../helpers/ed');
 let Transaction = require('../../logic/transaction.js');
 let Account = require('../../logic/account.js');
 
-let modulesLoader = new function () {
+const modulesLoader = new function () {
 
 	this.db = null;
 	//this.logger = new Logger({ echo: null, errorLevel: config.fileLogLevel, filename: config.logFileName });
@@ -62,7 +62,7 @@ let modulesLoader = new function () {
 			break;
 		 case 'Block':
 		 	async.waterfall([
-				function (waterCb) {	
+				function (waterCb) {
 					return new Account(scope.db, scope.schema, scope.logger, waterCb);
 				},
 				function (account, waterCb) {
@@ -246,5 +246,6 @@ let modulesLoader = new function () {
 };
 
 module.exports = {
-	modulesLoader: modulesLoader
+  name: 'modulesLoader',
+  modulesLoader:  modulesLoader
 };

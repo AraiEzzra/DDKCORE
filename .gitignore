@@ -10,5 +10,5 @@ package-lock.json
 public
 config.json
 genesisBlock.json
-.eslintrc.json
-.idea
+.idea/
+.nyc_output/

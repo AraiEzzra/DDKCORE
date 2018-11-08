@@ -40,9 +40,19 @@ const GetDelegate = require('./methods/getdelegate');
 const GetDelegates = require('./methods/getdelegates');
 const GetNextForgers = require('./methods/getnextforgers');
 const Search = require('./methods/search');
-const Count = require('./methods/count');
 const GetForgedByAccount = require('./methods/getforgedbyaccount');
 const AddDelegate = require('./methods/adddelegate');
+
+/**
+ *
+ */
+const Count = require('./methods/count');
+
+/**
+ * modules.accounts.shared
+ */
+const GetBalance = require('./methods/getbalance');
+const SetAccountAndGet = require('./methods/setaccountandget');
 
 
 const methods = [
@@ -69,14 +79,17 @@ const methods = [
   GetDelegates,
   GetNextForgers,
   Search,
-  Count,
   GetForgedByAccount,
   AddDelegate,
+  Count,
+  GetBalance,
+  SetAccountAndGet,
 ];
 
 // todo: replace me to config.json
+const env = process.env;
 const PORT = 8080;
-const HOST = '127.0.0.1';
+const HOST = env.ADDRESS || '0.0.0.0';
 const VERSION = 1;
 
 module.exports = {

@@ -1,7 +1,7 @@
 const { createServerRPCMethod } = require('./../util');
 
 
-const METHOD_NAME = 'count';
+const METHOD_NAME = 'setaccountandget';
 
 /**
  * @param {WebSocketServer} wss
@@ -10,11 +10,11 @@ const METHOD_NAME = 'count';
  * @param {function} cdError - Application Error callback
  * @constructor
  */
-function Count (wss, params, scope, cdError) {
+function SetAccountAndGet (wss, params, scope, cdError) {
 
   return new Promise(function (resolve) {
 
-    scope.modules.blocks.submodules.api.getBlock({body: params}, (error, result) => {
+    scope.modules.accounts.shared.setAccountAndGet({body: params}, (error, result) => {
 
       resolve(error
         ? {error}
@@ -25,4 +25,4 @@ function Count (wss, params, scope, cdError) {
 
 }
 
-module.exports = createServerRPCMethod(METHOD_NAME, Count);
+module.exports = createServerRPCMethod(METHOD_NAME, SetAccountAndGet);
