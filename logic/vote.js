@@ -66,15 +66,11 @@ Vote.prototype.create = async function (data, trs) {
 	trs.asset.votes = data.votes;
 	trs.asset.reward = totals.reward || 0;
 	trs.asset.unstake = totals.unstake || 0;
-    trs.amount = totals.reward;
     trs.asset.airdropReward = {
         withAirdropReward : airdropReward.allowed,
         sponsors: airdropReward.sponsors,
 		totalReward: airdropReward.total
     };
-    if (airdropReward.allowed) {
-        trs.amount += airdropReward.total;
-    }
     trs.recipientId = data.sender.address;
     trs.trsName = data.votes[0][0] == "+" ? "VOTE" : "DOWNVOTE";
 	return trs;

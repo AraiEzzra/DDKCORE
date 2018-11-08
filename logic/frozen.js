@@ -80,10 +80,6 @@ Frozen.prototype.create = async function (data, trs) {
 		totalReward: airdropReward.total
     };
 
-    if (airdropReward.allowed) {
-        trs.amount = airdropReward.total;
-    }
-
 	if (data.stakeId) {
 		trs.stakeId = data.stakeId;
 	}
@@ -353,10 +349,6 @@ Frozen.prototype.verifyAirdrop = async (trs) => {
 		airdropReward.total !== trs.asset.airdropReward.totalReward
 	) {
 		throw `Verify failed: ${trs.type === transactionTypes.STAKE ? 'stake': 'vote'} airdrop reward is corrupted`;
-	}
-	const totalTransactionAmount = (trs.asset.reward || 0) + trs.asset.airdropReward.totalReward;
-	if (totalTransactionAmount !== trs.amount) {
-		throw `Verify failed: ${trs.type === transactionTypes.STAKE ? 'stake': 'vote'} amount is corrupted`;
 	}
 };
 
