@@ -74,6 +74,7 @@ Vote.prototype.create = async function (data, trs) {
     trs.recipientId = data.sender.address;
     trs.trsName = data.votes[0][0] == "+" ? "VOTE" : "DOWNVOTE";
 	return trs;
+
 };
 
 /**
@@ -324,13 +325,20 @@ Vote.prototype.undo = function (trs, block, sender, cb) {
 					votes: votesInvert,
 					senderId: trs.senderId
 				}
-				, function (err) {
-					if (err) {
-						return setImmediate(cb, err);
-					}
-					return setImmediate(cb, null);
-				});
-		}
+                , function (err) {
+                    if (err) {
+                        return setImmediate(seriesCb, err);
+                    }
+                    return setImmediate(seriesCb, null);
+                });
+		},
+        function (seriesCb) {
+            self.updateAndCheckVote(trs, true)
+                .then(
+                    () => setImmediate(seriesCb, null),
+                    err => setImmediate(seriesCb, err),
+                );
+        }
 	], cb);
 };
 
@@ -493,7 +501,7 @@ Vote.prototype.ready = function (trs, sender) {
  * @return {null|err} return null if success else err 
  * 
  */
-Vote.prototype.updateAndCheckVote = async (voteTransaction) => {
+Vote.prototype.updateAndCheckVote = async (voteTransaction, undo) => {
     const senderId = voteTransaction.senderId;
     try {
         // todo check if could change to tx
@@ -507,13 +515,20 @@ Vote.prototype.updateAndCheckVote = async (voteTransaction) => {
                 const count = parseInt(queryResult.count, 10);
                 availableToVote = count !== 0;
             }
-            if(availableToVote) {
+            if(availableToVote && !undo) {
                 await library.db.none(sql.updateStakeOrder, {
                     senderId: senderId,
                     milestone: constants.froze.vTime, //TODO back to vTime * 60
                     currentTime: slots.getTime()
                 });
                 await library.frozen.checkFrozeOrders(voteTransaction);
+            } else {
+                await library.db.none(sql.undoUpdateStakeOrder, {
+                    senderId: senderId,
+                    milestone: constants.froze.vTime, //TODO back to vTime * 60
+                    currentTime: slots.getTime()
+                });
+                await library.frozen.checkFrozeOrders(voteTransaction, undo);
             }
         });
     } catch (err) {
