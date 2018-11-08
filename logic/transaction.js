@@ -980,6 +980,7 @@ Transaction.prototype.dbSave = function (trs) {
 		throw e;
 	}
 
+	// FIXME ?
 	if((trs.type === 8) && trs.freezedAmount > 0){
 		trs.amount = trs.freezedAmount;
 	}
