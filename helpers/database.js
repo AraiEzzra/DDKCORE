@@ -186,7 +186,7 @@ function Migrator (pgp, db) {
  */
 module.exports.connect = function (config, logger, cb) {
 	const promise = require('bluebird');
-	let pgOptions = {
+    let pgOptions = {
 		promiseLib: promise
 	};
 

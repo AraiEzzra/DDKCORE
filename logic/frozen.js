@@ -521,7 +521,7 @@ Frozen.prototype.calculateTotalRewardAndUnstake = async function (senderId) {
  * @implements {Frozen#disableFrozeOrders}
  * @return {Promise} {Resolve|Reject}
  */
-Frozen.prototype.checkFrozeOrders = async function (voteTransaction) {
+Frozen.prototype.checkFrozeOrders = async function (voteTransaction, undo) {
     const senderId = voteTransaction.senderId;
 
     const getFrozeOrders = async (senderId) => {
@@ -554,6 +554,23 @@ Frozen.prototype.checkFrozeOrders = async function (voteTransaction) {
         }
     };
 
+    const deductRewards = async (orders) => {
+        const readyToRewardOrders = orders.filter(order => {
+            if (order.voteCount <= 0)
+                return false;
+            return order.voteCount % constants.froze.rewardVoteCount === 0;
+        });
+
+        if (readyToRewardOrders.length > 0) {
+            await Promise.all(readyToRewardOrders.map(async order => {
+                await deductOrderReward(order);
+            }));
+
+            if (voteTransaction.asset.airdropReward.withAirdropReward)
+                await self.sendAirdropReward(voteTransaction);
+        }
+    };
+
     const sendOrderReward = async (order) => {
         let blockHeight = modules.blocks.lastBlock.get().height;
         let stakeRewardPercent = __private.stakeReward.calcReward(blockHeight);
@@ -573,6 +590,25 @@ Frozen.prototype.checkFrozeOrders = async function (voteTransaction) {
 		});
     };
 
+    const deductOrderReward = async (order) => {
+        let blockHeight = modules.blocks.lastBlock.get().height;
+        let stakeRewardPercent = __private.stakeReward.calcReward(blockHeight);
+        const reward = parseInt(order.freezedAmount, 10) * stakeRewardPercent / 100;
+        order.freezedAmount = parseInt(order.freezedAmount, 10) - reward;
+        await self.scope.db.none(sql.updateOrderFrozeAmount, {
+            freezedAmount: order.freezedAmount,
+            stakeId: order.stakeId
+        });
+        await self.scope.db.none(sql.undoUpdateAccountBalanceAndFroze, {
+            reward: reward,
+            senderId: order.senderId
+        });
+        await self.scope.db.none(sql.addTotalSupply, {
+        	reward: reward,
+        	totalSupplyAccount: self.scope.config.forging.totalSupplyAccount
+		});
+    };
+
     const unstakeOrder = async (order) => {
         await self.scope.db.none(sql.deductFrozeAmount, {
             orderFreezedAmount: order.freezedAmount,
@@ -583,13 +619,35 @@ Frozen.prototype.checkFrozeOrders = async function (voteTransaction) {
 		});
     };
 
-    const freezeOrders = await getFrozeOrders(senderId);
-    await sendRewards(freezeOrders);
-    const readyToUnstakeOrders = freezeOrders.filter(o => {
-        return o.voteCount === constants.froze.unstakeVoteCount;
-	});
-    await Promise.all(readyToUnstakeOrders.map(order => unstakeOrder(order)));
-    return [];
+    const stakeOrder = async (order) => {
+        await self.scope.db.none(sql.stakeFrozeAmount, {
+            orderFreezedAmount: order.freezedAmount,
+            senderId: order.senderId
+        });
+        await self.scope.db.none(sql.enableFrozeOrders, {
+            stakeId: order.stakeId
+        });
+    };
+
+    if(!undo) {
+        const freezeOrders = await getFrozeOrders(senderId);
+        await sendRewards(freezeOrders);
+        const readyToUnstakeOrders = freezeOrders.filter(o => {
+            return o.voteCount === constants.froze.unstakeVoteCount;
+        });
+        await Promise.all(readyToUnstakeOrders.map(order => unstakeOrder(order)));
+        return [];
+	} else {
+    	// todo ордеры status = 0 не придут
+        const freezeOrders = await getFrozeOrders(senderId);
+        await deductRewards(freezeOrders);
+        const readyToUnstakeOrders = freezeOrders.filter(o => {
+            return o.voteCount === constants.froze.unstakeVoteCount;
+        });
+        await Promise.all(readyToUnstakeOrders.map(order => stakeOrder(order)));
+        return [];
+	}
+
 };
 /**
  * @desc updateFrozeAmount
