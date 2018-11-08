@@ -48,6 +48,9 @@ function Transport (cb, scope) {
 					timeout: scope.config.peers.options.timeout,
 				},
 			},
+			forging: {
+				minBroadhashConsensus: scope.config.forging.minBroadhashConsensus,
+			}
 		},
 	};
 	self = this;
@@ -278,7 +281,7 @@ Transport.prototype.poorConsensus = function () {
 	if (__private.broadcaster.consensus === undefined) {
 		return false;
 	} else {
-		return (__private.broadcaster.consensus < constants.minBroadhashConsensus);
+		return (__private.broadcaster.consensus < library.config.forging.minBroadhashConsensus);
 	}
 };
 
@@ -350,7 +353,7 @@ Transport.prototype.getFromPeer = function (peer, options, cb) {
 	}
 
 	peer = library.logic.peers.create(peer);
-	__private.headers.port = 7000;
+	__private.headers.port = 7007;
 	let req = {
 		url: 'http://' + peer.ip + ':' + peer.port + url,
 		method: options.method,

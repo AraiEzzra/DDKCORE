@@ -6,8 +6,6 @@ let express = require('express');
 let sinon = require('sinon');
 let randomString = require('randomstring');
 let _  = require('lodash');
-
-let config = require('../../config.json');
 let randomPeer = require('../../common/objectStubs').randomPeer;
 let modulesLoader = require('../../common/initModule').modulesLoader;
 
@@ -20,7 +18,7 @@ describe('peers', function () {
 	let NONCE = randomString.generate(16);
 
 	function getPeers (cb) {
-		peers.list({broadhash: config.nethash}, function (err, __peers) {
+		peers.list({broadhash: modulesLoader.config.nethash}, function (err, __peers) {
 			expect(err).to.not.exist;
 			expect(__peers).to.be.an('array');
 			return cb(err, __peers);
@@ -199,7 +197,7 @@ describe('peers', function () {
 	describe('acceptable', function () {
 
 		before(function () {
-			process.env['NODE_ENV'] = 'DEV';
+			process.env['NODE_ENV'] = 'development';
 		});
 
 		let ip = require('ip');
@@ -227,7 +225,7 @@ describe('peers', function () {
 		});
 
 		it('should not accept peer with different ip but the same nonce', function () {
-			process.env['NODE_ENV'] = 'TEST';
+			process.env['NODE_ENV'] = 'test';
 			let meAsPeer = {
 				ip: '40.00.40.40',
 				port: 4001,
@@ -237,7 +235,7 @@ describe('peers', function () {
 		});
 
 		after(function () {
-			process.env['NODE_ENV'] = 'TEST';
+			process.env['NODE_ENV'] = 'test';
 		});
 	});
 
@@ -269,10 +267,9 @@ describe('peers', function () {
 
 		it('should update peers during onBlockchainReady', function (done) {
 			sinon.stub(peers, 'discover').callsArgWith(0, null);
-			let config = require('../../config.json');
-			let initialPeers = _.clone(config.peers.list);
+			let initialPeers = _.clone(modulesLoader.config.peers.list);
 			if (initialPeers.length === 0) {
-				config.peers.list.push(randomPeer);
+				modulesLoader.config.peers.list.push(randomPeer);
 			}
 			peers.onBlockchainReady();
 			setTimeout(function () {

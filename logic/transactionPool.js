@@ -1,5 +1,4 @@
 let async = require('async');
-let config = require('../config.json');
 let constants = require('../helpers/constants.js');
 let jobsQueue = require('../helpers/jobsQueue.js');
 let transactionTypes = require('../helpers/transactionTypes.js');
@@ -17,12 +16,13 @@ let modules, library, self, __private = {};
  * @implements {expireTransactions}
  * @param {number} broadcastInterval
  * @param {number} releaseLimit
+ * @param {number} maxTxsPerQueue
  * @param {Transaction} transaction - Logic instance
  * @param {bus} bus
  * @param {Object} logger
  */
 // Constructor
-function TransactionPool (broadcastInterval, releaseLimit, transaction, bus, logger) {
+function TransactionPool (broadcastInterval, releaseLimit, maxTxsPerQueue, transaction, bus, logger) {
 	library = {
 		logger: logger,
 		bus: bus,
@@ -34,6 +34,9 @@ function TransactionPool (broadcastInterval, releaseLimit, transaction, bus, log
 				broadcastInterval: broadcastInterval,
 				releaseLimit: releaseLimit,
 			},
+			transactions: {
+				maxTxsPerQueue,
+			}
 		},
 	};
 	self = this;
@@ -492,19 +495,19 @@ TransactionPool.prototype.queueTransaction = function (transaction, cb) {
 	transaction.receivedAt = new Date();
 
 	if (transaction.bundled) {
-		if (self.countBundled() >= config.transactions.maxTxsPerQueue) {
+		if (self.countBundled() >= library.config.transactions.maxTxsPerQueue) {
 			return setImmediate(cb, 'Transaction pool is full');
 		} else {
 			self.addBundledTransaction(transaction);
 		}
 	} else if (transaction.type === transactionTypes.MULTI || Array.isArray(transaction.signatures)) {
-		if (self.countMultisignature() >= config.transactions.maxTxsPerQueue) {
+		if (self.countMultisignature() >= library.config.transactions.maxTxsPerQueue) {
 			return setImmediate(cb, 'Transaction pool is full');
 		} else {
 			self.addMultisignatureTransaction(transaction);
 		}
 	} else {
-		if (self.countQueued() >= config.transactions.maxTxsPerQueue) {
+		if (self.countQueued() >= library.config.transactions.maxTxsPerQueue) {
 			return setImmediate(cb, 'Transaction pool is full');
 		} else {
 			self.addQueuedTransaction(transaction);

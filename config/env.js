@@ -35,8 +35,12 @@ module.exports = {
   app: {
     port: env.PORT
   },
+  peers: {
+    list: (env.PEERS || '').split(',').map(peer => peer.split(':')).map(([ip, port]) => ({ ip, port })),
+  },
   forging: {
-    secret: env.FORGE_SECRET
+    secret: env.FORGE_SECRET,
+    totalSupplyAccount: env.TOTAL_SUPPLY_ACCOUNT,
   },
   ssl: {
     options: {
@@ -57,6 +61,8 @@ module.exports = {
   clientId: env.CLIENT_ID,
   clientSecret: env.CLIENT_SECRET,
   hashSecret: env.HASH_SECRET,
+  silent: env.SILENT,
+  debug: env.DEBUG,
   users: [
     {
       keys: env.DSTAKEREWARD
@@ -83,7 +89,7 @@ module.exports = {
       keys: env.DRESERVEDEX
     },
     {
-      keys: env.DDKFOUNDATION
+      keys: env.DPREORDERDNC
     }
   ],  
 };

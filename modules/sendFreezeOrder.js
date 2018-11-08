@@ -49,6 +49,7 @@ function SendFreezeOrder (cb, scope) {
 	__private.transactionPool = new TransactionPool(
 		scope.config.broadcasts.broadcastInterval,
 		scope.config.broadcasts.releaseLimit,
+		scope.config.transactions.maxTxsPerQueue,
 		scope.logic.transaction,
 		scope.bus,
 		scope.logger
@@ -335,22 +336,21 @@ SendFreezeOrder.prototype.shared = {
 
 									let transaction;
 
-									try {
-										transaction = library.logic.transaction.create({
-											type: transactionTypes.SENDSTAKE,
-											sender: account,
-											stakeId: req.body.stakeId,
-											keypair: keypair,
-											recipientId: recipientId,
-											secondKeypair: secondKeypair,
-											requester: keypair,
-											freezedAmount: req.body.freezedAmount
-										});
-									} catch (e) {
+									library.logic.transaction.create({
+										type: transactionTypes.SENDSTAKE,
+										sender: account,
+										stakeId: req.body.stakeId,
+										keypair: keypair,
+										recipientId: recipientId,
+										secondKeypair: secondKeypair,
+										requester: keypair,
+										freezedAmount: req.body.freezedAmount
+									}).then((transactionSendStake) => {
+										transaction = transactionSendStake;
+										modules.transactions.receiveTransactions([transaction], true, cb);
+									}).catch((e) => {
 										return setImmediate(cb, e.toString());
-									}
-
-									modules.transactions.receiveTransactions([transaction], true, cb);
+									});
 								});
 							});
 						});
@@ -396,22 +396,20 @@ SendFreezeOrder.prototype.shared = {
 
 								let transaction;
 
-								try {
-									transaction = library.logic.transaction.create({
-										type: transactionTypes.SENDSTAKE,
-										sender: account,
-										stakeId: req.body.stakeId,
-										keypair: keypair,
-										recipientId: recipientId,
-										secondKeypair: secondKeypair,
-										freezedAmount: req.body.freezedAmount
-									});
-								} catch (e) {
+								library.logic.transaction.create({
+									type: transactionTypes.SENDSTAKE,
+									sender: account,
+									stakeId: req.body.stakeId,
+									keypair: keypair,
+									recipientId: recipientId,
+									secondKeypair: secondKeypair,
+									freezedAmount: req.body.freezedAmount
+								}).then((transactionSendStake) => {
+									transaction = transactionSendStake;
+									modules.transactions.receiveTransactions([transaction], true, cb);
+								}).catch((e) => {
 									return setImmediate(cb, e.toString());
-								}
-
-								modules.transactions.receiveTransactions([transaction], true, cb);
-
+								});
 							});
 						});
 					}
@@ -421,8 +419,8 @@ SendFreezeOrder.prototype.shared = {
 				if (err) {
 					return setImmediate(cb, err);
 				}
-
-				library.logic.sendFreezeOrder.sendFreezedOrder({
+				return setImmediate(cb, null, { transactionId: transaction[0].id });
+				/* library.logic.sendFreezeOrder.sendFreezedOrder({
 					account: accountData,
 					recipientId: req.body.recipientId,
 					stakeId: req.body.stakeId,
@@ -434,7 +432,7 @@ SendFreezeOrder.prototype.shared = {
 					}
 					return setImmediate(cb, null, { transactionId: transaction[0].id });
 
-				});
+				}); */
 			});
 		});
 	}

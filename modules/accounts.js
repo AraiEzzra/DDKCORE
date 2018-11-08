@@ -10,7 +10,6 @@ let transactionTypes = require('../helpers/transactionTypes.js');
 let Vote = require('../logic/vote.js');
 let sql = require('../sql/accounts.js');
 let cache = require('./cache.js');
-let config = require('../config.json');
 let jwt = require('jsonwebtoken');
 let QRCode = require('qrcode');
 let speakeasy = require('speakeasy');
@@ -60,7 +59,8 @@ function Accounts(cb, scope) {
 		new Vote(
 			scope.logger,
 			scope.schema,
-			scope.db
+            scope.db,
+			scope.logic.frozen
 		)
 	);
 
@@ -159,14 +159,13 @@ Accounts.prototype.getAccount = function (filter, fields, cb) {
 
 Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 
-	let referralLink = referalLink;
-	if (!referralLink) {
-		referralLink = '';
+	let referrer_address = referalLink;
+	if (!referrer_address) {
+		referrer_address = '';
 	}
-	let decoded = new Buffer(referralLink, 'base64').toString('ascii');
 	let level = [];
 
-	if (decoded == address) {
+	if (referrer_address == address) {
 		let err = 'Introducer and sponsor can\'t be same';
 		return setImmediate(cb, err);
 	}
@@ -174,12 +173,12 @@ Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 	async.series([
 
 		function (callback) {
-			if (referralLink != '') {
-				library.db.one(sql.findReferLink, {
-					referLink: referralLink
+			if (referrer_address != '') {
+				library.db.one(sql.validateReferSource, {
+					referSource: referrer_address
 				}).then(function (user) {
 					if (parseInt(user.address)) {
-						level.unshift(decoded);
+						level.unshift(referrer_address);
 						callback();
 					} else {
 						let error = 'Referral Link is Invalid';
@@ -193,8 +192,8 @@ Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 			}
 		},
 		function (callback) {
-			if (referralLink != '') {
-				library.logic.account.findReferralLevel(decoded, function (err, resp) {
+			if (referrer_address != '') {
+				library.logic.account.findReferralLevel(referrer_address, function (err, resp) {
 					if (err) {
 						return setImmediate(cb, err);
 					}
@@ -203,7 +202,7 @@ Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
 
 						level = level.concat(resp[0].level.slice(0, chain_length));
 					} else if (resp.length == 0) {
-						return setImmediate(cb, "Referral link source not eligible");
+						return setImmediate(cb, "Referral link source is not eligible");
 					}
 					callback();
 				});
@@ -383,6 +382,7 @@ Accounts.prototype.shared = {
 
 			__private.openAccount(req.body.secret, function (err, account) {
 				if (!err) {
+
 					let payload = {
 						secret: req.body.secret,
 						address: account.address
@@ -405,10 +405,34 @@ Accounts.prototype.shared = {
 						secondPublicKey: account.secondPublicKey,
 						multisignatures: account.multisignatures,
 						u_multisignatures: account.u_multisignatures,
-						totalFrozeAmount: account.totalFrozeAmount
+						totalFrozeAmount: account.totalFrozeAmount,
+						groupBonus: account.group_bonus
 					};
 
 					accountData.token = token;
+
+					if (req.body.email) {
+						let mailOptions = {
+							From: library.config.mailFrom,
+							To: req.body.email,
+							TemplateId: 8265220,
+							TemplateModel: {
+								"ddk": {
+									"username": req.body.email,
+									"ddk_address": accountData.address,
+									"public_key": accountData.publicKey
+								}
+							}
+						};
+						(async function () {
+							await mailServices.sendEmailWithTemplate(mailOptions, function (err) {
+								if (err) {
+									library.logger.error(err.stack);
+									return setImmediate(cb, err.toString());
+								}
+							});
+						})();
+					}
 
 					//library.cache.client.set('jwtToken_' + account.address, token, 'ex', 100);
 					/****************************************************************/
@@ -416,6 +440,7 @@ Accounts.prototype.shared = {
 					cache.prototype.isExists(REDIS_KEY_USER_INFO_HASH, function (err, isExist) {
 						
 						if (!isExist) {
+							cache.prototype.setJsonForKey(REDIS_KEY_USER_INFO_HASH, accountData.address);
 							self.referralLinkChain(req.body.referal, account.address, function (error) {
 								if (error) {
 									library.logger.error("Referral API Error : "+error);
@@ -426,7 +451,7 @@ Accounts.prototype.shared = {
 										u_isDelegate: 0,
 										isDelegate: 0,
 										vote: 0,
-										publicKey: accountData.publicKey
+										publicKey: accountData.publicKey,
 									};
 									if (account.u_isDelegate) {
 										data.u_isDelegate = account.u_isDelegate;
@@ -439,10 +464,10 @@ Accounts.prototype.shared = {
 									}
 									library.logic.account.set(accountData.address, data, function (error) {
 										if (!error) {
-											cache.prototype.setJsonForKey(REDIS_KEY_USER_INFO_HASH, accountData.address);
 											return setImmediate(cb, null, {
 												account: accountData
 											});
+
 										} else {
 											return setImmediate(cb, error);
 										}
@@ -450,9 +475,23 @@ Accounts.prototype.shared = {
 								}
 							});
 						} else {
-							return setImmediate(cb, null, {
-								account: accountData
-							});
+							if (req.body.etps_user) {
+								library.db.none(sql.updateEtp, {
+									transfer_time: slots.getTime(),
+									address: accountData.address
+								}).then(function () {
+									return setImmediate(cb, null, {
+										account: accountData
+									});
+								}).catch(function (err) {
+									library.logger.error(err.stack);
+									return setImmediate(cb, err);
+								});
+							} else {
+								return setImmediate(cb, null, {
+									account: accountData
+								});
+							}
 						}
 					});
 
@@ -596,6 +635,7 @@ Accounts.prototype.shared = {
 								return setImmediate(cb, err);
 							}
 
+	                        // TODO change that if
 							if (account.totalFrozeAmount === 0) {
 								return setImmediate(cb, 'No Stake available');
 							}
@@ -623,22 +663,18 @@ Accounts.prototype.shared = {
 								secondKeypair = library.ed.makeKeypair(secondHash);
 							}
 
-							let transaction;
-
-							try {
-								transaction = library.logic.transaction.create({
-									type: transactionTypes.VOTE,
-									votes: req.body.delegates,
-									sender: account,
-									keypair: keypair,
-									secondKeypair: secondKeypair,
-									requester: keypair
-								});
-							} catch (e) {
+							library.logic.transaction.create({
+								type: transactionTypes.VOTE,
+								votes: req.body.delegates,
+								sender: account,
+								keypair: keypair,
+								secondKeypair: secondKeypair,
+								requester: keypair
+							}).then((transactionVote) =>{
+								modules.transactions.receiveTransactions([transactionVote], true, cb);
+							}).catch((e) => {
 								return setImmediate(cb, e.toString());
-							}
-
-							modules.transactions.receiveTransactions([transaction], true, cb);
+							});
 						});
 					});
 				} else {
@@ -646,7 +682,7 @@ Accounts.prototype.shared = {
 						if (err) {
 							return setImmediate(cb, err);
 						}
-
+                        // TODO change that if
 						if (account.totalFrozeAmount === 0) {
 							return setImmediate(cb, 'No Stake available');
 						}
@@ -670,37 +706,24 @@ Accounts.prototype.shared = {
 							return setImmediate(cb, 'Please Stake before vote/unvote');
 						}
 
-						let transaction;
-
-						try {
-							transaction = library.logic.transaction.create({
-								type: transactionTypes.VOTE,
-								votes: req.body.delegates,
-								sender: account,
-								keypair: keypair,
-								secondKeypair: secondKeypair
-							});
-						} catch (e) {
-							return setImmediate(cb, e.toString());
-						}
-
-						modules.transactions.receiveTransactions([transaction], true, cb);
-
+                        library.logic.transaction.create({
+                            type: transactionTypes.VOTE,
+                            votes: req.body.delegates,
+                            sender: account,
+                            keypair: keypair,
+                            secondKeypair: secondKeypair
+                        }).then((transactionVote) =>{
+                            modules.transactions.receiveTransactions([transactionVote], true, cb);
+                        }).catch((e) => {
+                            return setImmediate(cb, e.toString());
+                        });
 					});
 				}
 			}, function (err, transaction) {
 				if (err) {
 					return setImmediate(cb, err);
 				}
-				library.logic.vote.updateAndCheckVote({
-					votes: req.body.delegates,
-					senderId: transaction[0].senderId
-				}, function (err) {
-					if (err) {
-						return setImmediate(cb, err);
-					}
-					return setImmediate(cb, null, { transaction: transaction[0] });
-				});
+				return setImmediate(cb, null, { transaction: transaction[0] });
 			});
 		});
 	},
@@ -759,7 +782,7 @@ Accounts.prototype.shared = {
 	},
 
 	getCirculatingSupply: function (req, cb) {
-		let initialUnmined = config.ddkSupply.totalSupply - config.initialPrimined.total;
+		let initialUnmined = library.config.ddkSupply.totalSupply - library.config.initialPrimined.total;
 		//let publicAddress = library.config.sender.address;
 		let hash = Buffer.from(JSON.parse(library.config.users[0].keys));
 		let keypair = library.ed.makeKeypair(hash);
@@ -767,7 +790,7 @@ Accounts.prototype.shared = {
 		self.getAccount({publicKey: publicKey}, function(err, account) {
 			library.db.one(sql.getCurrentUnmined, { address: account.address })
 			.then(function (currentUnmined) {
-				let circulatingSupply = config.initialPrimined.total + initialUnmined - currentUnmined.balance;
+				let circulatingSupply = library.config.initialPrimined.total + initialUnmined - currentUnmined.balance;
 
 				cache.prototype.getJsonForKey('minedContributorsBalance', function (err, contributorsBalance) {
 					let totalCirculatingSupply = parseInt(contributorsBalance) + circulatingSupply;
@@ -784,7 +807,7 @@ Accounts.prototype.shared = {
 		});
 	},
 	totalSupply: function (req, cb) {
-		let totalSupply = config.ddkSupply.totalSupply;
+		let totalSupply = library.config.ddkSupply.totalSupply;
 
 		return setImmediate(cb, null, {
 			totalSupply: totalSupply
@@ -953,18 +976,7 @@ Accounts.prototype.shared = {
 			library.db.one(sql.findPassPhrase, {
 				userName: username
 			}).then(function (user) {
-				if (user.transferred_etp == 0) {
-					(async function () {
-						await library.db.none(sql.updateEtp, {
-							transfer_time: slots.getTime(),
-							userName: username
-						}).then(function () {
-						}).catch(function (err) {
-							library.logger.error(err.stack);
-							return setImmediate(cb, err);
-						});
-					}());
-				}
+				
 				return setImmediate(cb, null, {
 					success: true,
 					userInfo: user
@@ -1008,6 +1020,21 @@ Accounts.prototype.shared = {
 		}).catch(function(err){
 			return setImmediate(cb, err);
 		});
+	},
+
+	getMigratedUsersList: function (req, cb) {
+		library.db.query(sql.getMigratedList, {
+				limit: req.body.limit,
+				offset: req.body.offset
+			})
+			.then(function (users) {
+				return setImmediate(cb, null, {
+					migratedList: users,
+					count: users.length ? users[0].user_count : 0
+				});
+			}).catch(function (err) {
+				return setImmediate(cb, err);
+			});
 	}
 };
 
@@ -1293,15 +1320,15 @@ Accounts.prototype.internal = {
 				return setImmediate(cb, err);
 			}
 
-			var stakedAmount = 0, groupBonus = 0, pendingGroupBonus = 0, failedRule = 0;
-			async.series({
+			var stakedAmount = 0, groupBonus = 0, pendingGroupBonus = 0, failedRule = [];
+			async.auto({
 				checkLastWithdrawl: function (seriesCb) {
 					library.cache.client.exists(req.body.address + '_pending_group_bonus_trs_id', function (err, isExists) {
 						if (isExists) {
 							library.cache.client.get(req.body.address + '_pending_group_bonus_trs_id', function (err, transactionId) {
 								if (err) {
-									failedRule = 1;
-									seriesCb(err);
+									//failedRule[0] = false;
+									seriesCb(null, false);
 								}
 								library.db.one(sql.findTrs, {
 									transactionId: transactionId
@@ -1313,40 +1340,38 @@ Accounts.prototype.internal = {
 										const timeDiff = (d - Date.now());
 										const days = Math.ceil(Math.abs(timeDiff / (1000 * 60 * 60 * 24)));
 										if (days > 7) {
-											seriesCb(null);
+											seriesCb(null, true);
 										} else {
-											failedRule = 1;
-											seriesCb('This week\'s withdrawl is already processed. You can try next withdrawl after ' + 7 - days + ' days.');
+											seriesCb(null, false);
 										}
 									})
 									.catch(function (err) {
-										failedRule = 1;
-										seriesCb(err);
+										seriesCb(err, false);
 									});
 							});
 						} else {
-							seriesCb(null);
+							seriesCb(null, true);
 						}
 					});
 				},
-				checkActiveStake: function (seriesCb) {
-					library.db.query(sql.findActiveStake, {
+				checkActiveStake: ['checkLastWithdrawl', function (result, seriesCb) {
+					library.db.query(sql.findActiveStakeAmount, {
 						senderId: req.body.address
 					})
-						.then(function (stakeOrders) {
-							if (stakeOrders.length > 0) {
-								seriesCb(null);
-							} else {
-								failedRule = 2;
-								seriesCb('Rule 2 failed: You need to have at least one active stake order');
-							}
-						})
-						.catch(function (err) {
-							failedRule = 2;
-							seriesCb(err);
-						});
-				},
-				checkActiveStakeOfLeftAndRightSponsor: function (seriesCb) {
+					.then(function (stakeOrders) {
+						if (stakeOrders.length > 0) {
+							stakedAmount = parseInt(stakeOrders[1].value) / 100000000;
+							seriesCb(null, true);
+						} else {
+							seriesCb(null, false);
+							//seriesCb('Rule 2 failed: You need to have at least one active stake order');
+						}
+					})
+					.catch(function (err) {
+						seriesCb(err, false);
+					});
+				}],
+				checkActiveStakeOfLeftAndRightSponsor: ['checkActiveStake', function (result, seriesCb) {
 					library.db.query(sql.findDirectSponsor, {
 						introducer: req.body.address
 					})
@@ -1359,67 +1384,69 @@ Accounts.prototype.internal = {
 										senderId: directSponsor.address
 									})
 										.then(function (stakeInfo) {
-											stakedAmount = parseInt(stakeInfo[1].value) / 100000000;
 											const timeDiff = (slots.getTime() - stakeInfo[0].value);
 											const days = Math.ceil(Math.abs(timeDiff / (1000 * 60 * 60 * 24)));
 											if (stakedAmount && days <= 31) {
 												activeStakeCount++;
 											}
 											if (activeStakeCount >= 2) {
-												seriesCb(null);
+												seriesCb(null, true);
 											}
 										})
 										.catch(function (err) {
-											failedRule = 3;
-											seriesCb(err);
+											seriesCb(err, false);
 										});
 								});
 								
 							} else if(activeStakeCount < 2){
-								failedRule = 3;
-								seriesCb('Rule 3 failed: User doesn\'t have two direct sponsor');
+								seriesCb(null, false);
 							}else {
-								failedRule = 3;
-								seriesCb('Rule 3 failed: Direct sponsors don\'t have active stake orders');
+								seriesCb(null, false);
 							}
 						})
 						.catch(function (err) {
-							failedRule = 3;
-							seriesCb(err);
+							seriesCb(err, false);
 						});
-				},
-				checkRatio: function (seriesCb) {
+				}],
+				checkRatio: ['checkActiveStakeOfLeftAndRightSponsor', function (result, seriesCb) {
 
 					library.db.query(sql.findGroupBonus, {
 						senderId: req.body.address
 					})
-						.then(function (bonusInfo) {
-							groupBonus = bonusInfo[0].group_bonus;
-							pendingGroupBonus = bonusInfo[0].pending_group_bonus;
-							if (pendingGroupBonus < groupBonus) {
-								nextBonus = (groupBonus - pendingGroupBonus) > 15 ? 15 : (groupBonus - pendingGroupBonus);
-								if ((groupBonus - pendingGroupBonus + nextBonus) < stakedAmount * 10) {
-									pendingGroupBonus = pendingGroupBonus + nextBonus;
-									seriesCb(null);
-								} else {
-									failedRule = 4;
-									seriesCb('Rule 4 failed: Ratio withdrawal is 1:10 from own staking DDK.');
-								}
+					.then(function (bonusInfo) {
+						groupBonus = parseInt(bonusInfo[0].group_bonus) / 100000000 ;
+						pendingGroupBonus = parseInt(bonusInfo[0].pending_group_bonus) / 100000000;
+						if (pendingGroupBonus <= groupBonus && pendingGroupBonus > 0) {
+							nextBonus = (groupBonus - pendingGroupBonus) > 15 ? 15 : (groupBonus - pendingGroupBonus) !== 0 ? (groupBonus - pendingGroupBonus) : 15;
+							if(nextBonus > stakedAmount * 10) {
+								nextBonus = stakedAmount * 10;
+								pendingGroupBonus = groupBonus - nextBonus;
+								seriesCb(null, true);
+							} else if ((groupBonus - pendingGroupBonus + nextBonus) < stakedAmount * 10) {
+								pendingGroupBonus = groupBonus - nextBonus;
+								seriesCb(null, true);
+							} else if(stakedAmount * 10 - (groupBonus - pendingGroupBonus) > 0) {
+								nextBonus = stakedAmount * 10 - (groupBonus - pendingGroupBonus);
+								pendingGroupBonus = groupBonus - nextBonus;
+								seriesCb(null, true);
 							} else {
-								failedRule = 4;
-								seriesCb('Either you don\'t have group bonus reserved or exhausted your withdrawl limit');
+								seriesCb(null, false);
+								//seriesCb('Rule 4 failed: Ratio withdrawal is 1:10 from own staking DDK.');
 							}
-						})
-						.catch(function (err) {
-							failedRule = 4;
-							seriesCb(err);
-						});
-				}
-			}, function (err) {
+						} else {
+							seriesCb(null, false);
+							//seriesCb('Either you don\'t have group bonus reserved or exhausted your withdrawl limit');
+						}
+					})
+					.catch(function (err) {
+						seriesCb(err, false);
+					});
+				}]
+			}, function (err, data) {
 				if (err) {
-					return setImmediate(cb, { message: err, code: failedRule });
+					return setImmediate(cb, err, { success: false, status: data });
 				}
-				return setImmediate(cb, null);
+				return setImmediate(cb, null, { success: true, status: data });
 			});
 		});
 	},
@@ -1443,20 +1470,21 @@ Accounts.prototype.internal = {
 					let transaction;
 					let secondKeypair = null;
 					account.publicKey = publicKey;
-	
-					try {
-						transaction = library.logic.transaction.create({
-							type: transactionTypes.REWARD,
-							amount: nextBonus * 100000000,
-							sender: account,
-							recipientId: req.body.address,
-							keypair: keypair,
-							secondKeypair: secondKeypair
-						});
-					} catch (e) {
+
+					library.logic.transaction.create({
+						type: transactionTypes.REWARD,
+						amount: nextBonus * 100000000,
+						sender: account,
+						recipientId: req.body.address,
+						keypair: keypair,
+						secondKeypair: secondKeypair,
+						trsName: 'WITHDRAWLREWARD'
+					}).then((transactionReward) =>{
+						transaction = transactionReward;
+						modules.transactions.receiveTransactions([transaction], true, cb);
+					}).catch((e) => {
 						return setImmediate(cb, e.toString());
-					}
-					modules.transactions.receiveTransactions([transaction], true, cb);
+					});
 				});
 			}, function (err, transaction) {
 				if (err) {
@@ -1464,7 +1492,7 @@ Accounts.prototype.internal = {
 				}
 				library.cache.client.set(req.body.address + '_pending_group_bonus_trs_id', transaction[0].id);
 				library.db.none(sql.updatePendingGroupBonus, {
-					nextBonus: nextBonus,
+					nextBonus: nextBonus * 100000000,
 					senderId: req.body.address
 				})
 				.then(function () {
@@ -1498,14 +1526,16 @@ Accounts.prototype.internal = {
 				let mailOptions = {
 					From: library.config.mailFrom,
 					To: email,
-					Subject: 'New Password',
-					TextBody: '',
-					HtmlBody: 'Hello, ' + userName + ' <br><br>\
-					<br> Your Newly Generated Password for login is : <strong>' + newPassword + '</strong><br><br>\
-					<a href="' + link + '">Click here to login</a>'
+					TemplateId: 8276287,
+					TemplateModel: {
+						"ddk": {
+						  "username": userName,
+						  "password": newPassword
+						}
+					  }
 				};
 
-				mailServices.sendMail(mailOptions, function (err) {
+				mailServices.sendEmailWithTemplate(mailOptions, function (err) {
 					if (err) {
 						library.logger.error(err.stack);
 						return setImmediate(cb, err.toString());

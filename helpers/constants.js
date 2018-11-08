@@ -40,6 +40,11 @@
  * @property {number} unconfirmedTransactionTimeOut - 1080 blocks
  */
 module.exports = {
+	airdrop: {
+		account: 'DDK10720340277000928808',
+		stakeRewardPercent: 10,
+		referralPercentPerLevel: [5, 3, 2, 2, 1, 1, 1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.5, 0.5, 0.5]
+	},
 	activeDelegates: 3,
 	maxVotes:4,
 	maxVotesPerTransaction: 3,
@@ -71,7 +76,6 @@ module.exports = {
 	maxSharedTxs: 100,
 	maxSignaturesLength: 196 * 256,
 	maxTxsPerBlock: 25,
-	minBroadhashConsensus: 0,
 	nethashes: [
 		// Mainnet
 		'ed14889723f24ecc54871d058d98ce91ff2f973192075c0155ba2b7b70ad2511',
@@ -114,7 +118,7 @@ module.exports = {
 	froze : {
 		endTime : 48,
 		rTime : 8,
-		vTime : 2,
+		vTime : 0, // TODO: restore 2
 		milestone : 8, //for testing, taking 2 min
 		rewards: {
 			milestones: [
@@ -126,7 +130,9 @@ module.exports = {
 				2  // 2% For 31 months and above
 			],
 			distance: 30, // Distance between each milestone is 6 months
-		}
+		},
+        rewardVoteCount: 2,  // TODO: restore 4 and up to footer of file
+        unstakeVoteCount :4  // TODO: restore 27 and up to footer of file
 	},
 	defaultLock: 0
 };

@@ -4,10 +4,10 @@
 let node = {};
 let Rounds = require('../modules/rounds.js');
 let slots = require('../helpers/slots.js');
-
+const modulesLoader = require('./common/initModule').modulesLoader;
 // Requires
 node.bignum = require('../helpers/bignum.js');
-node.config = require('../config.json');
+node.config = modulesLoader.config;
 node.constants = require('../helpers/constants.js');
 node.dappCategories = require('../helpers/dappCategories.js');
 node.dappTypes = require('../helpers/dappTypes.js');
@@ -20,7 +20,7 @@ node.expect = require('chai').expect;
 node.chai = require('chai');
 node.chai.config.includeStack = true;
 node.chai.use(require('chai-bignumber')(node.bignum));
-//node.ddk = require('./ddk-js');
+node.ddk = require('lisk-js');
 node.supertest = require('supertest');
 require('colors');
 
@@ -66,8 +66,7 @@ node.gAccount = {
 	balance: '10000000000000000'
 };
 
-// Optional logging
-if (process.env.SILENT === 'true') {
+if (node.config.silent === 'true') {
 	node.debug = function () {};
 } else {
 	node.debug = console.log;

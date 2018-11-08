@@ -56,6 +56,7 @@ function Transactions(cb, scope) {
 	__private.transactionPool = new TransactionPool(
 		scope.config.broadcasts.broadcastInterval,
 		scope.config.broadcasts.releaseLimit,
+		scope.config.transactions.maxTxsPerQueue,
 		scope.logic.transaction,
 		scope.bus,
 		scope.logger
@@ -110,8 +111,11 @@ __private.list = function (filter, cb) {
 		ownerAddress: null,
 		ownerPublicKey: null,
 		stakedAmount: '"t_stakedAmount" = ${stakedAmount}',
+		stakeId: '"t_stakedId" = ${stakedId}',
 		trsName: '"t_trsName" = ${trsName}',
-		groupBonus: '"t_groupBonus" = ${groupBonus}'
+		groupBonus: '"t_groupBonus" = ${groupBonus}',
+		reward: '"t_reward" = ${reward}',
+		pendingGroupBonus: '"t_pendingGroupBonus" = ${pendingGroupBonus}'
 	};
 	let owner = '';
 	let isFirstWhere = true;
@@ -872,20 +876,19 @@ Transactions.prototype.shared = {
 
 									let transaction;
 
-									try {
-										transaction = library.logic.transaction.create({
-											type: (req.body.transactionRefer) ? (transactionTypes.REFER) : (transactionTypes.SEND),
-											amount: req.body.amount,
-											sender: account,
-											recipientId: recipientId,
-											keypair: keypair,
-											secondKeypair: secondKeypair
-										});
-									} catch (e) {
+									library.logic.transaction.create({
+										type: (req.body.transactionRefer) ? (transactionTypes.REFER) : (transactionTypes.SEND),
+										amount: req.body.amount,
+										sender: account,
+										recipientId: recipientId,
+										keypair: keypair,
+										secondKeypair: secondKeypair
+									}).then((transactionReferSend) => {
+										transaction = transactionReferSend;
+										modules.transactions.receiveTransactions([transaction], true, cb);
+									}).catch((e) => {
 										return setImmediate(cb, e.toString());
-									}
-
-									modules.transactions.receiveTransactions([transaction], true, cb);
+									});
 								});
 							});
 						} else {
@@ -915,20 +918,19 @@ Transactions.prototype.shared = {
 
 								let transaction;
 
-								try {
-									transaction = library.logic.transaction.create({
-										type: (req.body.transactionRefer) ? (transactionTypes.REFER) : (transactionTypes.SEND),
-										amount: req.body.amount,
-										sender: account,
-										recipientId: recipientId,
-										keypair: keypair,
-										secondKeypair: secondKeypair
-									});
-								} catch (e) {
+								library.logic.transaction.create({
+									type: (req.body.transactionRefer) ? (transactionTypes.REFER) : (transactionTypes.SEND),
+									amount: req.body.amount,
+									sender: account,
+									recipientId: recipientId,
+									keypair: keypair,
+									secondKeypair: secondKeypair
+								}).then((transactionReferSend) => {
+									transaction = transactionReferSend;
+									modules.transactions.receiveTransactions([transaction], true, cb);
+								}).catch((e) => {
 									return setImmediate(cb, e.toString());
-								}
-
-								modules.transactions.receiveTransactions([transaction], true, cb);
+								});
 							});
 						}
 					});

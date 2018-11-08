@@ -1,18 +1,22 @@
 {
-    "port": 7001,
-    "address": "127.0.0.1",
+    "port": 7007,
+    "serverProtocol": "http",
+    "serverHost": "10.5.0.5",
+    "serverPort": 7007,
+    "serverUrl": "http://10.5.0.5:7007",
+    "address": "10.5.0.5",
     "version": "0.9.9a",
     "minVersion": ">=0.9.0",
     "fileLogLevel": "info",
-    "logFileName": "logs/ETP.log",
+    "logFileName": "logs/DDKHELLorWin.log",
     "consoleLogLevel": "none",
     "trustProxy": false,
     "topAccounts": false,
     "cacheEnabled": true,
     "db": {
-        "host": "127.0.0.1",
+        "host": "db",
         "port": 5432,
-        "database": "ddk3",
+        "database": "ddk",
         "user": "lisk",
         "poolSize": 95,
         "poolIdleTimeout": 30000,
@@ -22,8 +26,8 @@
         ]
     },
     "redis": {
-        "host": "127.0.0.1",
-        "port": 6380,
+        "host": "10.5.0.3",
+        "port": 6379,
         "db": 0
     },
     "api": {
@@ -31,14 +35,7 @@
         "access": {
             "public":true,
             "whiteList": [
-                "127.0.0.1",
-                "192.168.9.91",
-                "180.151.225.194",
-                "159.65.139.87",
-                "118.100.29.72",
-                "124.29.212.104",
-                "103.201.142.50",
-                "18.218.25.187"
+                "127.0.0.1"
             ]
         },
         "options": {
@@ -78,13 +75,10 @@
         "maxTxsPerQueue": 1000
     },
     "forging": {
-        "force": true,
+        "force": false,
         "access": {
             "whiteList": [
-                "127.0.0.1",
-                "192.168.9.91",
-                "180.151.225.194",
-                "118.100.29.72"
+                "127.0.0.1"
             ]
         }
     },
@@ -96,7 +90,7 @@
         "enabled": false,
         "options": {
             "port": 443,
-            "address": "159.65.139.248"
+            "address": "0.0.0.0"
         }
     },
     "dapp": {
@@ -114,8 +108,8 @@
     "app": {},
     "sender": {},
     "nethash": "da3ed6a45429278bac2666961289ca17ad86595d33b31037615d4b8e8f158bba",
-    "elasticsearchHost": "127.0.0.1",
-    "swaggerDomain": "127.0.0.1",
+    "elasticsearchHost": "10.5.0.2:9200",
+    "swaggerDomain": "159.65.139.248",
     "jwt": {
         "tokenLife": 300
     }

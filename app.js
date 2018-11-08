@@ -103,13 +103,6 @@ if (program.snapshot) {
 	);
 }
 
-if (process.env.NODE_ENV === 'test') {
-	appConfig.coverage = true;
-}
-
-// Define top endpoint availability
-process.env.TOP = appConfig.topAccounts;
-
 /**
  * The config object to handle ddk modules and ddk api.
  * It loads `modules` and `api` folders content.
@@ -163,8 +156,9 @@ let config = {
 //merge environment variables
 let env = require('./config/env');
 utils.merge(appConfig, env);
-appConfig.forging.secret = appConfig.forging.secret.split(',');
-
+if(appConfig.forging.hasOwnProperty('secret') && appConfig.forging.secret.length > 0) {
+	appConfig.forging.secret = appConfig.forging.secret.split(',');
+}
 // Trying to get last git commit
 try {
 	lastCommit = git.getLastCommit();
@@ -306,12 +300,32 @@ d.run(function () {
 			app.use(compression({ level: 9 }));
 			app.use(cors());
 			app.options('*', cors());
+			let socketIO;
 
 			let server = require('http').createServer(app);
 			let io = require('socket.io')(server);
+			if (!scope.config.ssl.enabled) {
+				socketIO = require('socket.io')(server);
+			}
+			
+			let privateKey, certificate, https, https_io;
+
+			if (scope.config.ssl.enabled) {
+				privateKey = fs.readFileSync(scope.config.ssl.options.key);
+				certificate = fs.readFileSync(scope.config.ssl.options.cert);
+
+				https = require('https').createServer({
+					key: privateKey,
+					cert: certificate,
+					ciphers: 'ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:' + 'ECDHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:DHE-RSA-AES256-SHA384:ECDHE-RSA-AES256-SHA256:DHE-RSA-AES256-SHA256:HIGH:' + '!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!SRP:!CAMELLIA'
+				}, app);
+
+				https_io = require('socket.io')(https);
+				socketIO = require('socket.io')(https);
+			}
 
 			// handled socket's connection event
-			io.on('connection', function (socket) {
+			socketIO.on('connection', function (socket) {
 				//IIFE: function to accept new socket.id in sockets array.
 				function acceptSocket(user, sockets) {
 					let userFound = false;
@@ -325,7 +339,7 @@ d.run(function () {
 					if (!userFound && user.address) {
 						sockets.push(user);
 					}
-					io.emit('updateConnected', sockets.length);
+					socketIO.sockets.emit('updateConnected', sockets.length);
 				}
 
 				socket.on('setUserAddress', function (data) {
@@ -341,26 +355,11 @@ d.run(function () {
 					sockets.forEach(function (user, index) {
 						if (user.socketId == socket.id) {
 							sockets.splice(index, 1);
-							io.sockets.emit('updateConnected', sockets.length);
+							socketIO.sockets.emit('updateConnected', sockets.length);
 						}
 					});
 				});
 			});
-
-			let privateKey, certificate, https, https_io;
-
-			if (scope.config.ssl.enabled) {
-				privateKey = fs.readFileSync(scope.config.ssl.options.key);
-				certificate = fs.readFileSync(scope.config.ssl.options.cert);
-
-				https = require('https').createServer({
-					key: privateKey,
-					cert: certificate,
-					ciphers: 'ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:' + 'ECDHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:DHE-RSA-AES256-SHA384:ECDHE-RSA-AES256-SHA256:DHE-RSA-AES256-SHA256:HIGH:' + '!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!SRP:!CAMELLIA'
-				}, app);
-
-				https_io = require('socket.io')(https);
-			}
 
 			cb(null, {
 				express: express,
@@ -504,7 +503,6 @@ d.run(function () {
 		db: function (cb) {
 			let db = require('./helpers/database.js');
 			db.connect(config.db, logger, cb);
-
 		},
 		/**
 		 * It tries to connect with redis server based on config. provided in config.json file
@@ -581,8 +579,8 @@ d.run(function () {
 				contract: ['config', function (scope, cb) {
 					new Contract(scope.config, scope.db, cb);
 				}],
-				vote: ['logger', 'schema', 'db', function (scope, cb) {
-					new Vote(scope.logger, scope.schema, scope.db, cb);
+				vote: ['logger', 'schema', 'db', 'frozen', function (scope, cb) {
+					new Vote(scope.logger, scope.schema, scope.db, scope.frozen, cb);
 				}],
 				migration: ['logger', 'db', function (scope, cb) {
 					new Migration(scope.logger, scope.db, cb);
@@ -639,7 +637,9 @@ d.run(function () {
 					let apiEndpointPath = config.api[moduleName][protocol];
 					try {
 						let ApiEndpoint = require(apiEndpointPath);
-						new ApiEndpoint(scope.modules[moduleName], scope.network.app, scope.logger, scope.modules.cache);
+						new ApiEndpoint(
+							scope.modules[moduleName], scope.network.app, scope.logger, scope.modules.cache, scope.config
+						);
 					} catch (e) {
 						scope.logger.error('Unable to load API endpoint for ' + moduleName + ' of ' + protocol, e);
 					}
@@ -666,7 +666,7 @@ d.run(function () {
 		 * @param {nodeStyleCallback} cb - Callback function with `scope.network`.
 		 */
 		listen: ['ready', function (scope, cb) {
-			scope.network.server.listen(scope.config.app.port, scope.config.address, function (err) {
+			scope.network.server.listen(scope.config.port, scope.config.address, function (err) {
 				scope.logger.info('ddk started: ' + scope.config.address + ':' + scope.config.app.port);
 
 				if (!err) {
@@ -716,7 +716,6 @@ d.run(function () {
 			//require('./helpers/accountCreateETPS').AccountCreateETPS(scope);
 		
 			cronjob.startJob('updateDataOnElasticSearch');
-			cronjob.startJob('checkFrozeOrders');
 			cronjob.startJob('archiveLogFiles');
 			cronjob.startJob('unlockLockedUsers');
 			

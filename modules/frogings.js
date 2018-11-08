@@ -7,7 +7,6 @@ let TransactionPool = require('../logic/transactionPool.js');
 let transactionTypes = require('../helpers/transactionTypes.js');
 let Frozen = require('../logic/frozen.js');
 let ref_sql = require('../sql/referal_sql');
-let env = process.env;
 let constants = require('../helpers/constants.js');
 let cache = require('./cache.js');
 let slots = require('../helpers/slots');
@@ -55,6 +54,7 @@ function Frogings (cb, scope) {
 	__private.transactionPool = new TransactionPool(
 		scope.config.broadcasts.broadcastInterval,
 		scope.config.broadcasts.releaseLimit,
+		scope.config.transactions.maxTxsPerQueue,
 		scope.logic.transaction,
 		scope.bus,
 		scope.logger
@@ -72,87 +72,12 @@ function Frogings (cb, scope) {
  * 10 percent of Reward send to the Direct introducer for staking the amount by it's sponsor.
  * Reward is send through the main account.
  * Disable refer option when main account balance becomes zero.
- * @param {stake_amount} - Amount stake by the user.
- * @param {address} - Address of user which staked the amount.
- * @param {cb} - callback function.
+ * @param {reward} number - reward for referral user
+ * @param {address} string - Address of user which staked the amount.
+ * @param {introducerAddress} string - Address of user which get reward and introduce address to ddk.
+ * @param {transactionId} string - stake transaction id.
  * @author - Satish Joshi 
  */
-
-Frogings.prototype.referralReward = function (stake_amount, address, cb) {
-
-	let sponsor_address = address;
-	let introducerReward = {},
-		i = 0;
-
-	library.db.query(ref_sql.referLevelChain, {
-		address: sponsor_address
-	}).then(function (user) {
-
-		if (user.length != 0 && user[0].level != null) {
-			
-			let sponsorId = user[0].level;
-
-			introducerReward[sponsorId[i]] = (((env.STAKE_REWARD) * stake_amount) / 100);
-
-			let hash = Buffer.from(JSON.parse(library.config.users[6].keys));
-			let keypair = library.ed.makeKeypair(hash);
-			let publicKey = keypair.publicKey.toString('hex');
-			library.balancesSequence.add(function (reward_cb) {
-				modules.accounts.getAccount({publicKey: publicKey}, function(err, account) {
-					if (err) {
-						return setImmediate(cb, err);
-					}
-					let transaction;
-					let secondKeypair = null;
-					account.publicKey = publicKey;
-	
-					try {
-						transaction = library.logic.transaction.create({
-							type: transactionTypes.REFER,
-							amount: introducerReward[sponsorId[i]],
-							sender: account,
-							recipientId: sponsorId[i],
-							keypair: keypair,
-							secondKeypair: secondKeypair,
-							trsName: "DIRECTREF"
-						});
-					} catch (e) {
-						return setImmediate(cb, e.toString());
-					}
-					modules.transactions.receiveTransactions([transaction], true, reward_cb);
-				});
-			}, function (err, transaction) {
-				if (err) {
-					return setImmediate(cb, err);
-				}
-				else {
-					// (async function(){
-						library.db.none(ref_sql.updateRewardTypeTransaction,{
-							trsId: transaction[0].id,
-							sponsorAddress: sponsor_address,
-							introducer_address: sponsorId[i],
-							reward: introducerReward[sponsorId[i]],
-							level: "Level 1",
-							transaction_type: "DIRECTREF",
-							time: slots.getTime()
-						}).then(function(){
-							return setImmediate(cb, null);
-						}).catch(function(err){
-							return setImmediate(cb,err);
-						});
-					// }());
-				}
-			});
-		} else {
-			library.logger.info("Direct Introducer Reward Info : No referrals or any introducer found");
-			return setImmediate(cb, null);
-		}
-
-	}).catch(function (err) {
-		return setImmediate(cb, err);
-	});
-};
-
 
 // Events
 /**
@@ -307,7 +232,6 @@ Frogings.prototype.shared = {
 
 			let hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
 			let keypair = library.ed.makeKeypair(hash);
-			let publicKey = keypair.publicKey.toString('hex');
 
 			if (req.body.publicKey) {
 				if (keypair.publicKey.toString('hex') !== req.body.publicKey) {
@@ -316,8 +240,11 @@ Frogings.prototype.shared = {
 			}
 
 			library.balancesSequence.add(function (cb) {
-				if (req.body.multisigAccountPublicKey && req.body.multisigAccountPublicKey !== keypair.publicKey.toString('hex')) {
-					modules.accounts.getAccount({ publicKey: req.body.multisigAccountPublicKey }, function (err, account) {
+				if (
+					req.body.multisigAccountPublicKey &&
+					req.body.multisigAccountPublicKey !== keypair.publicKey.toString('hex')
+				) {
+					modules.accounts.getAccount({ publicKey: req.body.multisigAccountPublicKey }, (err, account) => {
 						if (err) {
 							return setImmediate(cb, err);
 						}
@@ -359,25 +286,28 @@ Frogings.prototype.shared = {
 								secondKeypair = library.ed.makeKeypair(secondHash);
 							}
 
-							if ((req.body.freezedAmount + (constants.fees.froze * req.body.freezedAmount)/100 + parseInt(account.totalFrozeAmount)) > account.balance) {
+							if (
+								(
+									req.body.freezedAmount +
+									(constants.fees.froze * req.body.freezedAmount)/100 +
+									parseInt(account.totalFrozeAmount)
+								) > account.balance
+							) {
 								return setImmediate(cb, 'Insufficient balance');
-							} 
-
-							let transaction;
-
-							try {
-								transaction = library.logic.transaction.create({
-									type: transactionTypes.STAKE,
-									freezedAmount: req.body.freezedAmount,
-									sender: account,
-									keypair: keypair,
-									secondKeypair: secondKeypair,
-									requester: keypair
-								});
-							} catch (e) {
-								return setImmediate(cb, e.toString());
 							}
-							modules.transactions.receiveTransactions([transaction], true, cb);
+
+							library.logic.transaction.create({
+								type: transactionTypes.STAKE,
+								freezedAmount: req.body.freezedAmount,
+								sender: account,
+								keypair: keypair,
+								secondKeypair: secondKeypair,
+								requester: keypair
+							}).then((transactionStake) => {
+								modules.transactions.receiveTransactions([transactionStake], true, cb);
+							}).catch((e) => {
+								return setImmediate(cb, e.toString());
+							});
 						});
 
 					});
@@ -402,25 +332,27 @@ Frogings.prototype.shared = {
 							secondKeypair = library.ed.makeKeypair(secondHash);
 						}
 						
-						if ((req.body.freezedAmount + (constants.fees.froze * req.body.freezedAmount)/100 + parseInt(account.totalFrozeAmount)) > account.balance) {
+						if (
+							(
+								req.body.freezedAmount +
+								(constants.fees.froze * req.body.freezedAmount)/100 +
+								parseInt(account.totalFrozeAmount)
+							) > account.balance
+						) {
 							return setImmediate(cb, 'Insufficient balance');
 						} 
 
-						let transaction;
-
-						try {
-							transaction = library.logic.transaction.create({
-								type: transactionTypes.STAKE,
-								freezedAmount: req.body.freezedAmount,
-								sender: account,
-								keypair: keypair,
-								secondKeypair: secondKeypair
-							});
-						} catch (e) {
+						library.logic.transaction.create({
+							type: transactionTypes.STAKE,
+							freezedAmount: req.body.freezedAmount,
+							sender: account,
+							keypair: keypair,
+							secondKeypair: secondKeypair
+						}).then((transactionStake) => {
+							modules.transactions.receiveTransactions([transactionStake], true, cb);
+						}).catch((e) => {
 							return setImmediate(cb, e.toString());
-						}
-
-						modules.transactions.receiveTransactions([transaction], true, cb);
+						});
 					});
 				}
 			}, function (err, transaction) {
@@ -428,35 +360,9 @@ Frogings.prototype.shared = {
 					return setImmediate(cb, err);
 				}
 				library.network.io.sockets.emit('updateTotalStakeAmount', null);
-
-				library.db.one(ref_sql.checkBalance, {
-					sender_address: env.SENDER_ADDRESS
-				}).then(function (bal) {
-					let balance = parseFloat(bal.u_balance);
-					if (balance > 1000) {
-						self.referralReward(req.body.freezedAmount, accountData.address, function (err) {
-							if (err) {
-								library.logger.error(err);
-							}
-							return setImmediate(cb, null, {
-								transaction: transaction[0],
-								referStatus: true
-							});
-						});
-					} else {
-						cache.prototype.isExists("referStatus", function (err, exist) {
-							if (!exist) {
-								cache.prototype.setJsonForKey("referStatus", false);
-							}
-							return setImmediate(cb, null, {
-								transaction: transaction[0],
-								referStatus: false
-							});
-						});
-					}
-				}).catch(function (err) {
-					library.logger.error(err.stack);
-					return setImmediate(cb, err);
+				return setImmediate(cb, null, {
+					transaction: transaction[0],
+					referStatus: true
 				});
 			});
 		});

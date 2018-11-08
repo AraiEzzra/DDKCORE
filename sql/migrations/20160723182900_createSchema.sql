@@ -40,13 +40,16 @@ CREATE TABLE IF NOT EXISTS "trs"(
   "recipientId" VARCHAR(25),
   "amount" BIGINT NOT NULL,
   "stakedAmount" BIGINT NOT NULL,
+  "stakeId" VARCHAR(20),
   "groupBonus" BIGINT,
+  "pendingGroupBonus" BIGINT,
   "fee" BIGINT NOT NULL,
   "signature" bytea NOT NULL,
   "signSignature" bytea,
   "requesterPublicKey" bytea,
   "signatures" TEXT,
   "trsName" VARCHAR(20) NOT NULL,
+  "reward" TEXT,
   FOREIGN KEY("blockId") REFERENCES "blocks"("id") ON DELETE CASCADE
 );
 
@@ -63,7 +66,8 @@ CREATE TABLE IF NOT EXISTS "stake_orders"(
   "voteCount" INT DEFAULT 0,
   "nextVoteMilestone" INT NOT NULL,
   "isVoteDone" BOOLEAN DEFAULT FALSE,
-  "isTransferred" INT DEFAULT 0
+  "isTransferred" INT DEFAULT 0,
+  "airdropReward" json
 );
 
 CREATE TABLE IF NOT EXISTS "signatures"(
@@ -81,6 +85,9 @@ CREATE TABLE IF NOT EXISTS "delegates"(
 CREATE TABLE IF NOT EXISTS "votes"(
   "votes" TEXT,
   "transactionId" VARCHAR(20) NOT NULL,
+  "reward" BIGINT,
+  "unstake" BIGINT,
+  "airdropReward" json,
   FOREIGN KEY("transactionId") REFERENCES "trs"("id") ON DELETE CASCADE
 );
 

@@ -1081,25 +1081,24 @@ DApps.prototype.internal = {
 
 				let transaction;
 
-				try {
-					transaction = library.logic.transaction.create({
-						type: transactionTypes.DAPP,
-						sender: account,
-						keypair: keypair,
-						secondKeypair: secondKeypair,
-						category: dapp.category,
-						name: dapp.name,
-						description: dapp.description,
-						tags: dapp.tags,
-						dapp_type: dapp.type,
-						link: dapp.link,
-						icon: dapp.icon
-					});
-				} catch (e) {
+				library.logic.transaction.create({
+					type: transactionTypes.DAPP,
+					sender: account,
+					keypair: keypair,
+					secondKeypair: secondKeypair,
+					category: dapp.category,
+					name: dapp.name,
+					description: dapp.description,
+					tags: dapp.tags,
+					dapp_type: dapp.type,
+					link: dapp.link,
+					icon: dapp.icon
+				}).then((transactionDAPP) =>{
+					transaction = transactionDAPP;
+					modules.transactions.receiveTransactions([transaction], true, cb);
+				}).catch((e) => {
 					return setImmediate(cb, e.toString());
-				}
-
-				modules.transactions.receiveTransactions([transaction], true, cb);
+				});
 			});
 		}, function (err, transaction) {
 			if (err) {
@@ -1497,21 +1496,20 @@ DApps.prototype.internal = {
 
 							let transaction;
 
-							try {
-								transaction = library.logic.transaction.create({
-									type: transactionTypes.IN_TRANSFER,
-									amount: req.body.amount,
-									sender: account,
-									keypair: keypair,
-									requester: keypair,
-									secondKeypair: secondKeypair,
-									dappId: req.body.dappId
-								});
-							} catch (e) {
+							library.logic.transaction.create({
+								type: transactionTypes.IN_TRANSFER,
+								amount: req.body.amount,
+								sender: account,
+								keypair: keypair,
+								requester: keypair,
+								secondKeypair: secondKeypair,
+								dappId: req.body.dappId
+							}).then((transactionInTransfer) =>{
+								transaction = transactionInTransfer;
+								modules.transactions.receiveTransactions([transaction], true, cb);
+							}).catch((e) => {
 								return setImmediate(cb, e.toString());
-							}
-
-							modules.transactions.receiveTransactions([transaction], true, cb);
+							});
 						});
 					});
 				} else {
@@ -1537,20 +1535,19 @@ DApps.prototype.internal = {
 
 						let transaction;
 
-						try {
-							transaction = library.logic.transaction.create({
-								type: transactionTypes.IN_TRANSFER,
-								amount: req.body.amount,
-								sender: account,
-								keypair: keypair,
-								secondKeypair: secondKeypair,
-								dappId: req.body.dappId
-							});
-						} catch (e) {
+						library.logic.transaction.create({
+							type: transactionTypes.IN_TRANSFER,
+							amount: req.body.amount,
+							sender: account,
+							keypair: keypair,
+							secondKeypair: secondKeypair,
+							dappId: req.body.dappId
+						}).then((transactionRefer) =>{
+							transaction = transactionRefer;
+							modules.transactions.receiveTransactions([transaction], true, cb);
+						}).catch((e) => {
 							return setImmediate(cb, e.toString());
-						}
-
-						modules.transactions.receiveTransactions([transaction], true, cb);
+						});
 					});
 				}
 			}, function (err, transaction) {
@@ -1618,23 +1615,22 @@ DApps.prototype.internal = {
 
 							let transaction;
 
-							try {
-								transaction = library.logic.transaction.create({
-									type: transactionTypes.OUT_TRANSFER,
-									amount: req.body.amount,
-									sender: account,
-									recipientId: req.body.recipientId,
-									keypair: keypair,
-									secondKeypair: secondKeypair,
-									requester: keypair,
-									dappId: req.body.dappId,
-									transactionId: req.body.transactionId
-								});
-							} catch (e) {
+							library.logic.transaction.create({
+								type: transactionTypes.OUT_TRANSFER,
+								amount: req.body.amount,
+								sender: account,
+								recipientId: req.body.recipientId,
+								keypair: keypair,
+								secondKeypair: secondKeypair,
+								requester: keypair,
+								dappId: req.body.dappId,
+								transactionId: req.body.transactionId
+							}).then((transactionRefer) =>{
+								transaction = transactionRefer;
+								modules.transactions.receiveTransactions([transaction], true, cb);
+							}).catch((e) => {
 								return setImmediate(cb, e.toString());
-							}
-
-							modules.transactions.receiveTransactions([transaction], true, cb);
+							});
 						});
 					});
 				} else {
@@ -1660,22 +1656,21 @@ DApps.prototype.internal = {
 
 						let transaction;
 
-						try {
-							transaction = library.logic.transaction.create({
-								type: transactionTypes.OUT_TRANSFER,
-								amount: req.body.amount,
-								sender: account,
-								recipientId: req.body.recipientId,
-								keypair: keypair,
-								secondKeypair: secondKeypair,
-								dappId: req.body.dappId,
-								transactionId: req.body.transactionId
-							});
-						} catch (e) {
+						library.logic.transaction.create({
+							type: transactionTypes.OUT_TRANSFER,
+							amount: req.body.amount,
+							sender: account,
+							recipientId: req.body.recipientId,
+							keypair: keypair,
+							secondKeypair: secondKeypair,
+							dappId: req.body.dappId,
+							transactionId: req.body.transactionId
+						}).then((transactionRefer) =>{
+							transaction = transactionRefer;
+							modules.transactions.receiveTransactions([transaction], true, cb);
+						}).catch((e) => {
 							return setImmediate(cb, e.toString());
-						}
-
-						modules.transactions.receiveTransactions([transaction], true, cb);
+						});
 					});
 				}
 			}, function (err, transaction) {

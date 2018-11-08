@@ -525,21 +525,20 @@ Multisignatures.prototype.shared = {
 							scope.secondKeypair = library.ed.makeKeypair(scope.secondHash);
 						}
 
-						try {
-							scope.transaction = library.logic.transaction.create({
-								type: transactionTypes.MULTI,
-								sender: account,
-								keypair: scope.keypair,
-								secondKeypair: scope.secondKeypair,
-								min: req.body.min,
-								keysgroup: req.body.keysgroup,
-								lifetime: req.body.lifetime
-							});
-						} catch (e) {
+						library.logic.transaction.create({
+							type: transactionTypes.MULTI,
+							sender: account,
+							keypair: scope.keypair,
+							secondKeypair: scope.secondKeypair,
+							min: req.body.min,
+							keysgroup: req.body.keysgroup,
+							lifetime: req.body.lifetime
+						}).then((transactionMulti) => {
+							scope.transaction = transactionMulti;
+							modules.transactions.receiveTransactions([transaction], true, seriesCb);
+						}).catch((e) => {
 							return setImmediate(seriesCb, e.toString());
-						}
-
-						modules.transactions.receiveTransactions([scope.transaction], true, seriesCb);
+						});
 					});
 				}
 			}, function (err) {

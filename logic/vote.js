@@ -4,6 +4,8 @@ let exceptions = require('../helpers/exceptions.js');
 let Diff = require('../helpers/diff.js');
 let _ = require('lodash');
 let sql = require('../sql/accounts.js');
+let slots = require('../helpers/slots.js');
+const transactionTypes = require('../helpers/transactionTypes');
 
 // Private fields
 let modules, library, self;
@@ -18,13 +20,17 @@ let modules, library, self;
  * @constructor
  * @param {Object} logger
  * @param {ZSchema} schema
+ * @param {Object} db
+ * @param {Object} frozen
+ * @param {Function} cb
  */
-function Vote(logger, schema, db, cb) {
+function Vote(logger, schema, db, frozen, cb) {
 	self = this;
 	library = {
 		db: db,
 		logger: logger,
 		schema: schema,
+        frozen: frozen
 	};
 	if (cb) {
 		return setImmediate(cb, null, this);
@@ -52,10 +58,25 @@ Vote.prototype.bind = function (delegates, rounds, accounts) {
  * @param {transaction} trs
  * @return {transaction} trs with new data
  */
-Vote.prototype.create = function (data, trs) {
-	trs.recipientId = data.sender.address;
+Vote.prototype.create = async function (data, trs) {
+    const senderId = data.sender.address;
+    const totals = await library.frozen.calculateTotalRewardAndUnstake(senderId);
+    const airdropReward = await library.frozen.getAirdropReward(senderId, totals.reward, data.type);
+
 	trs.asset.votes = data.votes;
-	trs.trsName = data.votes[0][0] == "+" ? "VOTE" : "DOWNVOTE";
+	trs.asset.reward = totals.reward || 0;
+	trs.asset.unstake = totals.unstake || 0;
+    trs.amount = totals.reward;
+    trs.asset.airdropReward = {
+        withAirdropReward : airdropReward.allowed,
+        sponsors: airdropReward.sponsors,
+		totalReward: airdropReward.total
+    };
+    if (airdropReward.allowed) {
+        trs.amount += airdropReward.total;
+    }
+    trs.recipientId = data.sender.address;
+    trs.trsName = data.votes[0][0] == "+" ? "VOTE" : "DOWNVOTE";
 	return trs;
 };
 
@@ -65,12 +86,13 @@ Vote.prototype.create = function (data, trs) {
  * @return {number} fee
  */
 Vote.prototype.calculateFee = function (trs, sender) {
-	return (parseInt(sender.totalFrozeAmount) * constants.fees.vote) / 100;
+	return 1;
+	// return (parseInt(sender.totalFrozeAmount) * constants.fees.vote) / 100;
 };
 
 /**
  * Validates transaction votes fields and for each vote calls verifyVote.
- * @implements {verifyVote}
+ * @implements {verifysendStakingRewardVote}
  * @implements {checkConfirmedDelegates}
  * @param {transaction} trs
  * @param {account} sender
@@ -99,25 +121,38 @@ Vote.prototype.verify = function (trs, sender, cb) {
 		return setImmediate(cb, ['Voting limit exceeded. Maximum is', constants.maxVotesPerTransaction, 'votes per transaction'].join(' '));
 	}
 
-	async.eachSeries(trs.asset.votes, function (vote, eachSeriesCb) {
-		self.verifyVote(vote, function (err) {
-			if (err) {
-				return setImmediate(eachSeriesCb, ['Invalid vote at index', trs.asset.votes.indexOf(vote), '-', err].join(' '));
-			} else {
-				return setImmediate(eachSeriesCb);
-			}
-		});
-	}, function (err) {
-		if (err) {
-			return setImmediate(cb, err);
-		} else {
+	(new Promise((resolve, reject) => {
+        async.eachSeries(trs.asset.votes, function (vote, eachSeriesCb) {
+            self.verifyVote(vote, function (err) {
+                if (err) {
+                    return setImmediate(eachSeriesCb, ['Invalid vote at index', trs.asset.votes.indexOf(vote), '-', err].join(' '));
+                } else {
+                    return setImmediate(eachSeriesCb);
+                }
+            });
+        }, function (err) {
+            if (err) {
+                reject(err);
+            }
+            resolve();
+        });
+	})).then( async () => {
 
-			if (trs.asset.votes.length > _.uniqBy(trs.asset.votes, function (v) { return v.slice(1); }).length) {
-				return setImmediate(cb, 'Multiple votes for same delegate are not allowed');
-			}
-
-			return self.checkConfirmedDelegates(trs, cb);
+		if (trs.asset.votes.length > _.uniqBy(trs.asset.votes, function (v) { return v.slice(1); }).length) {
+			throw 'Multiple votes for same delegate are not allowed';
 		}
+        const totals = await library.frozen.calculateTotalRewardAndUnstake(trs.senderId);
+        if (totals.reward !== trs.asset.reward) {
+            throw 'Verify failed: vote reward is corrupted';
+        }
+        if (totals.unstake !== trs.asset.unstake) {
+            throw 'Verify failed: vote unstake is corrupted';
+        }
+
+        await library.frozen.verifyAirdrop(trs);
+        return self.checkConfirmedDelegates(trs, cb);
+	}).catch((err) => {
+        return setImmediate(cb, err);
 	});
 };
 
@@ -237,7 +272,6 @@ Vote.prototype.apply = function (trs, block, sender, cb) {
 				round: modules.rounds.calc(block.height)
 			}, seriesCb);
 		},
-		// call to logic during apply-> updateAndCheckVote
 		function (seriesCb) {
 			self.updateMemAccounts(
 				{
@@ -246,10 +280,17 @@ Vote.prototype.apply = function (trs, block, sender, cb) {
 				}
 				, function (err) {
 					if (err) {
-						return setImmediate(cb, err);
+						return setImmediate(seriesCb, err);
 					}
-					return setImmediate(cb, null);
+					return setImmediate(seriesCb, null);
 				});
+		},
+		function (seriesCb) {
+			self.updateAndCheckVote(trs)
+			.then(
+				() => setImmediate(seriesCb, null),
+				err => setImmediate(seriesCb, err),
+			);
 		}
 	], cb);
 };
@@ -394,9 +435,12 @@ Vote.prototype.dbRead = function (raw) {
 	if (!raw.v_votes) {
 		return null;
 	} else {
-		let votes = raw.v_votes.split(',');
+		const votes = raw.v_votes.split(',');
+        const reward = raw.v_reward || 0;
+		const unstake = raw.v_unstake || 0;
+        const airdropReward = raw.v_airdropReward || 0;
 
-		return { votes: votes };
+		return { votes: votes, reward: reward, unstake: unstake, airdropReward: airdropReward };
 	}
 };
 
@@ -404,7 +448,10 @@ Vote.prototype.dbTable = 'votes';
 
 Vote.prototype.dbFields = [
 	'votes',
-	'transactionId'
+	'transactionId',
+    'reward',
+    'unstake',
+    'airdropReward'
 ];
 
 /**
@@ -418,7 +465,10 @@ Vote.prototype.dbSave = function (trs) {
 		fields: this.dbFields,
 		values: {
 			votes: Array.isArray(trs.asset.votes) ? trs.asset.votes.join(',') : null,
-			transactionId: trs.id
+			transactionId: trs.id,
+			reward: trs.asset.reward || 0,
+            unstake: trs.asset.unstake || 0,
+            airdropReward: trs.asset.airdropReward || {}
 		}
 	};
 };
@@ -443,76 +493,37 @@ Vote.prototype.ready = function (trs, sender) {
 
 /**
  * Check and update vote milestone, vote count from stake_order and mem_accounts table
- * @param {voteInfo} voteInfo voteInfo have votes and senderId
+ * @param {Object} voteTransaction transaction data object
  * @return {null|err} return null if success else err 
  * 
  */
-Vote.prototype.updateAndCheckVote = function (voteInfo, cb) {
-	let votes = voteInfo.votes;
-	let senderId = voteInfo.senderId;
-
-	function checkUpvoteDownvote(waterCb) {
-
-		if ((votes[0])[0] === '+') {
-			return setImmediate(waterCb, null, 1);
-		} else {
-			return setImmediate(waterCb, null, 0);
-		}
-	}
-
-	function checkWeeklyVote(voteType, waterCb) {
-
-		if (voteType === 1) {
-			library.db.many(sql.checkWeeklyVote, {
-				senderId: senderId
-			})
-				.then(function (resp) {
-					if ((resp.length !== 0) && parseInt(resp[0].count) > 0) {
-						return setImmediate(waterCb, null, true, voteType);
-					} else {
-						return setImmediate(waterCb, null, false, voteType);
-					}
-				})
-				.catch(function (err) {
-					library.logger.error(err.stack);
-					return setImmediate(waterCb, err.toString());
-				});
-		} else {
-			return setImmediate(waterCb, null, false, voteType);
-		}
-	}
-
-	function updateStakeOrder(found, voteType, waterCb) {
-		if (found) {
-			library.db.none(sql.updateStakeOrder, {
-				senderId: senderId
-			})
-				.then(function () {
-					library.logger.info(senderId + ': update stake orders isvoteDone and count');
-					return setImmediate(waterCb, null, voteType);
-				})
-				.catch(function (err) {
-					library.logger.error(err.stack);
-					return setImmediate(waterCb, err.toString());
-				});
-		} else {
-			return setImmediate(waterCb, null, voteType);
-		}
-
-	}
-
-	async.waterfall([
-		checkUpvoteDownvote,
-		checkWeeklyVote,
-		updateStakeOrder
-	], function (err) {
-		if (err) {
-			library.logger.warn(err);
-			return setImmediate(cb, err);
-		}
-		return setImmediate(cb, null);
-	});
-
+Vote.prototype.updateAndCheckVote = async (voteTransaction) => {
+    const senderId = voteTransaction.senderId;
+    try {
+        // todo check if could change to tx
+        await library.db.task(async () => {
+            let availableToVote = true;
+            const queryResult = await library.db.one(sql.countAvailableStakeOrdersForVote, {
+                senderId: senderId,
+                currentTime: slots.getTime()
+            });
+            if(queryResult && queryResult.hasOwnProperty("count")) {
+                const count = parseInt(queryResult.count, 10);
+                availableToVote = count !== 0;
+            }
+            if(availableToVote) {
+                await library.db.none(sql.updateStakeOrder, {
+                    senderId: senderId,
+                    milestone: constants.froze.vTime, //TODO back to vTime * 60
+                    currentTime: slots.getTime()
+                });
+                await library.frozen.checkFrozeOrders(voteTransaction);
+            }
+        });
+    } catch (err) {
+        library.logger.warn(err);
+        throw err;
+    }
 };
 
 /**

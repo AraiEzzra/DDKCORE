@@ -60,31 +60,14 @@ exports.updateDataOnElasticSearch = {
 								//FIXME: Do further processing on successful indexing on elasticsearch server
 							})
 							.catch(function (err) {
-								library.logger.error('elasticsearch error :', err);
+								library.logger.error('elasticsearch error :'+ err);
 							});
 					}
 				})
 				.catch(function (err) {
-					library.logger.error('database error : ', err);
+					library.logger.error('database error : '+ err);
 				});
 		});
-	},
-	spawn: false
-};
-
-/** 
- * @desc checks pending stake rewards functionality every day at mid night.
-*/
-exports.checkFrozeOrders = {
-
-	on: '* * * * *',
-	job: function () {
-		let date = new Date();
-		//FIXME: comment or remove below statement once this goes live
-		library.logic.frozen.checkFrozeOrders();
-		if (date.getHours() === 10 && date.getMinutes() === 20) {
-			library.logic.frozen.checkFrozeOrders();
-		}
 	},
 	spawn: false
 };

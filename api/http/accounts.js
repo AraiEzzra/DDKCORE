@@ -42,9 +42,10 @@ let tokenValidator = require('../../tokenValidator');
  * @constructor
  * @param {Object} accountsModule - Module account instance.
  * @param {scope} app - Network app.
+ * @param config appConfig
  */
 
-function AccountsHttpApi (accountsModule, app) {
+function AccountsHttpApi (accountsModule, app, logger, cache, config) {
 
 	let router = new Router();
 
@@ -63,7 +64,8 @@ function AccountsHttpApi (accountsModule, app) {
 		'post /migrateData' : 'migrateData', 
 		'post /existingETPSUser/validate' : 'validateExistingUser',
 		'post /verifyUserToComment': 'verifyUserToComment',
-		'post /senderBalance': 'senderAccountBalance'
+		'post /senderBalance': 'senderAccountBalance',
+		'post /getMigratedUsers': 'getMigratedUsersList'
 	});
 
 	router.map(accountsModule.internal, {
@@ -82,16 +84,15 @@ function AccountsHttpApi (accountsModule, app) {
 		'get /generatenpNewPassphase':'generatenpNewPassphase',
 		'post /forgotEtpsPassword': 'forgotEtpsPassword'
 	});
-
-	if (process.env.DEBUG && process.env.DEBUG.toUpperCase() === 'TRUE') {
+	if (config.debug) {
 		router.map(accountsModule.internal, {'get /getAllAccounts': 'getAllAccounts'});
 	}
 
-	if (process.env.TOP && process.env.TOP.toUpperCase() === 'TRUE') {
+	if (config.topAccounts) {
 		router.get('/top', httpApi.middleware.sanitize('query', schema.top, accountsModule.internal.top));
 	}
-	app.use('/api/accounts/getBalance', tokenValidator);
-	app.use('/api/accounts/logout', tokenValidator);
+	app.use('/api/accounts/getBalance', (req, res, next) => tokenValidator(req, res, next, config.jwt.secret));
+	app.use('/api/accounts/logout', (req, res, next) => tokenValidator(req, res, next, config.jwt.secret));
 	httpApi.registerEndpoint('/api/accounts', app, router, accountsModule.isLoaded);
 }
 

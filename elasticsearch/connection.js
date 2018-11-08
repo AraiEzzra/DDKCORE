@@ -11,8 +11,8 @@
 */
 
 let elasticsearch = require('elasticsearch');
-let config = require('../config.json');
-let connectionHost = config.elasticsearchHost + ':9200' || 'localhost:9200';
+// TODO change elastic use as module with config (add to app.js)
+let connectionHost = process.env.ELASTICSEARCH_HOST || 'localhost:9200';
 
 let Client = new elasticsearch.Client({
 	hosts: connectionHost,

@@ -9,7 +9,6 @@ package-lock.json
 .vscode/
 public
 config.json
+genesisBlock.json
 .eslintrc.json
 .idea
-api_client/
-

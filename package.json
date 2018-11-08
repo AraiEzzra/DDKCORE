@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "start": "node app.js",
+    "debug": "node --inspect=0.0.0.0:9229 app.js",
     "test": "./node_modules/.bin/grunt test --verbose",
     "jenkins": "./node_modules/.bin/grunt jenkins --verbose",
     "eslint": "./node_modules/.bin/grunt eslint-nofix --verbose",
@@ -91,6 +92,7 @@
     "csv": "=1.1.1",
     "eslint-config-standard": "^11.0.0",
     "eslint-plugin-import": "^2.12.0",
+    "eslint-plugin-mocha": "^5.2.0",
     "eslint-plugin-node": "^6.0.1",
     "eslint-plugin-promise": "^3.8.0",
     "eslint-plugin-standard": "^3.1.0",
@@ -107,6 +109,7 @@
     "jsdox": "=0.4.10",
     "mocha": "^3.5.3",
     "moment": "^2.17.1",
+    "nyc": "^13.1.0",
     "sinon": "=1.17.7",
     "supertest": "=3.0.0",
     "rpc-websockets": "^4.2.6"

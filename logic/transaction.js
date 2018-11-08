@@ -22,6 +22,7 @@ let self, modules, __private = {};
  * - 5: DApp
  * - 6: InTransfer
  * - 7: OutTransfer
+ * - 8: STAKE
  */
 __private.types = {};
 
@@ -70,7 +71,7 @@ function Transaction (db, ed, schema, genesisblock, account, logger, config, net
  * @param {Object} data
  * @return {transaction} trs
  */
-Transaction.prototype.create = function (data) {
+Transaction.prototype.create = async function (data) {
 	if (!__private.types[data.type]) {
 		throw 'Unknown transaction type ' + data.type;
 	}
@@ -92,10 +93,11 @@ Transaction.prototype.create = function (data) {
 		asset: {},
 		stakedAmount: 0,
 		trsName: 'NA',
-		groupBonus:0
+		groupBonus:0,
+		reward: data.rewardPercentage || null
 	};
 
-	trs = __private.types[trs.type].create.call(this, data, trs);
+	trs = await __private.types[trs.type].create.call(this, data, trs);
 	trs.signature = this.sign(data.keypair, trs);
 
 	if (data.sender.secondSignature && data.secondKeypair) {
@@ -106,7 +108,7 @@ Transaction.prototype.create = function (data) {
 	if(trs.type === 9) {
 		trs.fee = 0;
 	} else {
-		trs.fee = __private.types[trs.type].calculateFee.call(this, trs, data.sender) || false;
+		trs.fee = __private.types[trs.type].calculateFee.call(this, trs, data.sender) || 0;
 	}
 	
 	return trs;
@@ -348,7 +350,7 @@ Transaction.prototype.checkBalance = function (amount, balance, trs, sender) {
 		return {
 			exceeded: exceeded,
 			error: exceeded ? [
-				'Account does not have enough ETP due to freeze amount:', sender.address,
+				'Account does not have enough DDK due to freeze amount:', sender.address,
 				'balance:', new bignum(sender[balance].toString() || '0').div(Math.pow(10, 8)),
 				'totalFreezeAmount :', new bignum(sender.totalFrozeAmount.toString()).div(Math.pow(10, 8))
 			].join(' ') : null
@@ -357,7 +359,7 @@ Transaction.prototype.checkBalance = function (amount, balance, trs, sender) {
 		return {
 			exceeded: exceeded,
 			error: exceeded ? [
-				'Account does not have enough ETP:', sender.address,
+				'Account does not have enough DDK:', sender.address,
 				'balance:', new bignum(sender[balance].toString() || '0').div(Math.pow(10, 8))
 			].join(' ') : null
 		};
@@ -603,8 +605,12 @@ Transaction.prototype.verify = function (trs, sender, requester, cb) {
 		}
 	}
 	
-	let fee = __private.types[trs.type].calculateFee.call(this, trs, sender) || false;
-	if ((trs.type !== 11 && trs.type !== 9 && trs.type !== 12) && (!fee || trs.fee !== fee)) {
+	let fee = __private.types[trs.type].calculateFee.call(this, trs, sender) || 0;
+	if (
+		(trs.type !== 11 && trs.type !== 9 && trs.type !== 12) &&
+		!(trs.type === 8 && trs.stakedAmount < 0) &&
+		(!fee || trs.fee !== fee)
+	) {
 		return setImmediate(cb, 'Invalid transaction fee');
 	}
 
@@ -941,12 +947,14 @@ Transaction.prototype.dbFields = [
 	'recipientId',
 	'amount',
 	'stakedAmount',
+	'stakeId',
 	'groupBonus',
 	'fee',
 	'signature',
 	'signSignature',
 	'signatures',
-	'trsName'
+	'trsName',
+	'reward'
 ];
 
 /**
@@ -995,12 +1003,14 @@ Transaction.prototype.dbSave = function (trs) {
 				recipientId: trs.recipientId || null,
 				amount: trs.amount,
 				stakedAmount: trs.stakedAmount,
+				stakeId: trs.stakeId || null,
 				groupBonus: trs.groupBonus,
 				fee: trs.fee,
 				signature: signature,
 				signSignature: signSignature,
 				signatures: trs.signatures ? trs.signatures.join(',') : null,
-				trsName: trs.trsName				
+				trsName: trs.trsName,
+				reward: trs.reward
 			}
 		}
 	];
@@ -1185,7 +1195,7 @@ Transaction.prototype.Referschema = {
 			maximum: constants.totalAmount
 		},
 		fee: {
-			type: 'boolean',
+			type: 'integer',
 			minimum: 0,
 			maximum: constants.totalAmount
 		},
@@ -1222,12 +1232,15 @@ Transaction.prototype.objectNormalize = function (trs) {
 			delete trs[i];
 		}
 	}
-	if (trs.type === 11 || trs.type === 12)
+	trs.fee = trs.fee || 0;
+
+	if (trs.type === 9 || trs.type === 11 || trs.type === 12)
 		var report = this.scope.schema.validate(trs, Transaction.prototype.Referschema);
 	else
 		var report = this.scope.schema.validate(trs, Transaction.prototype.schema);
 		
 	if (!report) {
+		console.log(trs);
 		throw 'Failed to validate transaction schema: ' + this.scope.schema.getLastErrors().map(function (err) {
 			return err.message;
 		}).join(', ');
@@ -1266,6 +1279,7 @@ Transaction.prototype.dbRead = function (raw) {
 			recipientPublicKey: raw.m_recipientPublicKey || null,
 			amount: parseInt(raw.t_amount),
 			stakedAmount: parseInt(raw.t_stakedAmount),
+			stakeId: raw.t_stakeId,
 			groupBonus: parseInt(raw.t_groupBonus),
 			fee: parseInt(raw.t_fee),
 			signature: raw.t_signature,
@@ -1273,7 +1287,9 @@ Transaction.prototype.dbRead = function (raw) {
 			signatures: raw.t_signatures ? raw.t_signatures.split(',') : [],
 			confirmations: parseInt(raw.confirmations),
 			asset: {},
-			trsName: raw.t_trsName
+			trsName: raw.t_trsName,
+			reward: raw.t_reward,
+			pendingGroupBonus: raw.t_pendingGroupBonus
 		};
 
 		if (!__private.types[tx.type]) {

@@ -35,7 +35,11 @@ Transfer.prototype.bind = function (accounts, rounds) {
 Transfer.prototype.create = function (data, trs) {
 	trs.recipientId = data.recipientId;
 	trs.amount = data.amount;
-	trs.trsName = 'SEND';
+	if(data.trsName) {
+		trs.trsName = data.trsName;
+	} else {
+		trs.trsName = 'SEND';
+	}
 	return trs;
 };
 /**
