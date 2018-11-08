@@ -354,10 +354,6 @@ Frozen.prototype.verifyAirdrop = async (trs) => {
 	) {
 		throw `Verify failed: ${trs.type === transactionTypes.STAKE ? 'stake': 'vote'} airdrop reward is corrupted`;
 	}
-	const totalTransactionAmount = (trs.asset.reward || 0) + trs.asset.airdropReward.totalReward;
-	if (totalTransactionAmount !== trs.amount) {
-		throw `Verify failed: ${trs.type === transactionTypes.STAKE ? 'stake': 'vote'} amount is corrupted`;
-	}
 };
 
 /**
