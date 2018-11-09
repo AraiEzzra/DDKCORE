@@ -1,4 +1,4 @@
-require('./rpc/getblockscount.js');
+require('./rpc/blockscount.js');
 
 // require('./unit/helpers/request-limiter.js');
 // require('./unit/logic/blockReward.js');

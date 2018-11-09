@@ -1,7 +1,7 @@
 const { createServerRPCMethod } = require('./../util');
 
 
-const METHOD_NAME = 'count';
+const METHOD_NAME = 'blockscount';
 
 /**
  * @param {WebSocketServer} wss
@@ -10,19 +10,19 @@ const METHOD_NAME = 'count';
  * @param {function} cdError - Application Error callback
  * @constructor
  */
-function Count (wss, params, scope, cdError) {
+function BlocksCount (wss, params, scope, cdError) {
 
   return new Promise(function (resolve) {
 
-    scope.modules.blocks.submodules.api.getBlock({body: params}, (error, result) => {
+    scope.modules.blocks.submodules.api.getBlocks({body: {limit: 1}}, (error, result) => {
 
       resolve(error
         ? {error}
-        : result);
+        : {count: result.count});
     });
 
   });
 
 }
 
-module.exports = createServerRPCMethod(METHOD_NAME, Count);
+module.exports = createServerRPCMethod(METHOD_NAME, BlocksCount);

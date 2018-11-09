@@ -46,12 +46,13 @@ const AddDelegate = require('./methods/adddelegate');
 /**
  *
  */
-const Count = require('./methods/count');
+const BlocksCount = require('./methods/blockscount');
 
 /**
  * modules.accounts.shared
  */
 const GetBalance = require('./methods/getbalance');
+const GetAccount = require('./methods/getaccount');
 const SetAccountAndGet = require('./methods/setaccountandget');
 
 
@@ -81,8 +82,9 @@ const methods = [
   Search,
   GetForgedByAccount,
   AddDelegate,
-  Count,
+  BlocksCount,
   GetBalance,
+  GetAccount,
   SetAccountAndGet,
 ];
 
