@@ -1,141 +1,140 @@
-var moment = require('moment');
-var util = require('util');
+const moment = require('moment');
+const buffer = require('buffer');
+const path = require('path');
 
-module.exports = function (grunt) {
-	let files = [
-		'logger.js',
-		'api/**/*.js',
-		'helpers/**/*.js',
-		'modules/**/*.js',
-		'logic/*.js',
-		'schema/**/*.js',
-		'sql/**/*.js',
-		'app.js'
-	];
+const config = require('./config.json');
 
-	let today = moment().format('HH:mm:ss DD/MM/YYYY');
+module.exports = (grunt) => {
+  const files = [
+    'logger.js',
+    'api/**/*.js',
+    'helpers/**/*.js',
+    'modules/**/*.js',
+    'logic/*.js',
+    'schema/**/*.js',
+    'sql/**/*.js',
+    'app.js',
+  ];
 
-	let config = require('./config.json');
+  const today = moment().format('HH:mm:ss DD/MM/YYYY');
 
-	let release_dir = __dirname + '/release/';
-	let version_dir = release_dir + config.version;
+  const releaseDir = path.join(__dirname, 'release');
+  const versionDir = path.join(releaseDir, config.version);
 
-	let maxBufferSize = require('buffer').kMaxLength - 1;
+  const maxBufferSize = buffer.kMaxLength - 1;
 
-	grunt.initConfig({
-		obfuscator: {
-			files: files,
-			entry: 'app.js',
-			out: 'release/app.js',
-			strings: true,
-			root: __dirname
-		},
+  grunt.initConfig({
+    obfuscator: {
+      files,
+      entry: 'app.js',
+      out: 'release/app.js',
+      strings: true,
+      root: __dirname,
+    },
 
-		exec: {
-			package: {
-				command: function () {
-					return [
-						util.format('mkdir -p %s', version_dir),
-						util.format('mkdir -p %s/logs', version_dir),
-						util.format('mkdir -p %s/pids', version_dir),
-						util.format('mkdir -p %s/public', version_dir),
-						util.format('cp %s/app.js %s', release_dir, version_dir),
-						util.format('cp %s/config.json %s', __dirname, version_dir),
-						util.format('cp %s/package.json %s', __dirname, version_dir),
-						util.format('cp %s/genesisBlock.json %s', __dirname, version_dir),
-						util.format('cp %s/LICENSE %s', __dirname, version_dir),
-						util.format('mkdir -p %s/sql/migrations', version_dir),
-						util.format('cp %s/sql/*.sql %s/sql/', __dirname, version_dir),
-						util.format('cp %s/sql/migrations/*.sql %s/sql/migrations/', __dirname, version_dir),
-						util.format('cd %s/public && mkdir -p ./static', __dirname),
-						'npm install && bower install && grunt release && cd ../',
-						util.format('cp %s/public/wallet.html %s/public/', __dirname, version_dir),
-						util.format('cp %s/public/loading.html %s/public/', __dirname, version_dir),
-						util.format('cp -Rf %s/public/images %s/public/', __dirname, version_dir),
-						util.format('cp -Rf %s/public/partials %s/public/', __dirname, version_dir),
-						util.format('cp -RfL %s/public/static %s/public/', __dirname, version_dir),
-						util.format('mkdir -p %s/public/node_modules', version_dir),
-						util.format('cp -Rf %s/public/node_modules/chart.js %s/public/node_modules', __dirname, version_dir),
-						util.format('mkdir -p %s/public/bower_components', version_dir),
-						util.format('mkdir -p %s/public/socket.io', version_dir),
-						util.format('cp -Rf %s/public/bower_components/jquery %s/public/bower_components', __dirname, version_dir),
-						util.format('cp -Rf %s/public/bower_components/materialize %s/public/bower_components', __dirname, version_dir),
-						util.format('cp -Rf %s/public/bower_components/blob %s/public/bower_components', __dirname, version_dir),
-						util.format('cp -Rf %s/public/bower_components/file-saver %s/public/bower_components', __dirname, version_dir)
-					].join(' && ');
-				}
-			},
+    exec: {
+      package: {
+        command: () => ([
+          `mkdir -p ${versionDir}`,
+          `mkdir -p ${versionDir}/logs`,
+          `mkdir -p ${versionDir}/pids`,
+          `mkdir -p ${versionDir}/public`,
+          `cp ${releaseDir}/app.js ${versionDir}`,
+          `cp ${__dirname}/config.json ${versionDir}`,
+          `cp ${__dirname}/package.json ${versionDir}`,
+          `cp ${__dirname}/genesisBlock.json ${versionDir}`,
+          `cp ${__dirname}/LICENSE ${versionDir}`,
+          `mkdir -p ${versionDir}/sql/migrations`,
+          `cp ${__dirname}/sql/*.sql ${versionDir}/sql/`,
+          `cp ${__dirname}/sql/migrations/*.sql ${versionDir}/sql/migrations/`,
+          `cd ${__dirname}/public && mkdir -p ./static', __dirname)`,
+          'npm install && bower install && grunt release && cd ../',
+          `cp ${__dirname}/public/wallet.html ${versionDir}/public/`,
+          `cp ${__dirname}/public/loading.html ${versionDir}/public/`,
+          `cp -Rf ${__dirname}/public/images ${versionDir}/public/`,
+          `cp -Rf ${__dirname}/public/partials ${versionDir}/public/`,
+          `cp -RfL ${__dirname}/public/static ${versionDir}/public/`,
+          `mkdir -p ${versionDir}/public/node_modules`,
+          `cp -Rf ${__dirname}/public/node_modules/chart.js ${versionDir}/public/node_modules`,
+          `mkdir -p ${versionDir}/public/bower_components`,
+          `mkdir -p ${versionDir}/public/socket.io`,
+          `cp -Rf ${__dirname}/public/bower_components/jquery ${versionDir}/public/bower_components`,
+          `cp -Rf ${__dirname}/public/bower_components/materialize ${versionDir}/public/bower_components`,
+          `cp -Rf ${__dirname}/public/bower_components/blob ${versionDir}/public/bower_components`,
+          `cp -Rf ${__dirname}/public/bower_components/file-saver ${versionDir}/public/bower_components`,
+        ].join(' && ')),
+      },
 
-			folder: {
-				command: 'mkdir -p ' + release_dir
-			},
+      folder: {
+        command: `mkdir -p ${releaseDir}`,
+      },
 
-			build: {
-				command: 'cd ' + version_dir + '/ && touch build && echo "v' + today + '" > build'
-			},
+      build: {
+        command: `cd ${versionDir}/ && touch build && echo "v${today}" > build`,
+      },
 
       coverage: {
         command: 'export NODE_ENV=testnet && ./node_modules/.bin/nyc ./node_modules/.bin/_mocha',
-        maxBuffer: maxBufferSize
+        maxBuffer: maxBufferSize,
       },
 
       coverageSingle: {
         command: 'export NODE_ENV=testnet && ./node_modules/.bin/nyc cover --dir test/.coverage-unit ./node_modules/.bin/_mocha $TEST',
-        maxBuffer: maxBufferSize
+        maxBuffer: maxBufferSize,
       },
 
-			fetchCoverage: {
-				command: 'rm -rf ./test/.coverage-func.zip; curl -o ./test/.coverage-func.zip $HOST/coverage/download',
-				maxBuffer: maxBufferSize
-			}
-		},
+      fetchCoverage: {
+        command: 'rm -rf ./test/.coverage-func.zip; curl -o ./test/.coverage-func.zip $HOST/coverage/download',
+        maxBuffer: maxBufferSize,
+      },
+    },
 
-		compress: {
-			main: {
-				options: {
-					archive: version_dir + '.tar.gz',
-					mode: 'tgz',
-					level: 6
-				},
-				files: [
-					{ expand: true, cwd: release_dir, src: [config.version + '/**'], dest: './' }
-				]
-			}
-		},
+    compress: {
+      main: {
+        options: {
+          archive: `${versionDir}.tar.gz`,
+          mode: 'tgz',
+          level: 6,
+        },
+        files: [
+          { expand: true, cwd: releaseDir, src: [`${config.version}/**`], dest: './' },
+        ],
+      },
+    },
 
-		eslint: {
-			options: {
-				configFile: '.eslintrc.json',
-				format: 'codeframe',
-				fix: false
-			},
-			target: [
-				'api',
-				'helpers',
-				'modules',
-				'logic',
-				'schema',
-				'tasks',
-				'test'
-			]
-		}
-	});
+    eslint: {
+      options: {
+        configFile: '.eslintrc.json',
+        format: 'codeframe',
+        fix: false,
+      },
+      target: [
+        'api/**/*.js',
+        'helpers/**/*.js',
+        'modules/**/*.js',
+        'logic/**/*.js',
+        'schema/**/*.js',
+        'tasks/**/*.js',
+        'test/**/*.js',
+      ],
+    },
+  });
 
-	grunt.loadTasks('tasks');
+  grunt.loadTasks('tasks');
 
-	grunt.loadNpmTasks('grunt-obfuscator');
-	grunt.loadNpmTasks('grunt-exec');
-	grunt.loadNpmTasks('grunt-contrib-compress');
-	grunt.loadNpmTasks('grunt-eslint');
+  grunt.loadNpmTasks('grunt-obfuscator');
+  grunt.loadNpmTasks('grunt-exec');
+  grunt.loadNpmTasks('grunt-contrib-compress');
+  grunt.loadNpmTasks('grunt-eslint');
 
-	grunt.registerTask('default', ['release']);
-	grunt.registerTask('release', ['exec:folder', 'obfuscator', 'exec:package', 'exec:build', 'compress']);
-	grunt.registerTask('jenkins', ['exec:coverageSingle']);
-	grunt.registerTask('eslint-nofix', ['eslint']);
-	grunt.registerTask('test', ['eslint', 'exec:coverage']);
+  grunt.registerTask('default', ['release']);
+  grunt.registerTask('release', ['exec:folder', 'obfuscator', 'exec:package', 'exec:build', 'compress']);
+  grunt.registerTask('jenkins', ['exec:coverageSingle']);
+  grunt.registerTask('eslint-nofix', ['eslint']);
+  grunt.registerTask('test', ['exec:coverage']);
 
-	grunt.registerTask('eslint-fix', 'Run eslint and fix formatting', function () {
-		grunt.config.set('eslint.options.fix', true);
-		grunt.task.run('eslint');
-	});
+  grunt.registerTask('eslint-fix', 'Run eslint and fix formatting', () => {
+    grunt.config.set('eslint.options.fix', true);
+    grunt.task.run('eslint');
+  });
 };
