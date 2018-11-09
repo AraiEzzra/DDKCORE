@@ -80,10 +80,6 @@ Frozen.prototype.create = async function (data, trs) {
 		totalReward: airdropReward.total
     };
 
-    if (airdropReward.allowed) {
-        trs.amount = airdropReward.total;
-    }
-
 	if (data.stakeId) {
 		trs.stakeId = data.stakeId;
 	}
