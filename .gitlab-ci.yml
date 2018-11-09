@@ -1,0 +1,12 @@
+stages:
+ - update
+
+updating:
+ stage: update
+ only:
+   - tags
+ tags:
+   - ssh_update_ddk_nodes
+ script:
+   - cd /home/provision/DDK.ORCHESTRATION.PROCESES/DDK.Delegat.Install.Environment/
+   - ./update.node.4rom.demo.on.all.targets.sh inventory.test.env
