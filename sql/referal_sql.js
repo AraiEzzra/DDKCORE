@@ -41,6 +41,8 @@ let Referals = {
 
     updateRewardTypeTransaction : 'INSERT INTO referral_transactions ("id","sponsor_address","introducer_address","reward","sponsor_level","transaction_type","reward_time") VALUES (${trsId},${sponsorAddress},${introducer_address},${reward},${level},${transaction_type},${time})',
 
+    deleteRewardTypeTransaction : 'DELETE FROM referral_transactions WHERE "id" = ${trsId}',
+
     findReferralList : 'SELECT address from referals WHERE level[1] = ANY(ARRAY[${refer_list}])',
 
     findTotalStakeVolume : 'SELECT SUM("freezedAmount") as freezed_amount from stake_orders WHERE "senderId" = ANY(ARRAY[${address_list}]) AND "status" =1',
