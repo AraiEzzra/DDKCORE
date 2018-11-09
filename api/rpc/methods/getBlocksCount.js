@@ -3,7 +3,7 @@ const { createServerRPCMethod } = require('./../util');
 
 module.exports = createServerRPCMethod(
 
-  'SEARCH',
+  'GET_BLOCKS_COUNT',
 
   /**
    * @param {WebSocketServer} wss
@@ -13,11 +13,11 @@ module.exports = createServerRPCMethod(
    */
   function (wss, params, scope, cdError) {
     return new Promise(function (resolve) {
-      scope.modules.delegates.shared.search({body: params}, (error, result) => {
+      scope.modules.blocks.submodules.api.getBlocks({body: {limit: 1}}, (error, result) => {
 
         resolve(error
           ? {error}
-          : result);
+          : {count: result.count});
       });
     });
   });

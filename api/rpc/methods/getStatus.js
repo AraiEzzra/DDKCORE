@@ -3,17 +3,17 @@ const { createServerRPCMethod } = require('./../util');
 
 module.exports = createServerRPCMethod(
 
-  'SEARCH',
+  'GET_STATUS',
 
   /**
    * @param {WebSocketServer} wss
    * @param {object} params
-   * @param {object} scope - Application instance
+   * @param {object} scope - Application instance,
    * @param {function} cdError - Application Error callback
    */
   function (wss, params, scope, cdError) {
     return new Promise(function (resolve) {
-      scope.modules.delegates.shared.search({body: params}, (error, result) => {
+      scope.modules.blocks.submodules.api.getStatus({body: params}, (error, result) => {
 
         resolve(error
           ? {error}

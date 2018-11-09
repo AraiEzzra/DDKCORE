@@ -1,59 +1,59 @@
 /**
  * modules.blocks.submodules.api
  */
-const GetBlock = require('./methods/getblock');
-const GetBlocks = require('./methods/getblocks');
-const GetBroadhash = require('./methods/getbroadhash');
-const GetEpoch = require('./methods/getepoch');
-const GetHeight = require('./methods/getheight');
-const GetFee = require('./methods/getfee');
-const GetFees = require('./methods/getfees');
-const GetNethash = require('./methods/getnethash');
-const GetMilestone = require('./methods/getmilestone');
-const GetReward = require('./methods/getreward');
-const GetSupply = require('./methods/getsupply');
-const GetStatus = require('./methods/getstatus');
+const GetBlock = require('./methods/getBlock.js');
+const GetBlocks = require('./methods/getBlocks.js');
+const GetBroadhash = require('./methods/getBroadhash.js');
+const GetEpoch = require('./methods/getEpoch.js');
+const GetHeight = require('./methods/getHeight.js');
+const GetFee = require('./methods/getFee.js');
+const GetFees = require('./methods/getFees.js');
+const GetNethash = require('./methods/getNethash.js');
+const GetMilestone = require('./methods/getMilestone.js');
+const GetReward = require('./methods/getReward.js');
+const GetStatus = require('./methods/getStatus.js');
+const GetSupply = require('./methods/getSupply.js');
 
 /**
  * modules.delegates.internal
  */
-const GetForgingStatus = require('./methods/getforgingstatus');
+const GetForgingStatus = require('./methods/getForgingStatus.js');
 
 /**
  * modules.transactions.shared
  */
-const GetTransaction = require('./methods/gettransaction');
-const GetTransactions = require('./methods/gettransactions');
-const AddTransaction = require('./methods/addtransaction');
+const GetTransaction = require('./methods/getTransaction.js');
+const GetTransactions = require('./methods/getTransactions.js');
+const AddTransactions = require('./methods/addTransactions.js');
 
 /**
  * modules.peers.shared
  */
-const GetPeer = require('./methods/getpeer');
-const GetPeers = require('./methods/getpeers');
+const GetPeer = require('./methods/getPeer.js');
+const GetPeers = require('./methods/getPeers.js');
 
 /**
  * modules.delegates.shared
  */
-const GetVoters = require('./methods/getvoters');
-const GetDelegate = require('./methods/getdelegate');
-const GetDelegates = require('./methods/getdelegates');
-const GetNextForgers = require('./methods/getnextforgers');
+const GetVoters = require('./methods/getVoters.js');
+const GetDelegate = require('./methods/getDelegate.js');
+const GetDelegates = require('./methods/getDelegates.js');
+const GetNextForgers = require('./methods/getNextForgers.js');
 const Search = require('./methods/search');
-const GetForgedByAccount = require('./methods/getforgedbyaccount');
-const AddDelegate = require('./methods/adddelegate');
+const GetForgedByAccount = require('./methods/getForgedByAccount.js');
+const AddDelegate = require('./methods/addDelegate.js');
 
 /**
  *
  */
-const BlocksCount = require('./methods/blockscount');
+const GetBlocksCount = require('./methods/getBlocksCount.js');
 
 /**
  * modules.accounts.shared
  */
-const GetBalance = require('./methods/getbalance');
-const GetAccount = require('./methods/getaccount');
-const SetAccountAndGet = require('./methods/setaccountandget');
+const GetBalance = require('./methods/getBalance.js');
+const GetAccount = require('./methods/getAccount.js');
+const SetAccountAndGet = require('./methods/setAccountAndGet.js');
 
 
 const methods = [
@@ -62,7 +62,7 @@ const methods = [
   GetBlocks,
   GetTransaction,
   GetTransactions,
-  AddTransaction,
+  AddTransactions,
   GetPeer,
   GetPeers,
   GetBroadhash,
@@ -82,7 +82,7 @@ const methods = [
   Search,
   GetForgedByAccount,
   AddDelegate,
-  BlocksCount,
+  GetBlocksCount,
   GetBalance,
   GetAccount,
   SetAccountAndGet,

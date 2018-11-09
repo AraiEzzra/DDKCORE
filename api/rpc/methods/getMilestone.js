@@ -3,7 +3,7 @@ const { createServerRPCMethod } = require('./../util');
 
 module.exports = createServerRPCMethod(
 
-  'SEARCH',
+  'GET_MILESTONE',
 
   /**
    * @param {WebSocketServer} wss
@@ -13,7 +13,7 @@ module.exports = createServerRPCMethod(
    */
   function (wss, params, scope, cdError) {
     return new Promise(function (resolve) {
-      scope.modules.delegates.shared.search({body: params}, (error, result) => {
+      scope.modules.blocks.submodules.api.getMilestone({body: params}, (error, result) => {
 
         resolve(error
           ? {error}
