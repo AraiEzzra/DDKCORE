@@ -41,6 +41,8 @@ let logger = logman.logger;
 let sockets = [];
 let utils = require('./utils');
 let cronjob = require('node-cron-job');
+const serverRPCConfig = require('./api/rpc/server.config');
+const ServerRPCApi = require('./api/rpc/server');
 
 process.stdin.resume();
 
@@ -692,10 +694,8 @@ d.run(function () {
      * @param {nodeStyleCallback} cb - Callback function with `scope.network`.
      */
     listenRPC: ['listen', function (scope, cb) {
-      const config = require('./api/rpc/server.config');
-      const ServerRPCApi = require('./api/rpc/server');
       const server = new ServerRPCApi();
-      config.methods.map(function (method) {
+        serverRPCConfig.methods.map(function (method) {
         server.register(method.methodName, function (params) {
           return method.call(null, server.getWebSocketServer(), params, scope, cb);
         });

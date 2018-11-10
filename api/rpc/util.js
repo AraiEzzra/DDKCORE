@@ -1,3 +1,5 @@
+const ZSchema = require("z-schema");
+
 
 module.exports.createServerRPCMethod = function (methodName, callback) {
 
@@ -19,7 +21,6 @@ module.exports.createServerRPCMethod = function (methodName, callback) {
 };
 
 module.exports.validator = function(json, schema) {
-  const ZSchema = require("z-schema");
   const validator = new ZSchema();
   return validator.validate(json, schema);
 };
