@@ -806,6 +806,7 @@ Accounts.prototype.shared = {
 			});
 		});
 	},
+
 	totalSupply: function (req, cb) {
 		let totalSupply = library.config.ddkSupply.totalSupply;
 

@@ -41,6 +41,8 @@ let logger = logman.logger;
 let sockets = [];
 let utils = require('./utils');
 let cronjob = require('node-cron-job');
+const serverRPCConfig = require('./api/rpc/server.config');
+const ServerRPCApi = require('./api/rpc/server');
 
 process.stdin.resume();
 
@@ -683,7 +685,24 @@ d.run(function () {
 					cb(err, scope.network);
 				}
 			});
-		}]
+		}],
+
+    /**
+     * Realisation of RPC protocol
+     * @method listenWs
+     * @param {object} scope - The results from current execution, at leats will contain the required elements.
+     * @param {nodeStyleCallback} cb - Callback function with `scope.network`.
+     */
+    listenRPC: ['listen', function (scope, cb) {
+      const server = new ServerRPCApi();
+        serverRPCConfig.methods.map(function (method) {
+        server.register(method.methodName, function (params) {
+          return method.call(null, server.getWebSocketServer(), params, scope, cb);
+        });
+      });
+      scope.logger.info('RPC Server started on: ' + server.host + ':' + server.port);
+    }]
+
 	}, function (err, scope) {
 		if (err) {
 			scope.logger.error(err.message);

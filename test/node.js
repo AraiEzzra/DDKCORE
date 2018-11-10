@@ -5,9 +5,10 @@ let node = {};
 let Rounds = require('../modules/rounds.js');
 let slots = require('../helpers/slots.js');
 const modulesLoader = require('./common/initModule').modulesLoader;
+
 // Requires
 node.bignum = require('../helpers/bignum.js');
-node.config = modulesLoader.config;
+node.config = modulesLoader.scope.config;
 node.constants = require('../helpers/constants.js');
 node.dappCategories = require('../helpers/dappCategories.js');
 node.dappTypes = require('../helpers/dappTypes.js');
