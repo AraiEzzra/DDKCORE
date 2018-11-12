@@ -246,6 +246,5 @@ const modulesLoader = new function () {
 };
 
 module.exports = {
-  name: 'modulesLoader',
   modulesLoader:  modulesLoader
 };

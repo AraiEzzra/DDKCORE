@@ -3,7 +3,7 @@ const { createServerRPCMethod } = require('./../util');
 
 module.exports = createServerRPCMethod(
 
-  'SET_ACCOUNT_AND_GET',
+  'GET_PUBLICKEY',
 
   /**
    * @param {WebSocketServer} wss
@@ -13,7 +13,7 @@ module.exports = createServerRPCMethod(
    */
   function (wss, params, scope, cdError) {
     return new Promise(function (resolve) {
-      scope.modules.accounts.shared.setAccountAndGet(params, (error, result) => {
+      scope.modules.accounts.shared.getPublickey({body: params}, (error, result) => {
 
         resolve(error
           ? {error}

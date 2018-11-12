@@ -54,6 +54,7 @@ const GetBlocksCount = require('./methods/getBlocksCount.js');
 const GetBalance = require('./methods/getBalance.js');
 const GetAccount = require('./methods/getAccount.js');
 const SetAccountAndGet = require('./methods/setAccountAndGet.js');
+const GetPublickey = require('./methods/getPublickey.js');
 
 
 const methods = [
@@ -86,6 +87,7 @@ const methods = [
   GetBalance,
   GetAccount,
   SetAccountAndGet,
+  GetPublickey,
 ];
 
 // todo: replace me to config.json
