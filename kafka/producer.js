@@ -54,10 +54,18 @@ exports.isTopicExists = function (topic, cb) {
 
 //Send data to Kafka server
 exports.send = function(topic, message, partition, cb) {
-    producer.produce(topic, partition, Buffer.from(JSON.stringify(message)), function(err) {
-        if(err) {
-            return setImmediate(cb, err);
-        } 
-        return setImmediate(cb, null);
-    });
+    logger.info('Adding transaction ' + message.id + ' into ' + topic + ' topic');
+    try {
+        producer.produce(topic, partition, Buffer.from(JSON.stringify(message)), function(err) {
+            if(err) {
+                logger.error('Error while send topic : ' + err.message);
+                return setImmediate(cb, err);
+            } 
+            logger.info('transaction sent to ' + topic + ' topic successfully');
+            return setImmediate(cb, null);
+        });
+    } catch (e) {
+        logger.error('Error while send topic : ' + e.message);
+    }
+    
 };
