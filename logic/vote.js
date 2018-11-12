@@ -74,6 +74,7 @@ Vote.prototype.create = async function (data, trs) {
     trs.recipientId = data.sender.address;
     trs.trsName = data.votes[0][0] == "+" ? "VOTE" : "DOWNVOTE";
 	return trs;
+
 };
 
 /**
@@ -82,8 +83,7 @@ Vote.prototype.create = async function (data, trs) {
  * @return {number} fee
  */
 Vote.prototype.calculateFee = function (trs, sender) {
-	return 1;
-	// return (parseInt(sender.totalFrozeAmount) * constants.fees.vote) / 100;
+	return (parseInt(sender.totalFrozeAmount) * constants.fees.vote) / 100;
 };
 
 /**
@@ -324,13 +324,20 @@ Vote.prototype.undo = function (trs, block, sender, cb) {
 					votes: votesInvert,
 					senderId: trs.senderId
 				}
-				, function (err) {
-					if (err) {
-						return setImmediate(cb, err);
-					}
-					return setImmediate(cb, null);
-				});
-		}
+                , function (err) {
+                    if (err) {
+                        return setImmediate(seriesCb, err);
+                    }
+                    return setImmediate(seriesCb, null);
+                });
+		},
+        function (seriesCb) {
+            self.removeCheckVote(trs)
+                .then(
+                    () => setImmediate(seriesCb, null),
+                    err => setImmediate(seriesCb, err),
+                );
+        }
 	], cb);
 };
 
@@ -434,7 +441,7 @@ Vote.prototype.dbRead = function (raw) {
 		const votes = raw.v_votes.split(',');
         const reward = raw.v_reward || 0;
 		const unstake = raw.v_unstake || 0;
-        const airdropReward = raw.v_airdropReward || 0;
+        const airdropReward = raw.v_airdropReward || {};
 
 		return { votes: votes, reward: reward, unstake: unstake, airdropReward: airdropReward };
 	}
@@ -498,23 +505,37 @@ Vote.prototype.updateAndCheckVote = async (voteTransaction) => {
     try {
         // todo check if could change to tx
         await library.db.task(async () => {
-            let availableToVote = true;
-            const queryResult = await library.db.one(sql.countAvailableStakeOrdersForVote, {
-                senderId: senderId,
-                currentTime: slots.getTime()
-            });
-            if(queryResult && queryResult.hasOwnProperty("count")) {
-                const count = parseInt(queryResult.count, 10);
-                availableToVote = count !== 0;
-            }
-            if(availableToVote) {
-                await library.db.none(sql.updateStakeOrder, {
-                    senderId: senderId,
-                    milestone: constants.froze.vTime, //TODO back to vTime * 60
-                    currentTime: slots.getTime()
-                });
-                await library.frozen.checkFrozeOrders(voteTransaction);
-            }
+			await library.db.none(sql.updateStakeOrder, {
+				senderId: senderId,
+				milestone: constants.froze.vTime*10, //TODO back to vTime * 60
+				currentTime: slots.getTime()
+			});
+			await library.frozen.applyFrozeOrdersRewardAndUnstake(voteTransaction);
+        });
+    } catch (err) {
+        library.logger.warn(err);
+        throw err;
+    }
+};
+
+/**
+ * Check and update vote milestone, vote count from stake_order and mem_accounts table
+ * @param {Object} voteTransaction transaction data object
+ * @return {null|err} return null if success else err
+ *
+ */
+Vote.prototype.removeCheckVote = async (voteTransaction) => {
+    const senderId = voteTransaction.senderId;
+    try {
+        // todo check if could change to tx
+        await library.db.task(async () => {
+            library.logger.info('UNDO');
+            await library.frozen.undoFrozeOrdersRewardAndUnstake(voteTransaction);
+			await library.db.none(sql.undoUpdateStakeOrder, {
+				senderId: senderId,
+				milestone: constants.froze.vTime, //TODO back to vTime * 60
+				currentTime: slots.getTime()
+			});
         });
     } catch (err) {
         library.logger.warn(err);

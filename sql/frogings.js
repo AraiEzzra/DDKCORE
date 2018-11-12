@@ -26,7 +26,9 @@ let FrogingsSql = {
 
 	getFrozeAmount: 'SELECT "totalFrozeAmount" FROM mem_accounts WHERE "address"=${senderId}',
 
-	disableFrozeOrders: 'UPDATE stake_orders SET "status"=0, "nextVoteMilestone"=-1 where "stakeId"=${stakeId}',
+	disableFrozeOrders: 'UPDATE stake_orders SET "status"=0 where "stakeId"=${stakeId}',
+
+	enableFrozeOrder: 'UPDATE stake_orders SET "status"=1 where "stakeId"=${stakeId}',
 
 	checkAndUpdateMilestone: 'UPDATE stake_orders SET "nextVoteMilestone"= ("nextVoteMilestone" +${milestone}), "isVoteDone"= false where "status"=1 AND  ${currentTime} >= "nextVoteMilestone" ',
 
@@ -38,11 +40,13 @@ let FrogingsSql = {
 
 	getActiveFrozeOrders: 'SELECT * FROM stake_orders WHERE "senderId"=${senderId} AND "status"=1 AND ${currentTime} >= "nextVoteMilestone"',
 
+    getInactiveFrozeOrders: 'SELECT * FROM stake_orders WHERE "senderId"=${senderId} AND "status"=0 AND ${currentTime} >= "nextVoteMilestone"',
+
 	getActiveFrozeOrder: 'SELECT * FROM stake_orders WHERE "senderId"=${senderId} AND "id"=${stakeId} AND "status"=1',
 
-	updateFrozeOrder: 'UPDATE stake_orders SET "status"=0,"recipientId"=${recipientId}, "nextVoteMilestone"=-1, "isTransferred" = ("isTransferred"+1) WHERE "senderId"=${senderId} AND "id"=${stakeId} AND "status"=1',
+	updateFrozeOrder: 'UPDATE stake_orders SET "status"=0,"recipientId"=${recipientId}, "nextVoteMilestone"=-1, "transferCount" = ("transferCount"+1) WHERE "senderId"=${senderId} AND "id"=${stakeId} AND "status"=1',
 
-	createNewFrozeOrder: 'INSERT INTO stake_orders ("id","status","startTime","insertTime","senderId","freezedAmount","rewardCount","voteCount","nextVoteMilestone","isVoteDone","isTransferred") VALUES (${id},1,${startTime},${insertTime},${senderId},${freezedAmount},${rewardCount},${voteCount},${nextVoteMilestone},${isVoteDone},$(isTransferred)+1) ',
+	createNewFrozeOrder: 'INSERT INTO stake_orders ("id","status","startTime","insertTime","senderId","freezedAmount","rewardCount","voteCount","nextVoteMilestone","isVoteDone","transferCount") VALUES (${id},1,${startTime},${insertTime},${senderId},${freezedAmount},${rewardCount},${voteCount},${nextVoteMilestone},${isVoteDone},$(transferCount)+1) ',
 
 	countStakeholders: 'SELECT count(DISTINCT "senderId") FROM stake_orders WHERE "status"=1',
 
@@ -66,8 +70,9 @@ let FrogingsSql = {
 
 	updateOrderFrozeAmount: 'UPDATE stake_orders SET "freezedAmount"=${freezedAmount} WHERE "stakeId"=${stakeId}',
 
-	deductTotalSupply: 'UPDATE mem_accounts SET "balance"=("balance" - ${reward}), "u_balance"=("u_balance" - ${reward}) WHERE "address"=${totalSupplyAccount}',
+    updateTotalSupply: 'UPDATE mem_accounts SET "balance"=("balance" + ${reward}), "u_balance"=("u_balance" + ${reward}) WHERE "address"=${totalSupplyAccount}',
 
+    getRecentlyChangedFrozeOrders: 'SELECT * FROM stake_orders WHERE "senderId"=${senderId} AND ${currentTime} < "nextVoteMilestone"',
 };
 
 module.exports = FrogingsSql;

@@ -663,18 +663,31 @@ Accounts.prototype.shared = {
 								secondKeypair = library.ed.makeKeypair(secondHash);
 							}
 
-							library.logic.transaction.create({
-								type: transactionTypes.VOTE,
-								votes: req.body.delegates,
-								sender: account,
-								keypair: keypair,
-								secondKeypair: secondKeypair,
-								requester: keypair
-							}).then((transactionVote) =>{
-								modules.transactions.receiveTransactions([transactionVote], true, cb);
-							}).catch((e) => {
-								return setImmediate(cb, e.toString());
-							});
+                            library.db.one(sql.countAvailableStakeOrdersForVote, {
+                                senderId: account.address,
+                                currentTime: slots.getTime()
+                            }).then((queryResult) => {
+                                if(queryResult && queryResult.hasOwnProperty("count")) {
+                                    const count = parseInt(queryResult.count, 10);
+                                    if (count <= 0) {
+                                    	throw 'No Stake available';
+									}
+									library.logic.transaction.create({
+										type: transactionTypes.VOTE,
+										votes: req.body.delegates,
+										sender: account,
+										keypair: keypair,
+										secondKeypair: secondKeypair,
+										requester: keypair
+									}).then((transactionVote) =>{
+										modules.transactions.receiveTransactions([transactionVote], true, cb);
+									}).catch((e) => {
+										throw e;
+									});
+                                }
+                            }).catch((e) => {
+                                return setImmediate(cb, e.toString());
+                            });
 						});
 					});
 				} else {
@@ -706,17 +719,30 @@ Accounts.prototype.shared = {
 							return setImmediate(cb, 'Please Stake before vote/unvote');
 						}
 
-                        library.logic.transaction.create({
-                            type: transactionTypes.VOTE,
-                            votes: req.body.delegates,
-                            sender: account,
-                            keypair: keypair,
-                            secondKeypair: secondKeypair
-                        }).then((transactionVote) =>{
-                            modules.transactions.receiveTransactions([transactionVote], true, cb);
-                        }).catch((e) => {
+                        library.db.one(sql.countAvailableStakeOrdersForVote, {
+                            senderId: account.address,
+                            currentTime: slots.getTime()
+                        }).then((queryResult) => {
+                            if(queryResult && queryResult.hasOwnProperty("count")) {
+                                const count = parseInt(queryResult.count, 10);
+                                if (count <= 0) {
+                                    throw 'No Stake available';
+                                }
+								library.logic.transaction.create({
+									type: transactionTypes.VOTE,
+									votes: req.body.delegates,
+									sender: account,
+									keypair: keypair,
+									secondKeypair: secondKeypair
+								}).then((transactionVote) =>{
+									modules.transactions.receiveTransactions([transactionVote], true, cb);
+								}).catch((e) => {
+									throw e;
+								});
+                            }
+						}).catch((e) => {
                             return setImmediate(cb, e.toString());
-                        });
+						});
 					});
 				}
 			}, function (err, transaction) {
