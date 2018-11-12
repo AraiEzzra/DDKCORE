@@ -456,6 +456,16 @@ Transactions.prototype.removeUnconfirmedTransaction = function (id) {
 };
 
 /**
+ * Enables a user to do next transaction when transaction is processed completely.
+ * @param {string} sender
+ * @param {Boolean} value
+ * @return {function} Calls transactionPool.removeUnconfirmedTransaction
+ */
+Transactions.prototype.setTransactionsForUser = function (sender, value) {
+	return __private.transactionPool.setTransactionsForUser(sender, value);
+};
+
+/**
  * Checks kind of unconfirmed transaction and process it, resets queue
  * if limit reached.
  * @param {transaction} transaction
