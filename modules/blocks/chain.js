@@ -458,6 +458,7 @@ Chain.prototype.applyBlock = function (block, broadcast, cb, saveBlock) {
 						}
 						// Transaction applied, removed from the unconfirmed list.
 						modules.transactions.removeUnconfirmedTransaction(transaction.id);
+						modules.transactions.setTransactionsForUser(transaction.senderId, false);
 						return setImmediate(eachSeriesCb);
 					});
 				});

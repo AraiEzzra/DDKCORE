@@ -49,6 +49,7 @@ function TransactionPool (broadcastInterval, releaseLimit, transaction, bus, log
 	self.bundledInterval = library.config.broadcasts.broadcastInterval;
 	self.bundleLimit = library.config.broadcasts.releaseLimit;
 	self.processed = 0;
+	self.processedKafka = { index: {} };
 
 	// Bundled transaction timer
 	function nextBundle (cb) {
@@ -84,10 +85,10 @@ consumer
 
         // Read one message every 1000 milliseconds
         setInterval(function () {
-			let trs = self.countBundled() + self.countMultisignature() + self.countQueued() + self.countUnconfirmed();
-			if(!trs) {
-				consumer.consume(10);
-			}
+			/* let trs = self.countBundled() + self.countMultisignature() + self.countQueued() + self.countUnconfirmed();
+			if(!trs) { */
+				consumer.consume(2);
+			//}
         }, 1000);
     })
     .on('data', function (data) {
@@ -317,6 +318,7 @@ TransactionPool.prototype.addUnconfirmedTransaction = function (transaction) {
 				self.kafka.transactions.push(transaction);
 				let index = self.kafka.transactions.indexOf(transaction);
 				self.kafka.index[transaction.id] = index;
+				self.processedKafka.index[transaction.senderId] = true;
 				producer.send('unconfirmedTransaction', transaction, 0);
 			}
 		});
@@ -340,6 +342,14 @@ TransactionPool.prototype.removeUnconfirmedTransaction = function (id) {
 	self.removeQueuedTransaction(id);
 	self.removeMultisignatureTransaction(id);
 	self.removeKafkaTransaction(id);
+};
+
+/**
+ * enables/disables a user for transactions.
+ * @param {Boolean} value
+ */
+TransactionPool.prototype.setTransactionsForUser = function (sender, value) {
+	self.processedKafka.index[sender] = value;
 };
 
 /**
@@ -539,7 +549,7 @@ TransactionPool.prototype.processBundled = function (cb) {
 		__private.processVerifyTransaction(transaction, true, function (err) {
 			if (err) {
 				library.logger.debug('Failed to process / verify bundled transaction: ' + transaction.id, err);
-				self.removeUnconfirmedTransaction(transaction);
+				self.removeUnconfirmedTransaction(transaction.id);
 				return setImmediate(eachSeriesCb);
 			} else {
 				self.queueTransaction(transaction, function (err) {
@@ -609,6 +619,9 @@ TransactionPool.prototype.processUnconfirmedTransaction = function (transaction,
 TransactionPool.prototype.queueTransaction = function (transaction, cb) {
 	if (self.transactionInPool(transaction.id)) {
 		return setImmediate(cb, 'Transaction is already processed: ' + transaction.id);
+	}
+	if(self.processedKafka.index[transaction.senderId] === true) {
+		return setImmediate(cb, 'Your previous transaction is under process. Please try once its confirmed');
 	}
 	transaction.receivedAt = new Date();
 
@@ -727,7 +740,9 @@ TransactionPool.prototype.fillPool = function (cb) {
 	if (modules.loader.syncing()) { return setImmediate(cb); }
 
 	let unconfirmedCount = self.countUnconfirmed();
-	library.logger.info('Transaction pool size: ' + unconfirmedCount);
+	if(unconfirmedCount) {
+		library.logger.info('Transaction pool size: ' + unconfirmedCount);
+	}
 
 	if (unconfirmedCount >= constants.maxTxsPerBlock) {
 		return setImmediate(cb);
@@ -890,13 +905,17 @@ __private.applyUnconfirmedList = function (transactions, cb) {
 			if (err) {
 				library.logger.error('Failed to process / verify unconfirmed transaction: ' + transaction.id, err);
 				self.removeUnconfirmedTransaction(transaction.id);
+				//self.processedKafka.index[transaction.senderId] = false;
 				return setImmediate(eachSeriesCb);
 			}
 			modules.transactions.applyUnconfirmed(transaction, sender, function (err) {
 				if (err) {
 					library.logger.error('Failed to apply unconfirmed transaction: ' + transaction.id, err);
 					self.removeUnconfirmedTransaction(transaction.id);
+					self.removeQueuedTransaction(transaction.id);
+					//self.processedKafka.index[transaction.senderId] = false;
 				}
+				//self.processedKafka.index[transaction.senderId] = false;
 				return setImmediate(eachSeriesCb);
 			});
 		});
