@@ -370,8 +370,8 @@ SendFreezeOrder.prototype.shared = {
 									return setImmediate(cb, err);
 								}
 
-								if(order !== null && order.transferCount == 3){
-									return setImmediate(cb, 'Order can be send only 3 times');
+								if(order !== null && order.transferCount == constants.maxTransferCount){
+									return setImmediate(cb, `Order can be send only ${maxTransferCount} times`);
 								}
 								stakeOrder = order;
 
@@ -406,7 +406,7 @@ SendFreezeOrder.prototype.shared = {
 									secondKeypair: secondKeypair,
 									freezedAmount: req.body.freezedAmount
 								}).then((transactionSendStake) => {
-                                    transaction = transactionSendStake;
+									transaction = transactionSendStake;
 									modules.transactions.receiveTransactions([transaction], true, cb);
 								}).catch((e) => {
 									return setImmediate(cb, e.toString());

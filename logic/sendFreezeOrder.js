@@ -24,6 +24,40 @@ function SendFreezeOrder(logger, db, network, cb) {
 	}
 }
 
+async function rollbackOrders(cb) {
+
+	try {
+
+		await self.scope.db.one(sql.getOldOrderID,
+            {
+                stakeId: trs.stakeId
+            });
+
+        await self.scope.db.one(sql.getNewOrderNextVoteMilestone,
+            {
+                id: id,
+                senderId: trs.recipientId
+            });
+
+        await self.scope.db.one(sql.updateOldOrder,
+            {
+                stakeId: trs.stakeId,
+                nextVoteMilestone: nextVoteMilestone
+            });
+
+        await self.scope.db.one(sql.RemoveOrder,
+            {
+                id: id,
+                senderId: trs.recipientId
+            });
+
+        return setImmediate(cb, null);
+
+	} catch (err) {
+        self.scope.logger.error(err.stack);
+		return setImmediate(cb, err.toString());
+	}
+}
 
 SendFreezeOrder.prototype.create = function (data, trs) {
 	trs.startTime = trs.timestamp;
@@ -62,134 +96,50 @@ SendFreezeOrder.prototype.applyUnconfirmed = function (trs, sender, cb) {
 	return setImmediate(cb);
 };
 
-SendFreezeOrder.prototype.undo = function (trs, block, sender, cb) {
-	async.series({
-		addFrozeAmount: function (seriesCb) {
-			//Add frozeAmount to mem_account to sender address
-			self.scope.db.none(sql.deductFrozeAmount,
-				{
-					senderId: sender.address,
-					orderFreezedAmount: -trs.amount
-				})
-				.then(function () {
-					return setImmediate(seriesCb);
-				})
-				.catch(function (err) {
-					self.scope.logger.error(err.stack);
-					return setImmediate(seriesCb, err.toString());
-				});
-		},
+SendFreezeOrder.prototype.undo = async function (trs, block, sender, cb) {
 
-		removeFrozeAmount: function (seriesCb) {
+	try {
 
-			//remove frozeAmount to mem_account to recipient address
-			self.scope.db.none(sql.deductFrozeAmount,
-				{
-					senderId: trs.recipientId,
-					orderFreezedAmount: trs.amount
-				})
-				.then(function () {
-					return setImmediate(seriesCb);
-				})
-				.catch(function (err) {
-					self.scope.logger.error(err.stack);
-					return setImmediate(seriesCb, err.toString());
-				});
-		},
-		rollbackOrders: function (seriesCb) {
+        //Add frozeAmount to mem_account to sender address
+        await self.scope.db.none(sql.deductFrozeAmount,
+            {
+                senderId: sender.address,
+                orderFreezedAmount: -trs.amount
+            });
 
-			async.waterfall([
-				function (waterCb) {
-					self.scope.db.one(sql.getOldOrderID,
-						{
-							stakeId: trs.stakeId
-						})
-						.then(function (id) {
-							return setImmediate(waterCb, null, id);
-						})
-						.catch(function (err) {
-							self.scope.logger.error(err.stack);
-							return setImmediate(waterCb, err.toString());
-						});
-				},
-				function (id, waterCb) {
-					self.scope.db.one(sql.getNewOrderNextVoteMilestone,
-						{
-							id: id,
-							senderId: trs.recipientId
-						})
-						.then(function (nextVoteMilestone) {
-							return setImmediate(waterCb, null, id, nextVoteMilestone);
-						})
-						.catch(function (err) {
-							self.scope.logger.error(err.stack);
-							return setImmediate(waterCb, err.toString());
-						});
-				},
-				function (id, nextVoteMilestone, waterCb) {
-					self.scope.db.one(sql.updateOldOrder,
-						{
-							stakeId: trs.stakeId,
-							nextVoteMilestone: nextVoteMilestone
-						})
-						.then(function (nextVoteMilestone) {
-							return setImmediate(waterCb, null, id);
-						})
-						.catch(function (err) {
-							self.scope.logger.error(err.stack);
-							return setImmediate(waterCb, err.toString());
-						});
-				},
-				function (id, waterCb) {
-					self.scope.db.one(sql.RemoveOrder,
-						{
-							id: id,
-							senderId: trs.recipientId
-						})
-						.then(function (nextVoteMilestone) {
-							return setImmediate(waterCb, null, nextVoteMilestone);
-						})
-						.catch(function (err) {
-							self.scope.logger.error(err.stack);
-							return setImmediate(waterCb, err.toString());
-						});
-				}
-			], function (err) {
-				if (err) {
-					self.scope.logger.warn(err);
-					return setImmediate(seriesCb, err);
-				}
-				return setImmediate(seriesCb, null);
-			});
-		}
+        //remove frozeAmount to mem_account to recipient address
+        await self.scope.db.none(sql.deductFrozeAmount,
+            {
+                senderId: trs.recipientId,
+                orderFreezedAmount: trs.amount
+            });
 
-	}, function (err) {
-		if (err) {
-			self.scope.logger.warn(err);
-			return setImmediate(cb, err);
-		}
+        await rollbackOrders(cb);
 
-		modules.accounts.setAccountAndGet({ address: trs.recipientId }, function (err, recipient) {
-			if (err) {
-				return setImmediate(cb, err);
-			}
+        const setAccountAndGet = promise.promisify(modules.accounts.setAccountAndGet);
+        const mergeAccountAndGet = promise.promisify(modules.accounts.mergeAccountAndGet);
 
-			modules.accounts.mergeAccountAndGet({
-				address: trs.recipientId,
-				balance: -trs.amount,
-				u_balance: -trs.amount,
-				blockId: block.id,
-				round: modules.rounds.calc(block.height)
-			}, function (err) {
-				return setImmediate(cb, err);
-			});
-		});
+        await setAccountAndGet({ address: trs.recipientId });
 
-	});
+        await mergeAccountAndGet({
+            address: trs.recipientId,
+            balance: -trs.amount,
+            u_balance: -trs.amount,
+            blockId: block.id,
+            round: modules.rounds.calc(block.height)
+        });
+
+        return setImmediate(cb, err);
+
+    } catch (err) {
+        self.scope.logger.error(err.stack);
+        return setImmediate(cb, err.toString());
+	}
 };
 
 SendFreezeOrder.prototype.apply = async function (trs, block, sender, cb) {
 	try {
+
         const setAccountAndGet = promise.promisify(modules.accounts.setAccountAndGet);
 		const mergeAccountAndGet = promise.promisify(modules.accounts.mergeAccountAndGet);
         const getActiveFrozeOrder = promise.promisify(self.getActiveFrozeOrder);
@@ -222,7 +172,6 @@ SendFreezeOrder.prototype.apply = async function (trs, block, sender, cb) {
 	} catch (err) {
         return setImmediate(cb, err);
 	}
-
 };
 
 SendFreezeOrder.prototype.getBytes = function (trs) {
@@ -234,7 +183,8 @@ SendFreezeOrder.prototype.process = function (trs, sender, cb) {
 };
 
 SendFreezeOrder.prototype.verify = function (trs, sender, cb) {
-    if (!trs.recipientId) {
+
+	if (!trs.recipientId) {
 		return setImmediate(cb, 'Missing recipient');
 	}
 
@@ -328,7 +278,6 @@ SendFreezeOrder.prototype.sendFreezedOrder = async function (userAndOrderData, c
 			});
 
 	} catch (err) {
-        console.log("\n \n ERROR SendFreezeOrder", err);
         return setImmediate(cb, err);
 	}
 
