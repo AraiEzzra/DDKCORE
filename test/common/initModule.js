@@ -8,7 +8,7 @@ let _ = require('lodash');
 
 let async = require('async');
 let dirname = path.join(__dirname, '..', '..');
-let config = require(path.join(dirname, '/config.json'));
+let config = require(path.join(dirname, '/helpers', 'config.js'))();
 let database = require(path.join(dirname, '/helpers', 'database.js'));
 let genesisblock = require(path.join(dirname, '/genesisBlock.json'));
 let logger = require(dirname + '/logger.js');
