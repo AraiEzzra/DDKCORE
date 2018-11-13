@@ -310,14 +310,15 @@ Frozen.prototype.verify = function (trs, sender, cb) {
         return setImmediate(cb, 'Invalid stake amount: Decimal value');
     }
 
-    if (trs.stakedAmount + sender.totalFrozeAmount > sender.u_balance) {
-        return setImmediate(cb, 'Verify failed: Insufficient balance for stake');
-    }
-    self.verifyAirdrop(trs)
-    .then(() => {
-        return setImmediate(cb, null, trs);
-    })
-    .catch((err) => {
+	if (Number(trs.stakedAmount) + Number(sender.totalFrozeAmount) > Number(sender.u_balance)) {
+		return setImmediate(cb, 'Verify failed: Insufficient balance for stake');
+	}
+
+	self.verifyAirdrop(trs)
+	.then(() => {
+		return setImmediate(cb, null);
+	})
+	.catch((err) => {
         return setImmediate(cb, err);
     });
 };
