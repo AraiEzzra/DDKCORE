@@ -1,36 +1,36 @@
 const chai = require('chai');
 const expect = require('chai').expect;
-const WebSocket = require('rpc-websockets').Client;
+const TestWebSocketConnector = require('../common/TestWebSocketConnector.js');
 
 
 describe('RPC method: GET_TRANSACTIONS', function () {
 
   const URL = 'ws://localhost:8080/v1';
   const TRX_LIMIT = 3;
-  let ws;
+  let wsc;
 
   before(function (done) {
-    ws = new WebSocket(URL);
-    ws.on('open', done);
+    wsc = new TestWebSocketConnector(URL);
+    wsc.open(done)
   });
 
   after(function (done) {
-    ws.close();
+    wsc.close();
     done();
   });
 
   describe('Checked connection', function () {
     it('socket is ready', function (done) {
-        expect(ws.ready).to.equals(true);
-        done();
+      expect(wsc.ws.ready).to.equals(true);
+      done();
     });
   });
 
   describe('Checked method result', function () {
 
     it('should have valid parameters', function (done) {
-      ws.call('GET_TRANSACTIONS', {limit: TRX_LIMIT}).then((result) => {
 
+      wsc.call('GET_TRANSACTIONS', {limit: TRX_LIMIT}, (result) => {
         expect(result).to.be.an('object');
         expect(result.transactions).to.be.an.instanceof(Array);
 
