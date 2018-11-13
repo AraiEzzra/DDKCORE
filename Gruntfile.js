@@ -1,6 +1,7 @@
 const moment = require('moment');
 const buffer = require('buffer');
 const path = require('path');
+const util = require('util');
 
 const config = require('./config.json');
 
@@ -35,42 +36,43 @@ module.exports = (grunt) => {
     exec: {
       package: {
         command: () => ([
-          `mkdir -p ${versionDir}`,
-          `mkdir -p ${versionDir}/logs`,
-          `mkdir -p ${versionDir}/pids`,
-          `mkdir -p ${versionDir}/public`,
-          `cp ${releaseDir}/app.js ${versionDir}`,
-          `cp ${__dirname}/config.json ${versionDir}`,
-          `cp ${__dirname}/package.json ${versionDir}`,
-          `cp ${__dirname}/genesisBlock.json ${versionDir}`,
-          `cp ${__dirname}/LICENSE ${versionDir}`,
-          `mkdir -p ${versionDir}/sql/migrations`,
-          `cp ${__dirname}/sql/*.sql ${versionDir}/sql/`,
-          `cp ${__dirname}/sql/migrations/*.sql ${versionDir}/sql/migrations/`,
-          `cd ${__dirname}/public && mkdir -p ./static', __dirname)`,
+          util.format('mkdir -p %s', versionDir),
+          util.format('mkdir -p %s/logs', versionDir),
+          util.format('mkdir -p %s/pids', versionDir),
+          util.format('mkdir -p %s/public', versionDir),
+          util.format('cp %s/app.js %s', releaseDir, versionDir),
+          util.format('cp %s/config.json %s', __dirname, versionDir),
+          util.format('cp %s/package.json %s', __dirname, versionDir),
+          util.format('cp %s/genesisBlock.json %s', __dirname, versionDir),
+          util.format('cp %s/LICENSE %s', __dirname, versionDir),
+          util.format('mkdir -p %s/sql/migrations', versionDir),
+          util.format('cp %s/sql/*.sql %s/sql/', __dirname, versionDir),
+          util.format('cp %s/sql/migrations/*.sql %s/sql/migrations/', __dirname, versionDir),
+          util.format('cd %s/public && mkdir -p ./static', __dirname),
           'npm install && bower install && grunt release && cd ../',
-          `cp ${__dirname}/public/wallet.html ${versionDir}/public/`,
-          `cp ${__dirname}/public/loading.html ${versionDir}/public/`,
-          `cp -Rf ${__dirname}/public/images ${versionDir}/public/`,
-          `cp -Rf ${__dirname}/public/partials ${versionDir}/public/`,
-          `cp -RfL ${__dirname}/public/static ${versionDir}/public/`,
-          `mkdir -p ${versionDir}/public/node_modules`,
-          `cp -Rf ${__dirname}/public/node_modules/chart.js ${versionDir}/public/node_modules`,
-          `mkdir -p ${versionDir}/public/bower_components`,
-          `mkdir -p ${versionDir}/public/socket.io`,
-          `cp -Rf ${__dirname}/public/bower_components/jquery ${versionDir}/public/bower_components`,
-          `cp -Rf ${__dirname}/public/bower_components/materialize ${versionDir}/public/bower_components`,
-          `cp -Rf ${__dirname}/public/bower_components/blob ${versionDir}/public/bower_components`,
-          `cp -Rf ${__dirname}/public/bower_components/file-saver ${versionDir}/public/bower_components`,
-        ].join(' && ')),
+          util.format('cp %s/public/wallet.html %s/public/', __dirname, versionDir),
+          util.format('cp %s/public/loading.html %s/public/', __dirname, versionDir),
+          util.format('cp -Rf %s/public/images %s/public/', __dirname, versionDir),
+          util.format('cp -Rf %s/public/partials %s/public/', __dirname, versionDir),
+          util.format('cp -RfL %s/public/static %s/public/', __dirname, versionDir),
+          util.format('mkdir -p %s/public/node_modules', versionDir),
+          util.format('cp -Rf %s/public/node_modules/chart.js %s/public/node_modules', __dirname, versionDir),
+          util.format('mkdir -p %s/public/bower_components', versionDir),
+          util.format('mkdir -p %s/public/socket.io', versionDir),
+          util.format('cp -Rf %s/public/bower_components/jquery %s/public/bower_components', __dirname, versionDir),
+          util.format('cp -Rf %s/public/bower_components/materialize %s/public/bower_components', __dirname, versionDir),
+          util.format('cp -Rf %s/public/bower_components/blob %s/public/bower_components', __dirname, versionDir),
+          util.format('cp -Rf %s/public/bower_components/file-saver %s/public/bower_components', __dirname, versionDir)
+          ].join(' && ')
+        )
       },
 
       folder: {
-        command: `mkdir -p ${releaseDir}`,
+          command: 'mkdir -p ' + releaseDir
       },
 
       build: {
-        command: `cd ${versionDir}/ && touch build && echo "v${today}" > build`,
+          command: 'cd ' + versionDir + '/ && touch build && echo "v' + today + '" > build'
       },
 
       coverage: {
