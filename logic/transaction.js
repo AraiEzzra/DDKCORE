@@ -8,6 +8,7 @@ let slots = require('../helpers/slots.js');
 let sql = require('../sql/transactions.js');
 let sqlAccount = require('../sql/accounts.js');
 let request = require('request');
+let transactionTypes = require('../helpers/transactionTypes.js');
 
 // Private fields
 let self, modules, __private = {};
@@ -105,12 +106,8 @@ Transaction.prototype.create = async function (data) {
 	}
 
 	trs.id = this.getId(trs);
-	if(trs.type === 9) {
-		trs.fee = 0;
-	} else {
-		trs.fee = __private.types[trs.type].calculateFee.call(this, trs, data.sender) || 0;
-	}
-	
+	trs.fee = __private.types[trs.type].calculateFee.call(this, trs, data.sender) || 0;
+
 	return trs;
 };
 
@@ -341,7 +338,10 @@ Transaction.prototype.checkConfirmed = function (trs, cb) {
  */
 Transaction.prototype.checkBalance = function (amount, balance, trs, sender) {
 	
-	let totalAmountWithFrozeAmount = trs.type == 10 ? new bignum(amount): new bignum(sender.totalFrozeAmount).plus(amount);
+	let totalAmountWithFrozeAmount = trs.type === transactionTypes.SENDSTAKE ?
+		new bignum(amount)
+		:
+		new bignum(sender.totalFrozeAmount).plus(amount);
 
 	let exceededBalance = new bignum(sender[balance].toString()).lessThan(totalAmountWithFrozeAmount);
 	let exceeded = (trs.blockId !== this.scope.genesisblock.block.id && exceededBalance);
@@ -607,8 +607,8 @@ Transaction.prototype.verify = function (trs, sender, requester, cb) {
 	
 	let fee = __private.types[trs.type].calculateFee.call(this, trs, sender) || 0;
 	if (
-		(trs.type !== 11 && trs.type !== 9 && trs.type !== 12) &&
-		!(trs.type === 8 && trs.stakedAmount < 0) &&
+		(trs.type !== transactionTypes.MIGRATION) &&
+		!(trs.type === transactionTypes.STAKE && trs.stakedAmount < 0) &&
 		(!fee || trs.fee !== fee)
 	) {
 		return setImmediate(cb, 'Invalid transaction fee');
@@ -622,7 +622,7 @@ Transaction.prototype.verify = function (trs, sender, requester, cb) {
 	// //Check sender not able to do transaction on froze amount
 	let amount;
 	// Check confirmed sender balance
-	if (trs.type !== 11 && trs.type !== 9 && trs.type !== 12) {
+	if (trs.type !== transactionTypes.MIGRATION) {
 		amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
 	} else {
 		amount = new bignum(trs.amount.toString());
@@ -759,7 +759,7 @@ Transaction.prototype.apply = function (trs, block, sender, cb) {
 
 	let amount;
 	// Check confirmed sender balance
-	if (trs.type !== 11 && trs.type !==9 && trs.type !== 12 ) {
+	if (trs.type !== transactionTypes.MIGRATION) {
 		amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
 	} else {
 		amount = new bignum(trs.amount.toString());
@@ -815,7 +815,7 @@ Transaction.prototype.apply = function (trs, block, sender, cb) {
  */
 Transaction.prototype.undo = function (trs, block, sender, cb) {
 	let amount = new bignum(trs.amount.toString());
-	if (trs.type !== 11 && trs.type !== 9 && trs.type !== 12) {
+	if (trs.type !== transactionTypes.MIGRATION) {
 		amount = amount.plus(trs.fee.toString()).toNumber();
 	}
 
@@ -866,7 +866,7 @@ Transaction.prototype.applyUnconfirmed = function (trs, sender, requester, cb) {
 	}
 	var amount;
 	// Check unconfirmed sender balance
-	if (trs.type === 11 || trs.type === 9 || trs.type === 12) {
+	if (trs.type === transactionTypes.MIGRATION) {
 		amount = new bignum(trs.amount.toString());
 	} else {
 		amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
@@ -910,7 +910,7 @@ Transaction.prototype.applyUnconfirmed = function (trs, sender, requester, cb) {
  */
 Transaction.prototype.undoUnconfirmed = function (trs, sender, cb) {
 	let amount = new bignum(trs.amount.toString());
-	if (trs.type !== 11 && trs.type !== 9 && trs.type !== 12) {
+	if (trs.type !== transactionTypes.MIGRATION) {
 		amount = amount.plus(trs.fee.toString()).toNumber();
 	}
 	else {
@@ -981,11 +981,11 @@ Transaction.prototype.dbSave = function (trs) {
 	}
 
 	// FIXME ?
-	if((trs.type === 8) && trs.freezedAmount > 0){
+	if((trs.type === transactionTypes.STAKE) && trs.freezedAmount > 0){
 		trs.amount = trs.freezedAmount;
 	}
 
-	if (trs.type === 11 || trs.type === 9 || trs.type === 12) {
+	if (trs.type === transactionTypes.MIGRATION) {
 		trs.fee = 0;
 	}
 
@@ -1033,7 +1033,7 @@ Transaction.prototype.dbSave = function (trs) {
  * @return {setImmediateCallback} error string | cb
  */
 Transaction.prototype.afterSave = function (trs, cb) {
-	if (trs.type === 8) {
+	if (trs.type === transactionTypes.STAKE) {
 		//Stake order event
 		this.scope.network.io.sockets.emit('stake/change', null);
 	}
@@ -1235,7 +1235,7 @@ Transaction.prototype.objectNormalize = function (trs) {
 	}
 	trs.fee = trs.fee || 0;
 
-	if (trs.type === 9 || trs.type === 11 || trs.type === 12)
+	if (trs.type === transactionTypes.MIGRATION)
 		var report = this.scope.schema.validate(trs, Transaction.prototype.Referschema);
 	else
 		var report = this.scope.schema.validate(trs, Transaction.prototype.schema);

@@ -60,7 +60,7 @@ let FrogingsSql = {
 
 	getSelectedOrder: 'SELECT "senderId" , "freezedAmount", "rewardCount", "nextVoteMilestone", "voteCount", "stakeId" FROM stake_orders WHERE "status"=1 AND "stakeId"=${id}',
 
-	RemoveOrder: 'DELETE FROM stake_orders WHERE "id" = ${id} AND "senderId"=${address}',
+	removeOrderByTrsId: 'DELETE FROM stake_orders WHERE "id" = ${transactionId}',
 
 	getOldOrderID: 'SELECT "id" FROM stake_orders WHERE "stakeId"=${stakeId}',
 
