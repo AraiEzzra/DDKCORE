@@ -1,4 +1,3 @@
-
 const constants = require('../helpers/constants.js');
 const sql = require('../sql/frogings.js');
 const accountSql = require('../sql/accounts.js');
@@ -31,22 +30,22 @@ let modules, library, self;
  */
 // Constructor
 function Frozen(logger, db, transaction, network, config, balancesSequence, ed, cb) {
-	self = this;
-	self.scope = {
-		logger: logger,
-		db: db,
-		logic: {
-			transaction: transaction
-		},
-		network: network,
-		config: config,
-		balancesSequence: balancesSequence,
-		ed: ed
-	};
+    self = this;
+    self.scope = {
+        logger: logger,
+        db: db,
+        logic: {
+            transaction: transaction
+        },
+        network: network,
+        config: config,
+        balancesSequence: balancesSequence,
+        ed: ed
+    };
 
-	if (cb) {
-		return setImmediate(cb, null, this);
-	}
+    if (cb) {
+        return setImmediate(cb, null, this);
+    }
 }
 
 // Private methods
@@ -64,41 +63,39 @@ __private.stakeReward = new StakeReward();
  */
 Frozen.prototype.create = async function (data, trs) {
 
-	const senderId = data.sender.address;
+    const senderId = data.sender.address;
     const airdropReward = await self.getAirdropReward(senderId, data.freezedAmount, data.type);
 
-	const date = new Date(trs.timestamp * 1000);
-	trs.recipientId = null;
-	trs.asset.stakeOrder = {
-		stakedAmount: data.freezedAmount,
-		nextVoteMilestone: (date.setMinutes(date.getMinutes())) / 1000,
-		startTime: trs.timestamp
-	};
-	trs.asset.airdropReward = {
-        withAirdropReward : airdropReward.allowed,
-        sponsors: airdropReward.sponsors,
-		totalReward: airdropReward.total
+    const date = new Date(trs.timestamp * 1000);
+    trs.recipientId = null;
+    trs.asset.stakeOrder = {
+        stakedAmount: data.freezedAmount,
+        nextVoteMilestone: (date.setMinutes(date.getMinutes())) / 1000,
+        startTime: trs.timestamp
+    };
+    trs.asset.airdropReward = {
+        withAirdropReward: airdropReward.allowed, sponsors: airdropReward.sponsors, totalReward: airdropReward.total
     };
 
-	if (data.stakeId) {
-		trs.stakeId = data.stakeId;
-	}
-	trs.stakedAmount = data.freezedAmount;
-	trs.trsName = 'STAKE';
-	return trs;
+    if (data.stakeId) {
+        trs.stakeId = data.stakeId;
+    }
+    trs.stakedAmount = data.freezedAmount;
+    trs.trsName = 'STAKE';
+    return trs;
 };
 
 /**
  * @desc on modules ready
  * @private
- * @implements 
+ * @implements
  * @param {Object} sender - sender data
  * @param {Object} frz - stake order data
  * @param {function} cb - Callback function.
  * @return {bool} true
  */
 Frozen.prototype.ready = function (frz, sender) {
-	return true;
+    return true;
 };
 
 /**
@@ -109,17 +106,7 @@ Frozen.prototype.dbTable = 'stake_orders';
 /**
  * @desc stake_order table fields
  */
-Frozen.prototype.dbFields = [
-	'id',
-	'status',
-	'startTime',
-	'insertTime',
-	'senderId',
-	'recipientId',
-	'freezedAmount',
-	'nextVoteMilestone',
-	'airdropReward'
-];
+Frozen.prototype.dbFields = ['id', 'status', 'startTime', 'insertTime', 'senderId', 'recipientId', 'freezedAmount', 'nextVoteMilestone', 'airdropReward'];
 
 Frozen.prototype.inactive = '0';
 Frozen.prototype.active = '1';
@@ -131,21 +118,19 @@ Frozen.prototype.active = '1';
  * @throws {error} catch error
  */
 Frozen.prototype.dbSave = function (trs) {
-	return {
-		table: this.dbTable,
-		fields: this.dbFields,
-		values: {
-			id: trs.id,
-			status: this.active,
-			startTime: trs.asset.stakeOrder.startTime,
-			insertTime: trs.asset.stakeOrder.startTime,
-			senderId: trs.senderId,
-			recipientId: trs.recipientId,
-			freezedAmount: trs.asset.stakeOrder.stakedAmount,
-			nextVoteMilestone: trs.asset.stakeOrder.nextVoteMilestone,
-			airdropReward: trs.asset.airdropReward || {}
-		}
-	};
+    return {
+        table: this.dbTable, fields: this.dbFields, values: {
+            id: trs.id,
+            status: this.active,
+            startTime: trs.asset.stakeOrder.startTime,
+            insertTime: trs.asset.stakeOrder.startTime,
+            senderId: trs.senderId,
+            recipientId: trs.recipientId,
+            freezedAmount: trs.asset.stakeOrder.stakedAmount,
+            nextVoteMilestone: trs.asset.stakeOrder.nextVoteMilestone,
+            airdropReward: trs.asset.airdropReward || {}
+        }
+    };
 };
 
 /**
@@ -154,23 +139,23 @@ Frozen.prototype.dbSave = function (trs) {
  * @return {null|froze} blcok object
  */
 Frozen.prototype.dbRead = function (raw) {
-	if (!raw.so_id) {
-		return null;
-	} else {
-		let stakeOrder = {
-			id: raw.so_id,
-			status: raw.so_status,
-			startTime: raw.so_startTime,
-			insertTime: raw.so_startTime,
-			senderId: raw.so_senderId,
-			recipientId: raw.so_recipientId,
-			stakedAmount: raw.so_freezedAmount,
-			nextVoteMilestone: raw.so_nextVoteMilestone,
-			airdropReward: raw.so_airdropReward || {}
-		};
+    if (!raw.so_id) {
+        return null;
+    } else {
+        let stakeOrder = {
+            id: raw.so_id,
+            status: raw.so_status,
+            startTime: raw.so_startTime,
+            insertTime: raw.so_startTime,
+            senderId: raw.so_senderId,
+            recipientId: raw.so_recipientId,
+            stakedAmount: raw.so_freezedAmount,
+            nextVoteMilestone: raw.so_nextVoteMilestone,
+            airdropReward: raw.so_airdropReward || {}
+        };
 
-		return { stakeOrder: stakeOrder };
-	}
+        return { stakeOrder: stakeOrder };
+    }
 };
 
 /**
@@ -179,34 +164,34 @@ Frozen.prototype.dbRead = function (raw) {
  * @throws {string|error} error message | catch error
  */
 Frozen.prototype.objectNormalize = function (trs) {
-	delete trs.blockId;
-	return trs;
+    delete trs.blockId;
+    return trs;
 };
 
 /**
  * @desc undo unconfirmed transations
  * @private
- * @implements 
+ * @implements
  * @param {Object} sender - sender data
  * @param {Object} trs - transation data
  * @param {function} cb - Callback function.
  * @return {function} cb
  */
 Frozen.prototype.undoUnconfirmed = function (trs, sender, cb) {
-	return setImmediate(cb);
+    return setImmediate(cb);
 };
 
 /**
  * @desc apply unconfirmed transations
  * @private
- * @implements 
+ * @implements
  * @param {Object} sender - sender data
  * @param {Object} trs - transation data
  * @param {function} cb - Callback function.
  * @return {function} cb
  */
 Frozen.prototype.applyUnconfirmed = function (trs, sender, cb) {
-	return setImmediate(cb);
+    return setImmediate(cb);
 };
 
 /**
@@ -219,36 +204,27 @@ Frozen.prototype.applyUnconfirmed = function (trs, sender, cb) {
  * @return {function} {cb, err}
  */
 Frozen.prototype.undo = function (trs, block, sender, cb) {
-
-	self.scope.db.none(sql.RemoveOrder,
-		{
-			id: trs.id,
-			address: trs.senderId
-		})
-		.then(function () {
-			self.scope.db.none(sql.deductFrozeAmount,
-				{
-					senderId: trs.senderId,
-					orderFreezedAmount: trs.stakedAmount
-				})
-				.then(function () {
-					return setImmediate(cb);
-				})
-				.catch(function (err) {
-					self.scope.logger.error(err.stack);
-					return setImmediate(cb, 'Stake#DeductStakeAmount from mem_account error');
-				});
-		})
-		.catch(function (err) {
-			self.scope.logger.error(err.stack);
-			return setImmediate(cb, 'Stake#deleteOrder error');
-		});
+    (async () => {
+        await Promise.all([
+            self.scope.db.none(sql.removeOrderByTrsId, { transactionId: trs.stakeId }),
+            self.scope.db.none(sql.deductFrozeAmount, {
+                senderId: trs.senderId, orderFreezedAmount: trs.stakedAmount
+            }),
+            self.undoAirdropReward(trs)
+        ]);
+    })()
+    .then(function () {
+        return setImmediate(cb);
+    })
+    .catch(function (err) {
+        return setImmediate(cb, `Undo stake error: ${err}`);
+    });
 };
 
 /**
  * @desc apply
  * @private
- * @implements 
+ * @implements
  *  @param {Object} block - block data
  * @param {Object} sender - sender data
  * @param {Object} trs - transation data
@@ -256,100 +232,85 @@ Frozen.prototype.undo = function (trs, block, sender, cb) {
  * @return {function} cb
  */
 Frozen.prototype.apply = function (trs, block, sender, cb) {
-	async.series([
-		function (seriesCb) {
-			self.updateFrozeAmount({
-				account: sender,
-				freezedAmount: trs.stakedAmount
-			}, function (err) {
-				if (err) {
-					return setImmediate(seriesCb, err);
-				}
+    async.series([function (seriesCb) {
+        self.updateFrozeAmount({
+            account: sender, freezedAmount: trs.stakedAmount
+        }, function (err) {
+            if (err) {
+                return setImmediate(seriesCb, err);
+            }
 
-				return setImmediate(seriesCb, null, trs);
-			});
-		},
-		function (seriesCb) {
-			self.sendAirdropReward(trs)
-			.then(
-				() => setImmediate(seriesCb, null),
-				err => setImmediate(seriesCb, err),
-			);
-		}
-	], cb);
+            return setImmediate(seriesCb, null, trs);
+        });
+    }, function (seriesCb) {
+        self.sendAirdropReward(trs)
+            .then(() => setImmediate(seriesCb, null), err => setImmediate(seriesCb, err),);
+    }], cb);
 };
 
 /**
  * @desc get bytes
  * @private
- * @implements 
+ * @implements
  * @return {null}
  */
 Frozen.prototype.getBytes = function (trs) {
-	return null;
+    return null;
 };
 
 /**
  * @desc process transaction
  * @private
- * @implements 
+ * @implements
  * @param {Object} sender - sender data
  * @param {Object} trs - transation data
  * @param {function} cb - Callback function.
  * @return {function} cb
  */
 Frozen.prototype.process = function (trs, sender, cb) {
-	return setImmediate(cb, null, trs);
+    return setImmediate(cb, null, trs);
 };
 
 /**
  * @desc verify
  * @private
- * @implements 
+ * @implements
  * @param {Object} sender - sender data
  * @param {Object} trs - transation data
  * @param {function} cb - Callback function.
  * @return {function} {cb, err, trs}
  */
 Frozen.prototype.verify = function (trs, sender, cb) {
-	const stakedAmount = trs.stakedAmount / 100000000;
+    const stakedAmount = trs.stakedAmount / 100000000;
 
-	if (stakedAmount < 1) {
-		return setImmediate(cb, 'Invalid stake amount');
-	}
+    if (stakedAmount < 1) {
+        return setImmediate(cb, 'Invalid stake amount');
+    }
 
-	if((stakedAmount % 1)!== 0){
-		return setImmediate(cb, 'Invalid stake amount: Decimal value');
-	}
+    if ((stakedAmount % 1) !== 0) {
+        return setImmediate(cb, 'Invalid stake amount: Decimal value');
+    }
 
-	if (trs.stakedAmount + sender.totalFrozeAmount > sender.u_balance ) {
-		return setImmediate(cb, 'Verify failed: Insufficient balance for stake');
-	}
+    if (trs.stakedAmount + sender.totalFrozeAmount > sender.u_balance) {
+        return setImmediate(cb, 'Verify failed: Insufficient balance for stake');
+    }
 
-	self.verifyAirdrop(trs)
-	.then(() => {
-		return setImmediate(cb, null);
-	})
-	.catch((err) => {
-        return setImmediate(cb, err);
-	});
+    self.verifyAirdrop(trs)
+        .then(() => {
+            return setImmediate(cb, null);
+        })
+        .catch((err) => {
+            return setImmediate(cb, err);
+        });
 };
 
 
 Frozen.prototype.verifyAirdrop = async (trs) => {
-	const airdropReward = await self.getAirdropReward(
-		trs.senderId,
-		trs.type === transactionTypes.STAKE ? trs.stakedAmount : trs.asset.reward,
-		trs.type
-	);
+    const airdropReward = await self.getAirdropReward(trs.senderId, trs.type === transactionTypes.STAKE ? trs.stakedAmount : trs.asset.reward, trs.type);
 
-	if (
-		airdropReward.allowed !== trs.asset.airdropReward.withAirdropReward ||
-		JSON.stringify(airdropReward.sponsors) !== JSON.stringify(trs.asset.airdropReward.sponsors) ||
-		airdropReward.total !== trs.asset.airdropReward.totalReward
-	) {
-		throw `Verify failed: ${trs.type === transactionTypes.STAKE ? 'stake': 'vote'} airdrop reward is corrupted`;
-	}
+    if (airdropReward.allowed !== trs.asset.airdropReward.withAirdropReward || JSON.stringify(airdropReward.sponsors) !== JSON.stringify(trs.asset.airdropReward.sponsors) || airdropReward.total !== trs.asset.airdropReward.totalReward) {
+        throw `Verify failed: ${trs.type === transactionTypes.STAKE ? 'stake' : 'vote'} airdrop reward is corrupted`;
+    }
 };
 
 /**
@@ -360,22 +321,19 @@ Frozen.prototype.verifyAirdrop = async (trs) => {
  * @return % based on amount
  */
 Frozen.prototype.calculateFee = function (trs, sender) {
-	return (trs.stakedAmount * constants.fees.froze) / 100;
+    return (trs.stakedAmount * constants.fees.froze) / 100;
 };
 
 /**
  * @desc on bind
  * @private
- * @implements 
+ * @implements
  * @param {Object} accounts - modules:accounts
  */
 Frozen.prototype.bind = function (accounts, rounds, blocks, transactions) {
-	modules = {
-		accounts: accounts,
-		rounds: rounds,
-		blocks: blocks,
-		transactions: transactions
-	};
+    modules = {
+        accounts: accounts, rounds: rounds, blocks: blocks, transactions: transactions
+    };
 };
 
 /**
@@ -392,19 +350,17 @@ Frozen.prototype.sendAirdropReward = async function (trs) {
 
     let i = 0;
 
-    for(let sponsorId in transactionAirdropReward.sponsors) {
+    for (let sponsorId in transactionAirdropReward.sponsors) {
         const rewardAmount = transactionAirdropReward.sponsors[sponsorId];
         await self.scope.db.task(async () => {
 
-        	const iterator = i;
+            const iterator = i;
             await self.scope.db.none(reward_sql.updateAccountBalance, {
-                address: sponsorId,
-                reward: rewardAmount
+                address: sponsorId, reward: rewardAmount
             });
 
             await self.scope.db.none(reward_sql.updateAccountBalance, {
-                address: constants.airdrop.account,
-                reward: -rewardAmount
+                address: constants.airdrop.account, reward: -rewardAmount
             });
 
             await self.scope.db.none(reward_sql.updateRewardTypeTransaction, {
@@ -412,8 +368,8 @@ Frozen.prototype.sendAirdropReward = async function (trs) {
                 sponsorAddress: trs.senderId,
                 introducer_address: sponsorId,
                 reward: rewardAmount,
-                level: "Level " + (iterator),
-                transaction_type: trs.type === transactionTypes.STAKE ? "DIRECTREF" : "CHAINREF",
+                level: 'Level ' + (iterator),
+                transaction_type: trs.type === transactionTypes.STAKE ? 'DIRECTREF' : 'CHAINREF',
                 time: slots.getTime()
             });
 
@@ -427,19 +383,20 @@ Frozen.prototype.sendAirdropReward = async function (trs) {
 Frozen.prototype.undoAirdropReward = async function (trs) {
 
     const transactionAirdropReward = trs.asset.airdropReward;
+    if (!transactionAirdropReward.withAirdropReward) {
+        return true;
+    }
 
-    for(let sponsorId in transactionAirdropReward.sponsors) {
+    for (let sponsorId in transactionAirdropReward.sponsors) {
         const rewardAmount = transactionAirdropReward.sponsors[sponsorId];
         await self.scope.db.task(async () => {
 
             await self.scope.db.none(reward_sql.updateAccountBalance, {
-                address: sponsorId,
-                reward: -rewardAmount
+                address: sponsorId, reward: -rewardAmount
             });
 
             await self.scope.db.none(reward_sql.updateAccountBalance, {
-                address: constants.airdrop.account,
-                reward: rewardAmount
+                address: constants.airdrop.account, reward: rewardAmount
             });
 
         });
@@ -453,19 +410,17 @@ Frozen.prototype.undoAirdropReward = async function (trs) {
 };
 
 Frozen.prototype.getAirdropReward = async function (senderAddress, amount, transactionType) {
-	const result = {
-        total: 0,
-        sponsors: {},
-        allowed: false
-	};
+    const result = {
+        total: 0, sponsors: {}, allowed: false
+    };
 
-	try {
-        if (!await cache.prototype.getJsonForKeyAsync("referStatus")) {
+    try {
+        if (!await cache.prototype.getJsonForKeyAsync('referStatus')) {
             return result;
         }
-	} catch (err){
+    } catch (err) {
         self.scope.logger.error(err);
-	}
+    }
 
     // TODO use u_balance
     const availableAirdropBalance = await self.scope.db.one(account_sql.getCurrentUnmined, {
@@ -482,24 +437,21 @@ Frozen.prototype.getAirdropReward = async function (senderAddress, amount, trans
     }
 
     if (transactionType === transactionTypes.STAKE) {
-    	user.level = [user.level[0]]
-	}
+        user.level = [user.level[0]];
+    }
 
-	let airdropRewardAmount = 0;
+    let airdropRewardAmount = 0;
     const sponsors = {};
 
     user.level.forEach((sponsorAddress, i) => {
-        const reward = transactionType === transactionTypes.STAKE ?
-			((amount * constants.airdrop.stakeRewardPercent) / 100)
-			:
-			(((constants.airdrop.referralPercentPerLevel[i]) * amount) / 100);
+        const reward = transactionType === transactionTypes.STAKE ? ((amount * constants.airdrop.stakeRewardPercent) / 100) : (((constants.airdrop.referralPercentPerLevel[i]) * amount) / 100);
         sponsors[sponsorAddress] = reward;
         airdropRewardAmount += reward;
-	});
+    });
 
     if (availableAirdropBalance.balance < airdropRewardAmount) {
         try {
-            await cache.prototype.setJsonForKeyAsync("referStatus", false);
+            await cache.prototype.setJsonForKeyAsync('referStatus', false);
         } catch (err) {
             self.scope.logger.error(err);
         }
@@ -517,7 +469,9 @@ Frozen.prototype.getAirdropReward = async function (senderAddress, amount, trans
 Frozen.prototype.calculateTotalRewardAndUnstake = async function (senderId) {
     let reward = 0;
     let unstakeAmount = 0;
-    const freezeOrders = await self.scope.db.query(sql.getActiveFrozeOrders, { senderId, currentTime: slots.getTime() });
+    const freezeOrders = await self.scope.db.query(sql.getActiveFrozeOrders, {
+        senderId, currentTime: slots.getTime()
+    });
     await Promise.all(freezeOrders.map(async order => {
         if (order.voteCount > 0 && (parseInt(order.voteCount, 10) + 1) % constants.froze.rewardVoteCount === 0) {
             const blockHeight = modules.blocks.lastBlock.get().height;
@@ -527,9 +481,9 @@ Frozen.prototype.calculateTotalRewardAndUnstake = async function (senderId) {
     }));
     const readyToUnstakeOrders = freezeOrders.filter(o => (parseInt(o.voteCount, 10) + 1) === constants.froze.unstakeVoteCount);
     await Promise.all(readyToUnstakeOrders.map(order => {
-    	unstakeAmount -= parseInt(order.freezedAmount, 10);
+        unstakeAmount -= parseInt(order.freezedAmount, 10);
     }));
-    return {reward: reward, unstake: unstakeAmount};
+    return { reward: reward, unstake: unstakeAmount };
 };
 
 /**
@@ -543,24 +497,27 @@ Frozen.prototype.calculateTotalRewardAndUnstake = async function (senderId) {
  */
 Frozen.prototype.applyFrozeOrdersRewardAndUnstake = async function (voteTransaction) {
     const senderId = voteTransaction.senderId;
-	const freezeOrders = await self.scope.db.query(sql.getActiveFrozeOrders, { senderId, currentTime: slots.getTime() });
-	await self.sendRewards(freezeOrders);
+    const freezeOrders = await self.scope.db.query(sql.getActiveFrozeOrders, {
+        senderId, currentTime: slots.getTime()
+    });
+    await self.sendRewards(freezeOrders);
     if (voteTransaction.asset.airdropReward.withAirdropReward) {
         await self.sendAirdropReward(voteTransaction);
     }
-	await self.unstakeOrders(freezeOrders);
-	return [];
+    await self.unstakeOrders(freezeOrders);
+    return [];
 };
 
 Frozen.prototype.sendRewards = async (orders) => {
     const readyToRewardOrders = orders.filter(order => {
-        if (order.voteCount <= 0)
+        if (order.voteCount <= 0) {
             return false;
+        }
         return order.voteCount % constants.froze.rewardVoteCount === 0;
     });
-	await Promise.all(readyToRewardOrders.map(async order => {
-		await self.sendOrderReward(order);
-	}));
+    await Promise.all(readyToRewardOrders.map(async order => {
+        await self.sendOrderReward(order);
+    }));
 };
 
 Frozen.prototype.sendOrderReward = async (order) => {
@@ -568,16 +525,13 @@ Frozen.prototype.sendOrderReward = async (order) => {
     const reward = parseInt(order.freezedAmount, 10) * stakeRewardPercent / 100;
     order.freezedAmount = parseInt(order.freezedAmount, 10) + reward;
     await self.scope.db.none(sql.updateOrderFrozeAmount, {
-        freezedAmount: order.freezedAmount,
-        stakeId: order.stakeId
+        freezedAmount: order.freezedAmount, stakeId: order.stakeId
     });
     await self.scope.db.none(sql.updateAccountBalanceAndFroze, {
-        reward: reward,
-        senderId: order.senderId
+        reward: reward, senderId: order.senderId
     });
     await self.scope.db.none(sql.updateTotalSupply, {
-        reward: -reward,
-        totalSupplyAccount: self.scope.config.forging.totalSupplyAccount
+        reward: -reward, totalSupplyAccount: self.scope.config.forging.totalSupplyAccount
     });
 };
 
@@ -590,56 +544,55 @@ Frozen.prototype.unstakeOrders = async (orders) => {
     const readyToUnstakeOrders = orders.filter(o => {
         return o.voteCount === constants.froze.unstakeVoteCount;
     });
-	await Promise.all(readyToUnstakeOrders.map(async order => {
-		await self.scope.db.none(sql.deductFrozeAmount, {
-			orderFreezedAmount: order.freezedAmount,
-			senderId: order.senderId
-		});
-		await self.scope.db.none(sql.disableFrozeOrders, {
-			stakeId: order.stakeId
-		});
-	}));
+    await Promise.all(readyToUnstakeOrders.map(async order => {
+        await self.scope.db.none(sql.deductFrozeAmount, {
+            orderFreezedAmount: order.freezedAmount, senderId: order.senderId
+        });
+        await self.scope.db.none(sql.disableFrozeOrders, {
+            stakeId: order.stakeId
+        });
+    }));
 };
 
 Frozen.prototype.undoFrozeOrdersRewardAndUnstake = async function (voteTransaction) {
     const senderId = voteTransaction.senderId;
-    const updatedOrders = await self.scope.db.query(sql.getRecentlyChangedFrozeOrders, { senderId, currentTime: slots.getTime() });
-    await self.recoverUnstakedOrders(updatedOrders);
-    await self.deductRewards(updatedOrders);
-    if (voteTransaction.asset.airdropReward.withAirdropReward) {
-        await self.undoAirdropReward(voteTransaction);
-	}
+    const updatedOrders = await self.scope.db.query(sql.getRecentlyChangedFrozeOrders, {
+        senderId, currentTime: slots.getTime()
+    });
+    await Promise.all([
+        self.recoverUnstakedOrders(updatedOrders),
+        self.deductRewards(updatedOrders),
+        self.undoAirdropReward(voteTransaction)
+    ]);
     return [];
 };
 
 Frozen.prototype.deductRewards = async (orders) => {
     const readyToDeductRewardOrders = orders.filter(order => {
-        if (order.voteCount <= 0)
+        if (order.voteCount <= 0) {
             return false;
+        }
         return order.voteCount % constants.froze.rewardVoteCount === 0;
     });
-	await Promise.all(readyToDeductRewardOrders.map(async order => {
-		await self.deductOrderReward(order);
-	}));
+    await Promise.all(readyToDeductRewardOrders.map(async order => {
+        await self.deductOrderReward(order);
+    }));
 };
 
 Frozen.prototype.deductOrderReward = async (order) => {
     const stakeRewardPercent = self.getStakeRewardPercent();
     const updatedBalance = parseInt(order.freezedAmount, 10);
-    const previousBalance =  parseInt(order.freezedAmount, 10) * 100 / (stakeRewardPercent + 100);
+    const previousBalance = parseInt(order.freezedAmount, 10) * 100 / (stakeRewardPercent + 100);
     const reward = updatedBalance - previousBalance;
     order.freezedAmount = parseInt(order.freezedAmount, 10) - reward;
     await self.scope.db.none(sql.updateOrderFrozeAmount, {
-        freezedAmount: order.freezedAmount,
-        stakeId: order.stakeId
+        freezedAmount: order.freezedAmount, stakeId: order.stakeId
     });
     await self.scope.db.none(sql.updateAccountBalanceAndFroze, {
-        reward: -reward,
-        senderId: order.senderId
+        reward: -reward, senderId: order.senderId
     });
     await self.scope.db.none(sql.updateTotalSupply, {
-        reward: reward,
-        totalSupplyAccount: self.scope.config.forging.totalSupplyAccount
+        reward: reward, totalSupplyAccount: self.scope.config.forging.totalSupplyAccount
     });
 };
 
@@ -647,15 +600,14 @@ Frozen.prototype.recoverUnstakedOrders = async (orders) => {
     const needRecoverStakeOrders = orders.filter(o => {
         return o.status === 0;
     });
-	await Promise.all(needRecoverStakeOrders.map(async order => {
-		await self.recoverUnstakedOrder(order);
-	}));
+    await Promise.all(needRecoverStakeOrders.map(async order => {
+        await self.recoverUnstakedOrder(order);
+    }));
 };
 
 Frozen.prototype.recoverUnstakedOrder = async (order) => {
     await self.scope.db.none(sql.updateFrozeAmount, {
-        reward: order.freezedAmount,
-        senderId: order.senderId
+        reward: order.freezedAmount, senderId: order.senderId
     });
     await self.scope.db.none(sql.enableFrozeOrder, {
         stakeId: order.stakeId
@@ -671,37 +623,36 @@ Frozen.prototype.recoverUnstakedOrder = async (order) => {
  */
 Frozen.prototype.updateFrozeAmount = function (userData, cb) {
 
-	self.scope.db.one(sql.getFrozeAmount, {
-		senderId: userData.account.address
-	})
-	.then(function (totalFrozeAmount) {
-		if (!totalFrozeAmount) {
-			return setImmediate(cb, 'No Account Exist in mem_account table for' + userData.account.address);
-		}
-		let frozeAmountFromDB = totalFrozeAmount.totalFrozeAmount;
-		totalFrozeAmount = parseInt(frozeAmountFromDB) + userData.freezedAmount;
-		let totalFrozeAmountWithFees = totalFrozeAmount + (parseFloat(constants.fees.froze) * (userData.freezedAmount)) / 100;
-		if (totalFrozeAmountWithFees <= userData.account.balance) {
-			self.scope.db.none(sql.updateFrozeAmount, {
-				reward: userData.freezedAmount,
-				senderId: userData.account.address
-			})
-			.then(function () {
-				self.scope.logger.info(userData.account.address, ': is update its froze amount in mem_accounts table ');
-				return setImmediate(cb, null);
-			})
-			.catch(function (err) {
-				self.scope.logger.error(err.stack);
-				return setImmediate(cb, err.toString());
-			});
-		} else {
-			return setImmediate(cb, 'Not have enough balance');
-		}
-	})
-	.catch(function (err) {
-		self.scope.logger.error(err.stack);
-		return setImmediate(cb, err.toString());
-	});
+    self.scope.db.one(sql.getFrozeAmount, {
+        senderId: userData.account.address
+    })
+        .then(function (totalFrozeAmount) {
+            if (!totalFrozeAmount) {
+                return setImmediate(cb, 'No Account Exist in mem_account table for' + userData.account.address);
+            }
+            let frozeAmountFromDB = totalFrozeAmount.totalFrozeAmount;
+            totalFrozeAmount = parseInt(frozeAmountFromDB) + userData.freezedAmount;
+            let totalFrozeAmountWithFees = totalFrozeAmount + (parseFloat(constants.fees.froze) * (userData.freezedAmount)) / 100;
+            if (totalFrozeAmountWithFees <= userData.account.balance) {
+                self.scope.db.none(sql.updateFrozeAmount, {
+                    reward: userData.freezedAmount, senderId: userData.account.address
+                })
+                    .then(function () {
+                        self.scope.logger.info(userData.account.address, ': is update its froze amount in mem_accounts table ');
+                        return setImmediate(cb, null);
+                    })
+                    .catch(function (err) {
+                        self.scope.logger.error(err.stack);
+                        return setImmediate(cb, err.toString());
+                    });
+            } else {
+                return setImmediate(cb, 'Not have enough balance');
+            }
+        })
+        .catch(function (err) {
+            self.scope.logger.error(err.stack);
+            return setImmediate(cb, err.toString());
+        });
 
 };
 

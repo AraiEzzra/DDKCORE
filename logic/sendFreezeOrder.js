@@ -141,18 +141,14 @@ SendFreezeOrder.prototype.undo = function (trs, block, sender, cb) {
 						});
 				},
 				function (id, waterCb) {
-					self.scope.db.one(sql.RemoveOrder,
-						{
-							id: id,
-							senderId: trs.recipientId
-						})
-						.then(function (nextVoteMilestone) {
-							return setImmediate(waterCb, null, nextVoteMilestone);
-						})
-						.catch(function (err) {
-							self.scope.logger.error(err.stack);
-							return setImmediate(waterCb, err.toString());
-						});
+					self.scope.db.one(sql.removeOrderByTrsId, { transactionId: id })
+					.then(function (nextVoteMilestone) {
+						return setImmediate(waterCb, null, nextVoteMilestone);
+					})
+					.catch(function (err) {
+						self.scope.logger.error(err.stack);
+						return setImmediate(waterCb, err.toString());
+					});
 				}
 			], function (err) {
 				if (err) {
