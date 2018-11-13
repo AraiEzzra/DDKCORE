@@ -269,22 +269,18 @@ Vote.prototype.apply = function (trs, block, sender, cb) {
 			}, seriesCb);
 		},
 		function (seriesCb) {
-			self.updateMemAccounts(
-				{
-					votes: trs.asset.votes,
-					senderId: trs.senderId
+			self.updateMemAccounts({ votes: trs.asset.votes, senderId: trs.senderId },
+			function (err) {
+				if (err) {
+					return setImmediate(seriesCb, err);
 				}
-				, function (err) {
-					if (err) {
-						return setImmediate(seriesCb, err);
-					}
-					return setImmediate(seriesCb, null);
-				});
+				return setImmediate(seriesCb, null, trs);
+			});
 		},
 		function (seriesCb) {
 			self.updateAndCheckVote(trs)
 			.then(
-				() => setImmediate(seriesCb, null),
+				() => setImmediate(seriesCb, null, trs),
 				err => setImmediate(seriesCb, err),
 			);
 		}
@@ -439,8 +435,8 @@ Vote.prototype.dbRead = function (raw) {
 		return null;
 	} else {
 		const votes = raw.v_votes.split(',');
-        const reward = raw.v_reward || 0;
-		const unstake = raw.v_unstake || 0;
+        const reward = Number(raw.v_reward) || 0;
+		const unstake = Number(raw.v_unstake) || 0;
         const airdropReward = raw.v_airdropReward || {};
 
 		return { votes: votes, reward: reward, unstake: unstake, airdropReward: airdropReward };
@@ -507,7 +503,7 @@ Vote.prototype.updateAndCheckVote = async (voteTransaction) => {
         await library.db.task(async () => {
 			await library.db.none(sql.updateStakeOrder, {
 				senderId: senderId,
-				milestone: constants.froze.vTime*10, //TODO back to vTime * 60
+				milestone: constants.froze.vTime * 10, //TODO back to vTime * 60
 				currentTime: slots.getTime()
 			});
 			await library.frozen.applyFrozeOrdersRewardAndUnstake(voteTransaction);
