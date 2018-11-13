@@ -31,9 +31,10 @@ describe('RPC method: GET_ACCOUNT', function () {
 
     it('should return object', function (done) {
       ws.call('GET_ACCOUNT', {address: ADDRESS}).then((result) => {
-        expect(result).to.be.object;
-        expect(result.account).to.be.object;
-        accountResult = result;
+        expect(result).to.be.an('object');
+        expect(result.account, 'prop account must be object').to.be.an('object');
+
+        accountResult = result.account;
         done();
       });
     });
@@ -43,10 +44,15 @@ describe('RPC method: GET_ACCOUNT', function () {
   describe('Checking the result on the conditions', function () {
 
     it('should not stop', function (done) {
-      expect(accountResult.account.address).to.be.string;
-      expect(accountResult.account.unconfirmedBalance).to.be.string;
-      expect(accountResult.account.balance).to.be.string;
-      expect(accountResult.account.publicKey).to.be.defined;
+      expect(accountResult.address).to.be.an('string');
+      expect(accountResult.unconfirmedBalance).to.be.an('string');
+      expect(accountResult.balance).to.be.an('string');
+      expect(accountResult).to.have.property('publicKey');
+      expect(accountResult).to.have.property('unconfirmedSignature').to.be.an('number');
+      expect(accountResult).to.have.property('secondSignature').to.be.an('number');
+      expect(accountResult).to.have.property('secondPublicKey');
+      expect(accountResult).to.have.property('multisignatures');
+      expect(accountResult).to.have.property('totalFrozeAmount');
       done()
     });
 
