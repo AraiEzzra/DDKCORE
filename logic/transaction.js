@@ -607,7 +607,7 @@ Transaction.prototype.verify = function (trs, sender, requester, cb) {
 	
 	let fee = __private.types[trs.type].calculateFee.call(this, trs, sender) || 0;
 	if (
-		(trs.type !== transactionTypes.MIGRATION) &&
+		(trs.type !== transactionTypes.MIGRATION && trs.type !== transactionTypes.REFERRAL) &&
 		!(trs.type === transactionTypes.STAKE && trs.stakedAmount < 0) &&
 		(!fee || trs.fee !== fee)
 	) {

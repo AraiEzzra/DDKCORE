@@ -8,6 +8,7 @@ let schema = require('../schema/accounts.js');
 let sandboxHelper = require('../helpers/sandbox.js');
 let transactionTypes = require('../helpers/transactionTypes.js');
 let Vote = require('../logic/vote.js');
+let Referral = require('../logic/referral.js');
 let sql = require('../sql/accounts.js');
 let cache = require('./cache.js');
 let jwt = require('jsonwebtoken');
@@ -63,6 +64,15 @@ function Accounts(cb, scope) {
 			scope.logic.frozen
 		)
 	);
+
+    __private.assetTypes[transactionTypes.REFERRAL] = library.logic.transaction.attachAssetType(
+        transactionTypes.REFERRAL,
+        new Referral(
+            scope.logger,
+            scope.schema,
+            scope.db
+        )
+    );
 
 	setImmediate(cb, null, self);
 }
@@ -153,83 +163,39 @@ Accounts.prototype.getAccount = function (filter, fields, cb) {
  * In case of no referral, chain will contain the null value i.e; Blank. 
  * @param {referalLink} - Refer Id.
  * @param {address} - Address of user during registration.
- * @param {cb} - callback function which return success or failure to the caller.
  * @author - Satish Joshi
  */
 
-Accounts.prototype.referralLinkChain = function (referalLink, address, cb) {
+Accounts.prototype.getReferralLinkChain = async function (referalLink, address) {
 
-	let referrer_address = referalLink;
-	if (!referrer_address) {
-		referrer_address = '';
-	}
-	let level = [];
-
-	if (referrer_address == address) {
-		let err = 'Introducer and sponsor can\'t be same';
-		return setImmediate(cb, err);
-	}
-
-	async.series([
-
-		function (callback) {
-			if (referrer_address != '') {
-				library.db.one(sql.validateReferSource, {
-					referSource: referrer_address
-				}).then(function (user) {
-					if (parseInt(user.address)) {
-						level.unshift(referrer_address);
-						callback();
-					} else {
-						let error = 'Referral Link is Invalid';
-						return setImmediate(cb, error);
-					}
-				}).catch(function (err) {
-					return setImmediate(cb, err);
-				});
-			} else {
-				callback();
-			}
-		},
-		function (callback) {
-			if (referrer_address != '') {
-				library.logic.account.findReferralLevel(referrer_address, function (err, resp) {
-					if (err) {
-						return setImmediate(cb, err);
-					}
-					if (resp.length != 0 && resp[0].level != null) {
-						let chain_length = ((resp[0].level.length) < 15) ? (resp[0].level.length) : 14;
-
-						level = level.concat(resp[0].level.slice(0, chain_length));
-					} else if (resp.length == 0) {
-						return setImmediate(cb, "Referral link source is not eligible");
-					}
-					callback();
-				});
-			} else {
-				callback();
-			}
-		},
-		function (callback) {
-			let levelDetails = {
-				address: address,
-				level: level
-			};
-
-			library.logic.account.insertLevel(levelDetails, function (err) {
-				if (err) {
-					return setImmediate(cb, err);
-				}
-				level.length = 0;
-				callback();
-			});
-		}
-	], function (err) {
-		if (err) {
-			setImmediate(cb, err);
-		}
-
-		return setImmediate(cb, null);
+    let referrer_address = referalLink;
+    if (!referrer_address) {
+        referrer_address = '';
+    }
+    let level = [];
+    if (referrer_address == address) {
+        return Promise.reject('Introducer and sponsor can\'t be same');
+    }
+    let user;
+    try {
+        user = await library.db.one(sql.validateReferSource, { referSource: referrer_address });
+        if (parseInt(user.address)) {
+            level.unshift(referrer_address);
+        }
+    } catch (e){
+        return Promise.reject('Referral Link is Invalid');
+    }
+    return new Promise((resolve, reject) => {
+        library.logic.account.findReferralLevel(referrer_address, function (err, resp) {
+            if (err) {
+                return reject(err);
+            }
+            if (resp.length != 0 && resp[0].level != null) {
+                let chain_length = ((resp[0].level.length) < 15) ? (resp[0].level.length) : 14;
+                level = level.concat(resp[0].level.slice(0, chain_length));
+            }
+            resolve(level);
+        });
 	});
 };
 
@@ -438,41 +404,28 @@ Accounts.prototype.shared = {
 					/****************************************************************/
 
 					cache.prototype.isExists(REDIS_KEY_USER_INFO_HASH, function (err, isExist) {
-						
 						if (!isExist) {
 							cache.prototype.setJsonForKey(REDIS_KEY_USER_INFO_HASH, accountData.address);
-							self.referralLinkChain(req.body.referal, account.address, function (error) {
-								if (error) {
-									library.logger.error("Referral API Error : "+error);
-									return setImmediate(cb, error.toString());
-								} else {
-									let data = {
-										address: accountData.address,
-										u_isDelegate: 0,
-										isDelegate: 0,
-										vote: 0,
-										publicKey: accountData.publicKey,
-									};
-									if (account.u_isDelegate) {
-										data.u_isDelegate = account.u_isDelegate;
-									}
-									if (account.isDelegate) {
-										data.isDelegate = account.isDelegate;
-									}
-									if (account.vote) {
-										data.vote = account.vote;
-									}
-									library.logic.account.set(accountData.address, data, function (error) {
-										if (!error) {
-											return setImmediate(cb, null, {
-												account: accountData
-											});
-
-										} else {
-											return setImmediate(cb, error);
-										}
+                            let hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
+                            let keypair = library.ed.makeKeypair(hash);
+							self.getReferralLinkChain(req.body.referal, account.address).then((level) => {
+                                library.logic.transaction.create({
+                                    type: transactionTypes.REFERRAL,
+                                    sender: account,
+                                    keypair: keypair,
+                                    referrals: level
+                                }).then((transactionReferral) =>{
+                                    modules.transactions.receiveTransactions([transactionReferral], true, (err) => {
+                                        return setImmediate(cb, null, {
+                                            account: accountData
+                                        });
 									});
-								}
+                                }).catch((e) => {
+                                    throw e;
+                                });
+							}).catch((err) => {
+                                library.logger.error("Referral API Error : "+err);
+                                return setImmediate(cb, err.toString());
 							});
 						} else {
 							if (req.body.etps_user) {
