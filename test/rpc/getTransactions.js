@@ -5,12 +5,11 @@ const TestWebSocketConnector = require('../common/TestWebSocketConnector.js');
 
 describe('RPC method: GET_TRANSACTIONS', function () {
 
-  const URL = 'ws://localhost:8080/v1';
   const TRX_LIMIT = 3;
   let wsc;
 
   before(function (done) {
-    wsc = new TestWebSocketConnector(URL);
+    wsc = new TestWebSocketConnector();
     wsc.open(done)
   });
 

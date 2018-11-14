@@ -5,11 +5,10 @@ const TestWebSocketConnector = require('../common/TestWebSocketConnector.js');
 
 describe('RPC method: GET_BLOCKS_COUNT', function () {
 
-  const URL = 'ws://localhost:8080/v1';
   let wsc;
 
   before(function (done) {
-    wsc = new TestWebSocketConnector(URL);
+    wsc = new TestWebSocketConnector();
     wsc.open(done)
   });
 

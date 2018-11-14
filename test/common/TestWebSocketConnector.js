@@ -1,14 +1,15 @@
 const WebSocket = require('rpc-websockets').Client;
+const URL_DEFAULT = 'ws://localhost:8080/v1';
 
 
 class TestWebSocketConnector {
 
   constructor (url) {
-    this._ws = new WebSocket(url);
+    this._ws = new WebSocket(url || URL_DEFAULT);
   }
 
   get ws () {
-    return this._ws
+    return this._ws;
   }
 
   open (cb) {

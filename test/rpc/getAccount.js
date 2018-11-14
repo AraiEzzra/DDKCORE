@@ -5,13 +5,12 @@ const TestWebSocketConnector = require('../common/TestWebSocketConnector.js');
 
 describe('RPC method: GET_ACCOUNT', function () {
 
-  const URL = 'ws://localhost:8080/v1';
   const ADDRESS = 'DDK7214959811294852078';
   let accountResult;
   let wsc;
 
   before(function (done) {
-    wsc = new TestWebSocketConnector(URL);
+    wsc = new TestWebSocketConnector();
     wsc.open(done)
   });
 

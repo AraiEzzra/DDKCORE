@@ -5,12 +5,11 @@ const TestWebSocketConnector = require('../common/TestWebSocketConnector.js');
 
 describe('RPC method: GET_STATUS', function () {
 
-  const URL = 'ws://localhost:8080/v1';
   let wsc;
 
   before(function (done) {
-    wsc = new TestWebSocketConnector(URL);
-    wsc.open(done)
+    wsc = new TestWebSocketConnector();
+    wsc.open(done);
   });
 
   after(function (done) {
