@@ -27,7 +27,8 @@ module.exports = {
 	REWARD: 9,
 	SENDSTAKE : 10,
 	REFER	:	11,
-	MIGRATION : 12
+	MIGRATION : 12,
+	REFERRAL: 13
 };
 
 /*************************************** END OF FILE *************************************/
