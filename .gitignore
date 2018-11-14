@@ -12,3 +12,4 @@ config.json
 genesisBlock.json
 .idea/
 .nyc_output/
+api/rpc/client.js
