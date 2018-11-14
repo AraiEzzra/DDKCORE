@@ -1,3 +1,8 @@
+require('./rpc/getBlocksCount.js');
+require('./rpc/getAccount.js');
+require('./rpc/getSataus.js');
+require('./rpc/getTransactions.js');
+
 require('./unit/helpers/request-limiter.js');
 require('./unit/logic/blockReward.js');
 require('./unit/sql/blockRewards.js');
