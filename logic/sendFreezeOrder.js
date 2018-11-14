@@ -28,14 +28,9 @@ async function rollbackOrders(cb) {
 
 	try {
 
-		await self.scope.db.one(sql.getOldOrderID,
+        const {id, nextVoteMilestone} = await self.scope.db.one(sql.getOrderForUndo,
             {
-                stakeId: trs.stakeId
-            });
-
-        await self.scope.db.one(sql.getNewOrderNextVoteMilestone,
-            {
-                id: id,
+                stakeId: trs.stakeId,
                 senderId: trs.recipientId
             });
 
