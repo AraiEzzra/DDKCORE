@@ -2,6 +2,11 @@ require('./rpc/getBlocksCount.js');
 require('./rpc/getAccount.js');
 require('./rpc/getSataus.js');
 require('./rpc/getTransactions.js');
+require('./rpc/getBalance.js');
+require('./rpc/getBlock.js');
+require('./rpc/getBlocks.js');
+require('./rpc/generatePublicKey.js');
+require('./rpc/setAccountAndGet.js');
 
 require('./unit/helpers/request-limiter.js');
 require('./unit/logic/blockReward.js');
