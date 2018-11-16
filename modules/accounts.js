@@ -176,15 +176,17 @@ Accounts.prototype.getReferralLinkChain = async function (referalLink, address) 
     if (referrer_address == address) {
         return Promise.reject('Introducer and sponsor can\'t be same');
     }
-    let user;
+    let userExists = false;
     try {
-        user = await library.db.one(sql.validateReferSource, { referSource: referrer_address });
-        if (parseInt(user.address)) {
-            level.unshift(referrer_address);
-        }
+        userExists = await library.db.one(sql.validateReferSource, { referSource: referrer_address });
     } catch (e){
+        return Promise.reject('Referral Link is Invalid' + JSON.stringify(e));
+    }
+    userExists = userExists.address ? parseInt(userExists.address, 10) > 0 : false;
+    if (!userExists) {
         return Promise.reject('Referral Link is Invalid');
     }
+    level.unshift(referrer_address);
     return new Promise((resolve, reject) => {
         library.logic.account.findReferralLevel(referrer_address, function (err, resp) {
             if (err) {

@@ -701,14 +701,15 @@ d.run(function () {
         });
       });
       scope.logger.info('RPC Server started on: ' + server.host + ':' + server.port);
+      return setImmediate(cb);
     }]
 
 	}, function (err, scope) {
 		if (err) {
 			scope.logger.error(err.message);
 		} else {
-			
-			cronjob.setJobsPath(__dirname + '/jobs.js');  // Absolute path to the jobs module. 
+
+			cronjob.setJobsPath(__dirname + '/jobs.js');  // Absolute path to the jobs module.
 			require('./jobs.js').attachScope(scope);
 			//AFFILIATE AIRDROP
 			require('./helpers/referal').Referals(scope);
