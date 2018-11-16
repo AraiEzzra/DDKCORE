@@ -494,9 +494,12 @@ Frozen.prototype.getAirdropReward = async function (senderAddress, amount, trans
 };
 
 
-Frozen.prototype.calculateTotalRewardAndUnstake = async function (senderId) {
+Frozen.prototype.calculateTotalRewardAndUnstake = async function (senderId, isDownVote) {
     let reward = 0;
     let unstakeAmount = 0;
+    if (isDownVote) {
+        return { reward: reward, unstake: unstakeAmount };
+    }
     const freezeOrders = await self.scope.db.query(sql.getActiveFrozeOrders, {
         senderId, currentTime: slots.getTime()
     });

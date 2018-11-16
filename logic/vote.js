@@ -60,7 +60,8 @@ Vote.prototype.bind = function (delegates, rounds, accounts) {
  */
 Vote.prototype.create = async function (data, trs) {
     const senderId = data.sender.address;
-    const totals = await library.frozen.calculateTotalRewardAndUnstake(senderId);
+    const isDownVote = data.votes[0][0] == "-";
+    const totals = await library.frozen.calculateTotalRewardAndUnstake(senderId, isDownVote);
     const airdropReward = await library.frozen.getAirdropReward(senderId, totals.reward, data.type);
 
 	trs.asset.votes = data.votes;
@@ -72,7 +73,7 @@ Vote.prototype.create = async function (data, trs) {
 		totalReward: airdropReward.total
     };
     trs.recipientId = data.sender.address;
-    trs.trsName = data.votes[0][0] == "+" ? "VOTE" : "DOWNVOTE";
+    trs.trsName = isDownVote ? "DOWNVOTE" : "VOTE";
 	return trs;
 
 };
@@ -137,7 +138,8 @@ Vote.prototype.verify = function (trs, sender, cb) {
 		if (trs.asset.votes.length > _.uniqBy(trs.asset.votes, function (v) { return v.slice(1); }).length) {
 			throw 'Multiple votes for same delegate are not allowed';
 		}
-        const totals = await library.frozen.calculateTotalRewardAndUnstake(trs.senderId);
+        const isDownVote = trs.trsName === "DOWNVOTE";
+        const totals = await library.frozen.calculateTotalRewardAndUnstake(trs.senderId, isDownVote);
         if (totals.reward !== trs.asset.reward) {
             throw 'Verify failed: vote reward is corrupted';
         }
@@ -278,6 +280,10 @@ Vote.prototype.apply = function (trs, block, sender, cb) {
 			});
 		},
 		function (seriesCb) {
+            const isDownVote = trs.trsName === "DOWNVOTE";
+            if(isDownVote) {
+                return setImmediate(seriesCb, null, trs);
+			}
 			self.updateAndCheckVote(trs)
 			.then(
 				() => setImmediate(seriesCb, null, trs),
@@ -328,6 +334,10 @@ Vote.prototype.undo = function (trs, block, sender, cb) {
                 });
 		},
         function (seriesCb) {
+            const isDownVote = trs.trsName === "DOWNVOTE";
+            if(isDownVote) {
+                return setImmediate(seriesCb, null, trs);
+            }
             self.removeCheckVote(trs)
                 .then(
                     () => setImmediate(seriesCb, null),
