@@ -64,7 +64,7 @@ describe('RPC method: GET_TRANSACTIONS', function () {
           expect(trx.senderPublicKey).to.be.an('string').that.length(64);
           expect(trx.senderId).to.be.an('string');
           expect(trx.recipientId).to.be.an('string');
-          // expect(trx.recipientPublicKey, 'String with 64 charts').to.be.an('string').that.length(64);
+          expect(trx.recipientPublicKey, 'String with 64 charts').to.be.an('string').that.length(64);
           expect(trx.amount).to.be.an('number');
           expect(trx.stakedAmount).to.be.an('number');
           expect(trx.fee).to.be.an('number');
