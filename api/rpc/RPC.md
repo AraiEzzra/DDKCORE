@@ -278,4 +278,9 @@ address 				string($address) 			Address of an account
 publicKey 				string($publicKey) 			Public key to query
 
 
+## `GET_TRANSACTION_HISTORY`
+
+
+#### Parameters
+
 

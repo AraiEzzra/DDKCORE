@@ -21,10 +21,12 @@ const GetForgingStatus = require('./methods/getForgingStatus.js');
 
 /**
  * modules.transactions.shared
+ * modules.transactions.internal
  */
 const GetTransaction = require('./methods/getTransaction.js');
 const GetTransactions = require('./methods/getTransactions.js');
 const AddTransactions = require('./methods/addTransactions.js');
+const GetTransactionHistory = require('./methods/getTransactionHistory.js');
 
 /**
  * modules.peers.shared
@@ -65,6 +67,7 @@ const methods = [
   GetTransaction,
   GetTransactions,
   AddTransactions,
+  GetTransactionHistory,
   GetPeer,
   GetPeers,
   GetBroadhash,

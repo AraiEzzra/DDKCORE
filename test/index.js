@@ -18,6 +18,11 @@ require('./rpc/getMilestone.js');
 require('./rpc/getNethash.js');
 require('./rpc/getNextForgers.js');
 require('./rpc/getPeers.js');
+require('./rpc/getPeer.js');
+require('./rpc/getReward.js');
+require('./rpc/getSupply.js');
+require('./rpc/getTransaction.js');
+require('./rpc/getPublickey.js');
 
 require('./unit/helpers/request-limiter.js');
 require('./unit/logic/blockReward.js');
