@@ -3,9 +3,8 @@ const expect = require('chai').expect;
 const TestWebSocketConnector = require('../common/TestWebSocketConnector.js');
 
 
-describe('RPC method: GET_BALANCE', function () {
+describe('RPC method: GET_REWARD', function () {
 
-  const ADDRESS = 'DDK16313739661670634666';
   let wsc;
 
   before(function (done) {
@@ -25,14 +24,13 @@ describe('RPC method: GET_BALANCE', function () {
     });
   });
 
-  describe('Checked method result', function () {
+  describe('Call and checked method result', function () {
 
     it('should have valid parameters', function (done) {
 
-      wsc.call('GET_BALANCE', {address: ADDRESS}, (result) => {
+      wsc.call('GET_REWARD', {}, (result) => {
         expect(result).to.be.an('object');
-        expect(result.balance).to.be.an('string');
-        expect(result.unconfirmedBalance).to.be.an('string');
+        expect(result).to.have.property('reward');
         done();
       });
 

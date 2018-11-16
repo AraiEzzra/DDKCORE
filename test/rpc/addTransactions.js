@@ -3,10 +3,10 @@ const expect = require('chai').expect;
 const TestWebSocketConnector = require('../common/TestWebSocketConnector.js');
 
 
-describe('RPC method: GET_BALANCE', function () {
+describe('RPC method: ADD_TRANSACTIONS', function () {
 
-  const ADDRESS = 'DDK16313739661670634666';
   let wsc;
+  let transactionParams;
 
   before(function (done) {
     wsc = new TestWebSocketConnector();
@@ -20,19 +20,27 @@ describe('RPC method: GET_BALANCE', function () {
 
   describe('Checked connection', function () {
     it('socket is ready', function (done) {
-        expect(wsc.ws.ready).to.equals(true);
-        done();
+      expect(wsc.ws.ready).to.equals(true);
+      done();
     });
   });
 
-  describe('Checked method result', function () {
+  describe('Call and checked method result', function () {
+
+    transactionParams = {
+      secret: null,
+      publicKey: null,
+      recipientId: null,
+      multisigAccountPublicKey: null,
+      secondSecret: null,
+      transactionRefer: null,
+      amount: null,
+    };
 
     it('should have valid parameters', function (done) {
 
-      wsc.call('GET_BALANCE', {address: ADDRESS}, (result) => {
+      wsc.call('ADD_TRANSACTIONS', transactionParams, (result) => {
         expect(result).to.be.an('object');
-        expect(result.balance).to.be.an('string');
-        expect(result.unconfirmedBalance).to.be.an('string');
         done();
       });
 
