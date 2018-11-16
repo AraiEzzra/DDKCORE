@@ -7,6 +7,17 @@ require('./rpc/getBlock.js');
 require('./rpc/getBlocks.js');
 require('./rpc/generatePublicKey.js');
 require('./rpc/setAccountAndGet.js');
+require('./rpc/getBroadhash.js');
+require('./rpc/getDelegates.js');
+require('./rpc/getDelegate.js');
+require('./rpc/getEpoch.js');
+require('./rpc/getFee.js');
+require('./rpc/getFees.js');
+require('./rpc/getHeight.js');
+require('./rpc/getMilestone.js');
+require('./rpc/getNethash.js');
+require('./rpc/getNextForgers.js');
+require('./rpc/getPeers.js');
 
 require('./unit/helpers/request-limiter.js');
 require('./unit/logic/blockReward.js');
