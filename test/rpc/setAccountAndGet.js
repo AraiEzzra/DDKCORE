@@ -1,11 +1,22 @@
 const chai = require('chai');
 const expect = require('chai').expect;
+const node = require('../node.js');
+const speakeasy = require('speakeasy');
 const TestWebSocketConnector = require('../common/TestWebSocketConnector.js');
 
 
-describe('RPC method: GET_STATUS', function () {
+const account = node.randomAccount();
+
+describe('RPC method: SET_ACCOUNT_AND_GET', function () {
 
   let wsc;
+  const callParams = {
+    publicKey: account.publicKey,
+    username: 'TEST_' + account.username,
+    u_username: 'TEST_' + account.username,
+    balance: 0,
+    u_balance: 0
+  };
 
   before(function (done) {
     wsc = new TestWebSocketConnector();
@@ -27,20 +38,11 @@ describe('RPC method: GET_STATUS', function () {
   describe('Checked method result', function () {
 
     it('should have valid parameters', function (done) {
-
-      wsc.call('GET_STATUS', {}, (result) => {
+      wsc.call('SET_ACCOUNT_AND_GET', callParams, (result) => {
         expect(result).to.be.an('object');
-        expect(result.height).to.be.an('number');
-        expect(result.fee).to.be.an('number');
-        expect(result.milestone).to.be.an('number');
-        expect(result.nethash).to.be.an('string').that.have.length(64);
-        expect(result.reward).to.be.an('number');
-        expect(result.supply).to.be.an('number');
         done();
       });
-
     });
-
   })
 
 });

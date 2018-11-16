@@ -701,6 +701,7 @@ d.run(function () {
         });
       });
       scope.logger.info('RPC Server started on: ' + server.host + ':' + server.port);
+      cb();
     }]
 
 	}, function (err, scope) {
