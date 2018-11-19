@@ -18,7 +18,7 @@ let FrogingsSql = {
 
 	count: 'SELECT COUNT("id")::int AS "count" FROM stake_orders',
 
-	updateAccountBalanceAndFroze: 'UPDATE mem_accounts SET "totalFrozeAmount" = ("totalFrozeAmount" + ${reward}), "balance"=("balance" + ${reward}), "u_balance"=("u_balance" + ${reward}) WHERE "address"=${senderId}',
+	updateAccountBalance: 'UPDATE mem_accounts SET "balance"=("balance" + ${reward}), "u_balance"=("u_balance" + ${reward}) WHERE "address"=${senderId}',
 
 	getMemoryAccounts: 'SELECT * FROM  mem_accounts',
 
@@ -67,8 +67,6 @@ let FrogingsSql = {
 	getNewOrderNextVoteMilestone: 'SELECT "nextVoteMilestone" FROM stake_orders WHERE "id"=${id} AND "senderId"=${senderId}',
 
 	updateOldOrder: 'UPDATE stake_orders SET "status"=1, "nextVoteMilestone"=${nextVoteMilestone}, "isVoteDone"=false WHERE "stakeId"=${stakeId} ',
-
-	updateOrderFrozeAmount: 'UPDATE stake_orders SET "freezedAmount"=${freezedAmount} WHERE "stakeId"=${stakeId}',
 
     updateTotalSupply: 'UPDATE mem_accounts SET "balance"=("balance" + ${reward}), "u_balance"=("u_balance" + ${reward}) WHERE "address"=${totalSupplyAccount}',
 

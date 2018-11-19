@@ -531,6 +531,11 @@ Frozen.prototype.applyFrozeOrdersRewardAndUnstake = async function (voteTransact
     const freezeOrders = await self.scope.db.query(sql.getActiveFrozeOrders, {
         senderId, currentTime: slots.getTime()
     });
+    freezeOrders.forEach((order) => {
+        order.freezedAmount = parseInt(order.freezedAmount, 10);
+        order.voteCount = parseInt(order.voteCount, 10);
+        order.status = parseInt(order.status, 10);
+    });
     await Promise.all([
         await self.sendRewards(freezeOrders),
         await self.sendAirdropReward(voteTransaction)
@@ -552,13 +557,8 @@ Frozen.prototype.sendRewards = async (orders) => {
 };
 
 Frozen.prototype.sendOrderReward = async (order) => {
-    const stakeRewardPercent = self.getStakeRewardPercent(order);
-    const reward = parseInt(order.freezedAmount, 10) * stakeRewardPercent / 100;
-    order.freezedAmount = parseInt(order.freezedAmount, 10) + reward;
-    await self.scope.db.none(sql.updateOrderFrozeAmount, {
-        freezedAmount: order.freezedAmount, stakeId: order.stakeId
-    });
-    await self.scope.db.none(sql.updateAccountBalanceAndFroze, {
+    const reward = self.getStakeReward(order);
+    await self.scope.db.none(sql.updateAccountBalance, {
         reward: reward, senderId: order.senderId
     });
     await self.scope.db.none(sql.updateTotalSupply, {
@@ -566,22 +566,17 @@ Frozen.prototype.sendOrderReward = async (order) => {
     });
 };
 
-Frozen.prototype.getStakeRewardPercent = () => {
-    const blockHeight = modules.blocks.lastBlock.get().height;
-    return __private.stakeReward.calcReward(blockHeight);
-};
-
 Frozen.prototype.unstakeOrders = async (orders) => {
     const readyToUnstakeOrders = orders.filter(o => {
         return o.voteCount === constants.froze.unstakeVoteCount;
     });
     await Promise.all(readyToUnstakeOrders.map(async order => {
-        await self.scope.db.none(sql.deductFrozeAmount, {
-            orderFreezedAmount: order.freezedAmount, senderId: order.senderId
-        });
-        await self.scope.db.none(sql.disableFrozeOrders, {
-            stakeId: order.stakeId
-        });
+    await self.scope.db.none(sql.deductFrozeAmount, {
+        orderFreezedAmount: order.freezedAmount, senderId: order.senderId
+    });
+    await self.scope.db.none(sql.disableFrozeOrders, {
+        stakeId: order.stakeId
+    });
     }));
 };
 
@@ -589,6 +584,11 @@ Frozen.prototype.undoFrozeOrdersRewardAndUnstake = async function (voteTransacti
     const senderId = voteTransaction.senderId;
     const updatedOrders = await self.scope.db.query(sql.getRecentlyChangedFrozeOrders, {
         senderId, currentTime: slots.getTime()
+    });
+    updatedOrders.forEach((order) => {
+        order.freezedAmount = parseInt(order.freezedAmount, 10);
+        order.voteCount = parseInt(order.voteCount, 10);
+        order.status = parseInt(order.status, 10);
     });
     await Promise.all([
         self.recoverUnstakedOrders(updatedOrders),
@@ -611,15 +611,8 @@ Frozen.prototype.deductRewards = async (orders) => {
 };
 
 Frozen.prototype.deductOrderReward = async (order) => {
-    const stakeRewardPercent = self.getStakeRewardPercent();
-    const updatedBalance = parseInt(order.freezedAmount, 10);
-    const previousBalance = parseInt(order.freezedAmount, 10) * 100 / (stakeRewardPercent + 100);
-    const reward = updatedBalance - previousBalance;
-    order.freezedAmount = parseInt(order.freezedAmount, 10) - reward;
-    await self.scope.db.none(sql.updateOrderFrozeAmount, {
-        freezedAmount: order.freezedAmount, stakeId: order.stakeId
-    });
-    await self.scope.db.none(sql.updateAccountBalanceAndFroze, {
+    const reward = self.getStakeReward(order);
+    await self.scope.db.none(sql.updateAccountBalance, {
         reward: -reward, senderId: order.senderId
     });
     await self.scope.db.none(sql.updateTotalSupply, {
@@ -643,6 +636,13 @@ Frozen.prototype.recoverUnstakedOrder = async (order) => {
     await self.scope.db.none(sql.enableFrozeOrder, {
         stakeId: order.stakeId
     });
+};
+
+Frozen.prototype.getStakeReward = (order) => {
+    const blockHeight = modules.blocks.lastBlock.get().height;
+    const stakeRewardPercent =  __private.stakeReward.calcReward(blockHeight);
+    const reward = parseInt(order.freezedAmount, 10) * stakeRewardPercent / 100;
+    return reward;
 };
 
 /**
