@@ -263,6 +263,13 @@ orderBy
 limit
 
 
+## `GENERATE_PUBLICKEY`
+Generate public key 
+
+#### Parameters
+secret
+
+
 ## `SET_ACCOUNT_AND_GET`
 Validates input address and calls logic.account.set() and logic.account.get().
 
@@ -270,5 +277,10 @@ Validates input address and calls logic.account.set() and logic.account.get().
 address 				string($address) 			Address of an account
 publicKey 				string($publicKey) 			Public key to query
 
+
+## `GET_TRANSACTION_HISTORY`
+
+
+#### Parameters
 
 

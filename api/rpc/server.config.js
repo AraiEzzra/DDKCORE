@@ -21,10 +21,12 @@ const GetForgingStatus = require('./methods/getForgingStatus.js');
 
 /**
  * modules.transactions.shared
+ * modules.transactions.internal
  */
 const GetTransaction = require('./methods/getTransaction.js');
 const GetTransactions = require('./methods/getTransactions.js');
 const AddTransactions = require('./methods/addTransactions.js');
+const GetTransactionHistory = require('./methods/getTransactionHistory.js');
 
 /**
  * modules.peers.shared
@@ -54,7 +56,8 @@ const GetBlocksCount = require('./methods/getBlocksCount.js');
 const GetBalance = require('./methods/getBalance.js');
 const GetAccount = require('./methods/getAccount.js');
 const SetAccountAndGet = require('./methods/setAccountAndGet.js');
-const GetPublickey = require('./methods/getPublickey.js');
+const GetPublicKey = require('./methods/getPublickey.js');
+const GeneratePublicKey = require('./methods/generatePublicKey.js');
 
 
 const methods = [
@@ -64,6 +67,7 @@ const methods = [
   GetTransaction,
   GetTransactions,
   AddTransactions,
+  GetTransactionHistory,
   GetPeer,
   GetPeers,
   GetBroadhash,
@@ -87,7 +91,8 @@ const methods = [
   GetBalance,
   GetAccount,
   SetAccountAndGet,
-  GetPublickey,
+  GetPublicKey,
+  GeneratePublicKey,
 ];
 
 // todo: replace me to config.json
