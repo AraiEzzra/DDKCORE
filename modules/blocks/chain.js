@@ -436,6 +436,9 @@ Chain.prototype.applyBlock = function (block, broadcast, cb, saveBlock) {
 		// Block and transactions are ok.
 		// Apply transactions to confirmed mem_accounts fields.
 		applyConfirmed: function (seriesCb) {
+			if(block.transactions.length === 0) {
+				modules.transactions.clearProcessedKafka();
+			}
 			async.eachSeries(block.transactions, function (transaction, eachSeriesCb) {
 				modules.accounts.getAccount({publicKey: transaction.senderPublicKey}, function (err, sender) {
 					if (err) {

@@ -466,6 +466,14 @@ Transactions.prototype.setTransactionsForUser = function (sender, value) {
 };
 
 /**
+ * Clears Procced Kafka array.
+ * @return {function} Calls transactionPool.clearProcessedKafka
+ */
+Transactions.prototype.clearProcessedKafka = function () {
+	return __private.transactionPool.clearProcessedKafka();
+};
+
+/**
  * Checks kind of unconfirmed transaction and process it, resets queue
  * if limit reached.
  * @param {transaction} transaction
@@ -843,7 +851,7 @@ Transactions.prototype.shared = {
 			if (!publicSendAllowed) {
 				return setImmediate(cb, 'send transaction is not enabled for ' + senderAddress);
 			}
-			__private.getPooledTransactions('getUnconfirmedTransactionList', {
+			/* __private.getPooledTransactions('getUnconfirmedTransactionList', {
 				body: {
 					senderPublicKey: publicKey
 				}
@@ -866,7 +874,7 @@ Transactions.prototype.shared = {
 						}
 						if (data.length === 1 && data[0].b_confirmations < 10) {
 							return setImmediate(cb, 'Your last transactions is getting verified. Please wait untill block confirmations becomes 10 and try again. Current confirmations : '+ data[0].b_confirmations);
-						}
+						} */
 						library.cache.client.get('2fa_user_' + senderAddress, function (err, userTwoFaCred) {
 							if (err) {
 								return setImmediate(cb, err);
@@ -1011,9 +1019,9 @@ Transactions.prototype.shared = {
 								return setImmediate(cb, null, { transactionId: transaction[0].id });
 							});
 						});
-					});
-				}
-			});
+					//});
+				//}
+			//});
 		});
 	}
 };

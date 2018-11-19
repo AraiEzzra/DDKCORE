@@ -83,70 +83,49 @@ consumer
         // This makes subsequent consumes read from that topic.
         consumer.subscribe(['queuedTransactions', 'bundeledTransactions', 'multisignatureTransaction', 'unconfirmedTransaction']);
 
-        // Read one message every 1000 milliseconds
-        setInterval(function () {
-			/* let trs = self.countBundled() + self.countMultisignature() + self.countQueued() + self.countUnconfirmed();
-			if(!trs) { */
-				consumer.consume(2);
-			//}
-        }, 1000);
-    })
-    .on('data', function (data) {
-		library.logger.info('adding transaction into the queue');
+        // Read two messages/transactions every 1000 milliseconds
+		setInterval(function () {
+			if (!self.countBundled()) {
+				self.bundled.transactions = [];
+			}
+			if (!self.countMultisignature()) {
+				self.multisignature.transactions = [];
+			}
+			if (!self.countQueued()) {
+				self.queued.transactions = [];
+			}
+			if (!self.countUnconfirmed()) {
+				self.unconfirmed.transactions = [];
+			}
+			consumer.consume(2);
+		}, 1000);
+	})
+	.on('data', function (data) {
 		if (data.topic === 'queuedTransactions') {
 			let queuedTransaction = JSON.parse(data.value.toString());
-			__private.processVerifyTransaction(queuedTransaction, false, function (err) {
-				if (err) {
-					library.logger.error('Failed to process / verify unconfirmed transaction: ' + queuedTransaction.id, err);
-					self.removeQueuedTransaction(queuedTransaction.id);
-					self.removeKafkaTransaction(queuedTransaction.id);
-				} else {
-					self.queued.transactions.push(queuedTransaction);
-					let index = self.queued.transactions.indexOf(queuedTransaction);
-					self.queued.index[queuedTransaction.id] = index;
-				}
-			});
+			self.queued.transactions.push(queuedTransaction);
+			let index = self.queued.transactions.indexOf(queuedTransaction);
+			self.queued.index[queuedTransaction.id] = index;
 		} else if (data.topic === 'bundeledTransactions') {
 			let bundledTransaction = JSON.parse(data.value.toString());
-			__private.processVerifyTransaction(bundledTransaction, false, function (err) {
-				if (err) {
-					library.logger.error('Failed to process / verify unconfirmed transaction: ' + bundledTransaction.id, err);
-					self.removeBundledTransaction(bundledTransaction.id);
-					self.removeKafkaTransaction(bundledTransaction.id);
-				} else {
-					self.bundled.transactions.push(bundledTransaction);
-					let index = self.bundled.transactions.indexOf(bundledTransaction);
-					self.bundled.index[bundledTransaction.id] = index;
-				}
-			});
+			self.bundled.transactions.push(bundledTransaction);
+			let index = self.bundled.transactions.indexOf(bundledTransaction);
+			self.bundled.index[bundledTransaction.id] = index;
 		} else if (data.topic === 'multisignatureTransaction') {
 			let multisignatureTransaction = JSON.parse(data.value.toString());
-			__private.processVerifyTransaction(multisignatureTransaction, false, function (err) {
-				if (err) {
-					library.logger.error('Failed to process / verify unconfirmed transaction: ' + multisignatureTransaction.id, err);
-					self.removeMultisignatureTransaction(multisignatureTransaction.id);
-					self.removeKafkaTransaction(multisignatureTransaction.id);
-				} else {
-					self.multisignature.transactions.push(multisignatureTransaction);
-					let index = self.multisignature.transactions.indexOf(multisignatureTransaction);
-					self.multisignature.index[multisignatureTransaction.id] = index;
-				}
-			});
+			self.multisignature.transactions.push(multisignatureTransaction);
+			let index = self.multisignature.transactions.indexOf(multisignatureTransaction);
+			self.multisignature.index[multisignatureTransaction.id] = index;
 		} else {
 			let unconfirmedTransaction = JSON.parse(data.value.toString());
-			__private.processVerifyTransaction(unconfirmedTransaction, false, function (err) {
-				if (err) {
-					library.logger.error('Failed to process / verify unconfirmed transaction: ' + unconfirmedTransaction.id, err);
-					self.removeUnconfirmedTransaction(unconfirmedTransaction.id);
-					self.removeKafkaTransaction(unconfirmedTransaction.id);
-				} else {
-					self.unconfirmed.transactions.push(unconfirmedTransaction);
-					let index = self.unconfirmed.transactions.indexOf(unconfirmedTransaction);
-					self.unconfirmed.index[unconfirmedTransaction.id] = index;
-				}
-			});
+			if (!self.processedKafka.index[unconfirmedTransaction.senderId]) {
+				self.processedKafka.index[unconfirmedTransaction.senderId] = true;
+				self.unconfirmed.transactions.push(unconfirmedTransaction);
+				let index = self.unconfirmed.transactions.indexOf(unconfirmedTransaction);
+				self.unconfirmed.index[unconfirmedTransaction.id] = index;
+			}
 		}
-    });
+	});
 
 // Public methods
 /**
@@ -318,7 +297,6 @@ TransactionPool.prototype.addUnconfirmedTransaction = function (transaction) {
 				self.kafka.transactions.push(transaction);
 				let index = self.kafka.transactions.indexOf(transaction);
 				self.kafka.index[transaction.id] = index;
-				self.processedKafka.index[transaction.senderId] = true;
 				producer.send('unconfirmedTransaction', transaction, 0);
 			}
 		});
@@ -350,6 +328,13 @@ TransactionPool.prototype.removeUnconfirmedTransaction = function (id) {
  */
 TransactionPool.prototype.setTransactionsForUser = function (sender, value) {
 	self.processedKafka.index[sender] = value;
+};
+
+/**
+ * Clears Procced Kafka array.
+ */
+TransactionPool.prototype.clearProcessedKafka = function () {
+	self.processedKafka = { index: {} };
 };
 
 /**
@@ -621,6 +606,7 @@ TransactionPool.prototype.queueTransaction = function (transaction, cb) {
 		return setImmediate(cb, 'Transaction is already processed: ' + transaction.id);
 	}
 	if(self.processedKafka.index[transaction.senderId] === true) {
+		library.logger.debug('Previous transaction for ' + transaction.senderId + ' is in progress');
 		return setImmediate(cb, 'Your previous transaction is under process. Please try once its confirmed');
 	}
 	transaction.receivedAt = new Date();
@@ -905,7 +891,6 @@ __private.applyUnconfirmedList = function (transactions, cb) {
 			if (err) {
 				library.logger.error('Failed to process / verify unconfirmed transaction: ' + transaction.id, err);
 				self.removeUnconfirmedTransaction(transaction.id);
-				//self.processedKafka.index[transaction.senderId] = false;
 				return setImmediate(eachSeriesCb);
 			}
 			modules.transactions.applyUnconfirmed(transaction, sender, function (err) {
@@ -913,9 +898,7 @@ __private.applyUnconfirmedList = function (transactions, cb) {
 					library.logger.error('Failed to apply unconfirmed transaction: ' + transaction.id, err);
 					self.removeUnconfirmedTransaction(transaction.id);
 					self.removeQueuedTransaction(transaction.id);
-					//self.processedKafka.index[transaction.senderId] = false;
 				}
-				//self.processedKafka.index[transaction.senderId] = false;
 				return setImmediate(eachSeriesCb);
 			});
 		});
