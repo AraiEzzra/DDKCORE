@@ -210,11 +210,9 @@ d.run(function () {
 				if (appConfig.loading.snapshot != null) {
 					delete appConfig.loading.snapshot;
 				}
-				fs.writeFileSync('./config.json', JSON.stringify(appConfig, null, 4));
-				cb(null, appConfig);
-			} else {
-				cb(null, appConfig);
 			}
+			fs.writeFileSync('./config.json', JSON.stringify(appConfig, null, 4));
+			cb(null, appConfig);
 		},
 
 		logger: function (cb) {

@@ -359,8 +359,14 @@ Peers.prototype.list = function (options, cb) {
 			peersList = peersList.slice(0, options.limit);
 			picked = peersList.length;
 			accepted = self.acceptable(peers.concat(peersList));
-			library.logger.debug('Listing peers', {attempt: options.attempts[options.attempt], found: found, matched: matched, picked: picked, accepted: accepted.length});
-			return setImmediate(cb, null, accepted);
+            library.logger.debug(`Listing peers ${JSON.stringify({
+				attempt: options.attempts[options.attempt], 
+				found: found, 
+				matched: matched, 
+				picked: picked, 
+				accepted: accepted.length
+            })}`);
+            return setImmediate(cb, null, accepted);
 		});
 	}
 
