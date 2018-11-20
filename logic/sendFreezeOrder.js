@@ -92,7 +92,6 @@ SendFreezeOrder.prototype.applyUnconfirmed = function (trs, sender, cb) {
 };
 
 SendFreezeOrder.prototype.undo = async function (trs, block, sender, cb) {
-
 	try {
 
         //Add frozeAmount to mem_account to sender address
@@ -138,7 +137,6 @@ SendFreezeOrder.prototype.apply = async function (trs, block, sender, cb) {
         const setAccountAndGet = promise.promisify(modules.accounts.setAccountAndGet);
 		const mergeAccountAndGet = promise.promisify(modules.accounts.mergeAccountAndGet);
         const getActiveFrozeOrder = promise.promisify(self.getActiveFrozeOrder);
-		const sendFreezedOrder = promise.promisify(self.sendFreezedOrder);
 
 		await setAccountAndGet({ address: trs.recipientId });
 
@@ -155,8 +153,8 @@ SendFreezeOrder.prototype.apply = async function (trs, block, sender, cb) {
 			stakeId: trs.stakeId
 		});
 
-		await sendFreezedOrder({
-			senderId: trs.senderID,
+		await self.sendFreezedOrder({
+			senderId: trs.senderId,
 			recipientId: trs.recipientId,
 			stakeId: trs.stakeId,
 			stakeOrder: order
@@ -183,11 +181,26 @@ SendFreezeOrder.prototype.verify = function (trs, sender, cb) {
 		return setImmediate(cb, 'Missing recipient');
 	}
 
-	if ((trs.fee) > (sender.balance - parseInt(sender.totalFrozeAmount))) {
+    if (parseInt(trs.fee) > (parseInt(sender.balance) - parseInt(sender.totalFrozeAmount))) {
 		return setImmediate(cb, 'Insufficient balance');
 	}
 
-	return setImmediate(cb, null, trs);
+    self.getActiveFrozeOrder({
+        address: trs.senderId,
+        stakeId: trs.stakeId
+    }, function (err, order) {
+
+        if (order === null ) {
+            return setImmediate(cb, `Orders not found`);
+        }
+
+        if (order.transferCount >= constants.maxTransferCount) {
+            return setImmediate(cb, `Order can be send only ${ constants.maxTransferCount } times`);
+		} else {
+            return setImmediate(cb, null, trs);
+		}
+    });
+
 };
 
 SendFreezeOrder.prototype.calculateFee = function (trs, sender) {
