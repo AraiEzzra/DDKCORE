@@ -513,7 +513,7 @@ Vote.prototype.updateAndCheckVote = async (voteTransaction) => {
         await library.db.task(async () => {
 			await library.db.none(sql.updateStakeOrder, {
 				senderId: senderId,
-				milestone: constants.froze.vTime * 10, //TODO back to vTime * 60
+				milestone: constants.froze.vTime * 60, // 2 * 60 sec = 2 mins
 				currentTime: slots.getTime()
 			});
 			await library.frozen.applyFrozeOrdersRewardAndUnstake(voteTransaction);
@@ -535,11 +535,10 @@ Vote.prototype.removeCheckVote = async (voteTransaction) => {
     try {
         // todo check if could change to tx
         await library.db.task(async () => {
-            library.logger.info('UNDO');
             await library.frozen.undoFrozeOrdersRewardAndUnstake(voteTransaction);
 			await library.db.none(sql.undoUpdateStakeOrder, {
 				senderId: senderId,
-				milestone: constants.froze.vTime, //TODO back to vTime * 60
+				milestone: constants.froze.vTime * 60,
 				currentTime: slots.getTime()
 			});
         });

@@ -118,7 +118,7 @@ module.exports = {
 	froze : {
 		endTime : 48,
 		rTime : 8,
-		vTime : 0, // TODO: restore 2
+		vTime : 2,
 		milestone : 8, //for testing, taking 2 min
 		rewards: {
 			milestones: [

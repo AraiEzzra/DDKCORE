@@ -42,7 +42,7 @@ let Accounts = {
 
     undoUpdateStakeOrder: 'UPDATE stake_orders SET "voteCount"="voteCount"-1, "nextVoteMilestone"="nextVoteMilestone"-${milestone} WHERE "senderId"=${senderId} AND "status"=1 AND ${currentTime} >= "nextVoteMilestone"',
 
-	countAvailableStakeOrdersForVote: 'SELECT count(*) FROM stake_orders WHERE "senderId"=${senderId} AND "status"=1 AND ${currentTime} >= "nextVoteMilestone"',
+	countAvailableStakeOrdersForVote: 'SELECT count(*) FROM stake_orders WHERE "senderId"=${senderId} AND "status"=1',
 
     updateETPSUserInfo: 'UPDATE etps_user SET "transferred_time"=${insertTime}, "transferred_etp"=1 WHERE "id"=${userId} ',
 
