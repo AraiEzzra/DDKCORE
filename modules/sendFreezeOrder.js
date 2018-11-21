@@ -307,9 +307,6 @@ SendFreezeOrder.prototype.shared = {
 										return setImmediate(cb, err);
 									}
 
-									if (order !== null && order.transferCount == constants.maxTransferCount) {
-										return setImmediate(cb, `Order can be send only ${ maxTransferCount } times`);
-									}
 									stakeOrder = order;
 
 									if (!requester || !requester.publicKey) {
@@ -370,9 +367,6 @@ SendFreezeOrder.prototype.shared = {
 									return setImmediate(cb, err);
 								}
 
-								if(order !== null && order.transferCount == constants.maxTransferCount){
-									return setImmediate(cb, `Order can be send only ${maxTransferCount} times`);
-								}
 								stakeOrder = order;
 
 								accountData = account;
