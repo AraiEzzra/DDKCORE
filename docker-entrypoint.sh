@@ -1,11 +1,9 @@
-#!/bin/sh
-
 echo $(node -v)
-# needs defined db, elasticsearch and redis in docker-compose
+# needs defined DB_HOST, ELASTICSEARCH_HOST and REDIS_HOST in environment
 # and wait-port npm package installed
-wait-port db:5432 && \
-wait-port elasticsearch:9200 && \
-wait-port redis:6379 && \
+wait-port "$DB_HOST:${DB_PORT:-5432}" && \
+wait-port "$ELASTICSEARCH_HOST" && \
+wait-port "$REDIS_HOST:${REDIS_PORT:-6379}" && \
 if [[ -v DEBUG ]]; then
   npm run debug
 else
