@@ -29,6 +29,11 @@ const AddTransactions = require('./methods/addTransactions.js');
 const GetTransactionHistory = require('./methods/getTransactionHistory.js');
 
 /**
+ * logic.transactions.shared
+ */
+const CreateTransaction = require('./methods/createTransaction.js');
+
+/**
  * modules.peers.shared
  */
 const GetPeer = require('./methods/getPeer.js');
@@ -58,6 +63,7 @@ const GetAccount = require('./methods/getAccount.js');
 const SetAccountAndGet = require('./methods/setAccountAndGet.js');
 const GetPublicKey = require('./methods/getPublickey.js');
 const GeneratePublicKey = require('./methods/generatePublicKey.js');
+const OpenAccount = require('./methods/openAccount.js');
 
 
 const methods = [
@@ -93,12 +99,14 @@ const methods = [
   SetAccountAndGet,
   GetPublicKey,
   GeneratePublicKey,
+  CreateTransaction,
+  OpenAccount,
 ];
 
 // todo: replace me to config.json
 const env = process.env;
 const PORT = 8080;
-const HOST = env.ADDRESS || '0.0.0.0';
+const HOST = '10.6.0.5' || '0.0.0.0';
 const VERSION = 1;
 
 module.exports = {

@@ -284,3 +284,10 @@ publicKey 				string($publicKey) 			Public key to query
 #### Parameters
 
 
+
+## `OPEN_ACCOUNT` 
+Created new account with address
+
+#### Parameters
+secret                  string($secret) 			hex
+email                   string($email)              username
