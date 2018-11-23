@@ -133,7 +133,10 @@ module.exports = {
     sender: {},
     nethash: env.NETHASH,
     elasticsearchHost: env.DEFAULT_ELASTICSEARCH_HOST + ':9200'|| '0.0.0.0:9200',
-    swaggerDomain: env.DEFAULT_ADDRESS,
+    swagger: {
+        protocol: 'http',
+        host: env.DEFAULT_ADDRESS || '0.0.0.0'
+    },
     jwt: {
         secret: env.JWT_SECRET,
         tokenLife: 300

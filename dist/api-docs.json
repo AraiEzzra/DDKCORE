@@ -22,7 +22,8 @@
     }
   ],
   "schemes": [
-    "http"
+    "http",
+    "https"
   ],
   "consumes": [
     "application/json"
@@ -259,6 +260,36 @@
             "name": "none",
             "in": "query",
             "description": "fetch circulating supply",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "response",
+            "schema": {
+              "$ref": "#/definitions/response1"
+            }
+          }
+        }
+      }
+    },
+    "/api/accounts/delegates": {
+      "get": {
+        "tags": [
+          "Account"
+        ],
+        "description": "Get Delegates List",
+        "operationId": "none",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "address",
+            "in": "query",
+            "defaultValue": "DDK4995063339468361088",
+            "description": "Fetch Delegates List",
             "required": false,
             "type": "string"
           }

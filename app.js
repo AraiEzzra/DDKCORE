@@ -295,8 +295,7 @@ d.run(function () {
 				res.sendFile(__dirname + '/dist/index.html');
 			});
 			swagger.configureSwaggerPaths('', 'api-docs', '');
-			let domain = scope.config.swaggerDomain || 'localhost';
-			let applicationUrl = 'http://' + domain;
+			let applicationUrl = scope.config.swagger.protocol + '://' + scope.config.swagger.host; //'https://' + domain;
 			swagger.configure(applicationUrl, '1.0.0');
 
 			if (appConfig.coverage) {
