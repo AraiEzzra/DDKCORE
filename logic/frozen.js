@@ -451,15 +451,27 @@ Frozen.prototype.getAirdropReward = async function (senderAddress, amount, trans
         self.scope.logger.error(err);
     }
 
-    // TODO use u_balance
-    const availableAirdropBalance = await self.scope.db.one(account_sql.getCurrentUnmined, {
-        address: constants.airdrop.account
-    });
+    let availableAirdropBalance;
+    try {
+        // TODO use u_balance
+        availableAirdropBalance = await self.scope.db.one(account_sql.getCurrentUnmined, {
+            address: constants.airdrop.account
+        });
+    } catch (err) {
+        self.scope.logger.error(err);
+        return result;
+    }
     self.scope.logger.info(`availableAirdropBalance: ${availableAirdropBalance.balance / 100000000}`);
 
-    const user = await self.scope.db.one(reward_sql.referLevelChain, {
-        address: senderAddress
-    });
+    let user = null;
+    try {
+        user = await self.scope.db.one(reward_sql.referLevelChain, {
+            address: senderAddress
+        });
+    } catch (err) {
+        self.scope.logger.error(err);
+        return result;
+    }
 
     if (!user || !user.level || (user.level.length === 0)) {
         return result;
