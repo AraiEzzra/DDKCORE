@@ -1,5 +1,5 @@
 const { createServerRPCMethod, validator } = require('./../util');
-const { ReservedErrorCodes } = require('./../errors');
+const { ReservedError } = require('./../errors');
 const { getTransaction } = require('../../../schema/transactions');
 
 
@@ -26,7 +26,7 @@ module.exports = createServerRPCMethod(
         });
       }
       else {
-        return {error: ReservedErrorCodes[String(ReservedErrorCodes.ServerErrorInvalidMethodParameters)]}
+        return {error: ReservedError.ServerErrorInvalidMethodParameters}
       }
     });
   });
