@@ -1,5 +1,5 @@
 const { createServerRPCMethod, validator } = require('./../util');
-const { ReservedError } = require('./../errors');
+const ReservedError = require('./../errors');
 const { getPeers } = require('../../../schema/peers');
 
 

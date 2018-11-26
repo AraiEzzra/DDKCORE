@@ -29,8 +29,8 @@ describe('RPC method: CREATE_TRANSACTIONS', function () {
   describe('Call and checked method result', function () {
 
     transactionParams = {
-      type: transactionTypes.SEND,
-      amount: 0,
+      type: 'SEND', // transactionTypes.SEND,
+      amount: 100,
       senderAddress: 'DDK16313739661670634666',
       requesterAddress: 'DDK16863581701775438665',
     };
@@ -39,10 +39,20 @@ describe('RPC method: CREATE_TRANSACTIONS', function () {
 
       wsc.call('CREATE_TRANSACTIONS', transactionParams, (result) => {
         expect(result).to.be.an('object');
+        expect(result.transaction).to.have.property('amount');
+        expect(result.transaction).to.have.property('senderPublicKey');
+        expect(result.transaction).to.have.property('requesterPublicKey');
+        expect(result.transaction).to.have.property('timestamp');
+        expect(result.transaction).to.have.property('asset');
+        expect(result.transaction).to.have.property('stakedAmount');
+        expect(result.transaction).to.have.property('trsName');
+        expect(result.transaction).to.have.property('groupBonus');
+        expect(result.transaction).to.have.property('reward');
+        expect(result.transaction).to.have.property('signature');
+        expect(result.transaction).to.have.property('fee');
         console.log(result);
         done();
       });
-
     });
 
   })
