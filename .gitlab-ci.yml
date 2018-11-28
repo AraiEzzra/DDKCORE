@@ -1,6 +1,6 @@
 stages:
- - update
  - manual_build
+ - update
 
 
 manual_build:
