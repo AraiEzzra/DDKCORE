@@ -297,18 +297,14 @@ __private.checkDelegates = function (publicKey, votes, state, cb) {
 __private.loadDelegates = function (cb) {
 	let secret;
 
-	if (library.config.forging.secret) {
-		if (Array.isArray(library.config.forging.secret)) {
-            secret = library.config.forging.secret;
-		} else {
-            secret = [library.config.forging.secret];
-		}
+    if (library.config.forging.secret && typeof library.config.forging.secret === 'string') {
+        secret = library.config.forging.secret;
 	}
 
-	if (!secret || !secret.length) {
+	if (!secret) {
 		return setImmediate(cb);
 	} else {
-		library.logger.info(['Loading', secret.length, 'delegates from config'].join(' '));
+		library.logger.info(['Loading delegate from config'].join(' '));
 	}
 
     let keypair = library.ed.makeKeypair(crypto.createHash('sha256').update(secret, 'utf8').digest());
@@ -334,7 +330,6 @@ __private.loadDelegates = function (cb) {
         return setImmediate(cb);
     });
 
-    return setImmediate(cb);
 };
 
 // Public methods
