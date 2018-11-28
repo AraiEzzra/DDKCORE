@@ -1,5 +1,20 @@
 stages:
  - update
+ - manual_build
+
+
+manual_build:
+  stage: manual_build
+  when: manual
+  only:
+    - master
+  tags:
+    - ssh_update_ddk_nodes
+  script:
+    - cd /root/DDK.Delegat.Install.Environment/
+    - build.tag.core.sh
+    - build.tag.ui.sh
+
 
 updating:
  stage: update
@@ -8,5 +23,16 @@ updating:
  tags:
    - ssh_update_ddk_nodes
  script:
-   - cd /home/provision/DDK.ORCHESTRATION.PROCESES/DDK.Delegat.Install.Environment/
-   - ./update.node.4rom.demo.on.all.targets.sh inventory.test.env
+   - cd /root/DDK.Delegat.Install.Environment/
+   - ./update.node.on.all.targets_cluster2.sh inventory.test.env
+
+
+updating:
+ stage: update
+ only:
+   - sk-master
+ tags:
+   - ssh_update_ddk_nodes
+ script:
+   - cd /root/DDK.Delegat.Install.Environment/
+   - ./update.node.on.all.targets_cluster1.sh inventory.test.env
