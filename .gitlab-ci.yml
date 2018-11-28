@@ -1,6 +1,21 @@
 stages:
  - manual_build
  - update
+ - manual_build
+
+
+manual_build:
+  stage: manual_build
+  when: manual
+  only:
+    - master
+  tags:
+    - ssh_update_ddk_nodes
+  script:
+    - cd /root/DDK.Delegat.Install.Environment/
+    - build.tag.core.sh
+    - build.tag.ui.sh
+
 
 
 manual_build:
