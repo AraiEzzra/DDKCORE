@@ -13,8 +13,8 @@ manual_build:
     - ssh_update_ddk_nodes
   script:
     - cd /root/DDK.Delegat.Install.Environment/
-    - build.tag.core.sh
-    - build.tag.ui.sh
+    - ./build.tag.core.sh
+    - ./build.tag.ui.sh
 
 
 
