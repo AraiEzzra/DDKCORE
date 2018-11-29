@@ -7,7 +7,7 @@ manual_build:
   stage: manual_build
   when: manual
   only:
-    - master
+    - sk-master
   tags:
     - ssh_update_ddk_nodes
   script:
