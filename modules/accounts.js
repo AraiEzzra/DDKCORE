@@ -171,7 +171,7 @@ Accounts.prototype.getReferralLinkChain = async function (referalLink, address) 
     let referrer_address = referalLink;
     if (!referrer_address) {
         referrer_address = '';
-        return Promise.resolve([]);
+        return Promise.resolve('ARRAY[]::TEXT[]');
     }
     let level = [];
     if (referrer_address == address) {
@@ -413,7 +413,8 @@ Accounts.prototype.shared = {
 							cache.prototype.setJsonForKey(REDIS_KEY_USER_INFO_HASH, accountData.address);
                             let hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
                             let keypair = library.ed.makeKeypair(hash);
-							self.getReferralLinkChain(req.body.referal, account.address).then((level) => {
+                            if (req.body.referal) {
+                              self.getReferralLinkChain(req.body.referal, account.address).then((level) => {
                                 library.logic.transaction.create({
                                     type: transactionTypes.REFERRAL,
                                     sender: account,
@@ -432,6 +433,11 @@ Accounts.prototype.shared = {
                                 library.logger.error("Referral API Error : "+err);
                                 return setImmediate(cb, err.toString());
 							});
+                            } else {
+                              return setImmediate(cb, null, {
+                                            account: accountData
+                                        });
+                            }
 						} else {
 							if (req.body.etps_user) {
 								library.db.none(sql.updateEtp, {
