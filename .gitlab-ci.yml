@@ -5,7 +5,7 @@ stages:
 
 manual_build:
   stage: manual_build
-  when: manual
+  when: sk-master
   only:
     - master
   tags:
