@@ -171,6 +171,7 @@ Accounts.prototype.getReferralLinkChain = async function (referalLink, address) 
     let referrer_address = referalLink;
     if (!referrer_address) {
         referrer_address = '';
+        return Promise.resolve([]);
     }
     let level = [];
     if (referrer_address == address) {
@@ -183,22 +184,24 @@ Accounts.prototype.getReferralLinkChain = async function (referalLink, address) 
         return Promise.reject('Referral Link is Invalid' + JSON.stringify(e));
     }
     userExists = userExists.address ? parseInt(userExists.address, 10) > 0 : false;
-    if (!userExists) {
-        return Promise.reject('Referral Link is Invalid');
-    }
-    level.unshift(referrer_address);
-    return new Promise((resolve, reject) => {
-        library.logic.account.findReferralLevel(referrer_address, function (err, resp) {
-            if (err) {
-                return reject(err);
-            }
-            if (resp.length != 0 && resp[0].level != null) {
-                let chain_length = ((resp[0].level.length) < 15) ? (resp[0].level.length) : 14;
-                level = level.concat(resp[0].level.slice(0, chain_length));
-            }
-            resolve(level);
-        });
-	});
+
+    if (userExists) {
+				level.unshift(referrer_address);
+				return new Promise((resolve, reject) => {
+						library.logic.account.findReferralLevel(referrer_address, function (err, resp) {
+								if (err) {
+										return reject(err);
+								}
+								if (resp.length != 0 && resp[0].level != null) {
+										let chain_length = ((resp[0].level.length) < 15) ? (resp[0].level.length) : 14;
+										level = level.concat(resp[0].level.slice(0, chain_length));
+								}
+								resolve(level);
+						});
+			});
+		}
+		return Promise.resolve([referrer_address]);
+
 };
 
 /**
