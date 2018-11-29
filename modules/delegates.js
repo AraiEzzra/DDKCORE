@@ -54,6 +54,7 @@ function Delegates (cb, scope) {
 				access: {
 					whiteList: scope.config.forging.access.whiteList,
 				},
+                stopForging: scope.config.forging.stopForging,
 			},
 		},
 	};
@@ -318,6 +319,12 @@ __private.loadDelegates = function (cb) {
 
         if (!account) {
             return setImmediate(cb, ['Account with public key:', keypair.publicKey.toString('hex'), 'not found'].join(' '));
+        }
+
+        //Delegate can't forging blocks course env.STROP_FORGING flag is true
+        if (library.config.forging.stopForging) {
+            account.isDelegate = false;
+            library.logger.info(['Forging stopped for account:', account.address].join(' '));
         }
 
         if (account.isDelegate) {
