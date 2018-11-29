@@ -925,7 +925,7 @@ Transactions.prototype.shared = {
 									recipientId: recipientId,
 									keypair: keypair,
 									secondKeypair: secondKeypair
-								}).then((transactionReferSend) => {,
+								}).then((transactionReferSend) => {
 									transaction = transactionReferSend;
 									modules.transactions.receiveTransactions([transaction], true, cb);
 								}).catch((e) => {

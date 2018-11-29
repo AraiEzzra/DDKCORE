@@ -1,5 +1,5 @@
 const WebSocket = require('rpc-websockets').Client;
-const URL_DEFAULT = 'ws://10.6.0.5:8080/v1';
+const URL_DEFAULT = 'ws://localhost:8080/v1';
 
 
 class TestWebSocketConnector {
