@@ -106,7 +106,7 @@ const methods = [
 // todo: replace me to config.json
 const env = process.env;
 const PORT = 8080;
-const HOST = '10.6.0.5' || '0.0.0.0';
+const HOST = env.ADDRESS || '0.0.0.0';
 const VERSION = 1;
 
 module.exports = {
