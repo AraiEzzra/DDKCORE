@@ -44,7 +44,7 @@ let DelegatesSql = {
 			'SELECT * FROM delegates WHERE username LIKE ${q} LIMIT ${limit}'
 		].join(' ');
 
-		params.q = '%' + String(params.q).toLowerCase() + '%';
+		params.q = '%' + String(params.q) + '%';
 		return pgp.as.format(sql, params);
 	},
 
