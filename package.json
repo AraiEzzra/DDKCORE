@@ -3,7 +3,7 @@
   "version": "0.9.9a",
   "private": true,
   "scripts": {
-    "start": "node app.js",
+    "start": "node --max-old-space-size=4096 app.js",
     "debug": "node --inspect=0.0.0.0:9229 app.js",
     "test": "./node_modules/.bin/grunt test --verbose",
     "jenkins": "./node_modules/.bin/grunt jenkins --verbose",
