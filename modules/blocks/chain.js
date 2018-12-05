@@ -277,6 +277,7 @@ Chain.prototype.applyGenesisBlock = function (block, cb) {
 	}, function (err) {
 		if (err) {
 			// If genesis block is invalid, kill the node...
+      library.logger.error('Genesis block error: ', err.message);
 			return process.exit(0);
 		} else {
 			// Set genesis block as last block
