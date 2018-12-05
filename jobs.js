@@ -30,25 +30,31 @@ exports.attachScope = function (scope) {
 */
 exports.updateDataOnElasticSearch = {
 
-	on: '* * * * *',
+	on: '*/30 * * * *',
 	job: function () {
-		let dbTables = [
-			'blocks_list',
-			'dapps',
-			'delegates',
-			'mem_accounts',
-			'migrations',
-			'rounds_fees',
-			'trs',
-			'votes',
-			'signatures',
-			'stake_orders',
-			'peers',
-			'peers_dapp',
-			'intransfer',
-			'outtransfer',
-			'multisignatures'
-		];
+        let dbTables = [
+            'blocks_list',
+            'trs',
+            'stake_orders'
+        ];
+
+		// let dbTables = [
+		// 	'blocks_list',
+		// 	'dapps',
+		// 	'delegates',
+		// 	'mem_accounts',
+		// 	'migrations',
+		// 	'rounds_fees',
+		// 	'trs',
+		// 	'votes',
+		// 	'signatures',
+		// 	'stake_orders',
+		// 	'peers',
+		// 	'peers_dapp',
+		// 	'intransfer',
+		// 	'outtransfer',
+		// 	'multisignatures'
+		// ];
 
 		dbTables.forEach(function (tableName) {
 			library.db.query('SELECT * FROM ' + tableName)
