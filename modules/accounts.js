@@ -772,29 +772,21 @@ Accounts.prototype.shared = {
 	},
 
 	getCirculatingSupply: function (req, cb) {
-		let initialUnmined = library.config.ddkSupply.totalSupply - library.config.initialPrimined.total;
-		//let publicAddress = library.config.sender.address;
-		let hash = Buffer.from(JSON.parse(library.config.users[0].keys));
-		let keypair = library.ed.makeKeypair(hash);
-		let publicKey = keypair.publicKey.toString('hex');
-		self.getAccount({publicKey: publicKey}, function(err, account) {
-			library.db.one(sql.getCurrentUnmined, { address: account.address })
+        library.db.one(sql.getCurrentUnmined, {address: library.config.forging.totalSupplyAccount})
 			.then(function (currentUnmined) {
-				let circulatingSupply = library.config.initialPrimined.total + initialUnmined - currentUnmined.balance;
+                let circulatingSupply = library.config.ddkSupply.totalSupply - currentUnmined.balance;
+                cache.prototype.getJsonForKey('minedContributorsBalance', function (err, contributorsBalance) {
+                    let totalCirculatingSupply = parseInt(contributorsBalance) + circulatingSupply;
 
-				cache.prototype.getJsonForKey('minedContributorsBalance', function (err, contributorsBalance) {
-					let totalCirculatingSupply = parseInt(contributorsBalance) + circulatingSupply;
-
-					return setImmediate(cb, null, {
-						circulatingSupply: totalCirculatingSupply
-					});
-				});
+                    return setImmediate(cb, null, {
+                        circulatingSupply: totalCirculatingSupply
+                    });
+                });
 			})
-			.catch(function (err) {
-				library.logger.error(err.stack);
-				return setImmediate(cb, err.toString());
-			});
-		});
+            .catch(function (err) {
+                library.logger.error(err.stack);
+                return setImmediate(cb, err.toString());
+            });
 	},
 
 	totalSupply: function (req, cb) {
