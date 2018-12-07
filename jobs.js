@@ -49,6 +49,34 @@ let dbTables = [
 	}
 ];
 
+const iterate = async (table, limit, rowsAcc, bulkAcc, lastValue) => {
+    if (!lastValue) {
+        lastValue = table.lastValue;
+    }
+    try {
+        rowsAcc = await library.db.manyOrNone(
+            'SELECT * FROM $(tableName~) WHERE $(fieldName~) > $(lastValue) ORDER BY $(fieldName~) LIMIT $(limit)',
+            {
+                tableName: table.tableName,
+                fieldName: table.fieldName,
+                lastValue: lastValue,
+                limit: limit
+            }
+        );
+        if (rowsAcc.length < 1) {
+            table.lastValue = lastValue;
+            return ;
+        }
+        bulkAcc = utils.makeBulk(rowsAcc, table.tableName);
+        await utils.indexall(bulkAcc, table.tableName);
+        lastValue = rowsAcc[rowsAcc.length - 1][table.fieldName];
+    } catch(err) {
+        library.logger.error('elasticsearch indexing error : '+ err);
+    }
+
+    await iterate(table, limit, rowsAcc, bulkAcc, lastValue);
+};
+
 
 exports.updateDataOnElasticSearch = {
 
@@ -76,35 +104,6 @@ exports.updateDataOnElasticSearch = {
 		// 	'outtransfer',
 		// 	'multisignatures'
 		// ];
-
-		const iterate = async (table, limit, rowsAcc, bulkAcc, lastValue) => {
-			if (!lastValue) {
-				lastValue = table.lastValue;
-			}
-			try {
-                rowsAcc = await library.db.manyOrNone(
-                    'SELECT * FROM $(tableName~) WHERE $(fieldName~) > $(lastValue) ORDER BY $(fieldName~) LIMIT $(limit)',
-                    {
-                        tableName: table.tableName,
-                        fieldName: table.fieldName,
-                        lastValue: lastValue,
-						limit: limit
-                    }
-                );
-                if (rowsAcc.length < 1) {
-                	table.lastValue = lastValue;
-                	return ;
-                }
-                bulkAcc = utils.makeBulk(rowsAcc, table.tableName);
-                await utils.indexall(bulkAcc, table.tableName);
-                lastValue = rowsAcc[rowsAcc.length - 1][table.fieldName];
-                // console.log("from " + table.tableName + " indexed " + rowsAcc.length + " last value " + lastValue);
-			} catch(err) {
-                library.logger.error('elasticsearch indexing error : '+ err);
-            }
-
-            await iterate(table, limit, rowsAcc, bulkAcc, lastValue);
-		};
 		
 		let promises = [];
 		dbTables.forEach(function (table) {
