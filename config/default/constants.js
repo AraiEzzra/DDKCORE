@@ -119,7 +119,7 @@ module.exports = {
 	froze : {
 		endTime : 48,
 		rTime : 8,
-		vTime : 2,
+		vTime : 0,
 		milestone : 8, //for testing, taking 2 min
 		rewards: {
 			milestones: [
@@ -132,8 +132,8 @@ module.exports = {
 			],
 			distance: 30, // Distance between each milestone is 6 months
 		},
-        rewardVoteCount: 2,  // TODO: restore 4 and up to footer of file
-        unstakeVoteCount : 4  // TODO: restore 27 and up to footer of file
+        rewardVoteCount: 2,
+        unstakeVoteCount : 4
 	},
 	defaultLock: 0
 };

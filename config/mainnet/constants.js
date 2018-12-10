@@ -45,7 +45,7 @@ module.exports = {
 		stakeRewardPercent: 10,
 		referralPercentPerLevel: [5, 3, 2, 2, 1, 1, 1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.5, 0.5, 0.5]
 	},
-	activeDelegates: 11,
+	activeDelegates: 201,
 	maxVotes:4,
 	maxVotesPerTransaction: 3,
     maxTransferCount: 3,
@@ -119,7 +119,7 @@ module.exports = {
 	froze : {
 		endTime : 48,
 		rTime : 8,
-		vTime : 2,
+		vTime : 10080,
 		milestone : 8, //for testing, taking 2 min
 		rewards: {
 			milestones: [
@@ -132,8 +132,8 @@ module.exports = {
 			],
 			distance: 30, // Distance between each milestone is 6 months
 		},
-        rewardVoteCount: 4,  // TODO: restore 4 and up to footer of file
-        unstakeVoteCount : 24  // TODO: restore 27 and up to footer of file
+        rewardVoteCount: 4,
+        unstakeVoteCount : 24
 	},
 	defaultLock: 0
 };

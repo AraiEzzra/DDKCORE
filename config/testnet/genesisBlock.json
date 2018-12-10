@@ -146,8 +146,8 @@
       "fee": 0,
       "timestamp": 0,
       "recipientId": null,
-      "senderId": "DDK3955937947011006122",
-      "senderPublicKey": "276f0d09e64b68566fb458b7c71aeb62411d0b633ad6c038e5a4a042ec588af9",
+      "senderId": "DDK15997339612254901283",
+      "senderPublicKey": "a0515f134d80b7e89491e848fe1be340df297de6114acd6cbb82866c7c95252c",
       "asset": {
         "delegate": {
           "username": "TDALLIANCE1"
@@ -164,8 +164,8 @@
       "fee": 0,
       "timestamp": 0,
       "recipientId": null,
-      "senderId": "DDK14521323608713415449",
-      "senderPublicKey": "3f0348b6d3ecaeaeca0a05ee4c2d7b4b7895ef0a12d8023ba245b6b8022833e5",
+      "senderId": "DDK4618746982989879274",
+      "senderPublicKey": "059473307676a03ead0004339b4ec4f64383e7cec200ec2b686ccebba718b9f4",
       "asset": {
         "delegate": {
           "username": "TDALLIANCE2"
@@ -182,8 +182,8 @@
       "fee": 0,
       "timestamp": 0,
       "recipientId": null,
-      "senderId": "DDK12458159079905364672",
-      "senderPublicKey": "3f1ecf6de517a6bf2f5c7a8226a478dc571ed0100d53ee104842f4d443e49806",
+      "senderId": "DDK15965510093128280983",
+      "senderPublicKey": "bd27a7c1c4d4c62bbe0a5fe292e7c3f201d55db9ef1d4c4013cde0a679f55b51",
       "asset": {
         "delegate": {
           "username": "TDALLIANCE3"
@@ -200,8 +200,8 @@
       "fee": 0,
       "timestamp": 0,
       "recipientId": null,
-      "senderId": "DDK933553974927686133",
-      "senderPublicKey": "83cb3d8641c8e73735cc1b70c915602ffcb6e5a68f14a71056511699050a1a05",
+      "senderId": "DDK573794630550253062",
+      "senderPublicKey": "eb3ecfad0b81f6744a0c9152e3b2baabdb6a4c795cfc2fbf94caf9276bbf1cb7",
       "asset": {
         "delegate": {
           "username": "DELEGATE1"
@@ -218,8 +218,8 @@
       "fee": 0,
       "timestamp": 0,
       "recipientId": null,
-      "senderId": "DDK3002421063889966908",
-      "senderPublicKey": "f959e6c8d279c97d3ec5ba993f04ab740a6e50bec4aad75a8a1e7808a6c5eec7",
+      "senderId": "DDK16074639108458190352",
+      "senderPublicKey": "6fafb15bf9e9bff361f144ff2dc22743151e0fc404e7a257017220dcb09c31a3",
       "asset": {
         "delegate": {
           "username": "DELEGATE2"
@@ -236,8 +236,8 @@
       "fee": 0,
       "timestamp": 0,
       "recipientId": null,
-      "senderId": "DDK7897332094363171058",
-      "senderPublicKey": "137b9f0f839ab3ecd2146bfecd64d31e127d79431211e352bedfeba5fd61a57a",
+      "senderId": "DDK17909750894588744924",
+      "senderPublicKey": "3d59755c247abce2d9ea55bc85764563c1880cc057c0b4c1e6805647ea05f0c8",
       "asset": {
         "delegate": {
           "username": "DELEGATE3"
@@ -254,8 +254,8 @@
       "fee": 0,
       "timestamp": 0,
       "recipientId": null,
-      "senderId": "DDK6896696291079341052",
-      "senderPublicKey": "96c7402e487ac2c17b4667da8412044ca37e172597335b4495b154610865976f",
+      "senderId": "DDK17417187224294680068",
+      "senderPublicKey": "3c45f3082394abc2fa5d0b07bb0da9db3ec9349023d8c04824b0752756e4ff6e",
       "asset": {
         "delegate": {
           "username": "DELEGATE4"
@@ -272,8 +272,8 @@
       "fee": 0,
       "timestamp": 0,
       "recipientId": null,
-      "senderId": "DDK2992231075173753241",
-      "senderPublicKey": "e95e54e2a278cea7ffc334b997c99780d4c21fb722545a0e705a39c1f9907fb6",
+      "senderId": "DDK7393133298689447084",
+      "senderPublicKey": "df7a05ee5aaf85af4bc4443b1e846b0fc3fadf3fd1c6387ba389c52d1ef72096",
       "asset": {
         "delegate": {
           "username": "DELEGATE5"
@@ -290,8 +290,8 @@
       "fee": 0,
       "timestamp": 0,
       "recipientId": null,
-      "senderId": "DDK2609330451270037814",
-      "senderPublicKey": "7822d08f07cc362ae3fa536d1fd1555074a8cc2da369191051cb6f1d49773fcc",
+      "senderId": "DDK15529443968007519792",
+      "senderPublicKey": "7e81d9e02612b8eb620d934030be86fc6742ad56f98421261c4c1ebe52144540",
       "asset": {
         "delegate": {
           "username": "DELEGATE6"
@@ -308,8 +308,8 @@
       "fee": 0,
       "timestamp": 0,
       "recipientId": null,
-      "senderId": "DDK16566686158587408921",
-      "senderPublicKey": "df4b6a242c1e84906f0bd1f5c41f31b2b554d413388215a8c75dda177b958630",
+      "senderId": "DDK9534211753611791526",
+      "senderPublicKey": "301c99b6ee57807664eae0a43a58c7d39c5e8a6441aa2239e2024046161e652f",
       "asset": {
         "delegate": {
           "username": "DELEGATE7"
@@ -326,8 +326,8 @@
       "fee": 0,
       "timestamp": 0,
       "recipientId": null,
-      "senderId": "DDK9061812427491485592",
-      "senderPublicKey": "c6268f7247b0ff3c1ff9f5155a0ee7289116841e853194f440d4928771487ce7",
+      "senderId": "DDK17044581156522263104",
+      "senderPublicKey": "791a367ccf1ba1d77b1b511ae383fae752a58fb95cd4def54985734ab1afbabe",
       "asset": {
         "delegate": {
           "username": "DELEGATE8"
@@ -348,9 +348,9 @@
       "senderPublicKey": "f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2",
       "asset": {
         "votes": [
-          "+276f0d09e64b68566fb458b7c71aeb62411d0b633ad6c038e5a4a042ec588af9",
-          "+3f0348b6d3ecaeaeca0a05ee4c2d7b4b7895ef0a12d8023ba245b6b8022833e5",
-          "+3f1ecf6de517a6bf2f5c7a8226a478dc571ed0100d53ee104842f4d443e49806"
+          "+a0515f134d80b7e89491e848fe1be340df297de6114acd6cbb82866c7c95252c",
+          "+059473307676a03ead0004339b4ec4f64383e7cec200ec2b686ccebba718b9f4",
+          "+bd27a7c1c4d4c62bbe0a5fe292e7c3f201d55db9ef1d4c4013cde0a679f55b51"
         ]
       },
       "signature": "a8edb3af3ff7e864ce610ea92ea44454ebc3ed3195cbd325d0eb59a1c8fc27cff851af2784f71d836f161abf3d92e44e888acad5473ea9a93f51767953d2560c",
@@ -363,14 +363,14 @@
       "amount": 0,
       "fee": 0,
       "timestamp": 0,
-      "recipientId": "DDK933553974927686133",
-      "senderId": "DDK933553974927686133",
-      "senderPublicKey": "83cb3d8641c8e73735cc1b70c915602ffcb6e5a68f14a71056511699050a1a05",
+      "recipientId": "DDK573794630550253062",
+      "senderId": "DDK573794630550253062",
+      "senderPublicKey": "eb3ecfad0b81f6744a0c9152e3b2baabdb6a4c795cfc2fbf94caf9276bbf1cb7",
       "asset": {
         "votes": [
-          "+83cb3d8641c8e73735cc1b70c915602ffcb6e5a68f14a71056511699050a1a05",
-          "+f959e6c8d279c97d3ec5ba993f04ab740a6e50bec4aad75a8a1e7808a6c5eec7",
-          "+137b9f0f839ab3ecd2146bfecd64d31e127d79431211e352bedfeba5fd61a57a"
+          "+eb3ecfad0b81f6744a0c9152e3b2baabdb6a4c795cfc2fbf94caf9276bbf1cb7",
+          "+6fafb15bf9e9bff361f144ff2dc22743151e0fc404e7a257017220dcb09c31a3",
+          "+3d59755c247abce2d9ea55bc85764563c1880cc057c0b4c1e6805647ea05f0c8"
         ]
       },
       "signature": "29f9f0219c48fe1e0a18831082297d16959a6488cf70c4c5b9b18c9dc10f01fc72964632cc5d53759f1d343cf7d821a99ac29b6cb8c0e540833b05ce24e48106",
@@ -383,14 +383,14 @@
       "amount": 0,
       "fee": 0,
       "timestamp": 0,
-      "recipientId": "DDK3002421063889966908",
-      "senderId": "DDK3002421063889966908",
-      "senderPublicKey": "f959e6c8d279c97d3ec5ba993f04ab740a6e50bec4aad75a8a1e7808a6c5eec7",
+      "recipientId": "DDK16074639108458190352",
+      "senderId": "DDK16074639108458190352",
+      "senderPublicKey": "6fafb15bf9e9bff361f144ff2dc22743151e0fc404e7a257017220dcb09c31a3",
       "asset": {
         "votes": [
-          "+96c7402e487ac2c17b4667da8412044ca37e172597335b4495b154610865976f",
-          "+e95e54e2a278cea7ffc334b997c99780d4c21fb722545a0e705a39c1f9907fb6",
-          "+7822d08f07cc362ae3fa536d1fd1555074a8cc2da369191051cb6f1d49773fcc"
+          "+3c45f3082394abc2fa5d0b07bb0da9db3ec9349023d8c04824b0752756e4ff6e",
+          "+df7a05ee5aaf85af4bc4443b1e846b0fc3fadf3fd1c6387ba389c52d1ef72096",
+          "+7e81d9e02612b8eb620d934030be86fc6742ad56f98421261c4c1ebe52144540"
         ]
       },
       "signature": "e459583512d86f1db7c9fe30bbd3365251fc2171b5bf19009f242c53be758310fd80760a0067e2e488d810fb2de6ba16e90d763132bc2ac831dabe66c0285d03",
@@ -403,13 +403,13 @@
       "amount": 0,
       "fee": 0,
       "timestamp": 0,
-      "recipientId": "DDK7897332094363171058",
-      "senderId": "DDK7897332094363171058",
-      "senderPublicKey": "137b9f0f839ab3ecd2146bfecd64d31e127d79431211e352bedfeba5fd61a57a",
+      "recipientId": "DDK17909750894588744924",
+      "senderId": "DDK17909750894588744924",
+      "senderPublicKey": "3d59755c247abce2d9ea55bc85764563c1880cc057c0b4c1e6805647ea05f0c8",
       "asset": {
         "votes": [
-          "+df4b6a242c1e84906f0bd1f5c41f31b2b554d413388215a8c75dda177b958630",
-          "+c6268f7247b0ff3c1ff9f5155a0ee7289116841e853194f440d4928771487ce7"
+          "+301c99b6ee57807664eae0a43a58c7d39c5e8a6441aa2239e2024046161e652f",
+          "+791a367ccf1ba1d77b1b511ae383fae752a58fb95cd4def54985734ab1afbabe"
         ]
       },
       "signature": "48c67b6eec3c6e147b530f2c15c3e845258704fcf2472e7694f03ae9414b2114399c1da7c8f258dbfdfeb311729a7b623b25f2b760b0bd1cb5d08db67eb85c04",

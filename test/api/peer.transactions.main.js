@@ -3,7 +3,7 @@
 let crypto = require('crypto');
 let node = require('./../node.js');
 
-let genesisblock = require('../../genesisBlock.json');
+let genesisblock = require('../../helpers/genesisBlock');
 
 function postTransaction (transaction, done) {
 	node.post('/peer/transactions', {
