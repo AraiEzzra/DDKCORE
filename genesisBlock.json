@@ -5,8 +5,8 @@
   "reward": 0,
   "payloadHash": "da3ed6a45429278bac2666961289ca17ad86595d33b31037615d4b8e8f158bba",
   "timestamp": 0,
-  "numberOfTransactions": 13,
-  "payloadLength": 20326,
+  "numberOfTransactions": 25,
+  "payloadLength": 44412,
   "previousBlock": null,
   "generatorPublicKey": "f50fe1582173dc30869ca3357daeec3ec3608a7517c0ea388c50c5e3afcc8041",
   "transactions": [
