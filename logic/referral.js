@@ -68,7 +68,7 @@ Referral.prototype.schema = {
 
 Referral.prototype.dbRead = function (raw) {
     return {
-        referrals: raw.ref_level
+        referrals: raw.ref_level ? raw.ref_level : [],
     };
 };
 
