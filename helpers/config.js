@@ -10,26 +10,26 @@ let configData = {};
  * Loads config.json file
  * @memberof module:helpers
  * @implements {validateForce}
- * @param {string} configPath 
+ * @param {string} configPath
  * @returns {Object} configData
  */
 function Config (configPath) {
 
 	// For development mode
 	if(env.NODE_ENV === 'development') {
-		configData = require('../config/default');
+		configData = require('../config/default/config');
 		//configData = fs.readFileSync(path.resolve(process.cwd(), (configPath || 'config/default.js')), 'utf8');
 	}
 
 	// For staging environment
 	if(env.NODE_ENV === 'testnet') {
-		configData = require('../config/testnet');
+		configData = require('../config/testnet/config');
 		//configData = fs.readFileSync(path.resolve(process.cwd(), (configPath || 'config/testnet.js')), 'utf8');
 	}
 
-	// For production 
+	// For production
 	if(env.NODE_ENV === 'mainnet') {
-		configData = require('../config/mainnet');
+		configData = require('../config/mainnet/config');
 		//configData = fs.readFileSync(path.resolve(process.cwd(), (configPath || 'config/mainnet.js')), 'utf8');
 	}
 
@@ -60,7 +60,7 @@ function Config (configPath) {
 /**
  * Validates nethash value from constants and sets forging force to false if any.
  * @private
- * @param {Object} configData 
+ * @param {Object} configData
  */
 function validateForce (configData) {
 	if (configData.forging.force) {
