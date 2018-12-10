@@ -739,6 +739,10 @@ Account.prototype.findReferralLevel= function(address,cb) {
 	this.scope.db.query(sql.referLevelChain,{
 		address:address
 	}).then(function(user){
+		if (user && !user.level) {
+			user.level = [];
+		}
+
 		return setImmediate(cb,null,user);
 	}).catch(function(err){
 		return setImmediate(cb,err);
