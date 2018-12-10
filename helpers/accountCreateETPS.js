@@ -1,5 +1,5 @@
-/** 
- * @author - Satish Joshi 
+/**
+ * @author - Satish Joshi
  */
 
 let Mnemonic = require('bitcore-mnemonic');
@@ -38,7 +38,7 @@ exports.AccountCreateETPS = function (scope) {
 /**
  * Registration process of Etps user in the DDK system.
  * First send an transaction from an specific account to all etps users.
- * Then make an transaction of total stake amount for migrated users. 
+ * Then make an transaction of total stake amount for migrated users.
  * @param {user_data} - Contains the address, passphrase, balance, total freezed amount, group bonus of Etps user.
  * @param {cb} - callback function which will return the status.
  */
@@ -145,7 +145,7 @@ function generateAddressByPublicKey(publicKey) {
     return address;
 }
 
-/** 
+/**
  * First checking the status of migrated users by getting the last id in case of rebuilding the blockchain.
  * Then generating the Passphrase , Public Key , Referral Chain.
  * Also applying the stake orders of Etps User and save it to db.
@@ -226,7 +226,7 @@ function etpsMigrationProcess() {
                                             self.scope.db.query(sql.referLevelChain, {
                                                 address: user[0].address
                                             }).then(function (etps_upline) {
-                                                if (etps_upline.length != 0 && etps_upline[0].level != null) {
+                                                if (etps_upline != null && etps_upline.length != 0 && etps_upline[0].level != null) {
                                                     let chain_length = ((etps_upline[0].level.length) < 15) ? (etps_upline[0].level.length) : 14;
 
                                                     referral_chain = referral_chain.concat(etps_upline[0].level.slice(0, chain_length));

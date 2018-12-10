@@ -297,7 +297,7 @@ __private.loadTransactions = function (cb) {
  * Matchs genesis block with database.
  * Verifies Snapshot mode.
  * Recreates memory tables when neccesary:
- *  - Calls logic.account to removeTables and createTables 
+ *  - Calls logic.account to removeTables and createTables
  *  - Calls block to load block. When blockchain ready emits a bus message.
  * Detects orphaned blocks in `mem_accounts` and gets delegates.
  * Loads last block and emits a bus message blockchain is ready.
@@ -658,7 +658,7 @@ __private.sync = function (cb) {
 	});
 };
 
-/* 
+/*
  * Given a list of peers (with associated blockchain height), we find a list
  * of good peers (likely to sync with), then perform a histogram cut, removing
  * peers far from the most common observed height. This is not as easy as it
@@ -666,7 +666,7 @@ __private.sync = function (cb) {
  * therefore need to aggregate).
  */
 /**
- * Gets the list of good peers. 
+ * Gets the list of good peers.
  * @private
  * @implements {modules.blocks.lastBlock.get}
  * @implements {library.logic.peers.create}

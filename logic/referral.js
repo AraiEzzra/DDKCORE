@@ -85,7 +85,7 @@ Referral.prototype.dbSave = function (trs) {
         fields: this.dbFields,
         values: {
             address: trs.recipientId,
-            level: trs.asset.referrals
+            level: trs.asset.referrals.length ? `{${trs.asset.referrals.toString()}}` : null,
         }
     };
 };
