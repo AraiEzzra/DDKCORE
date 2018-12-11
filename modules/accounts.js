@@ -783,12 +783,16 @@ Accounts.prototype.shared = {
 	},
 
 	totalSupply: function (req, cb) {
-		let totalSupply = library.config.ddkSupply.totalSupply;
-
-		return setImmediate(cb, null, {
-			totalSupply: totalSupply
-		});
-
+        library.db.one(sql.getCurrentUnmined, {address: library.config.forging.totalSupplyAccount})
+            .then(function (currentUnmined) {
+                return setImmediate(cb, null, {
+                    totalSupply: parseInt(currentUnmined.balance)
+                });
+            })
+            .catch(function (err) {
+                library.logger.error(err.stack);
+                return setImmediate(cb, err.toString());
+            });
 	},
 
 	migrateData: function (req, cb) {
