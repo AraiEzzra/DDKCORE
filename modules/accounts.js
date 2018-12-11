@@ -501,16 +501,12 @@ Accounts.prototype.shared = {
 				return setImmediate(cb, err[0].message);
 			}
 
-			__private.openAccount(req.body, function (err, account) {
-				let publicKey = null;
+			const hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
+			const keypair = library.ed.makeKeypair(hash);
+			const publicKey = keypair.publicKey.toString('hex');
 
-				if (!err && account) {
-					publicKey = account.publicKey;
-				}
-
-				return setImmediate(cb, err, {
-					publicKey: publicKey
-				});
+			return setImmediate(cb, err, {
+				publicKey: publicKey
 			});
 		});
 	},
