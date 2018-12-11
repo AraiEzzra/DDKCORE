@@ -41,6 +41,7 @@ module.exports = {
   forging: {
     secret: env.FORGE_SECRET,
     totalSupplyAccount: env.TOTAL_SUPPLY_ACCOUNT,
+    stopForging: (env.STOP_FORGING || 'FALSE').toUpperCase() === 'TRUE',
   },
   ssl: {
     options: {

@@ -452,12 +452,13 @@ Frozen.prototype.getAirdropReward = async function (senderAddress, amount, trans
     }
 
     // TODO use u_balance
-    const availableAirdropBalance = await self.scope.db.one(account_sql.getCurrentUnmined, {
+    const availableAirdropBalance = await self.scope.db.oneOrNone(account_sql.getCurrentUnmined, {
         address: constants.airdrop.account
     });
+
     self.scope.logger.info(`availableAirdropBalance: ${availableAirdropBalance.balance / 100000000}`);
 
-    const user = await self.scope.db.one(reward_sql.referLevelChain, {
+    const user = await self.scope.db.oneOrNone(reward_sql.referLevelChain, {
         address: senderAddress
     });
 

@@ -183,22 +183,24 @@ Accounts.prototype.getReferralLinkChain = async function (referalLink, address) 
         return Promise.reject('Referral Link is Invalid' + JSON.stringify(e));
     }
     userExists = userExists.address ? parseInt(userExists.address, 10) > 0 : false;
-    if (!userExists) {
-        return Promise.reject('Referral Link is Invalid');
-    }
-    level.unshift(referrer_address);
-    return new Promise((resolve, reject) => {
-        library.logic.account.findReferralLevel(referrer_address, function (err, resp) {
-            if (err) {
-                return reject(err);
-            }
-            if (resp.length != 0 && resp[0].level != null) {
-                let chain_length = ((resp[0].level.length) < 15) ? (resp[0].level.length) : 14;
-                level = level.concat(resp[0].level.slice(0, chain_length));
-            }
-            resolve(level);
-        });
-	});
+
+    if (userExists) {
+				level.unshift(referrer_address);
+				return new Promise((resolve, reject) => {
+						library.logic.account.findReferralLevel(referrer_address, function (err, resp) {
+								if (err) {
+										return reject(err);
+								}
+								if (resp.length != 0 && resp[0].level != null) {
+										let chain_length = ((resp[0].level.length) < 15) ? (resp[0].level.length) : 14;
+										level = level.concat(resp[0].level.slice(0, chain_length));
+								}
+								resolve(level);
+						});
+			});
+	}
+	return Promise.resolve([]);
+
 };
 
 /**
@@ -410,7 +412,7 @@ Accounts.prototype.shared = {
 							cache.prototype.setJsonForKey(REDIS_KEY_USER_INFO_HASH, accountData.address);
                             let hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
                             let keypair = library.ed.makeKeypair(hash);
-							self.getReferralLinkChain(req.body.referal, account.address).then((level) => {
+                              self.getReferralLinkChain(req.body.referal, account.address).then((level) => {
                                 library.logic.transaction.create({
                                     type: transactionTypes.REFERRAL,
                                     sender: account,
@@ -425,10 +427,10 @@ Accounts.prototype.shared = {
                                 }).catch((e) => {
                                     throw e;
                                 });
-							}).catch((err) => {
-                                library.logger.error("Referral API Error : "+err);
-                                return setImmediate(cb, err.toString());
-							});
+								}).catch((err) => {
+									library.logger.error("Referral API Error : "+err);
+									return setImmediate(cb, err.toString());
+								});
 						} else {
 							if (req.body.etps_user) {
 								library.db.none(sql.updateEtp, {
@@ -763,38 +765,34 @@ Accounts.prototype.shared = {
 	},
 
 	getCirculatingSupply: function (req, cb) {
-		let initialUnmined = library.config.ddkSupply.totalSupply - library.config.initialPrimined.total;
-		//let publicAddress = library.config.sender.address;
-		let hash = Buffer.from(JSON.parse(library.config.users[0].keys));
-		let keypair = library.ed.makeKeypair(hash);
-		let publicKey = keypair.publicKey.toString('hex');
-		self.getAccount({publicKey: publicKey}, function(err, account) {
-			library.db.one(sql.getCurrentUnmined, { address: account.address })
+        library.db.one(sql.getCurrentUnmined, {address: library.config.forging.totalSupplyAccount})
 			.then(function (currentUnmined) {
-				let circulatingSupply = library.config.initialPrimined.total + initialUnmined - currentUnmined.balance;
+                let circulatingSupply = library.config.ddkSupply.totalSupply - currentUnmined.balance;
+                cache.prototype.getJsonForKey('minedContributorsBalance', function (err, contributorsBalance) {
+                    let totalCirculatingSupply = parseInt(contributorsBalance) + circulatingSupply;
 
-				cache.prototype.getJsonForKey('minedContributorsBalance', function (err, contributorsBalance) {
-					let totalCirculatingSupply = parseInt(contributorsBalance) + circulatingSupply;
-
-					return setImmediate(cb, null, {
-						circulatingSupply: totalCirculatingSupply
-					});
-				});
+                    return setImmediate(cb, null, {
+                        circulatingSupply: totalCirculatingSupply
+                    });
+                });
 			})
-			.catch(function (err) {
-				library.logger.error(err.stack);
-				return setImmediate(cb, err.toString());
-			});
-		});
+            .catch(function (err) {
+                library.logger.error(err.stack);
+                return setImmediate(cb, err.toString());
+            });
 	},
 
 	totalSupply: function (req, cb) {
-		let totalSupply = library.config.ddkSupply.totalSupply;
-
-		return setImmediate(cb, null, {
-			totalSupply: totalSupply
-		});
-
+        library.db.one(sql.getCurrentUnmined, {address: library.config.forging.totalSupplyAccount})
+            .then(function (currentUnmined) {
+                return setImmediate(cb, null, {
+                    totalSupply: parseInt(currentUnmined.balance)
+                });
+            })
+            .catch(function (err) {
+                library.logger.error(err.stack);
+                return setImmediate(cb, err.toString());
+            });
 	},
 
 	migrateData: function (req, cb) {
