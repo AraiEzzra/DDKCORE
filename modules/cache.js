@@ -85,17 +85,25 @@ Cache.prototype.setJsonForKey = function (key, value, cb) {
 	client.set(key, JSON.stringify(value), cb);
 };
 
-Cache.prototype.setJsonForKeyAsync = async function (key, value) {
+Cache.prototype.setJsonForKeyAsync = async function (key, value, expire) {
     return new Promise((resolve, reject) => {
         if (!self.isConnected()) {
             reject(errorCacheDisabled);
         }
-        client.set(key, JSON.stringify(value), function (err){
-            if (err) {
-                reject(err);
-            }
-            resolve(true);
-        });
+		const jsonValue = JSON.stringify(value);
+
+		const cb = (err) => {
+			if (err) {
+				reject(err);
+			}
+			resolve(true);
+		};
+
+		if (expire) {
+			client.setex(key, expire, jsonValue, cb);
+		} else {
+			client.set(key, jsonValue, cb);
+		}
 	});
 };
 

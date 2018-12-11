@@ -48,7 +48,7 @@ let FrogingsSql = {
 
 	createNewFrozeOrder: 'INSERT INTO stake_orders ("id","status","startTime","insertTime","senderId","freezedAmount","rewardCount","voteCount","nextVoteMilestone","isVoteDone","transferCount") VALUES (${id},1,${startTime},${insertTime},${senderId},${freezedAmount},${rewardCount},${voteCount},${nextVoteMilestone},${isVoteDone},$(transferCount)+1) ',
 
-	countStakeholders: 'SELECT count(DISTINCT "senderId") FROM stake_orders WHERE "status"=1',
+	countStakeholders: 'select count(1) from (select 1 from stake_orders o where o.status = 1 group by "senderId") a',
 
 	getTotalStakedAmount: 'SELECT sum("freezedAmount") FROM stake_orders WHERE "status"=1',
 
