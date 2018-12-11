@@ -86,8 +86,8 @@ function Accounts(cb, scope) {
  * @param {function} cb - Callback function.
  * @returns {setImmediateCallback} As per logic new|current account data object.
  */
-__private.openAccount = function (secret, cb) {
-	let hash = crypto.createHash('sha256').update(secret, 'utf8').digest();
+__private.openAccount = function (body, cb) {
+	let hash = crypto.createHash('sha256').update(body.secret, 'utf8').digest();
 	let keypair = library.ed.makeKeypair(hash);
 	let publicKey = keypair.publicKey.toString('hex');
 
@@ -113,7 +113,24 @@ __private.openAccount = function (secret, cb) {
 				multisignatures: null,
 				u_multisignatures: null
 			};
-			return setImmediate(cb, null, account);
+
+			self.getReferralLinkChain(body.referal, account.address).then((level) => {
+				library.logic.transaction.create({
+					type: transactionTypes.REFERRAL,
+					sender: account,
+					keypair: keypair,
+					referrals: level
+				}).then((transactionReferral) => {
+					modules.transactions.receiveTransactions([transactionReferral], true, (err) => {
+						return setImmediate(cb, null, account);
+					});
+				}).catch((err) => {
+					throw err;
+				});
+			}).catch((err) => {
+				library.logger.error("Referral API Error : " + err);
+				return setImmediate(cb, err.toString());
+			});
 		}
 	});
 };
@@ -157,10 +174,10 @@ Accounts.prototype.getAccount = function (filter, fields, cb) {
 	library.logic.account.get(filter, fields, cb);
 };
 
-/**  
+/**
  * Firstly check whether this referral id is valid or not.
  * If valid Generate referral chain for that user.
- * In case of no referral, chain will contain the null value i.e; Blank. 
+ * In case of no referral, chain will contain the null value i.e; Blank.
  * @param {referalLink} - Refer Id.
  * @param {address} - Address of user during registration.
  * @author - Satish Joshi
@@ -246,10 +263,10 @@ Accounts.prototype.setAccountAndGet = function (data, cb) {
 			throw err;
 		}
 	}
-	
+
 	let REDIS_KEY_USER = "userAccountInfo_" + address;
 
-	cache.prototype.isExists(REDIS_KEY_USER, function (err, isExist) { 
+	cache.prototype.isExists(REDIS_KEY_USER, function (err, isExist) {
 		if(!isExist) {
 			cache.prototype.setJsonForKey(REDIS_KEY_USER, address);
 		}
@@ -350,7 +367,7 @@ Accounts.prototype.shared = {
 				return setImmediate(cb, err[0].message);
 			}
 
-			__private.openAccount(req.body.secret, function (err, account) {
+			__private.openAccount(req.body, function (err, account) {
 				if (!err) {
 
 					let payload = {
@@ -410,27 +427,7 @@ Accounts.prototype.shared = {
 					cache.prototype.isExists(REDIS_KEY_USER_INFO_HASH, function (err, isExist) {
 						if (!isExist) {
 							cache.prototype.setJsonForKey(REDIS_KEY_USER_INFO_HASH, accountData.address);
-                            let hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
-                            let keypair = library.ed.makeKeypair(hash);
-                              self.getReferralLinkChain(req.body.referal, account.address).then((level) => {
-                                library.logic.transaction.create({
-                                    type: transactionTypes.REFERRAL,
-                                    sender: account,
-                                    keypair: keypair,
-                                    referrals: level
-                                }).then((transactionReferral) =>{
-                                    modules.transactions.receiveTransactions([transactionReferral], true, (err) => {
-                                        return setImmediate(cb, null, {
-                                            account: accountData
-                                        });
-									});
-                                }).catch((e) => {
-                                    throw e;
-                                });
-								}).catch((err) => {
-									library.logger.error("Referral API Error : "+err);
-									return setImmediate(cb, err.toString());
-								});
+							return setImmediate(cb, null, { account: accountData });
 						} else {
 							if (req.body.etps_user) {
 								library.db.none(sql.updateEtp, {
@@ -504,7 +501,7 @@ Accounts.prototype.shared = {
 				return setImmediate(cb, err[0].message);
 			}
 
-			__private.openAccount(req.body.secret, function (err, account) {
+			__private.openAccount(req.body, function (err, account) {
 				let publicKey = null;
 
 				if (!err && account) {
@@ -934,7 +931,7 @@ Accounts.prototype.shared = {
 			if (err){
 				library.logger.error(err.stack);
 				return setImmediate(cb, err.toString());
-			}	
+			}
 			return setImmediate(cb, null, { success: true, message: 'Successfully migrated' });
 		});
 
@@ -956,7 +953,7 @@ Accounts.prototype.shared = {
 			library.db.one(sql.findPassPhrase, {
 				userName: username
 			}).then(function (user) {
-				
+
 				return setImmediate(cb, null, {
 					success: true,
 					userInfo: user
@@ -1377,7 +1374,7 @@ Accounts.prototype.internal = {
 											seriesCb(err, false);
 										});
 								});
-								
+
 							} else if(activeStakeCount < 2){
 								seriesCb(null, false);
 							}else {
