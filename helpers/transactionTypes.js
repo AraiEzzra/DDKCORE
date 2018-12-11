@@ -1,4 +1,4 @@
-/** 
+/**
  * @desc Total transations used in DDK and their types
  * @param {Integer} SEND - send transation
  * @param {Integer} SIGNATURE - signature transation
@@ -11,10 +11,11 @@
  * @param {Integer} STAKE - froze transation
  * @param {Integer} CONTRACT - contract transation
  * @param {Integer} SENDSTAKE - send freeze transation
- * @param {Integer} REFER - Referral reward transaction. 
+ * @param {Integer} REFER - Referral reward transaction.
  * @returns {Object}
 */
 module.exports = {
+	REFERRAL: -1,
 	SEND: 0,
 	SIGNATURE: 1,
 	DELEGATE: 2,
@@ -27,8 +28,7 @@ module.exports = {
 	REWARD: 9,
 	SENDSTAKE : 10,
 	REFER	:	11,
-	MIGRATION : 12,
-	REFERRAL: 13
+	MIGRATION : 12
 };
 
 /*************************************** END OF FILE *************************************/
