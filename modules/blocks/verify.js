@@ -41,6 +41,10 @@ function Verify (logger, block, transaction, db) {
  * @return {Object}   cb.err Error if occurred
  */
 __private.checkTransaction = function (block, transaction, cb) {
+	// TODO: restore transaction verifing
+	// https://trello.com/c/2jF7cnad/115-restore-transactions-verifing
+	return setImmediate(cb);
+
 	async.waterfall([
 		function (waterCb) {
 			try {
@@ -184,7 +188,7 @@ __private.verifyVersion = function (block, result) {
  * @return {Array}   result.errors Array of validation errors
  */
 __private.verifyReward = function (block, result) {
-	
+
 	let expectedReward = __private.blockReward.calcReward(block.height);
 
 	if(block.height > 21000000) {
