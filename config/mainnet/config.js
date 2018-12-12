@@ -87,7 +87,7 @@ module.exports = {
         loadPerIteration: 5000
     },
     ssl: {
-        enabled: false,
+        enabled: true,
         options: {
             port: 443,
             address: env.ADDRESS || '0.0.0.0',
