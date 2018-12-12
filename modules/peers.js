@@ -295,6 +295,11 @@ Peers.prototype.discover = function (cb) {
 					return setImmediate(eachCb);
 				}
 
+				if (library.config.peers.access.blackList.indexOf(peer.ip) !== -1) {
+					library.logger.info(`Skip peer from black list: ${peer.string}`);
+					return setImmediate(eachCb);
+				}
+
 				// Set peer state to disconnected
 				peer.state = 1;
 				// We rely on data from other peers only when new peer is discovered for the first time
@@ -343,12 +348,11 @@ Peers.prototype.list = function (options, cb) {
 			peersList = peersList.filter(function (peer) {
 				if (options.broadhash) {
 					// Skip banned peers (state 0)
-					return peer.state > 0 && (
-						// Matched broadhash when attempt 0
-						options.attempt === 0 ? (peer.broadhash === options.broadhash) :
-						// Unmatched broadhash when attempt 1
-						options.attempt === 1 ? (peer.broadhash !== options.broadhash) : false
-					);
+					if (peer.state > 0 && (options.attempt === 0)) {
+						return (peer.broadhash === options.broadhash);
+					} else {
+						return options.attempt === 1 ? (peer.broadhash !== options.broadhash) : false;
+					}
 				} else {
 					// Skip banned peers (state 0)
 					return peer.state > 0;
