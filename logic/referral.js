@@ -23,7 +23,7 @@ Referral.prototype.bind = function () {
 Referral.prototype.create = async function (data, trs) {
     trs.recipientId = data.sender.address;
     trs.asset.referrals = [...data.referrals];
-    trs.trsName = "REFERRAL";
+    trs.trsName = "REGISTER";
     return trs;
 };
 
