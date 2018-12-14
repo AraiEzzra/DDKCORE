@@ -6,6 +6,7 @@ let _ = require('lodash');
 let sql = require('../sql/accounts.js');
 let slots = require('../helpers/slots.js');
 const transactionTypes = require('../helpers/transactionTypes');
+let utils = require('../utils');
 
 // Private fields
 let modules, library, self;
@@ -516,6 +517,20 @@ Vote.prototype.updateAndCheckVote = async (voteTransaction) => {
 				milestone: constants.froze.vTime * 60, // 2 * 60 sec = 2 mins
 				currentTime: slots.getTime()
 			});
+			
+			const rows = await library.db.query(sql.GetOrders, { senderId: senderId });
+
+            if (rows.length > 0) {
+                let bulk = utils.makeBulk(rows, 'stake_orders');
+				try {
+                    await utils.indexall(bulk, 'stake_orders');
+                    library.logger.info(senderId + ': update stake orders isvoteDone and count');
+				} catch(err) {
+                    library.logger.error('elasticsearch error :' + err.message);
+				}
+                
+            }
+            
 			await library.frozen.applyFrozeOrdersRewardAndUnstake(voteTransaction);
         });
     } catch (err) {

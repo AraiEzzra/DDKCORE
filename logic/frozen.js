@@ -8,6 +8,7 @@ const reward_sql = require('../sql/referal_sql');
 const account_sql = require('../sql/accounts');
 const cache = require('../modules/cache');
 const transactionTypes = require('../helpers/transactionTypes.js');
+let utils = require('../utils');
 
 const __private = {};
 __private.types = {};
@@ -226,6 +227,18 @@ Frozen.prototype.undo = function (trs, block, sender, cb) {
         ]);
     })()
     .then(function () {
+        utils.deleteDocument({
+            index: 'stake_orders',
+            type: 'stake_orders',
+            id: trs.id
+        }, function (err) {
+            if (err) {
+                self.scope.logger.error('Elasticsearch: document deletion error : ' + err);
+            } else {
+                self.scope.logger.info('Elasticsearch: document deleted successfullly');
+            }
+        });
+        
         return setImmediate(cb);
     })
     .catch(function (err) {
