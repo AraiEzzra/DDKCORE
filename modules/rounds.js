@@ -62,8 +62,11 @@ Rounds.prototype.ticking = function () {
  * @return {number} height / delegates
  */
 Rounds.prototype.calc = function (height) {
-	return Math.ceil(height / slots.delegates);
+	return Math.ceil(height / self.getSlotDelegatesCount(height));
 };
+
+Rounds.prototype.getSlotDelegatesCount = (height) =>
+  height <= constants.MASTER_NODE_MIGRATED_BLOCK ? slots.delegates : constants.PREVIOUS_DELEGATES_COUNT;
 
 /**
  * Deletes from `mem_round` table records based on round.
@@ -259,7 +262,7 @@ Rounds.prototype.tick = function (block, done) {
 		},
 		function (cb) {
 			// Check if we are one block before last block of round, if yes - perform round snapshot
-			if ((block.height+1) % slots.delegates === 0) {
+			if ((block.height + 1) % self.getSlotDelegatesCount(block.height + 1) === 0) {
 				library.logger.debug('Performing round snapshot...');
 
 				library.db.tx(function (t) {

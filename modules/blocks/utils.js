@@ -1,12 +1,3 @@
-
-
-let _ = require('lodash');
-let constants = require('../../helpers/constants.js');
-let sql = require('../../sql/blocks.js');
-let transactionTypes = require('../../helpers/transactionTypes.js');
-
-let modules, library, self, __private = {};
-
 /**
  * Initializes library.
  * @memberof module:blocks
@@ -20,6 +11,14 @@ let modules, library, self, __private = {};
  * @param {Sequence} dbSequence
  * @param {Object} genesisblock
  */
+const _ = require('lodash');
+const constants = require('../../helpers/constants.js');
+const sql = require('../../sql/blocks.js');
+const transactionTypes = require('../../helpers/transactionTypes.js');
+const Rounds = require('../../modules/rounds.js');
+
+let modules, library, self, __private = {};
+
 function Utils (logger, block, transaction, db, dbSequence, genesisblock) {
 	library = {
 		logger: logger,
@@ -184,7 +183,10 @@ Utils.prototype.getIdSequence = function (height, cb) {
 	let lastBlock = modules.blocks.lastBlock.get();
 	// Get IDs of first blocks of (n) last rounds, descending order
 	// EXAMPLE: For height 2000000 (round 19802) we will get IDs of blocks at height: 1999902, 1999801, 1999700, 1999599, 1999498
-	library.db.query(sql.getIdSequence(), {height: height, limit: 5, delegates: constants.activeDelegates}).then(function (rows) {
+	library.db.query(
+	  sql.getIdSequence(),
+    {height: height, limit: 5, delegates: Rounds.prototype.getSlotDelegatesCount(height)}
+  ).then(function (rows) {
 		if (rows.length === 0) {
 			return setImmediate(cb, 'Failed to get id sequence for height: ' + height);
 		}
