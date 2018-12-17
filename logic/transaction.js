@@ -346,7 +346,13 @@ Transaction.prototype.checkBalance = function (amount, balance, trs, sender) {
 	let exceededBalance = new bignum(sender[balance].toString()).lessThan(totalAmountWithFrozeAmount);
 	let exceeded = (trs.blockId !== this.scope.genesisblock.block.id && exceededBalance);
 
-	if (parseInt( sender.totalFrozeAmount) > 0) {
+	// FIXME
+  // https://trello.com/c/MPx5yxNH/134-account-does-not-have-enough-ddk
+  if (trs.height <= constants.MASTER_NODE_MIGRATED_BLOCK) {
+    exceeded = false;
+  }
+
+	if (parseInt(sender.totalFrozeAmount) > 0) {
 		return {
 			exceeded: exceeded,
 			error: exceeded ? [

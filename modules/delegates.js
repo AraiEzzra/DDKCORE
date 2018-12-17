@@ -257,18 +257,23 @@ __private.checkDelegates = function (publicKey, votes, state, cb) {
 				return setImmediate(cb, 'Failed to add vote, account has already voted for this delegate');
 			}
 
-			if (math === '-' && (delegates === null || delegates.indexOf(publicKey) === -1)) {
-				return setImmediate(cb, 'Failed to remove vote, account has not voted for this delegate');
-			}
+
+      // FIXME
+      // https://trello.com/c/wh9i1ire/135-failed-to-remove-vote
+			// if (math === '-' && (delegates === null || delegates.indexOf(publicKey) === -1)) {
+			// 	return setImmediate(cb, 'Failed to remove vote, account has not voted for this delegate');
+			// }
 
 			modules.accounts.getAccount({ publicKey: publicKey, isDelegate: 1 }, function (err, account) {
 				if (err) {
 					return setImmediate(cb, err);
 				}
 
-				if (!account) {
-					return setImmediate(cb, 'Delegate not found');
-				}
+				// FIXME right delegate include
+        // https://trello.com/c/CN7Tij6M/133-delegate-not-found
+				// if (!account) {
+				// 	return setImmediate(cb, 'Delegate not found');
+				// }
 
 				return setImmediate(cb);
 			});
