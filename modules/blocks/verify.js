@@ -41,10 +41,6 @@ function Verify (logger, block, transaction, db) {
  * @return {Object}   cb.err Error if occurred
  */
 __private.checkTransaction = function (block, transaction, cb) {
-	// TODO: restore transaction verifing
-	// https://trello.com/c/2jF7cnad/115-restore-transactions-verifing
-	return setImmediate(cb);
-
 	async.waterfall([
 		function (waterCb) {
 			try {
@@ -79,7 +75,7 @@ __private.checkTransaction = function (block, transaction, cb) {
 		function (waterCb) {
 			// Get account from database if any (otherwise cold wallet).
 			// DATABASE: read only
-			modules.accounts.getAccount({publicKey: transaction.senderPublicKey}, waterCb);
+			modules.accounts.setAccountAndGet({publicKey: transaction.senderPublicKey}, waterCb);
 		},
 		function (sender, waterCb) {
 			// Check if transaction id valid against database state (mem_* tables).
