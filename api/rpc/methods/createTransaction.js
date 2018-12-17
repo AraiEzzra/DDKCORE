@@ -27,30 +27,40 @@ module.exports = createServerRPCMethod(
       const accepted = transactionRequired.every( (key) => params[key] );
 
       if (Object.keys(transactionTypes).indexOf(params.type) > -1 && accepted ) {
-
         scope.modules.accounts.shared.getAccount({body: {address: params.senderAddress}}, (error, result) => {
-          //todo: to check sender
-          const sender = result.account;
-          const hash = crypto.createHash('sha256').update(sender.publicKey, 'utf8').digest();
-          const keypair = scope.ed.makeKeypair(hash);
 
-          scope.modules.accounts.shared.getAccount({body: {address: params.requesterAddress}}, async (error2, requesterResult) => {
-            //todo: to check requester
-            const requester = requesterResult.account;
+          if (error || (result && result.account)) {
+            const sender = result.account;
+            const hash = crypto.createHash('sha256').update(sender.publicKey, 'utf8').digest();
+            const keypair = scope.ed.makeKeypair(hash);
             let trs;
 
-            try {
-              trs = await scope.logic.transaction.create({
-                type: transactionTypes[params.type],
-                amount: params.amount,
-                sender: sender,
-                requester: requester,
-                keypair: keypair,
+            scope.modules.accounts.shared.getAccount({body: {address: params.requesterAddress}},
+              async (requesterError, requesterResult) => {
+
+                if (requesterResult) {
+                  try {
+                    const requester = requesterResult.account;
+                    trs = await scope.logic.transaction.create({
+                      type: transactionTypes[params.type],
+                      amount: params.amount,
+                      sender: sender,
+                      requester: requester,
+                      keypair: keypair,
+                    });
+
+                    resolve( {transaction: trs} );
+                  } catch (err) {
+                    resolve( {error: err} );
+                  }
+                } else {
+                  resolve( {error: requesterError} );
+                }
               });
 
-            } catch (e) {error = e}
-            resolve(error ? {error} : {transaction: trs} );
-          });
+          } else {
+            resolve( {error} );
+          }
 
         });
 

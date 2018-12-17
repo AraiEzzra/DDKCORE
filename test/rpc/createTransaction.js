@@ -29,10 +29,10 @@ describe('RPC method: CREATE_TRANSACTIONS', function () {
   describe('Call and checked method result', function () {
 
     transactionParams = {
-      type: 'SEND', // transactionTypes.SEND,
+      type: 'SEND',
       amount: 100,
-      senderAddress: 'DDK16313739661670634666',
-      requesterAddress: 'DDK16863581701775438665',
+      senderAddress: 'DDK00000000000000000001',
+      requesterAddress: 'DDK00000000000000000002',
     };
 
     it('should have valid parameters', function (done) {
