@@ -81,7 +81,7 @@ module.exports = {
         maxTxsPerQueue: 1000
     },
     forging: {
-        force: true,
+        force: false,
         minBroadhashConsensus: parseInt(env.MIN_CONSENSUS, 10) || 0,
         secret: env.FORGE_SECRET,
         access: {

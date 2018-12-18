@@ -288,8 +288,12 @@ __private.verifyPayload = function (block, result) {
 	}
 
 	if (totalAmount !== block.totalAmount) {
-		result.errors.push('Invalid total amount');
-	}
+        // FIXME update old chain totalAmount
+		// https://trello.com/c/6G2rPg0o/141-invalid-total-amount
+        if (block.height > constants.MASTER_NODE_MIGRATED_BLOCK) {
+            result.errors.push('Invalid total amount');
+        }
+    }
 
 	if (totalFee !== block.totalFee) {
 	  // FIXME update old chain totalFee
