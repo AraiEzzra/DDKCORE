@@ -12,7 +12,7 @@ if(env.NODE_ENV === 'testnet') {
 
 // For production
 if(env.NODE_ENV === 'mainnet') {
-    genesisBlock = require('../config/testnet/genesisBlock.json');
+    genesisBlock = require('../config/mainnet/genesisBlock.json');
 }
 
 module.exports = genesisBlock;
