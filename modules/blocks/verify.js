@@ -244,7 +244,9 @@ __private.verifyPayload = function (block, result) {
 		result.errors.push('Payload length is too long');
 	}
 
-	if (block.transactions.length !== block.numberOfTransactions) {
+	// FIXME update old chain payloadHash
+  // https://trello.com/c/ZRV5EAUT/132-included-transactions-do-not-match-block-transactions-count
+	if (block.transactions.length !== block.numberOfTransactions && block.height > constants.MASTER_NODE_MIGRATED_BLOCK) {
 		result.errors.push('Included transactions do not match block transactions count');
 	}
 
@@ -278,7 +280,11 @@ __private.verifyPayload = function (block, result) {
 	}
 
 	if (payloadHash.digest().toString('hex') !== block.payloadHash) {
-		result.errors.push('Invalid payload hash');
+	  // FIXME update old chain payloadHash
+    // https://trello.com/c/G3XRs3Fk/127-update-old-chain-payloadhash
+	  if (block.height > constants.MASTER_NODE_MIGRATED_BLOCK) {
+	    result.errors.push('Invalid payload hash');
+    }
 	}
 
 	if (totalAmount !== block.totalAmount) {
@@ -286,7 +292,11 @@ __private.verifyPayload = function (block, result) {
 	}
 
 	if (totalFee !== block.totalFee) {
-		result.errors.push('Invalid total fee');
+	  // FIXME update old chain totalFee
+    // https://trello.com/c/zmjr4SAL/131-invalid-total-fee
+	  if (block.height > constants.MASTER_NODE_MIGRATED_BLOCK) {
+      result.errors.push('Invalid total fee');
+    }
 	}
 
 	return result;

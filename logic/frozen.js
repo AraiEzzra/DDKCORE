@@ -128,6 +128,11 @@ Frozen.prototype.active = '1';
  * @throws {error} catch error
  */
 Frozen.prototype.dbSave = function (trs) {
+
+    // FIXME delete bad transaction migration
+    if (!trs.asset || trs.stakedAmount <= 0) {
+      return null;
+    }
     return {
         table: this.dbTable,
         fields: this.dbFields,
@@ -272,6 +277,7 @@ Frozen.prototype.apply = function (trs, block, sender, cb) {
  * @private
  * @implements
  * @return {null}
+ * FIXME add bytes to stake https://trello.com/c/lpgvxc2x/129-add-bytes-to-stake
  */
 Frozen.prototype.getBytes = function (trs) {
     return null;
@@ -663,21 +669,23 @@ Frozen.prototype.updateFrozeAmount = function (userData, cb) {
             if (!totalFrozeAmount) {
                 return setImmediate(cb, 'No Account Exist in mem_account table for' + userData.account.address);
             }
-            let frozeAmountFromDB = totalFrozeAmount.totalFrozeAmount;
+            const frozeAmountFromDB = totalFrozeAmount.totalFrozeAmount;
             totalFrozeAmount = parseInt(frozeAmountFromDB) + userData.freezedAmount;
-            let totalFrozeAmountWithFees = totalFrozeAmount + (parseFloat(constants.fees.froze) * (userData.freezedAmount)) / 100;
+            const totalFrozeAmountWithFees = totalFrozeAmount + self.calculateFee(userData.freezedAmount);
             if (totalFrozeAmountWithFees <= userData.account.balance) {
                 self.scope.db.none(sql.updateFrozeAmount, {
                     reward: userData.freezedAmount, senderId: userData.account.address
                 })
-                    .then(function () {
-                        self.scope.logger.info(userData.account.address, ': is update its froze amount in mem_accounts table ');
-                        return setImmediate(cb, null);
-                    })
-                    .catch(function (err) {
-                        self.scope.logger.error(err.stack);
-                        return setImmediate(cb, err.toString());
-                    });
+                .then(function () {
+                    self.scope.logger.info(
+                      userData.account.address, ': is update its froze amount in mem_accounts table'
+                    );
+                    return setImmediate(cb, null);
+                })
+                .catch(function (err) {
+                    self.scope.logger.error(err.stack);
+                    return setImmediate(cb, err.toString());
+                });
             } else {
                 return setImmediate(cb, 'Not have enough balance');
             }

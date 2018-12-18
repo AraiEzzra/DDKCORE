@@ -3,7 +3,6 @@
 // Root object
 let node = {};
 let Rounds = require('../modules/rounds.js');
-let slots = require('../helpers/slots.js');
 const modulesLoader = require('./common/initModule').modulesLoader;
 
 // Requires
@@ -130,8 +129,8 @@ node.onNewRound = function (cb) {
 		if (err) {
 			return cb(err);
 		} else {
-			let nextRound = Math.ceil(height / slots.delegates);
-			let blocksToWait = nextRound * slots.delegates - height;
+			const nextRound = Math.ceil(height / Rounds.prototype.getSlotDelegatesCount(height));
+			const blocksToWait = nextRound * Rounds.prototype.getSlotDelegatesCount(height) - height;
 			node.debug('blocks to wait: '.grey, blocksToWait);
 			node.waitForNewBlock(height, blocksToWait, cb);
 		}
