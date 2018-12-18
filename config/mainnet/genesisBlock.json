@@ -200,11 +200,11 @@
       "fee": 0,
       "timestamp": 0,
       "recipientId": null,
-      "senderId": "DDK268809323875982170",
-      "senderPublicKey": "3e29e73fa227a5c2c338f0a4b54944f09b538b3bc30467f7072381ab0a1d46f4",
+      "senderId": "DDK9206595555082606869",
+      "senderPublicKey": "33ecad8ba399744276b9fb43480537141f84b369c235044bffc43536a9ff19b5",
       "asset": {
         "delegate": {
-          "username": "DELEGATE1"
+          "username": "DDK_Thailand"
         }
       },
       "signature": "3addc5525f097b620800b4cc8de8dc1e5b0cc66473f83cbae24351558aecc0fd77c634afb2f11d736962e9c2f399342cf3fd82399ce57479cc74150ca854ac05",
@@ -218,11 +218,11 @@
       "fee": 0,
       "timestamp": 0,
       "recipientId": null,
-      "senderId": "DDK10330918175902084000",
-      "senderPublicKey": "e9c89d7c0d4ea1587b36920ff9a4c2b48efb38075adf7972e00af27febf87b53",
+      "senderId": "DDK5320257611903519345",
+      "senderPublicKey": "d4999726b7db7e0e5c0d5f441e43d0e0b471aebb46178b9286f275f1f5911208",
       "asset": {
         "delegate": {
-          "username": "DELEGATE2"
+          "username": "DDK_Indonesia"
         }
       },
       "signature": "6ec1c69a4760a13359f1bd31b0d2d108ff5bddd51972d9b7529be338dacab1c89e8f93926d0557af8621895ec0ae6a9a900dad3abae963b3ea56126d31a37d03",
@@ -236,11 +236,11 @@
       "fee": 0,
       "timestamp": 0,
       "recipientId": null,
-      "senderId": "DDK10404072752041372841",
-      "senderPublicKey": "f1a812e49b09bc83a57f3014b7bda3d4c801a3676b5635fab5a1ab2e7ba45b9e",
+      "senderId": "DDK16863284565142340144",
+      "senderPublicKey": "6690354691aa0374dca6ff7dd643d1e5a3e5f5fb97c1170413a7ba4c0efb1a4f",
       "asset": {
         "delegate": {
-          "username": "DELEGATE3"
+          "username": "DDK_Brunei"
         }
       },
       "signature": "85eaaa9165efc26405222eb853da706f72dca8f8d91e7eb641cbd90ab224cd725e9c467a3dda523a471c6338132d0cbcd1aa3ed0115f0aee3794208dee68cf07",
@@ -254,11 +254,11 @@
       "fee": 0,
       "timestamp": 0,
       "recipientId": null,
-      "senderId": "DDK8559757398732877966",
-      "senderPublicKey": "d40ec6fa91ef3122cc2d6c5e5f83428e6443145d4a72f0fd619ecc6074c98e12",
+      "senderId": "DDK685154889029150601",
+      "senderPublicKey": "1beb2d8cf4b1b849a443cd236c0ec194ead6390f4b0671cdb008d0558e252b91",
       "asset": {
         "delegate": {
-          "username": "DELEGATE4"
+          "username": "DDK_Japan"
         }
       },
       "signature": "02c84d91b2cc0905c2095a4a88946b32208e99450cb694244530c723003c8e6ac5674619ad9ea16dbb200a8d945e5d75517122543edbe66feed626796fb1be0f",
@@ -272,11 +272,11 @@
       "fee": 0,
       "timestamp": 0,
       "recipientId": null,
-      "senderId": "DDK7303042688575221746",
-      "senderPublicKey": "8c90c98559bde731117288ecdf9713f2bbb56304e811c77a0668d49cce2715f9",
+      "senderId": "DDK16229868773623603544",
+      "senderPublicKey": "e1c567be066129f28f23f1b90fe76d5d45661f64b1f38426cca4f3c77d1a92f4",
       "asset": {
         "delegate": {
-          "username": "DELEGATE5"
+          "username": "GFAlliance"
         }
       },
       "signature": "7c76c32bca3d0be8a4475665d172ace6b06a677b2c7e2293ca1ba28accb455a40a84b821c85f35803f78862249e3769cf5a708c4ffe15b6a02c277621e2a2f0f",
@@ -290,11 +290,11 @@
       "fee": 0,
       "timestamp": 0,
       "recipientId": null,
-      "senderId": "DDK2144364691789655630",
-      "senderPublicKey": "7fed4b42c95be66284427ef029d9393cf325781857181c5030a8115196175348",
+      "senderId": "DDK12291899327410899365",
+      "senderPublicKey": "2432531ba2ed00f673d7742bf3894bf31ef80cc2253c4347e4450a30f8bba06f",
       "asset": {
         "delegate": {
-          "username": "DELEGATE6"
+          "username": "FEGTEAM"
         }
       },
       "signature": "e344f7bd90797a5d74f78d3ea398787784bb1532466e7570ddd6b0610f1b3087775df0b73aa6aada7d21b6422d864b361693d1e282c0436e102fed601354d207",
@@ -308,11 +308,11 @@
       "fee": 0,
       "timestamp": 0,
       "recipientId": null,
-      "senderId": "DDK15119818568739722936",
-      "senderPublicKey": "365b159cc96f77ebf89f7be9163f17bbeaa9ea2ec8cbcefb6249bde8797b13a9",
+      "senderId": "DDK17554960634025608482",
+      "senderPublicKey": "ca3ccbb56fd111b31f11818bfd8b38d3c77b84a2ebd4983e4584eda4d7197e41",
       "asset": {
         "delegate": {
-          "username": "DELEGATE7"
+          "username": "Universal_UFO"
         }
       },
       "signature": "d363d10d4820bb4b970e9ca7f745387d289058b9d68a850f2e26f27b8213c948fd72711fb65163ced5c315d8b624b6e0e9b1aafb9d3a44f6627365cd3ed7ff03",
@@ -326,11 +326,11 @@
       "fee": 0,
       "timestamp": 0,
       "recipientId": null,
-      "senderId": "DDK10401254524230398200",
-      "senderPublicKey": "06f8ad746828c243d86910a472035b31ae35880548f464502398c654001cdd33",
+      "senderId": "DDK11972568834750607117",
+      "senderPublicKey": "ed6e8f15d1e6495fe613b42af080c84f8b6e23148686c4851d82287785265332",
       "asset": {
         "delegate": {
-          "username": "DELEGATE8"
+          "username": "TDA_ALL_CREV"
         }
       },
       "signature": "f6ea999df9608e0b7f2736e213e930b2d6effa8035ee010102e10a6b6d50c6068535cada51d6be21bb36f46ab5e31dc53d1b111754eb9da76e10a44aff25250a",
@@ -363,14 +363,14 @@
       "amount": 0,
       "fee": 0,
       "timestamp": 0,
-      "recipientId": "DDK268809323875982170",
-      "senderId": "DDK268809323875982170",
-      "senderPublicKey": "3e29e73fa227a5c2c338f0a4b54944f09b538b3bc30467f7072381ab0a1d46f4",
+      "recipientId": "DDK3955937947011006122",
+      "senderId": "DDK3955937947011006122",
+      "senderPublicKey": "276f0d09e64b68566fb458b7c71aeb62411d0b633ad6c038e5a4a042ec588af9",
       "asset": {
         "votes": [
-          "+3e29e73fa227a5c2c338f0a4b54944f09b538b3bc30467f7072381ab0a1d46f4",
-          "+e9c89d7c0d4ea1587b36920ff9a4c2b48efb38075adf7972e00af27febf87b53",
-          "+f1a812e49b09bc83a57f3014b7bda3d4c801a3676b5635fab5a1ab2e7ba45b9e"
+          "+33ecad8ba399744276b9fb43480537141f84b369c235044bffc43536a9ff19b5",
+          "+d4999726b7db7e0e5c0d5f441e43d0e0b471aebb46178b9286f275f1f5911208",
+          "+6690354691aa0374dca6ff7dd643d1e5a3e5f5fb97c1170413a7ba4c0efb1a4f"
         ]
       },
       "signature": "29f9f0219c48fe1e0a18831082297d16959a6488cf70c4c5b9b18c9dc10f01fc72964632cc5d53759f1d343cf7d821a99ac29b6cb8c0e540833b05ce24e48106",
@@ -383,14 +383,14 @@
       "amount": 0,
       "fee": 0,
       "timestamp": 0,
-      "recipientId": "DDK10330918175902084000",
-      "senderId": "DDK10330918175902084000",
-      "senderPublicKey": "e9c89d7c0d4ea1587b36920ff9a4c2b48efb38075adf7972e00af27febf87b53",
+      "recipientId": "DDK14521323608713415449",
+      "senderId": "DDK14521323608713415449",
+      "senderPublicKey": "3f0348b6d3ecaeaeca0a05ee4c2d7b4b7895ef0a12d8023ba245b6b8022833e5",
       "asset": {
         "votes": [
-          "+d40ec6fa91ef3122cc2d6c5e5f83428e6443145d4a72f0fd619ecc6074c98e12",
-          "+8c90c98559bde731117288ecdf9713f2bbb56304e811c77a0668d49cce2715f9",
-          "+7fed4b42c95be66284427ef029d9393cf325781857181c5030a8115196175348"
+          "+1beb2d8cf4b1b849a443cd236c0ec194ead6390f4b0671cdb008d0558e252b91",
+          "+e1c567be066129f28f23f1b90fe76d5d45661f64b1f38426cca4f3c77d1a92f4",
+          "+2432531ba2ed00f673d7742bf3894bf31ef80cc2253c4347e4450a30f8bba06f"
         ]
       },
       "signature": "e459583512d86f1db7c9fe30bbd3365251fc2171b5bf19009f242c53be758310fd80760a0067e2e488d810fb2de6ba16e90d763132bc2ac831dabe66c0285d03",
@@ -403,13 +403,13 @@
       "amount": 0,
       "fee": 0,
       "timestamp": 0,
-      "recipientId": "DDK10404072752041372841",
-      "senderId": "DDK10404072752041372841",
-      "senderPublicKey": "f1a812e49b09bc83a57f3014b7bda3d4c801a3676b5635fab5a1ab2e7ba45b9e",
+      "recipientId": "DDK12458159079905364672",
+      "senderId": "DDK12458159079905364672",
+      "senderPublicKey": "3f1ecf6de517a6bf2f5c7a8226a478dc571ed0100d53ee104842f4d443e49806",
       "asset": {
         "votes": [
-          "+365b159cc96f77ebf89f7be9163f17bbeaa9ea2ec8cbcefb6249bde8797b13a9",
-          "+06f8ad746828c243d86910a472035b31ae35880548f464502398c654001cdd33"
+          "+ca3ccbb56fd111b31f11818bfd8b38d3c77b84a2ebd4983e4584eda4d7197e41",
+          "+ed6e8f15d1e6495fe613b42af080c84f8b6e23148686c4851d82287785265332"
         ]
       },
       "signature": "48c67b6eec3c6e147b530f2c15c3e845258704fcf2472e7694f03ae9414b2114399c1da7c8f258dbfdfeb311729a7b623b25f2b760b0bd1cb5d08db67eb85c04",
