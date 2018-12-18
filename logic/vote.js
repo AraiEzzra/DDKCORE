@@ -234,15 +234,18 @@ Vote.prototype.process = function (trs, sender, cb) {
  * @throws {e} error
  */
 Vote.prototype.getBytes = function (trs) {
-	let buf;
-
-	try {
-		buf = trs.asset.votes ? Buffer.from(trs.asset.votes.join(''), 'utf8') : null;
-	} catch (e) {
-		throw e;
-	}
-
-	return buf;
+  return null;
+  // FIXME add new logic for bytes
+  // https://trello.com/c/Lt24bdzI/143-add-new-logic-for-bytes
+	// let buf;
+  //
+	// try {
+	// 	buf = trs.asset.votes ? Buffer.from(trs.asset.votes.join(''), 'utf8') : null;
+	// } catch (e) {
+	// 	throw e;
+	// }
+  //
+	// return buf;
 };
 
 /**

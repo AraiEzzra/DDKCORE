@@ -124,7 +124,7 @@ exports.deleteDocument = function (doc) {
  */
 exports.deleteDocumentByQuery = function (doc) {
     (async function () {
-        await client.deleteByQuery({
+        await esClient.deleteByQuery({
             index: doc.index,
             type: doc.type,
             body: doc.body
