@@ -264,14 +264,16 @@ Frozen.prototype.undo = function (trs, block, sender, cb) {
 Frozen.prototype.apply = function (trs, block, sender, cb) {
     async.series([
         function (seriesCb) {
-            self.updateFrozeAmount({ account: sender, freezedAmount: trs.stakedAmount },
-            function (err) {
-                if (err) {
-                    return setImmediate(seriesCb, err);
-                }
+            self.updateFrozeAmount(
+              { account: sender, freezedAmount: trs.stakedAmount },
+              function (err) {
+                  if (err) {
+                      return setImmediate(seriesCb, err);
+                  }
 
-                return setImmediate(seriesCb, null, trs);
-            });
+                  return setImmediate(seriesCb, null, trs);
+              }
+            );
         },
         function (seriesCb) {
             self.sendAirdropReward(trs)
@@ -290,7 +292,6 @@ Frozen.prototype.apply = function (trs, block, sender, cb) {
  * @private
  * @implements
  * @return {null}
- * FIXME add bytes to stake https://trello.com/c/lpgvxc2x/129-add-bytes-to-stake
  */
 Frozen.prototype.getBytes = function (trs) {
     return null;
@@ -361,7 +362,6 @@ Frozen.prototype.verifyAirdrop = async (trs) => {
 /**
  * @desc calculate fee for transaction type 9
  * @private
- * @param {Object} sender - sender data
  * @param {Object} trs - transation data
  * @return % based on amount
  */
@@ -674,7 +674,6 @@ Frozen.prototype.getStakeReward = (order) => {
  * @return {function} {cb, err}
  */
 Frozen.prototype.updateFrozeAmount = function (userData, cb) {
-
     self.scope.db.one(sql.getFrozeAmount, {
         senderId: userData.account.address
     })
@@ -683,8 +682,9 @@ Frozen.prototype.updateFrozeAmount = function (userData, cb) {
                 return setImmediate(cb, 'No Account Exist in mem_account table for' + userData.account.address);
             }
             const frozeAmountFromDB = totalFrozeAmount.totalFrozeAmount;
-            totalFrozeAmount = parseInt(frozeAmountFromDB) + userData.freezedAmount;
-            const totalFrozeAmountWithFees = totalFrozeAmount + self.calculateFee(userData.freezedAmount);
+            totalFrozeAmount = Number(frozeAmountFromDB) + Number(userData.freezedAmount);
+            const totalFrozeAmountWithFees =
+              totalFrozeAmount + self.calculateFee({ stakedAmount: Number(userData.freezedAmount) });
             if (totalFrozeAmountWithFees <= userData.account.balance) {
                 self.scope.db.none(sql.updateFrozeAmount, {
                     reward: userData.freezedAmount, senderId: userData.account.address

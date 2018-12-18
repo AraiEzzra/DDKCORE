@@ -1,7 +1,7 @@
 const env = process.env;
 const constants = {
-  MASTER_NODE_MIGRATED_BLOCK: 723820,
-  PREVIOUS_DELEGATES_COUNT: 3
+  PREVIOUS_DELEGATES_COUNT: 3,
+  MASTER_NODE_MIGRATED_BLOCK: 0,
 };
 
 if(env.NODE_ENV === 'development') {

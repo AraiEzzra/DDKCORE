@@ -129,7 +129,11 @@ __private.verifySignature = function (block, result) {
 	}
 
 	if (!valid) {
-		result.errors.push('Failed to verify block signature');
+	  // FIXME
+    // https://trello.com/c/4maz5nyk/144-failed-to-verify-block-signature
+	  if (block.height > constants.MASTER_NODE_MIGRATED_BLOCK) {
+      result.errors.push('Failed to verify block signature');
+    }
 	}
 
 	return result;
@@ -288,7 +292,11 @@ __private.verifyPayload = function (block, result) {
 	}
 
 	if (totalAmount !== block.totalAmount) {
-		result.errors.push('Invalid total amount');
+	  // FIXME Invalid total amount
+    // https://trello.com/c/6G2rPg0o/141-invalid-total-amount
+	  if (block.height > constants.MASTER_NODE_MIGRATED_BLOCK) {
+      result.errors.push('Invalid total amount');
+    }
 	}
 
 	if (totalFee !== block.totalFee) {
