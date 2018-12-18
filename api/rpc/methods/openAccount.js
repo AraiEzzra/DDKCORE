@@ -1,4 +1,4 @@
-const { createServerRPCMethod } = require('./../util');
+const { createServerRPCMethod, mnemonicValidator } = require('./../util');
 
 
 module.exports = createServerRPCMethod(
@@ -9,14 +9,18 @@ module.exports = createServerRPCMethod(
    * @param {WebSocketServer} wss
    * @param {object} params
    * @param {object} scope - Application instance
-   * @param {function} cdError - Application Error callback
    */
-  function (wss, params, scope, cdError) {
+  function (wss, params, scope) {
     return new Promise(function (resolve) {
-      scope.modules.accounts.shared.open({body: params}, (error, result) => {
-        resolve(error
-          ? {error}
-          : result);
-      });
+      const secret = params.secret;
+
+      if (mnemonicValidator(secret)) {
+        scope.modules.accounts.shared.open({body: params}, (error, result) => {
+          resolve(error ? {error} : result);
+        });
+      } else {
+        resolve({error: "Mnemonic is not valid!"});
+      }
+
     });
   });

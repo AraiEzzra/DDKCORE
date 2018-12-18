@@ -9,9 +9,8 @@ module.exports = createServerRPCMethod(
    * @param {WebSocketServer} wss
    * @param {object} params
    * @param {object} scope - Application instance
-   * @param {function} cdError - Application Error callback
    */
-  function (wss, params, scope, cdError) {
+  function (wss, params, scope) {
     return new Promise(function (resolve) {
       scope.modules.accounts.shared.getBalance({body: params}, (error, result) => {
 

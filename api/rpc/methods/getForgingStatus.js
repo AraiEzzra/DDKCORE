@@ -1,4 +1,4 @@
-const { createServerRPCMethod, validator } = require('./../util');
+const { createServerRPCMethod, schemaValidator } = require('./../util');
 const ReservedError = require('./../errors');
 const { forgingStatus } = require('../../../schema/delegates');
 
@@ -11,11 +11,10 @@ module.exports = createServerRPCMethod(
    * @param {WebSocketServer} wss
    * @param {object} params
    * @param {object} scope - Application instance
-   * @param {function} cdError - Application Error callback
    */
-  function (wss, params, scope, cdError) {
+  function (wss, params, scope) {
     return new Promise(function (resolve) {
-      if (validator(params, forgingStatus)) {
+      if (schemaValidator(params, forgingStatus)) {
         scope.modules.delegates.internal.forgingStatus({body: params}, (error, result) => {
 
           resolve(error

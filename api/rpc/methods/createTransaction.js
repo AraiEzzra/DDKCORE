@@ -1,4 +1,4 @@
-const { createServerRPCMethod, validator } = require('./../util');
+const { createServerRPCMethod, schemaValidator } = require('./../util');
 const ReservedError = require('./../errors');
 const crypto = require('crypto');
 const transactionTypes = require('../../../helpers/transactionTypes.js');
@@ -14,15 +14,14 @@ const transactionDefault = {};
 
 module.exports = createServerRPCMethod(
 
-  'CREATE_TRANSACTIONS',
+  'CREATE_TRANSACTION',
 
   /**
    * @param {WebSocketServer} wss
    * @param {object} params
    * @param {object} scope - Application instance
-   * @param {function} cdError - Application Error callback
    */
-  function (wss, params, scope, cdError) {
+  function (wss, params, scope) {
     return new Promise(function (resolve) {
       const accepted = transactionRequired.every( (key) => params[key] );
 

@@ -693,7 +693,7 @@ d.run(function () {
       const server = new ServerRPCApi();
         serverRPCConfig.methods.map(function (method) {
         server.register(method.methodName, function (params) {
-          return method.call(null, server.getWebSocketServer(), params, scope, cb);
+          return method.call(null, server.getWebSocketServer(), params, scope);
         });
       });
       scope.logger.info('RPC Server started on: ' + server.host + ':' + server.port);

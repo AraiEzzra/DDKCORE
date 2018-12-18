@@ -1,4 +1,4 @@
-const { createServerRPCMethod, validator } = require('./../util');
+const { createServerRPCMethod, schemaValidator } = require('./../util');
 const ReservedError = require('./../errors');
 const { getTransactions } = require('../../../schema/transactions');
 
@@ -11,11 +11,10 @@ module.exports = createServerRPCMethod(
    * @param {WebSocketServer} wss
    * @param {object} params
    * @param {object} scope - Application instance
-   * @param {function} cdError - Application Error callback
    */
-  function (wss, params, scope, cdError) {
+  function (wss, params, scope) {
     return new Promise(function (resolve) {
-      if (validator(params, getTransactions)) {
+      if (schemaValidator(params, getTransactions)) {
         scope.modules.transactions.shared.getTransactions({body: params}, (error, result) => {
 
           resolve(error
