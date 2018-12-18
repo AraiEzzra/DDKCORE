@@ -80,7 +80,7 @@ const iterate = async (table, limit, rowsAcc, bulkAcc, lastValue) => {
 
 exports.updateDataOnElasticSearch = {
 
-	on: '*/30 * * * *',
+	on: '* * * * *',
 	job: function () {
 		if (!esIterationFinished) {
 			return;
