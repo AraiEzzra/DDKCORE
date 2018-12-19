@@ -314,7 +314,11 @@ Frozen.prototype.verify = function (trs, sender, cb) {
 		return setImmediate(cb, 'Verify failed: Insufficient balance for stake');
 	}
 
-	self.verifyAirdrop(trs)
+    if ((parseInt(sender.balance) - parseInt(sender.totalFrozeAmount)) < (trs.stakedAmount + trs.fee)) {
+        return setImmediate(cb, 'Insufficient balance');
+    }
+
+    self.verifyAirdrop(trs)
 	.then(() => {
 		return setImmediate(cb, null);
 	})

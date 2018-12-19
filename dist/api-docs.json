@@ -120,6 +120,52 @@
         }
       }
     },
+    "/api/accounts/getDashboardDDKData": {
+      "get": {
+        "tags": [
+          "Account"
+        ],
+        "description": "Get date from cache for Dashboard",
+        "operationId": "findByAddress",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "response",
+            "schema": {
+              "properties": {
+                "success": {
+                  "required": true,
+                  "type": "boolean",
+                  "example": "true"
+                },
+                "countStakeholders": {
+                  "required": true,
+                  "type": "string",
+                  "example": "0"
+                },
+                "totalDDKStaked": {
+                  "required": true,
+                  "type": "string",
+                  "example": "2000"
+                },
+                "totalAccountHolders": {
+                  "required": true,
+                  "type": "string",
+                  "example": "10"
+                },
+                "totalCirculatingSupply": {
+                  "required": true,
+                  "type": "string",
+                  "example": 387000000000000
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/accounts/open": {
       "post": {
         "tags": [

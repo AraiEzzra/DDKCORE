@@ -19,9 +19,9 @@ let async = require('async');
 let nextBonus = 0;
 let Mnemonic = require('bitcore-mnemonic');
 let mailServices = require('../helpers/postmark');
-
 // Private fields
 let modules, library, self, __private = {}, shared = {};
+let frogings_sql = require('../sql/frogings');
 
 __private.assetTypes = {};
 __private.blockReward = new BlockReward();
@@ -757,7 +757,7 @@ Accounts.prototype.shared = {
 			});
 	},
 
-	getCirculatingSupply: function (req, cb) {
+	getCirculatingSupply: function (cb) {
         library.db.one(sql.getCurrentUnmined, {address: library.config.forging.totalSupplyAccount})
 			.then(function (currentUnmined) {
                 let circulatingSupply = library.config.ddkSupply.totalSupply - currentUnmined.balance;
@@ -1008,7 +1008,53 @@ Accounts.prototype.shared = {
 			}).catch(function (err) {
 				return setImmediate(cb, err);
 			});
-	}
+	},
+
+    getDashboardDDKData: async function (req, cb) {
+		try {
+            const ddkCache = await cache.prototype.getJsonForKeyAsync('ddkCache');
+
+            if (ddkCache) {
+                return setImmediate(cb, null, ddkCache);
+            } else {
+                function getDDKData(t) {
+                    let promises = [
+                        t.one(frogings_sql.countStakeholders),
+                        t.one(frogings_sql.getTotalStakedAmount),
+                        t.one(sql.getTotalAccount)
+                    ];
+
+                    return t.batch(promises);
+                }
+
+                const results = await library.db.task(getDDKData);
+
+                const ddkData = await (async () => {
+					return new Promise((resolve, reject) => {
+                        Accounts.prototype.shared.getCirculatingSupply(function (err, data) {
+                            if (err) {
+                                reject(err);
+                            }
+
+                            resolve ({
+                                countStakeholders: results[0].count,
+                                totalDDKStaked: results[1].sum,
+                                totalAccountHolders: results[2].count,
+                                totalCirculatingSupply: data.circulatingSupply
+                            });
+
+                        });
+					});
+				})();
+
+                await cache.prototype.setJsonForKeyAsync('ddkCache', ddkData);
+                setImmediate(cb, null, ddkData);
+            }
+        } catch (err) {
+            console.log("\n\n\nERROR", err);
+            return setImmediate(cb, err);
+		}
+    }
 };
 
 // Internal API
