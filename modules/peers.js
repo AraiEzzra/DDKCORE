@@ -349,29 +349,32 @@ Peers.prototype.list = function (options, cb) {
 			peersList = peersList.filter(function (peer) {
 				if (options.broadhash) {
 					// Skip banned peers (state 0)
-					if (peer.state > 0 && (options.attempt === 0)) {
+					if ([Peer.STATE.CONNECTED].indexOf(peer.state) !== -1 && (options.attempt === 0)) {
 						return (peer.broadhash === options.broadhash);
 					} else {
 						return options.attempt === 1 ? (peer.broadhash !== options.broadhash) : false;
 					}
 				} else {
 					// Skip banned peers (state 0)
-					return peer.state > 0;
+					return [Peer.STATE.CONNECTED].indexOf(peer.state) !== -1;
 				}
 			});
 			matched = peersList.length;
 			// Apply limit
 			peersList = peersList.slice(0, options.limit);
 			picked = peersList.length;
-			accepted = self.acceptable(peers.concat(peersList));
-            library.logger.debug(`Listing peers ${JSON.stringify({
+			// Filter only connected peers
+			accepted = self.acceptable(peers.concat(peersList)).filter(
+			  peer => [Peer.STATE.CONNECTED].indexOf(peer.state) !== -1
+      );
+      library.logger.debug(`Listing peers ${JSON.stringify({
 				attempt: options.attempts[options.attempt], 
 				found: found, 
 				matched: matched, 
 				picked: picked, 
 				accepted: accepted.length
-            })}`);
-            return setImmediate(cb, null, accepted);
+      })}`);
+      return setImmediate(cb, null, accepted);
 		});
 	}
 
