@@ -1,12 +1,11 @@
-
-
-let _ = require('lodash');
-let async = require('async');
-let constants = require('../helpers/constants.js');
-let pgp = require('pg-promise')(); // We also initialize library here
-let sandboxHelper = require('../helpers/sandbox.js');
-let schema = require('../schema/peers.js');
-let sql = require('../sql/peers.js');
+const _ = require('lodash');
+const async = require('async');
+const constants = require('../helpers/constants.js');
+const pgp = require('pg-promise')(); // We also initialize library here
+const sandboxHelper = require('../helpers/sandbox.js');
+const schema = require('../schema/peers.js');
+const sql = require('../sql/peers.js');
+const Peer = require('../logic/peer');
 
 // Private fields
 let modules, library, self, __private = {}, shared = {};
@@ -223,15 +222,17 @@ Peers.prototype.update = function (peer) {
 	return library.logic.peers.upsert(peer);
 };
 
-Peers.prototype.remove = function (pip, port) {
-	let frozenPeer = _.find(library.config.peers.list, function (peer) {
-		return peer.ip === pip && peer.port === port;
+Peers.prototype.remove = function (peer) {
+	let frozenPeer = _.find(library.config.peers.list, function (innerPeer) {
+		return innerPeer.ip === peer.ip && innerPeer.port === peer.port;
 	});
 	if (frozenPeer) {
 		// FIXME: Keeping peer frozen is bad idea at all
-		library.logger.debug('Cannot remove frozen peer', pip + ':' + port);
+		library.logger.info('Cannot remove frozen peer', peer.ip + ':' + peer.port);
+		peer.state = Peer.STATE.DISCONNECTED;
+		library.logic.peers.upsert(peer);
 	} else {
-		return library.logic.peers.remove ({ip: pip, port: port});
+		return library.logic.peers.remove(peer);
 	}
 };
 
