@@ -392,7 +392,7 @@ Frozen.prototype.bind = function (accounts, rounds, blocks, transactions) {
 Frozen.prototype.sendAirdropReward = async function (trs) {
 
     const transactionAirdropReward = trs.asset.airdropReward;
-    if (!transactionAirdropReward.withAirdropReward) {
+    if (!transactionAirdropReward.withAirdropReward || transactionAirdropReward.totalReward === 0) {
         return true;
     }
 
