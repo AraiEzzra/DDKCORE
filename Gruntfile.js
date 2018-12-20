@@ -2,7 +2,6 @@ const moment = require('moment');
 const buffer = require('buffer');
 const path = require('path');
 const util = require('util');
-let env = process.env;
 const config = require('./config.json');
 
 module.exports = (grunt) => {
@@ -16,13 +15,6 @@ module.exports = (grunt) => {
     'sql/**/*.js',
     'app.js',
   ];
-  var dbConnection = {
-      user: env.DB_USER || '',
-      password: env.DB_PASSWORD || 'password',
-      database: env.DB_NAME || 'DDK_test',
-      host: env.DB_HOST || '0.0.0.0',
-      port: parseInt(env.DB_PORT, 10) || 5432,
-  };
   const today = moment().format('HH:mm:ss DD/MM/YYYY');
 
   const releaseDir = path.join(__dirname, 'release');
@@ -125,15 +117,7 @@ module.exports = (grunt) => {
         'tasks/**/*.js',
         'test/**/*.js',
       ],
-    },
-      'run-sql': {
-          'add-column': {
-              src: './sql/addColumn.sql',
-              options: {
-                  connection: dbConnection
-              }
-          }
-      }
+    }
   });
 
   grunt.loadTasks('tasks');
@@ -144,7 +128,6 @@ module.exports = (grunt) => {
   grunt.loadNpmTasks('grunt-eslint');
 
   grunt.registerTask('default', ['release']);
-  grunt.registerTask('addColumn', ['run-sql:add-column']);
   grunt.registerTask('release', ['exec:folder', 'obfuscator', 'exec:package', 'exec:build', 'compress']);
   grunt.registerTask('jenkins', ['exec:coverageSingle']);
   grunt.registerTask('eslint-nofix', ['eslint']);
