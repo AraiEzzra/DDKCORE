@@ -758,7 +758,7 @@ Accounts.prototype.shared = {
 			});
 	},
 
-	getCirculatingSupply: function (cb) {
+	getCirculatingSupply: function (req, cb) {
         library.db.one(sql.getCurrentUnmined, {address: library.config.forging.totalSupplyAccount})
 			.then(function (currentUnmined) {
                 let circulatingSupply = library.config.ddkSupply.totalSupply - currentUnmined.balance;
@@ -1032,7 +1032,7 @@ Accounts.prototype.shared = {
 
                 const ddkData = await (async () => {
 					return new Promise((resolve, reject) => {
-                        Accounts.prototype.shared.getCirculatingSupply(function (err, data) {
+                        Accounts.prototype.shared.getCirculatingSupply(req, function (err, data) {
                             if (err) {
                                 reject(err);
                             }
