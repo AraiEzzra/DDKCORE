@@ -1051,7 +1051,6 @@ Accounts.prototype.shared = {
                 setImmediate(cb, null, ddkData);
             }
         } catch (err) {
-            console.log("\n\n\nERROR", err);
             return setImmediate(cb, err);
 		}
     }

@@ -871,7 +871,7 @@ Transaction.prototype.applyUnconfirmed = function (trs, sender, requester, cb) {
 	} else {
 		amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
 	}
-    if(trs.type == 8 && (parseInt(sender.u_balance) - parseInt(sender.u_totalFrozeAmount)) < (trs.stakedAmount + trs.fee)){
+    if(trs.type == transactionTypes.STAKE && (parseInt(sender.u_balance) - parseInt(sender.u_totalFrozeAmount)) < (trs.stakedAmount + trs.fee)){
         return setImmediate(cb, 'Failed because of Frozen DDK');
     }
 	let senderBalance = this.checkBalance(amount, 'u_balance', trs, sender);
@@ -883,7 +883,7 @@ Transaction.prototype.applyUnconfirmed = function (trs, sender, requester, cb) {
 	amount = amount.toNumber();
 
 
-    if (trs.type == 8) {
+    if (trs.type == transactionTypes.STAKE) {
         this.scope.account.merge(sender.address, {u_balance: -amount, u_totalFrozeAmount: trs.stakedAmount }, function (err, sender) {
             if (err) {
                 return setImmediate(cb, err);
@@ -940,7 +940,7 @@ Transaction.prototype.undoUnconfirmed = function (trs, sender, cb) {
 		amount = amount.toNumber();
 	}
 
-    if(trs.type == 8){
+    if(trs.type == transactionTypes.STAKE){
         this.scope.account.merge(sender.address, {u_balance: amount, u_totalFrozeAmount: -trs.stakedAmount}, function (err, sender) {
             if (err) {
                 return setImmediate(cb, err);
