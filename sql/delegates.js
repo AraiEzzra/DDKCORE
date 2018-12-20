@@ -41,10 +41,10 @@ let DelegatesSql = {
 			'LEFT JOIN (SELECT "dependentId", COUNT(1)::int AS voters_cnt from mem_accounts2delegates GROUP BY "dependentId") v ON v."dependentId" = ENCODE(m."publicKey", \'hex\')',
 			'WHERE m."isDelegate" = 1',
 			'ORDER BY ' + [params.sortField, params.sortMethod].join(' ') + ')',
-			'SELECT * FROM delegates WHERE username LIKE ${q} LIMIT ${limit}'
+			'SELECT * FROM delegates WHERE LOWER(username) LIKE ${q} LIMIT ${limit}'
 		].join(' ');
 
-		params.q = '%' + String(params.q) + '%';
+		params.q = '%' + String(params.q).toLowerCase() + '%';
 		return pgp.as.format(sql, params);
 	},
 
