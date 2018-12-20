@@ -11,6 +11,8 @@ let Referals = {
 		'reward_time'
 	],
 
+    changeAccountGlobalStatus: 'UPDATE mem_accounts SET global = ${status} WHERE address = ${address}',
+
     updateAccountBalance: 'UPDATE mem_accounts SET "balance" = "balance" + ${reward}, "u_balance" = "u_balance" + ${reward} WHERE "address" = ${address}',
 
     updateReferLink : 'UPDATE mem_accounts SET "referralLink" = ${referralLink} WHERE "address" = ${address}',

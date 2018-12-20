@@ -70,7 +70,8 @@ function Accounts(cb, scope) {
         new Referral(
             scope.logger,
             scope.schema,
-            scope.db
+            scope.db,
+            scope.logic.account
         )
     );
 
