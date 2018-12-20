@@ -1,12 +1,11 @@
-
-
-let _ = require('lodash');
-let async = require('async');
-let constants = require('../helpers/constants.js');
-let pgp = require('pg-promise')(); // We also initialize library here
-let sandboxHelper = require('../helpers/sandbox.js');
-let schema = require('../schema/peers.js');
-let sql = require('../sql/peers.js');
+const _ = require('lodash');
+const async = require('async');
+const constants = require('../helpers/constants.js');
+const pgp = require('pg-promise')(); // We also initialize library here
+const sandboxHelper = require('../helpers/sandbox.js');
+const schema = require('../schema/peers.js');
+const sql = require('../sql/peers.js');
+const Peer = require('../logic/peer');
 
 // Private fields
 let modules, library, self, __private = {}, shared = {};
@@ -223,15 +222,17 @@ Peers.prototype.update = function (peer) {
 	return library.logic.peers.upsert(peer);
 };
 
-Peers.prototype.remove = function (pip, port) {
-	let frozenPeer = _.find(library.config.peers.list, function (peer) {
-		return peer.ip === pip && peer.port === port;
+Peers.prototype.remove = function (peer) {
+	let frozenPeer = _.find(library.config.peers.list, function (innerPeer) {
+		return innerPeer.ip === peer.ip && innerPeer.port === peer.port;
 	});
 	if (frozenPeer) {
 		// FIXME: Keeping peer frozen is bad idea at all
-		library.logger.debug('Cannot remove frozen peer', pip + ':' + port);
+		library.logger.info('Cannot remove frozen peer', peer.ip + ':' + peer.port);
+		peer.state = Peer.STATE.DISCONNECTED;
+		library.logic.peers.upsert(peer);
 	} else {
-		return library.logic.peers.remove ({ip: pip, port: port});
+		return library.logic.peers.remove(peer);
 	}
 };
 
@@ -295,6 +296,11 @@ Peers.prototype.discover = function (cb) {
 					return setImmediate(eachCb);
 				}
 
+				if (library.config.peers.access.blackList.indexOf(peer.ip) !== -1) {
+					library.logger.info(`Skip peer from black list: ${peer.string}`);
+					return setImmediate(eachCb);
+				}
+
 				// Set peer state to disconnected
 				peer.state = 1;
 				// We rely on data from other peers only when new peer is discovered for the first time
@@ -343,30 +349,32 @@ Peers.prototype.list = function (options, cb) {
 			peersList = peersList.filter(function (peer) {
 				if (options.broadhash) {
 					// Skip banned peers (state 0)
-					return peer.state > 0 && (
-						// Matched broadhash when attempt 0
-						options.attempt === 0 ? (peer.broadhash === options.broadhash) :
-						// Unmatched broadhash when attempt 1
-						options.attempt === 1 ? (peer.broadhash !== options.broadhash) : false
-					);
+					if ([Peer.STATE.CONNECTED].indexOf(peer.state) !== -1 && (options.attempt === 0)) {
+						return (peer.broadhash === options.broadhash);
+					} else {
+						return options.attempt === 1 ? (peer.broadhash !== options.broadhash) : false;
+					}
 				} else {
 					// Skip banned peers (state 0)
-					return peer.state > 0;
+					return [Peer.STATE.CONNECTED].indexOf(peer.state) !== -1;
 				}
 			});
 			matched = peersList.length;
 			// Apply limit
 			peersList = peersList.slice(0, options.limit);
 			picked = peersList.length;
-			accepted = self.acceptable(peers.concat(peersList));
-            library.logger.debug(`Listing peers ${JSON.stringify({
+			// Filter only connected peers
+			accepted = self.acceptable(peers.concat(peersList)).filter(
+			  peer => [Peer.STATE.CONNECTED].indexOf(peer.state) !== -1
+      );
+      library.logger.debug(`Listing peers ${JSON.stringify({
 				attempt: options.attempts[options.attempt], 
 				found: found, 
 				matched: matched, 
 				picked: picked, 
 				accepted: accepted.length
-            })}`);
-            return setImmediate(cb, null, accepted);
+      })}`);
+      return setImmediate(cb, null, accepted);
 		});
 	}
 

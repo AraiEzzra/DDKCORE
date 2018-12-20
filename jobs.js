@@ -28,15 +28,64 @@ exports.attachScope = function (scope) {
  * @param {Table} outtransfer
  * @param {Table} multisignatures
 */
+
+let esIterationFinished = true;
+let limit = 5000;
+let dbTables = [
+	{
+		tableName: 'blocks_list',
+		fieldName: 'b_height',
+		lastValue: 0
+	},
+	{
+        tableName: 'trs',
+        fieldName: 'rowId',
+        lastValue: 0
+	},
+	{
+        tableName: 'stake_orders',
+        fieldName: 'stakeId',
+        lastValue: 0
+	}
+];
+
+const iterate = async (table, limit, rowsAcc, bulkAcc, lastValue) => {
+    if (!lastValue) {
+        lastValue = table.lastValue;
+    }
+    try {
+        rowsAcc = await library.db.manyOrNone(
+            'SELECT * FROM $(tableName~) WHERE $(fieldName~) > $(lastValue) ORDER BY $(fieldName~) LIMIT $(limit)',
+            {
+                tableName: table.tableName,
+                fieldName: table.fieldName,
+                lastValue: lastValue,
+                limit: limit
+            }
+        );
+        if (rowsAcc.length < 1) {
+            table.lastValue = lastValue;
+            return ;
+        }
+        bulkAcc = utils.makeBulk(rowsAcc, table.tableName);
+        await utils.indexall(bulkAcc, table.tableName);
+        lastValue = rowsAcc[rowsAcc.length - 1][table.fieldName];
+    } catch(err) {
+        library.logger.error('elasticsearch indexing error : '+ err);
+    }
+
+    await iterate(table, limit, rowsAcc, bulkAcc, lastValue);
+};
+
+
 exports.updateDataOnElasticSearch = {
 
-	on: '*/30 * * * *',
+	on: '* * * * *',
 	job: function () {
-        let dbTables = [
-            'blocks_list',
-            'trs',
-            'stake_orders'
-        ];
+		if (!esIterationFinished) {
+			return;
+		}
+        esIterationFinished = false;
 
 		// let dbTables = [
 		// 	'blocks_list',
@@ -55,24 +104,13 @@ exports.updateDataOnElasticSearch = {
 		// 	'outtransfer',
 		// 	'multisignatures'
 		// ];
-
-		dbTables.forEach(function (tableName) {
-			library.db.query('SELECT * FROM ' + tableName)
-				.then(function (rows) {
-					if (rows.length > 0) {
-						let bulk = utils.makeBulk(rows, tableName);
-						utils.indexall(bulk, tableName)
-							.then(function (result) {
-								//FIXME: Do further processing on successful indexing on elasticsearch server
-							})
-							.catch(function (err) {
-								library.logger.error('elasticsearch error :'+ err);
-							});
-					}
-				})
-				.catch(function (err) {
-					library.logger.error('database error : '+ err);
-				});
+		
+		let promises = [];
+		dbTables.forEach(function (table) {
+            promises.push(iterate(table, limit, [], []));
+		});
+		Promise.all(promises).then( () => {
+            esIterationFinished = true;
 		});
 	},
 	spawn: false

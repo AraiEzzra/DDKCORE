@@ -1,7 +1,7 @@
 
 
 let node = require('./../node.js');
-let genesisblock = require('../../genesisBlock.json');
+let genesisblock = require('../../helpers/genesisBlock');
 
 let testBlock = {
 	id: '2807833455815592401',

@@ -11,6 +11,9 @@ let constants = require('../helpers/constants.js');
 let cache = require('./cache.js');
 let slots = require('../helpers/slots');
 
+const COUNT_ACTIVE_STAKE_HOLDERS_KEY = 'COUNT_ACTIVE_STAKE_HOLDERS';
+const COUNT_ACTIVE_STAKE_HOLDERS_EXPIRE = 300; // 5 minutes
+
 // Private fields
 let __private = {};
 let shared = {};
@@ -114,18 +117,33 @@ Frogings.prototype.onBind = function (scope) {
  */
 Frogings.prototype.shared = {
 
-	countStakeholders: function (req, cb) {
+	getCountStakeHoldersFromCache: async () => {
+		return await cache.prototype.getJsonForKeyAsync(COUNT_ACTIVE_STAKE_HOLDERS_KEY);
+	},
 
-		library.db.one(sql.countStakeholders)
-		.then(function (row) {
+	getCountStakeHoldersFromQuery: async () => {
+		return await library.db.one(sql.countStakeholders);
+	},
+
+	updateCountStakeHoldersCache: async (value) => {
+		return await cache.prototype.setJsonForKeyAsync(
+			COUNT_ACTIVE_STAKE_HOLDERS_KEY, value, COUNT_ACTIVE_STAKE_HOLDERS_EXPIRE
+		);
+	},
+
+	countStakeholders: async function (req, cb) {
+		try {
+			let result = await self.shared.getCountStakeHoldersFromCache();
+			if (result === null) {
+				result = await self.shared.getCountStakeHoldersFromQuery();
+				await self.shared.updateCountStakeHoldersCache(result);
+			}
 			return setImmediate(cb, null, {
-				countStakeholders: row
+				countStakeholders: result
 			});
-		})
-		.catch(function (err) {
+		} catch (err) {
 			return setImmediate(cb, err);
-		});
-
+		}
 	},
 
 	totalDDKStaked: function (req, cb) {

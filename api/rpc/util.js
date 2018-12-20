@@ -1,4 +1,5 @@
 const ZSchema = require("z-schema");
+const Mnemonic = require('bitcore-mnemonic');
 
 
 module.exports.createServerRPCMethod = function (methodName, callback) {
@@ -20,7 +21,11 @@ module.exports.createServerRPCMethod = function (methodName, callback) {
   return callback;
 };
 
-module.exports.validator = function(json, schema) {
+module.exports.schemaValidator = function(json, schema) {
   const validator = new ZSchema();
   return validator.validate(json, schema);
+};
+
+module.exports.mnemonicValidator = function(secret) {
+  return Mnemonic.isValid(secret, Mnemonic.Words.ENGLISH)
 };

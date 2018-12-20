@@ -70,7 +70,8 @@ function Accounts(cb, scope) {
         new Referral(
             scope.logger,
             scope.schema,
-            scope.db
+            scope.db,
+            scope.logic.account
         )
     );
 
@@ -86,8 +87,8 @@ function Accounts(cb, scope) {
  * @param {function} cb - Callback function.
  * @returns {setImmediateCallback} As per logic new|current account data object.
  */
-__private.openAccount = function (secret, cb) {
-	let hash = crypto.createHash('sha256').update(secret, 'utf8').digest();
+__private.openAccount = function (body, cb) {
+	let hash = crypto.createHash('sha256').update(body.secret, 'utf8').digest();
 	let keypair = library.ed.makeKeypair(hash);
 	let publicKey = keypair.publicKey.toString('hex');
 
@@ -113,7 +114,24 @@ __private.openAccount = function (secret, cb) {
 				multisignatures: null,
 				u_multisignatures: null
 			};
-			return setImmediate(cb, null, account);
+
+			self.getReferralLinkChain(body.referal, account.address).then((level) => {
+				library.logic.transaction.create({
+					type: transactionTypes.REFERRAL,
+					sender: account,
+					keypair: keypair,
+					referrals: level
+				}).then((transactionReferral) => {
+					modules.transactions.receiveTransactions([transactionReferral], true, (err) => {
+						return setImmediate(cb, null, account);
+					});
+				}).catch((err) => {
+					throw err;
+				});
+			}).catch((err) => {
+				library.logger.error("Referral API Error : " + err);
+				return setImmediate(cb, err.toString());
+			});
 		}
 	});
 };
@@ -157,10 +175,10 @@ Accounts.prototype.getAccount = function (filter, fields, cb) {
 	library.logic.account.get(filter, fields, cb);
 };
 
-/**  
+/**
  * Firstly check whether this referral id is valid or not.
  * If valid Generate referral chain for that user.
- * In case of no referral, chain will contain the null value i.e; Blank. 
+ * In case of no referral, chain will contain the null value i.e; Blank.
  * @param {referalLink} - Refer Id.
  * @param {address} - Address of user during registration.
  * @author - Satish Joshi
@@ -171,7 +189,6 @@ Accounts.prototype.getReferralLinkChain = async function (referalLink, address) 
     let referrer_address = referalLink;
     if (!referrer_address) {
         referrer_address = '';
-        return Promise.resolve('ARRAY[]::TEXT[]');
     }
     let level = [];
     if (referrer_address == address) {
@@ -199,8 +216,8 @@ Accounts.prototype.getReferralLinkChain = async function (referalLink, address) 
 								resolve(level);
 						});
 			});
-		}
-		return Promise.resolve([referrer_address]);
+	}
+	return Promise.resolve([]);
 
 };
 
@@ -247,10 +264,10 @@ Accounts.prototype.setAccountAndGet = function (data, cb) {
 			throw err;
 		}
 	}
-	
+
 	let REDIS_KEY_USER = "userAccountInfo_" + address;
 
-	cache.prototype.isExists(REDIS_KEY_USER, function (err, isExist) { 
+	cache.prototype.isExists(REDIS_KEY_USER, function (err, isExist) {
 		if(!isExist) {
 			cache.prototype.setJsonForKey(REDIS_KEY_USER, address);
 		}
@@ -351,7 +368,7 @@ Accounts.prototype.shared = {
 				return setImmediate(cb, err[0].message);
 			}
 
-			__private.openAccount(req.body.secret, function (err, account) {
+			__private.openAccount(req.body, function (err, account) {
 				if (!err) {
 
 					let payload = {
@@ -411,33 +428,7 @@ Accounts.prototype.shared = {
 					cache.prototype.isExists(REDIS_KEY_USER_INFO_HASH, function (err, isExist) {
 						if (!isExist) {
 							cache.prototype.setJsonForKey(REDIS_KEY_USER_INFO_HASH, accountData.address);
-                            let hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
-                            let keypair = library.ed.makeKeypair(hash);
-                            if (req.body.referal) {
-                              self.getReferralLinkChain(req.body.referal, account.address).then((level) => {
-                                library.logic.transaction.create({
-                                    type: transactionTypes.REFERRAL,
-                                    sender: account,
-                                    keypair: keypair,
-                                    referrals: level
-                                }).then((transactionReferral) =>{
-                                    modules.transactions.receiveTransactions([transactionReferral], true, (err) => {
-                                        return setImmediate(cb, null, {
-                                            account: accountData
-                                        });
-									});
-                                }).catch((e) => {
-                                    throw e;
-                                });
-							}).catch((err) => {
-                                library.logger.error("Referral API Error : "+err);
-                                return setImmediate(cb, err.toString());
-							});
-                            } else {
-                              return setImmediate(cb, null, {
-                                            account: accountData
-                                        });
-                            }
+							return setImmediate(cb, null, { account: accountData });
 						} else {
 							if (req.body.etps_user) {
 								library.db.none(sql.updateEtp, {
@@ -511,16 +502,12 @@ Accounts.prototype.shared = {
 				return setImmediate(cb, err[0].message);
 			}
 
-			__private.openAccount(req.body.secret, function (err, account) {
-				let publicKey = null;
+			const hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
+			const keypair = library.ed.makeKeypair(hash);
+			const publicKey = keypair.publicKey.toString('hex');
 
-				if (!err && account) {
-					publicKey = account.publicKey;
-				}
-
-				return setImmediate(cb, err, {
-					publicKey: publicKey
-				});
+			return setImmediate(cb, err, {
+				publicKey: publicKey
 			});
 		});
 	},
@@ -772,38 +759,34 @@ Accounts.prototype.shared = {
 	},
 
 	getCirculatingSupply: function (req, cb) {
-		let initialUnmined = library.config.ddkSupply.totalSupply - library.config.initialPrimined.total;
-		//let publicAddress = library.config.sender.address;
-		let hash = Buffer.from(JSON.parse(library.config.users[0].keys));
-		let keypair = library.ed.makeKeypair(hash);
-		let publicKey = keypair.publicKey.toString('hex');
-		self.getAccount({publicKey: publicKey}, function(err, account) {
-			library.db.one(sql.getCurrentUnmined, { address: account.address })
+        library.db.one(sql.getCurrentUnmined, {address: library.config.forging.totalSupplyAccount})
 			.then(function (currentUnmined) {
-				let circulatingSupply = library.config.initialPrimined.total + initialUnmined - currentUnmined.balance;
+                let circulatingSupply = library.config.ddkSupply.totalSupply - currentUnmined.balance;
+                cache.prototype.getJsonForKey('minedContributorsBalance', function (err, contributorsBalance) {
+                    let totalCirculatingSupply = parseInt(contributorsBalance) + circulatingSupply;
 
-				cache.prototype.getJsonForKey('minedContributorsBalance', function (err, contributorsBalance) {
-					let totalCirculatingSupply = parseInt(contributorsBalance) + circulatingSupply;
-
-					return setImmediate(cb, null, {
-						circulatingSupply: totalCirculatingSupply
-					});
-				});
+                    return setImmediate(cb, null, {
+                        circulatingSupply: totalCirculatingSupply
+                    });
+                });
 			})
-			.catch(function (err) {
-				library.logger.error(err.stack);
-				return setImmediate(cb, err.toString());
-			});
-		});
+            .catch(function (err) {
+                library.logger.error(err.stack);
+                return setImmediate(cb, err.toString());
+            });
 	},
 
 	totalSupply: function (req, cb) {
-		let totalSupply = library.config.ddkSupply.totalSupply;
-
-		return setImmediate(cb, null, {
-			totalSupply: totalSupply
-		});
-
+        library.db.one(sql.getCurrentUnmined, {address: library.config.forging.totalSupplyAccount})
+            .then(function (currentUnmined) {
+                return setImmediate(cb, null, {
+                    totalSupply: parseInt(currentUnmined.balance)
+                });
+            })
+            .catch(function (err) {
+                library.logger.error(err.stack);
+                return setImmediate(cb, err.toString());
+            });
 	},
 
 	migrateData: function (req, cb) {
@@ -945,7 +928,7 @@ Accounts.prototype.shared = {
 			if (err){
 				library.logger.error(err.stack);
 				return setImmediate(cb, err.toString());
-			}	
+			}
 			return setImmediate(cb, null, { success: true, message: 'Successfully migrated' });
 		});
 
@@ -967,7 +950,7 @@ Accounts.prototype.shared = {
 			library.db.one(sql.findPassPhrase, {
 				userName: username
 			}).then(function (user) {
-				
+
 				return setImmediate(cb, null, {
 					success: true,
 					userInfo: user
@@ -1388,7 +1371,7 @@ Accounts.prototype.internal = {
 											seriesCb(err, false);
 										});
 								});
-								
+
 							} else if(activeStakeCount < 2){
 								seriesCb(null, false);
 							}else {

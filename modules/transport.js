@@ -95,7 +95,7 @@ __private.hashsum = function (obj) {
  */
 __private.removePeer = function (options, extraMessage) {
 	library.logger.debug([options.code, 'Removing peer', options.peer.string, extraMessage].join(' '));
-	modules.peers.remove(options.peer.ip, options.peer.port);
+	modules.peers.remove(options.peer);
 };
 
 /**

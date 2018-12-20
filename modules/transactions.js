@@ -87,8 +87,8 @@ __private.list = function (filter, cb) {
 	let allowedFieldsMap = {
 		id: '"t_id" = ${id}',
 		blockId: '"t_blockId" = ${blockId}',
-		senderPublicKey: '"t_senderPublicKey" = DECODE (${senderPublicKey}, \'hex\')',
-		recipientPublicKey: '"m_recipientPublicKey" = DECODE (${recipientPublicKey}, \'hex\')',
+		senderPublicKey: '"t_senderPublicKey" = ${senderPublicKey}',
+		recipientPublicKey: '"m_recipientPublicKey" = ${recipientPublicKey}',
 		senderId: '"t_senderId" = ${senderId}',
 		recipientId: '"t_recipientId" = ${recipientId}',
 		height: '"b_height" = ${height}',
@@ -98,8 +98,8 @@ __private.list = function (filter, cb) {
 		toTimestamp: '"t_timestamp" <= ${toTimestamp}',
 		senderIds: '"t_senderId" IN (${senderIds:csv})',
 		recipientIds: '"t_recipientId" IN (${recipientIds:csv})',
-		senderPublicKeys: 'ENCODE ("t_senderPublicKey", \'hex\') IN (${senderPublicKeys:csv})',
-		recipientPublicKeys: 'ENCODE ("m_recipientPublicKey", \'hex\') IN (${recipientPublicKeys:csv})',
+		senderPublicKeys: '"t_senderPublicKey" IN (${senderPublicKeys:csv})',
+		recipientPublicKeys: '"m_recipientPublicKey" IN (${recipientPublicKeys:csv})',
 		minAmount: '"t_amount" >= ${minAmount}',
 		maxAmount: '"t_amount" <= ${maxAmount}',
 		type: '"t_type" = ${type}',
@@ -169,7 +169,7 @@ __private.list = function (filter, cb) {
 
 	// FIXME: Backward compatibility, should be removed after transitional period
 	if (filter.ownerAddress && filter.ownerPublicKey) {
-		owner = '("t_senderPublicKey" = DECODE (${ownerPublicKey}, \'hex\') OR "t_recipientId" = ${ownerAddress})';
+		owner = '("t_senderPublicKey" = ${ownerPublicKey} OR "t_recipientId" = ${ownerAddress})';
 		params.ownerPublicKey = filter.ownerPublicKey;
 		params.ownerAddress = filter.ownerAddress;
 	}

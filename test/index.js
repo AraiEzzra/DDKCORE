@@ -1,6 +1,7 @@
+
 require('./rpc/getBlocksCount.js');
 require('./rpc/getAccount.js');
-require('./rpc/getSataus.js');
+require('./rpc/getStatus.js');
 require('./rpc/getTransactions.js');
 require('./rpc/getBalance.js');
 require('./rpc/getBlock.js');
@@ -23,6 +24,8 @@ require('./rpc/getReward.js');
 require('./rpc/getSupply.js');
 require('./rpc/getTransaction.js');
 require('./rpc/getPublickey.js');
+require('./rpc/openAccount.js');
+require('./rpc/createTransaction.js');
 
 require('./unit/helpers/request-limiter.js');
 require('./unit/logic/blockReward.js');

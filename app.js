@@ -27,7 +27,7 @@ require('dotenv').config();
 require('auto-strict');
 let async = require('async');
 let fs = require('fs');
-let genesisblock = require('./genesisBlock.json');
+let genesisblock = require('./helpers/genesisBlock');
 let git = require('./helpers/git.js');
 let packageJson = require('./package.json');
 let path = require('path');
@@ -249,7 +249,7 @@ d.run(function () {
 		 * @method network
 		 * @param {object} scope - The results from current execution,
 		 * at leats will contain the required elements.
-		 * @param {nodeStyleCallback} cb - Callback function with created Object: 
+		 * @param {nodeStyleCallback} cb - Callback function with created Object:
 		 * `{express, app, server, io, https, https_io}`.
 		 */
 		network: ['config', function (scope, cb) {
@@ -305,7 +305,7 @@ d.run(function () {
 			if (!scope.config.ssl.enabled) {
 				socketIO = require('socket.io')(server);
 			}
-			
+
 			let privateKey, certificate, https, https_io;
 
 			if (scope.config.ssl.enabled) {
@@ -400,7 +400,7 @@ d.run(function () {
 		 * Once config, public, genesisblock, logger, build and network are completed,
 		 * adds configuration to `network.app`.
 		 * @method connect
-		 * @param {object} scope - The results from current execution, 
+		 * @param {object} scope - The results from current execution,
 		 * at leats will contain the required elements.
 		 * @param {function} cb - Callback function.
 		 */
@@ -514,7 +514,7 @@ d.run(function () {
 		 * Once db, bus, schema and genesisblock are completed,
 		 * loads transaction, block, account and peers from logic folder.
 		 * @method logic
-		 * @param {object} scope - The results from current execution, 
+		 * @param {object} scope - The results from current execution,
 		 * at leats will contain the required elements.
 		 * @param {function} cb - Callback function.
 		 */
@@ -625,7 +625,7 @@ d.run(function () {
 		 * Loads api from `api` folder using `config.api`, once modules, logger and
 		 * network are completed.
 		 * @method api
-		 * @param {object} scope - The results from current execution, 
+		 * @param {object} scope - The results from current execution,
 		 * at leats will contain the required elements.
 		 * @param {function} cb - Callback function.
 		 */
@@ -659,7 +659,7 @@ d.run(function () {
 		 * Once 'ready' is completed, binds and listens for connections on the
 		 * specified host and port for `scope.network.server`.
 		 * @method listen
-		 * @param {object} scope - The results from current execution, 
+		 * @param {object} scope - The results from current execution,
 		 * at leats will contain the required elements.
 		 * @param {nodeStyleCallback} cb - Callback function with `scope.network`.
 		 */
@@ -693,7 +693,7 @@ d.run(function () {
       const server = new ServerRPCApi();
         serverRPCConfig.methods.map(function (method) {
         server.register(method.methodName, function (params) {
-          return method.call(null, server.getWebSocketServer(), params, scope, cb);
+          return method.call(null, server.getWebSocketServer(), params, scope);
         });
       });
       scope.logger.info('RPC Server started on: ' + server.host + ':' + server.port);
@@ -711,11 +711,11 @@ d.run(function () {
 			require('./helpers/referal').Referals(scope);
 			//Migration Process
 			//require('./helpers/accountCreateETPS').AccountCreateETPS(scope);
-		
+
 			cronjob.startJob('updateDataOnElasticSearch');
 			cronjob.startJob('archiveLogFiles');
 			cronjob.startJob('unlockLockedUsers');
-			
+
 			/**
 			 * Handles app instance (acts as global variable, passed as parameter).
 			 * @global

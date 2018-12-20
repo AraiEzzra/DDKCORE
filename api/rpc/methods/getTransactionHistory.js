@@ -1,5 +1,5 @@
-const { createServerRPCMethod, validator } = require('./../util');
-const { ReservedErrorCodes } = require('./../errors');
+const { createServerRPCMethod, schemaValidator } = require('./../util');
+const ReservedError = require('./../errors');
 const { addTransactions } = require('../../../schema/transactions');
 
 
@@ -11,11 +11,10 @@ module.exports = createServerRPCMethod(
    * @param {WebSocketServer} wss
    * @param {object} params
    * @param {object} scope - Application instance
-   * @param {function} cdError - Application Error callback
    */
-  function (wss, params, scope, cdError) {
+  function (wss, params, scope) {
     return new Promise(function (resolve) {
-      if (validator(params, addTransactions)) {
+      if (schemaValidator(params, addTransactions)) {
         scope.modules.transactions.internal.getTransactionHistory({body: params}, (error, result) => {
 
           resolve(error
@@ -24,7 +23,7 @@ module.exports = createServerRPCMethod(
         });
       }
       else {
-        return {error: ReservedErrorCodes[String(ReservedErrorCodes.ServerErrorInvalidMethodParameters)]}
+        return {error: ReservedError.ServerErrorInvalidMethodParameters}
       }
     });
   });

@@ -1,4 +1,3 @@
-
 let env = process.env;
 
 module.exports = {
@@ -15,7 +14,7 @@ module.exports = {
     db: {
         host: env.DB_HOST || '0.0.0.0',
         port: parseInt(env.DB_PORT, 10) || 5432,
-        database: env.DB_NAME || 'ddk_mainnet_database',
+        database: env.DB_NAME || 'DDK_test',
         password: env.DB_PASSWORD,
         user: env.DB_USER,
         poolSize: 95,
@@ -27,7 +26,7 @@ module.exports = {
     },
     redis: {
         host: env.REDIS_HOST || '0.0.0.0',
-        port: parseInt(env.REDIS_PORT, 10) || 6379,
+        port: parseInt(env.REDIS_PORT, 10) || 6380,
         password: env.REDIS_PASSWORD,
         db: 0
     },
@@ -36,6 +35,14 @@ module.exports = {
         access: {
             public: true,
             whiteList: [
+                '127.0.0.1',
+                '192.168.9.91',
+                '180.151.225.194',
+                '159.65.139.87',
+                '118.100.29.72',
+                '124.29.212.104',
+                '103.201.142.50',
+                '18.218.25.187'
             ]
         },
         options: {
@@ -49,7 +56,7 @@ module.exports = {
     },
     peers: {
         enabled: true,
-        list: (env.PEERS || '').split(',').map(peer => peer.split(':')).map(([ip, port]) => ({ ip, port })),
+        list:  (env.PEERS || '').split(',').map(peer => peer.split(':')).map(([ip, port]) => ({ ip, port })),
         access: {
             blackList: (env.PEERS_BLACKLIST || '').split(','),
         },
@@ -75,10 +82,14 @@ module.exports = {
     },
     forging: {
         force: true,
-        minBroadhashConsensus: parseInt(env.MIN_CONSENSUS, 10) || 51,
+        minBroadhashConsensus: parseInt(env.MIN_CONSENSUS, 10) || 0,
         secret: env.FORGE_SECRET,
         access: {
             whiteList: [
+                '127.0.0.1',
+                '192.168.9.91',
+                '180.151.225.194',
+                '118.100.29.72'
             ]
         }
     },
@@ -87,7 +98,7 @@ module.exports = {
         loadPerIteration: 5000
     },
     ssl: {
-        enabled: true,
+        enabled: false,
         options: {
             port: 443,
             address: env.ADDRESS || '0.0.0.0',

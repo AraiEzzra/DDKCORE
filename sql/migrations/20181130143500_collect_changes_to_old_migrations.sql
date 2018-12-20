@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS "stake_orders"(
   "voteCount" INT DEFAULT 0,
   "nextVoteMilestone" INT NOT NULL,
   "isVoteDone" BOOLEAN DEFAULT FALSE,
-  "isTransferred" INT DEFAULT 0,
+  "transferCount" INT DEFAULT 0,
   "airdropReward" json
 );
 

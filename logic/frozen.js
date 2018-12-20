@@ -8,6 +8,7 @@ const reward_sql = require('../sql/referal_sql');
 const account_sql = require('../sql/accounts');
 const cache = require('../modules/cache');
 const transactionTypes = require('../helpers/transactionTypes.js');
+let utils = require('../utils');
 
 const __private = {};
 __private.types = {};
@@ -128,6 +129,11 @@ Frozen.prototype.active = '1';
  * @throws {error} catch error
  */
 Frozen.prototype.dbSave = function (trs) {
+
+    // FIXME delete bad transaction migration
+    if (!trs.asset || trs.stakedAmount <= 0) {
+      return null;
+    }
     return {
         table: this.dbTable,
         fields: this.dbFields,
@@ -226,6 +232,18 @@ Frozen.prototype.undo = function (trs, block, sender, cb) {
         ]);
     })()
     .then(function () {
+        utils.deleteDocument({
+            index: 'stake_orders',
+            type: 'stake_orders',
+            id: trs.id
+        }, function (err) {
+            if (err) {
+                self.scope.logger.error('Elasticsearch: document deletion error : ' + err);
+            } else {
+                self.scope.logger.info('Elasticsearch: document deleted successfullly');
+            }
+        });
+        
         return setImmediate(cb);
     })
     .catch(function (err) {
@@ -246,14 +264,16 @@ Frozen.prototype.undo = function (trs, block, sender, cb) {
 Frozen.prototype.apply = function (trs, block, sender, cb) {
     async.series([
         function (seriesCb) {
-            self.updateFrozeAmount({ account: sender, freezedAmount: trs.stakedAmount },
-            function (err) {
-                if (err) {
-                    return setImmediate(seriesCb, err);
-                }
+            self.updateFrozeAmount(
+              { account: sender, freezedAmount: trs.stakedAmount },
+              function (err) {
+                  if (err) {
+                      return setImmediate(seriesCb, err);
+                  }
 
-                return setImmediate(seriesCb, null, trs);
-            });
+                  return setImmediate(seriesCb, null, trs);
+              }
+            );
         },
         function (seriesCb) {
             self.sendAirdropReward(trs)
@@ -342,7 +362,6 @@ Frozen.prototype.verifyAirdrop = async (trs) => {
 /**
  * @desc calculate fee for transaction type 9
  * @private
- * @param {Object} sender - sender data
  * @param {Object} trs - transation data
  * @return % based on amount
  */
@@ -373,7 +392,7 @@ Frozen.prototype.bind = function (accounts, rounds, blocks, transactions) {
 Frozen.prototype.sendAirdropReward = async function (trs) {
 
     const transactionAirdropReward = trs.asset.airdropReward;
-    if (!transactionAirdropReward.withAirdropReward) {
+    if (!transactionAirdropReward.withAirdropReward || transactionAirdropReward.totalReward === 0) {
         return true;
     }
 
@@ -655,7 +674,6 @@ Frozen.prototype.getStakeReward = (order) => {
  * @return {function} {cb, err}
  */
 Frozen.prototype.updateFrozeAmount = function (userData, cb) {
-
     self.scope.db.one(sql.getFrozeAmount, {
         senderId: userData.account.address
     })
@@ -663,21 +681,24 @@ Frozen.prototype.updateFrozeAmount = function (userData, cb) {
             if (!totalFrozeAmount) {
                 return setImmediate(cb, 'No Account Exist in mem_account table for' + userData.account.address);
             }
-            let frozeAmountFromDB = totalFrozeAmount.totalFrozeAmount;
-            totalFrozeAmount = parseInt(frozeAmountFromDB) + userData.freezedAmount;
-            let totalFrozeAmountWithFees = totalFrozeAmount + (parseFloat(constants.fees.froze) * (userData.freezedAmount)) / 100;
+            const frozeAmountFromDB = totalFrozeAmount.totalFrozeAmount;
+            totalFrozeAmount = Number(frozeAmountFromDB) + Number(userData.freezedAmount);
+            const totalFrozeAmountWithFees =
+              totalFrozeAmount + self.calculateFee({ stakedAmount: Number(userData.freezedAmount) });
             if (totalFrozeAmountWithFees <= userData.account.balance) {
                 self.scope.db.none(sql.updateFrozeAmount, {
                     reward: userData.freezedAmount, senderId: userData.account.address
                 })
-                    .then(function () {
-                        self.scope.logger.info(userData.account.address, ': is update its froze amount in mem_accounts table ');
-                        return setImmediate(cb, null);
-                    })
-                    .catch(function (err) {
-                        self.scope.logger.error(err.stack);
-                        return setImmediate(cb, err.toString());
-                    });
+                .then(function () {
+                    self.scope.logger.info(
+                      userData.account.address, ': is update its froze amount in mem_accounts table'
+                    );
+                    return setImmediate(cb, null);
+                })
+                .catch(function (err) {
+                    self.scope.logger.error(err.stack);
+                    return setImmediate(cb, err.toString());
+                });
             } else {
                 return setImmediate(cb, 'Not have enough balance');
             }

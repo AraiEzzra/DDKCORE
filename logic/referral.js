@@ -1,15 +1,17 @@
+const sql = require('../sql/referal_sql');
 let modules, library, self;
 
 /**
  * Referral logic.
  * @class
  */
-function Referral(logger, schema, db) {
+function Referral(logger, schema, db, account) {
     self = this;
     library = {
         db: db,
         logger: logger,
-        schema: schema
+        schema: schema,
+        account: account
     };
     return this;
 }
@@ -23,7 +25,7 @@ Referral.prototype.bind = function () {
 Referral.prototype.create = async function (data, trs) {
     trs.recipientId = data.sender.address;
     trs.asset.referrals = [...data.referrals];
-    trs.trsName = "REFERRAL";
+    trs.trsName = "REGISTER";
     return trs;
 };
 
@@ -32,15 +34,34 @@ Referral.prototype.getBytes = function (trs) {
 };
 
 Referral.prototype.verify = function (trs, sender, cb) {
-    setImmediate(cb);
+    library.account.get({ address: trs.recipientId }, (err, account) => {
+        if (account && account.global) {
+            return setImmediate(cb, 'Account already exists.');
+        }
+        return setImmediate(cb);
+    });
 };
 
 Referral.prototype.apply = function (trs, block, sender, cb) {
-    setImmediate(cb);
+    library.db.none(sql.changeAccountGlobalStatus, {
+        address: trs.recipientId,
+        status: true
+    }).then(() => {
+        setImmediate(cb);
+    }).catch((err) => {
+        setImmediate(cb,err);
+    });
 };
 
 Referral.prototype.undo = function (trs, block, sender, cb) {
-    setImmediate(cb);
+    library.db.none(sql.changeAccountGlobalStatus, {
+        address: trs.recipientId,
+        status: false
+    }).then(() => {
+        setImmediate(cb);
+    }).catch((err) => {
+        setImmediate(cb,err);
+    });
 };
 
 Referral.prototype.applyUnconfirmed = function (trs, sender, cb) {
@@ -68,7 +89,7 @@ Referral.prototype.schema = {
 
 Referral.prototype.dbRead = function (raw) {
     return {
-        referrals: raw.ref_level
+        referrals: raw.ref_level ? raw.ref_level : [],
     };
 };
 
@@ -85,7 +106,7 @@ Referral.prototype.dbSave = function (trs) {
         fields: this.dbFields,
         values: {
             address: trs.recipientId,
-            level: trs.asset.referrals
+            level: trs.asset.referrals.length ? `{${trs.asset.referrals.toString()}}` : null,
         }
     };
 };
