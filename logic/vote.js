@@ -515,14 +515,18 @@ Vote.prototype.updateAndCheckVote = async (voteTransaction) => {
     try {
         // todo check if could change to tx
         await library.db.task(async () => {
-			await library.db.none(sql.updateStakeOrder, {
+
+			let affectedRowIds = await library.db.any(sql.updateStakeOrder, {
 				senderId: senderId,
 				milestone: constants.froze.vTime * 60, // 2 * 60 sec = 2 mins
 				currentTime: slots.getTime()
 			});
+			affectedRowIds = await affectedRowIds.map(item => item.id);
 			
-			const rows = await library.db.query(sql.GetOrders, { senderId: senderId });
-
+			await library.frozen.applyFrozeOrdersRewardAndUnstake(voteTransaction);
+			
+			const rows = await library.db.query(sql.GetOrders, { affectedRowIds });
+			
             if (rows.length > 0) {
                 let bulk = utils.makeBulk(rows, 'stake_orders');
 				try {
@@ -534,7 +538,6 @@ Vote.prototype.updateAndCheckVote = async (voteTransaction) => {
                 
             }
             
-			await library.frozen.applyFrozeOrdersRewardAndUnstake(voteTransaction);
         });
     } catch (err) {
         library.logger.warn(err);

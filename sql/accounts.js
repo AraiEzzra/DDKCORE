@@ -38,9 +38,9 @@ let Accounts = {
 
 	totalFrozeAmount: 'SELECT sum("freezedAmount") FROM stake_orders WHERE "id"=${account_id} and "status"=1',
 
-	updateStakeOrder: 'UPDATE stake_orders SET "voteCount"="voteCount"+1, "nextVoteMilestone"="nextVoteMilestone"+${milestone} WHERE "senderId"=${senderId} AND "status"=1 AND ${currentTime} >= "nextVoteMilestone"',
+	updateStakeOrder: 'UPDATE stake_orders SET "voteCount"="voteCount"+1, "nextVoteMilestone"="nextVoteMilestone"+${milestone} WHERE "senderId"=${senderId} AND "status"=1 AND ${currentTime} >= "nextVoteMilestone" RETURNING stake_orders.id',
 
-    GetOrders: 'SELECT * FROM stake_orders WHERE "senderId"=${senderId} AND "status" = 1',
+	GetOrders: 'SELECT * FROM stake_orders WHERE "id"= ANY(${affectedRowIds})',
 
     undoUpdateStakeOrder: 'UPDATE stake_orders SET "voteCount"="voteCount"-1, "nextVoteMilestone"="nextVoteMilestone"-${milestone} WHERE "senderId"=${senderId} AND "status"=1 AND ${currentTime} >= "nextVoteMilestone"',
 
