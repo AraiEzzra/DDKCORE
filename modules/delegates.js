@@ -396,25 +396,26 @@ Delegates.prototype.getDelegates = function (query, cb) {
 			return setImmediate(cb, err);
 		}
 
-		let limit = query.limit || slots.delegates;
-		let offset = query.offset || 0;
+		let limit = query.limit || Rounds.prototype.getSlotDelegatesCount();
+		const offset = query.offset || 0;
 
-		limit = limit > slots.delegates ? slots.delegates : limit;
+		limit = limit > Rounds.prototype.getSlotDelegatesCount() ? Rounds.prototype.getSlotDelegatesCount() : limit;
 
-		let count = delegates.length;
-		let realLimit = Math.min(offset + limit, count);
-
-		let lastBlock = modules.blocks.lastBlock.get(),
-			totalSupply = __private.blockReward.calcSupply(lastBlock.height);
+		const count = delegates.length;
+		const realLimit = Math.min(offset + limit, count);
 
 		for (let i = 0; i < delegates.length; i++) {
 			// TODO: 'rate' property is deprecated and need to be removed after transitional period
 			delegates[i].rate = i + 1;
 			delegates[i].rank = i + 1;
-			delegates[i].approval = (delegates[i].vote / totalSupply) * 100;
+			// TODO change approval to right logic
+      // https://trello.com/c/epSWVfXM/160-change-approval-to-right-logic
+
+			delegates[i].approval = 100;
 			delegates[i].approval = Math.round(delegates[i].approval * 1e2) / 1e2;
 
-			let percent = 100 - (delegates[i].missedblocks / ((delegates[i].producedblocks + delegates[i].missedblocks) / 100));
+			let percent = 100 -
+        (delegates[i].missedblocks / ((delegates[i].producedblocks + delegates[i].missedblocks) / 100));
 			percent = Math.abs(percent) || 0;
 
 			let outsider = i + 1 > Rounds.prototype.getSlotDelegatesCount();
@@ -733,6 +734,7 @@ Delegates.prototype.internal = {
  * @see {@link http://apidocjs.com/}
  */
 Delegates.prototype.shared = {
+  // TODO rewrite that ***
 	getDelegate: function (req, cb) {
 		library.schema.validate(req.body, schema.getDelegate, function (err) {
 			if (err) {
