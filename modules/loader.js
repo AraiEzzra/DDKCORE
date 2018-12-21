@@ -492,7 +492,6 @@ __private.loadBlockChain = function () {
 		function updateMemAccounts (t) {
 			let promises = [
 				t.none(sql.updateMemAccounts),
-				t.query(sql.getOrphanedMemAccounts),
 				t.query(sql.getDelegates)
 			];
 
