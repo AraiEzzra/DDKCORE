@@ -356,6 +356,16 @@ Accounts.prototype.isLoaded = function () {
 	return !!modules;
 };
 
+Accounts.prototype.addressExists = async function (referrer_address) {
+    let result;
+    try {
+        result = await library.db.one(sql.validateReferSource, { referSource: referrer_address });
+        return result.address > 0;
+    } catch (e) {
+        return false;
+    }
+};
+
 // Shared API
 /**
  * @todo implement API comments with apidoc.
@@ -363,10 +373,14 @@ Accounts.prototype.isLoaded = function () {
  */
 Accounts.prototype.shared = {
 	open: function (req, cb) {
-		library.schema.validate(req.body, schema.open, function (err) {
+		library.schema.validate(req.body, schema.open, async function (err) {
 			if (err) {
 				return setImmediate(cb, err[0].message);
 			}
+
+            if (req.body.referal && !await self.addressExists(req.body.referal)) {
+                return setImmediate(cb, 'Referral Address is Invalid');
+            }
 
 			__private.openAccount(req.body, function (err, account) {
 				if (!err) {
