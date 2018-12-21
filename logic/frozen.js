@@ -243,7 +243,6 @@ Frozen.prototype.undo = function (trs, block, sender, cb) {
                 self.scope.logger.info('Elasticsearch: document deleted successfullly');
             }
         });
-        
         return setImmediate(cb);
     })
     .catch(function (err) {
@@ -334,7 +333,11 @@ Frozen.prototype.verify = function (trs, sender, cb) {
 		return setImmediate(cb, 'Verify failed: Insufficient balance for stake');
 	}
 
-	self.verifyAirdrop(trs)
+    if ((parseInt(sender.balance) - parseInt(sender.totalFrozeAmount)) < (trs.stakedAmount + trs.fee)) {
+        return setImmediate(cb, 'Insufficient balance');
+    }
+
+    self.verifyAirdrop(trs)
 	.then(() => {
 		return setImmediate(cb, null);
 	})
@@ -347,7 +350,8 @@ Frozen.prototype.verify = function (trs, sender, cb) {
 Frozen.prototype.verifyAirdrop = async (trs) => {
     const airdropReward = await self.getAirdropReward(
         trs.senderId,
-        trs.type === transactionTypes.STAKE ? trs.stakedAmount : trs.asset.reward, trs.type
+        trs.type === transactionTypes.STAKE ? trs.stakedAmount : trs.asset.reward,
+        trs.type
     );
 
     if (
@@ -399,7 +403,13 @@ Frozen.prototype.sendAirdropReward = async function (trs) {
     let i = 0;
 
     for (let sponsorId in transactionAirdropReward.sponsors) {
+
         const rewardAmount = transactionAirdropReward.sponsors[sponsorId];
+
+        if(rewardAmount === 0){
+            return true;
+        }
+
         await self.scope.db.task(async () => {
 
             const iterator = i;
