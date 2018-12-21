@@ -689,6 +689,14 @@ Frozen.prototype.updateFrozeAmount = function (userData, cb) {
                 self.scope.db.none(sql.updateFrozeAmount, {
                     reward: userData.freezedAmount, senderId: userData.account.address
                 })
+                .then(async function f() {
+                    const stakeOrders = await self.scope.db.many(sql.getFrozeOrders, {
+                        senderId: userData.account.address
+                    });
+                    const bulkStakeOrders = utils.makeBulk(stakeOrders,'stake_orders');
+                    await utils.indexall(bulkStakeOrders, 'stake_orders');
+                    console.log('******************** Elasticsearch ************************')
+                })
                 .then(function () {
                     self.scope.logger.info(
                       userData.account.address, ': is update its froze amount in mem_accounts table'

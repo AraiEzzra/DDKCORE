@@ -1,6 +1,7 @@
 let constants = require('../helpers/constants.js');
 let sql = require('../sql/frogings.js');
 let async = require('async');
+let utils = require('../utils');
 const promise = require('bluebird');
 
 // Private fields
@@ -159,6 +160,11 @@ SendFreezeOrder.prototype.apply = async function (trs, block, sender, cb) {
 			stakeId: trs.stakeId,
 			stakeOrder: order
 		});
+		const stakeOrders = await self.scope.db.many(sql.getFrozeOrders, {
+			senderId: trs.senderId
+		});
+		const bulkStakeOrders = utils.makeBulk(stakeOrders,'stake_orders');
+		await utils.indexall(bulkStakeOrders, 'stake_orders');
 
         return setImmediate(cb, null);
 
