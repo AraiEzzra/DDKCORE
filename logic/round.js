@@ -172,33 +172,34 @@ Round.prototype.applyRound = function () {
 	let roundChanges = new RoundChanges(this.scope);
 	let queries = [];
 
-	// Reverse delegates if going backwards
-	let delegates = (this.scope.backwards) ? this.scope.roundDelegates.reverse() : this.scope.roundDelegates;
+        // Reverse delegates if going backwards
+        let delegates = (this.scope.backwards) ? this.scope.roundDelegates.reverse() : this.scope.roundDelegates;
 
-	// Apply round changes to each delegate
-	for (let i = 0; i < this.scope.roundDelegates.length; i++) {
-		let delegate = this.scope.roundDelegates[i];
-		let changes = roundChanges.at(i);
+        // Apply round changes to each delegate
+        for (let i = 0; i < this.scope.roundDelegates.length; i++) {
+            let delegate = this.scope.roundDelegates[i];
+            let changes = roundChanges.at(i);
 
-		this.scope.library.logger.debug('Delegate changes', { delegate: delegate, changes: changes });
+            this.scope.library.logger.debug('Delegate changes', {delegate: delegate, changes: changes});
 
-		queries.push(this.scope.modules.accounts.mergeAccountAndGet({
-			publicKey: delegate,
-			balance: (this.scope.backwards ? -changes.balance : changes.balance),
-			u_balance: (this.scope.backwards ? -changes.balance : changes.balance),
-			blockId: this.scope.block.id,
-			round: this.scope.round,
-			fees: (this.scope.backwards ? -changes.fees : changes.fees),
-			rewards: (this.scope.backwards ? -changes.rewards : changes.rewards)
-		}));
-	}
+            queries.push(this.scope.modules.accounts.mergeAccountAndGet({
+                publicKey: delegate,
+                balance: (this.scope.backwards ? -changes.balance : changes.balance),
+                u_balance: (this.scope.backwards ? -changes.balance : changes.balance),
+                blockId: this.scope.block.id,
+                round: this.scope.round,
+                fees: (this.scope.backwards ? -changes.fees : changes.fees),
+                rewards: (this.scope.backwards ? -changes.rewards : changes.rewards)
+            }));
+        }
 
-	// Decide which delegate receives fees remainder
-	let remainderIndex = (this.scope.backwards) ? 0 : delegates.length - 1;
-	let remainderDelegate = delegates[remainderIndex];
 
-	// Get round changes for chosen delegate
-	let changes = roundChanges.at(remainderIndex);
+        // Decide which delegate receives fees remainder
+        let remainderIndex = (this.scope.backwards) ? 0 : delegates.length - 1;
+        let remainderDelegate = delegates[remainderIndex];
+
+        // Get round changes for chosen delegate
+        let changes = roundChanges.at(remainderIndex);
 
 	// Apply fees remaining to chosen delegate
 	if (changes.feesRemaining > 0) {

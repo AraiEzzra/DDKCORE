@@ -374,7 +374,7 @@ __private.getOutsiders = function (scope, cb) {
 			return setImmediate(cb, err);
 		}
 		async.eachSeries(roundDelegates, function (delegate, eachCb) {
-			if (scope.roundDelegates.indexOf(delegate) === -1) {
+			if (scope.roundDelegates && scope.roundDelegates.indexOf(delegate) === -1) {
 				scope.roundOutsiders.push(modules.accounts.generateAddressByPublicKey(delegate));
 			}
 			return setImmediate(eachCb);
@@ -400,9 +400,11 @@ __private.sumRound = function (scope, cb) {
 	library.db.query(sql.summedRound, { round: scope.round, activeDelegates: constants.activeDelegates }).then(function (rows) {
 		let rewards = [];
 
-		rows[0].rewards.forEach(function (reward) {
-			rewards.push(Math.floor(reward));
-		});
+		if(rows[0].rewards) {
+            rows[0].rewards.forEach(function (reward) {
+                rewards.push(Math.floor(reward));
+            });
+        }
 
 		scope.roundFees = Math.floor(rows[0].fees);
 		scope.roundRewards = rewards;

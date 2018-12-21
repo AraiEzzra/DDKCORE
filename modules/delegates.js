@@ -570,7 +570,9 @@ Delegates.prototype.onBlockchainReady = function () {
 			});
 		}
 
-		jobsQueue.register('delegatesNextForge', nextForge, 1000);
+		if (!constants.forging.stopForging) {
+            jobsQueue.register('delegatesNextForge', nextForge, 1000);
+		}
 	});
 };
 
