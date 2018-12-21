@@ -350,7 +350,8 @@ Frozen.prototype.verify = function (trs, sender, cb) {
 Frozen.prototype.verifyAirdrop = async (trs) => {
     const airdropReward = await self.getAirdropReward(
         trs.senderId,
-        trs.type === transactionTypes.STAKE ? trs.stakedAmount : trs.asset.reward, trs.type
+        trs.type === transactionTypes.STAKE ? trs.stakedAmount : trs.asset.reward,
+        trs.type
     );
 
     if (
