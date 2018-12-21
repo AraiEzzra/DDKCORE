@@ -516,11 +516,12 @@ Vote.prototype.updateAndCheckVote = async (voteTransaction) => {
         // todo check if could change to tx
         await library.db.task(async () => {
 
-			let affectedRowIds = await library.db.any(sql.updateStakeOrder, {
+			let affectedRowIds = await library.db.many(sql.updateStakeOrder, {
 				senderId: senderId,
 				milestone: constants.froze.vTime * 60, // 2 * 60 sec = 2 mins
 				currentTime: slots.getTime()
 			});
+			
 			affectedRowIds = await affectedRowIds.map(item => item.id);
 			
 			await library.frozen.applyFrozeOrdersRewardAndUnstake(voteTransaction);
@@ -534,8 +535,7 @@ Vote.prototype.updateAndCheckVote = async (voteTransaction) => {
                     library.logger.info(senderId + ': update stake orders isvoteDone and count');
 				} catch(err) {
                     library.logger.error('elasticsearch error :' + err.message);
-				}
-                
+				}                
             }
             
         });
