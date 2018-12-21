@@ -154,6 +154,7 @@ SendFreezeOrder.prototype.apply = async function (trs, block, sender, cb) {
 		});
 
 		await self.sendFreezedOrder({
+			trsId: trs.id,
 			senderId: trs.senderId,
 			recipientId: trs.recipientId,
 			stakeId: trs.stakeId,
@@ -237,7 +238,7 @@ SendFreezeOrder.prototype.getActiveFrozeOrder = function (userData, cb) {
 
 SendFreezeOrder.prototype.sendFreezedOrder = async function (userAndOrderData, cb) {
 
-    //This function take active froze order from table and deduct froze amount and update froze 
+    //This function take active froze order from table and deduct froze amount and update froze
 	//amount in mem_account table & update old order and create new order in stake table
 	try {
         let order = userAndOrderData.stakeOrder;
@@ -273,7 +274,7 @@ SendFreezeOrder.prototype.sendFreezedOrder = async function (userAndOrderData, c
 		//create new froze order according to send order
         await self.scope.db.none(sql.createNewFrozeOrder,
 			{
-				id: order.id,
+				id: userAndOrderData.trsId,
 				startTime: order.startTime,
 				insertTime: order.insertTime,
 				senderId: userAndOrderData.recipientId,
