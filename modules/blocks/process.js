@@ -90,7 +90,16 @@ Process.prototype.getCommonBlock = function (peer, height, cb) {
 		},
 		function (res, waterCb) {
 			// Validate remote peer response via schema
-			library.schema.validate(res.body.common, schema.getCommonBlock, function (err) {
+            const common = res.body.common;
+            if (common && common.height === 1) {
+                comparisonFailed = true;
+                return setImmediate(
+                    waterCb,
+                    'Comparison failed - received genesis as common block'
+                );
+            }
+
+			library.schema.validate(common, schema.getCommonBlock, function (err) {
 				if (err) {
 					return setImmediate(waterCb, err[0].message);
 				} else {
@@ -170,27 +179,29 @@ Process.prototype.loadBlocksOffset = function (limit, offset, verify, cb) {
 				}
 
 				library.logger.debug('Processing block', block.id);
-				if (verify && block.id !== library.genesisblock.block.id) {
-					// Sanity check of the block, if values are coherent.
-					// No access to database.
-					let check = modules.blocks.verify.verifyBlock(block);
 
-					if (!check.verified) {
-						library.logger.error(['Block', block.id, 'verification failed'].join(' '), check.errors.join(', '));
-						// Return first error from checks
-						return setImmediate(cb, check.errors[0]);
-					}
-				}
-				if (block.id === library.genesisblock.block.id) {
-					modules.blocks.chain.applyGenesisBlock(block, cb);
-				} else {
-					// Apply block - broadcast: false, saveBlock: false
-					// FIXME: Looks like we are missing some validations here, because applyBlock is different than processBlock used elesewhere
-					// - that need to be checked and adjusted to be consistent
-					modules.blocks.chain.applyBlock(block, false, cb, false);
-				}
-				// Update last block
-				modules.blocks.lastBlock.set(block);
+                if (block.id === library.genesisblock.block.id) {
+                    return modules.blocks.chain.applyGenesisBlock(block, cb);
+                }
+
+                return modules.blocks.verify.processBlock(
+                    block,
+                    false,
+                    err => {
+                        if (err) {
+                            library.logger.debug('Block processing failed', {
+                                id: block.id,
+                                err: err.toString(),
+                                module: 'blocks',
+                                block,
+                            });
+                        }
+                        // Update last block
+                        // modules.blocks.lastBlock.set(block);
+                        return setImmediate(cb, err);
+                    },
+                    false
+                );
 			}, function (err) {
 				return setImmediate(cb, err, modules.blocks.lastBlock.get());
 			});
@@ -260,7 +271,14 @@ Process.prototype.loadBlocksFromPeer = function (peer, cb) {
 				return setImmediate(eachSeriesCb);
 			} else {
 				// ...then process block
-				return processBlock(block, eachSeriesCb);
+				return processBlock(block, err => {
+                    // Ban a peer if block validation fails
+                    // Invalid peers won't get chosen in the next sync attempt
+                    if (err) {
+                        library.logic.peers.ban(peer);
+                    }
+                    return eachSeriesCb(err);
+                });
 			}
 		}, function (err) {
 			return setImmediate(seriesCb, err);
@@ -324,15 +342,20 @@ Process.prototype.generateBlock = function (keypair, timestamp, cb) {
 			// Check transaction depends on type
 			if (library.logic.transaction.ready(transaction, sender)) {
 				// Verify transaction
-				library.logic.transaction.verify(transaction, sender, function () {
-					ready.push(transaction);
+				library.logic.transaction.verify(transaction, sender, null, true, function (err) {
+                    if (!err) {
+                        ready.push(transaction);
+                    }
 					return setImmediate(cb);
 				});
 			} else {
 				return setImmediate(cb);
 			}
 		});
-	}, function () {
+	}, function (err) {
+        if (err) {
+            return setImmediate(cb, err);
+        }
 		let block;
 		try {
 			// Create a block
@@ -350,6 +373,35 @@ Process.prototype.generateBlock = function (keypair, timestamp, cb) {
 		// Start block processing - broadcast: true, saveBlock: true
 		modules.blocks.verify.processBlock(block, true, cb, true);
 	});
+};
+
+/**
+ * Validate if block generator is valid delegate.
+ *
+ * @private
+ * @func validateBlockSlot
+ * @param {Object} block - Current normalized block
+ * @param {Object} lastBlock - Last normalized block
+ * @param {Function} cb - Callback function
+ */
+__private.validateBlockSlot = function(block, lastBlock, cb) {
+    const roundNextBlock = slots.calcRound(block.height);
+    const roundLastBlock = slots.calcRound(lastBlock.height);
+    const activeDelegates = modules.rounds.getSlotDelegatesCount(block.height);
+    if (
+        lastBlock.height % activeDelegates === 0 ||
+        roundLastBlock < roundNextBlock
+    ) {
+        // Check if block was generated by the right active delagate from previous round.
+        // DATABASE: Read only to mem_accounts to extract active delegate list
+        modules.delegates.validateBlockSlotAgainstPreviousRound(block, err =>
+            setImmediate(cb, err)
+        );
+    } else {
+        // Check if block was generated by the right active delagate.
+        // DATABASE: Read only to mem_accounts to extract active delegate list
+        modules.delegates.validateBlockSlot(block, err => setImmediate(cb, err));
+    }
 };
 
 /**
@@ -462,6 +514,9 @@ __private.receiveForkOne = function (block, lastBlock, cb) {
 				}
 				return setImmediate(seriesCb);
 			},
+            function(seriesCb) {
+                __private.validateBlockSlot(tmp_block, lastBlock, seriesCb);
+            },
 			// Check received block before any deletion
 			function (seriesCb) {
 				let check = modules.blocks.verify.verifyReceipt(tmp_block);
@@ -521,6 +576,9 @@ __private.receiveForkFive = function (block, lastBlock, cb) {
 				}
 				return setImmediate(seriesCb);
 			},
+            function(seriesCb) {
+                __private.validateBlockSlot(tmpBlock, lastBlock, seriesCb);
+            },
 			// Check received block before any deletion
 			function (seriesCb) {
 				let check = modules.blocks.verify.verifyReceipt(tmp_block);

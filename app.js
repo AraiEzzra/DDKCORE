@@ -99,10 +99,16 @@ if (program.log) {
 	appConfig.consoleLogLevel = program.log;
 }
 
+appConfig.loading.snapshot = null;
 if (program.snapshot) {
 	appConfig.loading.snapshot = Math.abs(
 		Math.floor(program.snapshot)
 	);
+	appConfig.api.enabled = false;
+	appConfig.peers.enabled = false;
+	appConfig.peers.list = [];
+	appConfig.broadcasts.active = false;
+	appConfig.syncing.active = false;
 }
 
 /**
