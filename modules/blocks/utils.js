@@ -379,7 +379,7 @@ Utils.prototype.aggregateBlocksReward = function (filter, cb) {
 	let params = {};
 
 	params.generatorPublicKey = filter.generatorPublicKey;
-	params.delegates = constants.activeDelegates;
+	params.delegates = Rounds.prototype.getSlotDelegatesCount();
 
 	if (filter.start !== undefined) {
 		params.start = filter.start - constants.epochTime.getTime () / 1000;

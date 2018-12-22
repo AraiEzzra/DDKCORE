@@ -118,11 +118,15 @@ module.exports = {
      *
      * @param {number} height - Height from which round is calculated
      * @returns {number} Round number
-     * @todo Add description for the params
-     *
+     * @FIXME REWRITE
      */
     calcRound(height) {
-        return Math.ceil(height / constants.activeDelegates);
+        return Math.ceil(height / (
+          height && height <= constants.MASTER_NODE_MIGRATED_BLOCK ?
+            constants.PREVIOUS_DELEGATES_COUNT
+            :
+            constants.activeDelegates
+        ));
     },
 };
 

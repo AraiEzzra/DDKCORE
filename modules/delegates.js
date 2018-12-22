@@ -1117,7 +1117,7 @@ Delegates.prototype.validateBlockSlotAgainstPreviousRound = function(
  * @todo Add description for the return value
  */
 __private.getDelegatesFromPreviousRound = function(cb) {
-    library.db.query(roundSql.getDelegatesSnapshot, { limit: constants.activeDelegates})
+    library.db.query(roundSql.getDelegatesSnapshot, { limit: Round.prototype.getSlotDelegatesCount()})
         .then(rows => {
             const delegatesPublicKeys = [];
             rows.forEach(row => {

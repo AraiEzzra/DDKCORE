@@ -8,6 +8,7 @@ let schema = require('../schema/loader.js');
 let pgp = require('pg-promise');
 let path = require('path');
 let sql = require('../sql/loader.js');
+const Rounds = require('../modules/rounds');
 
 require('colors');
 
@@ -433,7 +434,7 @@ __private.loadBlockChain = function () {
 			if (isNaN(library.config.loading.snapshot) || library.config.loading.snapshot >= round) {
 				library.config.loading.snapshot = round;
 
-				if ((count === 1) || (count % constants.activeDelegates > 0)) {
+				if ((count === 1) || (count % Rounds.prototype.getSlotDelegatesCount() > 0)) {
 					library.config.loading.snapshot = (round > 1) ? (round - 1) : 1;
 				}
 

@@ -1,6 +1,5 @@
-
-
-let constants = require('../helpers/constants.js');
+const constants = require('../helpers/constants.js');
+const Rounds = require('../modules/rounds');
 
 module.exports = {
 	enableForging: {
@@ -98,7 +97,7 @@ module.exports = {
 			limit: {
 				type: 'integer',
 				minimum: 1,
-				maximum: constants.activeDelegates
+				maximum: Rounds.prototype.getSlotDelegatesCount()
 			},
 			offset: {
 				type: 'integer',

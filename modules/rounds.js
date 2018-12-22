@@ -66,7 +66,7 @@ Rounds.prototype.calc = function (height) {
 };
 
 Rounds.prototype.getSlotDelegatesCount = (height) =>
-  height && height <= constants.MASTER_NODE_MIGRATED_BLOCK ? constants.PREVIOUS_DELEGATES_COUNT : slots.delegates ;
+  height && height <= constants.MASTER_NODE_MIGRATED_BLOCK ? constants.PREVIOUS_DELEGATES_COUNT : slots.delegates;
 
 /**
  * Deletes from `mem_round` table records based on round.
@@ -397,18 +397,18 @@ __private.getOutsiders = function (scope, cb) {
 __private.sumRound = function (scope, cb) {
 	library.logger.debug('Summing round', scope.round);
 
-	library.db.query(sql.summedRound, { round: scope.round, activeDelegates: constants.activeDelegates }).then(function (rows) {
+	library.db.one(sql.summedRound, { round: scope.round, activeDelegates: self.getSlotDelegatesCount() }).then(function (summedRound) {
 		let rewards = [];
 
-		if(rows[0].rewards) {
-            rows[0].rewards.forEach(function (reward) {
-                rewards.push(Math.floor(reward));
-            });
-        }
+		if(summedRound.rewards) {
+      summedRound.rewards.forEach(function (reward) {
+          rewards.push(Math.floor(reward));
+      });
+    }
 
-		scope.roundFees = Math.floor(rows[0].fees);
+		scope.roundFees = Math.floor(summedRound.fees);
 		scope.roundRewards = rewards;
-		scope.roundDelegates = rows[0].delegates;
+		scope.roundDelegates = summedRound.delegates;
 
 		library.logger.trace('roundFees', scope.roundFees);
 		library.logger.trace('roundRewards', scope.roundRewards);
