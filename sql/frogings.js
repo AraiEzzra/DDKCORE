@@ -34,7 +34,7 @@ let FrogingsSql = {
 
 	getfrozeOrder: 'SELECT "senderId" , "freezedAmount", "rewardCount", "nextVoteMilestone", "voteCount", "stakeId" FROM stake_orders WHERE "status"=1 AND ${currentTime} >= "nextVoteMilestone" ',
 
-	deductFrozeAmount: 'UPDATE mem_accounts SET "totalFrozeAmount" = ("totalFrozeAmount" - ${orderFreezedAmount}) WHERE "address" = ${senderId}',
+	deductFrozeAmount: 'UPDATE mem_accounts SET "totalFrozeAmount" = ("totalFrozeAmount" - ${orderFreezedAmount}), "u_totalFrozeAmount" = ("u_totalFrozeAmount" - ${orderFreezedAmount}) WHERE "address" = ${senderId}',
 
 	getFrozeOrders: 'SELECT * FROM stake_orders WHERE "senderId"=${senderId}',
 
