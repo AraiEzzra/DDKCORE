@@ -2,7 +2,7 @@ let constants = require('../helpers/constants.js');
 let sql = require('../sql/frogings.js');
 let async = require('async');
 const promise = require('bluebird');
-let utils = require('../utils');
+const utils = require('../utils');
 
 // Private fields
 let __private = {};
@@ -29,28 +29,28 @@ async function rollbackOrders(cb) {
 
 	try {
 
-		const { id, nextVoteMilestone } = await self.scope.db.one(sql.getOrderForUndo,
-			{
-				stakeId: trs.stakeId,
-				senderId: trs.recipientId
-			});
+        const {id, nextVoteMilestone} = await self.scope.db.one(sql.getOrderForUndo,
+            {
+                stakeId: trs.stakeId,
+                senderId: trs.recipientId
+            });
 
-		await self.scope.db.one(sql.updateOldOrder,
-			{
-				stakeId: trs.stakeId,
-				nextVoteMilestone: nextVoteMilestone
-			});
+        await self.scope.db.one(sql.updateOldOrder,
+            {
+                stakeId: trs.stakeId,
+                nextVoteMilestone: nextVoteMilestone
+            });
 
-		await self.scope.db.one(sql.RemoveOrder,
-			{
-				id: id,
-				senderId: trs.recipientId
-			});
+        await self.scope.db.one(sql.RemoveOrder,
+            {
+                id: id,
+                senderId: trs.recipientId
+            });
 
-		return Promise.resolve();
+        return Promise.resolve();
 
 	} catch (err) {
-		self.scope.logger.error(err.stack);
+        self.scope.logger.error(err.stack);
 		return setImmediate(cb, err.toString());
 	}
 }
@@ -95,49 +95,49 @@ SendFreezeOrder.prototype.applyUnconfirmed = function (trs, sender, cb) {
 SendFreezeOrder.prototype.undo = async function (trs, block, sender, cb) {
 	try {
 
-		//Add frozeAmount to mem_account to sender address
-		await self.scope.db.none(sql.deductFrozeAmount,
-			{
-				senderId: sender.address,
-				orderFreezedAmount: -trs.amount
-			});
+        //Add frozeAmount to mem_account to sender address
+        await self.scope.db.none(sql.deductFrozeAmount,
+            {
+                senderId: sender.address,
+                orderFreezedAmount: -trs.amount
+            });
 
-		//remove frozeAmount to mem_account to recipient address
-		await self.scope.db.none(sql.deductFrozeAmount,
-			{
-				senderId: trs.recipientId,
-				orderFreezedAmount: trs.amount
-			});
+        //remove frozeAmount to mem_account to recipient address
+        await self.scope.db.none(sql.deductFrozeAmount,
+            {
+                senderId: trs.recipientId,
+                orderFreezedAmount: trs.amount
+            });
 
-		await rollbackOrders(cb);
+        await rollbackOrders(cb);
 
-		const setAccountAndGet = promise.promisify(modules.accounts.setAccountAndGet);
-		const mergeAccountAndGet = promise.promisify(modules.accounts.mergeAccountAndGet);
+        const setAccountAndGet = promise.promisify(modules.accounts.setAccountAndGet);
+        const mergeAccountAndGet = promise.promisify(modules.accounts.mergeAccountAndGet);
 
-		await setAccountAndGet({ address: trs.recipientId });
+        await setAccountAndGet({ address: trs.recipientId });
 
-		await mergeAccountAndGet({
-			address: trs.recipientId,
-			balance: -trs.amount,
-			u_balance: -trs.amount,
-			blockId: block.id,
-			round: modules.rounds.calc(block.height)
-		});
+        await mergeAccountAndGet({
+            address: trs.recipientId,
+            balance: -trs.amount,
+            u_balance: -trs.amount,
+            blockId: block.id,
+            round: modules.rounds.calc(block.height)
+        });
 
-		return setImmediate(cb, err);
+        return setImmediate(cb, err);
 
-	} catch (err) {
-		self.scope.logger.error(err.stack);
-		return setImmediate(cb, err.toString());
+    } catch (err) {
+        self.scope.logger.error(err.stack);
+        return setImmediate(cb, err.toString());
 	}
 };
 
 SendFreezeOrder.prototype.apply = async function (trs, block, sender, cb) {
 	try {
 
-		const setAccountAndGet = promise.promisify(modules.accounts.setAccountAndGet);
+        const setAccountAndGet = promise.promisify(modules.accounts.setAccountAndGet);
 		const mergeAccountAndGet = promise.promisify(modules.accounts.mergeAccountAndGet);
-		const getActiveFrozeOrder = promise.promisify(self.getActiveFrozeOrder);
+        const getActiveFrozeOrder = promise.promisify(self.getActiveFrozeOrder);
 
 		await setAccountAndGet({ address: trs.recipientId });
 
@@ -161,10 +161,10 @@ SendFreezeOrder.prototype.apply = async function (trs, block, sender, cb) {
 			stakeOrder: order
 		});
 
-		return setImmediate(cb, null);
+        return setImmediate(cb, null);
 
 	} catch (err) {
-		return setImmediate(cb, err);
+        return setImmediate(cb, err);
 	}
 };
 
@@ -182,25 +182,25 @@ SendFreezeOrder.prototype.verify = function (trs, sender, cb) {
 		return setImmediate(cb, 'Missing recipient');
 	}
 
-	if (parseInt(trs.fee) > (parseInt(sender.balance) - parseInt(sender.totalFrozeAmount))) {
+    if (parseInt(trs.fee) > (parseInt(sender.balance) - parseInt(sender.totalFrozeAmount))) {
 		return setImmediate(cb, 'Insufficient balance');
 	}
 
-	self.getActiveFrozeOrder({
-		address: trs.senderId,
-		stakeId: trs.stakeId
-	}, function (err, order) {
+    self.getActiveFrozeOrder({
+        address: trs.senderId,
+        stakeId: trs.stakeId
+    }, function (err, order) {
 
-		if (order === null) {
-			return setImmediate(cb, `Orders not found`);
-		}
+        if (order === null ) {
+            return setImmediate(cb, `Orders not found`);
+        }
 
-		if (order.transferCount >= constants.maxTransferCount) {
-			return setImmediate(cb, `Order can be send only ${constants.maxTransferCount} times`);
+        if (order.transferCount >= constants.maxTransferCount) {
+            return setImmediate(cb, `Order can be send only ${ constants.maxTransferCount } times`);
 		} else {
-			return setImmediate(cb, null, trs);
+            return setImmediate(cb, null, trs);
 		}
-	});
+    });
 
 };
 
@@ -238,48 +238,49 @@ SendFreezeOrder.prototype.getActiveFrozeOrder = function (userData, cb) {
 
 SendFreezeOrder.prototype.sendFreezedOrder = async function (userAndOrderData, cb) {
 
-	//This function take active froze order from table and deduct froze amount and update froze 
+    //This function take active froze order from table and deduct froze amount and update froze 
 	//amount in mem_account table & update old order and create new order in stake table
 	try {
-		let order = userAndOrderData.stakeOrder;
+        let order = userAndOrderData.stakeOrder;
 
-		if (!order) {
-			throw new Error("sendFreezedOrder: Order is empty");
+        if (!order) {
+        	throw new Error("sendFreezedOrder: Order is empty");
 		}
 
-		self.scope.network.io.sockets.emit('stake/change', null);
+        self.scope.network.io.sockets.emit('stake/change', null);
 
-		//deduct froze Amount from totalFrozeAmount in mem_accounts table
-		await self.scope.db.none(sql.deductFrozeAmount,
+        //deduct froze Amount from totalFrozeAmount in mem_accounts table
+        await self.scope.db.none(sql.deductFrozeAmount,
 			{
 				senderId: userAndOrderData.senderId,
 				orderFreezedAmount: order.freezedAmount
 			});
 
-		//update total Froze amount for recipient of froze order during sending order
-		await self.scope.db.none(sql.updateFrozeAmount,
+        //update total Froze amount for recipient of froze order during sending order
+        await self.scope.db.none(sql.updateFrozeAmount,
 			{
 				senderId: userAndOrderData.recipientId,
 				reward: order.freezedAmount
 			});
 
-		//Update old freeze order
-		let updatedStakeOrderRow = await self.scope.db.one(sql.updateFrozeOrder, {
+        //Update old freeze order
+        let updatedStakeOrderRow = await self.scope.db.one(sql.updateFrozeOrder,
+			{
 				recipientId: userAndOrderData.recipientId,
 				senderId: order.senderId,
 				stakeId: userAndOrderData.stakeId
 			});
-
+		
 		let bulk = utils.makeBulk([updatedStakeOrderRow], 'stake_orders');
-		try {
-			await utils.indexall(bulk, 'stake_orders');
-			library.logger.info(order.senderId + ': updated stake order ', userAndOrderData.stakeId);
-		} catch (err) {
-			library.logger.error('elasticsearch error :' + err.message);
-		}
+ 		try {
+ 			await utils.indexall(bulk, 'stake_orders');
+ 			library.logger.info(order.senderId + ': updated stake order ', userAndOrderData.stakeId);
+ 		} catch (err) {
+ 			library.logger.error('elasticsearch error :' + err.message);
+ 		}
 
 		//create new froze order according to send order
-		await self.scope.db.none(sql.createNewFrozeOrder,
+        await self.scope.db.none(sql.createNewFrozeOrder,
 			{
 				id: order.id,
 				startTime: order.startTime,
@@ -294,7 +295,7 @@ SendFreezeOrder.prototype.sendFreezedOrder = async function (userAndOrderData, c
 			});
 
 	} catch (err) {
-		return setImmediate(cb, err);
+        return setImmediate(cb, err);
 	}
 
 };
