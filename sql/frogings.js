@@ -44,7 +44,7 @@ let FrogingsSql = {
 
 	getActiveFrozeOrder: 'SELECT * FROM stake_orders WHERE "senderId"=${senderId} AND "id"=${stakeId} AND "status"=1',
 
-	updateFrozeOrder: 'UPDATE stake_orders SET "status"=0,"recipientId"=${recipientId}, "nextVoteMilestone"=-1, "transferCount" = ("transferCount"+1) WHERE "senderId"=${senderId} AND "id"=${stakeId} AND "status"=1',
+	updateFrozeOrder: 'UPDATE stake_orders SET "status"=0,"recipientId"=${recipientId}, "nextVoteMilestone"=-1, "transferCount" = ("transferCount"+1) WHERE "senderId"=${senderId} AND "id"=${stakeId} AND "status"=1 RETURNING *',
 
 	createNewFrozeOrder: 'INSERT INTO stake_orders ("id","status","startTime","insertTime","senderId","freezedAmount","rewardCount","voteCount","nextVoteMilestone","isVoteDone","transferCount") VALUES (${id},1,${startTime},${insertTime},${senderId},${freezedAmount},${rewardCount},${voteCount},${nextVoteMilestone},${isVoteDone},$(transferCount)+1) ',
 
