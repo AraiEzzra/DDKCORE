@@ -557,21 +557,17 @@ Frozen.prototype.calculateTotalRewardAndUnstake = async function (senderId, isDo
  * @implements {Frozen#disableFrozeOrders}
  * @return {Promise} {Resolve|Reject}
  */
-Frozen.prototype.applyFrozeOrdersRewardAndUnstake = async function (voteTransaction) {
-    const senderId = voteTransaction.senderId;
-    const freezeOrders = await self.scope.db.query(sql.getActiveFrozeOrders, {
-        senderId, currentTime: slots.getTime()
-    });
-    freezeOrders.forEach((order) => {
+Frozen.prototype.applyFrozeOrdersRewardAndUnstake = async function (voteTransaction, activeOrders) {
+    activeOrders.forEach((order) => {
         order.freezedAmount = parseInt(order.freezedAmount, 10);
         order.voteCount = parseInt(order.voteCount, 10);
         order.status = parseInt(order.status, 10);
     });
     await Promise.all([
-        await self.sendRewards(freezeOrders),
+        await self.sendRewards(activeOrders),
         await self.sendAirdropReward(voteTransaction)
     ]);
-    await self.unstakeOrders(freezeOrders);
+    await self.unstakeOrders(activeOrders);
     return true;
 };
 
