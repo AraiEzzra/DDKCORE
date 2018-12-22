@@ -19,9 +19,9 @@ let async = require('async');
 let nextBonus = 0;
 let Mnemonic = require('bitcore-mnemonic');
 let mailServices = require('../helpers/postmark');
-
 // Private fields
 let modules, library, self, __private = {}, shared = {};
+let frogings_sql = require('../sql/frogings');
 
 __private.assetTypes = {};
 __private.blockReward = new BlockReward();
@@ -356,6 +356,16 @@ Accounts.prototype.isLoaded = function () {
 	return !!modules;
 };
 
+Accounts.prototype.addressExists = async function (referrer_address) {
+    let result;
+    try {
+        result = await library.db.one(sql.validateReferSource, { referSource: referrer_address });
+        return result.address > 0;
+    } catch (e) {
+        return false;
+    }
+};
+
 // Shared API
 /**
  * @todo implement API comments with apidoc.
@@ -363,10 +373,14 @@ Accounts.prototype.isLoaded = function () {
  */
 Accounts.prototype.shared = {
 	open: function (req, cb) {
-		library.schema.validate(req.body, schema.open, function (err) {
+		library.schema.validate(req.body, schema.open, async function (err) {
 			if (err) {
 				return setImmediate(cb, err[0].message);
 			}
+
+            if (req.body.referal && !await self.addressExists(req.body.referal)) {
+                return setImmediate(cb, 'Referral Address is Invalid');
+            }
 
 			__private.openAccount(req.body, function (err, account) {
 				if (!err) {
@@ -1009,7 +1023,52 @@ Accounts.prototype.shared = {
 			}).catch(function (err) {
 				return setImmediate(cb, err);
 			});
-	}
+	},
+
+    getDashboardDDKData: async function (req, cb) {
+		try {
+            const ddkCache = await cache.prototype.getJsonForKeyAsync('ddkCache');
+
+            if (ddkCache) {
+                return setImmediate(cb, null, ddkCache);
+            } else {
+                function getDDKData(t) {
+                    let promises = [
+                        t.one(frogings_sql.countStakeholders),
+                        t.one(frogings_sql.getTotalStakedAmount),
+                        t.one(sql.getTotalAccount)
+                    ];
+
+                    return t.batch(promises);
+                }
+
+                const results = await library.db.task(getDDKData);
+
+                const ddkData = await (async () => {
+					return new Promise((resolve, reject) => {
+                        Accounts.prototype.shared.getCirculatingSupply(req, function (err, data) {
+                            if (err) {
+                                reject(err);
+                            }
+
+                            resolve ({
+                                countStakeholders: results[0].count,
+                                totalDDKStaked: results[1].sum,
+                                totalAccountHolders: results[2].count,
+                                totalCirculatingSupply: data.circulatingSupply
+                            });
+
+                        });
+					});
+				})();
+
+                await cache.prototype.setJsonForKeyAsync('ddkCache', ddkData);
+                setImmediate(cb, null, ddkData);
+            }
+        } catch (err) {
+            return setImmediate(cb, err);
+		}
+    }
 };
 
 // Internal API
