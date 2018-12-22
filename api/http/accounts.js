@@ -20,7 +20,8 @@ let tokenValidator = require('../../tokenValidator');
 	- get /count
 	- get /getCirculatingSupply
 	- get /totalSupply
-	- post /migrateData 
+    - get /getDashboardDDKData
+	- post /migrateData
 	- post /existingETPSUser/validate
 	- post /verifyUserToComment
  * - Private API:
@@ -65,8 +66,9 @@ function AccountsHttpApi (accountsModule, app, logger, cache, config) {
 		'post /existingETPSUser/validate' : 'validateExistingUser',
 		'post /verifyUserToComment': 'verifyUserToComment',
 		'post /senderBalance': 'senderAccountBalance',
-		'post /getMigratedUsers': 'getMigratedUsersList'
-	});
+		'post /getMigratedUsers': 'getMigratedUsersList',
+        'get /getDashboardDDKData': 'getDashboardDDKData'
+    });
 
 	router.map(accountsModule.internal, {
 		'get /count': 'count',

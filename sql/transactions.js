@@ -25,7 +25,7 @@ let TransactionsSql = {
 
 	countList: function (params) {
 		return [
-			'SELECT COUNT(1) FROM trs_list',
+			'SELECT COUNT(1) FROM full_trs_list',
 			(params.where.length || params.owner ? 'WHERE' : ''),
 			(params.where.length ? '(' + params.where.join(' ') + ')' : ''),
 			// FIXME: Backward compatibility, should be removed after transitional period
@@ -35,7 +35,7 @@ let TransactionsSql = {
 
 	list: function (params) {
 		return [
-			'SELECT * FROM full_blocks_list',
+			'SELECT * FROM full_trs_list',
 			(params.where.length || params.owner ? 'WHERE' : ''),
 			(params.where.length ? '(' + params.where.join(' ') + ')' : ''),
 			// FIXME: Backward compatibility, should be removed after transitional period
