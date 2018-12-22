@@ -598,12 +598,13 @@ Frozen.prototype.unstakeOrders = async (orders) => {
         return o.voteCount === constants.froze.unstakeVoteCount;
     });
     await Promise.all(readyToUnstakeOrders.map(async order => {
-    await self.scope.db.none(sql.deductFrozeAmount, {
-        orderFreezedAmount: order.freezedAmount, senderId: order.senderId
-    });
-    await self.scope.db.none(sql.disableFrozeOrders, {
-        stakeId: order.stakeId
-    });
+        await self.scope.db.none(sql.deductFrozeAmount, {
+            orderFreezedAmount: order.freezedAmount, senderId: order.senderId
+        });
+        await self.scope.db.none(sql.disableFrozeOrders, {
+            stakeId: order.stakeId
+        });
+        order.status = 0;
     }));
 };
 
