@@ -2,6 +2,7 @@ let constants = require('../helpers/constants.js');
 let sql = require('../sql/frogings.js');
 let async = require('async');
 const promise = require('bluebird');
+const utils = require('../utils');
 
 // Private fields
 let __private = {};
@@ -264,12 +265,20 @@ SendFreezeOrder.prototype.sendFreezedOrder = async function (userAndOrderData, c
 			});
 
         //Update old freeze order
-        await self.scope.db.none(sql.updateFrozeOrder,
+        const updatedStakeOrderRow = await self.scope.db.one(sql.updateFrozeOrder,
 			{
 				recipientId: userAndOrderData.recipientId,
 				senderId: order.senderId,
 				stakeId: userAndOrderData.stakeId
 			});
+		
+		let bulk = utils.makeBulk([updatedStakeOrderRow], 'stake_orders');
+ 		try {
+ 			await utils.indexall(bulk, 'stake_orders');
+ 			library.logger.info(order.senderId + ': updated stake order ', userAndOrderData.stakeId);
+ 		} catch (err) {
+ 			library.logger.error('elasticsearch error :' + err.message);
+ 		}
 
 		//create new froze order according to send order
         await self.scope.db.none(sql.createNewFrozeOrder,
