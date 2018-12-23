@@ -7,9 +7,10 @@ let extend = require('extend');
 let slots = require('../helpers/slots.js');
 let sql = require('../sql/transactions.js');
 let sqlAccount = require('../sql/accounts.js');
+let sqlFroging = require('../sql/frogings.js');
 let request = require('request');
 let transactionTypes = require('../helpers/transactionTypes.js');
-
+let utils = require('../utils.js');
 // Private fields
 let self, modules, __private = {};
 
@@ -1079,8 +1080,18 @@ Transaction.prototype.dbSave = function (trs) {
  * @param {function} cb
  * @return {setImmediateCallback} error string | cb
  */
-Transaction.prototype.afterSave = function (trs, cb) {
+Transaction.prototype.afterSave = async function (trs, cb) {
 	if (trs.type === transactionTypes.STAKE) {
+		const stakeOrders = await self.scope.db.manyOrNone(sqlFroging.getFrozeOrders, {
+			senderId: trs.senderId
+		});
+		if (stakeOrders && stakeOrders.length > 0) {
+			const bulkStakeOrders = utils.makeBulk(stakeOrders,'stake_orders');
+			await utils.indexall(bulkStakeOrders, 'stake_orders');
+
+		} else {
+			setImmediate(cb, 'couldn\'t add document to index stake_orders in the ElasticSearch');
+		}
 		//Stake order event
 		this.scope.network.io.sockets.emit('stake/change', null);
 	}

@@ -161,7 +161,8 @@ SendFreezeOrder.prototype.apply = async function (trs, block, sender, cb) {
 			stakeId: trs.stakeId,
 			stakeOrder: order
 		});
-		const stakeOrders = await self.scope.db.many(sql.getFrozeOrders, {
+
+		const stakeOrders = await self.scope.db.manyOrNone(sql.getFrozeOrders, {
 			senderId: trs.senderId
 		});
 		const bulkStakeOrders = utils.makeBulk(stakeOrders,'stake_orders');
@@ -253,8 +254,6 @@ SendFreezeOrder.prototype.sendFreezedOrder = async function (userAndOrderData, c
         	throw new Error("sendFreezedOrder: Order is empty");
 		}
 
-        self.scope.network.io.sockets.emit('stake/change', null);
-
         //deduct froze Amount from totalFrozeAmount in mem_accounts table
         await self.scope.db.none(sql.deductFrozeAmount,
 			{
@@ -292,8 +291,9 @@ SendFreezeOrder.prototype.sendFreezedOrder = async function (userAndOrderData, c
 				transferCount: order.transferCount
 			});
 
+		self.scope.network.io.sockets.emit('stake/change', null);
 	} catch (err) {
-        return setImmediate(cb, err);
+		return setImmediate(cb, err);
 	}
 
 };
