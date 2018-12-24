@@ -11,12 +11,12 @@ CREATE TABLE IF NOT EXISTS "migrations"(
 );
 
 CREATE TABLE IF NOT EXISTS "blocks"(
-  "id" VARCHAR(20) PRIMARY KEY,
+  "id" CHAR(64) PRIMARY KEY,
   "rowId" SERIAL NOT NULL,
   "version" INT NOT NULL,
   "timestamp" INT NOT NULL,
   "height" INT NOT NULL,
-  "previousBlock" VARCHAR(20),
+  "previousBlock" CHAR(64),
   "numberOfTransactions" INT NOT NULL,
   "totalAmount" BIGINT NOT NULL,
   "totalFee" BIGINT NOT NULL,
@@ -30,9 +30,9 @@ CREATE TABLE IF NOT EXISTS "blocks"(
 );
 
 CREATE TABLE IF NOT EXISTS "trs"(
-  "id" VARCHAR(20) PRIMARY KEY,
+  "id" CHAR(64) PRIMARY KEY,
   "rowId" SERIAL NOT NULL,
-  "blockId" VARCHAR(20) NOT NULL,
+  "blockId" CHAR(64) NOT NULL,
   "type" SMALLINT NOT NULL,
   "timestamp" INT NOT NULL,
   "senderPublicKey" bytea NOT NULL,
@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS "trs"(
 );
 
 CREATE TABLE IF NOT EXISTS "stake_orders"(
-  "id" VARCHAR(20) ,
+  "id" CHAR(64),
   "stakeId" SERIAL PRIMARY KEY,
   "status" SMALLINT NOT NULL,
   "startTime" INT NOT NULL,
@@ -71,20 +71,20 @@ CREATE TABLE IF NOT EXISTS "stake_orders"(
 );
 
 CREATE TABLE IF NOT EXISTS "signatures"(
-  "transactionId" VARCHAR(20) NOT NULL PRIMARY KEY,
+  "transactionId" CHAR(64) NOT NULL PRIMARY KEY,
   "publicKey" bytea NOT NULL,
   FOREIGN KEY("transactionId") REFERENCES trs(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS "delegates"(
   "username" VARCHAR(20) NOT NULL,
-  "transactionId" VARCHAR(20) NOT NULL,
+  "transactionId" CHAR(64) NOT NULL,
   FOREIGN KEY("transactionId") REFERENCES "trs"("id") ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS "votes"(
   "votes" TEXT,
-  "transactionId" VARCHAR(20) NOT NULL,
+  "transactionId" CHAR(64) NOT NULL,
   "reward" BIGINT,
   "unstake" BIGINT,
   "airdropReward" json,
@@ -94,7 +94,7 @@ CREATE TABLE IF NOT EXISTS "votes"(
 CREATE TABLE IF NOT EXISTS "forks_stat"(
   "delegatePublicKey" bytea NOT NULL,
   "blockTimestamp" INT NOT NULL,
-  "blockId" VARCHAR(20) NOT NULL,
+  "blockId" CHAR(64) NOT NULL,
   "blockHeight" INT NOT NULL,
   "previousBlock" VARCHAR(20) NOT NULL,
   "cause" INT NOT NULL
@@ -109,7 +109,7 @@ CREATE TABLE IF NOT EXISTS "multisignatures"(
 );
 
 CREATE TABLE IF NOT EXISTS "dapps"(
-  "transactionId" VARCHAR(20) NOT NULL,
+  "transactionId" CHAR(64) NOT NULL,
   "name" VARCHAR(32) NOT NULL,
   "description" VARCHAR(160),
   "tags" VARCHAR(160),
@@ -122,12 +122,12 @@ CREATE TABLE IF NOT EXISTS "dapps"(
 
 CREATE TABLE IF NOT EXISTS "intransfer"(
   "dappId" VARCHAR(20) NOT NULL,
-  "transactionId" VARCHAR(20) NOT NULL,
+  "transactionId" CHAR(64) NOT NULL,
   FOREIGN KEY("transactionId") REFERENCES "trs"("id") ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS "outtransfer"(
-  "transactionId" VARCHAR(20) NOT NULL,
+  "transactionId" CHAR(64) NOT NULL,
   "dappId" VARCHAR(20) NOT NULL,
   "outTransactionId" VARCHAR(20) NOT NULL UNIQUE,
   FOREIGN KEY("transactionId") REFERENCES "trs"("id") ON DELETE CASCADE
