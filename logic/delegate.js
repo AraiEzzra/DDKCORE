@@ -152,19 +152,7 @@ Delegate.prototype.process = function (trs, sender, cb) {
  * @throws {error} If buffer fails.
  */
 Delegate.prototype.getBytes = function (trs) {
-	if (!trs.asset.delegate.username) {
-		return null;
-	}
-
-	let buf;
-
-	try {
-		buf = Buffer.from(trs.asset.delegate.username, 'utf8');
-	} catch (e) {
-		throw e;
-	}
-
-	return buf;
+    return trs.asset.delegate.username ? Buffer.from(trs.asset.delegate.username, 'utf8') : Buffer.from([]);
 };
 
 /**

@@ -1,3 +1,4 @@
+const {LENGTH, writeUInt64LE} = require('../helpers/buffer.js');
 const sql = require('../sql/referal_sql');
 let modules, library, self;
 
@@ -30,7 +31,16 @@ Referral.prototype.create = async function (data, trs) {
 };
 
 Referral.prototype.getBytes = function (trs) {
-    return null;
+    const buff = Buffer.alloc(LENGTH.DOUBLE_HEX * 15);
+
+    let offset = 0;
+    if (trs.asset && trs.asset.referrals) {
+        trs.asset.referrals.forEach((referral) => {
+            const id = parseInt(referral.slice(3), 10) || 0;
+            offset = writeUInt64LE(buff, id, offset);
+        });
+    }
+    return buff;
 };
 
 Referral.prototype.verify = function (trs, sender, cb) {

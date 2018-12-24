@@ -1,4 +1,5 @@
-
+const sodium = require('sodium-javascript');
+const BUFFER = require('../helpers/buffer.js');
 
 let crypto = require('crypto');
 let bignum = require('../helpers/bignum.js');
@@ -7,6 +8,18 @@ let BlockReward = require('../logic/blockReward.js');
 let Contract = require('../logic/contract.js');
 let constants = require('../helpers/constants.js');
 let __private = {};
+
+const BLOCK_BUFFER_SIZE
+    = BUFFER.LENGTH.UINT32 // version
+    + BUFFER.LENGTH.UINT32 // timestamp
+    + BUFFER.LENGTH.DOUBLE_HEX // previousBlock
+    + BUFFER.LENGTH.UINT32 // numberOfTransactions
+    + BUFFER.LENGTH.INT64 // totalAmount
+    + BUFFER.LENGTH.INT64 // totalFee
+    + BUFFER.LENGTH.UINT32 // payloadLength
+    + BUFFER.LENGTH.HEX // payloadHash
+    + BUFFER.LENGTH.HEX // generatorPublicKey
+;
 
 /**
  * Main Block logic.
@@ -20,15 +33,15 @@ let __private = {};
  * @return {setImmediateCallback} With `this` as data.
  */
 // Constructor
-function Block (ed, schema, transaction, cb) {
-	this.scope = {
-		ed: ed,
-		schema: schema,
-		transaction: transaction,
-	};
-	if (cb) {
-		return setImmediate(cb, null, this);
-	}
+function Block(ed, schema, transaction, cb) {
+    this.scope = {
+        ed: ed,
+        schema: schema,
+        transaction: transaction,
+    };
+    if (cb) {
+        return setImmediate(cb, null, this);
+    }
 }
 
 // Private methods
@@ -48,15 +61,15 @@ __private.Contract = new Contract();
  * @return {address} address
  */
 __private.getAddressByPublicKey = function (publicKey) {
-	let publicKeyHash = crypto.createHash('sha256').update(publicKey, 'hex').digest();
-	let temp = Buffer.alloc(8);
+    let publicKeyHash = crypto.createHash('sha256').update(publicKey, 'hex').digest();
+    let temp = Buffer.alloc(BUFFER.LENGTH.INT64);
 
-	for (let i = 0; i < 8; i++) {
-		temp[i] = publicKeyHash[7 - i];
-	}
+    for (let i = 0; i < 8; i++) {
+        temp[i] = publicKeyHash[7 - i];
+    }
 
-	let address =  'DDK' + bignum.fromBuffer(temp).toString();
-	return address;
+    let address = 'DDK' + bignum.fromBuffer(temp).toString();
+    return address;
 };
 
 // Public methods
@@ -73,59 +86,67 @@ __private.getAddressByPublicKey = function (publicKey) {
  * @returns {block} block
  */
 Block.prototype.create = function (data) {
-	let transactions = data.transactions.sort(function compare (a, b) {
-		if (a.type < b.type) { return -1; }
-		if (a.type > b.type) { return 1; }
-		if (a.amount < b.amount) { return -1; }
-		if (a.amount > b.amount) { return 1; }
-		return 0;
-	});
+    let transactions = data.transactions.sort(function compare(a, b) {
+        if (a.type < b.type) {
+            return -1;
+        }
+        if (a.type > b.type) {
+            return 1;
+        }
+        if (a.amount < b.amount) {
+            return -1;
+        }
+        if (a.amount > b.amount) {
+            return 1;
+        }
+        return 0;
+    });
 
-	let reward = 0,//changes from: __private.blockReward.calcReward(nextHeight)
-		totalFee = 0, totalAmount = 0, size = 0;
+    let reward = 0,//changes from: __private.blockReward.calcReward(nextHeight)
+        totalFee = 0, totalAmount = 0, size = 0;
 
-	let blockTransactions = [];
-	let payloadHash = crypto.createHash('sha256');
+    let blockTransactions = [];
+    let payloadHash = crypto.createHash('sha256');
 
-	for (let i = 0; i < transactions.length; i++) {
-		let transaction = transactions[i];
-		let bytes = this.scope.transaction.getBytes(transaction);
+    for (let i = 0; i < transactions.length; i++) {
+        let transaction = transactions[i];
+        let bytes = this.scope.transaction.getBytes(transaction);
 
-		if (size + bytes.length > constants.maxPayloadLength) {
-			break;
-		}
+        if (size + bytes.length > constants.maxPayloadLength) {
+            break;
+        }
 
-		size += bytes.length;
+        size += bytes.length;
 
-		totalFee += transaction.fee;
-		totalAmount += transaction.amount;
+        totalFee += transaction.fee;
+        totalAmount += transaction.amount;
 
-		blockTransactions.push(transaction);
-		payloadHash.update(bytes);
-	}
+        blockTransactions.push(transaction);
+        payloadHash.update(bytes);
+    }
 
-	let block = {
-		version: 0,
-		totalAmount: totalAmount,
-		totalFee: totalFee,
-		reward: reward,
-		payloadHash: payloadHash.digest().toString('hex'),
-		timestamp: data.timestamp,
-		numberOfTransactions: blockTransactions.length,
-		payloadLength: size,
-		previousBlock: data.previousBlock.id,
-		generatorPublicKey: data.keypair.publicKey.toString('hex'),
-		transactions: blockTransactions
-	};
-	try {
-		block.blockSignature = this.sign(block, data.keypair);
+    let block = {
+        version: 0,
+        totalAmount: totalAmount,
+        totalFee: totalFee,
+        reward: reward,
+        payloadHash: payloadHash.digest().toString('hex'),
+        timestamp: data.timestamp,
+        numberOfTransactions: blockTransactions.length,
+        payloadLength: size,
+        previousBlock: data.previousBlock.id,
+        generatorPublicKey: data.keypair.publicKey.toString('hex'),
+        transactions: blockTransactions
+    };
+    try {
+        block.blockSignature = this.sign(block, data.keypair);
 
-		block = this.objectNormalize(block);
-	} catch (e) {
-		throw e;
-	}
+        block = this.objectNormalize(block);
+    } catch (e) {
+        throw e;
+    }
 
-	return block;
+    return block;
 };
 
 /**
@@ -136,10 +157,12 @@ Block.prototype.create = function (data) {
  * @param {Object} keypair
  * @returns {signature} block signature
  */
-Block.prototype.sign = function (block, keypair) {
-	let hash = this.getHash(block);
+Block.prototype.sign = function (block, keyPair) {
+    const blockHash = this.getHash(block);
+    const sig = Buffer.alloc(sodium.crypto_sign_BYTES);
 
-	return this.scope.ed.sign(hash, keypair).toString('hex');
+    sodium.crypto_sign_detached(sig, blockHash, keyPair.privateKey);
+    return sig.toString('hex');
 };
 
 /**
@@ -150,57 +173,28 @@ Block.prototype.sign = function (block, keypair) {
  * @throws {error} If buffer fails
  */
 Block.prototype.getBytes = function (block) {
-	let size = 4 + 4 + 8 + 4 + 4 + 8 + 8 + 4 + 4 + 4 + 32 + 32 + 64;
-	let b, i;
+    const buf = Buffer.alloc(BLOCK_BUFFER_SIZE);
+    let offset = 0;
 
-	try {
-		let bb = new ByteBuffer(size, true);
-		bb.writeInt(block.version);
-		bb.writeInt(block.timestamp);
+    offset = BUFFER.writeInt32LE(buf, block.version, offset);
+    offset = BUFFER.writeInt32LE(buf, block.timestamp, offset);
 
-		if (block.previousBlock) {
-			let pb = new bignum(block.previousBlock).toBuffer({size: '8'});
+    if (block.previousBlock) {
+        buf.write(block.previousBlock, offset, BUFFER.LENGTH.DOUBLE_HEX);
+    }
+    offset += BUFFER.LENGTH.DOUBLE_HEX;
 
-			for (i = 0; i < 8; i++) {
-				bb.writeByte(pb[i]);
-			}
-		} else {
-			for (i = 0; i < 8; i++) {
-				bb.writeByte(0);
-			}
-		}
+    offset = BUFFER.writeInt32LE(buf, block.numberOfTransactions, offset);
+    offset = BUFFER.writeUInt64LE(buf, block.totalAmount, offset);
+    offset = BUFFER.writeUInt64LE(buf, block.totalFee, offset);
+    offset = BUFFER.writeInt32LE(buf, block.payloadLength, offset);
 
-		bb.writeInt(block.numberOfTransactions);
-		bb.writeLong(block.totalAmount);
-		bb.writeLong(block.totalFee);
-		bb.writeLong(block.reward);
+    buf.write(block.payloadHash, offset, BUFFER.LENGTH.HEX, 'hex');
+    offset += BUFFER.LENGTH.HEX;
 
-		bb.writeInt(block.payloadLength);
+    buf.write(block.generatorPublicKey, offset, BUFFER.LENGTH.HEX, 'hex');
 
-		let payloadHashBuffer = Buffer.from(block.payloadHash, 'hex');
-		for (i = 0; i < payloadHashBuffer.length; i++) {
-			bb.writeByte(payloadHashBuffer[i]);
-		}
-
-		let generatorPublicKeyBuffer = Buffer.from(block.generatorPublicKey, 'hex');
-		for (i = 0; i < generatorPublicKeyBuffer.length; i++) {
-			bb.writeByte(generatorPublicKeyBuffer[i]);
-		}
-
-		if (block.blockSignature) {
-			let blockSignatureBuffer = Buffer.from(block.blockSignature, 'hex');
-			for (i = 0; i < blockSignatureBuffer.length; i++) {
-				bb.writeByte(blockSignatureBuffer[i]);
-			}
-		}
-
-		bb.flip();
-		b = bb.toBuffer();
-	} catch (e) {
-		throw e;
-	}
-
-	return b;
+    return buf;
 };
 
 /**
@@ -213,43 +207,43 @@ Block.prototype.getBytes = function (block) {
  * @throws {error} catch error
  */
 Block.prototype.verifySignature = function (block) {
-	let remove = 64;
-	let res;
+    let remove = 64;
+    let res;
 
-	try {
-		let data = this.getBytes(block);
-		let data2 = Buffer.alloc(data.length - remove);
+    try {
+        let data = this.getBytes(block);
+        let data2 = Buffer.alloc(data.length - remove);
 
-		for (let i = 0; i < data2.length; i++) {
-			data2[i] = data[i];
-		}
-		let hash = crypto.createHash('sha256').update(data2).digest();
-		let blockSignatureBuffer = Buffer.from(block.blockSignature, 'hex');
-		let generatorPublicKeyBuffer = Buffer.from(block.generatorPublicKey, 'hex');
-		res = this.scope.ed.verify(hash, blockSignatureBuffer || ' ', generatorPublicKeyBuffer || ' ');
-	} catch (e) {
-		throw e;
-	}
+        for (let i = 0; i < data2.length; i++) {
+            data2[i] = data[i];
+        }
+        let hash = crypto.createHash('sha256').update(data2).digest();
+        let blockSignatureBuffer = Buffer.from(block.blockSignature, 'hex');
+        let generatorPublicKeyBuffer = Buffer.from(block.generatorPublicKey, 'hex');
+        res = this.scope.ed.verify(hash, blockSignatureBuffer || ' ', generatorPublicKeyBuffer || ' ');
+    } catch (e) {
+        throw e;
+    }
 
-	return res;
+    return res;
 };
 
 Block.prototype.dbTable = 'blocks';
 
 Block.prototype.dbFields = [
-	'id',
-	'version',
-	'timestamp',
-	'height',
-	'previousBlock',
-	'numberOfTransactions',
-	'totalAmount',
-	'totalFee',
-	'reward',
-	'payloadLength',
-	'payloadHash',
-	'generatorPublicKey',
-	'blockSignature'
+    'id',
+    'version',
+    'timestamp',
+    'height',
+    'previousBlock',
+    'numberOfTransactions',
+    'totalAmount',
+    'totalFee',
+    'reward',
+    'payloadLength',
+    'payloadHash',
+    'generatorPublicKey',
+    'blockSignature'
 ];
 
 /**
@@ -259,35 +253,35 @@ Block.prototype.dbFields = [
  * @throws {error} catch error
  */
 Block.prototype.dbSave = function (block) {
-	let payloadHash, generatorPublicKey, blockSignature;
+    let payloadHash, generatorPublicKey, blockSignature;
 
-	try {
-		payloadHash = Buffer.from(block.payloadHash, 'hex');
-		generatorPublicKey = Buffer.from(block.generatorPublicKey, 'hex');
-		blockSignature = Buffer.from(block.blockSignature, 'hex');
-	} catch (e) {
-		throw e;
-	}
+    try {
+        payloadHash = Buffer.from(block.payloadHash, 'hex');
+        generatorPublicKey = Buffer.from(block.generatorPublicKey, 'hex');
+        blockSignature = Buffer.from(block.blockSignature, 'hex');
+    } catch (e) {
+        throw e;
+    }
 
-	return {
-		table: this.dbTable,
-		fields: this.dbFields,
-		values: {
-			id: block.id,
-			version: block.version,
-			timestamp: block.timestamp,
-			height: block.height,
-			previousBlock: block.previousBlock || null,
-			numberOfTransactions: block.numberOfTransactions,
-			totalAmount: block.totalAmount,
-			totalFee: block.totalFee,
-			reward: block.reward || 0,
-			payloadLength: block.payloadLength,
-			payloadHash: payloadHash,
-			generatorPublicKey: generatorPublicKey,
-			blockSignature: blockSignature
-		}
-	};
+    return {
+        table: this.dbTable,
+        fields: this.dbFields,
+        values: {
+            id: block.id,
+            version: block.version,
+            timestamp: block.timestamp,
+            height: block.height,
+            previousBlock: block.previousBlock || null,
+            numberOfTransactions: block.numberOfTransactions,
+            totalAmount: block.totalAmount,
+            totalFee: block.totalFee,
+            reward: block.reward || 0,
+            payloadLength: block.payloadLength,
+            payloadHash: payloadHash,
+            generatorPublicKey: generatorPublicKey,
+            blockSignature: blockSignature
+        }
+    };
 };
 
 /**
@@ -308,67 +302,67 @@ Block.prototype.dbSave = function (block) {
  * @property {number} version - Minimun 0
  */
 Block.prototype.schema = {
-	id: 'Block',
-	type: 'object',
-	properties: {
-		id: {
-			type: 'string',
-			format: 'id',
-			minLength: 1,
-			maxLength: 20
-		},
-		height: {
-			type: 'integer'
-		},
-		blockSignature: {
-			type: 'string',
-			format: 'signature'
-		},
-		generatorPublicKey: {
-			type: 'string',
-			format: 'publicKey'
-		},
-		numberOfTransactions: {
-			type: 'integer'
-		},
-		payloadHash: {
-			type: 'string',
-			format: 'hex'
-		},
-		payloadLength: {
-			type: 'integer'
-		},
-		previousBlock: {
-			type: 'string',
-			format: 'id',
-			minLength: 1,
-			maxLength: 20
-		},
-		timestamp: {
-			type: 'integer'
-		},
-		totalAmount: {
-			type: 'integer',
-			minimum: 0
-		},
-		totalFee: {
-			type: 'integer',
-			minimum: 0
-		},
-		reward: {
-			type: 'integer',
-			minimum: 0
-		},
-		transactions: {
-			type: 'array',
-			uniqueItems: true
-		},
-		version: {
-			type: 'integer',
-			minimum: 0
-		}
-	},
-	required: ['blockSignature', 'generatorPublicKey', 'numberOfTransactions', 'payloadHash', 'payloadLength', 'timestamp', 'totalAmount', 'totalFee', 'reward', 'transactions', 'version']
+    id: 'Block',
+    type: 'object',
+    properties: {
+        id: {
+            type: 'string',
+            format: 'hex',
+            minLength: 1,
+            maxLength: 64
+        },
+        height: {
+            type: 'integer'
+        },
+        blockSignature: {
+            type: 'string',
+            format: 'signature'
+        },
+        generatorPublicKey: {
+            type: 'string',
+            format: 'publicKey'
+        },
+        numberOfTransactions: {
+            type: 'integer'
+        },
+        payloadHash: {
+            type: 'string',
+            format: 'hex'
+        },
+        payloadLength: {
+            type: 'integer'
+        },
+        previousBlock: {
+            type: 'string',
+            format: 'hex',
+            minLength: 1,
+            maxLength: 64
+        },
+        timestamp: {
+            type: 'integer'
+        },
+        totalAmount: {
+            type: 'integer',
+            minimum: 0
+        },
+        totalFee: {
+            type: 'integer',
+            minimum: 0
+        },
+        reward: {
+            type: 'integer',
+            minimum: 0
+        },
+        transactions: {
+            type: 'array',
+            uniqueItems: true
+        },
+        version: {
+            type: 'integer',
+            minimum: 0
+        }
+    },
+    required: ['blockSignature', 'generatorPublicKey', 'numberOfTransactions', 'payloadHash', 'payloadLength', 'timestamp', 'totalAmount', 'totalFee', 'reward', 'transactions', 'version']
 };
 
 /**
@@ -379,31 +373,31 @@ Block.prototype.schema = {
  * @throws {string|error} error message | catch error
  */
 Block.prototype.objectNormalize = function (block) {
-	let i;
+    let i;
 
-	for (i in block) {
-		if (block[i] === null || typeof block[i] === 'undefined') {
-			delete block[i];
-		}
-	}
+    for (i in block) {
+        if (block[i] === null || typeof block[i] === 'undefined') {
+            delete block[i];
+        }
+    }
 
-	let report = this.scope.schema.validate(block, Block.prototype.schema);
+    let report = this.scope.schema.validate(block, Block.prototype.schema);
 
-	if (!report) {
-		throw 'Failed to validate block schema: ' + this.scope.schema.getLastErrors().map(function (err) {
-			return err.message;
-		}).join(', ');
-	}
+    if (!report) {
+        throw 'Failed to validate block schema: ' + this.scope.schema.getLastErrors().map(function (err) {
+            return err.message;
+        }).join(', ');
+    }
 
-	try {
-		for (i = 0; i < block.transactions.length; i++) {
-			block.transactions[i] = this.scope.transaction.objectNormalize(block.transactions[i]);
-		}
-	} catch (e) {
-		throw e;
-	}
+    try {
+        for (i = 0; i < block.transactions.length; i++) {
+            block.transactions[i] = this.scope.transaction.objectNormalize(block.transactions[i]);
+        }
+    } catch (e) {
+        throw e;
+    }
 
-	return block;
+    return block;
 };
 
 /**
@@ -415,14 +409,7 @@ Block.prototype.objectNormalize = function (block) {
  * @return {string} id string
  */
 Block.prototype.getId = function (block) {
-	let hash = crypto.createHash('sha256').update(this.getBytes(block)).digest();
-	let temp = Buffer.alloc(8);
-	for (let i = 0; i < 8; i++) {
-		temp[i] = hash[7 - i];
-	}
-
-	let id = new bignum.fromBuffer(temp).toString();
-	return id;
+    return crypto.createHash('sha256').update(this.getBytes(block)).digest('hex');
 };
 
 /**
@@ -433,7 +420,7 @@ Block.prototype.getId = function (block) {
  * @return {hash} sha256 crypto hash
  */
 Block.prototype.getHash = function (block) {
-	return crypto.createHash('sha256').update(this.getBytes(block)).digest();
+    return crypto.createHash('sha256').update(this.getBytes(block)).digest();
 };
 
 /**
@@ -443,7 +430,7 @@ Block.prototype.getHash = function (block) {
  * @todo delete unused input parameter
  */
 Block.prototype.calculateFee = function () {
-	return constants.fees.send;
+    return constants.fees.send;
 };
 
 /**
@@ -453,30 +440,30 @@ Block.prototype.calculateFee = function () {
  * @return {null|block} blcok object
  */
 Block.prototype.dbRead = function (raw) {
-	if (!raw.b_id) {
-		return null;
-	} else {
-		let block = {
-			id: raw.b_id,
-			version: parseInt(raw.b_version),
-			timestamp: parseInt(raw.b_timestamp),
-			height: parseInt(raw.b_height),
-			previousBlock: raw.b_previousBlock,
-			numberOfTransactions: parseInt(raw.b_numberOfTransactions),
-			totalAmount: parseInt(raw.b_totalAmount),
-			totalFee: parseInt(raw.b_totalFee),
-			reward: parseInt(raw.b_reward),
-			payloadLength: parseInt(raw.b_payloadLength),
-			payloadHash: raw.b_payloadHash,
-			generatorPublicKey: raw.b_generatorPublicKey,
-			generatorId: __private.getAddressByPublicKey(raw.b_generatorPublicKey),
-			blockSignature: raw.b_blockSignature,
-			confirmations: parseInt(raw.b_confirmations),
-			username: raw.m_username
-		};
-		block.totalForged = new bignum(block.totalFee).plus(new bignum(block.reward)).toString();
-		return block;
-	}
+    if (!raw.b_id) {
+        return null;
+    } else {
+        let block = {
+            id: raw.b_id,
+            version: parseInt(raw.b_version),
+            timestamp: parseInt(raw.b_timestamp),
+            height: parseInt(raw.b_height),
+            previousBlock: raw.b_previousBlock,
+            numberOfTransactions: parseInt(raw.b_numberOfTransactions),
+            totalAmount: parseInt(raw.b_totalAmount),
+            totalFee: parseInt(raw.b_totalFee),
+            reward: parseInt(raw.b_reward),
+            payloadLength: parseInt(raw.b_payloadLength),
+            payloadHash: raw.b_payloadHash,
+            generatorPublicKey: raw.b_generatorPublicKey,
+            generatorId: __private.getAddressByPublicKey(raw.b_generatorPublicKey),
+            blockSignature: raw.b_blockSignature,
+            confirmations: parseInt(raw.b_confirmations),
+            username: raw.m_username
+        };
+        block.totalForged = new bignum(block.totalFee).plus(new bignum(block.reward)).toString();
+        return block;
+    }
 };
 
 // Export

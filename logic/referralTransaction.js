@@ -1,5 +1,4 @@
 'use strict';
-
 let constants = require('../helpers/constants.js');
 
 // Private fields
