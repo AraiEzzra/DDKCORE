@@ -1068,7 +1068,19 @@ Accounts.prototype.shared = {
         } catch (err) {
             return setImmediate(cb, err);
 		}
-    }
+	},
+	
+	checkAccountExists: function(req, cb) {
+		library.schema.validate(req.body, schema.checkAccountExists, async function(err) {
+			if (err) {
+				return setImmediate(cb, err[0].message);
+			}
+            if (!await self.addressExists(req.body.address)) {
+				return setImmediate(cb, 'Address is Invalid');
+			}
+			return setImmediate(cb, null, { success: true });
+		});
+	}
 };
 
 // Internal API
