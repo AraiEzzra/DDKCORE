@@ -38,7 +38,8 @@ function FrogingsHttpApi (frogingsModule, app, logger, cache) {
 		'post /getAllActiveOrders' : 'getAllActiveFreezeOrders',
 		'get /countStakeholders' : 'countStakeholders',
 		'get /getTotalDDKStaked' : 'totalDDKStaked'	,
-		'post /getMyDDKFrozen' : 'getMyDDKFrozen'
+		'post /getMyDDKFrozen' : 'getMyDDKFrozen',
+		'get /getRewardHistory' : 'getRewardHistory'
 	});
 
 	httpApi.registerEndpoint('/api/frogings', app, router, frogingsModule.isLoaded);
