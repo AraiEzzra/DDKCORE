@@ -736,7 +736,7 @@ Transactions.prototype.shared = {
 					return setImmediate(cb, 'Transaction not found');
 				}
 
-				if (transaction.type === 3) {
+				if (transaction.type === transactionTypes.VOTE) {
 					__private.getVotesById(transaction, function (err, transaction) {
 						return setImmediate(cb, null, { transaction: transaction });
 					});
