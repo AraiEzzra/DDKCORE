@@ -6,7 +6,7 @@
   "payloadLength": 6159,
   "version": 1,
   "timestamp": 0,
-  "previousBlock": "7807109686729042739",
+  "previousBlock": null,
   "numberOfTransactions": 25,
   "payloadHash": "062439070c3134dc3798ca315779071820206b892571395a17bfdc1ade748112",
   "generatorPublicKey": "589884f47404ee0f0a46236f30e17cdc3d36501a1d03701a07140a526d3d79b0",
