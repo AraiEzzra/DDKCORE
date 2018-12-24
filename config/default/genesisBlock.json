@@ -1,14 +1,14 @@
 {
-  "version": 0,
-  "totalAmount": 4500000000000000,
+  "version": 1,
+  "totalAmount": 4887000000000000,
   "totalFee": 0,
   "reward": 0,
   "payloadHash": "da3ed6a45429278bac2666961289ca17ad86595d33b31037615d4b8e8f158bba",
   "timestamp": 0,
   "numberOfTransactions": 25,
-  "payloadLength": 44412,
+  "payloadLength": 6145,
   "previousBlock": null,
-  "generatorPublicKey": "f50fe1582173dc30869ca3357daeec3ec3608a7517c0ea388c50c5e3afcc8041",
+  "generatorPublicKey": "589884f47404ee0f0a46236f30e17cdc3d36501a1d03701a07140a526d3d79b0",
   "transactions": [
     {
       "type": 0,
@@ -17,7 +17,7 @@
       "timestamp": 0,
       "recipientId": "DDK4995063339468361088",
       "senderId": "DDK00000000000000000000",
-      "senderPublicKey": "f50fe1582173dc30869ca3357daeec3ec3608a7517c0ea388c50c5e3afcc8041",
+      "senderPublicKey": "589884f47404ee0f0a46236f30e17cdc3d36501a1d03701a07140a526d3d79b0",
       "signature": "c1e1e02f5128fa79e913356b5db18dce1626f5f740416431fe669345c5669497b974bc16d978a83142ed36cc7d2f6a9b764e609b24372f412fea8ecd476f9507",
       "id": "2525816115293971625",
       "stakedAmount": 0,
@@ -419,6 +419,6 @@
     }
   ],
   "height": 1,
-  "blockSignature": "a47d07d3a8d8024eb44672bc6d07cdcd1cd03803d9612b7b10c10d5a844fb8f6ed11fab5159b6d9826b7302c3d3f5d7d29d13b40e6fe59c9374f4ec94af4eb0f",
-  "id": "7807109686729042739"
+  "blockSignature": "53c7113cae3b2a933c884beabda9dc6776c68e88d7927c55c8e41fd2936bf7d8c3a6155939e253a59a02b3aa89056650ff005a58cc59e63671f8ff4293245d03",
+  "id": "132673da4ee4325f15227677696814a14e7555ccf629eddf6d13276a9f6fa750"
 }
