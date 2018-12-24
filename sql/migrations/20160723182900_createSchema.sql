@@ -104,7 +104,7 @@ CREATE TABLE IF NOT EXISTS "multisignatures"(
   "min" INT NOT NULL,
   "lifetime" INT NOT NULL,
   "keysgroup" TEXT NOT NULL,
-  "transactionId" VARCHAR(20) NOT NULL,
+  "transactionId" CHAR(64) NOT NULL,
   FOREIGN KEY("transactionId") REFERENCES "trs"("id") ON DELETE CASCADE
 );
 
