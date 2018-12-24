@@ -14,6 +14,7 @@ let Transfer = require('../logic/transfer.js');
 let ReferTransfer = require('../logic/referralTransaction.js');
 let slots = require('../helpers/slots');
 let getCorrectTypeForFront = require('api/http/transactionTypeMapper');
+let getCorrectTypeForBack = require('api/http/transactionTypeMapper');
 
 // Private fields
 let __private = {};
@@ -236,6 +237,10 @@ __private.list = function (filter, cb) {
 						}
 					}
 				}
+				
+				for (let i = 0; i < transactions.length; i++){
+					transactions[i].type = getCorrectTypeForFront(transactions[i].type);
+				}
 	
 				let data = {
 					transactions: transactions,
@@ -272,6 +277,7 @@ __private.getById = function (id, cb) {
 
 		let transacton = library.logic.transaction.dbRead(rows[0]);
 
+        transaction.type = getCorrectTypeForFront(transaction.type);
 		return setImmediate(cb, null, transacton);
 	}).catch(function (err) {
 		library.logger.error(err.stack);
@@ -303,9 +309,10 @@ __private.getVotesById = function (transaction, cb) {
 				deleted.push(votes[i].substring(1));
 			}
 		}
-
 		transaction.votes = { added: added, deleted: deleted };
 
+		transaction.type = getCorrectTypeForFront(transaction.type);
+		
 		return setImmediate(cb, null, transaction);
 	}).catch(function (err) {
 		library.logger.error(err.stack);
@@ -333,6 +340,7 @@ __private.getPooledTransaction = function (method, req, cb) {
 			return setImmediate(cb, 'Transaction not found');
 		}
 
+        transaction.type = getCorrectTypeForFront(transaction.type);
 		return setImmediate(cb, null, { transaction: transaction });
 	});
 };
@@ -358,11 +366,13 @@ __private.getPooledTransactions = function (method, req, cb) {
 		if (req.body.senderPublicKey || req.body.address) {
 			for (i = 0; i < transactions.length; i++) {
 				if (transactions[i].senderPublicKey === req.body.senderPublicKey || transactions[i].recipientId === req.body.address) {
+					transactions[i].type = getCorrectTypeForFront(transactions[i].type);
 					toSend.push(transactions[i]);
 				}
 			}
 		} else {
 			for (i = 0; i < transactions.length; i++) {
+                transactions[i].type = getCorrectTypeForFront(transactions[i].type);
 				toSend.push(transactions[i]);
 			}
 		}
@@ -531,6 +541,8 @@ Transactions.prototype.undo = function (transaction, block, sender, cb) {
  */
 Transactions.prototype.applyUnconfirmed = function (transaction, sender, cb) {
 	library.logger.debug('Applying unconfirmed transaction', transaction.id);
+	
+	transaction.type = getCorrectTypeForBack(transaction.type);
 
 	if (!sender && transaction.blockId !== library.genesisblock.block.id) {
 		return setImmediate(cb, 'Invalid block id');
@@ -563,6 +575,8 @@ Transactions.prototype.applyUnconfirmed = function (transaction, sender, cb) {
  */
 Transactions.prototype.undoUnconfirmed = function (transaction, cb) {
 	library.logger.debug('Undoing unconfirmed transaction', transaction.id);
+
+    transaction.type = getCorrectTypeForBack(transaction.type);
 
 	modules.accounts.getAccount({ publicKey: transaction.senderPublicKey }, function (err, sender) {
 		if (err) {
@@ -717,6 +731,10 @@ Transactions.prototype.shared = {
 					if (err) {
 						return setImmediate(waterCb, 'Failed to get transactions: ' + err);
 					} else {
+						const transactions = data.transactions;
+                        for (i = 0; i < transactions.length; i++) {
+                            transactions[i].type = getCorrectTypeForFront(transactions[i].type); 
+                        }
 						return setImmediate(waterCb, null, { transactions: data.transactions, count: data.count });
 					}
 				});
@@ -739,7 +757,9 @@ Transactions.prototype.shared = {
 
 				if (transaction.type === transactionTypes.VOTE) {
 					__private.getVotesById(transaction, function (err, transaction) {
+						
                         transaction.type = getCorrectTypeForFront(transaction.type);
+                        
 						return setImmediate(cb, null, { transaction: transaction });
 					});
 				} else {

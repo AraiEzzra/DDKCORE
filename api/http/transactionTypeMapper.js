@@ -1,9 +1,9 @@
 
 const transactionType = require('../../helpers/transactionTypes');
 
-function getCorrectTypeForBack(frontType) {
+const typeMap = new Map();
 
-    const typeMap = new Map();
+function getCorrectTypeForBack(frontType) {
 
     typeMap.set(-1, transactionType.REFERRAL);
     typeMap.set(0, transactionType.SEND);
@@ -25,9 +25,9 @@ function getCorrectTypeForBack(frontType) {
 
 module.exports = getCorrectTypeForBack(frontType);
 
-function getCorrectTypeForFront(backType) {
+const typeMap = new Map();
 
-    const typeMap = new Map();
+function getCorrectTypeForFront(backType) {
 
     typeMap.set(transactionType.REFERRAL, -1);
     typeMap.set(transactionType.SEND, 0);
