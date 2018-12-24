@@ -15,20 +15,20 @@
  * @returns {Object}
 */
 module.exports = {
-	REFERRAL: -1,
-	SEND: 0,
-	SIGNATURE: 1,
-	DELEGATE: 2,
-	VOTE: 3,
-	MULTI: 4,
-	DAPP: 5,
-	IN_TRANSFER: 6,
-	OUT_TRANSFER: 7,
-	STAKE: 8,
-	REWARD: 9,
-	SENDSTAKE : 10,
-	REFER	:	11,
-	MIGRATION : 12
+	REFERRAL: 0,
+	SEND: 1,
+	SIGNATURE: 2,
+	DELEGATE: 3,
+	VOTE: 4,
+	MULTI: 5,
+	DAPP: 6,
+	IN_TRANSFER: 7,
+	OUT_TRANSFER: 8,
+	STAKE: 9,
+	REWARD: 10,
+	SENDSTAKE : 11,
+	REFER	:	12,
+	MIGRATION : 13
 };
 
 /*************************************** END OF FILE *************************************/

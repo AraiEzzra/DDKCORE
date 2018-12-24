@@ -13,6 +13,7 @@ let transactionTypes = require('../helpers/transactionTypes.js');
 let Transfer = require('../logic/transfer.js');
 let ReferTransfer = require('../logic/referralTransaction.js');
 let slots = require('../helpers/slots');
+let getCorrectTypeForFront = require('api/http/transactionTypeMapper');
 
 // Private fields
 let __private = {};
@@ -738,9 +739,11 @@ Transactions.prototype.shared = {
 
 				if (transaction.type === transactionTypes.VOTE) {
 					__private.getVotesById(transaction, function (err, transaction) {
+                        transaction.type = getCorrectTypeForFront(transaction.type);
 						return setImmediate(cb, null, { transaction: transaction });
 					});
 				} else {
+                    transaction.type = getCorrectTypeForFront(transaction.type);
 					return setImmediate(cb, null, { transaction: transaction });
 				}
 			});
