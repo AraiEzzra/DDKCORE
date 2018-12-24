@@ -7,7 +7,7 @@ let Accounts = {
 	findActiveStakeAmount: '(SELECT "startTime" AS "value" FROM stake_orders where "senderId" = ${senderId} ORDER BY "startTime" DESC LIMIT 1) UNION ALL (SELECT SUM("freezedAmount") as "value" FROM stake_orders WHERE "senderId" = ${senderId} AND "status" = 1);',
 
 	findActiveStake: 'SELECT * FROM stake_orders WHERE "senderId" = ${senderId} AND "status" = 1',
-  
+
 	findGroupBonus: 'SELECT "group_bonus", "pending_group_bonus" FROM mem_accounts WHERE "address"=${senderId}',
 
 	findDirectSponsor: 'SELECT address FROM referals WHERE level[1] = ${introducer}',
@@ -23,7 +23,7 @@ let Accounts = {
 	getCurrentUnmined : 'SELECT "balance" FROM mem_accounts where "address"=${address}',
 
 	checkAlreadyMigrated : 'SELECT "isMigrated" FROM mem_accounts where "name"=${username}',
-  
+
 	updateUserInfo : 'UPDATE mem_accounts SET "balance" = ${balance},"u_balance"=${balance},"email" = ${email}, "phoneNumber" = ${phone}, "country" = ${country}, "name" = ${username}, "totalFrozeAmount"=${totalFrozeAmount}, "isMigrated" = 1, "group_bonus" = ${group_bonus} WHERE "address" = ${address}',
 
 	validateExistingUser: 'SELECT * FROM etps_user  WHERE  "username"=${username} AND "password"=${password}',
@@ -38,9 +38,9 @@ let Accounts = {
 
 	totalFrozeAmount: 'SELECT sum("freezedAmount") FROM stake_orders WHERE "id"=${account_id} and "status"=1',
 
-	updateStakeOrder: 'UPDATE stake_orders SET "voteCount"="voteCount"+1, "nextVoteMilestone"=${currentTime}+${milestone} WHERE "senderId"=${senderId} AND "status"=1 AND ( "nextVoteMilestone" = 0 OR ${currentTime} >= "nextVoteMilestone") RETURNING stake_orders.id',
-	
-	GetOrders: 'SELECT * FROM stake_orders WHERE "id"= ANY(${affectedRowIds})',
+    updateStakeOrder: 'UPDATE stake_orders SET "voteCount"="voteCount"+1, "nextVoteMilestone"=${currentTime}+${milestone} WHERE "senderId"=${senderId} AND "status"=1 AND ( "nextVoteMilestone" = 0 OR ${currentTime} >= "nextVoteMilestone") returning *',
+
+    GetOrders: 'SELECT * FROM stake_orders WHERE "senderId"=${senderId} AND "status" = 1',
 
     undoUpdateStakeOrder: 'UPDATE stake_orders SET "voteCount"="voteCount"-1, "nextVoteMilestone"="nextVoteMilestone"-${milestone} WHERE "senderId"=${senderId} AND "status"=1 AND ${currentTime} >= "nextVoteMilestone"',
 

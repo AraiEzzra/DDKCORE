@@ -390,19 +390,19 @@ Frogings.prototype.shared = {
 		let params = {};
 		if (req.body.limit) {
 			params.limit = req.body.limit;
-		}else{
+		} else {
 			params.limit = 5;
 		}
 
 		if (req.body.offset) {
 			params.offset = req.body.offset;
-		}else{
+		} else {
 			params.offset = 0;
 		}
 
 		params.senderId = req.body.senderId;
 
-		library.db.query(sql.getStakeRewardHistory, {senderId:params.senderId, offset:params.offset, limit:params.limit})
+		library.db.query(sql.getStakeRewardHistory, { senderId: params.senderId, offset: params.offset, limit: params.limit })
 			.then(function (row) {
 				return setImmediate(cb, null, {
 					rewardHistory: row,
