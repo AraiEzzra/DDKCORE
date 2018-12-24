@@ -315,7 +315,7 @@ TransactionPool.prototype.addQueuedTransaction = function (transaction) {
 };
 
 /**
- * Removes id from queued index and transactions. 
+ * Removes id from queued index and transactions.
  * @param {string} id
  */
 TransactionPool.prototype.removeQueuedTransaction = function (id) {
@@ -348,7 +348,7 @@ TransactionPool.prototype.addMultisignatureTransaction = function (transaction) 
 };
 
 /**
- * Removes id from multisignature index and transactions. 
+ * Removes id from multisignature index and transactions.
  * @param {string} id
  */
 TransactionPool.prototype.removeMultisignatureTransaction = function (id) {
@@ -680,7 +680,7 @@ __private.processVerifyTransaction = function (transaction, broadcast, cb) {
 	if (!transaction) {
 		return setImmediate(cb, 'Missing transaction');
 	}
-	
+
 	async.waterfall([
 		function setAccountAndGet (waterCb) {
 			modules.accounts.setAccountAndGet({publicKey: transaction.senderPublicKey}, waterCb);
@@ -731,7 +731,7 @@ __private.processVerifyTransaction = function (transaction, broadcast, cb) {
 			}
 		},
 		function verifyTransaction (sender, waterCb) {
-			library.logic.transaction.verify(transaction, sender, null, true, function (err) {
+			library.logic.transaction.verify(transaction, sender, undefined, true, function (err) {
 				if (err) {
 					return setImmediate(waterCb, err);
 				} else {

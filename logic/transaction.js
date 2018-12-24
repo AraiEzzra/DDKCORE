@@ -337,7 +337,7 @@ Transaction.prototype.checkConfirmed = function (trs, cb) {
  *  modify checkbalance according to froze amount avaliable to user
  */
 Transaction.prototype.checkBalance = function (amount, balance, trs, sender) {
-	
+
 	let totalAmountWithFrozeAmount = trs.type === transactionTypes.SENDSTAKE ?
 		new bignum(amount)
 		:
@@ -433,18 +433,18 @@ Transaction.prototype.process = function (trs, sender, requester, cb) {
 	}.bind(this));
 };
 
-Transaction.prototype.getAccountStatus = function(trs, cb) {	
-	this.scope.db.one(sqlAccount.checkAccountStatus, { 
-		senderId: trs.senderId 
-	}).then(function (row) {		
-		if (row.status === 0) {	 
+Transaction.prototype.getAccountStatus = function(trs, cb) {
+	this.scope.db.one(sqlAccount.checkAccountStatus, {
+		senderId: trs.senderId
+	}).then(function (row) {
+		if (row.status === 0) {
 			return setImmediate(cb,'Invalid transaction : account disabled');
-		} 			 
+		}
 		return setImmediate(cb, null, row.status);
-	}).catch(function (err) {		 
-		this.scope.logger.error(err.stack);	 
-		return setImmediate(cb, 'Transaction#checkAccountStatus error');	
-	});	
+	}).catch(function (err) {
+		this.scope.logger.error(err.stack);
+		return setImmediate(cb, 'Transaction#checkAccountStatus error');
+	});
 };
 
 /**
@@ -459,8 +459,8 @@ Transaction.prototype.getAccountStatus = function(trs, cb) {
  * @param {function} cb
  * @return {setImmediateCallback} validation errors | trs
  */
-Transaction.prototype.verify = function (trs, sender, requester, checkExists, cb) {
-	let valid = false;	
+Transaction.prototype.verify = function (trs, sender, requester = {}, checkExists, cb) {
+	let valid = false;
 	let err = null;
     if (typeof checkExists === 'function') {
         cb = checkExists;
@@ -468,10 +468,10 @@ Transaction.prototype.verify = function (trs, sender, requester, checkExists, cb
     } else if (typeof requester === 'function') {
 		cb = requester;
         requester = {};
-	}	
-	// Check sender	
-	if (!sender) {		
-		return setImmediate(cb, 'Missing sender');	
+	}
+	// Check sender
+	if (!sender) {
+		return setImmediate(cb, 'Missing sender');
 	}
 
 	// Check transaction type
@@ -615,7 +615,7 @@ Transaction.prototype.verify = function (trs, sender, requester, checkExists, cb
 			}
 		}
 	}
-	
+
 	let fee = __private.types[trs.type].calculateFee.call(this, trs, sender) || 0;
 	if (
 		(trs.type !== transactionTypes.MIGRATION && trs.type !== transactionTypes.REFERRAL) &&
@@ -638,7 +638,7 @@ Transaction.prototype.verify = function (trs, sender, requester, checkExists, cb
 	} else {
 		amount = new bignum(trs.amount.toString());
 	}
-	
+
 	let senderBalance = this.checkBalance(amount, 'balance', trs, sender);
 
 	if (senderBalance.exceeded) {
@@ -651,7 +651,7 @@ Transaction.prototype.verify = function (trs, sender, requester, checkExists, cb
 	}
 
     const verifyTransactionTypes = (transaction, sender, verifyTransactionTypesCb) => {
-        __private.types[trs.type].verify.call(this, trs, sender, function (err) {
+		__private.types[trs.type].verify.call(this, transaction, sender, function (err) {
             if (err) {
                 return setImmediate(verifyTransactionTypesCb, err);
             }
@@ -660,7 +660,7 @@ Transaction.prototype.verify = function (trs, sender, requester, checkExists, cb
     };
 
     if (checkExists) {
-        this.checkConfirmed(transaction, (checkConfirmedErr, isConfirmed) => {
+		this.checkConfirmed(trs, (checkConfirmedErr, isConfirmed) => {
             if (checkConfirmedErr) {
                 return setImmediate(cb, checkConfirmedErr);
             }
@@ -668,14 +668,14 @@ Transaction.prototype.verify = function (trs, sender, requester, checkExists, cb
             if (isConfirmed) {
                 return setImmediate(
                     cb,
-                    `Transaction is already confirmed: ${transaction.id}`
+					`Transaction is already confirmed: ${trs.id}`
                 );
             }
 
-            verifyTransactionTypes(transaction, sender, cb);
+			verifyTransactionTypes(trs, sender, cb);
         });
     } else {
-        verifyTransactionTypes(transaction, sender, cb);
+		verifyTransactionTypes(trs, sender, cb);
     }
 };
 
@@ -1309,7 +1309,7 @@ Transaction.prototype.objectNormalize = function (trs) {
 		var report = this.scope.schema.validate(trs, Transaction.prototype.Referschema);
 	else
 		var report = this.scope.schema.validate(trs, Transaction.prototype.schema);
-		
+
 	if (!report) {
 		console.log(trs);
 		throw 'Failed to validate transaction schema: ' + this.scope.schema.getLastErrors().map(function (err) {
@@ -1389,7 +1389,7 @@ Transaction.prototype.bindModules = function (__modules) {
 	};
 };
 
-// call add transaction API 
+// call add transaction API
 Transaction.prototype.sendTransaction = function (data, cb) {
 
 	let port = this.scope.config.app.port;

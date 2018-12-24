@@ -71,7 +71,7 @@ __private.checkTransaction = function (block, transaction, checkExists, cb) {
 		function verifyTransaction(sender, waterCb) {
 			// Check if transaction id valid against database state (mem_* tables).
 			// DATABASE: read only
-			library.logic.transaction.verify(transaction, sender, null, checkExists, waterCb);
+            library.logic.transaction.verify(transaction, sender, undefined, checkExists, waterCb);
 		}
 	], function (err) {
         if (err && err.match(/Transaction is already confirmed/)) {
