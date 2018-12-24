@@ -101,22 +101,14 @@ Referral.prototype.dbFields = [
 ];
 
 Referral.prototype.dbSave = function (trs) {
-    library.db.oneOrNone(sql.referLevelChain, {
-        address: trs.recipientId,
-    }).then(referral => {
-        if (referral) {
-            return null;
+    return {
+        table: this.dbTable,
+        fields: this.dbFields,
+        values: {
+            address: trs.recipientId,
+            level: trs.asset.referrals.length ? `{${trs.asset.referrals.toString()}}` : null,
         }
-
-        return {
-            table: this.dbTable,
-            fields: this.dbFields,
-            values: {
-                address: trs.recipientId,
-                level: trs.asset.referrals.length ? `{${trs.asset.referrals.toString()}}` : null,
-            }
-        };
-    });
+    };
 };
 
 Referral.prototype.ready = function () {
