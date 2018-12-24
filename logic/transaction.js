@@ -455,14 +455,19 @@ Transaction.prototype.getAccountStatus = function(trs, cb) {
  * @param {transaction} trs
  * @param {account} sender
  * @param {account} requester
+ * @param  {boolean} checkExists - Check if transaction already exists in database
  * @param {function} cb
  * @return {setImmediateCallback} validation errors | trs
  */
-Transaction.prototype.verify = function (trs, sender, requester, cb) {
+Transaction.prototype.verify = function (trs, sender, requester, checkExists, cb) {
 	let valid = false;	
-	let err = null;	
-	if (typeof requester === 'function') {		
-		cb = requester;	
+	let err = null;
+    if (typeof checkExists === 'function') {
+        cb = checkExists;
+        checkExists = false;
+    } else if (typeof requester === 'function') {
+		cb = requester;
+        requester = {};
 	}	
 	// Check sender	
 	if (!sender) {		
@@ -645,15 +650,33 @@ Transaction.prototype.verify = function (trs, sender, requester, cb) {
 		return setImmediate(cb, 'Invalid transaction timestamp. Timestamp is in the future');
 	}
 
-	// Call verify on transaction type
-	__private.types[trs.type].verify.call(this, trs, sender, function (err) {
-		if (err) {
-			return setImmediate(cb, err);
-		} else {
-			// Check for already confirmed transaction
-			return self.checkConfirmed(trs, cb);
-		}
-	});
+    const verifyTransactionTypes = (transaction, sender, verifyTransactionTypesCb) => {
+        __private.types[trs.type].verify.call(this, trs, sender, function (err) {
+            if (err) {
+                return setImmediate(verifyTransactionTypesCb, err);
+            }
+            return setImmediate(verifyTransactionTypesCb);
+        });
+    };
+
+    if (checkExists) {
+        this.checkConfirmed(transaction, (checkConfirmedErr, isConfirmed) => {
+            if (checkConfirmedErr) {
+                return setImmediate(cb, checkConfirmedErr);
+            }
+
+            if (isConfirmed) {
+                return setImmediate(
+                    cb,
+                    `Transaction is already confirmed: ${transaction.id}`
+                );
+            }
+
+            verifyTransactionTypes(transaction, sender, cb);
+        });
+    } else {
+        verifyTransactionTypes(transaction, sender, cb);
+    }
 };
 
 /**

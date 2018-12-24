@@ -111,7 +111,19 @@ module.exports = {
 
 	roundTime: function (date) {
 		return Math.floor(date.getTime() / 1000) * 1000;
-	}
+	},
+
+    /**
+     * Calculates round number from the given height.
+     *
+     * @param {number} height - Height from which round is calculated
+     * @returns {number} Round number
+     * @todo Add description for the params
+     *
+     */
+    calcRound(height) {
+        return Math.ceil(height / constants.activeDelegates);
+    },
 };
 
 /*************************************** END OF FILE *************************************/
