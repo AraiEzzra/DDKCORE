@@ -259,26 +259,26 @@ __private.checkDelegates = function (publicKey, votes, state, cb) {
 			}
 
 
-      // FIXME
-      // https://trello.com/c/wh9i1ire/135-failed-to-remove-vote
-			// if (math === '-' && (delegates === null || delegates.indexOf(publicKey) === -1)) {
-			// 	return setImmediate(cb, 'Failed to remove vote, account has not voted for this delegate');
-			// }
+			// FIXME
+			// https://trello.com/c/wh9i1ire/135-failed-to-remove-vote
+			if (math === '-' && (delegates === null || delegates.indexOf(publicKey) === -1)) {
+				return setImmediate(cb, 'Failed to remove vote, account has not voted for this delegate');
+			}
 
 			modules.accounts.getAccount({ publicKey: publicKey, isDelegate: 1 }, function (err, account) {
 				if (err) {
 					return setImmediate(cb, err);
 				}
 
-				// FIXME right delegate include
-        // https://trello.com/c/CN7Tij6M/133-delegate-not-found
-				// if (!account) {
-				// 	return setImmediate(cb, 'Delegate not found');
-				// }
+			// FIXME right delegate include
+			// https://trello.com/c/CN7Tij6M/133-delegate-not-found
+			if (!account) {
+				return setImmediate(cb, 'Delegate not found');
+			}
 
-				return setImmediate(cb);
-			});
-		}, function (err) {
+			return setImmediate(cb);
+		});
+	}, function (err) {
 			if (err) {
 				return setImmediate(cb, err);
 			}
@@ -418,7 +418,7 @@ Delegates.prototype.getDelegates = function (query, cb) {
 			delegates[i].rate = i + 1;
 			delegates[i].rank = i + 1;
 			// TODO change approval to right logic
-      // https://trello.com/c/epSWVfXM/160-change-approval-to-right-logic
+      		// https://trello.com/c/epSWVfXM/160-change-approval-to-right-logic
 
 			delegates[i].approval = 100;
 			delegates[i].approval = Math.round(delegates[i].approval * 1e2) / 1e2;
