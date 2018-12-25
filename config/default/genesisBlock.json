@@ -429,6 +429,19 @@
           "+c6268f7247b0ff3c1ff9f5155a0ee7289116841e853194f440d4928771487ce7"
         ]
       }
+    },
+    {
+      "type": 0,
+      "amount": "10000000000",
+      "fee": 0,
+      "timestamp": 0,
+      "recipientId": "DDK933553974927686133",
+      "senderId": "DDK4995063339468361088",
+      "senderPublicKey": "f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2",
+      "signature": "3822bff17dbda16377c819fdf46aa3bf86994551b39ed9eb90d75ab8b7b4bab13d19271a2fa694bc3f446d44987241cdde9aefeda31bab23c2645f183ef1d908",
+      "id": "2122047750874702140",
+      "stakedAmount": 0,
+      "trsName": "SEND"
     }
   ]
 }

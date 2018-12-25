@@ -169,7 +169,7 @@ SendFreezeOrder.prototype.apply = async function (trs, block, sender, cb) {
 };
 
 SendFreezeOrder.prototype.getBytes = function (trs) {
-	return null;
+	return Buffer.from([]);
 };
 
 SendFreezeOrder.prototype.process = function (trs, sender, cb) {
