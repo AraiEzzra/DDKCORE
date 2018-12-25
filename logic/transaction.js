@@ -347,10 +347,10 @@ Transaction.prototype.checkBalance = function (amount, balance, trs, sender) {
 	let exceeded = (trs.blockId !== this.scope.genesisblock.block.id && exceededBalance);
 
 	// FIXME
-  // https://trello.com/c/MPx5yxNH/134-account-does-not-have-enough-ddk
-  if (trs.height <= constants.MASTER_NODE_MIGRATED_BLOCK) {
-    exceeded = false;
-  }
+	// https://trello.com/c/MPx5yxNH/134-account-does-not-have-enough-ddk
+	if (trs.height <= constants.MASTER_NODE_MIGRATED_BLOCK) {
+		exceeded = false;
+	}
 
 	if (parseInt(sender.totalFrozeAmount) > 0) {
 		return {
