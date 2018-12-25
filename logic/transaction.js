@@ -1153,9 +1153,9 @@ Transaction.prototype.schema = {
 		},
 		blockId: {
 			type: 'string',
-			format: 'id',
-			minLength: 1,
-			maxLength: 64
+      format: 'hex',
+      minLength: 1,
+      maxLength: 64
 		},
 		type: {
 			type: 'integer'
@@ -1214,18 +1214,18 @@ Transaction.prototype.Referschema = {
 	properties: {
 		id: {
 			type: 'string',
-			format: 'id',
-			minLength: 1,
-			maxLength: 20
+      format: 'hex',
+      minLength: 1,
+      maxLength: 64
 		},
 		height: {
 			type: 'integer'
 		},
 		blockId: {
 			type: 'string',
-			format: 'id',
-			minLength: 1,
-			maxLength: 20
+      format: 'hex',
+      minLength: 1,
+      maxLength: 64
 		},
 		type: {
 			type: 'integer'
