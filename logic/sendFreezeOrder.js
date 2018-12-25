@@ -154,19 +154,22 @@ SendFreezeOrder.prototype.apply = async function (trs, block, sender, cb) {
 			stakeId: trs.stakeId
 		});
 
-		await self.sendFreezedOrder({
+		const stakeOrders = await self.sendFreezedOrder({
 			trsId: trs.id,
 			senderId: trs.senderId,
 			recipientId: trs.recipientId,
 			stakeId: trs.stakeId,
 			stakeOrder: order
 		});
-
-		const stakeOrders = await self.scope.db.manyOrNone(sql.getFrozeOrders, {
-			senderId: trs.senderId
-		});
-		const bulkStakeOrders = utils.makeBulk(stakeOrders,'stake_orders');
+		const bulkStakeOrders = utils.makeBulk([stakeOrders.new],'stake_orders');
 		await utils.indexall(bulkStakeOrders, 'stake_orders');
+		await utils.updateDocument({
+            index: 'stake_orders',
+            type: 'stake_orders',
+            body: stakeOrders.prev
+        });
+
+		self.scope.network.io.sockets.emit('stake/change', null);
 
         return setImmediate(cb, null);
 
@@ -269,7 +272,7 @@ SendFreezeOrder.prototype.sendFreezedOrder = async function (userAndOrderData, c
 			});
 
         //Update old freeze order
-        await self.scope.db.none(sql.updateFrozeOrder,
+        const prevOrder = await self.scope.db.one(sql.updateFrozeOrder,
 			{
 				recipientId: userAndOrderData.recipientId,
 				senderId: order.senderId,
@@ -277,7 +280,7 @@ SendFreezeOrder.prototype.sendFreezedOrder = async function (userAndOrderData, c
 			});
 
 		//create new froze order according to send order
-        await self.scope.db.none(sql.createNewFrozeOrder,
+        const newOrder = await self.scope.db.one(sql.createNewFrozeOrder,
 			{
 				id: userAndOrderData.trsId,
 				startTime: order.startTime,
@@ -290,8 +293,10 @@ SendFreezeOrder.prototype.sendFreezedOrder = async function (userAndOrderData, c
 				isVoteDone: order.isVoteDone,
 				transferCount: order.transferCount
 			});
-
-		self.scope.network.io.sockets.emit('stake/change', null);
+		return {
+			new: newOrder,
+			prev: prevOrder
+		}
 	} catch (err) {
 		return setImmediate(cb, err);
 	}
