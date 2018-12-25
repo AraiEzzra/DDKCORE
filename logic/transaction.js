@@ -1146,7 +1146,7 @@ Transaction.prototype.schema = {
 			type: 'string',
 			format: 'hex',
 			minLength: 1,
-			maxLength: 128
+			maxLength: 64
 		},
 		height: {
 			type: 'integer'
@@ -1155,7 +1155,7 @@ Transaction.prototype.schema = {
 			type: 'string',
 			format: 'id',
 			minLength: 1,
-			maxLength: 20
+			maxLength: 64
 		},
 		type: {
 			type: 'integer'
