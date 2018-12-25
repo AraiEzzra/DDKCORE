@@ -209,9 +209,9 @@ module.exports = {
 			},
 			transactionId: {
 				type: 'string',
-				format: 'id',
-				minLength: 1,
-				maxLength: 20
+        format: 'hex',
+        minLength: 1,
+        maxLength: 64
 			},
 			multisigAccountPublicKey: {
 				type: 'string',
