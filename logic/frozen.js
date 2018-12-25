@@ -8,6 +8,7 @@ const reward_sql = require('../sql/referal_sql');
 const account_sql = require('../sql/accounts');
 const cache = require('../modules/cache');
 const transactionTypes = require('../helpers/transactionTypes.js');
+const {LENGTH, writeUInt64LE} = require('../helpers/buffer.js');
 let utils = require('../utils');
 
 const __private = {};
@@ -293,7 +294,44 @@ Frozen.prototype.apply = function (trs, block, sender, cb) {
  * @return {null}
  */
 Frozen.prototype.getBytes = function (trs) {
-    return null;
+    let bb;
+    try {
+      let offset = 0;
+      let buff = Buffer.alloc(
+        LENGTH.INT64 +  // asset.stakeOrder.stakedAmount
+        LENGTH.UINT32 + // asset.stakeOrder.nextVoteMilestone
+        LENGTH.UINT32 + // asset.stakeOrders.startTime
+        LENGTH.BYTE +   // asset.airdropReward.withAirdropReward
+        LENGTH.INT64    // asset.airdropReward.totalReward
+      );
+
+      offset = writeUInt64LE(buff, trs.asset.stakeOrder.stakedAmount || 0, offset);
+
+      buff.writeInt32LE(trs.asset.stakeOrder.nextVoteMilestone, offset);
+      offset += LENGTH.UINT32;
+
+      buff.writeInt32LE(trs.asset.stakeOrder.startTime, offset);
+      offset += LENGTH.UINT32;
+
+      buff.writeInt8(trs.asset.airdropReward.withAirdropReward ? 1 : 0, offset);
+      offset += LENGTH.BYTE;
+      writeUInt64LE(buff, trs.asset.airdropReward.totalReward || 0, offset);
+
+      // airdropReward.sponsors up to 15 sponsors
+      const sponsorsBuffer = Buffer.alloc((LENGTH.INT64 + LENGTH.INT64) * 15);
+
+      offset = 0;
+      Object.keys(trs.asset.airdropReward.sponsors).forEach(address => {
+        offset = writeUInt64LE(sponsorsBuffer, parseInt(address.slice(3), 10), offset);
+        offset = writeUInt64LE(sponsorsBuffer, trs.asset.airdropReward.sponsors[address] || 0, offset);
+      });
+
+      bb = Buffer.concat([buff, sponsorsBuffer]);
+    } catch (e) {
+      throw e;
+    }
+
+    return bb;
 };
 
 /**
