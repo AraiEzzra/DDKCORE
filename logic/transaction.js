@@ -172,14 +172,7 @@ Transaction.prototype.multisign = function (keypair, trs) {
  * @return {string} id
  */
 Transaction.prototype.getId = function (trs) {
-	let hash = this.getHash(trs);
-	let temp = Buffer.alloc(8);
-	for (let i = 0; i < 8; i++) {
-		temp[i] = hash[7 - i];
-	}
-
-	let id = bignum.fromBuffer(temp).toString();
-	return id;
+  return this.getHash(trs).toString('hex');
 };
 
 /**
@@ -1151,9 +1144,9 @@ Transaction.prototype.schema = {
 	properties: {
 		id: {
 			type: 'string',
-			format: 'id',
+			format: 'hex',
 			minLength: 1,
-			maxLength: 20
+			maxLength: 64
 		},
 		height: {
 			type: 'integer'
@@ -1162,7 +1155,7 @@ Transaction.prototype.schema = {
 			type: 'string',
 			format: 'id',
 			minLength: 1,
-			maxLength: 20
+			maxLength: 64
 		},
 		type: {
 			type: 'integer'
@@ -1310,8 +1303,8 @@ Transaction.prototype.objectNormalize = function (trs) {
 	else
 		var report = this.scope.schema.validate(trs, Transaction.prototype.schema);
 
+	// schemaValidator
 	if (!report) {
-		console.log(trs);
 		throw 'Failed to validate transaction schema: ' + this.scope.schema.getLastErrors().map(function (err) {
 			return err.message;
 		}).join(', ');

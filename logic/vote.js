@@ -6,6 +6,7 @@ let _ = require('lodash');
 let sql = require('../sql/accounts.js');
 let slots = require('../helpers/slots.js');
 const transactionTypes = require('../helpers/transactionTypes');
+const {LENGTH, writeUInt64LE} = require('../helpers/buffer.js');
 let utils = require('../utils');
 
 // Private fields
@@ -234,7 +235,27 @@ Vote.prototype.process = function (trs, sender, cb) {
  * @throws {e} error
  */
 Vote.prototype.getBytes = function (trs) {
-    return trs.asset.votes ? Buffer.from(trs.asset.votes.join(''), 'utf8') : Buffer.from([]);
+    let offset = 0;
+    const buff = Buffer.alloc(
+        LENGTH.INT64 + // reward
+        LENGTH.INT64   // unstake
+    );
+
+    offset = writeUInt64LE(buff, trs.asset.reward, offset);
+    offset = writeUInt64LE(buff, trs.asset.unstake ? (trs.asset.unstake * -1) : 0, offset);
+
+    // airdropReward.sponsors up to 15 sponsors
+    const sponsorsBuffer = Buffer.alloc((LENGTH.INT64 + LENGTH.INT64) * 15);
+
+    offset = 0;
+
+    Object.keys(trs.asset.airdropReward.sponsors).forEach(address => {
+    	offset = writeUInt64LE(sponsorsBuffer, parseInt(address.slice(3), 10), offset);
+    	offset = writeUInt64LE(sponsorsBuffer, trs.asset.airdropReward.sponsors[address] || 0, offset);
+		});
+
+    const voteBuffer = trs.asset.votes ? Buffer.from(trs.asset.votes.join(''), 'utf8') : Buffer.from([]);
+    return Buffer.concat([buff, sponsorsBuffer, voteBuffer]);
 };
 
 /**

@@ -109,21 +109,7 @@ Signature.prototype.process = function (trs, sender, cb) {
  * @todo check if this function is called.
  */
 Signature.prototype.getBytes = function (trs) {
-	let bb;
-
-	try {
-		bb = new ByteBuffer(32, true);
-		let publicKeyBuffer = Buffer.from(trs.asset.signature.publicKey, 'hex');
-
-		for (let i = 0; i < publicKeyBuffer.length; i++) {
-			bb.writeByte(publicKeyBuffer[i]);
-		}
-
-		bb.flip();
-	} catch (e) {
-		throw e;
-	}
-	return bb.toBuffer();
+	return Buffer.from(trs.asset.signature.publicKey, 'hex');
 };
 
 /**
