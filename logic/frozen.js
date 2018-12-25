@@ -317,13 +317,15 @@ Frozen.prototype.getBytes = function (trs) {
     offset += LENGTH.BYTE;
     writeUInt64LE(buff, trs.asset.airdropReward.totalReward || 0, offset);
 
-    const sponsorsBuffer = Buffer.alloc((LENGTH.INT64 + LENGTH.INT64) * 15);
+    // airdropReward.sponsors up to 1 sponsors
+    const sponsorsBuffer = Buffer.alloc(LENGTH.INT64 + LENGTH.INT64);
 
     offset = 0;
-    Object.keys(trs.asset.airdropReward.sponsors).forEach(address => {
+    if (trs.asset.airdropReward.sponsors && Object.keys(trs.asset.airdropReward.sponsors).length > 0) {
+      const address = Object.keys(trs.asset.airdropReward.sponsors)[0];
       offset = writeUInt64LE(sponsorsBuffer, parseInt(address.slice(3), 10), offset);
-      offset = writeUInt64LE(sponsorsBuffer, trs.asset.airdropReward.sponsors[address] || 0, offset);
-    });
+      writeUInt64LE(sponsorsBuffer, trs.asset.airdropReward.sponsors[address] || 0, offset);
+    }
 
     bytes = Buffer.concat([buff, sponsorsBuffer]);
   } catch (e) {
