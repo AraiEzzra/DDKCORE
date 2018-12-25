@@ -24,7 +24,7 @@ function SendFreezeOrder(logger, db, network, cb) {
 	}
 }
 
-async function rollbackOrders(cb) {
+async function rollbackOrders(trs, cb) {
 
 	try {
 
@@ -40,7 +40,7 @@ async function rollbackOrders(cb) {
                 nextVoteMilestone: nextVoteMilestone
             });
 
-        await self.scope.db.one(sql.RemoveOrder,
+        await self.scope.db.one(sql.removeOrderByTrsIdAndSenderId,
             {
                 id: id,
                 senderId: trs.recipientId
@@ -108,7 +108,7 @@ SendFreezeOrder.prototype.undo = async function (trs, block, sender, cb) {
                 orderFreezedAmount: trs.amount
             });
 
-        await rollbackOrders(cb);
+        await rollbackOrders(trs, cb);
 
         const setAccountAndGet = promise.promisify(modules.accounts.setAccountAndGet);
         const mergeAccountAndGet = promise.promisify(modules.accounts.mergeAccountAndGet);
