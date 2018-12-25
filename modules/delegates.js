@@ -529,7 +529,12 @@ __private.validateBlockSlot = function (block, source, cb) {
 
         if (delegatePubKey && block.generatorPublicKey === delegatePubKey) {
             return setImmediate(cb);
-        }
+		}
+
+		// TODO: Restore slote verify
+		// https://trello.com/c/2jF7cnad/115-restore-transactions-verifing
+		return setImmediate(cb);
+
         library.logger.error('Expected generator: ' + delegatePubKey + ' Received generator: ' + block.generatorPublicKey);
         return setImmediate(cb, 'Failed to verify slot: ' + currentSlot);
     });

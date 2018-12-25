@@ -9,7 +9,9 @@ const transactionTypes = require('../helpers/transactionTypes');
 let utils = require('../utils');
 
 // Private fields
-let modules, library, self;
+let modules, library, self, __private = {};
+
+__private.loaded = false;
 
 // Constructor
 /**
@@ -88,6 +90,10 @@ Vote.prototype.calculateFee = function (trs, sender) {
 	return parseInt((parseInt(sender.totalFrozeAmount) * constants.fees.vote) / 100);
 };
 
+Vote.prototype.onBlockchainReady = function () {
+	__private.loaded = true;
+}
+
 /**
  * Validates transaction votes fields and for each vote calls verifyVote.
  * @implements {verifysendStakingRewardVote}
@@ -139,14 +145,17 @@ Vote.prototype.verify = function (trs, sender, cb) {
 		if (trs.asset.votes.length > _.uniqBy(trs.asset.votes, function (v) { return v.slice(1); }).length) {
 			throw 'Multiple votes for same delegate are not allowed';
 		}
-        const isDownVote = trs.trsName === "DOWNVOTE";
-        const totals = await library.frozen.calculateTotalRewardAndUnstake(trs.senderId, isDownVote);
-        if (totals.reward !== trs.asset.reward) {
-            throw 'Verify failed: vote reward is corrupted';
-        }
-        if (totals.unstake !== trs.asset.unstake) {
-            throw 'Verify failed: vote unstake is corrupted';
-        }
+
+		if (__private.loaded) {
+			const isDownVote = trs.trsName === "DOWNVOTE";
+			const totals = await library.frozen.calculateTotalRewardAndUnstake(trs.senderId, isDownVote);
+			if (totals.reward !== trs.asset.reward) {
+				throw 'Verify failed: vote reward is corrupted';
+			}
+			if (totals.unstake !== trs.asset.unstake) {
+				throw 'Verify failed: vote unstake is corrupted';
+			}
+		}
 
         await library.frozen.verifyAirdrop(trs);
         return self.checkConfirmedDelegates(trs, cb);

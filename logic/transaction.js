@@ -623,7 +623,11 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
 		!(trs.type === transactionTypes.STAKE && trs.stakedAmount < 0) &&
 		(!fee || trs.fee !== fee)
 	) {
-		return setImmediate(cb, 'Invalid transaction fee');
+		// TODO: Restore transation verify
+		// https://trello.com/c/2jF7cnad/115-restore-transactions-verifing
+		// return setImmediate(cb, 'Invalid transaction fee');
+
+		this.scope.logger.error('Invalid transaction fee');
 	}
 
 	// Check amount
