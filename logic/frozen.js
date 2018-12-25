@@ -294,45 +294,38 @@ Frozen.prototype.apply = function (trs, block, sender, cb) {
  * @return {null}
  */
 Frozen.prototype.getBytes = function (trs) {
-  let bytes;
-  try {
-    let offset = 0;
-    const buff = Buffer.alloc(
-      LENGTH.INT64 +  // asset.stakeOrder.stakedAmount
-      LENGTH.UINT32 + // asset.stakeOrder.nextVoteMilestone
-      LENGTH.UINT32 + // asset.stakeOrders.startTime
-      LENGTH.BYTE +   // asset.airdropReward.withAirdropReward
-      LENGTH.INT64    // asset.airdropReward.totalReward
-    );
+  let offset = 0;
+  const buff = Buffer.alloc(
+    LENGTH.INT64 +  // asset.stakeOrder.stakedAmount
+    LENGTH.UINT32 + // asset.stakeOrder.nextVoteMilestone
+    LENGTH.UINT32 + // asset.stakeOrders.startTime
+    LENGTH.BYTE +   // asset.airdropReward.withAirdropReward
+    LENGTH.INT64    // asset.airdropReward.totalReward
+  );
 
-    offset = writeUInt64LE(buff, trs.asset.stakeOrder.stakedAmount || 0, offset);
+  offset = writeUInt64LE(buff, trs.asset.stakeOrder.stakedAmount || 0, offset);
 
-    buff.writeInt32LE(trs.asset.stakeOrder.nextVoteMilestone, offset);
-    offset += LENGTH.UINT32;
+  buff.writeInt32LE(trs.asset.stakeOrder.nextVoteMilestone, offset);
+  offset += LENGTH.UINT32;
 
-    buff.writeInt32LE(trs.asset.stakeOrder.startTime, offset);
-    offset += LENGTH.UINT32;
+  buff.writeInt32LE(trs.asset.stakeOrder.startTime, offset);
+  offset += LENGTH.UINT32;
 
-    buff.writeInt8(trs.asset.airdropReward.withAirdropReward ? 1 : 0, offset);
-    offset += LENGTH.BYTE;
-    writeUInt64LE(buff, trs.asset.airdropReward.totalReward || 0, offset);
+  buff.writeInt8(trs.asset.airdropReward.withAirdropReward ? 1 : 0, offset);
+  offset += LENGTH.BYTE;
+  writeUInt64LE(buff, trs.asset.airdropReward.totalReward || 0, offset);
 
-    // airdropReward.sponsors up to 1 sponsors
-    const sponsorsBuffer = Buffer.alloc(LENGTH.INT64 + LENGTH.INT64);
+  // airdropReward.sponsors up to 1 sponsors
+  const sponsorsBuffer = Buffer.alloc(LENGTH.INT64 + LENGTH.INT64);
 
-    offset = 0;
-    if (trs.asset.airdropReward.sponsors && Object.keys(trs.asset.airdropReward.sponsors).length > 0) {
-      const address = Object.keys(trs.asset.airdropReward.sponsors)[0];
-      offset = writeUInt64LE(sponsorsBuffer, parseInt(address.slice(3), 10), offset);
-      writeUInt64LE(sponsorsBuffer, trs.asset.airdropReward.sponsors[address] || 0, offset);
-    }
-
-    bytes = Buffer.concat([buff, sponsorsBuffer]);
-  } catch (e) {
-    throw e;
+  offset = 0;
+  if (trs.asset.airdropReward.sponsors && Object.keys(trs.asset.airdropReward.sponsors).length > 0) {
+    const address = Object.keys(trs.asset.airdropReward.sponsors)[0];
+    offset = writeUInt64LE(sponsorsBuffer, parseInt(address.slice(3), 10), offset);
+    writeUInt64LE(sponsorsBuffer, trs.asset.airdropReward.sponsors[address] || 0, offset);
   }
 
-  return bytes;
+  return Buffer.concat([buff, sponsorsBuffer]);
 };
 
 /**
