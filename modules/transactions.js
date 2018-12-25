@@ -13,8 +13,8 @@ let transactionTypes = require('../helpers/transactionTypes.js');
 let Transfer = require('../logic/transfer.js');
 let ReferTransfer = require('../logic/referralTransaction.js');
 let slots = require('../helpers/slots');
-let getCorrectTypeForFront = require('api/http/transactionTypeMapper');
-let getCorrectTypeForBack = require('api/http/transactionTypeMapper');
+let getCorrectTypeForFront = require('../api/http/transactionTypeMapper');
+let getCorrectTypeForBack = require('../api/http/transactionTypeMapper');
 
 // Private fields
 let __private = {};

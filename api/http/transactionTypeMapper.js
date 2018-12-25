@@ -1,50 +1,50 @@
 
 const transactionType = require('../../helpers/transactionTypes');
 
-const typeMap = new Map();
+const typeMapBack = new Map();
 
 function getCorrectTypeForBack(frontType) {
 
-    typeMap.set(-1, transactionType.REFERRAL);
-    typeMap.set(0, transactionType.SEND);
-    typeMap.set(1, transactionType.SIGNATURE);
-    typeMap.set(2, transactionType.DELEGATE);
-    typeMap.set(3, transactionType.VOTE);
-    typeMap.set(4, transactionType.MULTI);
-    typeMap.set(5, transactionType.DAPP);
-    typeMap.set(6, transactionType.IN_TRANSFER);
-    typeMap.set(7, transactionType.OUT_TRANSFER);
-    typeMap.set(8, transactionType.STAKE);
-    typeMap.set(9, transactionType.REWARD);
-    typeMap.set(10, transactionType.SENDSTAKE);
-    typeMap.set(11, transactionType.REFER);
-    typeMap.set(12, transactionType.MIGRATION);
+    typeMapBack.set(-1, transactionType.REFERRAL);
+    typeMapBack.set(0, transactionType.SEND);
+    typeMapBack.set(1, transactionType.SIGNATURE);
+    typeMapBack.set(2, transactionType.DELEGATE);
+    typeMapBack.set(3, transactionType.VOTE);
+    typeMapBack.set(4, transactionType.MULTI);
+    typeMapBack.set(5, transactionType.DAPP);
+    typeMapBack.set(6, transactionType.IN_TRANSFER);
+    typeMapBack.set(7, transactionType.OUT_TRANSFER);
+    typeMapBack.set(8, transactionType.STAKE);
+    typeMapBack.set(9, transactionType.REWARD);
+    typeMapBack.set(10, transactionType.SENDSTAKE);
+    typeMapBack.set(11, transactionType.REFER);
+    typeMapBack.set(12, transactionType.MIGRATION);
 
-    return typeMap.get(frontType);
+    return typeMapBack.get(frontType);
 }
 
-module.exports = getCorrectTypeForBack(frontType);
+module.exports.getCorrectTypeForBack = getCorrectTypeForBack;
 
-const typeMap = new Map();
+const typeMapFront = new Map();
 
 function getCorrectTypeForFront(backType) {
 
-    typeMap.set(transactionType.REFERRAL, -1);
-    typeMap.set(transactionType.SEND, 0);
-    typeMap.set(transactionType.SIGNATURE, 1);
-    typeMap.set(transactionType.DELEGATE, 2);
-    typeMap.set(transactionType.VOTE, 3);
-    typeMap.set(transactionType.MULTI, 4);
-    typeMap.set(transactionType.DAPP, 5);
-    typeMap.set(transactionType.IN_TRANSFER, 6);
-    typeMap.set(transactionType.OUT_TRANSFER, 7);
-    typeMap.set(transactionType.STAKE, 8);
-    typeMap.set(transactionType.REWARD, 9);
-    typeMap.set(transactionType.SENDSTAKE, 10);
-    typeMap.set(transactionType.REFER, 11);
-    typeMap.set(transactionType.MIGRATION, 12);
+    typeMapFront.set(transactionType.REFERRAL, -1);
+    typeMapFront.set(transactionType.SEND, 0);
+    typeMapFront.set(transactionType.SIGNATURE, 1);
+    typeMapFront.set(transactionType.DELEGATE, 2);
+    typeMapFront.set(transactionType.VOTE, 3);
+    typeMapFront.set(transactionType.MULTI, 4);
+    typeMapFront.set(transactionType.DAPP, 5);
+    typeMapFront.set(transactionType.IN_TRANSFER, 6);
+    typeMapFront.set(transactionType.OUT_TRANSFER, 7);
+    typeMapFront.set(transactionType.STAKE, 8);
+    typeMapFront.set(transactionType.REWARD, 9);
+    typeMapFront.set(transactionType.SENDSTAKE, 10);
+    typeMapFront.set(transactionType.REFER, 11);
+    typeMapFront.set(transactionType.MIGRATION, 12);
 
-    return typeMap.get(backType);
+    return typeMapFront.get(backType);
 }
 
-module.exports = getCorrectTypeForFront(backType);
+module.exports.getCorrectTypeForFront = getCorrectTypeForFront;
