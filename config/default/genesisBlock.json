@@ -11,7 +11,7 @@
   "generatorPublicKey": "f50fe1582173dc30869ca3357daeec3ec3608a7517c0ea388c50c5e3afcc8041",
   "transactions": [
     {
-      "type": 0,
+      "type": 1,
       "amount": "4500000000000000",
       "fee": 0,
       "timestamp": 0,
@@ -24,7 +24,7 @@
       "trsName": "SEND"
     },
     {
-      "type": 0,
+      "type": 1,
       "amount": "171000000000000",
       "fee": 0,
       "timestamp": 0,
@@ -37,7 +37,7 @@
       "trsName": "SEND"
     },
     {
-      "type": 0,
+      "type": 1,
       "amount": "36000000000000",
       "fee": 0,
       "timestamp": 0,
@@ -50,7 +50,7 @@
       "trsName": "SEND"
     },
     {
-      "type": 0,
+      "type": 1,
       "amount": "90000000000000",
       "fee": 0,
       "timestamp": 0,
@@ -63,7 +63,7 @@
       "trsName": "SEND"
     },
     {
-      "type": 0,
+      "type": 1,
       "amount": "9000000000000",
       "fee": 0,
       "timestamp": 0,
@@ -76,7 +76,7 @@
       "trsName": "SEND"
     },
     {
-      "type": 0,
+      "type": 1,
       "amount": "2250000000000",
       "fee": 0,
       "timestamp": 0,
@@ -89,7 +89,7 @@
       "trsName": "SEND"
     },
     {
-      "type": 0,
+      "type": 1,
       "amount": "11250000000000",
       "fee": 0,
       "timestamp": 0,
@@ -102,7 +102,7 @@
       "trsName": "SEND"
     },
     {
-      "type": 0,
+      "type": 1,
       "amount": "11250000000000",
       "fee": 0,
       "timestamp": 0,
@@ -115,7 +115,7 @@
       "trsName": "SEND"
     },
     {
-      "type": 0,
+      "type": 1,
       "amount": "11250000000000",
       "fee": 0,
       "timestamp": 0,
@@ -128,7 +128,7 @@
       "trsName": "SEND"
     },
     {
-      "type": 0,
+      "type": 1,
       "amount": "45000000000000",
       "fee": 0,
       "timestamp": 0,
@@ -141,7 +141,7 @@
       "trsName": "SEND"
     },
     {
-      "type": 2,
+      "type": 3,
       "amount": 0,
       "fee": 0,
       "timestamp": 0,
@@ -159,7 +159,7 @@
       "trsName": "DELEGATE"
     },
     {
-      "type": 2,
+      "type": 3,
       "amount": 0,
       "fee": 0,
       "timestamp": 0,
@@ -177,7 +177,7 @@
       "trsName": "DELEGATE"
     },
     {
-      "type": 2,
+      "type": 3,
       "amount": 0,
       "fee": 0,
       "timestamp": 0,
@@ -195,7 +195,7 @@
       "trsName": "DELEGATE"
     },
     {
-      "type": 2,
+      "type": 3,
       "amount": 0,
       "fee": 0,
       "timestamp": 0,
@@ -213,7 +213,7 @@
       "trsName": "DELEGATE"
     },
     {
-      "type": 2,
+      "type": 3,
       "amount": 0,
       "fee": 0,
       "timestamp": 0,
@@ -231,7 +231,7 @@
       "trsName": "DELEGATE"
     },
     {
-      "type": 2,
+      "type": 3,
       "amount": 0,
       "fee": 0,
       "timestamp": 0,
@@ -249,7 +249,7 @@
       "trsName": "DELEGATE"
     },
     {
-      "type": 2,
+      "type": 3,
       "amount": 0,
       "fee": 0,
       "timestamp": 0,
@@ -267,7 +267,7 @@
       "trsName": "DELEGATE"
     },
     {
-      "type": 2,
+      "type": 3,
       "amount": 0,
       "fee": 0,
       "timestamp": 0,
@@ -285,7 +285,7 @@
       "trsName": "DELEGATE"
     },
     {
-      "type": 2,
+      "type": 3,
       "amount": 0,
       "fee": 0,
       "timestamp": 0,
@@ -303,7 +303,7 @@
       "trsName": "DELEGATE"
     },
     {
-      "type": 2,
+      "type": 3,
       "amount": 0,
       "fee": 0,
       "timestamp": 0,
@@ -321,7 +321,7 @@
       "trsName": "DELEGATE"
     },
     {
-      "type": 2,
+      "type": 3,
       "amount": 0,
       "fee": 0,
       "timestamp": 0,
@@ -339,7 +339,7 @@
       "trsName": "DELEGATE"
     },
     {
-      "type": 3,
+      "type": 4,
       "amount": 0,
       "fee": 0,
       "timestamp": 0,
@@ -359,7 +359,7 @@
       "trsName": "VOTE"
     },
     {
-      "type": 3,
+      "type": 4,
       "amount": 0,
       "fee": 0,
       "timestamp": 0,
@@ -379,7 +379,7 @@
       "trsName": "VOTE"
     },
     {
-      "type": 3,
+      "type": 4,
       "amount": 0,
       "fee": 0,
       "timestamp": 0,
@@ -399,7 +399,7 @@
       "trsName": "VOTE"
     },
     {
-      "type": 3,
+      "type": 4,
       "amount": 0,
       "fee": 0,
       "timestamp": 0,
