@@ -486,8 +486,6 @@ Transport.prototype.onUnconfirmedTransaction = function (transaction, broadcast)
         let users = usersList.getUsersList();
         users.map(function(user) {
             if(user.address === transaction.senderId || user.address === transaction.recipientId) {
-                console.log('\n\n\n users = ', users, '\n\n\n\n');
-
                 library.network.io.to(user.socketId).emit('transactions/change', transaction);
             }
         })
