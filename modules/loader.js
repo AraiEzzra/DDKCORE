@@ -13,6 +13,7 @@ require('colors');
 
 // Private fields
 let modules, library, self, __private = {}, shared = {};
+let firstSync = true;
 
 __private.loaded = false;
 __private.isActive = false;
@@ -646,6 +647,11 @@ __private.sync = function (cb) {
 		__private.isActive = false;
 		__private.syncTrigger(false);
 		__private.blocksToSync = 0;
+
+        if (firstSync) {
+            library.bus.message('blockchainReadyForForging');
+            firstSync = false;
+        }
 
 		library.logger.info('Finished sync');
 		library.bus.message('syncFinished');
