@@ -1,5 +1,5 @@
 
-
+const constants = require('../../helpers/constants');
 let Router = require('../../helpers/router');
 let httpApi = require('../../helpers/httpApi');
 let schema = require('../../schema/transport');
@@ -87,8 +87,9 @@ function TransportHttpApi (transportModule, app, logger) {
 		});
 
 		function validateHeaders (headers, cb) {
-			headers.port = 7007;
-			headers.nethash = 'da3ed6a45429278bac2666961289ca17ad86595d33b31037615d4b8e8f158bba';
+			headers.port = constants.app.port;
+			headers.nethash = constants.nethash;
+			// FIXME: (???) actual "npm_package_version": "0.9.9-a", != '0.9.9a'
 			headers.version = '0.9.9a';
 			return req.sanitize(headers, schema.headers, function (err, report) {
 				if (err) {
