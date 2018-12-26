@@ -9,7 +9,9 @@ const transactionTypes = require('../helpers/transactionTypes');
 let utils = require('../utils');
 
 // Private fields
-let modules, library, self;
+let modules, library, self, __private = {};
+
+__private.loaded = false;
 
 // Constructor
 /**
@@ -88,6 +90,10 @@ Vote.prototype.calculateFee = function (trs, sender) {
 	return parseInt((parseInt(sender.totalFrozeAmount) * constants.fees.vote) / 100);
 };
 
+Vote.prototype.onBlockchainReady = function () {
+	__private.loaded = true;
+}
+
 /**
  * Validates transaction votes fields and for each vote calls verifyVote.
  * @implements {verifysendStakingRewardVote}
@@ -95,7 +101,7 @@ Vote.prototype.calculateFee = function (trs, sender) {
  * @param {transaction} trs
  * @param {account} sender
  * @param {function} cb - Callback function.
- * @returns {setImmediateCallback|function} returns error if invalid field | 
+ * @returns {setImmediateCallback|function} returns error if invalid field |
  * calls checkConfirmedDelegates.
  */
 Vote.prototype.verify = function (trs, sender, cb) {
@@ -139,14 +145,17 @@ Vote.prototype.verify = function (trs, sender, cb) {
 		if (trs.asset.votes.length > _.uniqBy(trs.asset.votes, function (v) { return v.slice(1); }).length) {
 			throw 'Multiple votes for same delegate are not allowed';
 		}
-        const isDownVote = trs.trsName === "DOWNVOTE";
-        const totals = await library.frozen.calculateTotalRewardAndUnstake(trs.senderId, isDownVote);
-        if (totals.reward !== trs.asset.reward) {
-            throw 'Verify failed: vote reward is corrupted';
-        }
-        if (totals.unstake !== trs.asset.unstake) {
-            throw 'Verify failed: vote unstake is corrupted';
-        }
+
+		if (__private.loaded) {
+			const isDownVote = trs.trsName === "DOWNVOTE";
+			const totals = await library.frozen.calculateTotalRewardAndUnstake(trs.senderId, isDownVote);
+			if (totals.reward !== trs.asset.reward) {
+				throw 'Verify failed: vote reward is corrupted';
+			}
+			if (totals.unstake !== trs.asset.unstake) {
+				throw 'Verify failed: vote unstake is corrupted';
+			}
+		}
 
         await library.frozen.verifyAirdrop(trs);
         return self.checkConfirmedDelegates(trs, cb);
@@ -182,7 +191,7 @@ Vote.prototype.verifyVote = function (vote, cb) {
  * @implements {modules.delegates.checkConfirmedDelegates}
  * @param {transaction} trs
  * @param {function} cb - Callback function.
- * @return {setImmediateCallback} cb, err(if transaction id is not in 
+ * @return {setImmediateCallback} cb, err(if transaction id is not in
  * exceptions votes list)
  */
 Vote.prototype.checkConfirmedDelegates = function (trs, cb) {
@@ -202,7 +211,7 @@ Vote.prototype.checkConfirmedDelegates = function (trs, cb) {
  * @implements {modules.delegates.checkUnconfirmedDelegates}
  * @param {Object} trs
  * @param {function} cb
- * @return {setImmediateCallback} cb, err(if transaction id is not in 
+ * @return {setImmediateCallback} cb, err(if transaction id is not in
  * exceptions votes list)
  */
 Vote.prototype.checkUnconfirmedDelegates = function (trs, cb) {
@@ -234,18 +243,18 @@ Vote.prototype.process = function (trs, sender, cb) {
  * @throws {e} error
  */
 Vote.prototype.getBytes = function (trs) {
-  return null;
-  // FIXME add new logic for bytes
-  // https://trello.com/c/Lt24bdzI/143-add-new-logic-for-bytes
-	// let buf;
-  //
-	// try {
-	// 	buf = trs.asset.votes ? Buffer.from(trs.asset.votes.join(''), 'utf8') : null;
-	// } catch (e) {
-	// 	throw e;
-	// }
-  //
-	// return buf;
+	// return null;
+	// FIXME add new logic for bytes
+	// https://trello.com/c/Lt24bdzI/143-add-new-logic-for-bytes
+	let buf;
+
+	try {
+		buf = trs.asset.votes ? Buffer.from(trs.asset.votes.join(''), 'utf8') : null;
+	} catch (e) {
+		throw e;
+	}
+
+	return buf;
 };
 
 /**
@@ -298,7 +307,7 @@ Vote.prototype.apply = function (trs, block, sender, cb) {
 };
 
 /**
- * Calls Diff.reverse to change asset.votes signs and merges account to 
+ * Calls Diff.reverse to change asset.votes signs and merges account to
  * sender address with inverted votes as delegates.
  * @implements {Diff}
  * @implements {scope.account.merge}
@@ -322,7 +331,7 @@ Vote.prototype.undo = function (trs, block, sender, cb) {
 				blockId: block.id,
 				round: modules.rounds.calc(block.height)
 			}, seriesCb);
-		}, 
+		},
 		//added to remove vote count from mem_accounts table
 		function (seriesCb) {
 			self.updateMemAccounts(
@@ -379,7 +388,7 @@ Vote.prototype.applyUnconfirmed = function (trs, sender, cb) {
 };
 
 /**
- * Calls Diff.reverse to change asset.votes signs and merges account to 
+ * Calls Diff.reverse to change asset.votes signs and merges account to
  * sender address with inverted votes as unconfirmed delegates.
  * @implements {Diff}
  * @implements {scope.account.merge}
@@ -490,7 +499,7 @@ Vote.prototype.dbSave = function (trs) {
  * Checks sender multisignatures and transaction signatures.
  * @param {transaction} trs
  * @param {account} sender
- * @return {boolean} True if transaction signatures greather than 
+ * @return {boolean} True if transaction signatures greather than
  * sender multimin or there are not sender multisignatures.
  */
 Vote.prototype.ready = function (trs, sender) {
@@ -507,39 +516,37 @@ Vote.prototype.ready = function (trs, sender) {
 /**
  * Check and update vote milestone, vote count from stake_order and mem_accounts table
  * @param {Object} voteTransaction transaction data object
- * @return {null|err} return null if success else err 
- * 
+ * @return {null|err} return null if success else err
+ *
  */
 Vote.prototype.updateAndCheckVote = async (voteTransaction) => {
-    const senderId = voteTransaction.senderId;
-    try {
-        // todo check if could change to tx
-        await library.db.task(async () => {
-			await library.db.none(sql.updateStakeOrder, {
+	const senderId = voteTransaction.senderId;
+	try {
+		// todo check if could change to tx
+		await library.db.task(async () => {
+			const activeOrders = await library.db.manyOrNone(sql.updateStakeOrder, {
 				senderId: senderId,
 				milestone: constants.froze.vTime * 60, // 2 * 60 sec = 2 mins
 				currentTime: slots.getTime()
 			});
-			
-			const rows = await library.db.query(sql.GetOrders, { senderId: senderId });
 
-            if (rows.length > 0) {
-                let bulk = utils.makeBulk(rows, 'stake_orders');
+			if (activeOrders && activeOrders.length > 0) {
+				await library.frozen.applyFrozeOrdersRewardAndUnstake(voteTransaction, activeOrders);
+
+				let bulk = utils.makeBulk(activeOrders, 'stake_orders');
 				try {
-                    await utils.indexall(bulk, 'stake_orders');
-                    library.logger.info(senderId + ': update stake orders isvoteDone and count');
-				} catch(err) {
-                    library.logger.error('elasticsearch error :' + err.message);
+					await utils.indexall(bulk, 'stake_orders');
+					library.logger.info(senderId + ': update stake orders isvoteDone and count');
+				} catch (err) {
+					library.logger.error('elasticsearch error :' + err.message);
 				}
-                
-            }
-            
-			await library.frozen.applyFrozeOrdersRewardAndUnstake(voteTransaction);
-        });
-    } catch (err) {
-        library.logger.warn(err);
-        throw err;
-    }
+
+			}
+		});
+	} catch (err) {
+		library.logger.warn(err);
+		throw err;
+	}
 };
 
 /**
@@ -569,8 +576,8 @@ Vote.prototype.removeCheckVote = async (voteTransaction) => {
 /**
  * Update vote count from stake_order and mem_accounts table
  * @param {voteInfo} voteInfo voteInfo have votes and senderId
- * @return {null|err} return null if success else err 
- * 
+ * @return {null|err} return null if success else err
+ *
  */
 Vote.prototype.updateMemAccounts = function (voteInfo, cb) {
 	let votes = voteInfo.votes;

@@ -161,5 +161,18 @@ module.exports = {
 				minimum: 0
 			}
 		}
+	},
+	checkAccountExists: {
+		id: 'accounts.checkAccountExists',
+		type: 'object',
+		properties: {
+			address: {
+				type: 'string',
+				format: 'address',
+				minLength: 1,
+				maxLength: 25
+			}
+		},
+		required: ['address']
 	}
 };

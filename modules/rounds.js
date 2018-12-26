@@ -66,7 +66,7 @@ Rounds.prototype.calc = function (height) {
 };
 
 Rounds.prototype.getSlotDelegatesCount = (height) =>
-  height > constants.MASTER_NODE_MIGRATED_BLOCK ? slots.delegates : constants.PREVIOUS_DELEGATES_COUNT;
+  height && height <= constants.MASTER_NODE_MIGRATED_BLOCK ? constants.PREVIOUS_DELEGATES_COUNT : slots.delegates ;
 
 /**
  * Deletes from `mem_round` table records based on round.
@@ -369,12 +369,12 @@ __private.getOutsiders = function (scope, cb) {
 	if (scope.block.height === 1) {
 		return setImmediate(cb);
 	}
-	modules.delegates.generateDelegateList(scope.block.height, function (err, roundDelegates) {
+	modules.delegates.generateDelegateList(scope.block.height, null, function (err, roundDelegates) {
 		if (err) {
 			return setImmediate(cb, err);
 		}
 		async.eachSeries(roundDelegates, function (delegate, eachCb) {
-			if (scope.roundDelegates.indexOf(delegate) === -1) {
+			if (scope.roundDelegates && scope.roundDelegates.indexOf(delegate) === -1) {
 				scope.roundOutsiders.push(modules.accounts.generateAddressByPublicKey(delegate));
 			}
 			return setImmediate(eachCb);
@@ -400,9 +400,11 @@ __private.sumRound = function (scope, cb) {
 	library.db.query(sql.summedRound, { round: scope.round, activeDelegates: constants.activeDelegates }).then(function (rows) {
 		let rewards = [];
 
-		rows[0].rewards.forEach(function (reward) {
-			rewards.push(Math.floor(reward));
-		});
+		if(rows[0].rewards) {
+            rows[0].rewards.forEach(function (reward) {
+                rewards.push(Math.floor(reward));
+            });
+        }
 
 		scope.roundFees = Math.floor(rows[0].fees);
 		scope.roundRewards = rewards;

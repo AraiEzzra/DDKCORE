@@ -13,6 +13,7 @@ require('colors');
 
 // Private fields
 let modules, library, self, __private = {}, shared = {};
+let firstSync = true;
 
 __private.loaded = false;
 __private.isActive = false;
@@ -492,7 +493,6 @@ __private.loadBlockChain = function () {
 		function updateMemAccounts (t) {
 			let promises = [
 				t.none(sql.updateMemAccounts),
-				t.query(sql.getOrphanedMemAccounts),
 				t.query(sql.getDelegates)
 			];
 
@@ -501,11 +501,7 @@ __private.loadBlockChain = function () {
 
 		library.db.task(updateMemAccounts).then(function (results) {
 
-			if (results[1].length > 0) {
-				return reload(count, 'Detected orphaned blocks in mem_accounts');
-			}
-
-			if (results[2].length === 0) {
+			if (results[1].length === 0) {
 				return reload(count, 'No delegates found');
 			}
 
@@ -651,6 +647,11 @@ __private.sync = function (cb) {
 		__private.isActive = false;
 		__private.syncTrigger(false);
 		__private.blocksToSync = 0;
+
+        if (firstSync) {
+            library.bus.message('blockchainReadyForForging');
+            firstSync = false;
+        }
 
 		library.logger.info('Finished sync');
 		library.bus.message('syncFinished');

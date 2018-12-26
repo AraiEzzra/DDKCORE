@@ -1,16 +1,13 @@
+const async = require('async');
+const transactionTypes = require('../../helpers/transactionTypes.js');
 
+const _ = require('lodash');
+const Inserts = require('../../helpers/inserts.js');
+const sql = require('../../sql/blocks.js');
+const utils = require('../../utils');
 
-let _ = require('lodash');
-let async = require('async');
-let Inserts = require('../../helpers/inserts.js');
-let sql = require('../../sql/blocks.js');
-let transactionTypes = require('../../helpers/transactionTypes.js');
-let slots = require('../../helpers/slots.js');
-let pgp = require('pg-promise');
-let path = require('path');
-let utils = require('../../utils');
-
-let modules, library, self, __private = {};
+let modules, library, self;
+const __private = {};
 
 /**
  * Initializes library.

@@ -67,7 +67,8 @@ function AccountsHttpApi (accountsModule, app, logger, cache, config) {
 		'post /verifyUserToComment': 'verifyUserToComment',
 		'post /senderBalance': 'senderAccountBalance',
 		'post /getMigratedUsers': 'getMigratedUsersList',
-        'get /getDashboardDDKData': 'getDashboardDDKData'
+        'get /getDashboardDDKData': 'getDashboardDDKData',
+		'post /checkAccountExists': 'checkAccountExists'
     });
 
 	router.map(accountsModule.internal, {

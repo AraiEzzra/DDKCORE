@@ -45,6 +45,7 @@ module.exports = {
 		stakeRewardPercent: 10,
 		referralPercentPerLevel: [5, 3, 2, 2, 1, 1, 1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.5, 0.5, 0.5]
 	},
+    blockSlotWindow: 5,
 	activeDelegates: 11,
 	maxVotes: 11,
 	maxVotesPerTransaction: 3,

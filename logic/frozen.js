@@ -243,7 +243,6 @@ Frozen.prototype.undo = function (trs, block, sender, cb) {
                 self.scope.logger.info('Elasticsearch: document deleted successfullly');
             }
         });
-        
         return setImmediate(cb);
     })
     .catch(function (err) {
@@ -351,7 +350,8 @@ Frozen.prototype.verify = function (trs, sender, cb) {
 Frozen.prototype.verifyAirdrop = async (trs) => {
     const airdropReward = await self.getAirdropReward(
         trs.senderId,
-        trs.type === transactionTypes.STAKE ? trs.stakedAmount : trs.asset.reward, trs.type
+        trs.type === transactionTypes.STAKE ? trs.stakedAmount : trs.asset.reward,
+        trs.type
     );
 
     if (
@@ -403,7 +403,13 @@ Frozen.prototype.sendAirdropReward = async function (trs) {
     let i = 0;
 
     for (let sponsorId in transactionAirdropReward.sponsors) {
+
         const rewardAmount = transactionAirdropReward.sponsors[sponsorId];
+
+        if(rewardAmount === 0){
+            return true;
+        }
+
         await self.scope.db.task(async () => {
 
             const iterator = i;
@@ -550,21 +556,17 @@ Frozen.prototype.calculateTotalRewardAndUnstake = async function (senderId, isDo
  * @implements {Frozen#disableFrozeOrders}
  * @return {Promise} {Resolve|Reject}
  */
-Frozen.prototype.applyFrozeOrdersRewardAndUnstake = async function (voteTransaction) {
-    const senderId = voteTransaction.senderId;
-    const freezeOrders = await self.scope.db.query(sql.getActiveFrozeOrders, {
-        senderId, currentTime: slots.getTime()
-    });
-    freezeOrders.forEach((order) => {
+Frozen.prototype.applyFrozeOrdersRewardAndUnstake = async function (voteTransaction, activeOrders) {
+    activeOrders.forEach((order) => {
         order.freezedAmount = parseInt(order.freezedAmount, 10);
         order.voteCount = parseInt(order.voteCount, 10);
         order.status = parseInt(order.status, 10);
     });
     await Promise.all([
-        await self.sendRewards(freezeOrders),
+        await self.sendRewards(activeOrders),
         await self.sendAirdropReward(voteTransaction)
     ]);
-    await self.unstakeOrders(freezeOrders);
+    await self.unstakeOrders(activeOrders);
     return true;
 };
 
@@ -595,12 +597,13 @@ Frozen.prototype.unstakeOrders = async (orders) => {
         return o.voteCount === constants.froze.unstakeVoteCount;
     });
     await Promise.all(readyToUnstakeOrders.map(async order => {
-    await self.scope.db.none(sql.deductFrozeAmount, {
-        orderFreezedAmount: order.freezedAmount, senderId: order.senderId
-    });
-    await self.scope.db.none(sql.disableFrozeOrders, {
-        stakeId: order.stakeId
-    });
+        await self.scope.db.none(sql.deductFrozeAmount, {
+            orderFreezedAmount: order.freezedAmount, senderId: order.senderId
+        });
+        await self.scope.db.none(sql.disableFrozeOrders, {
+            stakeId: order.stakeId
+        });
+        order.status = 0;
     }));
 };
 

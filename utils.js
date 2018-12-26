@@ -148,10 +148,13 @@ exports.deleteDocumentByQuery = function (doc) {
 
 exports.updateDocument = function (doc) {
     (async function () {
-        await esClient.updateByQuery({
+        await esClient.update({
             index: doc.index,
             type: doc.type,
-            body: doc.body
+            body: {
+                doc: doc.body
+            },
+            id: doc.body.stakeId
         }, function (err, res) {
             if (err) {
                 return err.message;
