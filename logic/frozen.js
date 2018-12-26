@@ -12,7 +12,7 @@ let utils = require('../utils');
 
 const __private = {};
 __private.types = {};
-let modules, library, self;
+let modules, self;
 
 /**
  * Main Frozen logic.
