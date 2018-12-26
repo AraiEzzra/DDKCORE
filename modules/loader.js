@@ -316,10 +316,10 @@ __private.loadTransactions = function (cb) {
  */
 __private.loadBlockChain = function () {
 	let offset = 0, limit = Number(library.config.loading.loadPerIteration) || 1000;
-	let verify = Boolean(library.config.loading.verifyOnLoading);
+	let verify = true;
 
 	function load (count) {
-		verify = true;
+		const verifyOnLoading = Boolean(library.config.loading.verifyOnLoading);
 		__private.total = count;
 
 		async.series({
@@ -349,7 +349,7 @@ __private.loadBlockChain = function () {
 					if (count > 1) {
 						library.logger.info('Rebuilding blockchain, current block height: '  + (offset + 1));
 					}
-					modules.blocks.process.loadBlocksOffset(limit, offset, verify, function (err, lastBlock) {
+					modules.blocks.process.loadBlocksOffset(limit, offset, verifyOnLoading, function (err, lastBlock) {
 						if (err) {
 							return setImmediate(cb, err);
 						}
