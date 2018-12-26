@@ -990,7 +990,7 @@ Accounts.prototype.shared = {
 		library.db.query(sql.checkSenderBalance,{
 			sender_address: req.body.address
 		}).then(function(bal){
-			return setImmediate(cb, null, { balance: bal[0].u_balance});
+			return setImmediate(cb, null, { balance: bal[0].balance});
 		}).catch(function(err){
 			return setImmediate(cb, err);
 		});
@@ -1524,57 +1524,101 @@ Accounts.prototype.internal = {
 		});
 	},
 
-	forgotEtpsPassword: function (req, cb) {
-		let data = req.body.data;
-		let userName = Buffer.from((data.split('&')[0]).split('=')[1], 'base64').toString();
-		let email = Buffer.from((data.split('&')[1]).split('=')[1], 'base64').toString();
-		let link = req.body.link;
+    forgotEtpsPassword: function (req, cb) {
+        let data = req.body.data;
+        let userName = Buffer.from((data.split('&')[0]).split('=')[1], 'base64').toString();
+        let email = Buffer.from((data.split('&')[1]).split('=')[1], 'base64').toString();
+        let link = req.body.link;
 
-		library.db.one(sql.validateEtpsUser, {
-			username: userName,
-			emailId: email
-		}).then(function (user) {
-			let newPassword = Math.random().toString(36).substr(2, 8);
-			let hash = crypto.createHash('md5').update(newPassword).digest('hex');
+        library.dbReplica.query(sql.validateEtpsUser, {
+            username: userName,
+            emailId: email
+        }).then(function (user) {
+            if (user.length) {
 
-			library.db.none(sql.updateEtpsPassword, {
-				password: hash,
-				username: userName
-			}).then(function () {
+                let newPassword = Math.random().toString(36).substr(2, 8);
+                let hash = crypto.createHash('md5').update(newPassword).digest('hex');
+                let mobileNumber = user[0].phone;
 
-				let mailOptions = {
-					From: library.config.mailFrom,
-					To: email,
-					TemplateId: 8276287,
-					TemplateModel: {
-						"ddk": {
-						  "username": userName,
-						  "password": newPassword
-						}
-					  }
-				};
+                let mobileLength = mobileNumber ? mobileNumber.length : 0;
 
-				mailServices.sendEmailWithTemplate(mailOptions, function (err) {
-					if (err) {
-						library.logger.error(err.stack);
-						return setImmediate(cb, err.toString());
-					}
-					return setImmediate(cb, null, {
-						success: true,
-						info: "Mail Sent Successfully"
-					});
-				});
-			}).catch(function (err) {
-				library.logger.error(err.stack);
-				return setImmediate(cb, err);
-			});
+                async.series({
 
-		}).catch(function (err) {
-			library.logger.error(err.stack);
-			return setImmediate(cb, 'Invalid username or email');
-		});
+                    sendPasswordSMS: function (smsCallback) {
+                        if (mobileLength >= 8 && mobileLength <= 15) {
+                            let url = 'http://backoffice.etpswallet.gold/sms.php';
+                            let propertiesObject = {
+                                phone: mobileNumber,
+                                content: 'Your ETPS Migration Password is : ' + newPassword
+                            };
 
-	}
+                            request({
+                                url: url,
+                                qs: propertiesObject
+                            }, function (err, response, body) {
+                                if (err) {
+                                    return smsCallback(err);
+                                }
+                                library.logger.info("SMS Code Status Response: " + body.trim());
+                                smsCallback();
+                                // body=="1" sms sent
+                            });
+                        } else {
+                            smsCallback();
+                        }
+                    },
+                    sendPasswordMail: function (mailCallback) {
+                        library.db.none(sql.updateEtpsPassword, {
+                            password: hash,
+                            username: userName
+                        }).then(function () {
+
+                            let mailOptions = {
+                                From: library.config.mailFrom,
+                                To: email,
+                                TemplateId: 8276206,
+                                TemplateModel: {
+                                    "ddk": {
+                                        "username": userName,
+                                        "password": newPassword
+                                    }
+                                }
+                            };
+
+                            mailServices.sendEmailWithTemplate(mailOptions, function (err) {
+                                if (err) {
+                                    library.logger.error(err.stack);
+                                    return mailCallback(err);
+                                }
+                                mailCallback();
+                            });
+                        }).catch(function (err) {
+                            library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
+                            return mailCallback(err);
+                        });
+                    }
+
+                }, function (err) {
+                    if (err) {
+                        return setImmediate(cb, err);
+                    }
+                    return setImmediate(cb, null, {
+                        success: true,
+                        info: "Mail Sent Successfully"
+                    })
+                });
+
+            } else {
+                library.logger.error('Invalid username or email');
+                return setImmediate(cb, 'Invalid username or email');
+            }
+
+        }).catch(function (err) {
+            library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
+            return setImmediate(cb, 'Invalid username or email');
+        });
+
+    }
 };
 
 // Export

@@ -474,7 +474,6 @@ Frozen.prototype.getAirdropReward = async function (senderAddress, amount, trans
         self.scope.logger.error(err);
     }
 
-    // TODO use u_balance
     const availableAirdropBalance = await self.scope.db.oneOrNone(account_sql.getCurrentUnmined, {
         address: constants.airdrop.account
     });

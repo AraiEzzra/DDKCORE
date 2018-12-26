@@ -34,6 +34,8 @@ let path = require('path');
 let program = require('commander');
 let httpApi = require('./helpers/httpApi.js');
 let Sequence = require('./helpers/sequence.js');
+let dbSequence = require('./helpers/dbSequence.js');
+let balanceSequence = require('./helpers/balanceSequence.js');
 let z_schema = require('./helpers/z_schema.js');
 let Logger = require('./logger.js');
 let logman = new Logger();
@@ -43,6 +45,9 @@ let utils = require('./utils');
 let cronjob = require('node-cron-job');
 const serverRPCConfig = require('./api/rpc/server.config');
 const ServerRPCApi = require('./api/rpc/server');
+exports.getUsersList = function() {
+    return sockets;
+};
 
 process.stdin.resume();
 
@@ -370,11 +375,11 @@ d.run(function () {
 		}],
 
 		dbSequence: ['logger', function (scope, cb) {
-			let sequence = new Sequence({
-				onWarning: function (current) {
-					scope.logger.warn('DB queue', current);
-				}
-			});
+            let sequence = new dbSequence({
+                onWarning: function (current) {
+                    scope.logger.warn('DB queue', current);
+                }
+            });
 			cb(null, sequence);
 		}],
 
@@ -388,7 +393,7 @@ d.run(function () {
 		}],
 
 		balancesSequence: ['logger', function (scope, cb) {
-			let sequence = new Sequence({
+			let sequence = new balanceSequence({
 				onWarning: function (current) {
 					scope.logger.warn('Balance queue', current);
 				}

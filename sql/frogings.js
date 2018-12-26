@@ -62,9 +62,11 @@ let FrogingsSql = {
 
 	removeOrderByTrsId: 'DELETE FROM stake_orders WHERE "id" = ${transactionId}',
 
+    removeOrderByTrsIdAndSenderId: 'DELETE FROM stake_orders WHERE "id" = ${transactionId} AND "senderId" = ${senderId}',
+
 	getOrderForUndo: 'SELECT id, "nextVoteMilestone" FROM stake_orders WHERE (SELECT id FROM stake_orders WHERE "stakeId"=${stakeId})=id AND "senderId"=${senderId}',
 
-	updateOldOrder: 'UPDATE stake_orders SET "status"=1, "nextVoteMilestone"=${nextVoteMilestone}, "isVoteDone"=false WHERE "stakeId"=${stakeId} ',
+	updateOldOrder: 'UPDATE stake_orders SET "status"=1, "nextVoteMilestone"=${nextVoteMilestone}, "isVoteDone"=false, "recipientId"=NULL WHERE "stakeId"=${stakeId}',
 
     updateTotalSupply: 'UPDATE mem_accounts SET "balance"=("balance" + ${reward}), "u_balance"=("u_balance" + ${reward}) WHERE "address"=${totalSupplyAccount}',
 
