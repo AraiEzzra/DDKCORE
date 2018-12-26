@@ -469,14 +469,6 @@ __private.loadBlockChain = function () {
 			}
 		}
 
-		// TODO comment like in lisk
-		// let missed = !(results[2].count);
-		// library.logger.info(`Results ${JSON.stringify(results)}`);
-    //
-    // if (missed) {
-			// return reload(count, 'Detected missed blocks in mem_accounts');
-		// }
-
 		let unapplied = results[3].filter(function (row) {
 			return (row.round !== String(round));
 		});
