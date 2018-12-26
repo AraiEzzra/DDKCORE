@@ -40,7 +40,7 @@
  * @property {number} unconfirmedTransactionTimeOut - 1080 blocks
  */
 module.exports = {
-  MASTER_NODE_MIGRATED_BLOCK: 723820,
+  MASTER_NODE_MIGRATED_BLOCK: 0, //723820
 	airdrop: {
 		account: 'DDK10720340277000928808',
 		stakeRewardPercent: 10,
