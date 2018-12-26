@@ -21,6 +21,7 @@ let modules, library, self, __private = {}, shared = {};
 
 __private.assetTypes = {};
 __private.loaded = false;
+__private.readyForForging = false;
 __private.blockReward = new BlockReward();
 __private.keypairs = {};
 __private.tmpKeypairs = {};
@@ -139,7 +140,7 @@ __private.forge = function (cb) {
 
 	// When client is not loaded, is syncing or round is ticking
 	// Do not try to forge new blocks as client is not ready
-	if (!__private.loaded || modules.loader.syncing() || !modules.rounds.loaded() || modules.rounds.ticking()) {
+	if (!__private.loaded || modules.loader.syncing() || !modules.rounds.loaded() || modules.rounds.ticking() || !__private.readyForForging) {
 		library.logger.debug('Client not ready to forge');
 		return setImmediate(cb);
 	}
@@ -571,6 +572,14 @@ Delegates.prototype.onBind = function (scope) {
 	__private.assetTypes[transactionTypes.DELEGATE].bind(
 		scope.accounts
 	);
+};
+
+/**
+ * Loads delegates.
+ * @implements module:transactions#Transactions~fillPool
+ */
+Delegates.prototype.onBlockchainReadyForForging = function () {
+    __private.readyForForging = true;
 };
 
 /**
