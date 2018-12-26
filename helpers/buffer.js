@@ -37,7 +37,7 @@ function writeUInt64LE(buff, bigint, offset) {
 }
 
 function writeNotNull(buff, val, offset, len) {
-    if (val != null) {
+    if (val) {
         buff.write(val, offset, len);
     }
     return offset + len;

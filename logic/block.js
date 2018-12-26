@@ -198,25 +198,10 @@ Block.prototype.getBytes = function (block) {
  * @throws {error} catch error
  */
 Block.prototype.verifySignature = function (block) {
-    let remove = 64;
-    let res;
-
-    try {
-        let data = this.getBytes(block);
-        let data2 = Buffer.alloc(data.length - remove);
-
-        for (let i = 0; i < data2.length; i++) {
-            data2[i] = data[i];
-        }
-        let hash = crypto.createHash('sha256').update(data2).digest();
-        let blockSignatureBuffer = Buffer.from(block.blockSignature, 'hex');
-        let generatorPublicKeyBuffer = Buffer.from(block.generatorPublicKey, 'hex');
-        res = this.scope.ed.verify(hash, blockSignatureBuffer || ' ', generatorPublicKeyBuffer || ' ');
-    } catch (e) {
-        throw e;
-    }
-
-    return res;
+    const hash = crypto.createHash('sha256').update(this.getBytes(block)).digest();
+    const blockSignatureBuffer = Buffer.from(block.blockSignature, 'hex');
+    const generatorPublicKeyBuffer = Buffer.from(block.generatorPublicKey, 'hex');
+    return sodium.crypto_sign_verify_detached(blockSignatureBuffer, hash, generatorPublicKeyBuffer);
 };
 
 Block.prototype.dbTable = 'blocks';

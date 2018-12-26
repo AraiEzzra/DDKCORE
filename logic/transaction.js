@@ -1,5 +1,5 @@
 let bignum = require('../helpers/bignum.js');
-let ByteBuffer = require('bytebuffer');
+const sodium = require('sodium-javascript');
 let constants = require('../helpers/constants.js');
 let crypto = require('crypto');
 let exceptions = require('../helpers/exceptions.js');
@@ -200,7 +200,7 @@ Transaction.prototype.getId = function (trs) {
  * @return {hash} sha256 crypto hash
  */
 Transaction.prototype.getHash = function (trs) {
-    return crypto.createHash('sha256').update(this.getBytes(trs)).digest();
+    return crypto.createHash('sha256').update(this.getBytes(trs, false, false)).digest();
 };
 
 /**
@@ -213,7 +213,7 @@ Transaction.prototype.getHash = function (trs) {
  * @return {!Array} Contents as an ArrayBuffer.
  * @throws {error} If buffer fails.
  */
-Transaction.prototype.getBytes = function (trs, skipSignature, skipSecondSignature) {
+Transaction.prototype.getBytes = function (trs, skipSignature = false, skipSecondSignature = false) {
     if (!__private.types[trs.type]) {
         throw 'Unknown transaction type ' + trs.type;
     }
@@ -228,9 +228,11 @@ Transaction.prototype.getBytes = function (trs, skipSignature, skipSecondSignatu
 
     if (trs.recipientId) {
         offset = BUFFER.writeUInt64LE(buff, parseInt(trs.recipientId.slice(3), 10), offset);
-    } else {
-        offset += BUFFER.LENGTH.INT64;
     }
+    // TODO uncomment after redump
+    // else {
+    //     offset += BUFFER.LENGTH.INT64;
+    // }
 
     offset = BUFFER.writeUInt64LE(buff, trs.amount, offset);
 
@@ -673,16 +675,8 @@ Transaction.prototype.verifySignature = function (trs, publicKey, signature) {
         return false;
     }
 
-    let res;
-
-    try {
-        let bytes = this.getBytes(trs, true, true);
-        res = this.verifyBytes(bytes, publicKey, signature);
-    } catch (e) {
-        throw e;
-    }
-
-    return res;
+    const bytes = this.getBytes(trs, false, false);
+    return this.verifyBytes(bytes, publicKey, signature);
 };
 
 /**
@@ -727,25 +721,10 @@ Transaction.prototype.verifySecondSignature = function (trs, publicKey, signatur
  * @throws {error}
  */
 Transaction.prototype.verifyBytes = function (bytes, publicKey, signature) {
-    let res;
-
-    try {
-        let data2 = Buffer.alloc(bytes.length);
-
-        for (let i = 0; i < data2.length; i++) {
-            data2[i] = bytes[i];
-        }
-
-        let hash = crypto.createHash('sha256').update(data2).digest();
-        let signatureBuffer = Buffer.from(signature, 'hex');
-        let publicKeyBuffer = Buffer.from(publicKey, 'hex');
-
-        res = this.scope.ed.verify(hash, signatureBuffer || ' ', publicKeyBuffer || ' ');
-    } catch (e) {
-        throw e;
-    }
-
-    return res;
+    const hash = crypto.createHash('sha256').update(bytes).digest();
+    const signatureBuffer = Buffer.from(signature, 'hex');
+    const publicKeyBuffer = Buffer.from(publicKey, 'hex');
+    return sodium.crypto_sign_verify_detached(signatureBuffer, hash, publicKeyBuffer);
 };
 
 /**

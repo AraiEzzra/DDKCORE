@@ -106,7 +106,7 @@ LEFT OUTER JOIN dapps AS dapp ON dapp."transactionId" = t."id"
 LEFT OUTER JOIN intransfer AS it ON it."transactionId" = t."id"
 LEFT OUTER JOIN outtransfer AS ot ON ot."transactionId" = t."id"
 LEFT JOIN stake_orders so ON so."id" = t."id"
-LEFT JOIN referals ref ON ref."address" = t."recipientId";
+LEFT JOIN referals ref ON ref."address" = t."senderId";
 
 CREATE VIEW trs_list AS
 
