@@ -525,9 +525,9 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
         valid = true;
         // FIXME verify transaction signature
         // https://trello.com/c/VcBpfYTi/180-failed-to-verify-transaction-signature
-        // if (trs.type !== transactionTypes.REFERRAL) {
-        //   valid = this.verifySignature(trs, (trs.requesterPublicKey || trs.senderPublicKey), trs.signature);
-        // }
+        if (trs.type !== transactionTypes.REFERRAL) {
+          valid = this.verifySignature(trs, (trs.requesterPublicKey || trs.senderPublicKey), trs.signature);
+        }
 
     } catch (e) {
         this.scope.logger.error(e.stack);
@@ -604,8 +604,8 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
 	) {
 		// TODO: Restore transation verify
 		// https://trello.com/c/2jF7cnad/115-restore-transactions-verifing
-		//return setImmediate(cb, 'Invalid transaction fee');
-	  this.scope.logger.error('Invalid transaction fee');}
+		return setImmediate(cb, 'Invalid transaction fee');
+	  }
 
     // Check amount
     if (trs.amount < 0 || trs.amount > constants.totalAmount || String(trs.amount).indexOf('.') >= 0 || trs.amount.toString().indexOf('e') >= 0) {

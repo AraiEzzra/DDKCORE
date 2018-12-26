@@ -49,10 +49,6 @@ function Verify(logger, block, transaction, db, config) {
  * @return {Object}   cb.err Error if occurred
  */
 __private.checkTransaction = function (block, transaction, checkExists, cb) {
-  // TODO: restore transaction verifing
-  // https://trello.com/c/2jF7cnad/115-restore-transactions-verifing
-  // return setImmediate(cb);
-
   async.waterfall([
     function getTransactionId(waterCb) {
       try {
@@ -287,7 +283,16 @@ __private.verifyPayload = function (block, result) {
     let bytes;
 
     try {
-      bytes = library.logic.transaction.getBytes(transaction, false, false);
+      bytes = library.logic.transaction.getBytes(
+          Object.assign(
+              {},
+              transaction,
+              { asset: {
+                referrals: null
+              }}),
+          false,
+          false
+      );
     } catch (e) {
       result.errors.push(e.toString());
     }
@@ -308,8 +313,7 @@ __private.verifyPayload = function (block, result) {
   if (hex !== block.payloadHash) {
     // FIXME update old chain payloadHash
     // https://trello.com/c/G3XRs3Fk/127-update-old-chain-payloadhash
-    if (block.height > constants.MASTER_NODE_MIGRATED_BLOCK && false) {
-      console.log('block.payloadHash', hex, block.payloadHash);
+    if (block.height > constants.MASTER_NODE_MIGRATED_BLOCK) {
       result.errors.push('Invalid payload hash');
     }
   }
