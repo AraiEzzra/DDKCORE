@@ -1,7 +1,6 @@
 
 
 let bignum = require('../helpers/bignum.js');
-let BlockReward = require('../logic/blockReward.js');
 let constants = require('../helpers/constants.js');
 let crypto = require('crypto');
 let schema = require('../schema/accounts.js');
@@ -24,7 +23,6 @@ let modules, library, self, __private = {}, shared = {};
 let frogings_sql = require('../sql/frogings');
 
 __private.assetTypes = {};
-__private.blockReward = new BlockReward();
 
 /**
  * Initializes library with scope content and generates a Vote instance.
@@ -571,7 +569,7 @@ Accounts.prototype.shared = {
 			let publicKey = keypair.publicKey.toString('hex');
 
 			if (req.body.publicKey) {
-				if (keypair.publicKey.toString('hex') !== req.body.publicKey) {
+				if (publicKey.toString('hex') !== req.body.publicKey) {
 					return setImmediate(cb, 'Invalid passphrase');
 				}
 			}
@@ -804,17 +802,6 @@ Accounts.prototype.shared = {
 	},
 
 	migrateData: function (req, cb) {
-
-		try {
-			var balance;
-			if (req.body.data.balance_d === null) {
-				balance = 0;
-			} else {
-				balance = parseFloat(req.body.data.balance_d) * 100000000;
-			}
-		} catch (err) {
-			return setImmediate(cb, err.toString());
-		}
 
 		function getStakeOrderFromETPS(next) {
 			library.db.query(sql.getETPSStakeOrders, {
@@ -1416,6 +1403,9 @@ Accounts.prototype.internal = {
 						seriesCb(err, false);
 					});
 				}],
+				/**
+				 * @todo FIX param activeStakeCount
+ 				 */
 				checkActiveStakeOfLeftAndRightSponsor: ['checkActiveStake', function (result, seriesCb) {
 					library.db.query(sql.findDirectSponsor, {
 						introducer: req.body.address
@@ -1554,7 +1544,6 @@ Accounts.prototype.internal = {
 		let data = req.body.data;
 		let userName = Buffer.from((data.split('&')[0]).split('=')[1], 'base64').toString();
 		let email = Buffer.from((data.split('&')[1]).split('=')[1], 'base64').toString();
-		let link = req.body.link;
 
 		library.db.one(sql.validateEtpsUser, {
 			username: userName,

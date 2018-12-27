@@ -1,7 +1,6 @@
 const _ = require('lodash');
 const async = require('async');
 const bignum = require('../helpers/bignum.js');
-const BlockReward = require('../logic/blockReward.js');
 const checkIpInList = require('../helpers/checkIpInList.js');
 const constants = require('../helpers/constants.js');
 const jobsQueue = require('../helpers/jobsQueue.js');
@@ -22,7 +21,6 @@ let modules, library, self, __private = {}, shared = {};
 __private.assetTypes = {};
 __private.loaded = false;
 __private.readyForForging = false;
-__private.blockReward = new BlockReward();
 __private.keypairs = {};
 __private.tmpKeypairs = {};
 
@@ -572,14 +570,6 @@ Delegates.prototype.onBind = function (scope) {
 	__private.assetTypes[transactionTypes.DELEGATE].bind(
 		scope.accounts
 	);
-};
-
-/**
- * Loads delegates.
- * @implements module:transactions#Transactions~fillPool
- */
-Delegates.prototype.onBlockchainReadyForForging = function () {
-    __private.readyForForging = true;
 };
 
 /**
