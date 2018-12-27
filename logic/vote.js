@@ -5,7 +5,6 @@ let Diff = require('../helpers/diff.js');
 let _ = require('lodash');
 let sql = require('../sql/accounts.js');
 let slots = require('../helpers/slots.js');
-const transactionTypes = require('../helpers/transactionTypes');
 let utils = require('../utils');
 
 // Private fields
