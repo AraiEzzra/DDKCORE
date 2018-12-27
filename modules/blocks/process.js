@@ -200,7 +200,8 @@ Process.prototype.loadBlocksOffset = function (limit, offset, verify, cb) {
                         // modules.blocks.lastBlock.set(block);
                         return setImmediate(cb, err);
                     },
-                    false
+					false,
+					verify,
                 );
 			}, function (err) {
 				return setImmediate(cb, err, modules.blocks.lastBlock.get());
