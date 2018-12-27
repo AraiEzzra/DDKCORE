@@ -88,11 +88,11 @@ OutTransfer.prototype.verify = function (trs, sender, cb) {
 		return setImmediate(cb, 'Invalid transaction asset');
 	}
 
-	if (!/^[0-9]+$/.test(trs.asset.outTransfer.dappId)) {
+	if (!/^[0-9a-fA-F]+$/.test(trs.asset.outTransfer.dappId)) {
 		return setImmediate(cb, 'Invalid outTransfer dappId');
 	}
 
-	if (!/^[0-9]+$/.test(trs.asset.outTransfer.transactionId)) {
+	if (!/^[0-9a-fA-F]+$/.test(trs.asset.outTransfer.transactionId)) {
 		return setImmediate(cb, 'Invalid outTransfer transactionId');
 	}
 

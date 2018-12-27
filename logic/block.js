@@ -117,7 +117,7 @@ Block.prototype.create = function (data) {
     }
 
     let block = {
-        version: 0,
+        version: constants.CURRENT_BLOCK_VERSION,
         totalAmount: totalAmount,
         totalFee: totalFee,
         reward: reward,

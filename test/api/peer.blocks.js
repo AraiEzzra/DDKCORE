@@ -5,7 +5,7 @@ let genesisblock = require('../../helpers/genesisBlock');
 
 let testBlock = {
 	id: '2807833455815592401',
-	version: 0,
+	version: 1,
 	timestamp: 39997040,
 	height: 1258,
 	previousBlock: '3863141986505461614',

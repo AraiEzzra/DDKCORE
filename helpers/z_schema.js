@@ -27,7 +27,7 @@ z_schema.registerFormat('id', function (str) {
 		return true;
 	}
 
-	return /^[0-9]+$/g.test(str);
+	return /^[0-9a-fA-F]+$/g.test(str);
 });
 
 z_schema.registerFormat('address', function (str) {

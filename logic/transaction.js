@@ -218,6 +218,7 @@ Transaction.prototype.getBytes = function (trs, skipSignature = false, skipSecon
         throw 'Unknown transaction type ' + trs.type;
     }
     const assetBytes = __private.types[trs.type].getBytes.call(this, trs, skipSignature, skipSecondSignature);
+    console.log('assetBytes', JSON.stringify(assetBytes));
     const buff = Buffer.alloc(TRANSACTION_BUFFER_SIZE);
     let offset = 0;
 
@@ -525,9 +526,7 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
         valid = true;
         // FIXME verify transaction signature
         // https://trello.com/c/VcBpfYTi/180-failed-to-verify-transaction-signature
-        if (trs.type !== transactionTypes.REFERRAL) {
-          valid = this.verifySignature(trs, (trs.requesterPublicKey || trs.senderPublicKey), trs.signature);
-        }
+        valid = this.verifySignature(trs, (trs.requesterPublicKey || trs.senderPublicKey), trs.signature);
 
     } catch (e) {
         this.scope.logger.error(e.stack);
@@ -679,8 +678,9 @@ Transaction.prototype.verifySignature = function (trs, publicKey, signature) {
     if (!signature) {
         return false;
     }
-
+    console.log(trs, JSON.stringify(trs), publicKey, signature);
     const bytes = this.getBytes(trs, false, false);
+    console.log(bytes, JSON.stringify(bytes));
     return this.verifyBytes(bytes, publicKey, signature);
 };
 
