@@ -65,7 +65,10 @@ __private.checkTransaction = function (block, transaction, checkExists, cb) {
     function getAccount(waterCb) {
       // Get account from database if any (otherwise cold wallet).
       // DATABASE: read only
-      modules.accounts.setAccountAndGet({publicKey: transaction.senderPublicKey}, waterCb);
+      modules.accounts.setAccountAndGet({
+          publicKey: transaction.senderPublicKey,
+          address: transaction.senderId
+      }, waterCb);
     },
     function verifyTransaction(sender, waterCb) {
       // Check if transaction id valid against database state (mem_* tables).

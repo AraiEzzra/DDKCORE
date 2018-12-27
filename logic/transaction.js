@@ -218,6 +218,7 @@ Transaction.prototype.getBytes = function (trs, skipSignature = false, skipSecon
         throw 'Unknown transaction type ' + trs.type;
     }
     const assetBytes = __private.types[trs.type].getBytes.call(this, trs, skipSignature, skipSecondSignature);
+    this.scope.logger.debug(`Trs ${JSON.stringify(trs)}`);
     this.scope.logger.debug(`AssetBytes ${JSON.stringify(assetBytes)}`);
     const buff = Buffer.alloc(TRANSACTION_BUFFER_SIZE);
     let offset = 0;
@@ -231,9 +232,9 @@ Transaction.prototype.getBytes = function (trs, skipSignature = false, skipSecon
         offset = BUFFER.writeUInt64LE(buff, parseInt(trs.recipientId.slice(3), 10), offset);
     }
     // TODO uncomment after redump
-    // else {
-    //     offset += BUFFER.LENGTH.INT64;
-    // }
+    else {
+        offset += BUFFER.LENGTH.INT64;
+    }
 
     offset = BUFFER.writeUInt64LE(buff, trs.amount, offset);
 
@@ -474,7 +475,10 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
     }
 
     // Check sender public key
-    if (sender.publicKey && sender.publicKey !== trs.senderPublicKey) {
+    if (
+        sender.publicKey && sender.publicKey !== trs.senderPublicKey &&
+        trs.height > constants.MASTER_NODE_MIGRATED_BLOCK
+    ) {
         err = ['Invalid sender public key:', trs.senderPublicKey, 'expected:', sender.publicKey].join(' ');
 
         if (exceptions.senderPublicKey.indexOf(trs.id) > -1) {
@@ -675,9 +679,11 @@ Transaction.prototype.verifySignature = function (trs, publicKey, signature) {
     self.scope.logger.debug(`Transaction ${JSON.stringify(trs)}`);
     self.scope.logger.debug(`publicKey ${JSON.stringify(publicKey)}`);
     self.scope.logger.debug(`signature ${JSON.stringify(signature)}`);
-    const bytes = this.getBytes(trs, true, true);
+    const bytes = this.getBytes(trs, true, false);
     self.scope.logger.debug(`Bytes ${JSON.stringify(bytes)}`);
-    return this.verifyBytes(bytes, publicKey, signature);
+    const verify = this.verifyBytes(bytes, publicKey, signature);
+    self.scope.logger.debug(`verify ${JSON.stringify(verify)}`);
+    return verify;
 };
 
 /**
@@ -723,6 +729,7 @@ Transaction.prototype.verifySecondSignature = function (trs, publicKey, signatur
  */
 Transaction.prototype.verifyBytes = function (bytes, publicKey, signature) {
     const hash = crypto.createHash('sha256').update(bytes).digest();
+    console.log(signature, publicKey)
     const signatureBuffer = Buffer.from(signature, 'hex');
     const publicKeyBuffer = Buffer.from(publicKey, 'hex');
     return sodium.crypto_sign_verify_detached(signatureBuffer, hash, publicKeyBuffer);
