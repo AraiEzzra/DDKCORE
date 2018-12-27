@@ -283,16 +283,7 @@ __private.verifyPayload = function (block, result) {
     let bytes;
 
     try {
-      bytes = library.logic.transaction.getBytes(
-          Object.assign(
-              {},
-              transaction,
-              { asset: {
-                referrals: null
-              }}),
-          false,
-          false
-      );
+      bytes = library.logic.transaction.getBytes(transaction, false, false);
     } catch (e) {
       result.errors.push(e.toString());
     }

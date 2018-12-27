@@ -1,8 +1,5 @@
-
-
-let utils = require('./utils');
-let sql = require('./sql/accounts.js');
-let path = require('path');
+const utils = require('./utils');
+const path = require('path');
 let library = {};
 
 
@@ -30,7 +27,7 @@ exports.attachScope = function (scope) {
 */
 
 let esIterationFinished = true;
-let limit = 5000;
+let limit = 1000;
 let dbTables = [
 	{
 		tableName: 'blocks_list',
@@ -150,41 +147,4 @@ exports.archiveLogFiles = {
 	},
 	spawn: false
 };
-
-/** 
- * @desc checks for pending users and unlocks them everyday at midnight
-*/
-exports.unlockLockedUsers = {
-
-	on: '00 00 00 * * *',
-	job: function () {
-		library.logger.info('Checking any pending users(contributors, founders etc...) which needs to be unlocked and unlock them at midnight every day');
-		library.cache.client.keys('*userTimeHash_*', function (err, userKeys) {
-			userKeys.forEach(function (key) {
-				library.modules.cache.hgetall(key, function (err, data) {
-					let lastBlock = library.modules.blocks.lastBlock.get();
-					if (data.endTime < lastBlock.timestamp) {
-						library.modules.cache.getJsonForKey('minedContributorsBalance', function (err, contributorsBalance) {
-							let totalContributorsBal = parseInt(data.transferedAmount) + parseInt(contributorsBalance);
-							library.modules.cache.setJsonForKey('minedContributorsBalance', totalContributorsBal);
-						});
-						library.db.none(sql.enableAccount, {
-							senderId: data.address
-						})
-							.then(function () {
-								library.logger.info(data.address + ' account is unlocked');
-								library.cache.client.del('userInfo_' + data.address);
-								library.cache.client.del('userTimeHash_' + data.endTime);
-							})
-							.catch(function (err) {
-								library.logger.error(err.stack);
-							});
-					}
-				});
-			});
-		});
-	},
-	spawn: false
-};
-
 /*************************************** END OF FILE *************************************/
