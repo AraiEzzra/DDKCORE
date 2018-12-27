@@ -15,8 +15,6 @@ let Referals = {
 
     updateAccountBalance: 'UPDATE mem_accounts SET "balance" = "balance" + ${reward}, "u_balance" = "u_balance" + ${reward} WHERE "address" = ${address}',
 
-    updateReferLink : 'UPDATE mem_accounts SET "referralLink" = ${referralLink} WHERE "address" = ${address}',
-
     referLevelChain : 'SELECT level from referals WHERE "address" = ${address}',
 
     checkBalance : 'SELECT u_balance from mem_accounts WHERE "address" = ${sender_address}',
@@ -24,8 +22,6 @@ let Referals = {
     // TODO: Fix duplicate key value violates unique constraint "referals_pkey"
     // https://trello.com/c/hokoAxK9/163-fix-duplicate-key-value-violates-unique-constraint-referalspkey
     insertLevelChain: 'INSERT INTO referals ("address","level") VALUES (${address},${level}) ON CONFLICT DO NOTHING',
-
-    getDirectSponsor : 'SELECT address from referals WHERE level[1] = ${address}',
 
     insertMemberAccount : 'UPDATE mem_accounts SET "totalFrozeAmount"=${totalFrozeAmount},"group_bonus"=${group_bonus},"pending_group_bonus"=${group_bonus} WHERE "address"= ${address}',
 

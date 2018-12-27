@@ -84,8 +84,6 @@ let BlocksSql = {
 		].filter(Boolean).join(' ');
 	},
 
-	countByRowId: 'SELECT COUNT("rowId")::int FROM blocks',
-
 	getHeightByLastId: 'SELECT "height" FROM blocks WHERE "id" = ${lastId}',
 
 	loadBlocksData: function (params) {
