@@ -87,7 +87,7 @@ Transfer.prototype.process = function (trs, sender, cb) {
  * @return {null}
  */
 Transfer.prototype.getBytes = function () {
-	return null;
+	return Buffer.from([]);
 };
 
 /**

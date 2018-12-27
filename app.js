@@ -715,7 +715,6 @@ d.run(function () {
 
 			cronjob.startJob('updateDataOnElasticSearch');
 			cronjob.startJob('archiveLogFiles');
-			cronjob.startJob('unlockLockedUsers');
 
 			/**
 			 * Handles app instance (acts as global variable, passed as parameter).
