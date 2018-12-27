@@ -520,7 +520,7 @@ Verify.prototype.addBlockProperties = function (block) {
   block.reward = block.reward || 0;
 
   if (block.version === undefined) {
-    block.version = 0;
+    block.version = constants.CURRENT_BLOCK_VERSION;
   }
   if (block.numberOfTransactions === undefined) {
     if (block.transactions === undefined) {
@@ -546,7 +546,7 @@ Verify.prototype.addBlockProperties = function (block) {
  */
 Verify.prototype.deleteBlockProperties = function (block) {
   const reducedBlock = Object.assign({}, block);
-  if (reducedBlock.version === 0) {
+  if (reducedBlock.version === constants.CURRENT_BLOCK_VERSION) {
     delete reducedBlock.version;
   }
   // verifyBlock ensures numberOfTransactions is transactions.length

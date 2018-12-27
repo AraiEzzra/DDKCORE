@@ -379,6 +379,7 @@ Transport.prototype.getFromPeer = function (peer, options, cb) {
 				let report = library.schema.validate(headers, schema.headers);
 				if (!report) {
 					// Remove peer
+          console.log('EHEADERS1', report);
 					__private.removePeer({peer: peer, code: 'EHEADERS'}, req.method + ' ' + req.url);
 
 					return setImmediate(cb, ['Invalid response headers', JSON.stringify(headers), req.method, req.url].join(' '));
@@ -554,7 +555,7 @@ Transport.prototype.internal = {
 			.split(',')
 			// Reject any non-numeric values
 			.filter(function (id) {
-				return /^[0-9]+$/.test(id);
+				return /^[0-9a-fA-F]+$/.test(id);
 			});
 
 		if (!escapedIds.length) {

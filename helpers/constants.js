@@ -1,7 +1,8 @@
 const env = process.env;
 const constants = {
   PREVIOUS_DELEGATES_COUNT: 3,
-  MASTER_NODE_MIGRATED_BLOCK: 0
+  MASTER_NODE_MIGRATED_BLOCK: 0,
+  CURRENT_BLOCK_VERSION: 1
 };
 
 Object.assign(constants, require('../config/env'));

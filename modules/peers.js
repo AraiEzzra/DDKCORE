@@ -218,7 +218,7 @@ Peers.prototype.sandboxApi = function (call, args, cb) {
 };
 
 Peers.prototype.update = function (peer) {
-	peer.state = 2;
+	peer.state = Peer.STATE.CONNECTED;
 	return library.logic.peers.upsert(peer);
 };
 
