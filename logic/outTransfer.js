@@ -145,18 +145,9 @@ OutTransfer.prototype.process = function (trs, sender, cb) {
  * @throws {e} Error
  */
 OutTransfer.prototype.getBytes = function (trs) {
-	let buf;
-
-	try {
-		buf = Buffer.from([]);
-		let dappIdBuf = Buffer.from(trs.asset.outTransfer.dappId, 'utf8');
-		let transactionIdBuff = Buffer.from(trs.asset.outTransfer.transactionId, 'utf8');
-		buf = Buffer.concat([buf, dappIdBuf, transactionIdBuff]);
-	} catch (e) {
-		throw e;
-	}
-
-	return buf;
+		const dappIdBuf = Buffer.from(trs.asset.outTransfer.dappId, 'utf8');
+		const transactionIdBuff = Buffer.from(trs.asset.outTransfer.transactionId, 'utf8');
+		return Buffer.concat([dappIdBuf, transactionIdBuff]);
 };
 
 /**

@@ -116,17 +116,7 @@ InTransfer.prototype.process = function (trs, sender, cb) {
  * @throws {e} Error
  */
 InTransfer.prototype.getBytes = function (trs) {
-	let buf;
-
-	try {
-		buf = Buffer.from([]);
-		let nameBuf = Buffer.from(trs.asset.inTransfer.dappId, 'utf8');
-		buf = Buffer.concat([buf, nameBuf]);
-	} catch (e) {
-		throw e;
-	}
-
-	return buf;
+		return Buffer.from(trs.asset.inTransfer.dappId, 'utf8');
 };
 
 /**
