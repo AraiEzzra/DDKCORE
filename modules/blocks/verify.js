@@ -737,7 +737,7 @@ __private.checkTransactions = function (block, checkExists, cb) {
  * @return {Function} cb Callback function from params (through setImmediate)
  * @return {Object}   cb.err Error if occurred
  */
-Verify.prototype.processBlock = function (block, broadcast, cb, saveBlock) {
+Verify.prototype.processBlock = function (block, broadcast, cb, saveBlock, verify = true) {
   if (modules.blocks.isCleaning.get()) {
     // Break processing if node shutdown reqested
     return setImmediate(cb, 'Cleaning up');
@@ -754,6 +754,9 @@ Verify.prototype.processBlock = function (block, broadcast, cb, saveBlock) {
       __private.normalizeBlock(block, seriesCb);
     },
     verifyBlock(seriesCb) {
+      if (!verify) {
+        return setImmediate(seriesCb);
+      }
       __private.verifyBlock(block, seriesCb);
     },
     checkExists(seriesCb) {
