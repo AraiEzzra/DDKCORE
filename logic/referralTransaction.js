@@ -103,7 +103,7 @@ ReferTransfer.prototype.process = function (trs, sender, cb) {
  * @return {null}
  */
 ReferTransfer.prototype.getBytes = function (trs) {
-	return null;
+	return Buffer.from([]);
 };
 
 /**

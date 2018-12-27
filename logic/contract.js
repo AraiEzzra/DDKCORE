@@ -94,8 +94,8 @@ Contract.prototype.verify = function (trs, sender, cb) {
  * @implements 
  * @return {null}
  */
-Contract.prototype.getBytes = function () {
-	return null;
+Contract.prototype.getBytes = function (trs) {
+	return Buffer.from([]);
 };
 
 /**

@@ -87,7 +87,7 @@ Migration.prototype.process = function (trs, sender, cb) {
  * @return {null}
  */
 Migration.prototype.getBytes = function (trs) {
-	return null;
+	return Buffer.from([]);
 };
 
 /**
