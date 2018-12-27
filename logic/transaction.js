@@ -218,7 +218,7 @@ Transaction.prototype.getBytes = function (trs, skipSignature = false, skipSecon
         throw 'Unknown transaction type ' + trs.type;
     }
     const assetBytes = __private.types[trs.type].getBytes.call(this, trs, skipSignature, skipSecondSignature);
-    console.log('assetBytes', JSON.stringify(assetBytes));
+    this.scope.logger.debug(`AssetBytes ${JSON.stringify(assetBytes)}`);
     const buff = Buffer.alloc(TRANSACTION_BUFFER_SIZE);
     let offset = 0;
 
@@ -678,9 +678,11 @@ Transaction.prototype.verifySignature = function (trs, publicKey, signature) {
     if (!signature) {
         return false;
     }
-    console.log(trs, JSON.stringify(trs), publicKey, signature);
-    const bytes = this.getBytes(trs, false, false);
-    console.log(bytes, JSON.stringify(bytes));
+    self.scope.logger.debug(`Transaction ${JSON.stringify(trs)}`);
+    self.scope.logger.debug(`publicKey ${JSON.stringify(publicKey)}`);
+    self.scope.logger.debug(`signature ${JSON.stringify(signature)}`);
+    const bytes = this.getBytes(trs, true, true);
+    self.scope.logger.debug(`Bytes ${JSON.stringify(bytes)}`);
     return this.verifyBytes(bytes, publicKey, signature);
 };
 
