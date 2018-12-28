@@ -384,7 +384,7 @@ Chain.prototype.applyBlock = function (block, broadcast, cb, saveBlock) {
 		applyUnconfirmed: function (seriesCb) {
 			async.eachSeries(block.transactions, function (transaction, eachSeriesCb) {
 				// DATABASE write
-				modules.accounts.setAccountAndGet({publicKey: transaction.senderPublicKey}, function (err, sender) {
+				modules.accounts.getAccount({publicKey: transaction.senderPublicKey}, function (err, sender) {
 					// DATABASE: write
 					modules.transactions.applyUnconfirmed(transaction, sender, function (err) {
 						if (err) {
