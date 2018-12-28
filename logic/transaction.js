@@ -445,32 +445,56 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
     }
     // Check sender
     if (!sender) {
-        return setImmediate(cb, 'Missing sender');
+        if (constants.TRANSACTION_VALIDATION_ENABLED.SENDER) {
+            return setImmediate(cb, 'Missing sender');
+        } else {
+            library.logger.error('Transaction sender error')
+        }
     }
 
     // Check transaction type
     if (!__private.types[trs.type]) {
-        return setImmediate(cb, 'Unknown transaction type ' + trs.type);
+        if(constants.TRANSACTION_VALIDATION_ENABLED.TYPE) {
+            return setImmediate(cb, 'Unknown transaction type ' + trs.type);
+        } else {
+            library.logger.error('Transaction error type')
+        }
     }
 
     // Check for missing sender second signature
     if (!trs.requesterPublicKey && sender.secondSignature && !trs.signSignature && trs.blockId !== this.scope.genesisblock.block.id) {
-        return setImmediate(cb, 'Missing sender second signature');
+        if(constants.TRANSACTION_VALIDATION_ENABLED.SECOND_SIGNATURE) {
+            return setImmediate(cb, 'Missing sender second signature');
+        } else {
+            library.logger.error('Missing sender second signature')
+        }
     }
 
     // If second signature provided, check if sender has one enabled
     if (!trs.requesterPublicKey && !sender.secondSignature && (trs.signSignature && trs.signSignature.length > 0)) {
-        return setImmediate(cb, 'Sender does not have a second signature');
+        if(constants.TRANSACTION_VALIDATION_ENABLED.SENDER_SECOND_SIGNATURE) {
+            return setImmediate(cb, 'Sender does not have a second signature');
+        } else {
+            library.logger.error('Sender does not have a second signature')
+        }
     }
 
     // Check for missing requester second signature
     if (trs.requesterPublicKey && requester.secondSignature && !trs.signSignature) {
-        return setImmediate(cb, 'Missing requester second signature');
+        if(constants.TRANSACTION_VALIDATION_ENABLED.REQUEST_SECOND_SIGNATURE) {
+            return setImmediate(cb, 'Missing requester second signature');
+        } else {
+            library.logger.error('Missing requester second signature')
+        }
     }
 
     // If second signature provided, check if requester has one enabled
     if (trs.requesterPublicKey && !requester.secondSignature && (trs.signSignature && trs.signSignature.length > 0)) {
-        return setImmediate(cb, 'Requester does not have a second signature');
+        if(constants.TRANSACTION_VALIDATION_ENABLED.CHECKING_REQUEST_SECOND_SIGNATURE) {
+            return setImmediate(cb, 'Requester does not have a second signature');
+        } else {
+            library.logger.error('Requester does not have a second signature')
+        }
     }
 
     // Check sender public key
@@ -479,23 +503,35 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
         trs.height > constants.MASTER_NODE_MIGRATED_BLOCK
     ) {
         err = ['Invalid sender public key:', trs.senderPublicKey, 'expected:', sender.publicKey].join(' ');
+       if (constants.TRANSACTION_VALIDATION_ENABLED.SENDER_PUBLIC_KEY) {
 
-        if (exceptions.senderPublicKey.indexOf(trs.id) > -1) {
-            this.scope.logger.debug(err);
-            this.scope.logger.debug(JSON.stringify(trs));
-        } else {
-            return setImmediate(cb, err);
-        }
+           if (exceptions.senderPublicKey.indexOf(trs.id) > -1) {
+               this.scope.logger.debug(err);
+               this.scope.logger.debug(JSON.stringify(trs));
+           } else {
+               return setImmediate(cb, err);
+           }
+       } else {
+           library.logger.error('Sender public key error')
+       }
     }
 
     // Check sender is not genesis account unless block id equals genesis
     if ([exceptions.genesisPublicKey.mainnet, exceptions.genesisPublicKey.testnet].indexOf(sender.publicKey) !== -1 && trs.blockId !== this.scope.genesisblock.block.id) {
-        return setImmediate(cb, 'Invalid sender. Can not send from genesis account');
+       if (constants.TRANSACTION_VALIDATION_ENABLED.SENDER_GENESIS_ACCOUNT) {
+           return setImmediate(cb, 'Invalid sender. Can not send from genesis account');
+       } else {
+           library.logger.error('Invalid sender. Can not send from genesis account')
+       }
     }
 
     // Check sender address
     if (String(trs.senderId).toUpperCase() !== String(sender.address).toUpperCase()) {
-        return setImmediate(cb, 'Invalid sender address');
+        if (constants.TRANSACTION_VALIDATION_ENABLED.SENDER_ADDRESS) {
+            return setImmediate(cb, 'Invalid sender address');
+        } else {
+            library.logger.error('Invalid sender address')
+        }
     }
 
     // Determine multisignatures from sender or transaction asset
@@ -507,7 +543,11 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
                 let key = trs.asset.multisignature.keysgroup[i];
 
                 if (!key || typeof key !== 'string') {
-                    return setImmediate(cb, 'Invalid member in keysgroup');
+                    if (constants.TRANSACTION_VALIDATION_ENABLED.KEYSGROUP_MEMBER) {
+                        return setImmediate(cb, 'Invalid member in keysgroup');
+                    } else {
+                        library.logger.error('Invalid member in keysgroup')
+                    }
                 }
 
                 multisignatures.push(key.slice(1));
@@ -520,7 +560,11 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
         multisignatures.push(trs.senderPublicKey);
 
         if (sender.multisignatures.indexOf(trs.requesterPublicKey) < 0) {
-            return setImmediate(cb, 'Account does not belong to multisignature group');
+            if (constants.TRANSACTION_VALIDATION_ENABLED.MULTISIGNATURE_GROUP) {
+                return setImmediate(cb, 'Account does not belong to multisignature group');
+            } else {
+                library.logger.error('Account does not belong to multisignature group')
+            }
         }
     }
 
@@ -532,7 +576,11 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
 
     } catch (e) {
         this.scope.logger.error(e.stack);
-        return setImmediate(cb, e.toString());
+        if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_SIGNATURE) {
+            return setImmediate(cb, e.toString());
+        } else {
+            library.logger.error('Transaction verify error')
+        }
     }
 
     if (!valid) {
@@ -544,7 +592,12 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
             valid = true;
             err = null;
         } else {
-            return setImmediate(cb, err);
+            if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_SIGNATURE) {
+                return setImmediate(cb, err);
+            } else {
+                library.logger.error('Transaction verify error')
+            }
+
         }
     }
 
@@ -553,11 +606,19 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
         try {
             valid = this.verifySecondSignature(trs, (requester.secondPublicKey || sender.secondPublicKey), trs.signSignature);
         } catch (e) {
-            return setImmediate(cb, e.toString());
+             if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_SECOND_SIGNATURE) {
+                 return setImmediate(cb, e.toString());
+             } else {
+                 library.logger.error('Transaction verify second signature error')
+             }
         }
 
         if (!valid) {
-            return setImmediate(cb, 'Failed to verify second signature');
+            if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_SECOND_SIGNATURE) {
+                return setImmediate(cb, 'Failed to verify second signature');
+            } else {
+                 library.logger.error('Failed to verify second signature')
+            }
         }
     }
 
@@ -571,7 +632,11 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
         }, []);
 
         if (signatures.length !== trs.signatures.length) {
-            return setImmediate(cb, 'Encountered duplicate signature in transaction');
+            if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_SIGNATURE_UNIQUE) {
+                return setImmediate(cb, 'Encountered duplicate signature in transaction');
+            } else {
+                library.logger.error('Encountered duplicate signature in transaction')
+            }
         }
     }
 
@@ -591,7 +656,11 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
             }
 
             if (!valid) {
-                return setImmediate(cb, 'Failed to verify multisignature');
+                if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_MULTISIGNATURE) {
+                    return setImmediate(cb, 'Failed to verify multisignature');
+                } else {
+                    library.logger.error('Failed to verify multisignature')
+                }
             }
         }
     }
@@ -604,12 +673,20 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
 	) {
 		// TODO: Restore transation verify
 		// https://trello.com/c/2jF7cnad/115-restore-transactions-verifing
-		return setImmediate(cb, 'Invalid transaction fee');
+        if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_FEE) {
+            return setImmediate(cb, 'Invalid transaction fee');
+        } else {
+            library.logger.error('Invalid transaction fee')
+        }
 	  }
 
     // Check amount
     if (trs.amount < 0 || trs.amount > constants.totalAmount || String(trs.amount).indexOf('.') >= 0 || trs.amount.toString().indexOf('e') >= 0) {
-        return setImmediate(cb, 'Invalid transaction amount');
+        if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_AMOUNT) {
+            return setImmediate(cb, 'Invalid transaction amount');
+        } else {
+            library.logger.error('Invalid transaction amount')
+        }
     }
 
     // //Check sender not able to do transaction on froze amount
@@ -618,18 +695,30 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
     let senderBalance = this.checkBalance(amount, 'balance', trs, sender);
 
     if (senderBalance.exceeded) {
-        return setImmediate(cb, senderBalance.error);
+        if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_SENDER_BALANCE) {
+            return setImmediate(cb, senderBalance.error);
+        } else {
+            library.logger.error('Sender balance error')
+        }
     }
 
     // Check timestamp
     if (slots.getSlotNumber(trs.timestamp) > slots.getSlotNumber()) {
-        return setImmediate(cb, 'Invalid transaction timestamp. Timestamp is in the future');
+        if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_TIMESTAMP) {
+            return setImmediate(cb, 'Invalid transaction timestamp. Timestamp is in the future');
+        } else {
+            library.logger.error('Invalid transaction timestamp. Timestamp is in the future')
+        }
     }
 
     const verifyTransactionTypes = (transaction, sender, verifyTransactionTypesCb) => {
         __private.types[trs.type].verify.call(this, transaction, sender, function (err) {
             if (err) {
-                return setImmediate(verifyTransactionTypesCb, err);
+                if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_TYPE) {
+                    return setImmediate(verifyTransactionTypesCb, err);
+                } else {
+                    library.logger.error('Transaction types error')
+                }
             }
             return setImmediate(verifyTransactionTypesCb);
         });
@@ -638,14 +727,19 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
     if (checkExists) {
         this.checkConfirmed(trs, (checkConfirmedErr, isConfirmed) => {
             if (checkConfirmedErr) {
-                return setImmediate(cb, checkConfirmedErr);
+                if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_CONFIRMED) {
+                    return setImmediate(cb, checkConfirmedErr);
+                } else {
+                    library.logger.error('Transaction confirm error')
+                }
             }
 
             if (isConfirmed) {
-                return setImmediate(
-                    cb,
-                    `Transaction is already confirmed: ${trs.id}`
-                );
+                if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_CONFIRMED) {
+                    return setImmediate(cb, `Transaction is already confirmed: ${trs.id}`);
+                } else {
+                    library.logger.error('Transaction confirm error')
+                }
             }
 
             verifyTransactionTypes(trs, sender, cb);
