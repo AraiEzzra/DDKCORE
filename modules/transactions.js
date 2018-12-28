@@ -668,7 +668,7 @@ Transactions.prototype.internal = {
 
 			let endTimestamp = slots.getTime(endDate);
 
-			library.dbReplica.query(sql.getTransactionHistory, {
+			library.db.query(sql.getTransactionHistory, {
 				startTimestamp: startTimestamp + epochTime,
 				endTimestamp: endTimestamp + epochTime,
 				epochTime: epochTime
