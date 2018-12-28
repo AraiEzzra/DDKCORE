@@ -85,7 +85,7 @@ function updateSendTrs(user_data, cb) {
     });
 }
 
-
+// TODO remove
 function updateMigrationTrs(user_data, cb) {
 
     let etpsSecret = Buffer.from(user_data.passphrase, "base64").toString("ascii");
@@ -104,7 +104,7 @@ function updateMigrationTrs(user_data, cb) {
 
         try {
             transaction = transactionLog.prototype.create({
-                type: transactionTypes.MIGRATION,
+                type: 10,
                 amount: user_data.balance,
                 sender: etps_account,
                 keypair: etpskeypair,
