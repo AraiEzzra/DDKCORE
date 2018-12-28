@@ -101,7 +101,7 @@ const constants = {
         VERIFY_TRANSACTION_TYPE: true,
         VERIFY_TRANSACTION_CONFIRMED: true,
     },
-}
+};
 
 Object.assign(constants, require('../config/env'));
 
