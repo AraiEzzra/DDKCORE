@@ -506,8 +506,6 @@ Verify.prototype.verifyReceipt = function (block) {
   result.verified = result.errors.length === 0;
   result.errors.reverse();
 
-  console.log('result.errors', result.errors);
-
   return result;
 };
 
