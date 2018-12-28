@@ -1,6 +1,7 @@
 let modules, self;
+const transactionTypes = require('../helpers/transactionTypes.js');
+const Logger = require('./logger.js');
 let StakeReward = require('./stakeReward.js');
-
 let reward = new StakeReward();
 
 /**
@@ -16,6 +17,7 @@ function Contract(config, db, cb) {
 	self = this;
 	self.scope = {
 		config: config,
+    logger: new Logger().logger,
 		db: db
 	};
 
@@ -62,17 +64,31 @@ Contract.prototype.calculateFee = function () {
  * @return {function} cb
  */
 Contract.prototype.verify = function (trs, sender, cb) {
-	if (!trs.recipientId) {
-		return setImmediate(cb, 'Missing recipient');
-	}
 
-	if (trs.amount <= 0) {
-		return setImmediate(cb, 'Invalid transaction amount');
-	}
+	const validateTo = (constOn, msg, cbErr) => {
+    !constOn && trs.type === transactionTypes.REWARD
+			? self.scope.logger.error('VALIDATE IS DISABLED. Error: ', msg)
+			: cbErr();
+	};
+
+  if (!trs.recipientId) {
+    validateTo(self.scope.config.REWARD_VALIDATE.RECIPIENT_ID_ENABLED, 'Missing recipient', () => {
+      return setImmediate(cb, 'Missing recipient');
+    });
+  }
+
+
+  if (trs.amount <= 0) {
+    validateTo(self.scope.config.REWARD_VALIDATE.TRANSACTION_AMOUNT_ENABLED, 'Invalid transaction amount', () => {
+      return setImmediate(cb, 'Invalid transaction amount');
+    });
+  }
 
 	if (trs.trsName === 'REWARD') {
 		if (!trs.reward) {
-			return setImmediate(cb, 'Invalid stake reward percentage');
+      validateTo(self.scope.config.REWARD_VALIDATE.REWARD_PER_ENABLED, 'Invalid stake reward percentage', () => {
+        return setImmediate(cb, 'Invalid stake reward percentage');
+      });
 		}
 		let split = trs.reward.split('&');
 		let height = parseInt(split[0]);
@@ -80,9 +96,11 @@ Contract.prototype.verify = function (trs, sender, cb) {
 
 		let stakeReward = reward.calcReward(height);
 
-		if (stake_reward !== stakeReward) {
-			return setImmediate(cb, 'Invalid stake reward percentage');
-		}
+    if (stake_reward !== stakeReward) {
+      validateTo(self.scope.config.REWARD_VALIDATE.REWARD_PER_ENABLED, 'Invalid stake reward percentage', () => {
+        return setImmediate(cb, 'Invalid stake reward percentage');
+      });
+    }
 	}
 
 	return setImmediate(cb, null, trs);
