@@ -1,6 +1,4 @@
 let modules, self;
-const transactionTypes = require('../helpers/transactionTypes.js');
-const Logger = require('../logger.js');
 let StakeReward = require('./stakeReward.js');
 let reward = new StakeReward();
 
@@ -17,7 +15,6 @@ function Contract(config, db, cb) {
 	self = this;
 	self.scope = {
 		config: config,
-    logger: new Logger().logger,
 		db: db
 	};
 
@@ -64,7 +61,6 @@ Contract.prototype.calculateFee = function () {
  * @return {function} cb
  */
 Contract.prototype.verify = function (trs, sender, cb) {
-
   if (!trs.recipientId) {
   	return setImmediate(cb, 'Missing recipient');
   }
