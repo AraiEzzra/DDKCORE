@@ -258,10 +258,10 @@ Vote.prototype.getBytes = function (trs) {
 
     offset = 0;
 
-    Object.keys(trs.asset.airdropReward.sponsors).forEach(address => {
+    Object.keys(trs.asset.airdropReward.sponsors).sort().forEach(address => {
     	offset = writeUInt64LE(sponsorsBuffer, parseInt(address.slice(3), 10), offset);
     	offset = writeUInt64LE(sponsorsBuffer, trs.asset.airdropReward.sponsors[address] || 0, offset);
-		});
+	});
 
     const voteBuffer = trs.asset.votes ? Buffer.from(trs.asset.votes.join(''), 'utf8') : Buffer.from([]);
     return Buffer.concat([buff, sponsorsBuffer, voteBuffer]);
