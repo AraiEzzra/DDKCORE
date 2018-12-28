@@ -64,6 +64,13 @@ const constants = {
         AMOUNT: true,
         PUBLIC_KEY: true
     },
+    SENDSTAKE_VERIFICATION: {
+        VERIFY_RECIPIENT_ID_ENABLED: true,
+        VERIFY_BALANCE_ENABLED: true,
+        VERIFY_ACTIVE_FROZE_ORDER_EXIST_ENABLED: true,
+        VERIFY_ACTIVE_FROZE_ORDER_TRANSFERCOUNT_ENABLED: true
+
+    },
     TRANSACTION_VALIDATION_ENABLED: {
         SENDER: true,
         TYPE: true,
