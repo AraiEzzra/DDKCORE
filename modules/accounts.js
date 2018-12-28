@@ -569,7 +569,7 @@ Accounts.prototype.shared = {
 			let publicKey = keypair.publicKey.toString('hex');
 
 			if (req.body.publicKey) {
-				if (publicKey.toString('hex') !== req.body.publicKey) {
+				if (publicKey !== req.body.publicKey) {
 					return setImmediate(cb, 'Invalid passphrase');
 				}
 			}
@@ -1403,17 +1403,15 @@ Accounts.prototype.internal = {
 						seriesCb(err, false);
 					});
 				}],
-				/**
-				 * @todo FIX param activeStakeCount
- 				 */
+
 				checkActiveStakeOfLeftAndRightSponsor: ['checkActiveStake', function (result, seriesCb) {
+					let activeStakeCount = 0;
 					library.db.query(sql.findDirectSponsor, {
 						introducer: req.body.address
 					})
 						.then(function (directSponsors) {
 							if (directSponsors.length >= 2) {
 
-								var activeStakeCount = 0;
 								directSponsors.forEach(function (directSponsor) {
 									library.db.query(sql.findActiveStakeAmount, {
 										senderId: directSponsor.address

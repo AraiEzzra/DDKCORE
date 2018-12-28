@@ -19,10 +19,6 @@ let Referals = {
 
     checkBalance : 'SELECT u_balance from mem_accounts WHERE "address" = ${sender_address}',
 
-    // TODO: Fix duplicate key value violates unique constraint "referals_pkey"
-    // https://trello.com/c/hokoAxK9/163-fix-duplicate-key-value-violates-unique-constraint-referalspkey
-    insertLevelChain: 'INSERT INTO referals ("address","level") VALUES (${address},${level}) ON CONFLICT DO NOTHING',
-
     insertMemberAccount : 'UPDATE mem_accounts SET "totalFrozeAmount"=${totalFrozeAmount},"group_bonus"=${group_bonus},"pending_group_bonus"=${group_bonus} WHERE "address"= ${address}',
 
     selectEtpsList : 'SELECT * from etps_user where id > ${etpsCount} order by id asc',
