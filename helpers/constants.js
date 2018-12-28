@@ -16,15 +16,27 @@ const constants = {
         PAYLOAD_HASH: true,
     },
     STAKE_VALIDATE: {
-    AMOUNT_ENABLED: true,
-    BALANCE_ENABLED: true,
-    AIRDROP_ENABLED: true,
-  },
-  REWARD_VALIDATE: {
-    RECIPIENT_ID_ENABLED: true,
-    TRANSACTION_AMOUNT_ENABLED: true,
-    REWARD_PER_ENABLED: true,
-  },
+        AMOUNT_ENABLED: true,
+        BALANCE_ENABLED: true,
+        AIRDROP_ENABLED: true,
+    },
+    REWARD_VALIDATE: {
+        RECIPIENT_ID_ENABLED: true,
+        TRANSACTION_AMOUNT_ENABLED: true,
+        REWARD_PER_ENABLED: true,
+    },
+    SEND_TRANSACTION_VALIDATION_ENABLED: {
+        AMOUNT: true,
+        RECIPIENT_ID: true
+    },
+    REFERRAL_TRANSACTION_VALIDATION_ENABLED: {
+        GLOBAL_ACCOUNT: true
+    },
+    SIGNATURE_TRANSACTION_VALIDATION_ENABLED: {
+        SIGNATURE: true,
+        AMOUNT: true,
+        PUBLIC_KEY: true
+    },
 };
 
 if (trs.recipientId !== trs.senderId) {
