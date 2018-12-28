@@ -597,7 +597,7 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
 
 	let fee = __private.types[trs.type].calculateFee.call(this, trs, sender) || 0;
 	if (
-		(trs.type !== transactionTypes.MIGRATION && trs.type !== transactionTypes.REFERRAL) &&
+		trs.type !== transactionTypes.REFERRAL &&
 		!(trs.type === transactionTypes.STAKE && trs.stakedAmount < 0) &&
 		(!fee || trs.fee !== fee)
 	) {
@@ -612,13 +612,7 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
     }
 
     // //Check sender not able to do transaction on froze amount
-    let amount;
-    // Check confirmed sender balance
-    if (trs.type !== transactionTypes.MIGRATION) {
-        amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
-    } else {
-        amount = new bignum(trs.amount.toString());
-    }
+    let amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
 
     let senderBalance = this.checkBalance(amount, 'balance', trs, sender);
 
@@ -751,13 +745,7 @@ Transaction.prototype.apply = function (trs, block, sender, cb) {
         return setImmediate(cb, 'Transaction is not ready');
     }
 
-    let amount;
-    // Check confirmed sender balance
-    if (trs.type !== transactionTypes.MIGRATION) {
-        amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
-    } else {
-        amount = new bignum(trs.amount.toString());
-    }
+    let amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
     let senderBalance = this.checkBalance(amount, 'balance', trs, sender);
 
     if (senderBalance.exceeded) {
@@ -813,10 +801,7 @@ Transaction.prototype.apply = function (trs, block, sender, cb) {
  * @return {setImmediateCallback} for errors | cb
  */
 Transaction.prototype.undo = function (trs, block, sender, cb) {
-    let amount = new bignum(trs.amount.toString());
-    if (trs.type !== transactionTypes.MIGRATION) {
-        amount = amount.plus(trs.fee.toString()).toNumber();
-    }
+    let amount = amount.plus(trs.fee.toString()).toNumber();
 
     this.scope.logger.trace('Logic/Transaction->undo', {
         sender: sender.address,
@@ -868,14 +853,8 @@ Transaction.prototype.applyUnconfirmed = function (trs, sender, requester, cb) {
     if (typeof requester === 'function') {
         cb = requester;
     }
-    var amount;
-    // Check unconfirmed sender balance
-    if (trs.type === transactionTypes.MIGRATION) {
-        amount = new bignum(trs.amount.toString());
-    } else {
-        amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
-    }
-    if (trs.type == transactionTypes.STAKE && (parseInt(sender.u_balance) - parseInt(sender.u_totalFrozeAmount)) < (trs.stakedAmount + trs.fee)) {
+    var amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
+    if (trs.type === transactionTypes.STAKE && (parseInt(sender.u_balance) - parseInt(sender.u_totalFrozeAmount)) < (trs.stakedAmount + trs.fee)) {
         return setImmediate(cb, 'Failed because of Frozen DDK');
     }
     let senderBalance = this.checkBalance(amount, 'u_balance', trs, sender);
@@ -942,14 +921,9 @@ Transaction.prototype.applyUnconfirmed = function (trs, sender, requester, cb) {
  * @return {setImmediateCallback} for errors | cb
  */
 Transaction.prototype.undoUnconfirmed = function (trs, sender, cb) {
-    let amount = new bignum(trs.amount.toString());
-    if (trs.type !== transactionTypes.MIGRATION) {
-        amount = amount.plus(trs.fee.toString()).toNumber();
-    } else {
-        amount = amount.toNumber();
-    }
+    let amount = amount.plus(trs.fee.toString()).toNumber();
 
-    if (trs.type == transactionTypes.STAKE) {
+    if (trs.type === transactionTypes.STAKE) {
         this.scope.account.merge(sender.address, {
             u_balance: amount,
             u_totalFrozeAmount: -trs.stakedAmount
@@ -1022,6 +996,7 @@ Transaction.prototype.dbFields = [
  */
 Transaction.prototype.dbSave = function (trs) {
     if (!__private.types[trs.type]) {
+        console.log('Unknown transaction type', trs.type);
         throw 'Unknown transaction type ' + trs.type;
     }
 
@@ -1039,10 +1014,6 @@ Transaction.prototype.dbSave = function (trs) {
     // FIXME ?
     if ((trs.type === transactionTypes.STAKE) && trs.freezedAmount > 0) {
         trs.amount = trs.freezedAmount;
-    }
-
-    if (trs.type === transactionTypes.MIGRATION) {
-        trs.fee = 0;
     }
 
     let promises = [
@@ -1301,13 +1272,7 @@ Transaction.prototype.objectNormalize = function (trs) {
     }
     trs.fee = trs.fee || 0;
 
-    let report = null;
-
-    if (trs.type === transactionTypes.MIGRATION) {
-        report = this.scope.schema.validate(trs, Transaction.prototype.Referschema);
-    } else {
-        report = this.scope.schema.validate(trs, Transaction.prototype.schema);
-    }
+    const report = this.scope.schema.validate(trs, Transaction.prototype.schema);
 
 	// schemaValidator
     if (!report) {
