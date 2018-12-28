@@ -1022,6 +1022,7 @@ Transaction.prototype.dbFields = [
  */
 Transaction.prototype.dbSave = function (trs) {
     if (!__private.types[trs.type]) {
+        console.log('Unknown transaction type', trs.type);
         throw 'Unknown transaction type ' + trs.type;
     }
 
