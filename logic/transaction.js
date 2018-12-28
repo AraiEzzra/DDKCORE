@@ -231,7 +231,6 @@ Transaction.prototype.getBytes = function (trs, skipSignature = false, skipSecon
     if (trs.recipientId) {
         offset = BUFFER.writeUInt64LE(buff, parseInt(trs.recipientId.slice(3), 10), offset);
     }
-    // TODO uncomment after redump
     else {
         offset += BUFFER.LENGTH.INT64;
     }
@@ -527,7 +526,6 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
 
     // Verify signature
     try {
-        valid = true;
         // FIXME verify transaction signature
         // https://trello.com/c/VcBpfYTi/180-failed-to-verify-transaction-signature
         valid = this.verifySignature(trs, (trs.requesterPublicKey || trs.senderPublicKey), trs.signature);
@@ -553,7 +551,6 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
     // Verify second signature
     if (requester.secondSignature || sender.secondSignature) {
         try {
-            valid = false;
             valid = this.verifySecondSignature(trs, (requester.secondPublicKey || sender.secondPublicKey), trs.signSignature);
         } catch (e) {
             return setImmediate(cb, e.toString());
@@ -679,9 +676,15 @@ Transaction.prototype.verifySignature = function (trs, publicKey, signature) {
     self.scope.logger.debug(`Transaction ${JSON.stringify(trs)}`);
     self.scope.logger.debug(`publicKey ${JSON.stringify(publicKey)}`);
     self.scope.logger.debug(`signature ${JSON.stringify(signature)}`);
-    const bytes = this.getBytes(trs, true, false);
+    const bytes = this.getBytes(trs, true, true);
     self.scope.logger.debug(`Bytes ${JSON.stringify(bytes)}`);
-    const verify = this.verifyBytes(bytes, publicKey, signature);
+    let verify = this.verifyBytes(bytes, publicKey, signature);
+    // TODO add block limit
+    if (!verify) {
+        verify = this.verifyBytes(bytes, constants.PRE_ORDER_PUBLIC_KEY, signature);
+    }
+
+
     self.scope.logger.debug(`verify ${JSON.stringify(verify)}`);
     return verify;
 };
@@ -729,7 +732,6 @@ Transaction.prototype.verifySecondSignature = function (trs, publicKey, signatur
  */
 Transaction.prototype.verifyBytes = function (bytes, publicKey, signature) {
     const hash = crypto.createHash('sha256').update(bytes).digest();
-    console.log(signature, publicKey)
     const signatureBuffer = Buffer.from(signature, 'hex');
     const publicKeyBuffer = Buffer.from(publicKey, 'hex');
     return sodium.crypto_sign_verify_detached(signatureBuffer, hash, publicKeyBuffer);
@@ -860,8 +862,11 @@ Transaction.prototype.applyUnconfirmed = function (trs, sender, requester, cb) {
     if (typeof requester === 'function') {
         cb = requester;
     }
-    var amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
-    if (trs.type === transactionTypes.STAKE && (parseInt(sender.u_balance) - parseInt(sender.u_totalFrozeAmount)) < (trs.stakedAmount + trs.fee)) {
+    let amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
+    if (
+        trs.type === transactionTypes.STAKE && (
+        parseInt(sender.u_balance) - parseInt(sender.u_totalFrozeAmount)) < (trs.stakedAmount + trs.fee)
+    ) {
         return setImmediate(cb, 'Failed because of Frozen DDK');
     }
     let senderBalance = this.checkBalance(amount, 'u_balance', trs, sender);
@@ -873,7 +878,7 @@ Transaction.prototype.applyUnconfirmed = function (trs, sender, requester, cb) {
     amount = amount.toNumber();
 
 
-    if (trs.type == transactionTypes.STAKE) {
+    if (trs.type === transactionTypes.STAKE) {
         this.scope.account.merge(sender.address, {
             u_balance: -amount,
             u_totalFrozeAmount: trs.stakedAmount
@@ -1003,7 +1008,6 @@ Transaction.prototype.dbFields = [
  */
 Transaction.prototype.dbSave = function (trs) {
     if (!__private.types[trs.type]) {
-        console.log('Unknown transaction type', trs.type);
         throw 'Unknown transaction type ' + trs.type;
     }
 
