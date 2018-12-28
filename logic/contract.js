@@ -1,6 +1,6 @@
 let modules, self;
 const transactionTypes = require('../helpers/transactionTypes.js');
-const Logger = require('./logger.js');
+const Logger = require('../logger.js');
 let StakeReward = require('./stakeReward.js');
 let reward = new StakeReward();
 
