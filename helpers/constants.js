@@ -2,13 +2,20 @@ const env = process.env;
 const constants = {
     PREVIOUS_DELEGATES_COUNT: 3,
     MASTER_NODE_MIGRATED_BLOCK: 0,
-    CURRENT_BLOCK_VERSION: 1,
-    // Block verify
+    CURRENT_BLOCK_VERSION: 1,// Block verify
     VERIFY_BLOCK_VERSION: true,
     VERIFY_BLOCK_SIGNATURE: true,
     VERIFY_BLOCK_ID: true,
     VERIFY_BLOCK_PAYLOAD: true,
-    VERIFY_INVALID_BLOCK_TIMESTAMP: true,
+    PAYLOAD_VALIDATE: {
+        MAX_LENGTH: true,
+        MAX_TRANSACTION_LENGTH: true,
+        MAX_TRANSACTION_IN_BLOCK: true,
+        MAX_TRANSACTION_DUPLICATE: true,
+        INVALID_HASH: true,
+        TOTAL_AMOUNT: true,
+        TOTAL_FEE: true,
+    }, VERIFY_INVALID_BLOCK_TIMESTAMP: true,
     VERIFY_PREVIOUS_BLOCK: true,
     VERIFY_AGAINST_LAST_N_BLOCK_IDS: true,
     VERIFY_BLOCK_FORK_ONE: true,
