@@ -4,7 +4,7 @@ const constants = {
     VERIFY_BLOCK_VERSION: true,
     VERIFY_BLOCK_SIGNATURE: true,
     VERIFY_BLOCK_ID: true,
-    VERIFY_BLOCK_PAYLOAD: false,
+    VERIFY_BLOCK_PAYLOAD: true,
     VERIFY_INVALID_BLOCK_TIMESTAMP: true,
     VERIFY_PREVIOUS_BLOCK: true,
     VERIFY_AGAINST_LAST_N_BLOCK_IDS: true,
@@ -86,7 +86,7 @@ const constants = {
     },
     STAKE_VALIDATE: {
         AMOUNT_ENABLED: true,
-        BALANCE_ENABLED: false,
+        BALANCE_ENABLED: true,
         AIRDROP_ENABLED: true,
     }
 };

@@ -14,8 +14,7 @@ let utils = require('../utils.js');
 
 const BUFFER = require('../helpers/buffer.js');
 
-const TRANSACTION_BUFFER_SIZE
-    = BUFFER.LENGTH.BYTE // type
+const TRANSACTION_BUFFER_SIZE = BUFFER.LENGTH.BYTE // type
     + BUFFER.LENGTH.UINT32 // timestamp
     + BUFFER.LENGTH.HEX // senderPublicKey
     + BUFFER.LENGTH.HEX // requesterPublicKey
@@ -135,13 +134,7 @@ Transaction.prototype.create = async function (data) {
  */
 Transaction.prototype.attachAssetType = function (typeId, instance) {
     this.scope.logger.info('typeID : ' + typeId);
-    if (instance && typeof instance.create === 'function' && typeof instance.getBytes === 'function' &&
-        typeof instance.calculateFee === 'function' && typeof instance.verify === 'function' &&
-        typeof instance.objectNormalize === 'function' && typeof instance.dbRead === 'function' &&
-        typeof instance.apply === 'function' && typeof instance.undo === 'function' &&
-        typeof instance.applyUnconfirmed === 'function' && typeof instance.undoUnconfirmed === 'function' &&
-        typeof instance.ready === 'function' && typeof instance.process === 'function'
-    ) {
+    if (instance && typeof instance.create === 'function' && typeof instance.getBytes === 'function' && typeof instance.calculateFee === 'function' && typeof instance.verify === 'function' && typeof instance.objectNormalize === 'function' && typeof instance.dbRead === 'function' && typeof instance.apply === 'function' && typeof instance.undo === 'function' && typeof instance.applyUnconfirmed === 'function' && typeof instance.undoUnconfirmed === 'function' && typeof instance.ready === 'function' && typeof instance.process === 'function') {
         this.scope.logger.info('asset type is attached successfully');
         __private.types[typeId] = instance;
         return instance;
@@ -230,8 +223,7 @@ Transaction.prototype.getBytes = function (trs, skipSignature = false, skipSecon
 
     if (trs.recipientId) {
         offset = BUFFER.writeUInt64LE(buff, parseInt(trs.recipientId.slice(3), 10), offset);
-    }
-    else {
+    } else {
         offset += BUFFER.LENGTH.INT64;
     }
 
@@ -274,7 +266,7 @@ Transaction.prototype.ready = function (trs, sender) {
  * @return {setImmediateCallback} error | row.count
  */
 Transaction.prototype.countById = function (trs, cb) {
-    this.scope.db.one(sql.countById, {id: trs.id}).then(function (row) {
+    this.scope.db.one(sql.countById, { id: trs.id }).then(function (row) {
         return setImmediate(cb, null, row.count);
     }).catch(function (err) {
         this.scope.logger.error(err.stack);
@@ -312,10 +304,7 @@ Transaction.prototype.checkConfirmed = function (trs, cb) {
  */
 Transaction.prototype.checkBalance = function (amount, balance, trs, sender) {
 
-    let totalAmountWithFrozeAmount = trs.type === transactionTypes.SENDSTAKE ?
-        new bignum(amount)
-        :
-        new bignum(sender.totalFrozeAmount).plus(amount);
+    let totalAmountWithFrozeAmount = trs.type === transactionTypes.SENDSTAKE ? new bignum(amount) : new bignum(sender.totalFrozeAmount).plus(amount);
 
     let exceededBalance = new bignum(sender[balance].toString()).lessThan(totalAmountWithFrozeAmount);
     let exceeded = (trs.blockId !== this.scope.genesisblock.block.id && exceededBalance);
@@ -329,19 +318,12 @@ Transaction.prototype.checkBalance = function (amount, balance, trs, sender) {
     if (parseInt(sender.totalFrozeAmount) > 0) {
         return {
             exceeded: exceeded,
-            error: exceeded ? [
-                'Account does not have enough DDK due to freeze amount:', sender.address,
-                'balance:', new bignum(sender[balance].toString() || '0').div(Math.pow(10, 8)),
-                'totalFreezeAmount :', new bignum(sender.totalFrozeAmount.toString()).div(Math.pow(10, 8))
-            ].join(' ') : null
+            error: exceeded ? ['Account does not have enough DDK due to freeze amount:', sender.address, 'balance:', new bignum(sender[balance].toString() || '0').div(Math.pow(10, 8)), 'totalFreezeAmount :', new bignum(sender.totalFrozeAmount.toString()).div(Math.pow(10, 8))].join(' ') : null
         };
     } else {
         return {
             exceeded: exceeded,
-            error: exceeded ? [
-                'Account does not have enough DDK:', sender.address,
-                'balance:', new bignum(sender[balance].toString() || '0').div(Math.pow(10, 8))
-            ].join(' ') : null
+            error: exceeded ? ['Account does not have enough DDK:', sender.address, 'balance:', new bignum(sender[balance].toString() || '0').div(Math.pow(10, 8))].join(' ') : null
         };
     }
 
@@ -448,7 +430,7 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
         if (constants.TRANSACTION_VALIDATION_ENABLED.SENDER) {
             return setImmediate(cb, 'Missing sender');
         } else {
-            this.scope.logger.error('Transaction sender error')
+            this.scope.logger.error('Transaction sender error');
         }
     }
 
@@ -457,7 +439,7 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
         if (constants.TRANSACTION_VALIDATION_ENABLED.TYPE) {
             return setImmediate(cb, 'Unknown transaction type ' + trs.type);
         } else {
-            this.scope.logger.error('Transaction error type')
+            this.scope.logger.error('Transaction error type');
         }
     }
 
@@ -466,7 +448,7 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
         if (constants.TRANSACTION_VALIDATION_ENABLED.SECOND_SIGNATURE) {
             return setImmediate(cb, 'Missing sender second signature');
         } else {
-            this.scope.logger.error('Missing sender second signature')
+            this.scope.logger.error('Missing sender second signature');
         }
     }
 
@@ -475,7 +457,7 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
         if (constants.TRANSACTION_VALIDATION_ENABLED.SENDER_SECOND_SIGNATURE) {
             return setImmediate(cb, 'Sender does not have a second signature');
         } else {
-            this.scope.logger.error('Sender does not have a second signature')
+            this.scope.logger.error('Sender does not have a second signature');
         }
     }
 
@@ -484,7 +466,7 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
         if (constants.TRANSACTION_VALIDATION_ENABLED.REQUEST_SECOND_SIGNATURE) {
             return setImmediate(cb, 'Missing requester second signature');
         } else {
-            this.scope.logger.error('Missing requester second signature')
+            this.scope.logger.error('Missing requester second signature');
         }
     }
 
@@ -493,15 +475,12 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
         if (constants.TRANSACTION_VALIDATION_ENABLED.CHECKING_REQUEST_SECOND_SIGNATURE) {
             return setImmediate(cb, 'Requester does not have a second signature');
         } else {
-            this.scope.logger.error('Requester does not have a second signature')
+            this.scope.logger.error('Requester does not have a second signature');
         }
     }
 
     // Check sender public key
-    if (
-        sender.publicKey && sender.publicKey !== trs.senderPublicKey &&
-        trs.height > constants.MASTER_NODE_MIGRATED_BLOCK
-    ) {
+    if (sender.publicKey && sender.publicKey !== trs.senderPublicKey && trs.height > constants.MASTER_NODE_MIGRATED_BLOCK) {
         err = ['Invalid sender public key:', trs.senderPublicKey, 'expected:', sender.publicKey].join(' ');
         if (constants.TRANSACTION_VALIDATION_ENABLED.SENDER_PUBLIC_KEY) {
 
@@ -512,7 +491,7 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
                 return setImmediate(cb, err);
             }
         } else {
-            this.scope.logger.error('Sender public key error')
+            this.scope.logger.error('Sender public key error');
         }
     }
 
@@ -521,7 +500,7 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
         if (constants.TRANSACTION_VALIDATION_ENABLED.SENDER_GENESIS_ACCOUNT) {
             return setImmediate(cb, 'Invalid sender. Can not send from genesis account');
         } else {
-            this.scope.logger.error('Invalid sender. Can not send from genesis account')
+            this.scope.logger.error('Invalid sender. Can not send from genesis account');
         }
     }
 
@@ -530,7 +509,7 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
         if (constants.TRANSACTION_VALIDATION_ENABLED.SENDER_ADDRESS) {
             return setImmediate(cb, 'Invalid sender address');
         } else {
-            this.scope.logger.error('Invalid sender address')
+            this.scope.logger.error('Invalid sender address');
         }
     }
 
@@ -546,7 +525,7 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
                     if (constants.TRANSACTION_VALIDATION_ENABLED.KEYSGROUP_MEMBER) {
                         return setImmediate(cb, 'Invalid member in keysgroup');
                     } else {
-                        this.scope.logger.error('Invalid member in keysgroup')
+                        this.scope.logger.error('Invalid member in keysgroup');
                     }
                 }
 
@@ -563,7 +542,7 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
             if (constants.TRANSACTION_VALIDATION_ENABLED.MULTISIGNATURE_GROUP) {
                 return setImmediate(cb, 'Account does not belong to multisignature group');
             } else {
-                this.scope.logger.error('Account does not belong to multisignature group')
+                this.scope.logger.error('Account does not belong to multisignature group');
             }
         }
     }
@@ -579,7 +558,7 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
         if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_SIGNATURE) {
             return setImmediate(cb, e.toString());
         } else {
-            this.scope.logger.error('Transaction verify error')
+            this.scope.logger.error('Transaction verify error');
         }
     }
 
@@ -595,7 +574,7 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
             if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_SIGNATURE) {
                 return setImmediate(cb, err);
             } else {
-                this.scope.logger.error('Transaction verify error')
+                this.scope.logger.error('Transaction verify error');
             }
 
         }
@@ -609,7 +588,7 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
             if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_SECOND_SIGNATURE) {
                 return setImmediate(cb, e.toString());
             } else {
-                this.scope.logger.error('Transaction verify second signature error')
+                this.scope.logger.error('Transaction verify second signature error');
             }
         }
 
@@ -617,7 +596,7 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
             if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_SECOND_SIGNATURE) {
                 return setImmediate(cb, 'Failed to verify second signature');
             } else {
-                this.scope.logger.error('Failed to verify second signature')
+                this.scope.logger.error('Failed to verify second signature');
             }
         }
     }
@@ -635,7 +614,7 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
             if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_SIGNATURE_UNIQUE) {
                 return setImmediate(cb, 'Encountered duplicate signature in transaction');
             } else {
-                this.scope.logger.error('Encountered duplicate signature in transaction')
+                this.scope.logger.error('Encountered duplicate signature in transaction');
             }
         }
     }
@@ -659,24 +638,20 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
                 if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_MULTISIGNATURE) {
                     return setImmediate(cb, 'Failed to verify multisignature');
                 } else {
-                    this.scope.logger.error('Failed to verify multisignature')
+                    this.scope.logger.error('Failed to verify multisignature');
                 }
             }
         }
     }
 
     let fee = __private.types[trs.type].calculateFee.call(this, trs, sender) || 0;
-    if (
-        trs.type !== transactionTypes.REFERRAL &&
-        !(trs.type === transactionTypes.STAKE && trs.stakedAmount < 0) &&
-        (!fee || trs.fee !== fee)
-    ) {
+    if (trs.type !== transactionTypes.REFERRAL && !(trs.type === transactionTypes.STAKE && trs.stakedAmount < 0) && (!fee || trs.fee !== fee)) {
         // TODO: Restore transation verify
         // https://trello.com/c/2jF7cnad/115-restore-transactions-verifing
         if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_FEE) {
             return setImmediate(cb, 'Invalid transaction fee');
         } else {
-            this.scope.logger.error('Invalid transaction fee')
+            this.scope.logger.error('Invalid transaction fee');
         }
     }
 
@@ -685,7 +660,7 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
         if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_AMOUNT) {
             return setImmediate(cb, 'Invalid transaction amount');
         } else {
-            this.scope.logger.error('Invalid transaction amount')
+            this.scope.logger.error('Invalid transaction amount');
         }
     }
 
@@ -698,7 +673,7 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
         if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_SENDER_BALANCE) {
             return setImmediate(cb, senderBalance.error);
         } else {
-            this.scope.logger.error('Sender balance error')
+            this.scope.logger.error('Sender balance error');
         }
     }
 
@@ -707,7 +682,7 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
         if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_TIMESTAMP) {
             return setImmediate(cb, 'Invalid transaction timestamp. Timestamp is in the future');
         } else {
-            this.scope.logger.error('Invalid transaction timestamp. Timestamp is in the future')
+            this.scope.logger.error('Invalid transaction timestamp. Timestamp is in the future');
         }
     }
 
@@ -717,7 +692,7 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
                 if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_TYPE) {
                     return setImmediate(verifyTransactionTypesCb, err);
                 } else {
-                    this.scope.logger.error('Transaction types error')
+                    this.scope.logger.error('Transaction types error');
                 }
             }
             return setImmediate(verifyTransactionTypesCb);
@@ -730,7 +705,7 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
                 if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_CONFIRMED) {
                     return setImmediate(cb, checkConfirmedErr);
                 } else {
-                    this.scope.logger.error('Transaction confirm error')
+                    this.scope.logger.error('Transaction confirm error');
                 }
             }
 
@@ -738,7 +713,7 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
                 if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_CONFIRMED) {
                     return setImmediate(cb, `Transaction is already confirmed: ${trs.id}`);
                 } else {
-                    this.scope.logger.error('Transaction confirm error')
+                    this.scope.logger.error('Transaction confirm error');
                 }
             }
 
@@ -858,15 +833,10 @@ Transaction.prototype.apply = function (trs, block, sender, cb) {
     amount = amount.toNumber();
 
     this.scope.logger.trace('Logic/Transaction->apply', {
-        sender: sender.address,
-        balance: -amount,
-        blockId: block.id,
-        round: modules.rounds.calc(block.height)
+        sender: sender.address, balance: -amount, blockId: block.id, round: modules.rounds.calc(block.height)
     });
     this.scope.account.merge(sender.address, {
-        balance: -amount,
-        blockId: block.id,
-        round: modules.rounds.calc(block.height)
+        balance: -amount, blockId: block.id, round: modules.rounds.calc(block.height)
     }, function (err, sender) {
         if (err) {
             return setImmediate(cb, err);
@@ -878,9 +848,7 @@ Transaction.prototype.apply = function (trs, block, sender, cb) {
         __private.types[trs.type].apply.call(this, trs, block, sender, function (err) {
             if (err) {
                 this.scope.account.merge(sender.address, {
-                    balance: amount,
-                    blockId: block.id,
-                    round: modules.rounds.calc(block.height)
+                    balance: amount, blockId: block.id, round: modules.rounds.calc(block.height)
                 }, function (err) {
                     return setImmediate(cb, err);
                 });
@@ -907,15 +875,10 @@ Transaction.prototype.undo = function (trs, block, sender, cb) {
     let amount = amount.plus(trs.fee.toString()).toNumber();
 
     this.scope.logger.trace('Logic/Transaction->undo', {
-        sender: sender.address,
-        balance: amount,
-        blockId: block.id,
-        round: modules.rounds.calc(block.height)
+        sender: sender.address, balance: amount, blockId: block.id, round: modules.rounds.calc(block.height)
     });
     this.scope.account.merge(sender.address, {
-        balance: amount,
-        blockId: block.id,
-        round: modules.rounds.calc(block.height)
+        balance: amount, blockId: block.id, round: modules.rounds.calc(block.height)
     }, function (err, sender) {
         if (err) {
             return setImmediate(cb, err);
@@ -924,9 +887,7 @@ Transaction.prototype.undo = function (trs, block, sender, cb) {
         __private.types[trs.type].undo.call(this, trs, block, sender, function (err) {
             if (err) {
                 this.scope.account.merge(sender.address, {
-                    balance: -amount,
-                    blockId: block.id,
-                    round: modules.rounds.calc(block.height)
+                    balance: -amount, blockId: block.id, round: modules.rounds.calc(block.height)
                 }, function (err) {
                     return setImmediate(cb, err);
                 });
@@ -957,10 +918,7 @@ Transaction.prototype.applyUnconfirmed = function (trs, sender, requester, cb) {
         cb = requester;
     }
     let amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
-    if (
-        trs.type === transactionTypes.STAKE && (
-        parseInt(sender.u_balance) - parseInt(sender.u_totalFrozeAmount)) < (trs.stakedAmount + trs.fee)
-    ) {
+    if (trs.type === transactionTypes.STAKE && (parseInt(sender.u_balance) - parseInt(sender.u_totalFrozeAmount)) < (trs.stakedAmount + trs.fee)) {
         return setImmediate(cb, 'Failed because of Frozen DDK');
     }
     let senderBalance = this.checkBalance(amount, 'u_balance', trs, sender);
@@ -974,8 +932,7 @@ Transaction.prototype.applyUnconfirmed = function (trs, sender, requester, cb) {
 
     if (trs.type === transactionTypes.STAKE) {
         this.scope.account.merge(sender.address, {
-            u_balance: -amount,
-            u_totalFrozeAmount: trs.stakedAmount
+            u_balance: -amount, u_totalFrozeAmount: trs.stakedAmount
         }, function (err, sender) {
             if (err) {
                 return setImmediate(cb, err);
@@ -984,8 +941,7 @@ Transaction.prototype.applyUnconfirmed = function (trs, sender, requester, cb) {
             __private.types[trs.type].applyUnconfirmed.call(this, trs, sender, function (err) {
                 if (err) {
                     this.scope.account.merge(sender.address, {
-                        u_balance: amount,
-                        u_totalFrozeAmount: -trs.stakedAmount
+                        u_balance: amount, u_totalFrozeAmount: -trs.stakedAmount
                     }, function (err2) {
                         return setImmediate(cb, err2 || err);
                     });
@@ -995,14 +951,14 @@ Transaction.prototype.applyUnconfirmed = function (trs, sender, requester, cb) {
             }.bind(this));
         }.bind(this));
     } else {
-        this.scope.account.merge(sender.address, {u_balance: -amount}, function (err, sender) {
+        this.scope.account.merge(sender.address, { u_balance: -amount }, function (err, sender) {
             if (err) {
                 return setImmediate(cb, err);
             }
 
             __private.types[trs.type].applyUnconfirmed.call(this, trs, sender, function (err) {
                 if (err) {
-                    this.scope.account.merge(sender.address, {u_balance: amount}, function (err2) {
+                    this.scope.account.merge(sender.address, { u_balance: amount }, function (err2) {
                         return setImmediate(cb, err2 || err);
                     });
                 } else {
@@ -1031,8 +987,7 @@ Transaction.prototype.undoUnconfirmed = function (trs, sender, cb) {
 
     if (trs.type === transactionTypes.STAKE) {
         this.scope.account.merge(sender.address, {
-            u_balance: amount,
-            u_totalFrozeAmount: -trs.stakedAmount
+            u_balance: amount, u_totalFrozeAmount: -trs.stakedAmount
         }, function (err, sender) {
             if (err) {
                 return setImmediate(cb, err);
@@ -1041,8 +996,7 @@ Transaction.prototype.undoUnconfirmed = function (trs, sender, cb) {
             __private.types[trs.type].undoUnconfirmed.call(this, trs, sender, function (err) {
                 if (err) {
                     this.scope.account.merge(sender.address, {
-                        u_balance: -amount,
-                        u_totalFrozeAmount: trs.stakedAmount
+                        u_balance: -amount, u_totalFrozeAmount: trs.stakedAmount
                     }, function (err2) {
                         return setImmediate(cb, err2 || err);
                     });
@@ -1052,14 +1006,14 @@ Transaction.prototype.undoUnconfirmed = function (trs, sender, cb) {
             }.bind(this));
         }.bind(this));
     } else {
-        this.scope.account.merge(sender.address, {u_balance: amount}, function (err, sender) {
+        this.scope.account.merge(sender.address, { u_balance: amount }, function (err, sender) {
             if (err) {
                 return setImmediate(cb, err);
             }
 
             __private.types[trs.type].undoUnconfirmed.call(this, trs, sender, function (err) {
                 if (err) {
-                    this.scope.account.merge(sender.address, {u_balance: -amount}, function (err2) {
+                    this.scope.account.merge(sender.address, { u_balance: -amount }, function (err2) {
                         return setImmediate(cb, err2 || err);
                     });
                 } else {
@@ -1072,26 +1026,7 @@ Transaction.prototype.undoUnconfirmed = function (trs, sender, cb) {
 
 Transaction.prototype.dbTable = 'trs';
 
-Transaction.prototype.dbFields = [
-    'id',
-    'blockId',
-    'type',
-    'timestamp',
-    'senderPublicKey',
-    'requesterPublicKey',
-    'senderId',
-    'recipientId',
-    'amount',
-    'stakedAmount',
-    'stakeId',
-    'groupBonus',
-    'fee',
-    'signature',
-    'signSignature',
-    'signatures',
-    'trsName',
-    'reward'
-];
+Transaction.prototype.dbFields = ['id', 'blockId', 'type', 'timestamp', 'senderPublicKey', 'requesterPublicKey', 'senderId', 'recipientId', 'amount', 'stakedAmount', 'stakeId', 'groupBonus', 'fee', 'signature', 'signSignature', 'signatures', 'trsName', 'reward'];
 
 /**
  * Creates db trs object transaction. Calls `dbSave` based on trs type (privateTypes).
@@ -1121,32 +1056,28 @@ Transaction.prototype.dbSave = function (trs) {
         trs.amount = trs.freezedAmount;
     }
 
-    let promises = [
-        {
-            table: this.dbTable,
-            fields: this.dbFields,
-            values: {
-                id: trs.id,
-                blockId: trs.blockId,
-                type: trs.type,
-                timestamp: trs.timestamp,
-                senderPublicKey: senderPublicKey,
-                requesterPublicKey: requesterPublicKey,
-                senderId: trs.senderId,
-                recipientId: trs.recipientId || null,
-                amount: trs.amount,
-                stakedAmount: trs.stakedAmount,
-                stakeId: trs.stakeId || null,
-                groupBonus: trs.groupBonus,
-                fee: trs.fee,
-                signature: signature,
-                signSignature: signSignature,
-                signatures: trs.signatures ? trs.signatures.join(',') : null,
-                trsName: trs.trsName,
-                reward: trs.reward
-            }
+    let promises = [{
+        table: this.dbTable, fields: this.dbFields, values: {
+            id: trs.id,
+            blockId: trs.blockId,
+            type: trs.type,
+            timestamp: trs.timestamp,
+            senderPublicKey: senderPublicKey,
+            requesterPublicKey: requesterPublicKey,
+            senderId: trs.senderId,
+            recipientId: trs.recipientId || null,
+            amount: trs.amount,
+            stakedAmount: trs.stakedAmount,
+            stakeId: trs.stakeId || null,
+            groupBonus: trs.groupBonus,
+            fee: trs.fee,
+            signature: signature,
+            signSignature: signSignature,
+            signatures: trs.signatures ? trs.signatures.join(',') : null,
+            trsName: trs.trsName,
+            reward: trs.reward
         }
-    ];
+    }];
 
     let promise = __private.types[trs.type].dbSave(trs);
 
@@ -1218,143 +1149,71 @@ Transaction.prototype.afterSave = async function (trs, cb) {
  *
  */
 Transaction.prototype.schema = {
-    id: 'Transaction',
-    type: 'object',
-    properties: {
+    id: 'Transaction', type: 'object', properties: {
         id: {
-            type: 'string',
-            format: 'hex',
-            minLength: 1,
-            maxLength: 64
-        },
-        height: {
+            type: 'string', format: 'hex', minLength: 1, maxLength: 64
+        }, height: {
             type: 'integer'
-        },
-        blockId: {
-            type: 'string',
-            format: 'hex',
-            minLength: 1,
-            maxLength: 64
-        },
-        type: {
+        }, blockId: {
+            type: 'string', format: 'hex', minLength: 1, maxLength: 64
+        }, type: {
             type: 'integer'
-        },
-        timestamp: {
+        }, timestamp: {
             type: 'integer'
-        },
-        senderPublicKey: {
-            type: 'string',
-            format: 'publicKey'
-        },
-        requesterPublicKey: {
-            type: 'string',
-            format: 'publicKey'
-        },
-        senderId: {
-            type: 'string',
-            format: 'address',
-            minLength: 1,
-            maxLength: 25
-        },
-        recipientId: {
-            type: 'string',
-            format: 'address',
-            minLength: 1,
-            maxLength: 25
-        },
-        amount: {
-            type: 'integer',
-            minimum: 0,
-            maximum: constants.totalAmount
-        },
-        fee: {
-            type: 'integer',
-            minimum: 0,
-            maximum: constants.totalAmount
-        },
-        signature: {
-            type: 'string',
-            format: 'signature'
-        },
-        signSignature: {
-            type: 'string',
-            format: 'signature'
-        },
-        asset: {
+        }, senderPublicKey: {
+            type: 'string', format: 'publicKey'
+        }, requesterPublicKey: {
+            type: 'string', format: 'publicKey'
+        }, senderId: {
+            type: 'string', format: 'address', minLength: 1, maxLength: 25
+        }, recipientId: {
+            type: 'string', format: 'address', minLength: 1, maxLength: 25
+        }, amount: {
+            type: 'integer', minimum: 0, maximum: constants.totalAmount
+        }, fee: {
+            type: 'integer', minimum: 0, maximum: constants.totalAmount
+        }, signature: {
+            type: 'string', format: 'signature'
+        }, signSignature: {
+            type: 'string', format: 'signature'
+        }, asset: {
             type: 'object'
         }
-    },
-    required: ['type', 'timestamp', 'senderPublicKey', 'signature']
+    }, required: ['type', 'timestamp', 'senderPublicKey', 'signature']
 };
 
 Transaction.prototype.Referschema = {
-    id: 'Transaction',
-    type: 'object',
-    properties: {
+    id: 'Transaction', type: 'object', properties: {
         id: {
-            type: 'string',
-            format: 'hex',
-            minLength: 1,
-            maxLength: 64
-        },
-        height: {
+            type: 'string', format: 'hex', minLength: 1, maxLength: 64
+        }, height: {
             type: 'integer'
-        },
-        blockId: {
-            type: 'string',
-            format: 'hex',
-            minLength: 1,
-            maxLength: 64
-        },
-        type: {
+        }, blockId: {
+            type: 'string', format: 'hex', minLength: 1, maxLength: 64
+        }, type: {
             type: 'integer'
-        },
-        timestamp: {
+        }, timestamp: {
             type: 'integer'
-        },
-        senderPublicKey: {
-            type: 'string',
-            format: 'publicKey'
-        },
-        requesterPublicKey: {
-            type: 'string',
-            format: 'publicKey'
-        },
-        senderId: {
-            type: 'string',
-            format: 'address',
-            minLength: 1,
-            maxLength: 25
-        },
-        recipientId: {
-            type: 'string',
-            format: 'address',
-            minLength: 1,
-            maxLength: 25
-        },
-        amount: {
-            type: 'integer',
-            minimum: 0,
-            maximum: constants.totalAmount
-        },
-        fee: {
-            type: 'integer',
-            minimum: 0,
-            maximum: constants.totalAmount
-        },
-        signature: {
-            type: 'string',
-            format: 'signature'
-        },
-        signSignature: {
-            type: 'string',
-            format: 'signature'
-        },
-        asset: {
+        }, senderPublicKey: {
+            type: 'string', format: 'publicKey'
+        }, requesterPublicKey: {
+            type: 'string', format: 'publicKey'
+        }, senderId: {
+            type: 'string', format: 'address', minLength: 1, maxLength: 25
+        }, recipientId: {
+            type: 'string', format: 'address', minLength: 1, maxLength: 25
+        }, amount: {
+            type: 'integer', minimum: 0, maximum: constants.totalAmount
+        }, fee: {
+            type: 'integer', minimum: 0, maximum: constants.totalAmount
+        }, signature: {
+            type: 'string', format: 'signature'
+        }, signSignature: {
+            type: 'string', format: 'signature'
+        }, asset: {
             type: 'object'
         }
-    },
-    required: ['type', 'timestamp', 'senderPublicKey', 'signature']
+    }, required: ['type', 'timestamp', 'senderPublicKey', 'signature']
 };
 
 /**
@@ -1466,8 +1325,9 @@ Transaction.prototype.sendTransaction = function (data, cb) {
     let address = this.scope.config.address;
 
     request.put('http://' + address + ':' + port + '/api/transactions/', data, function (error, transactionResponse) {
-        if (error)
+        if (error) {
             return setImmediate(cb, error);
+        }
 
         return setImmediate(cb, null, transactionResponse);
     });
