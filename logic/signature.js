@@ -67,22 +67,34 @@ Signature.prototype.calculateFee = function () {
  * trs validated.
  */
 Signature.prototype.verify = function (trs, sender, cb) {
-	if (!trs.asset || !trs.asset.signature) {
-		return setImmediate(cb, 'Invalid transaction asset');
-	}
+    if (!trs.asset || !trs.asset.signature) {
+        if (constants.SIGNATURE_TRANSACTION_VALIDATION_ENABLED.SIGNATURE) {
+            return setImmediate(cb, 'Invalid transaction asset');
+        } else {
+            library.logger.error('Invalid transaction asset signature')
+        }
+    }
 
-	if (trs.amount !== 0) {
-		return setImmediate(cb, 'Invalid transaction amount');
-	}
+    if (trs.amount !== 0) {
+        if (constants.SIGNATURE_TRANSACTION_VALIDATION_ENABLED.AMOUNT) {
+            return setImmediate(cb, 'Invalid transaction amount');
+        } else {
+            library.logger.error('Invalid transaction signature amount')
+        }
+    }
 
-	try {
-		if (!trs.asset.signature.publicKey || Buffer.from(trs.asset.signature.publicKey, 'hex').length !== 32) {
-			return setImmediate(cb, 'Invalid public key');
-		}
-	} catch (e) {
-		library.logger.error(e.stack);
-		return setImmediate(cb, 'Invalid public key');
-	}
+    try {
+        if (!trs.asset.signature.publicKey || Buffer.from(trs.asset.signature.publicKey, 'hex').length !== 32) {
+            if (constants.SIGNATURE_TRANSACTION_VALIDATION_ENABLED.PUBLIC_KEY) {
+                return setImmediate(cb, 'Invalid public key');
+            } else {
+                library.logger.error('Signature public key error')
+            }
+        }
+    } catch (e) {
+        library.logger.error(e.stack);
+        return setImmediate(cb, 'Invalid public key');
+    }
 
 	return setImmediate(cb, null, trs);
 };
