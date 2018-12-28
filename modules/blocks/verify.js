@@ -124,14 +124,22 @@ __private.verifySignature = function (block, result) {
   try {
     valid = library.logic.block.verifySignature(block);
   } catch (e) {
-    result.errors.push(e.toString());
+    if (constants.VERIFY_BLOCK_SIGNATURE) {
+      result.errors.push(e.toString());
+    } else {
+      library.logger.error(e.toString());
+    }
   }
 
   if (!valid) {
     // FIXME
     // https://trello.com/c/4maz5nyk/144-failed-to-verify-block-signature
     if (block.height > constants.MASTER_NODE_MIGRATED_BLOCK) {
-      result.errors.push('Failed to verify block signature');
+      if (constants.VERIFY_BLOCK_SIGNATURE) {
+        result.errors.push('Failed to verify block signature');
+      } else {
+        library.logger.error('Failed to verify block signature');
+      }
     }
   }
 
@@ -152,7 +160,11 @@ __private.verifySignature = function (block, result) {
  */
 __private.verifyPreviousBlock = function (block, result) {
   if (!block.previousBlock && block.height !== 1) {
-    result.errors.push('Invalid previous block');
+    if (constants.VERIFY_PREVIOUS_BLOCK) {
+      result.errors.push('Invalid previous block');
+    } else {
+      library.logger.error('Invalid previous block');
+    }
   }
 
   return result;
@@ -171,7 +183,11 @@ __private.verifyPreviousBlock = function (block, result) {
  */
 __private.verifyAgainstLastNBlockIds = function (block, result) {
   if (__private.lastNBlockIds.indexOf(block.id) !== -1) {
-    result.errors.push('Block already exists in chain');
+    if (constants.VERIFY_AGAINST_LAST_N_BLOCK_IDS) {
+      result.errors.push('Block already exists in chain');
+    } else {
+      library.logger.error('Block already exists in chain');
+    }
   }
 
   return result;
@@ -191,7 +207,11 @@ __private.verifyAgainstLastNBlockIds = function (block, result) {
  */
 __private.verifyVersion = function (block, result) {
   if (!blockVersion.isValid(block.version, block.height)) {
-    result.errors.push('Invalid block version');
+    if (constants.VERIFY_BLOCK_VERSION) {
+      result.errors.push('Invalid block version');
+    } else {
+      library.logger.error('Invalid block version');
+    }
   }
   return result;
 };
@@ -218,7 +238,11 @@ __private.verifyReward = function (block, result) {
   }
 
   if (block.height !== 1 && expectedReward !== block.reward && exceptions.blockRewards.indexOf(block.id) === -1) {
-    result.errors.push(['Invalid block reward:', block.reward, 'expected:', expectedReward].join(' '));
+    if (constants.VERIFY_BLOCK_REWARD) {
+      result.errors.push(['Invalid block reward:', block.reward, 'expected:', expectedReward].join(' '));
+    } else {
+      library.logger.error(['Invalid block reward:', block.reward, 'expected:', expectedReward].join(' '));
+    }
   }
 
   return result;
@@ -242,7 +266,11 @@ __private.verifyId = function (block, result) {
     // FIXME: Why we don't have it?
     block.id = library.logic.block.getId(block);
   } catch (e) {
-    result.errors.push(e.toString());
+    if (constants.VERIFY_BLOCK_ID) {
+      result.errors.push(e.toString());
+    } else {
+      library.logger.error(e.toString());
+    }
   }
 
   return result;
@@ -262,17 +290,29 @@ __private.verifyId = function (block, result) {
  */
 __private.verifyPayload = function (block, result) {
   if (block.payloadLength > constants.maxPayloadLength) {
-    result.errors.push('Payload length is too long');
+    if (constants.VERIFY_BLOCK_PAYLOAD) {
+      result.errors.push('Payload length is too long');
+    } else {
+      library.logger.error('Payload length is too long');
+    }
   }
 
   // FIXME update old chain payloadHash
   // https://trello.com/c/ZRV5EAUT/132-included-transactions-do-not-match-block-transactions-count
   if (block.transactions.length !== block.numberOfTransactions && block.height > constants.MASTER_NODE_MIGRATED_BLOCK) {
-    result.errors.push('Included transactions do not match block transactions count');
+    if (constants.VERIFY_BLOCK_PAYLOAD) {
+      result.errors.push('Included transactions do not match block transactions count');
+    } else {
+      library.logger.error('Included transactions do not match block transactions count');
+    }
   }
 
   if (block.transactions.length > constants.maxTxsPerBlock) {
-    result.errors.push('Number of transactions exceeds maximum per block');
+    if (constants.VERIFY_BLOCK_PAYLOAD) {
+      result.errors.push('Number of transactions exceeds maximum per block');
+    } else {
+      library.logger.error('Number of transactions exceeds maximum per block');
+    }
   }
 
   let totalAmount = 0;
@@ -289,11 +329,19 @@ __private.verifyPayload = function (block, result) {
       bytes = library.logic.transaction.getBytes(transaction, false, false);
       library.logger.debug(`Bytes ${JSON.stringify(bytes)}`);
     } catch (e) {
-      result.errors.push(e.toString());
+      if (constants.VERIFY_BLOCK_PAYLOAD) {
+        result.errors.push(e.toString());
+      } else {
+        library.logger.error(e.toString());
+      }
     }
 
     if (appliedTransactions[transaction.id]) {
-      result.errors.push('Encountered duplicate transaction: ' + transaction.id);
+      if (constants.VERIFY_BLOCK_PAYLOAD) {
+        result.errors.push('Encountered duplicate transaction: ' + transaction.id);
+      } else {
+        library.logger.error('Encountered duplicate transaction: ' + transaction.id);
+      }
     }
 
     appliedTransactions[transaction.id] = transaction;
@@ -309,7 +357,11 @@ __private.verifyPayload = function (block, result) {
     // FIXME update old chain payloadHash
     // https://trello.com/c/G3XRs3Fk/127-update-old-chain-payloadhash
     if (block.height > constants.MASTER_NODE_MIGRATED_BLOCK) {
-      result.errors.push('Invalid payload hash');
+      if (constants.VERIFY_BLOCK_PAYLOAD) {
+        result.errors.push('Invalid payload hash');
+      } else {
+        library.logger.error('Invalid payload hash');
+      }
     }
   }
 
@@ -317,7 +369,11 @@ __private.verifyPayload = function (block, result) {
     // FIXME Invalid total amount
     // https://trello.com/c/6G2rPg0o/141-invalid-total-amount
     if (block.height > constants.MASTER_NODE_MIGRATED_BLOCK) {
-      result.errors.push('Invalid total amount');
+      if (constants.VERIFY_BLOCK_PAYLOAD) {
+        result.errors.push('Invalid total amount');
+      } else {
+        library.logger.error('Invalid total amount');
+      }
     }
   }
 
@@ -325,7 +381,11 @@ __private.verifyPayload = function (block, result) {
     // FIXME update old chain totalFee
     // https://trello.com/c/zmjr4SAL/131-invalid-total-fee
     if (block.height > constants.MASTER_NODE_MIGRATED_BLOCK) {
-      result.errors.push('Invalid total fee');
+      if (constants.VERIFY_BLOCK_PAYLOAD) {
+        result.errors.push('Invalid total fee');
+      } else {
+        library.logger.error('Invalid total fee');
+      }
     }
   }
 
@@ -347,7 +407,11 @@ __private.verifyPayload = function (block, result) {
 __private.verifyForkOne = function (block, lastBlock, result) {
   if (block.previousBlock && block.previousBlock !== lastBlock.id) {
     modules.delegates.fork(block, 1);
-    result.errors.push(['Invalid previous block:', block.previousBlock, 'expected:', lastBlock.id].join(' '));
+    if (constants.VERIFY_BLOCK_FORK_ONE) {
+      result.errors.push(['Invalid previous block:', block.previousBlock, 'expected:', lastBlock.id].join(' '));
+    } else {
+      library.logger.error(['Invalid previous block:', block.previousBlock, 'expected:', lastBlock.id].join(' '));
+    }
   }
 
   return result;
@@ -370,7 +434,11 @@ __private.verifyBlockSlot = function (block, lastBlock, result) {
   const lastBlockSlotNumber = slots.getSlotNumber(lastBlock.timestamp);
 
   if (blockSlotNumber > slots.getSlotNumber() || blockSlotNumber <= lastBlockSlotNumber) {
-    result.errors.push('Invalid block timestamp');
+    if (constants.VERIFY_BLOCK_SLOT) {
+      result.errors.push('Invalid block timestamp');
+    } else {
+      library.logger.error('Invalid block timestamp', JSON.stringify(block));
+    }
   }
 
   return result;
@@ -392,12 +460,20 @@ __private.verifyBlockSlotWindow = function (block, result) {
 
   // Reject block if it's slot is older than BLOCK_SLOT_WINDOW
   if (currentApplicationSlot - blockSlot > constants.blockSlotWindow) {
-    result.errors.push('Block slot is too old');
+    if (constants.VERIFY_BLOCK_SLOT_WINDOW) {
+      result.errors.push('Block slot is too old');
+    } else {
+      library.logger.error('Block slot is too old');
+    }
   }
 
   // Reject block if it's slot is in the future
   if (currentApplicationSlot < blockSlot) {
-    result.errors.push('Block slot is in the future');
+    if (constants.VERIFY_BLOCK_SLOT_WINDOW) {
+      result.errors.push('Block slot is in the future');
+    } else {
+      library.logger.error('Block slot is in the future');
+    }
   }
 
   return result;
@@ -686,8 +762,12 @@ __private.validateBlockSlot = function (block, cb) {
   modules.delegates.validateBlockSlot(block, err => {
     if (err) {
       // Fork: Delegate does not match calculated slot
-      modules.delegates.fork(block, 3);
-      return setImmediate(cb, err);
+      if (constants.VALIDATE_BLOCK_SLOT) {
+        modules.delegates.fork(block, 3);
+        return setImmediate(cb, err);
+      } else {
+        library.logger.error('validateBlockSlot', err);
+      }
     }
     return setImmediate(cb);
   });
