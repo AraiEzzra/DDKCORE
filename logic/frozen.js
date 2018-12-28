@@ -352,34 +352,37 @@ Frozen.prototype.process = function (trs, sender, cb) {
  */
 Frozen.prototype.verify = function (trs, sender, cb) {
   const stakedAmount = trs.stakedAmount / 100000000;
-  const validateTo = (constOn, msg, cbErr) => {
-    !constOn
-      ? self.scope.logger.error(`VALIDATE IS DISABLED. Error: trs.id ${trs.id} `, msg)
-      : cbErr();
-  };
 
   if (stakedAmount < 1) {
-    validateTo(library.config.STAKE_VALIDATE.AMOUNT_ENABLED, 'Invalid stake amount', () => {
+    if (constants.STAKE_VALIDATE.AMOUNT_ENABLED) {
       return setImmediate(cb, 'Invalid stake amount');
-    });
+    } else {
+      self.scope.logger.error(`VALIDATE IS DISABLED. Error: trs.id ${trs.id} Invalid stake amount`)
+    }
   }
 
   if ((stakedAmount % 1) !== 0) {
-    validateTo(library.config.STAKE_VALIDATE.AMOUNT_ENABLED, 'Invalid stake amount: Decimal value', () => {
+    if (constants.STAKE_VALIDATE.AMOUNT_ENABLED) {
       return setImmediate(cb, 'Invalid stake amount: Decimal value');
-    });
+    } else {
+      self.scope.logger.error(`VALIDATE IS DISABLED. Error: trs.id ${trs.id} Invalid stake amount: Decimal value`)
+    }
   }
 
   if (Number(trs.stakedAmount) + Number(sender.totalFrozeAmount) > Number(sender.u_balance)) {
-    validateTo(library.config.STAKE_VALIDATE.BALANCE_ENABLED, 'Verify failed: Insufficient balance for stake', () => {
+    if (constants.STAKE_VALIDATE.BALANCE_ENABLED) {
       return setImmediate(cb, 'Verify failed: Insufficient balance for stake');
-    });
+    } else {
+      self.scope.logger.error(`VALIDATE IS DISABLED. Error: trs.id ${trs.id} Verify failed: Insufficient balance for stake`)
+    }
   }
 
   if ((parseInt(sender.balance) - parseInt(sender.totalFrozeAmount)) < (trs.stakedAmount + trs.fee)) {
-    validateTo(library.config.STAKE_VALIDATE.BALANCE_ENABLED, 'Insufficient balance', () => {
+    if (constants.STAKE_VALIDATE.BALANCE_ENABLED) {
       return setImmediate(cb, 'Insufficient balance');
-    });
+    } else {
+      self.scope.logger.error(`VALIDATE IS DISABLED. Error: trs.id ${trs.id} Insufficient balance`)
+    }
   }
 
   self.verifyAirdrop(trs)
@@ -387,9 +390,11 @@ Frozen.prototype.verify = function (trs, sender, cb) {
       return setImmediate(cb, null);
     })
     .catch((err) => {
-      validateTo(library.config.STAKE_VALIDATE.AIRDROP_ENABLED, err.message, () => {
+      if (constants.STAKE_VALIDATE.AIRDROP_ENABLED) {
         return setImmediate(cb, err);
-      });
+      } else {
+        self.scope.logger.error(`VALIDATE IS DISABLED. Error: trs.id ${trs.id}, ${err.message}`)
+      }
     });
 };
 
