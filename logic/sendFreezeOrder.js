@@ -25,6 +25,14 @@ function SendFreezeOrder(logger, db, network, cb) {
 	}
 }
 
+SendFreezeOrder.prototype.bind = function (accounts, rounds) {
+	modules = {
+		accounts: accounts,
+		rounds: rounds,
+	};
+};
+
+
 async function rollbackOrders(trs, cb) {
 
 	try {
@@ -216,13 +224,6 @@ SendFreezeOrder.prototype.verify = function (trs, sender, cb) {
 
 SendFreezeOrder.prototype.calculateFee = function (trs, sender) {
 	return (trs.amount * constants.fees.sendfreeze) / 100;
-};
-
-SendFreezeOrder.prototype.bind = function (accounts, rounds) {
-	modules = {
-		accounts: accounts,
-		rounds: rounds,
-	};
 };
 
 SendFreezeOrder.prototype.getActiveFrozeOrder = function (userData, cb) {

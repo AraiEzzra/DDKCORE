@@ -530,10 +530,8 @@ d.run(function () {
 			let Account = require('./logic/account.js');
 			let Peers = require('./logic/peers.js');
 			let Frozen = require('./logic/frozen.js');
-			let Contract = require('./logic/contract.js');
 			let SendFreezeOrder = require('./logic/sendFreezeOrder.js');
 			let Vote = require('./logic/vote.js');
-			let Migration = require('./logic/Migration.js');
 
 			async.auto({
 				bus: function (cb) {
@@ -580,15 +578,9 @@ d.run(function () {
 				sendFreezeOrder: ['logger', 'db', 'network', function (scope, cb) {
 					new SendFreezeOrder(scope.logger, scope.db, scope.network, cb);
 				}],
-				contract: ['config', function (scope, cb) {
-					new Contract(scope.config, scope.db, cb);
-				}],
 				vote: ['logger', 'schema', 'db', 'frozen', function (scope, cb) {
 					new Vote(scope.logger, scope.schema, scope.db, scope.frozen, cb);
 				}],
-				migration: ['logger', 'db', function (scope, cb) {
-					new Migration(scope.logger, scope.db, cb);
-				}]
 			}, cb);
 		}],
 		/**
