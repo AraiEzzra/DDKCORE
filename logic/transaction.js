@@ -189,7 +189,7 @@ Transaction.prototype.multisign = function (keypair, trs) {
  * @return {string} id
  */
 Transaction.prototype.getId = function (trs) {
-  return this.getHash(trs).toString('hex');
+    return this.getHash(trs).toString('hex');
 };
 
 /**
@@ -320,11 +320,11 @@ Transaction.prototype.checkBalance = function (amount, balance, trs, sender) {
     let exceededBalance = new bignum(sender[balance].toString()).lessThan(totalAmountWithFrozeAmount);
     let exceeded = (trs.blockId !== this.scope.genesisblock.block.id && exceededBalance);
 
-	// FIXME
-  // https://trello.com/c/MPx5yxNH/134-account-does-not-have-enough-ddk
-  if (trs.height <= constants.MASTER_NODE_MIGRATED_BLOCK) {
-    exceeded = false;
-  }
+    // FIXME
+    // https://trello.com/c/MPx5yxNH/134-account-does-not-have-enough-ddk
+    if (trs.height <= constants.MASTER_NODE_MIGRATED_BLOCK) {
+        exceeded = false;
+    }
 
     if (parseInt(sender.totalFrozeAmount) > 0) {
         return {
@@ -448,52 +448,52 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
         if (constants.TRANSACTION_VALIDATION_ENABLED.SENDER) {
             return setImmediate(cb, 'Missing sender');
         } else {
-            library.logger.error('Transaction sender error')
+            this.scope.logger.error('Transaction sender error')
         }
     }
 
     // Check transaction type
     if (!__private.types[trs.type]) {
-        if(constants.TRANSACTION_VALIDATION_ENABLED.TYPE) {
+        if (constants.TRANSACTION_VALIDATION_ENABLED.TYPE) {
             return setImmediate(cb, 'Unknown transaction type ' + trs.type);
         } else {
-            library.logger.error('Transaction error type')
+            this.scope.logger.error('Transaction error type')
         }
     }
 
     // Check for missing sender second signature
     if (!trs.requesterPublicKey && sender.secondSignature && !trs.signSignature && trs.blockId !== this.scope.genesisblock.block.id) {
-        if(constants.TRANSACTION_VALIDATION_ENABLED.SECOND_SIGNATURE) {
+        if (constants.TRANSACTION_VALIDATION_ENABLED.SECOND_SIGNATURE) {
             return setImmediate(cb, 'Missing sender second signature');
         } else {
-            library.logger.error('Missing sender second signature')
+            this.scope.logger.error('Missing sender second signature')
         }
     }
 
     // If second signature provided, check if sender has one enabled
     if (!trs.requesterPublicKey && !sender.secondSignature && (trs.signSignature && trs.signSignature.length > 0)) {
-        if(constants.TRANSACTION_VALIDATION_ENABLED.SENDER_SECOND_SIGNATURE) {
+        if (constants.TRANSACTION_VALIDATION_ENABLED.SENDER_SECOND_SIGNATURE) {
             return setImmediate(cb, 'Sender does not have a second signature');
         } else {
-            library.logger.error('Sender does not have a second signature')
+            this.scope.logger.error('Sender does not have a second signature')
         }
     }
 
     // Check for missing requester second signature
     if (trs.requesterPublicKey && requester.secondSignature && !trs.signSignature) {
-        if(constants.TRANSACTION_VALIDATION_ENABLED.REQUEST_SECOND_SIGNATURE) {
+        if (constants.TRANSACTION_VALIDATION_ENABLED.REQUEST_SECOND_SIGNATURE) {
             return setImmediate(cb, 'Missing requester second signature');
         } else {
-            library.logger.error('Missing requester second signature')
+            this.scope.logger.error('Missing requester second signature')
         }
     }
 
     // If second signature provided, check if requester has one enabled
     if (trs.requesterPublicKey && !requester.secondSignature && (trs.signSignature && trs.signSignature.length > 0)) {
-        if(constants.TRANSACTION_VALIDATION_ENABLED.CHECKING_REQUEST_SECOND_SIGNATURE) {
+        if (constants.TRANSACTION_VALIDATION_ENABLED.CHECKING_REQUEST_SECOND_SIGNATURE) {
             return setImmediate(cb, 'Requester does not have a second signature');
         } else {
-            library.logger.error('Requester does not have a second signature')
+            this.scope.logger.error('Requester does not have a second signature')
         }
     }
 
@@ -503,26 +503,26 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
         trs.height > constants.MASTER_NODE_MIGRATED_BLOCK
     ) {
         err = ['Invalid sender public key:', trs.senderPublicKey, 'expected:', sender.publicKey].join(' ');
-       if (constants.TRANSACTION_VALIDATION_ENABLED.SENDER_PUBLIC_KEY) {
+        if (constants.TRANSACTION_VALIDATION_ENABLED.SENDER_PUBLIC_KEY) {
 
-           if (exceptions.senderPublicKey.indexOf(trs.id) > -1) {
-               this.scope.logger.debug(err);
-               this.scope.logger.debug(JSON.stringify(trs));
-           } else {
-               return setImmediate(cb, err);
-           }
-       } else {
-           library.logger.error('Sender public key error')
-       }
+            if (exceptions.senderPublicKey.indexOf(trs.id) > -1) {
+                this.scope.logger.debug(err);
+                this.scope.logger.debug(JSON.stringify(trs));
+            } else {
+                return setImmediate(cb, err);
+            }
+        } else {
+            this.scope.logger.error('Sender public key error')
+        }
     }
 
     // Check sender is not genesis account unless block id equals genesis
     if ([exceptions.genesisPublicKey.mainnet, exceptions.genesisPublicKey.testnet].indexOf(sender.publicKey) !== -1 && trs.blockId !== this.scope.genesisblock.block.id) {
-       if (constants.TRANSACTION_VALIDATION_ENABLED.SENDER_GENESIS_ACCOUNT) {
-           return setImmediate(cb, 'Invalid sender. Can not send from genesis account');
-       } else {
-           library.logger.error('Invalid sender. Can not send from genesis account')
-       }
+        if (constants.TRANSACTION_VALIDATION_ENABLED.SENDER_GENESIS_ACCOUNT) {
+            return setImmediate(cb, 'Invalid sender. Can not send from genesis account');
+        } else {
+            this.scope.logger.error('Invalid sender. Can not send from genesis account')
+        }
     }
 
     // Check sender address
@@ -530,7 +530,7 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
         if (constants.TRANSACTION_VALIDATION_ENABLED.SENDER_ADDRESS) {
             return setImmediate(cb, 'Invalid sender address');
         } else {
-            library.logger.error('Invalid sender address')
+            this.scope.logger.error('Invalid sender address')
         }
     }
 
@@ -546,7 +546,7 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
                     if (constants.TRANSACTION_VALIDATION_ENABLED.KEYSGROUP_MEMBER) {
                         return setImmediate(cb, 'Invalid member in keysgroup');
                     } else {
-                        library.logger.error('Invalid member in keysgroup')
+                        this.scope.logger.error('Invalid member in keysgroup')
                     }
                 }
 
@@ -563,7 +563,7 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
             if (constants.TRANSACTION_VALIDATION_ENABLED.MULTISIGNATURE_GROUP) {
                 return setImmediate(cb, 'Account does not belong to multisignature group');
             } else {
-                library.logger.error('Account does not belong to multisignature group')
+                this.scope.logger.error('Account does not belong to multisignature group')
             }
         }
     }
@@ -579,7 +579,7 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
         if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_SIGNATURE) {
             return setImmediate(cb, e.toString());
         } else {
-            library.logger.error('Transaction verify error')
+            this.scope.logger.error('Transaction verify error')
         }
     }
 
@@ -595,7 +595,7 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
             if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_SIGNATURE) {
                 return setImmediate(cb, err);
             } else {
-                library.logger.error('Transaction verify error')
+                this.scope.logger.error('Transaction verify error')
             }
 
         }
@@ -606,18 +606,18 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
         try {
             valid = this.verifySecondSignature(trs, (requester.secondPublicKey || sender.secondPublicKey), trs.signSignature);
         } catch (e) {
-             if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_SECOND_SIGNATURE) {
-                 return setImmediate(cb, e.toString());
-             } else {
-                 library.logger.error('Transaction verify second signature error')
-             }
+            if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_SECOND_SIGNATURE) {
+                return setImmediate(cb, e.toString());
+            } else {
+                this.scope.logger.error('Transaction verify second signature error')
+            }
         }
 
         if (!valid) {
             if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_SECOND_SIGNATURE) {
                 return setImmediate(cb, 'Failed to verify second signature');
             } else {
-                 library.logger.error('Failed to verify second signature')
+                this.scope.logger.error('Failed to verify second signature')
             }
         }
     }
@@ -635,7 +635,7 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
             if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_SIGNATURE_UNIQUE) {
                 return setImmediate(cb, 'Encountered duplicate signature in transaction');
             } else {
-                library.logger.error('Encountered duplicate signature in transaction')
+                this.scope.logger.error('Encountered duplicate signature in transaction')
             }
         }
     }
@@ -659,33 +659,33 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
                 if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_MULTISIGNATURE) {
                     return setImmediate(cb, 'Failed to verify multisignature');
                 } else {
-                    library.logger.error('Failed to verify multisignature')
+                    this.scope.logger.error('Failed to verify multisignature')
                 }
             }
         }
     }
 
-	let fee = __private.types[trs.type].calculateFee.call(this, trs, sender) || 0;
-	if (
-		trs.type !== transactionTypes.REFERRAL &&
-		!(trs.type === transactionTypes.STAKE && trs.stakedAmount < 0) &&
-		(!fee || trs.fee !== fee)
-	) {
-		// TODO: Restore transation verify
-		// https://trello.com/c/2jF7cnad/115-restore-transactions-verifing
+    let fee = __private.types[trs.type].calculateFee.call(this, trs, sender) || 0;
+    if (
+        trs.type !== transactionTypes.REFERRAL &&
+        !(trs.type === transactionTypes.STAKE && trs.stakedAmount < 0) &&
+        (!fee || trs.fee !== fee)
+    ) {
+        // TODO: Restore transation verify
+        // https://trello.com/c/2jF7cnad/115-restore-transactions-verifing
         if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_FEE) {
             return setImmediate(cb, 'Invalid transaction fee');
         } else {
-            library.logger.error('Invalid transaction fee')
+            this.scope.logger.error('Invalid transaction fee')
         }
-	  }
+    }
 
     // Check amount
     if (trs.amount < 0 || trs.amount > constants.totalAmount || String(trs.amount).indexOf('.') >= 0 || trs.amount.toString().indexOf('e') >= 0) {
         if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_AMOUNT) {
             return setImmediate(cb, 'Invalid transaction amount');
         } else {
-            library.logger.error('Invalid transaction amount')
+            this.scope.logger.error('Invalid transaction amount')
         }
     }
 
@@ -698,7 +698,7 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
         if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_SENDER_BALANCE) {
             return setImmediate(cb, senderBalance.error);
         } else {
-            library.logger.error('Sender balance error')
+            this.scope.logger.error('Sender balance error')
         }
     }
 
@@ -707,7 +707,7 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
         if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_TIMESTAMP) {
             return setImmediate(cb, 'Invalid transaction timestamp. Timestamp is in the future');
         } else {
-            library.logger.error('Invalid transaction timestamp. Timestamp is in the future')
+            this.scope.logger.error('Invalid transaction timestamp. Timestamp is in the future')
         }
     }
 
@@ -717,7 +717,7 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
                 if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_TYPE) {
                     return setImmediate(verifyTransactionTypesCb, err);
                 } else {
-                    library.logger.error('Transaction types error')
+                    this.scope.logger.error('Transaction types error')
                 }
             }
             return setImmediate(verifyTransactionTypesCb);
@@ -730,7 +730,7 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
                 if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_CONFIRMED) {
                     return setImmediate(cb, checkConfirmedErr);
                 } else {
-                    library.logger.error('Transaction confirm error')
+                    this.scope.logger.error('Transaction confirm error')
                 }
             }
 
@@ -738,7 +738,7 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
                 if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_CONFIRMED) {
                     return setImmediate(cb, `Transaction is already confirmed: ${trs.id}`);
                 } else {
-                    library.logger.error('Transaction confirm error')
+                    this.scope.logger.error('Transaction confirm error')
                 }
             }
 
@@ -1027,7 +1027,7 @@ Transaction.prototype.applyUnconfirmed = function (trs, sender, requester, cb) {
  * @return {setImmediateCallback} for errors | cb
  */
 Transaction.prototype.undoUnconfirmed = function (trs, sender, cb) {
-    let amount = amount.plus(trs.fee.toString()).toNumber();
+    let amount = (new bignum(trs.amount.toString())).plus(trs.fee.toString()).toNumber();
 
     if (trs.type === transactionTypes.STAKE) {
         this.scope.account.merge(sender.address, {
@@ -1166,16 +1166,16 @@ Transaction.prototype.dbSave = function (trs) {
  */
 Transaction.prototype.afterSave = async function (trs, cb) {
     if (trs.type === transactionTypes.STAKE) {
-		const stakeOrders = await self.scope.db.manyOrNone(sqlFroging.getFrozeOrders, {
-			senderId: trs.senderId
-		});
-		if (stakeOrders && stakeOrders.length > 0) {
-			const bulkStakeOrders = utils.makeBulk(stakeOrders,'stake_orders');
-			await utils.indexall(bulkStakeOrders, 'stake_orders');
+        const stakeOrders = await self.scope.db.manyOrNone(sqlFroging.getFrozeOrders, {
+            senderId: trs.senderId
+        });
+        if (stakeOrders && stakeOrders.length > 0) {
+            const bulkStakeOrders = utils.makeBulk(stakeOrders, 'stake_orders');
+            await utils.indexall(bulkStakeOrders, 'stake_orders');
 
-		} else {
-			setImmediate(cb, 'couldn\'t add document to index stake_orders in the ElasticSearch');
-		}
+        } else {
+            setImmediate(cb, 'couldn\'t add document to index stake_orders in the ElasticSearch');
+        }
         //Stake order event
         this.scope.network.io.sockets.emit('stake/change', null);
     }
@@ -1218,143 +1218,143 @@ Transaction.prototype.afterSave = async function (trs, cb) {
  *
  */
 Transaction.prototype.schema = {
-	id: 'Transaction',
-	type: 'object',
-	properties: {
-		id: {
-			type: 'string',
-			format: 'hex',
-			minLength: 1,
-			maxLength: 64
-		},
-		height: {
-			type: 'integer'
-		},
-		blockId: {
-			type: 'string',
-			format: 'hex',
-			minLength: 1,
-			maxLength: 64
-		},
-		type: {
-			type: 'integer'
-		},
-		timestamp: {
-			type: 'integer'
-		},
-		senderPublicKey: {
-			type: 'string',
-			format: 'publicKey'
-		},
-		requesterPublicKey: {
-			type: 'string',
-			format: 'publicKey'
-		},
-		senderId: {
-			type: 'string',
-			format: 'address',
-			minLength: 1,
-			maxLength: 25
-		},
-		recipientId: {
-			type: 'string',
-			format: 'address',
-			minLength: 1,
-			maxLength: 25
-		},
-		amount: {
-			type: 'integer',
-			minimum: 0,
-			maximum: constants.totalAmount
-		},
-		fee: {
-			type: 'integer',
-			minimum: 0,
-			maximum: constants.totalAmount
-		},
-		signature: {
-			type: 'string',
-			format: 'signature'
-		},
-		signSignature: {
-			type: 'string',
-			format: 'signature'
-		},
-		asset: {
-			type: 'object'
-		}
-	},
-	required: ['type', 'timestamp', 'senderPublicKey', 'signature']
+    id: 'Transaction',
+    type: 'object',
+    properties: {
+        id: {
+            type: 'string',
+            format: 'hex',
+            minLength: 1,
+            maxLength: 64
+        },
+        height: {
+            type: 'integer'
+        },
+        blockId: {
+            type: 'string',
+            format: 'hex',
+            minLength: 1,
+            maxLength: 64
+        },
+        type: {
+            type: 'integer'
+        },
+        timestamp: {
+            type: 'integer'
+        },
+        senderPublicKey: {
+            type: 'string',
+            format: 'publicKey'
+        },
+        requesterPublicKey: {
+            type: 'string',
+            format: 'publicKey'
+        },
+        senderId: {
+            type: 'string',
+            format: 'address',
+            minLength: 1,
+            maxLength: 25
+        },
+        recipientId: {
+            type: 'string',
+            format: 'address',
+            minLength: 1,
+            maxLength: 25
+        },
+        amount: {
+            type: 'integer',
+            minimum: 0,
+            maximum: constants.totalAmount
+        },
+        fee: {
+            type: 'integer',
+            minimum: 0,
+            maximum: constants.totalAmount
+        },
+        signature: {
+            type: 'string',
+            format: 'signature'
+        },
+        signSignature: {
+            type: 'string',
+            format: 'signature'
+        },
+        asset: {
+            type: 'object'
+        }
+    },
+    required: ['type', 'timestamp', 'senderPublicKey', 'signature']
 };
 
 Transaction.prototype.Referschema = {
-	id: 'Transaction',
-	type: 'object',
-	properties: {
-		id: {
-			type: 'string',
-			format: 'hex',
-			minLength: 1,
-			maxLength: 64
-		},
-		height: {
-			type: 'integer'
-		},
-		blockId: {
-			type: 'string',
-			format: 'hex',
-			minLength: 1,
-			maxLength: 64
-		},
-		type: {
-			type: 'integer'
-		},
-		timestamp: {
-			type: 'integer'
-		},
-		senderPublicKey: {
-			type: 'string',
-			format: 'publicKey'
-		},
-		requesterPublicKey: {
-			type: 'string',
-			format: 'publicKey'
-		},
-		senderId: {
-			type: 'string',
-			format: 'address',
-			minLength: 1,
-			maxLength: 25
-		},
-		recipientId: {
-			type: 'string',
-			format: 'address',
-			minLength: 1,
-			maxLength: 25
-		},
-		amount: {
-			type: 'integer',
-			minimum: 0,
-			maximum: constants.totalAmount
-		},
-		fee: {
-			type: 'integer',
-			minimum: 0,
-			maximum: constants.totalAmount
-		},
-		signature: {
-			type: 'string',
-			format: 'signature'
-		},
-		signSignature: {
-			type: 'string',
-			format: 'signature'
-		},
-		asset: {
-			type: 'object'
-		}
-	},
-	required: ['type', 'timestamp', 'senderPublicKey', 'signature']
+    id: 'Transaction',
+    type: 'object',
+    properties: {
+        id: {
+            type: 'string',
+            format: 'hex',
+            minLength: 1,
+            maxLength: 64
+        },
+        height: {
+            type: 'integer'
+        },
+        blockId: {
+            type: 'string',
+            format: 'hex',
+            minLength: 1,
+            maxLength: 64
+        },
+        type: {
+            type: 'integer'
+        },
+        timestamp: {
+            type: 'integer'
+        },
+        senderPublicKey: {
+            type: 'string',
+            format: 'publicKey'
+        },
+        requesterPublicKey: {
+            type: 'string',
+            format: 'publicKey'
+        },
+        senderId: {
+            type: 'string',
+            format: 'address',
+            minLength: 1,
+            maxLength: 25
+        },
+        recipientId: {
+            type: 'string',
+            format: 'address',
+            minLength: 1,
+            maxLength: 25
+        },
+        amount: {
+            type: 'integer',
+            minimum: 0,
+            maximum: constants.totalAmount
+        },
+        fee: {
+            type: 'integer',
+            minimum: 0,
+            maximum: constants.totalAmount
+        },
+        signature: {
+            type: 'string',
+            format: 'signature'
+        },
+        signSignature: {
+            type: 'string',
+            format: 'signature'
+        },
+        asset: {
+            type: 'object'
+        }
+    },
+    required: ['type', 'timestamp', 'senderPublicKey', 'signature']
 };
 
 /**
@@ -1379,13 +1379,13 @@ Transaction.prototype.objectNormalize = function (trs) {
 
     const report = this.scope.schema.validate(trs, Transaction.prototype.schema);
 
-	// schemaValidator
+    // schemaValidator
     if (!report) {
-		
-		throw 'Failed to validate transaction schema: ' + this.scope.schema.getLastErrors().map(function (err) {
-			return err.message;
-		}).join(', ');
-	}
+
+        throw 'Failed to validate transaction schema: ' + this.scope.schema.getLastErrors().map(function (err) {
+            return err.message;
+        }).join(', ');
+    }
 
     try {
         trs = __private.types[trs.type].objectNormalize.call(this, trs);
