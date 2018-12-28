@@ -4,7 +4,6 @@ let crypto = require('crypto');
 let bignum = require('../helpers/bignum.js');
 let ByteBuffer = require('bytebuffer');
 let BlockReward = require('../logic/blockReward.js');
-let Contract = require('../logic/contract.js');
 let constants = require('../helpers/constants.js');
 let __private = {};
 
@@ -30,14 +29,6 @@ function Block (ed, schema, transaction, cb) {
 		return setImmediate(cb, null, this);
 	}
 }
-
-// Private methods
-/**
- * Creates a blockReward instance.
- * @private
- */
-__private.blockReward = new BlockReward();
-__private.Contract = new Contract();
 
 /**
  * Gets address by public

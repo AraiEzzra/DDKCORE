@@ -6,17 +6,14 @@ let sql = require('../sql/frogings.js');
 let TransactionPool = require('../logic/transactionPool.js');
 let transactionTypes = require('../helpers/transactionTypes.js');
 let Frozen = require('../logic/frozen.js');
-let ref_sql = require('../sql/referal_sql');
 let constants = require('../helpers/constants.js');
 let cache = require('./cache.js');
-let slots = require('../helpers/slots');
 
 const COUNT_ACTIVE_STAKE_HOLDERS_KEY = 'COUNT_ACTIVE_STAKE_HOLDERS';
 const COUNT_ACTIVE_STAKE_HOLDERS_EXPIRE = 300; // 5 minutes
 
 // Private fields
 let __private = {};
-let shared = {};
 let modules;
 let library;
 let self;
