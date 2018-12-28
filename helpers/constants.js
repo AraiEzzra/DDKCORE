@@ -66,27 +66,6 @@ const constants = {
     },
 };
 
-if (trs.recipientId !== trs.senderId) {
-    return setImmediate(cb, 'Invalid recipient');
-}
-
-if (!trs.asset || !trs.asset.votes) {
-    return setImmediate(cb, 'Invalid transaction asset');
-}
-
-if (!Array.isArray(trs.asset.votes)) {
-    return setImmediate(cb, 'Invalid votes. Must be an array');
-}
-
-if (!trs.asset.votes.length) {
-    return setImmediate(cb, 'Invalid votes. Must not be empty');
-}
-
-if (trs.asset.votes && trs.asset.votes.length > constants.maxVotesPerTransaction) {
-    return setImmediate(cb, ['Voting limit exceeded. Maximum is', constants.maxVotesPerTransaction, 'votes per transaction'].join(' '));
-}
-
-
 Object.assign(constants, require('../config/env'));
 
 if (env.NODE_ENV === 'development') {
