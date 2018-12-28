@@ -84,6 +84,11 @@ const constants = {
         VERIFY_TRANSACTION_TYPE: true,
         VERIFY_TRANSACTION_CONFIRMED: true,
     },
+    STAKE_VALIDATE: {
+        AMOUNT_ENABLED: true,
+        BALANCE_ENABLED: true,
+        AIRDROP_ENABLED: true,
+    }
 };
 
 Object.assign(constants, require('../config/env'));

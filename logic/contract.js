@@ -1,6 +1,5 @@
 let modules, self;
 let StakeReward = require('./stakeReward.js');
-
 let reward = new StakeReward();
 
 /**
@@ -62,13 +61,13 @@ Contract.prototype.calculateFee = function () {
  * @return {function} cb
  */
 Contract.prototype.verify = function (trs, sender, cb) {
-	if (!trs.recipientId) {
-		return setImmediate(cb, 'Missing recipient');
-	}
+  if (!trs.recipientId) {
+  	return setImmediate(cb, 'Missing recipient');
+  }
 
-	if (trs.amount <= 0) {
-		return setImmediate(cb, 'Invalid transaction amount');
-	}
+  if (trs.amount <= 0) {
+  	return setImmediate(cb, 'Invalid transaction amount');
+  }
 
 	if (trs.trsName === 'REWARD') {
 		if (!trs.reward) {
@@ -80,9 +79,9 @@ Contract.prototype.verify = function (trs, sender, cb) {
 
 		let stakeReward = reward.calcReward(height);
 
-		if (stake_reward !== stakeReward) {
-			return setImmediate(cb, 'Invalid stake reward percentage');
-		}
+    if (stake_reward !== stakeReward) {
+    	return setImmediate(cb, 'Invalid stake reward percentage');
+    }
 	}
 
 	return setImmediate(cb, null, trs);
