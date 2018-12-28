@@ -13,22 +13,19 @@
  * @param {Integer} SENDSTAKE - send freeze transation
  * @param {Integer} REFER - Referral reward transaction.
  * @returns {Object}
-*/
+ */
 module.exports = {
-	REFERRAL: -1,
-	SEND: 0,
-	SIGNATURE: 1,
-	DELEGATE: 2,
-	VOTE: 15,
-	MULTI: 4,
-	DAPP: 5,
-	IN_TRANSFER: 6,
-	OUT_TRANSFER: 7,
-	STAKE: 8,
-	// REWARD: 9,
-	// SENDSTAKE : 10,
-	// REFER	:	11,
-	// MIGRATION : 12
+  REFERRAL: 0,
+  SEND: 10,
+  SIGNATURE: 20,
+  DELEGATE: 30,
+  STAKE: 40,
+  SENDSTAKE: 50,
+  VOTE: 60,
+  MULTI: 70,
+  DAPP: 80,
+  IN_TRANSFER: 90,
+  OUT_TRANSFER: 100,
 };
 
 /*************************************** END OF FILE *************************************/
