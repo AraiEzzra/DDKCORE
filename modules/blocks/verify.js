@@ -290,7 +290,7 @@ __private.verifyId = function (block, result) {
  */
 __private.verifyPayload = function (block, result) {
   if (block.payloadLength > constants.maxPayloadLength) {
-    if (constants.VERIFY_BLOCK_PAYLOAD) {
+    if (constants.PAYLOAD_VALIDATE.MAX_LENGTH) {
       result.errors.push('Payload length is too long');
     } else {
       library.logger.error('Payload length is too long');
@@ -300,7 +300,7 @@ __private.verifyPayload = function (block, result) {
   // FIXME update old chain payloadHash
   // https://trello.com/c/ZRV5EAUT/132-included-transactions-do-not-match-block-transactions-count
   if (block.transactions.length !== block.numberOfTransactions && block.height > constants.MASTER_NODE_MIGRATED_BLOCK) {
-    if (constants.VERIFY_BLOCK_PAYLOAD) {
+    if (constants.PAYLOAD_VALIDATE.MAX_TRANSACTION_LENGTH) {
       result.errors.push('Included transactions do not match block transactions count');
     } else {
       library.logger.error('Included transactions do not match block transactions count');
@@ -308,7 +308,7 @@ __private.verifyPayload = function (block, result) {
   }
 
   if (block.transactions.length > constants.maxTxsPerBlock) {
-    if (constants.VERIFY_BLOCK_PAYLOAD) {
+    if (constants.PAYLOAD_VALIDATE.MAX_TRANSACTION_IN_BLOCK) {
       result.errors.push('Number of transactions exceeds maximum per block');
     } else {
       library.logger.error('Number of transactions exceeds maximum per block');
@@ -329,15 +329,11 @@ __private.verifyPayload = function (block, result) {
       bytes = library.logic.transaction.getBytes(transaction, false, false);
       library.logger.debug(`Bytes ${JSON.stringify(bytes)}`);
     } catch (e) {
-      if (constants.VERIFY_BLOCK_PAYLOAD) {
-        result.errors.push(e.toString());
-      } else {
-        library.logger.error(e.toString());
-      }
+      result.errors.push(e.toString());
     }
 
     if (appliedTransactions[transaction.id]) {
-      if (constants.VERIFY_BLOCK_PAYLOAD) {
+      if (constants.PAYLOAD_VALIDATE.MAX_TRANSACTION_DUPLICATE) {
         result.errors.push('Encountered duplicate transaction: ' + transaction.id);
       } else {
         library.logger.error('Encountered duplicate transaction: ' + transaction.id);
@@ -357,7 +353,7 @@ __private.verifyPayload = function (block, result) {
     // FIXME update old chain payloadHash
     // https://trello.com/c/G3XRs3Fk/127-update-old-chain-payloadhash
     if (block.height > constants.MASTER_NODE_MIGRATED_BLOCK) {
-      if (constants.VERIFY_BLOCK_PAYLOAD) {
+      if (constants.PAYLOAD_VALIDATE.INVALID_HASH) {
         result.errors.push('Invalid payload hash');
       } else {
         library.logger.error('Invalid payload hash');
@@ -369,7 +365,7 @@ __private.verifyPayload = function (block, result) {
     // FIXME Invalid total amount
     // https://trello.com/c/6G2rPg0o/141-invalid-total-amount
     if (block.height > constants.MASTER_NODE_MIGRATED_BLOCK) {
-      if (constants.VERIFY_BLOCK_PAYLOAD) {
+      if (constants.PAYLOAD_VALIDATE.TOTAL_AMOUNT) {
         result.errors.push('Invalid total amount');
       } else {
         library.logger.error('Invalid total amount');
@@ -381,7 +377,7 @@ __private.verifyPayload = function (block, result) {
     // FIXME update old chain totalFee
     // https://trello.com/c/zmjr4SAL/131-invalid-total-fee
     if (block.height > constants.MASTER_NODE_MIGRATED_BLOCK) {
-      if (constants.VERIFY_BLOCK_PAYLOAD) {
+      if (constants.PAYLOAD_VALIDATE.TOTAL_FEE) {
         result.errors.push('Invalid total fee');
       } else {
         library.logger.error('Invalid total fee');
