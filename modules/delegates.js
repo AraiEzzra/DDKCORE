@@ -576,6 +576,14 @@ Delegates.prototype.onBind = function (scope) {
  * Loads delegates.
  * @implements module:transactions#Transactions~fillPool
  */
+Delegates.prototype.onBlockchainReadyForForging = function () {
+    __private.readyForForging = true;
+};
+
+/**
+ * Loads delegates.
+ * @implements module:transactions#Transactions~fillPool
+ */
 Delegates.prototype.onBlockchainReady = function () {
 	__private.loaded = true;
 
