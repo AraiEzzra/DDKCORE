@@ -218,6 +218,7 @@ Transaction.prototype.getBytes = function (trs, skipSignature = false, skipSecon
         throw 'Unknown transaction type ' + trs.type;
     }
     const assetBytes = __private.types[trs.type].getBytes.call(this, trs, skipSignature, skipSecondSignature);
+    this.scope.logger.debug(`Trs ${JSON.stringify(trs)}`);
     this.scope.logger.debug(`AssetBytes ${JSON.stringify(assetBytes)}`);
     const buff = Buffer.alloc(TRANSACTION_BUFFER_SIZE);
     let offset = 0;
@@ -230,10 +231,9 @@ Transaction.prototype.getBytes = function (trs, skipSignature = false, skipSecon
     if (trs.recipientId) {
         offset = BUFFER.writeUInt64LE(buff, parseInt(trs.recipientId.slice(3), 10), offset);
     }
-    // TODO uncomment after redump
-    // else {
-    //     offset += BUFFER.LENGTH.INT64;
-    // }
+    else {
+        offset += BUFFER.LENGTH.INT64;
+    }
 
     offset = BUFFER.writeUInt64LE(buff, trs.amount, offset);
 
@@ -474,7 +474,10 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
     }
 
     // Check sender public key
-    if (sender.publicKey && sender.publicKey !== trs.senderPublicKey) {
+    if (
+        sender.publicKey && sender.publicKey !== trs.senderPublicKey &&
+        trs.height > constants.MASTER_NODE_MIGRATED_BLOCK
+    ) {
         err = ['Invalid sender public key:', trs.senderPublicKey, 'expected:', sender.publicKey].join(' ');
 
         if (exceptions.senderPublicKey.indexOf(trs.id) > -1) {
@@ -523,7 +526,6 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
 
     // Verify signature
     try {
-        valid = true;
         // FIXME verify transaction signature
         // https://trello.com/c/VcBpfYTi/180-failed-to-verify-transaction-signature
         valid = this.verifySignature(trs, (trs.requesterPublicKey || trs.senderPublicKey), trs.signature);
@@ -549,7 +551,6 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
     // Verify second signature
     if (requester.secondSignature || sender.secondSignature) {
         try {
-            valid = false;
             valid = this.verifySecondSignature(trs, (requester.secondPublicKey || sender.secondPublicKey), trs.signSignature);
         } catch (e) {
             return setImmediate(cb, e.toString());
@@ -677,7 +678,15 @@ Transaction.prototype.verifySignature = function (trs, publicKey, signature) {
     self.scope.logger.debug(`signature ${JSON.stringify(signature)}`);
     const bytes = this.getBytes(trs, true, true);
     self.scope.logger.debug(`Bytes ${JSON.stringify(bytes)}`);
-    return this.verifyBytes(bytes, publicKey, signature);
+    let verify = this.verifyBytes(bytes, publicKey, signature);
+    // TODO add block limit
+    if (!verify) {
+        verify = this.verifyBytes(bytes, constants.PRE_ORDER_PUBLIC_KEY, signature);
+    }
+
+
+    self.scope.logger.debug(`verify ${JSON.stringify(verify)}`);
+    return verify;
 };
 
 /**
@@ -853,8 +862,11 @@ Transaction.prototype.applyUnconfirmed = function (trs, sender, requester, cb) {
     if (typeof requester === 'function') {
         cb = requester;
     }
-    var amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
-    if (trs.type === transactionTypes.STAKE && (parseInt(sender.u_balance) - parseInt(sender.u_totalFrozeAmount)) < (trs.stakedAmount + trs.fee)) {
+    let amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
+    if (
+        trs.type === transactionTypes.STAKE && (
+        parseInt(sender.u_balance) - parseInt(sender.u_totalFrozeAmount)) < (trs.stakedAmount + trs.fee)
+    ) {
         return setImmediate(cb, 'Failed because of Frozen DDK');
     }
     let senderBalance = this.checkBalance(amount, 'u_balance', trs, sender);
@@ -866,7 +878,7 @@ Transaction.prototype.applyUnconfirmed = function (trs, sender, requester, cb) {
     amount = amount.toNumber();
 
 
-    if (trs.type == transactionTypes.STAKE) {
+    if (trs.type === transactionTypes.STAKE) {
         this.scope.account.merge(sender.address, {
             u_balance: -amount,
             u_totalFrozeAmount: trs.stakedAmount
@@ -996,7 +1008,6 @@ Transaction.prototype.dbFields = [
  */
 Transaction.prototype.dbSave = function (trs) {
     if (!__private.types[trs.type]) {
-        console.log('Unknown transaction type', trs.type);
         throw 'Unknown transaction type ' + trs.type;
     }
 
