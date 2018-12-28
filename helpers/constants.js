@@ -64,6 +64,29 @@ const constants = {
         AMOUNT: true,
         PUBLIC_KEY: true
     },
+    TRANSACTION_VALIDATION_ENABLED: {
+        SENDER: true,
+        TYPE: true,
+        SECOND_SIGNATURE: true,
+        SENDER_SECOND_SIGNATURE: true,
+        REQUEST_SECOND_SIGNATURE: true,
+        CHECKING_REQUEST_SECOND_SIGNATURE: true,
+        SENDER_PUBLIC_KEY: true,
+        SENDER_GENESIS_ACCOUNT: true,
+        SENDER_ADDRESS: true,
+        KEYSGROUP_MEMBER: true,
+        MULTISIGNATURE_GROUP: true,
+        VERIFY_TRANSACTION_SIGNATURE: true,
+        VERIFY_TRANSACTION_SECOND_SIGNATURE: true,
+        VERIFY_TRANSACTION_SIGNATURE_UNIQUE: true,
+        VERIFY_TRANSACTION_MULTISIGNATURE: true,
+        VERIFY_TRANSACTION_FEE: true,
+        VERIFY_TRANSACTION_AMOUNT: true,
+        VERIFY_SENDER_BALANCE: true,
+        VERIFY_TRANSACTION_TIMESTAMP: true,
+        VERIFY_TRANSACTION_TYPE: true,
+        VERIFY_TRANSACTION_CONFIRMED: true,
+    },
 };
 
 Object.assign(constants, require('../config/env'));
