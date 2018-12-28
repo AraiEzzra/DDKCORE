@@ -93,7 +93,7 @@ Vote.prototype.calculateFee = function (trs, sender) {
 
 Vote.prototype.onBlockchainReady = function () {
     __private.loaded = true;
-}
+};
 
 /**
  * Validates transaction votes fields and for each vote calls verifyVote.

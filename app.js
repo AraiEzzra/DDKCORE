@@ -827,7 +827,7 @@ process.on('uncaughtException', function (err) {
 	 * emits cleanup once 'uncaughtException'.
 	 * @emits cleanup
 	 */
-	process.emit('cleanup');
+	// process.emit('cleanup'); // TODO Are u kidding me
 });
 
 /*************************************** END OF FILE *************************************/

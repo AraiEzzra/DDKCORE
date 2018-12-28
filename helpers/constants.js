@@ -2,7 +2,8 @@ const env = process.env;
 const constants = {
     PREVIOUS_DELEGATES_COUNT: 3,
     MASTER_NODE_MIGRATED_BLOCK: 0,
-    CURRENT_BLOCK_VERSION: 1,// Block verify
+    CURRENT_BLOCK_VERSION: 1,
+    // Block verify
     VERIFY_BLOCK_VERSION: true,
     VERIFY_BLOCK_SIGNATURE: true,
     VERIFY_BLOCK_ID: true,
@@ -35,6 +36,7 @@ const constants = {
     VERIFY_DELEGATE_EMPTY_USERNAME: true,
     VERIFY_DELEGATE_USERNAME_LENGTH: true,
     VERIFY_DELEGATE_USERNAME_ALPHANUMERIC_CHARACTERS: true,
+
     VOTE_VALIDATION_ENABLED: {
         INVALID_RECIPIENT: true,
         INVALID_TRANSACTION_ASSET: true,
@@ -94,12 +96,12 @@ const constants = {
         VERIFY_TRANSACTION_MULTISIGNATURE: true,
         VERIFY_TRANSACTION_FEE: true,
         VERIFY_TRANSACTION_AMOUNT: true,
-        VERIFY_SENDER_BALANCE: true,
+        VERIFY_SENDER_BALANCE: false,
         VERIFY_TRANSACTION_TIMESTAMP: true,
         VERIFY_TRANSACTION_TYPE: true,
         VERIFY_TRANSACTION_CONFIRMED: true,
     },
-};
+}
 
 Object.assign(constants, require('../config/env'));
 
