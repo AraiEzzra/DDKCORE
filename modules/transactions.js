@@ -13,6 +13,8 @@ let transactionTypes = require('../helpers/transactionTypes.js');
 let Transfer = require('../logic/transfer.js');
 let ReferTransfer = require('../logic/referralTransaction.js');
 let slots = require('../helpers/slots');
+let trsCache = require('memory-cache');
+let expCache = new trsCache.Cache();
 
 // Private fields
 let __private = {};
