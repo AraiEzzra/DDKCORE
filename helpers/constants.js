@@ -15,6 +15,18 @@ const constants = {
         VOTE_UNSTAKE_CORRUPTED: true,
         PAYLOAD_HASH: true,
     },
+    SEND_TRANSACTION_VALIDATION_ENABLED: {
+        AMOUNT: true,
+        RECIPIENT_ID: true
+    },
+    REFERRAL_TRANSACTION_VALIDATION_ENABLED: {
+        GLOBAL_ACCOUNT: true
+    },
+    SIGNATURE_TRANSACTION_VALIDATION_ENABLED: {
+        SIGNATURE: true,
+        AMOUNT: true,
+        PUBLIC_KEY: true
+    },
 };
 
 if (trs.recipientId !== trs.senderId) {
