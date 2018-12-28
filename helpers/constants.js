@@ -7,12 +7,7 @@ const constants = {
     AMOUNT_ENABLED: true,
     BALANCE_ENABLED: true,
     AIRDROP_ENABLED: true,
-  },
-  REWARD_VALIDATE: {
-    RECIPIENT_ID_ENABLED: true,
-    TRANSACTION_AMOUNT_ENABLED: true,
-    REWARD_PER_ENABLED: true,
-  },
+  }
 };
 
 Object.assign(constants, require('../config/env'));
