@@ -876,7 +876,7 @@ Transaction.prototype.apply = function (trs, block, sender, cb) {
  * @return {setImmediateCallback} for errors | cb
  */
 Transaction.prototype.undo = function (trs, block, sender, cb) {
-    let amount = amount.plus(trs.fee.toString()).toNumber();
+    let amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
 
     this.scope.logger.trace('Logic/Transaction->undo', {
         sender: sender.address, balance: amount, blockId: block.id, round: modules.rounds.calc(block.height)
