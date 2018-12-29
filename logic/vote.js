@@ -93,7 +93,7 @@ Vote.prototype.calculateFee = function (trs, sender) {
 
 Vote.prototype.onBlockchainReady = function () {
     __private.loaded = true;
-}
+};
 
 /**
  * Validates transaction votes fields and for each vote calls verifyVote.
@@ -254,7 +254,16 @@ Vote.prototype.verify = function (trs, sender, cb) {
             }
         }
 
-        await library.frozen.verifyAirdrop(trs);
+        try {
+            await library.frozen.verifyAirdrop(trs);
+        } catch (error) {
+            if (VVE.VOTE_AIRDROP_CORRUPTED) {
+                throw error;
+            } else {
+                library.logger.error(`trs.id ${trs.id}, ${error}`);
+            }
+        }
+
         return self.checkConfirmedDelegates(trs, cb);
     }).catch((err) => {
         return setImmediate(cb, err);
