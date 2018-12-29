@@ -1106,7 +1106,9 @@ Transaction.prototype.dbSave = function (trs) {
 Transaction.prototype.afterSave = async function (trs, cb) {
     if (trs.type === transactionTypes.STAKE) {
         const stakeOrders = await self.scope.db.manyOrNone(sqlFroging.getFrozeOrders, {
-            senderId: trs.senderId
+            senderId: trs.senderId,
+            limit: 10000,
+            offset: 0
         });
         if (stakeOrders && stakeOrders.length > 0) {
             const bulkStakeOrders = utils.makeBulk(stakeOrders, 'stake_orders');
