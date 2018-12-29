@@ -1,5 +1,6 @@
 const env = process.env;
 const constants = {
+    NODE_ENV: env.NODE_ENV,
     PREVIOUS_DELEGATES_COUNT: 3,
     MASTER_NODE_MIGRATED_BLOCK: 0,
     CURRENT_BLOCK_VERSION: 1,
