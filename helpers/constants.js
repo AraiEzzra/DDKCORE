@@ -48,6 +48,7 @@ const constants = {
         VOTE_REWARD_CORRUPTED: true,
         VOTE_UNSTAKE_CORRUPTED: true,
         PAYLOAD_HASH: true,
+        VOTE_AIRDROP_CORRUPTED: true,
     },
     STAKE_VALIDATE: {
         AMOUNT_ENABLED: true,

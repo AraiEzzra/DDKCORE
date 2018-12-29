@@ -393,7 +393,8 @@ Frozen.prototype.verify = function (trs, sender, cb) {
       if (constants.STAKE_VALIDATE.AIRDROP_ENABLED) {
         return setImmediate(cb, err);
       } else {
-        self.scope.logger.error(`VALIDATE IS DISABLED. Error: trs.id ${trs.id}, ${err.message}`)
+        self.scope.logger.error(`VALIDATE IS DISABLED. Error: trs.id ${trs.id}, ${err}`)
+        return setImmediate(cb, null);
       }
     });
 };

@@ -827,7 +827,11 @@ Transaction.prototype.apply = function (trs, block, sender, cb) {
     let senderBalance = this.checkBalance(amount, 'balance', trs, sender);
 
     if (senderBalance.exceeded) {
-        return setImmediate(cb, senderBalance.error);
+        if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_SENDER_BALANCE) {
+            return setImmediate(cb, senderBalance.error);
+        } else {
+            this.scope.logger.error('Sender balance error');
+        }
     }
 
     amount = amount.toNumber();
@@ -924,7 +928,11 @@ Transaction.prototype.applyUnconfirmed = function (trs, sender, requester, cb) {
     let senderBalance = this.checkBalance(amount, 'u_balance', trs, sender);
 
     if (senderBalance.exceeded) {
-        return setImmediate(cb, senderBalance.error);
+        if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_SENDER_BALANCE) {
+            return setImmediate(cb, senderBalance.error);
+        } else {
+            this.scope.logger.error('Sender balance error');
+        }
     }
 
     amount = amount.toNumber();
