@@ -48,7 +48,7 @@ module.exports = {
 		referralPercentPerLevel: [5, 3, 2, 2, 1, 1, 1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.5, 0.5, 0.5]
 	},
     blockSlotWindow: 5,
-	activeDelegates: 201,
+	activeDelegates: 11,
 	maxVotes: 201,
 	maxVotesPerTransaction: 3,
     maxTransferCount: 3,
@@ -125,10 +125,10 @@ module.exports = {
 			milestones: [
 				10, // 10% For 0-6 months
 				10, // 10% For 7-12 months
-				8, // 8% For 13-18 months
-				6, // 6% For 19-24 months
-				4, // 4% For 25-30 months
-				2  // 2% For 31 months and above
+				10, // 8% For 13-18 months
+				10, // 6% For 19-24 months
+				10, // 4% For 25-30 months
+				10  // 2% For 31 months and above
 			],
 			distance: 30, // Distance between each milestone is 6 months
 		},
