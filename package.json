@@ -3,22 +3,25 @@
   "version": "0.9.9a",
   "private": true,
   "scripts": {
-    "start": "node --max-old-space-size=8192 app.js",
+    "start": "node --max-old-space-size=8192 src/app.js",
     "debug": "node --inspect=0.0.0.0:9229 app.js",
     "test": "./node_modules/.bin/grunt test --verbose",
     "jenkins": "./node_modules/.bin/grunt jenkins --verbose",
     "eslint": "./node_modules/.bin/grunt eslint-nofix --verbose",
     "fetchCoverage": "./node_modules/.bin/grunt exec:fetchCoverage --verbose",
     "jsdoc": "jsdoc -c docs/conf.json --verbose --pedantic",
-    "server-docs": "npm run jsdoc && http-server docs/jsdoc/"
+    "server-docs": "npm run jsdoc && http-server docs/jsdoc/",
+    "build": "webpack --progress --profile --colors"
   },
   "author": "DDK Foundation <http://www.ddkoin.com/>",
   "license": "GPL-3.0",
   "dependencies": {
+    "@babel/runtime": "^7.2.0",
     "appmetrics-dash": "^3.3.6",
     "archiver": "^2.1.0",
     "async": "=2.1.4",
     "auto-strict": "0.0.4",
+    "babel-runtime": "^6.26.0",
     "basic-auth": "^2.0.0",
     "bignumber.js": "=4.0.0",
     "body-parser": "^1.18.3",
@@ -83,6 +86,15 @@
     "z-schema": "=3.18.2"
   },
   "devDependencies": {
+    "@babel/core": "^7.2.2",
+    "@babel/plugin-transform-runtime": "^7.2.0",
+    "@babel/preset-env": "^7.2.3",
+    "babel-core": "^6.26.3",
+    "babel-loader": "^8.0.4",
+    "babel-plugin-transform-runtime": "^6.23.0",
+    "babel-polyfill": "^6.26.0",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-stage-0": "^6.24.1",
     "bitcore-mnemonic": "^1.5.0",
     "browserify-bignum": "=1.3.0-2",
     "chai": "=3.5.0",
@@ -108,8 +120,11 @@
     "mocha": "^3.5.3",
     "moment": "^2.17.1",
     "nyc": "^13.1.0",
+    "rpc-websockets": "^4.2.6",
     "sinon": "=1.17.7",
     "supertest": "=3.0.0",
-    "rpc-websockets": "^4.2.6"
+    "webpack": "^4.28.2",
+    "webpack-cli": "^3.1.2",
+    "webpack-node-externals": "^1.7.2"
   }
 }
