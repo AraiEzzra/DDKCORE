@@ -702,7 +702,9 @@ d.run(function () {
 			//Migration Process
 			//require('./helpers/accountCreateETPS').AccountCreateETPS(scope);
 
-			cronjob.startJob('updateDataOnElasticSearch');
+			if (!scope.config.elasticsearch.disableJobs) {
+				cronjob.startJob('updateDataOnElasticSearch');
+			}
 			cronjob.startJob('archiveLogFiles');
 
 			/**

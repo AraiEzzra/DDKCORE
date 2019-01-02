@@ -123,6 +123,9 @@ module.exports = {
     sender: {},
     nethash: env.NETHASH,
     elasticsearchHost: env.ELASTICSEARCH_HOST || '0.0.0.0:9200',
+    elasticsearch: {
+        disableJobs: env.DISABLE_ELASTICSEARCH_JOBS === 'TRUE',
+    },
     swaggerDomain: env.ADDRESS || '0.0.0.0',
     jwt: {
         secret: env.JWT_SECRET,
