@@ -8,6 +8,7 @@ const reward_sql = require('../sql/referal_sql');
 const account_sql = require('../sql/accounts');
 const cache = require('../modules/cache');
 const transactionTypes = require('../helpers/transactionTypes.js');
+const {LENGTH, writeUInt64LE} = require('../helpers/buffer.js');
 let utils = require('../utils');
 
 const __private = {};
@@ -293,7 +294,38 @@ Frozen.prototype.apply = function (trs, block, sender, cb) {
  * @return {null}
  */
 Frozen.prototype.getBytes = function (trs) {
-    return null;
+  let offset = 0;
+  const buff = Buffer.alloc(
+    LENGTH.INT64 +  // asset.stakeOrder.stakedAmount
+    LENGTH.UINT32 + // asset.stakeOrder.nextVoteMilestone
+    LENGTH.UINT32 + // asset.stakeOrders.startTime
+    LENGTH.BYTE +   // asset.airdropReward.withAirdropReward
+    LENGTH.INT64    // asset.airdropReward.totalReward
+  );
+
+  offset = writeUInt64LE(buff, trs.asset.stakeOrder.stakedAmount || 0, offset);
+
+  buff.writeInt32LE(trs.asset.stakeOrder.nextVoteMilestone, offset);
+  offset += LENGTH.UINT32;
+
+  buff.writeInt32LE(trs.asset.stakeOrder.startTime, offset);
+  offset += LENGTH.UINT32;
+
+  buff.writeInt8(trs.asset.airdropReward.withAirdropReward ? 1 : 0, offset);
+  offset += LENGTH.BYTE;
+  writeUInt64LE(buff, trs.asset.airdropReward.totalReward || 0, offset);
+
+  // airdropReward.sponsors up to 1 sponsors
+  const sponsorsBuffer = Buffer.alloc(LENGTH.INT64 + LENGTH.INT64);
+
+  offset = 0;
+  if (trs.asset.airdropReward.sponsors && Object.keys(trs.asset.airdropReward.sponsors).length > 0) {
+    const address = Object.keys(trs.asset.airdropReward.sponsors)[0];
+    offset = writeUInt64LE(sponsorsBuffer, parseInt(address.slice(3), 10), offset);
+    writeUInt64LE(sponsorsBuffer, trs.asset.airdropReward.sponsors[address] || 0, offset);
+  }
+
+  return Buffer.concat([buff, sponsorsBuffer]);
 };
 
 /**
@@ -319,30 +351,51 @@ Frozen.prototype.process = function (trs, sender, cb) {
  * @return {function} {cb, err, trs}
  */
 Frozen.prototype.verify = function (trs, sender, cb) {
-    const stakedAmount = trs.stakedAmount / 100000000;
+  const stakedAmount = trs.stakedAmount / 100000000;
 
-    if (stakedAmount < 1) {
-        return setImmediate(cb, 'Invalid stake amount');
+  if (stakedAmount < 1) {
+    if (constants.STAKE_VALIDATE.AMOUNT_ENABLED) {
+      return setImmediate(cb, 'Invalid stake amount');
+    } else {
+      self.scope.logger.error(`VALIDATE IS DISABLED. Error: trs.id ${trs.id} Invalid stake amount`)
     }
+  }
 
-    if ((stakedAmount % 1) !== 0) {
-        return setImmediate(cb, 'Invalid stake amount: Decimal value');
+  if ((stakedAmount % 1) !== 0) {
+    if (constants.STAKE_VALIDATE.AMOUNT_ENABLED) {
+      return setImmediate(cb, 'Invalid stake amount: Decimal value');
+    } else {
+      self.scope.logger.error(`VALIDATE IS DISABLED. Error: trs.id ${trs.id} Invalid stake amount: Decimal value`)
     }
+  }
 
-	if (Number(trs.stakedAmount) + Number(sender.totalFrozeAmount) > Number(sender.u_balance)) {
-		return setImmediate(cb, 'Verify failed: Insufficient balance for stake');
-	}
-
-    if ((parseInt(sender.balance) - parseInt(sender.totalFrozeAmount)) < (trs.stakedAmount + trs.fee)) {
-        return setImmediate(cb, 'Insufficient balance');
+  if (Number(trs.stakedAmount) + Number(sender.totalFrozeAmount) > Number(sender.u_balance)) {
+    if (constants.STAKE_VALIDATE.BALANCE_ENABLED) {
+      return setImmediate(cb, 'Verify failed: Insufficient balance for stake');
+    } else {
+      self.scope.logger.error(`VALIDATE IS DISABLED. Error: trs.id ${trs.id} Verify failed: Insufficient balance for stake`)
     }
+  }
 
-    self.verifyAirdrop(trs)
-	.then(() => {
-		return setImmediate(cb, null);
-	})
-	.catch((err) => {
+  if ((parseInt(sender.balance) - parseInt(sender.totalFrozeAmount)) < (trs.stakedAmount + trs.fee)) {
+    if (constants.STAKE_VALIDATE.BALANCE_ENABLED) {
+      return setImmediate(cb, 'Insufficient balance');
+    } else {
+      self.scope.logger.error(`VALIDATE IS DISABLED. Error: trs.id ${trs.id} Insufficient balance`)
+    }
+  }
+
+  self.verifyAirdrop(trs)
+    .then(() => {
+      return setImmediate(cb, null);
+    })
+    .catch((err) => {
+      if (constants.STAKE_VALIDATE.AIRDROP_ENABLED) {
         return setImmediate(cb, err);
+      } else {
+        self.scope.logger.error(`VALIDATE IS DISABLED. Error: trs.id ${trs.id}, ${err}`)
+        return setImmediate(cb, null);
+      }
     });
 };
 

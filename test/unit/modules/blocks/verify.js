@@ -25,7 +25,7 @@ let previousBlock = {
 	totalAmount: 0,
 	totalFee: 0,
 	transactions: [],
-	version: 0,
+	version: 1,
 };
 
 let validBlock = {
@@ -71,7 +71,7 @@ let validBlock = {
 			'id': '9314232245035524467'
 		}
 	],
-	version: 0,
+	version: 1,
 	id: '884740302254229983'
 };
 
@@ -118,7 +118,7 @@ let blockRewardInvalid = {
 			'id': '9314232245035524467'
 		}
 	],
-	version: 0,
+	version: 1,
 	id: '15635779876149546284'
 };
 
@@ -159,7 +159,7 @@ let previousBlock1 = {
 	totalAmount: 0,
 	totalFee: 0,
 	transactions: [],
-	version: 0,
+	version: 1,
 };
 
 let block1;

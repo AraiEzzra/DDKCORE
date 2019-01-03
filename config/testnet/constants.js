@@ -79,10 +79,7 @@ module.exports = {
 	maxSignaturesLength: 196 * 256,
 	maxTxsPerBlock: 25,
 	nethashes: [
-		// Mainnet
-		'ed14889723f24ecc54871d058d98ce91ff2f973192075c0155ba2b7b70ad2511',
-		// Testnet
-		'da3ed6a45429278bac2666961289ca17ad86595d33b31037615d4b8e8f158bba'
+		'14044404dadd53000e1aa104ffdd6a48c034518c8c8c2ceb974cff13e6f0a5b6'
 	],
 	numberLength: 100000000,
 	requestLength: 104,

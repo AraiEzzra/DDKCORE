@@ -140,9 +140,8 @@ let config = {
 		crypto: './modules/crypto.js',
 		sql: './modules/sql.js',
 		cache: './modules/cache.js',
-		contracts: './modules/contracts.js',
 		frogings: './modules/frogings.js',
-		sendFreezeOrder: './modules/sendFreezeOrder.js'
+		// sendFreezeOrder: './modules/sendFreezeOrder.js'
 	},
 	api: {
 		accounts: { http: './api/http/accounts.js' },
@@ -157,7 +156,7 @@ let config = {
 		transactions: { http: './api/http/transactions.js' },
 		transport: { http: './api/http/transport.js' },
 		frogings: { http: './api/http/froging.js' },
-		sendFreezeOrder: { http: './api/http/transferorder.js' }
+		// sendFreezeOrder: { http: './api/http/transferorder.js' }
 	}
 };
 
@@ -179,7 +178,6 @@ try {
 let d = require('domain').create();
 
 d.on('error', function (err) {
-	console.log('error : ', err.stack);
 	logger.error('Domain master', { message: err.message, stack: err.stack });
 	process.exit(0);
 });
@@ -525,10 +523,8 @@ d.run(function () {
 			let Account = require('./logic/account.js');
 			let Peers = require('./logic/peers.js');
 			let Frozen = require('./logic/frozen.js');
-			let Contract = require('./logic/contract.js');
-			let SendFreezeOrder = require('./logic/sendFreezeOrder.js');
+			// let SendFreezeOrder = require('./logic/sendFreezeOrder.js');
 			let Vote = require('./logic/vote.js');
-			let Migration = require('./logic/Migration.js');
 
 			async.auto({
 				bus: function (cb) {
@@ -572,18 +568,12 @@ d.run(function () {
 				frozen: ['logger', 'db', 'transaction', 'network', 'config', function (scope, cb) {
 					new Frozen(scope.logger, scope.db, scope.transaction, scope.network, scope.config, scope.balancesSequence, scope.ed, cb);
 				}],
-				sendFreezeOrder: ['logger', 'db', 'network', function (scope, cb) {
-					new SendFreezeOrder(scope.logger, scope.db, scope.network, cb);
-				}],
-				contract: ['config', function (scope, cb) {
-					new Contract(scope.config, scope.db, cb);
-				}],
+				// sendFreezeOrder: ['logger', 'db', 'network', function (scope, cb) {
+				// 	new SendFreezeOrder(scope.logger, scope.db, scope.network, cb);
+				// }],
 				vote: ['logger', 'schema', 'db', 'frozen', function (scope, cb) {
 					new Vote(scope.logger, scope.schema, scope.db, scope.frozen, cb);
 				}],
-				migration: ['logger', 'db', function (scope, cb) {
-					new Migration(scope.logger, scope.db, cb);
-				}]
 			}, cb);
 		}],
 		/**
@@ -604,7 +594,6 @@ d.run(function () {
 					let d = require('domain').create();
 
 					d.on('error', function (err) {
-						console.log('error : ', err.stack);
 						scope.logger.error('Domain ' + name, { message: err.message, stack: err.stack });
 					});
 
@@ -715,7 +704,6 @@ d.run(function () {
 
 			cronjob.startJob('updateDataOnElasticSearch');
 			cronjob.startJob('archiveLogFiles');
-			cronjob.startJob('unlockLockedUsers');
 
 			/**
 			 * Handles app instance (acts as global variable, passed as parameter).
@@ -839,7 +827,7 @@ process.on('uncaughtException', function (err) {
 	 * emits cleanup once 'uncaughtException'.
 	 * @emits cleanup
 	 */
-	process.emit('cleanup');
+	// process.emit('cleanup'); // TODO Are u kidding me
 });
 
 /*************************************** END OF FILE *************************************/

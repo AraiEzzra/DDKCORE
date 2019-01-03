@@ -65,36 +65,64 @@ Delegate.prototype.calculateFee = function () {
  * @param {transaction} trs
  * @param {account} sender
  * @param {function} cb - Callback function.
- * @returns {setImmediateCallback|Object} returns error if invalid parameter | 
+ * @returns {setImmediateCallback|Object} returns error if invalid parameter |
  * trs validated.
  */
 Delegate.prototype.verify = function (trs, sender, cb) {
 	if (trs.recipientId) {
-		return setImmediate(cb, 'Invalid recipient');
+		if (constants.VERIFY_DELEGATE_TRS_RECIPIENT) {
+			return setImmediate(cb, 'Invalid recipient');
+		} else {
+			library.logger.error('Invalid recipient');
+		}
 	}
 
 	if (trs.amount !== 0) {
-		return setImmediate(cb, 'Invalid transaction amount');
+		if (constants.VERIFY_DELEGATE_TRS_RECIPIENT) {
+			return setImmediate(cb, 'Invalid transaction amount');
+		} else {
+			library.logger.error('Invalid transaction amount');
+		}
 	}
 
 	if (sender.isDelegate) {
-		return setImmediate(cb, 'Account is already a delegate');
+		if (constants.VERIFY_DELEGATE_TRS_RECIPIENT) {
+			return setImmediate(cb, 'Account is already a delegate');
+		} else {
+			library.logger.error('Account is already a delegate');
+		}
 	}
 
 	if (sender.u_isDelegate) {
-		return setImmediate(cb, 'Account is under process for delegate registration');
-	} 
+		if (constants.VERIFY_DELEGATE_TRS_RECIPIENT) {
+			return setImmediate(cb, 'Account is under process for delegate registration');
+		} else {
+			library.logger.error('Account is under process for delegate registration');
+		}
+	}
 
 	if (!trs.asset || !trs.asset.delegate) {
-		return setImmediate(cb, 'Invalid transaction asset');
+		if (constants.VERIFY_DELEGATE_TRS_RECIPIENT) {
+			return setImmediate(cb, 'Invalid transaction asset');
+		} else {
+			library.logger.error('Invalid transaction asset');
+		}
 	}
 
 	if (!trs.asset.delegate.username) {
-		return setImmediate(cb, 'Username is undefined');
+		if (constants.VERIFY_DELEGATE_TRS_RECIPIENT) {
+			return setImmediate(cb, 'Username is undefined');
+		} else {
+			library.logger.error('Username is undefined');
+		}
 	}
 
 	if (trs.asset.delegate.username !== trs.asset.delegate.username.toLowerCase()) {
-		return setImmediate(cb, 'Username must be lowercase');
+		if (constants.VERIFY_DELEGATE_TRS_RECIPIENT) {
+			return setImmediate(cb, 'Username must be lowercase');
+		} else {
+			library.logger.error('Username must be lowercase');
+		}
 	}
 
 	let isAddress = /^(DDK)+[0-9]{1,25}$/ig;
@@ -103,11 +131,19 @@ Delegate.prototype.verify = function (trs, sender, cb) {
 	let username = String(trs.asset.delegate.username).toLowerCase().trim();
 
 	if (username === '') {
-		return setImmediate(cb, 'Empty username');
+		if (constants.VERIFY_DELEGATE_TRS_RECIPIENT) {
+			return setImmediate(cb, 'Empty username');
+		} else {
+			library.logger.error('Empty username');
+		}
 	}
 
 	if (username.length > 20) {
-		return setImmediate(cb, 'Username is too long. Maximum is 20 characters');
+		if (constants.VERIFY_DELEGATE_TRS_RECIPIENT) {
+			return setImmediate(cb, 'Username is too long. Maximum is 20 characters');
+		} else {
+			library.logger.error('Username is too long. Maximum is 20 characters');
+		}
 	}
 
 	if (isAddress.test(username)) {
@@ -115,7 +151,11 @@ Delegate.prototype.verify = function (trs, sender, cb) {
 	}
 
 	if (!allowSymbols.test(username)) {
-		return setImmediate(cb, 'Username can only contain alphanumeric characters with the exception of !@$&_.');
+		if (constants.VERIFY_DELEGATE_TRS_RECIPIENT) {
+			return setImmediate(cb, 'Username can only contain alphanumeric characters with the exception of !@$&_.');
+		} else {
+			library.logger.error('Username can only contain alphanumeric characters with the exception of !@$&_.');
+		}
 	}
 
 	modules.accounts.getAccount({
@@ -152,19 +192,7 @@ Delegate.prototype.process = function (trs, sender, cb) {
  * @throws {error} If buffer fails.
  */
 Delegate.prototype.getBytes = function (trs) {
-	if (!trs.asset.delegate.username) {
-		return null;
-	}
-
-	let buf;
-
-	try {
-		buf = Buffer.from(trs.asset.delegate.username, 'utf8');
-	} catch (e) {
-		throw e;
-	}
-
-	return buf;
+    return trs.asset.delegate.username ? Buffer.from(trs.asset.delegate.username, 'utf8') : Buffer.from([]);
 };
 
 /**
@@ -239,7 +267,7 @@ Delegate.prototype.applyUnconfirmed = function (trs, sender, cb) {
 };
 
 /**
- * Checks trs delegate and calls modules.accounts.setAccountAndGet() with 
+ * Checks trs delegate and calls modules.accounts.setAccountAndGet() with
  * username and u_username both null.
  * @implements module:accounts#Accounts~setAccountAndGet
  * @param {transaction} trs

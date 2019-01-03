@@ -117,7 +117,7 @@ CREATE TABLE IF NOT EXISTS "migrated_etps_users"(
 );
 
 CREATE TABLE IF NOT EXISTS "referral_transactions"(
-  "id" VARCHAR(100) NOT NULL,
+  "id" CHAR(64) NOT NULL,
   "sponsor_address" VARCHAR(100) NOT NULL,
   "introducer_address" VARCHAR(100) NOT NULL,
   "reward" BIGINT DEFAULT 0,
