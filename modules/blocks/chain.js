@@ -154,7 +154,7 @@ __private.promiseTransactions = function (t, block) {
 		/* if(block.height === 1){
 			transaction.timestamp=slots.getTime();
 		} */
-		
+
 		return library.logic.transaction.dbSave(transaction);
 	};
 
@@ -401,7 +401,7 @@ Chain.prototype.applyBlock = function (block, broadcast, cb, saveBlock) {
 						if (index >= 0) {
 							unconfirmedTransactionIds.splice(index, 1);
 						}
-												
+
 						return setImmediate(eachSeriesCb);
 					});
 				});
@@ -428,6 +428,23 @@ Chain.prototype.applyBlock = function (block, broadcast, cb, saveBlock) {
 				} else {
 					return setImmediate(seriesCb);
 				}
+			});
+		},
+		verifyUnconfirmed: function (seriesCb) {
+			async.eachSeries(block.transactions, function (transaction, eachSeriesCb) {
+				modules.accounts.getAccount({ publicKey: transaction.senderPublicKey }, function (err, sender) {
+					if (err) {
+						return setImmediate(eachSeriesCb, err);
+					}
+
+					library.logic.transaction.verifyUnconfirmed({
+						trs: transaction,
+						sender,
+						cb: eachSeriesCb,
+					});
+				});
+			}, function (err) {
+				return setImmediate(seriesCb, err);
 			});
 		},
 		// Block and transactions are ok.

@@ -96,6 +96,22 @@ Vote.prototype.onBlockchainReady = function () {
 };
 
 /**
+ * Validates unconfirmed vote transaction fields and for each calls verifyVote.
+ * @implements {verifysendStakingRewardVote}
+ * @implements {checkConfirmedDelegates}
+ * @param {transaction} trs
+ * @param {account} sender
+ * @param {function} cb - Callback function.
+ * @returns {setImmediateCallback|function} returns error if invalid field |
+ * calls checkConfirmedDelegates.
+ */
+Vote.prototype.verifyUnconfirmed = function (trs, sender, cb) {
+    const VVE = constants.VOTE_VALIDATION_ENABLED;
+
+    this.verify(trs, sender, cb);
+};
+
+/**
  * Validates transaction votes fields and for each vote calls verifyVote.
  * @implements {verifysendStakingRewardVote}
  * @implements {checkConfirmedDelegates}

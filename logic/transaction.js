@@ -22,7 +22,7 @@ const TRANSACTION_BUFFER_SIZE = BUFFER.LENGTH.BYTE // type
     + BUFFER.LENGTH.INT64 // amount
     + BUFFER.LENGTH.DOUBLE_HEX // signature
     + BUFFER.LENGTH.DOUBLE_HEX // signSignature
-;
+    ;
 
 // Private fields
 let self, modules, __private = {};
@@ -296,7 +296,7 @@ Transaction.prototype.checkConfirmed = function (trs, cb) {
  * Checks if balance is less than amount for sender.
  * @implements {bignum}
  * @param {number} amount
- * @param {number} balance
+ * @param {string} balance
  * @param {transaction} trs
  * @param {account} sender
  * @returns {Object} With exceeded boolean and error: address, balance
@@ -404,8 +404,54 @@ Transaction.prototype.getAccountStatus = function (trs, cb) {
 };
 
 /**
- * Validates parameters.
- * Calls `process` based on trs type (see privateTypes)
+ * Validates unconfirmed transaction.
+ * Calls `verifyUnconfirmed` based on trs type
+ * @param {transaction} trs
+ * @param {account} sender
+ * @param {account} requester
+ * @param {function} cb
+ * @return {setImmediateCallback} validation errors | trs
+ */
+Transaction.prototype.verifyUnconfirmed = function ({ trs, sender, requester = {}, cb }) {
+    // Check sender
+    if (!sender) {
+        if (constants.TRANSACTION_VALIDATION_ENABLED.SENDER) {
+            return setImmediate(cb, 'Missing sender');
+        } else {
+            this.scope.logger.error('Transaction sender error');
+        }
+    }
+
+    let fee = __private.types[trs.type].calculateFee.call(this, trs, sender) || 0;
+    if (trs.type !== transactionTypes.REFERRAL && !(trs.type === transactionTypes.STAKE && trs.stakedAmount < 0) && (!fee || trs.fee !== fee)) {
+        // TODO: Restore transation verify
+        // https://trello.com/c/2jF7cnad/115-restore-transactions-verifing
+        if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_FEE) {
+            return setImmediate(cb, 'Invalid transaction fee');
+        } else {
+            this.scope.logger.error('Invalid transaction fee');
+        }
+    }
+
+    // Check sender not able to do transaction on froze amount
+    let amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
+
+    let senderBalance = this.checkBalance(amount, 'balance', trs, sender);
+
+    if (senderBalance.exceeded) {
+        if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_SENDER_BALANCE) {
+            return setImmediate(cb, senderBalance.error);
+        } else {
+            this.scope.logger.error('Sender balance error');
+        }
+    }
+
+    this.verify({ trs, sender, requester, cb, isUnconfirmed: true });
+}
+
+/**
+ * Validates parameters of confirmed trs.
+ * Calls `verify` based on trs type (see privateTypes)
  * @see privateTypes
  * @implements {getId}
  * @param {transaction} trs
@@ -415,16 +461,10 @@ Transaction.prototype.getAccountStatus = function (trs, cb) {
  * @param {function} cb
  * @return {setImmediateCallback} validation errors | trs
  */
-Transaction.prototype.verify = function (trs, sender, requester = {}, checkExists, cb) {
+Transaction.prototype.verify = function ({ trs, sender, requester = {}, checkExists = false, cb }) {
     let valid = false;
     let err = null;
-    if (typeof checkExists === 'function') {
-        cb = checkExists;
-        checkExists = false;
-    } else if (typeof requester === 'function') {
-        cb = requester;
-        requester = {};
-    }
+
     // Check sender
     if (!sender) {
         if (constants.TRANSACTION_VALIDATION_ENABLED.SENDER) {
@@ -644,36 +684,12 @@ Transaction.prototype.verify = function (trs, sender, requester = {}, checkExist
         }
     }
 
-    let fee = __private.types[trs.type].calculateFee.call(this, trs, sender) || 0;
-    if (trs.type !== transactionTypes.REFERRAL && !(trs.type === transactionTypes.STAKE && trs.stakedAmount < 0) && (!fee || trs.fee !== fee)) {
-        // TODO: Restore transation verify
-        // https://trello.com/c/2jF7cnad/115-restore-transactions-verifing
-        if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_FEE) {
-            return setImmediate(cb, 'Invalid transaction fee');
-        } else {
-            this.scope.logger.error('Invalid transaction fee');
-        }
-    }
-
     // Check amount
     if (trs.amount < 0 || trs.amount > constants.totalAmount || String(trs.amount).indexOf('.') >= 0 || trs.amount.toString().indexOf('e') >= 0) {
         if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_AMOUNT) {
             return setImmediate(cb, 'Invalid transaction amount');
         } else {
             this.scope.logger.error('Invalid transaction amount');
-        }
-    }
-
-    // //Check sender not able to do transaction on froze amount
-    let amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
-
-    let senderBalance = this.checkBalance(amount, 'balance', trs, sender);
-
-    if (senderBalance.exceeded) {
-        if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_SENDER_BALANCE) {
-            return setImmediate(cb, senderBalance.error);
-        } else {
-            this.scope.logger.error('Sender balance error');
         }
     }
 

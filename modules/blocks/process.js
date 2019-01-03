@@ -336,6 +336,7 @@ Process.prototype.loadBlocksFromPeer = function (peer, cb) {
 Process.prototype.generateBlock = function (keypair, timestamp, cb) {
 	// Get transactions that will be included in block
 	let transactions = modules.transactions.getUnconfirmedTransactionList(false, constants.maxTxsPerBlock);
+	console.log('UnconfirmedTransactionList!!!', transactions);
 	let ready = [];
 
 	async.eachSeries(transactions, function (transaction, cb) {
@@ -347,11 +348,17 @@ Process.prototype.generateBlock = function (keypair, timestamp, cb) {
 			// Check transaction depends on type
 			if (library.logic.transaction.ready(transaction, sender)) {
 				// Verify transaction
-				library.logic.transaction.verify(transaction, sender, undefined, true, function (err) {
-                    if (!err) {
-                        ready.push(transaction);
-                    }
-					return setImmediate(cb);
+				library.logic.transaction.verify({
+					trs: transaction,
+					sender,
+					checkExists: true,
+					isUnconfirmed: true,
+					cb: function (err) {
+						if (!err) {
+							ready.push(transaction);
+						}
+						return setImmediate(cb);
+					},
 				});
 			} else {
 				return setImmediate(cb);

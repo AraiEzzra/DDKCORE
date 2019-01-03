@@ -720,11 +720,16 @@ __private.processVerifyTransaction = function (transaction, broadcast, cb) {
 			}
 		},
 		function verifyTransaction (sender, waterCb) {
-			library.logic.transaction.verify(transaction, sender, undefined, true, function (err) {
-				if (err) {
-					return setImmediate(waterCb, err);
-				} else {
-					return setImmediate(waterCb, null, sender);
+			library.logic.transaction.verify({
+				trs:transaction,
+				sender,
+				checkExists: true,
+				cb: function (err) {
+					if (err) {
+						return setImmediate(waterCb, err);
+					} else {
+						return setImmediate(waterCb, null, sender);
+					}
 				}
 			});
 		}
