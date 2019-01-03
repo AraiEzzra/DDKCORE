@@ -81,6 +81,7 @@ module.exports = {
 	nethashes: [
 		'14044404dadd53000e1aa104ffdd6a48c034518c8c8c2ceb974cff13e6f0a5b6'
 	],
+	nethash: '14044404dadd53000e1aa104ffdd6a48c034518c8c8c2ceb974cff13e6f0a5b6',
 	numberLength: 100000000,
 	requestLength: 104,
 	// WARNING: When changing rewards you also need to change getBlockRewards(int) SQL function!
