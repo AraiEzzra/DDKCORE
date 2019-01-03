@@ -221,7 +221,7 @@
       "trsName": "DELEGATE",
       "asset": {
         "delegate": {
-          "username": "DDK_Thailand"
+          "username": "TDA_DDK_Thailand"
         }
       }
     },
@@ -239,7 +239,7 @@
       "trsName": "DELEGATE",
       "asset": {
         "delegate": {
-          "username": "DDK_Indonesia"
+          "username": "TDA_DDK_Indonesia"
         }
       }
     },
@@ -257,7 +257,7 @@
       "trsName": "DELEGATE",
       "asset": {
         "delegate": {
-          "username": "DDK_Brunei"
+          "username": "TDA_DDK_Brunei"
         }
       }
     },
@@ -275,7 +275,7 @@
       "trsName": "DELEGATE",
       "asset": {
         "delegate": {
-          "username": "DDK_Japan"
+          "username": "TDA_DDK_Japan"
         }
       }
     },
@@ -293,7 +293,7 @@
       "trsName": "DELEGATE",
       "asset": {
         "delegate": {
-          "username": "GFAlliance"
+          "username": "TDA_GFAlliance"
         }
       }
     },
@@ -311,7 +311,7 @@
       "trsName": "DELEGATE",
       "asset": {
         "delegate": {
-          "username": "FEGTEAM"
+          "username": "TDA_FEGTEAM"
         }
       }
     },
@@ -329,7 +329,7 @@
       "trsName": "DELEGATE",
       "asset": {
         "delegate": {
-          "username": "Universal_UFO"
+          "username": "TDA_Universal_UFO"
         }
       }
     },
