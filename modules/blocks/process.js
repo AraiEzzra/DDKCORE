@@ -136,9 +136,9 @@ Process.prototype.getCommonBlock = function (peer, height, cb) {
 		if (comparisionFailed && modules.transport.poorConsensus()) {
             // FIXME return recoverChain
             // https://trello.com/c/0nn2FreZ/192-return-recoverchain
-            if (constants.NODE_ENV === 'mainnet') {
-                return setImmediate(cb, null, res);
-            }
+            // if (constants.NODE_ENV === 'mainnet') {
+            //     return setImmediate(cb, null, res);
+            // }
 			return modules.blocks.chain.recoverChain(cb);
 		} else {
 			return setImmediate(cb, err, res);
