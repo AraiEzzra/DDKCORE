@@ -77,10 +77,12 @@ Referral.prototype.undo = function (trs, block, sender, cb) {
 };
 
 Referral.prototype.applyUnconfirmed = function (trs, sender, cb) {
+    // TODO can be added u_global
     setImmediate(cb);
 };
 
 Referral.prototype.undoUnconfirmed = function (trs, sender, cb) {
+    // TODO can be removed u_global
     setImmediate(cb);
 };
 

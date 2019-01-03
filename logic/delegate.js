@@ -34,12 +34,12 @@ Delegate.prototype.bind = function (accounts) {
  * @returns {Object} trs with new data
  */
 Delegate.prototype.create = function (data, trs) {
+	// TODO Can be in future will be added delegate URL
 	trs.recipientId = null;
 	trs.amount = 0;
 	trs.asset.delegate = {
 		username: data.username,
-		publicKey: data.sender.publicKey,
-		URL: data.URL
+		publicKey: data.sender.publicKey
 	};
 
 	if (trs.asset.delegate.username) {
@@ -201,7 +201,6 @@ Delegate.prototype.getBytes = function (trs) {
  * @param {transaction} trs
  * @param {account} sender
  * @param {function} cb - Callback function.
- * @todo delete extra parameter block.
  */
 Delegate.prototype.apply = function (trs, block, sender, cb) {
 	let data = {
@@ -214,7 +213,6 @@ Delegate.prototype.apply = function (trs, block, sender, cb) {
 	if (trs.asset.delegate.username) {
 		data.u_username = null;
 		data.username = trs.asset.delegate.username;
-		data.url = trs.asset.delegate.URL;
 	}
 
 	modules.accounts.setAccountAndGet(data, cb);
