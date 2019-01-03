@@ -638,7 +638,59 @@ d.run(function () {
 			cb();
 		}],
 
-		ready: ['modules', 'bus', 'logic', function (scope, cb) {
+        elasticsearch: ['db', 'logger', function (scope, cb) {
+            let limit = 1000;
+            let dbTables = [
+                {
+                    tableName: 'blocks_list',
+                    fieldName: 'b_height'
+                },
+                {
+                    tableName: 'trs',
+                    fieldName: 'rowId'
+                },
+                {
+                    tableName: 'stake_orders',
+                    fieldName: 'stakeId'
+                }
+            ];
+
+            const iterate = async (table, limit, rowsAcc, bulkAcc, lastValue) => {
+                try {
+                    rowsAcc = await scope.db.manyOrNone(
+                        'SELECT * FROM $(tableName~) WHERE $(fieldName~) > $(lastValue) ORDER BY $(fieldName~) LIMIT $(limit)',
+                        {
+                            tableName: table.tableName,
+                            fieldName: table.fieldName,
+                            lastValue: lastValue,
+                            limit: limit
+                        }
+                    );
+                    if (rowsAcc.length < 1) {
+                        table.lastValue = lastValue;
+                        return ;
+                    }
+                    bulkAcc = utils.makeBulk(rowsAcc, table.tableName);
+                    await utils.indexall(bulkAcc, table.tableName);
+                    lastValue = rowsAcc[rowsAcc.length - 1][table.fieldName];
+                } catch(err) {
+                    scope.logger.error('elasticsearch indexing error : '+ err);
+                }
+
+                await iterate(table, limit, rowsAcc, bulkAcc, lastValue);
+            };
+
+            let promises = [];
+            dbTables.forEach(function (table) {
+                promises.push(iterate(table, limit, [], [], 0));
+            });
+            Promise.all(promises).then( () => {
+                scope.logger.info('Elasticsearch indexed ok');
+                cb();
+            });
+        }],
+
+		ready: ['modules', 'bus', 'logic', 'elasticsearch', function (scope, cb) {
 			scope.bus.message('bind', scope.modules);
 			scope.logic.transaction.bindModules(scope.modules);
 			scope.logic.peers.bindModules(scope.modules);
@@ -702,9 +754,9 @@ d.run(function () {
 			//Migration Process
 			//require('./helpers/accountCreateETPS').AccountCreateETPS(scope);
 
-			if (!scope.config.elasticsearch.disableJobs) {
-				cronjob.startJob('updateDataOnElasticSearch');
-			}
+			// if (!scope.config.elasticsearch.disableJobs) {
+			// 	cronjob.startJob('updateDataOnElasticSearch');
+			// }
 			cronjob.startJob('archiveLogFiles');
 
 			/**
