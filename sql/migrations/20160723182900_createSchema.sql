@@ -96,7 +96,7 @@ CREATE TABLE IF NOT EXISTS "forks_stat"(
   "blockTimestamp" INT NOT NULL,
   "blockId" CHAR(64) NOT NULL,
   "blockHeight" INT NOT NULL,
-  "previousBlock" VARCHAR(20) NOT NULL,
+  "previousBlock" CHAR(64) NOT NULL,
   "cause" INT NOT NULL
 );
 
