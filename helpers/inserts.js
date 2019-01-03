@@ -49,14 +49,6 @@ function Inserts (record, values, concat) {
 		}
 		return pgp.as.format('INSERT INTO $1~($2^) VALUES $3^', [record.table, fields, values]);
 	};
-
-	this._rawDBType = true;
-
-	this.formatDBType = function () {
-		return values.map(function (v) {
-			return '(' + pgp.as.format(self._template, v) + ')';
-		}).join(',');
-	};
 }
 
 module.exports = Inserts;
