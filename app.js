@@ -40,6 +40,7 @@ let logman = new Logger();
 let logger = logman.logger;
 let sockets = [];
 let utils = require('./utils');
+const elasticsearchSync = require('./helpers/elasticsearch');
 let cronjob = require('node-cron-job');
 const serverRPCConfig = require('./api/rpc/server.config');
 const ServerRPCApi = require('./api/rpc/server');
@@ -638,7 +639,11 @@ d.run(function () {
 			cb();
 		}],
 
-		ready: ['modules', 'bus', 'logic', function (scope, cb) {
+        elasticsearch: ['db', 'logger', function (scope, cb) {
+            elasticsearchSync.sync(scope.db, scope.logger, cb);
+        }],
+
+		ready: ['modules', 'bus', 'logic', 'elasticsearch', function (scope, cb) {
 			scope.bus.message('bind', scope.modules);
 			scope.logic.transaction.bindModules(scope.modules);
 			scope.logic.peers.bindModules(scope.modules);
@@ -702,9 +707,6 @@ d.run(function () {
 			//Migration Process
 			//require('./helpers/accountCreateETPS').AccountCreateETPS(scope);
 
-			if (!scope.config.elasticsearch.disableJobs) {
-				cronjob.startJob('updateDataOnElasticSearch');
-			}
 			cronjob.startJob('archiveLogFiles');
 
 			/**
