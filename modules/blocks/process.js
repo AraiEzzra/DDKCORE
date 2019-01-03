@@ -92,7 +92,7 @@ Process.prototype.getCommonBlock = function (peer, height, cb) {
 			// Validate remote peer response via schema
             const common = res.body.common;
             if (common && common.height === 1) {
-                comparisonFailed = true;
+                comparisionFailed = true;
                 return setImmediate(
                     waterCb,
                     'Comparison failed - received genesis as common block'
@@ -499,7 +499,7 @@ __private.receiveBlock = function (block, cb) {
  * @param {Function} cb Callback function
  */
 __private.receiveForkOne = function (block, lastBlock, cb) {
-	let tmp_block = _.clone(block);
+	let tmpBlock = _.clone(block);
 
 	// Fork: Consecutive height but different previous block id
 	modules.delegates.fork(block, 1);
@@ -513,21 +513,21 @@ __private.receiveForkOne = function (block, lastBlock, cb) {
 		async.series([
 			function (seriesCb) {
 				try {
-					tmp_block = library.logic.block.objectNormalize(tmp_block);
+					tmpBlock = library.logic.block.objectNormalize(tmpBlock);
 				} catch (err) {
 					return setImmediate(seriesCb, err);
 				}
 				return setImmediate(seriesCb);
 			},
             function(seriesCb) {
-                __private.validateBlockSlot(tmp_block, lastBlock, seriesCb);
+                __private.validateBlockSlot(tmpBlock, lastBlock, seriesCb);
             },
 			// Check received block before any deletion
 			function (seriesCb) {
-				let check = modules.blocks.verify.verifyReceipt(tmp_block);
+				let check = modules.blocks.verify.verifyReceipt(tmpBlock);
 
 				if (!check.verified) {
-					library.logger.error(['Block', tmp_block.id, 'verification failed'].join(' '), check.errors.join(', '));
+					library.logger.error(['Block', tmpBlock.id, 'verification failed'].join(' '), check.errors.join(', '));
 					// Return first error from checks
 					return setImmediate(seriesCb, check.errors[0]);
 				} else {
@@ -556,7 +556,7 @@ __private.receiveForkOne = function (block, lastBlock, cb) {
  * @param {Function} cb Callback function
  */
 __private.receiveForkFive = function (block, lastBlock, cb) {
-	let tmp_block = _.clone(block);
+	let tmpBlock = _.clone(block);
 
 	// Fork: Same height and previous block id, but different block id
 	modules.delegates.fork(block, 5);
@@ -575,7 +575,7 @@ __private.receiveForkFive = function (block, lastBlock, cb) {
 		async.series([
 			function (seriesCb) {
 				try {
-					tmp_block = library.logic.block.objectNormalize(tmp_block);
+					tmpBlock = library.logic.block.objectNormalize(tmpBlock);
 				} catch (err) {
 					return setImmediate(seriesCb, err);
 				}
@@ -586,10 +586,10 @@ __private.receiveForkFive = function (block, lastBlock, cb) {
             },
 			// Check received block before any deletion
 			function (seriesCb) {
-				let check = modules.blocks.verify.verifyReceipt(tmp_block);
+				let check = modules.blocks.verify.verifyReceipt(tmpBlock);
 
 				if (!check.verified) {
-					library.logger.error(['Block', tmp_block.id, 'verification failed'].join(' '), check.errors.join(', '));
+					library.logger.error(['Block', tmpBlock.id, 'verification failed'].join(' '), check.errors.join(', '));
 					// Return first error from checks
 					return setImmediate(seriesCb, check.errors[0]);
 				} else {
