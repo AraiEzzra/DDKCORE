@@ -940,7 +940,8 @@ Transaction.prototype.applyUnconfirmed = function (trs, sender, requester, cb) {
 
     if (trs.type === transactionTypes.STAKE) {
         this.scope.account.merge(sender.address, {
-            u_balance: -amount, u_totalFrozeAmount: trs.stakedAmount
+            u_balance: -amount,
+            u_totalFrozeAmount: trs.stakedAmount
         }, function (err, sender) {
             if (err) {
                 return setImmediate(cb, err);
@@ -949,7 +950,8 @@ Transaction.prototype.applyUnconfirmed = function (trs, sender, requester, cb) {
             __private.types[trs.type].applyUnconfirmed.call(this, trs, sender, function (err) {
                 if (err) {
                     this.scope.account.merge(sender.address, {
-                        u_balance: amount, u_totalFrozeAmount: -trs.stakedAmount
+                        u_balance: amount,
+                        u_totalFrozeAmount: -trs.stakedAmount
                     }, function (err2) {
                         return setImmediate(cb, err2 || err);
                     });
