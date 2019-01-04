@@ -7,7 +7,6 @@ let sql = require('../sql/frogings.js');
 let TransactionPool = require('../logic/transactionPool.js');
 let transactionTypes = require('../helpers/transactionTypes.js');
 let sendFreezeOrder = require('../logic/sendFreezeOrder.js');
-const constants = require('../helpers/constants.js');
 
 // Private fields
 let __private = {};
@@ -255,7 +254,7 @@ SendFreezeOrder.prototype.shared = {
 			let publicKey = keypair.publicKey.toString('hex');
 
 			if (req.body.publicKey) {
-				if (keypair.publicKey.toString('hex') !== req.body.publicKey) {
+				if (publicKey !== req.body.publicKey) {
 					return setImmediate(cb, 'Invalid passphrase');
 				}
 			}
@@ -415,19 +414,6 @@ SendFreezeOrder.prototype.shared = {
 					return setImmediate(cb, err);
 				}
 				return setImmediate(cb, null, { transactionId: transaction[0].id });
-				/* library.logic.sendFreezeOrder.sendFreezedOrder({
-					account: accountData,
-					recipientId: req.body.recipientId,
-					stakeId: req.body.stakeId,
-					stakeOrder: stakeOrder
-				}, function (err) {
-
-					if (err) {
-						return setImmediate(cb, err);
-					}
-					return setImmediate(cb, null, { transactionId: transaction[0].id });
-
-				}); */
 			});
 		});
 	}

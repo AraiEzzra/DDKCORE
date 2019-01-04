@@ -4,6 +4,8 @@ let async = require('async');
 let utils = require('../utils');
 const promise = require('bluebird');
 
+const SENDSTAKE_VERIFICATION = constants.SENDSTAKE_VERIFICATION;
+
 // Private fields
 let __private = {};
 __private.types = {};
@@ -179,7 +181,7 @@ SendFreezeOrder.prototype.apply = async function (trs, block, sender, cb) {
 };
 
 SendFreezeOrder.prototype.getBytes = function (trs) {
-	return null;
+	return Buffer.from([]);
 };
 
 SendFreezeOrder.prototype.process = function (trs, sender, cb) {
@@ -189,11 +191,21 @@ SendFreezeOrder.prototype.process = function (trs, sender, cb) {
 SendFreezeOrder.prototype.verify = function (trs, sender, cb) {
 
 	if (!trs.recipientId) {
-		return setImmediate(cb, 'Missing recipient');
+		if (SENDSTAKE_VERIFICATION.VERIFY_RECIPIENT_ID_ENABLED) {
+            return setImmediate(cb, 'Missing recipient');
+        } else {
+			self.scope.logger.error('Missing recipient in transaction with id: ', trs.id);
+		}
 	}
 
+
     if (parseInt(trs.fee) > (parseInt(sender.balance) - parseInt(sender.totalFrozeAmount))) {
-		return setImmediate(cb, 'Insufficient balance');
+        if (SENDSTAKE_VERIFICATION.VERIFY_BALANCE_ENABLED) {
+            return setImmediate(cb, 'Insufficient balance');
+        } else {
+            self.scope.logger.error('Insufficient balance in transaction with id: ', trs.id)
+		}
+
 	}
 
     self.getActiveFrozeOrder({
@@ -202,11 +214,19 @@ SendFreezeOrder.prototype.verify = function (trs, sender, cb) {
     }, function (err, order) {
 
         if (order === null ) {
-            return setImmediate(cb, `Orders not found`);
+        	if (SENDSTAKE_VERIFICATION.VERIFY_ACTIVE_FROZE_ORDER_EXIST_ENABLED) {
+                return setImmediate(cb, `Orders not found`);
+            } else {
+        		self.scope.logger.error(`Orders not found in transaction with id:`, trs.id)
+			}
         }
 
         if (order.transferCount >= constants.maxTransferCount) {
-            return setImmediate(cb, `Order can be send only ${ constants.maxTransferCount } times`);
+            if (SENDSTAKE_VERIFICATION.VERIFY_ACTIVE_FROZE_ORDER_TRANSFERCOUNT_ENABLED) {
+                return setImmediate(cb, `Order can be send only ${ constants.maxTransferCount } times`);
+            } else {
+                self.scope.logger.error(`Order can be send only ${ constants.maxTransferCount } times`)
+			}
 		} else {
             return setImmediate(cb, null, trs);
 		}

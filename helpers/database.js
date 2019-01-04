@@ -161,6 +161,7 @@ function Migrator (pgp, db) {
 				return waterCb();
 			})
 			.catch(function (err) {
+				console.log('err', err.stack);
 				return waterCb(err);
 			});
 	};

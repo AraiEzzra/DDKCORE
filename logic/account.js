@@ -728,22 +728,6 @@ Account.prototype.set = function (address, fields, cb) {
 	});
 };
 
-
-Account.prototype.insertLevel = function (levelDetails, cb) {
-
-	if(levelDetails.level.length === 0){
-		levelDetails.level = null;
-	}
-	this.scope.db.none(sql.insertLevelChain,{
-		address: levelDetails.address,
-		level : levelDetails.level
-	}).then(function(){
-		return setImmediate(cb,null);
-	}).catch(function(err){
-		return setImmediate(cb, err);
-	});
-};
-
 Account.prototype.findReferralLevel= function(address,cb) {
 	this.scope.db.query(sql.referLevelChain,{
 		address:address

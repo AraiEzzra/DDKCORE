@@ -35,7 +35,6 @@ let tokenValidator = require('../../tokenValidator');
 	- post /disableTwoFactor
 	- get /checkTwoFactorStatus
 	- get /getWithdrawlStatus
-	- post /sendWithdrawlAmount
 	- post /enablePendingGroupBonus
  * @memberof module:accounts
  * @requires helpers/Router
@@ -82,7 +81,7 @@ function AccountsHttpApi (accountsModule, app, logger, cache, config) {
 		'post /disableTwoFactor': 'disableTwoFactor',
 		'get /checkTwoFactorStatus': 'checkTwoFactorStatus',
 		'get /getWithdrawlStatus': 'getWithdrawlStatus',
-		'post /sendWithdrawlAmount': 'sendWithdrawlAmount',
+		// 'post /sendWithdrawlAmount': 'sendWithdrawlAmount', // TODO remove
 		'post /enablePendingGroupBonus': 'enablePendingGroupBonus',
 		'get /generatenpNewPassphase':'generatenpNewPassphase'
 	});

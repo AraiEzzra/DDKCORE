@@ -46,6 +46,6 @@ FROM trs t
 LEFT OUTER JOIN blocks b ON t."blockId" = b."id"
 LEFT OUTER JOIN votes AS v ON v."transactionId" = t."id"
 LEFT OUTER JOIN stake_orders so ON so."id" = t."id"
-LEFT OUTER JOIN referals ref ON ref."address" = t."recipientId";
+LEFT OUTER JOIN referals ref ON ref."address" = t."senderId";
 
 COMMIT;

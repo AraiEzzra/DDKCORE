@@ -13,9 +13,9 @@ module.exports = {
 		properties: {
 			id: {
 				type: 'string',
-				format: 'id',
-				minLength: 1,
-				maxLength: 20
+        format: 'hex',
+        minLength: 1,
+        maxLength: 64
 			}
 		},
 		required: ['id']
@@ -56,9 +56,9 @@ module.exports = {
 			},
 			previousBlock: {
 				type: 'string',
-				format: 'id',
-				minLength: 1,
-				maxLength: 20
+        format: 'hex',
+        minLength: 1,
+        maxLength: 64
 			},
 			height: {
 				type: 'integer',
@@ -72,15 +72,15 @@ module.exports = {
 		properties: {
 			id: {
 				type: 'string',
-				format: 'id',
-				minLength: 1,
-				maxLength: 20
+        format: 'hex',
+        minLength: 1,
+        maxLength: 64
 			},
 			previousBlock: {
 				type: 'string',
-				format: 'id',
-				minLength: 1,
-				maxLength: 20
+        format: 'hex',
+        minLength: 1,
+        maxLength: 64
 			},
 			height: {
 				type: 'integer',

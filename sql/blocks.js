@@ -84,8 +84,6 @@ let BlocksSql = {
 		].filter(Boolean).join(' ');
 	},
 
-	countByRowId: 'SELECT COUNT("rowId")::int FROM blocks',
-
 	getHeightByLastId: 'SELECT "height" FROM blocks WHERE "id" = ${lastId}',
 
 	loadBlocksData: function (params) {
@@ -102,13 +100,13 @@ let BlocksSql = {
 			(params.id ? '"b_id" = ${id}' : ''),
 			(params.id && params.lastId ? ' AND ' : ''),
 			(params.lastId ? '"b_height" > ${height} AND "b_height" < ${limit}' : ''),
-			'ORDER BY "b_height", "t_rowId"'
+			'ORDER BY "b_height", t_type, t_timestamp, "t_id"'
 		].filter(Boolean).join(' ');
 	},
 
-	loadBlocksOffset: 'SELECT * FROM full_blocks_list WHERE "b_height" >= ${offset} AND "b_height" < ${limit} ORDER BY "b_height", "t_rowId"',
+	loadBlocksOffset: 'SELECT * FROM full_blocks_list WHERE "b_height" >= ${offset} AND "b_height" < ${limit} ORDER BY "b_height", t_type, t_timestamp, "t_id"',
 
-	loadLastBlock: 'SELECT * FROM full_blocks_list WHERE "b_height" = (SELECT MAX("height") FROM blocks) ORDER BY "b_height", "t_rowId"',
+	loadLastBlock: 'SELECT * FROM full_blocks_list WHERE "b_height" = (SELECT MAX("height") FROM blocks) ORDER BY "b_height", t_type, t_timestamp, "t_id"',
 
 	getBlockId: 'SELECT "id" FROM blocks WHERE "id" = ${id}',
 

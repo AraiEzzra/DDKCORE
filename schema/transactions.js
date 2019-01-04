@@ -9,9 +9,9 @@ module.exports = {
 		properties: {
 			blockId: {
 				type: 'string',
-				format: 'id',
+				format: 'hex',
 				minLength: 1,
-				maxLength: 20
+				maxLength: 64
 			},
 			type: {
 				type: 'integer',
@@ -146,9 +146,9 @@ module.exports = {
 		properties: {
 			id: {
 				type: 'string',
-				format: 'id',
+				format: 'hex',
 				minLength: 1,
-				maxLength: 20
+				maxLength: 64
 			}
 		},
 		required: ['id']
@@ -159,9 +159,9 @@ module.exports = {
 		properties: {
 			id: {
 				type: 'string',
-				format: 'id',
+				format: 'hex',
 				minLength: 1,
-				maxLength: 20
+				maxLength: 64
 			}
 		},
 		required: ['id']

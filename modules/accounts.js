@@ -571,7 +571,7 @@ Accounts.prototype.shared = {
 			let publicKey = keypair.publicKey.toString('hex');
 
 			if (req.body.publicKey) {
-				if (keypair.publicKey.toString('hex') !== req.body.publicKey) {
+				if (publicKey !== req.body.publicKey) {
 					return setImmediate(cb, 'Invalid passphrase');
 				}
 			}
@@ -804,17 +804,6 @@ Accounts.prototype.shared = {
 	},
 
 	migrateData: function (req, cb) {
-
-		try {
-			var balance;
-			if (req.body.data.balance_d === null) {
-				balance = 0;
-			} else {
-				balance = parseFloat(req.body.data.balance_d) * 100000000;
-			}
-		} catch (err) {
-			return setImmediate(cb, err.toString());
-		}
 
 		function getStakeOrderFromETPS(next) {
 			library.db.query(sql.getETPSStakeOrders, {
@@ -1416,14 +1405,15 @@ Accounts.prototype.internal = {
 						seriesCb(err, false);
 					});
 				}],
+
 				checkActiveStakeOfLeftAndRightSponsor: ['checkActiveStake', function (result, seriesCb) {
+					let activeStakeCount = 0;
 					library.db.query(sql.findDirectSponsor, {
 						introducer: req.body.address
 					})
 						.then(function (directSponsors) {
 							if (directSponsors.length >= 2) {
 
-								var activeStakeCount = 0;
 								directSponsors.forEach(function (directSponsor) {
 									library.db.query(sql.findActiveStakeAmount, {
 										senderId: directSponsor.address
@@ -1495,60 +1485,60 @@ Accounts.prototype.internal = {
 			});
 		});
 	},
-
-	sendWithdrawlAmount: function (req, cb) {
-		library.schema.validate(req.body, schema.enablePendingGroupBonus, function (err) {
-			if (err) {
-				return setImmediate(cb, err);
-			}
-			if (!nextBonus) {
-				return setImmediate(cb, 'You don\'t have pending group bonus remaining');
-			}
-			let hash = Buffer.from(JSON.parse(library.config.users[5].keys));
-			let keypair = library.ed.makeKeypair(hash);
-			let publicKey = keypair.publicKey.toString('hex');
-			library.balancesSequence.add(function (cb) {
-				self.getAccount({publicKey: publicKey}, function(err, account) {
-					if (err) {
-						return setImmediate(cb, err)
-					}
-					let transaction;
-					let secondKeypair = null;
-					account.publicKey = publicKey;
-
-					library.logic.transaction.create({
-						type: transactionTypes.REWARD,
-						amount: nextBonus * 100000000,
-						sender: account,
-						recipientId: req.body.address,
-						keypair: keypair,
-						secondKeypair: secondKeypair,
-						trsName: 'WITHDRAWLREWARD'
-					}).then((transactionReward) =>{
-						transaction = transactionReward;
-						modules.transactions.receiveTransactions([transaction], true, cb);
-					}).catch((e) => {
-						return setImmediate(cb, e.toString());
-					});
-				});
-			}, function (err, transaction) {
-				if (err) {
-					return setImmediate(cb, err);
-				}
-				library.cache.client.set(req.body.address + '_pending_group_bonus_trs_id', transaction[0].id);
-				library.db.none(sql.updatePendingGroupBonus, {
-					nextBonus: nextBonus * 100000000,
-					senderId: req.body.address
-				})
-				.then(function () {
-					return setImmediate(cb, null, { transactionId: transaction[0].id });
-				})
-				.catch(function (err) {
-					return setImmediate(cb, err);
-				});
-			});
-		});
-	}
+  // TODO remove
+	// sendWithdrawlAmount: function (req, cb) {
+	// 	library.schema.validate(req.body, schema.enablePendingGroupBonus, function (err) {
+	// 		if (err) {
+	// 			return setImmediate(cb, err);
+	// 		}
+	// 		if (!nextBonus) {
+	// 			return setImmediate(cb, 'You don\'t have pending group bonus remaining');
+	// 		}
+	// 		let hash = Buffer.from(JSON.parse(library.config.users[5].keys));
+	// 		let keypair = library.ed.makeKeypair(hash);
+	// 		let publicKey = keypair.publicKey.toString('hex');
+	// 		library.balancesSequence.add(function (cb) {
+	// 			self.getAccount({publicKey: publicKey}, function(err, account) {
+	// 				if (err) {
+	// 					return setImmediate(cb, err)
+	// 				}
+	// 				let transaction;
+	// 				let secondKeypair = null;
+	// 				account.publicKey = publicKey;
+  //
+	// 				library.logic.transaction.create({
+	// 					type: transactionTypes.REWARD,
+	// 					amount: nextBonus * 100000000,
+	// 					sender: account,
+	// 					recipientId: req.body.address,
+	// 					keypair: keypair,
+	// 					secondKeypair: secondKeypair,
+	// 					trsName: 'WITHDRAWLREWARD'
+	// 				}).then((transactionReward) =>{
+	// 					transaction = transactionReward;
+	// 					modules.transactions.receiveTransactions([transaction], true, cb);
+	// 				}).catch((e) => {
+	// 					return setImmediate(cb, e.toString());
+	// 				});
+	// 			});
+	// 		}, function (err, transaction) {
+	// 			if (err) {
+	// 				return setImmediate(cb, err);
+	// 			}
+	// 			library.cache.client.set(req.body.address + '_pending_group_bonus_trs_id', transaction[0].id);
+	// 			library.db.none(sql.updatePendingGroupBonus, {
+	// 				nextBonus: nextBonus * 100000000,
+	// 				senderId: req.body.address
+	// 			})
+	// 			.then(function () {
+	// 				return setImmediate(cb, null, { transactionId: transaction[0].id });
+	// 			})
+	// 			.catch(function (err) {
+	// 				return setImmediate(cb, err);
+	// 			});
+	// 		});
+	// 	});
+	// },
 };
 
 // Export

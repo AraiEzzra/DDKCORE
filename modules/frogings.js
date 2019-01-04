@@ -6,17 +6,14 @@ let sql = require('../sql/frogings.js');
 let TransactionPool = require('../logic/transactionPool.js');
 let transactionTypes = require('../helpers/transactionTypes.js');
 let Frozen = require('../logic/frozen.js');
-let ref_sql = require('../sql/referal_sql');
 let constants = require('../helpers/constants.js');
 let cache = require('./cache.js');
-let slots = require('../helpers/slots');
 
 const COUNT_ACTIVE_STAKE_HOLDERS_KEY = 'COUNT_ACTIVE_STAKE_HOLDERS';
 const COUNT_ACTIVE_STAKE_HOLDERS_EXPIRE = 300; // 5 minutes
 
 // Private fields
 let __private = {};
-let shared = {};
 let modules;
 let library;
 let self;
@@ -197,16 +194,25 @@ Frogings.prototype.shared = {
 				if (!account || !account.address) {
 					return setImmediate(cb, 'Address of account not found');
 				}
+				library.db.query(sql.getFrozeOrdersCount, { senderId: account.address })
+					.then(function (rows) {
+						let count = rows.length ? rows[0].count : 0;
 
-				library.db.query(sql.getFrozeOrders, { senderId: account.address })
-				.then(function (rows) {
-					return setImmediate(cb, null, {
-						freezeOrders: JSON.stringify(rows)
+						library.db.query(sql.getFrozeOrders, { senderId: account.address, limit: req.body.limit, offset: req.body.offset })
+							.then(function (rows) {
+
+								return setImmediate(cb, null, {
+									freezeOrders: JSON.stringify(rows),
+									count: count
+								});
+							})
+							.catch(function (err) {
+								return setImmediate(cb, err);
+							});
+					})
+					.catch(function (err) {
+						return setImmediate(cb, err);
 					});
-				})
-				.catch(function (err) {
-					return setImmediate(cb, err);
-				});
 			});
 		});
 	},

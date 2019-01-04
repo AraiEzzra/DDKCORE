@@ -1,0 +1,3 @@
+[submodule "autotests"]
+	path = autotests
+	url = https://github.com/AraiEzzra/DDKUI-autotests.git

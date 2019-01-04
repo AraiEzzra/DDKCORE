@@ -1,10 +1,8 @@
 'use strict';
-
-let constants = require('../helpers/constants.js');
 let sql = require('../sql/referal_sql');
 
 // Private fields
-let modules, library, self;
+let modules, self;
 
 /**
  * Main migration logic.
@@ -89,7 +87,7 @@ Migration.prototype.process = function (trs, sender, cb) {
  * @return {null}
  */
 Migration.prototype.getBytes = function (trs) {
-	return null;
+	return Buffer.from([]);
 };
 
 /**

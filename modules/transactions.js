@@ -66,10 +66,6 @@ function Transactions(cb, scope) {
 		transactionTypes.SEND, new Transfer()
 	);
 
-	__private.assetTypes[transactionTypes.REFER] = library.logic.transaction.attachAssetType(
-		transactionTypes.REFER, new ReferTransfer()
-	);
-
 	setImmediate(cb, null, self);
 }
 
@@ -632,10 +628,6 @@ Transactions.prototype.onBind = function (scope) {
 		scope.accounts,
 		scope.rounds
 	);
-	__private.assetTypes[transactionTypes.REFER].bind(
-		scope.accounts,
-		scope.rounds
-	);
 };
 
 // Internal API
@@ -877,7 +869,7 @@ Transactions.prototype.shared = {
 									let transaction;
 
 									library.logic.transaction.create({
-										type: (req.body.transactionRefer) ? (transactionTypes.REFER) : (transactionTypes.SEND),
+										type: transactionTypes.SEND,
 										amount: req.body.amount,
 										sender: account,
 										recipientId: recipientId,
@@ -919,7 +911,7 @@ Transactions.prototype.shared = {
 								let transaction;
 
 								library.logic.transaction.create({
-									type: (req.body.transactionRefer) ? (transactionTypes.REFER) : (transactionTypes.SEND),
+									type: transactionTypes.SEND,
 									amount: req.body.amount,
 									sender: account,
 									recipientId: recipientId,

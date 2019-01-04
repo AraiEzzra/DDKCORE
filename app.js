@@ -42,6 +42,7 @@ let logman = new Logger();
 let logger = logman.logger;
 let sockets = [];
 let utils = require('./utils');
+const elasticsearchSync = require('./helpers/elasticsearch');
 let cronjob = require('node-cron-job');
 const serverRPCConfig = require('./api/rpc/server.config');
 const ServerRPCApi = require('./api/rpc/server');
@@ -145,9 +146,8 @@ let config = {
 		crypto: './modules/crypto.js',
 		sql: './modules/sql.js',
 		cache: './modules/cache.js',
-		contracts: './modules/contracts.js',
 		frogings: './modules/frogings.js',
-		sendFreezeOrder: './modules/sendFreezeOrder.js'
+		// sendFreezeOrder: './modules/sendFreezeOrder.js'
 	},
 	api: {
 		accounts: { http: './api/http/accounts.js' },
@@ -162,7 +162,7 @@ let config = {
 		transactions: { http: './api/http/transactions.js' },
 		transport: { http: './api/http/transport.js' },
 		frogings: { http: './api/http/froging.js' },
-		sendFreezeOrder: { http: './api/http/transferorder.js' }
+		// sendFreezeOrder: { http: './api/http/transferorder.js' }
 	}
 };
 
@@ -184,7 +184,6 @@ try {
 let d = require('domain').create();
 
 d.on('error', function (err) {
-	console.log('error : ', err.stack);
 	logger.error('Domain master', { message: err.message, stack: err.stack });
 	process.exit(0);
 });
@@ -309,13 +308,9 @@ d.run(function () {
 			app.use(compression({ level: 9 }));
 			app.use(cors());
 			app.options('*', cors());
-			let socketIO;
 
 			let server = require('http').createServer(app);
 			let io = require('socket.io')(server);
-			if (!scope.config.ssl.enabled) {
-				socketIO = require('socket.io')(server);
-			}
 
 			let privateKey, certificate, https, https_io;
 
@@ -330,11 +325,10 @@ d.run(function () {
 				}, app);
 
 				https_io = require('socket.io')(https);
-				socketIO = require('socket.io')(https);
 			}
 
 			// handled socket's connection event
-			socketIO.on('connection', function (socket) {
+			io.on('connection', function (socket) {
 				//IIFE: function to accept new socket.id in sockets array.
 				function acceptSocket(user, sockets) {
 					let userFound = false;
@@ -348,7 +342,7 @@ d.run(function () {
 					if (!userFound && user.address) {
 						sockets.push(user);
 					}
-					socketIO.sockets.emit('updateConnected', sockets.length);
+					io.sockets.emit('updateConnected', sockets.length);
 				}
 
 				socket.on('setUserAddress', function (data) {
@@ -364,7 +358,7 @@ d.run(function () {
 					sockets.forEach(function (user, index) {
 						if (user.socketId == socket.id) {
 							sockets.splice(index, 1);
-							socketIO.sockets.emit('updateConnected', sockets.length);
+							io.sockets.emit('updateConnected', sockets.length);
 						}
 					});
 				});
@@ -535,10 +529,8 @@ d.run(function () {
 			let Account = require('./logic/account.js');
 			let Peers = require('./logic/peers.js');
 			let Frozen = require('./logic/frozen.js');
-			let Contract = require('./logic/contract.js');
-			let SendFreezeOrder = require('./logic/sendFreezeOrder.js');
+			// let SendFreezeOrder = require('./logic/sendFreezeOrder.js');
 			let Vote = require('./logic/vote.js');
-			let Migration = require('./logic/Migration.js');
 
 			async.auto({
 				bus: function (cb) {
@@ -582,18 +574,12 @@ d.run(function () {
 				frozen: ['logger', 'db', 'transaction', 'network', 'config', function (scope, cb) {
 					new Frozen(scope.logger, scope.db, scope.transaction, scope.network, scope.config, scope.balancesSequence, scope.ed, cb);
 				}],
-				sendFreezeOrder: ['logger', 'db', 'network', function (scope, cb) {
-					new SendFreezeOrder(scope.logger, scope.db, scope.network, cb);
-				}],
-				contract: ['config', function (scope, cb) {
-					new Contract(scope.config, scope.db, cb);
-				}],
+				// sendFreezeOrder: ['logger', 'db', 'network', function (scope, cb) {
+				// 	new SendFreezeOrder(scope.logger, scope.db, scope.network, cb);
+				// }],
 				vote: ['logger', 'schema', 'db', 'frozen', function (scope, cb) {
 					new Vote(scope.logger, scope.schema, scope.db, scope.frozen, cb);
 				}],
-				migration: ['logger', 'db', function (scope, cb) {
-					new Migration(scope.logger, scope.db, cb);
-				}]
 			}, cb);
 		}],
 		/**
@@ -614,7 +600,6 @@ d.run(function () {
 					let d = require('domain').create();
 
 					d.on('error', function (err) {
-						console.log('error : ', err.stack);
 						scope.logger.error('Domain ' + name, { message: err.message, stack: err.stack });
 					});
 
@@ -659,7 +644,11 @@ d.run(function () {
 			cb();
 		}],
 
-		ready: ['modules', 'bus', 'logic', function (scope, cb) {
+        elasticsearch: ['db', 'logger', function (scope, cb) {
+            elasticsearchSync.sync(scope.db, scope.logger, cb);
+        }],
+
+		ready: ['modules', 'bus', 'logic', 'elasticsearch', function (scope, cb) {
 			scope.bus.message('bind', scope.modules);
 			scope.logic.transaction.bindModules(scope.modules);
 			scope.logic.peers.bindModules(scope.modules);
@@ -723,9 +712,7 @@ d.run(function () {
 			//Migration Process
 			//require('./helpers/accountCreateETPS').AccountCreateETPS(scope);
 
-			cronjob.startJob('updateDataOnElasticSearch');
 			cronjob.startJob('archiveLogFiles');
-			cronjob.startJob('unlockLockedUsers');
 
 			/**
 			 * Handles app instance (acts as global variable, passed as parameter).
@@ -849,7 +836,7 @@ process.on('uncaughtException', function (err) {
 	 * emits cleanup once 'uncaughtException'.
 	 * @emits cleanup
 	 */
-	process.emit('cleanup');
+	// process.emit('cleanup'); // TODO Are u kidding me
 });
 
 /*************************************** END OF FILE *************************************/

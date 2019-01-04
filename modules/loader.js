@@ -317,10 +317,10 @@ __private.loadTransactions = function (cb) {
  */
 __private.loadBlockChain = function () {
 	let offset = 0, limit = Number(library.config.loading.loadPerIteration) || 1000;
-	let verify = Boolean(library.config.loading.verifyOnLoading);
+	let verify = true;
+	const verifyOnLoading = Boolean(library.config.loading.verifyOnLoading);
 
 	function load (count) {
-		verify = true;
 		__private.total = count;
 
 		async.series({
@@ -347,22 +347,22 @@ __private.loadBlockChain = function () {
 					function () {
 						return count < offset;
 					}, function (cb) {
-					if (count > 1) {
-						library.logger.info('Rebuilding blockchain, current block height: '  + (offset + 1));
-					}
-					modules.blocks.process.loadBlocksOffset(limit, offset, verify, function (err, lastBlock) {
-						if (err) {
-							return setImmediate(cb, err);
+						if (count > 1) {
+							library.logger.info('Rebuilding blockchain, current block height: ' + (offset + 1));
 						}
+						modules.blocks.process.loadBlocksOffset(limit, offset, verify, function (err, lastBlock) {
+							if (err) {
+								return setImmediate(cb, err);
+							}
 
-						offset = offset + limit;
-						__private.lastBlock = lastBlock;
+							offset = offset + limit;
+							__private.lastBlock = lastBlock;
 
-						return setImmediate(cb);
-					});
-				}, function (err) {
-					return setImmediate(seriesCb, err);
-				}
+							return setImmediate(cb);
+						});
+					}, function (err) {
+						return setImmediate(seriesCb, err);
+					}
 				);
 			},
 			updateUsersListView: function (seriesCb) {
@@ -461,19 +461,13 @@ __private.loadBlockChain = function () {
 
 		matchGenesisBlock(results[1][0]);
 
-		verify = verifySnapshot(count, round);
+		if (verifyOnLoading) {
+			verify = verifySnapshot(count, round);
 
-		if (verify) {
-			return reload(count, 'Blocks verification enabled');
+			if (verify) {
+				return reload(count, 'Blocks verification enabled');
+			}
 		}
-
-		// TODO comment like in lisk
-		// let missed = !(results[2].count);
-		// library.logger.info(`Results ${JSON.stringify(results)}`);
-    //
-    // if (missed) {
-			// return reload(count, 'Detected missed blocks in mem_accounts');
-		// }
 
 		let unapplied = results[3].filter(function (row) {
 			return (row.round !== String(round));
@@ -490,7 +484,7 @@ __private.loadBlockChain = function () {
 			return process.emit('exit');
 		}
 
-		function updateMemAccounts (t) {
+		function updateMemAccounts(t) {
 			let promises = [
 				t.none(sql.updateMemAccounts),
 				t.query(sql.getDelegates)

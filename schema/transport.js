@@ -59,9 +59,9 @@ module.exports = {
 		properties: {
 			lastBlockId: {
 				type: 'string',
-				format: 'id',
-				minLength: 1,
-				maxLength: 20
+        format: 'hex',
+        minLength: 1,
+        maxLength: 64
 			}
 		},
 	},
@@ -98,9 +98,9 @@ module.exports = {
 				properties: {
 					transaction: {
 						type: 'string',
-						format: 'id',
-						minLength: 1,
-						maxLength: 20
+            format: 'hex',
+            minLength: 1,
+            maxLength: 64
 					},
 					signature: {
 						type: 'string',
