@@ -104,6 +104,9 @@ const constants = {
         VERIFY_TRANSACTION_TYPE: true,
         VERIFY_TRANSACTION_CONFIRMED: true,
     },
+    BROADHASH_VALIDATION_ENABLED: true,
+    ONLY_FROZEN_PEERS_ENABLED: true
+
 };
 
 Object.assign(constants, require('../config/env'));
