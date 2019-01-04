@@ -1,4 +1,5 @@
 let constants = require('../helpers/constants.js');
+const sql = require('../sql/delegates');
 
 // Private fields
 let modules, library;
@@ -10,9 +11,10 @@ let modules, library;
  * @classdesc Main delegate logic.
  * @param {ZSchema} schema
  */
-function Delegate (schema) {
+function Delegate (schema, db) {
 	library = {
 		schema: schema,
+		db: db
 	};
 }
 
@@ -215,7 +217,9 @@ Delegate.prototype.apply = function (trs, block, sender, cb) {
 		data.username = trs.asset.delegate.username;
 	}
 
-	modules.accounts.setAccountAndGet(data, cb);
+    library.db.none(sql.addDelegateVoteRecord, { publicKey: trs.senderPublicKey.toString('hex') }).then(function () {
+        modules.accounts.setAccountAndGet(data, cb);
+    });
 };
 
 /**
@@ -239,7 +243,9 @@ Delegate.prototype.undo = function (trs, block, sender, cb) {
 		data.u_username = trs.asset.delegate.username;
 	}
 
-	modules.accounts.setAccountAndGet(data, cb);
+    library.db.none(sql.removeDelegateVoteRecord, { publicKey: trs.senderPublicKey.toString('hex') }).then(function () {
+        modules.accounts.setAccountAndGet(data, cb);
+    });
 };
 
 /**

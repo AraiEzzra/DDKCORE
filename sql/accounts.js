@@ -2,6 +2,10 @@
 
 let Accounts = {
 
+	getActiveDelegates : 'SELECT "publicKey" FROM "delegate_to_vote_counter" ORDER BY "voteCount" DESC, "publicKey" ASC LIMIT ${limit}',
+
+    changeDelegateVoteCount: 'UPDATE "delegate_to_vote_counter" SET "voteCount" = "voteCount" + ${value}  WHERE "publicKey" IN (${votes}:csv)',
+
 	checkAccountStatus : 'SELECT "status" FROM mem_accounts where "address"=${senderId}',
 
 	findActiveStakeAmount: '(SELECT "startTime" AS "value" FROM stake_orders where "senderId" = ${senderId} ORDER BY "startTime" DESC LIMIT 1) UNION ALL (SELECT SUM("freezedAmount") as "value" FROM stake_orders WHERE "senderId" = ${senderId} AND "status" = 1);',

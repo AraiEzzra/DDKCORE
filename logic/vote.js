@@ -408,6 +408,23 @@ Vote.prototype.apply = function (trs, block, sender, cb) {
                 });
         },
         function (seriesCb) {
+            // let votes = '';
+            let votes = trs.asset.votes.map((vote) => vote.substring(1));
+            // trs.asset.votes.map((vote) => {
+            //     votes += '\'' + vote.substring(1) + '\',';
+            // });
+            // votes = votes.substring(0, votes.length - 1);
+            // console.log('votes', votes);
+            library.db.query(sql.changeDelegateVoteCount, { value: 1, votes: votes })
+                .then(function () {
+                    return setImmediate(seriesCb, null);
+                })
+                .catch(function (err) {
+                    library.logger.error(err.stack);
+                    return setImmediate(seriesCb, err);
+                });
+        },
+        function (seriesCb) {
             const isDownVote = trs.trsName === "DOWNVOTE";
             if (isDownVote) {
                 return setImmediate(seriesCb, null, trs);
@@ -461,6 +478,21 @@ Vote.prototype.undo = function (trs, block, sender, cb) {
                         return setImmediate(seriesCb, err);
                     }
                     return setImmediate(seriesCb, null);
+                });
+        },
+        function (seriesCb) {
+            let votes = '';
+            trs.asset.votes.map((vote) => {
+                votes += vote.substring(1) + ', ';
+            });
+            votes = votes.substring(0, votes.length -1);
+            library.db.query(sql.changeDelegateVoteCount, { value: -1, votes: votes })
+                .then(function () {
+                    return setImmediate(seriesCb, null);
+                })
+                .catch(function (err) {
+                    library.logger.error(err.stack);
+                    return setImmediate(seriesCb, err);
                 });
         },
         function (seriesCb) {
