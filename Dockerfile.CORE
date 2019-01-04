@@ -8,12 +8,10 @@ USER    ddk
 RUN     mkdir -p /home/ddk && \
         chmod -R 777 /home/ddk && \
         mkdir -p /home/ddk/logs && \
-        mkdir -p /home/ddk/src && \
         mkdir -p /home/ddk/public/images/dapps/logs && \
         mkdir -p /home/ddk/public/images/dapps/pids && \
         mkdir -p /home/ddk/public/images/dapps/public && \
         touch /home/ddk/LICENSE
-COPY    ./package*.json /home/ddk/
 
 USER root
 RUN     npm install --global npm@latest && \
@@ -21,8 +19,11 @@ RUN     npm install --global npm@latest && \
         npm install --global wait-port@latest
 
 USER ddk
-RUN npm install
-COPY    --chown=ddk . /home/ddk/
+COPY    ./package*.json /home/ddk/
+RUN     npm install
+
+COPY    --chown=ddk . /home/ddk
+RUN     npm run build
 COPY    --chown=ddk docker-entrypoint.sh /home/ddk/docker-entrypoint.sh
 
 USER    root

@@ -11,19 +11,16 @@ Object.assign(constants, require('../config/env'));
 // console.log('CONSTANTS FIRST:', constants);
 
 if(env.NODE_ENV === 'development') {
-    console.log('development')
     Object.assign(constants, require('../config/default/constants'));
 }
 
 // For staging environment
 if(env.NODE_ENV === 'testnet') {
-    console.log('testnet')
     Object.assign(constants, require('../config/testnet/constants'));
 }
 
 // For production
 if(env.NODE_ENV === 'mainnet') {
-    console.log('mainnet')
     Object.assign(constants, require('../config/mainnet/constants'));
 }
 

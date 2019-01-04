@@ -155,7 +155,8 @@ function Migrator (pgp, db) {
 	 */
 	this.applyRuntimeQueryFile = function (waterCb) {
 		let dirname = path.basename(__dirname) === 'helpers' ? path.join(__dirname, '..') : __dirname;
-		let sql = new pgp.QueryFile(path.join(dirname, 'sql', 'runtime.sql'), {minify: true});
+		// TODO: replace with NORMAL config
+        let sql = new pgp.QueryFile(path.join(process.cwd(), 'src/sql', 'runtime.sql'), {minify: true});
 
 		db.query(sql)
 			.then(function () {

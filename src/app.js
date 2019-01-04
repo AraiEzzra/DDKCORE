@@ -43,6 +43,8 @@ let utils = require('./utils');
 let cronjob = require('node-cron-job');
 const serverRPCConfig = require('./api/rpc/server.config');
 const ServerRPCApi = require('./api/rpc/server');
+const referal = require('./helpers/referal');
+const jobs = require('./jobs.js');
 
 process.stdin.resume();
 
@@ -124,40 +126,40 @@ let config = {
 	cache: appConfig.redis,
 	cacheEnabled: appConfig.cacheEnabled,
 	modules: {
-		server: './modules/server.js',
-		accounts: './modules/accounts.js',
-		transactions: './modules/transactions.js',
-		blocks: './modules/blocks.js',
-		signatures: './modules/signatures.js',
-		transport: './modules/transport.js',
-		loader: './modules/loader.js',
-		system: './modules/system.js',
-		peers: './modules/peers.js',
-		delegates: './modules/delegates.js',
-		rounds: './modules/rounds.js',
-		multisignatures: './modules/multisignatures.js',
-		dapps: './modules/dapps.js',
-		crypto: './modules/crypto.js',
-		sql: './modules/sql.js',
-		cache: './modules/cache.js',
-		contracts: './modules/contracts.js',
-		frogings: './modules/frogings.js',
-		sendFreezeOrder: './modules/sendFreezeOrder.js'
+		server: require('./modules/server.js'),
+		accounts: require('./modules/accounts.js'),
+		transactions: require('./modules/transactions.js'),
+		blocks: require('./modules/blocks.js'),
+		signatures: require('./modules/signatures.js'),
+		transport: require('./modules/transport.js'),
+		loader: require('./modules/loader.js'),
+		system: require('./modules/system.js'),
+		peers: require('./modules/peers.js'),
+		delegates: require('./modules/delegates.js'),
+		rounds: require('./modules/rounds.js'),
+		multisignatures: require('./modules/multisignatures.js'),
+		dapps: require('./modules/dapps.js'),
+		crypto: require('./modules/crypto.js'),
+		sql: require('./modules/sql.js'),
+		cache: require('./modules/cache.js'),
+		contracts: require('./modules/contracts.js'),
+		frogings: require('./modules/frogings.js'),
+		sendFreezeOrder: require('./modules/sendFreezeOrder.js')
 	},
 	api: {
-		accounts: { http: './api/http/accounts.js' },
-		blocks: { http: './api/http/blocks.js' },
-		dapps: { http: './api/http/dapps.js' },
-		delegates: { http: './api/http/delegates.js' },
-		loader: { http: './api/http/loader.js' },
-		multisignatures: { http: './api/http/multisignatures.js' },
-		peers: { http: './api/http/peers.js' },
-		server: { http: './api/http/server.js' },
-		signatures: { http: './api/http/signatures.js' },
-		transactions: { http: './api/http/transactions.js' },
-		transport: { http: './api/http/transport.js' },
-		frogings: { http: './api/http/froging.js' },
-		sendFreezeOrder: { http: './api/http/transferorder.js' }
+		accounts: { http: require('./api/http/accounts.js') },
+		blocks: { http: require('./api/http/blocks.js') },
+		dapps: { http: require('./api/http/dapps.js') },
+		delegates: { http: require('./api/http/delegates.js') },
+		loader: { http: require('./api/http/loader.js') },
+		multisignatures: { http: require('./api/http/multisignatures.js') },
+		peers: { http: require('./api/http/peers.js') },
+		server: { http: require('./api/http/server.js') },
+		signatures: { http: require('./api/http/signatures.js') },
+		transactions: { http: require('./api/http/transactions.js') },
+		transport: { http: require('./api/http/transport.js') },
+		frogings: { http: require('./api/http/froging.js') },
+		sendFreezeOrder: { http: require('./api/http/transferorder.js') }
 	}
 };
 
@@ -610,14 +612,12 @@ d.run(function () {
 
 					d.run(function () {
 						logger.debug('Loading module', name);
-						let Klass = require(config.modules[name]);
+						let Klass = config.modules[name];
 						let obj = new Klass(cb, scope);
 						modules.push(obj);
 					});
 				};
 			});
-
-			console.log('TASKS:', Object.keys(tasks));
 
 			async.parallel(tasks, function (err, results) {
 				cb(err, results);
@@ -635,9 +635,8 @@ d.run(function () {
 		api: ['modules', 'logger', 'network', function (scope, cb) {
 			Object.keys(config.api).forEach(function (moduleName) {
 				Object.keys(config.api[moduleName]).forEach(function (protocol) {
-					let apiEndpointPath = config.api[moduleName][protocol];
+					let ApiEndpoint = config.api[moduleName][protocol];
 					try {
-						let ApiEndpoint = require(apiEndpointPath);
 						new ApiEndpoint(
 							scope.modules[moduleName], scope.network.app, scope.logger, scope.modules.cache, scope.config
 						);
@@ -707,11 +706,12 @@ d.run(function () {
 		if (err) {
 			scope.logger.error(err.message);
 		} else {
+            // TODO: make it NORMAL
+			cronjob.setJobsPath(path.join(process.cwd(), 'src','/jobs.js'));  // Absolute path to the jobs module.
+            jobs.attachScope(scope);
 
-			cronjob.setJobsPath(__dirname + '/jobs.js');  // Absolute path to the jobs module.
-			require('./jobs.js').attachScope(scope);
 			//AFFILIATE AIRDROP
-			require('./helpers/referal').Referals(scope);
+            referal.Referals(scope);
 			//Migration Process
 			//require('./helpers/accountCreateETPS').AccountCreateETPS(scope);
 

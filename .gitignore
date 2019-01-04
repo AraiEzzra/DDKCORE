@@ -1,4 +1,4 @@
-build
+**/build
 npm-debug.log
 .env
 archive/
@@ -12,3 +12,4 @@ config.json
 .idea/
 .nyc_output/
 api/rpc/client.js
+dist/

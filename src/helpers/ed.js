@@ -1,4 +1,4 @@
-let sodium = require('sodium').api;
+const sodium = require('sodium-javascript');
 
 /**
  * Crypto functions that implements sodium.
@@ -15,34 +15,38 @@ let ed = {};
  * @return {Object} publicKey, privateKey
  */
 ed.makeKeypair = function (hash) {
-	let keypair = sodium.crypto_sign_seed_keypair(hash);
+    const keyPair = {
+        publicKey: Buffer.alloc(sodium.crypto_sign_PUBLICKEYBYTES),
+        privateKey: Buffer.alloc(sodium.crypto_sign_SECRETKEYBYTES)
+    };
 
-	return {
-		publicKey: keypair.publicKey,
-		privateKey: keypair.secretKey
-	};
+    sodium.crypto_sign_seed_keypair(keyPair.publicKey, keyPair.privateKey, hash);
+    return keyPair;
 };
 
 /**
  * Creates a signature based on a hash and a keypair.
  * @implements {sodium}
  * @param {hash} hash
- * @param {keypair} keypair
+ * @param {keyPair} keyPair
  * @return {signature} signature
  */
-ed.sign = function (hash, keypair) {
-	return sodium.crypto_sign_detached(hash, Buffer.from(keypair.privateKey, 'hex'));
+ed.sign = function (hash, keyPair) {
+    const sig = Buffer.alloc(sodium.crypto_sign_BYTES);
+    sodium.crypto_sign_detached(sig, hash, keyPair.privateKey);
+    return sig;
 };
 
 /**
  * Verifies a signature based on a hash and a publicKey.
  * @implements {sodium}
  * @param {hash} hash
- * @param {keypair} keypair
+ * @param {signatureBuffer} signatureBuffer
+ * @param {publicKeyBuffer} publicKeyBuffer
  * @return {Boolean} true id verified
  */
 ed.verify = function (hash, signatureBuffer, publicKeyBuffer) {
-	return sodium.crypto_sign_verify_detached(signatureBuffer, hash, publicKeyBuffer);
+    return sodium.crypto_sign_verify_detached(signatureBuffer, hash, publicKeyBuffer);
 };
 
 module.exports = ed;
