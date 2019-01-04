@@ -987,11 +987,11 @@ Accounts.prototype.shared = {
 			});
 	},
 
-	senderAccountBalance: function(req,cb) {
-		library.db.query(sql.checkSenderBalance,{
+	senderAccountBalance: function(req, cb) {
+		library.db.query(sql.checkSenderBalance, {
 			sender_address: req.body.address
 		}).then(function(bal){
-			return setImmediate(cb, null, { balance: bal[0].u_balance});
+			return setImmediate(cb, null, { balance: bal[0].balance });
 		}).catch(function(err){
 			return setImmediate(cb, err);
 		});
@@ -1537,57 +1537,6 @@ Accounts.prototype.internal = {
 	// 		});
 	// 	});
 	// },
-
-	forgotEtpsPassword: function (req, cb) {
-		let data = req.body.data;
-		let userName = Buffer.from((data.split('&')[0]).split('=')[1], 'base64').toString();
-		let email = Buffer.from((data.split('&')[1]).split('=')[1], 'base64').toString();
-
-		library.db.one(sql.validateEtpsUser, {
-			username: userName,
-			emailId: email
-		}).then(function (user) {
-			let newPassword = Math.random().toString(36).substr(2, 8);
-			let hash = crypto.createHash('md5').update(newPassword).digest('hex');
-
-			library.db.none(sql.updateEtpsPassword, {
-				password: hash,
-				username: userName
-			}).then(function () {
-
-				let mailOptions = {
-					From: library.config.mailFrom,
-					To: email,
-					TemplateId: 8276287,
-					TemplateModel: {
-						"ddk": {
-						  "username": userName,
-						  "password": newPassword
-						}
-					  }
-				};
-
-				mailServices.sendEmailWithTemplate(mailOptions, function (err) {
-					if (err) {
-						library.logger.error(err.stack);
-						return setImmediate(cb, err.toString());
-					}
-					return setImmediate(cb, null, {
-						success: true,
-						info: "Mail Sent Successfully"
-					});
-				});
-			}).catch(function (err) {
-				library.logger.error(err.stack);
-				return setImmediate(cb, err);
-			});
-
-		}).catch(function (err) {
-			library.logger.error(err.stack);
-			return setImmediate(cb, 'Invalid username or email');
-		});
-
-	}
 };
 
 // Export

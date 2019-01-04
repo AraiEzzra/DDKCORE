@@ -15,14 +15,15 @@ function Sequence (config) {
 	};
 	_default = extend(_default, config);
 	let self = this;
-	this.sequence = [];
+    this.sequence = [];
+    this.newSequence = [];
 
 	setImmediate(function nextSequenceTick () {
 		if (_default.onWarning && self.sequence.length >= _default.warningLimit) {
 			_default.onWarning(self.sequence.length, _default.warningLimit);
 		}
 		self.__tick(function () {
-			setTimeout(nextSequenceTick, 10);
+			setTimeout(nextSequenceTick, 3);
 		});
 	});
 }
