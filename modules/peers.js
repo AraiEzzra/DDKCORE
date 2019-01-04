@@ -352,12 +352,14 @@ Peers.prototype.list = function (options, cb) {
             found = peersList.length;
             // TODO fix filtered only frozen
             // https://trello.com/c/Wwn9m2Ja/191-return-broadhash-validation-for-peer-picking
-            if (constants.NODE_ENV === 'mainnet') {
+
+            if (constants.ONLY_FROZEN_PEERS_ENABLED) {
                 peersList = peersList.filter(
                     (peer) => library.config.peers.list.map(p => p.ip).indexOf(peer.ip) !== -1 &&
                     [Peer.STATE.CONNECTED].indexOf(peer.state) !== -1
                 );
-            } else {
+            }
+            if (constants.BROADHASH_VALIDATION_ENABLED) {
                 // Apply filters
                 peersList = peersList.filter(function (peer) {
                     if (options.broadhash) {
