@@ -2,7 +2,7 @@ let constants = require('../helpers/constants.js');
 let sql = require('../sql/dapps.js');
 
 // Private fields
-let modules, library, shared;
+let modules, library, shared, self;
 
 /**
  * Initializes library.
@@ -18,6 +18,7 @@ function InTransfer (db, schema) {
 		db: db,
 		schema: schema,
 	};
+	self = this;
 }
 
 // Public methods
@@ -63,16 +64,7 @@ InTransfer.prototype.calculateFee = function () {
 	return constants.fees.send;
 };
 
-/**
- * Verifies recipientId, amount and InTransfer object content.
- * Finds application into `dapps` table.
- * @implements {library.db.one}
- * @param {transaction} trs
- * @param {account} sender
- * @param {function} cb
- * @return {setImmediateCallback} errors message | trs
- */
-InTransfer.prototype.verify = function (trs, sender, cb) {
+InTransfer.prototype.verifyFields = function (trs, sender, cb) {
 	if (trs.recipientId) {
 		return setImmediate(cb, 'Invalid recipient');
 	}
@@ -85,21 +77,43 @@ InTransfer.prototype.verify = function (trs, sender, cb) {
 		return setImmediate(cb, 'Invalid transaction asset');
 	}
 
-	library.db.one(sql.countByTransactionId, {
-		id: trs.asset.inTransfer.dappId
-	}).then(function (row) {
-		if (row.count === 0) {
-			return setImmediate(cb, 'Application not found: ' + trs.asset.inTransfer.dappId);
-		} else {
-			return setImmediate(cb);
-		}
-	}).catch(function (err) {
-		return setImmediate(cb, err);
-	});
+	setImmediate(cb);
+}
+
+/**
+ * Verifies recipientId, amount and InTransfer object content.
+ * Finds application into `dapps` table.
+ * @implements {library.db.one}
+ * @param {transaction} trs
+ * @param {account} sender
+ * @param {function} cb
+ * @return {setImmediateCallback} errors message | trs
+ */
+InTransfer.prototype.verify = function (trs, sender, cb) {
+	return this.verifyFields(trs, sender, cb);
 };
 
 InTransfer.prototype.verifyUnconfirmed = function (trs, sender, cb) {
-	this.verify(trs, sender, cb);
+	async.series([
+		function (seriesCb) {
+			return self.verifyFields(trs, sender, seriesCb);
+		},
+		function (seriesCb) {
+			library.db.one(sql.countByTransactionId, {
+				id: trs.asset.inTransfer.dappId,
+			}).then(function (row) {
+				if (row.count === 0) {
+					return setImmediate(seriesCb, 'Application not found: ' + trs.asset.inTransfer.dappId);
+				} else {
+					return setImmediate(seriesCb);
+				}
+			}).catch(function (err) {
+				return setImmediate(seriesCb, err);
+			});
+		}
+	], function (err) {
+		return setImmediate(cb, err);
+	});
 }
 
 /**

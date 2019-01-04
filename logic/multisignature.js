@@ -192,7 +192,7 @@ Multisignature.prototype.verify = function (trs, sender, cb) {
 };
 
 Multisignature.prototype.verifyUnconfirmed = function (trs, sender, cb) {
-	this.verify(trs, sender, cb);
+	return this.verify(trs, sender, cb);
 }
 
 /**

@@ -183,31 +183,6 @@ Vote.prototype.verifyFields = function (trs, sender, cb) {
         }
     }
 
-    return setImmediate(cb);
-};
-
-/**
- * Validates transaction votes fields and for each vote calls verifyVote.
- * @implements {verifysendStakingRewardVote}
- * @implements {checkConfirmedDelegates}
- * @param {transaction} trs
- * @param {account} sender
- * @param {function} cb - Callback function.
- * @returns {setImmediateCallback|function} returns error if invalid field |
- * calls checkConfirmedDelegates.
- */
-Vote.prototype.verify = function (trs, sender, cb) {
-    // async.series([
-    //     function (seriesCb) {
-    //         self.verifyFields(trs, sender, seriesCb);
-    //     },
-    //     function (seriesCb) {
-
-    //     },
-    // ], function (err) {
-    //     return setImmediate(cb, err);
-    // });
-
     (new Promise((resolve, reject) => {
         async.eachSeries(trs.asset.votes, function (vote, eachSeriesCb) {
             self.verifyVote(vote, function (err) {
@@ -236,70 +211,92 @@ Vote.prototype.verify = function (trs, sender, cb) {
             }
             resolve();
         });
-    })).then(async () => {
-
-        if (trs.asset.votes.length > _.uniqBy(trs.asset.votes, function (v) {
-            return v.slice(1);
-        }).length) {
-            const msg = 'Multiple votes for same delegate are not allowed';
-            if (VVE.MULTIPLE_VOTES_FOR_SAME_DELEGATE) {
-                throw msg;
-            } else {
-                library.logger.error(msg + '!\n' + {
-                    id: trs.id,
-                    type: trs.type,
-                    votes: trs.asset.votes
-                });
-            }
-        }
-
-        if (__private.loaded) {
-            const isDownVote = trs.trsName === "DOWNVOTE";
-            const totals = await library.frozen.calculateTotalRewardAndUnstake(trs.senderId, isDownVote);
-            if (totals.reward !== trs.asset.reward) {
-                const msg = 'Verify failed: vote reward is corrupted';
-                if (VVE.VOTE_REWARD_CORRUPTED) {
+    }))
+        .then(() => {
+            if (trs.asset.votes.length > _.uniqBy(trs.asset.votes, function (v) {
+                return v.slice(1);
+            }).length) {
+                const msg = 'Multiple votes for same delegate are not allowed';
+                if (VVE.MULTIPLE_VOTES_FOR_SAME_DELEGATE) {
                     throw msg;
                 } else {
                     library.logger.error(msg + '!\n' + {
                         id: trs.id,
                         type: trs.type,
-                        reward: {
-                            asset: trs.asset.reward,
-                            totals: totals.reward,
-                        }
+                        votes: trs.asset.votes
                     });
                 }
             }
-            if (totals.unstake !== trs.asset.unstake) {
-                const msg = 'Verify failed: vote unstake is corrupted';
-                if (VVE.VOTE_UNSTAKE_CORRUPTED) {
-                    throw msg;
+
+            setImmediate(cb);
+        })
+        .catch((err) => setImmediate(cb, err));
+};
+
+/**
+ * Validates transaction votes fields and for each vote calls verifyVote.
+ * @implements {verifysendStakingRewardVote}
+ * @implements {checkConfirmedDelegates}
+ * @param {transaction} trs
+ * @param {account} sender
+ * @param {function} cb - Callback function.
+ * @returns {setImmediateCallback|function} returns error if invalid field |
+ * calls checkConfirmedDelegates.
+ */
+Vote.prototype.verify = function (trs, sender, cb) {
+    async.series([
+        function (seriesCb) {
+            self.verifyFields(trs, sender, seriesCb);
+        },
+        async function (seriesCb) {
+            if (__private.loaded) {
+                const isDownVote = trs.trsName === "DOWNVOTE";
+                const totals = await library.frozen.calculateTotalRewardAndUnstake(trs.senderId, isDownVote);
+                if (totals.reward !== trs.asset.reward) {
+                    const msg = 'Verify failed: vote reward is corrupted';
+                    if (VVE.VOTE_REWARD_CORRUPTED) {
+                        throw msg;
+                    } else {
+                        library.logger.error(msg + '!\n' + {
+                            id: trs.id,
+                            type: trs.type,
+                            reward: {
+                                asset: trs.asset.reward,
+                                totals: totals.reward,
+                            }
+                        });
+                    }
+                }
+                if (totals.unstake !== trs.asset.unstake) {
+                    const msg = 'Verify failed: vote unstake is corrupted';
+                    if (VVE.VOTE_UNSTAKE_CORRUPTED) {
+                        throw msg;
+                    } else {
+                        library.logger.error(msg + '! ' + {
+                            id: trs.id,
+                            type: trs.type,
+                            unstake: {
+                                asset: trs.asset.unstake,
+                                totals: totals.unstake,
+                            }
+                        });
+                    }
+                }
+            }
+
+            try {
+                await library.frozen.verifyAirdrop(trs);
+            } catch (error) {
+                if (VVE.VOTE_AIRDROP_CORRUPTED) {
+                    throw error;
                 } else {
-                    library.logger.error(msg + '! ' + {
-                        id: trs.id,
-                        type: trs.type,
-                        unstake: {
-                            asset: trs.asset.unstake,
-                            totals: totals.unstake,
-                        }
-                    });
+                    library.logger.error(`trs.id ${trs.id}, ${error}`);
                 }
             }
-        }
 
-        try {
-            await library.frozen.verifyAirdrop(trs);
-        } catch (error) {
-            if (VVE.VOTE_AIRDROP_CORRUPTED) {
-                throw error;
-            } else {
-                library.logger.error(`trs.id ${trs.id}, ${error}`);
-            }
-        }
-
-        return self.checkConfirmedDelegates(trs, cb);
-    }).catch((err) => {
+            return self.checkConfirmedDelegates(trs, seriesCb);
+        },
+    ], function (err) {
         return setImmediate(cb, err);
     });
 };
@@ -315,18 +312,7 @@ Vote.prototype.verify = function (trs, sender, cb) {
  * calls checkConfirmedDelegates.
  */
 Vote.prototype.verifyUnconfirmed = function (trs, sender, cb) {
-    // async.series([
-    //     function (seriesCb) {
-    //         self.verifyFields({ trs, sender, requester, cb: seriesCb });
-    //     },
-    //     function (seriesCb) {
-
-    //     },
-    // ], function (err) {
-    //     return setImmediate(cb, err);
-    // });
-
-    setImmediate(cb);
+    return self.verifyFields(trs, sender, cb);
 };
 
 /**

@@ -342,7 +342,36 @@ Frozen.prototype.process = function (trs, sender, cb) {
 };
 
 Frozen.prototype.verifyFields = function (trs, sender, cb) {
+    const stakedAmount = trs.stakedAmount / 100000000;
 
+    if (stakedAmount < 1) {
+        if (constants.STAKE_VALIDATE.AMOUNT_ENABLED) {
+            return setImmediate(cb, 'Invalid stake amount');
+        } else {
+            self.scope.logger.error(`VALIDATE IS DISABLED. Error: trs.id ${trs.id} Invalid stake amount`)
+        }
+    }
+
+    if ((stakedAmount % 1) !== 0) {
+        if (constants.STAKE_VALIDATE.AMOUNT_ENABLED) {
+            return setImmediate(cb, 'Invalid stake amount: Decimal value');
+        } else {
+            self.scope.logger.error(`VALIDATE IS DISABLED. Error: trs.id ${trs.id} Invalid stake amount: Decimal value`)
+        }
+    }
+
+    self.verifyAirdrop(trs)
+        .then(() => {
+            return setImmediate(cb);
+        })
+        .catch((err) => {
+            if (constants.STAKE_VALIDATE.AIRDROP_ENABLED) {
+                return setImmediate(cb, err);
+            } else {
+                self.scope.logger.error(`VALIDATE IS DISABLED. Error: trs.id ${trs.id}, ${err}`)
+                return setImmediate(cb);
+            }
+        });
 }
 
 /**
@@ -355,56 +384,36 @@ Frozen.prototype.verifyFields = function (trs, sender, cb) {
  * @return {function} {cb, err, trs}
  */
 Frozen.prototype.verify = function (trs, sender, cb) {
-  const stakedAmount = trs.stakedAmount / 100000000;
-
-  if (stakedAmount < 1) {
-    if (constants.STAKE_VALIDATE.AMOUNT_ENABLED) {
-      return setImmediate(cb, 'Invalid stake amount');
-    } else {
-      self.scope.logger.error(`VALIDATE IS DISABLED. Error: trs.id ${trs.id} Invalid stake amount`)
-    }
-  }
-
-  if ((stakedAmount % 1) !== 0) {
-    if (constants.STAKE_VALIDATE.AMOUNT_ENABLED) {
-      return setImmediate(cb, 'Invalid stake amount: Decimal value');
-    } else {
-      self.scope.logger.error(`VALIDATE IS DISABLED. Error: trs.id ${trs.id} Invalid stake amount: Decimal value`)
-    }
-  }
-
-  if (Number(trs.stakedAmount) + Number(sender.totalFrozeAmount) > Number(sender.u_balance)) {
-    if (constants.STAKE_VALIDATE.BALANCE_ENABLED) {
-      return setImmediate(cb, 'Verify failed: Insufficient balance for stake');
-    } else {
-      self.scope.logger.error(`VALIDATE IS DISABLED. Error: trs.id ${trs.id} Verify failed: Insufficient balance for stake`)
-    }
-  }
-
-  if ((parseInt(sender.balance) - parseInt(sender.totalFrozeAmount)) < (trs.stakedAmount + trs.fee)) {
-    if (constants.STAKE_VALIDATE.BALANCE_ENABLED) {
-      return setImmediate(cb, 'Insufficient balance');
-    } else {
-      self.scope.logger.error(`VALIDATE IS DISABLED. Error: trs.id ${trs.id} Insufficient balance`)
-    }
-  }
-
-  self.verifyAirdrop(trs)
-    .then(() => {
-      return setImmediate(cb, null);
-    })
-    .catch((err) => {
-      if (constants.STAKE_VALIDATE.AIRDROP_ENABLED) {
-        return setImmediate(cb, err);
-      } else {
-        self.scope.logger.error(`VALIDATE IS DISABLED. Error: trs.id ${trs.id}, ${err}`)
-        return setImmediate(cb, null);
-      }
-    });
+    return self.verifyFields(trs, sender, cb);
 };
 
 Frozen.prototype.verifyUnconfirmed = function (trs, sender, cb) {
-    this.verify(trs, sender, cb);
+    async.series([
+        function (seriesCb) {
+            self.verifyFields(trs, sender, seriesCb);
+        },
+        function (seriesCb) {
+            if (Number(trs.stakedAmount) + Number(sender.u_totalFrozeAmount) > Number(sender.u_balance)) {
+                if (constants.STAKE_VALIDATE.BALANCE_ENABLED) {
+                    return setImmediate(cb, 'Verify failed: Insufficient unconfirmed balance for stake');
+                } else {
+                    self.scope.logger.error(`VALIDATE IS DISABLED. Error: trs.id ${trs.id} Verify failed: Insufficient unconfirmed balance for stake`);
+                }
+            }
+
+            if ((parseInt(sender.u_balance) - parseInt(sender.u_totalFrozeAmount)) < (trs.stakedAmount + trs.fee)) {
+                if (constants.STAKE_VALIDATE.BALANCE_ENABLED) {
+                    return setImmediate(cb, 'Insufficient unconfirmed balance');
+                } else {
+                    self.scope.logger.error(`VALIDATE IS DISABLED. Error: trs.id ${trs.id} Insufficient unconfirmed balance`);
+                }
+            }
+
+            setImmediate(seriesCb);
+        },
+    ], function (err) {
+        return setImmediate(cb, err);
+    });
 }
 
 Frozen.prototype.verifyAirdrop = async (trs) => {

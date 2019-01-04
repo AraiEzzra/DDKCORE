@@ -82,7 +82,7 @@ Transfer.prototype.verify = function (trs, sender, cb) {
 };
 
 Transfer.prototype.verifyUnconfirmed = function (trs, sender, cb) {
-    this.verify(trs, sender, cb);
+    return this.verify(trs, sender, cb);
 }
 
 /**

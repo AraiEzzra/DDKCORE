@@ -5,7 +5,7 @@ let sql = require('../sql/dapps.js');
 let valid_url = require('valid-url');
 
 // Private fields
-let library, __private = {};
+let library, __private = {}, self;
 
 __private.unconfirmedNames = {};
 __private.unconfirmedLinks = {};
@@ -29,6 +29,7 @@ function DApp (db, logger, schema, network) {
 		schema: schema,
 		network: network,
 	};
+	self = this;
 }
 
 // Public methods
@@ -70,16 +71,7 @@ DApp.prototype.calculateFee = function () {
 	return constants.fees.dapp;
 };
 
-/**
- * Verifies transaction and dapp fields. Checks dapp name and link in
- * `dapps` table.
- * @implements {library.db.query}
- * @param {transaction} trs
- * @param {account} sender
- * @param {function} cb
- * @return {setImmediateCallback} errors | trs
- */
-DApp.prototype.verify = function (trs, sender, cb) {
+DApp.prototype.verifyFields = function (trs, sender, cb) {
 	let i;
 
 	if (trs.recipientId) {
@@ -168,32 +160,54 @@ DApp.prototype.verify = function (trs, sender, cb) {
 		}
 	}
 
-	library.db.query(sql.getExisting, {
-		name: trs.asset.dapp.name,
-		link: trs.asset.dapp.link || null,
-		transactionId: trs.id
-	}).then(function (rows) {
-		let dapp = rows[0];
+	return setImmediate(cb);
+};
 
-		if (dapp) {
-			if (dapp.name === trs.asset.dapp.name) {
-				return setImmediate(cb, 'Application name already exists: ' + dapp.name);
-			} else if (dapp.link === trs.asset.dapp.link) {
-				return setImmediate(cb, 'Application link already exists: ' + dapp.link);
-			} else {
-				return setImmediate(cb, 'Application already exists');
-			}
-		} else {
-			return setImmediate(cb, null, trs);
-		}
-	}).catch(function (err) {
-		library.logger.error(err.stack);
-		return setImmediate(cb, 'DApp#verify error');
-	});
+/**
+ * Verifies transaction and dapp fields. Checks dapp name and link in
+ * `dapps` table.
+ * @implements {library.db.query}
+ * @param {transaction} trs
+ * @param {account} sender
+ * @param {function} cb
+ * @return {setImmediateCallback} errors | trs
+ */
+DApp.prototype.verify = function (trs, sender, cb) {
+	return this.verifyFields(trs, sender, cb);
 };
 
 DApp.prototype.verifyUnconfirmed = function (trs, sender, cb) {
-	this.verify(trs, sender, cb);
+	async.series([
+		function (seriesCb) {
+			self.verifyFields(trs, sender, seriesCb);
+		},
+		function (seriesCb) {
+			library.db.query(sql.getExisting, {
+				name: trs.asset.dapp.name,
+				link: trs.asset.dapp.link || null,
+				transactionId: trs.id
+			}).then(function (rows) {
+				let dapp = rows[0];
+
+				if (dapp) {
+					if (dapp.name === trs.asset.dapp.name) {
+						return setImmediate(seriesCb, 'Application name already exists: ' + dapp.name);
+					} else if (dapp.link === trs.asset.dapp.link) {
+						return setImmediate(seriesCb, 'Application link already exists: ' + dapp.link);
+					} else {
+						return setImmediate(seriesCb, 'Application already exists');
+					}
+				} else {
+					return setImmediate(seriesCb, null, trs);
+				}
+			}).catch(function (err) {
+				library.logger.error(err.stack);
+				return setImmediate(seriesCb, 'DApp#verify error');
+			});
+		},
+	], function (err) {
+		return setImmediate(cb, err);
+	});
 }
 
 /**
