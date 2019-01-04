@@ -81,6 +81,10 @@ Transfer.prototype.verify = function (trs, sender, cb) {
     return setImmediate(cb, null, trs);
 };
 
+Transfer.prototype.verifyUnconfirmed = function (trs, sender, cb) {
+    this.verify(trs, sender, cb);
+}
+
 /**
  * @param {transaction} trs
  * @param {account} sender

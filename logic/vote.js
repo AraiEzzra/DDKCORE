@@ -83,7 +83,16 @@ Vote.prototype.create = async function (data, trs) {
 };
 
 /**
- * Obtains constant fee vote.
+ * Calculates vote fee by unconfirmed total froze amount.
+ * @see {@link module:helpers/constants}
+ * @return {number} fee
+ */
+Vote.prototype.calculateUnconfirmedFee = function (trs, sender) {
+    return parseInt((parseInt(sender.u_totalFrozeAmount) * constants.fees.vote) / 100);
+};
+
+/**
+ * Calculates vote fee.
  * @see {@link module:helpers/constants}
  * @return {number} fee
  */
@@ -96,32 +105,16 @@ Vote.prototype.onBlockchainReady = function () {
 };
 
 /**
- * Validates unconfirmed vote transaction fields and for each calls verifyVote.
+ * Validates vote transaction fields.
  * @implements {verifysendStakingRewardVote}
  * @implements {checkConfirmedDelegates}
  * @param {transaction} trs
  * @param {account} sender
  * @param {function} cb - Callback function.
  * @returns {setImmediateCallback|function} returns error if invalid field |
- * calls checkConfirmedDelegates.
+ * calls callback.
  */
-Vote.prototype.verifyUnconfirmed = function (trs, sender, cb) {
-    const VVE = constants.VOTE_VALIDATION_ENABLED;
-
-    this.verify(trs, sender, cb);
-};
-
-/**
- * Validates transaction votes fields and for each vote calls verifyVote.
- * @implements {verifysendStakingRewardVote}
- * @implements {checkConfirmedDelegates}
- * @param {transaction} trs
- * @param {account} sender
- * @param {function} cb - Callback function.
- * @returns {setImmediateCallback|function} returns error if invalid field |
- * calls checkConfirmedDelegates.
- */
-Vote.prototype.verify = function (trs, sender, cb) {
+Vote.prototype.verifyFields = function (trs, sender, cb) {
     const VVE = constants.VOTE_VALIDATION_ENABLED;
 
     if (trs.recipientId !== trs.senderId) {
@@ -189,6 +182,31 @@ Vote.prototype.verify = function (trs, sender, cb) {
             });
         }
     }
+
+    return setImmediate(cb);
+};
+
+/**
+ * Validates transaction votes fields and for each vote calls verifyVote.
+ * @implements {verifysendStakingRewardVote}
+ * @implements {checkConfirmedDelegates}
+ * @param {transaction} trs
+ * @param {account} sender
+ * @param {function} cb - Callback function.
+ * @returns {setImmediateCallback|function} returns error if invalid field |
+ * calls checkConfirmedDelegates.
+ */
+Vote.prototype.verify = function (trs, sender, cb) {
+    // async.series([
+    //     function (seriesCb) {
+    //         self.verifyFields(trs, sender, seriesCb);
+    //     },
+    //     function (seriesCb) {
+
+    //     },
+    // ], function (err) {
+    //     return setImmediate(cb, err);
+    // });
 
     (new Promise((resolve, reject) => {
         async.eachSeries(trs.asset.votes, function (vote, eachSeriesCb) {
@@ -284,6 +302,31 @@ Vote.prototype.verify = function (trs, sender, cb) {
     }).catch((err) => {
         return setImmediate(cb, err);
     });
+};
+
+/**
+ * Validates unconfirmed vote transaction fields and for each calls verifyVote.
+ * @implements {verifysendStakingRewardVote}
+ * @implements {checkConfirmedDelegates}
+ * @param {transaction} trs
+ * @param {account} sender
+ * @param {function} cb - Callback function.
+ * @returns {setImmediateCallback|function} returns error if invalid field |
+ * calls checkConfirmedDelegates.
+ */
+Vote.prototype.verifyUnconfirmed = function (trs, sender, cb) {
+    // async.series([
+    //     function (seriesCb) {
+    //         self.verifyFields({ trs, sender, requester, cb: seriesCb });
+    //     },
+    //     function (seriesCb) {
+
+    //     },
+    // ], function (err) {
+    //     return setImmediate(cb, err);
+    // });
+
+    setImmediate(cb);
 };
 
 /**

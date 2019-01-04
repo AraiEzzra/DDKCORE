@@ -352,7 +352,6 @@ Process.prototype.generateBlock = function (keypair, timestamp, cb) {
 					trs: transaction,
 					sender,
 					checkExists: true,
-					isUnconfirmed: true,
 					cb: function (err) {
 						if (!err) {
 							ready.push(transaction);

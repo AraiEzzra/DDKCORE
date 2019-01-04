@@ -88,6 +88,10 @@ ReferTransfer.prototype.verify = function (trs, sender, cb) {
 	return setImmediate(cb, null, trs);
 };
 
+ReferTransfer.prototype.verifyUnconfirmed = function (trs, sender, cb) {
+	this.verify(trs, sender, cb);
+}
+
 /**
  * @param {transaction} trs
  * @param {account} sender
@@ -186,7 +190,7 @@ ReferTransfer.prototype.undoUnconfirmed = function (trs, sender, cb) {
 };
 
 /**
- * Deletes blockId from transaction 
+ * Deletes blockId from transaction
  * @param {transaction} trs
  * @return {transaction}
  */
@@ -215,7 +219,7 @@ ReferTransfer.prototype.dbSave = function (trs) {
  * Checks sender multisignatures and transaction signatures.
  * @param {transaction} trs
  * @param {account} sender
- * @return {boolean} True if transaction signatures greather than 
+ * @return {boolean} True if transaction signatures greather than
  * sender multimin or there are not sender multisignatures.
  */
 ReferTransfer.prototype.ready = function (trs, sender) {

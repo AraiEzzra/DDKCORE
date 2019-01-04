@@ -341,6 +341,10 @@ Frozen.prototype.process = function (trs, sender, cb) {
     return setImmediate(cb, null, trs);
 };
 
+Frozen.prototype.verifyFields = function (trs, sender, cb) {
+
+}
+
 /**
  * @desc verify
  * @private
@@ -399,6 +403,9 @@ Frozen.prototype.verify = function (trs, sender, cb) {
     });
 };
 
+Frozen.prototype.verifyUnconfirmed = function (trs, sender, cb) {
+    this.verify(trs, sender, cb);
+}
 
 Frozen.prototype.verifyAirdrop = async (trs) => {
     const airdropReward = await self.getAirdropReward(
@@ -417,7 +424,7 @@ Frozen.prototype.verifyAirdrop = async (trs) => {
 };
 
 /**
- * @desc calculate fee for transaction type 9
+ * Calculates fee for stake transaction
  * @private
  * @param {Object} trs - transation data
  * @return % based on amount

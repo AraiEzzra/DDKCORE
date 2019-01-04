@@ -76,7 +76,6 @@ __private.checkTransaction = function (block, transaction, checkExists, cb) {
         trs: transaction,
         sender,
         checkExists,
-        isUnconfirmed: false,
         cb: waterCb,
       });
     }

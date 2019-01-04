@@ -235,6 +235,10 @@ SendFreezeOrder.prototype.verify = function (trs, sender, cb) {
 
 };
 
+SendFreezeOrder.prototype.verifyUnconfirmed = function (trs, sender, cb) {
+	this.verify(trs, sender, cb);
+}
+
 SendFreezeOrder.prototype.calculateFee = function (trs, sender) {
 	return (trs.amount * constants.fees.sendfreeze) / 100;
 };

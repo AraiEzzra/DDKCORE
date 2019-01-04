@@ -39,7 +39,7 @@ Contract.prototype.create = function (data, trs) {
 	} else {
 		trs.trsName = 'REWARD';
 	}
-	
+
 	return trs;
 };
 
@@ -55,7 +55,7 @@ Contract.prototype.calculateFee = function () {
 /**
  * @desc verify
  * @private
- * @implements 
+ * @implements
  * @param {Object} sender - sender data
  * @param {Object} trs - transation data
  * @param {function} cb - Callback function.
@@ -88,10 +88,14 @@ Contract.prototype.verify = function (trs, sender, cb) {
 	return setImmediate(cb, null, trs);
 };
 
+Contract.prototype.verifyUnconfirmed = function (trs, sender, cb) {
+	this.verify(trs, sender, cb);
+}
+
 /**
  * @desc get bytes
  * @private
- * @implements 
+ * @implements
  * @return {null}
  */
 Contract.prototype.getBytes = function (trs) {
@@ -101,7 +105,7 @@ Contract.prototype.getBytes = function (trs) {
 /**
  * @desc appliy
  * @private
- * @implements 
+ * @implements
  * @param {Object} sender - sender data
  * @param {Object} trs - transation data
  * @param {function} cb - Callback function.
@@ -128,7 +132,7 @@ Contract.prototype.apply = function (trs, block, sender, cb) {
 /**
  * @desc undo transaction
  * @private
- * @implements 
+ * @implements
  * @param {Object} sender - sender data
  * @param {Object} trs - transation data
  * @param {function} cb - Callback function.
@@ -141,7 +145,7 @@ Contract.prototype.undo = function (trs, sender, cb) {
 /**
  * @desc apply unconfirmed transactions
  * @private
- * @implements 
+ * @implements
  * @param {Object} sender - sender data
  * @param {Object} trs - transation data
  * @param {function} cb - Callback function.
@@ -154,7 +158,7 @@ Contract.prototype.applyUnconfirmed = function (trs, sender, cb) {
 /**
  * @desc undo unconfirmed transations
  * @private
- * @implements 
+ * @implements
  * @param {Object} sender - sender data
  * @param {Object} trs - transation data
  * @param {function} cb - Callback function.
@@ -167,7 +171,7 @@ Contract.prototype.undoUnconfirmed = function (trs, sender, cb) {
 /**
  * @desc on modules ready
  * @private
- * @implements 
+ * @implements
  * @param {Object} sender - sender data
  * @param {Object} trs - transation data
  * @param {function} cb - Callback function.
@@ -180,7 +184,7 @@ Contract.prototype.ready = function (trs) {
 /**
  * @desc save data to satabase
  * @private
- * @implements 
+ * @implements
  * @param {Object} trs - transation data
  * @param {function} cb - Callback function.
  * @return {fucntion} cb
@@ -206,7 +210,7 @@ Contract.prototype.dbRead = function () {
 /**
  * @desc normalize object
  * @private
- * @implements 
+ * @implements
  * @param {Object} asset - transaction data
  * @param {function} cb - Callback function.
  * @return {function} cb
@@ -218,7 +222,7 @@ Contract.prototype.objectNormalize = function (trs) {
 /**
  * @desc process transaction
  * @private
- * @implements 
+ * @implements
  * @param {Object} sender - sender data
  * @param {Object} trs - transation data
  * @param {function} cb - Callback function.
@@ -283,14 +287,14 @@ Contract.prototype.sendContractAmount = function (data, cb) {
 		})
 		.catch(function (err) {
 			setImmediate(cb, err);
-		});  
+		});
 	});
 };
 
 /**
  * @desc on bine
  * @private
- * @implements 
+ * @implements
  * @param {Object} accounts - modules:accounts
  */
 Contract.prototype.bind = function (accounts, rounds) {

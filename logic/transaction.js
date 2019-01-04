@@ -1,3 +1,4 @@
+const async = require('async');
 let bignum = require('../helpers/bignum.js');
 const sodium = require('sodium-javascript');
 let constants = require('../helpers/constants.js');
@@ -404,64 +405,14 @@ Transaction.prototype.getAccountStatus = function (trs, cb) {
 };
 
 /**
- * Validates unconfirmed transaction.
- * Calls `verifyUnconfirmed` based on trs type
+ * Validates transaction fields.
  * @param {transaction} trs
  * @param {account} sender
  * @param {account} requester
  * @param {function} cb
  * @return {setImmediateCallback} validation errors | trs
  */
-Transaction.prototype.verifyUnconfirmed = function ({ trs, sender, requester = {}, cb }) {
-    // Check sender
-    if (!sender) {
-        if (constants.TRANSACTION_VALIDATION_ENABLED.SENDER) {
-            return setImmediate(cb, 'Missing sender');
-        } else {
-            this.scope.logger.error('Transaction sender error');
-        }
-    }
-
-    let fee = __private.types[trs.type].calculateFee.call(this, trs, sender) || 0;
-    if (trs.type !== transactionTypes.REFERRAL && !(trs.type === transactionTypes.STAKE && trs.stakedAmount < 0) && (!fee || trs.fee !== fee)) {
-        // TODO: Restore transation verify
-        // https://trello.com/c/2jF7cnad/115-restore-transactions-verifing
-        if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_FEE) {
-            return setImmediate(cb, 'Invalid transaction fee');
-        } else {
-            this.scope.logger.error('Invalid transaction fee');
-        }
-    }
-
-    // Check sender not able to do transaction on froze amount
-    let amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
-
-    let senderBalance = this.checkBalance(amount, 'balance', trs, sender);
-
-    if (senderBalance.exceeded) {
-        if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_SENDER_BALANCE) {
-            return setImmediate(cb, senderBalance.error);
-        } else {
-            this.scope.logger.error('Sender balance error');
-        }
-    }
-
-    this.verify({ trs, sender, requester, cb, isUnconfirmed: true });
-}
-
-/**
- * Validates parameters of confirmed trs.
- * Calls `verify` based on trs type (see privateTypes)
- * @see privateTypes
- * @implements {getId}
- * @param {transaction} trs
- * @param {account} sender
- * @param {account} requester
- * @param  {boolean} checkExists - Check if transaction already exists in database
- * @param {function} cb
- * @return {setImmediateCallback} validation errors | trs
- */
-Transaction.prototype.verify = function ({ trs, sender, requester = {}, checkExists = false, cb }) {
+Transaction.prototype.verifyFields = function ({ trs, sender, requester = {}, cb }) {
     let valid = false;
     let err = null;
 
@@ -702,6 +653,22 @@ Transaction.prototype.verify = function ({ trs, sender, requester = {}, checkExi
         }
     }
 
+    setImmediate(cb);
+};
+
+/**
+ * Validates new transaction.
+ * Calls `verify` based on transaction type (see privateTypes)
+ * @see privateTypes
+ * @implements {getId}
+ * @param {transaction} trs
+ * @param {account} sender
+ * @param {account} requester
+ * @param  {boolean} checkExists - Check if transaction already exists in database
+ * @param {function} cb
+ * @return {setImmediateCallback} validation errors | trs
+ */
+Transaction.prototype.verify = function ({ trs, sender, requester = {}, checkExists = false, cb }) {
     const verifyTransactionTypes = (transaction, sender, verifyTransactionTypesCb) => {
         __private.types[trs.type].verify.call(this, transaction, sender, function (err) {
             if (err) {
@@ -715,30 +682,95 @@ Transaction.prototype.verify = function ({ trs, sender, requester = {}, checkExi
         });
     };
 
-    if (checkExists) {
-        this.checkConfirmed(trs, (checkConfirmedErr, isConfirmed) => {
-            if (checkConfirmedErr) {
-                if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_CONFIRMED) {
-                    return setImmediate(cb, checkConfirmedErr);
-                } else {
-                    this.scope.logger.error('Transaction confirm error');
-                }
-            }
+    async.series([
+        function (seriesCb) {
+            self.verifyFields({ trs, sender, requester, cb: seriesCb });
+        },
+        function (seriesCb) {
+            if (checkExists) {
+                self.checkConfirmed(trs, (checkConfirmedErr, isConfirmed) => {
+                    if (checkConfirmedErr) {
+                        if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_CONFIRMED) {
+                            return setImmediate(seriesCb, checkConfirmedErr);
+                        } else {
+                            self.scope.logger.error('Transaction confirm error');
+                        }
+                    }
 
-            if (isConfirmed) {
-                if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_CONFIRMED) {
-                    return setImmediate(cb, `Transaction is already confirmed: ${trs.id}`);
-                } else {
-                    this.scope.logger.error('Transaction confirm error');
-                }
-            }
+                    if (isConfirmed) {
+                        if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_CONFIRMED) {
+                            return setImmediate(seriesCb, `Transaction is already confirmed: ${trs.id}`);
+                        } else {
+                            self.scope.logger.error('Transaction confirm error');
+                        }
+                    }
 
-            verifyTransactionTypes(trs, sender, cb);
-        });
-    } else {
-        verifyTransactionTypes(trs, sender, cb);
-    }
+                    verifyTransactionTypes(trs, sender, seriesCb);
+                });
+            } else {
+                verifyTransactionTypes(trs, sender, seriesCb);
+            }
+        },
+    ], function (err) {
+        return setImmediate(cb, err);
+    });
 };
+
+/**
+ * Validates unconfirmed transaction.
+ * Calls `verifyUnconfirmed` based on trs type
+ * @param {transaction} trs
+ * @param {account} sender
+ * @param {account} requester
+ * @param {function} cb
+ * @return {setImmediateCallback} validation errors | trs
+ */
+Transaction.prototype.verifyUnconfirmed = function ({ trs, sender, requester = {}, cb }) {
+    async.series([
+        function (seriesCb) {
+            self.verifyFields({ trs, sender, requester, cb: seriesCb });
+        },
+        function (seriesCb) {
+            let fee = __private.types[trs.type].calculateUnconfirmedFee.call(self, trs, sender) || 0;
+            if (trs.type !== transactionTypes.REFERRAL && !(trs.type === transactionTypes.STAKE && trs.stakedAmount < 0) && (!fee || trs.fee !== fee)) {
+                // TODO: Restore transation verify
+                // https://trello.com/c/2jF7cnad/115-restore-transactions-verifing
+                if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_FEE) {
+                    return setImmediate(seriesCb, 'Invalid transaction fee');
+                } else {
+                    self.scope.logger.error('Invalid transaction fee');
+                }
+            }
+
+            // Check sender not able to do transaction on froze amount
+            let amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
+
+            let senderBalance = self.checkBalance(amount, 'u_balance', trs, sender);
+
+            if (senderBalance.exceeded) {
+                if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_SENDER_BALANCE) {
+                    return setImmediate(seriesCb, senderBalance.error);
+                } else {
+                    self.scope.logger.error('Sender unconfirmed balance error');
+                }
+            }
+
+            const verify = __private.types[trs.type].verifyUnconfirmed || __private.types[trs.type].verify;
+            verify.call(self, transaction, sender, function (err) {
+                if (err) {
+                    if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_TYPE) {
+                        return setImmediate(seriesCb, err);
+                    } else {
+                        self.scope.logger.error('Transaction types error');
+                    }
+                }
+                return setImmediate(seriesCb);
+            });
+        },
+    ], function (err) {
+        return setImmediate(cb, err);
+    });
+}
 
 /**
  * Verifies signature for valid transaction type
