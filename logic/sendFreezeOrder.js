@@ -232,11 +232,11 @@ SendFreezeOrder.prototype.verifyFields = function (trs, sender, cb) {
 };
 
 SendFreezeOrder.prototype.verify = function (trs, sender, cb) {
-	return this.verifyFields(trs, sender, cb);
+	return self.verifyFields(trs, sender, cb);
 };
 
 SendFreezeOrder.prototype.verifyUnconfirmed = function (trs, sender, cb) {
-	return this.verifyFields(trs, sender, cb);
+	return self.verifyFields(trs, sender, cb);
 }
 
 SendFreezeOrder.prototype.calculateFee = function (trs, sender) {

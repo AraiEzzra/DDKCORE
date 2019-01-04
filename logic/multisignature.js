@@ -5,7 +5,7 @@ let Diff = require('../helpers/diff.js');
 let exceptions = require('../helpers/exceptions.js');
 
 // Private fields
-let modules, library, __private = {};
+let modules, library, __private = {}, self;
 
 __private.unconfirmedSignatures = {};
 
@@ -29,6 +29,7 @@ function Multisignature (schema, network, transaction, logger) {
 			transaction: transaction,
 		},
 	};
+	self = this;
 }
 
 // Public methods
@@ -192,7 +193,7 @@ Multisignature.prototype.verify = function (trs, sender, cb) {
 };
 
 Multisignature.prototype.verifyUnconfirmed = function (trs, sender, cb) {
-	return this.verify(trs, sender, cb);
+	return self.verify(trs, sender, cb);
 }
 
 /**

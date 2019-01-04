@@ -2,7 +2,7 @@ let ByteBuffer = require('bytebuffer');
 let constants = require('../helpers/constants.js');
 
 // Private fields
-let modules, library;
+let modules, library, self;
 
 /**
  * Initializes library.
@@ -18,6 +18,7 @@ function Signature (schema, logger) {
 		schema: schema,
 		logger: logger,
 	};
+	self = this;
 }
 
 /**
@@ -100,7 +101,7 @@ Signature.prototype.verify = function (trs, sender, cb) {
 };
 
 Signature.prototype.verifyUnconfirmed = function (trs, sender, cb) {
-	this.verify(trs, sender, cb);
+	self.verify(trs, sender, cb);
 }
 
 /**

@@ -2,7 +2,7 @@ let constants = require('../helpers/constants.js');
 let sql = require('../sql/dapps.js');
 
 // Private fields
-let modules, library, __private = {};
+let modules, library, __private = {}, self;
 
 __private.unconfirmedOutTansfers = {};
 
@@ -22,6 +22,7 @@ function OutTransfer (db, schema, logger) {
 		schema: schema,
 		logger: logger,
 	};
+	self = this;
 }
 
 // Public methods
@@ -100,7 +101,7 @@ OutTransfer.prototype.verify = function (trs, sender, cb) {
 };
 
 OutTransfer.prototype.verifyUnconfirmed = function (trs, sender, cb) {
-	this.verify(trs, sender, cb);
+	self.verify(trs, sender, cb);
 }
 
 /**

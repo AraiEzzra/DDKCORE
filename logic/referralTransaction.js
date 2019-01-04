@@ -2,7 +2,7 @@
 let constants = require('../helpers/constants.js');
 
 // Private fields
-let modules;
+let modules, self;
 
 /**
  * Main transfer logic.
@@ -11,7 +11,9 @@ let modules;
  * @classdesc Main transfer logic.
  */
 // Constructor
-function ReferTransfer () {}
+function ReferTransfer() {
+	self = this;
+}
 
 // Public methods
 /**
@@ -89,7 +91,7 @@ ReferTransfer.prototype.verify = function (trs, sender, cb) {
 };
 
 ReferTransfer.prototype.verifyUnconfirmed = function (trs, sender, cb) {
-	return this.verify(trs, sender, cb);
+	return self.verify(trs, sender, cb);
 }
 
 /**

@@ -684,7 +684,7 @@ Transaction.prototype.verify = function ({ trs, sender, requester = {}, checkExi
 
     async.series([
         function (seriesCb) {
-            self.verifyFields({ trs, sender, requester, cb: seriesCb });
+            return self.verifyFields({ trs, sender, requester, cb: seriesCb });
         },
         function (seriesCb) {
             if (checkExists) {
@@ -705,10 +705,10 @@ Transaction.prototype.verify = function ({ trs, sender, requester = {}, checkExi
                         }
                     }
 
-                    verifyTransactionTypes(trs, sender, seriesCb);
+                    return verifyTransactionTypes(trs, sender, seriesCb);
                 });
             } else {
-                verifyTransactionTypes(trs, sender, seriesCb);
+                return verifyTransactionTypes(trs, sender, seriesCb);
             }
         },
     ], function (err) {
@@ -731,7 +731,8 @@ Transaction.prototype.verifyUnconfirmed = function ({ trs, sender, requester = {
             self.verifyFields({ trs, sender, requester, cb: seriesCb });
         },
         function (seriesCb) {
-            let fee = __private.types[trs.type].calculateUnconfirmedFee.call(self, trs, sender) || 0;
+            const calculateFee = __private.types[trs.type].calculateUnconfirmedFee || __private.types[trs.type].calculateFee;
+            let fee = calculateFee.call(self, trs, sender) || 0;
             if (trs.type !== transactionTypes.REFERRAL && !(trs.type === transactionTypes.STAKE && trs.stakedAmount < 0) && (!fee || trs.fee !== fee)) {
                 // TODO: Restore transation verify
                 // https://trello.com/c/2jF7cnad/115-restore-transactions-verifing
@@ -755,8 +756,7 @@ Transaction.prototype.verifyUnconfirmed = function ({ trs, sender, requester = {
                 }
             }
 
-            const verify = __private.types[trs.type].verifyUnconfirmed || __private.types[trs.type].verify;
-            verify.call(self, transaction, sender, function (err) {
+            __private.types[trs.type].verifyUnconfirmed.call(self, trs, sender, function (err) {
                 if (err) {
                     if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_TYPE) {
                         return setImmediate(seriesCb, err);

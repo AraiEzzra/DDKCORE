@@ -89,7 +89,7 @@ Contract.prototype.verify = function (trs, sender, cb) {
 };
 
 Contract.prototype.verifyUnconfirmed = function (trs, sender, cb) {
-	this.verify(trs, sender, cb);
+	self.verify(trs, sender, cb);
 }
 
 /**

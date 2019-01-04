@@ -90,7 +90,7 @@ InTransfer.prototype.verifyFields = function (trs, sender, cb) {
  * @return {setImmediateCallback} errors message | trs
  */
 InTransfer.prototype.verify = function (trs, sender, cb) {
-	return this.verifyFields(trs, sender, cb);
+	return self.verifyFields(trs, sender, cb);
 };
 
 InTransfer.prototype.verifyUnconfirmed = function (trs, sender, cb) {

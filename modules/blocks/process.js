@@ -336,7 +336,6 @@ Process.prototype.loadBlocksFromPeer = function (peer, cb) {
 Process.prototype.generateBlock = function (keypair, timestamp, cb) {
 	// Get transactions that will be included in block
 	let transactions = modules.transactions.getUnconfirmedTransactionList(false, constants.maxTxsPerBlock);
-	console.log('UnconfirmedTransactionList!!!', transactions);
 	let ready = [];
 
 	async.eachSeries(transactions, function (transaction, cb) {

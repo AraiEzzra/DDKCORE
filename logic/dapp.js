@@ -173,7 +173,7 @@ DApp.prototype.verifyFields = function (trs, sender, cb) {
  * @return {setImmediateCallback} errors | trs
  */
 DApp.prototype.verify = function (trs, sender, cb) {
-	return this.verifyFields(trs, sender, cb);
+	return self.verifyFields(trs, sender, cb);
 };
 
 DApp.prototype.verifyUnconfirmed = function (trs, sender, cb) {
