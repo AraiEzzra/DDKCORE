@@ -110,6 +110,8 @@ let BlocksSql = {
 
 	getBlockId: 'SELECT "id" FROM blocks WHERE "id" = ${id}',
 
+	getBlockByHeight: 'SELECT * FROM blocks_list WHERE "b_height" = ${height}',
+
 	deleteAfterBlock: 'DELETE FROM blocks WHERE "height" >= (SELECT "height" FROM blocks WHERE "id" = ${id});'
 };
 

@@ -154,7 +154,7 @@ exports.updateDocument = function (doc) {
             body: {
                 doc: doc.body
             },
-            id: doc.body.stakeId
+            id: doc.id
         }, function (err, res) {
             if (err) {
                 return err.message;
@@ -163,4 +163,19 @@ exports.updateDocument = function (doc) {
             }
         });
     })();
-}
+};
+
+exports.addDocument = async function (doc) {
+    await esClient.index({
+        index: doc.index,
+        type: doc.type,
+        body: doc.body,
+        id: doc.id
+    }, function (err) {
+        if (err) {
+            return err.message;
+        } else {
+            return null;
+        }
+    })
+};

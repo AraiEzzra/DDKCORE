@@ -11,6 +11,8 @@ let popsicle = require('popsicle');
 let schema = require('../schema/transport.js');
 let sandboxHelper = require('../helpers/sandbox.js');
 let sql = require('../sql/transport.js');
+let sqlBlock = require('../sql/blocks.js');
+let utils = require('../utils');
 let usersList = require('../app.js');
 
 // Private fields
@@ -513,6 +515,16 @@ Transport.prototype.onNewBlock = function (block, broadcast) {
 			}
 			library.network.io.sockets.emit('blocks/change', block);
 		});
+
+		library.db.one(sqlBlock.getBlockByHeight, { height: block.height })
+			.then(function (lastBlock) {
+				utils.addDocument({
+					index: 'blocks_list',
+					type: 'blocks_list',
+					body: lastBlock,
+					id: lastBlock.b_height
+				});
+			})
 	}
 };
 
