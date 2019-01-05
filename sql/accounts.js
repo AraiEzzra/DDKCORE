@@ -4,7 +4,13 @@ let Accounts = {
 
 	getActiveDelegates : 'SELECT "publicKey" FROM "delegate_to_vote_counter" ORDER BY "voteCount" DESC, "publicKey" ASC LIMIT ${limit}',
 
-    changeDelegateVoteCount: 'UPDATE "delegate_to_vote_counter" SET "voteCount" = "voteCount" + ${value}  WHERE "publicKey" IN (${votes}:csv)',
+    changeDelegateVoteCount: function (arg) {
+		if (!arg || !arg.votes || arg.votes.length < 1) {
+			return false;
+		}
+        let votes = `'${arg.votes.join("','")}'`;
+        return `UPDATE "delegate_to_vote_counter" SET "voteCount" = "voteCount" + ${arg.value}  WHERE "publicKey" IN (${votes})`;
+    },
 
 	checkAccountStatus : 'SELECT "status" FROM mem_accounts where "address"=${senderId}',
 

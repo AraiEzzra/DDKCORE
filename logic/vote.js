@@ -408,14 +408,9 @@ Vote.prototype.apply = function (trs, block, sender, cb) {
                 });
         },
         function (seriesCb) {
-            // let votes = '';
-            let votes = trs.asset.votes.map((vote) => vote.substring(1));
-            // trs.asset.votes.map((vote) => {
-            //     votes += '\'' + vote.substring(1) + '\',';
-            // });
-            // votes = votes.substring(0, votes.length - 1);
-            // console.log('votes', votes);
-            library.db.query(sql.changeDelegateVoteCount, { value: 1, votes: votes })
+            const votes = trs.asset.votes.map(vote => vote.substring(1));
+            
+            library.db.query(sql.changeDelegateVoteCount({ value: 1, votes }))
                 .then(function () {
                     return setImmediate(seriesCb, null);
                 })
@@ -481,12 +476,9 @@ Vote.prototype.undo = function (trs, block, sender, cb) {
                 });
         },
         function (seriesCb) {
-            let votes = '';
-            trs.asset.votes.map((vote) => {
-                votes += vote.substring(1) + ', ';
-            });
-            votes = votes.substring(0, votes.length -1);
-            library.db.query(sql.changeDelegateVoteCount, { value: -1, votes: votes })
+            const votes = trs.asset.votes.map(vote => vote.substring(1));
+
+            library.db.query(sql.changeDelegateVoteCount({ value: -1, votes }))
                 .then(function () {
                     return setImmediate(seriesCb, null);
                 })
