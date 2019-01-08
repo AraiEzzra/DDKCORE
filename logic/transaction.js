@@ -1,29 +1,29 @@
 const async = require('async');
 let bignum = require('../helpers/bignum.js');
 const sodium = require('sodium-javascript');
-let constants = require('../helpers/constants.js');
-let crypto = require('crypto');
-let exceptions = require('../helpers/exceptions.js');
-let extend = require('extend');
-let slots = require('../helpers/slots.js');
-let sql = require('../sql/transactions.js');
-let sqlAccount = require('../sql/accounts.js');
-let sqlFroging = require('../sql/frogings.js');
-let request = require('request');
 const transactionTypes = require('../helpers/transactionTypes.js');
-let utils = require('../utils.js');
-
+const constants = require('../helpers/constants.js');
+const crypto = require('crypto');
+const exceptions = require('../helpers/exceptions.js');
+const extend = require('extend');
+const slots = require('../helpers/slots.js');
+const sql = require('../sql/transactions.js');
+const sqlAccount = require('../sql/accounts.js');
+const sqlFroging = require('../sql/frogings.js');
+const request = require('request');
+const utils = require('../utils.js');
 const BUFFER = require('../helpers/buffer.js');
 
-const TRANSACTION_BUFFER_SIZE = BUFFER.LENGTH.BYTE // type
-    + BUFFER.LENGTH.UINT32 // timestamp
-    + BUFFER.LENGTH.HEX // senderPublicKey
-    + BUFFER.LENGTH.HEX // requesterPublicKey
-    + BUFFER.LENGTH.INT64 // recipientId
-    + BUFFER.LENGTH.INT64 // amount
-    + BUFFER.LENGTH.DOUBLE_HEX // signature
-    + BUFFER.LENGTH.DOUBLE_HEX // signSignature
-    ;
+const TRANSACTION_BUFFER_SIZE =
+    BUFFER.LENGTH.HEX +         // salt
+    BUFFER.LENGTH.BYTE +        // type
+    BUFFER.LENGTH.UINT32 +      // timestamp
+    BUFFER.LENGTH.HEX +         // senderPublicKey
+    BUFFER.LENGTH.HEX +         // requesterPublicKey
+    BUFFER.LENGTH.INT64 +       // recipientId
+    BUFFER.LENGTH.INT64 +       // amount
+    BUFFER.LENGTH.DOUBLE_HEX +  // signature
+    BUFFER.LENGTH.DOUBLE_HEX;   // signSignature
 
 // Private fields
 let self, modules, __private = {};
@@ -212,8 +212,10 @@ Transaction.prototype.getBytes = function (trs, skipSignature = false, skipSecon
         throw 'Unknown transaction type ' + trs.type;
     }
     const assetBytes = __private.types[trs.type].getBytes.call(this, trs, skipSignature, skipSecondSignature);
-    this.scope.logger.debug(`Trs ${JSON.stringify(trs)}`);
-    this.scope.logger.debug(`AssetBytes ${JSON.stringify(assetBytes)}`);
+
+    self.scope.logger.trace(`Trs ${JSON.stringify(trs)}`);
+    self.scope.logger.trace(`AssetBytes ${JSON.stringify(assetBytes)}`);
+
     const buff = Buffer.alloc(TRANSACTION_BUFFER_SIZE);
     let offset = 0;
 
@@ -781,11 +783,11 @@ Transaction.prototype.verifySignature = function (trs, publicKey, signature) {
     if (!signature) {
         return false;
     }
-    self.scope.logger.debug(`Transaction ${JSON.stringify(trs)}`);
-    self.scope.logger.debug(`publicKey ${JSON.stringify(publicKey)}`);
-    self.scope.logger.debug(`signature ${JSON.stringify(signature)}`);
+    self.scope.logger.trace(`Transaction ${JSON.stringify(trs)}`);
+    self.scope.logger.trace(`publicKey ${JSON.stringify(publicKey)}`);
+    self.scope.logger.trace(`signature ${JSON.stringify(signature)}`);
     const bytes = this.getBytes(trs, true, true);
-    self.scope.logger.debug(`Bytes ${JSON.stringify(bytes)}`);
+    self.scope.logger.trace(`Bytes ${JSON.stringify(bytes)}`);
     let verify = this.verifyBytes(bytes, publicKey, signature);
     // TODO add block limit
     if (!verify) {
@@ -1337,7 +1339,8 @@ Transaction.prototype.dbRead = function (raw) {
             asset: {},
             trsName: raw.t_trsName,
             reward: raw.t_reward,
-            pendingGroupBonus: raw.t_pendingGroupBonus
+            pendingGroupBonus: raw.t_pendingGroupBonus,
+            salt: raw.t_salt
         };
 
         if (!__private.types[tx.type]) {
