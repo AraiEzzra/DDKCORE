@@ -94,24 +94,15 @@ InTransfer.prototype.verify = function (trs, sender, cb) {
 };
 
 InTransfer.prototype.verifyUnconfirmed = function (trs, sender, cb) {
-	async.series([
-		function (seriesCb) {
-			return self.verifyFields(trs, sender, seriesCb);
-		},
-		function (seriesCb) {
-			library.db.one(sql.countByTransactionId, {
-				id: trs.asset.inTransfer.dappId,
-			}).then(function (row) {
-				if (row.count === 0) {
-					return setImmediate(seriesCb, 'Application not found: ' + trs.asset.inTransfer.dappId);
-				} else {
-					return setImmediate(seriesCb);
-				}
-			}).catch(function (err) {
-				return setImmediate(seriesCb, err);
-			});
+	library.db.one(sql.countByTransactionId, {
+		id: trs.asset.inTransfer.dappId,
+	}).then(function (row) {
+		if (row.count === 0) {
+			return setImmediate(cb, 'Application not found: ' + trs.asset.inTransfer.dappId);
+		} else {
+			return setImmediate(cb);
 		}
-	], function (err) {
+	}).catch(function (err) {
 		return setImmediate(cb, err);
 	});
 }

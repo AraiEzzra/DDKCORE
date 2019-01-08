@@ -177,36 +177,27 @@ DApp.prototype.verify = function (trs, sender, cb) {
 };
 
 DApp.prototype.verifyUnconfirmed = function (trs, sender, cb) {
-	async.series([
-		function (seriesCb) {
-			self.verifyFields(trs, sender, seriesCb);
-		},
-		function (seriesCb) {
-			library.db.query(sql.getExisting, {
-				name: trs.asset.dapp.name,
-				link: trs.asset.dapp.link || null,
-				transactionId: trs.id
-			}).then(function (rows) {
-				let dapp = rows[0];
+	library.db.query(sql.getExisting, {
+		name: trs.asset.dapp.name,
+		link: trs.asset.dapp.link || null,
+		transactionId: trs.id
+	}).then(function (rows) {
+		let dapp = rows[0];
 
-				if (dapp) {
-					if (dapp.name === trs.asset.dapp.name) {
-						return setImmediate(seriesCb, 'Application name already exists: ' + dapp.name);
-					} else if (dapp.link === trs.asset.dapp.link) {
-						return setImmediate(seriesCb, 'Application link already exists: ' + dapp.link);
-					} else {
-						return setImmediate(seriesCb, 'Application already exists');
-					}
-				} else {
-					return setImmediate(seriesCb, null, trs);
-				}
-			}).catch(function (err) {
-				library.logger.error(err.stack);
-				return setImmediate(seriesCb, 'DApp#verify error');
-			});
-		},
-	], function (err) {
-		return setImmediate(cb, err);
+		if (dapp) {
+			if (dapp.name === trs.asset.dapp.name) {
+				return setImmediate(cb, 'Application name already exists: ' + dapp.name);
+			} else if (dapp.link === trs.asset.dapp.link) {
+				return setImmediate(cb, 'Application link already exists: ' + dapp.link);
+			} else {
+				return setImmediate(cb, 'Application already exists');
+			}
+		} else {
+			return setImmediate(cb, null, trs);
+		}
+	}).catch(function (err) {
+		library.logger.error(err.stack);
+		return setImmediate(cb, 'DApp#verify error');
 	});
 }
 

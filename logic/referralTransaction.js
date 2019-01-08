@@ -91,7 +91,7 @@ ReferTransfer.prototype.verify = function (trs, sender, cb) {
 };
 
 ReferTransfer.prototype.verifyUnconfirmed = function (trs, sender, cb) {
-	return self.verify(trs, sender, cb);
+	return setImmediate(cb);
 }
 
 /**

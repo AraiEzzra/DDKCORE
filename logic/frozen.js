@@ -388,32 +388,23 @@ Frozen.prototype.verify = function (trs, sender, cb) {
 };
 
 Frozen.prototype.verifyUnconfirmed = function (trs, sender, cb) {
-    async.series([
-        function (seriesCb) {
-            self.verifyFields(trs, sender, seriesCb);
-        },
-        function (seriesCb) {
-            if (Number(trs.stakedAmount) + Number(sender.u_totalFrozeAmount) > Number(sender.u_balance)) {
-                if (constants.STAKE_VALIDATE.BALANCE_ENABLED) {
-                    return setImmediate(cb, 'Verify failed: Insufficient unconfirmed balance for stake');
-                } else {
-                    self.scope.logger.error(`VALIDATE IS DISABLED. Error: trs.id ${trs.id} Verify failed: Insufficient unconfirmed balance for stake`);
-                }
-            }
+    if (Number(trs.stakedAmount) + Number(sender.u_totalFrozeAmount) > Number(sender.u_balance)) {
+        if (constants.STAKE_VALIDATE.BALANCE_ENABLED) {
+            return setImmediate(cb, 'Verify failed: Insufficient unconfirmed balance for stake');
+        } else {
+            self.scope.logger.error(`VALIDATE IS DISABLED. Error: trs.id ${trs.id} Verify failed: Insufficient unconfirmed balance for stake`);
+        }
+    }
 
-            if ((parseInt(sender.u_balance) - parseInt(sender.u_totalFrozeAmount)) < (trs.stakedAmount + trs.fee)) {
-                if (constants.STAKE_VALIDATE.BALANCE_ENABLED) {
-                    return setImmediate(cb, 'Insufficient unconfirmed balance');
-                } else {
-                    self.scope.logger.error(`VALIDATE IS DISABLED. Error: trs.id ${trs.id} Insufficient unconfirmed balance`);
-                }
-            }
+    if ((parseInt(sender.u_balance) - parseInt(sender.u_totalFrozeAmount)) < (trs.stakedAmount + trs.fee)) {
+        if (constants.STAKE_VALIDATE.BALANCE_ENABLED) {
+            return setImmediate(cb, 'Insufficient unconfirmed balance');
+        } else {
+            self.scope.logger.error(`VALIDATE IS DISABLED. Error: trs.id ${trs.id} Insufficient unconfirmed balance`);
+        }
+    }
 
-            setImmediate(seriesCb);
-        },
-    ], function (err) {
-        return setImmediate(cb, err);
-    });
+    setImmediate(cb);
 }
 
 Frozen.prototype.verifyAirdrop = async (trs) => {

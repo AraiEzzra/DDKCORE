@@ -236,7 +236,7 @@ SendFreezeOrder.prototype.verify = function (trs, sender, cb) {
 };
 
 SendFreezeOrder.prototype.verifyUnconfirmed = function (trs, sender, cb) {
-	return self.verifyFields(trs, sender, cb);
+	return setImmediate(cb);
 }
 
 SendFreezeOrder.prototype.calculateFee = function (trs, sender) {

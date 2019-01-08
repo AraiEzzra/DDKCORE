@@ -177,7 +177,7 @@ Delegate.prototype.verify = function (trs, sender, cb) {
 };
 
 Delegate.prototype.verifyUnconfirmed = function (trs, sender, cb) {
-	return self.verify(trs, sender, cb);
+	return setImmediate(cb);
 }
 
 /**

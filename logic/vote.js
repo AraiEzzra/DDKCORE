@@ -312,7 +312,7 @@ Vote.prototype.verify = function (trs, sender, cb) {
  * calls checkConfirmedDelegates.
  */
 Vote.prototype.verifyUnconfirmed = function (trs, sender, cb) {
-    return self.verifyFields(trs, sender, cb);
+    return setImmediate(cb);
 };
 
 /**

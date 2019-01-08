@@ -73,7 +73,7 @@ Migration.prototype.verify = function (trs, sender, cb) {
 };
 
 Migration.prototype.verifyUnconfirmed = function (trs, sender, cb) {
-	self.verify(trs, sender, cb);
+	return setImmediate(cb);
 }
 
 /**

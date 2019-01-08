@@ -55,7 +55,7 @@ Referral.prototype.verify = function (trs, sender, cb) {
 };
 
 Referral.prototype.verifyUnconfirmed = function (trs, sender, cb) {
-    return self.verify(trs, sender, cb);
+    return setImmediate(cb);
 }
 
 Referral.prototype.apply = function (trs, block, sender, cb) {

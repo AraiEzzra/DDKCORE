@@ -83,7 +83,7 @@ Transfer.prototype.verify = function (trs, sender, cb) {
 };
 
 Transfer.prototype.verifyUnconfirmed = function (trs, sender, cb) {
-    return self.verify(trs, sender, cb);
+    return setImmediate(cb);
 }
 
 /**
@@ -125,7 +125,6 @@ Transfer.prototype.apply = function (trs, block, sender, cb) {
         modules.accounts.mergeAccountAndGet({
             address: trs.recipientId,
             balance: trs.amount,
-            u_balance: trs.amount,
             blockId: block.id,
             round: modules.rounds.calc(block.height)
         }, function (err) {
@@ -155,7 +154,6 @@ Transfer.prototype.undo = function (trs, block, sender, cb) {
         modules.accounts.mergeAccountAndGet({
             address: trs.recipientId,
             balance: -trs.amount,
-            u_balance: -trs.amount,
             blockId: block.id,
             round: modules.rounds.calc(block.height)
         }, function (err) {
@@ -171,7 +169,18 @@ Transfer.prototype.undo = function (trs, block, sender, cb) {
  * @return {setImmediateCallback} cb
  */
 Transfer.prototype.applyUnconfirmed = function (trs, sender, cb) {
-    return setImmediate(cb);
+    modules.accounts.setAccountAndGet({ address: trs.recipientId }, function (err) {
+        if (err) {
+            return setImmediate(cb, err);
+        }
+
+        modules.accounts.mergeAccountAndGet({
+            address: trs.recipientId,
+            u_balance: trs.amount,
+        }, function (err) {
+            return setImmediate(cb, err);
+        });
+    });
 };
 
 /**
@@ -181,7 +190,18 @@ Transfer.prototype.applyUnconfirmed = function (trs, sender, cb) {
  * @return {setImmediateCallback} cb
  */
 Transfer.prototype.undoUnconfirmed = function (trs, sender, cb) {
-    return setImmediate(cb);
+    modules.accounts.setAccountAndGet({ address: trs.recipientId }, function (err) {
+        if (err) {
+            return setImmediate(cb, err);
+        }
+
+        modules.accounts.mergeAccountAndGet({
+            address: trs.recipientId,
+            u_balance: -trs.amount,
+        }, function (err) {
+            return setImmediate(cb, err);
+        });
+    });
 };
 
 /**

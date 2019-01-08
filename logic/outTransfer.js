@@ -101,7 +101,7 @@ OutTransfer.prototype.verify = function (trs, sender, cb) {
 };
 
 OutTransfer.prototype.verifyUnconfirmed = function (trs, sender, cb) {
-	self.verify(trs, sender, cb);
+	return setImmediate(cb);
 }
 
 /**

@@ -101,7 +101,7 @@ Signature.prototype.verify = function (trs, sender, cb) {
 };
 
 Signature.prototype.verifyUnconfirmed = function (trs, sender, cb) {
-	self.verify(trs, sender, cb);
+	return setImmediate(cb);
 }
 
 /**
