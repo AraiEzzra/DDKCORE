@@ -169,7 +169,7 @@ SendFreezeOrder.prototype.apply = async function (trs, block, sender, cb) {
             index: 'stake_orders',
             type: 'stake_orders',
             body: stakeOrders.prev,
-			id: stakeOrders.prev.stakeId
+			id: stakeOrders.prev.id
         });
 
 		self.scope.network.io.sockets.emit('stake/change', null);
