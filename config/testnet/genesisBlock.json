@@ -25,6 +25,7 @@
       "id": "dc1c117fe069f475988e22383ff7b250f7a8b67ef223951b3687f7f622fc95f3",
       "stakedAmount": 0,
       "trsName": "SEND",
+      "salt": "0145b4f09dc2d5008beeed1f45423eb7",
       "asset": {}
     },
     {
@@ -39,6 +40,7 @@
       "id": "d74f5f10e148350a14829ce6d8ad07da90e75b95b14a0298e1296b4d8ce35b38",
       "stakedAmount": 0,
       "trsName": "SEND",
+      "salt": "d647c09797cdab55596270c8b7733824",
       "asset": {}
     },
     {
@@ -53,6 +55,7 @@
       "id": "1a146f04dafcc04662245ebc89b8c5410a6b341e97d200107c39db990faf27e2",
       "stakedAmount": 0,
       "trsName": "SEND",
+      "salt": "92607aa2a35c652a2d4548cb09048aba",
       "asset": {}
     },
     {
@@ -67,6 +70,7 @@
       "id": "028a58e0b3193c5237545ef46e0709ebd06721fe3c540ff5d29f971c8521aa1f",
       "stakedAmount": 0,
       "trsName": "SEND",
+      "salt": "1afe2297ade200052e46e990b64e1616",
       "asset": {}
     },
     {
@@ -81,6 +85,7 @@
       "id": "2abcd3f9c712bdc77d6a1ebeb58901f9ed299fd9989aa303766b15a47b60867d",
       "stakedAmount": 0,
       "trsName": "SEND",
+      "salt": "7abba9750f88d434def33f37eadd387f",
       "asset": {}
     },
     {
@@ -95,6 +100,7 @@
       "id": "61c58d6af9bbc0f13323bc8439617c3f64ef40dc0d2ba2c60d672235af8fa898",
       "stakedAmount": 0,
       "trsName": "SEND",
+      "salt": "9e5afbff129c715cddb95c1846e2f172",
       "asset": {}
     },
     {
@@ -109,6 +115,7 @@
       "id": "f736a2bbbaee9d05e05a51b1f7b85000a4a6f6121a9beb9d2257e3b30a676feb",
       "stakedAmount": 0,
       "trsName": "SEND",
+      "salt": "562c897c16090a126aca77ba41b9e98a",
       "asset": {}
     },
     {
@@ -123,6 +130,7 @@
       "id": "39d8f45a4e88d4e14e6bd2fd2c3c6e3b4dda9ac3b4f2f888cf3439e7e5b36642",
       "stakedAmount": 0,
       "trsName": "SEND",
+      "salt": "3815a4a2afd2859da9a40cf19a8e2d39",
       "asset": {}
     },
     {
@@ -137,6 +145,7 @@
       "id": "39a1061b197b00bbe29a1efcc411877310cd0368031e3e519b895a1a60a341cc",
       "stakedAmount": 0,
       "trsName": "SEND",
+      "salt": "bb44d101d0b051f8bcb0505381524ff7",
       "asset": {}
     },
     {
@@ -151,6 +160,7 @@
       "id": "7447f97c409c0b0b8e53225200a0f1a6f6fbb1c5d2bce3698d4c9d9c88e05e43",
       "stakedAmount": 0,
       "trsName": "SEND",
+      "salt": "4ea84ca175abc577fef4d54e8ad983d7",
       "asset": {}
     },
     {
@@ -165,6 +175,7 @@
       "id": "1deeb122ed28661f9284960bce59db356b79fc69df104ce831fa00c26ad0d7da",
       "stakedAmount": 0,
       "trsName": "DELEGATE",
+      "salt": "7bb78433b9d6a3c779c1c021e9f66357",
       "asset": {
         "delegate": {
           "username": "TDALLIANCE1"
@@ -183,6 +194,7 @@
       "id": "d46db41a16cce87a01218fb8a65f275506b6b56c8b579a9d9c3888f4b131707d",
       "stakedAmount": 0,
       "trsName": "DELEGATE",
+      "salt": "8d259ae9eb2678100108f580416737c5",
       "asset": {
         "delegate": {
           "username": "TDALLIANCE2"
@@ -201,6 +213,7 @@
       "id": "38e2294dfe4be2ece6a77ba98e99ad90ce0e687de9c4dbbc0f070b3a2488de1f",
       "stakedAmount": 0,
       "trsName": "DELEGATE",
+      "salt": "d85065d793a3a348e5058623b508d83e",
       "asset": {
         "delegate": {
           "username": "TDALLIANCE3"
@@ -219,6 +232,7 @@
       "id": "8daa934aeb931a58866c72bc3436622fc739b1489cb4b55e8a2509758f4c665f",
       "stakedAmount": 0,
       "trsName": "DELEGATE",
+      "salt": "7661c37b452f96362ca099ff5a2ce654",
       "asset": {
         "delegate": {
           "username": "DELEGATE1"
@@ -237,6 +251,7 @@
       "id": "4c1b18d571ab05c2e2ed4cda49c7585c33c75f2f002e9cfd1171d3b0451d8ea2",
       "stakedAmount": 0,
       "trsName": "DELEGATE",
+      "salt": "c3267374be86074e653833b2f8f71262",
       "asset": {
         "delegate": {
           "username": "DELEGATE2"
@@ -255,6 +270,7 @@
       "id": "c3e4f2d66bd3b9fdc1aa7aec328def8f85508004d3525514e202886ac8cb61ed",
       "stakedAmount": 0,
       "trsName": "DELEGATE",
+      "salt": "98658521ad786f11aa01c28ff80ca810",
       "asset": {
         "delegate": {
           "username": "DELEGATE3"
@@ -273,6 +289,7 @@
       "id": "e321e264abe17922cbc7a7433d111b3ec7cd52bb279a7ce73191ed8ded1e4e01",
       "stakedAmount": 0,
       "trsName": "DELEGATE",
+      "salt": "59870d08eed1a419b73b587383f1659b",
       "asset": {
         "delegate": {
           "username": "DELEGATE4"
@@ -291,6 +308,7 @@
       "id": "65623f13edca9d95795d25da4e76279329595a409c4a4cff332aa43ca06d21ed",
       "stakedAmount": 0,
       "trsName": "DELEGATE",
+      "salt": "16a02a422e71535d3a831ffbb56904f4",
       "asset": {
         "delegate": {
           "username": "DELEGATE5"
@@ -309,6 +327,7 @@
       "id": "c8d29b5292f28c5064bba5d1e3aa1f69a4270d645ba069a9107b80987bc23ce1",
       "stakedAmount": 0,
       "trsName": "DELEGATE",
+      "salt": "50fdb0006c961365bf3f3a27540cc1dc",
       "asset": {
         "delegate": {
           "username": "DELEGATE6"
@@ -327,6 +346,7 @@
       "id": "9ca1885b5c9c5c69040d144e6fd61f3542b70529c7956d28ca2a8fa085f299a9",
       "stakedAmount": 0,
       "trsName": "DELEGATE",
+      "salt": "e8c967ec2a5297a9e94eecf5fc139249",
       "asset": {
         "delegate": {
           "username": "DELEGATE7"
@@ -345,6 +365,7 @@
       "id": "d781627b19747e489fa82ad2d5575287a8e149e7f5fd80d8ad3fdd8df0690317",
       "stakedAmount": 0,
       "trsName": "DELEGATE",
+      "salt": "02368a512fb4f95ad7c7ea7b5d6f3145",
       "asset": {
         "delegate": {
           "username": "DELEGATE8"
@@ -363,6 +384,7 @@
       "id": "85d00bf7d22a253e4672c06cada8a1cb94bc7527b959660c91a85919e5717fde",
       "stakedAmount": 0,
       "trsName": "VOTE",
+      "salt": "b474a656fc2c326fb43d5e8e3fe36307",
       "asset": {
         "votes": [
           "+a0515f134d80b7e89491e848fe1be340df297de6114acd6cbb82866c7c95252c",
@@ -383,6 +405,7 @@
       "id": "9db32306db544303a4702da927c2d9d05af4fd02c1b4ed0192e16d1f1cb38517",
       "stakedAmount": 0,
       "trsName": "VOTE",
+      "salt": "08569b61a1b4010fdfbf36fc40925728",
       "asset": {
         "votes": [
           "+eb3ecfad0b81f6744a0c9152e3b2baabdb6a4c795cfc2fbf94caf9276bbf1cb7",
@@ -403,6 +426,7 @@
       "id": "eabbf4a3ca007135e8f29ce4206476a560d439d5730667df5bc51440d2cdebb7",
       "stakedAmount": 0,
       "trsName": "VOTE",
+      "salt": "40d5fa340223a0307a544782c5cd6261",
       "asset": {
         "votes": [
           "+3c45f3082394abc2fa5d0b07bb0da9db3ec9349023d8c04824b0752756e4ff6e",
@@ -423,6 +447,7 @@
       "id": "af83a135f2f09dcd287764860ea7a2419891d127c96102fac3c916ff949e8c28",
       "stakedAmount": 0,
       "trsName": "VOTE",
+      "salt": "0b1834faea1a9494b471a2227b500bb1",
       "asset": {
         "votes": [
           "+301c99b6ee57807664eae0a43a58c7d39c5e8a6441aa2239e2024046161e652f",
