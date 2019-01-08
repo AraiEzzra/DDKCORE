@@ -84,10 +84,16 @@ Block.prototype.create = function (data) {
         if (a.type > b.type) {
             return 1;
         }
-        if (a.amount < b.amount) {
+        if (a.timestamp < b.timestamp) {
             return -1;
         }
-        if (a.amount > b.amount) {
+        if (a.timestamp > b.timestamp) {
+            return 1;
+        }
+        if (a.id < b.id) {
+            return -1;
+        }
+        if (a.id > b.id) {
             return 1;
         }
         return 0;
