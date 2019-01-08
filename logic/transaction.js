@@ -13,6 +13,7 @@ const sqlFroging = require('../sql/frogings.js');
 const request = require('request');
 const utils = require('../utils.js');
 const BUFFER = require('../helpers/buffer.js');
+const cryptoBrowserify = require('crypto-browserify');
 
 const TRANSACTION_BUFFER_SIZE =
     BUFFER.LENGTH.HEX +         // salt
@@ -110,6 +111,7 @@ Transaction.prototype.create = async function (data) {
         stakedAmount: 0,
         trsName: 'NA',
         groupBonus: 0,
+        salt: cryptoBrowserify.randomBytes(16).toString('hex'),
         reward: data.rewardPercentage || null
     };
 
@@ -218,6 +220,9 @@ Transaction.prototype.getBytes = function (trs, skipSignature = false, skipSecon
 
     const buff = Buffer.alloc(TRANSACTION_BUFFER_SIZE);
     let offset = 0;
+
+    buff.write(trs.salt, offset, BUFFER.LENGTH.HEX);
+    offset += BUFFER.LENGTH.HEX;
 
     offset = BUFFER.writeInt8(buff, trs.type, offset);
     offset = BUFFER.writeInt32LE(buff, trs.timestamp, offset);
@@ -1067,7 +1072,7 @@ Transaction.prototype.undoUnconfirmed = function (trs, sender, cb) {
 
 Transaction.prototype.dbTable = 'trs';
 
-Transaction.prototype.dbFields = ['id', 'blockId', 'type', 'timestamp', 'senderPublicKey', 'requesterPublicKey', 'senderId', 'recipientId', 'amount', 'stakedAmount', 'stakeId', 'groupBonus', 'fee', 'signature', 'signSignature', 'signatures', 'trsName', 'reward'];
+Transaction.prototype.dbFields = ['id', 'blockId', 'type', 'timestamp', 'senderPublicKey', 'requesterPublicKey', 'senderId', 'recipientId', 'amount', 'stakedAmount', 'stakeId', 'groupBonus', 'fee', 'signature', 'signSignature', 'signatures', 'trsName', 'reward', 'salt'];
 
 /**
  * Creates db trs object transaction. Calls `dbSave` based on trs type (privateTypes).
@@ -1077,6 +1082,7 @@ Transaction.prototype.dbFields = ['id', 'blockId', 'type', 'timestamp', 'senderP
  * @throws {String|error} error string | catch error
  */
 Transaction.prototype.dbSave = function (trs) {
+    console.log('TRANSACTION!!!!!!!!!!!!: ', trs);
     if (!__private.types[trs.type]) {
         throw 'Unknown transaction type ' + trs.type;
     }
@@ -1116,7 +1122,8 @@ Transaction.prototype.dbSave = function (trs) {
             signSignature: signSignature,
             signatures: trs.signatures ? trs.signatures.join(',') : null,
             trsName: trs.trsName,
-            reward: trs.reward
+            reward: trs.reward,
+            salt: trs.salt
         }
     }];
 
