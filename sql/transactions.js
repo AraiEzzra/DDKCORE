@@ -47,7 +47,9 @@ let TransactionsSql = {
 
 	getVotesById: 'SELECT * FROM votes WHERE "transactionId" = ${id}',
 
-	getUserNames: 'SELECT * FROM users_list'
+	getUserNames: 'SELECT * from users_list',
+
+	getTransactionById: 'SELECT * from trs WHERE "id" = ${id}'
 };
 
 module.exports = TransactionsSql;

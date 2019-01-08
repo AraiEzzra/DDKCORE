@@ -1128,6 +1128,13 @@ Transaction.prototype.afterSave = async function (trs, cb) {
     if (!tx_type) {
         return setImmediate(cb, 'Unknown transaction type ' + trs.type);
     } else {
+        const lastTransaction = await self.scope.db.one(sql.getTransactionById, { id: trs.id});
+        await utils.addDocument({
+            index: 'trs',
+            type: 'trs',
+            body: lastTransaction,
+            id: lastTransaction.id
+        });
         if (typeof tx_type.afterSave === 'function') {
             return tx_type.afterSave.call(this, trs, cb);
         } else {
