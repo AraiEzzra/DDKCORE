@@ -2,6 +2,16 @@
 
 let Accounts = {
 
+	getActiveDelegates : 'SELECT "publicKey" FROM "delegate_to_vote_counter" ORDER BY "voteCount" DESC, "publicKey" ASC LIMIT ${limit}',
+
+    changeDelegateVoteCount: function (arg) {
+		if (!arg || !arg.votes || arg.votes.length < 1) {
+			return false;
+		}
+        let votes = `'${arg.votes.join("','")}'`;
+        return `UPDATE "delegate_to_vote_counter" SET "voteCount" = "voteCount" + ${arg.value}  WHERE "publicKey" IN (${votes})`;
+    },
+
 	checkAccountStatus : 'SELECT "status" FROM mem_accounts where "address"=${senderId}',
 
 	findActiveStakeAmount: '(SELECT "startTime" AS "value" FROM stake_orders where "senderId" = ${senderId} ORDER BY "startTime" DESC LIMIT 1) UNION ALL (SELECT SUM("freezedAmount") as "value" FROM stake_orders WHERE "senderId" = ${senderId} AND "status" = 1);',
