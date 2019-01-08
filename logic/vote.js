@@ -408,13 +408,15 @@ Vote.prototype.apply = function (trs, block, sender, cb) {
                 });
         },
         function (seriesCb) {
+            let voteValue = 1;
+            const isDownVote = trs.trsName === 'DOWNVOTE';
             const votes = trs.asset.votes.map(vote => vote.substring(1));
-            
-            library.db.query(sql.changeDelegateVoteCount({ value: 1, votes }))
-                .then(function () {
-                    return setImmediate(seriesCb, null);
-                })
-                .catch(function (err) {
+            if (isDownVote) {
+                voteValue = -1;
+            }
+            library.db.query(sql.changeDelegateVoteCount({ value: voteValue, votes }))
+                .then(() => setImmediate(seriesCb, null))
+                .catch((err) => {
                     library.logger.error(err.stack);
                     return setImmediate(seriesCb, err);
                 });
