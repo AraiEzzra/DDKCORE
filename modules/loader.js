@@ -615,10 +615,11 @@ __private.sync = function (cb) {
 	__private.syncTrigger(true);
 
 	async.series({
-		undoUnconfirmedList: function (seriesCb) {
-			library.logger.debug('Undoing unconfirmed transactions before sync');
-			return modules.transactions.undoUnconfirmedList(seriesCb);
-		},
+		// TODO: https://trello.com/c/N7QnY14v/209-fix-sync-method
+		// undoUnconfirmedList: function (seriesCb) {
+		// 	library.logger.debug('Undoing unconfirmed transactions before sync');
+		// 	return modules.transactions.undoUnconfirmedList(seriesCb);
+		// },
 		getPeersBefore: function (seriesCb) {
 			library.logger.debug('Establishing broadhash consensus before sync');
 			return modules.transport.getPeers({limit: constants.maxPeers}, seriesCb);
@@ -633,10 +634,11 @@ __private.sync = function (cb) {
 			library.logger.debug('Establishing broadhash consensus after sync');
 			return modules.transport.getPeers({limit: constants.maxPeers}, seriesCb);
 		},
-		applyUnconfirmedList: function (seriesCb) {
-			library.logger.debug('Applying unconfirmed transactions after sync');
-			return modules.transactions.applyUnconfirmedList(seriesCb);
-		}
+		// TODO: https://trello.com/c/N7QnY14v/209-fix-sync-method
+		// applyUnconfirmedList: function (seriesCb) {
+		// 	library.logger.debug('Applying unconfirmed transactions after sync');
+		// 	return modules.transactions.applyUnconfirmedList(seriesCb);
+		// }
 	}, function (err) {
 		__private.isActive = false;
 		__private.syncTrigger(false);
