@@ -275,27 +275,6 @@ d.run(function () {
 			Prometheus.injectMetricsRoute(app);
 			Prometheus.startCollection();
 
-			// added swagger configuration
-			let subpath = express();
-			let swagger = require('swagger-node-express').createNew(subpath);
-			app.use('/v1', subpath);
-			subpath.use(express.static('dist'));
-			swagger.setApiInfo({
-				title: 'example API',
-				description: 'API to do something, manage something...',
-				termsOfServiceUrl: '',
-				contact: 'hotam.singh@oodlestechnologies.com',
-				license: '',
-				licenseUrl: ''
-			});
-			subpath.get('/', function (req, res) {
-				res.sendFile(__dirname + '/dist/index.html');
-			});
-			swagger.configureSwaggerPaths('', 'api-docs', '');
-			let domain = scope.config.swaggerDomain || 'localhost';
-			let applicationUrl = 'http://' + domain;
-			swagger.configure(applicationUrl, '1.0.0');
-
 			if (appConfig.coverage) {
 				let im = require('istanbul-middleware');
 				logger.debug('Hook loader for coverage - do not use in production environment!');

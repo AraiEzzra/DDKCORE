@@ -109,7 +109,6 @@
     "sender": {},
     "nethash": "82c2a4fddcd1f659ba60380ebdd38125c5c48ceeef7d8b9f5798c0faca89e808",
     "elasticsearchHost": "10.5.0.2:9200",
-    "swaggerDomain": "159.65.139.248",
     "jwt": {
         "tokenLife": 300
     }
