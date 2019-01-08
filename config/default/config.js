@@ -123,7 +123,6 @@ module.exports = {
     elasticsearch: {
         disableJobs: env.DISABLE_ELASTICSEARCH_JOBS === 'TRUE',
     },
-    swaggerDomain: env.ADDRESS,
     jwt: {
         secret: env.JWT_SECRET,
         tokenLife: 300
