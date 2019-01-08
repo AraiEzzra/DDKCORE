@@ -368,6 +368,7 @@ Process.prototype.generateBlock = function (keypair, timestamp, cb) {
         }
 		let block;
 		try {
+			modules.accounts.mergeAccountAndGet
 			// Create a block
 			block = library.logic.block.create({
 				keypair: keypair,
