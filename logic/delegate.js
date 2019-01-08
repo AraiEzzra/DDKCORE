@@ -2,7 +2,7 @@ let constants = require('../helpers/constants.js');
 const sql = require('../sql/delegates');
 
 // Private fields
-let modules, library;
+let modules, library, self;
 
 /**
  * Initializes library.
@@ -16,6 +16,7 @@ function Delegate (schema, db) {
 		schema: schema,
 		db: db
 	};
+	self = this;
 }
 
 // Public methods
@@ -174,6 +175,10 @@ Delegate.prototype.verify = function (trs, sender, cb) {
 		return setImmediate(cb, null, trs);
 	});
 };
+
+Delegate.prototype.verifyUnconfirmed = function (trs, sender, cb) {
+	return setImmediate(cb);
+}
 
 /**
  * Returns transaction with setImmediate.

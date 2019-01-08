@@ -154,7 +154,7 @@ __private.promiseTransactions = function (t, block) {
 		/* if(block.height === 1){
 			transaction.timestamp=slots.getTime();
 		} */
-		
+
 		return library.logic.transaction.dbSave(transaction);
 	};
 
@@ -361,7 +361,7 @@ Chain.prototype.applyBlock = function (block, broadcast, cb, saveBlock) {
 	let appliedTransactions = {};
 
 	// List of unconfirmed transactions ids.
-	let unconfirmedTransactionIds;
+	let unconfirmedTransactionIds = new Set();
 
 	async.series({
 		// Rewind any unconfirmed transactions before applying block.
@@ -375,7 +375,7 @@ Chain.prototype.applyBlock = function (block, broadcast, cb, saveBlock) {
 
 					return process.exit(0);
 				} else {
-					unconfirmedTransactionIds = ids;
+					ids.forEach(id => unconfirmedTransactionIds.add(id));
 					return setImmediate(seriesCb);
 				}
 			});
@@ -383,47 +383,68 @@ Chain.prototype.applyBlock = function (block, broadcast, cb, saveBlock) {
 		// Apply transactions to unconfirmed mem_accounts fields.
 		applyUnconfirmed: function (seriesCb) {
 			async.eachSeries(block.transactions, function (transaction, eachSeriesCb) {
-				// DATABASE write
-				modules.accounts.getAccount({publicKey: transaction.senderPublicKey}, function (err, sender) {
-					// DATABASE: write
-					modules.transactions.applyUnconfirmed(transaction, sender, function (err) {
-						if (err) {
-							err = ['Failed to apply transaction:', transaction.id, '-', err].join(' ');
-							library.logger.error(err);
-							library.logger.error('Transaction', transaction);
-							return setImmediate(eachSeriesCb, err);
-						}
+				async.series({
+					verifyUnconfirmed: function (series2Cb) {
+						modules.accounts.getAccount({ publicKey: transaction.senderPublicKey }, function (err, sender) {
+							if (err) {
+								return setImmediate(series2Cb, err);
+							}
 
-						appliedTransactions[transaction.id] = transaction;
+							library.logic.transaction.verifyUnconfirmed({
+								trs: transaction,
+								sender,
+								cb: series2Cb,
+							});
+						});
+					},
+					applyUnconfirmed: function (series2Cb) {
+						// DATABASE write
+						modules.accounts.getAccount({ publicKey: transaction.senderPublicKey }, function (err, sender) {
+							if (err) {
+								return setImmediate(series2Cb, err);
+							}
 
-						// Remove the transaction from the node queue, if it was present.
-						let index = unconfirmedTransactionIds.indexOf(transaction.id);
-						if (index >= 0) {
-							unconfirmedTransactionIds.splice(index, 1);
-						}
-												
-						return setImmediate(eachSeriesCb);
-					});
+							// DATABASE: write
+							modules.transactions.applyUnconfirmed(transaction, sender, function (err) {
+								if (err) {
+									err = ['Failed to apply transaction:', transaction.id, '-', err].join(' ');
+									library.logger.error(err);
+									library.logger.error('Transaction', transaction);
+									return setImmediate(series2Cb, err);
+								}
+
+								appliedTransactions[transaction.id] = transaction;
+
+								// Remove the transaction from the node queue, if it was present.
+								unconfirmedTransactionIds.delete(transaction.id);
+
+								return setImmediate(series2Cb);
+							});
+						});
+					},
+				}, function (err) {
+					return setImmediate(eachSeriesCb, err);
 				});
 			}, function (err) {
 				if (err) {
+					library.logger.error(`cannot apply unconfirmed transaction. ${err}.`);
 					// Rewind any already applied unconfirmed transactions.
 					// Leaves the database state as per the previous block.
 					async.eachSeries(block.transactions, function (transaction, eachSeriesCb) {
-						modules.accounts.getAccount({publicKey: transaction.senderPublicKey}, function (err, sender) {
-							if (err) {
-								return setImmediate(eachSeriesCb, err);
+						if (!appliedTransactions[transaction.id]) {
+							return setImmediate(eachSeriesCb);
+						}
+
+						modules.accounts.getAccount({ publicKey: transaction.senderPublicKey }, function (err2, sender) {
+							if (err2) {
+								return setImmediate(eachSeriesCb, err2);
 							}
-							// The transaction has been applied?
-							if (appliedTransactions[transaction.id]) {
-								// DATABASE: write
-								library.logic.transaction.undoUnconfirmed(transaction, sender, eachSeriesCb);
-							} else {
-								return setImmediate(eachSeriesCb);
-							}
+
+							// DATABASE: write
+							library.logic.transaction.undoUnconfirmed(transaction, sender, eachSeriesCb);
 						});
-					}, function (err) {
-						return setImmediate(seriesCb, err);
+					}, function (err3) {
+						return setImmediate(seriesCb, err3 || err);
 					});
 				} else {
 					return setImmediate(seriesCb);
@@ -494,7 +515,7 @@ Chain.prototype.applyBlock = function (block, broadcast, cb, saveBlock) {
 		// TODO: See undoUnconfirmedList discussion above.
 		applyUnconfirmedIds: function (seriesCb) {
 			// DATABASE write
-			modules.transactions.applyUnconfirmedIds(unconfirmedTransactionIds, function (err) {
+			modules.transactions.applyUnconfirmedIds(Array.from(unconfirmedTransactionIds), function (err) {
 				return setImmediate(seriesCb, err);
 			});
 		},

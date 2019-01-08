@@ -2,7 +2,7 @@ let constants = require('../helpers/constants.js');
 let sql = require('../sql/dapps.js');
 
 // Private fields
-let modules, library, shared;
+let modules, library, shared, self;
 
 /**
  * Initializes library.
@@ -18,6 +18,7 @@ function InTransfer (db, schema) {
 		db: db,
 		schema: schema,
 	};
+	self = this;
 }
 
 // Public methods
@@ -63,16 +64,7 @@ InTransfer.prototype.calculateFee = function () {
 	return constants.fees.send;
 };
 
-/**
- * Verifies recipientId, amount and InTransfer object content.
- * Finds application into `dapps` table.
- * @implements {library.db.one}
- * @param {transaction} trs
- * @param {account} sender
- * @param {function} cb
- * @return {setImmediateCallback} errors message | trs
- */
-InTransfer.prototype.verify = function (trs, sender, cb) {
+InTransfer.prototype.verifyFields = function (trs, sender, cb) {
 	if (trs.recipientId) {
 		return setImmediate(cb, 'Invalid recipient');
 	}
@@ -85,8 +77,25 @@ InTransfer.prototype.verify = function (trs, sender, cb) {
 		return setImmediate(cb, 'Invalid transaction asset');
 	}
 
+	setImmediate(cb);
+}
+
+/**
+ * Verifies recipientId, amount and InTransfer object content.
+ * Finds application into `dapps` table.
+ * @implements {library.db.one}
+ * @param {transaction} trs
+ * @param {account} sender
+ * @param {function} cb
+ * @return {setImmediateCallback} errors message | trs
+ */
+InTransfer.prototype.verify = function (trs, sender, cb) {
+	return self.verifyFields(trs, sender, cb);
+};
+
+InTransfer.prototype.verifyUnconfirmed = function (trs, sender, cb) {
 	library.db.one(sql.countByTransactionId, {
-		id: trs.asset.inTransfer.dappId
+		id: trs.asset.inTransfer.dappId,
 	}).then(function (row) {
 		if (row.count === 0) {
 			return setImmediate(cb, 'Application not found: ' + trs.asset.inTransfer.dappId);
@@ -96,7 +105,7 @@ InTransfer.prototype.verify = function (trs, sender, cb) {
 	}).catch(function (err) {
 		return setImmediate(cb, err);
 	});
-};
+}
 
 /**
  * @param {transaction} trs
@@ -121,7 +130,7 @@ InTransfer.prototype.getBytes = function (trs) {
 
 /**
  * Calls getGenesis with dappid to obtain authorId.
- * Calls mergeAccountAndGet with unconfirmed trs amount and authorId as 
+ * Calls mergeAccountAndGet with unconfirmed trs amount and authorId as
  * address.
  * @implements {shared.getGenesis}
  * @implements {modules.accounts.mergeAccountAndGet}
@@ -151,7 +160,7 @@ InTransfer.prototype.apply = function (trs, block, sender, cb) {
 
 /**
  * Calls getGenesis with dappid to obtain authorId.
- * Calls mergeAccountAndGet with authorId as address and unconfirmed 
+ * Calls mergeAccountAndGet with authorId as address and unconfirmed
  * trs amount and balance both negatives.
  * @implements {shared.getGenesis}
  * @implements {modules.accounts.mergeAccountAndGet}
@@ -257,7 +266,7 @@ InTransfer.prototype.dbFields = [
 ];
 
 /**
- * Creates db operation object to 'intransfer' table based on 
+ * Creates db operation object to 'intransfer' table based on
  * inTransfer data.
  * @param {transaction} trs
  * @return {Object[]} table, fields, values.
@@ -286,7 +295,7 @@ InTransfer.prototype.afterSave = function (trs, cb) {
  * Checks sender multisignatures and transaction signatures.
  * @param {transaction} trs
  * @param {account} sender
- * @return {boolean} True if transaction signatures greather than 
+ * @return {boolean} True if transaction signatures greather than
  * sender multimin or there are not sender multisignatures.
  */
 InTransfer.prototype.ready = function (trs, sender) {

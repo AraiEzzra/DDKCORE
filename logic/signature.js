@@ -2,7 +2,7 @@ let ByteBuffer = require('bytebuffer');
 let constants = require('../helpers/constants.js');
 
 // Private fields
-let modules, library;
+let modules, library, self;
 
 /**
  * Initializes library.
@@ -18,6 +18,7 @@ function Signature (schema, logger) {
 		schema: schema,
 		logger: logger,
 	};
+	self = this;
 }
 
 /**
@@ -60,10 +61,10 @@ Signature.prototype.calculateFee = function () {
 /**
  * Verifies signature fields from transaction asset and sender.
  * @implements module:transactions#Transaction~verifySignature
- * @param {transaction} trs 
+ * @param {transaction} trs
  * @param {account} sender
  * @param {function} cb - Callback function.
- * @returns {setImmediateCallback|transaction} returns error string if invalid parameter | 
+ * @returns {setImmediateCallback|transaction} returns error string if invalid parameter |
  * trs validated.
  */
 Signature.prototype.verify = function (trs, sender, cb) {
@@ -98,6 +99,10 @@ Signature.prototype.verify = function (trs, sender, cb) {
 
 	return setImmediate(cb, null, trs);
 };
+
+Signature.prototype.verifyUnconfirmed = function (trs, sender, cb) {
+	return setImmediate(cb);
+}
 
 /**
  * Returns transaction with setImmediate.
@@ -146,7 +151,7 @@ Signature.prototype.apply = function (trs, block, sender, cb) {
  * Sets account second signature to null.
  * @implements module:accounts#Accounts~setAccountAndGet
  * @param {transaction} trs - Unnecessary parameter.
- * @param {block} block - Unnecessary parameter. 
+ * @param {block} block - Unnecessary parameter.
  * @param {account} sender
  * @param {function} cb - Callback function.
  */
@@ -163,7 +168,7 @@ Signature.prototype.undo = function (trs, block, sender, cb) {
  * Activates unconfirmed second signature for sender account.
  * @implements module:accounts#Accounts~setAccountAndGet
  * @param {transaction} trs - Unnecessary parameter.
- * @param {block} block - Unnecessary parameter. 
+ * @param {block} block - Unnecessary parameter.
  * @param {account} sender
  * @param {function} cb - Callback function.
  * @return {setImmediateCallback} Error if second signature is already enabled.
@@ -180,7 +185,7 @@ Signature.prototype.applyUnconfirmed = function (trs, sender, cb) {
  * Deactivates unconfirmed second signature for sender account.
  * @implements module:accounts#Accounts~setAccountAndGet
  * @param {transaction} trs - Unnecessary parameter.
- * @param {block} block - Unnecessary parameter. 
+ * @param {block} block - Unnecessary parameter.
  * @param {account} sender
  * @param {function} cb - Callback function.
  */

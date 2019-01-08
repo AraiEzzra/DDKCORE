@@ -347,11 +347,16 @@ Process.prototype.generateBlock = function (keypair, timestamp, cb) {
 			// Check transaction depends on type
 			if (library.logic.transaction.ready(transaction, sender)) {
 				// Verify transaction
-				library.logic.transaction.verify(transaction, sender, undefined, true, function (err) {
-                    if (!err) {
-                        ready.push(transaction);
-                    }
-					return setImmediate(cb);
+				library.logic.transaction.verify({
+					trs: transaction,
+					sender,
+					checkExists: true,
+					cb: function (err) {
+						if (!err) {
+							ready.push(transaction);
+						}
+						return setImmediate(cb);
+					},
 				});
 			} else {
 				return setImmediate(cb);
@@ -363,6 +368,7 @@ Process.prototype.generateBlock = function (keypair, timestamp, cb) {
         }
 		let block;
 		try {
+			modules.accounts.mergeAccountAndGet
 			// Create a block
 			block = library.logic.block.create({
 				keypair: keypair,
