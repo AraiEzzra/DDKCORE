@@ -42,7 +42,7 @@ exports.makeBulk = function (list, index) {
     let bulk = [], indexId;
     for (let current in list) {
         if (list[current].stakeId) {
-            indexId = list[current].stakeId;
+            indexId = list[current].id;
         } else {
             indexId = list[current].b_height;
         }
