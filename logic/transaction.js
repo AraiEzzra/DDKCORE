@@ -1133,7 +1133,7 @@ Transaction.prototype.afterSave = async function (trs, cb) {
             index: 'trs',
             type: 'trs',
             body: lastTransaction,
-            id: lastTransaction.rowId
+            id: lastTransaction.id
         });
         if (typeof tx_type.afterSave === 'function') {
             return tx_type.afterSave.call(this, trs, cb);

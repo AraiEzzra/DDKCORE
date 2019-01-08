@@ -522,7 +522,7 @@ Transport.prototype.onNewBlock = function (block, broadcast) {
 					index: 'blocks_list',
 					type: 'blocks_list',
 					body: lastBlock,
-					id: lastBlock.b_height
+					id: lastBlock.b_id
 				});
 			})
 	}
