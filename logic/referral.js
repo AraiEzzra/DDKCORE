@@ -118,13 +118,27 @@ Referral.prototype.dbFields = [
     'level'
 ];
 
-Referral.prototype.dbSave = function (trs) {
+Referral.prototype.dbSave = async function (trs) {
+    let referral;
+    try {
+        referral = await library.db.oneOrNone(sql.referLevelChain, {
+            address: trs.recipientId,
+        });
+    } catch (error) {
+        library.logger.error(`Cannot get referral row from db. ${error}`);
+        return null;
+    }
+
+    if (referral) {
+        return null;
+    }
+
     return {
         table: this.dbTable,
         fields: this.dbFields,
         values: {
             address: trs.recipientId,
-            level: trs.asset.referrals.length ? `{${trs.asset.referrals.toString()}}` : null,
+            level: trs.asset.referrals.length ? `{${trs.asset.referrals.toString()}}` : '{}',
         }
     };
 };
