@@ -1082,7 +1082,6 @@ Transaction.prototype.dbFields = ['id', 'blockId', 'type', 'timestamp', 'senderP
  * @throws {String|error} error string | catch error
  */
 Transaction.prototype.dbSave = function (trs) {
-    console.log('TRANSACTION!!!!!!!!!!!!: ', trs);
     if (!__private.types[trs.type]) {
         throw 'Unknown transaction type ' + trs.type;
     }
