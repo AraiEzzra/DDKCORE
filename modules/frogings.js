@@ -11,6 +11,8 @@ let cache = require('./cache.js');
 
 const COUNT_ACTIVE_STAKE_HOLDERS_KEY = 'COUNT_ACTIVE_STAKE_HOLDERS';
 const COUNT_ACTIVE_STAKE_HOLDERS_EXPIRE = 300; // 5 minutes
+const COUNT_TOTAL_DDK_STAKED = 'COUNT_TOTAL_DDK_STAKED';
+const COUNT_TOTAL_DDK_STAKED_EXPIRE = 300; // 5 minutes
 
 // Private fields
 let __private = {};
@@ -143,16 +145,23 @@ Frogings.prototype.shared = {
 		}
 	},
 
-	totalDDKStaked: function (req, cb) {
-		library.db.one(sql.getTotalStakedAmount)
-		.then(function (row) {
-			return setImmediate(cb, null, {
-				totalDDKStaked: row
-			});
-		})
-		.catch(function (err) {
+	totalDDKStaked: async function (req, cb) {
+        try {
+            const resultFromCache = await cache.prototype.getJsonForKeyAsync(COUNT_TOTAL_DDK_STAKED);
+
+            if (resultFromCache !== null) {
+                return setImmediate(cb, null, { totalDDKStaked: resultFromCache });
+            }
+
+            const totalDDKStaked = await library.db.one(sql.getTotalStakedAmount);
+            await cache.prototype.setJsonForKeyAsync(
+                COUNT_TOTAL_DDK_STAKED, totalDDKStaked, COUNT_TOTAL_DDK_STAKED_EXPIRE
+            );
+            return setImmediate(cb, null, { totalDDKStaked: totalDDKStaked });
+
+        } catch (err) {
 			return setImmediate(cb, err);
-		});
+		}
 	},
 
 	getMyDDKFrozen: function (req, cb) {

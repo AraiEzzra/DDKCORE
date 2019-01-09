@@ -44,7 +44,7 @@ let FrogingsSql = {
 
 	countStakeholders: 'select count(1) from (select 1 from stake_orders o where o.status = 1 group by "senderId") a',
 
-	getTotalStakedAmount: 'SELECT sum("freezedAmount") FROM stake_orders WHERE "status"=1',
+	getTotalStakedAmount: 'SELECT coalesce(sum("freezedAmount"), 0) as sum FROM stake_orders WHERE "status"=1',
 
 	getMyStakedAmount: 'SELECT sum("freezedAmount") FROM stake_orders WHERE "senderId"=${address} AND "status"=1',
 
