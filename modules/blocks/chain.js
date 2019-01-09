@@ -84,7 +84,7 @@ Chain.prototype.saveGenesisBlock = function (cb) {
 Chain.prototype.saveBlock = function (block, cb) {
 	// Prepare and execute SQL transaction
 	// WARNING: DB_WRITE
-	library.db.tx(function (t) {
+	library.db.tx(async function (t) {
 		// Create bytea fields (buffers), and returns pseudo-row object promise-like
 		let promise = library.logic.block.dbSave(block);
 		// Initialize insert helper
@@ -96,7 +96,7 @@ Chain.prototype.saveBlock = function (block, cb) {
 		];
 
 		// Apply transactions inserts
-		t = __private.promiseTransactions(t, block, promises);
+		t = await __private.promiseTransactions(t, block, promises);
 		// Exec inserts as batch
 		t.batch(promises);
 	}).then(function () {
@@ -142,12 +142,12 @@ __private.afterSave = function (block, cb) {
  * @return {Object} t SQL connection object filled with inserts
  * @throws Will throw 'Invalid promise' when no promise, promise.values or promise.table
  */
-__private.promiseTransactions = function (t, block) {
+__private.promiseTransactions = async function (t, block) {
 	if (_.isEmpty(block.transactions)) {
 		return t;
 	}
 
-	let transactionIterator = function (transaction) {
+	let transactionIterator = async function (transaction) {
 		// Apply block ID to transaction
 		transaction.blockId = block.id;
 		// Create bytea fileds (buffers), and returns pseudo-row promise-like object
@@ -155,7 +155,7 @@ __private.promiseTransactions = function (t, block) {
 			transaction.timestamp=slots.getTime();
 		} */
 
-		return library.logic.transaction.dbSave(transaction);
+		return await library.logic.transaction.dbSave(transaction);
 	};
 
 	let promiseGrouper = function (promise) {
@@ -182,7 +182,10 @@ __private.promiseTransactions = function (t, block) {
 		t.none(inserts.template(), inserts);
 	};
 
-	let promises = _.flatMap(block.transactions, transactionIterator);
+	let promises = [];
+	for (let trs of block.transactions) {
+		promises.push(...await transactionIterator(trs));
+	}
 	_.each(_.groupBy(promises, promiseGrouper), typeIterator);
 
 	return t;
@@ -492,7 +495,7 @@ Chain.prototype.applyBlock = function (block, broadcast, cb, saveBlock) {
 				self.saveBlock(block, function (err) {
 					if (err) {
 						// Fatal error, memory tables will be inconsistent
-						library.logger.error('Failed to save block...');
+						library.logger.error('Failed to save block...', err);
 						library.logger.error('Block', block);
 
 						return process.exit(0);

@@ -1081,7 +1081,7 @@ Transaction.prototype.dbFields = ['id', 'blockId', 'type', 'timestamp', 'senderP
  * @return {Object[]} dbSave result + created object
  * @throws {String|error} error string | catch error
  */
-Transaction.prototype.dbSave = function (trs) {
+Transaction.prototype.dbSave = async function (trs) {
     if (!__private.types[trs.type]) {
         throw 'Unknown transaction type ' + trs.type;
     }
@@ -1126,7 +1126,7 @@ Transaction.prototype.dbSave = function (trs) {
         }
     }];
 
-    let promise = __private.types[trs.type].dbSave(trs);
+    let promise = await __private.types[trs.type].dbSave(trs);
 
     if (promise) {
         promises.push(promise);
