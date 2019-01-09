@@ -113,21 +113,21 @@ __private.openAccount = function (body, cb) {
 				u_multisignatures: null
 			};
 
-			self.getReferralLinkChain(body.referal, account.address).then((level) => {
+			self.verifyReferral(body.referal, account.address).then(() => {
 				library.logic.transaction.create({
 					type: transactionTypes.REFERRAL,
 					sender: account,
 					keypair: keypair,
-					referrals: level
-				}).then((transactionReferral) => {
-					modules.transactions.receiveTransactions([transactionReferral], true, (err) => {
+					referral: body.referal,
+				}).then((referralTransaction) => {
+					modules.transactions.receiveTransactions([referralTransaction], true, (err) => {
 						return setImmediate(cb, null, account);
 					});
 				}).catch((err) => {
 					throw err;
 				});
 			}).catch((err) => {
-				library.logger.error("Referral API Error : " + err);
+				library.logger.error("Referral API Error: " + err);
 				return setImmediate(cb, err.toString());
 			});
 		}
@@ -173,50 +173,27 @@ Accounts.prototype.getAccount = function (filter, fields, cb) {
 	library.logic.account.get(filter, fields, cb);
 };
 
-/**
- * Firstly check whether this referral id is valid or not.
- * If valid Generate referral chain for that user.
- * In case of no referral, chain will contain the null value i.e; Blank.
- * @param {referalLink} - Refer Id.
- * @param {address} - Address of user during registration.
- * @author - Satish Joshi
- */
-
-Accounts.prototype.getReferralLinkChain = async function (referalLink, address) {
-
-    let referrer_address = referalLink;
-    if (!referrer_address) {
-        referrer_address = '';
-    }
-    let level = [];
-    if (referrer_address == address) {
-        return Promise.reject('Introducer and sponsor can\'t be same');
-    }
-    let userExists = false;
-    try {
-        userExists = await library.db.one(sql.validateReferSource, { referSource: referrer_address });
-    } catch (e){
-        return Promise.reject('Referral Link is Invalid' + JSON.stringify(e));
-    }
-    userExists = userExists.address ? parseInt(userExists.address, 10) > 0 : false;
-
-    if (userExists) {
-				level.unshift(referrer_address);
-				return new Promise((resolve, reject) => {
-						library.logic.account.findReferralLevel(referrer_address, function (err, resp) {
-								if (err) {
-										return reject(err);
-								}
-								if (resp.length != 0 && resp[0].level != null) {
-										let chain_length = ((resp[0].level.length) < 15) ? (resp[0].level.length) : 14;
-										level = level.concat(resp[0].level.slice(0, chain_length));
-								}
-								resolve(level);
-						});
-			});
+Accounts.prototype.verifyReferral = async function (referralAddress, accountAddress) {
+	if (!referralAddress) {
+		return Promise.resolve();
 	}
-	return Promise.resolve([]);
 
+	if (referralAddress === accountAddress) {
+		return Promise.reject('Introducer and sponsor cannot be same');
+	}
+
+	let referral;
+	try {
+		referral = await library.db.oneOrNone(sql.getUserByAddress, { address: referralAddress });
+	} catch (error) {
+		return Promise.reject('Cannot get account from db: ' + error.message);
+	}
+
+	if (!referral) {
+		return Promise.reject('Referral does not found');
+	}
+
+	return Promise.resolve();
 };
 
 /**
@@ -1056,7 +1033,7 @@ Accounts.prototype.shared = {
             return setImmediate(cb, err);
 		}
 	},
-	
+
 	checkAccountExists: function(req, cb) {
 		library.schema.validate(req.body, schema.checkAccountExists, async function(err) {
 			if (err) {
