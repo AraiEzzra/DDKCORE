@@ -1144,15 +1144,18 @@ Transaction.prototype.dbSave = function (trs) {
  */
 Transaction.prototype.afterSave = async function (trs, cb) {
     if (trs.type === transactionTypes.STAKE) {
-        const stakeOrders = await self.scope.db.manyOrNone(sqlFroging.getFrozeOrders, {
-            senderId: trs.senderId,
+        const stakeOrder = await self.scope.db.one(sqlFroging.getStakeById, {
+            id: trs.id,
             limit: 10000,
             offset: 0
         });
-        if (stakeOrders && stakeOrders.length > 0) {
-            const bulkStakeOrders = utils.makeBulk(stakeOrders, 'stake_orders');
-            await utils.indexall(bulkStakeOrders, 'stake_orders');
-
+        if (stakeOrder) {
+            await utils.addDocument({
+                index: 'stake_orders',
+                type: 'stake_orders',
+                body: stakeOrder,
+                id: stakeOrder.id
+            });
         } else {
             setImmediate(cb, 'couldn\'t add document to index stake_orders in the ElasticSearch');
         }
