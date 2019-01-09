@@ -23,7 +23,7 @@ Referral.prototype.bind = function () {
 
 Referral.prototype.create = async function (data, trs) {
     trs.recipientId = data.sender.address;
-    trs.asset.referrals = [...data.referrals];
+    trs.asset.referral = data.referral;
     trs.trsName = "REGISTER";
     return trs;
 };
@@ -133,12 +133,34 @@ Referral.prototype.dbSave = async function (trs) {
         return null;
     }
 
+    const level = [];
+    if (trs.asset.referral) {
+        try {
+            referral = await library.db.oneOrNone(sql.referLevelChain, {
+                address: trs.asset.referral,
+            });
+        } catch (error) {
+            library.logger.error(`Cannot get referral row from db. ${error}`);
+            return null;
+        }
+
+
+        if (!referral || !referral.level) {
+            level.push(trs.asset.referral);
+        } else {
+            if (referral.level.length > 14) {
+                referral.level.length = 14;
+            }
+            level.push(trs.asset.referral, ...referral.level);
+        }
+    }
+
     return {
         table: this.dbTable,
         fields: this.dbFields,
         values: {
             address: trs.recipientId,
-            level: trs.asset.referrals.length ? `{${trs.asset.referrals.toString()}}` : '{}',
+            level: `{${level.toString()}}`,
         }
     };
 };
