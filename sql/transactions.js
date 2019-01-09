@@ -47,7 +47,7 @@ let TransactionsSql = {
 
 	getVotesById: 'SELECT * FROM votes WHERE "transactionId" = ${id}',
 
-	getUserNames: 'SELECT * from users_list',
+	getDelegateNames: 'SELECT username as m_username, address as m_address from mem_accounts where mem_accounts."isDelegate" = 1',
 
 	getTransactionById: 'SELECT * from trs WHERE "id" = ${id}'
 };
