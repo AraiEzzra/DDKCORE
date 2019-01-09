@@ -1145,9 +1145,7 @@ Transaction.prototype.dbSave = function (trs) {
 Transaction.prototype.afterSave = async function (trs, cb) {
     if (trs.type === transactionTypes.STAKE) {
         const stakeOrder = await self.scope.db.one(sqlFroging.getStakeById, {
-            id: trs.id,
-            limit: 10000,
-            offset: 0
+            id: trs.id
         });
         if (stakeOrder) {
             await utils.addDocument({
