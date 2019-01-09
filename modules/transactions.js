@@ -219,21 +219,22 @@ __private.list = function (filter, cb) {
 			sortField: orderBy.sortField,
 			sortMethod: orderBy.sortMethod
 		}), params).then(function (rows) {
-			let transactions = [];
-			library.db.query(sql.getUserNames)
+			library.db.query(sql.getDelegateNames)
 			.then(function(delegates) {
-				for (let i = 0; i < rows.length; i++) {
-					transactions.push(library.logic.transaction.dbRead(rows[i]));
-					for (let j = 0; j < delegates.length; j++) {
-						if(rows[i].t_senderId === delegates[j].m_address) {
-							transactions[i].senderName = delegates[j].m_username;
-						}
-						if(rows[i].t_recipientId === delegates[j].m_address) {
-							transactions[i].recipientName = delegates[j].m_username;
-						}
-					}
-				}
-	
+                // TODO remove that logic if count delegates will be more than 100
+                // https://trello.com/c/yQ6JC62S/214-remove-logic-add-username-for-transactions-get-if-count-delegates-will-be-more-than-100
+			    const delegatesMap = Object.assign({}, constants.DEFAULT_USERS);
+
+			    delegates.forEach(delegate => {
+			        delegatesMap[delegate.m_address] = delegate.m_username;
+                });
+
+			    const transactions = rows.map(row => {
+                    const trs = library.logic.transaction.dbRead(row);
+                    trs.senderName = delegatesMap[trs.t_senderId];
+                    trs.recipientName = delegatesMap[trs.t_recipientId];
+                });
+
 				let data = {
 					transactions: transactions,
 					count: count
