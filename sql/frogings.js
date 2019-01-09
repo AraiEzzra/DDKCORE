@@ -60,7 +60,9 @@ let FrogingsSql = {
 
 	getRecentlyChangedFrozeOrders: 'SELECT * FROM stake_orders WHERE "senderId"=${senderId} AND ${currentTime} < "nextVoteMilestone"',
 
-	getStakeRewardHistory: 'SELECT "v_reward", "t_timestamp", count(*) OVER() AS rewards_count from full_blocks_list WHERE "t_senderId" = ${senderId} AND "v_reward" > 0 ORDER BY "t_timestamp" DESC LIMIT ${limit} OFFSET ${offset}'
+	getStakeRewardHistory: 'SELECT "v_reward", "t_timestamp", count(*) OVER() AS rewards_count from full_blocks_list WHERE "t_senderId" = ${senderId} AND "v_reward" > 0 ORDER BY "t_timestamp" DESC LIMIT ${limit} OFFSET ${offset}',
+
+	getStakeById: 'SELECT * FROM stake_orders WHERE "id"=${id}'
 };
 
 module.exports = FrogingsSql;
