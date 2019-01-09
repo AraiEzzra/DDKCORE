@@ -11,7 +11,7 @@ else
     wait-port "$DB_HOST:${DB_PORT:-5432}" && \
     wait-port "$ELASTICSEARCH_HOST" && \
     wait-port "$REDIS_HOST:${REDIS_PORT:-6379}" && \
-    wait-port "10.6.0.7:5000" && \
+    wait-port "$WATCHER_HOST:$WATCHER_PORT" && \
     sleep 5
-    npm start
+    npm run server
 fi

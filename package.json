@@ -3,7 +3,8 @@
   "version": "0.9.9a",
   "private": true,
   "scripts": {
-    "start": "nodemon --max-old-space-size=8192 dist/app.js",
+    "start": "node --max-old-space-size=8192 dist/app.js",
+    "server": "nodemon --max-old-space-size=8192 dist/app.js",
     "debug": "node --inspect=0.0.0.0:9229 app.js",
     "test": "./node_modules/.bin/grunt test --verbose",
     "jenkins": "./node_modules/.bin/grunt jenkins --verbose",
