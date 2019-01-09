@@ -13,3 +13,6 @@ config.json
 .nyc_output/
 api/rpc/client.js
 dist/
+.bash_history
+.config/
+dapps/

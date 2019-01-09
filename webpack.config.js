@@ -1,6 +1,5 @@
 const path = require('path');
 const DIR = path.resolve(__dirname);
-const fs = require('fs');
 const nodeExternals = require('webpack-node-externals');
 
 const CopyWebpackPlugin = require('copy-webpack-plugin');
