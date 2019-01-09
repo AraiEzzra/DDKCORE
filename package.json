@@ -79,6 +79,7 @@
     "validator.js": "=2.0.3",
     "winston": "^2.4.0",
     "winston-daily-rotate-file": "^1.7.2",
+    "winston-udp-transport": "0.0.6",
     "z-schema": "=3.18.2"
   },
   "devDependencies": {

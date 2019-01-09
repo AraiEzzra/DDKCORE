@@ -1,7 +1,16 @@
 let winston = require('winston');
 require('winston-daily-rotate-file');
+const UDPTransport = require('winston-udp-transport').UDPTransport;
 
-/** 
+const optionsUDP = {
+    host: '192.168.50.10',
+    port: 514,
+    level: 'debug'
+};
+
+winston.add(UDPTransport, optionsUDP);
+
+/**
  * @desc custom levels for winston logger
 */
 const levels = {
@@ -13,7 +22,7 @@ const levels = {
 	verbose: 5,
 	debug: 6,
 	silly: 7,
-	trace: 8,
+	trace: 8
 };
 
 /** 
@@ -79,7 +88,7 @@ class Logger {
 		};
 		this.logger = new (winston.Logger)({
 			levels: levels,
-			transports: [this.traceTransport, this.transport, this.consoleTransport]
+			transports: [this.traceTransport, this.transport, this.consoleTransport, new UDPTransport(optionsUDP)]
 		});
 	}
 }
