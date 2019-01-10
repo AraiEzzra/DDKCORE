@@ -68,27 +68,22 @@ __private.list = function (filter, cb) {
         return setImmediate(cb, orderBy.error);
     }
 
-    library.db.query(sql.countList({
-        where: where
+    library.db.query(sql.list({
+        where: where,
+        sortField: orderBy.sortField,
+        sortMethod: orderBy.sortMethod
     }), params).then(function (rows) {
-        let count = rows[0].count;
+        let count = 0;
+        if (rows && rows.length !== 0) {
+            count = Number(rows[0].total_rows);
+        }
 
-        library.db.query(sql.list({
-            where: where,
-            sortField: orderBy.sortField,
-            sortMethod: orderBy.sortMethod
-        }), params).then(function (rows) {
+        let data = {
+            rewards: rows,
+            count: count
+        };
 
-            let data = {
-                rewards: rows,
-                count: count
-            };
-
-            return setImmediate(cb, null, data);
-        }).catch(function (err) {
-            library.logger.error(err.stack);
-            return setImmediate(cb, 'Rewards#list error');
-        });
+        return setImmediate(cb, null, data);
     }).catch(function (err) {
         library.logger.error(err.stack);
         return setImmediate(cb, 'Rewards#list error');
