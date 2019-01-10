@@ -1,6 +1,10 @@
 
 require('./rpc/getBlocksCount.js');
 require('./rpc/getAccount.js');
+
+require('./unit/logic/signature.js');
+
+/* todo: uncomment one by one after recode
 require('./rpc/getStatus.js');
 require('./rpc/getTransactions.js');
 require('./rpc/getBalance.js');
@@ -49,4 +53,4 @@ require('./api/peer.transactions.signatures');
 require('./api/peer.transactions.votes');
 require('./api/peers');
 require('./api/signatures');
-require('./api/transactions');
+require('./api/transactions');*/
