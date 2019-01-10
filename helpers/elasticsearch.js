@@ -39,13 +39,12 @@ const iterate = async (db, logger, table, limit, rowsAcc, bulkAcc, lastValue) =>
     await iterate(db, logger, table, limit, rowsAcc, bulkAcc, lastValue);
 };
 
-module.exports.sync = (db, logger, cb) => {
+module.exports.sync = (db, logger) => {
     let promises = [];
     dbTables.forEach(function (table) {
         promises.push(iterate(db, logger, table, limit, [], [], 0));
     });
     Promise.all(promises).then( () => {
         logger.info('Elasticsearch indexed ok');
-        cb();
     });
 };

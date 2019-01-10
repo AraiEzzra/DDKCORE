@@ -41,9 +41,9 @@ exports.merge = function merge(a, b) {
 exports.makeBulk = function (list, index) {
     let bulk = [], indexId;
     for (let current in list) {
-        if (list[current].stakeId) {
+        if (list[current].stakeId || list[current].rowId) {
             indexId = list[current].id;
-        } else {
+        } else if (list[current].b_height) {
             indexId = list[current].b_id;
         }
         if (index === 'blocks_list') {

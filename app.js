@@ -623,11 +623,7 @@ d.run(function () {
 			cb();
 		}],
 
-        elasticsearch: ['db', 'logger', function (scope, cb) {
-            elasticsearchSync.sync(scope.db, scope.logger, cb);
-        }],
-
-		ready: ['modules', 'bus', 'logic', 'elasticsearch', function (scope, cb) {
+		ready: ['modules', 'bus', 'logic', function (scope, cb) {
 			scope.bus.message('bind', scope.modules);
 			scope.logic.transaction.bindModules(scope.modules);
 			scope.logic.peers.bindModules(scope.modules);
@@ -692,7 +688,7 @@ d.run(function () {
 			//require('./helpers/accountCreateETPS').AccountCreateETPS(scope);
 
 			cronjob.startJob('archiveLogFiles');
-
+			elasticsearchSync.sync(scope.db, scope.logger);
 			/**
 			 * Handles app instance (acts as global variable, passed as parameter).
 			 * @global
