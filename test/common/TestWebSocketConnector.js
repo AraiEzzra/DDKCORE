@@ -1,5 +1,6 @@
+const env = process.env;
 const WebSocket = require('rpc-websockets').Client;
-const URL_DEFAULT = 'ws://localhost:8080/v1';
+const URL_DEFAULT = `ws://${env['HOST']}:${env['RPC_PORT']}/v1`;
 
 
 class TestWebSocketConnector {
