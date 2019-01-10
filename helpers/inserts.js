@@ -47,7 +47,8 @@ function Inserts (record, values, concat) {
 		} else {
 			values = '(' + this.namedTemplate() + ')';
 		}
-		return pgp.as.format('INSERT INTO $1~($2^) VALUES $3^', [record.table, fields, values]);
+		// TODO: https://trello.com/c/D3iBP5UZ/220-remove-on-conflict-do-nothing-from-inserts-function
+		return pgp.as.format('INSERT INTO $1~($2^) VALUES $3^ ON CONFLICT DO NOTHING', [record.table, fields, values]);
 	};
 
 	this._rawDBType = true;

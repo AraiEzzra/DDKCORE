@@ -294,11 +294,9 @@ Vote.prototype.verify = function (trs, sender, cb) {
                 }
             }
 
-            return self.checkConfirmedDelegates(trs, seriesCb);
+            return setImmediate(seriesCb);
         },
-    ], function (err) {
-        return setImmediate(cb, err);
-    });
+    ], cb);
 };
 
 /**
@@ -312,7 +310,7 @@ Vote.prototype.verify = function (trs, sender, cb) {
  * calls checkConfirmedDelegates.
  */
 Vote.prototype.verifyUnconfirmed = function (trs, sender, cb) {
-    return setImmediate(cb);
+    return self.checkUnconfirmedDelegates(trs, cb);
 };
 
 /**
@@ -433,9 +431,6 @@ Vote.prototype.apply = function (trs, block, sender, cb) {
     let parent = this;
 
     async.series([
-        function (seriesCb) {
-            self.checkConfirmedDelegates(trs, seriesCb);
-        },
         function (seriesCb) {
             parent.scope.account.merge(sender.address, {
                 delegates: trs.asset.votes,
@@ -561,18 +556,11 @@ Vote.prototype.undo = function (trs, block, sender, cb) {
 Vote.prototype.applyUnconfirmed = function (trs, sender, cb) {
     let parent = this;
 
-    async.series([
-        function (seriesCb) {
-            self.checkUnconfirmedDelegates(trs, seriesCb);
-        },
-        function (seriesCb) {
-            parent.scope.account.merge(sender.address, {
-                u_delegates: trs.asset.votes
-            }, function (err) {
-                return setImmediate(seriesCb, err);
-            });
-        }
-    ], cb);
+    parent.scope.account.merge(sender.address, {
+        u_delegates: trs.asset.votes
+    }, function (err) {
+        return setImmediate(cb, err);
+    });
 };
 
 /**
