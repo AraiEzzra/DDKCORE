@@ -677,6 +677,8 @@ Account.prototype.getAll = function (filter, fields, cb) {
 		filter.address = {
 			$upper: ['address', filter.address]
 		};
+	} else {
+		return setImmediate(cb);
 	}
 
 	let sql = jsonSql.build({
