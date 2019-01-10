@@ -47,7 +47,8 @@ function Inserts (record, values, concat) {
 		} else {
 			values = '(' + this.namedTemplate() + ')';
 		}
-		return pgp.as.format('INSERT INTO $1~($2^) VALUES $3^', [record.table, fields, values]);
+		// TODO: https://trello.com/c/hokoAxK9/163-fix-duplicate-key-value-violates-unique-constraint-referalspkey
+		return pgp.as.format('INSERT INTO $1~($2^) VALUES $3^ ON CONFLICT DO NOTHING', [record.table, fields, values]);
 	};
 
 	this._rawDBType = true;
