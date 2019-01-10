@@ -231,8 +231,9 @@ __private.list = function (filter, cb) {
 
 			    const transactions = rows.map(row => {
                     const trs = library.logic.transaction.dbRead(row);
-                    trs.senderName = delegatesMap[trs.t_senderId];
-                    trs.recipientName = delegatesMap[trs.t_recipientId];
+                    trs.senderName = delegatesMap[trs.senderId];
+                    trs.recipientName = delegatesMap[trs.recipientId];
+                    return trs;
                 });
 
 				let data = {
