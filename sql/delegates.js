@@ -50,7 +50,9 @@ let DelegatesSql = {
 
 	insertFork: 'INSERT INTO forks_stat ("delegatePublicKey", "blockTimestamp", "blockId", "blockHeight", "previousBlock", "cause") VALUES (${delegatePublicKey}, ${blockTimestamp}, ${blockId}, ${blockHeight}, ${previousBlock}, ${cause});',
 
-	getVoters: 'SELECT ARRAY_AGG("accountId") AS "accountIds" FROM mem_accounts2delegates WHERE "dependentId" = ${publicKey}',
+	getVoters: 'SELECT accounts.address, accounts.balance, encode(accounts."publicKey", \'hex\') AS "publicKey" FROM mem_accounts2delegates delegates INNER JOIN mem_accounts accounts ON delegates."accountId" = accounts.address WHERE delegates."dependentId" = ${publicKey} ORDER BY accounts."balance" DESC LIMIT ${limit} OFFSET ${offset}',
+
+	getVotersCount:'SELECT count(*) FROM mem_accounts2delegates WHERE "dependentId" = ${publicKey}',
 
 	getLatestVoters: 'SELECT * from trs WHERE type = 3 ORDER BY timestamp DESC LIMIT ${limit}',
 

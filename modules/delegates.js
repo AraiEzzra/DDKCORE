@@ -872,22 +872,18 @@ Delegates.prototype.shared = {
 				return setImmediate(cb, err[0].message);
 			}
 
-			library.db.one(sql.getVoters, { publicKey: req.body.publicKey }).then(function (row) {
-				let addresses = (row.accountIds) ? row.accountIds : [];
-
-				modules.accounts.getAccounts({
-					address: { $in: addresses },
-					sort: 'balance'
-				}, ['address', 'balance', 'username', 'publicKey'], function (err, rows) {
-					if (err) {
-						return setImmediate(cb, err);
-					} else {
-						return setImmediate(cb, null, {accounts: rows});
-					}
+			library.db.one(sql.getVotersCount, { publicKey: req.body.publicKey }).then(function (count) {
+				let voteCount = count;
+				library.db.many(sql.getVoters, { publicKey: req.body.publicKey, limit: req.body.limit, offset: req.body.offset }).then(function (voters) {
+					return setImmediate(cb, null, { voters: voters, count: voteCount });
+				}).catch(function (err) {
+					library.logger.error(err.stack);
+					return setImmediate(cb, 'Failed to get voters for delegate: ' + req.body.publicKey);
 				});
+
 			}).catch(function (err) {
 				library.logger.error(err.stack);
-				return setImmediate(cb, 'Failed to get voters for delegate: ' + req.body.publicKey);
+				return setImmediate(cb, 'Failed to get voters count for delegate: ' + req.body.publicKey);
 			});
 		});
 	},
