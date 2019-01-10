@@ -21,6 +21,7 @@ let mailServices = require('../helpers/postmark');
 // Private fields
 let modules, library, self, __private = {}, shared = {};
 let frogings_sql = require('../sql/frogings');
+const DDK_DATA_EXPIRE = 300;
 
 __private.assetTypes = {};
 
@@ -1026,7 +1027,7 @@ Accounts.prototype.shared = {
 					});
 				})();
 
-                await cache.prototype.setJsonForKeyAsync('ddkCache', ddkData);
+                await cache.prototype.setJsonForKeyAsync('ddkCache', ddkData, DDK_DATA_EXPIRE);
                 setImmediate(cb, null, ddkData);
             }
         } catch (err) {
