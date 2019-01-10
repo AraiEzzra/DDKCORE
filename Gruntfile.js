@@ -6,7 +6,7 @@ const config = require('./config.json');
 
 module.exports = (grunt) => {
   const files = [
-    'logger.js',
+    'src/logger.js',
     'api/**/*.js',
     'helpers/**/*.js',
     'modules/**/*.js',
@@ -74,7 +74,7 @@ module.exports = (grunt) => {
       },
 
       coverage: {
-        command: 'export NODE_ENV=testnet && ./node_modules/.bin/nyc ./node_modules/.bin/_mocha',
+        command: 'export NODE_ENV=testnet && ./node_modules/.bin/nyc ./node_modules/.bin/_mocha ./src/test',
         maxBuffer: maxBufferSize,
       },
 
@@ -109,13 +109,13 @@ module.exports = (grunt) => {
         fix: false,
       },
       target: [
-        'api/**/*.js',
-        'helpers/**/*.js',
-        'modules/**/*.js',
-        'logic/**/*.js',
-        'schema/**/*.js',
-        'tasks/**/*.js',
-        'test/**/*.js',
+        './src/api/**/*.js',
+        './src/helpers/**/*.js',
+        './src/modules/**/*.js',
+        './src/logic/**/*.js',
+        './src/schema/**/*.js',
+        './src/tasks/**/*.js',
+        './src/test/**/*.js',
       ],
     }
   });

@@ -14,8 +14,8 @@
     "server-docs": "npm run jsdoc && http-server docs/jsdoc/",
     "build": "./node_modules/webpack/bin/webpack.js --progress --profile --colors",
     "watch": "./node_modules/webpack/bin/webpack.js --progress --colors --watch",
-    "clean-modules": "rm -rf node_modules/",
-    "watch:with_update_clean": "npm run clean-modules && npm install && npm run watch",
+    "clean": "rm -rf node_modules/ dist/ dapps/ .nyc_output/ logs/ .npm/ .config/ .node-gyp",
+    "watch:with_update_clean": "npm run clean && npm install && npm run watch",
     "watch:with_update": "npm install && npm run watch"
   },
   "author": "DDK Foundation <http://www.ddkoin.com/>",
