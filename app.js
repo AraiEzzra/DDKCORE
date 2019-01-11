@@ -627,6 +627,7 @@ d.run(function () {
 			scope.bus.message('bind', scope.modules);
 			scope.logic.transaction.bindModules(scope.modules);
 			scope.logic.peers.bindModules(scope.modules);
+			elasticsearchSync.sync(scope.db, scope.logger);
 			cb();
 		}],
 
@@ -688,7 +689,6 @@ d.run(function () {
 			//require('./helpers/accountCreateETPS').AccountCreateETPS(scope);
 
 			cronjob.startJob('archiveLogFiles');
-			elasticsearchSync.sync(scope.db, scope.logger);
 			/**
 			 * Handles app instance (acts as global variable, passed as parameter).
 			 * @global
