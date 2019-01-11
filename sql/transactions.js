@@ -26,6 +26,7 @@ let TransactionsSql = {
 		return [
 			'WITH t0 AS (' +
             '    SELECT' +
+            (params.where.length ? ' count(1) OVER () AS total_rows,' : ''),
             '      t.id                                          AS t_id,' +
             '      t."blockId"                                   AS "t_blockId",' +
             '      t."rowId"                                     AS "t_rowId",' +

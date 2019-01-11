@@ -230,12 +230,20 @@ __private.list = function (filter, cb) {
 		return setImmediate(cb, orderBy.error);
 	}
 
+	const sqlList = sql.list({
+        where: where,
+        owner: owner,
+        sortField: orderBy.sortField,
+        sortMethod: orderBy.sortMethod
+    });
+	console.log('sqlList', sqlList);
+
 	library.db.query(sql.list({
 		where: where,
 		owner: owner,
 		sortField: orderBy.sortField,
 		sortMethod: orderBy.sortMethod
-	}), params).then(async function (rows) {
+	}), params).then(async (rows) => {
 
 		let count = rows.length
 			? rows[0].total_rows !== undefined
