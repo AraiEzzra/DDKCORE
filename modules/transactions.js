@@ -1,20 +1,22 @@
 
-let _ = require('lodash');
-let async = require('async');
-let speakeasy = require('speakeasy');
-let constants = require('../helpers/constants.js');
-let crypto = require('crypto');
-let OrderBy = require('../helpers/orderBy.js');
-let sandboxHelper = require('../helpers/sandbox.js');
-let schema = require('../schema/transactions.js');
-let sql = require('../sql/transactions.js');
-let TransactionPool = require('../logic/transactionPool.js');
-let transactionTypes = require('../helpers/transactionTypes.js');
-let Transfer = require('../logic/transfer.js');
-let ReferTransfer = require('../logic/referralTransaction.js');
-let slots = require('../helpers/slots');
-let trsCache = require('memory-cache');
-let expCache = new trsCache.Cache();
+const _ = require('lodash');
+const async = require('async');
+const speakeasy = require('speakeasy');
+const constants = require('../helpers/constants.js');
+const crypto = require('crypto');
+const OrderBy = require('../helpers/orderBy.js');
+const sandboxHelper = require('../helpers/sandbox.js');
+const schema = require('../schema/transactions.js');
+const sql = require('../sql/transactions.js');
+const TransactionPool = require('../logic/transactionPool.js');
+const transactionTypes = require('../helpers/transactionTypes.js');
+const Transfer = require('../logic/transfer.js');
+const slots = require('../helpers/slots');
+const trsCache = require('memory-cache');
+const expCache = new trsCache.Cache();
+const BUFFER = require('../helpers/buffer.js');
+const bignum = require('../helpers/bignum.js');
+
 
 // Private fields
 let __private = {};
@@ -98,6 +100,17 @@ __private.getTotalTrsCountFromCache = async function () {
 	});
 };
 
+__private.getAddressByPublicKey = function (publicKey) {
+    let publicKeyHash = crypto.createHash('sha256').update(publicKey, 'hex').digest();
+    let temp = Buffer.alloc(BUFFER.LENGTH.INT64);
+
+    for (let i = 0; i < 8; i++) {
+        temp[i] = publicKeyHash[7 - i];
+    }
+
+    return 'DDK' + bignum.fromBuffer(temp).toString();
+};
+
 // Private methods
 /**
  * Counts totals and gets transaction list from `trs_list` view.
@@ -174,6 +187,12 @@ __private.list = function (filter, cb) {
 		}
 
 		if (allowedFieldsMap[field[1]]) {
+
+		    if (field[1] === 'senderPublicKey') {
+                field[1] = 'senderId';
+                value = __private.getAddressByPublicKey(filter.senderPublicKey);
+            }
+
 			where.push((!isFirstWhere ? (field[0] + ' ') : '') + allowedFieldsMap[field[1]]);
 			params[field[1]] = value;
 			isFirstWhere = false;
@@ -189,9 +208,10 @@ __private.list = function (filter, cb) {
 
 	// FIXME: Backward compatibility, should be removed after transitional period
 	if (filter.ownerAddress && filter.ownerPublicKey) {
-		owner = '(t."senderPublicKey" = ${ownerPublicKey} OR t."recipientId" = ${ownerAddress})';
-		params.ownerPublicKey = filter.ownerPublicKey;
-		params.ownerAddress = filter.ownerAddress;
+	    const ownerAddressAsSender = __private.getAddressByPublicKey(filter.ownerPublicKey);
+		owner = '(t."senderId" = ${ownerAddressAsSender} OR t."recipientId" = ${ownerAddressAsRecipient})';
+		params.ownerAddressAsSender = ownerAddressAsSender;
+		params.ownerAddressAsRecipient = filter.ownerAddress;
 	}
 
 	if (!filter.limit) {
@@ -229,14 +249,6 @@ __private.list = function (filter, cb) {
 	if (orderBy.error) {
 		return setImmediate(cb, orderBy.error);
 	}
-
-	const sqlList = sql.list({
-        where: where,
-        owner: owner,
-        sortField: orderBy.sortField,
-        sortMethod: orderBy.sortMethod
-    });
-	console.log('sqlList', sqlList);
 
 	library.db.query(sql.list({
 		where: where,
@@ -773,7 +785,7 @@ Transactions.prototype.shared = {
 					return setImmediate(cb, 'Transaction not found');
 				}
 
-				if (transaction.type === 3) {
+				if (transaction.type === transactionTypes.VOTE) {
 					__private.getVotesById(transaction, function (err, transaction) {
 						return setImmediate(cb, null, { transaction: transaction });
 					});
