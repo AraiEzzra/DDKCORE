@@ -26,6 +26,13 @@ module.exports = {
   db: {
     password: env.DB_PASSWORD
   },
+  logging: {
+    udp: {
+          host: '192.168.50.10',
+          port: 514,
+          level: 'debug'
+      }
+  },
   redis: {
     password: env.REDIS_PASSWORD
   },

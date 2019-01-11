@@ -1,13 +1,10 @@
 let winston = require('winston');
 require('winston-daily-rotate-file');
+const constants = require('./helpers/constants.js');
+
 const UDPTransport = require('winston-udp-transport').UDPTransport;
 
-const optionsUDP = {
-    host: '192.168.50.10',
-    port: 514,
-    level: 'debug'
-};
-
+const optionsUDP = constants.logging.udp;
 winston.add(UDPTransport, optionsUDP);
 
 /**
