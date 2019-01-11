@@ -113,34 +113,29 @@ __private.list = function (filter, cb) {
 		id: 't."id" = ${id}',
 		blockId: 't."blockId" = ${blockId}',
 		senderPublicKey: 't."senderPublicKey" = ${senderPublicKey}',
-		recipientPublicKey: 'm."recipientPublicKey" = ${recipientPublicKey}',
+		// TODO can be use in future
+		// recipientPublicKey: 'm."recipientPublicKey" = ${recipientPublicKey}',
+        // recipientPublicKeys: 'm."recipientPublicKey" IN (${recipientPublicKeys:csv})',
 		senderId: 't."senderId" = ${senderId}',
 		recipientId: 't."recipientId" = ${recipientId}',
-		height: 'b."height" = ${height}',
-		fromHeight: 'b."height" >= ${fromHeight}',
-		toHeight: 'b."height" <= ${toHeight}',
+		// TODO change request
+		// height: 'b."height" = ${height}',
+		// fromHeight: 'b."height" >= ${fromHeight}',
+		// toHeight: 'b."height" <= ${toHeight}',
+        // minConfirmations: 'confirmations >= ${minConfirmations}',
 		fromTimestamp: 't."timestamp" >= ${fromTimestamp}',
 		toTimestamp: 't."timestamp" <= ${toTimestamp}',
 		senderIds: 't."senderId" IN (${senderIds:csv})',
 		recipientIds: 't."recipientId" IN (${recipientIds:csv})',
 		senderPublicKeys: 't."senderPublicKey" IN (${senderPublicKeys:csv})',
-		recipientPublicKeys: 'm."recipientPublicKey" IN (${recipientPublicKeys:csv})',
-		minAmount: 't."amount" >= ${minAmount}',
-		maxAmount: 't."amount" <= ${maxAmount}',
 		type: 't."type" = ${type}',
-		minConfirmations: 'confirmations >= ${minConfirmations}',
+
 		limit: null,
 		offset: null,
 		orderBy: null,
 		// FIXME: Backward compatibility, should be removed after transitional period
 		ownerAddress: null,
-		ownerPublicKey: null,
-		stakedAmount: 't."stakedAmount" = ${stakedAmount}',
-		stakeId: 't."stakedId" = ${stakedId}',
-		trsName: 't."trsName" = ${trsName}',
-		groupBonus: 't."groupBonus" = ${groupBonus}',
-		reward: 't."reward" = ${reward}',
-		pendingGroupBonus: 't."pendingGroupBonus" = ${pendingGroupBonus}'
+		ownerPublicKey: null
 	};
 	let owner = '';
 	let isFirstWhere = true;
@@ -235,12 +230,20 @@ __private.list = function (filter, cb) {
 		return setImmediate(cb, orderBy.error);
 	}
 
+	const sqlList = sql.list({
+        where: where,
+        owner: owner,
+        sortField: orderBy.sortField,
+        sortMethod: orderBy.sortMethod
+    });
+	console.log('sqlList', sqlList);
+
 	library.db.query(sql.list({
 		where: where,
 		owner: owner,
 		sortField: orderBy.sortField,
 		sortMethod: orderBy.sortMethod
-	}), params).then(async function (rows) {
+	}), params).then(async (rows) => {
 
 		let count = rows.length
 			? rows[0].total_rows !== undefined
@@ -276,6 +279,7 @@ __private.list = function (filter, cb) {
 			return setImmediate(cb, err.message);
 		});
 	}).catch(function (err) {
+
 		library.logger.error(err.stack);
 		return setImmediate(cb, 'Transactions#list error');
 	});
