@@ -15,7 +15,7 @@ let TransactionsSql = {
 		'height'
 	],
 
-	count: 'SELECT COUNT("id")::int AS "count" FROM trs',
+	count: 'SELECT count(1) AS "count" FROM trs',
 
 	getTransactionHistory : 'SELECT serie.day AS "time", COUNT(t."timestamp") AS count, SUM(t."amount" + t."stakedAmount") AS "amount" FROM ( SELECT date_series::date AS "day" FROM generate_series(to_timestamp(${startTimestamp})::date,to_timestamp(${endTimestamp})::date, \'1 day\') AS "date_series") AS "serie" LEFT JOIN trs t ON (t."timestamp"+${epochTime})::abstime::date = serie.day::date GROUP  BY serie.day order by time',
 

@@ -22,7 +22,10 @@ let shared = {};
 let modules;
 let library;
 let self;
-let epochTime = 1451667600; 
+let epochTime = 1451667600;
+
+const TOTAL_TRS_COUNT = 'TOTAL_TRS_COUNT';
+const TOTAL_TRS_COUNT_EXPIRE = 30; // seconds
 
 __private.assetTypes = {};
 
@@ -70,6 +73,30 @@ function Transactions(cb, scope) {
 
 	setImmediate(cb, null, self);
 }
+
+/**
+ * Get cached value for total number of transactions
+ * @returns total count of transactions
+ */
+__private.getTotalTrsCountFromCache = async function () {
+	return new Promise(async (resolve, reject) => {
+		try {
+			const resultFromCache = await library.cache.prototype.getJsonForKeyAsync(TOTAL_TRS_COUNT);
+
+			if (resultFromCache !== null) {
+				resolve(resultFromCache);
+			}
+
+			const row = await library.db.one(sql.count);
+			await library.cache.prototype.setJsonForKeyAsync(
+				TOTAL_TRS_COUNT, row, TOTAL_TRS_COUNT_EXPIRE
+			);
+			resolve(row);
+		} catch (err) {
+			reject(err);
+		}
+	});
+};
 
 // Private methods
 /**
@@ -213,8 +240,14 @@ __private.list = function (filter, cb) {
 		owner: owner,
 		sortField: orderBy.sortField,
 		sortMethod: orderBy.sortMethod
-	}), params).then(function (rows) {
-		let count = rows.length ? rows[0].total_rows : 0;
+	}), params).then(async function (rows) {
+
+		let count = rows.length
+			? rows[0].total_rows !== undefined
+                ? rows[0].total_rows
+                : await __private.getTotalTrsCountFromCache()
+			: 0;
+
 		library.db.query(sql.getDelegateNames)
 		.then(function(delegates) {
 			// TODO remove that logic if count delegates will be more than 100
@@ -798,7 +831,7 @@ Transactions.prototype.shared = {
 					return setImmediate(cb, 'Invalid passphrase');
 				}
 			}
-			
+
 			library.cache.client.get('2fa_user_' + modules.accounts.generateAddressByPublicKey(publicKey), function (err, userTwoFaCred) {
 				if (err) {
 					return setImmediate(cb, err);
