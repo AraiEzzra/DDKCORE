@@ -677,9 +677,11 @@ Account.prototype.getAll = function (filter, fields, cb) {
 		filter.address = {
 			$upper: ['address', filter.address]
 		};
-	} else {
-		return setImmediate(cb);
 	}
+
+	if (filter.address && filter.address.$in && filter.address.$in.length === 0) {
+	    return setImmediate(cb, 'Empty address');
+    }
 
 	let sql = jsonSql.build({
 		type: 'select',
