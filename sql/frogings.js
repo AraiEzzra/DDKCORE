@@ -20,8 +20,6 @@ let FrogingsSql = {
 
 	updateAccountBalance: 'UPDATE mem_accounts SET "balance"=("balance" + ${reward}), "u_balance"=("u_balance" + ${reward}) WHERE "address"=${senderId}',
 
-	getMemoryAccounts: 'SELECT * FROM  mem_accounts',
-
 	updateFrozeAmount: 'UPDATE mem_accounts SET "totalFrozeAmount" = ("totalFrozeAmount" + ${reward}) WHERE "address" = ${senderId}',
 
 	getFrozeAmount: 'SELECT "totalFrozeAmount" FROM mem_accounts WHERE "address"=${senderId}',
@@ -30,23 +28,17 @@ let FrogingsSql = {
 
 	enableFrozeOrder: 'UPDATE stake_orders SET "status"=1 where "stakeId"=${stakeId}',
 
-	checkAndUpdateMilestone: 'UPDATE stake_orders SET "nextVoteMilestone"= ("nextVoteMilestone" +${milestone}), "isVoteDone"= false where "status"=1 AND  ${currentTime} >= "nextVoteMilestone" ',
-
-	getfrozeOrder: 'SELECT "senderId" , "freezedAmount", "rewardCount", "nextVoteMilestone", "voteCount", "stakeId" FROM stake_orders WHERE "status"=1 AND ${currentTime} >= "nextVoteMilestone" ',
-
 	deductFrozeAmount: 'UPDATE mem_accounts SET "totalFrozeAmount" = ("totalFrozeAmount" - ${orderFreezedAmount}), "u_totalFrozeAmount" = ("u_totalFrozeAmount" - ${orderFreezedAmount}) WHERE "address" = ${senderId}',
 
 	getFrozeOrders: 'SELECT * FROM stake_orders WHERE "senderId"=${senderId}',
 
 	getActiveFrozeOrders: 'SELECT * FROM stake_orders WHERE "senderId"=${senderId} AND "status"=1 AND ${currentTime} >= "nextVoteMilestone"',
 
-    getInactiveFrozeOrders: 'SELECT * FROM stake_orders WHERE "senderId"=${senderId} AND "status"=0 AND ${currentTime} >= "nextVoteMilestone"',
-
 	getActiveFrozeOrder: 'SELECT * FROM stake_orders WHERE "senderId"=${senderId} AND "id"=${stakeId} AND "status"=1',
 
 	updateFrozeOrder: 'UPDATE stake_orders SET "status"=0,"recipientId"=${recipientId}, "nextVoteMilestone"=-1, "transferCount" = ("transferCount"+1) WHERE "senderId"=${senderId} AND "id"=${stakeId} AND "status"=1 RETURNING *',
 
-	createNewFrozeOrder: 'INSERT INTO stake_orders ("id","status","startTime","insertTime","senderId","freezedAmount","rewardCount","voteCount","nextVoteMilestone","isVoteDone","transferCount") VALUES (${id},1,${startTime},${insertTime},${senderId},${freezedAmount},${rewardCount},${voteCount},${nextVoteMilestone},${isVoteDone},$(transferCount)+1) ',
+	createNewFrozeOrder: 'INSERT INTO stake_orders ("id","status","startTime","insertTime","senderId","freezedAmount","rewardCount","voteCount","nextVoteMilestone","isVoteDone","transferCount") VALUES (${id},1,${startTime},${insertTime},${senderId},${freezedAmount},${rewardCount},${voteCount},${nextVoteMilestone},${isVoteDone},$(transferCount)+1) RETURNING *',
 
 	countStakeholders: 'select count(1) from (select 1 from stake_orders o where o.status = 1 group by "senderId") a',
 
@@ -54,17 +46,13 @@ let FrogingsSql = {
 
 	getMyStakedAmount: 'SELECT sum("freezedAmount") FROM stake_orders WHERE "senderId"=${address} AND "status"=1',
 
-	updateOrder: 'UPDATE stake_orders SET "rewardCount" = ("rewardCount" + 1), "voteCount"=0, "isVoteDone"=false WHERE "senderId" = ${senderId} AND "stakeId"=${id}',
-
-	checkRewardCount: 'SELECT "rewardCount" FROM stake_orders WHERE "status"=1 AND "senderId"=${senderId}',
-
-	getSelectedOrder: 'SELECT "senderId" , "freezedAmount", "rewardCount", "nextVoteMilestone", "voteCount", "stakeId" FROM stake_orders WHERE "status"=1 AND "stakeId"=${id}',
-
 	removeOrderByTrsId: 'DELETE FROM stake_orders WHERE "id" = ${transactionId}',
+
+    removeOrderByTrsIdAndSenderId: 'DELETE FROM stake_orders WHERE "id" = ${id} AND "senderId" = ${senderId}',
 
 	getOrderForUndo: 'SELECT id, "nextVoteMilestone" FROM stake_orders WHERE (SELECT id FROM stake_orders WHERE "stakeId"=${stakeId})=id AND "senderId"=${senderId}',
 
-	updateOldOrder: 'UPDATE stake_orders SET "status"=1, "nextVoteMilestone"=${nextVoteMilestone}, "isVoteDone"=false WHERE "stakeId"=${stakeId} ',
+	updateOldOrder: 'UPDATE stake_orders SET "status"=1, "nextVoteMilestone"=${nextVoteMilestone}, "isVoteDone"=false, "recipientId"=NULL WHERE "stakeId"=${stakeId}',
 
     updateTotalSupply: 'UPDATE mem_accounts SET "balance"=("balance" + ${reward}), "u_balance"=("u_balance" + ${reward}) WHERE "address"=${totalSupplyAccount}',
 

@@ -7,9 +7,10 @@ let extend = require('extend');
 let slots = require('../helpers/slots.js');
 let sql = require('../sql/transactions.js');
 let sqlAccount = require('../sql/accounts.js');
+let sqlFroging = require('../sql/frogings.js');
 let request = require('request');
 let transactionTypes = require('../helpers/transactionTypes.js');
-
+let utils = require('../utils.js');
 // Private fields
 let self, modules, __private = {};
 
@@ -337,7 +338,7 @@ Transaction.prototype.checkConfirmed = function (trs, cb) {
  *  modify checkbalance according to froze amount avaliable to user
  */
 Transaction.prototype.checkBalance = function (amount, balance, trs, sender) {
-	
+
 	let totalAmountWithFrozeAmount = trs.type === transactionTypes.SENDSTAKE ?
 		new bignum(amount)
 		:
@@ -347,10 +348,10 @@ Transaction.prototype.checkBalance = function (amount, balance, trs, sender) {
 	let exceeded = (trs.blockId !== this.scope.genesisblock.block.id && exceededBalance);
 
 	// FIXME
-  // https://trello.com/c/MPx5yxNH/134-account-does-not-have-enough-ddk
-  if (trs.height <= constants.MASTER_NODE_MIGRATED_BLOCK) {
-    exceeded = false;
-  }
+	// https://trello.com/c/MPx5yxNH/134-account-does-not-have-enough-ddk
+	if (trs.height <= constants.MASTER_NODE_MIGRATED_BLOCK) {
+		exceeded = false;
+	}
 
 	if (parseInt(sender.totalFrozeAmount) > 0) {
 		return {
@@ -433,18 +434,18 @@ Transaction.prototype.process = function (trs, sender, requester, cb) {
 	}.bind(this));
 };
 
-Transaction.prototype.getAccountStatus = function(trs, cb) {	
-	this.scope.db.one(sqlAccount.checkAccountStatus, { 
-		senderId: trs.senderId 
-	}).then(function (row) {		
-		if (row.status === 0) {	 
+Transaction.prototype.getAccountStatus = function(trs, cb) {
+	this.scope.db.one(sqlAccount.checkAccountStatus, {
+		senderId: trs.senderId
+	}).then(function (row) {
+		if (row.status === 0) {
 			return setImmediate(cb,'Invalid transaction : account disabled');
-		} 			 
+		}
 		return setImmediate(cb, null, row.status);
-	}).catch(function (err) {		 
-		this.scope.logger.error(err.stack);	 
-		return setImmediate(cb, 'Transaction#checkAccountStatus error');	
-	});	
+	}).catch(function (err) {
+		this.scope.logger.error(err.stack);
+		return setImmediate(cb, 'Transaction#checkAccountStatus error');
+	});
 };
 
 /**
@@ -455,18 +456,23 @@ Transaction.prototype.getAccountStatus = function(trs, cb) {
  * @param {transaction} trs
  * @param {account} sender
  * @param {account} requester
+ * @param  {boolean} checkExists - Check if transaction already exists in database
  * @param {function} cb
  * @return {setImmediateCallback} validation errors | trs
  */
-Transaction.prototype.verify = function (trs, sender, requester, cb) {
-	let valid = false;	
-	let err = null;	
-	if (typeof requester === 'function') {		
-		cb = requester;	
-	}	
-	// Check sender	
-	if (!sender) {		
-		return setImmediate(cb, 'Missing sender');	
+Transaction.prototype.verify = function (trs, sender, requester = {}, checkExists, cb) {
+	let valid = false;
+	let err = null;
+    if (typeof checkExists === 'function') {
+        cb = checkExists;
+        checkExists = false;
+    } else if (typeof requester === 'function') {
+		cb = requester;
+        requester = {};
+	}
+	// Check sender
+	if (!sender) {
+		return setImmediate(cb, 'Missing sender');
 	}
 
 	// Check transaction type
@@ -610,14 +616,18 @@ Transaction.prototype.verify = function (trs, sender, requester, cb) {
 			}
 		}
 	}
-	
+
 	let fee = __private.types[trs.type].calculateFee.call(this, trs, sender) || 0;
 	if (
 		(trs.type !== transactionTypes.MIGRATION && trs.type !== transactionTypes.REFERRAL) &&
 		!(trs.type === transactionTypes.STAKE && trs.stakedAmount < 0) &&
 		(!fee || trs.fee !== fee)
 	) {
-		return setImmediate(cb, 'Invalid transaction fee');
+		// TODO: Restore transation verify
+		// https://trello.com/c/2jF7cnad/115-restore-transactions-verifing
+		// return setImmediate(cb, 'Invalid transaction fee');
+
+		this.scope.logger.error('Invalid transaction fee');
 	}
 
 	// Check amount
@@ -633,7 +643,7 @@ Transaction.prototype.verify = function (trs, sender, requester, cb) {
 	} else {
 		amount = new bignum(trs.amount.toString());
 	}
-	
+
 	let senderBalance = this.checkBalance(amount, 'balance', trs, sender);
 
 	if (senderBalance.exceeded) {
@@ -645,15 +655,33 @@ Transaction.prototype.verify = function (trs, sender, requester, cb) {
 		return setImmediate(cb, 'Invalid transaction timestamp. Timestamp is in the future');
 	}
 
-	// Call verify on transaction type
-	__private.types[trs.type].verify.call(this, trs, sender, function (err) {
-		if (err) {
-			return setImmediate(cb, err);
-		} else {
-			// Check for already confirmed transaction
-			return self.checkConfirmed(trs, cb);
-		}
-	});
+    const verifyTransactionTypes = (transaction, sender, verifyTransactionTypesCb) => {
+		__private.types[trs.type].verify.call(this, transaction, sender, function (err) {
+            if (err) {
+                return setImmediate(verifyTransactionTypesCb, err);
+            }
+            return setImmediate(verifyTransactionTypesCb);
+        });
+    };
+
+    if (checkExists) {
+		this.checkConfirmed(trs, (checkConfirmedErr, isConfirmed) => {
+            if (checkConfirmedErr) {
+                return setImmediate(cb, checkConfirmedErr);
+            }
+
+            if (isConfirmed) {
+                return setImmediate(
+                    cb,
+					`Transaction is already confirmed: ${trs.id}`
+                );
+            }
+
+			verifyTransactionTypes(trs, sender, cb);
+        });
+    } else {
+		verifyTransactionTypes(trs, sender, cb);
+    }
 };
 
 /**
@@ -1079,8 +1107,18 @@ Transaction.prototype.dbSave = function (trs) {
  * @param {function} cb
  * @return {setImmediateCallback} error string | cb
  */
-Transaction.prototype.afterSave = function (trs, cb) {
+Transaction.prototype.afterSave = async function (trs, cb) {
 	if (trs.type === transactionTypes.STAKE) {
+		const stakeOrders = await self.scope.db.manyOrNone(sqlFroging.getFrozeOrders, {
+			senderId: trs.senderId
+		});
+		if (stakeOrders && stakeOrders.length > 0) {
+			const bulkStakeOrders = utils.makeBulk(stakeOrders,'stake_orders');
+			await utils.indexall(bulkStakeOrders, 'stake_orders');
+
+		} else {
+			setImmediate(cb, 'couldn\'t add document to index stake_orders in the ElasticSearch');
+		}
 		//Stake order event
 		this.scope.network.io.sockets.emit('stake/change', null);
 	}
@@ -1286,7 +1324,7 @@ Transaction.prototype.objectNormalize = function (trs) {
 		var report = this.scope.schema.validate(trs, Transaction.prototype.Referschema);
 	else
 		var report = this.scope.schema.validate(trs, Transaction.prototype.schema);
-		
+
 	if (!report) {
 		console.log(trs);
 		throw 'Failed to validate transaction schema: ' + this.scope.schema.getLastErrors().map(function (err) {
@@ -1366,7 +1404,7 @@ Transaction.prototype.bindModules = function (__modules) {
 	};
 };
 
-// call add transaction API 
+// call add transaction API
 Transaction.prototype.sendTransaction = function (data, cb) {
 
 	let port = this.scope.config.app.port;

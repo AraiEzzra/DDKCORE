@@ -13,6 +13,7 @@ const sandboxHelper = require('../helpers/sandbox.js');
 const schema = require('../schema/delegates.js');
 const slots = require('../helpers/slots.js');
 const sql = require('../sql/delegates.js');
+const roundSql = require('../sql/rounds.js');
 const transactionTypes = require('../helpers/transactionTypes.js');
 
 // Private fields
@@ -20,6 +21,7 @@ let modules, library, self, __private = {}, shared = {};
 
 __private.assetTypes = {};
 __private.loaded = false;
+__private.readyForForging = false;
 __private.blockReward = new BlockReward();
 __private.keypairs = {};
 __private.tmpKeypairs = {};
@@ -100,7 +102,7 @@ __private.getKeysSortByVote = function (cb) {
  * @returns {setImmediateCallback} error | cb | object {time, keypair}.
  */
 __private.getBlockSlotData = function (slot, height, cb) {
-	self.generateDelegateList(height, function (err, activeDelegates) {
+	self.generateDelegateList(height, null, function (err, activeDelegates) {
 		if (err) {
 			return setImmediate(cb, err);
 		}
@@ -138,7 +140,7 @@ __private.forge = function (cb) {
 
 	// When client is not loaded, is syncing or round is ticking
 	// Do not try to forge new blocks as client is not ready
-	if (!__private.loaded || modules.loader.syncing() || !modules.rounds.loaded() || modules.rounds.ticking()) {
+	if (!__private.loaded || modules.loader.syncing() || !modules.rounds.loaded() || modules.rounds.ticking() || !__private.readyForForging) {
 		library.logger.debug('Client not ready to forge');
 		return setImmediate(cb);
 	}
@@ -258,26 +260,26 @@ __private.checkDelegates = function (publicKey, votes, state, cb) {
 			}
 
 
-      // FIXME
-      // https://trello.com/c/wh9i1ire/135-failed-to-remove-vote
-			// if (math === '-' && (delegates === null || delegates.indexOf(publicKey) === -1)) {
-			// 	return setImmediate(cb, 'Failed to remove vote, account has not voted for this delegate');
-			// }
+			// FIXME
+			// https://trello.com/c/wh9i1ire/135-failed-to-remove-vote
+			if (math === '-' && (delegates === null || delegates.indexOf(publicKey) === -1)) {
+				return setImmediate(cb, 'Failed to remove vote, account has not voted for this delegate');
+			}
 
 			modules.accounts.getAccount({ publicKey: publicKey, isDelegate: 1 }, function (err, account) {
 				if (err) {
 					return setImmediate(cb, err);
 				}
 
-				// FIXME right delegate include
-        // https://trello.com/c/CN7Tij6M/133-delegate-not-found
-				// if (!account) {
-				// 	return setImmediate(cb, 'Delegate not found');
-				// }
+			// FIXME right delegate include
+			// https://trello.com/c/CN7Tij6M/133-delegate-not-found
+			if (!account) {
+				return setImmediate(cb, 'Delegate not found');
+			}
 
-				return setImmediate(cb);
-			});
-		}, function (err) {
+			return setImmediate(cb);
+		});
+	}, function (err) {
 			if (err) {
 				return setImmediate(cb, err);
 			}
@@ -353,27 +355,35 @@ __private.loadDelegates = function (cb) {
  * @returns {setImmediateCallback} err | truncated delegate list.
  * @todo explain seed.
  */
-Delegates.prototype.generateDelegateList = function (height, cb) {
-	__private.getKeysSortByVote(function (err, truncDelegateList) {
-		if (err) {
-			return setImmediate(cb, err);
-		}
+Delegates.prototype.generateDelegateList = function (height, source, cb) {
+    const round = slots.calcRound(height);
+    source = source || __private.getKeysSortByVote;
+    return source((err, truncDelegateList) => {
+        if (err) {
+            return setImmediate(cb, err);
+        }
+        const seedSource = round.toString();
+        let currentSeed = crypto
+            .createHash('sha256')
+            .update(seedSource, 'utf8')
+            .digest();
 
-		let seedSource = modules.rounds.calc(height).toString();
-		let currentSeed = crypto.createHash('sha256').update(seedSource, 'utf8').digest();
 
-		for (let i = 0, delCount = truncDelegateList.length; i < delCount; i++) {
-			for (let x = 0; x < 4 && i < delCount; i++, x++) {
-				let newIndex = currentSeed[x] % delCount;
-				let b = truncDelegateList[newIndex];
-				truncDelegateList[newIndex] = truncDelegateList[i];
-				truncDelegateList[i] = b;
-			}
-			currentSeed = crypto.createHash('sha256').update(currentSeed).digest();
-		}
+        for (let i = 0, delCount = truncDelegateList.length; i < delCount; i++) {
+            for (let x = 0; x < 4 && i < delCount; i++, x++) {
+                const newIndex = currentSeed[x] % delCount;
+                const b = truncDelegateList[newIndex];
+                truncDelegateList[newIndex] = truncDelegateList[i];
+                truncDelegateList[i] = b;
+            }
+            currentSeed = crypto
+                .createHash('sha256')
+                .update(currentSeed)
+                .digest();
+        }
 
-		return setImmediate(cb, null, truncDelegateList);
-	});
+        return setImmediate(cb, null, truncDelegateList);
+    });
 };
 
 /**
@@ -409,7 +419,7 @@ Delegates.prototype.getDelegates = function (query, cb) {
 			delegates[i].rate = i + 1;
 			delegates[i].rank = i + 1;
 			// TODO change approval to right logic
-      // https://trello.com/c/epSWVfXM/160-change-approval-to-right-logic
+      		// https://trello.com/c/epSWVfXM/160-change-approval-to-right-logic
 
 			delegates[i].approval = 100;
 			delegates[i].approval = Math.round(delegates[i].approval * 1e2) / 1e2;
@@ -487,32 +497,48 @@ Delegates.prototype.fork = function (block, cause) {
 };
 
 /**
+ * Generates delegate list and checks if block generator public key matches delegate id.
+ *
+ * @param {block} block
+ * @param {function} cb - Callback function
+ * @returns {setImmediateCallback} cb, err
+ * @todo Add description for the params
+ */
+Delegates.prototype.validateBlockSlot = function(block, cb) {
+    __private.validateBlockSlot(block, __private.getKeysSortByVote, cb);
+};
+
+/**
  * Generates delegate list and checks if block generator public Key
  * matches delegate id.
  * @param {block} block
  * @param {function} cb - Callback function.
  * @returns {setImmediateCallback} error message | cb
  */
-Delegates.prototype.validateBlockSlot = function (block, cb) {
-	self.generateDelegateList(block.height, function (err, activeDelegates) {
-		if (err) {
-			return setImmediate(cb, err);
+__private.validateBlockSlot = function (block, source, cb) {
+    self.generateDelegateList(block.height, source, function (err, activeDelegates) {
+        if (err) {
+            return setImmediate(cb, err);
+        }
+
+        if (block.height <= constants.MASTER_NODE_MIGRATED_BLOCK) {
+            return setImmediate(cb);
+        }
+
+        const currentSlot = slots.getSlotNumber(block.timestamp);
+        const delegatePubKey = activeDelegates[currentSlot % Rounds.prototype.getSlotDelegatesCount(block.height)];
+
+        if (delegatePubKey && block.generatorPublicKey === delegatePubKey) {
+            return setImmediate(cb);
 		}
 
-		if (block.height <= constants.MASTER_NODE_MIGRATED_BLOCK) {
-      return setImmediate(cb);
-    }
+		// TODO: Restore slote verify
+		// https://trello.com/c/2jF7cnad/115-restore-transactions-verifing
+		return setImmediate(cb);
 
-    const currentSlot = slots.getSlotNumber(block.timestamp);
-    const delegatePubKey = activeDelegates[currentSlot % Rounds.prototype.getSlotDelegatesCount(block.height)];
-
-		if (delegatePubKey && block.generatorPublicKey === delegatePubKey) {
-			return setImmediate(cb);
-		} else {
-			library.logger.error('Expected generator: ' + delegatePubKey + ' Received generator: ' + block.generatorPublicKey);
-			return setImmediate(cb, 'Failed to verify slot: ' + currentSlot);
-		}
-	});
+        library.logger.error('Expected generator: ' + delegatePubKey + ' Received generator: ' + block.generatorPublicKey);
+        return setImmediate(cb, 'Failed to verify slot: ' + currentSlot);
+    });
 };
 
 /**
@@ -546,6 +572,14 @@ Delegates.prototype.onBind = function (scope) {
 	__private.assetTypes[transactionTypes.DELEGATE].bind(
 		scope.accounts
 	);
+};
+
+/**
+ * Loads delegates.
+ * @implements module:transactions#Transactions~fillPool
+ */
+Delegates.prototype.onBlockchainReadyForForging = function () {
+    __private.readyForForging = true;
 };
 
 /**
@@ -771,7 +805,7 @@ Delegates.prototype.shared = {
 		let currentBlock = modules.blocks.lastBlock.get();
 		let limit = req.body.limit || 10;
 
-		modules.delegates.generateDelegateList(currentBlock.height, function (err, activeDelegates) {
+		modules.delegates.generateDelegateList(currentBlock.height, null, function (err, activeDelegates) {
 			if (err) {
 				return setImmediate(cb, err);
 			}
@@ -1067,6 +1101,48 @@ Delegates.prototype.shared = {
 			});
 		});
 	}
+};
+
+/**
+ * Generates delegate list and checks if block generator public key matches delegate id - against previous round.
+ *
+ * @param {block} block
+ * @param {function} cb - Callback function
+ * @returns {setImmediateCallback} cb, err
+ * @todo Add description for the params
+ */
+Delegates.prototype.validateBlockSlotAgainstPreviousRound = function(
+    block,
+    cb
+) {
+    __private.validateBlockSlot(
+        block,
+        __private.getDelegatesFromPreviousRound,
+        cb
+    );
+};
+
+/**
+ * Gets delegate public keys from previous round, sorted by vote descending.
+ *
+ * @private
+ * @param {function} cb - Callback function
+ * @returns {setImmediateCallback} cb
+ * @todo Add description for the return value
+ */
+__private.getDelegatesFromPreviousRound = function(cb) {
+    library.db.query(roundSql.getDelegatesSnapshot, { limit: constants.activeDelegates})
+        .then(rows => {
+            const delegatesPublicKeys = [];
+            rows.forEach(row => {
+                delegatesPublicKeys.push(row.publicKey.toString('hex'));
+            });
+            return setImmediate(cb, null, delegatesPublicKeys);
+        })
+        .catch(err => {
+            library.logger.error(err.stack);
+            return setImmediate(cb, 'getDelegatesSnapshot database query failed');
+        });
 };
 
 // Export

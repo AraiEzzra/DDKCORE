@@ -90,7 +90,7 @@ module.exports = {
         }
     },
     loading: {
-        verifyOnLoading: false,
+        verifyOnLoading: env.VERIFY_ON_LOADING === 'TRUE',
         loadPerIteration: 5000
     },
     ssl: {

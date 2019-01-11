@@ -1,6 +1,7 @@
 let constants = require('../helpers/constants.js');
 let sql = require('../sql/frogings.js');
 let async = require('async');
+let utils = require('../utils');
 const promise = require('bluebird');
 const utils = require('../utils');
 
@@ -25,7 +26,7 @@ function SendFreezeOrder(logger, db, network, cb) {
 	}
 }
 
-async function rollbackOrders(cb) {
+async function rollbackOrders(trs, cb) {
 
 	try {
 
@@ -41,7 +42,7 @@ async function rollbackOrders(cb) {
                 nextVoteMilestone: nextVoteMilestone
             });
 
-        await self.scope.db.one(sql.RemoveOrder,
+        await self.scope.db.one(sql.removeOrderByTrsIdAndSenderId,
             {
                 id: id,
                 senderId: trs.recipientId
@@ -109,7 +110,7 @@ SendFreezeOrder.prototype.undo = async function (trs, block, sender, cb) {
                 orderFreezedAmount: trs.amount
             });
 
-        await rollbackOrders(cb);
+        await rollbackOrders(trs, cb);
 
         const setAccountAndGet = promise.promisify(modules.accounts.setAccountAndGet);
         const mergeAccountAndGet = promise.promisify(modules.accounts.mergeAccountAndGet);
@@ -154,13 +155,22 @@ SendFreezeOrder.prototype.apply = async function (trs, block, sender, cb) {
 			stakeId: trs.stakeId
 		});
 
-		await self.sendFreezedOrder({
+		const stakeOrders = await self.sendFreezedOrder({
 			trsId: trs.id,
 			senderId: trs.senderId,
 			recipientId: trs.recipientId,
 			stakeId: trs.stakeId,
 			stakeOrder: order
 		});
+		const bulkStakeOrders = utils.makeBulk([stakeOrders.new],'stake_orders');
+		await utils.indexall(bulkStakeOrders, 'stake_orders');
+		await utils.updateDocument({
+            index: 'stake_orders',
+            type: 'stake_orders',
+            body: stakeOrders.prev
+        });
+
+		self.scope.network.io.sockets.emit('stake/change', null);
 
         return setImmediate(cb, null);
 
@@ -248,8 +258,6 @@ SendFreezeOrder.prototype.sendFreezedOrder = async function (userAndOrderData, c
         	throw new Error("sendFreezedOrder: Order is empty");
 		}
 
-        self.scope.network.io.sockets.emit('stake/change', null);
-
         //deduct froze Amount from totalFrozeAmount in mem_accounts table
         await self.scope.db.none(sql.deductFrozeAmount,
 			{
@@ -265,14 +273,14 @@ SendFreezeOrder.prototype.sendFreezedOrder = async function (userAndOrderData, c
 			});
 
         //Update old freeze order
-        let updatedStakeOrderRow = await self.scope.db.one(sql.updateFrozeOrder,
+        const prevOrder = await self.scope.db.one(sql.updateFrozeOrder,
 			{
 				recipientId: userAndOrderData.recipientId,
 				senderId: order.senderId,
 				stakeId: userAndOrderData.stakeId
 			});
 		
-		let bulk = utils.makeBulk([updatedStakeOrderRow], 'stake_orders');
+		let bulk = utils.makeBulk([prevOrder], 'stake_orders');
  		try {
  			await utils.indexall(bulk, 'stake_orders');
  			library.logger.info(order.senderId + ': updated stake order ', userAndOrderData.stakeId);
@@ -281,7 +289,7 @@ SendFreezeOrder.prototype.sendFreezedOrder = async function (userAndOrderData, c
  		}
 
 		//create new froze order according to send order
-        await self.scope.db.none(sql.createNewFrozeOrder,
+        const newOrder = await self.scope.db.one(sql.createNewFrozeOrder,
 			{
 				id: userAndOrderData.trsId,
 				startTime: order.startTime,
@@ -294,9 +302,12 @@ SendFreezeOrder.prototype.sendFreezedOrder = async function (userAndOrderData, c
 				isVoteDone: order.isVoteDone,
 				transferCount: order.transferCount
 			});
-
+		return {
+			new: newOrder,
+			prev: prevOrder
+		}
 	} catch (err) {
-        return setImmediate(cb, err);
+		return setImmediate(cb, err);
 	}
 
 };

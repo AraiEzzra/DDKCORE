@@ -116,17 +116,6 @@ TransactionPool.prototype.getUnconfirmedTransaction = function (id) {
 };
 
 /**
- * Gets bundled transactions based on transaction id.
- * @param {string} id
- * @return {transaction[]}
- * @todo This function is never called
- */
-TransactionPool.prototype.getBundledTransaction = function (id) {
-	let index = self.bundled.index[id];
-	return self.bundled.transactions[index];
-};
-
-/**
  * Gets queued transactions based on transaction id.
  * @param {string} id
  * @return {transaction[]}
@@ -315,7 +304,7 @@ TransactionPool.prototype.addQueuedTransaction = function (transaction) {
 };
 
 /**
- * Removes id from queued index and transactions. 
+ * Removes id from queued index and transactions.
  * @param {string} id
  */
 TransactionPool.prototype.removeQueuedTransaction = function (id) {
@@ -348,7 +337,7 @@ TransactionPool.prototype.addMultisignatureTransaction = function (transaction) 
 };
 
 /**
- * Removes id from multisignature index and transactions. 
+ * Removes id from multisignature index and transactions.
  * @param {string} id
  */
 TransactionPool.prototype.removeMultisignatureTransaction = function (id) {
@@ -680,7 +669,7 @@ __private.processVerifyTransaction = function (transaction, broadcast, cb) {
 	if (!transaction) {
 		return setImmediate(cb, 'Missing transaction');
 	}
-	
+
 	async.waterfall([
 		function setAccountAndGet (waterCb) {
 			modules.accounts.setAccountAndGet({publicKey: transaction.senderPublicKey}, waterCb);
@@ -731,7 +720,7 @@ __private.processVerifyTransaction = function (transaction, broadcast, cb) {
 			}
 		},
 		function verifyTransaction (sender, waterCb) {
-			library.logic.transaction.verify(transaction, sender, function (err) {
+			library.logic.transaction.verify(transaction, sender, undefined, true, function (err) {
 				if (err) {
 					return setImmediate(waterCb, err);
 				} else {

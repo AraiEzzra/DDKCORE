@@ -41,7 +41,7 @@ function Blocks (cb, scope) {
 			scope.logger, scope.db, scope.logic.block, scope.schema, scope.dbSequence
 		),
 		verify:  new blocksVerify(scope.logger, scope.logic.block, 
-			scope.logic.transaction, scope.db
+			scope.logic.transaction, scope.db, scope.config
 		),
 		process: new blocksProcess(
 			scope.logger, scope.logic.block, scope.logic.peers, scope.logic.transaction,

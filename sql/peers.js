@@ -6,8 +6,6 @@ let PeersSql = {
 
 	clear: 'DELETE FROM peers',
 
-	truncate: 'TRUNCATE peers CASCADE',
-
 	addDapp: 'INSERT INTO peers_dapp ("peerId", dappid) VALUES ((SELECT id FROM peers WHERE ip = ${ip} AND port = ${port}), ${dappid}) ON CONFLICT DO NOTHING',
 };
 

@@ -5,11 +5,12 @@ let Diff = require('../helpers/diff.js');
 let _ = require('lodash');
 let sql = require('../sql/accounts.js');
 let slots = require('../helpers/slots.js');
-const transactionTypes = require('../helpers/transactionTypes');
 let utils = require('../utils');
 
 // Private fields
-let modules, library, self;
+let modules, library, self, __private = {};
+
+__private.loaded = false;
 
 // Constructor
 /**
@@ -88,6 +89,10 @@ Vote.prototype.calculateFee = function (trs, sender) {
 	return parseInt((parseInt(sender.totalFrozeAmount) * constants.fees.vote) / 100);
 };
 
+Vote.prototype.onBlockchainReady = function () {
+	__private.loaded = true;
+}
+
 /**
  * Validates transaction votes fields and for each vote calls verifyVote.
  * @implements {verifysendStakingRewardVote}
@@ -139,14 +144,17 @@ Vote.prototype.verify = function (trs, sender, cb) {
 		if (trs.asset.votes.length > _.uniqBy(trs.asset.votes, function (v) { return v.slice(1); }).length) {
 			throw 'Multiple votes for same delegate are not allowed';
 		}
-        const isDownVote = trs.trsName === "DOWNVOTE";
-        const totals = await library.frozen.calculateTotalRewardAndUnstake(trs.senderId, isDownVote);
-        if (totals.reward !== trs.asset.reward) {
-            throw 'Verify failed: vote reward is corrupted';
-        }
-        if (totals.unstake !== trs.asset.unstake) {
-            throw 'Verify failed: vote unstake is corrupted';
-        }
+
+		if (__private.loaded) {
+			const isDownVote = trs.trsName === "DOWNVOTE";
+			const totals = await library.frozen.calculateTotalRewardAndUnstake(trs.senderId, isDownVote);
+			if (totals.reward !== trs.asset.reward) {
+				throw 'Verify failed: vote reward is corrupted';
+			}
+			if (totals.unstake !== trs.asset.unstake) {
+				throw 'Verify failed: vote unstake is corrupted';
+			}
+		}
 
         await library.frozen.verifyAirdrop(trs);
         return self.checkConfirmedDelegates(trs, cb);
@@ -234,18 +242,18 @@ Vote.prototype.process = function (trs, sender, cb) {
  * @throws {e} error
  */
 Vote.prototype.getBytes = function (trs) {
-  return null;
-  // FIXME add new logic for bytes
-  // https://trello.com/c/Lt24bdzI/143-add-new-logic-for-bytes
-	// let buf;
-  //
-	// try {
-	// 	buf = trs.asset.votes ? Buffer.from(trs.asset.votes.join(''), 'utf8') : null;
-	// } catch (e) {
-	// 	throw e;
-	// }
-  //
-	// return buf;
+	// return null;
+	// FIXME add new logic for bytes
+	// https://trello.com/c/Lt24bdzI/143-add-new-logic-for-bytes
+	let buf;
+
+	try {
+		buf = trs.asset.votes ? Buffer.from(trs.asset.votes.join(''), 'utf8') : null;
+	} catch (e) {
+		throw e;
+	}
+
+	return buf;
 };
 
 /**
@@ -511,48 +519,15 @@ Vote.prototype.ready = function (trs, sender) {
  *
  */
 Vote.prototype.updateAndCheckVote = async (voteTransaction) => {
-<<<<<<< HEAD
-    const senderId = voteTransaction.senderId;
-    try {
-        // todo check if could change to tx
-        await library.db.task(async () => {
-
-			let affectedRowIds = await library.db.many(sql.updateStakeOrder, {
-=======
 	const senderId = voteTransaction.senderId;
 	try {
 		// todo check if could change to tx
 		await library.db.task(async () => {
 			const activeOrders = await library.db.manyOrNone(sql.updateStakeOrder, {
->>>>>>> 9565b6719b4c5334502cedf3896c967ec947a894
 				senderId: senderId,
 				milestone: constants.froze.vTime * 60, // 2 * 60 sec = 2 mins
 				currentTime: slots.getTime()
 			});
-<<<<<<< HEAD
-			
-			affectedRowIds = await affectedRowIds.map(item => item.id);
-			
-			await library.frozen.applyFrozeOrdersRewardAndUnstake(voteTransaction);
-			
-			const rows = await library.db.query(sql.GetOrders, { affectedRowIds });
-			
-            if (rows.length > 0) {
-                let bulk = utils.makeBulk(rows, 'stake_orders');
-				try {
-                    await utils.indexall(bulk, 'stake_orders');
-                    library.logger.info(senderId + ': update stake orders isvoteDone and count');
-				} catch(err) {
-                    library.logger.error('elasticsearch error :' + err.message);
-				}                
-            }
-            
-        });
-    } catch (err) {
-        library.logger.warn(err);
-        throw err;
-    }
-=======
 
 			if (activeOrders && activeOrders.length > 0) {
 				await library.frozen.applyFrozeOrdersRewardAndUnstake(voteTransaction, activeOrders);
@@ -571,7 +546,6 @@ Vote.prototype.updateAndCheckVote = async (voteTransaction) => {
 		library.logger.warn(err);
 		throw err;
 	}
->>>>>>> 9565b6719b4c5334502cedf3896c967ec947a894
 };
 
 /**
