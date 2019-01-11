@@ -1,23 +1,24 @@
 {
     "port": 7007,
+    "address": "0.0.0.0",
     "serverProtocol": "http",
-    "serverHost": "10.5.0.5",
+    "serverHost": "0.0.0.0",
     "serverPort": 7007,
-    "serverUrl": "http://10.5.0.5:7007",
-    "address": "10.5.0.5",
+    "serverUrl": "undefined:NaN",
     "version": "0.9.9a",
     "minVersion": ">=0.9.0",
     "fileLogLevel": "info",
-    "logFileName": "logs/DDKHELLorWin.log",
+    "logFileName": "logs/ddk.log",
     "consoleLogLevel": "none",
     "trustProxy": false,
     "topAccounts": false,
     "cacheEnabled": true,
     "db": {
-        "host": "db",
+        "host": "0.0.0.0",
         "port": 5432,
-        "database": "ddk",
-        "user": "lisk",
+        "database": "DDK_test",
+        "password": "password",
+        "user": "",
         "poolSize": 95,
         "poolIdleTimeout": 30000,
         "reapIntervalMillis": 1000,
@@ -26,16 +27,17 @@
         ]
     },
     "redis": {
-        "host": "10.5.0.3",
-        "port": 6379,
+        "host": "0.0.0.0",
+        "port": 6380,
         "db": 0
     },
     "api": {
         "enabled": true,
         "access": {
-            "public":true,
+            "public": true,
             "whiteList": [
-                "127.0.0.1"
+                "127.0.0.1",
+                "192.168.9.91"
             ]
         },
         "options": {
@@ -50,9 +52,14 @@
     "peers": {
         "enabled": true,
         "list": [
+            {
+                "ip": ""
+            }
         ],
         "access": {
-            "blackList": []
+            "blackList": [
+                ""
+            ]
         },
         "options": {
             "limits": {
@@ -75,16 +82,20 @@
         "maxTxsPerQueue": 1000
     },
     "forging": {
-        "force": false,
+        "force": true,
+        "minBroadhashConsensus": 0,
+        "secret": [],
         "access": {
             "whiteList": [
-                "127.0.0.1"
+                "127.0.0.1",
+                "192.168.9.91"
             ]
         }
     },
     "loading": {
         "verifyOnLoading": false,
-        "loadPerIteration": 5000
+        "loadPerIteration": 5000,
+        "snapshot": null
     },
     "ssl": {
         "enabled": false,
@@ -96,7 +107,7 @@
     "dapp": {
         "masterrequired": true,
         "autoexec": [],
-        "masterpassword": "GSne7ki1uzu6"
+        "masterpassword": "Pu1FWkGFf3rF"
     },
     "initialPrimined": {
         "total": 360000000000000
@@ -108,8 +119,22 @@
     "app": {},
     "sender": {},
     "nethash": "82c2a4fddcd1f659ba60380ebdd38125c5c48ceeef7d8b9f5798c0faca89e808",
-    "elasticsearchHost": "10.5.0.2:9200",
+    "elasticsearchHost": "0.0.0.0:9200",
+    "elasticsearch": {
+        "disableJobs": false
+    },
     "jwt": {
         "tokenLife": 300
-    }
+    },
+    "users": [
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {}
+    ]
 }
