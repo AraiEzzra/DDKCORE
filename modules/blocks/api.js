@@ -157,29 +157,34 @@ __private.list = function (filter, cb) {
 		return setImmediate(cb, orderBy.error);
 	}
 
-	library.db.query(sql.list({
-		where: where,
-		sortField: orderBy.sortField,
-		sortMethod: orderBy.sortMethod
+	library.db.query(sql.countList({
+		where: where
 	}), params).then(function (rows) {
-        let count = 0;
-        if (rows && rows.length !== 0) {
-            count = Number(rows[0].total_rows);
-        }
-		let blocks = [];
+		let count = rows[0].count;
 
-		// Normalize blocks
-		for (let i = 0; i < rows.length; i++) {
-			// FIXME: Can have poor performance because it performs SHA256 hash calculation for each block
-			blocks.push(library.logic.block.dbRead(rows[i]));
-		}
+		library.db.query(sql.list({
+			where: where,
+			sortField: orderBy.sortField,
+			sortMethod: orderBy.sortMethod
+		}), params).then(function (rows) {
+			let blocks = [];
 
-		let data = {
-			blocks: blocks,
-			count: count
-		};
+			// Normalize blocks
+			for (let i = 0; i < rows.length; i++) {
+				// FIXME: Can have poor performance because it performs SHA256 hash calculation for each block
+				blocks.push(library.logic.block.dbRead(rows[i]));
+			}
 
-		return setImmediate(cb, null, data);
+			let data = {
+				blocks: blocks,
+				count: count
+			};
+
+			return setImmediate(cb, null, data);
+		}).catch(function (err) {
+			library.logger.error(err.stack);
+			return setImmediate(cb, 'Blocks#list error');
+		});
 	}).catch(function (err) {
 		library.logger.error(err.stack);
 		return setImmediate(cb, 'Blocks#list error');
