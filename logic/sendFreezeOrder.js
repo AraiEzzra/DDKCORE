@@ -3,6 +3,7 @@ let sql = require('../sql/frogings.js');
 let async = require('async');
 let utils = require('../utils');
 const promise = require('bluebird');
+const utils = require('../utils');
 
 const SENDSTAKE_VERIFICATION = constants.SENDSTAKE_VERIFICATION;
 
@@ -273,7 +274,7 @@ SendFreezeOrder.prototype.getActiveFrozeOrder = function (userData, cb) {
 
 SendFreezeOrder.prototype.sendFreezedOrder = async function (userAndOrderData, cb) {
 
-    //This function take active froze order from table and deduct froze amount and update froze
+    //This function take active froze order from table and deduct froze amount and update froze 
 	//amount in mem_account table & update old order and create new order in stake table
 	try {
         let order = userAndOrderData.stakeOrder;
@@ -303,6 +304,14 @@ SendFreezeOrder.prototype.sendFreezedOrder = async function (userAndOrderData, c
 				senderId: order.senderId,
 				stakeId: userAndOrderData.stakeId
 			});
+		
+		let bulk = utils.makeBulk([prevOrder], 'stake_orders');
+ 		try {
+ 			await utils.indexall(bulk, 'stake_orders');
+ 			library.logger.info(order.senderId + ': updated stake order ', userAndOrderData.stakeId);
+ 		} catch (err) {
+ 			library.logger.error('elasticsearch error :' + err.message);
+ 		}
 
 		//create new froze order according to send order
         const newOrder = await self.scope.db.one(sql.createNewFrozeOrder,

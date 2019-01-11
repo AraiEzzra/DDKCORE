@@ -52,13 +52,13 @@ let DelegatesSql = {
 
 	getVoters: 'SELECT ARRAY_AGG("accountId") AS "accountIds" FROM mem_accounts2delegates WHERE "dependentId" = ${publicKey}',
 
-	getLatestVoters: 'SELECT * from trs WHERE type = 3 ORDER BY timestamp DESC LIMIT ${limit}',
+	getLatestVoters: 'SELECT * from trs WHERE type = 60 ORDER BY timestamp DESC LIMIT ${limit}',
 
-	getLatestDelegates: 'SELECT d."username" AS "username", t."t_senderId" AS "address", ENCODE(t."t_senderPublicKey", \'hex\') AS "publicKey", t."t_timestamp" AS "timestamp" FROM trs_list t INNER JOIN delegates d ON t."t_id" = d."transactionId" WHERE t."t_type" = 2 ORDER BY "t_timestamp" DESC LIMIT ${limit}',
+	getLatestDelegates: 'SELECT d."username" AS "username", t."t_senderId" AS "address", ENCODE(t."t_senderPublicKey", \'hex\') AS "publicKey", t."t_timestamp" AS "timestamp" FROM trs_list t INNER JOIN delegates d ON t."t_id" = d."transactionId" WHERE t."t_type" = 30 ORDER BY "t_timestamp" DESC LIMIT ${limit}',
 
-    addDelegateVoteRecord : 'INSERT INTO "delegate_to_vote_counter"("publicKey", "voteCount") VALUES (${publicKey}, 0)',
+  addDelegateVoteRecord : 'INSERT INTO "delegate_to_vote_counter"("publicKey", "voteCount") VALUES (${publicKey}, 0)',
 
-    removeDelegateVoteRecord : 'DELETE FROM "delegate_to_vote_counter" WHERE "publicKey" = ${publicKey}'
+  removeDelegateVoteRecord : 'DELETE FROM "delegate_to_vote_counter" WHERE "publicKey" = ${publicKey}'
 };
 
 module.exports = DelegatesSql;
