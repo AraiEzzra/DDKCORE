@@ -1,9 +1,8 @@
 'use strict';
-
 let constants = require('../helpers/constants.js');
 
 // Private fields
-let modules;
+let modules, self;
 
 /**
  * Main transfer logic.
@@ -12,7 +11,9 @@ let modules;
  * @classdesc Main transfer logic.
  */
 // Constructor
-function ReferTransfer () {}
+function ReferTransfer() {
+	self = this;
+}
 
 // Public methods
 /**
@@ -89,6 +90,10 @@ ReferTransfer.prototype.verify = function (trs, sender, cb) {
 	return setImmediate(cb, null, trs);
 };
 
+ReferTransfer.prototype.verifyUnconfirmed = function (trs, sender, cb) {
+	return setImmediate(cb);
+}
+
 /**
  * @param {transaction} trs
  * @param {account} sender
@@ -104,7 +109,7 @@ ReferTransfer.prototype.process = function (trs, sender, cb) {
  * @return {null}
  */
 ReferTransfer.prototype.getBytes = function (trs) {
-	return null;
+	return Buffer.from([]);
 };
 
 /**
@@ -187,7 +192,7 @@ ReferTransfer.prototype.undoUnconfirmed = function (trs, sender, cb) {
 };
 
 /**
- * Deletes blockId from transaction 
+ * Deletes blockId from transaction
  * @param {transaction} trs
  * @return {transaction}
  */
@@ -216,7 +221,7 @@ ReferTransfer.prototype.dbSave = function (trs) {
  * Checks sender multisignatures and transaction signatures.
  * @param {transaction} trs
  * @param {account} sender
- * @return {boolean} True if transaction signatures greather than 
+ * @return {boolean} True if transaction signatures greather than
  * sender multimin or there are not sender multisignatures.
  */
 ReferTransfer.prototype.ready = function (trs, sender) {

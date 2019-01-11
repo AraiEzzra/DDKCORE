@@ -6,7 +6,7 @@ DROP TABLE IF EXISTS "stake_orders";
 DROP TABLE IF EXISTS "votes";
 
 CREATE TABLE IF NOT EXISTS "stake_orders"(
-  "id" VARCHAR(20) ,
+  "id" CHAR(64),
   "stakeId" SERIAL PRIMARY KEY,
   "status" SMALLINT NOT NULL,
   "startTime" INT NOT NULL,
@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS "stake_orders"(
 
 CREATE TABLE IF NOT EXISTS "votes"(
   "votes" TEXT,
-  "transactionId" VARCHAR(20) NOT NULL,
+  "transactionId" CHAR(64) NOT NULL,
   "reward" BIGINT,
   "unstake" BIGINT,
   "airdropReward" json,
@@ -106,7 +106,7 @@ LEFT OUTER JOIN dapps AS dapp ON dapp."transactionId" = t."id"
 LEFT OUTER JOIN intransfer AS it ON it."transactionId" = t."id"
 LEFT OUTER JOIN outtransfer AS ot ON ot."transactionId" = t."id"
 LEFT JOIN stake_orders so ON so."id" = t."id"
-LEFT JOIN referals ref ON ref."address" = t."recipientId";
+LEFT JOIN referals ref ON ref."address" = t."senderId";
 
 CREATE VIEW trs_list AS
 

@@ -11,6 +11,9 @@ let popsicle = require('popsicle');
 let schema = require('../schema/transport.js');
 let sandboxHelper = require('../helpers/sandbox.js');
 let sql = require('../sql/transport.js');
+let sqlBlock = require('../sql/blocks.js');
+let utils = require('../utils');
+let usersList = require('../app.js');
 
 // Private fields
 let modules, library, self, __private = {}, shared = {};
@@ -379,6 +382,7 @@ Transport.prototype.getFromPeer = function (peer, options, cb) {
 				let report = library.schema.validate(headers, schema.headers);
 				if (!report) {
 					// Remove peer
+          console.log('EHEADERS1', report);
 					__private.removePeer({peer: peer, code: 'EHEADERS'}, req.method + ' ' + req.url);
 
 					return setImmediate(cb, ['Invalid response headers', JSON.stringify(headers), req.method, req.url].join(' '));
@@ -480,10 +484,15 @@ Transport.prototype.onSignature = function (signature, broadcast) {
  * @emits transactions/change
  */
 Transport.prototype.onUnconfirmedTransaction = function (transaction, broadcast) {
-	if (broadcast && !__private.broadcaster.maxRelays(transaction)) {
-		__private.broadcaster.enqueue({}, {api: '/transactions', data: {transaction: transaction}, method: 'POST'});
-		library.network.io.sockets.emit('transactions/change', transaction);
-	}
+    if (broadcast && !__private.broadcaster.maxRelays(transaction)) {
+        __private.broadcaster.enqueue({}, {api: '/transactions', data: {transaction: transaction}, method: 'POST'});
+        let users = usersList.getUsersList();
+        users.map(function(user) {
+            if(user.address === transaction.senderId || user.address === transaction.recipientId) {
+                library.network.io.to(user.socketId).emit('transactions/change', transaction);
+            }
+        })
+    }
 };
 
 /**
@@ -506,6 +515,16 @@ Transport.prototype.onNewBlock = function (block, broadcast) {
 			}
 			library.network.io.sockets.emit('blocks/change', block);
 		});
+
+		library.db.one(sqlBlock.getBlockByHeight, { height: block.height })
+			.then(function (lastBlock) {
+				utils.addDocument({
+					index: 'blocks_list',
+					type: 'blocks_list',
+					body: lastBlock,
+					id: lastBlock.b_id
+				});
+			})
 	}
 };
 
@@ -554,7 +573,7 @@ Transport.prototype.internal = {
 			.split(',')
 			// Reject any non-numeric values
 			.filter(function (id) {
-				return /^[0-9]+$/.test(id);
+				return /^[0-9a-fA-F]+$/.test(id);
 			});
 
 		if (!escapedIds.length) {

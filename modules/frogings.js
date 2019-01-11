@@ -6,17 +6,23 @@ let sql = require('../sql/frogings.js');
 let TransactionPool = require('../logic/transactionPool.js');
 let transactionTypes = require('../helpers/transactionTypes.js');
 let Frozen = require('../logic/frozen.js');
-let ref_sql = require('../sql/referal_sql');
 let constants = require('../helpers/constants.js');
 let cache = require('./cache.js');
-let slots = require('../helpers/slots');
+let slots = require('../helpers/slots.js');
 
 const COUNT_ACTIVE_STAKE_HOLDERS_KEY = 'COUNT_ACTIVE_STAKE_HOLDERS';
 const COUNT_ACTIVE_STAKE_HOLDERS_EXPIRE = 300; // 5 minutes
+const COUNT_TOTAL_DDK_STAKED = 'COUNT_TOTAL_DDK_STAKED';
+const COUNT_TOTAL_DDK_STAKED_EXPIRE = 300; // 5 minutes
+const MY_STAKED_AMOUNT = 'MY_STAKED_AMOUNT';
+const MY_STAKED_AMOUNT_EXPIRE = 300; // 5 minutes
+const ALL_FREEZE_ORDERS = 'ALL_FREEZE_ORDERS';
+const ALL_FREEZE_ORDERS_EXPIRE = 300; // 5 minutes
+const ALL_ACTIVE_FREEZE_ORDERS = 'ALL_ACTIVE_FREEZE_ORDERS';
+const ALL_ACTIVE_FREEZE_ORDERS_EXPIRE = 300; // 5 minutes
 
 // Private fields
 let __private = {};
-let shared = {};
 let modules;
 let library;
 let self;
@@ -109,6 +115,75 @@ Frogings.prototype.onBind = function (scope) {
 
 };
 
+__private.getMyDDKFrozen = async function (account) {
+	return new Promise(async (resolve, reject) => {
+		try {
+            const resultFromCache = await cache.prototype.getJsonForKeyAsync(MY_STAKED_AMOUNT);
+
+            if (resultFromCache !== null) {
+            	resolve(resultFromCache);
+            }
+
+            const row = await library.db.one(sql.getMyStakedAmount, { address: account.address });
+            await cache.prototype.setJsonForKeyAsync(
+                MY_STAKED_AMOUNT, row, MY_STAKED_AMOUNT_EXPIRE
+            );
+            resolve(row);
+        } catch (err) {
+			reject(err);
+		}
+    });
+};
+
+__private.getAllFreezeOrders = async function (account, req) {
+	return new Promise(async (resolve, reject) => {
+		try {
+            const resultFromCache = await cache.prototype.getJsonForKeyAsync(ALL_FREEZE_ORDERS);
+
+            if (resultFromCache !== null) {
+            	resolve(resultFromCache);
+            }
+
+            const row = await library.db.task(async (t) => {
+            	const count = await t.query(sql.getFrozeOrdersCount, { senderId: account.address });
+                const freezeOrders = await t.query(sql.getFrozeOrders, { senderId: account.address, limit: req.body.limit, offset: req.body.offset });
+                return {
+            		freezeOrders: freezeOrders,
+					count: count.length ? count[0].count : 0
+                }
+			});
+            await cache.prototype.setJsonForKeyAsync(
+                ALL_FREEZE_ORDERS, row, ALL_FREEZE_ORDERS_EXPIRE
+            );
+            resolve(row);
+        } catch (err) {
+			reject(err);
+		}
+    });
+};
+
+__private.getAllActiveFreezeOrders = async function (account) {
+	return new Promise(async (resolve, reject) => {
+		try {
+            const resultFromCache = await cache.prototype.getJsonForKeyAsync(ALL_ACTIVE_FREEZE_ORDERS);
+
+            if (resultFromCache !== null) {
+            	resolve(resultFromCache);
+            }
+
+            const row = await library.db.query(sql.getActiveFrozeOrders, {
+                senderId: account.address,
+                currentTime: slots.getTime()
+            });
+            await cache.prototype.setJsonForKeyAsync(
+                ALL_ACTIVE_FREEZE_ORDERS, row, ALL_ACTIVE_FREEZE_ORDERS_EXPIRE
+            );
+            resolve(JSON.stringify(row));
+        } catch (err) {
+            reject(err);
+		}
+    });
+};
 
 // Shared API
 /**
@@ -146,16 +221,23 @@ Frogings.prototype.shared = {
 		}
 	},
 
-	totalDDKStaked: function (req, cb) {
-		library.db.one(sql.getTotalStakedAmount)
-		.then(function (row) {
-			return setImmediate(cb, null, {
-				totalDDKStaked: row
-			});
-		})
-		.catch(function (err) {
+	totalDDKStaked: async function (req, cb) {
+        try {
+            const resultFromCache = await cache.prototype.getJsonForKeyAsync(COUNT_TOTAL_DDK_STAKED);
+
+            if (resultFromCache !== null) {
+                return setImmediate(cb, null, { totalDDKStaked: resultFromCache });
+            }
+
+            const totalDDKStaked = await library.db.one(sql.getTotalStakedAmount);
+            await cache.prototype.setJsonForKeyAsync(
+                COUNT_TOTAL_DDK_STAKED, totalDDKStaked, COUNT_TOTAL_DDK_STAKED_EXPIRE
+            );
+            return setImmediate(cb, null, { totalDDKStaked: totalDDKStaked });
+
+        } catch (err) {
 			return setImmediate(cb, err);
-		});
+		}
 	},
 
 	getMyDDKFrozen: function (req, cb) {
@@ -171,22 +253,15 @@ Frogings.prototype.shared = {
 					return setImmediate(cb, 'Address of account not found');
 				}
 
-				library.db.one(sql.getMyStakedAmount, { address: account.address })
-				.then(function (row) {
-					return setImmediate(cb, null, {
-						totalDDKStaked: row
-					});
-				})
-				.catch(function (err) {
-					return setImmediate(cb, err);
-				});
+                __private.getMyDDKFrozen(account)
+					.then(row => setImmediate(cb, null, { totalDDKStaked: row }))
+					.catch(err => setImmediate(cb, err));
 			});
 		});
 	},
-	
-	getAllFreezeOrders: function (req, cb) {
+	getAllFreezeOrders: async function (req, cb) {
 
-		library.schema.validate(req.body, schema.getAllFreezeOrder, function (err) {
+      	library.schema.validate(req.body, schema.getAllFreezeOrder, function (err) {
 			if (err) {
 				return setImmediate(cb, err[0].message);
 			}
@@ -198,21 +273,14 @@ Frogings.prototype.shared = {
 					return setImmediate(cb, 'Address of account not found');
 				}
 
-				library.db.query(sql.getFrozeOrders, { senderId: account.address })
-				.then(function (rows) {
-					return setImmediate(cb, null, {
-						freezeOrders: JSON.stringify(rows)
-					});
-				})
-				.catch(function (err) {
-					return setImmediate(cb, err);
-				});
+                __private.getAllFreezeOrders(account, req)
+                    .then(row => setImmediate(cb, null, row))
+                    .catch(err => setImmediate(cb, err));
 			});
 		});
 	},
 
 	getAllActiveFreezeOrders: function (req, cb) {
-
 
 		library.schema.validate(req.body, schema.getAllActiveFreezeOrder, function (err) {
 			if (err) {
@@ -225,17 +293,10 @@ Frogings.prototype.shared = {
 				if (!account || !account.address) {
 					return setImmediate(cb, 'Address of account not found');
 				}
-				
-				library.db.one(sql.getActiveFrozeOrders, { senderId: account.address })
-				.then(function (rows) {
-					return setImmediate(cb, null, {
-						freezeOrders: JSON.stringify(rows)
-					});
-				})
-				.catch(function (err) {
-					return setImmediate(cb, err);
-				});
 
+                __private.getAllActiveFreezeOrders(account)
+                    .then(rows => setImmediate(cb, null, { freezeOrders: rows }))
+                    .catch(err => setImmediate(cb, err));
 			});
 		});
 	},

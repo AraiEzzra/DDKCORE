@@ -1,4 +1,5 @@
 const exceptions = require('../helpers/exceptions.js');
+const constants = require('../helpers/constants');
 
 /**
  * Main blockVersion logic
@@ -13,7 +14,7 @@ const exceptions = require('../helpers/exceptions.js');
  *
  * @property {number} currentBlockVersion - Current block version used for forging and verify
  */
-const currentBlockVersion = 0;
+const currentBlockVersion = constants.CURRENT_BLOCK_VERSION;
 
 /**
  * Checks if block version is valid - if match current version or there is an exception for provided block height.

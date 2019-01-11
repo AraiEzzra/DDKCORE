@@ -13,6 +13,8 @@ let transactionTypes = require('../helpers/transactionTypes.js');
 let Transfer = require('../logic/transfer.js');
 let ReferTransfer = require('../logic/referralTransaction.js');
 let slots = require('../helpers/slots');
+let trsCache = require('memory-cache');
+let expCache = new trsCache.Cache();
 
 // Private fields
 let __private = {};
@@ -66,10 +68,6 @@ function Transactions(cb, scope) {
 		transactionTypes.SEND, new Transfer()
 	);
 
-	__private.assetTypes[transactionTypes.REFER] = library.logic.transaction.attachAssetType(
-		transactionTypes.REFER, new ReferTransfer()
-	);
-
 	setImmediate(cb, null, self);
 }
 
@@ -85,24 +83,24 @@ __private.list = function (filter, cb) {
 	let params = {};
 	let where = [];
 	let allowedFieldsMap = {
-		id: '"t_id" = ${id}',
-		blockId: '"t_blockId" = ${blockId}',
-		senderPublicKey: '"t_senderPublicKey" = ${senderPublicKey}',
-		recipientPublicKey: '"m_recipientPublicKey" = ${recipientPublicKey}',
-		senderId: '"t_senderId" = ${senderId}',
-		recipientId: '"t_recipientId" = ${recipientId}',
-		height: '"b_height" = ${height}',
-		fromHeight: '"b_height" >= ${fromHeight}',
-		toHeight: '"b_height" <= ${toHeight}',
-		fromTimestamp: '"t_timestamp" >= ${fromTimestamp}',
-		toTimestamp: '"t_timestamp" <= ${toTimestamp}',
-		senderIds: '"t_senderId" IN (${senderIds:csv})',
-		recipientIds: '"t_recipientId" IN (${recipientIds:csv})',
-		senderPublicKeys: '"t_senderPublicKey" IN (${senderPublicKeys:csv})',
-		recipientPublicKeys: '"m_recipientPublicKey" IN (${recipientPublicKeys:csv})',
-		minAmount: '"t_amount" >= ${minAmount}',
-		maxAmount: '"t_amount" <= ${maxAmount}',
-		type: '"t_type" = ${type}',
+		id: 't."id" = ${id}',
+		blockId: 't."blockId" = ${blockId}',
+		senderPublicKey: 't."senderPublicKey" = ${senderPublicKey}',
+		recipientPublicKey: 'm."recipientPublicKey" = ${recipientPublicKey}',
+		senderId: 't."senderId" = ${senderId}',
+		recipientId: 't."recipientId" = ${recipientId}',
+		height: 'b."height" = ${height}',
+		fromHeight: 'b."height" >= ${fromHeight}',
+		toHeight: 'b."height" <= ${toHeight}',
+		fromTimestamp: 't."timestamp" >= ${fromTimestamp}',
+		toTimestamp: 't."timestamp" <= ${toTimestamp}',
+		senderIds: 't."senderId" IN (${senderIds:csv})',
+		recipientIds: 't."recipientId" IN (${recipientIds:csv})',
+		senderPublicKeys: 't."senderPublicKey" IN (${senderPublicKeys:csv})',
+		recipientPublicKeys: 'm."recipientPublicKey" IN (${recipientPublicKeys:csv})',
+		minAmount: 't."amount" >= ${minAmount}',
+		maxAmount: 't."amount" <= ${maxAmount}',
+		type: 't."type" = ${type}',
 		minConfirmations: 'confirmations >= ${minConfirmations}',
 		limit: null,
 		offset: null,
@@ -110,12 +108,12 @@ __private.list = function (filter, cb) {
 		// FIXME: Backward compatibility, should be removed after transitional period
 		ownerAddress: null,
 		ownerPublicKey: null,
-		stakedAmount: '"t_stakedAmount" = ${stakedAmount}',
-		stakeId: '"t_stakedId" = ${stakedId}',
-		trsName: '"t_trsName" = ${trsName}',
-		groupBonus: '"t_groupBonus" = ${groupBonus}',
-		reward: '"t_reward" = ${reward}',
-		pendingGroupBonus: '"t_pendingGroupBonus" = ${pendingGroupBonus}'
+		stakedAmount: 't."stakedAmount" = ${stakedAmount}',
+		stakeId: 't."stakedId" = ${stakedId}',
+		trsName: 't."trsName" = ${trsName}',
+		groupBonus: 't."groupBonus" = ${groupBonus}',
+		reward: 't."reward" = ${reward}',
+		pendingGroupBonus: 't."pendingGroupBonus" = ${pendingGroupBonus}'
 	};
 	let owner = '';
 	let isFirstWhere = true;
@@ -169,7 +167,7 @@ __private.list = function (filter, cb) {
 
 	// FIXME: Backward compatibility, should be removed after transitional period
 	if (filter.ownerAddress && filter.ownerPublicKey) {
-		owner = '("t_senderPublicKey" = ${ownerPublicKey} OR "t_recipientId" = ${ownerAddress})';
+		owner = '(t."senderPublicKey" = ${ownerPublicKey} OR t."recipientId" = ${ownerAddress})';
 		params.ownerPublicKey = filter.ownerPublicKey;
 		params.ownerAddress = filter.ownerAddress;
 	}
@@ -193,13 +191,14 @@ __private.list = function (filter, cb) {
 	let orderBy = OrderBy(
 		filter.orderBy, {
 			sortFields: sql.sortFields,
+			quoteField: false,
 			fieldPrefix: function (sortField) {
 				if (['height'].indexOf(sortField) > -1) {
-					return 'b_' + sortField;
+					return 'b.' + sortField;
 				} else if (['confirmations'].indexOf(sortField) > -1) {
 					return sortField;
 				} else {
-					return 't_' + sortField;
+					return 't.' + sortField;
 				}
 			}
 		}
@@ -209,46 +208,39 @@ __private.list = function (filter, cb) {
 		return setImmediate(cb, orderBy.error);
 	}
 
-	library.db.query(sql.countList({
+	library.db.query(sql.list({
 		where: where,
-		owner: owner
+		owner: owner,
+		sortField: orderBy.sortField,
+		sortMethod: orderBy.sortMethod
 	}), params).then(function (rows) {
-		let count = rows.length ? rows[0].count : 0;
+		let count = rows.length ? rows[0].total_rows : 0;
+		library.db.query(sql.getDelegateNames)
+		.then(function(delegates) {
+			// TODO remove that logic if count delegates will be more than 100
+			// https://trello.com/c/yQ6JC62S/214-remove-logic-add-username-for-transactions-get-if-count-delegates-will-be-more-than-100
+			const delegatesMap = Object.assign({}, constants.DEFAULT_USERS);
 
-		library.db.query(sql.list({
-			where: where,
-			owner: owner,
-			sortField: orderBy.sortField,
-			sortMethod: orderBy.sortMethod
-		}), params).then(function (rows) {
-			let transactions = [];
-			library.db.query(sql.getUserNames)
-			.then(function(delegates) {
-				for (let i = 0; i < rows.length; i++) {
-					transactions.push(library.logic.transaction.dbRead(rows[i]));
-					for (let j = 0; j < delegates.length; j++) {
-						if(rows[i].t_senderId === delegates[j].m_address) {
-							transactions[i].senderName = delegates[j].m_username;
-						}
-						if(rows[i].t_recipientId === delegates[j].m_address) {
-							transactions[i].recipientName = delegates[j].m_username;
-						}
-					}
-				}
-	
-				let data = {
-					transactions: transactions,
-					count: count
-				};
-	
-				return setImmediate(cb, null, data);
-			})
-			.catch(function(err) {
-				return setImmediate(cb, err.message);
+			delegates.forEach(delegate => {
+				delegatesMap[delegate.m_address] = delegate.m_username;
 			});
-		}).catch(function (err) {
-			library.logger.error(err.stack);
-			return setImmediate(cb, 'Transactions#list error');
+
+			const transactions = rows.map(row => {
+				const trs = library.logic.transaction.dbRead(row);
+				trs.senderName = delegatesMap[trs.senderId];
+				trs.recipientName = delegatesMap[trs.recipientId];
+				return trs;
+			});
+
+			let data = {
+				transactions: transactions,
+				count: count
+			};
+
+			return setImmediate(cb, null, data);
+		})
+		.catch(function(err) {
+			return setImmediate(cb, err.message);
 		});
 	}).catch(function (err) {
 		library.logger.error(err.stack);
@@ -632,10 +624,6 @@ Transactions.prototype.onBind = function (scope) {
 		scope.accounts,
 		scope.rounds
 	);
-	__private.assetTypes[transactionTypes.REFER].bind(
-		scope.accounts,
-		scope.rounds
-	);
 };
 
 // Internal API
@@ -644,39 +632,51 @@ Transactions.prototype.onBind = function (scope) {
  * @see {@link http://apidocjs.com/}
  */
 Transactions.prototype.internal = {
-	getTransactionHistory: function(req, cb) {
+	getTransactionHistory: function (req, cb) {
 
-		//let trsDate=[],trsCount=[];
+		if (expCache.get('trsHistoryCache')) {
+			return setImmediate(cb, null, {
+				success: true,
+				trsData: expCache.get('trsHistoryCache'),
+				info: 'caching'
+			});
+		} else {
 
-		let  fortnightBack = new Date(+new Date - 12096e5);
+			let fortnightBack = new Date(+new Date - 12096e5);
 
-		fortnightBack.setHours(0,0,0,0);	
+			fortnightBack.setHours(0, 0, 0, 0);
 
-		let startTimestamp = slots.getTime(fortnightBack);
-		
-		let endDate = new Date(+new Date - (60 * 60 * 24 * 1000));
-		
-		endDate.setHours(0,0,0,0);
-		
-		let endTimestamp = slots.getTime(endDate);
+			let startTimestamp = slots.getTime(fortnightBack);
 
-		library.db.query(sql.getTransactionHistory, {
-			startTimestamp: startTimestamp + epochTime,
-			endTimestamp: endTimestamp + epochTime,
-			epochTime: epochTime
-		})
-		.then(function(trsHistory) {
+			let endDate = new Date(+new Date - (60 * 60 * 24 * 1000));
 
-			//for(let i=0;i<trsHistory.length;i++) {
-			//	trsDate[i] = new Date(trsHistory[i].time).toDateString();
-			//	trsCount[i] = trsHistory[i].created;
-			//}
+			endDate.setHours(0, 0, 0, 0);
 
-			return setImmediate(cb, null, {success: true, trsData: trsHistory });
-		})
-		.catch(function(err) {
-			return setImmediate(cb, {success: false, err: err});
-		});
+			let endTimestamp = slots.getTime(endDate);
+
+			library.db.query(sql.getTransactionHistory, {
+				startTimestamp: startTimestamp + epochTime,
+				endTimestamp: endTimestamp + epochTime,
+				epochTime: epochTime
+			})
+				.then(function (trsHistory) {
+
+					let leftTime = (24 - new Date().getUTCHours()) * 60 * 60 * 1000;
+
+					expCache.put('trsHistoryCache', trsHistory, leftTime);
+
+					return setImmediate(cb, null, {
+						success: true,
+						trsData: trsHistory
+					});
+				})
+				.catch(function (err) {
+					return setImmediate(cb, {
+						success: false,
+						err: err
+					});
+				});
+		}
 	}
 };
 
@@ -877,7 +877,7 @@ Transactions.prototype.shared = {
 									let transaction;
 
 									library.logic.transaction.create({
-										type: (req.body.transactionRefer) ? (transactionTypes.REFER) : (transactionTypes.SEND),
+										type: transactionTypes.SEND,
 										amount: req.body.amount,
 										sender: account,
 										recipientId: recipientId,
@@ -919,7 +919,7 @@ Transactions.prototype.shared = {
 								let transaction;
 
 								library.logic.transaction.create({
-									type: (req.body.transactionRefer) ? (transactionTypes.REFER) : (transactionTypes.SEND),
+									type: transactionTypes.SEND,
 									amount: req.body.amount,
 									sender: account,
 									recipientId: recipientId,

@@ -1,7 +1,6 @@
 
 
 let bignum = require('../helpers/bignum.js');
-let BlockReward = require('../logic/blockReward.js');
 let constants = require('../helpers/constants.js');
 let crypto = require('crypto');
 let schema = require('../schema/accounts.js');
@@ -22,9 +21,9 @@ let mailServices = require('../helpers/postmark');
 // Private fields
 let modules, library, self, __private = {}, shared = {};
 let frogings_sql = require('../sql/frogings');
+const DDK_DATA_EXPIRE = 300;
 
 __private.assetTypes = {};
-__private.blockReward = new BlockReward();
 
 /**
  * Initializes library with scope content and generates a Vote instance.
@@ -115,21 +114,21 @@ __private.openAccount = function (body, cb) {
 				u_multisignatures: null
 			};
 
-			self.getReferralLinkChain(body.referal, account.address).then((level) => {
+			self.verifyReferral(body.referal, account.address).then(() => {
 				library.logic.transaction.create({
 					type: transactionTypes.REFERRAL,
 					sender: account,
 					keypair: keypair,
-					referrals: level
-				}).then((transactionReferral) => {
-					modules.transactions.receiveTransactions([transactionReferral], true, (err) => {
+					referral: body.referal,
+				}).then((referralTransaction) => {
+					modules.transactions.receiveTransactions([referralTransaction], true, (err) => {
 						return setImmediate(cb, null, account);
 					});
 				}).catch((err) => {
 					throw err;
 				});
 			}).catch((err) => {
-				library.logger.error("Referral API Error : " + err);
+				library.logger.error("Referral API Error: " + err);
 				return setImmediate(cb, err.toString());
 			});
 		}
@@ -175,50 +174,27 @@ Accounts.prototype.getAccount = function (filter, fields, cb) {
 	library.logic.account.get(filter, fields, cb);
 };
 
-/**
- * Firstly check whether this referral id is valid or not.
- * If valid Generate referral chain for that user.
- * In case of no referral, chain will contain the null value i.e; Blank.
- * @param {referalLink} - Refer Id.
- * @param {address} - Address of user during registration.
- * @author - Satish Joshi
- */
-
-Accounts.prototype.getReferralLinkChain = async function (referalLink, address) {
-
-    let referrer_address = referalLink;
-    if (!referrer_address) {
-        referrer_address = '';
-    }
-    let level = [];
-    if (referrer_address == address) {
-        return Promise.reject('Introducer and sponsor can\'t be same');
-    }
-    let userExists = false;
-    try {
-        userExists = await library.db.one(sql.validateReferSource, { referSource: referrer_address });
-    } catch (e){
-        return Promise.reject('Referral Link is Invalid' + JSON.stringify(e));
-    }
-    userExists = userExists.address ? parseInt(userExists.address, 10) > 0 : false;
-
-    if (userExists) {
-				level.unshift(referrer_address);
-				return new Promise((resolve, reject) => {
-						library.logic.account.findReferralLevel(referrer_address, function (err, resp) {
-								if (err) {
-										return reject(err);
-								}
-								if (resp.length != 0 && resp[0].level != null) {
-										let chain_length = ((resp[0].level.length) < 15) ? (resp[0].level.length) : 14;
-										level = level.concat(resp[0].level.slice(0, chain_length));
-								}
-								resolve(level);
-						});
-			});
+Accounts.prototype.verifyReferral = async function (referralAddress, accountAddress) {
+	if (!referralAddress) {
+		return Promise.resolve();
 	}
-	return Promise.resolve([]);
 
+	if (referralAddress === accountAddress) {
+		return Promise.reject('Introducer and sponsor cannot be same');
+	}
+
+	let referral;
+	try {
+		referral = await library.db.oneOrNone(sql.getUserByAddress, { address: referralAddress });
+	} catch (error) {
+		return Promise.reject('Cannot get account from db: ' + error.message);
+	}
+
+	if (!referral) {
+		return Promise.reject('Referral does not found');
+	}
+
+	return Promise.resolve();
 };
 
 /**
@@ -571,7 +547,7 @@ Accounts.prototype.shared = {
 			let publicKey = keypair.publicKey.toString('hex');
 
 			if (req.body.publicKey) {
-				if (keypair.publicKey.toString('hex') !== req.body.publicKey) {
+				if (publicKey !== req.body.publicKey) {
 					return setImmediate(cb, 'Invalid passphrase');
 				}
 			}
@@ -805,17 +781,6 @@ Accounts.prototype.shared = {
 
 	migrateData: function (req, cb) {
 
-		try {
-			var balance;
-			if (req.body.data.balance_d === null) {
-				balance = 0;
-			} else {
-				balance = parseFloat(req.body.data.balance_d) * 100000000;
-			}
-		} catch (err) {
-			return setImmediate(cb, err.toString());
-		}
-
 		function getStakeOrderFromETPS(next) {
 			library.db.query(sql.getETPSStakeOrders, {
 				account_id: req.body.data.id
@@ -1000,11 +965,11 @@ Accounts.prototype.shared = {
 			});
 	},
 
-	senderAccountBalance: function(req,cb) {
-		library.db.query(sql.checkSenderBalance,{
+	senderAccountBalance: function(req, cb) {
+		library.db.query(sql.checkSenderBalance, {
 			sender_address: req.body.address
 		}).then(function(bal){
-			return setImmediate(cb, null, { balance: bal[0].u_balance});
+			return setImmediate(cb, null, { balance: bal[0].balance });
 		}).catch(function(err){
 			return setImmediate(cb, err);
 		});
@@ -1062,14 +1027,14 @@ Accounts.prototype.shared = {
 					});
 				})();
 
-                await cache.prototype.setJsonForKeyAsync('ddkCache', ddkData);
+                await cache.prototype.setJsonForKeyAsync('ddkCache', ddkData, DDK_DATA_EXPIRE);
                 setImmediate(cb, null, ddkData);
             }
         } catch (err) {
             return setImmediate(cb, err);
 		}
 	},
-	
+
 	checkAccountExists: function(req, cb) {
 		library.schema.validate(req.body, schema.checkAccountExists, async function(err) {
 			if (err) {
@@ -1416,14 +1381,15 @@ Accounts.prototype.internal = {
 						seriesCb(err, false);
 					});
 				}],
+
 				checkActiveStakeOfLeftAndRightSponsor: ['checkActiveStake', function (result, seriesCb) {
+					let activeStakeCount = 0;
 					library.db.query(sql.findDirectSponsor, {
 						introducer: req.body.address
 					})
 						.then(function (directSponsors) {
 							if (directSponsors.length >= 2) {
 
-								var activeStakeCount = 0;
 								directSponsors.forEach(function (directSponsor) {
 									library.db.query(sql.findActiveStakeAmount, {
 										senderId: directSponsor.address
@@ -1495,112 +1461,60 @@ Accounts.prototype.internal = {
 			});
 		});
 	},
-
-	sendWithdrawlAmount: function (req, cb) {
-		library.schema.validate(req.body, schema.enablePendingGroupBonus, function (err) {
-			if (err) {
-				return setImmediate(cb, err);
-			}
-			if (!nextBonus) {
-				return setImmediate(cb, 'You don\'t have pending group bonus remaining');
-			}
-			let hash = Buffer.from(JSON.parse(library.config.users[5].keys));
-			let keypair = library.ed.makeKeypair(hash);
-			let publicKey = keypair.publicKey.toString('hex');
-			library.balancesSequence.add(function (cb) {
-				self.getAccount({publicKey: publicKey}, function(err, account) {
-					if (err) {
-						return setImmediate(cb, err)
-					}
-					let transaction;
-					let secondKeypair = null;
-					account.publicKey = publicKey;
-
-					library.logic.transaction.create({
-						type: transactionTypes.REWARD,
-						amount: nextBonus * 100000000,
-						sender: account,
-						recipientId: req.body.address,
-						keypair: keypair,
-						secondKeypair: secondKeypair,
-						trsName: 'WITHDRAWLREWARD'
-					}).then((transactionReward) =>{
-						transaction = transactionReward;
-						modules.transactions.receiveTransactions([transaction], true, cb);
-					}).catch((e) => {
-						return setImmediate(cb, e.toString());
-					});
-				});
-			}, function (err, transaction) {
-				if (err) {
-					return setImmediate(cb, err);
-				}
-				library.cache.client.set(req.body.address + '_pending_group_bonus_trs_id', transaction[0].id);
-				library.db.none(sql.updatePendingGroupBonus, {
-					nextBonus: nextBonus * 100000000,
-					senderId: req.body.address
-				})
-				.then(function () {
-					return setImmediate(cb, null, { transactionId: transaction[0].id });
-				})
-				.catch(function (err) {
-					return setImmediate(cb, err);
-				});
-			});
-		});
-	},
-
-	forgotEtpsPassword: function (req, cb) {
-		let data = req.body.data;
-		let userName = Buffer.from((data.split('&')[0]).split('=')[1], 'base64').toString();
-		let email = Buffer.from((data.split('&')[1]).split('=')[1], 'base64').toString();
-		let link = req.body.link;
-
-		library.db.one(sql.validateEtpsUser, {
-			username: userName,
-			emailId: email
-		}).then(function (user) {
-			let newPassword = Math.random().toString(36).substr(2, 8);
-			let hash = crypto.createHash('md5').update(newPassword).digest('hex');
-
-			library.db.none(sql.updateEtpsPassword, {
-				password: hash,
-				username: userName
-			}).then(function () {
-
-				let mailOptions = {
-					From: library.config.mailFrom,
-					To: email,
-					TemplateId: 8276287,
-					TemplateModel: {
-						"ddk": {
-						  "username": userName,
-						  "password": newPassword
-						}
-					  }
-				};
-
-				mailServices.sendEmailWithTemplate(mailOptions, function (err) {
-					if (err) {
-						library.logger.error(err.stack);
-						return setImmediate(cb, err.toString());
-					}
-					return setImmediate(cb, null, {
-						success: true,
-						info: "Mail Sent Successfully"
-					});
-				});
-			}).catch(function (err) {
-				library.logger.error(err.stack);
-				return setImmediate(cb, err);
-			});
-
-		}).catch(function (err) {
-			library.logger.error(err.stack);
-			return setImmediate(cb, 'Invalid username or email');
-		});
-
-	}
+  // TODO remove
+	// sendWithdrawlAmount: function (req, cb) {
+	// 	library.schema.validate(req.body, schema.enablePendingGroupBonus, function (err) {
+	// 		if (err) {
+	// 			return setImmediate(cb, err);
+	// 		}
+	// 		if (!nextBonus) {
+	// 			return setImmediate(cb, 'You don\'t have pending group bonus remaining');
+	// 		}
+	// 		let hash = Buffer.from(JSON.parse(library.config.users[5].keys));
+	// 		let keypair = library.ed.makeKeypair(hash);
+	// 		let publicKey = keypair.publicKey.toString('hex');
+	// 		library.balancesSequence.add(function (cb) {
+	// 			self.getAccount({publicKey: publicKey}, function(err, account) {
+	// 				if (err) {
+	// 					return setImmediate(cb, err)
+	// 				}
+	// 				let transaction;
+	// 				let secondKeypair = null;
+	// 				account.publicKey = publicKey;
+  //
+	// 				library.logic.transaction.create({
+	// 					type: transactionTypes.REWARD,
+	// 					amount: nextBonus * 100000000,
+	// 					sender: account,
+	// 					recipientId: req.body.address,
+	// 					keypair: keypair,
+	// 					secondKeypair: secondKeypair,
+	// 					trsName: 'WITHDRAWLREWARD'
+	// 				}).then((transactionReward) =>{
+	// 					transaction = transactionReward;
+	// 					modules.transactions.receiveTransactions([transaction], true, cb);
+	// 				}).catch((e) => {
+	// 					return setImmediate(cb, e.toString());
+	// 				});
+	// 			});
+	// 		}, function (err, transaction) {
+	// 			if (err) {
+	// 				return setImmediate(cb, err);
+	// 			}
+	// 			library.cache.client.set(req.body.address + '_pending_group_bonus_trs_id', transaction[0].id);
+	// 			library.db.none(sql.updatePendingGroupBonus, {
+	// 				nextBonus: nextBonus * 100000000,
+	// 				senderId: req.body.address
+	// 			})
+	// 			.then(function () {
+	// 				return setImmediate(cb, null, { transactionId: transaction[0].id });
+	// 			})
+	// 			.catch(function (err) {
+	// 				return setImmediate(cb, err);
+	// 			});
+	// 		});
+	// 	});
+	// },
 };
 
 // Export

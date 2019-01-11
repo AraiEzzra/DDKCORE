@@ -2,7 +2,7 @@ let constants = require('../helpers/constants.js');
 let sql = require('../sql/dapps.js');
 
 // Private fields
-let modules, library, __private = {};
+let modules, library, __private = {}, self;
 
 __private.unconfirmedOutTansfers = {};
 
@@ -22,6 +22,7 @@ function OutTransfer (db, schema, logger) {
 		schema: schema,
 		logger: logger,
 	};
+	self = this;
 }
 
 // Public methods
@@ -88,19 +89,23 @@ OutTransfer.prototype.verify = function (trs, sender, cb) {
 		return setImmediate(cb, 'Invalid transaction asset');
 	}
 
-	if (!/^[0-9]+$/.test(trs.asset.outTransfer.dappId)) {
+	if (!/^[0-9a-fA-F]+$/.test(trs.asset.outTransfer.dappId)) {
 		return setImmediate(cb, 'Invalid outTransfer dappId');
 	}
 
-	if (!/^[0-9]+$/.test(trs.asset.outTransfer.transactionId)) {
+	if (!/^[0-9a-fA-F]+$/.test(trs.asset.outTransfer.transactionId)) {
 		return setImmediate(cb, 'Invalid outTransfer transactionId');
 	}
 
 	return setImmediate(cb, null, trs);
 };
 
+OutTransfer.prototype.verifyUnconfirmed = function (trs, sender, cb) {
+	return setImmediate(cb);
+}
+
 /**
- * Finds application into `dapps` table. Checks if transaction is already 
+ * Finds application into `dapps` table. Checks if transaction is already
  * processed. Checks if transaction is already confirmed.
  * @implements {library.db.one}
  * @param {transaction} trs
@@ -145,18 +150,9 @@ OutTransfer.prototype.process = function (trs, sender, cb) {
  * @throws {e} Error
  */
 OutTransfer.prototype.getBytes = function (trs) {
-	let buf;
-
-	try {
-		buf = Buffer.from([]);
-		let dappIdBuf = Buffer.from(trs.asset.outTransfer.dappId, 'utf8');
-		let transactionIdBuff = Buffer.from(trs.asset.outTransfer.transactionId, 'utf8');
-		buf = Buffer.concat([buf, dappIdBuf, transactionIdBuff]);
-	} catch (e) {
-		throw e;
-	}
-
-	return buf;
+		const dappIdBuf = Buffer.from(trs.asset.outTransfer.dappId, 'utf8');
+		const transactionIdBuff = Buffer.from(trs.asset.outTransfer.transactionId, 'utf8');
+		return Buffer.concat([dappIdBuf, transactionIdBuff]);
 };
 
 /**
@@ -314,7 +310,7 @@ OutTransfer.prototype.dbFields = [
 ];
 
 /**
- * Creates db operation object to 'outtransfer' table based on 
+ * Creates db operation object to 'outtransfer' table based on
  * outTransfer data.
  * @param {transaction} trs
  * @return {Object[]} table, fields, values.
@@ -356,7 +352,7 @@ OutTransfer.prototype.afterSave = function (trs, cb) {
  * Checks sender multisignatures and transaction signatures.
  * @param {transaction} trs
  * @param {account} sender
- * @return {boolean} True if transaction signatures greather than 
+ * @return {boolean} True if transaction signatures greather than
  * sender multimin or there are not sender multisignatures.
  */
 OutTransfer.prototype.ready = function (trs, sender) {

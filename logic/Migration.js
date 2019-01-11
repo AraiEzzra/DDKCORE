@@ -72,6 +72,10 @@ Migration.prototype.verify = function (trs, sender, cb) {
 	return setImmediate(cb, null, trs);
 };
 
+Migration.prototype.verifyUnconfirmed = function (trs, sender, cb) {
+	return setImmediate(cb);
+}
+
 /**
  * @param {transaction} trs
  * @param {account} sender
@@ -87,7 +91,7 @@ Migration.prototype.process = function (trs, sender, cb) {
  * @return {null}
  */
 Migration.prototype.getBytes = function (trs) {
-	return null;
+	return Buffer.from([]);
 };
 
 /**
@@ -149,7 +153,7 @@ Migration.prototype.undoUnconfirmed = function (trs, sender, cb) {
 };
 
 /**
- * Deletes blockId from transaction 
+ * Deletes blockId from transaction
  * @param {transaction} trs
  * @return {transaction}
  */

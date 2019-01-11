@@ -2,7 +2,7 @@ let ByteBuffer = require('bytebuffer');
 let constants = require('../helpers/constants.js');
 
 // Private fields
-let modules, library;
+let modules, library, self;
 
 /**
  * Initializes library.
@@ -18,6 +18,7 @@ function Signature (schema, logger) {
 		schema: schema,
 		logger: logger,
 	};
+	self = this;
 }
 
 /**
@@ -60,32 +61,48 @@ Signature.prototype.calculateFee = function () {
 /**
  * Verifies signature fields from transaction asset and sender.
  * @implements module:transactions#Transaction~verifySignature
- * @param {transaction} trs 
+ * @param {transaction} trs
  * @param {account} sender
  * @param {function} cb - Callback function.
- * @returns {setImmediateCallback|transaction} returns error string if invalid parameter | 
+ * @returns {setImmediateCallback|transaction} returns error string if invalid parameter |
  * trs validated.
  */
 Signature.prototype.verify = function (trs, sender, cb) {
-	if (!trs.asset || !trs.asset.signature) {
-		return setImmediate(cb, 'Invalid transaction asset');
-	}
+    if (!trs.asset || !trs.asset.signature) {
+        if (constants.SIGNATURE_TRANSACTION_VALIDATION_ENABLED.SIGNATURE) {
+            return setImmediate(cb, 'Invalid transaction asset');
+        } else {
+            library.logger.error('Invalid transaction asset signature')
+        }
+    }
 
-	if (trs.amount !== 0) {
-		return setImmediate(cb, 'Invalid transaction amount');
-	}
+    if (trs.amount !== 0) {
+        if (constants.SIGNATURE_TRANSACTION_VALIDATION_ENABLED.AMOUNT) {
+            return setImmediate(cb, 'Invalid transaction amount');
+        } else {
+            library.logger.error('Invalid transaction signature amount')
+        }
+    }
 
-	try {
-		if (!trs.asset.signature.publicKey || Buffer.from(trs.asset.signature.publicKey, 'hex').length !== 32) {
-			return setImmediate(cb, 'Invalid public key');
-		}
-	} catch (e) {
-		library.logger.error(e.stack);
-		return setImmediate(cb, 'Invalid public key');
-	}
+    try {
+        if (!trs.asset.signature.publicKey || Buffer.from(trs.asset.signature.publicKey, 'hex').length !== 32) {
+            if (constants.SIGNATURE_TRANSACTION_VALIDATION_ENABLED.PUBLIC_KEY) {
+                return setImmediate(cb, 'Invalid public key');
+            } else {
+                library.logger.error('Signature public key error')
+            }
+        }
+    } catch (e) {
+        library.logger.error(e.stack);
+        return setImmediate(cb, 'Invalid public key');
+    }
 
 	return setImmediate(cb, null, trs);
 };
+
+Signature.prototype.verifyUnconfirmed = function (trs, sender, cb) {
+	return setImmediate(cb);
+}
 
 /**
  * Returns transaction with setImmediate.
@@ -109,21 +126,7 @@ Signature.prototype.process = function (trs, sender, cb) {
  * @todo check if this function is called.
  */
 Signature.prototype.getBytes = function (trs) {
-	let bb;
-
-	try {
-		bb = new ByteBuffer(32, true);
-		let publicKeyBuffer = Buffer.from(trs.asset.signature.publicKey, 'hex');
-
-		for (let i = 0; i < publicKeyBuffer.length; i++) {
-			bb.writeByte(publicKeyBuffer[i]);
-		}
-
-		bb.flip();
-	} catch (e) {
-		throw e;
-	}
-	return bb.toBuffer();
+	return Buffer.from(trs.asset.signature.publicKey, 'hex');
 };
 
 /**
@@ -148,7 +151,7 @@ Signature.prototype.apply = function (trs, block, sender, cb) {
  * Sets account second signature to null.
  * @implements module:accounts#Accounts~setAccountAndGet
  * @param {transaction} trs - Unnecessary parameter.
- * @param {block} block - Unnecessary parameter. 
+ * @param {block} block - Unnecessary parameter.
  * @param {account} sender
  * @param {function} cb - Callback function.
  */
@@ -165,7 +168,7 @@ Signature.prototype.undo = function (trs, block, sender, cb) {
  * Activates unconfirmed second signature for sender account.
  * @implements module:accounts#Accounts~setAccountAndGet
  * @param {transaction} trs - Unnecessary parameter.
- * @param {block} block - Unnecessary parameter. 
+ * @param {block} block - Unnecessary parameter.
  * @param {account} sender
  * @param {function} cb - Callback function.
  * @return {setImmediateCallback} Error if second signature is already enabled.
@@ -182,7 +185,7 @@ Signature.prototype.applyUnconfirmed = function (trs, sender, cb) {
  * Deactivates unconfirmed second signature for sender account.
  * @implements module:accounts#Accounts~setAccountAndGet
  * @param {transaction} trs - Unnecessary parameter.
- * @param {block} block - Unnecessary parameter. 
+ * @param {block} block - Unnecessary parameter.
  * @param {account} sender
  * @param {function} cb - Callback function.
  */

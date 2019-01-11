@@ -469,14 +469,6 @@ __private.loadBlockChain = function () {
 			}
 		}
 
-		// TODO comment like in lisk
-		// let missed = !(results[2].count);
-		// library.logger.info(`Results ${JSON.stringify(results)}`);
-    //
-    // if (missed) {
-			// return reload(count, 'Detected missed blocks in mem_accounts');
-		// }
-
 		let unapplied = results[3].filter(function (row) {
 			return (row.round !== String(round));
 		});
@@ -623,10 +615,11 @@ __private.sync = function (cb) {
 	__private.syncTrigger(true);
 
 	async.series({
-		undoUnconfirmedList: function (seriesCb) {
-			library.logger.debug('Undoing unconfirmed transactions before sync');
-			return modules.transactions.undoUnconfirmedList(seriesCb);
-		},
+		// TODO: https://trello.com/c/N7QnY14v/209-fix-sync-method
+		// undoUnconfirmedList: function (seriesCb) {
+		// 	library.logger.debug('Undoing unconfirmed transactions before sync');
+		// 	return modules.transactions.undoUnconfirmedList(seriesCb);
+		// },
 		getPeersBefore: function (seriesCb) {
 			library.logger.debug('Establishing broadhash consensus before sync');
 			return modules.transport.getPeers({limit: constants.maxPeers}, seriesCb);
@@ -641,10 +634,11 @@ __private.sync = function (cb) {
 			library.logger.debug('Establishing broadhash consensus after sync');
 			return modules.transport.getPeers({limit: constants.maxPeers}, seriesCb);
 		},
-		applyUnconfirmedList: function (seriesCb) {
-			library.logger.debug('Applying unconfirmed transactions after sync');
-			return modules.transactions.applyUnconfirmedList(seriesCb);
-		}
+		// TODO: https://trello.com/c/N7QnY14v/209-fix-sync-method
+		// applyUnconfirmedList: function (seriesCb) {
+		// 	library.logger.debug('Applying unconfirmed transactions after sync');
+		// 	return modules.transactions.applyUnconfirmedList(seriesCb);
+		// }
 	}, function (err) {
 		__private.isActive = false;
 		__private.syncTrigger(false);

@@ -41,10 +41,10 @@ exports.merge = function merge(a, b) {
 exports.makeBulk = function (list, index) {
     let bulk = [], indexId;
     for (let current in list) {
-        if (list[current].stakeId) {
-            indexId = list[current].stakeId;
-        } else {
-            indexId = list[current].b_height;
+        if (list[current].stakeId || list[current].rowId) {
+            indexId = list[current].id;
+        } else if (list[current].b_height) {
+            indexId = list[current].b_id;
         }
         if (index === 'blocks_list') {
             list[current].b_generatorId = Accounts.prototype.generateAddressByPublicKey(list[current].b_generatorPublicKey);
@@ -154,7 +154,7 @@ exports.updateDocument = function (doc) {
             body: {
                 doc: doc.body
             },
-            id: doc.body.stakeId
+            id: doc.id
         }, function (err, res) {
             if (err) {
                 return err.message;
@@ -163,4 +163,19 @@ exports.updateDocument = function (doc) {
             }
         });
     })();
-}
+};
+
+exports.addDocument = async function (doc) {
+    await esClient.index({
+        index: doc.index,
+        type: doc.type,
+        body: doc.body,
+        id: doc.id
+    }, function (err) {
+        if (err) {
+            return err.message;
+        } else {
+            return null;
+        }
+    })
+};

@@ -5,7 +5,7 @@ let sql = require('../sql/dapps.js');
 let valid_url = require('valid-url');
 
 // Private fields
-let library, __private = {};
+let library, __private = {}, self;
 
 __private.unconfirmedNames = {};
 __private.unconfirmedLinks = {};
@@ -29,6 +29,7 @@ function DApp (db, logger, schema, network) {
 		schema: schema,
 		network: network,
 	};
+	self = this;
 }
 
 // Public methods
@@ -70,16 +71,7 @@ DApp.prototype.calculateFee = function () {
 	return constants.fees.dapp;
 };
 
-/**
- * Verifies transaction and dapp fields. Checks dapp name and link in 
- * `dapps` table.
- * @implements {library.db.query}
- * @param {transaction} trs
- * @param {account} sender
- * @param {function} cb
- * @return {setImmediateCallback} errors | trs
- */
-DApp.prototype.verify = function (trs, sender, cb) {
+DApp.prototype.verifyFields = function (trs, sender, cb) {
 	let i;
 
 	if (trs.recipientId) {
@@ -168,6 +160,23 @@ DApp.prototype.verify = function (trs, sender, cb) {
 		}
 	}
 
+	return setImmediate(cb);
+};
+
+/**
+ * Verifies transaction and dapp fields. Checks dapp name and link in
+ * `dapps` table.
+ * @implements {library.db.query}
+ * @param {transaction} trs
+ * @param {account} sender
+ * @param {function} cb
+ * @return {setImmediateCallback} errors | trs
+ */
+DApp.prototype.verify = function (trs, sender, cb) {
+	return self.verifyFields(trs, sender, cb);
+};
+
+DApp.prototype.verifyUnconfirmed = function (trs, sender, cb) {
 	library.db.query(sql.getExisting, {
 		name: trs.asset.dapp.name,
 		link: trs.asset.dapp.link || null,
@@ -190,7 +199,7 @@ DApp.prototype.verify = function (trs, sender, cb) {
 		library.logger.error(err.stack);
 		return setImmediate(cb, 'DApp#verify error');
 	});
-};
+}
 
 /**
  * @param {transaction} trs
@@ -277,7 +286,7 @@ DApp.prototype.undo = function (trs, block, sender, cb) {
 };
 
 /**
- * Checks if dapp name and link exists, if not adds them to private 
+ * Checks if dapp name and link exists, if not adds them to private
  * unconfirmed variables.
  * @param {transaction} trs
  * @param {account} sender
@@ -468,7 +477,7 @@ DApp.prototype.afterSave = function (trs, cb) {
  * Checks sender multisignatures and transaction signatures.
  * @param {transaction} trs
  * @param {account} sender
- * @return {boolean} True if transaction signatures greather than 
+ * @return {boolean} True if transaction signatures greather than
  * sender multimin or there are not sender multisignatures.
  */
 DApp.prototype.ready = function (trs, sender) {

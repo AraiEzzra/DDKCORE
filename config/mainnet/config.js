@@ -65,10 +65,10 @@ module.exports = {
     },
     broadcasts: {
         broadcastInterval: 5000,
-        broadcastLimit: 20,
+        broadcastLimit: 25,
         parallelLimit: 20,
         releaseLimit: 25,
-        relayLimit: 2
+        relayLimit: 3
     },
     transactions: {
         maxTxsPerQueue: 1000
@@ -112,7 +112,9 @@ module.exports = {
     sender: {},
     nethash: env.NETHASH,
     elasticsearchHost: env.ELASTICSEARCH_HOST || '0.0.0.0:9200',
-    swaggerDomain: env.ADDRESS || '0.0.0.0',
+    elasticsearch: {
+        disableJobs: env.DISABLE_ELASTICSEARCH_JOBS === 'TRUE',
+    },
     jwt: {
         secret: env.JWT_SECRET,
         tokenLife: 300

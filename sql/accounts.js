@@ -2,6 +2,16 @@
 
 let Accounts = {
 
+	getActiveDelegates : 'SELECT "publicKey" FROM "delegate_to_vote_counter" ORDER BY "voteCount" DESC, "publicKey" ASC LIMIT ${limit}',
+
+    changeDelegateVoteCount: function (arg) {
+		if (!arg || !arg.votes || arg.votes.length < 1) {
+			return false;
+		}
+        let votes = `'${arg.votes.join("','")}'`;
+        return `UPDATE "delegate_to_vote_counter" SET "voteCount" = "voteCount" + ${arg.value}  WHERE "publicKey" IN (${votes})`;
+    },
+
 	checkAccountStatus : 'SELECT "status" FROM mem_accounts where "address"=${senderId}',
 
 	findActiveStakeAmount: '(SELECT "startTime" AS "value" FROM stake_orders where "senderId" = ${senderId} ORDER BY "startTime" DESC LIMIT 1) UNION ALL (SELECT SUM("freezedAmount") as "value" FROM stake_orders WHERE "senderId" = ${senderId} AND "status" = 1);',
@@ -42,7 +52,9 @@ let Accounts = {
 
     updateETPSUserInfo: 'UPDATE etps_user SET "transferred_time"=${insertTime}, "transferred_etp"=1 WHERE "id"=${userId} ',
 
-	validateReferSource : 'SELECT count(*) AS address FROM mem_accounts WHERE "address" = ${referSource}',
+	validateReferSource: 'SELECT count(*) AS address FROM mem_accounts WHERE "address" = ${referSource}',
+
+	getUserByAddress: 'SELECT address FROM mem_accounts WHERE "address" = ${address}',
 
 	findPassPhrase : 'SELECT * from migrated_etps_users WHERE "username" = ${userName}',
 
@@ -52,9 +64,9 @@ let Accounts = {
 
 	updateEtpsPassword: 'UPDATE etps_user SET "password" = ${password} WHERE "username" = ${username}',
 
-	checkSenderBalance: 'SELECT u_balance FROM mem_accounts WHERE "address" = ${sender_address}',
+	checkSenderBalance: 'SELECT balance FROM mem_accounts WHERE "address" = ${sender_address}',
 
-	getMigratedList: 'select m."address",e."username",m."totalFrozeAmount",m."balance",count(*) OVER() AS user_count from migrated_etps_users e INNER JOIN mem_accounts m ON(e."address" = m."address" AND e.transferred_etp = 1) LIMIT ${limit} OFFSET ${offset}'
+    getMigratedList: 'SELECT m."address",e."username",m."totalFrozeAmount",m."balance",e."transferred_time",count(*) OVER() AS "user_count" FROM migrated_etps_users e INNER JOIN mem_accounts m ON(e."address" = m."address" AND e.transferred_etp = 1) order by e."transferred_time" DESC LIMIT ${limit} OFFSET ${offset}'
 };
 
 module.exports = Accounts;

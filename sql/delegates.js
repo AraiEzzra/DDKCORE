@@ -56,9 +56,9 @@ let DelegatesSql = {
 
 	getLatestDelegates: 'SELECT d."username" AS "username", t."t_senderId" AS "address", ENCODE(t."t_senderPublicKey", \'hex\') AS "publicKey", t."t_timestamp" AS "timestamp" FROM trs_list t INNER JOIN delegates d ON t."t_id" = d."transactionId" WHERE t."t_type" = 30 ORDER BY "t_timestamp" DESC LIMIT ${limit}',
 
-	addDelegateVoteRecord : 'INSERT INTO "delegate_to_vote_counter"("publicKey", "voteCount") VALUES (${publicKey}, 0)',
+  addDelegateVoteRecord : 'INSERT INTO "delegate_to_vote_counter"("publicKey", "voteCount") VALUES (${publicKey}, 0)',
 
-    removeDelegateVoteRecord : 'DELETE FROM "delegate_to_vote_counter" WHERE "publicKey" = ${publicKey}'
+  removeDelegateVoteRecord : 'DELETE FROM "delegate_to_vote_counter" WHERE "publicKey" = ${publicKey}'
 };
 
 module.exports = DelegatesSql;

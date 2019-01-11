@@ -161,6 +161,7 @@ function Migrator (pgp, db) {
 				return waterCb();
 			})
 			.catch(function (err) {
+				console.log('err', err.stack);
 				return waterCb(err);
 			});
 	};
@@ -185,6 +186,9 @@ function Migrator (pgp, db) {
  * @return {function} error|cb
  */
 module.exports.connect = function (config, logger, cb) {
+
+    let timestamp;
+
 	const promise = require('bluebird');
 	let pgOptions = {
 		promiseLib: promise
@@ -197,7 +201,24 @@ module.exports.connect = function (config, logger, cb) {
 	monitor.setTheme('matrix');
 
 	monitor.log = function (msg, info){
-		info.display = false;
+        info.display = false;
+	    if (info.event === 'connect') {
+	        timestamp = new Date().getTime();
+        }
+
+        if (info.event === 'disconnect') {
+	        if (new Date().getTime() - timestamp > 200) {
+	            logger.warn(`SQL time: ${new Date().getTime() - timestamp}`);
+            } else {
+	            logger.debug(`SQL time: ${new Date().getTime() - timestamp}`);
+            }
+
+        }
+
+        if (info.event === 'query') {
+            logger.debug(`SQL query: ${msg}`);
+        }
+
 	};
 
 	let db = pgp(config);

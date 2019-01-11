@@ -1,7 +1,6 @@
 const _ = require('lodash');
 const async = require('async');
 const bignum = require('../helpers/bignum.js');
-const BlockReward = require('../logic/blockReward.js');
 const checkIpInList = require('../helpers/checkIpInList.js');
 const constants = require('../helpers/constants.js');
 const jobsQueue = require('../helpers/jobsQueue.js');
@@ -14,6 +13,7 @@ const schema = require('../schema/delegates.js');
 const slots = require('../helpers/slots.js');
 const sql = require('../sql/delegates.js');
 const roundSql = require('../sql/rounds.js');
+const accountSql = require('../sql/accounts.js');
 const transactionTypes = require('../helpers/transactionTypes.js');
 
 // Private fields
@@ -22,7 +22,6 @@ let modules, library, self, __private = {}, shared = {};
 __private.assetTypes = {};
 __private.loaded = false;
 __private.readyForForging = false;
-__private.blockReward = new BlockReward();
 __private.keypairs = {};
 __private.tmpKeypairs = {};
 
@@ -64,7 +63,8 @@ function Delegates (cb, scope) {
 	__private.assetTypes[transactionTypes.DELEGATE] = library.logic.transaction.attachAssetType(
 		transactionTypes.DELEGATE,
 		new Delegate(
-			scope.schema
+			scope.schema,
+			scope.db
 		)
 	);
 
@@ -79,17 +79,12 @@ function Delegates (cb, scope) {
  * @returns {setImmediateCallback}
  */
 __private.getKeysSortByVote = function (cb) {
-	modules.accounts.getAccounts({
-		isDelegate: 1,
-		sort: {'voteCount':-1,'vote': -1, 'publicKey': 1},
-		limit: slots.delegates
-	}, ['publicKey'], function (err, rows) {
-		if (err) {
-			return setImmediate(cb, err);
-		}
-		return setImmediate(cb, null, rows.map(function (el) {
-			return el.publicKey;
-		}));
+    library.db.many(accountSql.getActiveDelegates, {limit: constants.activeDelegates}).then((rows) => {
+        return setImmediate(cb, null, rows.map(function (el) {
+            return el.publicKey;
+        }));
+	}).catch((err) => {
+        return setImmediate(cb, err);
 	});
 };
 

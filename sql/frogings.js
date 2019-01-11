@@ -30,7 +30,9 @@ let FrogingsSql = {
 
 	deductFrozeAmount: 'UPDATE mem_accounts SET "totalFrozeAmount" = ("totalFrozeAmount" - ${orderFreezedAmount}), "u_totalFrozeAmount" = ("u_totalFrozeAmount" - ${orderFreezedAmount}) WHERE "address" = ${senderId}',
 
-	getFrozeOrders: 'SELECT * FROM stake_orders WHERE "senderId"=${senderId}',
+	getFrozeOrders: 'SELECT * FROM stake_orders WHERE "senderId"=${senderId} ORDER BY "insertTime" DESC LIMIT ${limit} OFFSET ${offset}',
+
+	getFrozeOrdersCount: 'SELECT count(*) FROM stake_orders WHERE "senderId"=${senderId}',
 
 	getActiveFrozeOrders: 'SELECT * FROM stake_orders WHERE "senderId"=${senderId} AND "status"=1 AND ${currentTime} >= "nextVoteMilestone"',
 
@@ -42,7 +44,7 @@ let FrogingsSql = {
 
 	countStakeholders: 'select count(1) from (select 1 from stake_orders o where o.status = 1 group by "senderId") a',
 
-	getTotalStakedAmount: 'SELECT sum("freezedAmount") FROM stake_orders WHERE "status"=1',
+	getTotalStakedAmount: 'SELECT coalesce(sum("freezedAmount"), 0) as sum FROM stake_orders WHERE "status"=1',
 
 	getMyStakedAmount: 'SELECT sum("freezedAmount") FROM stake_orders WHERE "senderId"=${address} AND "status"=1',
 
@@ -57,8 +59,10 @@ let FrogingsSql = {
     updateTotalSupply: 'UPDATE mem_accounts SET "balance"=("balance" + ${reward}), "u_balance"=("u_balance" + ${reward}) WHERE "address"=${totalSupplyAccount}',
 
 	getRecentlyChangedFrozeOrders: 'SELECT * FROM stake_orders WHERE "senderId"=${senderId} AND ${currentTime} < "nextVoteMilestone"',
-	
-	getStakeRewardHistory: 'SELECT "v_reward", "t_timestamp", count(*) OVER() AS rewards_count from full_blocks_list WHERE "t_senderId" = ${senderId} AND "v_reward" > 0 ORDER BY "t_timestamp" DESC LIMIT ${limit} OFFSET ${offset}'
+
+	getStakeRewardHistory: 'SELECT "v_reward", "t_timestamp", count(*) OVER() AS rewards_count from full_blocks_list WHERE "t_senderId" = ${senderId} AND "v_reward" > 0 ORDER BY "t_timestamp" DESC LIMIT ${limit} OFFSET ${offset}',
+
+	getStakeById: 'SELECT * FROM stake_orders WHERE "id"=${id}'
 };
 
 module.exports = FrogingsSql;

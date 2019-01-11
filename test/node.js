@@ -4,6 +4,7 @@
 let node = {};
 let Rounds = require('../modules/rounds.js');
 const modulesLoader = require('./common/initModule').modulesLoader;
+const env = process.env;
 
 // Requires
 node.bignum = require('../helpers/bignum.js');
@@ -25,7 +26,7 @@ node.supertest = require('supertest');
 require('colors');
 
 // Node configuration
-node.baseUrl = 'http://' + node.config.address + ':' + node.config.port;
+node.baseUrl = 'http://' + env['HOST'] + ':' + env['PORT'];
 node.api = node.supertest(node.baseUrl);
 
 node.normalizer = 100000000; // Use this to convert DDK amount to normal value
