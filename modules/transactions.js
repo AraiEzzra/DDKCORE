@@ -14,6 +14,7 @@ const Transfer = require('../logic/transfer.js');
 const slots = require('../helpers/slots');
 const trsCache = require('memory-cache');
 const expCache = new trsCache.Cache();
+const Cache = require('./cache.js');
 const BUFFER = require('../helpers/buffer.js');
 const bignum = require('../helpers/bignum.js');
 
@@ -83,14 +84,14 @@ function Transactions(cb, scope) {
 __private.getTotalTrsCountFromCache = async function () {
 	return new Promise(async (resolve, reject) => {
 		try {
-			const resultFromCache = await library.cache.prototype.getJsonForKeyAsync(TOTAL_TRS_COUNT);
+			const resultFromCache = await Cache.prototype.getJsonForKeyAsync(TOTAL_TRS_COUNT);
 
 			if (resultFromCache !== null) {
 				resolve(resultFromCache);
 			}
 
 			const row = await library.db.one(sql.count);
-			await library.cache.prototype.setJsonForKeyAsync(
+			await Cache.prototype.setJsonForKeyAsync(
 				TOTAL_TRS_COUNT, row, TOTAL_TRS_COUNT_EXPIRE
 			);
 			resolve(row);
