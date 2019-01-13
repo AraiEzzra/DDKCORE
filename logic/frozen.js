@@ -743,15 +743,12 @@ Frozen.prototype.updateFrozeAmount = function (userData, cb) {
     self.scope.db.one(sql.getFrozeAmount, {
         senderId: userData.account.address
     })
-        .then(function (totalFrozeAmount) {
-            if (!totalFrozeAmount) {
-                return setImmediate(cb, 'No Account Exist in mem_account table for' + userData.account.address);
+        .then(function (account) {
+            if (!account) {
+                return setImmediate(cb, 'No Account Exist in mem_account table for ' + userData.account.address);
             }
-            const frozeAmountFromDB = totalFrozeAmount.totalFrozeAmount;
-            totalFrozeAmount = Number(frozeAmountFromDB) + Number(userData.freezedAmount);
-            const totalFrozeAmountWithFees =
-              totalFrozeAmount + self.calculateFee({ stakedAmount: Number(userData.freezedAmount) });
-            if (totalFrozeAmountWithFees <= userData.account.balance) {
+            account.totalFrozeAmount += Number(userData.freezedAmount);
+            if (userData.account.balance >= account.totalFrozeAmount) {
                 self.scope.db.none(sql.updateFrozeAmount, {
                     reward: userData.freezedAmount, senderId: userData.account.address
                 })
