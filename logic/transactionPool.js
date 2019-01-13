@@ -41,7 +41,7 @@ function TransactionPool (broadcastInterval, releaseLimit, maxTxsPerQueue, trans
 	};
 	self = this;
 
-	self.unconfirmed = { transactions: [], index: {} };
+	self.unconfirmed = { transactions: [], index: {}, applied: {} };
 	self.bundled = { transactions: [], index: {} };
 	self.queued = { transactions: [], index: {} };
 	self.multisignature = { transactions: [], index: {} };
@@ -538,13 +538,14 @@ TransactionPool.prototype.undoUnconfirmedList = function (cb) {
 	let ids = [];
 
 	async.eachSeries(self.getUnconfirmedTransactionList(false), function (transaction, eachSeriesCb) {
-		if (transaction) {
+		if (transaction && self.unconfirmed.applied[transaction.id]) {
 			ids.push(transaction.id);
 			modules.transactions.undoUnconfirmed(transaction, function (err) {
 				if (err) {
 					library.logger.error('Failed to undo unconfirmed transaction: ' + transaction.id, err);
 					self.removeUnconfirmedTransaction(transaction.id);
 				}
+				delete self.unconfirmed.applied[transaction.id];
 				return setImmediate(eachSeriesCb);
 			});
 		} else {
@@ -598,7 +599,7 @@ TransactionPool.prototype.fillPool = function (cb) {
 	if (modules.loader.syncing()) { return setImmediate(cb); }
 
 	let unconfirmedCount = self.countUnconfirmed();
-	library.logger.debug('Transaction pool size: ' + unconfirmedCount);
+	library.logger.debug('Transaction pool size: ' + unconfirmedCount + ', applied transactions: ' + JSON.stringify(self.unconfirmed.applied));
 
 	if (unconfirmedCount >= constants.maxTxsPerBlock) {
 		return setImmediate(cb);
@@ -776,19 +777,23 @@ __private.applyUnconfirmedList = function (transactions, cb) {
 		if (!transaction) {
 			return setImmediate(eachSeriesCb);
 		}
+		if (self.unconfirmed.applied[transaction.id]) {
+			return setImmediate(eachSeriesCb);
+		}
 		__private.processVerifyTransaction(transaction, false, function (err, sender) {
 			if (err) {
 				library.logger.error('Failed to process / verify unconfirmed transaction: ' + transaction.id, err);
 				self.removeUnconfirmedTransaction(transaction.id);
 				return setImmediate(eachSeriesCb);
 			}
-				modules.transactions.applyUnconfirmed(transaction, sender, function (err) {
-					if (err) {
-						library.logger.error('Failed to apply unconfirmed transaction: ' + transaction.id, err);
-						self.removeUnconfirmedTransaction(transaction.id);
-					}
-					return setImmediate(eachSeriesCb);
-				});
+			modules.transactions.applyUnconfirmed(transaction, sender, function (err) {
+				if (err) {
+					library.logger.error('Failed to apply unconfirmed transaction: ' + transaction.id, err);
+					self.removeUnconfirmedTransaction(transaction.id);
+				}
+				self.unconfirmed.applied[transaction.id] = true;
+				return setImmediate(eachSeriesCb);
+			});
 		});
 	}, cb);
 };
