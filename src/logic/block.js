@@ -1,12 +1,10 @@
 const sodium = require('sodium-javascript');
 const BUFFER = require('../helpers/buffer.js');
 
-let crypto = require('crypto');
-let bignum = require('../helpers/bignum.js');
-let ByteBuffer = require('bytebuffer');
-let BlockReward = require('./blockReward.js');
-let constants = require('../helpers/constants.js');
-let __private = {};
+const crypto = require('crypto');
+const bignum = require('../helpers/bignum.js');
+const constants = require('../helpers/constants.js');
+const __private = {};
 
 const BLOCK_BUFFER_SIZE
     = BUFFER.LENGTH.UINT32 // version

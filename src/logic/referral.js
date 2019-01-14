@@ -22,27 +22,25 @@ Referral.prototype.bind = function () {
 };
 
 Referral.prototype.create = async function (data, trs) {
-    trs.recipientId = data.sender.address;
+    trs.recipientId = null;
     trs.asset.referral = data.referral;
     trs.trsName = "REGISTER";
     return trs;
 };
 
 Referral.prototype.getBytes = function (trs) {
-    const buff = Buffer.alloc(LENGTH.DOUBLE_HEX * 15);
+    const buff = Buffer.alloc(LENGTH.INT64);
 
     let offset = 0;
-    if (trs.asset && trs.asset.referrals) {
-        trs.asset.referrals.forEach((referral) => {
-            const id = parseInt(referral.slice(3), 10) || 0;
-            offset = writeUInt64LE(buff, id, offset);
-        });
+    if (trs.asset && trs.asset.referral) {
+        const id = parseInt(trs.asset.referral.slice(3), 10) || 0;
+        writeUInt64LE(buff, id, offset);
     }
     return buff;
 };
 
 Referral.prototype.verify = function (trs, sender, cb) {
-    library.account.get({address: trs.recipientId}, (err, account) => {
+    library.account.get({address: trs.senderId}, (err, account) => {
         if (account && account.global) {
             if (constants.REFERRAL_TRANSACTION_VALIDATION_ENABLED.GLOBAL_ACCOUNT) {
                 return setImmediate(cb, 'Account already exists.');
@@ -56,11 +54,11 @@ Referral.prototype.verify = function (trs, sender, cb) {
 
 Referral.prototype.verifyUnconfirmed = function (trs, sender, cb) {
     return setImmediate(cb);
-}
+};
 
 Referral.prototype.apply = function (trs, block, sender, cb) {
     library.db.none(sql.changeAccountGlobalStatus, {
-        address: trs.recipientId,
+        address: trs.senderId,
         status: true
     }).then(() => {
         setImmediate(cb);
@@ -71,7 +69,7 @@ Referral.prototype.apply = function (trs, block, sender, cb) {
 
 Referral.prototype.undo = function (trs, block, sender, cb) {
     library.db.none(sql.changeAccountGlobalStatus, {
-        address: trs.recipientId,
+        address: trs.senderId,
         status: false
     }).then(() => {
         setImmediate(cb);
@@ -122,7 +120,7 @@ Referral.prototype.dbSave = async function (trs) {
     let referral;
     try {
         referral = await library.db.oneOrNone(sql.referLevelChain, {
-            address: trs.recipientId,
+            address: trs.senderId,
         });
     } catch (error) {
         library.logger.error(`Cannot get referral row from db. ${error}`);
@@ -159,7 +157,7 @@ Referral.prototype.dbSave = async function (trs) {
         table: this.dbTable,
         fields: this.dbFields,
         values: {
-            address: trs.recipientId,
+            address: trs.senderId,
             level: `{${level.toString()}}`,
         }
     };
