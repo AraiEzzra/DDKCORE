@@ -9,13 +9,13 @@ module.exports = {
       script: './app.js',
       watch: true,
       env: {
-        NODE_ENV: 'development',
+        NODE_ENV_IN: 'development',
       },
       env_mainnet : {
-        NODE_ENV: 'mainnet'
+        NODE_ENV_IN: 'mainnet'
      },
      env_testnet : {
-        NODE_ENV : 'testnet'
+        NODE_ENV_IN : 'testnet'
      }
     }
   ],
@@ -41,7 +41,7 @@ module.exports = {
       path: '/root/DDKCoin/',
       'post-deploy': 'npm install && pm2 reload ecosystem.config.js --env dev',
       env: {
-        NODE_ENV: 'staging'
+        NODE_ENV_IN: 'staging'
       }
     },
     dev: {
@@ -52,7 +52,7 @@ module.exports = {
       path: '/home/hotam/project/DDKCoin/',
       'post-deploy': 'npm install && pm2 reload ecosystem.config.js --env dev',
       env: {
-        NODE_ENV: 'dev'
+        NODE_ENV_IN: 'dev'
       }
     }
   }

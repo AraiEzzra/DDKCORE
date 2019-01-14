@@ -1,6 +1,6 @@
 const env = process.env;
 const constants = {
-    NODE_ENV: env.NODE_ENV,
+    NODE_ENV_IN: env.NODE_ENV_IN,
     PREVIOUS_DELEGATES_COUNT: 3,
     MASTER_NODE_MIGRATED_BLOCK: 0,
     CURRENT_BLOCK_VERSION: 1,
@@ -122,17 +122,17 @@ const constants = {
 
 Object.assign(constants, require('../config/env'));
 
-if (env.NODE_ENV === 'development') {
+if (env.NODE_ENV_IN === 'development') {
     Object.assign(constants, require('../config/default/constants'));
 }
 
 // For staging environment
-if (env.NODE_ENV === 'testnet') {
+if (env.NODE_ENV_IN === 'testnet') {
     Object.assign(constants, require('../config/testnet/constants'));
 }
 
 // For production
-if (env.NODE_ENV === 'mainnet') {
+if (env.NODE_ENV_IN === 'mainnet') {
     Object.assign(constants, require('../config/mainnet/constants'));
 }
 
