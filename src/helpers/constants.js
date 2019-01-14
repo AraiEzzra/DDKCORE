@@ -1,4 +1,9 @@
 const env = process.env;
+const configEnv = require('../config/env');
+const devConstants = require('../config/default/constants');
+const testConstants = require('../config/testnet/constants');
+const mainConstants = require('../config/mainnet/constants');
+
 const constants = {
     NODE_ENV: env.NODE_ENV,
     PREVIOUS_DELEGATES_COUNT: 3,
@@ -120,20 +125,20 @@ const constants = {
     },
 };
 
-Object.assign(constants, require('../config/env'));
+Object.assign(constants, configEnv);
 
 if (env.NODE_ENV === 'development') {
-    Object.assign(constants, require('../config/default/constants'));
+    Object.assign(constants, devConstants);
 }
 
 // For staging environment
 if (env.NODE_ENV === 'testnet') {
-    Object.assign(constants, require('../config/testnet/constants'));
+    Object.assign(constants, testConstants);
 }
 
 // For production
 if (env.NODE_ENV === 'mainnet') {
-    Object.assign(constants, require('../config/mainnet/constants'));
+    Object.assign(constants, mainConstants);
 }
 
 module.exports = constants;
