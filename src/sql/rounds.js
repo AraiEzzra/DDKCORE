@@ -1,37 +1,35 @@
+const RoundsSql = {
+    flush: 'DELETE FROM mem_round WHERE "round" = (${round})::bigint;',
 
+    truncateBlocks: 'DELETE FROM blocks WHERE "height" > (${height})::bigint;',
 
-let RoundsSql = {
-	flush: 'DELETE FROM mem_round WHERE "round" = (${round})::bigint;',
+    updateMissedBlocks(backwards) {
+        return [
+            'UPDATE mem_accounts SET "missedblocks" = "missedblocks"',
+            (backwards ? '- 1' : '+ 1'),
+            'WHERE "address" IN ($1:csv);'
+        ].join(' ');
+    },
 
-	truncateBlocks: 'DELETE FROM blocks WHERE "height" > (${height})::bigint;',
+    getVotes: 'SELECT d."delegate", d."amount" FROM (SELECT m."delegate", SUM(m."amount") AS "amount", "round" FROM mem_round m GROUP BY m."delegate", m."round") AS d WHERE "round" = (${round})::bigint',
 
-	updateMissedBlocks: function (backwards) {
-		return [
-			'UPDATE mem_accounts SET "missedblocks" = "missedblocks"',
-			(backwards ? '- 1' : '+ 1'),
-			'WHERE "address" IN ($1:csv);'
-		].join(' ');
-	},
+    updateVotes: 'UPDATE mem_accounts SET "vote" = "vote" + (${amount})::bigint WHERE "address" = ${address};',
 
-	getVotes: 'SELECT d."delegate", d."amount" FROM (SELECT m."delegate", SUM(m."amount") AS "amount", "round" FROM mem_round m GROUP BY m."delegate", m."round") AS d WHERE "round" = (${round})::bigint',
+    updateBlockId: 'UPDATE mem_accounts SET "blockId" = ${newId} WHERE "blockId" = ${oldId};',
 
-	updateVotes: 'UPDATE mem_accounts SET "vote" = "vote" + (${amount})::bigint WHERE "address" = ${address};',
+    summedRound: 'SELECT SUM(r.fee)::bigint AS "fees", ARRAY_AGG(r.reward) AS rewards, ARRAY_AGG(r.pk) AS delegates FROM (SELECT b."totalFee" AS fee, b.reward, ENCODE(b."generatorPublicKey", \'hex\') AS pk FROM blocks b WHERE CEIL(b.height / ${activeDelegates}::float)::int = ${round} ORDER BY b.height ASC) r;',
 
-	updateBlockId: 'UPDATE mem_accounts SET "blockId" = ${newId} WHERE "blockId" = ${oldId};',
+    clearRoundSnapshot: 'DROP TABLE IF EXISTS mem_round_snapshot',
 
-	summedRound: 'SELECT SUM(r.fee)::bigint AS "fees", ARRAY_AGG(r.reward) AS rewards, ARRAY_AGG(r.pk) AS delegates FROM (SELECT b."totalFee" AS fee, b.reward, ENCODE(b."generatorPublicKey", \'hex\') AS pk FROM blocks b WHERE CEIL(b.height / ${activeDelegates}::float)::int = ${round} ORDER BY b.height ASC) r;',
+    performRoundSnapshot: 'CREATE TABLE mem_round_snapshot AS TABLE mem_round',
 
-	clearRoundSnapshot: 'DROP TABLE IF EXISTS mem_round_snapshot',
+    restoreRoundSnapshot: 'INSERT INTO mem_round SELECT * FROM mem_round_snapshot',
 
-	performRoundSnapshot: 'CREATE TABLE mem_round_snapshot AS TABLE mem_round',
+    clearVotesSnapshot: 'DROP TABLE IF EXISTS mem_votes_snapshot',
 
-	restoreRoundSnapshot: 'INSERT INTO mem_round SELECT * FROM mem_round_snapshot',
+    performVotesSnapshot: 'CREATE TABLE mem_votes_snapshot AS SELECT address, "publicKey", vote, "producedblocks", "missedblocks" FROM mem_accounts WHERE "isDelegate" = 1',
 
-	clearVotesSnapshot: 'DROP TABLE IF EXISTS mem_votes_snapshot',
-
-	performVotesSnapshot: 'CREATE TABLE mem_votes_snapshot AS SELECT address, "publicKey", vote, "producedblocks", "missedblocks" FROM mem_accounts WHERE "isDelegate" = 1',
-
-	restoreVotesSnapshot: 'UPDATE mem_accounts accounts SET vote = snapshot.vote, "missedBlocks" = snapshot."missedBlocks", "producedBlocks" = snapshot."producedBlocks" FROM mem_votes_snapshot snapshot WHERE accounts.address = snapshot.address',
+    restoreVotesSnapshot: 'UPDATE mem_accounts accounts SET vote = snapshot.vote, "missedBlocks" = snapshot."missedBlocks", "producedBlocks" = snapshot."producedBlocks" FROM mem_votes_snapshot snapshot WHERE accounts.address = snapshot.address',
 
     getDelegatesSnapshot: 'SELECT "publicKey" FROM mem_votes_snapshot ORDER BY vote DESC, "publicKey" ASC LIMIT ${limit}'
 };

@@ -1,10 +1,10 @@
-let RateLimit = require('express-rate-limit');
+const RateLimit = require('express-rate-limit');
 
-let defaults = {
-	max: 0, // Disabled
-	delayMs: 0, // Disabled
-	delayAfter: 0, // Disabled
-	windowMs: 60000 // 1 minute window
+const defaults = {
+    max: 0, // Disabled
+    delayMs: 0, // Disabled
+    delayAfter: 0, // Disabled
+    windowMs: 60000 // 1 minute window
 };
 
 /**
@@ -13,17 +13,16 @@ let defaults = {
  * @param {Object} [limits]
  * @returns {Object} max, delayMs, delayAfter, windowMs
  */
-function applyLimits (limits) {
-	if (typeof limits === 'object') {
-		return {
-			max: Math.floor(limits.max) || defaults.max,
-			delayMs: Math.floor(limits.delayMs) || defaults.delayMs,
-			delayAfter: Math.floor(limits.delayAfter) || defaults.delayAfter,
-			windowMs: Math.floor(limits.windowMs) || defaults.windowMs
-		};
-	} else {
-		return defaults;
-	}
+function applyLimits(limits) {
+    if (typeof limits === 'object') {
+        return {
+            max: Math.floor(limits.max) || defaults.max,
+            delayMs: Math.floor(limits.delayMs) || defaults.delayMs,
+            delayAfter: Math.floor(limits.delayAfter) || defaults.delayAfter,
+            windowMs: Math.floor(limits.windowMs) || defaults.windowMs
+        };
+    }
+    return defaults;
 }
 
 /**
@@ -36,27 +35,27 @@ function applyLimits (limits) {
  * @return {Object} limits per client and peer
  */
 module.exports = function (app, config) {
-	if (config.trustProxy) {
-		app.enable('trust proxy');
-	}
+    if (config.trustProxy) {
+        app.enable('trust proxy');
+    }
 
-	config.api = config.api || {};
-	config.api.options = config.api.options || {};
+    config.api = config.api || {};
+    config.api.options = config.api.options || {};
 
-	config.peers = config.peers || {};
-	config.peers.options = config.peers.options || {};
+    config.peers = config.peers || {};
+    config.peers.options = config.peers.options || {};
 
-	let limits = {
-		client: applyLimits(config.api.options.limits),
-		peer: applyLimits(config.peers.options.limits)
-	};
+    const limits = {
+        client: applyLimits(config.api.options.limits),
+        peer: applyLimits(config.peers.options.limits)
+    };
 
-	limits.middleware = {
-		client: app.use('/api/', new RateLimit(limits.client)),
-		peer: app.use('/peer/', new RateLimit(limits.peer))
-	};
+    limits.middleware = {
+        client: app.use('/api/', new RateLimit(limits.client)),
+        peer: app.use('/peer/', new RateLimit(limits.peer))
+    };
 
-	return limits;
+    return limits;
 };
 
-/*************************************** END OF FILE *************************************/
+/** ************************************* END OF FILE ************************************ */

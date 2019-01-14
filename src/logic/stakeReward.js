@@ -1,9 +1,7 @@
-
-
-let constants = require('../helpers/constants.js');
+const constants = require('../helpers/constants.js');
 
 // Private fields
-let __private = {};
+const __private = {};
 
 /**
  * Initializes variables:
@@ -14,12 +12,12 @@ let __private = {};
  * @classdesc Main StakeReward logic.
  */
 // Constructor
-function StakeReward () {
-	// Array of milestones
-	this.milestones = constants.froze.rewards.milestones;
+function StakeReward() {
+    // Array of milestones
+    this.milestones = constants.froze.rewards.milestones;
 
-	// Distance between each milestone
-	this.distance = Math.floor(constants.froze.rewards.distance);
+    // Distance between each milestone
+    this.distance = Math.floor(constants.froze.rewards.distance);
 }
 
 // Private methods
@@ -31,11 +29,11 @@ function StakeReward () {
  * @throws Invalid block height
  */
 __private.parseHeight = function (height) {
-	if (isNaN(height)) {
-		throw 'Invalid block height';
-	} else {
-		return Math.abs(height);
-	}
+    if (isNaN(height)) {
+        throw 'Invalid block height';
+    } else {
+        return Math.abs(height);
+    }
 };
 
 // Public methods
@@ -45,15 +43,13 @@ __private.parseHeight = function (height) {
  * @return {number}
  */
 StakeReward.prototype.calcMilestone = function (height) {
+    const location = Math.trunc((height) / this.distance);
+    const lastMile = this.milestones[this.milestones.length - 1];
 
-	let location = Math.trunc((height ) / this.distance);
-	let lastMile = this.milestones[this.milestones.length - 1];
-
-	if (location > (this.milestones.length - 1)) {
-		return this.milestones.lastIndexOf(lastMile);
-	} else {
-		return location;
-	}
+    if (location > (this.milestones.length - 1)) {
+        return this.milestones.lastIndexOf(lastMile);
+    }
+    return location;
 };
 
 /**
@@ -63,13 +59,12 @@ StakeReward.prototype.calcMilestone = function (height) {
  * @return {number}
  */
 StakeReward.prototype.calcReward = function (height) {
-	height = __private.parseHeight(height);
+    height = __private.parseHeight(height);
 
-	return this.milestones[this.calcMilestone(height)];
-	
+    return this.milestones[this.calcMilestone(height)];
 };
 
 // Export
 module.exports = StakeReward;
 
-/*************************************** END OF FILE *************************************/
+/** ************************************* END OF FILE ************************************ */

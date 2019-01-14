@@ -1,8 +1,11 @@
-let constants = require('../helpers/constants.js');
-let sql = require('../sql/dapps.js');
+const constants = require('../helpers/constants.js');
+const sql = require('../sql/dapps.js');
 
 // Private fields
-let modules, library, shared, self;
+let modules,
+    library,
+    shared,
+    self;
 
 /**
  * Initializes library.
@@ -13,12 +16,12 @@ let modules, library, shared, self;
  * @param {ZSchema} schema
  */
 // Constructor
-function InTransfer (db, schema) {
-	library = {
-		db: db,
-		schema: schema,
-	};
-	self = this;
+function InTransfer(db, schema) {
+    library = {
+        db,
+        schema,
+    };
+    self = this;
 }
 
 // Public methods
@@ -29,11 +32,11 @@ function InTransfer (db, schema) {
  * @param {Object} sharedApi
  */
 InTransfer.prototype.bind = function (accounts, rounds, sharedApi) {
-	modules = {
-		accounts: accounts,
-		rounds: rounds,
-	};
-	shared = sharedApi;
+    modules = {
+        accounts,
+        rounds,
+    };
+    shared = sharedApi;
 };
 
 /**
@@ -44,14 +47,14 @@ InTransfer.prototype.bind = function (accounts, rounds, sharedApi) {
  * @return {transaction} trs with assigned data
  */
 InTransfer.prototype.create = function (data, trs) {
-	trs.recipientId = null;
-	trs.amount = data.amount;
+    trs.recipientId = null;
+    trs.amount = data.amount;
 
-	trs.asset.inTransfer = {
-		dappId: data.dappId
-	};
-	trs.trsName = "IN_TRANSFER";
-	return trs;
+    trs.asset.inTransfer = {
+        dappId: data.dappId
+    };
+    trs.trsName = 'IN_TRANSFER';
+    return trs;
 };
 
 /**
@@ -61,24 +64,24 @@ InTransfer.prototype.create = function (data, trs) {
  * @return {number} fee
  */
 InTransfer.prototype.calculateFee = function () {
-	return constants.fees.send;
+    return constants.fees.send;
 };
 
 InTransfer.prototype.verifyFields = function (trs, sender, cb) {
-	if (trs.recipientId) {
-		return setImmediate(cb, 'Invalid recipient');
-	}
+    if (trs.recipientId) {
+        return setImmediate(cb, 'Invalid recipient');
+    }
 
-	if (!trs.amount) {
-		return setImmediate(cb, 'Invalid transaction amount');
-	}
+    if (!trs.amount) {
+        return setImmediate(cb, 'Invalid transaction amount');
+    }
 
-	if (!trs.asset || !trs.asset.inTransfer) {
-		return setImmediate(cb, 'Invalid transaction asset');
-	}
+    if (!trs.asset || !trs.asset.inTransfer) {
+        return setImmediate(cb, 'Invalid transaction asset');
+    }
 
-	setImmediate(cb);
-}
+    setImmediate(cb);
+};
 
 /**
  * Verifies recipientId, amount and InTransfer object content.
@@ -90,22 +93,19 @@ InTransfer.prototype.verifyFields = function (trs, sender, cb) {
  * @return {setImmediateCallback} errors message | trs
  */
 InTransfer.prototype.verify = function (trs, sender, cb) {
-	return self.verifyFields(trs, sender, cb);
+    return self.verifyFields(trs, sender, cb);
 };
 
 InTransfer.prototype.verifyUnconfirmed = function (trs, sender, cb) {
-	library.db.one(sql.countByTransactionId, {
-		id: trs.asset.inTransfer.dappId,
-	}).then(function (row) {
-		if (row.count === 0) {
-			return setImmediate(cb, 'Application not found: ' + trs.asset.inTransfer.dappId);
-		} else {
-			return setImmediate(cb);
-		}
-	}).catch(function (err) {
-		return setImmediate(cb, err);
-	});
-}
+    library.db.one(sql.countByTransactionId, {
+        id: trs.asset.inTransfer.dappId,
+    }).then((row) => {
+        if (row.count === 0) {
+            return setImmediate(cb, `Application not found: ${trs.asset.inTransfer.dappId}`);
+        }
+        return setImmediate(cb);
+    }).catch(err => setImmediate(cb, err));
+};
 
 /**
  * @param {transaction} trs
@@ -114,7 +114,7 @@ InTransfer.prototype.verifyUnconfirmed = function (trs, sender, cb) {
  * @return {setImmediateCallback} cb, null, trs
  */
 InTransfer.prototype.process = function (trs, sender, cb) {
-	return setImmediate(cb, null, trs);
+    return setImmediate(cb, null, trs);
 };
 
 /**
@@ -125,7 +125,7 @@ InTransfer.prototype.process = function (trs, sender, cb) {
  * @throws {e} Error
  */
 InTransfer.prototype.getBytes = function (trs) {
-		return Buffer.from(trs.asset.inTransfer.dappId, 'utf8');
+    return Buffer.from(trs.asset.inTransfer.dappId, 'utf8');
 };
 
 /**
@@ -142,20 +142,18 @@ InTransfer.prototype.getBytes = function (trs) {
  * @return {setImmediateCallback} error, cb
  */
 InTransfer.prototype.apply = function (trs, block, sender, cb) {
-	shared.getGenesis({dappid: trs.asset.inTransfer.dappId}, function (err, res) {
-		if (err) {
-			return setImmediate(cb, err);
-		}
-		modules.accounts.mergeAccountAndGet({
-			address: res.authorId,
-			balance: trs.amount,
-			u_balance: trs.amount,
-			blockId: block.id,
-			round: modules.rounds.calc(block.height)
-		}, function (err) {
-			return setImmediate(cb, err);
-		});
-	});
+    shared.getGenesis({ dappid: trs.asset.inTransfer.dappId }, (err, res) => {
+        if (err) {
+            return setImmediate(cb, err);
+        }
+        modules.accounts.mergeAccountAndGet({
+            address: res.authorId,
+            balance: trs.amount,
+            u_balance: trs.amount,
+            blockId: block.id,
+            round: modules.rounds.calc(block.height)
+        }, err => setImmediate(cb, err));
+    });
 };
 
 /**
@@ -172,20 +170,18 @@ InTransfer.prototype.apply = function (trs, block, sender, cb) {
  * @return {setImmediateCallback} error, cb
  */
 InTransfer.prototype.undo = function (trs, block, sender, cb) {
-	shared.getGenesis({dappid: trs.asset.inTransfer.dappId}, function (err, res) {
-		if (err) {
-			return setImmediate(cb, err);
-		}
-		modules.accounts.mergeAccountAndGet({
-			address: res.authorId,
-			balance: -trs.amount,
-			u_balance: -trs.amount,
-			blockId: block.id,
-			round: modules.rounds.calc(block.height)
-		}, function (err) {
-			return setImmediate(cb, err);
-		});
-	});
+    shared.getGenesis({ dappid: trs.asset.inTransfer.dappId }, (err, res) => {
+        if (err) {
+            return setImmediate(cb, err);
+        }
+        modules.accounts.mergeAccountAndGet({
+            address: res.authorId,
+            balance: -trs.amount,
+            u_balance: -trs.amount,
+            blockId: block.id,
+            round: modules.rounds.calc(block.height)
+        }, err => setImmediate(cb, err));
+    });
 };
 
 /**
@@ -195,7 +191,7 @@ InTransfer.prototype.undo = function (trs, block, sender, cb) {
  * @return {setImmediateCallback} cb
  */
 InTransfer.prototype.applyUnconfirmed = function (trs, sender, cb) {
-	return setImmediate(cb);
+    return setImmediate(cb);
 };
 
 /**
@@ -205,21 +201,21 @@ InTransfer.prototype.applyUnconfirmed = function (trs, sender, cb) {
  * @return {setImmediateCallback} cb
  */
 InTransfer.prototype.undoUnconfirmed = function (trs, sender, cb) {
-	return setImmediate(cb);
+    return setImmediate(cb);
 };
 
 InTransfer.prototype.schema = {
-	id: 'InTransfer',
-	object: true,
-	properties: {
-		dappId: {
-			type: 'string',
-			format: 'id',
-			minLength: 1,
-			maxLength: 20
-		},
-	},
-	required: ['dappId']
+    id: 'InTransfer',
+    object: true,
+    properties: {
+        dappId: {
+            type: 'string',
+            format: 'id',
+            minLength: 1,
+            maxLength: 20
+        },
+    },
+    required: ['dappId']
 };
 
 /**
@@ -230,15 +226,13 @@ InTransfer.prototype.schema = {
  * @throws {string} error message
  */
 InTransfer.prototype.objectNormalize = function (trs) {
-	let report = library.schema.validate(trs.asset.inTransfer, InTransfer.prototype.schema);
+    const report = library.schema.validate(trs.asset.inTransfer, InTransfer.prototype.schema);
 
-	if (!report) {
-		throw 'Failed to validate inTransfer schema: ' + this.scope.schema.getLastErrors().map(function (err) {
-			return err.message;
-		}).join(', ');
-	}
+    if (!report) {
+        throw `Failed to validate inTransfer schema: ${this.scope.schema.getLastErrors().map(err => err.message).join(', ')}`;
+    }
 
-	return trs;
+    return trs;
 };
 
 /**
@@ -247,22 +241,21 @@ InTransfer.prototype.objectNormalize = function (trs) {
  * @return {Object} inTransfer with dappId
  */
 InTransfer.prototype.dbRead = function (raw) {
-	if (!raw.in_dappId) {
-		return null;
-	} else {
-		let inTransfer = {
-			dappId: raw.in_dappId
-		};
+    if (!raw.in_dappId) {
+        return null;
+    }
+    const inTransfer = {
+        dappId: raw.in_dappId
+    };
 
-		return {inTransfer: inTransfer};
-	}
+    return { inTransfer };
 };
 
 InTransfer.prototype.dbTable = 'intransfer';
 
 InTransfer.prototype.dbFields = [
-	'dappId',
-	'transactionId'
+    'dappId',
+    'transactionId'
 ];
 
 /**
@@ -272,14 +265,14 @@ InTransfer.prototype.dbFields = [
  * @return {Object[]} table, fields, values.
  */
 InTransfer.prototype.dbSave = function (trs) {
-	return {
-		table: this.dbTable,
-		fields: this.dbFields,
-		values: {
-			dappId: trs.asset.inTransfer.dappId,
-			transactionId: trs.id
-		}
-	};
+    return {
+        table: this.dbTable,
+        fields: this.dbFields,
+        values: {
+            dappId: trs.asset.inTransfer.dappId,
+            transactionId: trs.id
+        }
+    };
 };
 
 /**
@@ -288,7 +281,7 @@ InTransfer.prototype.dbSave = function (trs) {
  * @return {setImmediateCallback} cb
  */
 InTransfer.prototype.afterSave = function (trs, cb) {
-	return setImmediate(cb);
+    return setImmediate(cb);
 };
 
 /**
@@ -299,17 +292,16 @@ InTransfer.prototype.afterSave = function (trs, cb) {
  * sender multimin or there are not sender multisignatures.
  */
 InTransfer.prototype.ready = function (trs, sender) {
-	if (Array.isArray(sender.multisignatures) && sender.multisignatures.length) {
-		if (!Array.isArray(trs.signatures)) {
-			return false;
-		}
-		return trs.signatures.length >= sender.multimin;
-	} else {
-		return true;
-	}
+    if (Array.isArray(sender.multisignatures) && sender.multisignatures.length) {
+        if (!Array.isArray(trs.signatures)) {
+            return false;
+        }
+        return trs.signatures.length >= sender.multimin;
+    }
+    return true;
 };
 
 // Export
 module.exports = InTransfer;
 
-/*************************************** END OF FILE *************************************/
+/** ************************************* END OF FILE ************************************ */

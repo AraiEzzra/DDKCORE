@@ -1,22 +1,24 @@
-
-
-let async = require('async');
-let Broadcaster = require('../logic/broadcaster.js');
-let Peer = require('../logic/peer.js');
-let bignum = require('../helpers/bignum.js');
-let constants = require('../helpers/constants.js');
-let crypto = require('crypto');
-let extend = require('extend');
-let popsicle = require('popsicle');
-let schema = require('../schema/transport.js');
-let sandboxHelper = require('../helpers/sandbox.js');
-let sql = require('../sql/transport.js');
-let sqlBlock = require('../sql/blocks.js');
-let utils = require('../utils');
-let usersList = require('../app.js');
+const async = require('async');
+const Broadcaster = require('../logic/broadcaster.js');
+const Peer = require('../logic/peer.js');
+const bignum = require('../helpers/bignum.js');
+const constants = require('../helpers/constants.js');
+const crypto = require('crypto');
+const extend = require('extend');
+const popsicle = require('popsicle');
+const schema = require('../schema/transport.js');
+const sandboxHelper = require('../helpers/sandbox.js');
+const sql = require('../sql/transport.js');
+const sqlBlock = require('../sql/blocks.js');
+const utils = require('../utils');
+const usersList = require('../app.js');
 
 // Private fields
-let modules, library, self, __private = {}, shared = {};
+let modules,
+    library,
+    self,
+    __private = {},
+    shared = {};
 
 __private.headers = {};
 __private.loaded = false;
@@ -32,41 +34,41 @@ __private.messages = {};
  * @return {setImmediateCallback} Callback function with `self` as data.
  */
 // Constructor
-function Transport (cb, scope) {
-	library = {
-		logger: scope.logger,
-		db: scope.db,
-		bus: scope.bus,
-		schema: scope.schema,
-		network: scope.network,
-		balancesSequence: scope.balancesSequence,
-		logic: {
-			block: scope.logic.block,
-			transaction: scope.logic.transaction,
-			peers: scope.logic.peers,
-		},
-		config: {
-			peers: {
-				options: {
-					timeout: scope.config.peers.options.timeout,
-				},
-			},
-			forging: {
-				minBroadhashConsensus: scope.config.forging.minBroadhashConsensus,
-			}
-		},
-	};
-	self = this;
+function Transport(cb, scope) {
+    library = {
+        logger: scope.logger,
+        db: scope.db,
+        bus: scope.bus,
+        schema: scope.schema,
+        network: scope.network,
+        balancesSequence: scope.balancesSequence,
+        logic: {
+            block: scope.logic.block,
+            transaction: scope.logic.transaction,
+            peers: scope.logic.peers,
+        },
+        config: {
+            peers: {
+                options: {
+                    timeout: scope.config.peers.options.timeout,
+                },
+            },
+            forging: {
+                minBroadhashConsensus: scope.config.forging.minBroadhashConsensus,
+            }
+        },
+    };
+    self = this;
 
-	__private.broadcaster = new Broadcaster(
-		scope.config.broadcasts,
-		scope.config.forging.force,
-		scope.logic.peers,
-		scope.logic.transaction,
-		scope.logger
-	);
+    __private.broadcaster = new Broadcaster(
+        scope.config.broadcasts,
+        scope.config.forging.force,
+        scope.logic.peers,
+        scope.logic.transaction,
+        scope.logger
+    );
 
-	setImmediate(cb, null, self);
+    setImmediate(cb, null, self);
 }
 
 // Private methods
@@ -79,14 +81,14 @@ function Transport (cb, scope) {
  * @return {string} Buffer array to string
  */
 __private.hashsum = function (obj) {
-	let buf = Buffer.from(JSON.stringify(obj), 'utf8');
-	let hashdig = crypto.createHash('sha256').update(buf).digest();
-	let temp = Buffer.alloc(8);
-	for (let i = 0; i < 8; i++) {
-		temp[i] = hashdig[7 - i];
-	}
+    const buf = Buffer.from(JSON.stringify(obj), 'utf8');
+    const hashdig = crypto.createHash('sha256').update(buf).digest();
+    const temp = Buffer.alloc(8);
+    for (let i = 0; i < 8; i++) {
+        temp[i] = hashdig[7 - i];
+    }
 
-	return bignum.fromBuffer(temp).toString();
+    return bignum.fromBuffer(temp).toString();
 };
 
 /**
@@ -97,8 +99,8 @@ __private.hashsum = function (obj) {
  * @param {string} extraMessage
  */
 __private.removePeer = function (options, extraMessage) {
-	library.logger.debug([options.code, 'Removing peer', options.peer.string, extraMessage].join(' '));
-	modules.peers.remove(options.peer);
+    library.logger.debug([options.code, 'Removing peer', options.peer.string, extraMessage].join(' '));
+    modules.peers.remove(options.peer);
 };
 
 /**
@@ -111,34 +113,31 @@ __private.removePeer = function (options, extraMessage) {
  * @return {setImmediateCallback} cb, err
  */
 __private.receiveSignatures = function (query, cb) {
-	let signatures;
+    let signatures;
 
-	async.series({
-		validateSchema: function (seriesCb) {
-			library.schema.validate(query, schema.signatures, function (err) {
-				if (err) {
-					return setImmediate(seriesCb, 'Invalid signatures body');
-				} else {
-					return setImmediate(seriesCb);
-				}
-			});
-		},
-		receiveSignatures: function (seriesCb) {
-			signatures = query.signatures;
+    async.series({
+        validateSchema(seriesCb) {
+            library.schema.validate(query, schema.signatures, (err) => {
+                if (err) {
+                    return setImmediate(seriesCb, 'Invalid signatures body');
+                }
+                return setImmediate(seriesCb);
+            });
+        },
+        receiveSignatures(seriesCb) {
+            signatures = query.signatures;
 
-			async.eachSeries(signatures, function (signature, eachSeriesCb) {
-				__private.receiveSignature(signature, function (err) {
-					if (err) {
-						library.logger.debug(err, signature);
-					}
+            async.eachSeries(signatures, (signature, eachSeriesCb) => {
+                __private.receiveSignature(signature, (err) => {
+                    if (err) {
+                        library.logger.debug(err, signature);
+                    }
 
-					return setImmediate(eachSeriesCb);
-				});
-			}, seriesCb);
-		}
-	}, function (err) {
-		return setImmediate(cb, err);
-	});
+                    return setImmediate(eachSeriesCb);
+                });
+            }, seriesCb);
+        }
+    }, err => setImmediate(cb, err));
 };
 
 /**
@@ -150,19 +149,18 @@ __private.receiveSignatures = function (query, cb) {
  * @return {setImmediateCallback} cb | error messages
  */
 __private.receiveSignature = function (signature, cb) {
-	library.schema.validate({signature: signature}, schema.signature, function (err) {
-		if (err) {
-			return setImmediate(cb, 'Invalid signature body');
-		}
+    library.schema.validate({ signature }, schema.signature, (err) => {
+        if (err) {
+            return setImmediate(cb, 'Invalid signature body');
+        }
 
-		modules.multisignatures.processSignature(signature, function (err) {
-			if (err) {
-				return setImmediate(cb, 'Error processing signature: ' + err);
-			} else {
-				return setImmediate(cb);
-			}
-		});
-	});
+        modules.multisignatures.processSignature(signature, (err) => {
+            if (err) {
+                return setImmediate(cb, `Error processing signature: ${err}`);
+            }
+            return setImmediate(cb);
+        });
+    });
 };
 
 /**
@@ -178,36 +176,33 @@ __private.receiveSignature = function (signature, cb) {
  * @return {setImmediateCallback} cb, err
  */
 __private.receiveTransactions = function (query, peer, extraLogMessage, cb) {
-	let transactions;
+    let transactions;
 
-	async.series({
-		validateSchema: function (seriesCb) {
-			library.schema.validate(query, schema.transactions, function (err) {
-				if (err) {
-					return setImmediate(seriesCb, 'Invalid transactions body');
-				} else {
-					return setImmediate(seriesCb);
-				}
-			});
-		},
-		receiveTransactions: function (seriesCb) {
-			transactions = query.transactions;
+    async.series({
+        validateSchema(seriesCb) {
+            library.schema.validate(query, schema.transactions, (err) => {
+                if (err) {
+                    return setImmediate(seriesCb, 'Invalid transactions body');
+                }
+                return setImmediate(seriesCb);
+            });
+        },
+        receiveTransactions(seriesCb) {
+            transactions = query.transactions;
 
-			async.eachSeries(transactions, function (transaction, eachSeriesCb) {
-				transaction.bundled = true;
+            async.eachSeries(transactions, (transaction, eachSeriesCb) => {
+                transaction.bundled = true;
 
-				__private.receiveTransaction(transaction, peer, extraLogMessage, function (err) {
-					if (err) {
-						library.logger.debug(err, transaction);
-					}
+                __private.receiveTransaction(transaction, peer, extraLogMessage, (err) => {
+                    if (err) {
+                        library.logger.debug(err, transaction);
+                    }
 
-					return setImmediate(eachSeriesCb);
-				});
-			}, seriesCb);
-		}
-	}, function (err) {
-		return setImmediate(cb, err);
-	});
+                    return setImmediate(eachSeriesCb);
+                });
+            }, seriesCb);
+        }
+    }, err => setImmediate(cb, err));
 };
 
 /**
@@ -226,31 +221,37 @@ __private.receiveTransactions = function (query, peer, extraLogMessage, cb) {
  * @return {setImmediateCallback} cb, error message
  */
 __private.receiveTransaction = function (transaction, peer, extraLogMessage, cb) {
-	let id = (transaction ? transaction.id : 'null');
+    const id = (transaction ? transaction.id : 'null');
 
-	try {
-		transaction = library.logic.transaction.objectNormalize(transaction);
-	} catch (e) {
-		library.logger.debug('Transaction normalization failed', {id: id, err: e.toString(), module: 'transport', tx: transaction});
+    try {
+        transaction = library.logic.transaction.objectNormalize(transaction);
+    } catch (e) {
+        library.logger.debug('Transaction normalization failed', {
+            id,
+            err: e.toString(),
+            module: 'transport',
+            tx: transaction
+        });
 
-		__private.removePeer({peer: peer, code: 'ETRANSACTION'}, extraLogMessage);
+        __private.removePeer({ peer, code: 'ETRANSACTION' }, extraLogMessage);
 
-		return setImmediate(cb, 'Invalid transaction body - ' + e.toString());
-	}
+        return setImmediate(cb, `Invalid transaction body - ${e.toString()}`);
+    }
 
-	library.balancesSequence.add(function (cb) {
-		library.logger.debug('Received transaction ' + transaction.id + ' from peer ' + peer.string);
-		modules.transactions.processUnconfirmedTransaction(transaction, true, function (err) {
-			if (err) {
-				library.logger.debug(['Transaction', id].join(' '), err.toString());
-				if (transaction) { library.logger.debug('Transaction', transaction); }
+    library.balancesSequence.add((cb) => {
+        library.logger.debug(`Received transaction ${transaction.id} from peer ${peer.string}`);
+        modules.transactions.processUnconfirmedTransaction(transaction, true, (err) => {
+            if (err) {
+                library.logger.debug(['Transaction', id].join(' '), err.toString());
+                if (transaction) {
+                    library.logger.debug('Transaction', transaction);
+                }
 
-				return setImmediate(cb, err.toString());
-			} else {
-				return setImmediate(cb, null, transaction.id);
-			}
-		});
-	}, cb);
+                return setImmediate(cb, err.toString());
+            }
+            return setImmediate(cb, null, transaction.id);
+        });
+    }, cb);
 };
 
 // Public methods
@@ -260,11 +261,11 @@ __private.receiveTransaction = function (transaction, peer, extraLogMessage, cb)
  * @return {Object} private variable with headers
  */
 Transport.prototype.headers = function (headers) {
-	if (headers) {
-		__private.headers = headers;
-	}
+    if (headers) {
+        __private.headers = headers;
+    }
 
-	return __private.headers;
+    return __private.headers;
 };
 
 /**
@@ -272,7 +273,7 @@ Transport.prototype.headers = function (headers) {
  * @return {number} broadcaster consensus
  */
 Transport.prototype.consensus = function () {
-	return __private.broadcaster.consensus;
+    return __private.broadcaster.consensus;
 };
 
 /**
@@ -281,11 +282,10 @@ Transport.prototype.consensus = function () {
  * @return {boolean}
  */
 Transport.prototype.poorConsensus = function () {
-	if (__private.broadcaster.consensus === undefined) {
-		return false;
-	} else {
-		return (__private.broadcaster.consensus < library.config.forging.minBroadhashConsensus);
-	}
+    if (__private.broadcaster.consensus === undefined) {
+        return false;
+    }
+    return (__private.broadcaster.consensus < library.config.forging.minBroadhashConsensus);
 };
 
 /**
@@ -296,7 +296,7 @@ Transport.prototype.poorConsensus = function () {
  * @return {Broadcaster.getPeers} calls getPeers
  */
 Transport.prototype.getPeers = function (params, cb) {
-	return __private.broadcaster.getPeers(params, cb);
+    return __private.broadcaster.getPeers(params, cb);
 };
 
 /**
@@ -310,20 +310,19 @@ Transport.prototype.getPeers = function (params, cb) {
  * @return {setImmediateCallback|getFromPeer} error | calls getFromPeer
  */
 Transport.prototype.getFromRandomPeer = function (config, options, cb) {
-	if (typeof options === 'function') {
-		cb = options;
-		options = config;
-		config = {};
-	}
-	config.limit = 1;
-	config.allowedStates = [Peer.STATE.DISCONNECTED, Peer.STATE.CONNECTED];
-	modules.peers.list(config, function (err, peers) {
-		if (!err && peers.length) {
-			return self.getFromPeer(peers[0], options, cb);
-		} else {
-			return setImmediate(cb, err || 'No acceptable peers found');
-		}
-	});
+    if (typeof options === 'function') {
+        cb = options;
+        options = config;
+        config = {};
+    }
+    config.limit = 1;
+    config.allowedStates = [Peer.STATE.DISCONNECTED, Peer.STATE.CONNECTED];
+    modules.peers.list(config, (err, peers) => {
+        if (!err && peers.length) {
+            return self.getFromPeer(peers[0], options, cb);
+        }
+        return setImmediate(cb, err || 'No acceptable peers found');
+    });
 };
 
 /**
@@ -347,72 +346,71 @@ Transport.prototype.getFromRandomPeer = function (config, options, cb) {
  * @todo implements secure http request with https
  */
 Transport.prototype.getFromPeer = function (peer, options, cb) {
-	let url;
+    let url;
 
-	if (options.api) {
-		url = '/peer' + options.api;
-	} else {
-		url = options.url;
-	}
+    if (options.api) {
+        url = `/peer${options.api}`;
+    } else {
+        url = options.url;
+    }
 
-	peer = library.logic.peers.create(peer);
-	__private.headers.port = 7007;
-	let req = {
-		url: 'http://' + peer.ip + ':' + peer.port + url,
-		method: options.method,
-		headers: __private.headers,
-		timeout: library.config.peers.options.timeout
-	};
+    peer = library.logic.peers.create(peer);
+    __private.headers.port = 7007;
+    const req = {
+        url: `http://${peer.ip}:${peer.port}${url}`,
+        method: options.method,
+        headers: __private.headers,
+        timeout: library.config.peers.options.timeout
+    };
 
-	if (options.data) {
-		req.body = options.data;
-	}
+    if (options.data) {
+        req.body = options.data;
+    }
 
-	popsicle.request(req)
-		.use(popsicle.plugins.parse(['json'], false))
-		.then(function (res) {
-			if (res.status !== 200) {
-				// Remove peer
-				__private.removePeer({peer: peer, code: 'ERESPONSE ' + res.status}, req.method + ' ' + req.url);
+    popsicle.request(req)
+        .use(popsicle.plugins.parse(['json'], false))
+        .then((res) => {
+            if (res.status !== 200) {
+                // Remove peer
+                __private.removePeer({ peer, code: `ERESPONSE ${res.status}` }, `${req.method} ${req.url}`);
 
-				return setImmediate(cb, ['Received bad response code', res.status, req.method, req.url].join(' '));
-			} else {
-				let headers = peer.applyHeaders(res.headers);
+                return setImmediate(cb, ['Received bad response code', res.status, req.method, req.url].join(' '));
+            }
+            const headers = peer.applyHeaders(res.headers);
 
-				let report = library.schema.validate(headers, schema.headers);
-				if (!report) {
-					// Remove peer
-          console.log('EHEADERS1', report);
-					__private.removePeer({peer: peer, code: 'EHEADERS'}, req.method + ' ' + req.url);
+            const report = library.schema.validate(headers, schema.headers);
+            if (!report) {
+                // Remove peer
+                console.log('EHEADERS1', report);
+                __private.removePeer({ peer, code: 'EHEADERS' }, `${req.method} ${req.url}`);
 
-					return setImmediate(cb, ['Invalid response headers', JSON.stringify(headers), req.method, req.url].join(' '));
-				}
+                return setImmediate(cb, ['Invalid response headers', JSON.stringify(headers), req.method, req.url].join(' '));
+            }
 
-				if (!modules.system.networkCompatible(headers.nethash)) {
-					// Remove peer
-					__private.removePeer({peer: peer, code: 'ENETHASH'}, req.method + ' ' + req.url);
+            if (!modules.system.networkCompatible(headers.nethash)) {
+                // Remove peer
+                __private.removePeer({ peer, code: 'ENETHASH' }, `${req.method} ${req.url}`);
 
-					return setImmediate(cb, ['Peer is not on the same network', headers.nethash, req.method, req.url].join(' '));
-				}
+                return setImmediate(cb, ['Peer is not on the same network', headers.nethash, req.method, req.url].join(' '));
+            }
 
-				if (!modules.system.versionCompatible(headers.version)) {
-					// Remove peer
-					__private.removePeer({peer: peer, code: 'EVERSION:' + headers.version}, req.method + ' ' + req.url);
+            if (!modules.system.versionCompatible(headers.version)) {
+                // Remove peer
+                __private.removePeer({ peer, code: `EVERSION:${headers.version}` }, `${req.method} ${req.url}`);
 
-					return setImmediate(cb, ['Peer is using incompatible version', headers.version, req.method, req.url].join(' '));
-				}
+                return setImmediate(cb, ['Peer is using incompatible version', headers.version, req.method, req.url].join(' '));
+            }
 
-				modules.peers.update(peer);
+            modules.peers.update(peer);
 
-				return setImmediate(cb, null, {body: res.body, peer: peer});
-			}
-		}).catch(function (err) {
-			if (peer) {
-				__private.removePeer({peer: peer, code: err.code}, req.method + ' ' + req.url);
-			}
+            return setImmediate(cb, null, { body: res.body, peer });
+        }).catch((err) => {
+        if (peer) {
+            __private.removePeer({ peer, code: err.code }, `${req.method} ${req.url}`);
+        }
 
-			return setImmediate(cb, [err.code, 'Request failed', req.method, req.url].join(' '));
-		});
+        return setImmediate(cb, [err.code, 'Request failed', req.method, req.url].join(' '));
+    });
 };
 
 /**
@@ -423,7 +421,7 @@ Transport.prototype.getFromPeer = function (peer, options, cb) {
  * @param {function} cb - Callback function.
  */
 Transport.prototype.sandboxApi = function (call, args, cb) {
-	sandboxHelper.callMethod(shared, call, args, cb);
+    sandboxHelper.callMethod(shared, call, args, cb);
 };
 
 // Events
@@ -434,28 +432,28 @@ Transport.prototype.sandboxApi = function (call, args, cb) {
  * @param {modules} scope - Loaded modules.
  */
 Transport.prototype.onBind = function (scope) {
-	modules = {
-		blocks: scope.blocks,
-		dapps: scope.dapps,
-		peers: scope.peers,
-		multisignatures: scope.multisignatures,
-		transactions: scope.transactions,
-		system: scope.system,
-	};
+    modules = {
+        blocks: scope.blocks,
+        dapps: scope.dapps,
+        peers: scope.peers,
+        multisignatures: scope.multisignatures,
+        transactions: scope.transactions,
+        system: scope.system,
+    };
 
-	__private.headers = modules.system.headers();
-	__private.broadcaster.bind(
-		scope.peers,
-		scope.transport,
-		scope.transactions
-	);
+    __private.headers = modules.system.headers();
+    __private.broadcaster.bind(
+        scope.peers,
+        scope.transport,
+        scope.transactions
+    );
 };
 
 /**
  * Sets private variable loaded to true
  */
 Transport.prototype.onBlockchainReady = function () {
-	__private.loaded = true;
+    __private.loaded = true;
 };
 
 /**
@@ -468,10 +466,10 @@ Transport.prototype.onBlockchainReady = function () {
  * @emits signature/change
  */
 Transport.prototype.onSignature = function (signature, broadcast) {
-	if (broadcast && !__private.broadcaster.maxRelays(signature)) {
-		__private.broadcaster.enqueue({}, {api: '/signatures', data: {signature: signature}, method: 'POST'});
-		library.network.io.sockets.emit('signature/change', signature);
-	}
+    if (broadcast && !__private.broadcaster.maxRelays(signature)) {
+        __private.broadcaster.enqueue({}, { api: '/signatures', data: { signature }, method: 'POST' });
+        library.network.io.sockets.emit('signature/change', signature);
+    }
 };
 
 /**
@@ -485,13 +483,13 @@ Transport.prototype.onSignature = function (signature, broadcast) {
  */
 Transport.prototype.onUnconfirmedTransaction = function (transaction, broadcast) {
     if (broadcast && !__private.broadcaster.maxRelays(transaction)) {
-        __private.broadcaster.enqueue({}, {api: '/transactions', data: {transaction: transaction}, method: 'POST'});
-        let users = usersList.getUsersList();
-        users.map(function(user) {
-            if(user.address === transaction.senderId || user.address === transaction.recipientId) {
+        __private.broadcaster.enqueue({}, { api: '/transactions', data: { transaction }, method: 'POST' });
+        const users = usersList.getUsersList();
+        users.map((user) => {
+            if (user.address === transaction.senderId || user.address === transaction.recipientId) {
                 library.network.io.to(user.socketId).emit('transactions/change', transaction);
             }
-        })
+        });
     }
 };
 
@@ -506,26 +504,31 @@ Transport.prototype.onUnconfirmedTransaction = function (transaction, broadcast)
  * @emits blocks/change
  */
 Transport.prototype.onNewBlock = function (block, broadcast) {
-	if (broadcast) {
-		let broadhash = modules.system.getBroadhash();
+    if (broadcast) {
+        const broadhash = modules.system.getBroadhash();
 
-		modules.system.update(function () {
-			if (!__private.broadcaster.maxRelays(block)) {
-				__private.broadcaster.broadcast({limit: constants.maxPeers, broadhash: broadhash}, {api: '/blocks', data: {block: block}, method: 'POST', immediate: true});
-			}
-			library.network.io.sockets.emit('blocks/change', block);
-		});
+        modules.system.update(() => {
+            if (!__private.broadcaster.maxRelays(block)) {
+                __private.broadcaster.broadcast({ limit: constants.maxPeers, broadhash }, {
+                    api: '/blocks',
+                    data: { block },
+                    method: 'POST',
+                    immediate: true
+                });
+            }
+            library.network.io.sockets.emit('blocks/change', block);
+        });
 
-		library.db.one(sqlBlock.getBlockByHeight, { height: block.height })
-			.then(function (lastBlock) {
-				utils.addDocument({
-					index: 'blocks_list',
-					type: 'blocks_list',
-					body: lastBlock,
-					id: lastBlock.b_id
-				});
-			})
-	}
+        library.db.one(sqlBlock.getBlockByHeight, { height: block.height })
+            .then((lastBlock) => {
+                utils.addDocument({
+                    index: 'blocks_list',
+                    type: 'blocks_list',
+                    body: lastBlock,
+                    id: lastBlock.b_id
+                });
+            });
+    }
 };
 
 /**
@@ -536,9 +539,14 @@ Transport.prototype.onNewBlock = function (block, broadcast) {
  * @param {Object} broadcast
  */
 Transport.prototype.onMessage = function (msg, broadcast) {
-	if (broadcast && !__private.broadcaster.maxRelays(msg)) {
-		__private.broadcaster.broadcast({limit: constants.maxPeers, dappid: msg.dappid}, {api: '/dapp/message', data: msg, method: 'POST', immediate: true});
-	}
+    if (broadcast && !__private.broadcaster.maxRelays(msg)) {
+        __private.broadcaster.broadcast({ limit: constants.maxPeers, dappid: msg.dappid }, {
+            api: '/dapp/message',
+            data: msg,
+            method: 'POST',
+            immediate: true
+        });
+    }
 };
 
 /**
@@ -547,8 +555,8 @@ Transport.prototype.onMessage = function (msg, broadcast) {
  * @return {setImmediateCallback} cb
  */
 Transport.prototype.cleanup = function (cb) {
-	__private.loaded = false;
-	return setImmediate(cb);
+    __private.loaded = false;
+    return setImmediate(cb);
 };
 
 /**
@@ -556,7 +564,7 @@ Transport.prototype.cleanup = function (cb) {
  * @return {boolean}
  */
 Transport.prototype.isLoaded = function () {
-	return modules && __private.loaded;
+    return modules && __private.loaded;
 };
 
 // Internal API
@@ -565,291 +573,282 @@ Transport.prototype.isLoaded = function () {
  * @see {@link http://apidocjs.com/}
  */
 Transport.prototype.internal = {
-	blocksCommon: function (ids, peer, extraLogMessage, cb) {
-		let escapedIds = ids
-			// Remove quotes
-			.replace(/['"]+/g, '')
-			// Separate by comma into an array
-			.split(',')
-			// Reject any non-numeric values
-			.filter(function (id) {
-				return /^[0-9a-fA-F]+$/.test(id);
-			});
+    blocksCommon(ids, peer, extraLogMessage, cb) {
+        const escapedIds = ids
+        // Remove quotes
+            .replace(/['"]+/g, '')
+            // Separate by comma into an array
+            .split(',')
+            // Reject any non-numeric values
+            .filter(id => /^[0-9a-fA-F]+$/.test(id));
 
-		if (!escapedIds.length) {
-			library.logger.debug('Common block request validation failed', {err: 'ESCAPE', req: ids});
+        if (!escapedIds.length) {
+            library.logger.debug('Common block request validation failed', { err: 'ESCAPE', req: ids });
 
-			__private.removePeer({peer: peer, code: 'ECOMMON'}, extraLogMessage);
+            __private.removePeer({ peer, code: 'ECOMMON' }, extraLogMessage);
 
-			return setImmediate(cb, 'Invalid block id sequence');
-		}
+            return setImmediate(cb, 'Invalid block id sequence');
+        }
 
-		library.db.query(sql.getCommonBlock, escapedIds).then(function (rows) {
-			return setImmediate(cb, null, { success: true, common: rows[0] || null });
-		}).catch(function (err) {
-			library.logger.error(err.stack);
-			return setImmediate(cb, 'Failed to get common block');
-		});
-	},
+        library.db.query(sql.getCommonBlock, escapedIds).then(rows => setImmediate(cb, null, {
+            success: true,
+            common: rows[0] || null
+        })).catch((err) => {
+            library.logger.error(err.stack);
+            return setImmediate(cb, 'Failed to get common block');
+        });
+    },
 
-	blocks: function (query, cb) {
-		// Get 34 blocks with all data (joins) from provided block id
-		// According to maxium payload of 58150 bytes per block with every transaction being a vote
-		// Discounting maxium compression setting used in middleware
-		// Maximum transport payload = 2000000 bytes
-		modules.blocks.utils.loadBlocksData({
-			limit: 34, // 1977100 bytes
-			lastId: query.lastBlockId
-		}, function (err, data) {
-			if (err) {
-				return setImmediate(cb, null, {blocks: []});
-			}
+    blocks(query, cb) {
+        // Get 34 blocks with all data (joins) from provided block id
+        // According to maxium payload of 58150 bytes per block with every transaction being a vote
+        // Discounting maxium compression setting used in middleware
+        // Maximum transport payload = 2000000 bytes
+        modules.blocks.utils.loadBlocksData({
+            limit: 34, // 1977100 bytes
+            lastId: query.lastBlockId
+        }, (err, data) => {
+            if (err) {
+                return setImmediate(cb, null, { blocks: [] });
+            }
 
-			return setImmediate(cb, null, {blocks: data});
-		});
-	},
+            return setImmediate(cb, null, { blocks: data });
+        });
+    },
 
-	postBlock: function (block, peer, extraLogMessage, cb) {
-		try {
-			block = library.logic.block.objectNormalize(block);
-		} catch (e) {
-			library.logger.debug('Block normalization failed', {err: e.toString(), module: 'transport', block: block });
+    postBlock(block, peer, extraLogMessage, cb) {
+        try {
+            block = library.logic.block.objectNormalize(block);
+        } catch (e) {
+            library.logger.debug('Block normalization failed', { err: e.toString(), module: 'transport', block });
 
-			__private.removePeer({peer: peer, code: 'EBLOCK'}, extraLogMessage);
+            __private.removePeer({ peer, code: 'EBLOCK' }, extraLogMessage);
 
-			return setImmediate(cb, null, {success: false, error: e.toString()});
-		}
+            return setImmediate(cb, null, { success: false, error: e.toString() });
+        }
 
-		library.bus.message('receiveBlock', block);
+        library.bus.message('receiveBlock', block);
 
-		return setImmediate(cb, null, {success: true, blockId: block.id});
-	},
+        return setImmediate(cb, null, { success: true, blockId: block.id });
+    },
 
-	list: function (req, cb) {
-		modules.peers.list({limit: constants.maxPeers}, function (err, peers) {
-			peers = (!err ? peers : []);
-			return setImmediate(cb, null, {success: !err, peers: peers});
-		});
-	},
+    list(req, cb) {
+        modules.peers.list({ limit: constants.maxPeers }, (err, peers) => {
+            peers = (!err ? peers : []);
+            return setImmediate(cb, null, { success: !err, peers });
+        });
+    },
 
-	height: function (req, cb) {
-		return setImmediate(cb, null, {success: true, height: modules.blocks.lastBlock.get().height});
-	},
+    height(req, cb) {
+        return setImmediate(cb, null, { success: true, height: modules.blocks.lastBlock.get().height });
+    },
 
-	ping: function (req, cb) {
-		return setImmediate(cb, null, {success: true});
-	},
+    ping(req, cb) {
+        return setImmediate(cb, null, { success: true });
+    },
 
-	postSignatures: function (query, cb) {
-		if (query.signatures) {
-			__private.receiveSignatures(query, function (err) {
-				if (err) {
-					return setImmediate(cb, null, {success: false, message: err});
-				} else {
-					return setImmediate(cb, null, {success: true});
-				}
-			});
-		} else {
-			__private.receiveSignature(query.signature, function (err) {
-				if (err) {
-					return setImmediate(cb, null, {success: false, message: err});
-				} else {
-					return setImmediate(cb, null, {success: true});
-				}
-			});
-		}
-	},
+    postSignatures(query, cb) {
+        if (query.signatures) {
+            __private.receiveSignatures(query, (err) => {
+                if (err) {
+                    return setImmediate(cb, null, { success: false, message: err });
+                }
+                return setImmediate(cb, null, { success: true });
+            });
+        } else {
+            __private.receiveSignature(query.signature, (err) => {
+                if (err) {
+                    return setImmediate(cb, null, { success: false, message: err });
+                }
+                return setImmediate(cb, null, { success: true });
+            });
+        }
+    },
 
-	getSignatures: function (req, cb) {
-		let transactions = modules.transactions.getMultisignatureTransactionList(true, constants.maxSharedTxs);
-		let signatures = [];
+    getSignatures(req, cb) {
+        const transactions = modules.transactions.getMultisignatureTransactionList(true, constants.maxSharedTxs);
+        const signatures = [];
 
-		async.eachSeries(transactions, function (trs, __cb) {
-			if (trs.signatures && trs.signatures.length) {
-				signatures.push({
-					transaction: trs.id,
-					signatures: trs.signatures
-				});
-			}
+        async.eachSeries(transactions, (trs, __cb) => {
+            if (trs.signatures && trs.signatures.length) {
+                signatures.push({
+                    transaction: trs.id,
+                    signatures: trs.signatures
+                });
+            }
 
-			return setImmediate(__cb);
-		}, function () {
-			return setImmediate(cb, null, {success: true, signatures: signatures});
-		});
-	},
+            return setImmediate(__cb);
+        }, () => setImmediate(cb, null, { success: true, signatures }));
+    },
 
-	getTransactions: function (req, cb) {
-		let transactions = modules.transactions.getMergedTransactionList(true, constants.maxSharedTxs);
+    getTransactions(req, cb) {
+        const transactions = modules.transactions.getMergedTransactionList(true, constants.maxSharedTxs);
 
-		return setImmediate(cb, null, {success: true, transactions: transactions});
-	},
+        return setImmediate(cb, null, { success: true, transactions });
+    },
 
-	postTransactions: function (query, peer, extraLogMessage, cb) {
-		if (query.transactions) {
-			__private.receiveTransactions(query, peer, extraLogMessage, function (err) {
-				if (err) {
-					return setImmediate(cb, null, {success: false, message: err});
-				} else {
-					return setImmediate(cb, null, {success: true});
-				}
-			});
-		} else {
-			__private.receiveTransaction(query.transaction, peer, extraLogMessage, function (err, id) {
-				if (err) {
-					return setImmediate(cb, null, {success: false,  message: err});
-				} else {
-					return setImmediate(cb, null, {success: true, transactionId: id});
-				}
-			});
-		}
-	},
+    postTransactions(query, peer, extraLogMessage, cb) {
+        if (query.transactions) {
+            __private.receiveTransactions(query, peer, extraLogMessage, (err) => {
+                if (err) {
+                    return setImmediate(cb, null, { success: false, message: err });
+                }
+                return setImmediate(cb, null, { success: true });
+            });
+        } else {
+            __private.receiveTransaction(query.transaction, peer, extraLogMessage, (err, id) => {
+                if (err) {
+                    return setImmediate(cb, null, { success: false, message: err });
+                }
+                return setImmediate(cb, null, { success: true, transactionId: id });
+            });
+        }
+    },
 
-	postDappMessage: function (query, cb) {
-		try {
-			if (!query.dappid) {
-				return setImmediate(cb, null, {success: false, message: 'Missing dappid'});
-			}
-			if (!query.timestamp || !query.hash) {
-				return setImmediate(cb, null, {success: false, message: 'Missing hash sum'});
-			}
-			let newHash = __private.hashsum(query.body, query.timestamp);
-			if (newHash !== query.hash) {
-				return setImmediate(cb, null, {success: false, message: 'Invalid hash sum'});
-			}
-		} catch (e) {
-			library.logger.error(e.stack);
-			return setImmediate(cb, null, {success: false, message: e.toString()});
-		}
+    postDappMessage(query, cb) {
+        try {
+            if (!query.dappid) {
+                return setImmediate(cb, null, { success: false, message: 'Missing dappid' });
+            }
+            if (!query.timestamp || !query.hash) {
+                return setImmediate(cb, null, { success: false, message: 'Missing hash sum' });
+            }
+            const newHash = __private.hashsum(query.body, query.timestamp);
+            if (newHash !== query.hash) {
+                return setImmediate(cb, null, { success: false, message: 'Invalid hash sum' });
+            }
+        } catch (e) {
+            library.logger.error(e.stack);
+            return setImmediate(cb, null, { success: false, message: e.toString() });
+        }
 
-		if (__private.messages[query.hash]) {
-			return setImmediate(cb, null);
-		}
+        if (__private.messages[query.hash]) {
+            return setImmediate(cb, null);
+        }
 
-		__private.messages[query.hash] = true;
+        __private.messages[query.hash] = true;
 
-		modules.dapps.message(query.dappid, query.body, function (err, body) {
-			if (!err && body.error) {
-				err = body.error;
-			}
+        modules.dapps.message(query.dappid, query.body, (err, body) => {
+            if (!err && body.error) {
+                err = body.error;
+            }
 
-			if (err) {
-				return setImmediate(cb, null, {success: false, message: err.toString()});
-			} else {
-				library.bus.message('message', query, true);
-				return setImmediate(cb, null, extend({}, body, {success: true}));
-			}
-		});
-	},
+            if (err) {
+                return setImmediate(cb, null, { success: false, message: err.toString() });
+            }
+            library.bus.message('message', query, true);
+            return setImmediate(cb, null, extend({}, body, { success: true }));
+        });
+    },
 
-	postDappRequest: function (query, cb) {
-		try {
-			if (!query.dappid) {
-				return setImmediate(cb, null, {success: false, message: 'Missing dappid'});
-			}
-			if (!query.timestamp || !query.hash) {
-				return setImmediate(cb, null, {success: false, message: 'Missing hash sum'});
-			}
+    postDappRequest(query, cb) {
+        try {
+            if (!query.dappid) {
+                return setImmediate(cb, null, { success: false, message: 'Missing dappid' });
+            }
+            if (!query.timestamp || !query.hash) {
+                return setImmediate(cb, null, { success: false, message: 'Missing hash sum' });
+            }
 
-			let newHash = __private.hashsum(query.body, query.timestamp);
-			if (newHash !== query.hash) {
-				return setImmediate(cb, null, {success: false, message: 'Invalid hash sum'});
-			}
-		} catch (e) {
-			library.logger.error(e.stack);
-			return setImmediate(cb, null, {success: false, message: e.toString()});
-		}
+            const newHash = __private.hashsum(query.body, query.timestamp);
+            if (newHash !== query.hash) {
+                return setImmediate(cb, null, { success: false, message: 'Invalid hash sum' });
+            }
+        } catch (e) {
+            library.logger.error(e.stack);
+            return setImmediate(cb, null, { success: false, message: e.toString() });
+        }
 
-		modules.dapps.request(query.dappid, query.body.method, query.body.path, query.body.query, function (err, body) {
-			if (!err && body.error) {
-				err = body.error;
-			}
+        modules.dapps.request(query.dappid, query.body.method, query.body.path, query.body.query, (err, body) => {
+            if (!err && body.error) {
+                err = body.error;
+            }
 
-			if (err) {
-				return setImmediate(cb, null, {success: false, message: err});
-			} else {
-				return setImmediate(cb, null, extend({}, body, {success: true}));
-			}
-		});
-	},
+            if (err) {
+                return setImmediate(cb, null, { success: false, message: err });
+            }
+            return setImmediate(cb, null, extend({}, body, { success: true }));
+        });
+    },
 
-	handshake: function (ip, port, headers, validateHeaders, cb) {
-		let peer = library.logic.peers.create(
-			{
-				ip: ip,
-				port: port
-			}
-		);
+    handshake(ip, port, headers, validateHeaders, cb) {
+        const peer = library.logic.peers.create(
+            {
+                ip,
+                port
+            }
+        );
 
-		headers = peer.applyHeaders(headers);
+        headers = peer.applyHeaders(headers);
 
-		validateHeaders(headers, function (error, extraMessage) {
-			if (error) {
-				// Remove peer
-				__private.removePeer({peer: peer, code: 'EHEADERS'}, extraMessage);
+        validateHeaders(headers, (error, extraMessage) => {
+            if (error) {
+                // Remove peer
+                __private.removePeer({ peer, code: 'EHEADERS' }, extraMessage);
 
-				return setImmediate(cb, {success: false, error: error});
-			}
+                return setImmediate(cb, { success: false, error });
+            }
 
-			if (!modules.system.networkCompatible(headers.nethash)) {
-				// Remove peer
-				__private.removePeer({peer: peer, code: 'ENETHASH'}, extraMessage);
+            if (!modules.system.networkCompatible(headers.nethash)) {
+                // Remove peer
+                __private.removePeer({ peer, code: 'ENETHASH' }, extraMessage);
 
-				return setImmediate(cb, {
-					success: false,
-					message: 'Request is made on the wrong network',
-					expected: modules.system.getNethash(),
-					received: headers.nethash
-				});
-			}
+                return setImmediate(cb, {
+                    success: false,
+                    message: 'Request is made on the wrong network',
+                    expected: modules.system.getNethash(),
+                    received: headers.nethash
+                });
+            }
 
-			if (!modules.system.versionCompatible(headers.version)) {
-				// Remove peer
-				__private.removePeer({
-					peer: peer,
-					code: 'EVERSION:' + headers.version
-				}, extraMessage);
+            if (!modules.system.versionCompatible(headers.version)) {
+                // Remove peer
+                __private.removePeer({
+                    peer,
+                    code: `EVERSION:${headers.version}`
+                }, extraMessage);
 
-				return setImmediate(cb, {
-					success: false,
-					message: 'Request is made from incompatible version',
-					expected: modules.system.getMinVersion(),
-					received: headers.version
-				});
-			}
+                return setImmediate(cb, {
+                    success: false,
+                    message: 'Request is made from incompatible version',
+                    expected: modules.system.getMinVersion(),
+                    received: headers.version
+                });
+            }
 
-			modules.peers.update(peer);
+            modules.peers.update(peer);
 
-			return setImmediate(cb, null, peer);
-		});
-	}
+            return setImmediate(cb, null, peer);
+        });
+    }
 };
 
 // Shared API
 shared.message = function (msg, cb) {
-	msg.timestamp = Math.floor(Date.now() / 1000);
-	msg.hash = __private.hashsum(msg.body, msg.timestamp);
+    msg.timestamp = Math.floor(Date.now() / 1000);
+    msg.hash = __private.hashsum(msg.body, msg.timestamp);
 
-	__private.broadcaster.enqueue({dappid: msg.dappid}, {api: '/dapp/message', data: msg, method: 'POST'});
+    __private.broadcaster.enqueue({ dappid: msg.dappid }, { api: '/dapp/message', data: msg, method: 'POST' });
 
-	return setImmediate(cb, null, {});
+    return setImmediate(cb, null, {});
 };
 
 shared.request = function (msg, cb) {
-	msg.timestamp = Math.floor(Date.now() / 1000);
-	msg.hash = __private.hashsum(msg.body, msg.timestamp);
+    msg.timestamp = Math.floor(Date.now() / 1000);
+    msg.hash = __private.hashsum(msg.body, msg.timestamp);
 
-	if (msg.body.peer) {
-		self.getFromPeer({ip: msg.body.peer.ip, port: msg.body.peer.port}, {
-			api: '/dapp/request',
-			data: msg,
-			method: 'POST'
-		}, cb);
-	} else {
-		self.getFromRandomPeer({dappid: msg.dappid}, {api: '/dapp/request', data: msg, method: 'POST'}, cb);
-	}
+    if (msg.body.peer) {
+        self.getFromPeer({ ip: msg.body.peer.ip, port: msg.body.peer.port }, {
+            api: '/dapp/request',
+            data: msg,
+            method: 'POST'
+        }, cb);
+    } else {
+        self.getFromRandomPeer({ dappid: msg.dappid }, { api: '/dapp/request', data: msg, method: 'POST' }, cb);
+    }
 };
 
 // Export
 module.exports = Transport;
 
-/*************************************** END OF FILE *************************************/
+/** ************************************* END OF FILE ************************************ */

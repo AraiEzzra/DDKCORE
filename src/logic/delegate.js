@@ -1,8 +1,10 @@
-let constants = require('../helpers/constants.js');
+const constants = require('../helpers/constants.js');
 const sql = require('../sql/delegates');
 
 // Private fields
-let modules, library, self;
+let modules,
+    library,
+    self;
 
 /**
  * Initializes library.
@@ -11,12 +13,12 @@ let modules, library, self;
  * @classdesc Main delegate logic.
  * @param {ZSchema} schema
  */
-function Delegate (schema, db) {
-	library = {
-		schema: schema,
-		db: db
-	};
-	self = this;
+function Delegate(schema, db) {
+    library = {
+        schema,
+        db
+    };
+    self = this;
 }
 
 // Public methods
@@ -25,9 +27,9 @@ function Delegate (schema, db) {
  * @param {Accounts} accounts
  */
 Delegate.prototype.bind = function (accounts) {
-	modules = {
-		accounts: accounts,
-	};
+    modules = {
+        accounts,
+    };
 };
 
 /**
@@ -37,19 +39,19 @@ Delegate.prototype.bind = function (accounts) {
  * @returns {Object} trs with new data
  */
 Delegate.prototype.create = function (data, trs) {
-	// TODO Can be in future will be added delegate URL
-	trs.recipientId = null;
-	trs.amount = 0;
-	trs.asset.delegate = {
-		username: data.username,
-		publicKey: data.sender.publicKey
-	};
+    // TODO Can be in future will be added delegate URL
+    trs.recipientId = null;
+    trs.amount = 0;
+    trs.asset.delegate = {
+        username: data.username,
+        publicKey: data.sender.publicKey
+    };
 
-	if (trs.asset.delegate.username) {
-		trs.asset.delegate.username = trs.asset.delegate.username.toLowerCase().trim();
-	}
-	trs.trsName = 'DELEGATE';
-	return trs;
+    if (trs.asset.delegate.username) {
+        trs.asset.delegate.username = trs.asset.delegate.username.toLowerCase().trim();
+    }
+    trs.trsName = 'DELEGATE';
+    return trs;
 };
 
 /**
@@ -59,7 +61,7 @@ Delegate.prototype.create = function (data, trs) {
  * @todo delete unnecessary function parameters trs, sender.
  */
 Delegate.prototype.calculateFee = function () {
-	return constants.fees.delegate;
+    return constants.fees.delegate;
 };
 
 /**
@@ -72,113 +74,113 @@ Delegate.prototype.calculateFee = function () {
  * trs validated.
  */
 Delegate.prototype.verify = function (trs, sender, cb) {
-	if (trs.recipientId) {
-		if (constants.VERIFY_DELEGATE_TRS_RECIPIENT) {
-			return setImmediate(cb, 'Invalid recipient');
-		} else {
-			library.logger.error('Invalid recipient');
-		}
-	}
+    if (trs.recipientId) {
+        if (constants.VERIFY_DELEGATE_TRS_RECIPIENT) {
+            return setImmediate(cb, 'Invalid recipient');
+        }
+        library.logger.error('Invalid recipient');
 
-	if (trs.amount !== 0) {
-		if (constants.VERIFY_DELEGATE_TRS_RECIPIENT) {
-			return setImmediate(cb, 'Invalid transaction amount');
-		} else {
-			library.logger.error('Invalid transaction amount');
-		}
-	}
+    }
 
-	if (sender.isDelegate) {
-		if (constants.VERIFY_DELEGATE_TRS_RECIPIENT) {
-			return setImmediate(cb, 'Account is already a delegate');
-		} else {
-			library.logger.error('Account is already a delegate');
-		}
-	}
+    if (trs.amount !== 0) {
+        if (constants.VERIFY_DELEGATE_TRS_RECIPIENT) {
+            return setImmediate(cb, 'Invalid transaction amount');
+        }
+        library.logger.error('Invalid transaction amount');
 
-	if (sender.u_isDelegate) {
-		if (constants.VERIFY_DELEGATE_TRS_RECIPIENT) {
-			return setImmediate(cb, 'Account is under process for delegate registration');
-		} else {
-			library.logger.error('Account is under process for delegate registration');
-		}
-	}
+    }
 
-	if (!trs.asset || !trs.asset.delegate) {
-		if (constants.VERIFY_DELEGATE_TRS_RECIPIENT) {
-			return setImmediate(cb, 'Invalid transaction asset');
-		} else {
-			library.logger.error('Invalid transaction asset');
-		}
-	}
+    if (sender.isDelegate) {
+        if (constants.VERIFY_DELEGATE_TRS_RECIPIENT) {
+            return setImmediate(cb, 'Account is already a delegate');
+        }
+        library.logger.error('Account is already a delegate');
 
-	if (!trs.asset.delegate.username) {
-		if (constants.VERIFY_DELEGATE_TRS_RECIPIENT) {
-			return setImmediate(cb, 'Username is undefined');
-		} else {
-			library.logger.error('Username is undefined');
-		}
-	}
+    }
 
-	if (trs.asset.delegate.username !== trs.asset.delegate.username.toLowerCase()) {
-		if (constants.VERIFY_DELEGATE_TRS_RECIPIENT) {
-			return setImmediate(cb, 'Username must be lowercase');
-		} else {
-			library.logger.error('Username must be lowercase');
-		}
-	}
+    if (sender.u_isDelegate) {
+        if (constants.VERIFY_DELEGATE_TRS_RECIPIENT) {
+            return setImmediate(cb, 'Account is under process for delegate registration');
+        }
+        library.logger.error('Account is under process for delegate registration');
 
-	let isAddress = /^(DDK)+[0-9]{1,25}$/ig;
-	let allowSymbols = /^[a-z0-9!@$&_.]+$/g;
+    }
 
-	let username = String(trs.asset.delegate.username).toLowerCase().trim();
+    if (!trs.asset || !trs.asset.delegate) {
+        if (constants.VERIFY_DELEGATE_TRS_RECIPIENT) {
+            return setImmediate(cb, 'Invalid transaction asset');
+        }
+        library.logger.error('Invalid transaction asset');
 
-	if (username === '') {
-		if (constants.VERIFY_DELEGATE_TRS_RECIPIENT) {
-			return setImmediate(cb, 'Empty username');
-		} else {
-			library.logger.error('Empty username');
-		}
-	}
+    }
 
-	if (username.length > 20) {
-		if (constants.VERIFY_DELEGATE_TRS_RECIPIENT) {
-			return setImmediate(cb, 'Username is too long. Maximum is 20 characters');
-		} else {
-			library.logger.error('Username is too long. Maximum is 20 characters');
-		}
-	}
+    if (!trs.asset.delegate.username) {
+        if (constants.VERIFY_DELEGATE_TRS_RECIPIENT) {
+            return setImmediate(cb, 'Username is undefined');
+        }
+        library.logger.error('Username is undefined');
 
-	if (isAddress.test(username)) {
-		return setImmediate(cb, 'Username can not be a potential address');
-	}
+    }
 
-	if (!allowSymbols.test(username)) {
-		if (constants.VERIFY_DELEGATE_TRS_RECIPIENT) {
-			return setImmediate(cb, 'Username can only contain alphanumeric characters with the exception of !@$&_.');
-		} else {
-			library.logger.error('Username can only contain alphanumeric characters with the exception of !@$&_.');
-		}
-	}
+    if (trs.asset.delegate.username !== trs.asset.delegate.username.toLowerCase()) {
+        if (constants.VERIFY_DELEGATE_TRS_RECIPIENT) {
+            return setImmediate(cb, 'Username must be lowercase');
+        }
+        library.logger.error('Username must be lowercase');
 
-	modules.accounts.getAccount({
-		username: username
-	}, function (err, account) {
-		if (err) {
-			return setImmediate(cb, err);
-		}
+    }
 
-		if (account) {
-			return setImmediate(cb, 'Username already exists');
-		}
+    let isAddress = /^(DDK)+[0-9]{1,25}$/ig;
+    let allowSymbols = /^[a-z0-9!@$&_.]+$/g;
 
-		return setImmediate(cb, null, trs);
-	});
+    let username = String(trs.asset.delegate.username).toLowerCase().trim();
+
+    if (username === '') {
+        if (constants.VERIFY_DELEGATE_TRS_RECIPIENT) {
+            return setImmediate(cb, 'Empty username');
+        }
+        library.logger.error('Empty username');
+
+    }
+
+    if (username.length > 20) {
+        if (constants.VERIFY_DELEGATE_TRS_RECIPIENT) {
+            return setImmediate(cb, 'Username is too long. Maximum is 20 characters');
+        }
+        library.logger.error('Username is too long. Maximum is 20 characters');
+
+    }
+
+    if (isAddress.test(username)) {
+        return setImmediate(cb, 'Username can not be a potential address');
+    }
+
+    if (!allowSymbols.test(username)) {
+        if (constants.VERIFY_DELEGATE_TRS_RECIPIENT) {
+            return setImmediate(cb, 'Username can only contain alphanumeric characters with the exception of !@$&_.');
+        }
+        library.logger.error('Username can only contain alphanumeric characters with the exception of !@$&_.');
+
+    }
+
+    modules.accounts.getAccount({
+        username: username
+    }, function (err, account) {
+        if (err) {
+            return setImmediate(cb, err);
+        }
+
+        if (account) {
+            return setImmediate(cb, 'Username already exists');
+        }
+
+        return setImmediate(cb, null, trs);
+    });
 };
 
 Delegate.prototype.verifyUnconfirmed = function (trs, sender, cb) {
-	return setImmediate(cb);
-}
+    return setImmediate(cb);
+};
 
 /**
  * Returns transaction with setImmediate.
@@ -189,7 +191,7 @@ Delegate.prototype.verifyUnconfirmed = function (trs, sender, cb) {
  * @todo delete extra parameter sender.
  */
 Delegate.prototype.process = function (trs, sender, cb) {
-	return setImmediate(cb, null, trs);
+    return setImmediate(cb, null, trs);
 };
 
 /**
@@ -210,19 +212,19 @@ Delegate.prototype.getBytes = function (trs) {
  * @param {function} cb - Callback function.
  */
 Delegate.prototype.apply = function (trs, block, sender, cb) {
-	let data = {
-		address: sender.address,
-		u_isDelegate: 0,
-		isDelegate: 1,
-		vote: 0
-	};
+    const data = {
+        address: sender.address,
+        u_isDelegate: 0,
+        isDelegate: 1,
+        vote: 0
+    };
 
-	if (trs.asset.delegate.username) {
-		data.u_username = null;
-		data.username = trs.asset.delegate.username;
-	}
+    if (trs.asset.delegate.username) {
+        data.u_username = null;
+        data.username = trs.asset.delegate.username;
+    }
 
-    library.db.none(sql.addDelegateVoteRecord, { publicKey: trs.senderPublicKey.toString('hex') }).then(function () {
+    library.db.none(sql.addDelegateVoteRecord, { publicKey: trs.senderPublicKey.toString('hex') }).then(() => {
         modules.accounts.setAccountAndGet(data, cb);
     });
 };
@@ -236,19 +238,19 @@ Delegate.prototype.apply = function (trs, block, sender, cb) {
  * @todo delete extra parameter block.
  */
 Delegate.prototype.undo = function (trs, block, sender, cb) {
-	let data = {
-		address: sender.address,
-		u_isDelegate: 1,
-		isDelegate: 0,
-		vote: 0
-	};
+    const data = {
+        address: sender.address,
+        u_isDelegate: 1,
+        isDelegate: 0,
+        vote: 0
+    };
 
-	if (!sender.nameexist && trs.asset.delegate.username) {
-		data.username = null;
-		data.u_username = trs.asset.delegate.username;
-	}
+    if (!sender.nameexist && trs.asset.delegate.username) {
+        data.username = null;
+        data.u_username = trs.asset.delegate.username;
+    }
 
-    library.db.none(sql.removeDelegateVoteRecord, { publicKey: trs.senderPublicKey.toString('hex') }).then(function () {
+    library.db.none(sql.removeDelegateVoteRecord, { publicKey: trs.senderPublicKey.toString('hex') }).then(() => {
         modules.accounts.setAccountAndGet(data, cb);
     });
 };
@@ -261,18 +263,18 @@ Delegate.prototype.undo = function (trs, block, sender, cb) {
  * @param {function} cb - Callback function.
  */
 Delegate.prototype.applyUnconfirmed = function (trs, sender, cb) {
-	let data = {
-		address: sender.address,
-		u_isDelegate: 1,
-		isDelegate: 0
-	};
+    const data = {
+        address: sender.address,
+        u_isDelegate: 1,
+        isDelegate: 0
+    };
 
-	if (trs.asset.delegate.username) {
-		data.username = null;
-		data.u_username = trs.asset.delegate.username;
-	}
+    if (trs.asset.delegate.username) {
+        data.username = null;
+        data.u_username = trs.asset.delegate.username;
+    }
 
-	modules.accounts.setAccountAndGet(data, cb);
+    modules.accounts.setAccountAndGet(data, cb);
 };
 
 /**
@@ -284,30 +286,30 @@ Delegate.prototype.applyUnconfirmed = function (trs, sender, cb) {
  * @param {function} cb - Callback function.
  */
 Delegate.prototype.undoUnconfirmed = function (trs, sender, cb) {
-	let data = {
-		address: sender.address,
-		u_isDelegate: 0,
-		isDelegate: 0
-	};
+    const data = {
+        address: sender.address,
+        u_isDelegate: 0,
+        isDelegate: 0
+    };
 
-	if (trs.asset.delegate.username) {
-		data.username = null;
-		data.u_username = null;
-	}
+    if (trs.asset.delegate.username) {
+        data.username = null;
+        data.u_username = null;
+    }
 
-	modules.accounts.setAccountAndGet(data, cb);
+    modules.accounts.setAccountAndGet(data, cb);
 };
 
 Delegate.prototype.schema = {
-	id: 'Delegate',
-	type: 'object',
-	properties: {
-		publicKey: {
-			type: 'string',
-			format: 'publicKey'
-		}
-	},
-	required: ['publicKey']
+    id: 'Delegate',
+    type: 'object',
+    properties: {
+        publicKey: {
+            type: 'string',
+            format: 'publicKey'
+        }
+    },
+    required: ['publicKey']
 };
 
 /**
@@ -317,15 +319,13 @@ Delegate.prototype.schema = {
  * @throws {string} Failed to validate delegate schema.
  */
 Delegate.prototype.objectNormalize = function (trs) {
-	let report = library.schema.validate(trs.asset.delegate, Delegate.prototype.schema);
+    const report = library.schema.validate(trs.asset.delegate, Delegate.prototype.schema);
 
-	if (!report) {
-		throw 'Failed to validate delegate schema: ' + this.scope.schema.getLastErrors().map(function (err) {
-			return err.message;
-		}).join(', ');
-	}
+    if (!report) {
+        throw `Failed to validate delegate schema: ${this.scope.schema.getLastErrors().map(err => err.message).join(', ')}`;
+    }
 
-	return trs;
+    return trs;
 };
 
 /**
@@ -334,24 +334,23 @@ Delegate.prototype.objectNormalize = function (trs) {
  * @returns {null|Object} Null if no d_username, otherwise created delegate object.
  */
 Delegate.prototype.dbRead = function (raw) {
-	if (!raw.d_username) {
-		return null;
-	} else {
-		let delegate = {
-			username: raw.d_username,
-			publicKey: raw.t_senderPublicKey,
-			address: raw.t_senderId
-		};
+    if (!raw.d_username) {
+        return null;
+    }
+    const delegate = {
+        username: raw.d_username,
+        publicKey: raw.t_senderPublicKey,
+        address: raw.t_senderId
+    };
 
-		return {delegate: delegate};
-	}
+    return { delegate };
 };
 
 Delegate.prototype.dbTable = 'delegates';
 
 Delegate.prototype.dbFields = [
-	'username',
-	'transactionId'
+    'username',
+    'transactionId'
 ];
 
 /**
@@ -360,14 +359,14 @@ Delegate.prototype.dbFields = [
  * @returns {Object} {table:delegates, username and transaction id}.
  */
 Delegate.prototype.dbSave = function (trs) {
-	return {
-		table: this.dbTable,
-		fields: this.dbFields,
-		values: {
-			username: trs.asset.delegate.username,
-			transactionId: trs.id
-		}
-	};
+    return {
+        table: this.dbTable,
+        fields: this.dbFields,
+        values: {
+            username: trs.asset.delegate.username,
+            transactionId: trs.id
+        }
+    };
 };
 
 /**
@@ -377,17 +376,16 @@ Delegate.prototype.dbSave = function (trs) {
  * @return {Boolean} logic based on trs signatures and sender multisignatures.
  */
 Delegate.prototype.ready = function (trs, sender) {
-	if (Array.isArray(sender.multisignatures) && sender.multisignatures.length) {
-		if (!Array.isArray(trs.signatures)) {
-			return false;
-		}
-		return trs.signatures.length >= sender.multimin;
-	} else {
-		return true;
-	}
+    if (Array.isArray(sender.multisignatures) && sender.multisignatures.length) {
+        if (!Array.isArray(trs.signatures)) {
+            return false;
+        }
+        return trs.signatures.length >= sender.multimin;
+    }
+    return true;
 };
 
 // Export
 module.exports = Delegate;
 
-/*************************************** END OF FILE *************************************/
+/** ************************************* END OF FILE ************************************ */

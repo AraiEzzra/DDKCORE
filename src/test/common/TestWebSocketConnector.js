@@ -5,25 +5,25 @@ const URL_DEFAULT = `ws://${env['HOST']}:${env['RPC_PORT']}/v1`;
 
 class TestWebSocketConnector {
 
-  constructor (url) {
-    this._ws = new WebSocket(url || URL_DEFAULT);
-  }
+    constructor(url) {
+        this._ws = new WebSocket(url || URL_DEFAULT);
+    }
 
-  get ws () {
-    return this._ws;
-  }
+    get ws() {
+        return this._ws;
+    }
 
-  open (cb) {
-    this.ws.on('open', cb);
-  }
+    open(cb) {
+        this.ws.on('open', cb);
+    }
 
-  call (methodName, methodParams, cb) {
-    this.ws.call(methodName, methodParams).then(cb);
-  }
+    call(methodName, methodParams, cb) {
+        this.ws.call(methodName, methodParams).then(cb);
+    }
 
-  close () {
-    this.ws.close();
-  }
+    close() {
+        this.ws.close();
+    }
 
 }
 

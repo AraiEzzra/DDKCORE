@@ -4,6 +4,7 @@
 
 BEGIN;
 
-ALTER TABLE delegates ADD CONSTRAINT delegates_unique UNIQUE ("username", "transactionId");
+ALTER TABLE delegates
+  ADD CONSTRAINT delegates_unique UNIQUE ("username", "transactionId");
 
 COMMIT;

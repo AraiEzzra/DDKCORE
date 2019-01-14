@@ -15,17 +15,17 @@
  * @returns {Object}
  */
 module.exports = {
-  REFERRAL: 0,
-  SEND: 10,
-  SIGNATURE: 20,
-  DELEGATE: 30,
-  STAKE: 40,
-  SENDSTAKE: 50,
-  VOTE: 60,
-  MULTI: 70,
-  DAPP: 80,
-  IN_TRANSFER: 90,
-  OUT_TRANSFER: 100,
+    REFERRAL: 0,
+    SEND: 10,
+    SIGNATURE: 20,
+    DELEGATE: 30,
+    STAKE: 40,
+    SENDSTAKE: 50,
+    VOTE: 60,
+    MULTI: 70,
+    DAPP: 80,
+    IN_TRANSFER: 90,
+    OUT_TRANSFER: 100,
 };
 
-/*************************************** END OF FILE *************************************/
+/** ************************************* END OF FILE ************************************ */

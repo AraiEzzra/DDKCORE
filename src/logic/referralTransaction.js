@@ -1,8 +1,8 @@
-'use strict';
-let constants = require('../helpers/constants.js');
+const constants = require('../helpers/constants.js');
 
 // Private fields
-let modules, self;
+let modules,
+    self;
 
 /**
  * Main transfer logic.
@@ -12,7 +12,7 @@ let modules, self;
  */
 // Constructor
 function ReferTransfer() {
-	self = this;
+    self = this;
 }
 
 // Public methods
@@ -22,10 +22,10 @@ function ReferTransfer() {
  * @param {Rounds} rounds
  */
 ReferTransfer.prototype.bind = function (accounts, rounds) {
-	modules = {
-		accounts: accounts,
-		rounds: rounds,
-	};
+    modules = {
+        accounts,
+        rounds,
+    };
 };
 
 /**
@@ -35,10 +35,10 @@ ReferTransfer.prototype.bind = function (accounts, rounds) {
  * @return {transaction} trs with assigned data
  */
 ReferTransfer.prototype.create = function (data, trs) {
-	trs.recipientId = data.recipientId;
-	trs.amount = data.amount;
-	trs.trsName = data.trsName;
-	return trs;
+    trs.recipientId = data.recipientId;
+    trs.amount = data.amount;
+    trs.trsName = data.trsName;
+    return trs;
 };
 /**
  * Returns send fees from constants.
@@ -47,7 +47,6 @@ ReferTransfer.prototype.create = function (data, trs) {
  * @return {number} fee
  */
 ReferTransfer.prototype.calculateFee = function (trs, sender) {
-
     return 0;
 };
 
@@ -59,40 +58,38 @@ ReferTransfer.prototype.calculateFee = function (trs, sender) {
  * @return {setImmediateCallback} errors | trs
  */
 ReferTransfer.prototype.verify = function (trs, sender, cb) {
-	if (!trs.recipientId) {
-		return setImmediate(cb, 'Missing recipient');
-	}
+    if (!trs.recipientId) {
+        return setImmediate(cb, 'Missing recipient');
+    }
 
-	if (trs.amount <= 0) {
-		return setImmediate(cb, 'Invalid transaction amount');
-	}
+    if (trs.amount <= 0) {
+        return setImmediate(cb, 'Invalid transaction amount');
+    }
 
-	if(!trs.reward) {
-		return setImmediate(cb,'Invalid reward percentage');
-	}
+    if (!trs.reward) {
+        return setImmediate(cb, 'Invalid reward percentage');
+    }
 
-	let reward_type = trs.reward.indexOf('level');
+    const reward_type = trs.reward.indexOf('level');
 
-	if(reward_type != -1) {
-		let split = trs.reward.split('&');
-		let level = split[0];
-		let rewardPercent = split[1];
-		let data = constants.validateLevelReward;
-		if(data[level] !== parseFloat(rewardPercent)) {
-			return setImmediate(cb,'Invalid percentage for referral chain reward');
-		}
-	} else {
-		if(parseInt(trs.reward) != constants.stakeReward) {
-			return setImmediate(cb,'Invalid percentage for referral stake reward');
-		}
-	}
+    if (reward_type != -1) {
+        const split = trs.reward.split('&');
+        const level = split[0];
+        const rewardPercent = split[1];
+        const data = constants.validateLevelReward;
+        if (data[level] !== parseFloat(rewardPercent)) {
+            return setImmediate(cb, 'Invalid percentage for referral chain reward');
+        }
+    } else if (parseInt(trs.reward) != constants.stakeReward) {
+        return setImmediate(cb, 'Invalid percentage for referral stake reward');
+    }
 
-	return setImmediate(cb, null, trs);
+    return setImmediate(cb, null, trs);
 };
 
 ReferTransfer.prototype.verifyUnconfirmed = function (trs, sender, cb) {
-	return setImmediate(cb);
-}
+    return setImmediate(cb);
+};
 
 /**
  * @param {transaction} trs
@@ -101,7 +98,7 @@ ReferTransfer.prototype.verifyUnconfirmed = function (trs, sender, cb) {
  * @return {setImmediateCallback} cb, null, trs
  */
 ReferTransfer.prototype.process = function (trs, sender, cb) {
-	return setImmediate(cb, null, trs);
+    return setImmediate(cb, null, trs);
 };
 
 /**
@@ -109,7 +106,7 @@ ReferTransfer.prototype.process = function (trs, sender, cb) {
  * @return {null}
  */
 ReferTransfer.prototype.getBytes = function (trs) {
-	return Buffer.from([]);
+    return Buffer.from([]);
 };
 
 /**
@@ -125,21 +122,19 @@ ReferTransfer.prototype.getBytes = function (trs) {
  * @return {setImmediateCallback} error, cb
  */
 ReferTransfer.prototype.apply = function (trs, block, sender, cb) {
-	modules.accounts.setAccountAndGet({address: trs.recipientId}, function (err, recipient) {
-		if (err) {
-			return setImmediate(cb, err);
-		}
+    modules.accounts.setAccountAndGet({ address: trs.recipientId }, (err, recipient) => {
+        if (err) {
+            return setImmediate(cb, err);
+        }
 
-		modules.accounts.mergeAccountAndGet({
-			address: trs.recipientId,
-			balance: trs.amount,
-			u_balance: trs.amount,
-			blockId: block.id,
-			round: modules.rounds.calc(block.height)
-		}, function (err) {
-			return setImmediate(cb, err);
-		});
-	});
+        modules.accounts.mergeAccountAndGet({
+            address: trs.recipientId,
+            balance: trs.amount,
+            u_balance: trs.amount,
+            blockId: block.id,
+            round: modules.rounds.calc(block.height)
+        }, err => setImmediate(cb, err));
+    });
 };
 
 /**
@@ -155,20 +150,18 @@ ReferTransfer.prototype.apply = function (trs, block, sender, cb) {
  * @return {setImmediateCallback} error, cb
  */
 ReferTransfer.prototype.undo = function (trs, block, sender, cb) {
-	modules.accounts.setAccountAndGet({address: trs.recipientId}, function (err, recipient) {
-		if (err) {
-			return setImmediate(cb, err);
-		}
-		modules.accounts.mergeAccountAndGet({
-			address: trs.recipientId,
-			balance: -trs.amount,
-			u_balance: -trs.amount,
-			blockId: block.id,
-			round: modules.rounds.calc(block.height)
-		}, function (err) {
-			return setImmediate(cb, err);
-		});
-	});
+    modules.accounts.setAccountAndGet({ address: trs.recipientId }, (err, recipient) => {
+        if (err) {
+            return setImmediate(cb, err);
+        }
+        modules.accounts.mergeAccountAndGet({
+            address: trs.recipientId,
+            balance: -trs.amount,
+            u_balance: -trs.amount,
+            blockId: block.id,
+            round: modules.rounds.calc(block.height)
+        }, err => setImmediate(cb, err));
+    });
 };
 
 /**
@@ -178,7 +171,7 @@ ReferTransfer.prototype.undo = function (trs, block, sender, cb) {
  * @return {setImmediateCallback} cb
  */
 ReferTransfer.prototype.applyUnconfirmed = function (trs, sender, cb) {
-	return setImmediate(cb);
+    return setImmediate(cb);
 };
 
 /**
@@ -188,7 +181,7 @@ ReferTransfer.prototype.applyUnconfirmed = function (trs, sender, cb) {
  * @return {setImmediateCallback} cb
  */
 ReferTransfer.prototype.undoUnconfirmed = function (trs, sender, cb) {
-	return setImmediate(cb);
+    return setImmediate(cb);
 };
 
 /**
@@ -197,8 +190,8 @@ ReferTransfer.prototype.undoUnconfirmed = function (trs, sender, cb) {
  * @return {transaction}
  */
 ReferTransfer.prototype.objectNormalize = function (trs) {
-	delete trs.blockId;
-	return trs;
+    delete trs.blockId;
+    return trs;
 };
 
 /**
@@ -206,7 +199,7 @@ ReferTransfer.prototype.objectNormalize = function (trs) {
  * @return {null}
  */
 ReferTransfer.prototype.dbRead = function (raw) {
-	return null;
+    return null;
 };
 
 /**
@@ -214,7 +207,7 @@ ReferTransfer.prototype.dbRead = function (raw) {
  * @return {null}
  */
 ReferTransfer.prototype.dbSave = function (trs) {
-	return null;
+    return null;
 };
 
 /**
@@ -225,14 +218,13 @@ ReferTransfer.prototype.dbSave = function (trs) {
  * sender multimin or there are not sender multisignatures.
  */
 ReferTransfer.prototype.ready = function (trs, sender) {
-	if (Array.isArray(sender.multisignatures) && sender.multisignatures.length) {
-		if (!Array.isArray(trs.signatures)) {
-			return false;
-		}
-		return trs.signatures.length >= sender.multimin;
-	} else {
-		return true;
-	}
+    if (Array.isArray(sender.multisignatures) && sender.multisignatures.length) {
+        if (!Array.isArray(trs.signatures)) {
+            return false;
+        }
+        return trs.signatures.length >= sender.multimin;
+    }
+    return true;
 };
 
 // Export

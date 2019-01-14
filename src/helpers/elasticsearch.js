@@ -1,4 +1,5 @@
 const utils = require('../utils');
+
 const limit = 5000;
 const dbTables = [
     {
@@ -22,29 +23,29 @@ const iterate = async (db, logger, table, limit, rowsAcc, bulkAcc, lastValue) =>
             {
                 tableName: table.tableName,
                 fieldName: table.fieldName,
-                lastValue: lastValue,
-                limit: limit
+                lastValue,
+                limit
             }
         );
         if (rowsAcc.length < 1) {
-            return ;
+            return;
         }
         bulkAcc = utils.makeBulk(rowsAcc, table.tableName);
         await utils.indexall(bulkAcc, table.tableName);
         lastValue = rowsAcc[rowsAcc.length - 1][table.fieldName];
-    } catch(err) {
-        logger.error('elasticsearch indexing error : '+ err);
+    } catch (err) {
+        logger.error(`elasticsearch indexing error : ${err}`);
     }
 
     await iterate(db, logger, table, limit, rowsAcc, bulkAcc, lastValue);
 };
 
 module.exports.sync = (db, logger) => {
-    let promises = [];
-    dbTables.forEach(function (table) {
+    const promises = [];
+    dbTables.forEach((table) => {
         promises.push(iterate(db, logger, table, limit, [], [], ''));
     });
-    Promise.all(promises).then( () => {
+    Promise.all(promises).then(() => {
         logger.info('Elasticsearch indexed ok');
     });
 };

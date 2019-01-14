@@ -1,6 +1,6 @@
-let bignum = require('./bignum');
-let slots = require('./slots');
-let exceptions = require('./exceptions');
+const bignum = require('./bignum');
+const slots = require('./slots');
+const exceptions = require('./exceptions');
 
 /**
  * Sets round fees and rewards
@@ -11,20 +11,20 @@ let exceptions = require('./exceptions');
  * @param {Object} scope
  */
 // Constructor
-function RoundChanges (scope) {
-	this.roundFees = Math.floor(scope.roundFees) || 0;
-	this.roundRewards = (scope.roundRewards || []);
+function RoundChanges(scope) {
+    this.roundFees = Math.floor(scope.roundFees) || 0;
+    this.roundRewards = (scope.roundRewards || []);
 
-	// Apply exception for round if required
-	if (exceptions.rounds[scope.round]) {
-		// Apply rewards factor
-		this.roundRewards.forEach(function (reward, index) {
-			this.roundRewards[index] = new bignum(reward.toPrecision(15)).times(exceptions.rounds[scope.round].rewards_factor).floor();
-		}.bind(this));
+    // Apply exception for round if required
+    if (exceptions.rounds[scope.round]) {
+        // Apply rewards factor
+        this.roundRewards.forEach((reward, index) => {
+            this.roundRewards[index] = new bignum(reward.toPrecision(15)).times(exceptions.rounds[scope.round].rewards_factor).floor();
+        });
 
-		// Apply fees factor and bonus
-		this.roundFees = new bignum(this.roundFees.toPrecision(15)).times(exceptions.rounds[scope.round].fees_factor).plus(exceptions.rounds[scope.round].fees_bonus).floor();
-	}
+        // Apply fees factor and bonus
+        this.roundFees = new bignum(this.roundFees.toPrecision(15)).times(exceptions.rounds[scope.round].fees_factor).plus(exceptions.rounds[scope.round].fees_bonus).floor();
+    }
 }
 
 // Public methods
@@ -37,18 +37,18 @@ function RoundChanges (scope) {
  * @return {Object} Contains fees, feesRemaining, rewards, balance
  */
 RoundChanges.prototype.at = function (index) {
-	let fees = new bignum(this.roundFees.toPrecision(15)).dividedBy(slots.delegates).floor();
-	let feesRemaining = new bignum(this.roundFees.toPrecision(15)).minus(fees.times(slots.delegates));
-	let rewards = new bignum(this.roundRewards[index].toPrecision(15)).floor() || 0;
+    const fees = new bignum(this.roundFees.toPrecision(15)).dividedBy(slots.delegates).floor();
+    const feesRemaining = new bignum(this.roundFees.toPrecision(15)).minus(fees.times(slots.delegates));
+    const rewards = new bignum(this.roundRewards[index].toPrecision(15)).floor() || 0;
 
-	return {
-		fees: Number(fees.toFixed()),
-		feesRemaining: Number(feesRemaining.toFixed()),
-		rewards: Number(rewards.toFixed()),
-		balance: Number(fees.add(rewards).toFixed())
-	};
+    return {
+        fees: Number(fees.toFixed()),
+        feesRemaining: Number(feesRemaining.toFixed()),
+        rewards: Number(rewards.toFixed()),
+        balance: Number(fees.add(rewards).toFixed())
+    };
 };
 
 module.exports = RoundChanges;
 
-/*************************************** END OF FILE *************************************/
+/** ************************************* END OF FILE ************************************ */

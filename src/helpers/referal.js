@@ -1,20 +1,18 @@
-'use strict';
-
-/** 
+/**
  * @author - Satish Joshi
  */
 
-let mailServices = require('./postmark');
-let async = require('async');
-let sql = require('../sql/referal_sql');
-let OrderBy = require('./orderBy.js');
+const mailServices = require('./postmark');
+const async = require('async');
+const sql = require('../sql/referal_sql');
+const OrderBy = require('./orderBy.js');
 
 let library = {},
     __private = {};
 
 exports.Referals = function (scope) {
     library = scope;
-}
+};
 
 /**
  * Get filtered list of rewards history
@@ -58,7 +56,7 @@ __private.list = function (filter, cb) {
         return setImmediate(cb, 'Invalid limit. Maximum is 100');
     }
 
-    let orderBy = OrderBy(
+    const orderBy = OrderBy(
         (filter.orderBy || 'reward_time:desc'), {
             sortFields: sql.sortFields
         }
@@ -69,54 +67,51 @@ __private.list = function (filter, cb) {
     }
 
     library.db.query(sql.list({
-        where: where,
+        where,
         sortField: orderBy.sortField,
         sortMethod: orderBy.sortMethod
-    }), params).then(function (rows) {
+    }), params).then((rows) => {
         let count = 0;
         if (rows && rows.length !== 0) {
             count = Number(rows[0].total_rows);
         }
 
-        let data = {
+        const data = {
             rewards: rows,
-            count: count
+            count
         };
 
         return setImmediate(cb, null, data);
-    }).catch(function (err) {
+    }).catch((err) => {
         library.logger.error(err.stack);
         return setImmediate(cb, 'Rewards#list error');
     });
-
 };
 
 module.exports.api = function (app) {
-
-    /** 
+    /**
      * Referral Link sharing through email with the help of Postmark.
      * @param {req} - contains the referral link and email id.
-     * @param {res} - return the response with status of success or failure. 
+     * @param {res} - return the response with status of success or failure.
      */
 
-    app.post('/referral/sendEmail', function (req, res) {
-
-        let referral_link = req.body.referlink;
-        let mailOptions = {
+    app.post('/referral/sendEmail', (req, res) => {
+        const referral_link = req.body.referlink;
+        const mailOptions = {
             From: library.config.mailFrom, // sender address
-            To: req.body.email, //req.body.email list of receivers
+            To: req.body.email, // req.body.email list of receivers
             TemplateId: 8257936,
             TemplateModel: {
-                "person": {
-                    "username": req.body.email,
-                    "referral_link": referral_link
+                person: {
+                    username: req.body.email,
+                    referral_link
                 }
             }
         };
 
-        mailServices.sendEmailWithTemplate(mailOptions, function (err) {
+        mailServices.sendEmailWithTemplate(mailOptions, (err) => {
             if (err) {
-                library.logger.error('Send Email Error : ' + err.stack);
+                library.logger.error(`Send Email Error : ${err.stack}`);
                 return res.status(400).json({
                     success: false,
                     error: err
@@ -129,16 +124,15 @@ module.exports.api = function (app) {
         });
     });
 
-    /** 
+    /**
      * Getting the stats of referrals done with including it's referral chain.
      * @param {req} - contains the referrer address.
      * @param {res} - return the response with status of success or failure.
      * @returns {hierarchy} - contains the list of referals with its level info.
      */
 
-    app.post('/referral/list', function (req, res) {
-
-        let hierarchy = [];
+    app.post('/referral/list', (req, res) => {
+        const hierarchy = [];
 
         let referList = [],
             level = 1,
@@ -147,19 +141,16 @@ module.exports.api = function (app) {
         function findSponsors(arr, cb) {
             if (level <= 15) {
                 library.db.query(sql.findReferralList, {
-                        refer_list: arr
-                    })
-                    .then(function (resp) {
+                    refer_list: arr
+                })
+                    .then((resp) => {
                         referList.length = 0;
                         if (resp.length) {
-
-                            async.each(resp, function (user, callback) {
-
+                            async.each(resp, (user, callback) => {
                                 referList.push(user.address);
 
                                 callback();
-
-                            }, function (err) {
+                            }, (err) => {
                                 if (err) {
                                     return setImmediate(cb, err);
                                 }
@@ -177,9 +168,7 @@ module.exports.api = function (app) {
                             return setImmediate(cb, null);
                         }
                     })
-                    .catch(function (err) {
-                        return setImmediate(cb, err);
-                    });
+                    .catch(err => setImmediate(cb, err));
             } else {
                 return setImmediate(cb, null);
             }
@@ -188,20 +177,19 @@ module.exports.api = function (app) {
         // Intitally the user whose chain we have to find.
         referList = [req.body.referrer_address];
 
-        findSponsors(referList, function (err) {
+        findSponsors(referList, (err) => {
             if (err) {
-                library.logger.error('Referral List Error : ' + err.stack);
+                library.logger.error(`Referral List Error : ${err.stack}`);
                 return res.status(400).json({
                     success: false,
                     error: err
                 });
             }
             let key = 0;
-            async.eachSeries(hierarchy, function (status, callback) {
-
+            async.eachSeries(hierarchy, (status, callback) => {
                 library.db.query(sql.findTotalStakeVolume, {
                     address_list: status.addressList
-                }).then(function (resp) {
+                }).then((resp) => {
                     if (!resp[0].freezed_amount) {
                         hierarchy[key].totalStakeVolume = 0;
                     } else {
@@ -209,12 +197,8 @@ module.exports.api = function (app) {
                     }
                     key++;
                     callback();
-                }).catch(function (err) {
-                    return callback(err);
-                });
-
-
-            }, function (err) {
+                }).catch(err => callback(err));
+            }, (err) => {
                 if (err) {
                     return setImmediate(callback, err);
                 }
@@ -223,12 +207,8 @@ module.exports.api = function (app) {
                     success: true,
                     SponsorList: hierarchy
                 });
-
             });
-
-
         });
-
     });
 
     /**
@@ -239,9 +219,8 @@ module.exports.api = function (app) {
      * @returns {count} - It contains the total count of rewards received.
      */
 
-    app.post('/referral/rewardHistory', function (req, res) {
-
-        __private.list(req.body, function (err, data) {
+    app.post('/referral/rewardHistory', (req, res) => {
+        __private.list(req.body, (err, data) => {
             if (err) {
                 return res.status(400).json({
                     success: false,
@@ -253,7 +232,6 @@ module.exports.api = function (app) {
                 SponsorList: data.rewards,
                 count: data.count
             });
-
         });
     });
 
@@ -264,38 +242,34 @@ module.exports.api = function (app) {
      * @returns {sponsorStatus} - Returns the status of stake order.
      */
 
-    app.post('/sponsor/stakeStatus', function (req, res) {
-        let address = req.body.address;
+    app.post('/sponsor/stakeStatus', (req, res) => {
+        const address = req.body.address;
         let stats = [],
-            addressList, i = 0;
+            addressList,
+            i = 0;
 
         library.db.query(sql.findSponsorStakeStatus, {
             sponsor_address: address
-        }).then(function (stake_status) {
+        }).then((stake_status) => {
+            addressList = stake_status.map(item => item.senderId);
 
-            addressList = stake_status.map(function (item) {
-                return item['senderId'];
-            });
-
-            async.each(address, function (user, callback) {
-
+            async.each(address, (user, callback) => {
                 if (addressList.indexOf(user) != -1) {
                     stats[i] = {
                         address: user,
-                        status: "Active"
+                        status: 'Active'
                     };
                 } else {
                     stats[i] = {
                         address: user,
-                        status: "Inactive"
-                    }
+                        status: 'Inactive'
+                    };
                 }
 
                 i++;
 
                 callback();
-
-            }, function (err) {
+            }, (err) => {
                 if (err) {
                     library.logger.error(err.stack);
                     return res.status(400).json({
@@ -309,8 +283,7 @@ module.exports.api = function (app) {
                     sponsorStatus: stats,
                 });
             });
-
-        }).catch(function (err) {
+        }).catch((err) => {
             library.logger.error(err.stack);
             return res.status(400).json({
                 success: false,
@@ -318,5 +291,4 @@ module.exports.api = function (app) {
             });
         });
     });
-
-}
+};

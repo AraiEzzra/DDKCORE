@@ -9,30 +9,32 @@ const constants = require('../../helpers/constants.js');
 const sql = require('../../sql/blocks.js');
 const exceptions = require('../../helpers/exceptions.js');
 
-let modules, library, self;
+let modules,
+    library,
+    self;
 const __private = {};
 __private.lastNBlockIds = [];
 
 __private.blockReward = new BlockReward();
 
 function Verify(logger, block, transaction, db, config) {
-  library = {
-    logger: logger,
-    db: db,
-    logic: {
-      block: block,
-      transaction: transaction,
-    },
-    config: {
-      loading: {
-        snapshotRound: config.loading.snapshotRound,
-      },
-    },
-  };
-  self = this;
+    library = {
+        logger,
+        db,
+        logic: {
+            block,
+            transaction,
+        },
+        config: {
+            loading: {
+                snapshotRound: config.loading.snapshotRound,
+            },
+        },
+    };
+    self = this;
 
-  library.logger.trace('Blocks->Verify: Submodule initialized.');
-  return self;
+    library.logger.trace('Blocks->Verify: Submodule initialized.');
+    return self;
 }
 
 /**
@@ -49,50 +51,50 @@ function Verify(logger, block, transaction, db, config) {
  * @return {Object}   cb.err Error if occurred
  */
 __private.checkTransaction = function (block, transaction, checkExists, cb) {
-  async.waterfall([
-    function getTransactionId(waterCb) {
-      try {
-        // Calculate transaction ID
-        // FIXME: Can have poor performance, because of hash cancluation
-        transaction.id = library.logic.transaction.getId(transaction);
-      } catch (e) {
-        return setImmediate(waterCb, e.toString());
-      }
-      // Apply block ID to transaction
-      transaction.blockId = block.id;
-      return setImmediate(waterCb);
-    },
-    function getAccount(waterCb) {
-      // Get account from database if any (otherwise cold wallet).
-      // DATABASE: read only
-      modules.accounts.setAccountAndGet({
-          publicKey: transaction.senderPublicKey
-      }, waterCb);
-    },
-    function verifyTransaction(sender, waterCb) {
-      // Check if transaction id valid against database state (mem_* tables).
-      // DATABASE: read only
-      library.logic.transaction.verify({
-        trs: transaction,
-        sender,
-        checkExists,
-        cb: waterCb,
-      });
-    }
-  ], function (err) {
-    if (err && err.match(/Transaction is already confirmed/)) {
-      // Fork: Transaction already confirmed.
-      modules.delegates.fork(block, 2);
-      // Undo the offending transaction.
-      // DATABASE: write
-      modules.transactions.undoUnconfirmed(transaction, function (err2) {
-        modules.transactions.removeUnconfirmedTransaction(transaction.id);
-        return setImmediate(cb, err2 || err);
-      });
-    } else {
-      return setImmediate(cb, err);
-    }
-  });
+    async.waterfall([
+        function getTransactionId(waterCb) {
+            try {
+                // Calculate transaction ID
+                // FIXME: Can have poor performance, because of hash cancluation
+                transaction.id = library.logic.transaction.getId(transaction);
+            } catch (e) {
+                return setImmediate(waterCb, e.toString());
+            }
+            // Apply block ID to transaction
+            transaction.blockId = block.id;
+            return setImmediate(waterCb);
+        },
+        function getAccount(waterCb) {
+            // Get account from database if any (otherwise cold wallet).
+            // DATABASE: read only
+            modules.accounts.setAccountAndGet({
+                publicKey: transaction.senderPublicKey
+            }, waterCb);
+        },
+        function verifyTransaction(sender, waterCb) {
+            // Check if transaction id valid against database state (mem_* tables).
+            // DATABASE: read only
+            library.logic.transaction.verify({
+                trs: transaction,
+                sender,
+                checkExists,
+                cb: waterCb,
+            });
+        }
+    ], (err) => {
+        if (err && err.match(/Transaction is already confirmed/)) {
+            // Fork: Transaction already confirmed.
+            modules.delegates.fork(block, 2);
+            // Undo the offending transaction.
+            // DATABASE: write
+            modules.transactions.undoUnconfirmed(transaction, (err2) => {
+                modules.transactions.removeUnconfirmedTransaction(transaction.id);
+                return setImmediate(cb, err2 || err);
+            });
+        } else {
+            return setImmediate(cb, err);
+        }
+    });
 };
 
 /**
@@ -106,9 +108,9 @@ __private.checkTransaction = function (block, transaction, checkExists, cb) {
  * @return {Object}  block Target block
  */
 __private.setHeight = function (block, lastBlock) {
-  block.height = lastBlock.height + 1;
+    block.height = lastBlock.height + 1;
 
-  return block;
+    return block;
 };
 
 /**
@@ -124,31 +126,31 @@ __private.setHeight = function (block, lastBlock) {
  * @return {Array}   result.errors Array of validation errors
  */
 __private.verifySignature = function (block, result) {
-  let valid;
+    let valid;
 
-  try {
-    valid = library.logic.block.verifySignature(block);
-  } catch (e) {
-    if (constants.VERIFY_BLOCK_SIGNATURE) {
-      result.errors.push(e.toString());
-    } else {
-      library.logger.error(e.toString());
+    try {
+        valid = library.logic.block.verifySignature(block);
+    } catch (e) {
+        if (constants.VERIFY_BLOCK_SIGNATURE) {
+            result.errors.push(e.toString());
+        } else {
+            library.logger.error(e.toString());
+        }
     }
-  }
 
-  if (!valid) {
-    // FIXME
-    // https://trello.com/c/4maz5nyk/144-failed-to-verify-block-signature
-    if (block.height > constants.MASTER_NODE_MIGRATED_BLOCK) {
-      if (constants.VERIFY_BLOCK_SIGNATURE) {
-        result.errors.push('Failed to verify block signature');
-      } else {
-        library.logger.error('Failed to verify block signature');
-      }
+    if (!valid) {
+        // FIXME
+        // https://trello.com/c/4maz5nyk/144-failed-to-verify-block-signature
+        if (block.height > constants.MASTER_NODE_MIGRATED_BLOCK) {
+            if (constants.VERIFY_BLOCK_SIGNATURE) {
+                result.errors.push('Failed to verify block signature');
+            } else {
+                library.logger.error('Failed to verify block signature');
+            }
+        }
     }
-  }
 
-  return result;
+    return result;
 };
 
 /**
@@ -164,15 +166,15 @@ __private.verifySignature = function (block, result) {
  * @return {Array}   result.errors Array of validation errors
  */
 __private.verifyPreviousBlock = function (block, result) {
-  if (!block.previousBlock && block.height !== 1) {
-    if (constants.VERIFY_PREVIOUS_BLOCK) {
-      result.errors.push('Invalid previous block');
-    } else {
-      library.logger.error('Invalid previous block');
+    if (!block.previousBlock && block.height !== 1) {
+        if (constants.VERIFY_PREVIOUS_BLOCK) {
+            result.errors.push('Invalid previous block');
+        } else {
+            library.logger.error('Invalid previous block');
+        }
     }
-  }
 
-  return result;
+    return result;
 };
 
 /**
@@ -187,15 +189,15 @@ __private.verifyPreviousBlock = function (block, result) {
  * @returns {Array} result.errors - Array of validation errors
  */
 __private.verifyAgainstLastNBlockIds = function (block, result) {
-  if (__private.lastNBlockIds.indexOf(block.id) !== -1) {
-    if (constants.VERIFY_AGAINST_LAST_N_BLOCK_IDS) {
-      result.errors.push('Block already exists in chain');
-    } else {
-      library.logger.error('Block already exists in chain');
+    if (__private.lastNBlockIds.indexOf(block.id) !== -1) {
+        if (constants.VERIFY_AGAINST_LAST_N_BLOCK_IDS) {
+            result.errors.push('Block already exists in chain');
+        } else {
+            library.logger.error('Block already exists in chain');
+        }
     }
-  }
 
-  return result;
+    return result;
 };
 
 /**
@@ -211,14 +213,14 @@ __private.verifyAgainstLastNBlockIds = function (block, result) {
  * @return {Array}   result.errors Array of validation errors
  */
 __private.verifyVersion = function (block, result) {
-  if (!blockVersion.isValid(block.version, block.height)) {
-    if (constants.VERIFY_BLOCK_VERSION) {
-      result.errors.push('Invalid block version');
-    } else {
-      library.logger.error('Invalid block version');
+    if (!blockVersion.isValid(block.version, block.height)) {
+        if (constants.VERIFY_BLOCK_VERSION) {
+            result.errors.push('Invalid block version');
+        } else {
+            library.logger.error('Invalid block version');
+        }
     }
-  }
-  return result;
+    return result;
 };
 
 /**
@@ -234,23 +236,22 @@ __private.verifyVersion = function (block, result) {
  * @return {Array}   result.errors Array of validation errors
  */
 __private.verifyReward = function (block, result) {
+    let expectedReward = __private.blockReward.calcReward(block.height);
 
-  let expectedReward = __private.blockReward.calcReward(block.height);
-
-  if (block.height > 21000000) {
-    expectedReward = 0;
-    block.reward = 0;
-  }
-
-  if (block.height !== 1 && expectedReward !== block.reward && exceptions.blockRewards.indexOf(block.id) === -1) {
-    if (constants.VERIFY_BLOCK_REWARD) {
-      result.errors.push(['Invalid block reward:', block.reward, 'expected:', expectedReward].join(' '));
-    } else {
-      library.logger.error(['Invalid block reward:', block.reward, 'expected:', expectedReward].join(' '));
+    if (block.height > 21000000) {
+        expectedReward = 0;
+        block.reward = 0;
     }
-  }
 
-  return result;
+    if (block.height !== 1 && expectedReward !== block.reward && exceptions.blockRewards.indexOf(block.id) === -1) {
+        if (constants.VERIFY_BLOCK_REWARD) {
+            result.errors.push(['Invalid block reward:', block.reward, 'expected:', expectedReward].join(' '));
+        } else {
+            library.logger.error(['Invalid block reward:', block.reward, 'expected:', expectedReward].join(' '));
+        }
+    }
+
+    return result;
 };
 
 /**
@@ -266,19 +267,19 @@ __private.verifyReward = function (block, result) {
  * @return {Array}   result.errors Array of validation errors
  */
 __private.verifyId = function (block, result) {
-  try {
-    // Get block ID
-    // FIXME: Why we don't have it?
-    block.id = library.logic.block.getId(block);
-  } catch (e) {
-    if (constants.VERIFY_BLOCK_ID) {
-      result.errors.push(e.toString());
-    } else {
-      library.logger.error(e.toString());
+    try {
+        // Get block ID
+        // FIXME: Why we don't have it?
+        block.id = library.logic.block.getId(block);
+    } catch (e) {
+        if (constants.VERIFY_BLOCK_ID) {
+            result.errors.push(e.toString());
+        } else {
+            library.logger.error(e.toString());
+        }
     }
-  }
 
-  return result;
+    return result;
 };
 
 /**
@@ -294,103 +295,103 @@ __private.verifyId = function (block, result) {
  * @return {Array}   result.errors Array of validation errors
  */
 __private.verifyPayload = function (block, result) {
-  if (block.payloadLength > constants.maxPayloadLength) {
-    if (constants.PAYLOAD_VALIDATE.MAX_LENGTH) {
-      result.errors.push('Payload length is too long');
-    } else {
-      library.logger.error('Payload length is too long');
-    }
-  }
-
-  // FIXME update old chain payloadHash
-  // https://trello.com/c/ZRV5EAUT/132-included-transactions-do-not-match-block-transactions-count
-  if (block.transactions.length !== block.numberOfTransactions && block.height > constants.MASTER_NODE_MIGRATED_BLOCK) {
-    if (constants.PAYLOAD_VALIDATE.MAX_TRANSACTION_LENGTH) {
-      result.errors.push('Included transactions do not match block transactions count');
-    } else {
-      library.logger.error('Included transactions do not match block transactions count');
-    }
-  }
-
-  if (block.transactions.length > constants.maxTxsPerBlock) {
-    if (constants.PAYLOAD_VALIDATE.MAX_TRANSACTION_IN_BLOCK) {
-      result.errors.push('Number of transactions exceeds maximum per block');
-    } else {
-      library.logger.error('Number of transactions exceeds maximum per block');
-    }
-  }
-
-  let totalAmount = 0;
-  let totalFee = 0;
-  const payloadHash = crypto.createHash('sha256');
-  const appliedTransactions = {};
-
-  for (let i in block.transactions) {
-    const transaction = block.transactions[i];
-    let bytes;
-
-    try {
-      library.logger.debug(`Transaction ${JSON.stringify(transaction)}`);
-      bytes = library.logic.transaction.getBytes(transaction, false, false);
-      library.logger.debug(`Bytes ${JSON.stringify(bytes)}`);
-    } catch (e) {
-      result.errors.push(e.toString());
+    if (block.payloadLength > constants.maxPayloadLength) {
+        if (constants.PAYLOAD_VALIDATE.MAX_LENGTH) {
+            result.errors.push('Payload length is too long');
+        } else {
+            library.logger.error('Payload length is too long');
+        }
     }
 
-    if (appliedTransactions[transaction.id]) {
-      if (constants.PAYLOAD_VALIDATE.MAX_TRANSACTION_DUPLICATE) {
-        result.errors.push('Encountered duplicate transaction: ' + transaction.id);
-      } else {
-        library.logger.error('Encountered duplicate transaction: ' + transaction.id);
-      }
-    }
-
-    appliedTransactions[transaction.id] = transaction;
-    if (bytes) {
-      payloadHash.update(bytes);
-    }
-    totalAmount += transaction.amount;
-    totalFee += transaction.fee;
-  }
-  const hex = payloadHash.digest().toString('hex');
-
-  if (hex !== block.payloadHash) {
     // FIXME update old chain payloadHash
-    // https://trello.com/c/G3XRs3Fk/127-update-old-chain-payloadhash
-    if (block.height > constants.MASTER_NODE_MIGRATED_BLOCK) {
-      if (constants.PAYLOAD_VALIDATE.INVALID_HASH) {
-        result.errors.push('Invalid payload hash');
-      } else {
-        library.logger.error('Invalid payload hash');
-      }
+    // https://trello.com/c/ZRV5EAUT/132-included-transactions-do-not-match-block-transactions-count
+    if (block.transactions.length !== block.numberOfTransactions && block.height > constants.MASTER_NODE_MIGRATED_BLOCK) {
+        if (constants.PAYLOAD_VALIDATE.MAX_TRANSACTION_LENGTH) {
+            result.errors.push('Included transactions do not match block transactions count');
+        } else {
+            library.logger.error('Included transactions do not match block transactions count');
+        }
     }
-  }
 
-  if (totalAmount !== block.totalAmount) {
-    // FIXME Invalid total amount
-    // https://trello.com/c/6G2rPg0o/141-invalid-total-amount
-    if (block.height > constants.MASTER_NODE_MIGRATED_BLOCK) {
-      if (constants.PAYLOAD_VALIDATE.TOTAL_AMOUNT) {
-        result.errors.push('Invalid total amount');
-      } else {
-        library.logger.error('Invalid total amount');
-      }
+    if (block.transactions.length > constants.maxTxsPerBlock) {
+        if (constants.PAYLOAD_VALIDATE.MAX_TRANSACTION_IN_BLOCK) {
+            result.errors.push('Number of transactions exceeds maximum per block');
+        } else {
+            library.logger.error('Number of transactions exceeds maximum per block');
+        }
     }
-  }
 
-  if (totalFee !== block.totalFee) {
-    // FIXME update old chain totalFee
-    // https://trello.com/c/zmjr4SAL/131-invalid-total-fee
-    if (block.height > constants.MASTER_NODE_MIGRATED_BLOCK) {
-      if (constants.PAYLOAD_VALIDATE.TOTAL_FEE) {
-        result.errors.push('Invalid total fee');
-      } else {
-        library.logger.error('Invalid total fee');
-      }
+    let totalAmount = 0;
+    let totalFee = 0;
+    const payloadHash = crypto.createHash('sha256');
+    const appliedTransactions = {};
+
+    for (const i in block.transactions) {
+        const transaction = block.transactions[i];
+        let bytes;
+
+        try {
+            library.logger.debug(`Transaction ${JSON.stringify(transaction)}`);
+            bytes = library.logic.transaction.getBytes(transaction, false, false);
+            library.logger.debug(`Bytes ${JSON.stringify(bytes)}`);
+        } catch (e) {
+            result.errors.push(e.toString());
+        }
+
+        if (appliedTransactions[transaction.id]) {
+            if (constants.PAYLOAD_VALIDATE.MAX_TRANSACTION_DUPLICATE) {
+                result.errors.push(`Encountered duplicate transaction: ${transaction.id}`);
+            } else {
+                library.logger.error(`Encountered duplicate transaction: ${transaction.id}`);
+            }
+        }
+
+        appliedTransactions[transaction.id] = transaction;
+        if (bytes) {
+            payloadHash.update(bytes);
+        }
+        totalAmount += transaction.amount;
+        totalFee += transaction.fee;
     }
-  }
+    const hex = payloadHash.digest().toString('hex');
 
-  return result;
+    if (hex !== block.payloadHash) {
+        // FIXME update old chain payloadHash
+        // https://trello.com/c/G3XRs3Fk/127-update-old-chain-payloadhash
+        if (block.height > constants.MASTER_NODE_MIGRATED_BLOCK) {
+            if (constants.PAYLOAD_VALIDATE.INVALID_HASH) {
+                result.errors.push('Invalid payload hash');
+            } else {
+                library.logger.error('Invalid payload hash');
+            }
+        }
+    }
+
+    if (totalAmount !== block.totalAmount) {
+        // FIXME Invalid total amount
+        // https://trello.com/c/6G2rPg0o/141-invalid-total-amount
+        if (block.height > constants.MASTER_NODE_MIGRATED_BLOCK) {
+            if (constants.PAYLOAD_VALIDATE.TOTAL_AMOUNT) {
+                result.errors.push('Invalid total amount');
+            } else {
+                library.logger.error('Invalid total amount');
+            }
+        }
+    }
+
+    if (totalFee !== block.totalFee) {
+        // FIXME update old chain totalFee
+        // https://trello.com/c/zmjr4SAL/131-invalid-total-fee
+        if (block.height > constants.MASTER_NODE_MIGRATED_BLOCK) {
+            if (constants.PAYLOAD_VALIDATE.TOTAL_FEE) {
+                result.errors.push('Invalid total fee');
+            } else {
+                library.logger.error('Invalid total fee');
+            }
+        }
+    }
+
+    return result;
 };
 
 /**
@@ -406,16 +407,16 @@ __private.verifyPayload = function (block, result) {
  * @return {Array}   result.errors Array of validation errors
  */
 __private.verifyForkOne = function (block, lastBlock, result) {
-  if (block.previousBlock && block.previousBlock !== lastBlock.id) {
-    modules.delegates.fork(block, 1);
-    if (constants.VERIFY_BLOCK_FORK_ONE) {
-      result.errors.push(['Invalid previous block:', block.previousBlock, 'expected:', lastBlock.id].join(' '));
-    } else {
-      library.logger.error(['Invalid previous block:', block.previousBlock, 'expected:', lastBlock.id].join(' '));
+    if (block.previousBlock && block.previousBlock !== lastBlock.id) {
+        modules.delegates.fork(block, 1);
+        if (constants.VERIFY_BLOCK_FORK_ONE) {
+            result.errors.push(['Invalid previous block:', block.previousBlock, 'expected:', lastBlock.id].join(' '));
+        } else {
+            library.logger.error(['Invalid previous block:', block.previousBlock, 'expected:', lastBlock.id].join(' '));
+        }
     }
-  }
 
-  return result;
+    return result;
 };
 
 /**
@@ -431,18 +432,18 @@ __private.verifyForkOne = function (block, lastBlock, result) {
  * @return {Array}   result.errors Array of validation errors
  */
 __private.verifyBlockSlot = function (block, lastBlock, result) {
-  const blockSlotNumber = slots.getSlotNumber(block.timestamp);
-  const lastBlockSlotNumber = slots.getSlotNumber(lastBlock.timestamp);
+    const blockSlotNumber = slots.getSlotNumber(block.timestamp);
+    const lastBlockSlotNumber = slots.getSlotNumber(lastBlock.timestamp);
 
-  if (blockSlotNumber > slots.getSlotNumber() || blockSlotNumber <= lastBlockSlotNumber) {
-    if (constants.VERIFY_BLOCK_SLOT) {
-      result.errors.push('Invalid block timestamp');
-    } else {
-      library.logger.error('Invalid block timestamp', JSON.stringify(block));
+    if (blockSlotNumber > slots.getSlotNumber() || blockSlotNumber <= lastBlockSlotNumber) {
+        if (constants.VERIFY_BLOCK_SLOT) {
+            result.errors.push('Invalid block timestamp');
+        } else {
+            library.logger.error('Invalid block timestamp', JSON.stringify(block));
+        }
     }
-  }
 
-  return result;
+    return result;
 };
 
 /**
@@ -456,28 +457,28 @@ __private.verifyBlockSlot = function (block, lastBlock, result) {
  * @returns {Array} result.errors - Array of validation errors
  */
 __private.verifyBlockSlotWindow = function (block, result) {
-  const currentApplicationSlot = slots.getSlotNumber();
-  const blockSlot = slots.getSlotNumber(block.timestamp);
+    const currentApplicationSlot = slots.getSlotNumber();
+    const blockSlot = slots.getSlotNumber(block.timestamp);
 
-  // Reject block if it's slot is older than BLOCK_SLOT_WINDOW
-  if (currentApplicationSlot - blockSlot > constants.blockSlotWindow) {
-    if (constants.VERIFY_BLOCK_SLOT_WINDOW) {
-      result.errors.push('Block slot is too old');
-    } else {
-      library.logger.error('Block slot is too old');
+    // Reject block if it's slot is older than BLOCK_SLOT_WINDOW
+    if (currentApplicationSlot - blockSlot > constants.blockSlotWindow) {
+        if (constants.VERIFY_BLOCK_SLOT_WINDOW) {
+            result.errors.push('Block slot is too old');
+        } else {
+            library.logger.error('Block slot is too old');
+        }
     }
-  }
 
-  // Reject block if it's slot is in the future
-  if (currentApplicationSlot < blockSlot) {
-    if (constants.VERIFY_BLOCK_SLOT_WINDOW) {
-      result.errors.push('Block slot is in the future');
-    } else {
-      library.logger.error('Block slot is in the future');
+    // Reject block if it's slot is in the future
+    if (currentApplicationSlot < blockSlot) {
+        if (constants.VERIFY_BLOCK_SLOT_WINDOW) {
+            result.errors.push('Block slot is in the future');
+        } else {
+            library.logger.error('Block slot is in the future');
+        }
     }
-  }
 
-  return result;
+    return result;
 };
 
 /**
@@ -491,41 +492,41 @@ __private.verifyBlockSlotWindow = function (block, result) {
  * @return {Array}   result.errors Array of validation errors
  */
 Verify.prototype.verifyReceipt = function (block) {
-  let lastBlock = modules.blocks.lastBlock.get();
+    const lastBlock = modules.blocks.lastBlock.get();
 
-  block = __private.setHeight(block, lastBlock);
+    block = __private.setHeight(block, lastBlock);
 
-  let result = {verified: false, errors: []};
+    let result = { verified: false, errors: [] };
 
-  result = __private.verifySignature(block, result);
-  result = __private.verifyPreviousBlock(block, result);
-  result = __private.verifyAgainstLastNBlockIds(block, result);
-  result = __private.verifyBlockSlotWindow(block, result);
-  result = __private.verifyVersion(block, result);
-  // TODO: verify total fee
-  result = __private.verifyId(block, result);
-  result = __private.verifyPayload(block, result);
+    result = __private.verifySignature(block, result);
+    result = __private.verifyPreviousBlock(block, result);
+    result = __private.verifyAgainstLastNBlockIds(block, result);
+    result = __private.verifyBlockSlotWindow(block, result);
+    result = __private.verifyVersion(block, result);
+    // TODO: verify total fee
+    result = __private.verifyId(block, result);
+    result = __private.verifyPayload(block, result);
 
-  result.verified = result.errors.length === 0;
-  result.errors.reverse();
+    result.verified = result.errors.length === 0;
+    result.errors.reverse();
 
-  return result;
+    return result;
 };
 
 /**
  * Loads last {BLOCK_SLOT_WINDOW} blocks from the database into memory. Called when application triggeres blockchainReady event.
  */
 Verify.prototype.onBlockchainReady = function () {
-  return library.db.query('SELECT id FROM blocks ORDER BY id DESC LIMIT ${blockLimit}', {blockLimit: constants.blockSlotWindow})
-    .then(blockIds => {
-      __private.lastNBlockIds = _.map(blockIds, 'id');
-    })
-    .catch(err => {
-      library.logger.error(
-        `Unable to load last ${constants.blockSlotWindow} block ids`
-      );
-      library.logger.error(err);
-    });
+    return library.db.query('SELECT id FROM blocks ORDER BY id DESC LIMIT ${blockLimit}', { blockLimit: constants.blockSlotWindow })
+        .then((blockIds) => {
+            __private.lastNBlockIds = _.map(blockIds, 'id');
+        })
+        .catch((err) => {
+            library.logger.error(
+                `Unable to load last ${constants.blockSlotWindow} block ids`
+            );
+            library.logger.error(err);
+        });
 };
 
 /**
@@ -536,10 +537,10 @@ Verify.prototype.onBlockchainReady = function () {
  * @todo Add description for the params
  */
 Verify.prototype.onNewBlock = function (block) {
-  __private.lastNBlockIds.push(block.id);
-  if (__private.lastNBlockIds.length > constants.blockSlotWindow) {
-    __private.lastNBlockIds.shift();
-  }
+    __private.lastNBlockIds.push(block.id);
+    if (__private.lastNBlockIds.length > constants.blockSlotWindow) {
+        __private.lastNBlockIds.shift();
+    }
 };
 
 /**
@@ -553,40 +554,40 @@ Verify.prototype.onNewBlock = function (block) {
  * @return {Array}   result.errors Array of validation errors
  */
 Verify.prototype.verifyBlock = function (block) {
-  let lastBlock = modules.blocks.lastBlock.get();
+    const lastBlock = modules.blocks.lastBlock.get();
 
-  block = __private.setHeight(block, lastBlock);
+    block = __private.setHeight(block, lastBlock);
 
-  let result = {verified: false, errors: []};
+    let result = { verified: false, errors: [] };
 
-  result = __private.verifySignature(block, result);
-  result = __private.verifyPreviousBlock(block, result);
-  result = __private.verifyVersion(block, result);
-  // TODO: verify total fee
-  result = __private.verifyId(block, result);
-  result = __private.verifyPayload(block, result);
+    result = __private.verifySignature(block, result);
+    result = __private.verifyPreviousBlock(block, result);
+    result = __private.verifyVersion(block, result);
+    // TODO: verify total fee
+    result = __private.verifyId(block, result);
+    result = __private.verifyPayload(block, result);
 
-  result = __private.verifyForkOne(block, lastBlock, result);
-  result = __private.verifyBlockSlot(block, lastBlock, result);
+    result = __private.verifyForkOne(block, lastBlock, result);
+    result = __private.verifyBlockSlot(block, lastBlock, result);
 
-  result.verified = result.errors.length === 0;
-  result.errors.reverse();
+    result.verified = result.errors.length === 0;
+    result.errors.reverse();
 
-  if (result.verified) {
-    library.logger.info(
-      `Verify->verifyBlock succeeded for block ${block.id} at height ${
-        block.height
-        }.`
-    );
-  } else {
-    library.logger.error(
-      `Verify->verifyBlock failed for block ${block.id} at height ${
-        block.height
-        }.`,
-      result.errors
-    );
-  }
-  return result;
+    if (result.verified) {
+        library.logger.info(
+            `Verify->verifyBlock succeeded for block ${block.id} at height ${
+                block.height
+                }.`
+        );
+    } else {
+        library.logger.error(
+            `Verify->verifyBlock failed for block ${block.id} at height ${
+                block.height
+                }.`,
+            result.errors
+        );
+    }
+    return result;
 };
 
 /**
@@ -596,27 +597,27 @@ Verify.prototype.verifyBlock = function (block) {
  * @returns {Object} Block object completed
  */
 Verify.prototype.addBlockProperties = function (block) {
-  block.totalAmount = block.totalAmount || 0;
-  block.totalFee = block.totalFee || 0;
-  block.reward = block.reward || 0;
+    block.totalAmount = block.totalAmount || 0;
+    block.totalFee = block.totalFee || 0;
+    block.reward = block.reward || 0;
 
-  if (block.version === undefined) {
-    block.version = constants.CURRENT_BLOCK_VERSION;
-  }
-  if (block.numberOfTransactions === undefined) {
-    if (block.transactions === undefined) {
-      block.numberOfTransactions = 0;
-    } else {
-      block.numberOfTransactions = block.transactions.length;
+    if (block.version === undefined) {
+        block.version = constants.CURRENT_BLOCK_VERSION;
     }
-  }
-  if (block.payloadLength === undefined) {
-    block.payloadLength = 0;
-  }
-  if (block.transactions === undefined) {
-    block.transactions = [];
-  }
-  return block;
+    if (block.numberOfTransactions === undefined) {
+        if (block.transactions === undefined) {
+            block.numberOfTransactions = 0;
+        } else {
+            block.numberOfTransactions = block.transactions.length;
+        }
+    }
+    if (block.payloadLength === undefined) {
+        block.payloadLength = 0;
+    }
+    if (block.transactions === undefined) {
+        block.transactions = [];
+    }
+    return block;
 };
 
 /**
@@ -626,30 +627,30 @@ Verify.prototype.addBlockProperties = function (block) {
  * @returns {Object} Block object reduced
  */
 Verify.prototype.deleteBlockProperties = function (block) {
-  const reducedBlock = Object.assign({}, block);
-  if (reducedBlock.version === constants.CURRENT_BLOCK_VERSION) {
-    delete reducedBlock.version;
-  }
-  // verifyBlock ensures numberOfTransactions is transactions.length
-  if (typeof reducedBlock.numberOfTransactions === 'number') {
-    delete reducedBlock.numberOfTransactions;
-  }
-  if (reducedBlock.totalAmount == 0) {
-    delete reducedBlock.totalAmount;
-  }
-  if (reducedBlock.totalFee == 0) {
-    delete reducedBlock.totalFee;
-  }
-  if (reducedBlock.payloadLength === 0) {
-    delete reducedBlock.payloadLength;
-  }
-  if (reducedBlock.reward == 0) {
-    delete reducedBlock.reward;
-  }
-  if (reducedBlock.transactions && reducedBlock.transactions.length === 0) {
-    delete reducedBlock.transactions;
-  }
-  return reducedBlock;
+    const reducedBlock = Object.assign({}, block);
+    if (reducedBlock.version === constants.CURRENT_BLOCK_VERSION) {
+        delete reducedBlock.version;
+    }
+    // verifyBlock ensures numberOfTransactions is transactions.length
+    if (typeof reducedBlock.numberOfTransactions === 'number') {
+        delete reducedBlock.numberOfTransactions;
+    }
+    if (reducedBlock.totalAmount == 0) {
+        delete reducedBlock.totalAmount;
+    }
+    if (reducedBlock.totalFee == 0) {
+        delete reducedBlock.totalFee;
+    }
+    if (reducedBlock.payloadLength === 0) {
+        delete reducedBlock.payloadLength;
+    }
+    if (reducedBlock.reward == 0) {
+        delete reducedBlock.reward;
+    }
+    if (reducedBlock.transactions && reducedBlock.transactions.length === 0) {
+        delete reducedBlock.transactions;
+    }
+    return reducedBlock;
 };
 
 /**
@@ -664,16 +665,16 @@ Verify.prototype.deleteBlockProperties = function (block) {
  * @returns {Object} cb.err - Error if occurred
  */
 __private.addBlockProperties = function (block, broadcast, cb) {
-  if (!broadcast) {
-    try {
-      // Set default properties
-      block = self.addBlockProperties(block);
-    } catch (err) {
-      return setImmediate(cb, err);
+    if (!broadcast) {
+        try {
+            // Set default properties
+            block = self.addBlockProperties(block);
+        } catch (err) {
+            return setImmediate(cb, err);
+        }
     }
-  }
 
-  return setImmediate(cb);
+    return setImmediate(cb);
 };
 
 /**
@@ -687,13 +688,13 @@ __private.addBlockProperties = function (block, broadcast, cb) {
  * @returns {Object} cb.err - Error if occurred
  */
 __private.normalizeBlock = function (block, cb) {
-  try {
-    block = library.logic.block.objectNormalize(block);
-  } catch (err) {
-    return setImmediate(cb, err);
-  }
+    try {
+        block = library.logic.block.objectNormalize(block);
+    } catch (err) {
+        return setImmediate(cb, err);
+    }
 
-  return setImmediate(cb);
+    return setImmediate(cb);
 };
 
 /**
@@ -707,18 +708,18 @@ __private.normalizeBlock = function (block, cb) {
  * @returns {Object} cb.err - Error if occurred
  */
 __private.verifyBlock = function (block, cb) {
-  // Sanity check of the block, if values are coherent
-  // No access to database
-  var result = self.verifyBlock(block);
+    // Sanity check of the block, if values are coherent
+    // No access to database
+    const result = self.verifyBlock(block);
 
-  if (!result.verified) {
-    library.logger.error(
-      ['Block', block.id, 'verification failed'].join(' '),
-      result.errors[0]
-    );
-    return setImmediate(cb, result.errors[0]);
-  }
-  return setImmediate(cb);
+    if (!result.verified) {
+        library.logger.error(
+            ['Block', block.id, 'verification failed'].join(' '),
+            result.errors[0]
+        );
+        return setImmediate(cb, result.errors[0]);
+    }
+    return setImmediate(cb);
 };
 
 /**
@@ -732,19 +733,18 @@ __private.verifyBlock = function (block, cb) {
  * @returns {Object} cb.err - Error if occurred
  */
 __private.checkExists = function (block, cb) {
-  // Check if block id is already in the database (very low probability of hash collision)
-  // TODO: In case of hash-collision, to me it would be a special autofork...
-  // DATABASE: read only
-  library.db.query(sql.getBlockId, {id: block.id}).then(function (rows) {
-    if (rows.length > 0) {
-      return setImmediate(cb, ['Block', block.id, 'already exists'].join(' '));
-    } else {
-      return setImmediate(cb);
-    }
-  }).catch((err) => {
-    library.logger.error(err);
-    return setImmediate(cb, 'Block#blockExists error');
-  });
+    // Check if block id is already in the database (very low probability of hash collision)
+    // TODO: In case of hash-collision, to me it would be a special autofork...
+    // DATABASE: read only
+    library.db.query(sql.getBlockId, { id: block.id }).then((rows) => {
+        if (rows.length > 0) {
+            return setImmediate(cb, ['Block', block.id, 'already exists'].join(' '));
+        }
+        return setImmediate(cb);
+    }).catch((err) => {
+        library.logger.error(err);
+        return setImmediate(cb, 'Block#blockExists error');
+    });
 };
 
 /**
@@ -758,20 +758,19 @@ __private.checkExists = function (block, cb) {
  * @returns {Object} cb.err - Error if occurred
  */
 __private.validateBlockSlot = function (block, cb) {
-  // Check if block was generated by the right active delagate. Otherwise, fork 3
-  // DATABASE: Read only to mem_accounts to extract active delegate list
-  modules.delegates.validateBlockSlot(block, err => {
-    if (err) {
-      // Fork: Delegate does not match calculated slot
-      if (constants.VALIDATE_BLOCK_SLOT) {
-        modules.delegates.fork(block, 3);
-        return setImmediate(cb, err);
-      } else {
-        library.logger.error('validateBlockSlot', err);
-      }
-    }
-    return setImmediate(cb);
-  });
+    // Check if block was generated by the right active delagate. Otherwise, fork 3
+    // DATABASE: Read only to mem_accounts to extract active delegate list
+    modules.delegates.validateBlockSlot(block, (err) => {
+        if (err) {
+            // Fork: Delegate does not match calculated slot
+            if (constants.VALIDATE_BLOCK_SLOT) {
+                modules.delegates.fork(block, 3);
+                return setImmediate(cb, err);
+            }
+            library.logger.error('validateBlockSlot', err);
+        }
+        return setImmediate(cb);
+    });
 };
 
 /**
@@ -786,14 +785,14 @@ __private.validateBlockSlot = function (block, cb) {
  * @returns {Object} cb.err - Error if occurred
  */
 __private.checkTransactions = function (block, checkExists, cb) {
-  // Check against the mem_* tables that we can perform the transactions included in the block
-  async.eachSeries(
-    block.transactions,
-    (transaction, eachSeriesCb) => {
-      __private.checkTransaction(block, transaction, checkExists, eachSeriesCb);
-    },
-    err => setImmediate(cb, err)
-  );
+    // Check against the mem_* tables that we can perform the transactions included in the block
+    async.eachSeries(
+        block.transactions,
+        (transaction, eachSeriesCb) => {
+            __private.checkTransaction(block, transaction, checkExists, eachSeriesCb);
+        },
+        err => setImmediate(cb, err)
+    );
 };
 
 /**
@@ -814,15 +813,15 @@ __private.checkTransactions = function (block, checkExists, cb) {
  * @return {Object}   cb.err Error if occurred
  */
 Verify.prototype.processBlock = function (block, broadcast, cb, saveBlock, verify = true) {
-  if (modules.blocks.isCleaning.get()) {
-    // Break processing if node shutdown reqested
-    return setImmediate(cb, 'Cleaning up');
-  } else if (!__private.loaded) {
-    // Break processing if blockchain is not loaded
-    return setImmediate(cb, 'Blockchain is loading');
-  }
+    if (modules.blocks.isCleaning.get()) {
+        // Break processing if node shutdown reqested
+        return setImmediate(cb, 'Cleaning up');
+    } else if (!__private.loaded) {
+        // Break processing if blockchain is not loaded
+        return setImmediate(cb, 'Blockchain is loading');
+    }
 
-	async.series({
+    async.series({
         addBlockProperties(seriesCb) {
             __private.addBlockProperties(block, broadcast, seriesCb);
         },
@@ -832,7 +831,8 @@ Verify.prototype.processBlock = function (block, broadcast, cb, saveBlock, verif
         verifyBlock(seriesCb) {
             if (!verify) {
                 return setImmediate(seriesCb);
-            }__private.verifyBlock(block, seriesCb);
+            }
+            __private.verifyBlock(block, seriesCb);
         },
         checkExists(seriesCb) {
             // Skip checking for existing block id if we don't need to save that block
@@ -861,15 +861,13 @@ Verify.prototype.processBlock = function (block, broadcast, cb, saveBlock, verif
         // 'true' if block comes from generation or receiving process
         // 'false' if block comes from chain synchronisation process
         updateSystemHeaders(seriesCb) {
-        	// TODO: ask and implement
+            // TODO: ask and implement
             // Update our own headers: broadhash and height
             !library.config.loading.snapshotRound
                 ? modules.system.update(seriesCb)
                 : seriesCb();
         }
-	}, function (err) {
-		return setImmediate(cb, err);
-	});
+    }, err => setImmediate(cb, err));
 };
 
 /**
@@ -881,20 +879,20 @@ Verify.prototype.processBlock = function (block, broadcast, cb, saveBlock, verif
  * @param {modules} scope Exposed modules
  */
 Verify.prototype.onBind = function (scope) {
-  library.logger.trace('Blocks->Verify: Shared modules bind.');
-  modules = {
-    accounts: scope.accounts,
-    blocks: scope.blocks,
-    delegates: scope.delegates,
-    transactions: scope.transactions,
-    system: scope.system
-  };
+    library.logger.trace('Blocks->Verify: Shared modules bind.');
+    modules = {
+        accounts: scope.accounts,
+        blocks: scope.blocks,
+        delegates: scope.delegates,
+        transactions: scope.transactions,
+        system: scope.system
+    };
 
 
-  // Set module as loaded
-  __private.loaded = true;
+    // Set module as loaded
+    __private.loaded = true;
 };
 
 module.exports = Verify;
 
-/*************************************** END OF FILE *************************************/
+/** ************************************* END OF FILE ************************************ */

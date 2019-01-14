@@ -1,52 +1,50 @@
+const DappsSql = {
+    sortFields: ['type', 'name', 'category', 'link'],
 
+    countByTransactionId: 'SELECT COUNT(*)::int AS "count" FROM dapps WHERE "transactionId" = ${id}',
 
-let DappsSql = {
-	sortFields: ['type', 'name', 'category', 'link'],
+    countByOutTransactionId: 'SELECT COUNT(*)::int AS "count" FROM outtransfer WHERE "outTransactionId" = ${transactionId}',
 
-	countByTransactionId: 'SELECT COUNT(*)::int AS "count" FROM dapps WHERE "transactionId" = ${id}',
+    getExisting: 'SELECT "name", "link" FROM dapps WHERE ("name" = ${name} OR "link" = ${link}) AND "transactionId" != ${transactionId}',
 
-	countByOutTransactionId: 'SELECT COUNT(*)::int AS "count" FROM outtransfer WHERE "outTransactionId" = ${transactionId}',
+    search(params) {
+        return [
+            'SELECT "transactionId", "name", "description", "tags", "link", "type", "category", "icon"',
+            'FROM dapps WHERE to_tsvector("name" || \' \' || "description" || \' \' || "tags") @@ to_tsquery(${q})',
+            (params.category ? 'AND "category" = ${category}' : ''),
+            'LIMIT ${limit}'
+        ].filter(Boolean).join(' ');
+    },
 
-	getExisting: 'SELECT "name", "link" FROM dapps WHERE ("name" = ${name} OR "link" = ${link}) AND "transactionId" != ${transactionId}',
+    get: 'SELECT "name", "description", "tags", "link", "type", "category", "icon", "transactionId" FROM dapps WHERE "transactionId" = ${id}',
 
-	search: function (params) {
-		return [
-			'SELECT "transactionId", "name", "description", "tags", "link", "type", "category", "icon"',
-			'FROM dapps WHERE to_tsvector("name" || \' \' || "description" || \' \' || "tags") @@ to_tsquery(${q})',
-			(params.category ? 'AND "category" = ${category}' : ''),
-			'LIMIT ${limit}'
-		].filter(Boolean).join(' ');
-	},
+    getByIds: 'SELECT "name", "description", "tags", "link", "type", "category", "icon", "transactionId" FROM dapps WHERE "transactionId" IN ($1:csv)',
 
-	get: 'SELECT "name", "description", "tags", "link", "type", "category", "icon", "transactionId" FROM dapps WHERE "transactionId" = ${id}',
+    // Need to fix "or" or "and" in query
+    list(params) {
+        return [
+            'SELECT "name", "description", "tags", "link", "type", "category", "icon", "transactionId" FROM dapps',
+            (params.where.length ? `WHERE ${params.where.join(' OR ')}` : ''),
+            (params.sortField ? `ORDER BY ${[params.sortField, params.sortMethod].join(' ')}` : ''),
+            'LIMIT ${limit} OFFSET ${offset}'
+        ].filter(Boolean).join(' ');
+    },
 
-	getByIds: 'SELECT "name", "description", "tags", "link", "type", "category", "icon", "transactionId" FROM dapps WHERE "transactionId" IN ($1:csv)',
+    getGenesis: 'SELECT b."height" AS "height", b."id" AS "id", t."senderId" AS "authorId" FROM trs t INNER JOIN blocks b ON t."blockId" = b."id" WHERE t."id" = ${id}',
 
-	// Need to fix "or" or "and" in query
-	list: function (params) {
-		return [
-			'SELECT "name", "description", "tags", "link", "type", "category", "icon", "transactionId" FROM dapps',
-			(params.where.length ? 'WHERE ' + params.where.join(' OR ') : ''),
-			(params.sortField ? 'ORDER BY ' + [params.sortField, params.sortMethod].join(' ') : ''),
-			'LIMIT ${limit} OFFSET ${offset}'
-		].filter(Boolean).join(' ');
-	},
+    getCommonBlock: 'SELECT b."height" AS "height", t."id" AS "id", t."senderId" AS "senderId", t."amount" AS "amount" FROM trs t INNER JOIN blocks b ON t."blockId" = b."id" AND t."id" = ${id} AND t."type" = ${type} INNER JOIN intransfer dt ON dt."transactionId" = t."id" AND dt."dappid" = ${dappid}',
 
-	getGenesis: 'SELECT b."height" AS "height", b."id" AS "id", t."senderId" AS "authorId" FROM trs t INNER JOIN blocks b ON t."blockId" = b."id" WHERE t."id" = ${id}',
+    getWithdrawalLastTransaction: 'SELECT ot."outTransactionId" FROM trs t INNER JOIN blocks b ON t."blockId" = b."id" AND t."type" = ${type} INNER JOIN outtransfer ot ON ot."transactionId" = t."id" AND ot."dappId" = ${dappid} ORDER BY b."height" DESC LIMIT 1',
 
-	getCommonBlock: 'SELECT b."height" AS "height", t."id" AS "id", t."senderId" AS "senderId", t."amount" AS "amount" FROM trs t INNER JOIN blocks b ON t."blockId" = b."id" AND t."id" = ${id} AND t."type" = ${type} INNER JOIN intransfer dt ON dt."transactionId" = t."id" AND dt."dappid" = ${dappid}',
-
-	getWithdrawalLastTransaction: 'SELECT ot."outTransactionId" FROM trs t INNER JOIN blocks b ON t."blockId" = b."id" AND t."type" = ${type} INNER JOIN outtransfer ot ON ot."transactionId" = t."id" AND ot."dappId" = ${dappid} ORDER BY b."height" DESC LIMIT 1',
-
-	getBalanceTransactions: function (params) {
-		return [
-			'SELECT t."id" AS "id", ENCODE(t."senderPublicKey", \'hex\') AS "senderPublicKey", t."amount" AS "amount" FROM trs t',
-			'INNER JOIN blocks b ON t."blockId" = b."id" AND t."type" = ${type}',
-			'INNER JOIN intransfer dt ON dt."transactionId" = t."id" AND dt."dappId" = ${dappid}',
-			(params.lastId ? 'WHERE b."height" > (SELECT "height" FROM blocks ib INNER JOIN trs it ON ib."id" = it."blockId" AND it."id" = ${lastId})' : ''),
-			'ORDER BY b."height"'
-		].filter(Boolean).join(' ');
-	}
+    getBalanceTransactions(params) {
+        return [
+            'SELECT t."id" AS "id", ENCODE(t."senderPublicKey", \'hex\') AS "senderPublicKey", t."amount" AS "amount" FROM trs t',
+            'INNER JOIN blocks b ON t."blockId" = b."id" AND t."type" = ${type}',
+            'INNER JOIN intransfer dt ON dt."transactionId" = t."id" AND dt."dappId" = ${dappid}',
+            (params.lastId ? 'WHERE b."height" > (SELECT "height" FROM blocks ib INNER JOIN trs it ON ib."id" = it."blockId" AND it."id" = ${lastId})' : ''),
+            'ORDER BY b."height"'
+        ].filter(Boolean).join(' ');
+    }
 };
 
 module.exports = DappsSql;

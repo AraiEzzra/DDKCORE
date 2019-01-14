@@ -12,6 +12,7 @@ const transactionTypes = require('../helpers/transactionTypes.js');
 const Transfer = require('../logic/transfer.js');
 const slots = require('../helpers/slots');
 const trsCache = require('memory-cache');
+
 const expCache = new trsCache.Cache();
 const Cache = require('./cache.js');
 const BUFFER = require('../helpers/buffer.js');
@@ -19,12 +20,12 @@ const bignum = require('../helpers/bignum.js');
 
 
 // Private fields
-let __private = {};
-let shared = {};
+const __private = {};
+const shared = {};
 let modules;
 let library;
 let self;
-let epochTime = 1451667600;
+const epochTime = 1451667600;
 
 const TOTAL_TRS_COUNT = 'TOTAL_TRS_COUNT';
 const TOTAL_TRS_COUNT_EXPIRE = 30; // seconds
@@ -103,14 +104,14 @@ __private.getTotalTrsCountFromCache = async function () {
 };
 
 __private.getAddressByPublicKey = function (publicKey) {
-    let publicKeyHash = crypto.createHash('sha256').update(publicKey, 'hex').digest();
-    let temp = Buffer.alloc(BUFFER.LENGTH.INT64);
+    const publicKeyHash = crypto.createHash('sha256').update(publicKey, 'hex').digest();
+    const temp = Buffer.alloc(BUFFER.LENGTH.INT64);
 
     for (let i = 0; i < 8; i++) {
         temp[i] = publicKeyHash[7 - i];
     }
 
-    return 'DDK' + bignum.fromBuffer(temp).toString();
+    return `DDK${bignum.fromBuffer(temp).toString()}`;
 };
 
 // Private methods
@@ -122,9 +123,9 @@ __private.getAddressByPublicKey = function (publicKey) {
  * @returns {setImmediateCallback} error | data: {transactions, count}
  */
 __private.list = function (filter, cb) {
-    let params = {};
-    let where = [];
-    let allowedFieldsMap = {
+    const params = {};
+    const where = [];
+    const allowedFieldsMap = {
         id: 't."id" = ${id}',
         blockId: 't."blockId" = ${blockId}',
         senderPublicKey: 't."senderPublicKey" = ${senderPublicKey}',
@@ -155,8 +156,8 @@ __private.list = function (filter, cb) {
     let owner = '';
     let isFirstWhere = true;
 
-    let processParams = function (value, key) {
-        let field = String(key).split(':');
+    const processParams = function (value, key) {
+        const field = String(key).split(':');
         if (field.length === 1) {
             // Only field identifier, so using default 'OR' condition
             field.unshift('OR');
@@ -165,37 +166,36 @@ __private.list = function (filter, cb) {
             if (_.includes(['or', 'and'], field[0].toLowerCase())) {
                 field[0] = field[0].toUpperCase();
             } else {
-                throw new Error('Incorrect condition [' + field[0] + '] for field: ' + field[1]);
+                throw new Error(`Incorrect condition [${field[0]}] for field: ${field[1]}`);
             }
         } else {
             // Invalid parameter 'x:y:z'
-            throw new Error('Invalid parameter supplied: ' + key);
+            throw new Error(`Invalid parameter supplied: ${key}`);
         }
 
         // Mutating parametres when unix timestamp is supplied
         if (_.includes(['fromUnixTime', 'toUnixTime'], field[1])) {
             // ddk epoch is 1464109200 as unix timestamp
-            value = value - constants.epochTime.getTime() / 1000;
+            value -= constants.epochTime.getTime() / 1000;
             field[1] = field[1].replace('UnixTime', 'Timestamp');
         }
 
         if (!_.includes(_.keys(allowedFieldsMap), field[1])) {
-            throw new Error('Parameter is not supported: ' + field[1]);
+            throw new Error(`Parameter is not supported: ${field[1]}`);
         }
 
         // Checking for empty parameters, 0 is allowed for few
         if (!value && !(value === 0 && _.includes(['fromTimestamp', 'minAmount', 'minConfirmations', 'type', 'offset'], field[1]))) {
-            throw new Error('Value for parameter [' + field[1] + '] cannot be empty');
+            throw new Error(`Value for parameter [${field[1]}] cannot be empty`);
         }
 
         if (allowedFieldsMap[field[1]]) {
-
             if (field[1] === 'senderPublicKey') {
                 field[1] = 'senderId';
                 value = __private.getAddressByPublicKey(filter.senderPublicKey);
             }
 
-            where.push((!isFirstWhere ? (field[0] + ' ') : '') + allowedFieldsMap[field[1]]);
+            where.push((!isFirstWhere ? (`${field[0]} `) : '') + allowedFieldsMap[field[1]]);
             params[field[1]] = value;
             isFirstWhere = false;
         }
@@ -232,18 +232,17 @@ __private.list = function (filter, cb) {
         return setImmediate(cb, 'Invalid limit, maximum is 1000');
     }
 
-    let orderBy = OrderBy(
+    const orderBy = OrderBy(
         filter.orderBy, {
             sortFields: sql.sortFields,
             quoteField: false,
-            fieldPrefix: function (sortField) {
+            fieldPrefix(sortField) {
                 if (['height'].indexOf(sortField) > -1) {
-                    return 'b.' + sortField;
+                    return `b.${sortField}`;
                 } else if (['confirmations'].indexOf(sortField) > -1) {
                     return sortField;
-                } else {
-                    return 't.' + sortField;
                 }
+                return `t.${sortField}`;
             }
         }
     );
@@ -253,47 +252,43 @@ __private.list = function (filter, cb) {
     }
 
     library.db.query(sql.list({
-        where: where,
-        owner: owner,
+        where,
+        owner,
         sortField: orderBy.sortField,
         sortMethod: orderBy.sortMethod
     }), params).then(async (rows) => {
-
-        let count = rows.length
+        const count = rows.length
             ? rows[0].total_rows !== undefined
                 ? rows[0].total_rows
                 : await __private.getTotalTrsCountFromCache()
             : 0;
 
         library.db.query(sql.getDelegateNames)
-            .then(function (delegates) {
+            .then((delegates) => {
                 // TODO remove that logic if count delegates will be more than 100
                 // https://trello.com/c/yQ6JC62S/214-remove-logic-add-username-for-transactions-get-if-count-delegates-will-be-more-than-100
                 const delegatesMap = Object.assign({}, constants.DEFAULT_USERS);
 
-                delegates.forEach(delegate => {
+                delegates.forEach((delegate) => {
                     delegatesMap[delegate.m_address] = delegate.m_username;
                 });
 
-                const transactions = rows.map(row => {
+                const transactions = rows.map((row) => {
                     const trs = library.logic.transaction.dbRead(row);
                     trs.senderName = delegatesMap[trs.senderId];
                     trs.recipientName = delegatesMap[trs.recipientId];
                     return trs;
                 });
 
-                let data = {
-                    transactions: transactions,
-                    count: count
+                const data = {
+                    transactions,
+                    count
                 };
 
                 return setImmediate(cb, null, data);
             })
-            .catch(function (err) {
-                return setImmediate(cb, err.message);
-            });
-    }).catch(function (err) {
-
+            .catch(err => setImmediate(cb, err.message));
+    }).catch((err) => {
         library.logger.error(err.stack);
         return setImmediate(cb, 'Transactions#list error');
     });
@@ -307,15 +302,15 @@ __private.list = function (filter, cb) {
  * @returns {setImmediateCallback} error | data: {transaction}
  */
 __private.getById = function (id, cb) {
-    library.db.query(sql.getById, {id: id}).then(function (rows) {
+    library.db.query(sql.getById, { id }).then((rows) => {
         if (!rows.length) {
-            return setImmediate(cb, 'Transaction not found: ' + id);
+            return setImmediate(cb, `Transaction not found: ${id}`);
         }
 
-        let transacton = library.logic.transaction.dbRead(rows[0]);
+        const transacton = library.logic.transaction.dbRead(rows[0]);
 
         return setImmediate(cb, null, transacton);
-    }).catch(function (err) {
+    }).catch((err) => {
         library.logger.error(err.stack);
         return setImmediate(cb, 'Transactions#getById error');
     });
@@ -329,14 +324,14 @@ __private.getById = function (id, cb) {
  * @returns {setImmediateCallback} error | data: {added, deleted}
  */
 __private.getVotesById = function (transaction, cb) {
-    library.db.query(sql.getVotesById, {id: transaction.id}).then(function (rows) {
+    library.db.query(sql.getVotesById, { id: transaction.id }).then((rows) => {
         if (!rows.length) {
-            return setImmediate(cb, 'Transaction not found: ' + transaction.id);
+            return setImmediate(cb, `Transaction not found: ${transaction.id}`);
         }
 
-        let votes = rows[0].votes.split(',');
-        let added = [];
-        let deleted = [];
+        const votes = rows[0].votes.split(',');
+        const added = [];
+        const deleted = [];
 
         for (let i = 0; i < votes.length; i++) {
             if (votes[i].substring(0, 1) === '+') {
@@ -346,10 +341,10 @@ __private.getVotesById = function (transaction, cb) {
             }
         }
 
-        transaction.votes = {added: added, deleted: deleted};
+        transaction.votes = { added, deleted };
 
         return setImmediate(cb, null, transaction);
-    }).catch(function (err) {
+    }).catch((err) => {
         library.logger.error(err.stack);
         return setImmediate(cb, 'Transactions#getVotesById error');
     });
@@ -364,18 +359,18 @@ __private.getVotesById = function (transaction, cb) {
  * @returns {setImmediateCallback} error | data: {transaction}
  */
 __private.getPooledTransaction = function (method, req, cb) {
-    library.schema.validate(req.body, schema.getPooledTransaction, function (err) {
+    library.schema.validate(req.body, schema.getPooledTransaction, (err) => {
         if (err) {
             return setImmediate(cb, err[0].message);
         }
 
-        let transaction = self[method](req.body.id);
+        const transaction = self[method](req.body.id);
 
         if (!transaction) {
             return setImmediate(cb, 'Transaction not found');
         }
 
-        return setImmediate(cb, null, {transaction: transaction});
+        return setImmediate(cb, null, { transaction });
     });
 };
 
@@ -389,13 +384,14 @@ __private.getPooledTransaction = function (method, req, cb) {
  * @returns {setImmediateCallback} error | data: {transactions, count}
  */
 __private.getPooledTransactions = function (method, req, cb) {
-    library.schema.validate(req.body, schema.getPooledTransactions, function (err) {
+    library.schema.validate(req.body, schema.getPooledTransactions, (err) => {
         if (err) {
             return setImmediate(cb, err[0].message);
         }
 
-        let transactions = self[method](true);
-        let i, toSend = [];
+        const transactions = self[method](true);
+        let i,
+            toSend = [];
 
         if (req.body.senderPublicKey || req.body.address) {
             for (i = 0; i < transactions.length; i++) {
@@ -409,7 +405,7 @@ __private.getPooledTransactions = function (method, req, cb) {
             }
         }
 
-        return setImmediate(cb, null, {transactions: toSend, count: transactions.length});
+        return setImmediate(cb, null, { transactions: toSend, count: transactions.length });
     });
 };
 
@@ -576,22 +572,21 @@ Transactions.prototype.applyUnconfirmed = function (transaction, sender, cb) {
 
     if (!sender && transaction.blockId !== library.genesisblock.block.id) {
         return setImmediate(cb, 'Invalid block id');
+    }
+    if (transaction.requesterPublicKey) {
+        modules.accounts.getAccount({ publicKey: transaction.requesterPublicKey }, (err, requester) => {
+            if (err) {
+                return setImmediate(cb, err);
+            }
+
+            if (!requester) {
+                return setImmediate(cb, 'Requester not found');
+            }
+
+            library.logic.transaction.applyUnconfirmed(transaction, sender, requester, cb);
+        });
     } else {
-        if (transaction.requesterPublicKey) {
-            modules.accounts.getAccount({publicKey: transaction.requesterPublicKey}, function (err, requester) {
-                if (err) {
-                    return setImmediate(cb, err);
-                }
-
-                if (!requester) {
-                    return setImmediate(cb, 'Requester not found');
-                }
-
-                library.logic.transaction.applyUnconfirmed(transaction, sender, requester, cb);
-            });
-        } else {
-            library.logic.transaction.applyUnconfirmed(transaction, sender, cb);
-        }
+        library.logic.transaction.applyUnconfirmed(transaction, sender, cb);
     }
 };
 
@@ -606,7 +601,7 @@ Transactions.prototype.applyUnconfirmed = function (transaction, sender, cb) {
 Transactions.prototype.undoUnconfirmed = function (transaction, cb) {
     library.logger.debug('Undoing unconfirmed transaction', transaction.id);
 
-    modules.accounts.getAccount({publicKey: transaction.senderPublicKey}, function (err, sender) {
+    modules.accounts.getAccount({ publicKey: transaction.senderPublicKey }, (err, sender) => {
         if (err) {
             return setImmediate(cb, err);
         }
@@ -683,51 +678,45 @@ Transactions.prototype.onBind = function (scope) {
  * @see {@link http://apidocjs.com/}
  */
 Transactions.prototype.internal = {
-    getTransactionHistory: function (req, cb) {
-
+    getTransactionHistory(req, cb) {
         if (expCache.get('trsHistoryCache')) {
             return setImmediate(cb, null, {
                 success: true,
                 trsData: expCache.get('trsHistoryCache'),
                 info: 'caching'
             });
-        } else {
-
-            let fortnightBack = new Date(+new Date - 12096e5);
-
-            fortnightBack.setHours(0, 0, 0, 0);
-
-            let startTimestamp = slots.getTime(fortnightBack);
-
-            let endDate = new Date(+new Date - (60 * 60 * 24 * 1000));
-
-            endDate.setHours(0, 0, 0, 0);
-
-            let endTimestamp = slots.getTime(endDate);
-
-            library.db.query(sql.getTransactionHistory, {
-                startTimestamp: startTimestamp + epochTime,
-                endTimestamp: endTimestamp + epochTime,
-                epochTime: epochTime
-            })
-                .then(function (trsHistory) {
-
-                    let leftTime = (24 - new Date().getUTCHours()) * 60 * 60 * 1000;
-
-                    expCache.put('trsHistoryCache', trsHistory, leftTime);
-
-                    return setImmediate(cb, null, {
-                        success: true,
-                        trsData: trsHistory
-                    });
-                })
-                .catch(function (err) {
-                    return setImmediate(cb, {
-                        success: false,
-                        err: err
-                    });
-                });
         }
+        const fortnightBack = new Date(+new Date() - 12096e5);
+
+        fortnightBack.setHours(0, 0, 0, 0);
+
+        const startTimestamp = slots.getTime(fortnightBack);
+
+        const endDate = new Date(+new Date() - (60 * 60 * 24 * 1000));
+
+        endDate.setHours(0, 0, 0, 0);
+
+        const endTimestamp = slots.getTime(endDate);
+
+        library.db.query(sql.getTransactionHistory, {
+            startTimestamp: startTimestamp + epochTime,
+            endTimestamp: endTimestamp + epochTime,
+            epochTime
+        })
+            .then((trsHistory) => {
+                const leftTime = (24 - new Date().getUTCHours()) * 60 * 60 * 1000;
+
+                expCache.put('trsHistoryCache', trsHistory, leftTime);
+
+                return setImmediate(cb, null, {
+                    success: true,
+                    trsData: trsHistory
+                });
+            })
+            .catch(err => setImmediate(cb, {
+                success: false,
+                err
+            }));
     }
 };
 
@@ -737,15 +726,15 @@ Transactions.prototype.internal = {
  * @see {@link http://apidocjs.com/}
  */
 Transactions.prototype.shared = {
-    getTransactions: function (req, cb) {
+    getTransactions(req, cb) {
         async.waterfall([
             function (waterCb) {
-                let params = {};
-                let pattern = /(and|or){1}:/i;
+                const params = {};
+                const pattern = /(and|or){1}:/i;
 
                 // Filter out 'and:'/'or:' from params to perform schema validation
-                _.each(req.body, function (value, key) {
-                    let param = String(key).replace(pattern, '');
+                _.each(req.body, (value, key) => {
+                    const param = String(key).replace(pattern, '');
                     // Dealing with array-like parameters (csv comma separated)
                     if (_.includes(['senderIds', 'recipientIds', 'senderPublicKeys', 'recipientPublicKeys'], param)) {
                         value = String(value).split(',');
@@ -754,95 +743,85 @@ Transactions.prototype.shared = {
                     params[param] = value;
                 });
 
-                library.schema.validate(params, schema.getTransactions, function (err) {
+                library.schema.validate(params, schema.getTransactions, (err) => {
                     if (err) {
                         return setImmediate(waterCb, err[0].message);
-                    } else {
-                        return setImmediate(waterCb, null);
                     }
+                    return setImmediate(waterCb, null);
                 });
             },
             function (waterCb) {
-                __private.list(req.body, function (err, data) {
+                __private.list(req.body, (err, data) => {
                     if (err) {
-                        return setImmediate(waterCb, 'Failed to get transactions: ' + err);
-                    } else {
-                        return setImmediate(waterCb, null, {transactions: data.transactions, count: data.count});
+                        return setImmediate(waterCb, `Failed to get transactions: ${err}`);
                     }
+                    return setImmediate(waterCb, null, { transactions: data.transactions, count: data.count });
                 });
             }
-        ], function (err, res) {
-            return setImmediate(cb, err, res);
-        });
+        ], (err, res) => setImmediate(cb, err, res));
     },
 
-    getTransaction: function (req, cb) {
-        library.schema.validate(req.body, schema.getTransaction, function (err) {
+    getTransaction(req, cb) {
+        library.schema.validate(req.body, schema.getTransaction, (err) => {
             if (err) {
                 return setImmediate(cb, err[0].message);
             }
 
-            __private.getById(req.body.id, function (err, transaction) {
+            __private.getById(req.body.id, (err, transaction) => {
                 if (!transaction || err) {
                     return setImmediate(cb, 'Transaction not found');
                 }
 
                 if (transaction.type === transactionTypes.VOTE) {
-                    __private.getVotesById(transaction, function (err, transaction) {
-                        return setImmediate(cb, null, {transaction: transaction});
-                    });
+                    __private.getVotesById(transaction, (err, transaction) => setImmediate(cb, null, { transaction }));
                 } else {
-                    return setImmediate(cb, null, {transaction: transaction});
+                    return setImmediate(cb, null, { transaction });
                 }
             });
         });
     },
 
-    getTransactionsCount: function (req, cb) {
-        library.db.query(sql.count).then(function (transactionsCount) {
-            return setImmediate(cb, null, {
-                confirmed: transactionsCount[0].count,
-                multisignature: __private.transactionPool.multisignature.transactions.length,
-                unconfirmed: __private.transactionPool.unconfirmed.transactions.length,
-                queued: __private.transactionPool.queued.transactions.length
-            });
-        }, function (err) {
-            return setImmediate(cb, err);
-        });
+    getTransactionsCount(req, cb) {
+        library.db.query(sql.count).then(transactionsCount => setImmediate(cb, null, {
+            confirmed: transactionsCount[0].count,
+            multisignature: __private.transactionPool.multisignature.transactions.length,
+            unconfirmed: __private.transactionPool.unconfirmed.transactions.length,
+            queued: __private.transactionPool.queued.transactions.length
+        }), err => setImmediate(cb, err));
     },
 
-    getQueuedTransaction: function (req, cb) {
+    getQueuedTransaction(req, cb) {
         return __private.getPooledTransaction('getQueuedTransaction', req, cb);
     },
 
-    getQueuedTransactions: function (req, cb) {
+    getQueuedTransactions(req, cb) {
         return __private.getPooledTsrcransactions('getQueuedTransactionList', req, cb);
     },
 
-    getMultisignatureTransaction: function (req, cb) {
+    getMultisignatureTransaction(req, cb) {
         return __private.getPooledTransaction('getMultisignatureTransaction', req, cb);
     },
 
-    getMultisignatureTransactions: function (req, cb) {
+    getMultisignatureTransactions(req, cb) {
         return __private.getPooraledTransactions('getMultisignatureTransactionList', req, cb);
     },
 
-    getUnconfirmedTransaction: function (req, cb) {
+    getUnconfirmedTransaction(req, cb) {
         return __private.getPooledTransaction('getUnconfirmedTransaction', req, cb);
     },
 
-    getUnconfirmedTransactions: function (req, cb) {
+    getUnconfirmedTransactions(req, cb) {
         return __private.getPooledTransactions('getUnconfirmedTransactionList', req, cb);
     },
 
-    addTransactions: function (req, cb) {
-        library.schema.validate(req.body, schema.addTransactions, function (err) {
+    addTransactions(req, cb) {
+        library.schema.validate(req.body, schema.addTransactions, (err) => {
             if (err) {
                 return setImmediate(cb, err[0].message);
             }
-            let hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
-            let keypair = library.ed.makeKeypair(hash);
-            let publicKey = keypair.publicKey.toString('hex');
+            const hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
+            const keypair = library.ed.makeKeypair(hash);
+            const publicKey = keypair.publicKey.toString('hex');
 
             if (req.body.publicKey) {
                 if (keypair.publicKey.toString('hex') !== req.body.publicKey) {
@@ -850,14 +829,14 @@ Transactions.prototype.shared = {
                 }
             }
 
-            library.cache.client.get('2fa_user_' + modules.accounts.generateAddressByPublicKey(publicKey), function (err, userTwoFaCred) {
+            library.cache.client.get(`2fa_user_${modules.accounts.generateAddressByPublicKey(publicKey)}`, (err, userTwoFaCred) => {
                 if (err) {
                     return setImmediate(cb, err);
                 }
                 if (userTwoFaCred) {
                     userTwoFaCred = JSON.parse(userTwoFaCred);
                     if (userTwoFaCred.twofactor.secret) {
-                        let verified = speakeasy.totp.verify({
+                        const verified = speakeasy.totp.verify({
                             secret: userTwoFaCred.twofactor.secret,
                             encoding: 'base32',
                             token: req.body.otp,
@@ -869,22 +848,22 @@ Transactions.prototype.shared = {
                     }
                 }
 
-                let query = {address: req.body.recipientId};
+                const query = { address: req.body.recipientId };
 
-                library.balancesSequence.add(function (cb) {
-                    modules.accounts.getAccount(query, function (err, recipient) {
+                library.balancesSequence.add((cb) => {
+                    modules.accounts.getAccount(query, (err, recipient) => {
                         if (err) {
                             return setImmediate(cb, err);
                         }
 
-                        let recipientId = recipient ? recipient.address : req.body.recipientId;
+                        const recipientId = recipient ? recipient.address : req.body.recipientId;
 
                         if (!recipientId) {
                             return setImmediate(cb, 'Invalid recipient');
                         }
 
                         if (req.body.multisigAccountPublicKey && req.body.multisigAccountPublicKey !== keypair.publicKey.toString('hex')) {
-                            modules.accounts.getAccount({publicKey: req.body.multisigAccountPublicKey}, function (err, account) {
+                            modules.accounts.getAccount({ publicKey: req.body.multisigAccountPublicKey }, (err, account) => {
                                 if (err) {
                                     return setImmediate(cb, err);
                                 }
@@ -901,7 +880,7 @@ Transactions.prototype.shared = {
                                     return setImmediate(cb, 'Account does not belong to multisignature group');
                                 }
 
-                                modules.accounts.getAccount({publicKey: keypair.publicKey}, function (err) {
+                                modules.accounts.getAccount({ publicKey: keypair.publicKey }, (err) => {
                                     if (err) {
                                         return setImmediate(cb, err);
                                     }
@@ -921,7 +900,7 @@ Transactions.prototype.shared = {
                                     let secondKeypair = null;
 
                                     if (account.secondSignature) {
-                                        let secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
+                                        const secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
                                         secondKeypair = library.ed.makeKeypair(secondHash);
                                     }
 
@@ -931,19 +910,17 @@ Transactions.prototype.shared = {
                                         type: transactionTypes.SEND,
                                         amount: req.body.amount,
                                         sender: account,
-                                        recipientId: recipientId,
-                                        keypair: keypair,
-                                        secondKeypair: secondKeypair
+                                        recipientId,
+                                        keypair,
+                                        secondKeypair
                                     }).then((transactionReferSend) => {
                                         transaction = transactionReferSend;
                                         modules.transactions.receiveTransactions([transaction], true, cb);
-                                    }).catch((e) => {
-                                        return setImmediate(cb, e.toString());
-                                    });
+                                    }).catch(e => setImmediate(cb, e.toString()));
                                 });
                             });
                         } else {
-                            modules.accounts.setAccountAndGet({publicKey: keypair.publicKey.toString('hex')}, function (err, account) {
+                            modules.accounts.setAccountAndGet({ publicKey: keypair.publicKey.toString('hex') }, (err, account) => {
                                 if (err) {
                                     return setImmediate(cb, err);
                                 }
@@ -963,7 +940,7 @@ Transactions.prototype.shared = {
                                 let secondKeypair = null;
 
                                 if (account.secondSignature) {
-                                    let secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
+                                    const secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
                                     secondKeypair = library.ed.makeKeypair(secondHash);
                                 }
 
@@ -973,24 +950,22 @@ Transactions.prototype.shared = {
                                     type: transactionTypes.SEND,
                                     amount: req.body.amount,
                                     sender: account,
-                                    recipientId: recipientId,
-                                    keypair: keypair,
-                                    secondKeypair: secondKeypair
+                                    recipientId,
+                                    keypair,
+                                    secondKeypair
                                 }).then((transactionReferSend) => {
                                     transaction = transactionReferSend;
                                     modules.transactions.receiveTransactions([transaction], true, cb);
-                                }).catch((e) => {
-                                    return setImmediate(cb, e.toString());
-                                });
+                                }).catch(e => setImmediate(cb, e.toString()));
                             });
                         }
                     });
-                }, function (err, transaction) {
+                }, (err, transaction) => {
                     if (err) {
                         return setImmediate(cb, err);
                     }
 
-                    return setImmediate(cb, null, {transactionId: transaction[0].id});
+                    return setImmediate(cb, null, { transactionId: transaction[0].id });
                 });
             });
         });
@@ -1000,4 +975,4 @@ Transactions.prototype.shared = {
 // Export
 module.exports = Transactions;
 
-/*************************************** END OF FILE *************************************/
+/** ************************************* END OF FILE ************************************ */
