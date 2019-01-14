@@ -131,7 +131,7 @@ __private.openAccount = (body, cb) => {
                 modules.transactions.receiveTransactions(
                     [referralTransaction],
                     true,
-                    () => setImmediate(cb, null, account)
+                    () => setImmediate(cb, null, newAccount)
                 );
             }).catch((receiveTransactionsError) => {
                 throw receiveTransactionsError;
