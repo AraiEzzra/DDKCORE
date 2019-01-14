@@ -305,9 +305,6 @@ Multisignature.prototype.undo = function (trs, block, sender, cb) {
  * @return {setImmediateCallback} For error.
  */
 Multisignature.prototype.applyUnconfirmed = function (trs, sender, cb) {
-    if (__private.unconfirmedSignatures[sender.address]) {
-        return setImmediate(cb, 'Signature on this account is pending confirmation');
-    }
 
     __private.unconfirmedSignatures[sender.address] = true;
 

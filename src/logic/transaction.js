@@ -949,9 +949,6 @@ Transaction.prototype.applyUnconfirmed = function (trs, sender, requester, cb) {
         cb = requester;
     }
     let amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
-    if (trs.type === transactionTypes.STAKE && (parseInt(sender.u_balance) - parseInt(sender.u_totalFrozeAmount)) < (trs.stakedAmount + trs.fee)) {
-        return setImmediate(cb, 'Failed because of Frozen DDK');
-    }
 
     amount = amount.toNumber();
 

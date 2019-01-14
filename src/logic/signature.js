@@ -173,9 +173,6 @@ Signature.prototype.undo = function (trs, block, sender, cb) {
  * @return {setImmediateCallback} Error if second signature is already enabled.
  */
 Signature.prototype.applyUnconfirmed = function (trs, sender, cb) {
-    if (sender.u_secondSignature || sender.secondSignature) {
-        return setImmediate(cb, 'Second signature already enabled');
-    }
 
     modules.accounts.setAccountAndGet({ address: sender.address, u_secondSignature: 1 }, cb);
 };
