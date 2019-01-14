@@ -368,9 +368,9 @@ Frogings.prototype.shared = {
 							if (
 								(
 									req.body.freezedAmount +
-									(constants.fees.froze * req.body.freezedAmount)/100 +
-									parseInt(account.totalFrozeAmount)
-								) > account.balance
+									(constants.fees.froze * req.body.freezedAmount) / 100 +
+									parseInt(account.u_totalFrozeAmount)
+								) > parseInt(account.u_balance)
 							) {
 								return setImmediate(cb, 'Insufficient balance');
 							}
@@ -414,9 +414,9 @@ Frogings.prototype.shared = {
 						if (
 							(
 								req.body.freezedAmount +
-								(constants.fees.froze * req.body.freezedAmount)/100 +
-								parseInt(account.totalFrozeAmount)
-							) > account.balance
+								(constants.fees.froze * req.body.freezedAmount) / 100 +
+								parseInt(account.u_totalFrozeAmount)
+							) > parseInt(account.u_balance)
 						) {
 							return setImmediate(cb, 'Insufficient balance');
 						}
