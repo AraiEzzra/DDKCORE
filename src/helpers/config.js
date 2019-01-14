@@ -3,8 +3,11 @@ const path = require('path');
 const z_schema = require('./z_schema.js');
 const configSchema = require('../schema/config.js');
 const constants = require('./constants.js');
-
 const env = process.env;
+const devConfig = require('../config/default/config');
+const testConfig = require('../config/testnet/config');
+const mainConfig = require('../config/mainnet/config');
+
 let configData = {};
 
 /**
@@ -17,19 +20,19 @@ let configData = {};
 function Config(configPath) {
     // For development mode
     if (env.NODE_ENV_IN === 'development') {
-        configData = require('../config/default/config');
+        configData = devConfig;
         // configData = fs.readFileSync(path.resolve(process.cwd(), (configPath || 'config/default.js')), 'utf8');
     }
 
     // For staging environment
     if (env.NODE_ENV_IN === 'testnet') {
-        configData = require('../config/testnet/config');
+        configData = testConfig;
         // configData = fs.readFileSync(path.resolve(process.cwd(), (configPath || 'config/testnet.js')), 'utf8');
     }
 
     // For production
     if (env.NODE_ENV_IN === 'mainnet') {
-        configData = require('../config/mainnet/config');
+        configData = mainConfig;
         // configData = fs.readFileSync(path.resolve(process.cwd(), (configPath || 'config/mainnet.js')), 'utf8');
     }
 
