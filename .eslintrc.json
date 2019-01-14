@@ -13,5 +13,11 @@
     "ecmaVersion": 2017
   },
   "extends": "airbnb-base",
-  "rules": {}
+  "rules": {
+    "indent": ["error", 4],
+    "no-underscore-dangle": "off",
+    "max-len": ["error", 120],
+    "comma-dangle": "off",
+    "global-require": "off"
+  }
 }

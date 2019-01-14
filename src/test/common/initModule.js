@@ -1,6 +1,6 @@
 const env = process.env;
-const genesisblockPath = '/config/' + (env['NODE_ENV'] === 'testnet' || env['NODE_ENV'] ===  'mainnet'
-	? env['NODE_ENV']
+const genesisblockPath = '/config/' + (env['NODE_ENV_IN'] === 'testnet' || env['NODE_ENV_IN'] ===  'mainnet'
+	? env['NODE_ENV_IN']
 	: 'default') + '/genesisBlock.json';
 
 let express = require('express');

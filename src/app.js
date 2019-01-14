@@ -62,9 +62,6 @@ let versionBuild = fs.readFileSync(path.join(__dirname, 'build'), 'utf8');
  */
 let lastCommit = '';
 
-
-
-
 program
 	.version(packageJson.version)
 	.option('-c, --config <path>', 'config file path')

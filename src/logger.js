@@ -48,7 +48,7 @@ let traceTransport = new (winston.transports.File)({
 });
 
 const consoleTransport = new (winston.transports.Console)({
-  level: process.env.NODE_ENV === 'development' ? 'debug' : 'info',
+  level: process.env.NODE_ENV_IN === 'development' ? 'debug' : 'info',
 });
 
 

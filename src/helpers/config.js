@@ -16,24 +16,24 @@ let configData = {};
 function Config (configPath) {
 
 	// For development mode
-	if(env.NODE_ENV === 'development') {
+	if(env.NODE_ENV_IN === 'development') {
 		configData = require('../config/default/config');
 		//configData = fs.readFileSync(path.resolve(process.cwd(), (configPath || 'config/default.js')), 'utf8');
 	}
 
 	// For staging environment
-	if(env.NODE_ENV === 'testnet') {
+	if(env.NODE_ENV_IN === 'testnet') {
 		configData = require('../config/testnet/config');
 		//configData = fs.readFileSync(path.resolve(process.cwd(), (configPath || 'config/testnet.js')), 'utf8');
 	}
 
 	// For production
-	if(env.NODE_ENV === 'mainnet') {
+	if(env.NODE_ENV_IN === 'mainnet') {
 		configData = require('../config/mainnet/config');
 		//configData = fs.readFileSync(path.resolve(process.cwd(), (configPath || 'config/mainnet.js')), 'utf8');
 	}
 
-	if(env.NODE_ENV === 'test') {
+	if(env.NODE_ENV_IN === 'test') {
 		configData = { coverage: true };
 		//configData = fs.readFileSync(path.resolve(process.cwd(), (configPath || 'config/mainnet.js')), 'utf8');
 	}

@@ -197,7 +197,7 @@ describe('peers', function () {
 	describe('acceptable', function () {
 
 		before(function () {
-			process.env['NODE_ENV'] = 'development';
+			process.env['NODE_ENV_IN'] = 'development';
 		});
 
 		let ip = require('ip');
@@ -225,7 +225,7 @@ describe('peers', function () {
 		});
 
 		it('should not accept peer with different ip but the same nonce', function () {
-			process.env['NODE_ENV'] = 'test';
+			process.env['NODE_ENV_IN'] = 'test';
 			let meAsPeer = {
 				ip: '40.00.40.40',
 				port: 4001,
@@ -235,7 +235,7 @@ describe('peers', function () {
 		});
 
 		after(function () {
-			process.env['NODE_ENV'] = 'test';
+			process.env['NODE_ENV_IN'] = 'test';
 		});
 	});
 
