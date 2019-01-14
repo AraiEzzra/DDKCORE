@@ -774,10 +774,7 @@ __private.applyUnconfirmedList = function (transactions, cb) {
 		if (typeof transaction === 'string') {
 			transaction = self.getUnconfirmedTransaction(transaction);
 		}
-		if (!transaction) {
-			return setImmediate(eachSeriesCb);
-		}
-		if (self.unconfirmed.applied[transaction.id]) {
+		if (!transaction || self.unconfirmed.applied[transaction.id]) {
 			return setImmediate(eachSeriesCb);
 		}
 		__private.processVerifyTransaction(transaction, false, function (err, sender) {

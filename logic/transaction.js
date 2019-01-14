@@ -890,7 +890,6 @@ Transaction.prototype.apply = function (trs, block, sender, cb) {
          */
         __private.types[trs.type].apply.call(this, trs, block, sender, function (applyErr) {
             if (applyErr) {
-                this.scope.logger.error('STAKE ERROR!!! ' + applyErr);
                 this.scope.account.merge(sender.address, {
                     balance: amount,
                     blockId: block.id,
