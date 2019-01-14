@@ -1,16 +1,18 @@
-
-
-let async = require('async');
-let crypto = require('crypto');
-let os = require('os');
-let sandboxHelper = require('../helpers/sandbox.js');
-let semver = require('semver');
-let sql = require('../sql/system.js');
+const async = require('async');
+const crypto = require('crypto');
+const os = require('os');
+const sandboxHelper = require('../helpers/sandbox.js');
+const semver = require('semver');
+const sql = require('../sql/system.js');
 
 // Private fields
-let modules, library, self, __private = {}, shared = {};
+let modules,
+    library,
+    self,
+    __private = {},
+    shared = {};
 
-let rcRegExp = /[a-z]+$/;
+const rcRegExp = /[a-z]+$/;
 
 /**
  * Initializes library with scope content and private variables:
@@ -29,37 +31,37 @@ let rcRegExp = /[a-z]+$/;
  * @param {scope} scope - App instance.
  */
 // Constructor
-function System (cb, scope) {
-	library = {
-		logger: scope.logger,
-		db: scope.db,
-		nonce: scope.nonce,
-		config: {
-			version: scope.config.version,
-			port: scope.config.port,
-			nethash: scope.config.nethash,
-			minVersion: scope.config.minVersion,
-		},
-	};
-	self = this;
+function System(cb, scope) {
+    library = {
+        logger: scope.logger,
+        db: scope.db,
+        nonce: scope.nonce,
+        config: {
+            version: scope.config.version,
+            port: scope.config.port,
+            nethash: scope.config.nethash,
+            minVersion: scope.config.minVersion,
+        },
+    };
+    self = this;
 
-	__private.os = os.platform() + os.release();
-	__private.version = library.config.version;
-	__private.port = library.config.port;
-	__private.height = 1;
-	__private.nethash = library.config.nethash;
-	__private.broadhash = library.config.nethash;
-	__private.minVersion = library.config.minVersion;
-	__private.nonce = library.nonce;
+    __private.os = os.platform() + os.release();
+    __private.version = library.config.version;
+    __private.port = library.config.port;
+    __private.height = 1;
+    __private.nethash = library.config.nethash;
+    __private.broadhash = library.config.nethash;
+    __private.minVersion = library.config.minVersion;
+    __private.nonce = library.nonce;
 
-	if (rcRegExp.test(__private.minVersion)) {
-		this.minVersion = __private.minVersion.replace(rcRegExp, '');
-		this.minVersionChar = __private.minVersion.charAt(__private.minVersion.length - 1);
-	} else {
-		this.minVersion = __private.minVersion;
-	}
+    if (rcRegExp.test(__private.minVersion)) {
+        this.minVersion = __private.minVersion.replace(rcRegExp, '');
+        this.minVersionChar = __private.minVersion.charAt(__private.minVersion.length - 1);
+    } else {
+        this.minVersion = __private.minVersion;
+    }
 
-	setImmediate(cb, null, self);
+    setImmediate(cb, null, self);
 }
 
 // Public methods
@@ -68,7 +70,7 @@ function System (cb, scope) {
  * @return {Object}
  */
 System.prototype.headers = function () {
-	return __private;
+    return __private;
 };
 
 /**
@@ -76,7 +78,7 @@ System.prototype.headers = function () {
  * @return {string}
  */
 System.prototype.getOS = function () {
-	return __private.os;
+    return __private.os;
 };
 
 /**
@@ -84,7 +86,7 @@ System.prototype.getOS = function () {
  * @return {string}
  */
 System.prototype.getVersion = function () {
-	return __private.version;
+    return __private.version;
 };
 
 /**
@@ -92,7 +94,7 @@ System.prototype.getVersion = function () {
  * @return {number}
  */
 System.prototype.getPort = function () {
-	return __private.port;
+    return __private.port;
 };
 
 /**
@@ -100,7 +102,7 @@ System.prototype.getPort = function () {
  * @return {number}
  */
 System.prototype.getHeight = function () {
-	return __private.height;
+    return __private.height;
 };
 
 /**
@@ -108,7 +110,7 @@ System.prototype.getHeight = function () {
  * @return {hash}
  */
 System.prototype.getNethash = function () {
-	return __private.nethash;
+    return __private.nethash;
 };
 
 /**
@@ -116,7 +118,7 @@ System.prototype.getNethash = function () {
  * @return {nonce}
  */
 System.prototype.getNonce = function () {
-	return __private.nonce;
+    return __private.nonce;
 };
 /**
  * Gets private variable `nethash` and compares with input param.
@@ -124,7 +126,7 @@ System.prototype.getNonce = function () {
  * @return {boolean} True if input param is equal to private value.
  */
 System.prototype.networkCompatible = function (nethash) {
-	return __private.nethash === nethash;
+    return __private.nethash === nethash;
 };
 
 /**
@@ -132,7 +134,7 @@ System.prototype.networkCompatible = function (nethash) {
  * @return {string}
  */
 System.prototype.getMinVersion = function () {
-	return __private.minVersion;
+    return __private.minVersion;
 };
 
 /**
@@ -142,21 +144,21 @@ System.prototype.getMinVersion = function () {
  * @return {boolean}
  */
 System.prototype.versionCompatible = function (version) {
-	let versionChar;
+    let versionChar;
 
-	if (rcRegExp.test(version)) {
-		versionChar = version.charAt(version.length - 1);
-		version = version.replace(rcRegExp, '');
-	}
+    if (rcRegExp.test(version)) {
+        versionChar = version.charAt(version.length - 1);
+        version = version.replace(rcRegExp, '');
+    }
 
-	// if no range specifier is used for minVersion, check the complete version string (inclusive versionChar)
-	let rangeRegExp = /[\^~\*]/;
-	if (this.minVersionChar && versionChar && !rangeRegExp.test(this.minVersion)) {
-		return (version + versionChar) === (this.minVersion + this.minVersionChar);
-	}
+    // if no range specifier is used for minVersion, check the complete version string (inclusive versionChar)
+    const rangeRegExp = /[\^~\*]/;
+    if (this.minVersionChar && versionChar && !rangeRegExp.test(this.minVersion)) {
+        return (version + versionChar) === (this.minVersion + this.minVersionChar);
+    }
 
-	// ignore versionChar, check only version
-	return semver.satisfies(version, this.minVersion);
+    // ignore versionChar, check only version
+    return semver.satisfies(version, this.minVersion);
 };
 
 /**
@@ -167,23 +169,22 @@ System.prototype.versionCompatible = function (version) {
  * @return {hash|setImmediateCallback} err | private nethash or new hash.
  */
 System.prototype.getBroadhash = function (cb) {
-	if (typeof cb !== 'function') {
-		return __private.broadhash;
-	}
+    if (typeof cb !== 'function') {
+        return __private.broadhash;
+    }
 
-	library.db.query(sql.getBroadhash, { limit: 5 }).then(function (rows) {
-		if (rows.length <= 1) {
-			return setImmediate(cb, null, __private.nethash);
-		} else {
-			let seed = rows.map(function (row) { return row.id; }).join('');
-			let hash = crypto.createHash('sha256').update(seed, 'utf8').digest();
+    library.db.query(sql.getBroadhash, { limit: 5 }).then((rows) => {
+        if (rows.length <= 1) {
+            return setImmediate(cb, null, __private.nethash);
+        }
+        const seed = rows.map(row => row.id).join('');
+        const hash = crypto.createHash('sha256').update(seed, 'utf8').digest();
 
-			return setImmediate(cb, null, hash.toString('hex'));
-		}
-	}).catch(function (err) {
-		library.logger.error(err.stack);
-		return setImmediate(cb, err);
-	});
+        return setImmediate(cb, null, hash.toString('hex'));
+    }).catch((err) => {
+        library.logger.error(err.stack);
+        return setImmediate(cb, err);
+    });
 };
 
 /**
@@ -196,25 +197,25 @@ System.prototype.getBroadhash = function (cb) {
  * @return {setImmediateCallback} cb, err
  */
 System.prototype.update = function (cb) {
-	async.series({
-		getBroadhash: function (seriesCb) {
-			self.getBroadhash(function (err, hash) {
-				if (!err) {
-					__private.broadhash = hash;
-				}
+    async.series({
+        getBroadhash(seriesCb) {
+            self.getBroadhash((err, hash) => {
+                if (!err) {
+                    __private.broadhash = hash;
+                }
 
-				return setImmediate(seriesCb);
-			});
-		},
-		getHeight: function (seriesCb) {
-			__private.height = modules.blocks.lastBlock.get().height;
-			return setImmediate(seriesCb);
-		}
-	}, function (err) {
-		library.logger.debug('System headers', __private);
-		modules.transport.headers(__private);
-		return setImmediate(cb, err);
-	});
+                return setImmediate(seriesCb);
+            });
+        },
+        getHeight(seriesCb) {
+            __private.height = modules.blocks.lastBlock.get().height;
+            return setImmediate(seriesCb);
+        }
+    }, (err) => {
+        library.logger.debug('System headers', __private);
+        modules.transport.headers(__private);
+        return setImmediate(cb, err);
+    });
 };
 
 /**
@@ -225,7 +226,7 @@ System.prototype.update = function (cb) {
  * @param {function} cb - Callback function.
  */
 System.prototype.sandboxApi = function (call, args, cb) {
-	sandboxHelper.callMethod(shared, call, args, cb);
+    sandboxHelper.callMethod(shared, call, args, cb);
 };
 
 // Events
@@ -234,13 +235,13 @@ System.prototype.sandboxApi = function (call, args, cb) {
  * @param {modules} scope - Loaded modules.
  */
 System.prototype.onBind = function (scope) {
-	modules = {
-		blocks: scope.blocks,
-		transport: scope.transport,
-	};
+    modules = {
+        blocks: scope.blocks,
+        transport: scope.transport,
+    };
 };
 
 // Export
 module.exports = System;
 
-/*************************************** END OF FILE *************************************/
+/** ************************************* END OF FILE ************************************ */

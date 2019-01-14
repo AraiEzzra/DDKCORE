@@ -1,7 +1,8 @@
-let constants = require('../helpers/constants.js');
+const constants = require('../helpers/constants.js');
 
 // Private fields
-let modules, self;
+let modules,
+    self;
 
 /**
  * Main transfer logic.
@@ -22,8 +23,8 @@ function Transfer() {
  */
 Transfer.prototype.bind = function (accounts, rounds) {
     modules = {
-        accounts: accounts,
-        rounds: rounds,
+        accounts,
+        rounds,
     };
 };
 
@@ -50,7 +51,6 @@ Transfer.prototype.create = function (data, trs) {
  * @return {number} fee
  */
 Transfer.prototype.calculateFee = function (trs) {
-
     return (trs.amount * constants.fees.send) / 100;
 };
 
@@ -62,21 +62,18 @@ Transfer.prototype.calculateFee = function (trs) {
  * @return {setImmediateCallback} errors | trs
  */
 Transfer.prototype.verify = function (trs, sender, cb) {
-
     if (!trs.recipientId) {
         if (constants.SEND_TRANSACTION_VALIDATION_ENABLED.RECIPIENT_ID) {
             return setImmediate(cb, 'Missing recipient');
-        } else {
-            library.logger.error('Missing recipient');
         }
+        library.logger.error('Missing recipient');
     }
 
     if (trs.amount <= 0) {
         if (constants.SEND_TRANSACTION_VALIDATION_ENABLED.AMOUNT) {
             return setImmediate(cb, 'Invalid transaction amount');
-        } else {
-            library.logger.error('Invalid transaction amount');
         }
+        library.logger.error('Invalid transaction amount');
     }
 
     return setImmediate(cb, null, trs);
@@ -84,7 +81,7 @@ Transfer.prototype.verify = function (trs, sender, cb) {
 
 Transfer.prototype.verifyUnconfirmed = function (trs, sender, cb) {
     return setImmediate(cb);
-}
+};
 
 /**
  * @param {transaction} trs
@@ -117,7 +114,7 @@ Transfer.prototype.getBytes = function (trs) {
  * @return {setImmediateCallback} error, cb
  */
 Transfer.prototype.apply = function (trs, block, sender, cb) {
-    modules.accounts.setAccountAndGet({address: trs.recipientId}, function (err) {
+    modules.accounts.setAccountAndGet({ address: trs.recipientId }, (err) => {
         if (err) {
             return setImmediate(cb, err);
         }
@@ -127,9 +124,7 @@ Transfer.prototype.apply = function (trs, block, sender, cb) {
             balance: trs.amount,
             blockId: block.id,
             round: modules.rounds.calc(block.height)
-        }, function (err) {
-            return setImmediate(cb, err);
-        });
+        }, err => setImmediate(cb, err));
     });
 };
 
@@ -146,7 +141,7 @@ Transfer.prototype.apply = function (trs, block, sender, cb) {
  * @return {setImmediateCallback} error, cb
  */
 Transfer.prototype.undo = function (trs, block, sender, cb) {
-    modules.accounts.setAccountAndGet({address: trs.recipientId}, function (err) {
+    modules.accounts.setAccountAndGet({ address: trs.recipientId }, (err) => {
         if (err) {
             return setImmediate(cb, err);
         }
@@ -156,9 +151,7 @@ Transfer.prototype.undo = function (trs, block, sender, cb) {
             balance: -trs.amount,
             blockId: block.id,
             round: modules.rounds.calc(block.height)
-        }, function (err) {
-            return setImmediate(cb, err);
-        });
+        }, err => setImmediate(cb, err));
     });
 };
 
@@ -169,7 +162,7 @@ Transfer.prototype.undo = function (trs, block, sender, cb) {
  * @return {setImmediateCallback} cb
  */
 Transfer.prototype.applyUnconfirmed = function (trs, sender, cb) {
-    modules.accounts.setAccountAndGet({ address: trs.recipientId }, function (err) {
+    modules.accounts.setAccountAndGet({ address: trs.recipientId }, (err) => {
         if (err) {
             return setImmediate(cb, err);
         }
@@ -177,9 +170,7 @@ Transfer.prototype.applyUnconfirmed = function (trs, sender, cb) {
         modules.accounts.mergeAccountAndGet({
             address: trs.recipientId,
             u_balance: trs.amount,
-        }, function (err) {
-            return setImmediate(cb, err);
-        });
+        }, err => setImmediate(cb, err));
     });
 };
 
@@ -190,7 +181,7 @@ Transfer.prototype.applyUnconfirmed = function (trs, sender, cb) {
  * @return {setImmediateCallback} cb
  */
 Transfer.prototype.undoUnconfirmed = function (trs, sender, cb) {
-    modules.accounts.setAccountAndGet({ address: trs.recipientId }, function (err) {
+    modules.accounts.setAccountAndGet({ address: trs.recipientId }, (err) => {
         if (err) {
             return setImmediate(cb, err);
         }
@@ -198,9 +189,7 @@ Transfer.prototype.undoUnconfirmed = function (trs, sender, cb) {
         modules.accounts.mergeAccountAndGet({
             address: trs.recipientId,
             u_balance: -trs.amount,
-        }, function (err) {
-            return setImmediate(cb, err);
-        });
+        }, err => setImmediate(cb, err));
     });
 };
 
@@ -243,12 +232,11 @@ Transfer.prototype.ready = function (trs, sender) {
             return false;
         }
         return trs.signatures.length >= sender.multimin;
-    } else {
-        return true;
     }
+    return true;
 };
 
 // Export
 module.exports = Transfer;
 
-/*************************************** END OF FILE *************************************/
+/** ************************************* END OF FILE ************************************ */

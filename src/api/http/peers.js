@@ -1,16 +1,14 @@
-
-
-let Router = require('../../helpers/router');
-let httpApi = require('../../helpers/httpApi');
+const Router = require('../../helpers/router');
+const httpApi = require('../../helpers/httpApi');
 
 /**
  * Binds api with modules and creates common url.
  * - End point: `/api/peers`
  * - Public API:
- * 	- get	/
- * 	- get	/version
- * 	- get	/get
- * 	- get	/count
+ *    - get    /
+ *    - get    /version
+ *    - get    /get
+ *    - get    /count
  * @memberof module:peers
  * @requires helpers/Router
  * @requires helpers/httpApi
@@ -19,20 +17,19 @@ let httpApi = require('../../helpers/httpApi');
  * @param {scope} app - Network app.
  */
 // Constructor
-function PeersHttpApi (peersModule, app) {
+function PeersHttpApi(peersModule, app) {
+    const router = new Router();
 
-	let router = new Router();
+    router.map(peersModule.shared, {
+        'get /': 'getPeers',
+        'get /version': 'version',
+        'get /get': 'getPeer',
+        'get /count': 'count'
+    });
 
-	router.map(peersModule.shared, {
-		'get /': 'getPeers',
-		'get /version': 'version',
-		'get /get': 'getPeer',
-		'get /count': 'count'
-	});
-
-	httpApi.registerEndpoint('/api/peers', app, router, peersModule.isLoaded);
+    httpApi.registerEndpoint('/api/peers', app, router, peersModule.isLoaded);
 }
 
 module.exports = PeersHttpApi;
 
-/*************************************** END OF FILE *************************************/
+/** ************************************* END OF FILE ************************************ */

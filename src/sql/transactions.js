@@ -1,33 +1,31 @@
+const TransactionsSql = {
+    sortFields: [
+        'id',
+        'blockId',
+        'amount',
+        'fee',
+        'type',
+        'timestamp',
+        'senderPublicKey',
+        'senderId',
+        'recipientId',
+        'confirmations',
+        'height'
+    ],
+
+    count: 'SELECT count(1) AS "count" FROM trs',
+
+    getTransactionHistory: 'SELECT serie.day AS "time", COUNT(t."timestamp") AS count, SUM(t."amount" + t."stakedAmount") AS "amount" FROM ( SELECT date_series::date AS "day" FROM generate_series(to_timestamp(${startTimestamp})::date,to_timestamp(${endTimestamp})::date, \'1 day\') AS "date_series") AS "serie" LEFT JOIN trs t ON (t."timestamp"+${epochTime})::abstime::date = serie.day::date GROUP  BY serie.day order by time',
+
+    countById: 'SELECT COUNT("id")::int AS "count" FROM trs WHERE "id" = ${id}',
 
 
-let TransactionsSql = {
-	sortFields: [
-		'id',
-		'blockId',
-		'amount',
-		'fee',
-		'type',
-		'timestamp',
-		'senderPublicKey',
-		'senderId',
-		'recipientId',
-		'confirmations',
-		'height'
-	],
-
-	count: 'SELECT count(1) AS "count" FROM trs',
-
-	getTransactionHistory : 'SELECT serie.day AS "time", COUNT(t."timestamp") AS count, SUM(t."amount" + t."stakedAmount") AS "amount" FROM ( SELECT date_series::date AS "day" FROM generate_series(to_timestamp(${startTimestamp})::date,to_timestamp(${endTimestamp})::date, \'1 day\') AS "date_series") AS "serie" LEFT JOIN trs t ON (t."timestamp"+${epochTime})::abstime::date = serie.day::date GROUP  BY serie.day order by time',
-
-	countById: 'SELECT COUNT("id")::int AS "count" FROM trs WHERE "id" = ${id}',
-
-
-	list: function (params) {
-		return [
-			'WITH t0 AS (' +
-            '    SELECT' +
-            (params.where.length ? ' count(1) OVER () AS total_rows,' : ''),
-            '      t.id                                          AS t_id,' +
+    list(params) {
+        return [
+            `${'WITH t0 AS (' +
+            '    SELECT'}${
+                params.where.length ? ' count(1) OVER () AS total_rows,' : ''}`,
+            `${'      t.id                                          AS t_id,' +
             '      t."blockId"                                   AS "t_blockId",' +
             '      t."rowId"                                     AS "t_rowId",' +
             '      t.type                                        AS t_type,' +
@@ -48,12 +46,12 @@ let TransactionsSql = {
             '      encode(t."requesterPublicKey", \'hex\' :: TEXT) AS "t_requesterPublicKey",' +
             '      t.signatures                                  AS t_signatures,' +
             '      t.salt                                        AS t_salt' +
-            '    FROM trs t ' +
-            (params.where.length || params.owner ? 'WHERE' : ''),
-            (params.where.length ? '(' + params.where.join(' ') + ')' : ''),
+            '    FROM trs t '}${
+                params.where.length || params.owner ? 'WHERE' : ''}`,
+            (params.where.length ? `(${params.where.join(' ')})` : ''),
             // FIXME: Backward compatibility, should be removed after transitional period
-            (params.where.length && params.owner ? ' AND ' + params.owner : params.owner),
-            (params.sortField ? 'ORDER BY ' + [params.sortField, params.sortMethod].join(' ') : ''),
+            (params.where.length && params.owner ? ` AND ${params.owner}` : params.owner),
+            (params.sortField ? `ORDER BY ${[params.sortField, params.sortMethod].join(' ')}` : ''),
             ' LIMIT ${limit} ' +
             ' OFFSET ${offset}' +
             ')',
@@ -80,16 +78,16 @@ let TransactionsSql = {
             '  LEFT JOIN votes v ON v."transactionId" = t.t_id' +
             '  LEFT JOIN stake_orders so ON so.id = t.t_id' +
             '  LEFT JOIN referals ref ON ref.address = t."t_senderId"'
-		].filter(Boolean).join(' ');
-	},
+        ].filter(Boolean).join(' ');
+    },
 
-	getById: 'SELECT *, ENCODE ("t_senderPublicKey", \'hex\') AS "t_senderPublicKey", ENCODE ("m_recipientPublicKey", \'hex\') AS "m_recipientPublicKey" FROM trs_list WHERE "t_id" = ${id}',
+    getById: 'SELECT *, ENCODE ("t_senderPublicKey", \'hex\') AS "t_senderPublicKey", ENCODE ("m_recipientPublicKey", \'hex\') AS "m_recipientPublicKey" FROM trs_list WHERE "t_id" = ${id}',
 
-	getVotesById: 'SELECT * FROM votes WHERE "transactionId" = ${id}',
+    getVotesById: 'SELECT * FROM votes WHERE "transactionId" = ${id}',
 
-	getDelegateNames: 'SELECT username as m_username, address as m_address from mem_accounts where mem_accounts."isDelegate" = 1',
+    getDelegateNames: 'SELECT username as m_username, address as m_address from mem_accounts where mem_accounts."isDelegate" = 1',
 
-	getTransactionById: 'SELECT * from trs WHERE "id" = ${id}'
+    getTransactionById: 'SELECT * from trs WHERE "id" = ${id}'
 };
 
 module.exports = TransactionsSql;

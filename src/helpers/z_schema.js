@@ -1,4 +1,4 @@
-let ip = require('ip');
+const ip = require('ip');
 /**
  * Uses JSON Schema validator z_schema to register custom formats.
  * - id
@@ -20,123 +20,120 @@ let ip = require('ip');
  * @constructor
  * @return {Boolean} True if the format is valid
  */
-let z_schema = require('z-schema');
+const z_schema = require('z-schema');
 
-z_schema.registerFormat('id', function (str) {
-	if (str.length === 0) {
-		return true;
-	}
+z_schema.registerFormat('id', (str) => {
+    if (str.length === 0) {
+        return true;
+    }
 
-	return /^[0-9a-fA-F]+$/g.test(str);
+    return /^[0-9a-fA-F]+$/g.test(str);
 });
 
-z_schema.registerFormat('address', function (str) {
-	if (str.length === 0) {
-		return true;
-	}
+z_schema.registerFormat('address', (str) => {
+    if (str.length === 0) {
+        return true;
+    }
 
-	return /^(DDK)+[0-9]+$/ig.test(str);
+    return /^(DDK)+[0-9]+$/ig.test(str);
 });
 
-z_schema.registerFormat('username', function (str) {
-	if (str.length === 0) {
-		return true;
-	}
+z_schema.registerFormat('username', (str) => {
+    if (str.length === 0) {
+        return true;
+    }
 
-	return /^[a-z0-9!@$&_.]+$/ig.test(str);
+    return /^[a-z0-9!@$&_.]+$/ig.test(str);
 });
 
-z_schema.registerFormat('hex', function (str) {
-	try {
-		Buffer.from(str, 'hex');
-	} catch (e) {
-		return false;
-	}
+z_schema.registerFormat('hex', (str) => {
+    try {
+        Buffer.from(str, 'hex');
+    } catch (e) {
+        return false;
+    }
 
-	return true;
+    return true;
 });
 
-z_schema.registerFormat('publicKey', function (str) {
-	if (str.length === 0) {
-		return true;
-	}
+z_schema.registerFormat('publicKey', (str) => {
+    if (str.length === 0) {
+        return true;
+    }
 
-	try {
-		let publicKey = Buffer.from(str, 'hex');
+    try {
+        const publicKey = Buffer.from(str, 'hex');
 
-		return publicKey.length === 32;
-	} catch (e) {
-		return false;
-	}
+        return publicKey.length === 32;
+    } catch (e) {
+        return false;
+    }
 });
 
-z_schema.registerFormat('csv', function (str) {
-	try {
-		let a = str.split(',');
-		if (a.length > 0 && a.length <= 1000) {
-			return true;
-		} else {
-			return false;
-		}
-	} catch (e) {
-		return false;
-	}
+z_schema.registerFormat('csv', (str) => {
+    try {
+        const a = str.split(',');
+        if (a.length > 0 && a.length <= 1000) {
+            return true;
+        }
+        return false;
+    } catch (e) {
+        return false;
+    }
 });
 
-z_schema.registerFormat('signature', function (str) {
-	if (str.length === 0) {
-		return true;
-	}
+z_schema.registerFormat('signature', (str) => {
+    if (str.length === 0) {
+        return true;
+    }
 
-	try {
-		let signature = Buffer.from(str, 'hex');
-		return signature.length === 64;
-	} catch (e) {
-		return false;
-	}
+    try {
+        const signature = Buffer.from(str, 'hex');
+        return signature.length === 64;
+    } catch (e) {
+        return false;
+    }
 });
 
-z_schema.registerFormat('queryList', function (obj) {
-	obj.limit = 100;
-	return true;
+z_schema.registerFormat('queryList', (obj) => {
+    obj.limit = 100;
+    return true;
 });
 
-z_schema.registerFormat('delegatesList', function (obj) {
-	obj.limit = 101;
-	return true;
+z_schema.registerFormat('delegatesList', (obj) => {
+    obj.limit = 101;
+    return true;
 });
 
-z_schema.registerFormat('parsedInt', function (value) {
-	/*eslint-disable eqeqeq */
-	if (isNaN(value) || parseInt(value) != value || isNaN(parseInt(value, 10))) {
-		return false;
-	}
-	/*eslint-enable eqeqeq */
-	value = parseInt(value);
-	return true;
+z_schema.registerFormat('parsedInt', (value) => {
+    /* eslint-disable eqeqeq */
+    if (isNaN(value) || parseInt(value) != value || isNaN(parseInt(value, 10))) {
+        return false;
+    }
+    /* eslint-enable eqeqeq */
+    value = parseInt(value);
+    return true;
 });
 
-z_schema.registerFormat('ip', function (str) {
-	return ip.isV4Format(str);
+z_schema.registerFormat('ip', str => ip.isV4Format(str));
+
+z_schema.registerFormat('os', (str) => {
+    if (str.length === 0) {
+        return true;
+    }
+
+    return /^[a-z0-9-_.+]+$/ig.test(str);
 });
 
-z_schema.registerFormat('os', function (str) {
-	if (str.length === 0) {
-		return true;
-	}
+z_schema.registerFormat('version', (str) => {
+    if (str.length === 0) {
+        return true;
+    }
 
-	return /^[a-z0-9-_.+]+$/ig.test(str);
-});
-
-z_schema.registerFormat('version', function (str) {
-	if (str.length === 0) {
-		return true;
-	}
-
-	return /^([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})([a-z]{1})?$/g.test(str);
+    return /^([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})([a-z]{1})?$/g.test(str);
 });
 
 // Exports
 module.exports = z_schema;
 
-/*************************************** END OF FILE *************************************/
+/** ************************************* END OF FILE ************************************ */

@@ -1,5 +1,4 @@
-
-let env = process.env;
+const env = process.env;
 
 module.exports = {
     port: parseInt(env.PORT, 10) || 7000,
@@ -35,8 +34,7 @@ module.exports = {
         enabled: true,
         access: {
             public: true,
-            whiteList: [
-            ]
+            whiteList: []
         },
         options: {
             limits: {
@@ -78,8 +76,7 @@ module.exports = {
         minBroadhashConsensus: parseInt(env.MIN_CONSENSUS, 10) || 51,
         secret: env.FORGE_SECRET,
         access: {
-            whiteList: [
-            ]
+            whiteList: []
         }
     },
     loading: {

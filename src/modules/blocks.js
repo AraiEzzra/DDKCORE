@@ -1,16 +1,16 @@
-
-
-let constants     = require('../helpers/constants.js');
-let sandboxHelper = require('../helpers/sandbox.js');
+const constants = require('../helpers/constants.js');
+const sandboxHelper = require('../helpers/sandbox.js');
 // Submodules
-let blocksAPI     = require('./blocks/api');
-let blocksVerify  = require('./blocks/verify');
-let blocksProcess = require('./blocks/process');
-let blocksUtils   = require('./blocks/utils');
-let blocksChain   = require('./blocks/chain');
+const blocksAPI = require('./blocks/api');
+const blocksVerify = require('./blocks/verify');
+const blocksProcess = require('./blocks/process');
+const blocksUtils = require('./blocks/utils');
+const blocksChain = require('./blocks/chain');
 
 // Private fields
-let library, self, __private = {};
+let library,
+    self,
+    __private = {};
 
 __private.lastBlock = {};
 __private.lastReceipt = null;
@@ -30,44 +30,42 @@ __private.isActive = false;
  * @return {setImmediateCallback} Callback function with `self` as data.
  */
 // Constructor
-function Blocks (cb, scope) {
-	library = {
-		logger: scope.logger,
-	};	
+function Blocks(cb, scope) {
+    library = {
+        logger: scope.logger,
+    };
 
-	// Initialize submodules with library content
-	this.submodules = {
-		api:     new blocksAPI(
-			scope.logger, scope.db, scope.logic.block, scope.schema, scope.dbSequence
-		),
-		verify:  new blocksVerify(scope.logger, scope.logic.block, 
-			scope.logic.transaction, scope.db, scope.config
-		),
-		process: new blocksProcess(
-			scope.logger, scope.logic.block, scope.logic.peers, scope.logic.transaction,
-			scope.schema, scope.db, scope.dbSequence, scope.sequence, scope.genesisblock
-		),
-		utils:   new blocksUtils(scope.logger, scope.logic.block, scope.logic.transaction, 
-			scope.db, scope.dbSequence, scope.genesisblock
-		),
-		chain:   new blocksChain(
-			scope.logger, scope.logic.block, scope.logic.transaction, scope.db,
-			scope.genesisblock, scope.bus, scope.balancesSequence
-		)
-	};
+    // Initialize submodules with library content
+    this.submodules = {
+        api: new blocksAPI(
+            scope.logger, scope.db, scope.logic.block, scope.schema, scope.dbSequence
+        ),
+        verify: new blocksVerify(scope.logger, scope.logic.block,
+            scope.logic.transaction, scope.db, scope.config
+        ),
+        process: new blocksProcess(
+            scope.logger, scope.logic.block, scope.logic.peers, scope.logic.transaction,
+            scope.schema, scope.db, scope.dbSequence, scope.sequence, scope.genesisblock
+        ),
+        utils: new blocksUtils(scope.logger, scope.logic.block, scope.logic.transaction,
+            scope.db, scope.dbSequence, scope.genesisblock
+        ),
+        chain: new blocksChain(
+            scope.logger, scope.logic.block, scope.logic.transaction, scope.db,
+            scope.genesisblock, scope.bus, scope.balancesSequence
+        )
+    };
 
-	// Expose submodules
-	this.shared  = this.submodules.api;
-	this.verify  = this.submodules.verify;
-	this.process = this.submodules.process;
-	this.utils   = this.submodules.utils;
-	this.chain   = this.submodules.chain;
+    // Expose submodules
+    this.shared = this.submodules.api;
+    this.verify = this.submodules.verify;
+    this.process = this.submodules.process;
+    this.utils = this.submodules.utils;
+    this.chain = this.submodules.chain;
 
-	self = this;
+    self = this;
 
-	this.submodules.chain.saveGenesisBlock(function (err) {
-		return setImmediate(cb, err, self);
-	});
+    this.submodules.chain.saveGenesisBlock(err => setImmediate(cb, err, self));
 }
 
 /**
@@ -80,24 +78,26 @@ function Blocks (cb, scope) {
  * @property {function} isFresh Returns status of last block - if it fresh or not
  */
 Blocks.prototype.lastBlock = {
-	get: function () {
-		return __private.lastBlock;
-	},
-	set: function (lastBlock) {
-		__private.lastBlock = lastBlock;
-		return __private.lastBlock;
-	},
-	/**
-	 * Returns status of last block - if it fresh or not
-	 *
-	 * @function isFresh
-	 * @return {Boolean} Fresh status of last block
-	 */
-	isFresh: function () {
-		if (!__private.lastBlock) { return false; }
-		let secondsAgo = Math.floor(Date.now() / 1000) - (Math.floor(constants.epochTime / 1000) + __private.lastBlock.timestamp);
-		return (secondsAgo < constants.blockReceiptTimeOut);
-	}
+    get() {
+        return __private.lastBlock;
+    },
+    set(lastBlock) {
+        __private.lastBlock = lastBlock;
+        return __private.lastBlock;
+    },
+    /**
+     * Returns status of last block - if it fresh or not
+     *
+     * @function isFresh
+     * @return {Boolean} Fresh status of last block
+     */
+    isFresh() {
+        if (!__private.lastBlock) {
+            return false;
+        }
+        const secondsAgo = Math.floor(Date.now() / 1000) - (Math.floor(constants.epochTime / 1000) + __private.lastBlock.timestamp);
+        return (secondsAgo < constants.blockReceiptTimeOut);
+    }
 };
 
 /**
@@ -107,41 +107,43 @@ Blocks.prototype.lastBlock = {
  * @property {function} isStale Returns status of last receipt - if it fresh or not
  */
 Blocks.prototype.lastReceipt = {
-	get: function () {
-		return __private.lastReceipt;
-	},
-	update: function () {
-		__private.lastReceipt = Math.floor(Date.now() / 1000);
-		return __private.lastReceipt;
-	},
-	/**
-	 * Returns status of last receipt - if it stale or not
-	 *
-	 * @public
-	 * @method lastReceipt.isStale
-	 * @return {Boolean} Stale status of last receipt
-	 */
-	isStale: function () {
-		if (!__private.lastReceipt) { return true; }
-		let secondsAgo = Math.floor(Date.now() / 1000) - __private.lastReceipt;
-		return (secondsAgo > constants.blockReceiptTimeOut);
-	}
+    get() {
+        return __private.lastReceipt;
+    },
+    update() {
+        __private.lastReceipt = Math.floor(Date.now() / 1000);
+        return __private.lastReceipt;
+    },
+    /**
+     * Returns status of last receipt - if it stale or not
+     *
+     * @public
+     * @method lastReceipt.isStale
+     * @return {Boolean} Stale status of last receipt
+     */
+    isStale() {
+        if (!__private.lastReceipt) {
+            return true;
+        }
+        const secondsAgo = Math.floor(Date.now() / 1000) - __private.lastReceipt;
+        return (secondsAgo > constants.blockReceiptTimeOut);
+    }
 };
 
 Blocks.prototype.isActive = {
-	get: function () {
-		return __private.isActive;
-	},
-	set: function (isActive) {
-		__private.isActive = isActive;
-		return __private.isActive;
-	}
+    get() {
+        return __private.isActive;
+    },
+    set(isActive) {
+        __private.isActive = isActive;
+        return __private.isActive;
+    }
 };
 
 Blocks.prototype.isCleaning = {
-	get: function () {
-		return __private.cleanup;
-	}
+    get() {
+        return __private.cleanup;
+    }
 };
 
 /**
@@ -150,12 +152,12 @@ Blocks.prototype.isCleaning = {
  * @public
  * @async
  * @method sandboxApi
- * @param  {string}   call Name of the function to be called 
+ * @param  {string}   call Name of the function to be called
  * @param  {Object}   args Arguments
  * @param  {Function} cb Callback function
  */
 Blocks.prototype.sandboxApi = function (call, args, cb) {
-	sandboxHelper.callMethod(Blocks.prototype.shared, call, args, cb);
+    sandboxHelper.callMethod(Blocks.prototype.shared, call, args, cb);
 };
 
 /**
@@ -164,9 +166,9 @@ Blocks.prototype.sandboxApi = function (call, args, cb) {
  * @param {modules} scope Exposed modules
  */
 Blocks.prototype.onBind = function () {
-	// TODO: move here blocks submodules modules load from app.js.
-	// Set module as loaded
-	__private.loaded = true;
+    // TODO: move here blocks submodules modules load from app.js.
+    // Set module as loaded
+    __private.loaded = true;
 };
 
 /**
@@ -179,23 +181,22 @@ Blocks.prototype.onBind = function () {
  * @return {Function} cb Callback function from params (through setImmediate)
  */
 Blocks.prototype.cleanup = function (cb) {
-	__private.loaded = false;
-	__private.cleanup = true;
+    __private.loaded = false;
+    __private.cleanup = true;
 
-	if (!__private.isActive) {
-		// Module ready for shutdown
-		return setImmediate(cb);
-	} else {
-		// Module is not ready, repeat
-		setImmediate(function nextWatch () {
-			if (__private.isActive) {
-				library.logger.info('Waiting for block processing to finish...');
-				setTimeout(nextWatch, 10000); // 10 sec
-			} else {
-				return setImmediate(cb);
-			}
-		});
-	}
+    if (!__private.isActive) {
+        // Module ready for shutdown
+        return setImmediate(cb);
+    }
+    // Module is not ready, repeat
+    setImmediate(function nextWatch() {
+        if (__private.isActive) {
+            library.logger.info('Waiting for block processing to finish...');
+            setTimeout(nextWatch, 10000); // 10 sec
+        } else {
+            return setImmediate(cb);
+        }
+    });
 };
 
 /**
@@ -206,12 +207,12 @@ Blocks.prototype.cleanup = function (cb) {
  * @return {boolean} status Module loading status
  */
 Blocks.prototype.isLoaded = function () {
-	// Return 'true' if 'modules' are present
-	return __private.loaded;
+    // Return 'true' if 'modules' are present
+    return __private.loaded;
 };
 
 
 // Export
 module.exports = Blocks;
 
-/*************************************** END OF FILE *************************************/
+/** ************************************* END OF FILE ************************************ */

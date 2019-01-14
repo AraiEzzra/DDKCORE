@@ -1,9 +1,10 @@
-
-
-let sandboxHelper = require('../helpers/sandbox.js');
+const sandboxHelper = require('../helpers/sandbox.js');
 
 // Private fields
-let modules, self, __private = {}, shared = {};
+let modules,
+    self,
+    __private = {},
+    shared = {};
 
 __private.loaded = false;
 
@@ -17,10 +18,10 @@ __private.loaded = false;
  * @return {setImmediateCallback} Callback function with `self` as data.
  */
 // Constructor
-function Server (cb) {
-	self = this;
+function Server(cb) {
+    self = this;
 
-	setImmediate(cb, null, self);
+    setImmediate(cb, null, self);
 }
 
 // Public methods
@@ -32,7 +33,7 @@ function Server (cb) {
  * @param {function} cb - Callback function.
  */
 Server.prototype.sandboxApi = function (call, args, cb) {
-	sandboxHelper.callMethod(shared, call, args, cb);
+    sandboxHelper.callMethod(shared, call, args, cb);
 };
 
 // Events
@@ -41,14 +42,14 @@ Server.prototype.sandboxApi = function (call, args, cb) {
  * @param {modules} scope - Loaded modules.
  */
 Server.prototype.onBind = function () {
-	modules = true;
+    modules = true;
 };
 
 /**
  * Sets private variable loaded to true.
  */
 Server.prototype.onBlockchainReady = function () {
-	__private.loaded = true;
+    __private.loaded = true;
 };
 
 /**
@@ -57,8 +58,8 @@ Server.prototype.onBlockchainReady = function () {
  * @return {setImmediateCallback} cb
  */
 Server.prototype.cleanup = function (cb) {
-	__private.loaded = false;
-	return setImmediate(cb);
+    __private.loaded = false;
+    return setImmediate(cb);
 };
 
 /**
@@ -66,7 +67,7 @@ Server.prototype.cleanup = function (cb) {
  * @return {boolean} loaded
  */
 Server.prototype.isLoaded = function () {
-	return __private.loaded;
+    return __private.loaded;
 };
 
 /**
@@ -74,10 +75,10 @@ Server.prototype.isLoaded = function () {
  * @return {boolean} modules loaded
  */
 Server.prototype.areModulesReady = function () {
-	return !!modules;
+    return !!modules;
 };
 
 // Export
 module.exports = Server;
 
-/*************************************** END OF FILE *************************************/
+/** ************************************* END OF FILE ************************************ */

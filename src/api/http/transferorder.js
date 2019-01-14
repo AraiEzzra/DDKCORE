@@ -1,7 +1,5 @@
-
-
-let Router = require('../../helpers/router');
-let httpApi = require('../../helpers/httpApi');
+const Router = require('../../helpers/router');
+const httpApi = require('../../helpers/httpApi');
 
 /**
  * Binds api with modules and creates common url.
@@ -16,22 +14,22 @@ let httpApi = require('../../helpers/httpApi');
  * @param {scope} app - Network app.
  */
 // Constructor
-function sendFreezeOrderHttpApi (sendFreezeOrderModule, app, logger, cache) {
-	let router = new Router();
+function sendFreezeOrderHttpApi(sendFreezeOrderModule, app, logger, cache) {
+    const router = new Router();
 
-	// attach a middlware to endpoints
-	router.attachMiddlwareForUrls(httpApi.middleware.useCache.bind(null, logger, cache), [
-		'get /'
-	]);
+    // attach a middlware to endpoints
+    router.attachMiddlwareForUrls(httpApi.middleware.useCache.bind(null, logger, cache), [
+        'get /'
+    ]);
 
-	router.map(sendFreezeOrderModule.shared, {
-		
-		'post /sendFreezeOrder' : 'transferFreezeOrder',		
-	});
+    router.map(sendFreezeOrderModule.shared, {
 
-	httpApi.registerEndpoint('/api/shiftOrder', app, router, sendFreezeOrderModule.isLoaded);
+        'post /sendFreezeOrder': 'transferFreezeOrder',
+    });
+
+    httpApi.registerEndpoint('/api/shiftOrder', app, router, sendFreezeOrderModule.isLoaded);
 }
 
 module.exports = sendFreezeOrderHttpApi;
 
-/*************************************** END OF FILE *************************************/
+/** ************************************* END OF FILE ************************************ */

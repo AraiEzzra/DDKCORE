@@ -5,36 +5,36 @@ const TestWebSocketConnector = require('../common/TestWebSocketConnector.js');
 
 describe('RPC method: GET_EPOCH', function () {
 
-  let wsc;
+    let wsc;
 
-  before(function (done) {
-    wsc = new TestWebSocketConnector();
-    wsc.open(done);
-  });
-
-  after(function (done) {
-    wsc.close();
-    done();
-  });
-
-  describe('Checked connection', function () {
-    it('socket is ready', function (done) {
-        expect(wsc.ws.ready).to.equals(true);
-        done();
-    });
-  });
-
-  describe('Checked method result', function () {
-
-    it('should have valid parameters', function (done) {
-      wsc.call('GET_EPOCH', {}, (result) => {
-        expect(result).to.be.an('object');
-        expect(result.epoch).to.be.an('string');
-        expect((new Date(result.epoch)).toString()).to.not.equal('Invalid Date');
-        done();
-      });
+    before(function (done) {
+        wsc = new TestWebSocketConnector();
+        wsc.open(done);
     });
 
-  })
+    after(function (done) {
+        wsc.close();
+        done();
+    });
+
+    describe('Checked connection', function () {
+        it('socket is ready', function (done) {
+            expect(wsc.ws.ready).to.equals(true);
+            done();
+        });
+    });
+
+    describe('Checked method result', function () {
+
+        it('should have valid parameters', function (done) {
+            wsc.call('GET_EPOCH', {}, (result) => {
+                expect(result).to.be.an('object');
+                expect(result.epoch).to.be.an('string');
+                expect((new Date(result.epoch)).toString()).to.not.equal('Invalid Date');
+                done();
+            });
+        });
+
+    })
 
 });

@@ -4,6 +4,7 @@ const BUFFER = require('../helpers/buffer.js');
 const crypto = require('crypto');
 const bignum = require('../helpers/bignum.js');
 const constants = require('../helpers/constants.js');
+
 const __private = {};
 
 const BLOCK_BUFFER_SIZE
@@ -32,9 +33,9 @@ const BLOCK_BUFFER_SIZE
 // Constructor
 function Block(ed, schema, transaction, cb) {
     this.scope = {
-        ed: ed,
-        schema: schema,
-        transaction: transaction,
+        ed,
+        schema,
+        transaction,
     };
     if (cb) {
         return setImmediate(cb, null, this);
@@ -50,14 +51,14 @@ function Block(ed, schema, transaction, cb) {
  * @return {address} address
  */
 __private.getAddressByPublicKey = function (publicKey) {
-    let publicKeyHash = crypto.createHash('sha256').update(publicKey, 'hex').digest();
-    let temp = Buffer.alloc(BUFFER.LENGTH.INT64);
+    const publicKeyHash = crypto.createHash('sha256').update(publicKey, 'hex').digest();
+    const temp = Buffer.alloc(BUFFER.LENGTH.INT64);
 
     for (let i = 0; i < 8; i++) {
         temp[i] = publicKeyHash[7 - i];
     }
 
-    let address = 'DDK' + bignum.fromBuffer(temp).toString();
+    const address = `DDK${bignum.fromBuffer(temp).toString()}`;
     return address;
 };
 
@@ -75,7 +76,7 @@ __private.getAddressByPublicKey = function (publicKey) {
  * @returns {block} block
  */
 Block.prototype.create = function (data) {
-    let transactions = data.transactions.sort(function compare(a, b) {
+    const transactions = data.transactions.sort((a, b) => {
         if (a.type < b.type) {
             return -1;
         }
@@ -97,15 +98,17 @@ Block.prototype.create = function (data) {
         return 0;
     });
 
-    let reward = 0,//changes from: __private.blockReward.calcReward(nextHeight)
-        totalFee = 0, totalAmount = 0, size = 0;
+    let reward = 0, // changes from: __private.blockReward.calcReward(nextHeight)
+        totalFee = 0,
+        totalAmount = 0,
+        size = 0;
 
-    let blockTransactions = [];
-    let payloadHash = crypto.createHash('sha256');
+    const blockTransactions = [];
+    const payloadHash = crypto.createHash('sha256');
 
     for (let i = 0; i < transactions.length; i++) {
-        let transaction = transactions[i];
-        let bytes = this.scope.transaction.getBytes(transaction);
+        const transaction = transactions[i];
+        const bytes = this.scope.transaction.getBytes(transaction);
 
         if (size + bytes.length > constants.maxPayloadLength) {
             break;
@@ -122,9 +125,9 @@ Block.prototype.create = function (data) {
 
     let block = {
         version: constants.CURRENT_BLOCK_VERSION,
-        totalAmount: totalAmount,
-        totalFee: totalFee,
-        reward: reward,
+        totalAmount,
+        totalFee,
+        reward,
         payloadHash: payloadHash.digest().toString('hex'),
         timestamp: data.timestamp,
         numberOfTransactions: blockTransactions.length,
@@ -233,7 +236,9 @@ Block.prototype.dbFields = [
  * @throws {error} catch error
  */
 Block.prototype.dbSave = function (block) {
-    let payloadHash, generatorPublicKey, blockSignature;
+    let payloadHash,
+        generatorPublicKey,
+        blockSignature;
 
     try {
         payloadHash = Buffer.from(block.payloadHash, 'hex');
@@ -257,9 +262,9 @@ Block.prototype.dbSave = function (block) {
             totalFee: block.totalFee,
             reward: block.reward || 0,
             payloadLength: block.payloadLength,
-            payloadHash: payloadHash,
-            generatorPublicKey: generatorPublicKey,
-            blockSignature: blockSignature
+            payloadHash,
+            generatorPublicKey,
+            blockSignature
         }
     };
 };
@@ -361,12 +366,10 @@ Block.prototype.objectNormalize = function (block) {
         }
     }
 
-    let report = this.scope.schema.validate(block, Block.prototype.schema);
+    const report = this.scope.schema.validate(block, Block.prototype.schema);
 
     if (!report) {
-        throw 'Failed to validate block schema: ' + this.scope.schema.getLastErrors().map(function (err) {
-            return err.message;
-        }).join(', ');
+        throw `Failed to validate block schema: ${this.scope.schema.getLastErrors().map(err => err.message).join(', ')}`;
     }
 
     try {
@@ -422,28 +425,27 @@ Block.prototype.calculateFee = function () {
 Block.prototype.dbRead = function (raw) {
     if (!raw.b_id) {
         return null;
-    } else {
-        let block = {
-            id: raw.b_id,
-            version: parseInt(raw.b_version),
-            timestamp: parseInt(raw.b_timestamp),
-            height: parseInt(raw.b_height),
-            previousBlock: raw.b_previousBlock,
-            numberOfTransactions: parseInt(raw.b_numberOfTransactions),
-            totalAmount: parseInt(raw.b_totalAmount),
-            totalFee: parseInt(raw.b_totalFee),
-            reward: parseInt(raw.b_reward),
-            payloadLength: parseInt(raw.b_payloadLength),
-            payloadHash: raw.b_payloadHash,
-            generatorPublicKey: raw.b_generatorPublicKey,
-            generatorId: __private.getAddressByPublicKey(raw.b_generatorPublicKey),
-            blockSignature: raw.b_blockSignature,
-            confirmations: parseInt(raw.b_confirmations),
-            username: raw.m_username
-        };
-        block.totalForged = new bignum(block.totalFee).plus(new bignum(block.reward)).toString();
-        return block;
     }
+    const block = {
+        id: raw.b_id,
+        version: parseInt(raw.b_version),
+        timestamp: parseInt(raw.b_timestamp),
+        height: parseInt(raw.b_height),
+        previousBlock: raw.b_previousBlock,
+        numberOfTransactions: parseInt(raw.b_numberOfTransactions),
+        totalAmount: parseInt(raw.b_totalAmount),
+        totalFee: parseInt(raw.b_totalFee),
+        reward: parseInt(raw.b_reward),
+        payloadLength: parseInt(raw.b_payloadLength),
+        payloadHash: raw.b_payloadHash,
+        generatorPublicKey: raw.b_generatorPublicKey,
+        generatorId: __private.getAddressByPublicKey(raw.b_generatorPublicKey),
+        blockSignature: raw.b_blockSignature,
+        confirmations: parseInt(raw.b_confirmations),
+        username: raw.m_username
+    };
+    block.totalForged = new bignum(block.totalFee).plus(new bignum(block.reward)).toString();
+    return block;
 };
 
 // Export

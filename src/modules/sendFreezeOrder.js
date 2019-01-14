@@ -1,16 +1,14 @@
-
-
-let crypto = require('data/DDKCORE/src/modules/crypto');
-let sandboxHelper = require('../helpers/sandbox.js');
-let schema = require('../schema/frogeTransfer.js');
-let sql = require('../sql/frogings.js');
-let TransactionPool = require('../logic/transactionPool.js');
-let transactionTypes = require('../helpers/transactionTypes.js');
-let sendFreezeOrder = require('../logic/sendFreezeOrder.js');
+const crypto = require('data/DDKCORE/src/modules/crypto');
+const sandboxHelper = require('../helpers/sandbox.js');
+const schema = require('../schema/frogeTransfer.js');
+const sql = require('../sql/frogings.js');
+const TransactionPool = require('../logic/transactionPool.js');
+const transactionTypes = require('../helpers/transactionTypes.js');
+const sendFreezeOrder = require('../logic/sendFreezeOrder.js');
 
 // Private fields
-let __private = {};
-let shared = {};
+const __private = {};
+const shared = {};
 let modules;
 let library;
 let self;
@@ -29,43 +27,43 @@ __private.assetTypes = {};
  * @return {setImmediateCallback} Callback function with `self` as data.
  */
 // Constructor
-function SendFreezeOrder (cb, scope) {
-	library = {
-		logger: scope.logger,
-		db: scope.db,
-		schema: scope.schema,
-		ed: scope.ed,
-		balancesSequence: scope.balancesSequence,
-		logic: {
-			transaction: scope.logic.transaction,
-			frozen: scope.logic.frozen,
-			sendFreezeOrder : scope.logic.sendFreezeOrder
-		},
-		genesisblock: scope.genesisblock
-	};
+function SendFreezeOrder(cb, scope) {
+    library = {
+        logger: scope.logger,
+        db: scope.db,
+        schema: scope.schema,
+        ed: scope.ed,
+        balancesSequence: scope.balancesSequence,
+        logic: {
+            transaction: scope.logic.transaction,
+            frozen: scope.logic.frozen,
+            sendFreezeOrder: scope.logic.sendFreezeOrder
+        },
+        genesisblock: scope.genesisblock
+    };
 
-	self = this;
+    self = this;
 
-	__private.transactionPool = new TransactionPool(
-		scope.config.broadcasts.broadcastInterval,
-		scope.config.broadcasts.releaseLimit,
-		scope.config.transactions.maxTxsPerQueue,
-		scope.logic.transaction,
-		scope.bus,
-		scope.logger
-	);
+    __private.transactionPool = new TransactionPool(
+        scope.config.broadcasts.broadcastInterval,
+        scope.config.broadcasts.releaseLimit,
+        scope.config.transactions.maxTxsPerQueue,
+        scope.logic.transaction,
+        scope.bus,
+        scope.logger
+    );
 
 
-	__private.assetTypes[transactionTypes.SENDSTAKE] = library.logic.transaction.attachAssetType(
-		transactionTypes.SENDSTAKE,
-		new sendFreezeOrder(
-			scope.logger,
-			scope.db,
-			scope.network
-		)
-	);
+    __private.assetTypes[transactionTypes.SENDSTAKE] = library.logic.transaction.attachAssetType(
+        transactionTypes.SENDSTAKE,
+        new sendFreezeOrder(
+            scope.logger,
+            scope.db,
+            scope.network
+        )
+    );
 
-	setImmediate(cb, null, self);
+    setImmediate(cb, null, self);
 }
 
 
@@ -77,20 +75,20 @@ function SendFreezeOrder (cb, scope) {
  * @returns {setImmediateCallback} error | data: {transaction}
  */
 __private.getById = function (id, cb) {
-	library.db.query(sql.getById, {id: id})
-	.then(function (rows) {
-		if (!rows.length) {
-			return setImmediate(cb, 'Transaction not found: ' + id);
-		}
+    library.db.query(sql.getById, { id })
+        .then((rows) => {
+            if (!rows.length) {
+                return setImmediate(cb, `Transaction not found: ${id}`);
+            }
 
-		let transacton = library.logic.transaction.dbRead(rows[0]);
+            const transacton = library.logic.transaction.dbRead(rows[0]);
 
-		return setImmediate(cb, null, transacton);
-	})
-	.catch(function (err) {
-		library.logger.error(err.stack);
-		return setImmediate(cb, 'Transactions#getById error');
-	});
+            return setImmediate(cb, null, transacton);
+        })
+        .catch((err) => {
+            library.logger.error(err.stack);
+            return setImmediate(cb, 'Transactions#getById error');
+        });
 };
 
 /**
@@ -102,8 +100,8 @@ __private.getById = function (id, cb) {
  * @param {function} cb - Callback function
  */
 SendFreezeOrder.prototype.apply = function (transaction, block, sender, cb) {
-	library.logger.debug('Applying confirmed transaction', transaction.id);
-	library.logic.transaction.apply(transaction, block, sender, cb);
+    library.logger.debug('Applying confirmed transaction', transaction.id);
+    library.logic.transaction.apply(transaction, block, sender, cb);
 };
 
 /**
@@ -115,8 +113,8 @@ SendFreezeOrder.prototype.apply = function (transaction, block, sender, cb) {
  * @param {function} cb - Callback function
  */
 SendFreezeOrder.prototype.undo = function (transaction, block, sender, cb) {
-	library.logger.debug('Undoing confirmed transaction', transaction.id);
-	library.logic.transaction.undo(transaction, block, sender, cb);
+    library.logger.debug('Undoing confirmed transaction', transaction.id);
+    library.logic.transaction.undo(transaction, block, sender, cb);
 };
 
 /**
@@ -129,27 +127,26 @@ SendFreezeOrder.prototype.undo = function (transaction, block, sender, cb) {
  * @return {setImmediateCallback} for errors
  */
 SendFreezeOrder.prototype.applyUnconfirmed = function (transaction, sender, cb) {
-	library.logger.debug('Applying unconfirmed transaction', transaction.id);
+    library.logger.debug('Applying unconfirmed transaction', transaction.id);
 
-	if (!sender && transaction.blockId !== library.genesisblock.block.id) {
-		return setImmediate(cb, 'Invalid block id');
-	} else {
-		if (transaction.requesterPublicKey) {
-			modules.accounts.getAccount({publicKey: transaction.requesterPublicKey}, function (err, requester) {
-				if (err) {
-					return setImmediate(cb, err);
-				}
+    if (!sender && transaction.blockId !== library.genesisblock.block.id) {
+        return setImmediate(cb, 'Invalid block id');
+    }
+    if (transaction.requesterPublicKey) {
+        modules.accounts.getAccount({ publicKey: transaction.requesterPublicKey }, (err, requester) => {
+            if (err) {
+                return setImmediate(cb, err);
+            }
 
-				if (!requester) {
-					return setImmediate(cb, 'Requester not found');
-				}
+            if (!requester) {
+                return setImmediate(cb, 'Requester not found');
+            }
 
-				library.logic.transaction.applyUnconfirmed(transaction, sender, requester, cb);
-			});
-		} else {
-			library.logic.transaction.applyUnconfirmed(transaction, sender, cb);
-		}
-	}
+            library.logic.transaction.applyUnconfirmed(transaction, sender, requester, cb);
+        });
+    } else {
+        library.logic.transaction.applyUnconfirmed(transaction, sender, cb);
+    }
 };
 
 /**
@@ -161,14 +158,14 @@ SendFreezeOrder.prototype.applyUnconfirmed = function (transaction, sender, cb) 
  * @return {setImmediateCallback} For error
  */
 SendFreezeOrder.prototype.undoUnconfirmed = function (transaction, cb) {
-	library.logger.debug('Undoing unconfirmed transaction', transaction.id);
+    library.logger.debug('Undoing unconfirmed transaction', transaction.id);
 
-	modules.accounts.getAccount({publicKey: transaction.senderPublicKey}, function (err, sender) {
-		if (err) {
-			return setImmediate(cb, err);
-		}
-		library.logic.transaction.undoUnconfirmed(transaction, sender, cb);
-	});
+    modules.accounts.getAccount({ publicKey: transaction.senderPublicKey }, (err, sender) => {
+        if (err) {
+            return setImmediate(cb, err);
+        }
+        library.logic.transaction.undoUnconfirmed(transaction, sender, cb);
+    });
 };
 
 /**
@@ -179,7 +176,7 @@ SendFreezeOrder.prototype.undoUnconfirmed = function (transaction, cb) {
  * @return {function} Calls transactionPool.receiveTransactions
  */
 SendFreezeOrder.prototype.receiveTransactions = function (transactions, broadcast, cb) {
-	return __private.transactionPool.receiveTransactions(transactions, broadcast, cb);
+    return __private.transactionPool.receiveTransactions(transactions, broadcast, cb);
 };
 
 /**
@@ -188,7 +185,7 @@ SendFreezeOrder.prototype.receiveTransactions = function (transactions, broadcas
  * @return {function} Calls transactionPool.fillPool
  */
 SendFreezeOrder.prototype.fillPool = function (cb) {
-	return __private.transactionPool.fillPool(cb);
+    return __private.transactionPool.fillPool(cb);
 };
 
 /**
@@ -199,7 +196,7 @@ SendFreezeOrder.prototype.fillPool = function (cb) {
  * @param {function} cb - Callback function.
  */
 SendFreezeOrder.prototype.sandboxApi = function (call, args, cb) {
-	sandboxHelper.callMethod(shared, call, args, cb);
+    sandboxHelper.callMethod(shared, call, args, cb);
 };
 
 /**
@@ -207,7 +204,7 @@ SendFreezeOrder.prototype.sandboxApi = function (call, args, cb) {
  * @return {boolean} True if `modules` is loaded.
  */
 SendFreezeOrder.prototype.isLoaded = function () {
-	return !!modules;
+    return !!modules;
 };
 
 // Events
@@ -218,20 +215,20 @@ SendFreezeOrder.prototype.isLoaded = function () {
  * @param {scope} scope - Loaded modules.
  */
 SendFreezeOrder.prototype.onBind = function (scope) {
-	modules = {
-		accounts: scope.accounts,
-		transactions: scope.transactions,
-	};
+    modules = {
+        accounts: scope.accounts,
+        transactions: scope.transactions,
+    };
 
-	__private.transactionPool.bind(
-		scope.accounts,
-		scope.transactions,
-		scope.loader
-	);
-	__private.assetTypes[transactionTypes.SENDSTAKE].bind(
-		scope.accounts,
-		scope.rounds
-	);
+    __private.transactionPool.bind(
+        scope.accounts,
+        scope.transactions,
+        scope.loader
+    );
+    __private.assetTypes[transactionTypes.SENDSTAKE].bind(
+        scope.accounts,
+        scope.rounds
+    );
 };
 
 
@@ -242,184 +239,179 @@ SendFreezeOrder.prototype.onBind = function (scope) {
  */
 SendFreezeOrder.prototype.shared = {
 
-	transferFreezeOrder: function (req, cb) {
-		let accountData, stakeOrder;
-		library.schema.validate(req.body, schema.transferFreezeOrder, function (err) {
-			if (err) {
-				return setImmediate(cb, err[0].message);
-			}
+    transferFreezeOrder(req, cb) {
+        let accountData,
+            stakeOrder;
+        library.schema.validate(req.body, schema.transferFreezeOrder, (err) => {
+            if (err) {
+                return setImmediate(cb, err[0].message);
+            }
 
-			let hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
-			let keypair = library.ed.makeKeypair(hash);
-			let publicKey = keypair.publicKey.toString('hex');
+            const hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
+            const keypair = library.ed.makeKeypair(hash);
+            const publicKey = keypair.publicKey.toString('hex');
 
-			if (req.body.publicKey) {
-				if (publicKey !== req.body.publicKey) {
-					return setImmediate(cb, 'Invalid passphrase');
-				}
-			}
+            if (req.body.publicKey) {
+                if (publicKey !== req.body.publicKey) {
+                    return setImmediate(cb, 'Invalid passphrase');
+                }
+            }
 
-			let query = { address: req.body.recipientId };
+            const query = { address: req.body.recipientId };
 
-			library.balancesSequence.add(function (cb) {
-				modules.accounts.getAccount(query, function (err, recipient) {
-					if (err) {
-						return setImmediate(cb, err);
-					}
+            library.balancesSequence.add((cb) => {
+                modules.accounts.getAccount(query, (err, recipient) => {
+                    if (err) {
+                        return setImmediate(cb, err);
+                    }
 
-					let recipientId = recipient ? recipient.address : req.body.recipientId;
+                    const recipientId = recipient ? recipient.address : req.body.recipientId;
 
-					if (!recipientId) {
-						return setImmediate(cb, 'Invalid recipient');
-					}
+                    if (!recipientId) {
+                        return setImmediate(cb, 'Invalid recipient');
+                    }
 
-					if (req.body.multisigAccountPublicKey && req.body.multisigAccountPublicKey !== keypair.publicKey.toString('hex')) {
-						modules.accounts.getAccount({ publicKey: req.body.multisigAccountPublicKey }, function (err, account) {
-							if (err) {
-								return setImmediate(cb, err);
-							}
+                    if (req.body.multisigAccountPublicKey && req.body.multisigAccountPublicKey !== keypair.publicKey.toString('hex')) {
+                        modules.accounts.getAccount({ publicKey: req.body.multisigAccountPublicKey }, (err, account) => {
+                            if (err) {
+                                return setImmediate(cb, err);
+                            }
 
-							accountData = account;
+                            accountData = account;
 
-							if (!account || !account.publicKey) {
-								return setImmediate(cb, 'Multisignature account not found');
-							}
+                            if (!account || !account.publicKey) {
+                                return setImmediate(cb, 'Multisignature account not found');
+                            }
 
-							if (!Array.isArray(account.multisignatures)) {
-								return setImmediate(cb, 'Account does not have multisignatures enabled');
-							}
+                            if (!Array.isArray(account.multisignatures)) {
+                                return setImmediate(cb, 'Account does not have multisignatures enabled');
+                            }
 
-							if (account.multisignatures.indexOf(keypair.publicKey.toString('hex')) < 0) {
-								return setImmediate(cb, 'Account does not belong to multisignature group');
-							}
+                            if (account.multisignatures.indexOf(keypair.publicKey.toString('hex')) < 0) {
+                                return setImmediate(cb, 'Account does not belong to multisignature group');
+                            }
 
-							modules.accounts.getAccount({ publicKey: keypair.publicKey }, function (err, requester) {
-								if (err) {
-									return setImmediate(cb, err);
-								}
+                            modules.accounts.getAccount({ publicKey: keypair.publicKey }, (err, requester) => {
+                                if (err) {
+                                    return setImmediate(cb, err);
+                                }
 
-								library.logic.sendFreezeOrder.getActiveFrozeOrder({
-									address: account.address,
-									stakeId: req.body.stakeId
-								}, function (err, order) {
-									if (err) {
-										return setImmediate(cb, err);
-									}
+                                library.logic.sendFreezeOrder.getActiveFrozeOrder({
+                                    address: account.address,
+                                    stakeId: req.body.stakeId
+                                }, (err, order) => {
+                                    if (err) {
+                                        return setImmediate(cb, err);
+                                    }
 
-									stakeOrder = order;
+                                    stakeOrder = order;
 
-									if (!requester || !requester.publicKey) {
-										return setImmediate(cb, 'Requester not found');
-									}
+                                    if (!requester || !requester.publicKey) {
+                                        return setImmediate(cb, 'Requester not found');
+                                    }
 
-									if (requester.secondSignature && !req.body.secondSecret) {
-										return setImmediate(cb, 'Missing second passphrase');
-									}
+                                    if (requester.secondSignature && !req.body.secondSecret) {
+                                        return setImmediate(cb, 'Missing second passphrase');
+                                    }
 
-									if (requester.publicKey === account.publicKey) {
-										return setImmediate(cb, 'Invalid requester public key');
-									}
+                                    if (requester.publicKey === account.publicKey) {
+                                        return setImmediate(cb, 'Invalid requester public key');
+                                    }
 
-									if(requester.address == req.body.recipientId){
-										return setImmediate(cb, 'Sender and Recipient can\'t be same');
-									}
+                                    if (requester.address == req.body.recipientId) {
+                                        return setImmediate(cb, 'Sender and Recipient can\'t be same');
+                                    }
 
-									let secondKeypair = null;
+                                    let secondKeypair = null;
 
-									if (requester.secondSignature) {
-										let secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
-										secondKeypair = library.ed.makeKeypair(secondHash);
-									}
+                                    if (requester.secondSignature) {
+                                        let secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
+                                        secondKeypair = library.ed.makeKeypair(secondHash);
+                                    }
 
-									let transaction;
+                                    let transaction;
 
-									library.logic.transaction.create({
-										type: transactionTypes.SENDSTAKE,
-										sender: account,
-										stakeId: req.body.stakeId,
-										keypair: keypair,
-										recipientId: recipientId,
-										secondKeypair: secondKeypair,
-										requester: keypair,
-										freezedAmount: req.body.freezedAmount
-									}).then((transactionSendStake) => {
-										transaction = transactionSendStake;
-										modules.transactions.receiveTransactions([transaction], true, cb);
-									}).catch((e) => {
-										return setImmediate(cb, e.toString());
-									});
-								});
-							});
-						});
+                                    library.logic.transaction.create({
+                                        type: transactionTypes.SENDSTAKE,
+                                        sender: account,
+                                        stakeId: req.body.stakeId,
+                                        keypair: keypair,
+                                        recipientId: recipientId,
+                                        secondKeypair: secondKeypair,
+                                        requester: keypair,
+                                        freezedAmount: req.body.freezedAmount
+                                    }).then((transactionSendStake) => {
+                                        transaction = transactionSendStake;
+                                        modules.transactions.receiveTransactions([transaction], true, cb);
+                                    }).catch(e => setImmediate(cb, e.toString()));
+                                });
+                            });
+                        });
+                    } else {
+                        modules.accounts.setAccountAndGet({ publicKey: keypair.publicKey.toString('hex') }, (err, account) => {
+                            if (err) {
+                                return setImmediate(cb, err);
+                            }
 
-					} else {
-						modules.accounts.setAccountAndGet({ publicKey: keypair.publicKey.toString('hex') }, function (err, account) {
-							if (err) {
-								return setImmediate(cb, err);
-							}
+                            library.logic.sendFreezeOrder.getActiveFrozeOrder({
+                                address: account.address,
+                                stakeId: req.body.stakeId
+                            }, (err, order) => {
+                                if (err) {
+                                    return setImmediate(cb, err);
+                                }
 
-							library.logic.sendFreezeOrder.getActiveFrozeOrder({
-								address: account.address,
-								stakeId: req.body.stakeId
-							}, function (err, order) {
-								if (err) {
-									return setImmediate(cb, err);
-								}
+                                stakeOrder = order;
 
-								stakeOrder = order;
+                                accountData = account;
+                                if (!account || !account.publicKey) {
+                                    return setImmediate(cb, 'Account not found');
+                                }
 
-								accountData = account;
-								if (!account || !account.publicKey) {
-									return setImmediate(cb, 'Account not found');
-								}
+                                if (account.secondSignature && !req.body.secondSecret) {
+                                    return setImmediate(cb, 'Missing second passphrase');
+                                }
 
-								if (account.secondSignature && !req.body.secondSecret) {
-									return setImmediate(cb, 'Missing second passphrase');
-								}
+                                if (account.address == req.body.recipientId) {
+                                    return setImmediate(cb, 'Sender and Recipient can\'t be same');
+                                }
 
-								if(account.address == req.body.recipientId){
-									return setImmediate(cb, 'Sender and Recipient can\'t be same');
-								}
+                                let secondKeypair = null;
 
-								let secondKeypair = null;
+                                if (account.secondSignature) {
+                                    let secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
+                                    secondKeypair = library.ed.makeKeypair(secondHash);
+                                }
 
-								if (account.secondSignature) {
-									let secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
-									secondKeypair = library.ed.makeKeypair(secondHash);
-								}
+                                let transaction;
 
-								let transaction;
-
-								library.logic.transaction.create({
-									type: transactionTypes.SENDSTAKE,
-									sender: account,
-									stakeId: req.body.stakeId,
-									keypair: keypair,
-									recipientId: recipientId,
-									secondKeypair: secondKeypair,
-									freezedAmount: req.body.freezedAmount
-								}).then((transactionSendStake) => {
-									transaction = transactionSendStake;
-									modules.transactions.receiveTransactions([transaction], true, cb);
-								}).catch((e) => {
-									return setImmediate(cb, e.toString());
-								});
-							});
-						});
-					}
-
-				});
-			}, function (err, transaction) {
-				if (err) {
-					return setImmediate(cb, err);
-				}
-				return setImmediate(cb, null, { transactionId: transaction[0].id });
-			});
-		});
-	}
+                                library.logic.transaction.create({
+                                    type: transactionTypes.SENDSTAKE,
+                                    sender: account,
+                                    stakeId: req.body.stakeId,
+                                    keypair: keypair,
+                                    recipientId: recipientId,
+                                    secondKeypair: secondKeypair,
+                                    freezedAmount: req.body.freezedAmount
+                                }).then((transactionSendStake) => {
+                                    transaction = transactionSendStake;
+                                    modules.transactions.receiveTransactions([transaction], true, cb);
+                                }).catch(e => setImmediate(cb, e.toString()));
+                            });
+                        });
+                    }
+                });
+            }, (err, transaction) => {
+                if (err) {
+                    return setImmediate(cb, err);
+                }
+                return setImmediate(cb, null, { transactionId: transaction[0].id });
+            });
+        });
+    }
 };
 
 // Export
 module.exports = SendFreezeOrder;
 
-/*************************************** END OF FILE *************************************/
+/** ************************************* END OF FILE ************************************ */

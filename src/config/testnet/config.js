@@ -1,4 +1,4 @@
-let env = process.env;
+const env = process.env;
 
 module.exports = {
     port: parseInt(env.PORT, 10) || 7000,
@@ -56,7 +56,7 @@ module.exports = {
     },
     peers: {
         enabled: true,
-        list:  (env.PEERS || '').split(',').map(peer => peer.split(':')).map(([ip, port]) => ({ ip, port })),
+        list: (env.PEERS || '').split(',').map(peer => peer.split(':')).map(([ip, port]) => ({ ip, port })),
         access: {
             blackList: (env.PEERS_BLACKLIST || '').split(','),
         },

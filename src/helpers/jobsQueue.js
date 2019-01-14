@@ -1,24 +1,24 @@
-let jobsQueue = {
+const jobsQueue = {
 
-	jobs: {},
+    jobs: {},
 
-	register: function (name, job, time) {
-		if (this.jobs[name]) {
-			throw new Error('Synchronous job ' + name  + ' already registered');
-		}
+    register(name, job, time) {
+        if (this.jobs[name]) {
+            throw new Error(`Synchronous job ${name} already registered`);
+        }
 
-		let nextJob = function () {
-			return job(function () {
-				jobsQueue.jobs[name] = setTimeout(nextJob, time);
-			});
-		};
+        const nextJob = function () {
+            return job(() => {
+                jobsQueue.jobs[name] = setTimeout(nextJob, time);
+            });
+        };
 
-		nextJob();
-		return this.jobs[name];
-	}
+        nextJob();
+        return this.jobs[name];
+    }
 
 };
 
 module.exports = jobsQueue;
 
-/*************************************** END OF FILE *************************************/
+/** ************************************* END OF FILE ************************************ */

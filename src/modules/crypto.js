@@ -1,9 +1,9 @@
-
-
-let sandboxHelper = require('../helpers/sandbox.js');
+const sandboxHelper = require('../helpers/sandbox.js');
 
 // Private fields
-let self, __private = {}, shared = {};
+let self,
+    __private = {},
+    shared = {};
 
 __private.loaded = false;
 
@@ -14,10 +14,10 @@ __private.loaded = false;
  * @param {scope} scope - App instance.
  */
 // Constructor
-function Crypto (cb) {
-	self = this;
+function Crypto(cb) {
+    self = this;
 
-	setImmediate(cb, null, self);
+    setImmediate(cb, null, self);
 }
 
 // Public methods
@@ -29,7 +29,7 @@ function Crypto (cb) {
  * @param {function} cb - Callback function.
  */
 Crypto.prototype.sandboxApi = function (call, args, cb) {
-	sandboxHelper.callMethod(shared, call, args, cb);
+    sandboxHelper.callMethod(shared, call, args, cb);
 };
 
 // Events
@@ -44,10 +44,10 @@ Crypto.prototype.onBind = function () {
  * Sets to true private variable loaded.
  */
 Crypto.prototype.onBlockchainReady = function () {
-	__private.loaded = true;
+    __private.loaded = true;
 };
 
 // Export
 module.exports = Crypto;
 
-/*************************************** END OF FILE *************************************/
+/** ************************************* END OF FILE ************************************ */

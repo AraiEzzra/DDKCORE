@@ -1,4 +1,3 @@
-
 const LENGTH = {
     BYTE: 1,
     UINT32: 4,
@@ -10,7 +9,7 @@ const LENGTH = {
 function stringNullGenerator(count) {
     let str = '';
     for (let i = 0; i < count; i++) {
-        str = str + '0';
+        str += '0';
     }
     return str;
 }
@@ -46,9 +45,9 @@ function writeNotNull(buff, val, offset, len) {
 
 module.exports = {
     LENGTH,
-    writeInt8: writeInt8,
-    writeInt32LE: writeInt32LE,
-    writeUInt64LE: writeUInt64LE,
-    writeNotNull: writeNotNull,
-    stringNullGenerator: stringNullGenerator,
+    writeInt8,
+    writeInt32LE,
+    writeUInt64LE,
+    writeNotNull,
+    stringNullGenerator,
 };

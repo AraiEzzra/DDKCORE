@@ -1,11 +1,9 @@
+const esClient = require('./elasticsearch/connection');
+const Accounts = require('./modules/accounts');
 
-
-let esClient = require('./elasticsearch/connection');
-let Accounts = require('./modules/accounts');
-
-//FIXME: validate client here. currently not implemented 
+// FIXME: validate client here. currently not implemented
 exports.validateClient = function (req, res, next) {
-	next();
+    next();
 };
 
 /**
@@ -16,19 +14,19 @@ exports.validateClient = function (req, res, next) {
  */
 
 exports.merge = function merge(a, b) {
-	for (let key in b) {
-		if (b.hasOwnProperty(key)) {
-			if (exports.merge.call(b, key) && b[key]) {
-				if ('object' === typeof (b[key])) {
-					if ('undefined' === typeof (a[key])) a[key] = {};
-					exports.merge(a[key], b[key]);
-				} else {
-					a[key] = b[key];
-				}
-			}
-		}
-	}
-	return a;
+    for (const key in b) {
+        if (b.hasOwnProperty(key)) {
+            if (exports.merge.call(b, key) && b[key]) {
+                if (typeof (b[key]) === 'object') {
+                    if (typeof (a[key]) === 'undefined') a[key] = {};
+                    exports.merge(a[key], b[key]);
+                } else {
+                    a[key] = b[key];
+                }
+            }
+        }
+    }
+    return a;
 };
 
 /**
@@ -39,8 +37,9 @@ exports.merge = function merge(a, b) {
  * @returns {Array} bulk
  */
 exports.makeBulk = function (list, index) {
-    let bulk = [], indexId;
-    for (let current in list) {
+    let bulk = [],
+        indexId;
+    for (const current in list) {
         if (list[current].stakeId || list[current].rowId) {
             indexId = list[current].id;
         } else if (list[current].b_height) {
@@ -65,30 +64,30 @@ exports.makeBulk = function (list, index) {
  * @returns {Promise} {Resolve|Reject}
  */
 exports.indexall = function (bulk, index) {
-	return new Promise(function(resolve, reject) {
-		esClient.bulk({
-			maxRetries: 5,
-			index: index,
-			type: index,
-			body: bulk
-		}, function (err) {
-			if (err) {
-				reject(err);
-			} else {
-				resolve(null);
-			}
-		});
-	});
+    return new Promise((resolve, reject) => {
+        esClient.bulk({
+            maxRetries: 5,
+            index,
+            type: index,
+            body: bulk
+        }, (err) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(null);
+            }
+        });
+    });
 };
 
 /**
  * @desc generate a file based on today's date and ignore this file before archiving
  * @implements {formatted date based file name}
- * @param {Date} currDate 
+ * @param {Date} currDate
  * @returns {String}
  */
 exports.getIgnoredFile = function (currDate) {
-    return currDate.getFullYear() + '-' + ('0' + (currDate.getMonth() + 1)).slice(-2) + '-' + ('0' + currDate.getDate()).slice(-2) + '.log';
+    return `${currDate.getFullYear()}-${(`0${currDate.getMonth() + 1}`).slice(-2)}-${(`0${currDate.getDate()}`).slice(-2)}.log`;
 };
 
 /**
@@ -105,14 +104,13 @@ exports.deleteDocument = function (doc) {
             index: doc.index,
             type: doc.type,
             id: doc.id
-        }, function (err, res) {
+        }, (err, res) => {
             if (err) {
                 return err.message;
-            } else {
-                return null;
             }
+            return null;
         });
-    })();
+    }());
 };
 
 /**
@@ -128,14 +126,13 @@ exports.deleteDocumentByQuery = function (doc) {
             index: doc.index,
             type: doc.type,
             body: doc.body
-        }, function (err, res) {
+        }, (err, res) => {
             if (err) {
                 return err.message;
-            } else {
-                return null;
             }
+            return null;
         });
-    })();
+    }());
 };
 
 /**
@@ -155,14 +152,13 @@ exports.updateDocument = function (doc) {
                 doc: doc.body
             },
             id: doc.id
-        }, function (err, res) {
+        }, (err, res) => {
             if (err) {
                 return err.message;
-            } else {
-                return null;
             }
+            return null;
         });
-    })();
+    }());
 };
 
 exports.addDocument = async function (doc) {
@@ -171,11 +167,10 @@ exports.addDocument = async function (doc) {
         type: doc.type,
         body: doc.body,
         id: doc.id
-    }, function (err) {
+    }, (err) => {
         if (err) {
             return err.message;
-        } else {
-            return null;
         }
-    })
+        return null;
+    });
 };

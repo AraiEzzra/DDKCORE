@@ -1,4 +1,3 @@
-
 require('./rpc/getBlocksCount.js');
 require('./rpc/getAccount.js');
 require('./rpc/getStatus.js');

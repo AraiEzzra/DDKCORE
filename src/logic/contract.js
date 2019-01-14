@@ -1,7 +1,8 @@
-let modules, self;
-let StakeReward = require('./stakeReward.js');
+let modules,
+    self;
+const StakeReward = require('./stakeReward.js');
 
-let reward = new StakeReward();
+const reward = new StakeReward();
 
 /**
  * Main Contract logic.
@@ -13,15 +14,15 @@ let reward = new StakeReward();
  * @return {setImmediateCallback} With `this` as data.
  */
 function Contract(config, db, cb) {
-	self = this;
-	self.scope = {
-		config: config,
-		db: db
-	};
+    self = this;
+    self.scope = {
+        config,
+        db
+    };
 
-	if (cb) {
-		return setImmediate(cb, null, this);
-	}
+    if (cb) {
+        return setImmediate(cb, null, this);
+    }
 }
 
 /**
@@ -32,15 +33,15 @@ function Contract(config, db, cb) {
  * @return {trs} trs
  */
 Contract.prototype.create = function (data, trs) {
-	trs.recipientId = data.recipientId;
-	trs.amount = data.amount;
-	if(data.trsName) {
-		trs.trsName = data.trsName;
-	} else {
-		trs.trsName = 'REWARD';
-	}
+    trs.recipientId = data.recipientId;
+    trs.amount = data.amount;
+    if (data.trsName) {
+        trs.trsName = data.trsName;
+    } else {
+        trs.trsName = 'REWARD';
+    }
 
-	return trs;
+    return trs;
 };
 
 /**
@@ -49,7 +50,7 @@ Contract.prototype.create = function (data, trs) {
  * @return 0
  */
 Contract.prototype.calculateFee = function () {
-	return 0;
+    return 0;
 };
 
 /**
@@ -62,35 +63,35 @@ Contract.prototype.calculateFee = function () {
  * @return {function} cb
  */
 Contract.prototype.verify = function (trs, sender, cb) {
-	if (!trs.recipientId) {
-		return setImmediate(cb, 'Missing recipient');
-	}
+    if (!trs.recipientId) {
+        return setImmediate(cb, 'Missing recipient');
+    }
 
-	if (trs.amount <= 0) {
-		return setImmediate(cb, 'Invalid transaction amount');
-	}
+    if (trs.amount <= 0) {
+        return setImmediate(cb, 'Invalid transaction amount');
+    }
 
-	if (trs.trsName === 'REWARD') {
-		if (!trs.reward) {
-			return setImmediate(cb, 'Invalid stake reward percentage');
-		}
-		let split = trs.reward.split('&');
-		let height = parseInt(split[0]);
-		let stake_reward = parseInt(split[1]);
+    if (trs.trsName === 'REWARD') {
+        if (!trs.reward) {
+            return setImmediate(cb, 'Invalid stake reward percentage');
+        }
+        const split = trs.reward.split('&');
+        const height = parseInt(split[0]);
+        const stake_reward = parseInt(split[1]);
 
-		let stakeReward = reward.calcReward(height);
+        const stakeReward = reward.calcReward(height);
 
-		if (stake_reward !== stakeReward) {
-			return setImmediate(cb, 'Invalid stake reward percentage');
-		}
-	}
+        if (stake_reward !== stakeReward) {
+            return setImmediate(cb, 'Invalid stake reward percentage');
+        }
+    }
 
-	return setImmediate(cb, null, trs);
+    return setImmediate(cb, null, trs);
 };
 
 Contract.prototype.verifyUnconfirmed = function (trs, sender, cb) {
-	return setImmediate(cb);
-}
+    return setImmediate(cb);
+};
 
 /**
  * @desc get bytes
@@ -99,7 +100,7 @@ Contract.prototype.verifyUnconfirmed = function (trs, sender, cb) {
  * @return {null}
  */
 Contract.prototype.getBytes = function (trs) {
-	return Buffer.from([]);
+    return Buffer.from([]);
 };
 
 /**
@@ -112,21 +113,19 @@ Contract.prototype.getBytes = function (trs) {
  * @return {function} cb
  */
 Contract.prototype.apply = function (trs, block, sender, cb) {
-	modules.accounts.setAccountAndGet({address: trs.recipientId}, function (err) {
-		if (err) {
-			return setImmediate(cb, err);
-		}
+    modules.accounts.setAccountAndGet({ address: trs.recipientId }, (err) => {
+        if (err) {
+            return setImmediate(cb, err);
+        }
 
-		modules.accounts.mergeAccountAndGet({
-			address: trs.recipientId,
-			balance: trs.amount,
-			u_balance: trs.amount,
-			blockId: block.id,
-			round: modules.rounds.calc(block.height)
-		}, function (err) {
-			return setImmediate(cb, err);
-		});
-	});
+        modules.accounts.mergeAccountAndGet({
+            address: trs.recipientId,
+            balance: trs.amount,
+            u_balance: trs.amount,
+            blockId: block.id,
+            round: modules.rounds.calc(block.height)
+        }, err => setImmediate(cb, err));
+    });
 };
 
 /**
@@ -139,7 +138,7 @@ Contract.prototype.apply = function (trs, block, sender, cb) {
  * @return {function} cb
  */
 Contract.prototype.undo = function (trs, sender, cb) {
-	return setImmediate(cb);
+    return setImmediate(cb);
 };
 
 /**
@@ -152,7 +151,7 @@ Contract.prototype.undo = function (trs, sender, cb) {
  * @return {function} cb
  */
 Contract.prototype.applyUnconfirmed = function (trs, sender, cb) {
-	return setImmediate(cb);
+    return setImmediate(cb);
 };
 
 /**
@@ -165,7 +164,7 @@ Contract.prototype.applyUnconfirmed = function (trs, sender, cb) {
  * @return {function} cb
  */
 Contract.prototype.undoUnconfirmed = function (trs, sender, cb) {
-	return setImmediate(cb, null, trs);
+    return setImmediate(cb, null, trs);
 };
 
 /**
@@ -178,7 +177,7 @@ Contract.prototype.undoUnconfirmed = function (trs, sender, cb) {
  * @return {function} cb
  */
 Contract.prototype.ready = function (trs) {
-	return true;
+    return true;
 };
 
 /**
@@ -190,11 +189,11 @@ Contract.prototype.ready = function (trs) {
  * @return {fucntion} cb
  */
 Contract.prototype.save = function (trs) {
-	return trs;
+    return trs;
 };
 
 Contract.prototype.dbSave = function () {
-	return null;
+    return null;
 };
 
 /**
@@ -204,7 +203,7 @@ Contract.prototype.dbSave = function () {
  * @return {null}
  */
 Contract.prototype.dbRead = function () {
-	return null;
+    return null;
 };
 
 /**
@@ -216,7 +215,7 @@ Contract.prototype.dbRead = function () {
  * @return {function} cb
  */
 Contract.prototype.objectNormalize = function (trs) {
-	return trs;
+    return trs;
 };
 
 /**
@@ -229,7 +228,7 @@ Contract.prototype.objectNormalize = function (trs) {
  * @return {function} cb
  */
 Contract.prototype.process = function (trs, sender, cb) {
-	return setImmediate(cb, null, trs);
+    return setImmediate(cb, null, trs);
 };
 
 /**
@@ -242,17 +241,17 @@ Contract.prototype.process = function (trs, sender, cb) {
  * @return {timestamp} endTime
  */
 Contract.prototype.calcEndTime = function (accType, startTime) {
-	let date = new Date(startTime * 1000);
-	if (accType === 1 || accType === 0) {
-		let endTime = (date.setMinutes(date.getMinutes() + 90 * 24 * 60 * 60)) / 1000;
-		return endTime;
-	} else if (accType === 2) {
-		let endTime = (date.setMinutes(date.getMinutes() + 90 * 24 * 60 * 60)) / 1000;
-		return endTime;
-	} else if (accType === 3) {
-		let endTime = (date.setMinutes(date.getMinutes() + 365 * 24 * 60 * 60)) / 1000;
-		return endTime;
-	}
+    const date = new Date(startTime * 1000);
+    if (accType === 1 || accType === 0) {
+        const endTime = (date.setMinutes(date.getMinutes() + 90 * 24 * 60 * 60)) / 1000;
+        return endTime;
+    } else if (accType === 2) {
+        const endTime = (date.setMinutes(date.getMinutes() + 90 * 24 * 60 * 60)) / 1000;
+        return endTime;
+    } else if (accType === 3) {
+        const endTime = (date.setMinutes(date.getMinutes() + 365 * 24 * 60 * 60)) / 1000;
+        return endTime;
+    }
 };
 
 /**
@@ -265,30 +264,31 @@ Contract.prototype.calcEndTime = function (accType, startTime) {
  * @return {function} cb
  */
 Contract.prototype.sendContractAmount = function (data, cb) {
-	let query = [];
-	data.forEach(function (recipient) {
-		let sender = self.scope.config.users[recipient.accType];
-		query.push(modules.accounts.mergeAccountAndGet({
-			publicKey: sender.publicKey,
-			balance: -recipient.transferedAmount,
-			u_balance: -recipient.transferedAmount
-		}));
-		query.push(modules.accounts.mergeAccountAndGet({
-			publicKey: recipient.publicKey,
-			balance: recipient.transferedAmount,
-			u_balance: recipient.transferedAmount
-		}));
-		function Tick(t) {
-			return t.none(query.join(''));
-		}
-		self.scope.db.tx(Tick)
-		.then(function () {
-			setImmediate(cb, null);
-		})
-		.catch(function (err) {
-			setImmediate(cb, err);
-		});
-	});
+    const query = [];
+    data.forEach((recipient) => {
+        const sender = self.scope.config.users[recipient.accType];
+        query.push(modules.accounts.mergeAccountAndGet({
+            publicKey: sender.publicKey,
+            balance: -recipient.transferedAmount,
+            u_balance: -recipient.transferedAmount
+        }));
+        query.push(modules.accounts.mergeAccountAndGet({
+            publicKey: recipient.publicKey,
+            balance: recipient.transferedAmount,
+            u_balance: recipient.transferedAmount
+        }));
+        function Tick(t) {
+            return t.none(query.join(''));
+        }
+
+        self.scope.db.tx(Tick)
+            .then(() => {
+                setImmediate(cb, null);
+            })
+            .catch((err) => {
+                setImmediate(cb, err);
+            });
+    });
 };
 
 /**
@@ -298,12 +298,12 @@ Contract.prototype.sendContractAmount = function (data, cb) {
  * @param {Object} accounts - modules:accounts
  */
 Contract.prototype.bind = function (accounts, rounds) {
-	modules = {
-		accounts: accounts,
-		rounds: rounds,
-	};
+    modules = {
+        accounts,
+        rounds,
+    };
 };
 
 module.exports = Contract;
 
-/*************************************** END OF FILE *************************************/
+/** ************************************* END OF FILE ************************************ */

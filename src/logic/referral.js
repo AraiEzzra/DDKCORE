@@ -1,6 +1,9 @@
-const {LENGTH, writeUInt64LE} = require('../helpers/buffer.js');
+const { LENGTH, writeUInt64LE } = require('../helpers/buffer.js');
 const sql = require('../sql/referal_sql');
-let modules, library, self;
+
+let modules,
+    library,
+    self;
 
 /**
  * Referral logic.
@@ -9,10 +12,10 @@ let modules, library, self;
 function Referral(logger, schema, db, account) {
     self = this;
     library = {
-        db: db,
-        logger: logger,
-        schema: schema,
-        account: account
+        db,
+        logger,
+        schema,
+        account
     };
     return this;
 }
@@ -24,14 +27,14 @@ Referral.prototype.bind = function () {
 Referral.prototype.create = async function (data, trs) {
     trs.recipientId = null;
     trs.asset.referral = data.referral;
-    trs.trsName = "REGISTER";
+    trs.trsName = 'REGISTER';
     return trs;
 };
 
 Referral.prototype.getBytes = function (trs) {
     const buff = Buffer.alloc(LENGTH.INT64);
 
-    let offset = 0;
+    const offset = 0;
     if (trs.asset && trs.asset.referral) {
         const id = parseInt(trs.asset.referral.slice(3), 10) || 0;
         writeUInt64LE(buff, id, offset);
@@ -40,13 +43,12 @@ Referral.prototype.getBytes = function (trs) {
 };
 
 Referral.prototype.verify = function (trs, sender, cb) {
-    library.account.get({address: trs.senderId}, (err, account) => {
+    library.account.get({ address: trs.senderId }, (err, account) => {
         if (account && account.global) {
             if (constants.REFERRAL_TRANSACTION_VALIDATION_ENABLED.GLOBAL_ACCOUNT) {
                 return setImmediate(cb, 'Account already exists.');
-            } else {
-                library.logger.error('Account already exists');
             }
+            library.logger.error('Account already exists');
         }
         return setImmediate(cb);
     });
@@ -74,7 +76,7 @@ Referral.prototype.undo = function (trs, block, sender, cb) {
     }).then(() => {
         setImmediate(cb);
     }).catch((err) => {
-        setImmediate(cb,err);
+        setImmediate(cb, err);
     });
 };
 
@@ -181,4 +183,4 @@ Referral.prototype.process = function (trs, sender, cb) {
 
 module.exports = Referral;
 
-/*************************************** END OF FILE *************************************/
+/** ************************************* END OF FILE ************************************ */

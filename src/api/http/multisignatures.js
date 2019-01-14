@@ -1,16 +1,14 @@
-
-
-let Router = require('../../helpers/router');
-let httpApi = require('../../helpers/httpApi');
+const Router = require('../../helpers/router');
+const httpApi = require('../../helpers/httpApi');
 
 /**
  * Binds api with modules and creates common url.
  * - End point: `/api/multisignatures`
  * - Public API:
- * 	- get	/pending
- * 	- post	/sign
- * 	- put	/
- * 	- get	/accounts
+ *    - get    /pending
+ *    - post    /sign
+ *    - put    /
+ *    - get    /accounts
  * @memberof module:multisignatures
  * @requires helpers/Router
  * @requires helpers/httpApi
@@ -20,20 +18,19 @@ let httpApi = require('../../helpers/httpApi');
  * @todo correct typo mutlisignaturesModule
  */
 // Constructor
-function MultisignaturesHttpApi (mutlisignaturesModule, app) {
+function MultisignaturesHttpApi(mutlisignaturesModule, app) {
+    const router = new Router();
 
-	let router = new Router();
+    router.map(mutlisignaturesModule.shared, {
+        'get /pending': 'pending',
+        'post /sign': 'sign',
+        'put /': 'addMultisignature',
+        'get /accounts': 'getAccounts'
+    });
 
-	router.map(mutlisignaturesModule.shared, {
-		'get /pending': 'pending',
-		'post /sign': 'sign',
-		'put /': 'addMultisignature',
-		'get /accounts': 'getAccounts'
-	});
-
-	httpApi.registerEndpoint('/api/multisignatures', app, router, mutlisignaturesModule.isLoaded);
+    httpApi.registerEndpoint('/api/multisignatures', app, router, mutlisignaturesModule.isLoaded);
 }
 
 module.exports = MultisignaturesHttpApi;
 
-/*************************************** END OF FILE *************************************/
+/** ************************************* END OF FILE ************************************ */

@@ -1,7 +1,9 @@
 {
   "tags": {
     "allowUnknownTags": true,
-    "dictionaries": ["jsdoc"]
+    "dictionaries": [
+      "jsdoc"
+    ]
   },
   "source": {
     "include": [
@@ -13,9 +15,14 @@
       "./modules/",
       "./schema/"
     ],
-    "exclude": [ "./public", "./node_modules"]
+    "exclude": [
+      "./public",
+      "./node_modules"
+    ]
   },
-  "plugins": ["plugins/markdown"],
+  "plugins": [
+    "plugins/markdown"
+  ],
   "opts": {
     "readme": "docs/intro.md",
     "encoding": "utf8",

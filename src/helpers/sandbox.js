@@ -8,17 +8,17 @@
  * @param {function} cb - Callback function.
  * @returns {function} Returns cb() for error.
  */
-function callMethod (shared, call, args, cb) {
-	if (typeof shared[call] !== 'function') {
-		return cb('Function not found in module: ' + call);
-	}
+function callMethod(shared, call, args, cb) {
+    if (typeof shared[call] !== 'function') {
+        return cb(`Function not found in module: ${call}`);
+    }
 
-	let callArgs = [args, cb];
-	shared[call].apply(null, callArgs);
+    const callArgs = [args, cb];
+    shared[call].apply(null, callArgs);
 }
 
 module.exports = {
-	callMethod: callMethod
+    callMethod
 };
 
-/*************************************** END OF FILE *************************************/
+/** ************************************* END OF FILE ************************************ */

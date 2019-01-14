@@ -1,8 +1,11 @@
-let constants = require('../helpers/constants.js');
-let sql = require('../sql/dapps.js');
+const constants = require('../helpers/constants.js');
+const sql = require('../sql/dapps.js');
 
 // Private fields
-let modules, library, __private = {}, self;
+let modules,
+    library,
+    __private = {},
+    self;
 
 __private.unconfirmedOutTansfers = {};
 
@@ -16,13 +19,13 @@ __private.unconfirmedOutTansfers = {};
  * @param {Object} logger
  */
 // Constructor
-function OutTransfer (db, schema, logger) {
-	library = {
-		db: db,
-		schema: schema,
-		logger: logger,
-	};
-	self = this;
+function OutTransfer(db, schema, logger) {
+    library = {
+        db,
+        schema,
+        logger,
+    };
+    self = this;
 }
 
 // Public methods
@@ -33,11 +36,11 @@ function OutTransfer (db, schema, logger) {
  * @param {Dapps} dapps
  */
 OutTransfer.prototype.bind = function (accounts, rounds, dapps) {
-	modules = {
-		accounts: accounts,
-		rounds: rounds,
-		dapps: dapps,
-	};
+    modules = {
+        accounts,
+        rounds,
+        dapps,
+    };
 };
 
 /**
@@ -48,15 +51,15 @@ OutTransfer.prototype.bind = function (accounts, rounds, dapps) {
  * @return {transaction} trs with assigned data
  */
 OutTransfer.prototype.create = function (data, trs) {
-	trs.recipientId = data.recipientId;
-	trs.amount = data.amount;
+    trs.recipientId = data.recipientId;
+    trs.amount = data.amount;
 
-	trs.asset.outTransfer = {
-		dappId: data.dappId,
-		transactionId: data.transactionId
-	};
-	trs.trsName = "OUT_TRANSFER";
-	return trs;
+    trs.asset.outTransfer = {
+        dappId: data.dappId,
+        transactionId: data.transactionId
+    };
+    trs.trsName = 'OUT_TRANSFER';
+    return trs;
 };
 
 /**
@@ -66,7 +69,7 @@ OutTransfer.prototype.create = function (data, trs) {
  * @return {number} fee
  */
 OutTransfer.prototype.calculateFee = function () {
-	return constants.fees.send;
+    return constants.fees.send;
 };
 
 /**
@@ -77,32 +80,32 @@ OutTransfer.prototype.calculateFee = function () {
  * @return {setImmediateCallback} errors messages | trs
  */
 OutTransfer.prototype.verify = function (trs, sender, cb) {
-	if (!trs.recipientId) {
-		return setImmediate(cb, 'Invalid recipient');
-	}
+    if (!trs.recipientId) {
+        return setImmediate(cb, 'Invalid recipient');
+    }
 
-	if (!trs.amount) {
-		return setImmediate(cb, 'Invalid transaction amount');
-	}
+    if (!trs.amount) {
+        return setImmediate(cb, 'Invalid transaction amount');
+    }
 
-	if (!trs.asset || !trs.asset.outTransfer) {
-		return setImmediate(cb, 'Invalid transaction asset');
-	}
+    if (!trs.asset || !trs.asset.outTransfer) {
+        return setImmediate(cb, 'Invalid transaction asset');
+    }
 
-	if (!/^[0-9a-fA-F]+$/.test(trs.asset.outTransfer.dappId)) {
-		return setImmediate(cb, 'Invalid outTransfer dappId');
-	}
+    if (!/^[0-9a-fA-F]+$/.test(trs.asset.outTransfer.dappId)) {
+        return setImmediate(cb, 'Invalid outTransfer dappId');
+    }
 
-	if (!/^[0-9a-fA-F]+$/.test(trs.asset.outTransfer.transactionId)) {
-		return setImmediate(cb, 'Invalid outTransfer transactionId');
-	}
+    if (!/^[0-9a-fA-F]+$/.test(trs.asset.outTransfer.transactionId)) {
+        return setImmediate(cb, 'Invalid outTransfer transactionId');
+    }
 
-	return setImmediate(cb, null, trs);
+    return setImmediate(cb, null, trs);
 };
 
 OutTransfer.prototype.verifyUnconfirmed = function (trs, sender, cb) {
-	return setImmediate(cb);
-}
+    return setImmediate(cb);
+};
 
 /**
  * Finds application into `dapps` table. Checks if transaction is already
@@ -114,31 +117,26 @@ OutTransfer.prototype.verifyUnconfirmed = function (trs, sender, cb) {
  * @return {setImmediateCallback} errors messages | trs
  */
 OutTransfer.prototype.process = function (trs, sender, cb) {
-	library.db.one(sql.countByTransactionId, {
-		id: trs.asset.outTransfer.dappId
-	}).then(function (row) {
-		if (row.count === 0) {
-			return setImmediate(cb, 'Application not found: ' + trs.asset.outTransfer.dappId);
-		}
+    library.db.one(sql.countByTransactionId, {
+        id: trs.asset.outTransfer.dappId
+    }).then((row) => {
+        if (row.count === 0) {
+            return setImmediate(cb, `Application not found: ${trs.asset.outTransfer.dappId}`);
+        }
 
-		if (__private.unconfirmedOutTansfers[trs.asset.outTransfer.transactionId]) {
-			return setImmediate(cb, 'Transaction is already processed: ' + trs.asset.outTransfer.transactionId);
-		}
+        if (__private.unconfirmedOutTansfers[trs.asset.outTransfer.transactionId]) {
+            return setImmediate(cb, `Transaction is already processed: ${trs.asset.outTransfer.transactionId}`);
+        }
 
-		library.db.one(sql.countByOutTransactionId, {
-			transactionId: trs.asset.outTransfer.transactionId
-		}).then(function (row) {
-			if (row.count > 0) {
-				return setImmediate(cb, 'Transaction is already confirmed: ' + trs.asset.outTransfer.transactionId);
-			} else {
-				return setImmediate(cb, null, trs);
-			}
-		}).catch(function (err) {
-			return setImmediate(cb, err);
-		});
-	}).catch(function (err) {
-		return setImmediate(cb, err);
-	});
+        library.db.one(sql.countByOutTransactionId, {
+            transactionId: trs.asset.outTransfer.transactionId
+        }).then((row) => {
+            if (row.count > 0) {
+                return setImmediate(cb, `Transaction is already confirmed: ${trs.asset.outTransfer.transactionId}`);
+            }
+            return setImmediate(cb, null, trs);
+        }).catch(err => setImmediate(cb, err));
+    }).catch(err => setImmediate(cb, err));
 };
 
 /**
@@ -150,9 +148,9 @@ OutTransfer.prototype.process = function (trs, sender, cb) {
  * @throws {e} Error
  */
 OutTransfer.prototype.getBytes = function (trs) {
-		const dappIdBuf = Buffer.from(trs.asset.outTransfer.dappId, 'utf8');
-		const transactionIdBuff = Buffer.from(trs.asset.outTransfer.transactionId, 'utf8');
-		return Buffer.concat([dappIdBuf, transactionIdBuff]);
+    const dappIdBuf = Buffer.from(trs.asset.outTransfer.dappId, 'utf8');
+    const transactionIdBuff = Buffer.from(trs.asset.outTransfer.transactionId, 'utf8');
+    return Buffer.concat([dappIdBuf, transactionIdBuff]);
 };
 
 /**
@@ -169,23 +167,21 @@ OutTransfer.prototype.getBytes = function (trs) {
  * @return {setImmediateCallback} error, cb
  */
 OutTransfer.prototype.apply = function (trs, block, sender, cb) {
-	__private.unconfirmedOutTansfers[trs.asset.outTransfer.transactionId] = false;
+    __private.unconfirmedOutTansfers[trs.asset.outTransfer.transactionId] = false;
 
-	modules.accounts.setAccountAndGet({address: trs.recipientId}, function (err) {
-		if (err) {
-			return setImmediate(cb, err);
-		}
+    modules.accounts.setAccountAndGet({ address: trs.recipientId }, (err) => {
+        if (err) {
+            return setImmediate(cb, err);
+        }
 
-		modules.accounts.mergeAccountAndGet({
-			address: trs.recipientId,
-			balance: trs.amount,
-			u_balance: trs.amount,
-			blockId: block.id,
-			round: modules.rounds.calc(block.height)
-		}, function (err) {
-			return setImmediate(cb, err);
-		});
-	});
+        modules.accounts.mergeAccountAndGet({
+            address: trs.recipientId,
+            balance: trs.amount,
+            u_balance: trs.amount,
+            blockId: block.id,
+            round: modules.rounds.calc(block.height)
+        }, err => setImmediate(cb, err));
+    });
 };
 
 /**
@@ -202,22 +198,20 @@ OutTransfer.prototype.apply = function (trs, block, sender, cb) {
  * @return {setImmediateCallback} error, cb
  */
 OutTransfer.prototype.undo = function (trs, block, sender, cb) {
-	__private.unconfirmedOutTansfers[trs.asset.outTransfer.transactionId] = true;
+    __private.unconfirmedOutTansfers[trs.asset.outTransfer.transactionId] = true;
 
-	modules.accounts.setAccountAndGet({address: trs.recipientId}, function (err) {
-		if (err) {
-			return setImmediate(cb, err);
-		}
-		modules.accounts.mergeAccountAndGet({
-			address: trs.recipientId,
-			balance: -trs.amount,
-			u_balance: -trs.amount,
-			blockId: block.id,
-			round: modules.rounds.calc(block.height)
-		}, function (err) {
-			return setImmediate(cb, err);
-		});
-	});
+    modules.accounts.setAccountAndGet({ address: trs.recipientId }, (err) => {
+        if (err) {
+            return setImmediate(cb, err);
+        }
+        modules.accounts.mergeAccountAndGet({
+            address: trs.recipientId,
+            balance: -trs.amount,
+            u_balance: -trs.amount,
+            blockId: block.id,
+            round: modules.rounds.calc(block.height)
+        }, err => setImmediate(cb, err));
+    });
 };
 
 /**
@@ -228,8 +222,8 @@ OutTransfer.prototype.undo = function (trs, block, sender, cb) {
  * @return {setImmediateCallback} cb
  */
 OutTransfer.prototype.applyUnconfirmed = function (trs, sender, cb) {
-	__private.unconfirmedOutTansfers[trs.asset.outTransfer.transactionId] = true;
-	return setImmediate(cb);
+    __private.unconfirmedOutTansfers[trs.asset.outTransfer.transactionId] = true;
+    return setImmediate(cb);
 };
 
 /**
@@ -240,28 +234,28 @@ OutTransfer.prototype.applyUnconfirmed = function (trs, sender, cb) {
  * @return {setImmediateCallback} cb
  */
 OutTransfer.prototype.undoUnconfirmed = function (trs, sender, cb) {
-	__private.unconfirmedOutTansfers[trs.asset.outTransfer.transactionId] = false;
-	return setImmediate(cb);
+    __private.unconfirmedOutTansfers[trs.asset.outTransfer.transactionId] = false;
+    return setImmediate(cb);
 };
 
 OutTransfer.prototype.schema = {
-	id: 'OutTransfer',
-	object: true,
-	properties: {
-		dappId: {
-			type: 'string',
-			format: 'id',
-			minLength: 1,
-			maxLength: 20
-		},
-		transactionId: {
-			type: 'string',
-			format: 'id',
-			minLength: 1,
-			maxLength: 20
-		}
-	},
-	required: ['dappId', 'transactionId']
+    id: 'OutTransfer',
+    object: true,
+    properties: {
+        dappId: {
+            type: 'string',
+            format: 'id',
+            minLength: 1,
+            maxLength: 20
+        },
+        transactionId: {
+            type: 'string',
+            format: 'id',
+            minLength: 1,
+            maxLength: 20
+        }
+    },
+    required: ['dappId', 'transactionId']
 };
 
 /**
@@ -272,15 +266,13 @@ OutTransfer.prototype.schema = {
  * @throws {string} error message
  */
 OutTransfer.prototype.objectNormalize = function (trs) {
-	let report = library.schema.validate(trs.asset.outTransfer, OutTransfer.prototype.schema);
+    const report = library.schema.validate(trs.asset.outTransfer, OutTransfer.prototype.schema);
 
-	if (!report) {
-		throw 'Failed to validate outTransfer schema: ' + this.scope.schema.getLastErrors().map(function (err) {
-			return err.message;
-		}).join(', ');
-	}
+    if (!report) {
+        throw `Failed to validate outTransfer schema: ${this.scope.schema.getLastErrors().map(err => err.message).join(', ')}`;
+    }
 
-	return trs;
+    return trs;
 };
 
 /**
@@ -289,24 +281,23 @@ OutTransfer.prototype.objectNormalize = function (trs) {
  * @return {Object} outTransfer with dappId and transactionId
  */
 OutTransfer.prototype.dbRead = function (raw) {
-	if (!raw.ot_dappId) {
-		return null;
-	} else {
-		let outTransfer = {
-			dappId: raw.ot_dappId,
-			transactionId: raw.ot_outTransactionId
-		};
+    if (!raw.ot_dappId) {
+        return null;
+    }
+    const outTransfer = {
+        dappId: raw.ot_dappId,
+        transactionId: raw.ot_outTransactionId
+    };
 
-		return {outTransfer: outTransfer};
-	}
+    return { outTransfer };
 };
 
 OutTransfer.prototype.dbTable = 'outtransfer';
 
 OutTransfer.prototype.dbFields = [
-	'dappId',
-	'outTransactionId',
-	'transactionId'
+    'dappId',
+    'outTransactionId',
+    'transactionId'
 ];
 
 /**
@@ -316,15 +307,15 @@ OutTransfer.prototype.dbFields = [
  * @return {Object[]} table, fields, values.
  */
 OutTransfer.prototype.dbSave = function (trs) {
-	return {
-		table: this.dbTable,
-		fields: this.dbFields,
-		values: {
-			dappId: trs.asset.outTransfer.dappId,
-			outTransactionId: trs.asset.outTransfer.transactionId,
-			transactionId: trs.id
-		}
-	};
+    return {
+        table: this.dbTable,
+        fields: this.dbFields,
+        values: {
+            dappId: trs.asset.outTransfer.dappId,
+            outTransactionId: trs.asset.outTransfer.transactionId,
+            transactionId: trs.id
+        }
+    };
 };
 
 /**
@@ -335,17 +326,17 @@ OutTransfer.prototype.dbSave = function (trs) {
  * @return {setImmediateCallback} cb
  */
 OutTransfer.prototype.afterSave = function (trs, cb) {
-	modules.dapps.message(trs.asset.outTransfer.dappId, {
-		topic: 'withdrawal',
-		message: {
-			transactionId: trs.id
-		}
-	}, function (err) {
-		if (err) {
-			library.logger.debug(err);
-		}
-		return setImmediate(cb);
-	});
+    modules.dapps.message(trs.asset.outTransfer.dappId, {
+        topic: 'withdrawal',
+        message: {
+            transactionId: trs.id
+        }
+    }, (err) => {
+        if (err) {
+            library.logger.debug(err);
+        }
+        return setImmediate(cb);
+    });
 };
 
 /**
@@ -356,17 +347,16 @@ OutTransfer.prototype.afterSave = function (trs, cb) {
  * sender multimin or there are not sender multisignatures.
  */
 OutTransfer.prototype.ready = function (trs, sender) {
-	if (Array.isArray(sender.multisignatures) && sender.multisignatures.length) {
-		if (!Array.isArray(trs.signatures)) {
-			return false;
-		}
-		return trs.signatures.length >= sender.multimin;
-	} else {
-		return true;
-	}
+    if (Array.isArray(sender.multisignatures) && sender.multisignatures.length) {
+        if (!Array.isArray(trs.signatures)) {
+            return false;
+        }
+        return trs.signatures.length >= sender.multimin;
+    }
+    return true;
 };
 
 // Export
 module.exports = OutTransfer;
 
-/*************************************** END OF FILE *************************************/
+/** ************************************* END OF FILE ************************************ */

@@ -26,7 +26,7 @@ const currentBlockVersion = constants.CURRENT_BLOCK_VERSION;
 function isValid(version, height) {
     // Check is there an exception for provided height and if yes assing its version
     const exceptionVersion = Object.keys(exceptions.blockVersions).find(
-        exceptionVersion => {
+        (exceptionVersion) => {
             // Get height range of current exceptions
             const heightsRange = exceptions.blockVersions[exceptionVersion];
             // Check if provided height is between the range boundaries

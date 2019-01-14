@@ -1,30 +1,30 @@
-let extend = require('extend');
-let util = require('util');
+const extend = require('extend');
+const util = require('util');
 
 /**
  * Creates a FIFO sequence array and default settings with config values.
- * Calls __tick with 3 
+ * Calls __tick with 3
  * @memberof module:helpers
  * @constructor
  * @param {string} config
  */
-function Sequence (config) {
-	let _default = {
-		onWarning: null,
-		warningLimit: 50
-	};
-	_default = extend(_default, config);
-	let self = this;
-	this.sequence = [];
+function Sequence(config) {
+    let _default = {
+        onWarning: null,
+        warningLimit: 50
+    };
+    _default = extend(_default, config);
+    const self = this;
+    this.sequence = [];
 
-	setImmediate(function nextSequenceTick () {
-		if (_default.onWarning && self.sequence.length >= _default.warningLimit) {
-			_default.onWarning(self.sequence.length, _default.warningLimit);
-		}
-		self.__tick(function () {
-			setTimeout(nextSequenceTick, 10);
-		});
-	});
+    setImmediate(function nextSequenceTick() {
+        if (_default.onWarning && self.sequence.length >= _default.warningLimit) {
+            _default.onWarning(self.sequence.length, _default.warningLimit);
+        }
+        self.__tick(() => {
+            setTimeout(nextSequenceTick, 10);
+        });
+    });
 }
 
 /**
@@ -33,20 +33,20 @@ function Sequence (config) {
  * @return {setImmediateCallback} With cb or task.done
  */
 Sequence.prototype.__tick = function (cb) {
-	let task = this.sequence.shift();
-	if (!task) {
-		return setImmediate(cb);
-	}
-	let args = [function (err, res) {
-		if (task.done) {
-			setImmediate(task.done, err, res);
-		}
-		setImmediate(cb);
-	}];
-	if (task.args) {
-		args = args.concat(task.args);
-	}
-	task.worker.apply(task.worker, args);
+    const task = this.sequence.shift();
+    if (!task) {
+        return setImmediate(cb);
+    }
+    let args = [function (err, res) {
+        if (task.done) {
+            setImmediate(task.done, err, res);
+        }
+        setImmediate(cb);
+    }];
+    if (task.args) {
+        args = args.concat(task.args);
+    }
+    task.worker.apply(task.worker, args);
 };
 
 /**
@@ -56,17 +56,17 @@ Sequence.prototype.__tick = function (cb) {
  * @param {function} done
  */
 Sequence.prototype.add = function (worker, args, done) {
-	if (!done && args && typeof(args) === 'function') {
-		done = args;
-		args = undefined;
-	}
-	if (worker && typeof(worker) === 'function') {
-		let task = {worker: worker, done: done};
-		if (util.isArray(args)) {
-			task.args = args;
-		}
-		this.sequence.push(task);
-	}
+    if (!done && args && typeof (args) === 'function') {
+        done = args;
+        args = undefined;
+    }
+    if (worker && typeof (worker) === 'function') {
+        const task = { worker, done };
+        if (util.isArray(args)) {
+            task.args = args;
+        }
+        this.sequence.push(task);
+    }
 };
 
 /**
@@ -74,9 +74,9 @@ Sequence.prototype.add = function (worker, args, done) {
  * @return {number} sequence lenght.
  */
 Sequence.prototype.count = function () {
-	return this.sequence.length;
+    return this.sequence.length;
 };
 
 module.exports = Sequence;
 
-/*************************************** END OF FILE *************************************/
+/** ************************************* END OF FILE ************************************ */

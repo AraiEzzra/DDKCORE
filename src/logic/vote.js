@@ -1,16 +1,19 @@
-let async = require('async');
-let constants = require('../helpers/constants.js');
-let exceptions = require('../helpers/exceptions.js');
-let Diff = require('../helpers/diff.js');
-let _ = require('lodash');
-let sql = require('../sql/accounts.js');
-let slots = require('../helpers/slots.js');
+const async = require('async');
+const constants = require('../helpers/constants.js');
+const exceptions = require('../helpers/exceptions.js');
+const Diff = require('../helpers/diff.js');
+const _ = require('lodash');
+const sql = require('../sql/accounts.js');
+const slots = require('../helpers/slots.js');
 const transactionTypes = require('../helpers/transactionTypes');
-const {LENGTH, writeUInt64LE} = require('../helpers/buffer.js');
-let utils = require('../utils');
+const { LENGTH, writeUInt64LE } = require('../helpers/buffer.js');
+const utils = require('../utils');
 
 // Private fields
-let modules, library, self, __private = {};
+let modules,
+    library,
+    self,
+    __private = {};
 
 __private.loaded = false;
 
@@ -31,10 +34,10 @@ __private.loaded = false;
 function Vote(logger, schema, db, frozen, cb) {
     self = this;
     library = {
-        db: db,
-        logger: logger,
-        schema: schema,
-        frozen: frozen
+        db,
+        logger,
+        schema,
+        frozen
     };
     if (cb) {
         return setImmediate(cb, null, this);
@@ -49,9 +52,9 @@ function Vote(logger, schema, db, frozen, cb) {
  */
 Vote.prototype.bind = function (delegates, rounds, accounts) {
     modules = {
-        delegates: delegates,
-        rounds: rounds,
-        accounts: accounts,
+        delegates,
+        rounds,
+        accounts,
     };
 };
 
@@ -64,7 +67,7 @@ Vote.prototype.bind = function (delegates, rounds, accounts) {
  */
 Vote.prototype.create = async function (data, trs) {
     const senderId = data.sender.address;
-    const isDownVote = data.votes[0][0] == "-";
+    const isDownVote = data.votes[0][0] == '-';
     const totals = await library.frozen.calculateTotalRewardAndUnstake(senderId, isDownVote);
     const airdropReward = await library.frozen.getAirdropReward(senderId, totals.reward, data.type);
 
@@ -77,9 +80,8 @@ Vote.prototype.create = async function (data, trs) {
         totalReward: airdropReward.total
     };
     trs.recipientId = data.sender.address;
-    trs.trsName = isDownVote ? "DOWNVOTE" : "VOTE";
+    trs.trsName = isDownVote ? 'DOWNVOTE' : 'VOTE';
     return trs;
-
 };
 
 /**
@@ -120,92 +122,86 @@ Vote.prototype.verifyFields = function (trs, sender, cb) {
     if (trs.recipientId !== trs.senderId) {
         if (VVE.INVALID_RECIPIENT === true) {
             return setImmediate(cb, 'Invalid recipient');
-        } else {
-            library.logger.error('Invalid recipient!\n' + {
-                id: trs.id,
-                type: trs.type,
-                // trsName: trs.trsName,
-                senderId: trs.senderId,
-                recipientId: trs.recipientId,
-            });
         }
+        library.logger.error(`Invalid recipient!\n${{
+            id: trs.id,
+            type: trs.type,
+            // trsName: trs.trsName,
+            senderId: trs.senderId,
+            recipientId: trs.recipientId,
+        }}`);
     }
 
     if (!trs.asset || !trs.asset.votes) {
         if (VVE.INVALID_TRANSACTION_ASSET) {
             return setImmediate(cb, 'Invalid transaction asset');
-        } else {
-            library.logger.error('Invalid transaction asset!\n' + {
-                id: trs.id,
-                type: trs.type,
-                asset: trs.asset,
-            });
         }
+        library.logger.error(`Invalid transaction asset!\n${{
+            id: trs.id,
+            type: trs.type,
+            asset: trs.asset,
+        }}`);
     }
 
     if (!Array.isArray(trs.asset.votes)) {
         if (VVE.INVALID_VOTES_MUST_BE_ARRAY) {
             return setImmediate(cb, 'Invalid votes. Must be an array');
-        } else {
-            library.logger.error('Invalid votes. Must be an array!\n' + {
-                id: trs.id,
-                type: trs.type,
-                votes: trs.asset.votes,
-            });
         }
+        library.logger.error(`Invalid votes. Must be an array!\n${{
+            id: trs.id,
+            type: trs.type,
+            votes: trs.asset.votes,
+        }}`);
     }
 
     if (!trs.asset.votes.length) {
         if (VVE.INVALID_VOTES_EMPTY_ARRAY) {
             return setImmediate(cb, 'Invalid votes. Must not be empty');
-        } else {
-            library.logger.error('Invalid votes. Must not be empty!\n' + {
-                id: trs.id,
-                type: trs.type,
-                votes: trs.asset.votes,
-            });
         }
+        library.logger.error(`Invalid votes. Must not be empty!\n${{
+            id: trs.id,
+            type: trs.type,
+            votes: trs.asset.votes,
+        }}`);
     }
 
     if (trs.asset.votes && trs.asset.votes.length > constants.maxVotesPerTransaction) {
         const msg = ['Voting limit exceeded. Maximum is', constants.maxVotesPerTransaction, 'votes per transaction'].join(' ');
         if (VVE.VOTING_LIMIT_EXCEEDED) {
             return setImmediate(cb, msg);
-        } else {
-            library.logger.error(msg + '\n' + {
-                id: trs.id,
-                type: trs.type,
-                votes: {
-                    length: trs.asset.votes.length,
-                    maxLength: constants.maxVotesPerTransaction,
-                }
-            });
         }
+        library.logger.error(`${msg}\n${{
+            id: trs.id,
+            type: trs.type,
+            votes: {
+                length: trs.asset.votes.length,
+                maxLength: constants.maxVotesPerTransaction,
+            }
+        }}`);
     }
 
     (new Promise((resolve, reject) => {
-        async.eachSeries(trs.asset.votes, function (vote, eachSeriesCb) {
-            self.verifyVote(vote, function (err) {
+        async.eachSeries(trs.asset.votes, (vote, eachSeriesCb) => {
+            self.verifyVote(vote, (err) => {
                 if (err) {
                     const msg = ['Invalid vote at index', trs.asset.votes.indexOf(vote), '-', err].join(' ');
                     if (VVE.INVALID_VOTE_AT_INDEX) {
                         return setImmediate(eachSeriesCb, msg);
-                    } else {
-                        library.logger.error(msg + '\n' + {
-                            id: trs.id,
-                            type: trs.type,
-                            vote: {
-                                index: trs.asset.votes.indexOf(vote),
-                                vote: vote,
-                            },
-                            err: err,
-                        });
                     }
+                    library.logger.error(`${msg}\n${{
+                        id: trs.id,
+                        type: trs.type,
+                        vote: {
+                            index: trs.asset.votes.indexOf(vote),
+                            vote,
+                        },
+                        err,
+                    }}`);
                 } else {
                     return setImmediate(eachSeriesCb);
                 }
             });
-        }, function (err) {
+        }, (err) => {
             if (err) {
                 reject(err);
             }
@@ -213,24 +209,22 @@ Vote.prototype.verifyFields = function (trs, sender, cb) {
         });
     }))
         .then(() => {
-            if (trs.asset.votes.length > _.uniqBy(trs.asset.votes, function (v) {
-                return v.slice(1);
-            }).length) {
+            if (trs.asset.votes.length > _.uniqBy(trs.asset.votes, v => v.slice(1)).length) {
                 const msg = 'Multiple votes for same delegate are not allowed';
                 if (VVE.MULTIPLE_VOTES_FOR_SAME_DELEGATE) {
                     throw msg;
                 } else {
-                    library.logger.error(msg + '!\n' + {
+                    library.logger.error(`${msg}!\n${{
                         id: trs.id,
                         type: trs.type,
                         votes: trs.asset.votes
-                    });
+                    }}`);
                 }
             }
 
             setImmediate(cb);
         })
-        .catch((err) => setImmediate(cb, err));
+        .catch(err => setImmediate(cb, err));
 };
 
 /**
@@ -250,21 +244,21 @@ Vote.prototype.verify = function (trs, sender, cb) {
         },
         async function (seriesCb) {
             if (__private.loaded) {
-                const isDownVote = trs.trsName === "DOWNVOTE";
+                const isDownVote = trs.trsName === 'DOWNVOTE';
                 const totals = await library.frozen.calculateTotalRewardAndUnstake(trs.senderId, isDownVote);
                 if (totals.reward !== trs.asset.reward) {
                     const msg = 'Verify failed: vote reward is corrupted';
                     if (VVE.VOTE_REWARD_CORRUPTED) {
                         throw msg;
                     } else {
-                        library.logger.error(msg + '!\n' + {
+                        library.logger.error(`${msg}!\n${{
                             id: trs.id,
                             type: trs.type,
                             reward: {
                                 asset: trs.asset.reward,
                                 totals: totals.reward,
                             }
-                        });
+                        }}`);
                     }
                 }
                 if (totals.unstake !== trs.asset.unstake) {
@@ -272,14 +266,14 @@ Vote.prototype.verify = function (trs, sender, cb) {
                     if (VVE.VOTE_UNSTAKE_CORRUPTED) {
                         throw msg;
                     } else {
-                        library.logger.error(msg + '! ' + {
+                        library.logger.error(`${msg}! ${{
                             id: trs.id,
                             type: trs.type,
                             unstake: {
                                 asset: trs.asset.unstake,
                                 totals: totals.unstake,
                             }
-                        });
+                        }}`);
                     }
                 }
             }
@@ -344,7 +338,7 @@ Vote.prototype.verifyVote = function (vote, cb) {
  * exceptions votes list)
  */
 Vote.prototype.checkConfirmedDelegates = function (trs, cb) {
-    modules.delegates.checkConfirmedDelegates(trs.senderPublicKey, trs.asset.votes, function (err) {
+    modules.delegates.checkConfirmedDelegates(trs.senderPublicKey, trs.asset.votes, (err) => {
         if (err && exceptions.votes.indexOf(trs.id) > -1) {
             library.logger.debug(err);
             library.logger.debug(JSON.stringify(trs));
@@ -364,7 +358,7 @@ Vote.prototype.checkConfirmedDelegates = function (trs, cb) {
  * exceptions votes list)
  */
 Vote.prototype.checkUnconfirmedDelegates = function (trs, cb) {
-    modules.delegates.checkUnconfirmedDelegates(trs.senderPublicKey, trs.asset.votes, function (err) {
+    modules.delegates.checkUnconfirmedDelegates(trs.senderPublicKey, trs.asset.votes, (err) => {
         if (err && exceptions.votes.indexOf(trs.id) > -1) {
             library.logger.debug(err);
             library.logger.debug(JSON.stringify(trs));
@@ -406,10 +400,10 @@ Vote.prototype.getBytes = function (trs) {
 
     offset = 0;
 
-    Object.keys(trs.asset.airdropReward.sponsors).sort().forEach(address => {
-    	offset = writeUInt64LE(sponsorsBuffer, parseInt(address.slice(3), 10), offset);
-    	offset = writeUInt64LE(sponsorsBuffer, trs.asset.airdropReward.sponsors[address] || 0, offset);
-		});
+    Object.keys(trs.asset.airdropReward.sponsors).sort().forEach((address) => {
+        offset = writeUInt64LE(sponsorsBuffer, parseInt(address.slice(3), 10), offset);
+        offset = writeUInt64LE(sponsorsBuffer, trs.asset.airdropReward.sponsors[address] || 0, offset);
+    });
 
     const voteBuffer = trs.asset.votes ? Buffer.from(trs.asset.votes.join(''), 'utf8') : Buffer.from([]);
     return Buffer.concat([buff, sponsorsBuffer, voteBuffer]);
@@ -428,7 +422,7 @@ Vote.prototype.getBytes = function (trs) {
  * @todo delete unnecessary let parent = this
  */
 Vote.prototype.apply = function (trs, block, sender, cb) {
-    let parent = this;
+    const parent = this;
 
     async.series([
         function (seriesCb) {
@@ -439,8 +433,8 @@ Vote.prototype.apply = function (trs, block, sender, cb) {
             }, seriesCb);
         },
         function (seriesCb) {
-            self.updateMemAccounts({votes: trs.asset.votes, senderId: trs.senderId},
-                function (err) {
+            self.updateMemAccounts({ votes: trs.asset.votes, senderId: trs.senderId },
+                (err) => {
                     if (err) {
                         return setImmediate(seriesCb, err);
                     }
@@ -462,7 +456,7 @@ Vote.prototype.apply = function (trs, block, sender, cb) {
                 });
         },
         function (seriesCb) {
-            const isDownVote = trs.trsName === "DOWNVOTE";
+            const isDownVote = trs.trsName === 'DOWNVOTE';
             if (isDownVote) {
                 return setImmediate(seriesCb, null, trs);
             }
@@ -488,12 +482,12 @@ Vote.prototype.apply = function (trs, block, sender, cb) {
  * @return {setImmediateCallback} cb, err
  */
 Vote.prototype.undo = function (trs, block, sender, cb) {
-    let parent = this;
+    const parent = this;
     if (trs.asset.votes === null) {
         return setImmediate(cb);
     }
 
-    let votesInvert = Diff.reverse(trs.asset.votes);
+    const votesInvert = Diff.reverse(trs.asset.votes);
 
     async.series([
         function (seriesCb) {
@@ -503,14 +497,14 @@ Vote.prototype.undo = function (trs, block, sender, cb) {
                 round: modules.rounds.calc(block.height)
             }, seriesCb);
         },
-        //added to remove vote count from mem_accounts table
+        // added to remove vote count from mem_accounts table
         function (seriesCb) {
             self.updateMemAccounts(
                 {
                     votes: votesInvert,
                     senderId: trs.senderId
                 }
-                , function (err) {
+                , (err) => {
                     if (err) {
                         return setImmediate(seriesCb, err);
                     }
@@ -521,16 +515,14 @@ Vote.prototype.undo = function (trs, block, sender, cb) {
             const votes = trs.asset.votes.map(vote => vote.substring(1));
 
             library.db.query(sql.changeDelegateVoteCount({ value: -1, votes }))
-                .then(function () {
-                    return setImmediate(seriesCb, null);
-                })
-                .catch(function (err) {
+                .then(() => setImmediate(seriesCb, null))
+                .catch((err) => {
                     library.logger.error(err.stack);
                     return setImmediate(seriesCb, err);
                 });
         },
         function (seriesCb) {
-            const isDownVote = trs.trsName === "DOWNVOTE";
+            const isDownVote = trs.trsName === 'DOWNVOTE';
             if (isDownVote) {
                 return setImmediate(seriesCb, null, trs);
             }
@@ -554,13 +546,11 @@ Vote.prototype.undo = function (trs, block, sender, cb) {
  * @todo delete unnecessary let parent = this
  */
 Vote.prototype.applyUnconfirmed = function (trs, sender, cb) {
-    let parent = this;
+    const parent = this;
 
     parent.scope.account.merge(sender.address, {
         u_delegates: trs.asset.votes
-    }, function (err) {
-        return setImmediate(cb, err);
-    });
+    }, err => setImmediate(cb, err));
 };
 
 /**
@@ -579,11 +569,9 @@ Vote.prototype.undoUnconfirmed = function (trs, sender, cb) {
         return setImmediate(cb);
     }
 
-    let votesInvert = Diff.reverse(trs.asset.votes);
+    const votesInvert = Diff.reverse(trs.asset.votes);
 
-    this.scope.account.merge(sender.address, {u_delegates: votesInvert}, function (err) {
-        return setImmediate(cb, err);
-    });
+    this.scope.account.merge(sender.address, { u_delegates: votesInvert }, err => setImmediate(cb, err));
 };
 
 /**
@@ -614,12 +602,10 @@ Vote.prototype.schema = {
  * @todo should pass trs.asset.vote to validate?
  */
 Vote.prototype.objectNormalize = function (trs) {
-    let report = library.schema.validate(trs.asset, Vote.prototype.schema);
+    const report = library.schema.validate(trs.asset, Vote.prototype.schema);
 
     if (!report) {
-        throw 'Failed to validate vote schema: ' + this.scope.schema.getLastErrors().map(function (err) {
-            return err.message;
-        }).join(', ');
+        throw `Failed to validate vote schema: ${this.scope.schema.getLastErrors().map(err => err.message).join(', ')}`;
     }
 
     return trs;
@@ -631,17 +617,15 @@ Vote.prototype.objectNormalize = function (trs) {
  * @return {null|votes} votes object
  */
 Vote.prototype.dbRead = function (raw) {
-
     if (!raw.v_votes) {
         return null;
-    } else {
-        const votes = raw.v_votes.split(',');
-        const reward = Number(raw.v_reward) || 0;
-        const unstake = Number(raw.v_unstake) || 0;
-        const airdropReward = raw.v_airdropReward || {};
-
-        return {votes: votes, reward: reward, unstake: unstake, airdropReward: airdropReward};
     }
+    const votes = raw.v_votes.split(',');
+    const reward = Number(raw.v_reward) || 0;
+    const unstake = Number(raw.v_unstake) || 0;
+    const airdropReward = raw.v_airdropReward || {};
+
+    return { votes, reward, unstake, airdropReward };
 };
 
 Vote.prototype.dbTable = 'votes';
@@ -686,9 +670,8 @@ Vote.prototype.ready = function (trs, sender) {
             return false;
         }
         return trs.signatures.length >= sender.multimin;
-    } else {
-        return true;
     }
+    return true;
 };
 
 /**
@@ -703,7 +686,7 @@ Vote.prototype.updateAndCheckVote = async (voteTransaction) => {
         // todo check if could change to tx
         await library.db.task(async () => {
             const activeOrders = await library.db.manyOrNone(sql.updateStakeOrder, {
-                senderId: senderId,
+                senderId,
                 milestone: constants.froze.vTime * 60, // 2 * 60 sec = 2 mins
                 currentTime: slots.getTime()
             });
@@ -711,14 +694,13 @@ Vote.prototype.updateAndCheckVote = async (voteTransaction) => {
             if (activeOrders && activeOrders.length > 0) {
                 await library.frozen.applyFrozeOrdersRewardAndUnstake(voteTransaction, activeOrders);
 
-                let bulk = utils.makeBulk(activeOrders, 'stake_orders');
+                const bulk = utils.makeBulk(activeOrders, 'stake_orders');
                 try {
                     await utils.indexall(bulk, 'stake_orders');
-                    library.logger.info(senderId + ': update stake orders isvoteDone and count');
+                    library.logger.info(`${senderId}: update stake orders isvoteDone and count`);
                 } catch (err) {
-                    library.logger.error('elasticsearch error :' + err.message);
+                    library.logger.error(`elasticsearch error :${err.message}`);
                 }
-
             }
         });
     } catch (err) {
@@ -740,7 +722,7 @@ Vote.prototype.removeCheckVote = async (voteTransaction) => {
         await library.db.task(async () => {
             await library.frozen.undoFrozeOrdersRewardAndUnstake(voteTransaction);
             await library.db.none(sql.undoUpdateStakeOrder, {
-                senderId: senderId,
+                senderId,
                 milestone: constants.froze.vTime * 60,
                 currentTime: slots.getTime()
             });
@@ -758,42 +740,35 @@ Vote.prototype.removeCheckVote = async (voteTransaction) => {
  *
  */
 Vote.prototype.updateMemAccounts = function (voteInfo, cb) {
-    let votes = voteInfo.votes;
-    let senderId = voteInfo.senderId;
+    const votes = voteInfo.votes;
+    const senderId = voteInfo.senderId;
 
     function checkUpvoteDownvote(waterCb) {
-
         if ((votes[0])[0] === '+') {
             return setImmediate(waterCb, null, 1);
-        } else {
-            return setImmediate(waterCb, null, 0);
         }
+        return setImmediate(waterCb, null, 0);
     }
 
     function prepareQuery(voteType, waterCb) {
-
-        let inCondition = "";
-        votes.forEach(function (vote) {
-            let address = modules.accounts.generateAddressByPublicKey(vote.substring(1));
-            inCondition += '\'' + address + '\' ,';
+        let inCondition = '';
+        votes.forEach((vote) => {
+            const address = modules.accounts.generateAddressByPublicKey(vote.substring(1));
+            inCondition += `'${address}' ,`;
         });
         inCondition = inCondition.substring(0, inCondition.length - 1);
         let query;
-        let sign = voteType === 1 ? '+' : '-';
+        const sign = voteType === 1 ? '+' : '-';
 
-        query = 'UPDATE mem_accounts SET "voteCount"="voteCount"' + sign + '1  WHERE "address" IN ( ' + inCondition + ')';
+        query = `UPDATE mem_accounts SET "voteCount"="voteCount"${sign}1  WHERE "address" IN ( ${inCondition})`;
 
         return setImmediate(waterCb, null, query);
-
     }
 
     function updateVoteCount(query, waterCb) {
-
         library.db.query(query)
-            .then(function () {
-                return setImmediate(waterCb);
-            })
-            .catch(function (err) {
+            .then(() => setImmediate(waterCb))
+            .catch((err) => {
                 library.logger.error(err.stack);
                 return setImmediate(waterCb, 'vote updation in mem_accounts table error');
             });
@@ -803,17 +778,16 @@ Vote.prototype.updateMemAccounts = function (voteInfo, cb) {
         checkUpvoteDownvote,
         prepareQuery,
         updateVoteCount
-    ], function (err) {
+    ], (err) => {
         if (err) {
             library.logger.warn(err);
             return setImmediate(cb, err);
         }
         return setImmediate(cb, null);
     });
-
 };
 
 // Export
 module.exports = Vote;
 
-/*************************************** END OF FILE *************************************/
+/** ************************************* END OF FILE ************************************ */

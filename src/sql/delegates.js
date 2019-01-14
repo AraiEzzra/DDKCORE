@@ -1,6 +1,6 @@
-let pgp = require('pg-promise');
+const pgp = require('pg-promise');
 
-let DelegatesSql = {
+const DelegatesSql = {
     sortFields: [
         'username',
         'address',
@@ -16,8 +16,8 @@ let DelegatesSql = {
 
     count: 'SELECT COUNT(*)::int FROM delegates',
 
-    search: function (params) {
-        let sql = [
+    search(params) {
+        const sql = [
             'WITH',
             'supply AS (SELECT calcSupply((SELECT height FROM blocks ORDER BY height DESC LIMIT 1))::numeric),',
             'delegates AS (SELECT row_number() OVER (ORDER BY vote DESC, m."publicKey" ASC)::int AS rank,',
@@ -38,11 +38,11 @@ let DelegatesSql = {
             'LEFT JOIN trs t ON d."transactionId" = t.id',
             'LEFT JOIN (SELECT "dependentId", COUNT(1)::int AS voters_cnt from mem_accounts2delegates GROUP BY "dependentId") v ON v."dependentId" = ENCODE(m."publicKey", \'hex\')',
             'WHERE m."isDelegate" = 1',
-            'ORDER BY ' + [params.sortField, params.sortMethod].join(' ') + ')',
+            `ORDER BY ${[params.sortField, params.sortMethod].join(' ')})`,
             'SELECT * FROM delegates WHERE LOWER(username) LIKE ${q} LIMIT ${limit}'
         ].join(' ');
 
-        params.q = '%' + String(params.q).toLowerCase() + '%';
+        params.q = `%${String(params.q).toLowerCase()}%`;
         return pgp.as.format(sql, params);
     },
 

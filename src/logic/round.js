@@ -1,6 +1,6 @@
-let pgp = require('pg-promise');
-let RoundChanges = require('../helpers/RoundChanges.js');
-let sql = require('../sql/rounds.js');
+const pgp = require('pg-promise');
+const RoundChanges = require('../helpers/RoundChanges.js');
+const sql = require('../sql/rounds.js');
 
 /**
  * Validates required scope properties.
@@ -12,42 +12,42 @@ let sql = require('../sql/rounds.js');
  * @constructor
  */
 // Constructor
-function Round (scope, t) {
-	this.scope = {
-		backwards: scope.backwards,
-		round: scope.round,
-		roundOutsiders: scope.roundOutsiders,
-		roundDelegates: scope.roundDelegates,
-		roundFees: scope.roundFees,
-		roundRewards: scope.roundRewards,
-		library: {
-			logger: scope.library.logger,
-		},
-		modules: {
-			accounts: scope.modules.accounts,
-		},
-		block: {
-			generatorPublicKey: scope.block.generatorPublicKey,
-			id: scope.block.id,
-			height: scope.block.height,
-		},
-	};
-	this.t = t;
+function Round(scope, t) {
+    this.scope = {
+        backwards: scope.backwards,
+        round: scope.round,
+        roundOutsiders: scope.roundOutsiders,
+        roundDelegates: scope.roundDelegates,
+        roundFees: scope.roundFees,
+        roundRewards: scope.roundRewards,
+        library: {
+            logger: scope.library.logger,
+        },
+        modules: {
+            accounts: scope.modules.accounts,
+        },
+        block: {
+            generatorPublicKey: scope.block.generatorPublicKey,
+            id: scope.block.id,
+            height: scope.block.height,
+        },
+    };
+    this.t = t;
 
-	// List of required scope properties
-	let requiredProperties = ['library', 'modules', 'block', 'round', 'backwards'];
+    // List of required scope properties
+    let requiredProperties = ['library', 'modules', 'block', 'round', 'backwards'];
 
-	// Require extra scope properties when finishing round
-	if (scope.finishRound) {
-		requiredProperties = requiredProperties.concat(['roundFees', 'roundRewards', 'roundDelegates', 'roundOutsiders']);
-	}
+    // Require extra scope properties when finishing round
+    if (scope.finishRound) {
+        requiredProperties = requiredProperties.concat(['roundFees', 'roundRewards', 'roundDelegates', 'roundOutsiders']);
+    }
 
-	// Iterate over requiredProperties, checking for undefined scope properties
-	requiredProperties.forEach(function (property) {
-		if (scope[property] === undefined) {
-			throw 'Missing required scope property: ' + property;
-		}
-	});
+    // Iterate over requiredProperties, checking for undefined scope properties
+    requiredProperties.forEach((property) => {
+        if (scope[property] === undefined) {
+            throw `Missing required scope property: ${property}`;
+        }
+    });
 }
 
 // Public methods
@@ -57,14 +57,14 @@ function Round (scope, t) {
  * @return {function} Promise
  */
 Round.prototype.mergeBlockGenerator = function () {
-	return this.t.none(
-		this.scope.modules.accounts.mergeAccountAndGet({
-			publicKey: this.scope.block.generatorPublicKey,
-			producedblocks: (this.scope.backwards ? -1 : 1),
-			blockId: this.scope.block.id,
-			round: this.scope.round
-		})
-	);
+    return this.t.none(
+        this.scope.modules.accounts.mergeAccountAndGet({
+            publicKey: this.scope.block.generatorPublicKey,
+            producedblocks: (this.scope.backwards ? -1 : 1),
+            blockId: this.scope.block.id,
+            round: this.scope.round
+        })
+    );
 };
 
 /**
@@ -72,11 +72,11 @@ Round.prototype.mergeBlockGenerator = function () {
  * @return {}
  */
 Round.prototype.updateMissedBlocks = function () {
-	if (this.scope.roundOutsiders.length === 0) {
-		return this.t;
-	}
+    if (this.scope.roundOutsiders.length === 0) {
+        return this.t;
+    }
 
-	return this.t.none(sql.updateMissedBlocks(this.scope.backwards), [this.scope.roundOutsiders]);
+    return this.t.none(sql.updateMissedBlocks(this.scope.backwards), [this.scope.roundOutsiders]);
 };
 
 /**
@@ -85,7 +85,7 @@ Round.prototype.updateMissedBlocks = function () {
  * @todo round must be a param option.
  */
 Round.prototype.getVotes = function () {
-	return this.t.query(sql.getVotes, { round: this.scope.round });
+    return this.t.query(sql.getVotes, { round: this.scope.round });
 };
 
 /**
@@ -95,22 +95,19 @@ Round.prototype.getVotes = function () {
  * @return {function} Promise
  */
 Round.prototype.updateVotes = function () {
-	let self = this;
+    const self = this;
 
-	return self.getVotes(self.scope.round).then(function (votes) {
-		let queries = votes.map(function (vote) {
-			return pgp.as.format(sql.updateVotes, {
-				address: self.scope.modules.accounts.generateAddressByPublicKey(vote.delegate),
-				amount: Math.floor(vote.amount)
-			});
-		}).join('');
+    return self.getVotes(self.scope.round).then((votes) => {
+        const queries = votes.map(vote => pgp.as.format(sql.updateVotes, {
+            address: self.scope.modules.accounts.generateAddressByPublicKey(vote.delegate),
+            amount: Math.floor(vote.amount)
+        })).join('');
 
-		if (queries.length > 0) {
-			return self.t.none(queries);
-		} else {
-			return self.t;
-		}
-	});
+        if (queries.length > 0) {
+            return self.t.none(queries);
+        }
+        return self.t;
+    });
 };
 
 /**
@@ -118,11 +115,10 @@ Round.prototype.updateVotes = function () {
  * @return {function} Promise
  */
 Round.prototype.markBlockId = function () {
-	if (this.scope.backwards) {
-		return this.t.none(sql.updateBlockId, { oldId: this.scope.block.id, newId: '0' });
-	} else {
-		return this.t;
-	}
+    if (this.scope.backwards) {
+        return this.t.none(sql.updateBlockId, { oldId: this.scope.block.id, newId: '0' });
+    }
+    return this.t;
 };
 
 /**
@@ -130,16 +126,16 @@ Round.prototype.markBlockId = function () {
  * @return {function} Promise
  */
 Round.prototype.flushRound = function () {
-	return this.t.none(sql.flush, { round: this.scope.round });
+    return this.t.none(sql.flush, { round: this.scope.round });
 };
 
 /**
- * Calls sql truncateBlocks: deletes blocks greather than height from 
+ * Calls sql truncateBlocks: deletes blocks greather than height from
  * `blocks` table.
  * @return {function} Promise
  */
 Round.prototype.truncateBlocks = function () {
-	return this.t.none(sql.truncateBlocks, { height: this.scope.block.height });
+    return this.t.none(sql.truncateBlocks, { height: this.scope.block.height });
 };
 
 /**
@@ -148,8 +144,8 @@ Round.prototype.truncateBlocks = function () {
  * @return {function} Promise
  */
 Round.prototype.restoreRoundSnapshot = function () {
-	this.scope.library.logger.debug('Restoring mem_round snapshot...');
-	return this.t.none(sql.restoreRoundSnapshot);
+    this.scope.library.logger.debug('Restoring mem_round snapshot...');
+    return this.t.none(sql.restoreRoundSnapshot);
 };
 
 /**
@@ -158,8 +154,8 @@ Round.prototype.restoreRoundSnapshot = function () {
  * @return {function} Promise
  */
 Round.prototype.restoreVotesSnapshot = function () {
-	this.scope.library.logger.debug('Restoring mem_accounts.vote snapshot...');
-	return this.t.none(sql.restoreVotesSnapshot);
+    this.scope.library.logger.debug('Restoring mem_accounts.vote snapshot...');
+    return this.t.none(sql.restoreVotesSnapshot);
 };
 
 /**
@@ -169,61 +165,64 @@ Round.prototype.restoreVotesSnapshot = function () {
  * @return {function} Promise with address array
  */
 Round.prototype.applyRound = function () {
-	let roundChanges = new RoundChanges(this.scope);
-	let queries = [];
+    const roundChanges = new RoundChanges(this.scope);
+    const queries = [];
 
-        // Reverse delegates if going backwards
-        let delegates = (this.scope.backwards) ? this.scope.roundDelegates.reverse() : this.scope.roundDelegates;
+    // Reverse delegates if going backwards
+    const delegates = (this.scope.backwards) ? this.scope.roundDelegates.reverse() : this.scope.roundDelegates;
 
-        // Apply round changes to each delegate
-        for (let i = 0; i < this.scope.roundDelegates.length; i++) {
-            let delegate = this.scope.roundDelegates[i];
-            let changes = roundChanges.at(i);
+    // Apply round changes to each delegate
+    for (let i = 0; i < this.scope.roundDelegates.length; i++) {
+        const delegate = this.scope.roundDelegates[i];
+        const changes = roundChanges.at(i);
 
-            this.scope.library.logger.debug('Delegate changes', {delegate: delegate, changes: changes});
+        this.scope.library.logger.debug('Delegate changes', { delegate, changes });
 
-            queries.push(this.scope.modules.accounts.mergeAccountAndGet({
-                publicKey: delegate,
-                balance: (this.scope.backwards ? -changes.balance : changes.balance),
-                u_balance: (this.scope.backwards ? -changes.balance : changes.balance),
-                blockId: this.scope.block.id,
-                round: this.scope.round,
-                fees: (this.scope.backwards ? -changes.fees : changes.fees),
-                rewards: (this.scope.backwards ? -changes.rewards : changes.rewards)
-            }));
-        }
+        queries.push(this.scope.modules.accounts.mergeAccountAndGet({
+            publicKey: delegate,
+            balance: (this.scope.backwards ? -changes.balance : changes.balance),
+            u_balance: (this.scope.backwards ? -changes.balance : changes.balance),
+            blockId: this.scope.block.id,
+            round: this.scope.round,
+            fees: (this.scope.backwards ? -changes.fees : changes.fees),
+            rewards: (this.scope.backwards ? -changes.rewards : changes.rewards)
+        }));
+    }
 
 
-        // Decide which delegate receives fees remainder
-        let remainderIndex = (this.scope.backwards) ? 0 : delegates.length - 1;
-        let remainderDelegate = delegates[remainderIndex];
+    // Decide which delegate receives fees remainder
+    const remainderIndex = (this.scope.backwards) ? 0 : delegates.length - 1;
+    const remainderDelegate = delegates[remainderIndex];
 
-        // Get round changes for chosen delegate
-        let changes = roundChanges.at(remainderIndex);
+    // Get round changes for chosen delegate
+    const changes = roundChanges.at(remainderIndex);
 
-	// Apply fees remaining to chosen delegate
-	if (changes.feesRemaining > 0) {
-		let feesRemaining = (this.scope.backwards ? -changes.feesRemaining : changes.feesRemaining);
+    // Apply fees remaining to chosen delegate
+    if (changes.feesRemaining > 0) {
+        const feesRemaining = (this.scope.backwards ? -changes.feesRemaining : changes.feesRemaining);
 
-		this.scope.library.logger.debug('Fees remaining', { index: remainderIndex, delegate: remainderDelegate, fees: feesRemaining });
+        this.scope.library.logger.debug('Fees remaining', {
+            index: remainderIndex,
+            delegate: remainderDelegate,
+            fees: feesRemaining
+        });
 
-		queries.push(this.scope.modules.accounts.mergeAccountAndGet({
-			publicKey: remainderDelegate,
-			balance: feesRemaining,
-			u_balance: feesRemaining,
-			blockId: this.scope.block.id,
-			round: this.scope.round,
-			fees: feesRemaining
-		}));
-	}
+        queries.push(this.scope.modules.accounts.mergeAccountAndGet({
+            publicKey: remainderDelegate,
+            balance: feesRemaining,
+            u_balance: feesRemaining,
+            blockId: this.scope.block.id,
+            round: this.scope.round,
+            fees: feesRemaining
+        }));
+    }
 
-	this.scope.library.logger.trace('Applying round', queries);
+    this.scope.library.logger.trace('Applying round', queries);
 
-	if (queries.length > 0) {
-		return this.t.none(queries.join(''));
-	} else {
-		return this.t;
-	}
+    if (queries.length > 0) {
+        return this.t.none(queries.join(''));
+    }
+    return this.t;
 };
 
 /**
@@ -241,15 +240,13 @@ Round.prototype.applyRound = function () {
  * @return {function} call result
  */
 Round.prototype.land = function () {
-	return this.updateVotes()
-		.then(this.updateMissedBlocks.bind(this))
-		.then(this.flushRound.bind(this))
-		.then(this.applyRound.bind(this))
-		.then(this.updateVotes.bind(this))
-		.then(this.flushRound.bind(this))
-		.then(function () {
-			return this.t;
-		}.bind(this));
+    return this.updateVotes()
+        .then(this.updateMissedBlocks.bind(this))
+        .then(this.flushRound.bind(this))
+        .then(this.applyRound.bind(this))
+        .then(this.updateVotes.bind(this))
+        .then(this.flushRound.bind(this))
+        .then(() => this.t);
 };
 
 /**
@@ -271,20 +268,18 @@ Round.prototype.land = function () {
  * @return {function} call result
  */
 Round.prototype.backwardLand = function () {
-	return this.updateVotes()
-		.then(this.updateMissedBlocks.bind(this))
-		.then(this.flushRound.bind(this))
-		.then(this.applyRound.bind(this))
-		.then(this.updateVotes.bind(this))
-		.then(this.flushRound.bind(this))
-		.then(this.restoreRoundSnapshot.bind(this))
-		.then(this.restoreVotesSnapshot.bind(this))
-		.then(function () {
-			return this.t;
-		}.bind(this));
+    return this.updateVotes()
+        .then(this.updateMissedBlocks.bind(this))
+        .then(this.flushRound.bind(this))
+        .then(this.applyRound.bind(this))
+        .then(this.updateVotes.bind(this))
+        .then(this.flushRound.bind(this))
+        .then(this.restoreRoundSnapshot.bind(this))
+        .then(this.restoreVotesSnapshot.bind(this))
+        .then(() => this.t);
 };
 
 // Export
 module.exports = Round;
 
-/*************************************** END OF FILE *************************************/
+/** ************************************* END OF FILE ************************************ */

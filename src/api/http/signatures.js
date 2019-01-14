@@ -1,14 +1,12 @@
-
-
-let Router = require('../../helpers/router');
-let httpApi = require('../../helpers/httpApi');
+const Router = require('../../helpers/router');
+const httpApi = require('../../helpers/httpApi');
 
 /**
  * Binds api with modules and creates common url.
  * - End point: `/api/signatures`
  * - Public API:
- * 	- get	/fee
- * 	- put	/
+ *    - get    /fee
+ *    - put    /
  * @memberof module:signatures
  * @requires helpers/Router
  * @requires helpers/httpApi
@@ -17,18 +15,17 @@ let httpApi = require('../../helpers/httpApi');
  * @param {scope} app - Network app.
  */
 // Constructor
-function SignaturesHttpApi (signaturesModule, app) {
+function SignaturesHttpApi(signaturesModule, app) {
+    const router = new Router();
 
-	let router = new Router();
+    router.map(signaturesModule.shared, {
+        'get /fee': 'getFee',
+        'put /': 'addSignature'
+    });
 
-	router.map(signaturesModule.shared, {
-		'get /fee': 'getFee',
-		'put /': 'addSignature'
-	});
-
-	httpApi.registerEndpoint('/api/signatures', app, router, signaturesModule.isLoaded);
+    httpApi.registerEndpoint('/api/signatures', app, router, signaturesModule.isLoaded);
 }
 
 module.exports = SignaturesHttpApi;
 
-/*************************************** END OF FILE *************************************/
+/** ************************************* END OF FILE ************************************ */

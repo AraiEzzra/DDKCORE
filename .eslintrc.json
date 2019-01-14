@@ -18,6 +18,7 @@
     "no-underscore-dangle": "off",
     "max-len": ["error", 120],
     "comma-dangle": "off",
-    "global-require": "off"
+    "global-require": "off",
+    "no-param-reassign": "off"
   }
 }
