@@ -293,13 +293,6 @@ DApp.prototype.undo = function (trs, block, sender, cb) {
  * @return {setImmediateCallback} cb|errors
  */
 DApp.prototype.applyUnconfirmed = function (trs, sender, cb) {
-    if (__private.unconfirmedNames[trs.asset.dapp.name]) {
-        return setImmediate(cb, 'Application name already exists');
-    }
-
-    if (trs.asset.dapp.link && __private.unconfirmedLinks[trs.asset.dapp.link]) {
-        return setImmediate(cb, 'Application link already exists');
-    }
 
     __private.unconfirmedNames[trs.asset.dapp.name] = true;
     __private.unconfirmedLinks[trs.asset.dapp.link] = true;
