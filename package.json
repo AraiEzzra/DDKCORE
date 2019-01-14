@@ -64,6 +64,7 @@
     "node-cron": "^1.2.1",
     "node-cron-job": "^0.2.3",
     "nodemailer": "^4.6.6",
+    "nodemon": "^1.18.9",
     "npm": "=2.15.10",
     "pg": "^7.3.0",
     "pg-monitor": "=0.7.1",

@@ -1,10 +1,10 @@
 {
     "port": 7007,
-    "address": "0.0.0.0",
+    "address": "10.6.0.5",
     "serverProtocol": "http",
-    "serverHost": "0.0.0.0",
+    "serverHost": "10.6.0.5",
     "serverPort": 7007,
-    "serverUrl": "undefined:NaN",
+    "serverUrl": "10.6.0.5:7007",
     "version": "0.9.9a",
     "minVersion": ">=0.9.0",
     "fileLogLevel": "info",
@@ -14,11 +14,11 @@
     "topAccounts": false,
     "cacheEnabled": true,
     "db": {
-        "host": "0.0.0.0",
+        "host": "10.6.0.4",
         "port": 5432,
-        "database": "DDK_test",
+        "database": "ddk",
         "password": "password",
-        "user": "",
+        "user": "lisk",
         "poolSize": 95,
         "poolIdleTimeout": 30000,
         "reapIntervalMillis": 1000,
@@ -27,9 +27,10 @@
         ]
     },
     "redis": {
-        "host": "0.0.0.0",
-        "port": 6380,
-        "db": 0
+        "host": "10.6.0.3",
+        "port": 6379,
+        "db": 0,
+        "password": "''"
     },
     "api": {
         "enabled": true,
@@ -53,12 +54,17 @@
         "enabled": true,
         "list": [
             {
-                "ip": ""
+                "ip": "10.5.0.5",
+                "port": "7007"
+            },
+            {
+                "ip": "10.7.0.5",
+                "port": "7007"
             }
         ],
         "access": {
             "blackList": [
-                ""
+                "10.6.0.5"
             ]
         },
         "options": {
@@ -82,15 +88,16 @@
         "maxTxsPerQueue": 1000
     },
     "forging": {
-        "force": true,
-        "minBroadhashConsensus": 0,
-        "secret": [],
+        "force": false,
+        "minBroadhashConsensus": 51,
+        "secret": "artwork relax sheriff sting fruit return spider reflect cupboard dice goddess slice",
         "access": {
             "whiteList": [
                 "127.0.0.1",
                 "192.168.9.91"
             ]
-        }
+        },
+        "totalSupplyAccount": "DDK4995063339468361088"
     },
     "loading": {
         "verifyOnLoading": false,
@@ -101,13 +108,15 @@
         "enabled": false,
         "options": {
             "port": 443,
-            "address": "0.0.0.0"
+            "address": "0.0.0.0",
+            "key": "./ssl/ETP.key",
+            "cert": "./ssl/ETP.crt"
         }
     },
     "dapp": {
         "masterrequired": true,
         "autoexec": [],
-        "masterpassword": "Pu1FWkGFf3rF"
+        "masterpassword": "Zn2bfetKiwDe"
     },
     "initialPrimined": {
         "total": 360000000000000
@@ -115,17 +124,23 @@
     "ddkSupply": {
         "totalSupply": 4500000000000000
     },
-    "session": {},
-    "app": {},
+    "session": {
+        "secret": "fd34s@!@dfa453f3DF#$D&W"
+    },
+    "app": {
+        "port": 7007
+    },
     "sender": {},
     "nethash": "82c2a4fddcd1f659ba60380ebdd38125c5c48ceeef7d8b9f5798c0faca89e808",
-    "elasticsearchHost": "0.0.0.0:9200",
+    "elasticsearchHost": "10.6.0.2:9200",
     "elasticsearch": {
         "disableJobs": false
     },
     "jwt": {
+        "secret": "itdrisNkmy85beSostUse89cr54et74",
         "tokenLife": 300
     },
+    "mailFrom": "noreply@etpswallet.gold",
     "users": [
         {},
         {},
