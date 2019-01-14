@@ -740,37 +740,16 @@ Frozen.prototype.getStakeReward = (order) => {
  * @return {function} {cb, err}
  */
 Frozen.prototype.updateFrozeAmount = function (userData, cb) {
-    self.scope.db.one(sql.getFrozeAmount, {
-        senderId: userData.account.address
-    })
-        .then(function (account) {
-            if (!account) {
-                return setImmediate(cb, 'No Account Exist in mem_account table for ' + userData.account.address);
-            }
-            account.totalFrozeAmount += Number(userData.freezedAmount);
-            if (userData.account.balance >= account.totalFrozeAmount) {
-                self.scope.db.none(sql.updateFrozeAmount, {
-                    reward: userData.freezedAmount, senderId: userData.account.address
-                })
-                .then(function () {
-                    self.scope.logger.info(
-                      userData.account.address, ': is update its froze amount in mem_accounts table'
-                    );
-                    return setImmediate(cb, null);
-                })
-                .catch(function (err) {
-                    self.scope.logger.error(err.stack);
-                    return setImmediate(cb, err.toString());
-                });
-            } else {
-                return setImmediate(cb, 'Not have enough balance');
-            }
-        })
-        .catch(function (err) {
-            self.scope.logger.error(err.stack);
-            return setImmediate(cb, err.toString());
-        });
-
+    self.scope.db.none(sql.updateFrozeAmount, {
+        reward: userData.freezedAmount,
+        senderId: userData.account.address,
+    }).then(function () {
+        self.scope.logger.info(`${userData.account.address}: is update its froze amount in mem_accounts table`);
+        return setImmediate(cb);
+    }).catch(function (err) {
+        self.scope.logger.error(err.stack);
+        return setImmediate(cb, err.toString());
+    });
 };
 
 // Export
