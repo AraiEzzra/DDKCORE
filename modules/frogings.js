@@ -85,7 +85,7 @@ function Frogings (cb, scope) {
  * @param {address} string - Address of user which staked the amount.
  * @param {introducerAddress} string - Address of user which get reward and introduce address to ddk.
  * @param {transactionId} string - stake transaction id.
- * @author - Satish Joshi 
+ * @author - Satish Joshi
  */
 
 // Events
@@ -368,9 +368,9 @@ Frogings.prototype.shared = {
 							if (
 								(
 									req.body.freezedAmount +
-									(constants.fees.froze * req.body.freezedAmount)/100 +
-									parseInt(account.totalFrozeAmount)
-								) > account.balance
+									(constants.fees.froze * req.body.freezedAmount) / 100 +
+									parseInt(account.u_totalFrozeAmount)
+								) > parseInt(account.u_balance)
 							) {
 								return setImmediate(cb, 'Insufficient balance');
 							}
@@ -410,16 +410,16 @@ Frogings.prototype.shared = {
 							let secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
 							secondKeypair = library.ed.makeKeypair(secondHash);
 						}
-						
+
 						if (
 							(
 								req.body.freezedAmount +
-								(constants.fees.froze * req.body.freezedAmount)/100 +
-								parseInt(account.totalFrozeAmount)
-							) > account.balance
+								(constants.fees.froze * req.body.freezedAmount) / 100 +
+								parseInt(account.u_totalFrozeAmount)
+							) > parseInt(account.u_balance)
 						) {
 							return setImmediate(cb, 'Insufficient balance');
-						} 
+						}
 
 						library.logic.transaction.create({
 							type: transactionTypes.STAKE,
