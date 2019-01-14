@@ -153,18 +153,18 @@ let config = {
 		// sendFreezeOrder: require('./modules/sendFreezeOrder.js')
 	},
 	api: {
-		accounts: { http: './api/http/accounts.js' },
-		blocks: { http: './api/http/blocks.js' },
-		dapps: { http: './api/http/dapps.js' },
-		delegates: { http: './api/http/delegates.js' },
-		loader: { http: './api/http/loader.js' },
-		multisignatures: { http: './api/http/multisignatures.js' },
-		peers: { http: './api/http/peers.js' },
-		server: { http: './api/http/server.js' },
-		signatures: { http: './api/http/signatures.js' },
-		transactions: { http: './api/http/transactions.js' },
-		transport: { http: './api/http/transport.js' },
-		frogings: { http: './api/http/froging.js' },
+        accounts: { http: require('./api/http/accounts.js') },
+        blocks: { http: require('./api/http/blocks.js') },
+        dapps: { http: require('./api/http/dapps.js') },
+        delegates: { http: require('./api/http/delegates.js') },
+        loader: { http: require('./api/http/loader.js') },
+        multisignatures: { http: require('./api/http/multisignatures.js') },
+        peers: { http: require('./api/http/peers.js') },
+        server: { http: require('./api/http/server.js') },
+        signatures: { http: require('./api/http/signatures.js') },
+        transactions: { http: require('./api/http/transactions.js') },
+        transport: { http: require('./api/http/transport.js') },
+        frogings: { http: require('./api/http/froging.js') },
 		// sendFreezeOrder: { http: './api/http/transferorder.js' }
 	}
 };
