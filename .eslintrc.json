@@ -22,6 +22,8 @@
     "no-param-reassign": "off",
     "consistent-return": "off",
     "no-continue": "off",
-    "no-plusplus": "off"
+    "no-plusplus": "off",
+    "no-throw-literal": "off",
+    "new-cap": "warn"
   }
 }
