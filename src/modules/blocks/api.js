@@ -23,11 +23,11 @@ __private.blockReward = new BlockReward();
  * @param {ZSchema} schema
  * @param {Sequence} dbSequence
  */
-function API(logger, db, block, schema, dbSequence) {
+function API(logger, db, block, schemaAPI, dbSequence) {
     library = {
         logger,
         db,
-        schema,
+        schema: schemaAPI,
         dbSequence,
         logic: {
             block,
@@ -172,13 +172,13 @@ __private.list = function (filter, cb) {
                 sortField: orderBy.sortField,
                 sortMethod: orderBy.sortMethod
             }), params)
-                .then((rows) => {
+                .then((rowsList) => {
                     const blocks = [];
 
                     // Normalize blocks
-                    for (let i = 0; i < rows.length; i++) {
+                    for (let i = 0; i < rowsList.length; i++) {
                         // FIXME: Can have poor performance because it performs SHA256 hash calculation for each block
-                        blocks.push(library.logic.block.dbRead(rows[i]));
+                        blocks.push(library.logic.block.dbRead(rowsList[i]));
                     }
 
                     const data = {
@@ -210,12 +210,12 @@ API.prototype.getBlock = function (req, cb) {
             return setImmediate(cb, err[0].message);
         }
 
-        library.dbSequence.add((cb) => {
-            __private.getById(req.body.id, (err, block) => {
-                if (!block || err) {
-                    return setImmediate(cb, 'Block not found');
+        library.dbSequence.add((cbAdd) => {
+            __private.getById(req.body.id, (getByIdError, block) => {
+                if (!block || getByIdError) {
+                    return setImmediate(cbAdd, 'Block not found');
                 }
-                return setImmediate(cb, null, { block });
+                return setImmediate(cbAdd, null, { block });
             });
         }, cb);
     });
@@ -231,12 +231,12 @@ API.prototype.getBlocks = function (req, cb) {
             return setImmediate(cb, err[0].message);
         }
 
-        library.dbSequence.add((cb) => {
-            __private.list(req.body, (err, data) => {
-                if (err) {
-                    return setImmediate(cb, err);
+        library.dbSequence.add((cbAdd) => {
+            __private.list(req.body, (errAdd, data) => {
+                if (errAdd) {
+                    return setImmediate(cbAdd, errAdd);
                 }
-                return setImmediate(cb, null, { blocks: data.blocks, count: data.count });
+                return setImmediate(cbAdd, null, { blocks: data.blocks, count: data.count });
             });
         }, cb);
     });
