@@ -27,9 +27,9 @@ const TRANSACTION_BUFFER_SIZE =
     BUFFER.LENGTH.DOUBLE_HEX;   // signSignature
 
 // Private fields
-let self,
-    modules,
-    __private = {};
+let self;
+let modules;
+const __private = {};
 
 /**
  * @typedef {Object} privateTypes
@@ -90,7 +90,7 @@ function Transaction(db, ed, schema, genesisblock, account, logger, config, netw
  * @param {Object} data
  * @return {transaction} trs
  */
-Transaction.prototype.create = async function (data) {
+Transaction.prototype.create = async (data) => {
     if (!__private.types[data.type]) {
         throw `Unknown transaction type ${data.type}`;
     }
@@ -117,15 +117,15 @@ Transaction.prototype.create = async function (data) {
         reward: data.rewardPercentage || null
     };
 
-    trs = await __private.types[trs.type].create.call(this, data, trs);
-    trs.signature = this.sign(data.keypair, trs);
+    trs = await __private.types[trs.type].create.call(self, data, trs);
+    trs.signature = self.sign(data.keypair, trs);
 
     if (data.sender.secondSignature && data.secondKeypair) {
-        trs.signSignature = this.sign(data.secondKeypair, trs);
+        trs.signSignature = self.sign(data.secondKeypair, trs);
     }
 
-    trs.id = this.getId(trs);
-    trs.fee = __private.types[trs.type].calculateFee.call(this, trs, data.sender) || 0;
+    trs.id = self.getId(trs);
+    trs.fee = __private.types[trs.type].calculateFee.call(self, trs, data.sender) || 0;
 
     return trs;
 };
@@ -137,14 +137,27 @@ Transaction.prototype.create = async function (data) {
  * @return {Object} instance
  * @throws {string} Invalid instance interface if validations are wrong
  */
-Transaction.prototype.attachAssetType = function (typeId, instance) {
-    this.scope.logger.info(`typeID : ${typeId}`);
-    if (instance && typeof instance.create === 'function' && typeof instance.getBytes === 'function' && typeof instance.calculateFee === 'function' && typeof instance.verify === 'function' && typeof instance.objectNormalize === 'function' && typeof instance.dbRead === 'function' && typeof instance.apply === 'function' && typeof instance.undo === 'function' && typeof instance.applyUnconfirmed === 'function' && typeof instance.undoUnconfirmed === 'function' && typeof instance.ready === 'function' && typeof instance.process === 'function') {
-        this.scope.logger.info('asset type is attached successfully');
+Transaction.prototype.attachAssetType = (typeId, instance) => {
+    self.scope.logger.info(`typeID : ${typeId}`);
+    if (instance &&
+        typeof instance.create === 'function' &&
+        typeof instance.getBytes === 'function' &&
+        typeof instance.calculateFee === 'function' &&
+        typeof instance.verify === 'function' &&
+        typeof instance.objectNormalize === 'function' &&
+        typeof instance.dbRead === 'function' &&
+        typeof instance.apply === 'function' &&
+        typeof instance.undo === 'function' &&
+        typeof instance.applyUnconfirmed === 'function' &&
+        typeof instance.undoUnconfirmed === 'function' &&
+        typeof instance.ready === 'function' &&
+        typeof instance.process === 'function'
+    ) {
+        self.scope.logger.info('asset type is attached successfully');
         __private.types[typeId] = instance;
         return instance;
     }
-    this.scope.logger.info('error while attaching asset type');
+    self.scope.logger.info('error while attaching asset type');
     throw 'Invalid instance interface';
 };
 
@@ -156,10 +169,10 @@ Transaction.prototype.attachAssetType = function (typeId, instance) {
  * @param {transaction} trs
  * @return {signature} sign
  */
-Transaction.prototype.sign = function (keyPair, trs) {
+Transaction.prototype.sign = (keyPair, trs) => {
     const sig = Buffer.alloc(sodium.crypto_sign_BYTES);
 
-    sodium.crypto_sign_detached(sig, this.getHash(trs), keyPair.privateKey);
+    sodium.crypto_sign_detached(sig, self.getHash(trs), keyPair.privateKey);
     return sig.toString('hex');
 };
 
@@ -172,10 +185,10 @@ Transaction.prototype.sign = function (keyPair, trs) {
  * @param {transaction} trs
  * @return {signature} sign
  */
-Transaction.prototype.multisign = function (keypair, trs) {
-    const bytes = this.getBytes(trs, true, true);
+Transaction.prototype.multisign = (keypair, trs) => {
+    const bytes = self.getBytes(trs, true, true);
     const hash = crypto.createHash('sha256').update(bytes).digest();
-    return this.scope.ed.sign(hash, keypair).toString('hex');
+    return self.scope.ed.sign(hash, keypair).toString('hex');
 };
 
 /**
@@ -185,8 +198,8 @@ Transaction.prototype.multisign = function (keypair, trs) {
  * @param {transaction} trs
  * @return {string} id
  */
-Transaction.prototype.getId = function (trs) {
-    return this.getHash(trs).toString('hex');
+Transaction.prototype.getId = (trs) => {
+    return self.getHash(trs).toString('hex');
 };
 
 /**
@@ -196,8 +209,8 @@ Transaction.prototype.getId = function (trs) {
  * @param {transaction} trs
  * @return {hash} sha256 crypto hash
  */
-Transaction.prototype.getHash = function (trs) {
-    return crypto.createHash('sha256').update(this.getBytes(trs, false, false)).digest();
+Transaction.prototype.getHash = (trs) => {
+    return crypto.createHash('sha256').update(self.getBytes(trs, false, false)).digest();
 };
 
 /**
@@ -210,11 +223,11 @@ Transaction.prototype.getHash = function (trs) {
  * @return {!Array} Contents as an ArrayBuffer.
  * @throws {error} If buffer fails.
  */
-Transaction.prototype.getBytes = function (trs, skipSignature = false, skipSecondSignature = false) {
+Transaction.prototype.getBytes = (trs, skipSignature = false, skipSecondSignature = false) => {
     if (!__private.types[trs.type]) {
         throw `Unknown transaction type ${trs.type}`;
     }
-    const assetBytes = __private.types[trs.type].getBytes.call(this, trs, skipSignature, skipSecondSignature);
+    const assetBytes = __private.types[trs.type].getBytes.call(self, trs, skipSignature, skipSecondSignature);
 
     self.scope.logger.trace(`Trs ${JSON.stringify(trs)}`);
     self.scope.logger.trace(`AssetBytes ${JSON.stringify(assetBytes)}`);
@@ -256,7 +269,7 @@ Transaction.prototype.getBytes = function (trs, skipSignature = false, skipSecon
  * @param {account} sender
  * @return {function|boolean} calls `ready` | false
  */
-Transaction.prototype.ready = function (trs, sender) {
+Transaction.prototype.ready = (trs, sender) => {
     if (!__private.types[trs.type]) {
         throw `Unknown transaction type ${trs.type}`;
     }
@@ -265,7 +278,7 @@ Transaction.prototype.ready = function (trs, sender) {
         return false;
     }
 
-    return __private.types[trs.type].ready.call(this, trs, sender);
+    return __private.types[trs.type].ready.call(self, trs, sender);
 };
 
 /**
@@ -274,9 +287,11 @@ Transaction.prototype.ready = function (trs, sender) {
  * @param {function} cb
  * @return {setImmediateCallback} error | row.count
  */
-Transaction.prototype.countById = function (trs, cb) {
-    this.scope.db.one(sql.countById, { id: trs.id }).then(row => setImmediate(cb, null, row.count)).catch(function (err) {
-        this.scope.logger.error(err.stack);
+Transaction.prototype.countById = (trs, cb) => {
+    self.scope.db.one(sql.countById, { id: trs.id })
+    .then(row => setImmediate(cb, null, row.count))
+    .catch((err) => {
+        self.scope.logger.error(err.stack);
         return setImmediate(cb, 'Transaction#countById error');
     });
 };
@@ -288,7 +303,7 @@ Transaction.prototype.countById = function (trs, cb) {
  * @return {setImmediateCallback} error | cb
  */
 Transaction.prototype.checkConfirmed = function (trs, cb) {
-    this.countById(trs, (err, count) => {
+    self.countById(trs, (err, count) => {
         if (err) {
             return setImmediate(cb, err);
         } else if (count > 0) {
@@ -302,7 +317,7 @@ Transaction.prototype.checkConfirmed = function (trs, cb) {
  * Checks if balance is less than amount for sender.
  * @implements {bignum}
  * @param {number} amount
- * @param {bool} isUnconfirmed
+ * @param {boolean} isUnconfirmed
  * @param {transaction} trs
  * @param {account} sender
  * @returns {Object} With exceeded boolean and error: address, balance
@@ -335,7 +350,10 @@ Transaction.prototype.checkBalance = (amount, isUnconfirmed, trs, sender) => {
                     new bignum(sender[`${isUnconfirmed ? 'u_' : ''}balance`].toString() || '0').div(10 ** 8),
                     'totalFreezeAmount :',
                     new bignum(sender[`${isUnconfirmed ? 'u_' : ''}totalFrozeAmount`].toString())
-                        .div(10 ** 8)].join(' ')
+                        .div(10 ** 8),
+                    'amount: ',
+                    amount / (10 ** 8)
+                ].join(' ')
                 :
                 null
         };
@@ -347,7 +365,9 @@ Transaction.prototype.checkBalance = (amount, isUnconfirmed, trs, sender) => {
                 'Account does not have enough DDK:',
                 sender.address,
                 'balance:',
-                new bignum(sender[`${isUnconfirmed ? 'u_' : ''}balance`].toString() || '0').div(10 ** 8)
+                new bignum(sender[`${isUnconfirmed ? 'u_' : ''}balance`].toString() || '0').div(10 ** 8),
+                'amount: ',
+                amount / (10 ** 8)
             ].join(' ')
             :
             null
@@ -365,7 +385,7 @@ Transaction.prototype.checkBalance = (amount, isUnconfirmed, trs, sender) => {
  * @param {function} cb
  * @return {setImmediateCallback} validation errors | trs
  */
-Transaction.prototype.process = function (trs, sender, requester, cb) {
+Transaction.prototype.process = (trs, sender, requester, cb) => {
     if (typeof requester === 'function') {
         cb = requester;
     }
@@ -376,7 +396,7 @@ Transaction.prototype.process = function (trs, sender, requester, cb) {
     }
 
     // if (!this.ready(trs, sender)) {
-    // 	return setImmediate(cb, 'Transaction is not ready: ' + trs.id);
+    //     return setImmediate(cb, 'Transaction is not ready: ' + trs.id);
     // }
 
     // Check sender
@@ -388,9 +408,9 @@ Transaction.prototype.process = function (trs, sender, requester, cb) {
     let txId;
 
     try {
-        txId = this.getId(trs);
+        txId = self.getId(trs);
     } catch (e) {
-        this.scope.logger.error(e.stack);
+        self.scope.logger.error(e.stack);
         return setImmediate(cb, 'Failed to get transaction id');
     }
 
@@ -405,11 +425,11 @@ Transaction.prototype.process = function (trs, sender, requester, cb) {
     trs.senderId = sender.address;
 
     // Call process on transaction type
-    __private.types[trs.type].process.call(this, trs, sender, (err, trs) => {
+    __private.types[trs.type].process.call(self, trs, sender, (err, transaction) => {
         if (err) {
             return setImmediate(cb, err);
         }
-        return setImmediate(cb, null, trs);
+        return setImmediate(cb, null, transaction);
     });
 };
 
@@ -532,7 +552,6 @@ Transaction.prototype.verifyFields = ({ trs, sender, requester = {}, cb }) => {
     const multisignatures = sender.multisignatures || sender.u_multisignatures || [];
     if (multisignatures.length === 0) {
         if (trs.asset && trs.asset.multisignature && trs.asset.multisignature.keysgroup) {
-
             for (let i = 0; i < trs.asset.multisignature.keysgroup.length; i++) {
                 const key = trs.asset.multisignature.keysgroup[i];
 
@@ -689,24 +708,22 @@ Transaction.prototype.verifyFields = ({ trs, sender, requester = {}, cb }) => {
  * @param {function} cb
  * @return {setImmediateCallback} validation errors | trs
  */
-Transaction.prototype.verify = function ({ trs, sender, requester = {}, checkExists = false, cb }) {
-    const verifyTransactionTypes = (transaction, sender, verifyTransactionTypesCb) => {
-        __private.types[trs.type].verify.call(this, transaction, sender, function (err) {
+Transaction.prototype.verify = ({ trs, sender, requester = {}, checkExists = false, cb }) => {
+    const verifyTransactionTypes = (transaction, innerSender, verifyTransactionTypesCb) => {
+        __private.types[trs.type].verify.call(self, transaction, innerSender, (err) => {
             if (err) {
                 if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_TYPE) {
                     return setImmediate(verifyTransactionTypesCb, err);
                 }
-                this.scope.logger.error('Transaction types error');
+                self.scope.logger.error('Transaction types error');
             }
             return setImmediate(verifyTransactionTypesCb);
         });
     };
 
     async.series([
-        function (seriesCb) {
-            return self.verifyFields({ trs, sender, requester, cb: seriesCb });
-        },
-        function (seriesCb) {
+        seriesCb => self.verifyFields({ trs, sender, requester, cb: seriesCb }),
+        (seriesCb) => {
             if (checkExists) {
                 self.checkConfirmed(trs, (checkConfirmedErr, isConfirmed) => {
                     if (checkConfirmedErr) {
@@ -741,12 +758,13 @@ Transaction.prototype.verify = function ({ trs, sender, requester = {}, checkExi
  * @param {function} cb
  * @return {setImmediateCallback} validation errors | trs
  */
-Transaction.prototype.verifyUnconfirmed = function ({ trs, sender, requester = {}, cb }) {
+Transaction.prototype.verifyUnconfirmed = ({ trs, sender, cb }) => {
     const calculateFee = __private.types[trs.type].calculateUnconfirmedFee || __private.types[trs.type].calculateFee;
     const fee = calculateFee.call(self, trs, sender) || 0;
-    if (trs.type !== transactionTypes.REFERRAL && !(trs.type === transactionTypes.STAKE && trs.stakedAmount < 0) && (!fee || trs.fee !== fee)) {
-        // TODO: Restore transation verify
-        // https://trello.com/c/2jF7cnad/115-restore-transactions-verifing
+    if (trs.type !== transactionTypes.REFERRAL &&
+        !(trs.type === transactionTypes.STAKE && trs.stakedAmount < 0) &&
+        (!fee || trs.fee !== fee)
+    ) {
         if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_FEE) {
             return setImmediate(cb, 'Invalid transaction fee');
         }
@@ -786,7 +804,7 @@ Transaction.prototype.verifyUnconfirmed = function ({ trs, sender, requester = {
  * @return {boolean}
  * @throws {error}
  */
-Transaction.prototype.verifySignature = function (trs, publicKey, signature) {
+Transaction.prototype.verifySignature = (trs, publicKey, signature) => {
     if (!__private.types[trs.type]) {
         throw `Unknown transaction type ${trs.type}`;
     }
@@ -797,12 +815,12 @@ Transaction.prototype.verifySignature = function (trs, publicKey, signature) {
     self.scope.logger.trace(`Transaction ${JSON.stringify(trs)}`);
     self.scope.logger.trace(`publicKey ${JSON.stringify(publicKey)}`);
     self.scope.logger.trace(`signature ${JSON.stringify(signature)}`);
-    const bytes = this.getBytes(trs, true, true);
+    const bytes = self.getBytes(trs, true, true);
     self.scope.logger.trace(`Bytes ${JSON.stringify(bytes)}`);
-    let verify = this.verifyBytes(bytes, publicKey, signature);
+    let verify = self.verifyBytes(bytes, publicKey, signature);
     // TODO add block limit
     if (!verify) {
-        verify = this.verifyBytes(bytes, constants.PRE_ORDER_PUBLIC_KEY, signature);
+        verify = self.verifyBytes(bytes, constants.PRE_ORDER_PUBLIC_KEY, signature);
     }
 
 
@@ -820,7 +838,7 @@ Transaction.prototype.verifySignature = function (trs, publicKey, signature) {
  * @return {boolean}
  * @throws {error}
  */
-Transaction.prototype.verifySecondSignature = function (trs, publicKey, signature) {
+Transaction.prototype.verifySecondSignature = (trs, publicKey, signature) => {
     if (!__private.types[trs.type]) {
         throw `Unknown transaction type ${trs.type}`;
     }
@@ -832,8 +850,8 @@ Transaction.prototype.verifySecondSignature = function (trs, publicKey, signatur
     let res;
 
     try {
-        const bytes = this.getBytes(trs, false, true);
-        res = this.verifyBytes(bytes, publicKey, signature);
+        const bytes = self.getBytes(trs, false, true);
+        res = self.verifyBytes(bytes, publicKey, signature);
     } catch (e) {
         throw e;
     }
@@ -851,7 +869,7 @@ Transaction.prototype.verifySecondSignature = function (trs, publicKey, signatur
  * @return {boolean} verified hash, signature and publicKey
  * @throws {error}
  */
-Transaction.prototype.verifyBytes = function (bytes, publicKey, signature) {
+Transaction.prototype.verifyBytes = (bytes, publicKey, signature) => {
     const hash = crypto.createHash('sha256').update(bytes).digest();
     const signatureBuffer = Buffer.from(signature, 'hex');
     const publicKeyBuffer = Buffer.from(publicKey, 'hex');
@@ -870,8 +888,8 @@ Transaction.prototype.verifyBytes = function (bytes, publicKey, signature) {
  * @param {function} cb - Callback function
  * @return {setImmediateCallback} for errors | cb
  */
-Transaction.prototype.apply = function (trs, block, sender, cb) {
-    if (!this.ready(trs, sender)) {
+Transaction.prototype.apply = (trs, block, sender, cb) => {
+    if (!self.ready(trs, sender)) {
         return setImmediate(cb, 'Transaction is not ready');
     }
 
@@ -879,14 +897,14 @@ Transaction.prototype.apply = function (trs, block, sender, cb) {
 
     amount = amount.toNumber();
 
-    this.scope.logger.trace('Logic/Transaction->apply', {
+    self.scope.logger.trace('Logic/Transaction->apply', {
         sender: sender.address, balance: -amount, blockId: block.id, round: modules.rounds.calc(block.height)
     });
-    this.scope.account.merge(sender.address, {
+    self.scope.account.merge(sender.address, {
         balance: -amount,
         blockId: block.id,
         round: modules.rounds.calc(block.height)
-    }, (err, sender) => {
+    }, (err, mergedSender) => {
         if (err) {
             return setImmediate(cb, err);
         }
@@ -894,9 +912,9 @@ Transaction.prototype.apply = function (trs, block, sender, cb) {
          * calls apply for Transfer, Signature, Delegate, Vote, Multisignature,
          * DApp, InTransfer or OutTransfer.
          */
-        __private.types[trs.type].apply.call(this, trs, block, sender, (applyErr) => {
+        __private.types[trs.type].apply.call(self, trs, block, mergedSender, (applyErr) => {
             if (applyErr) {
-                this.scope.account.merge(sender.address, {
+                self.scope.account.merge(mergedSender.address, {
                     balance: amount,
                     blockId: block.id,
                     round: modules.rounds.calc(block.height)
@@ -920,28 +938,28 @@ Transaction.prototype.apply = function (trs, block, sender, cb) {
  * @param {function} cb - Callback function
  * @return {setImmediateCallback} for errors | cb
  */
-Transaction.prototype.undo = function (trs, block, sender, cb) {
+Transaction.prototype.undo = (trs, block, sender, cb) => {
     const amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
 
-    this.scope.logger.trace('Logic/Transaction->undo', {
+    self.scope.logger.trace('Logic/Transaction->undo', {
         sender: sender.address, balance: amount, blockId: block.id, round: modules.rounds.calc(block.height)
     });
-    this.scope.account.merge(sender.address, {
+    self.scope.account.merge(sender.address, {
         balance: amount,
         blockId: block.id,
         round: modules.rounds.calc(block.height)
-    }, (err, sender) => {
+    }, (err, mergedSender) => {
         if (err) {
             return setImmediate(cb, err);
         }
 
-        __private.types[trs.type].undo.call(this, trs, block, sender, (err) => {
-            if (err) {
-                this.scope.account.merge(sender.address, {
+        __private.types[trs.type].undo.call(self, trs, block, mergedSender, (undoError) => {
+            if (undoError) {
+                self.scope.account.merge(mergedSender.address, {
                     balance: -amount,
                     blockId: block.id,
                     round: modules.rounds.calc(block.height)
-                }, err => setImmediate(cb, err));
+                }, mergedError => setImmediate(cb, mergedError || undoError));
             } else {
                 return setImmediate(cb);
             }
@@ -964,7 +982,7 @@ Transaction.prototype.undo = function (trs, block, sender, cb) {
  * @param {function} cb - Callback function
  * @return {setImmediateCallback} for errors | cb
  */
-Transaction.prototype.applyUnconfirmed = function (trs, sender, requester, cb) {
+Transaction.prototype.applyUnconfirmed = (trs, sender, requester, cb) => {
     if (typeof requester === 'function') {
         cb = requester;
     }
@@ -973,34 +991,38 @@ Transaction.prototype.applyUnconfirmed = function (trs, sender, requester, cb) {
     amount = amount.toNumber();
 
     if (trs.type === transactionTypes.STAKE) {
-        this.scope.account.merge(sender.address, {
+        self.scope.account.merge(sender.address, {
             u_balance: -amount,
             u_totalFrozeAmount: trs.stakedAmount
-        }, (err, sender) => {
+        }, (err, mergedSender) => {
             if (err) {
                 return setImmediate(cb, err);
             }
 
-            __private.types[trs.type].applyUnconfirmed.call(this, trs, sender, (err) => {
-                if (err) {
-                    this.scope.account.merge(sender.address, {
+            __private.types[trs.type].applyUnconfirmed.call(self, trs, mergedSender, (applyUnconfirmedError) => {
+                if (applyUnconfirmedError) {
+                    self.scope.account.merge(mergedSender.address, {
                         u_balance: amount,
                         u_totalFrozeAmount: -trs.stakedAmount
-                    }, err2 => setImmediate(cb, err2 || err));
+                    }, mergedError => setImmediate(cb, mergedError || applyUnconfirmedError));
                 } else {
                     return setImmediate(cb);
                 }
             });
         });
     } else {
-        this.scope.account.merge(sender.address, { u_balance: -amount }, (err, sender) => {
+        self.scope.account.merge(sender.address, { u_balance: -amount }, (err, mergedSender) => {
             if (err) {
                 return setImmediate(cb, err);
             }
 
-            __private.types[trs.type].applyUnconfirmed.call(this, trs, sender, (err) => {
-                if (err) {
-                    this.scope.account.merge(sender.address, { u_balance: amount }, err2 => setImmediate(cb, err2 || err));
+            __private.types[trs.type].applyUnconfirmed.call(self, trs, mergedSender, (applyUnconfirmedError) => {
+                if (applyUnconfirmedError) {
+                    self.scope.account.merge(
+                        mergedSender.address,
+                        { u_balance: amount },
+                        mergeError => setImmediate(cb, mergeError || applyUnconfirmedError)
+                    );
                 } else {
                     return setImmediate(cb);
                 }
@@ -1021,38 +1043,42 @@ Transaction.prototype.applyUnconfirmed = function (trs, sender, requester, cb) {
  * @param {function} cb - Callback function
  * @return {setImmediateCallback} for errors | cb
  */
-Transaction.prototype.undoUnconfirmed = function (trs, sender, cb) {
+Transaction.prototype.undoUnconfirmed = (trs, sender, cb) => {
     const amount = (new bignum(trs.amount.toString())).plus(trs.fee.toString()).toNumber();
 
     if (trs.type === transactionTypes.STAKE) {
-        this.scope.account.merge(sender.address, {
+        self.scope.account.merge(sender.address, {
             u_balance: amount,
             u_totalFrozeAmount: -trs.stakedAmount
-        }, (err, sender) => {
+        }, (err, mergedSender) => {
             if (err) {
                 return setImmediate(cb, err);
             }
 
-            __private.types[trs.type].undoUnconfirmed.call(this, trs, sender, (err) => {
-                if (err) {
-                    this.scope.account.merge(sender.address, {
+            __private.types[trs.type].undoUnconfirmed.call(self, trs, mergedSender, (undoUnconfirmedError) => {
+                if (undoUnconfirmedError) {
+                    self.scope.account.merge(mergedSender.address, {
                         u_balance: -amount,
                         u_totalFrozeAmount: trs.stakedAmount
-                    }, err2 => setImmediate(cb, err2 || err));
+                    }, mergeError => setImmediate(cb, mergeError || undoUnconfirmedError));
                 } else {
                     return setImmediate(cb);
                 }
             });
         });
     } else {
-        this.scope.account.merge(sender.address, { u_balance: amount }, (err, sender) => {
+        self.scope.account.merge(sender.address, { u_balance: amount }, (err, mergedSender) => {
             if (err) {
                 return setImmediate(cb, err);
             }
 
-            __private.types[trs.type].undoUnconfirmed.call(this, trs, sender, (err) => {
-                if (err) {
-                    this.scope.account.merge(sender.address, { u_balance: -amount }, err2 => setImmediate(cb, err2 || err));
+            __private.types[trs.type].undoUnconfirmed.call(self, trs, mergedSender, (undoUnconfirmedError) => {
+                if (undoUnconfirmedError) {
+                    self.scope.account.merge(
+                        mergedSender.address,
+                        { u_balance: -amount },
+                        mergeError => setImmediate(cb, mergeError || undoUnconfirmedError)
+                    );
                 } else {
                     return setImmediate(cb);
                 }
@@ -1063,7 +1089,27 @@ Transaction.prototype.undoUnconfirmed = function (trs, sender, cb) {
 
 Transaction.prototype.dbTable = 'trs';
 
-Transaction.prototype.dbFields = ['id', 'blockId', 'type', 'timestamp', 'senderPublicKey', 'requesterPublicKey', 'senderId', 'recipientId', 'amount', 'stakedAmount', 'stakeId', 'groupBonus', 'fee', 'signature', 'signSignature', 'signatures', 'trsName', 'reward', 'salt'];
+Transaction.prototype.dbFields = [
+    'id',
+    'blockId',
+    'type',
+    'timestamp',
+    'senderPublicKey',
+    'requesterPublicKey',
+    'senderId',
+    'recipientId',
+    'amount',
+    'stakedAmount',
+    'stakeId',
+    'groupBonus',
+    'fee',
+    'signature',
+    'signSignature',
+    'signatures',
+    'trsName',
+    'reward',
+    'salt'
+];
 
 /**
  * Creates db trs object transaction. Calls `dbSave` based on trs type (privateTypes).
@@ -1072,15 +1118,15 @@ Transaction.prototype.dbFields = ['id', 'blockId', 'type', 'timestamp', 'senderP
  * @return {Object[]} dbSave result + created object
  * @throws {String|error} error string | catch error
  */
-Transaction.prototype.dbSave = async function (trs) {
+Transaction.prototype.dbSave = async (trs) => {
     if (!__private.types[trs.type]) {
         throw `Unknown transaction type ${trs.type}`;
     }
 
-    let senderPublicKey,
-        signature,
-        signSignature,
-        requesterPublicKey;
+    let senderPublicKey;
+    let signature;
+    let signSignature;
+    let requesterPublicKey;
 
     try {
         senderPublicKey = Buffer.from(trs.senderPublicKey, 'hex');
@@ -1097,8 +1143,8 @@ Transaction.prototype.dbSave = async function (trs) {
     }
 
     const promises = [{
-        table: this.dbTable,
-        fields: this.dbFields,
+        table: self.dbTable,
+        fields: self.dbFields,
         values: {
             id: trs.id,
             blockId: trs.blockId,
@@ -1138,7 +1184,7 @@ Transaction.prototype.dbSave = async function (trs) {
  * @param {function} cb
  * @return {setImmediateCallback} error string | cb
  */
-Transaction.prototype.afterSave = async function (trs, cb) {
+Transaction.prototype.afterSave = async (trs, cb) => {
     if (trs.type === transactionTypes.STAKE) {
         const stakeOrder = await self.scope.db.one(sqlFroging.getStakeById, {
             id: trs.id
@@ -1154,12 +1200,12 @@ Transaction.prototype.afterSave = async function (trs, cb) {
             setImmediate(cb, 'couldn\'t add document to index stake_orders in the ElasticSearch');
         }
         // Stake order event
-        this.scope.network.io.sockets.emit('stake/change', null);
+        self.scope.network.io.sockets.emit('stake/change', null);
     }
 
-    const tx_type = __private.types[trs.type];
+    const txType = __private.types[trs.type];
 
-    if (!tx_type) {
+    if (!txType) {
         return setImmediate(cb, `Unknown transaction type ${trs.type}`);
     }
     const lastTransaction = await self.scope.db.one(sql.getTransactionById, { id: trs.id });
@@ -1169,8 +1215,8 @@ Transaction.prototype.afterSave = async function (trs, cb) {
         body: lastTransaction,
         id: lastTransaction.id
     });
-    if (typeof tx_type.afterSave === 'function') {
-        return tx_type.afterSave.call(this, trs, cb);
+    if (typeof txType.afterSave === 'function') {
+        return txType.afterSave.call(self, trs, cb);
     }
     return setImmediate(cb);
 };
@@ -1307,27 +1353,29 @@ Transaction.prototype.Referschema = {
  * @return {error|transaction} error string | trs normalized
  * @throws {string} error message
  */
-Transaction.prototype.objectNormalize = function (trs) {
+Transaction.prototype.objectNormalize = (trs) => {
     if (!__private.types[trs.type]) {
         throw `Unknown transaction type ${trs.type}`;
     }
 
-    for (const i in trs) {
-        if (trs[i] === null || typeof trs[i] === 'undefined') {
-            delete trs[i];
+    Object.keys(trs).forEach((key) => {
+        if (trs[key] === null || typeof trs[key] === 'undefined') {
+            delete trs[key];
         }
-    }
+    });
+
     trs.fee = trs.fee || 0;
 
-    const report = this.scope.schema.validate(trs, Transaction.prototype.schema);
+    const report = self.scope.schema.validate(trs, Transaction.prototype.schema);
 
     // schemaValidator
     if (!report) {
-        throw `Failed to validate transaction schema: ${this.scope.schema.getLastErrors().map(err => err.message).join(', ')}`;
+        throw `Failed to validate transaction schema: ${self.scope.schema.getLastErrors()
+            .map(err => err.message).join(', ')}`;
     }
 
     try {
-        trs = __private.types[trs.type].objectNormalize.call(this, trs);
+        trs = __private.types[trs.type].objectNormalize.call(self, trs);
     } catch (e) {
         throw e;
     }
@@ -1342,7 +1390,7 @@ Transaction.prototype.objectNormalize = function (trs) {
  * @return {null|tx}
  * @throws {string} Unknown transaction type
  */
-Transaction.prototype.dbRead = function (raw) {
+Transaction.prototype.dbRead = (raw) => {
     if (!raw.t_id) {
         return null;
     }
@@ -1350,22 +1398,22 @@ Transaction.prototype.dbRead = function (raw) {
         id: raw.t_id,
         height: raw.b_height,
         blockId: raw.b_id || raw.t_blockId,
-        type: parseInt(raw.t_type),
-        timestamp: parseInt(raw.t_timestamp),
+        type: Number(raw.t_type),
+        timestamp: Number(raw.t_timestamp),
         senderPublicKey: raw.t_senderPublicKey,
         requesterPublicKey: raw.t_requesterPublicKey,
         senderId: raw.t_senderId,
         recipientId: raw.t_recipientId,
         recipientPublicKey: raw.m_recipientPublicKey || null,
-        amount: parseInt(raw.t_amount),
-        stakedAmount: parseInt(raw.t_stakedAmount),
+        amount: Number(raw.t_amount),
+        stakedAmount: Number(raw.t_stakedAmount),
         stakeId: raw.t_stakeId,
-        groupBonus: parseInt(raw.t_groupBonus),
-        fee: parseInt(raw.t_fee),
+        groupBonus: Number(raw.t_groupBonus),
+        fee: Number(raw.t_fee),
         signature: raw.t_signature,
         signSignature: raw.t_signSignature,
         signatures: raw.t_signatures ? raw.t_signatures.split(',') : [],
-        confirmations: parseInt(raw.confirmations),
+        confirmations: Number(raw.confirmations),
         asset: {},
         trsName: raw.t_trsName,
         reward: raw.t_reward,
@@ -1377,7 +1425,7 @@ Transaction.prototype.dbRead = function (raw) {
         throw `Unknown transaction type ${tx.type}`;
     }
 
-    const asset = __private.types[tx.type].dbRead.call(this, raw);
+    const asset = __private.types[tx.type].dbRead.call(self, raw);
 
     if (asset) {
         tx.asset = extend(tx.asset, asset);
@@ -1391,17 +1439,17 @@ Transaction.prototype.dbRead = function (raw) {
  * Binds input parameters to private variables modules.
  * @param {Object} __modules
  */
-Transaction.prototype.bindModules = function (__modules) {
-    this.scope.logger.trace('Logic/Transaction->bindModules');
+Transaction.prototype.bindModules = (__modules) => {
+    self.scope.logger.trace('Logic/Transaction->bindModules');
     modules = {
         rounds: __modules.rounds
     };
 };
 
 // call add transaction API
-Transaction.prototype.sendTransaction = function (data, cb) {
-    const port = this.scope.config.app.port;
-    const address = this.scope.config.address;
+Transaction.prototype.sendTransaction = (data, cb) => {
+    const port = self.scope.config.app.port;
+    const address = self.scope.config.address;
 
     request.put(`http://${address}:${port}/api/transactions/`, data, (error, transactionResponse) => {
         if (error) {
@@ -1414,5 +1462,3 @@ Transaction.prototype.sendTransaction = function (data, cb) {
 
 // Export
 module.exports = Transaction;
-
-/** ************************************* END OF FILE ************************************ */
