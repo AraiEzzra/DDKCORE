@@ -23,11 +23,11 @@ __private.blockReward = new BlockReward();
  * @param {ZSchema} schema
  * @param {Sequence} dbSequence
  */
-function API(logger, db, block, schemaAPI, dbSequence) {
+function API(logger, db, block, Schema, dbSequence) {
     library = {
         logger,
         db,
-        schema: schemaAPI,
+        schema: Schema,
         dbSequence,
         logic: {
             block,

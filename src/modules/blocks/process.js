@@ -26,10 +26,10 @@ const __private = {};
  * @param {Sequence} sequence
  * @param {Object} genesisblock
  */
-function Process(logger, block, peers, transaction, schemaProcess, db, dbSequence, sequence, genesisblock) {
+function Process(logger, block, peers, transaction, Schema, db, dbSequence, sequence, genesisblock) {
     library = {
         logger,
-        schema: schemaProcess,
+        schema: Schema,
         db,
         dbSequence,
         sequence,
