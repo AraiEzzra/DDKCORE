@@ -711,7 +711,7 @@ __private.processVerifyTransaction = function (transaction, broadcast, cb) {
                 trs: transaction,
                 sender,
                 checkExists: true,
-                cb(err) {
+                cb: (err) => {
                     if (err) {
                         return setImmediate(waterCb, err);
                     }
@@ -724,7 +724,7 @@ __private.processVerifyTransaction = function (transaction, broadcast, cb) {
                 trs: transaction,
                 sender,
                 checkExists: true,
-                cb(err) {
+                cb: (err) => {
                     if (err) {
                         return setImmediate(waterCb, err);
                     }

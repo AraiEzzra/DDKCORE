@@ -334,33 +334,56 @@ Process.prototype.loadBlocksFromPeer = function (peer, cb) {
  * @return {Function} cb Callback function from params (through setImmediate)
  * @return {Object}   cb.err Error message if error occurred
  */
-Process.prototype.generateBlock = function (keypair, timestamp, cb) {
+Process.prototype.generateBlock = (keypair, timestamp, cb) => {
     // Get transactions that will be included in block
     const transactions = modules.transactions.getUnconfirmedTransactionList(false, constants.maxTxsPerBlock);
     const ready = [];
 
-    async.eachSeries(transactions, (transaction, cb) => {
+    async.eachSeries(transactions, (transaction, eachSeriesCb) => {
         modules.accounts.getAccount({ publicKey: transaction.senderPublicKey }, (err, sender) => {
             if (err || !sender) {
-                return setImmediate(cb, 'Sender not found');
+                return setImmediate(eachSeriesCb, 'Sender not found');
             }
 
             // Check transaction depends on type
             if (library.logic.transaction.ready(transaction, sender)) {
                 // Verify transaction
-                library.logic.transaction.verify({
-                    trs: transaction,
-                    sender,
-                    checkExists: true,
-                    cb(error) {
-                        if (!error) {
-                            ready.push(transaction);
-                        }
-                        return setImmediate(cb);
+                async.series({
+                    verifyTransaction(seriesCb) {
+                        library.logic.transaction.verify({
+                            trs: transaction,
+                            sender,
+                            checkExists: true,
+                            cb: (verifyTransactionError) => {
+                                if (verifyTransactionError) {
+                                    return setImmediate(seriesCb, verifyTransactionError);
+                                }
+                                return setImmediate(seriesCb, null, sender);
+                            }
+                        });
                     },
+                    verifyUnconfirmed(seriesCb) {
+                        library.logic.transaction.verifyUnconfirmed({
+                            trs: transaction,
+                            sender,
+                            checkExists: true,
+                            cb: (verifyUnconfirmedError) => {
+                                if (verifyUnconfirmedError) {
+                                    return setImmediate(seriesCb, verifyUnconfirmedError);
+                                }
+                                return setImmediate(seriesCb, null, sender);
+                            }
+                        });
+                    }
+                }, (seriesError) => {
+                    if (!seriesError) {
+                        return setImmediate(eachSeriesCb, seriesError);
+                    }
+                    ready.push(transaction);
+                    return setImmediate(eachSeriesCb);
                 });
             } else {
-                return setImmediate(cb);
+                return setImmediate(eachSeriesCb);
             }
         });
     }, (err) => {
