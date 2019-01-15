@@ -5,10 +5,10 @@ const schema = require('../../schema/blocks.js');
 const slots = require('../../helpers/slots.js');
 const sql = require('../../sql/blocks.js');
 
-let modules,
-    library,
-    self,
-    __private = {};
+let modules;
+let library;
+let self;
+const __private = {};
 
 /**
  * Initializes library.
@@ -26,10 +26,10 @@ let modules,
  * @param {Sequence} sequence
  * @param {Object} genesisblock
  */
-function Process(logger, block, peers, transaction, schema, db, dbSequence, sequence, genesisblock) {
+function Process(logger, block, peers, transaction, Schema, db, dbSequence, sequence, genesisblock) {
     library = {
         logger,
-        schema,
+        schema: Schema,
         db,
         dbSequence,
         sequence,
@@ -75,15 +75,18 @@ Process.prototype.getCommonBlock = function (peer, height, cb) {
             modules.transport.getFromPeer(peer, {
                 api: `/blocks/common?ids=${ids}`,
                 method: 'GET'
-            }, (err, res) => {
-                if (err || res.body.error) {
-                    return setImmediate(waterCb, err || res.body.error.toString());
-                } else if (!res.body.common) {
+            }, (err, result) => {
+                if (err || result.body.error) {
+                    return setImmediate(waterCb, err || result.body.error.toString());
+                } else if (!result.body.common) {
                     // FIXME: Need better checking here, is base on 'common' property enough?
                     comparisionFailed = true;
-                    return setImmediate(waterCb, ['Chain comparison failed with peer:', peer.string, 'using ids:', ids].join(' '));
+                    return setImmediate(
+                        waterCb,
+                        ['Chain comparison failed with peer:', peer.string, 'using ids:', ids].join(' ')
+                    );
                 }
-                return setImmediate(waterCb, null, res);
+                return setImmediate(waterCb, null, result);
             });
         },
         function (res, waterCb) {
@@ -110,19 +113,29 @@ Process.prototype.getCommonBlock = function (peer, height, cb) {
                 id: res.body.common.id,
                 previousBlock: res.body.common.previousBlock,
                 height: res.body.common.height
-            }).then((rows) => {
-                if (!rows.length || !rows[0].count) {
-                    // Block doesn't exists - comparison failed
-                    comparisionFailed = true;
-                    return setImmediate(waterCb, ['Chain comparison failed with peer:', peer.string, 'using block:', JSON.stringify(res.body.common)].join(' '));
-                }
-                // Block exists - it's common between our node and remote peer
-                return setImmediate(waterCb, null, res.body.common);
-            }).catch((err) => {
-                // SQL error occurred
-                library.logger.error(err.stack);
-                return setImmediate(waterCb, 'Blocks#getCommonBlock error');
-            });
+            })
+                .then((rows) => {
+                    if (!rows.length || !rows[0].count) {
+                        // Block doesn't exists - comparison failed
+                        comparisionFailed = true;
+                        return setImmediate(
+                            waterCb,
+                            [
+                                'Chain comparison failed with peer:',
+                                peer.string,
+                                'using block:',
+                                JSON.stringify(res.body.common)
+                            ].join(' ')
+                        );
+                    }
+                    // Block exists - it's common between our node and remote peer
+                    return setImmediate(waterCb, null, res.body.common);
+                })
+                .catch((err) => {
+                    // SQL error occurred
+                    library.logger.error(err.stack);
+                    return setImmediate(waterCb, 'Blocks#getCommonBlock error');
+                });
         }
     ], (err, res) => {
         // If comparison failed and current consensus is low - perform chain recovery
@@ -160,49 +173,51 @@ Process.prototype.loadBlocksOffset = function (limit, offset, verify, cb) {
 
     library.logger.debug('Loading blocks offset', { limit, offset, verify });
     // Execute in sequence via dbSequence
-    library.dbSequence.add((cb) => {
+    library.dbSequence.add((cbAdd) => {
         // Loads full blocks from database
         // FIXME: Weird logic in that SQL query, also ordering used can be performance bottleneck - to rewrite
-        library.db.query(sql.loadBlocksOffset, params).then((rows) => {
-            // Normalize blocks
-            const blocks = modules.blocks.utils.readDbRows(rows);
+        library.db.query(sql.loadBlocksOffset, params)
+            .then((rows) => {
+                // Normalize blocks
+                const blocks = modules.blocks.utils.readDbRows(rows);
 
-            async.eachSeries(blocks, (block, cb) => {
-                // Stop processing if node shutdown was requested
-                if (modules.blocks.isCleaning.get()) {
-                    return setImmediate(cb);
-                }
+                async.eachSeries(blocks, (block, cbBlocks) => {
+                    // Stop processing if node shutdown was requested
+                    if (modules.blocks.isCleaning.get()) {
+                        return setImmediate(cbBlocks);
+                    }
 
-                library.logger.debug('Processing block', block.id);
+                    library.logger.debug('Processing block', block.id);
 
-                if (block.id === library.genesisblock.block.id) {
-                    return modules.blocks.chain.applyGenesisBlock(block, cb);
-                }
+                    if (block.id === library.genesisblock.block.id) {
+                        return modules.blocks.chain.applyGenesisBlock(block, cbBlocks);
+                    }
 
-                return modules.blocks.verify.processBlock(
-                    block,
-                    false,
-                    (err) => {
-                        if (err) {
-                            library.logger.debug('Block processing failed', {
-                                id: block.id,
-                                err: err.toString(),
-                                module: 'blocks',
-                                block,
-                            });
-                        }
-                        // Update last block
-                        // modules.blocks.lastBlock.set(block);
-                        return setImmediate(cb, err);
-                    },
-                    false,
-                    verify,
-                );
-            }, err => setImmediate(cb, err, modules.blocks.lastBlock.get()));
-        }).catch((err) => {
-            library.logger.error(err.stack);
-            return setImmediate(cb, 'Blocks#loadBlocksOffset error');
-        });
+                    return modules.blocks.verify.processBlock(
+                        block,
+                        false,
+                        (err) => {
+                            if (err) {
+                                library.logger.debug('Block processing failed', {
+                                    id: block.id,
+                                    err: err.toString(),
+                                    module: 'blocks',
+                                    block,
+                                });
+                            }
+                            // Update last block
+                            // modules.blocks.lastBlock.set(block);
+                            return setImmediate(cbBlocks, err);
+                        },
+                        false,
+                        verify,
+                    );
+                }, err => setImmediate(cbAdd, err, modules.blocks.lastBlock.get()));
+            })
+            .catch((err) => {
+                library.logger.error(err.stack);
+                return setImmediate(cbAdd, 'Blocks#loadBlocksOffset error');
+            });
     }, cb);
 };
 
@@ -250,6 +265,26 @@ Process.prototype.loadBlocksFromPeer = function (peer, cb) {
         return setImmediate(seriesCb, null, blocks);
     }
 
+    // Process single block
+    function processBlock(block, seriesCb) {
+        // Start block processing - broadcast: false, saveBlock: true
+        modules.blocks.verify.processBlock(block, false, (err) => {
+            if (!err) {
+                // Update last valid block
+                lastValidBlock = block;
+                library.logger.info(
+                    ['Block', block.id, 'loaded from:', peer.string].join(' '),
+                    `height: ${block.height}`
+                );
+            } else {
+                const id = (block ? block.id : 'null');
+
+                library.logger.debug('Block processing failed', { id, err: err.toString(), module: 'blocks', block });
+            }
+            return seriesCb(err);
+        }, true);
+    }
+
     // Process all received blocks
     function processBlocks(blocks, seriesCb) {
         // Skip if ther is no blocks
@@ -272,23 +307,6 @@ Process.prototype.loadBlocksFromPeer = function (peer, cb) {
                 return eachSeriesCb(err);
             });
         }, err => setImmediate(seriesCb, err));
-    }
-
-    // Process single block
-    function processBlock(block, seriesCb) {
-        // Start block processing - broadcast: false, saveBlock: true
-        modules.blocks.verify.processBlock(block, false, (err) => {
-            if (!err) {
-                // Update last valid block
-                lastValidBlock = block;
-                library.logger.info(['Block', block.id, 'loaded from:', peer.string].join(' '), `height: ${block.height}`);
-            } else {
-                const id = (block ? block.id : 'null');
-
-                library.logger.debug('Block processing failed', { id, err: err.toString(), module: 'blocks', block });
-            }
-            return seriesCb(err);
-        }, true);
     }
 
     async.waterfall([
@@ -334,8 +352,8 @@ Process.prototype.generateBlock = function (keypair, timestamp, cb) {
                     trs: transaction,
                     sender,
                     checkExists: true,
-                    cb(err) {
-                        if (!err) {
+                    cb(error) {
+                        if (!error) {
                             ready.push(transaction);
                         }
                         return setImmediate(cb);
@@ -351,7 +369,6 @@ Process.prototype.generateBlock = function (keypair, timestamp, cb) {
         }
         let block;
         try {
-            modules.accounts.mergeAccountAndGet;
             // Create a block
             block = library.logic.block.create({
                 keypair,
@@ -432,7 +449,10 @@ Process.prototype.onReceiveBlock = function (block) {
         } else if (block.previousBlock !== lastBlock.id && lastBlock.height + 1 === block.height) {
             // Process received fork cause 1
             return __private.receiveForkOne(block, lastBlock, cb);
-        } else if (block.previousBlock === lastBlock.previousBlock && block.height === lastBlock.height && block.id !== lastBlock.id) {
+        } else if (
+            block.previousBlock === lastBlock.previousBlock &&
+            block.height === lastBlock.height && block.id !== lastBlock.id
+        ) {
             // Process received fork cause 5
             return __private.receiveForkFive(block, lastBlock, cb);
         }

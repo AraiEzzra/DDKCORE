@@ -9,9 +9,9 @@ const constants = require('../../helpers/constants.js');
 const sql = require('../../sql/blocks.js');
 const exceptions = require('../../helpers/exceptions.js');
 
-let modules,
-    library,
-    self;
+let modules;
+let library;
+let self;
 const __private = {};
 __private.lastNBlockIds = [];
 
@@ -323,7 +323,8 @@ __private.verifyPayload = function (block, result) {
 
     // FIXME update old chain payloadHash
     // https://trello.com/c/ZRV5EAUT/132-included-transactions-do-not-match-block-transactions-count
-    if (block.transactions.length !== block.numberOfTransactions && block.height > constants.MASTER_NODE_MIGRATED_BLOCK) {
+    if (block.transactions.length !== block.numberOfTransactions &&
+        block.height > constants.MASTER_NODE_MIGRATED_BLOCK) {
         if (constants.PAYLOAD_VALIDATE.MAX_TRANSACTION_LENGTH) {
             result.errors.push('Included transactions do not match block transactions count');
         } else {
@@ -532,13 +533,15 @@ Verify.prototype.verifyReceipt = function (block) {
 };
 
 /**
- * Loads last {BLOCK_SLOT_WINDOW} blocks from the database into memory. Called when application triggeres blockchainReady event.
+ * Loads last {BLOCK_SLOT_WINDOW} blocks from the database into memory.
+ * Called when application triggeres blockchainReady event.
  */
 Verify.prototype.onBlockchainReady = function () {
-    return library.db.query('SELECT id FROM blocks ORDER BY id DESC LIMIT ${blockLimit}', { blockLimit: constants.blockSlotWindow })
-        .then((blockIds) => {
-            __private.lastNBlockIds = _.map(blockIds, 'id');
-        })
+    return library.db.query(
+        'SELECT id FROM blocks ORDER BY id DESC LIMIT ${blockLimit}', { blockLimit: constants.blockSlotWindow }
+    ).then((blockIds) => {
+        __private.lastNBlockIds = _.map(blockIds, 'id');
+    })
         .catch((err) => {
             library.logger.error(
                 `Unable to load last ${constants.blockSlotWindow} block ids`
@@ -653,16 +656,16 @@ Verify.prototype.deleteBlockProperties = function (block) {
     if (typeof reducedBlock.numberOfTransactions === 'number') {
         delete reducedBlock.numberOfTransactions;
     }
-    if (reducedBlock.totalAmount == 0) {
+    if (reducedBlock.totalAmount === 0) {
         delete reducedBlock.totalAmount;
     }
-    if (reducedBlock.totalFee == 0) {
+    if (reducedBlock.totalFee === 0) {
         delete reducedBlock.totalFee;
     }
     if (reducedBlock.payloadLength === 0) {
         delete reducedBlock.payloadLength;
     }
-    if (reducedBlock.reward == 0) {
+    if (reducedBlock.reward === 0) {
         delete reducedBlock.reward;
     }
     if (reducedBlock.transactions && reducedBlock.transactions.length === 0) {
@@ -754,15 +757,17 @@ __private.checkExists = function (block, cb) {
     // Check if block id is already in the database (very low probability of hash collision)
     // TODO: In case of hash-collision, to me it would be a special autofork...
     // DATABASE: read only
-    library.db.query(sql.getBlockId, { id: block.id }).then((rows) => {
-        if (rows.length > 0) {
-            return setImmediate(cb, ['Block', block.id, 'already exists'].join(' '));
-        }
-        return setImmediate(cb);
-    }).catch((err) => {
-        library.logger.error(err);
-        return setImmediate(cb, 'Block#blockExists error');
-    });
+    library.db.query(sql.getBlockId, { id: block.id })
+        .then((rows) => {
+            if (rows.length > 0) {
+                return setImmediate(cb, ['Block', block.id, 'already exists'].join(' '));
+            }
+            return setImmediate(cb);
+        })
+        .catch((err) => {
+            library.logger.error(err);
+            return setImmediate(cb, 'Block#blockExists error');
+        });
 };
 
 /**
