@@ -327,7 +327,7 @@ Transaction.prototype.checkBalance = (amount, isUnconfirmed, trs, sender) => {
     const totalAmountWithFrozeAmount = trs.type === transactionTypes.SENDSTAKE ?
         new bignum(amount)
         :
-        new bignum(sender.totalFrozeAmount).plus(amount);
+        new bignum(sender[`${isUnconfirmed ? 'u_' : ''}totalFrozeAmount`]).plus(amount);
 
     const exceededBalance = new bignum(sender[`${isUnconfirmed ? 'u_' : ''}balance`].toString())
         .lessThan(totalAmountWithFrozeAmount);

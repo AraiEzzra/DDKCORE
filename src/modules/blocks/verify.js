@@ -78,7 +78,25 @@ __private.checkTransaction = function (block, transaction, checkExists, cb) {
                 trs: transaction,
                 sender,
                 checkExists,
-                cb: waterCb,
+                cb: (err) => {
+                    if (err) {
+                        return setImmediate(waterCb, err);
+                    }
+                    return setImmediate(waterCb, null, sender);
+                },
+            });
+        },
+        function verifyUnconfirmed(sender, waterCb) {
+            library.logic.transaction.verifyUnconfirmed({
+                trs: transaction,
+                sender,
+                checkExists: true,
+                cb(err) {
+                    if (err) {
+                        return setImmediate(waterCb, err);
+                    }
+                    return setImmediate(waterCb, null, sender);
+                }
             });
         }
     ], (err) => {
