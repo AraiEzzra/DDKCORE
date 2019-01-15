@@ -22,6 +22,11 @@ module.exports = {
                 use: ['babel-loader'],
             },
             {
+                test: /\.ts?$/,
+                exclude: /node_modules/,
+                use: 'ts-loader',
+            },
+            {
                 test: /\.(sql|ttf|gif|png|ico)$/,
                 use: 'file-loader',
             },
@@ -32,14 +37,14 @@ module.exports = {
             {
                 test: /\.css$/,
                 use: ['style-loader', 'css-loader'],
-            }
-        ]
+            },
+        ],
     },
     resolve: {
         extensions: ['.ts', '.js', '.json'],
         alias: {
             src: path.resolve(__dirname, 'src'),
-        }
+        },
     },
     output: {
         filename: "app.js",
@@ -50,8 +55,8 @@ module.exports = {
         new CopyWebpackPlugin([
             {
                 from: './build',
-                to: './'
-            }
+                to: './',
+            },
         ]),
     ],
 };
