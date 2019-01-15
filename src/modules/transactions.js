@@ -242,7 +242,7 @@ __private.list = function (filter, cb) {
                 } else if (['confirmations'].indexOf(sortField) > -1) {
                     return sortField;
                 }
-                return `t.${sortField}`;
+                return `t."t_${sortField}"`;
             }
         }
     );

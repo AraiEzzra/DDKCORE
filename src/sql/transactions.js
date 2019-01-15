@@ -53,13 +53,13 @@ const TransactionsSql = {
             `${'      t.id                                          AS t_id,' +
             '      t."blockId"                                   AS "t_blockId",' +
             '      t."rowId"                                     AS "t_rowId",' +
-            '      t.type                                        AS t_type,' +
-            '      t."timestamp"                                 AS t_timestamp,' +
+            '      t.type                                        AS "t_type",' +
+            '      t."timestamp"                                 AS "t_timestamp",' +
             '      t."trsName"                                   AS "t_trsName",' +
             '      encode(t."senderPublicKey", \'hex\' :: TEXT)    AS "t_senderPublicKey",' +
             '      t."senderId"                                  AS "t_senderId",' +
             '      t."recipientId"                               AS "t_recipientId",' +
-            '      t.amount                                      AS t_amount,' +
+            '      t.amount                                      AS "t_amount",' +
             '      t.fee                                         AS t_fee,' +
             '      t.reward                                      AS t_reward,' +
             '      encode(t.signature, \'hex\' :: TEXT)            AS t_signature,' +
@@ -76,7 +76,6 @@ const TransactionsSql = {
             (params.where.length ? `(${params.where.join(' ')})` : ''),
             // FIXME: Backward compatibility, should be removed after transitional period
             (params.where.length && params.owner ? ` AND ${params.owner}` : params.owner),
-            (params.sortField ? `ORDER BY ${[params.sortField, params.sortMethod].join(' ')}` : ''),
             ' LIMIT ${limit} ' +
             ' OFFSET ${offset}' +
             ')',
@@ -102,7 +101,8 @@ const TransactionsSql = {
             '  LEFT JOIN blocks b ON t."t_blockId" = b.id' +
             '  LEFT JOIN votes v ON v."transactionId" = t.t_id' +
             '  LEFT JOIN stake_orders so ON so.id = t.t_id' +
-            '  LEFT JOIN referals ref ON ref.address = t."t_senderId"'
+            '  LEFT JOIN referals ref ON ref.address = t."t_senderId"' +
+            (params.sortField ? `ORDER BY ${[params.sortField, params.sortMethod].join(' ')}` : ''),
         ].filter(Boolean).join(' ');
     },
 
