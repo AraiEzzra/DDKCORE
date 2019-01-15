@@ -17,10 +17,10 @@ const sql = require('../../sql/blocks.js');
 const transactionTypes = require('../../helpers/transactionTypes.js');
 const Rounds = require('../rounds.js');
 
-let modules,
-    library,
-    self,
-    __private = {};
+let modules;
+let library;
+let self;
+const __private = {};
 
 function Utils(logger, block, transaction, db, dbSequence, genesisblock) {
     library = {
@@ -134,7 +134,7 @@ Utils.prototype.loadBlocksPart = function (filter, cb) {
  * @return {Object}   cb.block Full normalized last block
  */
 Utils.prototype.loadLastBlock = function (cb) {
-    library.dbSequence.add((cb) => {
+    library.dbSequence.add((cbAdd) => {
         // Get full last block from database
         // FIXME: Ordering in that SQL - to rewrite
         library.db.query(sql.loadLastBlock).then((rows) => {
@@ -158,10 +158,10 @@ Utils.prototype.loadLastBlock = function (cb) {
 
             // Update last block
             modules.blocks.lastBlock.set(block);
-            return setImmediate(cb, null, block);
+            return setImmediate(cbAdd, null, block);
         }).catch((err) => {
             library.logger.error(err.stack);
-            return setImmediate(cb, 'Blocks#loadLastBlock error');
+            return setImmediate(cbAdd, 'Blocks#loadLastBlock error');
         });
     }, cb);
 };
@@ -183,7 +183,8 @@ Utils.prototype.loadLastBlock = function (cb) {
 Utils.prototype.getIdSequence = function (height, cb) {
     const lastBlock = modules.blocks.lastBlock.get();
     // Get IDs of first blocks of (n) last rounds, descending order
-    // EXAMPLE: For height 2000000 (round 19802) we will get IDs of blocks at height: 1999902, 1999801, 1999700, 1999599, 1999498
+    // EXAMPLE: For height 2000000 (round 19802)
+    // we will get IDs of blocks at height: 1999902, 1999801, 1999700, 1999599, 1999498
     library.db.query(
         sql.getIdSequence(),
         { height, limit: 5, delegates: Rounds.prototype.getSlotDelegatesCount(height) }
@@ -287,22 +288,23 @@ Utils.prototype.loadBlocksData = function (filter, options, cb) {
     }
 
     // Execute in sequence via dbSequence
-    library.dbSequence.add((cb) => {
+    library.dbSequence.add((cbAdd) => {
         // Get height of block with supplied ID
         library.db.query(sql.getHeightByLastId, { lastId: filter.lastId || null }).then((rows) => {
             const height = rows.length ? rows[0].height : 0;
             // Calculate max block height for database query
-            const realLimit = height + (parseInt(filter.limit) || 1);
+            const realLimit = height + (parseInt(filter.limit, 10) || 1);
 
             params.limit = realLimit;
             params.height = height;
 
             // Retrieve blocks from database
             // FIXME: That SQL query have mess logic, need to be refactored
-            library.db.query(sql.loadBlocksData(filter), params).then(rows => setImmediate(cb, null, rows));
+            library.db.query(sql.loadBlocksData(filter), params)
+                .then(rowsBlock => setImmediate(cbAdd, null, rowsBlock));
         }).catch((err) => {
             library.logger.error(err.stack);
-            return setImmediate(cb, 'Blocks#loadBlockData error');
+            return setImmediate(cbAdd, 'Blocks#loadBlockData error');
         });
     }, cb);
 };
@@ -317,9 +319,9 @@ Utils.prototype.loadBlocksData = function (filter, options, cb) {
  * @return {BlockProgressLogger}
  */
 Utils.prototype.getBlockProgressLogger = function (transactionsCount, logsFrequency, msg) {
-    function BlockProgressLogger(transactionsCount, logsFrequency, msg) {
-        this.target = transactionsCount;
-        this.step = Math.floor(transactionsCount / logsFrequency);
+    function BlockProgressLogger(blockTransactionCount, blockBlogsFrequency, msgBlock) {
+        this.target = blockTransactionCount;
+        this.step = Math.floor(blockTransactionCount / blockBlogsFrequency);
         this.applied = 0;
 
         /**
@@ -348,8 +350,8 @@ Utils.prototype.getBlockProgressLogger = function (transactionsCount, logsFreque
          * Logs the progress
          */
         this.log = function () {
-            library.logger.info(msg, `${((this.applied / this.target) * 100)
-                    .toPrecision(4)} %` + `: applied ${this.applied} of ${this.target} transactions`);
+            library.logger.info(msgBlock, `${((this.applied / this.target) * 100)
+                    .toPrecision(4)} % : applied ${this.applied} of ${this.target} transactions`);
         };
     }
 
@@ -381,11 +383,11 @@ Utils.prototype.aggregateBlocksReward = function (filter, cb) {
     params.delegates = constants.activeDelegates;
 
     if (filter.start !== undefined) {
-        params.start = filter.start - constants.epochTime.getTime() / 1000;
+        params.start = filter.start - (constants.epochTime.getTime() / 1000);
     }
 
     if (filter.end !== undefined) {
-        params.end = filter.end - constants.epochTime.getTime() / 1000;
+        params.end = filter.end - (constants.epochTime.getTime() / 1000);
     }
 
     // Get calculated rewards
