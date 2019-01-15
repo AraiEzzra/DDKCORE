@@ -6,6 +6,7 @@ const mailServices = require('./postmark');
 const async = require('async');
 const sql = require('../sql/referal_sql');
 const OrderBy = require('./orderBy.js');
+const constants = require('./constants.js');
 
 let library = {},
     __private = {};
@@ -100,7 +101,7 @@ module.exports.api = function (app) {
         const mailOptions = {
             From: library.config.mailFrom, // sender address
             To: req.body.email, // req.body.email list of receivers
-            TemplateId: 8257936,
+            TemplateId: constants.TemplateId.referralMail,
             TemplateModel: {
                 person: {
                     username: req.body.email,
