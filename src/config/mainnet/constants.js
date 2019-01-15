@@ -136,7 +136,11 @@ module.exports = {
         rewardVoteCount: 4,
         unstakeVoteCount: 24
     },
-    defaultLock: 0
+    defaultLock: 0,
+    TemplateId: {
+        referralMail: 8248756,
+        welcomeMail: 8265262
+    }
 };
 
 /** ************************************* END OF FILE ************************************ */

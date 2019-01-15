@@ -419,10 +419,10 @@ Accounts.prototype.shared = {
                         const mailOptions = {
                             From: library.config.mailFrom,
                             To: req.body.email,
-                            TemplateId: 8265220,
+                            TemplateId: constants.TemplateId.welcomeMail,
                             TemplateModel: {
                                 ddk: {
-                                    'username': req.body.email,
+                                    username: req.body.email,
                                     ddk_address: accountData.address,
                                     public_key: accountData.publicKey
                                 }
