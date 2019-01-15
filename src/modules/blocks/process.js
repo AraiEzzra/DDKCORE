@@ -129,12 +129,8 @@ Process.prototype.getCommonBlock = function (peer, height, cb) {
         /*
          * Removed poor consensus check in order to sync data
          */
+        // TODO can be useful
         if (comparisionFailed && modules.transport.poorConsensus()) {
-            // FIXME return recoverChain
-            // https://trello.com/c/0nn2FreZ/192-return-recoverchain
-            // if (constants.NODE_ENV === 'mainnet') {
-            //     return setImmediate(cb, null, res);
-            // }
             return modules.blocks.chain.recoverChain(cb);
         }
         return setImmediate(cb, err, res);

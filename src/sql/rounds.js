@@ -29,7 +29,11 @@ const RoundsSql = {
 
     performVotesSnapshot: 'CREATE TABLE mem_votes_snapshot AS SELECT address, "publicKey", vote, "producedblocks", "missedblocks" FROM mem_accounts WHERE "isDelegate" = 1',
 
-    restoreVotesSnapshot: 'UPDATE mem_accounts accounts SET vote = snapshot.vote, "missedBlocks" = snapshot."missedBlocks", "producedBlocks" = snapshot."producedBlocks" FROM mem_votes_snapshot snapshot WHERE accounts.address = snapshot.address',
+    restoreVotesSnapshot: 'UPDATE mem_accounts accounts SET ' +
+    ' vote = snapshot.vote, ' +
+    ' missedblocks = snapshot.missedblocks, ' +
+    ' producedblocks = snapshot.producedblocks' +
+    ' FROM mem_votes_snapshot snapshot WHERE accounts.address = snapshot.address',
 
     getDelegatesSnapshot: 'SELECT "publicKey" FROM mem_votes_snapshot ORDER BY vote DESC, "publicKey" ASC LIMIT ${limit}'
 };
