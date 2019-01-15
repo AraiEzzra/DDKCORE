@@ -20,6 +20,8 @@
     "comma-dangle": "off",
     "global-require": "warn",
     "no-param-reassign": "off",
-    "consistent-return": "off"
+    "consistent-return": "off",
+    "no-continue": "off",
+    "no-plusplus": "off"
   }
 }

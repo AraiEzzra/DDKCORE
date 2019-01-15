@@ -396,7 +396,7 @@ describe('transaction', function () {
 
         it('should return error when sender has insufficiant balance', function () {
             let amount = '9850458911801509';
-            let balanceKey = 'balance';
+            let balanceKey = false;
             let res = transaction.checkBalance(amount, balanceKey, validTransaction, validSender);
             expect(res.exceeded).to.equal(true);
             expect(res.error).to.include('Account does not have enough LSK:');
@@ -404,14 +404,14 @@ describe('transaction', function () {
 
         it('should be okay if insufficient balance from genesis account', function () {
             let amount = '999823366072900';
-            let balanceKey = 'balance';
+            let balanceKey = false;
             let res = transaction.checkBalance(amount, balanceKey, genesisTrs, validSender);
             expect(res.exceeded).to.equal(false);
             expect(res.error).to.not.exist;
         });
 
         it('should be okay if sender has sufficient balance', function () {
-            let balanceKey = 'balance';
+            let balanceKey = false;
             let res = transaction.checkBalance(validTransaction.amount, balanceKey, validTransaction, validSender);
             expect(res.exceeded).to.equal(false);
             expect(res.error).to.not.exist;

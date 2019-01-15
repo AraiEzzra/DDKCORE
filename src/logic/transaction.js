@@ -302,17 +302,21 @@ Transaction.prototype.checkConfirmed = function (trs, cb) {
  * Checks if balance is less than amount for sender.
  * @implements {bignum}
  * @param {number} amount
- * @param {string} balance
+ * @param {bool} isUnconfirmed
  * @param {transaction} trs
  * @param {account} sender
  * @returns {Object} With exceeded boolean and error: address, balance
  *  modify checkbalance according to froze amount avaliable to user
  */
-Transaction.prototype.checkBalance = function (amount, balance, trs, sender) {
-    const totalAmountWithFrozeAmount = trs.type === transactionTypes.SENDSTAKE ? new bignum(amount) : new bignum(sender.totalFrozeAmount).plus(amount);
+Transaction.prototype.checkBalance = (amount, isUnconfirmed, trs, sender) => {
+    const totalAmountWithFrozeAmount = trs.type === transactionTypes.SENDSTAKE ?
+        new bignum(amount)
+        :
+        new bignum(sender.totalFrozeAmount).plus(amount);
 
-    const exceededBalance = new bignum(sender[balance].toString()).lessThan(totalAmountWithFrozeAmount);
-    let exceeded = (trs.blockId !== this.scope.genesisblock.block.id && exceededBalance);
+    const exceededBalance = new bignum(sender[`${isUnconfirmed ? 'u_' : ''}balance`].toString())
+        .lessThan(totalAmountWithFrozeAmount);
+    let exceeded = (trs.blockId !== self.scope.genesisblock.block.id && exceededBalance);
 
     // FIXME
     // https://trello.com/c/MPx5yxNH/134-account-does-not-have-enough-ddk
@@ -320,15 +324,33 @@ Transaction.prototype.checkBalance = function (amount, balance, trs, sender) {
         exceeded = false;
     }
 
-    if (parseInt(sender.totalFrozeAmount) > 0) {
+    if (parseInt(sender[`${isUnconfirmed ? 'u_' : ''}totalFrozeAmount`], 10) > 0) {
         return {
             exceeded,
-            error: exceeded ? ['Account does not have enough DDK due to freeze amount:', sender.address, 'balance:', new bignum(sender[balance].toString() || '0').div(Math.pow(10, 8)), 'totalFreezeAmount :', new bignum(sender.totalFrozeAmount.toString()).div(Math.pow(10, 8))].join(' ') : null
+            error: exceeded ?
+                [
+                    'Account does not have enough DDK due to freeze amount:',
+                    sender.address,
+                    'balance:',
+                    new bignum(sender[`${isUnconfirmed ? 'u_' : ''}balance`].toString() || '0').div(10 ** 8),
+                    'totalFreezeAmount :',
+                    new bignum(sender[`${isUnconfirmed ? 'u_' : ''}totalFrozeAmount`].toString())
+                        .div(10 ** 8)].join(' ')
+                :
+                null
         };
     }
     return {
         exceeded,
-        error: exceeded ? ['Account does not have enough DDK:', sender.address, 'balance:', new bignum(sender[balance].toString() || '0').div(Math.pow(10, 8))].join(' ') : null
+        error: exceeded ?
+            [
+                'Account does not have enough DDK:',
+                sender.address,
+                'balance:',
+                new bignum(sender[`${isUnconfirmed ? 'u_' : ''}balance`].toString() || '0').div(10 ** 8)
+            ].join(' ')
+            :
+            null
     };
 };
 
@@ -391,16 +413,16 @@ Transaction.prototype.process = function (trs, sender, requester, cb) {
     });
 };
 
-Transaction.prototype.getAccountStatus = function (trs, cb) {
-    this.scope.db.one(sqlAccount.checkAccountStatus, {
+Transaction.prototype.getAccountStatus = (trs, cb) => {
+    self.scope.db.one(sqlAccount.checkAccountStatus, {
         senderId: trs.senderId
     }).then((row) => {
         if (row.status === 0) {
             return setImmediate(cb, 'Invalid transaction : account disabled');
         }
         return setImmediate(cb, null, row.status);
-    }).catch(function (err) {
-        this.scope.logger.error(err.stack);
+    }).catch((err) => {
+        self.scope.logger.error(err.stack);
         return setImmediate(cb, 'Transaction#checkAccountStatus error');
     });
 };
@@ -413,7 +435,7 @@ Transaction.prototype.getAccountStatus = function (trs, cb) {
  * @param {function} cb
  * @return {setImmediateCallback} validation errors | trs
  */
-Transaction.prototype.verifyFields = function ({ trs, sender, requester = {}, cb }) {
+Transaction.prototype.verifyFields = ({ trs, sender, requester = {}, cb }) => {
     let valid = false;
     let err = null;
 
@@ -422,103 +444,103 @@ Transaction.prototype.verifyFields = function ({ trs, sender, requester = {}, cb
         if (constants.TRANSACTION_VALIDATION_ENABLED.SENDER) {
             return setImmediate(cb, 'Missing sender');
         }
-        this.scope.logger.error('Transaction sender error');
-
+        self.scope.logger.error('Transaction sender error');
     }
 
     // Check transaction type
     if (!__private.types[trs.type]) {
         if (constants.TRANSACTION_VALIDATION_ENABLED.TYPE) {
-            return setImmediate(cb, 'Unknown transaction type ' + trs.type);
+            return setImmediate(cb, `Unknown transaction type ${trs.type}`);
         }
-        this.scope.logger.error('Transaction error type');
-
+        self.scope.logger.error('Transaction error type');
     }
 
     // Check for missing sender second signature
-    if (!trs.requesterPublicKey && sender.secondSignature && !trs.signSignature && trs.blockId !== this.scope.genesisblock.block.id) {
+    if (!trs.requesterPublicKey &&
+        sender.secondSignature &&
+        !trs.signSignature &&
+        trs.blockId !== self.scope.genesisblock.block.id
+    ) {
         if (constants.TRANSACTION_VALIDATION_ENABLED.SECOND_SIGNATURE) {
             return setImmediate(cb, 'Missing sender second signature');
-        } else {
-            this.scope.logger.error('Missing sender second signature');
         }
+        self.scope.logger.error('Missing sender second signature');
     }
 
     // If second signature provided, check if sender has one enabled
     if (!trs.requesterPublicKey && !sender.secondSignature && (trs.signSignature && trs.signSignature.length > 0)) {
         if (constants.TRANSACTION_VALIDATION_ENABLED.SENDER_SECOND_SIGNATURE) {
             return setImmediate(cb, 'Sender does not have a second signature');
-        } else {
-            this.scope.logger.error('Sender does not have a second signature');
         }
+        self.scope.logger.error('Sender does not have a second signature');
     }
 
     // Check for missing requester second signature
     if (trs.requesterPublicKey && requester.secondSignature && !trs.signSignature) {
         if (constants.TRANSACTION_VALIDATION_ENABLED.REQUEST_SECOND_SIGNATURE) {
             return setImmediate(cb, 'Missing requester second signature');
-        } else {
-            this.scope.logger.error('Missing requester second signature');
         }
+        self.scope.logger.error('Missing requester second signature');
     }
 
     // If second signature provided, check if requester has one enabled
     if (trs.requesterPublicKey && !requester.secondSignature && (trs.signSignature && trs.signSignature.length > 0)) {
         if (constants.TRANSACTION_VALIDATION_ENABLED.CHECKING_REQUEST_SECOND_SIGNATURE) {
             return setImmediate(cb, 'Requester does not have a second signature');
-        } else {
-            this.scope.logger.error('Requester does not have a second signature');
         }
+        self.scope.logger.error('Requester does not have a second signature');
     }
 
     // Check sender public key
-    if (sender.publicKey && sender.publicKey !== trs.senderPublicKey && trs.height > constants.MASTER_NODE_MIGRATED_BLOCK) {
+    if (
+        sender.publicKey && sender.publicKey !== trs.senderPublicKey &&
+        trs.height > constants.MASTER_NODE_MIGRATED_BLOCK
+    ) {
         err = ['Invalid sender public key:', trs.senderPublicKey, 'expected:', sender.publicKey].join(' ');
         if (constants.TRANSACTION_VALIDATION_ENABLED.SENDER_PUBLIC_KEY) {
-
             if (exceptions.senderPublicKey.indexOf(trs.id) > -1) {
-                this.scope.logger.debug(err);
-                this.scope.logger.debug(JSON.stringify(trs));
+                self.scope.logger.debug(err);
+                self.scope.logger.debug(JSON.stringify(trs));
             } else {
                 return setImmediate(cb, err);
             }
         } else {
-            this.scope.logger.error('Sender public key error');
+            self.scope.logger.error('Sender public key error');
         }
     }
 
     // Check sender is not genesis account unless block id equals genesis
-    if ([exceptions.genesisPublicKey.mainnet, exceptions.genesisPublicKey.testnet].indexOf(sender.publicKey) !== -1 && trs.blockId !== this.scope.genesisblock.block.id) {
+    if (
+        [exceptions.genesisPublicKey.mainnet, exceptions.genesisPublicKey.testnet].indexOf(sender.publicKey) !== -1
+        && trs.blockId !== self.scope.genesisblock.block.id
+    ) {
         if (constants.TRANSACTION_VALIDATION_ENABLED.SENDER_GENESIS_ACCOUNT) {
             return setImmediate(cb, 'Invalid sender. Can not send from genesis account');
         }
-        this.scope.logger.error('Invalid sender. Can not send from genesis account');
-
+        self.scope.logger.error('Invalid sender. Can not send from genesis account');
     }
 
     // Check sender address
     if (String(trs.senderId).toUpperCase() !== String(sender.address).toUpperCase()) {
         if (constants.TRANSACTION_VALIDATION_ENABLED.SENDER_ADDRESS) {
             return setImmediate(cb, 'Invalid sender address');
-        } else {
-            this.scope.logger.error('Invalid sender address');
         }
+        self.scope.logger.error('Invalid sender address');
     }
 
     // Determine multisignatures from sender or transaction asset
-    let multisignatures = sender.multisignatures || sender.u_multisignatures || [];
+    const multisignatures = sender.multisignatures || sender.u_multisignatures || [];
     if (multisignatures.length === 0) {
         if (trs.asset && trs.asset.multisignature && trs.asset.multisignature.keysgroup) {
 
             for (let i = 0; i < trs.asset.multisignature.keysgroup.length; i++) {
-                let key = trs.asset.multisignature.keysgroup[i];
+                const key = trs.asset.multisignature.keysgroup[i];
 
                 if (!key || typeof key !== 'string') {
                     if (constants.TRANSACTION_VALIDATION_ENABLED.KEYSGROUP_MEMBER) {
                         return setImmediate(cb, 'Invalid member in keysgroup');
                     }
-                    this.scope.logger.error('Invalid member in keysgroup');
-
+                    self.scope.logger.error('Invalid member in keysgroup');
                 }
 
                 multisignatures.push(key.slice(1));
@@ -534,8 +556,7 @@ Transaction.prototype.verifyFields = function ({ trs, sender, requester = {}, cb
             if (constants.TRANSACTION_VALIDATION_ENABLED.MULTISIGNATURE_GROUP) {
                 return setImmediate(cb, 'Account does not belong to multisignature group');
             }
-            this.scope.logger.error('Account does not belong to multisignature group');
-
+            self.scope.logger.error('Account does not belong to multisignature group');
         }
     }
 
@@ -543,59 +564,57 @@ Transaction.prototype.verifyFields = function ({ trs, sender, requester = {}, cb
     try {
         // FIXME verify transaction signature
         // https://trello.com/c/VcBpfYTi/180-failed-to-verify-transaction-signature
-        valid = this.verifySignature(trs, (trs.requesterPublicKey || trs.senderPublicKey), trs.signature);
-
+        valid = self.verifySignature(trs, (trs.requesterPublicKey || trs.senderPublicKey), trs.signature);
     } catch (e) {
-        this.scope.logger.error(e.stack);
+        self.scope.logger.error(e.stack);
         if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_SIGNATURE) {
             return setImmediate(cb, e.toString());
         }
-        this.scope.logger.error('Transaction verify error');
-
+        self.scope.logger.error('Transaction verify error');
     }
 
     if (!valid) {
         err = 'Failed to verify signature';
 
         if (exceptions.signatures.indexOf(trs.id) > -1) {
-            this.scope.logger.debug(err);
-            this.scope.logger.debug(JSON.stringify(trs));
+            self.scope.logger.debug(err);
+            self.scope.logger.debug(JSON.stringify(trs));
             valid = true;
             err = null;
         } else {
             if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_SIGNATURE) {
                 return setImmediate(cb, err);
             }
-            this.scope.logger.error('Transaction verify error');
-
-
+            self.scope.logger.error('Transaction verify error');
         }
     }
 
     // Verify second signature
     if (requester.secondSignature || sender.secondSignature) {
         try {
-            valid = this.verifySecondSignature(trs, (requester.secondPublicKey || sender.secondPublicKey), trs.signSignature);
+            valid = self.verifySecondSignature(
+                trs,
+                (requester.secondPublicKey || sender.secondPublicKey),
+                trs.signSignature
+            );
         } catch (e) {
             if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_SECOND_SIGNATURE) {
                 return setImmediate(cb, e.toString());
             }
-            this.scope.logger.error('Transaction verify second signature error');
-
+            self.scope.logger.error('Transaction verify second signature error');
         }
 
         if (!valid) {
             if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_SECOND_SIGNATURE) {
                 return setImmediate(cb, 'Failed to verify second signature');
-            } else {
-                this.scope.logger.error('Failed to verify second signature');
             }
+            self.scope.logger.error('Failed to verify second signature');
         }
     }
 
     // Check that signatures are unique
     if (trs.signatures && trs.signatures.length) {
-        let signatures = trs.signatures.reduce(function (p, c) {
+        const signatures = trs.signatures.reduce((p, c) => {
             if (p.indexOf(c) < 0) {
                 p.push(c);
             }
@@ -605,9 +624,8 @@ Transaction.prototype.verifyFields = function ({ trs, sender, requester = {}, cb
         if (signatures.length !== trs.signatures.length) {
             if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_SIGNATURE_UNIQUE) {
                 return setImmediate(cb, 'Encountered duplicate signature in transaction');
-            } else {
-                this.scope.logger.error('Encountered duplicate signature in transaction');
             }
+            self.scope.logger.error('Encountered duplicate signature in transaction');
         }
     }
 
@@ -621,7 +639,7 @@ Transaction.prototype.verifyFields = function ({ trs, sender, requester = {}, cb
                     continue;
                 }
 
-                if (this.verifySignature(trs, multisignatures[s], trs.signatures[d])) {
+                if (self.verifySignature(trs, multisignatures[s], trs.signatures[d])) {
                     valid = true;
                 }
             }
@@ -629,20 +647,23 @@ Transaction.prototype.verifyFields = function ({ trs, sender, requester = {}, cb
             if (!valid) {
                 if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_MULTISIGNATURE) {
                     return setImmediate(cb, 'Failed to verify multisignature');
-                } else {
-                    this.scope.logger.error('Failed to verify multisignature');
                 }
+                self.scope.logger.error('Failed to verify multisignature');
             }
         }
     }
 
     // Check amount
-    if (trs.amount < 0 || trs.amount > constants.totalAmount || String(trs.amount).indexOf('.') >= 0 || trs.amount.toString().indexOf('e') >= 0) {
+    if (
+        trs.amount < 0 ||
+        trs.amount > constants.totalAmount ||
+        String(trs.amount).indexOf('.') >= 0 ||
+        trs.amount.toString().indexOf('e') >= 0
+    ) {
         if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_AMOUNT) {
             return setImmediate(cb, 'Invalid transaction amount');
         }
-        this.scope.logger.error('Invalid transaction amount');
-
+        self.scope.logger.error('Invalid transaction amount');
     }
 
     // Check timestamp
@@ -650,8 +671,7 @@ Transaction.prototype.verifyFields = function ({ trs, sender, requester = {}, cb
         if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_TIMESTAMP) {
             return setImmediate(cb, 'Invalid transaction timestamp. Timestamp is in the future');
         }
-        this.scope.logger.error('Invalid transaction timestamp. Timestamp is in the future');
-
+        self.scope.logger.error('Invalid transaction timestamp. Timestamp is in the future');
     }
 
     setImmediate(cb);
@@ -736,7 +756,7 @@ Transaction.prototype.verifyUnconfirmed = function ({ trs, sender, requester = {
     // Check sender not able to do transaction on froze amount
     const amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
 
-    const senderBalance = self.checkBalance(amount, 'u_balance', trs, sender);
+    const senderBalance = self.checkBalance(amount, true, trs, sender);
 
     if (senderBalance.exceeded) {
         if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_SENDER_BALANCE) {
