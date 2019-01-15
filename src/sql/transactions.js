@@ -15,7 +15,32 @@ const TransactionsSql = {
 
     count: 'SELECT count(1) AS "count" FROM trs',
 
-    getTransactionHistory: 'SELECT serie.day AS "time", COUNT(t."timestamp") AS count, SUM(t."amount" + t."stakedAmount") AS "amount" FROM ( SELECT date_series::date AS "day" FROM generate_series(to_timestamp(${startTimestamp})::date,to_timestamp(${endTimestamp})::date, \'1 day\') AS "date_series") AS "serie" LEFT JOIN trs t ON (t."timestamp"+${epochTime})::abstime::date = serie.day::date GROUP  BY serie.day order by time',
+    getTransactionHistory : 'WITH transactions AS (' +
+        '    SELECT' +
+        '      t.truncated_date AS time,' +
+        '      count(1)         AS count,' +
+        '      sum(t."amount")  AS "amount"' +
+        '    FROM (' +
+        '           SELECT' +
+        '             (trs."timestamp" + ${epochTime}) :: ABSTIME :: DATE AS truncated_date,' +
+        '             trs."amount" + trs."stakedAmount"                   AS amount' +
+        '           FROM trs' +
+        '           WHERE trs.timestamp BETWEEN ${startTimestamp} - ${epochTime}' +
+        '                 AND ${endTimestamp} - ${epochTime}' +
+        '         ) t' +
+        '    GROUP BY t.truncated_date' +
+        ')' +
+        'SELECT' +
+        ' day_series AS time,' +
+        ' coalesce(count,0) AS count,' +
+        ' amount' +
+        ' FROM generate_series(' +
+        '         to_timestamp(${startTimestamp}) :: ABSTIME :: DATE,' +
+        '         (to_timestamp(${endTimestamp}) + INTERVAL \'1 day\') :: ABSTIME :: DATE,' +
+        '         \'1 day\'' +
+        '     ) AS day_series' +
+        ' LEFT JOIN transactions ON day_series = transactions.time' +
+        ' ORDER BY time;',
 
     countById: 'SELECT COUNT("id")::int AS "count" FROM trs WHERE "id" = ${id}',
 
