@@ -24,6 +24,7 @@
     "no-continue": "off",
     "no-plusplus": "off",
     "no-throw-literal": "off",
-    "new-cap": "warn"
+    "new-cap": "warn",
+    "no-template-curly-in-string": "off"
   }
 }

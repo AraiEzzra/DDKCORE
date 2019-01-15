@@ -6,9 +6,9 @@ const Inserts = require('../../helpers/inserts.js');
 const sql = require('../../sql/blocks.js');
 const utils = require('../../utils');
 
-let modules,
-    library,
-    self;
+let modules;
+let library;
+let self;
 const __private = {};
 
 /**
@@ -102,9 +102,9 @@ Chain.prototype.saveBlock = function (block, cb) {
     }).then(() =>
         // Execute afterSave for transactions
         __private.afterSave(block, cb)).catch((err) => {
-        library.logger.error(err.stack);
-        return setImmediate(cb, 'Blocks#saveBlock error');
-    });
+            library.logger.error(err.stack);
+            return setImmediate(cb, 'Blocks#saveBlock error');
+        });
 };
 
 /**
@@ -122,7 +122,9 @@ __private.afterSave = function (block, cb) {
     library.bus.message('transactionsSaved', block.transactions);
     // Execute afterSave callbacks for each transaction, depends on tx type
     // see: logic.outTransfer.afterSave, logic.dapp.afterSave
-    async.eachSeries(block.transactions, (transaction, cb) => library.logic.transaction.afterSave(transaction, cb), err => setImmediate(cb, err));
+    async.eachSeries(block.transactions,
+        (transaction, cb) => library.logic.transaction.afterSave(transaction, cb),
+            err => setImmediate(cb, err));
 };
 
 /**
@@ -217,7 +219,7 @@ Chain.prototype.deleteBlock = function (blockId, cb) {
         });
         return setImmediate(cb);
     }).catch((err) => {
-        library.logger.error(`Error Message : ${err.message} , Error query : ${err.query} , Error stack : ${err.stack}`);
+        library.logger.error(`Error Message : ${err.message}, Error query : ${err.query}, Error stack : ${err.stack}`);
         return setImmediate(cb, 'Blocks#deleteBlock error');
     });
 };
@@ -262,7 +264,9 @@ Chain.prototype.applyGenesisBlock = function (block, cb) {
         return 0;
     });
     // Initialize block progress tracker
-    const tracker = modules.blocks.utils.getBlockProgressLogger(block.transactions.length, block.transactions.length / 100, 'Genesis block loading');
+    const tracker = modules.blocks.utils.getBlockProgressLogger(
+        block.transactions.length, block.transactions.length / 100, 'Genesis block loading'
+    );
     async.eachSeries(block.transactions, (transaction, cb) => {
         // Apply transactions through setAccountAndGet, bypassing unconfirmed/confirmed states
         // FIXME: Poor performance - every transaction cause SQL query to be executed
@@ -501,7 +505,9 @@ Chain.prototype.applyBlock = function (block, broadcast, cb, saveBlock) {
         // TODO: See undoUnconfirmedList discussion above.
         applyUnconfirmedIds(seriesCb) {
             // DATABASE write
-            modules.transactions.applyUnconfirmedIds(Array.from(unconfirmedTransactionIds), err => setImmediate(seriesCb, err));
+            modules.transactions.applyUnconfirmedIds(
+                Array.from(unconfirmedTransactionIds), err => setImmediate(seriesCb, err)
+            );
         },
     }, (err) => {
         // Allow shutdown, database writes are finished.

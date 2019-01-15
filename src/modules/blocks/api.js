@@ -4,10 +4,10 @@ const OrderBy = require('../../helpers/orderBy.js');
 const schema = require('../../schema/blocks.js');
 const sql = require('../../sql/blocks.js');
 
-let modules,
-    library,
-    self,
-    __private = {};
+let modules;
+let library;
+let self;
+const __private = {};
 
 __private.blockReward = new BlockReward();
 
@@ -52,19 +52,21 @@ function API(logger, db, block, schema, dbSequence) {
  * @return {Object}   cb.block Block object
  */
 __private.getById = function (id, cb) {
-    library.db.query(sql.getById, { id }).then((rows) => {
-        if (!rows.length) {
-            return setImmediate(cb, 'Block not found');
-        }
+    library.db.query(sql.getById, { id })
+        .then((rows) => {
+            if (!rows.length) {
+                return setImmediate(cb, 'Block not found');
+            }
 
-        // Normalize block
-        const block = library.logic.block.dbRead(rows[0]);
+            // Normalize block
+            const block = library.logic.block.dbRead(rows[0]);
 
-        return setImmediate(cb, null, block);
-    }).catch((err) => {
-        library.logger.error(err.stack);
-        return setImmediate(cb, 'Blocks#getById error');
-    });
+            return setImmediate(cb, null, block);
+        })
+        .catch((err) => {
+            library.logger.error(err.stack);
+            return setImmediate(cb, 'Blocks#getById error');
+        });
 };
 
 /**
@@ -90,8 +92,8 @@ __private.getById = function (id, cb) {
  * @return {Object}   cb.data List of normalized blocks
  */
 __private.list = function (filter, cb) {
-    let params = {},
-        where = [];
+    const params = {};
+    const where = [];
 
     if (filter.generatorPublicKey) {
         where.push('"b_generatorPublicKey"::bytea = ${generatorPublicKey}');
@@ -161,36 +163,40 @@ __private.list = function (filter, cb) {
 
     library.db.query(sql.countList({
         where
-    }), params).then((rows) => {
-        const count = rows[0].count;
+    }), params)
+        .then((rows) => {
+            const count = rows[0].count;
 
-        library.db.query(sql.list({
-            where,
-            sortField: orderBy.sortField,
-            sortMethod: orderBy.sortMethod
-        }), params).then((rows) => {
-            const blocks = [];
+            library.db.query(sql.list({
+                where,
+                sortField: orderBy.sortField,
+                sortMethod: orderBy.sortMethod
+            }), params)
+                .then((rows) => {
+                    const blocks = [];
 
-            // Normalize blocks
-            for (let i = 0; i < rows.length; i++) {
-                // FIXME: Can have poor performance because it performs SHA256 hash calculation for each block
-                blocks.push(library.logic.block.dbRead(rows[i]));
-            }
+                    // Normalize blocks
+                    for (let i = 0; i < rows.length; i++) {
+                        // FIXME: Can have poor performance because it performs SHA256 hash calculation for each block
+                        blocks.push(library.logic.block.dbRead(rows[i]));
+                    }
 
-            const data = {
-                blocks,
-                count
-            };
+                    const data = {
+                        blocks,
+                        count
+                    };
 
-            return setImmediate(cb, null, data);
-        }).catch((err) => {
+                    return setImmediate(cb, null, data);
+                })
+                .catch((err) => {
+                    library.logger.error(err.stack);
+                    return setImmediate(cb, 'Blocks#list error');
+                });
+        })
+        .catch((err) => {
             library.logger.error(err.stack);
             return setImmediate(cb, 'Blocks#list error');
         });
-    }).catch((err) => {
-        library.logger.error(err.stack);
-        return setImmediate(cb, 'Blocks#list error');
-    });
 };
 
 
@@ -289,22 +295,23 @@ API.prototype.getMilestone = function (req, cb) {
         return setImmediate(cb, 'Blockchain is loading');
     }
 
-    return setImmediate(cb, null, { milestone: __private.blockReward.calcMilestone(modules.blocks.lastBlock.get().height) });
+    return setImmediate(cb, null, {
+        milestone: __private.blockReward.calcMilestone(modules.blocks.lastBlock.get().height)
+    });
 };
 
 API.prototype.getReward = function (req, cb) {
     if (!__private.loaded) {
         return setImmediate(cb, 'Blockchain is loading');
     }
-
-    return setImmediate(cb, null, { reward: 0 });// __private.blockReward.calcReward(modules.blocks.lastBlock.get().height)}
+    return setImmediate(cb, null, { reward: 0 });
+    // __private.blockReward.calcReward(modules.blocks.lastBlock.get().height)}
 };
 
 API.prototype.getSupply = function (req, cb) {
     if (!__private.loaded) {
         return setImmediate(cb, 'Blockchain is loading');
     }
-
     return setImmediate(cb, null, { supply: __private.blockReward.calcSupply(modules.blocks.lastBlock.get().height) });
 };
 
