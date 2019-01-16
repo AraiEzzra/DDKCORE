@@ -238,6 +238,8 @@ Vote.prototype.verifyFields = function (trs, sender, cb) {
  * calls checkConfirmedDelegates.
  */
 Vote.prototype.verify = function (trs, sender, cb) {
+    const VVE = constants.VOTE_VALIDATION_ENABLED;
+
     async.series([
         function (seriesCb) {
             self.verifyFields(trs, sender, seriesCb);
@@ -249,7 +251,7 @@ Vote.prototype.verify = function (trs, sender, cb) {
                 if (totals.reward !== trs.asset.reward) {
                     const msg = 'Verify failed: vote reward is corrupted';
                     if (VVE.VOTE_REWARD_CORRUPTED) {
-                        throw msg;
+                        return setImmediate(seriesCb, msg);
                     } else {
                         library.logger.error(`${msg}!\n${{
                             id: trs.id,
@@ -264,7 +266,7 @@ Vote.prototype.verify = function (trs, sender, cb) {
                 if (totals.unstake !== trs.asset.unstake) {
                     const msg = 'Verify failed: vote unstake is corrupted';
                     if (VVE.VOTE_UNSTAKE_CORRUPTED) {
-                        throw msg;
+                        return setImmediate(seriesCb, msg);
                     } else {
                         library.logger.error(`${msg}! ${{
                             id: trs.id,
@@ -282,7 +284,7 @@ Vote.prototype.verify = function (trs, sender, cb) {
                 await library.frozen.verifyAirdrop(trs);
             } catch (error) {
                 if (VVE.VOTE_AIRDROP_CORRUPTED) {
-                    throw error;
+                    return setImmediate(seriesCb, error);
                 } else {
                     library.logger.error(`trs.id ${trs.id}, ${error}`);
                 }
