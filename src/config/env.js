@@ -32,7 +32,8 @@ module.exports = {
         secret: env.SESSION_SECRET
     },
     app: {
-        port: parseInt(env.PORT, 10)
+        port: parseInt(env.PORT, 10),
+        portCore: parseInt(env.PORT_CORE, 10) || 7008,
     },
     peers: {
         list: (env.PEERS || '').split(',').map(peer => peer.split(':')).map(([ip, port]) => ({ ip, port })),
