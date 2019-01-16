@@ -184,9 +184,9 @@ __private.promiseTransactions = async function (t, block) {
 
     const promises = [];
 
-    block.transactions.map(async (trs) => {
+    for (const trs of block.transactions) {
         promises.push(...await transactionIterator(trs));
-    });
+    }
 
     _.each(_.groupBy(promises, promiseGrouper), typeIterator);
 

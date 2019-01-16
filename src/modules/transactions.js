@@ -824,7 +824,7 @@ Transactions.prototype.shared = {
             const publicKey = keypair.publicKey.toString('hex');
 
             if (req.body.publicKey) {
-                if (keypair.publicKey.toString('hex') !== req.body.publicKey) {
+                if (publicKey !== req.body.publicKey) {
                     return setImmediate(cb, 'Invalid passphrase');
                 }
             }
@@ -862,7 +862,7 @@ Transactions.prototype.shared = {
                             return setImmediate(cb, 'Invalid recipient');
                         }
 
-                        if (req.body.multisigAccountPublicKey && req.body.multisigAccountPublicKey !== keypair.publicKey.toString('hex')) {
+                        if (req.body.multisigAccountPublicKey && req.body.multisigAccountPublicKey !== publicKey) {
                             modules.accounts.getAccount({ publicKey: req.body.multisigAccountPublicKey }, (err, account) => {
                                 if (err) {
                                     return setImmediate(cb, err);
@@ -876,7 +876,7 @@ Transactions.prototype.shared = {
                                     return setImmediate(cb, 'Account does not have multisignatures enabled');
                                 }
 
-                                if (account.multisignatures.indexOf(keypair.publicKey.toString('hex')) < 0) {
+                                if (account.multisignatures.indexOf(publicKey) < 0) {
                                     return setImmediate(cb, 'Account does not belong to multisignature group');
                                 }
 
@@ -920,7 +920,7 @@ Transactions.prototype.shared = {
                                 });
                             });
                         } else {
-                            modules.accounts.setAccountAndGet({ publicKey: keypair.publicKey.toString('hex') }, (err, account) => {
+                            modules.accounts.setAccountAndGet({ publicKey: publicKey }, (err, account) => {
                                 if (err) {
                                     return setImmediate(cb, err);
                                 }

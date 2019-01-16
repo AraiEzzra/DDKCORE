@@ -516,8 +516,7 @@ Accounts.prototype.shared = {
             }
 
             const hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
-            const keypair = library.ed.makeKeypair(hash);
-            const publicKey = keypair.publicKey.toString('hex');
+            const publicKey = library.ed.makePublicKeyHex(hash);
 
             return setImmediate(cb, err, {
                 publicKey
@@ -576,7 +575,7 @@ Accounts.prototype.shared = {
             }
 
             library.balancesSequence.add((cb) => {
-                if (req.body.multisigAccountPublicKey && req.body.multisigAccountPublicKey !== keypair.publicKey.toString('hex')) {
+                if (req.body.multisigAccountPublicKey && req.body.multisigAccountPublicKey !== publicKey) {
                     modules.accounts.getAccount({ publicKey: req.body.multisigAccountPublicKey }, (err, account) => {
                         if (err) {
                             return setImmediate(cb, err);
@@ -590,7 +589,7 @@ Accounts.prototype.shared = {
                             return setImmediate(cb, 'Account does not have multisignatures enabled');
                         }
 
-                        if (account.multisignatures.indexOf(keypair.publicKey.toString('hex')) < 0) {
+                        if (account.multisignatures.indexOf(publicKey) < 0) {
                             return setImmediate(cb, 'Account does not belong to multisignature group');
                         }
 
@@ -653,7 +652,7 @@ Accounts.prototype.shared = {
                         });
                     });
                 } else {
-                    self.setAccountAndGet({ publicKey: keypair.publicKey.toString('hex') }, (err, account) => {
+                    self.setAccountAndGet({ publicKey: publicKey }, (err, account) => {
                         if (err) {
                             return setImmediate(cb, err);
                         }
@@ -958,9 +957,8 @@ Accounts.prototype.shared = {
             return setImmediate(cb, 'secret is missing');
         }
         const hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
-        const keypair = library.ed.makeKeypair(hash);
-        const publicKey = keypair.publicKey.toString('hex');
-        const address = self.generateAddressByPublicKey(publicKey);
+        const publicKey = library.ed.makePublicKeyHex(hash);
+        let address = self.generateAddressByPublicKey(publicKey);
         library.db.query(sql.findTrsUser, {
             senderId: address
         })
@@ -1263,8 +1261,8 @@ Accounts.prototype.internal = {
             return setImmediate(cb, 'otp is missing');
         }
         const hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
-        const keypair = library.ed.makeKeypair(hash);
-        const publicKey = keypair.publicKey.toString('hex');
+        const publicKey = library.ed.makePublicKeyHex(hash);
+
         user.address = modules.accounts.generateAddressByPublicKey(publicKey);
         library.cache.client.get(`2fa_user_${  user.address}`, (err, userCred) => {
             if (err) {
