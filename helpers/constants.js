@@ -14,7 +14,7 @@ const constants = {
         MAX_TRANSACTION_LENGTH: true,
         MAX_TRANSACTION_IN_BLOCK: true,
         MAX_TRANSACTION_DUPLICATE: true,
-        INVALID_HASH: false,
+        INVALID_HASH: true,
         TOTAL_AMOUNT: true,
         TOTAL_FEE: true,
     },

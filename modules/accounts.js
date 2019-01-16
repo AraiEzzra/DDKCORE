@@ -1,5 +1,4 @@
-
-
+const Cache = require('./cache.js');
 let bignum = require('../helpers/bignum.js');
 let constants = require('../helpers/constants.js');
 let crypto = require('crypto');
@@ -22,6 +21,8 @@ let mailServices = require('../helpers/postmark');
 let modules, library, self, __private = {}, shared = {};
 let frogings_sql = require('../sql/frogings');
 const DDK_DATA_EXPIRE = 300;
+const TOTAL_ACCOUNT = 'TOTAL_ACCOUNT';
+const TOTAL_ACCOUNT_EXPIRE = 300;
 
 __private.assetTypes = {};
 
@@ -37,32 +38,32 @@ __private.assetTypes = {};
  * @return {setImmediateCallback} Callback function with `self` as data.
  */
 function Accounts(cb, scope) {
-	library = {
-		ed: scope.ed,
-		db: scope.db,
-		cache: scope.cache,
-		logger: scope.logger,
-		schema: scope.schema,
-		balancesSequence: scope.balancesSequence,
-		logic: {
-			account: scope.logic.account,
-			transaction: scope.logic.transaction,
-			contract: scope.logic.contract,
-			vote: scope.logic.vote
-		},
-		config: scope.config
-	};
-	self = this;
+    library = {
+        ed: scope.ed,
+        db: scope.db,
+        cache: scope.cache,
+        logger: scope.logger,
+        schema: scope.schema,
+        balancesSequence: scope.balancesSequence,
+        logic: {
+            account: scope.logic.account,
+            transaction: scope.logic.transaction,
+            contract: scope.logic.contract,
+            vote: scope.logic.vote
+        },
+        config: scope.config
+    };
+    self = this;
 
-	__private.assetTypes[transactionTypes.VOTE] = library.logic.transaction.attachAssetType(
-		transactionTypes.VOTE,
-		new Vote(
-			scope.logger,
-			scope.schema,
+    __private.assetTypes[transactionTypes.VOTE] = library.logic.transaction.attachAssetType(
+        transactionTypes.VOTE,
+        new Vote(
+            scope.logger,
+            scope.schema,
             scope.db,
-			scope.logic.frozen
-		)
-	);
+            scope.logic.frozen
+        )
+    );
 
     __private.assetTypes[transactionTypes.REFERRAL] = library.logic.transaction.attachAssetType(
         transactionTypes.REFERRAL,
@@ -74,7 +75,7 @@ function Accounts(cb, scope) {
         )
     );
 
-	setImmediate(cb, null, self);
+    setImmediate(cb, null, self);
 }
 
 /**
@@ -87,52 +88,73 @@ function Accounts(cb, scope) {
  * @returns {setImmediateCallback} As per logic new|current account data object.
  */
 __private.openAccount = function (body, cb) {
-	let hash = crypto.createHash('sha256').update(body.secret, 'utf8').digest();
-	let keypair = library.ed.makeKeypair(hash);
-	let publicKey = keypair.publicKey.toString('hex');
+    let hash = crypto.createHash('sha256').update(body.secret, 'utf8').digest();
+    let keypair = library.ed.makeKeypair(hash);
+    let publicKey = keypair.publicKey.toString('hex');
 
-	self.getAccount({ publicKey: publicKey }, function (err, account) {
-		if (err) {
-			return setImmediate(cb, err);
-		}
+    self.getAccount({publicKey: publicKey}, function (err, account) {
+        if (err) {
+            return setImmediate(cb, err);
+        }
 
-		if (account) {
-			if (account.publicKey == null) {
-				account.publicKey = publicKey;
-			}
-			return setImmediate(cb, null, account);
-		} else {
-			let account = {
-				address: self.generateAddressByPublicKey(publicKey),
-				u_balance: '0',
-				balance: '0',
-				publicKey: publicKey,
-				u_secondSignature: 0,
-				secondSignature: 0,
-				secondPublicKey: null,
-				multisignatures: null,
-				u_multisignatures: null
-			};
+        if (account) {
+            if (account.publicKey == null) {
+                account.publicKey = publicKey;
+            }
+            return setImmediate(cb, null, account);
+        } else {
+            let account = {
+                address: self.generateAddressByPublicKey(publicKey),
+                u_balance: '0',
+                balance: '0',
+                publicKey: publicKey,
+                u_secondSignature: 0,
+                secondSignature: 0,
+                secondPublicKey: null,
+                multisignatures: null,
+                u_multisignatures: null
+            };
 
-			self.verifyReferral(body.referal, account.address).then(() => {
-				library.logic.transaction.create({
-					type: transactionTypes.REFERRAL,
-					sender: account,
-					keypair: keypair,
-					referral: body.referal,
-				}).then((referralTransaction) => {
-					modules.transactions.receiveTransactions([referralTransaction], true, (err) => {
-						return setImmediate(cb, null, account);
-					});
-				}).catch((err) => {
-					throw err;
-				});
-			}).catch((err) => {
-				library.logger.error("Referral API Error: " + err);
-				return setImmediate(cb, err.toString());
-			});
-		}
-	});
+            self.verifyReferral(body.referal, account.address).then(() => {
+                library.logic.transaction.create({
+                    type: transactionTypes.REFERRAL,
+                    sender: account,
+                    keypair: keypair,
+                    referral: body.referal,
+                }).then((referralTransaction) => {
+                    modules.transactions.receiveTransactions([referralTransaction], true, (err) => {
+                        return setImmediate(cb, null, account);
+                    });
+                }).catch((err) => {
+                    throw err;
+                });
+            }).catch((err) => {
+                library.logger.error("Referral API Error: " + err);
+                return setImmediate(cb, err.toString());
+            });
+        }
+    });
+};
+
+__private.getTotalAccountFromCache = async function () {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const resultFromCache = await Cache.prototype.getJsonForKeyAsync(TOTAL_ACCOUNT);
+
+            if (resultFromCache !== null) {
+                resolve(resultFromCache);
+            }
+
+            const row = await library.db.one(sql.getTotalAccount);
+
+            await Cache.prototype.setJsonForKeyAsync(
+                TOTAL_ACCOUNT, row, TOTAL_ACCOUNT_EXPIRE
+            );
+            resolve(row);
+        } catch (err) {
+            reject(err);
+        }
+    });
 };
 
 /**
@@ -142,20 +164,20 @@ __private.openAccount = function (body, cb) {
  * @throws {string} If address is invalid throws `Invalid public key`.
  */
 Accounts.prototype.generateAddressByPublicKey = function (publicKey) {
-	let publicKeyHash = crypto.createHash('sha256').update(publicKey, 'hex').digest();
-	let temp = Buffer.alloc(8);
+    let publicKeyHash = crypto.createHash('sha256').update(publicKey, 'hex').digest();
+    let temp = Buffer.alloc(8);
 
-	for (let i = 0; i < 8; i++) {
-		temp[i] = publicKeyHash[7 - i];
-	}
+    for (let i = 0; i < 8; i++) {
+        temp[i] = publicKeyHash[7 - i];
+    }
 
-	let address = 'DDK' + bignum.fromBuffer(temp).toString();
+    let address = 'DDK' + bignum.fromBuffer(temp).toString();
 
-	if (!address) {
-		throw 'Invalid public key: ' + publicKey;
-	}
+    if (!address) {
+        throw 'Invalid public key: ' + publicKey;
+    }
 
-	return address;
+    return address;
 };
 
 /**
@@ -166,35 +188,35 @@ Accounts.prototype.generateAddressByPublicKey = function (publicKey) {
  * @param {function} cb - Callback function.
  */
 Accounts.prototype.getAccount = function (filter, fields, cb) {
-	if (filter.publicKey) {
-		filter.address = self.generateAddressByPublicKey(filter.publicKey);
-		delete filter.publicKey;
-	}
+    if (filter.publicKey) {
+        filter.address = self.generateAddressByPublicKey(filter.publicKey);
+        delete filter.publicKey;
+    }
 
-	library.logic.account.get(filter, fields, cb);
+    library.logic.account.get(filter, fields, cb);
 };
 
 Accounts.prototype.verifyReferral = async function (referralAddress, accountAddress) {
-	if (!referralAddress) {
-		return Promise.resolve();
-	}
+    if (!referralAddress) {
+        return Promise.resolve();
+    }
 
-	if (referralAddress === accountAddress) {
-		return Promise.reject('Introducer and sponsor cannot be same');
-	}
+    if (referralAddress === accountAddress) {
+        return Promise.reject('Introducer and sponsor cannot be same');
+    }
 
-	let referral;
-	try {
-		referral = await library.db.oneOrNone(sql.getUserByAddress, { address: referralAddress });
-	} catch (error) {
-		return Promise.reject('Cannot get account from db: ' + error.message);
-	}
+    let referral;
+    try {
+        referral = await library.db.oneOrNone(sql.getUserByAddress, {address: referralAddress});
+    } catch (error) {
+        return Promise.reject('Cannot get account from db: ' + error.message);
+    }
 
-	if (!referral) {
-		return Promise.reject('Referral does not found');
-	}
+    if (!referral) {
+        return Promise.reject('Referral does not found');
+    }
 
-	return Promise.resolve();
+    return Promise.resolve();
 };
 
 /**
@@ -205,7 +227,7 @@ Accounts.prototype.verifyReferral = async function (referralAddress, accountAddr
  * @param {function} cb - Callback function.
  */
 Accounts.prototype.getAccounts = function (filter, fields, cb) {
-	library.logic.account.getAll(filter, fields, cb);
+    library.logic.account.getAll(filter, fields, cb);
 };
 
 /**
@@ -218,43 +240,43 @@ Accounts.prototype.getAccounts = function (filter, fields, cb) {
  * @returns {function()} Call to logic.account.get().
  */
 Accounts.prototype.setAccountAndGet = function (data, cb) {
-	let address = data.address || null;
-	let err;
+    let address = data.address || null;
+    let err;
 
-	if (address === null) {
-		if (data.publicKey) {
-			address = self.generateAddressByPublicKey(data.publicKey);
-		} else {
-			err = 'Missing address or public key';
-		}
-	}
+    if (address === null) {
+        if (data.publicKey) {
+            address = self.generateAddressByPublicKey(data.publicKey);
+        } else {
+            err = 'Missing address or public key';
+        }
+    }
 
-	if (!address) {
-		err = 'Invalid public key';
-	}
+    if (!address) {
+        err = 'Invalid public key';
+    }
 
-	if (err) {
-		if (typeof cb === 'function') {
-			return setImmediate(cb, err);
-		} else {
-			throw err;
-		}
-	}
+    if (err) {
+        if (typeof cb === 'function') {
+            return setImmediate(cb, err);
+        } else {
+            throw err;
+        }
+    }
 
-	let REDIS_KEY_USER = "userAccountInfo_" + address;
+    let REDIS_KEY_USER = "userAccountInfo_" + address;
 
-	cache.prototype.isExists(REDIS_KEY_USER, function (err, isExist) {
-		if(!isExist) {
-			cache.prototype.setJsonForKey(REDIS_KEY_USER, address);
-		}
+    cache.prototype.isExists(REDIS_KEY_USER, function (err, isExist) {
+        if (!isExist) {
+            cache.prototype.setJsonForKey(REDIS_KEY_USER, address);
+        }
 
-		library.logic.account.set(address, data, function (err) {
-			if (err) {
-				return setImmediate(cb, err);
-			}
-			return library.logic.account.get({ address: address }, cb);
-		});
-	});
+        library.logic.account.set(address, data, function (err) {
+            if (err) {
+                return setImmediate(cb, err);
+            }
+            return library.logic.account.get({address: address}, cb);
+        });
+    });
 };
 
 /**
@@ -267,29 +289,29 @@ Accounts.prototype.setAccountAndGet = function (data, cb) {
  * @todo improve publicKey validation try/catch
  */
 Accounts.prototype.mergeAccountAndGet = function (data, cb) {
-	let address = data.address || null;
-	let err;
+    let address = data.address || null;
+    let err;
 
-	if (address === null) {
-		if (data.publicKey) {
-			address = self.generateAddressByPublicKey(data.publicKey);
-		} else {
-			err = 'Missing address or public key';
-		}
-	}
+    if (address === null) {
+        if (data.publicKey) {
+            address = self.generateAddressByPublicKey(data.publicKey);
+        } else {
+            err = 'Missing address or public key';
+        }
+    }
 
-	if (!address) {
-		err = 'Invalid public key';
-	}
+    if (!address) {
+        err = 'Invalid public key';
+    }
 
-	if (err) {
-		if (typeof cb === 'function') {
-			return setImmediate(cb, err);
-		} else {
-			throw err;
-		}
-	}
-	return library.logic.account.merge(address, data, cb);
+    if (err) {
+        if (typeof cb === 'function') {
+            return setImmediate(cb, err);
+        } else {
+            throw err;
+        }
+    }
+    return library.logic.account.merge(address, data, cb);
 };
 
 /**
@@ -301,7 +323,7 @@ Accounts.prototype.mergeAccountAndGet = function (data, cb) {
  * @todo verified function and arguments.
  */
 Accounts.prototype.sandboxApi = function (call, args, cb) {
-	sandboxHelper.callMethod(shared, call, args, cb);
+    sandboxHelper.callMethod(shared, call, args, cb);
 };
 
 // Events
@@ -311,31 +333,31 @@ Accounts.prototype.sandboxApi = function (call, args, cb) {
  * @param {modules} scope - Loaded modules.
  */
 Accounts.prototype.onBind = function (scope) {
-	modules = {
-		delegates: scope.delegates,
-		accounts: scope.accounts,
-		transactions: scope.transactions,
-		blocks: scope.blocks
-	};
+    modules = {
+        delegates: scope.delegates,
+        accounts: scope.accounts,
+        transactions: scope.transactions,
+        blocks: scope.blocks
+    };
 
-	__private.assetTypes[transactionTypes.VOTE].bind(
-		scope.delegates,
-		scope.rounds,
-		scope.accounts
-	);
+    __private.assetTypes[transactionTypes.VOTE].bind(
+        scope.delegates,
+        scope.rounds,
+        scope.accounts
+    );
 };
 /**
  * Checks if modules is loaded.
  * @return {boolean} true if modules is loaded
  */
 Accounts.prototype.isLoaded = function () {
-	return !!modules;
+    return !!modules;
 };
 
 Accounts.prototype.addressExists = async function (referrer_address) {
     let result;
     try {
-        result = await library.db.one(sql.validateReferSource, { referSource: referrer_address });
+        result = await library.db.one(sql.validateReferSource, {referSource: referrer_address});
         return result.address > 0;
     } catch (e) {
         return false;
@@ -348,409 +370,409 @@ Accounts.prototype.addressExists = async function (referrer_address) {
  * @see {@link http://apidocjs.com/}
  */
 Accounts.prototype.shared = {
-	open: function (req, cb) {
-		library.schema.validate(req.body, schema.open, async function (err) {
-			if (err) {
-				return setImmediate(cb, err[0].message);
-			}
+    open: function (req, cb) {
+        library.schema.validate(req.body, schema.open, async function (err) {
+            if (err) {
+                return setImmediate(cb, err[0].message);
+            }
 
             if (req.body.referal && !await self.addressExists(req.body.referal)) {
                 return setImmediate(cb, 'Referral Address is Invalid');
             }
 
-			__private.openAccount(req.body, function (err, account) {
-				if (!err) {
+            __private.openAccount(req.body, function (err, account) {
+                if (!err) {
 
-					let payload = {
-						secret: req.body.secret,
-						address: account.address
-					};
-					let token = jwt.sign(payload, library.config.jwt.secret, {
-						expiresIn: library.config.jwt.tokenLife,
-						mutatePayload: false
-					});
+                    let payload = {
+                        secret: req.body.secret,
+                        address: account.address
+                    };
+                    let token = jwt.sign(payload, library.config.jwt.secret, {
+                        expiresIn: library.config.jwt.tokenLife,
+                        mutatePayload: false
+                    });
 
-					let REDIS_KEY_USER_INFO_HASH = 'userAccountInfo_' + account.address;
+                    let REDIS_KEY_USER_INFO_HASH = 'userAccountInfo_' + account.address;
 
-					let accountData = {
-						address: account.address,
-						username: account.username,
-						unconfirmedBalance: account.u_balance,
-						balance: account.balance,
-						publicKey: account.publicKey,
-						unconfirmedSignature: account.u_secondSignature,
-						secondSignature: account.secondSignature,
-						secondPublicKey: account.secondPublicKey,
-						multisignatures: account.multisignatures,
-						u_multisignatures: account.u_multisignatures,
-						totalFrozeAmount: account.totalFrozeAmount,
-						groupBonus: account.group_bonus
-					};
+                    let accountData = {
+                        address: account.address,
+                        username: account.username,
+                        unconfirmedBalance: account.u_balance,
+                        balance: account.balance,
+                        publicKey: account.publicKey,
+                        unconfirmedSignature: account.u_secondSignature,
+                        secondSignature: account.secondSignature,
+                        secondPublicKey: account.secondPublicKey,
+                        multisignatures: account.multisignatures,
+                        u_multisignatures: account.u_multisignatures,
+                        totalFrozeAmount: account.totalFrozeAmount,
+                        groupBonus: account.group_bonus
+                    };
 
-					accountData.token = token;
+                    accountData.token = token;
 
-					if (req.body.email) {
-						let mailOptions = {
-							From: library.config.mailFrom,
-							To: req.body.email,
-							TemplateId: 8265220,
-							TemplateModel: {
-								"ddk": {
-									"username": req.body.email,
-									"ddk_address": accountData.address,
-									"public_key": accountData.publicKey
-								}
-							}
-						};
-						(async function () {
-							await mailServices.sendEmailWithTemplate(mailOptions, function (err) {
-								if (err) {
-									library.logger.error(err.stack);
-									return setImmediate(cb, err.toString());
-								}
-							});
-						})();
-					}
+                    if (req.body.email) {
+                        let mailOptions = {
+                            From: library.config.mailFrom,
+                            To: req.body.email,
+                            TemplateId: 8265220,
+                            TemplateModel: {
+                                "ddk": {
+                                    "username": req.body.email,
+                                    "ddk_address": accountData.address,
+                                    "public_key": accountData.publicKey
+                                }
+                            }
+                        };
+                        (async function () {
+                            await mailServices.sendEmailWithTemplate(mailOptions, function (err) {
+                                if (err) {
+                                    library.logger.error(err.stack);
+                                    return setImmediate(cb, err.toString());
+                                }
+                            });
+                        })();
+                    }
 
-					//library.cache.client.set('jwtToken_' + account.address, token, 'ex', 100);
-					/****************************************************************/
+                    //library.cache.client.set('jwtToken_' + account.address, token, 'ex', 100);
+                    /****************************************************************/
 
-					cache.prototype.isExists(REDIS_KEY_USER_INFO_HASH, function (err, isExist) {
-						if (!isExist) {
-							cache.prototype.setJsonForKey(REDIS_KEY_USER_INFO_HASH, accountData.address);
-							return setImmediate(cb, null, { account: accountData });
-						} else {
-							if (req.body.etps_user) {
-								library.db.none(sql.updateEtp, {
-									transfer_time: slots.getTime(),
-									address: accountData.address
-								}).then(function () {
-									return setImmediate(cb, null, {
-										account: accountData
-									});
-								}).catch(function (err) {
-									library.logger.error(err.stack);
-									return setImmediate(cb, err);
-								});
-							} else {
-								return setImmediate(cb, null, {
-									account: accountData
-								});
-							}
-						}
-					});
+                    cache.prototype.isExists(REDIS_KEY_USER_INFO_HASH, function (err, isExist) {
+                        if (!isExist) {
+                            cache.prototype.setJsonForKey(REDIS_KEY_USER_INFO_HASH, accountData.address);
+                            return setImmediate(cb, null, {account: accountData});
+                        } else {
+                            if (req.body.etps_user) {
+                                library.db.none(sql.updateEtp, {
+                                    transfer_time: slots.getTime(),
+                                    address: accountData.address
+                                }).then(function () {
+                                    return setImmediate(cb, null, {
+                                        account: accountData
+                                    });
+                                }).catch(function (err) {
+                                    library.logger.error(err.stack);
+                                    return setImmediate(cb, err);
+                                });
+                            } else {
+                                return setImmediate(cb, null, {
+                                    account: accountData
+                                });
+                            }
+                        }
+                    });
 
-				} else {
-					return setImmediate(cb, err);
-				}
-			});
-		});
-	},
+                } else {
+                    return setImmediate(cb, err);
+                }
+            });
+        });
+    },
 
-	getBalance: function (req, cb) {
-		library.schema.validate(req.body, schema.getBalance, function (err) {
-			if (err) {
-				return setImmediate(cb, err[0].message);
-			}
+    getBalance: function (req, cb) {
+        library.schema.validate(req.body, schema.getBalance, function (err) {
+            if (err) {
+                return setImmediate(cb, err[0].message);
+            }
 
-			self.getAccount({ address: req.body.address }, function (err, account) {
-				if (err) {
-					return setImmediate(cb, err);
-				}
+            self.getAccount({address: req.body.address}, function (err, account) {
+                if (err) {
+                    return setImmediate(cb, err);
+                }
 
-				let balance = account ? account.balance : '0';
-				let unconfirmedBalance = account ? account.u_balance : '0';
+                let balance = account ? account.balance : '0';
+                let unconfirmedBalance = account ? account.u_balance : '0';
 
-				return setImmediate(cb, null, { balance: balance, unconfirmedBalance: unconfirmedBalance });
-			});
-		});
-	},
+                return setImmediate(cb, null, {balance: balance, unconfirmedBalance: unconfirmedBalance});
+            });
+        });
+    },
 
-	getPublickey: function (req, cb) {
-		library.schema.validate(req.body, schema.getPublicKey, function (err) {
-			if (err) {
-				return setImmediate(cb, err[0].message);
-			}
+    getPublickey: function (req, cb) {
+        library.schema.validate(req.body, schema.getPublicKey, function (err) {
+            if (err) {
+                return setImmediate(cb, err[0].message);
+            }
 
-			self.getAccount({ address: req.body.address }, function (err, account) {
-				if (err) {
-					return setImmediate(cb, err);
-				}
+            self.getAccount({address: req.body.address}, function (err, account) {
+                if (err) {
+                    return setImmediate(cb, err);
+                }
 
-				if (!account || !account.publicKey) {
-					return setImmediate(cb, 'Account not found');
-				}
+                if (!account || !account.publicKey) {
+                    return setImmediate(cb, 'Account not found');
+                }
 
-				return setImmediate(cb, null, { publicKey: account.publicKey });
-			});
-		});
-	},
+                return setImmediate(cb, null, {publicKey: account.publicKey});
+            });
+        });
+    },
 
-	generatePublicKey: function (req, cb) {
-		library.schema.validate(req.body, schema.generatePublicKey, function (err) {
-			if (err) {
-				return setImmediate(cb, err[0].message);
-			}
+    generatePublicKey: function (req, cb) {
+        library.schema.validate(req.body, schema.generatePublicKey, function (err) {
+            if (err) {
+                return setImmediate(cb, err[0].message);
+            }
 
-			const hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
-			const keypair = library.ed.makeKeypair(hash);
-			const publicKey = keypair.publicKey.toString('hex');
+            const hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
+            const keypair = library.ed.makeKeypair(hash);
+            const publicKey = keypair.publicKey.toString('hex');
 
-			return setImmediate(cb, err, {
-				publicKey: publicKey
-			});
-		});
-	},
+            return setImmediate(cb, err, {
+                publicKey: publicKey
+            });
+        });
+    },
 
-	getDelegates: function (req, cb) {
-		library.schema.validate(req.body, schema.getDelegates, function (err) {
-			if (err) {
-				return setImmediate(cb, err[0].message);
-			}
+    getDelegates: function (req, cb) {
+        library.schema.validate(req.body, schema.getDelegates, function (err) {
+            if (err) {
+                return setImmediate(cb, err[0].message);
+            }
 
-			self.getAccount({ address: req.body.address }, function (err, account) {
-				if (err) {
-					return setImmediate(cb, err);
-				}
+            self.getAccount({address: req.body.address}, function (err, account) {
+                if (err) {
+                    return setImmediate(cb, err);
+                }
 
-				if (!account) {
-					return setImmediate(cb, 'Account not found');
-				}
+                if (!account) {
+                    return setImmediate(cb, 'Account not found');
+                }
 
-				if (account.delegates) {
-					modules.delegates.getDelegates(req.body, function (err, res) {
-						let delegates = res.delegates.filter(function (delegate) {
-							return account.delegates.indexOf(delegate.publicKey) !== -1;
-						});
+                if (account.delegates) {
+                    modules.delegates.getDelegates(req.body, function (err, res) {
+                        let delegates = res.delegates.filter(function (delegate) {
+                            return account.delegates.indexOf(delegate.publicKey) !== -1;
+                        });
 
-						return setImmediate(cb, null, { delegates: delegates });
-					});
-				} else {
-					return setImmediate(cb, null, { delegates: [] });
-				}
-			});
-		});
-	},
+                        return setImmediate(cb, null, {delegates: delegates});
+                    });
+                } else {
+                    return setImmediate(cb, null, {delegates: []});
+                }
+            });
+        });
+    },
 
-	getDelegatesFee: function (req, cb) {
-		return setImmediate(cb, null, { fee: constants.fees.delegate });
-	},
+    getDelegatesFee: function (req, cb) {
+        return setImmediate(cb, null, {fee: constants.fees.delegate});
+    },
 
-	addDelegates: function (req, cb) {
-		library.schema.validate(req.body, schema.addDelegates, function (err) {
-			if (err) {
-				return setImmediate(cb, err[0].message);
-			}
+    addDelegates: function (req, cb) {
+        library.schema.validate(req.body, schema.addDelegates, function (err) {
+            if (err) {
+                return setImmediate(cb, err[0].message);
+            }
 
-			let hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
-			let keypair = library.ed.makeKeypair(hash);
-			let publicKey = keypair.publicKey.toString('hex');
+            let hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
+            let keypair = library.ed.makeKeypair(hash);
+            let publicKey = keypair.publicKey.toString('hex');
 
-			if (req.body.publicKey) {
-				if (publicKey !== req.body.publicKey) {
-					return setImmediate(cb, 'Invalid passphrase');
-				}
-			}
+            if (req.body.publicKey) {
+                if (publicKey !== req.body.publicKey) {
+                    return setImmediate(cb, 'Invalid passphrase');
+                }
+            }
 
-			library.balancesSequence.add(function (cb) {
-				if (req.body.multisigAccountPublicKey && req.body.multisigAccountPublicKey !== keypair.publicKey.toString('hex')) {
-					modules.accounts.getAccount({ publicKey: req.body.multisigAccountPublicKey }, function (err, account) {
-						if (err) {
-							return setImmediate(cb, err);
-						}
+            library.balancesSequence.add(function (cb) {
+                if (req.body.multisigAccountPublicKey && req.body.multisigAccountPublicKey !== keypair.publicKey.toString('hex')) {
+                    modules.accounts.getAccount({publicKey: req.body.multisigAccountPublicKey}, function (err, account) {
+                        if (err) {
+                            return setImmediate(cb, err);
+                        }
 
-						if (!account || !account.publicKey) {
-							return setImmediate(cb, 'Multisignature account not found');
-						}
+                        if (!account || !account.publicKey) {
+                            return setImmediate(cb, 'Multisignature account not found');
+                        }
 
-						if (!account.multisignatures || !account.multisignatures) {
-							return setImmediate(cb, 'Account does not have multisignatures enabled');
-						}
+                        if (!account.multisignatures || !account.multisignatures) {
+                            return setImmediate(cb, 'Account does not have multisignatures enabled');
+                        }
 
-						if (account.multisignatures.indexOf(keypair.publicKey.toString('hex')) < 0) {
-							return setImmediate(cb, 'Account does not belong to multisignature group');
-						}
+                        if (account.multisignatures.indexOf(keypair.publicKey.toString('hex')) < 0) {
+                            return setImmediate(cb, 'Account does not belong to multisignature group');
+                        }
 
-						modules.accounts.getAccount({ publicKey: keypair.publicKey }, function (err, requester) {
-							if (err) {
-								return setImmediate(cb, err);
-							}
+                        modules.accounts.getAccount({publicKey: keypair.publicKey}, function (err, requester) {
+                            if (err) {
+                                return setImmediate(cb, err);
+                            }
 
-	                        // TODO change that if
-							if (account.totalFrozeAmount === 0) {
-								return setImmediate(cb, 'No Stake available');
-							}
+                            // TODO change that if
+                            if (account.totalFrozeAmount === 0) {
+                                return setImmediate(cb, 'No Stake available');
+                            }
 
-							if (!requester || !requester.publicKey) {
-								return setImmediate(cb, 'Requester not found');
-							}
+                            if (!requester || !requester.publicKey) {
+                                return setImmediate(cb, 'Requester not found');
+                            }
 
-							if (requester.secondSignature && !req.body.secondSecret) {
-								return setImmediate(cb, 'Missing requester second passphrase');
-							}
+                            if (requester.secondSignature && !req.body.secondSecret) {
+                                return setImmediate(cb, 'Missing requester second passphrase');
+                            }
 
-							if (requester.publicKey === account.publicKey) {
-								return setImmediate(cb, 'Invalid requester public key');
-							}
+                            if (requester.publicKey === account.publicKey) {
+                                return setImmediate(cb, 'Invalid requester public key');
+                            }
 
-							if (requester.totalFrozeAmount == 0) {
-								return setImmediate(cb, 'Please Stake before vote/unvote');
-							}
+                            if (requester.totalFrozeAmount == 0) {
+                                return setImmediate(cb, 'Please Stake before vote/unvote');
+                            }
 
-							let secondKeypair = null;
+                            let secondKeypair = null;
 
-							if (requester.secondSignature) {
-								let secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
-								secondKeypair = library.ed.makeKeypair(secondHash);
-							}
+                            if (requester.secondSignature) {
+                                let secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
+                                secondKeypair = library.ed.makeKeypair(secondHash);
+                            }
 
                             library.db.one(sql.countAvailableStakeOrdersForVote, {
                                 senderId: account.address,
                                 currentTime: slots.getTime()
                             }).then((queryResult) => {
-                                if(queryResult && queryResult.hasOwnProperty("count")) {
+                                if (queryResult && queryResult.hasOwnProperty("count")) {
                                     const count = parseInt(queryResult.count, 10);
                                     if (count <= 0) {
-                                    	throw 'No Stake available';
-									}
-									library.logic.transaction.create({
-										type: transactionTypes.VOTE,
-										votes: req.body.delegates,
-										sender: account,
-										keypair: keypair,
-										secondKeypair: secondKeypair,
-										requester: keypair
-									}).then((transactionVote) =>{
-										modules.transactions.receiveTransactions([transactionVote], true, cb);
-									}).catch((e) => {
-										throw e;
-									});
+                                        throw 'No Stake available';
+                                    }
+                                    library.logic.transaction.create({
+                                        type: transactionTypes.VOTE,
+                                        votes: req.body.delegates,
+                                        sender: account,
+                                        keypair: keypair,
+                                        secondKeypair: secondKeypair,
+                                        requester: keypair
+                                    }).then((transactionVote) => {
+                                        modules.transactions.receiveTransactions([transactionVote], true, cb);
+                                    }).catch((e) => {
+                                        throw e;
+                                    });
                                 }
                             }).catch((e) => {
                                 return setImmediate(cb, e.toString());
                             });
-						});
-					});
-				} else {
-					self.setAccountAndGet({ publicKey: keypair.publicKey.toString('hex') }, function (err, account) {
-						if (err) {
-							return setImmediate(cb, err);
-						}
+                        });
+                    });
+                } else {
+                    self.setAccountAndGet({publicKey: keypair.publicKey.toString('hex')}, function (err, account) {
+                        if (err) {
+                            return setImmediate(cb, err);
+                        }
                         // TODO change that if
-						if (account.totalFrozeAmount === 0) {
-							return setImmediate(cb, 'No Stake available');
-						}
+                        if (account.totalFrozeAmount === 0) {
+                            return setImmediate(cb, 'No Stake available');
+                        }
 
-						if (!account || !account.publicKey) {
-							return setImmediate(cb, 'Account not found');
-						}
+                        if (!account || !account.publicKey) {
+                            return setImmediate(cb, 'Account not found');
+                        }
 
-						if (account.secondSignature && !req.body.secondSecret) {
-							return setImmediate(cb, 'Invalid second passphrase');
-						}
+                        if (account.secondSignature && !req.body.secondSecret) {
+                            return setImmediate(cb, 'Invalid second passphrase');
+                        }
 
-						let secondKeypair = null;
+                        let secondKeypair = null;
 
-						if (account.secondSignature) {
-							let secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
-							secondKeypair = library.ed.makeKeypair(secondHash);
-						}
+                        if (account.secondSignature) {
+                            let secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
+                            secondKeypair = library.ed.makeKeypair(secondHash);
+                        }
 
-						if (account.totalFrozeAmount == 0) {
-							return setImmediate(cb, 'Please Stake before vote/unvote');
-						}
+                        if (account.totalFrozeAmount == 0) {
+                            return setImmediate(cb, 'Please Stake before vote/unvote');
+                        }
 
                         library.db.one(sql.countAvailableStakeOrdersForVote, {
                             senderId: account.address,
                             currentTime: slots.getTime()
                         }).then((queryResult) => {
-                            if(queryResult && queryResult.hasOwnProperty("count")) {
+                            if (queryResult && queryResult.hasOwnProperty("count")) {
                                 const count = parseInt(queryResult.count, 10);
                                 if (count <= 0) {
                                     throw 'No Stake available';
                                 }
-								library.logic.transaction.create({
-									type: transactionTypes.VOTE,
-									votes: req.body.delegates,
-									sender: account,
-									keypair: keypair,
-									secondKeypair: secondKeypair
-								}).then((transactionVote) =>{
-									modules.transactions.receiveTransactions([transactionVote], true, cb);
-								}).catch((e) => {
-									throw e;
-								});
+                                library.logic.transaction.create({
+                                    type: transactionTypes.VOTE,
+                                    votes: req.body.delegates,
+                                    sender: account,
+                                    keypair: keypair,
+                                    secondKeypair: secondKeypair
+                                }).then((transactionVote) => {
+                                    modules.transactions.receiveTransactions([transactionVote], true, cb);
+                                }).catch((e) => {
+                                    throw e;
+                                });
                             }
-						}).catch((e) => {
+                        }).catch((e) => {
                             return setImmediate(cb, e.toString());
-						});
-					});
-				}
-			}, function (err, transaction) {
-				if (err) {
-					return setImmediate(cb, err);
-				}
-				return setImmediate(cb, null, { transaction: transaction[0] });
-			});
-		});
-	},
+                        });
+                    });
+                }
+            }, function (err, transaction) {
+                if (err) {
+                    return setImmediate(cb, err);
+                }
+                return setImmediate(cb, null, {transaction: transaction[0]});
+            });
+        });
+    },
 
-	getAccount: function (req, cb) {
-		library.schema.validate(req.body, schema.getAccount, function (err) {
-			if (err) {
-				return setImmediate(cb, err[0].message);
-			}
+    getAccount: function (req, cb) {
+        library.schema.validate(req.body, schema.getAccount, function (err) {
+            if (err) {
+                return setImmediate(cb, err[0].message);
+            }
 
-			if (!req.body.address && !req.body.publicKey) {
-				return setImmediate(cb, 'Missing required property: address or publicKey');
-			}
+            if (!req.body.address && !req.body.publicKey) {
+                return setImmediate(cb, 'Missing required property: address or publicKey');
+            }
 
-			let address = req.body.publicKey ? self.generateAddressByPublicKey(req.body.publicKey) : req.body.address;
-			if (req.body.address && req.body.publicKey && address !== req.body.address) {
-				return setImmediate(cb, 'Account publicKey does not match address');
-			}
+            let address = req.body.publicKey ? self.generateAddressByPublicKey(req.body.publicKey) : req.body.address;
+            if (req.body.address && req.body.publicKey && address !== req.body.address) {
+                return setImmediate(cb, 'Account publicKey does not match address');
+            }
 
-			self.getAccount({ address: address }, function (err, account) {
-				if (err) {
-					return setImmediate(cb, err);
-				}
+            self.getAccount({address: address}, function (err, account) {
+                if (err) {
+                    return setImmediate(cb, err);
+                }
 
-				if (!account) {
-					return setImmediate(cb, 'Account not found');
-				}
+                if (!account) {
+                    return setImmediate(cb, 'Account not found');
+                }
 
-				return setImmediate(cb, null, {
-					account: {
-						address: account.address,
-						unconfirmedBalance: account.u_balance,
-						balance: account.balance,
-						publicKey: account.publicKey,
-						unconfirmedSignature: account.u_secondSignature,
-						secondSignature: account.secondSignature,
-						secondPublicKey: account.secondPublicKey,
-						multisignatures: account.multisignatures || [],
-						u_multisignatures: account.u_multisignatures || [],
-						totalFrozeAmount: account.totalFrozeAmount
-					}
-				});
-			});
-		});
-	},
+                return setImmediate(cb, null, {
+                    account: {
+                        address: account.address,
+                        unconfirmedBalance: account.u_balance,
+                        balance: account.balance,
+                        publicKey: account.publicKey,
+                        unconfirmedSignature: account.u_secondSignature,
+                        secondSignature: account.secondSignature,
+                        secondPublicKey: account.secondPublicKey,
+                        multisignatures: account.multisignatures || [],
+                        u_multisignatures: account.u_multisignatures || [],
+                        totalFrozeAmount: account.totalFrozeAmount
+                    }
+                });
+            });
+        });
+    },
 
-	totalAccounts: function (req, cb) {
-		library.db.one(sql.getTotalAccount)
-			.then(function (data) {
-				return setImmediate(cb, null, data);
-			})
-			.catch(function (err) {
-				library.logger.error(err.stack);
-				return setImmediate(cb, err.toString());
-			});
-	},
+    totalAccounts: function (req, cb) {
+        __private.getTotalAccountFromCache()
+            .then(function (data) {
+                return setImmediate(cb, null, data);
+            })
+            .catch(function (err) {
+                library.logger.error(err.stack);
+                return setImmediate(cb, err.toString());
+            });
+    },
 
-	getCirculatingSupply: function (req, cb) {
+    getCirculatingSupply: function (req, cb) {
         library.db.one(sql.getCurrentUnmined, {address: library.config.forging.totalSupplyAccount})
-			.then(function (currentUnmined) {
+            .then(function (currentUnmined) {
                 let circulatingSupply = library.config.ddkSupply.totalSupply - currentUnmined.balance;
                 cache.prototype.getJsonForKey('minedContributorsBalance', function (err, contributorsBalance) {
                     let totalCirculatingSupply = parseInt(contributorsBalance) + circulatingSupply;
@@ -759,14 +781,14 @@ Accounts.prototype.shared = {
                         circulatingSupply: totalCirculatingSupply
                     });
                 });
-			})
+            })
             .catch(function (err) {
                 library.logger.error(err.stack);
                 return setImmediate(cb, err.toString());
             });
-	},
+    },
 
-	totalSupply: function (req, cb) {
+    totalSupply: function (req, cb) {
         library.db.one(sql.getCurrentUnmined, {address: library.config.forging.totalSupplyAccount})
             .then(function (currentUnmined) {
                 return setImmediate(cb, null, {
@@ -777,221 +799,221 @@ Accounts.prototype.shared = {
                 library.logger.error(err.stack);
                 return setImmediate(cb, err.toString());
             });
-	},
+    },
 
-	migrateData: function (req, cb) {
+    migrateData: function (req, cb) {
 
-		function getStakeOrderFromETPS(next) {
-			library.db.query(sql.getETPSStakeOrders, {
-				account_id: req.body.data.id
-			})
-				.then(function (orders) {
-					next(null, orders);
-				}).catch(function (err) {
-					library.logger.error(err.stack);
-					next(err, null);
-				});
-		}
+        function getStakeOrderFromETPS(next) {
+            library.db.query(sql.getETPSStakeOrders, {
+                account_id: req.body.data.id
+            })
+                .then(function (orders) {
+                    next(null, orders);
+                }).catch(function (err) {
+                library.logger.error(err.stack);
+                next(err, null);
+            });
+        }
 
-		function insertstakeOrder(order, next) {
+        function insertstakeOrder(order, next) {
 
-			let date = new Date((slots.getTime()) * 1000);
-			let nextVoteMilestone = (date.setMinutes(date.getMinutes() + constants.froze.vTime)) / 1000;
+            let date = new Date((slots.getTime()) * 1000);
+            let nextVoteMilestone = (date.setMinutes(date.getMinutes() + constants.froze.vTime)) / 1000;
 
-			library.db.none(sql.InsertStakeOrder, {
-				account_id: req.body.data.id,
-				startTime: (slots.getTime(order.insert_time)),
-				insertTime: slots.getTime(),
-				senderId: req.body.address,
-				freezedAmount: order.cost * 100000000,
-				rewardCount: order.month_count,
-				status: 1,
-				nextVoteMilestone: nextVoteMilestone
-			})
-				.then(function () {
-					next(null, null);
-				})
-				.catch(function (err) {
-					library.logger.error(err.stack);
-					next(err, null);
-				});
-		}
+            library.db.none(sql.InsertStakeOrder, {
+                account_id: req.body.data.id,
+                startTime: (slots.getTime(order.insert_time)),
+                insertTime: slots.getTime(),
+                senderId: req.body.address,
+                freezedAmount: order.cost * 100000000,
+                rewardCount: order.month_count,
+                status: 1,
+                nextVoteMilestone: nextVoteMilestone
+            })
+                .then(function () {
+                    next(null, null);
+                })
+                .catch(function (err) {
+                    library.logger.error(err.stack);
+                    next(err, null);
+                });
+        }
 
-		function insertStakeOrdersInETP(next, orders) {
+        function insertStakeOrdersInETP(next, orders) {
 
-			async.eachSeries(orders, function (order, eachSeriesCb) {
+            async.eachSeries(orders, function (order, eachSeriesCb) {
 
-				insertstakeOrder(order, function (err) {
-					if (err) {
-						next(err, null);
-					}else {
-						eachSeriesCb();
-					}
-				});
-			}, function (err) {
-				next(err, null);
-			});
-		}
+                insertstakeOrder(order, function (err) {
+                    if (err) {
+                        next(err, null);
+                    } else {
+                        eachSeriesCb();
+                    }
+                });
+            }, function (err) {
+                next(err, null);
+            });
+        }
 
-		function checkFrozeAmountsInStakeOrders(next) {
+        function checkFrozeAmountsInStakeOrders(next) {
 
-			library.db.one(sql.totalFrozeAmount, {
-				account_id: (req.body.data.id).toString()
-			})
-				.then(function (totalFrozeAmount) {
-					if (totalFrozeAmount) {
-						next(null, totalFrozeAmount);
-					} else {
-						next(null, 0);
-					}
-				}).catch(function (err) {
-					library.logger.error(err.stack);
-					next(err, null);
-				});
-		}
+            library.db.one(sql.totalFrozeAmount, {
+                account_id: (req.body.data.id).toString()
+            })
+                .then(function (totalFrozeAmount) {
+                    if (totalFrozeAmount) {
+                        next(null, totalFrozeAmount);
+                    } else {
+                        next(null, 0);
+                    }
+                }).catch(function (err) {
+                library.logger.error(err.stack);
+                next(err, null);
+            });
+        }
 
-		function updateMemAccountTable(next, totalFrozeAmount) {
+        function updateMemAccountTable(next, totalFrozeAmount) {
 
-			library.db.none(sql.updateUserInfo, {
-				address: req.body.address,
-				balance: parseInt(totalFrozeAmount.sum),
-				email: req.body.data.email,
-				phone: req.body.data.phone,
-				username: req.body.data.username,
-				country: req.body.data.country,
-				totalFrozeAmount: parseInt(totalFrozeAmount.sum),
-				group_bonus: req.body.group_bonus
-			})
-				.then(function () {
-					next(null, null);
-				})
-				.catch(function (err) {
-					library.logger.error(err.stack);
-					next(err, null);
-				});
-		}
+            library.db.none(sql.updateUserInfo, {
+                address: req.body.address,
+                balance: parseInt(totalFrozeAmount.sum),
+                email: req.body.data.email,
+                phone: req.body.data.phone,
+                username: req.body.data.username,
+                country: req.body.data.country,
+                totalFrozeAmount: parseInt(totalFrozeAmount.sum),
+                group_bonus: req.body.group_bonus
+            })
+                .then(function () {
+                    next(null, null);
+                })
+                .catch(function (err) {
+                    library.logger.error(err.stack);
+                    next(err, null);
+                });
+        }
 
-		function updateETPSUserDetail(next) {
-			let date = new Date((slots.getRealTime()));
+        function updateETPSUserDetail(next) {
+            let date = new Date((slots.getRealTime()));
 
-			library.db.none(sql.updateETPSUserInfo, {
-				userId: req.body.data.id,
-				insertTime: date
-			})
-				.then(function () {
-					next(null, null);
-				})
-				.catch(function (err) {
-					library.logger.error(err.stack);
-					next(err, null);
-				});
-		}
+            library.db.none(sql.updateETPSUserInfo, {
+                userId: req.body.data.id,
+                insertTime: date
+            })
+                .then(function () {
+                    next(null, null);
+                })
+                .catch(function (err) {
+                    library.logger.error(err.stack);
+                    next(err, null);
+                });
+        }
 
-		async.auto({
-			getStakeOrderFromETPS: function (next) {
-				getStakeOrderFromETPS(next);
-			},
-			insertStakeOrdersInETP: ['getStakeOrderFromETPS', function (results, next) {
-				insertStakeOrdersInETP(next, results.getStakeOrderFromETPS);
-			}],
-			checkFrozeAmountsInStakeOrders: ['insertStakeOrdersInETP', function (results, next) {
-				checkFrozeAmountsInStakeOrders(next, results);
-			}],
-			updateMemAccountTable: ['checkFrozeAmountsInStakeOrders', function (results, next) {
-				updateMemAccountTable(next, results.checkFrozeAmountsInStakeOrders);
-			}],
-			updateETPSUserDetail: ['updateMemAccountTable', function (results, next) {
-				updateETPSUserDetail(next, results);
-			}]
-		}, function (err) {
-			if (err){
-				library.logger.error(err.stack);
-				return setImmediate(cb, err.toString());
-			}
-			return setImmediate(cb, null, { success: true, message: 'Successfully migrated' });
-		});
+        async.auto({
+            getStakeOrderFromETPS: function (next) {
+                getStakeOrderFromETPS(next);
+            },
+            insertStakeOrdersInETP: ['getStakeOrderFromETPS', function (results, next) {
+                insertStakeOrdersInETP(next, results.getStakeOrderFromETPS);
+            }],
+            checkFrozeAmountsInStakeOrders: ['insertStakeOrdersInETP', function (results, next) {
+                checkFrozeAmountsInStakeOrders(next, results);
+            }],
+            updateMemAccountTable: ['checkFrozeAmountsInStakeOrders', function (results, next) {
+                updateMemAccountTable(next, results.checkFrozeAmountsInStakeOrders);
+            }],
+            updateETPSUserDetail: ['updateMemAccountTable', function (results, next) {
+                updateETPSUserDetail(next, results);
+            }]
+        }, function (err) {
+            if (err) {
+                library.logger.error(err.stack);
+                return setImmediate(cb, err.toString());
+            }
+            return setImmediate(cb, null, {success: true, message: 'Successfully migrated'});
+        });
 
-	},
+    },
 
-	validateExistingUser: function (req, cb) {
+    validateExistingUser: function (req, cb) {
 
-		let data = req.body.data;
-		let username = Buffer.from((data.split('&')[0]).split('=')[1], 'base64').toString();
-		let password = Buffer.from((data.split('&')[1]).split('=')[1], 'base64').toString();
+        let data = req.body.data;
+        let username = Buffer.from((data.split('&')[0]).split('=')[1], 'base64').toString();
+        let password = Buffer.from((data.split('&')[1]).split('=')[1], 'base64').toString();
 
-		let hashPassword = crypto.createHash('md5').update(password).digest('hex');
+        let hashPassword = crypto.createHash('md5').update(password).digest('hex');
 
-		library.db.one(sql.validateExistingUser, {
-			username: username,
-			password: hashPassword
-		}).then(function (userInfo) {
+        library.db.one(sql.validateExistingUser, {
+            username: username,
+            password: hashPassword
+        }).then(function (userInfo) {
 
-			library.db.one(sql.findPassPhrase, {
-				userName: username
-			}).then(function (user) {
+            library.db.one(sql.findPassPhrase, {
+                userName: username
+            }).then(function (user) {
 
-				return setImmediate(cb, null, {
-					success: true,
-					userInfo: user
-				});
-			}).catch(function (err) {
-				library.logger.error(err.stack);
-				return setImmediate(cb, 'Invalid username or password');
-			});
+                return setImmediate(cb, null, {
+                    success: true,
+                    userInfo: user
+                });
+            }).catch(function (err) {
+                library.logger.error(err.stack);
+                return setImmediate(cb, 'Invalid username or password');
+            });
 
-		}).catch(function (err) {
-			library.logger.error(err.stack);
-			return setImmediate(cb, 'Invalid username or password');
-		});
+        }).catch(function (err) {
+            library.logger.error(err.stack);
+            return setImmediate(cb, 'Invalid username or password');
+        });
 
-	},
+    },
 
-	verifyUserToComment: function (req, cb) {
-		if (!req.body.secret) {
-			return setImmediate(cb, 'secret is missing');
-		}
-		let hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
-		let keypair = library.ed.makeKeypair(hash);
-		let publicKey = keypair.publicKey.toString('hex');
-		let address = self.generateAddressByPublicKey(publicKey);
-		library.db.query(sql.findTrsUser, {
-			senderId: address
-		})
-			.then(function (trs) {
-				return setImmediate(cb, null, { address: trs[0].senderId });
-			})
-			.catch(function (err) {
-				return setImmediate(cb, err);
-			});
-	},
+    verifyUserToComment: function (req, cb) {
+        if (!req.body.secret) {
+            return setImmediate(cb, 'secret is missing');
+        }
+        let hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
+        let keypair = library.ed.makeKeypair(hash);
+        let publicKey = keypair.publicKey.toString('hex');
+        let address = self.generateAddressByPublicKey(publicKey);
+        library.db.query(sql.findTrsUser, {
+            senderId: address
+        })
+            .then(function (trs) {
+                return setImmediate(cb, null, {address: trs[0].senderId});
+            })
+            .catch(function (err) {
+                return setImmediate(cb, err);
+            });
+    },
 
-	senderAccountBalance: function(req, cb) {
-		library.db.query(sql.checkSenderBalance, {
-			sender_address: req.body.address
-		}).then(function(bal){
-			return setImmediate(cb, null, { balance: bal[0].balance });
-		}).catch(function(err){
-			return setImmediate(cb, err);
-		});
-	},
+    senderAccountBalance: function (req, cb) {
+        library.db.query(sql.checkSenderBalance, {
+            sender_address: req.body.address
+        }).then(function (bal) {
+            return setImmediate(cb, null, {balance: bal[0].balance});
+        }).catch(function (err) {
+            return setImmediate(cb, err);
+        });
+    },
 
-	getMigratedUsersList: function (req, cb) {
-		library.db.query(sql.getMigratedList, {
-				limit: req.body.limit,
-				offset: req.body.offset
-			})
-			.then(function (users) {
-				return setImmediate(cb, null, {
-					migratedList: users,
-					count: users.length ? users[0].user_count : 0
-				});
-			}).catch(function (err) {
-				return setImmediate(cb, err);
-			});
-	},
+    getMigratedUsersList: function (req, cb) {
+        library.db.query(sql.getMigratedList, {
+            limit: req.body.limit,
+            offset: req.body.offset
+        })
+            .then(function (users) {
+                return setImmediate(cb, null, {
+                    migratedList: users,
+                    count: users.length ? users[0].user_count : 0
+                });
+            }).catch(function (err) {
+            return setImmediate(cb, err);
+        });
+    },
 
     getDashboardDDKData: async function (req, cb) {
-		try {
+        try {
             const ddkCache = await cache.prototype.getJsonForKeyAsync('ddkCache');
 
             if (ddkCache) {
@@ -1010,13 +1032,13 @@ Accounts.prototype.shared = {
                 const results = await library.db.task(getDDKData);
 
                 const ddkData = await (async () => {
-					return new Promise((resolve, reject) => {
+                    return new Promise((resolve, reject) => {
                         Accounts.prototype.shared.getCirculatingSupply(req, function (err, data) {
                             if (err) {
                                 reject(err);
                             }
 
-                            resolve ({
+                            resolve({
                                 countStakeholders: results[0].count,
                                 totalDDKStaked: results[1].sum,
                                 totalAccountHolders: results[2].count,
@@ -1024,28 +1046,28 @@ Accounts.prototype.shared = {
                             });
 
                         });
-					});
-				})();
+                    });
+                })();
 
                 await cache.prototype.setJsonForKeyAsync('ddkCache', ddkData, DDK_DATA_EXPIRE);
                 setImmediate(cb, null, ddkData);
             }
         } catch (err) {
             return setImmediate(cb, err);
-		}
-	},
+        }
+    },
 
-	checkAccountExists: function(req, cb) {
-		library.schema.validate(req.body, schema.checkAccountExists, async function(err) {
-			if (err) {
-				return setImmediate(cb, err[0].message);
-			}
+    checkAccountExists: function (req, cb) {
+        library.schema.validate(req.body, schema.checkAccountExists, async function (err) {
+            if (err) {
+                return setImmediate(cb, err[0].message);
+            }
             if (!await self.addressExists(req.body.address)) {
-				return setImmediate(cb, 'Address is Invalid');
-			}
-			return setImmediate(cb, null, { success: true });
-		});
-	}
+                return setImmediate(cb, 'Address is Invalid');
+            }
+            return setImmediate(cb, null, {success: true});
+        });
+    }
 };
 
 // Internal API
@@ -1054,467 +1076,470 @@ Accounts.prototype.shared = {
  * @see {@link http://apidocjs.com/}
  */
 Accounts.prototype.internal = {
-	count: function (req, cb) {
-		return setImmediate(cb, null, { success: true, count: Object.keys(__private.accounts).length });
-	},
+    count: function (req, cb) {
+        return setImmediate(cb, null, {success: true, count: Object.keys(__private.accounts).length});
+    },
 
-	top: function (query, cb) {
-		self.getAccounts({
-			sort: {
-				balance: -1
-			},
-			offset: query.offset,
-			limit: (query.limit || 100)
-		}, function (err, raw) {
-			if (err) {
-				return setImmediate(cb, err);
-			}
+    top: function (query, cb) {
+        self.getAccounts({
+            sort: {
+                balance: -1
+            },
+            offset: query.offset,
+            limit: (query.limit || 100)
+        }, function (err, raw) {
+            if (err) {
+                return setImmediate(cb, err);
+            }
 
-			let accounts = raw.map(function (account) {
-				return {
-					address: account.address,
-					balance: account.balance,
-					publicKey: account.publicKey
-				};
-			});
+            let accounts = raw.map(function (account) {
+                return {
+                    address: account.address,
+                    balance: account.balance,
+                    publicKey: account.publicKey
+                };
+            });
 
-			return setImmediate(cb, null, { success: true, accounts: accounts });
-		});
-	},
+            return setImmediate(cb, null, {success: true, accounts: accounts});
+        });
+    },
 
-	getAllAccounts: function (req, cb) {
-		return setImmediate(cb, null, { success: true, accounts: __private.accounts });
-	},
+    getAllAccounts: function (req, cb) {
+        return setImmediate(cb, null, {success: true, accounts: __private.accounts});
+    },
 
-	lockAccount: function (req, cb) {
-		library.schema.validate(req.body, schema.lockAccount, function (err) {
-			if (!err) {
-				if (!req.body.address) {
-					return setImmediate(cb, 'Missing required property: address');
-				}
-				let address = req.body.publicKey ? self.generateAddressByPublicKey(req.body.publicKey) : req.body.address;
-				self.getAccount({ address: address }, function (err, account) {
-					if (err) {
-						return setImmediate(cb, err);
-					}
-					if (!account) {
-						let data = {};
-						data.status = 0;
-						data.address = req.body.address;
-						data.publicKey = req.body.publicKey;
-						if (req.body.accType) {
-							data.acc_type = req.body.accType;
-							let lastBlock = modules.blocks.lastBlock.get();
-							data.endTime = library.logic.contract.calcEndTime(req.body.accType, lastBlock.timestamp);
-							if (req.body.amount) {
-								data.transferedAmount = req.body.amount;
-							}
-							let REDIS_KEY_USER_INFO_HASH = 'userInfo_' + data.address;
-							let REDIS_KEY_USER_TIME_HASH = 'userTimeHash_' + data.endTime;
-							cache.prototype.isExists(REDIS_KEY_USER_INFO_HASH, function (err, isExist) {
-								if (!isExist) {
-									let userInfo = {
-										publicKey: data.publicKey,
-										transferedAmount: data.transferedAmount,
-										accType: req.body.accType
-									};
-									cache.prototype.hmset(REDIS_KEY_USER_INFO_HASH, userInfo);
-									cache.prototype.hmset(REDIS_KEY_USER_TIME_HASH, userInfo);
-									library.logic.contract.sendContractAmount([userInfo], function (err) {
-										//FIXME: do further processing with "res" i.e send notification to the user
-										if (err) {
-											return setImmediate(cb, err);
-										}
-										library.logic.account.set(data.address, data, function (err) {
-											if (!err) {
-												data.startTime = lastBlock.timestamp;
-												return setImmediate(cb, null, { account: data });
-											} else {
-												return setImmediate(cb, err);
-											}
-										});
-									});
-								} else {
-									return setImmediate(cb, null, { account: data });
-								}
-							});
-						}
-					} else {
-						library.db.one(sql.checkAccountStatus, {
-							senderId: account.address
-						})
-							.then(function (row) {
-								if (row.status === 0) {
-									return cb('Account is already locked');
-								}
-								library.db.none(sql.disableAccount, {
-									senderId: account.address
-								})
-									.then(function () {
-										library.logger.info(account.address + ' account is locked');
-										return setImmediate(cb, null, { account: account });
-									})
-									.catch(function (err) {
-										library.logger.error(err.stack);
-										return setImmediate(cb, err);
-									});
-							})
-							.catch(function (err) {
-								library.logger.error(err.stack);
-								return setImmediate(cb, 'Transaction#checkAccountStatus error');
-							});
-					}
-				});
-			} else {
-				return setImmediate(cb, err);
-			}
-		});
-	},
+    lockAccount: function (req, cb) {
+        library.schema.validate(req.body, schema.lockAccount, function (err) {
+            if (!err) {
+                if (!req.body.address) {
+                    return setImmediate(cb, 'Missing required property: address');
+                }
+                let address = req.body.publicKey ? self.generateAddressByPublicKey(req.body.publicKey) : req.body.address;
+                self.getAccount({address: address}, function (err, account) {
+                    if (err) {
+                        return setImmediate(cb, err);
+                    }
+                    if (!account) {
+                        let data = {};
+                        data.status = 0;
+                        data.address = req.body.address;
+                        data.publicKey = req.body.publicKey;
+                        if (req.body.accType) {
+                            data.acc_type = req.body.accType;
+                            let lastBlock = modules.blocks.lastBlock.get();
+                            data.endTime = library.logic.contract.calcEndTime(req.body.accType, lastBlock.timestamp);
+                            if (req.body.amount) {
+                                data.transferedAmount = req.body.amount;
+                            }
+                            let REDIS_KEY_USER_INFO_HASH = 'userInfo_' + data.address;
+                            let REDIS_KEY_USER_TIME_HASH = 'userTimeHash_' + data.endTime;
+                            cache.prototype.isExists(REDIS_KEY_USER_INFO_HASH, function (err, isExist) {
+                                if (!isExist) {
+                                    let userInfo = {
+                                        publicKey: data.publicKey,
+                                        transferedAmount: data.transferedAmount,
+                                        accType: req.body.accType
+                                    };
+                                    cache.prototype.hmset(REDIS_KEY_USER_INFO_HASH, userInfo);
+                                    cache.prototype.hmset(REDIS_KEY_USER_TIME_HASH, userInfo);
+                                    library.logic.contract.sendContractAmount([userInfo], function (err) {
+                                        //FIXME: do further processing with "res" i.e send notification to the user
+                                        if (err) {
+                                            return setImmediate(cb, err);
+                                        }
+                                        library.logic.account.set(data.address, data, function (err) {
+                                            if (!err) {
+                                                data.startTime = lastBlock.timestamp;
+                                                return setImmediate(cb, null, {account: data});
+                                            } else {
+                                                return setImmediate(cb, err);
+                                            }
+                                        });
+                                    });
+                                } else {
+                                    return setImmediate(cb, null, {account: data});
+                                }
+                            });
+                        }
+                    } else {
+                        library.db.one(sql.checkAccountStatus, {
+                            senderId: account.address
+                        })
+                            .then(function (row) {
+                                if (row.status === 0) {
+                                    return cb('Account is already locked');
+                                }
+                                library.db.none(sql.disableAccount, {
+                                    senderId: account.address
+                                })
+                                    .then(function () {
+                                        library.logger.info(account.address + ' account is locked');
+                                        return setImmediate(cb, null, {account: account});
+                                    })
+                                    .catch(function (err) {
+                                        library.logger.error(err.stack);
+                                        return setImmediate(cb, err);
+                                    });
+                            })
+                            .catch(function (err) {
+                                library.logger.error(err.stack);
+                                return setImmediate(cb, 'Transaction#checkAccountStatus error');
+                            });
+                    }
+                });
+            } else {
+                return setImmediate(cb, err);
+            }
+        });
+    },
 
-	unlockAccount: function (req, cb) {
-		library.schema.validate(req.body, schema.unlockAccount, function (err) {
-			if (!err) {
-				if (!req.body.address) {
-					return setImmediate(cb, 'Missing required property: address');
-				}
+    unlockAccount: function (req, cb) {
+        library.schema.validate(req.body, schema.unlockAccount, function (err) {
+            if (!err) {
+                if (!req.body.address) {
+                    return setImmediate(cb, 'Missing required property: address');
+                }
 
-				let address = req.body.publicKey ? self.generateAddressByPublicKey(req.body.publicKey) : req.body.address;
-				library.db.none(sql.enableAccount, {
-					senderId: address
-				})
-					.then(function () {
-						library.logger.info(address + ' account is unlocked');
-						return setImmediate(cb, null);
-					})
-					.catch(function (err) {
-						return setImmediate(cb, err);
-					});
-			} else {
-				return setImmediate(cb, err);
-			}
-		});
-	},
+                let address = req.body.publicKey ? self.generateAddressByPublicKey(req.body.publicKey) : req.body.address;
+                library.db.none(sql.enableAccount, {
+                    senderId: address
+                })
+                    .then(function () {
+                        library.logger.info(address + ' account is unlocked');
+                        return setImmediate(cb, null);
+                    })
+                    .catch(function (err) {
+                        return setImmediate(cb, err);
+                    });
+            } else {
+                return setImmediate(cb, err);
+            }
+        });
+    },
 
-	logout: function (req, cb) {
-		delete req.decoded;
-		return setImmediate(cb, null);
-	},
+    logout: function (req, cb) {
+        delete req.decoded;
+        return setImmediate(cb, null);
+    },
 
-	generateQRCode: function (req, cb) {
-		let user = {};
-		if (!req.body.publicKey) {
-			return setImmediate(cb, 'Missing address or public key');
-		}
-		user.address = modules.accounts.generateAddressByPublicKey(req.body.publicKey);
-		let secret = speakeasy.generateSecret({ length: 30 });
-		QRCode.toDataURL(secret.otpauth_url, function (err, data_url) {
-			user.twofactor = {
-				secret: '',
-				tempSecret: secret.base32,
-				dataURL: data_url,
-				otpURL: secret.otpauth_url
-			};
-			library.cache.client.set('2fa_user_' + user.address, JSON.stringify(user));
-			return setImmediate(cb, null, { success: true, dataUrl: data_url });
-		});
-	},
+    generateQRCode: function (req, cb) {
+        let user = {};
+        if (!req.body.publicKey) {
+            return setImmediate(cb, 'Missing address or public key');
+        }
+        user.address = modules.accounts.generateAddressByPublicKey(req.body.publicKey);
+        let secret = speakeasy.generateSecret({length: 30});
+        QRCode.toDataURL(secret.otpauth_url, function (err, data_url) {
+            user.twofactor = {
+                secret: '',
+                tempSecret: secret.base32,
+                dataURL: data_url,
+                otpURL: secret.otpauth_url
+            };
+            library.cache.client.set('2fa_user_' + user.address, JSON.stringify(user));
+            return setImmediate(cb, null, {success: true, dataUrl: data_url});
+        });
+    },
 
-	verifyOTP: function (req, cb) {
-		let user = {};
-		if (!req.body.publicKey) {
-			return setImmediate(cb, 'Missing address or public key');
-		}
-		user.address = modules.accounts.generateAddressByPublicKey(req.body.publicKey);
-		library.cache.client.get('2fa_user_' + user.address, function (err, userCred) {
-			if (!userCred) {
-				return setImmediate(cb, 'Token expired or invalid OTP. Click resend to continue');
-			}
-			if (err) {
-				return setImmediate(cb, err);
-			}
-			let user_2FA = JSON.parse(userCred);
-			let verified = speakeasy.totp.verify({
-				secret: user_2FA.twofactor.tempSecret,
-				encoding: 'base32',
-				token: req.body.otp,
-				window: 6
-			});
-			if (!verified) {
-				return setImmediate(cb, 'Invalid OTP!. Please enter valid OTP to SEND Transaction');
-			}
-			return setImmediate(cb, null, { success: true, key: user_2FA.twofactor.tempSecret });
-		});
-	},
+    verifyOTP: function (req, cb) {
+        let user = {};
+        if (!req.body.publicKey) {
+            return setImmediate(cb, 'Missing address or public key');
+        }
+        user.address = modules.accounts.generateAddressByPublicKey(req.body.publicKey);
+        library.cache.client.get('2fa_user_' + user.address, function (err, userCred) {
+            if (!userCred) {
+                return setImmediate(cb, 'Token expired or invalid OTP. Click resend to continue');
+            }
+            if (err) {
+                return setImmediate(cb, err);
+            }
+            let user_2FA = JSON.parse(userCred);
+            let verified = speakeasy.totp.verify({
+                secret: user_2FA.twofactor.tempSecret,
+                encoding: 'base32',
+                token: req.body.otp,
+                window: 6
+            });
+            if (!verified) {
+                return setImmediate(cb, 'Invalid OTP!. Please enter valid OTP to SEND Transaction');
+            }
+            return setImmediate(cb, null, {success: true, key: user_2FA.twofactor.tempSecret});
+        });
+    },
 
-	enableTwoFactor: function (req, cb) {
-		let user = {};
-		if (!req.body.key) {
-			return setImmediate(cb, 'Key is missing');
-		}
-		if (!req.body.secret) {
-			return setImmediate(cb, 'secret is missing');
-		}
-		if (!req.body.otp) {
-			return setImmediate(cb, 'otp is missing');
-		}
-		let hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
-		let keypair = library.ed.makeKeypair(hash);
-		let publicKey = keypair.publicKey.toString('hex');
-		user.address = modules.accounts.generateAddressByPublicKey(publicKey);
-		library.cache.client.get('2fa_user_' + user.address, function (err, userCred) {
-			if (err) {
-				return setImmediate(cb, err);
-			}
-			if (!userCred) {
-				return setImmediate(cb, 'Key expired');
-			}
-			let user_2FA = JSON.parse(userCred);
-			let verified = speakeasy.totp.verify({
-				secret: req.body.key,
-				encoding: 'base32',
-				token: req.body.otp,
-				window: 6
-			});
-			if (!verified) {
-				return setImmediate(cb, 'Invalid OTP!. Please enter valid OTP to SEND Transaction');
-			}
-			user_2FA.twofactor.secret = req.body.key;
-			library.cache.client.set('2fa_user_' + user.address, JSON.stringify(user_2FA));
-			return setImmediate(cb, null, { success: true, key: user_2FA.twofactor.tempSecret });
-		});
-	},
+    enableTwoFactor: function (req, cb) {
+        let user = {};
+        if (!req.body.key) {
+            return setImmediate(cb, 'Key is missing');
+        }
+        if (!req.body.secret) {
+            return setImmediate(cb, 'secret is missing');
+        }
+        if (!req.body.otp) {
+            return setImmediate(cb, 'otp is missing');
+        }
+        let hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
+        let keypair = library.ed.makeKeypair(hash);
+        let publicKey = keypair.publicKey.toString('hex');
+        user.address = modules.accounts.generateAddressByPublicKey(publicKey);
+        library.cache.client.get('2fa_user_' + user.address, function (err, userCred) {
+            if (err) {
+                return setImmediate(cb, err);
+            }
+            if (!userCred) {
+                return setImmediate(cb, 'Key expired');
+            }
+            let user_2FA = JSON.parse(userCred);
+            let verified = speakeasy.totp.verify({
+                secret: req.body.key,
+                encoding: 'base32',
+                token: req.body.otp,
+                window: 6
+            });
+            if (!verified) {
+                return setImmediate(cb, 'Invalid OTP!. Please enter valid OTP to SEND Transaction');
+            }
+            user_2FA.twofactor.secret = req.body.key;
+            library.cache.client.set('2fa_user_' + user.address, JSON.stringify(user_2FA));
+            return setImmediate(cb, null, {success: true, key: user_2FA.twofactor.tempSecret});
+        });
+    },
 
-	disableTwoFactor: function (req, cb) {
-		let user = {};
-		if (!req.body.publicKey) {
-			return setImmediate(cb, 'Missing address or public key');
-		}
-		user.address = modules.accounts.generateAddressByPublicKey(req.body.publicKey);
-		library.cache.client.exists('2fa_user_' + user.address, function (err, isExist) {
-			if (isExist) {
-				library.cache.client.del('2fa_user_' + user.address);
-			}
-			return setImmediate(cb, null, { success: true, message: 'Two Factor Authentication Disabled For ' + user.address });
-		});
-	},
+    disableTwoFactor: function (req, cb) {
+        let user = {};
+        if (!req.body.publicKey) {
+            return setImmediate(cb, 'Missing address or public key');
+        }
+        user.address = modules.accounts.generateAddressByPublicKey(req.body.publicKey);
+        library.cache.client.exists('2fa_user_' + user.address, function (err, isExist) {
+            if (isExist) {
+                library.cache.client.del('2fa_user_' + user.address);
+            }
+            return setImmediate(cb, null, {
+                success: true,
+                message: 'Two Factor Authentication Disabled For ' + user.address
+            });
+        });
+    },
 
-	checkTwoFactorStatus: function (req, cb) {
-		let user = {};
-		if (!req.body.publicKey) {
-			return setImmediate(cb, 'Missing address or public key');
-		}
-		user.address = modules.accounts.generateAddressByPublicKey(req.body.publicKey);
-		library.cache.client.exists('2fa_user_' + user.address, function (err, isExist) {
-			if (isExist) {
-				library.cache.client.get('2fa_user_' + user.address, function (err, userCred) {
-					let user_2FA = JSON.parse(userCred);
-					if(user_2FA.twofactor.secret) {
-						return setImmediate(cb, null, { success: true });
-					}
-					return setImmediate(cb, null, { success: false });
-				});
-			}else {
-				return setImmediate(cb, null, { success: false });
-			}
-		});
-	},
-	generatenpNewPassphase: function (req, cb) {
-		let code = new Mnemonic(Mnemonic.Words.ENGLISH);
-		code = code.toString();
-		return setImmediate(cb, null, { success: true, passphase: code });
-	},
+    checkTwoFactorStatus: function (req, cb) {
+        let user = {};
+        if (!req.body.publicKey) {
+            return setImmediate(cb, 'Missing address or public key');
+        }
+        user.address = modules.accounts.generateAddressByPublicKey(req.body.publicKey);
+        library.cache.client.exists('2fa_user_' + user.address, function (err, isExist) {
+            if (isExist) {
+                library.cache.client.get('2fa_user_' + user.address, function (err, userCred) {
+                    let user_2FA = JSON.parse(userCred);
+                    if (user_2FA.twofactor.secret) {
+                        return setImmediate(cb, null, {success: true});
+                    }
+                    return setImmediate(cb, null, {success: false});
+                });
+            } else {
+                return setImmediate(cb, null, {success: false});
+            }
+        });
+    },
+    generatenpNewPassphase: function (req, cb) {
+        let code = new Mnemonic(Mnemonic.Words.ENGLISH);
+        code = code.toString();
+        return setImmediate(cb, null, {success: true, passphase: code});
+    },
 
-	getWithdrawlStatus: function (req, cb) {
-		library.schema.validate(req.body, schema.enablePendingGroupBonus, function (err) {
-			if (err) {
-				return setImmediate(cb, err);
-			}
+    getWithdrawlStatus: function (req, cb) {
+        library.schema.validate(req.body, schema.enablePendingGroupBonus, function (err) {
+            if (err) {
+                return setImmediate(cb, err);
+            }
 
-			var stakedAmount = 0, groupBonus = 0, pendingGroupBonus = 0, failedRule = [];
-			async.auto({
-				checkLastWithdrawl: function (seriesCb) {
-					library.cache.client.exists(req.body.address + '_pending_group_bonus_trs_id', function (err, isExists) {
-						if (isExists) {
-							library.cache.client.get(req.body.address + '_pending_group_bonus_trs_id', function (err, transactionId) {
-								if (err) {
-									//failedRule[0] = false;
-									seriesCb(null, false);
-								}
-								library.db.one(sql.findTrs, {
-									transactionId: transactionId
-								})
-									.then(function (transationData) {
-										let d = constants.epochTime;
-										let t = parseInt(d.getTime() / 1000);
-										d = new Date((transationData.timestamp + t) * 1000);
-										const timeDiff = (d - Date.now());
-										const days = Math.ceil(Math.abs(timeDiff / (1000 * 60 * 60 * 24)));
-										if (days > 7) {
-											seriesCb(null, true);
-										} else {
-											seriesCb(null, false);
-										}
-									})
-									.catch(function (err) {
-										seriesCb(err, false);
-									});
-							});
-						} else {
-							seriesCb(null, true);
-						}
-					});
-				},
-				checkActiveStake: ['checkLastWithdrawl', function (result, seriesCb) {
-					library.db.query(sql.findActiveStakeAmount, {
-						senderId: req.body.address
-					})
-					.then(function (stakeOrders) {
-						if (stakeOrders.length > 0) {
-							stakedAmount = parseInt(stakeOrders[1].value) / 100000000;
-							seriesCb(null, true);
-						} else {
-							seriesCb(null, false);
-							//seriesCb('Rule 2 failed: You need to have at least one active stake order');
-						}
-					})
-					.catch(function (err) {
-						seriesCb(err, false);
-					});
-				}],
+            var stakedAmount = 0, groupBonus = 0, pendingGroupBonus = 0, failedRule = [];
+            async.auto({
+                checkLastWithdrawl: function (seriesCb) {
+                    library.cache.client.exists(req.body.address + '_pending_group_bonus_trs_id', function (err, isExists) {
+                        if (isExists) {
+                            library.cache.client.get(req.body.address + '_pending_group_bonus_trs_id', function (err, transactionId) {
+                                if (err) {
+                                    //failedRule[0] = false;
+                                    seriesCb(null, false);
+                                }
+                                library.db.one(sql.findTrs, {
+                                    transactionId: transactionId
+                                })
+                                    .then(function (transationData) {
+                                        let d = constants.epochTime;
+                                        let t = parseInt(d.getTime() / 1000);
+                                        d = new Date((transationData.timestamp + t) * 1000);
+                                        const timeDiff = (d - Date.now());
+                                        const days = Math.ceil(Math.abs(timeDiff / (1000 * 60 * 60 * 24)));
+                                        if (days > 7) {
+                                            seriesCb(null, true);
+                                        } else {
+                                            seriesCb(null, false);
+                                        }
+                                    })
+                                    .catch(function (err) {
+                                        seriesCb(err, false);
+                                    });
+                            });
+                        } else {
+                            seriesCb(null, true);
+                        }
+                    });
+                },
+                checkActiveStake: ['checkLastWithdrawl', function (result, seriesCb) {
+                    library.db.query(sql.findActiveStakeAmount, {
+                        senderId: req.body.address
+                    })
+                        .then(function (stakeOrders) {
+                            if (stakeOrders.length > 0) {
+                                stakedAmount = parseInt(stakeOrders[1].value) / 100000000;
+                                seriesCb(null, true);
+                            } else {
+                                seriesCb(null, false);
+                                //seriesCb('Rule 2 failed: You need to have at least one active stake order');
+                            }
+                        })
+                        .catch(function (err) {
+                            seriesCb(err, false);
+                        });
+                }],
 
-				checkActiveStakeOfLeftAndRightSponsor: ['checkActiveStake', function (result, seriesCb) {
-					let activeStakeCount = 0;
-					library.db.query(sql.findDirectSponsor, {
-						introducer: req.body.address
-					})
-						.then(function (directSponsors) {
-							if (directSponsors.length >= 2) {
+                checkActiveStakeOfLeftAndRightSponsor: ['checkActiveStake', function (result, seriesCb) {
+                    let activeStakeCount = 0;
+                    library.db.query(sql.findDirectSponsor, {
+                        introducer: req.body.address
+                    })
+                        .then(function (directSponsors) {
+                            if (directSponsors.length >= 2) {
 
-								directSponsors.forEach(function (directSponsor) {
-									library.db.query(sql.findActiveStakeAmount, {
-										senderId: directSponsor.address
-									})
-										.then(function (stakeInfo) {
-											const timeDiff = (slots.getTime() - stakeInfo[0].value);
-											const days = Math.ceil(Math.abs(timeDiff / (1000 * 60 * 60 * 24)));
-											if (stakedAmount && days <= 31) {
-												activeStakeCount++;
-											}
-											if (activeStakeCount >= 2) {
-												seriesCb(null, true);
-											}
-										})
-										.catch(function (err) {
-											seriesCb(err, false);
-										});
-								});
+                                directSponsors.forEach(function (directSponsor) {
+                                    library.db.query(sql.findActiveStakeAmount, {
+                                        senderId: directSponsor.address
+                                    })
+                                        .then(function (stakeInfo) {
+                                            const timeDiff = (slots.getTime() - stakeInfo[0].value);
+                                            const days = Math.ceil(Math.abs(timeDiff / (1000 * 60 * 60 * 24)));
+                                            if (stakedAmount && days <= 31) {
+                                                activeStakeCount++;
+                                            }
+                                            if (activeStakeCount >= 2) {
+                                                seriesCb(null, true);
+                                            }
+                                        })
+                                        .catch(function (err) {
+                                            seriesCb(err, false);
+                                        });
+                                });
 
-							} else if(activeStakeCount < 2){
-								seriesCb(null, false);
-							}else {
-								seriesCb(null, false);
-							}
-						})
-						.catch(function (err) {
-							seriesCb(err, false);
-						});
-				}],
-				checkRatio: ['checkActiveStakeOfLeftAndRightSponsor', function (result, seriesCb) {
+                            } else if (activeStakeCount < 2) {
+                                seriesCb(null, false);
+                            } else {
+                                seriesCb(null, false);
+                            }
+                        })
+                        .catch(function (err) {
+                            seriesCb(err, false);
+                        });
+                }],
+                checkRatio: ['checkActiveStakeOfLeftAndRightSponsor', function (result, seriesCb) {
 
-					library.db.query(sql.findGroupBonus, {
-						senderId: req.body.address
-					})
-					.then(function (bonusInfo) {
-						groupBonus = parseInt(bonusInfo[0].group_bonus) / 100000000 ;
-						pendingGroupBonus = parseInt(bonusInfo[0].pending_group_bonus) / 100000000;
-						if (pendingGroupBonus <= groupBonus && pendingGroupBonus > 0) {
-							nextBonus = (groupBonus - pendingGroupBonus) > 15 ? 15 : (groupBonus - pendingGroupBonus) !== 0 ? (groupBonus - pendingGroupBonus) : 15;
-							if(nextBonus > stakedAmount * 10) {
-								nextBonus = stakedAmount * 10;
-								pendingGroupBonus = groupBonus - nextBonus;
-								seriesCb(null, true);
-							} else if ((groupBonus - pendingGroupBonus + nextBonus) < stakedAmount * 10) {
-								pendingGroupBonus = groupBonus - nextBonus;
-								seriesCb(null, true);
-							} else if(stakedAmount * 10 - (groupBonus - pendingGroupBonus) > 0) {
-								nextBonus = stakedAmount * 10 - (groupBonus - pendingGroupBonus);
-								pendingGroupBonus = groupBonus - nextBonus;
-								seriesCb(null, true);
-							} else {
-								seriesCb(null, false);
-								//seriesCb('Rule 4 failed: Ratio withdrawal is 1:10 from own staking DDK.');
-							}
-						} else {
-							seriesCb(null, false);
-							//seriesCb('Either you don\'t have group bonus reserved or exhausted your withdrawl limit');
-						}
-					})
-					.catch(function (err) {
-						seriesCb(err, false);
-					});
-				}]
-			}, function (err, data) {
-				if (err) {
-					return setImmediate(cb, err, { success: false, status: data });
-				}
-				return setImmediate(cb, null, { success: true, status: data });
-			});
-		});
-	},
-  // TODO remove
-	// sendWithdrawlAmount: function (req, cb) {
-	// 	library.schema.validate(req.body, schema.enablePendingGroupBonus, function (err) {
-	// 		if (err) {
-	// 			return setImmediate(cb, err);
-	// 		}
-	// 		if (!nextBonus) {
-	// 			return setImmediate(cb, 'You don\'t have pending group bonus remaining');
-	// 		}
-	// 		let hash = Buffer.from(JSON.parse(library.config.users[5].keys));
-	// 		let keypair = library.ed.makeKeypair(hash);
-	// 		let publicKey = keypair.publicKey.toString('hex');
-	// 		library.balancesSequence.add(function (cb) {
-	// 			self.getAccount({publicKey: publicKey}, function(err, account) {
-	// 				if (err) {
-	// 					return setImmediate(cb, err)
-	// 				}
-	// 				let transaction;
-	// 				let secondKeypair = null;
-	// 				account.publicKey = publicKey;
-  //
-	// 				library.logic.transaction.create({
-	// 					type: transactionTypes.REWARD,
-	// 					amount: nextBonus * 100000000,
-	// 					sender: account,
-	// 					recipientId: req.body.address,
-	// 					keypair: keypair,
-	// 					secondKeypair: secondKeypair,
-	// 					trsName: 'WITHDRAWLREWARD'
-	// 				}).then((transactionReward) =>{
-	// 					transaction = transactionReward;
-	// 					modules.transactions.receiveTransactions([transaction], true, cb);
-	// 				}).catch((e) => {
-	// 					return setImmediate(cb, e.toString());
-	// 				});
-	// 			});
-	// 		}, function (err, transaction) {
-	// 			if (err) {
-	// 				return setImmediate(cb, err);
-	// 			}
-	// 			library.cache.client.set(req.body.address + '_pending_group_bonus_trs_id', transaction[0].id);
-	// 			library.db.none(sql.updatePendingGroupBonus, {
-	// 				nextBonus: nextBonus * 100000000,
-	// 				senderId: req.body.address
-	// 			})
-	// 			.then(function () {
-	// 				return setImmediate(cb, null, { transactionId: transaction[0].id });
-	// 			})
-	// 			.catch(function (err) {
-	// 				return setImmediate(cb, err);
-	// 			});
-	// 		});
-	// 	});
-	// },
+                    library.db.query(sql.findGroupBonus, {
+                        senderId: req.body.address
+                    })
+                        .then(function (bonusInfo) {
+                            groupBonus = parseInt(bonusInfo[0].group_bonus) / 100000000;
+                            pendingGroupBonus = parseInt(bonusInfo[0].pending_group_bonus) / 100000000;
+                            if (pendingGroupBonus <= groupBonus && pendingGroupBonus > 0) {
+                                nextBonus = (groupBonus - pendingGroupBonus) > 15 ? 15 : (groupBonus - pendingGroupBonus) !== 0 ? (groupBonus - pendingGroupBonus) : 15;
+                                if (nextBonus > stakedAmount * 10) {
+                                    nextBonus = stakedAmount * 10;
+                                    pendingGroupBonus = groupBonus - nextBonus;
+                                    seriesCb(null, true);
+                                } else if ((groupBonus - pendingGroupBonus + nextBonus) < stakedAmount * 10) {
+                                    pendingGroupBonus = groupBonus - nextBonus;
+                                    seriesCb(null, true);
+                                } else if (stakedAmount * 10 - (groupBonus - pendingGroupBonus) > 0) {
+                                    nextBonus = stakedAmount * 10 - (groupBonus - pendingGroupBonus);
+                                    pendingGroupBonus = groupBonus - nextBonus;
+                                    seriesCb(null, true);
+                                } else {
+                                    seriesCb(null, false);
+                                    //seriesCb('Rule 4 failed: Ratio withdrawal is 1:10 from own staking DDK.');
+                                }
+                            } else {
+                                seriesCb(null, false);
+                                //seriesCb('Either you don\'t have group bonus reserved or exhausted your withdrawl limit');
+                            }
+                        })
+                        .catch(function (err) {
+                            seriesCb(err, false);
+                        });
+                }]
+            }, function (err, data) {
+                if (err) {
+                    return setImmediate(cb, err, {success: false, status: data});
+                }
+                return setImmediate(cb, null, {success: true, status: data});
+            });
+        });
+    },
+    // TODO remove
+    // sendWithdrawlAmount: function (req, cb) {
+    // 	library.schema.validate(req.body, schema.enablePendingGroupBonus, function (err) {
+    // 		if (err) {
+    // 			return setImmediate(cb, err);
+    // 		}
+    // 		if (!nextBonus) {
+    // 			return setImmediate(cb, 'You don\'t have pending group bonus remaining');
+    // 		}
+    // 		let hash = Buffer.from(JSON.parse(library.config.users[5].keys));
+    // 		let keypair = library.ed.makeKeypair(hash);
+    // 		let publicKey = keypair.publicKey.toString('hex');
+    // 		library.balancesSequence.add(function (cb) {
+    // 			self.getAccount({publicKey: publicKey}, function(err, account) {
+    // 				if (err) {
+    // 					return setImmediate(cb, err)
+    // 				}
+    // 				let transaction;
+    // 				let secondKeypair = null;
+    // 				account.publicKey = publicKey;
+    //
+    // 				library.logic.transaction.create({
+    // 					type: transactionTypes.REWARD,
+    // 					amount: nextBonus * 100000000,
+    // 					sender: account,
+    // 					recipientId: req.body.address,
+    // 					keypair: keypair,
+    // 					secondKeypair: secondKeypair,
+    // 					trsName: 'WITHDRAWLREWARD'
+    // 				}).then((transactionReward) =>{
+    // 					transaction = transactionReward;
+    // 					modules.transactions.receiveTransactions([transaction], true, cb);
+    // 				}).catch((e) => {
+    // 					return setImmediate(cb, e.toString());
+    // 				});
+    // 			});
+    // 		}, function (err, transaction) {
+    // 			if (err) {
+    // 				return setImmediate(cb, err);
+    // 			}
+    // 			library.cache.client.set(req.body.address + '_pending_group_bonus_trs_id', transaction[0].id);
+    // 			library.db.none(sql.updatePendingGroupBonus, {
+    // 				nextBonus: nextBonus * 100000000,
+    // 				senderId: req.body.address
+    // 			})
+    // 			.then(function () {
+    // 				return setImmediate(cb, null, { transactionId: transaction[0].id });
+    // 			})
+    // 			.catch(function (err) {
+    // 				return setImmediate(cb, err);
+    // 			});
+    // 		});
+    // 	});
+    // },
 };
 
 // Export

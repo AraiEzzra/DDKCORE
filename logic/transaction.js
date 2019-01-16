@@ -888,14 +888,14 @@ Transaction.prototype.apply = function (trs, block, sender, cb) {
          * calls apply for Transfer, Signature, Delegate, Vote, Multisignature,
          * DApp, InTransfer or OutTransfer.
          */
-        __private.types[trs.type].apply.call(this, trs, block, sender, function (err) {
-            if (err) {
+        __private.types[trs.type].apply.call(this, trs, block, sender, function (applyErr) {
+            if (applyErr) {
                 this.scope.account.merge(sender.address, {
                     balance: amount,
                     blockId: block.id,
                     round: modules.rounds.calc(block.height)
-                }, function (err) {
-                    return setImmediate(cb, err);
+                }, function (mergeErr) {
+                    return setImmediate(cb, mergeErr || applyErr);
                 });
             } else {
                 return setImmediate(cb);

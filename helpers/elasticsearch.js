@@ -3,15 +3,15 @@ const limit = 5000;
 const dbTables = [
     {
         tableName: 'blocks_list',
-        fieldName: 'b_height'
+        fieldName: 'b_id'
     },
     {
         tableName: 'trs',
-        fieldName: 'rowId'
+        fieldName: 'id'
     },
     {
         tableName: 'stake_orders',
-        fieldName: 'stakeId'
+        fieldName: 'id'
     }
 ];
 
@@ -42,7 +42,7 @@ const iterate = async (db, logger, table, limit, rowsAcc, bulkAcc, lastValue) =>
 module.exports.sync = (db, logger) => {
     let promises = [];
     dbTables.forEach(function (table) {
-        promises.push(iterate(db, logger, table, limit, [], [], 0));
+        promises.push(iterate(db, logger, table, limit, [], [], ''));
     });
     Promise.all(promises).then( () => {
         logger.info('Elasticsearch indexed ok');
