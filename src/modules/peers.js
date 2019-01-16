@@ -8,11 +8,10 @@ const sql = require('../sql/peers.js');
 const Peer = require('../logic/peer');
 
 // Private fields
-let modules,
-    library,
-    self,
-    __private = {},
-    shared = {};
+let modules;
+let library;
+let self;
+const __private = {};
 
 // Constructor
 function Peers(cb, scope) {
@@ -34,7 +33,7 @@ __private.getByFilter = function (filter, cb) {
     // Sorting peers
     const sortPeers = function (field, asc) {
         return function (a, b) {
-            const sort_res =
+            const sortResult =
                 // Nulls last
                 a[field] === b[field] ? 0 :
                     a[field] === null ? 1 :
@@ -43,7 +42,7 @@ __private.getByFilter = function (filter, cb) {
                             asc ? (a[field] < b[field] ? -1 : 1) :
                                 // Descending
                                 (a[field] < b[field] ? 1 : -1);
-            return sort_res;
+            return sortResult;
         };
     };
     // Randomizing peers (using Fisher-Yates-Durstenfeld shuffle algorithm)

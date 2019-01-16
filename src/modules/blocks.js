@@ -8,9 +8,9 @@ const blocksUtils = require('./blocks/utils');
 const blocksChain = require('./blocks/chain');
 
 // Private fields
-let library,
-    self,
-    __private = {};
+let library;
+let self;
+const __private = {};
 
 __private.lastBlock = {};
 __private.lastReceipt = null;
@@ -95,7 +95,9 @@ Blocks.prototype.lastBlock = {
         if (!__private.lastBlock) {
             return false;
         }
-        const secondsAgo = Math.floor(Date.now() / 1000) - (Math.floor(constants.epochTime / 1000) + __private.lastBlock.timestamp);
+        const secondsAgo = Math.floor(Date.now() / 1000)
+            - (Math.floor(constants.epochTime / 1000)
+                + __private.lastBlock.timestamp);
         return (secondsAgo < constants.blockReceiptTimeOut);
     }
 };
