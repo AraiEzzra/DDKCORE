@@ -24,7 +24,7 @@ const Accounts = {
 
     enableAccount: 'UPDATE mem_accounts SET "status" = 1 WHERE "address" = ${senderId}',
 
-    getTotalAccount: 'SELECT count("address") AS "count" FROM mem_accounts WHERE "balance" > 0',
+    getTotalAccount: 'SELECT count("address") AS "count" FROM mem_accounts',
 
     getCurrentUnmined: 'SELECT "balance" FROM mem_accounts where "address"=${address}',
 
