@@ -62,9 +62,9 @@ module.exports.connect = function (cacheEnabled, config, logger, cb) {
             });
         }, (err) => {
             if (err) {
-                logger.warn('Redis default variables are not push.');
+                logger.warn('Redis default variables are not set.');
             } else {
-                logger.info('Redis default variables are push successfully.');
+                logger.info('Redis default variables are set successfully.');
             }
             cb();
         });

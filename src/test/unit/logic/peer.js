@@ -27,7 +27,7 @@ describe('peer', function () {
             expect(__peer.string).equals(randomPeer.ip + ':' + randomPeer.port);
         });
 
-        it('should accept empty peer and push default values', function () {
+        it('should accept empty peer and set default values', function () {
             let __peer = peer.accept({});
             expect(__peer.port).to.equal(0);
             expect(__peer.ip).to.be.undefined;

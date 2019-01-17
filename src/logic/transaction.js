@@ -328,8 +328,6 @@ Transaction.prototype.checkBalance = (amount, isUnconfirmed, trs, sender) => {
         .lessThan(totalAmountWithFrozeAmount);
     let exceeded = (trs.blockId !== self.scope.genesisblock.block.id && exceededBalance);
 
-    // FIXME
-    // https://trello.com/c/MPx5yxNH/134-account-does-not-have-enough-ddk
     if (trs.height <= constants.MASTER_NODE_MIGRATED_BLOCK) {
         exceeded = false;
     }
@@ -607,8 +605,6 @@ Transaction.prototype.verifyFields = ({ trs, sender, requester = {}, cb }) => {
 
     // Verify signature
     try {
-        // FIXME verify transaction signature
-        // https://trello.com/c/VcBpfYTi/180-failed-to-verify-transaction-signature
         valid = self.verifySignature(trs, (trs.requesterPublicKey || trs.senderPublicKey), trs.signature);
     } catch (e) {
         self.scope.logger.error(e.stack);
@@ -950,7 +946,7 @@ Transaction.prototype.newVerify = async ({ trs, sender, checkExists = false }) =
     }
 
     try {
-        __private.types[trs.type].newVerify.call(self, trs, sender);
+        await __private.types[trs.type].newVerify.call(self, trs, sender);
     } catch (e) {
         throw e;
     }
@@ -1001,7 +997,7 @@ Transaction.prototype.verifyUnconfirmed = ({ trs, sender, cb }) => {
     });
 };
 
-Transaction.prototype.newVerifyUnconfirmed = ({ trs, sender }) => {
+Transaction.prototype.newVerifyUnconfirmed = async ({ trs, sender }) => {
     const calculateFee = __private.types[trs.type].calculateUnconfirmedFee || __private.types[trs.type].calculateFee;
     const fee = calculateFee.call(self, trs, sender) || 0;
     if (trs.type !== transactionTypes.REFERRAL &&
@@ -1020,7 +1016,7 @@ Transaction.prototype.newVerifyUnconfirmed = ({ trs, sender }) => {
         throw new Error(senderBalance.error);
     }
 
-    __private.types[trs.type].verifyUnconfirmed.call(self, trs, sender, (err) => {
+    await __private.types[trs.type].newVerifyUnconfirmed.call(self, trs, sender, (err) => {
         if (err) {
             throw err;
         }

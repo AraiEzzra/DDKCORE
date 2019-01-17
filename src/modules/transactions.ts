@@ -1,5 +1,5 @@
 import {default as NewTransactionPool, TransactionQueue} from 'src/logic/newTransactionPool';
-import {Transaction, TransactionStatus} from "src/helpers/types";
+import {Account, Transaction, TransactionStatus} from "src/helpers/types";
 
 const _ = require('lodash');
 const async = require('async');
@@ -112,6 +112,39 @@ class Transactions {
     reshuffleTransactionQueue(): void {
         this.transactionQueue.reshuffle();
     }
+
+    async removeFromPool(
+        transactions: Array<Transaction>, withConflicted: boolean = false
+    ): Promise<Array<Transaction>> {
+        const removedTransactions = [];
+        for (const trs of transactions) {
+            // TODO add conflicted remove logic
+            // https://trello.com/c/FNWlZu5M/31-add-remove-conflicted-transaction-from-before-apply-received-block
+            if (await this.newTransactionPool.remove(trs)) {
+                removedTransactions.push(trs);
+            }
+        }
+        return removedTransactions;
+    }
+
+    async pushInPool(transactions: Array<Transaction>): Promise<void> {
+        for (const trs of transactions) {
+            await this.newTransactionPool.push(trs);
+        }
+    }
+
+    getQueueSize(): number {
+        return this.transactionQueue.getSize()['queue'];
+    }
+
+    getConflictedQueueSize(): number {
+        return this.transactionQueue.getSize()['conflictedQueue'];
+    }
+
+    getTransactionPoolSize(): number {
+        return this.newTransactionPool.getSize();
+    }
+
 }
 
 /**
@@ -279,6 +312,21 @@ __private.list = function (filter, cb) {
                 } else if (['confirmations'].indexOf(sortField) > -1) {
                     return sortField;
                 }
+                return `t."${sortField}"`;
+            }
+        }
+    );
+
+    const afterOrderBy = OrderBy(
+        filter.orderBy, {
+            sortFields: sql.sortFields,
+            quoteField: false,
+            fieldPrefix(sortField) {
+                if (['height'].indexOf(sortField) > -1) {
+                    return `b_${sortField}`;
+                } else if (['confirmations'].indexOf(sortField) > -1) {
+                    return sortField;
+                }
                 return `t."t_${sortField}"`;
             }
         }
@@ -292,7 +340,8 @@ __private.list = function (filter, cb) {
         where,
         owner,
         sortField: orderBy.sortField,
-        sortMethod: orderBy.sortMethod
+        sortMethod: orderBy.sortMethod,
+        afterSortField: afterOrderBy.sortField
     }), params).then(async (rows) => {
         const count = rows.length
             ? rows[0].total_rows !== undefined

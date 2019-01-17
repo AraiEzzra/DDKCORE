@@ -188,25 +188,24 @@ Vote.prototype.verifyFields = function (trs, sender, cb) {
 
     (new Promise((resolve, reject) => {
         async.eachSeries(trs.asset.votes, (vote, eachSeriesCb) => {
-            self.verifyVote(vote, (err) => {
-                if (err) {
-                    const msg = ['Invalid vote at index', trs.asset.votes.indexOf(vote), '-', err].join(' ');
-                    if (VVE.INVALID_VOTE_AT_INDEX) {
-                        return setImmediate(eachSeriesCb, msg);
-                    }
-                    library.logger.error(`${msg}\n${{
-                        id: trs.id,
-                        type: trs.type,
-                        vote: {
-                            index: trs.asset.votes.indexOf(vote),
-                            vote,
-                        },
-                        err,
-                    }}`);
-                } else {
-                    return setImmediate(eachSeriesCb);
+            try {
+                self.verifyVote(vote);
+                return setImmediate(eachSeriesCb);
+            } catch (err) {
+                const msg = ['Invalid vote at index', trs.asset.votes.indexOf(vote), '-', err].join(' ');
+                if (VVE.INVALID_VOTE_AT_INDEX) {
+                    return setImmediate(eachSeriesCb, msg);
                 }
-            });
+                library.logger.error(`${msg}\n${{
+                    id: trs.id,
+                    type: trs.type,
+                    vote: {
+                        index: trs.asset.votes.indexOf(vote),
+                        vote,
+                    },
+                    err,
+                }}`);
+            }
         }, (err) => {
             if (err) {
                 reject(err);
@@ -233,6 +232,44 @@ Vote.prototype.verifyFields = function (trs, sender, cb) {
         .catch(err => setImmediate(cb, err));
 };
 
+Vote.prototype.newVerifyFields = (trs) => {
+    if (trs.recipientId !== trs.senderId) {
+        throw new Error('Invalid recipient');
+    }
+
+    if (!trs.asset || !trs.asset.votes) {
+        throw new Error('Invalid transaction asset');
+    }
+
+    if (!Array.isArray(trs.asset.votes)) {
+        throw new Error('Invalid votes. Must be an array');
+    }
+
+    if (!trs.asset.votes.length) {
+        throw new Error('Invalid votes. Must not be empty');
+    }
+
+    if (trs.asset.votes && trs.asset.votes.length > constants.maxVotesPerTransaction) {
+        throw new Error([
+            'Voting limit exceeded. Maximum is',
+            constants.maxVotesPerTransaction,
+            'votes per transaction'
+        ].join(' '));
+    }
+
+    trs.asset.votes.forEach((vote) => {
+        try {
+            self.verifyVote(vote);
+        } catch (e) {
+            throw new Error(['Invalid vote at index', trs.asset.votes.indexOf(vote), '-', e].join(' '));
+        }
+    });
+
+    if (trs.asset.votes.length > _.uniqBy(trs.asset.votes, v => v.slice(1)).length) {
+        throw new Error('Multiple votes for same delegate are not allowed');
+    }
+};
+
 /**
  * Validates transaction votes fields and for each vote calls verifyVote.
  * @implements {verifysendStakingRewardVote}
@@ -244,7 +281,7 @@ Vote.prototype.verifyFields = function (trs, sender, cb) {
  * calls checkConfirmedDelegates.
  */
 Vote.prototype.verify = function (trs, sender, cb) {
-    const VVE = constants.VOTE_VALIDATION_ENABLED;
+    const vve = constants.VOTE_VALIDATION_ENABLED;
 
     async.series([
         function (seriesCb) {
@@ -256,49 +293,73 @@ Vote.prototype.verify = function (trs, sender, cb) {
                 const totals = await library.frozen.calculateTotalRewardAndUnstake(trs.senderId, isDownVote);
                 if (totals.reward !== trs.asset.reward) {
                     const msg = 'Verify failed: vote reward is corrupted';
-                    if (VVE.VOTE_REWARD_CORRUPTED) {
+                    if (vve.VOTE_REWARD_CORRUPTED) {
                         return setImmediate(seriesCb, msg);
-                    } else {
-                        library.logger.error(`${msg}!\n${{
-                            id: trs.id,
-                            type: trs.type,
-                            reward: {
-                                asset: trs.asset.reward,
-                                totals: totals.reward,
-                            }
-                        }}`);
                     }
+                    library.logger.error(`${msg}!\n${{
+                        id: trs.id,
+                        type: trs.type,
+                        reward: {
+                            asset: trs.asset.reward,
+                            totals: totals.reward,
+                        }
+                    }}`);
                 }
                 if (totals.unstake !== trs.asset.unstake) {
                     const msg = 'Verify failed: vote unstake is corrupted';
-                    if (VVE.VOTE_UNSTAKE_CORRUPTED) {
+                    if (vve.VOTE_UNSTAKE_CORRUPTED) {
                         return setImmediate(seriesCb, msg);
-                    } else {
-                        library.logger.error(`${msg}! ${{
-                            id: trs.id,
-                            type: trs.type,
-                            unstake: {
-                                asset: trs.asset.unstake,
-                                totals: totals.unstake,
-                            }
-                        }}`);
                     }
+                    library.logger.error(`${msg}! ${{
+                        id: trs.id,
+                        type: trs.type,
+                        unstake: {
+                            asset: trs.asset.unstake,
+                            totals: totals.unstake,
+                        }
+                    }}`);
                 }
             }
 
             try {
                 await library.frozen.verifyAirdrop(trs);
             } catch (error) {
-                if (VVE.VOTE_AIRDROP_CORRUPTED) {
+                if (vve.VOTE_AIRDROP_CORRUPTED) {
                     return setImmediate(seriesCb, error);
-                } else {
-                    library.logger.error(`trs.id ${trs.id}, ${error}`);
                 }
+                library.logger.error(`trs.id ${trs.id}, ${error}`);
             }
 
             return setImmediate(seriesCb);
         },
     ], cb);
+};
+
+Vote.prototype.newVerify = async (trs) => {
+    try {
+        self.newVerifyFields(trs);
+    } catch (e) {
+        throw e;
+    }
+
+    if (__private.loaded) {
+        const isDownVote = trs.trsName === 'DOWNVOTE';
+        const totals = await library.frozen.calculateTotalRewardAndUnstake(trs.senderId, isDownVote);
+
+        if (totals.reward !== trs.asset.reward) {
+            throw new Error('Verify failed: vote reward is corrupted');
+        }
+
+        if (totals.unstake !== trs.asset.unstake) {
+            throw new Error('Verify failed: vote unstake is corrupted');
+        }
+    }
+
+    try {
+        await library.frozen.verifyAirdrop(trs);
+    } catch (e) {
+        throw e;
+    }
 };
 
 /**
@@ -315,26 +376,35 @@ Vote.prototype.verifyUnconfirmed = function (trs, sender, cb) {
     return self.checkUnconfirmedDelegates(trs, cb);
 };
 
+Vote.prototype.newVerifyUnconfirmed = async trs =>
+    new Promise((resolve, reject) => {
+        self.checkUnconfirmedDelegates(trs, (err) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve();
+            }
+        });
+    });
+
 /**
  * Checks type, format and lenght from vote.
  * @param {Object} vote
  * @param {function} cb - Callback function.
  * @return {setImmediateCallback} error message | cb.
  */
-Vote.prototype.verifyVote = function (vote, cb) {
+Vote.prototype.verifyVote = (vote) => {
     if (typeof vote !== 'string') {
-        return setImmediate(cb, 'Invalid vote type');
+        throw new Error('Invalid vote type');
     }
 
     if (!/[-+]{1}[0-9a-z]{64}/.test(vote)) {
-        return setImmediate(cb, 'Invalid vote format');
+        throw new Error('Invalid vote format');
     }
 
     if (vote.length !== 65) {
-        return setImmediate(cb, 'Invalid vote length');
+        throw new Error('Invalid vote length');
     }
-
-    return setImmediate(cb);
 };
 
 /**

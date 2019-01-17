@@ -132,7 +132,7 @@ __private.newCheckTransaction = async (block, trs, sender, checkExists) => {
     }
 
     try {
-        library.logic.transaction.newVerifyUnconfirmed({
+        await library.logic.transaction.newVerifyUnconfirmed({
             trs,
             sender
         });
@@ -185,8 +185,6 @@ __private.verifySignature = function (block, result) {
     }
 
     if (!valid) {
-        // FIXME
-        // https://trello.com/c/4maz5nyk/144-failed-to-verify-block-signature
         if (block.height > constants.MASTER_NODE_MIGRATED_BLOCK) {
             if (constants.VERIFY_BLOCK_SIGNATURE) {
                 result.errors.push('Failed to verify block signature');
@@ -349,8 +347,6 @@ __private.verifyPayload = function (block, result) {
         }
     }
 
-    // FIXME update old chain payloadHash
-    // https://trello.com/c/ZRV5EAUT/132-included-transactions-do-not-match-block-transactions-count
     if (block.transactions.length !== block.numberOfTransactions &&
         block.height > constants.MASTER_NODE_MIGRATED_BLOCK) {
         if (constants.PAYLOAD_VALIDATE.MAX_TRANSACTION_LENGTH) {
@@ -403,8 +399,6 @@ __private.verifyPayload = function (block, result) {
     const hex = payloadHash.digest().toString('hex');
 
     if (hex !== block.payloadHash) {
-        // FIXME update old chain payloadHash
-        // https://trello.com/c/G3XRs3Fk/127-update-old-chain-payloadhash
         if (block.height > constants.MASTER_NODE_MIGRATED_BLOCK) {
             if (constants.PAYLOAD_VALIDATE.INVALID_HASH) {
                 result.errors.push('Invalid payload hash');
@@ -415,8 +409,6 @@ __private.verifyPayload = function (block, result) {
     }
 
     if (totalAmount !== block.totalAmount) {
-        // FIXME Invalid total amount
-        // https://trello.com/c/6G2rPg0o/141-invalid-total-amount
         if (block.height > constants.MASTER_NODE_MIGRATED_BLOCK) {
             if (constants.PAYLOAD_VALIDATE.TOTAL_AMOUNT) {
                 result.errors.push('Invalid total amount');
@@ -427,8 +419,6 @@ __private.verifyPayload = function (block, result) {
     }
 
     if (totalFee !== block.totalFee) {
-        // FIXME update old chain totalFee
-        // https://trello.com/c/zmjr4SAL/131-invalid-total-fee
         if (block.height > constants.MASTER_NODE_MIGRATED_BLOCK) {
             if (constants.PAYLOAD_VALIDATE.TOTAL_FEE) {
                 result.errors.push('Invalid total fee');
@@ -878,7 +868,7 @@ __private.checkTransactions = function (block, checkExists, cb) {
     );
 };
 
-__private.checkTransactionsAndAppliedUnconfirmed = async (block, checkExists, verify) => {
+__private.checkTransactionsAndApplyUnconfirmed = async (block, checkExists, verify) => {
     const errors = [];
     let i = 0;
 
@@ -887,6 +877,7 @@ __private.checkTransactionsAndAppliedUnconfirmed = async (block, checkExists, ve
 
         if (errors.length === 0) {
             const sender = await getOrCreateAccount(library.db, trs.senderPublicKey);
+            library.logger.debug(`[Verify][checkTransactionsAndApplyUnconfirmed][sender] ${JSON.stringify(sender)}`);
             if (verify) {
                 const resultCheckTransaction = await __private.newCheckTransaction(block, trs, sender, checkExists);
 
@@ -1014,7 +1005,7 @@ Verify.prototype.newProcessBlock = async (block, broadcast, saveBlock, verify, t
     }
     // validateBlockSlot TODO enable after fix round
 
-    const resultCheckTransactions = await __private.checkTransactionsAndAppliedUnconfirmed(block, saveBlock, verify);
+    const resultCheckTransactions = await __private.checkTransactionsAndApplyUnconfirmed(block, saveBlock, verify);
     if (!resultCheckTransactions.success) {
         throw new Error(`[checkTransactions] ${JSON.stringify(resultCheckTransactions.errors)}`);
     }

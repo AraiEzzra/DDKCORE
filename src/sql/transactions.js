@@ -9,9 +9,8 @@ const TransactionsSql = {
         'senderPublicKey',
         'senderId',
         'recipientId',
-        'confirmations',
-        'height'
-    ],
+        'confirmations'
+],
 
     count: 'SELECT count(1) AS "count" FROM trs',
 
@@ -76,6 +75,7 @@ const TransactionsSql = {
             (params.where.length ? `(${params.where.join(' ')})` : ''),
             // FIXME: Backward compatibility, should be removed after transitional period
             (params.where.length && params.owner ? ` AND ${params.owner}` : params.owner),
+            (params.sortField ? `ORDER BY ${[params.sortField, params.sortMethod].join(' ')}` : ''),
             ' LIMIT ${limit} ' +
             ' OFFSET ${offset}' +
             ')',
@@ -101,8 +101,8 @@ const TransactionsSql = {
             '  LEFT JOIN blocks b ON t."t_blockId" = b.id' +
             '  LEFT JOIN votes v ON v."transactionId" = t.t_id' +
             '  LEFT JOIN stake_orders so ON so.id = t.t_id' +
-            '  LEFT JOIN referals ref ON ref.address = t."t_senderId"' +
-            (params.sortField ? `ORDER BY ${[params.sortField, params.sortMethod].join(' ')}` : ''),
+            '  LEFT JOIN referals ref ON ref.address = t."t_senderId" ' +
+            (params.afterSortField ? `ORDER BY ${[params.afterSortField, params.sortMethod].join(' ')}` : ''),
         ].filter(Boolean).join(' ');
     },
 

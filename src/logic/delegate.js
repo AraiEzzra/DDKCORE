@@ -179,6 +179,8 @@ Delegate.prototype.verifyUnconfirmed = function (trs, sender, cb) {
     return setImmediate(cb);
 };
 
+Delegate.prototype.newVerifyUnconfirmed = async () => {};
+
 /**
  * Returns transaction with setImmediate.
  * @param {transaction} trs

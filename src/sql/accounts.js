@@ -66,9 +66,14 @@ const Accounts = {
 
     getMigratedList: 'SELECT m."address",e."username",m."totalFrozeAmount",m."balance",e."transferred_time",count(*) OVER() AS "user_count" FROM migrated_etps_users e INNER JOIN mem_accounts m ON(e."address" = m."address" AND e.transferred_etp = 1) order by e."transferred_time" DESC LIMIT ${limit} OFFSET ${offset}',
 
-    getAccountByPublicKey: 'SELECT * from mem_accounts WHERE encode("publicKey", \'hex\'::text) = ${publicKey}',
+    getAccountByPublicKey: 'SELECT *,' +
+    ' encode("publicKey", \'hex\'::text) as "publicKey",' +
+    ' encode("secondPublicKey", \'hex\'::text) as "secondPublicKey"' +
+    ' from mem_accounts WHERE encode("publicKey", \'hex\'::text) = ${publicKey}',
 
-    createNewAccount: 'INSERT INTO mem_accounts (address, "publicKey") VALUES (${address}, decode(${publicKey}, \'hex\'::text)) RETURNING *'
+    createNewAccount: 'INSERT INTO mem_accounts (address, "publicKey")' +
+    ' VALUES (${address}, decode(${publicKey}, \'hex\'::text))' +
+    ' RETURNING *, encode("publicKey", \'hex\'::text) as "publicKey"'
 };
 
 module.exports = Accounts;

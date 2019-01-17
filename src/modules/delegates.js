@@ -83,7 +83,9 @@ function Delegates(cb, scope) {
  * @returns {setImmediateCallback}
  */
 __private.getKeysSortByVote = function (cb) {
-    library.db.many(accountSql.getActiveDelegates, { limit: constants.activeDelegates }).then(rows => setImmediate(cb, null, rows.map(el => el.publicKey))).catch(err => setImmediate(cb, err));
+    library.db.many(accountSql.getActiveDelegates, { limit: constants.activeDelegates })
+        .then(rows => setImmediate(cb, null, rows.map(el => el.publicKey)))
+        .catch(err => setImmediate(cb, err));
 };
 
 /**
@@ -132,7 +134,12 @@ __private.forge = function (cb) {
 
     // When client is not loaded, is syncing or round is ticking
     // Do not try to forge new blocks as client is not ready
-    if (!__private.loaded || modules.loader.syncing() || !modules.rounds.loaded() || modules.rounds.ticking() || !__private.readyForForging) {
+    if (!__private.loaded ||
+        modules.loader.syncing() ||
+        !modules.rounds.loaded() ||
+        modules.rounds.ticking() ||
+        !__private.readyForForging
+    ) {
         library.logger.debug('Client not ready to forge');
         return setImmediate(cb);
     }
@@ -155,29 +162,38 @@ __private.forge = function (cb) {
             return setImmediate(cb);
         }
 
-        library.sequence.add((cb) => {
+        library.sequence.add((sequenceCb) => {
             async.series({
                 getPeers(seriesCb) {
                     return modules.transport.getPeers({ limit: constants.maxPeers }, seriesCb);
                 },
                 checkBroadhash(seriesCb) {
                     if (modules.transport.poorConsensus()) {
-                        return setImmediate(seriesCb, ['Inadequate broadhash consensus', modules.transport.consensus(), '%'].join(' '));
+                        return setImmediate(
+                            seriesCb,
+                            ['Inadequate broadhash consensus', modules.transport.consensus(), '%'].join(' ')
+                        );
                     }
                     return setImmediate(seriesCb);
                 }
-            }, (err) => {
-                if (err) {
-                    library.logger.warn(err);
-                    return setImmediate(cb, err);
+            }, (seriesErr) => {
+                if (seriesErr) {
+                    library.logger.warn(seriesErr);
+                    return setImmediate(sequenceCb, seriesErr);
                 }
                 modules.blocks.process.newGenerateBlock(currentBlockData.keypair, currentBlockData.time)
-                    .then(() => { setImmediate(cb); })
-                    .catch((generateBlockError) => { setImmediate(cb, generateBlockError); });
+                    .then(() => {
+                        setImmediate(sequenceCb);
+                    })
+                    .catch((generateBlockError) => {
+                        library.logger.error(`[Delegate][forge][generateBlock] ${generateBlockError}`);
+                        library.logger.error(`[Delegate][forge][generateBlock][stack] ${generateBlockError}`);
+                        setImmediate(sequenceCb, generateBlockError);
+                    });
             });
-        }, (err) => {
-            if (err) {
-                library.logger.error('Failed to generate block within delegate slot', err);
+        }, (sequenceErr) => {
+            if (sequenceErr) {
+                library.logger.error('Failed to generate block within delegate slot', sequenceErr);
             } else {
                 const forgedBlock = modules.blocks.lastBlock.get();
                 modules.blocks.lastReceipt.update();
@@ -250,9 +266,6 @@ __private.checkDelegates = function (publicKey, votes, state, cb) {
                 return setImmediate(cb, 'Failed to add vote, account has already voted for this delegate');
             }
 
-
-            // FIXME
-            // https://trello.com/c/wh9i1ire/135-failed-to-remove-vote
             if (math === '-' && (delegates === null || delegates.indexOf(publicKey) === -1)) {
                 return setImmediate(cb, 'Failed to remove vote, account has not voted for this delegate');
             }
@@ -262,8 +275,6 @@ __private.checkDelegates = function (publicKey, votes, state, cb) {
                     return setImmediate(cb, err);
                 }
 
-                // FIXME right delegate include
-                // https://trello.com/c/CN7Tij6M/133-delegate-not-found
                 if (!account) {
                     return setImmediate(cb, 'Delegate not found');
                 }
@@ -305,7 +316,9 @@ __private.loadDelegates = function (cb) {
     }
     library.logger.info(['Loading delegate from config'].join(' '));
 
-    const keypair = library.ed.makeKeypair(crypto.createHash('sha256').update(secret, 'utf8').digest());
+    const keypair = library.ed.makeKeypair(crypto.createHash('sha256')
+        .update(secret, 'utf8')
+        .digest());
     const publicKey = keypair.publicKey.toString('hex');
 
     modules.accounts.getAccount({
@@ -387,55 +400,50 @@ Delegates.prototype.getDelegates = function (query, cb) {
     if (!query) {
         throw 'Missing query argument';
     }
-    modules.accounts.getAccounts({
-        isDelegate: 1,
-        sort: { voteCount: -1, vote: -1, publicKey: 1 }
-    }, ['username', 'address', 'publicKey', 'vote', 'missedblocks', 'producedblocks', 'url'], (err, delegates) => {
-        if (err) {
-            return setImmediate(cb, err);
-        }
+    // TODO rewrite it getTopDelegates or add index
+    library.db.many(sql.getTopDelegates)
+        .then((delegates) => {
+            let limit = query.limit || Rounds.prototype.getSlotDelegatesCount();
+            const offset = query.offset || 0;
 
-        let limit = query.limit || Rounds.prototype.getSlotDelegatesCount();
-        const offset = query.offset || 0;
+            limit = limit > Rounds.prototype.getSlotDelegatesCount() ? Rounds.prototype.getSlotDelegatesCount() : limit;
 
-        limit = limit > Rounds.prototype.getSlotDelegatesCount() ? Rounds.prototype.getSlotDelegatesCount() : limit;
+            const count = delegates.length;
+            const realLimit = Math.min(offset + limit, count);
 
-        const count = delegates.length;
-        const realLimit = Math.min(offset + limit, count);
+            for (let i = 0; i < delegates.length; i++) {
+                // TODO: 'rate' property is deprecated and need to be removed after transitional period
+                delegates[i].rate = i + 1;
+                delegates[i].rank = i + 1;
+                // TODO change approval to right logic
+                // https://trello.com/c/epSWVfXM/160-change-approval-to-right-logic
 
-        for (let i = 0; i < delegates.length; i++) {
-            // TODO: 'rate' property is deprecated and need to be removed after transitional period
-            delegates[i].rate = i + 1;
-            delegates[i].rank = i + 1;
-            // TODO change approval to right logic
-            // https://trello.com/c/epSWVfXM/160-change-approval-to-right-logic
+                delegates[i].approval = 100;
+                delegates[i].approval = Math.round(delegates[i].approval * 1e2) / 1e2;
 
-            delegates[i].approval = 100;
-            delegates[i].approval = Math.round(delegates[i].approval * 1e2) / 1e2;
+                let percent = 100 -
+                    (delegates[i].missedblocks / ((delegates[i].producedblocks + delegates[i].missedblocks) / 100));
+                percent = Math.abs(percent) || 0;
 
-            let percent = 100 -
-                (delegates[i].missedblocks / ((delegates[i].producedblocks + delegates[i].missedblocks) / 100));
-            percent = Math.abs(percent) || 0;
+                const outsider = i + 1 > Rounds.prototype.getSlotDelegatesCount();
+                delegates[i].productivity = (!outsider) ? Math.round(percent * 1e2) / 1e2 : 0;
+            }
 
-            const outsider = i + 1 > Rounds.prototype.getSlotDelegatesCount();
-            delegates[i].productivity = (!outsider) ? Math.round(percent * 1e2) / 1e2 : 0;
-        }
+            const orderBy = OrderBy(query.orderBy, { quoteField: false });
 
-        const orderBy = OrderBy(query.orderBy, { quoteField: false });
+            if (orderBy.error) {
+                return setImmediate(cb, orderBy.error);
+            }
 
-        if (orderBy.error) {
-            return setImmediate(cb, orderBy.error);
-        }
-
-        return setImmediate(cb, null, {
-            delegates,
-            sortField: orderBy.sortField,
-            sortMethod: orderBy.sortMethod,
-            count,
-            offset,
-            limit: realLimit
+            return setImmediate(cb, null, {
+                delegates,
+                sortField: orderBy.sortField,
+                sortMethod: orderBy.sortMethod,
+                count,
+                offset,
+                limit: realLimit
+            });
         });
-    });
 };
 
 /**
@@ -480,9 +488,10 @@ Delegates.prototype.fork = function (block, cause) {
         cause
     };
 
-    library.db.none(sql.insertFork, fork).then(() => {
-        library.network.io.sockets.emit('delegates/fork', fork);
-    });
+    library.db.none(sql.insertFork, fork)
+        .then(() => {
+            library.network.io.sockets.emit('delegates/fork', fork);
+        });
 };
 
 /**
@@ -583,11 +592,13 @@ Delegates.prototype.onBlockchainReady = function () {
             if (err) {
                 library.logger.error('Failed to load delegates', err);
             }
-
-            async.series([
-                __private.forge,
-                modules.transactions.fillPool
-            ], () => setImmediate(cb));
+            __private.forge(cb);
+            library.logger.debug([
+                '[Delegates][nextForge]',
+                `Transaction queue size: ${modules.transactions.getQueueSize()}`,
+                `Transaction conflicted queue size: ${modules.transactions.getConflictedQueueSize()}`,
+                `Transaction pool size: ${modules.transactions.getTransactionPoolSize()}`
+            ].join('\n'));
         }
 
         if (!constants.forging.stopForging) {
@@ -626,7 +637,9 @@ Delegates.prototype.internal = {
                 return setImmediate(cb, err[0].message);
             }
 
-            const keypair = library.ed.makeKeypair(crypto.createHash('sha256').update(req.body.secret, 'utf8').digest());
+            const keypair = library.ed.makeKeypair(crypto.createHash('sha256')
+                .update(req.body.secret, 'utf8')
+                .digest());
 			const publicKey = keypair.publicKey.toString('hex');
 
             if (req.body.publicKey) {
@@ -659,7 +672,9 @@ Delegates.prototype.internal = {
                 return setImmediate(cb, err[0].message);
             }
 
-            const publicKey = library.ed.makePublicKeyHex(crypto.createHash('sha256').update(req.body.secret, 'utf8').digest());
+            const publicKey = library.ed.makePublicKeyHex(crypto.createHash('sha256')
+                .update(req.body.secret, 'utf8')
+                .digest());
 
             if (req.body.publicKey) {
                 if (publicKey !== req.body.publicKey) {
@@ -828,18 +843,22 @@ Delegates.prototype.shared = {
                 limit: req.body.limit || 101,
                 sortField: orderBy.sortField,
                 sortMethod: orderBy.sortMethod
-            })).then(rows => setImmediate(cb, null, { delegates: rows })).catch((err) => {
-                library.logger.error(err.stack);
-                return setImmediate(cb, 'Database search failed');
-            });
+            }))
+                .then(rows => setImmediate(cb, null, { delegates: rows }))
+                .catch((err) => {
+                    library.logger.error(err.stack);
+                    return setImmediate(cb, 'Database search failed');
+                });
         });
     },
 
     count(req, cb) {
-        library.db.one(sql.count).then(row => setImmediate(cb, null, { count: row.count })).catch((err) => {
-            library.logger.error(err.stack);
-            return setImmediate(cb, 'Failed to count delegates');
-        });
+        library.db.one(sql.count)
+            .then(row => setImmediate(cb, null, { count: row.count }))
+            .catch((err) => {
+                library.logger.error(err.stack);
+                return setImmediate(cb, 'Failed to count delegates');
+            });
     },
 
     getVoters(req, cb) {
@@ -848,18 +867,26 @@ Delegates.prototype.shared = {
                 return setImmediate(cb, err[0].message);
             }
 
-            library.db.one(sql.getVotersCount, { publicKey: req.body.publicKey }).then((count) => {
-                const voteCount = count;
-                library.db.many(sql.getVoters, { publicKey: req.body.publicKey, limit: req.body.limit, offset: req.body.offset }).then(voters =>
-                    setImmediate(cb, null, { voters: voters, count: voteCount })
-                ).catch((getVotersErr) => {
-                    library.logger.error(getVotersErr.stack);
-                    return setImmediate(cb, 'Failed to get voters for delegate: ' + req.body.publicKey);
+            library.db.one(sql.getVotersCount, { publicKey: req.body.publicKey })
+                .then((count) => {
+                    const voteCount = count;
+                    library.db.many(sql.getVoters, {
+                        publicKey: req.body.publicKey,
+                        limit: req.body.limit,
+                        offset: req.body.offset
+                    })
+                        .then(voters =>
+                            setImmediate(cb, null, { voters: voters, count: voteCount })
+                        )
+                        .catch((getVotersErr) => {
+                            library.logger.error(getVotersErr.stack);
+                            return setImmediate(cb, 'Failed to get voters for delegate: ' + req.body.publicKey);
+                        });
+                })
+                .catch((votersCountErr) => {
+                    library.logger.error(votersCountErr.stack);
+                    return setImmediate(cb, 'Failed to get voters count for delegate: ' + req.body.publicKey);
                 });
-            }).catch((votersCountErr) => {
-                library.logger.error(votersCountErr.stack);
-                return setImmediate(cb, 'Failed to get voters count for delegate: ' + req.body.publicKey);
-            });
         });
     },
 
@@ -930,7 +957,8 @@ Delegates.prototype.shared = {
                         return setImmediate(cb, err);
                     }
 
-                    const forged = new bignum(reward.fees).plus(new bignum(reward.rewards)).toString();
+                    const forged = new bignum(reward.fees).plus(new bignum(reward.rewards))
+                        .toString();
                     return setImmediate(cb, null, {
                         fees: reward.fees,
                         rewards: reward.rewards,
@@ -944,7 +972,8 @@ Delegates.prototype.shared = {
                         return setImmediate(cb, err || 'Account not found');
                     }
 
-                    const forged = new bignum(account.fees).plus(new bignum(account.rewards)).toString();
+                    const forged = new bignum(account.fees).plus(new bignum(account.rewards))
+                        .toString();
                     return setImmediate(cb, null, { fees: account.fees, rewards: account.rewards, forged });
                 });
             }
@@ -957,7 +986,9 @@ Delegates.prototype.shared = {
                 return setImmediate(cb, err[0].message);
             }
 
-            const hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
+            const hash = crypto.createHash('sha256')
+                .update(req.body.secret, 'utf8')
+                .digest();
             const keypair = library.ed.makeKeypair(hash);
 			const publicKey = keypair.publicKey.toString('hex');
 
@@ -1006,7 +1037,9 @@ Delegates.prototype.shared = {
                             let secondKeypair = null;
 
                             if (requester.secondSignature) {
-                                const secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
+                                const secondHash = crypto.createHash('sha256')
+                                    .update(req.body.secondSecret, 'utf8')
+                                    .digest();
                                 secondKeypair = library.ed.makeKeypair(secondHash);
                             }
 
@@ -1018,11 +1051,13 @@ Delegates.prototype.shared = {
                                 keypair,
                                 secondKeypair,
                                 requester: keypair
-                            }).then((transactionDelegate) => {
-                                transactionDelegate.status = 0;
-                                modules.transactions.putInQueue(transactionDelegate);
-                                return setImmediate(cb, null, [transactionDelegate]);
-                            }).catch(e => setImmediate(cb, e.toString()));
+                            })
+                                .then((transactionDelegate) => {
+                                    transactionDelegate.status = 0;
+                                    modules.transactions.putInQueue(transactionDelegate);
+                                    return setImmediate(cb, null, [transactionDelegate]);
+                                })
+                                .catch(e => setImmediate(cb, e.toString()));
                         });
                     });
                 } else {
@@ -1042,7 +1077,9 @@ Delegates.prototype.shared = {
                         let secondKeypair = null;
 
                         if (account.secondSignature) {
-                            const secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
+                            const secondHash = crypto.createHash('sha256')
+                                .update(req.body.secondSecret, 'utf8')
+                                .digest();
                             secondKeypair = library.ed.makeKeypair(secondHash);
                         }
 
@@ -1053,11 +1090,13 @@ Delegates.prototype.shared = {
                             sender: account,
                             keypair,
                             secondKeypair
-                        }).then((transactionDelegate) => {
-                            transactionDelegate.status = 0;
-                            modules.transactions.putInQueue(transactionDelegate);
-                            return setImmediate(cb, null, [transactionDelegate]);
-                        }).catch(e => setImmediate(cb, e.toString()));
+                        })
+                            .then((transactionDelegate) => {
+                                transactionDelegate.status = 0;
+                                modules.transactions.putInQueue(transactionDelegate);
+                                return setImmediate(cb, null, [transactionDelegate]);
+                            })
+                            .catch(e => setImmediate(cb, e.toString()));
                     });
                 }
             }, (err, transaction) => {

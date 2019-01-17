@@ -269,7 +269,7 @@ describe('vote', function () {
             });
         });
 
-        it('should return error when votes are not push', function (done) {
+        it('should return error when votes are not set', function (done) {
             let trs = _.cloneDeep(validTransaction);
             delete trs.asset.votes;
             vote.verify(trs, validSender, function (err) {

@@ -58,7 +58,19 @@ const DelegatesSql = {
 
     addDelegateVoteRecord: 'INSERT INTO "delegate_to_vote_counter"("publicKey", "voteCount") VALUES (${publicKey}, 0) ON CONFLICT DO NOTHING',
 
-    removeDelegateVoteRecord: 'DELETE FROM "delegate_to_vote_counter" WHERE "publicKey" = ${publicKey}'
+    removeDelegateVoteRecord: 'DELETE FROM "delegate_to_vote_counter" WHERE "publicKey" = ${publicKey}',
+
+    getTopDelegates: 'SELECT' +
+    '  "username",' +
+    '  "address",' +
+    '  delegate_to_vote_counter."publicKey",' +
+    '  "vote",' +
+    '  "missedblocks",' +
+    '  "producedblocks",' +
+    '  "url"' +
+    ' FROM delegate_to_vote_counter' +
+    '  INNER JOIN mem_accounts on encode(mem_accounts."publicKey", \'hex\') = delegate_to_vote_counter."publicKey"' +
+    ' ORDER BY delegate_to_vote_counter."voteCount", delegate_to_vote_counter."publicKey";'
 };
 
 module.exports = DelegatesSql;

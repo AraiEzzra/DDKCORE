@@ -19,7 +19,7 @@ const __private = {};
  * @memberof module:blocks
  * @class
  * @classdesc Main Chain logic.
- * Allows push information.
+ * Allows set information.
  * @param {Object} logger
  * @param {Block} block
  * @param {Transaction} transaction
@@ -611,12 +611,10 @@ Chain.prototype.newApplyBlock = async (block, broadcast, saveBlock, tick) => {
 
     if (saveBlock) {
         await self.newSaveBlock(block);
-
         library.logger.debug(`Block applied correctly with ${block.transactions.length} transactions`);
-        library.bus.message('newBlock', block, broadcast);
-    } else {
-        library.bus.message('newBlock', block, broadcast);
     }
+    library.bus.message('newBlock', block, broadcast);
+
     if (tick) {
         await (new Promise((resolve, reject) => modules.rounds.tick(block, (err, message) => {
             if (err) {
