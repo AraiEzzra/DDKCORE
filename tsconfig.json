@@ -2,7 +2,7 @@
   "compilerOptions": {
     "module": "commonjs",
     "esModuleInterop": true,
-    "target": "es2015",
+    "target": "es6",
     "noImplicitAny": false,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
@@ -11,8 +11,12 @@
     "outDir": "dist",
     "baseUrl": ".",
     "paths": {
-      "src/*": ["./src/*"]
+      "api/*": ["api/*"],
+      "core/*": ["core/*"]
     },
+    "types": [
+      "node"
+    ],
     "skipLibCheck": true,
     "typeRoots": [
       "node_modules/@types"
@@ -22,6 +26,7 @@
     ]
   },
   "include": [
-    "src/**/*"
+    "api/**/*",
+    "core/**/*"
   ]
 }
