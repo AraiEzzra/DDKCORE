@@ -190,28 +190,29 @@ Process.prototype.loadBlocksOffset = function (limit, offset, verify, cb) {
                     library.logger.debug('Processing block', block.id);
 
                     if (block.id === library.genesisblock.block.id) {
-                        return modules.blocks.chain.applyGenesisBlock(block, cbBlocks);
-                    }
-
-                    return modules.blocks.verify.processBlock(
-                        block,
-                        false,
-                        false,
-                        verify,
-                        (err) => {
-                            if (err) {
-                                library.logger.debug('Block processing failed', {
-                                    id: block.id,
-                                    err: err.toString(),
-                                    module: 'blocks',
-                                    block,
-                                });
+                        modules.blocks.chain.newApplyGenesisBlock(block, false, false)
+                            .then(() => setImmediate(cbBlocks));
+                    } else {
+                        return modules.blocks.verify.processBlock(
+                            block,
+                            false,
+                            false,
+                            verify,
+                            (err) => {
+                                if (err) {
+                                    library.logger.debug('Block processing failed', {
+                                        id: block.id,
+                                        err: err.toString(),
+                                        module: 'blocks',
+                                        block,
+                                    });
+                                }
+                                // Update last block
+                                // modules.blocks.lastBlock.push(block);
+                                return setImmediate(cbBlocks, err);
                             }
-                            // Update last block
-                            // modules.blocks.lastBlock.set(block);
-                            return setImmediate(cbBlocks, err);
-                        }
-                    );
+                        );
+                    }
                 }, err => setImmediate(cbAdd, err, modules.blocks.lastBlock.get()));
             })
             .catch((err) => {
@@ -268,21 +269,21 @@ Process.prototype.loadBlocksFromPeer = function (peer, cb) {
     // Process single block
     function processBlock(block, seriesCb) {
         // Start block processing - broadcast: false, saveBlock: true
-        modules.blocks.verify.processBlock(block, false, true, true,
-            (err) => {
-                if (!err) {
-                    // Update last valid block
-                    lastValidBlock = block;
-                    library.logger.info(
-                        ['Block', block.id, 'loaded from:', peer.string].join(' '),
-                        `height: ${block.height}`
-                    );
-                } else {
-                    const id = (block ? block.id : 'null');
-                    library.logger.debug(
-                        'Block processing failed', { id, err: err.toString(), module: 'blocks', block }
-                    );
-                }
+        modules.blocks.verify.newProcessBlock(block, false, true, true, true)
+            .then(() => {
+                // Update last valid block
+                lastValidBlock = block;
+                library.logger.info(
+                    ['Block', block.id, 'loaded from:', peer.string].join(' '),
+                    `height: ${block.height}`
+                );
+                return seriesCb();
+            })
+            .catch((err) => {
+                const id = (block ? block.id : 'null');
+                library.logger.debug(
+                    'Block processing failed', { id, err: err.toString(), module: 'blocks', block }
+                );
                 return seriesCb(err);
             });
     }
@@ -406,9 +407,9 @@ Process.prototype.newGenerateBlock = async (keypair, timestamp) => {
         library.logger.error(`[Process][newGenerateBlock][create][stack] ${e.stack}`);
         throw e;
     }
-        // Start block processing - broadcast: true, saveBlock: true
+
     try {
-        await modules.blocks.verify.newProcessBlock(block, true, true, true);
+        await modules.blocks.verify.newProcessBlock(block, true, true, true, true);
     } catch (e) {
         library.logger.error(`[Process][newGenerateBlock][processBlock] ${e}`);
         library.logger.error(`[Process][newGenerateBlock][processBlock][stack] ${e.stack}`);
@@ -474,7 +475,7 @@ Process.prototype.onReceiveBlock = function (block) {
         // Detect sane block
         if (block.previousBlock === lastBlock.id && lastBlock.height + 1 === block.height) {
             // Process received block
-            return __private.receiveBlock(block, cb);
+            __private.newReceiveBlock(block).then(() => setImmediate(cb, null));
         } else if (block.previousBlock !== lastBlock.id && lastBlock.height + 1 === block.height) {
             // Process received fork cause 1
             return __private.receiveForkOne(block, lastBlock, cb);
@@ -525,6 +526,26 @@ __private.receiveBlock = function (block, cb) {
     // Start block processing - broadcast: true, saveBlock: true
     modules.blocks.verify.processBlock(block, true, true, true, cb);
 };
+
+
+__private.newReceiveBlock = async (block) => {
+    library.logger.info([
+        'Received new block id:', block.id,
+        'height:', block.height,
+        'round:', modules.rounds.calc(block.height),
+        'slot:', slots.getSlotNumber(block.timestamp),
+        'reward:', block.reward
+    ].join(' '));
+
+    modules.blocks.lastReceipt.update();
+    try {
+        await modules.blocks.verify.newProcessBlock(block, true, true, true, true);
+    } catch (e) {
+        library.logger.error(`[Process][newReceiveBlock] ${e}`);
+        library.logger.error(`[Process][newReceiveBlock][stack] ${e.stack}`);
+    }
+};
+
 
 /**
  * Receive block detected as fork cause 1: Consecutive height but different previous block id
@@ -636,7 +657,7 @@ __private.receiveForkFive = function (block, lastBlock, cb) {
         },
         // Process received block
         function (seriesCb) {
-            return __private.receiveBlock(block, seriesCb);
+            return __private.newReceiveBlock(block).then(seriesCb);
         }
     ], (err) => {
         if (err) {

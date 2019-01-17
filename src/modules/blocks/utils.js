@@ -195,7 +195,7 @@ Utils.prototype.getIdSequence = function (height, cb) {
 
         const ids = [];
 
-        // Add genesis block at the end if the set doesn't contain it already
+        // Add genesis block at the end if the push doesn't contain it already
         if (library.genesisblock && library.genesisblock.block) {
             const __genesisblock = {
                 id: library.genesisblock.block.id,
@@ -207,7 +207,7 @@ Utils.prototype.getIdSequence = function (height, cb) {
             }
         }
 
-        // Add last block at the beginning if the set doesn't contain it already
+        // Add last block at the beginning if the push doesn't contain it already
         if (lastBlock && !_.includes(rows, lastBlock.id)) {
             rows.unshift({
                 id: lastBlock.id,

@@ -171,7 +171,7 @@ describe('transfer', function () {
     });
 
     describe('verify', function () {
-        it('should return error if recipientId is not set', function (done) {
+        it('should return error if recipientId is not push', function (done) {
             let trs = _.cloneDeep(validTransaction);
             delete trs.recipientId;
             transfer.verify(trs, validSender, function (err) {
@@ -217,7 +217,7 @@ describe('transfer', function () {
             transfer.undo.call(transaction, trs, dummyBlock, sender, done);
         }
 
-        it('should return error if recipientid is not set', function (done) {
+        it('should return error if recipientid is not push', function (done) {
             let trs = _.cloneDeep(validTransaction);
             delete trs.recipientId;
             transfer.apply.call(transaction, trs, dummyBlock, validSender, function (err) {
@@ -260,7 +260,7 @@ describe('transfer', function () {
             transfer.apply.call(transaction, trs, dummyBlock, sender, done);
         }
 
-        it('should return error if recipientid is not set', function (done) {
+        it('should return error if recipientid is not push', function (done) {
             let trs = _.cloneDeep(validTransaction);
             delete trs.recipientId;
             transfer.undo.call(transaction, trs, dummyBlock, validSender, function (err) {

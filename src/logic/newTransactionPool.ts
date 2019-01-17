@@ -1,7 +1,8 @@
-import {Account, Transaction, transactionSortFunc, TransactionStatus} from "src/helpers/types";
-import * as constants from 'src/helpers/constants';
+import {Account, Transaction, TransactionStatus} from "src/helpers/types";
 import * as AccountsSql from 'src/sql/accounts.js'
 import {getOrCreateAccount} from "src/helpers/account.utils";
+import {transactionSortFunc} from "src/helpers/transaction.utils";
+import * as constants from 'src/helpers/constants.js';
 
 declare class TransactionPoolScope {
     logger: any;
@@ -31,8 +32,8 @@ class TransactionPool {
      *
      * lock on moment block generation
      */
-    set(trs: Transaction) {
-        trs.status = TransactionStatus.PUT_IN_PUL;
+    push(trs: Transaction) {
+        trs.status = TransactionStatus.PUT_IN_POOL;
         this.pool[trs.id] = trs;
         if (!this.poolBySender[trs.senderId]) {
             this.poolBySender[trs.senderId] = [];
@@ -55,7 +56,18 @@ class TransactionPool {
      *  exist in new common block
      *  after verify on new trs
      */
-    remove(trs: Transaction) {
+    async remove(trs: Transaction) {
+        let sender = await this.scope.db.one(AccountsSql.getAccountByPublicKey, {
+            publicKey: trs.senderPublicKey
+        });
+        sender = new Account(sender);
+        try {
+            await this.scope.transactionLogic.newUndoUnconfirmed(trs, sender);
+        } catch (e) {
+            this.scope.logger.error(`[TransactionPool][remove]: ${e}`);
+            this.scope.logger.error(`[TransactionPool][remove][stack]: \n ${e.stack}`);
+        }
+
         delete this.pool[trs.id];
         this.poolBySender[trs.senderId].splice(this.poolBySender[trs.senderId].indexOf(trs), 1) ;
         this.poolByRecipient[trs.recipientId].splice(this.poolByRecipient[trs.recipientId].indexOf(trs), 1) ;
@@ -79,25 +91,28 @@ class TransactionPool {
         return deletedValue;
     }
 
-    async getUnconfirmedTransactionsForBlockGeneration(): Promise<Array<Transaction>> {
-        const transactions = Object.values(this.pool).sort(transactionSortFunc).slice(0, constants.maxTxsPerBlock);
+    async popSortedUnconfirmedTransactions(limit: number): Promise<Array<Transaction>> {
+        const transactions = Object.values(this.pool).sort(transactionSortFunc).slice(0, limit);
         for (const trs of transactions) {
-
-            let sender = await this.scope.db.one(AccountsSql.getAccountByPublicKey, {
-                publicKey: trs.senderPublicKey
-            });
-            sender = new Account(sender);
-            try {
-                await this.scope.transactionLogic.newUndoUnconfirmed(trs, sender);
-            } catch (e) {
-                this.scope.logger.error(`[TransactionPool][getUnconfirmedTransactionsForBlockGeneration]: ${e}`);
-                this.scope.logger.error(
-                    `[TransactionPool][getUnconfirmedTransactionsForBlockGeneration][stack]: \n ${e.stack}`
-                );
-            }
+            await this.remove(trs);
         }
 
         return transactions;
+    }
+
+    isPotentialConflict(trs: Transaction) {
+        const recipentsTrs = this.poolByRecipient[trs.senderId] || [];
+        const sendersTrs = this.poolBySender[trs.senderId] || [];
+        const dependTransactions = [...recipentsTrs, ...sendersTrs];
+
+        if (dependTransactions.length === 0) {
+            return false;
+        }
+
+        dependTransactions.push(trs);
+        dependTransactions.sort(transactionSortFunc);
+
+        return dependTransactions.indexOf(trs) !== (dependTransactions.length - 1);
     }
 
 }
@@ -111,9 +126,10 @@ declare class TransactionQueueScope {
 
 export class TransactionQueue {
 
-    queue: Array<Transaction> = [];
+    private queue: Array<Transaction> = [];
+    private conflictedQueue: Array<{ transaction: Transaction, expire: number }> = [];
 
-    scope: TransactionQueueScope = {} as TransactionQueueScope;
+    private scope: TransactionQueueScope = {} as TransactionQueueScope;
 
     constructor({ transactionLogic, transactionPool, logger, db }: TransactionQueueScope) {
         this.scope.transactionLogic = transactionLogic;
@@ -122,15 +138,11 @@ export class TransactionQueue {
         this.scope.db = db;
     }
 
-    /**
-     * used in:
-     *  verify ?
-     */
     pop(): Transaction {
         return this.queue.shift();
     }
 
-    set(trs: Transaction): void {
+    push(trs: Transaction): void {
         trs.status = TransactionStatus.QUEUED;
         this.queue.push(trs);
         if (this.queue.length === 1) {
@@ -140,37 +152,76 @@ export class TransactionQueue {
         }
     }
 
+    pushInConflictedQueue(trs: Transaction): void {
+        this.conflictedQueue.push({
+            transaction: trs,
+            expire: Math.floor(new Date().getTime() / 1000) + constants.TRANSACTION_QUEUE_EXPIRE
+        });
+        trs.status = TransactionStatus.QUEUED_AS_CONFLICTED;
+        this.scope.logger.debug(`TransactionStatus.QUEUED_AS_CONFLICTED ${JSON.stringify(trs)}`);
+    }
+
+    // TODO can be optimized if check senderId and recipientId
+    reshuffle() {
+        while (this.conflictedQueue.length > 0) {
+            this.push(this.conflictedQueue.pop().transaction);
+        }
+    }
+
     async process(): Promise<void> {
         if (this.queue.length >= 1) {
             const trs = this.pop();
 
             const sender = await getOrCreateAccount(this.scope.db, trs.senderPublicKey);
-            this.scope.logger.info(`[TransactionQueue][process][sender] ${JSON.stringify(sender)}`);
+            this.scope.logger.debug(`[TransactionQueue][process][sender] ${JSON.stringify(sender)}`);
 
-
-            await this.processTrs(trs, sender);
+            const processStatus = await this.processTrs(trs, sender);
+            if (!processStatus) {
+                // notify in socket
+                return;
+            }
             trs.status = TransactionStatus.PROCESSED;
-            this.scope.logger.info(`TransactionStatus.PROCESSED ${JSON.stringify(trs)}`);
+            this.scope.logger.debug(`TransactionStatus.PROCESSED ${JSON.stringify(trs)}`);
+
+            if (this.scope.transactionPool.isPotentialConflict(trs)) {
+                this.pushInConflictedQueue(trs);
+                // notify in socket
+                return;
+            }
 
             const verifyStatus = await this.verify(trs, sender);
 
-            if (verifyStatus.verified) {
-                trs.status = TransactionStatus.VERIFIED;
-                this.scope.logger.info(`TransactionStatus.VERIFIED ${JSON.stringify(trs)}`);
-                await this.applyUnconfirmed(trs, sender);
-                trs.status = TransactionStatus.UNCOFIRM_APPLIED;
-                this.scope.logger.info(`TransactionStatus.UNCOFIRM_APPLIED ${JSON.stringify(trs)}`);
-                this.scope.transactionPool.set(trs);
-            } else {
+            if (!verifyStatus.verified) {
+                trs.status = TransactionStatus.DECLINED;
                 // notify in socket
+                return;
             }
-            this.scope.logger.info(`[TransactionQueue][process]`);
+
+            trs.status = TransactionStatus.VERIFIED;
+            this.scope.logger.debug(`TransactionStatus.VERIFIED ${JSON.stringify(trs)}`);
+
+            await this.applyUnconfirmed(trs, sender);
+            trs.status = TransactionStatus.UNCOFIRM_APPLIED;
+            this.scope.logger.debug(`TransactionStatus.UNCOFIRM_APPLIED ${JSON.stringify(trs)}`);
+
+            this.scope.transactionPool.push(trs);
             this.process();
         }
     }
 
-    async processTrs(trs: Transaction, sender: Account): Promise<void> {
-        this.scope.transactionLogic.newProcess(trs, sender);
+    async processTrs(trs: Transaction, sender: Account): Promise<{ success: boolean, error?: Array<string> }> {
+        try {
+            this.scope.transactionLogic.newProcess(trs, sender);
+            return { success: true };
+        } catch (e) {
+            this.scope.logger.error(`[TransactionQueue][processTrs]: ${e}`);
+            this.scope.logger.error(`[TransactionQueue][processTrs][stack]: \n ${e.stack}`);
+            return {
+                success: false,
+                error: [e]
+            }
+        }
+
     }
 
     async verify(trs: Transaction, sender: Account): Promise<{ verified: boolean, error: Array<string> }> {
@@ -207,6 +258,7 @@ export class TransactionQueue {
         try {
             await this.scope.transactionLogic.newApplyUnconfirmed(trs, sender);
         } catch (e) {
+            trs.status = TransactionStatus.DECLINED;
             this.scope.logger.error(`[TransactionQueue][applyUnconfirmed]: ${e}`);
             this.scope.logger.error(`[TransactionQueue][applyUnconfirmed][stack]: \n ${e.stack}`);
         }

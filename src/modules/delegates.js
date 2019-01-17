@@ -1008,8 +1008,6 @@ Delegates.prototype.shared = {
                                 secondKeypair = library.ed.makeKeypair(secondHash);
                             }
 
-                            let transaction;
-
                             library.logic.transaction.create({
                                 type: transactionTypes.DELEGATE,
                                 username: req.body.username,
@@ -1019,8 +1017,9 @@ Delegates.prototype.shared = {
                                 secondKeypair,
                                 requester: keypair
                             }).then((transactionDelegate) => {
-                                transaction = transactionDelegate;
-                                modules.transactions.receiveTransactions([transaction], true, cb);
+                                transactionDelegate.status = 0;
+                                modules.transactions.putInQueue(transactionDelegate);
+                                return setImmediate(cb, null, [transactionDelegate]);
                             }).catch(e => setImmediate(cb, e.toString()));
                         });
                     });
@@ -1045,8 +1044,6 @@ Delegates.prototype.shared = {
                             secondKeypair = library.ed.makeKeypair(secondHash);
                         }
 
-                        let transaction;
-
                         library.logic.transaction.create({
                             type: transactionTypes.DELEGATE,
                             username: req.body.username,
@@ -1055,8 +1052,9 @@ Delegates.prototype.shared = {
                             keypair,
                             secondKeypair
                         }).then((transactionDelegate) => {
-                            transaction = transactionDelegate;
-                            modules.transactions.receiveTransactions([transaction], true, cb);
+                            transactionDelegate.status = 0;
+                            modules.transactions.putInQueue(transactionDelegate);
+                            return setImmediate(cb, null, [transactionDelegate]);
                         }).catch(e => setImmediate(cb, e.toString()));
                     });
                 }

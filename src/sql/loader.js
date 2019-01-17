@@ -1,5 +1,5 @@
 const LoaderSql = {
-    countBlocks: 'SELECT COUNT("rowId")::int FROM blocks',
+    countBlocks: 'SELECT COUNT(1)::int FROM blocks',
 
     getGenesisBlock: 'SELECT "id", "payloadHash", "blockSignature" FROM blocks WHERE "height" = 1',
 

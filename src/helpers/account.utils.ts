@@ -4,8 +4,8 @@ import {Account} from "src/helpers/types";
 import * as AccountsSql from 'src/sql/accounts.js';
 
 export const generateAddressByPublicKey = (publicKey) => {
-    console.log(`publicKey ${publicKey}`);
-    const publicKeyHash = crypto.createHash('sha256').update(publicKey).digest();
+    // any because bad types in node, allow hex
+    const publicKeyHash = crypto.createHash('sha256').update(publicKey, 'hex' as any).digest();
     const temp = Buffer.alloc(8);
 
     for (let i = 0; i < 8; i++) {

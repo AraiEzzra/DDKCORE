@@ -1,4 +1,4 @@
-// import { getOrCreateAccount } from 'src/helpers/account.utils';
+const { transactionSortFunc } = require('src/helpers/transaction.utils');
 const { getOrCreateAccount } = require('src/helpers/account.utils');
 
 const async = require('async');
@@ -19,7 +19,7 @@ const __private = {};
  * @memberof module:blocks
  * @class
  * @classdesc Main Chain logic.
- * Allows set information.
+ * Allows push information.
  * @param {Object} logger
  * @param {Block} block
  * @param {Transaction} transaction
@@ -54,26 +54,15 @@ function Chain(logger, block, transaction, db, genesisblock, bus, balancesSequen
  * @return {Function} cb Callback function from params (through setImmediate)
  * @return {Object}   cb.err Error if occurred
  */
-Chain.prototype.saveGenesisBlock = function (cb) {
+Chain.prototype.saveGenesisBlock = async () => {
     // Check if genesis block ID already exists in the database
     // FIXME: Duplicated, there is another SQL query that we can use for that
-    library.db.query(sql.getGenesisBlockId, { id: library.genesisblock.block.id })
-        .then((rows) => {
-            const blockId = rows.length && rows[0].id;
+    const rows = await library.db.query(sql.getGenesisBlockId, { id: library.genesisblock.block.id });
+    const blockId = rows.length && rows[0].id;
 
-            if (!blockId) {
-                // If there is no block with genesis ID - save to database
-                // WARNING: DB_WRITE
-                /* library.genesisblock.block.timestamp=slots.getTime(); */
-                self.saveBlock(library.genesisblock.block, err => setImmediate(cb, err));
-            } else {
-                return setImmediate(cb);
-            }
-        })
-        .catch((err) => {
-            library.logger.error(err.stack);
-            return setImmediate(cb, 'Blocks#saveGenesisBlock error');
-        });
+    if (!blockId) {
+        await self.newApplyGenesisBlock(library.genesisblock.block, false, true);
+    }
 };
 
 /**
@@ -344,6 +333,40 @@ Chain.prototype.applyGenesisBlock = function (block, cb) {
     });
 };
 
+Chain.prototype.deleteAfterBlock = function (blockId, cb) {
+    library.db.query(sql.deleteAfterBlock, { id: blockId })
+        .then(res => setImmediate(cb, null, res))
+        .catch((err) => {
+            library.logger.error(err.stack);
+            return setImmediate(cb, 'Blocks#deleteAfterBlock error');
+        });
+};
+
+
+/**
+ * Apply genesis block's transactions to blockchain
+ *
+ * @private
+ * @async
+ * @method applyGenesisBlock
+ * @param  {Object}   block Full normalized genesis block
+ * @param  {Function} cb Callback function
+ * @return {Function} cb Callback function from params (through setImmediate)
+ * @return {Object}   cb.err Error if occurred
+ */
+Chain.prototype.newApplyGenesisBlock = async (block, verify, save) => {
+    block.transactions = block.transactions.sort(transactionSortFunc);
+    try {
+        await modules.blocks.verify.newProcessBlock(block, false, save, verify, false);
+        library.logger.info('[Chain][applyGenesisBlock] Genesis block loading');
+    } catch (e) {
+        library.logger.error(`[Chain][applyGenesisBlock] ${e}`);
+        library.logger.error(`[Chain][applyGenesisBlock][stack] ${e.stack}`);
+    }
+
+
+};
+
 /**
  * Apply transaction to unconfirmed and confirmed
  *
@@ -575,7 +598,7 @@ Chain.prototype.applyBlock = function (block, broadcast, cb, saveBlock) {
     });
 };
 
-Chain.prototype.newApplyBlock = async (block, broadcast, saveBlock) => {
+Chain.prototype.newApplyBlock = async (block, broadcast, saveBlock, tick) => {
     // Prevent shutdown during database writes.
     modules.blocks.isActive.set(true);
 
@@ -594,15 +617,17 @@ Chain.prototype.newApplyBlock = async (block, broadcast, saveBlock) => {
     } else {
         library.bus.message('newBlock', block, broadcast);
     }
-    await (new Promise((resolve, reject) => modules.rounds.tick(block, (err, message) => {
-        if (err) {
-            library.logger.error(`[Chain][applyBlock][tick]: ${err}`);
-            library.logger.error(`[Chain][applyBlock][tick][stack]: \n ${err.stack}`);
-            reject(err);
-        }
-        library.logger.debug(`[Chain][applyBlock][tick] message: ${message}`);
-        resolve();
-    })));
+    if (tick) {
+        await (new Promise((resolve, reject) => modules.rounds.tick(block, (err, message) => {
+            if (err) {
+                library.logger.error(`[Chain][applyBlock][tick]: ${err}`);
+                library.logger.error(`[Chain][applyBlock][tick][stack]: \n ${err.stack}`);
+                reject(err);
+            }
+            library.logger.debug(`[Chain][applyBlock][tick] message: ${message}`);
+            resolve();
+        })));
+    }
     block = null;
 };
 

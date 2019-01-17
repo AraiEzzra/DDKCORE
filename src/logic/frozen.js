@@ -378,6 +378,24 @@ Frozen.prototype.verify = function (trs, sender, cb) {
     return self.verifyFields(trs, sender, cb);
 };
 
+Frozen.prototype.newVerify = async (trs) => {
+    const stakedAmount = trs.stakedAmount / 100000000;
+
+    if (stakedAmount < 1) {
+        throw new Error('Invalid stake amount');
+    }
+
+    if ((stakedAmount % 1) !== 0) {
+        throw new Error('Invalid stake amount: Decimal value');
+    }
+    try {
+        await self.verifyAirdrop(trs);
+    } catch (e) {
+        throw e;
+    }
+};
+
+
 Frozen.prototype.verifyUnconfirmed = function (trs, sender, cb) {
     if (Number(trs.stakedAmount) + Number(sender.u_totalFrozeAmount) > Number(sender.u_balance)) {
         if (constants.STAKE_VALIDATE.BALANCE_ENABLED) {

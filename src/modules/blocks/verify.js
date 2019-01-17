@@ -757,7 +757,7 @@ __private.newNormalizeBlock = (block) => {
         library.logic.block.objectNormalize(block);
         return { success: true, errors: [] };
     } catch (err) {
-        return { success: false, errors: [err.message] };
+        return { success: false, errors: [err] };
     }
 };
 /**
@@ -878,7 +878,7 @@ __private.checkTransactions = function (block, checkExists, cb) {
     );
 };
 
-__private.checkTransactionsAndAppliedUnconfirmed = async (block, checkExists) => {
+__private.checkTransactionsAndAppliedUnconfirmed = async (block, checkExists, verify) => {
     const errors = [];
     let i = 0;
 
@@ -887,12 +887,14 @@ __private.checkTransactionsAndAppliedUnconfirmed = async (block, checkExists) =>
 
         if (errors.length === 0) {
             const sender = await getOrCreateAccount(library.db, trs.senderPublicKey);
-            const resultCheckTransaction = await __private.newCheckTransaction(block, trs, sender, checkExists);
+            if (verify) {
+                const resultCheckTransaction = await __private.newCheckTransaction(block, trs, sender, checkExists);
 
-            if (!resultCheckTransaction.success) {
-                errors.push(resultCheckTransaction.errors);
-                i--;
-                continue;
+                if (!resultCheckTransaction.success) {
+                    errors.push(resultCheckTransaction.errors);
+                    i--;
+                    continue;
+                }
             }
 
             await library.logic.transaction.newApplyUnconfirmed(trs, sender);
@@ -966,10 +968,10 @@ Verify.prototype.processBlock = function (block, broadcast, saveBlock, verify, c
             // * Block and transactions have valid values (signatures, block slots, etc...)
             // * The check against database state passed (for instance sender has enough LSK, votes are under 101, etc...)
             // We thus update the database with the transactions values, save the block and tick it.
-            // Also that function set new block as our last block
+            // Also that function push new block as our last block
             modules.blocks.chain.applyBlock(block, broadcast, seriesCb, saveBlock);
         },
-        // Perform next two steps only when 'broadcast' flag is set, it can be:
+        // Perform next two steps only when 'broadcast' flag is push, it can be:
         // 'true' if block comes from generation or receiving process
         // 'false' if block comes from chain synchronisation process
         updateSystemHeaders(seriesCb) {
@@ -982,9 +984,8 @@ Verify.prototype.processBlock = function (block, broadcast, saveBlock, verify, c
     }, err => setImmediate(cb, err));
 };
 
-Verify.prototype.newProcessBlock = async (block, broadcast, saveBlock, verify) => {
+Verify.prototype.newProcessBlock = async (block, broadcast, saveBlock, verify, tick) => {
     if (modules.blocks.isCleaning.get()) {
-        // Break processing if node shutdown reqested
         throw new Error('Cleaning up');
     } else if (!__private.loaded) {
         throw new Error('Blockchain is loading');
@@ -1013,12 +1014,12 @@ Verify.prototype.newProcessBlock = async (block, broadcast, saveBlock, verify) =
     }
     // validateBlockSlot TODO enable after fix round
 
-    const resultCheckTransactions = await __private.checkTransactionsAndAppliedUnconfirmed(block, saveBlock);
+    const resultCheckTransactions = await __private.checkTransactionsAndAppliedUnconfirmed(block, saveBlock, verify);
     if (!resultCheckTransactions.success) {
         throw new Error(`[checkTransactions] ${JSON.stringify(resultCheckTransactions.errors)}`);
     }
 
-    await modules.blocks.chain.newApplyBlock(block, broadcast, saveBlock);
+    await modules.blocks.chain.newApplyBlock(block, broadcast, saveBlock, tick);
 
     if (!library.config.loading.snapshotRound) {
         await (new Promise((resolve, reject) => modules.system.update((err) => {
@@ -1030,6 +1031,7 @@ Verify.prototype.newProcessBlock = async (block, broadcast, saveBlock, verify) =
             resolve();
         })));
     }
+    modules.transactions.reshuffleTransactionQueue();
 };
 
 /**

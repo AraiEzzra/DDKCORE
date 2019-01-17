@@ -128,7 +128,7 @@ function Migrator(pgp, db) {
     };
 
     /**
-     * Executes 'runtime.sql' file, that set peers clock to null and state to 1.
+     * Executes 'runtime.sql' file, that push peers clock to null and state to 1.
      * @method
      * @param {function} waterCb - Callback function
      * @return {function} waterCb with error
