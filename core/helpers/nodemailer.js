@@ -1,4 +1,4 @@
-const nodemailer = require('data/DDKCORE/src/helpers/nodemailer');
+const nodemailer = require('./helpers/nodemailer');
 
 const env = process.env;
 

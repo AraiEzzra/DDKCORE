@@ -682,7 +682,7 @@ d.run(() => {
             scope.logger.error(err.message);
         } else {
             // TODO: make it NORMAL
-            cronjob.setJobsPath(path.join(process.cwd(), 'src', '/jobs.js'));  // Absolute path to the jobs module.
+            cronjob.setJobsPath(path.join(process.cwd(), 'core', '/jobs.js'));  // Absolute path to the jobs module.
             jobs.attachScope(scope);
 
             // AFFILIATE AIRDROP

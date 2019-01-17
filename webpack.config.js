@@ -6,9 +6,9 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
     mode: 'development',
-    entry: path.join(DIR, 'src', 'app.js'),
-    context: path.resolve(DIR, "src"),
-    target: "node",
+    entry: path.join(DIR, 'core', 'app.js'),
+    context: path.resolve(DIR, 'core'),
+    target: 'node',
     externals: [nodeExternals()],
     node: {
         __dirname: false,
@@ -43,11 +43,11 @@ module.exports = {
     resolve: {
         extensions: ['.ts', '.js', '.json'],
         alias: {
-            src: path.resolve(__dirname, 'src'),
+            src: path.resolve(DIR, 'core'),
         },
     },
     output: {
-        filename: "app.js",
+        filename: 'app.js',
         path: path.join(DIR, 'dist'),
         publicPath: '/',
     },
