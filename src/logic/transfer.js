@@ -1,8 +1,8 @@
 const constants = require('../helpers/constants.js');
 
 // Private fields
-let modules,
-    self;
+let modules;
+let self;
 
 /**
  * Main transfer logic.
@@ -124,7 +124,7 @@ Transfer.prototype.apply = function (trs, block, sender, cb) {
             balance: trs.amount,
             blockId: block.id,
             round: modules.rounds.calc(block.height)
-        }, err => setImmediate(cb, err));
+        }, errAccountGet => setImmediate(cb, errAccountGet));
     });
 };
 
@@ -170,7 +170,7 @@ Transfer.prototype.applyUnconfirmed = function (trs, sender, cb) {
         modules.accounts.mergeAccountAndGet({
             address: trs.recipientId,
             u_balance: trs.amount,
-        }, err => setImmediate(cb, err));
+        }, errAccountGet => setImmediate(cb, errAccountGet));
     });
 };
 
@@ -189,7 +189,7 @@ Transfer.prototype.undoUnconfirmed = function (trs, sender, cb) {
         modules.accounts.mergeAccountAndGet({
             address: trs.recipientId,
             u_balance: -trs.amount,
-        }, err => setImmediate(cb, err));
+        }, errAccountGet => setImmediate(cb, errAccountGet));
     });
 };
 

@@ -2,9 +2,9 @@ const constants = require('../helpers/constants.js');
 const sql = require('../sql/delegates');
 
 // Private fields
-let modules,
-    library,
-    self;
+let modules;
+let library;
+let self;
 
 /**
  * Initializes library.
@@ -87,7 +87,6 @@ Delegate.prototype.verify = function (trs, sender, cb) {
             return setImmediate(cb, 'Invalid transaction amount');
         }
         library.logger.error('Invalid transaction amount');
-
     }
 
     if (sender.isDelegate) {
@@ -95,7 +94,6 @@ Delegate.prototype.verify = function (trs, sender, cb) {
             return setImmediate(cb, 'Account is already a delegate');
         }
         library.logger.error('Account is already a delegate');
-
     }
 
     if (sender.u_isDelegate) {
@@ -103,7 +101,6 @@ Delegate.prototype.verify = function (trs, sender, cb) {
             return setImmediate(cb, 'Account is under process for delegate registration');
         }
         library.logger.error('Account is under process for delegate registration');
-
     }
 
     if (!trs.asset || !trs.asset.delegate) {
@@ -111,7 +108,6 @@ Delegate.prototype.verify = function (trs, sender, cb) {
             return setImmediate(cb, 'Invalid transaction asset');
         }
         library.logger.error('Invalid transaction asset');
-
     }
 
     if (!trs.asset.delegate.username) {
@@ -119,7 +115,6 @@ Delegate.prototype.verify = function (trs, sender, cb) {
             return setImmediate(cb, 'Username is undefined');
         }
         library.logger.error('Username is undefined');
-
     }
 
     if (trs.asset.delegate.username !== trs.asset.delegate.username.toLowerCase()) {
@@ -127,20 +122,20 @@ Delegate.prototype.verify = function (trs, sender, cb) {
             return setImmediate(cb, 'Username must be lowercase');
         }
         library.logger.error('Username must be lowercase');
-
     }
 
-    let isAddress = /^(DDK)+[0-9]{1,25}$/ig;
-    let allowSymbols = /^[a-z0-9!@$&_.]+$/g;
+    const isAddress = /^(DDK)+[0-9]{1,25}$/ig;
+    const allowSymbols = /^[a-z0-9!@$&_.]+$/g;
 
-    let username = String(trs.asset.delegate.username).toLowerCase().trim();
+    const username = String(trs.asset.delegate.username)
+        .toLowerCase()
+        .trim();
 
     if (username === '') {
         if (constants.VERIFY_DELEGATE_TRS_RECIPIENT) {
             return setImmediate(cb, 'Empty username');
         }
         library.logger.error('Empty username');
-
     }
 
     if (username.length > 20) {
@@ -160,11 +155,10 @@ Delegate.prototype.verify = function (trs, sender, cb) {
             return setImmediate(cb, 'Username can only contain alphanumeric characters with the exception of !@$&_.');
         }
         library.logger.error('Username can only contain alphanumeric characters with the exception of !@$&_.');
-
     }
 
     modules.accounts.getAccount({
-        username: username
+        username
     }, function (err, account) {
         if (err) {
             return setImmediate(cb, err);
@@ -224,9 +218,10 @@ Delegate.prototype.apply = function (trs, block, sender, cb) {
         data.username = trs.asset.delegate.username;
     }
 
-    library.db.none(sql.addDelegateVoteRecord, { publicKey: trs.senderPublicKey.toString('hex') }).then(() => {
-        modules.accounts.setAccountAndGet(data, cb);
-    });
+    library.db.none(sql.addDelegateVoteRecord, { publicKey: trs.senderPublicKey.toString('hex') })
+        .then(() => {
+            modules.accounts.setAccountAndGet(data, cb);
+        });
 };
 
 /**
@@ -250,9 +245,10 @@ Delegate.prototype.undo = function (trs, block, sender, cb) {
         data.u_username = trs.asset.delegate.username;
     }
 
-    library.db.none(sql.removeDelegateVoteRecord, { publicKey: trs.senderPublicKey.toString('hex') }).then(() => {
-        modules.accounts.setAccountAndGet(data, cb);
-    });
+    library.db.none(sql.removeDelegateVoteRecord, { publicKey: trs.senderPublicKey.toString('hex') })
+        .then(() => {
+            modules.accounts.setAccountAndGet(data, cb);
+        });
 };
 
 /**
@@ -322,7 +318,9 @@ Delegate.prototype.objectNormalize = function (trs) {
     const report = library.schema.validate(trs.asset.delegate, Delegate.prototype.schema);
 
     if (!report) {
-        throw `Failed to validate delegate schema: ${this.scope.schema.getLastErrors().map(err => err.message).join(', ')}`;
+        throw `Failed to validate delegate schema: ${this.scope.schema.getLastErrors()
+            .map(err => err.message)
+            .join(', ')}`;
     }
 
     return trs;
