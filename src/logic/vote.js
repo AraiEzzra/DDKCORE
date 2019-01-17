@@ -68,7 +68,10 @@ Vote.prototype.bind = function (delegates, rounds, accounts) {
  */
 Vote.prototype.create = async function (data, trs) {
     const senderId = data.sender.address;
-    const isDownVote = data.votes[0][0] === '-';
+    let isDownVote;
+    if (data.votes && data.votes[0]) {
+        isDownVote = data.votes[0][0] === '-';
+    }
     const totals = await library.frozen.calculateTotalRewardAndUnstake(senderId, isDownVote);
     const airdropReward = await library.frozen.getAirdropReward(senderId, totals.reward, data.type);
 
