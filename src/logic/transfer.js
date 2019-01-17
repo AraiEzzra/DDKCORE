@@ -94,6 +94,8 @@ Transfer.prototype.verifyUnconfirmed = function (trs, sender, cb) {
     return setImmediate(cb);
 };
 
+Transfer.prototype.newVerifyUnconfirmed = async () => {};
+
 /**
  * @param {transaction} trs
  * @param {account} sender

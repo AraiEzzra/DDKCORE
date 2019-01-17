@@ -32,7 +32,22 @@ class TransactionPool {
      *
      * lock on moment block generation
      */
-    push(trs: Transaction) {
+    async push(trs: Transaction, sender?: Account) {
+        if (!sender) {
+            sender = await getOrCreateAccount(this.scope.db, trs.senderPublicKey);
+        }
+
+        try {
+            await this.scope.transactionLogic.newApplyUnconfirmed(trs, sender);
+            trs.status = TransactionStatus.UNCOFIRM_APPLIED;
+            this.scope.logger.debug(`TransactionStatus.UNCONFIRM_APPLIED ${JSON.stringify(trs)}`);
+        } catch (e) {
+            trs.status = TransactionStatus.DECLINED;
+            this.scope.logger.error(`[TransactionQueue][applyUnconfirmed]: ${e}`);
+            this.scope.logger.error(`[TransactionQueue][applyUnconfirmed][stack]: \n ${e.stack}`);
+            return;
+        }
+
         trs.status = TransactionStatus.PUT_IN_POOL;
         this.pool[trs.id] = trs;
         if (!this.poolBySender[trs.senderId]) {
@@ -57,6 +72,10 @@ class TransactionPool {
      *  after verify on new trs
      */
     async remove(trs: Transaction) {
+        if (!this.pool[trs.id]) {
+            return false;
+        }
+
         let sender = await this.scope.db.one(AccountsSql.getAccountByPublicKey, {
             publicKey: trs.senderPublicKey
         });
@@ -69,8 +88,15 @@ class TransactionPool {
         }
 
         delete this.pool[trs.id];
-        this.poolBySender[trs.senderId].splice(this.poolBySender[trs.senderId].indexOf(trs), 1) ;
-        this.poolByRecipient[trs.recipientId].splice(this.poolByRecipient[trs.recipientId].indexOf(trs), 1) ;
+
+        if (this.poolBySender[trs.senderId] && this.poolBySender[trs.senderId].indexOf(trs) !== -1) {
+            this.poolBySender[trs.senderId].splice(this.poolBySender[trs.senderId].indexOf(trs), 1) ;
+        }
+
+        if (this.poolByRecipient[trs.recipientId] && this.poolByRecipient[trs.recipientId].indexOf(trs) !== -1) {
+            this.poolByRecipient[trs.recipientId].splice(this.poolByRecipient[trs.recipientId].indexOf(trs), 1) ;
+        }
+        return true;
     }
 
     /**
@@ -113,6 +139,10 @@ class TransactionPool {
         dependTransactions.sort(transactionSortFunc);
 
         return dependTransactions.indexOf(trs) !== (dependTransactions.length - 1);
+    }
+
+    getSize(): number {
+        return Object.keys(this.pool).length;
     }
 
 }
@@ -200,11 +230,7 @@ export class TransactionQueue {
             trs.status = TransactionStatus.VERIFIED;
             this.scope.logger.debug(`TransactionStatus.VERIFIED ${JSON.stringify(trs)}`);
 
-            await this.applyUnconfirmed(trs, sender);
-            trs.status = TransactionStatus.UNCOFIRM_APPLIED;
-            this.scope.logger.debug(`TransactionStatus.UNCOFIRM_APPLIED ${JSON.stringify(trs)}`);
-
-            this.scope.transactionPool.push(trs);
+            await this.scope.transactionPool.push(trs, sender);
             this.process();
         }
     }
@@ -238,7 +264,7 @@ export class TransactionQueue {
         }
 
         try {
-            this.scope.transactionLogic.newVerifyUnconfirmed({ trs, sender });
+            await this.scope.transactionLogic.newVerifyUnconfirmed({ trs, sender });
         } catch (e) {
             this.scope.logger.error(`[TransactionQueue][verifyUnconfirmed]: ${e}`);
             this.scope.logger.error(`[TransactionQueue][verifyUnconfirmed][stack]: \n ${e.stack}`);
@@ -254,14 +280,8 @@ export class TransactionQueue {
         }
     }
 
-    async applyUnconfirmed(trs: Transaction, sender: Account): Promise<void> {
-        try {
-            await this.scope.transactionLogic.newApplyUnconfirmed(trs, sender);
-        } catch (e) {
-            trs.status = TransactionStatus.DECLINED;
-            this.scope.logger.error(`[TransactionQueue][applyUnconfirmed]: ${e}`);
-            this.scope.logger.error(`[TransactionQueue][applyUnconfirmed][stack]: \n ${e.stack}`);
-        }
+    getSize(): { conflictedQueue: number, queue: number } {
+        return { conflictedQueue: this.conflictedQueue.length, queue: this.queue.length };
     }
 }
 

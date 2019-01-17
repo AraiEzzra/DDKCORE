@@ -175,7 +175,7 @@ describe('transaction', function () {
             expect(transaction.create).to.throw();
         });
 
-        it('should throw an error when sender is not push', function () {
+        it('should throw an error when sender is not set', function () {
             let trsData = _.cloneDeep(validTransactionData);
             delete trsData.sender;
             expect(function () {
@@ -183,7 +183,7 @@ describe('transaction', function () {
             }).to.throw();
         });
 
-        it('should throw an error when keypair is not push', function () {
+        it('should throw an error when keypair is not set', function () {
             let trsData = _.cloneDeep(validTransactionData);
             delete trsData.keypair;
             expect(function () {

@@ -116,6 +116,8 @@ Signature.prototype.verifyUnconfirmed = function (trs, sender, cb) {
     return setImmediate(cb);
 };
 
+Signature.prototype.newVerifyUnconfirmed = async () => {};
+
 /**
  * Returns transaction with setImmediate.
  * @param {transaction} trs

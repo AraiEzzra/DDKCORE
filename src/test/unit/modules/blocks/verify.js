@@ -271,7 +271,7 @@ describe('blocks/verify', function () {
     }
 
     function testSetHeight(functionName) {
-        it('should push height from lastBlock', function () {
+        it('should set height from lastBlock', function () {
             blocks.lastBlock.set(previousBlock);
 
             let result = blocksVerify[functionName](validBlock);

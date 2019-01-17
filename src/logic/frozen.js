@@ -416,6 +416,16 @@ Frozen.prototype.verifyUnconfirmed = function (trs, sender, cb) {
     setImmediate(cb);
 };
 
+Frozen.prototype.newVerifyUnconfirmed = async (trs, sender) => {
+    if (Number(trs.stakedAmount) + Number(sender.u_totalFrozeAmount) > Number(sender.u_balance)) {
+        throw new Error('Verify failed: Insufficient unconfirmed balance for stake');
+    }
+
+    if ((parseInt(sender.u_balance, 10) - parseInt(sender.u_totalFrozeAmount, 10)) < (trs.stakedAmount + trs.fee)) {
+        throw new Error('Insufficient unconfirmed balance');
+    }
+};
+
 Frozen.prototype.verifyAirdrop = async (trs) => {
     const airdropReward = await self.getAirdropReward(
         trs.senderId,

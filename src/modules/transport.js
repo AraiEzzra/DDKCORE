@@ -220,7 +220,8 @@ __private.receiveTransactions = function (query, peer, extraLogMessage, cb) {
  * @param {function} cb
  * @return {setImmediateCallback} cb, error message
  */
-__private.receiveTransaction = function (transaction, peer, extraLogMessage, cb) {
+// TODO rewrite it later
+__private.receiveTransaction = (transaction, peer, extraLogMessage, cb) => {
     const id = (transaction ? transaction.id : 'null');
 
     try {
@@ -237,21 +238,7 @@ __private.receiveTransaction = function (transaction, peer, extraLogMessage, cb)
 
         return setImmediate(cb, `Invalid transaction body - ${e.toString()}`);
     }
-
-    library.balancesSequence.add((cb) => {
-        library.logger.debug(`Received transaction ${transaction.id} from peer ${peer.string}`);
-        modules.transactions.processUnconfirmedTransaction(transaction, true, (err) => {
-            if (err) {
-                library.logger.debug(['Transaction', id].join(' '), err.toString());
-                if (transaction) {
-                    library.logger.debug('Transaction', transaction);
-                }
-
-                return setImmediate(cb, err.toString());
-            }
-            return setImmediate(cb, null, transaction.id);
-        });
-    }, cb);
+    modules.transactions.putInQueue(transaction);
 };
 
 // Public methods
@@ -485,7 +472,7 @@ Transport.prototype.onUnconfirmedTransaction = function (transaction, broadcast)
     if (broadcast && !__private.broadcaster.maxRelays(transaction)) {
         __private.broadcaster.enqueue({}, { api: '/transactions', data: { transaction }, method: 'POST' });
         const users = usersList.getUsersList();
-        users.map((user) => {
+        users.forEach((user) => {
             if (user.address === transaction.senderId || user.address === transaction.recipientId) {
                 library.network.io.to(user.socketId).emit('transactions/change', transaction);
             }

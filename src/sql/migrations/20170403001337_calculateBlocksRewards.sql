@@ -52,7 +52,7 @@ BEGIN
   -- Iterating over milestones array, m - milestone data (m[1] - milestone number, m[2] - milestone reward)
   FOREACH m SLICE 1 IN ARRAY r.milestones
   LOOP
-    -- If height is inside milestone - push reward and exit loop
+    -- If height is inside milestone - set reward and exit loop
     IF block_height <= r.start + r.distance * m [1]
     THEN
       reward := m [2];
@@ -60,7 +60,7 @@ BEGIN
     END IF;
   END LOOP;
 
-  -- If reward exceed last milestone - push reward from last milestone
+  -- If reward exceed last milestone - set reward from last milestone
   IF reward IS NULL
   THEN
     reward := m [2];

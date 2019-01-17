@@ -236,7 +236,7 @@ Accounts.prototype.getAccounts = function (filter, fields, cb) {
 };
 
 /**
- * Validates input address and calls logic.account.push() and logic.account.get().
+ * Validates input address and calls logic.account.set() and logic.account.get().
  * @implements module:accounts#Account~set
  * @implements module:accounts#Account~get
  * @param {Object} data - Contains address or public key to generate address.
@@ -436,7 +436,7 @@ Accounts.prototype.shared = {
                         }());
                     }
 
-                    // library.cache.client.push('jwtToken_' + account.address, token, 'ex', 100);
+                    // library.cache.client.set('jwtToken_' + account.address, token, 'ex', 100);
                     /** ************************************************************* */
 
                     cache.prototype.isExists(REDIS_KEY_USER_INFO_HASH, (err, isExist) => {
@@ -1511,7 +1511,7 @@ Accounts.prototype.internal = {
     // 			if (err) {
     // 				return setImmediate(cb, err);
     // 			}
-    // 			library.cache.client.push(req.body.address + '_pending_group_bonus_trs_id', transaction[0].id);
+    // 			library.cache.client.set(req.body.address + '_pending_group_bonus_trs_id', transaction[0].id);
     // 			library.db.none(sql.updatePendingGroupBonus, {
     // 				nextBonus: nextBonus * 100000000,
     // 				senderId: req.body.address

@@ -81,7 +81,7 @@ Validator.prototype.getRule = function (name) {
 };
 
 /**
- * Validate values with specified rules push
+ * Validate values with specified rules set
  * @param {*} value
  * @param {object} rules Set of rules
  * @param {function} callback Result callback (err:Error,report:Array,output:*)=
@@ -156,7 +156,7 @@ Validator.prototype.Field = Field;
  * Create field instance
  * @param {string|string[]} path Field path
  * @param {*} value Validated value
- * @param {object} rules Rule push
+ * @param {object} rules Rule set
  * @param {*=} thisArg This reference for Validation methods. Optional
  * @returns {Validator.Field}
  */
@@ -185,7 +185,7 @@ Validator.prototype.onEnd = function () {
 // Constructor methods
 
 /**
- * Add validation rule descriptor to validator rule push.
+ * Add validation rule descriptor to validator rule set.
  * @param {string} name Validator name
  * @param {{validate:function,filter:function}} descriptor Validator descriptor object
  */
@@ -242,7 +242,7 @@ Validator.options = {
  * Validate with fast initialization. Use `options` property for constructor instance;
  * @param {*} value Validated value
  * @param {object} rules Set of rules
- * @param {object} customRules Customized rule push. Optional
+ * @param {object} customRules Customized rule set. Optional
  * @param {function} callback assign customRules if it is a function
  * @returns {instance} instance
  */
