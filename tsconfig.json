@@ -2,7 +2,7 @@
   "compilerOptions": {
     "module": "commonjs",
     "esModuleInterop": true,
-    "target": "es2015",
+    "target": "es2017",
     "noImplicitAny": false,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
@@ -11,7 +11,9 @@
     "outDir": "dist",
     "baseUrl": ".",
     "paths": {
-      "src/*": ["./src/*"]
+      "@service/*": ["./core/*"],
+      "@config/*": ["./api/*"],
+      "@shared/*": ["./shared/*"]
     },
     "skipLibCheck": true,
     "typeRoots": [
@@ -22,6 +24,8 @@
     ]
   },
   "include": [
-    "src/**/*"
+    "core/**/*",
+    "api/**/*",
+    "shared/**/*"
   ]
 }
