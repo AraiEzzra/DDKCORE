@@ -285,7 +285,7 @@ Transport.prototype.poorConsensus = function () {
     if (__private.broadcaster.consensus === undefined) {
         return false;
     }
-    return (__private.broadcaster.consensus <= library.config.forging.minBroadhashConsensus);
+    return (__private.broadcaster.consensus < library.config.forging.minBroadhashConsensus);
 };
 
 /**

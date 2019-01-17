@@ -66,18 +66,29 @@ Transfer.prototype.verify = function (trs, sender, cb) {
         if (constants.SEND_TRANSACTION_VALIDATION_ENABLED.RECIPIENT_ID) {
             return setImmediate(cb, 'Missing recipient');
         }
-        library.logger.error('Missing recipient');
+        // self.scope.logger.error('Missing recipient');
     }
 
     if (trs.amount <= 0) {
         if (constants.SEND_TRANSACTION_VALIDATION_ENABLED.AMOUNT) {
             return setImmediate(cb, 'Invalid transaction amount');
         }
-        library.logger.error('Invalid transaction amount');
+        // self.scope.logger.error('Invalid transaction amount');
     }
 
     return setImmediate(cb, null, trs);
 };
+
+Transfer.prototype.newVerify = (trs) => {
+    if (!trs.recipientId) {
+        throw new Error('Missing recipient');
+    }
+
+    if (trs.amount <= 0) {
+        throw new Error('Invalid transaction amount');
+    }
+};
+
 
 Transfer.prototype.verifyUnconfirmed = function (trs, sender, cb) {
     return setImmediate(cb);

@@ -196,6 +196,8 @@ Process.prototype.loadBlocksOffset = function (limit, offset, verify, cb) {
                     return modules.blocks.verify.processBlock(
                         block,
                         false,
+                        false,
+                        verify,
                         (err) => {
                             if (err) {
                                 library.logger.debug('Block processing failed', {
@@ -208,9 +210,7 @@ Process.prototype.loadBlocksOffset = function (limit, offset, verify, cb) {
                             // Update last block
                             // modules.blocks.lastBlock.set(block);
                             return setImmediate(cbBlocks, err);
-                        },
-                        false,
-                        verify,
+                        }
                     );
                 }, err => setImmediate(cbAdd, err, modules.blocks.lastBlock.get()));
             })
@@ -268,21 +268,23 @@ Process.prototype.loadBlocksFromPeer = function (peer, cb) {
     // Process single block
     function processBlock(block, seriesCb) {
         // Start block processing - broadcast: false, saveBlock: true
-        modules.blocks.verify.processBlock(block, false, (err) => {
-            if (!err) {
-                // Update last valid block
-                lastValidBlock = block;
-                library.logger.info(
-                    ['Block', block.id, 'loaded from:', peer.string].join(' '),
-                    `height: ${block.height}`
-                );
-            } else {
-                const id = (block ? block.id : 'null');
-
-                library.logger.debug('Block processing failed', { id, err: err.toString(), module: 'blocks', block });
-            }
-            return seriesCb(err);
-        }, true);
+        modules.blocks.verify.processBlock(block, false, true, true,
+            (err) => {
+                if (!err) {
+                    // Update last valid block
+                    lastValidBlock = block;
+                    library.logger.info(
+                        ['Block', block.id, 'loaded from:', peer.string].join(' '),
+                        `height: ${block.height}`
+                    );
+                } else {
+                    const id = (block ? block.id : 'null');
+                    library.logger.debug(
+                        'Block processing failed', { id, err: err.toString(), module: 'blocks', block }
+                    );
+                }
+                return seriesCb(err);
+            });
     }
 
     // Process all received blocks
@@ -356,11 +358,11 @@ Process.prototype.generateBlock = function (keypair, timestamp, cb) {
                         if (!error) {
                             ready.push(transaction);
                         }
-                        return setImmediate(cb);
+                        return setImmediate(cb, error);
                     },
                 });
             } else {
-                return setImmediate(cb);
+                return setImmediate(cb, `Transaction ${transaction.id} not ready`);
             }
         });
     }, (err) => {
@@ -382,8 +384,35 @@ Process.prototype.generateBlock = function (keypair, timestamp, cb) {
         }
 
         // Start block processing - broadcast: true, saveBlock: true
-        modules.blocks.verify.processBlock(block, true, cb, true);
+        modules.blocks.verify.processBlock(block, true, true, true, cb);
     });
+};
+
+Process.prototype.newGenerateBlock = async (keypair, timestamp) => {
+    let block;
+    const transactions = await modules.transactions.getUnconfirmedTransactionsForBlockGeneration();
+
+    library.logger.debug(`[Process][newGenerateBlock][transactions] ${JSON.stringify(transactions)}`);
+
+    try {
+        block = library.logic.block.create({
+            keypair,
+            timestamp,
+            previousBlock: modules.blocks.lastBlock.get(),
+            transactions
+        });
+    } catch (e) {
+        library.logger.error(`[Process][newGenerateBlock][create] ${e}`);
+        library.logger.error(`[Process][newGenerateBlock][create][stack] ${e.stack}`);
+        throw e;
+    }
+        // Start block processing - broadcast: true, saveBlock: true
+    try {
+        await modules.blocks.verify.newProcessBlock(block, true, true, true);
+    } catch (e) {
+        library.logger.error(`[Process][newGenerateBlock][processBlock] ${e}`);
+        library.logger.error(`[Process][newGenerateBlock][processBlock][stack] ${e.stack}`);
+    }
 };
 
 /**
@@ -494,7 +523,7 @@ __private.receiveBlock = function (block, cb) {
     // Update last receipt
     modules.blocks.lastReceipt.update();
     // Start block processing - broadcast: true, saveBlock: true
-    modules.blocks.verify.processBlock(block, true, cb, true);
+    modules.blocks.verify.processBlock(block, true, true, true, cb);
 };
 
 /**

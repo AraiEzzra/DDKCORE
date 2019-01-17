@@ -455,11 +455,10 @@ DApp.prototype.dbSave = function (trs) {
  * @param {function} cb
  * @return {setImmediateCallback} cb
  */
-DApp.prototype.afterSave = function (trs, cb) {
+DApp.prototype.afterSave = async () => {
     if (library) {
         library.network.io.sockets.emit('dapps/change', {});
     }
-    return setImmediate(cb);
 };
 
 /**

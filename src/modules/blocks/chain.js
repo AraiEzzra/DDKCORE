@@ -1,3 +1,6 @@
+// import { getOrCreateAccount } from 'src/helpers/account.utils';
+const { getOrCreateAccount } = require('src/helpers/account.utils');
+
 const async = require('async');
 const transactionTypes = require('../../helpers/transactionTypes.js');
 
@@ -111,6 +114,26 @@ Chain.prototype.saveBlock = function (block, cb) {
         });
 };
 
+Chain.prototype.newSaveBlock = async (block) => {
+    try {
+        await library.db.tx(async (t) => {
+            const promise = library.logic.block.dbSave(block);
+            const inserts = new Inserts(promise, promise.values);
+
+            const promises = [t.none(inserts.template(), promise.values)];
+            // FIXME
+            t = await __private.promiseTransactions(t, block);
+            // Exec inserts as batch
+            await t.batch(promises);
+        });
+    } catch (e) {
+        library.logger.error(`[Chain][saveBlock][tx]: ${e}`);
+        library.logger.error(`[Chain][saveBlock][tx][stack]: \n ${e.stack}`);
+    }
+
+    await __private.newAfterSave(block);
+};
+
 /**
  * Execute afterSave callback for transactions depends on transaction type
  *
@@ -131,6 +154,18 @@ __private.afterSave = function (block, cb) {
         err => setImmediate(cb, err));
 };
 
+__private.newAfterSave = async (block) => {
+    library.bus.message('transactionsSaved', block.transactions);
+    for (const trs of block.transactions) {
+        try {
+            await library.logic.transaction.afterSave(trs);
+        } catch (e) {
+            library.logger.error(`[Chain][afterSave]: ${e}`);
+            library.logger.error(`[Chain][afterSave][stack]: \n ${e.stack}`);
+        }
+    }
+};
+
 /**
  * Build a sequence of transaction queries
  * // FIXME: Processing here is not clean
@@ -143,12 +178,12 @@ __private.afterSave = function (block, cb) {
  * @return {Object} t SQL connection object filled with inserts
  * @throws Will throw 'Invalid promise' when no promise, promise.values or promise.table
  */
-__private.promiseTransactions = async function (t, block) {
+__private.promiseTransactions = async (t, block) => {
     if (_.isEmpty(block.transactions)) {
         return t;
     }
 
-    const transactionIterator = async function (transaction) {
+    const transactionIterator = async (transaction) => {
         // Apply block ID to transaction
         transaction.blockId = block.id;
         // Create bytea fileds (buffers), and returns pseudo-row promise-like object
@@ -156,17 +191,17 @@ __private.promiseTransactions = async function (t, block) {
          transaction.timestamp=slots.getTime();
          } */
 
-        return await library.logic.transaction.dbSave(transaction);
+        return library.logic.transaction.dbSave(transaction);
     };
 
-    const promiseGrouper = function (promise) {
+    const promiseGrouper = (promise) => {
         if (promise && promise.table) {
             return promise.table;
         }
         throw 'Invalid promise';
     };
 
-    const typeIterator = function (type) {
+    const typeIterator = (type) => {
         let values = [];
         _.each(type, (promise) => {
             if (promise && promise.values) {
@@ -540,6 +575,36 @@ Chain.prototype.applyBlock = function (block, broadcast, cb, saveBlock) {
     });
 };
 
+Chain.prototype.newApplyBlock = async (block, broadcast, saveBlock) => {
+    // Prevent shutdown during database writes.
+    modules.blocks.isActive.set(true);
+
+    for (const trs of block.transactions) {
+        const sender = await getOrCreateAccount(library.db, trs.senderPublicKey);
+        await library.logic.transaction.newApply(trs, block, sender);
+    }
+
+    modules.blocks.lastBlock.set(block);
+
+    if (saveBlock) {
+        await self.newSaveBlock(block);
+
+        library.logger.debug(`Block applied correctly with ${block.transactions.length} transactions`);
+        library.bus.message('newBlock', block, broadcast);
+    } else {
+        library.bus.message('newBlock', block, broadcast);
+    }
+    await (new Promise((resolve, reject) => modules.rounds.tick(block, (err, message) => {
+        if (err) {
+            library.logger.error(`[Chain][applyBlock][tick]: ${err}`);
+            library.logger.error(`[Chain][applyBlock][tick][stack]: \n ${err.stack}`);
+            reject(err);
+        }
+        library.logger.debug(`[Chain][applyBlock][tick] message: ${message}`);
+        resolve();
+    })));
+    block = null;
+};
 
 /**
  * Deletes last block, undo transactions, recalculate round

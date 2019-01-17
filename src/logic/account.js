@@ -1003,6 +1003,17 @@ Account.prototype.merge = function (address, diff, cb) {
         });
 };
 
+Account.prototype.asyncMerge = async (address, data) => new Promise((resolve, reject) => {
+    self.merge(address, data, (err, account) => {
+        if (err) {
+            library.logger.error(`[Account][asyncMerge][merge] ${err}`);
+            library.logger.error(`[Account][asyncMerge][merge][stack] ${err.stack}`);
+            reject(err);
+        }
+        resolve(account);
+    });
+});
+
 /**
  * Removes an account from mem_account table based on address.
  * @param {address} address

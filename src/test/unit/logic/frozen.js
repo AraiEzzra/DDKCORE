@@ -1,4 +1,3 @@
-const { promisify } = require('util');
 const chai = require('chai');
 const expect = chai.expect;
 const Logger = require('../../../logger.js');

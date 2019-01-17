@@ -1,4 +1,4 @@
-const crypto = require('data/DDKCORE/src/modules/crypto');
+const crypto = require('crypto');
 const sandboxHelper = require('../helpers/sandbox.js');
 const schema = require('../schema/frogeTransfer.js');
 const sql = require('../sql/frogings.js');

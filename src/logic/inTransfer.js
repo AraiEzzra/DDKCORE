@@ -280,9 +280,7 @@ InTransfer.prototype.dbSave = function (trs) {
  * @param {function} cb
  * @return {setImmediateCallback} cb
  */
-InTransfer.prototype.afterSave = function (trs, cb) {
-    return setImmediate(cb);
-};
+InTransfer.prototype.afterSave = async () => {};
 
 /**
  * Checks sender multisignatures and transaction signatures.

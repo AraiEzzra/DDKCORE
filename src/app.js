@@ -15,6 +15,7 @@
  * @param {Data} [data] - Data, if there hasn't been an error and the function should return data.
  */
 
+import ModuleTransactions from 'src/modules/transactions';
 /**
  * Main entry point.
  * Loads the ddk modules, the ddk api and run the express server as Domain master.
@@ -133,7 +134,7 @@ const config = {
     modules: {
         server: require('./modules/server.js'),
         accounts: require('./modules/accounts.js'),
-        transactions: require('./modules/transactions.js'),
+        transactions: ModuleTransactions,
         blocks: require('./modules/blocks.js'),
         signatures: require('./modules/signatures.js'),
         transport: require('./modules/transport.js'),
