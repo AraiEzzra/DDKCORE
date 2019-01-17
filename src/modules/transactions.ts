@@ -102,11 +102,15 @@ class Transactions {
 
 
     putInQueue(trs: Transaction): void {
-        this.transactionQueue.set(trs);
+        this.transactionQueue.push(trs);
     }
 
     async getUnconfirmedTransactionsForBlockGeneration(): Promise<Array<Transaction>> {
-        return await this.newTransactionPool.getUnconfirmedTransactionsForBlockGeneration();
+        return await this.newTransactionPool.popSortedUnconfirmedTransactions(constants.maxTxsPerBlock);
+    }
+
+    reshuffleTransactionQueue(): void {
+        this.transactionQueue.reshuffle();
     }
 }
 
@@ -946,12 +950,7 @@ Transactions.prototype.shared = {
                                         secondKeypair
                                     }).then((transactionReferSend) => {
                                         transactionReferSend.status = TransactionStatus.CREATED;
-                                        try {
-                                            modules.transactions.putInQueue(transactionReferSend);
-                                        } catch (e) {
-                                            self.scope.logger.error(`putInQueue ${e.stack}`);
-                                        }
-
+                                        modules.transactions.putInQueue(transactionReferSend);
                                         return setImmediate(cb, null, [transactionReferSend]);
                                     }).catch(e => setImmediate(cb, e.toString()));
                                 });

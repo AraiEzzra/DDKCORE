@@ -172,6 +172,9 @@ Delegate.prototype.verify = function (trs, sender, cb) {
     });
 };
 
+// TODO implement it
+Delegate.prototype.newVerify = async () => {};
+
 Delegate.prototype.verifyUnconfirmed = function (trs, sender, cb) {
     return setImmediate(cb);
 };
@@ -300,12 +303,13 @@ Delegate.prototype.schema = {
     id: 'Delegate',
     type: 'object',
     properties: {
-        publicKey: {
+        username: {
             type: 'string',
-            format: 'publicKey'
+            minLength: 1,
+            maxLength: 20
         }
     },
-    required: ['publicKey']
+    required: ['username']
 };
 
 /**

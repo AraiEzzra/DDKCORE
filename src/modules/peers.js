@@ -361,6 +361,7 @@ Peers.prototype.list = function (options, cb) {
                         [Peer.STATE.CONNECTED].indexOf(peer.state) !== -1
                 );
             }
+            library.logger.debug(`[Peer][list][peersList] ${JSON.stringify(peersList)}`);
             if (constants.BROADHASH_VALIDATION_ENABLED) {
                 // Apply filters
                 peersList = peersList.filter((peer) => {

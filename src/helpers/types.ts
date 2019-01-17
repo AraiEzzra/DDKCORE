@@ -1,34 +1,14 @@
-export const transactionSortFunc = (a, b) => {
-    if (a.type < b.type) {
-        return -1;
-    }
-    if (a.type > b.type) {
-        return 1;
-    }
-    if (a.timestamp < b.timestamp) {
-        return -1;
-    }
-    if (a.timestamp > b.timestamp) {
-        return 1;
-    }
-    if (a.id < b.id) {
-        return -1;
-    }
-    if (a.id > b.id) {
-        return 1;
-    }
-    return 0;
-};
-
 export enum TransactionStatus {
     CREATED,
     QUEUED,
     PROCESSED,
+    QUEUED_AS_CONFLICTED,
     VERIFIED,
     UNCOFIRM_APPLIED,
-    PUT_IN_PUL,
+    PUT_IN_POOL,
     BROADCASTED,
-    APPLIED
+    APPLIED,
+    DECLINED
 }
 
 export class Transaction {

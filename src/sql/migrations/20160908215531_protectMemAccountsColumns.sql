@@ -46,7 +46,7 @@ BEGIN
 
   -- Revert any change of publicKey
   -- If account is no longer a virgin
-  -- And publicKey is already set
+  -- And publicKey is already push
   IF NEW."publicKey" <> OLD."publicKey" AND OLD."virgin" = 0 AND OLD."publicKey" IS NOT NULL
   THEN
     RAISE WARNING 'Reverting change of publicKey from % to %', ENCODE(OLD."publicKey", 'hex'), ENCODE(NEW."publicKey",
@@ -55,7 +55,7 @@ BEGIN
   END IF;
 
   -- Revert any change of secondPublicKey
-  -- If secondPublicKey is already set
+  -- If secondPublicKey is already push
   IF NEW."secondPublicKey" <> OLD."secondPublicKey" AND OLD."secondPublicKey" IS NOT NULL
   THEN
     RAISE WARNING 'Reverting change of secondPublicKey from % to %', ENCODE(OLD."secondPublicKey", 'hex'), ENCODE(

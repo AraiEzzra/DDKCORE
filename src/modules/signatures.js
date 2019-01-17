@@ -154,7 +154,6 @@ Signatures.prototype.shared = {
 
                             const secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
                             const secondKeypair = library.ed.makeKeypair(secondHash);
-                            let transaction;
 
                             library.logic.transaction.create({
                                 type: transactionTypes.SIGNATURE,
@@ -163,8 +162,9 @@ Signatures.prototype.shared = {
                                 requester: keypair,
                                 secondKeypair
                             }).then((transactionSignature) => {
-                                transaction = transactionSignature;
-                                modules.transactions.receiveTransactions([transaction], true, cb);
+                                transactionSignature.status = 0;
+                                modules.transactions.putInQueue(transactionSignature);
+                                return setImmediate(cb, null, [transactionSignature]);
                             }).catch(e => setImmediate(cb, e.toString()));
                         });
                     });
@@ -184,7 +184,6 @@ Signatures.prototype.shared = {
 
                         const secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
                         const secondKeypair = library.ed.makeKeypair(secondHash);
-                        let transaction;
 
                         library.logic.transaction.create({
                             type: transactionTypes.SIGNATURE,
@@ -192,8 +191,9 @@ Signatures.prototype.shared = {
                             keypair,
                             secondKeypair
                         }).then((transactionSignature) => {
-                            transaction = transactionSignature;
-                            modules.transactions.receiveTransactions([transaction], true, cb);
+                            transactionSignature.status = 0;
+                            modules.transactions.putInQueue(transactionSignature);
+                            return setImmediate(cb, null, [transactionSignature]);
                         }).catch(e => setImmediate(cb, e.toString()));
                     });
                 }

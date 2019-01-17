@@ -1,3 +1,5 @@
+const { TransactionStatus } = require('src/helpers/types');
+
 const async = require('async');
 const bignum = require('../helpers/bignum.js');
 const sodium = require('sodium-javascript');
@@ -198,9 +200,7 @@ Transaction.prototype.multisign = (keypair, trs) => {
  * @param {transaction} trs
  * @return {string} id
  */
-Transaction.prototype.getId = (trs) => {
-    return self.getHash(trs).toString('hex');
-};
+Transaction.prototype.getId = trs => self.getHash(trs).toString('hex');
 
 /**
  * Creates hash based on transaction bytes.
@@ -209,9 +209,7 @@ Transaction.prototype.getId = (trs) => {
  * @param {transaction} trs
  * @return {hash} sha256 crypto hash
  */
-Transaction.prototype.getHash = (trs) => {
-    return crypto.createHash('sha256').update(self.getBytes(trs, false, false)).digest();
-};
+Transaction.prototype.getHash = trs => crypto.createHash('sha256').update(self.getBytes(trs, false, false)).digest();
 
 /**
  * Calls `getBytes` based on trs type (see privateTypes)
@@ -224,9 +222,6 @@ Transaction.prototype.getHash = (trs) => {
  * @throws {error} If buffer fails.
  */
 Transaction.prototype.getBytes = (trs, skipSignature = false, skipSecondSignature = false) => {
-    if (!__private.types[trs.type]) {
-        throw `Unknown transaction type ${trs.type}`;
-    }
     const assetBytes = __private.types[trs.type].getBytes.call(self, trs, skipSignature, skipSecondSignature);
 
     self.scope.logger.trace(`Trs ${JSON.stringify(trs)}`);
@@ -448,27 +443,14 @@ Transaction.prototype.newProcess = (trs, sender) => {
         throw new Error('Missing sender');
     }
 
-    // Get transaction id
-    let txId;
+    const txId = self.getId(trs);
 
-    try {
-        txId = self.getId(trs);
-    } catch (e) {
-        self.scope.logger.error(e.stack);
-        throw new Error('Failed to get transaction id');
-    }
-
-    // Check transaction id
     if (trs.id && trs.id !== txId) {
         throw new Error('Invalid transaction id');
     }
-    trs.id = txId;
 
-
-    // Equalize sender address
     trs.senderId = sender.address;
 
-    // Call process on transaction type
     __private.types[trs.type].process.call(self, trs, sender, (err, transaction) => {
         if (err) {
             throw err;
@@ -832,35 +814,15 @@ Transaction.prototype.newVerifyFields = ({ trs, sender }) => {
     // }
 
     // Verify signature
-    try {
-        valid = self.verifySignature(trs, (trs.requesterPublicKey || trs.senderPublicKey), trs.signature);
-    } catch (e) {
-        self.scope.logger.error(e.stack);
-        throw e;
-    }
+    valid = self.verifySignature(trs, trs.senderPublicKey, trs.signature);
 
     if (!valid) {
-        if (exceptions.signatures.indexOf(trs.id) > -1) {
-            self.scope.logger.debug('Failed to verify signature');
-            self.scope.logger.debug(JSON.stringify(trs));
-            valid = true;
-        } else {
-            throw new Error('Failed to verify signature');
-        }
+        throw new Error('Failed to verify signature');
     }
 
     // Verify second signature
     if (sender.secondSignature) {
-        try {
-            valid = self.verifySecondSignature(
-                trs,
-                sender.secondPublicKey,
-                trs.signSignature
-            );
-        } catch (e) {
-            throw e;
-        }
-
+        valid = self.verifySecondSignature(trs, sender.secondPublicKey, trs.signSignature);
         if (!valid) {
             throw new Error('Failed to verify second signature');
         }
@@ -1076,10 +1038,6 @@ Transaction.prototype.newVerifyUnconfirmed = ({ trs, sender }) => {
  * @throws {error}
  */
 Transaction.prototype.verifySignature = (trs, publicKey, signature) => {
-    if (!__private.types[trs.type]) {
-        throw `Unknown transaction type ${trs.type}`;
-    }
-
     if (!signature) {
         return false;
     }
@@ -1110,10 +1068,6 @@ Transaction.prototype.verifySignature = (trs, publicKey, signature) => {
  * @throws {error}
  */
 Transaction.prototype.verifySecondSignature = (trs, publicKey, signature) => {
-    if (!__private.types[trs.type]) {
-        throw `Unknown transaction type ${trs.type}`;
-    }
-
     if (!signature) {
         return false;
     }
@@ -1215,6 +1169,7 @@ Transaction.prototype.newApply = async (trs, block, sender) => {
                 if (err) {
                     reject(err);
                 }
+                trs.status = TransactionStatus.APPLIED;
                 resolve();
             });
         }));
@@ -1224,7 +1179,7 @@ Transaction.prototype.newApply = async (trs, block, sender) => {
             blockId: block.id,
             round: modules.rounds.calc(block.height)
         });
-
+        trs.status = TransactionStatus.DECLINED;
         self.scope.logger.error(`[Logic/Transaction][apply]: ${e}`);
         self.scope.logger.error(`[Logic/Transaction][apply][stack]: ${e.stack}`);
     }

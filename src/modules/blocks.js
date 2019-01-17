@@ -64,8 +64,7 @@ function Blocks(cb, scope) {
     this.chain = this.submodules.chain;
 
     self = this;
-
-    this.submodules.chain.saveGenesisBlock(err => setImmediate(cb, err, self));
+    setImmediate(cb, null, self);
 }
 
 /**
@@ -74,7 +73,7 @@ function Blocks(cb, scope) {
 /**
  * Last block functions, getter, setter and isFresh
  * @property {function} get Returns lastBlock
- * @property {function} set Sets lastBlock
+ * @property {function} push Sets lastBlock
  * @property {function} isFresh Returns status of last block - if it fresh or not
  */
 Blocks.prototype.lastBlock = {

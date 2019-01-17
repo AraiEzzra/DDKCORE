@@ -39,7 +39,7 @@ describe('cache', function () {
 
     describe('setJsonForKey', function () {
 
-        it('should set the key value correctly', function (done) {
+        it('should push the key value correctly', function (done) {
             let key = 'test_key';
             let value = { testObject: 'testValue' };
 

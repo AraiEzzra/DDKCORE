@@ -708,7 +708,7 @@ Account.prototype.getAll = function (filter, fields, cb) {
  * @param {address} address
  * @param {Object} fields
  * @param {function} cb - Callback function.
- * @returns {setImmediateCallback} cb | 'Account#set error'.
+ * @returns {setImmediateCallback} cb | 'Account#push error'.
  */
 Account.prototype.set = function (address, fields, cb) {
     // Verify public key

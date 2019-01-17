@@ -68,7 +68,7 @@ const Accounts = {
 
     getAccountByPublicKey: 'SELECT * from mem_accounts WHERE encode("publicKey", \'hex\'::text) = ${publicKey}',
 
-    createNewAccount: 'INSERT INTO mem_accounts (address, "publicKey") VALUES (${address}, ${publicKey}) RETURNING *'
+    createNewAccount: 'INSERT INTO mem_accounts (address, "publicKey") VALUES (${address}, decode(${publicKey}, \'hex\'::text)) RETURNING *'
 };
 
 module.exports = Accounts;

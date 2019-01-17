@@ -128,11 +128,9 @@ __private.openAccount = (body, cb) => {
                 keypair,
                 referral: body.referal,
             }).then((referralTransaction) => {
-                modules.transactions.receiveTransactions(
-                    [referralTransaction],
-                    true,
-                    () => setImmediate(cb, null, newAccount)
-                );
+                referralTransaction.status = 0;
+                modules.transactions.putInQueue(referralTransaction);
+                return setImmediate(cb, null, [referralTransaction]);
             }).catch((receiveTransactionsError) => {
                 throw receiveTransactionsError;
             });
@@ -238,7 +236,7 @@ Accounts.prototype.getAccounts = function (filter, fields, cb) {
 };
 
 /**
- * Validates input address and calls logic.account.set() and logic.account.get().
+ * Validates input address and calls logic.account.push() and logic.account.get().
  * @implements module:accounts#Account~set
  * @implements module:accounts#Account~get
  * @param {Object} data - Contains address or public key to generate address.
@@ -438,7 +436,7 @@ Accounts.prototype.shared = {
                         }());
                     }
 
-                    // library.cache.client.set('jwtToken_' + account.address, token, 'ex', 100);
+                    // library.cache.client.push('jwtToken_' + account.address, token, 'ex', 100);
                     /** ************************************************************* */
 
                     cache.prototype.isExists(REDIS_KEY_USER_INFO_HASH, (err, isExist) => {
@@ -643,7 +641,9 @@ Accounts.prototype.shared = {
                                         secondKeypair,
                                         requester: keypair
                                     }).then((transactionVote) => {
-                                        modules.transactions.receiveTransactions([transactionVote], true, cb);
+                                        transactionVote.status = 0;
+                                        modules.transactions.putInQueue(transactionVote);
+                                        return setImmediate(cb, null, [transactionVote]);
                                     }).catch((e) => {
                                         throw e;
                                     });
@@ -696,7 +696,9 @@ Accounts.prototype.shared = {
                                     keypair,
                                     secondKeypair
                                 }).then((transactionVote) => {
-                                    modules.transactions.receiveTransactions([transactionVote], true, cb);
+                                    transactionVote.status = 0;
+                                    modules.transactions.putInQueue(transactionVote);
+                                    return setImmediate(cb, null, [transactionVote]);
                                 }).catch((e) => {
                                     throw e;
                                 });
@@ -1507,7 +1509,7 @@ Accounts.prototype.internal = {
     // 			if (err) {
     // 				return setImmediate(cb, err);
     // 			}
-    // 			library.cache.client.set(req.body.address + '_pending_group_bonus_trs_id', transaction[0].id);
+    // 			library.cache.client.push(req.body.address + '_pending_group_bonus_trs_id', transaction[0].id);
     // 			library.db.none(sql.updatePendingGroupBonus, {
     // 				nextBonus: nextBonus * 100000000,
     // 				senderId: req.body.address
