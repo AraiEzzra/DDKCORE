@@ -4,8 +4,8 @@ const slots = require('../helpers/slots.js');
 const StakeReward = require('./stakeReward.js');
 const async = require('async');
 const Promise = require('bluebird');
-const reward_sql = require('../sql/referal_sql');
-const account_sql = require('../sql/accounts');
+const rewardSql = require('../sql/referal_sql');
+const accountSql = require('../sql/accounts');
 const cache = require('../modules/cache');
 const transactionTypes = require('../helpers/transactionTypes.js');
 const { LENGTH, writeUInt64LE } = require('../helpers/buffer.js');
@@ -13,8 +13,8 @@ const utils = require('../utils');
 
 const __private = {};
 __private.types = {};
-let modules,
-    self;
+let modules;
+let self;
 
 /**
  * Main Frozen logic.
@@ -383,10 +383,12 @@ Frozen.prototype.verifyUnconfirmed = function (trs, sender, cb) {
         if (constants.STAKE_VALIDATE.BALANCE_ENABLED) {
             return setImmediate(cb, 'Verify failed: Insufficient unconfirmed balance for stake');
         }
-        self.scope.logger.error(`VALIDATE IS DISABLED. Error: trs.id ${trs.id} Verify failed: Insufficient unconfirmed balance for stake`);
+        self.scope.logger.error(
+            `VALIDATE IS DISABLED. Error: trs.id ${trs.id} Verify failed: Insufficient unconfirmed balance for stake`
+        );
     }
 
-    if ((parseInt(sender.u_balance) - parseInt(sender.u_totalFrozeAmount)) < (trs.stakedAmount + trs.fee)) {
+    if ((parseInt(sender.u_balance, 10) - parseInt(sender.u_totalFrozeAmount, 10)) < (trs.stakedAmount + trs.fee)) {
         if (constants.STAKE_VALIDATE.BALANCE_ENABLED) {
             return setImmediate(cb, 'Insufficient unconfirmed balance');
         }
@@ -459,15 +461,15 @@ Frozen.prototype.sendAirdropReward = async function (trs) {
 
         await self.scope.db.task(async () => {
             const iterator = i;
-            await self.scope.db.none(reward_sql.updateAccountBalance, {
+            await self.scope.db.none(rewardSql.updateAccountBalance, {
                 address: sponsorId, reward: rewardAmount
             });
 
-            await self.scope.db.none(reward_sql.updateAccountBalance, {
+            await self.scope.db.none(rewardSql.updateAccountBalance, {
                 address: constants.airdrop.account, reward: -rewardAmount
             });
 
-            await self.scope.db.none(reward_sql.updateRewardTypeTransaction, {
+            await self.scope.db.none(rewardSql.updateRewardTypeTransaction, {
                 trsId: trs.id,
                 sponsorAddress: trs.senderId,
                 introducer_address: sponsorId,
@@ -492,17 +494,17 @@ Frozen.prototype.undoAirdropReward = async function (trs) {
     for (const sponsorId in transactionAirdropReward.sponsors) {
         const rewardAmount = transactionAirdropReward.sponsors[sponsorId];
         await self.scope.db.task(async () => {
-            await self.scope.db.none(reward_sql.updateAccountBalance, {
+            await self.scope.db.none(rewardSql.updateAccountBalance, {
                 address: sponsorId, reward: -rewardAmount
             });
 
-            await self.scope.db.none(reward_sql.updateAccountBalance, {
+            await self.scope.db.none(rewardSql.updateAccountBalance, {
                 address: constants.airdrop.account, reward: rewardAmount
             });
         });
     }
 
-    await self.scope.db.none(reward_sql.deleteRewardTypeTransaction, {
+    await self.scope.db.none(rewardSql.deleteRewardTypeTransaction, {
         trsId: trs.id
     });
 
@@ -522,13 +524,13 @@ Frozen.prototype.getAirdropReward = async function (senderAddress, amount, trans
         self.scope.logger.error(err);
     }
 
-    const availableAirdropBalance = await self.scope.db.oneOrNone(account_sql.getCurrentUnmined, {
+    const availableAirdropBalance = await self.scope.db.oneOrNone(accountSql.getCurrentUnmined, {
         address: constants.airdrop.account
     });
 
     self.scope.logger.info(`availableAirdropBalance: ${availableAirdropBalance.balance / 100000000}`);
 
-    const user = await self.scope.db.oneOrNone(reward_sql.referLevelChain, {
+    const user = await self.scope.db.oneOrNone(rewardSql.referLevelChain, {
         address: senderAddress
     });
 
@@ -544,7 +546,9 @@ Frozen.prototype.getAirdropReward = async function (senderAddress, amount, trans
     const sponsors = {};
 
     user.level.forEach((sponsorAddress, i) => {
-        const reward = transactionType === transactionTypes.STAKE ? ((amount * constants.airdrop.stakeRewardPercent) / 100) : (((constants.airdrop.referralPercentPerLevel[i]) * amount) / 100);
+        const reward = transactionType === transactionTypes.STAKE ?
+            ((amount * constants.airdrop.stakeRewardPercent) / 100) :
+            (((constants.airdrop.referralPercentPerLevel[i]) * amount) / 100);
         sponsors[sponsorAddress] = reward;
         airdropRewardAmount += reward;
     });
@@ -579,10 +583,12 @@ Frozen.prototype.calculateTotalRewardAndUnstake = async function (senderId, isDo
         if (order.voteCount > 0 && (parseInt(order.voteCount, 10) + 1) % constants.froze.rewardVoteCount === 0) {
             const blockHeight = modules.blocks.lastBlock.get().height;
             const stakeRewardPercent = __private.stakeReward.calcReward(blockHeight);
-            reward += parseInt(order.freezedAmount, 10) * stakeRewardPercent / 100;
+            reward += (parseInt(order.freezedAmount, 10) * stakeRewardPercent) / 100;
         }
     }));
-    const readyToUnstakeOrders = freezeOrders.filter(o => (parseInt(o.voteCount, 10) + 1) === constants.froze.unstakeVoteCount);
+    const readyToUnstakeOrders = freezeOrders.filter(
+        o => (parseInt(o.voteCount, 10) + 1) === constants.froze.unstakeVoteCount
+    );
     await Promise.all(readyToUnstakeOrders.map((order) => {
         unstakeAmount -= parseInt(order.freezedAmount, 10);
     }));

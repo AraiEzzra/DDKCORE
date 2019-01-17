@@ -134,7 +134,7 @@ Peer.prototype.normalize = function (peer) {
  * @return {number} if not integer returns fallback
  */
 Peer.prototype.parseInt = function (integer, fallback) {
-    integer = parseInt(integer);
+    integer = parseInt(integer, 10);
     integer = isNaN(integer) ? fallback : integer;
 
     return integer;
