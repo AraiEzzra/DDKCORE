@@ -147,8 +147,7 @@ __private.forge = function (cb) {
 
     __private.getBlockSlotData(currentSlot, lastBlock.height + 1, (err, currentBlockData) => {
         if (err || currentBlockData === null) {
-            library.logger.warn('Skipping delegate slot', err);
-            return setImmediate(cb);
+            return setImmediate(cb, err);
         }
 
         if (slots.getSlotNumber(currentBlockData.time) !== slots.getSlotNumber()) {
@@ -172,7 +171,9 @@ __private.forge = function (cb) {
                     library.logger.warn(err);
                     return setImmediate(cb, err);
                 }
-                return modules.blocks.process.generateBlock(currentBlockData.keypair, currentBlockData.time, cb);
+                modules.blocks.process.newGenerateBlock(currentBlockData.keypair, currentBlockData.time)
+                    .then(() => { setImmediate(cb); })
+                    .catch((generateBlockError) => { setImmediate(cb, generateBlockError); });
             });
         }, (err) => {
             if (err) {

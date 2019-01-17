@@ -1,3 +1,6 @@
+import {default as NewTransactionPool, TransactionQueue} from 'src/logic/newTransactionPool';
+import {Transaction, TransactionStatus} from "src/helpers/types";
+
 const _ = require('lodash');
 const async = require('async');
 const speakeasy = require('speakeasy');
@@ -20,7 +23,7 @@ const bignum = require('../helpers/bignum.js');
 
 
 // Private fields
-const __private = {};
+const __private: any = {};
 const shared = {};
 let modules;
 let library;
@@ -44,37 +47,67 @@ __private.assetTypes = {};
  * @return {setImmediateCallback} Callback function with `self` as data.
  */
 // Constructor
-function Transactions(cb, scope) {
-    library = {
-        cache: scope.cache,
-        config: scope.config,
-        logger: scope.logger,
-        db: scope.db,
-        schema: scope.schema,
-        ed: scope.ed,
-        balancesSequence: scope.balancesSequence,
-        logic: {
-            transaction: scope.logic.transaction,
-        },
-        genesisblock: scope.genesisblock
-    };
+class Transactions {
 
-    self = this;
+    [prorotype: string]: any;
 
-    __private.transactionPool = new TransactionPool(
-        scope.config.broadcasts.broadcastInterval,
-        scope.config.broadcasts.releaseLimit,
-        scope.config.transactions.maxTxsPerQueue,
-        scope.logic.transaction,
-        scope.bus,
-        scope.logger
-    );
+    private newTransactionPool: NewTransactionPool;
+    private transactionQueue: TransactionQueue;
 
-    __private.assetTypes[transactionTypes.SEND] = library.logic.transaction.attachAssetType(
-        transactionTypes.SEND, new Transfer()
-    );
+    constructor(cb, scope) {
+        library = {
+            cache: scope.cache,
+            config: scope.config,
+            logger: scope.logger,
+            db: scope.db,
+            schema: scope.schema,
+            ed: scope.ed,
+            balancesSequence: scope.balancesSequence,
+            logic: {
+                transaction: scope.logic.transaction,
+            },
+            genesisblock: scope.genesisblock
+        };
 
-    setImmediate(cb, null, self);
+        self = this;
+
+        __private.transactionPool = new TransactionPool(
+            scope.config.broadcasts.broadcastInterval,
+            scope.config.broadcasts.releaseLimit,
+            scope.config.transactions.maxTxsPerQueue,
+            scope.logic.transaction,
+            scope.bus,
+            scope.logger
+        ) as any;
+
+        this.newTransactionPool = new NewTransactionPool({
+            transactionLogic: scope.logic.transaction,
+            logger: scope.logger,
+            db: scope.db
+        });
+
+        this.transactionQueue = new TransactionQueue({
+            transactionLogic: scope.logic.transaction,
+            transactionPool: this.newTransactionPool,
+            logger: scope.logger,
+            db: scope.db
+        });
+
+        __private.assetTypes[transactionTypes.SEND] = library.logic.transaction.attachAssetType(
+            transactionTypes.SEND, new Transfer()
+        );
+
+        setImmediate(cb, null, self);
+    }
+
+
+    putInQueue(trs: Transaction): void {
+        this.transactionQueue.set(trs);
+    }
+
+    async getUnconfirmedTransactionsForBlockGeneration(): Promise<Array<Transaction>> {
+        return await this.newTransactionPool.getUnconfirmedTransactionsForBlockGeneration();
+    }
 }
 
 /**
@@ -123,7 +156,7 @@ __private.getAddressByPublicKey = function (publicKey) {
  * @returns {setImmediateCallback} error | data: {transactions, count}
  */
 __private.list = function (filter, cb) {
-    const params = {};
+    const params: any = {};
     const where = [];
     const allowedFieldsMap = {
         id: 't."id" = ${id}',
@@ -904,8 +937,6 @@ Transactions.prototype.shared = {
                                         secondKeypair = library.ed.makeKeypair(secondHash);
                                     }
 
-                                    let transaction;
-
                                     library.logic.transaction.create({
                                         type: transactionTypes.SEND,
                                         amount: req.body.amount,
@@ -914,8 +945,14 @@ Transactions.prototype.shared = {
                                         keypair,
                                         secondKeypair
                                     }).then((transactionReferSend) => {
-                                        transaction = transactionReferSend;
-                                        modules.transactions.receiveTransactions([transaction], true, cb);
+                                        transactionReferSend.status = TransactionStatus.CREATED;
+                                        try {
+                                            modules.transactions.putInQueue(transactionReferSend);
+                                        } catch (e) {
+                                            self.scope.logger.error(`putInQueue ${e.stack}`);
+                                        }
+
+                                        return setImmediate(cb, null, [transactionReferSend]);
                                     }).catch(e => setImmediate(cb, e.toString()));
                                 });
                             });
@@ -943,9 +980,6 @@ Transactions.prototype.shared = {
                                     const secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
                                     secondKeypair = library.ed.makeKeypair(secondHash);
                                 }
-
-                                let transaction;
-
                                 library.logic.transaction.create({
                                     type: transactionTypes.SEND,
                                     amount: req.body.amount,
@@ -954,8 +988,9 @@ Transactions.prototype.shared = {
                                     keypair,
                                     secondKeypair
                                 }).then((transactionReferSend) => {
-                                    transaction = transactionReferSend;
-                                    modules.transactions.receiveTransactions([transaction], true, cb);
+                                    transactionReferSend.status = TransactionStatus.CREATED;
+                                    modules.transactions.putInQueue(transactionReferSend);
+                                    return setImmediate(cb, null, [transactionReferSend]);
                                 }).catch(e => setImmediate(cb, e.toString()));
                             });
                         }
@@ -973,6 +1008,7 @@ Transactions.prototype.shared = {
 };
 
 // Export
-module.exports = Transactions;
+// module.exports = Transactions;
+export default Transactions;
 
 /** ************************************* END OF FILE ************************************ */

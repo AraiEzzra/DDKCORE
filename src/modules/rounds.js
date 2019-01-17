@@ -275,9 +275,9 @@ Rounds.prototype.tick = function (block, done) {
         __private.ticking = false;
 
         if (scope.finishSnapshot) {
-            return done('Snapshot finished');
+            return done(null, 'Snapshot finished');
         }
-        return done(err);
+        return done(err, 'Tick finished');
     });
 };
 
