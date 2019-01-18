@@ -113,15 +113,23 @@ class Transactions {
         this.transactionQueue.reshuffle();
     }
 
-    async removeFromPool(
-        transactions: Array<Transaction>, withConflicted: boolean = false
-    ): Promise<Array<Transaction>> {
+    // TODO add conflicted remove logic
+    // https://trello.com/c/FNWlZu5M/31-add-remove-conflicted-transaction-from-before-apply-received-block
+    async removeFromPool(transactions: Array<Transaction>, withDepend: boolean): Promise<Array<Transaction>> {
         const removedTransactions = [];
         for (const trs of transactions) {
-            // TODO add conflicted remove logic
-            // https://trello.com/c/FNWlZu5M/31-add-remove-conflicted-transaction-from-before-apply-received-block
-            if (await this.newTransactionPool.remove(trs)) {
-                removedTransactions.push(trs);
+
+            if (withDepend) {
+                (await this.newTransactionPool.removeTransactionBySenderId(trs.senderId)).forEach(
+                    (t: Transaction) => { removedTransactions.push(t); });
+
+                (await this.newTransactionPool.removeTransactionByRecipientId(trs.recipientId)).forEach(
+                    (t: Transaction) => { removedTransactions.push(t); });
+
+            } else {
+                if (await this.newTransactionPool.remove(trs)) {
+                    removedTransactions.push(trs);
+                }
             }
         }
         return removedTransactions;
@@ -155,6 +163,9 @@ class Transactions {
         this.newTransactionPool.unlock();
     }
 
+    returnToQueueConflictedTransactionFromPool(): void {
+
+    }
 }
 
 /**

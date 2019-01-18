@@ -1,5 +1,6 @@
 const { LENGTH, writeUInt64LE } = require('../helpers/buffer.js');
 const sql = require('../sql/referal_sql');
+const constants = require('../helpers/constants');
 
 let modules,
     library,
@@ -54,9 +55,17 @@ Referral.prototype.verify = function (trs, sender, cb) {
     });
 };
 
+Referral.prototype.newVerify = async (trs, sender) => {
+    if (sender && sender.global) {
+        throw new Error('Account already exists.');
+    }
+};
+
 Referral.prototype.verifyUnconfirmed = function (trs, sender, cb) {
     return setImmediate(cb);
 };
+
+Referral.prototype.newVerifyUnconfirmed = async () => {};
 
 Referral.prototype.apply = function (trs, block, sender, cb) {
     library.db.none(sql.changeAccountGlobalStatus, {
