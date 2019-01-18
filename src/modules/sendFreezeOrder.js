@@ -271,7 +271,7 @@ SendFreezeOrder.prototype.shared = {
                         return setImmediate(cb, 'Invalid recipient');
                     }
 
-                    if (req.body.multisigAccountPublicKey && req.body.multisigAccountPublicKey !== keypair.publicKey.toString('hex')) {
+                    if (req.body.multisigAccountPublicKey && req.body.multisigAccountPublicKey !== publicKey) {
                         modules.accounts.getAccount({ publicKey: req.body.multisigAccountPublicKey }, (err, account) => {
                             if (err) {
                                 return setImmediate(cb, err);
@@ -287,9 +287,12 @@ SendFreezeOrder.prototype.shared = {
                                 return setImmediate(cb, 'Account does not have multisignatures enabled');
                             }
 
-                            if (account.multisignatures.indexOf(keypair.publicKey.toString('hex')) < 0) {
+                            if (account.multisignatures.indexOf(publicKey) < 0) {
                                 return setImmediate(cb, 'Account does not belong to multisignature group');
                             }
+							if (account.multisignatures.indexOf(publicKey) < 0) {
+								return setImmediate(cb, 'Account does not belong to multisignature group');
+							}
 
                             modules.accounts.getAccount({ publicKey: keypair.publicKey }, (err, requester) => {
                                 if (err) {
@@ -348,7 +351,7 @@ SendFreezeOrder.prototype.shared = {
                             });
                         });
                     } else {
-                        modules.accounts.setAccountAndGet({ publicKey: keypair.publicKey.toString('hex') }, (err, account) => {
+                        modules.accounts.setAccountAndGet({ publicKey: publicKey }, (err, account) => {
                             if (err) {
                                 return setImmediate(cb, err);
                             }

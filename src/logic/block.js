@@ -241,9 +241,9 @@ Block.prototype.dbSave = function (block) {
         blockSignature;
 
     try {
-        payloadHash = Buffer.from(block.payloadHash, 'hex');
-        generatorPublicKey = Buffer.from(block.generatorPublicKey, 'hex');
-        blockSignature = Buffer.from(block.blockSignature, 'hex');
+        payloadHash = block.payloadHash;
+        generatorPublicKey = block.generatorPublicKey;
+        blockSignature = block.blockSignature;
     } catch (e) {
         throw e;
     }

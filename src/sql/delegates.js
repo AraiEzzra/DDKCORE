@@ -23,7 +23,7 @@ const DelegatesSql = {
             'delegates AS (SELECT row_number() OVER (ORDER BY vote DESC, m."publicKey" ASC)::int AS rank,',
             'm.username,',
             'm.address,',
-            'ENCODE(m."publicKey", \'hex\') AS "publicKey",',
+            'm."publicKey" AS "publicKey",',
             'm.vote,',
             'm.producedblocks,',
             'm.missedblocks,',
@@ -36,7 +36,7 @@ const DelegatesSql = {
             'FROM delegates d',
             'LEFT JOIN mem_accounts m ON d.username = m.username',
             'LEFT JOIN trs t ON d."transactionId" = t.id',
-            'LEFT JOIN (SELECT "dependentId", COUNT(1)::int AS voters_cnt from mem_accounts2delegates GROUP BY "dependentId") v ON v."dependentId" = ENCODE(m."publicKey", \'hex\')',
+            'LEFT JOIN (SELECT "dependentId", COUNT(1)::int AS voters_cnt from mem_accounts2delegates GROUP BY "dependentId") v ON v."dependentId" = m."publicKey"',
             'WHERE m."isDelegate" = 1',
             `ORDER BY ${[params.sortField, params.sortMethod].join(' ')})`,
             'SELECT * FROM delegates WHERE LOWER(username) LIKE ${q} LIMIT ${limit}'
@@ -54,7 +54,7 @@ const DelegatesSql = {
 
     getLatestVoters: 'SELECT * from trs WHERE type = 60 ORDER BY timestamp DESC LIMIT ${limit}',
 
-    getLatestDelegates: 'SELECT d."username" AS "username", t."senderId" AS "address", ENCODE(t."senderPublicKey", \'hex\') AS "publicKey", t."timestamp" AS "timestamp" FROM trs t INNER JOIN delegates d ON t."id" = d."transactionId" WHERE t."type" = 30 ORDER BY "timestamp" DESC LIMIT ${limit}',
+    getLatestDelegates: 'SELECT d."username" AS "username", t."senderId" AS "address", t."senderPublicKey" AS "publicKey", t."timestamp" AS "timestamp" FROM trs t INNER JOIN delegates d ON t."id" = d."transactionId" WHERE t."type" = 30 ORDER BY "timestamp" DESC LIMIT ${limit}',
 
     addDelegateVoteRecord: 'INSERT INTO "delegate_to_vote_counter"("publicKey", "voteCount") VALUES (${publicKey}, 0) ON CONFLICT DO NOTHING',
 

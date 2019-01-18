@@ -23,9 +23,9 @@ const RoundsSql = {
     '  ARRAY_AGG(r.reward)  AS rewards,' +
     '  ARRAY_AGG(r.pk)      AS delegates' +
     '  FROM (SELECT' +
-    '        b."totalFee"                          AS fee,' +
+    '        b."totalFee" AS fee,' +
     '        b.reward,' +
-    '        ENCODE(b."generatorPublicKey", \'hex\') AS pk' +
+    '        b."generatorPublicKey" AS pk' +
     '      FROM blocks b' +
     '      WHERE b.height > (${round} -1 )* ${activeDelegates}' +
     '            AND b.height < ${round} * ${activeDelegates} + 1' +

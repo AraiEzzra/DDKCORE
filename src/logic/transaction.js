@@ -1129,10 +1129,10 @@ Transaction.prototype.dbSave = async (trs) => {
     let requesterPublicKey;
 
     try {
-        senderPublicKey = Buffer.from(trs.senderPublicKey, 'hex');
-        signature = Buffer.from(trs.signature, 'hex');
-        signSignature = trs.signSignature ? Buffer.from(trs.signSignature, 'hex') : null;
-        requesterPublicKey = trs.requesterPublicKey ? Buffer.from(trs.requesterPublicKey, 'hex') : null;
+        senderPublicKey = trs.senderPublicKey;
+        signature = trs.signature;
+        signSignature = trs.signSignature ? trs.signSignature : null;
+        requesterPublicKey = trs.requesterPublicKey ? trs.requesterPublicKey : null;
     } catch (e) {
         throw e;
     }
