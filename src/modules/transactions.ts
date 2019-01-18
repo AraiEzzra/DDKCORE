@@ -1,5 +1,6 @@
-import {default as NewTransactionPool, TransactionQueue} from 'src/logic/newTransactionPool';
-import {Account, Transaction, TransactionStatus} from "src/helpers/types";
+import { default as NewTransactionPool, TransactionQueue } from 'src/logic/newTransactionPool';
+import { Account, Transaction, TransactionStatus } from 'src/helpers/types';
+import { getAccountByAddress } from 'src/helpers/account.utils';
 
 const _ = require('lodash');
 const async = require('async');
@@ -121,13 +122,18 @@ class Transactions {
 
             if (withDepend) {
                 (await this.newTransactionPool.removeTransactionBySenderId(trs.senderId)).forEach(
-                    (t: Transaction) => { removedTransactions.push(t); });
+                    (t: Transaction) => {
+                        removedTransactions.push(t);
+                    });
 
                 (await this.newTransactionPool.removeTransactionByRecipientId(trs.recipientId)).forEach(
-                    (t: Transaction) => { removedTransactions.push(t); });
+                    (t: Transaction) => {
+                        removedTransactions.push(t);
+                    });
 
             } else {
-                if (await this.newTransactionPool.remove(trs)) {
+                const removed = await this.newTransactionPool.remove(trs);
+                if (removed) {
                     removedTransactions.push(trs);
                 }
             }
@@ -157,14 +163,49 @@ class Transactions {
         this.transactionQueue.lock();
         this.newTransactionPool.lock();
     }
-    
+
     unlockTransactionPoolAndQueue(): void {
         this.transactionQueue.unlock();
         this.newTransactionPool.unlock();
     }
 
-    async returnToQueueConflictedTransactionFromPool(): Promise<void> {
+    async returnToQueueConflictedTransactionFromPool(transactions): Promise<void> {
+        const verifiedTransactions: Set<string> = new Set();
+        const accountsMap: { [address: string]: Account } = {};
+        for (const trs of transactions) {
+            await this.checkSenderTransactions(trs.senderId, verifiedTransactions, accountsMap);
+        }
+    }
 
+    async checkSenderTransactions(senderId: string,
+                                  verifiedTransactions: Set<string>,
+                                  accountsMap: { [address: string]: Account }): Promise<void> {
+        const senderTransactions = this.newTransactionPool.getTransactionsBySenderId(senderId);
+
+        for (const senderTrs of senderTransactions) {
+            if (!verifiedTransactions.has(senderTrs.id)) {
+                try {
+                    let sender: Account;
+                    if (accountsMap[senderId]) {
+                        sender = accountsMap[senderId];
+                    } else {
+                        sender = await getAccountByAddress(library.db, senderId);
+                        accountsMap[sender.address] = sender;
+                    }
+
+                    await this.transactionQueue.verify(senderTrs, sender);
+                    verifiedTransactions.add(senderTrs.id);
+                } catch (e) {
+                    await this.newTransactionPool.remove(senderTrs);
+                    this.transactionQueue.push(senderTrs);
+                    library.logger.debug(`[Transaction][checkSenderTransactions][remove] ${senderTrs.id} because ${e}`);
+                    if (senderTrs.type === transactionTypes.SEND) {
+                        library.logger.debug(`[Transaction][checkSenderTransactions][deeper] ${e}`);
+                        await this.checkSenderTransactions(senderTrs.recipientId, verifiedTransactions, accountsMap);
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -371,30 +412,30 @@ __private.list = function (filter, cb) {
             : 0;
 
         library.db.query(sql.getDelegateNames)
-            .then((delegates) => {
-                // TODO remove that logic if count delegates will be more than 100
-                // https://trello.com/c/yQ6JC62S/214-remove-logic-add-username-for-transactions-get-if-count-delegates-will-be-more-than-100
-                const delegatesMap = Object.assign({}, constants.DEFAULT_USERS);
+        .then((delegates) => {
+            // TODO remove that logic if count delegates will be more than 100
+            // https://trello.com/c/yQ6JC62S/214-remove-logic-add-username-for-transactions-get-if-count-delegates-will-be-more-than-100
+            const delegatesMap = Object.assign({}, constants.DEFAULT_USERS);
 
-                delegates.forEach((delegate) => {
-                    delegatesMap[delegate.m_address] = delegate.m_username;
-                });
+            delegates.forEach((delegate) => {
+                delegatesMap[delegate.m_address] = delegate.m_username;
+            });
 
-                const transactions = rows.map((row) => {
-                    const trs = library.logic.transaction.dbRead(row);
-                    trs.senderName = delegatesMap[trs.senderId];
-                    trs.recipientName = delegatesMap[trs.recipientId];
-                    return trs;
-                });
+            const transactions = rows.map((row) => {
+                const trs = library.logic.transaction.dbRead(row);
+                trs.senderName = delegatesMap[trs.senderId];
+                trs.recipientName = delegatesMap[trs.recipientId];
+                return trs;
+            });
 
-                const data = {
-                    transactions,
-                    count
-                };
+            const data = {
+                transactions,
+                count
+            };
 
-                return setImmediate(cb, null, data);
-            })
-            .catch(err => setImmediate(cb, err.message));
+            return setImmediate(cb, null, data);
+        })
+        .catch(err => setImmediate(cb, err.message));
     }).catch((err) => {
         library.logger.error(err.stack);
         return setImmediate(cb, 'Transactions#list error');
@@ -810,20 +851,20 @@ Transactions.prototype.internal = {
             endTimestamp: endTimestamp + epochTime,
             epochTime
         })
-            .then((trsHistory) => {
-                const leftTime = (24 - new Date().getUTCHours()) * 60 * 60 * 1000;
+        .then((trsHistory) => {
+            const leftTime = (24 - new Date().getUTCHours()) * 60 * 60 * 1000;
 
-                expCache.put('trsHistoryCache', trsHistory, leftTime);
+            expCache.put('trsHistoryCache', trsHistory, leftTime);
 
-                return setImmediate(cb, null, {
-                    success: true,
-                    trsData: trsHistory
-                });
-            })
-            .catch(err => setImmediate(cb, {
-                success: false,
-                err
-            }));
+            return setImmediate(cb, null, {
+                success: true,
+                trsData: trsHistory
+            });
+        })
+        .catch(err => setImmediate(cb, {
+            success: false,
+            err
+        }));
     }
 };
 
