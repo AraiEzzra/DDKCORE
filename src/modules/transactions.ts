@@ -163,7 +163,7 @@ class Transactions {
         this.newTransactionPool.unlock();
     }
 
-    returnToQueueConflictedTransactionFromPool(): void {
+    async returnToQueueConflictedTransactionFromPool(): Promise<void> {
 
     }
 }

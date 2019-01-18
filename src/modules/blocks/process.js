@@ -268,15 +268,26 @@ Process.prototype.loadBlocksFromPeer = function (peer, cb) {
     // Process single block
     function processBlock(block, seriesCb) {
         // Start block processing - broadcast: false, saveBlock: true
-        modules.transactions.removeFromPool(block.transactions).then(
+        modules.transactions.removeFromPool(block.transactions, true).then(
             async (removedTransactions) => {
                 try {
+                    modules.transactions.lockTransactionPoolAndQueue();
                     await modules.blocks.verify.newProcessBlock(block, false, true, true, true);
                     lastValidBlock = block;
                     library.logger.info(
                         ['Block', block.id, 'loaded from:', peer.string].join(' '),
                         `height: ${block.height}`
                     );
+
+                    const transactionForReturn = [];
+                    removedTransactions.forEach((removedTrs) => {
+                        if (!(block.transactions.find(trs => trs.id === removedTrs.id))) {
+                            transactionForReturn.push(removedTrs);
+                        }
+                    });
+                    await modules.transactions.pushInPool(transactionForReturn);
+                    await modules.transactions.returnToQueueConflictedTransactionFromPool();
+                    modules.transactions.unlockTransactionPoolAndQueue();
                     return seriesCb();
                 } catch (err) {
                     const id = (block ? block.id : 'null');
@@ -284,6 +295,7 @@ Process.prototype.loadBlocksFromPeer = function (peer, cb) {
                         'Block processing failed', { id, err: err.toString(), module: 'blocks', block }
                     );
                     await modules.transactions.pushInPool(removedTransactions);
+                    modules.transactions.unlockTransactionPoolAndQueue();
                     return seriesCb(err);
                 }
             }
@@ -394,8 +406,9 @@ Process.prototype.generateBlock = function (keypair, timestamp, cb) {
 Process.prototype.newGenerateBlock = async (keypair, timestamp) => {
     let block;
     const transactions = await modules.transactions.getUnconfirmedTransactionsForBlockGeneration();
-
     library.logger.debug(`[Process][newGenerateBlock][transactions] ${JSON.stringify(transactions)}`);
+
+    modules.transactions.lockTransactionPoolAndQueue();
 
     try {
         block = library.logic.block.create({
@@ -412,8 +425,10 @@ Process.prototype.newGenerateBlock = async (keypair, timestamp) => {
 
     try {
         await modules.blocks.verify.newProcessBlock(block, true, true, true, true);
+        modules.transactions.unlockTransactionPoolAndQueue();
     } catch (e) {
         await modules.transactions.pushInPool(transactions);
+        modules.transactions.unlockTransactionPoolAndQueue();
         library.logger.error(`[Process][newGenerateBlock][processBlock] ${e}`);
         library.logger.error(`[Process][newGenerateBlock][processBlock][stack] ${e.stack}`);
     }
@@ -540,12 +555,25 @@ __private.newReceiveBlock = async (block) => {
     ].join(' '));
 
     modules.blocks.lastReceipt.update();
-    const removedTransactions = await modules.transactions.removeFromPool(block.transactions);
+    const removedTransactions = await modules.transactions.removeFromPool(block.transactions, true);
 
     try {
+        modules.transactions.lockTransactionPoolAndQueue();
+
         await modules.blocks.verify.newProcessBlock(block, true, true, true, true);
+
+        const transactionForReturn = [];
+        removedTransactions.forEach((removedTrs) => {
+            if (!(block.transactions.find(trs => trs.id === removedTrs.id))) {
+                transactionForReturn.push(removedTrs);
+            }
+        });
+        await modules.transactions.pushInPool(transactionForReturn);
+        await modules.transactions.returnToQueueConflictedTransactionFromPool();
+        modules.transactions.unlockTransactionPoolAndQueue();
     } catch (e) {
         await modules.transactions.pushInPool(removedTransactions);
+        modules.transactions.unlockTransactionPoolAndQueue();
         library.logger.error(`[Process][newReceiveBlock] ${e}`);
         library.logger.error(`[Process][newReceiveBlock][stack] ${e.stack}`);
     }
