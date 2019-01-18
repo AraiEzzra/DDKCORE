@@ -197,6 +197,10 @@ Frozen.prototype.undoUnconfirmed = function (trs, sender, cb) {
     return setImmediate(cb);
 };
 
+Frozen.prototype.calcUndoUnconfirmed = async (trs, sender) => {
+    return sender;
+};
+
 /**
  * @desc apply unconfirmed transations
  * @private

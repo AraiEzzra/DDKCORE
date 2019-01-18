@@ -314,6 +314,10 @@ DApp.prototype.undoUnconfirmed = function (trs, sender, cb) {
     return setImmediate(cb);
 };
 
+DApp.prototype.calcUndoUnconfirmed = async (trs, sender) => {
+    return sender;
+};
+
 /**
  * @typedef {Object} dapp
  * @property {dappCategory} category - Number between 0 and 8

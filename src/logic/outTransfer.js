@@ -238,6 +238,10 @@ OutTransfer.prototype.undoUnconfirmed = function (trs, sender, cb) {
     return setImmediate(cb);
 };
 
+OutTransfer.prototype.calcUndoUnconfirmed = async (trs, sender) => {
+    return sender;
+};
+
 OutTransfer.prototype.schema = {
     id: 'OutTransfer',
     object: true,
