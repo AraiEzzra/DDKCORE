@@ -21,8 +21,10 @@ export const generateAddressByPublicKey = (publicKey) => {
     return address;
 };
 
+export const getAccountByAddress = async (db: any, address: string): Promise<Account> =>
+    db.oneOrNone(AccountsSql.getAccountByAddress, { address });
 
-export const getOrCreateAccount = async (db, publicKey): Promise<Account> => {
+export const getOrCreateAccount = async (db: any, publicKey: string): Promise<Account> => {
 
     const address = generateAddressByPublicKey(publicKey);
     // TODO change to publicKey
