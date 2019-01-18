@@ -1,13 +1,8 @@
 import { Router } from 'express';
-import * as HttpStatus from 'http-status-codes';
+import accountRouter from './accountsRouter';
 
-const router: Router = Router();
-const accountsRouter: Router = Router();
+const appRouter: Router = Router();
 
-accountsRouter.get('/accounts', (req, res) => {
-    res.status(HttpStatus.OK).json({msg: 'Success'});
-});
+appRouter.use('/api', accountRouter);
 
-router.use('/api', accountsRouter);
-
-export default router;
+export default appRouter;

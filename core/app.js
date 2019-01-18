@@ -222,6 +222,7 @@ d.run(() => {
                 }
             }
             fs.writeFileSync('./config.json', JSON.stringify(appConfig, null, 4));
+            console.log('APP_CONFIG: ', appConfig);
             cb(null, appConfig);
         },
 
@@ -265,6 +266,7 @@ d.run(() => {
          * `{express, app, server, io, https, https_io}`.
          */
         network: ['config', function (scope, cb) {
+            console.log('SCOPE: ', scope);
             const express = require('express');
             const compression = require('compression');
             const cors = require('cors');

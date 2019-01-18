@@ -18,6 +18,7 @@
   "license": "GPL-3.0",
   "dependencies": {
     "@babel/runtime": "^7.2.0",
+    "@types/z-schema": "^3.16.32",
     "appmetrics-dash": "^3.3.6",
     "archiver": "^2.1.0",
     "async": "=2.1.4",

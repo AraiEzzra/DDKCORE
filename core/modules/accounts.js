@@ -195,6 +195,9 @@ Accounts.prototype.generateAddressByPublicKey = function (publicKey) {
  * @param {function} cb - Callback function.
  */
 Accounts.prototype.getAccount = function (filter, fields, cb) {
+    console.log('FILTER: ', filter);
+    console.log('FIELDS: ', fields);
+
     if (filter.publicKey) {
         filter.address = self.generateAddressByPublicKey(filter.publicKey);
         delete filter.publicKey;
@@ -715,6 +718,8 @@ Accounts.prototype.shared = {
     },
 
     getAccount(req, cb) {
+
+        console.log('REST COMING...');
         library.schema.validate(req.body, schema.getAccount, (err) => {
             if (err) {
                 return setImmediate(cb, err[0].message);
@@ -728,7 +733,6 @@ Accounts.prototype.shared = {
             if (req.body.address && req.body.publicKey && address !== req.body.address) {
                 return setImmediate(cb, 'Account publicKey does not match address');
             }
-
             self.getAccount({ address: address }, (err, account) => {
                 if (err) {
                     return setImmediate(cb, err);

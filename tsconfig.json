@@ -12,7 +12,8 @@
     "baseUrl": ".",
     "paths": {
       "api/*": ["api/*"],
-      "core/*": ["core/*"]
+      "core/*": ["core/*"],
+      "shared/*": ["shared/*"]
     },
     "types": [
       "node"
@@ -27,6 +28,7 @@
   },
   "include": [
     "api/**/*",
-    "core/**/*"
+    "core/**/*",
+    "shared/**/*"
   ]
 }

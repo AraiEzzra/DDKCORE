@@ -649,7 +649,6 @@ Account.prototype.getAll = function (filter, fields, cb) {
     }
 
     const realFields = this.fields.filter(field => fields.indexOf(field.alias || field.field) !== -1);
-
     const realConv = {};
     Object.keys(this.conv)
         .forEach((key) => {
@@ -697,6 +696,8 @@ Account.prototype.getAll = function (filter, fields, cb) {
         condition: filter,
         fields: realFields
     });
+
+    console.log('SQL: ', SQL);
 
     this.scope.db.query(SQL.query, SQL.values)
         .then(rows => setImmediate(cb, null, rows))
