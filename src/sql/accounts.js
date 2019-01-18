@@ -71,6 +71,11 @@ const Accounts = {
     ' encode("secondPublicKey", \'hex\'::text) as "secondPublicKey"' +
     ' from mem_accounts WHERE encode("publicKey", \'hex\'::text) = ${publicKey}',
 
+    getAccountByAddress: 'SELECT *,' +
+    ' encode("publicKey", \'hex\'::text) as "publicKey",' +
+    ' encode("secondPublicKey", \'hex\'::text) as "secondPublicKey"' +
+    ' from mem_accounts WHERE address = ${address}',
+
     createNewAccount: 'INSERT INTO mem_accounts (address, "publicKey")' +
     ' VALUES (${address}, decode(${publicKey}, \'hex\'::text))' +
     ' RETURNING *, encode("publicKey", \'hex\'::text) as "publicKey"'
