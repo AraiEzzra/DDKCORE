@@ -374,7 +374,7 @@ Vote.prototype.verifyUnconfirmed = function (trs, sender, cb) {
 };
 
 Vote.prototype.newVerifyUnconfirmed = async trs =>
-    new Promise((resolve, reject) => {
+    ((new Promise((resolve, reject) => {
         self.checkUnconfirmedDelegates(trs, (err) => {
             if (err) {
                 reject(err);
@@ -382,7 +382,7 @@ Vote.prototype.newVerifyUnconfirmed = async trs =>
                 resolve();
             }
         });
-    });
+    })));
 
 /**
  * Checks type, format and lenght from vote.

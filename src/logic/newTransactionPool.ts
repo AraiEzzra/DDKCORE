@@ -1,5 +1,4 @@
 import {Account, Transaction, TransactionStatus} from "src/helpers/types";
-import * as AccountsSql from 'src/sql/accounts.js'
 import {getOrCreateAccount} from "src/helpers/account.utils";
 import {transactionSortFunc} from "src/helpers/transaction.utils";
 import * as constants from 'src/helpers/constants.js';
@@ -34,6 +33,10 @@ class TransactionPool {
 
     unlock(): void {
         this.locked = false;
+    }
+
+    getLockStatus(): boolean {
+        return this.locked;
     }
 
     getTransactionsByRecipientId(recipientId): Array<Transaction> {
@@ -94,12 +97,8 @@ class TransactionPool {
             return false;
         }
 
-        let sender = await this.scope.db.one(AccountsSql.getAccountByPublicKey, {
-            publicKey: trs.senderPublicKey
-        });
-        sender = new Account(sender);
         try {
-            await this.scope.transactionLogic.newUndoUnconfirmed(trs, sender);
+            await this.scope.transactionLogic.newUndoUnconfirmed(trs);
         } catch (e) {
             this.scope.logger.error(`[TransactionPool][remove]: ${e}`);
             this.scope.logger.error(`[TransactionPool][remove][stack]: \n ${e.stack}`);
@@ -196,6 +195,10 @@ export class TransactionQueue {
 
     unlock(): void {
         this.locked = false;
+    }
+
+    getLockStatus(): boolean {
+        return this.locked;
     }
 
     pop(): Transaction {
