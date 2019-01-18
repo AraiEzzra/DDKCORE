@@ -66,17 +66,17 @@ function Broadcaster(broadcasts, force, peers, transaction, logger) {
 
     // TODO implement new broadcast logic
     // https://trello.com/c/KQQq8E97/30-implement-new-broadcast-logic
-    // // Broadcaster timer
-    // function nextRelease(cb) {
-    //     __private.releaseQueue((err) => {
-    //         if (err) {
-    //             library.logger.log('Broadcaster timer', err);
-    //         }
-    //         return setImmediate(cb);
-    //     });
-    // }
-    //
-    // jobsQueue.register('broadcasterNextRelease', nextRelease, self.config.broadcastInterval);
+    // Broadcaster timer
+    function nextRelease(cb) {
+        __private.releaseQueue((err) => {
+            if (err) {
+                library.logger.log('Broadcaster timer', err);
+            }
+            return setImmediate(cb);
+        });
+    }
+
+    jobsQueue.register('broadcasterNextRelease', nextRelease, self.config.broadcastInterval);
 }
 
 // Public methods
