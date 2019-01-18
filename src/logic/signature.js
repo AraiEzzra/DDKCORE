@@ -203,6 +203,13 @@ Signature.prototype.applyUnconfirmed = function (trs, sender, cb) {
 Signature.prototype.undoUnconfirmed = function (trs, sender, cb) {
     modules.accounts.setAccountAndGet({ address: sender.address, u_secondSignature: 0 }, cb);
 };
+
+Signature.prototype.calcUndoUnconfirmed = async (trs, sender) => {
+    sender.u_secondSignature = 0;
+
+    return sender;
+};
+
 /**
  * @typedef signature
  * @property {publicKey} publicKey

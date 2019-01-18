@@ -1388,6 +1388,13 @@ Transaction.prototype.newUndoUnconfirmed = async (trs, sender) => {
     }
 };
 
+Transaction.prototype.calcUndoUnconfirmed = async (trs, sender) => {
+    sender.u_balance -= trs.amount + trs.fee;
+    sender.u_totalFrozeAmount -= trs.stakedAmount;
+
+    return await __private.types[trs.type].calcUndoUnconfirmed(trs, sender);
+};
+
 Transaction.prototype.dbTable = 'trs';
 
 Transaction.prototype.dbFields = [

@@ -647,6 +647,17 @@ Vote.prototype.undoUnconfirmed = function (trs, sender, cb) {
     this.scope.account.merge(sender.address, { u_delegates: votesInvert }, err => setImmediate(cb, err));
 };
 
+Vote.prototype.calcUndoUnconfirmed = async (trs, sender) => {
+    if (trs.asset.votes) {
+        sender.u_delegates = sender.u_delegates.filter(vote => !trs.asset.votes.includes(vote));
+        sender.u_delegates.push(
+            ...trs.asset.votes.filter(vote => vote[0] === '-').map(vote => vote.replace('-', '+')),
+        );
+    }
+
+    return sender;
+};
+
 /**
  * @typedef {Object} votes
  * @property {String[]} votes - Unique items, max constant activeDelegates.

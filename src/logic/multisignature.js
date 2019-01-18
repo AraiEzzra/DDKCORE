@@ -337,6 +337,10 @@ Multisignature.prototype.undoUnconfirmed = function (trs, sender, cb) {
     }, err => setImmediate(cb, err));
 };
 
+Multisignature.prototype.calcUndoUnconfirmed = async (trs, sender) => {
+    return sender;
+};
+
 /**
  * @typedef {Object} multisignature
  * @property {number} min - From 1 to 15
