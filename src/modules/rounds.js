@@ -227,8 +227,7 @@ Rounds.prototype.tick = function (block, done) {
     async.series([
         function (cb) {
             // Start round ticking
-            // TODO test tick locked only for backwardTick
-            // __private.ticking = true;
+            __private.ticking = true;
 
             // Sum round if finishing round
             if (scope.finishRound) {
@@ -273,8 +272,7 @@ Rounds.prototype.tick = function (block, done) {
         }
     ], (err) => {
         // Stop round ticking
-        // TODO test tick locked only for backwardTick
-        // __private.ticking = false;
+        __private.ticking = false;
 
         if (scope.finishSnapshot) {
             return done(null, 'Snapshot finished');

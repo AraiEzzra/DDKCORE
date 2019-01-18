@@ -145,6 +145,16 @@ class Transactions {
         return this.newTransactionPool.getSize();
     }
 
+    lockTransactionPoolAndQueue(): void {
+        this.transactionQueue.lock();
+        this.newTransactionPool.lock();
+    }
+    
+    unlockTransactionPoolAndQueue(): void {
+        this.transactionQueue.unlock();
+        this.newTransactionPool.unlock();
+    }
+
 }
 
 /**
