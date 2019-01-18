@@ -204,6 +204,10 @@ InTransfer.prototype.undoUnconfirmed = function (trs, sender, cb) {
     return setImmediate(cb);
 };
 
+InTransfer.prototype.calcUndoUnconfirmed = async (trs, sender) => {
+    return sender;
+};
+
 InTransfer.prototype.schema = {
     id: 'InTransfer',
     object: true,
