@@ -85,7 +85,7 @@ Signature.prototype.verify = function (trs, sender, cb) {
     }
 
     try {
-        if (!trs.asset.signature.publicKey || Buffer.from(trs.asset.signature.publicKey, 'hex').length !== 32) {
+        if (!trs.asset.signature.publicKey || trs.asset.signature.publicKey.length !== 32) {
             if (constants.SIGNATURE_TRANSACTION_VALIDATION_ENABLED.PUBLIC_KEY) {
                 return setImmediate(cb, 'Invalid public key');
             }
@@ -255,7 +255,7 @@ Signature.prototype.dbSave = function (trs) {
     let publicKey;
 
     try {
-        publicKey = Buffer.from(trs.asset.signature.publicKey, 'hex');
+        publicKey = trs.asset.signature.publicKey;
     } catch (e) {
         throw e;
     }

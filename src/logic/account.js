@@ -143,19 +143,17 @@ function Account(db, schema, logger, cb) {
                 type: 'string',
                 format: 'publicKey'
             },
-            conv: String,
             immutable: true
         },
         {
             name: 'secondPublicKey',
-            type: 'Binary',
+            type: 'String',
             filter: {
                 type: 'string',
                 format: 'publicKey'
             },
             conv: String,
             immutable: true,
-            expression: 'ENCODE("secondPublicKey", \'hex\')'
         },
         {
             name: 'balance',
