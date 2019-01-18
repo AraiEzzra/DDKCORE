@@ -204,10 +204,8 @@ Signature.prototype.undoUnconfirmed = function (trs, sender, cb) {
     modules.accounts.setAccountAndGet({ address: sender.address, u_secondSignature: 0 }, cb);
 };
 
-Signature.prototype.calcUndoUnconfirmed = async (trs, sender) => {
+Signature.prototype.calcUndoUnconfirmed = (trs, sender) => {
     sender.u_secondSignature = 0;
-
-    return sender;
 };
 
 /**

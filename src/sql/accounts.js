@@ -68,12 +68,14 @@ const Accounts = {
 
     getAccountByPublicKey: 'SELECT *,' +
     ' encode("publicKey", \'hex\'::text) as "publicKey",' +
-    ' encode("secondPublicKey", \'hex\'::text) as "secondPublicKey"' +
+    ' encode("secondPublicKey", \'hex\'::text) as "secondPublicKey",' +
+    ' (SELECT ARRAY_AGG("dependentId") FROM mem_accounts2u_delegates WHERE "accountId" = ${address}) as u_delegates' +
     ' from mem_accounts WHERE encode("publicKey", \'hex\'::text) = ${publicKey}',
 
     getAccountByAddress: 'SELECT *,' +
     ' encode("publicKey", \'hex\'::text) as "publicKey",' +
-    ' encode("secondPublicKey", \'hex\'::text) as "secondPublicKey"' +
+    ' encode("secondPublicKey", \'hex\'::text) as "secondPublicKey",' +
+    ' (SELECT ARRAY_AGG("dependentId") FROM mem_accounts2u_delegates WHERE "accountId" = ${address}) as u_delegates' +
     ' from mem_accounts WHERE address = ${address}',
 
     createNewAccount: 'INSERT INTO mem_accounts (address, "publicKey")' +

@@ -286,7 +286,7 @@ Process.prototype.loadBlocksFromPeer = function (peer, cb) {
                         }
                     });
                     await modules.transactions.pushInPool(transactionForReturn);
-                    await modules.transactions.returnToQueueConflictedTransactionFromPool();
+                    await modules.transactions.returnToQueueConflictedTransactionFromPool(block.transactions);
                     modules.transactions.unlockTransactionPoolAndQueue();
                     return seriesCb();
                 } catch (err) {
@@ -569,7 +569,7 @@ __private.newReceiveBlock = async (block) => {
             }
         });
         await modules.transactions.pushInPool(transactionForReturn);
-        await modules.transactions.returnToQueueConflictedTransactionFromPool();
+        await modules.transactions.returnToQueueConflictedTransactionFromPool(block.transactions);
         modules.transactions.unlockTransactionPoolAndQueue();
     } catch (e) {
         await modules.transactions.pushInPool(removedTransactions);

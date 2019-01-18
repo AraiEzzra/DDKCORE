@@ -1,6 +1,7 @@
 import { default as NewTransactionPool, TransactionQueue } from 'src/logic/newTransactionPool';
 import { Account, Transaction, TransactionStatus } from 'src/helpers/types';
 import { getAccountByAddress } from 'src/helpers/account.utils';
+import { transactionSortFunc } from 'src/helpers/transaction.utils';
 
 const _ = require('lodash');
 const async = require('async');
@@ -126,7 +127,7 @@ class Transactions {
                         removedTransactions.push(t);
                     });
 
-                (await this.newTransactionPool.removeTransactionByRecipientId(trs.recipientId)).forEach(
+                (await this.newTransactionPool.removeTransactionByRecipientId(trs.senderId)).forEach(
                     (t: Transaction) => {
                         removedTransactions.push(t);
                     });
@@ -182,29 +183,52 @@ class Transactions {
                                   accountsMap: { [address: string]: Account }): Promise<void> {
         const senderTransactions = this.newTransactionPool.getTransactionsBySenderId(senderId);
 
+        let i = 0;
         for (const senderTrs of senderTransactions) {
             if (!verifiedTransactions.has(senderTrs.id)) {
-                try {
-                    let sender: Account;
-                    if (accountsMap[senderId]) {
-                        sender = accountsMap[senderId];
-                    } else {
-                        sender = await getAccountByAddress(library.db, senderId);
-                        accountsMap[sender.address] = sender;
-                    }
+                let sender: Account;
+                if (accountsMap[senderId]) {
+                    sender = accountsMap[senderId];
+                } else {
+                    sender = await getAccountByAddress(library.db, senderId);
+                    accountsMap[sender.address] = sender;
+                }
 
-                    await this.transactionQueue.verify(senderTrs, sender);
+                const account = Object.assign({}, sender);
+                senderTransactions.slice(i, senderTransactions.length).forEach(() => {
+                    library.logic.transaction.calcUndoUnconfirmed(senderTrs, account);
+                });
+
+                const transactions = [
+                    senderTrs,
+                    ...this.newTransactionPool.getTransactionsByRecipientId(senderId)
+                ];
+
+                transactions
+                .sort(transactionSortFunc)
+                .filter((trs: Transaction, index: number) => index > transactions.indexOf(senderTrs))
+                .forEach((trs: Transaction) => {
+                    account.u_balance -= trs.amount
+                });
+
+                const verifyStatus = await this.transactionQueue.verify(senderTrs, account);
+
+                if (verifyStatus.verified) {
                     verifiedTransactions.add(senderTrs.id);
-                } catch (e) {
+                } else {
                     await this.newTransactionPool.remove(senderTrs);
                     this.transactionQueue.push(senderTrs);
-                    library.logger.debug(`[Transaction][checkSenderTransactions][remove] ${senderTrs.id} because ${e}`);
+                    library.logger.debug(
+                        `[Transaction][checkSenderTransactions][remove] ${senderTrs.id} because ${verifyStatus.error}`
+                    );
+                    // TODO broadcast undoUnconfirmed in future
                     if (senderTrs.type === transactionTypes.SEND) {
-                        library.logger.debug(`[Transaction][checkSenderTransactions][deeper] ${e}`);
+                        library.logger.debug(`[Transaction][checkSenderTransactions][deeper] ${verifyStatus.error}`);
                         await this.checkSenderTransactions(senderTrs.recipientId, verifiedTransactions, accountsMap);
                     }
                 }
             }
+            i++;
         }
     }
 }

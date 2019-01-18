@@ -167,9 +167,7 @@ Contract.prototype.undoUnconfirmed = function (trs, sender, cb) {
     return setImmediate(cb, null, trs);
 };
 
-Contract.prototype.calcUndoUnconfirmed = async (trs, sender) => {
-    return sender;
-};
+Contract.prototype.calcUndoUnconfirmed = () => {};
 
 /**
  * @desc on modules ready
