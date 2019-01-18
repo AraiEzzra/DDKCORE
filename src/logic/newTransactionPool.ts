@@ -39,13 +39,13 @@ class TransactionPool {
         return this.poolByRecipient[recipientId] || [];
     }
 
-    getTransactionsBySendertId(senderId): Array<Transaction> {
+    getTransactionsBySenderId(senderId): Array<Transaction> {
         return this.poolBySender[senderId] || [];
     }
 
     async removeTransactionBySenderId(senderId: string): Promise<Array<Transaction>> {
         const removedTransactions = [];
-        const transactions = this.getTransactionsBySendertId(senderId);
+        const transactions = this.getTransactionsBySenderId(senderId);
         for (const trs of transactions) {
             await this.remove(trs);
             removedTransactions.push(trs);
