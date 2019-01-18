@@ -484,12 +484,7 @@ Transport.prototype.onSignature = function (signature, broadcast) {
 Transport.prototype.onUnconfirmedTransaction = function (transaction, broadcast) {
     if (broadcast && !__private.broadcaster.maxRelays(transaction)) {
         __private.broadcaster.enqueue({}, { api: '/transactions', data: { transaction }, method: 'POST' });
-        const users = usersList.getUsersList();
-        users.map((user) => {
-            if (user.address === transaction.senderId || user.address === transaction.recipientId) {
-                library.network.io.to(user.socketId).emit('transactions/change', transaction);
-            }
-        });
+        library.network.io.sockets.emit('transactions/change', transaction);
     }
 };
 
