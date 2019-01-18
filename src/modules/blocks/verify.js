@@ -1,4 +1,5 @@
 const { getOrCreateAccount } = require('src/helpers/account.utils');
+const { transactionSortFunc } = require('src/helpers/transaction.utils');
 
 const crypto = require('crypto');
 const async = require('async');
@@ -744,6 +745,7 @@ __private.normalizeBlock = function (block, cb) {
 
 __private.newNormalizeBlock = (block) => {
     try {
+        block.transactions.sort(transactionSortFunc);
         library.logic.block.objectNormalize(block);
         return { success: true, errors: [] };
     } catch (err) {
