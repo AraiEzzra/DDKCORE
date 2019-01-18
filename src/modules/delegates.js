@@ -847,21 +847,17 @@ Delegates.prototype.shared = {
                 return setImmediate(cb, err[0].message);
             }
 
-            library.db.one(sql.getVoters, { publicKey: req.body.publicKey }).then((row) => {
-                const addresses = (row.accountIds) ? row.accountIds : [];
-
-                modules.accounts.getAccounts({
-                    address: { $in: addresses },
-                    sort: 'balance'
-                }, ['address', 'balance', 'username', 'publicKey'], (err, rows) => {
-                    if (err) {
-                        return setImmediate(cb, err);
-                    }
-                    return setImmediate(cb, null, { accounts: rows });
+            library.db.one(sql.getVotersCount, { publicKey: req.body.publicKey }).then((count) => {
+                const voteCount = count;
+                library.db.many(sql.getVoters, { publicKey: req.body.publicKey, limit: req.body.limit, offset: req.body.offset }).then(voters =>
+                    setImmediate(cb, null, { voters: voters, count: voteCount })
+                ).catch((getVotersErr) => {
+                    library.logger.error(getVotersErr.stack);
+                    return setImmediate(cb, 'Failed to get voters for delegate: ' + req.body.publicKey);
                 });
-            }).catch((err) => {
-                library.logger.error(err.stack);
-                return setImmediate(cb, `Failed to get voters for delegate: ${req.body.publicKey}`);
+            }).catch((votersCountErr) => {
+                library.logger.error(votersCountErr.stack);
+                return setImmediate(cb, 'Failed to get voters count for delegate: ' + req.body.publicKey);
             });
         });
     },

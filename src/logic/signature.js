@@ -1,10 +1,9 @@
-const ByteBuffer = require('bytebuffer');
 const constants = require('../helpers/constants.js');
 
 // Private fields
-let modules,
-    library,
-    self;
+let modules;
+let library;
+let self;
 
 /**
  * Initializes library.
@@ -214,7 +213,8 @@ Signature.prototype.objectNormalize = function (trs) {
     const report = library.schema.validate(trs.asset.signature, Signature.prototype.schema);
 
     if (!report) {
-        throw `Failed to validate signature schema: ${this.scope.schema.getLastErrors().map(err => err.message).join(', ')}`;
+        throw `Failed to validate signature schema:
+         ${this.scope.schema.getLastErrors().map(err => err.message).join(', ')}`;
     }
 
     return trs;

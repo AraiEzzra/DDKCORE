@@ -17,7 +17,19 @@ const RoundsSql = {
 
     updateBlockId: 'UPDATE mem_accounts SET "blockId" = ${newId} WHERE "blockId" = ${oldId};',
 
-    summedRound: 'SELECT SUM(r.fee)::bigint AS "fees", ARRAY_AGG(r.reward) AS rewards, ARRAY_AGG(r.pk) AS delegates FROM (SELECT b."totalFee" AS fee, b.reward, b."generatorPublicKey" AS pk FROM blocks b WHERE CEIL(b.height / ${activeDelegates}::float)::int = ${round} ORDER BY b.height ASC) r;',
+    // TODO better that was but work while we have constants number activeDelegate, have to change logic and after query
+    summedRound: 'SELECT' +
+    '  SUM(r.fee) :: BIGINT AS "fees",' +
+    '  ARRAY_AGG(r.reward)  AS rewards,' +
+    '  ARRAY_AGG(r.pk)      AS delegates' +
+    '  FROM (SELECT' +
+    '        b."totalFee" AS fee,' +
+    '        b.reward,' +
+    '        b."generatorPublicKey" AS pk' +
+    '      FROM blocks b' +
+    '      WHERE b.height > (${round} -1 )* ${activeDelegates}' +
+    '            AND b.height < ${round} * ${activeDelegates} + 1' +
+    '      ORDER BY b.height ASC) r;',
 
     clearRoundSnapshot: 'DROP TABLE IF EXISTS mem_round_snapshot',
 

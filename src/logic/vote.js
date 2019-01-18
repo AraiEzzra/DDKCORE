@@ -5,15 +5,16 @@ const Diff = require('../helpers/diff.js');
 const _ = require('lodash');
 const sql = require('../sql/accounts.js');
 const slots = require('../helpers/slots.js');
-const transactionTypes = require('../helpers/transactionTypes');
 const { LENGTH, writeUInt64LE } = require('../helpers/buffer.js');
 const utils = require('../utils');
 
+const VVE = constants.VOTE_VALIDATION_ENABLED;
+
 // Private fields
-let modules,
-    library,
-    self,
-    __private = {};
+let modules;
+let library;
+let self;
+const __private = {};
 
 __private.loaded = false;
 
@@ -67,7 +68,10 @@ Vote.prototype.bind = function (delegates, rounds, accounts) {
  */
 Vote.prototype.create = async function (data, trs) {
     const senderId = data.sender.address;
-    const isDownVote = data.votes[0][0] == '-';
+    let isDownVote;
+    if (data.votes && data.votes[0]) {
+        isDownVote = data.votes[0][0] === '-';
+    }
     const totals = await library.frozen.calculateTotalRewardAndUnstake(senderId, isDownVote);
     const airdropReward = await library.frozen.getAirdropReward(senderId, totals.reward, data.type);
 
@@ -90,7 +94,7 @@ Vote.prototype.create = async function (data, trs) {
  * @return {number} fee
  */
 Vote.prototype.calculateUnconfirmedFee = function (trs, sender) {
-    return parseInt((parseInt(sender.u_totalFrozeAmount) * constants.fees.vote) / 100);
+    return parseInt((parseInt(sender.u_totalFrozeAmount, 10) * constants.fees.vote) / 100, 10);
 };
 
 /**
@@ -99,7 +103,7 @@ Vote.prototype.calculateUnconfirmedFee = function (trs, sender) {
  * @return {number} fee
  */
 Vote.prototype.calculateFee = function (trs, sender) {
-    return parseInt((parseInt(sender.totalFrozeAmount) * constants.fees.vote) / 100);
+    return parseInt((parseInt(sender.totalFrozeAmount, 10) * constants.fees.vote) / 100, 10);
 };
 
 Vote.prototype.onBlockchainReady = function () {
@@ -117,8 +121,6 @@ Vote.prototype.onBlockchainReady = function () {
  * calls callback.
  */
 Vote.prototype.verifyFields = function (trs, sender, cb) {
-    const VVE = constants.VOTE_VALIDATION_ENABLED;
-
     if (trs.recipientId !== trs.senderId) {
         if (VVE.INVALID_RECIPIENT === true) {
             return setImmediate(cb, 'Invalid recipient');
@@ -166,7 +168,11 @@ Vote.prototype.verifyFields = function (trs, sender, cb) {
     }
 
     if (trs.asset.votes && trs.asset.votes.length > constants.maxVotesPerTransaction) {
-        const msg = ['Voting limit exceeded. Maximum is', constants.maxVotesPerTransaction, 'votes per transaction'].join(' ');
+        const msg = [
+            'Voting limit exceeded. Maximum is',
+            constants.maxVotesPerTransaction,
+            'votes per transaction'
+        ].join(' ');
         if (VVE.VOTING_LIMIT_EXCEEDED) {
             return setImmediate(cb, msg);
         }
@@ -501,17 +507,15 @@ Vote.prototype.undo = function (trs, block, sender, cb) {
         },
         // added to remove vote count from mem_accounts table
         function (seriesCb) {
-            self.updateMemAccounts(
-                {
-                    votes: votesInvert,
-                    senderId: trs.senderId
+            self.updateMemAccounts({
+                votes: votesInvert,
+                senderId: trs.senderId
+            }, (err) => {
+                if (err) {
+                    return setImmediate(seriesCb, err);
                 }
-                , (err) => {
-                    if (err) {
-                        return setImmediate(seriesCb, err);
-                    }
-                    return setImmediate(seriesCb, null);
-                });
+                return setImmediate(seriesCb, null);
+            });
         },
         function (seriesCb) {
             const votes = trs.asset.votes.map(vote => vote.substring(1));
@@ -743,7 +747,6 @@ Vote.prototype.removeCheckVote = async (voteTransaction) => {
  */
 Vote.prototype.updateMemAccounts = function (voteInfo, cb) {
     const votes = voteInfo.votes;
-    const senderId = voteInfo.senderId;
 
     function checkUpvoteDownvote(waterCb) {
         if ((votes[0])[0] === '+') {
@@ -759,10 +762,10 @@ Vote.prototype.updateMemAccounts = function (voteInfo, cb) {
             inCondition += `'${address}' ,`;
         });
         inCondition = inCondition.substring(0, inCondition.length - 1);
-        let query;
+
         const sign = voteType === 1 ? '+' : '-';
 
-        query = `UPDATE mem_accounts SET "voteCount"="voteCount"${sign}1  WHERE "address" IN ( ${inCondition})`;
+        const query = `UPDATE mem_accounts SET "voteCount"="voteCount"${sign}1  WHERE "address" IN ( ${inCondition})`;
 
         return setImmediate(waterCb, null, query);
     }
