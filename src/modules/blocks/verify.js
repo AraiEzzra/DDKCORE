@@ -128,7 +128,7 @@ __private.newCheckTransaction = async (block, trs, sender, checkExists) => {
             checkExists
         });
     } catch (e) {
-        return { success: false, errors: [e.message] };
+        return { success: false, errors: [e.message || e] };
     }
 
     try {
@@ -137,7 +137,7 @@ __private.newCheckTransaction = async (block, trs, sender, checkExists) => {
             sender
         });
     } catch (e) {
-        return { success: false, errors: [e.message] };
+        return { success: false, errors: [e.message || e] };
     }
 
     return { success: true };
