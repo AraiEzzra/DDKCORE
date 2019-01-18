@@ -91,9 +91,7 @@ SendFreezeOrder.prototype.undoUnconfirmed = function (trs, sender, cb) {
     return setImmediate(cb);
 };
 
-SendFreezeOrder.prototype.calcUndoUnconfirmed = async (trs, sender) => {
-    return sender;
-};
+SendFreezeOrder.prototype.calcUndoUnconfirmed = () => {};
 
 SendFreezeOrder.prototype.applyUnconfirmed = function (trs, sender, cb) {
     return setImmediate(cb);

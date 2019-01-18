@@ -3,6 +3,7 @@ import * as AccountsSql from 'src/sql/accounts.js'
 import {getOrCreateAccount} from "src/helpers/account.utils";
 import {transactionSortFunc} from "src/helpers/transaction.utils";
 import * as constants from 'src/helpers/constants.js';
+import * as transactionTypes from 'src/helpers/transactionTypes.js';
 
 declare class TransactionPoolScope {
     logger: any;
@@ -76,7 +77,7 @@ class TransactionPool {
                 this.poolBySender[trs.senderId] = [];
             }
             this.poolBySender[trs.senderId].push(trs);
-            if (trs.recipientId) {
+            if (trs.type === transactionTypes.SEND) {
                 if (!this.poolByRecipient[trs.recipientId]) {
                     this.poolByRecipient[trs.recipientId] = [];
                 }
@@ -116,9 +117,9 @@ class TransactionPool {
         return true;
     }
 
-    async removeTransactionByRecipientId(recipientId: string): Promise<Array<Transaction>> {
+    async removeTransactionByRecipientId(address: string): Promise<Array<Transaction>> {
         const removedTransactions = [];
-        const transactions = this.getTransactionsByRecipientId(recipientId);
+        const transactions = this.getTransactionsByRecipientId(address);
         for (const trs of transactions) {
             await this.remove(trs);
             removedTransactions.push(trs);

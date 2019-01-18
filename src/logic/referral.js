@@ -99,9 +99,7 @@ Referral.prototype.undoUnconfirmed = function (trs, sender, cb) {
     setImmediate(cb);
 };
 
-Referral.prototype.calcUndoUnconfirmed = async (trs, sender) => {
-    return sender;
-};
+Referral.prototype.calcUndoUnconfirmed = () => {};
 
 Referral.prototype.schema = {
     id: 'Referral',

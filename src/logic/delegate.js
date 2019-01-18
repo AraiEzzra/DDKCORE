@@ -289,11 +289,9 @@ Delegate.prototype.undoUnconfirmed = function (trs, sender, cb) {
     modules.accounts.setAccountAndGet(data, cb);
 };
 
-Delegate.prototype.calcUndoUnconfirmed = async (trs, sender) => {
+Delegate.prototype.calcUndoUnconfirmed = (trs, sender) => {
     sender.u_isDelegate = 0;
     sender.u_username = null;
-
-    return sender;
 };
 
 Delegate.prototype.schema = {

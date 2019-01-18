@@ -314,9 +314,7 @@ DApp.prototype.undoUnconfirmed = function (trs, sender, cb) {
     return setImmediate(cb);
 };
 
-DApp.prototype.calcUndoUnconfirmed = async (trs, sender) => {
-    return sender;
-};
+DApp.prototype.calcUndoUnconfirmed = () => {};
 
 /**
  * @typedef {Object} dapp

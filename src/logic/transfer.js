@@ -206,9 +206,7 @@ Transfer.prototype.undoUnconfirmed = function (trs, sender, cb) {
     });
 };
 
-Transfer.prototype.calcUndoUnconfirmed = async (trs, sender) => {
-    return sender;
-};
+Transfer.prototype.calcUndoUnconfirmed = () => {};
 
 /**
  * Deletes blockId from transaction

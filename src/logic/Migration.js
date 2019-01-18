@@ -150,9 +150,7 @@ Migration.prototype.undoUnconfirmed = function (trs, sender, cb) {
     return setImmediate(cb);
 };
 
-Migration.prototype.calcUndoUnconfirmed = async (trs, sender) => {
-    return sender;
-};
+Migration.prototype.calcUndoUnconfirmed = () => {};
 
 /**
  * Deletes blockId from transaction
