@@ -1363,11 +1363,11 @@ Transaction.prototype.undoUnconfirmed = (trs, sender, cb) => {
     }
 };
 
-Transaction.prototype.newUndoUnconfirmed = async (trs, sender) => {
+Transaction.prototype.newUndoUnconfirmed = async (trs) => {
     const amount = trs.amount + trs.fee;
 
     const mergedSender = await self.scope.account.asyncMerge(
-        sender.address,
+        trs.senderId,
         { u_balance: amount, u_totalFrozeAmount: -trs.stakedAmount }
     );
     try {
@@ -1380,8 +1380,10 @@ Transaction.prototype.newUndoUnconfirmed = async (trs, sender) => {
             });
         }));
     } catch (err) {
+        self.scope.logger.error(`[LogicTransaction][newUndoUnconfirmed] ${err}`);
+        self.scope.logger.error(`[LogicTransaction][newUndoUnconfirmed][stack] ${err.stack}`);
         await self.scope.account.asyncMerge(
-            mergedSender.address,
+            trs.senderId,
             { u_balance: -amount, u_totalFrozeAmount: trs.stakedAmount },
         );
         throw err;

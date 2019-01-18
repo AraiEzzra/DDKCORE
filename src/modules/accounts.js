@@ -1016,7 +1016,7 @@ Accounts.prototype.shared = {
 
                 const results = await library.db.task(getDDKData);
 
-                const ddkData = await (async () => new Promise((resolve, reject) => {
+                const ddkData = await (new Promise((resolve, reject) => {
                     Accounts.prototype.shared.getCirculatingSupply(req, function (err, data) {
                         if (err) {
                             reject(err);
@@ -1028,9 +1028,8 @@ Accounts.prototype.shared = {
                             totalAccountHolders: results[2].count,
                             totalCirculatingSupply: data.circulatingSupply
                         });
-
                     });
-                }))();
+                }));
 
                 await cache.prototype.setJsonForKeyAsync('ddkCache', ddkData, DDK_DATA_EXPIRE);
                 setImmediate(cb, null, ddkData);
