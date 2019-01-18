@@ -17,6 +17,7 @@ class TransactionPool {
     poolByRecipient: { [recipientId: string]: Array<Transaction> } = {};
     poolBySender: { [senderId: string]: Array<Transaction> } = {};
 
+    locked: boolean = false;
 
     scope: TransactionPoolScope = {} as TransactionPoolScope;
 
@@ -26,51 +27,49 @@ class TransactionPool {
         this.scope.db = db;
     }
 
-    /**
-     * used in:
-     *  new transaction create on this node and verified as correct
-     *
-     * lock on moment block generation
-     */
+    lock(): void {
+        this.locked = true;
+    }
+
+    unlock(): void {
+        this.locked = false;
+    }
+
     async push(trs: Transaction, sender?: Account) {
         if (!sender) {
             sender = await getOrCreateAccount(this.scope.db, trs.senderPublicKey);
         }
 
-        try {
-            await this.scope.transactionLogic.newApplyUnconfirmed(trs, sender);
-            trs.status = TransactionStatus.UNCOFIRM_APPLIED;
-            this.scope.logger.debug(`TransactionStatus.UNCONFIRM_APPLIED ${JSON.stringify(trs)}`);
-        } catch (e) {
-            trs.status = TransactionStatus.DECLINED;
-            this.scope.logger.error(`[TransactionQueue][applyUnconfirmed]: ${e}`);
-            this.scope.logger.error(`[TransactionQueue][applyUnconfirmed][stack]: \n ${e.stack}`);
-            return;
-        }
-
-        trs.status = TransactionStatus.PUT_IN_POOL;
-        this.pool[trs.id] = trs;
-        if (!this.poolBySender[trs.senderId]) {
-            this.poolBySender[trs.senderId] = [];
-        }
-        this.poolBySender[trs.senderId].push(trs);
-        if (trs.recipientId) {
-            if (!this.poolByRecipient[trs.recipientId]) {
-                this.poolByRecipient[trs.recipientId] = [];
+        if (!this.locked) {
+            try {
+                await this.scope.transactionLogic.newApplyUnconfirmed(trs, sender);
+                trs.status = TransactionStatus.UNCOFIRM_APPLIED;
+                this.scope.logger.debug(`TransactionStatus.UNCONFIRM_APPLIED ${JSON.stringify(trs)}`);
+            } catch (e) {
+                trs.status = TransactionStatus.DECLINED;
+                this.scope.logger.error(`[TransactionQueue][applyUnconfirmed]: ${e}`);
+                this.scope.logger.error(`[TransactionQueue][applyUnconfirmed][stack]: \n ${e.stack}`);
+                return;
             }
-            this.poolByRecipient[trs.recipientId].push(trs);
+
+            trs.status = TransactionStatus.PUT_IN_POOL;
+            this.pool[trs.id] = trs;
+            if (!this.poolBySender[trs.senderId]) {
+                this.poolBySender[trs.senderId] = [];
+            }
+            this.poolBySender[trs.senderId].push(trs);
+            if (trs.recipientId) {
+                if (!this.poolByRecipient[trs.recipientId]) {
+                    this.poolByRecipient[trs.recipientId] = [];
+                }
+                this.poolByRecipient[trs.recipientId].push(trs);
+            }
+            return true;
+            // TODO on this place may be broadcast logic
         }
-        // TODO on this place may be broadcast logic
+        return false;
     }
 
-    /**
-     * used in:
-     *  expire time
-     *  more then limit (bubble logic or not?)
-     *  put into block
-     *  exist in new common block
-     *  after verify on new trs
-     */
     async remove(trs: Transaction) {
         if (!this.pool[trs.id]) {
             return false;
@@ -99,18 +98,10 @@ class TransactionPool {
         return true;
     }
 
-    /**
-     * used in:
-     *  broadcast
-     */
     get(id: string): Transaction {
         return this.pool[id];
     }
 
-    /**
-     * used in:
-     *  put into block
-     */
     pop(trs: Transaction): Transaction {
         const deletedValue = this.get(trs.id);
         this.remove(trs);
@@ -161,11 +152,21 @@ export class TransactionQueue {
 
     private scope: TransactionQueueScope = {} as TransactionQueueScope;
 
+    private locked: boolean = false;
+
     constructor({ transactionLogic, transactionPool, logger, db }: TransactionQueueScope) {
         this.scope.transactionLogic = transactionLogic;
         this.scope.transactionPool = transactionPool;
         this.scope.logger = logger;
         this.scope.db = db;
+    }
+
+    lock(): void {
+        this.locked = true;
+    }
+
+    unlock(): void {
+        this.locked = false;
     }
 
     pop(): Transaction {
@@ -199,56 +200,44 @@ export class TransactionQueue {
     }
 
     async process(): Promise<void> {
-        if (this.queue.length >= 1) {
-            const trs = this.pop();
+        if (this.queue.length === 0 || this.locked) {
+            return;
+        }
 
-            const sender = await getOrCreateAccount(this.scope.db, trs.senderPublicKey);
-            this.scope.logger.debug(`[TransactionQueue][process][sender] ${JSON.stringify(sender)}`);
+        const trs = this.pop();
 
-            const processStatus = await this.processTrs(trs, sender);
-            if (!processStatus) {
-                // notify in socket
-                return;
-            }
-            trs.status = TransactionStatus.PROCESSED;
-            this.scope.logger.debug(`TransactionStatus.PROCESSED ${JSON.stringify(trs)}`);
-
-            if (this.scope.transactionPool.isPotentialConflict(trs)) {
-                this.pushInConflictedQueue(trs);
-                // notify in socket
-                return;
-            }
-
-            const verifyStatus = await this.verify(trs, sender);
-
-            if (!verifyStatus.verified) {
-                trs.status = TransactionStatus.DECLINED;
-                // notify in socket
-                return;
-            }
-
-            trs.status = TransactionStatus.VERIFIED;
-            this.scope.logger.debug(`TransactionStatus.VERIFIED ${JSON.stringify(trs)}`);
-
-            await this.scope.transactionPool.push(trs, sender);
+        if (this.scope.transactionPool.isPotentialConflict(trs)) {
+            this.pushInConflictedQueue(trs);
+            // notify in socket
             this.process();
+            return;
         }
-    }
 
-    async processTrs(trs: Transaction, sender: Account): Promise<{ success: boolean, error?: Array<string> }> {
-        try {
-            this.scope.transactionLogic.newProcess(trs, sender);
-            return { success: true };
-        } catch (e) {
-            this.scope.logger.error(`[TransactionQueue][processTrs]: ${e}`);
-            this.scope.logger.error(`[TransactionQueue][processTrs][stack]: \n ${e.stack}`);
-            return {
-                success: false,
-                error: [e]
+        const sender = await getOrCreateAccount(this.scope.db, trs.senderPublicKey);
+        this.scope.logger.debug(`[TransactionQueue][process][sender] ${JSON.stringify(sender)}`);
+
+        const verifyStatus = await this.verify(trs, sender);
+
+        if (!verifyStatus.verified) {
+            trs.status = TransactionStatus.DECLINED;
+            // notify in socket
+            this.process();
+            return;
+        }
+
+        trs.status = TransactionStatus.VERIFIED;
+        this.scope.logger.debug(`TransactionStatus.VERIFIED ${JSON.stringify(trs)}`);
+
+        if (!this.locked) {
+            const pushed = await this.scope.transactionPool.push(trs, sender);
+            if (pushed) {
+                this.process();
+                return;
             }
         }
-
-    }
+        this.push(trs);
+        this.process();
+        }
 
     async verify(trs: Transaction, sender: Account): Promise<{ verified: boolean, error: Array<string> }> {
 
@@ -284,10 +273,5 @@ export class TransactionQueue {
         return { conflictedQueue: this.conflictedQueue.length, queue: this.queue.length };
     }
 }
-
-// SELECT * from u_pull where senderId={id} and recipientId={id};  -- verify
-// SELECT * from u_pull order by type, timestamp, id limit 25 --one per iteration -- create block
-// INSERT INTO u_pull transaction
-// SELECT
 
 export default TransactionPool;
