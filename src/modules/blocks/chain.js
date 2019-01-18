@@ -381,7 +381,6 @@ Chain.prototype.newApplyGenesisBlock = async (block, verify, save) => {
  * @return {Object}   cb.err Error if occurred
  */
 __private.applyTransaction = function (block, transaction, sender, cb) {
-    // FIXME: Not sure about flow here, when nodes have different transactions - 'applyUnconfirmed' can fail but 'apply' can be ok
     modules.transactions.applyUnconfirmed(transaction, sender, (err) => {
         if (err) {
             return setImmediate(cb, {
@@ -391,8 +390,8 @@ __private.applyTransaction = function (block, transaction, sender, cb) {
             });
         }
 
-        modules.transactions.apply(transaction, block, sender, (err) => {
-            if (err) {
+        modules.transactions.apply(transaction, block, sender, (applyErr) => {
+            if (applyErr) {
                 return setImmediate(cb, {
                     message: `Failed to apply transaction: ${transaction.id}`,
                     transaction,

@@ -432,29 +432,18 @@ Transaction.prototype.newProcess = (trs, sender) => {
         throw new Error(`Unknown transaction type ${trs.type}`);
     }
 
-    // if (!this.ready(trs, sender)) {
-    //     return setImmediate(cb, 'Transaction is not ready: ' + trs.id);
-    // }
-
     // Check sender
     if (!sender) {
         throw new Error('Missing sender');
     }
+
+    trs.senderId = sender.address;
 
     const txId = self.getId(trs);
 
     if (trs.id && trs.id !== txId) {
         throw new Error('Invalid transaction id');
     }
-
-    trs.senderId = sender.address;
-
-    __private.types[trs.type].process.call(self, trs, sender, (err, transaction) => {
-        if (err) {
-            throw err;
-        }
-        return transaction;
-    });
 };
 
 Transaction.prototype.getAccountStatus = (trs, cb) => {
@@ -930,6 +919,12 @@ Transaction.prototype.verify = ({ trs, sender, requester = {}, checkExists = fal
 };
 
 Transaction.prototype.newVerify = async ({ trs, sender, checkExists = false }) => {
+    try {
+        self.newProcess(trs, sender);
+    } catch (e) {
+        throw e;
+    }
+
     try {
         await self.newVerifyFields({ trs, sender });
     } catch (e) {
