@@ -12,7 +12,7 @@ declare class TransactionPoolScope {
 
 class TransactionPool {
 
-    pool: { [transactionId: string]: Transaction } = {};
+    private pool: { [transactionId: string]: Transaction } = {};
 
     poolByRecipient: { [recipientId: string]: Array<Transaction> } = {};
     poolBySender: { [senderId: string]: Array<Transaction> } = {};
@@ -33,6 +33,24 @@ class TransactionPool {
 
     unlock(): void {
         this.locked = false;
+    }
+
+    getTransactionsByRecipientId(recipientId): Array<Transaction> {
+        return this.poolByRecipient[recipientId] || [];
+    }
+
+    getTransactionsBySendertId(senderId): Array<Transaction> {
+        return this.poolBySender[senderId] || [];
+    }
+
+    async removeTransactionBySenderId(senderId: string): Promise<Array<Transaction>> {
+        const removedTransactions = [];
+        const transactions = this.getTransactionsBySendertId(senderId);
+        for (const trs of transactions) {
+            await this.remove(trs);
+            removedTransactions.push(trs);
+        }
+        return removedTransactions;
     }
 
     async push(trs: Transaction, sender?: Account) {
@@ -96,6 +114,16 @@ class TransactionPool {
             this.poolByRecipient[trs.recipientId].splice(this.poolByRecipient[trs.recipientId].indexOf(trs), 1) ;
         }
         return true;
+    }
+
+    async removeTransactionByRecipientId(recipientId: string): Promise<Array<Transaction>> {
+        const removedTransactions = [];
+        const transactions = this.getTransactionsByRecipientId(recipientId);
+        for (const trs of transactions) {
+            await this.remove(trs);
+            removedTransactions.push(trs);
+        }
+        return removedTransactions;
     }
 
     get(id: string): Transaction {
@@ -244,6 +272,7 @@ export class TransactionQueue {
         try {
             await this.scope.transactionLogic.newVerify({ trs, sender });
         } catch (e) {
+            // TODO change to debug
             this.scope.logger.error(`[TransactionQueue][verify]: ${e}`);
             this.scope.logger.error(`[TransactionQueue][verify][stack]: \n ${e.stack}`);
             return {
@@ -255,6 +284,7 @@ export class TransactionQueue {
         try {
             await this.scope.transactionLogic.newVerifyUnconfirmed({ trs, sender });
         } catch (e) {
+            // TODO change to debug
             this.scope.logger.error(`[TransactionQueue][verifyUnconfirmed]: ${e}`);
             this.scope.logger.error(`[TransactionQueue][verifyUnconfirmed][stack]: \n ${e.stack}`);
             return {
