@@ -874,7 +874,7 @@ __private.checkTransactionsAndApplyUnconfirmed = async (block, checkExists, veri
     const errors = [];
     let i = 0;
 
-    while ((i < block.transactions.length && errors.length === 0) || (i > 0 && errors.length !== 0)) {
+    while ((i < block.transactions.length && errors.length === 0) || (i >= 0 && errors.length !== 0)) {
         const trs = block.transactions[i];
 
         if (errors.length === 0) {
@@ -895,6 +895,7 @@ __private.checkTransactionsAndApplyUnconfirmed = async (block, checkExists, veri
         } else {
             const sender = await getOrCreateAccount(library.db, trs.senderPublicKey);
             await library.logic.transaction.newUndoUnconfirmed(trs);
+            --i;
         }
 
     }
