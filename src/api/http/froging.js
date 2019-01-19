@@ -3,7 +3,7 @@ const httpApi = require('../../helpers/httpApi');
 
 /**
  * Binds api with modules and creates common url.
- * - End point: `/api/froging`
+ * - End point: `/api/frogings`
  * - Public API:
  - post /freeze
  - get /count

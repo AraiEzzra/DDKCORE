@@ -117,9 +117,13 @@ Referral.prototype.schema = {
 };
 
 Referral.prototype.dbRead = function (raw) {
-    return {
-        referrals: raw.ref_level ? raw.ref_level : [],
-    };
+    const asset = {};
+
+    if (raw.ref_level && raw.ref_level.length) {
+        asset.referral = raw.ref_level[0];
+    }
+
+    return asset;
 };
 
 Referral.prototype.dbTable = 'referals';
