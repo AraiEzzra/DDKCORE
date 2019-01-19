@@ -894,8 +894,8 @@ __private.checkTransactionsAndApplyUnconfirmed = async (block, checkExists, veri
             i++;
         } else {
             const sender = await getOrCreateAccount(library.db, trs.senderPublicKey);
-            await library.logic.transaction.newUndoUnconfirmed(trs, sender);
-            --i;
+            await library.logic.transaction.newUndoUnconfirmed(trs);
+            i--;
         }
 
     }

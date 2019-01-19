@@ -85,7 +85,8 @@ class Transactions {
         this.newTransactionPool = new NewTransactionPool({
             transactionLogic: scope.logic.transaction,
             logger: scope.logger,
-            db: scope.db
+            db: scope.db,
+            bus: scope.bus
         });
 
         this.transactionQueue = new TransactionQueue({
@@ -144,7 +145,7 @@ class Transactions {
 
     async pushInPool(transactions: Array<Transaction>): Promise<void> {
         for (const trs of transactions) {
-            await this.newTransactionPool.push(trs);
+            await this.newTransactionPool.push(trs, null, false);
         }
     }
 
@@ -159,6 +160,13 @@ class Transactions {
     getTransactionPoolSize(): number {
         return this.newTransactionPool.getSize();
     }
+    
+    getLockStatus(): { transactionQueue: boolean, transactionPool: boolean } {
+        return {
+            transactionQueue: this.transactionQueue.getLockStatus(),
+            transactionPool: this.newTransactionPool.getLockStatus()
+        }
+    }
 
     lockTransactionPoolAndQueue(): void {
         this.transactionQueue.lock();
@@ -168,6 +176,10 @@ class Transactions {
     unlockTransactionPoolAndQueue(): void {
         this.transactionQueue.unlock();
         this.newTransactionPool.unlock();
+    }
+
+    triggerTransactionQueue(): void {
+        this.transactionQueue.process();
     }
 
     async returnToQueueConflictedTransactionFromPool(transactions): Promise<void> {

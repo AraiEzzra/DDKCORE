@@ -9,6 +9,7 @@ declare class TransactionPoolScope {
     logger: any;
     transactionLogic: any;
     db: any;
+    bus: any;
 }
 
 class TransactionPool {
@@ -22,10 +23,11 @@ class TransactionPool {
 
     scope: TransactionPoolScope = {} as TransactionPoolScope;
 
-    constructor({ transactionLogic, logger, db }: TransactionPoolScope) {
+    constructor({ transactionLogic, logger, db, bus }: TransactionPoolScope) {
         this.scope.transactionLogic = transactionLogic;
         this.scope.logger = logger;
         this.scope.db = db;
+        this.scope.bus = bus;
     }
 
     lock(): void {
@@ -34,6 +36,10 @@ class TransactionPool {
 
     unlock(): void {
         this.locked = false;
+    }
+
+    getLockStatus(): boolean {
+        return this.locked;
     }
 
     getTransactionsByRecipientId(recipientId): Array<Transaction> {
@@ -54,7 +60,7 @@ class TransactionPool {
         return removedTransactions;
     }
 
-    async push(trs: Transaction, sender?: Account) {
+    async push(trs: Transaction, sender?: Account, broadcast: boolean = false) {
         if (!sender) {
             sender = await getOrCreateAccount(this.scope.db, trs.senderPublicKey);
         }
@@ -83,8 +89,10 @@ class TransactionPool {
                 }
                 this.poolByRecipient[trs.recipientId].push(trs);
             }
+            if (broadcast) {
+                this.scope.bus.message('transactionPutInPool', trs);
+            }
             return true;
-            // TODO on this place may be broadcast logic
         }
         return false;
     }
@@ -94,12 +102,8 @@ class TransactionPool {
             return false;
         }
 
-        let sender = await this.scope.db.one(AccountsSql.getAccountByPublicKey, {
-            publicKey: trs.senderPublicKey
-        });
-        sender = new Account(sender);
         try {
-            await this.scope.transactionLogic.newUndoUnconfirmed(trs, sender);
+            await this.scope.transactionLogic.newUndoUnconfirmed(trs);
         } catch (e) {
             this.scope.logger.error(`[TransactionPool][remove]: ${e}`);
             this.scope.logger.error(`[TransactionPool][remove][stack]: \n ${e.stack}`);
@@ -108,11 +112,11 @@ class TransactionPool {
         delete this.pool[trs.id];
 
         if (this.poolBySender[trs.senderId] && this.poolBySender[trs.senderId].indexOf(trs) !== -1) {
-            this.poolBySender[trs.senderId].splice(this.poolBySender[trs.senderId].indexOf(trs), 1) ;
+            this.poolBySender[trs.senderId].splice(this.poolBySender[trs.senderId].indexOf(trs), 1);
         }
 
         if (this.poolByRecipient[trs.recipientId] && this.poolByRecipient[trs.recipientId].indexOf(trs) !== -1) {
-            this.poolByRecipient[trs.recipientId].splice(this.poolByRecipient[trs.recipientId].indexOf(trs), 1) ;
+            this.poolByRecipient[trs.recipientId].splice(this.poolByRecipient[trs.recipientId].indexOf(trs), 1);
         }
         return true;
     }
@@ -135,6 +139,13 @@ class TransactionPool {
         const deletedValue = this.get(trs.id);
         this.remove(trs);
         return deletedValue;
+    }
+
+    has(trs: Transaction) {
+        if (this.pool[trs.id]) {
+            return true;
+        }
+        return false;
     }
 
     async popSortedUnconfirmedTransactions(limit: number): Promise<Array<Transaction>> {
@@ -198,6 +209,10 @@ export class TransactionQueue {
         this.locked = false;
     }
 
+    getLockStatus(): boolean {
+        return this.locked;
+    }
+
     pop(): Transaction {
         return this.queue.shift();
     }
@@ -235,6 +250,10 @@ export class TransactionQueue {
 
         const trs = this.pop();
 
+        if(this.scope.transactionPool.has(trs)){
+            return;
+        }
+
         if (this.scope.transactionPool.isPotentialConflict(trs)) {
             this.pushInConflictedQueue(trs);
             // notify in socket
@@ -258,7 +277,7 @@ export class TransactionQueue {
         this.scope.logger.debug(`TransactionStatus.VERIFIED ${JSON.stringify(trs)}`);
 
         if (!this.locked) {
-            const pushed = await this.scope.transactionPool.push(trs, sender);
+            const pushed = await this.scope.transactionPool.push(trs, sender, true);
             if (pushed) {
                 this.process();
                 return;
@@ -279,7 +298,7 @@ export class TransactionQueue {
             return {
                 verified: false,
                 error: [e]
-            }
+            };
         }
 
         try {
@@ -291,13 +310,13 @@ export class TransactionQueue {
             return {
                 verified: false,
                 error: [e]
-            }
+            };
         }
 
         return {
             verified: true,
             error: []
-        }
+        };
     }
 
     getSize(): { conflictedQueue: number, queue: number } {

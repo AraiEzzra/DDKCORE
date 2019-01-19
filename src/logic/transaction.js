@@ -284,11 +284,11 @@ Transaction.prototype.ready = (trs, sender) => {
  */
 Transaction.prototype.countById = (trs, cb) => {
     self.scope.db.one(sql.countById, { id: trs.id })
-    .then(row => setImmediate(cb, null, row.count))
-    .catch((err) => {
-        self.scope.logger.error(err.stack);
-        return setImmediate(cb, 'Transaction#countById error');
-    });
+        .then(row => setImmediate(cb, null, row.count))
+        .catch((err) => {
+            self.scope.logger.error(err.stack);
+            return setImmediate(cb, 'Transaction#countById error');
+        });
 };
 
 /**
@@ -306,6 +306,16 @@ Transaction.prototype.checkConfirmed = function (trs, cb) {
         }
         return setImmediate(cb);
     });
+};
+
+Transaction.prototype.newCheckConfirmed = async (trs) => {
+    let result = {};
+    try {
+        result = await self.scope.db.one(sql.countById, { id: trs.id })
+    } catch (e) {
+        self.scope.logger.error(e);
+    }
+    return Boolean(result.count)
 };
 
 /**
@@ -932,14 +942,11 @@ Transaction.prototype.newVerify = async ({ trs, sender, checkExists = false }) =
     }
 
     if (checkExists) {
-        // rewrite to new
-        const isConfirmed = false; // await self.checkConfirmed(trs);
-
+        const isConfirmed = await self.newCheckConfirmed(trs);
         if (isConfirmed) {
             throw new Error(`Transaction is already confirmed: ${trs.id}`);
         }
     }
-
     try {
         await __private.types[trs.type].newVerify.call(self, trs, sender);
     } catch (e) {
@@ -1363,11 +1370,11 @@ Transaction.prototype.undoUnconfirmed = (trs, sender, cb) => {
     }
 };
 
-Transaction.prototype.newUndoUnconfirmed = async (trs, sender) => {
+Transaction.prototype.newUndoUnconfirmed = async (trs) => {
     const amount = trs.amount + trs.fee;
 
     const mergedSender = await self.scope.account.asyncMerge(
-        sender.address,
+        trs.senderId,
         { u_balance: amount, u_totalFrozeAmount: -trs.stakedAmount }
     );
     try {
@@ -1380,8 +1387,10 @@ Transaction.prototype.newUndoUnconfirmed = async (trs, sender) => {
             });
         }));
     } catch (err) {
+        self.scope.logger.error(`[LogicTransaction][newUndoUnconfirmed] ${err}`);
+        self.scope.logger.error(`[LogicTransaction][newUndoUnconfirmed][stack] ${err.stack}`);
         await self.scope.account.asyncMerge(
-            mergedSender.address,
+            trs.senderId,
             { u_balance: -amount, u_totalFrozeAmount: trs.stakedAmount },
         );
         throw err;

@@ -593,11 +593,13 @@ Delegates.prototype.onBlockchainReady = function () {
                 library.logger.error('Failed to load delegates', err);
             }
             __private.forge(cb);
+            modules.transactions.triggerTransactionQueue();
             library.logger.debug([
                 '[Delegates][nextForge]',
                 `Transaction queue size: ${modules.transactions.getQueueSize()}`,
                 `Transaction conflicted queue size: ${modules.transactions.getConflictedQueueSize()}`,
-                `Transaction pool size: ${modules.transactions.getTransactionPoolSize()}`
+                `Transaction pool size: ${modules.transactions.getTransactionPoolSize()}`,
+                `Lock status ${JSON.stringify(modules.transactions.getLockStatus())} `
             ].join('\n'));
         }
 
