@@ -53,6 +53,21 @@ export const searchQuery = async (index: string, queryMatch: string) => {
     });
 };
 
+export const addDocument = async function (doc) {
+    await client.index({
+        index: doc.index,
+        type: doc.type,
+        body: doc.body,
+        id: doc.id
+    }, (err) => {
+        if (err) {
+            return err.message;
+        }
+        return null;
+    });
+};
+
+
 
 
 

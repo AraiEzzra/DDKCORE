@@ -3,6 +3,7 @@
   "version": "0.9.9a",
   "private": true,
   "scripts": {
+    "tsc": "tsc",
     "start:api": "tslint -p . && tsc && ts-node dist/api/server.js",
     "start": "node --max-old-space-size=8192 dist/app.js",
     "server": "nodemon --max-old-space-size=8192 dist/app.js",
@@ -13,7 +14,8 @@
     "watch": "./node_modules/webpack/bin/webpack.js --progress --colors --watch",
     "clean": "rm -rf node_modules/ dist/ dapps/ .nyc_output/ logs/ .npm/ .config/ .node-gyp",
     "watch:with_update_clean": "npm run clean && npm install && npm run watch",
-    "watch:with_update": "npm install && npm run watch"
+    "watch:with_update": "npm install && npm run watch",
+    "test": "mocha --require ts-node/register ./core/test/elasticsearch/*.ts"
   },
   "author": "DDK Foundation <http://www.ddkoin.com/>",
   "license": "GPL-3.0",
@@ -98,6 +100,9 @@
   "devDependencies": {
     "@babel/core": "^7.2.2",
     "@babel/plugin-transform-runtime": "^7.2.0",
+    "@types/chai": "^4.1.7",
+    "@types/expect": "^1.20.3",
+    "@types/mocha": "^5.2.5",
     "@types/node": "^10.12.18",
     "babel-loader": "^8.0.4",
     "bitcore-mnemonic": "^1.5.0",

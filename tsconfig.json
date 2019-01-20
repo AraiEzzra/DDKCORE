@@ -11,8 +11,8 @@
     "outDir": "dist",
     "baseUrl": ".",
     "paths": {
-      "@service/*": ["./core/*"],
-      "@config/*": ["./api/*"],
+      "@core/*": ["./core/*"],
+      "@api/*": ["./api/*"],
       "@shared/*": ["./shared/*"]
     },
     "skipLibCheck": true,
