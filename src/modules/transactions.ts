@@ -194,6 +194,7 @@ class Transactions {
                                   verifiedTransactions: Set<string>,
                                   accountsMap: { [address: string]: Account }): Promise<void> {
         const senderTransactions = this.newTransactionPool.getTransactionsBySenderId(senderId);
+        library.logger.debug(`[Transactions][checkSenderTransactions] start for sender ${senderId}`);
 
         let i = 0;
         for (const senderTrs of senderTransactions) {

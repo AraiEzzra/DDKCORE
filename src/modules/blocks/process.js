@@ -270,6 +270,9 @@ Process.prototype.loadBlocksFromPeer = function (peer, cb) {
         // Start block processing - broadcast: false, saveBlock: true
         modules.transactions.removeFromPool(block.transactions, true).then(
             async (removedTransactions) => {
+                library.logger.debug(
+                    `[Process][processBlock] removedTransactions ${JSON.stringify(removedTransactions)}`
+                );
                 try {
                     modules.transactions.lockTransactionPoolAndQueue();
                     await modules.blocks.verify.newProcessBlock(block, false, true, true, true);
@@ -286,6 +289,9 @@ Process.prototype.loadBlocksFromPeer = function (peer, cb) {
                         }
                     });
                     await modules.transactions.pushInPool(transactionForReturn);
+                    library.logger.debug(
+                        `[Process][processBlock] transactionForReturn ${JSON.stringify(transactionForReturn)}`
+                    );
                     await modules.transactions.returnToQueueConflictedTransactionFromPool(block.transactions);
                     modules.transactions.unlockTransactionPoolAndQueue();
                     return seriesCb();
