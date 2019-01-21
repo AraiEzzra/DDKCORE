@@ -67,20 +67,16 @@ const Accounts = {
     getMigratedList: 'SELECT m."address",e."username",m."totalFrozeAmount",m."balance",e."transferred_time",count(*) OVER() AS "user_count" FROM migrated_etps_users e INNER JOIN mem_accounts m ON(e."address" = m."address" AND e.transferred_etp = 1) order by e."transferred_time" DESC LIMIT ${limit} OFFSET ${offset}',
 
     getAccountByPublicKey: 'SELECT *,' +
-    ' encode("publicKey", \'hex\'::text) as "publicKey",' +
-    ' encode("secondPublicKey", \'hex\'::text) as "secondPublicKey",' +
     ' (SELECT ARRAY_AGG("dependentId") FROM mem_accounts2u_delegates WHERE "accountId" = ${address}) as u_delegates' +
-    ' from mem_accounts WHERE encode("publicKey", \'hex\'::text) = ${publicKey}',
+    ' from mem_accounts WHERE "publicKey" = ${publicKey}',
 
     getAccountByAddress: 'SELECT *,' +
-    ' encode("publicKey", \'hex\'::text) as "publicKey",' +
-    ' encode("secondPublicKey", \'hex\'::text) as "secondPublicKey",' +
     ' (SELECT ARRAY_AGG("dependentId") FROM mem_accounts2u_delegates WHERE "accountId" = ${address}) as u_delegates' +
     ' from mem_accounts WHERE address = ${address}',
 
     createNewAccount: 'INSERT INTO mem_accounts (address, "publicKey")' +
-    ' VALUES (${address}, decode(${publicKey}, \'hex\'::text))' +
-    ' RETURNING *, encode("publicKey", \'hex\'::text) as "publicKey"'
+    ' VALUES (${address}, ${publicKey})' +
+    ' RETURNING *'
 };
 
 module.exports = Accounts;

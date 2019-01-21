@@ -134,7 +134,6 @@ function Account(db, schema, logger, cb) {
             },
             conv: String,
             immutable: true,
-            expression: 'UPPER("address")'
         },
         {
             name: 'publicKey',
@@ -439,7 +438,6 @@ function Account(db, schema, logger, cb) {
             },
             conv: String,
             immutable: true,
-            expression: 'UPPER("introducer")'
         }
     ];
 
@@ -535,11 +533,11 @@ Account.prototype.removeTables = function (cb) {
         'mem_accounts2u_delegates',
         'mem_accounts2multisignatures',
         'mem_accounts2u_multisignatures'].forEach((table) => {
-            const SQL = jsonSql.build({
-                type: 'remove',
-                table
-            });
-            sqles.push(SQL.query);
+        const SQL = jsonSql.build({
+            type: 'remove',
+            table
+        });
+        sqles.push(SQL.query);
     });
 
     this.scope.db.query(sqles.join(''))
@@ -674,12 +672,6 @@ Account.prototype.getAll = function (filter, fields, cb) {
     }
     delete filter.sort;
 
-    if (typeof filter.address === 'string') {
-        filter.address = {
-            $upper: ['address', filter.address]
-        };
-    }
-
     if (filter.address && filter.address.$in && filter.address.$in.length === 0) {
         return setImmediate(cb, 'Empty address');
     }
@@ -787,8 +779,8 @@ Account.prototype.merge = function (address, diff, cb) {
                         if (value === 'balance') {
                             round.push({
                                 query: 'INSERT INTO mem_round ("address", "amount", "delegate", "blockId", "round")' +
-                                    ' SELECT ${address}, (${amount})::bigint, "dependentId", ${blockId}, ${round}' +
-                                    ' FROM mem_accounts2delegates WHERE "accountId" = ${address};',
+                                ' SELECT ${address}, (${amount})::bigint, "dependentId", ${blockId}, ${round}' +
+                                ' FROM mem_accounts2delegates WHERE "accountId" = ${address};',
                                 values: {
                                     address,
                                     amount: trueValue,
@@ -808,8 +800,8 @@ Account.prototype.merge = function (address, diff, cb) {
                         if (value === 'balance') {
                             round.push({
                                 query: 'INSERT INTO mem_round ("address", "amount", "delegate", "blockId",' +
-                                    ' "round") SELECT ${address}, (${amount})::bigint, "dependentId", ${blockId},' +
-                                    ' ${round} FROM mem_accounts2delegates WHERE "accountId" = ${address};',
+                                ' "round") SELECT ${address}, (${amount})::bigint, "dependentId", ${blockId},' +
+                                ' ${round} FROM mem_accounts2delegates WHERE "accountId" = ${address};',
                                 values: {
                                     address,
                                     amount: trueValue,
@@ -849,8 +841,8 @@ Account.prototype.merge = function (address, diff, cb) {
                                 if (value === 'delegates') {
                                     round.push({
                                         query: 'INSERT INTO mem_round ("address", "amount", "delegate",' +
-                                            ' "blockId", "round") SELECT ${address}, (-balance)::bigint, ${delegate},' +
-                                            ' ${blockId}, ${round} FROM mem_accounts WHERE address = ${address};',
+                                        ' "blockId", "round") SELECT ${address}, (-balance)::bigint, ${delegate},' +
+                                        ' ${blockId}, ${round} FROM mem_accounts WHERE address = ${address};',
                                         values: {
                                             address: address,
                                             delegate: val,
@@ -866,8 +858,8 @@ Account.prototype.merge = function (address, diff, cb) {
                                 if (value === 'delegates') {
                                     round.push({
                                         query: 'INSERT INTO mem_round ("address", "amount", "delegate", "blockId",' +
-                                            ' "round") SELECT ${address}, (balance)::bigint, ${delegate}, ${blockId},' +
-                                            ' ${round} FROM mem_accounts WHERE address = ${address};',
+                                        ' "round") SELECT ${address}, (balance)::bigint, ${delegate}, ${blockId},' +
+                                        ' ${round} FROM mem_accounts WHERE address = ${address};',
                                         values: {
                                             address,
                                             delegate: val,
@@ -883,8 +875,8 @@ Account.prototype.merge = function (address, diff, cb) {
                                 if (value === 'delegates') {
                                     round.push({
                                         query: 'INSERT INTO mem_round ("address", "amount", "delegate", "blockId",' +
-                                            ' "round") SELECT ${address}, (balance)::bigint, ${delegate}, ${blockId},' +
-                                            ' ${round} FROM mem_accounts WHERE address = ${address};',
+                                        ' "round") SELECT ${address}, (balance)::bigint, ${delegate}, ${blockId},' +
+                                        ' ${round} FROM mem_accounts WHERE address = ${address};',
                                         values: {
                                             address,
                                             delegate: val,
@@ -896,6 +888,8 @@ Account.prototype.merge = function (address, diff, cb) {
                             }
                         }
                     }
+                    break;
+                default:
                     break;
             }
         }

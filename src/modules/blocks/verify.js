@@ -370,32 +370,31 @@ __private.verifyPayload = function (block, result) {
     const payloadHash = crypto.createHash('sha256');
     const appliedTransactions = {};
 
-    for (const i in block.transactions) {
-        const transaction = block.transactions[i];
+    for (const trs of block.transactions) {
         let bytes;
 
         try {
-            library.logger.debug(`Transaction ${JSON.stringify(transaction)}`);
-            bytes = library.logic.transaction.getBytes(transaction, false, false);
+            library.logger.debug(`Transaction ${JSON.stringify(trs)}`);
+            bytes = library.logic.transaction.getBytes(trs, false, false);
             library.logger.debug(`Bytes ${JSON.stringify(bytes)}`);
         } catch (e) {
             result.errors.push(e.toString());
         }
 
-        if (appliedTransactions[transaction.id]) {
+        if (appliedTransactions[trs.id]) {
             if (constants.PAYLOAD_VALIDATE.MAX_TRANSACTION_DUPLICATE) {
-                result.errors.push(`Encountered duplicate transaction: ${transaction.id}`);
+                result.errors.push(`Encountered duplicate transaction: ${trs.id}`);
             } else {
-                library.logger.error(`Encountered duplicate transaction: ${transaction.id}`);
+                library.logger.error(`Encountered duplicate transaction: ${trs.id}`);
             }
         }
 
-        appliedTransactions[transaction.id] = transaction;
+        appliedTransactions[trs.id] = trs;
         if (bytes) {
             payloadHash.update(bytes);
         }
-        totalAmount += transaction.amount;
-        totalFee += transaction.fee;
+        totalAmount += trs.amount;
+        totalFee += trs.fee;
     }
     const hex = payloadHash.digest().toString('hex');
 
@@ -869,7 +868,27 @@ __private.checkTransactions = function (block, checkExists, cb) {
         err => setImmediate(cb, err)
     );
 };
-
+/**
+ * Tested with 3 state trs = [true, false, false]; trs = [false, true, true]; trs = [true, true, false];
+ * with code sample
+ *
+ * let errors = [];
+ * let i = 0;
+ * while ((i < trs.length && errors.length === 0) || (i >= 0 && errors.length !== 0)) {
+    if (errors.length === 0) {
+        if (!trs[i]) {
+            errors.push(i);
+            i--;
+            continue
+        }
+        console.log('apply', i, trs[i]);
+        i++;
+    } else {
+        console.log('undo', i, trs[i]);
+        i--;
+    }
+}
+*/
 __private.checkTransactionsAndApplyUnconfirmed = async (block, checkExists, verify) => {
     const errors = [];
     let i = 0;
@@ -893,11 +912,9 @@ __private.checkTransactionsAndApplyUnconfirmed = async (block, checkExists, veri
             await library.logic.transaction.newApplyUnconfirmed(trs, sender);
             i++;
         } else {
-            const sender = await getOrCreateAccount(library.db, trs.senderPublicKey);
             await library.logic.transaction.newUndoUnconfirmed(trs);
-            --i;
+            i--;
         }
-
     }
 
     return { success: errors.length === 0, errors };

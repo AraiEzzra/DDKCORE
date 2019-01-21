@@ -27,6 +27,6 @@
     "new-cap": "warn",
     "no-template-curly-in-string": "off",
     "no-await-in-loop": "off",
-    "no-restricted-syntax": "warn"
+    "no-restricted-syntax": "off"
   }
 }
