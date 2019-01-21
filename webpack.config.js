@@ -1,13 +1,12 @@
 const path = require('path');
-const DIR = path.resolve(__dirname);
 const nodeExternals = require('webpack-node-externals');
-
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 
-module.exports = {
+const DIR = path.resolve(__dirname);
+const OUTPUT_DIR = path.resolve(__dirname, 'dist');
+
+const baseConfig = {
     mode: 'development',
-    entry: path.join(DIR, 'core', 'app.js'),
-    context: path.resolve(DIR, 'core'),
     target: 'node',
     externals: [nodeExternals()],
     node: {
@@ -40,6 +39,27 @@ module.exports = {
             },
         ],
     },
+};
+
+const apiConfig = {
+    entry: path.join(DIR, 'api', 'server.ts'),
+    context: path.resolve(DIR, 'api'),
+    resolve: {
+        extensions: ['.ts', '.js', '.json'],
+        alias: {
+            src: path.resolve(DIR, 'api'),
+        },
+    },
+    output: {
+        filename: 'app.js',
+        path: path.join(OUTPUT_DIR, 'api'),
+        publicPath: '/',
+    },
+};
+
+const coreConfig = {
+    entry: path.join(DIR, 'core', 'app.js'),
+    context: path.resolve(DIR, 'core'),
     resolve: {
         extensions: ['.ts', '.js', '.json'],
         alias: {
@@ -48,7 +68,7 @@ module.exports = {
     },
     output: {
         filename: 'app.js',
-        path: path.join(DIR, 'dist'),
+        path: path.join(OUTPUT_DIR, 'core'),
         publicPath: '/',
     },
     plugins: [
@@ -59,4 +79,19 @@ module.exports = {
             },
         ]),
     ],
+};
+
+module.exports = env => {
+
+    let appConfig;
+
+    switch (env.service) {
+        case 'api':
+            appConfig = apiConfig;
+            break;
+        case 'core':
+            appConfig = coreConfig;
+            break;
+    }
+    return Object.assign({}, baseConfig, appConfig);
 };
