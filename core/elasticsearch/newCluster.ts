@@ -53,20 +53,64 @@ export const searchQuery = async (index: string, queryMatch: string) => {
     });
 };
 
-export const addDocument = async function (doc) {
-    await client.index({
+export const addDocument = async (doc) => {
+    return await client.index({
         index: doc.index,
         type: doc.type,
         body: doc.body,
         id: doc.id
-    }, (err) => {
-        if (err) {
-            return err.message;
-        }
-        return null;
     });
 };
 
+export const getCount = async (indexName: string) => {
+    const countDoc = await client.count({ index: indexName });
+    console.log('countDoc ', countDoc);
+    return countDoc;
+};
+
+/**
+ * @desc Make bulk data to be saved on elasticsearch server.
+ * @param {Array} list
+ * @param {String} index
+ * @param {Array} bulk
+ * @returns {Array} bulk
+ */
+export const makeBulk = (list, index) => {
+    let bulk = [],
+        indexId;
+    for (const current in list) {
+        if (list[current].b_height) {
+            indexId = list[current].b_id;
+        } else {
+            indexId = list[current].id;
+        }
+
+        if (index === 'blocks_list') {
+            // list[current].b_generatorId = Accounts.prototype.generateAddressByPublicKey(list[current].b_generatorPublicKey);
+        }
+
+        bulk.push(
+            { index: { _index: index, _type: index, _id: indexId } },
+            list[current]
+        );
+    }
+    return bulk;
+};
+
+/**
+ * @desc creating bulk index based on data on elasticsearch server.
+ * @param {String} index
+ * @param {Object} bulk
+ * @returns {Promise} {Resolve|Reject}
+ */
+export const indexall = async (bulk, index) => {
+    return await client.bulk({
+            maxRetries: 5,
+            index,
+            type: index,
+            body: bulk
+    })
+};
 
 
 

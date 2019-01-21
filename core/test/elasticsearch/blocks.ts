@@ -1,27 +1,50 @@
 import 'module-alias/register';
 import { expect } from 'chai';
 import * as es from '@core/elasticsearch/newCluster';
-import { blockTest } from './mockData/blocks';
+import { blockTest, blocksArray } from './mockData/blocks';
+import { trsArray } from './mockData/trs';
 
-const nameIndex = 'blocks_list_test';
+const nameIndex = 'index_test';
 
 describe('Elasticsearch. Index Blocks_list', () => {
-    before(`Preparation for test ...`,async () => {
+    beforeEach(`Before all. Create Index...`,async () => {
         const result = await es.isIndexExists(nameIndex);
         if (result) {
             await es.deleteIndex(nameIndex);
         }
+        await es.createIndex(nameIndex);
     });
 
-    it('Must create a new index. ', async () => {
-        const result = await es.createIndex(nameIndex);
-        expect({
-            acknowledged: true,
-            shards_acknowledged: true,
-            index: nameIndex }).to.deep.equal(result);
+    afterEach(`After all. Create Index...`,async () => {
+        await es.deleteIndex(nameIndex);
     });
 
     it('Add one document to index', async () => {
+        const doc = await es.addDocument({
+            index: nameIndex,
+            type: nameIndex,
+            id: blockTest.b_id,
+            body: blockTest
+        });
+        expect(doc.result).to.equal('created');
+    });
 
-    })
+    it('Add array documents to index.(Block)', async () => {
+        const bulk = es.makeBulk(blocksArray, nameIndex);
+        expect(bulk).to.lengthOf(6, 'Check function makeBulk.');
+        expect(bulk[1]).to.have.property('b_id');
+        const result = await es.indexall(bulk, nameIndex);
+        expect(result.errors).to.equal(false);
+        expect(result.items.length).to.equal(3);
+    });
+
+    it('Add array documents to index.(Transaction)', async () => {
+        const bulk = es.makeBulk(trsArray, nameIndex);
+        expect(bulk).to.lengthOf(6, 'Check function makeBulk.');
+        expect(bulk[1]).to.have.property('id');
+
+        const result = await es.indexall(bulk, nameIndex);
+        expect(result.errors).to.equal(false);
+        expect(result.items.length).to.equal(3);
+    });
 });
