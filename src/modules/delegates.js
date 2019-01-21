@@ -322,7 +322,7 @@ __private.loadDelegates = function (cb) {
     const publicKey = keypair.publicKey.toString('hex');
 
     modules.accounts.getAccount({
-        publicKey: publicKey
+        publicKey
     }, (err, account) => {
         if (err) {
             return setImmediate(cb, err);

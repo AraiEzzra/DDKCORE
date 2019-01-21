@@ -6,36 +6,41 @@ DROP VIEW IF EXISTS trs_list;
 DROP VIEW IF EXISTS full_trs_list;
 DROP INDEX "mem_accounts_get_delegates";
 DROP INDEX IF EXISTS trs_encode_sender_rcpt;
+DROP INDEX IF EXISTS mem_accounts_address_upper CASCADE;
 
 --change bytea to CHAR with converting to hex
 ALTER TABLE "mem_accounts"
- ALTER COLUMN "publicKey" TYPE CHAR(64) USING ENCODE("publicKey",'hex'),
- ALTER COLUMN "secondPublicKey" TYPE CHAR(64) USING ENCODE("secondPublicKey",'hex');
+ ALTER COLUMN "publicKey" TYPE CHAR(64) USING ENCODE("publicKey", 'hex'::text),
+ ALTER COLUMN "secondPublicKey" TYPE CHAR(64) USING ENCODE("secondPublicKey", 'hex'::text);
 
 ALTER TABLE "signatures"
- ALTER COLUMN "publicKey" TYPE CHAR(64) USING ENCODE("publicKey",'hex');
+ ALTER COLUMN "publicKey" TYPE CHAR(64) USING ENCODE("publicKey", 'hex'::text);
 
 ALTER TABLE "peers"
- ALTER COLUMN "broadhash" TYPE CHAR(64) USING ENCODE("broadhash",'hex');
+ ALTER COLUMN "broadhash" TYPE CHAR(64) USING ENCODE("broadhash", 'hex'::text);
 
 ALTER TABLE "rounds_fees"
- ALTER COLUMN "publicKey" TYPE CHAR(64) USING ENCODE("publicKey",'hex');
+ ALTER COLUMN "publicKey" TYPE CHAR(64) USING ENCODE("publicKey", 'hex'::text);
 
 ALTER TABLE "blocks"
- ALTER COLUMN "payloadHash" TYPE CHAR(64) USING ENCODE("payloadHash",'hex'),
- ALTER COLUMN "generatorPublicKey" TYPE CHAR(64) USING ENCODE("generatorPublicKey",'hex'),
- ALTER COLUMN "blockSignature" TYPE CHAR(128) USING ENCODE("blockSignature",'hex');
+ ALTER COLUMN "payloadHash" TYPE CHAR(64) USING ENCODE("payloadHash", 'hex'::text),
+ ALTER COLUMN "generatorPublicKey" TYPE CHAR(64) USING ENCODE("generatorPublicKey", 'hex'::text),
+ ALTER COLUMN "blockSignature" TYPE CHAR(128) USING ENCODE("blockSignature", 'hex'::text);
 
 ALTER TABLE "trs"
- ALTER COLUMN "senderPublicKey" TYPE CHAR(64) USING ENCODE("senderPublicKey",'hex'),
- ALTER COLUMN "signature" TYPE CHAR(128) USING ENCODE("signature",'hex'),
- ALTER COLUMN "signSignature" TYPE CHAR(128) USING ENCODE("signSignature",'hex'),
- ALTER COLUMN "requesterPublicKey" TYPE CHAR(64) USING ENCODE("requesterPublicKey",'hex');
+ ALTER COLUMN "senderPublicKey" TYPE CHAR(64) USING ENCODE("senderPublicKey", 'hex'::text),
+ ALTER COLUMN "signature" TYPE CHAR(128) USING ENCODE("signature", 'hex'::text),
+ ALTER COLUMN "signSignature" TYPE CHAR(128) USING ENCODE("signSignature", 'hex'::text),
+ ALTER COLUMN "requesterPublicKey" TYPE CHAR(64) USING ENCODE("requesterPublicKey", 'hex'::text);
 
 --indexes
 CREATE INDEX IF NOT EXISTS "mem_accounts_get_delegates" ON "mem_accounts" ("vote" DESC, "publicKey" ASC) WHERE "isDelegate" = 1;
 CREATE INDEX trs_encode_sender_rcpt
   ON public.trs ("senderPublicKey", "recipientId");
+
+DROP INDEX IF EXISTS mem_accounts_publicKey_index RESTRICT;
+CREATE INDEX mem_accounts_publicKey_index
+  ON public.mem_accounts ("publicKey");
 
 CREATE TABLE IF NOT EXISTS "signatures" (
   "transactionId" CHAR(64) NOT NULL PRIMARY KEY,
@@ -144,7 +149,7 @@ CREATE VIEW full_blocks_list AS
     LEFT JOIN stake_orders so ON so."id" = t."id"
     LEFT JOIN referals ref ON ref."address" = t."senderId";
 
-    CREATE VIEW trs_list AS
+CREATE VIEW trs_list AS
 
   SELECT
     t."id"                           AS "t_id",
@@ -174,7 +179,7 @@ CREATE VIEW full_blocks_list AS
   FROM trs t
 
     INNER JOIN blocks b ON t."blockId" = b."id"
-    LEFT JOIN mem_accounts m ON t."recipientId" = m."address"
+    INNER JOIN mem_accounts m ON t."recipientId" = m."address"
     LEFT JOIN stake_orders s ON s."id" = t."id";
 
 

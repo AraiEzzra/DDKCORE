@@ -150,22 +150,22 @@ class Transactions {
     }
 
     getQueueSize(): number {
-        return this.transactionQueue.getSize()['queue'];
+        return this.transactionQueue.getSize().queue;
     }
 
     getConflictedQueueSize(): number {
-        return this.transactionQueue.getSize()['conflictedQueue'];
+        return this.transactionQueue.getSize().conflictedQueue;
     }
 
     getTransactionPoolSize(): number {
         return this.newTransactionPool.getSize();
     }
-    
+
     getLockStatus(): { transactionQueue: boolean, transactionPool: boolean } {
         return {
             transactionQueue: this.transactionQueue.getLockStatus(),
             transactionPool: this.newTransactionPool.getLockStatus()
-        }
+        };
     }
 
     lockTransactionPoolAndQueue(): void {
@@ -207,7 +207,7 @@ class Transactions {
                     accountsMap[sender.address] = sender;
                 }
 
-                const account = Object.assign({}, sender);
+                const account = { ...sender };
                 senderTransactions.slice(i, senderTransactions.length).forEach(() => {
                     library.logic.transaction.calcUndoUnconfirmed(senderTrs, account);
                 });
@@ -221,7 +221,7 @@ class Transactions {
                 .sort(transactionSortFunc)
                 .filter((trs: Transaction, index: number) => index > transactions.indexOf(senderTrs))
                 .forEach((trs: Transaction) => {
-                    account.u_balance -= trs.amount
+                    account.u_balance -= trs.amount;
                 });
 
                 const verifyStatus = await this.transactionQueue.verify(senderTrs, account);
@@ -354,7 +354,10 @@ __private.list = function (filter, cb) {
         }
 
         // Checking for empty parameters, 0 is allowed for few
-        if (!value && !(value === 0 && _.includes(['fromTimestamp', 'minAmount', 'minConfirmations', 'type', 'offset'], field[1]))) {
+        if (
+            !value &&
+            !(value === 0 && _.includes(['fromTimestamp', 'minAmount', 'minConfirmations', 'type', 'offset'], field[1]))
+        ) {
             throw new Error(`Value for parameter [${field[1]}] cannot be empty`);
         }
 
@@ -452,7 +455,7 @@ __private.list = function (filter, cb) {
         .then((delegates) => {
             // TODO remove that logic if count delegates will be more than 100
             // https://trello.com/c/yQ6JC62S/214-remove-logic-add-username-for-transactions-get-if-count-delegates-will-be-more-than-100
-            const delegatesMap = Object.assign({}, constants.DEFAULT_USERS);
+            const delegatesMap = { ...constants.DEFAULT_USERS };
 
             delegates.forEach((delegate) => {
                 delegatesMap[delegate.m_address] = delegate.m_username;
@@ -580,7 +583,10 @@ __private.getPooledTransactions = function (method, req, cb) {
 
         if (req.body.senderPublicKey || req.body.address) {
             for (i = 0; i < transactions.length; i++) {
-                if (transactions[i].senderPublicKey === req.body.senderPublicKey || transactions[i].recipientId === req.body.address) {
+                if (
+                    transactions[i].senderPublicKey === req.body.senderPublicKey ||
+                    transactions[i].recipientId === req.body.address
+                ) {
                     toSend.push(transactions[i]);
                 }
             }
@@ -952,13 +958,14 @@ Transactions.prototype.shared = {
                 return setImmediate(cb, err[0].message);
             }
 
-            __private.getById(req.body.id, (err, transaction) => {
-                if (!transaction || err) {
+            __private.getById(req.body.id, (getByIdErr, transaction) => {
+                if (!transaction || getByIdErr) {
                     return setImmediate(cb, 'Transaction not found');
                 }
 
                 if (transaction.type === transactionTypes.VOTE) {
-                    __private.getVotesById(transaction, (err, transaction) => setImmediate(cb, null, { transaction }));
+                    __private.getVotesById(transaction,
+                        (getVotesByIdErr, trs) => setImmediate(cb, null, { trs }));
                 } else {
                     return setImmediate(cb, null, { transaction });
                 }
@@ -1014,9 +1021,10 @@ Transactions.prototype.shared = {
                 }
             }
 
-            library.cache.client.get(`2fa_user_${modules.accounts.generateAddressByPublicKey(publicKey)}`, (err, userTwoFaCred) => {
-                if (err) {
-                    return setImmediate(cb, err);
+            library.cache.client.get(`2fa_user_${modules.accounts.generateAddressByPublicKey(publicKey)}`,
+                (cacheErr, userTwoFaCred) => {
+                if (cacheErr) {
+                    return setImmediate(cb, cacheErr);
                 }
                 if (userTwoFaCred) {
                     userTwoFaCred = JSON.parse(userTwoFaCred);
@@ -1035,57 +1043,65 @@ Transactions.prototype.shared = {
 
                 const query = { address: req.body.recipientId };
 
-                library.balancesSequence.add((cb) => {
-                    modules.accounts.getAccount(query, (err, recipient) => {
-                        if (err) {
-                            return setImmediate(cb, err);
+                library.balancesSequence.add((balancesSequenceCb) => {
+                    modules.accounts.getAccount(query, (getRecipientAccountErr, recipient) => {
+                        if (getRecipientAccountErr) {
+                            return setImmediate(balancesSequenceCb, getRecipientAccountErr);
                         }
 
                         const recipientId = recipient ? recipient.address : req.body.recipientId;
 
                         if (!recipientId) {
-                            return setImmediate(cb, 'Invalid recipient');
+                            return setImmediate(balancesSequenceCb, 'Invalid recipient');
                         }
 
                         if (req.body.multisigAccountPublicKey && req.body.multisigAccountPublicKey !== publicKey) {
-                            modules.accounts.getAccount({ publicKey: req.body.multisigAccountPublicKey }, (err, account) => {
-                                if (err) {
-                                    return setImmediate(cb, err);
+                            modules.accounts.getAccount({ publicKey: req.body.multisigAccountPublicKey },
+                                (multisigAccountErr, account) => {
+                                if (multisigAccountErr) {
+                                    return setImmediate(balancesSequenceCb, multisigAccountErr);
                                 }
 
                                 if (!account || !account.publicKey) {
-                                    return setImmediate(cb, 'Multisignature account not found');
+                                    return setImmediate(balancesSequenceCb, 'Multisignature account not found');
                                 }
 
                                 if (!Array.isArray(account.multisignatures)) {
-                                    return setImmediate(cb, 'Account does not have multisignatures enabled');
+                                    return setImmediate(
+                                        balancesSequenceCb,
+                                        'Account does not have multisignatures enabled'
+                                    );
                                 }
 
                                 if (account.multisignatures.indexOf(publicKey) < 0) {
-                                    return setImmediate(cb, 'Account does not belong to multisignature group');
+                                    return setImmediate(
+                                        balancesSequenceCb,
+                                        'Account does not belong to multisignature group'
+                                    );
                                 }
 
-                                modules.accounts.getAccount({ publicKey: keypair.publicKey }, (err) => {
-                                    if (err) {
-                                        return setImmediate(cb, err);
+                                modules.accounts.getAccount({ publicKey: keypair.publicKey }, (getAccountErr) => {
+                                    if (getAccountErr) {
+                                        return setImmediate(balancesSequenceCb, getAccountErr);
                                     }
 
                                     if (!account || !account.publicKey) {
-                                        return setImmediate(cb, 'Account not found');
+                                        return setImmediate(balancesSequenceCb, 'Account not found');
                                     }
 
                                     if (account.secondSignature && !req.body.secondSecret) {
-                                        return setImmediate(cb, 'Missing second passphrase');
+                                        return setImmediate(balancesSequenceCb, 'Missing second passphrase');
                                     }
 
-                                    if (account.address == req.body.recipientId) {
-                                        return setImmediate(cb, 'Sender and Recipient can\'t be same');
+                                    if (account.address === req.body.recipientId) {
+                                        return setImmediate(balancesSequenceCb, 'Sender and Recipient can\'t be same');
                                     }
 
                                     let secondKeypair = null;
 
                                     if (account.secondSignature) {
-                                        const secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
+                                        const secondHash =
+                                            crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
                                         secondKeypair = library.ed.makeKeypair(secondHash);
                                     }
 
@@ -1099,32 +1115,34 @@ Transactions.prototype.shared = {
                                     }).then((transactionReferSend) => {
                                         transactionReferSend.status = TransactionStatus.CREATED;
                                         modules.transactions.putInQueue(transactionReferSend);
-                                        return setImmediate(cb, null, [transactionReferSend]);
-                                    }).catch(e => setImmediate(cb, e.toString()));
+                                        return setImmediate(balancesSequenceCb, null, [transactionReferSend]);
+                                    }).catch(e => setImmediate(balancesSequenceCb, e.toString()));
                                 });
                             });
                         } else {
-                            modules.accounts.setAccountAndGet({ publicKey: publicKey }, (err, account) => {
-                                if (err) {
-                                    return setImmediate(cb, err);
+                            modules.accounts.setAccountAndGet({ publicKey: publicKey },
+                                (setAccountAndGetErr, account) => {
+                                if (setAccountAndGetErr) {
+                                    return setImmediate(balancesSequenceCb, setAccountAndGetErr);
                                 }
 
                                 if (!account || !account.publicKey) {
-                                    return setImmediate(cb, 'Account not found');
+                                    return setImmediate(balancesSequenceCb, 'Account not found');
                                 }
 
                                 if (account.secondSignature && !req.body.secondSecret) {
-                                    return setImmediate(cb, 'Missing second passphrase');
+                                    return setImmediate(balancesSequenceCb, 'Missing second passphrase');
                                 }
 
-                                if (account.address == req.body.recipientId) {
-                                    return setImmediate(cb, 'Sender and Recipient can\'t be same');
+                                if (account.address === req.body.recipientId) {
+                                    return setImmediate(balancesSequenceCb, 'Sender and Recipient can\'t be same');
                                 }
 
                                 let secondKeypair = null;
 
                                 if (account.secondSignature) {
-                                    const secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
+                                    const secondHash =
+                                        crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
                                     secondKeypair = library.ed.makeKeypair(secondHash);
                                 }
                                 library.logic.transaction.create({
@@ -1137,14 +1155,14 @@ Transactions.prototype.shared = {
                                 }).then((transactionReferSend) => {
                                     transactionReferSend.status = TransactionStatus.CREATED;
                                     modules.transactions.putInQueue(transactionReferSend);
-                                    return setImmediate(cb, null, [transactionReferSend]);
-                                }).catch(e => setImmediate(cb, e.toString()));
+                                    return setImmediate(balancesSequenceCb, null, [transactionReferSend]);
+                                }).catch(e => setImmediate(balancesSequenceCb, e.toString()));
                             });
                         }
                     });
-                }, (err, transaction) => {
-                    if (err) {
-                        return setImmediate(cb, err);
+                }, (balancesSequenceErr, transaction) => {
+                    if (balancesSequenceErr) {
+                        return setImmediate(cb, balancesSequenceErr);
                     }
 
                     return setImmediate(cb, null, { transactionId: transaction[0].id });
