@@ -186,12 +186,10 @@ __private.verifySignature = function (block, result) {
     }
 
     if (!valid) {
-        if (block.height > constants.MASTER_NODE_MIGRATED_BLOCK) {
-            if (constants.VERIFY_BLOCK_SIGNATURE) {
-                result.errors.push('Failed to verify block signature');
-            } else {
-                library.logger.error('Failed to verify block signature');
-            }
+        if (constants.VERIFY_BLOCK_SIGNATURE) {
+            result.errors.push('Failed to verify block signature');
+        } else {
+            library.logger.error('Failed to verify block signature');
         }
     }
 
@@ -348,8 +346,7 @@ __private.verifyPayload = function (block, result) {
         }
     }
 
-    if (block.transactions.length !== block.numberOfTransactions &&
-        block.height > constants.MASTER_NODE_MIGRATED_BLOCK) {
+    if (block.transactions.length !== block.numberOfTransactions) {
         if (constants.PAYLOAD_VALIDATE.MAX_TRANSACTION_LENGTH) {
             result.errors.push('Included transactions do not match block transactions count');
         } else {
@@ -399,32 +396,26 @@ __private.verifyPayload = function (block, result) {
     const hex = payloadHash.digest().toString('hex');
 
     if (hex !== block.payloadHash) {
-        if (block.height > constants.MASTER_NODE_MIGRATED_BLOCK) {
-            if (constants.PAYLOAD_VALIDATE.INVALID_HASH) {
-                result.errors.push('Invalid payload hash');
-            } else {
-                library.logger.error('Invalid payload hash');
-            }
+        if (constants.PAYLOAD_VALIDATE.INVALID_HASH) {
+            result.errors.push('Invalid payload hash');
+        } else {
+            library.logger.error('Invalid payload hash');
         }
     }
 
     if (totalAmount !== block.totalAmount) {
-        if (block.height > constants.MASTER_NODE_MIGRATED_BLOCK) {
-            if (constants.PAYLOAD_VALIDATE.TOTAL_AMOUNT) {
-                result.errors.push('Invalid total amount');
-            } else {
-                library.logger.error('Invalid total amount');
-            }
+        if (constants.PAYLOAD_VALIDATE.TOTAL_AMOUNT) {
+            result.errors.push('Invalid total amount');
+        } else {
+            library.logger.error('Invalid total amount');
         }
     }
 
     if (totalFee !== block.totalFee) {
-        if (block.height > constants.MASTER_NODE_MIGRATED_BLOCK) {
-            if (constants.PAYLOAD_VALIDATE.TOTAL_FEE) {
-                result.errors.push('Invalid total fee');
-            } else {
-                library.logger.error('Invalid total fee');
-            }
+        if (constants.PAYLOAD_VALIDATE.TOTAL_FEE) {
+            result.errors.push('Invalid total fee');
+        } else {
+            library.logger.error('Invalid total fee');
         }
     }
 

@@ -66,11 +66,10 @@ Frozen.prototype.create = async function (data, trs) {
     const senderId = data.sender.address;
     const airdropReward = await self.getAirdropReward(senderId, data.freezedAmount, data.type);
 
-    const date = new Date(trs.timestamp * 1000);
     trs.recipientId = null;
     trs.asset.stakeOrder = {
         stakedAmount: data.freezedAmount,
-        nextVoteMilestone: (date.setMinutes(date.getMinutes())) / 1000,
+        nextVoteMilestone: trs.timestamp,
         startTime: trs.timestamp
     };
     trs.asset.airdropReward = {
@@ -291,7 +290,7 @@ Frozen.prototype.apply = function (trs, block, sender, cb) {
  * @desc get bytes
  * @private
  * @implements
- * @return {null}
+* @return {Buffer}
  */
 Frozen.prototype.getBytes = function (trs) {
     let offset = 0;
@@ -305,7 +304,10 @@ Frozen.prototype.getBytes = function (trs) {
 
     offset = writeUInt64LE(buff, trs.asset.stakeOrder.stakedAmount || 0, offset);
 
-    buff.writeInt32LE(trs.asset.stakeOrder.nextVoteMilestone, offset);
+    if (trs.height <= constants.MASTER_NODE_MIGRATED_BLOCK) {
+        buff.writeInt32LE(trs.asset.stakeOrder.nextVoteMilestone, offset);
+    }
+
     offset += LENGTH.UINT32;
 
     buff.writeInt32LE(trs.asset.stakeOrder.startTime, offset);
