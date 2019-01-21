@@ -774,8 +774,8 @@ Vote.prototype.updateAndCheckVote = async (voteTransaction) => {
         await library.db.task(async () => {
             const activeOrders = await library.db.manyOrNone(sql.updateStakeOrder, {
                 senderId,
-                milestone: constants.froze.vTime * 60, // 2 * 60 sec = 2 mins
-                currentTime: slots.getTime()
+                nextVoteMilestone: voteTransaction.timestamp + constants.froze.vTime * 60,
+                currentTime: voteTransaction.timestamp
             });
 
             if (activeOrders && activeOrders.length > 0) {

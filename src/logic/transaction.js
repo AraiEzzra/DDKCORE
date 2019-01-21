@@ -338,10 +338,6 @@ Transaction.prototype.checkBalance = (amount, isUnconfirmed, trs, sender) => {
         .lessThan(totalAmountWithFrozeAmount);
     let exceeded = (trs.blockId !== self.scope.genesisblock.block.id && exceededBalance);
 
-    if (trs.height <= constants.MASTER_NODE_MIGRATED_BLOCK) {
-        exceeded = false;
-    }
-
     if (parseInt(sender[`${isUnconfirmed ? 'u_' : ''}totalFrozeAmount`], 10) > 0) {
         return {
             exceeded,
@@ -535,10 +531,7 @@ Transaction.prototype.verifyFields = ({ trs, sender, requester = {}, cb }) => {
     }
 
     // Check sender public key
-    if (
-        sender.publicKey && sender.publicKey !== trs.senderPublicKey &&
-        trs.height > constants.MASTER_NODE_MIGRATED_BLOCK
-    ) {
+    if (sender.publicKey && sender.publicKey !== trs.senderPublicKey) {
         err = ['Invalid sender public key:', trs.senderPublicKey, 'expected:', sender.publicKey].join(' ');
         if (constants.TRANSACTION_VALIDATION_ENABLED.SENDER_PUBLIC_KEY) {
             if (exceptions.senderPublicKey.indexOf(trs.id) > -1) {
@@ -757,10 +750,7 @@ Transaction.prototype.newVerifyFields = ({ trs, sender }) => {
     // }
 
     // Check sender public key
-    if (
-        sender.publicKey && sender.publicKey !== trs.senderPublicKey &&
-        trs.height > constants.MASTER_NODE_MIGRATED_BLOCK
-    ) {
+    if (sender.publicKey && sender.publicKey !== trs.senderPublicKey) {
         err = ['Invalid sender public key:', trs.senderPublicKey, 'expected:', sender.publicKey].join(' ');
         if (exceptions.senderPublicKey.indexOf(trs.id) > -1) {
             self.scope.logger.debug(err);
