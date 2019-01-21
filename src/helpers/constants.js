@@ -123,6 +123,7 @@ const constants = {
         DDK8999840344646463126: 'DPREORDERDNC',
         DDK7214959811294852078: 'DBOUNTY',
     },
+    TRANSACTION_QUEUE_EXPIRE: 60 * 5
 };
 
 Object.assign(constants, envConstants);

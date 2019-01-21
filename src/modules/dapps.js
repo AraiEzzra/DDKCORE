@@ -1060,8 +1060,6 @@ DApps.prototype.internal = {
                     secondKeypair = library.ed.makeKeypair(secondHash);
                 }
 
-                let transaction;
-
                 library.logic.transaction.create({
                     type: transactionTypes.DAPP,
                     sender: account,
@@ -1075,8 +1073,9 @@ DApps.prototype.internal = {
                     link: dapp.link,
                     icon: dapp.icon
                 }).then((transactionDAPP) => {
-                    transaction = transactionDAPP;
-                    modules.transactions.receiveTransactions([transaction], true, cb);
+                    transactionDAPP.status = 0;
+                    modules.transactions.putInQueue(transactionDAPP);
+                    return setImmediate(cb, null, [transactionDAPP]);
                 }).catch(e => setImmediate(cb, e.toString()));
             });
         }, (err, transaction) => {
@@ -1460,8 +1459,6 @@ DApps.prototype.internal = {
                                 secondKeypair = library.ed.makeKeypair(secondHash);
                             }
 
-                            let transaction;
-
                             library.logic.transaction.create({
                                 type: transactionTypes.IN_TRANSFER,
                                 amount: req.body.amount,
@@ -1471,8 +1468,9 @@ DApps.prototype.internal = {
                                 secondKeypair,
                                 dappId: req.body.dappId
                             }).then((transactionInTransfer) => {
-                                transaction = transactionInTransfer;
-                                modules.transactions.receiveTransactions([transaction], true, cb);
+                                transactionInTransfer.status = 0;
+                                modules.transactions.putInQueue(transactionInTransfer);
+                                return setImmediate(cb, null, [transactionInTransfer]);
                             }).catch(e => setImmediate(cb, e.toString()));
                         });
                     });
@@ -1497,8 +1495,6 @@ DApps.prototype.internal = {
                             secondKeypair = library.ed.makeKeypair(secondHash);
                         }
 
-                        let transaction;
-
                         library.logic.transaction.create({
                             type: transactionTypes.IN_TRANSFER,
                             amount: req.body.amount,
@@ -1507,8 +1503,9 @@ DApps.prototype.internal = {
                             secondKeypair,
                             dappId: req.body.dappId
                         }).then((transactionRefer) => {
-                            transaction = transactionRefer;
-                            modules.transactions.receiveTransactions([transaction], true, cb);
+                            transactionRefer.status = 0;
+                            modules.transactions.putInQueue(transactionRefer);
+                            return setImmediate(cb, null, [transactionRefer]);
                         }).catch(e => setImmediate(cb, e.toString()));
                     });
                 }
@@ -1579,8 +1576,6 @@ DApps.prototype.internal = {
                                 secondKeypair = library.ed.makeKeypair(secondHash);
                             }
 
-                            let transaction;
-
                             library.logic.transaction.create({
                                 type: transactionTypes.OUT_TRANSFER,
                                 amount: req.body.amount,
@@ -1592,8 +1587,9 @@ DApps.prototype.internal = {
                                 dappId: req.body.dappId,
                                 transactionId: req.body.transactionId
                             }).then((transactionRefer) => {
-                                transaction = transactionRefer;
-                                modules.transactions.receiveTransactions([transaction], true, cb);
+                                transactionRefer.status = 0;
+                                modules.transactions.putInQueue(transactionRefer);
+                                return setImmediate(cb, null, [transactionRefer]);
                             }).catch(e => setImmediate(cb, e.toString()));
                         });
                     });
@@ -1618,8 +1614,6 @@ DApps.prototype.internal = {
                             secondKeypair = library.ed.makeKeypair(secondHash);
                         }
 
-                        let transaction;
-
                         library.logic.transaction.create({
                             type: transactionTypes.OUT_TRANSFER,
                             amount: req.body.amount,
@@ -1630,8 +1624,9 @@ DApps.prototype.internal = {
                             dappId: req.body.dappId,
                             transactionId: req.body.transactionId
                         }).then((transactionRefer) => {
-                            transaction = transactionRefer;
-                            modules.transactions.receiveTransactions([transaction], true, cb);
+                            transactionRefer.status = 0;
+                            modules.transactions.putInQueue(transactionRefer);
+                            return setImmediate(cb, null, [transactionRefer]);
                         }).catch(e => setImmediate(cb, e.toString()));
                     });
                 }

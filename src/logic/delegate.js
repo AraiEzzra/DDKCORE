@@ -172,9 +172,14 @@ Delegate.prototype.verify = function (trs, sender, cb) {
     });
 };
 
+// TODO implement it
+Delegate.prototype.newVerify = async () => {};
+
 Delegate.prototype.verifyUnconfirmed = function (trs, sender, cb) {
     return setImmediate(cb);
 };
+
+Delegate.prototype.newVerifyUnconfirmed = async () => {};
 
 /**
  * Returns transaction with setImmediate.
@@ -235,14 +240,12 @@ Delegate.prototype.apply = function (trs, block, sender, cb) {
 Delegate.prototype.undo = function (trs, block, sender, cb) {
     const data = {
         address: sender.address,
-        u_isDelegate: 1,
         isDelegate: 0,
         vote: 0
     };
 
     if (!sender.nameexist && trs.asset.delegate.username) {
         data.username = null;
-        data.u_username = trs.asset.delegate.username;
     }
 
     library.db.none(sql.removeDelegateVoteRecord, { publicKey: trs.senderPublicKey.toString('hex') })
@@ -262,13 +265,8 @@ Delegate.prototype.applyUnconfirmed = function (trs, sender, cb) {
     const data = {
         address: sender.address,
         u_isDelegate: 1,
-        isDelegate: 0
+        u_username: trs.asset.delegate.username,
     };
-
-    if (trs.asset.delegate.username) {
-        data.username = null;
-        data.u_username = trs.asset.delegate.username;
-    }
 
     modules.accounts.setAccountAndGet(data, cb);
 };
@@ -285,27 +283,28 @@ Delegate.prototype.undoUnconfirmed = function (trs, sender, cb) {
     const data = {
         address: sender.address,
         u_isDelegate: 0,
-        isDelegate: 0
+        u_username: null,
     };
 
-    if (trs.asset.delegate.username) {
-        data.username = null;
-        data.u_username = null;
-    }
-
     modules.accounts.setAccountAndGet(data, cb);
+};
+
+Delegate.prototype.calcUndoUnconfirmed = (trs, sender) => {
+    sender.u_isDelegate = 0;
+    sender.u_username = null;
 };
 
 Delegate.prototype.schema = {
     id: 'Delegate',
     type: 'object',
     properties: {
-        publicKey: {
+        username: {
             type: 'string',
-            format: 'publicKey'
+            minLength: 1,
+            maxLength: 20
         }
     },
-    required: ['publicKey']
+    required: ['username']
 };
 
 /**

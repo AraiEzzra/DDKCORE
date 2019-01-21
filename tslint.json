@@ -1,0 +1,86 @@
+{
+  "rules": {
+    "class-name": true,
+    "comment-format": [
+      true,
+      "check-space"
+    ],
+    "curly": true,
+    "eofline": true,
+    "forin": true,
+    "indent": [
+      true,
+      "spaces",
+      4
+    ],
+    "label-position": true,
+    "max-line-length": [
+      true,
+      {
+        "limit": 120,
+        "ignore-pattern": "^\/\/.*"
+      }
+    ],
+    "no-arg": true,
+    "no-bitwise": true,
+    "no-console": [
+      true,
+      "debug",
+      "info"
+    ],
+    "no-construct": true,
+    "no-debugger": true,
+    "no-duplicate-variable": true,
+    "no-empty": false,
+    "no-eval": true,
+    "no-shadowed-variable": true,
+    "no-string-literal": true,
+    "no-switch-case-fall-through": true,
+    "trailing-comma": true,
+    "no-trailing-whitespace": false,
+    "no-unused-expression": true,
+    "no-unused-variable": false,
+    "no-use-before-declare": false,
+    "no-var-keyword": true,
+    "one-line": [
+      true,
+      "check-open-brace",
+      "check-catch",
+      "check-else",
+      "check-whitespace"
+    ],
+    "radix": true,
+    "semicolon": true,
+    "triple-equals": [
+      true,
+      "allow-null-check"
+    ],
+    "whitespace": [
+      true,
+      "check-branch",
+      "check-decl",
+      "check-operator",
+      "check-separator",
+      "check-type"
+    ],
+    "quotemark": [
+      true,
+      "single",
+      "jsx-single"
+    ],
+    "no-duplicate-switch-case": true,
+    "complexity": [
+      "error",
+      4
+    ],
+    "switch-default": true,
+    "prefer-object-spread": true,
+    "no-magic-numbers": true,
+    "import-spacing": true,
+    "variable-name": [
+      true,
+      "allow-leading-underscore",
+      "allow-pascal-case"
+    ]
+  }
+}

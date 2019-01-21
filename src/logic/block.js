@@ -4,6 +4,7 @@ const BUFFER = require('../helpers/buffer.js');
 const crypto = require('crypto');
 const bignum = require('../helpers/bignum.js');
 const constants = require('../helpers/constants.js');
+const { transactionSortFunc } = require('src/helpers/transaction.utils');
 
 const __private = {};
 
@@ -76,27 +77,7 @@ __private.getAddressByPublicKey = function (publicKey) {
  * @returns {block} block
  */
 Block.prototype.create = function (data) {
-    const transactions = data.transactions.sort((a, b) => {
-        if (a.type < b.type) {
-            return -1;
-        }
-        if (a.type > b.type) {
-            return 1;
-        }
-        if (a.timestamp < b.timestamp) {
-            return -1;
-        }
-        if (a.timestamp > b.timestamp) {
-            return 1;
-        }
-        if (a.id < b.id) {
-            return -1;
-        }
-        if (a.id > b.id) {
-            return 1;
-        }
-        return 0;
-    });
+    const transactions = data.transactions.sort(transactionSortFunc);
 
     let reward = 0, // changes from: __private.blockReward.calcReward(nextHeight)
         totalFee = 0,

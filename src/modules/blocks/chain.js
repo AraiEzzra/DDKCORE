@@ -1,3 +1,6 @@
+const { transactionSortFunc } = require('src/helpers/transaction.utils');
+const { getOrCreateAccount } = require('src/helpers/account.utils');
+
 const async = require('async');
 const transactionTypes = require('../../helpers/transactionTypes.js');
 
@@ -51,26 +54,15 @@ function Chain(logger, block, transaction, db, genesisblock, bus, balancesSequen
  * @return {Function} cb Callback function from params (through setImmediate)
  * @return {Object}   cb.err Error if occurred
  */
-Chain.prototype.saveGenesisBlock = function (cb) {
+Chain.prototype.saveGenesisBlock = async () => {
     // Check if genesis block ID already exists in the database
     // FIXME: Duplicated, there is another SQL query that we can use for that
-    library.db.query(sql.getGenesisBlockId, { id: library.genesisblock.block.id })
-        .then((rows) => {
-            const blockId = rows.length && rows[0].id;
+    const rows = await library.db.query(sql.getGenesisBlockId, { id: library.genesisblock.block.id });
+    const blockId = rows.length && rows[0].id;
 
-            if (!blockId) {
-                // If there is no block with genesis ID - save to database
-                // WARNING: DB_WRITE
-                /* library.genesisblock.block.timestamp=slots.getTime(); */
-                self.saveBlock(library.genesisblock.block, err => setImmediate(cb, err));
-            } else {
-                return setImmediate(cb);
-            }
-        })
-        .catch((err) => {
-            library.logger.error(err.stack);
-            return setImmediate(cb, 'Blocks#saveGenesisBlock error');
-        });
+    if (!blockId) {
+        await self.newApplyGenesisBlock(library.genesisblock.block, false, true);
+    }
 };
 
 /**
@@ -111,6 +103,26 @@ Chain.prototype.saveBlock = function (block, cb) {
         });
 };
 
+Chain.prototype.newSaveBlock = async (block) => {
+    try {
+        await library.db.tx(async (t) => {
+            const promise = library.logic.block.dbSave(block);
+            const inserts = new Inserts(promise, promise.values);
+
+            const promises = [t.none(inserts.template(), promise.values)];
+            // FIXME
+            t = await __private.promiseTransactions(t, block);
+            // Exec inserts as batch
+            await t.batch(promises);
+        });
+    } catch (e) {
+        library.logger.error(`[Chain][saveBlock][tx]: ${e}`);
+        library.logger.error(`[Chain][saveBlock][tx][stack]: \n ${e.stack}`);
+    }
+
+    await __private.newAfterSave(block);
+};
+
 /**
  * Execute afterSave callback for transactions depends on transaction type
  *
@@ -131,6 +143,18 @@ __private.afterSave = function (block, cb) {
         err => setImmediate(cb, err));
 };
 
+__private.newAfterSave = async (block) => {
+    library.bus.message('transactionsSaved', block.transactions);
+    for (const trs of block.transactions) {
+        try {
+            await library.logic.transaction.afterSave(trs);
+        } catch (e) {
+            library.logger.error(`[Chain][afterSave]: ${e}`);
+            library.logger.error(`[Chain][afterSave][stack]: \n ${e.stack}`);
+        }
+    }
+};
+
 /**
  * Build a sequence of transaction queries
  * // FIXME: Processing here is not clean
@@ -143,12 +167,12 @@ __private.afterSave = function (block, cb) {
  * @return {Object} t SQL connection object filled with inserts
  * @throws Will throw 'Invalid promise' when no promise, promise.values or promise.table
  */
-__private.promiseTransactions = async function (t, block) {
+__private.promiseTransactions = async (t, block) => {
     if (_.isEmpty(block.transactions)) {
         return t;
     }
 
-    const transactionIterator = async function (transaction) {
+    const transactionIterator = async (transaction) => {
         // Apply block ID to transaction
         transaction.blockId = block.id;
         // Create bytea fileds (buffers), and returns pseudo-row promise-like object
@@ -156,17 +180,17 @@ __private.promiseTransactions = async function (t, block) {
          transaction.timestamp=slots.getTime();
          } */
 
-        return await library.logic.transaction.dbSave(transaction);
+        return library.logic.transaction.dbSave(transaction);
     };
 
-    const promiseGrouper = function (promise) {
+    const promiseGrouper = (promise) => {
         if (promise && promise.table) {
             return promise.table;
         }
         throw 'Invalid promise';
     };
 
-    const typeIterator = function (type) {
+    const typeIterator = (type) => {
         let values = [];
         _.each(type, (promise) => {
             if (promise && promise.values) {
@@ -309,6 +333,40 @@ Chain.prototype.applyGenesisBlock = function (block, cb) {
     });
 };
 
+Chain.prototype.deleteAfterBlock = function (blockId, cb) {
+    library.db.query(sql.deleteAfterBlock, { id: blockId })
+        .then(res => setImmediate(cb, null, res))
+        .catch((err) => {
+            library.logger.error(err.stack);
+            return setImmediate(cb, 'Blocks#deleteAfterBlock error');
+        });
+};
+
+
+/**
+ * Apply genesis block's transactions to blockchain
+ *
+ * @private
+ * @async
+ * @method applyGenesisBlock
+ * @param  {Object}   block Full normalized genesis block
+ * @param  {Function} cb Callback function
+ * @return {Function} cb Callback function from params (through setImmediate)
+ * @return {Object}   cb.err Error if occurred
+ */
+Chain.prototype.newApplyGenesisBlock = async (block, verify, save) => {
+    block.transactions = block.transactions.sort(transactionSortFunc);
+    try {
+        await modules.blocks.verify.newProcessBlock(block, false, save, verify, false);
+        library.logger.info('[Chain][applyGenesisBlock] Genesis block loading');
+    } catch (e) {
+        library.logger.error(`[Chain][applyGenesisBlock] ${e}`);
+        library.logger.error(`[Chain][applyGenesisBlock][stack] ${e.stack}`);
+    }
+
+
+};
+
 /**
  * Apply transaction to unconfirmed and confirmed
  *
@@ -323,7 +381,6 @@ Chain.prototype.applyGenesisBlock = function (block, cb) {
  * @return {Object}   cb.err Error if occurred
  */
 __private.applyTransaction = function (block, transaction, sender, cb) {
-    // FIXME: Not sure about flow here, when nodes have different transactions - 'applyUnconfirmed' can fail but 'apply' can be ok
     modules.transactions.applyUnconfirmed(transaction, sender, (err) => {
         if (err) {
             return setImmediate(cb, {
@@ -333,8 +390,8 @@ __private.applyTransaction = function (block, transaction, sender, cb) {
             });
         }
 
-        modules.transactions.apply(transaction, block, sender, (err) => {
-            if (err) {
+        modules.transactions.apply(transaction, block, sender, (applyErr) => {
+            if (applyErr) {
                 return setImmediate(cb, {
                     message: `Failed to apply transaction: ${transaction.id}`,
                     transaction,
@@ -540,6 +597,36 @@ Chain.prototype.applyBlock = function (block, broadcast, cb, saveBlock) {
     });
 };
 
+Chain.prototype.newApplyBlock = async (block, broadcast, saveBlock, tick) => {
+    // Prevent shutdown during database writes.
+    modules.blocks.isActive.set(true);
+
+    for (const trs of block.transactions) {
+        const sender = await getOrCreateAccount(library.db, trs.senderPublicKey);
+        await library.logic.transaction.newApply(trs, block, sender);
+    }
+
+    modules.blocks.lastBlock.set(block);
+
+    if (saveBlock) {
+        await self.newSaveBlock(block);
+        library.logger.debug(`Block applied correctly with ${block.transactions.length} transactions`);
+    }
+    library.bus.message('newBlock', block, broadcast);
+
+    if (tick) {
+        await (new Promise((resolve, reject) => modules.rounds.tick(block, (err, message) => {
+            if (err) {
+                library.logger.error(`[Chain][applyBlock][tick]: ${err}`);
+                library.logger.error(`[Chain][applyBlock][tick][stack]: \n ${err.stack}`);
+                reject(err);
+            }
+            library.logger.debug(`[Chain][applyBlock][tick] message: ${message}`);
+            resolve();
+        })));
+    }
+    block = null;
+};
 
 /**
  * Deletes last block, undo transactions, recalculate round

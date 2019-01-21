@@ -1,3 +1,5 @@
+const { TransactionStatus } = require('src/helpers/types');
+
 const crypto = require('crypto');
 const schema = require('../schema/frogings.js');
 const sql = require('../sql/frogings.js');
@@ -375,7 +377,9 @@ Frogings.prototype.shared = {
                                 secondKeypair,
                                 requester: keypair
                             }).then((transactionStake) => {
-                                modules.transactions.receiveTransactions([transactionStake], true, cb);
+                                transactionStake.status = 0;
+                                modules.transactions.putInQueue(transactionStake);
+                                return setImmediate(cb, null, [transactionStake]);
                             }).catch(e => setImmediate(cb, e.toString()));
                         });
                     });
@@ -417,7 +421,9 @@ Frogings.prototype.shared = {
                             keypair,
                             secondKeypair
                         }).then((transactionStake) => {
-                            modules.transactions.receiveTransactions([transactionStake], true, cb);
+                            transactionStake.status = 0;
+                            modules.transactions.putInQueue(transactionStake);
+                            return setImmediate(cb, null, [transactionStake]);
                         }).catch(e => setImmediate(cb, e.toString()));
                     });
                 }

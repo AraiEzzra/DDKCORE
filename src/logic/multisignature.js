@@ -337,6 +337,10 @@ Multisignature.prototype.undoUnconfirmed = function (trs, sender, cb) {
     }, err => setImmediate(cb, err));
 };
 
+Multisignature.prototype.calcUndoUnconfirmed = async (trs, sender) => {
+    return sender;
+};
+
 /**
  * @typedef {Object} multisignature
  * @property {number} min - From 1 to 15
@@ -440,9 +444,8 @@ Multisignature.prototype.dbSave = function (trs) {
  * @param {function} cb
  * @return {setImmediateCallback} cb
  */
-Multisignature.prototype.afterSave = function (trs, cb) {
+Multisignature.prototype.afterSave = async (trs) => {
     library.network.io.sockets.emit('multisignatures/change', trs);
-    return setImmediate(cb);
 };
 
 /**

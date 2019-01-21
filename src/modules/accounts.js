@@ -128,11 +128,9 @@ __private.openAccount = (body, cb) => {
                 keypair,
                 referral: body.referal,
             }).then((referralTransaction) => {
-                modules.transactions.receiveTransactions(
-                    [referralTransaction],
-                    true,
-                    () => setImmediate(cb, null, newAccount)
-                );
+                referralTransaction.status = 0;
+                modules.transactions.putInQueue(referralTransaction);
+                return setImmediate(cb, null, [referralTransaction]);
             }).catch((receiveTransactionsError) => {
                 throw receiveTransactionsError;
             });
@@ -643,7 +641,9 @@ Accounts.prototype.shared = {
                                         secondKeypair,
                                         requester: keypair
                                     }).then((transactionVote) => {
-                                        modules.transactions.receiveTransactions([transactionVote], true, cb);
+                                        transactionVote.status = 0;
+                                        modules.transactions.putInQueue(transactionVote);
+                                        return setImmediate(cb, null, [transactionVote]);
                                     }).catch((e) => {
                                         throw e;
                                     });
@@ -696,7 +696,9 @@ Accounts.prototype.shared = {
                                     keypair,
                                     secondKeypair
                                 }).then((transactionVote) => {
-                                    modules.transactions.receiveTransactions([transactionVote], true, cb);
+                                    transactionVote.status = 0;
+                                    modules.transactions.putInQueue(transactionVote);
+                                    return setImmediate(cb, null, [transactionVote]);
                                 }).catch((e) => {
                                     throw e;
                                 });
@@ -1014,7 +1016,7 @@ Accounts.prototype.shared = {
 
                 const results = await library.db.task(getDDKData);
 
-                const ddkData = await (async () => new Promise((resolve, reject) => {
+                const ddkData = await (new Promise((resolve, reject) => {
                     Accounts.prototype.shared.getCirculatingSupply(req, function (err, data) {
                         if (err) {
                             reject(err);
@@ -1026,9 +1028,8 @@ Accounts.prototype.shared = {
                             totalAccountHolders: results[2].count,
                             totalCirculatingSupply: data.circulatingSupply
                         });
-
                     });
-                }))();
+                }));
 
                 await cache.prototype.setJsonForKeyAsync('ddkCache', ddkData, DDK_DATA_EXPIRE);
                 setImmediate(cb, null, ddkData);

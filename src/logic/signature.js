@@ -98,9 +98,25 @@ Signature.prototype.verify = function (trs, sender, cb) {
     return setImmediate(cb, null, trs);
 };
 
+Signature.prototype.newVerify = async (trs) => {
+    if (!trs.asset || !trs.asset.signature) {
+        throw new Error('Invalid transaction asset');
+    }
+
+    if (trs.amount !== 0) {
+        throw new Error('Invalid transaction amount');
+    }
+
+    if (!trs.asset.signature.publicKey || Buffer.from(trs.asset.signature.publicKey, 'hex').length !== 32) {
+        throw new Error('Invalid public key');
+    }
+};
+
 Signature.prototype.verifyUnconfirmed = function (trs, sender, cb) {
     return setImmediate(cb);
 };
+
+Signature.prototype.newVerifyUnconfirmed = async () => {};
 
 /**
  * Returns transaction with setImmediate.
@@ -187,6 +203,11 @@ Signature.prototype.applyUnconfirmed = function (trs, sender, cb) {
 Signature.prototype.undoUnconfirmed = function (trs, sender, cb) {
     modules.accounts.setAccountAndGet({ address: sender.address, u_secondSignature: 0 }, cb);
 };
+
+Signature.prototype.calcUndoUnconfirmed = (trs, sender) => {
+    sender.u_secondSignature = 0;
+};
+
 /**
  * @typedef signature
  * @property {publicKey} publicKey

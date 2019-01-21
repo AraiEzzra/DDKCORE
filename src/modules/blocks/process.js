@@ -142,7 +142,6 @@ Process.prototype.getCommonBlock = function (peer, height, cb) {
         /*
          * Removed poor consensus check in order to sync data
          */
-        // TODO can be useful
         if (comparisionFailed && modules.transport.poorConsensus()) {
             return modules.blocks.chain.recoverChain(cb);
         }
@@ -190,28 +189,29 @@ Process.prototype.loadBlocksOffset = function (limit, offset, verify, cb) {
                     library.logger.debug('Processing block', block.id);
 
                     if (block.id === library.genesisblock.block.id) {
-                        return modules.blocks.chain.applyGenesisBlock(block, cbBlocks);
-                    }
-
-                    return modules.blocks.verify.processBlock(
-                        block,
-                        false,
-                        (err) => {
-                            if (err) {
-                                library.logger.debug('Block processing failed', {
-                                    id: block.id,
-                                    err: err.toString(),
-                                    module: 'blocks',
-                                    block,
-                                });
+                        modules.blocks.chain.newApplyGenesisBlock(block, false, false)
+                            .then(() => setImmediate(cbBlocks));
+                    } else {
+                        return modules.blocks.verify.processBlock(
+                            block,
+                            false,
+                            false,
+                            verify,
+                            (err) => {
+                                if (err) {
+                                    library.logger.debug('Block processing failed', {
+                                        id: block.id,
+                                        err: err.toString(),
+                                        module: 'blocks',
+                                        block,
+                                    });
+                                }
+                                // Update last block
+                                // modules.blocks.lastBlock.push(block);
+                                return setImmediate(cbBlocks, err);
                             }
-                            // Update last block
-                            // modules.blocks.lastBlock.set(block);
-                            return setImmediate(cbBlocks, err);
-                        },
-                        false,
-                        verify,
-                    );
+                        );
+                    }
                 }, err => setImmediate(cbAdd, err, modules.blocks.lastBlock.get()));
             })
             .catch((err) => {
@@ -268,21 +268,44 @@ Process.prototype.loadBlocksFromPeer = function (peer, cb) {
     // Process single block
     function processBlock(block, seriesCb) {
         // Start block processing - broadcast: false, saveBlock: true
-        modules.blocks.verify.processBlock(block, false, (err) => {
-            if (!err) {
-                // Update last valid block
-                lastValidBlock = block;
-                library.logger.info(
-                    ['Block', block.id, 'loaded from:', peer.string].join(' '),
-                    `height: ${block.height}`
+        modules.transactions.removeFromPool(block.transactions, true).then(
+            async (removedTransactions) => {
+                library.logger.debug(
+                    `[Process][processBlock] removedTransactions ${JSON.stringify(removedTransactions)}`
                 );
-            } else {
-                const id = (block ? block.id : 'null');
+                try {
+                    modules.transactions.lockTransactionPoolAndQueue();
+                    await modules.blocks.verify.newProcessBlock(block, false, true, true, true);
+                    lastValidBlock = block;
+                    library.logger.info(
+                        ['Block', block.id, 'loaded from:', peer.string].join(' '),
+                        `height: ${block.height}`
+                    );
 
-                library.logger.debug('Block processing failed', { id, err: err.toString(), module: 'blocks', block });
+                    const transactionForReturn = [];
+                    removedTransactions.forEach((removedTrs) => {
+                        if (!(block.transactions.find(trs => trs.id === removedTrs.id))) {
+                            transactionForReturn.push(removedTrs);
+                        }
+                    });
+                    await modules.transactions.pushInPool(transactionForReturn);
+                    library.logger.debug(
+                        `[Process][processBlock] transactionForReturn ${JSON.stringify(transactionForReturn)}`
+                    );
+                    await modules.transactions.returnToQueueConflictedTransactionFromPool(block.transactions);
+                    modules.transactions.unlockTransactionPoolAndQueue();
+                    return seriesCb();
+                } catch (err) {
+                    const id = (block ? block.id : 'null');
+                    library.logger.debug(
+                        'Block processing failed', { id, err: err.toString(), module: 'blocks', block }
+                    );
+                    await modules.transactions.pushInPool(removedTransactions);
+                    modules.transactions.unlockTransactionPoolAndQueue();
+                    return seriesCb(err);
+                }
             }
-            return seriesCb(err);
-        }, true);
+        );
     }
 
     // Process all received blocks
@@ -356,11 +379,11 @@ Process.prototype.generateBlock = function (keypair, timestamp, cb) {
                         if (!error) {
                             ready.push(transaction);
                         }
-                        return setImmediate(cb);
+                        return setImmediate(cb, error);
                     },
                 });
             } else {
-                return setImmediate(cb);
+                return setImmediate(cb, `Transaction ${transaction.id} not ready`);
             }
         });
     }, (err) => {
@@ -382,8 +405,39 @@ Process.prototype.generateBlock = function (keypair, timestamp, cb) {
         }
 
         // Start block processing - broadcast: true, saveBlock: true
-        modules.blocks.verify.processBlock(block, true, cb, true);
+        modules.blocks.verify.processBlock(block, true, true, true, cb);
     });
+};
+
+Process.prototype.newGenerateBlock = async (keypair, timestamp) => {
+    let block;
+    const transactions = await modules.transactions.getUnconfirmedTransactionsForBlockGeneration();
+    library.logger.debug(`[Process][newGenerateBlock][transactions] ${JSON.stringify(transactions)}`);
+
+    modules.transactions.lockTransactionPoolAndQueue();
+
+    try {
+        block = library.logic.block.create({
+            keypair,
+            timestamp,
+            previousBlock: modules.blocks.lastBlock.get(),
+            transactions
+        });
+    } catch (e) {
+        library.logger.error(`[Process][newGenerateBlock][create] ${e}`);
+        library.logger.error(`[Process][newGenerateBlock][create][stack] ${e.stack}`);
+        throw e;
+    }
+
+    try {
+        await modules.blocks.verify.newProcessBlock(block, true, true, true, true);
+        modules.transactions.unlockTransactionPoolAndQueue();
+    } catch (e) {
+        await modules.transactions.pushInPool(transactions);
+        modules.transactions.unlockTransactionPoolAndQueue();
+        library.logger.error(`[Process][newGenerateBlock][processBlock] ${e}`);
+        library.logger.error(`[Process][newGenerateBlock][processBlock][stack] ${e.stack}`);
+    }
 };
 
 /**
@@ -435,6 +489,8 @@ Process.prototype.onReceiveBlock = function (block) {
         // When client is not loaded, is syncing or round is ticking
         // Do not receive new blocks as client is not ready
         if (!__private.loaded || modules.loader.syncing() || modules.rounds.ticking()) {
+            library.logger.debug(`[Process][onReceiveBlock] !__private.loaded ${!__private.loaded}`);
+            library.logger.debug(`[Process][onReceiveBlock] syncing ${modules.loader.syncing()}`);
             library.logger.debug('Client not ready to receive block', block.id);
             return;
         }
@@ -444,8 +500,7 @@ Process.prototype.onReceiveBlock = function (block) {
 
         // Detect sane block
         if (block.previousBlock === lastBlock.id && lastBlock.height + 1 === block.height) {
-            // Process received block
-            return __private.receiveBlock(block, cb);
+            __private.newReceiveBlock(block).then(() => setImmediate(cb, null));
         } else if (block.previousBlock !== lastBlock.id && lastBlock.height + 1 === block.height) {
             // Process received fork cause 1
             return __private.receiveForkOne(block, lastBlock, cb);
@@ -455,8 +510,7 @@ Process.prototype.onReceiveBlock = function (block) {
         ) {
             // Process received fork cause 5
             return __private.receiveForkFive(block, lastBlock, cb);
-        }
-        if (block.id === lastBlock.id) {
+        } else if (block.id === lastBlock.id) {
             library.logger.debug('Block already processed', block.id);
         } else {
             library.logger.warn([
@@ -467,7 +521,6 @@ Process.prototype.onReceiveBlock = function (block) {
                 'generator:', block.generatorPublicKey
             ].join(' '));
         }
-
         // Discard received block
         return setImmediate(cb);
     });
@@ -484,7 +537,7 @@ Process.prototype.onReceiveBlock = function (block) {
  */
 __private.receiveBlock = function (block, cb) {
     library.logger.info([
-        'Received new block id:', block.id,
+        'Old Received new block id:', block.id,
         'height:', block.height,
         'round:', modules.rounds.calc(block.height),
         'slot:', slots.getSlotNumber(block.timestamp),
@@ -494,8 +547,44 @@ __private.receiveBlock = function (block, cb) {
     // Update last receipt
     modules.blocks.lastReceipt.update();
     // Start block processing - broadcast: true, saveBlock: true
-    modules.blocks.verify.processBlock(block, true, cb, true);
+    modules.blocks.verify.processBlock(block, true, true, true, cb);
 };
+
+
+__private.newReceiveBlock = async (block) => {
+    library.logger.info([
+        'Received new block id:', block.id,
+        'height:', block.height,
+        'round:', modules.rounds.calc(block.height),
+        'slot:', slots.getSlotNumber(block.timestamp),
+        'reward:', block.reward
+    ].join(' '));
+
+    modules.blocks.lastReceipt.update();
+    const removedTransactions = await modules.transactions.removeFromPool(block.transactions, true);
+
+    try {
+        modules.transactions.lockTransactionPoolAndQueue();
+
+        await modules.blocks.verify.newProcessBlock(block, true, true, true, true);
+
+        const transactionForReturn = [];
+        removedTransactions.forEach((removedTrs) => {
+            if (!(block.transactions.find(trs => trs.id === removedTrs.id))) {
+                transactionForReturn.push(removedTrs);
+            }
+        });
+        await modules.transactions.pushInPool(transactionForReturn);
+        await modules.transactions.returnToQueueConflictedTransactionFromPool(block.transactions);
+        modules.transactions.unlockTransactionPoolAndQueue();
+    } catch (e) {
+        await modules.transactions.pushInPool(removedTransactions);
+        modules.transactions.unlockTransactionPoolAndQueue();
+        library.logger.error(`[Process][newReceiveBlock] ${e}`);
+        library.logger.error(`[Process][newReceiveBlock][stack] ${e.stack}`);
+    }
+};
+
 
 /**
  * Receive block detected as fork cause 1: Consecutive height but different previous block id
@@ -607,7 +696,7 @@ __private.receiveForkFive = function (block, lastBlock, cb) {
         },
         // Process received block
         function (seriesCb) {
-            return __private.receiveBlock(block, seriesCb);
+            return __private.newReceiveBlock(block).then(seriesCb);
         }
     ], (err) => {
         if (err) {

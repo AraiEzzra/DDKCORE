@@ -39,7 +39,7 @@ const DelegatesSql = {
             'LEFT JOIN (SELECT "dependentId", COUNT(1)::int AS voters_cnt from mem_accounts2delegates GROUP BY "dependentId") v ON v."dependentId" = m."publicKey"',
             'WHERE m."isDelegate" = 1',
             `ORDER BY ${[params.sortField, params.sortMethod].join(' ')})`,
-            'SELECT * FROM delegates WHERE LOWER(username) LIKE ${q} LIMIT ${limit}'
+            'SELECT * FROM delegates WHERE username LIKE ${q} LIMIT ${limit}'
         ].join(' ');
 
         params.q = `%${String(params.q).toLowerCase()}%`;
@@ -48,7 +48,7 @@ const DelegatesSql = {
 
     insertFork: 'INSERT INTO forks_stat ("delegatePublicKey", "blockTimestamp", "blockId", "blockHeight", "previousBlock", "cause") VALUES (${delegatePublicKey}, ${blockTimestamp}, ${blockId}, ${blockHeight}, ${previousBlock}, ${cause});',
 
-    getVoters: 'SELECT accounts.address, accounts.balance, encode(accounts."publicKey", \'hex\') AS "publicKey" FROM mem_accounts2delegates delegates INNER JOIN mem_accounts accounts ON delegates."accountId" = accounts.address WHERE delegates."dependentId" = ${publicKey} ORDER BY accounts."balance" DESC LIMIT ${limit} OFFSET ${offset}',
+    getVoters: 'SELECT accounts.address, accounts.balance, "publicKey" FROM mem_accounts2delegates delegates INNER JOIN mem_accounts accounts ON delegates."accountId" = accounts.address WHERE delegates."dependentId" = ${publicKey} ORDER BY accounts."balance" DESC LIMIT ${limit} OFFSET ${offset}',
 
     getVotersCount: 'SELECT count(*) FROM mem_accounts2delegates WHERE "dependentId" = ${publicKey}',
 
@@ -58,7 +58,19 @@ const DelegatesSql = {
 
     addDelegateVoteRecord: 'INSERT INTO "delegate_to_vote_counter"("publicKey", "voteCount") VALUES (${publicKey}, 0) ON CONFLICT DO NOTHING',
 
-    removeDelegateVoteRecord: 'DELETE FROM "delegate_to_vote_counter" WHERE "publicKey" = ${publicKey}'
+    removeDelegateVoteRecord: 'DELETE FROM "delegate_to_vote_counter" WHERE "publicKey" = ${publicKey}',
+
+    getTopDelegates: 'SELECT' +
+    '  "username",' +
+    '  "address",' +
+    '  delegate_to_vote_counter."publicKey",' +
+    '  "vote",' +
+    '  "missedblocks",' +
+    '  "producedblocks",' +
+    '  "url"' +
+    ' FROM delegate_to_vote_counter' +
+    '  INNER JOIN mem_accounts on mem_accounts."publicKey" = delegate_to_vote_counter."publicKey"' +
+    ' ORDER BY delegate_to_vote_counter."voteCount", delegate_to_vote_counter."publicKey";'
 };
 
 module.exports = DelegatesSql;

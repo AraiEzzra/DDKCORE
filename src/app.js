@@ -15,6 +15,7 @@
  * @param {Data} [data] - Data, if there hasn't been an error and the function should return data.
  */
 
+import ModuleTransactions from 'src/modules/transactions';
 /**
  * Main entry point.
  * Loads the ddk modules, the ddk api and run the express server as Domain master.
@@ -133,7 +134,7 @@ const config = {
     modules: {
         server: require('./modules/server.js'),
         accounts: require('./modules/accounts.js'),
-        transactions: require('./modules/transactions.js'),
+        transactions: ModuleTransactions,
         blocks: require('./modules/blocks.js'),
         signatures: require('./modules/signatures.js'),
         transport: require('./modules/transport.js'),
@@ -485,6 +486,7 @@ d.run(() => {
                     });
                 };
             };
+            scope.logger.info('[App][loader][bus] loaded');
             cb(null, new bus());
         }],
         db(cb) {
@@ -564,7 +566,10 @@ d.run(() => {
                 vote: ['logger', 'schema', 'db', 'frozen', function (scope, cb) {
                     new Vote(scope.logger, scope.schema, scope.db, scope.frozen, cb);
                 }],
-            }, cb);
+            }, (err, data) => {
+                scope.logger.info('[App][loader][logic] loaded');
+                cb(err, data);
+            });
         }],
         /**
          * Once network, connect, config, logger, bus, sequence,
@@ -587,17 +592,42 @@ d.run(() => {
                     });
 
                     d.run(() => {
-                        logger.debug('Loading module', name);
+                        scope.logger.debug('Loading module', name);
                         const Klass = config.modules[name];
                         const obj = new Klass(cb, scope);
                         modules.push(obj);
+                        scope.logger.debug(`[App][loader][modules][${name}] loaded`);
                     });
                 };
             });
 
             async.parallel(tasks, (err, results) => {
+                scope.logger.info('[App][loader][modules] loaded');
                 cb(err, results);
             });
+        }],
+        binding: ['modules', 'bus', 'logic', function (scope, cb) {
+            scope.logger.debug('[App][loader][ready] start loading');
+
+            scope.bus.message('bind', scope.modules);
+            scope.logic.transaction.bindModules(scope.modules);
+            scope.logic.peers.bindModules(scope.modules);
+
+            scope.logger.debug('[App][loader][ready] end binding');
+            cb();
+        }],
+        applyGenesisBlock: ['binding', (scope, cb) => {
+            scope.logger.debug('[App][loader][applyGenesisBlock] start loading');
+            scope.modules.blocks.chain.saveGenesisBlock().then(() => {
+                scope.logger.info('[App][loader][applyGenesisBlock] loaded');
+                cb();
+            });
+        }],
+        ready: ['applyGenesisBlock', function (scope, cb) {
+            scope.logger.debug('[App][loader][ready] start loading');
+            elasticsearchSync.sync(scope.db, scope.logger);
+            scope.logger.info('[App][loader][ready] loaded');
+            cb();
         }],
 
         /**
@@ -614,8 +644,13 @@ d.run(() => {
                     const ApiEndpoint = config.api[moduleName][protocol];
                     try {
                         new ApiEndpoint(
-                            scope.modules[moduleName], scope.network.app, scope.logger, scope.modules.cache, scope.config
+                            scope.modules[moduleName],
+                            scope.network.app,
+                            scope.logger,
+                            scope.modules.cache,
+                            scope.config
                         );
+                        scope.logger.debug(`[App][loader][api][${moduleName}] loaded`);
                     } catch (e) {
                         scope.logger.error(`Unable to load API endpoint for ${moduleName} of ${protocol}`, e);
                     }
@@ -623,14 +658,7 @@ d.run(() => {
             });
 
             scope.network.app.use(httpApi.middleware.errorLogger.bind(null, scope.logger));
-            cb();
-        }],
-
-        ready: ['modules', 'bus', 'logic', function (scope, cb) {
-            scope.bus.message('bind', scope.modules);
-            scope.logic.transaction.bindModules(scope.modules);
-            scope.logic.peers.bindModules(scope.modules);
-            elasticsearchSync.sync(scope.db, scope.logger);
+            scope.logger.info('[App][loader][api] loaded');
             cb();
         }],
 
@@ -654,6 +682,7 @@ d.run(() => {
                             cb(err, scope.network);
                         });
                     } else {
+                        scope.logger.info('[App][loader][listen] loaded');
                         cb(null, scope.network);
                     }
                 } else {

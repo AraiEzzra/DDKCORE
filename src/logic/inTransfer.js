@@ -204,6 +204,8 @@ InTransfer.prototype.undoUnconfirmed = function (trs, sender, cb) {
     return setImmediate(cb);
 };
 
+InTransfer.prototype.calcUndoUnconfirmed = () => {};
+
 InTransfer.prototype.schema = {
     id: 'InTransfer',
     object: true,
@@ -280,9 +282,7 @@ InTransfer.prototype.dbSave = function (trs) {
  * @param {function} cb
  * @return {setImmediateCallback} cb
  */
-InTransfer.prototype.afterSave = function (trs, cb) {
-    return setImmediate(cb);
-};
+InTransfer.prototype.afterSave = async () => {};
 
 /**
  * Checks sender multisignatures and transaction signatures.

@@ -64,8 +64,7 @@ function Blocks(cb, scope) {
     this.chain = this.submodules.chain;
 
     self = this;
-
-    this.submodules.chain.saveGenesisBlock(err => setImmediate(cb, err, self));
+    setImmediate(cb, null, self);
 }
 
 /**

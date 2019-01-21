@@ -165,7 +165,6 @@ function Migrator(pgp, db) {
  * @return {function} error|cb
  */
 module.exports.connect = function (config, logger, cb) {
-    let timestamp;
 
     const promise = require('bluebird');
     const pgOptions = {
@@ -180,20 +179,9 @@ module.exports.connect = function (config, logger, cb) {
 
     monitor.log = function (msg, info) {
         info.display = false;
-        if (info.event === 'connect') {
-            timestamp = new Date().getTime();
-        }
-
-        if (info.event === 'disconnect') {
-            if (new Date().getTime() - timestamp > 200) {
-                logger.warn(`SQL time: ${new Date().getTime() - timestamp}`);
-            } else {
-                logger.debug(`SQL time: ${new Date().getTime() - timestamp}`);
-            }
-        }
 
         if (info.event === 'query') {
-            logger.debug(`SQL query: ${msg}`);
+            logger.trace(`SQL query: ${msg}`);
         }
     };
 

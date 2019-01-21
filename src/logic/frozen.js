@@ -197,6 +197,10 @@ Frozen.prototype.undoUnconfirmed = function (trs, sender, cb) {
     return setImmediate(cb);
 };
 
+Frozen.prototype.calcUndoUnconfirmed = async (trs, sender) => {
+    return sender;
+};
+
 /**
  * @desc apply unconfirmed transations
  * @private
@@ -378,6 +382,24 @@ Frozen.prototype.verify = function (trs, sender, cb) {
     return self.verifyFields(trs, sender, cb);
 };
 
+Frozen.prototype.newVerify = async (trs) => {
+    const stakedAmount = trs.stakedAmount / 100000000;
+
+    if (stakedAmount < 1) {
+        throw new Error('Invalid stake amount');
+    }
+
+    if ((stakedAmount % 1) !== 0) {
+        throw new Error('Invalid stake amount: Decimal value');
+    }
+    try {
+        await self.verifyAirdrop(trs);
+    } catch (e) {
+        throw e;
+    }
+};
+
+
 Frozen.prototype.verifyUnconfirmed = function (trs, sender, cb) {
     if (Number(trs.stakedAmount) + Number(sender.u_totalFrozeAmount) > Number(sender.u_balance)) {
         if (constants.STAKE_VALIDATE.BALANCE_ENABLED) {
@@ -396,6 +418,16 @@ Frozen.prototype.verifyUnconfirmed = function (trs, sender, cb) {
     }
 
     setImmediate(cb);
+};
+
+Frozen.prototype.newVerifyUnconfirmed = async (trs, sender) => {
+    if (Number(trs.stakedAmount) + Number(sender.u_totalFrozeAmount) > Number(sender.u_balance)) {
+        throw new Error('Verify failed: Insufficient unconfirmed balance for stake');
+    }
+
+    if ((parseInt(sender.u_balance, 10) - parseInt(sender.u_totalFrozeAmount, 10)) < (trs.stakedAmount + trs.fee)) {
+        throw new Error('Insufficient unconfirmed balance');
+    }
 };
 
 Frozen.prototype.verifyAirdrop = async (trs) => {

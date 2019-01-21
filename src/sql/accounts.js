@@ -64,7 +64,19 @@ const Accounts = {
 
     checkSenderBalance: 'SELECT balance FROM mem_accounts WHERE "address" = ${sender_address}',
 
-    getMigratedList: 'SELECT m."address",e."username",m."totalFrozeAmount",m."balance",e."transferred_time",count(*) OVER() AS "user_count" FROM migrated_etps_users e INNER JOIN mem_accounts m ON(e."address" = m."address" AND e.transferred_etp = 1) order by e."transferred_time" DESC LIMIT ${limit} OFFSET ${offset}'
+    getMigratedList: 'SELECT m."address",e."username",m."totalFrozeAmount",m."balance",e."transferred_time",count(*) OVER() AS "user_count" FROM migrated_etps_users e INNER JOIN mem_accounts m ON(e."address" = m."address" AND e.transferred_etp = 1) order by e."transferred_time" DESC LIMIT ${limit} OFFSET ${offset}',
+
+    getAccountByPublicKey: 'SELECT *,' +
+    ' (SELECT ARRAY_AGG("dependentId") FROM mem_accounts2u_delegates WHERE "accountId" = ${address}) as u_delegates' +
+    ' from mem_accounts WHERE "publicKey" = ${publicKey}',
+
+    getAccountByAddress: 'SELECT *,' +
+    ' (SELECT ARRAY_AGG("dependentId") FROM mem_accounts2u_delegates WHERE "accountId" = ${address}) as u_delegates' +
+    ' from mem_accounts WHERE address = ${address}',
+
+    createNewAccount: 'INSERT INTO mem_accounts (address, "publicKey")' +
+    ' VALUES (${address}, ${publicKey})' +
+    ' RETURNING *'
 };
 
 module.exports = Accounts;
