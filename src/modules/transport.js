@@ -484,12 +484,7 @@ Transport.prototype.onSignature = function (signature, broadcast) {
 Transport.prototype.onUnconfirmedTransaction = function (transaction, broadcast) {
     if (broadcast && !__private.broadcaster.maxRelays(transaction)) {
         __private.broadcaster.enqueue({}, { api: '/transactions', data: { transaction }, method: 'POST' });
-        const users = usersList.getUsersList();
-        users.map((user) => {
-            if (user.address === transaction.senderId || user.address === transaction.recipientId) {
-                library.network.io.to(user.socketId).emit('transactions/change', transaction);
-            }
-        });
+        library.network.io.sockets.emit('transactions/change', transaction);
     }
 };
 
@@ -516,11 +511,12 @@ Transport.prototype.onNewBlock = function (block, broadcast) {
                     immediate: true
                 });
             }
-            library.network.io.sockets.emit('blocks/change', block);
         });
 
         library.db.one(sqlBlock.getBlockByHeight, { height: block.height })
             .then((lastBlock) => {
+                block.username = lastBlock.m_username;
+                library.network.io.sockets.emit('blocks/change', block);
                 utils.addDocument({
                     index: 'blocks_list',
                     type: 'blocks_list',
