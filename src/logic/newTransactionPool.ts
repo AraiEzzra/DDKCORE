@@ -106,7 +106,7 @@ class TransactionPool {
             await this.scope.transactionLogic.newUndoUnconfirmed(trs);
         } catch (e) {
             this.scope.logger.error(`[TransactionPool][remove]: ${e}`);
-            this.scope.logger.error(`[TransactionPool][remove][stack]: \n ${e.stack}`);
+            this.scope.logger.debug(`[TransactionPool][remove][stack]: \n ${e.stack}`);
         }
 
         delete this.pool[trs.id];
@@ -292,9 +292,8 @@ export class TransactionQueue {
         try {
             await this.scope.transactionLogic.newVerify({ trs, sender });
         } catch (e) {
-            // TODO change to debug
-            this.scope.logger.error(`[TransactionQueue][verify]: ${e}`);
-            this.scope.logger.error(`[TransactionQueue][verify][stack]: \n ${e.stack}`);
+            this.scope.logger.debug(`[TransactionQueue][verify]: ${e}`);
+            this.scope.logger.debug(`[TransactionQueue][verify][stack]: \n ${e.stack}`);
             return {
                 verified: false,
                 error: [e]
@@ -304,9 +303,8 @@ export class TransactionQueue {
         try {
             await this.scope.transactionLogic.newVerifyUnconfirmed({ trs, sender });
         } catch (e) {
-            // TODO change to debug
-            this.scope.logger.error(`[TransactionQueue][verifyUnconfirmed]: ${e}`);
-            this.scope.logger.error(`[TransactionQueue][verifyUnconfirmed][stack]: \n ${e.stack}`);
+            this.scope.logger.debug(`[TransactionQueue][verifyUnconfirmed]: ${e}`);
+            this.scope.logger.debug(`[TransactionQueue][verifyUnconfirmed][stack]: \n ${e.stack}`);
             return {
                 verified: false,
                 error: [e]

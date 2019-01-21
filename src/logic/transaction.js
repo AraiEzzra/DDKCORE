@@ -954,6 +954,12 @@ Transaction.prototype.newVerify = async ({ trs, sender, checkExists = false }) =
     }
 };
 
+Transaction.prototype.calculateUnconfirmedFee = (trs, sender) =>
+    (
+        __private.types[trs.type].calculateUnconfirmedFee ||
+        __private.types[trs.type].calculateFee
+    ).call(self, trs, sender);
+
 /**
  * Validates unconfirmed transaction.
  * Calls `verifyUnconfirmed` based on trs type
@@ -964,8 +970,7 @@ Transaction.prototype.newVerify = async ({ trs, sender, checkExists = false }) =
  * @return {setImmediateCallback} validation errors | trs
  */
 Transaction.prototype.verifyUnconfirmed = ({ trs, sender, cb }) => {
-    const calculateFee = __private.types[trs.type].calculateUnconfirmedFee || __private.types[trs.type].calculateFee;
-    const fee = calculateFee.call(self, trs, sender) || 0;
+    const fee = self.calculateUnconfirmedFee(trs, sender);
     if (trs.type !== transactionTypes.REFERRAL &&
         !(trs.type === transactionTypes.STAKE && trs.stakedAmount < 0) &&
         (!fee || trs.fee !== fee)
@@ -1000,14 +1005,8 @@ Transaction.prototype.verifyUnconfirmed = ({ trs, sender, cb }) => {
 };
 
 Transaction.prototype.newVerifyUnconfirmed = async ({ trs, sender }) => {
-    const calculateFee = __private.types[trs.type].calculateUnconfirmedFee || __private.types[trs.type].calculateFee;
-    const fee = calculateFee.call(self, trs, sender) || 0;
-    if (trs.type !== transactionTypes.REFERRAL &&
-        !(trs.type === transactionTypes.STAKE && trs.stakedAmount < 0) &&
-        (!fee || trs.fee !== fee)
-    ) {
-        throw new Error('Invalid transaction fee');
-    }
+    // change fee for vote and check in next validator checkBalance
+    trs.fee = self.calculateUnconfirmedFee(trs, sender);
 
     // Check sender not able to do transaction on froze amount
     const amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
