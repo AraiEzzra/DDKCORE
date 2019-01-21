@@ -141,7 +141,6 @@ describe('Frozen', function () {
 
         it('should', function (done) {
             modulesLoader.scope.modules.accounts.shared.addDelegates({ body: params }, (error, result) => {
-                console.log(error, result);
                 done();
             });
         });

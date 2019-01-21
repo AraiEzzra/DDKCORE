@@ -457,7 +457,6 @@ function etpsMigrationProcess() {
 
     }, (err) => {
         if (err) {
-            console.log('ERROR = ', err);
             logger.error(`Migration ${err}`);
             return err;
         }
