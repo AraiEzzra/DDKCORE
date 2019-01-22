@@ -54,7 +54,7 @@ function Migrator(pgp, db) {
      */
     this.readPendingMigrations = function (lastMigration, waterCb) {
         // TODO: replace with NORMAL config
-        const migrationsPath = path.join(process.cwd(), 'core/sql', 'migrations');
+        const migrationsPath = path.join(process.cwd(), 'backlog/sql', 'migrations');
         const pendingMigrations = [];
 
         function matchMigrationName(file) {
@@ -136,7 +136,7 @@ function Migrator(pgp, db) {
     this.applyRuntimeQueryFile = function (waterCb) {
         const dirname = path.basename(__dirname) === 'helpers' ? path.join(__dirname, '..') : __dirname;
         // TODO: replace with NORMAL config
-        const sql = new pgp.QueryFile(path.join(process.cwd(), 'core/sql', 'runtime.sql'), { minify: true });
+        const sql = new pgp.QueryFile(path.join(process.cwd(), 'backlog/sql', 'runtime.sql'), { minify: true });
         db.query(sql)
             .then(() => waterCb())
             .catch((err) => {
