@@ -11,9 +11,9 @@
     "outDir": "dist",
     "baseUrl": ".",
     "paths": {
-      "@core/*": ["./core/*"],
-      "@api/*": ["./api/*"],
-      "@shared/*": ["./shared/*"]
+      "core/*": ["./core/*"],
+      "api/*": ["./api/*"],
+      "shared/*": ["./shared/*"]
     },
     "skipLibCheck": true,
     "typeRoots": [

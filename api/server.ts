@@ -1,4 +1,3 @@
-// server here
 /**
  * Registration alias for directories (shared, core, api)
  */

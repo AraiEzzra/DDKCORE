@@ -20,9 +20,9 @@
   "author": "DDK Foundation <http://www.ddkoin.com/>",
   "license": "GPL-3.0",
   "_moduleAliases": {
-    "@api": "dist/api",
-    "@core": "dist/core",
-    "@shared": "dist/shared"
+    "api": "dist/api",
+    "core": "dist/core",
+    "shared": "dist/shared"
   },
   "dependencies": {
     "@babel/runtime": "^7.2.0",

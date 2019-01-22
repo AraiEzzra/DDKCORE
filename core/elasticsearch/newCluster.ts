@@ -1,4 +1,4 @@
-import { Client as client }  from './newConnection';
+import { Client as client } from './newConnection';
 
 /**
  *
@@ -79,14 +79,15 @@ export const makeBulk = (list, index) => {
     let bulk = [],
         indexId;
     for (const current in list) {
-        if (list[current].b_height) {
+        if (list[current].b_id) {
             indexId = list[current].b_id;
+            /**
+             * TODO  -- SPLIT -- : Need to import function from "Account" (generateAddressByPublicKey)
+             */
+            // list[current].b_generatorId =
+            //     Accounts.prototype.generateAddressByPublicKey(list[current].b_generatorPublicKey);
         } else {
             indexId = list[current].id;
-        }
-
-        if (index === 'blocks_list') {
-            // list[current].b_generatorId = Accounts.prototype.generateAddressByPublicKey(list[current].b_generatorPublicKey);
         }
 
         bulk.push(
@@ -109,7 +110,7 @@ export const indexall = async (bulk, index) => {
             index,
             type: index,
             body: bulk
-    })
+    });
 };
 
 

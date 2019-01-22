@@ -30,4 +30,4 @@ const enum TransactionType {
 
 export {
     TransactionType
-}
+};

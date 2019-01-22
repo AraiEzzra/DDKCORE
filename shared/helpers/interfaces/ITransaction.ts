@@ -1,4 +1,4 @@
-import  { transaction } from '../enums';
+import { transaction } from '../enums';
 
 export interface ITransactionModel <T extends object> {
     id: string;
@@ -21,5 +21,5 @@ export interface ITransactionModel <T extends object> {
     requesterPublicKey?: string;
     signatures?: string;
     reward?: string;
-    assetTypes?: T
+    assetTypes?: T;
 }
