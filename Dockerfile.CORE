@@ -6,6 +6,8 @@ RUN     npm install --global npm@latest && \
         npm install --global node-gyp@latest && \
         npm install --global wait-port@latest
 
-COPY    --chown=ddk docker-entrypoint.sh /home/ddk/docker-entrypoint.sh
+WORKDIR /home/ddk
+
+COPY    docker-entrypoint.sh /home/ddk/docker-entrypoint.sh
 RUN     chmod +x /home/ddk/docker-entrypoint.sh
 CMD     ["/bin/bash", "/home/ddk/docker-entrypoint.sh"]
