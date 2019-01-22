@@ -89,7 +89,7 @@ function Accounts(cb, scope) {
  * If not existes, generates new account data with public address
  * obtained from secret parameter.
  * @private
- * @param {function} secret
+ * @param {function} secreпt
  * @param {function} cb - Callback function.
  * @returns {setImmediateCallback} As per logic new|current account data object.
  */
@@ -730,6 +730,7 @@ Accounts.prototype.shared = {
             }
 
             self.getAccount({ address: address }, (err, account) => {
+                console.log('ACCOUNT: ', account);
                 if (err) {
                     return setImmediate(cb, err);
                 }
