@@ -42,7 +42,6 @@ function Config(configPath) {
     }
 
     /* if (!configData.length) {
-     console.log('Failed to read config file');
      process.exit(1);
      } else {
      configData = configData;
@@ -52,7 +51,6 @@ function Config(configPath) {
     const valid = validator.validate(configData, configSchema.config);
 
     if (!valid) {
-        console.log('Failed to validate config data', validator.getLastErrors());
         process.exit(1);
     } else {
         validateForce(configData);

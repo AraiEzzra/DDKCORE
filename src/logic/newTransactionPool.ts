@@ -1,6 +1,5 @@
 import {Account, Transaction, TransactionStatus} from "src/helpers/types";
-import * as AccountsSql from 'src/sql/accounts.js'
-import {getOrCreateAccount} from "src/helpers/account.utils";
+import {generateAddressByPublicKey, getOrCreateAccount} from "src/helpers/account.utils";
 import {transactionSortFunc} from "src/helpers/transaction.utils";
 import * as constants from 'src/helpers/constants.js';
 import * as transactionTypes from 'src/helpers/transactionTypes.js';
@@ -158,17 +157,16 @@ class TransactionPool {
     }
 
     isPotentialConflict(trs: Transaction) {
-        const recipentsTrs = this.poolByRecipient[trs.senderId] || [];
-        const sendersTrs = this.poolBySender[trs.senderId] || [];
-        const dependTransactions = [...recipentsTrs, ...sendersTrs];
+        const senderId = generateAddressByPublicKey(trs.senderPublicKey);
+        const recipientTrs = this.poolByRecipient[senderId] || [];
+        const senderTrs = this.poolBySender[senderId] || [];
+        const dependTransactions = [...recipientTrs, ...senderTrs];
 
         if (dependTransactions.length === 0) {
             return false;
         }
-
         dependTransactions.push(trs);
         dependTransactions.sort(transactionSortFunc);
-
         return dependTransactions.indexOf(trs) !== (dependTransactions.length - 1);
     }
 

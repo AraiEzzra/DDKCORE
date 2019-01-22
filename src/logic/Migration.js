@@ -113,7 +113,6 @@ Migration.prototype.apply = function (trs, block, sender, cb) {
         cb(null);
     }).catch((err) => {
         if (err) {
-            console.log(`error : ${err}`);
         }
         cb(err);
     });

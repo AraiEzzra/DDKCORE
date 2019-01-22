@@ -368,7 +368,6 @@ Transport.prototype.getFromPeer = function (peer, options, cb) {
             const report = library.schema.validate(headers, schema.headers);
             if (!report) {
                 // Remove peer
-                console.log('EHEADERS1', report);
                 __private.removePeer({ peer, code: 'EHEADERS' }, `${req.method} ${req.url}`);
 
                 return setImmediate(cb, ['Invalid response headers', JSON.stringify(headers), req.method, req.url].join(' '));

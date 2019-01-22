@@ -140,7 +140,6 @@ function Migrator(pgp, db) {
         db.query(sql)
             .then(() => waterCb())
             .catch((err) => {
-                console.log('err', err.stack);
                 return waterCb(err);
             });
     };
