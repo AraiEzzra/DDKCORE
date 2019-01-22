@@ -5,16 +5,17 @@ export enum PeerState {
 }
 
 export class Peer {
-       id: number;
-       ip: string;
-       port: number;
-       state: PeerState;
-       os: string;
-       version: string;
-       clock: number;
-       broadhash: string;
-       height: number;
-       string: string;
+    id?: number;
+    ip: string;
+    port: number;
+    state?: PeerState;
+    os?: string;
+    version?: string;
+    clock?: number;
+    broadhash?: string;
+    height?: number;
+    string?: string;
+    socket?: any;
 
-       constructor() {}
+    constructor() {}
 }

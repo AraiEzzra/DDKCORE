@@ -66,18 +66,11 @@ class PeerController extends BaseController {
         return new Response({ data: { blocks: [] } });
     }
 
-    @GET('/list')
-    public list(): Response<Peer[]> {
-        this.peerService.list();
-        return new Response({ data: [] });
-    }
 
     @GET('/height')
     public height() : Response<{ height: number }> {
         return new Response<{height: number}>({ data : { height: this.blockService.getLastBlock().height } });
     }
-
-    ping() {} // remove, peers use height
 
     @GET('/transactions')
     public getTransactions() {} // transaction[] unconfirmed + multisignatures + queued
@@ -111,20 +104,6 @@ class PeerController extends BaseController {
     private receiveTransactions(transactions: Transaction<object>[]): void {
         // blockService.objectNormalize ?
         // transactions.processUnconfirmedTransaction
-    }
-
-    @ON('BLOCKCHAIN_READY')
-    public initDiscover() {
-        this.peerService.insertSeeds();
-        this.peerService.discover();
-    }
-
-    // @todo should be called each 10 sec
-    @ON('PEERS_DISCOVER')
-    public discover() {
-        this.peerService.discover();
-        this.peerService.updatePeers();
-        this.peerService.removeBans();
     }
 }
 
