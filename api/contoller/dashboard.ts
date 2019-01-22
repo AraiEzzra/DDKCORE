@@ -1,6 +1,34 @@
-interface Account {}
-
-interface IRequest {
+export interface Account {}
+export interface IResponse {
+    success: boolean;
+    error?: Error;
+}
+export interface ITransaction {}
+export interface IFreezeOrder {}
+export interface ITransactionForFreeze extends IResponse {
+    transaction: ITransaction;
+    referStatus: boolean;
+}
+export interface IAllFreezeOrders extends IResponse {
+    success: boolean;
+    freezeOrders: Array<IFreezeOrder>;
+    count: number;
+}
+export interface IDDKFrozen extends IResponse {
+    totalDDKStaked: {
+        sum: number
+    };
+}
+export interface IRewardHistory extends IResponse {
+    rewardHistory: Array<any>;
+    count: number;
+}
+export interface ICountStakeholders extends IResponse {
+    countStakeholders: {
+        count: number
+    };
+}
+export interface IRequest {
     body: {
         publicKey?: string;
         multisigAccountPublicKey?: string;
@@ -19,38 +47,38 @@ export class Dashboard {
     private dashboardService = new DashboardService();
     constructor() {}
 
-    @POST('/')
-    public  async addTransactionForFreeze (req: IRequest): Promise {
+    @POST('/freeze')
+    public  async addTransactionForFreeze (req: IRequest): Promise<ITransactionForFreeze> {
         return await this.dashboardService.addTransactionForFreeze(req.body);
     }
 
-    @POST('/')
-    public async getAllFreezeOrders (account: Account, req: IRequest): Promise {
+    @POST('/getAllOrders')
+    public async getAllFreezeOrders (account: Account, req: IRequest): Promise<IAllFreezeOrders> {
         return await this.dashboardService.addTransactionForFreeze(account, req.body);
     }
 
-    @POST('/')
-    public async getAllActiveFreezeOrders (account: Account): Promise {
+    @POST('/getAllActiveOrders')
+    public async getAllActiveFreezeOrders (account: Account): Promise<IAllFreezeOrders> {
         return await this.dashboardService.addTransactionForFreeze(account);
     }
 
-    @GET('/')
-    public async countStakeholders (req: IRequest): Promise {
+    @GET('/countStakeholders')
+    public async countStakeholders (req: IRequest): Promise<ICountStakeholders> {
         return await this.dashboardService.addTransactionForFreeze(req.body);
     }
 
-    @POST('/')
-    public async getMyDDKFrozen (req: IRequest): Promise {
+    @POST('/getMyDDKFrozen')
+    public async getMyDDKFrozen (req: IRequest): Promise<IDDKFrozen> {
         return await this.dashboardService.addTransactionForFreeze(req.body);
     }
 
-    @GET('/')
-    public async totalDDKStaked (req: IRequest): Promise {
+    @GET('/getTotalDDKStaked')
+    public async totalDDKStaked (req: IRequest): Promise<IDDKFrozen> {
         return await this.dashboardService.addTransactionForFreeze(req.body);
     }
 
-    @GET('/')
-    public async getRewardHistory (req: IRequest): Promise {
+    @GET('/getRewardHistory')
+    public async getRewardHistory (req: IRequest): Promise<IRewardHistory> {
         return await this.dashboardService.addTransactionForFreeze(req.body);
     }
 }

@@ -1,46 +1,26 @@
-interface IResponse {
-    success: boolean;
-    error?: Error;
-}
-interface ITransaction {}
-interface IFreezeOrder {}
-interface ITransactionForFreeze extends IResponse {
-    transaction: ITransaction;
-    referStatus: boolean;
-}
-interface IAllFreezeOrders extends IResponse {
-    success: boolean;
-    freezeOrders: Array<IFreezeOrder>;
-    count: number;
-}
-interface IDDKFrozen extends IResponse {
-    totalDDKStaked: {
-        sum: number
-    };
-}
-interface IRewardHistory extends IResponse {
-    rewardHistory: Array<any>;
-    count: number;
-}
-interface ICountStakeholders extends IResponse {
-    countStakeholders: {
-        count: number
-    };
-}
-interface Account {}
+import {
+    IRequest,
+    IAllFreezeOrders,
+    ICountStakeholders,
+    IDDKFrozen,
+    IRewardHistory,
+    ITransactionForFreeze,
+    Account,
+} from './../contoller/dashboard';
 
+interface IRequestBody extends Pick<IRequest, 'body'> {}
 export interface IDashboardService {
-    addTransactionForFreeze (req: IRequest): ITransactionForFreeze;
+    addTransactionForFreeze (req: IRequestBody): ITransactionForFreeze;
 
-    getAllFreezeOrders (account: Account, req: IRequest): IAllFreezeOrders;
+    getAllFreezeOrders (account: Account, req: IRequestBody): IAllFreezeOrders;
 
     getAllActiveFreezeOrders (account: Account): IAllFreezeOrders;
 
-    countStakeholders (req: IRequest): ICountStakeholders;
+    countStakeholders (req: IRequestBody): ICountStakeholders;
 
-    getMyDDKFrozen (req: IRequest): IDDKFrozen;
+    getMyDDKFrozen (req: IRequestBody): IDDKFrozen;
 
-    totalDDKStaked (req: IRequest): IDDKFrozen;
+    totalDDKStaked (req: IRequestBody): IDDKFrozen;
 
-    getRewardHistory (req: IRequest): IRewardHistory;
+    getRewardHistory (req: IRequestBody): IRewardHistory;
 }
