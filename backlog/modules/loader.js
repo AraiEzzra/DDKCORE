@@ -361,7 +361,7 @@ __private.loadBlockChain = function () {
             },
             updateUsersListView(seriesCb) {
                 // TODO: make it NORMAL
-                const sql = new pgp.QueryFile(path.join(process.cwd(), 'core/sql', 'updateUsersListView.sql'), { minify: true });
+                const sql = new pgp.QueryFile(path.join(process.cwd(), 'backlog/sql', 'updateUsersListView.sql'), { minify: true });
 
                 library.db.query(sql).then(() => setImmediate(seriesCb)).catch((err) => {
                     throw err;

@@ -509,7 +509,7 @@ function Account(db, schema, logger, cb) {
  */
 Account.prototype.createTables = function (cb) {
     // TODO: make it NORMAL
-    const SQL = new pgp.QueryFile(path.join(process.cwd(), 'core/sql', 'memoryTables.sql'), { minify: true });
+    const SQL = new pgp.QueryFile(path.join(process.cwd(), 'backlog/sql', 'memoryTables.sql'), { minify: true });
 
     this.scope.db.query(SQL)
         .then(() => setImmediate(cb))
