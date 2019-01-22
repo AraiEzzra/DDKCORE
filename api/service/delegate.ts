@@ -1,10 +1,9 @@
 import { DelegateModel } from 'shared/model/delegate';
-import { DelegateRepo as sharedDelegateRepo } from 'shared/repository/delegate';
 import { DelegateRepo } from '../repository/delegate';
 
 export class DelegateService {
+    private readonly modules;
     private readonly drepo = new DelegateRepo();
-    private readonly sharedDRepo = new sharedDelegateRepo();
 
     private readonly sortFields: [
         'username',
@@ -18,6 +17,10 @@ export class DelegateService {
         'voters_cnt',
         'register_timestamp'
     ];
+
+    constructor(scope) {
+        this.modules = scope.modules;
+    }
 
     /**
      *  When will the implementation need to be removed 'void'
@@ -37,29 +40,11 @@ export class DelegateService {
 
     /**
      * Need to return Account Model
-     * Need to Account SQL
      */
     public async getVoters(publicKey): Promise<null> {
-        const result = await this.drepo.getVoters(publicKey);
         return;
     }
 
-    public async getDelegates(orderBy: string, limit: number, offset: number): Promise<{
-        delegates: DelegateModel[],
-        totalCount: number
-    }> {
-        const totalCount = await this.drepo.count();
-        const delegates = await this.sharedDRepo.getDelegates(orderBy, limit, offset);
-        return {
-            totalCount,
-            delegates
-        };
-    }
-
-    public async getDelegate(publicKey: string, username: string): Promise<DelegateModel> {
-        this.sharedDRepo.getDelegate(publicKey, username);
-        return;
-    }
 }
 
 
