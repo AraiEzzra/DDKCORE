@@ -2,7 +2,6 @@ import { DelegateModel } from 'shared/model/delegate';
 import { DelegateRepo } from '../repository/delegate';
 
 export class DelegateService {
-    private readonly modules;
     private readonly drepo = new DelegateRepo();
 
     private readonly sortFields: [
@@ -17,10 +16,6 @@ export class DelegateService {
         'voters_cnt',
         'register_timestamp'
     ];
-
-    constructor(scope) {
-        this.modules = scope.modules;
-    }
 
     /**
      *  When will the implementation need to be removed 'void'
@@ -42,7 +37,8 @@ export class DelegateService {
      * Need to return Account Model
      */
     public async getVoters(publicKey): Promise<null> {
-        return;
+        const result = await this.drepo.getVoters(publicKey);
+        return result ;
     }
 
 }
