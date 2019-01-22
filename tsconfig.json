@@ -13,6 +13,7 @@
     "paths": {
       "api/*": ["./api/*"],
       "core/*": ["./core/*"],
+      "backlog/*": ["./backlog/*"],
       "shared/*": ["./shared/*"]
     },
     "skipLibCheck": true,
@@ -26,6 +27,7 @@
   "include": [
     "api/**/*",
     "core/**/*",
+    "backlog/**/*",
     "shared/**/*"
   ]
 }
