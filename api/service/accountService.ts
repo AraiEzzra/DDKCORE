@@ -1,10 +1,10 @@
 import { Account } from 'shared/model/account';
 
-type IPubkey = {
+export type IPubkey = {
     publicKey: string;
 }
 
-type IAddress = {
+export type IAddress = {
     address: string;
 }
 

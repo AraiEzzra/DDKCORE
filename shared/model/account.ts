@@ -48,6 +48,7 @@ export class Account {
     global: boolean;
 
     constructor(rawData: any) {
+        //TODO: add default constructor
         this.username = rawData.username;
         this.u_username = rawData.u_username;
         this.status = Number(rawData.status);
