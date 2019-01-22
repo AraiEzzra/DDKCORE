@@ -579,8 +579,8 @@ Frozen.prototype.getAirdropReward = async function (senderAddress, amount, trans
 
     user.level.forEach((sponsorAddress, i) => {
         const reward = transactionType === transactionTypes.STAKE ?
-            ((amount * constants.airdrop.stakeRewardPercent) / 100) :
-            (((constants.airdrop.referralPercentPerLevel[i]) * amount) / 100);
+            Math.ceil((amount * constants.airdrop.stakeRewardPercent) / 100) :
+            Math.ceil(((constants.airdrop.referralPercentPerLevel[i]) * amount) / 100);
         sponsors[sponsorAddress] = reward;
         airdropRewardAmount += reward;
     });
