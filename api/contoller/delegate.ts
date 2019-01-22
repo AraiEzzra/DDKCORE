@@ -11,34 +11,15 @@ interface IDelegateCount {
 }
 
 interface IDelegateSearchRequest {
-    q: {
-        type: string,
-        minLength: number,
-        maxLength: number
-    };
-    limit: {
-        type: number,
-        minimum: number,
-        maximum: number
-    };
+    q: string;
+    limit: number;
 }
 interface IPublicKey {
-    publicKey: {
-        type: string;
-        format: string;
-    };
+    publicKey: string;
 }
 
 export class DelegateController {
-    private service : DelegateService;
-
-    constructor(scope) {
-        this.init(scope);
-    }
-
-    init(scope): void {
-        this.service = new DelegateService(scope);
-    }
+    private service = new DelegateService();
 
     public async count(req: Request, res: Response) {
         try {
