@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "start": "node --max-old-space-size=8192 dist/app.js",
+    "test": "./node_modules/.bin/nyc ./node_modules/.bin/_mocha src/test/index.js",
     "server": "nodemon --max-old-space-size=8192 dist/app.js",
     "debug": "node --inspect=0.0.0.0:9229 app.js",
     "jsdoc": "jsdoc -c docs/conf.json --verbose --pedantic",
