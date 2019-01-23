@@ -1,12 +1,18 @@
 import { DelegateModel } from 'shared/model/delegate';
 
-export class DelegateRepo {
+interface IDelegatesArray {
+    delegates: DelegateModel[];
+    totalCount?: number;
+}
 
-    getDelegate(publicKey: string, username: string): Promise<DelegateModel> {
-        return;
-    }
+export interface IDelegateRepo {
+    getDelegate(publicKey: string, username: string): Promise<IDelegatesArray>;
 
-    getDelegates(orderBy: string, limit: number, offset: number): Promise<DelegateModel[]> {
-        return;
-    }
+    getDelegates(orderBy: string, limit: number, offset: number): Promise<IDelegatesArray>;
+}
+
+export class DelegateRepository implements IDelegateRepo {
+    getDelegate(publicKey: string, username: string): Promise<{ delegate: DelegateModel }>;
+
+    getDelegates(orderBy: string, limit: number, offset: number): Promise<IDelegatesArray>;
 }

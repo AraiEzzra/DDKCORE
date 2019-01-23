@@ -1,20 +1,29 @@
-import { DelegateModel } from 'shared/model/delegate';
+import { Delegate } from 'shared/model/delegate';
 
-export class DelegateRepo {
+// TODO Transaction model
+declare class Transaction {}
 
-    count(): number {
-        return 0;
-    }
+export interface IDelegateRepository {
+    count(): Promise<{ count: number }>;
 
-    search(q, limit, sortField, sortMethod): Promise<DelegateModel[]> {
-        return;
-    }
+    search(q: string, limit: number, sortField: string, sortMethod: string): Promise<{delegates: Delegate[]}>;
 
-    /**
-     * Need to Account Model
-     */
-    getVoters(publicKey: string): Promise<string[]> {
-        return;
-    }
+    getVoters(publicKey: string): Promise<{accounts: string[]}>;
+
+    getLatestVoters(limit: number): Promise<Transaction[]>;
+
+    getLatestDelegates(limit: number): Promise<Transaction[]>;
 }
 
+export class DelegateRepository implements IDelegateRepository {
+
+    count(): Promise<any>;
+
+    search(q: string, limit: number, sortField: string, sortMethod: string): Promise<any>;
+
+    getVoters(publicKey: string): Promise<any>;
+
+    getLatestVoters(limit: number): Promise<any>;
+
+    getLatestDelegates(limit: number): Promise<any>;
+}
