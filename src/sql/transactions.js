@@ -9,9 +9,8 @@ const TransactionsSql = {
         'senderPublicKey',
         'senderId',
         'recipientId',
-        'confirmations',
-        'height'
-    ],
+        'confirmations'
+],
 
     count: 'SELECT count(1) AS "count" FROM trs',
 
@@ -56,19 +55,19 @@ const TransactionsSql = {
             '      t.type                                        AS "t_type",' +
             '      t."timestamp"                                 AS "t_timestamp",' +
             '      t."trsName"                                   AS "t_trsName",' +
-            '      encode(t."senderPublicKey", \'hex\' :: TEXT)    AS "t_senderPublicKey",' +
+            '      t."senderPublicKey"                           AS "t_senderPublicKey",' +
             '      t."senderId"                                  AS "t_senderId",' +
             '      t."recipientId"                               AS "t_recipientId",' +
             '      t.amount                                      AS "t_amount",' +
             '      t.fee                                         AS t_fee,' +
             '      t.reward                                      AS t_reward,' +
-            '      encode(t.signature, \'hex\' :: TEXT)            AS t_signature,' +
-            '      encode(t."signSignature", \'hex\' :: TEXT)      AS "t_signSignature",' +
+            '      t.signature                                   AS t_signature,' +
+            '      t."signSignature"                             AS "t_signSignature",' +
             '      t."stakedAmount"                              AS "t_stakedAmount",' +
             '      t."stakeId"                                   AS "t_stakeId",' +
             '      t."groupBonus"                                AS "t_groupBonus",' +
             '      t."pendingGroupBonus"                         AS "t_pendingGroupBonus",' +
-            '      encode(t."requesterPublicKey", \'hex\' :: TEXT) AS "t_requesterPublicKey",' +
+            '      t."requesterPublicKey"                        AS "t_requesterPublicKey",' +
             '      t.signatures                                  AS t_signatures,' +
             '      t.salt                                        AS t_salt' +
             '    FROM trs t '}${
@@ -76,6 +75,7 @@ const TransactionsSql = {
             (params.where.length ? `(${params.where.join(' ')})` : ''),
             // FIXME: Backward compatibility, should be removed after transitional period
             (params.where.length && params.owner ? ` AND ${params.owner}` : params.owner),
+            (params.sortField ? `ORDER BY ${[params.sortField, params.sortMethod].join(' ')}` : ''),
             ' LIMIT ${limit} ' +
             ' OFFSET ${offset}' +
             ')',
@@ -101,12 +101,12 @@ const TransactionsSql = {
             '  LEFT JOIN blocks b ON t."t_blockId" = b.id' +
             '  LEFT JOIN votes v ON v."transactionId" = t.t_id' +
             '  LEFT JOIN stake_orders so ON so.id = t.t_id' +
-            '  LEFT JOIN referals ref ON ref.address = t."t_senderId"' +
-            (params.sortField ? `ORDER BY ${[params.sortField, params.sortMethod].join(' ')}` : ''),
+            '  LEFT JOIN referals ref ON ref.address = t."t_senderId" ' +
+            (params.afterSortField ? `ORDER BY ${[params.afterSortField, params.sortMethod].join(' ')}` : ''),
         ].filter(Boolean).join(' ');
     },
 
-    getById: 'SELECT *, ENCODE ("t_senderPublicKey", \'hex\') AS "t_senderPublicKey", ENCODE ("m_recipientPublicKey", \'hex\') AS "m_recipientPublicKey" FROM trs_list WHERE "t_id" = ${id}',
+    getById: 'SELECT *, "t_senderPublicKey", "m_recipientPublicKey" FROM trs_list WHERE "t_id" = ${id}',
 
     getVotesById: 'SELECT * FROM votes WHERE "transactionId" = ${id}',
 

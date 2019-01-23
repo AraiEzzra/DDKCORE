@@ -67,8 +67,7 @@ Rounds.prototype.calc = function (height) {
     return Math.ceil(height / self.getSlotDelegatesCount(height));
 };
 
-Rounds.prototype.getSlotDelegatesCount = height =>
-    height && height <= constants.MASTER_NODE_MIGRATED_BLOCK ? constants.PREVIOUS_DELEGATES_COUNT : slots.delegates;
+Rounds.prototype.getSlotDelegatesCount = height => slots.delegates;
 
 /**
  * Deletes from `mem_round` table records based on round.
@@ -275,9 +274,9 @@ Rounds.prototype.tick = function (block, done) {
         __private.ticking = false;
 
         if (scope.finishSnapshot) {
-            return done('Snapshot finished');
+            return done(null, 'Snapshot finished');
         }
-        return done(err);
+        return done(err, 'Tick finished');
     });
 };
 

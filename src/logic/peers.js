@@ -38,31 +38,31 @@ Peers.prototype.get = function (peer) {
 
 Peers.prototype.upsert = function (peer, insertOnly) {
     // Insert new peer
-    const insert = function (peer) {
-        peer.updated = Date.now();
-        __private.peers[peer.string] = peer;
+    const insert = function (peerInsert) {
+        peerInsert.updated = Date.now();
+        __private.peers[peerInsert.string] = peerInsert;
 
-        library.logger.debug('Inserted new peer', peer.string);
-        library.logger.trace('Inserted new peer', { peer });
+        library.logger.debug('Inserted new peer', peerInsert.string);
+        library.logger.trace('Inserted new peer', { peer: peerInsert });
     };
 
     // Update existing peer
-    const update = function (peer) {
-        peer.updated = Date.now();
+    const update = function (peerUpdate) {
+        peerUpdate.updated = Date.now();
 
         const diff = {};
-        _.each(peer, (value, key) => {
-            if (key !== 'updated' && __private.peers[peer.string][key] !== value) {
+        _.each(peerUpdate, (value, key) => {
+            if (key !== 'updated' && __private.peers[peerUpdate.string][key] !== value) {
                 diff[key] = value;
             }
         });
 
-        __private.peers[peer.string].update(peer);
+        __private.peers[peerUpdate.string].update(peerUpdate);
 
         if (Object.keys(diff).length) {
-            library.logger.debug(`Updated peer ${peer.string}`, diff);
+            library.logger.debug(`Updated peer ${peerUpdate.string}`, diff);
         } else {
-            library.logger.trace('Peer not changed', peer.string);
+            library.logger.trace('Peer not changed', peerUpdate.string);
         }
     };
 
@@ -86,29 +86,29 @@ Peers.prototype.upsert = function (peer, insertOnly) {
     }
 
     // Stats for tracking changes
-    let cnt_total = 0;
-    let cnt_active = 0;
-    let cnt_empty_height = 0;
-    let cnt_empty_broadhash = 0;
+    let cntTotal = 0;
+    let cntActive = 0;
+    let cntEmptyHeight = 0;
+    let cntEmptyBroadhash = 0;
 
     _.each(__private.peers, (peer) => {
-        ++cnt_total;
+        ++cntTotal;
         if (peer.state === 2) {
-            ++cnt_active;
+            ++cntActive;
         }
         if (!peer.height) {
-            ++cnt_empty_height;
+            ++cntEmptyHeight;
         }
         if (!peer.broadhash) {
-            ++cnt_empty_broadhash;
+            ++cntEmptyBroadhash;
         }
     });
 
     library.logger.trace('Peer stats', {
-        total: cnt_total,
-        alive: cnt_active,
-        empty_height: cnt_empty_height,
-        empty_broadhash: cnt_empty_broadhash
+        total: cntTotal,
+        alive: cntActive,
+        empty_height: cntEmptyHeight,
+        empty_broadhash: cntEmptyBroadhash
     });
 
     return true;
@@ -120,7 +120,7 @@ Peers.prototype.ban = function (ip, port, seconds) {
         port,
         // State 0 for banned peer
         state: 0,
-        clock: Date.now() + (seconds || 1) * 1000
+        clock: Date.now() + ((seconds || 1) * 1000)
     });
 };
 

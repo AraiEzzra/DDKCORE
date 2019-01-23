@@ -113,7 +113,6 @@ Migration.prototype.apply = function (trs, block, sender, cb) {
         cb(null);
     }).catch((err) => {
         if (err) {
-            console.log(`error : ${err}`);
         }
         cb(err);
     });
@@ -149,6 +148,8 @@ Migration.prototype.applyUnconfirmed = function (trs, sender, cb) {
 Migration.prototype.undoUnconfirmed = function (trs, sender, cb) {
     return setImmediate(cb);
 };
+
+Migration.prototype.calcUndoUnconfirmed = () => {};
 
 /**
  * Deletes blockId from transaction

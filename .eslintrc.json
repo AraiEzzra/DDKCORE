@@ -25,6 +25,8 @@
     "no-plusplus": "off",
     "no-throw-literal": "off",
     "new-cap": "warn",
-    "no-template-curly-in-string": "off"
+    "no-template-curly-in-string": "off",
+    "no-await-in-loop": "off",
+    "no-restricted-syntax": "off"
   }
 }

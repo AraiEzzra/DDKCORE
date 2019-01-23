@@ -5,10 +5,10 @@ const extend = require('extend');
 const _ = require('lodash');
 
 // Private fields
-let modules,
-    library,
-    self,
-    __private = {};
+let modules;
+let library;
+let self;
+const __private = {};
 
 /**
  * Initializes variables, sets Broadcast routes and timer based on
@@ -64,6 +64,8 @@ function Broadcaster(broadcasts, force, peers, transaction, logger) {
         method: 'POST'
     }];
 
+    // TODO implement new broadcast logic
+    // https://trello.com/c/KQQq8E97/30-implement-new-broadcast-logic
     // Broadcaster timer
     function nextRelease(cb) {
         __private.releaseQueue((err) => {
@@ -257,7 +259,9 @@ __private.squashQueue = function (broadcasts) {
         if (Array.isArray(grouped[route.path])) {
             const data = {};
 
-            data[route.collection] = grouped[route.path].map(broadcast => broadcast.options.data[route.object]).filter(Boolean);
+            data[route.collection] = grouped[route.path]
+                .map(broadcast => broadcast.options.data[route.object])
+                .filter(Boolean);
 
             squashed.push({
                 options: { api: route.path, data, method: route.method },
@@ -302,8 +306,8 @@ __private.releaseQueue = function (cb) {
             self.getPeers({}, (err, peers) => setImmediate(waterCb, err, broadcasts, peers));
         },
         function broadcast(broadcasts, peers, waterCb) {
-            async.eachSeries(broadcasts, (broadcast, eachSeriesCb) => {
-                self.broadcast(extend({ peers }, broadcast.params), broadcast.options, eachSeriesCb);
+            async.eachSeries(broadcasts, (broadcastData, eachSeriesCb) => {
+                self.broadcast(extend({ peers }, broadcastData.params), broadcastData.options, eachSeriesCb);
             }, err => setImmediate(waterCb, err, broadcasts));
         }
     ], (err, broadcasts) => {

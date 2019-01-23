@@ -238,6 +238,8 @@ OutTransfer.prototype.undoUnconfirmed = function (trs, sender, cb) {
     return setImmediate(cb);
 };
 
+OutTransfer.prototype.calcUndoUnconfirmed = () => {};
+
 OutTransfer.prototype.schema = {
     id: 'OutTransfer',
     object: true,
@@ -325,18 +327,13 @@ OutTransfer.prototype.dbSave = function (trs) {
  * @param {function} cb
  * @return {setImmediateCallback} cb
  */
-OutTransfer.prototype.afterSave = function (trs, cb) {
+OutTransfer.prototype.afterSave = async (trs) => {
     modules.dapps.message(trs.asset.outTransfer.dappId, {
         topic: 'withdrawal',
         message: {
             transactionId: trs.id
         }
-    }, (err) => {
-        if (err) {
-            library.logger.debug(err);
-        }
-        return setImmediate(cb);
-    });
+    }, null);
 };
 
 /**

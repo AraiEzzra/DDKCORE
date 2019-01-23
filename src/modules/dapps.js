@@ -1026,15 +1026,21 @@ DApps.prototype.internal = {
     put(dapp, cb) {
         const hash = crypto.createHash('sha256').update(dapp.secret, 'utf8').digest();
         const keypair = library.ed.makeKeypair(hash);
+        const publicKey = keypair.publicKey.toString('hex');
 
         if (dapp.publicKey) {
             if (keypair.publicKey.toString('hex') !== dapp.publicKey) {
                 return setImmediate(cb, 'Invalid passphrase');
             }
         }
+		if (dapp.publicKey) {
+			if (publicKey !== dapp.publicKey) {
+				return setImmediate(cb, 'Invalid passphrase');
+			}
+		}
 
         library.balancesSequence.add((cb) => {
-            modules.accounts.setAccountAndGet({ publicKey: keypair.publicKey.toString('hex') }, (err, account) => {
+            modules.accounts.setAccountAndGet({ publicKey: publicKey }, (err, account) => {
                 if (err) {
                     return setImmediate(cb, err);
                 }
@@ -1054,8 +1060,6 @@ DApps.prototype.internal = {
                     secondKeypair = library.ed.makeKeypair(secondHash);
                 }
 
-                let transaction;
-
                 library.logic.transaction.create({
                     type: transactionTypes.DAPP,
                     sender: account,
@@ -1069,8 +1073,9 @@ DApps.prototype.internal = {
                     link: dapp.link,
                     icon: dapp.icon
                 }).then((transactionDAPP) => {
-                    transaction = transactionDAPP;
-                    modules.transactions.receiveTransactions([transaction], true, cb);
+                    transactionDAPP.status = 0;
+                    modules.transactions.putInQueue(transactionDAPP);
+                    return setImmediate(cb, null, [transactionDAPP]);
                 }).catch(e => setImmediate(cb, e.toString()));
             });
         }, (err, transaction) => {
@@ -1403,15 +1408,16 @@ DApps.prototype.internal = {
 
             const hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
             const keypair = library.ed.makeKeypair(hash);
+            const publicKey = keypair.publicKey.toString('hex');
 
-            if (req.body.publicKey) {
-                if (keypair.publicKey.toString('hex') !== req.body.publicKey) {
-                    return setImmediate(cb, 'Invalid passphrase');
-                }
-            }
+			if (req.body.publicKey) {
+				if (publicKey !== req.body.publicKey) {
+					return setImmediate(cb, 'Invalid passphrase');
+				}
+			}
 
             library.balancesSequence.add((cb) => {
-                if (req.body.multisigAccountPublicKey && req.body.multisigAccountPublicKey !== keypair.publicKey.toString('hex')) {
+                if (req.body.multisigAccountPublicKey && req.body.multisigAccountPublicKey !== publicKey) {
                     modules.accounts.getAccount({ publicKey: req.body.multisigAccountPublicKey }, (err, account) => {
                         if (err) {
                             return setImmediate(cb, err);
@@ -1425,7 +1431,7 @@ DApps.prototype.internal = {
                             return setImmediate(cb, 'Account does not have multisignatures enabled');
                         }
 
-                        if (account.multisignatures.indexOf(keypair.publicKey.toString('hex')) < 0) {
+                        if (account.multisignatures.indexOf(publicKey) < 0) {
                             return setImmediate(cb, 'Account does not belong to multisignature group');
                         }
 
@@ -1453,8 +1459,6 @@ DApps.prototype.internal = {
                                 secondKeypair = library.ed.makeKeypair(secondHash);
                             }
 
-                            let transaction;
-
                             library.logic.transaction.create({
                                 type: transactionTypes.IN_TRANSFER,
                                 amount: req.body.amount,
@@ -1464,8 +1468,9 @@ DApps.prototype.internal = {
                                 secondKeypair,
                                 dappId: req.body.dappId
                             }).then((transactionInTransfer) => {
-                                transaction = transactionInTransfer;
-                                modules.transactions.receiveTransactions([transaction], true, cb);
+                                transactionInTransfer.status = 0;
+                                modules.transactions.putInQueue(transactionInTransfer);
+                                return setImmediate(cb, null, [transactionInTransfer]);
                             }).catch(e => setImmediate(cb, e.toString()));
                         });
                     });
@@ -1490,8 +1495,6 @@ DApps.prototype.internal = {
                             secondKeypair = library.ed.makeKeypair(secondHash);
                         }
 
-                        let transaction;
-
                         library.logic.transaction.create({
                             type: transactionTypes.IN_TRANSFER,
                             amount: req.body.amount,
@@ -1500,8 +1503,9 @@ DApps.prototype.internal = {
                             secondKeypair,
                             dappId: req.body.dappId
                         }).then((transactionRefer) => {
-                            transaction = transactionRefer;
-                            modules.transactions.receiveTransactions([transaction], true, cb);
+                            transactionRefer.status = 0;
+                            modules.transactions.putInQueue(transactionRefer);
+                            return setImmediate(cb, null, [transactionRefer]);
                         }).catch(e => setImmediate(cb, e.toString()));
                     });
                 }
@@ -1524,9 +1528,10 @@ DApps.prototype.internal = {
 
             const hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
             const keypair = library.ed.makeKeypair(hash);
+			const publicKey = keypair.publicKey.toString('hex');
 
             library.balancesSequence.add((cb) => {
-                if (req.body.multisigAccountPublicKey && req.body.multisigAccountPublicKey !== keypair.publicKey.toString('hex')) {
+                if (req.body.multisigAccountPublicKey && req.body.multisigAccountPublicKey !== publicKey) {
                     modules.accounts.getAccount({ publicKey: req.body.multisigAccountPublicKey }, (err, account) => {
                         if (err) {
                             return setImmediate(cb, err);
@@ -1543,6 +1548,9 @@ DApps.prototype.internal = {
                         if (account.multisignatures.indexOf(keypair.publicKey.toString('hex')) < 0) {
                             return setImmediate(cb, 'Account does not belong to multisignature group');
                         }
+						if (account.multisignatures.indexOf(publicKey) < 0) {
+							return setImmediate(cb, 'Account does not belong to multisignature group');
+						}
 
                         modules.accounts.getAccount({ publicKey: keypair.publicKey }, (err, requester) => {
                             if (err) {
@@ -1568,8 +1576,6 @@ DApps.prototype.internal = {
                                 secondKeypair = library.ed.makeKeypair(secondHash);
                             }
 
-                            let transaction;
-
                             library.logic.transaction.create({
                                 type: transactionTypes.OUT_TRANSFER,
                                 amount: req.body.amount,
@@ -1581,8 +1587,9 @@ DApps.prototype.internal = {
                                 dappId: req.body.dappId,
                                 transactionId: req.body.transactionId
                             }).then((transactionRefer) => {
-                                transaction = transactionRefer;
-                                modules.transactions.receiveTransactions([transaction], true, cb);
+                                transactionRefer.status = 0;
+                                modules.transactions.putInQueue(transactionRefer);
+                                return setImmediate(cb, null, [transactionRefer]);
                             }).catch(e => setImmediate(cb, e.toString()));
                         });
                     });
@@ -1607,8 +1614,6 @@ DApps.prototype.internal = {
                             secondKeypair = library.ed.makeKeypair(secondHash);
                         }
 
-                        let transaction;
-
                         library.logic.transaction.create({
                             type: transactionTypes.OUT_TRANSFER,
                             amount: req.body.amount,
@@ -1619,8 +1624,9 @@ DApps.prototype.internal = {
                             dappId: req.body.dappId,
                             transactionId: req.body.transactionId
                         }).then((transactionRefer) => {
-                            transaction = transactionRefer;
-                            modules.transactions.receiveTransactions([transaction], true, cb);
+                            transactionRefer.status = 0;
+                            modules.transactions.putInQueue(transactionRefer);
+                            return setImmediate(cb, null, [transactionRefer]);
                         }).catch(e => setImmediate(cb, e.toString()));
                     });
                 }

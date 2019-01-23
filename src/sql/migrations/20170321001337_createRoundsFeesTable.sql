@@ -1,5 +1,5 @@
 /*
- * Create table 'rounds_fees', calculate fees & populate it, set triggers
+ * Create table 'rounds_fees', calculate fees & populate it, push triggers
  */
 
 BEGIN;

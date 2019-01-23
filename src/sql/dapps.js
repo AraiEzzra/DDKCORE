@@ -38,7 +38,7 @@ const DappsSql = {
 
     getBalanceTransactions(params) {
         return [
-            'SELECT t."id" AS "id", ENCODE(t."senderPublicKey", \'hex\') AS "senderPublicKey", t."amount" AS "amount" FROM trs t',
+            'SELECT t."id" AS "id", t."senderPublicKey", t."amount" AS "amount" FROM trs t',
             'INNER JOIN blocks b ON t."blockId" = b."id" AND t."type" = ${type}',
             'INNER JOIN intransfer dt ON dt."transactionId" = t."id" AND dt."dappId" = ${dappid}',
             (params.lastId ? 'WHERE b."height" > (SELECT "height" FROM blocks ib INNER JOIN trs it ON ib."id" = it."blockId" AND it."id" = ${lastId})' : ''),

@@ -24,6 +24,10 @@ ed.makeKeypair = function (hash) {
     return keyPair;
 };
 
+ed.makePublicKeyHex = function (hash) {
+    return ed.makeKeypair(hash).publicKey.toString('hex');
+};
+
 /**
  * Creates a signature based on a hash and a keypair.
  * @implements {sodium}

@@ -91,6 +91,8 @@ SendFreezeOrder.prototype.undoUnconfirmed = function (trs, sender, cb) {
     return setImmediate(cb);
 };
 
+SendFreezeOrder.prototype.calcUndoUnconfirmed = () => {};
+
 SendFreezeOrder.prototype.applyUnconfirmed = function (trs, sender, cb) {
     return setImmediate(cb);
 };
@@ -274,7 +276,7 @@ SendFreezeOrder.prototype.getActiveFrozeOrder = function (userData, cb) {
 
 SendFreezeOrder.prototype.sendFreezedOrder = async function (userAndOrderData, cb) {
 
-    //This function take active froze order from table and deduct froze amount and update froze 
+    //This function take active froze order from table and deduct froze amount and update froze
     //amount in mem_account table & update old order and create new order in stake table
     try {
         let order = userAndOrderData.stakeOrder;

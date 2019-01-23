@@ -104,15 +104,16 @@ Signatures.prototype.shared = {
 
             const hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
             const keypair = library.ed.makeKeypair(hash);
+            const publicKey = keypair.publicKey.toString('hex');
 
             if (req.body.publicKey) {
-                if (keypair.publicKey.toString('hex') !== req.body.publicKey) {
+                if (publicKey !== req.body.publicKey) {
                     return setImmediate(cb, 'Invalid passphrase');
                 }
             }
 
             library.balancesSequence.add((cb) => {
-                if (req.body.multisigAccountPublicKey && req.body.multisigAccountPublicKey !== keypair.publicKey.toString('hex')) {
+                if (req.body.multisigAccountPublicKey && req.body.multisigAccountPublicKey !== publicKey) {
                     modules.accounts.getAccount({ publicKey: req.body.multisigAccountPublicKey }, (err, account) => {
                         if (err) {
                             return setImmediate(cb, err);
@@ -126,7 +127,7 @@ Signatures.prototype.shared = {
                             return setImmediate(cb, 'Account does not have multisignatures enabled');
                         }
 
-                        if (account.multisignatures.indexOf(keypair.publicKey.toString('hex')) < 0) {
+                        if (account.multisignatures.indexOf(publicKey) < 0) {
                             return setImmediate(cb, 'Account does not belong to multisignature group');
                         }
 
@@ -153,7 +154,6 @@ Signatures.prototype.shared = {
 
                             const secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
                             const secondKeypair = library.ed.makeKeypair(secondHash);
-                            let transaction;
 
                             library.logic.transaction.create({
                                 type: transactionTypes.SIGNATURE,
@@ -162,8 +162,9 @@ Signatures.prototype.shared = {
                                 requester: keypair,
                                 secondKeypair
                             }).then((transactionSignature) => {
-                                transaction = transactionSignature;
-                                modules.transactions.receiveTransactions([transaction], true, cb);
+                                transactionSignature.status = 0;
+                                modules.transactions.putInQueue(transactionSignature);
+                                return setImmediate(cb, null, [transactionSignature]);
                             }).catch(e => setImmediate(cb, e.toString()));
                         });
                     });
@@ -183,7 +184,6 @@ Signatures.prototype.shared = {
 
                         const secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
                         const secondKeypair = library.ed.makeKeypair(secondHash);
-                        let transaction;
 
                         library.logic.transaction.create({
                             type: transactionTypes.SIGNATURE,
@@ -191,8 +191,9 @@ Signatures.prototype.shared = {
                             keypair,
                             secondKeypair
                         }).then((transactionSignature) => {
-                            transaction = transactionSignature;
-                            modules.transactions.receiveTransactions([transaction], true, cb);
+                            transactionSignature.status = 0;
+                            modules.transactions.putInQueue(transactionSignature);
+                            return setImmediate(cb, null, [transactionSignature]);
                         }).catch(e => setImmediate(cb, e.toString()));
                     });
                 }

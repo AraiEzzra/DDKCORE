@@ -1,8 +1,8 @@
 const constants = require('../helpers/constants.js');
 
 // Private fields
-let modules,
-    self;
+let modules;
+let self;
 
 /**
  * Main transfer logic.
@@ -66,22 +66,35 @@ Transfer.prototype.verify = function (trs, sender, cb) {
         if (constants.SEND_TRANSACTION_VALIDATION_ENABLED.RECIPIENT_ID) {
             return setImmediate(cb, 'Missing recipient');
         }
-        library.logger.error('Missing recipient');
+        // self.scope.logger.error('Missing recipient');
     }
 
     if (trs.amount <= 0) {
         if (constants.SEND_TRANSACTION_VALIDATION_ENABLED.AMOUNT) {
             return setImmediate(cb, 'Invalid transaction amount');
         }
-        library.logger.error('Invalid transaction amount');
+        // self.scope.logger.error('Invalid transaction amount');
     }
 
     return setImmediate(cb, null, trs);
 };
 
+Transfer.prototype.newVerify = (trs) => {
+    if (!trs.recipientId) {
+        throw new Error('Missing recipient');
+    }
+
+    if (trs.amount <= 0) {
+        throw new Error('Invalid transaction amount');
+    }
+};
+
+
 Transfer.prototype.verifyUnconfirmed = function (trs, sender, cb) {
     return setImmediate(cb);
 };
+
+Transfer.prototype.newVerifyUnconfirmed = async () => {};
 
 /**
  * @param {transaction} trs
@@ -124,7 +137,7 @@ Transfer.prototype.apply = function (trs, block, sender, cb) {
             balance: trs.amount,
             blockId: block.id,
             round: modules.rounds.calc(block.height)
-        }, err => setImmediate(cb, err));
+        }, errAccountGet => setImmediate(cb, errAccountGet));
     });
 };
 
@@ -170,7 +183,7 @@ Transfer.prototype.applyUnconfirmed = function (trs, sender, cb) {
         modules.accounts.mergeAccountAndGet({
             address: trs.recipientId,
             u_balance: trs.amount,
-        }, err => setImmediate(cb, err));
+        }, errAccountGet => setImmediate(cb, errAccountGet));
     });
 };
 
@@ -189,9 +202,11 @@ Transfer.prototype.undoUnconfirmed = function (trs, sender, cb) {
         modules.accounts.mergeAccountAndGet({
             address: trs.recipientId,
             u_balance: -trs.amount,
-        }, err => setImmediate(cb, err));
+        }, errAccountGet => setImmediate(cb, errAccountGet));
     });
 };
+
+Transfer.prototype.calcUndoUnconfirmed = () => {};
 
 /**
  * Deletes blockId from transaction

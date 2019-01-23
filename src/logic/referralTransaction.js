@@ -184,6 +184,10 @@ ReferTransfer.prototype.undoUnconfirmed = function (trs, sender, cb) {
     return setImmediate(cb);
 };
 
+ReferTransfer.prototype.calcUndoUnconfirmed = async (trs, sender) => {
+    return sender;
+};
+
 /**
  * Deletes blockId from transaction
  * @param {transaction} trs

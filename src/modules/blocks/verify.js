@@ -1,3 +1,6 @@
+const { getOrCreateAccount } = require('src/helpers/account.utils');
+const { transactionSortFunc } = require('src/helpers/transaction.utils');
+
 const crypto = require('crypto');
 const async = require('async');
 const BlockReward = require('../../logic/blockReward.js');
@@ -115,6 +118,32 @@ __private.checkTransaction = function (block, transaction, checkExists, cb) {
     });
 };
 
+__private.newCheckTransaction = async (block, trs, sender, checkExists) => {
+    trs.id = library.logic.transaction.getId(trs);
+    trs.blockId = block.id;
+
+    try {
+        await library.logic.transaction.newVerify({
+            trs,
+            sender,
+            checkExists
+        });
+    } catch (e) {
+        return { success: false, errors: [e.message || e] };
+    }
+
+    try {
+        await library.logic.transaction.newVerifyUnconfirmed({
+            trs,
+            sender
+        });
+    } catch (e) {
+        return { success: false, errors: [e.message || e] };
+    }
+
+    return { success: true };
+};
+
 /**
  * Set height according to the given last block
  *
@@ -157,14 +186,10 @@ __private.verifySignature = function (block, result) {
     }
 
     if (!valid) {
-        // FIXME
-        // https://trello.com/c/4maz5nyk/144-failed-to-verify-block-signature
-        if (block.height > constants.MASTER_NODE_MIGRATED_BLOCK) {
-            if (constants.VERIFY_BLOCK_SIGNATURE) {
-                result.errors.push('Failed to verify block signature');
-            } else {
-                library.logger.error('Failed to verify block signature');
-            }
+        if (constants.VERIFY_BLOCK_SIGNATURE) {
+            result.errors.push('Failed to verify block signature');
+        } else {
+            library.logger.error('Failed to verify block signature');
         }
     }
 
@@ -321,10 +346,7 @@ __private.verifyPayload = function (block, result) {
         }
     }
 
-    // FIXME update old chain payloadHash
-    // https://trello.com/c/ZRV5EAUT/132-included-transactions-do-not-match-block-transactions-count
-    if (block.transactions.length !== block.numberOfTransactions &&
-        block.height > constants.MASTER_NODE_MIGRATED_BLOCK) {
+    if (block.transactions.length !== block.numberOfTransactions) {
         if (constants.PAYLOAD_VALIDATE.MAX_TRANSACTION_LENGTH) {
             result.errors.push('Included transactions do not match block transactions count');
         } else {
@@ -345,68 +367,55 @@ __private.verifyPayload = function (block, result) {
     const payloadHash = crypto.createHash('sha256');
     const appliedTransactions = {};
 
-    for (const i in block.transactions) {
-        const transaction = block.transactions[i];
+    for (const trs of block.transactions) {
         let bytes;
 
         try {
-            library.logger.debug(`Transaction ${JSON.stringify(transaction)}`);
-            bytes = library.logic.transaction.getBytes(transaction, false, false);
+            library.logger.debug(`Transaction ${JSON.stringify(trs)}`);
+            bytes = library.logic.transaction.getBytes(trs, false, false);
             library.logger.debug(`Bytes ${JSON.stringify(bytes)}`);
         } catch (e) {
             result.errors.push(e.toString());
         }
 
-        if (appliedTransactions[transaction.id]) {
+        if (appliedTransactions[trs.id]) {
             if (constants.PAYLOAD_VALIDATE.MAX_TRANSACTION_DUPLICATE) {
-                result.errors.push(`Encountered duplicate transaction: ${transaction.id}`);
+                result.errors.push(`Encountered duplicate transaction: ${trs.id}`);
             } else {
-                library.logger.error(`Encountered duplicate transaction: ${transaction.id}`);
+                library.logger.error(`Encountered duplicate transaction: ${trs.id}`);
             }
         }
 
-        appliedTransactions[transaction.id] = transaction;
+        appliedTransactions[trs.id] = trs;
         if (bytes) {
             payloadHash.update(bytes);
         }
-        totalAmount += transaction.amount;
-        totalFee += transaction.fee;
+        totalAmount += trs.amount;
+        totalFee += trs.fee;
     }
     const hex = payloadHash.digest().toString('hex');
 
     if (hex !== block.payloadHash) {
-        // FIXME update old chain payloadHash
-        // https://trello.com/c/G3XRs3Fk/127-update-old-chain-payloadhash
-        if (block.height > constants.MASTER_NODE_MIGRATED_BLOCK) {
-            if (constants.PAYLOAD_VALIDATE.INVALID_HASH) {
-                result.errors.push('Invalid payload hash');
-            } else {
-                library.logger.error('Invalid payload hash');
-            }
+        if (constants.PAYLOAD_VALIDATE.INVALID_HASH) {
+            result.errors.push('Invalid payload hash');
+        } else {
+            library.logger.error('Invalid payload hash');
         }
     }
 
     if (totalAmount !== block.totalAmount) {
-        // FIXME Invalid total amount
-        // https://trello.com/c/6G2rPg0o/141-invalid-total-amount
-        if (block.height > constants.MASTER_NODE_MIGRATED_BLOCK) {
-            if (constants.PAYLOAD_VALIDATE.TOTAL_AMOUNT) {
-                result.errors.push('Invalid total amount');
-            } else {
-                library.logger.error('Invalid total amount');
-            }
+        if (constants.PAYLOAD_VALIDATE.TOTAL_AMOUNT) {
+            result.errors.push('Invalid total amount');
+        } else {
+            library.logger.error('Invalid total amount');
         }
     }
 
     if (totalFee !== block.totalFee) {
-        // FIXME update old chain totalFee
-        // https://trello.com/c/zmjr4SAL/131-invalid-total-fee
-        if (block.height > constants.MASTER_NODE_MIGRATED_BLOCK) {
-            if (constants.PAYLOAD_VALIDATE.TOTAL_FEE) {
-                result.errors.push('Invalid total fee');
-            } else {
-                library.logger.error('Invalid total fee');
-            }
+        if (constants.PAYLOAD_VALIDATE.TOTAL_FEE) {
+            result.errors.push('Invalid total fee');
+        } else {
+            library.logger.error('Invalid total fee');
         }
     }
 
@@ -698,6 +707,12 @@ __private.addBlockProperties = function (block, broadcast, cb) {
     return setImmediate(cb);
 };
 
+__private.newAddBlockProperties = (block, broadcast) => {
+    if (!broadcast) {
+        self.addBlockProperties(block);
+    }
+};
+
 /**
  * Validates block schema.
  *
@@ -718,6 +733,15 @@ __private.normalizeBlock = function (block, cb) {
     return setImmediate(cb);
 };
 
+__private.newNormalizeBlock = (block) => {
+    try {
+        block.transactions.sort(transactionSortFunc);
+        library.logic.block.objectNormalize(block);
+        return { success: true, errors: [] };
+    } catch (err) {
+        return { success: false, errors: [err] };
+    }
+};
 /**
  * Verifies block.
  *
@@ -741,6 +765,17 @@ __private.verifyBlock = function (block, cb) {
         return setImmediate(cb, result.errors[0]);
     }
     return setImmediate(cb);
+};
+
+__private.newVerifyBlock = (block) => {
+    const result = self.verifyBlock(block);
+
+    if (!result.verified) {
+        library.logger.error(['Block', block.id, 'verification failed', JSON.stringify(result.errors)].join(' '));
+    }
+
+    return result;
+
 };
 
 /**
@@ -770,6 +805,13 @@ __private.checkExists = function (block, cb) {
         });
 };
 
+__private.newCheckExists = async (block) => {
+    const rows = await library.db.query(sql.getBlockId, { id: block.id });
+    if (rows.length > 0) {
+        return { success: false, errors: [['Block', block.id, 'already exists'].join(' ')] };
+    }
+    return { success: true };
+};
 /**
  * Checks if block was generated by the right active delagate.
  *
@@ -817,6 +859,57 @@ __private.checkTransactions = function (block, checkExists, cb) {
         err => setImmediate(cb, err)
     );
 };
+/**
+ * Tested with 3 state trs = [true, false, false]; trs = [false, true, true]; trs = [true, true, false];
+ * with code sample
+ *
+ * let errors = [];
+ * let i = 0;
+ * while ((i < trs.length && errors.length === 0) || (i >= 0 && errors.length !== 0)) {
+    if (errors.length === 0) {
+        if (!trs[i]) {
+            errors.push(i);
+            i--;
+            continue
+        }
+        console.log('apply', i, trs[i]);
+        i++;
+    } else {
+        console.log('undo', i, trs[i]);
+        i--;
+    }
+}
+*/
+__private.checkTransactionsAndApplyUnconfirmed = async (block, checkExists, verify) => {
+    const errors = [];
+    let i = 0;
+
+    while ((i < block.transactions.length && errors.length === 0) || (i >= 0 && errors.length !== 0)) {
+        const trs = block.transactions[i];
+
+        if (errors.length === 0) {
+            const sender = await getOrCreateAccount(library.db, trs.senderPublicKey);
+            library.logger.debug(`[Verify][checkTransactionsAndApplyUnconfirmed][sender] ${JSON.stringify(sender)}`);
+            if (verify) {
+                const resultCheckTransaction = await __private.newCheckTransaction(block, trs, sender, checkExists);
+
+                if (!resultCheckTransaction.success) {
+                    errors.push(resultCheckTransaction.errors);
+                    i--;
+                    continue;
+                }
+            }
+
+            await library.logic.transaction.newApplyUnconfirmed(trs, sender);
+            i++;
+        } else {
+            await library.logic.transaction.newUndoUnconfirmed(trs);
+            i--;
+        }
+    }
+
+    return { success: errors.length === 0, errors };
+};
 
 /**
  * Main function to process a block
@@ -829,13 +922,13 @@ __private.checkTransactions = function (block, checkExists, cb) {
  * @method processBlock
  * @param  {Object}   block Full block
  * @param  {boolean}  broadcast Indicator that block needs to be broadcasted
- * @param  {Function} cb Callback function
  * @param  {boolean}  saveBlock Indicator that block needs to be saved to database
- * @param  {boolean}  checked Indicator that block was previously checked
+ * @param  {boolean}  verify Indicator that block was previously checked
+ * @param  {Function} cb Callback function
  * @return {Function} cb Callback function from params (through setImmediate)
  * @return {Object}   cb.err Error if occurred
  */
-Verify.prototype.processBlock = function (block, broadcast, cb, saveBlock, verify = true) {
+Verify.prototype.processBlock = function (block, broadcast, saveBlock, verify, cb) {
     if (modules.blocks.isCleaning.get()) {
         // Break processing if node shutdown reqested
         return setImmediate(cb, 'Cleaning up');
@@ -877,10 +970,10 @@ Verify.prototype.processBlock = function (block, broadcast, cb, saveBlock, verif
             // * Block and transactions have valid values (signatures, block slots, etc...)
             // * The check against database state passed (for instance sender has enough LSK, votes are under 101, etc...)
             // We thus update the database with the transactions values, save the block and tick it.
-            // Also that function set new block as our last block
+            // Also that function push new block as our last block
             modules.blocks.chain.applyBlock(block, broadcast, seriesCb, saveBlock);
         },
-        // Perform next two steps only when 'broadcast' flag is set, it can be:
+        // Perform next two steps only when 'broadcast' flag is push, it can be:
         // 'true' if block comes from generation or receiving process
         // 'false' if block comes from chain synchronisation process
         updateSystemHeaders(seriesCb) {
@@ -891,6 +984,56 @@ Verify.prototype.processBlock = function (block, broadcast, cb, saveBlock, verif
                 : seriesCb();
         }
     }, err => setImmediate(cb, err));
+};
+
+Verify.prototype.newProcessBlock = async (block, broadcast, saveBlock, verify, tick) => {
+    if (modules.blocks.isCleaning.get()) {
+        throw new Error('Cleaning up');
+    } else if (!__private.loaded) {
+        throw new Error('Blockchain is loading');
+    }
+
+    __private.newAddBlockProperties(block, broadcast);
+
+    const resultNormalizeBlock = __private.newNormalizeBlock(block);
+
+    if (!resultNormalizeBlock.success) {
+        throw new Error(`[normalizeBlock] ${JSON.stringify(resultNormalizeBlock.errors)}`);
+    }
+
+    if (verify) {
+        const resultVerifyBlock = __private.newVerifyBlock(block);
+        if (!resultVerifyBlock.verified) {
+            throw new Error(`[verifyBlock] ${JSON.stringify(resultVerifyBlock.errors)}`);
+        }
+    }
+
+    if (saveBlock) {
+        const resultCheckExists = await __private.newCheckExists(block);
+        if (!resultCheckExists.success) {
+            throw new Error(`[checkExists] ${JSON.stringify(resultCheckExists.errors)}`);
+        }
+    }
+    // validateBlockSlot TODO enable after fix round
+
+    const resultCheckTransactions = await __private.checkTransactionsAndApplyUnconfirmed(block, saveBlock, verify);
+    if (!resultCheckTransactions.success) {
+        throw new Error(`[checkTransactions] ${JSON.stringify(resultCheckTransactions.errors)}`);
+    }
+
+    await modules.blocks.chain.newApplyBlock(block, broadcast, saveBlock, tick);
+
+    if (!library.config.loading.snapshotRound) {
+        await (new Promise((resolve, reject) => modules.system.update((err) => {
+            if (err) {
+                library.logger.error(`[Verify][processBlock][system/update] ${err}`);
+                library.logger.error(`[Verify][processBlock][system/update][stack] ${err.stack}`);
+                reject(err);
+            }
+            resolve();
+        })));
+    }
+    modules.transactions.reshuffleTransactionQueue();
 };
 
 /**

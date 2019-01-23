@@ -1,5 +1,6 @@
 const { LENGTH, writeUInt64LE } = require('../helpers/buffer.js');
 const sql = require('../sql/referal_sql');
+const constants = require('../helpers/constants');
 
 let modules,
     library,
@@ -54,9 +55,17 @@ Referral.prototype.verify = function (trs, sender, cb) {
     });
 };
 
+Referral.prototype.newVerify = async (trs, sender) => {
+    if (sender && sender.global) {
+        throw new Error('Account already exists.');
+    }
+};
+
 Referral.prototype.verifyUnconfirmed = function (trs, sender, cb) {
     return setImmediate(cb);
 };
+
+Referral.prototype.newVerifyUnconfirmed = async () => {};
 
 Referral.prototype.apply = function (trs, block, sender, cb) {
     library.db.none(sql.changeAccountGlobalStatus, {
@@ -90,6 +99,8 @@ Referral.prototype.undoUnconfirmed = function (trs, sender, cb) {
     setImmediate(cb);
 };
 
+Referral.prototype.calcUndoUnconfirmed = () => {};
+
 Referral.prototype.schema = {
     id: 'Referral',
     type: 'object',
@@ -106,9 +117,13 @@ Referral.prototype.schema = {
 };
 
 Referral.prototype.dbRead = function (raw) {
-    return {
-        referrals: raw.ref_level ? raw.ref_level : [],
-    };
+    const asset = {};
+
+    if (raw.ref_level && raw.ref_level.length) {
+        asset.referral = raw.ref_level[0];
+    }
+
+    return asset;
 };
 
 Referral.prototype.dbTable = 'referals';

@@ -1,3 +1,5 @@
+const { TransactionStatus } = require('src/helpers/types');
+
 const crypto = require('crypto');
 const schema = require('../schema/frogings.js');
 const sql = require('../sql/frogings.js');
@@ -240,9 +242,9 @@ Frogings.prototype.shared = {
                 return setImmediate(cb, err[0].message);
             }
             const hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
-            const keypair = library.ed.makeKeypair(hash);
+            const publicKey = library.ed.makePublicKeyHex(hash);
 
-            modules.accounts.getAccount({ publicKey: keypair.publicKey.toString('hex') }, (err, account) => {
+            modules.accounts.getAccount({ publicKey: publicKey }, (err, account) => {
                 if (!account || !account.address) {
                     return setImmediate(cb, 'Address of account not found');
                 }
@@ -259,9 +261,9 @@ Frogings.prototype.shared = {
                 return setImmediate(cb, err[0].message);
             }
             const hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
-            const keypair = library.ed.makeKeypair(hash);
+            const publicKey = library.ed.makePublicKeyHex(hash);
 
-            modules.accounts.getAccount({ publicKey: keypair.publicKey.toString('hex') }, (err, account) => {
+            modules.accounts.getAccount({ publicKey: publicKey }, (err, account) => {
                 if (!account || !account.address) {
                     return setImmediate(cb, 'Address of account not found');
                 }
@@ -279,9 +281,9 @@ Frogings.prototype.shared = {
                 return setImmediate(cb, err[0].message);
             }
             const hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
-            const keypair = library.ed.makeKeypair(hash);
+            const publicKey = library.ed.makePublicKeyHex(hash);
 
-            modules.accounts.getAccount({ publicKey: keypair.publicKey.toString('hex') }, (err, account) => {
+            modules.accounts.getAccount({ publicKey: publicKey }, (err, account) => {
                 if (!account || !account.address) {
                     return setImmediate(cb, 'Address of account not found');
                 }
@@ -302,9 +304,10 @@ Frogings.prototype.shared = {
 
             const hash = crypto.createHash('sha256').update(req.body.secret, 'utf8').digest();
             const keypair = library.ed.makeKeypair(hash);
+            const publicKey = keypair.publicKey.toString('hex');
 
             if (req.body.publicKey) {
-                if (keypair.publicKey.toString('hex') !== req.body.publicKey) {
+                if (publicKey !== req.body.publicKey) {
                     return setImmediate(cb, 'Invalid passphrase');
                 }
             }
@@ -312,7 +315,7 @@ Frogings.prototype.shared = {
             library.balancesSequence.add((cb) => {
                 if (
                     req.body.multisigAccountPublicKey &&
-                    req.body.multisigAccountPublicKey !== keypair.publicKey.toString('hex')
+                    req.body.multisigAccountPublicKey !== publicKey
                 ) {
                     modules.accounts.getAccount({ publicKey: req.body.multisigAccountPublicKey }, (err, account) => {
                         if (err) {
@@ -328,7 +331,7 @@ Frogings.prototype.shared = {
                             return setImmediate(cb, 'Account does not have multisignatures enabled');
                         }
 
-                        if (account.multisignatures.indexOf(keypair.publicKey.toString('hex')) < 0) {
+                        if (account.multisignatures.indexOf(publicKey) < 0) {
                             return setImmediate(cb, 'Account does not belong to multisignature group');
                         }
 
@@ -374,12 +377,14 @@ Frogings.prototype.shared = {
                                 secondKeypair,
                                 requester: keypair
                             }).then((transactionStake) => {
-                                modules.transactions.receiveTransactions([transactionStake], true, cb);
+                                transactionStake.status = 0;
+                                modules.transactions.putInQueue(transactionStake);
+                                return setImmediate(cb, null, [transactionStake]);
                             }).catch(e => setImmediate(cb, e.toString()));
                         });
                     });
                 } else {
-                    modules.accounts.setAccountAndGet({ publicKey: keypair.publicKey.toString('hex') }, (err, account) => {
+                    modules.accounts.setAccountAndGet({ publicKey: publicKey }, (err, account) => {
                         if (err) {
                             return setImmediate(cb, err);
                         }
@@ -416,7 +421,9 @@ Frogings.prototype.shared = {
                             keypair,
                             secondKeypair
                         }).then((transactionStake) => {
-                            modules.transactions.receiveTransactions([transactionStake], true, cb);
+                            transactionStake.status = 0;
+                            modules.transactions.putInQueue(transactionStake);
+                            return setImmediate(cb, null, [transactionStake]);
                         }).catch(e => setImmediate(cb, e.toString()));
                     });
                 }

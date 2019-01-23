@@ -520,8 +520,9 @@ Multisignatures.prototype.shared = {
                             keysgroup: req.body.keysgroup,
                             lifetime: req.body.lifetime
                         }).then((transactionMulti) => {
-                            scope.transaction = transactionMulti;
-                            modules.transactions.receiveTransactions([transaction], true, seriesCb);
+                            transactionMulti.status = 0;
+                            modules.transactions.putInQueue(transactionMulti);
+                            return setImmediate(cb, null, [transactionMulti]);
                         }).catch(e => setImmediate(seriesCb, e.toString()));
                     });
                 }

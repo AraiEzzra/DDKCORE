@@ -50,7 +50,6 @@ describe('RPC method: CREATE_TRANSACTIONS', function () {
                 expect(result.transaction).to.have.property('reward');
                 expect(result.transaction).to.have.property('signature');
                 expect(result.transaction).to.have.property('fee');
-                console.log(result);
                 done();
             });
         });

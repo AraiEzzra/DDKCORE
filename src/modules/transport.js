@@ -220,7 +220,8 @@ __private.receiveTransactions = function (query, peer, extraLogMessage, cb) {
  * @param {function} cb
  * @return {setImmediateCallback} cb, error message
  */
-__private.receiveTransaction = function (transaction, peer, extraLogMessage, cb) {
+// TODO rewrite it later
+__private.receiveTransaction = (transaction, peer, extraLogMessage, cb) => {
     const id = (transaction ? transaction.id : 'null');
 
     try {
@@ -237,21 +238,7 @@ __private.receiveTransaction = function (transaction, peer, extraLogMessage, cb)
 
         return setImmediate(cb, `Invalid transaction body - ${e.toString()}`);
     }
-
-    library.balancesSequence.add((cb) => {
-        library.logger.debug(`Received transaction ${transaction.id} from peer ${peer.string}`);
-        modules.transactions.processUnconfirmedTransaction(transaction, true, (err) => {
-            if (err) {
-                library.logger.debug(['Transaction', id].join(' '), err.toString());
-                if (transaction) {
-                    library.logger.debug('Transaction', transaction);
-                }
-
-                return setImmediate(cb, err.toString());
-            }
-            return setImmediate(cb, null, transaction.id);
-        });
-    }, cb);
+    modules.transactions.putInQueue(transaction);
 };
 
 // Public methods
@@ -285,7 +272,7 @@ Transport.prototype.poorConsensus = function () {
     if (__private.broadcaster.consensus === undefined) {
         return false;
     }
-    return (__private.broadcaster.consensus <= library.config.forging.minBroadhashConsensus);
+    return (__private.broadcaster.consensus < library.config.forging.minBroadhashConsensus);
 };
 
 /**
@@ -381,7 +368,6 @@ Transport.prototype.getFromPeer = function (peer, options, cb) {
             const report = library.schema.validate(headers, schema.headers);
             if (!report) {
                 // Remove peer
-                console.log('EHEADERS1', report);
                 __private.removePeer({ peer, code: 'EHEADERS' }, `${req.method} ${req.url}`);
 
                 return setImmediate(cb, ['Invalid response headers', JSON.stringify(headers), req.method, req.url].join(' '));
@@ -483,6 +469,14 @@ Transport.prototype.onSignature = function (signature, broadcast) {
  */
 Transport.prototype.onUnconfirmedTransaction = function (transaction, broadcast) {
     if (broadcast && !__private.broadcaster.maxRelays(transaction)) {
+        __private.broadcaster.enqueue({}, { api: '/transactions', data: { transaction }, method: 'POST' });
+        library.network.io.sockets.emit('transactions/change', transaction);
+    }
+};
+
+Transport.prototype.onTransactionPutInPool = (transaction) => {
+    library.logger.debug(`OnTransactionPutInPool ${JSON.stringify(transaction)}`);
+    if (!__private.broadcaster.maxRelays(transaction)) {
         __private.broadcaster.enqueue({}, { api: '/transactions', data: { transaction }, method: 'POST' });
         library.network.io.sockets.emit('transactions/change', transaction);
     }

@@ -1,3 +1,5 @@
+const { TransactionStatus } = require('src/helpers/types');
+
 const async = require('async');
 const bignum = require('../helpers/bignum.js');
 const sodium = require('sodium-javascript');
@@ -198,9 +200,7 @@ Transaction.prototype.multisign = (keypair, trs) => {
  * @param {transaction} trs
  * @return {string} id
  */
-Transaction.prototype.getId = (trs) => {
-    return self.getHash(trs).toString('hex');
-};
+Transaction.prototype.getId = trs => self.getHash(trs).toString('hex');
 
 /**
  * Creates hash based on transaction bytes.
@@ -209,9 +209,7 @@ Transaction.prototype.getId = (trs) => {
  * @param {transaction} trs
  * @return {hash} sha256 crypto hash
  */
-Transaction.prototype.getHash = (trs) => {
-    return crypto.createHash('sha256').update(self.getBytes(trs, false, false)).digest();
-};
+Transaction.prototype.getHash = trs => crypto.createHash('sha256').update(self.getBytes(trs, false, false)).digest();
 
 /**
  * Calls `getBytes` based on trs type (see privateTypes)
@@ -224,9 +222,6 @@ Transaction.prototype.getHash = (trs) => {
  * @throws {error} If buffer fails.
  */
 Transaction.prototype.getBytes = (trs, skipSignature = false, skipSecondSignature = false) => {
-    if (!__private.types[trs.type]) {
-        throw `Unknown transaction type ${trs.type}`;
-    }
     const assetBytes = __private.types[trs.type].getBytes.call(self, trs, skipSignature, skipSecondSignature);
 
     self.scope.logger.trace(`Trs ${JSON.stringify(trs)}`);
@@ -289,11 +284,11 @@ Transaction.prototype.ready = (trs, sender) => {
  */
 Transaction.prototype.countById = (trs, cb) => {
     self.scope.db.one(sql.countById, { id: trs.id })
-    .then(row => setImmediate(cb, null, row.count))
-    .catch((err) => {
-        self.scope.logger.error(err.stack);
-        return setImmediate(cb, 'Transaction#countById error');
-    });
+        .then(row => setImmediate(cb, null, row.count))
+        .catch((err) => {
+            self.scope.logger.error(err.stack);
+            return setImmediate(cb, 'Transaction#countById error');
+        });
 };
 
 /**
@@ -311,6 +306,16 @@ Transaction.prototype.checkConfirmed = function (trs, cb) {
         }
         return setImmediate(cb);
     });
+};
+
+Transaction.prototype.newCheckConfirmed = async (trs) => {
+    let result = {};
+    try {
+        result = await self.scope.db.one(sql.countById, { id: trs.id })
+    } catch (e) {
+        self.scope.logger.error(e);
+    }
+    return Boolean(result.count)
 };
 
 /**
@@ -332,12 +337,6 @@ Transaction.prototype.checkBalance = (amount, isUnconfirmed, trs, sender) => {
     const exceededBalance = new bignum(sender[`${isUnconfirmed ? 'u_' : ''}balance`].toString())
         .lessThan(totalAmountWithFrozeAmount);
     let exceeded = (trs.blockId !== self.scope.genesisblock.block.id && exceededBalance);
-
-    // FIXME
-    // https://trello.com/c/MPx5yxNH/134-account-does-not-have-enough-ddk
-    if (trs.height <= constants.MASTER_NODE_MIGRATED_BLOCK) {
-        exceeded = false;
-    }
 
     if (parseInt(sender[`${isUnconfirmed ? 'u_' : ''}totalFrozeAmount`], 10) > 0) {
         return {
@@ -433,6 +432,26 @@ Transaction.prototype.process = (trs, sender, requester, cb) => {
     });
 };
 
+Transaction.prototype.newProcess = (trs, sender) => {
+    // Check transaction type
+    if (!__private.types[trs.type]) {
+        throw new Error(`Unknown transaction type ${trs.type}`);
+    }
+
+    // Check sender
+    if (!sender) {
+        throw new Error('Missing sender');
+    }
+
+    trs.senderId = sender.address;
+
+    const txId = self.getId(trs);
+
+    if (trs.id && trs.id !== txId) {
+        throw new Error('Invalid transaction id');
+    }
+};
+
 Transaction.prototype.getAccountStatus = (trs, cb) => {
     self.scope.db.one(sqlAccount.checkAccountStatus, {
         senderId: trs.senderId
@@ -512,10 +531,7 @@ Transaction.prototype.verifyFields = ({ trs, sender, requester = {}, cb }) => {
     }
 
     // Check sender public key
-    if (
-        sender.publicKey && sender.publicKey !== trs.senderPublicKey &&
-        trs.height > constants.MASTER_NODE_MIGRATED_BLOCK
-    ) {
+    if (sender.publicKey && sender.publicKey !== trs.senderPublicKey) {
         err = ['Invalid sender public key:', trs.senderPublicKey, 'expected:', sender.publicKey].join(' ');
         if (constants.TRANSACTION_VALIDATION_ENABLED.SENDER_PUBLIC_KEY) {
             if (exceptions.senderPublicKey.indexOf(trs.id) > -1) {
@@ -581,8 +597,6 @@ Transaction.prototype.verifyFields = ({ trs, sender, requester = {}, cb }) => {
 
     // Verify signature
     try {
-        // FIXME verify transaction signature
-        // https://trello.com/c/VcBpfYTi/180-failed-to-verify-transaction-signature
         valid = self.verifySignature(trs, (trs.requesterPublicKey || trs.senderPublicKey), trs.signature);
     } catch (e) {
         self.scope.logger.error(e.stack);
@@ -696,6 +710,161 @@ Transaction.prototype.verifyFields = ({ trs, sender, requester = {}, cb }) => {
     setImmediate(cb);
 };
 
+Transaction.prototype.newVerifyFields = ({ trs, sender }) => {
+    let valid = false;
+    let err = null;
+
+    // Check sender
+    if (!sender) {
+        throw new Error('Missing sender');
+    }
+
+    // Check transaction type
+    if (!__private.types[trs.type]) {
+        throw new Error(`Unknown transaction type ${trs.type}`);
+    }
+
+    // Check for missing sender second signature
+    if (!trs.requesterPublicKey &&
+        sender.secondSignature &&
+        !trs.signSignature &&
+        trs.blockId !== self.scope.genesisblock.block.id
+    ) {
+        throw new Error('Missing sender second signature');
+    }
+
+    // If second signature provided, check if sender has one enabled
+    if (!trs.requesterPublicKey && !sender.secondSignature && (trs.signSignature && trs.signSignature.length > 0)) {
+        throw new Error('Sender does not have a second signature');
+    }
+
+    // Check for missing requester second signature
+    // if (trs.requesterPublicKey && requester.secondSignature && !trs.signSignature) {
+    //     throw new Error('Missing requester second signature');
+    // }
+
+    // If second signature provided, check if requester has one enabled
+    // if (trs.requesterPublicKey && !requester.secondSignature &&
+    //     (trs.signSignature && trs.signSignature.length > 0)) {
+    //     throw new Error('Requester does not have a second signature');
+    // }
+
+    // Check sender public key
+    if (sender.publicKey && sender.publicKey !== trs.senderPublicKey) {
+        err = ['Invalid sender public key:', trs.senderPublicKey, 'expected:', sender.publicKey].join(' ');
+        if (exceptions.senderPublicKey.indexOf(trs.id) > -1) {
+            self.scope.logger.debug(err);
+            self.scope.logger.debug(JSON.stringify(trs));
+        } else {
+            throw new Error(err);
+        }
+    }
+
+    // Check sender is not genesis account unless block id equals genesis
+    if (
+        [exceptions.genesisPublicKey.mainnet, exceptions.genesisPublicKey.testnet].indexOf(sender.publicKey) !== -1
+        && trs.blockId !== self.scope.genesisblock.block.id
+    ) {
+        throw new Error('Invalid sender. Can not send from genesis account');
+    }
+
+    // Check sender address
+    if (String(trs.senderId).toUpperCase() !== String(sender.address).toUpperCase()) {
+        throw new Error('Invalid sender address');
+    }
+
+    // Determine multisignatures from sender or transaction asset
+    const multisignatures = sender.multisignatures || sender.u_multisignatures || [];
+    if (multisignatures.length === 0) {
+        if (trs.asset && trs.asset.multisignature && trs.asset.multisignature.keysgroup) {
+            for (let i = 0; i < trs.asset.multisignature.keysgroup.length; i++) {
+                const key = trs.asset.multisignature.keysgroup[i];
+
+                if (!key || typeof key !== 'string') {
+                    throw new Error('Invalid member in keysgroup');
+                }
+
+                multisignatures.push(key.slice(1));
+            }
+        }
+    }
+
+    // Check requester public key
+    // if (trs.requesterPublicKey) {
+    //     multisignatures.push(trs.senderPublicKey);
+    //
+    //     if (sender.multisignatures.indexOf(trs.requesterPublicKey) < 0) {
+    //         throw new Error('Account does not belong to multisignature group');
+    //     }
+    // }
+
+    // Verify signature
+    valid = self.verifySignature(trs, trs.senderPublicKey, trs.signature);
+
+    if (!valid) {
+        throw new Error('Failed to verify signature');
+    }
+
+    // Verify second signature
+    if (sender.secondSignature) {
+        valid = self.verifySecondSignature(trs, sender.secondPublicKey, trs.signSignature);
+        if (!valid) {
+            throw new Error('Failed to verify second signature');
+        }
+    }
+
+    // Check that signatures are unique
+    if (trs.signatures && trs.signatures.length) {
+        const signatures = trs.signatures.reduce((p, c) => {
+            if (p.indexOf(c) < 0) {
+                p.push(c);
+            }
+            return p;
+        }, []);
+
+        if (signatures.length !== trs.signatures.length) {
+            throw new Error('Encountered duplicate signature in transaction');
+        }
+    }
+
+    // Verify multisignatures
+    if (trs.signatures) {
+        for (let d = 0; d < trs.signatures.length; d++) {
+            valid = false;
+
+            for (let s = 0; s < multisignatures.length; s++) {
+                if (trs.requesterPublicKey && multisignatures[s] === trs.requesterPublicKey) {
+                    continue;
+                }
+
+                if (self.verifySignature(trs, multisignatures[s], trs.signatures[d])) {
+                    valid = true;
+                }
+            }
+
+            if (!valid) {
+                throw new Error('Failed to verify multisignature');
+            }
+        }
+    }
+
+    // Check amount
+    if (
+        trs.amount < 0 ||
+        trs.amount > constants.totalAmount ||
+        String(trs.amount).indexOf('.') >= 0 ||
+        trs.amount.toString().indexOf('e') >= 0
+    ) {
+        throw new Error('Invalid transaction amount');
+    }
+
+    // Check timestamp
+    if (slots.getSlotNumber(trs.timestamp) > slots.getSlotNumber()) {
+        throw new Error('Invalid transaction timestamp. Timestamp is in the future');
+    }
+};
+
+
 /**
  * Validates new transaction.
  * Calls `verify` based on transaction type (see privateTypes)
@@ -749,6 +918,38 @@ Transaction.prototype.verify = ({ trs, sender, requester = {}, checkExists = fal
     ], err => setImmediate(cb, err));
 };
 
+Transaction.prototype.newVerify = async ({ trs, sender, checkExists = false }) => {
+    try {
+        self.newProcess(trs, sender);
+    } catch (e) {
+        throw e;
+    }
+
+    try {
+        await self.newVerifyFields({ trs, sender });
+    } catch (e) {
+        throw e;
+    }
+
+    if (checkExists) {
+        const isConfirmed = await self.newCheckConfirmed(trs);
+        if (isConfirmed) {
+            throw new Error(`Transaction is already confirmed: ${trs.id}`);
+        }
+    }
+    try {
+        await __private.types[trs.type].newVerify.call(self, trs, sender);
+    } catch (e) {
+        throw e;
+    }
+};
+
+Transaction.prototype.calculateUnconfirmedFee = (trs, sender) =>
+    (
+        __private.types[trs.type].calculateUnconfirmedFee ||
+        __private.types[trs.type].calculateFee
+    ).call(self, trs, sender);
+
 /**
  * Validates unconfirmed transaction.
  * Calls `verifyUnconfirmed` based on trs type
@@ -759,8 +960,7 @@ Transaction.prototype.verify = ({ trs, sender, requester = {}, checkExists = fal
  * @return {setImmediateCallback} validation errors | trs
  */
 Transaction.prototype.verifyUnconfirmed = ({ trs, sender, cb }) => {
-    const calculateFee = __private.types[trs.type].calculateUnconfirmedFee || __private.types[trs.type].calculateFee;
-    const fee = calculateFee.call(self, trs, sender) || 0;
+    const fee = self.calculateUnconfirmedFee(trs, sender);
     if (trs.type !== transactionTypes.REFERRAL &&
         !(trs.type === transactionTypes.STAKE && trs.stakedAmount < 0) &&
         (!fee || trs.fee !== fee)
@@ -794,6 +994,26 @@ Transaction.prototype.verifyUnconfirmed = ({ trs, sender, cb }) => {
     });
 };
 
+Transaction.prototype.newVerifyUnconfirmed = async ({ trs, sender }) => {
+    // change fee for vote and check in next validator checkBalance
+    trs.fee = self.calculateUnconfirmedFee(trs, sender);
+
+    // Check sender not able to do transaction on froze amount
+    const amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
+
+    const senderBalance = self.checkBalance(amount, true, trs, sender);
+
+    if (senderBalance.exceeded) {
+        throw new Error(senderBalance.error);
+    }
+
+    await __private.types[trs.type].newVerifyUnconfirmed.call(self, trs, sender, (err) => {
+        if (err) {
+            throw err;
+        }
+    });
+};
+
 /**
  * Verifies signature for valid transaction type
  * @implements {getBytes}
@@ -805,10 +1025,6 @@ Transaction.prototype.verifyUnconfirmed = ({ trs, sender, cb }) => {
  * @throws {error}
  */
 Transaction.prototype.verifySignature = (trs, publicKey, signature) => {
-    if (!__private.types[trs.type]) {
-        throw `Unknown transaction type ${trs.type}`;
-    }
-
     if (!signature) {
         return false;
     }
@@ -839,10 +1055,6 @@ Transaction.prototype.verifySignature = (trs, publicKey, signature) => {
  * @throws {error}
  */
 Transaction.prototype.verifySecondSignature = (trs, publicKey, signature) => {
-    if (!__private.types[trs.type]) {
-        throw `Unknown transaction type ${trs.type}`;
-    }
-
     if (!signature) {
         return false;
     }
@@ -924,6 +1136,41 @@ Transaction.prototype.apply = (trs, block, sender, cb) => {
             }
         });
     });
+};
+
+Transaction.prototype.newApply = async (trs, block, sender) => {
+    const amount = trs.amount + trs.fee;
+
+    self.scope.logger.trace('Logic/Transaction->apply', {
+        sender: sender.address, balance: -amount, blockId: block.id, round: modules.rounds.calc(block.height)
+    });
+
+    const mergedSender = await self.scope.account.asyncMerge(sender.address, {
+        balance: -amount,
+        blockId: block.id,
+        round: modules.rounds.calc(block.height)
+    });
+    try {
+        await (new Promise((resolve, reject) => {
+            __private.types[trs.type].apply.call(self, trs, block, mergedSender, (err) => {
+                if (err) {
+                    reject(err);
+                }
+                trs.status = TransactionStatus.APPLIED;
+                resolve();
+            });
+        }));
+    } catch (e) {
+        await self.scope.account.asyncMerge(mergedSender.address, {
+            balance: amount,
+            blockId: block.id,
+            round: modules.rounds.calc(block.height)
+        });
+        trs.status = TransactionStatus.DECLINED;
+        self.scope.logger.error(`[Logic/Transaction][apply]: ${e}`);
+        self.scope.logger.error(`[Logic/Transaction][apply][stack]: ${e.stack}`);
+    }
+    self.scope.logger.debug(`[Logic/Transaction][apply]: transaction applied ${JSON.stringify(trs)}`);
 };
 
 /**
@@ -1031,6 +1278,31 @@ Transaction.prototype.applyUnconfirmed = (trs, sender, requester, cb) => {
     }
 };
 
+Transaction.prototype.newApplyUnconfirmed = async (trs, sender) => {
+    const amount = trs.amount + trs.fee;
+
+    const mergedSender = await self.scope.account.asyncMerge(
+        sender.address,
+        { u_balance: -amount, u_totalFrozeAmount: trs.stakedAmount }
+    );
+    try {
+        await (new Promise((resolve, reject) => {
+            __private.types[trs.type].applyUnconfirmed.call(self, trs, mergedSender, (err) => {
+                if (err) {
+                    reject(err);
+                }
+                resolve();
+            });
+        }));
+    } catch (err) {
+        await self.scope.account.asyncMerge(
+            mergedSender.address,
+            { u_balance: amount, u_totalFrozeAmount: -trs.stakedAmount }
+        );
+        throw err;
+    }
+};
+
 /**
  * Merges account into sender address with unconfirmed balance trs amount.
  * Calls `undoUnconfirmed` based on trs type (privateTypes). If error merge
@@ -1087,6 +1359,40 @@ Transaction.prototype.undoUnconfirmed = (trs, sender, cb) => {
     }
 };
 
+Transaction.prototype.newUndoUnconfirmed = async (trs) => {
+    const amount = trs.amount + trs.fee;
+
+    const mergedSender = await self.scope.account.asyncMerge(
+        trs.senderId,
+        { u_balance: amount, u_totalFrozeAmount: -trs.stakedAmount }
+    );
+    try {
+        await (new Promise((resolve, reject) => {
+            __private.types[trs.type].undoUnconfirmed.call(self, trs, mergedSender, (err) => {
+                if (err) {
+                    reject(err);
+                }
+                resolve();
+            });
+        }));
+    } catch (err) {
+        self.scope.logger.error(`[LogicTransaction][newUndoUnconfirmed] ${err}`);
+        self.scope.logger.error(`[LogicTransaction][newUndoUnconfirmed][stack] ${err.stack}`);
+        await self.scope.account.asyncMerge(
+            trs.senderId,
+            { u_balance: -amount, u_totalFrozeAmount: trs.stakedAmount },
+        );
+        throw err;
+    }
+};
+
+Transaction.prototype.calcUndoUnconfirmed = (trs, sender) => {
+    sender.u_balance -= trs.amount + trs.fee;
+    sender.u_totalFrozeAmount -= trs.stakedAmount;
+
+    __private.types[trs.type].calcUndoUnconfirmed(trs, sender);
+};
+
 Transaction.prototype.dbTable = 'trs';
 
 Transaction.prototype.dbFields = [
@@ -1129,10 +1435,10 @@ Transaction.prototype.dbSave = async (trs) => {
     let requesterPublicKey;
 
     try {
-        senderPublicKey = Buffer.from(trs.senderPublicKey, 'hex');
-        signature = Buffer.from(trs.signature, 'hex');
-        signSignature = trs.signSignature ? Buffer.from(trs.signSignature, 'hex') : null;
-        requesterPublicKey = trs.requesterPublicKey ? Buffer.from(trs.requesterPublicKey, 'hex') : null;
+        senderPublicKey = trs.senderPublicKey;
+        signature = trs.signature;
+        signSignature = trs.signSignature ? trs.signSignature : null;
+        requesterPublicKey = trs.requesterPublicKey ? trs.requesterPublicKey : null;
     } catch (e) {
         throw e;
     }
@@ -1184,7 +1490,7 @@ Transaction.prototype.dbSave = async (trs) => {
  * @param {function} cb
  * @return {setImmediateCallback} error string | cb
  */
-Transaction.prototype.afterSave = async (trs, cb) => {
+Transaction.prototype.afterSave = async (trs) => {
     if (trs.type === transactionTypes.STAKE) {
         const stakeOrder = await self.scope.db.one(sqlFroging.getStakeById, {
             id: trs.id
@@ -1197,7 +1503,7 @@ Transaction.prototype.afterSave = async (trs, cb) => {
                 id: stakeOrder.id
             });
         } else {
-            setImmediate(cb, 'couldn\'t add document to index stake_orders in the ElasticSearch');
+            throw 'couldn\'t add document to index stake_orders in the ElasticSearch';
         }
         // Stake order event
         self.scope.network.io.sockets.emit('stake/change', null);
@@ -1206,7 +1512,7 @@ Transaction.prototype.afterSave = async (trs, cb) => {
     const txType = __private.types[trs.type];
 
     if (!txType) {
-        return setImmediate(cb, `Unknown transaction type ${trs.type}`);
+        throw `Unknown transaction type ${trs.type}`;
     }
     const lastTransaction = await self.scope.db.one(sql.getTransactionById, { id: trs.id });
     await utils.addDocument({
@@ -1216,9 +1522,8 @@ Transaction.prototype.afterSave = async (trs, cb) => {
         id: lastTransaction.id
     });
     if (typeof txType.afterSave === 'function') {
-        return txType.afterSave.call(self, trs, cb);
+        return txType.afterSave.call(self, trs);
     }
-    return setImmediate(cb);
 };
 
 /**

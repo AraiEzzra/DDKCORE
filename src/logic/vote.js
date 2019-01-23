@@ -5,15 +5,16 @@ const Diff = require('../helpers/diff.js');
 const _ = require('lodash');
 const sql = require('../sql/accounts.js');
 const slots = require('../helpers/slots.js');
-const transactionTypes = require('../helpers/transactionTypes');
 const { LENGTH, writeUInt64LE } = require('../helpers/buffer.js');
 const utils = require('../utils');
 
+const VVE = constants.VOTE_VALIDATION_ENABLED;
+
 // Private fields
-let modules,
-    library,
-    self,
-    __private = {};
+let modules;
+let library;
+let self;
+const __private = {};
 
 __private.loaded = false;
 
@@ -67,7 +68,10 @@ Vote.prototype.bind = function (delegates, rounds, accounts) {
  */
 Vote.prototype.create = async function (data, trs) {
     const senderId = data.sender.address;
-    const isDownVote = data.votes[0][0] == '-';
+    let isDownVote;
+    if (data.votes && data.votes[0]) {
+        isDownVote = data.votes[0][0] === '-';
+    }
     const totals = await library.frozen.calculateTotalRewardAndUnstake(senderId, isDownVote);
     const airdropReward = await library.frozen.getAirdropReward(senderId, totals.reward, data.type);
 
@@ -90,7 +94,7 @@ Vote.prototype.create = async function (data, trs) {
  * @return {number} fee
  */
 Vote.prototype.calculateUnconfirmedFee = function (trs, sender) {
-    return parseInt((parseInt(sender.u_totalFrozeAmount) * constants.fees.vote) / 100);
+    return parseInt((parseInt(sender.u_totalFrozeAmount, 10) * constants.fees.vote) / 100, 10);
 };
 
 /**
@@ -99,7 +103,7 @@ Vote.prototype.calculateUnconfirmedFee = function (trs, sender) {
  * @return {number} fee
  */
 Vote.prototype.calculateFee = function (trs, sender) {
-    return parseInt((parseInt(sender.totalFrozeAmount) * constants.fees.vote) / 100);
+    return parseInt((parseInt(sender.totalFrozeAmount, 10) * constants.fees.vote) / 100, 10);
 };
 
 Vote.prototype.onBlockchainReady = function () {
@@ -117,8 +121,6 @@ Vote.prototype.onBlockchainReady = function () {
  * calls callback.
  */
 Vote.prototype.verifyFields = function (trs, sender, cb) {
-    const VVE = constants.VOTE_VALIDATION_ENABLED;
-
     if (trs.recipientId !== trs.senderId) {
         if (VVE.INVALID_RECIPIENT === true) {
             return setImmediate(cb, 'Invalid recipient');
@@ -166,7 +168,11 @@ Vote.prototype.verifyFields = function (trs, sender, cb) {
     }
 
     if (trs.asset.votes && trs.asset.votes.length > constants.maxVotesPerTransaction) {
-        const msg = ['Voting limit exceeded. Maximum is', constants.maxVotesPerTransaction, 'votes per transaction'].join(' ');
+        const msg = [
+            'Voting limit exceeded. Maximum is',
+            constants.maxVotesPerTransaction,
+            'votes per transaction'
+        ].join(' ');
         if (VVE.VOTING_LIMIT_EXCEEDED) {
             return setImmediate(cb, msg);
         }
@@ -182,25 +188,24 @@ Vote.prototype.verifyFields = function (trs, sender, cb) {
 
     (new Promise((resolve, reject) => {
         async.eachSeries(trs.asset.votes, (vote, eachSeriesCb) => {
-            self.verifyVote(vote, (err) => {
-                if (err) {
-                    const msg = ['Invalid vote at index', trs.asset.votes.indexOf(vote), '-', err].join(' ');
-                    if (VVE.INVALID_VOTE_AT_INDEX) {
-                        return setImmediate(eachSeriesCb, msg);
-                    }
-                    library.logger.error(`${msg}\n${{
-                        id: trs.id,
-                        type: trs.type,
-                        vote: {
-                            index: trs.asset.votes.indexOf(vote),
-                            vote,
-                        },
-                        err,
-                    }}`);
-                } else {
-                    return setImmediate(eachSeriesCb);
+            try {
+                self.verifyVote(vote);
+                return setImmediate(eachSeriesCb);
+            } catch (err) {
+                const msg = ['Invalid vote at index', trs.asset.votes.indexOf(vote), '-', err].join(' ');
+                if (VVE.INVALID_VOTE_AT_INDEX) {
+                    return setImmediate(eachSeriesCb, msg);
                 }
-            });
+                library.logger.error(`${msg}\n${{
+                    id: trs.id,
+                    type: trs.type,
+                    vote: {
+                        index: trs.asset.votes.indexOf(vote),
+                        vote,
+                    },
+                    err,
+                }}`);
+            }
         }, (err) => {
             if (err) {
                 reject(err);
@@ -227,6 +232,44 @@ Vote.prototype.verifyFields = function (trs, sender, cb) {
         .catch(err => setImmediate(cb, err));
 };
 
+Vote.prototype.newVerifyFields = (trs) => {
+    if (trs.recipientId !== trs.senderId) {
+        throw new Error('Invalid recipient');
+    }
+
+    if (!trs.asset || !trs.asset.votes) {
+        throw new Error('Invalid transaction asset');
+    }
+
+    if (!Array.isArray(trs.asset.votes)) {
+        throw new Error('Invalid votes. Must be an array');
+    }
+
+    if (!trs.asset.votes.length) {
+        throw new Error('Invalid votes. Must not be empty');
+    }
+
+    if (trs.asset.votes && trs.asset.votes.length > constants.maxVotesPerTransaction) {
+        throw new Error([
+            'Voting limit exceeded. Maximum is',
+            constants.maxVotesPerTransaction,
+            'votes per transaction'
+        ].join(' '));
+    }
+
+    trs.asset.votes.forEach((vote) => {
+        try {
+            self.verifyVote(vote);
+        } catch (e) {
+            throw new Error(['Invalid vote at index', trs.asset.votes.indexOf(vote), '-', e].join(' '));
+        }
+    });
+
+    if (trs.asset.votes.length > _.uniqBy(trs.asset.votes, v => v.slice(1)).length) {
+        throw new Error('Multiple votes for same delegate are not allowed');
+    }
+};
+
 /**
  * Validates transaction votes fields and for each vote calls verifyVote.
  * @implements {verifysendStakingRewardVote}
@@ -238,6 +281,8 @@ Vote.prototype.verifyFields = function (trs, sender, cb) {
  * calls checkConfirmedDelegates.
  */
 Vote.prototype.verify = function (trs, sender, cb) {
+    const vve = constants.VOTE_VALIDATION_ENABLED;
+
     async.series([
         function (seriesCb) {
             self.verifyFields(trs, sender, seriesCb);
@@ -248,49 +293,73 @@ Vote.prototype.verify = function (trs, sender, cb) {
                 const totals = await library.frozen.calculateTotalRewardAndUnstake(trs.senderId, isDownVote);
                 if (totals.reward !== trs.asset.reward) {
                     const msg = 'Verify failed: vote reward is corrupted';
-                    if (VVE.VOTE_REWARD_CORRUPTED) {
-                        throw msg;
-                    } else {
-                        library.logger.error(`${msg}!\n${{
-                            id: trs.id,
-                            type: trs.type,
-                            reward: {
-                                asset: trs.asset.reward,
-                                totals: totals.reward,
-                            }
-                        }}`);
+                    if (vve.VOTE_REWARD_CORRUPTED) {
+                        return setImmediate(seriesCb, msg);
                     }
+                    library.logger.error(`${msg}!\n${{
+                        id: trs.id,
+                        type: trs.type,
+                        reward: {
+                            asset: trs.asset.reward,
+                            totals: totals.reward,
+                        }
+                    }}`);
                 }
                 if (totals.unstake !== trs.asset.unstake) {
                     const msg = 'Verify failed: vote unstake is corrupted';
-                    if (VVE.VOTE_UNSTAKE_CORRUPTED) {
-                        throw msg;
-                    } else {
-                        library.logger.error(`${msg}! ${{
-                            id: trs.id,
-                            type: trs.type,
-                            unstake: {
-                                asset: trs.asset.unstake,
-                                totals: totals.unstake,
-                            }
-                        }}`);
+                    if (vve.VOTE_UNSTAKE_CORRUPTED) {
+                        return setImmediate(seriesCb, msg);
                     }
+                    library.logger.error(`${msg}! ${{
+                        id: trs.id,
+                        type: trs.type,
+                        unstake: {
+                            asset: trs.asset.unstake,
+                            totals: totals.unstake,
+                        }
+                    }}`);
                 }
             }
 
             try {
                 await library.frozen.verifyAirdrop(trs);
             } catch (error) {
-                if (VVE.VOTE_AIRDROP_CORRUPTED) {
-                    throw error;
-                } else {
-                    library.logger.error(`trs.id ${trs.id}, ${error}`);
+                if (vve.VOTE_AIRDROP_CORRUPTED) {
+                    return setImmediate(seriesCb, error);
                 }
+                library.logger.error(`trs.id ${trs.id}, ${error}`);
             }
 
             return setImmediate(seriesCb);
         },
     ], cb);
+};
+
+Vote.prototype.newVerify = async (trs) => {
+    try {
+        self.newVerifyFields(trs);
+    } catch (e) {
+        throw e;
+    }
+
+    if (__private.loaded) {
+        const isDownVote = trs.trsName === 'DOWNVOTE';
+        const totals = await library.frozen.calculateTotalRewardAndUnstake(trs.senderId, isDownVote);
+
+        if (totals.reward !== trs.asset.reward) {
+            throw new Error('Verify failed: vote reward is corrupted');
+        }
+
+        if (totals.unstake !== trs.asset.unstake) {
+            throw new Error('Verify failed: vote unstake is corrupted');
+        }
+    }
+
+    try {
+        await library.frozen.verifyAirdrop(trs);
+    } catch (e) {
+        throw e;
+    }
 };
 
 /**
@@ -307,26 +376,35 @@ Vote.prototype.verifyUnconfirmed = function (trs, sender, cb) {
     return self.checkUnconfirmedDelegates(trs, cb);
 };
 
+Vote.prototype.newVerifyUnconfirmed = async trs =>
+    ((new Promise((resolve, reject) => {
+        self.checkUnconfirmedDelegates(trs, (err) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve();
+            }
+        });
+    })));
+
 /**
  * Checks type, format and lenght from vote.
  * @param {Object} vote
  * @param {function} cb - Callback function.
  * @return {setImmediateCallback} error message | cb.
  */
-Vote.prototype.verifyVote = function (vote, cb) {
+Vote.prototype.verifyVote = (vote) => {
     if (typeof vote !== 'string') {
-        return setImmediate(cb, 'Invalid vote type');
+        throw new Error('Invalid vote type');
     }
 
     if (!/[-+]{1}[0-9a-z]{64}/.test(vote)) {
-        return setImmediate(cb, 'Invalid vote format');
+        throw new Error('Invalid vote format');
     }
 
     if (vote.length !== 65) {
-        return setImmediate(cb, 'Invalid vote length');
+        throw new Error('Invalid vote length');
     }
-
-    return setImmediate(cb);
 };
 
 /**
@@ -499,17 +577,15 @@ Vote.prototype.undo = function (trs, block, sender, cb) {
         },
         // added to remove vote count from mem_accounts table
         function (seriesCb) {
-            self.updateMemAccounts(
-                {
-                    votes: votesInvert,
-                    senderId: trs.senderId
+            self.updateMemAccounts({
+                votes: votesInvert,
+                senderId: trs.senderId
+            }, (err) => {
+                if (err) {
+                    return setImmediate(seriesCb, err);
                 }
-                , (err) => {
-                    if (err) {
-                        return setImmediate(seriesCb, err);
-                    }
-                    return setImmediate(seriesCb, null);
-                });
+                return setImmediate(seriesCb, null);
+            });
         },
         function (seriesCb) {
             const votes = trs.asset.votes.map(vote => vote.substring(1));
@@ -572,6 +648,17 @@ Vote.prototype.undoUnconfirmed = function (trs, sender, cb) {
     const votesInvert = Diff.reverse(trs.asset.votes);
 
     this.scope.account.merge(sender.address, { u_delegates: votesInvert }, err => setImmediate(cb, err));
+};
+
+Vote.prototype.calcUndoUnconfirmed = async (trs, sender) => {
+    if (trs.asset.votes) {
+        sender.u_delegates = sender.u_delegates.filter(vote => !trs.asset.votes.includes(vote));
+        sender.u_delegates.push(
+            ...trs.asset.votes.filter(vote => vote[0] === '-').map(vote => vote.replace('-', '+')),
+        );
+    }
+
+    return sender;
 };
 
 /**
@@ -687,8 +774,8 @@ Vote.prototype.updateAndCheckVote = async (voteTransaction) => {
         await library.db.task(async () => {
             const activeOrders = await library.db.manyOrNone(sql.updateStakeOrder, {
                 senderId,
-                milestone: constants.froze.vTime * 60, // 2 * 60 sec = 2 mins
-                currentTime: slots.getTime()
+                nextVoteMilestone: voteTransaction.timestamp + constants.froze.vTime * 60,
+                currentTime: voteTransaction.timestamp
             });
 
             if (activeOrders && activeOrders.length > 0) {
@@ -741,7 +828,6 @@ Vote.prototype.removeCheckVote = async (voteTransaction) => {
  */
 Vote.prototype.updateMemAccounts = function (voteInfo, cb) {
     const votes = voteInfo.votes;
-    const senderId = voteInfo.senderId;
 
     function checkUpvoteDownvote(waterCb) {
         if ((votes[0])[0] === '+') {
@@ -757,10 +843,10 @@ Vote.prototype.updateMemAccounts = function (voteInfo, cb) {
             inCondition += `'${address}' ,`;
         });
         inCondition = inCondition.substring(0, inCondition.length - 1);
-        let query;
+
         const sign = voteType === 1 ? '+' : '-';
 
-        query = `UPDATE mem_accounts SET "voteCount"="voteCount"${sign}1  WHERE "address" IN ( ${inCondition})`;
+        const query = `UPDATE mem_accounts SET "voteCount"="voteCount"${sign}1  WHERE "address" IN ( ${inCondition})`;
 
         return setImmediate(waterCb, null, query);
     }
