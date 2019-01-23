@@ -14,5 +14,4 @@ export class AccountPGQLRepository implements AccountRepository {
     updateAccount(data: object): Account {
         return undefined;
     }
-
 }

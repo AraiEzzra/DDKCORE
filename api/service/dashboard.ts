@@ -1,17 +1,15 @@
-import { IDashboardService } from 'api/service/Idashboard';
+import {
+    ITransactionForFreeze,
+    IRequest
+} from './../controller/dashboard';
 
-export class DashboardService extends IDashboardService {
-    public  async addTransactionForFreeze (req) {}
+export interface IDashboardService {
+    addTransactionForFreeze (req: IRequest): Promise<ITransactionForFreeze>;
+}
 
-    public async getAllFreezeOrders (account, req) {}
-
-    public async getAllActiveFreezeOrders (account) {}
-
-    public async countStakeholders (req) {}
-
-    public async getMyDDKFrozen (req) {}
-
-    public async totalDDKStaked (req) {}
-
-    public async getRewardHistory (req) {}
+export class DashboardService implements IDashboardService {
+    addTransactionForFreeze (req) {
+        // create transaction end return response
+        return new Promise(resolve => {});
+    }
 }
