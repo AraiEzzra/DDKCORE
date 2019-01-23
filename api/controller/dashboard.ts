@@ -1,6 +1,5 @@
 import { StakeOrder } from 'shared/model/stake_order';
-import { Transaction } from 'shared/model/transaction';
-import { DashboardService } from './../service/dashboard';
+import { Transaction } from 'shared/model/transaction'; // wait for it
 
 export interface Account {}
 export interface IResponse {
@@ -48,7 +47,7 @@ export interface IDashboard {
     addTransactionForFreeze (req: IRequest): Promise<ITransactionForFreeze<TransactionType>>;
 
     // todo change TransactionType to correct type
-    getAllFreezeOrders (account: Account, req: IRequest): Promise<IAllFreezeOrders<TransactionType>>;
+    getAllFreezeOrders (account: Account, req: IRequest): Promise<IAllFreezeOrders>;
 
     getAllActiveFreezeOrders (account: Account): Promise<IAllFreezeOrders>;
 
