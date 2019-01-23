@@ -591,14 +591,14 @@ Accounts.prototype.shared = {
                             return setImmediate(cb, 'Account does not belong to multisignature group');
                         }
 
+                        // TODO change that if
+                        if (account.u_totalFrozeAmount == 0) {
+                            return setImmediate(cb, 'No Stake available');
+                        }
+
                         modules.accounts.getAccount({ publicKey: keypair.publicKey }, (err, requester) => {
                             if (err) {
                                 return setImmediate(cb, err);
-                            }
-
-                            // TODO change that if
-                            if (account.totalFrozeAmount === 0) {
-                                return setImmediate(cb, 'No Stake available');
                             }
 
                             if (!requester || !requester.publicKey) {
@@ -613,8 +613,13 @@ Accounts.prototype.shared = {
                                 return setImmediate(cb, 'Invalid requester public key');
                             }
 
-                            if (requester.totalFrozeAmount == 0) {
+                            if (requester.u_totalFrozeAmount == 0) {
                                 return setImmediate(cb, 'Please Stake before vote/unvote');
+                            }
+
+                            const fee = library.logic.vote.calculateUnconfirmedFee(null, requester);
+                            if (Number(requester.u_balance) - Number(requester.u_totalFrozeAmount) < fee) {
+                                return setImmediate(cb, 'Insufficient balance');
                             }
 
                             let secondKeypair = null;
@@ -676,8 +681,13 @@ Accounts.prototype.shared = {
                             secondKeypair = library.ed.makeKeypair(secondHash);
                         }
 
-                        if (account.totalFrozeAmount == 0) {
+                        if (account.u_totalFrozeAmount == 0) {
                             return setImmediate(cb, 'Please Stake before vote/unvote');
+                        }
+
+                        const fee = library.logic.vote.calculateUnconfirmedFee(null, account);
+                        if (Number(account.u_balance) - Number(account.u_totalFrozeAmount) < fee) {
+                            return setImmediate(cb, 'Insufficient balance');
                         }
 
                         library.db.one(sql.countAvailableStakeOrdersForVote, {
