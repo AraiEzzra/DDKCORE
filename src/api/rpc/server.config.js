@@ -27,6 +27,8 @@ const GetTransaction = require('./methods/getTransaction.js');
 const GetTransactions = require('./methods/getTransactions.js');
 const AddTransactions = require('./methods/addTransactions.js');
 const GetTransactionHistory = require('./methods/getTransactionHistory.js');
+const TransactionSend = require('./methods/transactionSend.js');
+const TransactionStake = require('./methods/transactionStake.js');
 
 /**
  * logic.transactions.shared
@@ -74,6 +76,8 @@ const methods = [
     GetTransactions,
     AddTransactions,
     GetTransactionHistory,
+    TransactionSend,
+    TransactionStake,
     GetPeer,
     GetPeers,
     GetBroadhash,
@@ -103,9 +107,8 @@ const methods = [
     OpenAccount,
 ];
 
-// todo: replace me to config.json
 const env = process.env;
-const PORT = 8080;
+const PORT = env.RPC_PORT || 8080;
 const HOST = env.ADDRESS || '0.0.0.0';
 const VERSION = 1;
 

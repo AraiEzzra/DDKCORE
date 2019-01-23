@@ -25,6 +25,9 @@ require('./rpc/getTransaction.js');
 require('./rpc/getPublickey.js');
 require('./rpc/openAccount.js');
 require('./rpc/createTransaction.js');
+require('./rpc/addTransactions.js');
+require('./rpc/transactionSend.js');
+require('./rpc/transactionStake.js');
 
 require('./unit/helpers/request-limiter.js');
 require('./unit/logic/blockReward.js');

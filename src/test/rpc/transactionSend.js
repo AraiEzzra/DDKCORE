@@ -10,7 +10,7 @@ const transactionSend = {
     publicKey: null
 };
 
-describe('RPC method: ADD_TRANSACTIONS', function () {
+describe('RPC method: TRANSACTION_SEND', function () {
 
     let wsc;
 
@@ -35,7 +35,7 @@ describe('RPC method: ADD_TRANSACTIONS', function () {
 
         it('should have valid parameters', function (done) {
 
-            wsc.call('ADD_TRANSACTIONS', transactionSend, (result) => {
+            wsc.call('TRANSACTION_SEND', transactionSend, (result) => {
                 expect(result).to.be.an('object');
                 done();
             });
