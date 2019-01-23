@@ -9,9 +9,9 @@ import { Account } from './../../shared/model/account';
 import { StakeOrder } from 'shared/model/stake_order';
 
 export interface IDashboardRepository extends StakeOrder {
-    getAllFreezeOrders (account: Account, req: IRequest): Promise<IAllFreezeOrders<StakeOrder>>;
+    getAllFreezeOrders (account: Account, req: IRequest): Promise<IAllFreezeOrders>;
 
-    getAllActiveFreezeOrders (account: Account): Promise<IAllFreezeOrders<StakeOrder>>;
+    getAllActiveFreezeOrders (account: Account): Promise<IAllFreezeOrders>;
 
     countStakeholders (req: IRequest): Promise<ICountStakeholders>;
 
