@@ -46,7 +46,6 @@ export interface IDashboard {
     // todo change TransactionType to correct type
     addTransactionForFreeze (req: IRequest): Promise<ITransactionForFreeze<TransactionType>>;
 
-    // todo change TransactionType to correct type
     getAllFreezeOrders (account: Account, req: IRequest): Promise<IAllFreezeOrders>;
 
     getAllActiveFreezeOrders (account: Account): Promise<IAllFreezeOrders>;
@@ -61,7 +60,9 @@ export interface IDashboard {
 }
 
 export class Dashboard implements IDashboard {
-    constructor() {}
+    constructor() {
+        // todo realise it
+    }
 
     @POST('/freeze')
     public async addTransactionForFreeze (req) {
