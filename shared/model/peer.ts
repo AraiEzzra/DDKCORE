@@ -8,8 +8,7 @@ export class Peer {
        clock: number;
        broadhash: string;
        height: number;
+       string: string;
 
-       constructor(rawData) {
-
-       }
+       constructor() {}
 }
