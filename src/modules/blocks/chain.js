@@ -601,17 +601,17 @@ Chain.prototype.newApplyBlock = async (block, broadcast, saveBlock, tick) => {
     // Prevent shutdown during database writes.
     modules.blocks.isActive.set(true);
 
+    if (saveBlock) {
+        await self.newSaveBlock(block);
+        library.logger.debug(`Block applied correctly with ${block.transactions.length} transactions`);
+    }
+
     for (const trs of block.transactions) {
         const sender = await getOrCreateAccount(library.db, trs.senderPublicKey);
         await library.logic.transaction.newApply(trs, block, sender);
     }
 
     modules.blocks.lastBlock.set(block);
-
-    if (saveBlock) {
-        await self.newSaveBlock(block);
-        library.logger.debug(`Block applied correctly with ${block.transactions.length} transactions`);
-    }
     library.bus.message('newBlock', block, broadcast);
 
     if (tick) {
@@ -723,7 +723,7 @@ __private.popLastBlock = function (oldLastBlock, cbPopLastBlock) {
  */
 Chain.prototype.deleteLastBlock = function (cb) {
     let lastBlock = modules.blocks.lastBlock.get();
-    library.logger.warn('Deleting last block', lastBlock);
+    library.logger.warn('Deleting last block', JSON.stringify(lastBlock));
 
     if (lastBlock.height === 1) {
         return setImmediate(cb, 'Cannot delete genesis block');
@@ -732,7 +732,7 @@ Chain.prototype.deleteLastBlock = function (cb) {
     // Delete last block, replace last block with previous block, undo things
     __private.popLastBlock(lastBlock, (err, newLastBlock) => {
         if (err) {
-            library.logger.error('Error deleting last block', lastBlock);
+            library.logger.error('Error deleting last block', JSON.stringify(lastBlock), 'message', err);
         } else {
             // Replace last block with previous
             lastBlock = modules.blocks.lastBlock.set(newLastBlock);
