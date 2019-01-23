@@ -48,8 +48,8 @@ const DelegatesSql = {
 
     insertFork: 'INSERT INTO forks_stat ("delegatePublicKey", "blockTimestamp", "blockId", "blockHeight", "previousBlock", "cause") VALUES (${delegatePublicKey}, ${blockTimestamp}, ${blockId}, ${blockHeight}, ${previousBlock}, ${cause});',
 
-    getVoters: 'SELECT accounts.address, accounts.balance, ENCODE("publicKey", \'hex\') AS "publicKey" FROM mem_accounts2delegates delegates INNER JOIN mem_accounts accounts ON delegates."accountId" = accounts.address WHERE delegates."dependentId" = ${publicKey} ORDER BY accounts."balance" DESC LIMIT ${limit} OFFSET ${offset}',
-
+    getVoters: 'SELECT accounts.address, accounts.balance, "publicKey" FROM mem_accounts2delegates delegates INNER JOIN mem_accounts accounts ON delegates."accountId" = accounts.address WHERE delegates."dependentId" = ${publicKey} ORDER BY accounts."balance" DESC LIMIT ${limit} OFFSET ${offset}',
+    
     getVotersCount: 'SELECT count(*) FROM mem_accounts2delegates WHERE "dependentId" = ${publicKey}',
 
     getLatestVoters: 'SELECT * from trs WHERE type = 60 ORDER BY timestamp DESC LIMIT ${limit}',
