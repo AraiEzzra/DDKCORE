@@ -46,6 +46,16 @@ function Process(logger, block, peers, transaction, Schema, db, dbSequence, sequ
     return self;
 }
 
+Process.prototype.receiveLocked = false;
+
+Process.prototype.receiveLock = () => {
+    self.receiveLocked = true
+};
+
+Process.prototype.receiveUnlock = () => {
+    self.receiveLocked = false
+};
+
 /**
  * Performs chain comparison with remote peer
  * WARNING: Can trigger chain recovery
@@ -484,6 +494,11 @@ __private.validateBlockSlot = function (block, lastBlock, cb) {
 Process.prototype.onReceiveBlock = function (block) {
     let lastBlock;
 
+    if (self.receiveLocked) {
+        library.logger.warn(`[Process][onReceiveBlock] locked for id ${block.id}`);
+        return;
+    }
+
     // Execute in sequence via sequence
     library.sequence.add((cb) => {
         // When client is not loaded, is syncing or round is ticking
@@ -500,7 +515,12 @@ Process.prototype.onReceiveBlock = function (block) {
 
         // Detect sane block
         if (block.previousBlock === lastBlock.id && lastBlock.height + 1 === block.height) {
-            __private.newReceiveBlock(block).then(() => setImmediate(cb, null));
+            self.receiveLock();
+            __private.newReceiveBlock(block)
+                .then(() => {
+                    self.receiveUnlock();
+                    return setImmediate(cb, null);
+                });
         } else if (block.previousBlock !== lastBlock.id && lastBlock.height + 1 === block.height) {
             // Process received fork cause 1
             return __private.receiveForkOne(block, lastBlock, cb);
