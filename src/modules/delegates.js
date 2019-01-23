@@ -103,16 +103,26 @@ __private.getBlockSlotData = function (slot, height, cb) {
         let currentSlot = slot;
         const lastSlot = slots.getLastSlot(currentSlot);
 
+        const nextForgers = [];
+        const currentBlock = modules.blocks.lastBlock.get();
+
+        for (let i = 1; i <= Rounds.prototype.getSlotDelegatesCount(height) && i <= constants.activeDelegates; i++) {
+            if (activeDelegates[(currentSlot + i) % Rounds.prototype.getSlotDelegatesCount(currentBlock.height + i)]) {
+                nextForgers.push(
+                    activeDelegates[(currentSlot + i) % Rounds.prototype.getSlotDelegatesCount(currentBlock.height + i)]
+                );
+            }
+        }
+        
         for (; currentSlot < lastSlot; currentSlot += 1) {
             const delegatePubKey = activeDelegates[currentSlot % Rounds.prototype.getSlotDelegatesCount(height)];
 
             if (delegatePubKey && __private.keypairs[delegatePubKey]) {
                 return setImmediate(
-                    cb, null, { time: slots.getSlotTime(currentSlot), keypair: __private.keypairs[delegatePubKey] }
+                    cb, null, { nextForgersList: nextForgers, time: slots.getSlotTime(currentSlot), keypair: __private.keypairs[delegatePubKey] }
                 );
             }
         }
-
         return setImmediate(cb, null, null);
     });
 };
@@ -150,12 +160,12 @@ __private.forge = function (cb) {
             library.logger.warn('Skipping delegate slot', err);
             return setImmediate(cb);
         }
-
+       
         if (slots.getSlotNumber(currentBlockData.time) !== slots.getSlotNumber()) {
+            library.network.io.emit('delegates/nextForgers', currentBlockData.nextForgersList);
             library.logger.debug('Delegate slot', slots.getSlotNumber());
             return setImmediate(cb);
         }
-
         library.sequence.add((cb) => {
             async.series({
                 getPeers(seriesCb) {
@@ -180,7 +190,7 @@ __private.forge = function (cb) {
             } else {
                 const forgedBlock = modules.blocks.lastBlock.get();
                 modules.blocks.lastReceipt.update();
-
+                
                 library.logger.info([
                     'Forged new block id:', forgedBlock.id,
                     'height:', forgedBlock.height,
@@ -189,7 +199,6 @@ __private.forge = function (cb) {
                     `reward:${forgedBlock.reward}`
                 ].join(' '));
             }
-
             return setImmediate(cb);
         });
     });
@@ -846,22 +855,26 @@ Delegates.prototype.shared = {
                 return setImmediate(cb, err[0].message);
             }
 
-            library.db.one(sql.getVoters, { publicKey: req.body.publicKey }).then((row) => {
-                const addresses = (row.accountIds) ? row.accountIds : [];
-
-                modules.accounts.getAccounts({
-                    address: { $in: addresses },
-                    sort: 'balance'
-                }, ['address', 'balance', 'username', 'publicKey'], (err, rows) => {
-                    if (err) {
-                        return setImmediate(cb, err);
-                    }
-                    return setImmediate(cb, null, { accounts: rows });
+            library.db.one(sql.getVotersCount, { publicKey: req.body.publicKey })
+                .then((count) => {
+                    const voteCount = count;
+                    library.db.many(sql.getVoters, {
+                        publicKey: req.body.publicKey,
+                        limit: req.body.limit,
+                        offset: req.body.offset
+                    })
+                    .then(voters =>
+                        setImmediate(cb, null, { voters: voters, count: voteCount.count })
+                    )
+                    .catch((getVotersErr) => {
+                        library.logger.error(getVotersErr.stack);
+                        return setImmediate(cb, 'Failed to get voters for delegate: ' + req.body.publicKey);
+                    });
+                })
+                .catch((votersCountErr) => {
+                    library.logger.error(votersCountErr.stack);
+                    return setImmediate(cb, 'Failed to get voters count for delegate: ' + req.body.publicKey);
                 });
-            }).catch((err) => {
-                library.logger.error(err.stack);
-                return setImmediate(cb, `Failed to get voters for delegate: ${req.body.publicKey}`);
-            });
         });
     },
 
