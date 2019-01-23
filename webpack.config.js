@@ -47,7 +47,8 @@ const apiConfig = {
     resolve: {
         extensions: ['.ts', '.js', '.json'],
         alias: {
-            src: path.resolve(DIR, 'api'),
+            api: path.resolve(DIR, 'api'),
+            shared: path.resolve(DIR, 'shared'),
         },
     },
     output: {
@@ -63,7 +64,8 @@ const coreConfig = {
     resolve: {
         extensions: ['.ts', '.js', '.json'],
         alias: {
-            src: path.resolve(DIR, 'core'),
+            core: path.resolve(DIR, 'core'),
+            shared: path.resolve(DIR, 'shared'),
         },
     },
     output: {
@@ -87,7 +89,7 @@ const backlogConfig = {
     resolve: {
         extensions: ['.ts', '.js', '.json'],
         alias: {
-            src: path.resolve(DIR, 'backlog'),
+            backlog: path.resolve(DIR, 'backlog'),
         },
     },
     output: {
