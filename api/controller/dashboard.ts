@@ -11,8 +11,8 @@ export interface ITransactionForFreeze<T extends Object> extends IResponse {
     transaction: Transaction<T>;
     referStatus: boolean;
 }
-export interface IAllFreezeOrders<T extends Object> extends IResponse {
-    freezeOrders: Array<StakeOrder<T>>;
+export interface IAllFreezeOrders extends IResponse {
+    freezeOrders: Array<StakeOrder>;
     count: number;
 }
 export interface IDDKFrozen extends IResponse {
@@ -41,11 +41,14 @@ export interface IRequest {
         senderId?: string;
     };
 }
+declare class TransactionType {} // todo wait for trs type
 
 export interface IDashboard {
-    addTransactionForFreeze (req: IRequest): Promise<ITransactionForFreeze>;
+    // todo change TransactionType to correct type
+    addTransactionForFreeze (req: IRequest): Promise<ITransactionForFreeze<TransactionType>>;
 
-    getAllFreezeOrders (account: Account, req: IRequest): Promise<IAllFreezeOrders>;
+    // todo change TransactionType to correct type
+    getAllFreezeOrders (account: Account, req: IRequest): Promise<IAllFreezeOrders<TransactionType>>;
 
     getAllActiveFreezeOrders (account: Account): Promise<IAllFreezeOrders>;
 

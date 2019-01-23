@@ -2,14 +2,10 @@ import {
     ITransactionForFreeze,
     IRequest
 } from './../controller/dashboard';
+declare class TransactionType {} // todo wait for trs type
 
-export interface IDashboardService {
-    addTransactionForFreeze (req: IRequest): Promise<ITransactionForFreeze>;
-}
+export class DashboardService {
+    addTransactionForFreeze (req: IRequest): Promise<ITransactionForFreeze<TransactionType>> {
 
-export class DashboardService implements IDashboardService {
-    addTransactionForFreeze (req) {
-        // create transaction end return response
-        return new Promise(resolve => {});
     }
 }
