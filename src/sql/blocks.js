@@ -107,6 +107,8 @@ const BlocksSql = {
     loadLastBlock: 'SELECT * FROM full_blocks_list WHERE "b_height" = (SELECT MAX("height") FROM blocks) ORDER BY "b_height", t_type, t_timestamp, "t_id"',
 
     getBlockId: 'SELECT "id" FROM blocks WHERE "id" = ${id}',
+    
+    loadFullBlockById: 'SELECT * FROM full_blocks_list where b_id=${id}',
 
     getBlockByHeight: 'SELECT * FROM blocks_list WHERE "b_height" = ${height}',
 

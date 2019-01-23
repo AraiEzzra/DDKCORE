@@ -644,11 +644,10 @@ __private.popLastBlock = function (oldLastBlock, cbPopLastBlock) {
     library.balancesSequence.add((cbAdd) => {
         // Load previous block from full_blocks_list table
         // TODO: Can be inefficient, need performnce tests
-        modules.blocks.utils.loadBlocksPart({ id: oldLastBlock.previousBlock }, (err, previousBlock) => {
-            if (err || !previousBlock.length) {
+        modules.blocks.utils.loadBlocksPart(oldLastBlock.previousBlock, (err, previousBlock) => {
+            if (err) {
                 return setImmediate(cbAdd, err || 'previousBlock is null');
             }
-            previousBlock = previousBlock[0];
 
             // Reverse order of transactions in last blocks...
             async.eachSeries(oldLastBlock.transactions.reverse(), (transaction, cbReverse) => {
