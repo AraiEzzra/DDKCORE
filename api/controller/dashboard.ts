@@ -62,12 +62,11 @@ export interface IDashboard {
 }
 
 export class Dashboard implements IDashboard {
-    private dashboardService = new DashboardService();
     constructor() {}
 
     @POST('/freeze')
     public async addTransactionForFreeze (req) {
-        return await this.dashboardService.addTransactionForFreeze(req);
+        // wait for rps transaction creating
     }
 
     @POST('/getAllOrders')
