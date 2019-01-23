@@ -644,7 +644,7 @@ __private.popLastBlock = function (oldLastBlock, cbPopLastBlock) {
     library.balancesSequence.add((cbAdd) => {
         // Load previous block from full_blocks_list table
         // TODO: Can be inefficient, need performnce tests
-        modules.blocks.utils.loadBlocksPart({ id: oldLastBlock.previousBlock }, (err, previousBlock) => {
+        modules.blocks.utils.loadBlocksPart({ lastId: oldLastBlock.previousBlock }, (err, previousBlock) => {
             if (err || !previousBlock.length) {
                 return setImmediate(cbAdd, err || 'previousBlock is null');
             }
