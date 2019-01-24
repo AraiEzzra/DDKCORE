@@ -93,7 +93,8 @@ class Transactions {
             transactionLogic: scope.logic.transaction,
             transactionPool: this.newTransactionPool,
             logger: scope.logger,
-            db: scope.db
+            db: scope.db,
+            network: scope.network
         });
 
         __private.assetTypes[transactionTypes.SEND] = library.logic.transaction.attachAssetType(

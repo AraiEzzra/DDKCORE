@@ -288,11 +288,13 @@ Returns all votes received by a delegate.
 - limit
 
 
+
 ## `GENERATE_PUBLICKEY`
 Generate public key 
 
 #### Parameters
 - secret
+
 
 
 ## `SET_ACCOUNT_AND_GET`
@@ -303,6 +305,7 @@ Validates input address and calls logic.account.set() and logic.account.get().
 - publicKey 				string($publicKey) 			Public key to query
 
 
+
 ## `GET_TRANSACTION_HISTORY`
 
 
@@ -310,12 +313,13 @@ Validates input address and calls logic.account.set() and logic.account.get().
 - 
 
 
+
 ## `OPEN_ACCOUNT` 
 Created new account with address
 
 #### Parameters
 - secret                  string($secret) 			hex
-- email                   string($email)              username
+- email                   string($email)            username
 
 
 
@@ -327,3 +331,22 @@ Created transaction
 - amount                  (Number)              
 - senderAddress           (String) 	
 - requesterAddress        (String) 	
+
+
+
+## `TRANSACTION_SEND` 
+Send transaction with transfer amount
+
+#### Parameters
+- secret                  (String) 	
+- amount                  (Number)              
+- recipientId             (String)
+
+
+
+## `TRANSACTION_STAKE` 
+Send transaction with stake amount
+
+#### Parameters
+- secret                  (String) 	
+- freezedAmount           (Number)
