@@ -1,5 +1,5 @@
 import { Delegate } from 'shared/model/delegate';
-import Responce from 'shared/model/response';
+import Response from 'shared/model/response';
 import {Account} from 'shared/model/account';
 import { Transaction } from 'shared/model/transaction';
 
@@ -15,152 +15,70 @@ interface IForkDelegate {
     cause: string;
 }
 
-interface IRawDBRead {
-    d_username: string;
-    t_senderPublicKey: string;
-    t_senderId: string;
-}
-
-interface IResponceDBRead {
-    username: string;
-    publicKey: string;
-    address: string;
-}
-
-interface IResponceDBSave {
-    table: string;
-    fields: string;
-    values: {
-        username: string;
-        transactionId: string
-    };
-}
-
 export interface IDelegateRepository {
-    count(): Promise<Responce<{ count: number }>>;
+    count(): Promise<Response<{ count: number }>>;
 
     search(q: string, limit: number, sortField: string, sortMethod: string):
-        Promise<Responce<{delegates: Delegate[]}>>;
+        Promise<Response<{delegates: Delegate[]}>>;
 
-    getVoters(publicKey: string): Promise<Responce<{ accounts: string[]}>>;
+    getVoters(publicKey: string): Promise<Response<{ accounts: string[]}>>;
 
-    getLatestVoters(limit: number): Promise<Responce<{ voters: Array<Transaction<Object>> }>>;
+    getLatestVoters(limit: number): Promise<Response<{ voters: Array<Transaction<Object>> }>>;
 
-    getLatestDelegates(limit: number): Promise<Responce<Array<Transaction<Object>>>>;
+    getLatestDelegates(limit: number): Promise<Response<Array<Transaction<Object>>>>;
 
-    insertFork(fork: IForkDelegate): Promise<Responce<void>>;
+    insertFork(fork: IForkDelegate): Promise<Response<void>>;
 
-    getDelegatesFromPreviousRound(): Promise<Responce<string[]>>;
-
-    apply(trs: Transaction<Object>, block: Block, sender: Account): Promise<Responce<void>>;
-
-    undo(trs: Transaction<Object>, block: Block, sender: Account): Promise<Responce<void>>;
-
-    applyUnconfirmed(trs: Transaction<Object>, block: Block, sender: Account): Responce<void>;
-
-    applyUnconfirmed(trs: Transaction<Object>, block: Block, sender: Account): Responce<void>;
-
-    objectNormalize(trs: Transaction<Object>): Responce<Transaction<Object>>;
-
-    dbRead(raw: IRawDBRead): Responce<{ delegate: IResponceDBRead }>;
-
-    dbSave(trs: Transaction<Object>): Responce<IResponceDBSave>;
-
-    // ready(): ResponceContainer<>;
+    getDelegatesFromPreviousRound(): Promise<Response<string[]>>;
 }
 
 export class DelegateRepository implements IDelegateRepository {
 
-    async count(): Promise<Responce<{count: number}>> {
-        return new Responce({
+    async count(): Promise<Response<{ count: number }>> {
+        return new Response({
             data: {count: 0}
         });
     }
 
-    async search(q: string, limit: number, sortField: string, sortMethod: string) :
-                                                            Promise<Responce<{delegates: Delegate[]}>> {
-        return new Responce({ data: {
+    async search(q: string, limit: number, sortField: string, sortMethod: string):
+        Promise<Response<{ delegates: Delegate[] }>> {
+        return new Response({
+            data: {
                 delegates: []
             }
         });
     }
 
-    async getVoters(publicKey: string): Promise<Responce<{accounts: string[]}>> {
-        return new Responce({
+    async getVoters(publicKey: string): Promise<Response<{ accounts: string[] }>> {
+        return new Response({
             data: {
                 accounts: []
             }
         });
     }
 
-    async getLatestVoters(limit: number): Promise<Responce<{ voters: Array<Transaction<Object>> }>> {
-        return  new Responce({
+    async getLatestVoters(limit: number): Promise<Response<{ voters: Array<Transaction<Object>> }>> {
+        return new Response({
             data: {
                 voters: []
             }
         });
     }
 
-    async getLatestDelegates(limit: number): Promise<Responce<Array<Transaction<Object>>>> {
-        return new Responce({
+    async getLatestDelegates(limit: number): Promise<Response<Array<Transaction<Object>>>> {
+        return new Response({
             data: []
         });
     }
 
-    async insertFork(fork: IForkDelegate): Promise<Responce<void>> {
-        return new Responce({});
+    async insertFork(fork: IForkDelegate): Promise<Response<void>> {
+        return new Response({});
     }
 
-    async getDelegatesFromPreviousRound(): Promise<Responce<string[]>> {
-        return new Responce({
+    async getDelegatesFromPreviousRound(): Promise<Response<string[]>> {
+        return new Response({
             data: []
         });
     }
-
-    async apply(): Promise<Responce<void>> {
-        return new Responce({});
-    }
-
-    async undo(): Promise<Responce<void>> {
-        return new Responce({});
-    }
-
-    applyUnconfirmed(): Responce<void> {
-        return new Responce({});
-    }
-
-    undoUnconfirmed(): Responce<void> {
-        return new Responce({});
-    }
-
-    objectNormalize(trs: Transaction<Object>): Responce<Transaction<Object>> {
-        return new Responce({
-            data: null
-        });
-    }
-
-    dbRead(raw: IRawDBRead): Responce<{ delegate: IResponceDBRead }> {
-        return new Responce({
-            data: {
-                delegate: {
-                    username: '',
-                    publicKey: '',
-                    address: ''
-                }
-            }
-        });
-    }
-
-    dbSave(trs: Transaction<Object>): Responce<IResponceDBSave> {
-        return new Responce<IResponceDBSave>({
-            data: {
-                table: '',
-                fields: '',
-                values: {
-                    username: '',
-                    transactionId: ''
-                }
-            }
-        });
-    }}
+}
 

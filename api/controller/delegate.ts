@@ -1,4 +1,3 @@
-import { Request, Response, NextFunction, Error } from 'express';
 import { DelegateRepository } from 'api/repository/delegate';
 import { delegateSchema as schema } from 'api/schema/delegate';
 import { Account } from 'shared/model/account';
@@ -6,68 +5,81 @@ import { DelegateRepository as SharedDelegateRepository } from 'shared/repositor
 import { AccountPGQLRepository as SharedAccountRepository } from 'shared/repository/accountImpl';
 const constants = require('../../backlog/helpers/constants');
 
-@Controller('/api')
+interface IDataContainer<T extends Object> {
+    body: T;
+}
+
+interface IReqSearch {
+    q: string;
+    limit: number;
+}
+
+interface IReqGetDelegates {
+    orderBy: string;
+    limit: number;
+    offset: number;
+}
+
+interface IReqPublicKey {
+    publicKey: string;
+}
+
+@Controller('/api/delegate')
 export class DelegateController {
     private repo = new DelegateRepository();
     private sharedDelegateRepo = new SharedDelegateRepository();
     private sharedAccountRepo = new SharedAccountRepository();
 
     @GET('/count')
-    public async count(req: Request, res: Response) {
+    public async count() {
         const result = await this.repo.count();
     }
 
     @GET('/search')
     @validate(schema.search)
-    public async search(req: Request, res: Response) {
-        const { q, limit } = req.body;
+    public async search(data: IDataContainer<IReqSearch>) {
+        const { q, limit } = data.body;
         const result = await this.repo.search(q, limit, '', '');
     }
 
     @GET('/voters')
     @validate(schema.getVoters)
-    public async getVoters(req: Request, res: Response) {
-        const { publicKey } = req.body;
+    public async getVoters(data: IDataContainer<IReqPublicKey>) {
+        const { publicKey } = data.body;
         const result = await this.repo.getVoters(publicKey);
     }
 
     @GET('/')
     @validate(schema.getDelegates)
-    public async getDelegates(req: Request, res: Response) {
-        const { orderBy, limit, offset } = req.query;
+    public async getDelegates(data: IDataContainer<IReqGetDelegates>) {
+        const { orderBy, limit, offset } = data.body;
         const result = await this.sharedDelegateRepo.getDelegates(orderBy, limit, offset);
     }
 
     @GET('/get')
     @validate(schema.getDelegate)
-    public async getDelegate(req: Request, res: Response) {
-        const { publicKey, username } = req.body;
+    public async getDelegate(data: IDataContainer<{ publicKey: string, username: string }>) {
+        const { publicKey, username } = data.body;
         const result = await this.sharedDelegateRepo.getDelegate(publicKey, username);
     }
 
     @GET('/fee')
-    public getFee(req: Request, res: Response) {
+    public getFee() {
         const result = { fee: constants.fees.delegate };
     }
 
-    @GET('/forging/getForgedByAccount')
-    public async getForgedByAccount(req: Request, res: Response) {}
+    @GET('/forging/forged_by_account')
+    public async getForgedByAccount() {}
 
     @PUT('/')
     @validate(schema.addDelegate)
-    public async addDelegate(req: Request, res: Response) {
-        const { publicKey } = req.body;
+    public async addDelegate(data: IDataContainer<IReqPublicKey>) {
+        const { publicKey } = data.body;
         const account: Account = await this.sharedAccountRepo.getAccount({ publicKey });
-
-        if (!account || !account.publicKey) { /** 'Multisignature account not found'*/ }
-        if (!account.multisignatures || !account.multisignatures) {/**'Account does not have multisignatures enabled'*/}
-        /**
-         * Body checks
-         */
     }
 
-    @GET('/getNextForgers')
-    public async getNextForgers(req: Request, res: Response) {
+    @GET('/next_forgers')
+    public async getNextForgers() {
         const result = {
             currentBlock: 0,
             currentBlockSlot: 0,
@@ -76,10 +88,10 @@ export class DelegateController {
         };
     }
 
-    @POST('forging/enable')
+    @POST('/forging/enable')
     @validate(schema.enableForging)
-    public async forgingEnable(req: Request, res: Response) {
-        const { publicKey } = req.body;
+    public async forgingEnable(data: IDataContainer<IReqPublicKey>) {
+        const { publicKey } = data.body;
         const account: Account = await this.sharedAccountRepo.getAccount({ publicKey });
         // ...
         const result = { address: account.address };
@@ -87,27 +99,27 @@ export class DelegateController {
 
     @POST('/forging/disable')
     @validate(schema.disableForging)
-    public async forgingDisable(req: Request, res: Response) {
-        const { publicKey } = req.body;
+    public async forgingDisable(data: IDataContainer<IReqPublicKey>) {
+        const { publicKey } = data.body;
         const result = await this.sharedAccountRepo.getAccount({ publicKey });
         // ...
     }
 
-    @GET('/getLatestVoters')
-    public async getLatestVoters(req: Request, res: Response) {
-        const { limit } = req.body;
+    @GET('/latest_voters')
+    public async getLatestVoters(data: IDataContainer<{limit: number}>) {
+        const { limit } = data.body;
         const result = await this.repo.getLatestVoters(limit as number);
     }
 
-    @GET('/getLatestDelegates')
-    public async getLatestDelegates(req: Request, res: Response) {
-        const { limit } = req.body;
+    @GET('/latest_delegates')
+    public async getLatestDelegates(data: IDataContainer<{limit: number}>) {
+        const { limit } = data.body;
         const result = await this.repo.getLatestDelegates(limit as number);
     }
 
     @GET('/forging/status')
     @validate(schema.forgingStatus)
-    public async forgingStatus(req: Request, res: Response) {}
+    public async forgingStatus(data: IDataContainer<IReqPublicKey>) {}
 }
 
 
