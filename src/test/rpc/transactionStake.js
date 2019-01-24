@@ -3,14 +3,13 @@ const expect = require('chai').expect;
 const TestWebSocketConnector = require('../common/TestWebSocketConnector.js');
 
 
-const transactionSend = {
+const transactionStake = {
     secret: "seed sock milk update focus rotate barely fade car face mechanic mercy",
-    amount: 1000000000,
-    recipientId: "DDK0000000000000000000",
+    freezedAmount: 100000000,
     publicKey: null
 };
 
-describe('RPC method: ADD_TRANSACTIONS', function () {
+describe('RPC method: TRANSACTION_STAKE', function () {
 
     let wsc;
 
@@ -35,7 +34,7 @@ describe('RPC method: ADD_TRANSACTIONS', function () {
 
         it('should have valid parameters', function (done) {
 
-            wsc.call('ADD_TRANSACTIONS', transactionSend, (result) => {
+            wsc.call('TRANSACTION_STAKE', transactionStake, (result) => {
                 expect(result).to.be.an('object');
                 done();
             });
