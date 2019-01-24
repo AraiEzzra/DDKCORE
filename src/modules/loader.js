@@ -477,7 +477,9 @@ __private.loadBlockChain = function () {
         function updateMemAccounts(t) {
             const promises = [
                 t.none(sql.updateMemAccounts),
-                t.query(sql.getDelegates)
+                t.query(sql.getDelegates),
+                t.none(sql.clearUDelegates),
+                t.none(sql.refreshUDelegates)
             ];
 
             return t.batch(promises);

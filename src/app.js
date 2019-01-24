@@ -48,7 +48,6 @@ const elasticsearchSync = require('./helpers/elasticsearch');
 const cronjob = require('node-cron-job');
 const serverRPCConfig = require('./api/rpc/server.config');
 const ServerRPCApi = require('./api/rpc/server');
-const referal = require('./helpers/referal');
 const jobs = require('./jobs.js');
 
 exports.getUsersList = function () {
@@ -713,11 +712,6 @@ d.run(() => {
             // TODO: make it NORMAL
             cronjob.setJobsPath(path.join(process.cwd(), 'src', '/jobs.js'));  // Absolute path to the jobs module.
             jobs.attachScope(scope);
-
-            // AFFILIATE AIRDROP
-            referal.Referals(scope);
-            // Migration Process
-            // require('./helpers/accountCreateETPS').AccountCreateETPS(scope);
 
             cronjob.startJob('archiveLogFiles');
             /**
