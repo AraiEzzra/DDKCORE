@@ -505,11 +505,12 @@ Transport.prototype.onNewBlock = function (block, broadcast) {
                     immediate: true
                 });
             }
-            library.network.io.sockets.emit('blocks/change', block);
         });
 
         library.db.one(sqlBlock.getBlockByHeight, { height: block.height })
             .then((lastBlock) => {
+                block.username = lastBlock.m_username;
+                library.network.io.sockets.emit('blocks/change', block);
                 utils.addDocument({
                     index: 'blocks_list',
                     type: 'blocks_list',

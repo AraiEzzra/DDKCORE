@@ -104,7 +104,18 @@ __private.getBlockSlotData = function (slot, height, cb) {
 
         let currentSlot = slot;
         const lastSlot = slots.getLastSlot(currentSlot);
+        const nextForgers = [];
+        const currentBlock = modules.blocks.lastBlock.get();
 
+        for (let i = 1; i <= Rounds.prototype.getSlotDelegatesCount(height) && i <= constants.activeDelegates; i++) {
+            if (activeDelegates[(currentSlot + i) % Rounds.prototype.getSlotDelegatesCount(currentBlock.height + i)]) {
+                nextForgers.push(
+                    activeDelegates[(currentSlot + i) % Rounds.prototype.getSlotDelegatesCount(currentBlock.height + i)]
+                );
+            }
+        }
+
+        library.network.io.emit('delegates/nextForgers', nextForgers);
         for (; currentSlot < lastSlot; currentSlot += 1) {
             const delegatePubKey = activeDelegates[currentSlot % Rounds.prototype.getSlotDelegatesCount(height)];
 
