@@ -752,18 +752,36 @@ Delegates.prototype.internal = {
     },
 
     getLatestVoters(req, cb) {
-        library.db.query(sql.getLatestVoters, {
-            limit: req.body.limit
+        const trsType = req.body.type || 60;
+        library.db.query(sql.getTotalTransactionCount, {
+            type: trsType
         })
-            .then(voters => setImmediate(cb, null, { voters }))
+            .then((count) => {
+                const totalVoteCount = count[0].count;
+                library.db.query(sql.getLatestVoters, {
+                    limit: req.body.limit,
+                    type: trsType
+                })
+                    .then(voters => setImmediate(cb, null, { voters, count: totalVoteCount }))
+                    .catch(err => setImmediate(cb, err.message));
+            })
             .catch(err => setImmediate(cb, err));
     },
 
     getLatestDelegates(req, cb) {
-        library.db.query(sql.getLatestDelegates, {
-            limit: req.body.limit
+        const trsType = req.body.type || 30;
+        library.db.query(sql.getTotalTransactionCount, {
+            type: trsType
         })
-            .then(delegates => setImmediate(cb, null, { delegates }))
+            .then((count) => {
+                const totalDelegatesCount = count[0].count;
+                library.db.query(sql.getLatestDelegates, {
+                    limit: req.body.limit,
+                    type: trsType
+                })
+                    .then(delegates => setImmediate(cb, null, { delegates, count: totalDelegatesCount }))
+                    .catch(err => setImmediate(cb, err));
+            })
             .catch(err => setImmediate(cb, err));
     }
 };

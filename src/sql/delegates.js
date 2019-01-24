@@ -50,11 +50,13 @@ const DelegatesSql = {
 
     getVoters: 'SELECT accounts.address, accounts.balance, "publicKey" FROM mem_accounts2delegates delegates INNER JOIN mem_accounts accounts ON delegates."accountId" = accounts.address WHERE delegates."dependentId" = ${publicKey} ORDER BY accounts."balance" DESC LIMIT ${limit} OFFSET ${offset}',
 
+    getTotalTransactionCount: 'SELECT count(*) FROM trs WHERE type = ${type}',
+     
     getVotersCount: 'SELECT count(*) FROM mem_accounts2delegates WHERE "dependentId" = ${publicKey}',
 
-    getLatestVoters: 'SELECT * from trs WHERE type = 60 ORDER BY timestamp DESC LIMIT ${limit}',
+    getLatestVoters: 'SELECT * from trs WHERE type = ${type} ORDER BY timestamp DESC LIMIT ${limit}',
 
-    getLatestDelegates: 'SELECT d."username" AS "username", t."senderId" AS "address", t."senderPublicKey" AS "publicKey", t."timestamp" AS "timestamp" FROM trs t INNER JOIN delegates d ON t."id" = d."transactionId" WHERE t."type" = 30 ORDER BY "timestamp" DESC LIMIT ${limit}',
+    getLatestDelegates: 'SELECT d."username" AS "username", t."senderId" AS "address", t."senderPublicKey" AS "publicKey", t."timestamp" AS "timestamp" FROM trs t INNER JOIN delegates d ON t."id" = d."transactionId" WHERE t."type" = ${type} ORDER BY "timestamp" DESC LIMIT ${limit}',
 
     addDelegateVoteRecord: 'INSERT INTO "delegate_to_vote_counter"("publicKey", "voteCount") VALUES (${publicKey}, 0) ON CONFLICT DO NOTHING',
 
