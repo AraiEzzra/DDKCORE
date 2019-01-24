@@ -210,6 +210,7 @@ declare class TransactionQueueScope {
     transactionLogic: any;
     logger: any;
     db: any;
+    network: any;
 }
 
 export class TransactionQueue {
@@ -221,11 +222,12 @@ export class TransactionQueue {
 
     private locked: boolean = false;
 
-    constructor({ transactionLogic, transactionPool, logger, db }: TransactionQueueScope) {
+    constructor({ transactionLogic, transactionPool, logger, db, network }: TransactionQueueScope) {
         this.scope.transactionLogic = transactionLogic;
         this.scope.transactionPool = transactionPool;
         this.scope.logger = logger;
         this.scope.db = db;
+        this.scope.network = network;
     }
 
     lock(): void {
@@ -327,16 +329,16 @@ export class TransactionQueue {
     }
 
     async verify(trs: Transaction, sender: Account): Promise<{ verified: boolean, error: Array<string> }> {
+        let verified = true,
+            error = [];
 
         try {
             await this.scope.transactionLogic.newVerify({ trs, sender, checkExists: true });
         } catch (e) {
             this.scope.logger.debug(`[TransactionQueue][verify]: ${e}`);
             this.scope.logger.debug(`[TransactionQueue][verify][stack]: \n ${e.stack}`);
-            return {
-                verified: false,
-                error: [e]
-            };
+            verified = false;
+            error = [e];
         }
 
         try {
@@ -344,15 +346,20 @@ export class TransactionQueue {
         } catch (e) {
             this.scope.logger.debug(`[TransactionQueue][verifyUnconfirmed]: ${e}`);
             this.scope.logger.debug(`[TransactionQueue][verifyUnconfirmed][stack]: \n ${e.stack}`);
-            return {
-                verified: false,
-                error: [e]
-            };
+            verified = false;
+            error = [e];
         }
 
+        this.scope.network.io.sockets.emit('pool/verify', JSON.stringify({
+            verified: verified,
+            error: error,
+            trsId: trs.id,
+            senderId: trs.senderId
+        }));
+
         return {
-            verified: true,
-            error: []
+            verified: verified,
+            error: error
         };
     }
 
