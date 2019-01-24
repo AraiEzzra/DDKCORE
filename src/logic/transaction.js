@@ -336,7 +336,7 @@ Transaction.prototype.checkBalance = (amount, trs, sender) => {
         amount
     })}`);
 
-    if (trs.blockId !== self.scope.genesisblock.block.id) {
+    if (trs.blockId === self.scope.genesisblock.block.id) {
         return { success: true };
     }
 
