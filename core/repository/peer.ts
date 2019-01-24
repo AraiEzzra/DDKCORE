@@ -1,7 +1,7 @@
 const _ = require('lodash');
-const ip = require('ip');
+const ipService = require('ip');
 const logger = require('logger');
-import { Peer as PeerModel } from 'shared/model/peer';
+import { Peer as PeerModel, PeerState } from 'shared/model/peer';
 
 class Peer extends PeerModel {
 
@@ -49,12 +49,6 @@ class Peer extends PeerModel {
         'updated'
     ];
 
-    private readonly STATE = {
-        BANNED: 0,
-        DISCONNECTED: 1,
-        CONNECTED: 2
-    };
-
     private accept(peer) {
         // Normalize peer data
         peer = this.normalize(peer);
@@ -68,7 +62,7 @@ class Peer extends PeerModel {
 
         // Adjust properties according to rules
         if (/^[0-9]+$/.test(this.ip)) {
-            this.ip = ip.fromLong(this.ip);
+            this.ip = ipService.fromLong(this.ip);
         }
 
         if (this.ip && this.port) {
@@ -90,7 +84,7 @@ class Peer extends PeerModel {
         }
 
         peer.port = this.parseInt(peer.port, 0);
-        peer.state = this.parseInt(peer.state, this.STATE.DISCONNECTED);
+        peer.state = this.parseInt(peer.state, PeerState.DISCONNECTED);
 
         return peer;
     }
@@ -282,7 +276,7 @@ export class PeerRepo {
         return false;
     }
 
-    public list(normalize) {
+    public list(normalize = false) {
         if (normalize) {
             return Object.keys(this.peers).map(key => this.peers[key].object());
         }
