@@ -73,14 +73,10 @@ class TransactionPool {
         return removedTransactions;
     }
 
-    async push(trs: Transaction, sender?: Account, broadcast: boolean = false) {
-        if (!sender) {
-            sender = await getOrCreateAccount(this.scope.db, trs.senderPublicKey);
-        }
-
+    async push(trs: Transaction, broadcast: boolean = false) {
         if (!this.locked) {
             try {
-                await this.scope.transactionLogic.newApplyUnconfirmed(trs, sender);
+                await this.scope.transactionLogic.newApplyUnconfirmed(trs);
                 trs.status = TransactionStatus.UNCOFIRM_APPLIED;
                 this.scope.logger.debug(`TransactionStatus.UNCONFIRM_APPLIED ${JSON.stringify(trs)}`);
             } catch (e) {
@@ -279,7 +275,7 @@ export class TransactionQueue {
         this.scope.logger.debug(`TransactionStatus.VERIFIED ${JSON.stringify(trs)}`);
 
         if (!this.locked) {
-            const pushed = await this.scope.transactionPool.push(trs, sender, true);
+            const pushed = await this.scope.transactionPool.push(trs, true);
             if (pushed) {
                 this.process();
                 return;
