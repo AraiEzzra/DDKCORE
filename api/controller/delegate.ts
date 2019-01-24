@@ -24,7 +24,7 @@ interface IReqPublicKey {
     publicKey: string;
 }
 
-@Controller('/api/delegate')
+@Controller('/delegate')
 export class DelegateController {
     private repo = new DelegateRepository();
     private sharedDelegateRepo = new SharedDelegateRepository();
