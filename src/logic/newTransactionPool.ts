@@ -3,6 +3,7 @@ import { generateAddressByPublicKey, getOrCreateAccount } from 'src/helpers/acco
 import { transactionSortFunc } from 'src/helpers/transaction.utils';
 import * as constants from 'src/helpers/constants.js';
 import * as transactionTypes from 'src/helpers/transactionTypes.js';
+import { AccountSessions } from 'src/helpers/accountSessions';
 
 declare class TransactionPoolScope {
     logger: any;
@@ -222,6 +223,8 @@ export class TransactionQueue {
 
     private locked: boolean = false;
 
+    private accountSessions: AccountSessions = AccountSessions.getInstance();
+
     constructor({ transactionLogic, transactionPool, logger, db, network }: TransactionQueueScope) {
         this.scope.transactionLogic = transactionLogic;
         this.scope.transactionPool = transactionPool;
@@ -350,12 +353,15 @@ export class TransactionQueue {
             error = [e];
         }
 
-        this.scope.network.io.sockets.emit('pool/verify', JSON.stringify({
-            verified: verified,
-            error: error,
-            trsId: trs.id,
-            senderId: trs.senderId
-        }));
+        const accounts = this.accountSessions.get(sender.address);
+        accounts.forEach((session) => {
+            this.scope.network.io.sockets.sockets[session['socketId']].emit('pool/verify', JSON.stringify({
+                verified: verified,
+                error: error,
+                trsId: trs.id,
+                senderId: trs.senderId
+            }));
+        });
 
         return {
             verified: verified,
