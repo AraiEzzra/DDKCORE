@@ -59,7 +59,7 @@ const apiConfig = {
 };
 
 const coreConfig = {
-    entry: path.join(DIR, 'core', 'app.js'),
+    entry: path.join(DIR, 'core', 'server.ts'),
     context: path.resolve(DIR, 'core'),
     resolve: {
         extensions: ['.ts', '.js', '.json'],
@@ -73,14 +73,14 @@ const coreConfig = {
         path: path.join(OUTPUT_DIR, 'core'),
         publicPath: '/',
     },
-    plugins: [
-        new CopyWebpackPlugin([
-            {
-                from: './build',
-                to: './',
-            },
-        ]),
-    ],
+    // plugins: [
+    //     new CopyWebpackPlugin([
+    //         {
+    //             from: './build',
+    //             to: './',
+    //         },
+    //     ]),
+    // ],
 };
 
 const backlogConfig = {

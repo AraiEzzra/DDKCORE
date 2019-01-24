@@ -140,5 +140,6 @@ export default {
     TemplateId: {
         referralMail: 8248756,
         welcomeMail: 8265262
-    }
+    },
+    TRANSACTION_QUEUE_EXPIRE: 36000
 };

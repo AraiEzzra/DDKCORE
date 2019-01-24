@@ -2,6 +2,8 @@ import { Transaction, TransactionStatus } from 'shared/model/transaction';
 import { ITransactionPoolService } from 'core/service/transactionPool';
 import { transactionSortFunc } from 'core/util/transaction';
 import { getOrCreateAccount } from 'shared/util/account';
+import constants from "config/mainnet/constants";
+import TransactionService from 'core/service/transaction';
 
 
 export interface ITransactionQueueService<T extends Object> {
@@ -114,10 +116,10 @@ export class TransactionQueue<T extends object> implements ITransactionQueueServ
             return;
         }
 
-        const sender = await getOrCreateAccount(this.scope.db, trs.senderPublicKey);
+        const sender = await getOrCreateAccount(trs.senderPublicKey);
         this.scope.logger.debug(`[TransactionQueue][process][sender] ${JSON.stringify(sender)}`);
 
-        const verifyStatus = await this.verify(trs, sender);
+        const verifyStatus = await TransactionService.verify(trs, sender, true);
 
         if (!verifyStatus.verified) {
             trs.status = TransactionStatus.DECLINED;
