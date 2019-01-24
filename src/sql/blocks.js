@@ -65,7 +65,7 @@ const BlocksSql = {
     getIdSequence() {
         return [
             'WITH',
-            'current_round AS (SELECT CEIL(b.height / ${delegates}::float)::bigint FROM blocks b WHERE b.height <= ${height} ORDER BY b.height DESC LIMIT 1),',
+            'current_round AS (SELECT CEIL(b.height / ${delegates}::float)::bigint as height FROM blocks b WHERE b.height <= ${height} ORDER BY b.height DESC LIMIT 1),',
             'rounds AS (SELECT * FROM generate_series((SELECT * FROM current_round), (SELECT * FROM current_round) - ${limit} + 1, -1))',
             'SELECT',
             'b.id, b.height, CEIL(b.height / ${delegates}::float)::bigint AS round',
@@ -107,8 +107,8 @@ const BlocksSql = {
     loadLastBlock: 'SELECT * FROM full_blocks_list WHERE "b_height" = (SELECT MAX("height") FROM blocks) ORDER BY "b_height", t_type, t_timestamp, "t_id"',
 
     getBlockId: 'SELECT "id" FROM blocks WHERE "id" = ${id}',
-    
-    loadFullBlockById: 'SELECT * FROM full_blocks_list where b_id=${id}',
+
+    loadFullBlockById: 'SELECT * FROM full_blocks_list where b_id=${id} ORDER BY "b_height", t_type, t_timestamp, "t_id"',
 
     getBlockByHeight: 'SELECT * FROM blocks_list WHERE "b_height" = ${height}',
 
