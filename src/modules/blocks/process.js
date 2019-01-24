@@ -279,13 +279,13 @@ Process.prototype.loadBlocksFromPeer = function (peer, cb) {
     // Process single block
     function processBlock(block, seriesCb) {
         // Start block processing - broadcast: false, saveBlock: true
+        modules.transactions.lockTransactionPoolAndQueue();
         modules.transactions.removeFromPool(block.transactions, true).then(
             async (removedTransactions) => {
                 library.logger.debug(
                     `[Process][processBlock] removedTransactions ${JSON.stringify(removedTransactions)}`
                 );
                 try {
-                    modules.transactions.lockTransactionPoolAndQueue();
                     await modules.blocks.verify.newProcessBlock(block, false, true, true, true);
                     lastValidBlock = block;
                     library.logger.info(
@@ -423,10 +423,11 @@ Process.prototype.generateBlock = function (keypair, timestamp, cb) {
 
 Process.prototype.newGenerateBlock = async (keypair, timestamp) => {
     let block;
-    const transactions = await modules.transactions.getUnconfirmedTransactionsForBlockGeneration();
-    library.logger.debug(`[Process][newGenerateBlock][transactions] ${JSON.stringify(transactions)}`);
 
     modules.transactions.lockTransactionPoolAndQueue();
+
+    const transactions = await modules.transactions.getUnconfirmedTransactionsForBlockGeneration();
+    library.logger.debug(`[Process][newGenerateBlock][transactions] ${JSON.stringify(transactions)}`);
 
     try {
         block = library.logic.block.create({

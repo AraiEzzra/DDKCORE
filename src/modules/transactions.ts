@@ -116,8 +116,6 @@ class Transactions {
         this.transactionQueue.reshuffle();
     }
 
-    // TODO add conflicted remove logic
-    // https://trello.com/c/FNWlZu5M/31-add-remove-conflicted-transaction-from-before-apply-received-block
     async removeFromPool(transactions: Array<Transaction>, withDepend: boolean): Promise<Array<Transaction>> {
         const removedTransactions = [];
         for (const trs of transactions) {
@@ -145,7 +143,7 @@ class Transactions {
 
     async pushInPool(transactions: Array<Transaction>): Promise<void> {
         for (const trs of transactions) {
-            await this.newTransactionPool.push(trs, null, false);
+            await this.newTransactionPool.push(trs, false);
         }
     }
 

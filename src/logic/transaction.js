@@ -315,7 +315,7 @@ Transaction.prototype.newCheckConfirmed = async (trs) => {
     } catch (e) {
         self.scope.logger.error(e);
     }
-    return Boolean(result.count)
+    return Boolean(result.count);
 };
 
 /**
@@ -328,48 +328,34 @@ Transaction.prototype.newCheckConfirmed = async (trs) => {
  * @returns {Object} With exceeded boolean and error: address, balance
  *  modify checkbalance according to froze amount avaliable to user
  */
-Transaction.prototype.checkBalance = (amount, isUnconfirmed, trs, sender) => {
-    const totalAmountWithFrozeAmount = trs.type === transactionTypes.SENDSTAKE ?
-        new bignum(amount)
-        :
-        new bignum(sender[`${isUnconfirmed ? 'u_' : ''}totalFrozeAmount`]).plus(amount);
+Transaction.prototype.checkBalance = (amount, trs, sender) => {
+    self.scope.logger.debug(`[Transaction][checkBalance] ${JSON.stringify({
+        address: sender.address,
+        u_balance: sender.u_balance,
+        u_totalFrozeAmount: sender.u_totalFrozeAmount,
+        amount
+    })}`);
 
-    const exceededBalance = new bignum(sender[`${isUnconfirmed ? 'u_' : ''}balance`].toString())
-        .lessThan(totalAmountWithFrozeAmount);
-    let exceeded = (trs.blockId !== self.scope.genesisblock.block.id && exceededBalance);
-
-    if (parseInt(sender[`${isUnconfirmed ? 'u_' : ''}totalFrozeAmount`], 10) > 0) {
-        return {
-            exceeded,
-            error: exceeded ?
-                [
-                    'Account does not have enough DDK due to freeze amount:',
-                    sender.address,
-                    'balance:',
-                    new bignum(sender[`${isUnconfirmed ? 'u_' : ''}balance`].toString() || '0').div(10 ** 8),
-                    'totalFreezeAmount :',
-                    new bignum(sender[`${isUnconfirmed ? 'u_' : ''}totalFrozeAmount`].toString())
-                        .div(10 ** 8),
-                    'amount: ',
-                    amount / (10 ** 8)
-                ].join(' ')
-                :
-                null
-        };
+    if (trs.blockId !== self.scope.genesisblock.block.id) {
+        return { success: true };
     }
+
+    if (sender.u_balance - sender.u_totalFrozeAmount >= amount) {
+        return { success: true };
+    }
+
     return {
-        exceeded,
-        error: exceeded ?
-            [
-                'Account does not have enough DDK:',
-                sender.address,
-                'balance:',
-                new bignum(sender[`${isUnconfirmed ? 'u_' : ''}balance`].toString() || '0').div(10 ** 8),
-                'amount: ',
-                amount / (10 ** 8)
-            ].join(' ')
-            :
-            null
+        success: false,
+        errors: [[
+            'Account does not have enough DDK due to freeze amount:',
+            sender.address,
+            'u_balance:',
+            sender.u_balance / (10 ** 8),
+            'u_totalFrozeAmount :',
+            sender.u_totalFrozeAmount / (10 ** 8),
+            'amount: ',
+            amount / (10 ** 8)
+        ].join(' ')]
     };
 };
 
@@ -974,7 +960,7 @@ Transaction.prototype.verifyUnconfirmed = ({ trs, sender, cb }) => {
     // Check sender not able to do transaction on froze amount
     const amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
 
-    const senderBalance = self.checkBalance(amount, true, trs, sender);
+    const senderBalance = self.checkBalance(amount, trs, sender);
 
     if (senderBalance.exceeded) {
         if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_SENDER_BALANCE) {
@@ -995,16 +981,14 @@ Transaction.prototype.verifyUnconfirmed = ({ trs, sender, cb }) => {
 };
 
 Transaction.prototype.newVerifyUnconfirmed = async ({ trs, sender }) => {
-    // change fee for vote and check in next validator checkBalance
     trs.fee = self.calculateUnconfirmedFee(trs, sender);
 
-    // Check sender not able to do transaction on froze amount
-    const amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
+    const amount = trs.amount + trs.stakedAmount + trs.fee;
 
-    const senderBalance = self.checkBalance(amount, true, trs, sender);
+    const senderBalanceStatus = self.checkBalance(amount, trs, sender);
 
-    if (senderBalance.exceeded) {
-        throw new Error(senderBalance.error);
+    if (!senderBalanceStatus.success) {
+        throw new Error(senderBalanceStatus.errors);
     }
 
     await __private.types[trs.type].newVerifyUnconfirmed.call(self, trs, sender, (err) => {
@@ -1278,11 +1262,11 @@ Transaction.prototype.applyUnconfirmed = (trs, sender, requester, cb) => {
     }
 };
 
-Transaction.prototype.newApplyUnconfirmed = async (trs, sender) => {
+Transaction.prototype.newApplyUnconfirmed = async (trs) => {
     const amount = trs.amount + trs.fee;
 
     const mergedSender = await self.scope.account.asyncMerge(
-        sender.address,
+        trs.senderId,
         { u_balance: -amount, u_totalFrozeAmount: trs.stakedAmount }
     );
     try {
@@ -1294,6 +1278,11 @@ Transaction.prototype.newApplyUnconfirmed = async (trs, sender) => {
                 resolve();
             });
         }));
+        self.scope.logger.debug(`[Transaction][newApplyUnconfirmed], ${JSON.stringify({
+            sender: trs.senderId,
+            u_balance: -amount,
+            u_totalFrozeAmount: trs.stakedAmount
+        })}`);
     } catch (err) {
         await self.scope.account.asyncMerge(
             mergedSender.address,
@@ -1375,6 +1364,11 @@ Transaction.prototype.newUndoUnconfirmed = async (trs) => {
                 resolve();
             });
         }));
+        self.scope.logger.debug(`[Transaction][newUndoUnconfirmed], ${JSON.stringify({
+            sender: trs.senderId,
+            u_balance: amount,
+            u_totalFrozeAmount: -trs.stakedAmount
+        })}`);
     } catch (err) {
         self.scope.logger.error(`[LogicTransaction][newUndoUnconfirmed] ${err}`);
         self.scope.logger.error(`[LogicTransaction][newUndoUnconfirmed][stack] ${err.stack}`);
