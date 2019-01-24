@@ -752,7 +752,7 @@ Delegates.prototype.internal = {
     },
 
     getLatestVoters(req, cb) {
-        const trsType = req.body.type || 60;
+        const trsType = req.body.type || transactionTypes.VOTE;
         library.db.query(sql.getTotalTransactionCount, {
             type: trsType
         })
@@ -769,7 +769,7 @@ Delegates.prototype.internal = {
     },
 
     getLatestDelegates(req, cb) {
-        const trsType = req.body.type || 30;
+        const trsType = req.body.type || transactionTypes.DELEGATE;
         library.db.query(sql.getTotalTransactionCount, {
             type: trsType
         })
