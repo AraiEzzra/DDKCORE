@@ -122,8 +122,12 @@ Chain.prototype.newSaveBlock = async (block) => {
 Chain.prototype.saveTransaction = async (transaction) => {
     try {
         await library.db.tx(async (t) => {
-            const queries = await __private.newPromiseTransactions(transaction);
-            await t.batch(queries.map(query => t.none(query.template, query.params)));
+            const promises = await library.logic.transaction.dbSave(transaction);
+            const queries = promises.map(promise => {
+                const inserts = new Inserts(promise, promise.values);
+                return t.none(inserts.template(), promise.values);
+            });
+            await t.batch(queries);
         });
     } catch (error) {
         library.logger.error(`[Chain][saveTransaction][tx]: ${error}`);
@@ -221,35 +225,6 @@ __private.promiseTransactions = async (t, block) => {
     _.each(_.groupBy(promises, promiseGrouper), typeIterator);
 
     return t;
-};
-
-__private.newPromiseTransactions = async (transaction) => {
-    const promiseGrouper = (promise) => {
-        if (promise && promise.table) {
-            return promise.table;
-        }
-        throw 'Invalid promise';
-    };
-
-    const typeIterator = (type) => {
-        let values = [];
-        _.each(type, (promise) => {
-            if (promise && promise.values) {
-                values = values.concat(promise.values);
-            } else {
-                throw 'Invalid promise';
-            }
-        });
-
-        const inserts = new Inserts(type[0], values, true);
-        queries.push({ template: inserts.template(), params: inserts });
-    };
-
-    const queries = [];
-    const promises = await library.logic.transaction.dbSave(transaction);
-    _.each(_.groupBy(promises, promiseGrouper), typeIterator);
-
-    return queries;
 };
 
 /**
