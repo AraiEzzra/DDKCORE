@@ -209,12 +209,13 @@ Process.prototype.loadBlocksOffset = function (limit, offset, verify, cb) {
                             verify,
                             (err) => {
                                 if (err) {
-                                    library.logger.debug('Block processing failed', {
+                                    library.logger.debug(`[Process][loadBlocksOffset] 
+                                    Block processing failed, ${JSON.stringify({
                                         id: block.id,
                                         err: err.toString(),
                                         module: 'blocks',
                                         block,
-                                    });
+                                    })}`);
                                 }
                                 // Update last block
                                 // modules.blocks.lastBlock.push(block);
@@ -308,7 +309,8 @@ Process.prototype.loadBlocksFromPeer = function (peer, cb) {
                 } catch (err) {
                     const id = (block ? block.id : 'null');
                     library.logger.debug(
-                        'Block processing failed', { id, err: err.toString(), module: 'blocks', block }
+                        `[Process][processBlock] Block processing failed, 
+                        ${JSON.stringify({ id, err: err.toString(), module: 'blocks', block })}`
                     );
                     await modules.transactions.pushInPool(removedTransactions);
                     modules.transactions.unlockTransactionPoolAndQueue();
@@ -581,11 +583,13 @@ __private.newReceiveBlock = async (block) => {
     ].join(' '));
 
     modules.blocks.lastReceipt.update();
+
+    modules.transactions.lockTransactionPoolAndQueue();
+
     const removedTransactions = await modules.transactions.removeFromPool(block.transactions, true);
+    library.logger.debug(`[Process][newReceiveBlock] removedTransactions ${JSON.stringify(removedTransactions)}`);
 
     try {
-        modules.transactions.lockTransactionPoolAndQueue();
-
         await modules.blocks.verify.newProcessBlock(block, true, true, true, true);
 
         const transactionForReturn = [];
