@@ -205,6 +205,7 @@ __private.forge = function (cb) {
         }, (sequenceErr) => {
             if (sequenceErr) {
                 library.logger.error('Failed to generate block within delegate slot', sequenceErr);
+                // TODO i think on this place need logic for recoveryChain
             } else {
                 const forgedBlock = modules.blocks.lastBlock.get();
                 modules.blocks.lastReceipt.update();
