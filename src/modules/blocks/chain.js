@@ -646,8 +646,11 @@ Chain.prototype.newApplyBlock = async (block, broadcast, saveBlock, tick) => {
     for (const trs of block.transactions) {
         const sender = await getOrCreateAccount(library.db, trs.senderPublicKey);
         await library.logic.transaction.newApply(trs, block, sender);
-        trs.blockId = block.id;
-        await self.saveTransaction(trs);
+
+        if (saveBlock) {
+            trs.blockId = block.id;
+            await self.saveTransaction(trs);
+        }
     }
 
     if (saveBlock) {
