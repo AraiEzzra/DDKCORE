@@ -1,40 +1,70 @@
-import { AccountService } from 'api/service/accountService';
-import { AccountServiceImpl } from 'api/service/accountServiceImpl';
-import { Response, Request } from 'express';
+import { AccountService, AccountServiceImpl } from 'api/service/accountService';
+import { GetAccountParams, RegistrationParams } from 'api/util/types/account';
+import { Request, Response } from 'express';
 import * as HttpStatus from 'http-status-codes';
+import { AccountPGQLRepository, AccountRepository } from 'shared/repository/account';
 
-export default class AccountController {
+@Controller('/account')
+export class AccountController {
 
-    private static instance: AccountController = undefined;
     private accountService: AccountService;
+    private accountRepository : AccountRepository;
 
     constructor() {
-        if(!AccountController.instance) {
-            AccountController.instance = this;
-            this.accountService = new AccountServiceImpl();
-        }
-        return AccountController.instance;
+        this.accountService = new AccountServiceImpl();
+        this.accountRepository = new AccountPGQLRepository();
     }
 
-    public createAccount(req: Request, res: Response) {
-        res.status(HttpStatus.OK).json({msg: 'SUCCESS'})
+    // old version is /open
+    @POST('/login')
+    @ON('ACCOUNT_LOGIN')
+    @RPC('ACCOUNT_LOGIN')
+    @validate(zSchemaObj.login)
+    public login(secret: string) {
+        return this.accountService.login(secret);
     }
 
-    public getAccount(req: Request, res: Response) {
-        // TODO: use getAccount from Service. generateAddressByPublicKey method here
-        res.status(HttpStatus.OK).json({msg: 'SUCCESS'})
+    // old version is /open
+    @POST('/register')
+    @ON('ACCOUNT_REGISTER')
+    @RPC('ACCOUNT_REGISTER')
+    @validate(zSchemaObj.register)
+    public register(data: RegistrationParams) {
+        return this.accountService.register(data);
     }
 
-    public getBalance(req: Request, res: Response) {
-        res.status(HttpStatus.OK).json({msg: 'SUCCESS'})
+    @GET('/get_account')
+    @ON('ACCOUNT_GET')
+    @RPC('ACCOUNT_GET')
+    @validate(zSchemaObj.getAccount)
+    public getAccount(data: GetAccountParams) {
+        return this.accountService.getAccount(data);
     }
 
-    public getPublicKey(req: Request, res: Response) {
-        res.status(HttpStatus.OK).json({msg: 'SUCCESS'})
+    // TODO use only Repository here
+    @GET('/get_balance')
+    @ON('ACCOUNT_GET_BALANCE')
+    @RPC('ACCOUNT_GET_BALANCE')
+    @validate(zSchemaObj.getBalance)
+    public getBalance(address: string) {
+        return this.accountRepository.getAccountByAddress(address);
     }
 
-    public generatePublicKey(req: Request, res: Response) {
-        res.status(HttpStatus.OK).json({msg: 'SUCCESS'})
+    @GET('/get_public_key')
+    @ON('ACCOUNT_GET_PUBLIC_KEY')
+    @RPC('ACCOUNT_GET_PUBLIC_KEY')
+    @validate(zSchemaObj.getPublicKey)
+    public getPublicKey(address: string) {
+        return this.accountService.getPublicKey(address);
+    }
+
+    //TODO: maybe place this somewhere else
+    @POST('/generate_public_key')
+    @ON('ACCOUNT_GENERATE_PUBLIC_KEY')
+    @RPC('ACCOUNT_GENERATE_PUBLIC_KEY')
+    @validate(zSchemaObj.generatePublicKey)
+    public generatePublicKey(secret: string) {
+        this.accountService.generatePublicKey(secret)
     }
 
     // TODO: place this in DelegatesController
@@ -52,36 +82,38 @@ export default class AccountController {
         res.status(HttpStatus.OK).json({msg: 'SUCCESS'})
     }
 
-    public getTotalAccounts(req: Request, res: Response) {
-        res.status(HttpStatus.OK).json({msg: 'SUCCESS'})
+    @GET('/get_total_accounts')
+    @ON('ACCOUNT_GET_TOTAL')
+    @RPC('ACCOUNT_GET_TOTAL')
+    @validate(zSchemaObj.publicKey)
+    public getTotalAccounts() {
+        this.accountService.getTotalAccounts();
     }
 
-    public getCirculatingSupply(req: Request, res: Response) {
-        res.status(HttpStatus.OK).json({msg: 'SUCCESS'})
+    //TODO: maybe place this somewhere else
+    @GET('/get_circulating_supply')
+    @ON('ACCOUNT_GET_CIRCULATING_SUPPLY')
+    @RPC('ACCOUNT_GET_CIRCULATING_SUPPLY')
+    @validate(zSchemaObj.getCirculatingSupply)
+    public getCirculatingSupply() {
+        return this.accountService.getCirculatingSupply();
     }
 
-    public getTotalSupply(req: Request, res: Response) {
-        res.status(HttpStatus.OK).json({msg: 'SUCCESS'})
+    //TODO: maybe place this somewhere else
+    @GET('/get_total_supply')
+    @ON('ACCOUNT_GET_TOTAL_SUPPLY')
+    @RPC('ACCOUNT_GET_TOTAL_SUPPLY')
+    @validate(zSchemaObj.getTotalSupply)
+    public getTotalSupply(address: string) {
+        return this.accountRepository.getBalanceByAddress(address);
     }
 
-    public migrateData(req: Request, res: Response) {
-        res.status(HttpStatus.OK).json({msg: 'SUCCESS'})
-    }
-
-    public validateExistingUser(req: Request, res: Response) {
-        res.status(HttpStatus.OK).json({msg: 'SUCCESS'})
-    }
-
-    public verifyUserToComment(req: Request, res: Response) {
-        res.status(HttpStatus.OK).json({msg: 'SUCCESS'})
-    }
-
-    public checkSenderAccountBalance(req: Request, res: Response) {
-        res.status(HttpStatus.OK).json({msg: 'SUCCESS'})
-    }
-
-    public getMigratedUsersList(req: Request, res: Response) {
-        res.status(HttpStatus.OK).json({msg: 'SUCCESS'})
+    @POST('/check_sender_balance')
+    @ON('ACCOUNT_CHECK_SENDER_BALANCE')
+    @RPC('ACCOUNT_CHECK_SENDER_BALANCE')
+    @validate(zSchemaObj.checkSenderAccountBalance)
+    public checkSenderAccountBalance(address: string) {
+        return this.accountRepository.getBalanceByAddress(address);
     }
 
     // TODO: exclude this method from AccountController. Place it in DashboardController.
@@ -89,7 +121,13 @@ export default class AccountController {
         res.status(HttpStatus.OK).json({msg: 'SUCCESS'})
     }
 
-    public checkAccountExists(req: Request, res: Response) {
-        res.status(HttpStatus.OK).json({msg: 'SUCCESS'})
+    @POST('/check_account_existence')
+    @ON('ACCOUNT_CHECK_EXISTENCE')
+    @RPC('ACCOUNT_CHECK_EXISTENCE')
+    @validate(zSchemaObj.checkAccountExistence)
+    public checkAccountExistence(address: string) {
+        this.accountRepository.getCountAccountByAddress(address);
     }
 }
+
+export default new AccountController();
