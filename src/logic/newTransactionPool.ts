@@ -53,8 +53,22 @@ class TransactionPool {
         const removedTransactions = [];
         const transactions = this.getTransactionsBySenderId(senderId);
         for (const trs of transactions) {
-            await this.remove(trs);
-            removedTransactions.push(trs);
+            const removed = await this.remove(trs);
+            if (removed) {
+                removedTransactions.push(trs);
+            }
+        }
+        return removedTransactions;
+    }
+
+    async removeTransactionByRecipientId(address: string): Promise<Array<Transaction>> {
+        const removedTransactions = [];
+        const transactions = this.getTransactionsByRecipientId(address);
+        for (const trs of transactions) {
+            const removed = await this.remove(trs);
+            if (removed) {
+                removedTransactions.push(trs);
+            }
         }
         return removedTransactions;
     }
@@ -118,16 +132,6 @@ class TransactionPool {
             this.poolByRecipient[trs.recipientId].splice(this.poolByRecipient[trs.recipientId].indexOf(trs), 1);
         }
         return true;
-    }
-
-    async removeTransactionByRecipientId(address: string): Promise<Array<Transaction>> {
-        const removedTransactions = [];
-        const transactions = this.getTransactionsByRecipientId(address);
-        for (const trs of transactions) {
-            await this.remove(trs);
-            removedTransactions.push(trs);
-        }
-        return removedTransactions;
     }
 
     get(id: string): Transaction {

@@ -531,9 +531,9 @@ __private.loadBlocksFromNetwork = function (cb) {
                 function loadBlocks() {
                     __private.blocksToSync = peer.height;
 
-                    modules.blocks.process.loadBlocksFromPeer(peer, (err, lastValidBlock) => {
-                        if (err) {
-                            library.logger.error(err.toString());
+                    modules.blocks.process.loadBlocksFromPeer(peer, (loadBlocksFromPeerErr, lastValidBlock) => {
+                        if (loadBlocksFromPeerErr) {
+                            library.logger.error(loadBlocksFromPeerErr.toString());
                             library.logger.error(`Failed to load blocks from: ${peer.string}`);
                             errorCount += 1;
                         }
@@ -543,19 +543,19 @@ __private.loadBlocksFromNetwork = function (cb) {
                     });
                 }
 
-                function getCommonBlock(cb) {
+                function getCommonBlock(getCommonBlockCb) {
                     library.logger.info(`Looking for common block with: ${peer.string}`);
-                    modules.blocks.process.getCommonBlock(peer, lastBlock.height, (err, commonBlock) => {
+                    modules.blocks.process.getCommonBlock(peer, lastBlock.height, (getCommonBlockErr, commonBlock) => {
                         if (!commonBlock) {
-                            if (err) {
-                                library.logger.error(err.toString());
+                            if (getCommonBlockErr) {
+                                library.logger.error(getCommonBlockErr.toString());
                             }
                             library.logger.error(`Failed to find common block with: ${peer.string}`);
                             errorCount += 1;
                             return next();
                         }
                         library.logger.info(['Found common block:', commonBlock.id, 'with:', peer.string].join(' '));
-                        return setImmediate(cb);
+                        return setImmediate(getCommonBlockCb);
                     });
                 }
 
