@@ -4,18 +4,9 @@ import { delegateSchema as schema } from 'api/schema/delegate';
 import { Account } from 'shared/model/account';
 import { DelegateRepository as SharedDelegateRepository } from 'shared/repository/delegate';
 import { AccountPGQLRepository as SharedAccountRepository } from 'shared/repository/accountImpl';
-
-// TODO need to constant.ts
 const constants = require('../../backlog/helpers/constants');
 
-// TODO TransactionType
-declare enum TransactionType {
-    Delegate = 30
-}
-
-// TODO Transaction model
-declare class Transaction {}
-
+@Controller('/api')
 export class DelegateController {
     private repo = new DelegateRepository();
     private sharedDelegateRepo = new SharedDelegateRepository();
@@ -27,30 +18,30 @@ export class DelegateController {
     }
 
     @GET('/search')
-    @Validate(req.query, schema.search)
+    @validate(schema.search)
     public async search(req: Request, res: Response) {
-        const { q, limit } = req.query;
+        const { q, limit } = req.body;
         const result = await this.repo.search(q, limit, '', '');
     }
 
     @GET('/voters')
-    @Validate(req.query, schema.getVoters)
+    @validate(schema.getVoters)
     public async getVoters(req: Request, res: Response) {
-        const { publicKey } = req.query;
+        const { publicKey } = req.body;
         const result = await this.repo.getVoters(publicKey);
     }
 
     @GET('/')
-    @Validate(req.query, schema.getDelegates)
+    @validate(schema.getDelegates)
     public async getDelegates(req: Request, res: Response) {
         const { orderBy, limit, offset } = req.query;
         const result = await this.sharedDelegateRepo.getDelegates(orderBy, limit, offset);
     }
 
     @GET('/get')
-    @Validate(req.query, schema.getDelegate)
+    @validate(schema.getDelegate)
     public async getDelegate(req: Request, res: Response) {
-        const { publicKey, username } = req.query;
+        const { publicKey, username } = req.body;
         const result = await this.sharedDelegateRepo.getDelegate(publicKey, username);
     }
 
@@ -62,12 +53,10 @@ export class DelegateController {
     @GET('/forging/getForgedByAccount')
     public async getForgedByAccount(req: Request, res: Response) {}
 
-
-    // TODO Wait transaction create function
     @PUT('/')
-    @Validate(req.body, schema.addDelegate)
+    @validate(schema.addDelegate)
     public async addDelegate(req: Request, res: Response) {
-        const { publicKey } = req.query;
+        const { publicKey } = req.body;
         const account: Account = await this.sharedAccountRepo.getAccount({ publicKey });
 
         if (!account || !account.publicKey) { /** 'Multisignature account not found'*/ }
@@ -88,33 +77,37 @@ export class DelegateController {
     }
 
     @POST('forging/enable')
-    @Validate(req.body, schema.enableForging)
+    @validate(schema.enableForging)
     public async forgingEnable(req: Request, res: Response) {
-        const { publicKey } = req.query;
+        const { publicKey } = req.body;
         const account: Account = await this.sharedAccountRepo.getAccount({ publicKey });
         // ...
         const result = { address: account.address };
     }
 
     @POST('/forging/disable')
-    @Validate(req.body, schema.disableForging)
+    @validate(schema.disableForging)
     public async forgingDisable(req: Request, res: Response) {
-        const { publicKey } = req.query;
-        const result: { address: Account } = await this.sharedAccountRepo.getAccount({ publicKey });
+        const { publicKey } = req.body;
+        const result = await this.sharedAccountRepo.getAccount({ publicKey });
         // ...
     }
 
     @GET('/getLatestVoters')
     public async getLatestVoters(req: Request, res: Response) {
-        const { limit } = req.query;
-        const result: { voters: Transaction[] } = await this.repo.getLatestVoters(limit as number);
+        const { limit } = req.body;
+        const result = await this.repo.getLatestVoters(limit as number);
     }
 
     @GET('/getLatestDelegates')
     public async getLatestDelegates(req: Request, res: Response) {
-        const { limit } = req.query;
-        const result: { delegates: Transaction[] } = await this.repo.getLatestDelegates(limit as number);
+        const { limit } = req.body;
+        const result = await this.repo.getLatestDelegates(limit as number);
     }
+
+    @GET('/forging/status')
+    @validate(schema.forgingStatus)
+    public async forgingStatus(req: Request, res: Response) {}
 }
 
 
