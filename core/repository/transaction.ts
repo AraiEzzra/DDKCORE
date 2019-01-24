@@ -1,4 +1,4 @@
-import { Transaction } from 'shared/model/transaction';
+import { Transaction } from 'shared/model/transaction';Transaction
 import { ITransactionRepository as ITransactionRepositoryShared } from 'shared/repository/transaction';
 
 // wait declare by @Fisenko

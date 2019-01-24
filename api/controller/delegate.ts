@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction, Error } from 'express';
-import * as HttpStatus from 'http-status-codes';
 import { DelegateRepository } from 'api/repository/delegate';
 import { delegateSchema as schema } from 'api/schema/delegate';
 import { Account } from 'shared/model/account';
@@ -101,23 +100,20 @@ export class DelegateController {
     @Validate(req.body, schema.disableForging)
     public async forgingDisable(req: Request, res: Response) {
         const { publicKey } = req.query;
-        const account: Account = await this.sharedAccountRepo.getAccount({ publicKey });
+        const result: { address: Account } = await this.sharedAccountRepo.getAccount({ publicKey });
         // ...
-        const result = { address: account.address };
     }
 
     @GET('/getLatestVoters')
     public async getLatestVoters(req: Request, res: Response) {
         const { limit } = req.query;
-        const voters: Transaction[] = await this.repo.getLatestVoters(limit as number);
-        const result =  { voters };
+        const result: { voters: Transaction[] } = await this.repo.getLatestVoters(limit as number);
     }
 
     @GET('/getLatestDelegates')
     public async getLatestDelegates(req: Request, res: Response) {
         const { limit } = req.query;
-        const delegates: Transaction[] = await this.repo.getLatestDelegates(limit as number);
-        const result =  { delegates };
+        const result: { delegates: Transaction[] } = await this.repo.getLatestDelegates(limit as number);
     }
 }
 
