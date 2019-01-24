@@ -615,7 +615,7 @@ Chain.prototype.newApplyBlock = async (block, broadcast, saveBlock, tick) => {
 
     if (saveBlock) {
         await self.newSaveBlock(block);
-        library.logger.debug(`Block: ${block.id} applied correctly`);
+        library.logger.debug(`Block applied correctly with ${block.transactions.length} transactions`);
     }
 
     for (const trs of block.transactions) {
