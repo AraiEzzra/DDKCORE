@@ -110,8 +110,6 @@ Chain.prototype.newSaveBlock = async (block) => {
             const inserts = new Inserts(promise, promise.values);
 
             const promises = [t.none(inserts.template(), promise.values)];
-            // FIXME
-            t = await __private.promiseTransactions(t, block);
             // Exec inserts as batch
             await t.batch(promises);
         });
@@ -119,8 +117,18 @@ Chain.prototype.newSaveBlock = async (block) => {
         library.logger.error(`[Chain][saveBlock][tx]: ${e}`);
         library.logger.error(`[Chain][saveBlock][tx][stack]: \n ${e.stack}`);
     }
+};
 
-    await __private.newAfterSave(block);
+Chain.prototype.saveTransaction = async (transaction) => {
+    try {
+        await library.db.tx(async (t) => {
+            const queries = await __private.newPromiseTransactions(transaction);
+            await t.batch(queries.map(query => t.none(query.template, query.params)));
+        });
+    } catch (error) {
+        library.logger.error(`[Chain][saveTransaction][tx]: ${error}`);
+        library.logger.error(`[Chain][saveTransaction][tx][stack]:\n${error.stack}`);
+    }
 };
 
 /**
@@ -213,6 +221,35 @@ __private.promiseTransactions = async (t, block) => {
     _.each(_.groupBy(promises, promiseGrouper), typeIterator);
 
     return t;
+};
+
+__private.newPromiseTransactions = async (transaction) => {
+    const promiseGrouper = (promise) => {
+        if (promise && promise.table) {
+            return promise.table;
+        }
+        throw 'Invalid promise';
+    };
+
+    const typeIterator = (type) => {
+        let values = [];
+        _.each(type, (promise) => {
+            if (promise && promise.values) {
+                values = values.concat(promise.values);
+            } else {
+                throw 'Invalid promise';
+            }
+        });
+
+        const inserts = new Inserts(type[0], values, true);
+        queries.push({ template: inserts.template(), params: inserts });
+    };
+
+    const queries = [];
+    const promises = await library.logic.transaction.dbSave(transaction);
+    _.each(_.groupBy(promises, promiseGrouper), typeIterator);
+
+    return queries;
 };
 
 /**
@@ -603,12 +640,18 @@ Chain.prototype.newApplyBlock = async (block, broadcast, saveBlock, tick) => {
 
     if (saveBlock) {
         await self.newSaveBlock(block);
-        library.logger.debug(`Block applied correctly with ${block.transactions.length} transactions`);
+        library.logger.debug(`Block: ${block.id} applied correctly`);
     }
 
     for (const trs of block.transactions) {
         const sender = await getOrCreateAccount(library.db, trs.senderPublicKey);
         await library.logic.transaction.newApply(trs, block, sender);
+        trs.blockId = block.id;
+        await self.saveTransaction(trs);
+    }
+
+    if (saveBlock) {
+        await __private.newAfterSave(block);
     }
 
     modules.blocks.lastBlock.set(block);
@@ -723,7 +766,7 @@ __private.popLastBlock = function (oldLastBlock, cbPopLastBlock) {
  */
 Chain.prototype.deleteLastBlock = function (cb) {
     let lastBlock = modules.blocks.lastBlock.get();
-    library.logger.warn('Deleting last block', JSON.stringify(lastBlock));
+    library.logger.warn(`Deleting last block: ${JSON.stringify(lastBlock)}`);
 
     if (lastBlock.height === 1) {
         return setImmediate(cb, 'Cannot delete genesis block');
@@ -732,7 +775,7 @@ Chain.prototype.deleteLastBlock = function (cb) {
     // Delete last block, replace last block with previous block, undo things
     __private.popLastBlock(lastBlock, (err, newLastBlock) => {
         if (err) {
-            library.logger.error('Error deleting last block', JSON.stringify(lastBlock), 'message', err);
+            library.logger.error(`Error deleting last block: ${JSON.stringify(lastBlock)}, message: ${err}`);
         } else {
             // Replace last block with previous
             lastBlock = modules.blocks.lastBlock.set(newLastBlock);
