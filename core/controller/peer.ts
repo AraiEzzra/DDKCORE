@@ -2,15 +2,12 @@ import { Peer } from 'shared/model/peer';
 import { PeerService } from 'core/service/peer';
 import { Block } from 'shared/model/block';
 import { BlockService } from 'core/service/block';
-import { Signature } from 'shared/model/signature';
+import { Transaction } from 'shared/model/transaction';
+import Response from 'shared/model/response';
 
 interface ICommonBlockRequest {
     body: {
         ids: string;
-    };
-    ip: string;
-    headers: {
-        port: number;
     };
 }
 
@@ -24,33 +21,20 @@ interface IPostBlockRequest {
     body: {
         block: Block;
     };
-    ip: string;
-    headers: {
-        port: number;
-    };
-}
-
-interface IPostSignaturesRequest {
-    body: {
-        signatures: Signature[];
-        signature: Signature;
-    };
 }
 
 interface IPostTransactionsRequest {
     body: {
-        transactions: Transaction[];
-        transaction: Transaction;
+        transactions: Transaction<object>[];
+        transaction: Transaction<object>;
     };
+}
+
+interface IAdditionalData {
     ip: string;
     headers: {
         port: number;
     };
-}
-
-// wait for @Dima Mekhed
-class Transaction {
-
 }
 
 @Controller('/peer')
@@ -61,53 +45,53 @@ export class PeerController {
     constructor() {}
 
     private handshake(ip: string, port: number, headers: object): Peer {
-        return new Peer({});
+        return new Peer();
     }
 
     @GET('/blocks/common')
-    public blocksCommon(req: ICommonBlockRequest): { common: number; } {
-        let ip: string = req.ip;
-        let port: number = req.headers.port;
-        let peer : Peer = this.handshake(ip, port, req.headers);
-        this.peerService.remove();
-        return { common: 0 };
+    public blocksCommon(req: ICommonBlockRequest, additionalData: IAdditionalData): Response<{ common: number; }> {
+        let ip: string = additionalData.ip;
+        let port: number = additionalData.headers.port;
+        let peerResponse : Response<Peer> = this.handshake(ip, port, additionalData.headers);
+        if (peerResponse.errors) {
+            peerResponse.errors.push('/blocks/common');
+            return new Response<{common: number}>({ errors: peerResponse.errors });
+        }
+        this.peerService.remove(peer);
+        return new Response({ data: { common: 0 }});
     }
 
     @GET('/blocks')
-    public blocks(req: IBlockRequest) : { blocks: Block[]; } {
+    public blocks(req: IBlockRequest) : Response<{ blocks: Block[]; }> {
         this.blockService.loadBlocksData({
             limit: 34,
             lastId: req.body.lastBlockId
         });
-
-        return { blocks: [] };
+        return new Response({ data: { blocks: [] } });
     }
 
     @GET('/list')
-    public list(): Peer[] {
+    public list(): Response<Peer[]> {
         this.peerService.list();
-        return [];
+        return new Response({ data: [] });
     }
 
     @GET('/height')
-    public height() {
-        return { height: this.blockService.getLastBlock().height };
+    public height() : Response<{ height: number }> {
+        return new Response<{height: number}>({ data : { height: this.blockService.getLastBlock().height } });
     }
 
     ping() {} // remove, peers use height
-
-    @GET('/signatures')
-    public getSignatures() {} // uses logic connected to multisignature transactions in transactionPool
 
     @GET('/transactions')
     public getTransactions() {} // transaction[] unconfirmed + multisignatures + queued
 
     @POST('/blocks')
-    public postBlock(req: IPostBlockRequest): { blockId: string } {
+    public postBlock(req: IPostBlockRequest, additionalData: IAdditionalData): { blockId: string } {
         let block: Block = req.body.block;
-        let ip: string = req.ip;
-        let port: number = req.headers.port;
-        let peer : Peer = this.handshake(ip, port, req.headers);
+        let ip: string = additionalData.ip;
+        let port: number = additionalData.headers.port;
+        let peer : Peer = this.handshake(ip, port, additionalData.headers);
 
         // blockService.objectNormalize ?
         // broadcast 'receiveBlock'
@@ -115,28 +99,30 @@ export class PeerController {
         return { blockId: block.id };
     }
 
-    @POST('/signatures')
-    public postSignatures(req: IPostSignaturesRequest): void {
-        let signatures: Signature[] = req.body.signatures;
-        let signature: Signature = req.body.signature;
-        this.receiveSignatures(signatures ? signatures : [signature]);
-    }
-
     @POST('/transactions')
     public postTransactions(req: IPostTransactionsRequest) {
-        let transactions: Transaction[] = req.body.transactions;
-        let transaction: Transaction = req.body.transaction;
+        let transactions: Transaction<object>[] = req.body.transactions;
+        let transaction: Transaction<object> = req.body.transaction;
         this.receiveTransactions(transactions ? transactions : [transaction]);
 
     }
 
-    private receiveSignatures(signatures: Signature[]): void {
-        // complex logic connected to multisignatures module ->
-        // calls accounts.getAccount, publish messages in the bus and through socket
-    }
-
-    private receiveTransactions(signatures: Transaction[]): void {
+    private receiveTransactions(transactions: Transaction<object>[]): void {
         // blockService.objectNormalize ?
         // transactions.processUnconfirmedTransaction
+    }
+
+    @ON('BLOCKCHAIN_READY')
+    public initDiscover() {
+        this.peerService.insertSeeds();
+        this.peerService.discover();
+    }
+
+    // @todo should be called each 10 sec
+    @ON('PEERS_DISCOVER')
+    public discover() {
+        this.peerService.discover();
+        this.peerService.updatePeers();
+        this.peerService.removeBans();
     }
 }
