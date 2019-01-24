@@ -2,25 +2,39 @@ import { Account } from 'shared/model/account';
 
 export interface AccountRepository {
 
-    // TODO: define data. Need to debug
-    createAccount(data: object): Account;
-    getAccount(): Account;
-    updateAccount(data: object): Account;
+    getAccountByAddress(address: string): Promise<Account>;
+
+    getAccountByPublicKey(publicKey: string): Promise<Account>;
+
+    getCountAccounts(): Promise<number>;
+
+    getBalanceByAddress(address: string): Promise<number>;
+
+    getCountAccountByAddress(address: string): Promise<number>;
 
 }
 
 export class AccountPGQLRepository implements AccountRepository {
 
-    createAccount(data: object): Account {
+    getAccountByAddress(address: string): Promise<Account> {
         return undefined;
     }
 
-    getAccount(): Account {
+    getAccountByPublicKey(publicKey: string): Promise<Account> {
         return undefined;
     }
 
-    updateAccount(data: object): Account {
+    getBalanceByAddress(address: string): Promise<number> {
         return undefined;
     }
+
+    getCountAccountByAddress(address: string): Promise<number> {
+        return undefined;
+    }
+
+    getCountAccounts(): Promise<number> {
+        return undefined;
+    }
+
 
 }

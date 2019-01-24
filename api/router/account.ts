@@ -15,8 +15,6 @@ router.get('/delegates/fee', accountController.getDelegatesFee);
 router.get('/count', accountController.getTotalAccounts);
 router.get('/getCirculatingSupply', accountController.getCirculatingSupply);
 router.get('/totalSupply', accountController.getTotalSupply);
-router.post('/existingETPSUser/validate', accountController.validateExistingUser);
-router.post('/verifyUserToComment', accountController.verifyAccountToComment);
 router.post('/senderBalance', accountController.checkSenderAccountBalance);
 router.post('/getDashboardDDKData', accountController.getDashboardDDKData);
 router.post('/checkAccountExists', accountController.checkAccountExistence);
