@@ -676,8 +676,13 @@ Accounts.prototype.shared = {
                             secondKeypair = library.ed.makeKeypair(secondHash);
                         }
 
-                        if (account.totalFrozeAmount == 0) {
+                        if (account.u_totalFrozeAmount == 0) {
                             return setImmediate(cb, 'Please Stake before vote/unvote');
+                        }
+
+                        const fee = library.logic.vote.calculateUnconfirmedFee(null, account);
+                        if (Number(account.u_balance) - Number(account.u_totalFrozeAmount) < fee) {
+                            return setImmediate(cb, 'Insufficient balance');
                         }
 
                         library.db.one(sql.countAvailableStakeOrdersForVote, {
