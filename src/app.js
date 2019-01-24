@@ -42,7 +42,7 @@ const Logger = require('./logger.js');
 
 const logman = new Logger();
 const logger = logman.logger;
-const sockets = [];
+const {AccountSessions} = require('./helpers/accountSessions');
 const utils = require('./utils');
 const elasticsearchSync = require('./helpers/elasticsearch');
 const cronjob = require('node-cron-job');
@@ -51,9 +51,6 @@ const ServerRPCApi = require('./api/rpc/server');
 const referal = require('./helpers/referal');
 const jobs = require('./jobs.js');
 
-exports.getUsersList = function () {
-    return sockets;
-};
 
 process.stdin.resume();
 
@@ -312,22 +309,16 @@ d.run(() => {
                 https_io = require('socket.io')(https);
             }
 
+            const accountSessions = AccountSessions.getInstance();
+
             // handled socket's connection event
             io.on('connection', (socket) => {
                 // IIFE: function to accept new socket.id in sockets array.
-                function acceptSocket(user, sockets) {
-                    let userFound = false;
-                    if (sockets) {
-                        for (let i = 0; i < sockets.length; i++) {
-                            if (sockets[i].address == user.address) {
-                                userFound = true;
-                            }
-                        }
+                function acceptSocket(user) {
+                    if(user.address) {
+                        let length = accountSessions.add( user.address, 'online', socket.id );
+                        io.sockets.emit('updateConnected', length);
                     }
-                    if (!userFound && user.address) {
-                        sockets.push(user);
-                    }
-                    io.sockets.emit('updateConnected', sockets.length);
                 }
 
                 socket.on('setUserAddress', (data) => {
@@ -336,16 +327,12 @@ d.run(() => {
                         status: 'online',
                         socketId: socket.id
                     };
-                    acceptSocket(user, sockets);
+                    acceptSocket(user);
                 });
 
                 socket.on('disconnect', () => {
-                    sockets.forEach((user, index) => {
-                        if (user.socketId == socket.id) {
-                            sockets.splice(index, 1);
-                            io.sockets.emit('updateConnected', sockets.length);
-                        }
-                    });
+                    let length = accountSessions.remove( socket.id );
+                    io.sockets.emit('updateConnected', length);
                 });
             });
 
