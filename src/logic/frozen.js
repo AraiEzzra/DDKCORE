@@ -231,6 +231,8 @@ Frozen.prototype.undo = async (trs) => {
         index: 'stake_orders',
         type: 'stake_orders',
         id: trs.id
+    }).catch(err => {
+        self.scope.logger.error(`[Elasticsearch]: document deletion error: ${err.message}`);
     });
 };
 

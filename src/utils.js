@@ -99,18 +99,7 @@ exports.getIgnoredFile = function (currDate) {
  */
 
 exports.deleteDocument = function (doc) {
-    (async function () {
-        await esClient.delete({
-            index: doc.index,
-            type: doc.type,
-            id: doc.id
-        }, (err, res) => {
-            if (err) {
-                return err.message;
-            }
-            return null;
-        });
-    }());
+    return esClient.delete(doc);
 };
 
 /**
@@ -121,18 +110,7 @@ exports.deleteDocument = function (doc) {
  * @returns {String} || null
  */
 exports.deleteDocumentByQuery = function (doc) {
-    (async function () {
-        await esClient.deleteByQuery({
-            index: doc.index,
-            type: doc.type,
-            body: doc.body
-        }, (err, res) => {
-            if (err) {
-                return err.message;
-            }
-            return null;
-        });
-    }());
+    return esClient.deleteByQuery(doc);
 };
 
 /**
