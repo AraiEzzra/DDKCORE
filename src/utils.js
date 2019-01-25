@@ -1,5 +1,8 @@
 const esClient = require('./elasticsearch/connection');
 const Accounts = require('./modules/accounts');
+const Logger = require('./logger.js');
+
+const logger = new Logger().logger;
 
 // FIXME: validate client here. currently not implemented
 exports.validateClient = function (req, res, next) {
@@ -72,6 +75,7 @@ exports.indexall = function (bulk, index) {
             body: bulk
         }, (err) => {
             if (err) {
+                logger.error(`[Elasticsearch] [indexall]: ${err.message}`);
                 reject(err);
             } else {
                 resolve(null);
@@ -106,6 +110,7 @@ exports.deleteDocument = function (doc) {
             id: doc.id
         }, (err, res) => {
             if (err) {
+                logger.error(`[Elasticsearch] [deleteDocument]: ${err.message}`);
                 return err.message;
             }
             return null;
@@ -128,6 +133,7 @@ exports.deleteDocumentByQuery = function (doc) {
             body: doc.body
         }, (err, res) => {
             if (err) {
+                logger.error(`[Elasticsearch] [deleteDocumentByQuery]: ${err.message}`);
                 return err.message;
             }
             return null;
@@ -154,6 +160,7 @@ exports.updateDocument = function (doc) {
             id: doc.id
         }, (err, res) => {
             if (err) {
+                logger.error(`[Elasticsearch] [updateDocument]: ${err.message}`);
                 return err.message;
             }
             return null;
@@ -169,6 +176,7 @@ exports.addDocument = async function (doc) {
         id: doc.id
     }, (err) => {
         if (err) {
+            logger.error(`[Elasticsearch] [addDocument]: ${err.message}`);
             return err.message;
         }
         return null;
