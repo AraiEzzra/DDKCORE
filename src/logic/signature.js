@@ -14,7 +14,7 @@ let self;
  * @param {Object} logger
  */
 // Constructor
-function Signature(schema, logger) {
+function Signature(schema, account, logger) {
     library = {
         schema,
         account,
