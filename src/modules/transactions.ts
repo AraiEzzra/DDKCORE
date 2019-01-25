@@ -746,8 +746,8 @@ Transactions.prototype.apply = function (transaction, block, sender, cb) {
 Transactions.prototype.undo = function (transaction, block, cb) {
     library.logger.debug('Undoing confirmed transaction', transaction.id);
     library.logic.transaction.undo(transaction, block)
-    .then(() => setImmediate(cb, null))
-    .cache((err) => setImmediate(cb, err));
+    .then(() => { setImmediate(cb, null); })
+    .catch((err) => { setImmediate(cb, err); });
 };
 
 /**
@@ -794,7 +794,7 @@ Transactions.prototype.undoUnconfirmed = function (transaction, cb) {
     library.logger.debug(`[Transactions][undoUnconfirmed] id ${transaction.id}`);
     library.logic.transaction.newUndoUnconfirmed(transaction)
     .then(() => setImmediate(cb, null))
-    .cache((err) => setImmediate(cb, err));
+    .catch((err) => setImmediate(cb, err));
 };
 
 /**

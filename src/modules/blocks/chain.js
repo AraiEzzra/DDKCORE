@@ -675,12 +675,9 @@ __private.popLastBlock = function (oldLastBlock, cbPopLastBlock) {
                 async.series([
                     function (seriesCb) {
                         modules.transactions.undo(transaction, oldLastBlock, seriesCb);
-                    }, function (cbUncomfirmed) {
-                        // Undoing unconfirmed tx - refresh unconfirmed balance (see: logic.transaction.undoUnconfirmed)
-                        // WARNING: DB_WRITE
-                        modules.transactions.undoUnconfirmed(transaction, cbUncomfirmed);
-                    }, function (cb) {
-                        return setImmediate(cb);
+                    }, 
+                    function (seriesCb) {
+                        modules.transactions.undoUnconfirmed(transaction, seriesCb);
                     }
                 ], cbReverse);
             }, (errorUndo) => {

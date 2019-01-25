@@ -1186,7 +1186,7 @@ Transaction.prototype.undo = async (trs, block) => {
         );
         throw err;
     }
-}
+};
 
 /**
  * Checks unconfirmed sender balance. Merges account into sender address with
