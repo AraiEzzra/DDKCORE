@@ -673,19 +673,8 @@ __private.popLastBlock = function (oldLastBlock, cbPopLastBlock) {
             // Reverse order of transactions in last blocks...
             async.eachSeries(oldLastBlock.transactions.reverse(), (transaction, cbReverse) => {
                 async.series([
-                    function (cbGetAccount) {
-                        // Retrieve sender by public key
-                        modules.accounts.getAccount(
-                            { publicKey: transaction.senderPublicKey },
-                            (errorGetAccount, sender) => {
-                                if (errorGetAccount) {
-                                    return setImmediate(cbGetAccount, errorGetAccount);
-                                }
-                                // Undoing confirmed tx - refresh confirmed balance
-                                // (see: logic.transaction.undo, logic.transfer.undo)
-                                // WARNING: DB_WRITE
-                                modules.transactions.undo(transaction, oldLastBlock, sender, cbGetAccount);
-                            });
+                    function (seriesCb) {
+                        modules.transactions.undo(transaction, oldLastBlock, seriesCb);
                     }, function (cbUncomfirmed) {
                         // Undoing unconfirmed tx - refresh unconfirmed balance (see: logic.transaction.undoUnconfirmed)
                         // WARNING: DB_WRITE

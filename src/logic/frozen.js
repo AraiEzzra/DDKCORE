@@ -222,32 +222,16 @@ Frozen.prototype.applyUnconfirmed = function (trs, sender, cb) {
  * @param {function} cb - Callback function.
  * @return {function} {cb, err}
  */
-Frozen.prototype.undo = function (trs, block, sender, cb) {
-    (async () => {
-        await Promise.all([
-            self.scope.db.none(sql.removeOrderByTrsId, { transactionId: trs.id }),
-            self.scope.db.none(sql.deductFrozeAmount, {
-                senderId: trs.senderId,
-                orderFreezedAmount: trs.stakedAmount
-            }),
-            self.undoAirdropReward(trs)
-        ]);
-    })()
-        .then(() => {
-            utils.deleteDocument({
-                index: 'stake_orders',
-                type: 'stake_orders',
-                id: trs.id
-            }, (err) => {
-                if (err) {
-                    self.scope.logger.error(`Elasticsearch: document deletion error : ${err}`);
-                } else {
-                    self.scope.logger.info('Elasticsearch: document deleted successfullly');
-                }
-            });
-            return setImmediate(cb);
-        })
-        .catch(err => setImmediate(cb, `Undo stake error: ${err}`));
+Frozen.prototype.undo = async (trs) => {
+    await Promise.all([
+        self.scope.db.none(sql.removeOrderByTrsId, { transactionId: trs.id }),
+        self.undoAirdropReward(trs)
+    ]);
+    utils.deleteDocument({
+        index: 'stake_orders',
+        type: 'stake_orders',
+        id: trs.id
+    });
 };
 
 /**

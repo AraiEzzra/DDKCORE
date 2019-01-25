@@ -559,56 +559,45 @@ Vote.prototype.apply = function (trs, block, sender, cb) {
  * @param {function} cb - Callback function
  * @return {setImmediateCallback} cb, err
  */
-Vote.prototype.undo = function (trs, block, sender, cb) {
-    const parent = this;
-    if (trs.asset.votes === null) {
-        return setImmediate(cb);
-    }
-
+Vote.prototype.undo = async (trs) => {
+    const parent = this; // logic/transaction.js
     const votesInvert = Diff.reverse(trs.asset.votes);
 
-    async.series([
-        function (seriesCb) {
-            parent.scope.account.merge(sender.address, {
-                delegates: votesInvert,
-                blockId: block.id,
-                round: modules.rounds.calc(block.height)
-            }, seriesCb);
-        },
-        // added to remove vote count from mem_accounts table
-        function (seriesCb) {
+    await parent.scope.account.asyncMerge(trs.senderId, {
+        delegates: votesInvert,
+    });
+
+    try {
+        await (new Promise((resolve, reject) => {
             self.updateMemAccounts({
                 votes: votesInvert,
                 senderId: trs.senderId
             }, (err) => {
                 if (err) {
-                    return setImmediate(seriesCb, err);
+                    reject(err);
+                } else {
+                    resolve()
                 }
-                return setImmediate(seriesCb, null);
             });
-        },
-        function (seriesCb) {
-            const votes = trs.asset.votes.map(vote => vote.substring(1));
+        }));
+    } catch (e) {
+        throw e;
+    }
 
-            library.db.query(sql.changeDelegateVoteCount({ value: -1, votes }))
-                .then(() => setImmediate(seriesCb, null))
-                .catch((err) => {
-                    library.logger.error(err.stack);
-                    return setImmediate(seriesCb, err);
-                });
-        },
-        function (seriesCb) {
-            const isDownVote = trs.trsName === 'DOWNVOTE';
-            if (isDownVote) {
-                return setImmediate(seriesCb, null, trs);
-            }
-            self.removeCheckVote(trs)
-                .then(
-                    () => setImmediate(seriesCb, null),
-                    err => setImmediate(seriesCb, err),
-                );
-        }
-    ], cb);
+    const votes = trs.asset.votes.map(vote => vote.substring(1));
+
+    await library.db.query(sql.changeDelegateVoteCount({ value: -1, votes }));
+
+    const isDownVote = trs.trsName === 'DOWNVOTE';
+
+    if (isDownVote) {
+        return;
+    }
+    try {
+        await self.removeCheckVote(trs);
+    } catch (e) {
+        throw e;
+    }
 };
 
 /**
