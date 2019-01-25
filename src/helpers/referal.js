@@ -67,7 +67,9 @@ __private.list = function (filter, cb) {
         return setImmediate(cb, orderBy.error);
     }
 
-    library.db.query(sql.list({
+    /** Previous Code */
+
+/*     library.db.query(sql.list({
         where,
         sortField: orderBy.sortField,
         sortMethod: orderBy.sortMethod
@@ -86,7 +88,38 @@ __private.list = function (filter, cb) {
     }).catch((err) => {
         library.logger.error(err.stack);
         return setImmediate(cb, 'Rewards#list error');
+    }); */
+
+    /** Resolved Count Issue on Response with Updated Code */
+
+    library.db.query(sql.countList({
+        where: where
+    }), params).then(function (rows) {
+        let count = rows[0].count;
+
+        library.db.query(sql.list({
+            where: where,
+            sortField: orderBy.sortField,
+            sortMethod: orderBy.sortMethod
+        }), params).then(function (rows) {
+
+            let data = {
+                rewards: rows,
+                count: count
+            };
+
+            return setImmediate(cb, null, data);
+        }).catch(function (err) {
+            library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
+            return setImmediate(cb, 'Rewards#list error');
+        });
+    }).catch(function (err) {
+        library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
+        return setImmediate(cb, 'Rewards#list error');
     });
+
+
+
 };
 
 module.exports.api = function (app) {
