@@ -1,3 +1,5 @@
+import { Transaction } from 'shared/model/transaction';
+
 export class Block {
     id: string;
     rowId: number;
@@ -13,4 +15,10 @@ export class Block {
     payloadHash: string;
     generatorPublicKey: string;
     blockSignature: string;
+    generationSignature?: string;
+    totalForged?: number;
+    generatorId?: string;
+    confirmations: number;
+    username: string;
+    transactions? : Transaction<object>[];
 }

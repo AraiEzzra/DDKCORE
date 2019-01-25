@@ -20,3 +20,7 @@ export const generateAddressByPublicKey = (publicKey: string): string => {
     return address;
 };
 
+export const getAddressByPublicKey = (publicKey): string => {
+    return '';
+};
+
