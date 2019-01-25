@@ -1157,46 +1157,36 @@ Transaction.prototype.newApply = async (trs, block, sender) => {
     self.scope.logger.debug(`[Logic/Transaction][apply]: transaction applied ${JSON.stringify(trs)}`);
 };
 
-/**
- * Merges account into sender address, Calls `undo` based on trs type (privateTypes).
- * @see privateTypes
- * @implements {bignum}
- * @implements {account.merge}
- * @implements {modules.rounds.calc}
- * @param {transaction} trs
- * @param {block} block
- * @param {account} sender
- * @param {function} cb - Callback function
- * @return {setImmediateCallback} for errors | cb
- */
-Transaction.prototype.undo = (trs, block, sender, cb) => {
-    const amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
+Transaction.prototype.undo = async (trs, block) => {
+    const amount = trs.amount + trs.fee;
 
-    self.scope.logger.trace('Logic/Transaction->undo', {
-        sender: sender.address, balance: amount, blockId: block.id, round: modules.rounds.calc(block.height)
-    });
-    self.scope.account.merge(sender.address, {
+    self.scope.logger.debug(`[TransactionLogic][undo] ${JSON.stringify({
+        sender: trs.senderId,
         balance: amount,
+        totalFrozeAmount: -trs.stakedAmount
+    })}`);
+
+    const mergedSender = await self.scope.account.asyncMerge(trs.senderId, {
+        balance: amount,
+        totalFrozeAmount: -trs.stakedAmount,
         blockId: block.id,
         round: modules.rounds.calc(block.height)
-    }, (err, mergedSender) => {
-        if (err) {
-            return setImmediate(cb, err);
-        }
-
-        __private.types[trs.type].undo.call(self, trs, block, mergedSender, (undoError) => {
-            if (undoError) {
-                self.scope.account.merge(mergedSender.address, {
-                    balance: -amount,
-                    blockId: block.id,
-                    round: modules.rounds.calc(block.height)
-                }, mergedError => setImmediate(cb, mergedError || undoError));
-            } else {
-                return setImmediate(cb);
-            }
-        });
     });
-};
+
+    try {
+        await __private.types[trs.type].undo.call(self, trs, mergedSender);
+    } catch (err) {
+        self.scope.logger.error(`[LogicTransaction][undo] ${err}`);
+        self.scope.logger.error(`[LogicTransaction][undo][stack] ${err.stack}`);
+        await self.scope.account.asyncMerge(trs.senderId,
+            {
+                balance: -amount,
+                totalFrozeAmount: trs.stakedAmount
+            }
+        );
+        throw err;
+    }
+}
 
 /**
  * Checks unconfirmed sender balance. Merges account into sender address with
@@ -1359,19 +1349,19 @@ Transaction.prototype.newUndoUnconfirmed = async (trs) => {
         await (new Promise((resolve, reject) => {
             __private.types[trs.type].undoUnconfirmed.call(self, trs, mergedSender, (err) => {
                 if (err) {
-                    reject(err);
+                    return reject(err);
                 }
                 resolve();
             });
         }));
-        self.scope.logger.debug(`[Transaction][newUndoUnconfirmed], ${JSON.stringify({
+        self.scope.logger.debug(`[TransactionLogic][newUndoUnconfirmed] merge ${JSON.stringify({
             sender: trs.senderId,
             u_balance: amount,
             u_totalFrozeAmount: -trs.stakedAmount
         })}`);
     } catch (err) {
-        self.scope.logger.error(`[LogicTransaction][newUndoUnconfirmed] ${err}`);
-        self.scope.logger.error(`[LogicTransaction][newUndoUnconfirmed][stack] ${err.stack}`);
+        self.scope.logger.error(`[TransactionLogic][newUndoUnconfirmed] ${err}`);
+        self.scope.logger.error(`[TransactionLogic][newUndoUnconfirmed][stack] ${err.stack}`);
         await self.scope.account.asyncMerge(
             trs.senderId,
             { u_balance: -amount, u_totalFrozeAmount: trs.stakedAmount },
