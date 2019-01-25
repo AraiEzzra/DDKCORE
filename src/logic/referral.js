@@ -78,15 +78,11 @@ Referral.prototype.apply = function (trs, block, sender, cb) {
     });
 };
 
-Referral.prototype.undo = function (trs, block, sender, cb) {
-    library.db.none(sql.changeAccountGlobalStatus, {
+Referral.prototype.undo = async (trs) => {
+    await library.db.none(sql.changeAccountGlobalStatus, {
         address: trs.senderId,
         status: false
-    }).then(() => {
-        setImmediate(cb);
-    }).catch((err) => {
-        setImmediate(cb, err);
-    });
+    })
 };
 
 Referral.prototype.applyUnconfirmed = function (trs, sender, cb) {

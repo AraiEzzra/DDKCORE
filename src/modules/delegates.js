@@ -68,6 +68,7 @@ function Delegates(cb, scope) {
         transactionTypes.DELEGATE,
         new Delegate(
             scope.schema,
+            scope.logic.account,
             scope.db
         )
     );

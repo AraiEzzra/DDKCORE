@@ -40,6 +40,7 @@ function Signatures(cb, scope) {
         transactionTypes.SIGNATURE,
         new Signature(
             scope.schema,
+            scope.logic.account,
             scope.logger
         )
     );
