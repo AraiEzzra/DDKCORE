@@ -742,9 +742,11 @@ Transactions.prototype.apply = function (transaction, block, sender, cb) {
  * @param {account} sender
  * @param {function} cb - Callback function
  */
-Transactions.prototype.undo = function (transaction, block, sender, cb) {
+Transactions.prototype.undo = function (transaction, block, cb) {
     library.logger.debug('Undoing confirmed transaction', transaction.id);
-    library.logic.transaction.undo(transaction, block, sender, cb);
+    library.logic.transaction.undo(transaction, block)
+    .then(() => setImmediate(cb, null))
+    .cache((err) => setImmediate(cb, err));
 };
 
 /**
@@ -788,14 +790,10 @@ Transactions.prototype.applyUnconfirmed = function (transaction, sender, cb) {
  * @return {setImmediateCallback} For error
  */
 Transactions.prototype.undoUnconfirmed = function (transaction, cb) {
-    library.logger.debug('Undoing unconfirmed transaction', transaction.id);
-
-    modules.accounts.getAccount({ publicKey: transaction.senderPublicKey }, (err, sender) => {
-        if (err) {
-            return setImmediate(cb, err);
-        }
-        library.logic.transaction.undoUnconfirmed(transaction, sender, cb);
-    });
+    library.logger.debug(`[Transactions][undoUnconfirmed] id ${transaction.id}`);
+    library.logic.transaction.newUndoUnconfirmed(transaction)
+    .then(() => setImmediate(cb, null))
+    .cache((err) => setImmediate(cb, err));
 };
 
 /**

@@ -100,8 +100,6 @@ __private.getById = function (id, cb) {
  * @param {function} cb - Callback function
  */
 SendFreezeOrder.prototype.apply = function (transaction, block, sender, cb) {
-    library.logger.debug('Applying confirmed transaction', transaction.id);
-    library.logic.transaction.apply(transaction, block, sender, cb);
 };
 
 /**
@@ -113,8 +111,6 @@ SendFreezeOrder.prototype.apply = function (transaction, block, sender, cb) {
  * @param {function} cb - Callback function
  */
 SendFreezeOrder.prototype.undo = function (transaction, block, sender, cb) {
-    library.logger.debug('Undoing confirmed transaction', transaction.id);
-    library.logic.transaction.undo(transaction, block, sender, cb);
 };
 
 /**

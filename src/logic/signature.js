@@ -17,6 +17,7 @@ let self;
 function Signature(schema, logger) {
     library = {
         schema,
+        account,
         logger,
     };
     self = this;
@@ -169,13 +170,13 @@ Signature.prototype.apply = function (trs, block, sender, cb) {
  * @param {account} sender
  * @param {function} cb - Callback function.
  */
-Signature.prototype.undo = function (trs, block, sender, cb) {
-    modules.accounts.setAccountAndGet({
-        address: sender.address,
+Signature.prototype.undo = async (trs) => {
+    await library.account.asyncMerge(trs.senderId, {
+        address: trs.senderId,
         secondSignature: 0,
         u_secondSignature: 1,
         secondPublicKey: null
-    }, cb);
+    });
 };
 
 /**

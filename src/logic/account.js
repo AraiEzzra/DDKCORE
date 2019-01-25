@@ -1002,7 +1002,7 @@ Account.prototype.asyncMerge = async (address, data) => ((new Promise((resolve, 
         if (err) {
             library.logger.error(`[Account][asyncMerge][merge] ${err}`);
             library.logger.error(`[Account][asyncMerge][merge][stack] ${err.stack}`);
-            reject(err);
+            return reject(err);
         }
         library.logger.trace(`[Account][asyncMerge][merge] ${JSON.stringify(account)}`);
         resolve(account);
