@@ -54,20 +54,30 @@ class TransactionPool {
         const removedTransactions = [];
         const transactions = this.getTransactionsBySenderId(senderId);
         for (const trs of transactions) {
-            await this.remove(trs);
-            removedTransactions.push(trs);
+            const removed = await this.remove(trs);
+            if (removed) {
+                removedTransactions.push(trs);
+            }
         }
         return removedTransactions;
     }
 
-    async push(trs: Transaction, sender?: Account, broadcast: boolean = false) {
-        if (!sender) {
-            sender = await getOrCreateAccount(this.scope.db, trs.senderPublicKey);
+    async removeTransactionByRecipientId(address: string): Promise<Array<Transaction>> {
+        const removedTransactions = [];
+        const transactions = this.getTransactionsByRecipientId(address);
+        for (const trs of transactions) {
+            const removed = await this.remove(trs);
+            if (removed) {
+                removedTransactions.push(trs);
+            }
         }
+        return removedTransactions;
+    }
 
+    async push(trs: Transaction, broadcast: boolean = false) {
         if (!this.locked) {
             try {
-                await this.scope.transactionLogic.newApplyUnconfirmed(trs, sender);
+                await this.scope.transactionLogic.newApplyUnconfirmed(trs);
                 trs.status = TransactionStatus.UNCOFIRM_APPLIED;
                 this.scope.logger.debug(`TransactionStatus.UNCONFIRM_APPLIED ${JSON.stringify(trs)}`);
             } catch (e) {
@@ -119,16 +129,6 @@ class TransactionPool {
             this.poolByRecipient[trs.recipientId].splice(this.poolByRecipient[trs.recipientId].indexOf(trs), 1);
         }
         return true;
-    }
-
-    async removeTransactionByRecipientId(address: string): Promise<Array<Transaction>> {
-        const removedTransactions = [];
-        const transactions = this.getTransactionsByRecipientId(address);
-        for (const trs of transactions) {
-            await this.remove(trs);
-            removedTransactions.push(trs);
-        }
-        return removedTransactions;
     }
 
     get(id: string): Transaction {
@@ -280,7 +280,7 @@ export class TransactionQueue {
         this.scope.logger.debug(`TransactionStatus.VERIFIED ${JSON.stringify(trs)}`);
 
         if (!this.locked) {
-            const pushed = await this.scope.transactionPool.push(trs, sender, true);
+            const pushed = await this.scope.transactionPool.push(trs, true);
             if (pushed) {
                 this.process();
                 return;

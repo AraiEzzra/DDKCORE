@@ -477,7 +477,9 @@ __private.loadBlockChain = function () {
         function updateMemAccounts(t) {
             const promises = [
                 t.none(sql.updateMemAccounts),
-                t.query(sql.getDelegates)
+                t.query(sql.getDelegates),
+                t.none(sql.clearUDelegates),
+                t.none(sql.refreshUDelegates)
             ];
 
             return t.batch(promises);
@@ -531,9 +533,9 @@ __private.loadBlocksFromNetwork = function (cb) {
                 function loadBlocks() {
                     __private.blocksToSync = peer.height;
 
-                    modules.blocks.process.loadBlocksFromPeer(peer, (err, lastValidBlock) => {
-                        if (err) {
-                            library.logger.error(err.toString());
+                    modules.blocks.process.loadBlocksFromPeer(peer, (loadBlocksFromPeerErr, lastValidBlock) => {
+                        if (loadBlocksFromPeerErr) {
+                            library.logger.error(loadBlocksFromPeerErr.toString());
                             library.logger.error(`Failed to load blocks from: ${peer.string}`);
                             errorCount += 1;
                         }
@@ -543,19 +545,19 @@ __private.loadBlocksFromNetwork = function (cb) {
                     });
                 }
 
-                function getCommonBlock(cb) {
+                function getCommonBlock(getCommonBlockCb) {
                     library.logger.info(`Looking for common block with: ${peer.string}`);
-                    modules.blocks.process.getCommonBlock(peer, lastBlock.height, (err, commonBlock) => {
+                    modules.blocks.process.getCommonBlock(peer, lastBlock.height, (getCommonBlockErr, commonBlock) => {
                         if (!commonBlock) {
-                            if (err) {
-                                library.logger.error(err.toString());
+                            if (getCommonBlockErr) {
+                                library.logger.error(getCommonBlockErr.toString());
                             }
                             library.logger.error(`Failed to find common block with: ${peer.string}`);
                             errorCount += 1;
                             return next();
                         }
                         library.logger.info(['Found common block:', commonBlock.id, 'with:', peer.string].join(' '));
-                        return setImmediate(cb);
+                        return setImmediate(getCommonBlockCb);
                     });
                 }
 
@@ -600,11 +602,6 @@ __private.sync = function (cb) {
     __private.syncTrigger(true);
 
     async.series({
-        // TODO: https://trello.com/c/N7QnY14v/209-fix-sync-method
-        // undoUnconfirmedList: function (seriesCb) {
-        // 	library.logger.debug('Undoing unconfirmed transactions before sync');
-        // 	return modules.transactions.undoUnconfirmedList(seriesCb);
-        // },
         getPeersBefore(seriesCb) {
             library.logger.debug('Establishing broadhash consensus before sync');
             return modules.transport.getPeers({ limit: constants.maxPeers }, seriesCb);
@@ -619,11 +616,6 @@ __private.sync = function (cb) {
             library.logger.debug('Establishing broadhash consensus after sync');
             return modules.transport.getPeers({ limit: constants.maxPeers }, seriesCb);
         },
-        // TODO: https://trello.com/c/N7QnY14v/209-fix-sync-method
-        // applyUnconfirmedList: function (seriesCb) {
-        // 	library.logger.debug('Applying unconfirmed transactions after sync');
-        // 	return modules.transactions.applyUnconfirmedList(seriesCb);
-        // }
     }, (err) => {
         __private.isActive = false;
         __private.syncTrigger(false);

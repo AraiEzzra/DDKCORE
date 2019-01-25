@@ -900,7 +900,7 @@ __private.checkTransactionsAndApplyUnconfirmed = async (block, checkExists, veri
                 }
             }
 
-            await library.logic.transaction.newApplyUnconfirmed(trs, sender);
+            await library.logic.transaction.newApplyUnconfirmed(trs);
             i++;
         } else {
             await library.logic.transaction.newUndoUnconfirmed(trs);

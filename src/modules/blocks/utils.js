@@ -11,10 +11,11 @@
  * @param {Sequence} dbSequence
  * @param {Object} genesisblock
  */
+const { transactionSortFunc } = require('src/helpers/transaction.utils');
+
 const _ = require('lodash');
 const constants = require('../../helpers/constants.js');
 const sql = require('../../sql/blocks.js');
-const transactionTypes = require('../../helpers/transactionTypes.js');
 const Rounds = require('../rounds.js');
 
 let modules;
@@ -87,7 +88,8 @@ Utils.prototype.readDbRows = function (rows) {
 
     // Reorganize list
     blocks = order.map((v) => {
-        blocks[v].transactions = Object.keys(blocks[v].transactions).map(t => blocks[v].transactions[t]);
+        blocks[v].transactions = Object.keys(blocks[v].transactions)
+        .map(t => blocks[v].transactions[t]);
         return blocks[v];
     });
 
@@ -108,16 +110,15 @@ Utils.prototype.readDbRows = function (rows) {
  * @return {Object}   cb.err Error if occurred
  * @return {Object}   cb.rows List of normalized blocks
  */
-Utils.prototype.loadBlocksPart = function (filter, cb) {
-    self.loadBlocksData(filter, (err, rows) => {
-        let blocks = [];
-
-        if (!err) {
-            // Normalize list of blocks
-            blocks = self.readDbRows(rows);
+Utils.prototype.loadBlocksPart = function (previousBlockId, cb) {
+    library.logger.debug(`[Utils][loadBlocksPart]', previousBlockId ${previousBlockId}`);
+    library.db.manyOrNone(sql.loadFullBlockById, { id: previousBlockId })
+    .then((previousBlockRaw) => {
+        if (previousBlockRaw && previousBlockRaw.length !== 0) {
+            const previousBlock = self.readDbRows(previousBlockRaw)[0];
+            return setImmediate(cb, null, previousBlock);
         }
-
-        return setImmediate(cb, err, blocks);
+        return setImmediate(cb, 'previousBlock is null');
     });
 };
 
@@ -137,29 +138,19 @@ Utils.prototype.loadLastBlock = function (cb) {
     library.dbSequence.add((cbAdd) => {
         // Get full last block from database
         // FIXME: Ordering in that SQL - to rewrite
-        library.db.query(sql.loadLastBlock).then((rows) => {
+        library.db.query(sql.loadLastBlock)
+        .then((rows) => {
             // Normalize block
             const block = modules.blocks.utils.readDbRows(rows)[0];
 
             // Sort block's transactions
-            block.transactions = block.transactions.sort((a) => {
-                if (block.id === library.genesisblock.block.id) {
-                    if (a.type === transactionTypes.VOTE) {
-                        return 1;
-                    }
-                }
-
-                if (a.type === transactionTypes.SIGNATURE) {
-                    return 1;
-                }
-
-                return 0;
-            });
+            block.transactions = block.transactions.sort(transactionSortFunc);
 
             // Update last block
             modules.blocks.lastBlock.set(block);
             return setImmediate(cbAdd, null, block);
-        }).catch((err) => {
+        })
+        .catch((err) => {
             library.logger.error(err.stack);
             return setImmediate(cbAdd, 'Blocks#loadLastBlock error');
         });
@@ -188,7 +179,8 @@ Utils.prototype.getIdSequence = function (height, cb) {
     library.db.query(
         sql.getIdSequence(),
         { height, limit: 5, delegates: Rounds.prototype.getSlotDelegatesCount(height) }
-    ).then((rows) => {
+    )
+    .then((rows) => {
         if (rows.length === 0) {
             return setImmediate(cb, `Failed to get id sequence for height: ${height}`);
         }
@@ -224,7 +216,8 @@ Utils.prototype.getIdSequence = function (height, cb) {
         });
 
         return setImmediate(cb, null, { firstHeight: rows[0].height, ids: ids.join(',') });
-    }).catch((err) => {
+    })
+    .catch((err) => {
         library.logger.error(err.stack);
         return setImmediate(cb, 'Blocks#getIdSequence error');
     });
@@ -242,14 +235,14 @@ Utils.prototype.getIdSequence = function (height, cb) {
  */
 Utils.prototype.loadBlockByHeight = function (height, cb) {
     library.db.query(sql.loadBlocksOffset, [height, height + 1])
-        .then((rows) => {
-            const blocks = self.readDbRows(rows);
-            return setImmediate(cb, null, blocks[0]);
-        })
-        .catch((err) => {
-            library.logger.error(err.stack);
-            return setImmediate(cb, 'Blocks#loadBlockByHeight error');
-        });
+    .then((rows) => {
+        const blocks = self.readDbRows(rows);
+        return setImmediate(cb, null, blocks[0]);
+    })
+    .catch((err) => {
+        library.logger.error(err.stack);
+        return setImmediate(cb, 'Blocks#loadBlockByHeight error');
+    });
 };
 
 /**
@@ -290,7 +283,8 @@ Utils.prototype.loadBlocksData = function (filter, options, cb) {
     // Execute in sequence via dbSequence
     library.dbSequence.add((cbAdd) => {
         // Get height of block with supplied ID
-        library.db.query(sql.getHeightByLastId, { lastId: filter.lastId || null }).then((rows) => {
+        library.db.query(sql.getHeightByLastId, { lastId: filter.lastId })
+        .then((rows) => {
             const height = rows.length ? rows[0].height : 0;
             // Calculate max block height for database query
             const realLimit = height + (parseInt(filter.limit, 10) || 1);
@@ -301,8 +295,9 @@ Utils.prototype.loadBlocksData = function (filter, options, cb) {
             // Retrieve blocks from database
             // FIXME: That SQL query have mess logic, need to be refactored
             library.db.query(sql.loadBlocksData(filter), params)
-                .then(rowsBlock => setImmediate(cbAdd, null, rowsBlock));
-        }).catch((err) => {
+            .then(rowsBlock => setImmediate(cbAdd, null, rowsBlock));
+        })
+        .catch((err) => {
             library.logger.error(err.stack);
             return setImmediate(cbAdd, 'Blocks#loadBlockData error');
         });
@@ -351,7 +346,7 @@ Utils.prototype.getBlockProgressLogger = function (transactionsCount, logsFreque
          */
         this.log = function () {
             library.logger.info(msgBlock, `${((this.applied / this.target) * 100)
-                    .toPrecision(4)} % : applied ${this.applied} of ${this.target} transactions`);
+            .toPrecision(4)} % : applied ${this.applied} of ${this.target} transactions`);
         };
     }
 
@@ -391,14 +386,16 @@ Utils.prototype.aggregateBlocksReward = function (filter, cb) {
     }
 
     // Get calculated rewards
-    library.db.query(sql.aggregateBlocksReward(params), params).then((rows) => {
+    library.db.query(sql.aggregateBlocksReward(params), params)
+    .then((rows) => {
         let data = rows[0];
         if (data.delegate === null) {
             return setImmediate(cb, 'Account not found or is not a delegate');
         }
         data = { fees: data.fees || '0', rewards: data.rewards || '0', count: data.count || '0' };
         return setImmediate(cb, null, data);
-    }).catch((err) => {
+    })
+    .catch((err) => {
         library.logger.error(err.stack);
         return setImmediate(cb, 'Blocks#aggregateBlocksReward error');
     });

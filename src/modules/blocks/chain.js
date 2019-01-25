@@ -110,8 +110,6 @@ Chain.prototype.newSaveBlock = async (block) => {
             const inserts = new Inserts(promise, promise.values);
 
             const promises = [t.none(inserts.template(), promise.values)];
-            // FIXME
-            t = await __private.promiseTransactions(t, block);
             // Exec inserts as batch
             await t.batch(promises);
         });
@@ -119,8 +117,22 @@ Chain.prototype.newSaveBlock = async (block) => {
         library.logger.error(`[Chain][saveBlock][tx]: ${e}`);
         library.logger.error(`[Chain][saveBlock][tx][stack]: \n ${e.stack}`);
     }
+};
 
-    await __private.newAfterSave(block);
+Chain.prototype.saveTransaction = async (transaction) => {
+    try {
+        await library.db.tx(async (t) => {
+            const promises = await library.logic.transaction.dbSave(transaction);
+            const queries = promises.map(promise => {
+                const inserts = new Inserts(promise, promise.values);
+                return t.none(inserts.template(), promise.values);
+            });
+            await t.batch(queries);
+        });
+    } catch (error) {
+        library.logger.error(`[Chain][saveTransaction][tx]: ${error}`);
+        library.logger.error(`[Chain][saveTransaction][tx][stack]:\n${error.stack}`);
+    }
 };
 
 /**
@@ -601,17 +613,26 @@ Chain.prototype.newApplyBlock = async (block, broadcast, saveBlock, tick) => {
     // Prevent shutdown during database writes.
     modules.blocks.isActive.set(true);
 
-    for (const trs of block.transactions) {
-        const sender = await getOrCreateAccount(library.db, trs.senderPublicKey);
-        await library.logic.transaction.newApply(trs, block, sender);
-    }
-
-    modules.blocks.lastBlock.set(block);
-
     if (saveBlock) {
         await self.newSaveBlock(block);
         library.logger.debug(`Block applied correctly with ${block.transactions.length} transactions`);
     }
+
+    for (const trs of block.transactions) {
+        const sender = await getOrCreateAccount(library.db, trs.senderPublicKey);
+        await library.logic.transaction.newApply(trs, block, sender);
+
+        if (saveBlock) {
+            trs.blockId = block.id;
+            await self.saveTransaction(trs);
+        }
+    }
+
+    if (saveBlock) {
+        await __private.newAfterSave(block);
+    }
+
+    modules.blocks.lastBlock.set(block);
     library.bus.message('newBlock', block, broadcast);
 
     if (tick) {
@@ -644,11 +665,10 @@ __private.popLastBlock = function (oldLastBlock, cbPopLastBlock) {
     library.balancesSequence.add((cbAdd) => {
         // Load previous block from full_blocks_list table
         // TODO: Can be inefficient, need performnce tests
-        modules.blocks.utils.loadBlocksPart({ id: oldLastBlock.previousBlock }, (err, previousBlock) => {
-            if (err || !previousBlock.length) {
+        modules.blocks.utils.loadBlocksPart(oldLastBlock.previousBlock, (err, previousBlock) => {
+            if (err) {
                 return setImmediate(cbAdd, err || 'previousBlock is null');
             }
-            previousBlock = previousBlock[0];
 
             // Reverse order of transactions in last blocks...
             async.eachSeries(oldLastBlock.transactions.reverse(), (transaction, cbReverse) => {
@@ -723,7 +743,7 @@ __private.popLastBlock = function (oldLastBlock, cbPopLastBlock) {
  */
 Chain.prototype.deleteLastBlock = function (cb) {
     let lastBlock = modules.blocks.lastBlock.get();
-    library.logger.warn('Deleting last block', lastBlock);
+    library.logger.warn(`Deleting last block: ${JSON.stringify(lastBlock)}`);
 
     if (lastBlock.height === 1) {
         return setImmediate(cb, 'Cannot delete genesis block');
@@ -732,7 +752,7 @@ Chain.prototype.deleteLastBlock = function (cb) {
     // Delete last block, replace last block with previous block, undo things
     __private.popLastBlock(lastBlock, (err, newLastBlock) => {
         if (err) {
-            library.logger.error('Error deleting last block', lastBlock);
+            library.logger.error(`Error deleting last block: ${JSON.stringify(lastBlock)}, message: ${err}`);
         } else {
             // Replace last block with previous
             lastBlock = modules.blocks.lastBlock.set(newLastBlock);

@@ -46,6 +46,16 @@ function Process(logger, block, peers, transaction, Schema, db, dbSequence, sequ
     return self;
 }
 
+Process.prototype.receiveLocked = false;
+
+Process.prototype.receiveLock = () => {
+    self.receiveLocked = true
+};
+
+Process.prototype.receiveUnlock = () => {
+    self.receiveLocked = false
+};
+
 /**
  * Performs chain comparison with remote peer
  * WARNING: Can trigger chain recovery
@@ -199,12 +209,13 @@ Process.prototype.loadBlocksOffset = function (limit, offset, verify, cb) {
                             verify,
                             (err) => {
                                 if (err) {
-                                    library.logger.debug('Block processing failed', {
+                                    library.logger.debug(`[Process][loadBlocksOffset] 
+                                    Block processing failed, ${JSON.stringify({
                                         id: block.id,
                                         err: err.toString(),
                                         module: 'blocks',
                                         block,
-                                    });
+                                    })}`);
                                 }
                                 // Update last block
                                 // modules.blocks.lastBlock.push(block);
@@ -268,13 +279,13 @@ Process.prototype.loadBlocksFromPeer = function (peer, cb) {
     // Process single block
     function processBlock(block, seriesCb) {
         // Start block processing - broadcast: false, saveBlock: true
+        modules.transactions.lockTransactionPoolAndQueue();
         modules.transactions.removeFromPool(block.transactions, true).then(
             async (removedTransactions) => {
                 library.logger.debug(
                     `[Process][processBlock] removedTransactions ${JSON.stringify(removedTransactions)}`
                 );
                 try {
-                    modules.transactions.lockTransactionPoolAndQueue();
                     await modules.blocks.verify.newProcessBlock(block, false, true, true, true);
                     lastValidBlock = block;
                     library.logger.info(
@@ -298,7 +309,8 @@ Process.prototype.loadBlocksFromPeer = function (peer, cb) {
                 } catch (err) {
                     const id = (block ? block.id : 'null');
                     library.logger.debug(
-                        'Block processing failed', { id, err: err.toString(), module: 'blocks', block }
+                        `[Process][processBlock] Block processing failed, 
+                        ${JSON.stringify({ id, err: err.toString(), module: 'blocks', block })}`
                     );
                     await modules.transactions.pushInPool(removedTransactions);
                     modules.transactions.unlockTransactionPoolAndQueue();
@@ -411,10 +423,11 @@ Process.prototype.generateBlock = function (keypair, timestamp, cb) {
 
 Process.prototype.newGenerateBlock = async (keypair, timestamp) => {
     let block;
-    const transactions = await modules.transactions.getUnconfirmedTransactionsForBlockGeneration();
-    library.logger.debug(`[Process][newGenerateBlock][transactions] ${JSON.stringify(transactions)}`);
 
     modules.transactions.lockTransactionPoolAndQueue();
+
+    const transactions = await modules.transactions.getUnconfirmedTransactionsForBlockGeneration();
+    library.logger.debug(`[Process][newGenerateBlock][transactions] ${JSON.stringify(transactions)}`);
 
     try {
         block = library.logic.block.create({
@@ -484,6 +497,11 @@ __private.validateBlockSlot = function (block, lastBlock, cb) {
 Process.prototype.onReceiveBlock = function (block) {
     let lastBlock;
 
+    if (self.receiveLocked) {
+        library.logger.warn(`[Process][onReceiveBlock] locked for id ${block.id}`);
+        return;
+    }
+
     // Execute in sequence via sequence
     library.sequence.add((cb) => {
         // When client is not loaded, is syncing or round is ticking
@@ -500,7 +518,12 @@ Process.prototype.onReceiveBlock = function (block) {
 
         // Detect sane block
         if (block.previousBlock === lastBlock.id && lastBlock.height + 1 === block.height) {
-            __private.newReceiveBlock(block).then(() => setImmediate(cb, null));
+            self.receiveLock();
+            __private.newReceiveBlock(block)
+                .then(() => {
+                    self.receiveUnlock();
+                    return setImmediate(cb, null);
+                });
         } else if (block.previousBlock !== lastBlock.id && lastBlock.height + 1 === block.height) {
             // Process received fork cause 1
             return __private.receiveForkOne(block, lastBlock, cb);
@@ -561,11 +584,13 @@ __private.newReceiveBlock = async (block) => {
     ].join(' '));
 
     modules.blocks.lastReceipt.update();
+
+    modules.transactions.lockTransactionPoolAndQueue();
+
     const removedTransactions = await modules.transactions.removeFromPool(block.transactions, true);
+    library.logger.debug(`[Process][newReceiveBlock] removedTransactions ${JSON.stringify(removedTransactions)}`);
 
     try {
-        modules.transactions.lockTransactionPoolAndQueue();
-
         await modules.blocks.verify.newProcessBlock(block, true, true, true, true);
 
         const transactionForReturn = [];
