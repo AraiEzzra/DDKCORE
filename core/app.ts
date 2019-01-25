@@ -1,9 +1,12 @@
 import express from 'express';
 import * as bodyParser from 'body-parser';
-import { redisGetAsync } from 'shared/driver/redis';
+import 'shared/driver/redis';
+import 'shared/driver/elasticsearch';
+import 'shared/driver/db';
 
 class App {
     public app: express.Application;
+    public router: express.Router;
 
     constructor() {
         if (!this.app) {
@@ -13,24 +16,11 @@ class App {
 
     private init() {
         this.app = express();
-
         this.configurate();
-        this.route();
-
     }
 
     private configurate() {
         this.app.use(bodyParser.json());
-    }
-
-    private route() {
-        // this.app.use('/peer/');
-    }
-
-    private async driver() {
-        /**
-         *  connect (PGP, redis, ES)
-         */
     }
 }
 

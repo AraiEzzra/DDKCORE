@@ -1,13 +1,4 @@
-import { Router } from 'express'import { Router } from 'express';
-
-export class PeerRoute {
-    public routes: Router;
-
-    constructor() {
-        if (!this.routes) {
-            this.routes = Router();
-        }
-    };
+import { Router } from 'express';
 import accountController from '../controller/account';
 
 const router: Router = Router();

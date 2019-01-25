@@ -1,9 +1,10 @@
 import redis, { ClientOpts } from 'redis';
 const { promisify } = require('util');
 
+const defaultPortRedis = 6380;
 export const redisOptions: ClientOpts = {
     host: process.env.REDIS_HOST || '127.0.0.1',
-    port: parseInt(process.env.REDIS_PORT, 10) || 6380,
+    port: parseInt(process.env.REDIS_PORT, 10) || defaultPortRedis,
 };
 
 export const redisClient = redis.createClient(redisOptions);
