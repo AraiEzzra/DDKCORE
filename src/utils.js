@@ -74,8 +74,8 @@ exports.indexall = function (bulk, index) {
             type: index,
             body: bulk
         }, (err) => {
-            logger.error(`[Elasticsearch] [indexall]: ${err.message}`);
             if (err) {
+                logger.error(`[Elasticsearch][indexall]: ${err.message}`);
                 reject(err);
             } else {
                 resolve(null);
@@ -144,7 +144,7 @@ exports.updateDocument = function (doc) {
             id: doc.id
         }, (err, res) => {
             if (err) {
-                logger.error(`[Elasticsearch] [updateDocument]: ${err.message}`);
+                logger.error(`[Elasticsearch][updateDocument]: ${err.message}`);
                 return err.message;
             }
             return null;
@@ -160,9 +160,10 @@ exports.addDocument = async function (doc) {
         id: doc.id
     }, (err) => {
         if (err) {
-            logger.error(`[Elasticsearch] [addDocument]: ${err.message}`);
+            logger.error(`[Elasticsearch][addDocument]: ${err.message}`);
             return err.message;
         }
         return null;
     });
 };
+console.log('1');
