@@ -4,7 +4,7 @@ import { Block } from 'shared/model/block';
 import { BlockService } from 'core/service/block';
 import { Transaction } from 'shared/model/transaction';
 import Response from 'shared/model/response';
-import { Controller, GET } from 'core/util/decorator';
+import { Controller, GET, POST } from 'core/util/decorator';
 
 interface ICommonBlockRequest {
     body: {

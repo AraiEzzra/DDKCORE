@@ -1,8 +1,11 @@
 import express from 'express';
 import * as bodyParser from 'body-parser';
-import 'shared/driver/redis';
-import 'shared/driver/elasticsearch';
-import 'shared/driver/db';
+import { setApp } from './util/decorator';
+import './controller';
+
+// import 'shared/driver/redis';
+// import 'shared/driver/elasticsearch';
+// import 'shared/driver/db';
 
 class App {
     public app: express.Application;
@@ -16,11 +19,8 @@ class App {
 
     private init() {
         this.app = express();
-        this.configurate();
-    }
-
-    private configurate() {
         this.app.use(bodyParser.json());
+        setApp(this.app);
     }
 }
 

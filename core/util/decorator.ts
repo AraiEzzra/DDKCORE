@@ -1,28 +1,42 @@
-import { app } from '../app';
+import { Application } from 'express'
+let app: Application = undefined;
+let targets = new Set();
+
+export const setApp = (a: Application) => {
+    if (!app) {
+        app = a;
+        targets.forEach(item => {
+            item.ctrl.forEach(route => {
+                app[route.method](item.path + route.path, route.func);
+            });
+        })
+    }
+};
 
 export const Controller = (path) => {
     return (controller: Function) => {
         if (controller.prototype.routes) {
-            controller.prototype.routes.forEach(route => {
-                app[route.method](path + route.path, route.func);
+            targets.add({
+                path,
+                ctrl: controller.prototype.routes
             });
         }
     };
 };
 
-export const GET = (path) => {
+export const GET = (path: string) => {
     return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
         addEndpointPath('get', path, target, descriptor);
     };
 };
 
-export const POST = (path) => {
+export const POST = (path: string) => {
     return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
         addEndpointPath('post', path, target, descriptor);
     };
 };
 
-export const PUT = (path) => {
+export const PUT = (path: string) => {
     return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
         addEndpointPath('put', path, target, descriptor);
     };
@@ -44,28 +58,28 @@ const addEndpointPath = (method: string, path: string,  target: any, descriptor:
     });
 };
 
-// REMOVE
+// Need to Remove
+@Controller('/test')
+class Class {
+    constructor() {}
 
-// @Controller('/test')
-// class Class {
-//     constructor() {
-//     }
-//
-//     @GET('test')
-//     test() {
-//     }
-// }
-//
-// @Controller('/test2')
-// class Class2 {
-//     constructor() {
-//     }
-//
-//     @GET('test')
-//     test() {
-//     }
-// }
-//
-// const c = new Class();
-// const c2 = new Class2();
+    @GET('/')
+    test1() {
+        console.log('Class 1. Path "/"')
+    }
 
+    @GET('/test')
+    test2() {
+        console.log('Class 1. Path "/test"')
+    }
+}
+
+@Controller('/test2')
+class Class2 {
+    constructor() {}
+
+    @GET('/test')
+    test() {
+        console.log('Class 2. Path "/test"')
+    }
+}
