@@ -102,20 +102,12 @@ exports.getIgnoredFile = function (currDate) {
  * @returns {String} || null
  */
 
-exports.deleteDocument = function (doc) {
-    (async function () {
-        await esClient.delete({
-            index: doc.index,
-            type: doc.type,
-            id: doc.id
-        }, (err, res) => {
-            if (err) {
-                logger.error(`[Elasticsearch] [deleteDocument]: ${err.message}`);
-                return err.message;
-            }
-            return null;
-        });
-    }());
+exports.deleteDocument = async (doc) => {
+    try {
+        return await esClient.delete(doc);
+    } catch (error) {
+        logger.error(`[Elasticsearch][deleteDocument]: ${error.message}`);
+    }
 };
 
 /**
@@ -125,20 +117,12 @@ exports.deleteDocument = function (doc) {
  * @param {doc} containes info regarding document to be deleted i.e index, type, id, body
  * @returns {String} || null
  */
-exports.deleteDocumentByQuery = function (doc) {
-    (async function () {
-        await esClient.deleteByQuery({
-            index: doc.index,
-            type: doc.type,
-            body: doc.body
-        }, (err, res) => {
-            if (err) {
-                logger.error(`[Elasticsearch] [deleteDocumentByQuery]: ${err.message}`);
-                return err.message;
-            }
-            return null;
-        });
-    }());
+exports.deleteDocumentByQuery = async (doc) => {
+    try {
+        return await esClient.deleteByQuery(doc);
+    } catch (error) {
+        logger.error(`[Elasticsearch][deleteDocumentByQuery]: ${error.message}`);
+    }
 };
 
 /**

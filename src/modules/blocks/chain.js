@@ -251,8 +251,6 @@ Chain.prototype.deleteBlock = function (blockId, cb) {
                         term: { b_id: blockId }
                     }
                 }
-            }).catch(err => {
-                library.logger.error(`[Elasticsearch]: document deletion error: ${err.message}`);
             });
 
             return setImmediate(cb);
@@ -672,7 +670,7 @@ __private.popLastBlock = function (oldLastBlock, cbPopLastBlock) {
                 async.series([
                     function (seriesCb) {
                         modules.transactions.undo(transaction, oldLastBlock, seriesCb);
-                    }, 
+                    },
                     function (seriesCb) {
                         modules.transactions.undoUnconfirmed(transaction, seriesCb);
                     }
