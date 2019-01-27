@@ -1,5 +1,8 @@
 const esClient = require('./elasticsearch/connection');
 const Accounts = require('./modules/accounts');
+const Logger = require('./logger.js');
+
+const logger = new Logger().logger;
 
 // FIXME: validate client here. currently not implemented
 exports.validateClient = function (req, res, next) {
@@ -71,6 +74,7 @@ exports.indexall = function (bulk, index) {
             type: index,
             body: bulk
         }, (err) => {
+            logger.error(`[Elasticsearch] [indexall]: ${err.message}`);
             if (err) {
                 reject(err);
             } else {
@@ -99,7 +103,19 @@ exports.getIgnoredFile = function (currDate) {
  */
 
 exports.deleteDocument = function (doc) {
-    return esClient.delete(doc);
+    (async function () {
+        await esClient.delete({
+            index: doc.index,
+            type: doc.type,
+            id: doc.id
+        }, (err, res) => {
+            if (err) {
+                logger.error(`[Elasticsearch] [deleteDocument]: ${err.message}`);
+                return err.message;
+            }
+            return null;
+        });
+    }());
 };
 
 /**
@@ -110,7 +126,19 @@ exports.deleteDocument = function (doc) {
  * @returns {String} || null
  */
 exports.deleteDocumentByQuery = function (doc) {
-    return esClient.deleteByQuery(doc);
+    (async function () {
+        await esClient.deleteByQuery({
+            index: doc.index,
+            type: doc.type,
+            body: doc.body
+        }, (err, res) => {
+            if (err) {
+                logger.error(`[Elasticsearch] [deleteDocumentByQuery]: ${err.message}`);
+                return err.message;
+            }
+            return null;
+        });
+    }());
 };
 
 /**
@@ -132,6 +160,7 @@ exports.updateDocument = function (doc) {
             id: doc.id
         }, (err, res) => {
             if (err) {
+                logger.error(`[Elasticsearch] [updateDocument]: ${err.message}`);
                 return err.message;
             }
             return null;
@@ -147,6 +176,7 @@ exports.addDocument = async function (doc) {
         id: doc.id
     }, (err) => {
         if (err) {
+            logger.error(`[Elasticsearch] [addDocument]: ${err.message}`);
             return err.message;
         }
         return null;
