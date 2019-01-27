@@ -312,7 +312,7 @@ __private.loadTransactions = function (cb) {
  * @emits exit
  * @throws {string} When fails to match genesis block with database
  */
-__private.loadBlockChain = function () {
+Loader.prototype.loadBlockChain = function (cb) {
     let offset = 0,
         limit = Number(library.config.loading.loadPerIteration) || 1000;
     let verify = true;
@@ -342,19 +342,19 @@ __private.loadBlockChain = function () {
             },
             loadBlocksOffset(seriesCb) {
                 async.until(
-                    () => count < offset, (cb) => {
+                    () => count < offset, (untilCb) => {
                         if (count > 1) {
                             library.logger.info(`Rebuilding blockchain, current block height: ${offset + 1}`);
                         }
                         modules.blocks.process.loadBlocksOffset(limit, offset, verify, (err, lastBlock) => {
                             if (err) {
-                                return setImmediate(cb, err);
+                                return setImmediate(untilCb, err);
                             }
 
                             offset += limit;
                             __private.lastBlock = lastBlock;
 
-                            return setImmediate(cb);
+                            return setImmediate(untilCb);
                         });
                     }, err => setImmediate(seriesCb, err)
                 );
@@ -381,6 +381,8 @@ __private.loadBlockChain = function () {
                 library.logger.info('Blockchain ready');
                 library.bus.message('blockchainReady');
             }
+
+            return setImmediate(cb);
         });
     }
 
@@ -447,10 +449,6 @@ __private.loadBlockChain = function () {
 
         const round = modules.rounds.calc(count);
 
-        if (count === 1) {
-            return reload(count);
-        }
-
         matchGenesisBlock(results[1][0]);
 
         if (verifyOnLoading) {
@@ -497,6 +495,8 @@ __private.loadBlockChain = function () {
                 __private.lastBlock = block;
                 library.logger.info('Blockchain ready');
                 library.bus.message('blockchainReady');
+
+                return setImmediate(cb);
             });
         });
     }).catch((err) => {
@@ -820,8 +820,6 @@ Loader.prototype.onBind = function (scope) {
         multisignatures: scope.multisignatures,
         system: scope.system,
     };
-
-    __private.loadBlockChain();
 };
 
 /**

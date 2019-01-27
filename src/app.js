@@ -607,13 +607,13 @@ d.run(() => {
             });
         }],
         binding: ['modules', 'bus', 'logic', function (scope, cb) {
-            scope.logger.debug('[App][loader][ready] start loading');
+            scope.logger.debug('[App][loader][binding] start loading');
 
             scope.bus.message('bind', scope.modules);
             scope.logic.transaction.bindModules(scope.modules);
             scope.logic.peers.bindModules(scope.modules);
 
-            scope.logger.debug('[App][loader][ready] end binding');
+            scope.logger.debug('[App][loader][binding] end binding');
             cb();
         }],
         applyGenesisBlock: ['binding', (scope, cb) => {
@@ -623,7 +623,14 @@ d.run(() => {
                 cb();
             });
         }],
-        ready: ['applyGenesisBlock', function (scope, cb) {
+        loadBlockChain: ['applyGenesisBlock', (scope, cb) => {
+            scope.logger.debug('[App][loader][loadBlockChain] start loading');
+            scope.modules.loader.loadBlockChain(() => {
+                scope.logger.info('[App][loader][loadBlockChain] loaded');
+                cb();
+            });
+        }],
+        ready: ['loadBlockChain', function (scope, cb) {
             scope.logger.debug('[App][loader][ready] start loading');
             elasticsearchSync.sync(scope.db, scope.logger);
             scope.logger.info('[App][loader][ready] loaded');
