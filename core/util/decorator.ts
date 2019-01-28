@@ -1,11 +1,9 @@
 import { Application } from 'express';
-
 const MethodEnum = {
     GET: 'get',
     POST: 'post',
     PUT: 'put'
 };
-
 let targets = new Set();
 
 export const setRoute = (app: Application) => {
