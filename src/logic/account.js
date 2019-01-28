@@ -778,6 +778,7 @@ Account.prototype.merge = function (address, diff, cb) {
                         update.$inc[value] = Math.floor(trueValue);
                         if (value === 'balance') {
                             round.push({
+                                // TODO rewrite dependentId
                                 query: 'INSERT INTO mem_round ("address", "amount", "delegate", "blockId", "round")' +
                                 ' SELECT ${address}, (${amount})::bigint, "dependentId", ${blockId}, ${round}' +
                                 ' FROM mem_accounts2delegates WHERE "accountId" = ${address};',
@@ -785,7 +786,7 @@ Account.prototype.merge = function (address, diff, cb) {
                                     address,
                                     amount: trueValue,
                                     blockId: diff.blockId,
-                                    round: diff.round
+                                    round: diff.round || 0
                                 }
                             });
                         }
@@ -799,6 +800,7 @@ Account.prototype.merge = function (address, diff, cb) {
                         }
                         if (value === 'balance') {
                             round.push({
+                                // TODO rewrite dependentId
                                 query: 'INSERT INTO mem_round ("address", "amount", "delegate", "blockId",' +
                                 ' "round") SELECT ${address}, (${amount})::bigint, "dependentId", ${blockId},' +
                                 ' ${round} FROM mem_accounts2delegates WHERE "accountId" = ${address};',
@@ -806,7 +808,7 @@ Account.prototype.merge = function (address, diff, cb) {
                                     address,
                                     amount: trueValue,
                                     blockId: diff.blockId,
-                                    round: diff.round
+                                    round: diff.round || 0
                                 }
                             });
                         }
@@ -847,7 +849,7 @@ Account.prototype.merge = function (address, diff, cb) {
                                             address: address,
                                             delegate: val,
                                             blockId: diff.blockId,
-                                            round: diff.round
+                                            round: diff.round || 0
                                         }
                                     });
                                 }
@@ -864,7 +866,7 @@ Account.prototype.merge = function (address, diff, cb) {
                                             address,
                                             delegate: val,
                                             blockId: diff.blockId,
-                                            round: diff.round
+                                            round: diff.round || 0
                                         }
                                     });
                                 }
@@ -881,7 +883,7 @@ Account.prototype.merge = function (address, diff, cb) {
                                             address,
                                             delegate: val,
                                             blockId: diff.blockId,
-                                            round: diff.round
+                                            round: diff.round || 0
                                         }
                                     });
                                 }

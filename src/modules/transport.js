@@ -440,6 +440,8 @@ Transport.prototype.onBind = function (scope) {
  */
 Transport.prototype.onBlockchainReady = function () {
     __private.loaded = true;
+
+    __private.broadcaster.registerJobs();
 };
 
 /**
@@ -493,6 +495,10 @@ Transport.prototype.onTransactionPutInPool = (transaction) => {
  * @emits blocks/change
  */
 Transport.prototype.onNewBlock = function (block, broadcast) {
+    // TODO: fix broadcast onNewBlock
+    // https://trello.com/c/573v81yz/245-fix-broadcast-on-new-block
+    return;
+
     if (broadcast) {
         const broadhash = modules.system.getBroadhash();
 

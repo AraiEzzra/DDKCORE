@@ -550,8 +550,8 @@ d.run(() => {
                 // sendFreezeOrder: ['logger', 'db', 'network', function (scope, cb) {
                 // 	new SendFreezeOrder(scope.logger, scope.db, scope.network, cb);
                 // }],
-                vote: ['logger', 'schema', 'db', 'frozen', function (scope, cb) {
-                    new Vote(scope.logger, scope.schema, scope.db, scope.frozen, cb);
+                vote: ['logger', 'schema', 'db', 'frozen', 'account', function (scope, cb) {
+                    new Vote(scope.logger, scope.schema, scope.db, scope.frozen, scope.account, cb);
                 }],
             }, (err, data) => {
                 scope.logger.info('[App][loader][logic] loaded');
@@ -594,13 +594,13 @@ d.run(() => {
             });
         }],
         binding: ['modules', 'bus', 'logic', function (scope, cb) {
-            scope.logger.debug('[App][loader][ready] start loading');
+            scope.logger.debug('[App][loader][binding] start loading');
 
             scope.bus.message('bind', scope.modules);
             scope.logic.transaction.bindModules(scope.modules);
             scope.logic.peers.bindModules(scope.modules);
 
-            scope.logger.debug('[App][loader][ready] end binding');
+            scope.logger.debug('[App][loader][binding] end binding');
             cb();
         }],
         applyGenesisBlock: ['binding', (scope, cb) => {
@@ -610,7 +610,14 @@ d.run(() => {
                 cb();
             });
         }],
-        ready: ['applyGenesisBlock', function (scope, cb) {
+        loadBlockChain: ['applyGenesisBlock', (scope, cb) => {
+            scope.logger.debug('[App][loader][loadBlockChain] start loading');
+            scope.modules.loader.loadBlockChain(() => {
+                scope.logger.info('[App][loader][loadBlockChain] loaded');
+                cb();
+            });
+        }],
+        ready: ['loadBlockChain', function (scope, cb) {
             scope.logger.debug('[App][loader][ready] start loading');
             elasticsearchSync.sync(scope.db, scope.logger);
             scope.logger.info('[App][loader][ready] loaded');

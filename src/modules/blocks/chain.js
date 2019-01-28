@@ -248,16 +248,11 @@ Chain.prototype.deleteBlock = function (blockId, cb) {
                 type: 'blocks_list',
                 body: {
                     query: {
-                        term: { id: blockId }
+                        term: { b_id: blockId }
                     }
                 }
-            }, (err) => {
-                if (err) {
-                    library.logger.error(`Elasticsearch: document deletion error: ${err}`);
-                } else {
-                    library.logger.info('Elasticsearch: document deleted successfully');
-                }
             });
+
             return setImmediate(cb);
         })
         .catch((err) => {
@@ -369,8 +364,8 @@ Chain.prototype.deleteAfterBlock = function (blockId, cb) {
 Chain.prototype.newApplyGenesisBlock = async (block, verify, save) => {
     block.transactions = block.transactions.sort(transactionSortFunc);
     try {
-        await modules.blocks.verify.newProcessBlock(block, false, save, verify, false);
         library.logger.info('[Chain][applyGenesisBlock] Genesis block loading');
+        await modules.blocks.verify.newProcessBlock(block, false, save, verify, false);
     } catch (e) {
         library.logger.error(`[Chain][applyGenesisBlock] ${e}`);
         library.logger.error(`[Chain][applyGenesisBlock][stack] ${e.stack}`);
@@ -615,7 +610,6 @@ Chain.prototype.newApplyBlock = async (block, broadcast, saveBlock, tick) => {
 
     if (saveBlock) {
         await self.newSaveBlock(block);
-        library.logger.debug(`Block applied correctly with ${block.transactions.length} transactions`);
     }
 
     for (const trs of block.transactions) {
@@ -630,6 +624,7 @@ Chain.prototype.newApplyBlock = async (block, broadcast, saveBlock, tick) => {
 
     if (saveBlock) {
         await __private.newAfterSave(block);
+        library.logger.debug(`Block applied correctly with ${block.transactions.length} transactions`);
     }
 
     modules.blocks.lastBlock.set(block);
@@ -675,7 +670,7 @@ __private.popLastBlock = function (oldLastBlock, cbPopLastBlock) {
                 async.series([
                     function (seriesCb) {
                         modules.transactions.undo(transaction, oldLastBlock, seriesCb);
-                    }, 
+                    },
                     function (seriesCb) {
                         modules.transactions.undoUnconfirmed(transaction, seriesCb);
                     }

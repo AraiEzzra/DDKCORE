@@ -67,7 +67,8 @@ function Accounts(cb, scope) {
             scope.logger,
             scope.schema,
             scope.db,
-            scope.logic.frozen
+            scope.logic.frozen,
+            scope.logic.account,
         )
     );
 
@@ -655,10 +656,6 @@ Accounts.prototype.shared = {
                     self.setAccountAndGet({ publicKey: publicKey }, (err, account) => {
                         if (err) {
                             return setImmediate(cb, err);
-                        }
-                        // TODO change that if
-                        if (account.totalFrozeAmount === 0) {
-                            return setImmediate(cb, 'No Stake available');
                         }
 
                         if (!account || !account.publicKey) {
