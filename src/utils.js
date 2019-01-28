@@ -166,4 +166,3 @@ exports.addDocument = async function (doc) {
         return null;
     });
 };
-console.log('1');
