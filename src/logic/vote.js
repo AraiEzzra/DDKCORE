@@ -32,13 +32,14 @@ __private.loaded = false;
  * @param {Object} frozen
  * @param {Function} cb
  */
-function Vote(logger, schema, db, frozen, cb) {
+function Vote(logger, schema, db, frozen, account, cb) {
     self = this;
     library = {
         db,
         logger,
         schema,
-        frozen
+        frozen,
+        account
     };
     if (cb) {
         return setImmediate(cb, null, this);
@@ -491,20 +492,15 @@ Vote.prototype.getBytes = function (trs) {
  * Calls checkConfirmedDelegates based on transaction data and
  * merges account to sender address with votes as delegates.
  * @implements {checkConfirmedDelegates}
- * @implements {scope.account.merge}
- * @implements {modules.rounds.calc}
  * @param {transaction} trs
  * @param {block} block
  * @param {account} sender
  * @param {function} cb - Callback function
- * @todo delete unnecessary let parent = this
  */
 Vote.prototype.apply = function (trs, block, sender, cb) {
-    const parent = this;
-
     async.series([
         function (seriesCb) {
-            parent.scope.account.merge(sender.address, {
+            library.account.merge(sender.address, {
                 delegates: trs.asset.votes,
                 blockId: block.id,
                 round: modules.rounds.calc(block.height)
@@ -560,10 +556,9 @@ Vote.prototype.apply = function (trs, block, sender, cb) {
  * @return {setImmediateCallback} cb, err
  */
 Vote.prototype.undo = async (trs) => {
-    const parent = this; // logic/transaction.js
     const votesInvert = Diff.reverse(trs.asset.votes);
 
-    await parent.scope.account.asyncMerge(trs.senderId, {
+    await library.account.asyncMerge(trs.senderId, {
         delegates: votesInvert,
     });
 
@@ -608,12 +603,9 @@ Vote.prototype.undo = async (trs) => {
  * @param {transaction} trs
  * @param {account} sender
  * @param {function} cb - Callback function
- * @todo delete unnecessary let parent = this
  */
 Vote.prototype.applyUnconfirmed = function (trs, sender, cb) {
-    const parent = this;
-
-    parent.scope.account.merge(sender.address, {
+    library.account.merge(sender.address, {
         u_delegates: trs.asset.votes
     }, err => setImmediate(cb, err));
 };
