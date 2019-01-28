@@ -353,15 +353,7 @@ export class TransactionQueue {
             error = [e];
         }
 
-        const accounts = this.accountSessions.get(sender.address);
-        accounts.forEach((session) => {
-            this.scope.network.io.sockets.sockets[session['socketId']].emit('pool/verify', JSON.stringify({
-                verified: verified,
-                error: error,
-                trsId: trs.id,
-                senderId: trs.senderId
-            }));
-        });
+        this.sendVerifiedMessage(verified, error, trs, sender.address);
 
         return {
             verified: verified,
@@ -371,6 +363,18 @@ export class TransactionQueue {
 
     getSize(): { conflictedQueue: number, queue: number } {
         return { conflictedQueue: this.conflictedQueue.length, queue: this.queue.length };
+    }
+
+    sendVerifiedMessage(verified: boolean, error: any, trs: any, address: string) {
+        const accounts = this.accountSessions.get(address);
+        accounts.forEach((session) => {
+            this.scope.network.io.sockets.sockets[session['socketId']].emit('pool/verify', JSON.stringify({
+                verified: verified,
+                error: error,
+                trsId: trs.id,
+                senderId: address
+            }));
+        });
     }
 }
 
