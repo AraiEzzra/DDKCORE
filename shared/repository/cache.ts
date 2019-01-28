@@ -1,4 +1,6 @@
-import { redisClient } from 'shared/driver/redis';
+import { redisGetAsync } from 'shared/driver/redis';
+import ResponseEntity from 'shared/model/response';
+const errorCacheDisabled = 'Cache Unavailable';
 
 export interface ICacheRepository {
 
@@ -12,9 +14,9 @@ export interface ICacheRepository {
 
     setJsonByKeyAsync(key: string, value: any);
 
-    getJsonByKey(key: string, value: any);
+    getJsonByKey(key: string): ResponseEntity<any>;
 
-    getJsonByKeyAsync(key: string, value: any);
+    getJsonByKeyAsync(key: string): Promise<ResponseEntity<any>>;
 
     flushDb(): void;
 
@@ -26,7 +28,7 @@ export interface ICacheRepository {
 
 export class CacheRepository implements ICacheRepository {
     private static instance: CacheRepository = undefined;
-    private redisClient;
+    private cacheClient;
 
     constructor() {
         if (!CacheRepository.instance) {
@@ -37,46 +39,52 @@ export class CacheRepository implements ICacheRepository {
     }
 
     private connect(): void {
-        console.log('try to connect redis');
-        this.redisClient = redisClient;
+        this.cacheClient = redisGetAsync;
     }
 
-    setJsonByKeyAsync(key: string, value: any) {
-        throw new Error("Method not implemented.");
+    private isConnected() {
+        return this.cacheClient && this.cacheClient.ready;
     }
 
-    getJsonByKey(key: string, value: any) {
-        throw new Error("Method not implemented.");
-    }
-
-    getJsonByKeyAsync(key: string, value: any) {
-        throw new Error("Method not implemented.");
-    }
     removeByPattern(pattern: string): void {
-        throw new Error("Method not implemented.");
     }
 
     deleteJsonByKey(key: string): void {
-        throw new Error("Method not implemented.");
     }
 
     hmset(hmset: string): void {
-        throw new Error("Method not implemented.");
     }
 
     setJsonByKey(key: string, value: any) {
-        throw new Error("Method not implemented.");
+    }
+
+    setJsonByKeyAsync(key: string, value: any) {
+    }
+
+    getJsonByKey(key: string): ResponseEntity<any> {
+        if (!this.isConnected()) {
+            return new ResponseEntity({errors: ['errorCacheDisabled'], data: []});
+        }
+        this.cacheClient.get(key, (err, value) => {
+            if (err) {
+                return new ResponseEntity({errors: err, data: value});
+            }
+            // parsing string to json
+            return new ResponseEntity({errors: err, data: JSON.parse(value)});
+        });
+    }
+
+    getJsonByKeyAsync(key: string): Promise<ResponseEntity<any>> {
+        return undefined;
     }
 
     flushDb(): void {
-        throw new Error("Method not implemented.");
     }
 
     quit(): void {
-        throw new Error("Method not implemented.");
     }
 
     cleanup(): void {
-        throw new Error("Method not implemented.");
     }
+
 }

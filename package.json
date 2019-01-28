@@ -25,7 +25,7 @@
     "clean": "rm -rf node_modules/ dist/ dapps/ .nyc_output/ logs/ .npm/ .config/ .node-gyp",
     "watch:with_update_clean": "npm run clean && npm install && npm run watch",
     "watch:with_update": "npm install && npm run watch",
-    "test": "mocha --require ts-node/register './test/**/*.test.ts'"
+    "test": "export NODE_PATH=./ && mocha --require ts-node/register './test/**/*.test.ts'"
   },
   "author": "DDK Foundation <http://www.ddkoin.com/>",
   "license": "GPL-3.0",

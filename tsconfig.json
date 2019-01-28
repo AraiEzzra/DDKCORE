@@ -28,6 +28,7 @@
     "api/**/*",
     "core/**/*",
     "backlog/**/*",
-    "shared/**/*"
+    "shared/**/*",
+    "test/**/*"
   ]
 }
