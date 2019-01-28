@@ -369,8 +369,8 @@ Chain.prototype.deleteAfterBlock = function (blockId, cb) {
 Chain.prototype.newApplyGenesisBlock = async (block, verify, save) => {
     block.transactions = block.transactions.sort(transactionSortFunc);
     try {
-        await modules.blocks.verify.newProcessBlock(block, false, save, verify, false);
         library.logger.info('[Chain][applyGenesisBlock] Genesis block loading');
+        await modules.blocks.verify.newProcessBlock(block, false, save, verify, false);
     } catch (e) {
         library.logger.error(`[Chain][applyGenesisBlock] ${e}`);
         library.logger.error(`[Chain][applyGenesisBlock][stack] ${e.stack}`);
@@ -615,7 +615,6 @@ Chain.prototype.newApplyBlock = async (block, broadcast, saveBlock, tick) => {
 
     if (saveBlock) {
         await self.newSaveBlock(block);
-        library.logger.debug(`Block applied correctly with ${block.transactions.length} transactions`);
     }
 
     for (const trs of block.transactions) {
@@ -630,6 +629,7 @@ Chain.prototype.newApplyBlock = async (block, broadcast, saveBlock, tick) => {
 
     if (saveBlock) {
         await __private.newAfterSave(block);
+        library.logger.debug(`Block applied correctly with ${block.transactions.length} transactions`);
     }
 
     modules.blocks.lastBlock.set(block);

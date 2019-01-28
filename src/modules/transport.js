@@ -440,6 +440,8 @@ Transport.prototype.onBind = function (scope) {
  */
 Transport.prototype.onBlockchainReady = function () {
     __private.loaded = true;
+
+    __private.broadcaster.registerJobs();
 };
 
 /**
