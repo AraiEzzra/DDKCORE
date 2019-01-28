@@ -1,5 +1,5 @@
-// import { PeerController } from './peer';
+import { PeerController } from './peer';
 
-// export {
-//     PeerController
-// }
+export {
+    PeerController
+};
