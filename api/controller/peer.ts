@@ -34,7 +34,7 @@ interface IPeerRequest {
 }
 
 import { Peer } from 'shared/model/peer';
-import { PeerService } from 'api/service/peer(not in use)';
+import { PeerService } from 'api/service/peer';
 
 @Controller('/peers')
 export class PeerController {
