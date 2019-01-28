@@ -248,16 +248,11 @@ Chain.prototype.deleteBlock = function (blockId, cb) {
                 type: 'blocks_list',
                 body: {
                     query: {
-                        term: { id: blockId }
+                        term: { b_id: blockId }
                     }
                 }
-            }, (err) => {
-                if (err) {
-                    library.logger.error(`Elasticsearch: document deletion error: ${err}`);
-                } else {
-                    library.logger.info('Elasticsearch: document deleted successfully');
-                }
             });
+
             return setImmediate(cb);
         })
         .catch((err) => {
@@ -675,7 +670,7 @@ __private.popLastBlock = function (oldLastBlock, cbPopLastBlock) {
                 async.series([
                     function (seriesCb) {
                         modules.transactions.undo(transaction, oldLastBlock, seriesCb);
-                    }, 
+                    },
                     function (seriesCb) {
                         modules.transactions.undoUnconfirmed(transaction, seriesCb);
                     }

@@ -656,10 +656,6 @@ Accounts.prototype.shared = {
                         if (err) {
                             return setImmediate(cb, err);
                         }
-                        // TODO change that if
-                        if (account.totalFrozeAmount === 0) {
-                            return setImmediate(cb, 'No Stake available');
-                        }
 
                         if (!account || !account.publicKey) {
                             return setImmediate(cb, 'Account not found');
