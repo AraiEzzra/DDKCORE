@@ -67,7 +67,8 @@ function Accounts(cb, scope) {
             scope.logger,
             scope.schema,
             scope.db,
-            scope.logic.frozen
+            scope.logic.frozen,
+            scope.logic.account,
         )
     );
 

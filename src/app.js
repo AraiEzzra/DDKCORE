@@ -563,8 +563,8 @@ d.run(() => {
                 // sendFreezeOrder: ['logger', 'db', 'network', function (scope, cb) {
                 // 	new SendFreezeOrder(scope.logger, scope.db, scope.network, cb);
                 // }],
-                vote: ['logger', 'schema', 'db', 'frozen', function (scope, cb) {
-                    new Vote(scope.logger, scope.schema, scope.db, scope.frozen, cb);
+                vote: ['logger', 'schema', 'db', 'frozen', 'account', function (scope, cb) {
+                    new Vote(scope.logger, scope.schema, scope.db, scope.frozen, scope.account, cb);
                 }],
             }, (err, data) => {
                 scope.logger.info('[App][loader][logic] loaded');
