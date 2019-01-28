@@ -83,11 +83,6 @@ export const POST = (path: string) => {
     };
 };
 
-/**
- *
- * @param path
- * @constructor
- */
 export const PUT = (path: string) => {
     return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
         addEndpointPath(MethodEnum.PUT, path, target, descriptor, propertyKey);
@@ -169,5 +164,3 @@ const addEndpointPath = (method: string,
 //         });
 //     }
 // }
-
-
