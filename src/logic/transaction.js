@@ -1169,8 +1169,6 @@ Transaction.prototype.undo = async (trs, block) => {
     const mergedSender = await self.scope.account.asyncMerge(trs.senderId, {
         balance: amount,
         totalFrozeAmount: -trs.stakedAmount,
-        blockId: block.id,
-        round: modules.rounds.calc(block.height)
     });
 
     try {
