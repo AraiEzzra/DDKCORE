@@ -1,6 +1,6 @@
 import { Application, Request, Response as Resp, NextFunction } from 'express';
-import Response from 'shared/model/response';
-import { validate } from './validate';
+import Response from '../../shared/model/response';
+import { validate as validator } from './validate';
 
 let targets = new Set();
 
@@ -27,8 +27,9 @@ export const setRoute = (app: Application) => {
                     /**
                      * Add middleware for validate request
                      */
-                    app[MethodEnum.USE](item.path + route.path, (req: Request, res: Resp, next: NextFunction) => {
-                        if (!validate(route.validate, route.propertyKey)) {
+                    app[MethodEnum.USE](item.path + route.path, async (req: Request, res: Resp, next: NextFunction) => {
+                        const isValid = await validator(item.path, route.validate, route.propertyKey);
+                        if (!isValid) {
                             return new Response({
                                 errors: ['Bad request.']
                             });
@@ -94,7 +95,7 @@ export const PUT = (path: string) => {
  * @param data
  * @constructor
  */
-const Validate = (data) => {
+const validate = (data) => {
     return ( target: any, propertyName: string, descriptor: PropertyDescriptor) => {
       if (data) {
           Object.defineProperty(target, 'validate', {
@@ -139,13 +140,13 @@ const addEndpointPath = (method: string,
 
 
 // TODO Need to Remove
-// @Controller('/test1')
+// @Controller('/peer')
 // class Class {
 //     constructor() {}
 //
 //     @GET('/')
-//     @Validate({})
-//     test1(req, res) {
+//     @Validate({ ip: '1.160.10.240', port: 3112 })
+//     getPeer(req, res) {
 //         res.json({
 //             message: 'Class 1. Path "/" \n'
 //         });
