@@ -38,7 +38,9 @@ export class AccountSessions {
     }
 
     remove(socketId: string, address: string) {
-        this.sessions[address].delete(socketId);
+        if (this.sessions[address] instanceof Set) {
+            this.sessions[address].delete(socketId);
+        }
     }
 
     send(address: string, eventName: string, message: object) {
