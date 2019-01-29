@@ -317,8 +317,8 @@ d.run(() => {
                 // IIFE: function to accept new socket.id in sockets array.
                 function acceptSocket(user) {
                     if(user.address) {
-                        let length = accountSessions.put( user.address, 'online', socket.id );
-                        io.sockets.emit('updateConnected', length);
+                        accountSessions.put( user.address, socket.id );
+                        io.sockets.emit('updateConnected', accountSessions.length);
                     }
                 }
 
@@ -332,8 +332,8 @@ d.run(() => {
                 });
 
                 socket.on('disconnect', () => {
-                    let length = accountSessions.remove( socket.id );
-                    io.sockets.emit('updateConnected', length);
+                    accountSessions.remove( socket.id );
+                    io.sockets.emit('updateConnected', accountSessions.length);
                 });
             });
 

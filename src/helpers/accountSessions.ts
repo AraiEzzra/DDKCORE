@@ -7,7 +7,7 @@ export class AccountSessions {
     private logger: Logger = new Logger().logger;
     private static io: any;
     private static instance: AccountSessions;
-    private constructor() { }
+    private constructor() {}
 
     static setIOInstance(io: object) {
         AccountSessions.io = io;
@@ -20,74 +20,51 @@ export class AccountSessions {
         return AccountSessions.instance;
     }
 
-    put(address: string, status: string, socketId: string) {
+    put(address: string, socketId: string) {
         if (!this.sessions[address]) {
-            this.sessions[address] = [];
+            this.sessions[address] = new Set();
         }
-        this.sessions[address].push({address, status, socketId});
-
-        return this.count();
+        this.sessions[address].add(socketId);
     }
 
-    get(address) {
-        let sessions: Array<object> = [];
-
-        if (Array.isArray(this.sessions[address])) {
-            let i: number;
-            for (i = 0; i < this.sessions[address].length; i++) {
-                if (this.sessions[address][i].address === address) {
-                    sessions.push(this.sessions[address][i]);
-                }
-            }
-        }
-
-        return sessions;
+    get length() {
+        let counter: number = 0;
+        Object.values(this.sessions).forEach(stack => counter += stack.size);
+        return counter;
     }
 
-    remove(socketId: string, address?: string) {
-        if (address) {
-            if (Array.isArray(this.sessions[address])) {
-                this.sessions[address].forEach((session, index) => {
-                    if (session.socketId === socketId) {
-                        this.sessions[address].splice(index, 1);
-                    }
-                });
-            }
-        } else {
-            let address: string;
-            for (address in this.sessions) {
-                this.remove(socketId, address);
-            }
-        }
-
-        return this.count();
+    get(address): Set<string> {
+        return this.sessions[address];
     }
 
-    count() {
-        let address: string, counter: number = 0;
-        for (address in this.sessions) {
-            counter += Array.isArray(this.sessions[address])
-                ? this.sessions[address].length
-                : 0;
-        }
+    remove(socketId: string) {
+        let address: string;
 
-        return counter
+        for (address in Object.keys(this.sessions)) {
+            if (this.sessions[address] instanceof Set && this.sessions[address].has(socketId)) {
+                this.sessions[address].delete(socketId);
+                break;
+            }
+        }
     }
 
     send(address: string, eventName: string, message: object) {
-        const sessions: Array<object> = this.get(address);
-
-        sessions.forEach((session) => {
-            try {
-                AccountSessions.io.sockets.sockets[session['socketId']].emit(eventName, JSON.stringify(message));
-            } catch (err) {
-                this.logger.error(`Error send message by socketId on "${address}" `, { message: err.message });
-            }
-        });
+        if (this.sessions[address] instanceof Set) {
+            this.sessions[address].forEach((socketId) => {
+                if (AccountSessions.io.sockets.sockets[socketId]) {
+                    try {
+                        AccountSessions.io.sockets.sockets[socketId].emit(eventName, JSON.stringify(message));
+                    } catch (err) {
+                        this.logger.error(`Error send message by socketId on "${address}" `, { message: err.message });
+                    }
+                } else {
+                    this.remove(socketId);
+                }
+            });
+        }
     }
 
 }
-
 
 export default exports = {
     AccountSessions
