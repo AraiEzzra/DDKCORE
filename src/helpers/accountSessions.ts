@@ -33,19 +33,12 @@ export class AccountSessions {
         return counter;
     }
 
-    get(address): Set<string> {
+    get(address: string): Set<string> {
         return this.sessions[address];
     }
 
-    remove(socketId: string) {
-        let address: string;
-
-        for (address in Object.keys(this.sessions)) {
-            if (this.sessions[address] instanceof Set && this.sessions[address].has(socketId)) {
-                this.sessions[address].delete(socketId);
-                break;
-            }
-        }
+    remove(socketId: string, address: string) {
+        this.sessions[address].delete(socketId);
     }
 
     send(address: string, eventName: string, message: object) {
@@ -58,7 +51,7 @@ export class AccountSessions {
                         this.logger.error(`Error send message by socketId on "${address}" `, { message: err.message });
                     }
                 } else {
-                    this.remove(socketId);
+                    this.remove(socketId, address);
                 }
             });
         }
