@@ -484,37 +484,16 @@ Vote.prototype.getBytes = function (trs) {
  * @param {account} sender
  * @param {function} cb - Callback function
  */
-Vote.prototype.apply = function (trs, block, sender, cb) {
+Vote.prototype.apply = async (trs) => {
     const isDownVote = trs.trsName === 'DOWNVOTE';
+    const votes = trs.asset.votes.map(vote => vote.substring(1));
 
-    async.series([
-        function (seriesCb) {
-            library.account.merge(sender.address, {
-                delegates: trs.asset.votes,
-                blockId: block.id,
-                round: modules.rounds.calc(block.height)
-            }, seriesCb);
-        },
-        function (seriesCb) {
-            const votes = trs.asset.votes.map(vote => vote.substring(1));
-            library.db.query(sql.changeDelegateVoteCount({ value: isDownVote ? -1 : 1, votes }))
-                .then(() => setImmediate(seriesCb, null))
-                .catch((err) => {
-                    library.logger.error(err.stack);
-                    return setImmediate(seriesCb, err);
-                });
-        },
-        function (seriesCb) {
-            if (isDownVote) {
-                return setImmediate(seriesCb, null, trs);
-            }
-            self.updateAndCheckVote(trs)
-                .then(
-                    () => setImmediate(seriesCb, null, trs),
-                    err => setImmediate(seriesCb, err),
-                );
-        }
-    ], cb);
+    await library.db.none(DelegateSQL.addVoteForDelegates(votes), {
+        accountId: trs.senderId,
+    });
+
+    await library.db.query(sql.changeDelegateVoteCount({ value: isDownVote ? -1 : 1, votes }));
+    await self.updateAndCheckVote(trs);
 };
 
 /**
@@ -533,8 +512,8 @@ Vote.prototype.undo = async (trs) => {
     const isDownVote = trs.trsName === 'DOWNVOTE';
 
     const votes = trs.asset.votes.map(vote => vote.substring(1));
-    await library.db.none(DelegateSQL.removeDelegates, {
-        accountId: accountId,
+    await library.db.none(DelegateSQL.removeVoteForDelegates, {
+        accountId: trs.senderId,
         dependentIds: votes.join(',')
     });
 

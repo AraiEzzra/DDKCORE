@@ -143,8 +143,7 @@ const config = {
         peers: require('./modules/peers.js'),
         delegates: require('./modules/delegates.js'),
         rounds: require('./modules/rounds.js'),
-        multisignatures: require('./modules/multisignatures.js'),
-        dapps: require('./modules/dapps.js'),
+        // dapps: require('./modules/dapps.js'),
         crypto: require('./modules/crypto.js'),
         sql: require('./modules/sql.js'),
         cache: require('./modules/cache.js'),
@@ -154,10 +153,9 @@ const config = {
     api: {
         accounts: { http: require('./api/http/accounts.js') },
         blocks: { http: require('./api/http/blocks.js') },
-        dapps: { http: require('./api/http/dapps.js') },
+        // dapps: { http: require('./api/http/dapps.js') },
         delegates: { http: require('./api/http/delegates.js') },
         loader: { http: require('./api/http/loader.js') },
-        multisignatures: { http: require('./api/http/multisignatures.js') },
         peers: { http: require('./api/http/peers.js') },
         server: { http: require('./api/http/server.js') },
         signatures: { http: require('./api/http/signatures.js') },
@@ -209,19 +207,20 @@ d.run(() => {
                 throw Error(e);
             }
 
-            if (appConfig.dapp.masterrequired && !appConfig.dapp.masterpassword) {
-                const randomstring = require('randomstring');
-
-                appConfig.dapp.masterpassword = randomstring.generate({
-                    length: 12,
-                    readable: true,
-                    charset: 'alphanumeric'
-                });
-
-                if (appConfig.loading.snapshot != null) {
-                    delete appConfig.loading.snapshot;
-                }
-            }
+            // TODO useless code
+            // if (appConfig.dapp.masterrequired && !appConfig.dapp.masterpassword) {
+            //     const randomstring = require('randomstring');
+            //
+            //     appConfig.dapp.masterpassword = randomstring.generate({
+            //         length: 12,
+            //         readable: true,
+            //         charset: 'alphanumeric'
+            //     });
+            //
+            //     if (appConfig.loading.snapshot != null) {
+            //         delete appConfig.loading.snapshot;
+            //     }
+            // }
             fs.writeFileSync('./config.json', JSON.stringify(appConfig, null, 4));
             cb(null, appConfig);
         },

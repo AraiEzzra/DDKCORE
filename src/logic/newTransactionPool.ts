@@ -1,6 +1,6 @@
-import {Account, Transaction, TransactionStatus} from "src/helpers/types";
-import {generateAddressByPublicKey, getOrCreateAccount} from "src/helpers/account.utils";
-import {transactionSortFunc} from "src/helpers/transaction.utils";
+import { Account, Transaction, TransactionStatus } from 'src/helpers/types';
+import { generateAddressByPublicKey, getOrCreateAccount } from 'src/helpers/account.utils';
+import { transactionSortFunc } from 'src/helpers/transaction.utils';
 import * as constants from 'src/helpers/constants.js';
 import * as transactionTypes from 'src/helpers/transactionTypes.js';
 
@@ -74,36 +74,40 @@ class TransactionPool {
     }
 
     async push(trs: Transaction, broadcast: boolean = false) {
-        if (!this.locked) {
-            try {
-                await this.scope.transactionLogic.newApplyUnconfirmed(trs);
-                trs.status = TransactionStatus.UNCOFIRM_APPLIED;
-                this.scope.logger.debug(`TransactionStatus.UNCONFIRM_APPLIED ${JSON.stringify(trs)}`);
-            } catch (e) {
-                trs.status = TransactionStatus.DECLINED;
-                this.scope.logger.error(`[TransactionQueue][applyUnconfirmed]: ${e}`);
-                this.scope.logger.error(`[TransactionQueue][applyUnconfirmed][stack]: \n ${e.stack}`);
-                return;
-            }
-
-            trs.status = TransactionStatus.PUT_IN_POOL;
-            this.pool[trs.id] = trs;
-            if (!this.poolBySender[trs.senderId]) {
-                this.poolBySender[trs.senderId] = [];
-            }
-            this.poolBySender[trs.senderId].push(trs);
-            if (trs.type === transactionTypes.SEND) {
-                if (!this.poolByRecipient[trs.recipientId]) {
-                    this.poolByRecipient[trs.recipientId] = [];
-                }
-                this.poolByRecipient[trs.recipientId].push(trs);
-            }
-            if (broadcast) {
-                this.scope.bus.message('transactionPutInPool', trs);
-            }
-            return true;
+        if (this.locked || this.has(trs)) {
+            return false;
         }
-        return false;
+
+        try {
+            await this.scope.transactionLogic.newApplyUnconfirmed(trs);
+            trs.status = TransactionStatus.UNCOFIRM_APPLIED;
+            this.scope.logger.debug(`TransactionStatus.UNCONFIRM_APPLIED ${JSON.stringify(trs)}`);
+        } catch (e) {
+            trs.status = TransactionStatus.DECLINED;
+            this.scope.logger.error(`[TransactionQueue][applyUnconfirmed]: ${e}`);
+            this.scope.logger.error(`[TransactionQueue][applyUnconfirmed][stack]: \n ${e.stack}`);
+            return;
+        }
+
+        trs.status = TransactionStatus.PUT_IN_POOL;
+
+        this.pool[trs.id] = trs;
+        if (!this.poolBySender[trs.senderId]) {
+            this.poolBySender[trs.senderId] = [];
+        }
+        this.poolBySender[trs.senderId].push(trs);
+
+        if (trs.type === transactionTypes.SEND) {
+            if (!this.poolByRecipient[trs.recipientId]) {
+                this.poolByRecipient[trs.recipientId] = [];
+            }
+            this.poolByRecipient[trs.recipientId].push(trs);
+        }
+
+        if (broadcast) {
+            this.scope.bus.message('transactionPutInPool', trs);
+        }
+        return true;
     }
 
     async remove(trs: Transaction) {
@@ -141,10 +145,7 @@ class TransactionPool {
     }
 
     has(trs: Transaction) {
-        if (this.pool[trs.id]) {
-            return true;
-        }
-        return false;
+        return Boolean(this.pool[trs.id]);
     }
 
     async popSortedUnconfirmedTransactions(limit: number): Promise<Array<Transaction>> {
@@ -257,7 +258,7 @@ export class TransactionQueue {
 
         const trs = this.pop();
 
-        if(this.scope.transactionPool.has(trs)){
+        if (this.scope.transactionPool.has(trs)) {
             return;
         }
 

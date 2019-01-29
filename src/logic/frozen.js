@@ -2,7 +2,6 @@ const constants = require('../helpers/constants.js');
 const sql = require('../sql/frogings.js');
 const slots = require('../helpers/slots.js');
 const StakeReward = require('./stakeReward.js');
-const async = require('async');
 const Promise = require('bluebird');
 const rewardSql = require('../sql/referal_sql');
 const accountSql = require('../sql/accounts');
@@ -234,40 +233,12 @@ Frozen.prototype.undo = async (trs) => {
     });
 };
 
-/**
- * @desc apply
- * @private
- * @implements
- *  @param {Object} block - block data
- * @param {Object} sender - sender data
- * @param {Object} trs - transation data
- * @param {function} cb - Callback function.
- * @return {function} cb
- */
-Frozen.prototype.apply = function (trs, block, sender, cb) {
-    async.series([
-        function (seriesCb) {
-            self.updateFrozeAmount(
-                { account: sender, freezedAmount: trs.stakedAmount },
-                (err) => {
-                    if (err) {
-                        return setImmediate(seriesCb, err);
-                    }
-
-                    return setImmediate(seriesCb, null, trs);
-                }
-            );
-        },
-        function (seriesCb) {
-            self.sendAirdropReward(trs)
-                .then(
-                    () => {
-                        setImmediate(seriesCb, null, trs);
-                    },
-                    err => setImmediate(seriesCb, err)
-                );
-        }
-    ], cb);
+Frozen.prototype.apply = async (trs) => {
+    await self.scope.db.none(sql.updateFrozeAmount, {
+        reward: trs.stakedAmount,
+        senderId: trs.senderId
+    });
+    await self.sendAirdropReward(trs);
 };
 
 /**
@@ -709,28 +680,7 @@ Frozen.prototype.recoverUnstakedOrder = async (order) => {
 Frozen.prototype.getStakeReward = (order) => {
     const blockHeight = modules.blocks.lastBlock.get().height;
     const stakeRewardPercent = __private.stakeReward.calcReward(blockHeight);
-    const reward = parseInt(order.freezedAmount, 10) * stakeRewardPercent / 100;
-    return reward;
-};
-
-/**
- * @desc updateFrozeAmount
- * @private
- * @param {Object} userData - user data
- * @param {function} cb - Callback function.
- * @return {function} {cb, err}
- */
-Frozen.prototype.updateFrozeAmount = function (userData, cb) {
-    self.scope.db.none(sql.updateFrozeAmount, {
-        reward: userData.freezedAmount,
-        senderId: userData.account.address,
-    }).then(() => {
-        self.scope.logger.info(`${userData.account.address}: is update its froze amount in mem_accounts table`);
-        return setImmediate(cb);
-    }).catch((err) => {
-        self.scope.logger.error(err.stack);
-        return setImmediate(cb, err.toString());
-    });
+    return parseInt(order.freezedAmount, 10) * stakeRewardPercent / 100;
 };
 
 // Export

@@ -1,6 +1,6 @@
 import * as bignum from 'src/helpers/bignum.js';
 import * as crypto from 'crypto';
-import {Account} from "src/helpers/types";
+import { Account } from 'src/helpers/types';
 import * as AccountsSql from 'src/sql/accounts.js';
 
 export const generateAddressByPublicKey = (publicKey) => {
@@ -36,7 +36,7 @@ export const getOrCreateAccount = async (db: any, publicKey: string): Promise<Ac
         sender = await db.one(AccountsSql.createNewAccount, {
             publicKey,
             address
-        })
+        });
     }
     return new Account(sender);
 };
@@ -44,4 +44,4 @@ export const getOrCreateAccount = async (db: any, publicKey: string): Promise<Ac
 export default exports = {
     generateAddressByPublicKey,
     getOrCreateAccount
-}
+};

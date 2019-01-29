@@ -647,24 +647,14 @@ Transaction.prototype.newApply = async (trs, block, sender) => {
 
     const mergedSender = await self.scope.account.asyncMerge(sender.address, {
         balance: -amount,
-        blockId: block.id,
-        round: modules.rounds.calc(block.height)
+        blockId: block.id
     });
     try {
-        await (new Promise((resolve, reject) => {
-            __private.types[trs.type].apply.call(self, trs, block, mergedSender, (err) => {
-                if (err) {
-                    reject(err);
-                }
-                trs.status = TransactionStatus.APPLIED;
-                resolve();
-            });
-        }));
+        await __private.types[trs.type].apply.call(self, trs);
     } catch (e) {
         await self.scope.account.asyncMerge(mergedSender.address, {
             balance: amount,
-            blockId: block.id,
-            round: modules.rounds.calc(block.height)
+            blockId: block.id
         });
         trs.status = TransactionStatus.DECLINED;
         self.scope.logger.error(`[Logic/Transaction][apply]: ${e}`);
@@ -673,7 +663,7 @@ Transaction.prototype.newApply = async (trs, block, sender) => {
     self.scope.logger.debug(`[Logic/Transaction][apply]: transaction applied ${JSON.stringify(trs)}`);
 };
 
-Transaction.prototype.undo = async (trs, block) => {
+Transaction.prototype.undo = async (trs) => {
     const amount = trs.amount + trs.fee;
 
     self.scope.logger.debug(`[TransactionLogic][undo] ${JSON.stringify({

@@ -211,10 +211,8 @@ Delegate.prototype.getBytes = function (trs) {
  * @param {account} sender
  * @param {function} cb - Callback function.
  */
-Delegate.prototype.apply = function (trs, block, sender, cb) {
+Delegate.prototype.apply = async (trs) => {
     const data = {
-        address: sender.address,
-        u_isDelegate: 0,
         isDelegate: 1,
         vote: 0
     };
@@ -224,10 +222,8 @@ Delegate.prototype.apply = function (trs, block, sender, cb) {
         data.username = trs.asset.delegate.username;
     }
 
-    library.db.none(sql.addDelegateVoteRecord, { publicKey: trs.senderPublicKey.toString('hex') })
-        .then(() => {
-            modules.accounts.setAccountAndGet(data, cb);
-        });
+    await library.db.none(sql.addDelegateVoteRecord, { publicKey: trs.senderPublicKey.toString('hex') });
+    await library.account.asyncMerge(trs.senderId, data);
 };
 
 /**

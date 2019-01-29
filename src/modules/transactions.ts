@@ -568,19 +568,6 @@ Transactions.prototype.getMergedTransactionList = function (reverse, limit) {
     return self.newTransactionPool.getTransactions(limit);
 };
 /**
- * Applies confirmed transaction.
- * @implements {logic.transaction.apply}
- * @param {transaction} transaction
- * @param {block} block
- * @param {account} sender
- * @param {function} cb - Callback function
- */
-Transactions.prototype.apply = function (transaction, block, sender, cb) {
-    library.logger.debug(`[Transactions][apply] transaction id: ${transaction.id}}`);
-    library.logic.transaction.apply(transaction, block, sender, cb);
-};
-
-/**
  * Undoes confirmed transaction.
  * @implements {logic.transaction.undo}
  * @param {transaction} transaction
@@ -588,9 +575,9 @@ Transactions.prototype.apply = function (transaction, block, sender, cb) {
  * @param {account} sender
  * @param {function} cb - Callback function
  */
-Transactions.prototype.undo = (transaction, block, cb) => {
+Transactions.prototype.undo = (transaction, cb) => {
     library.logger.debug(`[Transactions][undo] transaction id: ${transaction.id}}`);
-    library.logic.transaction.undo(transaction, block)
+    library.logic.transaction.undo(transaction)
         .then(() => setImmediate(cb, null))
         .catch((err) => setImmediate(cb, err));
 };

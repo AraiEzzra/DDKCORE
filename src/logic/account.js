@@ -1010,8 +1010,16 @@ Account.prototype.asyncMerge = async (address, data) => {
     const set = [];
     const values = { address };
 
+    // TODO old logic include also ['producedblocks', 'missedblocks', 'fees', 'vote', 'rate'];
+    const accumulateFields = ['balance', 'u_balance', 'totalFrozeAmount', 'u_totalFrozeAmount'];
+
     Object.keys(data).forEach(field => {
-        set.push(`"${field}" = "${field}" + \${${field}}`);
+        if (accumulateFields.indexOf(field) !== -1) {
+            set.push(`"${field}" = "${field}" + \${${field}}`);
+        } else {
+            set.push(`"${field}" = \${${field}}`);
+        }
+
         values[field] = data[field];
     });
 
