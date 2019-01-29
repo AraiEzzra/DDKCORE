@@ -1,7 +1,7 @@
 {
 	"info": {
-		"_postman_id": "c74cd911-b3b5-4f45-814c-1efecc4497a8",
-		"name": "DDK ",
+		"_postman_id": "cb061dfe-c412-4bed-81a7-94fcea1caf0e",
+		"name": "DDK",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
@@ -9,8 +9,234 @@
 			"name": "Accounts",
 			"item": [
 				{
-					"name": "Private API",
+					"name": "Private",
 					"item": [
+						{
+							"name": "Check Two Factor Status",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "2978de95-23aa-4757-a8d0-76bba73fe3eb",
+										"exec": [
+											"pm.test(\"response is ok\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Body status success\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData.success).to.eql(true);",
+											"});",
+											"",
+											"pm.test(\"response should be okay to process\", function () { ",
+											"    pm.response.to.not.be.error; ",
+											"    pm.response.to.have.jsonBody(\"\"); ",
+											"    pm.response.to.not.have.jsonBody(\"error\"); ",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{host}}/api/accounts/checkTwoFactorStatus?address={{address}}&publicKey={{publicKey}}",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"accounts",
+										"checkTwoFactorStatus"
+									],
+									"query": [
+										{
+											"key": "address",
+											"value": "{{address}}"
+										},
+										{
+											"key": "publicKey",
+											"value": "{{publicKey}}"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Withdrawl Status",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "8f60d237-7ca6-4e89-b82a-40095df791de",
+										"exec": [
+											"pm.test(\"response is ok\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Body matches string\", function () {",
+											"    pm.expect(pm.response.text()).to.include(\"success\",\"status\",\"checkLastWithdrawl\",\"checkActiveStake\",\"checkActiveStakeOfLeftAndRightSponsor\",\"checkRatio\");",
+											"});",
+											"",
+											"",
+											"pm.test(\"Body status success\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData.success).to.eql(true);",
+											"});",
+											"",
+											"pm.test(\"response should be okay to process\", function () { ",
+											"    pm.response.to.not.be.error; ",
+											"    pm.response.to.have.jsonBody(\"\"); ",
+											"    pm.response.to.not.have.jsonBody(\"error\"); ",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{host}}/api/accounts/getWithdrawlStatus?address={{address}}",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"accounts",
+										"getWithdrawlStatus"
+									],
+									"query": [
+										{
+											"key": "address",
+											"value": "{{address}}"
+										}
+									]
+								}
+							},
+							"response": [
+								{
+									"name": "Get Withdrawl Status",
+									"originalRequest": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"type": "text",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n\"secret\": \"{{moneyAccountSecret}}\"\n}"
+										},
+										"url": {
+											"raw": "{{host}}/api/accounts/getWithdrawlStatus?address={{address}}",
+											"host": [
+												"{{host}}"
+											],
+											"path": [
+												"api",
+												"accounts",
+												"getWithdrawlStatus"
+											],
+											"query": [
+												{
+													"key": "address",
+													"value": "{{address}}"
+												}
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "X-Powered-By",
+											"value": "Express"
+										},
+										{
+											"key": "X-RateLimit-Limit",
+											"value": "0"
+										},
+										{
+											"key": "X-RateLimit-Remaining",
+											"value": "0"
+										},
+										{
+											"key": "Access-Control-Allow-Origin",
+											"value": "*"
+										},
+										{
+											"key": "X-Frame-Options",
+											"value": "DENY"
+										},
+										{
+											"key": "Content-Security-Policy",
+											"value": "frame-ancestors 'none'"
+										},
+										{
+											"key": "Access-Control-Allow-Headers",
+											"value": "Origin, X-Objected-With, Content-Type, Accept"
+										},
+										{
+											"key": "Content-Type",
+											"value": "application/json; charset=utf-8"
+										},
+										{
+											"key": "Content-Length",
+											"value": "142"
+										},
+										{
+											"key": "ETag",
+											"value": "W/\"8e-iodQblVq31vA0CB/DiH//R9LI0Q\""
+										},
+										{
+											"key": "Vary",
+											"value": "Accept-Encoding"
+										},
+										{
+											"key": "Date",
+											"value": "Thu, 03 Jan 2019 11:08:36 GMT"
+										},
+										{
+											"key": "Connection",
+											"value": "keep-alive"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"status\": {\n        \"checkLastWithdrawl\": true,\n        \"checkActiveStake\": true,\n        \"checkActiveStakeOfLeftAndRightSponsor\": false,\n        \"checkRatio\": false\n    }\n}"
+								}
+							]
+						},
 						{
 							"name": "Count",
 							"event": [
@@ -165,384 +391,6 @@
 									"body": "{\n    \"success\": true,\n    \"count\": \"15\"\n}"
 								}
 							]
-						},
-						{
-							"name": "Lock",
-							"event": [
-								{
-									"listen": "test",
-									"script": {
-										"id": "762ea78d-9286-4fd0-8318-257f31f3af83",
-										"exec": [
-											"pm.test(\"response is ok\", function () {",
-											"    pm.response.to.have.status(200);",
-											"});",
-											"",
-											"pm.test(\"Body status success\", function () {",
-											"    var jsonData = pm.response.json();",
-											"    pm.expect(jsonData.success).to.eql(true);",
-											"});",
-											"",
-											"pm.test(\"response should be okay to process\", function () { ",
-											"    pm.response.to.not.be.error; ",
-											"    pm.response.to.have.jsonBody(\"\"); ",
-											"    pm.response.to.not.have.jsonBody(\"error\"); ",
-											"});",
-											"",
-											"",
-											""
-										],
-										"type": "text/javascript"
-									}
-								}
-							],
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Content-Type",
-										"name": "Content-Type",
-										"type": "text",
-										"value": "application/json"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": ""
-								},
-								"url": {
-									"raw": "{{host}}/api/accounts/lock?address={{address}}",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"api",
-										"accounts",
-										"lock"
-									],
-									"query": [
-										{
-											"key": "address",
-											"value": "{{address}}"
-										}
-									]
-								}
-							},
-							"response": [
-								{
-									"name": "Lock",
-									"originalRequest": {
-										"method": "GET",
-										"header": [
-											{
-												"key": "Content-Type",
-												"name": "Content-Type",
-												"type": "text",
-												"value": "application/json"
-											}
-										],
-										"body": {
-											"mode": "raw",
-											"raw": ""
-										},
-										"url": {
-											"raw": "{{host}}/api/accounts/lock?address={{address}}",
-											"host": [
-												"{{host}}"
-											],
-											"path": [
-												"api",
-												"accounts",
-												"lock"
-											],
-											"query": [
-												{
-													"key": "address",
-													"value": "{{address}}"
-												}
-											]
-										}
-									},
-									"status": "OK",
-									"code": 200,
-									"_postman_previewlanguage": "json",
-									"header": [
-										{
-											"key": "X-Powered-By",
-											"value": "Express"
-										},
-										{
-											"key": "X-RateLimit-Limit",
-											"value": "0"
-										},
-										{
-											"key": "X-RateLimit-Remaining",
-											"value": "0"
-										},
-										{
-											"key": "Access-Control-Allow-Origin",
-											"value": "*"
-										},
-										{
-											"key": "X-Frame-Options",
-											"value": "DENY"
-										},
-										{
-											"key": "Content-Security-Policy",
-											"value": "frame-ancestors 'none'"
-										},
-										{
-											"key": "Access-Control-Allow-Headers",
-											"value": "Origin, X-Objected-With, Content-Type, Accept"
-										},
-										{
-											"key": "Content-Type",
-											"value": "application/json; charset=utf-8"
-										},
-										{
-											"key": "ETag",
-											"value": "W/\"509-BlZU6qoK8ItqCVhAk8pZ9O6qJf0\""
-										},
-										{
-											"key": "Vary",
-											"value": "Accept-Encoding"
-										},
-										{
-											"key": "Content-Encoding",
-											"value": "gzip"
-										},
-										{
-											"key": "Date",
-											"value": "Thu, 03 Jan 2019 11:04:33 GMT"
-										},
-										{
-											"key": "Connection",
-											"value": "keep-alive"
-										},
-										{
-											"key": "Transfer-Encoding",
-											"value": "chunked"
-										}
-									],
-									"cookie": [],
-									"body": "{\n    \"success\": true,\n    \"account\": {\n        \"username\": \"DSTAKEREWARD\",\n        \"isDelegate\": 0,\n        \"u_isDelegate\": 0,\n        \"secondSignature\": 0,\n        \"u_secondSignature\": 0,\n        \"u_username\": null,\n        \"address\": \"DDK4995063339468361088\",\n        \"publicKey\": \"f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2\",\n        \"secondPublicKey\": null,\n        \"balance\": \"4112999788298888\",\n        \"u_balance\": \"4112999788298888\",\n        \"vote\": \"0\",\n        \"rate\": \"0\",\n        \"delegates\": [\n            \"a0515f134d80b7e89491e848fe1be340df297de6114acd6cbb82866c7c95252c\",\n            \"059473307676a03ead0004339b4ec4f64383e7cec200ec2b686ccebba718b9f4\",\n            \"bd27a7c1c4d4c62bbe0a5fe292e7c3f201d55db9ef1d4c4013cde0a679f55b51\"\n        ],\n        \"u_delegates\": [\n            \"a0515f134d80b7e89491e848fe1be340df297de6114acd6cbb82866c7c95252c\",\n            \"059473307676a03ead0004339b4ec4f64383e7cec200ec2b686ccebba718b9f4\",\n            \"bd27a7c1c4d4c62bbe0a5fe292e7c3f201d55db9ef1d4c4013cde0a679f55b51\"\n        ],\n        \"url\": null,\n        \"multisignatures\": null,\n        \"u_multisignatures\": null,\n        \"multimin\": 0,\n        \"u_multimin\": 0,\n        \"multilifetime\": 0,\n        \"u_multilifetime\": 0,\n        \"blockId\": \"bdc79bc2159cf1db53f86bafcb658310b811bdba733c28add96f9f97e7ea0d98\",\n        \"nameexist\": 0,\n        \"u_nameexist\": 0,\n        \"producedblocks\": 0,\n        \"missedblocks\": 0,\n        \"fees\": \"0\",\n        \"rewards\": \"0\",\n        \"virgin\": 0,\n        \"acc_type\": 0,\n        \"transferedAmount\": \"5600000000\",\n        \"u_totalFrozeAmount\": \"5600000000\",\n        \"endTime\": null,\n        \"totalFrozeAmount\": \"5600000000\",\n        \"group_bonus\": \"0\",\n        \"pending_group_bonus\": \"0\",\n        \"introducer\": null\n    }\n}"
-								}
-							]
-						},
-						{
-							"name": "Unlock",
-							"event": [
-								{
-									"listen": "test",
-									"script": {
-										"id": "84815674-4c37-460a-ba64-031bc3478434",
-										"exec": [
-											"pm.test(\"response is ok\", function () {",
-											"    pm.response.to.have.status(200);",
-											"});",
-											"",
-											"pm.test(\"Body returns the unclock status of account\", function () {",
-											"    pm.expect(pm.response.text()).to.include(\"success\");",
-											"});",
-											"",
-											"pm.test(\"Body status success\", function () {",
-											"    var jsonData = pm.response.json();",
-											"    pm.expect(jsonData.success).to.eql(true);",
-											"});",
-											"",
-											"pm.test(\"response should be okay to process\", function () { ",
-											"    pm.response.to.not.be.error; ",
-											"    pm.response.to.have.jsonBody(\"\"); ",
-											"    pm.response.to.not.have.jsonBody(\"error\"); ",
-											"});"
-										],
-										"type": "text/javascript"
-									}
-								}
-							],
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Content-Type",
-										"name": "Content-Type",
-										"type": "text",
-										"value": "application/json"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": ""
-								},
-								"url": {
-									"raw": "{{host}}/api/accounts/unlock?address={{address}}",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"api",
-										"accounts",
-										"unlock"
-									],
-									"query": [
-										{
-											"key": "address",
-											"value": "{{address}}"
-										}
-									]
-								}
-							},
-							"response": [
-								{
-									"name": "Unlock",
-									"originalRequest": {
-										"method": "GET",
-										"header": [
-											{
-												"key": "Content-Type",
-												"name": "Content-Type",
-												"type": "text",
-												"value": "application/json"
-											}
-										],
-										"body": {
-											"mode": "raw",
-											"raw": "{\n\"secret\": \"{{moneyAccountSecret}}\"\n}"
-										},
-										"url": {
-											"raw": "{{host}}/api/accounts/unlock?address={{address}}",
-											"host": [
-												"{{host}}"
-											],
-											"path": [
-												"api",
-												"accounts",
-												"unlock"
-											],
-											"query": [
-												{
-													"key": "address",
-													"value": "{{address}}"
-												}
-											]
-										}
-									},
-									"status": "OK",
-									"code": 200,
-									"_postman_previewlanguage": "json",
-									"header": [
-										{
-											"key": "X-Powered-By",
-											"value": "Express"
-										},
-										{
-											"key": "X-RateLimit-Limit",
-											"value": "0"
-										},
-										{
-											"key": "X-RateLimit-Remaining",
-											"value": "0"
-										},
-										{
-											"key": "Access-Control-Allow-Origin",
-											"value": "*"
-										},
-										{
-											"key": "X-Frame-Options",
-											"value": "DENY"
-										},
-										{
-											"key": "Content-Security-Policy",
-											"value": "frame-ancestors 'none'"
-										},
-										{
-											"key": "Access-Control-Allow-Headers",
-											"value": "Origin, X-Objected-With, Content-Type, Accept"
-										},
-										{
-											"key": "Content-Type",
-											"value": "application/json; charset=utf-8"
-										},
-										{
-											"key": "Content-Length",
-											"value": "187"
-										},
-										{
-											"key": "ETag",
-											"value": "W/\"bb-yCLklaseGtxxzWzrJn8AJSPZ31c\""
-										},
-										{
-											"key": "Vary",
-											"value": "Accept-Encoding"
-										},
-										{
-											"key": "Date",
-											"value": "Thu, 03 Jan 2019 10:59:06 GMT"
-										},
-										{
-											"key": "Connection",
-											"value": "keep-alive"
-										}
-									],
-									"cookie": [],
-									"body": "{\n    \"success\": false,\n    \"error\": [\n        {\n            \"code\": \"OBJECT_MISSING_REQUIRED_PROPERTY\",\n            \"params\": [\n                \"address\"\n            ],\n            \"message\": \"Missing required property: address\",\n            \"path\": \"#/\",\n            \"schemaId\": \"accounts.unlockAccount\"\n        }\n    ]\n}"
-								}
-							]
-						},
-						{
-							"name": "Logout",
-							"event": [
-								{
-									"listen": "test",
-									"script": {
-										"id": "3cd66772-d71d-4d24-bbe2-06c11ac44ebb",
-										"exec": [
-											"pm.test(\"response is ok\", function () {",
-											"    pm.response.to.have.status(200);",
-											"});",
-											"",
-											"pm.test(\"Body status success\", function () {",
-											"    var jsonData = pm.response.json();",
-											"    pm.expect(jsonData.success).to.eql(true);",
-											"});",
-											"",
-											"pm.test(\"response should be okay to process\", function () { ",
-											"    pm.response.to.not.be.error; ",
-											"    pm.response.to.have.jsonBody(\"\"); ",
-											"    pm.response.to.not.have.jsonBody(\"error\"); ",
-											"});"
-										],
-										"type": "text/javascript"
-									}
-								}
-							],
-							"request": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Content-Type",
-										"name": "Content-Type",
-										"type": "text",
-										"value": "application/json"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n\t\"address\": \"DDK4995063339468361088\"\n}"
-								},
-								"url": {
-									"raw": "{{host}}/api/accounts/logout",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"api",
-										"accounts",
-										"logout"
-									]
-								}
-							},
-							"response": []
 						},
 						{
 							"name": "Generate QR Code",
@@ -958,12 +806,12 @@
 							]
 						},
 						{
-							"name": "Check Two Factor Status",
+							"name": "Lock",
 							"event": [
 								{
 									"listen": "test",
 									"script": {
-										"id": "2978de95-23aa-4757-a8d0-76bba73fe3eb",
+										"id": "762ea78d-9286-4fd0-8318-257f31f3af83",
 										"exec": [
 											"pm.test(\"response is ok\", function () {",
 											"    pm.response.to.have.status(200);",
@@ -978,7 +826,10 @@
 											"    pm.response.to.not.be.error; ",
 											"    pm.response.to.have.jsonBody(\"\"); ",
 											"    pm.response.to.not.have.jsonBody(\"error\"); ",
-											"});"
+											"});",
+											"",
+											"",
+											""
 										],
 										"type": "text/javascript"
 									}
@@ -999,84 +850,14 @@
 									"raw": ""
 								},
 								"url": {
-									"raw": "{{host}}/api/accounts/checkTwoFactorStatus?address={{address}}&publicKey={{publicKey}}",
+									"raw": "{{host}}/api/accounts/lock?address={{address}}",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
 										"api",
 										"accounts",
-										"checkTwoFactorStatus"
-									],
-									"query": [
-										{
-											"key": "address",
-											"value": "{{address}}"
-										},
-										{
-											"key": "publicKey",
-											"value": "{{publicKey}}"
-										}
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "Get Withdrawl Status",
-							"event": [
-								{
-									"listen": "test",
-									"script": {
-										"id": "8f60d237-7ca6-4e89-b82a-40095df791de",
-										"exec": [
-											"pm.test(\"response is ok\", function () {",
-											"    pm.response.to.have.status(200);",
-											"});",
-											"",
-											"pm.test(\"Body matches string\", function () {",
-											"    pm.expect(pm.response.text()).to.include(\"success\",\"status\",\"checkLastWithdrawl\",\"checkActiveStake\",\"checkActiveStakeOfLeftAndRightSponsor\",\"checkRatio\");",
-											"});",
-											"",
-											"",
-											"pm.test(\"Body status success\", function () {",
-											"    var jsonData = pm.response.json();",
-											"    pm.expect(jsonData.success).to.eql(true);",
-											"});",
-											"",
-											"pm.test(\"response should be okay to process\", function () { ",
-											"    pm.response.to.not.be.error; ",
-											"    pm.response.to.have.jsonBody(\"\"); ",
-											"    pm.response.to.not.have.jsonBody(\"error\"); ",
-											"});"
-										],
-										"type": "text/javascript"
-									}
-								}
-							],
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Content-Type",
-										"name": "Content-Type",
-										"type": "text",
-										"value": "application/json"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": ""
-								},
-								"url": {
-									"raw": "{{host}}/api/accounts/getWithdrawlStatus?address={{address}}",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"api",
-										"accounts",
-										"getWithdrawlStatus"
+										"lock"
 									],
 									"query": [
 										{
@@ -1088,7 +869,7 @@
 							},
 							"response": [
 								{
-									"name": "Get Withdrawl Status",
+									"name": "Lock",
 									"originalRequest": {
 										"method": "GET",
 										"header": [
@@ -1101,17 +882,17 @@
 										],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n\"secret\": \"{{moneyAccountSecret}}\"\n}"
+											"raw": ""
 										},
 										"url": {
-											"raw": "{{host}}/api/accounts/getWithdrawlStatus?address={{address}}",
+											"raw": "{{host}}/api/accounts/lock?address={{address}}",
 											"host": [
 												"{{host}}"
 											],
 											"path": [
 												"api",
 												"accounts",
-												"getWithdrawlStatus"
+												"lock"
 											],
 											"query": [
 												{
@@ -1158,28 +939,32 @@
 											"value": "application/json; charset=utf-8"
 										},
 										{
-											"key": "Content-Length",
-											"value": "142"
-										},
-										{
 											"key": "ETag",
-											"value": "W/\"8e-iodQblVq31vA0CB/DiH//R9LI0Q\""
+											"value": "W/\"509-BlZU6qoK8ItqCVhAk8pZ9O6qJf0\""
 										},
 										{
 											"key": "Vary",
 											"value": "Accept-Encoding"
 										},
 										{
+											"key": "Content-Encoding",
+											"value": "gzip"
+										},
+										{
 											"key": "Date",
-											"value": "Thu, 03 Jan 2019 11:08:36 GMT"
+											"value": "Thu, 03 Jan 2019 11:04:33 GMT"
 										},
 										{
 											"key": "Connection",
 											"value": "keep-alive"
+										},
+										{
+											"key": "Transfer-Encoding",
+											"value": "chunked"
 										}
 									],
 									"cookie": [],
-									"body": "{\n    \"success\": true,\n    \"status\": {\n        \"checkLastWithdrawl\": true,\n        \"checkActiveStake\": true,\n        \"checkActiveStakeOfLeftAndRightSponsor\": false,\n        \"checkRatio\": false\n    }\n}"
+									"body": "{\n    \"success\": true,\n    \"account\": {\n        \"username\": \"DSTAKEREWARD\",\n        \"isDelegate\": 0,\n        \"u_isDelegate\": 0,\n        \"secondSignature\": 0,\n        \"u_secondSignature\": 0,\n        \"u_username\": null,\n        \"address\": \"DDK4995063339468361088\",\n        \"publicKey\": \"f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2\",\n        \"secondPublicKey\": null,\n        \"balance\": \"4112999788298888\",\n        \"u_balance\": \"4112999788298888\",\n        \"vote\": \"0\",\n        \"rate\": \"0\",\n        \"delegates\": [\n            \"a0515f134d80b7e89491e848fe1be340df297de6114acd6cbb82866c7c95252c\",\n            \"059473307676a03ead0004339b4ec4f64383e7cec200ec2b686ccebba718b9f4\",\n            \"bd27a7c1c4d4c62bbe0a5fe292e7c3f201d55db9ef1d4c4013cde0a679f55b51\"\n        ],\n        \"u_delegates\": [\n            \"a0515f134d80b7e89491e848fe1be340df297de6114acd6cbb82866c7c95252c\",\n            \"059473307676a03ead0004339b4ec4f64383e7cec200ec2b686ccebba718b9f4\",\n            \"bd27a7c1c4d4c62bbe0a5fe292e7c3f201d55db9ef1d4c4013cde0a679f55b51\"\n        ],\n        \"url\": null,\n        \"multisignatures\": null,\n        \"u_multisignatures\": null,\n        \"multimin\": 0,\n        \"u_multimin\": 0,\n        \"multilifetime\": 0,\n        \"u_multilifetime\": 0,\n        \"blockId\": \"bdc79bc2159cf1db53f86bafcb658310b811bdba733c28add96f9f97e7ea0d98\",\n        \"nameexist\": 0,\n        \"u_nameexist\": 0,\n        \"producedblocks\": 0,\n        \"missedblocks\": 0,\n        \"fees\": \"0\",\n        \"rewards\": \"0\",\n        \"virgin\": 0,\n        \"acc_type\": 0,\n        \"transferedAmount\": \"5600000000\",\n        \"u_totalFrozeAmount\": \"5600000000\",\n        \"endTime\": null,\n        \"totalFrozeAmount\": \"5600000000\",\n        \"group_bonus\": \"0\",\n        \"pending_group_bonus\": \"0\",\n        \"introducer\": null\n    }\n}"
 								}
 							]
 						},
@@ -1237,19 +1022,329 @@
 								}
 							},
 							"response": []
+						},
+						{
+							"name": "Unlock",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "84815674-4c37-460a-ba64-031bc3478434",
+										"exec": [
+											"pm.test(\"response is ok\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Body returns the unclock status of account\", function () {",
+											"    pm.expect(pm.response.text()).to.include(\"success\");",
+											"});",
+											"",
+											"pm.test(\"Body status success\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData.success).to.eql(true);",
+											"});",
+											"",
+											"pm.test(\"response should be okay to process\", function () { ",
+											"    pm.response.to.not.be.error; ",
+											"    pm.response.to.have.jsonBody(\"\"); ",
+											"    pm.response.to.not.have.jsonBody(\"error\"); ",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{host}}/api/accounts/unlock?address={{address}}",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"accounts",
+										"unlock"
+									],
+									"query": [
+										{
+											"key": "address",
+											"value": "{{address}}"
+										}
+									]
+								}
+							},
+							"response": [
+								{
+									"name": "Unlock",
+									"originalRequest": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"type": "text",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n\"secret\": \"{{moneyAccountSecret}}\"\n}"
+										},
+										"url": {
+											"raw": "{{host}}/api/accounts/unlock?address={{address}}",
+											"host": [
+												"{{host}}"
+											],
+											"path": [
+												"api",
+												"accounts",
+												"unlock"
+											],
+											"query": [
+												{
+													"key": "address",
+													"value": "{{address}}"
+												}
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "X-Powered-By",
+											"value": "Express"
+										},
+										{
+											"key": "X-RateLimit-Limit",
+											"value": "0"
+										},
+										{
+											"key": "X-RateLimit-Remaining",
+											"value": "0"
+										},
+										{
+											"key": "Access-Control-Allow-Origin",
+											"value": "*"
+										},
+										{
+											"key": "X-Frame-Options",
+											"value": "DENY"
+										},
+										{
+											"key": "Content-Security-Policy",
+											"value": "frame-ancestors 'none'"
+										},
+										{
+											"key": "Access-Control-Allow-Headers",
+											"value": "Origin, X-Objected-With, Content-Type, Accept"
+										},
+										{
+											"key": "Content-Type",
+											"value": "application/json; charset=utf-8"
+										},
+										{
+											"key": "Content-Length",
+											"value": "187"
+										},
+										{
+											"key": "ETag",
+											"value": "W/\"bb-yCLklaseGtxxzWzrJn8AJSPZ31c\""
+										},
+										{
+											"key": "Vary",
+											"value": "Accept-Encoding"
+										},
+										{
+											"key": "Date",
+											"value": "Thu, 03 Jan 2019 10:59:06 GMT"
+										},
+										{
+											"key": "Connection",
+											"value": "keep-alive"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": false,\n    \"error\": [\n        {\n            \"code\": \"OBJECT_MISSING_REQUIRED_PROPERTY\",\n            \"params\": [\n                \"address\"\n            ],\n            \"message\": \"Missing required property: address\",\n            \"path\": \"#/\",\n            \"schemaId\": \"accounts.unlockAccount\"\n        }\n    ]\n}"
+								}
+							]
+						},
+						{
+							"name": "Logout",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "3cd66772-d71d-4d24-bbe2-06c11ac44ebb",
+										"exec": [
+											"pm.test(\"response is ok\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Body status success\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData.success).to.eql(true);",
+											"});",
+											"",
+											"pm.test(\"response should be okay to process\", function () { ",
+											"    pm.response.to.not.be.error; ",
+											"    pm.response.to.have.jsonBody(\"\"); ",
+											"    pm.response.to.not.have.jsonBody(\"error\"); ",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"address\": \"DDK4995063339468361088\",\n\t\"token\": \"{{token}}\"\n}"
+								},
+								"url": {
+									"raw": "{{host}}/api/accounts/logout",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"accounts",
+										"logout"
+									]
+								}
+							},
+							"response": []
 						}
 					],
 					"_postman_isSubFolder": true
 				},
 				{
-					"name": "Open",
+					"name": "Debug",
+					"item": [
+						{
+							"name": "Get All Accounts",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "b91d8f89-e80b-4e16-a58e-a82cd997b48f",
+										"exec": [
+											"pm.test(\"response is ok\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{host}}/api/accounts/getAllAccounts",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"accounts",
+										"getAllAccounts"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Top Accounts",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "b91d8f89-e80b-4e16-a58e-a82cd997b48f",
+										"exec": [
+											"pm.test(\"response is ok\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{host}}/api/accounts/top",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"accounts",
+										"top"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "Generate Public Key",
 					"event": [
 						{
 							"listen": "test",
 							"script": {
-								"id": "ed7b9837-cd2f-4fbd-b79e-42ffd9531844",
+								"id": "52fb855f-969b-49ea-b66b-a30aa7ec4365",
 								"exec": [
-									"",
 									"pm.test(\"response is ok\", function () {",
 									"    pm.response.to.have.status(200);",
 									"});",
@@ -1261,12 +1356,11 @@
 									"    pm.response.to.not.have.jsonBody(\"error\"); ",
 									"});",
 									"",
-									"",
-									"pm.test(\"Body matches string\", function () {",
-									"   pm.expect(pm.response.text()).to.include(\"success\",\"account\",\"address\",\"publicKey\",\"token\");",
-									"   var jsonData = pm.response.json();",
-									"   pm.environment.set(\"token\", jsonData.account.token);",
+									"pm.test(\"Body returns the publicKey of account\", function () {",
+									"    pm.expect(pm.response.text()).to.include(\"success\",\"publicKey\");",
 									"});",
+									"",
+									"",
 									"",
 									"pm.test(\"Body status success\", function () {",
 									"    var jsonData = pm.response.json();",
@@ -1274,14 +1368,9 @@
 									"});",
 									"",
 									"",
-									"pm.test(\"Body valid account\", function () {",
+									"pm.test(\"Body valid publicKey\", function () {",
 									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.account).to.not.eql(null);",
-									"});",
-									"",
-									"pm.test(\"Body valid token\", function () {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.account.token).to.not.eql(null);",
+									"    pm.expect(jsonData.publicKey).to.not.eql(null);",
 									"});"
 								],
 								"type": "text/javascript"
@@ -1303,28 +1392,28 @@
 							"raw": "{\n\t\"secret\": \"{{moneyAccountSecret}}\"\n}"
 						},
 						"url": {
-							"raw": "{{host}}/api/accounts/open",
+							"raw": "{{host}}/api/accounts/generatePublicKey",
 							"host": [
 								"{{host}}"
 							],
 							"path": [
 								"api",
 								"accounts",
-								"open"
+								"generatePublicKey"
 							]
 						}
 					},
 					"response": [
 						{
-							"name": "Open",
+							"name": "Generate Public Key",
 							"originalRequest": {
 								"method": "POST",
 								"header": [
 									{
 										"key": "Content-Type",
 										"name": "Content-Type",
-										"type": "text",
-										"value": "application/json"
+										"value": "application/json",
+										"type": "text"
 									}
 								],
 								"body": {
@@ -1332,14 +1421,14 @@
 									"raw": "{\n\"secret\": \"{{moneyAccountSecret}}\"\n}"
 								},
 								"url": {
-									"raw": "{{host}}/api/accounts/open",
+									"raw": "{{host}}/api/accounts/generatePublicKey",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
 										"api",
 										"accounts",
-										"open"
+										"generatePublicKey"
 									]
 								}
 							},
@@ -1385,15 +1474,15 @@
 								},
 								{
 									"key": "Content-Length",
-									"value": "653"
+									"value": "95"
 								},
 								{
 									"key": "ETag",
-									"value": "W/\"28d-gDmsacqZBglcWByc7MisvnULhTE\""
+									"value": "W/\"5f-xb/Nwb2ZpEGTdoHENin5U5oa5XE\""
 								},
 								{
 									"key": "Date",
-									"value": "Thu, 03 Jan 2019 09:30:21 GMT"
+									"value": "Thu, 03 Jan 2019 09:32:09 GMT"
 								},
 								{
 									"key": "Connection",
@@ -1401,25 +1490,20 @@
 								}
 							],
 							"cookie": [],
-							"body": "{\n    \"success\": true,\n    \"account\": {\n        \"address\": \"DDK7897332094363171058\",\n        \"username\": null,\n        \"unconfirmedBalance\": \"0\",\n        \"balance\": \"0\",\n        \"publicKey\": \"137b9f0f839ab3ecd2146bfecd64d31e127d79431211e352bedfeba5fd61a57a\",\n        \"unconfirmedSignature\": 0,\n        \"secondSignature\": 0,\n        \"secondPublicKey\": null,\n        \"multisignatures\": null,\n        \"u_multisignatures\": null,\n        \"totalFrozeAmount\": \"0\",\n        \"groupBonus\": \"0\",\n        \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzZWNyZXQiOiJ3aGFsZSBzbGFiIGJyaWRnZSB2aXJ1cyBtZXJyeSBzaGlwIGJyaWdodCBmaWJlciBwb3dlciBvdXRkb29yIG1haW4gZW5mb3JjZSIsImFkZHJlc3MiOiJEREs3ODk3MzMyMDk0MzYzMTcxMDU4IiwiaWF0IjoxNTQ2NTA3ODIxLCJleHAiOjE1NDY1MDgxMjF9.x_0zQo0rJ143-kP2Rb7wJT1ymDci3_6Go45gTxzTjtQ\"\n    }\n}"
+							"body": "{\n    \"success\": true,\n    \"publicKey\": \"137b9f0f839ab3ecd2146bfecd64d31e127d79431211e352bedfeba5fd61a57a\"\n}"
 						}
 					]
 				},
 				{
-					"name": "Get Balance",
+					"name": "Migrate Data",
 					"event": [
 						{
 							"listen": "test",
 							"script": {
-								"id": "3dd794ea-7fb1-4ab3-91de-b8efe1d5d63d",
+								"id": "acd8b285-117c-4bab-ba82-638ecba29a73",
 								"exec": [
 									"pm.test(\"response is ok\", function () {",
 									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"",
-									"pm.test(\"Body fetch balance of account\", function () {",
-									"    pm.expect(pm.response.text()).to.include(\"success\",\"balance\");",
 									"});",
 									"",
 									"",
@@ -1427,23 +1511,14 @@
 									"    var jsonData = pm.response.json();",
 									"    pm.expect(jsonData.success).to.eql(true);",
 									"});",
-									"",
-									"pm.test(\"Body valid balance\", function () {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.balance).to.not.eql(null);",
-									"});",
-									"",
-									"pm.test(\"Body valid unconfirmed balance\", function () {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.unconfirmedBalance).to.not.eql(null);",
-									"});"
+									""
 								],
 								"type": "text/javascript"
 							}
 						}
 					],
 					"request": {
-						"method": "GET",
+						"method": "POST",
 						"header": [
 							{
 								"key": "Content-Type",
@@ -1454,130 +1529,21 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": ""
+							"raw": "{\n\t\"secret\": \"{{moneyAccountSecret}}\"\n}"
 						},
 						"url": {
-							"raw": "{{host}}/api/accounts/getBalance?address={{address}}&token={{token}}",
+							"raw": "{{host}}/api/accounts/migrateData",
 							"host": [
 								"{{host}}"
 							],
 							"path": [
 								"api",
 								"accounts",
-								"getBalance"
-							],
-							"query": [
-								{
-									"key": "address",
-									"value": "{{address}}"
-								},
-								{
-									"key": "token",
-									"value": "{{token}}"
-								}
+								"migrateData"
 							]
 						}
 					},
-					"response": [
-						{
-							"name": "Get Balance",
-							"originalRequest": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Content-Type",
-										"name": "Content-Type",
-										"type": "text",
-										"value": "application/json"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": ""
-								},
-								"url": {
-									"raw": "{{host}}/api/accounts/getBalance?address={{address}}&token={{token}}",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"api",
-										"accounts",
-										"getBalance"
-									],
-									"query": [
-										{
-											"key": "address",
-											"value": "{{address}}"
-										},
-										{
-											"key": "token",
-											"value": "{{token}}"
-										}
-									]
-								}
-							},
-							"status": "OK",
-							"code": 200,
-							"_postman_previewlanguage": "json",
-							"header": [
-								{
-									"key": "X-Powered-By",
-									"value": "Express"
-								},
-								{
-									"key": "X-RateLimit-Limit",
-									"value": "0"
-								},
-								{
-									"key": "X-RateLimit-Remaining",
-									"value": "0"
-								},
-								{
-									"key": "Access-Control-Allow-Origin",
-									"value": "*"
-								},
-								{
-									"key": "X-Frame-Options",
-									"value": "DENY"
-								},
-								{
-									"key": "Content-Security-Policy",
-									"value": "frame-ancestors 'none'"
-								},
-								{
-									"key": "Access-Control-Allow-Headers",
-									"value": "Origin, X-Objected-With, Content-Type, Accept"
-								},
-								{
-									"key": "Content-Type",
-									"value": "application/json; charset=utf-8"
-								},
-								{
-									"key": "Content-Length",
-									"value": "85"
-								},
-								{
-									"key": "ETag",
-									"value": "W/\"55-jHf1KXLQQxvPMOOAHoaPdtTYf90\""
-								},
-								{
-									"key": "Vary",
-									"value": "Accept-Encoding"
-								},
-								{
-									"key": "Date",
-									"value": "Wed, 23 Jan 2019 13:11:30 GMT"
-								},
-								{
-									"key": "Connection",
-									"value": "keep-alive"
-								}
-							],
-							"cookie": [],
-							"body": "{\n    \"success\": true,\n    \"balance\": \"4112928389522207\",\n    \"unconfirmedBalance\": \"4112925889272207\"\n}"
-						}
-					]
+					"response": []
 				},
 				{
 					"name": "Get Public Key",
@@ -1751,13 +1717,677 @@
 					]
 				},
 				{
-					"name": "Generate Public Key",
+					"name": "Accounts",
 					"event": [
 						{
 							"listen": "test",
 							"script": {
-								"id": "52fb855f-969b-49ea-b66b-a30aa7ec4365",
+								"id": "b91d8f89-e80b-4e16-a58e-a82cd997b48f",
 								"exec": [
+									"pm.test(\"response is ok\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"response should be okay to process\", function () { ",
+									"    pm.response.to.not.be.error; ",
+									"    pm.response.to.have.jsonBody(\"\"); ",
+									"    pm.response.to.not.have.jsonBody(\"error\"); ",
+									"});",
+									"",
+									"",
+									"pm.test(\"Body matches string\", function () {",
+									"    pm.expect(pm.response.text()).to.include(\"success\",\"account\",\"address\",\"balance\",\"publicKey\",\"totalFrozeAmount\");",
+									"});",
+									"",
+									"pm.test(\"Body status success\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.eql(true);",
+									"});",
+									"",
+									"",
+									"pm.test(\"Body valid account\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.account).to.not.eql(null);",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{host}}/api/accounts/?address={{address}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"api",
+								"accounts",
+								""
+							],
+							"query": [
+								{
+									"key": "address",
+									"value": "{{address}}"
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Accounts",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\"secret\": \"{{moneyAccountSecret}}\"\n}"
+								},
+								"url": {
+									"raw": "{{host}}/api/accounts/?address={{address}}",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"accounts",
+										""
+									],
+									"query": [
+										{
+											"key": "address",
+											"value": "{{address}}"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "X-RateLimit-Limit",
+									"value": "0"
+								},
+								{
+									"key": "X-RateLimit-Remaining",
+									"value": "0"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								},
+								{
+									"key": "X-Frame-Options",
+									"value": "DENY"
+								},
+								{
+									"key": "Content-Security-Policy",
+									"value": "frame-ancestors 'none'"
+								},
+								{
+									"key": "Access-Control-Allow-Headers",
+									"value": "Origin, X-Objected-With, Content-Type, Accept"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "355"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"163-Vsi2wUEX7vABpSBJdy0rtA1knsI\""
+								},
+								{
+									"key": "Vary",
+									"value": "Accept-Encoding"
+								},
+								{
+									"key": "Date",
+									"value": "Wed, 02 Jan 2019 11:27:19 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"account\": {\n        \"address\": \"DDK4995063339468361088\",\n        \"unconfirmedBalance\": \"4112999999440000\",\n        \"balance\": \"4112999999440000\",\n        \"publicKey\": \"f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2\",\n        \"unconfirmedSignature\": 0,\n        \"secondSignature\": 0,\n        \"secondPublicKey\": null,\n        \"multisignatures\": [],\n        \"u_multisignatures\": [],\n        \"totalFrozeAmount\": \"5600000000\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Circulating Supply",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "348b59dc-43a0-4557-9f08-3d595f79a716",
+								"exec": [
+									"pm.test(\"response is ok\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"response should be okay to process\", function () { ",
+									"    pm.response.to.not.be.error; ",
+									"    pm.response.to.have.jsonBody(\"\"); ",
+									"    pm.response.to.not.have.jsonBody(\"error\"); ",
+									"});",
+									"",
+									"",
+									"",
+									"pm.test(\"Body returns the circulatingSupply of account\", function () {",
+									"    pm.expect(pm.response.text()).to.include(\"success\",\"circulatingSupply\");",
+									"});",
+									"",
+									"pm.test(\"Body status success\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.eql(true);",
+									"});",
+									"",
+									"",
+									"pm.test(\"Body valid circulatingSupply\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.circulatingSupply).to.not.eql(null);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{host}}/api/accounts/getCirculatingSupply",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"api",
+								"accounts",
+								"getCirculatingSupply"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Circulating Supply",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{host}}/api/accounts/getCirculatingSupply",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"accounts",
+										"getCirculatingSupply"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "X-RateLimit-Limit",
+									"value": "0"
+								},
+								{
+									"key": "X-RateLimit-Remaining",
+									"value": "0"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								},
+								{
+									"key": "X-Frame-Options",
+									"value": "DENY"
+								},
+								{
+									"key": "Content-Security-Policy",
+									"value": "frame-ancestors 'none'"
+								},
+								{
+									"key": "Access-Control-Allow-Headers",
+									"value": "Origin, X-Objected-With, Content-Type, Accept"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "52"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"34-Jp2zMUhZno6R7sZFz59O9mF4pp4\""
+								},
+								{
+									"key": "Vary",
+									"value": "Accept-Encoding"
+								},
+								{
+									"key": "Date",
+									"value": "Thu, 03 Jan 2019 09:37:37 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"circulatingSupply\": 387000211701112\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Balance",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "3dd794ea-7fb1-4ab3-91de-b8efe1d5d63d",
+								"exec": [
+									"pm.test(\"response is ok\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"",
+									"pm.test(\"Body fetch balance of account\", function () {",
+									"    pm.expect(pm.response.text()).to.include(\"success\",\"balance\");",
+									"});",
+									"",
+									"",
+									"pm.test(\"Body status success\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.eql(true);",
+									"});",
+									"",
+									"pm.test(\"Body valid balance\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.balance).to.not.eql(null);",
+									"});",
+									"",
+									"pm.test(\"Body valid unconfirmed balance\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.unconfirmedBalance).to.not.eql(null);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{host}}/api/accounts/getBalance?address={{address}}&token={{token}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"api",
+								"accounts",
+								"getBalance"
+							],
+							"query": [
+								{
+									"key": "address",
+									"value": "{{address}}"
+								},
+								{
+									"key": "token",
+									"value": "{{token}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delegates",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "7e5b3218-47ce-40c0-aed6-be83d89ef99b",
+								"exec": [
+									"pm.test(\"response is ok\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"response should be okay to process\", function () { ",
+									"    pm.response.to.not.be.error; ",
+									"    pm.response.to.have.jsonBody(\"\"); ",
+									"    pm.response.to.not.have.jsonBody(\"error\"); ",
+									"});",
+									"",
+									"",
+									"pm.test(\"Body status success\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.eql(true);",
+									"});",
+									"",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"secret\": \"{{moneyAccountSecret}}\",\n\t\"delegates\": [\"+7822d08f07cc362ae3fa536d1fd1555074a8cc2da369191051cb6f1d49773fcc\"]\n}"
+						},
+						"url": {
+							"raw": "{{host}}/api/accounts/delegates",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"api",
+								"accounts",
+								"delegates"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Existing ETPSUser Validate",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "aa86e1ec-0aa8-4bc8-8908-3013fe0dfc28",
+								"exec": [
+									"pm.test(\"response is ok\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Body status success\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.eql(true);",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"data\": \"username=YXhlbHNoZXZh&password=RVRPX05FX1BBUk9M\"\n}"
+						},
+						"url": {
+							"raw": "{{host}}/api/accounts/existingETPSUser/validate",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"api",
+								"accounts",
+								"existingETPSUser",
+								"validate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Total Supply",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "d117f2a2-7f58-41d8-9400-2c70c2130e01",
+								"exec": [
+									"pm.test(\"response is ok\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"response should be okay to process\", function () { ",
+									"    pm.response.to.not.be.error; ",
+									"    pm.response.to.have.jsonBody(\"\"); ",
+									"    pm.response.to.not.have.jsonBody(\"error\"); ",
+									"});",
+									"",
+									"pm.test(\"Body returns the totalSupply of account\", function () {",
+									"    pm.expect(pm.response.text()).to.include(\"success\",\"totalSupply\");",
+									"});",
+									"",
+									"",
+									"pm.test(\"Body status success\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.eql(true);",
+									"});",
+									"",
+									"",
+									"pm.test(\"Body valid totalSupply\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.totalSupply).to.not.eql(null);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{host}}/api/accounts/totalSupply",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"api",
+								"accounts",
+								"totalSupply"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Total Supply",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\"secret\": \"{{moneyAccountSecret}}\"\n}"
+								},
+								"url": {
+									"raw": "{{host}}/api/accounts/totalSupply",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"accounts",
+										"totalSupply"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "X-RateLimit-Limit",
+									"value": "0"
+								},
+								{
+									"key": "X-RateLimit-Remaining",
+									"value": "0"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								},
+								{
+									"key": "X-Frame-Options",
+									"value": "DENY"
+								},
+								{
+									"key": "Content-Security-Policy",
+									"value": "frame-ancestors 'none'"
+								},
+								{
+									"key": "Access-Control-Allow-Headers",
+									"value": "Origin, X-Objected-With, Content-Type, Accept"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "47"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"2f-hrMO46oFJe3CIeQwn8uTHI7emAs\""
+								},
+								{
+									"key": "Vary",
+									"value": "Accept-Encoding"
+								},
+								{
+									"key": "Date",
+									"value": "Thu, 03 Jan 2019 09:38:40 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"totalSupply\": 4112999788298888\n}"
+						}
+					]
+				},
+				{
+					"name": "Open",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "ed7b9837-cd2f-4fbd-b79e-42ffd9531844",
+								"exec": [
+									"",
 									"pm.test(\"response is ok\", function () {",
 									"    pm.response.to.have.status(200);",
 									"});",
@@ -1769,10 +2399,12 @@
 									"    pm.response.to.not.have.jsonBody(\"error\"); ",
 									"});",
 									"",
-									"pm.test(\"Body returns the publicKey of account\", function () {",
-									"    pm.expect(pm.response.text()).to.include(\"success\",\"publicKey\");",
-									"});",
 									"",
+									"pm.test(\"Body matches string\", function () {",
+									"    pm.expect(pm.response.text()).to.include(\"success\",\"account\",\"address\",\"publicKey\",\"token\");",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"token\", jsonData.account.token);",
+									"});",
 									"",
 									"",
 									"pm.test(\"Body status success\", function () {",
@@ -1781,9 +2413,14 @@
 									"});",
 									"",
 									"",
-									"pm.test(\"Body valid publicKey\", function () {",
+									"pm.test(\"Body valid account\", function () {",
 									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.publicKey).to.not.eql(null);",
+									"    pm.expect(jsonData.account).to.not.eql(null);",
+									"});",
+									"",
+									"pm.test(\"Body valid token\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.account.token).to.not.eql(null);",
 									"});"
 								],
 								"type": "text/javascript"
@@ -1802,31 +2439,31 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n\"secret\": \"{{moneyAccountSecret}}\"\n}"
+							"raw": "{\n\t\"secret\": \"taxi jaguar income latin museum print link sound odor south atom token\"\n}"
 						},
 						"url": {
-							"raw": "{{host}}/api/accounts/generatePublicKey",
+							"raw": "{{host}}/api/accounts/open",
 							"host": [
 								"{{host}}"
 							],
 							"path": [
 								"api",
 								"accounts",
-								"generatePublicKey"
+								"open"
 							]
 						}
 					},
 					"response": [
 						{
-							"name": "Generate Public Key",
+							"name": "Open",
 							"originalRequest": {
 								"method": "POST",
 								"header": [
 									{
 										"key": "Content-Type",
 										"name": "Content-Type",
-										"value": "application/json",
-										"type": "text"
+										"type": "text",
+										"value": "application/json"
 									}
 								],
 								"body": {
@@ -1834,14 +2471,14 @@
 									"raw": "{\n\"secret\": \"{{moneyAccountSecret}}\"\n}"
 								},
 								"url": {
-									"raw": "{{host}}/api/accounts/generatePublicKey",
+									"raw": "{{host}}/api/accounts/open",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
 										"api",
 										"accounts",
-										"generatePublicKey"
+										"open"
 									]
 								}
 							},
@@ -1887,15 +2524,15 @@
 								},
 								{
 									"key": "Content-Length",
-									"value": "95"
+									"value": "653"
 								},
 								{
 									"key": "ETag",
-									"value": "W/\"5f-xb/Nwb2ZpEGTdoHENin5U5oa5XE\""
+									"value": "W/\"28d-gDmsacqZBglcWByc7MisvnULhTE\""
 								},
 								{
 									"key": "Date",
-									"value": "Thu, 03 Jan 2019 09:32:09 GMT"
+									"value": "Thu, 03 Jan 2019 09:30:21 GMT"
 								},
 								{
 									"key": "Connection",
@@ -1903,7 +2540,164 @@
 								}
 							],
 							"cookie": [],
-							"body": "{\n    \"success\": true,\n    \"publicKey\": \"137b9f0f839ab3ecd2146bfecd64d31e127d79431211e352bedfeba5fd61a57a\"\n}"
+							"body": "{\n    \"success\": true,\n    \"account\": {\n        \"address\": \"DDK7897332094363171058\",\n        \"username\": null,\n        \"unconfirmedBalance\": \"0\",\n        \"balance\": \"0\",\n        \"publicKey\": \"137b9f0f839ab3ecd2146bfecd64d31e127d79431211e352bedfeba5fd61a57a\",\n        \"unconfirmedSignature\": 0,\n        \"secondSignature\": 0,\n        \"secondPublicKey\": null,\n        \"multisignatures\": null,\n        \"u_multisignatures\": null,\n        \"totalFrozeAmount\": \"0\",\n        \"groupBonus\": \"0\",\n        \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzZWNyZXQiOiJ3aGFsZSBzbGFiIGJyaWRnZSB2aXJ1cyBtZXJyeSBzaGlwIGJyaWdodCBmaWJlciBwb3dlciBvdXRkb29yIG1haW4gZW5mb3JjZSIsImFkZHJlc3MiOiJEREs3ODk3MzMyMDk0MzYzMTcxMDU4IiwiaWF0IjoxNTQ2NTA3ODIxLCJleHAiOjE1NDY1MDgxMjF9.x_0zQo0rJ143-kP2Rb7wJT1ymDci3_6Go45gTxzTjtQ\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Delegates Fee",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "c68a24eb-9aec-4a91-8aa0-daef9fbeebc0",
+								"exec": [
+									"pm.test(\"response is ok\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"response should be okay to process\", function () { ",
+									"    pm.response.to.not.be.error; ",
+									"    pm.response.to.have.jsonBody(\"\"); ",
+									"    pm.response.to.not.have.jsonBody(\"error\"); ",
+									"});",
+									"",
+									"",
+									"pm.test(\"Body returns the delegates fee for account\", function () {",
+									"    pm.expect(pm.response.text()).to.include(\"success\",\"fee\");",
+									"});",
+									"",
+									"",
+									"pm.test(\"Body status success\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.eql(true);",
+									"});",
+									"",
+									"pm.test(\"Body valid fee\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.fee).to.not.eql(null);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{host}}/api/accounts/delegates/fee",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"api",
+								"accounts",
+								"delegates",
+								"fee"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Delegates Fee",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{host}}/api/accounts/delegates/fee",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"accounts",
+										"delegates",
+										"fee"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "X-RateLimit-Limit",
+									"value": "0"
+								},
+								{
+									"key": "X-RateLimit-Remaining",
+									"value": "0"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								},
+								{
+									"key": "X-Frame-Options",
+									"value": "DENY"
+								},
+								{
+									"key": "Content-Security-Policy",
+									"value": "frame-ancestors 'none'"
+								},
+								{
+									"key": "Access-Control-Allow-Headers",
+									"value": "Origin, X-Objected-With, Content-Type, Accept"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "33"
+								},
+								{
+									"key": "ETag",
+									"value": "W/\"21-T80133dS2O8U7zyHMHiisEkV8eE\""
+								},
+								{
+									"key": "Vary",
+									"value": "Accept-Encoding"
+								},
+								{
+									"key": "Date",
+									"value": "Thu, 03 Jan 2019 09:32:39 GMT"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"fee\": 1000000000\n}"
 						}
 					]
 				},
@@ -2082,12 +2876,12 @@
 					]
 				},
 				{
-					"name": "Delegates Fee",
+					"name": "Get Dashboard DDK Data",
 					"event": [
 						{
 							"listen": "test",
 							"script": {
-								"id": "c68a24eb-9aec-4a91-8aa0-daef9fbeebc0",
+								"id": "bb856ee8-717d-46a4-b31b-3dd85b606fa7",
 								"exec": [
 									"pm.test(\"response is ok\", function () {",
 									"    pm.response.to.have.status(200);",
@@ -2099,21 +2893,21 @@
 									"    pm.response.to.not.have.jsonBody(\"error\"); ",
 									"});",
 									"",
-									"",
-									"pm.test(\"Body returns the delegates fee for account\", function () {",
-									"    pm.expect(pm.response.text()).to.include(\"success\",\"fee\");",
+									"pm.test(\"Body returns the totalCirculatingSupply of account\", function () {",
+									"    pm.expect(pm.response.text()).to.include(",
+									"    \"success\",",
+									"    \"countStakeholders\",",
+									"    \"totalDDKStaked\",",
+									"    \"totalAccountHolders\",",
+									"    \"totalCirculatingSupply\");",
 									"});",
-									"",
 									"",
 									"pm.test(\"Body status success\", function () {",
 									"    var jsonData = pm.response.json();",
 									"    pm.expect(jsonData.success).to.eql(true);",
 									"});",
 									"",
-									"pm.test(\"Body valid fee\", function () {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.fee).to.not.eql(null);",
-									"});"
+									""
 								],
 								"type": "text/javascript"
 							}
@@ -2134,27 +2928,20 @@
 							"raw": ""
 						},
 						"url": {
-							"raw": "{{host}}/api/accounts/delegates/fee?address={{address}}",
+							"raw": "{{host}}/api/accounts/getDashboardDDKData",
 							"host": [
 								"{{host}}"
 							],
 							"path": [
 								"api",
 								"accounts",
-								"delegates",
-								"fee"
-							],
-							"query": [
-								{
-									"key": "address",
-									"value": "{{address}}"
-								}
+								"getDashboardDDKData"
 							]
 						}
 					},
 					"response": [
 						{
-							"name": "Delegates Copy",
+							"name": "Total Supply Copy",
 							"originalRequest": {
 								"method": "GET",
 								"header": [
@@ -2170,15 +2957,14 @@
 									"raw": "{\n\"secret\": \"{{moneyAccountSecret}}\"\n}"
 								},
 								"url": {
-									"raw": "{{host}}/api/accounts/delegates/fee",
+									"raw": "{{host}}/api/accounts/getDashboardDDKData",
 									"host": [
 										"{{host}}"
 									],
 									"path": [
 										"api",
 										"accounts",
-										"delegates",
-										"fee"
+										"getDashboardDDKData"
 									]
 								}
 							},
@@ -2220,11 +3006,11 @@
 								},
 								{
 									"key": "Content-Length",
-									"value": "33"
+									"value": "138"
 								},
 								{
 									"key": "ETag",
-									"value": "W/\"21-T80133dS2O8U7zyHMHiisEkV8eE\""
+									"value": "W/\"8a-Q8/uAIbgMONssk8a9SkhSK3937Q\""
 								},
 								{
 									"key": "Vary",
@@ -2232,7 +3018,7 @@
 								},
 								{
 									"key": "Date",
-									"value": "Thu, 03 Jan 2019 09:32:39 GMT"
+									"value": "Thu, 03 Jan 2019 09:38:24 GMT"
 								},
 								{
 									"key": "Connection",
@@ -2240,233 +3026,7 @@
 								}
 							],
 							"cookie": [],
-							"body": "{\n    \"success\": true,\n    \"fee\": 1000000000\n}"
-						}
-					]
-				},
-				{
-					"name": "Delegates",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"id": "7e5b3218-47ce-40c0-aed6-be83d89ef99b",
-								"exec": [
-									"pm.test(\"response is ok\", function () {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test(\"response should be okay to process\", function () { ",
-									"    pm.response.to.not.be.error; ",
-									"    pm.response.to.have.jsonBody(\"\"); ",
-									"    pm.response.to.not.have.jsonBody(\"error\"); ",
-									"});",
-									"",
-									"",
-									"pm.test(\"Body status success\", function () {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.success).to.eql(true);",
-									"});",
-									"",
-									""
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Content-Type",
-								"name": "Content-Type",
-								"type": "text",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n\"secret\": \"{{moneyAccountSecret}}\"\n\n}"
-						},
-						"url": {
-							"raw": "{{host}}/api/accounts/delegates",
-							"host": [
-								"{{host}}"
-							],
-							"path": [
-								"api",
-								"accounts",
-								"delegates"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Accounts",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"id": "b91d8f89-e80b-4e16-a58e-a82cd997b48f",
-								"exec": [
-									"pm.test(\"response is ok\", function () {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test(\"response should be okay to process\", function () { ",
-									"    pm.response.to.not.be.error; ",
-									"    pm.response.to.have.jsonBody(\"\"); ",
-									"    pm.response.to.not.have.jsonBody(\"error\"); ",
-									"});",
-									"",
-									"",
-									"pm.test(\"Body matches string\", function () {",
-									"    pm.expect(pm.response.text()).to.include(\"success\",\"account\",\"address\",\"balance\",\"publicKey\",\"totalFrozeAmount\");",
-									"});",
-									"",
-									"pm.test(\"Body status success\", function () {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.success).to.eql(true);",
-									"});",
-									"",
-									"",
-									"pm.test(\"Body valid account\", function () {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.account).to.not.eql(null);",
-									"});",
-									""
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Content-Type",
-								"name": "Content-Type",
-								"type": "text",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": ""
-						},
-						"url": {
-							"raw": "{{host}}/api/accounts/?address={{address}}",
-							"host": [
-								"{{host}}"
-							],
-							"path": [
-								"api",
-								"accounts",
-								""
-							],
-							"query": [
-								{
-									"key": "address",
-									"value": "{{address}}"
-								}
-							]
-						}
-					},
-					"response": [
-						{
-							"name": "Accounts",
-							"originalRequest": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Content-Type",
-										"name": "Content-Type",
-										"type": "text",
-										"value": "application/json"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n\"secret\": \"{{moneyAccountSecret}}\"\n}"
-								},
-								"url": {
-									"raw": "{{host}}/api/accounts/?address={{address}}",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"api",
-										"accounts",
-										""
-									],
-									"query": [
-										{
-											"key": "address",
-											"value": "{{address}}"
-										}
-									]
-								}
-							},
-							"status": "OK",
-							"code": 200,
-							"_postman_previewlanguage": "json",
-							"header": [
-								{
-									"key": "X-Powered-By",
-									"value": "Express"
-								},
-								{
-									"key": "X-RateLimit-Limit",
-									"value": "0"
-								},
-								{
-									"key": "X-RateLimit-Remaining",
-									"value": "0"
-								},
-								{
-									"key": "Access-Control-Allow-Origin",
-									"value": "*"
-								},
-								{
-									"key": "X-Frame-Options",
-									"value": "DENY"
-								},
-								{
-									"key": "Content-Security-Policy",
-									"value": "frame-ancestors 'none'"
-								},
-								{
-									"key": "Access-Control-Allow-Headers",
-									"value": "Origin, X-Objected-With, Content-Type, Accept"
-								},
-								{
-									"key": "Content-Type",
-									"value": "application/json; charset=utf-8"
-								},
-								{
-									"key": "Content-Length",
-									"value": "355"
-								},
-								{
-									"key": "ETag",
-									"value": "W/\"163-Vsi2wUEX7vABpSBJdy0rtA1knsI\""
-								},
-								{
-									"key": "Vary",
-									"value": "Accept-Encoding"
-								},
-								{
-									"key": "Date",
-									"value": "Wed, 02 Jan 2019 11:27:19 GMT"
-								},
-								{
-									"key": "Connection",
-									"value": "keep-alive"
-								}
-							],
-							"cookie": [],
-							"body": "{\n    \"success\": true,\n    \"account\": {\n        \"address\": \"DDK4995063339468361088\",\n        \"unconfirmedBalance\": \"4112999999440000\",\n        \"balance\": \"4112999999440000\",\n        \"publicKey\": \"f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2\",\n        \"unconfirmedSignature\": 0,\n        \"secondSignature\": 0,\n        \"secondPublicKey\": null,\n        \"multisignatures\": [],\n        \"u_multisignatures\": [],\n        \"totalFrozeAmount\": \"5600000000\"\n    }\n}"
+							"body": "{\n    \"success\": true,\n    \"countStakeholders\": \"1\",\n    \"totalDDKStaked\": \"5600000000\",\n    \"totalAccountHolders\": \"15\",\n    \"totalCirculatingSupply\": 387000211701112\n}"
 						}
 					]
 				},
@@ -2634,574 +3194,6 @@
 					]
 				},
 				{
-					"name": "Get Circulating Supply",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"id": "348b59dc-43a0-4557-9f08-3d595f79a716",
-								"exec": [
-									"pm.test(\"response is ok\", function () {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test(\"response should be okay to process\", function () { ",
-									"    pm.response.to.not.be.error; ",
-									"    pm.response.to.have.jsonBody(\"\"); ",
-									"    pm.response.to.not.have.jsonBody(\"error\"); ",
-									"});",
-									"",
-									"",
-									"",
-									"pm.test(\"Body returns the circulatingSupply of account\", function () {",
-									"    pm.expect(pm.response.text()).to.include(\"success\",\"circulatingSupply\");",
-									"});",
-									"",
-									"pm.test(\"Body status success\", function () {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.success).to.eql(true);",
-									"});",
-									"",
-									"",
-									"pm.test(\"Body valid circulatingSupply\", function () {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.circulatingSupply).to.not.eql(null);",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Content-Type",
-								"name": "Content-Type",
-								"type": "text",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": ""
-						},
-						"url": {
-							"raw": "{{host}}/api/accounts/getCirculatingSupply",
-							"host": [
-								"{{host}}"
-							],
-							"path": [
-								"api",
-								"accounts",
-								"getCirculatingSupply"
-							]
-						}
-					},
-					"response": [
-						{
-							"name": "Count Copy",
-							"originalRequest": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Content-Type",
-										"name": "Content-Type",
-										"type": "text",
-										"value": "application/json"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n\"secret\": \"{{moneyAccountSecret}}\"\n}"
-								},
-								"url": {
-									"raw": "{{host}}/api/accounts/getCirculatingSupply",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"api",
-										"accounts",
-										"getCirculatingSupply"
-									]
-								}
-							},
-							"status": "OK",
-							"code": 200,
-							"_postman_previewlanguage": "json",
-							"header": [
-								{
-									"key": "X-Powered-By",
-									"value": "Express"
-								},
-								{
-									"key": "X-RateLimit-Limit",
-									"value": "0"
-								},
-								{
-									"key": "X-RateLimit-Remaining",
-									"value": "0"
-								},
-								{
-									"key": "Access-Control-Allow-Origin",
-									"value": "*"
-								},
-								{
-									"key": "X-Frame-Options",
-									"value": "DENY"
-								},
-								{
-									"key": "Content-Security-Policy",
-									"value": "frame-ancestors 'none'"
-								},
-								{
-									"key": "Access-Control-Allow-Headers",
-									"value": "Origin, X-Objected-With, Content-Type, Accept"
-								},
-								{
-									"key": "Content-Type",
-									"value": "application/json; charset=utf-8"
-								},
-								{
-									"key": "Content-Length",
-									"value": "52"
-								},
-								{
-									"key": "ETag",
-									"value": "W/\"34-Jp2zMUhZno6R7sZFz59O9mF4pp4\""
-								},
-								{
-									"key": "Vary",
-									"value": "Accept-Encoding"
-								},
-								{
-									"key": "Date",
-									"value": "Thu, 03 Jan 2019 09:37:37 GMT"
-								},
-								{
-									"key": "Connection",
-									"value": "keep-alive"
-								}
-							],
-							"cookie": [],
-							"body": "{\n    \"success\": true,\n    \"circulatingSupply\": 387000211701112\n}"
-						}
-					]
-				},
-				{
-					"name": "Total Supply",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"id": "d117f2a2-7f58-41d8-9400-2c70c2130e01",
-								"exec": [
-									"pm.test(\"response is ok\", function () {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test(\"response should be okay to process\", function () { ",
-									"    pm.response.to.not.be.error; ",
-									"    pm.response.to.have.jsonBody(\"\"); ",
-									"    pm.response.to.not.have.jsonBody(\"error\"); ",
-									"});",
-									"",
-									"pm.test(\"Body returns the totalSupply of account\", function () {",
-									"    pm.expect(pm.response.text()).to.include(\"success\",\"totalSupply\");",
-									"});",
-									"",
-									"",
-									"pm.test(\"Body status success\", function () {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.success).to.eql(true);",
-									"});",
-									"",
-									"",
-									"pm.test(\"Body valid totalSupply\", function () {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.totalSupply).to.not.eql(null);",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Content-Type",
-								"name": "Content-Type",
-								"type": "text",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": ""
-						},
-						"url": {
-							"raw": "{{host}}/api/accounts/totalSupply",
-							"host": [
-								"{{host}}"
-							],
-							"path": [
-								"api",
-								"accounts",
-								"totalSupply"
-							]
-						}
-					},
-					"response": [
-						{
-							"name": "Total Supply",
-							"originalRequest": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Content-Type",
-										"name": "Content-Type",
-										"type": "text",
-										"value": "application/json"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n\"secret\": \"{{moneyAccountSecret}}\"\n}"
-								},
-								"url": {
-									"raw": "{{host}}/api/accounts/totalSupply",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"api",
-										"accounts",
-										"totalSupply"
-									]
-								}
-							},
-							"status": "OK",
-							"code": 200,
-							"_postman_previewlanguage": "json",
-							"header": [
-								{
-									"key": "X-Powered-By",
-									"value": "Express"
-								},
-								{
-									"key": "X-RateLimit-Limit",
-									"value": "0"
-								},
-								{
-									"key": "X-RateLimit-Remaining",
-									"value": "0"
-								},
-								{
-									"key": "Access-Control-Allow-Origin",
-									"value": "*"
-								},
-								{
-									"key": "X-Frame-Options",
-									"value": "DENY"
-								},
-								{
-									"key": "Content-Security-Policy",
-									"value": "frame-ancestors 'none'"
-								},
-								{
-									"key": "Access-Control-Allow-Headers",
-									"value": "Origin, X-Objected-With, Content-Type, Accept"
-								},
-								{
-									"key": "Content-Type",
-									"value": "application/json; charset=utf-8"
-								},
-								{
-									"key": "Content-Length",
-									"value": "47"
-								},
-								{
-									"key": "ETag",
-									"value": "W/\"2f-hrMO46oFJe3CIeQwn8uTHI7emAs\""
-								},
-								{
-									"key": "Vary",
-									"value": "Accept-Encoding"
-								},
-								{
-									"key": "Date",
-									"value": "Thu, 03 Jan 2019 09:38:40 GMT"
-								},
-								{
-									"key": "Connection",
-									"value": "keep-alive"
-								}
-							],
-							"cookie": [],
-							"body": "{\n    \"success\": true,\n    \"totalSupply\": 4112999788298888\n}"
-						}
-					]
-				},
-				{
-					"name": "Get Dashboard DDK Data",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"id": "bb856ee8-717d-46a4-b31b-3dd85b606fa7",
-								"exec": [
-									"pm.test(\"response is ok\", function () {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test(\"response should be okay to process\", function () { ",
-									"    pm.response.to.not.be.error; ",
-									"    pm.response.to.have.jsonBody(\"\"); ",
-									"    pm.response.to.not.have.jsonBody(\"error\"); ",
-									"});",
-									"",
-									"pm.test(\"Body returns the totalCirculatingSupply of account\", function () {",
-									"    pm.expect(pm.response.text()).to.include(",
-									"    \"success\",",
-									"    \"countStakeholders\",",
-									"    \"totalDDKStaked\",",
-									"    \"totalAccountHolders\",",
-									"    \"totalCirculatingSupply\");",
-									"});",
-									"",
-									"pm.test(\"Body status success\", function () {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.success).to.eql(true);",
-									"});",
-									"",
-									""
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Content-Type",
-								"name": "Content-Type",
-								"type": "text",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": ""
-						},
-						"url": {
-							"raw": "{{host}}/api/accounts/getDashboardDDKData",
-							"host": [
-								"{{host}}"
-							],
-							"path": [
-								"api",
-								"accounts",
-								"getDashboardDDKData"
-							]
-						}
-					},
-					"response": [
-						{
-							"name": "Total Supply Copy",
-							"originalRequest": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Content-Type",
-										"name": "Content-Type",
-										"type": "text",
-										"value": "application/json"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n\"secret\": \"{{moneyAccountSecret}}\"\n}"
-								},
-								"url": {
-									"raw": "{{host}}/api/accounts/getDashboardDDKData",
-									"host": [
-										"{{host}}"
-									],
-									"path": [
-										"api",
-										"accounts",
-										"getDashboardDDKData"
-									]
-								}
-							},
-							"status": "OK",
-							"code": 200,
-							"_postman_previewlanguage": "json",
-							"header": [
-								{
-									"key": "X-Powered-By",
-									"value": "Express"
-								},
-								{
-									"key": "X-RateLimit-Limit",
-									"value": "0"
-								},
-								{
-									"key": "X-RateLimit-Remaining",
-									"value": "0"
-								},
-								{
-									"key": "Access-Control-Allow-Origin",
-									"value": "*"
-								},
-								{
-									"key": "X-Frame-Options",
-									"value": "DENY"
-								},
-								{
-									"key": "Content-Security-Policy",
-									"value": "frame-ancestors 'none'"
-								},
-								{
-									"key": "Access-Control-Allow-Headers",
-									"value": "Origin, X-Objected-With, Content-Type, Accept"
-								},
-								{
-									"key": "Content-Type",
-									"value": "application/json; charset=utf-8"
-								},
-								{
-									"key": "Content-Length",
-									"value": "138"
-								},
-								{
-									"key": "ETag",
-									"value": "W/\"8a-Q8/uAIbgMONssk8a9SkhSK3937Q\""
-								},
-								{
-									"key": "Vary",
-									"value": "Accept-Encoding"
-								},
-								{
-									"key": "Date",
-									"value": "Thu, 03 Jan 2019 09:38:24 GMT"
-								},
-								{
-									"key": "Connection",
-									"value": "keep-alive"
-								}
-							],
-							"cookie": [],
-							"body": "{\n    \"success\": true,\n    \"countStakeholders\": \"1\",\n    \"totalDDKStaked\": \"5600000000\",\n    \"totalAccountHolders\": \"15\",\n    \"totalCirculatingSupply\": 387000211701112\n}"
-						}
-					]
-				},
-				{
-					"name": "Migrate Data",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"id": "acd8b285-117c-4bab-ba82-638ecba29a73",
-								"exec": [
-									"pm.test(\"response is ok\", function () {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"",
-									"pm.test(\"Body status success\", function () {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.success).to.eql(true);",
-									"});",
-									""
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"name": "Content-Type",
-								"type": "text",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n\t\"secret\": \"{{moneyAccountSecret}}\"\n}"
-						},
-						"url": {
-							"raw": "{{host}}/api/accounts/migrateData",
-							"host": [
-								"{{host}}"
-							],
-							"path": [
-								"api",
-								"accounts",
-								"migrateData"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Existing ETPSUser Validate",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"id": "aa86e1ec-0aa8-4bc8-8908-3013fe0dfc28",
-								"exec": [
-									"pm.test(\"response is ok\", function () {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test(\"Body status success\", function () {",
-									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.success).to.eql(true);",
-									"});",
-									""
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"name": "Content-Type",
-								"type": "text",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n\t\"data\": \"username=YXhlbHNoZXZh&password=RVRPX05FX1BBUk9M\"\n}"
-						},
-						"url": {
-							"raw": "{{host}}/api/accounts/existingETPSUser/validate",
-							"host": [
-								"{{host}}"
-							],
-							"path": [
-								"api",
-								"accounts",
-								"existingETPSUser",
-								"validate"
-							]
-						}
-					},
-					"response": []
-				},
-				{
 					"name": "Verify User To Comment",
 					"event": [
 						{
@@ -3352,11 +3344,209 @@
 						}
 					]
 				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "a23b84ea-34ba-42e2-9569-50fb2a525662",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "e5c85afe-cdf7-4136-a2a0-feb6045a8ba3",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
 			]
 		},
 		{
 			"name": "Blocks",
 			"item": [
+				{
+					"name": "Debug",
+					"item": [
+						{
+							"name": "Pop Last Block",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "4b6a7d41-d42c-4b01-b377-8045d67c5d63",
+										"exec": [
+											"pm.test(\"response is ok\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Body matches string\", function () {",
+											"    pm.expect(pm.response.text()).to.include(\"true\",\"supply\");",
+											"});",
+											"",
+											"pm.test(\"Body status success\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData.success).to.eql(true);",
+											"});",
+											"",
+											"",
+											"pm.test(\"Body valid supply\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData.supply).to.not.eql(null);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{host}}/api/blocks/popLastBlock",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"blocks",
+										"popLastBlock"
+									]
+								}
+							},
+							"response": [
+								{
+									"name": "Get Supply",
+									"originalRequest": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"type": "text",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n\"secret\": \"{{moneyAccountSecret}}\"\n}"
+										},
+										"url": {
+											"raw": "{{host}}/api/blocks/getSupply",
+											"host": [
+												"{{host}}"
+											],
+											"path": [
+												"api",
+												"blocks",
+												"getSupply"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "X-Powered-By",
+											"value": "Express"
+										},
+										{
+											"key": "X-RateLimit-Limit",
+											"value": "0"
+										},
+										{
+											"key": "X-RateLimit-Remaining",
+											"value": "0"
+										},
+										{
+											"key": "Access-Control-Allow-Origin",
+											"value": "*"
+										},
+										{
+											"key": "X-Frame-Options",
+											"value": "DENY"
+										},
+										{
+											"key": "Content-Security-Policy",
+											"value": "frame-ancestors 'none'"
+										},
+										{
+											"key": "Access-Control-Allow-Headers",
+											"value": "Origin, X-Objected-With, Content-Type, Accept"
+										},
+										{
+											"key": "Content-Type",
+											"value": "application/json; charset=utf-8"
+										},
+										{
+											"key": "Content-Length",
+											"value": "42"
+										},
+										{
+											"key": "ETag",
+											"value": "W/\"2a-wbt0d+QM2m+7uGa2dA1T7bNjk34\""
+										},
+										{
+											"key": "Vary",
+											"value": "Accept-Encoding"
+										},
+										{
+											"key": "Date",
+											"value": "Thu, 03 Jan 2019 09:59:06 GMT"
+										},
+										{
+											"key": "Connection",
+											"value": "keep-alive"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"success\": true,\n    \"supply\": 4503907000000000\n}"
+								}
+							]
+						}
+					],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "da7c0c90-c1f5-4626-817c-6b7b870c2444",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "afb8522d-976f-43fe-9402-c295f159b9dc",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					],
+					"_postman_isSubFolder": true
+				},
 				{
 					"name": "Get",
 					"event": [
@@ -3442,7 +3632,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n\"secret\": \"{{moneyAccountSecret}}\"\n}"
+									"raw": ""
 								},
 								"url": {
 									"raw": "{{host}}/api/blocks/get?id={{blockId}}",
@@ -3608,7 +3798,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n\"secret\": \"{{moneyAccountSecret}}\"\n}"
+									"raw": ""
 								},
 								"url": {
 									"raw": "{{host}}/api/blocks/",
@@ -3769,7 +3959,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n\"secret\": \"{{moneyAccountSecret}}\"\n}"
+									"raw": ""
 								},
 								"url": {
 									"raw": "{{host}}/api/blocks/getBroadhash",
@@ -3923,7 +4113,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n\"secret\": \"{{moneyAccountSecret}}\"\n}"
+									"raw": ""
 								},
 								"url": {
 									"raw": "{{host}}/api/blocks/getEpoch",
@@ -4077,7 +4267,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n\"secret\": \"{{moneyAccountSecret}}\"\n}"
+									"raw": ""
 								},
 								"url": {
 									"raw": "{{host}}/api/blocks/getHeight",
@@ -4231,7 +4421,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n\"secret\": \"{{moneyAccountSecret}}\"\n}"
+									"raw": ""
 								},
 								"url": {
 									"raw": "{{host}}/api/blocks/getNethash",
@@ -4385,7 +4575,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n\"secret\": \"{{moneyAccountSecret}}\"\n}"
+									"raw": ""
 								},
 								"url": {
 									"raw": "{{host}}/api/blocks/getFee",
@@ -4540,7 +4730,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n\"secret\": \"{{moneyAccountSecret}}\"\n}"
+									"raw": ""
 								},
 								"url": {
 									"raw": "{{host}}/api/blocks/getFees?id={{blockId}}",
@@ -4701,7 +4891,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n\"secret\": \"{{moneyAccountSecret}}\"\n}"
+									"raw": ""
 								},
 								"url": {
 									"raw": "{{host}}/api/blocks/getMilestone?id={{blockId}}",
@@ -4855,7 +5045,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n\"secret\": \"{{moneyAccountSecret}}\"\n}"
+									"raw": ""
 								},
 								"url": {
 									"raw": "{{host}}/api/blocks/getReward",
@@ -5003,7 +5193,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n\"secret\": \"{{moneyAccountSecret}}\"\n}"
+									"raw": ""
 								},
 								"url": {
 									"raw": "{{host}}/api/blocks/getSupply",
@@ -5145,7 +5335,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n\"secret\": \"{{moneyAccountSecret}}\"\n}"
+									"raw": ""
 								},
 								"url": {
 									"raw": "{{host}}/api/blocks/getStatus",
@@ -5470,7 +5660,7 @@
 										],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n\"secret\": \"{{moneyAccountSecret}}\"\n}"
+											"raw": ""
 										},
 										"url": {
 											"raw": "{{host}}/api/delegates/getLatestVoters",
@@ -5619,7 +5809,7 @@
 										],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n\"secret\": \"{{moneyAccountSecret}}\"\n}"
+											"raw": ""
 										},
 										"url": {
 											"raw": "{{host}}/api/delegates/getLatestDelegates",
@@ -5884,7 +6074,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n\"secret\": \"{{moneyAccountSecret}}\"\n}"
+									"raw": ""
 								},
 								"url": {
 									"raw": "{{host}}/api/delegates/count",
@@ -6196,7 +6386,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n\"secret\": \"{{moneyAccountSecret}}\"\n}"
+									"raw": ""
 								},
 								"url": {
 									"raw": "{{host}}/api/delegates/",
@@ -6351,7 +6541,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n\"secret\": \"{{moneyAccountSecret}}\"\n}"
+									"raw": ""
 								},
 								"url": {
 									"raw": "{{host}}/api/delegates/fee",
@@ -6503,7 +6693,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n\"secret\": \"{{moneyAccountSecret}}\"\n}"
+									"raw": ""
 								},
 								"url": {
 									"raw": "{{host}}/api/delegates/forging/getForgedByAccount?generatorPublicKey={{generatorPublicKey}}",
@@ -6658,7 +6848,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n\"secret\": \"{{moneyAccountSecret}}\"\n}"
+									"raw": ""
 								},
 								"url": {
 									"raw": "{{host}}/api/delegates/getNextForgers",
@@ -6804,7 +6994,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n\"secret\": \"{{moneyAccountSecret}}\"\n}"
+									"raw": ""
 								},
 								"url": {
 									"raw": "{{host}}/api/delegates/getNextForgers",
@@ -7834,7 +8024,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{}\n"
+									"raw": ""
 								},
 								"url": {
 									"raw": "{{host}}/api/loader/status",
@@ -7977,7 +8167,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{}\n"
+									"raw": ""
 								},
 								"url": {
 									"raw": "{{host}}/api/loader/status/sync",
@@ -8137,7 +8327,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{}\n"
+									"raw": ""
 								},
 								"url": {
 									"raw": "{{host}}/api/multisignatures/pending?publicKey={{publicKey}}",
@@ -8396,7 +8586,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{}\n"
+									"raw": ""
 								},
 								"url": {
 									"raw": "{{host}}/api/multisignatures/accounts?publicKey={{publicKey}}",
@@ -8556,7 +8746,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{}\n"
+									"raw": ""
 								},
 								"url": {
 									"raw": "{{host}}/api/peers/",
@@ -8700,7 +8890,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{}\n"
+									"raw": ""
 								},
 								"url": {
 									"raw": "{{host}}/api/peers/version",
@@ -8854,7 +9044,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{}\n"
+									"raw": ""
 								},
 								"url": {
 									"raw": "{{host}}/api/peers/get?port={{peerPort}}&ip={{peerIp}}",
@@ -9008,7 +9198,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{}\n"
+									"raw": ""
 								},
 								"url": {
 									"raw": "{{host}}/api/peers/count",
@@ -9269,7 +9459,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{}\n"
+									"raw": ""
 								},
 								"url": {
 									"raw": "{{host}}/api/signatures/fee",
@@ -9485,7 +9675,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{}\n"
+									"raw": ""
 								},
 								"url": {
 									"raw": "{{host}}/api/transactions/",
@@ -9687,7 +9877,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{}\n"
+									"raw": ""
 								},
 								"url": {
 									"raw": "{{host}}/api/transactions/count",
@@ -9885,7 +10075,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{}\n"
+									"raw": ""
 								},
 								"url": {
 									"raw": "{{host}}/api/transactions/queued",
@@ -10190,7 +10380,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{}\n"
+									"raw": ""
 								},
 								"url": {
 									"raw": "{{host}}/api/transactions/unconfirmed",
