@@ -165,6 +165,10 @@ class TransactionPool {
         if (dependTransactions.length === 0) {
             return false;
         }
+        if (trs.type === transactionTypes.SIGNATURE) {
+            return true;
+        }
+
         dependTransactions.push(trs);
         dependTransactions.sort(transactionSortFunc);
         return dependTransactions.indexOf(trs) !== (dependTransactions.length - 1);
