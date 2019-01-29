@@ -1,9 +1,17 @@
+import Logger from 'src/logger.js';
+
 
 export class AccountSessions {
 
-    private sockets: Array<any> = [];
+    private sessions: object = {};
+    private logger: Logger = new Logger().logger;
+    private static io: any;
     private static instance: AccountSessions;
-    private constructor() {}
+    private constructor() { }
+
+    static setIOInstance(io: object) {
+        AccountSessions.io = io;
+    }
 
     static getInstance() {
         if (!AccountSessions.instance) {
@@ -12,39 +20,74 @@ export class AccountSessions {
         return AccountSessions.instance;
     }
 
-    list() {
-        return this.sockets;
-    }
+    put(address: string, status: string, socketId: string) {
+        if (!this.sessions[address]) {
+            this.sessions[address] = [];
+        }
+        this.sessions[address].push({address, status, socketId});
 
-    length() {
-        return this.sockets.length;
+        return this.count();
     }
 
     get(address) {
-        let i, sessions = [];
-        for (i = 0; i < this.sockets.length; i++) {
-            if (this.sockets[i].address == address) {
-                sessions.push(this.sockets[i]);
+        let sessions: Array<object> = [];
+
+        if (Array.isArray(this.sessions[address])) {
+            let i: number;
+            for (i = 0; i < this.sessions[address].length; i++) {
+                if (this.sessions[address][i].address === address) {
+                    sessions.push(this.sessions[address][i]);
+                }
             }
         }
+
         return sessions;
     }
 
-    add(address, status, socketId) {
-        this.sockets.push({address, status, socketId})
-        return this.length();
+    remove(socketId: string, address?: string) {
+        if (address) {
+            if (Array.isArray(this.sessions[address])) {
+                this.sessions[address].forEach((session, index) => {
+                    if (session.socketId === socketId) {
+                        this.sessions[address].splice(index, 1);
+                    }
+                });
+            }
+        } else {
+            let address: string;
+            for (address in this.sessions) {
+                this.remove(socketId, address);
+            }
+        }
+
+        return this.count();
     }
 
-    remove(socketId) {
-        this.sockets.forEach((session, index) => {
-            if (session.socketId === socketId) {
-                this.sockets.splice(index, 1);
+    count() {
+        let address: string, counter: number = 0;
+        for (address in this.sessions) {
+            counter += Array.isArray(this.sessions[address])
+                ? this.sessions[address].length
+                : 0;
+        }
+
+        return counter
+    }
+
+    send(address: string, eventName: string, message: object) {
+        const sessions: Array<object> = this.get(address);
+
+        sessions.forEach((session) => {
+            try {
+                AccountSessions.io.sockets.sockets[session['socketId']].emit(eventName, JSON.stringify(message));
+            } catch (err) {
+                this.logger.error(`Error send message by socketId on "${address}" `, { message: err.message });
             }
         });
-        return this.length();
     }
 
 }
+
 
 export default exports = {
     AccountSessions

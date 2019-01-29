@@ -310,13 +310,14 @@ d.run(() => {
             }
 
             const accountSessions = AccountSessions.getInstance();
+            AccountSessions.setIOInstance(io);
 
             // handled socket's connection event
             io.on('connection', (socket) => {
                 // IIFE: function to accept new socket.id in sockets array.
                 function acceptSocket(user) {
                     if(user.address) {
-                        let length = accountSessions.add( user.address, 'online', socket.id );
+                        let length = accountSessions.put( user.address, 'online', socket.id );
                         io.sockets.emit('updateConnected', length);
                     }
                 }
