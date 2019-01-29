@@ -184,22 +184,6 @@ Cache.prototype.removeByPattern = function (pattern, cb) {
     if (!self.isConnected()) {
         return cb(errorCacheDisabled);
     }
-    let keys,
-        cursor = 0;
-    async.doWhilst((whilstCb) => {
-        client.scan(cursor, 'MATCH', pattern, (err, res) => {
-            if (err) {
-                return whilstCb(err);
-            }
-            cursor = Number(res.shift());
-            keys = res.shift();
-            if (keys.length > 0) {
-                client.del(keys, whilstCb);
-            } else {
-                return whilstCb();
-            }
-        });
-    }, () => cursor > 0, cb);
 };
 
 /**

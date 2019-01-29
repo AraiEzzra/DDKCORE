@@ -1,4 +1,4 @@
-import { CacheRepository, ICacheRepository} from 'shared/repository/cache';
+import { CacheRepository, ICacheRepository } from 'shared/repository/cache';
 import ResponseEntity from 'shared/model/response';
 
 export const useCache = (expired, client?: ICacheRepository) => {
@@ -8,13 +8,13 @@ export const useCache = (expired, client?: ICacheRepository) => {
             if (descriptor.value != null) {
                 let decoratedFn = descriptor.value;
 
-                descriptor.value = () => {
-                    const cacheFromRedis = cacheClient.getJsonByKey(propertyKey);
+                descriptor.value = async () => {
+                    const cacheFromRedis = await cacheClient.get(propertyKey);
                     if (cacheFromRedis.data) {
                         return new ResponseEntity({data: cacheFromRedis});
                     } else {
                         let data = decoratedFn.apply(target, arguments);
-                        cacheClient.setJsonByKey(propertyKey, data.data);
+                        await cacheClient.set(propertyKey, data.data, expired);
                         return data;
                     }
                 };
