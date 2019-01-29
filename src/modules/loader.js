@@ -557,6 +557,7 @@ __private.loadBlocksFromNetwork = function (cb) {
                             return next();
                         }
                         library.logger.info(['Found common block:', commonBlock.id, 'with:', peer.string].join(' '));
+                        library.logger.debug(`Found common block: ${JSON.stringify(commonBlock)}`);
                         return setImmediate(getCommonBlockCb);
                     });
                 }

@@ -1169,8 +1169,6 @@ Transaction.prototype.undo = async (trs, block) => {
     const mergedSender = await self.scope.account.asyncMerge(trs.senderId, {
         balance: amount,
         totalFrozeAmount: -trs.stakedAmount,
-        blockId: block.id,
-        round: modules.rounds.calc(block.height)
     });
 
     try {
@@ -1339,6 +1337,7 @@ Transaction.prototype.undoUnconfirmed = (trs, sender, cb) => {
 };
 
 Transaction.prototype.newUndoUnconfirmed = async (trs) => {
+    self.scope.logger.error(`[Transaction][newUndoUnconfirmed] transaction id ${trs.id}`);
     const amount = trs.amount + trs.fee;
 
     const mergedSender = await self.scope.account.asyncMerge(

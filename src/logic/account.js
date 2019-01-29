@@ -748,6 +748,8 @@ Account.prototype.findReferralLevel = function (address, cb) {
  * @returns {setImmediateCallback|cb|done} Multiple returns: done() or error.
  */
 Account.prototype.merge = function (address, diff, cb) {
+    library.logger.debug(`[Account][merge] address: ${address}, diff: ${JSON.stringify(diff)}`);
+
     const update = {};
     const remove = {};
     const insert = {};

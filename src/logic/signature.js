@@ -154,11 +154,11 @@ Signature.prototype.getBytes = function (trs) {
  * @return {setImmediateCallback} for errors
  */
 Signature.prototype.apply = function (trs, block, sender, cb) {
+    library.logger.debug(`[Signature][apply] transaction id ${trs.id}`);
     modules.accounts.setAccountAndGet({
         address: sender.address,
         secondSignature: 1,
-        u_secondSignature: 0,
-        secondPublicKey: trs.asset.signature.publicKey
+        secondPublicKey: trs.asset.signature.publicKey,
     }, cb);
 };
 
@@ -171,11 +171,11 @@ Signature.prototype.apply = function (trs, block, sender, cb) {
  * @param {function} cb - Callback function.
  */
 Signature.prototype.undo = async (trs) => {
+    library.logger.debug(`[Signature][undo] transaction id ${trs.id}`);
     await library.account.asyncMerge(trs.senderId, {
         address: trs.senderId,
         secondSignature: 0,
-        u_secondSignature: 1,
-        secondPublicKey: null
+        secondPublicKey: null,
     });
 };
 
@@ -189,7 +189,6 @@ Signature.prototype.undo = async (trs) => {
  * @return {setImmediateCallback} Error if second signature is already enabled.
  */
 Signature.prototype.applyUnconfirmed = function (trs, sender, cb) {
-
     modules.accounts.setAccountAndGet({ address: sender.address, u_secondSignature: 1 }, cb);
 };
 

@@ -152,6 +152,10 @@ Process.prototype.getCommonBlock = function (peer, height, cb) {
         /*
          * Removed poor consensus check in order to sync data
          */
+        if (err) {
+            library.logger.error(`[Process][getCommonBlock] ${err}`);
+            library.logger.error(`[Process][getCommonBlock][stack] ${err.stack}`);
+        }
         if (comparisionFailed && modules.transport.poorConsensus()) {
             return modules.blocks.chain.recoverChain(cb);
         }
@@ -209,7 +213,7 @@ Process.prototype.loadBlocksOffset = function (limit, offset, verify, cb) {
                             verify,
                             (err) => {
                                 if (err) {
-                                    library.logger.debug(`[Process][loadBlocksOffset] 
+                                    library.logger.debug(`[Process][loadBlocksOffset]
                                     Block processing failed, ${JSON.stringify({
                                         id: block.id,
                                         err: err.toString(),
@@ -309,7 +313,7 @@ Process.prototype.loadBlocksFromPeer = function (peer, cb) {
                 } catch (err) {
                     const id = (block ? block.id : 'null');
                     library.logger.debug(
-                        `[Process][processBlock] Block processing failed, 
+                        `[Process][processBlock] Block processing failed,
                         ${JSON.stringify({ id, err: err.toString(), module: 'blocks', block })}`
                     );
                     await modules.transactions.pushInPool(removedTransactions);
