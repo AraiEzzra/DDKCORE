@@ -64,13 +64,14 @@ const DelegatesSql = {
     '  "username",' +
     '  "address",' +
     '  delegate_to_vote_counter."publicKey",' +
+    '  delegate_to_vote_counter."voteCount",' +
     '  "vote",' +
     '  "missedblocks",' +
     '  "producedblocks",' +
     '  "url"' +
     ' FROM delegate_to_vote_counter' +
     '  INNER JOIN mem_accounts on mem_accounts."publicKey" = delegate_to_vote_counter."publicKey"' +
-    ' ORDER BY delegate_to_vote_counter."voteCount", delegate_to_vote_counter."publicKey";'
+    ' ORDER BY delegate_to_vote_counter."voteCount" DESC, "vote" DESC, delegate_to_vote_counter."publicKey";'
 };
 
 module.exports = DelegatesSql;
