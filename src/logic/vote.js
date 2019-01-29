@@ -771,59 +771,6 @@ Vote.prototype.removeCheckVote = async (voteTransaction) => {
     }
 };
 
-/**
- * Update vote count from stake_order and mem_accounts table
- * @param {voteInfo} voteInfo voteInfo have votes and senderId
- * @return {null|err} return null if success else err
- *
- */
-Vote.prototype.updateMemAccounts = function (voteInfo, cb) {
-    const votes = voteInfo.votes;
-
-    function checkUpvoteDownvote(waterCb) {
-        if ((votes[0])[0] === '+') {
-            return setImmediate(waterCb, null, 1);
-        }
-        return setImmediate(waterCb, null, 0);
-    }
-
-    function prepareQuery(voteType, waterCb) {
-        let inCondition = '';
-        votes.forEach((vote) => {
-            const address = modules.accounts.generateAddressByPublicKey(vote.substring(1));
-            inCondition += `'${address}' ,`;
-        });
-        inCondition = inCondition.substring(0, inCondition.length - 1);
-
-        const sign = voteType === 1 ? '+' : '-';
-
-        const query = `UPDATE mem_accounts SET "voteCount"="voteCount"${sign}1  WHERE "address" IN ( ${inCondition})`;
-
-        return setImmediate(waterCb, null, query);
-    }
-
-    function updateVoteCount(query, waterCb) {
-        library.db.query(query)
-            .then(() => setImmediate(waterCb))
-            .catch((err) => {
-                library.logger.error(err.stack);
-                return setImmediate(waterCb, 'vote updation in mem_accounts table error');
-            });
-    }
-
-    async.waterfall([
-        checkUpvoteDownvote,
-        prepareQuery,
-        updateVoteCount
-    ], (err) => {
-        if (err) {
-            library.logger.warn(err);
-            return setImmediate(cb, err);
-        }
-        return setImmediate(cb, null);
-    });
-};
-
 // Export
 module.exports = Vote;
 
