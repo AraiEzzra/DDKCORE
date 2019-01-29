@@ -656,6 +656,7 @@ Chain.prototype.newApplyBlock = async (block, broadcast, saveBlock, tick) => {
  * @return {Object}   cbPopLastBlock.obj New last block
  */
 __private.popLastBlock = function (oldLastBlock, cbPopLastBlock) {
+    library.logger.debug(`[Chain][popLastBlock] block: ${JSON.stringify(oldLastBlock)}`);
     // Execute in sequence via balancesSequence
     library.balancesSequence.add((cbAdd) => {
         // Load previous block from full_blocks_list table
