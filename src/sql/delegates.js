@@ -49,9 +49,7 @@ const DelegatesSql = {
     insertFork: 'INSERT INTO forks_stat ("delegatePublicKey", "blockTimestamp", "blockId", "blockHeight", "previousBlock", "cause") VALUES (${delegatePublicKey}, ${blockTimestamp}, ${blockId}, ${blockHeight}, ${previousBlock}, ${cause});',
 
     getVoters: 'SELECT accounts.address, accounts.balance, "publicKey" FROM mem_accounts2delegates delegates INNER JOIN mem_accounts accounts ON delegates."accountId" = accounts.address WHERE delegates."dependentId" = ${publicKey} ORDER BY accounts."balance" DESC LIMIT ${limit} OFFSET ${offset}',
-
-    getTotalTransactionCount: 'SELECT count(*) FROM trs WHERE type = ${type}',
-     
+         
     getVotersCount: 'SELECT count(*) FROM mem_accounts2delegates WHERE "dependentId" = ${publicKey}',
 
     getLatestVoters: 'SELECT * from trs WHERE type = ${type} ORDER BY timestamp DESC LIMIT ${limit}',
@@ -66,13 +64,14 @@ const DelegatesSql = {
     '  "username",' +
     '  "address",' +
     '  delegate_to_vote_counter."publicKey",' +
+    '  delegate_to_vote_counter."voteCount",' +
     '  "vote",' +
     '  "missedblocks",' +
     '  "producedblocks",' +
     '  "url"' +
     ' FROM delegate_to_vote_counter' +
     '  INNER JOIN mem_accounts on mem_accounts."publicKey" = delegate_to_vote_counter."publicKey"' +
-    ' ORDER BY delegate_to_vote_counter."voteCount", delegate_to_vote_counter."publicKey";'
+    ' ORDER BY delegate_to_vote_counter."voteCount" DESC, "vote" DESC, delegate_to_vote_counter."publicKey";'
 };
 
 module.exports = DelegatesSql;
