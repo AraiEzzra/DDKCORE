@@ -913,6 +913,27 @@ Transactions.prototype.internal = {
  * @see {@link http://apidocjs.com/}
  */
 Transactions.prototype.shared = {
+    debug(req, cb) {
+        if (req.body.async) {
+            self[req.body.function].call(self, req.body.args)
+            .then((data) => {
+                return setImmediate(cb, null, { data: data });
+            }).catch((e) => {
+                return setImmediate(cb, e);
+            });
+        } else {
+            const cbIndex = req.body.args.indexOf('cb');
+            if (cbIndex !== -1) {
+                req.body.args[cbIndex] = (err, data) => {
+                    setImmediate(cb, err, { data: data });
+                };
+                self[req.body.function].call(self, req.body.args);
+            } else {
+                const data = self[req.body.function].call(self, req.body.args);
+                setImmediate(cb, null, { data: data });
+            }
+        }
+    },
     getTransactions(req, cb) {
         async.waterfall([
             function (waterCb) {
