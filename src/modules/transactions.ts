@@ -97,7 +97,7 @@ class Transactions {
         });
 
         __private.assetTypes[transactionTypes.SEND] = library.logic.transaction.attachAssetType(
-            transactionTypes.SEND, new Transfer()
+            transactionTypes.SEND, new Transfer(scope.logic.account)
         );
 
         setImmediate(cb, null, self);
