@@ -59,6 +59,10 @@ const DelegatesSql = {
     addDelegateVoteRecord: 'INSERT INTO "delegate_to_vote_counter"("publicKey", "voteCount") VALUES (${publicKey}, 0) ON CONFLICT DO NOTHING',
 
     removeDelegateVoteRecord: 'DELETE FROM "delegate_to_vote_counter" WHERE "publicKey" = ${publicKey}',
+    
+    removeDelegates: 'DELETE FROM mem_accounts2delegates WHERE "accountId" = ${accountId} and "dependentId" in (${dependentIds}:csv)',
+
+    removeUDelegates: 'DELETE FROM mem_accounts2u_delegates WHERE "accountId" = ${accountId} and "dependentId" in (${dependentIds}:csv)',
 
     getTopDelegates: 'SELECT' +
     '  "username",' +

@@ -158,7 +158,7 @@ Transfer.prototype.apply = function (trs, block, sender, cb) {
  * @return {setImmediateCallback} error, cb
  */
 Transfer.prototype.undo = async (trs) => {
-    library.account.asyncMerge(trs.recipientId, {
+    await library.account.asyncMerge(trs.recipientId, {
         address: trs.recipientId,
         balance: -trs.amount,
     });

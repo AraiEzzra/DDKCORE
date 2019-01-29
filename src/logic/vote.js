@@ -4,6 +4,7 @@ const exceptions = require('../helpers/exceptions.js');
 const Diff = require('../helpers/diff.js');
 const _ = require('lodash');
 const sql = require('../sql/accounts.js');
+const DelegateSQL = require('../sql/delegates');
 const slots = require('../helpers/slots.js');
 const { LENGTH, writeUInt64LE } = require('../helpers/buffer.js');
 const utils = require('../utils');
@@ -498,6 +499,8 @@ Vote.prototype.getBytes = function (trs) {
  * @param {function} cb - Callback function
  */
 Vote.prototype.apply = function (trs, block, sender, cb) {
+    const isDownVote = trs.trsName === 'DOWNVOTE';
+
     async.series([
         function (seriesCb) {
             library.account.merge(sender.address, {
@@ -507,22 +510,8 @@ Vote.prototype.apply = function (trs, block, sender, cb) {
             }, seriesCb);
         },
         function (seriesCb) {
-            self.updateMemAccounts({ votes: trs.asset.votes, senderId: trs.senderId },
-                (err) => {
-                    if (err) {
-                        return setImmediate(seriesCb, err);
-                    }
-                    return setImmediate(seriesCb, null, trs);
-                });
-        },
-        function (seriesCb) {
-            let voteValue = 1;
-            const isDownVote = trs.trsName === 'DOWNVOTE';
             const votes = trs.asset.votes.map(vote => vote.substring(1));
-            if (isDownVote) {
-                voteValue = -1;
-            }
-            library.db.query(sql.changeDelegateVoteCount({ value: voteValue, votes }))
+            library.db.query(sql.changeDelegateVoteCount({ value: isDownVote ? -1 : 1, votes }))
                 .then(() => setImmediate(seriesCb, null))
                 .catch((err) => {
                     library.logger.error(err.stack);
@@ -530,7 +519,6 @@ Vote.prototype.apply = function (trs, block, sender, cb) {
                 });
         },
         function (seriesCb) {
-            const isDownVote = trs.trsName === 'DOWNVOTE';
             if (isDownVote) {
                 return setImmediate(seriesCb, null, trs);
             }
@@ -556,38 +544,20 @@ Vote.prototype.apply = function (trs, block, sender, cb) {
  * @return {setImmediateCallback} cb, err
  */
 Vote.prototype.undo = async (trs) => {
-    const votesInvert = Diff.reverse(trs.asset.votes);
-
-    await library.account.asyncMerge(trs.senderId, {
-        delegates: votesInvert,
-    });
-
-    try {
-        await (new Promise((resolve, reject) => {
-            self.updateMemAccounts({
-                votes: votesInvert,
-                senderId: trs.senderId
-            }, (err) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve()
-                }
-            });
-        }));
-    } catch (e) {
-        throw e;
-    }
+    const isDownVote = trs.trsName === 'DOWNVOTE';
 
     const votes = trs.asset.votes.map(vote => vote.substring(1));
+    await library.db.none(DelegateSQL.removeDelegates, {
+        accountId: accountId,
+        dependentIds: votes.join(',')
+    });
 
-    await library.db.query(sql.changeDelegateVoteCount({ value: -1, votes }));
-
-    const isDownVote = trs.trsName === 'DOWNVOTE';
+    await library.db.none(sql.changeDelegateVoteCount({ value: isDownVote ? 1 : -1, votes }));
 
     if (isDownVote) {
         return;
     }
+
     try {
         await self.removeCheckVote(trs);
     } catch (e) {

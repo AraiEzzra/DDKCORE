@@ -5,6 +5,7 @@ const jsonSql = require('json-sql')();
 jsonSql.setDialect('postgresql');
 const constants = require('../helpers/constants.js');
 const sql = require('../sql/referal_sql');
+const AccountsSQL = require('../sql/accounts');
 
 let self;
 let library;
@@ -1005,17 +1006,17 @@ Account.prototype.merge = function (address, diff, cb) {
         });
 };
 
-Account.prototype.asyncMerge = async (address, data) => ((new Promise((resolve, reject) => {
-    self.merge(address, data, (err, account) => {
-        if (err) {
-            library.logger.error(`[Account][asyncMerge][merge] ${err}`);
-            library.logger.error(`[Account][asyncMerge][merge][stack] ${err.stack}`);
-            return reject(err);
-        }
-        library.logger.trace(`[Account][asyncMerge][merge] ${JSON.stringify(account)}`);
-        resolve(account);
+Account.prototype.asyncMerge = async (address, data) => {
+    const set = [];
+    const values = { address };
+
+    Object.keys(data).forEach(field => {
+        set.push(`"${field}" = "${field}" + \${${field}}`);
+        values[field] = data[field];
     });
-})));
+
+    return self.scope.db.one(AccountsSQL.updateAccount(set), values);
+};
 
 /**
  * Removes an account from mem_account table based on address.
