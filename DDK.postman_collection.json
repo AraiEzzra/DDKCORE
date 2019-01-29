@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "cb061dfe-c412-4bed-81a7-94fcea1caf0e",
+		"_postman_id": "d24d007f-44df-4040-acd8-b7d0a54e6f21",
 		"name": "DDK",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -72,7 +72,8 @@
 											"value": "{{publicKey}}"
 										}
 									]
-								}
+								},
+								"description": "Returns 2fa status for account\n\nParameters\n\n| Parameter     | Type          | Is Required | Description               |\n| ------------- | ------------- | ----------- | ------------------------- |\n| publicKey     | string        | +           | Account public key        |\n\nResponse\n\n| Parameter          | Type           | Description                 |\n| ------------------ | -------------- | --------------------------- |\n| success            | boolean        | Operation status            |"
 							},
 							"response": []
 						},
@@ -138,7 +139,8 @@
 											"value": "{{address}}"
 										}
 									]
-								}
+								},
+								"description": "Returns withdrawl status for account\n\nParameters\n\n| Parameter     | Type          | Is Required | Description               |\n| ------------- | ------------- | ----------- | ------------------------- |\n| address       | string        | +           | Account address           |\n| publicKey     | string        | -           | Account public key        |\n\nResponse\n\n| Parameter          | Type           | Description                 |\n| ------------------ | -------------- | --------------------------- |\n| success            | boolean        | Operation status            |\n| status             | boolean        | Withdrawl status            |"
 							},
 							"response": [
 								{
@@ -444,7 +446,8 @@
 										"accounts",
 										"generateQRCode"
 									]
-								}
+								},
+								"description": "Returns a data URI containing a representation of the QR Code image.\n\nBody parameters\n\n| Parameter     | Type          | Is Required | Description               |\n| ------------- | ------------- | ----------- | ------------------------- |\n| publicKey     | string        | +           | Account public key        |\n\nResponse\n\n| Parameter          | Type           | Description                 |\n| ------------------ | -------------- | --------------------------- |\n| success            | boolean        | Operation status            |\n| dataUrl            | boolean        | Data URI containing a representation of the QR Code image |"
 							},
 							"response": [
 								{
@@ -592,7 +595,8 @@
 										"accounts",
 										"verifyOTP"
 									]
-								}
+								},
+								"description": "Gets OTP from cache, verifies it and returns OTP shared secret key\n\nBody parameters\n\n| Parameter     | Type          | Is Required | Description               |\n| ------------- | ------------- | ----------- | ------------------------- |\n| publicKey     | string        | +           | Account public key        |\n| otp           | string        | -           | One time password         |\n\nResponse\n\n| Parameter          | Type           | Description                 |\n| ------------------ | -------------- | --------------------------- |\n| success            | boolean        | Operation status            |\n| key                | string         | OTP shared secret key       |"
 							},
 							"response": []
 						},
@@ -647,7 +651,8 @@
 										"accounts",
 										"enableTwoFactor"
 									]
-								}
+								},
+								"description": "Enables two-factor authentication\n\nBody parameters\n\n| Parameter     | Type          | Is Required | Description               |\n| ------------- | ------------- | ----------- | ------------------------- |\n| key           | string        | +           | OTP shared secret key     |\n| secret        | string        | +           | Account secret passphrase |\n| otp           | string        | +           | One time password         |\n\nResponse\n\n| Parameter          | Type           | Description                 |\n| ------------------ | -------------- | --------------------------- |\n| success            | boolean        | Operation status            |\n| key                | string         | Operation status            |"
 							},
 							"response": []
 						},
@@ -712,7 +717,8 @@
 										"accounts",
 										"disableTwoFactor"
 									]
-								}
+								},
+								"description": "Disables two-factor authentication\n\nBody parameters\n\n| Parameter     | Type          | Is Required | Description               |\n| ------------- | ------------- | ----------- | ------------------------- |\n| publicKey     | string        | +           | Account public key        |\n\nResponse\n\n| Parameter          | Type           | Description                 |\n| ------------------ | -------------- | --------------------------- |\n| success            | boolean        | Operation status            |\n| message            | string         | Operation report            |"
 							},
 							"response": [
 								{
@@ -865,7 +871,8 @@
 											"value": "{{address}}"
 										}
 									]
-								}
+								},
+								"description": "Locks account and returns it\n\nParameters\n\n| Parameter     | Type          | Is Required | Description               |\n| ------------- | ------------- | ----------- | ------------------------- |\n| address       | string        | +           | Account address           |\n| publicKey     | string        | -           | Account public key        |\n| accType       | ?             | -           | ?                         |\n| amount        | ?             | -           | ?                         |\n\nResponse\n\n| Parameter          | Type           | Description                 |\n| ------------------ | -------------- | --------------------------- |\n| success            | boolean        | Operation status            |\n| account            | Account        | Processed account           |"
 							},
 							"response": [
 								{
@@ -1019,7 +1026,8 @@
 										"accounts",
 										"enablePendingGroupBonus"
 									]
-								}
+								},
+								"description": "Method is missing in Accounts.prototype.shared\n\nGET /api/accounts/top\n\nQuery enables with topAccounts parameter of config.\nReturns accounts with the highest balance\n\nBody parameters\n\n| Parameter     | Type          | Is Required | Description               |\n| ------------- | ------------- | ----------- | ------------------------- |\n| offset        | number        | -           | Offset value for results  |\n| limit         | number        | -           | Limit applied to results  |\n\nResponse\n\n| Parameter          | Type           | Description                 |\n| ------------------ | -------------- | --------------------------- |\n| success            | boolean        | Operation status            |\n| accounts           | array[Account] | Accounts list               |"
 							},
 							"response": []
 						},
@@ -1084,7 +1092,8 @@
 											"value": "{{address}}"
 										}
 									]
-								}
+								},
+								"description": "Unlocks account\n\nParameters\n\n| Parameter     | Type          | Is Required | Description               |\n| ------------- | ------------- | ----------- | ------------------------- |\n| address       | string        | +           | Account address           |\n| publicKey     | string        | -           | Account public key        |\n\nResponse\n\n| Parameter          | Type           | Description                 |\n| ------------------ | -------------- | --------------------------- |\n| success            | boolean        | Operation status            |"
 							},
 							"response": [
 								{
@@ -1234,7 +1243,8 @@
 										"accounts",
 										"logout"
 									]
-								}
+								},
+								"description": "Logout account\n\nBody parameters\n\n| Parameter     | Type          | Is Required | Description               |\n| ------------- | ------------- | ----------- | ------------------------- |\n| token         | string        | +           | Session token             |\n\nResponse\n\n| Parameter          | Type           | Description                 |\n| ------------------ | -------------- | --------------------------- |\n| success            | boolean        | Operation status            |"
 							},
 							"response": []
 						}
@@ -1285,7 +1295,8 @@
 										"accounts",
 										"getAllAccounts"
 									]
-								}
+								},
+								"description": "Returns all accounts."
 							},
 							"response": []
 						},
@@ -1401,7 +1412,8 @@
 								"accounts",
 								"generatePublicKey"
 							]
-						}
+						},
+						"description": "Calculates public key from account secret and returns it.\n\nBody parameters\n\n| Parameter     | Type          | Is Required | Description               |\n| ------------- | ------------- | ----------- | ------------------------- |\n| secret        | string        | +           | Account secret passphrase |\n\nResponse\n\n| Parameter          | Type          | Description                 |\n| ------------------ | ------------- | --------------------------- |\n| success            | boolean       | Operation status            |\n| publicKey          | string        | Account public key          |"
 					},
 					"response": [
 						{
@@ -1541,7 +1553,8 @@
 								"accounts",
 								"migrateData"
 							]
-						}
+						},
+						"description": "ETPS"
 					},
 					"response": []
 				},
@@ -1617,7 +1630,8 @@
 									"value": "{{address}}"
 								}
 							]
-						}
+						},
+						"description": "Returns account public key by account address.\n\nParameters\n\n| Parameter     | Type          | Is Required | Description               |\n| ------------- | ------------- | ----------- | ------------------------- |\n| address       | string        | +           | Account address           |\n\nResponse\n\n| Parameter          | Type          | Description                 |\n| ------------------ | ------------- | --------------------------- |\n| success            | boolean       | Operation status            |\n| publicKey          | string        | Account public key          |"
 					},
 					"response": [
 						{
@@ -1785,7 +1799,8 @@
 									"value": "{{address}}"
 								}
 							]
-						}
+						},
+						"description": "Returns account by address or public key\n\nParameters\n\n| Parameter     | Type          | Is Required | Description               |\n| ------------- | ------------- | ----------- | ------------------------- |\n| address       | string        | -           | Account address           |\n| publicKey     | string        | -           | Account public key        |\n\nResponse\n\n| Parameter          | Type           | Description                 |\n| ------------------ | -------------- | --------------------------- |\n| success            | boolean        | Operation status            |\n| account            | Account        | Account                     |"
 					},
 					"response": [
 						{
@@ -1947,7 +1962,8 @@
 								"accounts",
 								"getCirculatingSupply"
 							]
-						}
+						},
+						"description": "*** Returns balance of total supply account\n\nParameters are missing\n\nResponse\n\n| Parameter          | Type           | Description                 |\n| ------------------ | -------------- | --------------------------- |\n| success            | boolean        | Operation status            |\n| circulatingSupply  | number         | *     |"
 					},
 					"response": [
 						{
@@ -2111,7 +2127,8 @@
 									"value": "{{token}}"
 								}
 							]
-						}
+						},
+						"description": "Returns balance and unconfirmed account balance.\n\nParameters\n\n| Parameter     | Type          | Is Required | Description               |\n| ------------- | ------------- | ----------- | ------------------------- |\n| address       | string        | +           | Account address           |\n| token         | string        | +           | Session token             |\n\nResponse\n\n| Parameter          | Type          | Description                 |\n| ------------------ | ------------- | --------------------------- |\n| success            | boolean       | Operation status            |\n| balance            | string        | Account balance             |\n| unconfirmedBalance | string        | Account unconfirmed balance |"
 					},
 					"response": []
 				},
@@ -2169,7 +2186,8 @@
 								"accounts",
 								"delegates"
 							]
-						}
+						},
+						"description": "Creates vote transaction with specified delegates\n\nBody parameters\n\n| Parameter     | Type          | Is Required | Description               |\n| ------------- | ------------- | ----------- | ------------------------- |\n| secret        | string        | -           | Account secret passphrase |\n| secondSecret  | string        | -           | Account second secret passphrase |\n| delegates     | Array[string] | -           | Delegates list for vote |\n\nResponse\n\n| Parameter          | Type           | Description                 |\n| ------------------ | -------------- | --------------------------- |\n| success            | boolean        | Operation status            |\n| transaction        | Transaction    | Created vote transaction    |"
 					},
 					"response": []
 				},
@@ -2220,7 +2238,8 @@
 								"existingETPSUser",
 								"validate"
 							]
-						}
+						},
+						"description": "ETPS"
 					},
 					"response": []
 				},
@@ -2286,7 +2305,8 @@
 								"accounts",
 								"totalSupply"
 							]
-						}
+						},
+						"description": "*** Returns balance of total supply account\n\nParameters are missing\n\nResponse\n\n| Parameter          | Type           | Description                 |\n| ------------------ | -------------- | --------------------------- |\n| success            | boolean        | Operation status            |\n| totalSupply        | number         | *     |"
 					},
 					"response": [
 						{
@@ -2451,7 +2471,8 @@
 								"accounts",
 								"open"
 							]
-						}
+						},
+						"description": "Creates an account if not exist. Returns account with a token.\nSends an email about registration of an email was specified.\n\nBody parameters\n\n| Parameter     | Type          | Is Required | Description               |\n| ------------- | ------------- | ----------- | ------------------------- |\n| secret        | string        | +           | Account secret passphrase |\n| referal       | string        | -           | Referral account address  |\n| email         | string        | -           | Your email address        |\n\nResponse\n\n| Parameter     | Type          | Description              |\n| ------------- | ------------- | ------------------------ |\n| success       | boolean       | Operation status         |\n| account       | Account       | Created or exist account with token |"
 					},
 					"response": [
 						{
@@ -2607,7 +2628,8 @@
 								"delegates",
 								"fee"
 							]
-						}
+						},
+						"description": "Returns delegates fee constant\n\nParameters are missing\n\nResponse\n\n| Parameter          | Type           | Description                 |\n| ------------------ | -------------- | --------------------------- |\n| success            | boolean        | Operation status            |\n| fee                | number         | Delegates fee constant      |"
 					},
 					"response": [
 						{
@@ -2776,7 +2798,8 @@
 									"value": "{{address}}"
 								}
 							]
-						}
+						},
+						"description": "Returns delegates list which the account voted for\n\nParameters\n\n| Parameter     | Type          | Is Required | Description               |\n| ------------- | ------------- | ----------- | ------------------------- |\n| address       | string        | +           | Account address           |\n\nResponse\n\n| Parameter          | Type           | Description                 |\n| ------------------ | -------------- | --------------------------- |\n| success            | boolean        | Operation status            |\n| delegates          | array[Account] | Delegates list              |"
 					},
 					"response": [
 						{
@@ -2937,7 +2960,8 @@
 								"accounts",
 								"getDashboardDDKData"
 							]
-						}
+						},
+						"description": "Returns dashboard information\n\nParameters are missing\n\nResponse\n\n| Parameter              | Type           | Description                   |\n| ---------------------- | -------------- | ----------------------------- |\n| success                | boolean        | Operation status              |\n| countStakeholders      | string         | Users count with stake orders |\n| totalDDKStaked         | string         | Total staked amount           |\n| totalAccountHolders    | string         | Count of registered accounts  |\n| totalCirculatingSupply | number         | ***     |"
 					},
 					"response": [
 						{
@@ -3100,7 +3124,8 @@
 									"value": "{{address}}"
 								}
 							]
-						}
+						},
+						"description": "Returns total count of registered accounts\n\nParameters are missing\n\nResponse\n\n| Parameter          | Type           | Description                 |\n| ------------------ | -------------- | --------------------------- |\n| success            | boolean        | Operation status            |\n| count              | string         | Total count of accounts     |"
 					},
 					"response": [
 						{
@@ -3251,7 +3276,8 @@
 								"accounts",
 								"verifyUserToComment"
 							]
-						}
+						},
+						"description": "Bad query"
 					},
 					"response": [
 						{
