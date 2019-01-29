@@ -757,12 +757,12 @@ Account.prototype.merge = function (address, diff, cb) {
     const round = [];
 
     // Verify public key
-    this.verifyPublicKey(diff.publicKey);
+    self.verifyPublicKey(diff.publicKey);
 
     // Normalize address
     address = String(address).toUpperCase();
 
-    this.editable.forEach((value) => {
+    self.editable.forEach((value) => {
         let val;
         let i;
         if (diff[value] !== undefined) {
@@ -966,7 +966,7 @@ Account.prototype.merge = function (address, diff, cb) {
     if (Object.keys(update).length) {
         const SQL = jsonSql.build({
             type: 'update',
-            table: this.table,
+            table: self.table,
             modifier: update,
             condition: {
                 address
@@ -997,7 +997,7 @@ Account.prototype.merge = function (address, diff, cb) {
         return done();
     }
 
-    this.scope.db.none(queries)
+    self.scope.db.none(queries)
         .then(() => done())
         .catch((err) => {
             library.logger.error(err.stack);
