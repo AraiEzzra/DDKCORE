@@ -3,41 +3,36 @@ import { ICacheRepository } from 'shared/repository/cache';
 import ResponseEntity from 'shared/model/response';
 import { expect } from 'chai';
 
-class RedisClient implements ICacheRepository {
+class EmulateRedisClient implements ICacheRepository {
     public store: any;
 
     constructor() {
         this.store = [];
     }
 
-    public getJsonByKey (key): ResponseEntity<any> {
-        return new ResponseEntity(
-            {
-                data: this.store[key],
-            });
+    public async get(key): Promise<ResponseEntity<any>> {
+        return new Promise((resolve, reject) => {
+            resolve(new ResponseEntity({ data: this.store[key]}));
+        });
     }
 
-    public getJsonByKeyAsync(key: string): Promise<ResponseEntity<any>> {
+    public async set(key: string, value: any, expired?: number): Promise<boolean> {
+        this.store[key] = {value: value, cached: true};
+        return Promise.resolve(true);
+    }
+
+    public delete(key): Promise<boolean> {
+        return new Promise((resolve) => {
+            delete this.store[key];
+            resolve(true);
+        });
+    }
+
+    public removeByPattern(pattern: string): Promise<boolean> {
         throw new Error('Method not implemented.');
     }
 
-    public setJsonByKey (key, value) {
-        this.store[key] = value;
-    }
-
-    public setJsonByKeyAsync(key: string, value: any) {
-        throw new Error('Method not implemented.');
-    }
-
-    public deleteJsonByKey(key) {
-        delete this.store[key];
-    }
-
-    public removeByPattern(pattern: string): void {
-        throw new Error('Method not implemented.');
-    }
-
-    public hmset(hmset: string): void {
+    public hmset(key: string, value: object): Promise<boolean> {
         throw new Error('Method not implemented.');
     }
 
@@ -54,16 +49,16 @@ class RedisClient implements ICacheRepository {
     }
 }
 
-const redisClient = new RedisClient();
+const redisClient = new EmulateRedisClient();
 
 class TestDecorator {
     @useCache(5000, redisClient)
-    method (): ResponseEntity<any> {
+    method(): ResponseEntity<any> {
         return new ResponseEntity({data : {test: 'test'}});
     }
 
     @useCache(500, redisClient)
-    method2 (): ResponseEntity<any> {
+    method2(): ResponseEntity<any> {
         return new ResponseEntity({data : {test: 'test2'}});
     }
 
@@ -71,30 +66,23 @@ class TestDecorator {
 
 const test = new TestDecorator();
 
-describe('Cache Decorator', function() {
+describe('CacheDecorator @useCache():: ', () => {
 
-    it('Get from empty cache', function () {
-        expect(redisClient.getJsonByKey('method').data).to.be.equal(undefined);
+    it('Check @useCache() for method()', async () => {
+        let result = await redisClient.get('method');
+        expect(!!result.data).equal(false);
+
+        await test.method();
+        result = await redisClient.get('method');
+        expect(result.data.cached).to.equal(true);
     });
 
-    it('Run decorated method', function () {
-        expect(test.method().data.test).to.be.equal('test');
-    });
+    it('Check @useCache() for method2()', async () => {
+        let result = await redisClient.get('method2');
+        expect(!!result.data).equal(false);
 
-    it('Get from cache ', function () {
-        expect(redisClient.getJsonByKey('method').data.test).to.be.equal('test');
+        await test.method2();
+        result = await redisClient.get('method2');
+        expect(result.data.cached).to.equal(true);
     });
-
-    it('Get from empty cache method2', function () {
-        expect(redisClient.getJsonByKey('method2').data).to.be.equal(undefined);
-    });
-
-    it('Run decorated method2 ', function () {
-        expect(test.method2().data.test).to.be.equal('test2');
-    });
-
-    it('Get from empty cache method2', function () {
-        expect(redisClient.getJsonByKey('method2').data.test).to.be.equal('test2');
-    });
-
 });
