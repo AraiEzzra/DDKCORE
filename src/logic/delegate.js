@@ -179,10 +179,6 @@ Delegate.prototype.verify = function (trs, sender, cb) {
 Delegate.prototype.newVerify = async () => {
 };
 
-Delegate.prototype.verifyUnconfirmed = function (trs, sender, cb) {
-    return setImmediate(cb);
-};
-
 Delegate.prototype.newVerifyUnconfirmed = async () => {
 };
 

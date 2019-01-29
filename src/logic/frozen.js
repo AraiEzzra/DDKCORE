@@ -385,27 +385,6 @@ Frozen.prototype.newVerify = async (trs) => {
     }
 };
 
-
-Frozen.prototype.verifyUnconfirmed = function (trs, sender, cb) {
-    if (Number(trs.stakedAmount) + Number(sender.u_totalFrozeAmount) > Number(sender.u_balance)) {
-        if (constants.STAKE_VALIDATE.BALANCE_ENABLED) {
-            return setImmediate(cb, 'Verify failed: Insufficient unconfirmed balance for stake');
-        }
-        self.scope.logger.error(
-            `VALIDATE IS DISABLED. Error: trs.id ${trs.id} Verify failed: Insufficient unconfirmed balance for stake`
-        );
-    }
-
-    if ((parseInt(sender.u_balance, 10) - parseInt(sender.u_totalFrozeAmount, 10)) < (trs.stakedAmount + trs.fee)) {
-        if (constants.STAKE_VALIDATE.BALANCE_ENABLED) {
-            return setImmediate(cb, 'Insufficient unconfirmed balance');
-        }
-        self.scope.logger.error(`VALIDATE IS DISABLED. Error: trs.id ${trs.id} Insufficient unconfirmed balance`);
-    }
-
-    setImmediate(cb);
-};
-
 Frozen.prototype.newVerifyUnconfirmed = async (trs, sender) => {
     if (Number(trs.stakedAmount) + Number(sender.u_totalFrozeAmount) > Number(sender.u_balance)) {
         throw new Error('Verify failed: Insufficient unconfirmed balance for stake');

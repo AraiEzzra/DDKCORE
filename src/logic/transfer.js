@@ -93,11 +93,6 @@ Transfer.prototype.newVerify = (trs) => {
     }
 };
 
-
-Transfer.prototype.verifyUnconfirmed = function (trs, sender, cb) {
-    return setImmediate(cb);
-};
-
 Transfer.prototype.newVerifyUnconfirmed = async () => {};
 
 /**

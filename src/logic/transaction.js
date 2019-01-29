@@ -546,50 +546,6 @@ Transaction.prototype.calculateUnconfirmedFee = (trs, sender) =>
         __private.types[trs.type].calculateFee
     ).call(self, trs, sender);
 
-/**
- * Validates unconfirmed transaction.
- * Calls `verifyUnconfirmed` based on trs type
- * @param {transaction} trs
- * @param {account} sender
- * @param {account} requester
- * @param {function} cb
- * @return {setImmediateCallback} validation errors | trs
- */
-Transaction.prototype.verifyUnconfirmed = ({ trs, sender, cb }) => {
-    const fee = self.calculateUnconfirmedFee(trs, sender);
-    if (trs.type !== transactionTypes.REFERRAL &&
-        !(trs.type === transactionTypes.STAKE && trs.stakedAmount < 0) &&
-        (!fee || trs.fee !== fee)
-    ) {
-        if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_FEE) {
-            return setImmediate(cb, 'Invalid transaction fee');
-        }
-        self.scope.logger.error('Invalid transaction fee');
-    }
-
-    // Check sender not able to do transaction on froze amount
-    const amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
-
-    const senderBalance = self.checkBalance(amount, trs, sender);
-
-    if (senderBalance.exceeded) {
-        if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_SENDER_BALANCE) {
-            return setImmediate(cb, senderBalance.error);
-        }
-        self.scope.logger.error('Sender unconfirmed balance error');
-    }
-
-    __private.types[trs.type].verifyUnconfirmed.call(self, trs, sender, (err) => {
-        if (err) {
-            if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_TYPE) {
-                return setImmediate(cb, err);
-            }
-            self.scope.logger.error('Transaction types error');
-        }
-        return setImmediate(cb);
-    });
-};
-
 Transaction.prototype.newVerifyUnconfirmed = async ({ trs, sender }) => {
     trs.fee = self.calculateUnconfirmedFee(trs, sender);
 

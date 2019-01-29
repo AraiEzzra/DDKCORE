@@ -61,10 +61,6 @@ Referral.prototype.newVerify = async (trs, sender) => {
     }
 };
 
-Referral.prototype.verifyUnconfirmed = function (trs, sender, cb) {
-    return setImmediate(cb);
-};
-
 Referral.prototype.newVerifyUnconfirmed = async () => {};
 
 Referral.prototype.apply = function (trs, block, sender, cb) {

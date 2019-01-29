@@ -113,10 +113,6 @@ Signature.prototype.newVerify = async (trs) => {
     }
 };
 
-Signature.prototype.verifyUnconfirmed = function (trs, sender, cb) {
-    return setImmediate(cb);
-};
-
 Signature.prototype.newVerifyUnconfirmed = async () => {};
 
 /**

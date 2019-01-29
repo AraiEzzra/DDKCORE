@@ -364,20 +364,6 @@ Vote.prototype.newVerify = async (trs) => {
     }
 };
 
-/**
- * Validates unconfirmed vote transaction fields and for each calls verifyVote.
- * @implements {verifysendStakingRewardVote}
- * @implements {checkConfirmedDelegates}
- * @param {transaction} trs
- * @param {account} sender
- * @param {function} cb - Callback function.
- * @returns {setImmediateCallback|function} returns error if invalid field |
- * calls checkConfirmedDelegates.
- */
-Vote.prototype.verifyUnconfirmed = function (trs, sender, cb) {
-    return self.checkUnconfirmedDelegates(trs, cb);
-};
-
 Vote.prototype.newVerifyUnconfirmed = async trs =>
     ((new Promise((resolve, reject) => {
         self.checkUnconfirmedDelegates(trs, (err) => {
