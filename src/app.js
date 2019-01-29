@@ -331,7 +331,6 @@ d.run(() => {
                 });
 
                 socket.on('disconnect', () => {
-                    accountSessions.remove( socket.id );
                     io.sockets.emit('updateConnected', accountSessions.length);
                 });
             });
