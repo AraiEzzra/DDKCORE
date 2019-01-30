@@ -152,7 +152,6 @@ function Account(db, schema, logger, cb) {
                 format: 'publicKey'
             },
             conv: String,
-            immutable: true,
         },
         {
             name: 'balance',
@@ -204,7 +203,7 @@ function Account(db, schema, logger, cb) {
                 uniqueItems: true
             },
             conv: Array,
-            expression: `(SELECT ARRAY_AGG("dependentId") FROM 
+            expression: `(SELECT ARRAY_AGG("dependentId") FROM
             ${this.table}2delegates WHERE "accountId" = a."address")`
         },
         {
@@ -215,7 +214,7 @@ function Account(db, schema, logger, cb) {
                 uniqueItems: true
             },
             conv: Array,
-            expression: `(SELECT ARRAY_AGG("dependentId") FROM 
+            expression: `(SELECT ARRAY_AGG("dependentId") FROM
             ${this.table}2u_delegates WHERE "accountId" = a."address")`
         },
         {
@@ -237,7 +236,7 @@ function Account(db, schema, logger, cb) {
                 uniqueItems: true
             },
             conv: Array,
-            expression: `(SELECT ARRAY_AGG("dependentId") FROM 
+            expression: `(SELECT ARRAY_AGG("dependentId") FROM
             ${this.table}2multisignatures WHERE "accountId" = a."address")`
         },
         {
@@ -248,7 +247,7 @@ function Account(db, schema, logger, cb) {
                 uniqueItems: true
             },
             conv: Array,
-            expression: `(SELECT ARRAY_AGG("dependentId") FROM 
+            expression: `(SELECT ARRAY_AGG("dependentId") FROM
             ${this.table}2u_multisignatures WHERE "accountId" = a."address")`
         },
         {
@@ -506,7 +505,7 @@ Account.prototype.createTables = function (cb) {
     // TODO: make it NORMAL
     const SQL = new pgp.QueryFile(path.join(process.cwd(), 'src/sql', 'memoryTables.sql'), { minify: true });
 
-    this.scope.db.query(SQL)
+    self.scope.db.query(SQL)
         .then(() => setImmediate(cb))
         .catch((err) => {
             library.logger.error(err.stack);
@@ -527,7 +526,7 @@ Account.prototype.createTables = function (cb) {
 Account.prototype.removeTables = function (cb) {
     const sqles = [];
 
-    [this.table,
+    [self.table,
         'mem_round',
         'mem_accounts2delegates',
         'mem_accounts2u_delegates',
@@ -540,7 +539,7 @@ Account.prototype.removeTables = function (cb) {
         sqles.push(SQL.query);
     });
 
-    this.scope.db.query(sqles.join(''))
+    self.scope.db.query(sqles.join(''))
         .then(() => setImmediate(cb))
         .catch((err) => {
             library.logger.error(err.stack);
@@ -555,15 +554,15 @@ Account.prototype.removeTables = function (cb) {
  * @throws {string} If schema.validate fails, throws 'Failed to validate account schema'.
  */
 Account.prototype.objectNormalize = function (account) {
-    const report = this.scope.schema.validate(account, {
+    const report = self.scope.schema.validate(account, {
         id: 'Account',
         object: true,
-        properties: this.filter
+        properties: self.filter
     });
 
     if (!report) {
-        throw `Failed to validate account schema: 
-        ${this.scope.schema.getLastErrors()
+        throw `Failed to validate account schema:
+        ${self.scope.schema.getLastErrors()
             .map(err => err.message)
             .join(', ')}`;
     }
@@ -601,7 +600,7 @@ Account.prototype.verifyPublicKey = function (publicKey) {
  * @returns {Object} Normalized address.
  */
 Account.prototype.toDB = function (raw) {
-    this.binary.forEach((field) => {
+    self.binary.forEach((field) => {
         if (raw[field]) {
             raw[field] = Buffer.from(raw[field], 'hex');
         }
@@ -624,10 +623,10 @@ Account.prototype.toDB = function (raw) {
 Account.prototype.get = function (filter, fields, cb) {
     if (typeof (fields) === 'function') {
         cb = fields;
-        fields = this.fields.map(field => field.alias || field.field);
+        fields = self.fields.map(field => field.alias || field.field);
     }
 
-    this.getAll(filter, fields, (err, data) => setImmediate(cb, err, data && data.length ? data[0] : null));
+    self.getAll(filter, fields, (err, data) => setImmediate(cb, err, data && data.length ? data[0] : null));
 };
 
 /**
@@ -640,16 +639,16 @@ Account.prototype.get = function (filter, fields, cb) {
 Account.prototype.getAll = function (filter, fields, cb) {
     if (typeof (fields) === 'function') {
         cb = fields;
-        fields = this.fields.map(field => field.alias || field.field);
+        fields = self.fields.map(field => field.alias || field.field);
     }
 
-    const realFields = this.fields.filter(field => fields.indexOf(field.alias || field.field) !== -1);
+    const realFields = self.fields.filter(field => fields.indexOf(field.alias || field.field) !== -1);
 
     const realConv = {};
-    Object.keys(this.conv)
+    Object.keys(self.conv)
         .forEach((key) => {
             if (fields.indexOf(key) !== -1) {
-                realConv[key] = this.conv[key];
+                realConv[key] = self.conv[key];
             }
         });
 
@@ -678,7 +677,7 @@ Account.prototype.getAll = function (filter, fields, cb) {
 
     const SQL = jsonSql.build({
         type: 'select',
-        table: this.table,
+        table: self.table,
         limit,
         offset,
         sort,
@@ -687,7 +686,7 @@ Account.prototype.getAll = function (filter, fields, cb) {
         fields: realFields
     });
 
-    this.scope.db.query(SQL.query, SQL.values)
+    self.scope.db.query(SQL.query, SQL.values)
         .then(rows => setImmediate(cb, null, rows))
         .catch((err) => {
             library.logger.error(err.stack);
@@ -704,7 +703,7 @@ Account.prototype.getAll = function (filter, fields, cb) {
  */
 Account.prototype.set = function (address, fields, cb) {
     // Verify public key
-    this.verifyPublicKey(fields.publicKey);
+    self.verifyPublicKey(fields.publicKey);
     // Normalize address
     address = String(address)
         .toUpperCase();
@@ -712,13 +711,13 @@ Account.prototype.set = function (address, fields, cb) {
 
     const SQL = jsonSql.build({
         type: 'insertorupdate',
-        table: this.table,
+        table: self.table,
         conflictFields: ['address'],
-        values: this.toDB(fields),
-        modifier: this.toDB(fields)
+        values: self.toDB(fields),
+        modifier: self.toDB(fields)
     });
 
-    this.scope.db.none(SQL.query, SQL.values)
+    self.scope.db.none(SQL.query, SQL.values)
         .then(() => setImmediate(cb))
         .catch((err) => {
             library.logger.error(err.stack);
@@ -727,7 +726,7 @@ Account.prototype.set = function (address, fields, cb) {
 };
 
 Account.prototype.findReferralLevel = function (address, cb) {
-    this.scope.db.query(sql.referLevelChain, {
+    self.scope.db.query(sql.referLevelChain, {
         address
     }).then((user) => {
         if (user && !user.level) {
@@ -748,6 +747,8 @@ Account.prototype.findReferralLevel = function (address, cb) {
  * @returns {setImmediateCallback|cb|done} Multiple returns: done() or error.
  */
 Account.prototype.merge = function (address, diff, cb) {
+    library.logger.debug(`[Account][merge] address: ${address}, diff: ${JSON.stringify(diff)}`);
+
     const update = {};
     const remove = {};
     const insert = {};
@@ -770,6 +771,9 @@ Account.prototype.merge = function (address, diff, cb) {
                 case String:
                     update[value] = trueValue;
                     break;
+                case Boolean:
+                    update[value] = trueValue;
+                    break;
                 case Number:
                     if (isNaN(trueValue) || trueValue === Infinity) {
                         return setImmediate(cb, `Encountered unsane number: ${trueValue}`);
@@ -778,6 +782,7 @@ Account.prototype.merge = function (address, diff, cb) {
                         update.$inc[value] = Math.floor(trueValue);
                         if (value === 'balance') {
                             round.push({
+                                // TODO rewrite dependentId
                                 query: 'INSERT INTO mem_round ("address", "amount", "delegate", "blockId", "round")' +
                                 ' SELECT ${address}, (${amount})::bigint, "dependentId", ${blockId}, ${round}' +
                                 ' FROM mem_accounts2delegates WHERE "accountId" = ${address};',
@@ -785,7 +790,7 @@ Account.prototype.merge = function (address, diff, cb) {
                                     address,
                                     amount: trueValue,
                                     blockId: diff.blockId,
-                                    round: diff.round
+                                    round: diff.round || 0
                                 }
                             });
                         }
@@ -799,6 +804,7 @@ Account.prototype.merge = function (address, diff, cb) {
                         }
                         if (value === 'balance') {
                             round.push({
+                                // TODO rewrite dependentId
                                 query: 'INSERT INTO mem_round ("address", "amount", "delegate", "blockId",' +
                                 ' "round") SELECT ${address}, (${amount})::bigint, "dependentId", ${blockId},' +
                                 ' ${round} FROM mem_accounts2delegates WHERE "accountId" = ${address};',
@@ -806,7 +812,7 @@ Account.prototype.merge = function (address, diff, cb) {
                                     address,
                                     amount: trueValue,
                                     blockId: diff.blockId,
-                                    round: diff.round
+                                    round: diff.round || 0
                                 }
                             });
                         }
@@ -847,7 +853,7 @@ Account.prototype.merge = function (address, diff, cb) {
                                             address: address,
                                             delegate: val,
                                             blockId: diff.blockId,
-                                            round: diff.round
+                                            round: diff.round || 0
                                         }
                                     });
                                 }
@@ -864,7 +870,7 @@ Account.prototype.merge = function (address, diff, cb) {
                                             address,
                                             delegate: val,
                                             blockId: diff.blockId,
-                                            round: diff.round
+                                            round: diff.round || 0
                                         }
                                     });
                                 }
@@ -881,7 +887,7 @@ Account.prototype.merge = function (address, diff, cb) {
                                             address,
                                             delegate: val,
                                             blockId: diff.blockId,
-                                            round: diff.round
+                                            round: diff.round || 0
                                         }
                                     });
                                 }
@@ -981,6 +987,8 @@ Account.prototype.merge = function (address, diff, cb) {
 
     const queries = sqles.concat(round).map(sql => pgp.as.format(sql.query, sql.values)).join('');
 
+    library.logger.debug(`[Account][merge] queries: ${JSON.stringify(queries)}`);
+
     if (!cb) {
         return queries;
     }
@@ -1002,7 +1010,7 @@ Account.prototype.asyncMerge = async (address, data) => ((new Promise((resolve, 
         if (err) {
             library.logger.error(`[Account][asyncMerge][merge] ${err}`);
             library.logger.error(`[Account][asyncMerge][merge][stack] ${err.stack}`);
-            reject(err);
+            return reject(err);
         }
         library.logger.trace(`[Account][asyncMerge][merge] ${JSON.stringify(account)}`);
         resolve(account);
@@ -1018,12 +1026,12 @@ Account.prototype.asyncMerge = async (address, data) => ((new Promise((resolve, 
 Account.prototype.remove = function (address, cb) {
     const sql = jsonSql.build({
         type: 'remove',
-        table: this.table,
+        table: self.table,
         condition: {
             address
         }
     });
-    this.scope.db.none(sql.query, sql.values)
+    self.scope.db.none(sql.query, sql.values)
         .then(() => setImmediate(cb, null, address))
         .catch((err) => {
             library.logger.error(err.stack);

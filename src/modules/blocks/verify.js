@@ -373,7 +373,7 @@ __private.verifyPayload = function (block, result) {
         try {
             library.logger.debug(`Transaction ${JSON.stringify(trs)}`);
             bytes = library.logic.transaction.getBytes(trs, false, false);
-            library.logger.debug(`Bytes ${JSON.stringify(bytes)}`);
+            library.logger.trace(`Bytes ${JSON.stringify(bytes)}`);
         } catch (e) {
             result.errors.push(e.toString());
         }

@@ -248,16 +248,11 @@ Chain.prototype.deleteBlock = function (blockId, cb) {
                 type: 'blocks_list',
                 body: {
                     query: {
-                        term: { id: blockId }
+                        term: { b_id: blockId }
                     }
                 }
-            }, (err) => {
-                if (err) {
-                    library.logger.error(`Elasticsearch: document deletion error: ${err}`);
-                } else {
-                    library.logger.info('Elasticsearch: document deleted successfully');
-                }
             });
+
             return setImmediate(cb);
         })
         .catch((err) => {
@@ -369,8 +364,8 @@ Chain.prototype.deleteAfterBlock = function (blockId, cb) {
 Chain.prototype.newApplyGenesisBlock = async (block, verify, save) => {
     block.transactions = block.transactions.sort(transactionSortFunc);
     try {
-        await modules.blocks.verify.newProcessBlock(block, false, save, verify, false);
         library.logger.info('[Chain][applyGenesisBlock] Genesis block loading');
+        await modules.blocks.verify.newProcessBlock(block, false, save, verify, false);
     } catch (e) {
         library.logger.error(`[Chain][applyGenesisBlock] ${e}`);
         library.logger.error(`[Chain][applyGenesisBlock][stack] ${e.stack}`);
@@ -615,7 +610,6 @@ Chain.prototype.newApplyBlock = async (block, broadcast, saveBlock, tick) => {
 
     if (saveBlock) {
         await self.newSaveBlock(block);
-        library.logger.debug(`Block applied correctly with ${block.transactions.length} transactions`);
     }
 
     for (const trs of block.transactions) {
@@ -630,6 +624,7 @@ Chain.prototype.newApplyBlock = async (block, broadcast, saveBlock, tick) => {
 
     if (saveBlock) {
         await __private.newAfterSave(block);
+        library.logger.debug(`Block applied correctly with ${block.transactions.length} transactions`);
     }
 
     modules.blocks.lastBlock.set(block);
@@ -661,6 +656,7 @@ Chain.prototype.newApplyBlock = async (block, broadcast, saveBlock, tick) => {
  * @return {Object}   cbPopLastBlock.obj New last block
  */
 __private.popLastBlock = function (oldLastBlock, cbPopLastBlock) {
+    library.logger.debug(`[Chain][popLastBlock] block: ${JSON.stringify(oldLastBlock)}`);
     // Execute in sequence via balancesSequence
     library.balancesSequence.add((cbAdd) => {
         // Load previous block from full_blocks_list table
@@ -673,25 +669,11 @@ __private.popLastBlock = function (oldLastBlock, cbPopLastBlock) {
             // Reverse order of transactions in last blocks...
             async.eachSeries(oldLastBlock.transactions.reverse(), (transaction, cbReverse) => {
                 async.series([
-                    function (cbGetAccount) {
-                        // Retrieve sender by public key
-                        modules.accounts.getAccount(
-                            { publicKey: transaction.senderPublicKey },
-                            (errorGetAccount, sender) => {
-                                if (errorGetAccount) {
-                                    return setImmediate(cbGetAccount, errorGetAccount);
-                                }
-                                // Undoing confirmed tx - refresh confirmed balance
-                                // (see: logic.transaction.undo, logic.transfer.undo)
-                                // WARNING: DB_WRITE
-                                modules.transactions.undo(transaction, oldLastBlock, sender, cbGetAccount);
-                            });
-                    }, function (cbUncomfirmed) {
-                        // Undoing unconfirmed tx - refresh unconfirmed balance (see: logic.transaction.undoUnconfirmed)
-                        // WARNING: DB_WRITE
-                        modules.transactions.undoUnconfirmed(transaction, cbUncomfirmed);
-                    }, function (cb) {
-                        return setImmediate(cb);
+                    function (seriesCb) {
+                        modules.transactions.undo(transaction, oldLastBlock, seriesCb);
+                    },
+                    function (seriesCb) {
+                        modules.transactions.undoUnconfirmed(transaction, seriesCb);
                     }
                 ], cbReverse);
             }, (errorUndo) => {

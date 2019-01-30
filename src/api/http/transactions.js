@@ -1,5 +1,6 @@
 const Router = require('../../helpers/router');
 const httpApi = require('../../helpers/httpApi');
+const constants = require('../../helpers/constants');
 
 /**
  * Binds api with modules and creates common url.
@@ -23,7 +24,7 @@ const httpApi = require('../../helpers/httpApi');
  * @param {scope} app - Network app.
  */
 // Constructor
-function TransactionsHttpApi(transactionsModule, app, logger, cache) {
+function TransactionsHttpApi(transactionsModule, app, logger, cache, config) {
     const router = new Router();
 
     // attach a middlware to endpoints
@@ -44,6 +45,11 @@ function TransactionsHttpApi(transactionsModule, app, logger, cache) {
         'put /': 'addTransactions',
     });
 
+    if (constants.NODE_ENV_IN === 'development') {
+        router.map(transactionsModule.shared, {
+            'post /debug': 'debug',
+        });
+    }
     router.map(transactionsModule.internal, {
         'get /getTransactionHistory': 'getTransactionHistory'
     });

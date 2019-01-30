@@ -97,7 +97,7 @@ class Transactions {
         });
 
         __private.assetTypes[transactionTypes.SEND] = library.logic.transaction.attachAssetType(
-            transactionTypes.SEND, new Transfer()
+            transactionTypes.SEND, new Transfer(scope.logic.account)
         );
 
         setImmediate(cb, null, self);
@@ -669,7 +669,7 @@ Transactions.prototype.getMultisignatureTransactionList = function (reverse, lim
  * @return {function} Calls transactionPool.getMergedTransactionList
  */
 Transactions.prototype.getMergedTransactionList = function (reverse, limit) {
-    return __private.transactionPool.getMergedTransactionList(reverse, limit);
+    return self.newTransactionPool.getTransactions(limit);
 };
 
 /**
@@ -730,7 +730,7 @@ Transactions.prototype.undoUnconfirmedList = function (cb) {
  * @param {function} cb - Callback function
  */
 Transactions.prototype.apply = function (transaction, block, sender, cb) {
-    library.logger.debug('Applying confirmed transaction', transaction.id);
+    library.logger.debug(`[Transactions][apply] transaction id: ${transaction.id}}`);
     library.logic.transaction.apply(transaction, block, sender, cb);
 };
 
@@ -742,9 +742,11 @@ Transactions.prototype.apply = function (transaction, block, sender, cb) {
  * @param {account} sender
  * @param {function} cb - Callback function
  */
-Transactions.prototype.undo = function (transaction, block, sender, cb) {
-    library.logger.debug('Undoing confirmed transaction', transaction.id);
-    library.logic.transaction.undo(transaction, block, sender, cb);
+Transactions.prototype.undo = (transaction, block, cb) => {
+    library.logger.debug(`[Transactions][undo] transaction id: ${transaction.id}}`);
+    library.logic.transaction.undo(transaction, block)
+        .then(() => setImmediate(cb, null))
+        .catch((err) => setImmediate(cb, err));
 };
 
 /**
@@ -787,15 +789,11 @@ Transactions.prototype.applyUnconfirmed = function (transaction, sender, cb) {
  * @param {function} cb
  * @return {setImmediateCallback} For error
  */
-Transactions.prototype.undoUnconfirmed = function (transaction, cb) {
-    library.logger.debug('Undoing unconfirmed transaction', transaction.id);
-
-    modules.accounts.getAccount({ publicKey: transaction.senderPublicKey }, (err, sender) => {
-        if (err) {
-            return setImmediate(cb, err);
-        }
-        library.logic.transaction.undoUnconfirmed(transaction, sender, cb);
-    });
+Transactions.prototype.undoUnconfirmed = (transaction, cb) => {
+    library.logger.debug(`[Transactions][undoUnconfirmed] transaction id ${transaction.id}`);
+    library.logic.transaction.newUndoUnconfirmed(transaction)
+        .then(() => setImmediate(cb))
+        .catch((err) => setImmediate(cb, err));
 };
 
 /**
@@ -805,7 +803,7 @@ Transactions.prototype.undoUnconfirmed = function (transaction, cb) {
  * @param {function} cb - Callback function.
  * @return {function} Calls transactionPool.receiveTransactions
  */
-Transactions.prototype.receiveTransactions = function (transactions, broadcast, cb) {
+Transactions.prototype.receiveTransactions = (transactions, broadcast, cb) => {
     return __private.transactionPool.receiveTransactions(transactions, broadcast, cb);
 };
 
@@ -915,6 +913,27 @@ Transactions.prototype.internal = {
  * @see {@link http://apidocjs.com/}
  */
 Transactions.prototype.shared = {
+    debug(req, cb) {
+        if (req.body.async) {
+            self[req.body.function].call(self, req.body.args)
+            .then((data) => {
+                return setImmediate(cb, null, { data: data });
+            }).catch((e) => {
+                return setImmediate(cb, e);
+            });
+        } else {
+            const cbIndex = req.body.args.indexOf('cb');
+            if (cbIndex !== -1) {
+                req.body.args[cbIndex] = (err, data) => {
+                    setImmediate(cb, err, { data: data });
+                };
+                self[req.body.function].call(self, req.body.args);
+            } else {
+                const data = self[req.body.function].call(self, req.body.args);
+                setImmediate(cb, null, { data: data });
+            }
+        }
+    },
     getTransactions(req, cb) {
         async.waterfall([
             function (waterCb) {

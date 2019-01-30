@@ -32,13 +32,14 @@ __private.loaded = false;
  * @param {Object} frozen
  * @param {Function} cb
  */
-function Vote(logger, schema, db, frozen, cb) {
+function Vote(logger, schema, db, frozen, account, cb) {
     self = this;
     library = {
         db,
         logger,
         schema,
-        frozen
+        frozen,
+        account
     };
     if (cb) {
         return setImmediate(cb, null, this);
@@ -491,20 +492,15 @@ Vote.prototype.getBytes = function (trs) {
  * Calls checkConfirmedDelegates based on transaction data and
  * merges account to sender address with votes as delegates.
  * @implements {checkConfirmedDelegates}
- * @implements {scope.account.merge}
- * @implements {modules.rounds.calc}
  * @param {transaction} trs
  * @param {block} block
  * @param {account} sender
  * @param {function} cb - Callback function
- * @todo delete unnecessary let parent = this
  */
 Vote.prototype.apply = function (trs, block, sender, cb) {
-    const parent = this;
-
     async.series([
         function (seriesCb) {
-            parent.scope.account.merge(sender.address, {
+            library.account.merge(sender.address, {
                 delegates: trs.asset.votes,
                 blockId: block.id,
                 round: modules.rounds.calc(block.height)
@@ -559,56 +555,44 @@ Vote.prototype.apply = function (trs, block, sender, cb) {
  * @param {function} cb - Callback function
  * @return {setImmediateCallback} cb, err
  */
-Vote.prototype.undo = function (trs, block, sender, cb) {
-    const parent = this;
-    if (trs.asset.votes === null) {
-        return setImmediate(cb);
-    }
-
+Vote.prototype.undo = async (trs) => {
     const votesInvert = Diff.reverse(trs.asset.votes);
 
-    async.series([
-        function (seriesCb) {
-            parent.scope.account.merge(sender.address, {
-                delegates: votesInvert,
-                blockId: block.id,
-                round: modules.rounds.calc(block.height)
-            }, seriesCb);
-        },
-        // added to remove vote count from mem_accounts table
-        function (seriesCb) {
+    await library.account.asyncMerge(trs.senderId, {
+        delegates: votesInvert,
+    });
+
+    try {
+        await (new Promise((resolve, reject) => {
             self.updateMemAccounts({
                 votes: votesInvert,
                 senderId: trs.senderId
             }, (err) => {
                 if (err) {
-                    return setImmediate(seriesCb, err);
+                    reject(err);
+                } else {
+                    resolve()
                 }
-                return setImmediate(seriesCb, null);
             });
-        },
-        function (seriesCb) {
-            const votes = trs.asset.votes.map(vote => vote.substring(1));
+        }));
+    } catch (e) {
+        throw e;
+    }
 
-            library.db.query(sql.changeDelegateVoteCount({ value: -1, votes }))
-                .then(() => setImmediate(seriesCb, null))
-                .catch((err) => {
-                    library.logger.error(err.stack);
-                    return setImmediate(seriesCb, err);
-                });
-        },
-        function (seriesCb) {
-            const isDownVote = trs.trsName === 'DOWNVOTE';
-            if (isDownVote) {
-                return setImmediate(seriesCb, null, trs);
-            }
-            self.removeCheckVote(trs)
-                .then(
-                    () => setImmediate(seriesCb, null),
-                    err => setImmediate(seriesCb, err),
-                );
-        }
-    ], cb);
+    const votes = trs.asset.votes.map(vote => vote.substring(1));
+
+    await library.db.query(sql.changeDelegateVoteCount({ value: -1, votes }));
+
+    const isDownVote = trs.trsName === 'DOWNVOTE';
+
+    if (isDownVote) {
+        return;
+    }
+    try {
+        await self.removeCheckVote(trs);
+    } catch (e) {
+        throw e;
+    }
 };
 
 /**
@@ -619,12 +603,9 @@ Vote.prototype.undo = function (trs, block, sender, cb) {
  * @param {transaction} trs
  * @param {account} sender
  * @param {function} cb - Callback function
- * @todo delete unnecessary let parent = this
  */
 Vote.prototype.applyUnconfirmed = function (trs, sender, cb) {
-    const parent = this;
-
-    parent.scope.account.merge(sender.address, {
+    library.account.merge(sender.address, {
         u_delegates: trs.asset.votes
     }, err => setImmediate(cb, err));
 };

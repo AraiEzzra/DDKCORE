@@ -3,6 +3,7 @@ const constants = require('../helpers/constants.js');
 // Private fields
 let modules;
 let self;
+let library;
 
 /**
  * Main transfer logic.
@@ -11,8 +12,11 @@ let self;
  * @classdesc Main transfer logic.
  */
 // Constructor
-function Transfer() {
+function Transfer(account) {
     self = this;
+    library = {
+        account
+    }
 }
 
 // Public methods
@@ -153,18 +157,10 @@ Transfer.prototype.apply = function (trs, block, sender, cb) {
  * @param {function} cb - Callback function
  * @return {setImmediateCallback} error, cb
  */
-Transfer.prototype.undo = function (trs, block, sender, cb) {
-    modules.accounts.setAccountAndGet({ address: trs.recipientId }, (err) => {
-        if (err) {
-            return setImmediate(cb, err);
-        }
-
-        modules.accounts.mergeAccountAndGet({
-            address: trs.recipientId,
-            balance: -trs.amount,
-            blockId: block.id,
-            round: modules.rounds.calc(block.height)
-        }, err => setImmediate(cb, err));
+Transfer.prototype.undo = async (trs) => {
+    library.account.asyncMerge(trs.recipientId, {
+        address: trs.recipientId,
+        balance: -trs.amount,
     });
 };
 

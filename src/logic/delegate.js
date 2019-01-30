@@ -12,10 +12,13 @@ let self;
  * @class
  * @classdesc Main delegate logic.
  * @param {ZSchema} schema
+ * @param {account} account
+ * @param {db} db
  */
-function Delegate(schema, db) {
+function Delegate(schema, account, db) {
     library = {
         schema,
+        account,
         db
     };
     self = this;
@@ -39,7 +42,7 @@ Delegate.prototype.bind = function (accounts) {
  * @returns {Object} trs with new data
  */
 Delegate.prototype.create = function (data, trs) {
-    // TODO Can be in future will be added delegate URL
+    // TODO In future will be added delegate URL
     trs.recipientId = null;
     trs.amount = 0;
     trs.asset.delegate = {
@@ -173,13 +176,15 @@ Delegate.prototype.verify = function (trs, sender, cb) {
 };
 
 // TODO implement it
-Delegate.prototype.newVerify = async () => {};
+Delegate.prototype.newVerify = async () => {
+};
 
 Delegate.prototype.verifyUnconfirmed = function (trs, sender, cb) {
     return setImmediate(cb);
 };
 
-Delegate.prototype.newVerifyUnconfirmed = async () => {};
+Delegate.prototype.newVerifyUnconfirmed = async () => {
+};
 
 /**
  * Returns transaction with setImmediate.
@@ -237,21 +242,15 @@ Delegate.prototype.apply = function (trs, block, sender, cb) {
  * @param {function} cb - Callback function.
  * @todo delete extra parameter block.
  */
-Delegate.prototype.undo = function (trs, block, sender, cb) {
-    const data = {
-        address: sender.address,
+Delegate.prototype.undo = async (trs) => {
+    await library.db.none(sql.removeDelegateVoteRecord, { publicKey: trs.senderPublicKey.toString('hex') });
+
+    await library.account.asyncMerge(trs.senderId, {
+        address: trs.senderId,
         isDelegate: 0,
-        vote: 0
-    };
-
-    if (!sender.nameexist && trs.asset.delegate.username) {
-        data.username = null;
-    }
-
-    library.db.none(sql.removeDelegateVoteRecord, { publicKey: trs.senderPublicKey.toString('hex') })
-        .then(() => {
-            modules.accounts.setAccountAndGet(data, cb);
-        });
+        vote: 0,
+        username: null
+    });
 };
 
 /**
@@ -317,7 +316,7 @@ Delegate.prototype.objectNormalize = function (trs) {
     const report = library.schema.validate(trs.asset.delegate, Delegate.prototype.schema);
 
     if (!report) {
-        throw `Failed to validate delegate schema: ${this.scope.schema.getLastErrors()
+        throw `Failed to validate delegate schema: ${library.schema.getLastErrors()
             .map(err => err.message)
             .join(', ')}`;
     }
