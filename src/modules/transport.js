@@ -496,10 +496,6 @@ Transport.prototype.onTransactionPutInPool = (transaction) => {
  * @emits blocks/change
  */
 Transport.prototype.onNewBlock = function (block, broadcast) {
-    // TODO: fix broadcast onNewBlock
-    // https://trello.com/c/573v81yz/245-fix-broadcast-on-new-block
-    return;
-
     if (broadcast) {
         const broadhash = modules.system.getBroadhash();
 
@@ -517,7 +513,9 @@ Transport.prototype.onNewBlock = function (block, broadcast) {
         library.db.one(sqlBlock.getBlockByHeight, { height: block.height })
             .then((lastBlock) => {
                 block.username = lastBlock.m_username;
-                library.network.io.sockets.emit('blocks/change', block);
+                // TODO: fix broadcast onNewBlock
+                // https://trello.com/c/573v81yz/245-fix-broadcast-on-new-block
+                // library.network.io.sockets.emit('blocks/change', block);
                 utils.addDocument({
                     index: 'blocks_list',
                     type: 'blocks_list',
