@@ -84,8 +84,8 @@ class TransactionPool {
             this.scope.logger.debug(`TransactionStatus.UNCONFIRM_APPLIED ${JSON.stringify(trs)}`);
         } catch (e) {
             trs.status = TransactionStatus.DECLINED;
-            this.scope.logger.error(`[TransactionQueue][applyUnconfirmed]: ${e}`);
-            this.scope.logger.error(`[TransactionQueue][applyUnconfirmed][stack]: \n ${e.stack}`);
+            this.scope.logger.error(`[TransactionPool][push]: ${e}`);
+            this.scope.logger.error(`[TransactionPool][push][stack]:\n${e.stack}`);
             return;
         }
 
@@ -225,6 +225,18 @@ export class TransactionQueue {
         return this.queue.shift();
     }
 
+    hasInQueue(trs: Transaction) {
+        return !!this.queue.filter(transaction => transaction.id === trs.id).length;
+    }
+
+    hasInConflictedQueue(trs: Transaction) {
+        return !!this.conflictedQueue.filter(obj => obj.transaction.id === trs.id).length;
+    }
+
+    has(trs: Transaction) {
+        return this.hasInQueue(trs) || this.hasInConflictedQueue(trs);
+    }
+
     push(trs: Transaction): void {
         trs.status = TransactionStatus.QUEUED;
         this.queue.push(trs);
@@ -293,7 +305,7 @@ export class TransactionQueue {
         }
         this.push(trs);
         this.process();
-        }
+    }
 
     async verify(trs: Transaction, sender: Account): Promise<{ verified: boolean, error: Array<string> }> {
 

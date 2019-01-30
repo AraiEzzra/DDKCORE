@@ -238,7 +238,7 @@ __private.filterQueue = function (cb) {
  */
 __private.filterTransaction = function (transaction, cb) {
     if (transaction !== undefined) {
-        if (modules.transactions.transactionInPool(transaction.id)) {
+        if (modules.transactions.inPool(transaction)) {
             return setImmediate(cb, null, true);
         }
         return library.logic.transaction.checkConfirmed(transaction, err => setImmediate(cb, null, !err));

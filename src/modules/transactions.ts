@@ -567,6 +567,11 @@ __private.getPooledTransactions = function (method, req, cb) {
 Transactions.prototype.getMergedTransactionList = function (reverse, limit) {
     return self.newTransactionPool.getTransactions(limit);
 };
+
+Transactions.prototype.inPool = (transaction: Transaction) => {
+    return self.newTransactionPool.has(transaction) || self.transactionQueue.has(transaction);
+};
+
 /**
  * Undoes confirmed transaction.
  * @implements {logic.transaction.undo}
@@ -811,7 +816,7 @@ Transactions.prototype.shared = {
     },
 
     getQueuedTransactions(req, cb) {
-        return setImmediate(cb, null, []);
+        return setImmediate(cb, null, { transactions: [] });
     },
 
     getUnconfirmedTransaction(req, cb) {
@@ -819,7 +824,7 @@ Transactions.prototype.shared = {
     },
 
     getUnconfirmedTransactions(req, cb) {
-        return setImmediate(cb, null, []);
+        return setImmediate(cb, null, { transactions: self.newTransactionPool.getTransactions() });
     },
 
     addTransactions(req, cb) {
