@@ -497,25 +497,24 @@ Transport.prototype.onTransactionPutInPool = (transaction) => {
  */
 Transport.prototype.onNewBlock = function (block, broadcast) {
     if (broadcast) {
-        const broadhash = modules.system.getBroadhash();
-
-        modules.system.update(() => {
-            if (!__private.broadcaster.maxRelays(block)) {
-                __private.broadcaster.broadcast({ limit: constants.maxPeers, broadhash }, {
-                    api: '/blocks',
-                    data: { block },
-                    method: 'POST',
-                    immediate: true
-                });
-            }
-        });
+        // TODO: fix broadcast onNewBlock
+        // https://trello.com/c/573v81yz/245-fix-broadcast-on-new-block
+        // const broadhash = modules.system.getBroadhash();
+        // modules.system.update(() => {
+        //     if (!__private.broadcaster.maxRelays(block)) {
+        //         __private.broadcaster.broadcast({ limit: constants.maxPeers, broadhash }, {
+        //             api: '/blocks',
+        //             data: { block },
+        //             method: 'POST',
+        //             immediate: true
+        //         });
+        //     }
+        // });
 
         library.db.one(sqlBlock.getBlockByHeight, { height: block.height })
             .then((lastBlock) => {
                 block.username = lastBlock.m_username;
-                // TODO: fix broadcast onNewBlock
-                // https://trello.com/c/573v81yz/245-fix-broadcast-on-new-block
-                // library.network.io.sockets.emit('blocks/change', block);
+                library.network.io.sockets.emit('blocks/change', block);
                 utils.addDocument({
                     index: 'blocks_list',
                     type: 'blocks_list',
