@@ -159,7 +159,9 @@ class TransactionPool {
     isPotentialConflict(trs: Transaction) {
         const senderId = generateAddressByPublicKey(trs.senderPublicKey);
         const recipientTrs = this.poolByRecipient[senderId] || [];
+        this.scope.logger.debug(`[TransactionPool][isPotentialConflict][recipientTrs] ${recipientTrs.length}`);
         const senderTrs = this.poolBySender[senderId] || [];
+        this.scope.logger.debug(`[TransactionPool][isPotentialConflict][senderTrs] ${senderTrs.length}`);
         const dependTransactions = [...recipientTrs, ...senderTrs];
 
         if (dependTransactions.length === 0) {
