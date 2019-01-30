@@ -16,4 +16,11 @@ redisClient.on('error', function(err: any) {
     console.log('Error ' + err);
 });
 
-export const redisGetAsync = promisify(redisClient.get).bind(redisClient);
+export const redisClientAsync = {
+    get: promisify(redisClient.get).bind(redisClient),
+    set: promisify(redisClient.set).bind(redisClient),
+    del: promisify(redisClient.del).bind(redisClient),
+    scan: promisify(redisClient.scan).bind(redisClient),
+    hmset: promisify(redisClient.hmset).bind(redisClient),
+    setex: promisify(redisClient.setex).bind(redisClient)
+};

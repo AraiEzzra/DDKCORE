@@ -1,4 +1,4 @@
-import { redisClient } from 'shared/driver/redis';
+import { redisClientAsync, redisClient } from 'shared/driver/redis';
 import ResponseEntity from 'shared/model/response';
 const errorCacheDisabled = 'Cache Unavailable';
 
@@ -47,79 +47,78 @@ export class CacheRepository implements ICacheRepository {
         return this.cacheClient && this.cacheClient.ready;
     }
 
-    removeByPattern(pattern: string): Promise<boolean> {
-        return new Promise((resolve) => {
-            if (!this.isConnected()) {
-                resolve(false);
+    async removeByPattern(pattern: string): Promise<boolean> {
+        if (!this.isConnected()) {
+            return false;
+        }
+
+        let keys, cursor = 0;
+
+        const scan = async (ptrn) => {
+            const res = await redisClientAsync.scan(cursor, 'MATCH', ptrn);
+
+            cursor = res[0];
+            if (cursor === 0) {
+                return true;
             }
 
-            const cb = (err) => {
-                err ? resolve(false) : resolve(true);
-            };
+            keys = res[1];
 
-            // this.cacheClient.hmset(key, value, cb);
-        });
+            if (keys.length > 0) {
+                await redisClientAsync.del(keys);
+            } else {
+                return scan(ptrn);
+            }
+        };
 
+        try {
+            await scan(pattern);
+        } catch (err) {
+            return err;
+        }
+
+        return true;
     }
 
-    delete(key: string): Promise<boolean> {
-        return new Promise((resolve, reject) => {
-            if (!this.isConnected()) {
-                reject(false);
-            }
-            const cb = (err) => {
-                err ? resolve(false) : resolve(true);
-            };
+    async delete(key: string): Promise<boolean> {
+        if (!this.isConnected()) {
+            return false;
+        }
 
-            this.cacheClient.del(key, cb);
-        });
-
+        return await !!redisClientAsync.del(key);
     }
 
-    hmset(key: string, value: object): Promise<boolean> {
-        return new Promise((resolve) => {
-            if (!this.isConnected()) {
-                resolve(false);
-            }
+    async hmset(key: string, value: object): Promise<boolean> {
+        if (!this.isConnected()) {
+            return false;
+        }
 
-            const cb = (err) => {
-                err ? resolve(false) : resolve(true);
-            };
-
-            this.cacheClient.hmset(key, value, cb);
-        });
+        return await !!redisClientAsync.hmset(key, value);
     }
 
     async set(key: string, value: any, expire?: number): Promise<boolean> {
-        return new Promise((resolve, reject) => {
-            if (!this.isConnected()) {
-                reject(new ResponseEntity({ errors: [errorCacheDisabled]}));
-            }
-            const jsonValue = JSON.stringify(value);
+        if (!this.isConnected()) {
+             return false;
+        }
 
-            const cb = (err) => {
-                err ? resolve(false) : resolve(true);
-            };
+        const jsonValue = JSON.stringify(value);
 
-            if (expire) {
-                this.cacheClient.setex(key, expire, jsonValue, cb);
-            } else {
-                this.cacheClient.set(key, jsonValue, cb);
-            }
-        });
+        if (expire) {
+            return await !!redisClientAsync.setex(key, expire, jsonValue);
+        } else {
+            return await !!redisClientAsync.set(key, jsonValue);
+        }
     }
 
     async get(key: string): Promise<ResponseEntity<any>> {
-        return new Promise((resolve, reject) => {
-            if (!this.isConnected()) {
-                reject(new ResponseEntity({ errors: [errorCacheDisabled]}));
-            }
-            this.cacheClient.get(key, (err, value) => {
-                if (err) {
-                    reject(new ResponseEntity({ errors: [err]}));
-                }
-                resolve(new ResponseEntity({ data: JSON.parse(value)}));
-            });
+        if (!this.isConnected()) {
+            return new ResponseEntity({ errors: [errorCacheDisabled]});
+        }
+
+        let result = await redisClientAsync.get(key);
+
+        return new ResponseEntity({
+            data: JSON.parse(result)
         });
     }
 

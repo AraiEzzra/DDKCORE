@@ -31,4 +31,19 @@ describe('Shared CacheRepository methods:: ', function() {
         await expect(status).to.be.equal(true);
         await redisRepository.delete(CACHE_KEY);
     });
+
+    it('redisRepository.removeByPattern should remove keys matching the pattern', async () => {
+        let key = '/api/transactions?123';
+        let value = { testObject: 'testValue2' };
+        let pattern = '/api/transactions*';
+
+        let status = await redisRepository.set(key, value);
+        await expect(status).to.be.equal(true);
+
+        status = await redisRepository.removeByPattern(pattern);
+        await expect(status).to.be.equal(true);
+
+        const result = await redisRepository.get(key);
+        await expect(result.data).to.be.equal(null);
+    });
 });
