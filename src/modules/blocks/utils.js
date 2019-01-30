@@ -111,7 +111,7 @@ Utils.prototype.readDbRows = function (rows) {
  * @return {Object}   cb.rows List of normalized blocks
  */
 Utils.prototype.loadBlocksPart = function (previousBlockId, cb) {
-    library.logger.debug(`[Utils][loadBlocksPart]', previousBlockId ${previousBlockId}`);
+    library.logger.debug(`[Utils][loadBlocksPart]' previousBlockId: ${previousBlockId}`);
     library.db.manyOrNone(sql.loadFullBlockById, { id: previousBlockId })
     .then((previousBlockRaw) => {
         if (previousBlockRaw && previousBlockRaw.length !== 0) {

@@ -239,6 +239,7 @@ __private.receiveTransaction = (transaction, peer, extraLogMessage, cb) => {
         return setImmediate(cb, `Invalid transaction body - ${e.toString()}`);
     }
     modules.transactions.putInQueue(transaction);
+    return setImmediate(cb, null, transaction.id);
 };
 
 // Public methods
@@ -495,23 +496,20 @@ Transport.prototype.onTransactionPutInPool = (transaction) => {
  * @emits blocks/change
  */
 Transport.prototype.onNewBlock = function (block, broadcast) {
-    // TODO: fix broadcast onNewBlock
-    // https://trello.com/c/573v81yz/245-fix-broadcast-on-new-block
-    return;
-
     if (broadcast) {
-        const broadhash = modules.system.getBroadhash();
-
-        modules.system.update(() => {
-            if (!__private.broadcaster.maxRelays(block)) {
-                __private.broadcaster.broadcast({ limit: constants.maxPeers, broadhash }, {
-                    api: '/blocks',
-                    data: { block },
-                    method: 'POST',
-                    immediate: true
-                });
-            }
-        });
+        // TODO: fix broadcast onNewBlock
+        // https://trello.com/c/573v81yz/245-fix-broadcast-on-new-block
+        // const broadhash = modules.system.getBroadhash();
+        // modules.system.update(() => {
+        //     if (!__private.broadcaster.maxRelays(block)) {
+        //         __private.broadcaster.broadcast({ limit: constants.maxPeers, broadhash }, {
+        //             api: '/blocks',
+        //             data: { block },
+        //             method: 'POST',
+        //             immediate: true
+        //         });
+        //     }
+        // });
 
         library.db.one(sqlBlock.getBlockByHeight, { height: block.height })
             .then((lastBlock) => {
