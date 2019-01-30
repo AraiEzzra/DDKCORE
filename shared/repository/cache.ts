@@ -85,7 +85,7 @@ export class CacheRepository implements ICacheRepository {
             return false;
         }
 
-        return await !!redisClientAsync.del(key);
+        return !!await redisClientAsync.del(key);
     }
 
     async hmset(key: string, value: object): Promise<boolean> {
@@ -93,7 +93,7 @@ export class CacheRepository implements ICacheRepository {
             return false;
         }
 
-        return await !!redisClientAsync.hmset(key, value);
+        return !!await redisClientAsync.hmset(key, value);
     }
 
     async set(key: string, value: any, expire?: number): Promise<boolean> {
@@ -104,9 +104,9 @@ export class CacheRepository implements ICacheRepository {
         const jsonValue = JSON.stringify(value);
 
         if (expire) {
-            return await !!redisClientAsync.setex(key, expire, jsonValue);
+            return !!await redisClientAsync.setex(key, expire, jsonValue);
         } else {
-            return await !!redisClientAsync.set(key, jsonValue);
+            return !!await redisClientAsync.set(key, jsonValue);
         }
     }
 
