@@ -1,477 +1,152 @@
-const bignum = require('../helpers/bignum.js');
 const crypto = require('crypto');
 const sodium = require('sodium-javascript');
 const exceptions = require('../helpers/exceptions.js');
 const constants = require('../helpers/constants');
+const zSchema = require('z-schema');
+// todo: implement
+const logger = require('logger');
 
+import { Account } from 'shared/model/account';
 import { Block } from 'shared/model/block';
 import { BlockRepo } from 'core/repository/block';
-import { getAddressByPublicKey } from 'shared/util/account';
-import {Peer} from 'shared/model/peer';
-import {PeerRepo} from 'core/repository/peer';
-import {Transaction} from 'shared/model/transaction';
-import { TransactionPool } from 'core/service/transactionPool';
-
-interface ILoadBlockParams {
-    limit: number;
-    lastId: string;
-}
-
-interface IDBBlockSave {
-
-}
+import { Transaction } from 'shared/model/transaction';
+import { TransactionService, ITransactionService } from 'core/service/transaction';
+import { TransactionQueue } from 'core/service/transactionQueue';
+import { TransactionPoolService } from 'core/service/transactionPool';
+import { TransactionRepo } from 'core/repository/transaction';
+import { transactionSortFunc } from 'core/util/transaction';
+import { getOrCreateAccount } from 'shared/util/account.utils';
+import blockShema from 'core/shema/block';
 
 interface IVerifyResult {
     verified: boolean;
     errors: any[];
 }
 
+interface IActionResult {
+    success: boolean;
+    errors?: string[];
+}
+
+class DelegateService {}
+
 export class BlockService {
-    private dbTable: string = 'blocks';
-    private dbFields: string[] = [
-        'id',
-        'version',
-        'timestamp',
-        'height',
-        'previousBlock',
-        'numberOfTransactions',
-        'totalAmount',
-        'totalFee',
-        'reward',
-        'payloadLength',
-        'payloadHash',
-        'generatorPublicKey',
-        'blockSignature'
-    ];
+    private delegateService = new DelegateService();
+    private transactionQueue = new TransactionQueue({});
+    private transactionPool = new TransactionPoolService({});
+    private transactionService: ITransactionService<object> = new TransactionService();
+    private transactionRepo = new TransactionRepo();
+    private blockRepo: BlockRepo = new BlockRepo();
+
     private lastBlock: Block;
     private lastReceipt: number;
     private lastNBlockIds: string[];
     private readonly currentBlockVersion: number = constants.CURRENT_BLOCK_VERSION;
-    private readonly milestones = constants.rewards.milestones;
-    private readonly distance = Math.floor(constants.rewards.distance);
-    private readonly rewardOffset = Math.floor(constants.rewards.offset);
-    private blockRepo: BlockRepo = new BlockRepo();
-    private peerRepo: PeerRepo = new PeerRepo();
-    private transactionPool = new TransactionPool();
+    private receiveLocked = false;
 
-    public loadBlocksData(params: ILoadBlockParams) : Block[] {
-        return [];
+    private receiveLock = () => {
+        this.receiveLocked = true;
     }
 
-    public getLastBlock(): Block {
-        return this.lastBlock;
+    private receiveUnlock = () => {
+        this.receiveLocked = false;
     }
 
-    public setLastBlock(block: Block): Block {
-        this.lastBlock = block;
-        return this.lastBlock;
-    }
+    public generateBlock = async (keypair: { privateKey: string, publicKey: string }, timestamp: number) => {
+        let block;
+        this.lockTransactionPoolAndQueue();
 
-    public isLastBlockFresh(): boolean {
-        return true;
-    }
-
-    public getLastReceipt(): number {
-        return this.lastReceipt;
-    }
-
-    public updateLastReceipt() {
-        this.lastReceipt = Math.floor(Date.now() / 1000);
-        return this.lastReceipt;
-    }
-
-    public isLastReceiptStale() {
-        if (!this.lastReceipt) {
-            return true;
-        }
-        const secondsAgo = Math.floor(Date.now() / 1000) - this.lastReceipt;
-        return (secondsAgo > constants.blockReceiptTimeOut);
-    }
-
-    public saveGenesisBlock(): void {
-        const block: Block = this.blockRepo.getGenesisBlock();
-        this.saveBlock(block); // config.genesis.block)
-    }
-
-    public saveBlock(block: Block): void {
-        this.dbSave(block);
-        this.promiseTransactions(block);
-        this.afterSave(block);
-    }
-
-    private dbSave(block: Block): IDBBlockSave {
-        let payloadHash,
-            generatorPublicKey,
-            blockSignature;
+        const transactions = await this.transactionPool.popSortedUnconfirmedTransactions(constants.maxTxsPerBlock);
+        logger.debug(`[Process][newGenerateBlock][transactions] ${JSON.stringify(transactions)}`);
 
         try {
-            payloadHash = Buffer.from(block.payloadHash, 'hex');
-            generatorPublicKey = Buffer.from(block.generatorPublicKey, 'hex');
-            blockSignature = Buffer.from(block.blockSignature, 'hex');
+            block = this.create({
+                keypair,
+                timestamp,
+                previousBlock: this.getLastBlock(),
+                transactions
+            });
         } catch (e) {
+            logger.error(`[Process][newGenerateBlock][create] ${e}`);
+            logger.error(`[Process][newGenerateBlock][create][stack] ${e.stack}`);
             throw e;
         }
 
-        return {
-            table: this.dbTable,
-            fields: this.dbFields,
-            values: {
-                id: block.id,
-                version: block.version,
-                timestamp: block.timestamp,
-                height: block.height,
-                previousBlock: block.previousBlock || null,
-                numberOfTransactions: block.numberOfTransactions,
-                totalAmount: block.totalAmount,
-                totalFee: block.totalFee,
-                reward: block.reward || 0,
-                payloadLength: block.payloadLength,
-                payloadHash,
-                generatorPublicKey,
-                blockSignature
-            }
-        };
-    }
 
-    private afterSave(block: Block): void {
-        // call 'transactionsSaved' on bus
-        // ?
-        block.transactions.forEach((transaction) => library.logic.transaction.afterSave(transaction));
-    }
-
-    private async promiseTransactions(block: Block): Promise<object> {
-        return await library.logic.transaction.dbSave(transaction);
-    }
-
-    public applyGenesisBlock(block: Block): void {
-        const tracker = this.getBlockProgressLogger(
-            block.transactions.length, block.transactions.length / 100, 'Genesis block loading'
-        );
-        block.transactions.forEach((transaction) => {
-            // busrx call ACCOUNT_SETANDGET
-            const sender = modules.accounts.setAccountAndGet({ publicKey: transaction.senderPublicKey });
-            this.applyTransaction(block, transaction, sender);
-            tracker.applyNext();
-        });
-        this.setLastBlock(block);
-        // busrx call to ROUNDS_TICK
-        modules.rounds.tick(block, cb);
-    }
-
-    public getBlockProgressLogger(transactionsCount: number, logsFrequency: number, msg: string) {
-        function BlockProgressLogger(blockTransactionCount, blockBlogsFrequency, msgBlock) {
-            this.target = blockTransactionCount;
-            this.step = Math.floor(blockTransactionCount / blockBlogsFrequency);
-            this.applied = 0;
-
-            /**
-             * Resets applied transactions
-             */
-            this.reset = function () {
-                this.applied = 0;
-            };
-
-            /**
-             * Increments applied transactions and logs the progress
-             * - For the first and last transaction
-             * - With given frequency
-             */
-            this.applyNext = function () {
-                if (this.applied >= this.target) {
-                    throw new Error(`Cannot apply transaction over the limit: ${this.target}`);
-                }
-                this.applied += 1;
-                if (this.applied === 1 || this.applied === this.target || this.applied % this.step === 1) {
-                    this.log();
-                }
-            };
-
-            /**
-             * Logs the progress
-             */
-            this.log = function () {
-                library.logger.info(msgBlock, `${((this.applied / this.target) * 100)
-                    .toPrecision(4)} % : applied ${this.applied} of ${this.target} transactions`);
-            };
-        }
-
-        return new BlockProgressLogger(transactionsCount, logsFrequency, msg);
-    }
-
-    private applyTransaction(block: Block, transaction: Transaction<object>, sender): void {
-        // FIXME: Not sure about flow here, when nodes have different transactions - 'applyUnconfirmed' can fail but 'apply' can be ok
-        await modules.transactions.applyUnconfirmed(transaction, sender);
-        await modules.transactions.apply(transaction, block, sender);
-    }
-
-    public applyBlock(block: Block, broadcast: boolean, saveBlock: boolean): void {
-        // Prevent shutdown during database writes.
-        modules.blocks.isActive.set(true);
-
-        // Transactions to rewind in case of error.
-        let appliedTransactions = {};
-
-        // List of unconfirmed transactions ids.
-        let unconfirmedTransactionIds = new Set();
-
-        // Rewind any unconfirmed transactions before applying block.
-        // TODO: It should be possible to remove this call if we can guarantee that only this function is processing transactions atomically. Then speed should be improved further.
-        // TODO: Other possibility, when we rebuild from block chain this action should be moved out of the rebuild function.
-        private function undoUnconfirmedList(){
-            const ids = modules.transactions.undoUnconfirmedList();
-        }
-
-        // Apply transactions to unconfirmed mem_accounts fields.
-        function applyUnconfirmed() {
-            const errors = [];
-
-            block.transactions.forEach((transaction) => {
-
-                // call to ACCOUNT_GET
-                const sender = modules.accounts.getAccount({publicKey: transaction.senderPublicKey});
-                // call to TRANSACTION_VERIFY_UNCONFIRMED
-                library.logic.transaction.verifyUnconfirmed({trs: transaction, sender});
-
-                // DATABASE: write
-                // call to TRANSACTION_APPLY_UNCONFIRMED
-                modules.transactions.applyUnconfirmed(transaction, sender);
-                appliedTransactions[transaction.id] = transaction;
-
-                // Remove the transaction from the node queue, if it was present.
-                unconfirmedTransactionIds.delete(transaction.id);
-            });
-
-            if (errors.length) {
-                block.transactions.forEach((transaction) => {
-                    if (!appliedTransactions[transaction.id]) {
-                        return setImmediate(() => {
-                        });
-                    }
-
-                    // call to ACCOUNT_GET
-                    const sender = modules.accounts.getAccount({publicKey: transaction.senderPublicKey});
-                    // DATABASE: write
-                    // call to TRANSACTION_UNDO_UNCONFIRMED
-                    library.logic.transaction.undoUnconfirmed(transaction, sender);
-                });
-
-            }
-        }
-
-        // Block and transactions are ok.
-        // Apply transactions to confirmed mem_accounts fields.
-        function applyConfirmed() {
-            block.transactions.forEach((transaction) => {
-                // call to ACCOUNT_GET
-                const sender = modules.accounts.getAccount({ publicKey: transaction.senderPublicKey });
-                // DATABASE: write
-                // call to TRANSACTION_APPLY
-                modules.transactions.apply(transaction, block, sender);
-                // Transaction applied, removed from the unconfirmed list.
-                // call to TRANSACTION_REMOVE_...
-                modules.transactions.removeUnconfirmedTransaction(transaction.id);
-            });
-            // Optionally save the block to the database.
-            this.setLastBlock(block);
-
-            if (saveBlock) {
-                this.saveBlock(block);
-                library.bus.message('newBlock', block, broadcast);
-                // DATABASE write. Update delegates accounts
-                modules.rounds.tick(block);
-            } else {
-                library.bus.message('newBlock', block, broadcast);
-                // DATABASE write. Update delegates accounts
-                modules.rounds.tick(block, seriesCb);
-            }
-
-            // Push back unconfirmed transactions list (minus the one that were on the block if applied correctly).
-            // TODO: See undoUnconfirmedList discussion above.
-
-            // DATABASE write
-            // call to TRANSACTION_APPLY_UNCONFIRMED_IDS
-            modules.transactions.applyUnconfirmedIds(Array.from(unconfirmedTransactionIds));
-
-        }
-
-        // Allow shutdown, database writes are finished.
-        modules.blocks.isActive.set(false);
-    }
-
-    private popLastBlock(oldLastBlock: Block): Block {
-        // Load previous block from full_blocks_list table
-        // TODO: Can be inefficient, need performnce tests
-        let previousBlock: Block = this.loadBlocksPart()[0];
-        previousBlock = this.loadBlocksPart({ id: oldLastBlock.previousBlock })[0];
-        oldLastBlock.transactions.reverse().forEach((transaction) => {
-            // Retrieve sender by public key
-            const sender = modules.accounts.getAccount({ publicKey: transaction.senderPublicKey });
-            // Undoing confirmed tx - refresh confirmed balance
-            // (see: logic.transaction.undo, logic.transfer.undo)
-            // WARNING: DB_WRITE
-            modules.transactions.undo(transaction, oldLastBlock, sender);
-            // Undoing unconfirmed tx - refresh unconfirmed balance (see: logic.transaction.undoUnconfirmed)
-            // WARNING: DB_WRITE
-            modules.transactions.undoUnconfirmed(transaction);
-
-        });
-        // Perform backward tick on rounds
-        // WARNING: DB_WRITE
-        modules.rounds.backwardTick(oldLastBlock, previousBlock);
-        // Delete last block from blockchain
-        // WARNING: Db_WRITE
-        this.deleteBlock(oldLastBlock.id);
-        return previousBlock;
-    }
-
-    public loadBlocksPart(filter?): Block[] {
-        const rows = this.loadBlocksData(filter);;
-        return [];
-    }
-
-    public readDbRows(rows: object[]): Block[]  {
-        return [];
-    }
-
-    public dbRead(raw: {[key: string]: any}, radix: number = 10): Block {
-        if (!raw.b_id) {
-            return null;
-        }
-        const block: Block = {
-            id: raw.b_id,
-            rowId: parseInt(raw.b_rowId, radix),
-            version: parseInt(raw.b_version, radix),
-            timestamp: parseInt(raw.b_timestamp, radix),
-            height: parseInt(raw.b_height, radix),
-            previousBlock: raw.b_previousBlock,
-            numberOfTransactions: parseInt(raw.b_numberOfTransactions, radix),
-            totalAmount: parseInt(raw.b_totalAmount, radix),
-            totalFee: parseInt(raw.b_totalFee, radix),
-            reward: parseInt(raw.b_reward, radix),
-            payloadLength: parseInt(raw.b_payloadLength, radix),
-            payloadHash: raw.b_payloadHash,
-            generatorPublicKey: raw.b_generatorPublicKey,
-            generatorId: getAddressByPublicKey(raw.b_generatorPublicKey),
-            blockSignature: raw.b_blockSignature,
-            confirmations: parseInt(raw.b_confirmations, radix),
-            username: raw.m_username
-        };
-        block.totalForged = new bignum(block.totalFee).plus(new bignum(block.reward)).toString();
-        return block;
-    }
-
-    public deleteLastBlock(): Block {
-        let lastBlock = this.getLastBlock();
-        const newLastBlock = this.popLastBlock(lastBlock);
-        return this.setLastBlock(newLastBlock);
-    }
-
-    public recoverChain(): Block {
-        const newLastBlock: Block = this.deleteLastBlock();
-        return newLastBlock;
-    }
-
-    public getIdSequence(height: number): { firstHeight: number, ids: []} {
-        const lastBlock = this.getLastBlock();
-        // Get IDs of first blocks of (n) last rounds, descending order
-        // EXAMPLE: For height 2000000 (round 19802)
-        // we will get IDs of blocks at height: 1999902, 1999801, 1999700, 1999599, 1999498
-        const rows = this.blockRepo.getIdSequence({ height, limit: 5, delegates: Rounds.prototype.getSlotDelegatesCount(height) });
-
-        return { firstHeight: rows[0].height, ids: ids.join(',') };
-    }
-
-    public getCommonBlock(peer: Peer, height: number): Block {
-        let comparisionFailed = false;
-
-        // Get IDs sequence (comma separated list)
-        const ids = this.getIdSequence(height).ids;
-
-        // Perform request to supplied remote peer
-        const result = modules.transport.getFromPeer(peer, {
-            api: `/blocks/common?ids=${ids}`,
-            method: 'GET'
-        });
-        const common = result.common;
-        // Check that block with ID, previousBlock and height exists in database
-        const rows = this.blockRepo.getCommonBlock({
-            id: result.body.common.id,
-            previousBlock: result.body.common.previousBlock,
-            height: result.body.common.height
-        });
-        if (comparisionFailed && modules.transport.poorConsensus()) {
-            return this.recoverChain();
+        try {
+            await this.processBlock(block, true, true, true, true);
+            this.unlockTransactionPoolAndQueue();
+        } catch (e) {
+            await this.pushInPool(transactions);
+            this.unlockTransactionPoolAndQueue();
+            logger.error(`[Process][newGenerateBlock][processBlock] ${e}`);
+            logger.error(`[Process][newGenerateBlock][processBlock][stack] ${e.stack}`);
         }
     }
 
-    public processBlock(block: Block, broadcast: boolean, saveBlock: boolean, verify = true): void {
+    private async pushInPool(transactions: Array<Transaction<object>>): Promise<void> {
+        for (const trs of transactions) {
+            await this.transactionPool.push(trs);
+        }
+    }
+
+    private lockTransactionPoolAndQueue(): void {
+        this.transactionQueue.lock();
+        this.transactionPool.lock();
+    }
+
+    private unlockTransactionPoolAndQueue(): void {
+        this.transactionQueue.unlock();
+        this.transactionPool.unlock();
+    }
+
+    /**
+     * @implements system.update
+     */
+    private async processBlock(block: Block, broadcast: boolean, saveBlock: boolean, verify: boolean = true, tick: boolean = true): Promise<void> {
         this.addBlockProperties(block, broadcast);
-        // this.normalizeBlock(block);
-        this.verifyBlock(block);
-        this.checkExists(block);
-        this.validateBlockSlot(block);
-        this.checkTransactions(block, saveBlock);
-        this.applyBlock(block, broadcast, saveBlock);
-        if (library.config.loading.snapshotRound) {
-            modules.system.update();
+        const resultNormalizeBlock = this.normalizeBlock(block);
+
+        if (!resultNormalizeBlock.success) {
+            throw new Error(`[normalizeBlock] ${JSON.stringify(resultNormalizeBlock.errors)}`);
         }
-    }
 
-    public checkTransactions(block: Block, checkExists: boolean): boolean {
-        block.transactions.forEach((transaction: Transaction<object>) => {
-            transaction.id = library.logic.transaction.getId(transaction);
-            transaction.blockId = block.id;
-            let sender = modules.accounts.setAccountAndGet({publicKey: transaction.senderPublicKey});
-            sender = library.logic.transaction.verify({trs: transaction, sender, checkExists});
-            sender = library.logic.transaction.verifyUnconfirmed({trs: transaction, sender, checkExists: true});
-            if (err) {
-                modules.delegates.fork(block, 2);
-                // Undo the offending transaction.
-                // DATABASE: write
-                modules.transactions.undoUnconfirmed(transaction);
-                modules.transactions.removeUnconfirmedTransaction(transaction.id);
+        if (verify) {
+            const resultVerifyBlock = this.verifyBlock(block);
+            if (!resultVerifyBlock.verified) {
+                throw new Error(`[verifyBlock] ${JSON.stringify(resultVerifyBlock.errors)}`);
             }
-        });
-        return true;
+        }
+
+        if (saveBlock) {
+            const resultCheckExists = await this.checkExists(block);
+            if (!resultCheckExists.success) {
+                throw new Error(`[checkExists] ${JSON.stringify(resultCheckExists.errors)}`);
+            }
+        }
+        // validateBlockSlot TODO enable after fix round
+
+        const resultCheckTransactions = await this.checkTransactionsAndApplyUnconfirmed(block, saveBlock, verify);
+        if (!resultCheckTransactions.success) {
+            throw new Error(`[checkTransactions] ${JSON.stringify(resultCheckTransactions.errors)}`);
+        }
+
+        await this.applyBlock(block, broadcast, saveBlock, tick);
+
+        if (!library.config.loading.snapshotRound) {
+            await (new Promise((resolve, reject) => modules.system.update((err) => {
+                if (err) {
+                    logger.error(`[Verify][processBlock][system/update] ${err}`);
+                    logger.error(`[Verify][processBlock][system/update][stack] ${err.stack}`);
+                    reject(err);
+                }
+                resolve();
+            })));
+        }
+        this.transactionQueue.reshuffleTransactionQueue();
     }
 
-    public checkExists(block: Block): boolean {
-        return true;
-    }
-
-    public verifyBlock(block: Block): IVerifyResult {
-        const lastBlock = this.getLastBlock();
-
-        block = this.setHeight(block, lastBlock);
-
-        let result = { verified: false, errors: [] };
-
-        result = this.verifySignature(block, result);
-        result = this.verifyPreviousBlock(block, result);
-        result = this.verifyVersion(block, result);
-        // TODO: verify total fee
-        result = this.verifyId(block, result);
-        result = this.verifyPayload(block, result);
-
-        result = this.verifyForkOne(block, lastBlock, result);
-        result = this.verifyBlockSlot(block, lastBlock, result);
-
-        result.verified = result.errors.length === 0;
-        result.errors.reverse();
-
-        return result;
-    }
-
-    public verifyForkOne(block: Block, lastBlock: Block, result: IVerifyResult): IVerifyResult {
-        modules.delegates.fork(block, 1);
-        return result;
-    }
-
-    public verifyBlockSlot(block: Block, lastBlock: Block, result: IVerifyResult): IVerifyResult {
-        return result;
-    }
-
-    public addBlockProperties(block: Block, broadcast: boolean): Block {
+    private addBlockProperties(block: Block, broadcast: boolean): Block {
         if (broadcast) {
             return block;
         }
@@ -498,100 +173,351 @@ export class BlockService {
         return block;
     }
 
-    public loadBlocksOffset(limit: number, offset: number, verify: boolean): Block {
-        const rows = this.blockRepo.loadBlocksOffset({});
-        const blocks = this.readDbRows(rows);
-        blocks.forEach((block) => {
-            if (block.id === library.genesisblock.block.id) {
-                return this.applyGenesisBlock(block);
+    private normalizeBlock(block: Block): IActionResult {
+        try {
+            block.transactions.sort(transactionSortFunc);
+            this.objectNormalize(block);
+            return { success: true, errors: [] };
+        } catch (err) {
+            return { success: false, errors: [err] };
+        }
+    }
+
+    private objectNormalize(block: Block): Block {
+        let i;
+
+        for (i in block) {
+            if (block[i] === null || typeof block[i] === 'undefined') {
+                delete block[i];
             }
+        }
+        const report = zSchema.validate(block, blockShema);
 
-            this.processBlock(block, false, false, verify);
-        });
-        return this.getLastBlock();
-    }
+        if (!report) {
+            throw `Failed to validate block schema: ${zSchema.getLastErrors().map(err => err.message).join(', ')}`;
+        }
 
-    public loadBlocksFromPeer(peer: Peer): Block {
-        // Set current last block as last valid block
-        let lastValidBlock: Block = this.getLastBlock();
+        try {
+            for (i = 0; i < block.transactions.length; i++) {
+                block.transactions[i] = this.transactionService.objectNormalize(block.transactions[i]);
+            }
+        } catch (e) {
+            throw e;
+        }
 
-        // Normalize peer
-        peer = this.peerRepo.create(peer);
-        const blocks: Block[] = modules.transport.getFromPeer(peer, {
-            method: 'GET',
-            api: `/blocks?lastBlockId=${lastValidBlock.id}`
-        });
-
-        return lastValidBlock;
-    }
-
-    public generateBlock(keypair: object, timestamp: number): Block {
-        // Get transactions that will be included in block
-        const transactions: Transaction<object>[] = this.transactionPool.getUnconfirmedTransactionsForBlockGeneration(constants.maxTxsPerBlock);
-        const block: Block = this.create({
-                    keypair,
-                    timestamp,
-                    previousBlock: this.getLastBlock(),
-                    transactions: ready
-                });
-        this.processBlock(block, true,  true);
         return block;
     }
 
-    public create(data): Block {
-        const block: Block = new Block();
-        this.sign(block, data.keypair);
+    private verifyBlock(block: Block): IVerifyResult {
+        const lastBlock = this.getLastBlock();
+
+        block = this.setHeight(block, lastBlock);
+
+        let result = { verified: false, errors: [] };
+
+        result = this.verifySignature(block, result);
+        result = this.verifyPreviousBlock(block, result);
+        result = this.verifyVersion(block, result);
+        // TODO: verify total fee
+        result = this.verifyId(block, result);
+        result = this.verifyPayload(block, result);
+
+        result = this.verifyForkOne(block, lastBlock, result);
+        result = this.verifyBlockSlot(block, lastBlock, result);
+
+        result.verified = result.errors.length === 0;
+        result.errors.reverse();
+
+        return result;
+    }
+
+    private setHeight(block: Block, lastBlock: Block): Block {
+        block.height = lastBlock.height + 1;
+
         return block;
     }
 
-    public sign(block, keyPair) {
-        const blockHash = this.getHash(block);
-        const sig = Buffer.alloc(sodium.crypto_sign_BYTES);
-
-        sodium.crypto_sign_detached(sig, blockHash, keyPair.privateKey);
-        return sig.toString('hex');
+    private verifySignature(block: Block, result: IVerifyResult): IVerifyResult {
+        return result;
     }
 
-    public getHash(block: Block): string {
-        return crypto.createHash('sha256').update(this.getBytes(block)).digest();
+    private verifyPreviousBlock(block: Block, result: IVerifyResult): IVerifyResult {
+        return result;
     }
 
-    public getBytes(block: Block): Buffer {
-        return new Buffer([]);
+    private verifyVersion(block: Block, result: IVerifyResult): IVerifyResult {
+        const version: number = block.version;
+        const height: number = block.height;
+        const exceptionVersion = Object.keys(exceptions.blockVersions).find(
+            (exceptionVersion) => {
+                // Get height range of current exceptions
+                const heightsRange = exceptions.blockVersions[exceptionVersion];
+                // Check if provided height is between the range boundaries
+                return height >= heightsRange.start && height <= heightsRange.end;
+            }
+        );
+        if (exceptionVersion === undefined) {
+            // If there is no exception for provided height - check against current block version
+            result.verified = version === this.currentBlockVersion;
+        }
+
+        // If there is an exception - check if version match
+        // return Number(exceptionVersion) === version;
+        return result;
     }
 
-    private validateBlockSlot(block: Block, lastBlock?: Block): boolean {
-        modules.delegates.validateBlockSlotAgainstPreviousRound(block);
-        modules.delegates.validateBlockSlot(block);
+    private verifyId(block: Block, result: IVerifyResult): IVerifyResult {
+        block.id = this.getId(block);
+        return result;
+    }
+
+    private getId(block: Block): string {
+        return crypto.createHash('sha256').update(this.getBytes(block)).digest('hex');
+    }
+
+    private verifyPayload(block: Block, result: IVerifyResult) {
+        const bytes = this.transactionService.getBytes(transaction, false, false);
+        return result;
+    }
+
+    /**
+     * @implements delegateService.fork
+     */
+    private verifyForkOne(block: Block, lastBlock: Block, result: IVerifyResult): IVerifyResult {
+        this.delegateService.fork(block, 1);
+        return result;
+    }
+
+    private verifyBlockSlot(block: Block, lastBlock: Block, result: IVerifyResult): IVerifyResult {
+        return result;
+    }
+
+    private async checkExists(block: Block): Promise<IActionResult> {
+        const exists = await this.blockRepo.isBlockExists(block.id);
+        if (!exists) {
+            return { success: false, errors: [['Block', block.id, 'already exists'].join(' ')] };
+        }
+        return { success: true };
+    }
+
+    private async checkTransactionsAndApplyUnconfirmed(block: Block, checkExists: boolean, verify: boolean): Promise<IActionResult> {
+        const errors = [];
+        let i = 0;
+
+        while ((i < block.transactions.length && errors.length === 0) || (i >= 0 && errors.length !== 0)) {
+            const trs: Transaction<object> = block.transactions[i];
+
+            if (errors.length === 0) {
+                const sender: Account = await getOrCreateAccount(trs.senderPublicKey);
+                logger.debug(`[Verify][checkTransactionsAndApplyUnconfirmed][sender] ${JSON.stringify(sender)}`);
+                if (verify) {
+                    const resultCheckTransaction = await this.checkTransaction(block, trs, sender, checkExists);
+
+                    if (!resultCheckTransaction.success) {
+                        errors.push(resultCheckTransaction.errors);
+                        i--;
+                        continue;
+                    }
+                }
+
+                await this.transactionService.applyUnconfirmed(trs);
+                i++;
+            } else {
+                await this.transactionService.undoUnconfirmed(trs);
+                i--;
+            }
+        }
+
+        return { success: errors.length === 0, errors };
+    }
+
+    private checkTransaction = async (block: Block, trs: Transaction<object>, sender: Account, checkExists: boolean) => {
+        trs.id = this.transactionService.getId(trs);
+        trs.blockId = block.id;
+
+        try {
+            await this.transactionService.verify(trs, sender, checkExists);
+        } catch (e) {
+            return { success: false, errors: [e.message || e] };
+        }
+
+        try {
+            await this.transactionService.verifyUnconfirmed(trs, sender);
+        } catch (e) {
+            return { success: false, errors: [e.message || e] };
+        }
+
+        return { success: true };
+    }
+
+    /**
+     * @implements rounds.tick
+     */
+    private async applyBlock(block: Block, broadcast: boolean, saveBlock: boolean, tick: boolean): Promise<void> {
+        if (saveBlock) {
+            await this.blockRepo.saveBlock(block);
+        }
+
+        for (const trs of block.transactions) {
+            const sender = await getOrCreateAccount(trs.senderPublicKey);
+            await this.transactionService.apply(trs, block);
+
+            if (saveBlock) {
+                trs.blockId = block.id;
+                await this.transactionRepo.saveTransaction(trs);
+            }
+        }
+
+        if (saveBlock) {
+            await this.afterSave(block);
+            logger.debug(`Block applied correctly with ${block.transactions.length} transactions`);
+        }
+
+        this.setLastBlock(block);
+        library.bus.message('newBlock', block, broadcast);
+
+        if (tick) {
+            await (new Promise((resolve, reject) => modules.rounds.tick(block, (err, message) => {
+                if (err) {
+                    logger.error(`[Chain][applyBlock][tick]: ${err}`);
+                    logger.error(`[Chain][applyBlock][tick][stack]: \n ${err.stack}`);
+                    reject(err);
+                }
+                logger.debug(`[Chain][applyBlock][tick] message: ${message}`);
+                resolve();
+            })));
+        }
+        block = null;
+    }
+
+    private async afterSave(block: Block): Promise<void> {
+        // call 'transactionsSaved' on bus
+        for (const trs of block.transactions) {
+            // how can I call this method in case it exists in service but connection service=service is baned
+            await this.transactionService.afterSave(trs);
+        }
+    }
+
+    /**
+     * @implements modules.rounds.calc()
+     * @implements slots.getSlotNumber
+     * @implements modules.loader.syncing
+     * @implements modules.rounds.ticking
+     */
+    public async processIncomingBlock(block: Block): Promise<void> {
+        let lastBlock;
+
+        if (this.receiveLocked) {
+            logger.warn(`[Process][onReceiveBlock] locked for id ${block.id}`);
+            return;
+        }
+
+        // TODO: how to check?
+        if (!__private.loaded || modules.loader.syncing() || modules.rounds.ticking()) {
+            logger.debug(`[Process][onReceiveBlock] !__private.loaded ${!__private.loaded}`);
+            logger.debug(`[Process][onReceiveBlock] syncing ${modules.loader.syncing()}`);
+            logger.debug('Client not ready to receive block', block.id);
+            return;
+        }
+
+        // Get the last block
+        lastBlock = this.getLastBlock();
+
+        // Detect sane block
+        if (block.previousBlock === lastBlock.id && lastBlock.height + 1 === block.height) {
+            this.receiveLock();
+            await this.receiveBlock(block);
+            this.receiveUnlock();
+        } else if (block.previousBlock !== lastBlock.id && lastBlock.height + 1 === block.height) {
+            return this.receiveForkOne(block, lastBlock);
+        } else if (
+            block.previousBlock === lastBlock.previousBlock &&
+            block.height === lastBlock.height && block.id !== lastBlock.id
+        ) {
+            return this.receiveForkFive(block, lastBlock);
+        } else if (block.id === lastBlock.id) {
+            logger.debug('Block already processed', block.id);
+        } else {
+            logger.warn([
+                'Discarded block that does not match with current chain:', block.id,
+                'height:', block.height,
+                'round:', modules.rounds.calc(block.height),
+                'slot:', slots.getSlotNumber(block.timestamp),
+                'generator:', block.generatorPublicKey
+            ].join(' '));
+        }
+    }
+
+    /**
+     * @implements modules.rounds.calc
+     * @implements slots.getSlotNumber
+     */
+    private async receiveBlock(block: Block): Promise<void> {
+        logger.info([
+            'Received new block id:', block.id,
+            'height:', block.height,
+            'round:', modules.rounds.calc(block.height),
+            'slot:', slots.getSlotNumber(block.timestamp),
+            'reward:', block.reward
+        ].join(' '));
+
+        this.updateLastReceipt();
+
+        this.lockTransactionPoolAndQueue();
+
+        const removedTransactions = await this.transactionPool.removeFromPool(block.transactions, true);
+        logger.debug(`[Process][newReceiveBlock] removedTransactions ${JSON.stringify(removedTransactions)}`);
+
+        try {
+            await this.processBlock(block, true, true, true, true);
+
+            const transactionForReturn = [];
+            removedTransactions.forEach((removedTrs) => {
+                if (!(block.transactions.find(trs => trs.id === removedTrs.id))) {
+                    transactionForReturn.push(removedTrs);
+                }
+            });
+            await this.pushInPool(transactionForReturn);
+            await this.transactionQueue.returnToQueueConflictedTransactionFromPool(block.transactions);
+            this.unlockTransactionPoolAndQueue();
+        } catch (e) {
+            await this.pushInPool(removedTransactions);
+            this.unlockTransactionPoolAndQueue();
+            logger.error(`[Process][newReceiveBlock] ${e}`);
+            logger.error(`[Process][newReceiveBlock][stack] ${e.stack}`);
+        }
+    }
+
+    /**
+     * @implements modules.delegates.fork
+     */
+    private async receiveForkOne(block: Block, lastBlock: Block): Promise<void> {
+        let tmpBlock: Block = {...block};
+        this.delegateService.fork(block, 1);
+        tmpBlock = this.objectNormalize(tmpBlock);
+        this.validateBlockSlot(block, lastBlock);
+        const check = this.verifyReceipt(tmpBlock);
+        await this.deleteLastBlock();
+        await this.deleteLastBlock();
+    }
+
+    /**
+     * @implements slots.calcRound
+     * @implements modules.rounds.getSlotDelegatesCount
+     * @implements delegateService.validateBlockSlotAgainstPreviousRound
+     * @implements delegateService.validateBlockSlot
+     */
+    private validateBlockSlot(block: Block, lastBlock: Block): boolean {
+        const roundNextBlock = slots.calcRound(block.height);
+        const roundLastBlock = slots.calcRound(lastBlock.height);
+        const activeDelegates = modules.rounds.getSlotDelegatesCount(block.height);
+
+        this.delegateService.validateBlockSlotAgainstPreviousRound(block);
+        this.delegateService.validateBlockSlot(block);
         return true;
     }
 
-    public receiveBlock(block: Block): void {
-        this.updateLastReceipt();
-        // Start block processing - broadcast: true, saveBlock: true
-        this.processBlock(block, true,  true);
-    }
-
-    public receiveForkOne(block: Block, lastBlock: Block): void {
-        let tmpBlock: Block = {...block};
-
-        modules.delegates.fork(block, 1);
-        const check = this.verifyReceipt(tmpBlock);
-        this.deleteLastBlock();
-        this.deleteLastBlock();
-    }
-
-    public receiveForkFive(block: Block, lastBlock: Block): void {
-        let tmpBlock: Block = {...block};
-
-        modules.delegates.fork(block, 5);
-        this.validateBlockSlot(tmpBlock, lastBlock);
-        const check = this.verifyReceipt(tmpBlock);
-        this.deleteLastBlock();
-        this.receiveBlock(block);
-    }
-
-    public verifyReceipt(block: Block): IVerifyResult {
+    private verifyReceipt(block: Block): IVerifyResult {
         const lastBlock = this.getLastBlock();
 
         block = this.setHeight(block, lastBlock);
@@ -613,73 +539,169 @@ export class BlockService {
         return result;
     }
 
-    public setHeight(block: Block, lastBlock: Block): Block {
-        block.height = lastBlock.height + 1;
-
-        return block;
-    }
-
-    public verifySignature(block: Block, result: IVerifyResult): IVerifyResult {
-        return result;
-    }
-
-    public verifyPreviousBlock(block: Block, result: IVerifyResult): IVerifyResult {
-        return result;
-    }
-
-    public verifyAgainstLastNBlockIds(block: Block, result: IVerifyResult): IVerifyResult {
+    private verifyAgainstLastNBlockIds(block: Block, result: IVerifyResult): IVerifyResult {
         if (this.lastNBlockIds.indexOf(block.id) !== -1) {}
         return result;
     }
 
-    public verifyVersion(block: Block, result: IVerifyResult): IVerifyResult {
-        const version: number = block.version;
-        const height: number = block.height;
-        const exceptionVersion = Object.keys(exceptions.blockVersions).find(
-            (exceptionVersion) => {
-                // Get height range of current exceptions
-                const heightsRange = exceptions.blockVersions[exceptionVersion];
-                // Check if provided height is between the range boundaries
-                return height >= heightsRange.start && height <= heightsRange.end;
-            }
-        );
-        if (exceptionVersion === undefined) {
-            // If there is no exception for provided height - check against current block version
-            // return version === this.currentBlockVersion;
+    private verifyBlockSlotWindow(block: Block, result: IVerifyResult): IVerifyResult {
+        return result;
+    }
+
+    private async receiveForkFive(block: Block, lastBlock: Block): Promise<void> {
+        let tmpBlock: Block = {...block};
+        modules.delegates.fork(block, 5);
+        tmpBlock = this.objectNormalize(tmpBlock);
+        this.validateBlockSlot(tmpBlock, lastBlock);
+        const check = this.verifyReceipt(tmpBlock);
+        await this.deleteLastBlock();
+        this.receiveBlock(block);
+    }
+
+    private async deleteLastBlock(): Promise<Block> {
+        let lastBlock = this.getLastBlock();
+        const newLastBlock = await this.popLastBlock(lastBlock);
+        return this.setLastBlock(newLastBlock);
+    }
+
+    /**
+     * @implements modules.rounds.backwardTick
+     */
+    private async popLastBlock(oldLastBlock: Block): Promise<Block> {
+        let previousBlock: Block = await this.loadBlocksPart(oldLastBlock.previousBlock);
+        oldLastBlock.transactions.reverse().forEach((transaction) => {
+            this.transactionService.undo(transaction, oldLastBlock);
+            this.transactionService.undoUnconfirmed(transaction);
+        });
+        modules.rounds.backwardTick(oldLastBlock, previousBlock);
+        this.blockRepo.deleteBlock(oldLastBlock.id);
+        return previousBlock;
+    }
+
+    private async loadBlocksPart(previousBlockId: string): Promise<Block> {
+        const block: Block = await this.blockRepo.loadFullBlockById(previousBlockId);
+        return this.readDbRow(block);
+    }
+
+    private readDbRows(rows: object[]): Block[] {
+        const blocks = [];
+        rows.forEach(row => {
+            blocks.push(this.readDbRow(row));
+        });
+        return blocks;
+    }
+
+    private readDbRow(row: object): Block {
+        return row as Block;
+    }
+
+    public getLastBlock(): Block {
+        return this.lastBlock;
+    }
+
+    public setLastBlock(block: Block): Block {
+        this.lastBlock = block;
+        return this.lastBlock;
+    }
+
+    // called in sync
+    public getLastReceipt(): number {
+        return this.lastReceipt;
+    }
+
+    public updateLastReceipt(): number {
+        this.lastReceipt = Math.floor(Date.now() / 1000);
+        return this.lastReceipt;
+    }
+
+    // called in sync
+    public isLastReceiptStale(): boolean {
+        if (!this.lastReceipt) {
+            return true;
         }
-
-        // If there is an exception - check if version match
-        // return Number(exceptionVersion) === version;
-        return result;
+        const secondsAgo = Math.floor(Date.now() / 1000) - this.lastReceipt;
+        return (secondsAgo > constants.blockReceiptTimeOut);
     }
 
-    public verifyReward(block: Block, result: IVerifyResult): IVerifyResult {
-        let expectedReward = this.calcReward(block.height);
-        return result;
+    // called from app.js
+    public async saveGenesisBlock(): Promise<void> {
+        const exists: boolean = await this.blockRepo.isBlockExists(genesisBlockId);
+        if (!exists) {
+            await this.applyGenesisBlock(genesisBlock, false, true); // config.genesis.block
+        }
     }
 
-    public verifyId(block: Block, result: IVerifyResult): IVerifyResult {
-        block.id = this.getId(block);
-        return result;
+    private async applyGenesisBlock(block: Block, verify?: boolean, save?: boolean): Promise<void> {
+        block.transactions = block.transactions.sort(transactionSortFunc);
+        try {
+            await this.processBlock(block, false, save, verify, false);
+            logger.info('[Chain][applyGenesisBlock] Genesis block loading');
+        } catch (e) {
+            logger.error(`[Chain][applyGenesisBlock] ${e}`);
+            logger.error(`[Chain][applyGenesisBlock][stack] ${e.stack}`);
+        }
     }
 
-    public getId(block: Block): string {
-        return crypto.createHash('sha256').update(this.getBytes(block)).digest('hex');
+    // used by rpc getCommonBlock
+    public async recoverChain(): Promise<Block> {
+        const newLastBlock: Block = await this.deleteLastBlock();
+        return newLastBlock;
     }
 
-    public verifyBlockSlotWindow(block: Block, result: IVerifyResult): IVerifyResult {
-        return result;
+    // used by rpc getCommonBlock
+    /**
+     * @implements rounds.getSlotDelegatesCount
+     */
+    public getIdSequence(height: number): { firstHeight: number, ids: []} {
+        const lastBlock = this.getLastBlock();
+        // Get IDs of first blocks of (n) last rounds, descending order
+        // EXAMPLE: For height 2000000 (round 19802)
+        // we will get IDs of blocks at height: 1999902, 1999801, 1999700, 1999599, 1999498
+        const rows = this.blockRepo.getIdSequence({ height, limit: 5, delegates: Rounds.prototype.getSlotDelegatesCount(height) });
+
+        return { firstHeight: rows[0].height, ids: ids.join(',') };
     }
 
-    public verifyPayload(block, result) {
-        bytes = library.logic.transaction.getBytes(transaction, false, false);
-        return result;
+    // called from loader
+    public loadBlocksOffset(limit: number, offset: number, verify: boolean): Block {
+        const rows = this.blockRepo.loadBlocksOffset({});
+        const blocks = this.readDbRows(rows);
+        blocks.forEach(async (block) => {
+            if (block.id === library.genesisblock.block.id) {
+                return this.applyGenesisBlock(block);
+            }
+
+            await this.processBlock(block, false, false, verify);
+        });
+        return this.getLastBlock();
     }
 
-    public loadLastBlock(): Block {
-        const rows = this.blockRepo.loadLastBlock();
-        const block = this.readDbRows([rows])[0];
+    private create(data): Block {
+        const block: Block = new Block();
+        this.sign(block, data.keypair);
         return block;
+    }
+
+    private sign(block, keyPair) {
+        const blockHash = this.getHash(block);
+        const sig = Buffer.alloc(sodium.crypto_sign_BYTES);
+
+        sodium.crypto_sign_detached(sig, blockHash, keyPair.privateKey);
+        return sig.toString('hex');
+    }
+
+    private getHash(block: Block): string {
+        return crypto.createHash('sha256').update(this.getBytes(block)).digest();
+    }
+
+    private getBytes(block: Block): Buffer {
+        return new Buffer([]);
+    }
+
+    // called from loader
+    private loadLastBlock(): Block {
+        const rows = this.blockRepo.loadLastBlock();
+        return this.readDbRow(rows);
     }
 
     public setLastNBlocks(blocks: string[]): void {
@@ -691,63 +713,5 @@ export class BlockService {
         if (this.lastNBlockIds.length > constants.blockSlotWindow) {
             this.lastNBlockIds.shift();
         }
-    }
-
-    public calculateFee(): number {
-        return 0;
-    }
-
-    public calcMilestone(height: number) {
-        const location = Math.trunc((height - this.rewardOffset) / this.distance);
-        const lastMile = this.milestones[this.milestones.length - 1];
-        if (location > (this.milestones.length - 1)) {
-            return this.milestones.lastIndexOf(lastMile);
-        }
-        return location;
-    }
-
-    public calcReward(height: number) {
-        if (height < this.rewardOffset) {
-            return 0;
-        }
-        return this.milestones[this.calcMilestone(height)];
-    }
-
-    public calcSupply(height: number) {
-        if (height < this.rewardOffset) {
-            // Rewards not started yet
-            return constants.totalAmount;
-        }
-        const milestone = this.calcMilestone(height);
-        let supply = constants.totalAmount;
-        const rewards = [];
-        let amount = 0, multiplier = 0;
-        // Remove offset from height
-        height -= this.rewardOffset - 1;
-        for (let i = 0; i < this.milestones.length; i++) {
-            if (milestone >= i) {
-                multiplier = this.milestones[i];
-                if (height < this.distance) {
-                    // Measure this.distance thus far
-                    amount = height % this.distance;
-                } else {
-                    amount = this.distance; // Assign completed milestone
-                    height -= this.distance; // Deduct from total height
-
-                    // After last milestone
-                    if (height > 0 && i === this.milestones.length - 1) {
-                        amount += height;
-                    }
-                }
-                rewards.push([amount, multiplier]);
-            } else {
-                break; // Milestone out of bounds
-            }
-        }
-        for (let i = 0; i < rewards.length; i++) {
-            const reward = rewards[i];
-            supply += reward[0] * reward[1];
-        }
-        return supply;
     }
 }

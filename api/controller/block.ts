@@ -2,15 +2,16 @@ import {BlockService} from 'api/service/block';
 import Response from 'shared/model/response';
 import {Block} from 'shared/model/block';
 import {BlockRepo} from 'api/repository/block';
+import schema from 'api/schema/block';
 
-// exists in core/service
-const BlockReward = require('../../logic/blockReward.js');
-const constants = require('../../helpers/constants.js');
-const schema = require('../../schema/blocks.js');
+const constants = require('../../backlog/helpers/constants');
+
+// wait declaration from @Bogdan Pidoprygora
+class RoundService {}
 
 @Controller('/blocks')
 export class BlockController {
-    private blockReward = new BlockReward();
+    private roundService = new RoundService(); // private blockReward = new BlockReward(); calcMilestone, calcSupply
     private blockService = new BlockService();
     private blockRepo = new BlockRepo();
 
@@ -65,7 +66,7 @@ export class BlockController {
 
     @GET('/milestone') // /getMilestone
     public getMilestone(): Response<{ milestone: number }> {
-        return new Response({ data: { milestone: this.blockReward.calcMilestone(this.blockService.getLastBlock().height) }});
+        return new Response({ data: { milestone: this.roundService.calcMilestone(this.blockService.getLastBlock().height) }});
     }
 
     @GET('/reward') // /getReward
@@ -76,25 +77,6 @@ export class BlockController {
 
     @GET('/supply') // /getSupply
     public getSupply(): Response<{ supply: number }> {
-        return new Response({ data: { supply: this.blockReward.calcSupply(this.blockService.getLastBlock().height) }});
-    }
-
-    @GET('/status') // /getStatus
-    public getStatus(): Response<{}> {
-        const lastBlock = this.blockService.getLastBlock();
-
-        return new Response({ data: {
-            // modules.system.getBroadhash()
-            broadhash: '',
-            epoch: constants.epochTime,
-            height: lastBlock.height,
-            fee: this.blockService.calculateFee(),
-            milestone: this.blockReward.calcMilestone(lastBlock.height),
-            // modules.system.getNethash()
-            nethash: '',
-            // __private.blockReward.calcReward(lastBlock.height)
-            reward: 0,
-            supply: this.blockReward.calcSupply(lastBlock.height)
-        }});
+        return new Response({ data: { supply: this.roundService.calcSupply(this.blockService.getLastBlock().height) }});
     }
 }

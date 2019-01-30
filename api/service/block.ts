@@ -27,13 +27,7 @@ export class BlockService {
     private sortFields = [
         'id',
         'timestamp',
-        'height',
-        'previousBlock',
-        'totalAmount',
-        'totalFee',
-        'reward',
-        'numberOfTransactions',
-        'generatorPublicKey'
+        'height'
     ];
 
     public loadBlocksData(params: ILoadBlockParams) : Block[] {
@@ -66,12 +60,6 @@ export class BlockService {
             params.generatorPublicKey = filter.generatorPublicKey;
         }
 
-        // FIXME: Useless condition
-        if (filter.numberOfTransactions) {
-            where.push('"b_numberOfTransactions" = ${numberOfTransactions}');
-            params.numberOfTransactions = filter.numberOfTransactions;
-        }
-
         if (filter.previousBlock) {
             where.push('"b_previousBlock" = ${previousBlock}');
             params.previousBlock = filter.previousBlock;
@@ -80,24 +68,6 @@ export class BlockService {
         if (filter.height === 0 || filter.height > 0) {
             where.push('"b_height" = ${height}');
             params.height = filter.height;
-        }
-
-        // FIXME: Useless condition
-        if (filter.totalAmount >= 0) {
-            where.push('"b_totalAmount" = ${totalAmount}');
-            params.totalAmount = filter.totalAmount;
-        }
-
-        // FIXME: Useless condition
-        if (filter.totalFee >= 0) {
-            where.push('"b_totalFee" = ${totalFee}');
-            params.totalFee = filter.totalFee;
-        }
-
-        // FIXME: Useless condition
-        if (filter.reward >= 0) {
-            where.push('"b_reward" = ${reward}');
-            params.reward = filter.reward;
         }
 
         if (!filter.limit) {

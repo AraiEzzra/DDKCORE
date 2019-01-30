@@ -63,7 +63,7 @@ declare class TransactionPoolScope {
 }
 
 // TODO NOT ready
-class TransactionPoolService<T extends object> implements ITransactionPoolService<T> {
+export class TransactionPoolService<T extends object> implements ITransactionPoolService<T> {
 
     private pool: { [transactionId: string]: Transaction<T> } = {};
 

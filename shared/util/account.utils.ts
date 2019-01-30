@@ -1,5 +1,4 @@
-declare class Account {
-}
+import { Account } from 'shared/model/account';
 
 export const generateAddressByPublicKey = (publicKey: string): string => {
 };
