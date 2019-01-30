@@ -239,6 +239,7 @@ __private.receiveTransaction = (transaction, peer, extraLogMessage, cb) => {
         return setImmediate(cb, `Invalid transaction body - ${e.toString()}`);
     }
     modules.transactions.putInQueue(transaction);
+    return setImmediate(cb, null, transaction.id);
 };
 
 // Public methods
