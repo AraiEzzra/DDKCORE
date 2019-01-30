@@ -281,7 +281,9 @@ Chain.prototype.newApplyBlock = async (block, broadcast, saveBlock, tick) => {
     }
 
     modules.blocks.lastBlock.set(block);
-    library.bus.message('newBlock', block, broadcast);
+    // TODO: fix broadcast onNewBlock
+    // https://trello.com/c/573v81yz/245-fix-broadcast-on-new-block
+    library.bus.message('newBlock', block, false);
 
     if (tick) {
         await (new Promise((resolve, reject) => modules.rounds.tick(block, (err, message) => {

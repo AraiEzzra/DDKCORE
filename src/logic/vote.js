@@ -488,9 +488,16 @@ Vote.prototype.apply = async (trs) => {
     const isDownVote = trs.trsName === 'DOWNVOTE';
     const votes = trs.asset.votes.map(vote => vote.substring(1));
 
-    await library.db.none(DelegateSQL.addVoteForDelegates(votes), {
-        accountId: trs.senderId,
-    });
+    if (isDownVote) {
+        await library.db.none(DelegateSQL.removeVoteForDelegates, {
+            accountId: trs.senderId,
+            dependentIds: votes.join(',')
+        });
+    } else {
+        await library.db.none(DelegateSQL.addVoteForDelegates(votes), {
+            accountId: trs.senderId,
+        });
+    }
 
     await library.db.query(sql.changeDelegateVoteCount({ value: isDownVote ? -1 : 1, votes }));
     await self.updateAndCheckVote(trs);
@@ -512,10 +519,16 @@ Vote.prototype.undo = async (trs) => {
     const isDownVote = trs.trsName === 'DOWNVOTE';
 
     const votes = trs.asset.votes.map(vote => vote.substring(1));
-    await library.db.none(DelegateSQL.removeVoteForDelegates, {
-        accountId: trs.senderId,
-        dependentIds: votes.join(',')
-    });
+    if (isDownVote) {
+        await library.db.none(DelegateSQL.addVoteForDelegates(votes), {
+            accountId: trs.senderId,
+        });
+    } else {
+        await library.db.none(DelegateSQL.removeVoteForDelegates, {
+            accountId: trs.senderId,
+            dependentIds: votes.join(',')
+        });
+    }
 
     await library.db.none(sql.changeDelegateVoteCount({ value: isDownVote ? 1 : -1, votes }));
 

@@ -62,10 +62,10 @@ const DelegatesSql = {
 
     addVoteForDelegates: (votes) => 'INSERT INTO mem_accounts2delegates("accountId", "dependentId")' +
         ' VALUES ' + votes.map(vote => `(\${accountId}, '${vote}')`).join(', '),
-    
-    removeVoteForDelegates: 'DELETE FROM mem_accounts2delegates WHERE "accountId" = ${accountId} and "dependentId" in (${dependentIds}:csv)',
 
-    removeVoteForUDelegates: 'DELETE FROM mem_accounts2u_delegates WHERE "accountId" = ${accountId} and "dependentId" in (${dependentIds}:csv)',
+    removeVoteForDelegates: 'DELETE FROM mem_accounts2delegates WHERE "accountId" = ${accountId} and "dependentId" in (${dependentIds:csv})',
+
+    removeVoteForUDelegates: 'DELETE FROM mem_accounts2u_delegates WHERE "accountId" = ${accountId} and "dependentId" in (${dependentIds:csv})',
 
     getTopDelegates: 'SELECT' +
     '  "username",' +

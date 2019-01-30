@@ -499,8 +499,6 @@ __private.validateBlockSlot = function (block, lastBlock, cb) {
  * @param   {block} block New block
  */
 Process.prototype.onReceiveBlock = function (block) {
-    let lastBlock;
-
     if (self.receiveLocked) {
         library.logger.warn(`[Process][onReceiveBlock] locked for id ${block.id}`);
         return;
@@ -518,7 +516,7 @@ Process.prototype.onReceiveBlock = function (block) {
         }
 
         // Get the last block
-        lastBlock = modules.blocks.lastBlock.get();
+        const lastBlock = modules.blocks.lastBlock.get();
 
         // Detect sane block
         if (block.previousBlock === lastBlock.id && lastBlock.height + 1 === block.height) {
