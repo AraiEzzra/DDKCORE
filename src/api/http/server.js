@@ -44,7 +44,6 @@ function ServerHttpApi(serverModule, app, logger, cache, config) {
                 Accounts.prototype.getAccount({ address: req.decoded.address }, (err, account) => {
                     if (!err) {
                         const payload = {
-                            secret: req.decoded.secret,
                             address: req.decoded.address
                         };
                         const refreshToken = jwt.sign(payload, config.jwt.secret, {
