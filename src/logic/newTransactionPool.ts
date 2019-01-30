@@ -178,6 +178,17 @@ class TransactionPool {
         return Object.keys(this.pool).length;
     }
 
+    getTransactions = (limit: number): Array<Transaction> => {
+        const minLimit = constants.maxTxsPerBlock;
+
+        if (limit < minLimit) {
+            limit = minLimit;
+        } else if (limit > constants.maxSharedTxs) {
+            limit = constants.maxSharedTxs;
+        }
+
+        return Object.values(this.pool).sort(transactionSortFunc).slice(0, limit);
+    };
 }
 
 declare class TransactionQueueScope {

@@ -669,7 +669,7 @@ Transactions.prototype.getMultisignatureTransactionList = function (reverse, lim
  * @return {function} Calls transactionPool.getMergedTransactionList
  */
 Transactions.prototype.getMergedTransactionList = function (reverse, limit) {
-    return __private.transactionPool.getMergedTransactionList(reverse, limit);
+    return self.newTransactionPool.getTransactions(limit);
 };
 
 /**
