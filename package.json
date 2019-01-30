@@ -24,12 +24,15 @@
     "watch:backlog": "./node_modules/webpack/bin/webpack.js --env.service=backlog --progress --colors --watch",
     "clean": "rm -rf node_modules/ dist/ dapps/ .nyc_output/ logs/ .npm/ .config/ .node-gyp",
     "watch:with_update_clean": "npm run clean && npm install && npm run watch",
-    "watch:with_update": "npm install && npm run watch"
+    "watch:with_update": "npm install && npm run watch",
+    "test": "export NODE_PATH=./ && mocha --require ts-node/register './test/**/*.test.ts'"
   },
   "author": "DDK Foundation <http://www.ddkoin.com/>",
   "license": "GPL-3.0",
   "dependencies": {
     "@babel/runtime": "^7.2.0",
+    "@types/chai": "^4.1.7",
+    "@types/mocha": "^5.2.5",
     "appmetrics-dash": "^3.3.6",
     "archiver": "^2.1.0",
     "async": "=2.1.4",
@@ -92,6 +95,7 @@
     "sodium-javascript": "^0.5.5",
     "speakeasy": "^2.0.0",
     "strftime": "=0.10.0",
+    "ts-node": "^8.0.1",
     "tslint": "^5.12.1",
     "valid-url": "=1.0.9",
     "validator": "=6.2.1",
@@ -108,7 +112,7 @@
     "babel-loader": "^8.0.4",
     "bitcore-mnemonic": "^1.5.0",
     "browserify-bignum": "=1.3.0-2",
-    "chai": "=3.5.0",
+    "chai": "^3.5.0",
     "chai-bignumber": "=2.0.0",
     "copy-webpack-plugin": "^4.6.0",
     "coveralls": "=2.11.16",
