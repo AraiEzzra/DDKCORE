@@ -269,20 +269,6 @@ __private.loadTransactions = function (cb) {
                 return setImmediate(eachSeriesCb);
             }, err => setImmediate(waterCb, err, transactions));
         },
-        function (transactions, waterCb) {
-            async.eachSeries(transactions, (transaction, eachSeriesCb) => {
-                library.balancesSequence.add((cb) => {
-                    transaction.bundled = true;
-                    modules.transactions.processUnconfirmedTransaction(transaction, false, cb);
-                }, (err) => {
-                    if (err) {
-                        // TODO: Validate if must include error propagation.
-                        library.logger.debug(err);
-                    }
-                    return setImmediate(eachSeriesCb);
-                });
-            }, waterCb);
-        }
     ], err => setImmediate(cb, err));
 };
 
