@@ -6,11 +6,11 @@ import './controller';
 const env = process.env;
 
 const app: Application = require('express')();
-app.use(bodyParser.json());
 setRoute(app);
+app.use(bodyParser.json());
 
-const defaultPort = 3000;
-const port = env.SERVER_CORE ? env.SERVER_CORE : defaultPort;
+const DEFAULT_PORT = 3000;
+const port = env.SERVER_CORE ? env.SERVER_CORE : DEFAULT_PORT;
 
 app.listen(port, () => {
     console.log(`Core. Listening on port ${port}`);

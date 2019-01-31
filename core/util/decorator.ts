@@ -1,6 +1,6 @@
 import { Application, Request, Response as Resp, NextFunction } from 'express';
-import Response from '../../shared/model/response';
 import { validate as validator } from './validate';
+import * as HttpStatus from 'http-status-codes';
 
 let targets = new Set();
 
@@ -13,26 +13,32 @@ interface IPropertyRoute {
 }
 
 const MethodEnum = {
-    GET: 'get',
+    GET:  'get',
     POST: 'post',
-    PUT: 'put',
-    USE: 'use'
+    PUT:  'put',
+    USE:  'use'
 };
 
 export const setRoute = (app: Application) => {
     if (app) {
         targets.forEach(item => {
             item.ctrl.forEach((route: IPropertyRoute) => {
-                if (route.validate) {
+                if (!!route.validate) {
                     /**
                      * Add middleware for validate request
                      */
                     app[MethodEnum.USE](item.path + route.path, async (req: Request, res: Resp, next: NextFunction) => {
-                        const isValid = await validator(item.path, route.validate, route.propertyKey);
+                        const isValid = await validator(route.validate, req.body, route.propertyKey);
                         if (!isValid) {
-                            return new Response({
+                            /**
+                             *  TODO need to replace on Custom Response
+                             */
+                            res.status(HttpStatus.BAD_REQUEST);
+                            res.json({
                                 errors: ['Bad request.']
                             });
+
+                            return;
                         }
                         next();
                     });
@@ -95,11 +101,11 @@ export const PUT = (path: string) => {
  * @param data
  * @constructor
  */
-const validate = (data) => {
+export const validate = (schemaValid: Object) => {
     return ( target: any, propertyName: string, descriptor: PropertyDescriptor) => {
-      if (data) {
+      if (!!schemaValid) {
           Object.defineProperty(target, 'validate', {
-              value: data,
+              value: schemaValid,
               configurable: false,
               writable: false,
               enumerable: false
@@ -137,31 +143,3 @@ const addEndpointPath = (method: string,
     };
     target.routes.push(propertyRoute);
 };
-
-
-// TODO Need to Remove
-// @Controller('/peer')
-// class Class {
-//     constructor() {}
-//
-//     @GET('/')
-//     @Validate({ ip: '1.160.10.240', port: 3112 })
-//     getPeer(req, res) {
-//         res.json({
-//             message: 'Class 1. Path "/" \n'
-//         });
-//     }
-// }
-//
-// @Controller('/test2')
-// class Class2 {
-//     constructor() {}
-//
-//     @GET('/')
-//     @Validate({ body: 'test validate' })
-//     test(req, res) {
-//         res.json({
-//             message: 'Class 2. Path "/test"'
-//         });
-//     }
-// }
