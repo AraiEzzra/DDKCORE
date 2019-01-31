@@ -367,71 +367,6 @@ Process.prototype.loadBlocksFromPeer = function (peer, cb) {
     });
 };
 
-/**
- * Generate new block
- * see: loader.loadBlockChain (private)
- *
- * @async
- * @public
- * @method generateBlock
- * @param  {Object}   keypair Pair of private and public keys, see: helpers.ed.makeKeypair
- * @param  {number}   timestamp Slot time, see: helpers.slots.getSlotTime
- * @param  {Function} cb Callback function
- * @return {Function} cb Callback function from params (through setImmediate)
- * @return {Object}   cb.err Error message if error occurred
- */
-Process.prototype.generateBlock = function (keypair, timestamp, cb) {
-    // Get transactions that will be included in block
-    const transactions = modules.transactions.getUnconfirmedTransactionList(false, constants.maxTxsPerBlock);
-    const ready = [];
-
-    async.eachSeries(transactions, (transaction, cb) => {
-        modules.accounts.getAccount({ publicKey: transaction.senderPublicKey }, (err, sender) => {
-            if (err || !sender) {
-                return setImmediate(cb, 'Sender not found');
-            }
-
-            // Check transaction depends on type
-            if (library.logic.transaction.ready(transaction, sender)) {
-                // Verify transaction
-                library.logic.transaction.verify({
-                    trs: transaction,
-                    sender,
-                    checkExists: true,
-                    cb(error) {
-                        if (!error) {
-                            ready.push(transaction);
-                        }
-                        return setImmediate(cb, error);
-                    },
-                });
-            } else {
-                return setImmediate(cb, `Transaction ${transaction.id} not ready`);
-            }
-        });
-    }, (err) => {
-        if (err) {
-            return setImmediate(cb, err);
-        }
-        let block;
-        try {
-            // Create a block
-            block = library.logic.block.create({
-                keypair,
-                timestamp,
-                previousBlock: modules.blocks.lastBlock.get(),
-                transactions: ready
-            });
-        } catch (e) {
-            library.logger.error(e.stack);
-            return setImmediate(cb, e);
-        }
-
-        // Start block processing - broadcast: true, saveBlock: true
-        modules.blocks.verify.processBlock(block, true, true, true, cb);
-    });
-};
-
 Process.prototype.newGenerateBlock = async (keypair, timestamp) => {
     let block;
 
@@ -455,6 +390,7 @@ Process.prototype.newGenerateBlock = async (keypair, timestamp) => {
 
     try {
         await modules.blocks.verify.newProcessBlock(block, true, true, true, true);
+        await modules.transactions.returnToQueueConflictedTransactionFromPool(transactions);
         modules.transactions.unlockTransactionPoolAndQueue();
     } catch (e) {
         await modules.transactions.pushInPool(transactions);
