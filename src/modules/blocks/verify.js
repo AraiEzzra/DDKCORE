@@ -413,7 +413,7 @@ __private.verifyPayload = function (block, result) {
 
     if (totalFee !== block.totalFee) {
         if (constants.PAYLOAD_VALIDATE.TOTAL_FEE) {
-            result.errors.push('Invalid total fee');
+            result.errors.push(`Invalid total fee. Expected: ${totalFee}, actual: ${block.totalFee}`);
         } else {
             library.logger.error('Invalid total fee');
         }

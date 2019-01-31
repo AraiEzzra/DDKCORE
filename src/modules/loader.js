@@ -449,6 +449,10 @@ Loader.prototype.loadBlockChain = function (cb) {
 
         const round = modules.rounds.calc(count);
 
+        if (count === 1) {
+            return reload(count);
+        }
+
         matchGenesisBlock(results[1][0]);
 
         if (verifyOnLoading) {
@@ -669,22 +673,23 @@ __private.sync = function (cb) {
  * @param {number} heights
  * @return {Object} {height number, peers array}
  */
-__private.findGoodPeers = function (heights) {
+__private.findGoodPeers = function (peers) {
+    library.logger.debug(`[loader][findGoodPeers] peers: ${JSON.stringify(peers)}`);
     const lastBlockHeight = modules.blocks.lastBlock.get().height;
-    library.logger.trace('Good peers - received', { count: heights.length });
+    library.logger.debug('Good peers - received', { count: peers.length });
+    library.logger.debug('Good peers - received', { peers: JSON.stringify(peers) });
 
-    heights = heights.filter(item =>
-        // Removing unreachable peers or heights below last block height
-    item != null && item.height >= lastBlockHeight);
+    peers = peers.filter(item => item && item.height >= lastBlockHeight);
 
-    library.logger.trace('Good peers - filtered', { count: heights.length });
+    library.logger.debug('Good peers - filtered', { count: peers.length });
+    library.logger.debug('Good peers - filtered', { peers: JSON.stringify(peers) });
 
     // No peers found
-    if (heights.length === 0) {
+    if (peers.length === 0) {
         return { height: 0, peers: [] };
     }
     // Ordering the peers with descending height
-    heights = heights.sort((a, b) => b.height - a.height);
+    peers = peers.sort((a, b) => b.height - a.height);
 
     const histogram = {};
     let max = 0;
@@ -694,8 +699,8 @@ __private.findGoodPeers = function (heights) {
     const aggregation = 2;
 
     // Histogram calculation, together with histogram maximum
-    for (const i in heights) {
-        const val = parseInt(heights[i].height / aggregation) * aggregation;
+    for (const i in peers) {
+        const val = parseInt(peers[i].height / aggregation) * aggregation;
         histogram[val] = (histogram[val] ? histogram[val] : 0) + 1;
 
         if (histogram[val] > max) {
@@ -705,12 +710,12 @@ __private.findGoodPeers = function (heights) {
     }
 
     // Performing histogram cut of peers too far from histogram maximum
-    const peers = heights.filter(item => item && Math.abs(height - item.height) < aggregation + 1).map(item => library.logic.peers.create(item));
+    const goodPeers = peers.filter(item => item && Math.abs(height - item.height) < aggregation + 1).map(item => library.logic.peers.create(item));
 
-    library.logger.trace('Good peers - accepted', { count: peers.length });
-    library.logger.debug('Good peers', peers);
+    library.logger.debug('Good peers - accepted', { count: goodPeers.length });
+    library.logger.debug('Good peers', goodPeers);
 
-    return { height, peers };
+    return { height, peers: goodPeers };
 };
 
 // Public methods
@@ -728,10 +733,7 @@ __private.findGoodPeers = function (heights) {
  * @return {setImmediateCallback} err | __private.network (good peers)
  */
 Loader.prototype.getNetwork = function (cb) {
-    if (__private.network.height > 0 && Math.abs(__private.network.height - modules.blocks.lastBlock.get().height) === 1) {
-        return setImmediate(cb, null, __private.network);
-    }
-
+    library.logger.debug(`[Loader][getNetwork]`);
     modules.peers.list({}, (err, peers) => {
         if (err) {
             return setImmediate(cb, err);
