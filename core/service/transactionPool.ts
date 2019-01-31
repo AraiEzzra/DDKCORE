@@ -1,6 +1,7 @@
 import { Transaction, TransactionStatus, TransactionType } from 'shared/model/transaction';
 import { transactionSortFunc } from 'core/util/transaction';
 import { generateAddressByPublicKey, getOrCreateAccount } from 'shared/util/account.utils';
+import Response from 'shared/model/response';
 
 // wait declare by @Fisenko
 declare class Account {
@@ -81,7 +82,7 @@ export class TransactionPoolService<T extends object> implements ITransactionPoo
         this.scope.bus = bus;
     }
 
-    removeFromPool(transactions: Array<Transaction<T>>, withDepend: boolean): Promise<Array<Transaction<T>>> {
+    removeFromPool(transactions: Array<Transaction<T>>, withDepend: boolean): Promise<Response<Array<Transaction<T>>>> {
     }
 
     pushInPool(transactions: Array<Transaction<T>>): Promise<void> {
@@ -117,7 +118,7 @@ export class TransactionPoolService<T extends object> implements ITransactionPoo
         return removedTransactions;
     }
 
-    async push(trs: Transaction<T>, sender?: Account, broadcast: boolean = false) {
+    async push(trs: Transaction<T>, sender?: Account, broadcast: boolean = false): Promise<Response<void>> {
         if (!sender) {
             sender = await getOrCreateAccount(trs.senderPublicKey);
         }
@@ -149,9 +150,9 @@ export class TransactionPoolService<T extends object> implements ITransactionPoo
             if (broadcast) {
                 this.scope.bus.message('transactionPutInPool', trs);
             }
-            return true;
+            return new Response<void>({});
         }
-        return false;
+        return new Response<void>({ errors: ['Error in pushing transaction'] });
     }
 
     async remove(trs: Transaction<T>) {

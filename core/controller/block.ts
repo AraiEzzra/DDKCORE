@@ -1,3 +1,4 @@
+import Response from 'shared/model/response';
 import { Block } from 'shared/model/block';
 import { BlockService } from 'core/service/block';
 import { BlockRepo } from 'core/repository/block';
@@ -8,24 +9,38 @@ export class BlockController {
     private blockRepo = new BlockRepo();
 
     @ON('BLOCK_RECEIVE')
-    public onReceiveBlock(block: Block): void {
-        this.blockService.processIncomingBlock(block);
+    public async onReceiveBlock(block: Block): Promise<Response<void>> {
+        const response: Response<void> = await this.blockService.processIncomingBlock(block);
+        if (!response.success) {
+            response.errors.push('onReceiveBlock');
+        }
+        return response;
     }
 
     @ON('BLOCK_GENERATE')
-    public generateBlock( data: { keypair: { privateKey: string, publicKey: string }, timestamp: number }): void {
-        this.blockService.generateBlock(data.keypair, data.timestamp);
+    public async generateBlock( data: { keypair: { privateKey: string, publicKey: string }, timestamp: number }): Promise<Response<void>> {
+        const response = await this.blockService.generateBlock(data.keypair, data.timestamp);
+        if (!response.success) {
+            response.errors.push('generateBlock');
+        }
+        return response;
     }
 
     @ON('BLOCKCHIN_READY')
-    public loadLastNBlocks(): void {
-        const blocks: string[] = this.blockRepo.loadLastNBlocks();
+    public async loadLastNBlocks(): Promise<Response<void>> {
+        const response: Response<string[]> = await this.blockRepo.loadLastNBlocks();
+        if (!response.success) {
+            return new Response<void>({ errors: [...response.errors, 'loadLastNBlocks'] });
+        }
+        const blocks: string[] = response.data;
         this.blockService.setLastNBlocks(blocks);
+        return new Response<void>();
     }
 
     @ON('NEW_BLOCKS')
-    public updateLastNBlocks(block: Block): void {
+    public updateLastNBlocks(block: Block): Response<void> {
         this.blockService.updateLastNBlocks(block);
+        return new Response<void>();
     }
 
     @RPC('GET_COMMON_BLOCK')
@@ -34,7 +49,7 @@ export class BlockController {
      * @implements modules.transport.getFromPeer
      * @implements modules.transport.poorConsensus
      */
-    private async getCommonBlock(peer: Peer, height: number): Promise<Block> {
+    private async getCommonBlock(peer: Peer, height: number): Promise<Response<Block>> {
         let comparisionFailed = false;
 
         // Get IDs sequence (comma separated list)
@@ -53,7 +68,7 @@ export class BlockController {
             height: result.body.common.height
         });
         if (comparisionFailed && modules.transport.poorConsensus()) {
-            return this.blockService.recoverChain();
+            return new Response<Block>({ data: await this.blockService.recoverChain() });
         }
     }
 }

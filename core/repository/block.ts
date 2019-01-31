@@ -4,6 +4,7 @@ const Inserts = require('../../backlog/helpers/inserts.js');
 import { Block } from 'shared/model/block';
 import db from 'shared/driver/db';
 import { getAddressByPublicKey } from 'shared/util/account';
+import Response from 'shared/model/response';
 
 interface IDBBlockSave {
     table: string;
@@ -31,42 +32,52 @@ export class BlockRepo {
 
     constructor() {}
 
-    public getGenesisBlock(): Block {
-        return undefined;
+    public async getGenesisBlock(): Promise<Response<Block>> {
+        let block: Block = null;
+        try {
+            const result = db.oneOrNone('SELECT * FROM blocks WHERE "height" = 1');
+            block = this.dbRead(result);
+        } catch (pgError) {
+            return new Response({ errors: [pgError]});
+        }
+        return new Response({ data: block });
     }
 
-    public getBlockId(id: string): string { return undefined; }
-
-    public async isBlockExists(id: string): Promise<boolean> {
-        return await db.query('SELECT EXISTS(SELECT * FROM blocks WHERE "id" = ${id})', { id });
+    public async isBlockExists(id: string): Promise<Response<boolean>> {
+        let exists = null;
+        try {
+            exists = await db.query('SELECT EXISTS(SELECT * FROM blocks WHERE "id" = ${id})', { id });
+        } catch (pgError) {
+            return new Response({ errors: [pgError]});
+        }
+        return new Response({ data: exists === 't' });
     }
 
-    public countList(where, params): number { return undefined; }
+    public async countList(where, params): Promise<Response<number>> { return undefined; }
 
-    public list(filter, params): Block[] { return undefined; }
+    public async list(filter, params): Promise<Response<Block[]>> { return undefined; }
 
-    public deleteBlock(blockId: string): void {}
+    // if I need to return deleted block?
+    public async deleteBlock(blockId: string): Promise<Response<void>> { return undefined; }
 
-    public getIdSequence(param: { height: number, delegetes: [], limit: number}) {}
+    public async getIdSequence(param: { height: number, delegetes: [], limit: number}): Promise<Response<string>> { return undefined; }
 
-    public getCommonBlock(param: {id: string, previousBlock: Block, height: number}): Block { return undefined; }
+    public async getCommonBlock(param: {id: string, previousBlock: Block, height: number}): Promise<Response<Block>> { return undefined; }
 
-    public loadBlocksOffset(param: {}): object[] { return undefined; }
+    public async loadBlocksOffset(param: {}): Promise<Response<Block[]>> { return undefined; }
 
-    public loadLastBlock(): Block { return undefined; }
+    public async loadLastBlock(): Promise<Response<Block>> { return undefined; }
 
-    public loadBlockByHeight(height: number): Block { return undefined; }
+    public async loadBlockByHeight(height: number): Promise<Response<Block>> { return undefined; }
 
-    public aggregateBlocksReward(filter: object): { fees: number, rewards: number, count: number} { return undefined; }
+    public async aggregateBlocksReward(filter: object): Promise<Response<{ fees: number, rewards: number, count: number}>> { return undefined; }
 
-    public loadLastNBlocks(): string[] {
+    public async loadLastNBlocks(): Promise<Response<string[]>> {
         // return array of ids
         return undefined;
     }
 
-    public deleteAfterBlock(id: string): void { return undefined; }
-
-    public loadBlocksData() {}
+    public async deleteAfterBlock(id: string): Promise<Response<void>> { return undefined; }
 
     public dbSave(block: Block): IDBBlockSave {
         let payloadHash,
@@ -102,7 +113,7 @@ export class BlockRepo {
         };
     }
 
-    public async saveBlock(block: Block): Promise<void> {
+    public async saveBlock(block: Block): Promise<Response<void>> {
         try {
             await db.tx(async (t) => {
                 const promise: IDBBlockSave = this.dbSave(block);
@@ -116,11 +127,13 @@ export class BlockRepo {
             library.logger.error(`[Chain][saveBlock][tx]: ${e}`);
             library.logger.error(`[Chain][saveBlock][tx][stack]: \n ${e.stack}`);
         }
+
+        return undefined;
     }
 
-    public async loadFullBlockById(id: string): Promise<Block> {
+    public async loadFullBlockById(id: string): Promise<Response<Block>> {
         const rawBlock = await db.query('SELECT * FROM full_blocks_list where b_id=${id} ORDER BY "b_height", t_type, t_timestamp, "t_id"', { id });
-        return this.dbRead(rawBlock);
+        return new Response({ data: this.dbRead(rawBlock) });
     }
 
     private dbRead(raw: {[key: string]: any}, radix: number = 10): Block {
