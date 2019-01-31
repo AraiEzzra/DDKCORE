@@ -517,17 +517,33 @@ Loader.prototype.loadBlockChain = function (cb) {
  * @return {setImmediateCallback} cb, err
  */
 __private.loadBlocksFromNetwork = function (cb) {
-    let errorCount = 0;
+    let testCount = 0;
     let loaded = false;
 
     self.getNetwork((err, network) => {
         if (err) {
             return setImmediate(cb, err);
         }
+
+        let peers = [];
+        if (network.peers.length <= 5) {
+            peers = network.peers;
+        } else {
+            // TODO exclude duplicate
+            peers = Array.from(new Array(5)).map(
+                () => network.peers[Math.floor(Math.random() * network.peers.length)]
+            );
+        }
+
         async.whilst(
-            () => !loaded && errorCount < 5,
+            () => !loaded && testCount < 5,
             (next) => {
-                const peer = network.peers[Math.floor(Math.random() * network.peers.length)];
+                const peer = peers[testCount || 0];
+                if (!peer) {
+                    testCount += 1;
+                    return next();
+                }
+
                 let lastBlock = modules.blocks.lastBlock.get();
 
                 function loadBlocks() {
@@ -537,7 +553,7 @@ __private.loadBlocksFromNetwork = function (cb) {
                         if (loadBlocksFromPeerErr) {
                             library.logger.error(loadBlocksFromPeerErr.toString());
                             library.logger.error(`Failed to load blocks from: ${peer.string}`);
-                            errorCount += 1;
+                            testCount += 1;
                         }
                         loaded = lastValidBlock.id === lastBlock.id;
                         lastValidBlock = lastBlock = null;
@@ -547,13 +563,18 @@ __private.loadBlocksFromNetwork = function (cb) {
 
                 function getCommonBlock(getCommonBlockCb) {
                     library.logger.info(`Looking for common block with: ${peer.string}`);
+                    if (peer.height < lastBlock.height) {
+                        testCount += 1;
+                        return next();
+                    }
+
                     modules.blocks.process.getCommonBlock(peer, lastBlock.height, (getCommonBlockErr, commonBlock) => {
                         if (!commonBlock) {
                             if (getCommonBlockErr) {
                                 library.logger.error(getCommonBlockErr.toString());
                             }
                             library.logger.error(`Failed to find common block with: ${peer.string}`);
-                            errorCount += 1;
+                            testCount += 1;
                             return next();
                         }
                         library.logger.info(['Found common block:', commonBlock.id, 'with:', peer.string].join(' '));
