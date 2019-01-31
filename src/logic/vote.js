@@ -500,7 +500,9 @@ Vote.prototype.apply = async (trs) => {
     }
 
     await library.db.query(sql.changeDelegateVoteCount({ value: isDownVote ? -1 : 1, votes }));
-    await self.updateAndCheckVote(trs);
+    if (!isDownVote) {
+        await self.updateAndCheckVote(trs);
+    }
 };
 
 /**

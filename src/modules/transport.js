@@ -566,7 +566,7 @@ Transport.prototype.internal = {
             return setImmediate(cb, 'Invalid block id sequence');
         }
 
-        library.db.query(sql.getCommonBlock, escapedIds).then(rows => setImmediate(cb, null, {
+        library.db.query(sql.getCommonBlock, [escapedIds]).then(rows => setImmediate(cb, null, {
             success: true,
             common: rows[0] || null
         })).catch((err) => {
@@ -585,7 +585,7 @@ Transport.prototype.internal = {
             lastId: query.lastBlockId
         }, (err, data) => {
             if (err) {
-                return setImmediate(cb, null, { blocks: [] });
+                return setImmediate(cb, err);
             }
 
             return setImmediate(cb, null, { blocks: data });

@@ -96,6 +96,14 @@ Process.prototype.getCommonBlock = function (peer, height, cb) {
                         ['Chain comparison failed with peer:', peer.string, 'using ids:', ids].join(' ')
                     );
                 }
+                const idsArray = ids.split(',');
+                if (idsArray[0] !== result.body.common.id) {
+                    comparisionFailed = true;
+                    return setImmediate(
+                        waterCb,
+                        `Chain comparison failed with peer: ${peer.string}, using ids: ${JSON.stringify(ids)}, common block is not first in ids: ${JSON.stringify(result.body.common)}`
+                    );
+                }
                 return setImmediate(waterCb, null, result);
             });
         },
@@ -154,7 +162,6 @@ Process.prototype.getCommonBlock = function (peer, height, cb) {
          */
         if (err) {
             library.logger.error(`[Process][getCommonBlock] ${err}`);
-            library.logger.error(`[Process][getCommonBlock][stack] ${err.stack}`);
         }
         if (comparisionFailed && modules.transport.poorConsensus()) {
             return modules.blocks.chain.recoverChain(cb);
