@@ -491,7 +491,7 @@ Vote.prototype.apply = async (trs) => {
     if (isDownVote) {
         await library.db.none(DelegateSQL.removeVoteForDelegates, {
             accountId: trs.senderId,
-            dependentIds: votes.join(',')
+            dependentIds: votes,
         });
     } else {
         await library.db.none(DelegateSQL.addVoteForDelegates(votes), {
@@ -528,7 +528,7 @@ Vote.prototype.undo = async (trs) => {
     } else {
         await library.db.none(DelegateSQL.removeVoteForDelegates, {
             accountId: trs.senderId,
-            dependentIds: votes.join(',')
+            dependentIds: votes,
         });
     }
 
