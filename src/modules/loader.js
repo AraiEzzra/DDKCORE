@@ -515,15 +515,8 @@ __private.loadBlocksFromNetwork = function (cb) {
             return setImmediate(cb, err);
         }
 
-        let peers = [];
-        if (network.peers.length <= 5) {
-            peers = network.peers;
-        } else {
-            // TODO exclude duplicate
-            peers = Array.from(new Array(5)).map(
-                () => network.peers[Math.floor(Math.random() * network.peers.length)]
-            );
-        }
+        let peers = arrayShuffle(network.peers).slice(0, 5);
+        library.logger.debug(`Peers for load blocks: ${JSON.stringify(peers)}`);
 
         async.whilst(
             () => !loaded && testCount < 5,
@@ -589,6 +582,14 @@ __private.loadBlocksFromNetwork = function (cb) {
         );
     });
 };
+
+function arrayShuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
 
 /**
  * - Undoes unconfirmed transactions.
