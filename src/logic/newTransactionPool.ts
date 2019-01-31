@@ -77,7 +77,7 @@ class TransactionPool {
         if (this.locked || this.has(trs)) {
             return false;
         }
-
+        this.pool[trs.id] = trs;
         try {
             await this.scope.transactionLogic.newApplyUnconfirmed(trs);
             trs.status = TransactionStatus.UNCOFIRM_APPLIED;
@@ -91,7 +91,6 @@ class TransactionPool {
 
         trs.status = TransactionStatus.PUT_IN_POOL;
 
-        this.pool[trs.id] = trs;
         if (!this.poolBySender[trs.senderId]) {
             this.poolBySender[trs.senderId] = [];
         }
@@ -124,12 +123,11 @@ class TransactionPool {
 
         delete this.pool[trs.id];
 
-        if (this.poolBySender[trs.senderId] && this.poolBySender[trs.senderId].indexOf(trs) !== -1) {
-            this.poolBySender[trs.senderId].splice(this.poolBySender[trs.senderId].indexOf(trs), 1);
-        }
+        this.poolBySender[trs.senderId] = this.poolBySender[trs.senderId].filter(t => t.id !== trs.id);
 
-        if (this.poolByRecipient[trs.recipientId] && this.poolByRecipient[trs.recipientId].indexOf(trs) !== -1) {
-            this.poolByRecipient[trs.recipientId].splice(this.poolByRecipient[trs.recipientId].indexOf(trs), 1);
+        if (this.poolByRecipient[trs.recipientId]) {
+            this.poolByRecipient[trs.recipientId] =
+                this.poolByRecipient[trs.recipientId].filter(t => t.id !== trs.id);
         }
         return true;
     }
@@ -160,9 +158,7 @@ class TransactionPool {
     isPotentialConflict(trs: Transaction) {
         const senderId = generateAddressByPublicKey(trs.senderPublicKey);
         const recipientTrs = this.poolByRecipient[senderId] || [];
-        this.scope.logger.debug(`[TransactionPool][isPotentialConflict][recipientTrs] ${recipientTrs.length}`);
         const senderTrs = this.poolBySender[senderId] || [];
-        this.scope.logger.debug(`[TransactionPool][isPotentialConflict][senderTrs] ${senderTrs.length}`);
         const dependTransactions = [...recipientTrs, ...senderTrs];
 
         if (dependTransactions.length === 0) {
