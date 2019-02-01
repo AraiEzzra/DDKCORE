@@ -169,14 +169,20 @@ module.exports.api = function (app) {
         const hierarchy = [];
 
         let referList = [],
-            level = 1,
+            level = req.body.level,
             index = 0;
 
+        let limit = 1;
+
+        if (level > 1) {
+            level++;
+        }
+
         function findSponsors(arr, cb) {
-            if (level <= 15) {
+            if (limit <= 5 && level <= 15) {
                 library.db.query(sql.findReferralList, {
-                    refer_list: arr
-                })
+                        refer_list: arr
+                    })
                     .then((resp) => {
                         referList.length = 0;
                         if (resp.length) {
@@ -195,6 +201,7 @@ module.exports.api = function (app) {
                                 };
                                 level++;
                                 index++;
+                                limit++;
                                 findSponsors(referList, cb);
                             });
                         }
@@ -241,8 +248,12 @@ module.exports.api = function (app) {
                     success: true,
                     SponsorList: hierarchy
                 });
+
             });
+
+
         });
+
     });
 
     /**
