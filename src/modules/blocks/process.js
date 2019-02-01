@@ -291,7 +291,8 @@ Process.prototype.loadBlocksFromPeer = function (peer, cb) {
     function processBlock(block, seriesCb) {
         // Start block processing - broadcast: false, saveBlock: true
         modules.transactions.lockTransactionPoolAndQueue();
-        modules.transactions.removeFromPool(block.transactions, true).then(
+        modules.transactions.removeFromPool(block.transactions, true)
+            .then(
             async (removedTransactions) => {
                 library.logger.debug(
                     `[Process][processBlock] removedTransactions ${JSON.stringify(removedTransactions)}`

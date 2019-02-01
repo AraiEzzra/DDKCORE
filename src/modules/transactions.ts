@@ -133,7 +133,7 @@ class Transactions {
 
     async pushInPool(transactions: Array<Transaction>): Promise<void> {
         for (const trs of transactions) {
-            await this.newTransactionPool.push(trs, false);
+            await this.newTransactionPool.push(trs, false, true);
         }
     }
 

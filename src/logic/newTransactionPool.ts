@@ -73,10 +73,16 @@ class TransactionPool {
         return removedTransactions;
     }
 
-    async push(trs: Transaction, broadcast: boolean = false) {
-        if (this.locked || this.has(trs)) {
+    async push(trs: Transaction, broadcast: boolean = false, force: boolean = false) {
+        if ((this.locked && !force)) {
             return false;
         }
+
+        if (this.has(trs)) {
+            this.scope.logger.error(`[TransactionPool][tryToPushExisted][has]: ${JSON.stringify(trs)}`);
+            return false;
+        }
+
         this.pool[trs.id] = trs;
         try {
             await this.scope.transactionLogic.newApplyUnconfirmed(trs);
@@ -293,7 +299,7 @@ export class TransactionQueue {
         this.scope.logger.debug(`TransactionStatus.VERIFIED ${JSON.stringify(trs)}`);
 
         if (!this.locked) {
-            const pushed = await this.scope.transactionPool.push(trs, true);
+            const pushed = await this.scope.transactionPool.push(trs, true, false);
             if (pushed) {
                 this.process();
                 return;
