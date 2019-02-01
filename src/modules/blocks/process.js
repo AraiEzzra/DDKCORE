@@ -213,6 +213,8 @@ Process.prototype.loadBlocksOffset = function (limit, offset, verify, cb) {
                         modules.blocks.chain.newApplyGenesisBlock(block, false, false)
                             .then(() => setImmediate(cbBlocks));
                     } else {
+                        // TODO: change to newProcessBlock
+                        // https://trello.com/c/pYHGRm9S/250-fix-loadblocksoffset
                         return modules.blocks.verify.processBlock(
                             block,
                             false,
@@ -494,31 +496,6 @@ Process.prototype.onReceiveBlock = function (block) {
         return setImmediate(cb);
     });
 };
-
-/**
- * Receive block - logs info about received block, updates last receipt, processes block
- *
- * @private
- * @async
- * @method receiveBlock
- * @param {Object}   block Full normalized block
- * @param {Function} cb Callback function
- */
-__private.receiveBlock = function (block, cb) {
-    library.logger.info([
-        'Old Received new block id:', block.id,
-        'height:', block.height,
-        'round:', modules.rounds.calc(block.height),
-        'slot:', slots.getSlotNumber(block.timestamp),
-        'reward:', block.reward
-    ].join(' '));
-
-    // Update last receipt
-    modules.blocks.lastReceipt.update();
-    // Start block processing - broadcast: true, saveBlock: true
-    modules.blocks.verify.processBlock(block, true, true, true, cb);
-};
-
 
 __private.newReceiveBlock = async (block) => {
     library.logger.info([
