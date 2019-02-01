@@ -51,23 +51,7 @@ const Referals = {
 
     lastMigrationTrs: 'SELECT m."id" from trs t INNER JOIN migrated_etps_users m ON(t."senderId" = m."address" AND t."trsName" = \'MIGRATION\') order by t.timestamp DESC LIMIT 1',
 
-    countList(params) {
-        return [
-            'SELECT COUNT(1) FROM trs_refer',
-            (params.where.length || params.owner ? 'WHERE' : ''),
-            (params.where.length ? `(${params.where.join(' ')})` : ''),
-            (params.where.length && params.owner ? ` AND ${params.owner}` : params.owner)
-        ].filter(Boolean).join(' ');
-    },
-
-    list(params) {
-        return [
-            'SELECT * FROM trs_refer',
-            (params.where.length ? `WHERE ${params.where.join(' AND ')}` : ''),
-            (params.sortField ? `ORDER BY ${[params.sortField, params.sortMethod].join(' ')}` : ''),
-            'LIMIT ${limit} OFFSET ${offset}'
-        ].filter(Boolean).join(' ');
-    }
+    getReferralRewardHistory: 'SELECT *, count(*) OVER() AS rewards_count from trs_refer WHERE "introducer_address"=${introducer_address} ORDER BY "reward_time" DESC LIMIT ${limit} OFFSET ${offset}'
 };
 
 module.exports = Referals;

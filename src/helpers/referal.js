@@ -37,7 +37,6 @@ __private.list = function (filter, cb) {
         where = [];
 
     if (filter.address) {
-        where.push('"introducer_address"=${introducer_address}');
         params.introducer_address = filter.address;
     }
 
@@ -57,69 +56,18 @@ __private.list = function (filter, cb) {
         return setImmediate(cb, 'Invalid limit. Maximum is 100');
     }
 
-    const orderBy = OrderBy(
-        (filter.orderBy || 'reward_time:desc'), {
-            sortFields: sql.sortFields
-        }
-    );
-
-    if (orderBy.error) {
-        return setImmediate(cb, orderBy.error);
-    }
-
-    /** Previous Code */
-
-/*     library.db.query(sql.list({
-        where,
-        sortField: orderBy.sortField,
-        sortMethod: orderBy.sortMethod
-    }), params).then((rows) => {
-        let count = 0;
-        if (rows && rows.length !== 0) {
-            count = Number(rows[0].total_rows);
-        }
-
-        const data = {
-            rewards: rows,
-            count
-        };
-
-        return setImmediate(cb, null, data);
-    }).catch((err) => {
-        library.logger.error(err.stack);
-        return setImmediate(cb, 'Rewards#list error');
-    }); */
-
     /** Resolved Count Issue on Response with Updated Code */
 
-    library.db.query(sql.countList({
-        where: where
-    }), params).then(function (rows) {
-        let count = rows[0].count;
-
-        library.db.query(sql.list({
-            where: where,
-            sortField: orderBy.sortField,
-            sortMethod: orderBy.sortMethod
-        }), params).then(function (rows) {
-
-            let data = {
-                rewards: rows,
-                count: count
-            };
-
-            return setImmediate(cb, null, data);
-        }).catch(function (err) {
-            library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
-            return setImmediate(cb, 'Rewards#list error');
-        });
-    }).catch(function (err) {
-        library.logger.error('Error Message : ' + err.message + ' , Error query : ' + err.query + ' , Error stack : ' + err.stack);
-        return setImmediate(cb, 'Rewards#list error');
-    });
-
-
-
+        library.db.query(sql.getReferralRewardHistory, {
+            introducer_address: params.introducer_address,
+            offset: params.offset,
+            limit: params.limit
+        })
+        .then(row => setImmediate(cb, null, {
+            rewards: row,
+            count: row[0].rewards_count
+        }))
+        .catch(err => setImmediate(cb, 'Rewards#list error'));
 };
 
 module.exports.api = function (app) {
