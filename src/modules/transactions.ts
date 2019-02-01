@@ -894,6 +894,16 @@ Transactions.prototype.shared = {
                                 return setImmediate(balancesSequenceCb, 'Sender and Recipient can\'t be same');
                             }
 
+                            if (
+                                (
+                                    req.body.amount +
+                                    (req.body.amount * constants.fees.send) / 100 +
+                                    parseInt(account.u_totalFrozeAmount)
+                                ) > parseInt(account.u_balance)
+                            ) {
+                                return setImmediate(cb, 'Insufficient balance');
+                            }
+
                             let secondKeypair = null;
 
                             if (account.secondSignature) {

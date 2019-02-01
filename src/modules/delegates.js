@@ -1014,106 +1014,43 @@ Delegates.prototype.shared = {
             }
 
             library.balancesSequence.add((cb) => {
-                if (req.body.multisigAccountPublicKey && req.body.multisigAccountPublicKey !== publicKey) {
-                    modules.accounts.getAccount({ publicKey: req.body.multisigAccountPublicKey }, (err, account) => {
-                        if (err) {
-                            return setImmediate(cb, err);
-                        }
+                modules.accounts.setAccountAndGet({ publicKey: publicKey }, (err, account) => {
+                    if (err) {
+                        return setImmediate(cb, err);
+                    }
 
-                        if (!account || !account.publicKey) {
-                            return setImmediate(cb, 'Multisignature account not found');
-                        }
+                    if (!account || !account.publicKey) {
+                        return setImmediate(cb, 'Account not found');
+                    }
 
-                        if (!account.multisignatures || !account.multisignatures) {
-                            return setImmediate(cb, 'Account does not have multisignatures enabled');
-                        }
+                    if (account.secondSignature && !req.body.secondSecret) {
+                        return setImmediate(cb, 'Invalid second passphrase');
+                    }
 
-                        if (account.multisignatures.indexOf(publicKey) < 0) {
-                            return setImmediate(cb, 'Account does not belong to multisignature group');
-                        }
+                    let secondKeypair = null;
 
-                        modules.accounts.getAccount({ publicKey: keypair.publicKey }, (err, requester) => {
-                            if (err) {
-                                return setImmediate(cb, err);
-                            }
+                    if (account.secondSignature) {
+                        const secondHash = crypto.createHash('sha256')
+                            .update(req.body.secondSecret, 'utf8')
+                            .digest();
+                        secondKeypair = library.ed.makeKeypair(secondHash);
+                    }
 
-                            if (!requester || !requester.publicKey) {
-                                return setImmediate(cb, 'Requester not found');
-                            }
-
-                            if (requester.secondSignature && !req.body.secondSecret) {
-                                return setImmediate(cb, 'Missing requester second passphrase');
-                            }
-
-                            if (requester.publicKey === account.publicKey) {
-                                return setImmediate(cb, 'Invalid requester public key');
-                            }
-
-                            let secondKeypair = null;
-
-                            if (requester.secondSignature) {
-                                const secondHash = crypto.createHash('sha256')
-                                    .update(req.body.secondSecret, 'utf8')
-                                    .digest();
-                                secondKeypair = library.ed.makeKeypair(secondHash);
-                            }
-
-                            library.logic.transaction.create({
-                                type: transactionTypes.DELEGATE,
-                                username: req.body.username,
-                                URL: req.body.URL,
-                                sender: account,
-                                keypair,
-                                secondKeypair,
-                                requester: keypair
-                            })
-                                .then((transactionDelegate) => {
-                                    transactionDelegate.status = 0;
-                                    modules.transactions.putInQueue(transactionDelegate);
-                                    return setImmediate(cb, null, [transactionDelegate]);
-                                })
-                                .catch(e => setImmediate(cb, e.toString()));
-                        });
-                    });
-                } else {
-                    modules.accounts.setAccountAndGet({ publicKey: publicKey }, (err, account) => {
-                        if (err) {
-                            return setImmediate(cb, err);
-                        }
-
-                        if (!account || !account.publicKey) {
-                            return setImmediate(cb, 'Account not found');
-                        }
-
-                        if (account.secondSignature && !req.body.secondSecret) {
-                            return setImmediate(cb, 'Invalid second passphrase');
-                        }
-
-                        let secondKeypair = null;
-
-                        if (account.secondSignature) {
-                            const secondHash = crypto.createHash('sha256')
-                                .update(req.body.secondSecret, 'utf8')
-                                .digest();
-                            secondKeypair = library.ed.makeKeypair(secondHash);
-                        }
-
-                        library.logic.transaction.create({
-                            type: transactionTypes.DELEGATE,
-                            username: req.body.username,
-                            URL: req.body.URL,
-                            sender: account,
-                            keypair,
-                            secondKeypair
+                    library.logic.transaction.create({
+                        type: transactionTypes.DELEGATE,
+                        username: req.body.username,
+                        URL: req.body.URL,
+                        sender: account,
+                        keypair,
+                        secondKeypair
+                    })
+                        .then((transactionDelegate) => {
+                            transactionDelegate.status = 0;
+                            modules.transactions.putInQueue(transactionDelegate);
+                            return setImmediate(cb, null, [transactionDelegate]);
                         })
-                            .then((transactionDelegate) => {
-                                transactionDelegate.status = 0;
-                                modules.transactions.putInQueue(transactionDelegate);
-                                return setImmediate(cb, null, [transactionDelegate]);
-                            })
-                            .catch(e => setImmediate(cb, e.toString()));
-                    });
-                }
+                        .catch(e => setImmediate(cb, e.toString()));
+                });
             }, (err, transaction) => {
                 if (err) {
                     return setImmediate(cb, err);

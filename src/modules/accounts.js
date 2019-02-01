@@ -574,129 +574,53 @@ Accounts.prototype.shared = {
             }
 
             library.balancesSequence.add((cb) => {
-                if (req.body.multisigAccountPublicKey && req.body.multisigAccountPublicKey !== publicKey) {
-                    modules.accounts.getAccount({ publicKey: req.body.multisigAccountPublicKey }, (err, account) => {
-                        if (err) {
-                            return setImmediate(cb, err);
-                        }
+                self.setAccountAndGet({ publicKey: publicKey }, (err, account) => {
+                    if (err) {
+                        return setImmediate(cb, err);
+                    }
 
-                        if (!account || !account.publicKey) {
-                            return setImmediate(cb, 'Multisignature account not found');
-                        }
+                    if (!account || !account.publicKey) {
+                        return setImmediate(cb, 'Account not found');
+                    }
 
-                        if (!account.multisignatures || !account.multisignatures) {
-                            return setImmediate(cb, 'Account does not have multisignatures enabled');
-                        }
+                    if (account.secondSignature && !req.body.secondSecret) {
+                        return setImmediate(cb, 'Invalid second passphrase');
+                    }
 
-                        if (account.multisignatures.indexOf(publicKey) < 0) {
-                            return setImmediate(cb, 'Account does not belong to multisignature group');
-                        }
+                    let secondKeypair = null;
 
-                        modules.accounts.getAccount({ publicKey: keypair.publicKey }, (err, requester) => {
-                            if (err) {
-                                return setImmediate(cb, err);
-                            }
+                    if (account.secondSignature) {
+                        const secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
+                        secondKeypair = library.ed.makeKeypair(secondHash);
+                    }
 
-                            // TODO change that if
-                            if (account.totalFrozeAmount === 0) {
-                                return setImmediate(cb, 'No Stake available');
-                            }
+                    if (account.u_totalFrozeAmount == 0) {
+                        return setImmediate(cb, 'Please Stake before vote/unvote');
+                    }
 
-                            if (!requester || !requester.publicKey) {
-                                return setImmediate(cb, 'Requester not found');
-                            }
+                    const fee = library.logic.vote.calculateUnconfirmedFee(null, account);
+                    if (Number(account.u_balance) - Number(account.u_totalFrozeAmount) < fee) {
+                        return setImmediate(cb, 'Insufficient balance');
+                    }
 
-                            if (requester.secondSignature && !req.body.secondSecret) {
-                                return setImmediate(cb, 'Missing requester second passphrase');
-                            }
+                    if (req.body.delegates && req.body.delegates.length > constants.maxVotesPerTransaction) {
+                        return setImmediate(cb, `Voting limit exceeded. Maximum is ${constants.maxVotesPerTransaction} votes per transaction`);
+                    }
 
-                            if (requester.publicKey === account.publicKey) {
-                                return setImmediate(cb, 'Invalid requester public key');
-                            }
-
-                            if (requester.totalFrozeAmount == 0) {
-                                return setImmediate(cb, 'Please Stake before vote/unvote');
-                            }
-
-                            let secondKeypair = null;
-
-                            if (requester.secondSignature) {
-                                const secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
-                                secondKeypair = library.ed.makeKeypair(secondHash);
-                            }
-
-                            library.db.one(sql.countAvailableStakeOrdersForVote, {
-                                senderId: account.address,
-                                currentTime: slots.getTime()
-                            }).then((queryResult) => {
-                                if (queryResult && queryResult.hasOwnProperty('count')) {
-                                    const count = parseInt(queryResult.count, 10);
-                                    if (count <= 0) {
-                                        throw 'No Stake available';
-                                    }
-                                    library.logic.transaction.create({
-                                        type: transactionTypes.VOTE,
-                                        votes: req.body.delegates,
-                                        sender: account,
-                                        keypair,
-                                        secondKeypair,
-                                        requester: keypair
-                                    }).then((transactionVote) => {
-                                        transactionVote.status = 0;
-                                        modules.transactions.putInQueue(transactionVote);
-                                        return setImmediate(cb, null, [transactionVote]);
-                                    }).catch((e) => {
-                                        throw e;
-                                    });
-                                }
-                            }).catch((e) => setImmediate(cb, e.toString()));
-                        });
+                    library.logic.transaction.create({
+                        type: transactionTypes.VOTE,
+                        votes: req.body.delegates,
+                        sender: account,
+                        keypair,
+                        secondKeypair
+                    }).then((transactionVote) => {
+                        transactionVote.status = 0;
+                        modules.transactions.putInQueue(transactionVote);
+                        return setImmediate(cb, null, [transactionVote]);
+                    }).catch((e) => {
+                        return setImmediate(cb, e.toString());
                     });
-                } else {
-                    self.setAccountAndGet({ publicKey: publicKey }, (err, account) => {
-                        if (err) {
-                            return setImmediate(cb, err);
-                        }
-
-                        if (!account || !account.publicKey) {
-                            return setImmediate(cb, 'Account not found');
-                        }
-
-                        if (account.secondSignature && !req.body.secondSecret) {
-                            return setImmediate(cb, 'Invalid second passphrase');
-                        }
-
-                        let secondKeypair = null;
-
-                        if (account.secondSignature) {
-                            const secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
-                            secondKeypair = library.ed.makeKeypair(secondHash);
-                        }
-
-                        if (account.u_totalFrozeAmount == 0) {
-                            return setImmediate(cb, 'Please Stake before vote/unvote');
-                        }
-
-                        const fee = library.logic.vote.calculateUnconfirmedFee(null, account);
-                        if (Number(account.u_balance) - Number(account.u_totalFrozeAmount) < fee) {
-                            return setImmediate(cb, 'Insufficient balance');
-                        }
-
-                        library.logic.transaction.create({
-                            type: transactionTypes.VOTE,
-                            votes: req.body.delegates,
-                            sender: account,
-                            keypair,
-                            secondKeypair
-                        }).then((transactionVote) => {
-                            transactionVote.status = 0;
-                            modules.transactions.putInQueue(transactionVote);
-                            return setImmediate(cb, null, [transactionVote]);
-                        }).catch((e) => {
-                            return setImmediate(cb, e.toString());
-                        });
-                    });
-                }
+                });
             }, (err, transaction) => {
                 if (err) {
                     return setImmediate(cb, err);
