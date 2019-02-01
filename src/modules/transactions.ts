@@ -565,7 +565,7 @@ __private.getPooledTransactions = function (method, req, cb) {
 };
 
 Transactions.prototype.getMergedTransactionList = function (reverse, limit) {
-    return self.newTransactionPool.getTransactions(limit);
+    return self.newTransactionPool.getTransactions({ limit });
 };
 
 Transactions.prototype.inPool = (transaction: Transaction) => {
@@ -824,7 +824,13 @@ Transactions.prototype.shared = {
     },
 
     getUnconfirmedTransactions(req, cb) {
-        return setImmediate(cb, null, { transactions: self.newTransactionPool.getTransactions() });
+        library.schema.validate(req.body, schema.getUnconfirmedTransactions, (err) => {
+            if (err) {
+                return setImmediate(cb, err[0].message);
+            }
+
+            return setImmediate(cb, null, { transactions: self.newTransactionPool.getTransactions(req.body) });
+        });
     },
 
     addTransactions(req, cb) {

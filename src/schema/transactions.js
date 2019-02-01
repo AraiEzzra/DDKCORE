@@ -151,6 +151,21 @@ module.exports = {
         },
         required: ['id']
     },
+    getUnconfirmedTransactions: {
+        id: 'transactions.getUnconfirmedTransactions',
+        type: 'object',
+        properties: {
+            senderPublicKey: {
+                type: 'string',
+                format: 'publicKey'
+            },
+            limit: {
+                type: 'integer',
+                minimum: 1,
+                maximum: 100
+            },
+        },
+    },
     getPooledTransaction: {
         id: 'transactions.getPooledTransaction',
         type: 'object',
