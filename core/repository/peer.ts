@@ -138,7 +138,7 @@ class Peer extends PeerModel {
 export class PeerRepo {
     private peers: { [string: string] : Peer };
 
-    constructor() {}
+    constructor(pgp, redis?) {}
 
     public create(peer) {
         if (!(peer instanceof Peer)) {
