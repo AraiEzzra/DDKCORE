@@ -245,7 +245,7 @@ Frozen.prototype.apply = async (trs) => {
  * @desc get bytes
  * @private
  * @implements
-* @return {Buffer}
+ * @return {Buffer}
  */
 Frozen.prototype.getBytes = function (trs) {
     let offset = 0;
@@ -612,10 +612,11 @@ Frozen.prototype.unstakeOrders = async (orders) => {
     const readyToUnstakeOrders = orders.filter(o => o.voteCount === constants.froze.unstakeVoteCount);
     await Promise.all(readyToUnstakeOrders.map(async (order) => {
         await self.scope.db.none(sql.deductFrozeAmount, {
-            orderFreezedAmount: order.freezedAmount, senderId: order.senderId
+            orderFreezedAmount: order.freezedAmount,
+            senderId: order.senderId
         });
         await self.scope.db.none(sql.disableFrozeOrders, {
-            stakeId: order.stakeId
+            id: order.id
         });
         order.status = 0;
     }));
@@ -624,7 +625,7 @@ Frozen.prototype.unstakeOrders = async (orders) => {
 Frozen.prototype.undoFrozeOrdersRewardAndUnstake = async function (voteTransaction) {
     const senderId = voteTransaction.senderId;
     const updatedOrders = await self.scope.db.query(sql.getRecentlyChangedFrozeOrders, {
-        senderId, currentTime: slots.getTime()
+        senderId, currentTime: voteTransaction.timestamp
     });
     updatedOrders.forEach((order) => {
         order.freezedAmount = parseInt(order.freezedAmount, 10);
@@ -662,7 +663,7 @@ Frozen.prototype.deductOrderReward = async (order) => {
 };
 
 Frozen.prototype.recoverUnstakedOrders = async (orders) => {
-    const needRecoverStakeOrders = orders.filter(o => o.status === 0);
+    const needRecoverStakeOrders = orders.filter(order => order.status === 0);
     await Promise.all(needRecoverStakeOrders.map(async (order) => {
         await self.recoverUnstakedOrder(order);
     }));
