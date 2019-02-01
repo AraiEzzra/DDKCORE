@@ -895,6 +895,9 @@ __private.checkTransactionsAndApplyUnconfirmed = async (block, checkExists, veri
 
                 if (!resultCheckTransaction.success) {
                     errors.push(resultCheckTransaction.errors);
+                    library.logger.debug(
+                        `[Verify][checkTransactionsAndApplyUnconfirmed][error] ${JSON.stringify(errors)}`
+                    );
                     i--;
                     continue;
                 }

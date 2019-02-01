@@ -641,8 +641,9 @@ Transaction.prototype.verifyBytes = (bytes, publicKey, signature) => {
 Transaction.prototype.newApply = async (trs, block, sender) => {
     const amount = trs.amount + trs.fee;
 
-    self.scope.logger.trace('Logic/Transaction->apply', {
-        sender: sender.address, balance: -amount, blockId: block.id, round: modules.rounds.calc(block.height)
+    self.scope.logger.debug('[LogicTransaction][apply][merge]', {
+        sender: sender.address,
+        balance: -amount
     });
 
     const mergedSender = await self.scope.account.asyncMerge(sender.address, {
@@ -660,13 +661,13 @@ Transaction.prototype.newApply = async (trs, block, sender) => {
         self.scope.logger.error(`[Logic/Transaction][apply]: ${e}`);
         self.scope.logger.error(`[Logic/Transaction][apply][stack]: ${e.stack}`);
     }
-    self.scope.logger.debug(`[Logic/Transaction][apply]: transaction applied ${JSON.stringify(trs)}`);
+    self.scope.logger.debug(`[TransactionLogic][lifecycle][apply]: transaction applied ${JSON.stringify(trs)}`);
 };
 
 Transaction.prototype.undo = async (trs) => {
     const amount = trs.amount + trs.fee;
 
-    self.scope.logger.debug(`[TransactionLogic][undo] ${JSON.stringify({
+    self.scope.logger.debug(`[TransactionLogic][undo][merge] ${JSON.stringify({
         sender: trs.senderId,
         balance: amount,
         totalFrozeAmount: -trs.stakedAmount
@@ -690,6 +691,7 @@ Transaction.prototype.undo = async (trs) => {
         );
         throw err;
     }
+    self.scope.logger.debug(`[TransactionLogic][lifecycle][undo]: transaction undo ${JSON.stringify(trs)}`);
 };
 
 Transaction.prototype.newApplyUnconfirmed = async (trs) => {
