@@ -901,7 +901,7 @@ Transactions.prototype.shared = {
                                     parseInt(account.u_totalFrozeAmount)
                                 ) > parseInt(account.u_balance)
                             ) {
-                                return setImmediate(cb, 'Insufficient balance');
+                                return setImmediate(balancesSequenceCb, 'Insufficient balance');
                             }
 
                             let secondKeypair = null;
