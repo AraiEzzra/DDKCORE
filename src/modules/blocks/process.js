@@ -300,7 +300,7 @@ Process.prototype.loadBlocksFromPeer = function (peer, cb) {
                     `[Process][processBlock] removedTransactions ${JSON.stringify(removedTransactions)}`
                 );
                 try {
-                    await modules.blocks.verify.newProcessBlock(block, false, true, true, true);
+                    await modules.blocks.verify.newProcessBlock(block, false, true, null, true, true);
                     lastValidBlock = block;
                     library.logger.info(
                         ['Block', block.id, 'loaded from:', peer.string].join(' '),
@@ -370,7 +370,7 @@ Process.prototype.loadBlocksFromPeer = function (peer, cb) {
     });
 };
 
-Process.prototype.newGenerateBlock = async (keypair, timestamp) => {
+Process.prototype.newGenerateBlock = async (keyPair, timestamp) => {
     let block;
 
     modules.transactions.lockTransactionPoolAndQueue();
@@ -380,7 +380,7 @@ Process.prototype.newGenerateBlock = async (keypair, timestamp) => {
 
     try {
         block = library.logic.block.create({
-            keypair,
+            keyPair,
             timestamp,
             previousBlock: modules.blocks.lastBlock.get(),
             transactions
@@ -392,7 +392,7 @@ Process.prototype.newGenerateBlock = async (keypair, timestamp) => {
     }
 
     try {
-        await modules.blocks.verify.newProcessBlock(block, true, true, true, true);
+        await modules.blocks.verify.newProcessBlock(block, true, true, keyPair, true, true);
         await modules.transactions.returnToQueueConflictedTransactionFromPool(transactions);
         modules.transactions.unlockTransactionPoolAndQueue();
     } catch (e) {
@@ -514,7 +514,7 @@ __private.newReceiveBlock = async (block) => {
     library.logger.debug(`[Process][newReceiveBlock] removedTransactions ${JSON.stringify(removedTransactions)}`);
 
     try {
-        await modules.blocks.verify.newProcessBlock(block, true, true, true, true);
+        await modules.blocks.verify.newProcessBlock(block, true, true, null, true, true);
 
         const transactionForReturn = [];
         removedTransactions.forEach((removedTrs) => {

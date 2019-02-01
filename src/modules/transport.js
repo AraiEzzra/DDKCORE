@@ -641,21 +641,21 @@ Transport.prototype.internal = {
         }
     },
 
-    getSignatures(req, cb) {
-        const transactions = modules.transactions.getMultisignatureTransactionList(true, constants.maxSharedTxs);
-        const signatures = [];
+    // getSignatures(req, cb) {
+    //     const transactions = modules.transactions.getMultisignatureTransactionList(true, constants.maxSharedTxs);
+    //     const signatures = [];
 
-        async.eachSeries(transactions, (trs, __cb) => {
-            if (trs.signatures && trs.signatures.length) {
-                signatures.push({
-                    transaction: trs.id,
-                    signatures: trs.signatures
-                });
-            }
+    //     async.eachSeries(transactions, (trs, __cb) => {
+    //         if (trs.signatures && trs.signatures.length) {
+    //             signatures.push({
+    //                 transaction: trs.id,
+    //                 signatures: trs.signatures
+    //             });
+    //         }
 
-            return setImmediate(__cb);
-        }, () => setImmediate(cb, null, { success: true, signatures }));
-    },
+    //         return setImmediate(__cb);
+    //     }, () => setImmediate(cb, null, { success: true, signatures }));
+    // },
 
     getTransactions(req, cb) {
         const res = modules.transactions.getMergedTransactionList(true, constants.maxSharedTxs);

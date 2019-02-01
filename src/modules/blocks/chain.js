@@ -250,16 +250,20 @@ Chain.prototype.newApplyGenesisBlock = async (block, verify, save) => {
     block.transactions = block.transactions.sort(transactionSortFunc);
     try {
         library.logger.info('[Chain][applyGenesisBlock] Genesis block loading');
-        await modules.blocks.verify.newProcessBlock(block, false, save, verify, false);
+        await modules.blocks.verify.newProcessBlock(block, false, save, null, verify, false);
     } catch (e) {
         library.logger.error(`[Chain][applyGenesisBlock] ${e}`);
         library.logger.error(`[Chain][applyGenesisBlock][stack] ${e.stack}`);
     }
 };
 
-Chain.prototype.newApplyBlock = async (block, broadcast, saveBlock, tick) => {
+Chain.prototype.newApplyBlock = async (block, broadcast, keyPair, saveBlock, tick) => {
     // Prevent shutdown during database writes.
     modules.blocks.isActive.set(true);
+
+    if (keyPair) {
+        library.logic.block.addPayloadHash(block, keyPair);
+    }
 
     if (saveBlock) {
         await self.newSaveBlock(block);

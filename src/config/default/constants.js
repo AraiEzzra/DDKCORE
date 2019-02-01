@@ -118,16 +118,16 @@ module.exports = {
     froze: {
         endTime: 48,
         rTime: 8,
-        vTime: 0,
+        vTime: 0.1,
         milestone: 8, // for testing, taking 2 min
         rewards: {
             milestones: [
                 10, // 10% For 0-6 months
                 10, // 10% For 7-12 months
-                8, // 8% For 13-18 months
-                6, // 6% For 19-24 months
-                4, // 4% For 25-30 months
-                2  // 2% For 31 months and above
+                10, // 8% For 13-18 months
+                10, // 6% For 19-24 months
+                10, // 4% For 25-30 months
+                10  // 2% For 31 months and above
             ],
             distance: 30, // Distance between each milestone is 6 months
         },

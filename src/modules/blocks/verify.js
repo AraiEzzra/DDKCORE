@@ -505,19 +505,23 @@ Verify.prototype.onNewBlock = function (block) {
  * @return {boolean} result.verified Indicator that verification passed
  * @return {Array}   result.errors Array of validation errors
  */
-Verify.prototype.verifyBlock = function (block) {
+Verify.prototype.verifyBlock = function (block, verify) {
     const lastBlock = modules.blocks.lastBlock.get();
 
     block = __private.setHeight(block, lastBlock);
 
     let result = { verified: false, errors: [] };
 
-    result = __private.verifySignature(block, result);
+    if (verify) {
+        result = __private.verifySignature(block, result);
+    }
     result = __private.verifyPreviousBlock(block, result);
     result = __private.verifyVersion(block, result);
     // TODO: verify total fee
     result = __private.verifyId(block, result);
-    result = __private.verifyPayload(block, result);
+    if (verify) {
+        result = __private.verifyPayload(block, result);
+    }
 
     result = __private.verifyForkOne(block, lastBlock, result);
     result = __private.verifyBlockSlot(block, lastBlock, result);
@@ -635,26 +639,6 @@ __private.newAddBlockProperties = (block, broadcast) => {
     }
 };
 
-/**
- * Validates block schema.
- *
- * @private
- * @func normalizeBlock
- * @param {Object} block - Full block
- * @param {function} cb - Callback function
- * @returns {function} cb - Callback function from params (through setImmediate)
- * @returns {Object} cb.err - Error if occurred
- */
-__private.normalizeBlock = function (block, cb) {
-    try {
-        block = library.logic.block.objectNormalize(block);
-    } catch (err) {
-        return setImmediate(cb, err);
-    }
-
-    return setImmediate(cb);
-};
-
 __private.newNormalizeBlock = (block) => {
     try {
         block.transactions.sort(transactionSortFunc);
@@ -664,33 +648,9 @@ __private.newNormalizeBlock = (block) => {
         return { success: false, errors: [err] };
     }
 };
-/**
- * Verifies block.
- *
- * @private
- * @func verifyBlock
- * @param {Object} block - Full block
- * @param {function} cb - Callback function
- * @returns {function} cb - Callback function from params (through setImmediate)
- * @returns {Object} cb.err - Error if occurred
- */
-__private.verifyBlock = function (block, cb) {
-    // Sanity check of the block, if values are coherent
-    // No access to database
-    const result = self.verifyBlock(block);
 
-    if (!result.verified) {
-        library.logger.error(
-            ['Block', block.id, 'verification failed'].join(' '),
-            result.errors[0]
-        );
-        return setImmediate(cb, result.errors[0]);
-    }
-    return setImmediate(cb);
-};
-
-__private.newVerifyBlock = (block) => {
-    const result = self.verifyBlock(block);
+__private.newVerifyBlock = (block, verify) => {
+    const result = self.verifyBlock(block, verify);
 
     if (!result.verified) {
         library.logger.error(['Block', block.id, 'verification failed', JSON.stringify(result.errors)].join(' '));
@@ -815,7 +775,7 @@ __private.checkTransactionsAndApplyUnconfirmed = async (block, checkExists, veri
     return { success: errors.length === 0, errors };
 };
 
-Verify.prototype.newProcessBlock = async (block, broadcast, saveBlock, verify, tick) => {
+Verify.prototype.newProcessBlock = async (block, broadcast, saveBlock, keyPair, verify, tick) => {
     if (modules.blocks.isCleaning.get()) {
         throw new Error('Cleaning up');
     } else if (!__private.loaded) {
@@ -831,7 +791,7 @@ Verify.prototype.newProcessBlock = async (block, broadcast, saveBlock, verify, t
     }
 
     if (verify) {
-        const resultVerifyBlock = __private.newVerifyBlock(block);
+        const resultVerifyBlock = __private.newVerifyBlock(block, !keyPair);
         if (!resultVerifyBlock.verified) {
             throw new Error(`[verifyBlock] ${JSON.stringify(resultVerifyBlock.errors)}`);
         }
@@ -850,7 +810,7 @@ Verify.prototype.newProcessBlock = async (block, broadcast, saveBlock, verify, t
         throw new Error(`[checkTransactions] ${JSON.stringify(resultCheckTransactions.errors)}`);
     }
 
-    await modules.blocks.chain.newApplyBlock(block, broadcast, saveBlock, tick);
+    await modules.blocks.chain.newApplyBlock(block, broadcast, keyPair, saveBlock, tick);
 
     if (!library.config.loading.snapshotRound) {
         await (new Promise((resolve, reject) => modules.system.update((err) => {

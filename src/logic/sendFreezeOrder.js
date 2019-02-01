@@ -104,14 +104,14 @@ SendFreezeOrder.prototype.undo = async function (trs, block, sender, cb) {
         await self.scope.db.none(sql.deductFrozeAmount,
             {
                 senderId: sender.address,
-                orderFreezedAmount: -trs.amount
+                reward: -trs.amount
             });
 
         //remove frozeAmount to mem_account to recipient address
         await self.scope.db.none(sql.deductFrozeAmount,
             {
                 senderId: trs.recipientId,
-                orderFreezedAmount: trs.amount
+                reward: trs.amount
             });
 
         await rollbackOrders(trs, cb);
@@ -289,7 +289,7 @@ SendFreezeOrder.prototype.sendFreezedOrder = async function (userAndOrderData, c
         await self.scope.db.none(sql.deductFrozeAmount,
             {
                 senderId: userAndOrderData.senderId,
-                orderFreezedAmount: order.freezedAmount
+                reward: order.freezedAmount
             });
 
         //update total Froze amount for recipient of froze order during sending order
