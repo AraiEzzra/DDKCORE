@@ -121,7 +121,7 @@ exports.deleteDocumentByQuery = async (doc) => {
     try {
         return await esClient.deleteByQuery(doc);
     } catch (error) {
-        logger.error(`[Elasticsearch][deleteDocumentByQuery]: ${error.message}`);
+        logger.error(`[Elasticsearch][deleteDocumentByQuery] error: ${error.message}, params: ${JSON.stringify(doc)}`);
     }
 };
 

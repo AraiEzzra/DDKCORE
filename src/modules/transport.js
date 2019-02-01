@@ -445,40 +445,24 @@ Transport.prototype.onBlockchainReady = function () {
     __private.broadcaster.registerJobs();
 };
 
-/**
- * Calls enqueue signatures and emits a 'signature/change' socket message.
- * @implements {Broadcaster.maxRelays}
- * @implements {Broadcaster.enqueue}
- * @implements {library.network.io.sockets.emit}
- * @param {signature} signature
- * @param {Object} broadcast
- * @emits signature/change
- */
-Transport.prototype.onSignature = function (signature, broadcast) {
-    if (broadcast && !__private.broadcaster.maxRelays(signature)) {
-        __private.broadcaster.enqueue({}, { api: '/signatures', data: { signature }, method: 'POST' });
-        library.network.io.sockets.emit('signature/change', signature);
-    }
-};
-
-/**
- * Calls enqueue transactions and emits a 'transactions/change' socket message.
- * @implements {Broadcaster.maxRelays}
- * @implements {Broadcaster.enqueue}
- * @implements {library.network.io.sockets.emit}
- * @param {transaction} transaction
- * @param {Object} broadcast
- * @emits transactions/change
- */
-Transport.prototype.onUnconfirmedTransaction = function (transaction, broadcast) {
-    if (broadcast && !__private.broadcaster.maxRelays(transaction)) {
-        __private.broadcaster.enqueue({}, { api: '/transactions', data: { transaction }, method: 'POST' });
-        library.network.io.sockets.emit('transactions/change', transaction);
-    }
-};
+// /**
+//  * Calls enqueue signatures and emits a 'signature/change' socket message.
+//  * @implements {Broadcaster.maxRelays}
+//  * @implements {Broadcaster.enqueue}
+//  * @implements {library.network.io.sockets.emit}
+//  * @param {signature} signature
+//  * @param {Object} broadcast
+//  * @emits signature/change
+//  */
+// Transport.prototype.onSignature = function (signature, broadcast) {
+//     if (broadcast && !__private.broadcaster.maxRelays(signature)) {
+//         __private.broadcaster.enqueue({}, { api: '/signatures', data: { signature }, method: 'POST' });
+//         library.network.io.sockets.emit('signature/change', signature);
+//     }
+// };
 
 Transport.prototype.onTransactionPutInPool = (transaction) => {
-    library.logger.debug(`OnTransactionPutInPool ${JSON.stringify(transaction)}`);
+    library.logger.debug(`[Transport][onTransactionPutInPool][transaction] ${JSON.stringify(transaction)}`);
     if (!__private.broadcaster.maxRelays(transaction)) {
         __private.broadcaster.enqueue({}, { api: '/transactions', data: { transaction }, method: 'POST' });
         library.network.io.sockets.emit('transactions/change', transaction);
@@ -496,32 +480,30 @@ Transport.prototype.onTransactionPutInPool = (transaction) => {
  * @emits blocks/change
  */
 Transport.prototype.onNewBlock = function (block, broadcast) {
-    if (broadcast) {
-        // TODO: fix broadcast onNewBlock
-        // https://trello.com/c/573v81yz/245-fix-broadcast-on-new-block
-        // const broadhash = modules.system.getBroadhash();
-        // modules.system.update(() => {
-        //     if (!__private.broadcaster.maxRelays(block)) {
-        //         __private.broadcaster.broadcast({ limit: constants.maxPeers, broadhash }, {
-        //             api: '/blocks',
-        //             data: { block },
-        //             method: 'POST',
-        //             immediate: true
-        //         });
-        //     }
-        // });
+    library.db.one(sqlBlock.getBlockByHeight, { height: block.height })
+    .then((lastBlock) => {
+        block.username = lastBlock.m_username;
+        library.network.io.sockets.emit('blocks/change', block);
+        utils.addDocument({
+            index: 'blocks_list',
+            type: 'blocks_list',
+            body: lastBlock,
+            id: lastBlock.b_id
+        });
+    });
 
-        library.db.one(sqlBlock.getBlockByHeight, { height: block.height })
-            .then((lastBlock) => {
-                block.username = lastBlock.m_username;
-                library.network.io.sockets.emit('blocks/change', block);
-                utils.addDocument({
-                    index: 'blocks_list',
-                    type: 'blocks_list',
-                    body: lastBlock,
-                    id: lastBlock.b_id
+    if (broadcast) {
+        const broadhash = modules.system.getBroadhash();
+        modules.system.update(() => {
+            if (!__private.broadcaster.maxRelays(block)) {
+                __private.broadcaster.broadcast({ limit: constants.maxPeers, broadhash }, {
+                    api: '/blocks',
+                    data: { block },
+                    method: 'POST',
+                    immediate: true
                 });
-            });
+            }
+        });
     }
 };
 
@@ -584,7 +566,7 @@ Transport.prototype.internal = {
             return setImmediate(cb, 'Invalid block id sequence');
         }
 
-        library.db.query(sql.getCommonBlock, escapedIds).then(rows => setImmediate(cb, null, {
+        library.db.query(sql.getCommonBlock, [escapedIds]).then(rows => setImmediate(cb, null, {
             success: true,
             common: rows[0] || null
         })).catch((err) => {
@@ -603,7 +585,7 @@ Transport.prototype.internal = {
             lastId: query.lastBlockId
         }, (err, data) => {
             if (err) {
-                return setImmediate(cb, null, { blocks: [] });
+                return setImmediate(cb, err);
             }
 
             return setImmediate(cb, null, { blocks: data });

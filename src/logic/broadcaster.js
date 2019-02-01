@@ -200,52 +200,6 @@ Broadcaster.prototype.registerJobs = () => {
     jobsQueue.register('broadcasterNextRelease', nextRelease, self.config.broadcastInterval);
 };
 
-// Private
-/**
- * Filters private queue based on broadcasts.
- * @private
- * @implements {__private.filterTransaction}
- * @param {function} cb
- * @return {setImmediateCallback} cb
- */
-__private.filterQueue = function (cb) {
-    library.logger.debug(`Broadcasts before filtering: ${self.queue.length}`);
-
-    async.filter(self.queue, (broadcast, filterCb) => {
-        if (broadcast.options.immediate) {
-            return setImmediate(filterCb, null, false);
-        } else if (broadcast.options.data) {
-            const transaction = (broadcast.options.data.transaction || broadcast.options.data.signature);
-            return __private.filterTransaction(transaction, filterCb);
-        }
-        return setImmediate(filterCb, null, true);
-    }, (err, broadcasts) => {
-        self.queue = broadcasts;
-
-        library.logger.debug(`Broadcasts after filtering: ${self.queue.length}`);
-        return setImmediate(cb);
-    });
-};
-
-/**
- * Checks if transaction is in pool or confirm it.
- * @private
- * @implements {modules.transactions.transactionInPool}
- * @implements {library.logic.transaction.checkConfirmed}
- * @param {transaction} transaction
- * @param {function} cb
- * @return {setImmediateCallback} cb, null, boolean
- */
-__private.filterTransaction = function (transaction, cb) {
-    if (transaction !== undefined) {
-        if (modules.transactions.transactionInPool(transaction.id)) {
-            return setImmediate(cb, null, true);
-        }
-        return library.logic.transaction.checkConfirmed(transaction, err => setImmediate(cb, null, !err));
-    }
-    return setImmediate(cb, null, false);
-};
-
 /**
  * Groups broadcasts by api.
  * @private
@@ -298,7 +252,16 @@ __private.releaseQueue = function (cb) {
 
     async.waterfall([
         function filterQueue(waterCb) {
-            return __private.filterQueue(waterCb);
+            const existedTrs = new Set();
+            self.queue = self.queue.filter(trs => {
+                if (trs.id in existedTrs) {
+                    return false;
+                } else {
+                    existedTrs.add(trs.id);
+                    return true;
+                }
+            });
+            return setImmediate(waterCb);
         },
         function squashQueue(waterCb) {
             const broadcasts = self.queue.splice(0, self.config.releaseLimit);

@@ -61,20 +61,12 @@ Referral.prototype.newVerify = async (trs, sender) => {
     }
 };
 
-Referral.prototype.verifyUnconfirmed = function (trs, sender, cb) {
-    return setImmediate(cb);
-};
-
 Referral.prototype.newVerifyUnconfirmed = async () => {};
 
-Referral.prototype.apply = function (trs, block, sender, cb) {
-    library.db.none(sql.changeAccountGlobalStatus, {
+Referral.prototype.apply = async (trs) => {
+    await library.db.none(sql.changeAccountGlobalStatus, {
         address: trs.senderId,
         status: true
-    }).then(() => {
-        setImmediate(cb);
-    }).catch((err) => {
-        setImmediate(cb, err);
     });
 };
 

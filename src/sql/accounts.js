@@ -76,7 +76,11 @@ const Accounts = {
 
     createNewAccount: 'INSERT INTO mem_accounts (address, "publicKey")' +
     ' VALUES (${address}, ${publicKey})' +
-    ' RETURNING *'
+    ' RETURNING *',
+
+    updateAccount: (set) => 'UPDATE mem_accounts SET ' + set + ' where address = ${address} ' +
+    ' RETURNING *, ' +
+    ' (SELECT ARRAY_AGG("dependentId") FROM mem_accounts2u_delegates WHERE "accountId" = ${address}) as u_delegates'
 };
 
 module.exports = Accounts;
