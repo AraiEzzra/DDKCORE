@@ -682,30 +682,19 @@ Accounts.prototype.shared = {
                             return setImmediate(cb, 'Insufficient balance');
                         }
 
-                        library.db.one(sql.countAvailableStakeOrdersForVote, {
-                            senderId: account.address,
-                            currentTime: slots.getTime()
-                        }).then((queryResult) => {
-                            if (queryResult && queryResult.hasOwnProperty('count')) {
-                                const count = parseInt(queryResult.count, 10);
-                                if (count <= 0) {
-                                    throw 'No Stake available';
-                                }
-                                library.logic.transaction.create({
-                                    type: transactionTypes.VOTE,
-                                    votes: req.body.delegates,
-                                    sender: account,
-                                    keypair,
-                                    secondKeypair
-                                }).then((transactionVote) => {
-                                    transactionVote.status = 0;
-                                    modules.transactions.putInQueue(transactionVote);
-                                    return setImmediate(cb, null, [transactionVote]);
-                                }).catch((e) => {
-                                    throw e;
-                                });
-                            }
-                        }).catch((e) => setImmediate(cb, e.toString()));
+                        library.logic.transaction.create({
+                            type: transactionTypes.VOTE,
+                            votes: req.body.delegates,
+                            sender: account,
+                            keypair,
+                            secondKeypair
+                        }).then((transactionVote) => {
+                            transactionVote.status = 0;
+                            modules.transactions.putInQueue(transactionVote);
+                            return setImmediate(cb, null, [transactionVote]);
+                        }).catch((e) => {
+                            return setImmediate(cb, e.toString());
+                        });
                     });
                 }
             }, (err, transaction) => {
