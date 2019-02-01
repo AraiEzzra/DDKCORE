@@ -40,84 +40,6 @@ function Verify(logger, block, transaction, db, config) {
     return self;
 }
 
-/**
- * Check transaction - perform transaction validation when processing block
- * FIXME: Some checks are probably redundant, see: logic.transactionPool
- *
- * @private
- * @async
- * @method checkTransaction
- * @param  {Object}   block Block object
- * @param  {Object}   transaction Transaction object
- * @param  {Function} cb Callback function
- * @return {Function} cb Callback function from params (through setImmediate)
- * @return {Object}   cb.err Error if occurred
- */
-__private.checkTransaction = function (block, transaction, checkExists, cb) {
-    async.waterfall([
-        function getTransactionId(waterCb) {
-            try {
-                // Calculate transaction ID
-                // FIXME: Can have poor performance, because of hash cancluation
-                transaction.id = library.logic.transaction.getId(transaction);
-            } catch (e) {
-                return setImmediate(waterCb, e.toString());
-            }
-            // Apply block ID to transaction
-            transaction.blockId = block.id;
-            return setImmediate(waterCb);
-        },
-        function getAccount(waterCb) {
-            // Get account from database if any (otherwise cold wallet).
-            // DATABASE: read only
-            modules.accounts.setAccountAndGet({
-                publicKey: transaction.senderPublicKey
-            }, waterCb);
-        },
-        function verifyTransaction(sender, waterCb) {
-            // Check if transaction id valid against database state (mem_* tables).
-            // DATABASE: read only
-            library.logic.transaction.verify({
-                trs: transaction,
-                sender,
-                checkExists,
-                cb: (err) => {
-                    if (err) {
-                        return setImmediate(waterCb, err);
-                    }
-                    return setImmediate(waterCb, null, sender);
-                },
-            });
-        },
-        function verifyUnconfirmed(sender, waterCb) {
-            library.logic.transaction.verifyUnconfirmed({
-                trs: transaction,
-                sender,
-                checkExists: true,
-                cb(err) {
-                    if (err) {
-                        return setImmediate(waterCb, err);
-                    }
-                    return setImmediate(waterCb, null, sender);
-                }
-            });
-        }
-    ], (err) => {
-        if (err && err.match(/Transaction is already confirmed/)) {
-            // Fork: Transaction already confirmed.
-            modules.delegates.fork(block, 2);
-            // Undo the offending transaction.
-            // DATABASE: write
-            modules.transactions.undoUnconfirmed(transaction, (err2) => {
-                modules.transactions.removeUnconfirmedTransaction(transaction.id);
-                return setImmediate(cb, err2 || err);
-            });
-        } else {
-            return setImmediate(cb, err);
-        }
-    });
-};
-
 __private.newCheckTransaction = async (block, trs, sender, checkExists) => {
     trs.id = library.logic.transaction.getId(trs);
     trs.blockId = block.id;
@@ -413,7 +335,7 @@ __private.verifyPayload = function (block, result) {
 
     if (totalFee !== block.totalFee) {
         if (constants.PAYLOAD_VALIDATE.TOTAL_FEE) {
-            result.errors.push('Invalid total fee');
+            result.errors.push(`Invalid total fee. Expected: ${totalFee}, actual: ${block.totalFee}`);
         } else {
             library.logger.error('Invalid total fee');
         }
@@ -839,27 +761,6 @@ __private.validateBlockSlot = function (block, cb) {
 };
 
 /**
- * Checks transactions in block.
- *
- * @private
- * @func checkTransactions
- * @param {Object} block - Full block
- * @param  {boolean} checkExists - Check if transactions already exists in database
- * @param {function} cb - Callback function
- * @returns {function} cb - Callback function from params (through setImmediate)
- * @returns {Object} cb.err - Error if occurred
- */
-__private.checkTransactions = function (block, checkExists, cb) {
-    // Check against the mem_* tables that we can perform the transactions included in the block
-    async.eachSeries(
-        block.transactions,
-        (transaction, eachSeriesCb) => {
-            __private.checkTransaction(block, transaction, checkExists, eachSeriesCb);
-        },
-        err => setImmediate(cb, err)
-    );
-};
-/**
  * Tested with 3 state trs = [true, false, false]; trs = [false, true, true]; trs = [true, true, false];
  * with code sample
  *
@@ -895,6 +796,9 @@ __private.checkTransactionsAndApplyUnconfirmed = async (block, checkExists, veri
 
                 if (!resultCheckTransaction.success) {
                     errors.push(resultCheckTransaction.errors);
+                    library.logger.debug(
+                        `[Verify][checkTransactionsAndApplyUnconfirmed][error] ${JSON.stringify(errors)}`
+                    );
                     i--;
                     continue;
                 }
@@ -909,81 +813,6 @@ __private.checkTransactionsAndApplyUnconfirmed = async (block, checkExists, veri
     }
 
     return { success: errors.length === 0, errors };
-};
-
-/**
- * Main function to process a block
- * - Verify the block looks ok
- * - Verify the block is compatible with database state (DATABASE readonly)
- * - Apply the block to database if both verifications are ok
- *
- * @async
- * @public
- * @method processBlock
- * @param  {Object}   block Full block
- * @param  {boolean}  broadcast Indicator that block needs to be broadcasted
- * @param  {boolean}  saveBlock Indicator that block needs to be saved to database
- * @param  {boolean}  verify Indicator that block was previously checked
- * @param  {Function} cb Callback function
- * @return {Function} cb Callback function from params (through setImmediate)
- * @return {Object}   cb.err Error if occurred
- */
-Verify.prototype.processBlock = function (block, broadcast, saveBlock, verify, cb) {
-    if (modules.blocks.isCleaning.get()) {
-        // Break processing if node shutdown reqested
-        return setImmediate(cb, 'Cleaning up');
-    } else if (!__private.loaded) {
-        // Break processing if blockchain is not loaded
-        return setImmediate(cb, 'Blockchain is loading');
-    }
-
-    async.series({
-        addBlockProperties(seriesCb) {
-            __private.addBlockProperties(block, broadcast, seriesCb);
-        },
-        normalizeBlock(seriesCb) {
-            __private.normalizeBlock(block, seriesCb);
-        },
-        verifyBlock(seriesCb) {
-            if (!verify) {
-                return setImmediate(seriesCb);
-            }
-            __private.verifyBlock(block, seriesCb);
-        },
-        checkExists(seriesCb) {
-            // Skip checking for existing block id if we don't need to save that block
-            if (!saveBlock) {
-                return setImmediate(seriesCb);
-            }
-            __private.checkExists(block, seriesCb);
-        },
-        validateBlockSlot(seriesCb) {
-            __private.validateBlockSlot(block, seriesCb);
-        },
-        checkTransactions(seriesCb) {
-            // checkTransactions should check for transactions to exists in database
-            // only if the block needed to be saved to database
-            __private.checkTransactions(block, saveBlock, seriesCb);
-        },
-        applyBlock(seriesCb) {
-            // The block and the transactions are OK i.e:
-            // * Block and transactions have valid values (signatures, block slots, etc...)
-            // * The check against database state passed (for instance sender has enough LSK, votes are under 101, etc...)
-            // We thus update the database with the transactions values, save the block and tick it.
-            // Also that function push new block as our last block
-            modules.blocks.chain.applyBlock(block, broadcast, seriesCb, saveBlock);
-        },
-        // Perform next two steps only when 'broadcast' flag is push, it can be:
-        // 'true' if block comes from generation or receiving process
-        // 'false' if block comes from chain synchronisation process
-        updateSystemHeaders(seriesCb) {
-            // TODO: ask and implement
-            // Update our own headers: broadhash and height
-            !library.config.loading.snapshotRound
-                ? modules.system.update(seriesCb)
-                : seriesCb();
-        }
-    }, err => setImmediate(cb, err));
 };
 
 Verify.prototype.newProcessBlock = async (block, broadcast, saveBlock, verify, tick) => {

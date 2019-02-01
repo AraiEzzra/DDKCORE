@@ -93,11 +93,6 @@ Transfer.prototype.newVerify = (trs) => {
     }
 };
 
-
-Transfer.prototype.verifyUnconfirmed = function (trs, sender, cb) {
-    return setImmediate(cb);
-};
-
 Transfer.prototype.newVerifyUnconfirmed = async () => {};
 
 /**
@@ -130,18 +125,9 @@ Transfer.prototype.getBytes = function (trs) {
  * @param {function} cb - Callback function
  * @return {setImmediateCallback} error, cb
  */
-Transfer.prototype.apply = function (trs, block, sender, cb) {
-    modules.accounts.setAccountAndGet({ address: trs.recipientId }, (err) => {
-        if (err) {
-            return setImmediate(cb, err);
-        }
-
-        modules.accounts.mergeAccountAndGet({
-            address: trs.recipientId,
-            balance: trs.amount,
-            blockId: block.id,
-            round: modules.rounds.calc(block.height)
-        }, errAccountGet => setImmediate(cb, errAccountGet));
+Transfer.prototype.apply = async (trs) => {
+    await library.account.asyncMerge(trs.recipientId, {
+        balance: trs.amount
     });
 };
 
@@ -158,7 +144,7 @@ Transfer.prototype.apply = function (trs, block, sender, cb) {
  * @return {setImmediateCallback} error, cb
  */
 Transfer.prototype.undo = async (trs) => {
-    library.account.asyncMerge(trs.recipientId, {
+    await library.account.asyncMerge(trs.recipientId, {
         address: trs.recipientId,
         balance: -trs.amount,
     });

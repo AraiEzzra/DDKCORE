@@ -60,6 +60,13 @@ const DelegatesSql = {
 
     removeDelegateVoteRecord: 'DELETE FROM "delegate_to_vote_counter" WHERE "publicKey" = ${publicKey}',
 
+    addVoteForDelegates: (votes) => 'INSERT INTO mem_accounts2delegates("accountId", "dependentId")' +
+        ' VALUES ' + votes.map(vote => `(\${accountId}, '${vote}')`).join(', '),
+
+    removeVoteForDelegates: 'DELETE FROM mem_accounts2delegates WHERE "accountId" = ${accountId} and "dependentId" in (${dependentIds:csv})',
+
+    removeVoteForUDelegates: 'DELETE FROM mem_accounts2u_delegates WHERE "accountId" = ${accountId} and "dependentId" in (${dependentIds:csv})',
+
     getTopDelegates: 'SELECT' +
     '  "username",' +
     '  "address",' +
@@ -71,7 +78,7 @@ const DelegatesSql = {
     '  "url"' +
     ' FROM delegate_to_vote_counter' +
     '  INNER JOIN mem_accounts on mem_accounts."publicKey" = delegate_to_vote_counter."publicKey"' +
-    ' ORDER BY delegate_to_vote_counter."voteCount" DESC, "vote" DESC, delegate_to_vote_counter."publicKey";'
+    ' ORDER BY delegate_to_vote_counter."voteCount" DESC, delegate_to_vote_counter."publicKey";'
 };
 
 module.exports = DelegatesSql;

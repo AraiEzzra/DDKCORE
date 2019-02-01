@@ -285,6 +285,9 @@ Utils.prototype.loadBlocksData = function (filter, options, cb) {
         // Get height of block with supplied ID
         library.db.query(sql.getHeightByLastId, { lastId: filter.lastId })
         .then((rows) => {
+            if (!rows || !rows.length) {
+                return setImmediate(cbAdd, `Block with id: ${filter.lastId} is missing`);
+            }
             const height = rows.length ? rows[0].height : 0;
             // Calculate max block height for database query
             const realLimit = height + (parseInt(filter.limit, 10) || 1);

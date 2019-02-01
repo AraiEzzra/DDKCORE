@@ -4,6 +4,7 @@ const exceptions = require('../helpers/exceptions.js');
 const Diff = require('../helpers/diff.js');
 const _ = require('lodash');
 const sql = require('../sql/accounts.js');
+const DelegateSQL = require('../sql/delegates');
 const slots = require('../helpers/slots.js');
 const { LENGTH, writeUInt64LE } = require('../helpers/buffer.js');
 const utils = require('../utils');
@@ -363,20 +364,6 @@ Vote.prototype.newVerify = async (trs) => {
     }
 };
 
-/**
- * Validates unconfirmed vote transaction fields and for each calls verifyVote.
- * @implements {verifysendStakingRewardVote}
- * @implements {checkConfirmedDelegates}
- * @param {transaction} trs
- * @param {account} sender
- * @param {function} cb - Callback function.
- * @returns {setImmediateCallback|function} returns error if invalid field |
- * calls checkConfirmedDelegates.
- */
-Vote.prototype.verifyUnconfirmed = function (trs, sender, cb) {
-    return self.checkUnconfirmedDelegates(trs, cb);
-};
-
 Vote.prototype.newVerifyUnconfirmed = async trs =>
     ((new Promise((resolve, reject) => {
         self.checkUnconfirmedDelegates(trs, (err) => {
@@ -497,50 +484,25 @@ Vote.prototype.getBytes = function (trs) {
  * @param {account} sender
  * @param {function} cb - Callback function
  */
-Vote.prototype.apply = function (trs, block, sender, cb) {
-    async.series([
-        function (seriesCb) {
-            library.account.merge(sender.address, {
-                delegates: trs.asset.votes,
-                blockId: block.id,
-                round: modules.rounds.calc(block.height)
-            }, seriesCb);
-        },
-        function (seriesCb) {
-            self.updateMemAccounts({ votes: trs.asset.votes, senderId: trs.senderId },
-                (err) => {
-                    if (err) {
-                        return setImmediate(seriesCb, err);
-                    }
-                    return setImmediate(seriesCb, null, trs);
-                });
-        },
-        function (seriesCb) {
-            let voteValue = 1;
-            const isDownVote = trs.trsName === 'DOWNVOTE';
-            const votes = trs.asset.votes.map(vote => vote.substring(1));
-            if (isDownVote) {
-                voteValue = -1;
-            }
-            library.db.query(sql.changeDelegateVoteCount({ value: voteValue, votes }))
-                .then(() => setImmediate(seriesCb, null))
-                .catch((err) => {
-                    library.logger.error(err.stack);
-                    return setImmediate(seriesCb, err);
-                });
-        },
-        function (seriesCb) {
-            const isDownVote = trs.trsName === 'DOWNVOTE';
-            if (isDownVote) {
-                return setImmediate(seriesCb, null, trs);
-            }
-            self.updateAndCheckVote(trs)
-                .then(
-                    () => setImmediate(seriesCb, null, trs),
-                    err => setImmediate(seriesCb, err),
-                );
-        }
-    ], cb);
+Vote.prototype.apply = async (trs) => {
+    const isDownVote = trs.trsName === 'DOWNVOTE';
+    const votes = trs.asset.votes.map(vote => vote.substring(1));
+
+    if (isDownVote) {
+        await library.db.none(DelegateSQL.removeVoteForDelegates, {
+            accountId: trs.senderId,
+            dependentIds: votes,
+        });
+    } else {
+        await library.db.none(DelegateSQL.addVoteForDelegates(votes), {
+            accountId: trs.senderId,
+        });
+    }
+
+    await library.db.query(sql.changeDelegateVoteCount({ value: isDownVote ? -1 : 1, votes }));
+    if (!isDownVote) {
+        await self.updateAndCheckVote(trs);
+    }
 };
 
 /**
@@ -556,38 +518,26 @@ Vote.prototype.apply = function (trs, block, sender, cb) {
  * @return {setImmediateCallback} cb, err
  */
 Vote.prototype.undo = async (trs) => {
-    const votesInvert = Diff.reverse(trs.asset.votes);
-
-    await library.account.asyncMerge(trs.senderId, {
-        delegates: votesInvert,
-    });
-
-    try {
-        await (new Promise((resolve, reject) => {
-            self.updateMemAccounts({
-                votes: votesInvert,
-                senderId: trs.senderId
-            }, (err) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve()
-                }
-            });
-        }));
-    } catch (e) {
-        throw e;
-    }
+    const isDownVote = trs.trsName === 'DOWNVOTE';
 
     const votes = trs.asset.votes.map(vote => vote.substring(1));
+    if (isDownVote) {
+        await library.db.none(DelegateSQL.addVoteForDelegates(votes), {
+            accountId: trs.senderId,
+        });
+    } else {
+        await library.db.none(DelegateSQL.removeVoteForDelegates, {
+            accountId: trs.senderId,
+            dependentIds: votes,
+        });
+    }
 
-    await library.db.query(sql.changeDelegateVoteCount({ value: -1, votes }));
-
-    const isDownVote = trs.trsName === 'DOWNVOTE';
+    await library.db.none(sql.changeDelegateVoteCount({ value: isDownVote ? 1 : -1, votes }));
 
     if (isDownVote) {
         return;
     }
+
     try {
         await self.removeCheckVote(trs);
     } catch (e) {
@@ -799,59 +749,6 @@ Vote.prototype.removeCheckVote = async (voteTransaction) => {
         library.logger.warn(err);
         throw err;
     }
-};
-
-/**
- * Update vote count from stake_order and mem_accounts table
- * @param {voteInfo} voteInfo voteInfo have votes and senderId
- * @return {null|err} return null if success else err
- *
- */
-Vote.prototype.updateMemAccounts = function (voteInfo, cb) {
-    const votes = voteInfo.votes;
-
-    function checkUpvoteDownvote(waterCb) {
-        if ((votes[0])[0] === '+') {
-            return setImmediate(waterCb, null, 1);
-        }
-        return setImmediate(waterCb, null, 0);
-    }
-
-    function prepareQuery(voteType, waterCb) {
-        let inCondition = '';
-        votes.forEach((vote) => {
-            const address = modules.accounts.generateAddressByPublicKey(vote.substring(1));
-            inCondition += `'${address}' ,`;
-        });
-        inCondition = inCondition.substring(0, inCondition.length - 1);
-
-        const sign = voteType === 1 ? '+' : '-';
-
-        const query = `UPDATE mem_accounts SET "voteCount"="voteCount"${sign}1  WHERE "address" IN ( ${inCondition})`;
-
-        return setImmediate(waterCb, null, query);
-    }
-
-    function updateVoteCount(query, waterCb) {
-        library.db.query(query)
-            .then(() => setImmediate(waterCb))
-            .catch((err) => {
-                library.logger.error(err.stack);
-                return setImmediate(waterCb, 'vote updation in mem_accounts table error');
-            });
-    }
-
-    async.waterfall([
-        checkUpvoteDownvote,
-        prepareQuery,
-        updateVoteCount
-    ], (err) => {
-        if (err) {
-            library.logger.warn(err);
-            return setImmediate(cb, err);
-        }
-        return setImmediate(cb, null);
-    });
 };
 
 // Export

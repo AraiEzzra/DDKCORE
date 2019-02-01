@@ -5,6 +5,7 @@ const jsonSql = require('json-sql')();
 jsonSql.setDialect('postgresql');
 const constants = require('../helpers/constants.js');
 const sql = require('../sql/referal_sql');
+const AccountsSQL = require('../sql/accounts');
 
 let self;
 let library;
@@ -757,12 +758,12 @@ Account.prototype.merge = function (address, diff, cb) {
     const round = [];
 
     // Verify public key
-    this.verifyPublicKey(diff.publicKey);
+    self.verifyPublicKey(diff.publicKey);
 
     // Normalize address
     address = String(address).toUpperCase();
 
-    this.editable.forEach((value) => {
+    self.editable.forEach((value) => {
         let val;
         let i;
         if (diff[value] !== undefined) {
@@ -966,7 +967,7 @@ Account.prototype.merge = function (address, diff, cb) {
     if (Object.keys(update).length) {
         const SQL = jsonSql.build({
             type: 'update',
-            table: this.table,
+            table: self.table,
             modifier: update,
             condition: {
                 address
@@ -997,7 +998,7 @@ Account.prototype.merge = function (address, diff, cb) {
         return done();
     }
 
-    this.scope.db.none(queries)
+    self.scope.db.none(queries)
         .then(() => done())
         .catch((err) => {
             library.logger.error(err.stack);
@@ -1005,17 +1006,25 @@ Account.prototype.merge = function (address, diff, cb) {
         });
 };
 
-Account.prototype.asyncMerge = async (address, data) => ((new Promise((resolve, reject) => {
-    self.merge(address, data, (err, account) => {
-        if (err) {
-            library.logger.error(`[Account][asyncMerge][merge] ${err}`);
-            library.logger.error(`[Account][asyncMerge][merge][stack] ${err.stack}`);
-            return reject(err);
+Account.prototype.asyncMerge = async (address, data) => {
+    const set = [];
+    const values = { address };
+
+    // TODO old logic include also ['producedblocks', 'missedblocks', 'fees', 'vote', 'rate'];
+    const accumulateFields = ['balance', 'u_balance', 'totalFrozeAmount', 'u_totalFrozeAmount'];
+
+    Object.keys(data).forEach(field => {
+        if (accumulateFields.indexOf(field) !== -1) {
+            set.push(`"${field}" = "${field}" + \${${field}}`);
+        } else {
+            set.push(`"${field}" = \${${field}}`);
         }
-        library.logger.trace(`[Account][asyncMerge][merge] ${JSON.stringify(account)}`);
-        resolve(account);
+
+        values[field] = data[field];
     });
-})));
+
+    return self.scope.db.one(AccountsSQL.updateAccount(set), values);
+};
 
 /**
  * Removes an account from mem_account table based on address.
