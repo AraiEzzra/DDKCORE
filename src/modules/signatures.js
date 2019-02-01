@@ -114,90 +114,42 @@ Signatures.prototype.shared = {
             }
 
             library.balancesSequence.add((cb) => {
-                if (req.body.multisigAccountPublicKey && req.body.multisigAccountPublicKey !== publicKey) {
-                    modules.accounts.getAccount({ publicKey: req.body.multisigAccountPublicKey }, (err, account) => {
-                        if (err) {
-                            return setImmediate(cb, err);
-                        }
+                modules.accounts.setAccountAndGet({ publicKey: keypair.publicKey.toString('hex') }, (err, account) => {
+                    if (err) {
+                        return setImmediate(cb, err);
+                    }
 
-                        if (!account || !account.publicKey) {
-                            return setImmediate(cb, 'Multisignature account not found');
-                        }
+                    if (!account || !account.publicKey) {
+                        return setImmediate(cb, 'Account not found');
+                    }
 
-                        if (!account.multisignatures || !account.multisignatures) {
-                            return setImmediate(cb, 'Account does not have multisignatures enabled');
-                        }
+                    if (account.secondSignature || account.u_secondSignature) {
+                        return setImmediate(cb, 'Account already has a second passphrase');
+                    }
 
-                        if (account.multisignatures.indexOf(publicKey) < 0) {
-                            return setImmediate(cb, 'Account does not belong to multisignature group');
-                        }
+                    if (
+                        (
+                            constants.fees.secondsignature +
+                            parseInt(account.u_totalFrozeAmount)
+                        ) > parseInt(account.u_balance)
+                    ) {
+                        return setImmediate(cb, 'Insufficient balance');
+                    }
 
-                        if (account.secondSignature || account.u_secondSignature) {
-                            return setImmediate(cb, 'Account already has a second passphrase');
-                        }
+                    const secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
+                    const secondKeypair = library.ed.makeKeypair(secondHash);
 
-                        modules.accounts.getAccount({ publicKey: keypair.publicKey }, (err, requester) => {
-                            if (err) {
-                                return setImmediate(cb, err);
-                            }
-
-                            if (!requester || !requester.publicKey) {
-                                return setImmediate(cb, 'Requester not found');
-                            }
-
-                            if (requester.secondSignature && !req.body.secondSecret) {
-                                return setImmediate(cb, 'Missing requester second passphrase');
-                            }
-
-                            if (requester.publicKey === account.publicKey) {
-                                return setImmediate(cb, 'Invalid requester public key');
-                            }
-
-                            const secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
-                            const secondKeypair = library.ed.makeKeypair(secondHash);
-
-                            library.logic.transaction.create({
-                                type: transactionTypes.SIGNATURE,
-                                sender: account,
-                                keypair,
-                                requester: keypair,
-                                secondKeypair
-                            }).then((transactionSignature) => {
-                                transactionSignature.status = 0;
-                                modules.transactions.putInQueue(transactionSignature);
-                                return setImmediate(cb, null, [transactionSignature]);
-                            }).catch(e => setImmediate(cb, e.toString()));
-                        });
-                    });
-                } else {
-                    modules.accounts.setAccountAndGet({ publicKey: keypair.publicKey.toString('hex') }, (err, account) => {
-                        if (err) {
-                            return setImmediate(cb, err);
-                        }
-
-                        if (!account || !account.publicKey) {
-                            return setImmediate(cb, 'Account not found');
-                        }
-
-                        if (account.secondSignature || account.u_secondSignature) {
-                            return setImmediate(cb, 'Account already has a second passphrase');
-                        }
-
-                        const secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
-                        const secondKeypair = library.ed.makeKeypair(secondHash);
-
-                        library.logic.transaction.create({
-                            type: transactionTypes.SIGNATURE,
-                            sender: account,
-                            keypair,
-                            secondKeypair
-                        }).then((transactionSignature) => {
-                            transactionSignature.status = 0;
-                            modules.transactions.putInQueue(transactionSignature);
-                            return setImmediate(cb, null, [transactionSignature]);
-                        }).catch(e => setImmediate(cb, e.toString()));
-                    });
-                }
+                    library.logic.transaction.create({
+                        type: transactionTypes.SIGNATURE,
+                        sender: account,
+                        keypair,
+                        secondKeypair
+                    }).then((transactionSignature) => {
+                        transactionSignature.status = 0;
+                        modules.transactions.putInQueue(transactionSignature);
+                        return setImmediate(cb, null, [transactionSignature]);
+                    }).catch(e => setImmediate(cb, e.toString()));
+                });
             }, (err, transaction) => {
                 if (err) {
                     return setImmediate(cb, err);

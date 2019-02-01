@@ -287,7 +287,6 @@ Frogings.prototype.shared = {
     },
 
     addTransactionForFreeze(req, cb) {
-        let accountData;
         library.schema.validate(req.body, schema.addTransactionForFreeze, (err) => {
             if (err) {
                 return setImmediate(cb, err[0].message);
@@ -303,18 +302,17 @@ Frogings.prototype.shared = {
                 }
             }
 
-            library.balancesSequence.add((cb) => {
+            library.balancesSequence.add((sequenceCb) => {
                 modules.accounts.setAccountAndGet({ publicKey: publicKey }, (err, account) => {
                     if (err) {
-                        return setImmediate(cb, err);
+                        return setImmediate(sequenceCb, err);
                     }
-                    accountData = account;
                     if (!account || !account.publicKey) {
-                        return setImmediate(cb, 'Account not found');
+                        return setImmediate(sequenceCb, 'Account not found');
                     }
 
                     if (account.secondSignature && !req.body.secondSecret) {
-                        return setImmediate(cb, 'Missing second passphrase');
+                        return setImmediate(sequenceCb, 'Missing second passphrase');
                     }
 
                     let secondKeypair = null;
@@ -331,7 +329,7 @@ Frogings.prototype.shared = {
                             parseInt(account.u_totalFrozeAmount)
                         ) > parseInt(account.u_balance)
                     ) {
-                        return setImmediate(cb, 'Insufficient balance');
+                        return setImmediate(sequenceCb, 'Insufficient balance');
                     }
 
                     library.logic.transaction.create({
@@ -343,8 +341,8 @@ Frogings.prototype.shared = {
                     }).then((transactionStake) => {
                         transactionStake.status = 0;
                         modules.transactions.putInQueue(transactionStake);
-                        return setImmediate(cb, null, [transactionStake]);
-                    }).catch(e => setImmediate(cb, e.toString()));
+                        return setImmediate(sequenceCb, null, transactionStake);
+                    }).catch(e => setImmediate(sequenceCb, e.toString()));
                 });
             }, (err, transaction) => {
                 if (err) {
@@ -352,7 +350,7 @@ Frogings.prototype.shared = {
                 }
                 library.network.io.sockets.emit('updateTotalStakeAmount', null);
                 return setImmediate(cb, null, {
-                    transaction: transaction[0],
+                    transaction,
                     referStatus: true
                 });
             });
