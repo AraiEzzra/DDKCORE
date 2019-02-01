@@ -312,7 +312,7 @@ export class TransactionQueue {
     async verify(trs: Transaction, sender: Account): Promise<{ verified: boolean, error: Array<string> }> {
 
         try {
-            await this.scope.transactionLogic.newVerify({ trs, sender });
+            await this.scope.transactionLogic.newVerify({ trs, sender, checkExists: true });
         } catch (e) {
             this.scope.logger.debug(`[TransactionQueue][verify]: ${e}`);
             this.scope.logger.debug(`[TransactionQueue][verify][stack]: \n ${e.stack}`);
