@@ -143,7 +143,7 @@ Frozen.prototype.dbSave = function (trs) {
             senderId: trs.senderId,
             recipientId: trs.recipientId,
             freezedAmount: trs.asset.stakeOrder.stakedAmount,
-            nextVoteMilestone: trs.asset.stakeOrder.nextVoteMilestone,
+            nextVoteMilestone: trs.timestamp,
             airdropReward: trs.asset.airdropReward || {}
         }
     };
@@ -538,14 +538,14 @@ Frozen.prototype.getAirdropReward = async function (senderAddress, amount, trans
 };
 
 
-Frozen.prototype.calculateTotalRewardAndUnstake = async function (senderId, isDownVote) {
+Frozen.prototype.calculateTotalRewardAndUnstake = async function (senderId, isDownVote, timestamp) {
     let reward = 0;
     let unstakeAmount = 0;
     if (isDownVote) {
         return { reward, unstake: unstakeAmount };
     }
     const freezeOrders = await self.scope.db.query(sql.getActiveFrozeOrders, {
-        senderId, currentTime: slots.getTime()
+        senderId, currentTime: timestamp
     });
     await Promise.all(freezeOrders.map(async (order) => {
         if (order.voteCount > 0 && (parseInt(order.voteCount, 10) + 1) % constants.froze.rewardVoteCount === 0) {

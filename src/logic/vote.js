@@ -74,7 +74,7 @@ Vote.prototype.create = async function (data, trs) {
     if (data.votes && data.votes[0]) {
         isDownVote = data.votes[0][0] === '-';
     }
-    const totals = await library.frozen.calculateTotalRewardAndUnstake(senderId, isDownVote);
+    const totals = await library.frozen.calculateTotalRewardAndUnstake(senderId, isDownVote, trs.timestamp);
     const airdropReward = await library.frozen.getAirdropReward(senderId, totals.reward, data.type);
 
     trs.asset.votes = data.votes;
@@ -290,37 +290,35 @@ Vote.prototype.verify = function (trs, sender, cb) {
             self.verifyFields(trs, sender, seriesCb);
         },
         async function (seriesCb) {
-            if (__private.loaded) {
-                const isDownVote = trs.trsName === 'DOWNVOTE';
-                const totals = await library.frozen.calculateTotalRewardAndUnstake(trs.senderId, isDownVote);
-                if (totals.reward !== trs.asset.reward) {
-                    const msg = 'Verify failed: vote reward is corrupted';
-                    if (vve.VOTE_REWARD_CORRUPTED) {
-                        return setImmediate(seriesCb, msg);
-                    }
-                    library.logger.error(`${msg}!\n${{
-                        id: trs.id,
-                        type: trs.type,
-                        reward: {
-                            asset: trs.asset.reward,
-                            totals: totals.reward,
-                        }
-                    }}`);
+            const isDownVote = trs.trsName === 'DOWNVOTE';
+            const totals = await library.frozen.calculateTotalRewardAndUnstake(trs.senderId, isDownVote, trs.timestamp);
+            if (totals.reward !== trs.asset.reward) {
+                const msg = 'Verify failed: vote reward is corrupted';
+                if (vve.VOTE_REWARD_CORRUPTED) {
+                    return setImmediate(seriesCb, msg);
                 }
-                if (totals.unstake !== trs.asset.unstake) {
-                    const msg = 'Verify failed: vote unstake is corrupted';
-                    if (vve.VOTE_UNSTAKE_CORRUPTED) {
-                        return setImmediate(seriesCb, msg);
+                library.logger.error(`${msg}!\n${{
+                    id: trs.id,
+                    type: trs.type,
+                    reward: {
+                        asset: trs.asset.reward,
+                        totals: totals.reward,
                     }
-                    library.logger.error(`${msg}! ${{
-                        id: trs.id,
-                        type: trs.type,
-                        unstake: {
-                            asset: trs.asset.unstake,
-                            totals: totals.unstake,
-                        }
-                    }}`);
+                }}`);
+            }
+            if (totals.unstake !== trs.asset.unstake) {
+                const msg = 'Verify failed: vote unstake is corrupted';
+                if (vve.VOTE_UNSTAKE_CORRUPTED) {
+                    return setImmediate(seriesCb, msg);
                 }
+                library.logger.error(`${msg}! ${{
+                    id: trs.id,
+                    type: trs.type,
+                    unstake: {
+                        asset: trs.asset.unstake,
+                        totals: totals.unstake,
+                    }
+                }}`);
             }
 
             try {
@@ -344,17 +342,15 @@ Vote.prototype.newVerify = async (trs) => {
         throw e;
     }
 
-    if (__private.loaded) {
-        const isDownVote = trs.trsName === 'DOWNVOTE';
-        const totals = await library.frozen.calculateTotalRewardAndUnstake(trs.senderId, isDownVote);
+    const isDownVote = trs.trsName === 'DOWNVOTE';
+    const totals = await library.frozen.calculateTotalRewardAndUnstake(trs.senderId, isDownVote, trs.timestamp);
 
-        if (totals.reward !== trs.asset.reward) {
-            throw new Error('Verify failed: vote reward is corrupted');
-        }
+    if (totals.reward !== trs.asset.reward) {
+        throw new Error('Verify failed: vote reward is corrupted');
+    }
 
-        if (totals.unstake !== trs.asset.unstake) {
-            throw new Error('Verify failed: vote unstake is corrupted');
-        }
+    if (totals.unstake !== trs.asset.unstake) {
+        throw new Error('Verify failed: vote unstake is corrupted');
     }
 
     try {
@@ -715,7 +711,6 @@ Vote.prototype.updateAndCheckVote = async (voteTransaction) => {
                 const bulk = utils.makeBulk(activeOrders, 'stake_orders');
                 try {
                     await utils.indexall(bulk, 'stake_orders');
-                    library.logger.info(`${senderId}: update stake orders isvoteDone and count`);
                 } catch (err) {
                     library.logger.error(`elasticsearch error :${err.message}`);
                 }
