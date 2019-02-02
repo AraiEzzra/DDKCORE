@@ -515,21 +515,19 @@ __private.loadBlocksFromNetwork = function (cb) {
             return setImmediate(cb, err);
         }
 
-        let lastBlock = modules.blocks.lastBlock.get();
-        const peersWithAnotherBroadhash = network.peers
-            .filter(peer => peer.broadhash !== lastBlock.broadhash);
-        const shuffledPeers = arrayShuffle(peersWithAnotherBroadhash).slice(0, 5);
-        library.logger.debug(`Peers for load blocks: ${JSON.stringify(shuffledPeers)}`);
+        let peers = arrayShuffle(network.peers).slice(0, 5);
+        library.logger.debug(`Peers for load blocks: ${JSON.stringify(peers)}`);
 
         async.whilst(
             () => !loaded && testCount < 5,
             (next) => {
-                const peer = shuffledPeers[testCount || 0];
-                library.logger.debug(`[loadBlocksFromNetwork][getNetwork][peer] ${JSON.stringify(peer)}`);
+                const peer = peers[testCount || 0];
                 if (!peer) {
                     testCount += 1;
                     return next();
                 }
+
+                let lastBlock = modules.blocks.lastBlock.get();
 
                 function loadBlocks() {
                     __private.blocksToSync = peer.height;
