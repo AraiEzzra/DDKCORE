@@ -212,7 +212,7 @@ System.prototype.update = function (cb) {
             return setImmediate(seriesCb);
         }
     }, (err) => {
-        library.logger.debug('System headers', __private);
+        library.logger.debug(`System headers ${JSON.stringify(__private)}`);
         modules.transport.headers(__private);
         return setImmediate(cb, err);
     });

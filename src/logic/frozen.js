@@ -670,7 +670,7 @@ Frozen.prototype.recoverUnstakedOrders = async (orders) => {
 };
 
 Frozen.prototype.recoverUnstakedOrder = async (order) => {
-    await self.scope.db.none(sql.updateFrozeAmount, {
+    await self.scope.db.none(sql.undoUnstake, {
         reward: order.freezedAmount, senderId: order.senderId
     });
     await self.scope.db.none(sql.enableFrozeOrder, {

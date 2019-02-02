@@ -20,6 +20,8 @@ const FrogingsSql = {
 
     updateFrozeAmount: 'UPDATE mem_accounts SET "totalFrozeAmount" = ("totalFrozeAmount" + ${reward}) WHERE "address" = ${senderId}',
 
+    undoUnstake: 'UPDATE mem_accounts SET "totalFrozeAmount" = ("totalFrozeAmount" + ${reward}), "u_totalFrozeAmount" = ("u_totalFrozeAmount" + ${reward}) WHERE "address" = ${senderId}',
+
     getFrozeAmount: 'SELECT "totalFrozeAmount" FROM mem_accounts WHERE "address"=${senderId}',
 
     disableFrozeOrders: 'UPDATE stake_orders SET "status"=0 where "id"=${id}',
