@@ -551,11 +551,6 @@ __private.loadBlocksFromNetwork = function (cb) {
 
                 function getCommonBlock(getCommonBlockCb) {
                     library.logger.info(`Looking for common block with: ${peer.string}`);
-                    if (peer.height < lastBlock.height) {
-                        testCount += 1;
-                        return next();
-                    }
-
                     modules.blocks.process.getCommonBlock(peer, lastBlock.height, (getCommonBlockErr, commonBlock) => {
                         if (!commonBlock) {
                             if (getCommonBlockErr) {
@@ -671,7 +666,7 @@ __private.findGoodPeers = function (peers) {
     library.logger.debug('Good peers - received', { count: peers.length });
     library.logger.debug('Good peers - received', { peers: JSON.stringify(peers) });
 
-    peers = peers.filter(item => item && item.height >= lastBlockHeight);
+    // peers = peers.filter(item => item && item.height >= lastBlockHeight);
 
     library.logger.debug('Good peers - filtered', { count: peers.length });
     library.logger.debug('Good peers - filtered', { peers: JSON.stringify(peers) });
