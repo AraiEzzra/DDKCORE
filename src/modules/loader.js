@@ -515,9 +515,10 @@ __private.loadBlocksFromNetwork = function (cb) {
             return setImmediate(cb, err);
         }
 
-        let lastBlock = modules.blocks.lastBlock.get();
+        const broadhash = modules.system.getBroadhash();
+        library.logger.debug(`[loadBlocksFromNetwork][getNetwork][broadhash] ${JSON.stringify(broadhash)}`);
         const peersWithAnotherBroadhash = network.peers
-            .filter(peer => peer.broadhash !== lastBlock.broadhash);
+            .filter(peer => peer.broadhash !== broadhash);
         const shuffledPeers = arrayShuffle(peersWithAnotherBroadhash).slice(0, 5);
         library.logger.debug(`Peers for load blocks: ${JSON.stringify(shuffledPeers)}`);
 
@@ -530,6 +531,8 @@ __private.loadBlocksFromNetwork = function (cb) {
                     testCount += 1;
                     return next();
                 }
+
+                let lastBlock = modules.blocks.lastBlock.get();
 
                 function loadBlocks() {
                     __private.blocksToSync = peer.height;
