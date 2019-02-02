@@ -515,7 +515,7 @@ __private.loadBlocksFromNetwork = function (cb) {
             return setImmediate(cb, err);
         }
 
-        let peers = arrayShuffle(network.peers).slice(0, 5);
+        const peers = arrayShuffle(network.peers).slice(0, 5);
         library.logger.debug(`Peers for load blocks: ${JSON.stringify(peers)}`);
 
         async.whilst(
@@ -545,12 +545,12 @@ __private.loadBlocksFromNetwork = function (cb) {
                 }
 
                 function getCommonBlock(getCommonBlockCb) {
-                    library.logger.info(`Looking for common block with: ${peer.string}`);
                     if (peer.height < lastBlock.height) {
                         testCount += 1;
                         return next();
                     }
 
+                    library.logger.info(`Looking for common block with: ${peer.string}`);
                     modules.blocks.process.getCommonBlock(peer, lastBlock.height, (getCommonBlockErr, commonBlock) => {
                         if (!commonBlock) {
                             if (getCommonBlockErr) {
