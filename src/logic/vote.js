@@ -293,7 +293,7 @@ Vote.prototype.verify = function (trs, sender, cb) {
             const isDownVote = trs.trsName === 'DOWNVOTE';
             const totals = await library.frozen.calculateTotalRewardAndUnstake(trs.senderId, isDownVote, trs.timestamp);
             if (totals.reward !== trs.asset.reward) {
-                const msg = 'Verify failed: vote reward is corrupted';
+                const msg = `Verify failed: vote reward is corrupted. Expected: ${trs.asset.reward}, actual: ${totals.reward}`;
                 if (vve.VOTE_REWARD_CORRUPTED) {
                     return setImmediate(seriesCb, msg);
                 }
@@ -346,7 +346,7 @@ Vote.prototype.newVerify = async (trs) => {
     const totals = await library.frozen.calculateTotalRewardAndUnstake(trs.senderId, isDownVote, trs.timestamp);
 
     if (totals.reward !== trs.asset.reward) {
-        throw new Error('Verify failed: vote reward is corrupted');
+        throw new Error(`Verify failed: vote reward is corrupted. Expected: ${trs.asset.reward}, actual: ${totals.reward}`);
     }
 
     if (totals.unstake !== trs.asset.unstake) {
