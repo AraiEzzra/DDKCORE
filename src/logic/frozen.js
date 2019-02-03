@@ -537,7 +537,6 @@ Frozen.prototype.getAirdropReward = async function (senderAddress, amount, trans
     return result;
 };
 
-
 Frozen.prototype.calculateTotalRewardAndUnstake = async function (senderId, isDownVote, timestamp) {
     let reward = 0;
     let unstakeAmount = 0;

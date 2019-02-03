@@ -290,36 +290,38 @@ Vote.prototype.verify = function (trs, sender, cb) {
             self.verifyFields(trs, sender, seriesCb);
         },
         async function (seriesCb) {
-            const isDownVote = trs.trsName === 'DOWNVOTE';
-            const totals = await library.frozen.calculateTotalRewardAndUnstake(trs.senderId, isDownVote, trs.timestamp);
-            if (totals.reward !== trs.asset.reward) {
-                const msg = `Verify failed: vote reward is corrupted. Expected: ${trs.asset.reward}, actual: ${totals.reward}`;
-                if (vve.VOTE_REWARD_CORRUPTED) {
-                    return setImmediate(seriesCb, msg);
-                }
-                library.logger.error(`${msg}!\n${{
-                    id: trs.id,
-                    type: trs.type,
-                    reward: {
-                        asset: trs.asset.reward,
-                        totals: totals.reward,
-                    }
-                }}`);
-            }
-            if (totals.unstake !== trs.asset.unstake) {
-                const msg = 'Verify failed: vote unstake is corrupted';
-                if (vve.VOTE_UNSTAKE_CORRUPTED) {
-                    return setImmediate(seriesCb, msg);
-                }
-                library.logger.error(`${msg}! ${{
-                    id: trs.id,
-                    type: trs.type,
-                    unstake: {
-                        asset: trs.asset.unstake,
-                        totals: totals.unstake,
-                    }
-                }}`);
-            }
+            // TODO: Fix vote reward validation
+            // https://trello.com/c/G4BPyvyV/113-fix-vote-reward-validation
+            // const isDownVote = trs.trsName === 'DOWNVOTE';
+            // const totals = await library.frozen.calculateTotalRewardAndUnstake(trs.senderId, isDownVote, trs.timestamp);
+            // if (totals.reward !== trs.asset.reward) {
+            //     const msg = `Verify failed: vote reward is corrupted. Expected: ${trs.asset.reward}, actual: ${totals.reward}`;
+            //     if (vve.VOTE_REWARD_CORRUPTED) {
+            //         return setImmediate(seriesCb, msg);
+            //     }
+            //     library.logger.error(`${msg}!\n${{
+            //         id: trs.id,
+            //         type: trs.type,
+            //         reward: {
+            //             asset: trs.asset.reward,
+            //             totals: totals.reward,
+            //         }
+            //     }}`);
+            // }
+            // if (totals.unstake !== trs.asset.unstake) {
+            //     const msg = 'Verify failed: vote unstake is corrupted';
+            //     if (vve.VOTE_UNSTAKE_CORRUPTED) {
+            //         return setImmediate(seriesCb, msg);
+            //     }
+            //     library.logger.error(`${msg}! ${{
+            //         id: trs.id,
+            //         type: trs.type,
+            //         unstake: {
+            //             asset: trs.asset.unstake,
+            //             totals: totals.unstake,
+            //         }
+            //     }}`);
+            // }
 
             try {
                 await library.frozen.verifyAirdrop(trs);
@@ -342,16 +344,18 @@ Vote.prototype.newVerify = async (trs) => {
         throw e;
     }
 
-    const isDownVote = trs.trsName === 'DOWNVOTE';
-    const totals = await library.frozen.calculateTotalRewardAndUnstake(trs.senderId, isDownVote, trs.timestamp);
+    // TODO: Fix vote reward validation
+    // https://trello.com/c/G4BPyvyV/113-fix-vote-reward-validation
+    // const isDownVote = trs.trsName === 'DOWNVOTE';
+    // const totals = await library.frozen.calculateTotalRewardAndUnstake(trs.senderId, isDownVote, trs.timestamp);
 
-    if (totals.reward !== trs.asset.reward) {
-        throw new Error(`Verify failed: vote reward is corrupted. Expected: ${trs.asset.reward}, actual: ${totals.reward}`);
-    }
+    // if (totals.reward !== trs.asset.reward) {
+    //     throw new Error(`Verify failed: vote reward is corrupted. Expected: ${trs.asset.reward}, actual: ${totals.reward}`);
+    // }
 
-    if (totals.unstake !== trs.asset.unstake) {
-        throw new Error('Verify failed: vote unstake is corrupted');
-    }
+    // if (totals.unstake !== trs.asset.unstake) {
+    //     throw new Error('Verify failed: vote unstake is corrupted');
+    // }
 
     try {
         await library.frozen.verifyAirdrop(trs);
