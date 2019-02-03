@@ -314,6 +314,12 @@ __private.popLastBlock = function (oldLastBlock, cbPopLastBlock) {
     library.logger.debug(`[Chain][popLastBlock] block: ${JSON.stringify(oldLastBlock)}`);
     // Execute in sequence via balancesSequence
     library.balancesSequence.add((cbAdd) => {
+        let lastBlock = modules.blocks.lastBlock.get();
+        if (oldLastBlock.id !== lastBlock.id) {
+            library.logger.error(`[Chain][popLastBlock] Block ${oldLastBlock.id} is not last`);
+            return setImmediate(cbAdd, `Block is not last: ${JSON.stringify(oldLastBlock)}`, lastBlock);
+        }
+
         // Load previous block from full_blocks_list table
         // TODO: Can be inefficient, need performnce tests
         modules.blocks.utils.loadBlocksPart(oldLastBlock.previousBlock, (err, previousBlock) => {
