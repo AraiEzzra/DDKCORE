@@ -515,8 +515,14 @@ __private.loadBlocksFromNetwork = function (cb) {
             return setImmediate(cb, err);
         }
 
-        const peers = arrayShuffle(network.peers).slice(0, 5);
+        const broadhash = modules.system.getBroadhash();
+        const peersWithAnotherBroadhash = network.peers
+            .filter(peer => peer.broadhash !== broadhash);
+        const peers = arrayShuffle(peersWithAnotherBroadhash).slice(0, 5);
         library.logger.debug(`Peers for load blocks: ${JSON.stringify(peers)}`);
+        if (!peers.length) {
+            return setImmediate(cb);
+        }
 
         async.whilst(
             () => !loaded && testCount < 5,
