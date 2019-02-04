@@ -184,17 +184,24 @@ class TransactionPool {
         return Object.keys(this.pool).length;
     }
 
-    getTransactions = ({ limit = constants.maxSharedTxs, senderPublicKey }: { limit: number, senderPublicKey: string }): Array<Transaction> => {
+    getTransactions = ({ limit = constants.maxSharedTxs, senderPublicKey }: { limit: number, senderPublicKey: string }): { transactions: Array<Transaction>, count: number } => {
         if (senderPublicKey) {
             const senderId = generateAddressByPublicKey(senderPublicKey);
             const recipientTrs = this.poolByRecipient[senderId] || [];
             const senderTrs = this.poolBySender[senderId] || [];
             const dependTransactions = [...recipientTrs, ...senderTrs];
 
-            return dependTransactions.sort(transactionSortFunc).slice(0, Math.min(limit, constants.maxSharedTxs)).reverse();
+            return {
+                transactions: dependTransactions.sort(transactionSortFunc).slice(0, Math.min(limit, constants.maxSharedTxs)).reverse(),
+                count: dependTransactions.length,
+            };
         }
 
-        return Object.values(this.pool).sort(transactionSortFunc).slice(0, Math.min(limit, constants.maxSharedTxs));
+        const transactions = Object.values(this.pool).sort(transactionSortFunc);
+        return {
+            transactions: transactions.slice(0, Math.min(limit, constants.maxSharedTxs)),
+            count: transactions.length,
+        };
     }
 }
 

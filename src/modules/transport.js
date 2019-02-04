@@ -658,9 +658,9 @@ Transport.prototype.internal = {
     },
 
     getTransactions(req, cb) {
-        const transactions = modules.transactions.getMergedTransactionList(true, constants.maxSharedTxs);
+        const res = modules.transactions.getMergedTransactionList(true, constants.maxSharedTxs);
 
-        return setImmediate(cb, null, { success: true, transactions });
+        return setImmediate(cb, null, { success: true, ...res });
     },
 
     postTransactions(query, peer, extraLogMessage, cb) {
