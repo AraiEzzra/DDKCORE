@@ -3,6 +3,7 @@ import { generateAddressByPublicKey, getOrCreateAccount } from 'src/helpers/acco
 import { transactionSortFunc } from 'src/helpers/transaction.utils';
 import * as constants from 'src/helpers/constants.js';
 import * as transactionTypes from 'src/helpers/transactionTypes.js';
+import { AccountSessions } from 'src/helpers/accountSessions';
 
 declare class TransactionPoolScope {
     logger: any;
@@ -202,6 +203,7 @@ declare class TransactionQueueScope {
     transactionLogic: any;
     logger: any;
     db: any;
+    network: any;
 }
 
 export class TransactionQueue {
@@ -213,11 +215,14 @@ export class TransactionQueue {
 
     private locked: boolean = false;
 
-    constructor({ transactionLogic, transactionPool, logger, db }: TransactionQueueScope) {
+    private accountSessions: AccountSessions = AccountSessions.getInstance();
+
+    constructor({ transactionLogic, transactionPool, logger, db, network }: TransactionQueueScope) {
         this.scope.transactionLogic = transactionLogic;
         this.scope.transactionPool = transactionPool;
         this.scope.logger = logger;
         this.scope.db = db;
+        this.scope.network = network;
     }
 
     lock(): void {
@@ -325,6 +330,7 @@ export class TransactionQueue {
         } catch (e) {
             this.scope.logger.debug(`[TransactionQueue][verify]: ${e}`);
             this.scope.logger.debug(`[TransactionQueue][verify][stack]: \n ${e.stack}`);
+            this.sendVerifiedMessage(sender.address, false, e.message);
             return {
                 verified: false,
                 error: [e]
@@ -336,12 +342,14 @@ export class TransactionQueue {
         } catch (e) {
             this.scope.logger.debug(`[TransactionQueue][verifyUnconfirmed]: ${e}`);
             this.scope.logger.debug(`[TransactionQueue][verifyUnconfirmed][stack]: \n ${e.stack}`);
+            this.sendVerifiedMessage(sender.address, false, e.message);
             return {
                 verified: false,
                 error: [e]
             };
         }
 
+        this.sendVerifiedMessage(sender.address, true);
         return {
             verified: true,
             error: []
@@ -350,6 +358,13 @@ export class TransactionQueue {
 
     getSize(): { conflictedQueue: number, queue: number } {
         return { conflictedQueue: this.conflictedQueue.length, queue: this.queue.length };
+    }
+
+    sendVerifiedMessage(address: string, verified: boolean, error?: string) {
+        this.accountSessions.send(address, 'pool/verify', {
+            verified,
+            error
+        })
     }
 }
 
