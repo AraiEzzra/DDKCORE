@@ -113,10 +113,6 @@ Signature.prototype.newVerify = async (trs) => {
     }
 };
 
-Signature.prototype.verifyUnconfirmed = function (trs, sender, cb) {
-    return setImmediate(cb);
-};
-
 Signature.prototype.newVerifyUnconfirmed = async () => {};
 
 /**
@@ -144,38 +140,20 @@ Signature.prototype.getBytes = function (trs) {
     return Buffer.from(trs.asset.signature.publicKey, 'hex');
 };
 
-/**
- * Sets account second signature from transaction asset.
- * @implements module:accounts#Accounts~setAccountAndGet
- * @param {transaction} trs - Uses publicKey from asset signature.
- * @param {block} block - Unnecessary parameter.
- * @param {account} sender - Uses the address
- * @param {function} cb - Callback function.
- * @return {setImmediateCallback} for errors
- */
-Signature.prototype.apply = function (trs, block, sender, cb) {
-    modules.accounts.setAccountAndGet({
-        address: sender.address,
+Signature.prototype.apply = async (trs) => {
+    library.logger.debug(`[Signature][apply] transaction id ${trs.id}`);
+    await library.account.asyncMerge(trs.senderId, {
         secondSignature: 1,
-        u_secondSignature: 0,
-        secondPublicKey: trs.asset.signature.publicKey
-    }, cb);
+        secondPublicKey: trs.asset.signature.publicKey,
+    });
 };
 
-/**
- * Sets account second signature to null.
- * @implements module:accounts#Accounts~setAccountAndGet
- * @param {transaction} trs - Unnecessary parameter.
- * @param {block} block - Unnecessary parameter.
- * @param {account} sender
- * @param {function} cb - Callback function.
- */
 Signature.prototype.undo = async (trs) => {
+    library.logger.debug(`[Signature][undo] transaction id ${trs.id}`);
     await library.account.asyncMerge(trs.senderId, {
         address: trs.senderId,
         secondSignature: 0,
-        u_secondSignature: 1,
-        secondPublicKey: null
+        secondPublicKey: null,
     });
 };
 
@@ -189,7 +167,6 @@ Signature.prototype.undo = async (trs) => {
  * @return {setImmediateCallback} Error if second signature is already enabled.
  */
 Signature.prototype.applyUnconfirmed = function (trs, sender, cb) {
-
     modules.accounts.setAccountAndGet({ address: sender.address, u_secondSignature: 1 }, cb);
 };
 

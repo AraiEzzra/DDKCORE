@@ -1,9 +1,6 @@
-const { TransactionStatus } = require('src/helpers/types');
-
 const crypto = require('crypto');
 const schema = require('../schema/frogings.js');
 const sql = require('../sql/frogings.js');
-const TransactionPool = require('../logic/transactionPool.js');
 const transactionTypes = require('../helpers/transactionTypes.js');
 const Frozen = require('../logic/frozen.js');
 const constants = require('../helpers/constants.js');
@@ -60,17 +57,16 @@ function Frogings(cb, scope) {
 
     self = this;
 
-    __private.transactionPool = new TransactionPool(
-        scope.config.broadcasts.broadcastInterval,
-        scope.config.broadcasts.releaseLimit,
-        scope.config.transactions.maxTxsPerQueue,
-        scope.logic.transaction,
-        scope.bus,
-        scope.logger
-    );
-
     __private.assetTypes[transactionTypes.STAKE] = library.logic.transaction.attachAssetType(
-        transactionTypes.STAKE, new Frozen(scope.logger, scope.db, scope.logic.transaction, scope.network, scope.config, scope.balancesSequence, scope.ed)
+        transactionTypes.STAKE, new Frozen(
+            scope.logger,
+            scope.db,
+            scope.logic.transaction,
+            scope.network,
+            scope.config,
+            scope.balancesSequence,
+            scope.ed
+        )
     );
 
     setImmediate(cb, null, self);
@@ -101,11 +97,6 @@ Frogings.prototype.onBind = function (scope) {
         transactions: scope.transactions
     };
 
-    __private.transactionPool.bind(
-        scope.accounts,
-        scope.transactions,
-        scope.loader
-    );
     __private.assetTypes[transactionTypes.STAKE].bind(
         scope.accounts,
         scope.rounds,
@@ -296,7 +287,6 @@ Frogings.prototype.shared = {
     },
 
     addTransactionForFreeze(req, cb) {
-        let accountData;
         library.schema.validate(req.body, schema.addTransactionForFreeze, (err) => {
             if (err) {
                 return setImmediate(cb, err[0].message);
@@ -312,128 +302,55 @@ Frogings.prototype.shared = {
                 }
             }
 
-            library.balancesSequence.add((cb) => {
-                if (
-                    req.body.multisigAccountPublicKey &&
-                    req.body.multisigAccountPublicKey !== publicKey
-                ) {
-                    modules.accounts.getAccount({ publicKey: req.body.multisigAccountPublicKey }, (err, account) => {
-                        if (err) {
-                            return setImmediate(cb, err);
-                        }
-                        accountData = account;
+            library.balancesSequence.add((sequenceCb) => {
+                modules.accounts.setAccountAndGet({ publicKey: publicKey }, (err, account) => {
+                    if (err) {
+                        return setImmediate(sequenceCb, err);
+                    }
+                    if (!account || !account.publicKey) {
+                        return setImmediate(sequenceCb, 'Account not found');
+                    }
 
-                        if (!account || !account.publicKey) {
-                            return setImmediate(cb, 'Multisignature account not found');
-                        }
+                    if (account.secondSignature && !req.body.secondSecret) {
+                        return setImmediate(sequenceCb, 'Missing second passphrase');
+                    }
 
-                        if (!account.multisignatures || !account.multisignatures) {
-                            return setImmediate(cb, 'Account does not have multisignatures enabled');
-                        }
+                    let secondKeypair = null;
 
-                        if (account.multisignatures.indexOf(publicKey) < 0) {
-                            return setImmediate(cb, 'Account does not belong to multisignature group');
-                        }
+                    if (account.secondSignature) {
+                        const secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
+                        secondKeypair = library.ed.makeKeypair(secondHash);
+                    }
 
-                        modules.accounts.getAccount({ publicKey: keypair.publicKey }, (err, requester) => {
-                            if (err) {
-                                return setImmediate(cb, err);
-                            }
+                    if (
+                        (
+                            req.body.freezedAmount +
+                            (constants.fees.froze * req.body.freezedAmount) / 100 +
+                            parseInt(account.u_totalFrozeAmount)
+                        ) > parseInt(account.u_balance)
+                    ) {
+                        return setImmediate(sequenceCb, 'Insufficient balance');
+                    }
 
-                            if (!requester || !requester.publicKey) {
-                                return setImmediate(cb, 'Requester not found');
-                            }
-
-                            if (requester.secondSignature && !req.body.secondSecret) {
-                                return setImmediate(cb, 'Missing second passphrase');
-                            }
-
-                            if (requester.publicKey === account.publicKey) {
-                                return setImmediate(cb, 'Invalid requester public key');
-                            }
-
-                            let secondKeypair = null;
-
-                            if (requester.secondSignature) {
-                                const secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
-                                secondKeypair = library.ed.makeKeypair(secondHash);
-                            }
-
-                            if (
-                                (
-                                    req.body.freezedAmount +
-                                    (constants.fees.froze * req.body.freezedAmount) / 100 +
-                                    parseInt(account.u_totalFrozeAmount)
-                                ) > parseInt(account.u_balance)
-                            ) {
-                                return setImmediate(cb, 'Insufficient balance');
-                            }
-
-                            library.logic.transaction.create({
-                                type: transactionTypes.STAKE,
-                                freezedAmount: req.body.freezedAmount,
-                                sender: account,
-                                keypair,
-                                secondKeypair,
-                                requester: keypair
-                            }).then((transactionStake) => {
-                                transactionStake.status = 0;
-                                modules.transactions.putInQueue(transactionStake);
-                                return setImmediate(cb, null, [transactionStake]);
-                            }).catch(e => setImmediate(cb, e.toString()));
-                        });
-                    });
-                } else {
-                    modules.accounts.setAccountAndGet({ publicKey: publicKey }, (err, account) => {
-                        if (err) {
-                            return setImmediate(cb, err);
-                        }
-                        accountData = account;
-                        if (!account || !account.publicKey) {
-                            return setImmediate(cb, 'Account not found');
-                        }
-
-                        if (account.secondSignature && !req.body.secondSecret) {
-                            return setImmediate(cb, 'Missing second passphrase');
-                        }
-
-                        let secondKeypair = null;
-
-                        if (account.secondSignature) {
-                            const secondHash = crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
-                            secondKeypair = library.ed.makeKeypair(secondHash);
-                        }
-
-                        if (
-                            (
-                                req.body.freezedAmount +
-                                (constants.fees.froze * req.body.freezedAmount) / 100 +
-                                parseInt(account.u_totalFrozeAmount)
-                            ) > parseInt(account.u_balance)
-                        ) {
-                            return setImmediate(cb, 'Insufficient balance');
-                        }
-
-                        library.logic.transaction.create({
-                            type: transactionTypes.STAKE,
-                            freezedAmount: req.body.freezedAmount,
-                            sender: account,
-                            keypair,
-                            secondKeypair
-                        }).then((transactionStake) => {
-                            transactionStake.status = 0;
-                            modules.transactions.putInQueue(transactionStake);
-                            return setImmediate(cb, null, [transactionStake]);
-                        }).catch(e => setImmediate(cb, e.toString()));
-                    });
-                }
+                    library.logic.transaction.create({
+                        type: transactionTypes.STAKE,
+                        freezedAmount: req.body.freezedAmount,
+                        sender: account,
+                        keypair,
+                        secondKeypair
+                    }).then((transactionStake) => {
+                        transactionStake.status = 0;
+                        modules.transactions.putInQueue(transactionStake);
+                        return setImmediate(sequenceCb, null, transactionStake);
+                    }).catch(e => setImmediate(sequenceCb, e.toString()));
+                });
             }, (err, transaction) => {
                 if (err) {
                     return setImmediate(cb, err);
                 }
                 library.network.io.sockets.emit('updateTotalStakeAmount', null);
                 return setImmediate(cb, null, {
-                    transaction: transaction[0],
+                    transaction,
                     referStatus: true
                 });
             });

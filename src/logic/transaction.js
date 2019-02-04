@@ -1,6 +1,5 @@
 const { TransactionStatus } = require('src/helpers/types');
 
-const async = require('async');
 const bignum = require('../helpers/bignum.js');
 const sodium = require('sodium-javascript');
 const transactionTypes = require('../helpers/transactionTypes.js');
@@ -10,7 +9,6 @@ const exceptions = require('../helpers/exceptions.js');
 const extend = require('extend');
 const slots = require('../helpers/slots.js');
 const sql = require('../sql/transactions.js');
-const sqlAccount = require('../sql/accounts.js');
 const sqlFroging = require('../sql/frogings.js');
 const request = require('request');
 const utils = require('../utils.js');
@@ -291,23 +289,6 @@ Transaction.prototype.countById = (trs, cb) => {
         });
 };
 
-/**
- * @implements {countById}
- * @param {transaction} trs
- * @param {function} cb
- * @return {setImmediateCallback} error | cb
- */
-Transaction.prototype.checkConfirmed = function (trs, cb) {
-    self.countById(trs, (err, count) => {
-        if (err) {
-            return setImmediate(cb, err);
-        } else if (count > 0) {
-            return setImmediate(cb, `Transaction is already confirmed: ${trs.id}`);
-        }
-        return setImmediate(cb);
-    });
-};
-
 Transaction.prototype.newCheckConfirmed = async (trs) => {
     let result = {};
     try {
@@ -359,65 +340,6 @@ Transaction.prototype.checkBalance = (amount, trs, sender) => {
     };
 };
 
-/**
- * Validates parameters.
- * Calls `process` based on trs type (see privateTypes)
- * @see privateTypes
- * @implements {getId}
- * @param {transaction} trs
- * @param {account} sender
- * @param {account} requester
- * @param {function} cb
- * @return {setImmediateCallback} validation errors | trs
- */
-Transaction.prototype.process = (trs, sender, requester, cb) => {
-    if (typeof requester === 'function') {
-        cb = requester;
-    }
-
-    // Check transaction type
-    if (!__private.types[trs.type]) {
-        return setImmediate(cb, `Unknown transaction type ${trs.type}`);
-    }
-
-    // if (!this.ready(trs, sender)) {
-    //     return setImmediate(cb, 'Transaction is not ready: ' + trs.id);
-    // }
-
-    // Check sender
-    if (!sender) {
-        return setImmediate(cb, 'Missing sender');
-    }
-
-    // Get transaction id
-    let txId;
-
-    try {
-        txId = self.getId(trs);
-    } catch (e) {
-        self.scope.logger.error(e.stack);
-        return setImmediate(cb, 'Failed to get transaction id');
-    }
-
-    // Check transaction id
-    if (trs.id && trs.id !== txId) {
-        return setImmediate(cb, 'Invalid transaction id');
-    }
-    trs.id = txId;
-
-
-    // Equalize sender address
-    trs.senderId = sender.address;
-
-    // Call process on transaction type
-    __private.types[trs.type].process.call(self, trs, sender, (err, transaction) => {
-        if (err) {
-            return setImmediate(cb, err);
-        }
-        return setImmediate(cb, null, transaction);
-    });
-};
-
 Transaction.prototype.newProcess = (trs, sender) => {
     // Check transaction type
     if (!__private.types[trs.type]) {
@@ -436,264 +358,6 @@ Transaction.prototype.newProcess = (trs, sender) => {
     if (trs.id && trs.id !== txId) {
         throw new Error('Invalid transaction id');
     }
-};
-
-Transaction.prototype.getAccountStatus = (trs, cb) => {
-    self.scope.db.one(sqlAccount.checkAccountStatus, {
-        senderId: trs.senderId
-    }).then((row) => {
-        if (row.status === 0) {
-            return setImmediate(cb, 'Invalid transaction : account disabled');
-        }
-        return setImmediate(cb, null, row.status);
-    }).catch((err) => {
-        self.scope.logger.error(err.stack);
-        return setImmediate(cb, 'Transaction#checkAccountStatus error');
-    });
-};
-
-/**
- * Validates transaction fields.
- * @param {transaction} trs
- * @param {account} sender
- * @param {account} requester
- * @param {function} cb
- * @return {setImmediateCallback} validation errors | trs
- */
-Transaction.prototype.verifyFields = ({ trs, sender, requester = {}, cb }) => {
-    let valid = false;
-    let err = null;
-
-    // Check sender
-    if (!sender) {
-        if (constants.TRANSACTION_VALIDATION_ENABLED.SENDER) {
-            return setImmediate(cb, 'Missing sender');
-        }
-        self.scope.logger.error('Transaction sender error');
-    }
-
-    // Check transaction type
-    if (!__private.types[trs.type]) {
-        if (constants.TRANSACTION_VALIDATION_ENABLED.TYPE) {
-            return setImmediate(cb, `Unknown transaction type ${trs.type}`);
-        }
-        self.scope.logger.error('Transaction error type');
-    }
-
-    // Check for missing sender second signature
-    if (!trs.requesterPublicKey &&
-        sender.secondSignature &&
-        !trs.signSignature &&
-        trs.blockId !== self.scope.genesisblock.block.id
-    ) {
-        if (constants.TRANSACTION_VALIDATION_ENABLED.SECOND_SIGNATURE) {
-            return setImmediate(cb, 'Missing sender second signature');
-        }
-        self.scope.logger.error('Missing sender second signature');
-    }
-
-    // If second signature provided, check if sender has one enabled
-    if (!trs.requesterPublicKey && !sender.secondSignature && (trs.signSignature && trs.signSignature.length > 0)) {
-        if (constants.TRANSACTION_VALIDATION_ENABLED.SENDER_SECOND_SIGNATURE) {
-            return setImmediate(cb, 'Sender does not have a second signature');
-        }
-        self.scope.logger.error('Sender does not have a second signature');
-    }
-
-    // Check for missing requester second signature
-    if (trs.requesterPublicKey && requester.secondSignature && !trs.signSignature) {
-        if (constants.TRANSACTION_VALIDATION_ENABLED.REQUEST_SECOND_SIGNATURE) {
-            return setImmediate(cb, 'Missing requester second signature');
-        }
-        self.scope.logger.error('Missing requester second signature');
-    }
-
-    // If second signature provided, check if requester has one enabled
-    if (trs.requesterPublicKey && !requester.secondSignature && (trs.signSignature && trs.signSignature.length > 0)) {
-        if (constants.TRANSACTION_VALIDATION_ENABLED.CHECKING_REQUEST_SECOND_SIGNATURE) {
-            return setImmediate(cb, 'Requester does not have a second signature');
-        }
-        self.scope.logger.error('Requester does not have a second signature');
-    }
-
-    // Check sender public key
-    if (sender.publicKey && sender.publicKey !== trs.senderPublicKey) {
-        err = ['Invalid sender public key:', trs.senderPublicKey, 'expected:', sender.publicKey].join(' ');
-        if (constants.TRANSACTION_VALIDATION_ENABLED.SENDER_PUBLIC_KEY) {
-            if (exceptions.senderPublicKey.indexOf(trs.id) > -1) {
-                self.scope.logger.debug(err);
-                self.scope.logger.debug(JSON.stringify(trs));
-            } else {
-                return setImmediate(cb, err);
-            }
-        } else {
-            self.scope.logger.error('Sender public key error');
-        }
-    }
-
-    // Check sender is not genesis account unless block id equals genesis
-    if (
-        [exceptions.genesisPublicKey.mainnet, exceptions.genesisPublicKey.testnet].indexOf(sender.publicKey) !== -1
-        && trs.blockId !== self.scope.genesisblock.block.id
-    ) {
-        if (constants.TRANSACTION_VALIDATION_ENABLED.SENDER_GENESIS_ACCOUNT) {
-            return setImmediate(cb, 'Invalid sender. Can not send from genesis account');
-        }
-        self.scope.logger.error('Invalid sender. Can not send from genesis account');
-    }
-
-    // Check sender address
-    if (String(trs.senderId).toUpperCase() !== String(sender.address).toUpperCase()) {
-        if (constants.TRANSACTION_VALIDATION_ENABLED.SENDER_ADDRESS) {
-            return setImmediate(cb, 'Invalid sender address');
-        }
-        self.scope.logger.error('Invalid sender address');
-    }
-
-    // Determine multisignatures from sender or transaction asset
-    const multisignatures = sender.multisignatures || sender.u_multisignatures || [];
-    if (multisignatures.length === 0) {
-        if (trs.asset && trs.asset.multisignature && trs.asset.multisignature.keysgroup) {
-            for (let i = 0; i < trs.asset.multisignature.keysgroup.length; i++) {
-                const key = trs.asset.multisignature.keysgroup[i];
-
-                if (!key || typeof key !== 'string') {
-                    if (constants.TRANSACTION_VALIDATION_ENABLED.KEYSGROUP_MEMBER) {
-                        return setImmediate(cb, 'Invalid member in keysgroup');
-                    }
-                    self.scope.logger.error('Invalid member in keysgroup');
-                }
-
-                multisignatures.push(key.slice(1));
-            }
-        }
-    }
-
-    // Check requester public key
-    if (trs.requesterPublicKey) {
-        multisignatures.push(trs.senderPublicKey);
-
-        if (sender.multisignatures.indexOf(trs.requesterPublicKey) < 0) {
-            if (constants.TRANSACTION_VALIDATION_ENABLED.MULTISIGNATURE_GROUP) {
-                return setImmediate(cb, 'Account does not belong to multisignature group');
-            }
-            self.scope.logger.error('Account does not belong to multisignature group');
-        }
-    }
-
-    // Verify signature
-    try {
-        valid = self.verifySignature(trs, (trs.requesterPublicKey || trs.senderPublicKey), trs.signature);
-    } catch (e) {
-        self.scope.logger.error(e.stack);
-        if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_SIGNATURE) {
-            return setImmediate(cb, e.toString());
-        }
-        self.scope.logger.error('Transaction verify error');
-    }
-
-    if (!valid) {
-        err = 'Failed to verify signature';
-
-        if (exceptions.signatures.indexOf(trs.id) > -1) {
-            self.scope.logger.debug(err);
-            self.scope.logger.debug(JSON.stringify(trs));
-            valid = true;
-            err = null;
-        } else {
-            if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_SIGNATURE) {
-                return setImmediate(cb, err);
-            }
-            self.scope.logger.error('Transaction verify error');
-        }
-    }
-
-    // Verify second signature
-    if (requester.secondSignature || sender.secondSignature) {
-        try {
-            valid = self.verifySecondSignature(
-                trs,
-                (requester.secondPublicKey || sender.secondPublicKey),
-                trs.signSignature
-            );
-        } catch (e) {
-            if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_SECOND_SIGNATURE) {
-                return setImmediate(cb, e.toString());
-            }
-            self.scope.logger.error('Transaction verify second signature error');
-        }
-
-        if (!valid) {
-            if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_SECOND_SIGNATURE) {
-                return setImmediate(cb, 'Failed to verify second signature');
-            }
-            self.scope.logger.error('Failed to verify second signature');
-        }
-    }
-
-    // Check that signatures are unique
-    if (trs.signatures && trs.signatures.length) {
-        const signatures = trs.signatures.reduce((p, c) => {
-            if (p.indexOf(c) < 0) {
-                p.push(c);
-            }
-            return p;
-        }, []);
-
-        if (signatures.length !== trs.signatures.length) {
-            if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_SIGNATURE_UNIQUE) {
-                return setImmediate(cb, 'Encountered duplicate signature in transaction');
-            }
-            self.scope.logger.error('Encountered duplicate signature in transaction');
-        }
-    }
-
-    // Verify multisignatures
-    if (trs.signatures) {
-        for (let d = 0; d < trs.signatures.length; d++) {
-            valid = false;
-
-            for (let s = 0; s < multisignatures.length; s++) {
-                if (trs.requesterPublicKey && multisignatures[s] === trs.requesterPublicKey) {
-                    continue;
-                }
-
-                if (self.verifySignature(trs, multisignatures[s], trs.signatures[d])) {
-                    valid = true;
-                }
-            }
-
-            if (!valid) {
-                if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_MULTISIGNATURE) {
-                    return setImmediate(cb, 'Failed to verify multisignature');
-                }
-                self.scope.logger.error('Failed to verify multisignature');
-            }
-        }
-    }
-
-    // Check amount
-    if (
-        trs.amount < 0 ||
-        trs.amount > constants.totalAmount ||
-        String(trs.amount).indexOf('.') >= 0 ||
-        trs.amount.toString().indexOf('e') >= 0
-    ) {
-        if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_AMOUNT) {
-            return setImmediate(cb, 'Invalid transaction amount');
-        }
-        self.scope.logger.error('Invalid transaction amount');
-    }
-
-    // Check timestamp
-    if (slots.getSlotNumber(trs.timestamp) > slots.getSlotNumber()) {
-        if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_TIMESTAMP) {
-            return setImmediate(cb, 'Invalid transaction timestamp. Timestamp is in the future');
-        }
-        self.scope.logger.error('Invalid transaction timestamp. Timestamp is in the future');
-    }
-
-    setImmediate(cb);
 };
 
 Transaction.prototype.newVerifyFields = ({ trs, sender }) => {
@@ -850,60 +514,6 @@ Transaction.prototype.newVerifyFields = ({ trs, sender }) => {
     }
 };
 
-
-/**
- * Validates new transaction.
- * Calls `verify` based on transaction type (see privateTypes)
- * @see privateTypes
- * @implements {getId}
- * @param {transaction} trs
- * @param {account} sender
- * @param {account} requester
- * @param {boolean} checkExists - Check if transaction already exists in database
- * @param {function} cb
- * @return {setImmediateCallback} validation errors | trs
- */
-Transaction.prototype.verify = ({ trs, sender, requester = {}, checkExists = false, cb }) => {
-    const verifyTransactionTypes = (transaction, innerSender, verifyTransactionTypesCb) => {
-        __private.types[trs.type].verify.call(self, transaction, innerSender, (err) => {
-            if (err) {
-                if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_TYPE) {
-                    return setImmediate(verifyTransactionTypesCb, err);
-                }
-                self.scope.logger.error('Transaction types error');
-            }
-            return setImmediate(verifyTransactionTypesCb);
-        });
-    };
-
-    async.series([
-        seriesCb => self.verifyFields({ trs, sender, requester, cb: seriesCb }),
-        (seriesCb) => {
-            if (checkExists) {
-                self.checkConfirmed(trs, (checkConfirmedErr, isConfirmed) => {
-                    if (checkConfirmedErr) {
-                        if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_CONFIRMED) {
-                            return setImmediate(seriesCb, checkConfirmedErr);
-                        }
-                        self.scope.logger.error('Transaction confirm error');
-                    }
-
-                    if (isConfirmed) {
-                        if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_CONFIRMED) {
-                            return setImmediate(seriesCb, `Transaction is already confirmed: ${trs.id}`);
-                        }
-                        self.scope.logger.error('Transaction confirm error');
-                    }
-
-                    return verifyTransactionTypes(trs, sender, seriesCb);
-                });
-            } else {
-                return verifyTransactionTypes(trs, sender, seriesCb);
-            }
-        },
-    ], err => setImmediate(cb, err));
-};
-
 Transaction.prototype.newVerify = async ({ trs, sender, checkExists = false }) => {
     try {
         self.newProcess(trs, sender);
@@ -935,50 +545,6 @@ Transaction.prototype.calculateUnconfirmedFee = (trs, sender) =>
         __private.types[trs.type].calculateUnconfirmedFee ||
         __private.types[trs.type].calculateFee
     ).call(self, trs, sender);
-
-/**
- * Validates unconfirmed transaction.
- * Calls `verifyUnconfirmed` based on trs type
- * @param {transaction} trs
- * @param {account} sender
- * @param {account} requester
- * @param {function} cb
- * @return {setImmediateCallback} validation errors | trs
- */
-Transaction.prototype.verifyUnconfirmed = ({ trs, sender, cb }) => {
-    const fee = self.calculateUnconfirmedFee(trs, sender);
-    if (trs.type !== transactionTypes.REFERRAL &&
-        !(trs.type === transactionTypes.STAKE && trs.stakedAmount < 0) &&
-        (!fee || trs.fee !== fee)
-    ) {
-        if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_FEE) {
-            return setImmediate(cb, 'Invalid transaction fee');
-        }
-        self.scope.logger.error('Invalid transaction fee');
-    }
-
-    // Check sender not able to do transaction on froze amount
-    const amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
-
-    const senderBalance = self.checkBalance(amount, trs, sender);
-
-    if (senderBalance.exceeded) {
-        if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_SENDER_BALANCE) {
-            return setImmediate(cb, senderBalance.error);
-        }
-        self.scope.logger.error('Sender unconfirmed balance error');
-    }
-
-    __private.types[trs.type].verifyUnconfirmed.call(self, trs, sender, (err) => {
-        if (err) {
-            if (constants.TRANSACTION_VALIDATION_ENABLED.VERIFY_TRANSACTION_TYPE) {
-                return setImmediate(cb, err);
-            }
-            self.scope.logger.error('Transaction types error');
-        }
-        return setImmediate(cb);
-    });
-};
 
 Transaction.prototype.newVerifyUnconfirmed = async ({ trs, sender }) => {
     trs.fee = self.calculateUnconfirmedFee(trs, sender);
@@ -1072,95 +638,36 @@ Transaction.prototype.verifyBytes = (bytes, publicKey, signature) => {
     return sodium.crypto_sign_verify_detached(signatureBuffer, hash, publicKeyBuffer);
 };
 
-/**
- * Merges account into sender address, Calls `apply` based on trs type (privateTypes).
- * @see privateTypes
- * @implements {checkBalance}
- * @implements {account.merge}
- * @implements {modules.rounds.calc}
- * @param {transaction} trs
- * @param {block} block
- * @param {account} sender
- * @param {function} cb - Callback function
- * @return {setImmediateCallback} for errors | cb
- */
-Transaction.prototype.apply = (trs, block, sender, cb) => {
-    if (!self.ready(trs, sender)) {
-        return setImmediate(cb, 'Transaction is not ready');
-    }
-
-    let amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
-
-    amount = amount.toNumber();
-
-    self.scope.logger.trace('Logic/Transaction->apply', {
-        sender: sender.address, balance: -amount, blockId: block.id, round: modules.rounds.calc(block.height)
-    });
-    self.scope.account.merge(sender.address, {
-        balance: -amount,
-        blockId: block.id,
-        round: modules.rounds.calc(block.height)
-    }, (err, mergedSender) => {
-        if (err) {
-            return setImmediate(cb, err);
-        }
-        /**
-         * calls apply for Transfer, Signature, Delegate, Vote, Multisignature,
-         * DApp, InTransfer or OutTransfer.
-         */
-        __private.types[trs.type].apply.call(self, trs, block, mergedSender, (applyErr) => {
-            if (applyErr) {
-                self.scope.account.merge(mergedSender.address, {
-                    balance: amount,
-                    blockId: block.id,
-                    round: modules.rounds.calc(block.height)
-                }, mergeErr => setImmediate(cb, mergeErr || applyErr));
-            } else {
-                return setImmediate(cb);
-            }
-        });
-    });
-};
-
 Transaction.prototype.newApply = async (trs, block, sender) => {
     const amount = trs.amount + trs.fee;
 
-    self.scope.logger.trace('Logic/Transaction->apply', {
-        sender: sender.address, balance: -amount, blockId: block.id, round: modules.rounds.calc(block.height)
+    self.scope.logger.debug('[LogicTransaction][apply][merge]', {
+        sender: sender.address,
+        balance: -amount
     });
 
     const mergedSender = await self.scope.account.asyncMerge(sender.address, {
         balance: -amount,
-        blockId: block.id,
-        round: modules.rounds.calc(block.height)
+        blockId: block.id
     });
     try {
-        await (new Promise((resolve, reject) => {
-            __private.types[trs.type].apply.call(self, trs, block, mergedSender, (err) => {
-                if (err) {
-                    reject(err);
-                }
-                trs.status = TransactionStatus.APPLIED;
-                resolve();
-            });
-        }));
+        await __private.types[trs.type].apply.call(self, trs);
     } catch (e) {
         await self.scope.account.asyncMerge(mergedSender.address, {
             balance: amount,
-            blockId: block.id,
-            round: modules.rounds.calc(block.height)
+            blockId: block.id
         });
         trs.status = TransactionStatus.DECLINED;
         self.scope.logger.error(`[Logic/Transaction][apply]: ${e}`);
         self.scope.logger.error(`[Logic/Transaction][apply][stack]: ${e.stack}`);
     }
-    self.scope.logger.debug(`[Logic/Transaction][apply]: transaction applied ${JSON.stringify(trs)}`);
+    self.scope.logger.debug(`[TransactionLogic][lifecycle][apply]: transaction applied ${JSON.stringify(trs)}`);
 };
 
-Transaction.prototype.undo = async (trs, block) => {
+Transaction.prototype.undo = async (trs) => {
     const amount = trs.amount + trs.fee;
 
-    self.scope.logger.debug(`[TransactionLogic][undo] ${JSON.stringify({
+    self.scope.logger.debug(`[TransactionLogic][undo][merge] ${JSON.stringify({
         sender: trs.senderId,
         balance: amount,
         totalFrozeAmount: -trs.stakedAmount
@@ -1169,8 +676,6 @@ Transaction.prototype.undo = async (trs, block) => {
     const mergedSender = await self.scope.account.asyncMerge(trs.senderId, {
         balance: amount,
         totalFrozeAmount: -trs.stakedAmount,
-        blockId: block.id,
-        round: modules.rounds.calc(block.height)
     });
 
     try {
@@ -1186,70 +691,7 @@ Transaction.prototype.undo = async (trs, block) => {
         );
         throw err;
     }
-};
-
-/**
- * Checks unconfirmed sender balance. Merges account into sender address with
- * unconfirmed balance negative amount.
- * Calls `applyUnconfirmed` based on trs type (privateTypes). If error merge
- * account with amount.
- * @see privateTypes
- * @implements {bignum}
- * @implements {checkBalance}
- * @implements {account.merge}
- * @param {transaction} trs
- * @param {account} sender
- * @param {account} requester
- * @param {function} cb - Callback function
- * @return {setImmediateCallback} for errors | cb
- */
-Transaction.prototype.applyUnconfirmed = (trs, sender, requester, cb) => {
-    if (typeof requester === 'function') {
-        cb = requester;
-    }
-    let amount = new bignum(trs.amount.toString()).plus(trs.fee.toString());
-
-    amount = amount.toNumber();
-
-    if (trs.type === transactionTypes.STAKE) {
-        self.scope.account.merge(sender.address, {
-            u_balance: -amount,
-            u_totalFrozeAmount: trs.stakedAmount
-        }, (err, mergedSender) => {
-            if (err) {
-                return setImmediate(cb, err);
-            }
-
-            __private.types[trs.type].applyUnconfirmed.call(self, trs, mergedSender, (applyUnconfirmedError) => {
-                if (applyUnconfirmedError) {
-                    self.scope.account.merge(mergedSender.address, {
-                        u_balance: amount,
-                        u_totalFrozeAmount: -trs.stakedAmount
-                    }, mergedError => setImmediate(cb, mergedError || applyUnconfirmedError));
-                } else {
-                    return setImmediate(cb);
-                }
-            });
-        });
-    } else {
-        self.scope.account.merge(sender.address, { u_balance: -amount }, (err, mergedSender) => {
-            if (err) {
-                return setImmediate(cb, err);
-            }
-
-            __private.types[trs.type].applyUnconfirmed.call(self, trs, mergedSender, (applyUnconfirmedError) => {
-                if (applyUnconfirmedError) {
-                    self.scope.account.merge(
-                        mergedSender.address,
-                        { u_balance: amount },
-                        mergeError => setImmediate(cb, mergeError || applyUnconfirmedError)
-                    );
-                } else {
-                    return setImmediate(cb);
-                }
-            });
-        });
-    }
+    self.scope.logger.debug(`[TransactionLogic][lifecycle][undo]: transaction undo ${JSON.stringify(trs)}`);
 };
 
 Transaction.prototype.newApplyUnconfirmed = async (trs) => {
@@ -1339,6 +781,7 @@ Transaction.prototype.undoUnconfirmed = (trs, sender, cb) => {
 };
 
 Transaction.prototype.newUndoUnconfirmed = async (trs) => {
+    self.scope.logger.debug(`[Transaction][newUndoUnconfirmed] transaction id ${trs.id}`);
     const amount = trs.amount + trs.fee;
 
     const mergedSender = await self.scope.account.asyncMerge(

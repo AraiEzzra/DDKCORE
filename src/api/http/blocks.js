@@ -1,5 +1,6 @@
 const Router = require('../../helpers/router');
 const httpApi = require('../../helpers/httpApi');
+const constants = require('../../helpers/constants');
 
 /**
  * Binds api with modules and creates common url.
@@ -47,6 +48,10 @@ function BlocksHttpApi(blocksModule, app, logger, cache) {
         'get /getSupply': 'getSupply',
         'get /getStatus': 'getStatus'
     });
+
+    if (constants.NODE_ENV_IN === 'development') {
+        router.map(blocksModule.internal, { 'get /popLastBlock': 'popLastBlock' });
+    }
 
     httpApi.registerEndpoint('/api/blocks', app, router, blocksModule.isLoaded);
 }

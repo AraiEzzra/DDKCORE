@@ -269,20 +269,6 @@ __private.loadTransactions = function (cb) {
                 return setImmediate(eachSeriesCb);
             }, err => setImmediate(waterCb, err, transactions));
         },
-        function (transactions, waterCb) {
-            async.eachSeries(transactions, (transaction, eachSeriesCb) => {
-                library.balancesSequence.add((cb) => {
-                    transaction.bundled = true;
-                    modules.transactions.processUnconfirmedTransaction(transaction, false, cb);
-                }, (err) => {
-                    if (err) {
-                        // TODO: Validate if must include error propagation.
-                        library.logger.debug(err);
-                    }
-                    return setImmediate(eachSeriesCb);
-                });
-            }, waterCb);
-        }
     ], err => setImmediate(cb, err));
 };
 
@@ -449,6 +435,10 @@ Loader.prototype.loadBlockChain = function (cb) {
 
         const round = modules.rounds.calc(count);
 
+        if (count === 1) {
+            return reload(count);
+        }
+
         matchGenesisBlock(results[1][0]);
 
         if (verifyOnLoading) {
@@ -517,17 +507,26 @@ Loader.prototype.loadBlockChain = function (cb) {
  * @return {setImmediateCallback} cb, err
  */
 __private.loadBlocksFromNetwork = function (cb) {
-    let errorCount = 0;
+    let testCount = 0;
     let loaded = false;
 
     self.getNetwork((err, network) => {
         if (err) {
             return setImmediate(cb, err);
         }
+
+        let peers = arrayShuffle(network.peers).slice(0, 5);
+        library.logger.debug(`Peers for load blocks: ${JSON.stringify(peers)}`);
+
         async.whilst(
-            () => !loaded && errorCount < 5,
+            () => !loaded && testCount < 5,
             (next) => {
-                const peer = network.peers[Math.floor(Math.random() * network.peers.length)];
+                const peer = peers[testCount || 0];
+                if (!peer) {
+                    testCount += 1;
+                    return next();
+                }
+
                 let lastBlock = modules.blocks.lastBlock.get();
 
                 function loadBlocks() {
@@ -537,7 +536,7 @@ __private.loadBlocksFromNetwork = function (cb) {
                         if (loadBlocksFromPeerErr) {
                             library.logger.error(loadBlocksFromPeerErr.toString());
                             library.logger.error(`Failed to load blocks from: ${peer.string}`);
-                            errorCount += 1;
+                            testCount += 1;
                         }
                         loaded = lastValidBlock.id === lastBlock.id;
                         lastValidBlock = lastBlock = null;
@@ -547,16 +546,22 @@ __private.loadBlocksFromNetwork = function (cb) {
 
                 function getCommonBlock(getCommonBlockCb) {
                     library.logger.info(`Looking for common block with: ${peer.string}`);
+                    if (peer.height < lastBlock.height) {
+                        testCount += 1;
+                        return next();
+                    }
+
                     modules.blocks.process.getCommonBlock(peer, lastBlock.height, (getCommonBlockErr, commonBlock) => {
                         if (!commonBlock) {
                             if (getCommonBlockErr) {
                                 library.logger.error(getCommonBlockErr.toString());
                             }
                             library.logger.error(`Failed to find common block with: ${peer.string}`);
-                            errorCount += 1;
+                            testCount += 1;
                             return next();
                         }
                         library.logger.info(['Found common block:', commonBlock.id, 'with:', peer.string].join(' '));
+                        library.logger.debug(`Found common block: ${JSON.stringify(commonBlock)}`);
                         return setImmediate(getCommonBlockCb);
                     });
                 }
@@ -577,6 +582,14 @@ __private.loadBlocksFromNetwork = function (cb) {
         );
     });
 };
+
+function arrayShuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
 
 /**
  * - Undoes unconfirmed transactions.
@@ -647,22 +660,23 @@ __private.sync = function (cb) {
  * @param {number} heights
  * @return {Object} {height number, peers array}
  */
-__private.findGoodPeers = function (heights) {
+__private.findGoodPeers = function (peers) {
+    library.logger.debug(`[loader][findGoodPeers] peers: ${JSON.stringify(peers)}`);
     const lastBlockHeight = modules.blocks.lastBlock.get().height;
-    library.logger.trace('Good peers - received', { count: heights.length });
+    library.logger.debug('Good peers - received', { count: peers.length });
+    library.logger.debug('Good peers - received', { peers: JSON.stringify(peers) });
 
-    heights = heights.filter(item =>
-        // Removing unreachable peers or heights below last block height
-    item != null && item.height >= lastBlockHeight);
+    peers = peers.filter(item => item && item.height >= lastBlockHeight);
 
-    library.logger.trace('Good peers - filtered', { count: heights.length });
+    library.logger.debug('Good peers - filtered', { count: peers.length });
+    library.logger.debug('Good peers - filtered', { peers: JSON.stringify(peers) });
 
     // No peers found
-    if (heights.length === 0) {
+    if (peers.length === 0) {
         return { height: 0, peers: [] };
     }
     // Ordering the peers with descending height
-    heights = heights.sort((a, b) => b.height - a.height);
+    peers = peers.sort((a, b) => b.height - a.height);
 
     const histogram = {};
     let max = 0;
@@ -672,8 +686,8 @@ __private.findGoodPeers = function (heights) {
     const aggregation = 2;
 
     // Histogram calculation, together with histogram maximum
-    for (const i in heights) {
-        const val = parseInt(heights[i].height / aggregation) * aggregation;
+    for (const i in peers) {
+        const val = parseInt(peers[i].height / aggregation) * aggregation;
         histogram[val] = (histogram[val] ? histogram[val] : 0) + 1;
 
         if (histogram[val] > max) {
@@ -683,12 +697,12 @@ __private.findGoodPeers = function (heights) {
     }
 
     // Performing histogram cut of peers too far from histogram maximum
-    const peers = heights.filter(item => item && Math.abs(height - item.height) < aggregation + 1).map(item => library.logic.peers.create(item));
+    const goodPeers = peers.filter(item => item && Math.abs(height - item.height) < aggregation + 1).map(item => library.logic.peers.create(item));
 
-    library.logger.trace('Good peers - accepted', { count: peers.length });
-    library.logger.debug('Good peers', peers);
+    library.logger.debug('Good peers - accepted', { count: goodPeers.length });
+    library.logger.debug('Good peers', goodPeers);
 
-    return { height, peers };
+    return { height, peers: goodPeers };
 };
 
 // Public methods
@@ -706,10 +720,7 @@ __private.findGoodPeers = function (heights) {
  * @return {setImmediateCallback} err | __private.network (good peers)
  */
 Loader.prototype.getNetwork = function (cb) {
-    if (__private.network.height > 0 && Math.abs(__private.network.height - modules.blocks.lastBlock.get().height) === 1) {
-        return setImmediate(cb, null, __private.network);
-    }
-
+    library.logger.debug(`[Loader][getNetwork]`);
     modules.peers.list({}, (err, peers) => {
         if (err) {
             return setImmediate(cb, err);

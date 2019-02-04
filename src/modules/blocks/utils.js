@@ -111,7 +111,7 @@ Utils.prototype.readDbRows = function (rows) {
  * @return {Object}   cb.rows List of normalized blocks
  */
 Utils.prototype.loadBlocksPart = function (previousBlockId, cb) {
-    library.logger.debug(`[Utils][loadBlocksPart]', previousBlockId ${previousBlockId}`);
+    library.logger.debug(`[Utils][loadBlocksPart]' previousBlockId: ${previousBlockId}`);
     library.db.manyOrNone(sql.loadFullBlockById, { id: previousBlockId })
     .then((previousBlockRaw) => {
         if (previousBlockRaw && previousBlockRaw.length !== 0) {
@@ -285,6 +285,9 @@ Utils.prototype.loadBlocksData = function (filter, options, cb) {
         // Get height of block with supplied ID
         library.db.query(sql.getHeightByLastId, { lastId: filter.lastId })
         .then((rows) => {
+            if (!rows || !rows.length) {
+                return setImmediate(cbAdd, `Block with id: ${filter.lastId} is missing`);
+            }
             const height = rows.length ? rows[0].height : 0;
             // Calculate max block height for database query
             const realLimit = height + (parseInt(filter.limit, 10) || 1);

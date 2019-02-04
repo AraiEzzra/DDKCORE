@@ -96,6 +96,14 @@ Process.prototype.getCommonBlock = function (peer, height, cb) {
                         ['Chain comparison failed with peer:', peer.string, 'using ids:', ids].join(' ')
                     );
                 }
+                const idsArray = ids.split(',');
+                if (idsArray[0] !== result.body.common.id) {
+                    comparisionFailed = true;
+                    return setImmediate(
+                        waterCb,
+                        `Chain comparison failed with peer: ${peer.string}, using ids: ${JSON.stringify(ids)}, common block is not first in ids: ${JSON.stringify(result.body.common)}`
+                    );
+                }
                 return setImmediate(waterCb, null, result);
             });
         },
@@ -152,6 +160,9 @@ Process.prototype.getCommonBlock = function (peer, height, cb) {
         /*
          * Removed poor consensus check in order to sync data
          */
+        if (err) {
+            library.logger.error(`[Process][getCommonBlock] ${err}`);
+        }
         if (comparisionFailed && modules.transport.poorConsensus()) {
             return modules.blocks.chain.recoverChain(cb);
         }
@@ -202,6 +213,8 @@ Process.prototype.loadBlocksOffset = function (limit, offset, verify, cb) {
                         modules.blocks.chain.newApplyGenesisBlock(block, false, false)
                             .then(() => setImmediate(cbBlocks));
                     } else {
+                        // TODO: change to newProcessBlock
+                        // https://trello.com/c/pYHGRm9S/250-fix-loadblocksoffset
                         return modules.blocks.verify.processBlock(
                             block,
                             false,
@@ -209,7 +222,7 @@ Process.prototype.loadBlocksOffset = function (limit, offset, verify, cb) {
                             verify,
                             (err) => {
                                 if (err) {
-                                    library.logger.debug(`[Process][loadBlocksOffset] 
+                                    library.logger.debug(`[Process][loadBlocksOffset]
                                     Block processing failed, ${JSON.stringify({
                                         id: block.id,
                                         err: err.toString(),
@@ -280,7 +293,8 @@ Process.prototype.loadBlocksFromPeer = function (peer, cb) {
     function processBlock(block, seriesCb) {
         // Start block processing - broadcast: false, saveBlock: true
         modules.transactions.lockTransactionPoolAndQueue();
-        modules.transactions.removeFromPool(block.transactions, true).then(
+        modules.transactions.removeFromPool(block.transactions, true)
+            .then(
             async (removedTransactions) => {
                 library.logger.debug(
                     `[Process][processBlock] removedTransactions ${JSON.stringify(removedTransactions)}`
@@ -309,7 +323,7 @@ Process.prototype.loadBlocksFromPeer = function (peer, cb) {
                 } catch (err) {
                     const id = (block ? block.id : 'null');
                     library.logger.debug(
-                        `[Process][processBlock] Block processing failed, 
+                        `[Process][processBlock] Block processing failed,
                         ${JSON.stringify({ id, err: err.toString(), module: 'blocks', block })}`
                     );
                     await modules.transactions.pushInPool(removedTransactions);
@@ -356,71 +370,6 @@ Process.prototype.loadBlocksFromPeer = function (peer, cb) {
     });
 };
 
-/**
- * Generate new block
- * see: loader.loadBlockChain (private)
- *
- * @async
- * @public
- * @method generateBlock
- * @param  {Object}   keypair Pair of private and public keys, see: helpers.ed.makeKeypair
- * @param  {number}   timestamp Slot time, see: helpers.slots.getSlotTime
- * @param  {Function} cb Callback function
- * @return {Function} cb Callback function from params (through setImmediate)
- * @return {Object}   cb.err Error message if error occurred
- */
-Process.prototype.generateBlock = function (keypair, timestamp, cb) {
-    // Get transactions that will be included in block
-    const transactions = modules.transactions.getUnconfirmedTransactionList(false, constants.maxTxsPerBlock);
-    const ready = [];
-
-    async.eachSeries(transactions, (transaction, cb) => {
-        modules.accounts.getAccount({ publicKey: transaction.senderPublicKey }, (err, sender) => {
-            if (err || !sender) {
-                return setImmediate(cb, 'Sender not found');
-            }
-
-            // Check transaction depends on type
-            if (library.logic.transaction.ready(transaction, sender)) {
-                // Verify transaction
-                library.logic.transaction.verify({
-                    trs: transaction,
-                    sender,
-                    checkExists: true,
-                    cb(error) {
-                        if (!error) {
-                            ready.push(transaction);
-                        }
-                        return setImmediate(cb, error);
-                    },
-                });
-            } else {
-                return setImmediate(cb, `Transaction ${transaction.id} not ready`);
-            }
-        });
-    }, (err) => {
-        if (err) {
-            return setImmediate(cb, err);
-        }
-        let block;
-        try {
-            // Create a block
-            block = library.logic.block.create({
-                keypair,
-                timestamp,
-                previousBlock: modules.blocks.lastBlock.get(),
-                transactions: ready
-            });
-        } catch (e) {
-            library.logger.error(e.stack);
-            return setImmediate(cb, e);
-        }
-
-        // Start block processing - broadcast: true, saveBlock: true
-        modules.blocks.verify.processBlock(block, true, true, true, cb);
-    });
-};
-
 Process.prototype.newGenerateBlock = async (keypair, timestamp) => {
     let block;
 
@@ -444,6 +393,7 @@ Process.prototype.newGenerateBlock = async (keypair, timestamp) => {
 
     try {
         await modules.blocks.verify.newProcessBlock(block, true, true, true, true);
+        await modules.transactions.returnToQueueConflictedTransactionFromPool(transactions);
         modules.transactions.unlockTransactionPoolAndQueue();
     } catch (e) {
         await modules.transactions.pushInPool(transactions);
@@ -495,8 +445,6 @@ __private.validateBlockSlot = function (block, lastBlock, cb) {
  * @param   {block} block New block
  */
 Process.prototype.onReceiveBlock = function (block) {
-    let lastBlock;
-
     if (self.receiveLocked) {
         library.logger.warn(`[Process][onReceiveBlock] locked for id ${block.id}`);
         return;
@@ -514,7 +462,7 @@ Process.prototype.onReceiveBlock = function (block) {
         }
 
         // Get the last block
-        lastBlock = modules.blocks.lastBlock.get();
+        const lastBlock = modules.blocks.lastBlock.get();
 
         // Detect sane block
         if (block.previousBlock === lastBlock.id && lastBlock.height + 1 === block.height) {
@@ -548,31 +496,6 @@ Process.prototype.onReceiveBlock = function (block) {
         return setImmediate(cb);
     });
 };
-
-/**
- * Receive block - logs info about received block, updates last receipt, processes block
- *
- * @private
- * @async
- * @method receiveBlock
- * @param {Object}   block Full normalized block
- * @param {Function} cb Callback function
- */
-__private.receiveBlock = function (block, cb) {
-    library.logger.info([
-        'Old Received new block id:', block.id,
-        'height:', block.height,
-        'round:', modules.rounds.calc(block.height),
-        'slot:', slots.getSlotNumber(block.timestamp),
-        'reward:', block.reward
-    ].join(' '));
-
-    // Update last receipt
-    modules.blocks.lastReceipt.update();
-    // Start block processing - broadcast: true, saveBlock: true
-    modules.blocks.verify.processBlock(block, true, true, true, cb);
-};
-
 
 __private.newReceiveBlock = async (block) => {
     library.logger.info([

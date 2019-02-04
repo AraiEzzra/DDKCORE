@@ -212,6 +212,11 @@ Blocks.prototype.isLoaded = function () {
     return __private.loaded;
 };
 
+Blocks.prototype.internal = {
+    popLastBlock(req, cb) {
+        self.chain.deleteLastBlock(cb);
+    },
+};
 
 // Export
 module.exports = Blocks;

@@ -12,7 +12,6 @@ const OrderBy = require('../helpers/orderBy.js');
 const sandboxHelper = require('../helpers/sandbox.js');
 const schema = require('../schema/transactions.js');
 const sql = require('../sql/transactions.js');
-const TransactionPool = require('../logic/transactionPool.js');
 const transactionTypes = require('../helpers/transactionTypes.js');
 const Transfer = require('../logic/transfer.js');
 const slots = require('../helpers/slots');
@@ -73,15 +72,6 @@ class Transactions {
 
         self = this;
 
-        __private.transactionPool = new TransactionPool(
-            scope.config.broadcasts.broadcastInterval,
-            scope.config.broadcasts.releaseLimit,
-            scope.config.transactions.maxTxsPerQueue,
-            scope.logic.transaction,
-            scope.bus,
-            scope.logger
-        ) as any;
-
         this.newTransactionPool = new NewTransactionPool({
             transactionLogic: scope.logic.transaction,
             logger: scope.logger,
@@ -98,7 +88,7 @@ class Transactions {
         });
 
         __private.assetTypes[transactionTypes.SEND] = library.logic.transaction.attachAssetType(
-            transactionTypes.SEND, new Transfer()
+            transactionTypes.SEND, new Transfer(scope.logic.account)
         );
 
         setImmediate(cb, null, self);
@@ -144,7 +134,7 @@ class Transactions {
 
     async pushInPool(transactions: Array<Transaction>): Promise<void> {
         for (const trs of transactions) {
-            await this.newTransactionPool.push(trs, false);
+            await this.newTransactionPool.push(trs, false, true);
         }
     }
 
@@ -538,30 +528,6 @@ __private.getVotesById = function (transaction, cb) {
 };
 
 /**
- * Gets transaction by calling parameter method.
- * @private
- * @param {Object} method
- * @param {Object} req
- * @param {function} cb - Callback function.
- * @returns {setImmediateCallback} error | data: {transaction}
- */
-__private.getPooledTransaction = function (method, req, cb) {
-    library.schema.validate(req.body, schema.getPooledTransaction, (err) => {
-        if (err) {
-            return setImmediate(cb, err[0].message);
-        }
-
-        const transaction = self[method](req.body.id);
-
-        if (!transaction) {
-            return setImmediate(cb, 'Transaction not found');
-        }
-
-        return setImmediate(cb, null, { transaction });
-    });
-};
-
-/**
  * Gets transactions by calling parameter method.
  * Filters by senderPublicKey or address if they are present.
  * @private
@@ -599,140 +565,12 @@ __private.getPooledTransactions = function (method, req, cb) {
     });
 };
 
-// Public methods
-/**
- * Check if transaction is in pool
- * @param {string} id
- * @return {function} Calls transactionPool.transactionInPool
- */
-Transactions.prototype.transactionInPool = function (id) {
-    return __private.transactionPool.transactionInPool(id);
-};
-
-/**
- * @param {string} id
- * @return {function} Calls transactionPool.getUnconfirmedTransaction
- */
-Transactions.prototype.getUnconfirmedTransaction = function (id) {
-    return __private.transactionPool.getUnconfirmedTransaction(id);
-};
-
-/**
- * @param {string} id
- * @return {function} Calls transactionPool.getQueuedTransaction
- */
-Transactions.prototype.getQueuedTransaction = function (id) {
-    return __private.transactionPool.getQueuedTransaction(id);
-};
-
-/**
- * @param {string} id
- * @return {function} Calls transactionPool.getMultisignatureTransaction
- */
-Transactions.prototype.getMultisignatureTransaction = function (id) {
-    return __private.transactionPool.getMultisignatureTransaction(id);
-};
-
-/**
- * Gets unconfirmed transactions based on limit and reverse option.
- * @param {boolean} reverse
- * @param {number} limit
- * @return {function} Calls transactionPool.getUnconfirmedTransactionList
- */
-Transactions.prototype.getUnconfirmedTransactionList = function (reverse, limit) {
-    return __private.transactionPool.getUnconfirmedTransactionList(reverse, limit);
-};
-
-/**
- * Gets queued transactions based on limit and reverse option.
- * @param {boolean} reverse
- * @param {number} limit
- * @return {function} Calls transactionPool.getQueuedTransactionList
- */
-Transactions.prototype.getQueuedTransactionList = function (reverse, limit) {
-    return __private.transactionPool.getQueuedTransactionList(reverse, limit);
-};
-
-/**
- * Gets multisignature transactions based on limit and reverse option.
- * @param {boolean} reverse
- * @param {number} limit
- * @return {function} Calls transactionPool.getQueuedTransactionList
- */
-Transactions.prototype.getMultisignatureTransactionList = function (reverse, limit) {
-    return __private.transactionPool.getMultisignatureTransactionList(reverse, limit);
-};
-
-/**
- * Gets unconfirmed, multisignature and queued transactions based on limit and reverse option.
- * @param {boolean} reverse
- * @param {number} limit
- * @return {function} Calls transactionPool.getMergedTransactionList
- */
 Transactions.prototype.getMergedTransactionList = function (reverse, limit) {
-    return __private.transactionPool.getMergedTransactionList(reverse, limit);
+    return self.newTransactionPool.getTransactions({ limit });
 };
 
-/**
- * Removes transaction from unconfirmed, queued and multisignature.
- * @param {string} id
- * @return {function} Calls transactionPool.removeUnconfirmedTransaction
- */
-Transactions.prototype.removeUnconfirmedTransaction = function (id) {
-    return __private.transactionPool.removeUnconfirmedTransaction(id);
-};
-
-/**
- * Checks kind of unconfirmed transaction and process it, resets queue
- * if limit reached.
- * @param {transaction} transaction
- * @param {Object} broadcast
- * @param {function} cb - Callback function.
- * @return {function} Calls transactionPool.processUnconfirmedTransaction
- */
-Transactions.prototype.processUnconfirmedTransaction = function (transaction, broadcast, cb) {
-    return __private.transactionPool.processUnconfirmedTransaction(transaction, broadcast, cb);
-};
-
-/**
- * Gets unconfirmed transactions list and applies unconfirmed transactions.
- * @param {function} cb - Callback function.
- * @return {function} Calls transactionPool.applyUnconfirmedList
- */
-Transactions.prototype.applyUnconfirmedList = function (cb) {
-    return __private.transactionPool.applyUnconfirmedList(cb);
-};
-
-/**
- * Applies unconfirmed list to unconfirmed Ids.
- * @param {string[]} ids
- * @param {function} cb - Callback function.
- * @return {function} Calls transactionPool.applyUnconfirmedIds
- */
-Transactions.prototype.applyUnconfirmedIds = function (ids, cb) {
-    return __private.transactionPool.applyUnconfirmedIds(ids, cb);
-};
-
-/**
- * Undoes unconfirmed list from queue.
- * @param {function} cb - Callback function.
- * @return {function} Calls transactionPool.undoUnconfirmedList
- */
-Transactions.prototype.undoUnconfirmedList = function (cb) {
-    return __private.transactionPool.undoUnconfirmedList(cb);
-};
-
-/**
- * Applies confirmed transaction.
- * @implements {logic.transaction.apply}
- * @param {transaction} transaction
- * @param {block} block
- * @param {account} sender
- * @param {function} cb - Callback function
- */
-Transactions.prototype.apply = function (transaction, block, sender, cb) {
-    library.logger.debug('Applying confirmed transaction', transaction.id);
-    library.logic.transaction.apply(transaction, block, sender, cb);
+Transactions.prototype.inPool = (transaction: Transaction) => {
+    return self.newTransactionPool.has(transaction) || self.transactionQueue.has(transaction);
 };
 
 /**
@@ -743,11 +581,11 @@ Transactions.prototype.apply = function (transaction, block, sender, cb) {
  * @param {account} sender
  * @param {function} cb - Callback function
  */
-Transactions.prototype.undo = function (transaction, block, cb) {
-    library.logger.debug('Undoing confirmed transaction', transaction.id);
-    library.logic.transaction.undo(transaction, block)
-    .then(() => { setImmediate(cb, null); })
-    .catch((err) => { setImmediate(cb, err); });
+Transactions.prototype.undo = (transaction, cb) => {
+    library.logger.debug(`[Transactions][undo] transaction id: ${transaction.id}}`);
+    library.logic.transaction.undo(transaction)
+        .then(() => setImmediate(cb, null))
+        .catch((err) => setImmediate(cb, err));
 };
 
 /**
@@ -790,31 +628,11 @@ Transactions.prototype.applyUnconfirmed = function (transaction, sender, cb) {
  * @param {function} cb
  * @return {setImmediateCallback} For error
  */
-Transactions.prototype.undoUnconfirmed = function (transaction, cb) {
-    library.logger.debug(`[Transactions][undoUnconfirmed] id ${transaction.id}`);
+Transactions.prototype.undoUnconfirmed = (transaction, cb) => {
+    library.logger.debug(`[Transactions][undoUnconfirmed] transaction id ${transaction.id}`);
     library.logic.transaction.newUndoUnconfirmed(transaction)
-    .then(() => setImmediate(cb, null))
-    .catch((err) => setImmediate(cb, err));
-};
-
-/**
- * Receives transactions
- * @param {transaction[]} transactions
- * @param {Object} broadcast
- * @param {function} cb - Callback function.
- * @return {function} Calls transactionPool.receiveTransactions
- */
-Transactions.prototype.receiveTransactions = function (transactions, broadcast, cb) {
-    return __private.transactionPool.receiveTransactions(transactions, broadcast, cb);
-};
-
-/**
- * Fills pool.
- * @param {function} cb - Callback function.
- * @return {function} Calls transactionPool.fillPool
- */
-Transactions.prototype.fillPool = function (cb) {
-    return __private.transactionPool.fillPool(cb);
+        .then(() => setImmediate(cb))
+        .catch((err) => setImmediate(cb, err));
 };
 
 /**
@@ -849,11 +667,6 @@ Transactions.prototype.onBind = function (scope) {
         transactions: scope.transactions,
     };
 
-    __private.transactionPool.bind(
-        scope.accounts,
-        scope.transactions,
-        scope.loader
-    );
     __private.assetTypes[transactionTypes.SEND].bind(
         scope.accounts,
         scope.rounds
@@ -914,6 +727,27 @@ Transactions.prototype.internal = {
  * @see {@link http://apidocjs.com/}
  */
 Transactions.prototype.shared = {
+    debug(req, cb) {
+        if (req.body.async) {
+            self[req.body.function].call(self, req.body.args)
+            .then((data) => {
+                return setImmediate(cb, null, { data: data });
+            }).catch((e) => {
+                return setImmediate(cb, e);
+            });
+        } else {
+            const cbIndex = req.body.args.indexOf('cb');
+            if (cbIndex !== -1) {
+                req.body.args[cbIndex] = (err, data) => {
+                    setImmediate(cb, err, { data: data });
+                };
+                self[req.body.function].call(self, req.body.args);
+            } else {
+                const data = self[req.body.function].call(self, req.body.args);
+                setImmediate(cb, null, { data: data });
+            }
+        }
+    },
     getTransactions(req, cb) {
         async.waterfall([
             function (waterCb) {
@@ -973,34 +807,31 @@ Transactions.prototype.shared = {
     getTransactionsCount(req, cb) {
         library.db.query(sql.count).then(transactionsCount => setImmediate(cb, null, {
             confirmed: transactionsCount[0].count,
-            multisignature: __private.transactionPool.multisignature.transactions.length,
-            unconfirmed: __private.transactionPool.unconfirmed.transactions.length,
-            queued: __private.transactionPool.queued.transactions.length
+            unconfirmed: __private.getTransactionPoolSize(),
+            queued: __private.getQueueSize()
         }), err => setImmediate(cb, err));
     },
 
     getQueuedTransaction(req, cb) {
-        return __private.getPooledTransaction('getQueuedTransaction', req, cb);
+        return setImmediate(cb, null, []);
     },
 
     getQueuedTransactions(req, cb) {
-        return __private.getPooledTsrcransactions('getQueuedTransactionList', req, cb);
-    },
-
-    getMultisignatureTransaction(req, cb) {
-        return __private.getPooledTransaction('getMultisignatureTransaction', req, cb);
-    },
-
-    getMultisignatureTransactions(req, cb) {
-        return __private.getPooraledTransactions('getMultisignatureTransactionList', req, cb);
+        return setImmediate(cb, null, { transactions: [] });
     },
 
     getUnconfirmedTransaction(req, cb) {
-        return __private.getPooledTransaction('getUnconfirmedTransaction', req, cb);
+        return setImmediate(cb, null, []);
     },
 
     getUnconfirmedTransactions(req, cb) {
-        return __private.getPooledTransactions('getUnconfirmedTransactionList', req, cb);
+        library.schema.validate(req.body, schema.getUnconfirmedTransactions, (err) => {
+            if (err) {
+                return setImmediate(cb, err[0].message);
+            }
+
+            return setImmediate(cb, null, { transactions: self.newTransactionPool.getTransactions(req.body) });
+        });
     },
 
     addTransactions(req, cb) {
@@ -1052,110 +883,54 @@ Transactions.prototype.shared = {
                             return setImmediate(balancesSequenceCb, 'Invalid recipient');
                         }
 
-                        if (req.body.multisigAccountPublicKey && req.body.multisigAccountPublicKey !== publicKey) {
-                            modules.accounts.getAccount({ publicKey: req.body.multisigAccountPublicKey },
-                                (multisigAccountErr, account) => {
-                                if (multisigAccountErr) {
-                                    return setImmediate(balancesSequenceCb, multisigAccountErr);
-                                }
+                        modules.accounts.setAccountAndGet({ publicKey: publicKey },
+                            (setAccountAndGetErr, account) => {
+                            if (setAccountAndGetErr) {
+                                return setImmediate(balancesSequenceCb, setAccountAndGetErr);
+                            }
 
-                                if (!account || !account.publicKey) {
-                                    return setImmediate(balancesSequenceCb, 'Multisignature account not found');
-                                }
+                            if (!account || !account.publicKey) {
+                                return setImmediate(balancesSequenceCb, 'Account not found');
+                            }
 
-                                if (!Array.isArray(account.multisignatures)) {
-                                    return setImmediate(
-                                        balancesSequenceCb,
-                                        'Account does not have multisignatures enabled'
-                                    );
-                                }
+                            if (account.secondSignature && !req.body.secondSecret) {
+                                return setImmediate(balancesSequenceCb, 'Missing second passphrase');
+                            }
 
-                                if (account.multisignatures.indexOf(publicKey) < 0) {
-                                    return setImmediate(
-                                        balancesSequenceCb,
-                                        'Account does not belong to multisignature group'
-                                    );
-                                }
+                            if (account.address === req.body.recipientId) {
+                                return setImmediate(balancesSequenceCb, 'Sender and Recipient can\'t be same');
+                            }
 
-                                modules.accounts.getAccount({ publicKey: keypair.publicKey }, (getAccountErr) => {
-                                    if (getAccountErr) {
-                                        return setImmediate(balancesSequenceCb, getAccountErr);
-                                    }
+                            if (
+                                (
+                                    req.body.amount +
+                                    (req.body.amount * constants.fees.send) / 100 +
+                                    parseInt(account.u_totalFrozeAmount)
+                                ) > parseInt(account.u_balance)
+                            ) {
+                                return setImmediate(balancesSequenceCb, 'Insufficient balance');
+                            }
 
-                                    if (!account || !account.publicKey) {
-                                        return setImmediate(balancesSequenceCb, 'Account not found');
-                                    }
+                            let secondKeypair = null;
 
-                                    if (account.secondSignature && !req.body.secondSecret) {
-                                        return setImmediate(balancesSequenceCb, 'Missing second passphrase');
-                                    }
-
-                                    if (account.address === req.body.recipientId) {
-                                        return setImmediate(balancesSequenceCb, 'Sender and Recipient can\'t be same');
-                                    }
-
-                                    let secondKeypair = null;
-
-                                    if (account.secondSignature) {
-                                        const secondHash =
-                                            crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
-                                        secondKeypair = library.ed.makeKeypair(secondHash);
-                                    }
-
-                                    library.logic.transaction.create({
-                                        type: transactionTypes.SEND,
-                                        amount: req.body.amount,
-                                        sender: account,
-                                        recipientId,
-                                        keypair,
-                                        secondKeypair
-                                    }).then((transactionReferSend) => {
-                                        transactionReferSend.status = TransactionStatus.CREATED;
-                                        modules.transactions.putInQueue(transactionReferSend);
-                                        return setImmediate(balancesSequenceCb, null, [transactionReferSend]);
-                                    }).catch(e => setImmediate(balancesSequenceCb, e.toString()));
-                                });
-                            });
-                        } else {
-                            modules.accounts.setAccountAndGet({ publicKey: publicKey },
-                                (setAccountAndGetErr, account) => {
-                                if (setAccountAndGetErr) {
-                                    return setImmediate(balancesSequenceCb, setAccountAndGetErr);
-                                }
-
-                                if (!account || !account.publicKey) {
-                                    return setImmediate(balancesSequenceCb, 'Account not found');
-                                }
-
-                                if (account.secondSignature && !req.body.secondSecret) {
-                                    return setImmediate(balancesSequenceCb, 'Missing second passphrase');
-                                }
-
-                                if (account.address === req.body.recipientId) {
-                                    return setImmediate(balancesSequenceCb, 'Sender and Recipient can\'t be same');
-                                }
-
-                                let secondKeypair = null;
-
-                                if (account.secondSignature) {
-                                    const secondHash =
-                                        crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
-                                    secondKeypair = library.ed.makeKeypair(secondHash);
-                                }
-                                library.logic.transaction.create({
-                                    type: transactionTypes.SEND,
-                                    amount: req.body.amount,
-                                    sender: account,
-                                    recipientId,
-                                    keypair,
-                                    secondKeypair
-                                }).then((transactionReferSend) => {
-                                    transactionReferSend.status = TransactionStatus.CREATED;
-                                    modules.transactions.putInQueue(transactionReferSend);
-                                    return setImmediate(balancesSequenceCb, null, [transactionReferSend]);
-                                }).catch(e => setImmediate(balancesSequenceCb, e.toString()));
-                            });
-                        }
+                            if (account.secondSignature) {
+                                const secondHash =
+                                    crypto.createHash('sha256').update(req.body.secondSecret, 'utf8').digest();
+                                secondKeypair = library.ed.makeKeypair(secondHash);
+                            }
+                            library.logic.transaction.create({
+                                type: transactionTypes.SEND,
+                                amount: req.body.amount,
+                                sender: account,
+                                recipientId,
+                                keypair,
+                                secondKeypair
+                            }).then((transactionReferSend) => {
+                                transactionReferSend.status = TransactionStatus.CREATED;
+                                modules.transactions.putInQueue(transactionReferSend);
+                                return setImmediate(balancesSequenceCb, null, [transactionReferSend]);
+                            }).catch(e => setImmediate(balancesSequenceCb, e.toString()));
+                        });
                     });
                 }, (balancesSequenceErr, transaction) => {
                     if (balancesSequenceErr) {

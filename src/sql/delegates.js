@@ -39,7 +39,7 @@ const DelegatesSql = {
             'LEFT JOIN (SELECT "dependentId", COUNT(1)::int AS voters_cnt from mem_accounts2delegates GROUP BY "dependentId") v ON v."dependentId" = m."publicKey"',
             'WHERE m."isDelegate" = 1',
             `ORDER BY ${[params.sortField, params.sortMethod].join(' ')})`,
-            'SELECT * FROM delegates WHERE username LIKE ${q} LIMIT ${limit}'
+            'SELECT * FROM delegates WHERE LOWER(username) LIKE ${q} LIMIT ${limit}'
         ].join(' ');
 
         params.q = `%${String(params.q).toLowerCase()}%`;
@@ -60,17 +60,25 @@ const DelegatesSql = {
 
     removeDelegateVoteRecord: 'DELETE FROM "delegate_to_vote_counter" WHERE "publicKey" = ${publicKey}',
 
+    addVoteForDelegates: (votes) => 'INSERT INTO mem_accounts2delegates("accountId", "dependentId")' +
+        ' VALUES ' + votes.map(vote => `(\${accountId}, '${vote}')`).join(', '),
+
+    removeVoteForDelegates: 'DELETE FROM mem_accounts2delegates WHERE "accountId" = ${accountId} and "dependentId" in (${dependentIds:csv})',
+
+    removeVoteForUDelegates: 'DELETE FROM mem_accounts2u_delegates WHERE "accountId" = ${accountId} and "dependentId" in (${dependentIds:csv})',
+
     getTopDelegates: 'SELECT' +
     '  "username",' +
     '  "address",' +
     '  delegate_to_vote_counter."publicKey",' +
+    '  delegate_to_vote_counter."voteCount",' +
     '  "vote",' +
     '  "missedblocks",' +
     '  "producedblocks",' +
     '  "url"' +
     ' FROM delegate_to_vote_counter' +
     '  INNER JOIN mem_accounts on mem_accounts."publicKey" = delegate_to_vote_counter."publicKey"' +
-    ' ORDER BY delegate_to_vote_counter."voteCount", delegate_to_vote_counter."publicKey";'
+    ' ORDER BY delegate_to_vote_counter."voteCount" DESC, delegate_to_vote_counter."publicKey";'
 };
 
 module.exports = DelegatesSql;

@@ -22,7 +22,7 @@ const FrogingsSql = {
 
     getFrozeAmount: 'SELECT "totalFrozeAmount" FROM mem_accounts WHERE "address"=${senderId}',
 
-    disableFrozeOrders: 'UPDATE stake_orders SET "status"=0 where "stakeId"=${stakeId}',
+    disableFrozeOrders: 'UPDATE stake_orders SET "status"=0 where "id"=${id}',
 
     enableFrozeOrder: 'UPDATE stake_orders SET "status"=1 where "stakeId"=${stakeId}',
 
