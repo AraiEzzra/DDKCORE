@@ -73,6 +73,7 @@ CREATE VIEW full_blocks_list AS
     LEFT OUTER JOIN delegates AS d ON d."transactionId" = t."id"
     LEFT OUTER JOIN votes AS v ON v."transactionId" = t."id"
     LEFT OUTER JOIN signatures AS s ON s."transactionId" = t."id"
+    LEFT OUTER JOIN multisignatures AS m ON m."transactionId" = t."id"
     LEFT OUTER JOIN dapps AS dapp ON dapp."transactionId" = t."id"
     LEFT OUTER JOIN intransfer AS it ON it."transactionId" = t."id"
     LEFT OUTER JOIN outtransfer AS ot ON ot."transactionId" = t."id"

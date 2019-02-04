@@ -36,4 +36,12 @@ UPDATE "mem_accounts2u_delegates"
 SET "accountId" = UPPER("accountId")
 WHERE "accountId" LIKE 'ddk%';
 
+UPDATE "mem_accounts2multisignatures"
+SET "accountId" = UPPER("accountId")
+WHERE "accountId" LIKE 'ddk%';
+
+UPDATE "mem_accounts2u_multisignatures"
+SET "accountId" = UPPER("accountId")
+WHERE "accountId" LIKE 'ddk%';
+
 COMMIT;

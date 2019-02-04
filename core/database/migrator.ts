@@ -29,6 +29,7 @@ export class Migrator {
         if (!migrationsPath) {
             migrationsPath = path.join(process.cwd(), 'core/database', 'migrations');
         }
+
         const filesMigration: Array<IPropertyFile> = [];
         fs.readdirSync(migrationsPath)
            .sort()
@@ -43,12 +44,12 @@ export class Migrator {
                        id: parseInt(splitName[0], 10),
                        name: Array.isArray(fileName) ? fileName[0]
                                                         .replace(/_/, '')
-                                                        .replace(/\.sql$/, '')
-                                                : null,
+                                                        .replace(/\.sql$/, '') : null,
                        path: pathToFile
                    });
                }
         });
+
         return filesMigration;
     }
 
@@ -58,7 +59,6 @@ export class Migrator {
      */
     async runMigrate(files: Array<any>) {
         for (let file of files) {
-            console.log(file.name);
             const sql = new QueryFile(file.path, { minify: true });
 
             await this.db.query(sql)
@@ -68,10 +68,9 @@ export class Migrator {
                         [file.id.toString(), file.name]);
                 })
                 .catch(err => {
-                    console.log('err', err);
-                    // return new Response({
-                    //     errors: err.message
-                    // });
+                    return new Response({
+                        errors: err.message
+                    });
                 });
         }
         return true;

@@ -1,22 +1,32 @@
-import fs from 'fs';
 import path from 'path';
 import chai, { expect } from 'chai';
-import { IDatabase, QueryFile } from 'pg-promise';
+import { QueryFile } from 'pg-promise';
 import { DatabaseConnector } from './mock/db';
 import { Migrator } from 'core/database/migrator';
 
 describe('Migrate on create tables', () => {
+    let db;
     let migrate: Migrator;
-    let pathSQL;
+    let pathMockData = path.join(process.cwd(), 'test/shared/migrate', 'mock');
 
     before(async (done) => {
-        pathSQL = path.join(process.cwd(), 'test/shared/migrate', 'mock');
-        const db = new DatabaseConnector();
-        migrate = new Migrator(db.connector);
+        db = new DatabaseConnector().connector;
+        migrate = new Migrator(db);
         done();
+    });
+
+    after( (done) => {
+        const filePath = path.join(pathMockData, 'dropTables.sql');
+        const sql = new QueryFile(filePath, { minify: true });
+        db.query(sql)
+            .then(() => {
+                done();
+                return;
+            });
     });
 
     it('It should create tables', async () => {
         await migrate.run();
+
     });
 });

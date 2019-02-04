@@ -100,6 +100,14 @@ CREATE TABLE IF NOT EXISTS "forks_stat" (
   "cause"             INT         NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS "multisignatures" (
+  "min"           INT      NOT NULL,
+  "lifetime"      INT      NOT NULL,
+  "keysgroup"     TEXT     NOT NULL,
+  "transactionId" CHAR(64) NOT NULL,
+  FOREIGN KEY ("transactionId") REFERENCES "trs" ("id") ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS "dapps" (
   "transactionId" CHAR(64)    NOT NULL,
   "name"          VARCHAR(32) NOT NULL,
@@ -190,6 +198,8 @@ CREATE INDEX IF NOT EXISTS "votes_trs_id"
   ON "votes" ("transactionId");
 CREATE INDEX IF NOT EXISTS "delegates_trs_id"
   ON "delegates" ("transactionId");
+CREATE INDEX IF NOT EXISTS "multisignatures_trs_id"
+  ON "multisignatures" ("transactionId");
 CREATE INDEX IF NOT EXISTS "dapps_trs_id"
   ON "dapps" ("transactionId");
 CREATE INDEX IF NOT EXISTS "dapps_name"
