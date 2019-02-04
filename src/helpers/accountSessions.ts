@@ -28,9 +28,7 @@ export class AccountSessions {
     }
 
     get length() {
-        let counter: number = 0;
-        Object.values(this.sessions).forEach(stack => counter += stack.size);
-        return counter;
+        return Object.values(AccountSessions.io.sockets.sockets).length;
     }
 
     get(address: string): Set<string> {
@@ -38,17 +36,18 @@ export class AccountSessions {
     }
 
     remove(socketId: string, address: string) {
-        if (this.sessions[address] instanceof Set) {
+        if (this.sessions[address]) {
             this.sessions[address].delete(socketId);
         }
     }
 
     send(address: string, eventName: string, message: object) {
-        if (this.sessions[address] instanceof Set) {
+        if (this.sessions[address]) {
             this.sessions[address].forEach((socketId) => {
-                if (AccountSessions.io.sockets.sockets[socketId]) {
+                let sessionConnection: any = AccountSessions.io.sockets.sockets[socketId];
+                if (sessionConnection && sessionConnection.connected) {
                     try {
-                        AccountSessions.io.sockets.sockets[socketId].emit(eventName, JSON.stringify(message));
+                        sessionConnection.emit(eventName, JSON.stringify(message));
                     } catch (err) {
                         this.logger.error(`Error send message by socketId on "${address}" `, { message: err.message });
                     }

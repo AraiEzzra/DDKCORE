@@ -332,16 +332,17 @@ export class TransactionQueue {
     }
 
     async verify(trs: Transaction, sender: Account): Promise<{ verified: boolean, error: Array<string> }> {
-        let verified = true,
-            error = [];
 
         try {
             await this.scope.transactionLogic.newVerify({ trs, sender, checkExists: true });
         } catch (e) {
             this.scope.logger.debug(`[TransactionQueue][verify]: ${e}`);
             this.scope.logger.debug(`[TransactionQueue][verify][stack]: \n ${e.stack}`);
-            verified = false;
-            error = [e];
+            this.sendVerifiedMessage(sender.address, false, e.message);
+            return {
+                verified: false,
+                error: [e]
+            };
         }
 
         try {
@@ -349,15 +350,17 @@ export class TransactionQueue {
         } catch (e) {
             this.scope.logger.debug(`[TransactionQueue][verifyUnconfirmed]: ${e}`);
             this.scope.logger.debug(`[TransactionQueue][verifyUnconfirmed][stack]: \n ${e.stack}`);
-            verified = false;
-            error = [e];
+            this.sendVerifiedMessage(sender.address, false, e.message);
+            return {
+                verified: false,
+                error: [e]
+            };
         }
 
-        this.sendVerifiedMessage(sender.address, verified, error);
-
+        this.sendVerifiedMessage(sender.address, true);
         return {
-            verified: verified,
-            error: error
+            verified: true,
+            error: []
         };
     }
 
@@ -365,7 +368,7 @@ export class TransactionQueue {
         return { conflictedQueue: this.conflictedQueue.length, queue: this.queue.length };
     }
 
-    sendVerifiedMessage(address: string, verified: boolean, error: Array<any>) {
+    sendVerifiedMessage(address: string, verified: boolean, error?: string) {
         this.accountSessions.send(address, 'pool/verify', {
             verified,
             error
