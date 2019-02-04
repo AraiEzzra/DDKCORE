@@ -43,8 +43,6 @@ export class AccountSessions {
                 delete this.sessions[address];
             }
         }
-
-
     }
 
     send(address: string, eventName: string, message: object) {
