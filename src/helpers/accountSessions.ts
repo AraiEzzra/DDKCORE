@@ -28,17 +28,23 @@ export class AccountSessions {
     }
 
     get length() {
-        return Object.values(AccountSessions.io.sockets.sockets).length;
+        return Object.values(this.sessions).length;
     }
 
     get(address: string): Set<string> {
         return this.sessions[address];
     }
 
-    remove(socketId: string, address: string) {
+    remove(socketId: string, address?: string) {
         if (this.sessions[address]) {
             this.sessions[address].delete(socketId);
+
+            if (!this.sessions[address].size) {
+                delete this.sessions[address];
+            }
         }
+
+
     }
 
     send(address: string, eventName: string, message: object) {
