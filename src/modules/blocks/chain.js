@@ -328,7 +328,7 @@ __private.popLastBlock = function (oldLastBlock, cbPopLastBlock) {
             }
 
             // Reverse order of transactions in last blocks...
-            async.eachSeries(oldLastBlock.transactions.reverse(), (transaction, cbReverse) => {
+            async.eachSeries(oldLastBlock.transactions.reverse(), (transaction, eachSeriesCb) => {
                 async.series([
                     function (seriesCb) {
                         modules.transactions.undo(transaction, seriesCb);
@@ -336,7 +336,7 @@ __private.popLastBlock = function (oldLastBlock, cbPopLastBlock) {
                     function (seriesCb) {
                         modules.transactions.undoUnconfirmed(transaction, seriesCb);
                     }
-                ], cbReverse);
+                ], eachSeriesCb);
             }, (errorUndo) => {
                 if (errorUndo) {
                     // Fatal error, memory tables will be inconsistent
