@@ -124,7 +124,7 @@ class TransactionPool {
             await this.scope.transactionLogic.newUndoUnconfirmed(trs);
         } catch (e) {
             this.scope.logger.error(`[TransactionPool][remove]: ${e}`);
-            this.scope.logger.debug(`[TransactionPool][remove][stack]: \n ${e.stack}`);
+            this.scope.logger.error(`[TransactionPool][remove][stack]: \n ${e.stack}`);
         }
 
         delete this.pool[trs.id];
@@ -132,9 +132,10 @@ class TransactionPool {
         this.poolBySender[trs.senderId] = this.poolBySender[trs.senderId].filter(t => t.id !== trs.id);
 
         if (this.poolByRecipient[trs.recipientId]) {
-            this.poolByRecipient[trs.recipientId] =
-                this.poolByRecipient[trs.recipientId].filter(t => t.id !== trs.id);
+            this.scope.logger.debug(`[TransactionPool][remove][poolByRecipient] trs.recipientId: ${trs.recipientId}, this.poolByRecipient[trs.recipientId]: ${this.poolByRecipient[trs.recipientId]}`);
         }
+        this.poolByRecipient[trs.recipientId] =
+            (this.poolByRecipient[trs.recipientId] || []).filter(t => t.id !== trs.id);
         return true;
     }
 
