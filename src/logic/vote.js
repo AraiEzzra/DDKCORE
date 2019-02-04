@@ -741,7 +741,7 @@ Vote.prototype.removeCheckVote = async (voteTransaction) => {
             await library.db.none(sql.undoUpdateStakeOrder, {
                 senderId,
                 milestone: constants.froze.vTime * 60,
-                currentTime: slots.getTime()
+                nextVoteMilestone: voteTransaction.timestamp + constants.froze.vTime * 60,
             });
         });
     } catch (err) {
