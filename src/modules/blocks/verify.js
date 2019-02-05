@@ -232,18 +232,10 @@ __private.verifyReward = function (block, result) {
  * @return {Array}   result.errors Array of validation errors
  */
 __private.verifyId = function (block, result) {
-    try {
-        // Get block ID
-        // FIXME: Why we don't have it?
-        block.id = library.logic.block.getId(block);
-    } catch (e) {
-        if (constants.VERIFY_BLOCK_ID) {
-            result.errors.push(e.toString());
-        } else {
-            library.logger.error(e.toString());
-        }
+    const blockId = library.logic.block.getId(block);
+    if (block.id !== blockId) {
+        result.errors.push(`Block id is corrupted expected: ${blockId} actual: ${block.id}`);
     }
-
     return result;
 };
 
@@ -518,8 +510,8 @@ Verify.prototype.verifyBlock = function (block, verify) {
     result = __private.verifyPreviousBlock(block, result);
     result = __private.verifyVersion(block, result);
     // TODO: verify total fee
-    result = __private.verifyId(block, result);
     if (verify) {
+        result = __private.verifyId(block, result);
         result = __private.verifyPayload(block, result);
     }
 

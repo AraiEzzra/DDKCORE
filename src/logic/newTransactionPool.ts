@@ -337,7 +337,7 @@ export class TransactionQueue {
             await this.scope.transactionLogic.newVerify({ trs, sender, checkExists: true });
         } catch (e) {
             this.scope.logger.debug(`[TransactionQueue][verify]: ${e}`);
-            this.scope.logger.debug(`[TransactionQueue][verify][stack]: \n ${e.stack}`);
+            this.scope.logger.trace(`[TransactionQueue][verify][stack]: \n ${e.stack}`);
             this.sendVerifiedMessage(sender.address, false, e.message);
             return {
                 verified: false,
@@ -349,7 +349,7 @@ export class TransactionQueue {
             await this.scope.transactionLogic.newVerifyUnconfirmed({ trs, sender });
         } catch (e) {
             this.scope.logger.debug(`[TransactionQueue][verifyUnconfirmed]: ${e}`);
-            this.scope.logger.debug(`[TransactionQueue][verifyUnconfirmed][stack]: \n ${e.stack}`);
+            this.scope.logger.trace(`[TransactionQueue][verifyUnconfirmed][stack]: \n ${e.stack}`);
             this.sendVerifiedMessage(sender.address, false, e.message);
             return {
                 verified: false,

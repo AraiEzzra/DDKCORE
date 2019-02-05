@@ -77,13 +77,13 @@ __private.getAddressByPublicKey = function (publicKey) {
  * @param {Object} data
  * @returns {block} block
  */
-Block.prototype.create = (data) => {
+Block.prototype.create = ({ transactions, timestamp, previousBlock, keyPair }) => {
     const reward = 0;
     const totalFee = 0;
     const totalAmount = 0;
     const size = 0;
 
-    const blockTransactions = data.transactions.sort(transactionSortFunc);
+    const blockTransactions = transactions.sort(transactionSortFunc);
     const payloadHash = '';
 
     const block = {
@@ -92,11 +92,11 @@ Block.prototype.create = (data) => {
         totalFee,
         reward,
         payloadHash,
-        timestamp: data.timestamp,
+        timestamp,
         numberOfTransactions: blockTransactions.length,
         payloadLength: size,
-        previousBlock: data.previousBlock.id,
-        generatorPublicKey: data.keyPair.publicKey.toString('hex'),
+        previousBlock: previousBlock.id,
+        generatorPublicKey: keyPair.publicKey.toString('hex'),
         transactions: blockTransactions
     };
     block.blockSignature = '';
@@ -136,7 +136,7 @@ Block.prototype.addPayloadHash = (block, keyPair) => {
 
     try {
         block.blockSignature = self.sign(block, keyPair);
-        // block.id = self.getId(block);
+        block.id = self.getId(block);
     } catch (e) {
         throw e;
     }

@@ -143,7 +143,6 @@ Transaction.prototype.attachAssetType = (typeId, instance) => {
         typeof instance.create === 'function' &&
         typeof instance.getBytes === 'function' &&
         typeof instance.calculateFee === 'function' &&
-        typeof instance.verify === 'function' &&
         typeof instance.objectNormalize === 'function' &&
         typeof instance.dbRead === 'function' &&
         typeof instance.apply === 'function' &&

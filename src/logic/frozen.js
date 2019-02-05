@@ -322,19 +322,6 @@ Frozen.prototype.verifyFields = function (trs, sender, cb) {
         });
 };
 
-/**
- * @desc verify
- * @private
- * @implements
- * @param {Object} sender - sender data
- * @param {Object} trs - transation data
- * @param {function} cb - Callback function.
- * @return {function} {cb, err, trs}
- */
-Frozen.prototype.verify = function (trs, sender, cb) {
-    return self.verifyFields(trs, sender, cb);
-};
-
 Frozen.prototype.newVerify = async (trs) => {
     const stakedAmount = trs.stakedAmount / 100000000;
 
@@ -533,7 +520,7 @@ Frozen.prototype.getAirdropReward = async function (senderAddress, amount, trans
     return result;
 };
 
-Frozen.prototype.calculateTotalRewardAndUnstake = async function (senderId, isDownVote, timestamp) {
+Frozen.prototype.calculateTotalRewardAndUnstake = async (senderId, isDownVote, timestamp) => {
     let reward = 0;
     let unstakeAmount = 0;
     if (isDownVote) {
@@ -542,22 +529,22 @@ Frozen.prototype.calculateTotalRewardAndUnstake = async function (senderId, isDo
     const freezeOrders = await self.scope.db.query(sql.getActiveFrozeOrders, {
         senderId, currentTime: timestamp
     });
-    self.scope.logger.error(`[Frozen][calculateTotalRewardAndUnstake] freezeOrders: ${JSON.stringify(freezeOrders)}`);
+    self.scope.logger.debug(`[Frozen][calculateTotalRewardAndUnstake] freezeOrders: ${JSON.stringify(freezeOrders)}`);
 
-    await Promise.all(freezeOrders.map(async (order) => {
+    freezeOrders.forEach((order) => {
         if (order.voteCount > 0 && (parseInt(order.voteCount, 10) + 1) % constants.froze.rewardVoteCount === 0) {
             const blockHeight = modules.blocks.lastBlock.get().height;
             const stakeRewardPercent = __private.stakeReward.calcReward(blockHeight);
             reward += (parseInt(order.freezedAmount, 10) * stakeRewardPercent) / 100;
         }
-    }));
+    });
     const readyToUnstakeOrders = freezeOrders.filter(
         o => (parseInt(o.voteCount, 10) + 1) === constants.froze.unstakeVoteCount
     );
-    self.scope.logger.error(`[Frozen][calculateTotalRewardAndUnstake] reward: ${reward}`);
-    await Promise.all(readyToUnstakeOrders.map((order) => {
+    self.scope.logger.debug(`[Frozen][calculateTotalRewardAndUnstake] reward: ${reward}`);
+    readyToUnstakeOrders.forEach((order) => {
         unstakeAmount -= parseInt(order.freezedAmount, 10);
-    }));
+    });
     return { reward, unstake: unstakeAmount };
 };
 
