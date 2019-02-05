@@ -1,8 +1,8 @@
 BEGIN;
 
 ALTER TABLE "stake_orders"
- ADD "u_voteCount"         INT         DEFAULT 0,
- ADD "u_status"              SMALLINT    NOT NULL,
- ADD "u_nextVoteMilestone" INT         NOT NULL,
+ ADD COLUMN "u_voteCount"         INT         DEFAULT 0,
+ ADD COLUMN "u_status"            SMALLINT    DEFAULT 0,
+ ADD COLUMN "u_nextVoteMilestone" INT         DEFAULT 0;
 
 COMMIT;

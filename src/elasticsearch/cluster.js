@@ -53,7 +53,7 @@ function createIndex(indexName, body, cb) {
         body: body,
     }, (err) => {
         if (err) {
-            logger.error(`[createIndex] Cannot create index for ${indexName}: ${err.message}`);
+            logger.debug(`[createIndex] Cannot create index for ${indexName}: ${err.message}`);
             cb(err);
         } else {
             cb();
