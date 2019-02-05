@@ -1,9 +1,11 @@
-const bignum = require('../helpers/bignum.js');
+import {Transaction} from 'shared/model/transaction';
+
+const bignum = require('../../backlog/helpers/bignum.js');
 const Inserts = require('../../backlog/helpers/inserts.js');
 
 import { Block } from 'shared/model/block';
-import db from 'shared/driver/db';
 import { getAddressByPublicKey } from 'shared/util/account';
+import db from 'shared/driver/db';
 import Response from 'shared/model/response';
 
 interface IDBBlockSave {
@@ -35,7 +37,10 @@ export class BlockRepo {
     public async getGenesisBlock(): Promise<Response<Block>> {
         let block: Block = null;
         try {
-            const result = db.oneOrNone('SELECT * FROM blocks WHERE "height" = 1');
+            const result: object = await db.oneOrNone('SELECT * FROM blocks WHERE "height" = 1');
+            if (!result) {
+                return new Response({ errors: ['No genesis block found']});
+            }
             block = this.dbRead(result);
         } catch (pgError) {
             return new Response({ errors: [pgError]});
@@ -124,8 +129,7 @@ export class BlockRepo {
                 await t.batch(promises);
             });
         } catch (e) {
-            library.logger.error(`[Chain][saveBlock][tx]: ${e}`);
-            library.logger.error(`[Chain][saveBlock][tx][stack]: \n ${e.stack}`);
+
         }
 
         return undefined;
@@ -137,28 +141,28 @@ export class BlockRepo {
     }
 
     private dbRead(raw: {[key: string]: any}, radix: number = 10): Block {
-        if (!raw.b_id) {
+        if (!raw.id) {
             return null;
         }
-        const block: Block = {
-            id: raw.b_id,
-            rowId: parseInt(raw.b_rowId, radix),
-            version: parseInt(raw.b_version, radix),
-            timestamp: parseInt(raw.b_timestamp, radix),
-            height: parseInt(raw.b_height, radix),
-            previousBlock: raw.b_previousBlock,
-            numberOfTransactions: parseInt(raw.b_numberOfTransactions, radix),
-            totalAmount: parseInt(raw.b_totalAmount, radix),
-            totalFee: parseInt(raw.b_totalFee, radix),
-            reward: parseInt(raw.b_reward, radix),
-            payloadLength: parseInt(raw.b_payloadLength, radix),
-            payloadHash: raw.b_payloadHash,
-            generatorPublicKey: raw.b_generatorPublicKey,
-            generatorId: getAddressByPublicKey(raw.b_generatorPublicKey),
-            blockSignature: raw.b_blockSignature,
-            confirmations: parseInt(raw.b_confirmations, radix),
-            username: raw.m_username
-        };
+
+        const block: Block = new Block({
+            id: raw.id,
+            rowId: parseInt(raw.rowId, radix),
+            version: parseInt(raw.version, radix),
+            timestamp: parseInt(raw.timestamp, radix),
+            height: parseInt(raw.height, radix),
+            previousBlock: raw.previousBlock,
+            numberOfTransactions: parseInt(raw.numberOfTransactions, radix),
+            totalAmount: parseInt(raw.totalAmount, radix),
+            totalFee: parseInt(raw.totalFee, radix),
+            reward: parseInt(raw.reward, radix),
+            payloadLength: parseInt(raw.payloadLength, radix),
+            payloadHash: raw.payloadHash,
+            generatorPublicKey: raw.generatorPublicKey,
+            generatorId: getAddressByPublicKey(raw.generatorPublicKey),
+            blockSignature: raw.blockSignature
+        });
+
         block.totalForged = new bignum(block.totalFee).plus(new bignum(block.reward)).toString();
         return block;
     }

@@ -1,5 +1,5 @@
-const crypto = require('./crypto');
-const bignum = require('../utils/bignum');
+const crypto = require('crypto');
+const bignum = require('../util/bignum');
 
 const BUFFER_SIZE = 8;
 

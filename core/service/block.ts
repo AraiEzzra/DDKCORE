@@ -13,17 +13,16 @@ import { TransactionService, ITransactionService } from 'core/service/transactio
 import { TransactionQueue } from 'core/service/transactionQueue';
 import { TransactionPoolService } from 'core/service/transactionPool';
 import { TransactionRepo } from 'core/repository/transaction';
+import { DelegateService } from 'core/service/delegate';
 import { transactionSortFunc } from 'core/util/transaction';
 import { getOrCreateAccount } from 'shared/util/account.utils';
 import blockShema from 'core/shema/block';
 import Response from 'shared/model/response';
 
 interface IVerifyResult {
-    verified: boolean;
+    verified?: boolean;
     errors: any[];
 }
-
-class DelegateService {}
 
 export class BlockService {
     private delegateService: DelegateService = new DelegateService();
@@ -259,7 +258,7 @@ export class BlockService {
         result = this.verifyId(block, result);
         result = this.verifyPayload(block, result);
 
-        result = this.verifyForkOne(block, lastBlock, result);
+        result = await this.verifyForkOne(block, lastBlock, result);
         result = this.verifyBlockSlot(block, lastBlock, result);
 
         result.verified = result.errors.length === 0;
@@ -294,9 +293,12 @@ export class BlockService {
         );
         if (exceptionVersion === undefined) {
             // If there is no exception for provided height - check against current block version
-            result.verified = version === this.currentBlockVersion;
+            if (version !== this.currentBlockVersion) {
+                result.errors.push('No exceptions found. Block version doesn\'t match te current one.');
+            }
+            return result;
         }
-
+        result.errors.push('Version exceptions found.');
         // If there is an exception - check if version match
         // return Number(exceptionVersion) === version;
         return result;
@@ -327,11 +329,11 @@ export class BlockService {
         return result;
     }
 
-    /**
-     * @implements delegateService.fork
-     */
-    private verifyForkOne(block: Block, lastBlock: Block, result: IVerifyResult): IVerifyResult {
-        this.delegateService.fork(block, 1);
+    private async verifyForkOne(block: Block, lastBlock: Block, result: IVerifyResult): Promise<IVerifyResult> {
+        const forkResponse: Response<void> = await this.delegateService.fork(block, 1);
+        if (!forkResponse.success) {
+            result.errors.push(...forkResponse.errors);
+        }
         return result;
     }
 
@@ -586,12 +588,12 @@ export class BlockService {
         return new Response<void>({ errors });
     }
 
-    /**
-     * @implements modules.delegates.fork
-     */
     private async receiveForkOne(block: Block, lastBlock: Block): Promise<Response<void>> {
         let tmpBlock: Block = {...block};
-        this.delegateService.fork(block, 1);
+        const forkResponse: Response<void> = await this.delegateService.fork(block, 1);
+        if (!forkResponse.success) {
+            return new Response<void>({ errors: [...forkResponse.errors, 'receiveForkOne'] });
+        }
 
         const normalizeResponse: Response<Block> = await this.objectNormalize(tmpBlock);
         if (!normalizeResponse.success) {
@@ -599,7 +601,11 @@ export class BlockService {
         }
         tmpBlock = normalizeResponse.data;
 
-        this.validateBlockSlot(block, lastBlock);
+        const validateBlockSlotResponse: Response<void> = await this.validateBlockSlot(block, lastBlock);
+        if (!validateBlockSlotResponse.success) {
+            return new Response<void>({ errors: [...validateBlockSlotResponse.errors, 'receiveForkOne'] });
+        }
+
         const check = this.verifyReceipt(tmpBlock);
 
         const deleteFirstResponse: Response<Block> = await this.deleteLastBlock();
@@ -616,17 +622,22 @@ export class BlockService {
     /**
      * @implements slots.calcRound
      * @implements modules.rounds.getSlotDelegatesCount
-     * @implements delegateService.validateBlockSlotAgainstPreviousRound
-     * @implements delegateService.validateBlockSlot
      */
-    private validateBlockSlot(block: Block, lastBlock: Block): boolean {
+    private async validateBlockSlot(block: Block, lastBlock: Block): Promise<Response<void>> {
         const roundNextBlock = slots.calcRound(block.height);
         const roundLastBlock = slots.calcRound(lastBlock.height);
         const activeDelegates = modules.rounds.getSlotDelegatesCount(block.height);
 
-        this.delegateService.validateBlockSlotAgainstPreviousRound(block);
-        this.delegateService.validateBlockSlot(block);
-        return true;
+        const errors: string[] = [];
+        const validateBlockSlotAgainstPreviousRoundresponse: Response<void> = await this.delegateService.validateBlockSlotAgainstPreviousRound(block);
+        if (!validateBlockSlotAgainstPreviousRoundresponse.success) {
+            errors.push(...validateBlockSlotAgainstPreviousRoundresponse.errors);
+        }
+        const validateBlockSlot: Response<void> = await this.delegateService.validateBlockSlot(block);
+        if (!validateBlockSlot.success) {
+            errors.push(...validateBlockSlot.errors);
+        }
+        return new Response<void>({ errors });
     }
 
     private verifyReceipt(block: Block): IVerifyResult {
@@ -662,7 +673,10 @@ export class BlockService {
 
     private async receiveForkFive(block: Block, lastBlock: Block): Promise<Response<void>> {
         let tmpBlock: Block = {...block};
-        modules.delegates.fork(block, 5);
+        const forkResponse: Response<void> = await this.delegateService.fork(block, 5);
+        if (!forkResponse.success) {
+            return new Response<void>({ errors: [...forkResponse.errors, 'receiveForkFive'] });
+        }
 
         const normalizeResponse: Response<Block> = await this.objectNormalize(tmpBlock);
         if (!normalizeResponse.success) {
@@ -670,7 +684,11 @@ export class BlockService {
         }
         tmpBlock = normalizeResponse.data;
 
-        this.validateBlockSlot(tmpBlock, lastBlock);
+        const validateBlockSlotResponse: Response<void> = await this.validateBlockSlot(tmpBlock, lastBlock);
+        if (!validateBlockSlotResponse.success) {
+            return new Response<void>({ errors: [...validateBlockSlotResponse.errors, 'receiveForkFive'] });
+        }
+
         const check = this.verifyReceipt(tmpBlock);
 
         const deleteResponse: Response<Block> = await this.deleteLastBlock();
@@ -851,7 +869,7 @@ export class BlockService {
     }
 
     private create(data): Response<Block> {
-        const block: Block = new Block();
+        const block: Block = new Block(data);
         this.sign(block, data.keypair);
         return new Response<Block>({ data: block });
     }
