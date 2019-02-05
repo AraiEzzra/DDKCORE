@@ -39,6 +39,7 @@ const dbSequence = require('./helpers/dbSequence.js');
 const balanceSequence = require('./helpers/balanceSequence.js');
 const z_schema = require('./helpers/z_schema.js');
 const Logger = require('./logger.js');
+const cluster = require('./elasticsearch/cluster.js');
 
 const logman = new Logger();
 const logger = logman.logger;
@@ -71,6 +72,9 @@ program
     .option('-s, --snapshot <round>', 'verify snapshot')
     .parse(process.argv);
 
+cluster.createIndex('stake_orders', cluster.createIndexBody({ limit: 1000000 }), () => {});
+cluster.createIndex('blocks_list', cluster.createIndexBody({ limit: 600000 }), () => {});
+cluster.createIndex('trs', cluster.createIndexBody({ limit: 2500000 }), () => {});
 
 /**
  * @property {object} - The default list of configuration options. Can be updated by CLI.
