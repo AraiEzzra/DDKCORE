@@ -371,9 +371,7 @@ Frozen.prototype.verifyAirdrop = async (trs) => {
  * @param {Object} trs - transation data
  * @return % based on amount
  */
-Frozen.prototype.calculateFee = function (trs, sender) {
-    return (trs.stakedAmount * constants.fees.froze) / 100;
-};
+Frozen.prototype.calculateFee = trs => trs.stakedAmount * constants.fees.froze / 100;
 
 /**
  * @desc on bind
@@ -636,51 +634,6 @@ Frozen.prototype.undoFrozeOrdersRewardAndUnstake = async function (voteTransacti
         self.undoAirdropReward(voteTransaction)
     ]);
     return [];
-};
-
-Frozen.prototype.deductRewards = async (orders) => {
-    const readyToDeductRewardOrders = orders.filter((order) => {
-        if (order.voteCount <= 0) {
-            return false;
-        }
-        return order.voteCount % constants.froze.rewardVoteCount === 0;
-    });
-    await Promise.all(readyToDeductRewardOrders.map(async (order) => {
-        await self.deductOrderReward(order);
-    }));
-};
-
-Frozen.prototype.deductOrderReward = async (order) => {
-    const reward = self.getStakeReward(order);
-    await self.scope.db.none(sql.updateAccountBalance, {
-        reward: -reward, senderId: order.senderId
-    });
-    await self.scope.db.none(sql.updateTotalSupply, {
-        reward, totalSupplyAccount: self.scope.config.forging.totalSupplyAccount
-    });
-};
-
-Frozen.prototype.recoverUnstakedOrders = async (orders) => {
-    const needRecoverStakeOrders = orders.filter(order => order.status === 0);
-    await Promise.all(needRecoverStakeOrders.map(async (order) => {
-        await self.recoverUnstakedOrder(order);
-    }));
-};
-
-Frozen.prototype.recoverUnstakedOrder = async (order) => {
-    await self.scope.db.none(sql.undoUnstake, {
-        reward: order.freezedAmount, senderId: order.senderId
-    });
-    await self.scope.db.none(sql.enableFrozeOrder, {
-        stakeId: order.stakeId
-    });
-};
-
-Frozen.prototype.getStakeReward = (order) => {
-    // TODO change to trs.height
-    const blockHeight = modules.blocks.lastBlock.get().height;
-    const stakeRewardPercent = __private.stakeReward.calcReward(blockHeight);
-    return parseInt(order.freezedAmount, 10) * stakeRewardPercent / 100;
 };
 
 // Export
