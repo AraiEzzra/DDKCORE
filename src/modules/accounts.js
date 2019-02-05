@@ -131,7 +131,7 @@ __private.openAccount = (body, cb) => {
             }).then((referralTransaction) => {
                 referralTransaction.status = 0;
                 modules.transactions.putInQueue(referralTransaction);
-                return setImmediate(cb, null, [referralTransaction]);
+                return setImmediate(cb, null, newAccount);
             }).catch((receiveTransactionsError) => {
                 throw receiveTransactionsError;
             });
