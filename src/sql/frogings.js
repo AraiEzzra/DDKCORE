@@ -32,6 +32,8 @@ const FrogingsSql = {
 
     getActiveFrozeOrders: 'SELECT * FROM stake_orders WHERE "senderId"=${senderId} AND "status"=1 AND ${currentTime} >= "nextVoteMilestone"',
 
+    getUnconfirmedActiveFrozeOrders: 'SELECT * FROM stake_orders WHERE "senderId"=${senderId} AND "u_status"=1 AND ${currentTime} >= "u_nextVoteMilestone"',
+
     getActiveFrozeOrder: 'SELECT * FROM stake_orders WHERE "senderId"=${senderId} AND "id"=${stakeId} AND "status"=1',
 
     updateFrozeOrder: 'UPDATE stake_orders SET "status"=0,"recipientId"=${recipientId}, "nextVoteMilestone"=-1, "transferCount" = ("transferCount"+1) WHERE "senderId"=${senderId} AND "id"=${stakeId} AND "status"=1 RETURNING *',

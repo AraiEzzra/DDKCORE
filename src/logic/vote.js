@@ -74,7 +74,7 @@ Vote.prototype.create = async function (data, trs) {
     if (data.votes && data.votes[0]) {
         isDownVote = data.votes[0][0] === '-';
     }
-    const totals = await library.frozen.calculateTotalRewardAndUnstake(senderId, isDownVote, trs.timestamp);
+    const totals = await library.frozen.calculateUnconfirmedTotalRewardAndUnstake(senderId, isDownVote, trs.timestamp);
     const airdropReward = await library.frozen.getAirdropReward(senderId, totals.reward, data.type);
 
     trs.asset.votes = data.votes;
@@ -278,9 +278,11 @@ Vote.prototype.newVerify = async (trs) => {
     } catch (e) {
         throw e;
     }
+};
 
+Vote.prototype.newVerifyUnconfirmed = async trs => {
     const isDownVote = trs.trsName === 'DOWNVOTE';
-    const totals = await library.frozen.calculateTotalRewardAndUnstake(trs.senderId, isDownVote, trs.timestamp);
+    const totals = await library.frozen.calculateUnconfirmedTotalRewardAndUnstake(trs.senderId, isDownVote, trs.timestamp);
 
     if (totals.reward !== trs.asset.reward) {
         throw new Error(
@@ -299,9 +301,7 @@ Vote.prototype.newVerify = async (trs) => {
     } catch (e) {
         throw e;
     }
-};
 
-Vote.prototype.newVerifyUnconfirmed = async trs =>
     ((new Promise((resolve, reject) => {
         self.checkUnconfirmedDelegates(trs, (err) => {
             if (err) {
@@ -311,6 +311,7 @@ Vote.prototype.newVerifyUnconfirmed = async trs =>
             }
         });
     })));
+};
 
 /**
  * Checks type, format and lenght from vote.
@@ -488,6 +489,15 @@ Vote.prototype.undo = async (trs) => {
  * @param {function} cb - Callback function
  */
 Vote.prototype.applyUnconfirmed = function (trs, sender, cb) {
+    const isDownVote = trs.trsName === 'DOWNVOTE';
+    if (!isDownVote) {
+        await library.db.none(sql.updateUnconfirmedStakeOrders, {
+            senderId: trs.senderId,
+            nextVoteMilestone: trs.timestamp + constants.froze.vTime * 60,
+            currentTime: trs.timestamp
+        });
+    }
+
     library.account.merge(sender.address, {
         u_delegates: trs.asset.votes
     }, err => setImmediate(cb, err));
@@ -505,8 +515,13 @@ Vote.prototype.applyUnconfirmed = function (trs, sender, cb) {
  * @return {setImmediateCallback} cb, err
  */
 Vote.prototype.undoUnconfirmed = function (trs, sender, cb) {
-    if (trs.asset.votes === null) {
-        return setImmediate(cb);
+    const isDownVote = trs.trsName === 'DOWNVOTE';
+    if (!isDownVote) {
+        await library.db.none(sql.undoUpdateStakeOrder, {
+            senderId: trs.senderId,
+            milestone: constants.froze.vTime * 60,
+            currentTime: trs.timestamp
+        });
     }
 
     const votesInvert = Diff.reverse(trs.asset.votes);
@@ -652,30 +667,6 @@ Vote.prototype.updateAndCheckVote = async (voteTransaction) => {
                     library.logger.error(`elasticsearch error :${err.message}`);
                 }
             }
-        });
-    } catch (err) {
-        library.logger.warn(err);
-        throw err;
-    }
-};
-
-/**
- * Check and update vote milestone, vote count from stake_order and mem_accounts table
- * @param {Object} voteTransaction transaction data object
- * @return {null|err} return null if success else err
- *
- */
-Vote.prototype.removeCheckVote = async (voteTransaction) => {
-    const senderId = voteTransaction.senderId;
-    try {
-        // todo check if could change to tx
-        await library.db.task(async () => {
-            await library.frozen.undoFrozeOrdersRewardAndUnstake(voteTransaction);
-            await library.db.none(sql.undoUpdateStakeOrder, {
-                senderId,
-                milestone: constants.froze.vTime * 60,
-                nextVoteMilestone: voteTransaction.timestamp + constants.froze.vTime * 60,
-            });
         });
     } catch (err) {
         library.logger.warn(err);

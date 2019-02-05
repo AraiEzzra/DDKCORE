@@ -477,7 +477,7 @@ Frozen.prototype.getAirdropReward = async function (senderAddress, amount, trans
         address: constants.airdrop.account
     });
 
-    self.scope.logger.info(`availableAirdropBalance: ${availableAirdropBalance.balance / 100000000}`);
+    self.scope.logger.debug(`availableAirdropBalance: ${availableAirdropBalance.balance / 100000000}`);
 
     const user = await self.scope.db.oneOrNone(rewardSql.referLevelChain, {
         address: senderAddress
@@ -518,28 +518,28 @@ Frozen.prototype.getAirdropReward = async function (senderAddress, amount, trans
     return result;
 };
 
-Frozen.prototype.calculateTotalRewardAndUnstake = async (senderId, isDownVote, timestamp) => {
+Frozen.prototype.calculateUnconfirmedTotalRewardAndUnstake = async (senderId, isDownVote, timestamp) => {
     let reward = 0;
     let unstakeAmount = 0;
     if (isDownVote) {
         return { reward, unstake: unstakeAmount };
     }
-    const freezeOrders = await self.scope.db.query(sql.getActiveFrozeOrders, {
+    const freezeOrders = await self.scope.db.query(sql.getUnconfirmedActiveFrozeOrders, {
         senderId, currentTime: timestamp
     });
-    self.scope.logger.debug(`[Frozen][calculateTotalRewardAndUnstake] freezeOrders: ${JSON.stringify(freezeOrders)}`);
+    self.scope.logger.debug(`[Frozen][calculateUnconfirmedTotalRewardAndUnstake] freezeOrders: ${JSON.stringify(freezeOrders)}`);
 
     freezeOrders.forEach((order) => {
-        if (order.voteCount > 0 && (parseInt(order.voteCount, 10) + 1) % constants.froze.rewardVoteCount === 0) {
+        if (order.u_voteCount > 0 && (parseInt(order.u_voteCount, 10) + 1) % constants.froze.rewardVoteCount === 0) {
             const blockHeight = modules.blocks.lastBlock.get().height;
             const stakeRewardPercent = __private.stakeReward.calcReward(blockHeight);
             reward += (parseInt(order.freezedAmount, 10) * stakeRewardPercent) / 100;
         }
     });
     const readyToUnstakeOrders = freezeOrders.filter(
-        o => (parseInt(o.voteCount, 10) + 1) === constants.froze.unstakeVoteCount
+        o => (parseInt(o.u_voteCount, 10) + 1) === constants.froze.unstakeVoteCount
     );
-    self.scope.logger.debug(`[Frozen][calculateTotalRewardAndUnstake] reward: ${reward}`);
+    self.scope.logger.debug(`[Frozen][calculateUnconfirmedTotalRewardAndUnstake] reward: ${reward}`);
     readyToUnstakeOrders.forEach((order) => {
         unstakeAmount -= parseInt(order.freezedAmount, 10);
     });

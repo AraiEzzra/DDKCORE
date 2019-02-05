@@ -44,6 +44,10 @@ const Accounts = {
 
     updateStakeOrder: 'UPDATE stake_orders SET "voteCount"="voteCount"+1, "nextVoteMilestone"=${nextVoteMilestone} WHERE "senderId"=${senderId} AND "status"=1 AND ( "nextVoteMilestone" = 0 OR ${currentTime} >= "nextVoteMilestone") returning *',
 
+    updateUnconfirmedStakeOrders: 'UPDATE stake_orders SET "u_voteCount"="u_voteCount"+1, "u_nextVoteMilestone"=${nextVoteMilestone} WHERE "senderId"=${senderId} AND "u_status"=1 AND ( "u_nextVoteMilestone" = 0 OR ${currentTime} >= "u_nextVoteMilestone")',
+
+    undoUnconfirmedStakeOrders: 'UPDATE stake_orders SET "u_voteCount"="u_voteCount"-1, "u_nextVoteMilestone"="u_nextVoteMilestone" - ${milestone} WHERE "senderId"=${senderId} AND "u_status"=1 AND ${currentTime} + ${milestone} = "u_nextVoteMilestone"',
+
     undoUpdateStakeOrder: 'UPDATE stake_orders SET "voteCount"="voteCount"-1, "nextVoteMilestone"="nextVoteMilestone"- ${milestone} WHERE "senderId"=${senderId} AND "status"=1 AND ${currentTime} + ${milestone} = "nextVoteMilestone"',
 
     countAvailableStakeOrdersForVote: 'SELECT count(*) FROM stake_orders WHERE "senderId"=${senderId} AND "status"=1',

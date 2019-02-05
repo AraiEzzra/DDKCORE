@@ -467,7 +467,8 @@ Loader.prototype.loadBlockChain = function (cb) {
                 t.none(sql.updateMemAccounts),
                 t.query(sql.getDelegates),
                 t.none(sql.clearUDelegates),
-                t.none(sql.refreshUDelegates)
+                t.none(sql.refreshUDelegates),
+                t.none(sql.refreshStakeOrders)
             ];
 
             return t.batch(promises);
