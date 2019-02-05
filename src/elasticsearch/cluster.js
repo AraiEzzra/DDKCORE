@@ -1,3 +1,7 @@
+const Logger = require('../logger.js');
+
+const logger = new Logger().logger;
+
 /**
  * @desc permorms cluster operations
  * @param {module} client - elasticsearch module
@@ -21,6 +25,19 @@ function isIndexExists(indexName) {
 }
 exports.isIndexExists = isIndexExists;
 
+const createIndexBody = ({ limit }) => {
+    return {
+        index: {
+            mapping: {
+                total_fields: {
+                    limit,
+                }
+            }
+        }
+    };
+}
+exports.createIndexBody = createIndexBody;
+
 /**
  *
  * @desc create an index
@@ -30,14 +47,16 @@ exports.isIndexExists = isIndexExists;
  *
  */
 
-function createIndex(indexName, cb) {
+function createIndex(indexName, body, cb) {
     client.indices.create({
-        index: indexName
+        index: indexName,
+        body: body,
     }, (err) => {
         if (err) {
+            logger.error(`[createIndex] Cannot create index for ${indexName}: ${err.message}`);
             cb(err);
         } else {
-            cb(null);
+            cb();
         }
     });
 }
