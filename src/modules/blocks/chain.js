@@ -250,16 +250,20 @@ Chain.prototype.newApplyGenesisBlock = async (block, verify, save) => {
     block.transactions = block.transactions.sort(transactionSortFunc);
     try {
         library.logger.info('[Chain][applyGenesisBlock] Genesis block loading');
-        await modules.blocks.verify.newProcessBlock(block, false, save, verify, false);
+        await modules.blocks.verify.newProcessBlock(block, false, save, null, verify, false);
     } catch (e) {
         library.logger.error(`[Chain][applyGenesisBlock] ${e}`);
         library.logger.error(`[Chain][applyGenesisBlock][stack] ${e.stack}`);
     }
 };
 
-Chain.prototype.newApplyBlock = async (block, broadcast, saveBlock, tick) => {
+Chain.prototype.newApplyBlock = async (block, broadcast, keyPair, saveBlock, tick) => {
     // Prevent shutdown during database writes.
     modules.blocks.isActive.set(true);
+
+    if (keyPair) {
+        library.logic.block.addPayloadHash(block, keyPair);
+    }
 
     if (saveBlock) {
         await self.newSaveBlock(block);
@@ -314,6 +318,12 @@ __private.popLastBlock = function (oldLastBlock, cbPopLastBlock) {
     library.logger.debug(`[Chain][popLastBlock] block: ${JSON.stringify(oldLastBlock)}`);
     // Execute in sequence via balancesSequence
     library.balancesSequence.add((cbAdd) => {
+        let lastBlock = modules.blocks.lastBlock.get();
+        if (oldLastBlock.id !== lastBlock.id) {
+            library.logger.error(`[Chain][popLastBlock] Block ${oldLastBlock.id} is not last`);
+            return setImmediate(cbAdd, `Block is not last: ${JSON.stringify(oldLastBlock)}`, lastBlock);
+        }
+
         // Load previous block from full_blocks_list table
         // TODO: Can be inefficient, need performnce tests
         modules.blocks.utils.loadBlocksPart(oldLastBlock.previousBlock, (err, previousBlock) => {
@@ -322,7 +332,7 @@ __private.popLastBlock = function (oldLastBlock, cbPopLastBlock) {
             }
 
             // Reverse order of transactions in last blocks...
-            async.eachSeries(oldLastBlock.transactions.reverse(), (transaction, cbReverse) => {
+            async.eachSeries(oldLastBlock.transactions.reverse(), (transaction, eachSeriesCb) => {
                 async.series([
                     function (seriesCb) {
                         modules.transactions.undo(transaction, seriesCb);
@@ -330,7 +340,7 @@ __private.popLastBlock = function (oldLastBlock, cbPopLastBlock) {
                     function (seriesCb) {
                         modules.transactions.undoUnconfirmed(transaction, seriesCb);
                     }
-                ], cbReverse);
+                ], eachSeriesCb);
             }, (errorUndo) => {
                 if (errorUndo) {
                     // Fatal error, memory tables will be inconsistent

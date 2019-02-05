@@ -82,13 +82,16 @@ function Transport(cb, scope) {
  */
 __private.hashsum = function (obj) {
     const buf = Buffer.from(JSON.stringify(obj), 'utf8');
-    const hashdig = crypto.createHash('sha256').update(buf).digest();
+    const hashdig = crypto.createHash('sha256')
+    .update(buf)
+    .digest();
     const temp = Buffer.alloc(8);
     for (let i = 0; i < 8; i++) {
         temp[i] = hashdig[7 - i];
     }
 
-    return bignum.fromBuffer(temp).toString();
+    return bignum.fromBuffer(temp)
+    .toString();
 };
 
 /**
@@ -356,42 +359,43 @@ Transport.prototype.getFromPeer = function (peer, options, cb) {
     }
 
     popsicle.request(req)
-        .use(popsicle.plugins.parse(['json'], false))
-        .then((res) => {
-            if (res.status !== 200) {
-                // Remove peer
-                __private.removePeer({ peer, code: `ERESPONSE ${res.status}` }, `${req.method} ${req.url}`);
+    .use(popsicle.plugins.parse(['json'], false))
+    .then((res) => {
+        if (res.status !== 200) {
+            // Remove peer
+            __private.removePeer({ peer, code: `ERESPONSE ${res.status}` }, `${req.method} ${req.url}`);
 
-                return setImmediate(cb, ['Received bad response code', res.status, req.method, req.url].join(' '));
-            }
-            const headers = peer.applyHeaders(res.headers);
+            return setImmediate(cb, ['Received bad response code', res.status, req.method, req.url].join(' '));
+        }
+        const headers = peer.applyHeaders(res.headers);
 
-            const report = library.schema.validate(headers, schema.headers);
-            if (!report) {
-                // Remove peer
-                __private.removePeer({ peer, code: 'EHEADERS' }, `${req.method} ${req.url}`);
+        const report = library.schema.validate(headers, schema.headers);
+        if (!report) {
+            // Remove peer
+            __private.removePeer({ peer, code: 'EHEADERS' }, `${req.method} ${req.url}`);
 
-                return setImmediate(cb, ['Invalid response headers', JSON.stringify(headers), req.method, req.url].join(' '));
-            }
+            return setImmediate(cb, ['Invalid response headers', JSON.stringify(headers), req.method, req.url].join(' '));
+        }
 
-            if (!modules.system.networkCompatible(headers.nethash)) {
-                // Remove peer
-                __private.removePeer({ peer, code: 'ENETHASH' }, `${req.method} ${req.url}`);
+        if (!modules.system.networkCompatible(headers.nethash)) {
+            // Remove peer
+            __private.removePeer({ peer, code: 'ENETHASH' }, `${req.method} ${req.url}`);
 
-                return setImmediate(cb, ['Peer is not on the same network', headers.nethash, req.method, req.url].join(' '));
-            }
+            return setImmediate(cb, ['Peer is not on the same network', headers.nethash, req.method, req.url].join(' '));
+        }
 
-            if (!modules.system.versionCompatible(headers.version)) {
-                // Remove peer
-                __private.removePeer({ peer, code: `EVERSION:${headers.version}` }, `${req.method} ${req.url}`);
+        if (!modules.system.versionCompatible(headers.version)) {
+            // Remove peer
+            __private.removePeer({ peer, code: `EVERSION:${headers.version}` }, `${req.method} ${req.url}`);
 
-                return setImmediate(cb, ['Peer is using incompatible version', headers.version, req.method, req.url].join(' '));
-            }
+            return setImmediate(cb, ['Peer is using incompatible version', headers.version, req.method, req.url].join(' '));
+        }
 
-            modules.peers.update(peer);
+        modules.peers.update(peer);
 
-            return setImmediate(cb, null, { body: res.body, peer });
-        }).catch((err) => {
+        return setImmediate(cb, null, { body: res.body, peer });
+    })
+    .catch((err) => {
         if (peer) {
             __private.removePeer({ peer, code: err.code }, `${req.method} ${req.url}`);
         }
@@ -552,11 +556,11 @@ Transport.prototype.internal = {
     blocksCommon(ids, peer, extraLogMessage, cb) {
         const escapedIds = ids
         // Remove quotes
-            .replace(/['"]+/g, '')
-            // Separate by comma into an array
-            .split(',')
-            // Reject any non-numeric values
-            .filter(id => /^[0-9a-fA-F]+$/.test(id));
+        .replace(/['"]+/g, '')
+        // Separate by comma into an array
+        .split(',')
+        // Reject any non-numeric values
+        .filter(id => /^[0-9a-fA-F]+$/.test(id));
 
         if (!escapedIds.length) {
             library.logger.debug('Common block request validation failed', { err: 'ESCAPE', req: ids });
@@ -566,10 +570,12 @@ Transport.prototype.internal = {
             return setImmediate(cb, 'Invalid block id sequence');
         }
 
-        library.db.query(sql.getCommonBlock, [escapedIds]).then(rows => setImmediate(cb, null, {
+        library.db.query(sql.getCommonBlock, [escapedIds])
+        .then(rows => setImmediate(cb, null, {
             success: true,
             common: rows[0] || null
-        })).catch((err) => {
+        }))
+        .catch((err) => {
             library.logger.error(err.stack);
             return setImmediate(cb, 'Failed to get common block');
         });
@@ -641,26 +647,10 @@ Transport.prototype.internal = {
         }
     },
 
-    getSignatures(req, cb) {
-        const transactions = modules.transactions.getMultisignatureTransactionList(true, constants.maxSharedTxs);
-        const signatures = [];
-
-        async.eachSeries(transactions, (trs, __cb) => {
-            if (trs.signatures && trs.signatures.length) {
-                signatures.push({
-                    transaction: trs.id,
-                    signatures: trs.signatures
-                });
-            }
-
-            return setImmediate(__cb);
-        }, () => setImmediate(cb, null, { success: true, signatures }));
-    },
-
     getTransactions(req, cb) {
-        const transactions = modules.transactions.getMergedTransactionList(true, constants.maxSharedTxs);
+        const res = modules.transactions.getMergedTransactionList(true, constants.maxSharedTxs);
 
-        return setImmediate(cb, null, { success: true, transactions });
+        return setImmediate(cb, null, { success: true, ...res });
     },
 
     postTransactions(query, peer, extraLogMessage, cb) {

@@ -33,6 +33,7 @@ __private.isActive = false;
 function Blocks(cb, scope) {
     library = {
         logger: scope.logger,
+        sequence: scope.sequence,
     };
 
     // Initialize submodules with library content
@@ -214,7 +215,11 @@ Blocks.prototype.isLoaded = function () {
 
 Blocks.prototype.internal = {
     popLastBlock(req, cb) {
-        self.chain.deleteLastBlock(cb);
+        library.sequence.add((sequenceCb) => {
+            self.chain.deleteLastBlock(sequenceCb);
+        }, (err, res) => {
+            return setImmediate(cb, err, res);
+        });
     },
 };
 

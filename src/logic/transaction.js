@@ -143,7 +143,6 @@ Transaction.prototype.attachAssetType = (typeId, instance) => {
         typeof instance.create === 'function' &&
         typeof instance.getBytes === 'function' &&
         typeof instance.calculateFee === 'function' &&
-        typeof instance.verify === 'function' &&
         typeof instance.objectNormalize === 'function' &&
         typeof instance.dbRead === 'function' &&
         typeof instance.apply === 'function' &&
@@ -648,14 +647,14 @@ Transaction.prototype.newApply = async (trs, block, sender) => {
 
     const mergedSender = await self.scope.account.asyncMerge(sender.address, {
         balance: -amount,
-        blockId: block.id
+        totalFrozeAmount: trs.stakedAmount
     });
     try {
         await __private.types[trs.type].apply.call(self, trs);
     } catch (e) {
         await self.scope.account.asyncMerge(mergedSender.address, {
             balance: amount,
-            blockId: block.id
+            totalFrozeAmount: -trs.stakedAmount
         });
         trs.status = TransactionStatus.DECLINED;
         self.scope.logger.error(`[Logic/Transaction][apply]: ${e}`);

@@ -515,8 +515,14 @@ __private.loadBlocksFromNetwork = function (cb) {
             return setImmediate(cb, err);
         }
 
-        let peers = arrayShuffle(network.peers).slice(0, 5);
+        const broadhash = modules.system.getBroadhash();
+        const peersWithAnotherBroadhash = network.peers
+            .filter(peer => peer.broadhash !== broadhash);
+        const peers = arrayShuffle(peersWithAnotherBroadhash).slice(0, 5);
         library.logger.debug(`Peers for load blocks: ${JSON.stringify(peers)}`);
+        if (!peers.length) {
+            return setImmediate(cb);
+        }
 
         async.whilst(
             () => !loaded && testCount < 5,
@@ -545,12 +551,12 @@ __private.loadBlocksFromNetwork = function (cb) {
                 }
 
                 function getCommonBlock(getCommonBlockCb) {
-                    library.logger.info(`Looking for common block with: ${peer.string}`);
                     if (peer.height < lastBlock.height) {
                         testCount += 1;
                         return next();
                     }
 
+                    library.logger.info(`Looking for common block with: ${peer.string}`);
                     modules.blocks.process.getCommonBlock(peer, lastBlock.height, (getCommonBlockErr, commonBlock) => {
                         if (!commonBlock) {
                             if (getCommonBlockErr) {
@@ -838,6 +844,8 @@ Loader.prototype.onBind = function (scope) {
  */
 Loader.prototype.onBlockchainReady = function () {
     __private.loaded = true;
+
+    modules.system.update(() => {});
 };
 
 /**

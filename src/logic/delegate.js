@@ -67,15 +67,7 @@ Delegate.prototype.calculateFee = function () {
     return constants.fees.delegate;
 };
 
-/**
- * Verifies fields from transaction and sender, calls modules.accounts.getAccount().
- * @implements module:accounts#Account~getAccount
- * @param {transaction} trs
- * @param {account} sender
- * @param {function} cb - Callback function.
- * @returns {setImmediateCallback|Object} returns error if invalid parameter |
- * trs validated.
- */
+// TODO implement in newVerify
 Delegate.prototype.verify = function (trs, sender, cb) {
     if (trs.recipientId) {
         if (constants.VERIFY_DELEGATE_TRS_RECIPIENT) {

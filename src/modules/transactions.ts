@@ -830,7 +830,7 @@ Transactions.prototype.shared = {
                 return setImmediate(cb, err[0].message);
             }
 
-            return setImmediate(cb, null, { transactions: self.newTransactionPool.getTransactions(req.body) });
+            return setImmediate(cb, null, self.newTransactionPool.getTransactions(req.body));
         });
     },
 

@@ -18,15 +18,13 @@ const FrogingsSql = {
 
     updateAccountBalance: 'UPDATE mem_accounts SET "balance"=("balance" + ${reward}), "u_balance"=("u_balance" + ${reward}) WHERE "address"=${senderId}',
 
-    updateFrozeAmount: 'UPDATE mem_accounts SET "totalFrozeAmount" = ("totalFrozeAmount" + ${reward}) WHERE "address" = ${senderId}',
+    updateFrozeAmount: 'UPDATE mem_accounts SET "totalFrozeAmount" = ("totalFrozeAmount" + ${reward}), "u_totalFrozeAmount" = ("u_totalFrozeAmount" + ${reward}) WHERE "address" = ${senderId}',
 
     getFrozeAmount: 'SELECT "totalFrozeAmount" FROM mem_accounts WHERE "address"=${senderId}',
 
     disableFrozeOrders: 'UPDATE stake_orders SET "status"=0 where "id"=${id}',
 
-    enableFrozeOrder: 'UPDATE stake_orders SET "status"=1 where "stakeId"=${stakeId}',
-
-    deductFrozeAmount: 'UPDATE mem_accounts SET "totalFrozeAmount" = ("totalFrozeAmount" - ${orderFreezedAmount}), "u_totalFrozeAmount" = ("u_totalFrozeAmount" - ${orderFreezedAmount}) WHERE "address" = ${senderId}',
+    enableFrozeOrder: 'UPDATE stake_orders SET "status"=1 where "id"=${id}',
 
     getFrozeOrders: 'SELECT * FROM stake_orders WHERE "senderId"=${senderId} ORDER BY "insertTime" DESC LIMIT ${limit} OFFSET ${offset}',
 
@@ -54,9 +52,7 @@ const FrogingsSql = {
 
     updateOldOrder: 'UPDATE stake_orders SET "status"=1, "nextVoteMilestone"=${nextVoteMilestone}, "isVoteDone"=false, "recipientId"=NULL WHERE "stakeId"=${stakeId}',
 
-    updateTotalSupply: 'UPDATE mem_accounts SET "balance"=("balance" + ${reward}), "u_balance"=("u_balance" + ${reward}) WHERE "address"=${totalSupplyAccount}',
-
-    getRecentlyChangedFrozeOrders: 'SELECT * FROM stake_orders WHERE "senderId"=${senderId} AND ${currentTime} < "nextVoteMilestone"',
+    getRecentlyChangedFrozeOrders: 'SELECT * FROM stake_orders WHERE "senderId"=${senderId} AND ${nextVoteMilestone} = "nextVoteMilestone"',
 
     getStakeRewardHistory: 'SELECT "v_reward", "t_timestamp", count(*) OVER() AS rewards_count from full_blocks_list WHERE "t_senderId" = ${senderId} AND "v_reward" > 0 ORDER BY "t_timestamp" DESC LIMIT ${limit} OFFSET ${offset}',
 

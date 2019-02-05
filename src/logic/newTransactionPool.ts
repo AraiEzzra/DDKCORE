@@ -125,7 +125,7 @@ class TransactionPool {
             await this.scope.transactionLogic.newUndoUnconfirmed(trs);
         } catch (e) {
             this.scope.logger.error(`[TransactionPool][remove]: ${e}`);
-            this.scope.logger.debug(`[TransactionPool][remove][stack]: \n ${e.stack}`);
+            this.scope.logger.error(`[TransactionPool][remove][stack]: \n ${e.stack}`);
         }
 
         delete this.pool[trs.id];
@@ -133,9 +133,10 @@ class TransactionPool {
         this.poolBySender[trs.senderId] = this.poolBySender[trs.senderId].filter(t => t.id !== trs.id);
 
         if (this.poolByRecipient[trs.recipientId]) {
-            this.poolByRecipient[trs.recipientId] =
-                this.poolByRecipient[trs.recipientId].filter(t => t.id !== trs.id);
+            this.scope.logger.debug(`[TransactionPool][remove][poolByRecipient] trs.recipientId: ${trs.recipientId}, this.poolByRecipient[trs.recipientId]: ${this.poolByRecipient[trs.recipientId]}`);
         }
+        this.poolByRecipient[trs.recipientId] =
+            (this.poolByRecipient[trs.recipientId] || []).filter(t => t.id !== trs.id);
         return true;
     }
 
@@ -184,17 +185,24 @@ class TransactionPool {
         return Object.keys(this.pool).length;
     }
 
-    getTransactions = ({ limit = constants.maxSharedTxs, senderPublicKey }: { limit: number, senderPublicKey: string }): Array<Transaction> => {
+    getTransactions = ({ limit = constants.maxSharedTxs, senderPublicKey }: { limit: number, senderPublicKey: string }): { transactions: Array<Transaction>, count: number } => {
         if (senderPublicKey) {
             const senderId = generateAddressByPublicKey(senderPublicKey);
             const recipientTrs = this.poolByRecipient[senderId] || [];
             const senderTrs = this.poolBySender[senderId] || [];
             const dependTransactions = [...recipientTrs, ...senderTrs];
 
-            return dependTransactions.sort(transactionSortFunc).slice(0, Math.min(limit, constants.maxSharedTxs)).reverse();
+            return {
+                transactions: dependTransactions.sort(transactionSortFunc).slice(0, Math.min(limit, constants.maxSharedTxs)).reverse(),
+                count: dependTransactions.length,
+            };
         }
 
-        return Object.values(this.pool).sort(transactionSortFunc).slice(0, Math.min(limit, constants.maxSharedTxs));
+        const transactions = Object.values(this.pool).sort(transactionSortFunc);
+        return {
+            transactions: transactions.slice(0, Math.min(limit, constants.maxSharedTxs)),
+            count: transactions.length,
+        };
     }
 }
 
@@ -329,7 +337,7 @@ export class TransactionQueue {
             await this.scope.transactionLogic.newVerify({ trs, sender, checkExists: true });
         } catch (e) {
             this.scope.logger.debug(`[TransactionQueue][verify]: ${e}`);
-            this.scope.logger.debug(`[TransactionQueue][verify][stack]: \n ${e.stack}`);
+            this.scope.logger.trace(`[TransactionQueue][verify][stack]: \n ${e.stack}`);
             this.sendVerifiedMessage(sender.address, false, e.message);
             return {
                 verified: false,
@@ -341,7 +349,7 @@ export class TransactionQueue {
             await this.scope.transactionLogic.newVerifyUnconfirmed({ trs, sender });
         } catch (e) {
             this.scope.logger.debug(`[TransactionQueue][verifyUnconfirmed]: ${e}`);
-            this.scope.logger.debug(`[TransactionQueue][verifyUnconfirmed][stack]: \n ${e.stack}`);
+            this.scope.logger.trace(`[TransactionQueue][verifyUnconfirmed][stack]: \n ${e.stack}`);
             this.sendVerifiedMessage(sender.address, false, e.message);
             return {
                 verified: false,

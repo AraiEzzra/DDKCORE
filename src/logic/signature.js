@@ -60,45 +60,6 @@ Signature.prototype.calculateFee = function () {
     return constants.fees.secondsignature;
 };
 
-/**
- * Verifies signature fields from transaction asset and sender.
- * @implements module:transactions#Transaction~verifySignature
- * @param {transaction} trs
- * @param {account} sender
- * @param {function} cb - Callback function.
- * @returns {setImmediateCallback|transaction} returns error string if invalid parameter |
- * trs validated.
- */
-Signature.prototype.verify = function (trs, sender, cb) {
-    if (!trs.asset || !trs.asset.signature) {
-        if (constants.SIGNATURE_TRANSACTION_VALIDATION_ENABLED.SIGNATURE) {
-            return setImmediate(cb, 'Invalid transaction asset');
-        }
-        library.logger.error('Invalid transaction asset signature');
-    }
-
-    if (trs.amount !== 0) {
-        if (constants.SIGNATURE_TRANSACTION_VALIDATION_ENABLED.AMOUNT) {
-            return setImmediate(cb, 'Invalid transaction amount');
-        }
-        library.logger.error('Invalid transaction signature amount');
-    }
-
-    try {
-        if (!trs.asset.signature.publicKey || trs.asset.signature.publicKey.length !== 32) {
-            if (constants.SIGNATURE_TRANSACTION_VALIDATION_ENABLED.PUBLIC_KEY) {
-                return setImmediate(cb, 'Invalid public key');
-            }
-            library.logger.error('Signature public key error');
-        }
-    } catch (e) {
-        library.logger.error(e.stack);
-        return setImmediate(cb, 'Invalid public key');
-    }
-
-    return setImmediate(cb, null, trs);
-};
-
 Signature.prototype.newVerify = async (trs) => {
     if (!trs.asset || !trs.asset.signature) {
         throw new Error('Invalid transaction asset');

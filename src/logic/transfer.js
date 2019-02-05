@@ -58,31 +58,6 @@ Transfer.prototype.calculateFee = function (trs) {
     return (trs.amount * constants.fees.send) / 100;
 };
 
-/**
- * Verifies recipientId and amount greather than 0.
- * @param {transaction} trs
- * @param {account} sender
- * @param {function} cb
- * @return {setImmediateCallback} errors | trs
- */
-Transfer.prototype.verify = function (trs, sender, cb) {
-    if (!trs.recipientId) {
-        if (constants.SEND_TRANSACTION_VALIDATION_ENABLED.RECIPIENT_ID) {
-            return setImmediate(cb, 'Missing recipient');
-        }
-        // self.scope.logger.error('Missing recipient');
-    }
-
-    if (trs.amount <= 0) {
-        if (constants.SEND_TRANSACTION_VALIDATION_ENABLED.AMOUNT) {
-            return setImmediate(cb, 'Invalid transaction amount');
-        }
-        // self.scope.logger.error('Invalid transaction amount');
-    }
-
-    return setImmediate(cb, null, trs);
-};
-
 Transfer.prototype.newVerify = (trs) => {
     if (!trs.recipientId) {
         throw new Error('Missing recipient');
