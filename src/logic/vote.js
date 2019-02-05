@@ -491,7 +491,7 @@ Vote.prototype.undo = async (trs) => {
 Vote.prototype.applyUnconfirmed = function (trs, sender, cb) {
     const isDownVote = trs.trsName === 'DOWNVOTE';
     if (!isDownVote) {
-        await library.db.none(sql.updateUnconfirmedStakeOrders, {
+        library.db.none(sql.updateUnconfirmedStakeOrders, {
             senderId: trs.senderId,
             nextVoteMilestone: trs.timestamp + constants.froze.vTime * 60,
             currentTime: trs.timestamp
@@ -517,7 +517,7 @@ Vote.prototype.applyUnconfirmed = function (trs, sender, cb) {
 Vote.prototype.undoUnconfirmed = function (trs, sender, cb) {
     const isDownVote = trs.trsName === 'DOWNVOTE';
     if (!isDownVote) {
-        await library.db.none(sql.undoUpdateStakeOrder, {
+        library.db.none(sql.undoUpdateStakeOrder, {
             senderId: trs.senderId,
             milestone: constants.froze.vTime * 60,
             currentTime: trs.timestamp
