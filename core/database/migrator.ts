@@ -69,7 +69,7 @@ export class Migrator {
                 })
                 .catch(err => {
                     return new Response({
-                        errors: err.message
+                        errors: [err.message]
                     });
                 });
         }

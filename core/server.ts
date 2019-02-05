@@ -10,11 +10,11 @@ app.use(bodyParser.json());
 const loader = new Loader();
 loader.initRoute(app);
 loader.runMigrate(db)
-    .then(res => {
+    .then(() => {
         /**
          * TODO Change on logger
          */
-        console.log('*** Migrate Done ****');
+        console.log('Migrate Done.');
     });
 
 const DEFAULT_PORT = 3000;
