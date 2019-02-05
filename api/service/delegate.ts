@@ -2,9 +2,7 @@ import { Delegate } from 'shared/model/delegate';
 import Response from 'shared/model/response';
 import { IModelTransaction, TransactionType, Transaction } from 'shared/model/transaction';
 import { Account } from 'shared/model/account';
-
-// TODO need model Block
-declare class Block {}
+import { Block } from 'shared/model/block';
 
 interface IResponseGetBlockSlotData {
     time: bigint;
@@ -22,8 +20,6 @@ export interface IDelegateService {
 
     generateDelegateList(height: number, source?: string[]): Promise<Response<void>>;
 
-    fork(block: Block, cause: string): Promise<Response<void>>;
-
     validateBlockSlot(block: Block, source: string[]): Promise<Response<void>>;
 
     sandboxApi(args: any): Response<void>;
@@ -35,8 +31,6 @@ export interface IDelegateService {
     getDelegatesFromPreviousRound(): Promise<Response<string[]>>;
 
     validateBlockSlotAgainstPreviousRound(): Promise<Response<void>>;
-
-
 }
 
 
