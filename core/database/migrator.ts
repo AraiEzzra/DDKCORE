@@ -1,7 +1,6 @@
 import path from 'path';
 import fs from 'fs';
 import { QueryFile, IDatabase } from 'pg-promise';
-import Response from '../../shared/model/response';
 
 interface IPropertyFile {
     id: number | bigint;
@@ -11,21 +10,17 @@ interface IPropertyFile {
 
 export class Migrator {
     private db;
-
     constructor(db: IDatabase<any>) {
         this.db = db;
     }
 
-    async run(migrationsPath ?: string) {
+    async run(migrationsPath = undefined) {
        const filesMigration = this.read(migrationsPath);
-       const isDone = await this.runMigrate(filesMigration);
-        if (isDone) {
-           await this.applyRuntimeQueryFile();
-           return true;
-       }
+       await this.runMigrate(filesMigration);
+       await this.applyRuntimeQueryFile();
     }
 
-    read(migrationsPath ?: string): Array<Object> {
+    read(migrationsPath ?: string): Array<Object | void> {
         if (!migrationsPath) {
             migrationsPath = path.join(process.cwd(), 'core/database', 'migrations');
         }
@@ -49,7 +44,6 @@ export class Migrator {
                    });
                }
         });
-
         return filesMigration;
     }
 
@@ -57,23 +51,18 @@ export class Migrator {
      * Read file migration and run it
      * @param files
      */
-    async runMigrate(files: Array<any>) {
+    async runMigrate(files: Array<any>): Promise<void> {
+        if (!files || files.length === 0) {
+            return;
+        }
         for (let file of files) {
             const sql = new QueryFile(file.path, { minify: true });
-
-            await this.db.query(sql)
-                .then((res) => {
-                    this.db.query(
-                        'INSERT INTO migrations (id, name) VALUES($1, $2) ON CONFLICT DO NOTHING',
-                        [file.id.toString(), file.name]);
-                })
-                .catch(err => {
-                    return new Response({
-                        errors: [err.message]
-                    });
-                });
+            await this.db.query(sql);
+            await this.db.query(
+                'INSERT INTO migrations (id, name) VALUES($1, $2) ON CONFLICT DO NOTHING',
+                [file.id.toString(), file.name]
+            );
         }
-        return true;
     }
 
     async applyRuntimeQueryFile() {

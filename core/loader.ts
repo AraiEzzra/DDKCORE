@@ -6,14 +6,15 @@ import './controller';
 
 export class Loader {
 
-    initRoute(app: Application) {
+    async initRoute(app: Application): Promise<boolean> {
         setRoute(app);
+        return true;
     }
 
-    async runMigrate(db: IDatabase<any>) {
+    async runMigrate(db: IDatabase<any>): Promise<boolean> {
         const migrator = new Migrator(db);
         await migrator.run();
+        return true;
     }
-
 }
 

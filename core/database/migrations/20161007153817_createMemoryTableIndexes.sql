@@ -16,10 +16,4 @@ CREATE INDEX IF NOT EXISTS "mem_accounts2delegates_accountId"
 CREATE INDEX IF NOT EXISTS "mem_accounts2u_delegates_accountId"
   ON "mem_accounts2u_delegates" ("accountId");
 
-CREATE INDEX IF NOT EXISTS "mem_accounts2multisignatures_accountId"
-  ON "mem_accounts2multisignatures" ("accountId");
-
-CREATE INDEX IF NOT EXISTS "mem_accounts2u_multisignatures_accountId"
-  ON "mem_accounts2u_multisignatures" ("accountId");
-
 COMMIT;

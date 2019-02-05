@@ -23,8 +23,6 @@ CREATE TABLE IF NOT EXISTS "mem_accounts" (
   "rate"                BIGINT   DEFAULT 0,
   "delegates"           TEXT,
   "u_delegates"         TEXT,
-  "multisignatures"     TEXT,
-  "u_multisignatures"   TEXT,
   "multimin"            BIGINT   DEFAULT 0,
   "u_multimin"          BIGINT   DEFAULT 0,
   "multilifetime"       BIGINT   DEFAULT 0,
@@ -69,18 +67,6 @@ CREATE TABLE IF NOT EXISTS "mem_accounts2delegates" (
 );
 
 CREATE TABLE IF NOT EXISTS "mem_accounts2u_delegates" (
-  "accountId"   VARCHAR(25) NOT NULL,
-  "dependentId" VARCHAR(64) NOT NULL,
-  FOREIGN KEY ("accountId") REFERENCES mem_accounts ("address") ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS "mem_accounts2multisignatures" (
-  "accountId"   VARCHAR(25) NOT NULL,
-  "dependentId" VARCHAR(64) NOT NULL,
-  FOREIGN KEY ("accountId") REFERENCES mem_accounts ("address") ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS "mem_accounts2u_multisignatures" (
   "accountId"   VARCHAR(25) NOT NULL,
   "dependentId" VARCHAR(64) NOT NULL,
   FOREIGN KEY ("accountId") REFERENCES mem_accounts ("address") ON DELETE CASCADE
