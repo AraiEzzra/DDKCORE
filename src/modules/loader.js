@@ -844,6 +844,8 @@ Loader.prototype.onBind = function (scope) {
  */
 Loader.prototype.onBlockchainReady = function () {
     __private.loaded = true;
+
+    modules.system.update(() => {});
 };
 
 /**
