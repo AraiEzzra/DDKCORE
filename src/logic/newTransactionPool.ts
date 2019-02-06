@@ -84,6 +84,10 @@ class TransactionPool {
             return false;
         }
 
+        if (this.isPotentialConflict(trs)) {
+            return false;
+        }
+
         this.pool[trs.id] = trs;
         try {
             await this.scope.transactionLogic.newApplyUnconfirmed(trs);
