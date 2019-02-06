@@ -396,10 +396,13 @@ Process.prototype.newGenerateBlock = async (keyPair, timestamp) => {
         await modules.transactions.returnToQueueConflictedTransactionFromPool(transactions);
         modules.transactions.unlockTransactionPoolAndQueue();
     } catch (e) {
-        await modules.transactions.pushInPool(transactions);
+        // TODO optimize for delete only invalid transactions
+        // https://trello.com/c/mLPjGLCU/71-optimize-for-delete-only-invalid-transactions
+        // await modules.transactions.pushInPool(transactions);
         modules.transactions.unlockTransactionPoolAndQueue();
         library.logger.error(`[Process][newGenerateBlock][processBlock] ${e}`);
         library.logger.error(`[Process][newGenerateBlock][processBlock][stack] ${e.stack}`);
+        throw e;
     }
 };
 
