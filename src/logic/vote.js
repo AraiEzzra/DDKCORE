@@ -285,15 +285,13 @@ Vote.prototype.newVerifyUnconfirmed = async trs => {
     const totals = await library.frozen.calculateUnconfirmedTotalRewardAndUnstake(trs.senderId, isDownVote, trs.timestamp);
 
     if (totals.reward !== trs.asset.reward) {
-        throw new Error(
-            `Verify failed: vote reward is corrupted, expected: ${totals.reward} actual: ${trs.asset.reward}`
-        );
+        library.logger.error(`Verify failed: vote reward is corrupted, expected: ${totals.reward}, actual: ${trs.asset.reward}, trs: ${JSON.stringify(trs)}`);
+        throw new Error(`Verify failed: vote reward is corrupted. Transaction id: ${trs.id}`);
     }
 
     if (totals.unstake !== trs.asset.unstake) {
-        throw new Error(
-            `Verify failed: vote unstake is corrupted, expected: ${totals.unstake} actual: ${trs.asset.unstake}`
-        );
+        library.logger.error(`Verify failed: vote unstake is corrupted, expected: ${totals.unstake} actual: ${trs.asset.unstake}, trs: ${JSON.stringify(trs)}`);
+        throw new Error(`Verify failed: vote unstake is corrupted. Transaction id: ${trs.id}`);
     }
 
     try {
@@ -430,6 +428,8 @@ Vote.prototype.apply = async (trs) => {
 
     await library.db.query(sql.changeDelegateVoteCount({ value: isDownVote ? -1 : 1, votes }));
     if (!isDownVote) {
+        library.logger.debug(`[Vote][apply][trs] ${JSON.stringify(trs)}`);
+
         const activeOrders = await library.db.manyOrNone(sql.updateStakeOrder, {
             senderId: trs.senderId,
             nextVoteMilestone: trs.timestamp + constants.froze.vTime * 60,
@@ -490,18 +490,38 @@ Vote.prototype.undo = async (trs) => {
  */
 Vote.prototype.applyUnconfirmed = function (trs, sender, cb) {
     const isDownVote = trs.trsName === 'DOWNVOTE';
-    if (!isDownVote) {
-        library.db.none(sql.updateUnconfirmedStakeOrders, {
-            senderId: trs.senderId,
-            nextVoteMilestone: trs.timestamp + constants.froze.vTime * 60,
-            currentTime: trs.timestamp
-        });
-    }
 
-    library.account.merge(sender.address, {
-        u_delegates: trs.asset.votes,
-        u_totalFrozeAmount: trs.asset.unstake,
-    }, err => setImmediate(cb, err));
+    async.series([
+        function (seriesCb) {
+            if (isDownVote) {
+                return setImmediate(seriesCb);
+            }
+
+            library.db.query(sql.updateUnconfirmedStakeOrders, {
+                senderId: trs.senderId,
+                nextVoteMilestone: trs.timestamp + constants.froze.vTime * 60,
+                currentTime: trs.timestamp
+            }).then(() => setImmediate(seriesCb));
+        },
+        function (seriesCb) {
+            if (isDownVote) {
+                return setImmediate(seriesCb);
+            }
+
+            library.db.query(sql.lockReadyToUnstakeStakeOrders, {
+                senderId: trs.senderId,
+                unstakeVoteCount: constants.froze.unstakeVoteCount,
+                milestone: constants.froze.vTime * 60,
+                currentTime: trs.timestamp,
+            }).then(() => setImmediate(seriesCb));
+        },
+        function (seriesCb) {
+            library.account.merge(sender.address, {
+                u_delegates: trs.asset.votes,
+                u_totalFrozeAmount: trs.asset.unstake,
+            }, seriesCb);
+        },
+    ], cb);
 };
 
 /**
@@ -517,20 +537,40 @@ Vote.prototype.applyUnconfirmed = function (trs, sender, cb) {
  */
 Vote.prototype.undoUnconfirmed = function (trs, sender, cb) {
     const isDownVote = trs.trsName === 'DOWNVOTE';
-    if (!isDownVote) {
-        library.db.none(sql.undoUpdateStakeOrder, {
-            senderId: trs.senderId,
-            milestone: constants.froze.vTime * 60,
-            currentTime: trs.timestamp
-        });
-    }
 
-    const votesInvert = Diff.reverse(trs.asset.votes);
+    async.series([
+        function (seriesCb) {
+            if (isDownVote) {
+                return setImmediate(seriesCb);
+            }
 
-    this.scope.account.merge(sender.address, {
-        u_delegates: votesInvert,
-        u_totalFrozeAmount: -trs.asset.unstake,
-    }, err => setImmediate(cb, err));
+            library.db.query(sql.unlockReadyToUnstakeStakeOrders, {
+                senderId: trs.senderId,
+                unstakeVoteCount: constants.froze.unstakeVoteCount,
+                milestone: constants.froze.vTime * 60,
+                currentTime: trs.timestamp,
+            }).then(() => setImmediate(seriesCb));
+        },
+        function (seriesCb) {
+            if (isDownVote) {
+                return setImmediate(seriesCb);
+            }
+
+            library.db.query(sql.undoUnconfirmedStakeOrders, {
+                senderId: trs.senderId,
+                milestone: constants.froze.vTime * 60,
+                currentTime: trs.timestamp
+            }).then(() => setImmediate(seriesCb));
+        },
+        function (seriesCb) {
+            const votesInvert = Diff.reverse(trs.asset.votes);
+
+            library.account.merge(sender.address, {
+                u_delegates: votesInvert,
+                u_totalFrozeAmount: -trs.asset.unstake,
+            }, seriesCb);
+        },
+    ], cb);
 };
 
 Vote.prototype.calcUndoUnconfirmed = async (trs, sender) => {
@@ -575,7 +615,7 @@ Vote.prototype.objectNormalize = function (trs) {
     const report = library.schema.validate(trs.asset, Vote.prototype.schema);
 
     if (!report) {
-        throw `Failed to validate vote schema: ${this.scope.schema.getLastErrors().map(err => err.message).join(', ')}`;
+        throw `Failed to validate vote schema: ${library.schema.getLastErrors().map(err => err.message).join(', ')}`;
     }
 
     return trs;
@@ -615,8 +655,8 @@ Vote.prototype.dbFields = [
  */
 Vote.prototype.dbSave = function (trs) {
     return {
-        table: this.dbTable,
-        fields: this.dbFields,
+        table: self.dbTable,
+        fields: self.dbFields,
         values: {
             votes: Array.isArray(trs.asset.votes) ? trs.asset.votes.join(',') : null,
             transactionId: trs.id,
@@ -625,6 +665,14 @@ Vote.prototype.dbSave = function (trs) {
             airdropReward: trs.asset.airdropReward || {}
         }
     };
+};
+
+Vote.prototype.afterSave = async (trs) => {
+    library.logger.debug(`[Vote][afterSave][trs] ${JSON.stringify(trs)}`);
+    await library.db.query(sql.updateUVoteCountForNewStakes, {
+        senderId: trs.senderId,
+        u_nextVoteMilestone: trs.timestamp + constants.froze.vTime * 60,
+    });
 };
 
 /**

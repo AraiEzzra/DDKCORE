@@ -400,6 +400,7 @@ Process.prototype.newGenerateBlock = async (keyPair, timestamp) => {
         modules.transactions.unlockTransactionPoolAndQueue();
         library.logger.error(`[Process][newGenerateBlock][processBlock] ${e}`);
         library.logger.error(`[Process][newGenerateBlock][processBlock][stack] ${e.stack}`);
+        throw e;
     }
 };
 

@@ -46,6 +46,12 @@ const Accounts = {
 
     updateUnconfirmedStakeOrders: 'UPDATE stake_orders SET "u_voteCount"="u_voteCount"+1, "u_nextVoteMilestone"=${nextVoteMilestone} WHERE "senderId"=${senderId} AND "u_status"=1 AND ( "u_nextVoteMilestone" = 0 OR ${currentTime} >= "u_nextVoteMilestone")',
 
+    lockReadyToUnstakeStakeOrders: 'UPDATE stake_orders SET "u_status"=0 WHERE "senderId"=${senderId} AND "u_status"=1 AND "u_voteCount"=${unstakeVoteCount} AND ${currentTime} + ${milestone} = "u_nextVoteMilestone"',
+
+    unlockReadyToUnstakeStakeOrders: 'UPDATE stake_orders SET "u_status"=1 WHERE "senderId"=${senderId} AND "u_status"=0 AND "u_voteCount"=${unstakeVoteCount} AND ${currentTime} + ${milestone} = "u_nextVoteMilestone"',
+
+    updateUVoteCountForNewStakes: 'UPDATE stake_orders SET "u_voteCount"="u_voteCount"+1, "u_nextVoteMilestone"=${u_nextVoteMilestone} WHERE "senderId"=${senderId} AND "u_voteCount"=0 AND "u_status"=1 AND "u_nextVoteMilestone" <= ${u_nextVoteMilestone}',
+
     undoUnconfirmedStakeOrders: 'UPDATE stake_orders SET "u_voteCount"="u_voteCount"-1, "u_nextVoteMilestone"="u_nextVoteMilestone" - ${milestone} WHERE "senderId"=${senderId} AND "u_status"=1 AND ${currentTime} + ${milestone} = "u_nextVoteMilestone"',
 
     undoUpdateStakeOrder: 'UPDATE stake_orders SET "voteCount"="voteCount"-1, "nextVoteMilestone"="nextVoteMilestone"- ${milestone} WHERE "senderId"=${senderId} AND "status"=1 AND ${currentTime} + ${milestone} = "nextVoteMilestone"',
@@ -71,20 +77,20 @@ const Accounts = {
     getMigratedList: 'SELECT m."address",e."username",m."totalFrozeAmount",m."balance",e."transferred_time",count(*) OVER() AS "user_count" FROM migrated_etps_users e INNER JOIN mem_accounts m ON(e."address" = m."address" AND e.transferred_etp = 1) order by e."transferred_time" DESC LIMIT ${limit} OFFSET ${offset}',
 
     getAccountByPublicKey: 'SELECT *,' +
-    ' (SELECT ARRAY_AGG("dependentId") FROM mem_accounts2u_delegates WHERE "accountId" = ${address}) as u_delegates' +
-    ' from mem_accounts WHERE "publicKey" = ${publicKey}',
+        ' (SELECT ARRAY_AGG("dependentId") FROM mem_accounts2u_delegates WHERE "accountId" = ${address}) as u_delegates' +
+        ' from mem_accounts WHERE "publicKey" = ${publicKey}',
 
     getAccountByAddress: 'SELECT *,' +
-    ' (SELECT ARRAY_AGG("dependentId") FROM mem_accounts2u_delegates WHERE "accountId" = ${address}) as u_delegates' +
-    ' from mem_accounts WHERE address = ${address}',
+        ' (SELECT ARRAY_AGG("dependentId") FROM mem_accounts2u_delegates WHERE "accountId" = ${address}) as u_delegates' +
+        ' from mem_accounts WHERE address = ${address}',
 
     createNewAccount: 'INSERT INTO mem_accounts (address, "publicKey")' +
-    ' VALUES (${address}, ${publicKey})' +
-    ' RETURNING *',
+        ' VALUES (${address}, ${publicKey})' +
+        ' RETURNING *',
 
     updateAccount: (set) => 'UPDATE mem_accounts SET ' + set + ' where address = ${address} ' +
-    ' RETURNING *, ' +
-    ' (SELECT ARRAY_AGG("dependentId") FROM mem_accounts2u_delegates WHERE "accountId" = ${address}) as u_delegates'
+        ' RETURNING *, ' +
+        ' (SELECT ARRAY_AGG("dependentId") FROM mem_accounts2u_delegates WHERE "accountId" = ${address}) as u_delegates'
 };
 
 module.exports = Accounts;

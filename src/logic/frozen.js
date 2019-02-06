@@ -109,12 +109,14 @@ Frozen.prototype.dbTable = 'stake_orders';
 Frozen.prototype.dbFields = [
     'id',
     'status',
+    'u_status',
     'startTime',
     'insertTime',
     'senderId',
     'recipientId',
     'freezedAmount',
     'nextVoteMilestone',
+    'u_nextVoteMilestone',
     'airdropReward'
 ];
 
@@ -138,12 +140,14 @@ Frozen.prototype.dbSave = function (trs) {
         values: {
             id: trs.id,
             status: this.active,
+            u_status: this.active,
             startTime: trs.asset.stakeOrder.startTime,
             insertTime: trs.asset.stakeOrder.startTime,
             senderId: trs.senderId,
             recipientId: trs.recipientId,
             freezedAmount: trs.asset.stakeOrder.stakedAmount,
             nextVoteMilestone: trs.timestamp,
+            u_nextVoteMilestone: trs.timestamp,
             airdropReward: trs.asset.airdropReward || {}
         }
     };
