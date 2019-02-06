@@ -132,9 +132,6 @@ class TransactionPool {
 
         this.poolBySender[trs.senderId] = this.poolBySender[trs.senderId].filter(t => t.id !== trs.id);
 
-        if (this.poolByRecipient[trs.recipientId]) {
-            this.scope.logger.debug(`[TransactionPool][remove][poolByRecipient] trs.recipientId: ${trs.recipientId}, this.poolByRecipient[trs.recipientId]: ${this.poolByRecipient[trs.recipientId]}`);
-        }
         this.poolByRecipient[trs.recipientId] =
             (this.poolByRecipient[trs.recipientId] || []).filter(t => t.id !== trs.id);
         return true;
@@ -172,7 +169,15 @@ class TransactionPool {
         if (dependTransactions.length === 0) {
             return false;
         }
+
         if (trs.type === transactionTypes.SIGNATURE) {
+            return true;
+        }
+
+        if (
+            trs.type === transactionTypes.VOTE &&
+            dependTransactions.find((t: Transaction) => t.type === transactionTypes.VOTE)
+        ) {
             return true;
         }
 
@@ -185,7 +190,9 @@ class TransactionPool {
         return Object.keys(this.pool).length;
     }
 
-    getTransactions = ({ limit = constants.maxSharedTxs, senderPublicKey }: { limit: number, senderPublicKey: string }): { transactions: Array<Transaction>, count: number } => {
+    getTransactions = (
+        { limit = constants.maxSharedTxs, senderPublicKey }: { limit: number, senderPublicKey: string }
+    ): { transactions: Array<Transaction>, count: number } => {
         if (senderPublicKey) {
             const senderId = generateAddressByPublicKey(senderPublicKey);
             const recipientTrs = this.poolByRecipient[senderId] || [];
@@ -193,7 +200,9 @@ class TransactionPool {
             const dependTransactions = [...recipientTrs, ...senderTrs];
 
             return {
-                transactions: dependTransactions.sort(transactionSortFunc).slice(0, Math.min(limit, constants.maxSharedTxs)).reverse(),
+                transactions: dependTransactions.sort(transactionSortFunc).slice(
+                    0, Math.min(limit, constants.maxSharedTxs)
+                ).reverse(),
                 count: dependTransactions.length,
             };
         }
@@ -372,7 +381,7 @@ export class TransactionQueue {
         this.accountSessions.send(address, 'pool/verify', {
             verified,
             error
-        })
+        });
     }
 }
 
