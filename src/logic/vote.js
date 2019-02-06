@@ -499,7 +499,8 @@ Vote.prototype.applyUnconfirmed = function (trs, sender, cb) {
     }
 
     library.account.merge(sender.address, {
-        u_delegates: trs.asset.votes
+        u_delegates: trs.asset.votes,
+        u_totalFrozeAmount: trs.asset.unstake,
     }, err => setImmediate(cb, err));
 };
 
@@ -526,7 +527,10 @@ Vote.prototype.undoUnconfirmed = function (trs, sender, cb) {
 
     const votesInvert = Diff.reverse(trs.asset.votes);
 
-    this.scope.account.merge(sender.address, { u_delegates: votesInvert }, err => setImmediate(cb, err));
+    this.scope.account.merge(sender.address, {
+        u_delegates: votesInvert,
+        u_totalFrozeAmount: -trs.asset.unstake,
+    }, err => setImmediate(cb, err));
 };
 
 Vote.prototype.calcUndoUnconfirmed = async (trs, sender) => {
