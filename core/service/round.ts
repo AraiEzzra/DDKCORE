@@ -1,5 +1,5 @@
 import ResponseEntity from 'shared/model/response';
-import { Block } from 'shared/model/block';
+import { Delegate } from 'shared/model/delegate';
 
 interface IRoundSum {
     roundFees: number;
@@ -7,75 +7,71 @@ interface IRoundSum {
     roundDelegates: Array<string>;
 }
 
+interface Round {
+    generatorPublicKey: string;
+    slot: number;
+}
+
 export interface IRoundService {
-
     /**
-     * Generate hash list for Active delegates using previous
-     * @implements Block
+     * for storing relation generator activeDelegate to slot
      */
-    generateHashList(): Array<string>;
+    roundHashList: Array<Round>;
 
     /**
-     * Generate hash using the last block in previous round
-     * @param block
+     * Get active delegates
+     * @implements {getDelegates(vote, activeDelegates): Array} DelegateRepository
+     * @param limit: activeDelegateCount
      */
-    generateHash(block: Block): string;
+    getActiveDelegates(limit: number): ResponseEntity<Delegate[]>;
 
     /**
-     * Generates snapshot round
-     * @implements {calc}
-     * @param {block} block
+     * Generate hash (delegate publicKey + idPreviousBlock)
+     * @return hash from DelegatePublicKey + blockId
      */
-    tick(): void;
+    generateHash(publicKey: string, blockId: string): string;
 
     /**
-     * Performs backward tick on round
-     * @implements {calc}
-     * @param block
-     * @param previousBlock
+     * Sort hash function
      */
-    backwardTick(block, previousBlock): void;
+    sortHashList(hashList: Array<string>): Array<string>;
 
     /**
-     * Gets rows from `round_blocks` and calculates rewards. Loads into scope
-     * variable fees, rewards and delegates.
-     * @private
-     * @param {number} round
+     * Match hash to delegates
+     * triggered by onRoundFinish or onApplyLastBlockInRound
+     * @implements getLastBlock from blocks repository
+     */
+    generateRound(): void;
+
+    /**
+     * @implements publicKey from config
+     * @return your slot for rxBus
+     */
+    getMyTurn(): number;
+
+    /**
+     * calculateReward
      */
     sumRound(round): IRoundSum;
 
     /**
-     * Returns average for each delegate based on height.
-     * @param {number} height
+     * Rebuild round if one of blocks apply with delay
      */
-    getSlotDelegatesCount(height): number;
+    rebuildRound(): void;
 
     /**
-     * Returns average for each delegate based on height.
-     * @param {number} height
-     * @return {number} height / delegates
+     * Rollback round if one of blocks fails
      */
-    calc(height): number;
+    rollBackRound(): void;
 
     /**
-     * Generates outsiders array.
-     * Obtains delegate list and for each delegate generate address.
-     * @private
-     * @implements {delegates.generateDelegateList}
-     * @implements {accounts.generateAddressByPublicKey}
-     * @param {scope} arg
+     * validateRound
      */
-    getOutsiders(arg: {block: Block, roundDelegates: Array<string>}): ResponseEntity<Array<any>>;
+    validateRound(): boolean;
 
     /**
-     * Sets snapshot rounds
-     * @param {number} rounds
+     * apply round
      */
-    setSnapshotRounds(rounds): number;
+    applyRound(param: IRoundSum): boolean;
 
-    /**
-     * Deletes from `mem_round` table records based on round.
-     * @param {number} round
-     */
-    flush(round): void;
 }
