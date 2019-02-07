@@ -3,26 +3,11 @@ const constants = { // todo config!
     activeDelegates: 11
 };
 
-export class SlotService {
-    private static instance: SlotService = undefined;
-
+class SlotService {
     /**
      * @property {number} interval - Slot time interval in seconds.
      */
-    public interval: number = 10;
-
-    /**
-     * @property {number} delegates - Active delegates from constants.
-     */
-    public delegates: number = constants.activeDelegates;
-
-    constructor() {
-        if (!SlotService.instance) {
-            SlotService.instance = this;
-
-        }
-        return SlotService.instance;
-    }
+    private interval: number = 10;
 
     /**
      * Gets constant time from ddk epoch.
@@ -96,9 +81,10 @@ export class SlotService {
      * @method
      * @param {number} nextSlot
      * @return {number} input next slot + delegates.
+     * // todo mb drop it ?
      */
     public getLastSlot(nextSlot: number): number {
-        return nextSlot + this.delegates;
+        return nextSlot + constants.activeDelegates;
     }
 
     public roundTime(date: Date): number {
@@ -111,6 +97,8 @@ export class SlotService {
      * @returns {number} Round number
      */
     public calcRound(height: number): number {
-        return Math.ceil(height / constants.activeDelegates);
+        return Math.ceil(height / constants.activeDelegates); // todo round has diff amount of blocks
     }
 }
+
+export default new SlotService();

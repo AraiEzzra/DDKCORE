@@ -1,5 +1,5 @@
 import ResponseEntity from 'shared/model/response';
-import { Block } from 'shared/model/block';
+import { Delegate } from 'shared/model/delegate';
 
 interface IRoundSum {
     roundFees: number;
@@ -8,74 +8,110 @@ interface IRoundSum {
 }
 
 export interface IRoundService {
-
     /**
-     * Generate hash list for Active delegates using previous
-     * @implements Block
+     * for storing relation generator activeDelegate to slot
      */
-    generateHashList(): Array<string>;
+    round: {[generatorPublicKey: string]: {slot: number}};
 
     /**
-     * Generate hash using the last block in previous round
-     * @param block
+     * Get active delegates
+     * @implements {getDelegates(vote, activeDelegates): Array<Delegate>} DelegateRepository
+     * @param limit: activeDelegateCount
      */
-    generateHash(block: Block): string;
+    getActiveDelegates(limit: number): ResponseEntity<Delegate[]>;
 
     /**
-     * Generates snapshot round
-     * @implements {calc}
-     * @param {block} block
+     * Generate hash (delegate publicKey + previousBlockId)
+     * @return hash from DelegatePublicKey + blockId
      */
-    tick(): void;
+    generateHashList(activeDelegates: Array<Delegate>, blockId: string):
+        Array<{hash: string, generatorPublicKey: string}>;
+
+    sortHashList(hashList: Array<{hash: string, generatorPublicKey: string}>):
+        Array<{hash: string, generatorPublicKey: string}>;
 
     /**
-     * Performs backward tick on round
-     * @implements {calc}
-     * @param block
-     * @param previousBlock
+     * Match hash to delegates
+     * Create  and store to this.round
      */
-    backwardTick(block, previousBlock): void;
+    generatorPublicKeyToSlot(sortedHashList: Array<{hash: string, generatorPublicKey: string}>): void;
 
     /**
-     * Gets rows from `round_blocks` and calculates rewards. Loads into scope
-     * variable fees, rewards and delegates.
-     * @private
-     * @param {number} round
+     * triggered by onRoundFinish or onApplyLastBlockInRound
+     * @implements getLastBlock from blocks repository
+     */
+    generateRound(): void;
+
+    /**
+     * @implements publicKey from config
+     * @return your slot for rxBus
+     */
+
+    getMyTurn(): number;
+
+    /**
+     * calculateReward
      */
     sumRound(round): IRoundSum;
 
     /**
-     * Returns average for each delegate based on height.
-     * @param {number} height
+     * Rebuild round if one of blocks apply with delay
      */
-    getSlotDelegatesCount(height): number;
+    rebuildRound(): void;
 
     /**
-     * Returns average for each delegate based on height.
-     * @param {number} height
-     * @return {number} height / delegates
+     * Rollback round if one of blocks fails
      */
-    calc(height): number;
+    rollBackRound(): void;
 
-    /**
-     * Generates outsiders array.
-     * Obtains delegate list and for each delegate generate address.
-     * @private
-     * @implements {delegates.generateDelegateList}
-     * @implements {accounts.generateAddressByPublicKey}
-     * @param {scope} arg
-     */
-    getOutsiders(arg: {block: Block, roundDelegates: Array<string>}): ResponseEntity<Array<any>>;
+    validateRound(): boolean;
 
-    /**
-     * Sets snapshot rounds
-     * @param {number} rounds
-     */
-    setSnapshotRounds(rounds): number;
+    applyRound(param: IRoundSum): boolean;
+}
 
-    /**
-     * Deletes from `mem_round` table records based on round.
-     * @param {number} round
-     */
-    flush(round): void;
+export class RoundService implements IRoundService {
+    round: { [p: string]: { slot: number } };
+
+    getActiveDelegates(limit: number): ResponseEntity<Delegate[]> {
+        return undefined;
+    }
+
+    generateHashList(activeDelegates: Array<Delegate>, blockId: string):
+    Array<{ hash: string; generatorPublicKey: string }> {
+        return undefined;
+    }
+
+    sortHashList(hashList: Array<{ hash: string; generatorPublicKey: string }>):
+    Array<{ hash: string; generatorPublicKey: string }> {
+        return undefined;
+    }
+
+    generatorPublicKeyToSlot(sortedHashList: Array<{ hash: string; generatorPublicKey: string }>): void {
+    }
+
+    generateRound(): void {
+    }
+
+    getMyTurn(): number {
+        return undefined;
+    }
+
+    sumRound(round): IRoundSum {
+        return undefined;
+    }
+
+    rebuildRound(): void {
+    }
+
+    rollBackRound(): void {
+    }
+
+    validateRound(): boolean {
+        return undefined;
+    }
+
+    applyRound(param: IRoundSum): boolean {
+        return undefined;
+    }
+
 }
