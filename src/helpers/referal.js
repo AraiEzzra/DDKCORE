@@ -56,14 +56,14 @@ __private.list = function (filter, cb) {
         return setImmediate(cb, 'Invalid limit. Maximum is 100');
     }
 
-    library.db.query(sql.getReferralRewardHistory, {
+    library.db.manyOrNone(sql.getReferralRewardHistory, {
         introducer_address: params.introducer_address,
         offset: params.offset,
         limit: params.limit
     })
     .then(row => setImmediate(cb, null, {
         rewards: row,
-        count: row[0].rewards_count
+        count: (row && row.length) ? row[0].rewards_count : 0
     }))
     .catch(err => setImmediate(cb, 'Rewards#list error'));
 };
