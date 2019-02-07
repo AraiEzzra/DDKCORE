@@ -106,87 +106,31 @@ module.exports.api = function (app) {
 
     /**
      * Getting the stats of referrals done with including it's referral chain.
-     * @param {req} - contains the referrer address.
+     * @param {req} - contains the User Address, Level Info, Limit and Offset.
      * @param {res} - return the response with status of success or failure.
-     * @returns {hierarchy} - contains the list of referals with its level info.
+     * @returns {SponsorList} - contains the list of referals with stake info.
+     * @returns {count} - contains the total users on a specific level.
      */
 
     app.post('/referral/list', (req, res) => {
-        const hierarchy = [];
+        let addressInfo = req.body.userAddress;
+        let levelIndicator = req.body.level;
 
-        let referList = [],
-            level = 1,
-            index = 0;
-
-        function findSponsors(arr, cb) {
-            if (level <= 15) {
-                library.db.query(sql.findReferralList, {
-                    refer_list: arr
-                })
-                    .then((resp) => {
-                        referList.length = 0;
-                        if (resp.length) {
-                            async.each(resp, (user, callback) => {
-                                referList.push(user.address);
-
-                                callback();
-                            }, (err) => {
-                                if (err) {
-                                    return setImmediate(cb, err);
-                                }
-                                hierarchy[index] = {
-                                    Level: level,
-                                    addressList: JSON.parse(JSON.stringify(referList)),
-                                    count: referList.length
-                                };
-                                level++;
-                                index++;
-                                findSponsors(referList, cb);
-                            });
-                        }
-                        if (referList.length == 0) {
-                            return setImmediate(cb, null);
-                        }
-                    })
-                    .catch(err => setImmediate(cb, err));
-            } else {
-                return setImmediate(cb, null);
-            }
-        }
-
-        // Intitally the user whose chain we have to find.
-        referList = [req.body.referrer_address];
-
-        findSponsors(referList, (err) => {
-            if (err) {
-                library.logger.error(`Referral List Error : ${err.stack}`);
-                return res.status(400).json({
-                    success: false,
-                    error: err
-                });
-            }
-            let key = 0;
-            async.eachSeries(hierarchy, (status, callback) => {
-                library.db.query(sql.findTotalStakeVolume, {
-                    address_list: status.addressList
-                }).then((resp) => {
-                    if (!resp[0].freezed_amount) {
-                        hierarchy[key].totalStakeVolume = 0;
-                    } else {
-                        hierarchy[key].totalStakeVolume = parseInt(resp[0].freezed_amount) / 100000000;
-                    }
-                    key++;
-                    callback();
-                }).catch(err => callback(err));
-            }, (err) => {
-                if (err) {
-                    return setImmediate(callback, err);
-                }
-
-                return res.status(200).json({
-                    success: true,
-                    SponsorList: hierarchy
-                });
+        library.db.manyOrNone(sql.findReferralList, {
+            levelInfo: levelIndicator,
+            address: addressInfo,
+            limit: req.body.limit,
+            offset: req.body.offset
+        }).then(function (user) {
+            return res.status(200).json({
+                success: true,
+                sponsorList: user,
+                count: (user && user.length) ? user[0].totalUsers : 0
+            });
+        }).catch(function (err) {
+            return res.status(400).json({
+                success: false,
+                error: err.stack
             });
         });
     });
@@ -211,63 +155,6 @@ module.exports.api = function (app) {
                 success: true,
                 SponsorList: data.rewards,
                 count: data.count
-            });
-        });
-    });
-
-    /**
-     * It will gather the status of the sponsors stake orders.
-     * It will return the status either Active or Inactive.
-     * @param {req} - It consist of user address.
-     * @returns {sponsorStatus} - Returns the status of stake order.
-     */
-
-    app.post('/sponsor/stakeStatus', (req, res) => {
-        const address = req.body.address;
-        let stats = [],
-            addressList,
-            i = 0;
-
-        library.db.query(sql.findSponsorStakeStatus, {
-            sponsor_address: address
-        }).then((stake_status) => {
-            addressList = stake_status.map(item => item.senderId);
-
-            async.each(address, (user, callback) => {
-                if (addressList.indexOf(user) != -1) {
-                    stats[i] = {
-                        address: user,
-                        status: 'Active'
-                    };
-                } else {
-                    stats[i] = {
-                        address: user,
-                        status: 'Inactive'
-                    };
-                }
-
-                i++;
-
-                callback();
-            }, (err) => {
-                if (err) {
-                    library.logger.error(err.stack);
-                    return res.status(400).json({
-                        success: false,
-                        error: err
-                    });
-                }
-
-                return res.status(200).json({
-                    success: true,
-                    sponsorStatus: stats,
-                });
-            });
-        }).catch((err) => {
-            library.logger.error(err.stack);
-            return res.status(400).json({
-                success: false,
-                error: err
             });
         });
     });

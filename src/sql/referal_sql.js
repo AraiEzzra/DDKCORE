@@ -37,7 +37,7 @@ const Referals = {
 
     deleteRewardTypeTransaction: 'DELETE FROM referral_transactions WHERE "id" = ${trsId}',
 
-    findReferralList: 'SELECT address from referals WHERE level[1] = ANY(ARRAY[${refer_list}])',
+    findReferralList: 'WITH t0 as ( SELECT address, count(*) OVER () AS totalUsers FROM referals WHERE level[${levelInfo}] = ${address} LIMIT ${limit} OFFSET ${offset} ) SELECT address, COALESCE(s."status",0) AS stakeStatus, COALESCE(SUM(s."freezedAmount"),0) as freezedAmount, totalUsers FROM t0 r LEFT JOIN stake_orders s ON r."address" = s."senderId" AND s."status" = 1 GROUP BY r."address", totalUsers, s."status"',
 
     findTotalStakeVolume: 'SELECT SUM("freezedAmount") as freezed_amount from stake_orders WHERE "senderId" = ANY(ARRAY[${address_list}]) AND "status" =1',
 
