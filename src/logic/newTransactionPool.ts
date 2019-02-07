@@ -85,21 +85,11 @@ class TransactionPool {
         }
 
         if (this.isPotentialConflict(trs)) {
+            delete this.pool[trs.id];
             return false;
         }
 
         this.pool[trs.id] = trs;
-        try {
-            await this.scope.transactionLogic.newApplyUnconfirmed(trs);
-            trs.status = TransactionStatus.UNCOFIRM_APPLIED;
-            this.scope.logger.debug(`TransactionStatus.UNCONFIRM_APPLIED ${JSON.stringify(trs)}`);
-        } catch (e) {
-            trs.status = TransactionStatus.DECLINED;
-            this.scope.logger.error(`[TransactionPool][push]: ${e}`);
-            this.scope.logger.error(`[TransactionPool][push][stack]:\n${e.stack}`);
-            return;
-        }
-
         trs.status = TransactionStatus.PUT_IN_POOL;
 
         if (!this.poolBySender[trs.senderId]) {
@@ -112,6 +102,18 @@ class TransactionPool {
                 this.poolByRecipient[trs.recipientId] = [];
             }
             this.poolByRecipient[trs.recipientId].push(trs);
+        }
+
+        try {
+            await this.scope.transactionLogic.newApplyUnconfirmed(trs);
+            trs.status = TransactionStatus.UNCOFIRM_APPLIED;
+            this.scope.logger.debug(`TransactionStatus.UNCONFIRM_APPLIED ${JSON.stringify(trs)}`);
+        } catch (e) {
+            delete this.pool[trs.id];
+            trs.status = TransactionStatus.DECLINED;
+            this.scope.logger.error(`[TransactionPool][push]: ${e}`);
+            this.scope.logger.error(`[TransactionPool][push][stack]:\n${e.stack}`);
+            return false;
         }
 
         if (broadcast) {
@@ -181,6 +183,13 @@ class TransactionPool {
         if (
             trs.type === transactionTypes.VOTE &&
             dependTransactions.find((t: Transaction) => t.type === transactionTypes.VOTE)
+        ) {
+            return true;
+        }
+
+        if (
+            trs.type === transactionTypes.REFERRAL &&
+            dependTransactions.find((t: Transaction) => t.type === transactionTypes.REFERRAL)
         ) {
             return true;
         }
