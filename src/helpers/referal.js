@@ -125,7 +125,7 @@ module.exports.api = function (app) {
             return res.status(200).json({
                 success: true,
                 sponsorList: user,
-                count: (user && user.length) ? user[0].totalUsers : 0
+                count: (user && user.length) ? user[0].totalusers : 0
             });
         }).catch(function (err) {
             return res.status(400).json({
