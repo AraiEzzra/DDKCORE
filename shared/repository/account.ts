@@ -1,6 +1,10 @@
+const crypto = require('crypto');
 import { Account } from 'shared/model/account';
+import ResponseEntity from 'shared/model/response';
+import { getAddressByPublicKey } from 'shared/util/account';
+import { ed } from 'shared/util/ed';
 
-export interface AccountRepository {
+export interface IAccountRepository {
 
     getAccountByAddress(address: string): Promise<Account>;
 
@@ -12,20 +16,21 @@ export interface AccountRepository {
 
     getCountAccountByAddress(address: string): Promise<number>;
 
+    generatePublicKey(secret: string): string;
 }
 
-export class AccountPGQLRepository implements AccountRepository {
+export class AccountRepository implements IAccountRepository {
 
-    getAccountByAddress(address: string): Promise<Account> {
-        return undefined;
+    async getAccountByAddress(address: string): Promise<Account> {
+        return new Account();
     }
 
     getAccountByPublicKey(publicKey: string): Promise<Account> {
         return undefined;
     }
 
-    getBalanceByAddress(address: string): Promise<number> {
-        return undefined;
+    async getBalanceByAddress(address: string): Promise<number> {
+        return 0;
     }
 
     getCountAccountByAddress(address: string): Promise<number> {
@@ -36,5 +41,16 @@ export class AccountPGQLRepository implements AccountRepository {
         return undefined;
     }
 
+    async getAccount(publicKey: string): Promise<ResponseEntity<Account>> {
+        const address: string = getAddressByPublicKey(publicKey);
+        return new ResponseEntity({
+            data: new Account()
+        });
+    }
 
+    public generatePublicKey(secret: string): string {
+        const hash = crypto.createHash('sha256').update(secret, 'utf8').digest();
+        const publicKey: string = ed.makePublicKeyHex(hash);
+        return publicKey;
+    }
 }

@@ -2,8 +2,10 @@ import { DelegateRepository } from 'api/repository/delegate';
 import { delegateSchema as schema } from 'api/schema/delegate';
 import { Account } from 'shared/model/account';
 import { DelegateRepository as SharedDelegateRepository } from 'shared/repository/delegate';
-import { AccountPGQLRepository as SharedAccountRepository } from 'shared/repository/account';
+import { AccountRepository as SharedAccountRepository } from 'shared/repository/account';
 import { GET, POST, Controller, validate, PUT } from 'api/util/http_decorator';
+import {Request, Response} from 'express';
+import * as HttpStatus from 'http-status-codes';
 const constants = require('../../backlog/helpers/constants');
 
 interface IDataContainer<T extends Object> {
@@ -103,7 +105,6 @@ export class DelegateController {
     public async forgingDisable(data: IDataContainer<IReqPublicKey>) {
         const { publicKey } = data.body;
         const result = await this.sharedAccountRepo.getAccount({ publicKey });
-        // ...
     }
 
     @GET('/latest_voters')
@@ -121,6 +122,21 @@ export class DelegateController {
     @GET('/forging/status')
     @validate(schema.forgingStatus)
     public async forgingStatus(data: IDataContainer<IReqPublicKey>) {}
+
+    // TODO: place this in DelegatesController
+    public getDelegates(req: Request, res: Response) {
+        res.status(HttpStatus.OK).json({msg: 'SUCCESS'});
+    }
+
+    // TODO: place this in DelegatesController
+    public getDelegatesFee(req: Request, res: Response) {
+        res.status(HttpStatus.OK).json({msg: 'SUCCESS'});
+    }
+
+    // TODO: place this in DelegatesController
+    public addDelegates(req: Request, res: Response) {
+        res.status(HttpStatus.OK).json({msg: 'SUCCESS'});
+    }
 }
 
 

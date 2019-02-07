@@ -17,8 +17,6 @@ export class Account {
     rate: number;
     delegates: string;
     u_delegates: string;
-    multisignatures: any;
-    u_multisignatures: any;
     multimin: number;
     u_multimin: number;
     multilifetime: number;
@@ -47,7 +45,7 @@ export class Account {
     virgin: number;
     global: boolean;
 
-    constructor(rawData: any) {
+    constructor(rawData?: any) {
         //TODO: add default constructor
         this.username = rawData.username;
         this.u_username = rawData.u_username;
@@ -67,8 +65,6 @@ export class Account {
         this.rate = Number(rawData.rate);
         this.delegates = rawData.delegates;
         this.u_delegates = rawData.u_delegates;
-        this.multisignatures = rawData.multisignatures;
-        this.u_multisignatures = rawData.u_multisignatures;
         this.multimin = Number(rawData.multimin);
         this.u_multimin = Number(rawData.u_multimin);
         this.multilifetime = Number(rawData.multilifetime);

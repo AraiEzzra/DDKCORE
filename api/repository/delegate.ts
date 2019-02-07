@@ -1,10 +1,9 @@
 import { Delegate } from 'shared/model/delegate';
 import Response from 'shared/model/response';
-import {Account} from 'shared/model/account';
+import { Account } from 'shared/model/account';
 import { Transaction } from 'shared/model/transaction';
 
 // TODO need to instance Block
-declare class Block {}
 
 interface IForkDelegate {
     delegatePublicKey: string;
