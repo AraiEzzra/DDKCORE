@@ -387,7 +387,6 @@ Accounts.prototype.shared = {
             __private.openAccount(req.body, (err, account) => {
                 if (!err) {
                     const payload = {
-                        secret: req.body.secret,
                         address: account.address
                     };
                     const token = jwt.sign(payload, library.config.jwt.secret, {
