@@ -185,6 +185,13 @@ class TransactionPool {
             return true;
         }
 
+        if (
+            trs.type === transactionTypes.REFERRAL &&
+            dependTransactions.find((t: Transaction) => t.type === transactionTypes.REFERRAL)
+        ) {
+            return true;
+        }
+
         dependTransactions.push(trs);
         dependTransactions.sort(transactionSortFunc);
         return dependTransactions.indexOf(trs) !== (dependTransactions.length - 1);
