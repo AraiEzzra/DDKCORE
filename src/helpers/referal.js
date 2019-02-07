@@ -116,7 +116,7 @@ module.exports.api = function (app) {
         let addressInfo = req.body.userAddress;
         let levelIndicator = req.body.level;
 
-        library.db.query(sql.findReferralList, {
+        library.db.manyOrNone(sql.findReferralList, {
             levelInfo: levelIndicator,
             address: addressInfo,
             limit: req.body.limit,
@@ -125,7 +125,7 @@ module.exports.api = function (app) {
             return res.status(200).json({
                 success: true,
                 SponsorList: user,
-                count: user[0].totalusers
+                count: (user && user.length) ? user[0].totalusers : 0
             });
         }).catch(function (err) {
             return res.status(400).json({
