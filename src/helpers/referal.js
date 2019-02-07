@@ -124,8 +124,8 @@ module.exports.api = function (app) {
         }).then(function (user) {
             return res.status(200).json({
                 success: true,
-                SponsorList: user,
-                count: (user && user.length) ? user[0].totalusers : 0
+                sponsorList: user,
+                count: (user && user.length) ? user[0].totalUsers : 0
             });
         }).catch(function (err) {
             return res.status(400).json({
