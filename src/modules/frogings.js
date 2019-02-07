@@ -373,14 +373,14 @@ Frogings.prototype.shared = {
 
         params.senderId = req.body.senderId;
 
-        library.db.query(sql.getStakeRewardHistory, {
+        library.db.manyOrNone(sql.getStakeRewardHistory, {
             senderId: params.senderId,
             offset: params.offset,
             limit: params.limit
         })
             .then(row => setImmediate(cb, null, {
                 rewardHistory: row,
-                count: row[0].rewards_count
+                count: (row && row.length) ? row[0].rewards_count : 0
             }))
             .catch(err => setImmediate(cb, err));
     }

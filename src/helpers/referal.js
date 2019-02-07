@@ -37,7 +37,6 @@ __private.list = function (filter, cb) {
         where = [];
 
     if (filter.address) {
-        where.push('"introducer_address"=${introducer_address}');
         params.introducer_address = filter.address;
     }
 
@@ -57,36 +56,16 @@ __private.list = function (filter, cb) {
         return setImmediate(cb, 'Invalid limit. Maximum is 100');
     }
 
-    const orderBy = OrderBy(
-        (filter.orderBy || 'reward_time:desc'), {
-            sortFields: sql.sortFields
-        }
-    );
-
-    if (orderBy.error) {
-        return setImmediate(cb, orderBy.error);
-    }
-
-    library.db.query(sql.list({
-        where,
-        sortField: orderBy.sortField,
-        sortMethod: orderBy.sortMethod
-    }), params).then((rows) => {
-        let count = 0;
-        if (rows && rows.length !== 0) {
-            count = Number(rows[0].total_rows);
-        }
-
-        const data = {
-            rewards: rows,
-            count
-        };
-
-        return setImmediate(cb, null, data);
-    }).catch((err) => {
-        library.logger.error(err.stack);
-        return setImmediate(cb, 'Rewards#list error');
-    });
+    library.db.manyOrNone(sql.getReferralRewardHistory, {
+        introducer_address: params.introducer_address,
+        offset: params.offset,
+        limit: params.limit
+    })
+    .then(row => setImmediate(cb, null, {
+        rewards: row,
+        count: (row && row.length) ? row[0].rewards_count : 0
+    }))
+    .catch(err => setImmediate(cb, 'Rewards#list error'));
 };
 
 module.exports.api = function (app) {
