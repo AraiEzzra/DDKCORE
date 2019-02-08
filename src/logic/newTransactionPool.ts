@@ -226,6 +226,10 @@ class TransactionPool {
             count: transactions.length,
         };
     }
+
+    getPool(): Array<Transaction> {
+        return Object.values(this.pool);
+    }
 }
 
 declare class TransactionQueueScope {
@@ -395,6 +399,14 @@ export class TransactionQueue {
             verified,
             error
         });
+    }
+
+    getQueue(): Array<Transaction> {
+        return this.queue;
+    }
+
+    getConflictedQueue(): Array<Transaction> {
+        return this.conflictedQueue.map(obj => obj.transaction);
     }
 }
 
