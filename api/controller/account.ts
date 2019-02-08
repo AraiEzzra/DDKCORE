@@ -3,6 +3,8 @@ import { GetAccountParams, RegistrationParams } from 'api/util/types/account';
 import { Request, Response } from 'express';
 import * as HttpStatus from 'http-status-codes';
 import { AccountPGQLRepository, AccountRepository } from 'shared/repository/account';
+import { GET, POST, Controller, validate } from 'api/util/http_decorator';
+import { accountSchema as schema } from 'api/schema/account';
 
 @Controller('/account')
 export class AccountController {
@@ -19,7 +21,7 @@ export class AccountController {
     @POST('/login')
     @ON('ACCOUNT_LOGIN')
     @RPC('ACCOUNT_LOGIN')
-    @validate(zSchemaObj.login)
+    @validate(schema.login)
     public login(secret: string) {
         return this.accountService.login(secret);
     }
@@ -28,7 +30,7 @@ export class AccountController {
     @POST('/register')
     @ON('ACCOUNT_REGISTER')
     @RPC('ACCOUNT_REGISTER')
-    @validate(zSchemaObj.register)
+    @validate(schema.register)
     public register(data: RegistrationParams) {
         return this.accountService.register(data);
     }
@@ -36,7 +38,7 @@ export class AccountController {
     @GET('/get_account')
     @ON('ACCOUNT_GET')
     @RPC('ACCOUNT_GET')
-    @validate(zSchemaObj.getAccount)
+    @validate(schema.getAccount)
     public getAccount(data: GetAccountParams) {
         return this.accountService.getAccount(data);
     }
@@ -45,7 +47,7 @@ export class AccountController {
     @GET('/get_balance')
     @ON('ACCOUNT_GET_BALANCE')
     @RPC('ACCOUNT_GET_BALANCE')
-    @validate(zSchemaObj.getBalance)
+    @validate(schema.getBalance)
     public getBalance(address: string) {
         return this.accountRepository.getAccountByAddress(address);
     }
@@ -53,7 +55,7 @@ export class AccountController {
     @GET('/get_public_key')
     @ON('ACCOUNT_GET_PUBLIC_KEY')
     @RPC('ACCOUNT_GET_PUBLIC_KEY')
-    @validate(zSchemaObj.getPublicKey)
+    @validate(schema.getPublicKey)
     public getPublicKey(address: string) {
         return this.accountService.getPublicKey(address);
     }
@@ -62,7 +64,7 @@ export class AccountController {
     @POST('/generate_public_key')
     @ON('ACCOUNT_GENERATE_PUBLIC_KEY')
     @RPC('ACCOUNT_GENERATE_PUBLIC_KEY')
-    @validate(zSchemaObj.generatePublicKey)
+    @validate(schema.generatePublicKey)
     public generatePublicKey(secret: string) {
         this.accountService.generatePublicKey(secret)
     }
@@ -85,7 +87,7 @@ export class AccountController {
     @GET('/get_total_accounts')
     @ON('ACCOUNT_GET_TOTAL')
     @RPC('ACCOUNT_GET_TOTAL')
-    @validate(zSchemaObj.publicKey)
+    @validate(schema.publicKey)
     public getTotalAccounts() {
         this.accountService.getTotalAccounts();
     }
@@ -94,7 +96,7 @@ export class AccountController {
     @GET('/get_circulating_supply')
     @ON('ACCOUNT_GET_CIRCULATING_SUPPLY')
     @RPC('ACCOUNT_GET_CIRCULATING_SUPPLY')
-    @validate(zSchemaObj.getCirculatingSupply)
+    @validate(schema.getCirculatingSupply)
     public getCirculatingSupply() {
         return this.accountService.getCirculatingSupply();
     }
@@ -103,7 +105,7 @@ export class AccountController {
     @GET('/get_total_supply')
     @ON('ACCOUNT_GET_TOTAL_SUPPLY')
     @RPC('ACCOUNT_GET_TOTAL_SUPPLY')
-    @validate(zSchemaObj.getTotalSupply)
+    @validate(schema.getTotalSupply)
     public getTotalSupply(address: string) {
         return this.accountRepository.getBalanceByAddress(address);
     }
@@ -111,7 +113,7 @@ export class AccountController {
     @POST('/check_sender_balance')
     @ON('ACCOUNT_CHECK_SENDER_BALANCE')
     @RPC('ACCOUNT_CHECK_SENDER_BALANCE')
-    @validate(zSchemaObj.checkSenderAccountBalance)
+    @validate(schema.checkSenderAccountBalance)
     public checkSenderAccountBalance(address: string) {
         return this.accountRepository.getBalanceByAddress(address);
     }
@@ -124,7 +126,7 @@ export class AccountController {
     @POST('/check_account_existence')
     @ON('ACCOUNT_CHECK_EXISTENCE')
     @RPC('ACCOUNT_CHECK_EXISTENCE')
-    @validate(zSchemaObj.checkAccountExistence)
+    @validate(schema.checkAccountExistence)
     public checkAccountExistence(address: string) {
         this.accountRepository.getCountAccountByAddress(address);
     }
