@@ -718,6 +718,21 @@ Transactions.prototype.internal = {
             success: false,
             err
         }));
+    },
+    getTransactionsSystem(req, cb) {
+        const queue = self.transactionQueue.getQueue();
+        const conflictedQueue = self.transactionQueue.getConflictedQueue();
+        const pool = self.newTransactionPool.getPool();
+
+        const transactions = [...queue, ...conflictedQueue, ...pool]
+            .filter((trs: Transaction, index: number, self: Array<Transaction>) =>
+                self.findIndex((trs2: Transaction) => trs.id === trs2.id) === index)
+
+        return setImmediate(cb, null, {
+            success: true,
+            transactions,
+            count: transactions.length
+        });
     }
 };
 
