@@ -1,17 +1,17 @@
-import { Application } from 'express';
-import * as bodyParser from 'body-parser';
-import { setRoute } from './util/decorator';
-import './controller';
+import { db } from 'shared/driver';
+import { Loader } from './loader';
+import { logger } from 'shared/util/logger';
 
-const env = process.env;
+const preconfiguration: Array<Promise<any>> = [];
 
-const app: Application = require('express')();
-setRoute(app);
-app.use(bodyParser.json());
+const loader = new Loader();
 
-const DEFAULT_PORT = 3000;
-const port = env.SERVER_CORE ? env.SERVER_CORE : DEFAULT_PORT;
+preconfiguration.push(loader.runMigrate(db));
 
-app.listen(port, () => {
-    console.log(`Core. Listening on port ${port}`);
-});
+Promise.all(preconfiguration)
+    .then(() => {})
+    .catch(err => {
+        logger.error('Failed to start the server CORE. \n', err);
+    });
+
+

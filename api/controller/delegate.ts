@@ -2,7 +2,8 @@ import { DelegateRepository } from 'api/repository/delegate';
 import { delegateSchema as schema } from 'api/schema/delegate';
 import { Account } from 'shared/model/account';
 import { DelegateRepository as SharedDelegateRepository } from 'shared/repository/delegate';
-import { AccountPGQLRepository as SharedAccountRepository } from 'shared/repository/accountImpl';
+import { AccountPGQLRepository as SharedAccountRepository } from 'shared/repository/account';
+import { GET, POST, Controller, validate, PUT } from 'api/util/http_decorator';
 const constants = require('../../backlog/helpers/constants');
 
 interface IDataContainer<T extends Object> {

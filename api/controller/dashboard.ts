@@ -1,6 +1,7 @@
 import { Dashboard } from 'shared/model/dashboard';
-import { ResponseEntity } from 'shared/model/response';
-import { AccountPGQLRepository } from 'shared/repository/accountImpl';
+import Response from 'shared/model/response';
+import { AccountPGQLRepository } from 'shared/repository/account';
+import { GET, Controller } from 'api/util/http_decorator';
 
 export interface IRequest {
     body: {
@@ -26,7 +27,7 @@ export class DashboardController {
     }
 
     @GET('/get')
-    public async getDashBoard (req: IRequest): Promise<ResponseEntity<Dashboard>> {
+    public async getDashBoard (req: IRequest): Promise<Response<Dashboard>> {
         let data = new Dashboard();
         let errors = undefined;
 
@@ -47,7 +48,7 @@ export class DashboardController {
             errors = error;
         }
 
-        return new ResponseEntity({
+        return new Response({
             data,
             error: errors
         });
