@@ -3,10 +3,20 @@ import { Block } from 'shared/model/block';
 import { BlockService } from 'core/service/block';
 import { BlockRepo } from 'core/repository/block';
 import { Peer } from 'shared/model/peer';
+import { ON, RPC } from "core/util/decorator";
+import { BaseController } from 'core/controller/baseController';
 
-export class BlockController {
-    private blockService = new BlockService();
-    private blockRepo = new BlockRepo();
+interface BlockGenerateRequest {
+    keypair: {
+        privateKey: string,
+        publicKey: string
+    };
+    timestamp: number;
+}
+
+class BlockController extends BaseController {
+    private blockService: BlockService = new BlockService();
+    private blockRepo: BlockRepo = new BlockRepo();
 
     @ON('BLOCK_RECEIVE')
     public async onReceiveBlock(block: Block): Promise<Response<void>> {
@@ -18,15 +28,15 @@ export class BlockController {
     }
 
     @ON('BLOCK_GENERATE')
-    public async generateBlock( data: { keypair: { privateKey: string, publicKey: string }, timestamp: number }): Promise<Response<void>> {
-        const response = await this.blockService.generateBlock(data.keypair, data.timestamp);
+    public async generateBlock( data: BlockGenerateRequest ): Promise<Response<void>> {
+        const response: Response<void> = await this.blockService.generateBlock(data.keypair, data.timestamp);
         if (!response.success) {
             response.errors.push('generateBlock');
         }
         return response;
     }
 
-    @ON('BLOCKCHIN_READY')
+    @ON('BLOCKCHAIN_READY')
     public async loadLastNBlocks(): Promise<Response<void>> {
         const response: Response<string[]> = await this.blockRepo.loadLastNBlocks();
         if (!response.success) {
@@ -50,25 +60,14 @@ export class BlockController {
      * @implements modules.transport.poorConsensus
      */
     private async getCommonBlock(peer: Peer, height: number): Promise<Response<Block>> {
-        let comparisionFailed = false;
-
-        // Get IDs sequence (comma separated list)
-        const ids = this.blockService.getIdSequence(height).ids;
-
-        // Perform request to supplied remote peer
-        const result = modules.transport.getFromPeer(peer, {
-            api: `/blocks/common?ids=${ids}`,
-            method: 'GET'
-        });
-        const common = result.common;
-        // Check that block with ID, previousBlock and height exists in database
-        const rows = this.blockRepo.getCommonBlock({
-            id: result.body.common.id,
-            previousBlock: result.body.common.previousBlock,
-            height: result.body.common.height
-        });
-        if (comparisionFailed && modules.transport.poorConsensus()) {
-            return new Response<Block>({ data: await this.blockService.recoverChain() });
+        const idsResponse: Response<{ids: string}> = await this.blockService.getIdSequence(height);
+        const ids = idsResponse.data.ids;
+        const recoveryResponse: Response<Block> = await this.blockService.recoverChain();
+        if (!recoveryResponse.success) {
+            recoveryResponse.errors.push('getCommonBlock');
         }
+        return recoveryResponse;
     }
 }
+
+export default new BlockController();

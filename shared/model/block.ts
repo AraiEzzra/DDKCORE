@@ -18,15 +18,15 @@ class BlockFields extends A {
     height?: number;
     previousBlock?: string;
     numberOfTransactions?: number;
-    totalAmount?: number;
-    totalFee?: number;
+    totalAmount?: bigint;
+    totalFee?: bigint;
     reward?: number;
     payloadLength?: number;
     payloadHash?: string;
     generatorPublicKey?: string;
     blockSignature?: string;
     generationSignature?: string;
-    totalForged?: number;
+    totalForged?: bigint;
     generatorId?: string;
     confirmations?: number;
     username?: string;

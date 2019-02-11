@@ -65,6 +65,9 @@ declare class TransactionPoolScope {
 
 // TODO NOT ready
 export class TransactionPoolService<T extends object> implements ITransactionPoolService<T> {
+    returnToQueueConflictedTransactionFromPool(transactions): Promise<void> {
+        return undefined;
+    }
 
     private pool: { [transactionId: string]: Transaction<T> } = {};
 

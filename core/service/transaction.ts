@@ -31,7 +31,7 @@ export interface ITransactionService<T extends Object> {
 
     getHash(trs: Transaction<T>): string;
 
-    getBytes(trs: Transaction<T>, skipSignature: boolean, skipSecondSignature: boolean): Uint8Array;
+    getBytes(trs: Transaction<T>, skipSignature?: boolean, skipSecondSignature?: boolean): Uint8Array;
 
     checkConfirmed(trs: Transaction<T>): IFunctionResponse;
 
@@ -90,7 +90,7 @@ export class TransactionService<T extends Object> implements ITransactionService
 
     getHash(trs: Transaction<object>): string { return undefined; }
 
-    getBytes(trs: Transaction<object>): Uint8Array { return undefined; }
+    getBytes(trs: Transaction<object>, skipSignature: boolean = false, skipSecondSignature: boolean = false): Uint8Array { return undefined; }
 
     checkConfirmed(trs: Transaction<object>): IFunctionResponse { return undefined; }
 

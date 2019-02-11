@@ -2,9 +2,14 @@ import * as crypto from 'crypto';
 import * as sodium from 'sodium-javascript';
 import * as exceptions from '../../backlog/helpers/exceptions.js';
 import * as constants from '../../backlog/helpers/constants';
-import * as zSchema from 'z-schema';
+import * as BUFFER from '../../backlog/helpers/buffer.js';
+
+import Validator from 'z-schema';
+import ZSchema from 'shared/util/z_schema';
+const validator: Validator = new ZSchema({});
+
 // todo: implement
-import * as logger from 'logger';
+import { logger } from 'shared/util/logger';
 import { Account } from 'shared/model/account';
 import { Block } from 'shared/model/block';
 import { BlockRepo } from 'core/repository/block';
@@ -14,14 +19,21 @@ import { TransactionQueue } from 'core/service/transactionQueue';
 import { TransactionPoolService } from 'core/service/transactionPool';
 import { TransactionRepo } from 'core/repository/transaction';
 import { DelegateService } from 'core/service/delegate';
+import slotService from 'core/service/slot';
 import { transactionSortFunc } from 'core/util/transaction';
 import { getOrCreateAccount } from 'shared/util/account.utils';
 import blockShema from 'core/shema/block';
 import Response from 'shared/model/response';
+import { messageON } from 'shared/util/bus';
 
 interface IVerifyResult {
     verified?: boolean;
     errors: any[];
+}
+
+interface IKeyPair {
+    privateKey: string;
+    publicKey: string;
 }
 
 export class BlockService {
@@ -38,6 +50,18 @@ export class BlockService {
     private readonly currentBlockVersion: number = constants.CURRENT_BLOCK_VERSION;
     private receiveLocked: boolean = false;
 
+    private readonly BLOCK_BUFFER_SIZE
+        = BUFFER.LENGTH.UINT32 // version
+        + BUFFER.LENGTH.UINT32 // timestamp
+        + BUFFER.LENGTH.DOUBLE_HEX // previousBlock
+        + BUFFER.LENGTH.UINT32 // numberOfTransactions
+        + BUFFER.LENGTH.INT64 // totalAmount
+        + BUFFER.LENGTH.INT64 // totalFee
+        + BUFFER.LENGTH.UINT32 // payloadLength
+        + BUFFER.LENGTH.HEX // payloadHash
+        + BUFFER.LENGTH.HEX // generatorPublicKey
+    ;
+
     private receiveLock(): void {
         this.receiveLocked = true;
     }
@@ -46,7 +70,7 @@ export class BlockService {
         this.receiveLocked = false;
     }
 
-    public async generateBlock(keypair: { privateKey: string, publicKey: string }, timestamp: number): Promise<Response<void>> {
+    public async generateBlock(keypair: IKeyPair, timestamp: number): Promise<Response<void>> {
         const lockResponse: Response<void> = await this.lockTransactionPoolAndQueue();
         if (!lockResponse.success) {
             lockResponse.errors.push('generateBlock: Can\' lock transaction pool or/and queue');
@@ -58,22 +82,18 @@ export class BlockService {
 
         const previousBlock: Block = this.getLastBlock();
 
-        const createBlockResponse: Response<Block> = this.create({
+        const block: Block = this.create({
             keypair,
             timestamp,
             previousBlock,
             transactions
         });
-        if (!createBlockResponse.success) {
-            return new Response<void>({ errors: [...createBlockResponse.errors, 'generate block'] });
-        }
-        const block: Block = createBlockResponse.data;
 
-        const processBlockResponse: Response<void> = await this.processBlock(block, true, true, true, true);
+        const processBlockResponse: Response<void> = await this.processBlock(block, true, true, keypair, true, true);
         if (!processBlockResponse.success) {
-            const pushResponse: Response<void> = await this.pushInPool(transactions);
-            if (!pushResponse.success) {
-                processBlockResponse.errors = [...processBlockResponse.errors, ...pushResponse.errors];
+            const returnResponse: Response<void> = await this.transactionPool.returnToQueueConflictedTransactionFromPool(transactions);
+            if (!returnResponse.success) {
+                processBlockResponse.errors = [...processBlockResponse.errors, ...returnResponse.errors];
             }
 
             processBlockResponse.errors.push('generate block');
@@ -130,8 +150,8 @@ export class BlockService {
     /**
      * @implements system.update
      */
-    private async processBlock(block: Block, broadcast: boolean, saveBlock: boolean, verify: boolean = true, tick: boolean = true): Promise<Response<void>> {
-        this.addBlockProperties(block, broadcast);
+    private async processBlock(block: Block, broadcast: boolean, saveBlock: boolean, keypair: IKeyPair, verify: boolean = true, tick: boolean = true): Promise<Response<void>> {
+        block = this.addBlockProperties(block, broadcast);
 
         const resultNormalizeBlock: Response<Block> = await this.normalizeBlock(block);
         if (!resultNormalizeBlock.success) {
@@ -140,7 +160,7 @@ export class BlockService {
         block = resultNormalizeBlock.data;
 
         if (verify) {
-            const resultVerifyBlock: IVerifyResult = await this.verifyBlock(block);
+            const resultVerifyBlock: IVerifyResult = await this.verifyBlock(block, !keypair);
             if (!resultVerifyBlock.verified) {
                 return new Response<void>({ errors: [...resultVerifyBlock.errors, 'processBlock'] });
             }
@@ -159,20 +179,13 @@ export class BlockService {
             return new Response<void>({ errors: [...resultCheckTransactions.errors, 'processBlock'] });
         }
 
-        const applyBlockResponse: Response<void> = await this.applyBlock(block, broadcast, saveBlock, tick);
+        const applyBlockResponse: Response<void> = await this.applyBlock(block, broadcast, keypair, saveBlock, tick);
         if (!applyBlockResponse.success) {
             return new Response<void>({ errors: [...applyBlockResponse.errors, 'processBlock'] });
         }
 
-        if (!library.config.loading.snapshotRound) {
-            await (new Promise((resolve, reject) => modules.system.update((err) => {
-                if (err) {
-                    logger.error(`[Verify][processBlock][system/update] ${err}`);
-                    logger.error(`[Verify][processBlock][system/update][stack] ${err.stack}`);
-                    reject(err);
-                }
-                resolve();
-            })));
+        if (!config.loading.snapshotRound) {
+            // todo modules.system.update?
         }
         const reshuffleResponse: Response<void> = await this.transactionQueue.reshuffleTransactionQueue();
         if (!reshuffleResponse.success) {
@@ -185,8 +198,8 @@ export class BlockService {
         if (broadcast) {
             return block;
         }
-        block.totalAmount = block.totalAmount || 0;
-        block.totalFee = block.totalFee || 0;
+        block.totalAmount = block.totalAmount || BigInt(0);
+        block.totalFee = block.totalFee || BigInt(0);
         block.reward = block.reward || 0;
 
         if (block.version === undefined) {
@@ -209,7 +222,7 @@ export class BlockService {
     }
 
     private async normalizeBlock(block: Block): Promise<Response<Block>> {
-        block.transactions.sort(transactionSortFunc);
+        block.transactions = block.transactions.sort(transactionSortFunc);
         const normalizeResponse: Response<Block> = await this.objectNormalize(block);
         if (!normalizeResponse.success) {
             normalizeResponse.errors.push('normalizeBlock');
@@ -226,10 +239,10 @@ export class BlockService {
                 delete block[i];
             }
         }
-        const report = zSchema.validate(block, blockShema);
+        const report: boolean = validator.validate(block, blockShema);
 
         if (!report) {
-            return new Response<Block>({ errors: [`Failed to validate block schema: ${zSchema.getLastErrors().map(err => err.message).join(', ')}`]});
+            return new Response<Block>({ errors: [`Failed to validate block schema: ${validator.getLastErrors().map(err => err.message).join(', ')}`]});
         }
 
         const errors: string[] = [];
@@ -244,19 +257,26 @@ export class BlockService {
         return new Response<Block>({ data: block, errors: errors });
     }
 
-    private async verifyBlock(block: Block): Promise<IVerifyResult> {
+    private async verifyBlock(block: Block, verify: boolean): Promise<IVerifyResult> {
         const lastBlock: Block = this.getLastBlock();
 
         block = this.setHeight(block, lastBlock);
 
         let result: IVerifyResult = { verified: false, errors: [] };
 
-        result = this.verifySignature(block, result);
+        if (verify) {
+            result = this.verifySignature(block, result);
+        }
+
         result = this.verifyPreviousBlock(block, result);
         result = this.verifyVersion(block, result);
         // TODO: verify total fee
-        result = this.verifyId(block, result);
-        result = this.verifyPayload(block, result);
+
+        if (verify) {
+            result = this.verifyId(block, result);
+            result = this.verifyPayload(block, result);
+        }
+
 
         result = await this.verifyForkOne(block, lastBlock, result);
         result = this.verifyBlockSlot(block, lastBlock, result);
@@ -264,6 +284,20 @@ export class BlockService {
         result.verified = result.errors.length === 0;
         result.errors.reverse();
 
+        if (result.verified) {
+            logger.info(
+                `Verify->verifyBlock succeeded for block ${block.id} at height ${
+                    block.height
+                    }.`
+            );
+        } else {
+            logger.error(
+                `Verify->verifyBlock failed for block ${block.id} at height ${
+                    block.height
+                    }.`,
+                JSON.stringify(result.errors)
+            );
+        }
         return result;
     }
 
@@ -273,10 +307,39 @@ export class BlockService {
     }
 
     private verifySignature(block: Block, result: IVerifyResult): IVerifyResult {
+        let valid: boolean = false;
+        const hash = crypto.createHash('sha256').update(this.getBytes(block)).digest();
+        const blockSignatureBuffer = Buffer.from(block.blockSignature, 'hex');
+        const generatorPublicKeyBuffer = Buffer.from(block.generatorPublicKey, 'hex');
+
+        try {
+            valid = sodium.crypto_sign_verify_detached(blockSignatureBuffer, hash, generatorPublicKeyBuffer);
+        } catch (e) {
+            if (constants.VERIFY_BLOCK_SIGNATURE) {
+                result.errors.push(e.toString());
+            } else {
+                logger.error(e.toString());
+            }
+        }
+
+        if (!valid) {
+            if (constants.VERIFY_BLOCK_SIGNATURE) {
+                result.errors.push('Failed to verify block signature');
+            } else {
+                logger.error('Failed to verify block signature');
+            }
+        }
         return result;
     }
 
     private verifyPreviousBlock(block: Block, result: IVerifyResult): IVerifyResult {
+        if (!block.previousBlock && block.height !== 1) {
+            if (constants.VERIFY_PREVIOUS_BLOCK) {
+                result.errors.push('Invalid previous block');
+            } else {
+                logger.error('Invalid previous block');
+            }
+        }
         return result;
     }
 
@@ -294,11 +357,19 @@ export class BlockService {
         if (exceptionVersion === undefined) {
             // If there is no exception for provided height - check against current block version
             if (version !== this.currentBlockVersion) {
-                result.errors.push('No exceptions found. Block version doesn\'t match te current one.');
+                if (constants.VERIFY_BLOCK_VERSION) {
+                    result.errors.push('Invalid block version', 'No exceptions found. Block version doesn\'t match te current one.');
+                } else {
+                    logger.error('Invalid block version');
+                }
             }
             return result;
         }
-        result.errors.push('Version exceptions found.');
+        if (constants.VERIFY_BLOCK_VERSION) {
+            result.errors.push('Invalid block version', 'Version exceptions found.');
+        } else {
+            logger.error('Invalid block version');
+        }
         // If there is an exception - check if version match
         // return Number(exceptionVersion) === version;
         return result;
@@ -310,7 +381,10 @@ export class BlockService {
             result.errors.push( ...idResponse.errors );
             return result;
         }
-        block.id = idResponse.data;
+        const blockId = idResponse.data;
+        if (block.id !== blockId) {
+            result.errors.push(`Block id is corrupted expected: ${blockId} actual: ${block.id}`);
+        }
         return result;
     }
 
@@ -325,19 +399,116 @@ export class BlockService {
     }
 
     private verifyPayload(block: Block, result: IVerifyResult): IVerifyResult {
-        const bytes = this.transactionService.getBytes(transaction, false, false);
-        return result;
-    }
+        if (block.payloadLength > constants.maxPayloadLength) {
+            if (constants.PAYLOAD_VALIDATE.MAX_LENGTH) {
+                result.errors.push('Payload length is too long');
+            } else {
+                logger.error('Payload length is too long');
+            }
+        }
 
-    private async verifyForkOne(block: Block, lastBlock: Block, result: IVerifyResult): Promise<IVerifyResult> {
-        const forkResponse: Response<void> = await this.delegateService.fork(block, 1);
-        if (!forkResponse.success) {
-            result.errors.push(...forkResponse.errors);
+        if (block.transactions.length !== block.numberOfTransactions) {
+            if (constants.PAYLOAD_VALIDATE.MAX_TRANSACTION_LENGTH) {
+                result.errors.push('Included transactions do not match block transactions count');
+            } else {
+                logger.error('Included transactions do not match block transactions count');
+            }
+        }
+
+        if (block.transactions.length > constants.maxTxsPerBlock) {
+            if (constants.PAYLOAD_VALIDATE.MAX_TRANSACTION_IN_BLOCK) {
+                result.errors.push('Number of transactions exceeds maximum per block');
+            } else {
+                logger.error('Number of transactions exceeds maximum per block');
+            }
+        }
+
+        let totalAmount = BigInt(0);
+        let totalFee = BigInt(0);
+        const payloadHash = crypto.createHash('sha256');
+        const appliedTransactions = {};
+
+        for (const trs of block.transactions) {
+            let bytes;
+
+            try {
+                logger.debug(`Transaction ${JSON.stringify(trs)}`);
+                bytes = this.transactionService.getBytes(trs, false, false);
+                logger.trace(`Bytes ${JSON.stringify(bytes)}`);
+            } catch (e) {
+                result.errors.push(e.toString());
+            }
+
+            if (appliedTransactions[trs.id]) {
+                if (constants.PAYLOAD_VALIDATE.MAX_TRANSACTION_DUPLICATE) {
+                    result.errors.push(`Encountered duplicate transaction: ${trs.id}`);
+                } else {
+                    logger.error(`Encountered duplicate transaction: ${trs.id}`);
+                }
+            }
+
+            appliedTransactions[trs.id] = trs;
+            if (bytes) {
+                payloadHash.update(bytes);
+            }
+            totalAmount += trs.amount;
+            totalFee += trs.fee;
+        }
+        const hex = payloadHash.digest().toString('hex');
+
+        if (hex !== block.payloadHash) {
+            if (constants.PAYLOAD_VALIDATE.INVALID_HASH) {
+                result.errors.push('Invalid payload hash');
+            } else {
+                logger.error('Invalid payload hash');
+            }
+        }
+
+        if (totalAmount !== block.totalAmount) {
+            if (constants.PAYLOAD_VALIDATE.TOTAL_AMOUNT) {
+                result.errors.push('Invalid total amount');
+            } else {
+                logger.error('Invalid total amount');
+            }
+        }
+
+        if (totalFee !== block.totalFee) {
+            if (constants.PAYLOAD_VALIDATE.TOTAL_FEE) {
+                result.errors.push(`Invalid total fee. Expected: ${totalFee}, actual: ${block.totalFee}`);
+            } else {
+                logger.error('Invalid total fee');
+            }
         }
         return result;
     }
 
+    private async verifyForkOne(block: Block, lastBlock: Block, result: IVerifyResult): Promise<IVerifyResult> {
+        if (block.previousBlock && block.previousBlock !== lastBlock.id) {
+            const forkResponse: Response<void> = await this.delegateService.fork(block, 1);
+            if (!forkResponse.success) {
+                result.errors.push(...forkResponse.errors);
+            }
+            if (constants.VERIFY_BLOCK_FORK_ONE) {
+                result.errors.push(['Invalid previous block:', block.previousBlock, 'expected:', lastBlock.id].join(' '));
+            } else {
+                logger.error(['Invalid previous block:', block.previousBlock, 'expected:', lastBlock.id].join(' '));
+            }
+        }
+
+        return result;
+    }
+
     private verifyBlockSlot(block: Block, lastBlock: Block, result: IVerifyResult): IVerifyResult {
+        const blockSlotNumber = slotService.getSlotNumber(block.timestamp);
+        const lastBlockSlotNumber = slotService.getSlotNumber(lastBlock.timestamp);
+
+        if (blockSlotNumber > slotService.getSlotNumber() || blockSlotNumber <= lastBlockSlotNumber) {
+            if (constants.VERIFY_BLOCK_SLOT) {
+                result.errors.push('Invalid block timestamp');
+            } else {
+                logger.error('Invalid block timestamp', JSON.stringify(block));
+            }
+        }
         return result;
     }
 
@@ -366,6 +537,7 @@ export class BlockService {
                     const resultCheckTransaction: Response<void> = await this.checkTransaction(block, trs, sender, checkExists);
                     if (!resultCheckTransaction.success) {
                         errors.push(resultCheckTransaction.errors);
+                        logger.debug(`[Verify][checkTransactionsAndApplyUnconfirmed][error] ${JSON.stringify(errors)}`);
                         i--;
                         continue;
                     }
@@ -412,7 +584,15 @@ export class BlockService {
     /**
      * @implements rounds.tick
      */
-    private async applyBlock(block: Block, broadcast: boolean, saveBlock: boolean, tick: boolean): Promise<Response<void>> {
+    private async applyBlock(block: Block, broadcast: boolean, keypair: IKeyPair, saveBlock: boolean, tick: boolean): Promise<Response<void>> {
+        if (keypair) {
+            const addPayloadHashResponse: Response<Block> = this.addPayloadHash(block, keypair);
+            if (!addPayloadHashResponse.success) {
+                return new Response<void>({ errors: [...addPayloadHashResponse.errors, 'applyBlock'] });
+            }
+            block = addPayloadHashResponse.data;
+        }
+
         if (saveBlock) {
             const saveBlockResponse: Response<void> = await this.blockRepo.saveBlock(block);
             if (!saveBlockResponse.success) {
@@ -447,31 +627,55 @@ export class BlockService {
         }
 
         this.setLastBlock(block);
-        library.bus.message('newBlock', block, broadcast);
+        messageON('NEW_BLOCKS', block);
 
         if (tick) {
-            await (new Promise((resolve, reject) => modules.rounds.tick(block, (err, message) => {
-                if (err) {
-                    logger.error(`[Chain][applyBlock][tick]: ${err}`);
-                    logger.error(`[Chain][applyBlock][tick][stack]: \n ${err.stack}`);
-                    reject(err);
-                }
-                logger.debug(`[Chain][applyBlock][tick] message: ${message}`);
-                resolve();
-            })));
+            // todo implement tick?
         }
         block = null;
         return new Response<void>();
     }
 
+    private addPayloadHash(block: Block, keypair: IKeyPair): Response<Block> {
+        let size = 0;
+        const payloadHash = crypto.createHash('sha256');
+        for (let i = 0; i < block.transactions.length; i++) {
+            const transaction = block.transactions[i];
+            const bytes = this.transactionService.getBytes(transaction);
+
+            if (size + bytes.length > constants.maxPayloadLength) {
+                break;
+            }
+
+            size += bytes.length;
+
+            block.totalFee += transaction.fee;
+            block.totalAmount += transaction.amount;
+
+            payloadHash.update(bytes);
+        }
+
+        block.payloadHash = payloadHash.digest().toString('hex');
+        block.payloadLength = size;
+
+        block.blockSignature = this.sign(block, keypair);
+        const idResponse: Response<string> = this.getId(block);
+        if (!idResponse.success) {
+            return new Response<Block>({errors: [...idResponse.errors, 'addPayloadHash']})
+        }
+        block.id = idResponse.data;
+        return new Response<Block>({ data: block });
+    }
+
     private async afterSave(block: Block): Promise<Response<void>> {
-        // todo: call 'transactionsSaved' on bus
+        messageON('transactionsSaved', block.transactions);
         const errors: string[] = [];
         for (const trs of block.transactions) {
             // how can I call this method in case it exists in service but connection service=service is baned
             const afterSaveResponse: Response<void> = await this.transactionService.afterSave(trs);
             if (!afterSaveResponse.success) {
                 errors.push(...afterSaveResponse.errors);
+                logger.error(`[Chain][afterSave]: ${JSON.stringify(afterSaveResponse.errors)}`);
             }
         }
         return new Response<void>({ errors });
@@ -479,7 +683,6 @@ export class BlockService {
 
     /**
      * @implements modules.rounds.calc()
-     * @implements slots.getSlotNumber
      * @implements modules.loader.syncing
      * @implements modules.rounds.ticking
      */
@@ -490,12 +693,14 @@ export class BlockService {
         }
 
         // TODO: how to check?
+        /*
         if (!__private.loaded || modules.loader.syncing() || modules.rounds.ticking()) {
             logger.debug(`[Process][onReceiveBlock] !__private.loaded ${!__private.loaded}`);
             logger.debug(`[Process][onReceiveBlock] syncing ${modules.loader.syncing()}`);
             logger.debug('Client not ready to receive block', block.id);
             return new Response({ errors: ['module not loaded'] });
         }
+        */
 
         // Get the last block
         let lastBlock: Block = this.getLastBlock();
@@ -519,7 +724,7 @@ export class BlockService {
                 'Discarded block that does not match with current chain:', block.id,
                 'height:', block.height,
                 'round:', modules.rounds.calc(block.height),
-                'slot:', slots.getSlotNumber(block.timestamp),
+                'slot:', slotService.getSlotNumber(block.timestamp),
                 'generator:', block.generatorPublicKey
             ].join(' '));
         }
@@ -527,14 +732,13 @@ export class BlockService {
 
     /**
      * @implements modules.rounds.calc
-     * @implements slots.getSlotNumber
      */
     private async receiveBlock(block: Block): Promise<Response<void>> {
         logger.info([
             'Received new block id:', block.id,
             'height:', block.height,
             'round:', modules.rounds.calc(block.height),
-            'slot:', slots.getSlotNumber(block.timestamp),
+            'slot:', slotService.getSlotNumber(block.timestamp),
             'reward:', block.reward
         ].join(' '));
 
@@ -555,7 +759,7 @@ export class BlockService {
 
         // todo: wrong logic with errors!!!
         const errors: string[] = [];
-        const processBlockResponse: Response<void> = await this.processBlock(block, true, true, true, true);
+        const processBlockResponse: Response<void> = await this.processBlock(block, true, true, null,true, true);
         if (!processBlockResponse.success) {
             errors.push(...processBlockResponse.errors);
         }
@@ -569,7 +773,7 @@ export class BlockService {
         if (!pushResponse.success) {
             errors.push(...pushResponse.errors);
         }
-        const returnResponse: Response<void> = await this.transactionQueue.returnToQueueConflictedTransactionFromPool(block.transactions);
+        const returnResponse: Response<void> = await this.transactionPool.returnToQueueConflictedTransactionFromPool(block.transactions);
         if (!returnResponse.success) {
             errors.push(...returnResponse.errors);
         }
@@ -594,19 +798,27 @@ export class BlockService {
         if (!forkResponse.success) {
             return new Response<void>({ errors: [...forkResponse.errors, 'receiveForkOne'] });
         }
-
+        if (block.timestamp > lastBlock.timestamp || (block.timestamp === lastBlock.timestamp && block.id > lastBlock.id)) {
+            logger.info('Last block stands');
+            return new Response<void>();
+        }
+        logger.info('Last block and parent loses');
         const normalizeResponse: Response<Block> = await this.objectNormalize(tmpBlock);
         if (!normalizeResponse.success) {
             return new Response<void>({ errors: [...normalizeResponse.errors, 'receiveForkOne'] });
         }
         tmpBlock = normalizeResponse.data;
 
-        const validateBlockSlotResponse: Response<void> = await this.validateBlockSlot(block, lastBlock);
+        const validateBlockSlotResponse: Response<void> = await this.validateBlockSlot(tmpBlock, lastBlock);
         if (!validateBlockSlotResponse.success) {
             return new Response<void>({ errors: [...validateBlockSlotResponse.errors, 'receiveForkOne'] });
         }
 
         const check = this.verifyReceipt(tmpBlock);
+        if (!check.verified) {
+            logger.error(['Block', tmpBlock.id, 'verification failed'].join(' '), check.errors.join(', '));
+            return new Response<void>({ errors: [...check.errors, 'receiveForkOne'] });
+        }
 
         const deleteFirstResponse: Response<Block> = await this.deleteLastBlock();
         if (!deleteFirstResponse.success) {
@@ -620,12 +832,11 @@ export class BlockService {
     }
 
     /**
-     * @implements slots.calcRound
      * @implements modules.rounds.getSlotDelegatesCount
      */
     private async validateBlockSlot(block: Block, lastBlock: Block): Promise<Response<void>> {
-        const roundNextBlock = slots.calcRound(block.height);
-        const roundLastBlock = slots.calcRound(lastBlock.height);
+        const roundNextBlock = slotService.calcRound(block.height);
+        const roundLastBlock = slotService.calcRound(lastBlock.height);
         const activeDelegates = modules.rounds.getSlotDelegatesCount(block.height);
 
         const errors: string[] = [];
@@ -663,11 +874,38 @@ export class BlockService {
     }
 
     private verifyAgainstLastNBlockIds(block: Block, result: IVerifyResult): IVerifyResult {
-        if (this.lastNBlockIds.indexOf(block.id) !== -1) {}
+        if (this.lastNBlockIds.indexOf(block.id) !== -1) {
+            if (constants.VERIFY_AGAINST_LAST_N_BLOCK_IDS) {
+                result.errors.push('Block already exists in chain');
+            } else {
+                logger.error('Block already exists in chain');
+            }
+        }
         return result;
     }
 
     private verifyBlockSlotWindow(block: Block, result: IVerifyResult): IVerifyResult {
+        const currentApplicationSlot = slotService.getSlotNumber();
+        const blockSlot = slotService.getSlotNumber(block.timestamp);
+
+        // Reject block if it's slot is older than BLOCK_SLOT_WINDOW
+        if (currentApplicationSlot - blockSlot > constants.blockSlotWindow) {
+            if (constants.VERIFY_BLOCK_SLOT_WINDOW) {
+                result.errors.push('Block slot is too old');
+            } else {
+                logger.error('Block slot is too old');
+            }
+        }
+
+        // Reject block if it's slot is in the future
+        if (currentApplicationSlot < blockSlot) {
+            if (constants.VERIFY_BLOCK_SLOT_WINDOW) {
+                result.errors.push('Block slot is in the future');
+            } else {
+                logger.error('Block slot is in the future');
+            }
+        }
+
         return result;
     }
 
@@ -677,7 +915,14 @@ export class BlockService {
         if (!forkResponse.success) {
             return new Response<void>({ errors: [...forkResponse.errors, 'receiveForkFive'] });
         }
-
+        if (block.generatorPublicKey === lastBlock.generatorPublicKey) {
+            logger.warn('Delegate forging on multiple nodes', block.generatorPublicKey);
+        }
+        if (block.timestamp > lastBlock.timestamp || (block.timestamp === lastBlock.timestamp && block.id > lastBlock.id)) {
+            logger.info('Last block stands');
+            return new Response<void>();
+        }
+        logger.info('Last block loses');
         const normalizeResponse: Response<Block> = await this.objectNormalize(tmpBlock);
         if (!normalizeResponse.success) {
             return new Response<void>({ errors: [...normalizeResponse.errors, 'receiveForkFive'] });
@@ -690,6 +935,10 @@ export class BlockService {
         }
 
         const check = this.verifyReceipt(tmpBlock);
+        if (!check.verified) {
+            logger.error(['Block', tmpBlock.id, 'verification failed'].join(' '), check.errors.join(', '));
+            return new Response<void>({ errors: [...check.errors, 'receiveForkOne'] });
+        }
 
         const deleteResponse: Response<Block> = await this.deleteLastBlock();
         if (!deleteResponse.success) {
@@ -705,9 +954,13 @@ export class BlockService {
 
     private async deleteLastBlock(): Promise<Response<Block>> {
         let lastBlock = this.getLastBlock();
-
+        logger.warn(`Deleting last block: ${JSON.stringify(lastBlock)}`);
+        if (lastBlock.height === 1) {
+            return new Response<Block>({ errors: ['Cannot delete genesis block'] });
+        }
         const popBlockResponse: Response<Block> = await this.popLastBlock(lastBlock);
         if (!popBlockResponse.success) {
+            logger.error(`Error deleting last block: ${JSON.stringify(lastBlock)}, message: ${JSON.stringify(popBlockResponse.errors)}`);
             popBlockResponse.errors.push('receiveForkFive');
             return popBlockResponse;
         }
@@ -720,6 +973,13 @@ export class BlockService {
      * @implements modules.rounds.backwardTick
      */
     private async popLastBlock(oldLastBlock: Block): Promise<Response<Block>> {
+        logger.debug(`[Chain][popLastBlock] block: ${JSON.stringify(oldLastBlock)}`);
+        let lastBlock: Block = this.getLastBlock();
+        if (oldLastBlock.id !== lastBlock.id) {
+            logger.error(`[Chain][popLastBlock] Block ${oldLastBlock.id} is not last`);
+            return new Response<Block>({ errors: [`Block is not last: ${JSON.stringify(oldLastBlock)}`] });
+        }
+
         const loadBlocksPartResponse: Response<Block> = await this.loadBlocksPart(oldLastBlock.previousBlock);
         if (!loadBlocksPartResponse.success) {
             loadBlocksPartResponse.errors.push('receiveForkFive');
@@ -753,35 +1013,61 @@ export class BlockService {
     }
 
     private async loadBlocksPart(previousBlockId: string): Promise<Response<Block>> {
+        logger.debug(`[Utils][loadBlocksPart]' previousBlockId: ${previousBlockId}`);
         const loadBlockResponse: Response<Block> = await this.blockRepo.loadFullBlockById(previousBlockId);
         if (!loadBlockResponse.success) {
             return new Response<Block>({ errors: [...loadBlockResponse.errors, 'loadBlocksPart'] });
         }
         const block: Block = loadBlockResponse.data;
 
-        const readBlockResponse: Response<Block> = await this.readDbRow(block);
+        const readBlockResponse: Response<Block[]> = await this.readDbRows([block]);
         if (!readBlockResponse.success) {
             return new Response<Block>({ errors: [...readBlockResponse.errors, 'loadBlocksPart'] });
         }
-        return new Response<Block>({ data: readBlockResponse.data });
+        return new Response<Block>({ data: readBlockResponse.data[0] });
     }
 
     private async readDbRows(rows: object[]): Promise<Response<Block[]>> {
-        const blocks = [];
+        const blocks = {};
+        const order = [];
         const errors: string[] = [];
         rows.forEach(async row => {
-            const readResponse: Response<Block> = await this.readDbRow(row);
-            if (!readResponse.success) {
-                errors.push(...readResponse.errors);
-            } else {
-                blocks.push(readResponse.data);
+            const block: Block = this.blockRepo.dbRead(row);
+
+            // If block is not already in the list...
+            if (!blocks[block.id]) {
+                if (block.id === library.genesisblock.block.id) {
+                    // Generate fake signature for genesis block
+                    block.generationSignature = (new Array(65)).join('0');
+                }
+
+                // Add block ID to order list
+                order.push(block.id);
+                // Add block to list
+                blocks[block.id] = block;
+            }
+
+            // Normalize transaction
+            const transaction = this.transactionService.dbRead(row);
+            // Set empty object if there are no transactions in block
+            blocks[block.id].transactions = blocks[block.id].transactions || {};
+
+            if (transaction) {
+                // Add transaction to block if not there already
+                if (!blocks[block.id].transactions[transaction.id]) {
+                    blocks[block.id].transactions[transaction.id] = transaction;
+                }
             }
         });
-        return new Response<Block[]>({ data: blocks, errors });
-    }
 
-    private async readDbRow(row: object): Promise<Response<Block>> {
-        return new Response<Block>();
+        // Reorganize list
+        const result: Block[] = order.map((v) => {
+            blocks[v].transactions = Object.keys(blocks[v].transactions)
+                .map(t => blocks[v].transactions[t]);
+            return blocks[v];
+        });
+
+        return new Response<Block[]>({ data: result, errors });
     }
 
     public getLastBlock(): Block {
@@ -825,7 +1111,7 @@ export class BlockService {
 
     private async applyGenesisBlock(block: Block, verify?: boolean, save?: boolean): Promise<Response<void>> {
         block.transactions = block.transactions.sort(transactionSortFunc);
-        return await this.processBlock(block, false, save, verify, false);
+        return await this.processBlock(block, false, save, null, verify, false);
     }
 
     // used by rpc getCommonBlock
@@ -837,14 +1123,50 @@ export class BlockService {
     /**
      * @implements rounds.getSlotDelegatesCount
      */
-    public getIdSequence(height: number): { firstHeight: number, ids: []} {
-        const rows = this.blockRepo.getIdSequence({ height, limit: 5, delegates: Rounds.prototype.getSlotDelegatesCount(height) });
-        return { firstHeight: rows[0].height, ids: ids.join(',') };
+    public async getIdSequence(height: number): Promise<Response<{ ids: string }>> {
+        const lastBlock = this.getLastBlock();
+        const rowsResponse: Response<string[]> = await this.blockRepo.getIdSequence({ height, limit: 5, delegates: Rounds.prototype.getSlotDelegatesCount(height) });
+        if (!rowsResponse.success) {
+            return new Response({ errors: [...rowsResponse.errors, 'getIdSequence']});
+        }
+        const rows = rowsResponse.data;
+        if (rows.length === 0) {
+            return new Response({ errors: [`Failed to get id sequence for height: ${height}`]});
+        }
+        const ids = [];
+        // Add genesis block at the end if the set doesn't contain it already
+        if (library.genesisblock && library.genesisblock.block) {
+            const __genesisblock = library.genesisblock.block.id;
+
+            if (rows.indexOf(__genesisblock.id) === -1) {
+                rows.push(__genesisblock);
+            }
+        }
+
+        // Add last block at the beginning if the set doesn't contain it already
+        if (lastBlock && rows.indexOf(lastBlock.id) === -1) {
+            rows.unshift(lastBlock.id);
+        }
+
+        // Extract blocks IDs
+        rows.forEach((row) => {
+            // FIXME: Looks like double check
+            if (ids.indexOf(row)) {
+                ids.push(row);
+            }
+        });
+
+        return new Response({ data: { ids: ids.join(',') } });
     }
 
     // called from loader
     public async loadBlocksOffset(limit: number, offset: number, verify: boolean): Promise<Response<Block>> {
-        const loadResponse: Response<Block[]> = await this.blockRepo.loadBlocksOffset({});
+        const newLimit = limit + (offset || 0);
+        const params = { limit: newLimit, offset: offset || 0 };
+
+        logger.debug('Loading blocks offset', { limit, offset, verify });
+
+        const loadResponse: Response<Block[]> = await this.blockRepo.loadBlocksOffset(params);
         if (!loadResponse.success) {
             return new Response<Block>({ errors: [...loadResponse.errors, 'loadBlocksOffset'] });
         }
@@ -853,25 +1175,46 @@ export class BlockService {
         if (!readResponse.success) {
             return new Response<Block>({ errors: [...readResponse.errors, 'loadBlocksOffset'] });
         }
-        const blocks = readResponse.data;
+        const blocks: Block[] = readResponse.data;
 
+        const errors: string[] = [];
         blocks.forEach(async (block) => {
             if (block.id === library.genesisblock.block.id) {
-                return this.applyGenesisBlock(block);
+                return await this.applyGenesisBlock(block);
             }
 
-            const processResponse: Response<void> = await this.processBlock(block, false, false, verify);
+            const processResponse: Response<void> = await this.processBlock(block, false, false, null, verify);
             if (!processResponse.success) {
-                return new Response<Block>({ errors: [...processResponse.errors, 'loadBlocksOffset'] });
+                errors.push(...processResponse.errors, 'loadBlocksOffset');
             }
         });
-        return new Response<Block>({ data: this.getLastBlock() });
+        return new Response<Block>({ data: this.getLastBlock(), errors });
     }
 
-    private create(data): Response<Block> {
-        const block: Block = new Block(data);
-        this.sign(block, data.keypair);
-        return new Response<Block>({ data: block });
+    private create({transactions, timestamp, previousBlock, keypair}): Block {
+        const reward = 0;
+        const totalFee = BigInt(0);
+        const totalAmount = BigInt(0);
+        const size = 0;
+
+        const blockTransactions = transactions.sort(transactionSortFunc);
+        const payloadHash = '';
+        const block: Block = new Block({
+            version: constants.CURRENT_BLOCK_VERSION,
+            totalAmount,
+            totalFee,
+            reward,
+            payloadHash,
+            timestamp,
+            numberOfTransactions: blockTransactions.length,
+            payloadLength: size,
+            previousBlock: previousBlock.id,
+            generatorPublicKey: keypair.publicKey.toString('hex'),
+            transactions: blockTransactions
+        });
+        block.blockSignature = '';
+
+        return block;
     }
 
     private sign(block, keyPair) {
@@ -892,7 +1235,28 @@ export class BlockService {
     }
 
     private getBytes(block: Block): Buffer {
-        return new Buffer([]);
+        const buf = Buffer.alloc(this.BLOCK_BUFFER_SIZE);
+        let offset = 0;
+
+        offset = BUFFER.writeInt32LE(buf, block.version, offset);
+        offset = BUFFER.writeInt32LE(buf, block.timestamp, offset);
+
+        if (block.previousBlock) {
+            buf.write(block.previousBlock, offset, BUFFER.LENGTH.DOUBLE_HEX);
+        }
+        offset += BUFFER.LENGTH.DOUBLE_HEX;
+
+        offset = BUFFER.writeInt32LE(buf, block.numberOfTransactions, offset);
+        offset = BUFFER.writeUInt64LE(buf, block.totalAmount, offset);
+        offset = BUFFER.writeUInt64LE(buf, block.totalFee, offset);
+        offset = BUFFER.writeInt32LE(buf, block.payloadLength, offset);
+
+        buf.write(block.payloadHash, offset, BUFFER.LENGTH.HEX, 'hex');
+        offset += BUFFER.LENGTH.HEX;
+
+        buf.write(block.generatorPublicKey, offset, BUFFER.LENGTH.HEX, 'hex');
+
+        return buf;
     }
 
     // called from loader
@@ -902,11 +1266,11 @@ export class BlockService {
             return new Response<Block>({ errors: [...loadResponse.errors, 'loadLastBlock'] });
         }
         const block: Block = loadResponse.data;
-        const readResponse: Response<Block> = await this.readDbRow(block);
+        const readResponse: Response<Block[]> = await this.readDbRows([block]);
         if (!readResponse.success) {
             return new Response<Block>({ errors: [...readResponse.errors, 'loadLastBlock'] });
         }
-        return readResponse;
+        return new Response({ data: readResponse.data[0] });
     }
 
     public setLastNBlocks(blocks: string[]): void {
