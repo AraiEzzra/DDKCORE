@@ -1,5 +1,8 @@
 import ResponseEntity from 'shared/model/response';
 import { Delegate } from 'shared/model/delegate';
+const constants = { // todo config!
+    activeDelegates: 11
+};
 
 interface IRoundSum {
     roundFees: number;
@@ -67,51 +70,67 @@ export interface IRoundService {
     validateRound(): boolean;
 
     applyRound(param: IRoundSum): boolean;
+
+    /**
+     * Returns average for each delegate based on height.
+     * @return {number} height / delegates
+     */
+    calc(height: number): number;
 }
 
 export class RoundService implements IRoundService {
     round: { [p: string]: { slot: number } };
 
-    getActiveDelegates(limit: number): ResponseEntity<Delegate[]> {
+    public getActiveDelegates(limit: number): ResponseEntity<Delegate[]> {
         return undefined;
     }
 
-    generateHashList(activeDelegates: Array<Delegate>, blockId: string):
+    public generateHashList(activeDelegates: Array<Delegate>, blockId: string):
     Array<{ hash: string; generatorPublicKey: string }> {
         return undefined;
     }
 
-    sortHashList(hashList: Array<{ hash: string; generatorPublicKey: string }>):
+    public sortHashList(hashList: Array<{ hash: string; generatorPublicKey: string }>):
     Array<{ hash: string; generatorPublicKey: string }> {
         return undefined;
     }
 
-    generatorPublicKeyToSlot(sortedHashList: Array<{ hash: string; generatorPublicKey: string }>): void {
+    public generatorPublicKeyToSlot(sortedHashList: Array<{ hash: string; generatorPublicKey: string }>): void {
     }
 
-    generateRound(): void {
+    public generateRound(): void {
     }
 
-    getMyTurn(): number {
+    public getMyTurn(): number {
         return undefined;
     }
 
-    sumRound(round): IRoundSum {
+    public sumRound(round): IRoundSum {
         return undefined;
     }
 
-    rebuildRound(): void {
+    public rebuildRound(): void {
     }
 
-    rollBackRound(): void {
+    public rollBackRound(): void {
     }
 
-    validateRound(): boolean {
+    public validateRound(): boolean {
         return undefined;
     }
 
-    applyRound(param: IRoundSum): boolean {
+    public applyRound(param: IRoundSum): boolean {
         return undefined;
     }
 
+    /**
+     * Calculates round number from the given height.
+     * @param {number} height - Height from which round is calculated
+     * @returns {number} Round number
+     */
+    public calcRound(height: number): number {
+        return Math.ceil(height / constants.activeDelegates); // todo round has diff amount of blocks
+    }
 }
+
+

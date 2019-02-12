@@ -90,15 +90,6 @@ class SlotService {
     public roundTime(date: Date): number {
         return Math.floor(date.getTime() / 1000) * 1000;
     }
-
-    /**
-     * Calculates round number from the given height.
-     * @param {number} height - Height from which round is calculated
-     * @returns {number} Round number
-     */
-    public calcRound(height: number): number {
-        return Math.ceil(height / constants.activeDelegates); // todo round has diff amount of blocks
-    }
 }
 
 export default new SlotService();
