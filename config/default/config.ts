@@ -6,7 +6,7 @@ export default {
     serverProtocol: env.PROTOCOL || 'http',
     serverHost: env.HOST || '0.0.0.0',
     serverPort: parseInt(env.PORT, 10) || 7007,
-    serverUrl: `${env.HOST}:${parseInt(env.PORT, 10)}` || 7007,
+    serverUrl: env.PORT ? `${env.HOST}:${parseInt(env.PORT, 10)}` : `${env.HOST}:7007`,
     version: '0.9.9a',
     minVersion: '>=0.9.0',
     fileLogLevel: 'info',
@@ -80,7 +80,7 @@ export default {
     forging: {
         force: true,
         minBroadhashConsensus: parseInt(env.MIN_CONSENSUS, 10) || 0,
-        secret: env.FORGE_SECRET || [],
+        secret: env.FORGE_SECRET || '',
         access: {
             whiteList: [
                 '127.0.0.1',

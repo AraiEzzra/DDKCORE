@@ -8,7 +8,6 @@ import Validator from 'z-schema';
 import ZSchema from 'shared/util/z_schema';
 const validator: Validator = new ZSchema({});
 
-// todo: implement
 import { logger } from 'shared/util/logger';
 import { Account } from 'shared/model/account';
 import { Block } from 'shared/model/block';
@@ -20,11 +19,13 @@ import { TransactionPoolService } from 'core/service/transactionPool';
 import { TransactionRepo } from 'core/repository/transaction';
 import { DelegateService } from 'core/service/delegate';
 import slotService from 'core/service/slot';
+import { RoundService } from "core/service/round";
 import { transactionSortFunc } from 'core/util/transaction';
-import { getOrCreateAccount } from 'shared/util/account.utils';
+import { getOrCreateAccount } from 'shared/util/account';
 import blockShema from 'core/shema/block';
 import Response from 'shared/model/response';
 import { messageON } from 'shared/util/bus';
+import config from 'shared/util/config';
 
 interface IVerifyResult {
     verified?: boolean;
@@ -43,6 +44,7 @@ export class BlockService {
     private transactionService: ITransactionService<object> = new TransactionService();
     private transactionRepo: TransactionRepo = new TransactionRepo();
     private blockRepo: BlockRepo = new BlockRepo();
+    private roundService: RoundService = new RoundService();
 
     private lastBlock: Block;
     private lastReceipt: number;
@@ -184,7 +186,7 @@ export class BlockService {
             return new Response<void>({ errors: [...applyBlockResponse.errors, 'processBlock'] });
         }
 
-        if (!config.loading.snapshotRound) {
+        if (!config.config.loading.snapshotRound) {
             // todo modules.system.update?
         }
         const reshuffleResponse: Response<void> = await this.transactionQueue.reshuffleTransactionQueue();
@@ -568,8 +570,8 @@ export class BlockService {
         trs.id = transactionIdResponse.data;
         trs.blockId = block.id;
 
-        const verifyResult: Response<void> = await this.transactionService.verify(trs, sender, checkExists);
-        if (!verifyResult.success) {
+        const verifyResult: IVerifyResult = await this.transactionService.verify(trs, sender, checkExists);
+        if (!verifyResult.verified) {
             return new Response<void>({ errors: [...verifyResult.errors, 'checkTransaction']});
         }
 
@@ -581,9 +583,6 @@ export class BlockService {
         return new Response<void>();
     }
 
-    /**
-     * @implements rounds.tick
-     */
     private async applyBlock(block: Block, broadcast: boolean, keypair: IKeyPair, saveBlock: boolean, tick: boolean): Promise<Response<void>> {
         if (keypair) {
             const addPayloadHashResponse: Response<Block> = this.addPayloadHash(block, keypair);
@@ -630,7 +629,7 @@ export class BlockService {
         messageON('NEW_BLOCKS', block);
 
         if (tick) {
-            // todo implement tick?
+            await this.roundService.generateRound();
         }
         block = null;
         return new Response<void>();
@@ -723,21 +722,18 @@ export class BlockService {
             logger.warn([
                 'Discarded block that does not match with current chain:', block.id,
                 'height:', block.height,
-                'round:', modules.rounds.calc(block.height),
+                'round:', this.roundService.calcRound(block.height),
                 'slot:', slotService.getSlotNumber(block.timestamp),
                 'generator:', block.generatorPublicKey
             ].join(' '));
         }
     }
 
-    /**
-     * @implements modules.rounds.calc
-     */
     private async receiveBlock(block: Block): Promise<Response<void>> {
         logger.info([
             'Received new block id:', block.id,
             'height:', block.height,
-            'round:', modules.rounds.calc(block.height),
+            'round:', this.roundService.calcRound(block.height),
             'slot:', slotService.getSlotNumber(block.timestamp),
             'reward:', block.reward
         ].join(' '));
@@ -831,13 +827,10 @@ export class BlockService {
         }
     }
 
-    /**
-     * @implements modules.rounds.getSlotDelegatesCount
-     */
     private async validateBlockSlot(block: Block, lastBlock: Block): Promise<Response<void>> {
-        const roundNextBlock = slotService.calcRound(block.height);
-        const roundLastBlock = slotService.calcRound(lastBlock.height);
-        const activeDelegates = modules.rounds.getSlotDelegatesCount(block.height);
+        const roundNextBlock = this.roundService.calcRound(block.height);
+        const roundLastBlock = this.roundService.calcRound(lastBlock.height);
+        const activeDelegates = config.constants.activeDelegates;
 
         const errors: string[] = [];
         const validateBlockSlotAgainstPreviousRoundresponse: Response<void> = await this.delegateService.validateBlockSlotAgainstPreviousRound(block);
@@ -969,9 +962,6 @@ export class BlockService {
         return new Response<Block>({ data: this.setLastBlock(newLastBlock) });
     }
 
-    /**
-     * @implements modules.rounds.backwardTick
-     */
     private async popLastBlock(oldLastBlock: Block): Promise<Response<Block>> {
         logger.debug(`[Chain][popLastBlock] block: ${JSON.stringify(oldLastBlock)}`);
         let lastBlock: Block = this.getLastBlock();
@@ -1002,7 +992,7 @@ export class BlockService {
             return new Response<Block>({ errors });
         }
 
-        modules.rounds.backwardTick(oldLastBlock, previousBlock);
+        await this.roundService.rollBackRound(); // (oldLastBlock, previousBlock);
 
         const deleteBlockResponse: Response<void> = await this.blockRepo.deleteBlock(oldLastBlock.id);
         if (!deleteBlockResponse.success) {
@@ -1036,7 +1026,7 @@ export class BlockService {
 
             // If block is not already in the list...
             if (!blocks[block.id]) {
-                if (block.id === library.genesisblock.block.id) {
+                if (block.id === config.genesisBlock.id) {
                     // Generate fake signature for genesis block
                     block.generationSignature = (new Array(65)).join('0');
                 }
@@ -1100,12 +1090,12 @@ export class BlockService {
 
     // called from app.js
     public async saveGenesisBlock(): Promise<Response<void>> {
-        const existsResponse: Response<boolean> = await this.blockRepo.isBlockExists(genesisBlockId);
+        const existsResponse: Response<boolean> = await this.blockRepo.isBlockExists(config.genesisBlock.id);
         if (!existsResponse.success) {
             return new Response<void>({ errors: [...existsResponse.errors, 'saveGenesisBlock'] });
         }
         if (!existsResponse.data) {
-            await this.applyGenesisBlock(genesisBlock, false, true); // config.genesis.block
+            await this.applyGenesisBlock(config.genesisBlock, false, true); // config.genesis.block
         }
     }
 
@@ -1125,7 +1115,7 @@ export class BlockService {
      */
     public async getIdSequence(height: number): Promise<Response<{ ids: string }>> {
         const lastBlock = this.getLastBlock();
-        const rowsResponse: Response<string[]> = await this.blockRepo.getIdSequence({ height, limit: 5, delegates: Rounds.prototype.getSlotDelegatesCount(height) });
+        const rowsResponse: Response<string[]> = await this.blockRepo.getIdSequence({ height, limit: 5, delegates: config.constants.activeDelegates });
         if (!rowsResponse.success) {
             return new Response({ errors: [...rowsResponse.errors, 'getIdSequence']});
         }
@@ -1135,10 +1125,10 @@ export class BlockService {
         }
         const ids = [];
         // Add genesis block at the end if the set doesn't contain it already
-        if (library.genesisblock && library.genesisblock.block) {
-            const __genesisblock = library.genesisblock.block.id;
+        if (config.genesisBlock) {
+            const __genesisblock = config.genesisBlock.id;
 
-            if (rows.indexOf(__genesisblock.id) === -1) {
+            if (rows.indexOf(__genesisblock) === -1) {
                 rows.push(__genesisblock);
             }
         }
@@ -1179,7 +1169,7 @@ export class BlockService {
 
         const errors: string[] = [];
         blocks.forEach(async (block) => {
-            if (block.id === library.genesisblock.block.id) {
+            if (block.id === config.genesisBlock.id) {
                 return await this.applyGenesisBlock(block);
             }
 

@@ -1,12 +1,10 @@
-import {Transaction} from 'shared/model/transaction';
-
-const bignum = require('../../backlog/helpers/bignum.js');
 const Inserts = require('../../backlog/helpers/inserts.js');
 
 import { Block } from 'shared/model/block';
 import { getAddressByPublicKey } from 'shared/util/account';
 import db from 'shared/driver/db';
 import Response from 'shared/model/response';
+import config from 'shared/util/config';
 
 interface IDBBlockSave {
     table: string;
@@ -68,7 +66,7 @@ export class BlockRepo {
         return new Response();
     }
 
-    public async getIdSequence(param: { height: number, delegates: [], limit: number}): Promise<Response<string[]>> {
+    public async getIdSequence(param: { height: number, delegates: number, limit: number}): Promise<Response<string[]>> {
         const request =
             `WITH 
             current_round AS (SELECT CEIL(b.height / ${param.delegates}::float)::bigint as height FROM blocks b WHERE b.height <= ${param.height} ORDER BY b.height DESC LIMIT 1)
@@ -136,8 +134,19 @@ export class BlockRepo {
     }
 
     public async loadLastNBlocks(): Promise<Response<string[]>> {
-        // return array of ids
-        return undefined;
+        let ids: string[] = null;
+        try {
+            const result: object[] = await db.manyOrNone('SELECT id FROM blocks ORDER BY id DESC LIMIT ${blockLimit}', { blockLimit: config.constants.blockSlotWindow });
+            if (!result) {
+                return new Response({ errors: ['No blocks found']});
+            }
+            result.forEach((row) => {
+                ids.push(this.dbRead(row).id);
+            });
+        } catch (pgError) {
+            return new Response({ errors: [pgError]});
+        }
+        return new Response({ data: ids });
     }
 
     public async deleteAfterBlock(id: string): Promise<Response<void>> {
@@ -237,7 +246,7 @@ export class BlockRepo {
             blockSignature: raw.blockSignature
         });
 
-        block.totalForged = block.totalFee + BigInt(block.reward);
+        block.totalForged = BigInt(block.totalFee) + BigInt(block.reward);
         return block;
     }
 }

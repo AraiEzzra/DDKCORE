@@ -14,7 +14,7 @@ export class DelegateService implements IDelegateService {
         return new Response({});
     }
 
-    public async validateBlockSlot(block: Block, delegatesPublicKeys: string[]): Promise<Response<void>> {
+    public async validateBlockSlot(block: Block, delegatesPublicKeys?: string[]): Promise<Response<void>> {
         return new Response({});
     }
 

@@ -21,7 +21,7 @@ export interface ITransactionService<T extends Object> {
         senderId: string, verifiedTransactions: Set<string>, accountsMap: { [address: string]: Account }
     ): Promise<void>;
 
-    verify(trs: Transaction<T>, sender: Account, checkExists: boolean): Promise<{ verified: boolean, error: Array<string> }>;
+    verify(trs: Transaction<T>, sender: Account, checkExists: boolean): Promise<{ verified: boolean, errors: Array<string> }>;
 
     create(data: Transaction<{}>): Transaction<T>;
 
@@ -128,7 +128,7 @@ export class TransactionService<T extends Object> implements ITransactionService
 
     dbRead(fullBlockRow: IModelTransaction<object>): Transaction<object> { return undefined; }
 
-    async verify(trs: Transaction<T>, sender: Account, checkExists: boolean = false): Promise<{ verified: boolean, error: Array<string> }> {
+    async verify(trs: Transaction<T>, sender: Account, checkExists: boolean = false): Promise<{ verified: boolean, errors: Array<string> }> {
 
         try {
             await this.scope.transactionLogic.newVerify({ trs, sender });
@@ -137,7 +137,7 @@ export class TransactionService<T extends Object> implements ITransactionService
             this.scope.logger.debug(`[TransactionQueue][verify][stack]: \n ${e.stack}`);
             return {
                 verified: false,
-                error: [e]
+                errors: [e]
             };
         }
 
@@ -148,13 +148,13 @@ export class TransactionService<T extends Object> implements ITransactionService
             this.scope.logger.debug(`[TransactionQueue][verifyUnconfirmed][stack]: \n ${e.stack}`);
             return {
                 verified: false,
-                error: [e]
+                errors: [e]
             };
         }
 
         return {
             verified: true,
-            error: []
+            errors: []
         };
     }
 }

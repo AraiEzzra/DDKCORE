@@ -1,16 +1,29 @@
 import { Transaction } from 'shared/model/transaction';
 
-class A {
-    constructor(data: object) {
-        for (const key in data) {
-            if (data[key] || data[key] === 0) {
-                this[key] = data[key];
-            }
-        }
-    }
+interface IBlockFields {
+    id?: string;
+    rowId?: number;
+    version?: number;
+    timestamp?: number;
+    height?: number;
+    previousBlock?: string;
+    numberOfTransactions?: number;
+    totalAmount?: bigint | number;
+    totalFee?: bigint | number;
+    reward?: number;
+    payloadLength?: number;
+    payloadHash?: string;
+    generatorPublicKey?: string;
+    blockSignature?: string;
+    generationSignature?: string;
+    totalForged?: bigint | number;
+    generatorId?: string;
+    confirmations?: number;
+    username?: string;
+    transactions? : Transaction<object>[];
 }
 
-class BlockFields extends A {
+export class Block {
     id?: string;
     rowId?: number;
     version?: number;
@@ -32,15 +45,16 @@ class BlockFields extends A {
     username?: string;
     transactions? : Transaction<object>[];
 
-    constructor(data) {
-        super(data);
-    }
-}
-
-export class Block extends BlockFields {
-
     // todo: resolve = weak for passing untyped object
-    constructor(data: BlockFields) {
-        super(data);
+    constructor(data: IBlockFields) {
+        for (const key in data) {
+            if (data[key] || data[key] === 0) {
+                if (key === 'totalAmount' || key === 'totalFee' || key === 'totalForged') {
+                    this[key] = BigInt(data[key]);
+                } else {
+                    this[key] = data[key];
+                }
+            }
+        }
     }
 }
