@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "module": "commonjs",
+    "resolveJsonModule": true,
     "esModuleInterop": true,
     "target": "es2015",
     "noImplicitAny": false,
@@ -14,7 +15,8 @@
       "api/*": ["./api/*"],
       "core/*": ["./core/*"],
       "backlog/*": ["./backlog/*"],
-      "shared/*": ["./shared/*"]
+      "shared/*": ["./shared/*"],
+      "config/*": ["./config/*"]
     },
     "skipLibCheck": true,
     "typeRoots": [
@@ -29,6 +31,7 @@
     "core/**/*",
     "backlog/**/*",
     "shared/**/*",
-    "test/**/*"
+    "test/**/*",
+    "config/**/*"
   ]
 }
