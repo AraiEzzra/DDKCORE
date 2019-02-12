@@ -8,3 +8,17 @@ export interface IDelegateService {
 
     validateBlockSlot(block: Block, delegatesPublicKeys: string[]): Promise<Response<void>>;
 }
+
+export class DelegateService implements IDelegateService {
+    public async fork(block: Block, cause: string): Promise<Response<void>> {
+        return new Response({});
+    }
+
+    public async validateBlockSlot(block: Block, delegatesPublicKeys: string[]): Promise<Response<void>> {
+        return new Response({});
+    }
+
+    public async validateBlockSlotAgainstPreviousRound(block: Block): Promise<Response<void>> {
+        return new Response({});
+    }
+}
