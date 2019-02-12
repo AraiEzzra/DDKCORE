@@ -181,8 +181,11 @@ class TransactionPool {
         }
 
         if (
-            trs.type === transactionTypes.VOTE &&
-            dependTransactions.find((t: Transaction) => t.type === transactionTypes.VOTE)
+            (
+                trs.type === transactionTypes.VOTE ||
+                trs.type === transactionTypes.SEND ||
+                trs.type === transactionTypes.STAKE
+            ) && dependTransactions.find((t: Transaction) => t.type === transactionTypes.VOTE)
         ) {
             return true;
         }

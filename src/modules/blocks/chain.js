@@ -398,12 +398,15 @@ Chain.prototype.deleteLastBlock = function (cb) {
 
     // Delete last block, replace last block with previous block, undo things
     __private.popLastBlock(lastBlock, (err, newLastBlock) => {
+        modules.transactions.lockTransactionPoolAndQueue();
         if (err) {
             library.logger.error(`Error deleting last block: ${JSON.stringify(lastBlock)}, message: ${err}`);
         } else {
+            modules.transactions.returnToQueueConflictedTransactionFromPool(lastBlock.transactions);
             // Replace last block with previous
             lastBlock = modules.blocks.lastBlock.set(newLastBlock);
         }
+        modules.transactions.unlockTransactionPoolAndQueue();
         return setImmediate(cb, err, lastBlock);
     });
 };
