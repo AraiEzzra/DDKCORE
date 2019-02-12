@@ -33,10 +33,17 @@ export const getOrCreateAccount = async (db: any, publicKey: string): Promise<Ac
     });
 
     if (!sender) {
-        sender = await db.one(AccountsSql.createNewAccount, {
-            publicKey,
-            address
-        });
+        try {
+            sender = await db.one(AccountsSql.createNewAccount, {
+                publicKey,
+                address
+            });
+        } catch (e) {
+            sender = await db.oneOrNone(AccountsSql.getAccountByAddress, {
+                address
+            });
+        }
+
     }
     return new Account(sender);
 };
