@@ -75,7 +75,7 @@ export interface IRoundService {
      * Returns average for each delegate based on height.
      * @return {number} height / delegates
      */
-    calc(height: number): number;
+    calcRound(height: number): number;
 }
 
 export class RoundService implements IRoundService {

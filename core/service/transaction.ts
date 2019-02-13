@@ -21,7 +21,7 @@ export interface ITransactionService<T extends Object> {
         senderId: string, verifiedTransactions: Set<string>, accountsMap: { [address: string]: Account }
     ): Promise<void>;
 
-    verify(trs: Transaction<T>, sender: Account): Promise<{ verified: boolean, error: Array<string> }>;
+    verify(trs: Transaction<T>, sender: Account, checkExists: boolean): Promise<{ verified: boolean, errors: Array<string> }>;
 
     create(data: Transaction<{}>): Transaction<T>;
 
@@ -31,7 +31,7 @@ export interface ITransactionService<T extends Object> {
 
     getHash(trs: Transaction<T>): string;
 
-    getBytes(trs: Transaction<T>, skipSignature: boolean, skipSecondSignature: boolean): Uint8Array;
+    getBytes(trs: Transaction<T>, skipSignature?: boolean, skipSecondSignature?: boolean): Uint8Array;
 
     checkConfirmed(trs: Transaction<T>): IFunctionResponse;
 
@@ -55,9 +55,9 @@ export interface ITransactionService<T extends Object> {
 
     undo(trs: Transaction<T>, sender: Account): void;
 
-    applyUnconfirmed(trs: Transaction<T>, sender: Account): void;
+    applyUnconfirmed(trs: Transaction<T>, sender?: Account): void;
 
-    undoUnconfirmed(trs: Transaction<T>, sender: Account): void;
+    undoUnconfirmed(trs: Transaction<T>, sender?: Account): void;
 
     calcUndoUnconfirmed(trs: Transaction<T>, sender: Account): void;
 
@@ -72,7 +72,63 @@ export interface ITransactionService<T extends Object> {
 
 export class TransactionService<T extends Object> implements ITransactionService<T> {
 
-    async verify(trs: Transaction<T>, sender: Account): Promise<{ verified: boolean, error: Array<string> }> {
+    getAddressByPublicKey(): any { return null; }
+
+    list(): any { return null; }
+
+    getById(): any { return null; }
+
+    getVotesById(): any { return null; }
+
+    checkSenderTransactions(senderId: string, verifiedTransactions: Set<string>, accountsMap: { [p: string]: Account }): Promise<void> { return null; }
+
+    create(data: Transaction<{}>): Transaction<{}> { return undefined; }
+
+    sign(keyPair: KeyPair, trs: Transaction<object>) : string { return undefined; }
+
+    getId(trs: Transaction<object>): string { return undefined; }
+
+    getHash(trs: Transaction<object>): string { return undefined; }
+
+    getBytes(trs: Transaction<object>, skipSignature: boolean = false, skipSecondSignature: boolean = false): Uint8Array { return undefined; }
+
+    checkConfirmed(trs: Transaction<object>): IFunctionResponse { return undefined; }
+
+    checkBalance(amount: number, trs: Transaction<object>): IFunctionResponse { return undefined; }
+
+    process(trs: Transaction<object>): void { return undefined; }
+
+    verifyFields(trs: Transaction<object>): void { return undefined; }
+
+    calculateUnconfirmedFee(trs: Transaction<object>): number { return undefined; }
+
+    verifyUnconfirmed(trs: Transaction<object>): IFunctionResponse { return undefined; }
+
+    verifySignature(trs: Transaction<object>): IFunctionResponse { return undefined; }
+
+    verifySecondSignature(trs: Transaction<object>): IFunctionResponse { return undefined; }
+
+    verifyBytes(bytes: Uint8Array, publicKey: string, signature: string): IFunctionResponse { return null; }
+
+    apply(trs: Transaction<object>): void { return undefined; }
+
+    undo(trs: Transaction<object>): void { return undefined; }
+
+    applyUnconfirmed(trs: Transaction<object>): void { return undefined; }
+
+    undoUnconfirmed(trs: Transaction<object>): void { return undefined; }
+
+    calcUndoUnconfirmed(trs: Transaction<object>): void { return undefined; }
+
+    dbSave(trs: Transaction<object>): ITableObject[] { return undefined; }
+
+    afterSave(trs: Transaction<object>): void { return undefined; }
+
+    objectNormalize(trs: Transaction<object>): Transaction<object> { return undefined; }
+
+    dbRead(fullBlockRow: IModelTransaction<object>): Transaction<object> { return undefined; }
+
+    async verify(trs: Transaction<T>, sender: Account, checkExists: boolean = false): Promise<{ verified: boolean, errors: Array<string> }> {
 
         try {
             await this.scope.transactionLogic.newVerify({ trs, sender });
@@ -81,7 +137,7 @@ export class TransactionService<T extends Object> implements ITransactionService
             this.scope.logger.debug(`[TransactionQueue][verify][stack]: \n ${e.stack}`);
             return {
                 verified: false,
-                error: [e]
+                errors: [e]
             };
         }
 
@@ -92,13 +148,13 @@ export class TransactionService<T extends Object> implements ITransactionService
             this.scope.logger.debug(`[TransactionQueue][verifyUnconfirmed][stack]: \n ${e.stack}`);
             return {
                 verified: false,
-                error: [e]
+                errors: [e]
             };
         }
 
         return {
             verified: true,
-            error: []
+            errors: []
         };
     }
 }

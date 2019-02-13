@@ -4,7 +4,8 @@ import { Block } from 'shared/model/block';
 import { BlockService } from 'core/service/block';
 import { Transaction } from 'shared/model/transaction';
 import Response from 'shared/model/response';
-import { Controller, GET, POST } from 'core/util/decorator';
+import { Controller, GET, POST, ON } from 'core/util/decorator';
+import { BaseController } from 'core/controller/baseController';
 
 interface ICommonBlockRequest {
     body: {
@@ -39,14 +40,12 @@ interface IAdditionalData {
 }
 
 @Controller('/peer')
-export class PeerController {
+class PeerController extends BaseController {
     private peerService = new PeerService();
     private blockService = new BlockService();
 
-    constructor() {}
-
-    private handshake(ip: string, port: number, headers: object): Peer {
-        return new Peer();
+    private handshake(ip: string, port: number, headers: object): Response<Peer> {
+        return new Response({data: new Peer()});
     }
 
     @GET('/blocks/common')
@@ -58,16 +57,12 @@ export class PeerController {
             peerResponse.errors.push('/blocks/common');
             return new Response<{common: number}>({ errors: peerResponse.errors });
         }
-        this.peerService.remove(peer);
+        this.peerService.remove(peerResponse.data);
         return new Response({ data: { common: 0 }});
     }
 
     @GET('/blocks')
     public blocks(req: IBlockRequest) : Response<{ blocks: Block[]; }> {
-        this.blockService.loadBlocksData({
-            limit: 34,
-            lastId: req.body.lastBlockId
-        });
         return new Response({ data: { blocks: [] } });
     }
 
@@ -88,16 +83,21 @@ export class PeerController {
     public getTransactions() {} // transaction[] unconfirmed + multisignatures + queued
 
     @POST('/blocks')
-    public postBlock(req: IPostBlockRequest, additionalData: IAdditionalData): { blockId: string } {
+    public postBlock(req: IPostBlockRequest, additionalData: IAdditionalData): Response<{ blockId: string }> {
         let block: Block = req.body.block;
         let ip: string = additionalData.ip;
         let port: number = additionalData.headers.port;
-        let peer : Peer = this.handshake(ip, port, additionalData.headers);
+        let peerResponse : Response<Peer> = this.handshake(ip, port, additionalData.headers);
+        if (peerResponse.errors) {
+            peerResponse.errors.push('/blocks/common');
+            return new Response<{ blockId: string }>({ errors: peerResponse.errors });
+        }
+        let peer : Peer = peerResponse.data;
 
         // blockService.objectNormalize ?
         // broadcast 'receiveBlock'
 
-        return { blockId: block.id };
+        return new Response({data: { blockId: block.id }});
     }
 
     @POST('/transactions')
@@ -127,3 +127,5 @@ export class PeerController {
         this.peerService.removeBans();
     }
 }
+
+export default new PeerController();
