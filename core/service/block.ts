@@ -1,8 +1,6 @@
 import * as crypto from 'crypto';
 import * as sodium from 'sodium-javascript';
-import * as exceptions from '../../backlog/helpers/exceptions.js';
-import * as constants from '../../backlog/helpers/constants';
-import * as BUFFER from '../../backlog/helpers/buffer.js';
+import BUFFER from 'core/util/buffer';
 
 import Validator from 'z-schema';
 import ZSchema from 'shared/util/z_schema';
@@ -49,7 +47,7 @@ export class BlockService {
     private lastBlock: Block;
     private lastReceipt: number;
     private lastNBlockIds: string[];
-    private readonly currentBlockVersion: number = constants.CURRENT_BLOCK_VERSION;
+    private readonly currentBlockVersion: number = config.constants.CURRENT_BLOCK_VERSION;
     private receiveLocked: boolean = false;
 
     private readonly BLOCK_BUFFER_SIZE
@@ -79,7 +77,7 @@ export class BlockService {
             return lockResponse;
         }
 
-        const transactions: Transaction<object>[] = await this.transactionPool.popSortedUnconfirmedTransactions(constants.maxTxsPerBlock);
+        const transactions: Transaction<object>[] = await this.transactionPool.popSortedUnconfirmedTransactions(config.constants.maxTxsPerBlock);
         logger.debug(`[Process][newGenerateBlock][transactions] ${JSON.stringify(transactions)}`);
 
         const previousBlock: Block = this.getLastBlock();
@@ -205,7 +203,7 @@ export class BlockService {
         block.reward = block.reward || 0;
 
         if (block.version === undefined) {
-            block.version = constants.CURRENT_BLOCK_VERSION;
+            block.version = config.constants.CURRENT_BLOCK_VERSION;
         }
         if (block.numberOfTransactions === undefined) {
             if (block.transactions === undefined) {
@@ -317,7 +315,7 @@ export class BlockService {
         try {
             valid = sodium.crypto_sign_verify_detached(blockSignatureBuffer, hash, generatorPublicKeyBuffer);
         } catch (e) {
-            if (constants.VERIFY_BLOCK_SIGNATURE) {
+            if (config.constants.VERIFY_BLOCK_SIGNATURE) {
                 result.errors.push(e.toString());
             } else {
                 logger.error(e.toString());
@@ -325,7 +323,7 @@ export class BlockService {
         }
 
         if (!valid) {
-            if (constants.VERIFY_BLOCK_SIGNATURE) {
+            if (config.constants.VERIFY_BLOCK_SIGNATURE) {
                 result.errors.push('Failed to verify block signature');
             } else {
                 logger.error('Failed to verify block signature');
@@ -336,7 +334,7 @@ export class BlockService {
 
     private verifyPreviousBlock(block: Block, result: IVerifyResult): IVerifyResult {
         if (!block.previousBlock && block.height !== 1) {
-            if (constants.VERIFY_PREVIOUS_BLOCK) {
+            if (config.constants.VERIFY_PREVIOUS_BLOCK) {
                 result.errors.push('Invalid previous block');
             } else {
                 logger.error('Invalid previous block');
@@ -347,33 +345,13 @@ export class BlockService {
 
     private verifyVersion(block: Block, result: IVerifyResult): IVerifyResult {
         const version: number = block.version;
-        const height: number = block.height;
-        const exceptionVersion = Object.keys(exceptions.blockVersions).find(
-            (exceptionVersion) => {
-                // Get height range of current exceptions
-                const heightsRange = exceptions.blockVersions[exceptionVersion];
-                // Check if provided height is between the range boundaries
-                return height >= heightsRange.start && height <= heightsRange.end;
+        if (version !== this.currentBlockVersion) {
+            if (config.constants.VERIFY_BLOCK_VERSION) {
+                result.errors.push('Invalid block version', 'No exceptions found. Block version doesn\'t match te current one.');
+            } else {
+                logger.error('Invalid block version');
             }
-        );
-        if (exceptionVersion === undefined) {
-            // If there is no exception for provided height - check against current block version
-            if (version !== this.currentBlockVersion) {
-                if (constants.VERIFY_BLOCK_VERSION) {
-                    result.errors.push('Invalid block version', 'No exceptions found. Block version doesn\'t match te current one.');
-                } else {
-                    logger.error('Invalid block version');
-                }
-            }
-            return result;
         }
-        if (constants.VERIFY_BLOCK_VERSION) {
-            result.errors.push('Invalid block version', 'Version exceptions found.');
-        } else {
-            logger.error('Invalid block version');
-        }
-        // If there is an exception - check if version match
-        // return Number(exceptionVersion) === version;
         return result;
     }
 
@@ -401,8 +379,8 @@ export class BlockService {
     }
 
     private verifyPayload(block: Block, result: IVerifyResult): IVerifyResult {
-        if (block.payloadLength > constants.maxPayloadLength) {
-            if (constants.PAYLOAD_VALIDATE.MAX_LENGTH) {
+        if (block.payloadLength > config.constants.maxPayloadLength) {
+            if (config.constants.PAYLOAD_VALIDATE.MAX_LENGTH) {
                 result.errors.push('Payload length is too long');
             } else {
                 logger.error('Payload length is too long');
@@ -410,15 +388,15 @@ export class BlockService {
         }
 
         if (block.transactions.length !== block.numberOfTransactions) {
-            if (constants.PAYLOAD_VALIDATE.MAX_TRANSACTION_LENGTH) {
+            if (config.constants.PAYLOAD_VALIDATE.MAX_TRANSACTION_LENGTH) {
                 result.errors.push('Included transactions do not match block transactions count');
             } else {
                 logger.error('Included transactions do not match block transactions count');
             }
         }
 
-        if (block.transactions.length > constants.maxTxsPerBlock) {
-            if (constants.PAYLOAD_VALIDATE.MAX_TRANSACTION_IN_BLOCK) {
+        if (block.transactions.length > config.constants.maxTxsPerBlock) {
+            if (config.constants.PAYLOAD_VALIDATE.MAX_TRANSACTION_IN_BLOCK) {
                 result.errors.push('Number of transactions exceeds maximum per block');
             } else {
                 logger.error('Number of transactions exceeds maximum per block');
@@ -442,7 +420,7 @@ export class BlockService {
             }
 
             if (appliedTransactions[trs.id]) {
-                if (constants.PAYLOAD_VALIDATE.MAX_TRANSACTION_DUPLICATE) {
+                if (config.constants.PAYLOAD_VALIDATE.MAX_TRANSACTION_DUPLICATE) {
                     result.errors.push(`Encountered duplicate transaction: ${trs.id}`);
                 } else {
                     logger.error(`Encountered duplicate transaction: ${trs.id}`);
@@ -459,7 +437,7 @@ export class BlockService {
         const hex = payloadHash.digest().toString('hex');
 
         if (hex !== block.payloadHash) {
-            if (constants.PAYLOAD_VALIDATE.INVALID_HASH) {
+            if (config.constants.PAYLOAD_VALIDATE.INVALID_HASH) {
                 result.errors.push('Invalid payload hash');
             } else {
                 logger.error('Invalid payload hash');
@@ -467,7 +445,7 @@ export class BlockService {
         }
 
         if (totalAmount !== block.totalAmount) {
-            if (constants.PAYLOAD_VALIDATE.TOTAL_AMOUNT) {
+            if (config.constants.PAYLOAD_VALIDATE.TOTAL_AMOUNT) {
                 result.errors.push('Invalid total amount');
             } else {
                 logger.error('Invalid total amount');
@@ -475,7 +453,7 @@ export class BlockService {
         }
 
         if (totalFee !== block.totalFee) {
-            if (constants.PAYLOAD_VALIDATE.TOTAL_FEE) {
+            if (config.constants.PAYLOAD_VALIDATE.TOTAL_FEE) {
                 result.errors.push(`Invalid total fee. Expected: ${totalFee}, actual: ${block.totalFee}`);
             } else {
                 logger.error('Invalid total fee');
@@ -490,7 +468,7 @@ export class BlockService {
             if (!forkResponse.success) {
                 result.errors.push(...forkResponse.errors);
             }
-            if (constants.VERIFY_BLOCK_FORK_ONE) {
+            if (config.constants.VERIFY_BLOCK_FORK_ONE) {
                 result.errors.push(['Invalid previous block:', block.previousBlock, 'expected:', lastBlock.id].join(' '));
             } else {
                 logger.error(['Invalid previous block:', block.previousBlock, 'expected:', lastBlock.id].join(' '));
@@ -505,7 +483,7 @@ export class BlockService {
         const lastBlockSlotNumber = slotService.getSlotNumber(lastBlock.timestamp);
 
         if (blockSlotNumber > slotService.getSlotNumber() || blockSlotNumber <= lastBlockSlotNumber) {
-            if (constants.VERIFY_BLOCK_SLOT) {
+            if (config.constants.VERIFY_BLOCK_SLOT) {
                 result.errors.push('Invalid block timestamp');
             } else {
                 logger.error('Invalid block timestamp', JSON.stringify(block));
@@ -642,7 +620,7 @@ export class BlockService {
             const transaction = block.transactions[i];
             const bytes = this.transactionService.getBytes(transaction);
 
-            if (size + bytes.length > constants.maxPayloadLength) {
+            if (size + bytes.length > config.constants.maxPayloadLength) {
                 break;
             }
 
@@ -868,7 +846,7 @@ export class BlockService {
 
     private verifyAgainstLastNBlockIds(block: Block, result: IVerifyResult): IVerifyResult {
         if (this.lastNBlockIds.indexOf(block.id) !== -1) {
-            if (constants.VERIFY_AGAINST_LAST_N_BLOCK_IDS) {
+            if (config.constants.VERIFY_AGAINST_LAST_N_BLOCK_IDS) {
                 result.errors.push('Block already exists in chain');
             } else {
                 logger.error('Block already exists in chain');
@@ -882,8 +860,8 @@ export class BlockService {
         const blockSlot = slotService.getSlotNumber(block.timestamp);
 
         // Reject block if it's slot is older than BLOCK_SLOT_WINDOW
-        if (currentApplicationSlot - blockSlot > constants.blockSlotWindow) {
-            if (constants.VERIFY_BLOCK_SLOT_WINDOW) {
+        if (currentApplicationSlot - blockSlot > config.constants.blockSlotWindow) {
+            if (config.constants.VERIFY_BLOCK_SLOT_WINDOW) {
                 result.errors.push('Block slot is too old');
             } else {
                 logger.error('Block slot is too old');
@@ -892,7 +870,7 @@ export class BlockService {
 
         // Reject block if it's slot is in the future
         if (currentApplicationSlot < blockSlot) {
-            if (constants.VERIFY_BLOCK_SLOT_WINDOW) {
+            if (config.constants.VERIFY_BLOCK_SLOT_WINDOW) {
                 result.errors.push('Block slot is in the future');
             } else {
                 logger.error('Block slot is in the future');
@@ -1085,7 +1063,7 @@ export class BlockService {
             return true;
         }
         const secondsAgo = Math.floor(Date.now() / 1000) - this.lastReceipt;
-        return (secondsAgo > constants.blockReceiptTimeOut);
+        return (secondsAgo > config.constants.blockReceiptTimeOut);
     }
 
     // called from app.js
@@ -1190,7 +1168,7 @@ export class BlockService {
         const blockTransactions = transactions.sort(transactionSortFunc);
         const payloadHash = '';
         const block: Block = new Block({
-            version: constants.CURRENT_BLOCK_VERSION,
+            version: config.constants.CURRENT_BLOCK_VERSION,
             totalAmount,
             totalFee,
             reward,
@@ -1269,7 +1247,7 @@ export class BlockService {
 
     public updateLastNBlocks(block): void {
         this.lastNBlockIds.push(block.id);
-        if (this.lastNBlockIds.length > constants.blockSlotWindow) {
+        if (this.lastNBlockIds.length > config.constants.blockSlotWindow) {
             this.lastNBlockIds.shift();
         }
     }
