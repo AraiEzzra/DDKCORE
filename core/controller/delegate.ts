@@ -1,4 +1,5 @@
 import { delegateCoreRepository } from 'core/repository/delegate';
+import Response from 'shared/model/response';
 
 export class DelegateController {
 
@@ -23,5 +24,7 @@ export class DelegateController {
         return res;
     }
 
+    @ON('READY_FOR_FORGING')
+    public blockchainReadyForForging() {}
 
 }
