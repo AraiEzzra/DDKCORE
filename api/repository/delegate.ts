@@ -1,9 +1,8 @@
 import { Delegate } from 'shared/model/delegate';
 import Response from 'shared/model/response';
 import { Account } from 'shared/model/account';
-import { Transaction } from 'shared/model/transaction';
-
-// TODO need to instance Block
+import { Transaction, TransactionType } from 'shared/model/transaction';
+import { getAddressByPublicKey } from 'shared/util/account';
 
 interface IForkDelegate {
     delegatePublicKey: string;
@@ -14,6 +13,13 @@ interface IForkDelegate {
     cause: string;
 }
 
+interface IForgedByAccountResponse {
+    fees: number | bigint;
+    rewards: number | bigint;
+    forged: number | bigint;
+    count: number;
+}
+
 export interface IDelegateRepository {
     count(): Promise<Response<{ count: number }>>;
 
@@ -22,13 +28,7 @@ export interface IDelegateRepository {
 
     getVoters(publicKey: string): Promise<Response<{ accounts: string[]}>>;
 
-    getLatestVoters(limit: number): Promise<Response<{ voters: Array<Transaction<Object>> }>>;
-
-    getLatestDelegates(limit: number): Promise<Response<Array<Transaction<Object>>>>;
-
-    insertFork(fork: IForkDelegate): Promise<Response<void>>;
-
-    getDelegatesFromPreviousRound(): Promise<Response<string[]>>;
+    getForgedByAccount(data: any): Promise<Response<IForgedByAccountResponse>>;
 }
 
 export class DelegateRepository implements IDelegateRepository {
@@ -56,28 +56,32 @@ export class DelegateRepository implements IDelegateRepository {
         });
     }
 
-    async getLatestVoters(limit: number): Promise<Response<{ voters: Array<Transaction<Object>> }>> {
+    async getForgedByAccount(data: any): Promise<Response<IForgedByAccountResponse>> {
         return new Response({
             data: {
-                voters: []
+                fees: 0,
+                rewards: 0,
+                forged: 0,
+                count: 0
             }
         });
     }
 
-    async getLatestDelegates(limit: number): Promise<Response<Array<Transaction<Object>>>> {
-        return new Response({
-            data: []
-        });
-    }
-
-    async insertFork(fork: IForkDelegate): Promise<Response<void>> {
-        return new Response({});
-    }
-
-    async getDelegatesFromPreviousRound(): Promise<Response<string[]>> {
-        return new Response({
-            data: []
-        });
+    /**
+     * Create transaction for to register new Account
+     * TODO
+     */
+    @RPC('ADD_DELEGATE')
+    addDelegates(data) {
+        const senderId = getAddressByPublicKey(data.publicKey);
+        const body = {
+            trsName: TransactionType.DELEGATE,
+            senderPublicKey: data.publicKey,
+            signature: '',
+            senderId,
+            assetTypes: new Account(data.account)
+        };
+        const trs: Transaction<any> = new Transaction();
     }
 }
 

@@ -4,7 +4,7 @@ import ResponseEntity from 'shared/model/response';
 import { getAddressByPublicKey } from 'shared/util/account';
 import { ed } from 'shared/util/ed';
 
-export interface IAccountRepository {
+interface IAccountRepository {
 
     getAccountByAddress(address: string): Promise<Account>;
 

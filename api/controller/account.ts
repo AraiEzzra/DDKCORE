@@ -1,4 +1,3 @@
-
 import { GetAccountParams, RegistrationParams } from 'api/util/types/account';
 import { GET, POST, Controller, validate } from 'api/util/http_decorator';
 import { AccountRepository } from 'api/repository/account';

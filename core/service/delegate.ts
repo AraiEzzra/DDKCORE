@@ -7,6 +7,10 @@ export interface IDelegateService {
     validateBlockSlotAgainstPreviousRound(block: Block): Promise<Response<void>>;
 
     validateBlockSlot(block: Block, delegatesPublicKeys: string[]): Promise<Response<void>>;
+
+    loadDelegates(): Promise<Response<void>>;
+
+    forge(): Promise<Response<void>>;
 }
 
 export class DelegateService implements IDelegateService {
@@ -14,11 +18,19 @@ export class DelegateService implements IDelegateService {
         return new Response({});
     }
 
-    public async validateBlockSlot(block: Block, delegatesPublicKeys: string[]): Promise<Response<void>> {
+    public async forge(): Promise<Response<void>> {
+        return new Response({});
+    }
+
+    public async validateBlockSlot(block: Block, delegatesPublicKeys?: string[]): Promise<Response<void>> {
         return new Response({});
     }
 
     public async validateBlockSlotAgainstPreviousRound(block: Block): Promise<Response<void>> {
+        return new Response({});
+    }
+
+    public async loadDelegates(): Promise<Response<void>> {
         return new Response({});
     }
 }
