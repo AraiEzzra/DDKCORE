@@ -3,7 +3,7 @@ import { Block } from 'shared/model/block';
 import { BlockService } from 'core/service/block';
 import { BlockRepo } from 'core/repository/block';
 import { Peer } from 'shared/model/peer';
-import { ON, RPC } from "core/util/decorator";
+import { ON, RPC } from 'core/util/decorator';
 import { BaseController } from 'core/controller/baseController';
 
 interface BlockGenerateRequest {
