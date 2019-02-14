@@ -659,30 +659,6 @@ Vote.prototype.updateAndCheckVote = async (voteTransaction) => {
     }
 };
 
-/**
- * Check and update vote milestone, vote count from stake_order and mem_accounts table
- * @param {Object} voteTransaction transaction data object
- * @return {null|err} return null if success else err
- *
- */
-Vote.prototype.removeCheckVote = async (voteTransaction) => {
-    const senderId = voteTransaction.senderId;
-    try {
-        // todo check if could change to tx
-        await library.db.task(async () => {
-            await library.frozen.undoFrozeOrdersRewardAndUnstake(voteTransaction);
-            await library.db.none(sql.undoUpdateStakeOrder, {
-                senderId,
-                milestone: constants.froze.vTime * 60,
-                nextVoteMilestone: voteTransaction.timestamp + constants.froze.vTime * 60,
-            });
-        });
-    } catch (err) {
-        library.logger.warn(err);
-        throw err;
-    }
-};
-
 // Export
 module.exports = Vote;
 
