@@ -1,10 +1,7 @@
 import { Peer } from 'shared/model/peer';
-import { PeerRepo } from 'api/repository/peer';
+import PeerRepo from 'api/repository/peer';
 
-export class PeerService {
-    private peerRepo = new PeerRepo();
-
-    constructor() { }
+class PeerService {
 
     public countByFilter(): any {
         return {
@@ -15,6 +12,8 @@ export class PeerService {
     }
 
     public async getByFilter(filter): Promise<Peer[]> {
-        return this.peerRepo.list();
+        return PeerRepo.list();
     }
 }
+
+export default new PeerService();

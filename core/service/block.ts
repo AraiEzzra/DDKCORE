@@ -9,7 +9,7 @@ const validator: Validator = new ZSchema({});
 import { logger } from 'shared/util/logger';
 import { Account } from 'shared/model/account';
 import { Block } from 'shared/model/block';
-import { BlockRepo } from 'core/repository/block';
+import BlockRepo from 'core/repository/block';
 import { Transaction } from 'shared/model/transaction';
 import { TransactionService, ITransactionService } from 'core/service/transaction';
 import { TransactionQueue } from 'core/service/transactionQueue';
@@ -17,10 +17,10 @@ import { TransactionPoolService } from 'core/service/transactionPool';
 import { TransactionRepo } from 'core/repository/transaction';
 import { DelegateService } from 'core/service/delegate';
 import slotService from 'core/service/slot';
-import { RoundService } from "core/service/round";
+import { RoundService } from 'core/service/round';
 import { transactionSortFunc } from 'core/util/transaction';
 import { getOrCreateAccount } from 'shared/util/account';
-import blockShema from 'core/shema/block';
+import blockShema from 'core/schema/block';
 import Response from 'shared/model/response';
 import { messageON } from 'shared/util/bus';
 import config from 'shared/util/config';
@@ -35,13 +35,13 @@ interface IKeyPair {
     publicKey: string;
 }
 
-export class BlockService {
+class BlockService {
+    // todo: remove after implemented as singleton
     private delegateService: DelegateService = new DelegateService();
     private transactionQueue: TransactionQueue<object> = new TransactionQueue({});
     private transactionPool: TransactionPoolService<object> = new TransactionPoolService({});
     private transactionService: ITransactionService<object> = new TransactionService();
     private transactionRepo: TransactionRepo = new TransactionRepo();
-    private blockRepo: BlockRepo = new BlockRepo();
     private roundService: RoundService = new RoundService();
 
     private lastBlock: Block;
@@ -493,7 +493,7 @@ export class BlockService {
     }
 
     private async checkExists(block: Block): Promise<Response<void>> {
-        const existsResponse: Response<boolean> = await this.blockRepo.isBlockExists(block.id);
+        const existsResponse: Response<boolean> = await BlockRepo.isBlockExists(block.id);
         if (!existsResponse.success) {
             return new Response<void>({ errors: [...existsResponse.errors, 'checkExists'] });
         }
@@ -571,7 +571,7 @@ export class BlockService {
         }
 
         if (saveBlock) {
-            const saveBlockResponse: Response<void> = await this.blockRepo.saveBlock(block);
+            const saveBlockResponse: Response<void> = await BlockRepo.saveBlock(block);
             if (!saveBlockResponse.success) {
                 return new Response<void>({ errors: [...saveBlockResponse.errors, 'applyBlock'] });
             }
@@ -972,7 +972,7 @@ export class BlockService {
 
         await this.roundService.rollBackRound(); // (oldLastBlock, previousBlock);
 
-        const deleteBlockResponse: Response<void> = await this.blockRepo.deleteBlock(oldLastBlock.id);
+        const deleteBlockResponse: Response<void> = await BlockRepo.deleteBlock(oldLastBlock.id);
         if (!deleteBlockResponse.success) {
             return new Response<Block>({ errors: [...deleteBlockResponse.errors, 'popLastBlock'] });
         }
@@ -982,7 +982,7 @@ export class BlockService {
 
     private async loadBlocksPart(previousBlockId: string): Promise<Response<Block>> {
         logger.debug(`[Utils][loadBlocksPart]' previousBlockId: ${previousBlockId}`);
-        const loadBlockResponse: Response<Block> = await this.blockRepo.loadFullBlockById(previousBlockId);
+        const loadBlockResponse: Response<Block> = await BlockRepo.loadFullBlockById(previousBlockId);
         if (!loadBlockResponse.success) {
             return new Response<Block>({ errors: [...loadBlockResponse.errors, 'loadBlocksPart'] });
         }
@@ -1000,7 +1000,7 @@ export class BlockService {
         const order = [];
         const errors: string[] = [];
         rows.forEach(async row => {
-            const block: Block = this.blockRepo.dbRead(row);
+            const block: Block = BlockRepo.dbRead(row);
 
             // If block is not already in the list...
             if (!blocks[block.id]) {
@@ -1068,7 +1068,7 @@ export class BlockService {
 
     // called from app.js
     public async saveGenesisBlock(): Promise<Response<void>> {
-        const existsResponse: Response<boolean> = await this.blockRepo.isBlockExists(config.genesisBlock.id);
+        const existsResponse: Response<boolean> = await BlockRepo.isBlockExists(config.genesisBlock.id);
         if (!existsResponse.success) {
             return new Response<void>({ errors: [...existsResponse.errors, 'saveGenesisBlock'] });
         }
@@ -1093,7 +1093,7 @@ export class BlockService {
      */
     public async getIdSequence(height: number): Promise<Response<{ ids: string }>> {
         const lastBlock = this.getLastBlock();
-        const rowsResponse: Response<string[]> = await this.blockRepo.getIdSequence({ height, limit: 5, delegates: config.constants.activeDelegates });
+        const rowsResponse: Response<string[]> = await BlockRepo.getIdSequence({ height, limit: 5, delegates: config.constants.activeDelegates });
         if (!rowsResponse.success) {
             return new Response({ errors: [...rowsResponse.errors, 'getIdSequence']});
         }
@@ -1104,10 +1104,10 @@ export class BlockService {
         const ids = [];
         // Add genesis block at the end if the set doesn't contain it already
         if (config.genesisBlock) {
-            const __genesisblock = config.genesisBlock.id;
+            const genesisBlock = config.genesisBlock.id;
 
-            if (rows.indexOf(__genesisblock) === -1) {
-                rows.push(__genesisblock);
+            if (rows.indexOf(genesisBlock) === -1) {
+                rows.push(genesisBlock);
             }
         }
 
@@ -1134,7 +1134,7 @@ export class BlockService {
 
         logger.debug('Loading blocks offset', { limit, offset, verify });
 
-        const loadResponse: Response<Block[]> = await this.blockRepo.loadBlocksOffset(params);
+        const loadResponse: Response<Block[]> = await BlockRepo.loadBlocksOffset(params);
         if (!loadResponse.success) {
             return new Response<Block>({ errors: [...loadResponse.errors, 'loadBlocksOffset'] });
         }
@@ -1229,7 +1229,7 @@ export class BlockService {
 
     // called from loader
     private async loadLastBlock(): Promise<Response<Block>> {
-        const loadResponse: Response<Block> = await this.blockRepo.loadLastBlock();
+        const loadResponse: Response<Block> = await BlockRepo.loadLastBlock();
         if (!loadResponse.success) {
             return new Response<Block>({ errors: [...loadResponse.errors, 'loadLastBlock'] });
         }
@@ -1252,3 +1252,5 @@ export class BlockService {
         }
     }
 }
+
+export default new BlockService();

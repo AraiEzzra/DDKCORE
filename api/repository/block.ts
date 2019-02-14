@@ -1,6 +1,6 @@
 import { Block } from 'shared/model/block';
 
-export class BlockRepo {
+class BlockRepo {
 
     constructor() {}
 
@@ -10,3 +10,5 @@ export class BlockRepo {
 
     public list(filter, params): Block[] { return undefined; }
 }
+
+export default new BlockRepo();

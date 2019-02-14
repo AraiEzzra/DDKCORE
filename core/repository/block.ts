@@ -1,5 +1,4 @@
 const Inserts = require('../../backlog/helpers/inserts.js');
-
 import { Block } from 'shared/model/block';
 import { getAddressByPublicKey } from 'shared/util/account';
 import db from 'shared/driver/db';
@@ -12,7 +11,7 @@ interface IDBBlockSave {
     values: object;
 }
 
-export class BlockRepo {
+class BlockRepo {
     private dbTable: string = 'blocks';
     private dbFields: string[] = [
         'id',
@@ -250,3 +249,5 @@ export class BlockRepo {
         return block;
     }
 }
+
+export default new BlockRepo();

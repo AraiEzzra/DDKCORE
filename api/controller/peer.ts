@@ -34,20 +34,18 @@ interface IPeerRequest {
 }
 
 import { Peer } from 'shared/model/peer';
-import { PeerService } from 'api/service/peer';
+import PeerService from 'api/service/peer';
+import { Controller, GET } from "api/util/http_decorator";
 
 @Controller('/peers')
-export class PeerController {
-    private peerService = new PeerService();
-
-    constructor() { }
+class PeerController {
 
     /**
      * @deprecated
      */
     @GET('/count')
     public count(): IPeersCount {
-        return this.peerService.countByFilter();
+        return PeerService.countByFilter();
     }
 
     /**
@@ -55,7 +53,7 @@ export class PeerController {
      */
     @GET('/')
     public async getPeers(req: IPeersRequest): Promise<Peer[]> {
-        return await this.peerService.getByFilter(req.body);
+        return await PeerService.getByFilter(req.body);
     }
 
     /**
@@ -63,7 +61,7 @@ export class PeerController {
      */
     @GET('/get')
     public async getPeer(req: IPeerRequest): Promise<Peer> {
-        return await this.peerService.getByFilter( {
+        return await PeerService.getByFilter( {
             ip: req.body.ip,
             port: req.body.port
         })[0];
@@ -79,3 +77,5 @@ export class PeerController {
         };
     }
 }
+
+export default new PeerController();
