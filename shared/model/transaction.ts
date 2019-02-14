@@ -1,3 +1,5 @@
+import { Address, PublicKey, Timestamp } from 'shared/model/account';
+
 export enum TransactionType {
     REGISTER = 0,
     SEND = 10,
@@ -6,10 +8,6 @@ export enum TransactionType {
     STAKE = 40,
     SENDSTAKE = 50,
     VOTE = 60,
-    MULTI = 70,
-    DAPP = 80,
-    IN_TRANSFER = 90,
-    OUT_TRANSFER = 100,
 }
 
 export enum TransactionStatus {
@@ -25,45 +23,18 @@ export enum TransactionStatus {
     DECLINED
 }
 
-export interface IModelTransaction <T extends object> {
+export class Transaction <T extends object> {
     id: string;
     blockId: string;
-    type: number;
-    senderPublicKey: string;
-    senderId: string;
-    recipientId: string;
+    type: TransactionType;
+    senderPublicKey: PublicKey;
+    senderAddress: Address;
+    recipientAddress: Address;
     signature: string;
-    trsName: TransactionType;
-    rowId?: number; // useless
-    amount?: bigint;
-    timestamp?: number;
-    stakedAmount?: bigint; // useless ?
-    stakeId?: string; // useless
-    groupBonus?: bigint; // useless
-    pendingGroupBonus?: bigint; // useless
-    fee?: bigint;
-    signSignature?: string;
-    requesterPublicKey?: string; // useless
-    signatures?: string; // useless
-    reward?: string; // useless
+    secondSignature: string;
+    amount: number;
+    createdAt: Timestamp;
+    fee: number;
     status?: TransactionStatus;
-    assetTypes?: T;
-}
-
-export class Transaction <T extends object> implements IModelTransaction <any> {
-    id: string;
-    blockId: string;
-    type: number;
-    senderPublicKey: string;
-    senderId: string;
-    recipientId: string;
-    signature: string;
-    trsName: TransactionType;
-    amount?: bigint;
-    timestamp?: number;
-    stakedAmount?: bigint; // useless ?
-    fee?: bigint;
-    signSignature?: string;
-    status?: TransactionStatus;
-    assetTypes?: T;
+    asset: T;
 }
