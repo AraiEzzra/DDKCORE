@@ -2,6 +2,7 @@ import { Delegate } from 'shared/model/delegate';
 import Response from 'shared/model/response';
 import db from 'shared/driver/db';
 import config from 'shared/util/config';
+
 interface IDelegatesArray {
     delegates: Delegate[];
     totalCount?: number;
@@ -16,10 +17,26 @@ export interface IDelegateRepo {
 export class DelegateRepository implements IDelegateRepo {
 
     async getDelegate(publicKey: string, username: string): Promise<Response<{ delegate: Delegate }>> {
-
+        const delegate = await db.one(`
+            SELECT username,
+                   address,
+                   dtvc."publicKey",
+                   dtvc."voteCount",
+                   vote,
+                   missedblocks,
+                   producedblocks,
+                   url
+            FROM delegate_to_vote_counter as dtvc
+            INNER JOIN mem_accounts ON mem_accounts."publicKey" = dtvc."publicKey"
+        `);
+        if (!delegate) {
+            return new Response({
+                errors: ['Delegate not found']
+            });
+        }
         return new Response({
             data: {
-                delegate: new Delegate('', ''),
+                delegate: new Delegate(delegate)
             }
         });
     }
@@ -36,7 +53,7 @@ export class DelegateRepository implements IDelegateRepo {
                               missedblocks,
                               producedblocks,
                               url,
-                              count(*) OVER() AS count_delegates
+                              count(*) OVER() AS total_count
                       FROM delegate_to_vote_counter as dtvc
                       INNER JOIN mem_accounts ON mem_accounts."publicKey" = dtvc."publicKey"
                       ORDER BY dtvc."voteCount" DESC, dtvc."publicKey"
@@ -52,7 +69,7 @@ export class DelegateRepository implements IDelegateRepo {
         return new Response({
             data: {
                 delegates,
-                count: delegates[0].count_delegates
+                count: delegates[0].total_count
             }
         });
     }

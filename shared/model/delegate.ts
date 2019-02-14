@@ -13,10 +13,20 @@ export const sortFields: string[] = [
 
 export class Delegate {
     username: string;
-    transactionId: string;
+    transactionId?: string;
+    publicKey?: string;
+    vote?: number | bigint;
+    missedblocks?: number;
+    producedblocks?: number;
+    url?: string;
 
-    constructor(username: string, transactionId: string) {
-        this.username = username;
-        this.transactionId = transactionId;
+    constructor(obj) {
+        this.username = obj.username;
+        this.transactionId = obj.transactionId;
+        this.publicKey = obj.publicKey;
+        this.vote = obj.vote;
+        this.missedblocks = obj.missedblocks;
+        this.producedblocks = obj.producedblocks;
+        this.url = obj.url;
     }
 }
