@@ -135,10 +135,8 @@ class Peer extends PeerModel {
     }
 }
 
-export class PeerRepo {
+class PeerRepo {
     private peers: { [string: string] : Peer };
-
-    constructor(pgp, redis?) {}
 
     public create(peer) {
         if (!(peer instanceof Peer)) {
@@ -282,4 +280,13 @@ export class PeerRepo {
         }
         return Object.keys(this.peers).map(key => this.peers[key]);
     }
+
+    public getByFilter(filter) {
+        return [];
+    }
+
+    public dbSave() {}
+    public dbRead() {}
 }
+
+export default new PeerRepo();

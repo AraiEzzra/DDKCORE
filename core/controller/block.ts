@@ -36,11 +36,11 @@ class BlockController extends BaseController {
 
     @ON('BLOCKCHAIN_READY')
     public async loadLastNBlocks(): Promise<Response<void>> {
-        const response: Response<string[]> = await BlockRepo.loadLastNBlocks();
+        const response: Response<Array<string>> = await BlockRepo.loadLastNBlocks();
         if (!response.success) {
             return new Response<void>({ errors: [...response.errors, 'loadLastNBlocks'] });
         }
-        const blocks: string[] = response.data;
+        const blocks: Array<string> = response.data;
         BlockService.setLastNBlocks(blocks);
         return new Response<void>();
     }

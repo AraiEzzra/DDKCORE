@@ -27,7 +27,7 @@ import config from 'shared/util/config';
 
 interface IVerifyResult {
     verified?: boolean;
-    errors: any[];
+    errors: Array<any>;
 }
 
 interface IKeyPair {
@@ -46,18 +46,17 @@ class BlockService {
 
     private lastBlock: Block;
     private lastReceipt: number;
-    private lastNBlockIds: string[];
+    private lastNBlockIds: Array<string>;
     private readonly currentBlockVersion: number = config.constants.CURRENT_BLOCK_VERSION;
     private receiveLocked: boolean = false;
 
     private readonly BLOCK_BUFFER_SIZE
         = BUFFER.LENGTH.UINT32 // version
         + BUFFER.LENGTH.UINT32 // timestamp
-        + BUFFER.LENGTH.DOUBLE_HEX // previousBlock
-        + BUFFER.LENGTH.UINT32 // numberOfTransactions
-        + BUFFER.LENGTH.INT64 // totalAmount
-        + BUFFER.LENGTH.INT64 // totalFee
-        + BUFFER.LENGTH.UINT32 // payloadLength
+        + BUFFER.LENGTH.DOUBLE_HEX // previousBlockId
+        + BUFFER.LENGTH.UINT32 // transactionCount
+        + BUFFER.LENGTH.INT64 // amount
+        + BUFFER.LENGTH.INT64 // fee
         + BUFFER.LENGTH.HEX // payloadHash
         + BUFFER.LENGTH.HEX // generatorPublicKey
     ;
@@ -77,7 +76,8 @@ class BlockService {
             return lockResponse;
         }
 
-        const transactions: Transaction<object>[] = await this.transactionPool.popSortedUnconfirmedTransactions(config.constants.maxTxsPerBlock);
+        const transactions: Array<Transaction<object>> =
+            await this.transactionPool.popSortedUnconfirmedTransactions(config.constants.maxTxsPerBlock);
         logger.debug(`[Process][newGenerateBlock][transactions] ${JSON.stringify(transactions)}`);
 
         const previousBlock: Block = this.getLastBlock();
@@ -91,7 +91,8 @@ class BlockService {
 
         const processBlockResponse: Response<void> = await this.processBlock(block, true, true, keypair, true, true);
         if (!processBlockResponse.success) {
-            const returnResponse: Response<void> = await this.transactionPool.returnToQueueConflictedTransactionFromPool(transactions);
+            const returnResponse: Response<void> =
+                await this.transactionPool.returnToQueueConflictedTransactionFromPool(transactions);
             if (!returnResponse.success) {
                 processBlockResponse.errors = [...processBlockResponse.errors, ...returnResponse.errors];
             }
@@ -109,7 +110,7 @@ class BlockService {
     }
 
     private async pushInPool(transactions: Array<Transaction<object>>): Promise<Response<void>> {
-        const errors: string[] = [];
+        const errors: Array<string> = [];
         for (const trs of transactions) {
             let response: Response<void> = await this.transactionPool.push(trs);
             if (!response.success) {
@@ -150,7 +151,13 @@ class BlockService {
     /**
      * @implements system.update
      */
-    private async processBlock(block: Block, broadcast: boolean, saveBlock: boolean, keypair: IKeyPair, verify: boolean = true, tick: boolean = true): Promise<Response<void>> {
+    private async processBlock(
+        block: Block,
+        broadcast: boolean,
+        saveBlock: boolean,
+        keypair: IKeyPair,
+        verify: boolean = true,
+        tick: boolean = true): Promise<Response<void>> {
         block = this.addBlockProperties(block, broadcast);
 
         const resultNormalizeBlock: Response<Block> = await this.normalizeBlock(block);
@@ -174,7 +181,8 @@ class BlockService {
         }
         // validateBlockSlot TODO enable after fix round
 
-        const resultCheckTransactions: Response<void> = await this.checkTransactionsAndApplyUnconfirmed(block, saveBlock, verify);
+        const resultCheckTransactions: Response<void> =
+            await this.checkTransactionsAndApplyUnconfirmed(block, saveBlock, verify);
         if (!resultCheckTransactions.success) {
             return new Response<void>({ errors: [...resultCheckTransactions.errors, 'processBlock'] });
         }
@@ -198,22 +206,18 @@ class BlockService {
         if (broadcast) {
             return block;
         }
-        block.totalAmount = block.totalAmount || BigInt(0);
-        block.totalFee = block.totalFee || BigInt(0);
-        block.reward = block.reward || 0;
+        block.amount = block.amount || 0;
+        block.fee = block.fee || 0;
 
         if (block.version === undefined) {
             block.version = config.constants.CURRENT_BLOCK_VERSION;
         }
-        if (block.numberOfTransactions === undefined) {
+        if (block.transactionCount === undefined) {
             if (block.transactions === undefined) {
-                block.numberOfTransactions = 0;
+                block.transactionCount = 0;
             } else {
-                block.numberOfTransactions = block.transactions.length;
+                block.transactionCount = block.transactions.length;
             }
-        }
-        if (block.payloadLength === undefined) {
-            block.payloadLength = 0;
         }
         if (block.transactions === undefined) {
             block.transactions = [];
@@ -242,12 +246,15 @@ class BlockService {
         const report: boolean = validator.validate(block, blockShema);
 
         if (!report) {
-            return new Response<Block>({ errors: [`Failed to validate block schema: ${validator.getLastErrors().map(err => err.message).join(', ')}`]});
+            return new Response<Block>({
+                errors: [`Failed to validate block schema: 
+                ${validator.getLastErrors().map(err => err.message).join(', ')}`]});
         }
 
-        const errors: string[] = [];
+        const errors: Array<string> = [];
         for (i = 0; i < block.transactions.length; i++) {
-            const response: Response<Transaction<object>> = await this.transactionService.objectNormalize(block.transactions[i]);
+            const response: Response<Transaction<object>> =
+                await this.transactionService.objectNormalize(block.transactions[i]);
             if (!response.success) {
                 errors.push(...response.errors);
             }
@@ -277,7 +284,6 @@ class BlockService {
             result = this.verifyPayload(block, result);
         }
 
-
         result = await this.verifyForkOne(block, lastBlock, result);
         result = this.verifyBlockSlot(block, lastBlock, result);
 
@@ -291,6 +297,7 @@ class BlockService {
                     }.`
             );
         } else {
+            logger.error(
             logger.error(
                 `Verify->verifyBlock failed for block ${block.id} at height ${
                     block.height
@@ -309,7 +316,7 @@ class BlockService {
     private verifySignature(block: Block, result: IVerifyResult): IVerifyResult {
         let valid: boolean = false;
         const hash = crypto.createHash('sha256').update(this.getBytes(block)).digest();
-        const blockSignatureBuffer = Buffer.from(block.blockSignature, 'hex');
+        const blockSignatureBuffer = Buffer.from(block.signature, 'hex');
         const generatorPublicKeyBuffer = Buffer.from(block.generatorPublicKey, 'hex');
 
         try {
@@ -333,7 +340,7 @@ class BlockService {
     }
 
     private verifyPreviousBlock(block: Block, result: IVerifyResult): IVerifyResult {
-        if (!block.previousBlock && block.height !== 1) {
+        if (!block.previousBlockId && block.height !== 1) {
             if (config.constants.VERIFY_PREVIOUS_BLOCK) {
                 result.errors.push('Invalid previous block');
             } else {
@@ -347,7 +354,8 @@ class BlockService {
         const version: number = block.version;
         if (version !== this.currentBlockVersion) {
             if (config.constants.VERIFY_BLOCK_VERSION) {
-                result.errors.push('Invalid block version', 'No exceptions found. Block version doesn\'t match te current one.');
+                result.errors.push('Invalid block version',
+                    'No exceptions found. Block version doesn\'t match te current one.');
             } else {
                 logger.error('Invalid block version');
             }
@@ -361,7 +369,7 @@ class BlockService {
             result.errors.push( ...idResponse.errors );
             return result;
         }
-        const blockId = idResponse.data;
+        const blockId: string = idResponse.data;
         if (block.id !== blockId) {
             result.errors.push(`Block id is corrupted expected: ${blockId} actual: ${block.id}`);
         }
@@ -379,15 +387,7 @@ class BlockService {
     }
 
     private verifyPayload(block: Block, result: IVerifyResult): IVerifyResult {
-        if (block.payloadLength > config.constants.maxPayloadLength) {
-            if (config.constants.PAYLOAD_VALIDATE.MAX_LENGTH) {
-                result.errors.push('Payload length is too long');
-            } else {
-                logger.error('Payload length is too long');
-            }
-        }
-
-        if (block.transactions.length !== block.numberOfTransactions) {
+        if (block.transactions.length !== block.transactionCount) {
             if (config.constants.PAYLOAD_VALIDATE.MAX_TRANSACTION_LENGTH) {
                 result.errors.push('Included transactions do not match block transactions count');
             } else {
@@ -403,8 +403,8 @@ class BlockService {
             }
         }
 
-        let totalAmount = BigInt(0);
-        let totalFee = BigInt(0);
+        let totalAmount = 0;
+        let totalFee = 0;
         const payloadHash = crypto.createHash('sha256');
         const appliedTransactions = {};
 
@@ -444,7 +444,7 @@ class BlockService {
             }
         }
 
-        if (totalAmount !== block.totalAmount) {
+        if (totalAmount !== block.amount) {
             if (config.constants.PAYLOAD_VALIDATE.TOTAL_AMOUNT) {
                 result.errors.push('Invalid total amount');
             } else {
@@ -452,9 +452,9 @@ class BlockService {
             }
         }
 
-        if (totalFee !== block.totalFee) {
+        if (totalFee !== block.fee) {
             if (config.constants.PAYLOAD_VALIDATE.TOTAL_FEE) {
-                result.errors.push(`Invalid total fee. Expected: ${totalFee}, actual: ${block.totalFee}`);
+                result.errors.push(`Invalid total fee. Expected: ${totalFee}, actual: ${block.fee}`);
             } else {
                 logger.error('Invalid total fee');
             }
@@ -463,15 +463,16 @@ class BlockService {
     }
 
     private async verifyForkOne(block: Block, lastBlock: Block, result: IVerifyResult): Promise<IVerifyResult> {
-        if (block.previousBlock && block.previousBlock !== lastBlock.id) {
+        if (block.previousBlockId && block.previousBlockId !== lastBlock.id) {
             const forkResponse: Response<void> = await this.delegateService.fork(block, 1);
             if (!forkResponse.success) {
                 result.errors.push(...forkResponse.errors);
             }
             if (config.constants.VERIFY_BLOCK_FORK_ONE) {
-                result.errors.push(['Invalid previous block:', block.previousBlock, 'expected:', lastBlock.id].join(' '));
+                result.errors.push(['Invalid previous block:',
+                    block.previousBlockId, 'expected:', lastBlock.id].join(' '));
             } else {
-                logger.error(['Invalid previous block:', block.previousBlock, 'expected:', lastBlock.id].join(' '));
+                logger.error(['Invalid previous block:', block.previousBlockId, 'expected:', lastBlock.id].join(' '));
             }
         }
 
@@ -479,8 +480,8 @@ class BlockService {
     }
 
     private verifyBlockSlot(block: Block, lastBlock: Block, result: IVerifyResult): IVerifyResult {
-        const blockSlotNumber = slotService.getSlotNumber(block.timestamp);
-        const lastBlockSlotNumber = slotService.getSlotNumber(lastBlock.timestamp);
+        const blockSlotNumber = slotService.getSlotNumber(block.createdAt);
+        const lastBlockSlotNumber = slotService.getSlotNumber(lastBlock.createdAt);
 
         if (blockSlotNumber > slotService.getSlotNumber() || blockSlotNumber <= lastBlockSlotNumber) {
             if (config.constants.VERIFY_BLOCK_SLOT) {
@@ -503,8 +504,11 @@ class BlockService {
         return new Response<void>();
     }
 
-    private async checkTransactionsAndApplyUnconfirmed(block: Block, checkExists: boolean, verify: boolean): Promise<Response<void>> {
-        const errors = [];
+    private async checkTransactionsAndApplyUnconfirmed(
+        block: Block,
+        checkExists: boolean,
+        verify: boolean): Promise<Response<void>> {
+        const errors: Array<string> = [];
         let i = 0;
 
         while ((i < block.transactions.length && errors.length === 0) || (i >= 0 && errors.length !== 0)) {
@@ -514,9 +518,10 @@ class BlockService {
                 const sender: Account = await getOrCreateAccount(trs.senderPublicKey);
                 logger.debug(`[Verify][checkTransactionsAndApplyUnconfirmed][sender] ${JSON.stringify(sender)}`);
                 if (verify) {
-                    const resultCheckTransaction: Response<void> = await this.checkTransaction(block, trs, sender, checkExists);
+                    const resultCheckTransaction: Response<void> =
+                        await this.checkTransaction(block, trs, sender, checkExists);
                     if (!resultCheckTransaction.success) {
-                        errors.push(resultCheckTransaction.errors);
+                        errors.push(...resultCheckTransaction.errors);
                         logger.debug(`[Verify][checkTransactionsAndApplyUnconfirmed][error] ${JSON.stringify(errors)}`);
                         i--;
                         continue;
@@ -540,7 +545,11 @@ class BlockService {
         return new Response<void>({ errors: errors });
     }
 
-    private async checkTransaction(block: Block, trs: Transaction<object>, sender: Account, checkExists: boolean): Promise<Response<void>> {
+    private async checkTransaction(
+        block: Block,
+        trs: Transaction<object>,
+        sender: Account,
+        checkExists: boolean): Promise<Response<void>> {
         const transactionIdResponse: Response<string> = await this.transactionService.getId(trs);
         if (!transactionIdResponse.success) {
             return new Response<void>({ errors: [...transactionIdResponse.errors, 'checkTransaction']});
@@ -561,7 +570,12 @@ class BlockService {
         return new Response<void>();
     }
 
-    private async applyBlock(block: Block, broadcast: boolean, keypair: IKeyPair, saveBlock: boolean, tick: boolean): Promise<Response<void>> {
+    private async applyBlock(
+        block: Block,
+        broadcast: boolean,
+        keypair: IKeyPair,
+        saveBlock: boolean,
+        tick: boolean): Promise<Response<void>> {
         if (keypair) {
             const addPayloadHashResponse: Response<Block> = this.addPayloadHash(block, keypair);
             if (!addPayloadHashResponse.success) {
@@ -577,7 +591,7 @@ class BlockService {
             }
         }
 
-        const errors: string[] = [];
+        const errors: Array<string> = [];
         for (const trs of block.transactions) {
             const applyResponse: Response<void> = await this.transactionService.apply(trs, block);
             if (!applyResponse.success) {
@@ -614,31 +628,23 @@ class BlockService {
     }
 
     private addPayloadHash(block: Block, keypair: IKeyPair): Response<Block> {
-        let size = 0;
         const payloadHash = crypto.createHash('sha256');
         for (let i = 0; i < block.transactions.length; i++) {
             const transaction = block.transactions[i];
             const bytes = this.transactionService.getBytes(transaction);
 
-            if (size + bytes.length > config.constants.maxPayloadLength) {
-                break;
-            }
-
-            size += bytes.length;
-
-            block.totalFee += transaction.fee;
-            block.totalAmount += transaction.amount;
+            block.fee += transaction.fee;
+            block.amount += transaction.amount;
 
             payloadHash.update(bytes);
         }
 
         block.payloadHash = payloadHash.digest().toString('hex');
-        block.payloadLength = size;
 
-        block.blockSignature = this.sign(block, keypair);
+        block.signature = this.sign(block, keypair);
         const idResponse: Response<string> = this.getId(block);
         if (!idResponse.success) {
-            return new Response<Block>({errors: [...idResponse.errors, 'addPayloadHash']})
+            return new Response<Block>({errors: [...idResponse.errors, 'addPayloadHash']});
         }
         block.id = idResponse.data;
         return new Response<Block>({ data: block });
@@ -646,7 +652,7 @@ class BlockService {
 
     private async afterSave(block: Block): Promise<Response<void>> {
         messageON('transactionsSaved', block.transactions);
-        const errors: string[] = [];
+        const errors: Array<string> = [];
         for (const trs of block.transactions) {
             // how can I call this method in case it exists in service but connection service=service is baned
             const afterSaveResponse: Response<void> = await this.transactionService.afterSave(trs);
@@ -683,14 +689,14 @@ class BlockService {
         let lastBlock: Block = this.getLastBlock();
 
         // Detect sane block
-        if (block.previousBlock === lastBlock.id && lastBlock.height + 1 === block.height) {
+        if (block.previousBlockId === lastBlock.id && lastBlock.height + 1 === block.height) {
             this.receiveLock();
             await this.receiveBlock(block);
             this.receiveUnlock();
-        } else if (block.previousBlock !== lastBlock.id && lastBlock.height + 1 === block.height) {
+        } else if (block.previousBlockId !== lastBlock.id && lastBlock.height + 1 === block.height) {
             return this.receiveForkOne(block, lastBlock);
         } else if (
-            block.previousBlock === lastBlock.previousBlock &&
+            block.previousBlockId === lastBlock.previousBlockId &&
             block.height === lastBlock.height && block.id !== lastBlock.id
         ) {
             return this.receiveForkFive(block, lastBlock);
@@ -701,7 +707,7 @@ class BlockService {
                 'Discarded block that does not match with current chain:', block.id,
                 'height:', block.height,
                 'round:', this.roundService.calcRound(block.height),
-                'slot:', slotService.getSlotNumber(block.timestamp),
+                'slot:', slotService.getSlotNumber(block.createdAt),
                 'generator:', block.generatorPublicKey
             ].join(' '));
         }
@@ -712,8 +718,7 @@ class BlockService {
             'Received new block id:', block.id,
             'height:', block.height,
             'round:', this.roundService.calcRound(block.height),
-            'slot:', slotService.getSlotNumber(block.timestamp),
-            'reward:', block.reward
+            'slot:', slotService.getSlotNumber(block.createdAt)
         ].join(' '));
 
         this.updateLastReceipt();
@@ -724,20 +729,22 @@ class BlockService {
             return lockResponse;
         }
 
-        const removedTransactionsResponse: Response<Array<Transaction<object>>> = await this.transactionPool.removeFromPool(block.transactions, true);
+        const removedTransactionsResponse: Response<Array<Transaction<object>>> =
+            await this.transactionPool.removeFromPool(block.transactions, true);
         if (!removedTransactionsResponse.success) {
             return new Response<void>({ errors: [...removedTransactionsResponse.errors, 'receiveBlock'] });
         }
-        logger.debug(`[Process][newReceiveBlock] removedTransactions ${JSON.stringify(removedTransactionsResponse.data)}`);
-        const removedTransactions = removedTransactionsResponse.data;
+        logger.debug(`[Process][newReceiveBlock] removedTransactions 
+            ${JSON.stringify(removedTransactionsResponse.data)}`);
+        const removedTransactions: Array<Transaction<object>> = removedTransactionsResponse.data;
 
         // todo: wrong logic with errors!!!
-        const errors: string[] = [];
-        const processBlockResponse: Response<void> = await this.processBlock(block, true, true, null,true, true);
+        const errors: Array<string> = [];
+        const processBlockResponse: Response<void> = await this.processBlock(block, true, true, null, true, true);
         if (!processBlockResponse.success) {
             errors.push(...processBlockResponse.errors);
         }
-        const transactionForReturn = [];
+        const transactionForReturn: Array<Transaction<object>> = [];
         removedTransactions.forEach((removedTrs) => {
             if (!(block.transactions.find(trs => trs.id === removedTrs.id))) {
                 transactionForReturn.push(removedTrs);
@@ -747,7 +754,8 @@ class BlockService {
         if (!pushResponse.success) {
             errors.push(...pushResponse.errors);
         }
-        const returnResponse: Response<void> = await this.transactionPool.returnToQueueConflictedTransactionFromPool(block.transactions);
+        const returnResponse: Response<void> =
+            await this.transactionPool.returnToQueueConflictedTransactionFromPool(block.transactions);
         if (!returnResponse.success) {
             errors.push(...returnResponse.errors);
         }
@@ -772,7 +780,8 @@ class BlockService {
         if (!forkResponse.success) {
             return new Response<void>({ errors: [...forkResponse.errors, 'receiveForkOne'] });
         }
-        if (block.timestamp > lastBlock.timestamp || (block.timestamp === lastBlock.timestamp && block.id > lastBlock.id)) {
+        if (block.createdAt > lastBlock.createdAt ||
+            (block.createdAt === lastBlock.createdAt && block.id > lastBlock.id)) {
             logger.info('Last block stands');
             return new Response<void>();
         }
@@ -810,8 +819,9 @@ class BlockService {
         const roundLastBlock = this.roundService.calcRound(lastBlock.height);
         const activeDelegates = config.constants.activeDelegates;
 
-        const errors: string[] = [];
-        const validateBlockSlotAgainstPreviousRoundresponse: Response<void> = await this.delegateService.validateBlockSlotAgainstPreviousRound(block);
+        const errors: Array<string> = [];
+        const validateBlockSlotAgainstPreviousRoundresponse: Response<void> =
+            await this.delegateService.validateBlockSlotAgainstPreviousRound(block);
         if (!validateBlockSlotAgainstPreviousRoundresponse.success) {
             errors.push(...validateBlockSlotAgainstPreviousRoundresponse.errors);
         }
@@ -857,7 +867,7 @@ class BlockService {
 
     private verifyBlockSlotWindow(block: Block, result: IVerifyResult): IVerifyResult {
         const currentApplicationSlot = slotService.getSlotNumber();
-        const blockSlot = slotService.getSlotNumber(block.timestamp);
+        const blockSlot = slotService.getSlotNumber(block.createdAt);
 
         // Reject block if it's slot is older than BLOCK_SLOT_WINDOW
         if (currentApplicationSlot - blockSlot > config.constants.blockSlotWindow) {
@@ -889,7 +899,8 @@ class BlockService {
         if (block.generatorPublicKey === lastBlock.generatorPublicKey) {
             logger.warn('Delegate forging on multiple nodes', block.generatorPublicKey);
         }
-        if (block.timestamp > lastBlock.timestamp || (block.timestamp === lastBlock.timestamp && block.id > lastBlock.id)) {
+        if (block.createdAt > lastBlock.createdAt ||
+            (block.createdAt === lastBlock.createdAt && block.id > lastBlock.id)) {
             logger.info('Last block stands');
             return new Response<void>();
         }
@@ -931,7 +942,8 @@ class BlockService {
         }
         const popBlockResponse: Response<Block> = await this.popLastBlock(lastBlock);
         if (!popBlockResponse.success) {
-            logger.error(`Error deleting last block: ${JSON.stringify(lastBlock)}, message: ${JSON.stringify(popBlockResponse.errors)}`);
+            logger.error(`Error deleting last block: ${JSON.stringify(lastBlock)}, 
+                message: ${JSON.stringify(popBlockResponse.errors)}`);
             popBlockResponse.errors.push('receiveForkFive');
             return popBlockResponse;
         }
@@ -948,14 +960,14 @@ class BlockService {
             return new Response<Block>({ errors: [`Block is not last: ${JSON.stringify(oldLastBlock)}`] });
         }
 
-        const loadBlocksPartResponse: Response<Block> = await this.loadBlocksPart(oldLastBlock.previousBlock);
+        const loadBlocksPartResponse: Response<Block> = await this.loadBlocksPart(oldLastBlock.previousBlockId);
         if (!loadBlocksPartResponse.success) {
             loadBlocksPartResponse.errors.push('receiveForkFive');
             return loadBlocksPartResponse;
         }
         let previousBlock: Block = loadBlocksPartResponse.data;
 
-        const errors: string[] = [];
+        const errors: Array<string> = [];
         oldLastBlock.transactions.reverse().forEach(async (transaction) => {
             const undoResponse: Response<void> = await this.transactionService.undo(transaction, oldLastBlock);
             if (!undoResponse.success) {
@@ -988,17 +1000,17 @@ class BlockService {
         }
         const block: Block = loadBlockResponse.data;
 
-        const readBlockResponse: Response<Block[]> = await this.readDbRows([block]);
+        const readBlockResponse: Response<Array<Block>> = await this.readDbRows([block]);
         if (!readBlockResponse.success) {
             return new Response<Block>({ errors: [...readBlockResponse.errors, 'loadBlocksPart'] });
         }
         return new Response<Block>({ data: readBlockResponse.data[0] });
     }
 
-    private async readDbRows(rows: object[]): Promise<Response<Block[]>> {
+    private async readDbRows(rows: Array<object>): Promise<Response<Array<Block>>> {
         const blocks = {};
-        const order = [];
-        const errors: string[] = [];
+        const order: Array<string> = [];
+        const errors: Array<string> = [];
         rows.forEach(async row => {
             const block: Block = BlockRepo.dbRead(row);
 
@@ -1006,7 +1018,7 @@ class BlockService {
             if (!blocks[block.id]) {
                 if (block.id === config.genesisBlock.id) {
                     // Generate fake signature for genesis block
-                    block.generationSignature = (new Array(65)).join('0');
+                    block.signature = (new Array(65)).join('0');
                 }
 
                 // Add block ID to order list
@@ -1029,13 +1041,13 @@ class BlockService {
         });
 
         // Reorganize list
-        const result: Block[] = order.map((v) => {
+        const result: Array<Block> = order.map((v) => {
             blocks[v].transactions = Object.keys(blocks[v].transactions)
                 .map(t => blocks[v].transactions[t]);
             return blocks[v];
         });
 
-        return new Response<Block[]>({ data: result, errors });
+        return new Response<Array<Block>>({ data: result, errors });
     }
 
     public getLastBlock(): Block {
@@ -1093,7 +1105,8 @@ class BlockService {
      */
     public async getIdSequence(height: number): Promise<Response<{ ids: string }>> {
         const lastBlock = this.getLastBlock();
-        const rowsResponse: Response<string[]> = await BlockRepo.getIdSequence({ height, limit: 5, delegates: config.constants.activeDelegates });
+        const rowsResponse: Response<Array<string>> =
+            await BlockRepo.getIdSequence({ height, limit: 5, delegates: config.constants.activeDelegates });
         if (!rowsResponse.success) {
             return new Response({ errors: [...rowsResponse.errors, 'getIdSequence']});
         }
@@ -1101,13 +1114,13 @@ class BlockService {
         if (rows.length === 0) {
             return new Response({ errors: [`Failed to get id sequence for height: ${height}`]});
         }
-        const ids = [];
+        const ids: Array<string> = [];
         // Add genesis block at the end if the set doesn't contain it already
         if (config.genesisBlock) {
-            const genesisBlock = config.genesisBlock.id;
+            const genesisBlockId = config.genesisBlock.id;
 
-            if (rows.indexOf(genesisBlock) === -1) {
-                rows.push(genesisBlock);
+            if (rows.indexOf(genesisBlockId) === -1) {
+                rows.push(genesisBlockId);
             }
         }
 
@@ -1134,18 +1147,18 @@ class BlockService {
 
         logger.debug('Loading blocks offset', { limit, offset, verify });
 
-        const loadResponse: Response<Block[]> = await BlockRepo.loadBlocksOffset(params);
+        const loadResponse: Response<Array<Block>> = await BlockRepo.loadBlocksOffset(params);
         if (!loadResponse.success) {
             return new Response<Block>({ errors: [...loadResponse.errors, 'loadBlocksOffset'] });
         }
 
-        const readResponse: Response<Block[]> = await this.readDbRows(loadResponse.data);
+        const readResponse: Response<Array<Block>> = await this.readDbRows(loadResponse.data);
         if (!readResponse.success) {
             return new Response<Block>({ errors: [...readResponse.errors, 'loadBlocksOffset'] });
         }
-        const blocks: Block[] = readResponse.data;
+        const blocks: Array<Block> = readResponse.data;
 
-        const errors: string[] = [];
+        const errors: Array<string> = [];
         blocks.forEach(async (block) => {
             if (block.id === config.genesisBlock.id) {
                 return await this.applyGenesisBlock(block);
@@ -1160,27 +1173,14 @@ class BlockService {
     }
 
     private create({transactions, timestamp, previousBlock, keypair}): Block {
-        const reward = 0;
-        const totalFee = BigInt(0);
-        const totalAmount = BigInt(0);
-        const size = 0;
-
         const blockTransactions = transactions.sort(transactionSortFunc);
-        const payloadHash = '';
         const block: Block = new Block({
-            version: config.constants.CURRENT_BLOCK_VERSION,
-            totalAmount,
-            totalFee,
-            reward,
-            payloadHash,
-            timestamp,
-            numberOfTransactions: blockTransactions.length,
-            payloadLength: size,
-            previousBlock: previousBlock.id,
+            createdAt: timestamp,
+            transactionCount: blockTransactions.length,
+            previousBlockId: previousBlock.id,
             generatorPublicKey: keypair.publicKey.toString('hex'),
             transactions: blockTransactions
         });
-        block.blockSignature = '';
 
         return block;
     }
@@ -1207,17 +1207,16 @@ class BlockService {
         let offset = 0;
 
         offset = BUFFER.writeInt32LE(buf, block.version, offset);
-        offset = BUFFER.writeInt32LE(buf, block.timestamp, offset);
+        offset = BUFFER.writeInt32LE(buf, block.createdAt, offset);
 
-        if (block.previousBlock) {
-            buf.write(block.previousBlock, offset, BUFFER.LENGTH.DOUBLE_HEX);
+        if (block.previousBlockId) {
+            buf.write(block.previousBlockId, offset, BUFFER.LENGTH.DOUBLE_HEX);
         }
         offset += BUFFER.LENGTH.DOUBLE_HEX;
 
-        offset = BUFFER.writeInt32LE(buf, block.numberOfTransactions, offset);
-        offset = BUFFER.writeUInt64LE(buf, block.totalAmount, offset);
-        offset = BUFFER.writeUInt64LE(buf, block.totalFee, offset);
-        offset = BUFFER.writeInt32LE(buf, block.payloadLength, offset);
+        offset = BUFFER.writeInt32LE(buf, block.transactionCount, offset);
+        offset = BUFFER.writeUInt64LE(buf, block.amount, offset);
+        offset = BUFFER.writeUInt64LE(buf, block.fee, offset);
 
         buf.write(block.payloadHash, offset, BUFFER.LENGTH.HEX, 'hex');
         offset += BUFFER.LENGTH.HEX;
@@ -1234,14 +1233,14 @@ class BlockService {
             return new Response<Block>({ errors: [...loadResponse.errors, 'loadLastBlock'] });
         }
         const block: Block = loadResponse.data;
-        const readResponse: Response<Block[]> = await this.readDbRows([block]);
+        const readResponse: Response<Array<Block>> = await this.readDbRows([block]);
         if (!readResponse.success) {
             return new Response<Block>({ errors: [...readResponse.errors, 'loadLastBlock'] });
         }
         return new Response({ data: readResponse.data[0] });
     }
 
-    public setLastNBlocks(blocks: string[]): void {
+    public setLastNBlocks(blocks: Array<string>): void {
         this.lastNBlockIds = blocks;
     }
 

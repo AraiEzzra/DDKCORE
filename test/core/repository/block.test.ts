@@ -7,7 +7,7 @@ process.env.DB_PASSWORD = 'password';
 
 import db from 'shared/driver/db';
 import { Block } from 'shared/model/block';
-import { BlockRepo } from 'core/repository/block';
+import BlockRepo from 'core/repository/block';
 import { expect } from 'chai';
 import Response from 'shared/model/response';
 
@@ -46,12 +46,11 @@ const insertGenesisBlock = async () => {
 };
 
 describe('Block repository', () => {
-    const blockRepo: BlockRepo = new BlockRepo();
 
     describe('getGenesisBlock', () => {
         context('without existing table', () => {
             it('should return response with error', async () => {
-                const response = await blockRepo.getGenesisBlock();
+                const response = await BlockRepo.getGenesisBlock();
                 expect(response).to.be.instanceOf(Response);
                 expect(response.success).to.be.false;
                 expect(response.errors.length).to.be.above(0);
@@ -65,7 +64,7 @@ describe('Block repository', () => {
             });
 
             it('should return response with error', async () => {
-                const response = await blockRepo.getGenesisBlock();
+                const response = await BlockRepo.getGenesisBlock();
                 expect(response).to.be.instanceOf(Response);
                 expect(response.success).to.be.false;
                 expect(response.errors.length).to.be.equal(1);
@@ -85,7 +84,7 @@ describe('Block repository', () => {
             });
 
             it('should return response with genesis block data (blockId = 1)', async () => {
-                const response: Response<Block> = await blockRepo.getGenesisBlock();
+                const response: Response<Block> = await BlockRepo.getGenesisBlock();
                 expect(response).to.be.an.instanceOf(Response);
                 expect(response.success).to.be.true;
                 expect(response.errors).to.be.null;
