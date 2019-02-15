@@ -27,6 +27,8 @@ const Referals = {
 
     insertReferalChain: 'INSERT INTO referals ("address","level") VALUES (${address},${level})',
 
+    deleteReferralChain: 'DELETE FROM referals WHERE "address" = ${address}',
+
     getMigratedUsers: 'SELECT id,address,passphrase,publickey,group_bonus from migrated_etps_users where id > ${lastetpsId} order by id ASC',
 
     getStakeOrders: 'SELECT insert_time,quantity,remain_month from existing_etps_assets_m WHERE account_id = $1',
