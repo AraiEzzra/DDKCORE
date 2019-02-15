@@ -361,7 +361,7 @@ Frozen.prototype.verifyAirdrop = async (trs) => {
         JSON.stringify(airdropReward.sponsors) !== JSON.stringify(trs.asset.airdropReward.sponsors) ||
         airdropReward.total !== trs.asset.airdropReward.totalReward
     ) {
-        throw `Verify failed: ${trs.type === transactionTypes.STAKE ? 'stake' : 'vote'} airdrop reward is corrupted`;
+        throw `Verify failed: ${trs.type === transactionTypes.STAKE ? 'stake' : 'vote'} airdrop reward is corrupted, expected: withAirdropReward ${airdropReward.allowed} sponsors: ${JSON.stringify(airdropReward.sponsors)} totalReward: ${airdropReward.total}, actual: withAirdropReward ${trs.asset.airdropReward.withAirdropReward} sponsors: ${JSON.stringify(trs.asset.airdropReward.sponsors)} totalReward: ${trs.asset.airdropReward.totalReward}`;
     }
 };
 
