@@ -130,7 +130,7 @@ class BlockService {
             poolLockResponse.errors.push('lockTransactionPoolAndQueue');
             return poolLockResponse;
         }
-        return new Response<void>();
+        return new Response<void>({});
     }
 
     private async unlockTransactionPoolAndQueue(): Promise<Response<void>> {
@@ -144,7 +144,7 @@ class BlockService {
             poolUnlockResponse.errors.push('lockTransactionPoolAndQueue');
             return poolUnlockResponse;
         }
-        return new Response<void>();
+        return new Response<void>({});
     }
 
     /**

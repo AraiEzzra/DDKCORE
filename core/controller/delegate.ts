@@ -1,7 +1,9 @@
 import { delegateCoreRepository } from 'core/repository/delegate';
+import { RPC, ON } from 'core/util/decorator';
 import Response from 'shared/model/response';
+import { BaseController } from 'core/controller/baseController';
 
-export class DelegateController {
+export class DelegateController extends BaseController {
 
     @RPC('FORGING_DISABLE')
     @ON('FORGING_DISABLE')
@@ -26,5 +28,7 @@ export class DelegateController {
 
     @ON('READY_FOR_FORGING')
     public blockchainReadyForForging() {}
-
 }
+
+export default new DelegateController();
+

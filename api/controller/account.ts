@@ -49,14 +49,14 @@ export class AccountController {
     }
 
     @GET('/get_total_accounts')
-    @validate(schema.publicKey)
+    @validate({})
     public async getTotalAccounts() {
         const count = await this.sharedAccountRepo.getCountAccounts();
         return { count };
     }
 
     @POST('/check_sender_balance')
-    @validate(schema.checkSenderAccountBalance)
+    @validate({})
     public checkSenderAccountBalance(address: string) {
         return this.sharedAccountRepo.getBalanceByAddress(address);
     }
