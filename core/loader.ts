@@ -1,8 +1,6 @@
-import { Application } from 'express';
 import { IDatabase } from 'pg-promise';
-import { setRoute } from './util/decorator';
 import { Migrator } from 'core/database/migrator';
-import './controller';
+import controllers from './controller';
 
 export class Loader {
 

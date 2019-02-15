@@ -3,7 +3,7 @@ import Response from 'shared/model/response';
 import {Block} from 'shared/model/block';
 import {BlockRepo} from 'api/repository/block';
 import schema from 'api/schema/block';
-
+import { Controller, GET, validate } from 'api/util/http_decorator';
 const constants = require('../../backlog/helpers/constants');
 
 // wait declaration from @Bogdan Pidoprygora
