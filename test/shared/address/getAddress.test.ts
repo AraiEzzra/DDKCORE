@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { mockData } from './mock/data';
-import { getAddressByPublicKey } from 'shared/util/account.utils';
+import { getAddressByPublicKey } from 'shared/util/account';
 
 describe('Get Address by public key. ', () => {
     it('Should be right addresses by public key', (done) => {

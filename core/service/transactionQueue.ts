@@ -1,7 +1,8 @@
 import { Transaction, TransactionStatus } from 'shared/model/transaction';
 import { ITransactionPoolService } from 'core/service/transactionPool';
 import { transactionSortFunc } from 'core/util/transaction';
-import { getOrCreateAccount } from 'shared/util/account.utils';
+import { getOrCreateAccount } from 'shared/util/account';
+
 
 export interface ITransactionQueueService<T extends Object> {
     reshuffleTransactionQueue(): void;
