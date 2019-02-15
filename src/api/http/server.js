@@ -75,7 +75,7 @@ function ServerHttpApi(serverModule, app, logger, cache, config) {
     );
 
     // Referral API's
-    require('../../helpers/referal').api(app);
+    require('../../helpers/referral').api(app);
 
     router.use((req, res, next) => {
         if (req.url.indexOf('/api/') === -1 && req.url.indexOf('/peer/') === -1) {

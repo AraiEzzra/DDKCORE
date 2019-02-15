@@ -1,5 +1,5 @@
 const { LENGTH, writeUInt64LE } = require('../helpers/buffer.js');
-const sql = require('../sql/referal_sql');
+const sql = require('../sql/referral');
 const constants = require('../helpers/constants');
 
 let modules,

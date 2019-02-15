@@ -4,7 +4,7 @@ const jsonSql = require('json-sql')();
 
 jsonSql.setDialect('postgresql');
 const constants = require('../helpers/constants.js');
-const sql = require('../sql/referal_sql');
+const sql = require('../sql/referral');
 const AccountsSQL = require('../sql/accounts');
 
 let self;

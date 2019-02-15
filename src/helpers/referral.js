@@ -3,15 +3,13 @@
  */
 
 const mailServices = require('./postmark');
-const async = require('async');
-const sql = require('../sql/referal_sql');
-const OrderBy = require('./orderBy.js');
+const sql = require('../sql/referral');
 const constants = require('./constants.js');
 
 let library = {},
     __private = {};
 
-exports.Referals = function (scope) {
+exports.Referral = function (scope) {
     library = scope;
 };
 
@@ -25,16 +23,14 @@ exports.Referals = function (scope) {
  * @param  {string}   filter.address addres of user whose reward we have to get
  * @param  {number}   filter.limit Limit of rewards to retrieve, default: 100, max: 100
  * @param  {number}   filter.offset Offset from where to start
- * @param  {string}   filter.orderBy Sort order, default: reward_time:desc
  * @param  {Function} cb Callback function
  * @return {Function} cb Callback function from params (through setImmediate)
  * @return {Object}   cb.err Error if occurred
- * @return {Object}   cb.data List of referral rewards received.
+ * @return {Object}   cb.rewards List of referral rewards received.
  */
 
 __private.list = function (filter, cb) {
-    let params = {},
-        where = [];
+    let params = {};
 
     if (filter.address) {
         params.introducer_address = filter.address;
@@ -108,8 +104,8 @@ module.exports.api = function (app) {
      * Getting the stats of referrals done with including it's referral chain.
      * @param {req} - contains the User Address, Level Info, Limit and Offset.
      * @param {res} - return the response with status of success or failure.
-     * @returns {SponsorList} - contains the list of referals with stake info.
-     * @returns {count} - contains the total users on a specific level.
+     * @returns {sponsorList} - contains the list of referrals also with stake info.
+     * @returns {count} - contains the total referred users on a specific level.
      */
 
     app.post('/referral/list', (req, res) => {
@@ -139,8 +135,8 @@ module.exports.api = function (app) {
      * It will get all the rewards received either by Direct or Chain referral.
      * Also contains the sponsor information like its address, level, transaction type, reward amount, reward time.
      * @param {req} - It consist of user address.
-     * @returns {SponsorList} - It contains the list of rewards received from sponsors.
-     * @returns {count} - It contains the total count of rewards received.
+     * @returns {SponsorList} - It contains the list of rewards received from sponsors with their respective level and other details.
+     * @returns {count} - It contains the total number of rewards received.
      */
 
     app.post('/referral/rewardHistory', (req, res) => {
