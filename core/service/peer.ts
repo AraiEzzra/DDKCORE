@@ -1,30 +1,18 @@
 import { Peer, PeerState } from 'shared/model/peer';
-import { PeerRepo } from 'core/repository/peer';
+import PeerRepo from 'core/repository/peer';
 
 const _ = require('lodash');
 
 const logger = require('logger');
 const config = require('config');
 
-export class PeerService {
-    private readonly peerRepo = new PeerRepo();
-
-    constructor() { }
-
-    // to repo
-    private getByFilter(filter) {
-        return [];
-    }
-
-    // ?
-    private dbSave() {}
-    private dbRead() {}
+class PeerService {
 
     public removeBans() {
         const now = Date.now();
-        _.each(this.peerRepo.list(), (peer) => {
+        _.each(PeerRepo.list(), (peer) => {
             if (peer.clock && peer.clock <= now) {
-                this.peerRepo.unban(peer);
+                PeerRepo.unban(peer);
             }
         });
     }
@@ -32,7 +20,7 @@ export class PeerService {
     public insertSeeds() {
         let updated = 0;
         config.peers.list.forEach((peer) => {
-            peer = this.peerRepo.create(peer);
+            peer = PeerRepo.create(peer);
             logger.trace(`Processing seed peer: ${peer.string}`);
             this.ping(peer);
             ++updated;
@@ -41,18 +29,18 @@ export class PeerService {
 
     public update(peer) {
         peer.state = PeerState.CONNECTED;
-        return this.peerRepo.upsert(peer);
+        return PeerRepo.upsert(peer);
     }
 
     public remove(peer) {
         // additional logic may be transferred to repo
-        this.peerRepo.upsert(peer);
-        this.peerRepo.remove(peer);
+        PeerRepo.upsert(peer);
+        PeerRepo.remove(peer);
     }
 
     public ban(pip, port, seconds) {
         // additional logic may be transferred to repo
-        this.peerRepo.ban(pip, port, seconds);
+        PeerRepo.ban(pip, port, seconds);
     }
 
     public ping(peer) {
@@ -88,9 +76,9 @@ export class PeerService {
 
     public list(options?) {
         // system getBroadHash
-        const peers = [];
+        const peers: Array<Peer> = [];
         const consensus = '';
-        this.getByFilter({});
+        PeerRepo.getByFilter({});
         return {
             peers,
             consensus
@@ -99,10 +87,12 @@ export class PeerService {
 
     public updatePeers() {
         let updated = 0;
-        const peers = this.peerRepo.list();
+        const peers = PeerRepo.list();
 
         peers.forEach((peer) => {
             this.ping(peer);
         });
     }
 }
+
+export default new PeerService();
