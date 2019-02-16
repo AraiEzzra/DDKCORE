@@ -8,3 +8,7 @@ export interface ITableObject {
     fields: Array<string>;
     values: any;
 }
+
+export function getRandomInt(max: number): number {
+  return Math.floor(Math.random() * Math.floor(max));
+}
