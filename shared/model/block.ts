@@ -1,60 +1,26 @@
+import { Timestamp } from 'shared/model/account';
 import { Transaction } from 'shared/model/transaction';
+import config from 'shared/util/config';
 
-interface IBlockFields {
-    id?: string;
-    rowId?: number;
-    version?: number;
-    timestamp?: number;
-    height?: number;
-    previousBlock?: string;
-    numberOfTransactions?: number;
-    totalAmount?: bigint | number;
-    totalFee?: bigint | number;
-    reward?: number;
-    payloadLength?: number;
-    payloadHash?: string;
-    generatorPublicKey?: string;
-    blockSignature?: string;
-    generationSignature?: string;
-    totalForged?: bigint | number;
-    generatorId?: string;
-    confirmations?: number;
-    username?: string;
-    transactions? : Transaction<object>[];
+export class IBlockFields {
+    id?: string | null = null;
+    version?: number = config.constants.CURRENT_BLOCK_VERSION;
+    createdAt: Timestamp;
+    height?: number | null = null;
+    previousBlockId: string | null;
+    transactionCount?: number = 0;
+    amount?: number = 0;
+    fee?: number = 0;
+    payloadHash?: string = '';
+    generatorPublicKey?: string = '';
+    signature?: string = '';
+    transactions?: Array<Transaction<object>> | null = null;
 }
 
-export class Block {
-    id?: string;
-    rowId?: number;
-    version?: number;
-    timestamp?: number;
-    height?: number;
-    previousBlock?: string;
-    numberOfTransactions?: number;
-    totalAmount?: bigint;
-    totalFee?: bigint;
-    reward?: number;
-    payloadLength?: number;
-    payloadHash?: string;
-    generatorPublicKey?: string;
-    blockSignature?: string;
-    generationSignature?: string;
-    totalForged?: bigint;
-    generatorId?: string;
-    confirmations?: number;
-    username?: string;
-    transactions? : Transaction<object>[];
-
+export class Block extends IBlockFields {
     // todo: resolve = weak for passing untyped object
     constructor(data: IBlockFields) {
-        for (const key in data) {
-            if (data[key] || data[key] === 0) {
-                if (key === 'totalAmount' || key === 'totalFee' || key === 'totalForged') {
-                    this[key] = BigInt(data[key]);
-                } else {
-                    this[key] = data[key];
-                }
-            }
-        }
+        super();
+        Object.assign(this, data);
     }
 }

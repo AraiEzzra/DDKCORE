@@ -1,15 +1,59 @@
-import { Application } from 'express';
-import { IDatabase } from 'pg-promise';
-import { setRoute } from './util/decorator';
-import { Migrator } from 'core/database/migrator';
-import './controller';
+import db from 'shared/driver/db';
+import TransactionService from 'core/service/transaction';
+import { TransactionStatus, TransactionType} from 'shared/model/transaction';
+import { Address, PublicKey, Timestamp} from 'shared/model/account';
+import { messageON } from 'shared/util/bus';
 
-export class Loader {
+enum constant  {
+    Limit = 1000
+}
 
-    async runMigrate(db: IDatabase<any>): Promise<boolean> {
-        const migrator = new Migrator(db);
-        await migrator.run();
-        return true;
+interface ITransaction <T extends object> {
+    id: string;
+    blockId: string;
+    type: TransactionType;
+    senderPublicKey: PublicKey;
+    senderAddress: Address;
+    recipientAddress: Address;
+    signature: string;
+    secondSignature: string;
+    amount: number;
+    createdAt: Timestamp;
+    fee: number;
+    status?: TransactionStatus;
+    asset: T;
+}
+
+
+class Loader {
+
+    public async start() {
+        const totalAmountTrs = await db.one(`
+            SELECT count(*)::int AS count
+            FROM trs;
+        `);
+
+        const countIteration = Math.ceil(totalAmountTrs.count / constant.Limit);
+
+        for (let i = 0; i < countIteration; i ++ ) {
+            const transactionBatch = await this.getTransactionBatch(constant.Limit * i);
+            await TransactionService.applyUnconfirmed(transactionBatch);
+
+        }
+        messageON('WARN_UP_FINISHED');
+    }
+
+    private async getTransactionBatch(offset: number): Promise<Array<ITransaction<any>>> {
+        const transactions: Array<ITransaction<any>> = await db.many(`
+            SELECT *
+            FROM trs
+            ORDER BY created_at ASC
+            LIMIT ${constant.Limit}
+            OFFSET ${offset}
+        `);
+        return transactions;
     }
 }
+
+export default new Loader();
 

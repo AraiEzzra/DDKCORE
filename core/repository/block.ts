@@ -1,36 +1,30 @@
 const Inserts = require('../../backlog/helpers/inserts.js');
-
 import { Block } from 'shared/model/block';
-import { getAddressByPublicKey } from 'shared/util/account';
 import db from 'shared/driver/db';
 import Response from 'shared/model/response';
 import config from 'shared/util/config';
 
 interface IDBBlockSave {
     table: string;
-    fields: string[];
+    fields: Array<string>;
     values: object;
 }
 
-export class BlockRepo {
+class BlockRepo {
     private dbTable: string = 'blocks';
-    private dbFields: string[] = [
+    private dbFields: Array<string> = [
         'id',
         'version',
-        'timestamp',
+        'created_at',
         'height',
-        'previousBlock',
-        'numberOfTransactions',
-        'totalAmount',
-        'totalFee',
-        'reward',
-        'payloadLength',
-        'payloadHash',
-        'generatorPublicKey',
-        'blockSignature'
+        'previous_block_id',
+        'transaction_count',
+        'amount',
+        'fee',
+        'payload_hash',
+        'generator_public_key',
+        'signature'
     ];
-
-    constructor() {}
 
     public async getGenesisBlock(): Promise<Response<Block>> {
         let block: Block = null;
@@ -49,7 +43,7 @@ export class BlockRepo {
     public async isBlockExists(id: string): Promise<Response<boolean>> {
         let exists = null;
         try {
-            exists = await db.query('SELECT EXISTS(SELECT * FROM blocks WHERE "id" = ${id})', { id });
+            exists = await db.one('SELECT EXISTS(SELECT * FROM blocks WHERE "id" = ${id})', { id });
         } catch (pgError) {
             return new Response({ errors: [pgError]});
         }
@@ -59,29 +53,46 @@ export class BlockRepo {
     // if I need to return deleted block?
     public async deleteBlock(blockId: string): Promise<Response<void>> {
         try {
-            await db.query('DELETE FROM blocks WHERE "id" = ${blockId};', { blockId });
+            await db.none('DELETE FROM blocks WHERE "id" = ${blockId};', { blockId });
         } catch (pgError) {
             return new Response({ errors: [pgError]});
         }
         return new Response();
     }
 
-    public async getIdSequence(param: { height: number, delegates: number, limit: number}): Promise<Response<string[]>> {
+    // todo: should be redone
+    public async getIdSequence(
+        param: { height: number, delegates: number, limit: number}
+        ): Promise<Response<Array<string>>> {
         const request =
             `WITH 
-            current_round AS (SELECT CEIL(b.height / ${param.delegates}::float)::bigint as height FROM blocks b WHERE b.height <= ${param.height} ORDER BY b.height DESC LIMIT 1)
-            rounds AS (SELECT * FROM generate_series((SELECT * FROM current_round), (SELECT * FROM current_round) - ${param.limit} + 1, -1))'
+            current_round AS (
+                SELECT CEIL(b.height / ${param.delegates}::float)::bigint as height 
+                FROM blocks b 
+                WHERE b.height <= ${param.height} 
+                ORDER BY b.height DESC LIMIT 1)
+            rounds AS (
+                SELECT * 
+                FROM generate_series(
+                    (SELECT * FROM current_round),
+                    (SELECT * FROM current_round) - ${param.limit} + 1, 
+                    -1
+                )
+            )
             SELECT
             b.id, b.height, CEIL(b.height / ${param.delegates}::float)::bigint AS round
             FROM blocks b
-            WHERE b.height IN (SELECT ((n - 1) * ${param.delegates}) + 1 FROM rounds AS s(n)) ORDER BY height DESC`;
+            WHERE b.height IN (
+                SELECT ((n - 1) * ${param.delegates}) + 1 FROM rounds AS s(n)
+            ) 
+            ORDER BY height DESC`;
         let result = [];
         try {
             result = await db.query(request);
         } catch (pgError) {
             return new Response({ errors: [pgError]});
         }
-        const ids: string[] = [];
+        const ids: Array<string> = [];
         result.forEach((row) => {
             ids.push(row.id);
         });
@@ -91,22 +102,31 @@ export class BlockRepo {
     public async getCommonBlock(param: {id: string, previousBlock: Block, height: number}): Promise<Response<string>> {
         const request =  [
             'SELECT COUNT("id")::int FROM blocks WHERE "id" = ${id}',
-            (param.previousBlock ? 'AND "previousBlock" = ${previousBlock}' : ''),
+            (param.previousBlock ? 'AND "previous_block_id" = ${previousBlockId}' : ''),
             'AND "height" = ${height}'
         ].filter(Boolean).join(' ');
         let result;
         try {
-            result = await db.query(request, param);
+            result = await db.oneOrNone(request, {
+                id: param.id,
+                previousBlockId: param.previousBlock.id,
+                height: param.height
+            });
         } catch (pgError) {
             return new Response({ errors: [pgError]});
         }
         return new Response({ data: result });
     }
 
-    public async loadBlocksOffset(param: {offset: number, limit: number}): Promise<Response<Block[]>> {
-        let blocks: Block[] = null;
+    public async loadBlocksOffset(param: {offset: number, limit: number}): Promise<Response<Array<Block>>> {
+        let blocks: Array<Block> = null;
         try {
-            const result: object[] = await db.manyOrNone('SELECT * FROM full_blocks_list WHERE "b_height" >= ${offset} AND "b_height" < ${limit} ORDER BY "b_height", t_type, t_timestamp, "t_id"', { offset: param.offset, limit: param.limit });
+            const result: Array<object> = await db.manyOrNone(
+                'SELECT * ' +
+                'FROM blocks ' +
+                'WHERE "height" >= ${offset} AND "height" < ${limit} ' +
+                'ORDER BY "height"',
+                param);
             if (!result) {
                 return new Response({ errors: ['No blocks found']});
             }
@@ -122,7 +142,14 @@ export class BlockRepo {
     public async loadLastBlock(): Promise<Response<Block>> {
         let block: Block = null;
         try {
-            const result: object = await db.oneOrNone('SELECT * FROM full_blocks_list WHERE "b_height" = (SELECT MAX("height") FROM blocks) ORDER BY "b_height", t_type, t_timestamp, "t_id"');
+            const result: object = await db.oneOrNone(
+                'SELECT * ' +
+                'FROM blocks' +
+                'WHERE "height" = (' +
+                '   SELECT MAX("height") ' +
+                '   FROM blocks' +
+                ') ' +
+                'ORDER BY "height"');
             if (!result) {
                 return new Response({ errors: ['No blocks found']});
             }
@@ -133,15 +160,20 @@ export class BlockRepo {
         return new Response({ data: block });
     }
 
-    public async loadLastNBlocks(): Promise<Response<string[]>> {
-        let ids: string[] = null;
+    public async loadLastNBlocks(): Promise<Response<Array<string>>> {
+        let ids: Array<string> = null;
         try {
-            const result: object[] = await db.manyOrNone('SELECT id FROM blocks ORDER BY id DESC LIMIT ${blockLimit}', { blockLimit: config.constants.blockSlotWindow });
+            const result: Array<{id: string}> = await db.manyOrNone(
+                'SELECT id ' +
+                'FROM blocks ' +
+                'ORDER BY height DESC ' +
+                'LIMIT ${blockLimit}',
+                { blockLimit: config.constants.blockSlotWindow });
             if (!result) {
                 return new Response({ errors: ['No blocks found']});
             }
             result.forEach((row) => {
-                ids.push(this.dbRead(row).id);
+                ids.push(row.id);
             });
         } catch (pgError) {
             return new Response({ errors: [pgError]});
@@ -151,7 +183,15 @@ export class BlockRepo {
 
     public async deleteAfterBlock(id: string): Promise<Response<void>> {
         try {
-            await db.query('DELETE FROM blocks WHERE "height" >= (SELECT "height" FROM blocks WHERE "id" = ${id});', { id });
+            await db.query(
+                'DELETE ' +
+                'FROM blocks ' +
+                'WHERE "height" >= (' +
+                '   SELECT "height" ' +
+                '   FROM blocks ' +
+                '   WHERE "id" = ${id}' +
+                ');',
+                { id });
         } catch (pgError) {
             return new Response({ errors: [pgError]});
         }
@@ -159,35 +199,21 @@ export class BlockRepo {
     }
 
     public dbSave(block: Block): IDBBlockSave {
-        let payloadHash,
-            generatorPublicKey,
-            blockSignature;
-
-        try {
-            payloadHash = Buffer.from(block.payloadHash, 'hex');
-            generatorPublicKey = Buffer.from(block.generatorPublicKey, 'hex');
-            blockSignature = Buffer.from(block.blockSignature, 'hex');
-        } catch (e) {
-            throw e;
-        }
-
         return {
             table: this.dbTable,
             fields: this.dbFields,
             values: {
                 id: block.id,
                 version: block.version,
-                timestamp: block.timestamp,
+                created_at: block.createdAt,
                 height: block.height,
-                previousBlock: block.previousBlock || null,
-                numberOfTransactions: block.numberOfTransactions,
-                totalAmount: block.totalAmount,
-                totalFee: block.totalFee,
-                reward: block.reward || 0,
-                payloadLength: block.payloadLength,
-                payloadHash,
-                generatorPublicKey,
-                blockSignature
+                previous_block_id: block.previousBlockId || null,
+                transaction_count: block.transactionCount,
+                amount: block.amount,
+                fee: block.fee,
+                payload_hash: block.payloadHash,
+                generator_public_key: block.generatorPublicKey,
+                signature: block.signature
             }
         };
     }
@@ -212,15 +238,16 @@ export class BlockRepo {
     public async loadFullBlockById(id: string): Promise<Response<Block>> {
         let rawBlock = null;
         try {
-            rawBlock = await db.query('SELECT * FROM full_blocks_list where b_id=${id} ORDER BY "b_height", t_type, t_timestamp, "t_id"', { id });
+            rawBlock = await db.oneOrNone(
+                'SELECT * ' +
+                'FROM blocks ' +
+                'WHERE id = ${id} ' +
+                'ORDER BY "height"',
+                { id });
         } catch (pgError) {
             return new Response({ errors: [pgError]});
         }
-        //todo: map fields if view is in use
-        return new Response({ data: this.dbRead({
-                id: rawBlock.b_id,
-            })
-        });
+        return new Response({ data: this.dbRead(rawBlock) });
     }
 
     public dbRead(raw: {[key: string]: any}, radix: number = 10): Block {
@@ -230,23 +257,20 @@ export class BlockRepo {
 
         const block: Block = new Block({
             id: raw.id,
-            rowId: parseInt(raw.rowId, radix),
             version: parseInt(raw.version, radix),
-            timestamp: parseInt(raw.timestamp, radix),
+            createdAt: parseInt(raw.created_at, radix),
             height: parseInt(raw.height, radix),
-            previousBlock: raw.previousBlock,
-            numberOfTransactions: parseInt(raw.numberOfTransactions, radix),
-            totalAmount: BigInt(raw.totalAmount),
-            totalFee: BigInt(raw.totalFee),
-            reward: parseInt(raw.reward, radix),
-            payloadLength: parseInt(raw.payloadLength, radix),
-            payloadHash: raw.payloadHash,
-            generatorPublicKey: raw.generatorPublicKey,
-            generatorId: getAddressByPublicKey(raw.generatorPublicKey),
-            blockSignature: raw.blockSignature
+            previousBlockId: raw.previous_block_id,
+            transactionCount: parseInt(raw.transaction_count, radix),
+            amount: raw.amount,
+            fee: raw.fee,
+            payloadHash: raw.payload_hash,
+            generatorPublicKey: raw.generator_public_key,
+            signature: raw.signature
         });
 
-        block.totalForged = BigInt(block.totalFee) + BigInt(block.reward);
         return block;
     }
 }
+
+export default new BlockRepo();

@@ -26,6 +26,7 @@ export class PeerRepo {
     removePeer(peer: Peer): void {
         console.log(`disconnect peer ${peer.ip}:${peer.port}`);
         delete this.peers[`${peer.ip}:${peer.port}`];
+
     }
 
     peerList(): Array<Peer> {
@@ -57,4 +58,13 @@ export class PeerRepo {
     getRandomTrustedPeer(): Peer {
         return TRUSTED_PEERS[getRandomInt(TRUSTED_PEERS.length)];
     }
+
+    public getByFilter(filter) {
+        return [];
+    }
+
+    public dbSave() {}
+    public dbRead() {}
 }
+
+export default new PeerRepo();

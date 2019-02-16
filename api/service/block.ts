@@ -1,5 +1,5 @@
 import { Block } from 'shared/model/block';
-import { BlockRepo } from 'api/repository/block';
+import BlockRepo from 'api/repository/block';
 import Response from 'shared/model/response';
 const OrderBy = require('../../helpers/orderBy.js');
 
@@ -21,8 +21,7 @@ interface IListParams {
     orderBy?: string;
 }
 
-export class BlockService {
-    private blockRepo = new BlockRepo();
+class BlockService {
     private lastBlock: Block;
     private sortFields = [
         'id',
@@ -35,7 +34,6 @@ export class BlockService {
     }
 
     public getLastBlock(): Block {
-        // load block from db?
         return this.lastBlock;
     }
 
@@ -65,7 +63,7 @@ export class BlockService {
             params.previousBlock = filter.previousBlock;
         }
 
-        if (filter.height === 0 || filter.height > 0) {
+        if (filter.height > 0) {
             where.push('"b_height" = ${height}');
             params.height = filter.height;
         }
@@ -97,9 +95,9 @@ export class BlockService {
             return new Response({ errors: [orderBy.error]});
         }
 
-        let rowsCountResponse: number = this.blockRepo.countList(where, params);
+        let rowsCountResponse: number = BlockRepo.countList(where, params);
         let count: number = rowsCountResponse;
-        let rowsListResponse: Block[] = this.blockRepo.list(
+        let rowsListResponse: Block[] = BlockRepo.list(
             {
                 where,
                 sortField: orderBy.sortField,
@@ -110,3 +108,5 @@ export class BlockService {
         return new Response({ data: { blocks, count }});
     }
 }
+
+export default new BlockService();

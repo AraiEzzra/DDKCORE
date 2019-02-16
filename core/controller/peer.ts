@@ -1,10 +1,10 @@
 import { Peer } from 'shared/model/peer';
-import { PeerService } from 'core/service/peer';
+import PeerService from 'core/service/peer';
 import { Block } from 'shared/model/block';
-import { BlockService } from 'core/service/block';
+import BlockService from 'core/service/block';
 import { Transaction } from 'shared/model/transaction';
 import Response from 'shared/model/response';
-import { Controller, GET, POST, ON } from 'core/util/decorator';
+import { ON, RPC } from 'core/util/decorator';
 import { BaseController } from 'core/controller/baseController';
 
 interface ICommonBlockRequest {
@@ -27,7 +27,7 @@ interface IPostBlockRequest {
 
 interface IPostTransactionsRequest {
     body: {
-        transactions: Transaction<object>[];
+        transactions: Array<Transaction<object>>;
         transaction: Transaction<object>;
     };
 }
@@ -39,16 +39,14 @@ interface IAdditionalData {
     };
 }
 
-@Controller('/peer')
+// todo: check if this controller is redundant, cause all actions are for transport
 class PeerController extends BaseController {
-    private peerService = new PeerService();
-    private blockService = new BlockService();
 
     private handshake(ip: string, port: number, headers: object): Response<Peer> {
         return new Response({data: new Peer()});
     }
 
-    @GET('/blocks/common')
+    @RPC('COMMON_BLOCK')
     public blocksCommon(req: ICommonBlockRequest, additionalData: IAdditionalData): Response<{ common: number; }> {
         let ip: string = additionalData.ip;
         let port: number = additionalData.headers.port;
@@ -57,25 +55,30 @@ class PeerController extends BaseController {
             peerResponse.errors.push('/blocks/common');
             return new Response<{common: number}>({ errors: peerResponse.errors });
         }
-        this.peerService.remove(peerResponse.data);
+        PeerService.remove(peerResponse.data);
         return new Response({ data: { common: 0 }});
     }
 
-    @GET('/blocks')
-    public blocks(req: IBlockRequest) : Response<{ blocks: Block[]; }> {
+    @RPC('GET_BLOCKS')
+    public blocks(req: IBlockRequest) : Response<{ blocks: Array<Block>; }> {
         return new Response({ data: { blocks: [] } });
     }
 
-
-    @GET('/height')
-    public height() : Response<{ height: number }> {
-        return new Response<{height: number}>({ data : { height: this.blockService.getLastBlock().height } });
+    @RPC('GET_PEERS_LIST')
+    public list(): Response<Array<Peer>> {
+        PeerService.list();
+        return new Response({ data: [] });
     }
 
-    @GET('/transactions')
+    @RPC('GET_HEIGHT')
+    public height() : Response<{ height: number }> {
+        return new Response<{height: number}>({ data : { height: BlockService.getLastBlock().height } });
+    }
+
+    @RPC('GET_TRANSACTIONS_COUNT')
     public getTransactions() {} // transaction[] unconfirmed + multisignatures + queued
 
-    @POST('/blocks')
+    @RPC('RECEIVE_BLOCK')
     public postBlock(req: IPostBlockRequest, additionalData: IAdditionalData): Response<{ blockId: string }> {
         let block: Block = req.body.block;
         let ip: string = additionalData.ip;
@@ -93,17 +96,31 @@ class PeerController extends BaseController {
         return new Response({data: { blockId: block.id }});
     }
 
-    @POST('/transactions')
+    @RPC('RECEIVE_TRANSACTIONS')
     public postTransactions(req: IPostTransactionsRequest) {
-        let transactions: Transaction<object>[] = req.body.transactions;
+        let transactions: Array<Transaction<object>> = req.body.transactions;
         let transaction: Transaction<object> = req.body.transaction;
         this.receiveTransactions(transactions ? transactions : [transaction]);
 
     }
 
-    private receiveTransactions(transactions: Transaction<object>[]): void {
+    private receiveTransactions(transactions: Array<Transaction<object>>): void {
         // blockService.objectNormalize ?
         // transactions.processUnconfirmedTransaction
+    }
+
+    @ON('BLOCKCHAIN_READY')
+    public initDiscover() {
+        PeerService.insertSeeds();
+        PeerService.discover();
+    }
+
+    // @todo should be called each 10 sec
+    @ON('PEERS_DISCOVER')
+    public discover() {
+        PeerService.discover();
+        PeerService.updatePeers();
+        PeerService.removeBans();
     }
 }
 
