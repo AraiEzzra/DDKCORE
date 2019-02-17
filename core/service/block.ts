@@ -4,25 +4,27 @@ import BUFFER from 'core/util/buffer';
 
 import Validator from 'z-schema';
 import ZSchema from 'shared/util/z_schema';
+
 const validator: Validator = new ZSchema({});
 
-import { logger } from 'shared/util/logger';
-import { Account } from 'shared/model/account';
-import { Block } from 'shared/model/block';
+import {logger} from 'shared/util/logger';
+import {Account} from 'shared/model/account';
+import {Block} from 'shared/model/block';
 import BlockRepo from 'core/repository/block';
-import { Transaction } from 'shared/model/transaction';
-import { TransactionService, ITransactionService } from 'core/service/transaction';
-import { TransactionQueue } from 'core/service/transactionQueue';
-import { TransactionPoolService } from 'core/service/transactionPool';
-import { TransactionRepo } from 'core/repository/transaction';
-import { DelegateService } from 'core/service/delegate';
+import {Transaction} from 'shared/model/transaction';
+import {ITransactionService}  from 'core/service/transaction';
+import TransactionService  from 'core/service/transaction';
+import {TransactionQueue} from 'core/service/transactionQueue';
+import {TransactionPoolService} from 'core/service/transactionPool';
+import {TransactionRepo} from 'core/repository/transaction';
+import {DelegateService} from 'core/service/delegate';
 import slotService from 'core/service/slot';
-import { RoundService } from 'core/service/round';
-import { transactionSortFunc } from 'core/util/transaction';
-import { getOrCreateAccount } from 'shared/util/account';
+import {RoundService} from 'core/service/round';
+import {transactionSortFunc} from 'core/util/transaction';
+import {getOrCreateAccount} from 'shared/util/account';
 import blockShema from 'core/schema/block';
 import Response from 'shared/model/response';
-import { messageON } from 'shared/util/bus';
+import {messageON} from 'shared/util/bus';
 import config from 'shared/util/config';
 
 interface IVerifyResult {
@@ -40,7 +42,7 @@ class BlockService {
     private delegateService: DelegateService = new DelegateService();
     private transactionQueue: TransactionQueue<object> = new TransactionQueue({});
     private transactionPool: TransactionPoolService<object> = new TransactionPoolService({});
-    private transactionService: ITransactionService<object> = new TransactionService();
+    private transactionService: ITransactionService<object> = TransactionService;
     private transactionRepo: TransactionRepo = new TransactionRepo();
     private roundService: RoundService = new RoundService();
 
@@ -117,7 +119,7 @@ class BlockService {
                 errors.push(...response.errors);
             }
         }
-        return new Response<void>({ errors: errors });
+        return new Response<void>({errors: errors});
     }
 
     private async lockTransactionPoolAndQueue(): Promise<Response<void>> {
@@ -162,21 +164,21 @@ class BlockService {
 
         const resultNormalizeBlock: Response<Block> = await this.normalizeBlock(block);
         if (!resultNormalizeBlock.success) {
-            return new Response<void>({ errors: [...resultNormalizeBlock.errors, 'processBlock'] });
+            return new Response<void>({errors: [...resultNormalizeBlock.errors, 'processBlock']});
         }
         block = resultNormalizeBlock.data;
 
         if (verify) {
             const resultVerifyBlock: IVerifyResult = await this.verifyBlock(block, !keypair);
             if (!resultVerifyBlock.verified) {
-                return new Response<void>({ errors: [...resultVerifyBlock.errors, 'processBlock'] });
+                return new Response<void>({errors: [...resultVerifyBlock.errors, 'processBlock']});
             }
         }
 
         if (saveBlock) {
             const resultCheckExists: Response<void> = await this.checkExists(block);
             if (!resultCheckExists.success) {
-                return new Response<void>({ errors: [...resultCheckExists.errors, 'processBlock'] });
+                return new Response<void>({errors: [...resultCheckExists.errors, 'processBlock']});
             }
         }
         // validateBlockSlot TODO enable after fix round
@@ -184,12 +186,12 @@ class BlockService {
         const resultCheckTransactions: Response<void> =
             await this.checkTransactionsAndApplyUnconfirmed(block, saveBlock, verify);
         if (!resultCheckTransactions.success) {
-            return new Response<void>({ errors: [...resultCheckTransactions.errors, 'processBlock'] });
+            return new Response<void>({errors: [...resultCheckTransactions.errors, 'processBlock']});
         }
 
         const applyBlockResponse: Response<void> = await this.applyBlock(block, broadcast, keypair, saveBlock, tick);
         if (!applyBlockResponse.success) {
-            return new Response<void>({ errors: [...applyBlockResponse.errors, 'processBlock'] });
+            return new Response<void>({errors: [...applyBlockResponse.errors, 'processBlock']});
         }
 
         if (!config.config.loading.snapshotRound) {
@@ -197,7 +199,7 @@ class BlockService {
         }
         const reshuffleResponse: Response<void> = await this.transactionQueue.reshuffleTransactionQueue();
         if (!reshuffleResponse.success) {
-            return new Response<void>({ errors: [...reshuffleResponse.errors, 'processBlock'] });
+            return new Response<void>({errors: [...reshuffleResponse.errors, 'processBlock']});
         }
         return new Response<void>();
     }
@@ -248,7 +250,8 @@ class BlockService {
         if (!report) {
             return new Response<Block>({
                 errors: [`Failed to validate block schema: 
-                ${validator.getLastErrors().map(err => err.message).join(', ')}`]});
+                ${validator.getLastErrors().map(err => err.message).join(', ')}`]
+            });
         }
 
         const errors: Array<string> = [];
@@ -261,7 +264,7 @@ class BlockService {
             block.transactions[i] = response.data;
         }
 
-        return new Response<Block>({ data: block, errors: errors });
+        return new Response<Block>({data: block, errors: errors});
     }
 
     private async verifyBlock(block: Block, verify: boolean): Promise<IVerifyResult> {
@@ -269,7 +272,7 @@ class BlockService {
 
         block = this.setHeight(block, lastBlock);
 
-        let result: IVerifyResult = { verified: false, errors: [] };
+        let result: IVerifyResult = {verified: false, errors: []};
 
         if (verify) {
             result = this.verifySignature(block, result);
@@ -297,7 +300,6 @@ class BlockService {
                     }.`
             );
         } else {
-            logger.error(
             logger.error(
                 `Verify->verifyBlock failed for block ${block.id} at height ${
                     block.height
@@ -366,7 +368,7 @@ class BlockService {
     private verifyId(block: Block, result: IVerifyResult): IVerifyResult {
         const idResponse: Response<string> = this.getId(block);
         if (!idResponse.success) {
-            result.errors.push( ...idResponse.errors );
+            result.errors.push(...idResponse.errors);
             return result;
         }
         const blockId: string = idResponse.data;
@@ -381,9 +383,9 @@ class BlockService {
         try {
             id = crypto.createHash('sha256').update(this.getBytes(block)).digest('hex');
         } catch (err) {
-            return new Response<string>({ errors: [err, 'getId'] });
+            return new Response<string>({errors: [err, 'getId']});
         }
-        return new Response<string>({ data: id });
+        return new Response<string>({data: id});
     }
 
     private verifyPayload(block: Block, result: IVerifyResult): IVerifyResult {
@@ -496,10 +498,10 @@ class BlockService {
     private async checkExists(block: Block): Promise<Response<void>> {
         const existsResponse: Response<boolean> = await BlockRepo.isBlockExists(block.id);
         if (!existsResponse.success) {
-            return new Response<void>({ errors: [...existsResponse.errors, 'checkExists'] });
+            return new Response<void>({errors: [...existsResponse.errors, 'checkExists']});
         }
         if (!existsResponse.data) {
-            return new Response<void>({ errors: [['Block', block.id, 'already exists'].join(' ')] });
+            return new Response<void>({errors: [['Block', block.id, 'already exists'].join(' ')]});
         }
         return new Response<void>();
     }
@@ -542,7 +544,7 @@ class BlockService {
             }
         }
 
-        return new Response<void>({ errors: errors });
+        return new Response<void>({errors: errors});
     }
 
     private async checkTransaction(
@@ -552,19 +554,19 @@ class BlockService {
         checkExists: boolean): Promise<Response<void>> {
         const transactionIdResponse: Response<string> = await this.transactionService.getId(trs);
         if (!transactionIdResponse.success) {
-            return new Response<void>({ errors: [...transactionIdResponse.errors, 'checkTransaction']});
+            return new Response<void>({errors: [...transactionIdResponse.errors, 'checkTransaction']});
         }
         trs.id = transactionIdResponse.data;
         trs.blockId = block.id;
 
         const verifyResult: IVerifyResult = await this.transactionService.verify(trs, sender, checkExists);
         if (!verifyResult.verified) {
-            return new Response<void>({ errors: [...verifyResult.errors, 'checkTransaction']});
+            return new Response<void>({errors: [...verifyResult.errors, 'checkTransaction']});
         }
 
         const verifyUnconfirmedResult: Response<void> = await this.transactionService.verifyUnconfirmed(trs, sender);
         if (!verifyUnconfirmedResult.success) {
-            return new Response<void>({ errors: [...verifyUnconfirmedResult.errors, 'checkTransaction']});
+            return new Response<void>({errors: [...verifyUnconfirmedResult.errors, 'checkTransaction']});
         }
 
         return new Response<void>();
@@ -579,7 +581,7 @@ class BlockService {
         if (keypair) {
             const addPayloadHashResponse: Response<Block> = this.addPayloadHash(block, keypair);
             if (!addPayloadHashResponse.success) {
-                return new Response<void>({ errors: [...addPayloadHashResponse.errors, 'applyBlock'] });
+                return new Response<void>({errors: [...addPayloadHashResponse.errors, 'applyBlock']});
             }
             block = addPayloadHashResponse.data;
         }
@@ -587,7 +589,7 @@ class BlockService {
         if (saveBlock) {
             const saveBlockResponse: Response<void> = await BlockRepo.saveBlock(block);
             if (!saveBlockResponse.success) {
-                return new Response<void>({ errors: [...saveBlockResponse.errors, 'applyBlock'] });
+                return new Response<void>({errors: [...saveBlockResponse.errors, 'applyBlock']});
             }
         }
 
@@ -606,13 +608,13 @@ class BlockService {
             }
         }
         if (errors.length) {
-            return new Response<void>({ errors: [...errors, 'applyBlock'] });
+            return new Response<void>({errors: [...errors, 'applyBlock']});
         }
 
         if (saveBlock) {
             const afterSaveResponse: Response<void> = await this.afterSave(block);
             if (!afterSaveResponse.success) {
-                return new Response<void>({ errors: [...afterSaveResponse.errors, 'applyBlock'] });
+                return new Response<void>({errors: [...afterSaveResponse.errors, 'applyBlock']});
             }
             logger.debug(`Block applied correctly with ${block.transactions.length} transactions`);
         }
@@ -647,7 +649,7 @@ class BlockService {
             return new Response<Block>({errors: [...idResponse.errors, 'addPayloadHash']});
         }
         block.id = idResponse.data;
-        return new Response<Block>({ data: block });
+        return new Response<Block>({data: block});
     }
 
     private async afterSave(block: Block): Promise<Response<void>> {
@@ -661,7 +663,7 @@ class BlockService {
                 logger.error(`[Chain][afterSave]: ${JSON.stringify(afterSaveResponse.errors)}`);
             }
         }
-        return new Response<void>({ errors });
+        return new Response<void>({errors});
     }
 
     /**
@@ -672,7 +674,7 @@ class BlockService {
     public async processIncomingBlock(block: Block): Promise<Response<void>> {
         if (this.receiveLocked) {
             logger.warn(`[Process][onReceiveBlock] locked for id ${block.id}`);
-            return new Response({ errors: ['receiveLocked'] });
+            return new Response({errors: ['receiveLocked']});
         }
 
         // TODO: how to check?
@@ -732,7 +734,7 @@ class BlockService {
         const removedTransactionsResponse: Response<Array<Transaction<object>>> =
             await this.transactionPool.removeFromPool(block.transactions, true);
         if (!removedTransactionsResponse.success) {
-            return new Response<void>({ errors: [...removedTransactionsResponse.errors, 'receiveBlock'] });
+            return new Response<void>({errors: [...removedTransactionsResponse.errors, 'receiveBlock']});
         }
         logger.debug(`[Process][newReceiveBlock] removedTransactions 
             ${JSON.stringify(removedTransactionsResponse.data)}`);
@@ -771,14 +773,14 @@ class BlockService {
             unlockResponse.errors.push('receiveBlock: Can\' unlock transaction pool or/and queue');
             return unlockResponse;
         }
-        return new Response<void>({ errors });
+        return new Response<void>({errors});
     }
 
     private async receiveForkOne(block: Block, lastBlock: Block): Promise<Response<void>> {
         let tmpBlock: Block = {...block};
         const forkResponse: Response<void> = await this.delegateService.fork(block, 1);
         if (!forkResponse.success) {
-            return new Response<void>({ errors: [...forkResponse.errors, 'receiveForkOne'] });
+            return new Response<void>({errors: [...forkResponse.errors, 'receiveForkOne']});
         }
         if (block.createdAt > lastBlock.createdAt ||
             (block.createdAt === lastBlock.createdAt && block.id > lastBlock.id)) {
@@ -788,29 +790,29 @@ class BlockService {
         logger.info('Last block and parent loses');
         const normalizeResponse: Response<Block> = await this.objectNormalize(tmpBlock);
         if (!normalizeResponse.success) {
-            return new Response<void>({ errors: [...normalizeResponse.errors, 'receiveForkOne'] });
+            return new Response<void>({errors: [...normalizeResponse.errors, 'receiveForkOne']});
         }
         tmpBlock = normalizeResponse.data;
 
         const validateBlockSlotResponse: Response<void> = await this.validateBlockSlot(tmpBlock, lastBlock);
         if (!validateBlockSlotResponse.success) {
-            return new Response<void>({ errors: [...validateBlockSlotResponse.errors, 'receiveForkOne'] });
+            return new Response<void>({errors: [...validateBlockSlotResponse.errors, 'receiveForkOne']});
         }
 
         const check = this.verifyReceipt(tmpBlock);
         if (!check.verified) {
             logger.error(['Block', tmpBlock.id, 'verification failed'].join(' '), check.errors.join(', '));
-            return new Response<void>({ errors: [...check.errors, 'receiveForkOne'] });
+            return new Response<void>({errors: [...check.errors, 'receiveForkOne']});
         }
 
         const deleteFirstResponse: Response<Block> = await this.deleteLastBlock();
         if (!deleteFirstResponse.success) {
-            return new Response<void>({ errors: [...deleteFirstResponse.errors, 'receiveForkOne'] });
+            return new Response<void>({errors: [...deleteFirstResponse.errors, 'receiveForkOne']});
         }
 
         const deleteSecondResponse: Response<Block> = await this.deleteLastBlock();
         if (!deleteSecondResponse.success) {
-            return new Response<void>({ errors: [...deleteSecondResponse.errors, 'receiveForkOne'] });
+            return new Response<void>({errors: [...deleteSecondResponse.errors, 'receiveForkOne']});
         }
     }
 
@@ -829,7 +831,7 @@ class BlockService {
         if (!validateBlockSlot.success) {
             errors.push(...validateBlockSlot.errors);
         }
-        return new Response<void>({ errors });
+        return new Response<void>({errors});
     }
 
     private verifyReceipt(block: Block): IVerifyResult {
@@ -837,7 +839,7 @@ class BlockService {
 
         block = this.setHeight(block, lastBlock);
 
-        let result: IVerifyResult = { verified: false, errors: [] };
+        let result: IVerifyResult = {verified: false, errors: []};
 
         result = this.verifySignature(block, result);
         result = this.verifyPreviousBlock(block, result);
@@ -894,7 +896,7 @@ class BlockService {
         let tmpBlock: Block = {...block};
         const forkResponse: Response<void> = await this.delegateService.fork(block, 5);
         if (!forkResponse.success) {
-            return new Response<void>({ errors: [...forkResponse.errors, 'receiveForkFive'] });
+            return new Response<void>({errors: [...forkResponse.errors, 'receiveForkFive']});
         }
         if (block.generatorPublicKey === lastBlock.generatorPublicKey) {
             logger.warn('Delegate forging on multiple nodes', block.generatorPublicKey);
@@ -907,24 +909,24 @@ class BlockService {
         logger.info('Last block loses');
         const normalizeResponse: Response<Block> = await this.objectNormalize(tmpBlock);
         if (!normalizeResponse.success) {
-            return new Response<void>({ errors: [...normalizeResponse.errors, 'receiveForkFive'] });
+            return new Response<void>({errors: [...normalizeResponse.errors, 'receiveForkFive']});
         }
         tmpBlock = normalizeResponse.data;
 
         const validateBlockSlotResponse: Response<void> = await this.validateBlockSlot(tmpBlock, lastBlock);
         if (!validateBlockSlotResponse.success) {
-            return new Response<void>({ errors: [...validateBlockSlotResponse.errors, 'receiveForkFive'] });
+            return new Response<void>({errors: [...validateBlockSlotResponse.errors, 'receiveForkFive']});
         }
 
         const check = this.verifyReceipt(tmpBlock);
         if (!check.verified) {
             logger.error(['Block', tmpBlock.id, 'verification failed'].join(' '), check.errors.join(', '));
-            return new Response<void>({ errors: [...check.errors, 'receiveForkOne'] });
+            return new Response<void>({errors: [...check.errors, 'receiveForkOne']});
         }
 
         const deleteResponse: Response<Block> = await this.deleteLastBlock();
         if (!deleteResponse.success) {
-            return new Response<void>({ errors: [...deleteResponse.errors, 'receiveForkFive'] });
+            return new Response<void>({errors: [...deleteResponse.errors, 'receiveForkFive']});
         }
 
         const receiveBlockResponse: Response<void> = await this.receiveBlock(block);
@@ -938,7 +940,7 @@ class BlockService {
         let lastBlock = this.getLastBlock();
         logger.warn(`Deleting last block: ${JSON.stringify(lastBlock)}`);
         if (lastBlock.height === 1) {
-            return new Response<Block>({ errors: ['Cannot delete genesis block'] });
+            return new Response<Block>({errors: ['Cannot delete genesis block']});
         }
         const popBlockResponse: Response<Block> = await this.popLastBlock(lastBlock);
         if (!popBlockResponse.success) {
@@ -949,7 +951,7 @@ class BlockService {
         }
         const newLastBlock = popBlockResponse.data;
 
-        return new Response<Block>({ data: this.setLastBlock(newLastBlock) });
+        return new Response<Block>({data: this.setLastBlock(newLastBlock)});
     }
 
     private async popLastBlock(oldLastBlock: Block): Promise<Response<Block>> {
@@ -957,7 +959,7 @@ class BlockService {
         let lastBlock: Block = this.getLastBlock();
         if (oldLastBlock.id !== lastBlock.id) {
             logger.error(`[Chain][popLastBlock] Block ${oldLastBlock.id} is not last`);
-            return new Response<Block>({ errors: [`Block is not last: ${JSON.stringify(oldLastBlock)}`] });
+            return new Response<Block>({errors: [`Block is not last: ${JSON.stringify(oldLastBlock)}`]});
         }
 
         const loadBlocksPartResponse: Response<Block> = await this.loadBlocksPart(oldLastBlock.previousBlockId);
@@ -979,32 +981,32 @@ class BlockService {
             }
         });
         if (errors.length) {
-            return new Response<Block>({ errors });
+            return new Response<Block>({errors});
         }
 
         await this.roundService.rollBackRound(); // (oldLastBlock, previousBlock);
 
         const deleteBlockResponse: Response<void> = await BlockRepo.deleteBlock(oldLastBlock.id);
         if (!deleteBlockResponse.success) {
-            return new Response<Block>({ errors: [...deleteBlockResponse.errors, 'popLastBlock'] });
+            return new Response<Block>({errors: [...deleteBlockResponse.errors, 'popLastBlock']});
         }
 
-        return new Response<Block>({ data: previousBlock });
+        return new Response<Block>({data: previousBlock});
     }
 
     private async loadBlocksPart(previousBlockId: string): Promise<Response<Block>> {
         logger.debug(`[Utils][loadBlocksPart]' previousBlockId: ${previousBlockId}`);
         const loadBlockResponse: Response<Block> = await BlockRepo.loadFullBlockById(previousBlockId);
         if (!loadBlockResponse.success) {
-            return new Response<Block>({ errors: [...loadBlockResponse.errors, 'loadBlocksPart'] });
+            return new Response<Block>({errors: [...loadBlockResponse.errors, 'loadBlocksPart']});
         }
         const block: Block = loadBlockResponse.data;
 
         const readBlockResponse: Response<Array<Block>> = await this.readDbRows([block]);
         if (!readBlockResponse.success) {
-            return new Response<Block>({ errors: [...readBlockResponse.errors, 'loadBlocksPart'] });
+            return new Response<Block>({errors: [...readBlockResponse.errors, 'loadBlocksPart']});
         }
-        return new Response<Block>({ data: readBlockResponse.data[0] });
+        return new Response<Block>({data: readBlockResponse.data[0]});
     }
 
     private async readDbRows(rows: Array<object>): Promise<Response<Array<Block>>> {
@@ -1043,11 +1045,11 @@ class BlockService {
         // Reorganize list
         const result: Array<Block> = order.map((v) => {
             blocks[v].transactions = Object.keys(blocks[v].transactions)
-                .map(t => blocks[v].transactions[t]);
+            .map(t => blocks[v].transactions[t]);
             return blocks[v];
         });
 
-        return new Response<Array<Block>>({ data: result, errors });
+        return new Response<Array<Block>>({data: result, errors});
     }
 
     public getLastBlock(): Block {
@@ -1082,7 +1084,7 @@ class BlockService {
     public async saveGenesisBlock(): Promise<Response<void>> {
         const existsResponse: Response<boolean> = await BlockRepo.isBlockExists(config.genesisBlock.id);
         if (!existsResponse.success) {
-            return new Response<void>({ errors: [...existsResponse.errors, 'saveGenesisBlock'] });
+            return new Response<void>({errors: [...existsResponse.errors, 'saveGenesisBlock']});
         }
         if (!existsResponse.data) {
             await this.applyGenesisBlock(config.genesisBlock, false, true); // config.genesis.block
@@ -1106,13 +1108,13 @@ class BlockService {
     public async getIdSequence(height: number): Promise<Response<{ ids: string }>> {
         const lastBlock = this.getLastBlock();
         const rowsResponse: Response<Array<string>> =
-            await BlockRepo.getIdSequence({ height, limit: 5, delegates: config.constants.activeDelegates });
+            await BlockRepo.getIdSequence({height, limit: 5, delegates: config.constants.activeDelegates});
         if (!rowsResponse.success) {
-            return new Response({ errors: [...rowsResponse.errors, 'getIdSequence']});
+            return new Response({errors: [...rowsResponse.errors, 'getIdSequence']});
         }
         const rows = rowsResponse.data;
         if (rows.length === 0) {
-            return new Response({ errors: [`Failed to get id sequence for height: ${height}`]});
+            return new Response({errors: [`Failed to get id sequence for height: ${height}`]});
         }
         const ids: Array<string> = [];
         // Add genesis block at the end if the set doesn't contain it already
@@ -1137,24 +1139,24 @@ class BlockService {
             }
         });
 
-        return new Response({ data: { ids: ids.join(',') } });
+        return new Response({data: {ids: ids.join(',')}});
     }
 
     // called from loader
     public async loadBlocksOffset(limit: number, offset: number, verify: boolean): Promise<Response<Block>> {
         const newLimit = limit + (offset || 0);
-        const params = { limit: newLimit, offset: offset || 0 };
+        const params = {limit: newLimit, offset: offset || 0};
 
-        logger.debug('Loading blocks offset', { limit, offset, verify });
+        logger.debug('Loading blocks offset', {limit, offset, verify});
 
         const loadResponse: Response<Array<Block>> = await BlockRepo.loadBlocksOffset(params);
         if (!loadResponse.success) {
-            return new Response<Block>({ errors: [...loadResponse.errors, 'loadBlocksOffset'] });
+            return new Response<Block>({errors: [...loadResponse.errors, 'loadBlocksOffset']});
         }
 
         const readResponse: Response<Array<Block>> = await this.readDbRows(loadResponse.data);
         if (!readResponse.success) {
-            return new Response<Block>({ errors: [...readResponse.errors, 'loadBlocksOffset'] });
+            return new Response<Block>({errors: [...readResponse.errors, 'loadBlocksOffset']});
         }
         const blocks: Array<Block> = readResponse.data;
 
@@ -1169,7 +1171,7 @@ class BlockService {
                 errors.push(...processResponse.errors, 'loadBlocksOffset');
             }
         });
-        return new Response<Block>({ data: this.getLastBlock(), errors });
+        return new Response<Block>({data: this.getLastBlock(), errors});
     }
 
     private create({transactions, timestamp, previousBlock, keypair}): Block {
@@ -1197,9 +1199,9 @@ class BlockService {
         try {
             hash = crypto.createHash('sha256').update(this.getBytes(block)).digest();
         } catch (err) {
-            return new Response<Uint8Array>({ errors: [err, 'getHash'] });
+            return new Response<Uint8Array>({errors: [err, 'getHash']});
         }
-        return new Response<Uint8Array>({ data: hash });
+        return new Response<Uint8Array>({data: hash});
     }
 
     private getBytes(block: Block): Buffer {
@@ -1230,14 +1232,14 @@ class BlockService {
     private async loadLastBlock(): Promise<Response<Block>> {
         const loadResponse: Response<Block> = await BlockRepo.loadLastBlock();
         if (!loadResponse.success) {
-            return new Response<Block>({ errors: [...loadResponse.errors, 'loadLastBlock'] });
+            return new Response<Block>({errors: [...loadResponse.errors, 'loadLastBlock']});
         }
         const block: Block = loadResponse.data;
         const readResponse: Response<Array<Block>> = await this.readDbRows([block]);
         if (!readResponse.success) {
-            return new Response<Block>({ errors: [...readResponse.errors, 'loadLastBlock'] });
+            return new Response<Block>({errors: [...readResponse.errors, 'loadLastBlock']});
         }
-        return new Response({ data: readResponse.data[0] });
+        return new Response({data: readResponse.data[0]});
     }
 
     public setLastNBlocks(blocks: Array<string>): void {

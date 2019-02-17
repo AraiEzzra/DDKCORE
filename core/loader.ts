@@ -37,8 +37,9 @@ class Loader {
 
         for (let i = 0; i < countIteration; i ++ ) {
             const transactionBatch = await this.getTransactionBatch(constant.Limit * i);
-            await TransactionService.applyUnconfirmed(transactionBatch);
-
+            for (const trs of transactionBatch) {
+                await TransactionService.applyUnconfirmed(trs);
+            }
         }
         messageON('WARN_UP_FINISHED');
     }

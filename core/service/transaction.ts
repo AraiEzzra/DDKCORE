@@ -1,5 +1,6 @@
-import { IModelTransaction, Transaction } from 'shared/model/transaction';
+import {IAsset, IModelTransaction, Transaction} from 'shared/model/transaction';
 import { IFunctionResponse, ITableObject } from 'core/util/common';
+import ResponseEntity from "shared/model/response";
 
 // wait declare by @Fisenko
 declare class Account {
@@ -10,7 +11,31 @@ declare class KeyPair {
 
 }
 
-export interface ITransactionService<T extends Object> {
+export interface IAssetService<T extends IAsset> {
+    create(data: any): Promise<IAsset>;
+
+    getBytes(asset: IAsset): Uint8Array;
+
+    verify(asset: IAsset, sender: Account): Promise<ResponseEntity<IAsset>>;
+
+    calculateFee(asset: IAsset, sender: Account): number;
+
+    calcUndoUnconfirmed(asset: IAsset, sender: Account): void;
+
+    applyUnconfirmed(asset: IAsset): Promise<void>;
+
+    undoUnconfirmed(asset: IAsset): Promise<void>;
+
+    apply(asset: IAsset): Promise<void>;
+
+    undo(asset: IAsset): Promise<void>;
+
+    dbRead(fullTrsObject: any): IAsset;
+
+    dbSave(asset: IAsset): Promise<void>;
+}
+
+export interface ITransactionService<T extends IAsset> {
     getAddressByPublicKey(): any; // to utils
     list(): any; // to repo
     getById(): any; // to repo
@@ -70,91 +95,110 @@ export interface ITransactionService<T extends Object> {
     dbRead(fullBlockRow: IModelTransaction<T>): Transaction<T>;
 }
 
-export class TransactionService<T extends Object> implements ITransactionService<T> {
+class TransactionService<T extends IAsset> implements ITransactionService<T> {
+    afterSave(trs: Transaction<T>): void {
+    }
 
-    getAddressByPublicKey(): any { return null; }
+    apply(trs: Transaction<T>, sender: Account): void {
+    }
 
-    list(): any { return null; }
+    applyUnconfirmed(trs: Transaction<T>, sender?: Account): void {
+    }
 
-    getById(): any { return null; }
+    calcUndoUnconfirmed(trs: Transaction<T>, sender: Account): void {
+    }
 
-    getVotesById(): any { return null; }
+    calculateUnconfirmedFee(trs: Transaction<T>, sender: Account): number {
+        return 0;
+    }
 
-    checkSenderTransactions(senderId: string, verifiedTransactions: Set<string>, accountsMap: { [p: string]: Account }): Promise<void> { return null; }
+    checkBalance(amount: number, trs: Transaction<T>, sender: Account): IFunctionResponse {
+        return undefined;
+    }
 
-    create(data: Transaction<{}>): Transaction<{}> { return undefined; }
+    checkConfirmed(trs: Transaction<T>): IFunctionResponse {
+        return undefined;
+    }
 
-    sign(keyPair: KeyPair, trs: Transaction<object>) : string { return undefined; }
+    checkSenderTransactions(senderId: string, verifiedTransactions: Set<string>, accountsMap: { [p: string]: Account }): Promise<void> {
+        return undefined;
+    }
 
-    getId(trs: Transaction<object>): string { return undefined; }
+    create(data: Transaction<{}>): Transaction<T> {
+        return undefined;
+    }
 
-    getHash(trs: Transaction<object>): string { return undefined; }
+    dbRead(fullBlockRow: any): Transaction<T> {
+        return undefined;
+    }
 
-    getBytes(trs: Transaction<object>, skipSignature: boolean = false, skipSecondSignature: boolean = false): Uint8Array { return undefined; }
+    dbSave(trs: Transaction<T>): Array<ITableObject> {
+        return undefined;
+    }
 
-    checkConfirmed(trs: Transaction<object>): IFunctionResponse { return undefined; }
+    getAddressByPublicKey(): any {
+    }
 
-    checkBalance(amount: number, trs: Transaction<object>): IFunctionResponse { return undefined; }
+    getById(): any {
+    }
 
-    process(trs: Transaction<object>): void { return undefined; }
+    getBytes(trs: Transaction<T>, skipSignature?: boolean, skipSecondSignature?: boolean): Uint8Array {
+        return undefined;
+    }
 
-    verifyFields(trs: Transaction<object>): void { return undefined; }
+    getHash(trs: Transaction<T>): string {
+        return "";
+    }
 
-    calculateUnconfirmedFee(trs: Transaction<object>): number { return undefined; }
+    getId(trs: Transaction<T>): string {
+        return "";
+    }
 
-    verifyUnconfirmed(trs: Transaction<object>): IFunctionResponse { return undefined; }
+    getVotesById(): any {
+    }
 
-    verifySignature(trs: Transaction<object>): IFunctionResponse { return undefined; }
+    list(): any {
+    }
 
-    verifySecondSignature(trs: Transaction<object>): IFunctionResponse { return undefined; }
+    objectNormalize(trs: Transaction<T>): Transaction<T> {
+        return undefined;
+    }
 
-    verifyBytes(bytes: Uint8Array, publicKey: string, signature: string): IFunctionResponse { return null; }
+    process(trs: Transaction<T>, sender: Account): void {
+    }
 
-    apply(trs: Transaction<object>): void { return undefined; }
+    sign(keyPair: KeyPair, trs: Transaction<T>): string {
+        return "";
+    }
 
-    undo(trs: Transaction<object>): void { return undefined; }
+    undo(trs: Transaction<T>, sender: Account): void {
+    }
 
-    applyUnconfirmed(trs: Transaction<object>): void { return undefined; }
+    undoUnconfirmed(trs: Transaction<T>, sender?: Account): void {
+    }
 
-    undoUnconfirmed(trs: Transaction<object>): void { return undefined; }
+    verify(trs: Transaction<T>, sender: Account, checkExists: boolean): Promise<{ verified: boolean; errors: Array<string> }> {
+        return undefined;
+    }
 
-    calcUndoUnconfirmed(trs: Transaction<object>): void { return undefined; }
+    verifyBytes(bytes: Uint8Array, publicKey: string, signature: string): IFunctionResponse {
+        return undefined;
+    }
 
-    dbSave(trs: Transaction<object>): ITableObject[] { return undefined; }
+    verifyFields(trs: Transaction<T>, sender: Account): void {
+    }
 
-    afterSave(trs: Transaction<object>): void { return undefined; }
+    verifySecondSignature(trs: Transaction<T>, publicKey: string, signature: string): IFunctionResponse {
+        return undefined;
+    }
 
-    objectNormalize(trs: Transaction<object>): Transaction<object> { return undefined; }
+    verifySignature(trs: Transaction<T>, publicKey: string, signature: string): IFunctionResponse {
+        return undefined;
+    }
 
-    dbRead(fullBlockRow: IModelTransaction<object>): Transaction<object> { return undefined; }
-
-    async verify(trs: Transaction<T>, sender: Account, checkExists: boolean = false): Promise<{ verified: boolean, errors: Array<string> }> {
-
-        try {
-            await this.scope.transactionLogic.newVerify({ trs, sender });
-        } catch (e) {
-            this.scope.logger.debug(`[TransactionQueue][verify]: ${e}`);
-            this.scope.logger.debug(`[TransactionQueue][verify][stack]: \n ${e.stack}`);
-            return {
-                verified: false,
-                errors: [e]
-            };
-        }
-
-        try {
-            await this.scope.transactionLogic.newVerifyUnconfirmed({ trs, sender });
-        } catch (e) {
-            this.scope.logger.debug(`[TransactionQueue][verifyUnconfirmed]: ${e}`);
-            this.scope.logger.debug(`[TransactionQueue][verifyUnconfirmed][stack]: \n ${e.stack}`);
-            return {
-                verified: false,
-                errors: [e]
-            };
-        }
-
-        return {
-            verified: true,
-            errors: []
-        };
+    verifyUnconfirmed(trs: Transaction<T>, sender: Account): IFunctionResponse {
+        return undefined;
     }
 }
+
+export default new TransactionService();

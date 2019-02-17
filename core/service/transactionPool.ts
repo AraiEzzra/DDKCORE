@@ -1,6 +1,6 @@
-import { Transaction, TransactionStatus, TransactionType } from 'shared/model/transaction';
-import { transactionSortFunc } from 'core/util/transaction';
-import { generateAddressByPublicKey, getOrCreateAccount } from 'shared/util/account.utils';
+import {Transaction, TransactionStatus, TransactionType} from 'shared/model/transaction';
+import {transactionSortFunc} from 'core/util/transaction';
+import {getAddressByPublicKey, getOrCreateAccount} from 'shared/util/account';
 import Response from 'shared/model/response';
 
 // wait declare by @Fisenko
@@ -22,11 +22,11 @@ export interface ITransactionPoolService<T extends Object> {
 
     getLockStatus(): boolean;
 
-    getTransactionsByRecipientId(recipientId: string): Array<Transaction<T>>;
+    getTransactionsByRecipientId(recipientAddress: string): Array<Transaction<T>>;
 
-    getTransactionsBySenderId(senderId: string): Array<Transaction<T>>;
+    getTransactionsBySenderId(senderAddress: string): Array<Transaction<T>>;
 
-    removeTransactionsBySenderId(senderId: string): Promise<Array<Transaction<T>>>;
+    removeTransactionsBySenderId(senderAddress: string): Promise<Array<Transaction<T>>>;
 
     push(trs: Transaction<T>, sender?: Account, broadcast?: boolean);
 
@@ -71,24 +71,26 @@ export class TransactionPoolService<T extends object> implements ITransactionPoo
 
     private pool: { [transactionId: string]: Transaction<T> } = {};
 
-    poolByRecipient: { [recipientId: string]: Array<Transaction<T>> } = {};
-    poolBySender: { [senderId: string]: Array<Transaction<T>> } = {};
+    poolByRecipient: { [recipientAddress: string]: Array<Transaction<T>> } = {};
+    poolBySender: { [senderAddress: string]: Array<Transaction<T>> } = {};
 
     locked: boolean = false;
 
     scope: TransactionPoolScope = {} as TransactionPoolScope;
 
-    constructor({ transactionLogic, logger, db, bus }: TransactionPoolScope) {
+    constructor({transactionLogic, logger, db, bus}: TransactionPoolScope) {
         this.scope.transactionLogic = transactionLogic;
         this.scope.logger = logger;
         this.scope.db = db;
         this.scope.bus = bus;
     }
 
-    removeFromPool(transactions: Array<Transaction<T>>, withDepend: boolean): Promise<Response<Array<Transaction<T>>>> {
+    async removeFromPool(transactions: Array<Transaction<T>>, withDepend: boolean):
+        Promise<Response<Array<Transaction<T>>>> {
+        return new Response();
     }
 
-    pushInPool(transactions: Array<Transaction<T>>): Promise<void> {
+    async pushInPool(transactions: Array<Transaction<T>>): Promise<void> {
     }
 
     lock(): void {
@@ -103,17 +105,17 @@ export class TransactionPoolService<T extends object> implements ITransactionPoo
         return this.locked;
     }
 
-    getTransactionsByRecipientId(recipientId: string): Array<Transaction<T>> {
-        return this.poolByRecipient[recipientId] || [];
+    getTransactionsByRecipientId(recipientAddress: string): Array<Transaction<T>> {
+        return this.poolByRecipient[recipientAddress] || [];
     }
 
-    getTransactionsBySenderId(senderId: string): Array<Transaction<T>> {
-        return this.poolBySender[senderId] || [];
+    getTransactionsBySenderId(senderAddress: string): Array<Transaction<T>> {
+        return this.poolBySender[senderAddress] || [];
     }
 
-    async removeTransactionsBySenderId(senderId: string): Promise<Array<Transaction<T>>> {
+    async removeTransactionsBySenderId(senderAddress: string): Promise<Array<Transaction<T>>> {
         const removedTransactions = [];
-        const transactions = this.getTransactionsBySenderId(senderId);
+        const transactions = this.getTransactionsBySenderId(senderAddress);
         for (const trs of transactions) {
             await this.remove(trs);
             removedTransactions.push(trs);
@@ -140,22 +142,22 @@ export class TransactionPoolService<T extends object> implements ITransactionPoo
 
             trs.status = TransactionStatus.PUT_IN_POOL;
             this.pool[trs.id] = trs;
-            if (!this.poolBySender[trs.senderId]) {
-                this.poolBySender[trs.senderId] = [];
+            if (!this.poolBySender[trs.senderAddress]) {
+                this.poolBySender[trs.senderAddress] = [];
             }
-            this.poolBySender[trs.senderId].push(trs);
+            this.poolBySender[trs.senderAddress].push(trs);
             if (trs.type === TransactionType.SEND) {
-                if (!this.poolByRecipient[trs.recipientId]) {
-                    this.poolByRecipient[trs.recipientId] = [];
+                if (!this.poolByRecipient[trs.recipientAddress]) {
+                    this.poolByRecipient[trs.recipientAddress] = [];
                 }
-                this.poolByRecipient[trs.recipientId].push(trs);
+                this.poolByRecipient[trs.recipientAddress].push(trs);
             }
             if (broadcast) {
                 this.scope.bus.message('transactionPutInPool', trs);
             }
             return new Response<void>({});
         }
-        return new Response<void>({ errors: ['Error in pushing transaction'] });
+        return new Response<void>({errors: ['Error in pushing transaction']});
     }
 
     async remove(trs: Transaction<T>) {
@@ -172,12 +174,12 @@ export class TransactionPoolService<T extends object> implements ITransactionPoo
 
         delete this.pool[trs.id];
 
-        if (this.poolBySender[trs.senderId] && this.poolBySender[trs.senderId].indexOf(trs) !== -1) {
-            this.poolBySender[trs.senderId].splice(this.poolBySender[trs.senderId].indexOf(trs), 1);
+        if (this.poolBySender[trs.senderAddress] && this.poolBySender[trs.senderAddress].indexOf(trs) !== -1) {
+            this.poolBySender[trs.senderAddress].splice(this.poolBySender[trs.senderAddress].indexOf(trs), 1);
         }
 
-        if (this.poolByRecipient[trs.recipientId] && this.poolByRecipient[trs.recipientId].indexOf(trs) !== -1) {
-            this.poolByRecipient[trs.recipientId].splice(this.poolByRecipient[trs.recipientId].indexOf(trs), 1);
+        if (this.poolByRecipient[trs.recipientAddress] && this.poolByRecipient[trs.recipientAddress].indexOf(trs) !== -1) {
+            this.poolByRecipient[trs.recipientAddress].splice(this.poolByRecipient[trs.recipientAddress].indexOf(trs), 1);
         }
         return true;
     }
@@ -216,9 +218,9 @@ export class TransactionPoolService<T extends object> implements ITransactionPoo
     }
 
     isPotentialConflict(trs: Transaction<T>) {
-        const senderId = generateAddressByPublicKey(trs.senderPublicKey);
-        const recipientTrs = this.poolByRecipient[senderId] || [];
-        const senderTrs = this.poolBySender[senderId] || [];
+        const senderAddress = getAddressByPublicKey(trs.senderPublicKey);
+        const recipientTrs = this.poolByRecipient[senderAddress] || [];
+        const senderTrs = this.poolBySender[senderAddress] || [];
         const dependTransactions = [...recipientTrs, ...senderTrs];
 
         if (dependTransactions.length === 0) {

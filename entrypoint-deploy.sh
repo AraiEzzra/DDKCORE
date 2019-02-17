@@ -3,6 +3,6 @@ echo $(node -v)
 # and wait-port npm package installed
 
 wait-port "$DB_HOST:${DB_PORT:-5432}" &&
-wait-port "$ELASTICSEARCH_HOST" && \
-wait-port "$REDIS_HOST:${REDIS_PORT:-6379}" && \
+#wait-port "$ELASTICSEARCH_HOST" && \
+#wait-port "$REDIS_HOST:${REDIS_PORT:-6379}" && \
 npm start

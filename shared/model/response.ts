@@ -1,4 +1,4 @@
-export interface ReponseEntityParams<T> {
+export interface ResponseEntityParams<T> {
     errors?: Array<string>;
     data?: T;
 }
@@ -8,7 +8,7 @@ export default class ResponseEntity<T> {
     errors?: Array<string>;
     data?: T;
 
-    constructor(params: ReponseEntityParams<T> = {}) {
+    constructor(params: ResponseEntityParams<T> = null) {
         this.success = params.errors ? !Boolean(params.errors.length) : true;
         this.errors = params.errors ? params.errors : null;
         this.data = params.data ? params.data : null;
