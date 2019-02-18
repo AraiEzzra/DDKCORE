@@ -2,18 +2,22 @@ import { Transaction, TransactionStatus } from 'shared/model/transaction';
 import { ITransactionPoolService } from 'core/service/transactionPool';
 import { transactionSortFunc } from 'core/util/transaction';
 import { getOrCreateAccount } from 'shared/util/account';
-import constants from "config/mainnet/constants";
+import constants from 'config/mainnet/constants';
 import TransactionService from 'core/service/transaction';
+import TransactionPool from 'core/service/transactionPool';
+import db from 'shared/driver/db';
+import {logger} from 'shared/util/logger';
+import Response from 'shared/model/response';
 
 
 export interface ITransactionQueueService<T extends Object> {
-    reshuffleTransactionQueue(): void;
+    reshuffleTransactionQueue(): Response<void>;
 
     getLockStatus(): boolean;
 
-    lock(): void;
+    lock(): Response<void>;
 
-    unlock(): void;
+    unlock(): Response<void>;
 
     getLockStatus(): boolean;
 
@@ -32,14 +36,14 @@ export interface ITransactionQueueService<T extends Object> {
 
 // TODO will be removed
 declare class TransactionQueueScope<T> {
-    transactionPool: ITransactionPoolService<T>;
+    transactionPool: any; // ITransactionPoolService<T> but shouldn't be parametrized
     transactionLogic: any;
-    logger: any;
-    db: any;
+    logger?: any;
+    db?: any;
 }
 
 // TODO NOT ready
-export class TransactionQueue<T extends object> implements ITransactionQueueService<T> {
+class TransactionQueue<T extends object> implements ITransactionQueueService<T> {
 
     private queue: Array<Transaction<T>> = [];
     private conflictedQueue: Array<{ transaction: Transaction<T>, expire: number }> = [];
@@ -48,19 +52,22 @@ export class TransactionQueue<T extends object> implements ITransactionQueueServ
 
     private locked: boolean = false;
 
-    constructor({ transactionLogic, transactionPool, logger, db }: TransactionQueueScope<T>) {
-        this.scope.transactionLogic = transactionLogic;
-        this.scope.transactionPool = transactionPool;
+    // redundant
+    constructor() {
+        this.scope.transactionLogic = TransactionService;
+        this.scope.transactionPool = TransactionPool;
         this.scope.logger = logger;
         this.scope.db = db;
     }
 
-    lock(): void {
+    lock(): Response<void> {
         this.locked = true;
+        return new Response<void>();
     }
 
-    unlock(): void {
+    unlock(): Response<void> {
         this.locked = false;
+        return new Response<void>();
     }
 
     getLockStatus(): boolean {
@@ -147,5 +154,7 @@ export class TransactionQueue<T extends object> implements ITransactionQueueServ
         return { conflictedQueue: this.conflictedQueue.length, queue: this.queue.length };
     }
 
-    reshuffleTransactionQueue(): void {}
+    reshuffleTransactionQueue(): Response<void> { return new Response<void>(); }
 }
+
+export default new TransactionQueue();

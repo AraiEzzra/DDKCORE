@@ -96,7 +96,7 @@ export default {
         offset: 2160,      // 2160 Start rewards at block (n)
         distance: 3000000, // Distance between each milestone
     },
-    signatureLength: 196,
+    signatureLength: 65,
     // WARNING: When changing totalAmount you also need to change getBlockRewards(int) SQL function!
     totalAmount: 4500000000000000,
     unconfirmedTransactionTimeOut: 10800, // 1080 blocks
