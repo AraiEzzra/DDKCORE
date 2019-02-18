@@ -1012,7 +1012,6 @@ class BlockService {
 
     // may be redundant
     private async readDbRows(rows: Array<object>): Promise<Response<Array<Block>>> {
-        const signatureLength = 65;
         const blocks = {};
         const order: Array<string> = [];
         const errors: Array<string> = [];
@@ -1023,7 +1022,7 @@ class BlockService {
             if (!blocks[block.id]) {
                 if (block.id === config.genesisBlock.id) {
                     // Generate fake signature for genesis block
-                    block.signature = (new Array(signatureLength)).join('0');
+                    block.signature = (new Array(config.constants.signatureLength)).join('0');
                 }
 
                 // Add block ID to order list
