@@ -74,7 +74,10 @@ Referral.prototype.undo = async (trs) => {
     await library.db.none(sql.changeAccountGlobalStatus, {
         address: trs.senderId,
         status: false
-    })
+    });
+    await library.db.none(sql.deleteReferralChain, {
+        address: trs.senderId,
+    });
 };
 
 Referral.prototype.applyUnconfirmed = function (trs, sender, cb) {

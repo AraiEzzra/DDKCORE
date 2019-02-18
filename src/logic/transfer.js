@@ -39,7 +39,7 @@ Transfer.prototype.bind = function (accounts, rounds) {
  * @return {transaction} trs with assigned data
  */
 Transfer.prototype.create = function (data, trs) {
-    trs.recipientId = data.recipientId;
+    trs.recipientId = data.recipientId.toUpperCase();
     trs.amount = data.amount;
     if (data.trsName) {
         trs.trsName = data.trsName;

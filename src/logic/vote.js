@@ -284,13 +284,13 @@ Vote.prototype.newVerify = async (trs) => {
 
     if (totals.reward !== trs.asset.reward) {
         throw new Error(
-            `Verify failed: vote reward is corrupted, expected: ${totals.reward} actual: ${trs.asset.reward}`
+            `Verify failed: vote reward is corrupted, expected: ${totals.reward}, actual: ${trs.asset.reward}`
         );
     }
 
     if (totals.unstake !== trs.asset.unstake) {
         throw new Error(
-            `Verify failed: vote unstake is corrupted, expected: ${totals.unstake} actual: ${trs.asset.unstake}`
+            `Verify failed: vote unstake is corrupted, expected: ${totals.unstake}, actual: ${trs.asset.unstake}`
         );
     }
 
@@ -342,10 +342,14 @@ Vote.prototype.verifyVote = (vote) => {
  */
 Vote.prototype.checkConfirmedDelegates = function (trs, cb) {
     modules.delegates.checkConfirmedDelegates(trs.senderPublicKey, trs.asset.votes, (err) => {
-        if (err && exceptions.votes.indexOf(trs.id) > -1) {
-            library.logger.debug(err);
-            library.logger.debug(JSON.stringify(trs));
-            err = null;
+        if (err) {
+            if (exceptions.votes.indexOf(trs.id) > -1) {
+                library.logger.debug(err);
+                library.logger.debug(JSON.stringify(trs));
+                err = null;
+            } else {
+                library.logger.error(`[Vote][checkConfirmedDelegates] error: ${err}. Trs: ${JSON.stringify(trs)}`);
+            }
         }
 
         return setImmediate(cb, err);
@@ -362,10 +366,14 @@ Vote.prototype.checkConfirmedDelegates = function (trs, cb) {
  */
 Vote.prototype.checkUnconfirmedDelegates = function (trs, cb) {
     modules.delegates.checkUnconfirmedDelegates(trs.senderPublicKey, trs.asset.votes, (err) => {
-        if (err && exceptions.votes.indexOf(trs.id) > -1) {
-            library.logger.debug(err);
-            library.logger.debug(JSON.stringify(trs));
-            err = null;
+        if (err) {
+            if (exceptions.votes.indexOf(trs.id) > -1) {
+                library.logger.debug(err);
+                library.logger.debug(JSON.stringify(trs));
+                err = null;
+            } else {
+                library.logger.error(`[Vote][checkUnconfirmedDelegates] error: ${err}. Trs: ${JSON.stringify(trs)}`);
+            }
         }
 
         return setImmediate(cb, err);
