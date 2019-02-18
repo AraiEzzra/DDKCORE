@@ -118,15 +118,15 @@ class BlockRepo {
         return new Response({ data: result });
     }
 
-    public async loadBlocksOffset(param: {offset: number, limit: number}): Promise<Response<Array<Block>>> {
+    public async loadBlocksOffset(param: {offset: number, limit?: number}): Promise<Response<Array<Block>>> {
+        const request =  [
+            'SELECT * FROM blocks WHERE "height" >= ${offset}',
+            (param.limit ? 'AND "height" < ${limit}' : ''),
+            'ORDER BY "height"'
+        ].filter(Boolean).join(' ');
         let blocks: Array<Block> = null;
         try {
-            const result: Array<object> = await db.manyOrNone(
-                'SELECT * ' +
-                'FROM blocks ' +
-                'WHERE "height" >= ${offset} AND "height" < ${limit} ' +
-                'ORDER BY "height"',
-                param);
+            const result: Array<object> = await db.manyOrNone(request, param);
             if (!result) {
                 return new Response({ errors: ['No blocks found']});
             }

@@ -1,7 +1,10 @@
 import {Transaction, TransactionStatus, TransactionType} from 'shared/model/transaction';
 import {transactionSortFunc} from 'core/util/transaction';
 import {getAddressByPublicKey, getOrCreateAccount} from 'shared/util/account';
+import TransactionService from 'core/service/transaction';
 import Response from 'shared/model/response';
+import db from 'shared/driver/db';
+import {logger} from 'shared/util/logger';
 
 // wait declare by @Fisenko
 declare class Account {
@@ -46,26 +49,41 @@ export interface ITransactionPoolService<T extends Object> {
 
     getSize(): number;
 
-    getUnconfirmedTransactionsForBlockGeneration(): Promise<Array<Transaction<T>>>; // to block service
+    removeFromPool(transactions: Array<Transaction<T>>, withDepend: boolean): Promise<Response<Array<Transaction<T>>>>;
 
-    lockTransactionPoolAndQueue(): void; // to block service
+    // getUnconfirmedTransactionsForBlockGeneration(): Promise<Array<Transaction<T>>>; // to block service
 
-    unlockTransactionPoolAndQueue(): void; // to block service
+    // lockTransactionPoolAndQueue(): void; // to block service
 
-    returnToQueueConflictedTransactionFromPool(transactions): Promise<void>; // to block service
+    // unlockTransactionPoolAndQueue(): void; // to block service
+
+    returnToQueueConflictedTransactionFromPool(transactions): Promise<Response<void>>; // to block service
+
+    lock(): Response<void>;
+
+    unlock(): Response<void>;
 }
 
 // TODO will be removed
 declare class TransactionPoolScope {
-    logger: any;
+    logger?: any;
     transactionLogic: any;
-    db: any;
-    bus: any;
+    db?: any;
+    bus?: any;
 }
 
 // TODO NOT ready
-export class TransactionPoolService<T extends object> implements ITransactionPoolService<T> {
-    returnToQueueConflictedTransactionFromPool(transactions): Promise<void> {
+class TransactionPoolService<T extends object> implements ITransactionPoolService<T> {
+    returnToQueueConflictedTransactionFromPool(transactions): Promise<Response<void>> {
+        return undefined;
+    }
+
+    batchPush(transactions: Array<Transaction<T>>): Promise<void> {
+        return undefined;
+    }
+
+    batchRemove(transactions: Array<Transaction<T>>, withDepend: boolean):
+        Promise<Array<Transaction<T>>> {
         return undefined;
     }
 
@@ -78,11 +96,11 @@ export class TransactionPoolService<T extends object> implements ITransactionPoo
 
     scope: TransactionPoolScope = {} as TransactionPoolScope;
 
-    constructor({transactionLogic, logger, db, bus}: TransactionPoolScope) {
-        this.scope.transactionLogic = transactionLogic;
+    // redundant
+    constructor() {
+        this.scope.transactionLogic = TransactionService;
         this.scope.logger = logger;
         this.scope.db = db;
-        this.scope.bus = bus;
     }
 
     async removeFromPool(transactions: Array<Transaction<T>>, withDepend: boolean):
@@ -93,12 +111,14 @@ export class TransactionPoolService<T extends object> implements ITransactionPoo
     async pushInPool(transactions: Array<Transaction<T>>): Promise<void> {
     }
 
-    lock(): void {
+    lock(): Response<void> {
         this.locked = true;
+        return new Response<void>();
     }
 
-    unlock(): void {
+    unlock(): Response<void> {
         this.locked = false;
+        return new Response<void>();
     }
 
     getLockStatus(): boolean {
@@ -234,5 +254,6 @@ export class TransactionPoolService<T extends object> implements ITransactionPoo
     getSize(): number {
         return Object.keys(this.pool).length;
     }
-
 }
+
+export default new TransactionPoolService();

@@ -1,6 +1,6 @@
-import {IAsset, IModelTransaction, Transaction} from 'shared/model/transaction';
+import {IAsset, Transaction} from 'shared/model/transaction';
 import { IFunctionResponse, ITableObject } from 'core/util/common';
-import ResponseEntity from "shared/model/response";
+import ResponseEntity from 'shared/model/response';
 
 // wait declare by @Fisenko
 declare class Account {
@@ -46,13 +46,14 @@ export interface ITransactionService<T extends IAsset> {
         senderId: string, verifiedTransactions: Set<string>, accountsMap: { [address: string]: Account }
     ): Promise<void>;
 
-    verify(trs: Transaction<T>, sender: Account, checkExists: boolean): Promise<{ verified: boolean, errors: Array<string> }>;
+    verify(trs: Transaction<T>, sender: Account, checkExists: boolean):
+        Promise<{ verified: boolean, errors: Array<string> }>;
 
     create(data: Transaction<{}>): Transaction<T>;
 
     sign(keyPair: KeyPair, trs: Transaction<T>): string;
 
-    getId(trs: Transaction<T>): string;
+    getId(trs: Transaction<T>): ResponseEntity<string>;
 
     getHash(trs: Transaction<T>): string;
 
@@ -76,33 +77,36 @@ export interface ITransactionService<T extends IAsset> {
 
     verifyBytes(bytes: Uint8Array, publicKey: string, signature: string): IFunctionResponse;
 
-    apply(trs: Transaction<T>, sender: Account): void;
+    apply(trs: Transaction<T>, sender: Account): ResponseEntity<void>;
 
-    undo(trs: Transaction<T>, sender: Account): void;
+    undo(trs: Transaction<T>, sender: Account): ResponseEntity<void>;
 
-    applyUnconfirmed(trs: Transaction<T>, sender?: Account): void;
+    applyUnconfirmed(trs: Transaction<T>, sender?: Account): ResponseEntity<void>;
 
-    undoUnconfirmed(trs: Transaction<T>, sender?: Account): void;
+    undoUnconfirmed(trs: Transaction<T>, sender?: Account): ResponseEntity<void>;
 
     calcUndoUnconfirmed(trs: Transaction<T>, sender: Account): void;
 
     dbSave(trs: Transaction<T>): Array<ITableObject>; // Fixme
 
-    afterSave(trs: Transaction<T>): void;
+    afterSave(trs: Transaction<T>): ResponseEntity<void>;
 
-    objectNormalize(trs: Transaction<T>): Transaction<T>; // to controller
+    objectNormalize(trs: Transaction<T>): ResponseEntity<Transaction<T>>; // to controller
 
-    dbRead(fullBlockRow: IModelTransaction<T>): Transaction<T>;
+    dbRead(fullBlockRow: Transaction<T>): Transaction<T>;
 }
 
 class TransactionService<T extends IAsset> implements ITransactionService<T> {
-    afterSave(trs: Transaction<T>): void {
+    afterSave(trs: Transaction<T>): ResponseEntity<void> {
+        return new ResponseEntity<void>();
     }
 
-    apply(trs: Transaction<T>, sender: Account): void {
+    apply(trs: Transaction<T>, sender: Account): ResponseEntity<void> {
+        return new ResponseEntity<void>();
     }
 
-    applyUnconfirmed(trs: Transaction<T>, sender?: Account): void {
+    applyUnconfirmed(trs: Transaction<T>, sender?: Account): ResponseEntity<void> {
+        return new ResponseEntity<void>();
     }
 
     calcUndoUnconfirmed(trs: Transaction<T>, sender: Account): void {
@@ -120,7 +124,11 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         return undefined;
     }
 
-    checkSenderTransactions(senderId: string, verifiedTransactions: Set<string>, accountsMap: { [p: string]: Account }): Promise<void> {
+    checkSenderTransactions(
+        senderId: string,
+        verifiedTransactions: Set<string>,
+        accountsMap: { [p: string]: Account }
+        ): Promise<void> {
         return undefined;
     }
 
@@ -147,11 +155,11 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
     }
 
     getHash(trs: Transaction<T>): string {
-        return "";
+        return '';
     }
 
-    getId(trs: Transaction<T>): string {
-        return "";
+    getId(trs: Transaction<T>): ResponseEntity<string> {
+        return new ResponseEntity<string>();
     }
 
     getVotesById(): any {
@@ -160,7 +168,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
     list(): any {
     }
 
-    objectNormalize(trs: Transaction<T>): Transaction<T> {
+    objectNormalize(trs: Transaction<T>): ResponseEntity<Transaction<T>> {
         return undefined;
     }
 
@@ -168,16 +176,19 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
     }
 
     sign(keyPair: KeyPair, trs: Transaction<T>): string {
-        return "";
+        return '';
     }
 
-    undo(trs: Transaction<T>, sender: Account): void {
+    undo(trs: Transaction<T>, sender: Account): ResponseEntity<void> {
+        return new ResponseEntity<void>();
     }
 
-    undoUnconfirmed(trs: Transaction<T>, sender?: Account): void {
+    undoUnconfirmed(trs: Transaction<T>, sender?: Account): ResponseEntity<void> {
+        return new ResponseEntity<void>();
     }
 
-    verify(trs: Transaction<T>, sender: Account, checkExists: boolean): Promise<{ verified: boolean; errors: Array<string> }> {
+    verify(trs: Transaction<T>, sender: Account, checkExists: boolean):
+        Promise<{ verified: boolean; errors: Array<string> }> {
         return undefined;
     }
 

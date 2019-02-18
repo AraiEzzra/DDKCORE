@@ -2,6 +2,8 @@ const Inserts = require('../../backlog/helpers/inserts.js');
 import db from 'shared/driver/db';
 import { Transaction } from 'shared/model/transaction';
 import { ITransactionRepository as ITransactionRepositoryShared } from 'shared/repository/transaction';
+import Response from 'shared/model/response';
+import {logger} from 'shared/util/logger';
 
 // wait declare by @Fisenko
 declare class Account {
@@ -17,7 +19,7 @@ export interface ITransactionRepository<T extends Object> extends ITransactionRe
     list(): Array<Transaction<T>>;
 }
 
-export class TransactionRepo implements ITransactionRepository<object> {
+class TransactionRepo implements ITransactionRepository<object> {
     one(): Promise<Transaction<object>> {
         return null;
     }
@@ -30,7 +32,7 @@ export class TransactionRepo implements ITransactionRepository<object> {
 
     dbSave(trs: Transaction<object>): IDBTransactionSave { return undefined; }
 
-    public saveTransaction = async (transaction) => {
+    public saveTransaction = async (transaction): Promise<Response<void>> => {
         try {
             await db.tx(async (t) => {
                 const promise = await this.dbSave(transaction);
@@ -39,8 +41,11 @@ export class TransactionRepo implements ITransactionRepository<object> {
                 await t.batch(promises);
             });
         } catch (error) {
-            library.logger.error(`[Chain][saveTransaction][tx]: ${error}`);
-            library.logger.error(`[Chain][saveTransaction][tx][stack]:\n${error.stack}`);
+            logger.error(`[Chain][saveTransaction][tx]: ${error}`);
+            logger.error(`[Chain][saveTransaction][tx][stack]:\n${error.stack}`);
         }
+        return new Response<void>();
     }
 }
+
+export default new TransactionRepo();
