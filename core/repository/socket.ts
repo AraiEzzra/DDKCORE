@@ -4,6 +4,8 @@ import * as io from 'socket.io';
 import { Headers } from 'core/repository/system';
 import { Peer } from 'shared/model/peer';
 import { PeerRepo } from 'core/repository/peer';
+import { messageON } from 'shared/util/bus';
+import {logger} from 'shared/util/logger';
 
 const ioServer = io({
     serveClient: false,
@@ -85,7 +87,7 @@ export default class Socket {
     onPeerAction(response: string, peer: Peer): void {
 
         const { code, data } = JSON.parse(response);
-        // todo call rx subject
+        messageON(code, { data, peer });
     }
 
     @autobind
@@ -98,7 +100,7 @@ export default class Socket {
     @autobind
     emitPeer(code, data, peer): void {
         if (!(this.peerRepo.has(peer))) {
-            console.error(`Peer ${peer.ip}:${peer.port} is offline`);
+            logger.error(`Peer ${peer.ip}:${peer.port} is offline`);
             return;
         }
         if (!peer.socket) {
