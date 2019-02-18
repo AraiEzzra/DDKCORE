@@ -1,3 +1,5 @@
+import {Transaction} from 'shared/model/transaction';
+import TransactionRepo from 'core/repository/transaction';
 const Inserts = require('../../backlog/helpers/inserts.js');
 import { Block } from 'shared/model/block';
 import db from 'shared/driver/db';
@@ -34,10 +36,11 @@ class BlockRepo {
             if (!result) {
                 return new Response({ errors: ['No genesis block found']});
             }
-            block = this.dbRead(result);
+            block = await this.dbRead(result);
         } catch (pgError) {
             return new Response({ errors: [pgError]});
         }
+        block = await this.assignTransactions([block])[0];
         return new Response({ data: block });
     }
 
@@ -99,12 +102,13 @@ class BlockRepo {
             if (!result) {
                 return new Response({ errors: ['No blocks found']});
             }
-            result.forEach((row) => {
-                blocks.push(this.dbRead(row));
+            result.forEach(async (row) => {
+                blocks.push(await this.dbRead(row));
             });
         } catch (pgError) {
             return new Response({ errors: [pgError]});
         }
+        blocks = await this.assignTransactions(blocks);
         return new Response({ data: blocks });
     }
 
@@ -115,10 +119,11 @@ class BlockRepo {
             if (!result) {
                 return new Response({ errors: ['No blocks found']});
             }
-            block = this.dbRead(result);
+            block = await this.dbRead(result);
         } catch (pgError) {
             return new Response({ errors: [pgError]});
         }
+        block = await this.assignTransactions([block])[0];
         return new Response({ data: block });
     }
 
@@ -192,10 +197,12 @@ class BlockRepo {
         } catch (pgError) {
             return new Response({ errors: [pgError]});
         }
-        return new Response({ data: this.dbRead(rawBlock) });
+        let block: Block = await this.dbRead(rawBlock);
+        block = await this.assignTransactions([block])[0];
+        return new Response({ data: block });
     }
 
-    public dbRead(raw: {[key: string]: any}, radix: number = 10): Block {
+    public async dbRead(raw: {[key: string]: any}, radix: number = 10): Promise<Block> {
         if (!raw.id) {
             return null;
         }
@@ -215,6 +222,24 @@ class BlockRepo {
         });
 
         return block;
+    }
+
+    private async assignTransactions(blocks: Array<Block>): Promise<Array<Block>> {
+        const ids: Array<string> = blocks.map((block: Block) => {
+            return block.id;
+        });
+        const transactionsResponse: Response<{ [blockId: string]:  Array<Transaction<object>> }> =
+            await TransactionRepo.getTransactionsForBlocksByIds(ids);
+        if (!transactionsResponse.success) {
+            return blocks;
+        }
+        const transactions: { [blockId: string]:  Array<Transaction<object>> } = transactionsResponse.data;
+        blocks.forEach((block: Block) => {
+            if (transactions[block.id]) {
+                block.transactions = transactions[block.id];
+            }
+        });
+        return blocks;
     }
 }
 
