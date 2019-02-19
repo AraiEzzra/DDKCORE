@@ -5,6 +5,7 @@ import TransactionService from 'core/service/transaction';
 import Response from 'shared/model/response';
 import db from 'shared/driver/db';
 import {logger} from 'shared/util/logger';
+import SyncService, { ISyncService } from 'core/service/sync';
 
 // wait declare by @Fisenko
 declare class Account {
@@ -70,6 +71,7 @@ declare class TransactionPoolScope {
     transactionLogic: any;
     db?: any;
     bus?: any;
+    syncService: ISyncService;
 }
 
 // TODO NOT ready
@@ -101,6 +103,7 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
         this.scope.transactionLogic = TransactionService;
         this.scope.logger = logger;
         this.scope.db = db;
+        this.scope.syncService = SyncService;
     }
 
     async removeFromPool(transactions: Array<Transaction<T>>, withDepend: boolean):
@@ -173,6 +176,8 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
                 this.poolByRecipient[trs.recipientAddress].push(trs);
             }
             if (broadcast) {
+                // TODO
+                this.scope.syncService.sendNewTransaction(trs);
                 this.scope.bus.message('transactionPutInPool', trs);
             }
             return new Response<void>({});
