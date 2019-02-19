@@ -40,7 +40,11 @@ class BlockRepo {
         } catch (pgError) {
             return new Response({ errors: [pgError]});
         }
-        block = await this.assignTransactions([block])[0];
+        const assignResponse: Response<Array<Block>> = await this.assignTransactions([block]);
+        if (!assignResponse.success) {
+            return new Response({ errors: [...assignResponse.errors, 'getGenesisBlock'], data: block });
+        }
+        block = assignResponse.data[0];
         return new Response({ data: block });
     }
 
@@ -102,13 +106,17 @@ class BlockRepo {
             if (!result) {
                 return new Response({ errors: ['No blocks found']});
             }
-            result.forEach(async (row) => {
-                blocks.push(await this.dbRead(row));
+            result.forEach((row) => {
+                blocks.push(this.dbRead(row));
             });
         } catch (pgError) {
             return new Response({ errors: [pgError]});
         }
-        blocks = await this.assignTransactions(blocks);
+        const assignResponse: Response<Array<Block>> = await this.assignTransactions(blocks);
+        if (!assignResponse.success) {
+            return new Response({ errors: [...assignResponse.errors, 'loadBlocksOffset'], data: blocks });
+        }
+        blocks = assignResponse.data;
         return new Response({ data: blocks });
     }
 
@@ -123,7 +131,11 @@ class BlockRepo {
         } catch (pgError) {
             return new Response({ errors: [pgError]});
         }
-        block = await this.assignTransactions([block])[0];
+        const assignResponse: Response<Array<Block>> = await this.assignTransactions([block]);
+        if (!assignResponse.success) {
+            return new Response({ errors: [...assignResponse.errors, 'loadLastBlock'], data: block });
+        }
+        block = assignResponse.data[0];
         return new Response({ data: block });
     }
 
@@ -198,11 +210,15 @@ class BlockRepo {
             return new Response({ errors: [pgError]});
         }
         let block: Block = await this.dbRead(rawBlock);
-        block = await this.assignTransactions([block])[0];
+        const assignResponse: Response<Array<Block>> = await this.assignTransactions([block]);
+        if (!assignResponse.success) {
+            return new Response({ errors: [...assignResponse.errors, 'loadFullBlockById'], data: block });
+        }
+        block = assignResponse.data[0];
         return new Response({ data: block });
     }
 
-    public async dbRead(raw: {[key: string]: any}, radix: number = 10): Promise<Block> {
+    public dbRead(raw: {[key: string]: any}, radix: number = 10): Block {
         if (!raw.id) {
             return null;
         }
@@ -224,14 +240,14 @@ class BlockRepo {
         return block;
     }
 
-    private async assignTransactions(blocks: Array<Block>): Promise<Array<Block>> {
+    private async assignTransactions(blocks: Array<Block>): Promise<Response<Array<Block>>> {
         const ids: Array<string> = blocks.map((block: Block) => {
             return block.id;
         });
         const transactionsResponse: Response<{ [blockId: string]:  Array<Transaction<object>> }> =
             await TransactionRepo.getTransactionsForBlocksByIds(ids);
         if (!transactionsResponse.success) {
-            return blocks;
+            return new Response({ errors: [...transactionsResponse.errors, 'assignTransaction'] });
         }
         const transactions: { [blockId: string]:  Array<Transaction<object>> } = transactionsResponse.data;
         blocks.forEach((block: Block) => {
@@ -239,7 +255,7 @@ class BlockRepo {
                 block.transactions = transactions[block.id];
             }
         });
-        return blocks;
+        return new Response({ data: blocks });
     }
 }
 

@@ -1,12 +1,9 @@
-import { db } from 'shared/driver';
-import { Loader } from './loader';
+import Loader from './loader';
 import { logger } from 'shared/util/logger';
 
 const preconfiguration: Array<Promise<any>> = [];
 
-const loader = new Loader();
-
-preconfiguration.push(loader.runMigrate(db));
+preconfiguration.push(Loader.start());
 
 Promise.all(preconfiguration)
     .then(() => {})

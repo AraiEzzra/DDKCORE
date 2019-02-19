@@ -28,16 +28,17 @@ class TransactionRepo implements ITransactionRepository<object> {
         return null;
     }
 
-    async  getTransactionsForBlocksByIds(ids: Array<string>):
+    async  getTransactionsForBlocksByIds(blocksIds: Array<string>):
         Promise<Response<{ [blockId: string]:  Array<Transaction<object>> }>> {
         let result: { [blockId: string]:  Array<Transaction<object>> } = {};
         try {
-            const rawTransactions: Array<object> = await db.manyOrNone(queries.getTransactionsForBlocksByIds, [ids]);
-            if (!result) {
-                return new Response({ errors: ['No blocks found']});
+            const rawTransactions: Array<object> =
+                await db.manyOrNone(queries.getTransactionsForBlocksByIds, [blocksIds]);
+            if (!rawTransactions) {
+                return new Response({ errors: ['No transactions found']});
             }
-            rawTransactions.forEach(async (rawTransaction) =>  {
-                const transaction: Transaction<object> = await this.dbRead(rawTransaction);
+            rawTransactions.forEach((rawTransaction) =>  {
+                const transaction: Transaction<object> = this.dbRead(rawTransaction);
                 if (!result[transaction.blockId]) {
                     result[transaction.blockId] = [];
                 }
@@ -49,7 +50,7 @@ class TransactionRepo implements ITransactionRepository<object> {
         return new Response({ data: result });
     }
 
-    public async dbRead(raw: {[key: string]: any}, radix: number = 10): Promise<Transaction<object>> {
+    public dbRead(raw: {[key: string]: any}, radix: number = 10): Transaction<object> {
         if (!raw.id) {
             return null;
         }
