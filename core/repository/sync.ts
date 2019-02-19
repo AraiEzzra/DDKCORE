@@ -58,13 +58,17 @@ export class Sync implements ISyncRepo {
 
     async requestCommonBlocks(blockIds) {
         // TODO minheight > нашей && !consensus (broadhash не такой как наш)
-        const peers = [];
-        peers.push(this.peerRepo.getRandomPeer());
+
+        const filteredPeers = this.peerRepo.getPeersByFilter();
+        const peers = this.peerRepo.getRandomPeers(
+            2,
+            filteredPeers
+        );
         this.socketRepo.emitPeers('REQUEST_COMMON_BLOCKS', blockIds, peers);
     }
 
-    async sendCommonBlocksExist(result: boolean, peer): Promise<void> {
-        this.socketRepo.emitPeer('RESPONSE_COMMON_BLOCKS', result, peer);
+    async sendCommonBlocksExist(data: boolean, peer): Promise<void> {
+        this.socketRepo.emitPeer('RESPONSE_COMMON_BLOCKS', data, peer);
     }
 
     async requestBlocks(data: { height: number, limit: number }, peer): Promise<void> {
@@ -73,5 +77,9 @@ export class Sync implements ISyncRepo {
 
     async sendBlocks(blocks: Array<Block>, peer): Promise<void> {
         this.socketRepo.emitPeer('RESPONSE_BLOCKS', { blocks }, peer);
+    }
+
+    async sendHeaders(headers){
+        this.socketRepo.emitPeers('PEER_HEADERS_UPDATE', headers);
     }
 }

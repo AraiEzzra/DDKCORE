@@ -3,6 +3,7 @@ import { Block } from 'shared/model/block';
 import { Sync } from 'core/repository/sync';
 import Socket from 'core/repository/socket';
 import { Transaction } from 'shared/model/transaction';
+import headers from 'core/repository/system';
 
 export interface ISyncService {
 
@@ -73,4 +74,11 @@ export class SyncService implements ISyncService {
         let response = true; // response = result.length
         this.syncRepo.sendCommonBlocksExist(response, peer);
     }
+
+    async updateHeaders(data) {
+        headers.update(data)
+        this.syncRepo.sendHeaders(headers)
+    }
 }
+
+export default new SyncService();

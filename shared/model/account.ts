@@ -20,17 +20,36 @@ class Stake {
     airdropReward: AirdropReward;
 }
 
-export class Account {
+export interface IAccountFilds {
+    address: Address;
+    publicKey: PublicKey;
+    secondPublicKey?: PublicKey;
+    actualBalance?: number;
+    delegate?: Delegate;
+    votes?: Array<PublicKey>;
+    referrals?: Array<Account>;
+    stakes?: Array<Stake>;
+}
+
+export class Account implements IAccountFilds{
 
     address: Address;
     publicKey: PublicKey;
-    secondPublicKey: PublicKey;
-    actualBalance: number;
+    secondPublicKey?: PublicKey;
+    actualBalance?: number;
 
-    delegate: Delegate;
-    votes: Array<PublicKey>;
-    referrals: Array<Account>;
-    stakes: Array<Stake>;
+    delegate?: Delegate;
+    votes?: Array<PublicKey>;
+    referrals?: Array<Account>;
+    stakes?: Array<Stake>;
+
+    constructor(data: IAccountFilds) {
+        Object.assign(this, data);
+    }
+
+    public getCopy() {
+        return new Account(this);
+    }
 
     // TODO: define what is that sh*t
     // group_bonus: number;

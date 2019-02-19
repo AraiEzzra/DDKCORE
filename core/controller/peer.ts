@@ -112,18 +112,16 @@ class PeerController extends BaseController {
 
     @ON('BLOCKCHAIN_READY')
     public initDiscover() {
-        // PeerService.addPeer();
+        // PeerService.insertSeeds();
         // PeerService.discover();
     }
 
     // @todo should be called each 10 sec
     @ON('PEERS_DISCOVER')
     public discover() {
-        /*
-        PeerService.discover();
-        PeerService.updatePeers();
-        PeerService.removeBans();
-        */
+        // PeerService.discover();
+        // PeerService.updatePeers();
+        // PeerService.removeBans();
     }
 }
 

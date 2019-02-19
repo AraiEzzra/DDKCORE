@@ -1,11 +1,11 @@
-import peerController from './peer';
 import blockController from './block';
 import delegateController from './delegate';
 import roundController from './round';
+import syncController from  './sync';
 
 import { subjectOn, subjectRpc } from 'shared/util/bus';
 
-const controllers = [peerController, blockController, roundController, delegateController];
+const controllers = [blockController, roundController, delegateController, syncController];
 controllers.forEach((controller) => {
     if (controller.eventsON && controller.eventsON.length) {
         controller.eventsON.forEach(({ handlerTopicName, handlerFunc }) => {
@@ -29,9 +29,8 @@ controllers.forEach((controller) => {
 });
 
 export default {
-    peerController,
     blockController,
     delegateController,
-    roundController
+    roundController,
+    syncController,
 };
-
