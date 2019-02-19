@@ -12,7 +12,7 @@
     "outDir": "dist",
     "baseUrl": ".",
     "paths": {
-      "api/*": ["./api/*"],
+//      "api/*": ["./api/*"],
       "core/*": ["./core/*"],
       "backlog/*": ["./backlog/*"],
       "shared/*": ["./shared/*"],
@@ -28,7 +28,7 @@
     ]
   },
   "include": [
-    "api/**/*",
+//    "api/**/*",
     "core/**/*",
     "backlog/**/*",
     "shared/**/*",
