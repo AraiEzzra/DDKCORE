@@ -12,11 +12,11 @@ class DelegateMock {
         for (let i = 0; i < transactions.length; i++) {
             const trs = transactions[i];
             if (trs.type === TransactionType.DELEGATE) {
-                this.delegates.push(new Account({
+                this.delegates.push({
                     name: trs.asset.delegate.username,
                     publicKey: trs.senderPublicKey,
                     votes: 0
-                }));
+                });
             }
             if (trs.type === TransactionType.VOTE) {
                 this.votes.push(...trs.asset.votes);

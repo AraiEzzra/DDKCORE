@@ -3,6 +3,10 @@ import { Account } from 'shared/model/account';
 import crypto from 'crypto';
 import SlotService from 'core/service/slot';
 import Config from 'shared/util/config';
+// todo delete it when find a way to mock services for tests
+// import BlockService from 'test/core/mock/blockService';
+// import { createTaskON } from 'test/core/mock/bus';
+// import BlockRepository from 'test/core/mock/blockRepository';
 import BlockService from 'core/service/block';
 import BlockRepository from 'core/repository/block';
 import { Slots } from 'shared/model/round';
@@ -27,7 +31,7 @@ interface IRoundService {
      * @implements {getDelegates(vote, activeDelegates): Array<Delegate>} DelegateRepository
      * @param limit: activeDelegateCount
      */
-    getActiveDelegates(): ResponseEntity<Account[]>;
+    getActiveDelegates(): ResponseEntity<any>;
 
     /**
      * Generate hash (delegate publicKey + previousBlockId)
@@ -60,7 +64,7 @@ interface IRoundService {
     /**
      * calculateReward
      */
-    sumRound(round): IRoundSum;
+    sumRound(round): Promise<IRoundSum>;
 
     /**
      * Rebuild round if one of blocks apply with delay
@@ -86,12 +90,11 @@ interface IRoundService {
 }
 
 class RoundService implements IRoundService {
-
     // todo mock delegates from genesis and change
-    public getActiveDelegates(): ResponseEntity<Array<any>> {
-        return {
+    public getActiveDelegates(): ResponseEntity<any> {
+        return new ResponseEntity({
             data: mockDelegate.getDelegates()
-        };
+        });
     }
 
     private compose(...fns): any {
@@ -129,7 +132,6 @@ class RoundService implements IRoundService {
     public generatorPublicKeyToSlot(sortedHashList: Array<IHashList>): Slots {
         let firstSlot = SlotService.getSlotNumber();
         // set the last round slot
-        this.lastRoundSlot = firstSlot + sortedHashList.length;
 
         return sortedHashList.reduce(
             (acc: Object = {}, item: IHashList, i) => {
@@ -155,17 +157,17 @@ class RoundService implements IRoundService {
             RoundRepository.setPrevRound(RoundRepository.getCurrentRound());
         }
 
-        const blockId = BlockService.getLastBlock().id;
-        const activeDelegates = this.getActiveDelegates(); // todo wait for implementation method
+        const lastBlock = BlockService.getLastBlock();
+        const { data } = this.getActiveDelegates(); // todo wait for implementation method
 
         const slots = this.compose(
             this.generatorPublicKeyToSlot,
             this.sortHashList,
             this.generateHashList
         )
-        ({blockId, activeDelegates});
+        ({blockId: lastBlock.id, activeDelegates: data});
 
-        RoundRepository.setCurrentRound({slots, startHeight: blockId + 1});
+        RoundRepository.setCurrentRound({slots, startHeight: lastBlock.height + 1});
 
         const mySlot = this.getMyTurn();
 
@@ -176,21 +178,28 @@ class RoundService implements IRoundService {
 
         // create event for end of current round
         createTaskON('ROUND_FINISH', SlotService.getSlotTime(RoundRepository.getLastSlotInRound()));
+
+        return new ResponseEntity();
     }
 
     public getMyTurn(): number {
         return RoundRepository.getCurrentRound().slots[constants.publicKey].slot;
     }
 
-    public sumRound(round): IRoundSum {
-        const blocks = BlockRepository.loadBlocksOffset({offset: round.startHeight});
+    public async sumRound(round): Promise<IRoundSum> {
+        const { data } = await BlockRepository.loadBlocksOffset(
+            {
+                offset: round.startHeight,
+                limit: constants.activeDelegates
+            });
+
         const resp: IRoundSum = {
             roundFees: 0,
             roundDelegates: []
         };
-        for (let i = 0; i < blocks.length; i++) {
-            resp.roundFees += blocks[i].fee;
-            resp.roundDelegates.push(blocks[i].generatorPublicKey);
+        for (let i = 0; i < data.length; i++) {
+            resp.roundFees += data[i].fee;
+            resp.roundDelegates.push(data[i].generatorPublicKey);
         }
 
         return resp;
