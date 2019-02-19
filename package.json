@@ -6,7 +6,7 @@
     "tsc": "tsc",
     "start": "npm run start:api && npm run start:backlog",
     "start:api": "node --max-old-space-size=8192 dist/api/app.js",
-    "start:core": "npm run tsc && node --max-old-space-size=8192 dist/core/app.js",
+    "start:core": "npm run tsc && node --max-old-space-size=8192 dist/core/server.js",
     "start:backlog": "node --max-old-space-size=8192 dist/backlog/app.js",
     "server": "npm run server:backlog",
     "server:api": "nodemon --max-old-space-size=8192 dist/api/app.js",

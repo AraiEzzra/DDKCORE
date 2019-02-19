@@ -37,7 +37,7 @@ export class Dashboard implements IDashboardResponse {
     forgingStatus: { enabled?: boolean; delegates: any };
     totalDDKStaked: number;
 
-    constructor(rawData?: any = {}) {
+    constructor(rawData: any = {}) {
         this.totalSupply = Number(rawData.totalSupply) || 0;
         this.circulatingSupply = Number(rawData.circulatingSupply) || 0;
         this.account = rawData.account || [];

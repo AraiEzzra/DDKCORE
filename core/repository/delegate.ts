@@ -42,7 +42,7 @@ class DelegateRepository implements IDelegateRepository {
         const hash = crypto.createHash('sha256').update(data.secret, 'utf8').digest();
         const publicKey: string = ed.makePublicKeyHex(hash);
         const account  = await this.accountRepo.getAccount(publicKey);
-        if (account.data && account.data.isDelegate) {
+        if (account.data && account.data.delegate) {
             return new Response({
                 data: {
                     address: account.data.address

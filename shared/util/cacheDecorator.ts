@@ -13,7 +13,8 @@ export const useCache = (expired, client?: ICacheRepository) => {
                     if (cacheFromRedis.data) {
                         return new ResponseEntity({data: cacheFromRedis});
                     } else {
-                        let data = decoratedFn.apply(target, arguments);
+                        // todo: use arguments as second parameter
+                        let data = decoratedFn.apply(target, []);
                         await cacheClient.set(propertyKey, data.data, expired);
                         return data;
                     }

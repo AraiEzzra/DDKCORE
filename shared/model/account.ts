@@ -6,7 +6,7 @@ export type Timestamp = number;
 
 type AirdropReward = {
     [address: string]: number;
-}
+};
 
 class Stake {
     createdAt: Timestamp;

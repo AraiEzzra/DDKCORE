@@ -7,10 +7,10 @@ export const transactionSortFunc = (a: Transaction<any>, b: Transaction<any>): n
     if (a.type > b.type) {
         return 1;
     }
-    if (a.timestamp < b.timestamp) {
+    if (a.createdAt < b.createdAt) {
         return -1;
     }
-    if (a.timestamp > b.timestamp) {
+    if (a.createdAt > b.createdAt) {
         return 1;
     }
     if (a.id < b.id) {

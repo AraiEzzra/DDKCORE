@@ -6,6 +6,7 @@ import { Transaction } from 'shared/model/transaction';
 import Response from 'shared/model/response';
 import { ON, RPC } from 'core/util/decorator';
 import { BaseController } from 'core/controller/baseController';
+import PeerRepo from 'core/repository/peer';
 
 interface ICommonBlockRequest {
     body: {
@@ -55,7 +56,7 @@ class PeerController extends BaseController {
             peerResponse.errors.push('/blocks/common');
             return new Response<{common: number}>({ errors: peerResponse.errors });
         }
-        PeerService.remove(peerResponse.data);
+        PeerRepo.removePeer(peerResponse.data);
         return new Response({ data: { common: 0 }});
     }
 
@@ -66,7 +67,7 @@ class PeerController extends BaseController {
 
     @RPC('GET_PEERS_LIST')
     public list(): Response<Array<Peer>> {
-        PeerService.list();
+        PeerRepo.peerList();
         return new Response({ data: [] });
     }
 
@@ -111,16 +112,18 @@ class PeerController extends BaseController {
 
     @ON('BLOCKCHAIN_READY')
     public initDiscover() {
-        PeerService.insertSeeds();
-        PeerService.discover();
+        // PeerService.addPeer();
+        // PeerService.discover();
     }
 
     // @todo should be called each 10 sec
     @ON('PEERS_DISCOVER')
     public discover() {
+        /*
         PeerService.discover();
         PeerService.updatePeers();
         PeerService.removeBans();
+        */
     }
 }
 
