@@ -79,7 +79,7 @@ export default {
     maxRequests: 10000 * 12,
     maxSharedTxs: 100,
     maxSignaturesLength: 196 * 256,
-    maxTxsPerBlock: 25,
+    maxTxsPerBlock: 250,
     nethashes: [
         '062439070c3134dc3798ca315779071820206b892571395a17bfdc1ade748112'
     ],

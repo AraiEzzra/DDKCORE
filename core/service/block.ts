@@ -18,7 +18,7 @@ import TransactionPool from 'core/service/transactionPool';
 import TransactionRepo from 'core/repository/transaction';
 import {DelegateService} from 'core/service/delegate';
 import slotService from 'core/service/slot';
-import {RoundService} from 'core/service/round';
+import RoundService from 'core/service/round';
 import {transactionSortFunc} from 'core/util/transaction';
 import {getOrCreateAccount} from 'shared/util/account';
 import blockShema from 'core/schema/block';
@@ -44,7 +44,6 @@ enum Fork {
 class BlockService {
     // todo: remove after implemented as singleton
     private delegateService: DelegateService = new DelegateService();
-    private roundService: RoundService = new RoundService();
 
     private secondsRadix = 1000;
     private lastBlock: Block;
@@ -624,7 +623,7 @@ class BlockService {
         messageON('NEW_BLOCKS', block);
 
         if (tick) {
-            await this.roundService.generateRound();
+            await RoundService.generateRound();
         }
         block = null;
         return new Response<void>();
@@ -709,7 +708,7 @@ class BlockService {
             logger.warn([
                 'Discarded block that does not match with current chain:', block.id,
                 'height:', block.height,
-                'round:', this.roundService.calcRound(block.height),
+                'round:', RoundService.calcRound(block.height),
                 'slot:', slotService.getSlotNumber(block.createdAt),
                 'generator:', block.generatorPublicKey
             ].join(' '));
@@ -720,7 +719,7 @@ class BlockService {
         logger.info([
             'Received new block id:', block.id,
             'height:', block.height,
-            'round:', this.roundService.calcRound(block.height),
+            'round:', RoundService.calcRound(block.height),
             'slot:', slotService.getSlotNumber(block.createdAt)
         ].join(' '));
 
@@ -818,8 +817,8 @@ class BlockService {
     }
 
     private async validateBlockSlot(block: Block, lastBlock: Block): Promise<Response<void>> {
-        const roundNextBlock = this.roundService.calcRound(block.height);
-        const roundLastBlock = this.roundService.calcRound(lastBlock.height);
+        const roundNextBlock = RoundService.calcRound(block.height);
+        const roundLastBlock = RoundService.calcRound(lastBlock.height);
         const activeDelegates = config.constants.activeDelegates;
 
         const errors: Array<string> = [];
@@ -985,7 +984,7 @@ class BlockService {
             return new Response<Block>({errors});
         }
 
-        await this.roundService.rollBackRound(); // (oldLastBlock, previousBlock);
+        await RoundService.rollBackRound(); // (oldLastBlock, previousBlock);
 
         const deleteBlockResponse: Response<void> = await BlockRepo.deleteBlock(oldLastBlock.id);
         if (!deleteBlockResponse.success) {
