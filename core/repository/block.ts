@@ -241,9 +241,14 @@ class BlockRepo {
     }
 
     private async assignTransactions(blocks: Array<Block>): Promise<Response<Array<Block>>> {
+        let totalTransactionCount = 0;
         const ids: Array<string> = blocks.map((block: Block) => {
+            totalTransactionCount += block.transactionCount;
             return block.id;
         });
+        if (!totalTransactionCount) {
+            return new Response({ data: blocks });
+        }
         const transactionsResponse: Response<{ [blockId: string]:  Array<Transaction<object>> }> =
             await TransactionRepo.getTransactionsForBlocksByIds(ids);
         if (!transactionsResponse.success) {

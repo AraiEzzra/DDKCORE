@@ -1,13 +1,16 @@
 const env = process.env;
 
+import { ed } from 'shared/util/ed';
+import crypto from 'crypto';
+
 import Validator from 'z-schema';
 import ZSchema from 'shared/util/z_schema';
 const validator: Validator = new ZSchema({});
 
 import configSchema from 'config/schema/config';
-import devConfig from 'config/default/config';
-import testConfig from 'config/testnet/config';
-import mainConfig from 'config/mainnet/config';
+import defaultCfg from 'config/default/config';
+import testnetCfg from 'config/testnet/config';
+import mainnetCfg from 'config/mainnet/config';
 import envConstants from 'config/env';
 import devConstants from 'config/default/constants';
 import testConstants from 'config/testnet/constants';
@@ -15,9 +18,9 @@ import mainConstants from 'config/mainnet/constants';
 import defaultGenesisBlock from 'config/default/genesisBlock.json';
 import testnetGenesisBlock from 'config/testnet/genesisBlock.json';
 import mainnetGenesisBlock from 'config/mainnet/genesisBlock.json';
-import { Block } from 'shared/model/block';
 
 interface IConstraint {
+    publicKey?: string;
     airdrop?: {
         account?: string;
         stakeRewardPercent?: number;
@@ -331,7 +334,7 @@ interface IConfig {
 class Config {
     public config: IConfig;
     public constants: IConstraint;
-    public genesisBlock: Block;
+    public genesisBlock: any = {}; // todo change it
 
     constructor() {
         if (!env.NODE_ENV_IN) {
@@ -463,27 +466,27 @@ class Config {
 
         // For development mode
         if (env.NODE_ENV_IN === 'development') {
-            this.config = devConfig;
-            this.genesisBlock = new Block(defaultGenesisBlock);
+            this.config = defaultCfg;
+            Object.assign(this.genesisBlock, defaultGenesisBlock);
             Object.assign(this.constants, devConstants);
         }
 
         // For staging environment
         if (env.NODE_ENV_IN === 'testnet') {
-            this.genesisBlock = new Block(testnetGenesisBlock);
-            this.config = testConfig;
+            Object.assign(this.genesisBlock, testnetGenesisBlock);
+            this.config = testnetCfg;
             Object.assign(this.constants, testConstants);
         }
 
         // For production
         if (env.NODE_ENV_IN === 'mainnet') {
-            this.genesisBlock = new Block(mainnetGenesisBlock);
-            this.config = mainConfig;
+            Object.assign(this.genesisBlock, mainnetGenesisBlock);
+            this.config = mainnetCfg;
             Object.assign(this.constants, mainConstants);
         }
 
         if (env.NODE_ENV_IN === 'test') {
-            this.genesisBlock = new Block(testnetGenesisBlock);
+            Object.assign(this.genesisBlock, testnetGenesisBlock);
             this.config = { coverage: true };
             Object.assign(this.constants, testConstants);
         }
@@ -495,6 +498,11 @@ class Config {
         } else {
             this.config = this.validateForce(this.config, this.constants);
         }
+
+        const hash = crypto.createHash('sha256').update(env.FORGE_SECRET, 'utf8').digest();
+        const publicKey = ed.makeKeypair(hash).publicKey.toString('hex');
+        Object.assign(this.constants, {publicKey: publicKey});
+
     }
 
     /**

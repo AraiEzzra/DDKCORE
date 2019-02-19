@@ -35,7 +35,7 @@ class TransactionRepo implements ITransactionRepository<object> {
             const rawTransactions: Array<object> =
                 await db.manyOrNone(queries.getTransactionsForBlocksByIds, [blocksIds]);
             if (!rawTransactions) {
-                return new Response({ errors: ['No transactions found']});
+                return new Response({ data: {}});
             }
             rawTransactions.forEach((rawTransaction) =>  {
                 const transaction: Transaction<object> = this.dbRead(rawTransaction);
