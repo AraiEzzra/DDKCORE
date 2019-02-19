@@ -8,7 +8,7 @@ export default class ResponseEntity<T> {
     errors?: Array<string>;
     data?: T;
 
-    constructor(params: ResponseEntityParams<T> = null) {
+    constructor(params: ResponseEntityParams<T> = {}) {
         this.success = params.errors ? !Boolean(params.errors.length) : true;
         this.errors = params.errors ? params.errors : null;
         this.data = params.data ? params.data : null;

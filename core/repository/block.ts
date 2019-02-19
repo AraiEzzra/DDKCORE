@@ -3,6 +3,7 @@ import { Block } from 'shared/model/block';
 import db from 'shared/driver/db';
 import Response from 'shared/model/response';
 import config from 'shared/util/config';
+import queries from 'core/repository/queries/block';
 
 interface IDBBlockSave {
     table: string;
@@ -29,7 +30,7 @@ class BlockRepo {
     public async getGenesisBlock(): Promise<Response<Block>> {
         let block: Block = null;
         try {
-            const result: object = await db.oneOrNone('SELECT * FROM blocks WHERE "height" = 1');
+            const result: object = await db.oneOrNone(queries.getGenesisBlock);
             if (!result) {
                 return new Response({ errors: ['No genesis block found']});
             }
@@ -43,7 +44,7 @@ class BlockRepo {
     public async isBlockExists(id: string): Promise<Response<boolean>> {
         let exists = null;
         try {
-            exists = await db.one('SELECT EXISTS(SELECT * FROM blocks WHERE "id" = ${id})', { id });
+            exists = await db.one(queries.isBlockExists, { id });
         } catch (pgError) {
             return new Response({ errors: [pgError]});
         }
@@ -53,7 +54,7 @@ class BlockRepo {
     // if I need to return deleted block?
     public async deleteBlock(blockId: string): Promise<Response<void>> {
         try {
-            await db.none('DELETE FROM blocks WHERE "id" = ${blockId};', { blockId });
+            await db.none(queries.deleteBlock, { blockId });
         } catch (pgError) {
             return new Response({ errors: [pgError]});
         }
@@ -64,31 +65,9 @@ class BlockRepo {
     public async getIdSequence(
         param: { height: number, delegates: number, limit: number}
         ): Promise<Response<Array<string>>> {
-        const request =
-            `WITH 
-            current_round AS (
-                SELECT CEIL(b.height / ${param.delegates}::float)::bigint as height 
-                FROM blocks b 
-                WHERE b.height <= ${param.height} 
-                ORDER BY b.height DESC LIMIT 1)
-            rounds AS (
-                SELECT * 
-                FROM generate_series(
-                    (SELECT * FROM current_round),
-                    (SELECT * FROM current_round) - ${param.limit} + 1, 
-                    -1
-                )
-            )
-            SELECT
-            b.id, b.height, CEIL(b.height / ${param.delegates}::float)::bigint AS round
-            FROM blocks b
-            WHERE b.height IN (
-                SELECT ((n - 1) * ${param.delegates}) + 1 FROM rounds AS s(n)
-            ) 
-            ORDER BY height DESC`;
         let result = [];
         try {
-            result = await db.query(request);
+            result = await db.query(queries.getIdSequence(param));
         } catch (pgError) {
             return new Response({ errors: [pgError]});
         }
@@ -100,14 +79,9 @@ class BlockRepo {
     }
 
     public async getCommonBlock(param: {id: string, previousBlock: Block, height: number}): Promise<Response<string>> {
-        const request =  [
-            'SELECT COUNT("id")::int FROM blocks WHERE "id" = ${id}',
-            (param.previousBlock ? 'AND "previous_block_id" = ${previousBlockId}' : ''),
-            'AND "height" = ${height}'
-        ].filter(Boolean).join(' ');
         let result;
         try {
-            result = await db.oneOrNone(request, {
+            result = await db.oneOrNone(queries.getCommonBlock(param.previousBlock), {
                 id: param.id,
                 previousBlockId: param.previousBlock.id,
                 height: param.height
@@ -118,15 +92,10 @@ class BlockRepo {
         return new Response({ data: result });
     }
 
-    public async loadBlocksOffset(param: {offset: number, limit: number}): Promise<Response<Array<Block>>> {
+    public async loadBlocksOffset(param: {offset: number, limit?: number}): Promise<Response<Array<Block>>> {
         let blocks: Array<Block> = null;
         try {
-            const result: Array<object> = await db.manyOrNone(
-                'SELECT * ' +
-                'FROM blocks ' +
-                'WHERE "height" >= ${offset} AND "height" < ${limit} ' +
-                'ORDER BY "height"',
-                param);
+            const result: Array<object> = await db.manyOrNone(queries.loadBlocksOffset(param.limit), param);
             if (!result) {
                 return new Response({ errors: ['No blocks found']});
             }
@@ -142,14 +111,7 @@ class BlockRepo {
     public async loadLastBlock(): Promise<Response<Block>> {
         let block: Block = null;
         try {
-            const result: object = await db.oneOrNone(
-                'SELECT * ' +
-                'FROM blocks' +
-                'WHERE "height" = (' +
-                '   SELECT MAX("height") ' +
-                '   FROM blocks' +
-                ') ' +
-                'ORDER BY "height"');
+            const result: object = await db.oneOrNone(queries.loadLastBlock);
             if (!result) {
                 return new Response({ errors: ['No blocks found']});
             }
@@ -163,11 +125,7 @@ class BlockRepo {
     public async loadLastNBlocks(): Promise<Response<Array<string>>> {
         let ids: Array<string> = null;
         try {
-            const result: Array<{id: string}> = await db.manyOrNone(
-                'SELECT id ' +
-                'FROM blocks ' +
-                'ORDER BY height DESC ' +
-                'LIMIT ${blockLimit}',
+            const result: Array<{id: string}> = await db.manyOrNone(queries.loadLastNBlocks,
                 { blockLimit: config.constants.blockSlotWindow });
             if (!result) {
                 return new Response({ errors: ['No blocks found']});
@@ -183,15 +141,7 @@ class BlockRepo {
 
     public async deleteAfterBlock(id: string): Promise<Response<void>> {
         try {
-            await db.query(
-                'DELETE ' +
-                'FROM blocks ' +
-                'WHERE "height" >= (' +
-                '   SELECT "height" ' +
-                '   FROM blocks ' +
-                '   WHERE "id" = ${id}' +
-                ');',
-                { id });
+            await db.query(queries.deleteAfterBlock, { id });
         } catch (pgError) {
             return new Response({ errors: [pgError]});
         }
@@ -238,12 +188,7 @@ class BlockRepo {
     public async loadFullBlockById(id: string): Promise<Response<Block>> {
         let rawBlock = null;
         try {
-            rawBlock = await db.oneOrNone(
-                'SELECT * ' +
-                'FROM blocks ' +
-                'WHERE id = ${id} ' +
-                'ORDER BY "height"',
-                { id });
+            rawBlock = await db.oneOrNone(queries.loadFullBlockById, { id });
         } catch (pgError) {
             return new Response({ errors: [pgError]});
         }
