@@ -1,6 +1,6 @@
 import os from 'os';
 import crypto from 'crypto';
-import db from 'shared/driver/db';
+// import db from 'shared/driver/db';
 import queries from 'core/repository/queries/block';
 import config from 'shared/util/config';
 

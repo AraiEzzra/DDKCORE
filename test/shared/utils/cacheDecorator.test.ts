@@ -4,16 +4,14 @@ import ResponseEntity from 'shared/model/response';
 import { expect } from 'chai';
 
 class EmulateRedisClient implements ICacheRepository {
-    public store: any;
+    public store: Array<any>;
 
     constructor() {
         this.store = [];
     }
 
     public async get(key): Promise<ResponseEntity<any>> {
-        return new Promise((resolve, reject) => {
-            resolve(new ResponseEntity({ data: this.store[key]}));
-        });
+        return new ResponseEntity({ data: this.store[key] })
     }
 
     public async set(key: string, value: any, expired?: number): Promise<boolean> {

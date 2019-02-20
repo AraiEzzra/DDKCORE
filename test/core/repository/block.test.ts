@@ -30,7 +30,7 @@ const createTable = async () => {
              "blockSignature"       BYTEA  NOT NULL,
              FOREIGN KEY ("previousBlock")
              REFERENCES "blocks" ("id") ON DELETE SET NULL
-        );       
+        );
     `);
 };
 
@@ -41,7 +41,7 @@ const dropTable = async () => {
 const insertGenesisBlock = async () => {
     const hash = new Buffer('hash');
     const signature = new Buffer('signature');
-    await db.query(`INSERT INTO blocks(id, version, timestamp, height, "numberOfTransactions", "totalAmount", "totalFee", reward, "payloadLength", "payloadHash", "generatorPublicKey", "blockSignature") 
+    await db.query(`INSERT INTO blocks(id, version, timestamp, height, "numberOfTransactions", "totalAmount", "totalFee", reward, "payloadLength", "payloadHash", "generatorPublicKey", "blockSignature")
         VALUES ('firstId', 1, 100, 1, 0, 0, 0, 0, 0, '${hash}', 'publicKey', '${signature}');`);
 };
 

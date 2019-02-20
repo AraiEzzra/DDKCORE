@@ -11,6 +11,7 @@ import {logger} from 'shared/util/logger';
 import {Account} from 'shared/model/account';
 import {Block} from 'shared/model/block';
 import BlockRepo from 'core/repository/block';
+import AccountRepo from 'core/repository/account';
 import {Transaction} from 'shared/model/transaction';
 import TransactionService from 'core/service/transaction';
 import TransactionQueue from 'core/service/transactionQueue';
@@ -249,7 +250,7 @@ class BlockService {
 
         if (!report) {
             return new Response<Block>({
-                errors: [`Failed to validate block schema: 
+                errors: [`Failed to validate block schema:
                 ${validator.getLastErrors().map(err => err.message).join(', ')}`]
             });
         }
@@ -257,7 +258,7 @@ class BlockService {
         const errors: Array<string> = [];
         for (i = 0; i < block.transactions.length; i++) {
             const response: Response<Transaction<object>> =
-                await TransactionService.objectNormalize(block.transactions[i]);
+                await TransactionService.normalize(block.transactions[i]);
             if (!response.success) {
                 errors.push(...response.errors);
             }
@@ -559,8 +560,8 @@ class BlockService {
         trs.id = transactionIdResponse.data;
         trs.blockId = block.id;
 
-        const verifyResult: IVerifyResult = await TransactionService.verify(trs, sender, checkExists);
-        if (!verifyResult.verified) {
+        const verifyResult = await TransactionService.verify(trs, sender, checkExists);
+        if (!verifyResult.success) {
             return new Response<void>({errors: [...verifyResult.errors, 'checkTransaction']});
         }
 
@@ -595,7 +596,8 @@ class BlockService {
 
         const errors: Array<string> = [];
         for (const trs of block.transactions) {
-            const applyResponse: Response<void> = await TransactionService.apply(trs, block);
+            const sender = AccountRepo.getByPublicKey(trs.senderPublicKey);
+            const applyResponse: Response<void> = await TransactionService.apply(trs, sender);
             if (!applyResponse.success) {
                 errors.push(...applyResponse.errors);
             }
@@ -736,7 +738,7 @@ class BlockService {
         if (!removedTransactionsResponse.success) {
             return new Response<void>({errors: [...removedTransactionsResponse.errors, 'receiveBlock']});
         }
-        logger.debug(`[Process][newReceiveBlock] removedTransactions 
+        logger.debug(`[Process][newReceiveBlock] removedTransactions
             ${JSON.stringify(removedTransactionsResponse.data)}`);
         const removedTransactions: Array<Transaction<object>> = removedTransactionsResponse.data;
 
@@ -944,7 +946,7 @@ class BlockService {
         }
         const popBlockResponse: Response<Block> = await this.popLastBlock(lastBlock);
         if (!popBlockResponse.success) {
-            logger.error(`Error deleting last block: ${JSON.stringify(lastBlock)}, 
+            logger.error(`Error deleting last block: ${JSON.stringify(lastBlock)},
                 message: ${JSON.stringify(popBlockResponse.errors)}`);
             popBlockResponse.errors.push('receiveForkFive');
             return popBlockResponse;
@@ -971,7 +973,8 @@ class BlockService {
 
         const errors: Array<string> = [];
         oldLastBlock.transactions.reverse().forEach(async (transaction) => {
-            const undoResponse: Response<void> = await TransactionService.undo(transaction, oldLastBlock);
+            const sender = AccountRepo.getByPublicKey(transaction.senderPublicKey);
+            const undoResponse: Response<void> = await TransactionService.undo(transaction, sender);
             if (!undoResponse.success) {
                 errors.push(...undoResponse.errors);
             }

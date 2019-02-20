@@ -1,4 +1,4 @@
-import db from 'shared/driver/db';
+// import db from 'shared/driver/db';
 import TransactionService from 'core/service/transaction';
 import { TransactionStatus, TransactionType} from 'shared/model/transaction';
 import { Address, PublicKey, Timestamp} from 'shared/model/account';
@@ -57,4 +57,3 @@ class Loader {
 }
 
 export default new Loader();
-
