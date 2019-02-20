@@ -3,6 +3,7 @@ import TransactionService from 'core/service/transaction';
 import { TransactionStatus, TransactionType} from 'shared/model/transaction';
 import { Address, PublicKey, Timestamp} from 'shared/model/account';
 import { messageON } from 'shared/util/bus';
+import {initControllers} from 'core/controller/index';
 
 /**
  * for mock delegates
@@ -107,6 +108,7 @@ class Loader {
         //         await TransactionService.applyUnconfirmed(trs);
         //     }
         // }
+        initControllers();
         messageON('WARN_UP_FINISHED');
     }
 

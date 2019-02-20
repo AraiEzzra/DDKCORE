@@ -1,8 +1,6 @@
 import os from 'os';
 import crypto from 'crypto';
-// import db from 'shared/driver/db';
-import queries from 'core/repository/queries/block';
-import config from 'shared/util/config';
+export const env = require('../../config/env').default;
 
 export class Headers {
     os: string;
@@ -17,8 +15,8 @@ export class Headers {
 
     constructor() {
         this.os = os.platform() + os.release();
-        this.port = 8080;
-        this.ip = '0.0.0.0';
+        this.port = env.serverPort;
+        this.ip = env.serverHost;
         this.broadhash = null;
     }
 
@@ -29,13 +27,11 @@ export class Headers {
         this.nonce = data.nonce || this.nonce;
     }
 
-    async getBroadhash() {
-        const rows = await db.manyOrNone(queries.loadLastNBlocks,
-            { blockLimit: 5 });
-        if (rows.length <= 1) {
+    generateBroadhash(ids: Array<any>) {
+        if (ids.length <= 1) {
             return this.broadhash;
         }
-        const seed = rows.map(row => row.id).join('');
+        const seed = ids.join('');
         const hash = crypto.createHash('sha256').update(seed, 'utf8').digest();
         return hash.toString('hex');
     };
