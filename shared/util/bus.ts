@@ -9,6 +9,6 @@ export function messageON(topicName: string, data: any = null) {
     subjectOn.next({ data, topicName });
 }
 
-export function createTaskON(topicName: string, time: number = new Date(), data: any = null) {
+export function createTaskON(topicName: string, time: number = Date.now(), data: any = null) {
     // todo implement function to create schedule fro messageON
 }
