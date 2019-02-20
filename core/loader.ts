@@ -40,7 +40,7 @@ export class MockDelegates {
     private startData: Array<{name: string, secret: string}> = [
         {
             name: 'DELEGATE_10.6.0.1',
-            secret: 'hen worry two thank unfair salmon smile oven gospel grab latin reason'
+            secret: 'artwork relax sheriff sting fruit return spider reflect cupboard dice goddess slice'
         },
         {
             name: 'DELEGATE_10.5.0.1',
