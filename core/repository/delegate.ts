@@ -47,6 +47,18 @@ class DelegateRepository {
             }
         }
     }
+
+    public forgingDisable(data: any) {
+
+    }
+
+    public forgingEnable(data: any) {
+
+    }
+
+    public forgingStatus(publicKey: string) {
+
+    }
 }
 
 export default new DelegateRepository();

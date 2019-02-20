@@ -1,14 +1,10 @@
 const Inserts = require('../../backlog/helpers/inserts.js');
-import db from 'shared/driver/db';
+// import db from 'shared/driver/db';
 import { Transaction } from 'shared/model/transaction';
 import { ITransactionRepository as ITransactionRepositoryShared } from 'shared/repository/transaction';
 import Response from 'shared/model/response';
 import {logger} from 'shared/util/logger';
 import queries from 'core/repository/queries/transaction';
-
-// wait declare by @Fisenko
-declare class Account {
-}
 
 interface IDBTransactionSave {
     table: string;
@@ -24,6 +20,13 @@ export interface ITransactionRepository<T extends Object> extends ITransactionRe
 }
 
 class TransactionRepo implements ITransactionRepository<object> {
+    // TODO: only for in-memory version
+    private memoryTransactions: { [id: string]: Transaction<{}> };
+
+    constructor() {
+        this.memoryTransactions = {};
+    }
+
     one(): Promise<Transaction<object>> {
         return null;
     }
@@ -82,6 +85,8 @@ class TransactionRepo implements ITransactionRepository<object> {
     dbSave(trs: Transaction<object>): IDBTransactionSave { return undefined; }
 
     public saveTransaction = async (transaction): Promise<Response<void>> => {
+        this.memoryTransactions[transaction.id] = transaction;
+
         try {
             await db.tx(async (t) => {
                 const promise = await this.dbSave(transaction);

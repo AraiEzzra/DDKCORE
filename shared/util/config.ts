@@ -7,17 +7,17 @@ import Validator from 'z-schema';
 import ZSchema from 'shared/util/z_schema';
 const validator: Validator = new ZSchema({});
 
-import configSchema from 'config/schema/config';
-import defaultCfg from 'config/default/config';
-import testnetCfg from 'config/testnet/config';
-import mainnetCfg from 'config/mainnet/config';
-import envConstants from 'config/env';
-import devConstants from 'config/default/constants';
-import testConstants from 'config/testnet/constants';
-import mainConstants from 'config/mainnet/constants';
-import defaultGenesisBlock from 'config/default/genesisBlock.json';
-import testnetGenesisBlock from 'config/testnet/genesisBlock.json';
-import mainnetGenesisBlock from 'config/mainnet/genesisBlock.json';
+import configSchema from '../../config/schema/config';
+import defaultCfg from '../../config/default/config';
+import testnetCfg from '../../config/testnet/config';
+import mainnetCfg from '../../config/mainnet/config';
+import envConstants from '../../config/env';
+import devConstants from '../../config/default/constants';
+import testConstants from '../../config/testnet/constants';
+import mainConstants from '../../config/mainnet/constants';
+import defaultGenesisBlock from '../../config/default/genesisBlock.json';
+import testnetGenesisBlock from '../../config/testnet/genesisBlock.json';
+import mainnetGenesisBlock from '../../config/mainnet/genesisBlock.json';
 
 interface IConstraint {
     publicKey?: string;
