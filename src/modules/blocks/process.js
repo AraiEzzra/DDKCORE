@@ -323,8 +323,7 @@ Process.prototype.loadBlocksFromPeer = function (peer, cb) {
                 } catch (err) {
                     const id = (block ? block.id : 'null');
                     library.logger.debug(
-                        `[Process][processBlock] Block processing failed,
-                        ${JSON.stringify({ id, err: err.toString(), module: 'blocks', block })}`
+                        `[Process][processBlock] Block processing failed, ${JSON.stringify({ id, err: err.toString(), module: 'blocks', block })}`
                     );
                     await modules.transactions.pushInPool(removedTransactions);
                     modules.transactions.unlockTransactionPoolAndQueue();
