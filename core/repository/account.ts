@@ -1,4 +1,4 @@
-import { Account, IAccountFilds } from 'shared/model/account';
+import { Account, IAccountFilds, Address } from 'shared/model/account';
 import Response from 'shared/model/response';
 
 class AccountRepo {
@@ -36,6 +36,16 @@ class AccountRepo {
     // example: such functions should be handlers and depends on workflows
     updateBalance(account: Account, balance: number): Response<void> {
         this.memoryAccountsByPublicKey[account.publicKey].actualBalance = balance;
+        return new Response<void>();
+    }
+
+    updateBalanceByPublicKey(publicKey: string, difference: number): Response<void> {
+        this.memoryAccountsByPublicKey[publicKey].actualBalance += difference;
+        return new Response<void>();
+    }
+
+    updateBalanceByAddress(address: Address, difference: number): Response<void> {
+        this.memoryAccountsByAddress[address].actualBalance += difference;
         return new Response<void>();
     }
 }

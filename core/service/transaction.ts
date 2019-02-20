@@ -6,6 +6,8 @@ import ResponseEntity from 'shared/model/response';
 import TransactionSendService from './transaction/send';
 import { ed, IKeyPair } from 'shared/util/ed';
 import { Account } from 'shared/model/account';
+import config from 'shared/util/config';
+import AccountRepo from '../repository/account';
 
 export interface IAssetService<T extends IAsset> {
     create(data: any): IAsset;
@@ -18,7 +20,9 @@ export interface IAssetService<T extends IAsset> {
 
     calcUndoUnconfirmed(asset: IAsset, sender: Account): void;
 
-    applyUnconfirmed(asset: IAsset): Promise<void>;
+    verifyUnconfirmed(asset: IAsset): ResponseEntity<void>;
+
+    applyUnconfirmed(asset: IAsset): ResponseEntity<void>;
 
     undoUnconfirmed(asset: IAsset): Promise<void>;
 
@@ -56,7 +60,7 @@ export interface ITransactionService<T extends IAsset> {
 
     checkConfirmed(trs: Transaction<T>): IFunctionResponse;
 
-    checkBalance(amount: number, trs: Transaction<T>, sender: Account): IFunctionResponse;
+    checkBalance(amount: number, trs: Transaction<T>, sender: Account): ResponseEntity<void>;
 
     process(trs: Transaction<T>, sender: Account): ResponseEntity<void>;
 
@@ -64,7 +68,7 @@ export interface ITransactionService<T extends IAsset> {
 
     calculateUnconfirmedFee(trs: Transaction<T>, sender: Account): number;
 
-    verifyUnconfirmed(trs: Transaction<T>, sender: Account): IFunctionResponse;
+    verifyUnconfirmed(trs: Transaction<T>, sender: Account): ResponseEntity<void>;
 
     verifySignature(trs: Transaction<T>, publicKey: string, signature: string): IFunctionResponse;
 
@@ -76,7 +80,7 @@ export interface ITransactionService<T extends IAsset> {
 
     undo(trs: Transaction<T>, sender: Account): ResponseEntity<void>;
 
-    applyUnconfirmed(trs: Transaction<T>, sender?: Account): ResponseEntity<void>;
+    applyUnconfirmed(trs: Transaction<T>, sender: Account): ResponseEntity<void>;
 
     undoUnconfirmed(trs: Transaction<T>, sender?: Account): ResponseEntity<void>;
 
@@ -100,19 +104,53 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         return new ResponseEntity<void>();
     }
 
-    applyUnconfirmed(trs: Transaction<T>, sender?: Account): ResponseEntity<void> {
-        return new ResponseEntity<void>();
+    applyUnconfirmed(trs: Transaction<T>, sender: Account): ResponseEntity<void> {
+        const amount = trs.amount + trs.fee;
+
+        AccountRepo.updateBalanceByPublicKey(trs.senderPublicKey, -amount);
+
+        switch (trs.type) {
+            case TransactionType.SEND:
+                return TransactionSendService.applyUnconfirmed(trs);
+            default:
+                return new ResponseEntity();
+        }
     }
 
     calcUndoUnconfirmed(trs: Transaction<T>, sender: Account): void {
+        sender.actualBalance -= trs.amount + trs.fee;
+
+        switch (trs.type) {
+            case TransactionType.SEND:
+                return TransactionSendService.calcUndoUnconfirmed(trs, sender);
+            default:
+                return;
+        }
     }
 
     calculateUnconfirmedFee(trs: Transaction<T>, sender: Account): number {
-        return 0;
+        switch (trs.type) {
+            case TransactionType.SEND:
+                return TransactionSendService.calculateFee(trs, sender);
+            default:
+                return 0;
+        }
     }
 
-    checkBalance(amount: number, trs: Transaction<T>, sender: Account): IFunctionResponse {
-        return undefined;
+    checkBalance(amount: number, trs: Transaction<T>, sender: Account): ResponseEntity<void> {
+        if (trs.blockId === config.genesisBlock.id) {
+            return new ResponseEntity();
+        }
+
+        // TODO: calculate this with sender.totalStakedAmount
+        if (sender.actualBalance >= amount) {
+            return { success: true };
+        }
+
+        const errors = [];
+        // TODO: subtract sender.totalStakedAmount from sender.actualBalance
+        errors.push(`Not enough money on account ${sender.address}: balance ${sender.actualBalance}, amount: ${amount}`);
+        return new ResponseEntity({ errors });
     }
 
     checkConfirmed(trs: Transaction<T>): IFunctionResponse {
@@ -285,8 +323,22 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         return undefined;
     }
 
-    verifyUnconfirmed(trs: Transaction<T>, sender: Account): IFunctionResponse {
-        return undefined;
+    verifyUnconfirmed(trs: Transaction<T>, sender: Account): ResponseEntity<void> {
+        trs.fee = this.calculateUnconfirmedFee(trs, sender);
+
+        // TODO: add trs.stakedAmount to amount sum
+        const amount = trs.amount + trs.fee;
+        const senderBalanceResponse = this.checkBalance(amount, trs, sender);
+        if (!senderBalanceResponse.success) {
+            return senderBalanceResponse;
+        }
+
+        switch (trs.type) {
+            case TransactionType.SEND:
+                return TransactionSendService.verifyUnconfirmed(trs);
+            default:
+                return new ResponseEntity();
+        }
     }
 }
 
