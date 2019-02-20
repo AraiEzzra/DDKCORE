@@ -22,7 +22,7 @@ interface IAccountRepository {
 export class AccountRepository implements IAccountRepository {
 
     async getAccountByAddress(address: string): Promise<Account> {
-        return new Account();
+        return null;
     }
 
     getAccountByPublicKey(publicKey: string): Promise<Account> {
@@ -44,7 +44,7 @@ export class AccountRepository implements IAccountRepository {
     async getAccount(publicKey: string): Promise<ResponseEntity<Account>> {
         const address: string = getAddressByPublicKey(publicKey);
         return new ResponseEntity({
-            data: new Account()
+            data: null,
         });
     }
 

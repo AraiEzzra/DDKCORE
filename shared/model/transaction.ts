@@ -41,7 +41,7 @@ export interface IAssetRegister extends IAsset {
 }
 
 export interface IAssetTransfer extends IAsset {
-    recipientId: string;
+    recipientAddress: Address;
 }
 
 export interface IAssetSignature extends IAsset {

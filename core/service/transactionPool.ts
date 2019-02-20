@@ -3,7 +3,7 @@ import {transactionSortFunc} from 'core/util/transaction';
 import {getAddressByPublicKey, getOrCreateAccount} from 'shared/util/account';
 import TransactionService from 'core/service/transaction';
 import Response from 'shared/model/response';
-import db from 'shared/driver/db';
+// import db from 'shared/driver/db';
 import {logger} from 'shared/util/logger';
 import SyncService, { ISyncService } from 'core/service/sync';
 
@@ -102,7 +102,7 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
     constructor() {
         this.scope.transactionLogic = TransactionService;
         this.scope.logger = logger;
-        this.scope.db = db;
+        // this.scope.db = db;
         this.scope.syncService = SyncService;
     }
 
@@ -203,8 +203,11 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
             this.poolBySender[trs.senderAddress].splice(this.poolBySender[trs.senderAddress].indexOf(trs), 1);
         }
 
-        if (this.poolByRecipient[trs.recipientAddress] && this.poolByRecipient[trs.recipientAddress].indexOf(trs) !== -1) {
-            this.poolByRecipient[trs.recipientAddress].splice(this.poolByRecipient[trs.recipientAddress].indexOf(trs), 1);
+        if (this.poolByRecipient[trs.recipientAddress] &&
+            this.poolByRecipient[trs.recipientAddress].indexOf(trs) !== -1
+        ) {
+            this.poolByRecipient[trs.recipientAddress]
+                .splice(this.poolByRecipient[trs.recipientAddress].indexOf(trs), 1);
         }
         return true;
     }

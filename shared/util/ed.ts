@@ -1,8 +1,8 @@
 const sodium = require('sodium-javascript');
 
-interface IKeyPair {
-    publicKey: any;
-    privateKey: any;
+export interface IKeyPair {
+    publicKey: Buffer;
+    privateKey: Buffer;
 }
 
 class Ed {
@@ -21,7 +21,7 @@ class Ed {
         return this.makeKeypair(hash).publicKey.toString('hex');
     }
 
-    public sign(hash: string, keyPair: IKeyPair) {
+    public sign(hash: Buffer, keyPair: IKeyPair): Buffer {
         const sig: Buffer = Buffer.alloc(sodium.crypto_sign_BYTES);
         sodium.crypto_sign_detached(sig, hash, keyPair.privateKey);
         return sig;
@@ -33,4 +33,3 @@ class Ed {
 }
 
 export const ed = new Ed();
-

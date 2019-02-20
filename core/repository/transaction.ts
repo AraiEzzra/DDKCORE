@@ -1,14 +1,10 @@
 const Inserts = require('../../backlog/helpers/inserts.js');
-import db from 'shared/driver/db';
+// import db from 'shared/driver/db';
 import { Transaction } from 'shared/model/transaction';
 import { ITransactionRepository as ITransactionRepositoryShared } from 'shared/repository/transaction';
 import Response from 'shared/model/response';
 import {logger} from 'shared/util/logger';
 import queries from 'core/repository/queries/transaction';
-
-// wait declare by @Fisenko
-declare class Account {
-}
 
 interface IDBTransactionSave {
     table: string;
