@@ -16,42 +16,55 @@ export interface ITransactionRepository<T extends Object> extends ITransactionRe
     list(): Array<Transaction<T>>;
 
     getTransactionsForBlocksByIds(ids: Array<string>):
-        Promise<Response<{ [blockId: string]:  Array<Transaction<object>> }>>;
+        Response<{ [blockId: string]:  Array<Transaction<object>> }>;
 }
 
 class TransactionRepo implements ITransactionRepository<object> {
-    // TODO: only for in-memory version
-    private memoryTransactions: { [id: string]: Transaction<{}> };
+    private memoryTransactionByBlockId: { [blockId: string]: Array<Transaction<Object>> } = {};
+    private memoryTransactionById: { [transactionId: string]: Transaction<Object> } = {};
 
-    constructor() {
-        this.memoryTransactions = {};
+    public getTransactionsForBlocksByIds(blocksIds: Array<string>):
+        Response<{ [blockId: string]:  Array<Transaction<object>> }> {
+        let result: { [blockId: string]:  Array<Transaction<object>> } = {};
+        blocksIds.forEach((blockId: string) => {
+            result[blockId] = this.memoryTransactionByBlockId[blockId];
+        });
+        return new Response({ data: result });
+    }
+
+    public getById(tranasctionId: string): Transaction<object> {
+        return this.memoryTransactionById[tranasctionId].getCopy();
+    }
+
+    public getAll() {
+        return Object.values(this.memoryTransactionById);
     }
 
     one(): Promise<Transaction<object>> {
         return null;
     }
 
-    async  getTransactionsForBlocksByIds(blocksIds: Array<string>):
-        Promise<Response<{ [blockId: string]:  Array<Transaction<object>> }>> {
-        let result: { [blockId: string]:  Array<Transaction<object>> } = {};
-        try {
-            const rawTransactions: Array<object> =
-                await db.manyOrNone(queries.getTransactionsForBlocksByIds, [blocksIds]);
-            if (!rawTransactions) {
-                return new Response({ data: {}});
-            }
-            rawTransactions.forEach((rawTransaction) =>  {
-                const transaction: Transaction<object> = this.dbRead(rawTransaction);
-                if (!result[transaction.blockId]) {
-                    result[transaction.blockId] = [];
-                }
-                result[transaction.blockId].push(transaction);
-            });
-        } catch (pgError) {
-            return new Response({ errors: [pgError]});
-        }
-        return new Response({ data: result });
-    }
+    // async  getTransactionsForBlocksByIds(blocksIds: Array<string>):
+    //     Promise<Response<{ [blockId: string]:  Array<Transaction<object>> }>> {
+    //     let result: { [blockId: string]:  Array<Transaction<object>> } = {};
+    //     try {
+    //         const rawTransactions: Array<object> =
+    //             await db.manyOrNone(queries.getTransactionsForBlocksByIds, [blocksIds]);
+    //         if (!rawTransactions) {
+    //             return new Response({ data: {}});
+    //         }
+    //         rawTransactions.forEach((rawTransaction) =>  {
+    //             const transaction: Transaction<object> = this.dbRead(rawTransaction);
+    //             if (!result[transaction.blockId]) {
+    //                 result[transaction.blockId] = [];
+    //             }
+    //             result[transaction.blockId].push(transaction);
+    //         });
+    //     } catch (pgError) {
+    //         return new Response({ errors: [pgError]});
+    //     }
+    //     return new Response({ data: result });
+    // }
 
     public dbRead(raw: {[key: string]: any}, radix: number = 10): Transaction<object> {
         if (!raw.id) {
@@ -84,20 +97,24 @@ class TransactionRepo implements ITransactionRepository<object> {
 
     dbSave(trs: Transaction<object>): IDBTransactionSave { return undefined; }
 
-    public saveTransaction = async (transaction): Promise<Response<void>> => {
-        this.memoryTransactions[transaction.id] = transaction;
-
-        try {
-            await db.tx(async (t) => {
-                const promise = await this.dbSave(transaction);
-                const inserts = new Inserts(promise, promise.values);
-                const promises = t.none(inserts.template(), promise.values);
-                await t.batch(promises);
-            });
-        } catch (error) {
-            logger.error(`[Chain][saveTransaction][tx]: ${error}`);
-            logger.error(`[Chain][saveTransaction][tx][stack]:\n${error.stack}`);
+    public saveTransaction = async (transaction: Transaction<object>): Promise<Response<void>> => {
+        // try {
+        //     await db.tx(async (t) => {
+        //         const promise = await this.dbSave(transaction);
+        //         const inserts = new Inserts(promise, promise.values);
+        //         const promises = t.none(inserts.template(), promise.values);
+        //         await t.batch(promises);
+        //     });
+        // } catch (error) {
+        //     logger.error(`[Chain][saveTransaction][tx]: ${error}`);
+        //     logger.error(`[Chain][saveTransaction][tx][stack]:\n${error.stack}`);
+        // }
+        // return new Response<void>();
+        if (!this.memoryTransactionByBlockId[transaction.blockId]) {
+            this.memoryTransactionByBlockId[transaction.blockId] = [];
         }
+        this.memoryTransactionByBlockId[transaction.blockId].push(transaction);
+        this.memoryTransactionById[transaction.id] = transaction;
         return new Response<void>();
     }
 }
