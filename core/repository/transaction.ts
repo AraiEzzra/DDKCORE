@@ -110,6 +110,9 @@ class TransactionRepo implements ITransactionRepository<object> {
         //     logger.error(`[Chain][saveTransaction][tx][stack]:\n${error.stack}`);
         // }
         // return new Response<void>();
+        if (!this.memoryTransactionByBlockId[transaction.blockId]) {
+            this.memoryTransactionByBlockId[transaction.blockId] = [];
+        }
         this.memoryTransactionByBlockId[transaction.blockId].push(transaction);
         this.memoryTransactionById[transaction.id] = transaction;
         return new Response<void>();
