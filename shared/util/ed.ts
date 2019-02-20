@@ -7,7 +7,7 @@ interface IKeyPair {
 
 class Ed {
 
-    public makeKeypair(hash: string): IKeyPair {
+    public makeKeypair(hash: Buffer): IKeyPair {
         const keyPair: IKeyPair = {
             publicKey: Buffer.alloc(sodium.crypto_sign_PUBLICKEYBYTES),
             privateKey: Buffer.alloc(sodium.crypto_sign_SECRETKEYBYTES)

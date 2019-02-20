@@ -55,7 +55,7 @@ class PeerController extends BaseController {
             peerResponse.errors.push('/blocks/common');
             return new Response<{common: number}>({ errors: peerResponse.errors });
         }
-        PeerService.remove(peerResponse.data);
+        // PeerService.remove(peerResponse.data);
         return new Response({ data: { common: 0 }});
     }
 
@@ -66,7 +66,7 @@ class PeerController extends BaseController {
 
     @RPC('GET_PEERS_LIST')
     public list(): Response<Array<Peer>> {
-        PeerService.list();
+        // PeerService.list();
         return new Response({ data: [] });
     }
 
@@ -111,16 +111,16 @@ class PeerController extends BaseController {
 
     @ON('BLOCKCHAIN_READY')
     public initDiscover() {
-        PeerService.insertSeeds();
-        PeerService.discover();
+        // PeerService.insertSeeds();
+        // PeerService.discover();
     }
 
     // @todo should be called each 10 sec
     @ON('PEERS_DISCOVER')
     public discover() {
-        PeerService.discover();
-        PeerService.updatePeers();
-        PeerService.removeBans();
+        // PeerService.discover();
+        // PeerService.updatePeers();
+        // PeerService.removeBans();
     }
 }
 

@@ -1,81 +1,85 @@
-import { SyncService } from 'core/service/sync';
-import { RPC, ON } from 'core/util/decorator';
+import SyncService from 'core/service/sync';
+import { ON } from 'core/util/decorator';
 import { Block } from 'shared/model/block';
 import { Transaction } from 'shared/model/transaction';
 import { Peer } from 'shared/model/peer';
+import { BaseController } from 'core/controller/baseController';
+import PeerService from 'core/service/peer';
+import transactionQueue from 'core/service/transactionQueue';
 
-export class SyncController {
-    private syncService: SyncService;
-
-    constructor() {
-        this.syncService = new SyncService();
-    }
+export class SyncController extends BaseController {
 
     @ON('NEW_BLOCK')
-    async newBlock(data: { block: Block }): Promise<void> {
+    async newBlock(action: { data: { block: Block } }): Promise<void> {
+        const { data } = action;
         // TODO call block_service
     }
 
     @ON('NEW_TRANSACTION')
-    async newTransaction(data: { trs: Transaction<any> }): Promise<void> {
-        //    TODO call transaction service
-    }
-
-    @ON('NEW_UNCONFIRMED_TRANSACTION')
-    async newUnconfirmedTransaction(data: { trs: Transaction<any> }): Promise<void> {
-    }
-
-    @RPC('GET_COMMON_BLOCK')
-    async getCommonBlock(ids, peer): Promise<void> {
+    async newTransaction(action: { data: { trs: Transaction<any> } }): Promise<void> {
+        const { data } = action;
+        transactionQueue.push(data.trs);
     }
 
     // TODO call after several minutes or by interval
     @ON('EMIT_REQUEST_PEERS')
     async requestPeers(): Promise<void> {
-        this.syncService.requestPeers();
+        SyncService.requestPeers();
     }
 
     @ON('REQUEST_PEERS')
-    async sendPeers(peer: Peer): Promise<void> {
-        this.syncService.sendPeers(peer);
+    async sendPeers(action: { peer: Peer }): Promise<void> {
+        const { peer } = action;
+        SyncService.sendPeers(peer);
     }
 
     @ON('RESPONSE_PEERS')
-    async connectNewPeers(data: { peers }): Promise<void> {
-        this.syncService.connectNewPeers(data.peers);
+    async connectNewPeers(action: { data: { peers } }): Promise<void> {
+        const { data } = action;
+        SyncService.connectNewPeers(data.peers);
     }
 
-     // TODO call after several minutes or by interval
+    // TODO call after several minutes or by interval
     @ON('EMIT_REQUEST_COMMON_BLOCKS')
     async emitRequestCommonBlocks() {
-        this.syncService.requestCommonBlocks();
+        SyncService.requestCommonBlocks();
     }
 
     @ON('REQUEST_COMMON_BLOCKS')
-    async checkCommonBlocks(blockIds: Array<number>, peer: Peer) {
-        this.syncService.checkCommonBlocks(blockIds, peer);
+    async checkCommonBlocks(action: { data: { blockIds: Array<number> }, peer: Peer }) {
+        const { data, peer } = action;
+        SyncService.checkCommonBlocks(data.blockIds, peer);
     }
 
     @ON('RESPONSE_COMMON_BLOCKS')
-    async getCommonBlocks(result: boolean, peer: Peer) {
-        if (result) {
+    async getCommonBlocks(action: { data: boolean, peer: Peer }) {
+        const { data, peer } = action;
+        if (data) {
             this.requestBlocks(peer);
         }
     }
 
     @ON('EMIT_REQUEST_BLOCKS')
     async requestBlocks(peer: Peer): Promise<void> {
-        this.syncService.requestBlocks(peer);
+        SyncService.requestBlocks(peer);
     }
 
     @ON('REQUEST_BLOCKS')
-    async sendBlocks(data: { height: number, limit: number }, peer): Promise<void> {
-        this.syncService.sendBlocks(data, peer);
+    async sendBlocks(action: { data: { height: number, limit: number }, peer: Peer }): Promise<void> {
+        const { data, peer } = action;
+        SyncService.sendBlocks(data, peer);
     }
 
     @ON('RESPONSE_BLOCKS')
-    async getBlocks(data: { blocks: Array<Block> }, peer): Promise<void> {
+    async getBlocks(action: { data: { blocks: Array<Block> }, peer }): Promise<void> {
+        const { data, peer } = action;
         //    TODO call block service and insert blocks
+    }
+
+    @ON('PEER_HEADERS_UPDATE')
+    async updatePeer(action: { data: { headers }, peer }) {
+        const { data, peer } = action;
+        PeerService.update(data.headers, peer);
     }
 
 

@@ -4,6 +4,7 @@ import { Transaction } from 'shared/model/transaction';
 import { ITransactionRepository as ITransactionRepositoryShared } from 'shared/repository/transaction';
 import Response from 'shared/model/response';
 import {logger} from 'shared/util/logger';
+import queries from 'core/repository/queries/transaction';
 
 // wait declare by @Fisenko
 declare class Account {
@@ -17,11 +18,59 @@ interface IDBTransactionSave {
 
 export interface ITransactionRepository<T extends Object> extends ITransactionRepositoryShared<T> {
     list(): Array<Transaction<T>>;
+
+    getTransactionsForBlocksByIds(ids: Array<string>):
+        Promise<Response<{ [blockId: string]:  Array<Transaction<object>> }>>;
 }
 
 class TransactionRepo implements ITransactionRepository<object> {
     one(): Promise<Transaction<object>> {
         return null;
+    }
+
+    async  getTransactionsForBlocksByIds(blocksIds: Array<string>):
+        Promise<Response<{ [blockId: string]:  Array<Transaction<object>> }>> {
+        let result: { [blockId: string]:  Array<Transaction<object>> } = {};
+        try {
+            const rawTransactions: Array<object> =
+                await db.manyOrNone(queries.getTransactionsForBlocksByIds, [blocksIds]);
+            if (!rawTransactions) {
+                return new Response({ data: {}});
+            }
+            rawTransactions.forEach((rawTransaction) =>  {
+                const transaction: Transaction<object> = this.dbRead(rawTransaction);
+                if (!result[transaction.blockId]) {
+                    result[transaction.blockId] = [];
+                }
+                result[transaction.blockId].push(transaction);
+            });
+        } catch (pgError) {
+            return new Response({ errors: [pgError]});
+        }
+        return new Response({ data: result });
+    }
+
+    public dbRead(raw: {[key: string]: any}, radix: number = 10): Transaction<object> {
+        if (!raw.id) {
+            return null;
+        }
+
+        const transaction: Transaction<object> = new Transaction({
+            id: raw.id,
+            blockId: raw.block_id,
+            type: parseInt(raw.type, radix),
+            createdAt: parseInt(raw.created_at, radix),
+            senderPublicKey: raw.sender_public_key,
+            senderAddress: parseInt(raw.sender_address, radix),
+            recipientAddress: parseInt(raw.recipient_address, radix),
+            amount: parseInt(raw.amount, radix),
+            fee: parseInt(raw.fee, radix),
+            signature: raw.signature,
+            secondSignature: raw.second_signature,
+            salt: raw.salt,
+            asset: raw.asset
+        });
+        return transaction;
     }
 
     many(): Promise<Transaction<object>> {
