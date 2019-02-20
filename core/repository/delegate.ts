@@ -7,7 +7,7 @@ const constants = Config.constants;
 
 class DelegateRepository {
     private memoryDelegates: Array<IDelegate> = [];
-    
+
     public addDelegate(delegate: IDelegate) {
         this.memoryDelegates.push(delegate);
         this.memoryDelegates.sort((a, b) => {
@@ -35,6 +35,18 @@ class DelegateRepository {
                 this.memoryDelegates[i] = delegate;
             }
         }
+    }
+
+    public forgingDisable(data: any) {
+
+    }
+
+    public forgingEnable(data: any) {
+
+    }
+
+    public forgingStatus(publicKey: string) {
+
     }
 }
 

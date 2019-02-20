@@ -27,7 +27,7 @@ export const getAddressByPublicKey = (publicKey: string): string => {
  * @param publicKey
  */
 export const getOrCreateAccount = async (publicKey: string): Promise<Account> => {
-    return new Account();
+    return null;
 };
 
 

@@ -1,6 +1,6 @@
 export interface IFunctionResponse {
     success: boolean;
-    errors: Array<string>;
+    errors?: Array<string>;
 }
 
 export interface ITableObject {

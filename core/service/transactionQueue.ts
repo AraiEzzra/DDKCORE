@@ -5,7 +5,7 @@ import { getOrCreateAccount } from 'shared/util/account';
 import constants from 'config/mainnet/constants';
 import TransactionService from 'core/service/transaction';
 import TransactionPool from 'core/service/transactionPool';
-import db from 'shared/driver/db';
+// import db from 'shared/driver/db';
 import {logger} from 'shared/util/logger';
 import Response from 'shared/model/response';
 
@@ -57,7 +57,7 @@ class TransactionQueue<T extends object> implements ITransactionQueueService<T> 
         this.scope.transactionLogic = TransactionService;
         this.scope.transactionPool = TransactionPool;
         this.scope.logger = logger;
-        this.scope.db = db;
+        // this.scope.db = db;
     }
 
     lock(): Response<void> {
@@ -128,7 +128,7 @@ class TransactionQueue<T extends object> implements ITransactionQueueService<T> 
 
         const verifyStatus = await TransactionService.verify(trs, sender, true);
 
-        if (!verifyStatus.verified) {
+        if (!verifyStatus.success) {
             trs.status = TransactionStatus.DECLINED;
             // notify in socket
             this.process();

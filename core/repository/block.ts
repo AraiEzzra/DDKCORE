@@ -2,7 +2,7 @@ import {Transaction} from 'shared/model/transaction';
 import TransactionRepo from 'core/repository/transaction';
 const Inserts = require('../../backlog/helpers/inserts.js');
 import { Block } from 'shared/model/block';
-import db from 'shared/driver/db';
+// import db from 'shared/driver/db';
 import Response from 'shared/model/response';
 import config from 'shared/util/config';
 import queries from 'core/repository/queries/block';
