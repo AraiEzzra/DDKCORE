@@ -20,6 +20,8 @@ const env = process.env;
  */
 
 export default {
+    serverHost: env.HOST || '0.0.0.0',
+    serverPort: parseInt(env.PORT, 10) || 7007,
     redisURL: env.REDIS_URL || env.REDISTOGO_URL || '',
     db: {
         password: env.DB_PASSWORD
@@ -36,6 +38,7 @@ export default {
     peers: {
         list: (env.PEERS || '').split(',').map(peer => peer.split(':')).map(([ip, port]) => ({ ip, port })),
     },
+    blackList: (env.PEERS_BLACKLIST || '').split(','),
     forging: {
         secret: env.FORGE_SECRET,
         totalSupplyAccount: env.TOTAL_SUPPLY_ACCOUNT,

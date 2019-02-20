@@ -1,28 +1,26 @@
 import autobind from 'autobind-decorator';
-import * as ioClient from 'socket.io-client';
-import * as io from 'socket.io';
 import { Headers } from 'core/repository/system';
 import { Peer } from 'shared/model/peer';
 import { PeerRepo } from 'core/repository/peer';
 import { messageON } from 'shared/util/bus';
-import {logger} from 'shared/util/logger';
-
-const ioServer = io({
+import { logger } from 'shared/util/logger';
+import io from 'socket.io-client';
+// TODO remove http
+const server = require('http').createServer();
+const ioServer = require('socket.io')(server, {
     serveClient: false,
     wsEngine: 'ws',
 });
+const env = require('../../config/env').default;
 
-// todo import port from env
-ioServer.listen(8080);
+server.listen(
+    env.serverPort,
+    env.serverHost
+);
 
-// todo get peer list from env
-export const TRUSTED_PEERS = [
-    { ip: '0.0.0.0', port: 8081 },
-    { ip: '0.0.0.0', port: 8082 }
-];
+export const TRUSTED_PEERS: Array<any> = env.peers.list;
 
-// todo get black list from env
-const BLACK_LIST = new Set(['0.0.0.0:8080']);
+const BLACK_LIST = new Set(env.blackList);
 
 export default class Socket {
     private static _instance: Socket;
@@ -38,6 +36,7 @@ export default class Socket {
     }
 
     init(): void {
+        console.log('INIT', TRUSTED_PEERS);
         TRUSTED_PEERS.forEach((peer: any) => {
             this.connectNewPeer(peer);
         });
@@ -45,6 +44,7 @@ export default class Socket {
         ioServer.on('connect', function (socket) {
             socket.emit('OPEN');
             socket.on('HEADERS', (data: string) => {
+                console.log('on headers', data);
                 const peer = JSON.parse(data);
                 if (Socket._instance.addPeer(peer, socket)) {
                     socket.emit('READY');
@@ -55,15 +55,16 @@ export default class Socket {
 
     @autobind
     connectNewPeer(peer: Peer): void {
-        if (BLACK_LIST.has(`${peer.ip}:${peer.port}`) ||
+        if (BLACK_LIST.has(`${peer.ip}`) ||
             this.peerRepo.has(peer)) {
             return;
         }
-        const ws = ioClient(`ws://${peer.ip}:${peer.port}`);
+        const ws = io(`ws://${peer.ip}:${peer.port}`);
         ws.on('OPEN', () => {
             ws.emit('HEADERS', JSON.stringify(
                 new Headers()
             ));
+            console.log('Congretulation!!!!', peer);
             ws.on('READY', () => {
                 Socket._instance.addPeer(peer, ws);
             });
@@ -85,8 +86,8 @@ export default class Socket {
 
     @autobind
     onPeerAction(response: string, peer: Peer): void {
-
         const { code, data } = JSON.parse(response);
+        console.log(`${peer.ip} say CODE: ${code}, DATA: ${data}`);
         messageON(code, { data, peer });
     }
 

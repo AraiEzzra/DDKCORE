@@ -26,6 +26,8 @@ import blockShema from 'core/schema/block';
 import Response from 'shared/model/response';
 import {messageON} from 'shared/util/bus';
 import config from 'shared/util/config';
+import SyncService from 'core/service/sync';
+import system from 'core/repository/system';
 
 interface IVerifyResult {
     verified?: boolean;
@@ -623,6 +625,7 @@ class BlockService {
 
         this.setLastBlock(block);
         messageON('NEW_BLOCKS', block);
+        SyncService.sendNewBlock(block);
 
         if (tick) {
             await RoundService.generateRound();
@@ -1278,6 +1281,10 @@ class BlockService {
         if (this.lastNBlockIds.length > config.constants.blockSlotWindow) {
             this.lastNBlockIds.shift();
         }
+        messageON('LAST_BLOCKS_UPDATE', {
+            blockIds: this.lastNBlockIds,
+            lastBlock: block
+        });
     }
 }
 

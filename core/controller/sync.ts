@@ -6,13 +6,14 @@ import { Peer } from 'shared/model/peer';
 import { BaseController } from 'core/controller/baseController';
 import PeerService from 'core/service/peer';
 import transactionQueue from 'core/service/transactionQueue';
+import BlockService from 'core/service/block';
 
 export class SyncController extends BaseController {
 
     @ON('NEW_BLOCK')
     async newBlock(action: { data: { block: Block } }): Promise<void> {
         const { data } = action;
-        // TODO call block_service
+        await BlockService.processIncomingBlock(data.block);
     }
 
     @ON('NEW_TRANSACTION')
@@ -80,6 +81,11 @@ export class SyncController extends BaseController {
     async updatePeer(action: { data: { headers }, peer }) {
         const { data, peer } = action;
         PeerService.update(data.headers, peer);
+    }
+
+    @ON('LAST_BLOCKS_UPDATE')
+    async updateHeaders(data: {blockIds, lastBlock}) {
+        SyncService.updateHeaders(data);
     }
 
 
