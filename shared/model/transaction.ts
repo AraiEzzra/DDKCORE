@@ -112,4 +112,8 @@ export class Transaction <T extends IAsset> implements ITransactionFields<object
     constructor(data: ITransactionFields<object>) {
         Object.assign(this, data);
     }
+
+    public getCopy() {
+        return new Transaction(this);
+    }
 }
