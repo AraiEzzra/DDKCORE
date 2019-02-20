@@ -23,4 +23,8 @@ export class Block extends IBlockFields {
         super();
         Object.assign(this, data);
     }
+
+    public getCopy() {
+        return new Block(this);
+    }
 }

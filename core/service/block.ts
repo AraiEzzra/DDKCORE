@@ -679,6 +679,12 @@ class BlockService {
             return new Response({errors: ['receiveLocked']});
         }
 
+        const lockResponse: Response<void> = await this.lockTransactionPoolAndQueue();
+        if (!lockResponse.success) {
+            lockResponse.errors.push('generateBlock: Can\' lock transaction pool or/and queue');
+            return lockResponse;
+        }
+
         // TODO: how to check?
         /*
         if (!__private.loaded || modules.loader.syncing() || modules.rounds.ticking()) {
@@ -693,17 +699,26 @@ class BlockService {
         let lastBlock: Block = this.getLastBlock();
 
         // Detect sane block
+        const errors: Array<string> = [];
+        this.receiveLock();
         if (block.previousBlockId === lastBlock.id && lastBlock.height + 1 === block.height) {
-            this.receiveLock();
-            await this.receiveBlock(block);
-            this.receiveUnlock();
+            const receiveResponse: Response<void> = await this.receiveBlock(block);
+            if (!receiveResponse.success) {
+                errors.push(...receiveResponse.errors, 'processIncomingBlock');
+            }
         } else if (block.previousBlockId !== lastBlock.id && lastBlock.height + 1 === block.height) {
-            return this.receiveForkOne(block, lastBlock);
+            const receiveResponse: Response<void> = await this.receiveForkOne(block, lastBlock);
+            if (!receiveResponse.success) {
+                errors.push(...receiveResponse.errors, 'processIncomingBlock');
+            }
         } else if (
             block.previousBlockId === lastBlock.previousBlockId &&
             block.height === lastBlock.height && block.id !== lastBlock.id
         ) {
-            return this.receiveForkFive(block, lastBlock);
+            const receiveResponse: Response<void> = await  this.receiveForkFive(block, lastBlock);
+            if (!receiveResponse.success) {
+                errors.push(...receiveResponse.errors, 'processIncomingBlock');
+            }
         } else if (block.id === lastBlock.id) {
             logger.debug('Block already processed', block.id);
         } else {
@@ -715,6 +730,14 @@ class BlockService {
                 'generator:', block.generatorPublicKey
             ].join(' '));
         }
+        this.receiveUnlock();
+
+        const unlockResponse: Response<void> = await this.unlockTransactionPoolAndQueue();
+        if (!unlockResponse.success) {
+            unlockResponse.errors.push('generateBlock: Can\' unlock transaction pool or/and queue');
+            return unlockResponse;
+        }
+        return new Response<void>();
     }
 
     private async receiveBlock(block: Block): Promise<Response<void>> {
@@ -779,7 +802,7 @@ class BlockService {
     }
 
     private async receiveForkOne(block: Block, lastBlock: Block): Promise<Response<void>> {
-        let tmpBlock: Block = {...block};
+        let tmpBlock: Block = block.getCopy();
         const forkResponse: Response<void> = await this.delegateService.fork(block, Fork.ONE);
         if (!forkResponse.success) {
             return new Response<void>({errors: [...forkResponse.errors, 'receiveForkOne']});
@@ -895,7 +918,7 @@ class BlockService {
     }
 
     private async receiveForkFive(block: Block, lastBlock: Block): Promise<Response<void>> {
-        let tmpBlock: Block = {...block};
+        let tmpBlock: Block = block.getCopy();
         const forkResponse: Response<void> = await this.delegateService.fork(block, Fork.FIVE);
         if (!forkResponse.success) {
             return new Response<void>({errors: [...forkResponse.errors, 'receiveForkFive']});
