@@ -12,6 +12,9 @@ import { Account } from 'shared/model/account';
 import { getAddressByPublicKey } from 'shared/util/account';
 import DelegateRepository from 'core/repository/delegate';
 import { ed } from 'shared/util/ed';
+import AccountRepository from 'core/repository/account';
+import BlockRepository from 'core/repository/block';
+import { Block } from 'shared/model/block';
 /**
  * END
  */
@@ -53,11 +56,20 @@ export class MockDelegates {
 
     public init() {
         for (let i = 0; i < this.startData.length; i++) {
-            DelegateRepository.addDelegate(this.makeDelegate(this.startData[i]));
+            const account = this.createAccount(this.startData[i]);
+
+            AccountRepository.add(account);
+            DelegateRepository.addDelegate(account);
         }
+
+        BlockRepository.saveBlock(new Block({
+            id: 'genesis',
+            createdAt: new Date().getTime(),
+            previousBlockId: null,
+        }));
     }
 
-    private makeDelegate(data): Account {
+    private createAccount(data): Account {
         const hash = crypto.createHash('sha256').update(data.secret, 'utf8').digest();
         const publicKey: string = ed.makePublicKeyHex(hash);
         const address: number = Number(getAddressByPublicKey(publicKey).slice(3, -1));
@@ -76,7 +88,7 @@ export class MockDelegates {
 
 
 class Loader {
-    
+
     constructor() {
         const delegate = new MockDelegates();
         delegate.init();

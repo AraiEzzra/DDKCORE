@@ -37,5 +37,5 @@ const getBodyAddress = (buf) => {
         const c = (buf[i] < 16 ? '0' : '') + buf[i].toString(16);
         hex.push(c);
     }
-    return BigInt(`0x${hex.join('')}`);
+    return `0x${hex.join('')}`;
 };
