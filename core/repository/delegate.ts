@@ -1,68 +1,41 @@
 import Response from 'shared/model/response';
-const crypto = require('crypto');
-import { AccountRepository } from 'shared/repository/account';
 import { Account } from 'shared/model/account';
-import { ed } from 'shared/util/ed';
+import Config from 'shared/util/config';
+import { IDelegate } from 'shared/model/delegate';
 
-interface IForgingDisable {
-    secret: string;
-    publicKey: string;
-}
+const constants = Config.constants;
 
-export interface IDelegateRepository {
-    forgingDisable(data: IForgingDisable): Promise<Response<any>>;
-
-    forgingEnable(data: IForgingDisable): Promise<Response<any>>;
-}
-
-class DelegateRepository implements IDelegateRepository {
-    private accountRepo: AccountRepository;
-
-    constructor() {
-        this.accountRepo = new AccountRepository();
-    }
-
-    async forgingDisable(data: IForgingDisable): Promise<Response<any>> {
-        const hash = crypto.createHash('sha256').update(data.secret, 'utf8').digest();
-        const publicKey: string = ed.makePublicKeyHex(hash);
-        const account  = await this.accountRepo.getAccount(publicKey);
-        if (!account) {
-            return new Response({
-                errors: ['Delegate not found']
-            });
-        }
-        return new Response({
-            data: {
-                address: account.data.address
+class DelegateRepository {
+    private memoryDelegates: Array<IDelegate> = [];
+    
+    public addDelegate(delegate: IDelegate) {
+        this.memoryDelegates.push(delegate);
+        this.memoryDelegates.sort((a, b) => {
+            if (a.votes > b.votes) {
+                return 1;
             }
-        });
-    }
-
-    async forgingEnable(data: IForgingDisable): Promise<Response<Object>> {
-        const hash = crypto.createHash('sha256').update(data.secret, 'utf8').digest();
-        const publicKey: string = ed.makePublicKeyHex(hash);
-        const account  = await this.accountRepo.getAccount(publicKey);
-        if (account.data && account.data.delegate) {
-            return new Response({
-                data: {
-                    address: account.data.address
-                }
-            });
-        }
-        return new Response({
-            errors: ['Delegate not found']
-        });
-    }
-
-    async forgingStatus(publicKey: string): Promise<Response<Object>> {
-        return new Response({
-            data: {
-                enabled: true,
-                delegates: []
+            if (a.votes < b.votes) {
+                return -1;
             }
+            return 0;
         });
     }
 
+    /**
+     * @implements constants.activeDelegates
+     * @return Array<Account>
+     */
+    public getActiveDelegates(): Response<Array<IDelegate>> {
+        return new Response({data: this.memoryDelegates.slice(0, constants.activeDelegates)});
+    }
+
+    public updateDelegate(delegate: IDelegate) {
+        for (let i = 0; i < this.memoryDelegates.length; i++) {
+            if ( delegate.account.address === this.memoryDelegates[i].account.address) {
+                this.memoryDelegates[i] = delegate;
+            }
+        }
+    }
 }
 
-export const delegateCoreRepository = new DelegateRepository();
+export default new DelegateRepository();
