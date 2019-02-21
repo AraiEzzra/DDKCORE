@@ -53,7 +53,7 @@ export class MockDelegates {
 
     public init() {
         for (let i = 0; i < this.startData.length; i++) {
-            DelegateRepository.addDelegate(this.makeDelegate(this.startData[i]));
+            DelegateRepository.add(this.makeDelegate(this.startData[i]));
         }
     }
 

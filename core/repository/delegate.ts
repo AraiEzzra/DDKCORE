@@ -8,7 +8,7 @@ const constants = Config.constants;
 class DelegateRepository {
     private memoryDelegates: Array<Delegate> = [];
 
-    public addDelegate(account: Account, params: {username?: string, url?: string} = {}) {
+    public add(account: Account, params: {username?: string, url?: string} = {}) {
         const delegate: Delegate = new Delegate({
             username: params.username || '',
             url: params.url || '',
@@ -40,7 +40,7 @@ class DelegateRepository {
         return new Response({data: this.memoryDelegates.slice(0, constants.activeDelegates)});
     }
 
-    public updateDelegate(delegate: Delegate) {
+    public update(delegate: Delegate) {
         for (let i = 0; i < this.memoryDelegates.length; i++) {
             if ( delegate.account.address === this.memoryDelegates[i].account.address) {
                 this.memoryDelegates[i] = delegate;
