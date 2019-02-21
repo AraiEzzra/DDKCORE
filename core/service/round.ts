@@ -12,7 +12,8 @@ import BlockRepository from 'core/repository/block';
 import { Slots } from 'shared/model/round';
 import RoundRepository from 'core/repository/round';
 import { createTaskON } from 'shared/util/bus';
-import mockDelegate from 'test/core/mock/delegate';
+import DelegateRepository from 'core/repository/delegate';
+
 const constants = Config.constants;
 
 interface IHashList {
@@ -26,12 +27,6 @@ interface IRoundSum {
 }
 
 interface IRoundService {
-    /**
-     * Get active delegates
-     * @implements {getDelegates(vote, activeDelegates): Array<Delegate>} DelegateRepository
-     * @param limit: activeDelegateCount
-     */
-    getActiveDelegates(): ResponseEntity<any>;
 
     /**
      * Generate hash (delegate publicKey + previousBlockId)
@@ -90,12 +85,6 @@ interface IRoundService {
 }
 
 class RoundService implements IRoundService {
-    // todo mock delegates from genesis and change
-    public getActiveDelegates(): ResponseEntity<any> {
-        return new ResponseEntity({
-            data: mockDelegate.getDelegates()
-        });
-    }
 
     private compose(...fns): any {
         return fns.reduceRight((prevFn, nextFn) =>
@@ -158,7 +147,7 @@ class RoundService implements IRoundService {
         }
 
         const lastBlock = BlockService.getLastBlock();
-        const { data } = this.getActiveDelegates(); // todo wait for implementation method
+        const { data } = DelegateRepository.getActiveDelegates();
 
         const slots = this.compose(
             this.generatorPublicKeyToSlot,
