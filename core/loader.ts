@@ -20,7 +20,7 @@ import BlockService from 'core/service/block';
  * END
  */
 
-import {initControllers} from 'core/controller/index';
+import {Delegate} from 'shared/model/delegate';
 enum constant  {
     Limit = 1000
 }
@@ -61,7 +61,8 @@ export class MockDelegates {
             const account = this.createAccount(this.startData[i]);
 
             AccountRepository.add(account);
-            DelegateRepository.addDelegate(account);
+            const delegate: Delegate = DelegateRepository.addDelegate(account);
+            AccountRepository.attachDelegate(account, delegate);
         }
 
         BlockService.saveGenesisBlock().then(res => {
