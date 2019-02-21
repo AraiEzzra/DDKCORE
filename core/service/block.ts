@@ -27,6 +27,7 @@ import Response from 'shared/model/response';
 import {messageON} from 'shared/util/bus';
 import config from 'shared/util/config';
 import SyncService from 'core/service/sync';
+import ResponseEntity from 'shared/model/response';
 import system from 'core/repository/system';
 
 interface IVerifyResult {
@@ -75,6 +76,7 @@ class BlockService {
     }
 
     public async generateBlock(keypair: IKeyPair, timestamp: number): Promise<Response<void>> {
+        logger.debug(`[Service][Block][generateBlock] timestamp ${timestamp}`);
         const lockResponse: Response<void> = await this.lockTransactionPoolAndQueue();
         if (!lockResponse.success) {
             lockResponse.errors.push('generateBlock: Can\' lock transaction pool or/and queue');
@@ -94,10 +96,10 @@ class BlockService {
             transactions
         });
 
-        const processBlockResponse: Response<void> = await this.processBlock(block, true, true, keypair, true, true);
+        const processBlockResponse: Response<void> = await this.processBlock(block, true, true, keypair, false, true);
         if (!processBlockResponse.success) {
             const returnResponse: Response<void> =
-                await TransactionPool.returnToQueueConflictedTransactionFromPool(transactions);
+                await TransactionService.returnToQueueConflictedTransactionFromPool(transactions);
             if (!returnResponse.success) {
                 processBlockResponse.errors = [...processBlockResponse.errors, ...returnResponse.errors];
             }
@@ -178,6 +180,13 @@ class BlockService {
             if (!resultVerifyBlock.verified) {
                 return new Response<void>({errors: [...resultVerifyBlock.errors, 'processBlock']});
             }
+        } else {
+            // TODO: remove when verify will be fix
+            if (keypair) {
+                const lastBlock: Block = this.getLastBlock();
+
+                block = this.setHeight(block, lastBlock);
+            }
         }
 
         if (saveBlock) {
@@ -250,6 +259,7 @@ class BlockService {
                 delete block[i];
             }
         }
+
         const report: boolean = validator.validate(block, blockShema);
         if (!report) {
             return new Response<Block>({
@@ -677,6 +687,7 @@ class BlockService {
      * @implements modules.rounds.ticking
      */
     public async processIncomingBlock(block: Block): Promise<Response<void>> {
+        logger.warn(`[Service][Block][processIncomingBlock] block ${JSON.stringify(block)}`);
         if (this.receiveLocked) {
             logger.warn(`[Process][onReceiveBlock] locked for id ${block.id}`);
             return new Response({errors: ['receiveLocked']});
@@ -764,13 +775,14 @@ class BlockService {
         if (!removedTransactionsResponse.success) {
             return new Response<void>({errors: [...removedTransactionsResponse.errors, 'receiveBlock']});
         }
-        logger.debug(`[Process][newReceiveBlock] removedTransactions
-            ${JSON.stringify(removedTransactionsResponse.data)}`);
-        const removedTransactions: Array<Transaction<object>> = removedTransactionsResponse.data;
+        logger.debug(
+            `[Process][newReceiveBlock] removedTransactions ${JSON.stringify(removedTransactionsResponse.data)}`
+        );
+        const removedTransactions: Array<Transaction<object>> = removedTransactionsResponse.data || [];
 
         // todo: wrong logic with errors!!!
         const errors: Array<string> = [];
-        const processBlockResponse: Response<void> = await this.processBlock(block, true, true, null, true, true);
+        const processBlockResponse: Response<void> = await this.processBlock(block, true, true, null, false, true);
         if (!processBlockResponse.success) {
             errors.push(...processBlockResponse.errors);
         }
@@ -784,8 +796,8 @@ class BlockService {
         if (!pushResponse.success) {
             errors.push(...pushResponse.errors);
         }
-        const returnResponse: Response<void> =
-            await TransactionPool.returnToQueueConflictedTransactionFromPool(block.transactions);
+        const returnResponse: ResponseEntity<void> =
+            await TransactionService.returnToQueueConflictedTransactionFromPool(block.transactions);
         if (!returnResponse.success) {
             errors.push(...returnResponse.errors);
         }
