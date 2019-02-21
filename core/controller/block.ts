@@ -5,12 +5,10 @@ import BlockRepo from 'core/repository/block';
 import { Peer } from 'shared/model/peer';
 import { ON, RPC } from 'core/util/decorator';
 import { BaseController } from 'core/controller/baseController';
+import { IKeyPair } from 'shared/util/ed';
 
 interface BlockGenerateRequest {
-    keypair: {
-        privateKey: string,
-        publicKey: string
-    };
+    keypair: IKeyPair;
     timestamp: number;
 }
 
@@ -26,7 +24,7 @@ class BlockController extends BaseController {
     }
 
     @ON('BLOCK_GENERATE')
-    public async generateBlock( data: BlockGenerateRequest ): Promise<Response<void>> {
+    public async generateBlock(data: BlockGenerateRequest): Promise<Response<void>> {
         const response: Response<void> = await BlockService.generateBlock(data.keypair, data.timestamp);
         if (!response.success) {
             response.errors.push('generateBlock');
