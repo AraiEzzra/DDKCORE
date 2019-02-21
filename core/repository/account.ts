@@ -1,5 +1,6 @@
 import { Account, IAccountFilds, Address } from 'shared/model/account';
 import Response from 'shared/model/response';
+import {Delegate} from 'shared/model/delegate';
 
 class AccountRepo {
     private memoryAccountsByAddress: { [address: number]: Account } = {};
@@ -46,6 +47,11 @@ class AccountRepo {
 
     updateBalanceByAddress(address: Address, difference: number): Response<void> {
         this.memoryAccountsByAddress[address].actualBalance += difference;
+        return new Response<void>();
+    }
+
+    attachDelegate(account: Account, delegate: Delegate): Response<void> {
+        this.memoryAccountsByAddress[account.address].delegate = delegate;
         return new Response<void>();
     }
 }

@@ -101,8 +101,8 @@ class RoundService implements IRoundService {
         const keypair = ed.makeKeypair(hash);
 
         this.keypair = {
-            privateKey: keypair.privateKey.toString(),
-            publicKey: keypair.publicKey.toString(),
+            privateKey: keypair.privateKey.toString('hex'),
+            publicKey: keypair.publicKey.toString('hex'),
         };
     }
 
