@@ -55,7 +55,7 @@ export default {
     required: [
         'signature',
         'generatorPublicKey',
-        'transactionCount', '' +
+        'transactionCount',
         'payloadHash',
         'createdAt',
         'amount',
