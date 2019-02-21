@@ -3,6 +3,7 @@ import TransactionService from 'core/service/transaction';
 import { TransactionStatus, TransactionType} from 'shared/model/transaction';
 import { Address, PublicKey, Timestamp} from 'shared/model/account';
 import { messageON } from 'shared/util/bus';
+import {initControllers} from 'core/controller/index';
 
 /**
  * for mock delegates
@@ -13,8 +14,8 @@ import { getAddressByPublicKey } from 'shared/util/account';
 import DelegateRepository from 'core/repository/delegate';
 import { ed } from 'shared/util/ed';
 import AccountRepository from 'core/repository/account';
-import BlockRepository from 'core/repository/block';
-import { Block } from 'shared/model/block';
+import RoundService from 'core/service/round';
+import BlockService from 'core/service/block';
 /**
  * END
  */
@@ -63,11 +64,14 @@ export class MockDelegates {
             DelegateRepository.addDelegate(account);
         }
 
-        BlockRepository.saveBlock(new Block({
-            id: 'genesis',
-            createdAt: new Date().getTime(),
-            previousBlockId: null,
-        }));
+        BlockService.saveGenesisBlock().then(res => {
+            console.log(JSON.stringify(res));
+
+        });
+
+        setTimeout(() => {
+            RoundService.generateRound();
+        }, 1000);
     }
 
     private createAccount(data): Account {

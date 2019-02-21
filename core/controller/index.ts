@@ -12,7 +12,7 @@ export const initControllers = () => {
             controller.eventsON.forEach(({ handlerTopicName, handlerFunc }) => {
                 subjectOn.subscribe(({ data, topicName }) => {
                     if (handlerTopicName === topicName) {
-                        handlerFunc.apply(controller, data);
+                        handlerFunc.apply(controller, [data]);
                     }
                 });
             });
@@ -22,7 +22,7 @@ export const initControllers = () => {
             controller.eventsRPC.forEach(({ handlerTopicName, handlerFunc }) => {
                 subjectRpc.subscribe(({ data, topicName }) => {
                     if (handlerTopicName === topicName) {
-                        handlerFunc.apply(controller, data);
+                        handlerFunc.apply(controller, [data]);
                     }
                 });
             });

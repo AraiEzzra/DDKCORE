@@ -51,7 +51,7 @@ class BlockService {
     private secondsRadix = 1000;
     private lastBlock: Block;
     private lastReceipt: number;
-    private lastNBlockIds: Array<string>;
+    private lastNBlockIds: Array<string> = [];
     private readonly currentBlockVersion: number = config.constants.CURRENT_BLOCK_VERSION;
     private receiveLocked: boolean = false;
 
@@ -505,7 +505,7 @@ class BlockService {
         if (!existsResponse.success) {
             return new Response<void>({errors: [...existsResponse.errors, 'checkExists']});
         }
-        if (!existsResponse.data) {
+        if (existsResponse.data) {
             return new Response<void>({errors: [['Block', block.id, 'already exists'].join(' ')]});
         }
         return new Response<void>();
@@ -535,7 +535,7 @@ class BlockService {
                     }
                 }
 
-                const applyResponse: Response<void> = await TransactionService.applyUnconfirmed(trs);
+                const applyResponse: Response<void> = await TransactionService.applyUnconfirmed(trs, sender);
                 if (!applyResponse.success) {
                     errors.push(...applyResponse.errors);
                 }
@@ -627,6 +627,7 @@ class BlockService {
 
         this.setLastBlock(block);
         messageON('NEW_BLOCKS', block);
+        SyncService.sendNewBlock(block);
 
         if (tick) {
             await RoundService.generateRound();
@@ -1117,7 +1118,7 @@ class BlockService {
             return new Response<void>({errors: [...existsResponse.errors, 'saveGenesisBlock']});
         }
         if (!existsResponse.data) {
-            await this.applyGenesisBlock(config.genesisBlock, false, true); // config.genesis.block
+            return await this.applyGenesisBlock(config.genesisBlock, false, true); // config.genesis.block
         }
     }
 
