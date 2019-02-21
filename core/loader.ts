@@ -3,6 +3,7 @@ import TransactionService from 'core/service/transaction';
 import { TransactionStatus, TransactionType} from 'shared/model/transaction';
 import { Address, PublicKey, Timestamp} from 'shared/model/account';
 import { messageON } from 'shared/util/bus';
+import {initControllers} from 'core/controller/index';
 
 /**
  * for mock delegates
@@ -12,10 +13,14 @@ import { Account } from 'shared/model/account';
 import { getAddressByPublicKey } from 'shared/util/account';
 import DelegateRepository from 'core/repository/delegate';
 import { ed } from 'shared/util/ed';
+import AccountRepository from 'core/repository/account';
+import RoundService from 'core/service/round';
+import BlockService from 'core/service/block';
 /**
  * END
  */
 
+import {Delegate} from 'shared/model/delegate';
 enum constant  {
     Limit = 1000
 }
@@ -53,11 +58,24 @@ export class MockDelegates {
 
     public init() {
         for (let i = 0; i < this.startData.length; i++) {
-            DelegateRepository.add(this.makeDelegate(this.startData[i]));
+            const account = this.createAccount(this.startData[i]);
+
+            AccountRepository.add(account);
+            const delegate: Delegate = DelegateRepository.addDelegate(account);
+            AccountRepository.attachDelegate(account, delegate);
         }
+
+        BlockService.saveGenesisBlock().then(res => {
+            console.log(JSON.stringify(res));
+
+        });
+
+        setTimeout(() => {
+            RoundService.generateRound();
+        }, 1000);
     }
 
-    private makeDelegate(data): Account {
+    private createAccount(data): Account {
         const hash = crypto.createHash('sha256').update(data.secret, 'utf8').digest();
         const publicKey: string = ed.makePublicKeyHex(hash);
         const address: number = Number(getAddressByPublicKey(publicKey).slice(3, -1));
@@ -76,7 +94,7 @@ export class MockDelegates {
 
 
 class Loader {
-    
+
     constructor() {
         const delegate = new MockDelegates();
         delegate.init();
@@ -95,6 +113,7 @@ class Loader {
         //         await TransactionService.applyUnconfirmed(trs);
         //     }
         // }
+        initControllers();
         messageON('WARN_UP_FINISHED');
     }
 

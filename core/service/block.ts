@@ -26,6 +26,8 @@ import blockShema from 'core/schema/block';
 import Response from 'shared/model/response';
 import {messageON} from 'shared/util/bus';
 import config from 'shared/util/config';
+import SyncService from 'core/service/sync';
+import system from 'core/repository/system';
 
 interface IVerifyResult {
     verified?: boolean;
@@ -49,7 +51,7 @@ class BlockService {
     private secondsRadix = 1000;
     private lastBlock: Block;
     private lastReceipt: number;
-    private lastNBlockIds: Array<string>;
+    private lastNBlockIds: Array<string> = [];
     private readonly currentBlockVersion: number = config.constants.CURRENT_BLOCK_VERSION;
     private receiveLocked: boolean = false;
 
@@ -103,6 +105,8 @@ class BlockService {
             processBlockResponse.errors.push('generate block');
             return processBlockResponse;
         }
+
+        SyncService.sendNewBlock(block);
 
         const unlockResponse: Response<void> = await this.unlockTransactionPoolAndQueue();
         if (!unlockResponse.success) {
@@ -501,7 +505,7 @@ class BlockService {
         if (!existsResponse.success) {
             return new Response<void>({errors: [...existsResponse.errors, 'checkExists']});
         }
-        if (!existsResponse.data) {
+        if (existsResponse.data) {
             return new Response<void>({errors: [['Block', block.id, 'already exists'].join(' ')]});
         }
         return new Response<void>();
@@ -531,7 +535,7 @@ class BlockService {
                     }
                 }
 
-                const applyResponse: Response<void> = await TransactionService.applyUnconfirmed(trs);
+                const applyResponse: Response<void> = await TransactionService.applyUnconfirmed(trs, sender);
                 if (!applyResponse.success) {
                     errors.push(...applyResponse.errors);
                 }
@@ -623,11 +627,11 @@ class BlockService {
 
         this.setLastBlock(block);
         messageON('NEW_BLOCKS', block);
+        SyncService.sendNewBlock(block);
 
         if (tick) {
             await RoundService.generateRound();
         }
-        block = null;
         return new Response<void>();
     }
 
@@ -1114,7 +1118,7 @@ class BlockService {
             return new Response<void>({errors: [...existsResponse.errors, 'saveGenesisBlock']});
         }
         if (!existsResponse.data) {
-            await this.applyGenesisBlock(config.genesisBlock, false, true); // config.genesis.block
+            return await this.applyGenesisBlock(config.genesisBlock, false, true); // config.genesis.block
         }
     }
 
@@ -1278,6 +1282,10 @@ class BlockService {
         if (this.lastNBlockIds.length > config.constants.blockSlotWindow) {
             this.lastNBlockIds.shift();
         }
+        messageON('LAST_BLOCKS_UPDATE', {
+            blockIds: this.lastNBlockIds,
+            lastBlock: block
+        });
     }
 }
 
