@@ -13,7 +13,7 @@ import { Slots } from 'shared/model/round';
 import RoundRepository from 'core/repository/round';
 import { createTaskON } from 'shared/util/bus';
 import DelegateRepository from 'core/repository/delegate';
-import { Delegate } from 'shared/model/delegate';
+import { ed } from 'shared/util/ed';
 const constants = Config.constants;
 
 interface IHashList {
@@ -91,6 +91,21 @@ interface IRoundService {
 }
 
 class RoundService implements IRoundService {
+    private keypair: {
+        privateKey: string,
+        publicKey: string,
+    };
+
+    constructor() {
+        const hash = crypto.createHash('sha256').update(process.env.FORGE_SECRET, 'utf8').digest();
+        const keypair = ed.makeKeypair(hash);
+
+        this.keypair = {
+            privateKey: keypair.privateKey.toString('hex'),
+            publicKey: keypair.publicKey.toString('hex'),
+        };
+    }
+
     // todo mock delegates from genesis and change
     public getActiveDelegates(): ResponseEntity<any> {
         return DelegateRepository.getActiveDelegates();
@@ -172,11 +187,20 @@ class RoundService implements IRoundService {
 
         if (mySlot) {
             // start forging block at mySlotTime
-            createTaskON('BLOCK_GENERATE', SlotService.getSlotTime(mySlot));
+            const mySlotTime = SlotService.getSlotTime(mySlot);
+            const mySlotRealTime = SlotService.getRealTime(mySlotTime);
+
+            createTaskON('BLOCK_GENERATE', mySlotRealTime, {
+                timestamp: mySlotTime,
+                keypair: this.keypair,
+            });
         }
 
         // create event for end of current round
-        createTaskON('ROUND_FINISH', SlotService.getSlotTime(RoundRepository.getLastSlotInRound()));
+        const lastSlotTime = SlotService.getSlotTime(RoundRepository.getLastSlotInRound());
+        const lastSlotRealTime = SlotService.getRealTime(lastSlotTime);
+
+        createTaskON('ROUND_FINISH', lastSlotRealTime);
 
         return new ResponseEntity();
     }

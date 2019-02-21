@@ -10,5 +10,6 @@ export function messageON(topicName: string, data: any = null) {
 }
 
 export function createTaskON(topicName: string, time: number = new Date().getTime(), data: any = null) {
-    // todo implement function to create schedule fro messageON
+    const callTime = (time - Date.now());
+    setTimeout(() => messageON(topicName, data), callTime);
 }
