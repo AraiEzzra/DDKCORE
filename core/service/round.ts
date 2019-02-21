@@ -12,7 +12,7 @@ import BlockRepository from 'core/repository/block';
 import { Slots } from 'shared/model/round';
 import RoundRepository from 'core/repository/round';
 import { createTaskON } from 'shared/util/bus';
-import mockDelegate from 'test/core/mock/delegate';
+// import mockDelegate from 'test/core/mock/delegate';
 const constants = Config.constants;
 
 interface IHashList {

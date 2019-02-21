@@ -75,9 +75,11 @@ export class SyncService implements ISyncService {
         this.syncRepo.sendCommonBlocksExist(response, peer);
     }
 
-    async updateHeaders(data) {
-        headers.update(data)
-        this.syncRepo.sendHeaders(headers)
+    async updateHeaders(data: { blockIds, lastBlock }) {
+        const broadhash = headers.generateBroadhash(data.blockIds);
+        const height = data.lastBlock.height;
+        headers.update({ broadhash, height });
+        this.syncRepo.sendHeaders(headers);
     }
 }
 

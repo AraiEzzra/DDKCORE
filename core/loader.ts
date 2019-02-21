@@ -19,6 +19,7 @@ import { Block } from 'shared/model/block';
  * END
  */
 
+import {initControllers} from 'core/controller/index';
 enum constant  {
     Limit = 1000
 }
@@ -107,6 +108,7 @@ class Loader {
         //         await TransactionService.applyUnconfirmed(trs);
         //     }
         // }
+        initControllers();
         messageON('WARN_UP_FINISHED');
     }
 

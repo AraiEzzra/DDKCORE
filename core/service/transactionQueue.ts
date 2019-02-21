@@ -2,7 +2,7 @@ import { Transaction, TransactionStatus } from 'shared/model/transaction';
 import { ITransactionPoolService } from 'core/service/transactionPool';
 import { transactionSortFunc } from 'core/util/transaction';
 import { getOrCreateAccount } from 'shared/util/account';
-import constants from 'config/mainnet/constants';
+import constants from '../../config/mainnet/constants';
 import TransactionService from 'core/service/transaction';
 import TransactionPool from 'core/service/transactionPool';
 // import db from 'shared/driver/db';
