@@ -250,8 +250,7 @@ class BlockService {
                 delete block[i];
             }
         }
-        // const report: boolean = validator.validate(block, blockShema);
-        const report = true;
+        const report: boolean = validator.validate(block, blockShema);
         if (!report) {
             return new Response<Block>({
                 errors: [`Failed to validate block schema:
