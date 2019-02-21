@@ -20,6 +20,7 @@ import BlockService from 'core/service/block';
  * END
  */
 
+import {initControllers} from 'core/controller/index';
 enum constant  {
     Limit = 1000
 }

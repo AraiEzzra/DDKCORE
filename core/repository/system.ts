@@ -27,7 +27,7 @@ export class Headers {
         this.nonce = data.nonce || this.nonce;
     }
 
-    generateBroadhash(ids: Array<any>) {
+    generateBroadhash(ids: Array<string>) {
         if (ids.length <= 1) {
             return this.broadhash;
         }

@@ -106,6 +106,8 @@ class BlockService {
             return processBlockResponse;
         }
 
+        SyncService.sendNewBlock(block);
+
         const unlockResponse: Response<void> = await this.unlockTransactionPoolAndQueue();
         if (!unlockResponse.success) {
             unlockResponse.errors.push('generateBlock: Can\' unlock transaction pool or/and queue');
@@ -630,7 +632,6 @@ class BlockService {
         if (tick) {
             await RoundService.generateRound();
         }
-        block = null;
         return new Response<void>();
     }
 
