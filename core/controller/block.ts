@@ -5,10 +5,12 @@ import BlockRepo from 'core/repository/block';
 import { Peer } from 'shared/model/peer';
 import { ON, RPC } from 'core/util/decorator';
 import { BaseController } from 'core/controller/baseController';
-import { IKeyPair } from 'shared/util/ed';
 
 interface BlockGenerateRequest {
-    keypair: IKeyPair;
+    keypair: {
+        privateKey: string,
+        publicKey: string
+    };
     timestamp: number;
 }
 

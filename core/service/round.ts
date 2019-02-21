@@ -13,8 +13,7 @@ import { Slots } from 'shared/model/round';
 import RoundRepository from 'core/repository/round';
 import { createTaskON } from 'shared/util/bus';
 import DelegateRepository from 'core/repository/delegate';
-import { Delegate } from 'shared/model/delegate';
-import { ed, IKeyPair } from 'shared/util/ed';
+import { ed } from 'shared/util/ed';
 const constants = Config.constants;
 
 interface IHashList {
@@ -92,11 +91,19 @@ interface IRoundService {
 }
 
 class RoundService implements IRoundService {
-    private keypair: IKeyPair;
+    private keypair: {
+        privateKey: string,
+        publicKey: string,
+    };
 
     constructor() {
         const hash = crypto.createHash('sha256').update(process.env.FORGE_SECRET, 'utf8').digest();
-        this.keypair = ed.makeKeypair(hash);
+        const keypair = ed.makeKeypair(hash);
+
+        this.keypair = {
+            privateKey: keypair.privateKey.toString(),
+            publicKey: keypair.publicKey.toString(),
+        };
     }
 
     // todo mock delegates from genesis and change
