@@ -220,10 +220,10 @@ class RoundService implements IRoundService {
             roundFees: 0,
             roundDelegates: []
         };
-        for (let i = 0; i < data.length; i++) {
-            resp.roundFees += data[i].fee;
-            resp.roundDelegates.push(data[i].generatorPublicKey);
-        }
+        // for (let i = 0; i < data.length; i++) {
+        //     resp.roundFees += data[i].fee;
+        //     resp.roundDelegates.push(data[i].generatorPublicKey);
+        // }
 
         return resp;
     }
@@ -239,9 +239,9 @@ class RoundService implements IRoundService {
     }
 
     public applyRound(param: IRoundSum): boolean {
-        if (!param.roundDelegates.length) {
-            return false;
-        }
+        // if (!param.roundDelegates.length) {
+        //     return false;
+        // }
 
         // increase delegates balance
         // get delegates by publicKey
