@@ -4,13 +4,10 @@
   "createdAt": 1,
   "previousBlockId": null,
   "transactions": [],
-  "reward": 0,
-  "numberOfTransactions": 0,
+  "transactionCount": 0,
   "payloadHash": "",
-  "totalFee": 0,
-  "totalAmount": 0,
-  "timestamp": 0,
-  "payloadLength": 0,
+  "fee": 0,
+  "amount": 0,
   "generatorPublicKey": "",
-  "blockSignature": ""
+  "signature": ""
 }
