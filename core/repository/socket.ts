@@ -36,7 +36,6 @@ export default class Socket {
     }
 
     init(): void {
-        console.log('INIT', TRUSTED_PEERS);
         TRUSTED_PEERS.forEach((peer: any) => {
             this.connectNewPeer(peer);
         });
