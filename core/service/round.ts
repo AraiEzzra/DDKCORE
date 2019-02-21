@@ -13,7 +13,7 @@ import { Slots } from 'shared/model/round';
 import RoundRepository from 'core/repository/round';
 import { createTaskON } from 'shared/util/bus';
 import DelegateRepository from 'core/repository/delegate';
-
+import { Delegate } from 'shared/model/delegate';
 const constants = Config.constants;
 
 interface IHashList {
@@ -27,6 +27,12 @@ interface IRoundSum {
 }
 
 interface IRoundService {
+    /**
+     * Get active delegates
+     * @implements {getDelegates(vote, activeDelegates): Array<Delegate>} DelegateRepository
+     * @param limit: activeDelegateCount
+     */
+    getActiveDelegates(): ResponseEntity<any>;
 
     /**
      * Generate hash (delegate publicKey + previousBlockId)
@@ -85,6 +91,10 @@ interface IRoundService {
 }
 
 class RoundService implements IRoundService {
+    // todo mock delegates from genesis and change
+    public getActiveDelegates(): ResponseEntity<any> {
+        return DelegateRepository.getActiveDelegates();
+    }
 
     private compose(...fns): any {
         return fns.reduceRight((prevFn, nextFn) =>
@@ -96,7 +106,7 @@ class RoundService implements IRoundService {
     public generateHashList(params: {activeDelegates: Array<Account>, blockId: string}):
     Array<IHashList> {
         return params.activeDelegates.map((delegate) => {
-            const publicKey = delegate.publicKey;
+            const publicKey = delegate.account.publicKey;
             const hash = crypto.createHash('md5').update(publicKey + params.blockId).digest('hex');
             return {
                 hash,
