@@ -460,7 +460,7 @@ Process.prototype.onReceiveBlock = function (block) {
             library.logger.debug(`[Process][onReceiveBlock] !__private.loaded ${!__private.loaded}`);
             library.logger.debug(`[Process][onReceiveBlock] syncing ${modules.loader.syncing()}`);
             library.logger.debug('Client not ready to receive block', block.id);
-            return;
+            return setImmediate(cb);
         }
 
         // Get the last block
