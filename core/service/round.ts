@@ -13,7 +13,7 @@ import { Slots } from 'shared/model/round';
 import RoundRepository from 'core/repository/round';
 import { createTaskON } from 'shared/util/bus';
 import DelegateRepository from 'core/repository/delegate';
-import { Delegate } from 'shared/model/delegate';
+import { ed } from 'shared/util/ed';
 const constants = Config.constants;
 
 interface IHashList {
@@ -27,12 +27,6 @@ interface IRoundSum {
 }
 
 interface IRoundService {
-    /**
-     * Get active delegates
-     * @implements {getDelegates(vote, activeDelegates): Array<Delegate>} DelegateRepository
-     * @param limit: activeDelegateCount
-     */
-    getActiveDelegates(): ResponseEntity<any>;
 
     /**
      * Generate hash (delegate publicKey + previousBlockId)
@@ -91,9 +85,19 @@ interface IRoundService {
 }
 
 class RoundService implements IRoundService {
-    // todo mock delegates from genesis and change
-    public getActiveDelegates(): ResponseEntity<any> {
-        return DelegateRepository.getActiveDelegates();
+    private keypair: {
+        privateKey: string,
+        publicKey: string,
+    };
+
+    constructor() {
+        const hash = crypto.createHash('sha256').update(process.env.FORGE_SECRET, 'utf8').digest();
+        const keypair = ed.makeKeypair(hash);
+
+        this.keypair = {
+            privateKey: keypair.privateKey.toString('hex'),
+            publicKey: keypair.publicKey.toString('hex'),
+        };
     }
 
     private compose(...fns): any {
@@ -157,7 +161,7 @@ class RoundService implements IRoundService {
         }
 
         const lastBlock = BlockService.getLastBlock();
-        const { data } = this.getActiveDelegates(); // todo wait for implementation method
+        const { data } = DelegateRepository.getActiveDelegates();
 
         const slots = this.compose(
             this.generatorPublicKeyToSlot,
@@ -172,11 +176,20 @@ class RoundService implements IRoundService {
 
         if (mySlot) {
             // start forging block at mySlotTime
-            createTaskON('BLOCK_GENERATE', SlotService.getSlotTime(mySlot));
+            const mySlotTime = SlotService.getSlotTime(mySlot);
+            const mySlotRealTime = SlotService.getRealTime(mySlotTime);
+
+            createTaskON('BLOCK_GENERATE', mySlotRealTime, {
+                timestamp: mySlotTime,
+                keypair: this.keypair,
+            });
         }
 
         // create event for end of current round
-        createTaskON('ROUND_FINISH', SlotService.getSlotTime(RoundRepository.getLastSlotInRound()));
+        const lastSlotTime = SlotService.getSlotTime(RoundRepository.getLastSlotInRound());
+        const lastSlotRealTime = SlotService.getRealTime(lastSlotTime);
+
+        createTaskON('ROUND_FINISH', lastSlotRealTime);
 
         return new ResponseEntity();
     }
@@ -196,10 +209,10 @@ class RoundService implements IRoundService {
             roundFees: 0,
             roundDelegates: []
         };
-        for (let i = 0; i < data.length; i++) {
-            resp.roundFees += data[i].fee;
-            resp.roundDelegates.push(data[i].generatorPublicKey);
-        }
+        // for (let i = 0; i < data.length; i++) {
+        //     resp.roundFees += data[i].fee;
+        //     resp.roundDelegates.push(data[i].generatorPublicKey);
+        // }
 
         return resp;
     }
@@ -215,9 +228,9 @@ class RoundService implements IRoundService {
     }
 
     public applyRound(param: IRoundSum): boolean {
-        if (!param.roundDelegates.length) {
-            return false;
-        }
+        // if (!param.roundDelegates.length) {
+        //     return false;
+        // }
 
         // increase delegates balance
         // get delegates by publicKey

@@ -61,7 +61,7 @@ export class MockDelegates {
             const account = this.createAccount(this.startData[i]);
 
             AccountRepository.add(account);
-            const delegate: Delegate = DelegateRepository.addDelegate(account);
+            const delegate: Delegate = DelegateRepository.add(account);
             AccountRepository.attachDelegate(account, delegate);
         }
 
