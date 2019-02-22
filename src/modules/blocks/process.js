@@ -468,11 +468,11 @@ Process.prototype.onReceiveBlock = function (block) {
 
         // Detect sane block
         if (block.previousBlock === lastBlock.id && lastBlock.height + 1 === block.height) {
-            // self.receiveLock();
+            self.receiveLock();
             __private.newReceiveBlock(block)
                 .then(() => {
-                    // self.receiveUnlock();
-                    return setImmediate(cb);
+                    self.receiveUnlock();
+                    return setImmediate(cb, null);
                 });
         } else if (block.previousBlock !== lastBlock.id && lastBlock.height + 1 === block.height) {
             // Process received fork cause 1
@@ -516,7 +516,7 @@ __private.newReceiveBlock = async (block) => {
     library.logger.debug(`[Process][newReceiveBlock] removedTransactions ${JSON.stringify(removedTransactions)}`);
 
     try {
-        await modules.blocks.verify.newProcessBlock(block, false, true, null, true, true);
+        await modules.blocks.verify.newProcessBlock(block, true, true, null, true, true);
 
         const transactionForReturn = [];
         removedTransactions.forEach((removedTrs) => {
