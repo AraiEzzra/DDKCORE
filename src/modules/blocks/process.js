@@ -461,7 +461,7 @@ Process.prototype.onReceiveBlock = function (block) {
             library.logger.debug(`[Process][onReceiveBlock] !__private.loaded ${!__private.loaded}`);
             library.logger.debug(`[Process][onReceiveBlock] syncing ${modules.loader.syncing()}`);
             library.logger.debug('Client not ready to receive block', block.id);
-            return;
+            return setImmediate(cb);
         }
 
         // Get the last block
@@ -486,6 +486,7 @@ Process.prototype.onReceiveBlock = function (block) {
             return __private.receiveForkFive(block, lastBlock, cb);
         } else if (block.id === lastBlock.id) {
             library.logger.debug('Block already processed', block.id);
+            return setImmediate(cb);
         } else {
             library.logger.warn([
                 'Discarded block that does not match with current chain:', block.id,
@@ -494,9 +495,9 @@ Process.prototype.onReceiveBlock = function (block) {
                 'slot:', slots.getSlotNumber(block.timestamp),
                 'generator:', block.generatorPublicKey
             ].join(' '));
+            // Discard received block
+            return setImmediate(cb);
         }
-        // Discard received block
-        return setImmediate(cb);
     });
 };
 
