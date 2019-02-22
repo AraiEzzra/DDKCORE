@@ -26,7 +26,7 @@ class BlockController extends BaseController {
     }
 
     @ON('BLOCK_GENERATE')
-    public async generateBlock( data: BlockGenerateRequest ): Promise<Response<void>> {
+    public async generateBlock(data: BlockGenerateRequest): Promise<Response<void>> {
         const response: Response<void> = await BlockService.generateBlock(data.keypair, data.timestamp);
         if (!response.success) {
             response.errors.push('generateBlock');
