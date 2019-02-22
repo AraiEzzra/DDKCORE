@@ -44,9 +44,9 @@ function BlocksHttpApi(blocksModule, app, logger, cache) {
         'get /getStatus': 'getStatus'
     });
 
-    if (constants.NODE_ENV_IN === 'development') {
-        router.map(blocksModule.internal, { 'get /popLastBlock': 'popLastBlock' });
-    }
+    // if (constants.NODE_ENV_IN === 'development') {
+    router.map(blocksModule.internal, { 'get /popLastBlock': 'popLastBlock' });
+    // }
 
     httpApi.registerEndpoint('/api/blocks', app, router, blocksModule.isLoaded);
 }
