@@ -27,7 +27,6 @@ import Response from 'shared/model/response';
 import {messageON} from 'shared/util/bus';
 import config from 'shared/util/config';
 import SyncService from 'core/service/sync';
-import ResponseEntity from 'shared/model/response';
 import system from 'core/repository/system';
 
 interface IVerifyResult {
@@ -687,7 +686,7 @@ class BlockService {
      * @implements modules.rounds.ticking
      */
     public async processIncomingBlock(block: Block): Promise<Response<void>> {
-        logger.warn(`[Service][Block][processIncomingBlock] block ${JSON.stringify(block)}`);
+        logger.warn(`[Service][Block][processIncomingBlock] block id ${block.id}`);
         if (this.receiveLocked) {
             logger.warn(`[Process][onReceiveBlock] locked for id ${block.id}`);
             return new Response({errors: ['receiveLocked']});
@@ -796,7 +795,7 @@ class BlockService {
         if (!pushResponse.success) {
             errors.push(...pushResponse.errors);
         }
-        const returnResponse: ResponseEntity<void> =
+        const returnResponse: Response<void> =
             await TransactionService.returnToQueueConflictedTransactionFromPool(block.transactions);
         if (!returnResponse.success) {
             errors.push(...returnResponse.errors);
@@ -933,6 +932,7 @@ class BlockService {
     }
 
     private async receiveForkFive(block: Block, lastBlock: Block): Promise<Response<void>> {
+        logger.debug(`[Service][Block][receiveForkFive] block ${JSON.stringify(block)}`);
         let tmpBlock: Block = block.getCopy();
         const forkResponse: Response<void> = await this.delegateService.fork(block, Fork.FIVE);
         if (!forkResponse.success) {
