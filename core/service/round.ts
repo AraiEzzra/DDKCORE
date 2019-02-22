@@ -14,6 +14,7 @@ import RoundRepository from 'core/repository/round';
 import { createTaskON } from 'shared/util/bus';
 import DelegateRepository from 'core/repository/delegate';
 import { ed } from 'shared/util/ed';
+import { logger } from 'shared/util/logger';
 const constants = Config.constants;
 
 interface IHashList {
@@ -102,7 +103,7 @@ class RoundService implements IRoundService {
 
     private compose(...fns): any {
         return fns.reduceRight((prevFn, nextFn) =>
-                (...args) => nextFn(prevFn(...args)),
+            (...args) => nextFn(prevFn(...args)),
             value => value
         );
     }
@@ -175,6 +176,7 @@ class RoundService implements IRoundService {
         const mySlot = this.getMyTurn();
 
         if (mySlot) {
+            logger.debug(`[Service][Round][generateRound] my slot: ${mySlot}`);
             // start forging block at mySlotTime
             const mySlotTime = SlotService.getSlotTime(mySlot);
             const mySlotRealTime = SlotService.getRealTime(mySlotTime);

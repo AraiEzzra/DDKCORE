@@ -6,6 +6,7 @@ import Response from 'shared/model/response';
 // import db from 'shared/driver/db';
 import {logger} from 'shared/util/logger';
 import SyncService, { ISyncService } from 'core/service/sync';
+import { Address } from 'shared/model/account';
 
 // wait declare by @Fisenko
 declare class Account {
@@ -26,17 +27,17 @@ export interface ITransactionPoolService<T extends Object> {
 
     getLockStatus(): boolean;
 
-    getTransactionsByRecipientId(recipientAddress: string): Array<Transaction<T>>;
+    getTransactionsByRecipientId(recipientAddress: Address): Array<Transaction<T>>;
 
-    getTransactionsBySenderId(senderAddress: string): Array<Transaction<T>>;
+    getTransactionsBySenderAddress(senderAddress: Address): Array<Transaction<T>>;
 
-    removeTransactionsBySenderId(senderAddress: string): Promise<Array<Transaction<T>>>;
+    removeTransactionsBySenderId(senderAddress: Address): Promise<Array<Transaction<T>>>;
 
     push(trs: Transaction<T>, sender?: Account, broadcast?: boolean);
 
     remove(trs: Transaction<T>);
 
-    removeTransactionsByRecipientId(address: string): Promise<Array<Transaction<T>>>;
+    removeTransactionsByRecipientId(address: Address): Promise<Array<Transaction<T>>>;
 
     get(id: string): Transaction<T>;
 
@@ -58,7 +59,7 @@ export interface ITransactionPoolService<T extends Object> {
 
     // unlockTransactionPoolAndQueue(): void; // to block service
 
-    returnToQueueConflictedTransactionFromPool(transactions): Promise<Response<void>>; // to block service
+    // returnToQueueConflictedTransactionFromPool(transactions): Promise<Response<void>>; // to block service
 
     lock(): Response<void>;
 
@@ -76,10 +77,6 @@ declare class TransactionPoolScope {
 
 // TODO NOT ready
 class TransactionPoolService<T extends object> implements ITransactionPoolService<T> {
-    returnToQueueConflictedTransactionFromPool(transactions): Promise<Response<void>> {
-        return undefined;
-    }
-
     batchPush(transactions: Array<Transaction<T>>): Promise<void> {
         return undefined;
     }
@@ -91,8 +88,8 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
 
     private pool: { [transactionId: string]: Transaction<T> } = {};
 
-    poolByRecipient: { [recipientAddress: string]: Array<Transaction<T>> } = {};
-    poolBySender: { [senderAddress: string]: Array<Transaction<T>> } = {};
+    poolByRecipient: { [recipientAddress: number]: Array<Transaction<T>> } = {};
+    poolBySender: { [senderAddress: number]: Array<Transaction<T>> } = {};
 
     locked: boolean = false;
 
@@ -108,7 +105,7 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
 
     async removeFromPool(transactions: Array<Transaction<T>>, withDepend: boolean):
         Promise<Response<Array<Transaction<T>>>> {
-        return new Response();
+        return new Response({ data: [] });
     }
 
     async pushInPool(transactions: Array<Transaction<T>>): Promise<void> {
@@ -128,17 +125,17 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
         return this.locked;
     }
 
-    getTransactionsByRecipientId(recipientAddress: string): Array<Transaction<T>> {
+    getTransactionsByRecipientId(recipientAddress: Address): Array<Transaction<T>> {
         return this.poolByRecipient[recipientAddress] || [];
     }
 
-    getTransactionsBySenderId(senderAddress: string): Array<Transaction<T>> {
+    getTransactionsBySenderAddress(senderAddress: Address): Array<Transaction<T>> {
         return this.poolBySender[senderAddress] || [];
     }
 
-    async removeTransactionsBySenderId(senderAddress: string): Promise<Array<Transaction<T>>> {
+    async removeTransactionsBySenderId(senderAddress: Address): Promise<Array<Transaction<T>>> {
         const removedTransactions = [];
-        const transactions = this.getTransactionsBySenderId(senderAddress);
+        const transactions = this.getTransactionsBySenderAddress(senderAddress);
         for (const trs of transactions) {
             await this.remove(trs);
             removedTransactions.push(trs);
@@ -212,7 +209,7 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
         return true;
     }
 
-    async removeTransactionsByRecipientId(address: string): Promise<Array<Transaction<T>>> {
+    async removeTransactionsByRecipientId(address: Address): Promise<Array<Transaction<T>>> {
         const removedTransactions = [];
         const transactions = this.getTransactionsByRecipientId(address);
         for (const trs of transactions) {
