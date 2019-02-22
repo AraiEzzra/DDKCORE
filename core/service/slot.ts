@@ -3,6 +3,8 @@ const constants = { // todo config!
     activeDelegates: 11
 };
 
+type EpochTime = number;
+
 class SlotService {
     /**
      * @property {number} interval - Slot time interval in seconds.
@@ -21,7 +23,7 @@ class SlotService {
      * Calculates time since ddk epoch.
      * @param {number|undefined} time - Time in unix seconds.
      */
-    private getEpochTime(time: number = Date.now()): number {
+    private getEpochTime(time: number = Date.now()): EpochTime {
         const d = this.beginEpochTime();
         const t = d.getTime();
 
@@ -33,7 +35,7 @@ class SlotService {
      * @param {number} time
      * @return {number} ddk epoch time constant.
      */
-    public getTime(time?: number): number {
+    public getTime(time?: number): EpochTime {
         return this.getEpochTime(time);
     }
 
@@ -42,7 +44,7 @@ class SlotService {
      * @param {number} [epochTime]
      * @return {number} constant time from ddk epoch + input time.
      */
-    public getRealTime(epochTime: number = this.getTime()): number {
+    public getRealTime(epochTime: EpochTime = this.getTime()): number {
         const d = this.beginEpochTime();
         const t = Math.floor(d.getTime() / 1000) * 1000;
 
@@ -54,7 +56,7 @@ class SlotService {
      * @param {number} [epochTime] - time or
      * @return {number} input time / slot interval.
      */
-    public getSlotNumber(epochTime: number = this.getTime()): number {
+    public getSlotNumber(epochTime: EpochTime = this.getTime()): number {
         return Math.floor(epochTime / this.interval);
     }
 
@@ -63,7 +65,7 @@ class SlotService {
      * @param {number} slot - slot number
      * @return {number} input slot * slot interval.
      */
-    public getSlotTime(slot: number): number {
+    public getSlotTime(slot: number): EpochTime {
         return slot * this.interval;
     }
 

@@ -11,7 +11,7 @@ export default {
         height: {
             type: 'integer'
         },
-        blockSignature: {
+        signature: {
             type: 'string',
             format: 'signature'
         },
@@ -19,34 +19,27 @@ export default {
             type: 'string',
             format: 'publicKey'
         },
-        numberOfTransactions: {
+        transactionCount: {
             type: 'integer'
         },
         payloadHash: {
             type: 'string',
             format: 'hex'
         },
-        payloadLength: {
-            type: 'integer'
-        },
-        previousBlock: {
+        previousBlockId: {
             type: 'string',
             format: 'hex',
             minLength: 1,
             maxLength: 64
         },
-        timestamp: {
+        createdAt: {
             type: 'integer'
         },
-        totalAmount: {
+        amount: {
             type: 'integer',
             minimum: 0
         },
-        totalFee: {
-            type: 'integer',
-            minimum: 0
-        },
-        reward: {
+        fee: {
             type: 'integer',
             minimum: 0
         },
@@ -59,5 +52,14 @@ export default {
             minimum: 0
         }
     },
-    required: ['blockSignature', 'generatorPublicKey', 'numberOfTransactions', 'payloadHash', 'payloadLength', 'timestamp', 'totalAmount', 'totalFee', 'reward', 'transactions', 'version']
+    required: [
+        'signature',
+        'generatorPublicKey',
+        'transactionCount',
+        'payloadHash',
+        'createdAt',
+        'amount',
+        'fee',
+        'version'
+    ]
 };

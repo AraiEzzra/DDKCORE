@@ -57,7 +57,7 @@ class BlockService {
 
     private readonly BLOCK_BUFFER_SIZE
         = BUFFER.LENGTH.UINT32 // version
-        + BUFFER.LENGTH.UINT32 // timestamp
+        + BUFFER.LENGTH.INT64 // timestamp
         + BUFFER.LENGTH.DOUBLE_HEX // previousBlockId
         + BUFFER.LENGTH.UINT32 // transactionCount
         + BUFFER.LENGTH.INT64 // amount
@@ -251,7 +251,6 @@ class BlockService {
             }
         }
         const report: boolean = validator.validate(block, blockShema);
-
         if (!report) {
             return new Response<Block>({
                 errors: [`Failed to validate block schema:
