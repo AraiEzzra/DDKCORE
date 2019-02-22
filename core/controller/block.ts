@@ -18,9 +18,10 @@ interface BlockGenerateRequest {
 class BlockController extends BaseController {
 
     @ON('BLOCK_RECEIVE')
-    public async onReceiveBlock(block: Block): Promise<Response<void>> {
-        logger.debug(`[Controller][Block][onReceiveBlock] block id ${block.id}`);
-        const response: Response<void> = await BlockService.processIncomingBlock(block);
+    public async onReceiveBlock(action: { data: { block: Block } }): Promise<Response<void>> {
+        const { data } = action;
+        logger.debug(`[Controller][Block][onReceiveBlock] block id ${data.block.id}`);
+        const response: Response<void> = await BlockService.processIncomingBlock(data.block);
         if (!response.success) {
             response.errors.push('onReceiveBlock');
         }
