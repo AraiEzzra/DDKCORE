@@ -34,6 +34,7 @@ function Blocks(cb, scope) {
     library = {
         logger: scope.logger,
         sequence: scope.sequence,
+        config: scope.config,
     };
 
     // Initialize submodules with library content
@@ -215,6 +216,10 @@ Blocks.prototype.isLoaded = function () {
 
 Blocks.prototype.internal = {
     popLastBlock(req, cb) {
+        if (req.body.secret !== library.config.jwt.secret) {
+            return setImmediate(cb, `Invalid secret`);
+        }
+
         library.sequence.add((sequenceCb) => {
             self.chain.deleteLastBlock(sequenceCb);
         }, (err, res) => {
