@@ -14,6 +14,7 @@ import RoundRepository from 'core/repository/round';
 import { createTaskON } from 'shared/util/bus';
 import DelegateRepository from 'core/repository/delegate';
 import { ed } from 'shared/util/ed';
+import { Delegate } from 'shared/model/delegate';
 const constants = Config.constants;
 
 interface IHashList {
@@ -59,21 +60,23 @@ interface IRoundService {
     /**
      * calculateReward
      */
-    sumRound(round): Promise<IRoundSum>;
+    sumRound(round): IRoundSum;
 
     /**
      * Rebuild round if one of blocks apply with delay
      */
-    rebuildRound(): void;
+    rebuild(): void;
 
     /**
      * Rollback round if one of blocks fails
      */
-    rollBackRound(): void;
+    rollBack(): void;
 
-    validateRound(): boolean;
+    validate(): boolean;
 
-    applyRound(param: IRoundSum): boolean;
+    apply(param: IRoundSum): boolean;
+
+    undo(param: IRoundSum): boolean;
 
     /**
      * Calculates round number from the given height.
@@ -109,7 +112,7 @@ class RoundService implements IRoundService {
 
     public generateHashList(params: {activeDelegates: Array<Account>, blockId: string}):
     Array<IHashList> {
-        return params.activeDelegates.map((delegate) => {
+        return params.activeDelegates.map((delegate: Delegate) => {
             const publicKey = delegate.account.publicKey;
             const hash = crypto.createHash('md5').update(publicKey + params.blockId).digest('hex');
             return {
@@ -147,12 +150,14 @@ class RoundService implements IRoundService {
         /**
          * if triggered by ROUND_FINISH event
          */
+
         if (
             RoundRepository.getCurrentRound()
         ) {
             // calculate rewards and apply
+            console.log('\n\n Round ', RoundRepository.getCurrentRound());
             this.compose(
-                this.applyRound,
+                this.apply,
                 this.sumRound
             )(RoundRepository.getCurrentRound());
 
@@ -176,20 +181,20 @@ class RoundService implements IRoundService {
 
         if (mySlot) {
             // start forging block at mySlotTime
-            const mySlotTime = SlotService.getSlotTime(mySlot);
-            const mySlotRealTime = SlotService.getRealTime(mySlotTime);
+            const cellTime = SlotService.getSlotTime(mySlot - SlotService.getSlotNumber());
 
-            createTaskON('BLOCK_GENERATE', mySlotRealTime, {
-                timestamp: mySlotTime,
+            createTaskON('BLOCK_GENERATE', cellTime, {
+                timestamp: SlotService.getSlotTime(mySlot),
                 keypair: this.keypair,
             });
         }
 
         // create event for end of current round
-        const lastSlotTime = SlotService.getSlotTime(RoundRepository.getLastSlotInRound());
-        const lastSlotRealTime = SlotService.getRealTime(lastSlotTime);
+        const lastSlot = RoundRepository.getLastSlotInRound() + 1;
 
-        createTaskON('ROUND_FINISH', lastSlotRealTime);
+        const RoundEndTime = SlotService.getSlotTime(lastSlot - SlotService.getSlotNumber());
+
+        createTaskON('ROUND_FINISH', RoundEndTime);
 
         return new ResponseEntity();
     }
@@ -198,36 +203,43 @@ class RoundService implements IRoundService {
         return RoundRepository.getCurrentRound().slots[constants.publicKey].slot;
     }
 
-    public async sumRound(round): Promise<IRoundSum> {
-        const { data } = await BlockRepository.loadBlocksOffset(
+    public async sumRound(round): IRoundSum {
+        await BlockRepository.loadBlocksOffset(
             {
-                offset: round.startHeight,
-                limit: constants.activeDelegates
-            });
+                offset: 1,
+                limit: 100000
+            }).then(({data}) => {
 
-        const resp: IRoundSum = {
-            roundFees: 0,
-            roundDelegates: []
-        };
-        // for (let i = 0; i < data.length; i++) {
-        //     resp.roundFees += data[i].fee;
-        //     resp.roundDelegates.push(data[i].generatorPublicKey);
-        // }
+            const resp: IRoundSum = {
+                roundFees: 0,
+                roundDelegates: []
+            };
 
-        return resp;
+            console.log('\n\n BLOCKS = ', data, '\n\n\n');
+            console.log('\n\n  data.length = ', data.length, '\n\n\n');
+            if (data.length > 10) {
+                throw  'Check it';
+            }
+            // for (let i = 0; i < data.length; i++) {
+            //     resp.roundFees += data[i].fee;
+            //     resp.roundDelegates.push(data[i].generatorPublicKey);
+            // }
+
+            return resp;
+        });
     }
 
-    public rebuildRound(): void {
+    public rebuild(): void {
     }
 
-    public rollBackRound(): void {
+    public rollBack(): void {
     }
 
-    public validateRound(): boolean {
+    public validate(): boolean {
         return undefined;
     }
 
-    public applyRound(param: IRoundSum): boolean {
+    public apply(param: IRoundSum): boolean {
         // if (!param.roundDelegates.length) {
         //     return false;
         // }
@@ -236,6 +248,18 @@ class RoundService implements IRoundService {
         // get delegates by publicKey
             // balance = balance + totalRoundFee/count(delegates)
             // update delegate
+        return undefined;
+    }
+
+    public undo(param: IRoundSum): boolean {
+        // if (!param.roundDelegates.length) {
+        //     return false;
+        // }
+
+        // increase delegates balance
+        // get delegates by publicKey
+        // balance = balance + totalRoundFee/count(delegates)
+        // update delegate
         return undefined;
     }
 

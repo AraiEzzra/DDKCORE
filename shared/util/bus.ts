@@ -9,8 +9,12 @@ export function messageON(topicName: string, data: any = null) {
     subjectOn.next({ data, topicName });
 }
 
-export function createTaskON(topicName: string, time: number = Date.now(), data: any = null) {
+let timer = {};
+export function createTaskON(topicName: string, callTime: number, data: any = null) {
     // todo implement function to create schedule fro messageON
-    const callTime = (time - Date.now());
-    setTimeout(() => messageON(topicName, data), callTime);
+    // if (timer.topicName) {
+    //     clearTimeout(timer.topicName);
+    // }
+
+    timer.topicName = setTimeout(() => messageON(topicName, data), callTime * 1000);
 }

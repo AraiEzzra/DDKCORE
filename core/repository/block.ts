@@ -146,7 +146,8 @@ class BlockRepo {
         // }
         // blocks = assignResponse.data;
         const rquestLimit = param.limit || -1;
-        const targetBlocks: Array<Block> = this.memoryBlocks.slice(param.offset - 1, rquestLimit);
+        // const targetBlocks: Array<Block> = this.memoryBlocks.slice(param.offset - 1, rquestLimit);
+        const targetBlocks: Array<Block> = this.memoryBlocks;
         return new Response({ data: targetBlocks });
     }
 
@@ -240,6 +241,11 @@ class BlockRepo {
         // } catch (e) {
         //
         // }
+        console.log('saveBlock ', block);
+        // todo implement logic for block apply and memory clean
+        if (this.memoryBlocks.length > 1000) {
+            throw 'Block max count has been arrived';
+        }
         this.memoryBlocks.push(block);
         return new Response();
     }
