@@ -1,11 +1,12 @@
 import crypto from 'crypto';
 
-import { IAsset, Transaction, TransactionType } from 'shared/model/transaction';
+import { IAsset, IAssetStake, Transaction, TransactionType } from 'shared/model/transaction';
 import { IFunctionResponse, ITableObject } from 'core/util/common';
 import ResponseEntity from 'shared/model/response';
 import TransactionSendService from './transaction/send';
-import { ed, IKeyPair } from 'shared/util/ed';
-import { Account, Address } from 'shared/model/account';
+import TransactionStakeService from './transaction/stake';
+import {ed, IKeyPair} from 'shared/util/ed';
+import {Account, Address} from 'shared/model/account';
 import config from 'shared/util/config';
 import AccountRepo from '../repository/account';
 import TransactionRepo from '../repository/transaction';
@@ -119,6 +120,8 @@ class TransactionDispatcher<T extends IAsset> implements ITransactionDispatcher<
         switch (trs.type) {
             case TransactionType.SEND:
                 return TransactionSendService.applyUnconfirmed(trs);
+            case TransactionType.STAKE:
+                return TransactionStakeService.applyUnconfirmed(trs);
             default:
                 return new ResponseEntity();
         }
@@ -130,6 +133,8 @@ class TransactionDispatcher<T extends IAsset> implements ITransactionDispatcher<
         switch (trs.type) {
             case TransactionType.SEND:
                 return TransactionSendService.calculateUndoUnconfirmed(trs, sender);
+            case TransactionType.STAKE:
+                return TransactionStakeService.calcUndoUnconfirmed(trs, sender);
             default:
                 return;
         }
@@ -139,6 +144,8 @@ class TransactionDispatcher<T extends IAsset> implements ITransactionDispatcher<
         switch (trs.type) {
             case TransactionType.SEND:
                 return TransactionSendService.calculateFee(trs, sender);
+            case TransactionType.STAKE:
+                return TransactionStakeService.calculateFee(trs, sender);
             default:
                 return 0;
         }
