@@ -36,15 +36,13 @@ export default class Socket {
     }
 
     init(): void {
-        console.log('INIT', TRUSTED_PEERS);
         TRUSTED_PEERS.forEach((peer: any) => {
             this.connectNewPeer(peer);
         });
-
         ioServer.on('connect', function (socket) {
             socket.emit('OPEN');
             socket.on('HEADERS', (data: string) => {
-                console.log('on headers', data);
+                logger.debug(`[SOCKET][PEER_HEADERS_RECEIVE], data: ${JSON.stringify(data)}`);
                 const peer = JSON.parse(data);
                 if (Socket._instance.addPeer(peer, socket)) {
                     socket.emit('READY');
@@ -64,7 +62,6 @@ export default class Socket {
             ws.emit('HEADERS', JSON.stringify(
                 new Headers()
             ));
-            console.log('Congretulation!!!!', peer);
             ws.on('READY', () => {
                 Socket._instance.addPeer(peer, ws);
             });
@@ -74,6 +71,7 @@ export default class Socket {
     @autobind
     addPeer(peer: Peer, socket): boolean {
         if (this.peerRepo.addPeer(peer, socket)) {
+            logger.debug(`[SOCKET][ADD_PEER] host: ${peer.ip}:${peer.port}`);
             socket.on('ACTION', (response: string) => Socket._instance.onPeerAction(response, peer));
 
             peer.socket.on('disconnect', () => {
@@ -87,7 +85,7 @@ export default class Socket {
     @autobind
     onPeerAction(response: string, peer: Peer): void {
         const { code, data } = JSON.parse(response);
-        console.log(`${peer.ip} say CODE: ${code}, DATA: ${data}`);
+        logger.debug(`[SOCKET][ON_PEER_ACTION][${peer.ip}:${peer.port}], CODE: ${code}, DATA: ${JSON.stringify(data)}`);
         messageON(code, { data, peer });
     }
 
