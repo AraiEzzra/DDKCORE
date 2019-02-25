@@ -107,8 +107,6 @@ class BlockService {
             return processBlockResponse;
         }
 
-        SyncService.sendNewBlock(block);
-
         const unlockResponse: Response<void> = await this.unlockTransactionPoolAndQueue();
         if (!unlockResponse.success) {
             unlockResponse.errors.push('generateBlock: Can\' unlock transaction pool or/and queue');
@@ -165,7 +163,8 @@ class BlockService {
         saveBlock: boolean,
         keypair: IKeyPair,
         verify: boolean = true,
-        tick: boolean = true): Promise<Response<void>> {
+        tick: boolean = true
+    ): Promise<Response<void>> {
         block = this.addBlockProperties(block, broadcast);
 
         const resultNormalizeBlock: Response<Block> = await this.normalizeBlock(block);
@@ -322,7 +321,7 @@ class BlockService {
         }
         result.verified = true;
         if (result.errors.length) {
-            console.log('\n\n result.errors = ', result.errors);
+            logger.error(`[Service][Block][verifyBlock] result.errors: ${result.errors}`);
         }
         return result;
     }
@@ -630,16 +629,23 @@ class BlockService {
             if (!afterSaveResponse.success) {
                 return new Response<void>({errors: [...afterSaveResponse.errors, 'applyBlock']});
             }
-            logger.debug(`Block applied correctly with ${block.transactions.length} transactions`);
+            const trsLength = block.transactions.length;
+            logger.debug(`[Service][Block][applyBlock] block ${block.id}, height: ${block.height}, ` +
+                `applied with ${trsLength} transactions`
+            );
         }
 
         this.setLastBlock(block);
         messageON('NEW_BLOCKS', block);
-        SyncService.sendNewBlock(block);
 
-        if (tick) {
-            await RoundService.generateRound();
+        if (broadcast) {
+            SyncService.sendNewBlock(block);
         }
+
+        // TODO: is it necessary?
+        // if (tick) {
+        //     await RoundService.generateRound();
+        // }
         return new Response<void>();
     }
 
@@ -728,7 +734,7 @@ class BlockService {
             block.previousBlockId === lastBlock.previousBlockId &&
             block.height === lastBlock.height && block.id !== lastBlock.id
         ) {
-            const receiveResponse: Response<void> = await  this.receiveForkFive(block, lastBlock);
+            const receiveResponse: Response<void> = await this.receiveForkFive(block, lastBlock);
             if (!receiveResponse.success) {
                 errors.push(...receiveResponse.errors, 'processIncomingBlock');
             }
@@ -781,7 +787,7 @@ class BlockService {
 
         // todo: wrong logic with errors!!!
         const errors: Array<string> = [];
-        const processBlockResponse: Response<void> = await this.processBlock(block, true, true, null, false, true);
+        const processBlockResponse: Response<void> = await this.processBlock(block, false, true, null, false, true);
         if (!processBlockResponse.success) {
             errors.push(...processBlockResponse.errors);
         }
@@ -816,6 +822,7 @@ class BlockService {
     }
 
     private async receiveForkOne(block: Block, lastBlock: Block): Promise<Response<void>> {
+        logger.debug(`[Service][Block][receiveForkOne] block ${JSON.stringify(block)}`);
         let tmpBlock: Block = block.getCopy();
         const forkResponse: Response<void> = await this.delegateService.fork(block, Fork.ONE);
         if (!forkResponse.success) {
@@ -1025,7 +1032,7 @@ class BlockService {
             return new Response<Block>({errors});
         }
 
-        await RoundService.rollBackRound(); // (oldLastBlock, previousBlock);
+        await RoundService.rollBack(); // (oldLastBlock, previousBlock);
 
         const deleteBlockResponse: Response<void> = await BlockRepo.deleteBlock(oldLastBlock.id);
         if (!deleteBlockResponse.success) {

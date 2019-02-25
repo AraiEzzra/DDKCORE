@@ -21,6 +21,8 @@ import BlockService from 'core/service/block';
  */
 
 import {Delegate} from 'shared/model/delegate';
+import { logger } from 'shared/util/logger';
+import { SECOND } from 'core/util/const';
 enum constant  {
     Limit = 1000
 }
@@ -87,12 +89,19 @@ export class MockDelegates {
     }
 }
 
-
 class Loader {
 
     constructor() {
         const delegate = new MockDelegates();
         delegate.init();
+
+        const initTime = new Date().getTime();
+        setInterval(() => {
+            const currentTime = new Date().getTime();
+            const timeInSeconds = Math.floor((currentTime - initTime) / SECOND);
+            const projectedHeight = Math.floor(timeInSeconds / 10) + 1;
+            logger.debug(`[Loader] time in seconds: ${timeInSeconds}, projected height: ${projectedHeight}`);
+        }, SECOND);
     }
 
     public async start() {

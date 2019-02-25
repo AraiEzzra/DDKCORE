@@ -1,4 +1,5 @@
 import redis, { ClientOpts } from 'redis';
+import { logger } from 'shared/util/logger';
 const { promisify } = require('util');
 const port = 6380;
 export const redisOptions: ClientOpts = {
@@ -9,11 +10,11 @@ export const redisOptions: ClientOpts = {
 export const redisClient = redis.createClient(redisOptions);
 
 redisClient.on('connect', function() {
-    console.log(`Redis connected on: ${redisOptions.host}:${redisOptions.port}`);
+    logger.debug(`Redis connected on: ${redisOptions.host}:${redisOptions.port}`);
 });
 
 redisClient.on('error', function(err: any) {
-    console.log('Error ' + err);
+    logger.debug('Error ' + err);
 });
 
 export const redisClientAsync = {

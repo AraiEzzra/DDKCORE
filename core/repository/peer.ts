@@ -2,6 +2,7 @@ import { Peer } from 'shared/model/peer';
 import { getRandomInt } from 'core/util/common';
 import { TRUSTED_PEERS } from 'core/repository/socket';
 import headers from './system';
+import { logger } from 'shared/util/logger';
 
 export class PeerRepo {
     private peers: { [string: string]: Peer } = {};
@@ -25,9 +26,8 @@ export class PeerRepo {
     }
 
     removePeer(peer: Peer): void {
-        console.log(`disconnect peer ${peer.ip}:${peer.port}`);
+        logger.debug(`disconnect peer ${peer.ip}:${peer.port}`);
         delete this.peers[`${peer.ip}:${peer.port}`];
-
     }
 
     peerList(): Array<Peer> {
