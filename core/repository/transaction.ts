@@ -1,6 +1,6 @@
 const Inserts = require('../../backlog/helpers/inserts.js');
 // import db from 'shared/driver/db';
-import { Transaction } from 'shared/model/transaction';
+import { Transaction, IAsset } from 'shared/model/transaction';
 import { ITransactionRepository as ITransactionRepositoryShared } from 'shared/repository/transaction';
 import Response from 'shared/model/response';
 import {logger} from 'shared/util/logger';
@@ -32,7 +32,7 @@ class TransactionRepo implements ITransactionRepository<object> {
         return new Response({ data: result });
     }
 
-    public getById(tranasctionId: string): Transaction<object> {
+    public getById(tranasctionId: string): Transaction<IAsset> {
         return this.memoryTransactionById[tranasctionId].getCopy();
     }
 

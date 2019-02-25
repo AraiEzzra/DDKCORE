@@ -75,24 +75,7 @@ export interface IAssetVote extends IAsset {
     airdropReward: IAirdropAsset;
 }
 
-interface ITransactionFields <T extends IAsset> {
-    id: string;
-    blockId: string;
-    type: TransactionType;
-    senderPublicKey: PublicKey;
-    senderAddress: Address;
-    recipientAddress: Address;
-    signature: string;
-    secondSignature: string;
-    amount: number;
-    createdAt: Timestamp;
-    fee: number;
-    status?: TransactionStatus;
-    salt?: string;
-    asset?: T;
-}
-
-export class Transaction <T extends IAsset> implements ITransactionFields<object> {
+export class Transaction<T extends IAsset> {
     id: string;
     blockId: string;
     type: TransactionType;
@@ -109,7 +92,7 @@ export class Transaction <T extends IAsset> implements ITransactionFields<object
     asset: T;
 
     // todo: convert asset
-    constructor(data: ITransactionFields<object>) {
+    constructor(data: Transaction<T>) {
         Object.assign(this, data);
     }
 

@@ -8,42 +8,61 @@ import { ed, IKeyPair } from 'shared/util/ed';
 import { Account, Address } from 'shared/model/account';
 import config from 'shared/util/config';
 import AccountRepo from '../repository/account';
+import TransactionRepo from '../repository/transaction';
 import TransactionPool from './transactionPool';
 import TransactionQueue from './transactionQueue';
-import { transactionSortFunc } from 'core/util/transaction';
+import { transactionSortFunc, getTransactionServiceByType, TRANSACTION_BUFFER_SIZE } from 'core/util/transaction';
+import BUFFER from 'core/util/buffer';
 
 export interface IAssetService<T extends IAsset> {
     create(data: any): IAsset;
 
-    getBytes(asset: IAsset): Uint8Array;
-
-    verify(trs: Transaction<IAsset>, sender: Account): ResponseEntity<any>;
+    getBytes(asset: IAsset): Buffer;
 
     calculateFee(trs: Transaction<IAsset>, sender: Account): number;
 
-    calcUndoUnconfirmed(asset: IAsset, sender: Account): void;
+    calculateUndoUnconfirmed(asset: IAsset, sender: Account): void;
 
+    verify(trs: Transaction<IAsset>, sender: Account): ResponseEntity<any>;
     verifyUnconfirmed(asset: IAsset): ResponseEntity<void>;
 
     applyUnconfirmed(asset: IAsset): ResponseEntity<void>;
-
     undoUnconfirmed(asset: IAsset): Promise<void>;
 
     apply(asset: IAsset): Promise<void>;
-
     undo(asset: IAsset): Promise<void>;
 
     dbRead(fullTrsObject: any): IAsset;
-
     dbSave(asset: IAsset): Promise<void>;
 }
 
 export interface ITransactionService<T extends IAsset> {
-    getAddressByPublicKey(): any; // to utils
-    list(): any; // to repo
-    getById(): any; // to repo
+    getBytes(trs: Transaction<T>): Buffer;
 
-    getVotesById(): any; // ?
+    create(data: Transaction<T>): void;
+
+    verify(trs: Transaction<T>, sender: Account, checkExists: boolean): ResponseEntity<void>;
+
+    applyUnconfirmed(trs: Transaction<T>, sender: Account): ResponseEntity<void>;
+    undoUnconfirmed(trs: Transaction<T>, sender: Account): ResponseEntity<void>;
+
+    calculateUndoUnconfirmed(trs: Transaction<T>, sender: Account): void;
+
+    calculateFee(trs: Transaction<IAsset>, sender: Account): number;
+
+    apply(trs: Transaction<T>, sender: Account): ResponseEntity<void>;
+    undo(trs: Transaction<T>, sender: Account): ResponseEntity<void>;
+
+    dbSave(trs: Transaction<T>): Array<ITableObject>;
+    dbRead(fullBlockRow: Transaction<T>): Transaction<T>;
+}
+
+export interface ITransactionService2<T extends IAsset> {
+    // getAddressByPublicKey(): any; // to utils
+    // list(): any; // to repo
+    // getById(): any; // to repo
+
+    // getVotesById(): any; // ?
 
     checkSenderTransactions(
         senderAddress: Address, verifiedTransactions: Set<string>, accountsMap: { [address: string]: Account }
@@ -55,11 +74,11 @@ export interface ITransactionService<T extends IAsset> {
 
     sign(keyPair: IKeyPair, trs: Transaction<T>): string;
 
-    getId(trs: Transaction<T>): ResponseEntity<string>;
+    getId(trs: Transaction<T>): string;
 
     getHash(trs: Transaction<T>): Buffer;
 
-    getBytes(trs: Transaction<T>, skipSignature?: boolean, skipSecondSignature?: boolean): Uint8Array;
+    getBytes(trs: Transaction<T>): Buffer;
 
     checkConfirmed(trs: Transaction<T>): IFunctionResponse;
 
@@ -87,7 +106,7 @@ export interface ITransactionService<T extends IAsset> {
 
     undoUnconfirmed(trs: Transaction<T>, sender?: Account): ResponseEntity<void>;
 
-    calcUndoUnconfirmed(trs: Transaction<T>, sender: Account): void;
+    calculateUndoUnconfirmed(trs: Transaction<T>, sender: Account): void;
 
     dbSave(trs: Transaction<T>): Array<ITableObject>; // Fixme
 
@@ -97,10 +116,15 @@ export interface ITransactionService<T extends IAsset> {
 
     dbRead(fullBlockRow: Transaction<T>): Transaction<T>;
 
+    popFromPool(limit: number): Promise<Array<Transaction<IAsset>>>;
+
+    lockPoolAndQueue(): void;
+    unlockPoolAndQueue(): void;
+
     returnToQueueConflictedTransactionFromPool(transactions): Promise<ResponseEntity<void>>;
 }
 
-class TransactionService<T extends IAsset> implements ITransactionService<T> {
+class TransactionService<T extends IAsset> implements ITransactionService2<T> {
     afterSave(trs: Transaction<T>): ResponseEntity<void> {
         return new ResponseEntity<void>();
     }
@@ -122,12 +146,12 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         }
     }
 
-    calcUndoUnconfirmed(trs: Transaction<{}>, sender: Account): void {
+    calculateUndoUnconfirmed(trs: Transaction<{}>, sender: Account): void {
         sender.actualBalance -= trs.amount + trs.fee;
 
         switch (trs.type) {
             case TransactionType.SEND:
-                return TransactionSendService.calcUndoUnconfirmed(trs, sender);
+                return TransactionSendService.calculateUndoUnconfirmed(trs, sender);
             default:
                 return;
         }
@@ -161,7 +185,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
     }
 
     checkConfirmed(trs: Transaction<T>): IFunctionResponse {
-        // TODO: check in transaction repo
+        TransactionRepo.getById(trs.id);
 
         return undefined;
     }
@@ -184,7 +208,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
                 }
 
                 senderTransactions.slice(i, senderTransactions.length).forEach(() => {
-                    this.calcUndoUnconfirmed(senderTrs, sender);
+                    this.calculateUndoUnconfirmed(senderTrs, sender);
                 });
 
                 const transactions = [
@@ -220,7 +244,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         }
     }
 
-    create(trs: Transaction<{}>, keyPair: IKeyPair): ResponseEntity<Transaction<IAsset>> {
+    create(trs: Transaction<T>, keyPair: IKeyPair): ResponseEntity<Transaction<IAsset>> {
         const errors = [];
         if (!TransactionType[trs.type]) {
             errors.push(`Unknown transaction type ${trs.type}`);
@@ -230,19 +254,21 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             errors.push('Invalid sender address');
         }
 
+        const sender = AccountRepo.getByPublicKey(trs.senderPublicKey);
+        if (!sender) {
+            errors.push(`Cannot get sender from accounts repository`);
+        }
+
         if (errors.length) {
             return new ResponseEntity({ errors });
         }
 
-        switch (trs.type) {
-            case TransactionType.SEND:
-                trs.asset = TransactionSendService.create(trs);
-                break;
-            default:
-                break;
-        }
+        const service = getTransactionServiceByType(trs.type);
+        service.create(trs);
 
         trs.signature = this.sign(keyPair, trs);
+        trs.id = this.getId(trs);
+        trs.fee = service.calculateFee(trs, sender);
 
         return new ResponseEntity({ data: trs });
     }
@@ -261,18 +287,46 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
     getById(): any {
     }
 
-    getBytes(trs: Transaction<{}>, skipSignature?: boolean, skipSecondSignature?: boolean): Uint8Array {
-        return null;
+    getBytes(trs: Transaction<{}>): Buffer {
+        const transactionService = getTransactionServiceByType(trs.type);
+        const assetBytes = transactionService.getBytes(trs);
+
+        const bytes = Buffer.alloc(TRANSACTION_BUFFER_SIZE);
+        let offset = 0;
+
+        bytes.write(trs.salt, offset, BUFFER.LENGTH.HEX);
+        offset += BUFFER.LENGTH.HEX;
+
+        offset = BUFFER.writeInt8(bytes, trs.type, offset);
+        offset = BUFFER.writeInt32LE(bytes, trs.createdAt, offset);
+        offset = BUFFER.writeNotNull(bytes, trs.senderPublicKey, offset, BUFFER.LENGTH.HEX);
+
+        if (trs.recipientAddress) {
+            offset = BUFFER.writeUInt64LE(bytes, trs.recipientAddress, offset);
+        } else {
+            offset += BUFFER.LENGTH.INT64;
+        }
+
+        offset = BUFFER.writeUInt64LE(bytes, trs.amount, offset);
+
+        if (trs.signature) {
+            bytes.write(trs.signature, offset, BUFFER.LENGTH.DOUBLE_HEX, 'hex');
+        }
+        offset += BUFFER.LENGTH.DOUBLE_HEX;
+
+        if (trs.secondSignature) {
+            bytes.write(trs.secondSignature, offset, BUFFER.LENGTH.DOUBLE_HEX, 'hex');
+        }
+
+        return Buffer.concat([bytes, assetBytes]);
     }
 
     getHash(trs: Transaction<{}>): Buffer {
-        return crypto.createHash('sha256').update(this.getBytes(trs, false, false)).digest();
+        return crypto.createHash('sha256').update(this.getBytes(trs)).digest();
     }
 
-    getId(trs: Transaction<T>): ResponseEntity<string> {
-        const id = this.getHash(trs).toString('hex');
-
-        return new ResponseEntity<string>({ data: id });
+    getId(trs: Transaction<T>): string {
+        return this.getHash(trs).toString('hex');
     }
 
     getVotesById(): any {
@@ -285,25 +339,11 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         return undefined;
     }
 
+    // TODO: validate on receive transaction from another nodes
     process(trs: Transaction<T>, sender: Account): ResponseEntity<void> {
         const errors = [];
-        if (!TransactionType[trs.type]) {
-            errors.push(`Unknown transaction type ${trs.type}`);
-        }
-
-        if (!sender) {
-            errors.push(`Missing sender`);
-        }
-
-        trs.senderAddress = sender.address;
-
-        const idResponse = this.getId(trs);
-        if (!idResponse.success) {
-            Array.prototype.push.apply(errors, idResponse.errors);
-            return new ResponseEntity<void>({ errors });
-        }
-
-        if (trs.id && trs.id !== idResponse.data) {
+        const id = this.getId(trs);
+        if (trs.id && trs.id !== id) {
             errors.push('Invalid transaction id');
         }
 
@@ -401,6 +441,20 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             await this.checkSenderTransactions(trs.senderId, verifiedTransactions, accountsMap);
         }
         return new ResponseEntity();
+    }
+
+    lockPoolAndQueue(): void {
+        TransactionQueue.lock();
+        TransactionPool.lock();
+    }
+
+    unlockPoolAndQueue(): void {
+        TransactionPool.unlock();
+        TransactionQueue.unlock();
+    }
+
+    async popFromPool(limit: number): Promise<Array<Transaction<IAsset>>> {
+        return await TransactionPool.popSortedUnconfirmedTransactions(limit);
     }
 }
 

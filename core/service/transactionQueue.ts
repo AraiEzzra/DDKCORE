@@ -1,5 +1,4 @@
 import { Transaction, TransactionStatus } from 'shared/model/transaction';
-import { ITransactionPoolService } from 'core/service/transactionPool';
 import { transactionSortFunc } from 'core/util/transaction';
 import { getOrCreateAccount } from 'shared/util/account';
 import constants from '../../config/mainnet/constants';
@@ -9,7 +8,7 @@ import TransactionPool from 'core/service/transactionPool';
 import {logger} from 'shared/util/logger';
 import Response from 'shared/model/response';
 import { Account } from 'shared/model/account';
-
+import { SECOND } from 'core/util/const';
 
 export interface ITransactionQueueService<T extends Object> {
     reshuffleTransactionQueue(): Response<void>;
@@ -94,7 +93,7 @@ class TransactionQueue<T extends object> implements ITransactionQueueService<T> 
     pushInConflictedQueue(trs: Transaction<T>): void {
         this.conflictedQueue.push({
             transaction: trs,
-            expire: Math.floor(new Date().getTime() / 1000) + constants.TRANSACTION_QUEUE_EXPIRE
+            expire: Math.floor(new Date().getTime() / SECOND) + constants.TRANSACTION_QUEUE_EXPIRE
         });
         trs.status = TransactionStatus.QUEUED_AS_CONFLICTED;
         this.scope.logger.debug(`TransactionStatus.QUEUED_AS_CONFLICTED ${JSON.stringify(trs)}`);

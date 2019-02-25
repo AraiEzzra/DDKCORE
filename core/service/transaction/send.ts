@@ -1,29 +1,27 @@
-import { IAssetService } from '../transaction';
+import { ITransactionService } from '../transaction';
 import { IAsset } from 'shared/model/transaction';
 import { IAssetTransfer, Transaction } from 'shared/model/transaction';
 import { Account } from 'shared/model/account';
-import ResponseEntity from 'shared/model/response';
+import Response from 'shared/model/response';
 import config from 'shared/util/config';
 import AccountRepo from '../../repository/account';
+import { ITableObject } from 'core/util/common';
+import { TOTAL_PERCENTAGE } from 'core/util/const';
 
-class TransactionSendService implements IAssetService<IAssetTransfer> {
-    create(trs: Transaction<{}>): IAssetTransfer {
-        const asset: IAssetTransfer = {
-            recipientAddress: trs.recipientAddress,
-        };
-
-        return asset;
+class TransactionSendService implements ITransactionService<IAssetTransfer> {
+    create(trs: Transaction<IAssetTransfer>): void {
     }
 
-    getBytes(asset: IAssetTransfer): Uint8Array {
+    getBytes(trs: Transaction<IAssetTransfer>): Buffer {
         return Buffer.from([]);
     }
 
-    verifyUnconfirmed(trs: Transaction<IAsset>): ResponseEntity<void> {
-        return new ResponseEntity();
+    verifyUnconfirmed(trs: Transaction<IAsset>): Response<void> {
+        return new Response();
     }
 
-    verify(trs: Transaction<IAssetTransfer>, sender: Account): ResponseEntity<any> {
+    // TODO: validate fields in controller
+    verify(trs: Transaction<IAssetTransfer>, sender: Account): Response<any> {
         const errors = [];
 
         if (!trs.recipientAddress) {
@@ -34,38 +32,38 @@ class TransactionSendService implements IAssetService<IAssetTransfer> {
             errors.push('Invalid transaction amount');
         }
 
-        return new ResponseEntity({ errors });
+        return new Response();
     }
 
     calculateFee(trs: Transaction<IAsset>, sender: Account): number {
-        return (trs.amount * config.constants.fees.send) / 100;
+        return (trs.amount * config.constants.fees.send) / TOTAL_PERCENTAGE;
     }
 
-    calcUndoUnconfirmed(trs: Transaction<IAsset>, sender: Account): void {
+    calculateUndoUnconfirmed(trs: Transaction<IAsset>, sender: Account): void {
         return;
     }
 
-    applyUnconfirmed(trs: Transaction<IAsset>): ResponseEntity<void> {
+    applyUnconfirmed(trs: Transaction<IAsset>): Response<void> {
         return AccountRepo.updateBalanceByAddress(trs.recipientAddress, trs.amount);
     }
 
-    undoUnconfirmed(asset: IAssetTransfer): Promise<void> {
+    undoUnconfirmed(trs: Transaction<IAssetTransfer>, sender: Account): Response<void> {
         return null;
     }
 
-    apply(asset: IAssetTransfer): Promise<void> {
+    apply(trs: Transaction<IAssetTransfer>): Response<void> {
         return null;
     }
 
-    undo(asset: IAssetTransfer): Promise<void> {
+    undo(trs: Transaction<IAssetTransfer>): Response<void> {
         return null;
     }
 
-    dbRead(fullTrsObject: any): IAssetTransfer {
+    dbRead(fullBlockRow: Transaction<IAssetTransfer>): Transaction<IAssetTransfer> {
         return null;
     }
 
-    dbSave(asset: IAssetTransfer): Promise<void> {
+    dbSave(trs: Transaction<IAssetTransfer>): Array<ITableObject> {
         return null;
     }
 }

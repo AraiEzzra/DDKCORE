@@ -428,7 +428,7 @@ class BlockService {
 
             try {
                 logger.debug(`Transaction ${JSON.stringify(trs)}`);
-                bytes = TransactionService.getBytes(trs, false, false);
+                bytes = TransactionService.getBytes(trs);
                 logger.trace(`Bytes ${JSON.stringify(bytes)}`);
             } catch (e) {
                 result.errors.push(e.toString());
@@ -565,11 +565,7 @@ class BlockService {
         trs: Transaction<object>,
         sender: Account,
         checkExists: boolean): Promise<Response<void>> {
-        const transactionIdResponse: Response<string> = await TransactionService.getId(trs);
-        if (!transactionIdResponse.success) {
-            return new Response<void>({errors: [...transactionIdResponse.errors, 'checkTransaction']});
-        }
-        trs.id = transactionIdResponse.data;
+        trs.id = TransactionService.getId(trs);
         trs.blockId = block.id;
 
         const verifyResult = await TransactionService.verify(trs, sender, checkExists);
