@@ -146,8 +146,7 @@ class BlockRepo {
         // }
         // blocks = assignResponse.data;
         const rquestLimit = param.limit || -1;
-        // const targetBlocks: Array<Block> = this.memoryBlocks.slice(param.offset - 1, rquestLimit);
-        const targetBlocks: Array<Block> = this.memoryBlocks;
+        const targetBlocks: Array<Block> = this.memoryBlocks.slice(param.offset - 1, rquestLimit);
         return new Response({ data: targetBlocks });
     }
 
