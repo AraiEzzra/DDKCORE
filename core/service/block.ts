@@ -320,6 +320,10 @@ class BlockService {
                 JSON.stringify(result.errors)
             );
         }
+        result.verified = true;
+        if (result.errors.length) {
+            console.log('\n\n result.errors = ', result.errors);
+        }
         return result;
     }
 
