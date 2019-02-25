@@ -75,7 +75,7 @@ export interface IAssetVote extends IAsset {
     airdropReward: IAirdropAsset;
 }
 
-export class Transaction<T extends IAsset> {
+class TransactionModel<T extends IAsset> {
     id: string;
     blockId: string;
     type: TransactionType;
@@ -89,14 +89,15 @@ export class Transaction<T extends IAsset> {
     fee: number;
     status?: TransactionStatus;
     salt?: string;
-    asset: T;
+    asset?: T;
 
-    // todo: convert asset
-    constructor(data: Transaction<T>) {
+    constructor(data: TransactionModel<T>) {
         Object.assign(this, data);
     }
+}
 
+export class Transaction<T extends IAsset> extends TransactionModel<T> {
     public getCopy() {
-        return new Transaction(this);
+        return new Transaction<T>(this);
     }
 }

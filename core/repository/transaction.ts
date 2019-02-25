@@ -84,7 +84,7 @@ class TransactionRepo implements ITransactionRepository<object> {
             signature: raw.signature,
             secondSignature: raw.second_signature,
             salt: raw.salt,
-            asset: raw.asset
+            asset: raw.asset,
         });
         return transaction;
     }
