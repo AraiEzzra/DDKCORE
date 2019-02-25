@@ -1,5 +1,5 @@
 // import db from 'shared/driver/db';
-import TransactionService from 'core/service/transaction';
+import TransactionDispatcher from 'core/service/transaction';
 import { TransactionStatus, TransactionType} from 'shared/model/transaction';
 import { Address, PublicKey, Timestamp} from 'shared/model/account';
 import { messageON } from 'shared/util/bus';
@@ -73,7 +73,7 @@ export class MockDelegates {
     private createAccount(data): Account {
         const hash = crypto.createHash('sha256').update(data.secret, 'utf8').digest();
         const publicKey: string = ed.makePublicKeyHex(hash);
-        const address: number = Number(getAddressByPublicKey(publicKey).slice(3, -1));
+        const address: number = Number(getAddressByPublicKey(publicKey).slice(this.startData.length, -1));
 
         return new Account({
             address: address,
@@ -94,6 +94,7 @@ class Loader {
         const delegate = new MockDelegates();
         delegate.init();
     }
+
     public async start() {
         // const totalAmountTrs = await db.one(`
         //     SELECT count(*)::int AS count
@@ -109,7 +110,7 @@ class Loader {
         //     }
         // }
         initControllers();
-        messageON('WARN_UP_FINISHED');
+        // messageON('WARN_UP_FINISHED');
     }
 
     private async getTransactionBatch(offset: number): Promise<Array<ITransaction<any>>> {

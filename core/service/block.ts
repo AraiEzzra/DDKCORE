@@ -13,7 +13,7 @@ import {Block} from 'shared/model/block';
 import BlockRepo from 'core/repository/block';
 import AccountRepo from 'core/repository/account';
 import {Transaction} from 'shared/model/transaction';
-import TransactionService from 'core/service/transaction';
+import TransactionDispatcher from 'core/service/transaction';
 import TransactionQueue from 'core/service/transactionQueue';
 import TransactionPool from 'core/service/transactionPool';
 import TransactionRepo from 'core/repository/transaction';
@@ -98,7 +98,7 @@ class BlockService {
         const processBlockResponse: Response<void> = await this.processBlock(block, true, true, keypair, false, true);
         if (!processBlockResponse.success) {
             const returnResponse: Response<void> =
-                await TransactionService.returnToQueueConflictedTransactionFromPool(transactions);
+                await TransactionDispatcher.returnToQueueConflictedTransactionFromPool(transactions);
             if (!returnResponse.success) {
                 processBlockResponse.errors = [...processBlockResponse.errors, ...returnResponse.errors];
             }
@@ -270,7 +270,7 @@ class BlockService {
         const errors: Array<string> = [];
         for (i = 0; i < block.transactions.length; i++) {
             const response: Response<Transaction<object>> =
-                await TransactionService.normalize(block.transactions[i]);
+                await TransactionDispatcher.normalize(block.transactions[i]);
             if (!response.success) {
                 errors.push(...response.errors);
             }
@@ -428,7 +428,7 @@ class BlockService {
 
             try {
                 logger.debug(`Transaction ${JSON.stringify(trs)}`);
-                bytes = TransactionService.getBytes(trs);
+                bytes = TransactionDispatcher.getBytes(trs);
                 logger.trace(`Bytes ${JSON.stringify(bytes)}`);
             } catch (e) {
                 result.errors.push(e.toString());
@@ -543,13 +543,13 @@ class BlockService {
                     }
                 }
 
-                const applyResponse: Response<void> = await TransactionService.applyUnconfirmed(trs, sender);
+                const applyResponse: Response<void> = await TransactionDispatcher.applyUnconfirmed(trs, sender);
                 if (!applyResponse.success) {
                     errors.push(...applyResponse.errors);
                 }
                 i++;
             } else {
-                const undoResponse: Response<void> = await TransactionService.undoUnconfirmed(trs);
+                const undoResponse: Response<void> = await TransactionDispatcher.undoUnconfirmed(trs);
                 if (!undoResponse.success) {
                     errors.push(...undoResponse.errors);
                 }
@@ -565,15 +565,15 @@ class BlockService {
         trs: Transaction<object>,
         sender: Account,
         checkExists: boolean): Promise<Response<void>> {
-        trs.id = TransactionService.getId(trs);
+        trs.id = TransactionDispatcher.getId(trs);
         trs.blockId = block.id;
 
-        const verifyResult = await TransactionService.verify(trs, sender, checkExists);
+        const verifyResult = await TransactionDispatcher.verify(trs, sender, checkExists);
         if (!verifyResult.success) {
             return new Response<void>({errors: [...verifyResult.errors, 'checkTransaction']});
         }
 
-        const verifyUnconfirmedResult: Response<void> = await TransactionService.verifyUnconfirmed(trs, sender);
+        const verifyUnconfirmedResult: Response<void> = await TransactionDispatcher.verifyUnconfirmed(trs, sender);
         if (!verifyUnconfirmedResult.success) {
             return new Response<void>({errors: [...verifyUnconfirmedResult.errors, 'checkTransaction']});
         }
@@ -605,7 +605,7 @@ class BlockService {
         const errors: Array<string> = [];
         for (const trs of block.transactions) {
             const sender = AccountRepo.getByPublicKey(trs.senderPublicKey);
-            const applyResponse: Response<void> = await TransactionService.apply(trs, sender);
+            const applyResponse: Response<void> = await TransactionDispatcher.apply(trs, sender);
             if (!applyResponse.success) {
                 errors.push(...applyResponse.errors);
             }
@@ -643,7 +643,7 @@ class BlockService {
         const payloadHash = crypto.createHash('sha256');
         for (let i = 0; i < block.transactions.length; i++) {
             const transaction = block.transactions[i];
-            const bytes = TransactionService.getBytes(transaction);
+            const bytes = TransactionDispatcher.getBytes(transaction);
 
             block.fee += transaction.fee;
             block.amount += transaction.amount;
@@ -667,7 +667,7 @@ class BlockService {
         const errors: Array<string> = [];
         for (const trs of block.transactions) {
             // how can I call this method in case it exists in service but connection service=service is baned
-            const afterSaveResponse: Response<void> = await TransactionService.afterSave(trs);
+            const afterSaveResponse: Response<void> = await TransactionDispatcher.afterSave(trs);
             if (!afterSaveResponse.success) {
                 errors.push(...afterSaveResponse.errors);
                 logger.error(`[Chain][afterSave]: ${JSON.stringify(afterSaveResponse.errors)}`);
@@ -792,7 +792,7 @@ class BlockService {
             errors.push(...pushResponse.errors);
         }
         const returnResponse: Response<void> =
-            await TransactionService.returnToQueueConflictedTransactionFromPool(block.transactions);
+            await TransactionDispatcher.returnToQueueConflictedTransactionFromPool(block.transactions);
         if (!returnResponse.success) {
             errors.push(...returnResponse.errors);
         }
@@ -1008,11 +1008,11 @@ class BlockService {
         const errors: Array<string> = [];
         oldLastBlock.transactions.reverse().forEach(async (transaction) => {
             const sender = AccountRepo.getByPublicKey(transaction.senderPublicKey);
-            const undoResponse: Response<void> = await TransactionService.undo(transaction, sender);
+            const undoResponse: Response<void> = await TransactionDispatcher.undo(transaction, sender);
             if (!undoResponse.success) {
                 errors.push(...undoResponse.errors);
             }
-            const undoUnconfirmedResponse: Response<void> = await TransactionService.undoUnconfirmed(transaction);
+            const undoUnconfirmedResponse: Response<void> = await TransactionDispatcher.undoUnconfirmed(transaction);
             if (!undoUnconfirmedResponse.success) {
                 errors.push(...undoUnconfirmedResponse.errors);
             }
@@ -1068,7 +1068,7 @@ class BlockService {
             }
 
             // Normalize transaction
-            const transaction = TransactionService.dbRead(row);
+            const transaction = TransactionDispatcher.dbRead(row);
             // Set empty object if there are no transactions in block
             blocks[block.id].transactions = blocks[block.id].transactions || {};
 

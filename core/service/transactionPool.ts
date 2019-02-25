@@ -1,7 +1,7 @@
 import {Transaction, TransactionStatus, TransactionType} from 'shared/model/transaction';
 import {transactionSortFunc} from 'core/util/transaction';
 import {getAddressByPublicKey, getOrCreateAccount} from 'shared/util/account';
-import TransactionService from 'core/service/transaction';
+import TransactionDispatcher from 'core/service/transaction';
 import Response from 'shared/model/response';
 // import db from 'shared/driver/db';
 import {logger} from 'shared/util/logger';
@@ -120,7 +120,7 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
 
         if (!this.locked) {
             try {
-                await TransactionService.applyUnconfirmed(trs, sender);
+                await TransactionDispatcher.applyUnconfirmed(trs, sender);
                 trs.status = TransactionStatus.UNCONFIRM_APPLIED;
                 logger.debug(`TransactionStatus.UNCONFIRM_APPLIED ${JSON.stringify(trs)}`);
             } catch (e) {
@@ -156,7 +156,7 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
         }
 
         try {
-            await TransactionService.undoUnconfirmed(trs);
+            await TransactionDispatcher.undoUnconfirmed(trs);
         } catch (e) {
             logger.error(`[TransactionPool][remove]: ${e}`);
             logger.debug(`[TransactionPool][remove][stack]: \n ${e.stack}`);

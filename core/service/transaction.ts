@@ -14,28 +14,6 @@ import TransactionQueue from './transactionQueue';
 import { transactionSortFunc, getTransactionServiceByType, TRANSACTION_BUFFER_SIZE } from 'core/util/transaction';
 import BUFFER from 'core/util/buffer';
 
-export interface IAssetService<T extends IAsset> {
-    create(data: any): IAsset;
-
-    getBytes(asset: IAsset): Buffer;
-
-    calculateFee(trs: Transaction<IAsset>, sender: Account): number;
-
-    calculateUndoUnconfirmed(asset: IAsset, sender: Account): void;
-
-    verify(trs: Transaction<IAsset>, sender: Account): ResponseEntity<any>;
-    verifyUnconfirmed(asset: IAsset): ResponseEntity<void>;
-
-    applyUnconfirmed(asset: IAsset): ResponseEntity<void>;
-    undoUnconfirmed(asset: IAsset): Promise<void>;
-
-    apply(asset: IAsset): Promise<void>;
-    undo(asset: IAsset): Promise<void>;
-
-    dbRead(fullTrsObject: any): IAsset;
-    dbSave(asset: IAsset): Promise<void>;
-}
-
 export interface ITransactionService<T extends IAsset> {
     getBytes(trs: Transaction<T>): Buffer;
 
@@ -57,7 +35,7 @@ export interface ITransactionService<T extends IAsset> {
     dbRead(fullBlockRow: Transaction<T>): Transaction<T>;
 }
 
-export interface ITransactionService2<T extends IAsset> {
+export interface ITransactionDispatcher<T extends IAsset> {
     // getAddressByPublicKey(): any; // to utils
     // list(): any; // to repo
     // getById(): any; // to repo
@@ -124,7 +102,7 @@ export interface ITransactionService2<T extends IAsset> {
     returnToQueueConflictedTransactionFromPool(transactions): Promise<ResponseEntity<void>>;
 }
 
-class TransactionService<T extends IAsset> implements ITransactionService2<T> {
+class TransactionDispatcher<T extends IAsset> implements ITransactionDispatcher<T> {
     afterSave(trs: Transaction<T>): ResponseEntity<void> {
         return new ResponseEntity<void>();
     }
@@ -458,4 +436,4 @@ class TransactionService<T extends IAsset> implements ITransactionService2<T> {
     }
 }
 
-export default new TransactionService();
+export default new TransactionDispatcher();
