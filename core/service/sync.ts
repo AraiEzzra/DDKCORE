@@ -15,7 +15,7 @@ export interface ISyncService {
 
     sendNewBlock(block: Block): Promise<void>;
 
-    sendNewTransaction(trs: Transaction<any>): Promise<void>;
+    sendUnconfirmedTransaction(trs: Transaction<any>): Promise<void>;
 
     requestBlocks(data: { height: number, limit: number }): Promise<void>;
 
@@ -50,8 +50,8 @@ export class SyncService implements ISyncService {
     }
 
     // TODO call in transaction service
-    async sendNewTransaction(trs: Transaction<any>): Promise<void> {
-        this.syncRepo.sendNewTransaction(trs);
+    async sendUnconfirmedTransaction(trs: Transaction<any>): Promise<void> {
+        this.syncRepo.sendUnconfirmedTransaction(trs);
     }
 
     async requestBlocks(peer): Promise<void> {

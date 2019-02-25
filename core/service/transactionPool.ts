@@ -174,7 +174,7 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
             }
             if (broadcast) {
                 // TODO
-                this.scope.syncService.sendNewTransaction(trs);
+                this.scope.syncService.sendUnconfirmedTransaction(trs);
                 this.scope.bus.message('transactionPutInPool', trs);
             }
             return new Response<void>({});
