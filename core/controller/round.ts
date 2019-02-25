@@ -6,7 +6,6 @@ class RoundController extends BaseController {
 
     @ON('ROUND_FINISH')
     generateRound(): void {
-        console.log('\n\n\n  @ON(\'ROUND_FINISH\')\n\n\n');
         RoundService.generateRound();
     }
 }
