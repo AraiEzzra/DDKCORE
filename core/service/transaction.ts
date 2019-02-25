@@ -5,9 +5,12 @@ import { IFunctionResponse, ITableObject } from 'core/util/common';
 import ResponseEntity from 'shared/model/response';
 import TransactionSendService from './transaction/send';
 import { ed, IKeyPair } from 'shared/util/ed';
-import { Account } from 'shared/model/account';
+import { Account, Address } from 'shared/model/account';
 import config from 'shared/util/config';
 import AccountRepo from '../repository/account';
+import TransactionPool from './transactionPool';
+import TransactionQueue from './transactionQueue';
+import { transactionSortFunc } from 'core/util/transaction';
 
 export interface IAssetService<T extends IAsset> {
     create(data: any): IAsset;
@@ -43,7 +46,7 @@ export interface ITransactionService<T extends IAsset> {
     getVotesById(): any; // ?
 
     checkSenderTransactions(
-        senderId: string, verifiedTransactions: Set<string>, accountsMap: { [address: string]: Account }
+        senderAddress: Address, verifiedTransactions: Set<string>, accountsMap: { [address: string]: Account }
     ): Promise<void>;
 
     verify(trs: Transaction<T>, sender: Account, checkExists: boolean): ResponseEntity<void>;
@@ -93,6 +96,8 @@ export interface ITransactionService<T extends IAsset> {
     normalize(trs: Transaction<T>): ResponseEntity<Transaction<T>>; // to controller
 
     dbRead(fullBlockRow: Transaction<T>): Transaction<T>;
+
+    returnToQueueConflictedTransactionFromPool(transactions): Promise<ResponseEntity<void>>;
 }
 
 class TransactionService<T extends IAsset> implements ITransactionService<T> {
@@ -117,7 +122,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         }
     }
 
-    calcUndoUnconfirmed(trs: Transaction<T>, sender: Account): void {
+    calcUndoUnconfirmed(trs: Transaction<{}>, sender: Account): void {
         sender.actualBalance -= trs.amount + trs.fee;
 
         switch (trs.type) {
@@ -149,7 +154,9 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
 
         const errors = [];
         // TODO: subtract sender.totalStakedAmount from sender.actualBalance
-        errors.push(`Not enough money on account ${sender.address}: balance ${sender.actualBalance}, amount: ${amount}`);
+        errors.push(
+            `Not enough money on account ${sender.address}: balance ${sender.actualBalance}, amount: ${amount}`
+        );
         return new ResponseEntity({ errors });
     }
 
@@ -159,12 +166,58 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         return undefined;
     }
 
-    checkSenderTransactions(
-        senderId: string,
+    async checkSenderTransactions(
+        senderAddress: Address,
         verifiedTransactions: Set<string>,
-        accountsMap: { [p: string]: Account }
+        accountsMap: { [p: number]: Account }
     ): Promise<void> {
-        return undefined;
+        const senderTransactions = TransactionPool.getTransactionsBySenderAddress(senderAddress);
+        let i = 0;
+        for (const senderTrs of senderTransactions) {
+            if (!verifiedTransactions.has(senderTrs.id)) {
+                let sender: Account;
+                if (accountsMap[senderAddress]) {
+                    sender = accountsMap[senderAddress];
+                } else {
+                    sender = AccountRepo.getByAddress(senderAddress);
+                    accountsMap[sender.address] = sender;
+                }
+
+                senderTransactions.slice(i, senderTransactions.length).forEach(() => {
+                    this.calcUndoUnconfirmed(senderTrs, sender);
+                });
+
+                const transactions = [
+                    senderTrs,
+                    ...TransactionPool.getTransactionsByRecipientId(senderAddress)
+                ];
+
+                transactions
+                    .sort(transactionSortFunc)
+                    .filter((trs: Transaction<T>, index: number) => index > transactions.indexOf(senderTrs))
+                    .forEach((trs: Transaction<T>) => {
+                        sender.actualBalance -= trs.amount;
+                    });
+
+                const verifyStatus = await TransactionQueue.verify(senderTrs, sender);
+
+                if (verifyStatus.verified) {
+                    verifiedTransactions.add(senderTrs.id);
+                } else {
+                    await TransactionPool.remove(senderTrs);
+                    TransactionQueue.push(senderTrs);
+                    // TODO broadcast undoUnconfirmed in future
+                    if (senderTrs.type === TransactionType.SEND) {
+                        await this.checkSenderTransactions(
+                            senderTrs.recipientAddress,
+                            verifiedTransactions,
+                            accountsMap,
+                        );
+                    }
+                }
+            }
+            i++;
+        }
     }
 
     create(trs: Transaction<{}>, keyPair: IKeyPair): ResponseEntity<Transaction<IAsset>> {
@@ -339,6 +392,15 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             default:
                 return new ResponseEntity();
         }
+    }
+
+    async returnToQueueConflictedTransactionFromPool(transactions): Promise<ResponseEntity<void>> {
+        const verifiedTransactions: Set<string> = new Set();
+        const accountsMap: { [address: string]: Account } = {};
+        for (const trs of transactions) {
+            await this.checkSenderTransactions(trs.senderId, verifiedTransactions, accountsMap);
+        }
+        return new ResponseEntity();
     }
 }
 

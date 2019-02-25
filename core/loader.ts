@@ -66,13 +66,8 @@ export class MockDelegates {
         }
 
         BlockService.saveGenesisBlock().then(res => {
-            console.log(JSON.stringify(res));
-
-        });
-
-        setTimeout(() => {
             RoundService.generateRound();
-        }, 1000);
+        });
     }
 
     private createAccount(data): Account {

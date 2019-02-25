@@ -152,7 +152,6 @@ class RoundService implements IRoundService {
         /**
          * if triggered by ROUND_FINISH event
          */
-
         if (
             RoundRepository.getCurrentRound()
         ) {
@@ -177,14 +176,14 @@ class RoundService implements IRoundService {
         ({blockId: lastBlock.id, activeDelegates: data});
 
         RoundRepository.setCurrentRound({slots, startHeight: lastBlock.height + 1});
-        logger.info(`Start round id: ${RoundRepository.getCurrentRound().id}`);
+        logger.info(`[Service][Round][generateRound] Start round id: ${RoundRepository.getCurrentRound().id}`);
 
         const mySlot = this.getMyTurn();
 
         if (mySlot) {
             // start forging block at mySlotTime
             const cellTime = SlotService.getSlotTime(mySlot - SlotService.getSlotNumber());
-            logger.info(`Start forging block to : ${mySlot} after ${cellTime} seconds`);
+            logger.info(`[Service][Round][generateRound] Start forging block to : ${mySlot} after ${cellTime} seconds`);
             createTaskON('BLOCK_GENERATE', cellTime, {
                 timestamp: SlotService.getSlotTime(mySlot),
                 keypair: this.keypair,
