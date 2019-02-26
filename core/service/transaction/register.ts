@@ -10,7 +10,6 @@ import {ITableObject} from 'core/util/common';
 class TransactionRegisterService implements ITransactionService<IAssetRegister> {
 
     async create(trs: Transaction<IAssetRegister>, data: IAssetRegister ): Promise<IAssetRegister> {
-        trs.recipientAddress = null;
         return {
             referral: data.referral
         };
@@ -33,10 +32,6 @@ class TransactionRegisterService implements ITransactionService<IAssetRegister> 
             errors.push('Missing referral');
         }
 
-        if (sender) {
-            errors.push('Account already exists.');
-        }
-
         return new Response({ errors });
     }
 
@@ -48,9 +43,9 @@ class TransactionRegisterService implements ITransactionService<IAssetRegister> 
     }
 
     async applyUnconfirmed(trs: Transaction<IAssetRegister>, sender: Account): Promise<Response<void>> {
-        const sponsor: Account = AccountRepo.getByAddress(trs.asset.referral);
-        const sponsorsReferrals: Array<Account> =
-            sponsor.referrals.slice(0, config.constants.airdrop.maxReferralCount - 1);
+        const referralAccount: Account = AccountRepo.getByAddress(trs.asset.referral);
+        const referrals: Array<Account> =
+            referralAccount.referrals.slice(0, config.constants.airdrop.maxReferralCount - 1);
         const addAccountResponse: Response<Account> =
             AccountRepo.add({address: trs.senderAddress, publicKey: trs.senderPublicKey});
         if (!addAccountResponse.success) {
@@ -58,7 +53,7 @@ class TransactionRegisterService implements ITransactionService<IAssetRegister> 
         }
         const targetAccount = addAccountResponse.data;
         const updateResponse: Response<void> =
-            AccountRepo.updateReferralByAddress(targetAccount.address, [sponsor, ...sponsorsReferrals]);
+            AccountRepo.updateReferralByAddress(targetAccount.address, [referralAccount, ...referrals]);
         if (!updateResponse.success) {
             return new Response<void>({ errors: [...addAccountResponse.errors, 'Can\'t update account referrals'] });
         }
@@ -66,8 +61,7 @@ class TransactionRegisterService implements ITransactionService<IAssetRegister> 
     }
 
     async undoUnconfirmed(trs: Transaction<IAssetRegister>, sender: Account): Promise<Response<void>> {
-        const targetAccount: Account = AccountRepo.getByAddress(trs.asset.referral);
-        AccountRepo.delete(targetAccount);
+        AccountRepo.delete(sender);
         return new Response<void>();
     }
 

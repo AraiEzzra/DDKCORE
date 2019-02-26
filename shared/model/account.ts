@@ -8,7 +8,7 @@ type AirdropReward = {
     [address: string]: number;
 };
 
-class Stake {
+export class Stake {
     createdAt: Timestamp;
     isActive: boolean;
     amount: number;

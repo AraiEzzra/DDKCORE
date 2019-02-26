@@ -1,8 +1,7 @@
 import {ITransactionService} from '../transaction';
-import {IAirdropAsset} from 'shared/model/transaction';
-import {IAssetStake, Transaction, TransactionType} from 'shared/model/transaction';
+import {IAssetStake, Transaction, TransactionType, IAirdropAsset} from 'shared/model/transaction';
 import ResponseEntity from 'shared/model/response';
-import {Account} from 'shared/model/account';
+import {Address, Account} from 'shared/model/account';
 import AccountRepo from 'core/repository/account';
 import BlockRepo from 'core/repository/block';
 import {Block} from 'shared/model/block';
@@ -11,7 +10,6 @@ import config from 'shared/util/config';
 import BUFFER from 'core/util/buffer';
 
 import {
-    calculateTotalRewardAndUnstake,
     getAirdropReward,
     verifyAirdrop,
     sendAirdropReward,
@@ -24,9 +22,11 @@ class TransactionStakeService implements ITransactionService<IAssetStake> {
 
     async create(trs: Transaction<IAssetStake>, data?: IAssetStake ): Promise<IAssetStake> {
         const sender: Account = AccountRepo.getByAddress(trs.senderAddress);
-        const totals: { reward: number } = await calculateTotalRewardAndUnstake(sender, false);
-        const airdropReward: IAirdropAsset = await getAirdropReward(sender, totals.reward, TransactionType.STAKE);
-
+        const airdropReward: IAirdropAsset = await getAirdropReward(
+                sender,
+                data.stakeOrder.stakedAmount,
+                TransactionType.STAKE
+            );
         const asset: IAssetStake = {
             stakeOrder: {
                 stakedAmount: data.stakeOrder.stakedAmount,
@@ -65,15 +65,15 @@ class TransactionStakeService implements ITransactionService<IAssetStake> {
         offset += BUFFER.LENGTH.BYTE;
         BUFFER.writeUInt64LE(buff, trs.asset.airdropReward.totalReward || 0, offset);
 
-        const sponsorsBuffer = Buffer.alloc(BUFFER.LENGTH.INT64 + BUFFER.LENGTH.INT64);
+        const referralBuffer = Buffer.alloc(BUFFER.LENGTH.INT64 + BUFFER.LENGTH.INT64);
         offset = 0;
         if (trs.asset.airdropReward.sponsors && Object.keys(trs.asset.airdropReward.sponsors).length > 0) {
-            const address = Object.keys(trs.asset.airdropReward.sponsors)[0];
-            offset = BUFFER.writeUInt64LE(sponsorsBuffer, parseInt(address.slice(3), 10), offset);
-            BUFFER.writeUInt64LE(sponsorsBuffer, trs.asset.airdropReward.sponsors[address] || 0, offset);
+            const address: Address = parseInt(Object.keys(trs.asset.airdropReward.sponsors)[0], 10);
+            offset = BUFFER.writeUInt64LE(referralBuffer, address, offset);
+            BUFFER.writeUInt64LE(referralBuffer, trs.asset.airdropReward.sponsors[address] || 0, offset);
         }
 
-        return Buffer.concat([buff, sponsorsBuffer]);
+        return Buffer.concat([buff, referralBuffer]);
     }
 
     async verifyUnconfirmed(trs: Transaction<IAssetStake>, sender: Account): Promise<ResponseEntity<void>> {
@@ -91,7 +91,7 @@ class TransactionStakeService implements ITransactionService<IAssetStake> {
         }
 
         const airdropCheck: ResponseEntity<any> = await verifyAirdrop(trs, trs.asset.stakeOrder.stakedAmount, sender);
-        if (airdropCheck.errors && airdropCheck.errors.length > 0 && config.constants.STAKE_VALIDATE.AIRDROP_ENABLED) {
+        if (!airdropCheck.success && config.constants.STAKE_VALIDATE.AIRDROP_ENABLED) {
             errors = errors.concat(airdropCheck.errors);
         }
         return new ResponseEntity({ errors });
@@ -112,11 +112,12 @@ class TransactionStakeService implements ITransactionService<IAssetStake> {
     }
 
     async undoUnconfirmed(trs: Transaction<IAssetStake>, sender: Account): Promise<ResponseEntity<void>> {
-        return null;
+        const fee: number = this.calculateFee(trs);
+        const totalAmount: number = fee + trs.asset.stakeOrder.stakedAmount;
+        return AccountRepo.updateBalanceByAddress(trs.senderAddress, totalAmount);
     }
 
-    async apply(trs: Transaction<IAssetStake>):  Promise<ResponseEntity<void>> {
-        await sendAirdropReward(trs);
+    async apply(trs: Transaction<IAssetStake>): Promise<ResponseEntity<void>> {
         return new ResponseEntity<void>();
     }
 
