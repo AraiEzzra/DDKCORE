@@ -663,7 +663,12 @@ class BlockService {
 
         block.payloadHash = payloadHash.digest().toString('hex');
 
-        block.signature = this.sign(block, keypair);
+        const signResponseEntity = this.sign(block, keypair);
+        if (!signResponseEntity.success) {
+            return new Response<Block>({ errors: [...signResponseEntity.errors, 'addPayloadHash'] });
+        }
+
+        block.signature = signResponseEntity.data;
         const idResponse: Response<string> = this.getId(block);
         if (!idResponse.success) {
             return new Response<Block>({errors: [...idResponse.errors, 'addPayloadHash']});
@@ -1236,21 +1241,25 @@ class BlockService {
         return block;
     }
 
-    private sign(block, keyPair) {
+    private sign(block, keyPair): Response<string> {
         const blockHash = this.getHash(block);
+        if (!blockHash.success) {
+            return new Response({ errors: [...blockHash.errors, 'sign'] });
+        }
+
         const sig = Buffer.alloc(sodium.crypto_sign_BYTES);
-        sodium.crypto_sign_detached(sig, blockHash, keyPair.privateKey);
-        return sig.toString('hex');
+        sodium.crypto_sign_detached(sig, blockHash.data, keyPair.privateKey);
+        return new Response<string>({ data: sig.toString('hex') });
     }
 
-    private getHash(block: Block): Response<Uint8Array> {
-        let hash: Uint8Array = null;
+    private getHash(block: Block): Response<Buffer> {
+        let hash: Buffer = null;
         try {
             hash = crypto.createHash('sha256').update(this.getBytes(block)).digest();
         } catch (err) {
-            return new Response<Uint8Array>({errors: [err, 'getHash']});
+            return new Response<Buffer>({errors: [err, 'getHash']});
         }
-        return new Response<Uint8Array>({data: hash});
+        return new Response<Buffer>({data: hash});
     }
 
     private getBytes(block: Block): Buffer {
