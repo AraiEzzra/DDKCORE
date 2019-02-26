@@ -59,6 +59,26 @@ class DelegateRepository {
     public forgingStatus(publicKey: string) {
 
     }
+
+    public getByUsername(username: string): Delegate {
+        const iterations: number = this.memoryDelegates.length;
+        for (let i = 0; i < iterations; i++) {
+            if (this.memoryDelegates[i].username === username) {
+                return this.memoryDelegates[i];
+            }
+        }
+        return null;
+    }
+
+    public deleteByUsername(username: string): void {
+        const iterations: number = this.memoryDelegates.length;
+        for (let i = 0; i < iterations; i++) {
+            if (this.memoryDelegates[i].username === username) {
+                delete (this.memoryDelegates[i]);
+                return;
+            }
+        }
+    }
 }
 
 export default new DelegateRepository();

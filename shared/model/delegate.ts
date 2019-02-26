@@ -1,25 +1,23 @@
 import { Account } from 'shared/model/account';
 
 // todo interface for example delegate model for delegatesRepository. Discuss it
-export interface IDelegate {
+export class DelegateModel {
     username: string;
-    url: string;
-    missedBlocks: number;
-    forgedBlocks: number;
+    url?: string;
+    missedBlocks?: number;
+    forgedBlocks?: number;
     account: Account;
-    votes: number;
+    votes?: number;
+
+    constructor(data: DelegateModel) {
+        Object.assign(this, data);
+    }
 }
 
-export class Delegate implements IDelegate {
-    username: string;
-    url: string;
-    missedBlocks: number;
-    forgedBlocks: number;
-    account: Account;
-    votes: number;
+export class Delegate extends DelegateModel {
 
-    constructor(data: IDelegate) {
-        Object.assign(this, data);
+    getCopy(): Delegate {
+        return new Delegate(this);
     }
     // index Array of delegate`s Accounts
 }
