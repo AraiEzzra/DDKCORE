@@ -1,10 +1,11 @@
 import Response from 'shared/model/response';
-import { Block } from 'shared/model/block';
+import { Block, BlockModel } from 'shared/model/block';
 import BlockService from 'core/service/block';
 import BlockRepo from 'core/repository/block';
 import { Peer } from 'shared/model/peer';
 import { ON, RPC } from 'core/util/decorator';
 import { BaseController } from 'core/controller/baseController';
+import { logger } from 'shared/util/logger';
 
 interface BlockGenerateRequest {
     keypair: {
@@ -17,7 +18,11 @@ interface BlockGenerateRequest {
 class BlockController extends BaseController {
 
     @ON('BLOCK_RECEIVE')
-    public async onReceiveBlock(block: Block): Promise<Response<void>> {
+    public async onReceiveBlock(action: { data: { block: BlockModel } }): Promise<Response<void>> {
+        const { data } = action;
+        const block = new Block(data.block);
+
+        logger.debug(`[Controller][Block][onReceiveBlock] block id ${block.id}`);
         const response: Response<void> = await BlockService.processIncomingBlock(block);
         if (!response.success) {
             response.errors.push('onReceiveBlock');
@@ -27,6 +32,7 @@ class BlockController extends BaseController {
 
     @ON('BLOCK_GENERATE')
     public async generateBlock(data: BlockGenerateRequest): Promise<Response<void>> {
+        logger.debug(`[Controller][Block][generateBlock]`);
         const response: Response<void> = await BlockService.generateBlock(data.keypair, data.timestamp);
         if (!response.success) {
             response.errors.push('generateBlock');

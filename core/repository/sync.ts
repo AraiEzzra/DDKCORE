@@ -12,7 +12,7 @@ interface ISyncRepo {
 
     sendNewBlock(block: Block): Promise<void>;
 
-    sendNewTransaction(trs: Transaction<any>): Promise<void>;
+    sendUnconfirmedTransaction(trs: Transaction<any>): Promise<void>;
 
     requestBlocks(data: { height: number, limit: number }, peer?): Promise<void>;
 
@@ -49,10 +49,10 @@ export class Sync implements ISyncRepo {
     }
 
     async sendNewBlock(block: Block): Promise<void> {
-        this.socketRepo.emitPeers('NEW_BLOCK', { block });
+        this.socketRepo.emitPeers('BLOCK_RECEIVE', { block });
     }
 
-    async sendNewTransaction(trs: Transaction<any>): Promise<void> {
+    async sendUnconfirmedTransaction(trs: Transaction<any>): Promise<void> {
         this.socketRepo.emitPeers('NEW_TRANSACTION', { trs });
     }
 
@@ -79,7 +79,7 @@ export class Sync implements ISyncRepo {
         this.socketRepo.emitPeer('RESPONSE_BLOCKS', { blocks }, peer);
     }
 
-    async sendHeaders(headers){
+    async sendHeaders(headers) {
         this.socketRepo.emitPeers('PEER_HEADERS_UPDATE', headers);
     }
 }

@@ -1,5 +1,5 @@
 // import db from 'shared/driver/db';
-import TransactionService from 'core/service/transaction';
+import TransactionDispatcher from 'core/service/transaction';
 import { TransactionStatus, TransactionType} from 'shared/model/transaction';
 import { Address, PublicKey, Timestamp} from 'shared/model/account';
 import { messageON } from 'shared/util/bus';
@@ -21,6 +21,8 @@ import BlockService from 'core/service/block';
  */
 
 import {Delegate} from 'shared/model/delegate';
+import { logger } from 'shared/util/logger';
+import { SECOND } from 'core/util/const';
 enum constant  {
     Limit = 1000
 }
@@ -61,24 +63,19 @@ export class MockDelegates {
             const account = this.createAccount(this.startData[i]);
 
             AccountRepository.add(account);
-            const delegate: Delegate = DelegateRepository.addDelegate(account);
+            const delegate: Delegate = DelegateRepository.add(account);
             AccountRepository.attachDelegate(account, delegate);
         }
 
         BlockService.saveGenesisBlock().then(res => {
-            console.log(JSON.stringify(res));
-
-        });
-
-        setTimeout(() => {
             RoundService.generateRound();
-        }, 1000);
+        });
     }
 
     private createAccount(data): Account {
         const hash = crypto.createHash('sha256').update(data.secret, 'utf8').digest();
         const publicKey: string = ed.makePublicKeyHex(hash);
-        const address: number = Number(getAddressByPublicKey(publicKey).slice(3, -1));
+        const address: number = Number(getAddressByPublicKey(publicKey).slice(this.startData.length, -1));
 
         return new Account({
             address: address,
@@ -92,13 +89,21 @@ export class MockDelegates {
     }
 }
 
-
 class Loader {
 
     constructor() {
         const delegate = new MockDelegates();
         delegate.init();
+
+        const initTime = new Date().getTime();
+        setInterval(() => {
+            const currentTime = new Date().getTime();
+            const timeInSeconds = Math.floor((currentTime - initTime) / SECOND);
+            const projectedHeight = Math.floor(timeInSeconds / 10) + 1;
+            logger.debug(`[Loader] time in seconds: ${timeInSeconds}, projected height: ${projectedHeight}`);
+        }, SECOND);
     }
+
     public async start() {
         // const totalAmountTrs = await db.one(`
         //     SELECT count(*)::int AS count
@@ -114,7 +119,7 @@ class Loader {
         //     }
         // }
         initControllers();
-        messageON('WARN_UP_FINISHED');
+        // messageON('WARN_UP_FINISHED');
     }
 
     private async getTransactionBatch(offset: number): Promise<Array<ITransaction<any>>> {

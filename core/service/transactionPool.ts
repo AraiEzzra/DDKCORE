@@ -1,15 +1,13 @@
 import {Transaction, TransactionStatus, TransactionType} from 'shared/model/transaction';
 import {transactionSortFunc} from 'core/util/transaction';
 import {getAddressByPublicKey, getOrCreateAccount} from 'shared/util/account';
-import TransactionService from 'core/service/transaction';
+import TransactionDispatcher from 'core/service/transaction';
 import Response from 'shared/model/response';
 // import db from 'shared/driver/db';
 import {logger} from 'shared/util/logger';
-import SyncService, { ISyncService } from 'core/service/sync';
-
-// wait declare by @Fisenko
-declare class Account {
-}
+import SyncService from 'core/service/sync';
+import { Address, Account } from 'shared/model/account';
+import { messageON } from 'shared/util/bus';
 
 export interface ITransactionPoolService<T extends Object> {
 
@@ -26,17 +24,17 @@ export interface ITransactionPoolService<T extends Object> {
 
     getLockStatus(): boolean;
 
-    getTransactionsByRecipientId(recipientAddress: string): Array<Transaction<T>>;
+    getTransactionsByRecipientId(recipientAddress: Address): Array<Transaction<T>>;
 
-    getTransactionsBySenderId(senderAddress: string): Array<Transaction<T>>;
+    getTransactionsBySenderAddress(senderAddress: Address): Array<Transaction<T>>;
 
-    removeTransactionsBySenderId(senderAddress: string): Promise<Array<Transaction<T>>>;
+    removeTransactionsBySenderId(senderAddress: Address): Promise<Array<Transaction<T>>>;
 
     push(trs: Transaction<T>, sender?: Account, broadcast?: boolean);
 
     remove(trs: Transaction<T>);
 
-    removeTransactionsByRecipientId(address: string): Promise<Array<Transaction<T>>>;
+    removeTransactionsByRecipientId(address: Address): Promise<Array<Transaction<T>>>;
 
     get(id: string): Transaction<T>;
 
@@ -52,33 +50,19 @@ export interface ITransactionPoolService<T extends Object> {
 
     removeFromPool(transactions: Array<Transaction<T>>, withDepend: boolean): Promise<Response<Array<Transaction<T>>>>;
 
-    // getUnconfirmedTransactionsForBlockGeneration(): Promise<Array<Transaction<T>>>; // to block service
-
-    // lockTransactionPoolAndQueue(): void; // to block service
-
-    // unlockTransactionPoolAndQueue(): void; // to block service
-
-    returnToQueueConflictedTransactionFromPool(transactions): Promise<Response<void>>; // to block service
-
     lock(): Response<void>;
 
     unlock(): Response<void>;
 }
 
-// TODO will be removed
-declare class TransactionPoolScope {
-    logger?: any;
-    transactionLogic: any;
-    db?: any;
-    bus?: any;
-    syncService: ISyncService;
-}
-
 // TODO NOT ready
 class TransactionPoolService<T extends object> implements ITransactionPoolService<T> {
-    returnToQueueConflictedTransactionFromPool(transactions): Promise<Response<void>> {
-        return undefined;
-    }
+    private pool: { [transactionId: string]: Transaction<T> } = {};
+
+    poolByRecipient: { [recipientAddress: number]: Array<Transaction<T>> } = {};
+    poolBySender: { [senderAddress: number]: Array<Transaction<T>> } = {};
+
+    locked: boolean = false;
 
     batchPush(transactions: Array<Transaction<T>>): Promise<void> {
         return undefined;
@@ -89,26 +73,9 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
         return undefined;
     }
 
-    private pool: { [transactionId: string]: Transaction<T> } = {};
-
-    poolByRecipient: { [recipientAddress: string]: Array<Transaction<T>> } = {};
-    poolBySender: { [senderAddress: string]: Array<Transaction<T>> } = {};
-
-    locked: boolean = false;
-
-    scope: TransactionPoolScope = {} as TransactionPoolScope;
-
-    // redundant
-    constructor() {
-        this.scope.transactionLogic = TransactionService;
-        this.scope.logger = logger;
-        // this.scope.db = db;
-        this.scope.syncService = SyncService;
-    }
-
     async removeFromPool(transactions: Array<Transaction<T>>, withDepend: boolean):
         Promise<Response<Array<Transaction<T>>>> {
-        return new Response();
+        return new Response({ data: [] });
     }
 
     async pushInPool(transactions: Array<Transaction<T>>): Promise<void> {
@@ -128,17 +95,17 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
         return this.locked;
     }
 
-    getTransactionsByRecipientId(recipientAddress: string): Array<Transaction<T>> {
+    getTransactionsByRecipientId(recipientAddress: Address): Array<Transaction<T>> {
         return this.poolByRecipient[recipientAddress] || [];
     }
 
-    getTransactionsBySenderId(senderAddress: string): Array<Transaction<T>> {
+    getTransactionsBySenderAddress(senderAddress: Address): Array<Transaction<T>> {
         return this.poolBySender[senderAddress] || [];
     }
 
-    async removeTransactionsBySenderId(senderAddress: string): Promise<Array<Transaction<T>>> {
+    async removeTransactionsBySenderId(senderAddress: Address): Promise<Array<Transaction<T>>> {
         const removedTransactions = [];
-        const transactions = this.getTransactionsBySenderId(senderAddress);
+        const transactions = this.getTransactionsBySenderAddress(senderAddress);
         for (const trs of transactions) {
             await this.remove(trs);
             removedTransactions.push(trs);
@@ -153,13 +120,13 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
 
         if (!this.locked) {
             try {
-                await this.scope.transactionLogic.newApplyUnconfirmed(trs, sender);
+                await TransactionDispatcher.applyUnconfirmed(trs, sender);
                 trs.status = TransactionStatus.UNCONFIRM_APPLIED;
-                this.scope.logger.debug(`TransactionStatus.UNCONFIRM_APPLIED ${JSON.stringify(trs)}`);
+                logger.debug(`TransactionStatus.UNCONFIRM_APPLIED ${JSON.stringify(trs)}`);
             } catch (e) {
                 trs.status = TransactionStatus.DECLINED;
-                this.scope.logger.error(`[TransactionQueue][applyUnconfirmed]: ${e}`);
-                this.scope.logger.error(`[TransactionQueue][applyUnconfirmed][stack]: \n ${e.stack}`);
+                logger.error(`[TransactionQueue][applyUnconfirmed]: ${e}`);
+                logger.error(`[TransactionQueue][applyUnconfirmed][stack]: \n ${e.stack}`);
                 return;
             }
 
@@ -176,9 +143,7 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
                 this.poolByRecipient[trs.recipientAddress].push(trs);
             }
             if (broadcast) {
-                // TODO
-                this.scope.syncService.sendNewTransaction(trs);
-                this.scope.bus.message('transactionPutInPool', trs);
+                SyncService.sendUnconfirmedTransaction(trs);
             }
             return new Response<void>({});
         }
@@ -191,10 +156,10 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
         }
 
         try {
-            await this.scope.transactionLogic.newUndoUnconfirmed(trs);
+            await TransactionDispatcher.undoUnconfirmed(trs);
         } catch (e) {
-            this.scope.logger.error(`[TransactionPool][remove]: ${e}`);
-            this.scope.logger.debug(`[TransactionPool][remove][stack]: \n ${e.stack}`);
+            logger.error(`[TransactionPool][remove]: ${e}`);
+            logger.debug(`[TransactionPool][remove][stack]: \n ${e.stack}`);
         }
 
         delete this.pool[trs.id];
@@ -212,7 +177,7 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
         return true;
     }
 
-    async removeTransactionsByRecipientId(address: string): Promise<Array<Transaction<T>>> {
+    async removeTransactionsByRecipientId(address: Address): Promise<Array<Transaction<T>>> {
         const removedTransactions = [];
         const transactions = this.getTransactionsByRecipientId(address);
         for (const trs of transactions) {

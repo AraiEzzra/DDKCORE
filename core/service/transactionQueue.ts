@@ -1,14 +1,14 @@
 import { Transaction, TransactionStatus } from 'shared/model/transaction';
-import { ITransactionPoolService } from 'core/service/transactionPool';
 import { transactionSortFunc } from 'core/util/transaction';
 import { getOrCreateAccount } from 'shared/util/account';
 import constants from '../../config/mainnet/constants';
-import TransactionService from 'core/service/transaction';
+import TransactionDispatcher from 'core/service/transaction';
 import TransactionPool from 'core/service/transactionPool';
 // import db from 'shared/driver/db';
 import {logger} from 'shared/util/logger';
 import Response from 'shared/model/response';
-
+import { Account } from 'shared/model/account';
+import { SECOND } from 'core/util/const';
 
 export interface ITransactionQueueService<T extends Object> {
     reshuffleTransactionQueue(): Response<void>;
@@ -32,6 +32,8 @@ export interface ITransactionQueueService<T extends Object> {
     process(): Promise<void>;
 
     getSize(): { conflictedQueue: number, queue: number };
+
+    verify(trs: Transaction<T>, sender: Account): Promise<{ verified: boolean, error: Array<string> }>;
 }
 
 // TODO will be removed
@@ -54,7 +56,7 @@ class TransactionQueue<T extends object> implements ITransactionQueueService<T> 
 
     // redundant
     constructor() {
-        this.scope.transactionLogic = TransactionService;
+        this.scope.transactionLogic = TransactionDispatcher;
         this.scope.transactionPool = TransactionPool;
         this.scope.logger = logger;
         // this.scope.db = db;
@@ -91,7 +93,7 @@ class TransactionQueue<T extends object> implements ITransactionQueueService<T> 
     pushInConflictedQueue(trs: Transaction<T>): void {
         this.conflictedQueue.push({
             transaction: trs,
-            expire: Math.floor(new Date().getTime() / 1000) + constants.TRANSACTION_QUEUE_EXPIRE
+            expire: Math.floor(new Date().getTime() / SECOND) + constants.TRANSACTION_QUEUE_EXPIRE
         });
         trs.status = TransactionStatus.QUEUED_AS_CONFLICTED;
         this.scope.logger.debug(`TransactionStatus.QUEUED_AS_CONFLICTED ${JSON.stringify(trs)}`);
@@ -126,7 +128,7 @@ class TransactionQueue<T extends object> implements ITransactionQueueService<T> 
         const sender = await getOrCreateAccount(trs.senderPublicKey);
         this.scope.logger.debug(`[TransactionQueue][process][sender] ${JSON.stringify(sender)}`);
 
-        const verifyStatus = await TransactionService.verify(trs, sender, true);
+        const verifyStatus = await TransactionDispatcher.verify(trs, sender, true);
 
         if (!verifyStatus.success) {
             trs.status = TransactionStatus.DECLINED;
@@ -155,6 +157,35 @@ class TransactionQueue<T extends object> implements ITransactionQueueService<T> 
     }
 
     reshuffleTransactionQueue(): Response<void> { return new Response<void>(); }
+
+    async verify(trs: Transaction<T>, sender: Account): Promise<{ verified: boolean, error: Array<string> }> {
+        try {
+            await this.scope.transactionLogic.newVerify({ trs, sender, checkExists: true });
+        } catch (e) {
+            this.scope.logger.debug(`[TransactionQueue][verify]: ${e}`);
+            this.scope.logger.trace(`[TransactionQueue][verify][stack]: \n ${e.stack}`);
+            return {
+                verified: false,
+                error: [e]
+            };
+        }
+
+        try {
+            await this.scope.transactionLogic.newVerifyUnconfirmed({ trs, sender });
+        } catch (e) {
+            this.scope.logger.debug(`[TransactionQueue][verifyUnconfirmed]: ${e}`);
+            this.scope.logger.trace(`[TransactionQueue][verifyUnconfirmed][stack]: \n ${e.stack}`);
+            return {
+                verified: false,
+                error: [e]
+            };
+        }
+
+        return {
+            verified: true,
+            error: []
+        };
+    }
 }
 
 export default new TransactionQueue();

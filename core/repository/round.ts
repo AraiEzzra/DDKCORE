@@ -18,7 +18,10 @@ class RoundRepository {
      */
     setCurrentRound(round: Round): void {
         const roundId: number = !!this.prevRound ? this.prevRound.id + 1 : 1;
-        this.currentRound = new Round({id: roundId, ...round});
+        this.currentRound = new Round({
+            id: roundId,
+            slots: round.slots,
+        });
     }
 
     /**

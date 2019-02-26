@@ -7,12 +7,14 @@ import { BaseController } from 'core/controller/baseController';
 import PeerService from 'core/service/peer';
 import transactionQueue from 'core/service/transactionQueue';
 import BlockService from 'core/service/block';
+import { logger } from 'shared/util/logger';
 
 export class SyncController extends BaseController {
 
     @ON('NEW_BLOCK')
     async newBlock(action: { data: { block: Block } }): Promise<void> {
         const { data } = action;
+        logger.debug(`[Controller][Sync][newBlock] block id ${data.block.id}`);
         await BlockService.processIncomingBlock(data.block);
     }
 

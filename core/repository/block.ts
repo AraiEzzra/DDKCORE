@@ -240,6 +240,12 @@ class BlockRepo {
         // } catch (e) {
         //
         // }
+        // todo implement logic for block apply and memory clean
+        if (this.memoryBlocks.length > 1000) {
+            // Block max count has been arrived
+            this.memoryBlocks.splice(0,1);
+        }
+
         this.memoryBlocks.push(block);
         return new Response();
     }
