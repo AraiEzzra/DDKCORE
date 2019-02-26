@@ -1,4 +1,4 @@
-import { Account, IAccountFilds, Address } from 'shared/model/account';
+import { Account, AccountModel, Address } from 'shared/model/account';
 import Response from 'shared/model/response';
 import {Delegate} from 'shared/model/delegate';
 
@@ -6,7 +6,7 @@ class AccountRepo {
     private memoryAccountsByAddress: { [address: number]: Account } = {};
     private memoryAccountsByPublicKey: { [publicKey: string]: Account } = {};
 
-    public add(account: IAccountFilds): Response<Account> {
+    public add(account: AccountModel): Response<Account> {
         const accountModel = new Account(account);
         this.memoryAccountsByAddress[account.address] = accountModel;
         this.memoryAccountsByPublicKey[account.publicKey] = accountModel;
