@@ -20,7 +20,7 @@ class Stake {
     airdropReward: AirdropReward;
 }
 
-export interface IAccountFilds {
+export class AccountModel {
     address: Address;
     publicKey: PublicKey;
     secondPublicKey?: PublicKey;
@@ -29,25 +29,15 @@ export interface IAccountFilds {
     votes?: Array<PublicKey>;
     referrals?: Array<Account>;
     stakes?: Array<Stake>;
-}
 
-export class Account implements IAccountFilds{
-
-    address: Address;
-    publicKey: PublicKey;
-    secondPublicKey?: PublicKey;
-    actualBalance?: number;
-
-    delegate?: Delegate;
-    votes?: Array<PublicKey>;
-    referrals?: Array<Account>;
-    stakes?: Array<Stake>;
-
-    constructor(data: IAccountFilds) {
+    constructor(data: AccountModel) {
         Object.assign(this, data);
     }
+}
 
-    public getCopy() {
+export class Account extends AccountModel {
+
+    public getCopy(): Account {
         return new Account(this);
     }
 

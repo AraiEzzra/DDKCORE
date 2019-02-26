@@ -25,6 +25,7 @@ interface IConstraint {
         account?: string;
         stakeRewardPercent?: number;
         referralPercentPerLevel?: Array<number>;
+        maxReferralCount: number;
     };
     blockSlotWindow?: number;
     activeDelegates?: number;
