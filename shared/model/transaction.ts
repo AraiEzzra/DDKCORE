@@ -81,7 +81,7 @@ class TransactionModel<T extends IAsset> {
     type: TransactionType;
     senderPublicKey: PublicKey;
     senderAddress: Address;
-    recipientAddress: Address;
+    recipientAddress?: Address = null;
     signature: string;
     secondSignature: string;
     amount: number;
