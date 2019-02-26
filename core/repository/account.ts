@@ -55,11 +55,15 @@ class AccountRepo {
         return new Response<void>();
     }
 
+    updateVotes(account: Account, votes: Array<string> ): Response<void> {
+        this.memoryAccountsByAddress[account.address].votes = votes;
+        return new Response<void>();
+    }
+
     updateReferralByAddress(address: Address, referrals: Array<Account>): Response<void> {
         this.memoryAccountsByAddress[address].referrals = referrals;
         return new Response<void>();
     }
-
 }
 
 export default new AccountRepo();
