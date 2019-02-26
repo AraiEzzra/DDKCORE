@@ -1,10 +1,11 @@
-import { ITransactionService } from '../transaction';
-import {IAsset, IAirdropAsset} from 'shared/model/transaction';
-import { IAssetStake, Transaction, TransactionType } from 'shared/model/transaction';
+import {ITransactionService} from '../transaction';
+import {IAirdropAsset} from 'shared/model/transaction';
+import {IAssetStake, Transaction, TransactionType} from 'shared/model/transaction';
 import ResponseEntity from 'shared/model/response';
 import {Account} from 'shared/model/account';
 import AccountRepo from 'core/repository/account';
 import BlockRepo from 'core/repository/block';
+import {Block} from 'shared/model/block';
 import { TOTAL_PERCENTAGE } from 'core/util/const';
 import config from 'shared/util/config';
 import BUFFER from 'core/util/buffer';
@@ -13,10 +14,11 @@ import {
     calculateTotalRewardAndUnstake,
     getAirdropReward,
     verifyAirdrop,
-    applyFrozeOrdersRewardAndUnstake,
-    undoFrozeOrdersRewardAndUnstake
+    sendAirdropReward,
+    undoAirdropReward
 } from 'core/util/reward';
-import {Block} from 'shared/model/block';
+
+import {ITableObject} from 'core/util/common';
 
 class TransactionStakeService implements ITransactionService<IAssetStake> {
 
@@ -27,7 +29,7 @@ class TransactionStakeService implements ITransactionService<IAssetStake> {
 
         const asset: IAssetStake = {
             stakeOrder: {
-                stakedAmount: trs.amount,
+                stakedAmount: data.stakeOrder.stakedAmount,
                 startTime: trs.createdAt,
                 nextVoteMilestone: trs.createdAt,
             },
@@ -74,51 +76,60 @@ class TransactionStakeService implements ITransactionService<IAssetStake> {
         return Buffer.concat([buff, sponsorsBuffer]);
     }
 
-    verifyUnconfirmed(trs: Transaction<IAsset>): ResponseEntity<void> {
+    async verifyUnconfirmed(trs: Transaction<IAssetStake>, sender: Account): Promise<ResponseEntity<void>> {
         return new ResponseEntity();
     }
 
-    verify(trs: Transaction<IAssetStake>, sender: Account): ResponseEntity<any> {
-        const errors = [];
-
-        if (trs.amount <= 0) {
+    async verify(trs: Transaction<IAssetStake>, sender: Account): Promise<ResponseEntity<any>> {
+        let errors = [];
+        if (trs.asset.stakeOrder.stakedAmount <= 0 && config.constants.STAKE_VALIDATE.AMOUNT_ENABLED) {
             errors.push('Invalid transaction amount');
         }
 
+        if ((trs.asset.stakeOrder.stakedAmount % 1) !== 0 && config.constants.STAKE_VALIDATE.AMOUNT_ENABLED) {
+            errors.push('Invalid stake amount: Decimal value');
+        }
+
+        const airdropCheck: ResponseEntity<any> = await verifyAirdrop(trs, trs.asset.stakeOrder.stakedAmount, sender);
+        if (airdropCheck.errors && airdropCheck.errors.length > 0 && config.constants.STAKE_VALIDATE.AIRDROP_ENABLED) {
+            errors = errors.concat(airdropCheck.errors);
+        }
         return new ResponseEntity({ errors });
     }
 
-    calculateFee(trs: Transaction<IAsset>, sender?: Account): number {
-        return (trs.amount * config.constants.fees.froze) / TOTAL_PERCENTAGE;
+    calculateFee(trs: Transaction<IAssetStake>, sender?: Account): number {
+        return (trs.asset.stakeOrder.stakedAmount * config.constants.fees.froze) / TOTAL_PERCENTAGE;
     }
 
-    calcUndoUnconfirmed(trs: Transaction<IAsset>, sender: Account): void {
+    calculateUndoUnconfirmed(trs: Transaction<IAssetStake>, sender: Account): void {
         return;
     }
 
-    applyUnconfirmed(trs: Transaction<IAsset>): ResponseEntity<void> {
+    async applyUnconfirmed(trs: Transaction<IAssetStake>): Promise<ResponseEntity<void>> {
         const fee: number = this.calculateFee(trs);
-        const totalAmount: number = fee + trs.amount;
+        const totalAmount: number = fee + trs.asset.stakeOrder.stakedAmount;
         return AccountRepo.updateBalanceByAddress(trs.senderAddress, totalAmount * (-1));
     }
 
-    undoUnconfirmed(trs: Transaction<IAssetStake>, sender: Account): ResponseEntity<void> {
+    async undoUnconfirmed(trs: Transaction<IAssetStake>, sender: Account): Promise<ResponseEntity<void>> {
         return null;
     }
 
-    apply(asset: IAssetStake): Promise<void> {
+    async apply(trs: Transaction<IAssetStake>):  Promise<ResponseEntity<void>> {
+        await sendAirdropReward(trs);
+        return new ResponseEntity<void>();
+    }
+
+    async undo(trs: Transaction<IAssetStake>): Promise<ResponseEntity<void>> {
+        await undoAirdropReward(trs);
+        return new ResponseEntity<void>();
+    }
+
+    dbRead(fullTrsObject: any): Transaction<IAssetStake> {
         return null;
     }
 
-    undo(asset: IAssetStake): Promise<void> {
-        return null;
-    }
-
-    dbRead(fullTrsObject: any): IAssetStake {
-        return null;
-    }
-
-    dbSave(asset: IAssetStake): Promise<void> {
+    dbSave(trs: Transaction<IAssetStake>): Array<ITableObject>  {
         return null;
     }
 }

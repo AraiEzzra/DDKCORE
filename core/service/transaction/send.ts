@@ -9,19 +9,21 @@ import { ITableObject } from 'core/util/common';
 import { TOTAL_PERCENTAGE } from 'core/util/const';
 
 class TransactionSendService implements ITransactionService<IAssetTransfer> {
-    create(trs: Transaction<IAssetTransfer>): void {
+
+    async create(trs: Transaction<IAssetTransfer>): Promise<IAssetTransfer> {
+        return;
     }
 
     getBytes(trs: Transaction<IAssetTransfer>): Buffer {
         return Buffer.from([]);
     }
 
-    verifyUnconfirmed(trs: Transaction<IAsset>): Response<void> {
+    async verifyUnconfirmed(trs: Transaction<IAsset>): Promise<Response<void>> {
         return new Response();
     }
 
     // TODO: validate fields in controller
-    verify(trs: Transaction<IAssetTransfer>, sender: Account): Response<any> {
+    async verify(trs: Transaction<IAssetTransfer>, sender: Account): Promise<Response<void>> {
         const errors = [];
 
         if (!trs.recipientAddress) {
@@ -43,19 +45,19 @@ class TransactionSendService implements ITransactionService<IAssetTransfer> {
         return;
     }
 
-    applyUnconfirmed(trs: Transaction<IAsset>): Response<void> {
+    async applyUnconfirmed(trs: Transaction<IAsset>): Promise<Response<void>> {
         return AccountRepo.updateBalanceByAddress(trs.recipientAddress, trs.amount);
     }
 
-    undoUnconfirmed(trs: Transaction<IAssetTransfer>, sender: Account): Response<void> {
+    async undoUnconfirmed(trs: Transaction<IAssetTransfer>, sender: Account): Promise<Response<void>> {
         return null;
     }
 
-    apply(trs: Transaction<IAssetTransfer>): Response<void> {
+    async apply(trs: Transaction<IAssetTransfer>): Promise<Response<void>> {
         return null;
     }
 
-    undo(trs: Transaction<IAssetTransfer>): Response<void> {
+    async undo(trs: Transaction<IAssetTransfer>): Promise<Response<void>> {
         return null;
     }
 
