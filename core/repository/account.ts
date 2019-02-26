@@ -6,11 +6,11 @@ class AccountRepo {
     private memoryAccountsByAddress: { [address: number]: Account } = {};
     private memoryAccountsByPublicKey: { [publicKey: string]: Account } = {};
 
-    public add(account: IAccountFilds): Response<void> {
+    public add(account: IAccountFilds): Response<Account> {
         const accountModel = new Account(account);
         this.memoryAccountsByAddress[account.address] = accountModel;
         this.memoryAccountsByPublicKey[account.publicKey] = accountModel;
-        return new Response<void>();
+        return new Response<Account>({ data: accountModel });
     }
 
     getByAddress(accountAddress: number): Account {
@@ -54,6 +54,12 @@ class AccountRepo {
         this.memoryAccountsByAddress[account.address].delegate = delegate;
         return new Response<void>();
     }
+
+    updateReferralByAddress(address: Address, referrals: Array<Account>): Response<void> {
+        this.memoryAccountsByAddress[address].referrals = referrals;
+        return new Response<void>();
+    }
+
 }
 
 export default new AccountRepo();
