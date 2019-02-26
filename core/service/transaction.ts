@@ -48,7 +48,7 @@ export interface ITransactionDispatcher<T extends IAsset> {
 
     verify(trs: Transaction<T>, sender: Account, checkExists: boolean): Promise<ResponseEntity<void>>;
 
-    create(data: Transaction<{}>, keyPair: IKeyPair): Promise<ResponseEntity<Transaction<IAsset>>>;
+    create(trs: Transaction<{}>, keyPair: IKeyPair, data?: T): Promise<ResponseEntity<Transaction<IAsset>>>;
 
     sign(keyPair: IKeyPair, trs: Transaction<T>): string;
 
@@ -211,7 +211,7 @@ class TransactionDispatcher<T extends IAsset> implements ITransactionDispatcher<
         }
     }
 
-    async create(trs: Transaction<T>, keyPair: IKeyPair): Promise<ResponseEntity<Transaction<IAsset>>> {
+    async create(trs: Transaction<T>, keyPair: IKeyPair, data?: T): Promise<ResponseEntity<Transaction<IAsset>>> {
         const errors = [];
         if (!TransactionType[trs.type]) {
             errors.push(`Unknown transaction type ${trs.type}`);
@@ -231,7 +231,7 @@ class TransactionDispatcher<T extends IAsset> implements ITransactionDispatcher<
         }
 
         const service: ITransactionService<IAsset> = getTransactionServiceByType(trs.type);
-        await service.create(trs);
+        await service.create(trs, data);
 
         trs.signature = this.sign(keyPair, trs);
         trs.id = this.getId(trs);
