@@ -13,7 +13,7 @@ import {Block} from 'shared/model/block';
 import BlockRepo from 'core/repository/block';
 import AccountRepo from 'core/repository/account';
 import {Transaction} from 'shared/model/transaction';
-import TransactionService from 'core/service/transaction';
+import TransactionDispatcher from 'core/service/transaction';
 import TransactionQueue from 'core/service/transactionQueue';
 import TransactionPool from 'core/service/transactionPool';
 import TransactionRepo from 'core/repository/transaction';
@@ -98,7 +98,7 @@ class BlockService {
         const processBlockResponse: Response<void> = await this.processBlock(block, true, true, keypair, false, true);
         if (!processBlockResponse.success) {
             const returnResponse: Response<void> =
-                await TransactionService.returnToQueueConflictedTransactionFromPool(transactions);
+                await TransactionDispatcher.returnToQueueConflictedTransactionFromPool(transactions);
             if (!returnResponse.success) {
                 processBlockResponse.errors = [...processBlockResponse.errors, ...returnResponse.errors];
             }
@@ -106,8 +106,6 @@ class BlockService {
             processBlockResponse.errors.push('generate block');
             return processBlockResponse;
         }
-
-        SyncService.sendNewBlock(block);
 
         const unlockResponse: Response<void> = await this.unlockTransactionPoolAndQueue();
         if (!unlockResponse.success) {
@@ -165,7 +163,8 @@ class BlockService {
         saveBlock: boolean,
         keypair: IKeyPair,
         verify: boolean = true,
-        tick: boolean = true): Promise<Response<void>> {
+        tick: boolean = true
+    ): Promise<Response<void>> {
         block = this.addBlockProperties(block, broadcast);
 
         const resultNormalizeBlock: Response<Block> = await this.normalizeBlock(block);
@@ -270,7 +269,7 @@ class BlockService {
         const errors: Array<string> = [];
         for (i = 0; i < block.transactions.length; i++) {
             const response: Response<Transaction<object>> =
-                await TransactionService.normalize(block.transactions[i]);
+                await TransactionDispatcher.normalize(block.transactions[i]);
             if (!response.success) {
                 errors.push(...response.errors);
             }
@@ -322,7 +321,7 @@ class BlockService {
         }
         result.verified = true;
         if (result.errors.length) {
-            console.log('\n\n result.errors = ', result.errors);
+            logger.error(`[Service][Block][verifyBlock] result.errors: ${result.errors}`);
         }
         return result;
     }
@@ -432,7 +431,7 @@ class BlockService {
 
             try {
                 logger.debug(`Transaction ${JSON.stringify(trs)}`);
-                bytes = TransactionService.getBytes(trs, false, false);
+                bytes = TransactionDispatcher.getBytes(trs);
                 logger.trace(`Bytes ${JSON.stringify(bytes)}`);
             } catch (e) {
                 result.errors.push(e.toString());
@@ -547,13 +546,13 @@ class BlockService {
                     }
                 }
 
-                const applyResponse: Response<void> = await TransactionService.applyUnconfirmed(trs, sender);
+                const applyResponse: Response<void> = await TransactionDispatcher.applyUnconfirmed(trs, sender);
                 if (!applyResponse.success) {
                     errors.push(...applyResponse.errors);
                 }
                 i++;
             } else {
-                const undoResponse: Response<void> = await TransactionService.undoUnconfirmed(trs);
+                const undoResponse: Response<void> = await TransactionDispatcher.undoUnconfirmed(trs);
                 if (!undoResponse.success) {
                     errors.push(...undoResponse.errors);
                 }
@@ -569,19 +568,15 @@ class BlockService {
         trs: Transaction<object>,
         sender: Account,
         checkExists: boolean): Promise<Response<void>> {
-        const transactionIdResponse: Response<string> = await TransactionService.getId(trs);
-        if (!transactionIdResponse.success) {
-            return new Response<void>({errors: [...transactionIdResponse.errors, 'checkTransaction']});
-        }
-        trs.id = transactionIdResponse.data;
+        trs.id = TransactionDispatcher.getId(trs);
         trs.blockId = block.id;
 
-        const verifyResult = await TransactionService.verify(trs, sender, checkExists);
+        const verifyResult = await TransactionDispatcher.verify(trs, sender, checkExists);
         if (!verifyResult.success) {
             return new Response<void>({errors: [...verifyResult.errors, 'checkTransaction']});
         }
 
-        const verifyUnconfirmedResult: Response<void> = await TransactionService.verifyUnconfirmed(trs, sender);
+        const verifyUnconfirmedResult: Response<void> = await TransactionDispatcher.verifyUnconfirmed(trs, sender);
         if (!verifyUnconfirmedResult.success) {
             return new Response<void>({errors: [...verifyUnconfirmedResult.errors, 'checkTransaction']});
         }
@@ -613,7 +608,7 @@ class BlockService {
         const errors: Array<string> = [];
         for (const trs of block.transactions) {
             const sender = AccountRepo.getByPublicKey(trs.senderPublicKey);
-            const applyResponse: Response<void> = await TransactionService.apply(trs, sender);
+            const applyResponse: Response<void> = await TransactionDispatcher.apply(trs, sender);
             if (!applyResponse.success) {
                 errors.push(...applyResponse.errors);
             }
@@ -634,16 +629,23 @@ class BlockService {
             if (!afterSaveResponse.success) {
                 return new Response<void>({errors: [...afterSaveResponse.errors, 'applyBlock']});
             }
-            logger.debug(`Block applied correctly with ${block.transactions.length} transactions`);
+            const trsLength = block.transactions.length;
+            logger.debug(`[Service][Block][applyBlock] block ${block.id}, height: ${block.height}, ` +
+                `applied with ${trsLength} transactions`
+            );
         }
 
         this.setLastBlock(block);
         messageON('NEW_BLOCKS', block);
-        SyncService.sendNewBlock(block);
 
-        if (tick) {
-            await RoundService.generateRound();
+        if (broadcast) {
+            SyncService.sendNewBlock(block);
         }
+
+        // TODO: is it necessary?
+        // if (tick) {
+        //     await RoundService.generateRound();
+        // }
         return new Response<void>();
     }
 
@@ -651,7 +653,7 @@ class BlockService {
         const payloadHash = crypto.createHash('sha256');
         for (let i = 0; i < block.transactions.length; i++) {
             const transaction = block.transactions[i];
-            const bytes = TransactionService.getBytes(transaction);
+            const bytes = TransactionDispatcher.getBytes(transaction);
 
             block.fee += transaction.fee;
             block.amount += transaction.amount;
@@ -661,7 +663,12 @@ class BlockService {
 
         block.payloadHash = payloadHash.digest().toString('hex');
 
-        block.signature = this.sign(block, keypair);
+        const signResponseEntity = this.sign(block, keypair);
+        if (!signResponseEntity.success) {
+            return new Response<Block>({ errors: [...signResponseEntity.errors, 'addPayloadHash'] });
+        }
+
+        block.signature = signResponseEntity.data;
         const idResponse: Response<string> = this.getId(block);
         if (!idResponse.success) {
             return new Response<Block>({errors: [...idResponse.errors, 'addPayloadHash']});
@@ -675,7 +682,7 @@ class BlockService {
         const errors: Array<string> = [];
         for (const trs of block.transactions) {
             // how can I call this method in case it exists in service but connection service=service is baned
-            const afterSaveResponse: Response<void> = await TransactionService.afterSave(trs);
+            const afterSaveResponse: Response<void> = await TransactionDispatcher.afterSave(trs);
             if (!afterSaveResponse.success) {
                 errors.push(...afterSaveResponse.errors);
                 logger.error(`[Chain][afterSave]: ${JSON.stringify(afterSaveResponse.errors)}`);
@@ -732,7 +739,7 @@ class BlockService {
             block.previousBlockId === lastBlock.previousBlockId &&
             block.height === lastBlock.height && block.id !== lastBlock.id
         ) {
-            const receiveResponse: Response<void> = await  this.receiveForkFive(block, lastBlock);
+            const receiveResponse: Response<void> = await this.receiveForkFive(block, lastBlock);
             if (!receiveResponse.success) {
                 errors.push(...receiveResponse.errors, 'processIncomingBlock');
             }
@@ -785,7 +792,7 @@ class BlockService {
 
         // todo: wrong logic with errors!!!
         const errors: Array<string> = [];
-        const processBlockResponse: Response<void> = await this.processBlock(block, true, true, null, false, true);
+        const processBlockResponse: Response<void> = await this.processBlock(block, false, true, null, false, true);
         if (!processBlockResponse.success) {
             errors.push(...processBlockResponse.errors);
         }
@@ -800,7 +807,7 @@ class BlockService {
             errors.push(...pushResponse.errors);
         }
         const returnResponse: Response<void> =
-            await TransactionService.returnToQueueConflictedTransactionFromPool(block.transactions);
+            await TransactionDispatcher.returnToQueueConflictedTransactionFromPool(block.transactions);
         if (!returnResponse.success) {
             errors.push(...returnResponse.errors);
         }
@@ -820,6 +827,7 @@ class BlockService {
     }
 
     private async receiveForkOne(block: Block, lastBlock: Block): Promise<Response<void>> {
+        logger.debug(`[Service][Block][receiveForkOne] block ${JSON.stringify(block)}`);
         let tmpBlock: Block = block.getCopy();
         const forkResponse: Response<void> = await this.delegateService.fork(block, Fork.ONE);
         if (!forkResponse.success) {
@@ -1016,11 +1024,11 @@ class BlockService {
         const errors: Array<string> = [];
         oldLastBlock.transactions.reverse().forEach(async (transaction) => {
             const sender = AccountRepo.getByPublicKey(transaction.senderPublicKey);
-            const undoResponse: Response<void> = await TransactionService.undo(transaction, sender);
+            const undoResponse: Response<void> = await TransactionDispatcher.undo(transaction, sender);
             if (!undoResponse.success) {
                 errors.push(...undoResponse.errors);
             }
-            const undoUnconfirmedResponse: Response<void> = await TransactionService.undoUnconfirmed(transaction);
+            const undoUnconfirmedResponse: Response<void> = await TransactionDispatcher.undoUnconfirmed(transaction);
             if (!undoUnconfirmedResponse.success) {
                 errors.push(...undoUnconfirmedResponse.errors);
             }
@@ -1029,7 +1037,7 @@ class BlockService {
             return new Response<Block>({errors});
         }
 
-        await RoundService.rollBackRound(); // (oldLastBlock, previousBlock);
+        await RoundService.rollBack(); // (oldLastBlock, previousBlock);
 
         const deleteBlockResponse: Response<void> = await BlockRepo.deleteBlock(oldLastBlock.id);
         if (!deleteBlockResponse.success) {
@@ -1076,7 +1084,7 @@ class BlockService {
             }
 
             // Normalize transaction
-            const transaction = TransactionService.dbRead(row);
+            const transaction = TransactionDispatcher.dbRead(row);
             // Set empty object if there are no transactions in block
             blocks[block.id].transactions = blocks[block.id].transactions || {};
 
@@ -1233,21 +1241,25 @@ class BlockService {
         return block;
     }
 
-    private sign(block, keyPair) {
+    private sign(block, keyPair): Response<string> {
         const blockHash = this.getHash(block);
+        if (!blockHash.success) {
+            return new Response({ errors: [...blockHash.errors, 'sign'] });
+        }
+
         const sig = Buffer.alloc(sodium.crypto_sign_BYTES);
-        sodium.crypto_sign_detached(sig, blockHash, keyPair.privateKey);
-        return sig.toString('hex');
+        sodium.crypto_sign_detached(sig, blockHash.data, keyPair.privateKey);
+        return new Response<string>({ data: sig.toString('hex') });
     }
 
-    private getHash(block: Block): Response<Uint8Array> {
-        let hash: Uint8Array = null;
+    private getHash(block: Block): Response<Buffer> {
+        let hash: Buffer = null;
         try {
             hash = crypto.createHash('sha256').update(this.getBytes(block)).digest();
         } catch (err) {
-            return new Response<Uint8Array>({errors: [err, 'getHash']});
+            return new Response<Buffer>({errors: [err, 'getHash']});
         }
-        return new Response<Uint8Array>({data: hash});
+        return new Response<Buffer>({data: hash});
     }
 
     private getBytes(block: Block): Buffer {

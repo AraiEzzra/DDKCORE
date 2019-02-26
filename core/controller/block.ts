@@ -1,5 +1,5 @@
 import Response from 'shared/model/response';
-import { Block } from 'shared/model/block';
+import { Block, BlockModel } from 'shared/model/block';
 import BlockService from 'core/service/block';
 import BlockRepo from 'core/repository/block';
 import { Peer } from 'shared/model/peer';
@@ -18,10 +18,12 @@ interface BlockGenerateRequest {
 class BlockController extends BaseController {
 
     @ON('BLOCK_RECEIVE')
-    public async onReceiveBlock(action: { data: { block: Block } }): Promise<Response<void>> {
+    public async onReceiveBlock(action: { data: { block: BlockModel } }): Promise<Response<void>> {
         const { data } = action;
-        logger.debug(`[Controller][Block][onReceiveBlock] block id ${data.block.id}`);
-        const response: Response<void> = await BlockService.processIncomingBlock(data.block);
+        const block = new Block(data.block);
+
+        logger.debug(`[Controller][Block][onReceiveBlock] block id ${block.id}`);
+        const response: Response<void> = await BlockService.processIncomingBlock(block);
         if (!response.success) {
             response.errors.push('onReceiveBlock');
         }
