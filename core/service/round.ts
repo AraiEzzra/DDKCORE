@@ -161,7 +161,7 @@ class RoundService implements IRoundService {
 
         if (!delegateResponse.success) {
             logger.error('[RoundService][generateRound] Can\'t get Active delegates');
-            return new Response({errors: [...delegateResponse, '[generateRound] Can\'t get Active delegates']});
+            return new Response({errors: [...delegateResponse.errors, '[generateRound] Can\'t get Active delegates']});
         }
 
         const slots = compose(
@@ -212,7 +212,7 @@ class RoundService implements IRoundService {
             roundFees: 0,
             roundDelegates: []
         };
-        
+
         if (!blockResponse.success) {
             return new Response({errors: [...blockResponse.errors, 'sumRound']});
         } else {

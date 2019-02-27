@@ -1,8 +1,7 @@
 const crypto = require('crypto');
 import { Account } from 'shared/model/account';
 
-declare const BigInt;
-enum EnumSize  {
+enum EnumSize {
     INT64 = 8
 }
 
@@ -10,7 +9,7 @@ enum EnumSize  {
  *
  * @param publicKey
  */
-export const getAddressByPublicKey = (publicKey: string): string => {
+export const getAddressByPublicKey = (publicKey: string): number => {
     const publicKeyHash = crypto.createHash('sha256')
         .update(publicKey, 'hex')
         .digest();
@@ -19,7 +18,7 @@ export const getAddressByPublicKey = (publicKey: string): string => {
     for (let i = 0; i < 8; i++) {
         temp[i] = publicKeyHash[7 - i];
     }
-    return `DDK${getBodyAddress(temp).toString()}`;
+    return parseInt(getBodyAddress(temp), 10);
 };
 
 /**

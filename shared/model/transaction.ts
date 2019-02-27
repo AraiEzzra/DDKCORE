@@ -1,4 +1,6 @@
 import { Address, PublicKey, Timestamp } from 'shared/model/account';
+import { IKeyPair } from 'shared/util/ed';
+import TransactionDispatcher from 'core/service/transaction';
 
 export enum TransactionType {
     REGISTER = 0,
@@ -75,18 +77,18 @@ export interface IAssetVote extends IAsset {
     airdropReward: IAirdropAsset;
 }
 
-class TransactionModel<T extends IAsset> {
-    id: string;
-    blockId: string;
+export class TransactionModel<T extends IAsset> {
+    id?: string;
+    blockId?: string;
     type: TransactionType;
     senderPublicKey: PublicKey;
     senderAddress: Address;
     recipientAddress: Address;
-    signature: string;
-    secondSignature: string;
+    signature?: string;
+    secondSignature?: string;
     amount: number;
-    createdAt: Timestamp;
-    fee: number;
+    createdAt?: Timestamp;
+    fee?: number;
     status?: TransactionStatus;
     salt?: string;
     asset?: T;

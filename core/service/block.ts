@@ -28,6 +28,7 @@ import {messageON} from 'shared/util/bus';
 import config from 'shared/util/config';
 import SyncService from 'core/service/sync';
 import system from 'core/repository/system';
+import AccountRepository from 'core/repository/account';
 
 interface IVerifyResult {
     verified?: boolean;
@@ -209,7 +210,7 @@ class BlockService {
         if (!config.config.loading.snapshotRound) {
             // todo modules.system.update?
         }
-        const reshuffleResponse: Response<void> = await TransactionQueue.reshuffleTransactionQueue();
+        const reshuffleResponse: Response<void> = await TransactionQueue.reshuffle();
         if (!reshuffleResponse.success) {
             return new Response<void>({errors: [...reshuffleResponse.errors, 'processBlock']});
         }
@@ -273,6 +274,8 @@ class BlockService {
             if (!response.success) {
                 errors.push(...response.errors);
             }
+            console.log(`response.data: ${JSON.stringify(response.data)}`);
+
             block.transactions[i] = response.data;
         }
 
@@ -351,7 +354,7 @@ class BlockService {
             if (config.constants.VERIFY_BLOCK_SIGNATURE) {
                 result.errors.push('Failed to verify block signature');
             } else {
-                logger.error('Failed to verify block signature');
+                logger.error(`Failed to verify block signature`);
             }
         }
         return result;
@@ -533,7 +536,8 @@ class BlockService {
             const trs: Transaction<object> = block.transactions[i];
 
             if (errors.length === 0) {
-                const sender: Account = await getOrCreateAccount(trs.senderPublicKey);
+                // const sender: Account = await getOrCreateAccount(trs.senderPublicKey);
+                const sender: Account = AccountRepository.getByPublicKey(trs.senderPublicKey);
                 logger.debug(`[Verify][checkTransactionsAndApplyUnconfirmed][sender] ${JSON.stringify(sender)}`);
                 if (verify) {
                     const resultCheckTransaction: Response<void> =
@@ -571,7 +575,7 @@ class BlockService {
         trs.id = TransactionDispatcher.getId(trs);
         trs.blockId = block.id;
 
-        const verifyResult = await TransactionDispatcher.verify(trs, sender, checkExists);
+        const verifyResult = await TransactionDispatcher.verifyUnconfirmed(trs, sender, checkExists);
         if (!verifyResult.success) {
             return new Response<void>({errors: [...verifyResult.errors, 'checkTransaction']});
         }
@@ -781,7 +785,7 @@ class BlockService {
         }
 
         const removedTransactionsResponse: Response<Array<Transaction<object>>> =
-            await TransactionPool.removeFromPool(block.transactions, true);
+            await TransactionPool.batchRemove(block.transactions, true);
         if (!removedTransactionsResponse.success) {
             return new Response<void>({errors: [...removedTransactionsResponse.errors, 'receiveBlock']});
         }
