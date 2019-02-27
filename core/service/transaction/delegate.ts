@@ -33,39 +33,38 @@ class TransactionDelegateService implements ITransactionService<IAssetDelegate> 
     async verify(trs: Transaction<IAssetDelegate>, sender: Account): Promise<Response<void>> {
         const errors = [];
 
-        if (trs.recipientAddress && config.constants.VERIFY_DELEGATE_TRS_RECIPIENT) {
+        if (trs.recipientAddress) {
             errors.push('Invalid recipient');
         }
 
-        if (trs.amount !== 0 && config.constants.VERIFY_DELEGATE_TRS_RECIPIENT) {
+        if (trs.amount !== 0) {
             errors.push('Invalid transaction amount');
         }
 
-        if (sender.delegate && config.constants.VERIFY_DELEGATE_TRS_RECIPIENT) {
+        if (sender.delegate) {
             errors.push('Account is already a delegate');
         }
 
-        if ((!trs.asset || !trs.asset.username) && config.constants.VERIFY_DELEGATE_TRS_RECIPIENT) {
+        if (!trs.asset || !trs.asset.username) {
             errors.push('Invalid transaction asset');
         }
 
-        if (trs.asset.username !== trs.asset.username.toLowerCase() && config.constants.VERIFY_DELEGATE_TRS_RECIPIENT) {
+        if (trs.asset.username !== trs.asset.username.toLowerCase()) {
             errors.push('Username must be lowercase');
         }
 
-        const isAddress = /^(DDK)+[0-9]{1,25}$/ig;
+        const isAddress = /^[0-9]{1,25}$/ig;
         const allowSymbols = /^[a-z0-9!@$&_.]+$/g;
 
         const username = String(trs.asset.username)
             .toLowerCase()
             .trim();
 
-        if (username === '' && config.constants.VERIFY_DELEGATE_TRS_RECIPIENT) {
+        if (username === '') {
             errors.push('Empty username');
         }
 
-        if (username.length > config.constants.maxDelegateUsernameLength
-            && config.constants.VERIFY_DELEGATE_TRS_RECIPIENT) {
+        if (username.length > config.constants.maxDelegateUsernameLength) {
             errors.push('Username is too long. Maximum is 20 characters');
         }
 
@@ -73,7 +72,7 @@ class TransactionDelegateService implements ITransactionService<IAssetDelegate> 
             errors.push('Username can not be a potential address');
         }
 
-        if (!allowSymbols.test(username) && config.constants.VERIFY_DELEGATE_TRS_RECIPIENT) {
+        if (!allowSymbols.test(username)) {
             errors.push('Username can only contain alphanumeric characters with the exception of !@$&_.');
         }
 
