@@ -1,5 +1,5 @@
 const Inserts = require('../../backlog/helpers/inserts.js');
-// import db from 'shared/driver/db';
+import db from 'shared/driver/db';
 import { Transaction, IAsset } from 'shared/model/transaction';
 import { ITransactionRepository as ITransactionRepositoryShared } from 'shared/repository/transaction';
 import Response from 'shared/model/response';
@@ -15,8 +15,11 @@ interface IDBTransactionSave {
 export interface ITransactionRepository<T extends Object> extends ITransactionRepositoryShared<T> {
     list(): Array<Transaction<T>>;
 
-    getTransactionsForBlocksByIds(ids: Array<string>):
-        Response<{ [blockId: string]:  Array<Transaction<object>> }>;
+    getTransactionsForBlocksByIds(ids: Array<string>): Response<{ [blockId: string]:  Array<Transaction<object>> }>;
+
+    getTotalCountTransactions(): Promise<Response<number>>;
+
+    getTransactionBatch(limit: number, offset: number): Promise<Response<Array<Transaction<any>>>>;
 }
 
 class TransactionRepo implements ITransactionRepository<object> {
@@ -116,6 +119,26 @@ class TransactionRepo implements ITransactionRepository<object> {
         this.memoryTransactionByBlockId[transaction.blockId].push(transaction);
         this.memoryTransactionById[transaction.id] = transaction;
         return new Response<void>();
+    }
+
+    async getTotalCountTransactions(): Promise<Response<number>> {
+        let res: {count: number};
+        try {
+            res = await db.one(queries.getTotalCountTransactions);
+        } catch (errors) {
+            return new Response(errors);
+        }
+        return new Response<number>({data: res.count});
+    }
+
+    async getTransactionBatch(limit: number, offset: number): Promise<Response<Array<Transaction<IAsset>>>> {
+        let trs: Array<Transaction<IAsset>>;
+        try {
+            trs = await db.many(queries.getTransactionBatch(limit, offset));
+        } catch (errors) {
+            return new Response(errors);
+        }
+        return new Response({data: trs});
     }
 }
 
