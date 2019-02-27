@@ -64,7 +64,8 @@ class TransactionDelegateService implements ITransactionService<IAssetDelegate> 
             errors.push('Empty username');
         }
 
-        if (username.length > 20 && config.constants.VERIFY_DELEGATE_TRS_RECIPIENT) {
+        if (username.length > config.constants.maxDelegateUsernameLength
+            && config.constants.VERIFY_DELEGATE_TRS_RECIPIENT) {
             errors.push('Username is too long. Maximum is 20 characters');
         }
 
