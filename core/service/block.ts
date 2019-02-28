@@ -77,11 +77,7 @@ class BlockService {
 
     public async generateBlock(keypair: IKeyPair, timestamp: number): Promise<Response<void>> {
         logger.debug(`[Service][Block][generateBlock] timestamp ${timestamp}`);
-        const lockResponse: Response<void> = await this.lockTransactionPoolAndQueue();
-        if (!lockResponse.success) {
-            lockResponse.errors.push('generateBlock: Can\' lock transaction pool or/and queue');
-            return lockResponse;
-        }
+        this.lockTransactionPoolAndQueue();
 
         const transactions: Array<Transaction<object>> =
             await TransactionPool.popSortedUnconfirmedTransactions(config.constants.maxTxsPerBlock);
@@ -108,18 +104,15 @@ class BlockService {
             return processBlockResponse;
         }
 
-        const unlockResponse: Response<void> = await this.unlockTransactionPoolAndQueue();
-        if (!unlockResponse.success) {
-            unlockResponse.errors.push('generateBlock: Can\' unlock transaction pool or/and queue');
-            return unlockResponse;
-        }
+        this.unlockTransactionPoolAndQueue();
+
         return new Response<void>();
     }
 
     private async pushInPool(transactions: Array<Transaction<object>>): Promise<Response<void>> {
         const errors: Array<string> = [];
         for (const trs of transactions) {
-            let response: Response<void> = await TransactionPool.push(trs);
+            let response: Response<void> = await TransactionPool.push(trs, undefined, false, true);
             if (!response.success) {
                 errors.push(...response.errors);
             }
@@ -127,32 +120,15 @@ class BlockService {
         return new Response<void>({errors: errors});
     }
 
-    private async lockTransactionPoolAndQueue(): Promise<Response<void>> {
-        const queueLockResponse: Response<void> = await TransactionQueue.lock();
-        if (!queueLockResponse.success) {
-            queueLockResponse.errors.push('lockTransactionPoolAndQueue');
-            return queueLockResponse;
-        }
-        const poolLockResponse: Response<void> = await TransactionPool.lock();
-        if (!poolLockResponse.success) {
-            poolLockResponse.errors.push('lockTransactionPoolAndQueue');
-            return poolLockResponse;
-        }
-        return new Response<void>({});
+    private lockTransactionPoolAndQueue(): void {
+        TransactionQueue.lock();
+        TransactionPool.lock();
     }
 
-    private async unlockTransactionPoolAndQueue(): Promise<Response<void>> {
-        const queueUnlockResponse: Response<void> = await TransactionQueue.unlock();
-        if (!queueUnlockResponse.success) {
-            queueUnlockResponse.errors.push('lockTransactionPoolAndQueue');
-            return queueUnlockResponse;
-        }
-        const poolUnlockResponse: Response<void> = await TransactionPool.unlock();
-        if (!poolUnlockResponse.success) {
-            poolUnlockResponse.errors.push('lockTransactionPoolAndQueue');
-            return poolUnlockResponse;
-        }
-        return new Response<void>({});
+    private unlockTransactionPoolAndQueue(): void {
+        TransactionQueue.unlock();
+        TransactionPool.unlock();
+        TransactionQueue.process();
     }
 
     /**
@@ -707,11 +683,7 @@ class BlockService {
             return new Response({errors: ['receiveLocked']});
         }
 
-        const lockResponse: Response<void> = await this.lockTransactionPoolAndQueue();
-        if (!lockResponse.success) {
-            lockResponse.errors.push('generateBlock: Can\' lock transaction pool or/and queue');
-            return lockResponse;
-        }
+        this.lockTransactionPoolAndQueue();
 
         // TODO: how to check?
         /*
@@ -758,13 +730,10 @@ class BlockService {
                 'generator:', block.generatorPublicKey
             ].join(' '));
         }
-        this.receiveUnlock();
 
-        const unlockResponse: Response<void> = await this.unlockTransactionPoolAndQueue();
-        if (!unlockResponse.success) {
-            unlockResponse.errors.push('generateBlock: Can\' unlock transaction pool or/and queue');
-            return unlockResponse;
-        }
+        this.receiveUnlock();
+        this.unlockTransactionPoolAndQueue();
+
         return new Response<void>();
     }
 
@@ -777,12 +746,7 @@ class BlockService {
         ].join(' '));
 
         this.updateLastReceipt();
-
-        const lockResponse: Response<void> = await this.lockTransactionPoolAndQueue();
-        if (!lockResponse.success) {
-            lockResponse.errors.push('receiveBlock: Can\' lock transaction pool or/and queue');
-            return lockResponse;
-        }
+        this.lockTransactionPoolAndQueue();
 
         const removedTransactionsResponse: Response<Array<Transaction<object>>> =
             await TransactionPool.batchRemove(block.transactions, true);
@@ -822,11 +786,7 @@ class BlockService {
                 logger.error(`[Process][newReceiveBlock] ${JSON.stringify(errors)}`);
             }
         }
-        const unlockResponse: Response<void> = await this.unlockTransactionPoolAndQueue();
-        if (!unlockResponse.success) {
-            unlockResponse.errors.push('receiveBlock: Can\' unlock transaction pool or/and queue');
-            return unlockResponse;
-        }
+        this.unlockTransactionPoolAndQueue();
         return new Response<void>({errors});
     }
 

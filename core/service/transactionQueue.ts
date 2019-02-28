@@ -16,8 +16,8 @@ export interface ITransactionQueueService<T extends Object> {
 
     getLockStatus(): boolean;
 
-    lock(): ResponseEntity<void>;
-    unlock(): ResponseEntity<void>;
+    lock(): void;
+    unlock(): void;
 
     push(trs: Transaction<T>): void;
     pop(): Transaction<T>;
@@ -39,14 +39,12 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
 
     private locked: boolean = false;
 
-    lock(): ResponseEntity<void> {
+    lock(): void {
         this.locked = true;
-        return new ResponseEntity<void>();
     }
 
-    unlock(): ResponseEntity<void> {
+    unlock(): void {
         this.locked = false;
-        return new ResponseEntity<void>();
     }
 
     getLockStatus(): boolean {
@@ -77,12 +75,12 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
             expire: Math.floor(new Date().getTime() / SECOND) + constants.TRANSACTION_QUEUE_EXPIRE
         });
         trs.status = TransactionStatus.QUEUED_AS_CONFLICTED;
-        logger.debug(`TransactionStatus.QUEUED_AS_CONFLICTED ${JSON.stringify(trs)}`);
+        // logger.debug(`TransactionStatus.QUEUED_AS_CONFLICTED ${JSON.stringify(trs)}`);
     }
 
     // TODO can be optimized if check senderId and recipientId
     reshuffle(): ResponseEntity<void> {
-        while (this.conflictedQueue.length > 0) {
+        while (this.getSize().conflictedQueue > 0) {
             this.push(this.conflictedQueue.pop().transaction);
         }
 
@@ -121,11 +119,11 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
         }
 
         trs.status = TransactionStatus.VERIFIED;
-        logger.debug(`TransactionStatus.VERIFIED ${JSON.stringify(trs)}`);
+        // logger.debug(`TransactionStatus.VERIFIED ${JSON.stringify(trs)}`);
 
         if (!this.locked) {
             const pushed = await TransactionPool.push(trs, sender, true);
-            if (pushed) {
+            if (pushed.success) {
                 this.process();
                 return;
             }

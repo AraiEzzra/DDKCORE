@@ -18,7 +18,7 @@ export const getAddressByPublicKey = (publicKey: string): number => {
     for (let i = 0; i < 8; i++) {
         temp[i] = publicKeyHash[7 - i];
     }
-    return parseInt(getBodyAddress(temp), 10);
+    return Number(getBodyAddress(temp).toString());
 };
 
 /**

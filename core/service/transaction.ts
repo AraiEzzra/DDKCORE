@@ -88,9 +88,6 @@ export interface ITransactionDispatcher<T extends IAsset> {
 
     popFromPool(limit: number): Promise<Array<Transaction<IAsset>>>;
 
-    lockPoolAndQueue(): void;
-    unlockPoolAndQueue(): void;
-
     returnToQueueConflictedTransactionFromPool(transactions): Promise<ResponseEntity<void>>;
 }
 
@@ -392,7 +389,6 @@ class TransactionDispatcher<T extends IAsset> implements ITransactionDispatcher<
 
         if (checkExists) {
             const isConfirmed = this.isConfirmed(trs);
-            console.log(`isConfirmed: ${isConfirmed.success}`);
 
             if (isConfirmed.success) {
                 return new ResponseEntity<void>({ errors: [`Transaction is already confirmed: ${trs.id}`] });
@@ -421,16 +417,6 @@ class TransactionDispatcher<T extends IAsset> implements ITransactionDispatcher<
             await this.checkSenderTransactions(trs.senderId, verifiedTransactions, accountsMap);
         }
         return new ResponseEntity();
-    }
-
-    lockPoolAndQueue(): void {
-        TransactionQueue.lock();
-        TransactionPool.lock();
-    }
-
-    unlockPoolAndQueue(): void {
-        TransactionPool.unlock();
-        TransactionQueue.unlock();
     }
 
     async popFromPool(limit: number): Promise<Array<Transaction<IAsset>>> {

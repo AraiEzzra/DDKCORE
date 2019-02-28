@@ -29,7 +29,7 @@ export interface ITransactionPoolService<T extends Object> {
     removeBySenderAddress(senderAddress: Address): Promise<Array<Transaction<T>>>;
     removeByRecipientAddress(address: Address): Promise<Array<Transaction<T>>>;
 
-    push(trs: Transaction<T>, sender?: Account, broadcast?: boolean);
+    push(trs: Transaction<T>, sender?: Account, broadcast?: boolean, force?: boolean): Promise<Response<void>>;
 
     remove(trs: Transaction<T>);
 
@@ -117,45 +117,59 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
         return removedTransactions;
     }
 
-    async push(trs: Transaction<T>, sender?: Account, broadcast: boolean = false): Promise<Response<void>> {
+    async push(
+        trs: Transaction<T>,
+        sender: Account,
+        broadcast: boolean = false,
+        force: boolean = false,
+    ): Promise<Response<void>> {
+        if ((this.locked && !force)) {
+            return new Response<void>({ errors: [`Cannot push this transaction`] });
+        }
+
+        if (this.has(trs)) {
+            return new Response<void>({ errors: [`Transaction is already in pool`] });
+        }
+
+        if (!force && this.isPotentialConflict(trs)) {
+            return new Response<void>({ errors: [`Transaction is potential conflicted`] });
+        }
+
+        this.pool[trs.id] = trs;
+        trs.status = TransactionStatus.PUT_IN_POOL;
+
+        if (!this.poolBySender[trs.senderAddress]) {
+            this.poolBySender[trs.senderAddress] = [];
+        }
+        this.poolBySender[trs.senderAddress].push(trs);
+        if (trs.type === TransactionType.SEND) {
+            if (!this.poolByRecipient[trs.recipientAddress]) {
+                this.poolByRecipient[trs.recipientAddress] = [];
+            }
+            this.poolByRecipient[trs.recipientAddress].push(trs);
+        }
+
         if (!sender) {
-            // sender = await getOrCreateAccount(trs.senderPublicKey);
             sender = AccountRepository.getByPublicKey(trs.senderPublicKey);
         }
 
-        if (!this.locked) {
-            try {
-                await TransactionDispatcher.applyUnconfirmed(trs, sender);
-                trs.status = TransactionStatus.UNCONFIRM_APPLIED;
-                logger.debug(`TransactionStatus.UNCONFIRM_APPLIED ${JSON.stringify(trs)}`);
-            } catch (e) {
-                trs.status = TransactionStatus.DECLINED;
-                logger.error(`[TransactionPool][applyUnconfirmed]: ${e}`);
-                logger.error(`[TransactionPool][applyUnconfirmed][stack]: \n ${e.stack}`);
-                return;
-            }
-
-            trs.status = TransactionStatus.PUT_IN_POOL;
-            this.pool[trs.id] = trs;
-            if (!this.poolBySender[trs.senderAddress]) {
-                this.poolBySender[trs.senderAddress] = [];
-            }
-            this.poolBySender[trs.senderAddress].push(trs);
-            if (trs.type === TransactionType.SEND) {
-                if (!this.poolByRecipient[trs.recipientAddress]) {
-                    this.poolByRecipient[trs.recipientAddress] = [];
-                }
-                this.poolByRecipient[trs.recipientAddress].push(trs);
-            }
-            if (broadcast) {
-                // TODO: fix broadcast storm
-                SyncService.sendUnconfirmedTransaction(trs);
-            }
-            console.log(`pool size: ${Object.keys(this.pool).length}, id: ${trs.id}`);
-
-            return new Response<void>({});
+        try {
+            await TransactionDispatcher.applyUnconfirmed(trs, sender);
+            trs.status = TransactionStatus.UNCONFIRM_APPLIED;
+        } catch (e) {
+            delete this.pool[trs.id];
+            trs.status = TransactionStatus.DECLINED;
+            logger.error(`[TransactionPool][applyUnconfirmed]: ${e}`);
+            logger.error(`[TransactionPool][applyUnconfirmed][stack]: \n ${e.stack}`);
+            return new Response<void>({ errors: [`Cannot apply unconfirmed this transaction`] });
         }
-        return new Response<void>({errors: ['Error in pushing transaction']});
+
+        if (broadcast) {
+            // TODO: fix broadcast storm
+            SyncService.sendUnconfirmedTransaction(trs);
+        }
+
+        return new Response<void>();
     }
 
     async remove(trs: Transaction<T>) {
@@ -218,8 +232,8 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
         return transactions;
     }
 
-    isPotentialConflict(trs: Transaction<T>) {
-        const senderAddress = getAddressByPublicKey(trs.senderPublicKey);
+    isPotentialConflict(trs: Transaction<T>): boolean {
+        const { senderAddress } = trs;
         const recipientTrs = this.poolByRecipient[senderAddress] || [];
         const senderTrs = this.poolBySender[senderAddress] || [];
         const dependTransactions = [...recipientTrs, ...senderTrs];
@@ -227,6 +241,28 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
         if (dependTransactions.length === 0) {
             return false;
         }
+
+        if (trs.type === TransactionType.SIGNATURE) {
+            return true;
+        }
+
+        if (
+            (
+                trs.type === TransactionType.VOTE ||
+                trs.type === TransactionType.SEND ||
+                trs.type === TransactionType.STAKE
+            ) && dependTransactions.find((t: Transaction<T>) => t.type === TransactionType.VOTE)
+        ) {
+            return true;
+        }
+
+        if (
+            trs.type === TransactionType.REGISTER &&
+            dependTransactions.find((t: Transaction<T>) => t.type === TransactionType.REGISTER)
+        ) {
+            return true;
+        }
+
         dependTransactions.push(trs);
         dependTransactions.sort(transactionSortFunc);
         return dependTransactions.indexOf(trs) !== (dependTransactions.length - 1);

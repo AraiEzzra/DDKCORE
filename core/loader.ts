@@ -3,7 +3,8 @@ import TransactionDispatcher from 'core/service/transaction';
 import { TransactionStatus, TransactionType} from 'shared/model/transaction';
 import { Address, PublicKey, Timestamp} from 'shared/model/account';
 import { messageON } from 'shared/util/bus';
-import {initControllers} from 'core/controller/index';
+import { initControllers } from 'core/controller/index';
+import TransactionPool from 'core/service/transactionPool';
 
 /**
  * for mock delegates
@@ -24,6 +25,7 @@ import {Delegate} from 'shared/model/delegate';
 import { logger } from 'shared/util/logger';
 import { SECOND } from 'core/util/const';
 import TransactionQueue from 'core/service/transactionQueue';
+import { queue } from 'rxjs/internal/scheduler/queue';
 enum constant  {
     Limit = 1000
 }
@@ -70,28 +72,30 @@ export class MockDelegates {
         }
 
         // For testing
-        // if (process.env.FORGE_SECRET === this.startData[0].secret) {
-        //     const hash = crypto.createHash('sha256').update(process.env.FORGE_SECRET, 'utf8').digest();
-        //     const keypair = ed.makeKeypair(hash);
+        if (process.env.FORGE_SECRET === this.startData[0].secret) {
+            const hash = crypto.createHash('sha256').update(process.env.FORGE_SECRET, 'utf8').digest();
+            const keypair = ed.makeKeypair(hash);
 
-        //     setTimeout(() => {
-        //         for (let index = 0; index < 250; index++) {
-        //             const trsResponse = TransactionDispatcher.create({
-        //                 senderAddress: 7897332094363171058,
-        //                 senderPublicKey: '137b9f0f839ab3ecd2146bfecd64d31e127d79431211e352bedfeba5fd61a57a',
-        //                 recipientAddress: 3002421063889966908,
-        //                 type: TransactionType.SEND,
-        //                 amount: 100000000,
-        //             }, keypair);
+            setTimeout(() => {
+                for (let index = 0; index < 5000; index++) {
+                    setTimeout(() => {
+                        const trsResponse = TransactionDispatcher.create({
+                            senderAddress: 7897332094363171058,
+                            senderPublicKey: '137b9f0f839ab3ecd2146bfecd64d31e127d79431211e352bedfeba5fd61a57a',
+                            recipientAddress: 3002421063889966908,
+                            type: TransactionType.SEND,
+                            amount: 100000000,
+                        }, keypair);
 
-        //             TransactionQueue.push(trsResponse.data);
-        //         }
-        //     }, 5000);
-        // }
+                        TransactionQueue.push(trsResponse.data);
+                    }, Math.round(index));
+                }
+            }, 5000);
+        }
 
         BlockService.saveGenesisBlock().then(res => {
             // generateRound calls after 10 seconds
-            setTimeout(() => RoundService.generateRound(), 10 * SECOND);
+            setTimeout(() => RoundService.generateRound(), 30 * SECOND);
         });
     }
 
@@ -123,7 +127,11 @@ class Loader {
             const currentTime = new Date().getTime();
             const timeInSeconds = Math.floor((currentTime - initTime) / SECOND);
             const projectedHeight = Math.floor(timeInSeconds / 10) + 1;
-            logger.debug(`[Loader] time in seconds: ${timeInSeconds}, projected height: ${projectedHeight}`);
+            logger.debug(
+                `[Loader] time in seconds: ${timeInSeconds}, projected height: ${projectedHeight}` +
+                `, pool size: ${TransactionPool.getSize()}, queue size: ${TransactionQueue.getSize().queue}` +
+                `, conflicted queue size: ${TransactionQueue.getSize().conflictedQueue}`
+            );
         }, SECOND);
     }
 
