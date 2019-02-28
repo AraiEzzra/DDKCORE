@@ -23,16 +23,17 @@ class TransactionSendService implements ITransactionService<IAssetTransfer> {
     }
 
     // TODO: validate fields in controller
-    verify(asset: IAsset): Response<void> {
+    verify(asset: IAssetTransfer): Response<void> {
         const errors = [];
 
-        if (!trs.recipientAddress) {
-            errors.push('Missing recipient address');
-        }
+        // TODO: validate
+        // if (!trs.recipientAddress) {
+        //     errors.push('Missing recipient address');
+        // }
 
-        if (trs.amount <= 0) {
-            errors.push('Invalid transaction amount');
-        }
+        // if (trs.amount <= 0) {
+        //     errors.push('Invalid transaction amount');
+        // }
 
         return new Response();
     }
@@ -49,7 +50,7 @@ class TransactionSendService implements ITransactionService<IAssetTransfer> {
         return AccountRepo.updateBalanceByAddress(trs.recipientAddress, trs.amount);
     }
 
-    async undoUnconfirmed(trs: Transaction<IAssetTransfer>, sender: Account): Promise<Response<void>> {
+    undoUnconfirmed(trs: Transaction<IAssetTransfer>, sender: Account): Response<void> {
         return null;
     }
 

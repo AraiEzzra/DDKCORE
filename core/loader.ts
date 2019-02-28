@@ -71,26 +71,28 @@ export class MockDelegates {
         }
 
         // For testing
-        // if (process.env.FORGE_SECRET === this.startData[0].secret) {
-        //     const hash = crypto.createHash('sha256').update(process.env.FORGE_SECRET, 'utf8').digest();
-        //     const keypair = ed.makeKeypair(hash);
+        if (process.env.FORGE_SECRET === this.startData[0].secret) {
+            const hash = crypto.createHash('sha256').update(process.env.FORGE_SECRET, 'utf8').digest();
+            const keypair = ed.makeKeypair(hash);
 
-        //     setTimeout(() => {
-        //         for (let index = 0; index < 250; index++) {
-        //             setTimeout(() => {
-        //                 const trsResponse = TransactionDispatcher.create({
-        //                     senderAddress: 7897332094363171058,
-        //                     senderPublicKey: '137b9f0f839ab3ecd2146bfecd64d31e127d79431211e352bedfeba5fd61a57a',
-        //                     recipientAddress: 3002421063889966908,
-        //                     type: TransactionType.SEND,
-        //                     amount: 100000000,
-        //                 }, keypair);
+            const waitForPeers = 2000;
+            const trsCount = 250;
+            setTimeout(() => {
+                for (let index = 0; index < trsCount; index++) {
+                    setTimeout(() => {
+                        const trsResponse = TransactionDispatcher.create({
+                            senderAddress: 7897332094363171058,
+                            senderPublicKey: '137b9f0f839ab3ecd2146bfecd64d31e127d79431211e352bedfeba5fd61a57a',
+                            recipientAddress: 3002421063889966908,
+                            type: TransactionType.SEND,
+                            amount: 100000000,
+                        }, keypair);
 
-        //                 TransactionQueue.push(trsResponse.data);
-        //             }, Math.round(index));
-        //         }
-        //     }, 5000);
-        // }
+                        TransactionQueue.push(trsResponse.data);
+                    }, Math.round(index));
+                }
+            }, waitForPeers);
+        }
 
         const startAfter = 10;
         BlockService.saveGenesisBlock().then(res => {
