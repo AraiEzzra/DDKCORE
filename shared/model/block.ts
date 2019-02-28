@@ -22,7 +22,7 @@ export class BlockModel {
 }
 
 export class Block extends BlockModel {
-    public getCopy() {
+    public getCopy(): Block {
         return new Block(this);
     }
 }

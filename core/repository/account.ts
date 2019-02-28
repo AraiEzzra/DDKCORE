@@ -1,4 +1,4 @@
-import { Account, IAccountFilds, Address } from 'shared/model/account';
+import { Account, AccountModel, Address } from 'shared/model/account';
 import Response from 'shared/model/response';
 import {Delegate} from 'shared/model/delegate';
 
@@ -6,11 +6,11 @@ class AccountRepo {
     private memoryAccountsByAddress: { [address: number]: Account } = {};
     private memoryAccountsByPublicKey: { [publicKey: string]: Account } = {};
 
-    public add(account: IAccountFilds): Response<void> {
+    public add(account: AccountModel): Response<Account> {
         const accountModel = new Account(account);
         this.memoryAccountsByAddress[account.address] = accountModel;
         this.memoryAccountsByPublicKey[account.publicKey] = accountModel;
-        return new Response<void>();
+        return new Response<Account>({ data: accountModel });
     }
 
     getByAddress(accountAddress: number): Account {
@@ -52,6 +52,16 @@ class AccountRepo {
 
     attachDelegate(account: Account, delegate: Delegate): Response<void> {
         this.memoryAccountsByAddress[account.address].delegate = delegate;
+        return new Response<void>();
+    }
+
+    updateVotes(account: Account, votes: Array<string> ): Response<void> {
+        this.memoryAccountsByAddress[account.address].votes = votes;
+        return new Response<void>();
+    }
+
+    updateReferralByAddress(address: Address, referrals: Array<Account>): Response<void> {
+        this.memoryAccountsByAddress[address].referrals = referrals;
         return new Response<void>();
     }
 }

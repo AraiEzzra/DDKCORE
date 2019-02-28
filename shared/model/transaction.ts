@@ -30,7 +30,7 @@ export interface IModelAsset {
 
 export interface IAirdropAsset {
     withAirdropReward: boolean;
-    sponsors: Array<string>;
+    sponsors: { [sponsorAddress: number]: number };
     totalReward: number;
 }
 
@@ -39,7 +39,7 @@ export interface IAsset {
 }
 
 export interface IAssetRegister extends IAsset {
-    referral: string;
+    referral: Address;
 }
 
 export interface IAssetTransfer extends IAsset {
@@ -47,7 +47,7 @@ export interface IAssetTransfer extends IAsset {
 }
 
 export interface IAssetSignature extends IAsset {
-    publicKey: string;
+    publicKey: PublicKey;
 }
 
 export interface IAssetDelegate extends IAsset {
@@ -72,9 +72,9 @@ export interface IAssetSendStake extends IAsset {
 
 export interface IAssetVote extends IAsset {
     votes: Array<string>;
-    reward: number;
-    unstake: number;
-    airdropReward: IAirdropAsset;
+    reward?: number;
+    unstake?: number;
+    airdropReward?: IAirdropAsset;
 }
 
 export class TransactionModel<T extends IAsset> {

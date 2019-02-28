@@ -9,7 +9,9 @@ import { ITableObject } from 'core/util/common';
 import { TOTAL_PERCENTAGE } from 'core/util/const';
 
 class TransactionSendService implements ITransactionService<IAssetTransfer> {
-    create(trs: Transaction<IAssetTransfer>): void {
+
+    async create(trs: Transaction<IAssetTransfer>): Promise<IAssetTransfer> {
+        return;
     }
 
     getBytes(trs: Transaction<IAssetTransfer>): Buffer {
@@ -20,7 +22,19 @@ class TransactionSendService implements ITransactionService<IAssetTransfer> {
         return new Response();
     }
 
-    verify(asset: IAsset): Response<void> {
+    // TODO: validate fields in controller
+    verify(asset: IAssetTransfer): Response<void> {
+        const errors = [];
+
+        // TODO: validate
+        // if (!trs.recipientAddress) {
+        //     errors.push('Missing recipient address');
+        // }
+
+        // if (trs.amount <= 0) {
+        //     errors.push('Invalid transaction amount');
+        // }
+
         return new Response();
     }
 
@@ -40,11 +54,11 @@ class TransactionSendService implements ITransactionService<IAssetTransfer> {
         return null;
     }
 
-    apply(trs: Transaction<IAssetTransfer>): Response<void> {
+    async apply(trs: Transaction<IAssetTransfer>): Promise<Response<void>> {
         return null;
     }
 
-    undo(trs: Transaction<IAssetTransfer>): Response<void> {
+    async undo(trs: Transaction<IAssetTransfer>): Promise<Response<void>> {
         return null;
     }
 
