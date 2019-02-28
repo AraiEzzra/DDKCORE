@@ -18,9 +18,9 @@ import { SALT_LENGTH } from 'core/util/const';
 export interface ITransactionService<T extends IAsset> {
     getBytes(trs: TransactionModel<T>): Buffer;
 
-    create(data: TransactionModel<T>): void;
+    create(trs: TransactionModel<T>, data?: T): void;
 
-    verify(asset: IAsset): ResponseEntity<void>;
+    verify(trs: TransactionModel<T>, sender: Account): ResponseEntity<void>;
     verifyUnconfirmed(trs: Transaction<T>, sender: Account): ResponseEntity<void>;
 
     applyUnconfirmed(trs: Transaction<T>, sender: Account): ResponseEntity<void>;
@@ -32,9 +32,6 @@ export interface ITransactionService<T extends IAsset> {
 
     apply(trs: Transaction<T>, sender: Account): Promise<ResponseEntity<void>>;
     undo(trs: Transaction<T>, sender: Account): Promise<ResponseEntity<void>>;
-
-    dbSave(trs: Transaction<T>): Array<ITableObject>;
-    dbRead(fullBlockRow: Transaction<T>): Transaction<T>;
 }
 
 export interface ITransactionDispatcher<T extends IAsset> {
@@ -47,7 +44,7 @@ export interface ITransactionDispatcher<T extends IAsset> {
         senderAddress: Address, verifiedTransactions: Set<string>, accountsMap: { [address: string]: Account }
     ): Promise<void>;
 
-    verify(trs: TransactionModel<T>): ResponseEntity<void>;
+    verify(trs: TransactionModel<T>, sender: Account): ResponseEntity<void>;
     verifyUnconfirmed(trs: Transaction<T>, sender: Account, checkExists: boolean): ResponseEntity<void>;
 
     create(data: Transaction<T>, keyPair: IKeyPair): ResponseEntity<Transaction<IAsset>>;
@@ -309,7 +306,7 @@ class TransactionDispatcher<T extends IAsset> implements ITransactionDispatcher<
         return new ResponseEntity<void>();
     }
 
-    verify(trs: TransactionModel<T>): ResponseEntity<void> {
+    verify(trs: TransactionModel<T>, sender: Account): ResponseEntity<void> {
         const errors = [];
 
         if (!trs) {
@@ -361,7 +358,7 @@ class TransactionDispatcher<T extends IAsset> implements ITransactionDispatcher<
         }
 
         const service = getTransactionServiceByType(trs.type);
-        const verifyResponse = service.verify(trs.asset);
+        const verifyResponse = service.verify(trs, sender);
         if (!verifyResponse.success) {
             errors.push(...verifyResponse.errors);
         }

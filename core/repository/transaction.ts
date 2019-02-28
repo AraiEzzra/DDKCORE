@@ -20,8 +20,8 @@ export interface ITransactionRepository<T extends Object> extends ITransactionRe
 }
 
 class TransactionRepo implements ITransactionRepository<object> {
-    private memoryTransactionByBlockId: { [blockId: string]: Array<Transaction<Object>> } = {};
-    private memoryTransactionById: { [transactionId: string]: Transaction<Object> } = {};
+    private readonly memoryTransactionByBlockId: { [blockId: string]: Array<Transaction<Object>> } = {};
+    private readonly memoryTransactionById: { [transactionId: string]: Transaction<Object> } = {};
 
     public getTransactionsForBlocksByIds(blocksIds: Array<string>):
         Response<{ [blockId: string]:  Array<Transaction<object>> }> {
