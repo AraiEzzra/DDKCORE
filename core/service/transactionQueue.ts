@@ -1,4 +1,4 @@
-import { Transaction, TransactionStatus } from 'shared/model/transaction';
+import { Transaction, TransactionStatus, IAsset } from 'shared/model/transaction';
 import { transactionSortFunc } from 'core/util/transaction';
 import { getOrCreateAccount } from 'shared/util/account';
 import constants from '../../config/mainnet/constants';
@@ -6,24 +6,21 @@ import TransactionDispatcher from 'core/service/transaction';
 import TransactionPool from 'core/service/transactionPool';
 // import db from 'shared/driver/db';
 import {logger} from 'shared/util/logger';
-import Response from 'shared/model/response';
 import { Account } from 'shared/model/account';
 import { SECOND } from 'core/util/const';
+import AccountRepository from 'core/repository/account';
+import ResponseEntity from 'shared/model/response';
 
 export interface ITransactionQueueService<T extends Object> {
-    reshuffleTransactionQueue(): Response<void>;
+    reshuffle(): ResponseEntity<void>;
 
     getLockStatus(): boolean;
 
-    lock(): Response<void>;
-
-    unlock(): Response<void>;
-
-    getLockStatus(): boolean;
-
-    pop(): Transaction<T>;
+    lock(): void;
+    unlock(): void;
 
     push(trs: Transaction<T>): void;
+    pop(): Transaction<T>;
 
     pushInConflictedQueue(trs: Transaction<T>): void;
 
@@ -33,43 +30,21 @@ export interface ITransactionQueueService<T extends Object> {
 
     getSize(): { conflictedQueue: number, queue: number };
 
-    verify(trs: Transaction<T>, sender: Account): Promise<{ verified: boolean, error: Array<string> }>;
+    verify(trs: Transaction<T>, sender: Account): Promise<ResponseEntity<void>>;
 }
 
-// TODO will be removed
-declare class TransactionQueueScope<T> {
-    transactionPool: any; // ITransactionPoolService<T> but shouldn't be parametrized
-    transactionLogic: any;
-    logger?: any;
-    db?: any;
-}
-
-// TODO NOT ready
-class TransactionQueue<T extends object> implements ITransactionQueueService<T> {
-
+class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> {
     private queue: Array<Transaction<T>> = [];
     private conflictedQueue: Array<{ transaction: Transaction<T>, expire: number }> = [];
 
-    private scope: TransactionQueueScope<T> = {} as TransactionQueueScope<T>;
-
     private locked: boolean = false;
 
-    // redundant
-    constructor() {
-        this.scope.transactionLogic = TransactionDispatcher;
-        this.scope.transactionPool = TransactionPool;
-        this.scope.logger = logger;
-        // this.scope.db = db;
-    }
-
-    lock(): Response<void> {
+    lock(): void {
         this.locked = true;
-        return new Response<void>();
     }
 
-    unlock(): Response<void> {
+    unlock(): void {
         this.locked = false;
-        return new Response<void>();
     }
 
     getLockStatus(): boolean {
@@ -81,6 +56,10 @@ class TransactionQueue<T extends object> implements ITransactionQueueService<T> 
     }
 
     push(trs: Transaction<T>): void {
+        if (this.queue.findIndex(t => t.id === trs.id) !== -1) {
+            return;
+        }
+
         trs.status = TransactionStatus.QUEUED;
         this.queue.push(trs);
         if (this.queue.length === 1) {
@@ -96,14 +75,16 @@ class TransactionQueue<T extends object> implements ITransactionQueueService<T> 
             expire: Math.floor(new Date().getTime() / SECOND) + constants.TRANSACTION_QUEUE_EXPIRE
         });
         trs.status = TransactionStatus.QUEUED_AS_CONFLICTED;
-        this.scope.logger.debug(`TransactionStatus.QUEUED_AS_CONFLICTED ${JSON.stringify(trs)}`);
+        // logger.debug(`TransactionStatus.QUEUED_AS_CONFLICTED ${JSON.stringify(trs)}`);
     }
 
     // TODO can be optimized if check senderId and recipientId
-    reshuffle() {
-        while (this.conflictedQueue.length > 0) {
+    reshuffle(): ResponseEntity<void> {
+        while (this.getSize().conflictedQueue > 0) {
             this.push(this.conflictedQueue.pop().transaction);
         }
+
+        return new ResponseEntity<void>();
     }
 
     async process(): Promise<void> {
@@ -113,24 +94,24 @@ class TransactionQueue<T extends object> implements ITransactionQueueService<T> 
 
         const trs = this.pop();
 
-        if (this.scope.transactionPool.has(trs)) {
+        if (TransactionPool.has(trs)) {
             this.process();
             return;
         }
 
-        if (this.scope.transactionPool.isPotentialConflict(trs)) {
+        if (TransactionPool.isPotentialConflict(trs)) {
             this.pushInConflictedQueue(trs);
             // notify in socket
             this.process();
             return;
         }
 
-        const sender = await getOrCreateAccount(trs.senderPublicKey);
-        this.scope.logger.debug(`[TransactionQueue][process][sender] ${JSON.stringify(sender)}`);
-
-        const verifyStatus = await TransactionDispatcher.verify(trs, sender, true);
+        // const sender = await getOrCreateAccount(trs.senderPublicKey);
+        const sender: Account = AccountRepository.getByPublicKey(trs.senderPublicKey);
+        const verifyStatus = await TransactionDispatcher.verifyUnconfirmed(trs, sender, true);
 
         if (!verifyStatus.success) {
+            logger.debug(`TransactionStatus.verifyStatus ${JSON.stringify(verifyStatus)}`);
             trs.status = TransactionStatus.DECLINED;
             // notify in socket
             this.process();
@@ -138,11 +119,11 @@ class TransactionQueue<T extends object> implements ITransactionQueueService<T> 
         }
 
         trs.status = TransactionStatus.VERIFIED;
-        this.scope.logger.debug(`TransactionStatus.VERIFIED ${JSON.stringify(trs)}`);
+        // logger.debug(`TransactionStatus.VERIFIED ${JSON.stringify(trs)}`);
 
         if (!this.locked) {
-            const pushed = await this.scope.transactionPool.push(trs, sender, true);
-            if (pushed) {
+            const pushed = await TransactionPool.push(trs, sender, true);
+            if (pushed.success) {
                 this.process();
                 return;
             }
@@ -156,35 +137,16 @@ class TransactionQueue<T extends object> implements ITransactionQueueService<T> 
         return { conflictedQueue: this.conflictedQueue.length, queue: this.queue.length };
     }
 
-    reshuffleTransactionQueue(): Response<void> { return new Response<void>(); }
-
-    async verify(trs: Transaction<T>, sender: Account): Promise<{ verified: boolean, error: Array<string> }> {
+    async verify(trs: Transaction<T>, sender: Account): Promise<ResponseEntity<void>> {
         try {
-            await this.scope.transactionLogic.newVerify({ trs, sender, checkExists: true });
-        } catch (e) {
-            this.scope.logger.debug(`[TransactionQueue][verify]: ${e}`);
-            this.scope.logger.trace(`[TransactionQueue][verify][stack]: \n ${e.stack}`);
-            return {
-                verified: false,
-                error: [e]
-            };
+            await TransactionDispatcher.verifyUnconfirmed(trs, sender);
+        } catch (error) {
+            logger.error(`[TransactionQueue][verifyUnconfirmed]: ${error}`);
+            logger.trace(`[TransactionQueue][verifyUnconfirmed][stack]:\n${error.stack}`);
+            return new ResponseEntity<void>({ errors: [error] });
         }
 
-        try {
-            await this.scope.transactionLogic.newVerifyUnconfirmed({ trs, sender });
-        } catch (e) {
-            this.scope.logger.debug(`[TransactionQueue][verifyUnconfirmed]: ${e}`);
-            this.scope.logger.trace(`[TransactionQueue][verifyUnconfirmed][stack]: \n ${e.stack}`);
-            return {
-                verified: false,
-                error: [e]
-            };
-        }
-
-        return {
-            verified: true,
-            error: []
-        };
+        return new ResponseEntity<void>();
     }
 }
 

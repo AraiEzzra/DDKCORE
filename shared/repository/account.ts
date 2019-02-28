@@ -42,7 +42,7 @@ export class AccountRepository implements IAccountRepository {
     }
 
     async getAccount(publicKey: string): Promise<ResponseEntity<Account>> {
-        const address: string = getAddressByPublicKey(publicKey);
+        const address: number = getAddressByPublicKey(publicKey);
         return new ResponseEntity({
             data: null,
         });

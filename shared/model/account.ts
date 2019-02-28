@@ -5,7 +5,7 @@ export type PublicKey = string;
 export type Timestamp = number;
 
 type AirdropReward = {
-    [address: string]: number;
+    [address: number]: number;
 };
 
 class Stake {
