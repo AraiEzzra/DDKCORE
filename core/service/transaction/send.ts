@@ -5,12 +5,11 @@ import { Account } from 'shared/model/account';
 import Response from 'shared/model/response';
 import config from 'shared/util/config';
 import AccountRepo from '../../repository/account';
-import { ITableObject } from 'core/util/common';
 import { TOTAL_PERCENTAGE } from 'core/util/const';
 
 class TransactionSendService implements ITransactionService<IAssetTransfer> {
 
-    async create(trs: Transaction<IAssetTransfer>): Promise<IAssetTransfer> {
+    create(trs: Transaction<IAssetTransfer>): IAssetTransfer {
         return;
     }
 
@@ -18,22 +17,21 @@ class TransactionSendService implements ITransactionService<IAssetTransfer> {
         return Buffer.from([]);
     }
 
-    verifyUnconfirmed(trs: Transaction<IAssetTransfer>): Response<void> {
+    verifyUnconfirmed(trs: Transaction<IAsset>): Response<void> {
         return new Response();
     }
 
     // TODO: validate fields in controller
-    verify(asset: IAssetTransfer): Response<void> {
+    verify(trs: Transaction<IAssetTransfer>, sender: Account): Response<void> {
         const errors = [];
 
-        // TODO: validate
-        // if (!trs.recipientAddress) {
-        //     errors.push('Missing recipient address');
-        // }
+        if (!trs.recipientAddress) {
+            errors.push('Missing recipient address');
+        }
 
-        // if (trs.amount <= 0) {
-        //     errors.push('Invalid transaction amount');
-        // }
+        if (trs.amount <= 0) {
+            errors.push('Invalid transaction amount');
+        }
 
         return new Response();
     }
@@ -59,14 +57,6 @@ class TransactionSendService implements ITransactionService<IAssetTransfer> {
     }
 
     async undo(trs: Transaction<IAssetTransfer>): Promise<Response<void>> {
-        return null;
-    }
-
-    dbRead(fullBlockRow: Transaction<IAssetTransfer>): Transaction<IAssetTransfer> {
-        return null;
-    }
-
-    dbSave(trs: Transaction<IAssetTransfer>): Array<ITableObject> {
         return null;
     }
 }
