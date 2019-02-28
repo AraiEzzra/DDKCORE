@@ -18,38 +18,39 @@ class TransactionSendService implements ITransactionService<IAssetTransfer> {
         return Buffer.from([]);
     }
 
-    async verifyUnconfirmed(trs: Transaction<IAsset>): Promise<Response<void>> {
+    verifyUnconfirmed(trs: Transaction<IAssetTransfer>): Response<void> {
         return new Response();
     }
 
     // TODO: validate fields in controller
-    async verify(trs: Transaction<IAssetTransfer>, sender: Account): Promise<Response<void>> {
+    verify(asset: IAssetTransfer): Response<void> {
         const errors = [];
 
-        if (!trs.recipientAddress) {
-            errors.push('Missing recipient address');
-        }
+        // TODO: validate
+        // if (!trs.recipientAddress) {
+        //     errors.push('Missing recipient address');
+        // }
 
-        if (trs.amount <= 0) {
-            errors.push('Invalid transaction amount');
-        }
+        // if (trs.amount <= 0) {
+        //     errors.push('Invalid transaction amount');
+        // }
 
         return new Response();
     }
 
-    calculateFee(trs: Transaction<IAsset>, sender: Account): number {
+    calculateFee(trs: Transaction<IAssetTransfer>, sender: Account): number {
         return (trs.amount * config.constants.fees.send) / TOTAL_PERCENTAGE;
     }
 
-    calculateUndoUnconfirmed(trs: Transaction<IAsset>, sender: Account): void {
+    calculateUndoUnconfirmed(trs: Transaction<IAssetTransfer>, sender: Account): void {
         return;
     }
 
-    async applyUnconfirmed(trs: Transaction<IAsset>): Promise<Response<void>> {
+    applyUnconfirmed(trs: Transaction<IAssetTransfer>): Response<void> {
         return AccountRepo.updateBalanceByAddress(trs.recipientAddress, trs.amount);
     }
 
-    async undoUnconfirmed(trs: Transaction<IAssetTransfer>, sender: Account): Promise<Response<void>> {
+    undoUnconfirmed(trs: Transaction<IAssetTransfer>, sender: Account): Response<void> {
         return null;
     }
 

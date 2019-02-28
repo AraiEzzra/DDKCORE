@@ -1,12 +1,20 @@
-import blockController from './block';
-import delegateController from './delegate';
-import roundController from './round';
-import syncController from './sync';
+import BlockController from './block';
+import DelegateController from './delegate';
+import RoundController from './round';
+import SyncController from './sync';
+import TransactionController from './transaction';
 
 import { subjectOn, subjectRpc } from 'shared/util/bus';
 
 export const initControllers = () => {
-    const controllers = [blockController, roundController, delegateController, syncController];
+    const controllers = [
+        BlockController,
+        TransactionController,
+        RoundController,
+        DelegateController,
+        SyncController
+    ];
+
     controllers.forEach((controller) => {
         if (controller.eventsON && controller.eventsON.length) {
             controller.eventsON.forEach(({ handlerTopicName, handlerFunc }) => {
@@ -32,8 +40,8 @@ export const initControllers = () => {
 };
 
 export default {
-    blockController,
-    delegateController,
-    roundController,
-    syncController,
+    BlockController,
+    DelegateController,
+    RoundController,
+    SyncController,
 };
