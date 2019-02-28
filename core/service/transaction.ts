@@ -22,7 +22,7 @@ export interface ITransactionService<T extends IAsset> {
     create(data: TransactionModel<T>): void;
 
     verify(asset: IAsset): ResponseEntity<void>;
-    verifyUnconfirmed(trs: Transaction<T>, sender: Account, checkExists: boolean): ResponseEntity<void>;
+    verifyUnconfirmed(trs: Transaction<T>, sender: Account): ResponseEntity<void>;
 
     applyUnconfirmed(trs: Transaction<T>, sender: Account): ResponseEntity<void>;
     undoUnconfirmed(trs: Transaction<T>, sender: Account): ResponseEntity<void>;
@@ -57,9 +57,9 @@ export interface ITransactionDispatcher<T extends IAsset> {
 
     getId(trs: Transaction<T>): string;
 
-    getHash(trs: TransactionModel<T>): Buffer;
+    getHash(trs: Transaction<T>): Buffer;
 
-    getBytes(trs: TransactionModel<T>): Buffer;
+    getBytes(trs: Transaction<T>): Buffer;
 
     isConfirmed(trs: Transaction<T>): IFunctionResponse;
 
@@ -71,8 +71,8 @@ export interface ITransactionDispatcher<T extends IAsset> {
     verifySecondSignature(trs: Transaction<T>, publicKey: string, signature: string): IFunctionResponse;
     verifyBytes(bytes: Uint8Array, publicKey: string, signature: string): IFunctionResponse;
 
-    apply(trs: Transaction<T>, sender: Account): ResponseEntity<void>;
-    undo(trs: Transaction<T>, sender: Account): ResponseEntity<void>;
+    apply(trs: Transaction<T>, sender: Account): Promise<ResponseEntity<void>>;
+    undo(trs: Transaction<T>, sender: Account): Promise<ResponseEntity<void>>;
 
     applyUnconfirmed(trs: Transaction<T>, sender: Account): ResponseEntity<void>;
     undoUnconfirmed(trs: Transaction<T>, sender?: Account): ResponseEntity<void>;
@@ -96,7 +96,7 @@ class TransactionDispatcher<T extends IAsset> implements ITransactionDispatcher<
         return new ResponseEntity<void>();
     }
 
-    apply(trs: Transaction<T>, sender: Account): ResponseEntity<void> {
+    async apply(trs: Transaction<T>, sender: Account): Promise<ResponseEntity<void>> {
         return new ResponseEntity<void>();
     }
 
@@ -302,7 +302,7 @@ class TransactionDispatcher<T extends IAsset> implements ITransactionDispatcher<
         return ed.sign(this.getHash(trs), keyPair).toString('hex');
     }
 
-    undo(trs: Transaction<T>, sender: Account): ResponseEntity<void> {
+    async undo(trs: Transaction<T>, sender: Account): Promise<ResponseEntity<void>> {
         return new ResponseEntity<void>();
     }
 
@@ -312,6 +312,12 @@ class TransactionDispatcher<T extends IAsset> implements ITransactionDispatcher<
 
     verify(trs: TransactionModel<T>): ResponseEntity<void> {
         const errors = [];
+
+        if (!trs) {
+            errors.push('Missing transaction');
+            return new ResponseEntity<void>({ errors });
+        }
+
         if (!trs.id) {
             errors.push('Missing id');
         }
@@ -402,12 +408,8 @@ class TransactionDispatcher<T extends IAsset> implements ITransactionDispatcher<
             return senderBalanceResponse;
         }
 
-        switch (trs.type) {
-            case TransactionType.SEND:
-                return TransactionSendService.verifyUnconfirmed(trs);
-            default:
-                return new ResponseEntity();
-        }
+        const service = getTransactionServiceByType(trs.type);
+        return service.verifyUnconfirmed(trs, sender);
     }
 
     async returnToQueueConflictedTransactionFromPool(transactions): Promise<ResponseEntity<void>> {

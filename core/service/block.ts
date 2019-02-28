@@ -250,7 +250,6 @@ class BlockService {
             if (!response.success) {
                 errors.push(...response.errors);
             }
-            console.log(`response.data: ${JSON.stringify(response.data)}`);
 
             block.transactions[i] = response.data;
         }

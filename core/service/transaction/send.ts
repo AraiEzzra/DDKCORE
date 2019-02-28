@@ -16,7 +16,7 @@ class TransactionSendService implements ITransactionService<IAssetTransfer> {
         return Buffer.from([]);
     }
 
-    verifyUnconfirmed(trs: Transaction<IAsset>): Response<void> {
+    verifyUnconfirmed(trs: Transaction<IAssetTransfer>): Response<void> {
         return new Response();
     }
 
@@ -24,11 +24,11 @@ class TransactionSendService implements ITransactionService<IAssetTransfer> {
         return new Response();
     }
 
-    calculateFee(trs: Transaction<IAsset>, sender: Account): number {
+    calculateFee(trs: Transaction<IAssetTransfer>, sender: Account): number {
         return (trs.amount * config.constants.fees.send) / TOTAL_PERCENTAGE;
     }
 
-    calculateUndoUnconfirmed(trs: Transaction<IAsset>, sender: Account): void {
+    calculateUndoUnconfirmed(trs: Transaction<IAssetTransfer>, sender: Account): void {
         return;
     }
 
