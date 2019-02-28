@@ -6,11 +6,10 @@ import DelegateRepo from 'core/repository/delegate';
 import Response from 'shared/model/response';
 import AccountRepo from 'core/repository/account';
 import config from 'shared/util/config';
-import { ITableObject } from 'core/util/common';
 
 class TransactionDelegateService implements ITransactionService<IAssetDelegate> {
 
-    async create(trs: Transaction<IAssetDelegate>, data: IAssetDelegate): Promise<IAssetDelegate> {
+    create(trs: Transaction<IAssetDelegate>, data: IAssetDelegate): IAssetDelegate {
         const asset: IAssetDelegate = {
             username: data.username,
             url: data.url
@@ -26,11 +25,11 @@ class TransactionDelegateService implements ITransactionService<IAssetDelegate> 
         return Buffer.from(trs.asset.username, 'utf8');
     }
 
-    async verifyUnconfirmed(trs: Transaction<IAssetDelegate>, sender: Account): Promise<Response<void>> {
+    verifyUnconfirmed(trs: Transaction<IAssetDelegate>, sender: Account): Response<void> {
         return new Response();
     }
 
-    async verify(trs: Transaction<IAssetDelegate>, sender: Account): Promise<Response<void>> {
+    verify(trs: Transaction<IAssetDelegate>, sender: Account): Response<void> {
         const errors = [];
 
         if (trs.recipientAddress) {
@@ -76,7 +75,7 @@ class TransactionDelegateService implements ITransactionService<IAssetDelegate> 
             errors.push('Username can only contain alphanumeric characters with the exception of !@$&_.');
         }
 
-        const existingDelegate: Delegate = DelegateRepo.getByUsername(username);
+        const existingDelegate: boolean = DelegateRepo.isUserNameExists(username);
         if (existingDelegate) {
             errors.push('Username already exists');
         }
@@ -92,7 +91,7 @@ class TransactionDelegateService implements ITransactionService<IAssetDelegate> 
         sender.delegate = null;
     }
 
-    async applyUnconfirmed(trs: Transaction<IAssetDelegate>, sender: Account): Promise<Response<void>> {
+    applyUnconfirmed(trs: Transaction<IAssetDelegate>, sender: Account): Response<void> {
         const newDelegate: Delegate = DelegateRepo.add(sender, {
             username: trs.asset.username,
             url: trs.asset.url
@@ -101,8 +100,8 @@ class TransactionDelegateService implements ITransactionService<IAssetDelegate> 
         return new Response<void>();
     }
 
-    async undoUnconfirmed(trs: Transaction<IAssetDelegate>, sender: Account): Promise<Response<void>> {
-        DelegateRepo.deleteByUsername(sender.delegate.username);
+    undoUnconfirmed(trs: Transaction<IAssetDelegate>, sender: Account): Response<void> {
+        DelegateRepo.delete(sender);
         AccountRepo.attachDelegate(sender, null);
         return new Response<void>();
     }
@@ -113,14 +112,6 @@ class TransactionDelegateService implements ITransactionService<IAssetDelegate> 
 
     async undo(trs: Transaction<IAssetDelegate>): Promise<Response<void>> {
         return new Response<void>();
-    }
-
-    dbRead(fullBlockRow: Transaction<IAssetDelegate>): Transaction<IAssetDelegate> {
-        return null;
-    }
-
-    dbSave(trs: Transaction<IAssetDelegate>): Array<ITableObject> {
-        return null;
     }
 }
 
