@@ -18,12 +18,12 @@ class TransactionSendService implements ITransactionService<IAssetTransfer> {
         return Buffer.from([]);
     }
 
-    async verifyUnconfirmed(trs: Transaction<IAsset>): Promise<Response<void>> {
+    verifyUnconfirmed(trs: Transaction<IAssetTransfer>): Response<void> {
         return new Response();
     }
 
     // TODO: validate fields in controller
-    async verify(trs: Transaction<IAssetTransfer>, sender: Account): Promise<Response<void>> {
+    verify(asset: IAsset): Response<void> {
         const errors = [];
 
         if (!trs.recipientAddress) {
@@ -37,15 +37,15 @@ class TransactionSendService implements ITransactionService<IAssetTransfer> {
         return new Response();
     }
 
-    calculateFee(trs: Transaction<IAsset>, sender: Account): number {
+    calculateFee(trs: Transaction<IAssetTransfer>, sender: Account): number {
         return (trs.amount * config.constants.fees.send) / TOTAL_PERCENTAGE;
     }
 
-    calculateUndoUnconfirmed(trs: Transaction<IAsset>, sender: Account): void {
+    calculateUndoUnconfirmed(trs: Transaction<IAssetTransfer>, sender: Account): void {
         return;
     }
 
-    async applyUnconfirmed(trs: Transaction<IAsset>): Promise<Response<void>> {
+    applyUnconfirmed(trs: Transaction<IAssetTransfer>): Response<void> {
         return AccountRepo.updateBalanceByAddress(trs.recipientAddress, trs.amount);
     }
 

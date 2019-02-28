@@ -3,7 +3,8 @@ import TransactionDispatcher from 'core/service/transaction';
 import { TransactionStatus, TransactionType} from 'shared/model/transaction';
 import { Address, PublicKey, Timestamp} from 'shared/model/account';
 import { messageON } from 'shared/util/bus';
-import {initControllers} from 'core/controller/index';
+import { initControllers } from 'core/controller/index';
+import TransactionPool from 'core/service/transactionPool';
 
 /**
  * for mock delegates
@@ -23,6 +24,7 @@ import BlockService from 'core/service/block';
 import {Delegate} from 'shared/model/delegate';
 import { logger } from 'shared/util/logger';
 import { SECOND } from 'core/util/const';
+import TransactionQueue from 'core/service/transactionQueue';
 enum constant  {
     Limit = 1000
 }
@@ -44,14 +46,15 @@ interface ITransaction <T extends object> {
 }
 
 export class MockDelegates {
-    private startData: Array<{name: string, secret: string}> = [
+    private startData: Array<{ name: string, secret: string }> = [
+        {
+            name: 'DELEGATE_10.5.0.1',
+            secret: 'whale slab bridge virus merry ship bright fiber power outdoor main enforce'
+        },
         {
             name: 'DELEGATE_10.6.0.1',
             secret: 'artwork relax sheriff sting fruit return spider reflect cupboard dice goddess slice'
         },
-        {
-            name: 'DELEGATE_10.5.0.1',
-            secret: 'whale slab bridge virus merry ship bright fiber power outdoor main enforce'},
         {
             name: 'DELEGATE_10.7.0.1',
             secret: 'milk exhibit cabbage detail village hero script glory tongue post clinic wish'
@@ -67,15 +70,39 @@ export class MockDelegates {
             AccountRepository.attachDelegate(account, delegate);
         }
 
+        // For testing
+        // if (process.env.FORGE_SECRET === this.startData[0].secret) {
+        //     const hash = crypto.createHash('sha256').update(process.env.FORGE_SECRET, 'utf8').digest();
+        //     const keypair = ed.makeKeypair(hash);
+
+        //     setTimeout(() => {
+        //         for (let index = 0; index < 250; index++) {
+        //             setTimeout(() => {
+        //                 const trsResponse = TransactionDispatcher.create({
+        //                     senderAddress: 7897332094363171058,
+        //                     senderPublicKey: '137b9f0f839ab3ecd2146bfecd64d31e127d79431211e352bedfeba5fd61a57a',
+        //                     recipientAddress: 3002421063889966908,
+        //                     type: TransactionType.SEND,
+        //                     amount: 100000000,
+        //                 }, keypair);
+
+        //                 TransactionQueue.push(trsResponse.data);
+        //             }, Math.round(index));
+        //         }
+        //     }, 5000);
+        // }
+
+        const startAfter = 10;
         BlockService.saveGenesisBlock().then(res => {
-            RoundService.generateRound();
+            // generateRound calls after 10 seconds
+            setTimeout(() => RoundService.generateRound(), startAfter * SECOND);
         });
     }
 
     private createAccount(data): Account {
         const hash = crypto.createHash('sha256').update(data.secret, 'utf8').digest();
         const publicKey: string = ed.makePublicKeyHex(hash);
-        const address: number = Number(getAddressByPublicKey(publicKey).slice(this.startData.length, -1));
+        const address: number = getAddressByPublicKey(publicKey);
 
         return new Account({
             address: address,
@@ -99,8 +126,13 @@ class Loader {
         setInterval(() => {
             const currentTime = new Date().getTime();
             const timeInSeconds = Math.floor((currentTime - initTime) / SECOND);
-            const projectedHeight = Math.floor(timeInSeconds / 10) + 1;
-            logger.debug(`[Loader] time in seconds: ${timeInSeconds}, projected height: ${projectedHeight}`);
+            const slotTime = 10;
+            const projectedHeight = Math.floor(timeInSeconds / slotTime) + 1;
+            logger.debug(
+                `[Loader] time in seconds: ${timeInSeconds}, projected height: ${projectedHeight}` +
+                `, pool size: ${TransactionPool.getSize()}, queue size: ${TransactionQueue.getSize().queue}` +
+                `, conflicted queue size: ${TransactionQueue.getSize().conflictedQueue}`
+            );
         }, SECOND);
     }
 

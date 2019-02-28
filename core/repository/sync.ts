@@ -53,7 +53,7 @@ export class Sync implements ISyncRepo {
     }
 
     async sendUnconfirmedTransaction(trs: Transaction<any>): Promise<void> {
-        this.socketRepo.emitPeers('NEW_TRANSACTION', { trs });
+        this.socketRepo.emitPeers('TRANSACTION_RECEIVE', { trs });
     }
 
     async requestCommonBlocks(blockIds) {
