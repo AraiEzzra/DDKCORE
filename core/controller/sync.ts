@@ -1,11 +1,9 @@
 import SyncService from 'core/service/sync';
 import { ON } from 'core/util/decorator';
 import { Block } from 'shared/model/block';
-import { Transaction } from 'shared/model/transaction';
 import { Peer } from 'shared/model/peer';
 import { BaseController } from 'core/controller/baseController';
 import PeerService from 'core/service/peer';
-import transactionQueue from 'core/service/transactionQueue';
 import BlockService from 'core/service/block';
 import { logger } from 'shared/util/logger';
 
@@ -16,12 +14,6 @@ export class SyncController extends BaseController {
         const { data } = action;
         logger.debug(`[Controller][Sync][newBlock] block id ${data.block.id}`);
         await BlockService.processIncomingBlock(data.block);
-    }
-
-    @ON('NEW_TRANSACTION')
-    async newTransaction(action: { data: { trs: Transaction<any> } }): Promise<void> {
-        const { data } = action;
-        transactionQueue.push(data.trs);
     }
 
     // TODO call after several minutes or by interval

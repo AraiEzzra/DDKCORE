@@ -27,8 +27,8 @@ class StakeReward {
 
 const stakeReward = new StakeReward();
 
-export async function calculateTotalRewardAndUnstake(sender: Account, isDownVote: boolean):
-        Promise<{ reward: number, unstake: number}> {
+export function calculateTotalRewardAndUnstake(sender: Account, isDownVote: boolean)
+        : { reward: number, unstake: number} {
     let reward: number = 0;
     let unstakeAmount: number = 0;
     if (isDownVote) {
@@ -55,10 +55,10 @@ export async function calculateTotalRewardAndUnstake(sender: Account, isDownVote
 }
 
 // todo: check if available, redis
-export async function getAirdropReward(
+export function getAirdropReward(
     sender: Account,
     amount: number,
-    transactionType: TransactionType): Promise<IAirdropAsset> {
+    transactionType: TransactionType): IAirdropAsset {
     const result: IAirdropAsset = {
         totalReward: 0,
         sponsors: {},
@@ -98,11 +98,11 @@ export async function getAirdropReward(
     return result;
 }
 
-export async function verifyAirdrop(
+export function verifyAirdrop(
     trs: Transaction<IAssetStake | IAssetVote>,
     amount: number,
-    sender: Account): Promise<Response<void>> {
-    const airdropReward = await getAirdropReward(
+    sender: Account): Response<void> {
+    const airdropReward = getAirdropReward(
         sender,
         amount,
         trs.type
@@ -128,22 +128,22 @@ export async function verifyAirdrop(
     return new Response<void>();
 }
 
-export async function applyFrozeOrdersRewardAndUnstake(
+export function applyFrozeOrdersRewardAndUnstake(
     voteTransaction: Transaction<IAssetVote>,
-    activeOrders: Array<Stake>): Promise<Response<void>> {
-    await applyRewards(voteTransaction);
-    await sendAirdropReward(voteTransaction);
-    await applyUnstake(activeOrders, voteTransaction);
+    activeOrders: Array<Stake>): Response<void> {
+    applyRewards(voteTransaction);
+    sendAirdropReward(voteTransaction);
+    applyUnstake(activeOrders, voteTransaction);
     return new Response<void>();
 }
 
-async function applyRewards(voteTransaction: Transaction<IAssetVote>): Promise<void> {
+function applyRewards(voteTransaction: Transaction<IAssetVote>): void {
     const reward = voteTransaction.asset.reward;
     AccountRepo.updateBalanceByAddress(voteTransaction.senderAddress, reward);
     AccountRepo.updateBalanceByAddress(config.config.forging.totalSupplyAccount, -reward);
 }
 
-async function applyUnstake(orders: Array<Stake>, voteTransaction: Transaction<IAssetVote>): Promise<void> {
+function applyUnstake(orders: Array<Stake>, voteTransaction: Transaction<IAssetVote>): void {
     const readyToUnstakeOrders = orders.filter(o => o.voteCount === config.constants.froze.unstakeVoteCount);
     readyToUnstakeOrders.map((order) => {
         order.isActive = false;
@@ -151,7 +151,7 @@ async function applyUnstake(orders: Array<Stake>, voteTransaction: Transaction<I
     AccountRepo.updateBalanceByAddress(voteTransaction.senderAddress, voteTransaction.asset.unstake);
 }
 
-export async function sendAirdropReward(trs: Transaction<IAssetVote | IAssetStake>): Promise<void> {
+async function sendAirdropReward(trs: Transaction<IAssetVote>): Promise<void> {
     const transactionAirdropReward = trs.asset.airdropReward;
     if (!transactionAirdropReward.withAirdropReward || transactionAirdropReward.totalReward === 0) {
         return;
@@ -172,19 +172,19 @@ export async function sendAirdropReward(trs: Transaction<IAssetVote | IAssetStak
     }
 }
 
-export async function undoFrozeOrdersRewardAndUnstake(voteTransaction: Transaction<IAssetVote>): Promise<void> {
+export function undoFrozeOrdersRewardAndUnstake(voteTransaction: Transaction<IAssetVote>): void {
     const senderStakes: Array<Stake> = AccountRepo.getByAddress(voteTransaction.senderAddress).stakes;
     const updatedOrders = senderStakes.map((order: Stake) => {
         if (order.nextVoteMilestone === voteTransaction.createdAt + config.constants.froze.vTime * 60) {
             return order;
         }
     });
-    await undoUnstake(updatedOrders, voteTransaction);
-    await undoRewards(voteTransaction);
-    await undoAirdropReward(voteTransaction);
+    undoUnstake(updatedOrders, voteTransaction);
+    undoRewards(voteTransaction);
+    undoAirdropReward(voteTransaction);
 }
 
-async function undoUnstake(orders: Array<Stake>, voteTransaction: Transaction<IAssetVote>): Promise<void> {
+function undoUnstake(orders: Array<Stake>, voteTransaction: Transaction<IAssetVote>): void {
     const unstakedOrders = orders.filter(order => !order.isActive);
     unstakedOrders.map((order) => {
         order.isActive = true;
@@ -192,13 +192,13 @@ async function undoUnstake(orders: Array<Stake>, voteTransaction: Transaction<IA
     AccountRepo.updateBalanceByAddress(voteTransaction.senderAddress, -voteTransaction.asset.unstake);
 }
 
-async function undoRewards(voteTransaction: Transaction<IAssetVote>): Promise<void> {
+function undoRewards(voteTransaction: Transaction<IAssetVote>): void {
     const reward = voteTransaction.asset.reward;
     AccountRepo.updateBalanceByAddress(voteTransaction.senderAddress, -reward);
     AccountRepo.updateBalanceByAddress(config.config.forging.totalSupplyAccount, reward);
 }
 
-export async function undoAirdropReward(trs: Transaction<IAssetVote | IAssetStake>): Promise<void> {
+function undoAirdropReward(trs: Transaction<IAssetVote | IAssetStake>): void {
     const transactionAirdropReward = trs.asset.airdropReward;
     if (!transactionAirdropReward.withAirdropReward) {
         return;

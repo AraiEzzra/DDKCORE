@@ -12,8 +12,6 @@ import BUFFER from 'core/util/buffer';
 import {
     getAirdropReward,
     verifyAirdrop,
-    sendAirdropReward,
-    undoAirdropReward
 } from 'core/util/reward';
 
 import {ITableObject} from 'core/util/common';
@@ -76,11 +74,11 @@ class TransactionStakeService implements ITransactionService<IAssetStake> {
         return Buffer.concat([buff, referralBuffer]);
     }
 
-    async verifyUnconfirmed(trs: Transaction<IAssetStake>, sender: Account): Promise<ResponseEntity<void>> {
+    verifyUnconfirmed(trs: Transaction<IAssetStake>, sender: Account): ResponseEntity<void> {
         return new ResponseEntity();
     }
 
-    async verify(trs: Transaction<IAssetStake>, sender: Account): Promise<ResponseEntity<any>> {
+    verify(trs: Transaction<IAssetStake>, sender: Account): ResponseEntity<any> {
         let errors = [];
         if (trs.asset.stakeOrder.stakedAmount <= 0 && config.constants.STAKE_VALIDATE.AMOUNT_ENABLED) {
             errors.push('Invalid transaction amount');
@@ -90,7 +88,7 @@ class TransactionStakeService implements ITransactionService<IAssetStake> {
             errors.push('Invalid stake amount: Decimal value');
         }
 
-        const airdropCheck: ResponseEntity<any> = await verifyAirdrop(trs, trs.asset.stakeOrder.stakedAmount, sender);
+        const airdropCheck: ResponseEntity<any> = verifyAirdrop(trs, trs.asset.stakeOrder.stakedAmount, sender);
         if (!airdropCheck.success && config.constants.STAKE_VALIDATE.AIRDROP_ENABLED) {
             errors = errors.concat(airdropCheck.errors);
         }
@@ -105,13 +103,13 @@ class TransactionStakeService implements ITransactionService<IAssetStake> {
         return;
     }
 
-    async applyUnconfirmed(trs: Transaction<IAssetStake>): Promise<ResponseEntity<void>> {
+    applyUnconfirmed(trs: Transaction<IAssetStake>): ResponseEntity<void> {
         const fee: number = this.calculateFee(trs);
         const totalAmount: number = fee + trs.asset.stakeOrder.stakedAmount;
         return AccountRepo.updateBalanceByAddress(trs.senderAddress, totalAmount * (-1));
     }
 
-    async undoUnconfirmed(trs: Transaction<IAssetStake>, sender: Account): Promise<ResponseEntity<void>> {
+    undoUnconfirmed(trs: Transaction<IAssetStake>, sender: Account): ResponseEntity<void> {
         const fee: number = this.calculateFee(trs);
         const totalAmount: number = fee + trs.asset.stakeOrder.stakedAmount;
         return AccountRepo.updateBalanceByAddress(trs.senderAddress, totalAmount);
@@ -122,7 +120,6 @@ class TransactionStakeService implements ITransactionService<IAssetStake> {
     }
 
     async undo(trs: Transaction<IAssetStake>): Promise<ResponseEntity<void>> {
-        await undoAirdropReward(trs);
         return new ResponseEntity<void>();
     }
 
