@@ -122,23 +122,13 @@ class TransactionRepo implements ITransactionRepository<object> {
     }
 
     async getTotalCountTransactions(): Promise<Response<number>> {
-        let res: {count: number};
-        try {
-            res = await db.one(queries.getTotalCountTransactions);
-        } catch (errors) {
-            return new Response(errors);
-        }
+        const res = await db.one(queries.getTotalCountTransactions);
         return new Response<number>({data: res.count});
     }
 
     async getTransactionBatch(limit: number, offset: number): Promise<Response<Array<Transaction<IAsset>>>> {
-        let trs: Array<Transaction<IAsset>>;
-        try {
-            trs = await db.many(queries.getTransactionBatch(limit, offset));
-        } catch (errors) {
-            return new Response(errors);
-        }
-        return new Response({data: trs});
+        const trs:  Array<Transaction<IAsset>> = await db.manyOrNone(queries.getTransactionBatch, { limit, offset});
+        return new Response({data: trs || []});
     }
 }
 

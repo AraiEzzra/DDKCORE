@@ -15,24 +15,18 @@ class Loader {
         let offset = 0;
         do {
             const transactionBatch: Response<Array<Transaction<IAsset>>> =
-                    await TransactionRepo.getTransactionBatch(limit, offset);
+                await TransactionRepo.getTransactionBatch(limit, offset);
 
-            if (!transactionBatch.success) {
-                logger.error('Loader ERROR : ', transactionBatch.errors);
-                return;
-            }
             for (let trs of transactionBatch.data) {
                 const sender = AccountRepo.add({
                     address: trs.senderAddress,
                     publicKey: trs.senderPublicKey
                 });
-                await TransactionDispatcher.applyUnconfirmed(trs, sender.data);
+                TransactionDispatcher.applyUnconfirmed(trs, sender.data);
             }
-
             if (transactionBatch.data.length < limit) {
                 break;
             }
-
             offset += limit;
         } while (true);
 
