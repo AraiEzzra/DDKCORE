@@ -44,21 +44,9 @@ create index trs_sender_address
 create index trs_recipient_address
   on trs (recipient_address);
 
-create table account
+create table round
 (
-  address           bigint    not null primary key,
-  public_key        char(64)  not null,
-  second_public_key char(64),
-  balance           bigint             default 0,
-  staked_amount     bigint             default 0,
-  referrals         bigint [] not null default []
-);
-
-create index account_address
-  on account (address);
-
-create table delegate_to_vote_counter
-(
-  public_key char(64)          not null    primary key,
-  voteCount  integer default 0 not null
+  height_start      integer   primary key,
+  height_finish     integer   not null,
+  slots             json      not null default '{}' :: json
 );
