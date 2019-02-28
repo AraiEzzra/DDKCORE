@@ -1,9 +1,14 @@
 import { Peer } from 'shared/model/peer';
 import { Block } from 'shared/model/block';
-import { Sync } from 'core/repository/sync';
-import Socket from 'core/repository/socket';
 import { Transaction } from 'shared/model/transaction';
 import headers from 'core/repository/system';
+import BlockService from 'core/service/block';
+import BlockRepository from 'core/repository/block';
+import PeerRepository from 'core/repository/peer';
+import SyncRepository from 'core/repository/sync';
+import SocketRepository from 'core/repository/socket';
+//  TODO get from env
+const MIN_CONSENSUS = 51;
 
 export interface ISyncService {
 
@@ -17,69 +22,79 @@ export interface ISyncService {
 
     sendUnconfirmedTransaction(trs: Transaction<any>): Promise<void>;
 
-    requestBlocks(data: { height: number, limit: number }): Promise<void>;
+    requestBlocks(block: Block, peer: Peer): Promise<void>;
 
     sendBlocks(data: { height: number, limit: number }, peer: Peer): Promise<void>;
+
+    consensus: boolean;
 }
 
 export class SyncService implements ISyncService {
 
-    private syncRepo: Sync;
-    private socketRepo: Socket;
-
     constructor() {
-        this.syncRepo = new Sync();
-        this.socketRepo = new Socket();
     }
 
     async requestPeers(): Promise<void> {
-        this.syncRepo.requestPeers();
+        SyncRepository.requestPeers();
     }
 
     async sendPeers(peer): Promise<void> {
-        this.syncRepo.sendPeers(peer);
+        SyncRepository.sendPeers(peer);
     }
 
     async connectNewPeers(peers: Array<Peer>): Promise<void> {
-        peers.forEach(peer => this.socketRepo.connectNewPeer(peer));
+        peers.forEach(peer => SocketRepository.connectNewPeer(peer));
     }
 
-    // TODO call in block service
     async sendNewBlock(block: Block): Promise<void> {
-        this.syncRepo.sendNewBlock(block);
+        SyncRepository.sendNewBlock(block);
     }
 
-    // TODO call in transaction service
     async sendUnconfirmedTransaction(trs: Transaction<any>): Promise<void> {
-        this.syncRepo.sendUnconfirmedTransaction(trs);
+        SyncRepository.sendUnconfirmedTransaction(trs);
     }
 
-    async requestBlocks(peer): Promise<void> {
-        // TODO getMinHeight from block service
-        this.syncRepo.requestBlocks({ height: 1, limit: 42 }, peer);
+    async requestBlocks(): Promise<void> {
+        SyncRepository.requestBlocks({ height: headers.height, limit: 42 });
     }
 
     async sendBlocks(data: { height: number, limit: number }, peer): Promise<void> {
-        // TODO get blocks from block service
-        this.syncRepo.sendBlocks([], peer);
+        const response = await BlockRepository.loadBlocksOffset({
+            offset: data.height,
+            limit: data.limit
+        });
+        SyncRepository.sendBlocks(response.data, peer);
     }
 
+        // TODO remove
     async requestCommonBlocks(): Promise<void> {
-        const blockIds = []; // TODO get id from 5 last blocks from block service
-        this.syncRepo.requestCommonBlocks(blockIds);
+        const block = BlockService.getLastBlock();
+        SyncRepository.requestCommonBlocks(block);
     }
 
-    async checkCommonBlocks(blockIds: Array<number>, peer): Promise<void> {
-        //  const result = await this.blockService.getBlocks(blockIds);
-        let response = true; // response = result.length
-        this.syncRepo.sendCommonBlocksExist(response, peer);
+    // TODO remove
+    async checkCommonBlocks(block: Block, peer): Promise<void> {
+        // const response = await BlockRepository.getCommonBlock(block);
+        // SyncRepository.sendCommonBlocksExist(response, peer);
     }
 
-    async updateHeaders(data: { blockIds, lastBlock }) {
-        const broadhash = headers.generateBroadhash(data.blockIds);
-        const height = data.lastBlock.height;
-        headers.update({ broadhash, height });
-        this.syncRepo.sendHeaders(headers);
+    async updateHeaders(data: { lastBlock: Block }) {
+        headers.setBroadhash(data.lastBlock);
+        headers.addBlockIdInPool(data.lastBlock);
+        headers.setHeight(data.lastBlock);
+        SyncRepository.sendHeaders(
+            headers.getHeaders()
+        );
+    }
+
+    getConsensus(): number {
+        const peers = PeerRepository.peerList();
+        const commonPeers = peers.filter(peer => peer.broadhash === headers.broadhash);
+        return commonPeers.length / peers.length * 100;
+    }
+
+    get consensus(): boolean {
+        return this.getConsensus() >= MIN_CONSENSUS
     }
 }
 

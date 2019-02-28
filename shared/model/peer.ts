@@ -16,6 +16,8 @@ export class Peer {
     height?: number;
     string?: string;
     socket?: any;
+    blocksIds?: Map<number, string>;
 
-    constructor() {}
+    constructor() {
+    }
 }
