@@ -6,7 +6,8 @@ import { Delegate } from 'shared/model/delegate';
 const constants = Config.constants;
 
 class DelegateRepository {
-    private memoryDelegates: Array<Delegate> = [];
+    private memoryDelegates: { [publicKey: string]: Delegate } = {};
+    private usernames: Set<string> = new Set<string>();
 
     public add(account: Account, params: {username?: string, url?: string} = {}) {
         const delegate: Delegate = new Delegate({
@@ -17,18 +18,8 @@ class DelegateRepository {
             account: account,
             votes: 0
         });
-        
-        this.memoryDelegates.push(delegate);
-        this.memoryDelegates.sort((a, b) => {
-            if (a.votes > b.votes) {
-                return 1;
-            }
-            if (a.votes < b.votes) {
-                return -1;
-            }
-            return 0;
-        });
-        
+        this.memoryDelegates[account.publicKey] = delegate;
+        this.usernames.add(delegate.username);
         return delegate;
     }
 
@@ -37,15 +28,29 @@ class DelegateRepository {
      * @return Array<Account>
      */
     public getActiveDelegates(): Response<Array<Delegate>> {
-        return new Response({data: this.memoryDelegates.slice(0, constants.activeDelegates)});
+        const activeDelegates: Array<Delegate> = Object.values(this.memoryDelegates).sort((a, b) => {
+            if (a.votes > b.votes) {
+                return 1;
+            }
+            if (a.votes < b.votes) {
+                return -1;
+            }
+            return 0;
+        }).slice(0, constants.activeDelegates);
+        return new Response({data: activeDelegates});
     }
 
     public update(delegate: Delegate) {
-        for (let i = 0; i < this.memoryDelegates.length; i++) {
-            if ( delegate.account.address === this.memoryDelegates[i].account.address) {
-                this.memoryDelegates[i] = delegate;
-            }
+        const oldName = this.memoryDelegates[delegate.account.publicKey].username;
+        if (oldName !== delegate.username) {
+            this.usernames.delete(oldName);
+            this.usernames.add(delegate.username);
         }
+        this.memoryDelegates[delegate.account.publicKey] = delegate;
+    }
+
+    public getByPublicKey(publicKey: string): Delegate {
+        return this.memoryDelegates[publicKey];
     }
 
     public forgingDisable(data: any) {
@@ -58,6 +63,14 @@ class DelegateRepository {
 
     public forgingStatus(publicKey: string) {
 
+    }
+
+    public isUserNameExists(username: string): boolean {
+        return this.usernames.has(username);
+    }
+
+    public delete(account: Account): void {
+        delete this.memoryDelegates[account.publicKey];
     }
 }
 
