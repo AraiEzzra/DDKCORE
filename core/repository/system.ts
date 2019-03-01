@@ -1,23 +1,27 @@
 import os from 'os';
-import crypto from 'crypto';
+import { Block } from 'shared/model/block';
+
 export const env = require('../../config/env').default;
 
 export class Headers {
     os: string;
     version: string;
     port: number;
-    height: 1;
+    height: number;
     nethash: string;
     broadhash: string;
     minVersion: string;
     nonce: string;
     ip: string;
+    blocksIds: Map<number, string>;
 
     constructor() {
+        this.blocksIds = new Map();
         this.os = os.platform() + os.release();
         this.port = env.serverPort;
         this.ip = env.serverHost;
         this.broadhash = null;
+        this.height = 1;
     }
 
     update(data) {
@@ -27,14 +31,43 @@ export class Headers {
         this.nonce = data.nonce || this.nonce;
     }
 
-    generateBroadhash(ids: Array<string>) {
-        if (ids.length <= 1) {
-            return this.broadhash;
+    setBroadhash(lastBlock: Block) {
+        this.broadhash = lastBlock.id;
+    }
+
+    addBlockIdInPool(lastBlock: Block) {
+        this.blocksIds.set(lastBlock.height, lastBlock.id);
+        if (this.blocksIds.size > 100) {
+            const min = Math.min(...this.blocksIds.keys());
+            this.blocksIds.delete(min);
         }
-        const seed = ids.join('');
-        const hash = crypto.createHash('sha256').update(seed, 'utf8').digest();
-        return hash.toString('hex');
-    };
+    }
+
+    setHeight(lastBlock: Block) {
+        this.height = lastBlock.height;
+    }
+
+    getHeaders() {
+        return {
+            height: this.height,
+            nethash: this.nethash,
+            broadhash: this.broadhash,
+            nonce: this.nonce,
+        };
+    }
+
+    getFullHeaders() {
+        return {
+            os: this.os,
+            version: this.version,
+            port: this.port,
+            minVersion: this.minVersion,
+            ip: this.ip,
+            blocksIds: [...this.blocksIds],
+            ...this.getHeaders(),
+        };
+    }
+
 }
 
 export default new Headers();
