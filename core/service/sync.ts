@@ -1,11 +1,13 @@
 import { Peer } from 'shared/model/peer';
 import { Block } from 'shared/model/block';
 import { Transaction } from 'shared/model/transaction';
-import headers from 'core/repository/system';
-import BlockRepository from 'core/repository/block';
+import SystemRepository from 'core/repository/system';
+import BlockService from 'core/service/block';
+import BlockRepository from 'core/repository/block/index';
 import PeerRepository from 'core/repository/peer';
 import SyncRepository from 'core/repository/sync';
 import SocketRepository from 'core/repository/socket';
+import { messageON } from 'shared/util/bus';
 import { TOTAL_PERCENTAGE } from 'core/util/const';
 //  TODO get from env
 const MIN_CONSENSUS = 51;
@@ -54,8 +56,32 @@ export class SyncService implements ISyncService {
         SyncRepository.sendUnconfirmedTransaction(trs);
     }
 
-    async requestBlocks(): Promise<void> {
-        SyncRepository.requestBlocks({ height: headers.height, limit: 42 });
+    async checkCommonBlock() {
+        const lastBlock = BlockRepository.getLastBlock();
+        if (this.checkBlockConsensus(lastBlock)) {
+            await this.requestBlocks(lastBlock);
+        } else {
+
+            const randomPeer = PeerRepository.getRandomPeer(
+                PeerRepository.getPeersByFilter(lastBlock.height, SystemRepository.broadhash)
+            );
+            const minHeight = Math.min(...randomPeer.blocksIds.keys());
+            if (minHeight > lastBlock.height) {
+                messageON('EMIT_REQUEST_COMMON_BLOCKS', {
+                    id: lastBlock.id,
+                    height: lastBlock.height
+                });
+            } else {
+
+                await BlockService.deleteLastBlock();
+                this.checkCommonBlock();
+            }
+        }
+    }
+
+
+    async requestBlocks(lastBlock, peer = null): Promise<void> {
+        SyncRepository.requestBlocks({ height: lastBlock.height, limit: 42 }, peer);
     }
 
     async sendBlocks(data: { height: number, limit: number }, peer): Promise<void> {
@@ -63,36 +89,46 @@ export class SyncService implements ISyncService {
         SyncRepository.sendBlocks(blocks, peer);
     }
 
-        // TODO remove
-    async requestCommonBlocks(): Promise<void> {
-        const block = BlockRepository.getLastBlock();
+    async requestCommonBlocks(block): Promise<void> {
         SyncRepository.requestCommonBlocks(block);
     }
 
-    // TODO remove
-    async checkCommonBlocks(block: Block, peer): Promise<void> {
-        // const response = await BlockRepository.getCommonBlock(block);
-        // SyncRepository.sendCommonBlocksExist(response, peer);
+    async checkCommonBlocks(block: {id: string, height: number}, peer): Promise<void> {
+        const isExist = await BlockRepository.isExist(block.id);
+        SyncRepository.sendCommonBlocksExist({isExist, block}, peer);
     }
 
     async updateHeaders(data: { lastBlock: Block }) {
-        headers.setBroadhash(data.lastBlock);
-        headers.addBlockIdInPool(data.lastBlock);
-        headers.setHeight(data.lastBlock);
+        SystemRepository.setBroadhash(data.lastBlock);
+        SystemRepository.addBlockIdInPool(data.lastBlock);
+        SystemRepository.setHeight(data.lastBlock);
         SyncRepository.sendHeaders(
-            headers.getHeaders()
+            SystemRepository.getHeaders()
         );
+    }
+
+    getBlockConsensus(block: Block) {
+        const peers = PeerRepository.peerList();
+        const commonPeers = peers.filter(peer => PeerRepository.checkCommonBlock(peer, block));
+        return commonPeers.length / peers.length * TOTAL_PERCENTAGE;
+    }
+
+    checkBlockConsensus(block: Block): boolean {
+        return this.getBlockConsensus(block) >= MIN_CONSENSUS;
     }
 
     getConsensus(): number {
         const peers = PeerRepository.peerList();
-        const commonPeers = peers.filter(peer => peer.broadhash === headers.broadhash);
+        const commonPeers = peers.filter(peer => {
+            return peer.broadhash === SystemRepository.broadhash;
+        });
         return commonPeers.length / peers.length * TOTAL_PERCENTAGE;
     }
 
     get consensus(): boolean {
         return this.getConsensus() >= MIN_CONSENSUS;
     }
+
 }
 
 export default new SyncService();
