@@ -32,75 +32,34 @@ interface IRoundSum {
 
 interface IRoundService {
 
-    /**
-     * Generate hash (delegate publicKey + previousBlockId)
-     * @return hash from DelegatePublicKey + blockId
-     */
     generateHashList(params: {activeDelegates: Array<Delegate>, blockId: string}):
         Array<{hash: string, generatorPublicKey: string}>;
 
     sortHashList(hashList: Array<{hash: string, generatorPublicKey: string}>):
         Array<{hash: string, generatorPublicKey: string}>;
 
-    /**
-     * Match hash to delegates
-     * Create  and store to this.round
-     */
     generatorPublicKeyToSlot(sortedHashList: Array<{hash: string, generatorPublicKey: string}>): Slots;
 
-    /**
-     * triggered by onRoundFinish or onApplyLastBlockInRound
-     * @implements getLastBlock from blocks repository
-     */
     generateRound(): Response<void>;
 
-    /**
-     * @implements publicKey from config
-     * @return your slot for rxBus
-     */
     getMyTurn(): number;
 
-    /**
-     * calculateReward
-     */
     sumRound(round): Promise<Response<IRoundSum>>;
 
-    /**
-     * Rebuild round if one of blocks apply with delay
-     */
     rebuild(): void;
 
-    /**
-     * Rollback round if one of blocks fails
-     */
     rollBack(): void;
 
     validate(): boolean;
 
-    /**
-     * Update accounts balance for delegates in the end of round
-     * @implements AccountRepository, DelegateRepository
-     * @param {Promise<ResponseEntity<IRoundSum>>} param
-     * @return {Promise<ResponseEntity<void>>}
-     */
     applyUnconfirmed(param: Promise<Response<IRoundSum>>): Promise<Response<void>>;
 
-    /**
-     *
-     * @param {Round} round (current round by default)
-     * @return {Promise<ResponseEntity<Array<DelegatePublicKey>>>}
-     */
     undoUnconfirmed(round: Round): Promise<Response<string>>;
 
     apply(params: Promise<Response<Array<string>>>): void;
 
     undo(params: Promise<Response<Array<string>>>): boolean;
 
-    /**
-     * Calculates round number from the given height.
-     * @param {number} height - Height from which round is calculated
-     * @returns {number} Round number
-     */
     calcRound(height: number): number;
 
 }
@@ -256,19 +215,14 @@ class RoundService implements IRoundService {
         }
         // increase delegates balance
         const delegates = roundSumResponse.data.roundDelegates;
-        const fee = roundSumResponse.data.roundFees / delegates.length;
+        const fee = Math.floor(roundSumResponse.data.roundFees / delegates.length);
 
-        let errors = [];
         for (let i = 0; i < delegates.length; i++) {
             let delegateAccount = DelegateRepository.getByPublicKey(delegates[i]).account;
-            if (!delegateAccount) {
-                errors.push(`[RoundService][applyUnconfirmed] Delegate ${delegates[i]} not found in AccountRepo`);
-            } else {
-                AccountRepository.updateBalance(delegateAccount, delegateAccount.actualBalance - fee);
-            }
+            AccountRepository.updateBalance(delegateAccount, delegateAccount.actualBalance + fee);
         }
 
-        return new Response({errors, data: delegates});
+        return new Response({data: delegates});
     }
 
     async undoUnconfirmed(round: Round = RoundRepository.getCurrentRound()): Promise<Response<Array<string>>> {
@@ -278,19 +232,14 @@ class RoundService implements IRoundService {
         }
         // increase delegates balance
         const delegates = roundSumResponse.data.roundDelegates;
-        const fee = roundSumResponse.data.roundFees / delegates.length;
+        const fee = Math.floor(roundSumResponse.data.roundFees / delegates.length);
 
-        let errors = [];
         for (let i = 0; i < delegates.length; i++) {
             let delegateAccount = DelegateRepository.getByPublicKey(delegates[i]).account;
-            if (!delegateAccount) {
-                errors.push(`[RoundService][undoUnconfirmed] Delegate ${delegates[i]} not found in AccountRepo`);
-            } else {
-                AccountRepository.updateBalance(delegateAccount, delegateAccount.actualBalance + fee);
-            }
+            AccountRepository.updateBalance(delegateAccount, delegateAccount.actualBalance - fee);
         }
 
-        return new Response({errors, data: delegates});
+        return new Response({data: delegates});
     }
 
     apply(params: Promise<Response<Array<string>>>): void {
