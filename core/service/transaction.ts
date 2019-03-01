@@ -8,7 +8,7 @@ import { ed, IKeyPair } from 'shared/util/ed';
 import { Account, Address } from 'shared/model/account';
 import config from 'shared/util/config';
 import AccountRepo from '../repository/account';
-import TransactionRepo from '../repository/transaction';
+import TransactionRepo from 'core/repository/transaction';
 import TransactionPool from './transactionPool';
 import TransactionQueue from './transactionQueue';
 import { transactionSortFunc, getTransactionServiceByType, TRANSACTION_BUFFER_SIZE } from 'core/util/transaction';

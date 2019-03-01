@@ -6,7 +6,6 @@ import Config from 'shared/util/config';
 // import BlockService from 'test/core/mock/blockService';
 // import { createTaskON } from 'test/core/mock/bus';
 // import BlockRepository from 'test/core/mock/blockRepository';
-import BlockService from 'core/service/block';
 import BlockRepository from 'core/repository/block';
 import { Slots, Round } from 'shared/model/round';
 import RoundRepository from 'core/repository/round';
@@ -156,7 +155,7 @@ class RoundService implements IRoundService {
             RoundRepository.setPrevRound(RoundRepository.getCurrentRound());
         }
 
-        const lastBlock = BlockService.getLastBlock();
+        const lastBlock = BlockRepository.getLastBlock();
         const delegateResponse = DelegateRepository.getActiveDelegates();
 
         if (!delegateResponse.success) {
@@ -172,7 +171,7 @@ class RoundService implements IRoundService {
         ({blockId: lastBlock.id, activeDelegates: delegateResponse.data});
 
         RoundRepository.setCurrentRound({slots, startHeight: lastBlock.height + 1});
-        logger.info(`[Service][Round][generateRound] Start round id: ${RoundRepository.getCurrentRound().id}`);
+        logger.info(`[Service][Round][generateRound] Start round id: ${RoundRepository.getCurrentRound().startHeight}`);
 
         const mySlot = this.getMyTurn();
 
@@ -202,29 +201,19 @@ class RoundService implements IRoundService {
     }
 
     public async sumRound(round: Round): Promise<Response<IRoundSum>> {
-        const blockResponse = await BlockRepository.loadBlocksOffset(
-            {
-                offset: 1,
-                limit: 100000
-            });
+        const blocks = BlockRepository.getMany(1, 100000);
 
         const resp: IRoundSum = {
             roundFees: 0,
             roundDelegates: []
         };
 
-        if (!blockResponse.success) {
-            return new Response({errors: [...blockResponse.errors, 'sumRound']});
-        } else {
-            const blocks = blockResponse.data;
-
-            for (let i = 0; i < blocks.length; i++) {
-                resp.roundFees += blocks[i].fee;
-                resp.roundDelegates.push(blocks[i].generatorPublicKey);
-            }
-
-            return new Response({errors: [], data: resp});
+        for (let i = 0; i < blocks.length; i++) {
+            resp.roundFees += blocks[i].fee;
+            resp.roundDelegates.push(blocks[i].generatorPublicKey);
         }
+
+        return new Response({errors: [], data: resp});
     }
 
     public rebuild(): void {

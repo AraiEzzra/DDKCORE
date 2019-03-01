@@ -1,7 +1,7 @@
 import {Account, Stake} from 'shared/model/account';
 import { logger } from 'shared/util/logger';
 import config from 'shared/util/config';
-import BlockService from 'core/service/block';
+import BlockRepo from 'core/repository/block';
 import {IAirdropAsset, IAssetStake, IAssetVote, Transaction, TransactionType} from 'shared/model/transaction';
 import AccountRepo from 'core/repository/account';
 import Response from 'shared/model/response';
@@ -39,7 +39,7 @@ export function calculateTotalRewardAndUnstake(sender: Account, isDownVote: bool
 
     freezeOrders.forEach((order: Stake) => {
         if (order.voteCount > 0 && (order.voteCount + 1) % config.constants.froze.rewardVoteCount === 0) {
-            const blockHeight: number = BlockService.getLastBlock().height;
+            const blockHeight: number = BlockRepo.getLastBlock().height;
             const stakeRewardPercent: number = stakeReward.calcReward(blockHeight);
             reward += (order.amount * stakeRewardPercent) / 100;
         }

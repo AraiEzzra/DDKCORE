@@ -1,7 +1,7 @@
 import { Peer } from 'shared/model/peer';
 import PeerService from 'core/service/peer';
 import { Block } from 'shared/model/block';
-import BlockService from 'core/service/block';
+import BlockRepo from 'core/repository/block';
 import { Transaction } from 'shared/model/transaction';
 import Response from 'shared/model/response';
 import { ON, RPC } from 'core/util/decorator';
@@ -73,7 +73,7 @@ class PeerController extends BaseController {
 
     @RPC('GET_HEIGHT')
     public height() : Response<{ height: number }> {
-        return new Response<{height: number}>({ data : { height: BlockService.getLastBlock().height } });
+        return new Response<{height: number}>({ data : { height: BlockRepo.getLastBlock().height } });
     }
 
     @RPC('GET_TRANSACTIONS_COUNT')

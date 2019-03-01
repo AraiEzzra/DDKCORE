@@ -2,6 +2,7 @@ import Response from 'shared/model/response';
 import { Block, BlockModel } from 'shared/model/block';
 import BlockService from 'core/service/block';
 import BlockRepo from 'core/repository/block';
+import BlockPGRepo from 'core/repository/block/pg';
 import { Peer } from 'shared/model/peer';
 import { ON, RPC } from 'core/util/decorator';
 import { BaseController } from 'core/controller/baseController';
@@ -42,27 +43,20 @@ class BlockController extends BaseController {
 
     @ON('BLOCKCHAIN_READY')
     public async loadLastNBlocks(): Promise<Response<void>> {
-        const response: Response<Array<string>> = await BlockRepo.loadLastNBlocks();
-        if (!response.success) {
-            return new Response<void>({ errors: [...response.errors, 'loadLastNBlocks'] });
-        }
-        const blocks: Array<string> = response.data;
-        BlockService.setLastNBlocks(blocks);
+        const blocks: Array<string> = await BlockPGRepo.getLastNBlockIds();
+        BlockRepo.setLastNBlocks(blocks);
         return new Response<void>();
     }
 
     @ON('NEW_BLOCKS')
     public updateLastNBlocks(block: Block): Response<void> {
-        BlockService.updateLastNBlocks(block);
+        BlockRepo.updateLastNBlocks(block);
         return new Response<void>();
     }
 
+    /*
     @RPC('GET_COMMON_BLOCK')
     // called from UI
-    /**
-     * @implements modules.transport.getFromPeer
-     * @implements modules.transport.poorConsensus
-     */
     private async getCommonBlock(peer: Peer, height: number): Promise<Response<Block>> {
         const idsResponse: Response<{ids: string}> = await BlockService.getIdSequence(height);
         const ids = idsResponse.data.ids;
@@ -72,6 +66,7 @@ class BlockController extends BaseController {
         }
         return recoveryResponse;
     }
+    */
 }
 
 export default new BlockController();

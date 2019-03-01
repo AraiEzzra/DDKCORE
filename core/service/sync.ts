@@ -2,7 +2,6 @@ import { Peer } from 'shared/model/peer';
 import { Block } from 'shared/model/block';
 import { Transaction } from 'shared/model/transaction';
 import headers from 'core/repository/system';
-import BlockService from 'core/service/block';
 import BlockRepository from 'core/repository/block';
 import PeerRepository from 'core/repository/peer';
 import SyncRepository from 'core/repository/sync';
@@ -59,16 +58,13 @@ export class SyncService implements ISyncService {
     }
 
     async sendBlocks(data: { height: number, limit: number }, peer): Promise<void> {
-        const response = await BlockRepository.loadBlocksOffset({
-            offset: data.height,
-            limit: data.limit
-        });
-        SyncRepository.sendBlocks(response.data, peer);
+        const blocks = BlockRepository.getMany(data.height, data.limit);
+        SyncRepository.sendBlocks(blocks, peer);
     }
 
         // TODO remove
     async requestCommonBlocks(): Promise<void> {
-        const block = BlockService.getLastBlock();
+        const block = BlockRepository.getLastBlock();
         SyncRepository.requestCommonBlocks(block);
     }
 
@@ -94,7 +90,7 @@ export class SyncService implements ISyncService {
     }
 
     get consensus(): boolean {
-        return this.getConsensus() >= MIN_CONSENSUS
+        return this.getConsensus() >= MIN_CONSENSUS;
     }
 }
 
