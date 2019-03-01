@@ -1,6 +1,6 @@
 import os from 'os';
 import { Block } from 'shared/model/block';
-
+export const MAX_BLOCK_IN_MEMORY = 100;
 export const env = require('../../config/env').default;
 
 export class Headers {
@@ -37,7 +37,7 @@ export class Headers {
 
     addBlockIdInPool(lastBlock: Block) {
         this.blocksIds.set(lastBlock.height, lastBlock.id);
-        if (this.blocksIds.size > 100) {
+        if (this.blocksIds.size > MAX_BLOCK_IN_MEMORY) {
             const min = Math.min(...this.blocksIds.keys());
             this.blocksIds.delete(min);
         }

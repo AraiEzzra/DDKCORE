@@ -1,5 +1,4 @@
 import PeerRepository from 'core/repository/peer';
-import { Block } from 'shared/model/block';
 
 export class PeerService {
 

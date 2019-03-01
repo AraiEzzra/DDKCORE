@@ -3,20 +3,27 @@ import { Peer } from 'shared/model/peer';
 import { Block } from 'shared/model/block';
 import { Transaction } from 'shared/model/transaction';
 import PeerRepository from 'core/repository/peer';
+import SystemRepository from 'core/repository/system';
 
 interface ISyncRepo {
 
-    requestPeers(): Promise<void>;
+    requestPeers(): void;
 
-    sendPeers(peer: Peer): Promise<void>;
+    sendPeers(peer: Peer): void;
 
-    sendNewBlock(block: Block): Promise<void>;
+    sendNewBlock(block: Block): void;
 
-    sendUnconfirmedTransaction(trs: Transaction<any>): Promise<void>;
+    sendUnconfirmedTransaction(trs: Transaction<any>): void;
 
-    requestBlocks(data: { height: number, limit: number }, peer?): Promise<void>;
+    requestCommonBlocks(block: {id: string, height: number}): void;
+    
+    sendCommonBlocksExist(response, peer: Peer): void;
+    
+    requestBlocks(data: { height: number, limit: number }, peer?): void;
 
-    sendBlocks(blocks: Array<Block>, peer): Promise<void>;
+    sendBlocks(blocks: Array<Block>, peer): void;
+    
+    sendHeaders(headers): void;
 }
 
 export class Sync implements ISyncRepo {
@@ -24,55 +31,51 @@ export class Sync implements ISyncRepo {
     constructor() {
     }
 
-    async requestPeers(): Promise<void> {
+    requestPeers(): void {
         const peer = PeerRepository.getRandomTrustedPeer();
         SocketRepository.emitPeer('REQUEST_PEERS', {}, peer);
     }
 
-    async sendPeers(peer: Peer): Promise<void> {
-        const peers = PeerRepository.peerList().map(peer => ({
-                ip: peer.ip,
-                port: peer.port,
+    sendPeers(peer: Peer): void {
+        const peers = PeerRepository.peerList().map(item => ({
+                ip: item.ip,
+                port: item.port,
             })
         );
 
         SocketRepository.emitPeer('RESPONSE_PEERS', { peers }, peer);
     }
 
-    async sendNewBlock(block: Block): Promise<void> {
+    sendNewBlock(block: Block): void {
         SocketRepository.emitPeers('BLOCK_RECEIVE', { block });
     }
 
-    async sendUnconfirmedTransaction(trs: Transaction<any>): Promise<void> {
+    sendUnconfirmedTransaction(trs: Transaction<any>): void {
         SocketRepository.emitPeers('TRANSACTION_RECEIVE', { trs });
     }
 
-    // TODO remove
-    async requestCommonBlocks(block) {
-        // TODO minheight > нашей && !consensus (broadhash не такой как наш)
-
-        // const filteredPeers = PeerRepository.getPeersByFilter();
-        // const peer = PeerRepository.getRandomPeer(filteredPeers);
-        // SocketRepository.emitPeer('REQUEST_COMMON_BLOCKS', block, peer);
+    requestCommonBlocks(block): void {
+        const filteredPeers = PeerRepository.getPeersByFilter(block.height, SystemRepository.broadhash);
+        const peer = PeerRepository.getRandomPeer(filteredPeers);
+        SocketRepository.emitPeer('REQUEST_COMMON_BLOCKS', block, peer);
     }
 
-    // TODO remove
-    async sendCommonBlocksExist(response, peer): Promise<void> {
+    sendCommonBlocksExist(response, peer): void {
         SocketRepository.emitPeer('RESPONSE_COMMON_BLOCKS', response, peer);
     }
 
-    async requestBlocks(data: { height: number, limit: number }): Promise<void> {
+    requestBlocks(data: { height: number, limit: number }, peer = null): void {
 
-        const filteredPeers = PeerRepository.getPeersByFilter(data.height);
-        const peer = PeerRepository.getRandomPeer(filteredPeers);
-        SocketRepository.emitPeer('REQUEST_BLOCKS', data, peer);
+        const filteredPeers = PeerRepository.getPeersByFilter(data.height, SystemRepository.broadhash);
+        const currentPeer = peer || PeerRepository.getRandomPeer(filteredPeers);
+        SocketRepository.emitPeer('REQUEST_BLOCKS', data, currentPeer);
     }
 
-    async sendBlocks(blocks: Array<Block>, peer): Promise<void> {
+    sendBlocks(blocks: Array<Block>, peer): void {
         SocketRepository.emitPeer('RESPONSE_BLOCKS', { blocks }, peer);
     }
 
-    async sendHeaders(headers) {
+    sendHeaders(headers) {
         SocketRepository.emitPeers('PEER_HEADERS_UPDATE', headers);
     }
 }
