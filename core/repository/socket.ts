@@ -1,5 +1,5 @@
 import autobind from 'autobind-decorator';
-import headers from 'core/repository/system';
+import SystemRepository from 'core/repository/system';
 import { Peer } from 'shared/model/peer';
 import { messageON } from 'shared/util/bus';
 import { logger } from 'shared/util/logger';
@@ -33,6 +33,7 @@ export class Socket {
     }
 
     init(): void {
+        logger.debug('SOCKET_INIT');
         TRUSTED_PEERS.forEach((peer: any) => {
             this.connectNewPeer(peer);
         });
@@ -42,7 +43,9 @@ export class Socket {
                 logger.debug(`[SOCKET][PEER_HEADERS_RECEIVE], data: ${JSON.stringify(data)}`);
                 const peer = JSON.parse(data);
                 if (Socket._instance.addPeer(peer, socket)) {
-                    socket.emit('READY');
+                    socket.emit('SERVER_HEADERS', JSON.stringify(
+                        SystemRepository.getFullHeaders()
+                    ));
                 }
             });
         });
@@ -54,13 +57,16 @@ export class Socket {
             PeerRepository.has(peer)) {
             return;
         }
+
         const ws = io(`ws://${peer.ip}:${peer.port}`);
         ws.on('OPEN', () => {
             ws.emit('HEADERS', JSON.stringify(
-                headers.getFullHeaders()
+                SystemRepository.getFullHeaders()
             ));
-            ws.on('READY', () => {
-                Socket._instance.addPeer(peer, ws);
+            ws.on('SERVER_HEADERS', (headers: string) => {
+                logger.debug(`[SOCKET][PEER_HEADERS_RECEIVE], data: ${JSON.stringify(headers)}`);
+                const fullPeer = Object.assign(JSON.parse(headers), peer);
+                Socket._instance.addPeer(fullPeer, ws);
             });
         });
     }

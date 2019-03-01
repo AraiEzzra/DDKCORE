@@ -1,6 +1,6 @@
 import { Peer } from 'shared/model/peer';
 import { getRandomInt } from 'core/util/common';
-import Headers from './system';
+import SystemRepository from './system';
 
 const env = require('../../config/env').default;
 export const TRUSTED_PEERS: Array<any> = env.peers.list;
@@ -61,7 +61,7 @@ export class PeerRepo {
     }
 
     peerUpdate(headers, peer) {
-        logger.debug(`[PeerRepository][peerUpdate]: ${JSON.stringify(headers)}`);
+        logger.debug(`[Repository][Peer][peerUpdate]: ${JSON.stringify(headers)}`);
         if (!this.has(peer)) {
             return;
         }
@@ -73,7 +73,6 @@ export class PeerRepo {
             const min = Math.min(...currentPeer.blocksIds.keys());
             currentPeer.blocksIds.delete(min);
         }
-        logger.debug(`[PeerRepository][peerBlocksIdsUpdated]: ${JSON.stringify([...currentPeer.blocksIds])}`);
     }
 
     ban(peer) {
@@ -87,6 +86,7 @@ export class PeerRepo {
         return peerList[getRandomInt(peerList.length)];
     }
 
+    // @deprecated
     getRandomPeers(limit: number = 5, peers: Array<Peer> = null): Array<Peer> {
         const peerList = peers || this.peerList();
         if (peerList.length <= limit) {
@@ -102,10 +102,10 @@ export class PeerRepo {
         return result;
     }
 
-    getPeersByFilter(height): Array<Peer> {
+    getPeersByFilter(height, broadhash): Array<Peer> {
         return this.peerList().filter(peer => {
             return peer.height >= height
-                && peer.broadhash !== Headers.broadhash;
+                && peer.broadhash !== broadhash;
         });
     }
 

@@ -3,6 +3,7 @@ import { Peer } from 'shared/model/peer';
 import { Block } from 'shared/model/block';
 import { Transaction } from 'shared/model/transaction';
 import PeerRepository from 'core/repository/peer';
+import SystemRepository from 'core/repository/system';
 
 interface ISyncRepo {
 
@@ -23,7 +24,7 @@ export class Sync implements ISyncRepo {
 
     constructor() {
     }
-
+    
     async requestPeers(): Promise<void> {
         const peer = PeerRepository.getRandomTrustedPeer();
         SocketRepository.emitPeer('REQUEST_PEERS', {}, peer);
@@ -47,25 +48,21 @@ export class Sync implements ISyncRepo {
         SocketRepository.emitPeers('TRANSACTION_RECEIVE', { trs });
     }
 
-    // TODO remove
     async requestCommonBlocks(block) {
-        // TODO minheight > нашей && !consensus (broadhash не такой как наш)
-
-        // const filteredPeers = PeerRepository.getPeersByFilter();
-        // const peer = PeerRepository.getRandomPeer(filteredPeers);
-        // SocketRepository.emitPeer('REQUEST_COMMON_BLOCKS', block, peer);
+        const filteredPeers = PeerRepository.getPeersByFilter(block.height, SystemRepository.broadhash);
+        const peer = PeerRepository.getRandomPeer(filteredPeers);
+        SocketRepository.emitPeer('REQUEST_COMMON_BLOCKS', block, peer);
     }
 
-    // TODO remove
     async sendCommonBlocksExist(response, peer): Promise<void> {
         SocketRepository.emitPeer('RESPONSE_COMMON_BLOCKS', response, peer);
     }
 
-    async requestBlocks(data: { height: number, limit: number }): Promise<void> {
+    async requestBlocks(data: { height: number, limit: number }, peer = null): Promise<void> {
 
-        const filteredPeers = PeerRepository.getPeersByFilter(data.height);
-        const peer = PeerRepository.getRandomPeer(filteredPeers);
-        SocketRepository.emitPeer('REQUEST_BLOCKS', data, peer);
+        const filteredPeers = PeerRepository.getPeersByFilter(data.height, SystemRepository.broadhash);
+        const currentPeer = peer || PeerRepository.getRandomPeer(filteredPeers);
+        SocketRepository.emitPeer('REQUEST_BLOCKS', data, currentPeer);
     }
 
     async sendBlocks(blocks: Array<Block>, peer): Promise<void> {
