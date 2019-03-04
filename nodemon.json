@@ -1,7 +1,6 @@
 {
     "watch": [
         "dist/api/app.js",
-        "dist/backlog/app.js",
         "dist/core/app.js"
     ]
 }

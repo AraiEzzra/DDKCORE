@@ -23,8 +23,8 @@ export interface ITransactionRepository<T extends Object> extends ITransactionRe
 }
 
 class TransactionRepo implements ITransactionRepository<object> {
-    private memoryTransactionByBlockId: { [blockId: string]: Array<Transaction<Object>> } = {};
-    private memoryTransactionById: { [transactionId: string]: Transaction<Object> } = {};
+    private readonly memoryTransactionByBlockId: { [blockId: string]: Array<Transaction<Object>> } = {};
+    private readonly memoryTransactionById: { [transactionId: string]: Transaction<Object> } = {};
 
     public getTransactionsForBlocksByIds(blocksIds: Array<string>):
         Response<{ [blockId: string]:  Array<Transaction<object>> }> {
@@ -35,8 +35,16 @@ class TransactionRepo implements ITransactionRepository<object> {
         return new Response({ data: result });
     }
 
-    public getById(tranasctionId: string): Transaction<IAsset> {
-        return this.memoryTransactionById[tranasctionId].getCopy();
+    public isExist(transactionId: string): boolean {
+        return !!this.memoryTransactionById[transactionId];
+    }
+
+    public getById(transactionId: string): Transaction<IAsset> {
+        if (this.memoryTransactionById[transactionId]) {
+            return this.memoryTransactionById[transactionId].getCopy();
+        }
+
+        return;
     }
 
     public getAll() {

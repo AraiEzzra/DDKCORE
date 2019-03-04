@@ -1,6 +1,5 @@
 import {Transaction} from 'shared/model/transaction';
 import TransactionRepo from 'core/repository/transaction';
-const Inserts = require('../../backlog/helpers/inserts.js');
 import { Block } from 'shared/model/block';
 // import db from 'shared/driver/db';
 import Response from 'shared/model/response';
@@ -127,7 +126,7 @@ class BlockRepo {
         return new Response({ data: exists });
     }
 
-    public async loadBlocksOffset(param: {offset: number, limit?: number}): Promise<Response<Array<Block>>> {
+    public loadBlocksOffset(startHeight: number, limit?: number): Response<Array<Block>> {
         // let blocks: Array<Block> = null;
         // try {
         //     const result: Array<object> = await db.manyOrNone(queries.loadBlocksOffset(param.limit), param);
@@ -145,8 +144,11 @@ class BlockRepo {
         //     return new Response({ errors: [...assignResponse.errors, 'loadBlocksOffset'], data: blocks });
         // }
         // blocks = assignResponse.data;
-        const rquestLimit = param.limit || -1;
-        const targetBlocks: Array<Block> = this.memoryBlocks.slice(param.offset - 1, rquestLimit);
+
+        const from = startHeight - this.memoryBlocks[0].height;
+        const to = limit ? from + limit : -1;
+        const targetBlocks: Array<Block> = this.memoryBlocks.slice(from, to);
+
         return new Response({ data: targetBlocks });
     }
 

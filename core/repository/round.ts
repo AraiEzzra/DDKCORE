@@ -1,4 +1,4 @@
-import { Round } from 'shared/model/round';
+import {Round, RoundModel} from 'shared/model/round';
 
 class RoundRepository {
     private prevRound: Round;
@@ -16,10 +16,9 @@ class RoundRepository {
      * setter for current round
      * @param {Round} round
      */
-    setCurrentRound(round: Round): void {
-        const roundId: number = !!this.prevRound ? this.prevRound.id + 1 : 1;
+    setCurrentRound(round: RoundModel): void {
         this.currentRound = new Round({
-            id: roundId,
+            startHeight: Number(round.startHeight),
             slots: round.slots,
         });
     }

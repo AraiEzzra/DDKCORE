@@ -28,6 +28,7 @@ import {messageON} from 'shared/util/bus';
 import config from 'shared/util/config';
 import SyncService from 'core/service/sync';
 import system from 'core/repository/system';
+import AccountRepository from 'core/repository/account';
 
 interface IVerifyResult {
     verified?: boolean;
@@ -76,11 +77,7 @@ class BlockService {
 
     public async generateBlock(keypair: IKeyPair, timestamp: number): Promise<Response<void>> {
         logger.debug(`[Service][Block][generateBlock] timestamp ${timestamp}`);
-        const lockResponse: Response<void> = await this.lockTransactionPoolAndQueue();
-        if (!lockResponse.success) {
-            lockResponse.errors.push('generateBlock: Can\' lock transaction pool or/and queue');
-            return lockResponse;
-        }
+        this.lockTransactionPoolAndQueue();
 
         const transactions: Array<Transaction<object>> =
             await TransactionPool.popSortedUnconfirmedTransactions(config.constants.maxTxsPerBlock);
@@ -107,18 +104,15 @@ class BlockService {
             return processBlockResponse;
         }
 
-        const unlockResponse: Response<void> = await this.unlockTransactionPoolAndQueue();
-        if (!unlockResponse.success) {
-            unlockResponse.errors.push('generateBlock: Can\' unlock transaction pool or/and queue');
-            return unlockResponse;
-        }
+        this.unlockTransactionPoolAndQueue();
+
         return new Response<void>();
     }
 
     private async pushInPool(transactions: Array<Transaction<object>>): Promise<Response<void>> {
         const errors: Array<string> = [];
         for (const trs of transactions) {
-            let response: Response<void> = await TransactionPool.push(trs);
+            let response: Response<void> = await TransactionPool.push(trs, undefined, false, true);
             if (!response.success) {
                 errors.push(...response.errors);
             }
@@ -126,32 +120,15 @@ class BlockService {
         return new Response<void>({errors: errors});
     }
 
-    private async lockTransactionPoolAndQueue(): Promise<Response<void>> {
-        const queueLockResponse: Response<void> = await TransactionQueue.lock();
-        if (!queueLockResponse.success) {
-            queueLockResponse.errors.push('lockTransactionPoolAndQueue');
-            return queueLockResponse;
-        }
-        const poolLockResponse: Response<void> = await TransactionPool.lock();
-        if (!poolLockResponse.success) {
-            poolLockResponse.errors.push('lockTransactionPoolAndQueue');
-            return poolLockResponse;
-        }
-        return new Response<void>({});
+    private lockTransactionPoolAndQueue(): void {
+        TransactionQueue.lock();
+        TransactionPool.lock();
     }
 
-    private async unlockTransactionPoolAndQueue(): Promise<Response<void>> {
-        const queueUnlockResponse: Response<void> = await TransactionQueue.unlock();
-        if (!queueUnlockResponse.success) {
-            queueUnlockResponse.errors.push('lockTransactionPoolAndQueue');
-            return queueUnlockResponse;
-        }
-        const poolUnlockResponse: Response<void> = await TransactionPool.unlock();
-        if (!poolUnlockResponse.success) {
-            poolUnlockResponse.errors.push('lockTransactionPoolAndQueue');
-            return poolUnlockResponse;
-        }
-        return new Response<void>({});
+    private unlockTransactionPoolAndQueue(): void {
+        TransactionQueue.unlock();
+        TransactionPool.unlock();
+        TransactionQueue.process();
     }
 
     /**
@@ -179,7 +156,7 @@ class BlockService {
                 return new Response<void>({errors: [...resultVerifyBlock.errors, 'processBlock']});
             }
         } else {
-            // TODO: remove when verify will be fix
+            // TODO: remove when validate will be fix
             if (keypair) {
                 const lastBlock: Block = this.getLastBlock();
 
@@ -209,7 +186,7 @@ class BlockService {
         if (!config.config.loading.snapshotRound) {
             // todo modules.system.update?
         }
-        const reshuffleResponse: Response<void> = await TransactionQueue.reshuffleTransactionQueue();
+        const reshuffleResponse: Response<void> = await TransactionQueue.reshuffle();
         if (!reshuffleResponse.success) {
             return new Response<void>({errors: [...reshuffleResponse.errors, 'processBlock']});
         }
@@ -273,6 +250,7 @@ class BlockService {
             if (!response.success) {
                 errors.push(...response.errors);
             }
+
             block.transactions[i] = response.data;
         }
 
@@ -292,7 +270,7 @@ class BlockService {
 
         result = this.verifyPreviousBlock(block, result);
         result = this.verifyVersion(block, result);
-        // TODO: verify total fee
+        // TODO: validate total fee
 
         if (verify) {
             result = this.verifyId(block, result);
@@ -340,30 +318,18 @@ class BlockService {
         try {
             valid = sodium.crypto_sign_verify_detached(blockSignatureBuffer, hash, generatorPublicKeyBuffer);
         } catch (e) {
-            if (config.constants.VERIFY_BLOCK_SIGNATURE) {
-                result.errors.push(e.toString());
-            } else {
-                logger.error(e.toString());
-            }
+            result.errors.push(e.toString());
         }
 
         if (!valid) {
-            if (config.constants.VERIFY_BLOCK_SIGNATURE) {
-                result.errors.push('Failed to verify block signature');
-            } else {
-                logger.error('Failed to verify block signature');
-            }
+            result.errors.push('Failed to validate block signature');
         }
         return result;
     }
 
     private verifyPreviousBlock(block: Block, result: IVerifyResult): IVerifyResult {
         if (!block.previousBlockId && block.height !== 1) {
-            if (config.constants.VERIFY_PREVIOUS_BLOCK) {
-                result.errors.push('Invalid previous block');
-            } else {
-                logger.error('Invalid previous block');
-            }
+            result.errors.push('Invalid previous block');
         }
         return result;
     }
@@ -371,12 +337,8 @@ class BlockService {
     private verifyVersion(block: Block, result: IVerifyResult): IVerifyResult {
         const version: number = block.version;
         if (version !== this.currentBlockVersion) {
-            if (config.constants.VERIFY_BLOCK_VERSION) {
-                result.errors.push('Invalid block version',
-                    'No exceptions found. Block version doesn\'t match te current one.');
-            } else {
-                logger.error('Invalid block version');
-            }
+            result.errors.push('Invalid block version',
+                'No exceptions found. Block version doesn\'t match te current one.');
         }
         return result;
     }
@@ -486,12 +448,7 @@ class BlockService {
             if (!forkResponse.success) {
                 result.errors.push(...forkResponse.errors);
             }
-            if (config.constants.VERIFY_BLOCK_FORK_ONE) {
-                result.errors.push(['Invalid previous block:',
-                    block.previousBlockId, 'expected:', lastBlock.id].join(' '));
-            } else {
-                logger.error(['Invalid previous block:', block.previousBlockId, 'expected:', lastBlock.id].join(' '));
-            }
+            result.errors.push(['Invalid previous block:', block.previousBlockId, 'expected:', lastBlock.id].join(' '));
         }
 
         return result;
@@ -502,11 +459,7 @@ class BlockService {
         const lastBlockSlotNumber = slotService.getSlotNumber(lastBlock.createdAt);
 
         if (blockSlotNumber > slotService.getSlotNumber() || blockSlotNumber <= lastBlockSlotNumber) {
-            if (config.constants.VERIFY_BLOCK_SLOT) {
-                result.errors.push('Invalid block timestamp');
-            } else {
-                logger.error('Invalid block timestamp', JSON.stringify(block));
-            }
+            result.errors.push('Invalid block timestamp');
         }
         return result;
     }
@@ -533,7 +486,8 @@ class BlockService {
             const trs: Transaction<object> = block.transactions[i];
 
             if (errors.length === 0) {
-                const sender: Account = await getOrCreateAccount(trs.senderPublicKey);
+                // const sender: Account = await getOrCreateAccount(trs.senderPublicKey);
+                const sender: Account = AccountRepository.getByPublicKey(trs.senderPublicKey);
                 logger.debug(`[Verify][checkTransactionsAndApplyUnconfirmed][sender] ${JSON.stringify(sender)}`);
                 if (verify) {
                     const resultCheckTransaction: Response<void> =
@@ -571,7 +525,7 @@ class BlockService {
         trs.id = TransactionDispatcher.getId(trs);
         trs.blockId = block.id;
 
-        const verifyResult = await TransactionDispatcher.verify(trs, sender, checkExists);
+        const verifyResult = await TransactionDispatcher.verifyUnconfirmed(trs, sender, checkExists);
         if (!verifyResult.success) {
             return new Response<void>({errors: [...verifyResult.errors, 'checkTransaction']});
         }
@@ -642,10 +596,6 @@ class BlockService {
             SyncService.sendNewBlock(block);
         }
 
-        // TODO: is it necessary?
-        // if (tick) {
-        //     await RoundService.generateRound();
-        // }
         return new Response<void>();
     }
 
@@ -703,11 +653,7 @@ class BlockService {
             return new Response({errors: ['receiveLocked']});
         }
 
-        const lockResponse: Response<void> = await this.lockTransactionPoolAndQueue();
-        if (!lockResponse.success) {
-            lockResponse.errors.push('generateBlock: Can\' lock transaction pool or/and queue');
-            return lockResponse;
-        }
+        this.lockTransactionPoolAndQueue();
 
         // TODO: how to check?
         /*
@@ -754,13 +700,10 @@ class BlockService {
                 'generator:', block.generatorPublicKey
             ].join(' '));
         }
-        this.receiveUnlock();
 
-        const unlockResponse: Response<void> = await this.unlockTransactionPoolAndQueue();
-        if (!unlockResponse.success) {
-            unlockResponse.errors.push('generateBlock: Can\' unlock transaction pool or/and queue');
-            return unlockResponse;
-        }
+        this.receiveUnlock();
+        this.unlockTransactionPoolAndQueue();
+
         return new Response<void>();
     }
 
@@ -773,15 +716,10 @@ class BlockService {
         ].join(' '));
 
         this.updateLastReceipt();
-
-        const lockResponse: Response<void> = await this.lockTransactionPoolAndQueue();
-        if (!lockResponse.success) {
-            lockResponse.errors.push('receiveBlock: Can\' lock transaction pool or/and queue');
-            return lockResponse;
-        }
+        this.lockTransactionPoolAndQueue();
 
         const removedTransactionsResponse: Response<Array<Transaction<object>>> =
-            await TransactionPool.removeFromPool(block.transactions, true);
+            await TransactionPool.batchRemove(block.transactions, true);
         if (!removedTransactionsResponse.success) {
             return new Response<void>({errors: [...removedTransactionsResponse.errors, 'receiveBlock']});
         }
@@ -818,11 +756,7 @@ class BlockService {
                 logger.error(`[Process][newReceiveBlock] ${JSON.stringify(errors)}`);
             }
         }
-        const unlockResponse: Response<void> = await this.unlockTransactionPoolAndQueue();
-        if (!unlockResponse.success) {
-            unlockResponse.errors.push('receiveBlock: Can\' unlock transaction pool or/and queue');
-            return unlockResponse;
-        }
+        this.unlockTransactionPoolAndQueue();
         return new Response<void>({errors});
     }
 
@@ -897,7 +831,7 @@ class BlockService {
         result = this.verifyAgainstLastNBlockIds(block, result);
         result = this.verifyBlockSlotWindow(block, result);
         result = this.verifyVersion(block, result);
-        // TODO: verify total fee
+        // TODO: validate total fee
         result = this.verifyId(block, result);
         result = this.verifyPayload(block, result);
 
@@ -909,11 +843,7 @@ class BlockService {
 
     private verifyAgainstLastNBlockIds(block: Block, result: IVerifyResult): IVerifyResult {
         if (this.lastNBlockIds.indexOf(block.id) !== -1) {
-            if (config.constants.VERIFY_AGAINST_LAST_N_BLOCK_IDS) {
-                result.errors.push('Block already exists in chain');
-            } else {
-                logger.error('Block already exists in chain');
-            }
+            result.errors.push('Block already exists in chain');
         }
         return result;
     }
@@ -924,20 +854,12 @@ class BlockService {
 
         // Reject block if it's slot is older than BLOCK_SLOT_WINDOW
         if (currentApplicationSlot - blockSlot > config.constants.blockSlotWindow) {
-            if (config.constants.VERIFY_BLOCK_SLOT_WINDOW) {
-                result.errors.push('Block slot is too old');
-            } else {
-                logger.error('Block slot is too old');
-            }
+            result.errors.push('Block slot is too old');
         }
 
         // Reject block if it's slot is in the future
         if (currentApplicationSlot < blockSlot) {
-            if (config.constants.VERIFY_BLOCK_SLOT_WINDOW) {
-                result.errors.push('Block slot is in the future');
-            } else {
-                logger.error('Block slot is in the future');
-            }
+            result.errors.push('Block slot is in the future');
         }
 
         return result;
@@ -1313,6 +1235,13 @@ class BlockService {
             blockIds: this.lastNBlockIds,
             lastBlock: block
         });
+    }
+
+    public async loadBlocks(blocks: Array<Block>): Promise<void> {
+        for (let block of blocks){
+            await this.receiveBlock(block)
+        }
+        return;
     }
 }
 

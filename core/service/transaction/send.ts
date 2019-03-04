@@ -1,16 +1,15 @@
-import { ITransactionService } from '../transaction';
+import { IAssetService } from '../transaction';
 import { IAsset } from 'shared/model/transaction';
 import { IAssetTransfer, Transaction } from 'shared/model/transaction';
 import { Account } from 'shared/model/account';
 import Response from 'shared/model/response';
 import config from 'shared/util/config';
 import AccountRepo from '../../repository/account';
-import { ITableObject } from 'core/util/common';
 import { TOTAL_PERCENTAGE } from 'core/util/const';
 
-class TransactionSendService implements ITransactionService<IAssetTransfer> {
+class TransactionSendService implements IAssetService<IAssetTransfer> {
 
-    async create(trs: Transaction<IAssetTransfer>): Promise<IAssetTransfer> {
+    create(trs: Transaction<IAssetTransfer>): IAssetTransfer {
         return;
     }
 
@@ -18,12 +17,12 @@ class TransactionSendService implements ITransactionService<IAssetTransfer> {
         return Buffer.from([]);
     }
 
-    async verifyUnconfirmed(trs: Transaction<IAsset>): Promise<Response<void>> {
+    verifyUnconfirmed(trs: Transaction<IAsset>): Response<void> {
         return new Response();
     }
 
     // TODO: validate fields in controller
-    async verify(trs: Transaction<IAssetTransfer>, sender: Account): Promise<Response<void>> {
+    validate(trs: Transaction<IAssetTransfer>, sender: Account): Response<void> {
         const errors = [];
 
         if (!trs.recipientAddress) {
@@ -37,19 +36,19 @@ class TransactionSendService implements ITransactionService<IAssetTransfer> {
         return new Response();
     }
 
-    calculateFee(trs: Transaction<IAsset>, sender: Account): number {
+    calculateFee(trs: Transaction<IAssetTransfer>, sender: Account): number {
         return (trs.amount * config.constants.fees.send) / TOTAL_PERCENTAGE;
     }
 
-    calculateUndoUnconfirmed(trs: Transaction<IAsset>, sender: Account): void {
+    calculateUndoUnconfirmed(trs: Transaction<IAssetTransfer>, sender: Account): void {
         return;
     }
 
-    async applyUnconfirmed(trs: Transaction<IAsset>): Promise<Response<void>> {
+    applyUnconfirmed(trs: Transaction<IAssetTransfer>): Response<void> {
         return AccountRepo.updateBalanceByAddress(trs.recipientAddress, trs.amount);
     }
 
-    async undoUnconfirmed(trs: Transaction<IAssetTransfer>, sender: Account): Promise<Response<void>> {
+    undoUnconfirmed(trs: Transaction<IAssetTransfer>, sender: Account): Response<void> {
         return null;
     }
 
@@ -58,14 +57,6 @@ class TransactionSendService implements ITransactionService<IAssetTransfer> {
     }
 
     async undo(trs: Transaction<IAssetTransfer>): Promise<Response<void>> {
-        return null;
-    }
-
-    dbRead(fullBlockRow: Transaction<IAssetTransfer>): Transaction<IAssetTransfer> {
-        return null;
-    }
-
-    dbSave(trs: Transaction<IAssetTransfer>): Array<ITableObject> {
         return null;
     }
 }

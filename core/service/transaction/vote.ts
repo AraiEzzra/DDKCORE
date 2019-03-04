@@ -1,4 +1,4 @@
-import { ITransactionService } from 'core/service/transaction';
+import { IAssetService } from 'core/service/transaction';
 import { IAirdropAsset, IAssetVote, Transaction } from 'shared/model/transaction';
 import { Account, Stake } from 'shared/model/account';
 import Response from 'shared/model/response';
@@ -13,18 +13,17 @@ import {
     undoFrozeOrdersRewardAndUnstake
 } from 'core/util/reward';
 import DelegateRepo from 'core/repository/delegate';
-import {ITableObject} from 'core/util/common';
 
-class TransactionVoteService implements ITransactionService<IAssetVote> {
+class TransactionVoteService implements IAssetService<IAssetVote> {
 
-    async create(trs: Transaction<IAssetVote>, data: IAssetVote ): Promise<IAssetVote> {
+    create(trs: Transaction<IAssetVote>, data: IAssetVote ): IAssetVote {
         const sender: Account = AccountRepo.getByAddress(trs.senderAddress);
         let isDownVote: boolean = false;
         if (data.votes && data.votes[0]) {
             isDownVote = data.votes[0][0] === '-';
         }
-        const totals: { reward: number, unstake: number} = await calculateTotalRewardAndUnstake(sender, isDownVote);
-        const airdropReward: IAirdropAsset = await getAirdropReward(sender, totals.reward, trs.type);
+        const totals: { reward: number, unstake: number} = calculateTotalRewardAndUnstake(sender, isDownVote);
+        const airdropReward: IAirdropAsset = getAirdropReward(sender, totals.reward, trs.type);
 
         trs.recipientAddress = sender.address;
         return {
@@ -60,7 +59,7 @@ class TransactionVoteService implements ITransactionService<IAssetVote> {
         return Buffer.concat([buff, sponsorsBuffer, voteBuffer]);
     }
 
-    async verifyUnconfirmed(trs: Transaction<IAssetVote>, sender: Account): Promise<Response<void>> {
+    verifyUnconfirmed(trs: Transaction<IAssetVote>, sender: Account): Response<void> {
         const errors: Array<string> = [];
         let additions: number = 0;
         let removals: number = 0;
@@ -102,7 +101,7 @@ class TransactionVoteService implements ITransactionService<IAssetVote> {
         return new Response({ errors });
     }
 
-    async verify(trs: Transaction<IAssetVote>, sender: Account): Promise<Response<void>> {
+    validate(trs: Transaction<IAssetVote>, sender: Account): Response<void> {
         const errors: Array<string> = [];
 
         if (trs.recipientAddress !== trs.senderAddress) {
@@ -159,7 +158,7 @@ class TransactionVoteService implements ITransactionService<IAssetVote> {
         }
 
         const isDownVote: boolean = trs.asset.votes[0][0] === '-';
-        const totals: { reward: number, unstake: number} = await calculateTotalRewardAndUnstake(sender, isDownVote);
+        const totals: { reward: number, unstake: number} = calculateTotalRewardAndUnstake(sender, isDownVote);
 
         if (totals.reward !== trs.asset.reward) {
             errors.push(
@@ -173,7 +172,7 @@ class TransactionVoteService implements ITransactionService<IAssetVote> {
             );
         }
 
-        const verifyAirdropResponse: Response<void> = await verifyAirdrop(trs, totals.reward, sender);
+        const verifyAirdropResponse: Response<void> = verifyAirdrop(trs, totals.reward, sender);
         if (!verifyAirdropResponse.success) {
             errors.push(...verifyAirdropResponse.errors);
         }
@@ -192,7 +191,7 @@ class TransactionVoteService implements ITransactionService<IAssetVote> {
     }
 
 
-    async applyUnconfirmed(trs: Transaction<IAssetVote>, sender: Account): Promise<Response<void>> {
+    applyUnconfirmed(trs: Transaction<IAssetVote>, sender: Account): Response<void> {
         const isDownVote = trs.asset.votes[0][0] === '-';
         const votes = trs.asset.votes.map(vote => vote.substring(1));
         if (isDownVote) {
@@ -226,11 +225,11 @@ class TransactionVoteService implements ITransactionService<IAssetVote> {
             }
         });
         if (processedOrders && processedOrders.length > 0) {
-            await applyFrozeOrdersRewardAndUnstake(trs, processedOrders);
+            applyFrozeOrdersRewardAndUnstake(trs, processedOrders);
         }
     }
 
-    async undoUnconfirmed(trs: Transaction<IAssetVote>, sender: Account): Promise<Response<void>> {
+    undoUnconfirmed(trs: Transaction<IAssetVote>, sender: Account): Response<void> {
         const isDownVote = trs.asset.votes[0][0] === '-';
         const votes = trs.asset.votes.map(vote => vote.substring(1));
         if (isDownVote) {
@@ -262,7 +261,7 @@ class TransactionVoteService implements ITransactionService<IAssetVote> {
                 stake.nextVoteMilestone = 0;
             }
         });
-        await undoFrozeOrdersRewardAndUnstake(trs);
+        undoFrozeOrdersRewardAndUnstake(trs);
     }
 
     async apply(trs: Transaction<IAssetVote>, sender: Account): Promise<Response<void>> {
@@ -275,14 +274,6 @@ class TransactionVoteService implements ITransactionService<IAssetVote> {
     }
 
     calculateUndoUnconfirmed(trs: Transaction<IAssetVote>, sender: Account): void {
-    }
-
-    dbSave(trs: Transaction<IAssetVote>): Array<ITableObject> {
-        return null;
-    }
-
-    dbRead(fullBlockRow: Transaction<IAssetVote>): Transaction<IAssetVote> {
-        return null;
     }
 }
 

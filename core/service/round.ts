@@ -1,5 +1,4 @@
-import ResponseEntity from 'shared/model/response';
-import { Account } from 'shared/model/account';
+import Response from 'shared/model/response';
 import crypto from 'crypto';
 import SlotService from 'core/service/slot';
 import Config from 'shared/util/config';
@@ -13,10 +12,11 @@ import { Slots, Round } from 'shared/model/round';
 import RoundRepository from 'core/repository/round';
 import { createTaskON } from 'shared/util/bus';
 import DelegateRepository from 'core/repository/delegate';
+import AccountRepository from 'core/repository/account';
 import { ed } from 'shared/util/ed';
 import { Delegate } from 'shared/model/delegate';
 import { logger } from 'shared/util/logger';
-import { asyncCompose, compose } from 'core/util/common';
+import { compose } from 'core/util/common';
 
 const constants = Config.constants;
 
@@ -32,60 +32,34 @@ interface IRoundSum {
 
 interface IRoundService {
 
-    /**
-     * Generate hash (delegate publicKey + previousBlockId)
-     * @return hash from DelegatePublicKey + blockId
-     */
-    generateHashList(params: {activeDelegates: Array<Account>, blockId: string}):
+    generateHashList(params: {activeDelegates: Array<Delegate>, blockId: string}):
         Array<{hash: string, generatorPublicKey: string}>;
 
     sortHashList(hashList: Array<{hash: string, generatorPublicKey: string}>):
         Array<{hash: string, generatorPublicKey: string}>;
 
-    /**
-     * Match hash to delegates
-     * Create  and store to this.round
-     */
     generatorPublicKeyToSlot(sortedHashList: Array<{hash: string, generatorPublicKey: string}>): Slots;
 
-    /**
-     * triggered by onRoundFinish or onApplyLastBlockInRound
-     * @implements getLastBlock from blocks repository
-     */
-    generateRound(): Promise<ResponseEntity<void>>;
+    generateRound(): Response<void>;
 
-    /**
-     * @implements publicKey from config
-     * @return your slot for rxBus
-     */
     getMyTurn(): number;
 
-    /**
-     * calculateReward
-     */
-    sumRound(round): Promise<ResponseEntity<IRoundSum>>;
+    sumRound(round): Response<IRoundSum>;
 
-    /**
-     * Rebuild round if one of blocks apply with delay
-     */
     rebuild(): void;
 
-    /**
-     * Rollback round if one of blocks fails
-     */
     rollBack(): void;
 
     validate(): boolean;
 
-    apply(param: ResponseEntity<IRoundSum>): Promise<ResponseEntity<void>>;
+    applyUnconfirmed(param: Response<IRoundSum>): Response<void>;
 
-    undo(param: IRoundSum): boolean;
+    undoUnconfirmed(round: Round): Response<string>;
 
-    /**
-     * Calculates round number from the given height.
-     * @param {number} height - Height from which round is calculated
-     * @returns {number} Round number
-     */
+    apply(params: Response<Array<string>>): void;
+
+    undo(params: Response<Array<string>>): boolean;
+
     calcRound(height: number): number;
 
 }
@@ -106,8 +80,7 @@ class RoundService implements IRoundService {
         };
     }
 
-    // TODO: refactor activeDelegates type
-    public generateHashList(params: { activeDelegates: Array<Account>, blockId: string }): Array<IHashList> {
+    public generateHashList(params: { activeDelegates: Array<Delegate>, blockId: string }): Array<IHashList> {
         return params.activeDelegates.map((delegate: Delegate) => {
             const publicKey = delegate.account.publicKey;
             const hash = crypto.createHash('md5').update(publicKey + params.blockId).digest('hex');
@@ -141,36 +114,36 @@ class RoundService implements IRoundService {
         }, {});
     }
 
-    public async generateRound(): Promise<ResponseEntity<void>> {
+    public generateRound(): Response<void> {
         /**
          * if triggered by ROUND_FINISH event
          */
         if (
             RoundRepository.getCurrentRound()
         ) {
-            // TODO: fix it
-            // calculate rewards and apply
-            // await asyncCompose(
-            //     this.apply,
-            //     this.sumRound
-            // )(RoundRepository.getCurrentRound());
-
-            const sumRoundResponseEntity = await this.sumRound(RoundRepository.getCurrentRound());
-            await this.apply(sumRoundResponseEntity);
+            compose(
+                this.applyUnconfirmed,
+                this.sumRound
+            )(RoundRepository.getCurrentRound());
 
             // store pound as previous
             RoundRepository.setPrevRound(RoundRepository.getCurrentRound());
         }
 
         const lastBlock = BlockService.getLastBlock();
-        const { data } = DelegateRepository.getActiveDelegates();
+        const delegateResponse = DelegateRepository.getActiveDelegates();
+
+        if (!delegateResponse.success) {
+            logger.error('[RoundService][generateRound] Can\'t get Active delegates');
+            return new Response({errors: [...delegateResponse.errors, '[generateRound] Can\'t get Active delegates']});
+        }
 
         const slots = compose(
             this.generatorPublicKeyToSlot,
             this.sortHashList,
             this.generateHashList
         )
-        ({blockId: lastBlock.id, activeDelegates: data});
+        ({blockId: lastBlock.id, activeDelegates: delegateResponse.data});
 
         RoundRepository.setCurrentRound({slots, startHeight: lastBlock.height + 1});
         logger.info(`[Service][Round][generateRound] Start round id: ${RoundRepository.getCurrentRound().id}`);
@@ -188,44 +161,41 @@ class RoundService implements IRoundService {
         }
 
         // create event for end of current round
-        const lastSlot = RoundRepository.getLastSlotInRound();
-
         // lastSlot + 1 for waiting finish last round
+        const lastSlot = RoundRepository.getLastSlotInRound();
         const RoundEndTime = SlotService.getSlotTime(lastSlot + 1 - SlotService.getSlotNumber());
-
         createTaskON('ROUND_FINISH', RoundEndTime);
 
-        return new ResponseEntity();
+        return new Response();
     }
 
     public getMyTurn(): number {
         return RoundRepository.getCurrentRound().slots[constants.publicKey].slot;
     }
 
-    public async sumRound(round: Round): Promise<ResponseEntity<IRoundSum>> {
-        const response = await BlockRepository.loadBlocksOffset(
-            {
-                offset: 1,
-                limit: 100000
-            });
+    public sumRound(round: Round): Response<IRoundSum> {
+        // load blocks forged in the last round
+
+        const limit = Object.keys(round.slots).length;
+        const blockResponse = BlockRepository.loadBlocksOffset(round.startHeight, limit);
+
+        if (!blockResponse.success) {
+            return new Response({errors: [...blockResponse.errors, 'sumRound']});
+        }
 
         const resp: IRoundSum = {
             roundFees: 0,
             roundDelegates: []
         };
 
-        if (!response.success) {
-            return new ResponseEntity({errors: [...response.errors, 'sumRound']});
-        } else {
-            const blocks = response.data;
+        const blocks = blockResponse.data;
 
-            for (let i = 0; i < blocks.length; i++) {
-                resp.roundFees += blocks[i].fee;
-                resp.roundDelegates.push(blocks[i].generatorPublicKey);
-            }
-
-            return new ResponseEntity({errors: [], data: resp});
+        for (let i = 0; i < blocks.length; i++) {
+            resp.roundFees += blocks[i].fee;
+            resp.roundDelegates.push(blocks[i].generatorPublicKey);
         }
+
+        return new Response({data: resp});
     }
 
     public rebuild(): void {
@@ -238,27 +208,44 @@ class RoundService implements IRoundService {
         return undefined;
     }
 
-    public async apply(param: ResponseEntity<IRoundSum>): Promise<ResponseEntity<void>> {
-        if (!await param.success) {
-            return new ResponseEntity({errors: [...param.errors, 'applyRound']});
+    public applyUnconfirmed(param: Response<IRoundSum>): Response<Array<string>> {
+        const roundSumResponse = param;
+        if (!roundSumResponse.success) {
+            return new Response({errors: [...roundSumResponse.errors, 'applyUnconfirmed']});
+        }
+        // increase delegates balance
+        const delegates = roundSumResponse.data.roundDelegates;
+        const fee = Math.floor(roundSumResponse.data.roundFees / delegates.length);
+
+        for (let i = 0; i < delegates.length; i++) {
+            let delegateAccount = DelegateRepository.getByPublicKey(delegates[i]).account;
+            AccountRepository.updateBalance(delegateAccount, delegateAccount.actualBalance + fee);
         }
 
-        // increase delegates balance
-        // get delegates by publicKeybalance = balance + totalRoundFee/count(delegates)
-        // update delegate
-        return new ResponseEntity({});
+        return new Response({data: delegates});
     }
 
-    public undo(param: IRoundSum): boolean {
-        // if (!param.roundDelegates.length) {
-        //     return false;
-        // }
-
+    public undoUnconfirmed(round: Round = RoundRepository.getCurrentRound()): Response<Array<string>> {
+        const roundSumResponse = this.sumRound(round);
+        if (!roundSumResponse.success) {
+            return new Response({errors: [...roundSumResponse.errors, 'undoUnconfirmed']});
+        }
         // increase delegates balance
-        // get delegates by publicKey
-        // balance = balance + totalRoundFee/count(delegates)
-        // update delegate
-        return undefined;
+        const delegates = roundSumResponse.data.roundDelegates;
+        const fee = Math.floor(roundSumResponse.data.roundFees / delegates.length);
+
+        for (let i = 0; i < delegates.length; i++) {
+            let delegateAccount = DelegateRepository.getByPublicKey(delegates[i]).account;
+            AccountRepository.updateBalance(delegateAccount, delegateAccount.actualBalance - fee);
+        }
+
+        return new Response({data: delegates});
+    }
+
+    public async apply(params: Response<Array<string>>): void {
+    }
+
+    public async undo(params: Response<Array<string>>): void {
     }
 
     public calcRound(height: number): number {

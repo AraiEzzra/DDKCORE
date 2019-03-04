@@ -1,10 +1,10 @@
 import autobind from 'autobind-decorator';
-import { Headers } from 'core/repository/system';
+import headers from 'core/repository/system';
 import { Peer } from 'shared/model/peer';
-import { PeerRepo } from 'core/repository/peer';
 import { messageON } from 'shared/util/bus';
 import { logger } from 'shared/util/logger';
 import io from 'socket.io-client';
+import PeerRepository from 'core/repository/peer';
 // TODO remove http
 const server = require('http').createServer();
 const ioServer = require('socket.io')(server, {
@@ -12,25 +12,22 @@ const ioServer = require('socket.io')(server, {
     wsEngine: 'ws',
 });
 const env = require('../../config/env').default;
+import { TRUSTED_PEERS } from 'core/repository/peer';
+import { BLACK_LIST } from 'core/repository/peer';
 
 server.listen(
     env.serverPort,
     env.serverHost
 );
 
-export const TRUSTED_PEERS: Array<any> = env.peers.list;
 
-const BLACK_LIST = new Set(env.blackList);
-
-export default class Socket {
+export class Socket {
     private static _instance: Socket;
-    private peerRepo: PeerRepo;
 
     constructor() {
         if (Socket._instance) {
             return Socket._instance;
         }
-        this.peerRepo = new PeerRepo();
         this.init();
         Socket._instance = this;
     }
@@ -54,13 +51,13 @@ export default class Socket {
     @autobind
     connectNewPeer(peer: Peer): void {
         if (BLACK_LIST.has(`${peer.ip}`) ||
-            this.peerRepo.has(peer)) {
+            PeerRepository.has(peer)) {
             return;
         }
         const ws = io(`ws://${peer.ip}:${peer.port}`);
         ws.on('OPEN', () => {
             ws.emit('HEADERS', JSON.stringify(
-                new Headers()
+                headers.getFullHeaders()
             ));
             ws.on('READY', () => {
                 Socket._instance.addPeer(peer, ws);
@@ -70,12 +67,12 @@ export default class Socket {
 
     @autobind
     addPeer(peer: Peer, socket): boolean {
-        if (this.peerRepo.addPeer(peer, socket)) {
+        if (PeerRepository.addPeer(peer, socket)) {
             logger.debug(`[SOCKET][ADD_PEER] host: ${peer.ip}:${peer.port}`);
             socket.on('ACTION', (response: string) => Socket._instance.onPeerAction(response, peer));
 
             peer.socket.on('disconnect', () => {
-                this.peerRepo.removePeer(peer);
+                PeerRepository.removePeer(peer);
             });
             return true;
         }
@@ -91,19 +88,19 @@ export default class Socket {
 
     @autobind
     emitPeers(code, data, peers: Array<Peer> = null): void {
-        (peers || this.peerRepo.peerList()).forEach(peer => {
+        (peers || PeerRepository.peerList()).forEach(peer => {
             this.emitPeer(code, data, peer);
         });
     }
 
     @autobind
     emitPeer(code, data, peer): void {
-        if (!(this.peerRepo.has(peer))) {
+        if (!(PeerRepository.has(peer))) {
             logger.error(`Peer ${peer.ip}:${peer.port} is offline`);
             return;
         }
         if (!peer.socket) {
-            peer = this.peerRepo.getPeerFromPool(peer);
+            peer = PeerRepository.getPeerFromPool(peer);
         }
         peer.socket.emit(
             'ACTION',
@@ -111,3 +108,5 @@ export default class Socket {
         );
     }
 }
+
+export default new Socket();

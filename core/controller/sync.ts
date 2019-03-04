@@ -1,28 +1,12 @@
 import SyncService from 'core/service/sync';
 import { ON } from 'core/util/decorator';
 import { Block } from 'shared/model/block';
-import { Transaction } from 'shared/model/transaction';
 import { Peer } from 'shared/model/peer';
 import { BaseController } from 'core/controller/baseController';
 import PeerService from 'core/service/peer';
-import transactionQueue from 'core/service/transactionQueue';
 import BlockService from 'core/service/block';
-import { logger } from 'shared/util/logger';
 
 export class SyncController extends BaseController {
-
-    @ON('NEW_BLOCK')
-    async newBlock(action: { data: { block: Block } }): Promise<void> {
-        const { data } = action;
-        logger.debug(`[Controller][Sync][newBlock] block id ${data.block.id}`);
-        await BlockService.processIncomingBlock(data.block);
-    }
-
-    @ON('NEW_TRANSACTION')
-    async newTransaction(action: { data: { trs: Transaction<any> } }): Promise<void> {
-        const { data } = action;
-        transactionQueue.push(data.trs);
-    }
 
     // TODO call after several minutes or by interval
     @ON('EMIT_REQUEST_PEERS')
@@ -42,29 +26,32 @@ export class SyncController extends BaseController {
         SyncService.connectNewPeers(data.peers);
     }
 
-    // TODO call after several minutes or by interval
+    // TODO remove
     @ON('EMIT_REQUEST_COMMON_BLOCKS')
     async emitRequestCommonBlocks() {
         SyncService.requestCommonBlocks();
     }
 
+    // TODO remove
     @ON('REQUEST_COMMON_BLOCKS')
-    async checkCommonBlocks(action: { data: { blockIds: Array<number> }, peer: Peer }) {
+    async checkCommonBlocks(action: { data: { block: Block }, peer: Peer }) {
         const { data, peer } = action;
-        SyncService.checkCommonBlocks(data.blockIds, peer);
+        SyncService.checkCommonBlocks(data.block, peer);
     }
 
+    // TODO remove
     @ON('RESPONSE_COMMON_BLOCKS')
-    async getCommonBlocks(action: { data: boolean, peer: Peer }) {
+    async getCommonBlocks(action: { data: { success: boolean, data?: Block }, peer: Peer }) {
         const { data, peer } = action;
-        if (data) {
-            this.requestBlocks(peer);
+        if (data.success) {
+            // this.requestBlocks(data.data, peer);
         }
     }
 
+    // TODO start on load
     @ON('EMIT_REQUEST_BLOCKS')
-    async requestBlocks(peer: Peer): Promise<void> {
-        SyncService.requestBlocks(peer);
+    async requestBlocks(): Promise<void> {
+        SyncService.requestBlocks();
     }
 
     @ON('REQUEST_BLOCKS')
@@ -74,20 +61,24 @@ export class SyncController extends BaseController {
     }
 
     @ON('RESPONSE_BLOCKS')
-    async getBlocks(action: { data: { blocks: Array<Block> }, peer }): Promise<void> {
-        const { data, peer } = action;
-        //    TODO call block service and insert blocks
+    async loadBlocks(action: { data: { blocks: Array<Block> }, peer }): Promise<void> {
+        const { data } = action;
+        await BlockService.loadBlocks(data.blocks);
+        if (!SyncService.consensus) {
+            // TODO uncoment if load blocks work correct
+            // this.requestBlocks();
+        }
     }
 
     @ON('PEER_HEADERS_UPDATE')
-    async updatePeer(action: { data: { headers }, peer }) {
+    async updatePeer(action: { data, peer }) {
         const { data, peer } = action;
-        PeerService.update(data.headers, peer);
+        PeerService.update(data, peer);
     }
 
     @ON('LAST_BLOCKS_UPDATE')
-    async updateHeaders(data: {blockIds, lastBlock}) {
-        SyncService.updateHeaders(data);
+    async updateHeaders(data: { lastBlock }) {
+        await SyncService.updateHeaders(data);
     }
 
 

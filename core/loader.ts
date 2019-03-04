@@ -5,7 +5,6 @@ import {Transaction, IAsset} from 'shared/model/transaction';
 import Response from 'shared/model/response';
 import {messageON} from 'shared/util/bus';
 import {initControllers} from 'core/controller';
-import {logger} from 'shared/util/logger';
 
 const limit = 1000;
 

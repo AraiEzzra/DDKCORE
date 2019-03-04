@@ -1,15 +1,14 @@
-import { ITransactionService } from 'core/service/transaction';
+import { IAssetService } from 'core/service/transaction';
 import { IAssetRegister, Transaction } from 'shared/model/transaction';
 import { Account } from 'shared/model/account';
 import Response from 'shared/model/response';
 import AccountRepo from 'core/repository/account';
 import config from 'shared/util/config';
 import BUFFER from 'core/util/buffer';
-import {ITableObject} from 'core/util/common';
 
-class TransactionRegisterService implements ITransactionService<IAssetRegister> {
+class TransactionRegisterService implements IAssetService<IAssetRegister> {
 
-    async create(trs: Transaction<IAssetRegister>, data: IAssetRegister ): Promise<IAssetRegister> {
+    create(trs: Transaction<IAssetRegister>, data: IAssetRegister ): IAssetRegister {
         return {
             referral: data.referral
         };
@@ -21,11 +20,11 @@ class TransactionRegisterService implements ITransactionService<IAssetRegister> 
         return buff;
     }
 
-    async verifyUnconfirmed(trs: Transaction<IAssetRegister>, sender: Account): Promise<Response<void>> {
+    verifyUnconfirmed(trs: Transaction<IAssetRegister>, sender: Account): Response<void> {
         return new Response();
     }
 
-    async verify(trs: Transaction<IAssetRegister>, sender: Account): Promise<Response<void>> {
+    validate(trs: Transaction<IAssetRegister>, sender: Account): Response<void> {
         const errors = [];
 
         if (!trs.asset.referral) {
@@ -42,7 +41,7 @@ class TransactionRegisterService implements ITransactionService<IAssetRegister> 
     calculateUndoUnconfirmed(trs: Transaction<IAssetRegister>, sender: Account): void {
     }
 
-    async applyUnconfirmed(trs: Transaction<IAssetRegister>, sender: Account): Promise<Response<void>> {
+    applyUnconfirmed(trs: Transaction<IAssetRegister>, sender: Account): Response<void> {
         const referralAccount: Account = AccountRepo.getByAddress(trs.asset.referral);
         const referrals: Array<Account> =
             referralAccount.referrals.slice(0, config.constants.airdrop.maxReferralCount - 1);
@@ -60,7 +59,7 @@ class TransactionRegisterService implements ITransactionService<IAssetRegister> 
         return new Response<void>();
     }
 
-    async undoUnconfirmed(trs: Transaction<IAssetRegister>, sender: Account): Promise<Response<void>> {
+    undoUnconfirmed(trs: Transaction<IAssetRegister>, sender: Account): Response<void> {
         AccountRepo.delete(sender);
         return new Response<void>();
     }
@@ -71,14 +70,6 @@ class TransactionRegisterService implements ITransactionService<IAssetRegister> 
 
     async undo(trs: Transaction<IAssetRegister>): Promise<Response<void>> {
         return new Response<void>();
-    }
-
-    dbRead(fullBlockRow: Transaction<IAssetRegister>): Transaction<IAssetRegister> {
-        return null;
-    }
-
-    dbSave(trs: Transaction<IAssetRegister>): Array<ITableObject> {
-        return null;
     }
 }
 

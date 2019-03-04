@@ -22,18 +22,12 @@ export enum TransactionStatus {
     APPLIED,
     DECLINED
 }
-export interface IModelAsset {
-
-}
 
 export interface IAirdropAsset {
-    withAirdropReward: boolean;
     sponsors: { [sponsorAddress: number]: number };
-    totalReward: number;
 }
 
 export interface IAsset {
-
 }
 
 export interface IAssetRegister extends IAsset {
@@ -42,6 +36,7 @@ export interface IAssetRegister extends IAsset {
 
 export interface IAssetTransfer extends IAsset {
     recipientAddress: Address;
+    amount: number;
 }
 
 export interface IAssetSignature extends IAsset {
@@ -55,13 +50,10 @@ export interface IAssetDelegate extends IAsset {
 
 // TODO rewrite in future
 export interface IAssetStake extends IAsset {
-    stakeOrder: {
-        stakedAmount: number,
-        nextVoteMilestone: number,
-        startTime: number
-    };
-    airdropReward: IAirdropAsset;
-
+    amount: number;
+    startTime: number;
+    startVoteCount: number;
+    airdropReward?: IAirdropAsset;
 }
 
 export interface IAssetSendStake extends IAsset {
@@ -75,25 +67,27 @@ export interface IAssetVote extends IAsset {
     airdropReward?: IAirdropAsset;
 }
 
-class TransactionModel<T extends IAsset> {
-    id: string;
+export class TransactionModel<T extends IAsset> {
+    id?: string;
     blockId: string;
     type: TransactionType;
     senderPublicKey: PublicKey;
-    senderAddress: Address;
-    recipientAddress?: Address = null;
-    signature: string;
-    secondSignature: string;
-    amount: number;
-    createdAt: Timestamp;
-    fee: number;
-    status?: TransactionStatus;
+    senderAddress: Address; // Memory only
+    signature?: string;
+    secondSignature?: string;
+    createdAt?: Timestamp;
+    fee?: number; // Memory only
+    status?: TransactionStatus; // Memory only
     salt?: string;
     asset?: T;
 
     constructor(data: TransactionModel<T>) {
         Object.assign(this, data);
     }
+
+    serialize() {}
+
+    deserialize() {}
 }
 
 export class Transaction<T extends IAsset> extends TransactionModel<T> {
