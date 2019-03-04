@@ -18,6 +18,7 @@ class RoundRepository {
      */
     setCurrentRound(round: RoundModel): void {
         this.currentRound = new Round({
+            startHeight: Number(round.startHeight),
             slots: round.slots,
         });
     }

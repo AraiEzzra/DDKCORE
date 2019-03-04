@@ -36,7 +36,7 @@ class DelegateRepository {
                 return -1;
             }
             return 0;
-        });
+        }).slice(0, constants.activeDelegates);
         return new Response({data: activeDelegates});
     }
 
@@ -47,6 +47,10 @@ class DelegateRepository {
             this.usernames.add(delegate.username);
         }
         this.memoryDelegates[delegate.account.publicKey] = delegate;
+    }
+
+    public getByPublicKey(publicKey: string): Delegate {
+        return this.memoryDelegates[publicKey];
     }
 
     public forgingDisable(data: any) {

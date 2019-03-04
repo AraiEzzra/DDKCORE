@@ -596,10 +596,6 @@ class BlockService {
             SyncService.sendNewBlock(block);
         }
 
-        // TODO: is it necessary?
-        // if (tick) {
-        //     await RoundService.generateRound();
-        // }
         return new Response<void>();
     }
 
