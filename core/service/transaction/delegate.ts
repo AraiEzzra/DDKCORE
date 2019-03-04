@@ -1,4 +1,4 @@
-import { ITransactionService } from 'core/service/transaction';
+import { IAssetService } from 'core/service/transaction';
 import { IAssetDelegate, Transaction } from 'shared/model/transaction';
 import { Account } from 'shared/model/account';
 import { Delegate } from 'shared/model/delegate';
@@ -7,7 +7,7 @@ import Response from 'shared/model/response';
 import AccountRepo from 'core/repository/account';
 import config from 'shared/util/config';
 
-class TransactionDelegateService implements ITransactionService<IAssetDelegate> {
+class TransactionDelegateService implements IAssetService<IAssetDelegate> {
 
     create(trs: Transaction<IAssetDelegate>, data: IAssetDelegate): IAssetDelegate {
         const asset: IAssetDelegate = {
@@ -29,7 +29,7 @@ class TransactionDelegateService implements ITransactionService<IAssetDelegate> 
         return new Response();
     }
 
-    verify(trs: Transaction<IAssetDelegate>, sender: Account): Response<void> {
+    validate(trs: Transaction<IAssetDelegate>, sender: Account): Response<void> {
         const errors = [];
 
         if (trs.recipientAddress) {

@@ -154,7 +154,7 @@ class BlockService {
                 return new Response<void>({errors: [...resultVerifyBlock.errors, 'processBlock']});
             }
         } else {
-            // TODO: remove when verify will be fix
+            // TODO: remove when validate will be fix
             if (keypair) {
                 const lastBlock: Block = BlockRepo.getLastBlock();
                 block = this.setHeight(block, lastBlock);
@@ -267,7 +267,7 @@ class BlockService {
 
         result = this.verifyPreviousBlock(block, result);
         result = this.verifyVersion(block, result);
-        // TODO: verify total fee
+        // TODO: validate total fee
 
         if (verify) {
             result = this.verifyId(block, result);
@@ -319,7 +319,7 @@ class BlockService {
         }
 
         if (!valid) {
-            result.errors.push('Failed to verify block signature');
+            result.errors.push('Failed to validate block signature');
         }
         return result;
     }
@@ -823,7 +823,7 @@ class BlockService {
         result = this.verifyAgainstLastNBlockIds(block, result);
         result = this.verifyBlockSlotWindow(block, result);
         result = this.verifyVersion(block, result);
-        // TODO: verify total fee
+        // TODO: validate total fee
         result = this.verifyId(block, result);
         result = this.verifyPayload(block, result);
 

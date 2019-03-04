@@ -349,7 +349,7 @@ class Config {
             PREVIOUS_DELEGATES_COUNT: 3,
             MASTER_NODE_MIGRATED_BLOCK: 0,
             CURRENT_BLOCK_VERSION: 1,
-            // Block verify
+            // Block validate
             VERIFY_BLOCK_VERSION: true,
             VERIFY_BLOCK_SIGNATURE: true,
             VERIFY_BLOCK_ID: true,
@@ -372,7 +372,7 @@ class Config {
             VERIFY_BLOCK_SLOT_WINDOW: true,
             VALIDATE_BLOCK_SLOT: false,
 
-            // Delegates transaction verify
+            // Delegates transaction validate
             VERIFY_DELEGATE_TRS_RECIPIENT: true,
             VERIFY_DELEGATE_TRS_AMOUNT: true,
             VERIFY_DELEGATE_TRS_IS_DELEGATE: true,

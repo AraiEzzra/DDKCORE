@@ -1,6 +1,0 @@
-BEGIN;
-
-ALTER TABLE "mem_accounts"
-  ADD COLUMN "global" BOOLEAN DEFAULT FALSE;
-
-COMMIT;
