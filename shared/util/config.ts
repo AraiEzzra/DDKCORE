@@ -32,6 +32,7 @@ interface IConstraint {
     maxVotes?: number;
     maxVotesPerTransaction?: number;
     maxTransferCount?: number;
+    maxDelegateUsernameLength?: number;
     addressLength?: number;
     blockHeaderLength?: number;
     blockReceiptTimeOut?: number;
