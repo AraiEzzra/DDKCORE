@@ -51,6 +51,7 @@ export default {
     maxVotes: 11,
     maxVotesPerTransaction: 3,
     maxTransferCount: 3,
+    maxDelegateUsernameLength: 20,
     addressLength: 208,
     blockHeaderLength: 248,
     blockReceiptTimeOut: 20, // 2 blocks
