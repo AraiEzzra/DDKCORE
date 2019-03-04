@@ -42,7 +42,7 @@ describe('RxBus', () => {
     describe('receiving message', () => {
         context('topic1', () => {
             it('should call 2 handlers', async () => {
-                messageON('topic1');
+                messageON('topic1', {});
                 await expect(test.result.length).to.be.equal(2);
             });
         });

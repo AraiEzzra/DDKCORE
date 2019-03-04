@@ -92,7 +92,12 @@ class BlockPGRepo implements IBlockPGRepository {
 
 
     async getById(blockId: BlockId): Promise<Block> {
-        const rawBlock: RawBlock = await db.none(queries.getById, { blockId });
+        const rawBlock: RawBlock = await db.oneOrNone(queries.getById, { blockId });
+
+        if (!rawBlock) {
+            return null;
+        }
+
         let block: Block = this.deserialize(rawBlock);
         block = this.assignTransactions([block])[0];
         return block;
@@ -101,7 +106,7 @@ class BlockPGRepo implements IBlockPGRepository {
     async getGenesisBlock(): Promise<Block> {
         const rawBlock: RawBlock = await db.oneOrNone(queries.getGenesisBlock);
         if (!rawBlock) {
-            return;
+            return null;
         }
         let block: Block = this.deserialize(rawBlock);
         block = this.assignTransactions([block])[0];
@@ -124,8 +129,7 @@ class BlockPGRepo implements IBlockPGRepository {
         if (!rawBlockIds || rawBlockIds.length) {
             return;
         }
-        const ids: Array<BlockId> = rawBlockIds.map(block => block.id);
-        return ids;
+        return  rawBlockIds.map(block => block.id);
     }
 
     async getMany(offset: number, limit?: number): Promise<Array<Block>> {

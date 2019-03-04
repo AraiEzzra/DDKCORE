@@ -1,14 +1,20 @@
+import path from 'path';
+import db from 'shared/driver/db';
+import { QueryFile } from 'pg-promise';
 import TransactionDispatcher from 'core/service/transaction';
 import TransactionPGRepo from 'core/repository/transaction/pg';
 import AccountRepo from 'core/repository/account';
-import {Transaction, IAsset} from 'shared/model/transaction';
-import {messageON} from 'shared/util/bus';
-import {initControllers} from 'core/controller';
+import { IAsset, Transaction } from 'shared/model/transaction';
+import { messageON } from 'shared/util/bus';
+import { initControllers } from 'core/controller';
 
 const limit = 1000;
 
 class Loader {
     public async start() {
+        const pathMockData: string = path.join(process.cwd(), 'core/database/sql');
+        const filePath = path.join(pathMockData, 'init.sql');
+        await db.query(new QueryFile(filePath, { minify: true }));
 
         let offset = 0;
         do {
