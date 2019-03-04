@@ -1,8 +1,7 @@
 import TransactionDispatcher from 'core/service/transaction';
-import TransactionRepo from 'core/repository/transaction';
+import TransactionPGRepo from 'core/repository/transaction/pg';
 import AccountRepo from 'core/repository/account';
 import {Transaction, IAsset} from 'shared/model/transaction';
-import Response from 'shared/model/response';
 import {messageON} from 'shared/util/bus';
 import {initControllers} from 'core/controller';
 
@@ -13,17 +12,17 @@ class Loader {
 
         let offset = 0;
         do {
-            const transactionBatch: Response<Array<Transaction<IAsset>>> =
-                await TransactionRepo.getTransactionBatch(limit, offset);
+            const transactionBatch: Array<Transaction<IAsset>> =
+                await TransactionPGRepo.getMany(limit, offset);
 
-            for (let trs of transactionBatch.data) {
+            for (let trs of transactionBatch) {
                 const sender = AccountRepo.add({
                     address: trs.senderAddress,
                     publicKey: trs.senderPublicKey
                 });
                 TransactionDispatcher.applyUnconfirmed(trs, sender.data);
             }
-            if (transactionBatch.data.length < limit) {
+            if (transactionBatch.length < limit) {
                 break;
             }
             offset += limit;

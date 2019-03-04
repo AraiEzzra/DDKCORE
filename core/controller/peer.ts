@@ -1,7 +1,6 @@
 import { Peer } from 'shared/model/peer';
-import PeerService from 'core/service/peer';
 import { Block } from 'shared/model/block';
-import BlockRepo from 'core/repository/block';
+import BlockRepo from 'core/repository/block/';
 import { Transaction } from 'shared/model/transaction';
 import Response from 'shared/model/response';
 import { ON, RPC } from 'core/util/decorator';

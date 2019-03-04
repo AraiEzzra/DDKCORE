@@ -1,4 +1,4 @@
-import {Transaction, TransactionStatus, TransactionType, IAsset} from 'shared/model/transaction';
+import {Transaction, TransactionStatus, TransactionType, IAsset, IAssetTransfer} from 'shared/model/transaction';
 import {transactionSortFunc} from 'core/util/transaction';
 import {getAddressByPublicKey, getOrCreateAccount} from 'shared/util/account';
 import TransactionDispatcher from 'core/service/transaction';
@@ -143,10 +143,11 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
         }
         this.poolBySender[trs.senderAddress].push(trs);
         if (trs.type === TransactionType.SEND) {
-            if (!this.poolByRecipient[trs.recipientAddress]) {
-                this.poolByRecipient[trs.recipientAddress] = [];
+            const asset: IAssetTransfer = <IAssetTransfer>trs.asset;
+            if (!this.poolByRecipient[asset.recipientAddress]) {
+                this.poolByRecipient[asset.recipientAddress] = [];
             }
-            this.poolByRecipient[trs.recipientAddress].push(trs);
+            this.poolByRecipient[asset.recipientAddress].push(trs);
         }
 
         if (!sender) {
@@ -190,11 +191,14 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
             this.poolBySender[trs.senderAddress].splice(this.poolBySender[trs.senderAddress].indexOf(trs), 1);
         }
 
-        if (this.poolByRecipient[trs.recipientAddress] &&
-            this.poolByRecipient[trs.recipientAddress].indexOf(trs) !== -1
-        ) {
-            this.poolByRecipient[trs.recipientAddress]
-                .splice(this.poolByRecipient[trs.recipientAddress].indexOf(trs), 1);
+        if (trs.type === TransactionType.SEND) {
+            const asset: IAssetTransfer = <IAssetTransfer>trs.asset;
+            if (this.poolByRecipient[asset.recipientAddress] &&
+                this.poolByRecipient[asset.recipientAddress].indexOf(trs) !== -1
+            ) {
+                this.poolByRecipient[asset.recipientAddress]
+                    .splice(this.poolByRecipient[asset.recipientAddress].indexOf(trs), 1);
+            }
         }
         return true;
     }

@@ -32,14 +32,6 @@ class TransactionDelegateService implements IAssetService<IAssetDelegate> {
     validate(trs: Transaction<IAssetDelegate>, sender: Account): Response<void> {
         const errors = [];
 
-        if (trs.recipientAddress) {
-            errors.push('Invalid recipient');
-        }
-
-        if (trs.amount !== 0) {
-            errors.push('Invalid transaction amount');
-        }
-
         if (sender.delegate) {
             errors.push('Account is already a delegate');
         }

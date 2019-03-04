@@ -1,10 +1,9 @@
 import Response from 'shared/model/response';
 import { Block, BlockModel } from 'shared/model/block';
 import BlockService from 'core/service/block';
-import BlockRepo from 'core/repository/block';
+import BlockRepo from 'core/repository/block/';
 import BlockPGRepo from 'core/repository/block/pg';
-import { Peer } from 'shared/model/peer';
-import { ON, RPC } from 'core/util/decorator';
+import { ON } from 'core/util/decorator';
 import { BaseController } from 'core/controller/baseController';
 import { logger } from 'shared/util/logger';
 import * as blockUtils from 'core/util/block';
@@ -32,7 +31,7 @@ class BlockController extends BaseController {
         }
 
         const receivedBlock = new Block(data.block);
-        const lastBlock = BlockService.getLastBlock();
+        const lastBlock = BlockRepo.getLastBlock();
 
         const errors: Array<string> = [];
         if (blockUtils.isHeightLess(lastBlock, receivedBlock)) {
@@ -108,7 +107,7 @@ class BlockController extends BaseController {
 
     @ON('NEW_BLOCKS')
     public updateLastNBlocks(block: Block): Response<void> {
-        BlockRepo.updateLastNBlocks(block);
+        BlockRepo.appendInLastNBlocks(block);
         return new Response<void>();
     }
 

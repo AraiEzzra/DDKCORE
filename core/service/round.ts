@@ -51,13 +51,13 @@ interface IRoundService {
 
     validate(): boolean;
 
-    applyUnconfirmed(param: Response<IRoundSum>): Response<void>;
+    applyUnconfirmed(param: Response<IRoundSum>): Response<Array<string>>;
 
-    undoUnconfirmed(round: Round): Response<string>;
+    undoUnconfirmed(round: Round): Response<Array<string>>;
 
-    apply(params: Response<Array<string>>): void;
+    apply(params: Response<Array<string>>): Promise<void>;
 
-    undo(params: Response<Array<string>>): boolean;
+    undo(params: Response<Array<string>>): Promise<boolean>;
 
     calcRound(height: number): number;
 
@@ -235,10 +235,11 @@ class RoundService implements IRoundService {
         return new Response({data: delegates});
     }
 
-    public async apply(params: Response<Array<string>>): void {
+    public async apply(params: Response<Array<string>>): Promise<void> {
     }
 
-    public async undo(params: Response<Array<string>>): void {
+    public async undo(params: Response<Array<string>>): Promise<boolean> {
+        return;
     }
 
     public calcRound(height: number): number {

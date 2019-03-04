@@ -99,13 +99,12 @@ class BlockRepo implements IBlockRepository {
         this.lastNBlockIds = blocks;
     }
 
-    public updateLastNBlocks(block: Block): void {
+    public appendInLastNBlocks(block: Block): void {
         this.lastNBlockIds.push(block.id);
         if (this.lastNBlockIds.length > config.constants.blockSlotWindow) {
             this.lastNBlockIds.shift();
         }
         messageON('LAST_BLOCKS_UPDATE', {
-            blockIds: this.lastNBlockIds,
             lastBlock: block
         });
     }

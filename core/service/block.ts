@@ -12,11 +12,11 @@ import {Account} from 'shared/model/account';
 import {Block, BlockModel} from 'shared/model/block';
 import BlockRepo from 'core/repository/block';
 import AccountRepo from 'core/repository/account';
-import {Transaction} from 'shared/model/transaction';
+import { IAssetTransfer, Transaction, TransactionType } from 'shared/model/transaction';
 import TransactionDispatcher from 'core/service/transaction';
 import TransactionQueue from 'core/service/transactionQueue';
 import TransactionPool from 'core/service/transactionPool';
-import TransactionRepo from 'core/repository/transaction';
+import TransactionRepo from 'core/repository/transaction/';
 import {DelegateService} from 'core/service/delegate';
 import slotService from 'core/service/slot';
 import RoundService from 'core/service/round';
@@ -392,7 +392,10 @@ class BlockService {
             if (bytes) {
                 payloadHash.update(bytes);
             }
-            totalAmount += trs.amount;
+            if (trs.type === TransactionType.SEND) {
+                const asset: IAssetTransfer = <IAssetTransfer>trs.asset;
+                totalAmount += asset.amount;
+            }
             totalFee += trs.fee;
         }
         const hex = payloadHash.digest().toString('hex');
@@ -578,8 +581,10 @@ class BlockService {
             const bytes = TransactionDispatcher.getBytes(transaction);
 
             block.fee += transaction.fee;
-            block.amount += transaction.amount;
-
+            if (transaction.type === TransactionType.SEND) {
+                const asset: IAssetTransfer = <IAssetTransfer>transaction.asset;
+                block.amount += asset.amount;
+            }
             payloadHash.update(bytes);
         }
 
@@ -747,7 +752,7 @@ class BlockService {
     }
 
     private verifyAgainstLastNBlockIds(block: Block, result: IVerifyResult): IVerifyResult {
-        if (this.lastNBlockIds.indexOf(block.id) !== -1) {
+        if (BlockRepo.getLastNBlockIds().indexOf(block.id) !== -1) {
             result.errors.push('Block already exists in chain');
         }
         return result;
