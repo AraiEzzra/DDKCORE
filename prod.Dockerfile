@@ -1,4 +1,4 @@
-FROM    node:8-alpine
+FROM    node:10-alpine
 RUN     apk add --no-cache python curl bash automake autoconf libtool git alpine-sdk postgresql-dev
 RUN     addgroup ddk -g 1100 && \
         adduser -D -u 1100 ddk -G ddk
