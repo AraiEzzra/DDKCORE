@@ -5,7 +5,7 @@ export class PeerService {
 
     constructor() { }
 
-    update(headers, peer){
+    update(headers, peer) {
         PeerRepository.peerUpdate(headers, peer);
     }
 }

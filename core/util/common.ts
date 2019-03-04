@@ -19,7 +19,3 @@ export const compose = (...fns): any => {
     value => value
   );
 };
-
-// TODO: check it
-export const asyncCompose = (...fns) => input =>
-  fns.reduceRight((chain, func) => chain.then(func), Promise.resolve(input));

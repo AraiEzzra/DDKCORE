@@ -7,16 +7,17 @@ export const TRUSTED_PEERS: Array<any> = env.peers.list;
 export const BLACK_LIST = new Set(env.blackList);
 import { logger } from 'shared/util/logger';
 import { Block } from 'shared/model/block';
+import { MAX_PEER_BLOCKS_IDS } from 'core/util/const';
 
 export class PeerRepo {
     private peers: { [string: string]: Peer } = {};
-    private static _instance: PeerRepo;
+    private static instance: PeerRepo;
 
     constructor() {
-        if (PeerRepo._instance) {
-            return PeerRepo._instance;
+        if (PeerRepo.instance) {
+            return PeerRepo.instance;
         }
-        PeerRepo._instance = this;
+        PeerRepo.instance = this;
     }
 
     addPeer(peer: Peer, socket): boolean {
@@ -68,7 +69,7 @@ export class PeerRepo {
         Object.assign(currentPeer, headers);
 
         currentPeer.blocksIds.set(headers.height, headers.broadhash);
-        if (currentPeer.blocksIds.size > 100) {
+        if (currentPeer.blocksIds.size > MAX_PEER_BLOCKS_IDS) {
             const min = Math.min(...currentPeer.blocksIds.keys());
             currentPeer.blocksIds.delete(min);
         }
