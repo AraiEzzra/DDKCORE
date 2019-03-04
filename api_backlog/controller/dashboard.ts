@@ -50,7 +50,7 @@ export class DashboardController {
 
         return new Response({
             data,
-            error: errors
+            errors
         });
     }
 }

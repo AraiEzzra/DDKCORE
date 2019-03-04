@@ -1,27 +1,38 @@
-import { Application } from 'express';
-import * as bodyParser from 'body-parser';
-import { logger } from 'shared/util/logger';
-import { Loader } from './loader';
+import bodyParser = require('body-parser');
 
-const env = process.env;
+const app = require('express')();
+const server = require('http').createServer(app);
+const redis = require('redis');
+const io = require('socket.io')(server, {
+    serveClient: false,
+    wsEngine: 'ws',
+    pingTimeout: 30000,
+    pingInterval: 30000,
+});
+const cors = require('cors');
+const port = process.env.API_PORT || 4601;
 
-const preconfiguration: Array<Promise<any>> = [];
-
-const DEFAULT_PORT = 3001;
-const port = env.SERVER_CORE ? env.SERVER_CORE : DEFAULT_PORT;
-
-const app: Application = require('express')();
 app.use(bodyParser.json());
+app.use(cors());
+io.on('connect', onConnect);
+server.listen(port, () => console.log('API server is listening on port ' + port));
 
-const loader = new Loader();
-preconfiguration.push(loader.initRoute(app));
+function onConnect(socket: any) {
+    console.log('Socket %s connected', socket);
 
-Promise.all(preconfiguration)
-    .then(() => {
-        app.listen(port, () => {
-            logger.info('API Server is ready');
-        });
-    })
-    .catch(err => {
-        logger.error('Failed to start the server API. \n', err);
+    socket.on('api_message', function (json: string) {
+        onApiMessage(json, socket);
     });
+
+    socket.on('core_message', function (json: string) {
+        onCoreMessage(json, socket);
+    });
+}
+
+async function onCoreMessage(json: string, socket: any) {
+    console.log('onMessage here');
+}
+
+async function onApiMessage(json: string, socket: any) {
+    console.log('onMessage here');
+}
