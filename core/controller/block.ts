@@ -38,7 +38,8 @@ class BlockController extends BaseController {
             return new Response<void>({
                 errors: [`[Service][Block][processIncomingBlock] Block has less height: ${receivedBlock.id}`],
             });
-        } else if (blockUtils.isEqualId(lastBlock, receivedBlock)) {
+        }
+        if (blockUtils.isEqualId(lastBlock, receivedBlock)) {
             return new Response<void>({
                 errors: [`[Service][Block][processIncomingBlock] Block already processed: ${receivedBlock.id}`],
             });
@@ -51,20 +52,23 @@ class BlockController extends BaseController {
         ) {
             const deleteLastBlockResponse = await BlockService.deleteLastBlock();
             if (!deleteLastBlockResponse.success) {
-                deleteLastBlockResponse.errors.push('processIncomingBlock');
-                return new Response<void>();
+                errors.push(...deleteLastBlockResponse.errors, 'processIncomingBlock');
+                return new Response<void>({ errors });
             }
             const receiveResponse: Response<void> = await BlockService.receiveBlock(receivedBlock);
             if (!receiveResponse.success) {
                 errors.push(...receiveResponse.errors, 'processIncomingBlock');
-                return new Response<void>();
+                return new Response<void>({ errors });
             }
-        } else if (blockUtils.isReceivedBlockAbove(lastBlock, receivedBlock)) {
+            return new Response<void>({ errors });
+        }
+
+        if (blockUtils.isReceivedBlockAbove(lastBlock, receivedBlock)) {
             if (blockUtils.canBeProcessed(lastBlock, receivedBlock)) {
                 const receiveResponse: Response<void> = await BlockService.receiveBlock(receivedBlock);
                 if (!receiveResponse.success) {
                     errors.push(...receiveResponse.errors, 'processIncomingBlock');
-                    return new Response<void>();
+                    return new Response<void>({ errors });
                 }
             } else if (!SyncService.consensus) {
                 // TODO: undo to common
@@ -80,6 +84,8 @@ class BlockController extends BaseController {
                 `generator: ${receivedBlock.generatorPublicKey}`
             );
         }
+
+        return new Response<void>({ errors });
     }
 
     @ON('BLOCK_GENERATE')
