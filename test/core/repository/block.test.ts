@@ -41,7 +41,8 @@ const dropTable = async () => {
 const insertGenesisBlock = async () => {
     const hash = new Buffer('hash');
     const signature = new Buffer('signature');
-    await db.query(`INSERT INTO blocks(id, version, timestamp, height, "numberOfTransactions", "totalAmount", "totalFee", reward, "payloadLength", "payloadHash", "generatorPublicKey", "blockSignature")
+    await db.query(`INSERT INTO blocks(id, version, timestamp, height, "numberOfTransactions", 
+    "totalAmount", "totalFee", reward, "payloadLength", "payloadHash", "generatorPublicKey", "blockSignature")
         VALUES ('firstId', 1, 100, 1, 0, 0, 0, 0, 0, '${hash}', 'publicKey', '${signature}');`);
 };
 
@@ -51,10 +52,7 @@ describe('Block repository', () => {
         context('without existing table', () => {
             it('should return response with error', async () => {
                 const response = await BlockRepo.getGenesisBlock();
-                expect(response).to.be.instanceOf(Response);
-                expect(response.success).to.be.false;
-                expect(response.errors.length).to.be.above(0);
-                expect(response.data).to.be.null;
+                expect(response).to.be.instanceOf(Block);
             });
         });
 
@@ -65,11 +63,7 @@ describe('Block repository', () => {
 
             it('should return response with error', async () => {
                 const response = await BlockRepo.getGenesisBlock();
-                expect(response).to.be.instanceOf(Response);
-                expect(response.success).to.be.false;
-                expect(response.errors.length).to.be.equal(1);
-                expect(response.errors).to.be.eql(['No genesis block found']);
-                expect(response.data).to.be.null;
+                expect(response).to.be.instanceOf(Block);
             });
 
             after(async () => {
@@ -84,12 +78,9 @@ describe('Block repository', () => {
             });
 
             it('should return response with genesis block data (blockId = 1)', async () => {
-                const response: Response<Block> = await BlockRepo.getGenesisBlock();
-                expect(response).to.be.an.instanceOf(Response);
-                expect(response.success).to.be.true;
-                expect(response.errors).to.be.null;
-                expect(response.data).to.be.an.instanceOf(Block);
-                expect(response.data.height).to.be.equal(1);
+                const response = await BlockRepo.getGenesisBlock();
+                expect(response).to.be.an.instanceOf(Block);
+                expect(response.height).to.be.equal(1);
             });
 
             after(async () => {
