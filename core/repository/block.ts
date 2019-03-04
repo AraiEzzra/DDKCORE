@@ -127,7 +127,7 @@ class BlockRepo {
         return new Response({ data: exists });
     }
 
-    public async loadBlocksOffset(startHeight: number, limit?: number): Promise<Response<Array<Block>>> {
+    public loadBlocksOffset(startHeight: number, limit?: number): Response<Array<Block>> {
         // let blocks: Array<Block> = null;
         // try {
         //     const result: Array<object> = await db.manyOrNone(queries.loadBlocksOffset(param.limit), param);

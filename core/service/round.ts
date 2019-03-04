@@ -44,7 +44,7 @@ interface IRoundService {
 
     getMyTurn(): number;
 
-    sumRound(round): Promise<Response<IRoundSum>>;
+    sumRound(round): Response<IRoundSum>;
 
     rebuild(): void;
 
@@ -52,13 +52,13 @@ interface IRoundService {
 
     validate(): boolean;
 
-    applyUnconfirmed(param: Promise<Response<IRoundSum>>): Promise<Response<void>>;
+    applyUnconfirmed(param: Response<IRoundSum>): Response<void>;
 
-    undoUnconfirmed(round: Round): Promise<Response<string>>;
+    undoUnconfirmed(round: Round): Response<string>;
 
-    apply(params: Promise<Response<Array<string>>>): void;
+    apply(params: Response<Array<string>>): void;
 
-    undo(params: Promise<Response<Array<string>>>): boolean;
+    undo(params: Response<Array<string>>): boolean;
 
     calcRound(height: number): number;
 
@@ -173,11 +173,11 @@ class RoundService implements IRoundService {
         return RoundRepository.getCurrentRound().slots[constants.publicKey].slot;
     }
 
-    public async sumRound(round: Round): Promise<Response<IRoundSum>> {
+    public sumRound(round: Round): Response<IRoundSum> {
         // load blocks forged in the last round
 
         const limit = Object.keys(round.slots).length;
-        const blockResponse = await BlockRepository.loadBlocksOffset(round.startHeight, limit);
+        const blockResponse = BlockRepository.loadBlocksOffset(round.startHeight, limit);
 
         if (!blockResponse.success) {
             return new Response({errors: [...blockResponse.errors, 'sumRound']});
@@ -208,8 +208,8 @@ class RoundService implements IRoundService {
         return undefined;
     }
 
-    public async applyUnconfirmed(param: Promise<Response<IRoundSum>>): Promise<Response<Array<string>>> {
-        const roundSumResponse = await param;
+    public async applyUnconfirmed(param: Response<IRoundSum>): Response<Array<string>> {
+        const roundSumResponse = param;
         if (!roundSumResponse.success) {
             return new Response({errors: [...roundSumResponse.errors, 'applyUnconfirmed']});
         }
@@ -225,8 +225,8 @@ class RoundService implements IRoundService {
         return new Response({data: delegates});
     }
 
-    async undoUnconfirmed(round: Round = RoundRepository.getCurrentRound()): Promise<Response<Array<string>>> {
-        const roundSumResponse = await this.sumRound(round);
+    undoUnconfirmed(round: Round = RoundRepository.getCurrentRound()): Response<Array<string>> {
+        const roundSumResponse = this.sumRound(round);
         if (!roundSumResponse.success) {
             return new Response({errors: [...roundSumResponse.errors, 'undoUnconfirmed']});
         }
@@ -242,10 +242,10 @@ class RoundService implements IRoundService {
         return new Response({data: delegates});
     }
 
-    apply(params: Promise<Response<Array<string>>>): void {
+    async apply(params: Response<Array<string>>): void {
     }
 
-    public async undo(params: Promise<Response<Array<string>>>): void {
+    public async undo(params: Response<Array<string>>): void {
     }
 
     public calcRound(height: number): number {
