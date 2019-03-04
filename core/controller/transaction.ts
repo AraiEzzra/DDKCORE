@@ -12,7 +12,7 @@ class TransactionController extends BaseController {
         const { data } = action;
         logger.debug(`[Controller][Transaction][onReceiveTransaction] ${JSON.stringify(data.trs)}`);
 
-        if (!TransactionDispatcher.verify(data.trs)) {
+        if (!TransactionDispatcher.validate(data.trs)) {
             return;
         }
 

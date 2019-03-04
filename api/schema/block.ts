@@ -1,4 +1,4 @@
-const constants = require('../../backlog/helpers/constants.js');
+import config from 'shared/util/config';
 
 export default {
     loadBlocksFromPeer: {
@@ -41,12 +41,12 @@ export default {
             totalAmount: {
                 type: 'integer',
                 minimum: 0,
-                maximum: constants.totalAmount
+                maximum: config.constants.totalAmount
             },
             totalFee: {
                 type: 'integer',
                 minimum: 0,
-                maximum: constants.totalAmount
+                maximum: config.constants.totalAmount
             },
             reward: {
                 type: 'integer',

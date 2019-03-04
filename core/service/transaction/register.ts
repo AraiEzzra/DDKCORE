@@ -1,4 +1,4 @@
-import { ITransactionService } from 'core/service/transaction';
+import { IAssetService } from 'core/service/transaction';
 import { IAssetRegister, Transaction } from 'shared/model/transaction';
 import { Account } from 'shared/model/account';
 import Response from 'shared/model/response';
@@ -6,7 +6,7 @@ import AccountRepo from 'core/repository/account';
 import config from 'shared/util/config';
 import BUFFER from 'core/util/buffer';
 
-class TransactionRegisterService implements ITransactionService<IAssetRegister> {
+class TransactionRegisterService implements IAssetService<IAssetRegister> {
 
     create(trs: Transaction<IAssetRegister>, data: IAssetRegister ): IAssetRegister {
         return {
@@ -24,7 +24,7 @@ class TransactionRegisterService implements ITransactionService<IAssetRegister> 
         return new Response();
     }
 
-    verify(trs: Transaction<IAssetRegister>, sender: Account): Response<void> {
+    validate(trs: Transaction<IAssetRegister>, sender: Account): Response<void> {
         const errors = [];
 
         if (!trs.asset.referral) {

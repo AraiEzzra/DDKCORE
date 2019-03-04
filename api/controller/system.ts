@@ -1,7 +1,7 @@
 import Response from 'shared/model/response';
 import {BlockService} from 'api/service/block';
 
-const constants = require('../../backlog/helpers/constants');
+import config from 'shared/util/config';
 
 class RoundService {}
 
@@ -17,7 +17,7 @@ export class System {
         return new Response({ data: {
                 // modules.system.getBroadhash()
                 broadhash: '',
-                epoch: constants.epochTime,
+                epoch: config.constants.epochTime,
                 height: lastBlock.height,
                 fee: this.blockService.calculateFee(),
                 milestone: this.roundService.calcMilestone(lastBlock.height),
