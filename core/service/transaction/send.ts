@@ -1,4 +1,4 @@
-import { ITransactionService } from '../transaction';
+import { IAssetService } from '../transaction';
 import { IAsset } from 'shared/model/transaction';
 import { IAssetTransfer, Transaction } from 'shared/model/transaction';
 import { Account } from 'shared/model/account';
@@ -7,7 +7,7 @@ import config from 'shared/util/config';
 import AccountRepo from '../../repository/account';
 import { TOTAL_PERCENTAGE } from 'core/util/const';
 
-class TransactionSendService implements ITransactionService<IAssetTransfer> {
+class TransactionSendService implements IAssetService<IAssetTransfer> {
 
     create(trs: Transaction<IAssetTransfer>): IAssetTransfer {
         return;
@@ -22,7 +22,7 @@ class TransactionSendService implements ITransactionService<IAssetTransfer> {
     }
 
     // TODO: validate fields in controller
-    verify(trs: Transaction<IAssetTransfer>, sender: Account): Response<void> {
+    validate(trs: Transaction<IAssetTransfer>, sender: Account): Response<void> {
         const errors = [];
 
         if (!trs.recipientAddress) {

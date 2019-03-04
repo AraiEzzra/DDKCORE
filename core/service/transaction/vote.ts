@@ -1,4 +1,4 @@
-import { ITransactionService } from 'core/service/transaction';
+import { IAssetService } from 'core/service/transaction';
 import { IAirdropAsset, IAssetVote, Transaction } from 'shared/model/transaction';
 import { Account, Stake } from 'shared/model/account';
 import Response from 'shared/model/response';
@@ -14,7 +14,7 @@ import {
 } from 'core/util/reward';
 import DelegateRepo from 'core/repository/delegate';
 
-class TransactionVoteService implements ITransactionService<IAssetVote> {
+class TransactionVoteService implements IAssetService<IAssetVote> {
 
     create(trs: Transaction<IAssetVote>, data: IAssetVote ): IAssetVote {
         const sender: Account = AccountRepo.getByAddress(trs.senderAddress);
@@ -101,7 +101,7 @@ class TransactionVoteService implements ITransactionService<IAssetVote> {
         return new Response({ errors });
     }
 
-    verify(trs: Transaction<IAssetVote>, sender: Account): Response<void> {
+    validate(trs: Transaction<IAssetVote>, sender: Account): Response<void> {
         const errors: Array<string> = [];
 
         if (trs.recipientAddress !== trs.senderAddress) {
