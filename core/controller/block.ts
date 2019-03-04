@@ -6,6 +6,10 @@ import { Peer } from 'shared/model/peer';
 import { ON, RPC } from 'core/util/decorator';
 import { BaseController } from 'core/controller/baseController';
 import { logger } from 'shared/util/logger';
+import * as blockUtils from 'core/util/block';
+import SyncService from 'core/service/sync';
+import SlotService from 'core/service/slot';
+import RoundService from 'core/service/round';
 
 interface BlockGenerateRequest {
     keypair: {
@@ -20,14 +24,68 @@ class BlockController extends BaseController {
     @ON('BLOCK_RECEIVE')
     public async onReceiveBlock(action: { data: { block: BlockModel } }): Promise<Response<void>> {
         const { data } = action;
-        const block = new Block(data.block);
 
-        logger.debug(`[Controller][Block][onReceiveBlock] block id ${block.id}`);
-        const response: Response<void> = await BlockService.processIncomingBlock(block);
-        if (!response.success) {
-            response.errors.push('onReceiveBlock');
+        const validateResponse = BlockService.isValid(data.block);
+        if (!validateResponse.success) {
+            return validateResponse;
         }
-        return response;
+
+        const receivedBlock = new Block(data.block);
+        const lastBlock = BlockService.getLastBlock();
+
+        const errors: Array<string> = [];
+        if (blockUtils.isHeightLess(lastBlock, receivedBlock)) {
+            return new Response<void>({
+                errors: [`[Service][Block][processIncomingBlock] Block has less height: ${receivedBlock.id}`],
+            });
+        }
+        if (blockUtils.isEqualId(lastBlock, receivedBlock)) {
+            return new Response<void>({
+                errors: [`[Service][Block][processIncomingBlock] Block already processed: ${receivedBlock.id}`],
+            });
+        }
+
+        if (
+            blockUtils.isEqualHeight(lastBlock, receivedBlock) &&
+            blockUtils.isEqualPreviousBlock(lastBlock, receivedBlock) &&
+            !SyncService.consensus
+        ) {
+            const deleteLastBlockResponse = await BlockService.deleteLastBlock();
+            if (!deleteLastBlockResponse.success) {
+                errors.push(...deleteLastBlockResponse.errors, 'processIncomingBlock');
+                return new Response<void>({ errors });
+            }
+            const receiveResponse: Response<void> = await BlockService.receiveBlock(receivedBlock);
+            if (!receiveResponse.success) {
+                errors.push(...receiveResponse.errors, 'processIncomingBlock');
+                return new Response<void>({ errors });
+            }
+            return new Response<void>({ errors });
+        }
+
+        if (blockUtils.isReceivedBlockAbove(lastBlock, receivedBlock)) {
+            if (blockUtils.canBeProcessed(lastBlock, receivedBlock)) {
+                const receiveResponse: Response<void> = await BlockService.receiveBlock(receivedBlock);
+                if (!receiveResponse.success) {
+                    errors.push(...receiveResponse.errors, 'processIncomingBlock');
+                    return new Response<void>({ errors });
+                }
+            } else if (!SyncService.consensus) {
+                // TODO: undo to common
+                // TODO: sync / load blocks
+            }
+        } else {
+            errors.push(
+                `[Service][Block][processIncomingBlock] ` +
+                `Discarded block that does not match with current chain: ${receivedBlock.id}, ` +
+                `height: ${receivedBlock.height}, ` +
+                `round: ${RoundService.calcRound(receivedBlock.height)}, ` +
+                `slot: ${SlotService.getSlotNumber(receivedBlock.createdAt)}, ` +
+                `generator: ${receivedBlock.generatorPublicKey}`
+            );
+        }
+
+        return new Response<void>({ errors });
     }
 
     @ON('BLOCK_GENERATE')

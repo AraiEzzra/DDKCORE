@@ -7,6 +7,7 @@ import BlockRepository from 'core/repository/block';
 import PeerRepository from 'core/repository/peer';
 import SyncRepository from 'core/repository/sync';
 import SocketRepository from 'core/repository/socket';
+import { TOTAL_PERCENTAGE } from 'core/util/const';
 //  TODO get from env
 const MIN_CONSENSUS = 51;
 
@@ -90,11 +91,11 @@ export class SyncService implements ISyncService {
     getConsensus(): number {
         const peers = PeerRepository.peerList();
         const commonPeers = peers.filter(peer => peer.broadhash === headers.broadhash);
-        return commonPeers.length / peers.length * 100;
+        return commonPeers.length / peers.length * TOTAL_PERCENTAGE;
     }
 
     get consensus(): boolean {
-        return this.getConsensus() >= MIN_CONSENSUS
+        return this.getConsensus() >= MIN_CONSENSUS;
     }
 }
 
