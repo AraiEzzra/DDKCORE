@@ -3,8 +3,9 @@ import { BaseController } from 'core/controller/baseController';
 import { logger } from 'shared/util/logger';
 import { Transaction, TransactionModel, IAsset } from 'shared/model/transaction';
 import TransactionQueue from 'core/service/transactionQueue';
-import TransactionDispatcher from 'core/service/transaction';
+import TransactionService from 'core/service/transaction';
 import TransactionPool from 'core/service/transactionPool';
+import AccountRepository from 'core/repository/account';
 
 class TransactionController extends BaseController {
     @ON('TRANSACTION_RECEIVE')
@@ -12,7 +13,7 @@ class TransactionController extends BaseController {
         const { data } = action;
         logger.debug(`[Controller][Transaction][onReceiveTransaction] ${JSON.stringify(data.trs)}`);
 
-        if (!TransactionDispatcher.validate(data.trs)) {
+        if (!TransactionService.validate(data.trs, AccountRepository.getByPublicKey(data.trs.senderPublicKey))) {
             return;
         }
 

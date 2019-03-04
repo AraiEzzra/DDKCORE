@@ -1,7 +1,7 @@
 import {Account, Stake} from 'shared/model/account';
 import { logger } from 'shared/util/logger';
 import config from 'shared/util/config';
-import BlockService from 'core/service/block';
+import BlockRepo from 'core/repository/block';
 import {IAirdropAsset, IAssetStake, IAssetVote, Transaction, TransactionType} from 'shared/model/transaction';
 import AccountRepo from 'core/repository/account';
 import Response from 'shared/model/response';
@@ -39,7 +39,7 @@ export function calculateTotalRewardAndUnstake(sender: Account, isDownVote: bool
 
     freezeOrders.forEach((order: Stake) => {
         if (order.voteCount > 0 && (order.voteCount + 1) % config.constants.froze.rewardVoteCount === 0) {
-            const blockHeight: number = BlockService.getLastBlock().height;
+            const blockHeight: number = BlockRepo.getLastBlock().height;
             const stakeRewardPercent: number = stakeReward.calcReward(blockHeight);
             reward += (order.amount * stakeRewardPercent) / 100;
         }
@@ -60,9 +60,7 @@ export function getAirdropReward(
     amount: number,
     transactionType: TransactionType): IAirdropAsset {
     const result: IAirdropAsset = {
-        totalReward: 0,
-        sponsors: {},
-        withAirdropReward: false
+        sponsors: {}
     };
 
     const availableAirdropBalance: number = AccountRepo.getByAddress(config.constants.airdrop.account).actualBalance;
@@ -91,9 +89,7 @@ export function getAirdropReward(
         return result;
     }
 
-    result.totalReward = airdropRewardAmount;
     result.sponsors = sponsors;
-    result.withAirdropReward = true;
 
     return result;
 }
@@ -109,20 +105,14 @@ export function verifyAirdrop(
     );
 
     if (
-        airdropReward.withAirdropReward !== trs.asset.airdropReward.withAirdropReward ||
-        JSON.stringify(airdropReward.sponsors) !== JSON.stringify(trs.asset.airdropReward.sponsors) ||
-        airdropReward.totalReward !== trs.asset.airdropReward.totalReward
+        JSON.stringify(airdropReward.sponsors) !== JSON.stringify(trs.asset.airdropReward.sponsors)
     ) {
         return new Response<void>({ errors: [
             `Verify failed: ${trs.type === TransactionType.STAKE ? 'stake' : 'vote'} airdrop reward is corrupted, 
             expected: 
-            withAirdropReward ${airdropReward.withAirdropReward} 
-            sponsors: ${JSON.stringify(airdropReward.sponsors)} 
-            totalReward: ${airdropReward.totalReward}, 
+            sponsors: ${JSON.stringify(airdropReward.sponsors)}  
             actual: 
-            withAirdropReward ${trs.asset.airdropReward.withAirdropReward} 
-            sponsors: ${JSON.stringify(trs.asset.airdropReward.sponsors)} 
-            totalReward: ${trs.asset.airdropReward.totalReward}`
+            sponsors: ${JSON.stringify(trs.asset.airdropReward.sponsors)}`
             ] });
     }
     return new Response<void>();
@@ -153,9 +143,6 @@ function applyUnstake(orders: Array<Stake>, voteTransaction: Transaction<IAssetV
 
 function sendAirdropReward(trs: Transaction<IAssetVote>): void {
     const transactionAirdropReward = trs.asset.airdropReward;
-    if (!transactionAirdropReward.withAirdropReward || transactionAirdropReward.totalReward === 0) {
-        return;
-    }
 
     for (const sponsorAddress in transactionAirdropReward.sponsors) {
         if (!transactionAirdropReward.sponsors[sponsorAddress]) {
@@ -200,9 +187,6 @@ function undoRewards(voteTransaction: Transaction<IAssetVote>): void {
 
 function undoAirdropReward(trs: Transaction<IAssetVote | IAssetStake>): void {
     const transactionAirdropReward = trs.asset.airdropReward;
-    if (!transactionAirdropReward.withAirdropReward) {
-        return;
-    }
 
     for (const sponsorAddress in transactionAirdropReward.sponsors) {
         if (!transactionAirdropReward.sponsors[sponsorAddress]) {

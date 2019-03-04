@@ -1,4 +1,4 @@
-import pgp, { IDatabase } from 'pg-promise';
+import pgp, { IMain, IDatabase } from 'pg-promise';
 const DEFAULT_PG_PORT = 5432;
 
 const connectionOptions = {
@@ -13,7 +13,7 @@ const connectionOptions = {
     logEvents: ['error'],
 };
 
-const pgpE = pgp();
+export const pgpE: IMain = pgp();
 
 export class DatabaseConnector {
     static instance: DatabaseConnector = undefined;

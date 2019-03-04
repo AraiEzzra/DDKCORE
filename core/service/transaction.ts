@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import cryptoBrowserify from 'crypto-browserify';
 
-import { IAsset, Transaction, TransactionType } from 'shared/model/transaction';
+import {IAsset, IAssetTransfer, Transaction, TransactionModel, TransactionType} from 'shared/model/transaction';
 import { IFunctionResponse, ITableObject } from 'core/util/common';
 import ResponseEntity from 'shared/model/response';
 import { ed, IKeyPair } from 'shared/util/ed';
@@ -20,7 +20,7 @@ export interface IAssetService<T extends IAsset> {
 
     create(trs: Transaction<T>, data?: T): void;
 
-    validate(trs: Transaction<T>, sender: Account): ResponseEntity<void>;
+    validate(trs: TransactionModel<T>, sender: Account): ResponseEntity<void>;
     verifyUnconfirmed(trs: Transaction<T>, sender: Account): ResponseEntity<void>;
 
     applyUnconfirmed(trs: Transaction<T>, sender: Account): ResponseEntity<void>;
@@ -89,17 +89,11 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
     }
 
     applyUnconfirmed(trs: Transaction<T>, sender: Account): ResponseEntity<void> {
-        const amount = trs.amount + trs.fee;
-
-        AccountRepo.updateBalanceByPublicKey(trs.senderPublicKey, -amount);
-
         const service: IAssetService<IAsset> = getTransactionServiceByType(trs.type);
         return service.applyUnconfirmed(trs, sender);
     }
 
     calculateUndoUnconfirmed(trs: Transaction<{}>, sender: Account): void {
-        sender.actualBalance -= trs.amount + trs.fee;
-
         const service: IAssetService<IAsset> = getTransactionServiceByType(trs.type);
         return service.calculateUndoUnconfirmed(trs, sender);
     }
@@ -161,7 +155,11 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
                     .sort(transactionSortFunc)
                     .filter((trs: Transaction<T>, index: number) => index > transactions.indexOf(senderTrs))
                     .forEach((trs: Transaction<T>) => {
-                        sender.actualBalance -= trs.amount;
+                        if (trs.type === TransactionType.SEND) {
+                            // its as bad as possible, I know, can't make this in another way
+                            const asset: IAssetTransfer = <IAssetTransfer><Object>trs.asset;
+                            sender.actualBalance -= asset.amount;
+                        }
                     });
 
                 const verifyStatus = await TransactionQueue.verify(senderTrs, sender);
@@ -173,8 +171,9 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
                     TransactionQueue.push(senderTrs);
                     // TODO broadcast undoUnconfirmed in future
                     if (senderTrs.type === TransactionType.SEND) {
+                        const asset: IAssetTransfer = <IAssetTransfer><Object>senderTrs.asset;
                         await this.checkSenderTransactions(
-                            senderTrs.recipientAddress,
+                            asset.recipientAddress,
                             verifiedTransactions,
                             accountsMap,
                         );
@@ -208,13 +207,13 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         service.create(data);
 
         const trs = new Transaction<T>({
+            blockId: data.blockId,
             senderPublicKey: data.senderPublicKey,
             senderAddress: data.senderAddress,
-            recipientAddress: data.recipientAddress,
             type: data.type,
-            amount: data.amount,
             fee: service.calculateFee(data, sender),
             salt: cryptoBrowserify.randomBytes(SALT_LENGTH).toString('hex'),
+            asset: data.asset
         });
 
         trs.signature = this.sign(keyPair, trs);
@@ -248,13 +247,13 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         offset = BUFFER.writeInt32LE(bytes, trs.createdAt, offset);
         offset = BUFFER.writeNotNull(bytes, trs.senderPublicKey, offset, BUFFER.LENGTH.HEX);
 
-        if (trs.recipientAddress) {
-            offset = BUFFER.writeUInt64LE(bytes, trs.recipientAddress, offset);
+        if (trs.type === TransactionType.SEND) {
+            const asset: IAssetTransfer = <IAssetTransfer><Object>trs.asset;
+            offset = BUFFER.writeUInt64LE(bytes, asset.recipientAddress, offset);
+            offset = BUFFER.writeUInt64LE(bytes, asset.amount, offset);
         } else {
-            offset += BUFFER.LENGTH.INT64;
+            offset += BUFFER.LENGTH.INT64 + BUFFER.LENGTH.INT64;
         }
-
-        offset = BUFFER.writeUInt64LE(bytes, trs.amount, offset);
 
         if (trs.signature) {
             bytes.write(trs.signature, offset, BUFFER.LENGTH.DOUBLE_HEX, 'hex');
@@ -298,7 +297,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         return new ResponseEntity<void>();
     }
 
-    validate(trs: Transaction<T>, sender: Account): ResponseEntity<void> {
+    validate(trs: TransactionModel<T>, sender: Account): ResponseEntity<void> {
         const errors = [];
 
         if (!trs) {
@@ -338,15 +337,18 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             errors.push(`Missing creation time`);
         }
 
-        if (!trs.amount) {
-            errors.push(`Missing amount`);
-        }
+        if (trs.type === TransactionType.SEND) {
+            const asset: IAssetTransfer = <IAssetTransfer><Object>trs.asset;
+            if (!asset.amount) {
+                errors.push(`Missing amount`);
+            }
 
-        if (trs.amount < 0 ||
-            String(trs.amount).indexOf('.') >= 0 ||
-            trs.amount.toString().indexOf('e') >= 0
-        ) {
-            errors.push('Invalid amount');
+            if (asset.amount < 0 ||
+                String(asset.amount).indexOf('.') >= 0 ||
+                asset.amount.toString().indexOf('e') >= 0
+            ) {
+                errors.push('Invalid amount');
+            }
         }
 
         const service = getTransactionServiceByType(trs.type);
@@ -390,10 +392,13 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         }
 
         // TODO: add trs.stakedAmount to amount sum
-        const amount = trs.amount + trs.fee;
-        const senderBalanceResponse = this.checkBalance(amount, trs, sender);
-        if (!senderBalanceResponse.success) {
-            return senderBalanceResponse;
+        if (trs.type === TransactionType.SEND) {
+            const asset: IAssetTransfer = <IAssetTransfer><Object>trs.asset;
+            const amount = asset.amount + trs.fee;
+            const senderBalanceResponse = this.checkBalance(amount, trs, sender);
+            if (!senderBalanceResponse.success) {
+                return senderBalanceResponse;
+            }
         }
 
         const service: IAssetService<IAsset> = getTransactionServiceByType(trs.type);

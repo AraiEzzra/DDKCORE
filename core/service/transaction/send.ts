@@ -25,19 +25,11 @@ class TransactionSendService implements IAssetService<IAssetTransfer> {
     validate(trs: Transaction<IAssetTransfer>, sender: Account): Response<void> {
         const errors = [];
 
-        if (!trs.recipientAddress) {
-            errors.push('Missing recipient address');
-        }
-
-        if (trs.amount <= 0) {
-            errors.push('Invalid transaction amount');
-        }
-
         return new Response();
     }
 
     calculateFee(trs: Transaction<IAssetTransfer>, sender: Account): number {
-        return (trs.amount * config.constants.fees.send) / TOTAL_PERCENTAGE;
+        return (trs.asset.amount * config.constants.fees.send) / TOTAL_PERCENTAGE;
     }
 
     calculateUndoUnconfirmed(trs: Transaction<IAssetTransfer>, sender: Account): void {
@@ -45,11 +37,15 @@ class TransactionSendService implements IAssetService<IAssetTransfer> {
     }
 
     applyUnconfirmed(trs: Transaction<IAssetTransfer>): Response<void> {
-        return AccountRepo.updateBalanceByAddress(trs.recipientAddress, trs.amount);
+        const amount = trs.asset.amount + trs.fee;
+        AccountRepo.updateBalanceByPublicKey(trs.senderPublicKey, -amount);
+        return AccountRepo.updateBalanceByAddress(trs.asset.recipientAddress, trs.asset.amount);
     }
 
     undoUnconfirmed(trs: Transaction<IAssetTransfer>, sender: Account): Response<void> {
-        return null;
+        const amount = trs.asset.amount + trs.fee;
+        AccountRepo.updateBalanceByPublicKey(trs.senderPublicKey, amount);
+        return AccountRepo.updateBalanceByAddress(trs.asset.recipientAddress, -trs.asset.amount);
     }
 
     async apply(trs: Transaction<IAssetTransfer>): Promise<Response<void>> {

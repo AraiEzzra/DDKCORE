@@ -1,6 +1,11 @@
 import {Round, RoundModel} from 'shared/model/round';
+import {IRoundRepository as IRoundRepositoryShared} from 'shared/repository/round';
 
-class RoundRepository {
+export interface IRoundRepository extends IRoundRepositoryShared {
+
+}
+
+class RoundRepository implements IRoundRepository {
     private prevRound: Round;
     private currentRound: Round;
 

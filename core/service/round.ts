@@ -6,7 +6,6 @@ import Config from 'shared/util/config';
 // import BlockService from 'test/core/mock/blockService';
 // import { createTaskON } from 'test/core/mock/bus';
 // import BlockRepository from 'test/core/mock/blockRepository';
-import BlockService from 'core/service/block';
 import BlockRepository from 'core/repository/block';
 import { Slots, Round } from 'shared/model/round';
 import RoundRepository from 'core/repository/round';
@@ -52,13 +51,13 @@ interface IRoundService {
 
     validate(): boolean;
 
-    applyUnconfirmed(param: Response<IRoundSum>): Response<void>;
+    applyUnconfirmed(param: Response<IRoundSum>): Response<Array<string>>;
 
-    undoUnconfirmed(round: Round): Response<string>;
+    undoUnconfirmed(round: Round): Response<Array<string>>;
 
-    apply(params: Response<Array<string>>): void;
+    apply(params: Response<Array<string>>): Promise<void>;
 
-    undo(params: Response<Array<string>>): boolean;
+    undo(params: Response<Array<string>>): Promise<boolean>;
 
     calcRound(height: number): number;
 
@@ -130,7 +129,7 @@ class RoundService implements IRoundService {
             RoundRepository.setPrevRound(RoundRepository.getCurrentRound());
         }
 
-        const lastBlock = BlockService.getLastBlock();
+        const lastBlock = BlockRepository.getLastBlock();
         const delegateResponse = DelegateRepository.getActiveDelegates();
 
         if (!delegateResponse.success) {
@@ -146,7 +145,7 @@ class RoundService implements IRoundService {
         ({blockId: lastBlock.id, activeDelegates: delegateResponse.data});
 
         RoundRepository.setCurrentRound({slots, startHeight: lastBlock.height + 1});
-        logger.info(`[Service][Round][generateRound] Start round id: ${RoundRepository.getCurrentRound().id}`);
+        logger.info(`[Service][Round][generateRound] Start round id: ${RoundRepository.getCurrentRound().startHeight}`);
 
         const mySlot = this.getMyTurn();
 
@@ -177,18 +176,12 @@ class RoundService implements IRoundService {
         // load blocks forged in the last round
 
         const limit = Object.keys(round.slots).length;
-        const blockResponse = BlockRepository.loadBlocksOffset(round.startHeight, limit);
-
-        if (!blockResponse.success) {
-            return new Response({errors: [...blockResponse.errors, 'sumRound']});
-        }
+        const blocks = BlockRepository.getMany(round.startHeight, limit);
 
         const resp: IRoundSum = {
             roundFees: 0,
             roundDelegates: []
         };
-
-        const blocks = blockResponse.data;
 
         for (let i = 0; i < blocks.length; i++) {
             resp.roundFees += blocks[i].fee;
@@ -242,10 +235,11 @@ class RoundService implements IRoundService {
         return new Response({data: delegates});
     }
 
-    public async apply(params: Response<Array<string>>): void {
+    public async apply(params: Response<Array<string>>): Promise<void> {
     }
 
-    public async undo(params: Response<Array<string>>): void {
+    public async undo(params: Response<Array<string>>): Promise<boolean> {
+        return;
     }
 
     public calcRound(height: number): number {

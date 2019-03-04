@@ -84,10 +84,6 @@ export class TransactionModel<T extends IAsset> {
     constructor(data: TransactionModel<T>) {
         Object.assign(this, data);
     }
-
-    serialize() {}
-
-    deserialize() {}
 }
 
 export class Transaction<T extends IAsset> extends TransactionModel<T> {

@@ -25,7 +25,6 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
         const totals: { reward: number, unstake: number} = calculateTotalRewardAndUnstake(sender, isDownVote);
         const airdropReward: IAirdropAsset = getAirdropReward(sender, totals.reward, trs.type);
 
-        trs.recipientAddress = sender.address;
         return {
             votes: data.votes,
             reward: totals.reward || 0,
@@ -103,10 +102,6 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
 
     validate(trs: Transaction<IAssetVote>, sender: Account): Response<void> {
         const errors: Array<string> = [];
-
-        if (trs.recipientAddress !== trs.senderAddress) {
-            errors.push('Invalid recipient');
-        }
 
         if (!trs.asset || !trs.asset.votes) {
             errors.push('Invalid transaction asset');
