@@ -1,3 +1,5 @@
+import Middleware from 'api/middleware/socket';
+
 const port = process.env.API_PORT || 7008;
 const socketConfig = {
     serveClient: false,
@@ -23,8 +25,20 @@ function onConnect(socket: any) {
 
 async function onCoreMessage(json: string, socket: any) {
     console.log('CORE MESSAGE:', JSON.stringify(json));
+
 }
 
 async function onApiMessage(json: string, socket: any) {
     console.log('API MESSAGE:', JSON.stringify(json));
+
+    const { token, code, data } = JSON.parse(json);
+    const response = Middleware.processRequest(code, data);
+
+    socket.emit(
+        'message',
+        JSON.stringify({
+            code: code + '_RESPONSE',
+            ...response,
+        }),
+    );
 }
