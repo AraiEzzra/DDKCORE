@@ -21,7 +21,6 @@ const generateTransaction = (index: number) => {
         fee: 0,
         status: TransactionStatus.CREATED,
         salt: '08569b61a1b4010fdfbf36fc40925728',
-        secondSignature: null,
         asset: {
             votes: [
                 '+eb3ecfad0b81f6744a0c9152e3b2baabdb6a4c795cfc2fbf94caf9276bbf1cb7',

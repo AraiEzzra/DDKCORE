@@ -3,7 +3,7 @@ import { reqGetTransactions } from 'api/controller/transaction/types';
 import TransactionService from 'api/service/transaction';
 import { RPC } from 'api/utils/decorators';
 
-class TransactionController {
+export class TransactionController {
 
     @RPC('GET_ALL_TRS_HISTORY')
     getTransactions(data?: reqGetTransactions) {
