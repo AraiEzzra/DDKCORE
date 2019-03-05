@@ -4,6 +4,7 @@ import { BaseController } from 'core/controller/baseController';
 
 class RoundController extends BaseController {
 
+    @ON('WARM_UP_FINISHED')
     @ON('ROUND_FINISH')
     generateRound(): void {
         RoundService.generateRound();
