@@ -52,7 +52,5 @@ export const TRANSACTION_BUFFER_SIZE =
     BUFFER.LENGTH.BYTE +        // type
     BUFFER.LENGTH.UINT32 +      // createdAt
     BUFFER.LENGTH.HEX +         // senderPublicKey
-    BUFFER.LENGTH.INT64 +       // recipientAddress
-    BUFFER.LENGTH.INT64 +       // amount
     BUFFER.LENGTH.DOUBLE_HEX +  // signature
     BUFFER.LENGTH.DOUBLE_HEX;   // secondSignature

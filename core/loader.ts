@@ -19,14 +19,14 @@ class Loader {
 
     public async start() {
 
-        await this.transactionWarmup(this.limit);
+        await this.transactionWarmUp(this.limit);
         await this.roundWarmUp(this.limit);
         await BlockService.applyGenesisBlock(config.genesisBlock);
         initControllers();
         messageON('WARM_UP_FINISHED', null);
     }
 
-    private async transactionWarmup(limit: number) {
+    private async transactionWarmUp(limit: number) {
         const pathMockData: string = path.join(process.cwd(), 'core/database/sql');
         const filePath = path.join(pathMockData, 'init.sql');
         await db.query(new QueryFile(filePath, { minify: true }));
@@ -41,7 +41,7 @@ class Loader {
                     address: trs.senderAddress,
                     publicKey: trs.senderPublicKey
                 });
-                TransactionDispatcher.applyUnconfirmed(trs, sender.data);
+                TransactionDispatcher.applyUnconfirmed(trs, sender);
             }
             if (transactionBatch.length < limit) {
                 break;

@@ -58,48 +58,6 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
         return Buffer.concat([buff, sponsorsBuffer, voteBuffer]);
     }
 
-    verifyUnconfirmed(trs: Transaction<IAssetVote>, sender: Account): Response<void> {
-        const errors: Array<string> = [];
-        let additions: number = 0;
-        let removals: number = 0;
-        const senderVotes: Array<string> = sender.votes || [];
-        trs.asset.votes.forEach((vote) => {
-            const sign: string = vote[0];
-            const publicKey: string = vote.slice(1);
-            switch (sign) {
-                case '+': {
-                    if (senderVotes.indexOf(publicKey) !== -1) {
-                        errors.push('Failed to add vote, account has already voted for this delegate, vote: ' + vote);
-                        break;
-                    }
-                    additions++;
-                    break;
-                }
-                case '-': {
-                    if (senderVotes.length < 1 || senderVotes.indexOf(publicKey) === -1) {
-                        errors.push('Failed to remove vote, account has not voted for this delegate, vote: ' + vote);
-                        break;
-                    }
-                    removals++;
-                    break;
-                }
-                default: errors.push('Invalid math operator for vote' + vote);
-            }
-            if (!AccountRepo.getByPublicKey(publicKey).delegate) {
-                errors.push('Delegate not found, vote: ' + vote);
-            }
-        });
-
-        const totalVotes: number = (senderVotes.length + additions) - removals;
-
-        if (totalVotes > config.constants.maxVotes) {
-            const exceeded = totalVotes - config.constants.maxVotes;
-
-            errors.push(`Maximum number of votes possible ${config.constants.maxVotes}, exceeded by ${exceeded}`);
-        }
-        return new Response({ errors });
-    }
-
     validate(trs: Transaction<IAssetVote>, sender: Account): Response<void> {
         const errors: Array<string> = [];
 
@@ -152,6 +110,12 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
             errors.push('Multiple votes for same delegate are not allowed');
         }
 
+        return new Response({ errors });
+    }
+
+    verifyUnconfirmed(trs: Transaction<IAssetVote>, sender: Account): Response<void> {
+        const errors: Array<string> = [];
+
         const isDownVote: boolean = trs.asset.votes[0][0] === '-';
         const totals: { reward: number, unstake: number} = calculateTotalRewardAndUnstake(sender, isDownVote);
 
@@ -172,21 +136,58 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
             errors.push(...verifyAirdropResponse.errors);
         }
 
+        let additions: number = 0;
+        let removals: number = 0;
+        const senderVotes: Array<string> = sender.votes || [];
+        trs.asset.votes.forEach((vote) => {
+            const sign: string = vote[0];
+            const publicKey: string = vote.slice(1);
+            switch (sign) {
+                case '+': {
+                    if (senderVotes.indexOf(publicKey) !== -1) {
+                        errors.push('Failed to add vote, account has already voted for this delegate, vote: ' + vote);
+                        break;
+                    }
+                    additions++;
+                    break;
+                }
+                case '-': {
+                    if (senderVotes.length < 1 || senderVotes.indexOf(publicKey) === -1) {
+                        errors.push('Failed to remove vote, account has not voted for this delegate, vote: ' + vote);
+                        break;
+                    }
+                    removals++;
+                    break;
+                }
+                default: errors.push('Invalid math operator for vote' + vote);
+            }
+            if (!AccountRepo.getByPublicKey(publicKey).delegate) {
+                errors.push('Delegate not found, vote: ' + vote);
+            }
+        });
+
+        const totalVotes: number = (senderVotes.length + additions) - removals;
+
+        if (totalVotes > config.constants.maxVotes) {
+            const exceeded = totalVotes - config.constants.maxVotes;
+
+            errors.push(`Maximum number of votes possible ${config.constants.maxVotes}, exceeded by ${exceeded}`);
+        }
         return new Response({ errors });
     }
 
     calculateFee(trs: Transaction<IAssetVote>, sender: Account): number {
-        const senderTotalFrozeAmmount = sender.stakes.reduce((acc: number, stake: Stake) => {
+        const senderTotalFrozeAmount = sender.stakes.reduce((acc: number, stake: Stake) => {
             if (stake.isActive) {
                 acc += stake.amount;
             }
             return acc;
         }, 0);
-        return senderTotalFrozeAmmount * config.constants.fees.vote / 100;
+        return senderTotalFrozeAmount * config.constants.fees.vote / 100;
     }
 
 
-    applyUnconfirmed(trs: Transaction<IAssetVote>, sender: Account): Response<void> {
+    applyUnconfirmed(trs: Transaction<IAssetVote>, sender: Account): void {
         const isDownVote = trs.asset.votes[0][0] === '-';
         const votes = trs.asset.votes.map(vote => vote.substring(1));
         if (isDownVote) {
@@ -224,7 +225,7 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
         }
     }
 
-    undoUnconfirmed(trs: Transaction<IAssetVote>, sender: Account): Response<void> {
+    undoUnconfirmed(trs: Transaction<IAssetVote>, sender: Account): void {
         const isDownVote = trs.asset.votes[0][0] === '-';
         const votes = trs.asset.votes.map(vote => vote.substring(1));
         if (isDownVote) {
@@ -257,9 +258,6 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
             }
         });
         undoFrozeOrdersRewardAndUnstake(trs);
-    }
-
-    calculateUndoUnconfirmed(trs: Transaction<IAssetVote>, sender: Account): void {
     }
 }
 

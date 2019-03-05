@@ -51,21 +51,13 @@ class TransactionStakeService implements IAssetService<IAssetStake>  {
         );
         offset = 0;
         if (trs.asset.airdropReward.sponsors && Object.keys(trs.asset.airdropReward.sponsors).length > 0) {
+            // TODO BigInt
             const address: Address = parseInt(Object.keys(trs.asset.airdropReward.sponsors)[0], 10);
             offset = BUFFER.writeUInt64LE(referralBuffer, address, offset);
             BUFFER.writeUInt64LE(referralBuffer, trs.asset.airdropReward.sponsors[address] || 0, offset);
         }
 
         return Buffer.concat([buff, referralBuffer]);
-    }
-
-    verifyUnconfirmed(trs: Transaction<IAssetStake>, sender: Account): ResponseEntity<void> {
-        let errors = [];
-        const airdropCheck: ResponseEntity<any> = verifyAirdrop(trs, trs.asset.amount, sender);
-        if (!airdropCheck.success) {
-            errors = airdropCheck.errors;
-        }
-        return new ResponseEntity({ errors });
     }
 
     validate(trs: Transaction<IAssetStake>, sender: Account): ResponseEntity<any> {
@@ -78,6 +70,16 @@ class TransactionStakeService implements IAssetService<IAssetStake>  {
             errors.push('Invalid stake amount: Decimal value');
         }
 
+        return new ResponseEntity({ errors });
+    }
+
+    verifyUnconfirmed(trs: Transaction<IAssetStake>, sender: Account): ResponseEntity<void> {
+        // TODO checkBalance
+        let errors = [];
+        const airdropCheck: ResponseEntity<any> = verifyAirdrop(trs, trs.asset.amount, sender);
+        if (!airdropCheck.success) {
+            errors = airdropCheck.errors;
+        }
         return new ResponseEntity({ errors });
     }
 
@@ -94,10 +96,6 @@ class TransactionStakeService implements IAssetService<IAssetStake>  {
         const fee: number = this.calculateFee(trs);
         const totalAmount: number = fee + trs.asset.amount;
         AccountRepo.updateBalanceByAddress(trs.senderAddress, totalAmount);
-    }
-
-    calculateUndoUnconfirmed(trs: Transaction<IAssetStake>, sender: Account): void {
-        sender.actualBalance += trs.asset.amount;
     }
 
 }

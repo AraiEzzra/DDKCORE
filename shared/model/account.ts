@@ -14,9 +14,6 @@ export class Stake {
     amount: number;
     voteCount: number;
     nextVoteMilestone: Timestamp;
-
-    // TODO: for sendStake
-    transferCount?: number;
     airdropReward: AirdropReward;
 }
 
@@ -32,6 +29,9 @@ export class AccountModel {
 
     constructor(data: AccountModel) {
         Object.assign(this, data);
+        this.votes = (data.votes || []).slice();
+        this.referrals = (data.referrals || []).slice();
+        this.stakes = (data.stakes || []).slice();
     }
 }
 
