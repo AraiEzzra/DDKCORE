@@ -1,12 +1,12 @@
-import { PeerRepo } from 'core/repository/peer';
+import PeerRepository from 'core/repository/peer';
+import { Block } from 'shared/model/block';
 
 export class PeerService {
-    private readonly peerRepo = new PeerRepo();
 
     constructor() { }
 
-    update(headers, peer){
-        this.peerRepo.peerUpdate(headers, peer);
+    update(headers, peer) {
+        PeerRepository.peerUpdate(headers, peer);
     }
 }
 

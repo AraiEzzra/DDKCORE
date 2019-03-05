@@ -1,7 +1,11 @@
-import {IAsset, Transaction, TransactionType} from 'shared/model/transaction';
-import {ITransactionService} from 'core/service/transaction';
+import { Transaction, TransactionType, IAsset } from 'shared/model/transaction';
+import { IAssetService } from 'core/service/transaction';
 import TransactionSendService from '../service/transaction/send';
+import TransactionRegisterService from '../service/transaction/register';
+import TransactionVoteService from '../service/transaction/vote';
+import TransactionDelegateService from '../service/transaction/delegate';
 import TransactionStakeService from 'core/service/transaction/stake';
+
 import BUFFER from 'core/util/buffer';
 
 export const transactionSortFunc = (a: Transaction<any>, b: Transaction<any>): number => {
@@ -26,10 +30,16 @@ export const transactionSortFunc = (a: Transaction<any>, b: Transaction<any>): n
     return 0;
 };
 
-export const getTransactionServiceByType = (type: TransactionType): ITransactionService<IAsset> => {
+export const getTransactionServiceByType = (type: TransactionType): IAssetService<IAsset> => {
     switch (type) {
         case TransactionType.SEND:
             return TransactionSendService;
+        case TransactionType.REGISTER:
+            return TransactionRegisterService;
+        case TransactionType.VOTE:
+            return TransactionVoteService;
+        case TransactionType.DELEGATE:
+            return TransactionDelegateService;
         case TransactionType.STAKE:
             return TransactionStakeService;
         default:

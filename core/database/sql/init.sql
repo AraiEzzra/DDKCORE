@@ -1,52 +1,52 @@
-create table migrations
+CREATE TABLE IF NOT EXISTS migrations
 (
-  id   varchar(25) not null
-    constraint migrations_pkey
-    primary key,
-  name text        not null
+  id   VARCHAR(25) NOT NULL
+    CONSTRAINT migrations_pkey
+    PRIMARY KEY,
+  name TEXT        NOT NULL
 );
 
-create table block
+CREATE TABLE IF NOT EXISTS block
 (
-  id                   char(64)  not null primary key,
-  version              integer   not null,
-  created_at           integer   not null,
-  height               integer   not null,
-  previous_block_id    char(64) references block on delete set null,
-  transaction_count    integer   not null,
-  amount               bigint    not null,
-  fee                  bigint    not null,
-  payload_hash         char(64)  not null,
-  generator_public_key char(64)  not null,
-  signature            char(128) not null
+  id                   CHAR(64)  NOT NULL PRIMARY KEY,
+  version              INTEGER   NOT NULL,
+  created_at           INTEGER   NOT NULL,
+  height               INTEGER   NOT NULL,
+  previous_block_id    CHAR(64) REFERENCES block ON DELETE SET NULL,
+  transaction_count    INTEGER   NOT NULL,
+  amount               BIGINT    NOT NULL,
+  fee                  BIGINT    NOT NULL,
+  payload_hash         CHAR(64)  NOT NULL,
+  generator_public_key CHAR(64)  NOT NULL,
+  signature            CHAR(128) NOT NULL
 );
 
-create table trs
+CREATE TABLE IF NOT EXISTS trs
 (
-  id                char(64)  not null primary key,
-  block_id          char(64)  not null references block on delete cascade,
-  type              smallint  not null,
-  created_at        integer   not null,
-  sender_public_key char(64)  not null,
-  sender_address    bigint    not null,
-  recipient_address bigint,
-  amount            bigint    not null,
-  fee               bigint    not null,
-  signature         char(128) not null,
-  second_signature  char(128),
-  salt              char(32)  not null default '' :: bpchar,
-  asset             json      not null default '{}' :: json
+  id                CHAR(64)  NOT NULL PRIMARY KEY,
+  block_id          CHAR(64)  NOT NULL REFERENCES block ON DELETE CASCADE,
+  type              SMALLINT  NOT NULL,
+  created_at        INTEGER   NOT NULL,
+  sender_public_key CHAR(64)  NOT NULL,
+  sender_address    BIGINT    NOT NULL,
+  recipient_address BIGINT,
+  amount            BIGINT    NOT NULL,
+  fee               BIGINT    NOT NULL,
+  signature         CHAR(128) NOT NULL,
+  second_signature  CHAR(128),
+  salt              CHAR(32)  NOT NULL DEFAULT '' :: BPCHAR,
+  asset             JSON      NOT NULL DEFAULT '{}' :: JSON
 );
 
-create index trs_sender_address
-  on trs (sender_address);
+CREATE INDEX IF NOT EXISTS trs_sender_address
+  ON trs (sender_address);
 
-create index trs_recipient_address
-  on trs (recipient_address);
+CREATE INDEX IF NOT EXISTS trs_recipient_address
+  ON trs (recipient_address);
 
-create table round
+CREATE TABLE IF NOT EXISTS round
 (
-  height_start      integer   primary key,
-  height_finish     integer   not null,
-  slots             json      not null default '{}' :: json
+  height_start  INTEGER PRIMARY KEY,
+  height_finish INTEGER NOT NULL,
+  slots         JSON    NOT NULL DEFAULT '{}' :: JSON
 );

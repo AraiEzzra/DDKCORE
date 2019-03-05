@@ -83,30 +83,6 @@ const coreConfig = {
     // ],
 };
 
-const backlogConfig = {
-    entry: path.join(DIR, 'backlog', 'app.js'),
-    context: path.resolve(DIR, 'backlog'),
-    resolve: {
-        extensions: ['.ts', '.js', '.json'],
-        alias: {
-            backlog: path.resolve(DIR, 'backlog'),
-        },
-    },
-    output: {
-        filename: 'app.js',
-        path: path.join(OUTPUT_DIR, 'backlog'),
-        publicPath: '/',
-    },
-    plugins: [
-        new CopyWebpackPlugin([
-            {
-                from: './build',
-                to: './',
-            },
-        ]),
-    ],
-};
-
 module.exports = env => {
 
     let appConfig;
@@ -117,9 +93,6 @@ module.exports = env => {
             break;
         case 'core':
             appConfig = coreConfig;
-            break;
-        case 'backlog':
-            appConfig = backlogConfig;
             break;
     }
     return Object.assign({}, baseConfig, appConfig);

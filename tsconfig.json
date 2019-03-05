@@ -14,7 +14,6 @@
     "paths": {
 //      "api/*": ["./api/*"],
       "core/*": ["./core/*"],
-      "backlog/*": ["./backlog/*"],
       "shared/*": ["./shared/*"],
       "config/*": ["./config/*"]
     },
@@ -30,7 +29,6 @@
   "include": [
 //    "api/**/*",
     "core/**/*",
-    "backlog/**/*",
     "shared/**/*",
     "test/**/*",
     "config/**/*"

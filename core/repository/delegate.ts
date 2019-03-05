@@ -36,8 +36,12 @@ class DelegateRepository {
                 return -1;
             }
             return 0;
-        });
-        return new Response({data: activeDelegates});
+        }).slice(0, constants.activeDelegates);
+        if (activeDelegates.length > 0) {
+            return new Response({data: activeDelegates});
+        } else {
+            return new Response({errors: [`[DelegateRepository][getActiveDelegates] Can't get Active delegates`]});
+        }
     }
 
     public update(delegate: Delegate) {
@@ -47,6 +51,10 @@ class DelegateRepository {
             this.usernames.add(delegate.username);
         }
         this.memoryDelegates[delegate.account.publicKey] = delegate;
+    }
+
+    public getByPublicKey(publicKey: string): Delegate {
+        return this.memoryDelegates[publicKey];
     }
 
     public forgingDisable(data: any) {

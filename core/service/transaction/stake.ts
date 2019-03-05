@@ -1,36 +1,34 @@
-import {ITransactionService} from '../transaction';
-import {IAssetStake, Transaction, TransactionType, IAirdropAsset} from 'shared/model/transaction';
+import {IAssetService} from '../transaction';
+import {
+    IAssetStake,
+    Transaction,
+    TransactionType,
+    IAirdropAsset,
+} from 'shared/model/transaction';
 import ResponseEntity from 'shared/model/response';
 import {Address, Account} from 'shared/model/account';
 import AccountRepo from 'core/repository/account';
-import BlockRepo from 'core/repository/block';
-import {Block} from 'shared/model/block';
 import { TOTAL_PERCENTAGE } from 'core/util/const';
 import config from 'shared/util/config';
 import BUFFER from 'core/util/buffer';
 
-import {
-    getAirdropReward,
-    verifyAirdrop,
-} from 'core/util/reward';
+import { getAirdropReward, verifyAirdrop } from 'core/util/reward';
 
 import {ITableObject} from 'core/util/common';
 
-class TransactionStakeService implements ITransactionService<IAssetStake> {
+class TransactionStakeService implements IAssetService<IAssetStake>  {
 
-    async create(trs: Transaction<IAssetStake>, data?: IAssetStake ): Promise<IAssetStake> {
+    create(trs: Transaction<IAssetStake>, data?: IAssetStake ): IAssetStake {
         const sender: Account = AccountRepo.getByAddress(trs.senderAddress);
-        const airdropReward: IAirdropAsset = await getAirdropReward(
+        const airdropReward: IAirdropAsset = getAirdropReward(
                 sender,
-                data.stakeOrder.stakedAmount,
+                data.amount,
                 TransactionType.STAKE
             );
         const asset: IAssetStake = {
-            stakeOrder: {
-                stakedAmount: data.stakeOrder.stakedAmount,
-                startTime: trs.createdAt,
-                nextVoteMilestone: trs.createdAt,
-            },
+            amount: data.amount,
+            startTime: trs.createdAt,
+            startVoteCount: trs.createdAt,
             airdropReward: airdropReward
         };
 
@@ -46,7 +44,7 @@ class TransactionStakeService implements ITransactionService<IAssetStake> {
             BUFFER.LENGTH.BYTE +   // asset.airdropReward.withAirdropReward
             BUFFER.LENGTH.INT64    // asset.airdropReward.totalReward
         );
-        offset = BUFFER.writeUInt64LE(buff, trs.asset.stakeOrder.stakedAmount || 0, offset);
+        offset = BUFFER.writeUInt64LE(buff, trs.asset.amount || 0, offset);
         /**
          * TODO Should be async?
          */
@@ -57,11 +55,11 @@ class TransactionStakeService implements ITransactionService<IAssetStake> {
         // }
 
         offset += BUFFER.LENGTH.UINT32;
-        buff.writeInt32LE(trs.asset.stakeOrder.startTime, offset);
+        buff.writeInt32LE(trs.asset.startTime, offset);
         offset += BUFFER.LENGTH.UINT32;
-        buff.writeInt8(trs.asset.airdropReward.withAirdropReward ? 1 : 0, offset);
+        buff.writeInt8( 0, offset);
         offset += BUFFER.LENGTH.BYTE;
-        BUFFER.writeUInt64LE(buff, trs.asset.airdropReward.totalReward || 0, offset);
+        BUFFER.writeUInt64LE(buff, 0, offset);
 
         const referralBuffer = Buffer.alloc(BUFFER.LENGTH.INT64 + BUFFER.LENGTH.INT64);
         offset = 0;
@@ -78,17 +76,17 @@ class TransactionStakeService implements ITransactionService<IAssetStake> {
         return new ResponseEntity();
     }
 
-    verify(trs: Transaction<IAssetStake>, sender: Account): ResponseEntity<any> {
+    validate(trs: Transaction<IAssetStake>, sender: Account): ResponseEntity<any> {
         let errors = [];
-        if (trs.asset.stakeOrder.stakedAmount <= 0 && config.constants.STAKE_VALIDATE.AMOUNT_ENABLED) {
+        if (trs.asset.amount <= 0 && config.constants.STAKE_VALIDATE.AMOUNT_ENABLED) {
             errors.push('Invalid transaction amount');
         }
 
-        if ((trs.asset.stakeOrder.stakedAmount % 1) !== 0 && config.constants.STAKE_VALIDATE.AMOUNT_ENABLED) {
+        if ((trs.asset.amount % 1) !== 0 && config.constants.STAKE_VALIDATE.AMOUNT_ENABLED) {
             errors.push('Invalid stake amount: Decimal value');
         }
 
-        const airdropCheck: ResponseEntity<any> = verifyAirdrop(trs, trs.asset.stakeOrder.stakedAmount, sender);
+        const airdropCheck: ResponseEntity<any> = verifyAirdrop(trs, trs.asset.amount, sender);
         if (!airdropCheck.success && config.constants.STAKE_VALIDATE.AIRDROP_ENABLED) {
             errors = errors.concat(airdropCheck.errors);
         }
@@ -96,7 +94,7 @@ class TransactionStakeService implements ITransactionService<IAssetStake> {
     }
 
     calculateFee(trs: Transaction<IAssetStake>, sender?: Account): number {
-        return (trs.asset.stakeOrder.stakedAmount * config.constants.fees.froze) / TOTAL_PERCENTAGE;
+        return (trs.asset.amount * config.constants.fees.froze) / TOTAL_PERCENTAGE;
     }
 
     calculateUndoUnconfirmed(trs: Transaction<IAssetStake>, sender: Account): void {
@@ -104,14 +102,13 @@ class TransactionStakeService implements ITransactionService<IAssetStake> {
     }
 
     applyUnconfirmed(trs: Transaction<IAssetStake>): ResponseEntity<void> {
-        const fee: number = this.calculateFee(trs);
-        const totalAmount: number = fee + trs.asset.stakeOrder.stakedAmount;
+        const totalAmount: number = trs.fee + trs.asset.amount;
         return AccountRepo.updateBalanceByAddress(trs.senderAddress, totalAmount * (-1));
     }
 
     undoUnconfirmed(trs: Transaction<IAssetStake>, sender: Account): ResponseEntity<void> {
         const fee: number = this.calculateFee(trs);
-        const totalAmount: number = fee + trs.asset.stakeOrder.stakedAmount;
+        const totalAmount: number = fee + trs.asset.amount;
         return AccountRepo.updateBalanceByAddress(trs.senderAddress, totalAmount);
     }
 

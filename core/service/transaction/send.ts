@@ -1,4 +1,4 @@
-import { ITransactionService } from '../transaction';
+import { IAssetService } from '../transaction';
 import { IAsset } from 'shared/model/transaction';
 import { IAssetTransfer, Transaction } from 'shared/model/transaction';
 import { Account } from 'shared/model/account';
@@ -7,7 +7,7 @@ import config from 'shared/util/config';
 import AccountRepo from '../../repository/account';
 import { TOTAL_PERCENTAGE } from 'core/util/const';
 
-class TransactionSendService implements ITransactionService<IAssetTransfer> {
+class TransactionSendService implements IAssetService<IAssetTransfer> {
 
     create(trs: Transaction<IAssetTransfer>): IAssetTransfer {
         return;
@@ -22,22 +22,14 @@ class TransactionSendService implements ITransactionService<IAssetTransfer> {
     }
 
     // TODO: validate fields in controller
-    verify(trs: Transaction<IAssetTransfer>, sender: Account): Response<void> {
+    validate(trs: Transaction<IAssetTransfer>, sender: Account): Response<void> {
         const errors = [];
-
-        if (!trs.recipientAddress) {
-            errors.push('Missing recipient address');
-        }
-
-        if (trs.amount <= 0) {
-            errors.push('Invalid transaction amount');
-        }
 
         return new Response();
     }
 
     calculateFee(trs: Transaction<IAssetTransfer>, sender: Account): number {
-        return (trs.amount * config.constants.fees.send) / TOTAL_PERCENTAGE;
+        return (trs.asset.amount * config.constants.fees.send) / TOTAL_PERCENTAGE;
     }
 
     calculateUndoUnconfirmed(trs: Transaction<IAssetTransfer>, sender: Account): void {
@@ -45,11 +37,15 @@ class TransactionSendService implements ITransactionService<IAssetTransfer> {
     }
 
     applyUnconfirmed(trs: Transaction<IAssetTransfer>): Response<void> {
-        return AccountRepo.updateBalanceByAddress(trs.recipientAddress, trs.amount);
+        const amount = trs.asset.amount + trs.fee;
+        AccountRepo.updateBalanceByPublicKey(trs.senderPublicKey, -amount);
+        return AccountRepo.updateBalanceByAddress(trs.asset.recipientAddress, trs.asset.amount);
     }
 
     undoUnconfirmed(trs: Transaction<IAssetTransfer>, sender: Account): Response<void> {
-        return null;
+        const amount = trs.asset.amount + trs.fee;
+        AccountRepo.updateBalanceByPublicKey(trs.senderPublicKey, amount);
+        return AccountRepo.updateBalanceByAddress(trs.asset.recipientAddress, -trs.asset.amount);
     }
 
     async apply(trs: Transaction<IAssetTransfer>): Promise<Response<void>> {

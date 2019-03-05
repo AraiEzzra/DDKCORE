@@ -1,6 +1,4 @@
-
-// When will update constants need to edit path.
-const constants = require('../../backlog/helpers/constants');
+import config from 'shared/util/config';
 
 export const delegateSchema = {
     enableForging: {
@@ -98,7 +96,7 @@ export const delegateSchema = {
             limit: {
                 type: 'integer',
                 minimum: 1,
-                maximum: constants.activeDelegates
+                maximum: config.constants.activeDelegates
             },
             offset: {
                 type: 'integer',

@@ -2,9 +2,7 @@ FROM    node:10-alpine
 RUN     apk add --no-cache python curl bash automake autoconf libtool git alpine-sdk postgresql-dev netcat-openbsd
 RUN     addgroup ddk -g 1100 && \
         adduser -D -u 1100 ddk -G ddk
-
 WORKDIR /home/ddk
-
 USER    ddk
 RUN     mkdir -p /home/ddk && \
         mkdir -p /home/ddk/dist && \
@@ -20,20 +18,6 @@ RUN     npm install --global npm@latest && \
         npm install --global node-gyp@latest && \
         npm install --global wait-port@latest
 
-
-# RUN     chmod +x /home/ddk/docker-entrypoint-prod.sh
-# CMD     ["/bin/bash", "/home/ddk/docker-entrypoint-prod.sh"]
-
-USER ddk
-COPY    ./package*.json /home/ddk/
-RUN     npm install
-
-COPY    --chown=ddk . /home/ddk
-RUN     npm run build
-COPY    --chown=ddk docker-entrypoint-prod.sh /home/ddk/docker-entrypoint-prod.sh
-
-USER    root
-RUN     chmod +x /home/ddk/docker-entrypoint-prod.sh
-
-USER    ddk
-ENTRYPOINT ["/bin/bash", "/home/ddk/docker-entrypoint-prod.sh"]
+COPY    --chown=ddk docker-entrypoint-new.sh /home/ddk/docker-entrypoint-new.sh
+RUN     chmod +x /home/ddk/docker-entrypoint-new.sh
+CMD     ["/bin/bash", "/home/ddk/docker-entrypoint-new.sh"]

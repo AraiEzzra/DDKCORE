@@ -9,7 +9,8 @@ export default {
             maxLength: 64
         },
         height: {
-            type: 'integer'
+            type: 'integer',
+            minimum: 1
         },
         signature: {
             type: 'string',
@@ -53,10 +54,13 @@ export default {
         }
     },
     required: [
+        'id',
+        'height',
         'signature',
         'generatorPublicKey',
         'transactionCount',
         'payloadHash',
+        'previousBlockId',
         'createdAt',
         'amount',
         'fee',
