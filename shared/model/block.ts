@@ -1,10 +1,10 @@
 import { Timestamp } from 'shared/model/account';
 import { Transaction } from 'shared/model/transaction';
-// import config from 'shared/util/config';
+import config from 'shared/util/config';
 
 export class BlockModel {
     id?: string | null = null;
-    version?: number = 1;
+    version?: number = config.constants.CURRENT_BLOCK_VERSION;
     createdAt: Timestamp;
     height?: number | null = null;
     previousBlockId: string | null;

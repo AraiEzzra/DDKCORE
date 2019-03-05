@@ -1,6 +1,4 @@
-import { TransactionType } from 'shared/model/transaction';
-
-export interface IListContainer<T extends object> {
-    data: T[];
+export interface IListContainer<T> {
+    data: Array<T>;
     total_count: number;
 }
