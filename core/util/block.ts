@@ -7,7 +7,7 @@ export const isHeightLess = (lastBlock: Block, receivedBlock: Block): boolean =>
     return false;
 };
 
-const isNext = (lastBlock: Block, receivedBlock: Block): boolean => {
+export const isNext = (lastBlock: Block, receivedBlock: Block): boolean => {
     if (lastBlock.height + 1 === receivedBlock.height) {
         return true;
     }

@@ -9,7 +9,6 @@ if [ "$MODE" == "WATCH" ]; then
     nc -lk 5000 & npm run watch:core
 else
     if [ "$MODE" == "TEST" ]; then
-        wait-port "$HOST:${PORT:-7007}"
         npm run test
     else
         wait-port "$DB_HOST:${DB_PORT:-5432}" && \
