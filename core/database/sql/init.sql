@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS migrations
 (
   id   VARCHAR(25) NOT NULL
     CONSTRAINT migrations_pkey
-    PRIMARY KEY,
+      PRIMARY KEY,
   name TEXT        NOT NULL
 );
 
@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS block
   version              INTEGER   NOT NULL,
   created_at           INTEGER   NOT NULL,
   height               INTEGER   NOT NULL,
-  previous_block_id    CHAR(64) REFERENCES block ON DELETE SET NULL,
+  previous_block_id    CHAR(64)  REFERENCES block ON DELETE SET NULL,
   transaction_count    INTEGER   NOT NULL,
   amount               BIGINT    NOT NULL,
   fee                  BIGINT    NOT NULL,
@@ -34,11 +34,8 @@ CREATE TABLE IF NOT EXISTS trs
   asset             JSON      NOT NULL DEFAULT '{}' :: JSON
 );
 
-CREATE INDEX IF NOT EXISTS trs_sender_address
-  ON trs (sender_address);
-
-CREATE INDEX IF NOT EXISTS trs_recipient_address
-  ON trs (recipient_address);
+CREATE INDEX IF NOT EXISTS trs_sender_public_key
+  ON trs (sender_public_key);
 
 CREATE TABLE IF NOT EXISTS round
 (
