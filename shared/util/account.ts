@@ -6,7 +6,6 @@ enum EnumSize {
 }
 
 /**
- *
  * @param publicKey
  */
 export const getAddressByPublicKey = (publicKey: string): number => {
@@ -28,7 +27,6 @@ export const getAddressByPublicKey = (publicKey: string): number => {
 export const getOrCreateAccount = async (publicKey: string): Promise<Account> => {
     return null;
 };
-
 
 const getBodyAddress = (buf) => {
     const hex = [];

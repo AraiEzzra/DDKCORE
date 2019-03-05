@@ -1,9 +1,9 @@
-import { DelegateRepository } from 'api/repository/delegate';
-import { delegateSchema as schema } from 'api/schema/delegate';
+import { DelegateRepository } from 'api_backlog/repository/delegate';
+import { delegateSchema as schema } from 'api_backlog/schema/delegate';
 import { Account } from 'shared/model/account';
 import { DelegateRepository as SharedDelegateRepository } from 'shared/repository/delegate';
 import { AccountRepository as SharedAccountRepository } from 'shared/repository/account';
-import { GET, POST, Controller, validate, PUT } from 'api/util/http_decorator';
+import { GET, POST, Controller, validate, PUT } from 'api_backlog/util/http_decorator';
 import {Request, Response} from 'express';
 import * as HttpStatus from 'http-status-codes';
 import constants from 'config/default/constants';

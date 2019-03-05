@@ -1,7 +1,7 @@
 import { Dashboard } from 'shared/model/dashboard';
 import Response from 'shared/model/response';
 import { AccountPGQLRepository } from 'shared/repository/account';
-import { GET, Controller } from 'api/util/http_decorator';
+import { GET, Controller } from 'api_backlog/util/http_decorator';
 
 export interface IRequest {
     body: {

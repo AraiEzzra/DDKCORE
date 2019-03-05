@@ -1,7 +1,7 @@
-import { GetAccountParams, RegistrationParams } from 'api/util/types/account';
-import { GET, POST, Controller, validate } from 'api/util/http_decorator';
-import { AccountRepository } from 'api/repository/account';
-import { accountSchema as schema } from 'api/schema/account';
+import { GetAccountParams, RegistrationParams } from 'api_backlog/util/types/account';
+import { GET, POST, Controller, validate } from 'api_backlog/util/http_decorator';
+import { AccountRepository } from 'api_backlog/repository/account';
+import { accountSchema as schema } from 'api_backlog/schema/account';
 
 import { AccountRepository as SharedAccountService } from 'shared/repository/account';
 import { Account } from 'shared/model/account';

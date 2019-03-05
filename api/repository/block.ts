@@ -1,14 +1,23 @@
-import { Block } from 'shared/model/block';
+import { mockBlocks } from '../mock/blocks';
+import {Block, BlockModel} from 'shared/model/block';
+import Response from 'shared/model/response';
+import { IListContainer } from '../util/common';
 
-class BlockRepo {
+class BlockRepository {
 
-    constructor() {}
+    getMany(data?: any): Response<IListContainer<Block>> {
+        /**TODO need to RPC request to CORE*/
+        return new Response<IListContainer<BlockModel>>({
+            data: mockBlocks,
+            total_count: mockBlocks.length
+        });
+    }
 
-    public getById(id: string): Block { return undefined; }
-
-    public countList(where, params): number { return undefined; }
-
-    public list(filter, params): Block[] { return undefined; }
+    getOne(data: string | number): Response<BlockModel> {
+        /**TODO need to RPC request to CORE*/
+        const blocks = mockBlocks.filter((item: Block) => item.id === data || item.height === data);
+        return new Response<BlockModel>(blocks[0]);
+    }
 }
 
-export default new BlockRepo();
+export default new BlockRepository();

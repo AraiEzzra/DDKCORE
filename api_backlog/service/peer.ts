@@ -1,5 +1,5 @@
 import { Peer } from 'shared/model/peer';
-import PeerRepo from 'api/repository/peer';
+import PeerRepo from 'api_backlog/repository/peer';
 
 class PeerService {
 
