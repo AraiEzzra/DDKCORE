@@ -63,7 +63,7 @@ class RoundPGRepository implements IRoundPGRepository {
     }
 
     async delete(round: Round): Promise<void> {
-        await db.none(queries.deleteByHeight, {height: round.startHeight});
+        await db.none(queries.deleteByStartHeight, {height: round.startHeight});
     }
 }
 

@@ -1,12 +1,12 @@
 
 export default {
-    getByHeight: 'SELECT * FROM round WHERE height_start >= ${height} AND height_finish <= ${height}',
+    getByHeight: 'SELECT * FROM round WHERE height_start <= ${height} AND height_finish >= ${height}',
     getMany(limit: number) {
         return [
-            'SELECT * FROM round WHERE height_start >= ${offset}',
+            'SELECT * FROM round WHERE height_start <= ${offset}',
             (limit ? 'AND height_start < ${limit}' : ''),
             'ORDER BY height_start'
         ].filter(Boolean).join(' ');
     },
-    deleteByHeight: 'DELETE FROM round WHERE height_start >= ${height} AND height_finish <= ${height}',
+    deleteByStartHeight: 'DELETE FROM round WHERE height_start = ${height}',
 };
