@@ -4,7 +4,7 @@ import { Block } from 'shared/model/block';
 import BlockRepo from 'api/repository/block';
 import schema from 'api/schema/block';
 import config from 'shared/util/config';
-import { Controller, GET, validate } from 'api/util/http_decorator';
+import { Controller, validate } from 'api/util/http_decorator';
 
 // wait declaration from @Bogdan Pidoprygora
 class RoundService {
