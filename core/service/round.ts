@@ -7,7 +7,7 @@ import Config from 'shared/util/config';
 // import { createTaskON } from 'test/core/mock/bus';
 // import BlockRepository from 'test/core/mock/blockRepository';
 import BlockRepository from 'core/repository/block';
-import { Slots, Round } from 'shared/model/round';
+import { Round, Slots } from 'shared/model/round';
 import RoundRepository from 'core/repository/round';
 import { createTaskON } from 'shared/util/bus';
 import DelegateRepository from 'core/repository/delegate';

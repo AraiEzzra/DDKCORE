@@ -62,13 +62,6 @@ class TransactionRegisterService implements IAssetService<IAssetRegister> {
         return new Response<void>();
     }
 
-    async apply(trs: Transaction<IAssetRegister>): Promise<Response<void>> {
-        return new Response<void>();
-    }
-
-    async undo(trs: Transaction<IAssetRegister>): Promise<Response<void>> {
-        return new Response<void>();
-    }
 }
 
 export default new TransactionRegisterService();

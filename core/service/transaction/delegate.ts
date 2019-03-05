@@ -18,15 +18,27 @@ class TransactionDelegateService implements IAssetService<IAssetDelegate> {
     }
 
     verifyUnconfirmed(trs: Transaction<IAssetDelegate>, sender: Account): Response<void> {
-        return new Response();
-    }
-
-    validate(trs: Transaction<IAssetDelegate>, sender: Account): Response<void> {
         const errors = [];
 
         if (sender.delegate) {
             errors.push('Account is already a delegate');
         }
+
+        const username = String(trs.asset.username)
+            .toLowerCase()
+            .trim();
+
+        const existingDelegate: boolean = DelegateRepo.isUserNameExists(username);
+
+        if (existingDelegate) {
+            errors.push('Username already exists');
+        }
+
+        return new Response({ errors });
+    }
+
+    validate(trs: Transaction<IAssetDelegate>, sender: Account): Response<void> {
+        const errors = [];
 
         if (!trs.asset || !trs.asset.username) {
             errors.push('Invalid transaction asset');
@@ -59,20 +71,11 @@ class TransactionDelegateService implements IAssetService<IAssetDelegate> {
             errors.push('Username can only contain alphanumeric characters with the exception of !@$&_.');
         }
 
-        const existingDelegate: boolean = DelegateRepo.isUserNameExists(username);
-        if (existingDelegate) {
-            errors.push('Username already exists');
-        }
-
         return new Response({ errors });
     }
 
     calculateFee(trs: Transaction<IAssetDelegate>, sender: Account): number {
         return config.constants.fees.delegate;
-    }
-
-    calculateUndoUnconfirmed(trs: Transaction<IAssetDelegate>, sender: Account): void {
-        sender.delegate = null;
     }
 
     applyUnconfirmed(trs: Transaction<IAssetDelegate>, sender: Account): Response<void> {
@@ -90,13 +93,10 @@ class TransactionDelegateService implements IAssetService<IAssetDelegate> {
         return new Response<void>();
     }
 
-    async apply(trs: Transaction<IAssetDelegate>): Promise<Response<void>> {
-        return new Response<void>();
+    calculateUndoUnconfirmed(trs: Transaction<IAssetDelegate>, sender: Account): void {
+        sender.delegate = null;
     }
 
-    async undo(trs: Transaction<IAssetDelegate>): Promise<Response<void>> {
-        return new Response<void>();
-    }
 }
 
 export default new TransactionDelegateService();
