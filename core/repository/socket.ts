@@ -1,5 +1,5 @@
 import autobind from 'autobind-decorator';
-import headers from 'core/repository/system';
+import SystemRepository from 'core/repository/system';
 import { Peer } from 'shared/model/peer';
 import { messageON } from 'shared/util/bus';
 import { logger } from 'shared/util/logger';
@@ -22,17 +22,18 @@ server.listen(
 
 
 export class Socket {
-    private static _instance: Socket;
+    private static instance: Socket;
 
     constructor() {
-        if (Socket._instance) {
-            return Socket._instance;
+        if (Socket.instance) {
+            return Socket.instance;
         }
         this.init();
-        Socket._instance = this;
+        Socket.instance = this;
     }
 
     init(): void {
+        logger.debug('SOCKET_INIT');
         TRUSTED_PEERS.forEach((peer: any) => {
             this.connectNewPeer(peer);
         });
@@ -41,8 +42,10 @@ export class Socket {
             socket.on('HEADERS', (data: string) => {
                 logger.debug(`[SOCKET][PEER_HEADERS_RECEIVE], data: ${JSON.stringify(data)}`);
                 const peer = JSON.parse(data);
-                if (Socket._instance.addPeer(peer, socket)) {
-                    socket.emit('READY');
+                if (Socket.instance.addPeer(peer, socket)) {
+                    socket.emit('SERVER_HEADERS', JSON.stringify(
+                        SystemRepository.getFullHeaders()
+                    ));
                 }
             });
         });
@@ -54,13 +57,16 @@ export class Socket {
             PeerRepository.has(peer)) {
             return;
         }
+
         const ws = io(`ws://${peer.ip}:${peer.port}`);
         ws.on('OPEN', () => {
             ws.emit('HEADERS', JSON.stringify(
-                headers.getFullHeaders()
+                SystemRepository.getFullHeaders()
             ));
-            ws.on('READY', () => {
-                Socket._instance.addPeer(peer, ws);
+            ws.on('SERVER_HEADERS', (headers: string) => {
+                logger.debug(`[SOCKET][PEER_HEADERS_RECEIVE], data: ${JSON.stringify(headers)}`);
+                const fullPeer = Object.assign(JSON.parse(headers), peer);
+                Socket.instance.addPeer(fullPeer, ws);
             });
         });
     }
@@ -69,7 +75,7 @@ export class Socket {
     addPeer(peer: Peer, socket): boolean {
         if (PeerRepository.addPeer(peer, socket)) {
             logger.debug(`[SOCKET][ADD_PEER] host: ${peer.ip}:${peer.port}`);
-            socket.on('ACTION', (response: string) => Socket._instance.onPeerAction(response, peer));
+            socket.on('ACTION', (response: string) => Socket.instance.onPeerAction(response, peer));
 
             peer.socket.on('disconnect', () => {
                 PeerRepository.removePeer(peer);

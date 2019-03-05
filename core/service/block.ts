@@ -1031,6 +1031,7 @@ class BlockService {
         return buf;
     }
 
+    // @deprecate
     public async loadBlocks(blocks: Array<Block>): Promise<void> {
         for (let block of blocks) {
             await this.receiveBlock(block);
