@@ -140,16 +140,18 @@ class BlockService {
         }
         block = resultNormalizeBlock.data;
 
-        if (verify) {
-            const resultVerifyBlock: IVerifyResult = await this.verifyBlock(block, !keypair);
-            if (!resultVerifyBlock.verified) {
-                return new Response<void>({errors: [...resultVerifyBlock.errors, 'processBlock']});
-            }
-        } else {
-            // TODO: remove when validate will be fix
-            if (keypair) {
-                const lastBlock: Block = BlockRepo.getLastBlock();
-                block = this.setHeight(block, lastBlock);
+        if (block.height !== 1) {
+            if (verify) {
+                const resultVerifyBlock: IVerifyResult = await this.verifyBlock(block, !keypair);
+                if (!resultVerifyBlock.verified) {
+                    return new Response<void>({errors: [...resultVerifyBlock.errors, 'processBlock']});
+                }
+            } else {
+                // TODO: remove when validate will be fix
+                if (keypair) {
+                    const lastBlock: Block = BlockRepo.getLastBlock();
+                    block = this.setHeight(block, lastBlock);
+                }
             }
         }
 

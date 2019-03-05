@@ -37,7 +37,11 @@ class DelegateRepository {
             }
             return 0;
         }).slice(0, constants.activeDelegates);
-        return new Response({data: activeDelegates});
+        if (activeDelegates.length > 0) {
+            return new Response({data: activeDelegates});
+        } else {
+            return new Response({errors: [`[DelegateRepository][getActiveDelegates] Can't get Active delegates`]});
+        }
     }
 
     public update(delegate: Delegate) {
