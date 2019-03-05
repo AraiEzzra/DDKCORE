@@ -4,32 +4,29 @@ import BUFFER from 'core/util/buffer';
 
 import Validator from 'z-schema';
 import ZSchema from 'shared/util/z_schema';
-
-const validator: Validator = new ZSchema({});
-
-import {logger} from 'shared/util/logger';
-import {Account} from 'shared/model/account';
-import {Block, BlockModel} from 'shared/model/block';
+import { logger } from 'shared/util/logger';
+import { Account } from 'shared/model/account';
+import { Block, BlockModel } from 'shared/model/block';
 import BlockRepo from 'core/repository/block';
 import AccountRepo from 'core/repository/account';
+import AccountRepository from 'core/repository/account';
 import { IAssetTransfer, Transaction, TransactionType } from 'shared/model/transaction';
 import TransactionDispatcher from 'core/service/transaction';
 import TransactionQueue from 'core/service/transactionQueue';
 import TransactionPool from 'core/service/transactionPool';
 import TransactionRepo from 'core/repository/transaction/';
-import {DelegateService} from 'core/service/delegate';
+import { DelegateService } from 'core/service/delegate';
 import slotService from 'core/service/slot';
 import RoundService from 'core/service/round';
-import {transactionSortFunc} from 'core/util/transaction';
-import {getOrCreateAccount} from 'shared/util/account';
+import { transactionSortFunc } from 'core/util/transaction';
 import blockShema from 'core/schema/block';
 import Response from 'shared/model/response';
-import {messageON} from 'shared/util/bus';
+import { messageON } from 'shared/util/bus';
 import config from 'shared/util/config';
 import SyncService from 'core/service/sync';
 import system from 'core/repository/system';
-import AccountRepository from 'core/repository/account';
-import BlockSchema from 'core/schema/block';
+
+const validator: Validator = new ZSchema({});
 
 interface IVerifyResult {
     verified?: boolean;
@@ -85,7 +82,7 @@ class BlockService {
         const processBlockResponse: Response<void> = await this.process(block, true, true, keypair, false, true);
         if (!processBlockResponse.success) {
             const returnResponse: Response<void> =
-                await TransactionDispatcher.returnToQueueConflictedTransactionFromPool(transactions);
+                TransactionDispatcher.returnToQueueConflictedTransactionFromPool(transactions);
             if (!returnResponse.success) {
                 processBlockResponse.errors = [...processBlockResponse.errors, ...returnResponse.errors];
             }
@@ -99,10 +96,10 @@ class BlockService {
         return new Response<void>();
     }
 
-    private async pushInPool(transactions: Array<Transaction<object>>): Promise<Response<void>> {
+    private pushInPool(transactions: Array<Transaction<object>>): Response<void> {
         const errors: Array<string> = [];
         for (const trs of transactions) {
-            let response: Response<void> = await TransactionPool.push(trs, undefined, false, true);
+            let response: Response<void> = TransactionPool.push(trs, undefined, false, true);
             if (!response.success) {
                 errors.push(...response.errors);
             }
@@ -483,16 +480,10 @@ class BlockService {
                     }
                 }
 
-                const applyResponse: Response<void> = await TransactionDispatcher.applyUnconfirmed(trs, sender);
-                if (!applyResponse.success) {
-                    errors.push(...applyResponse.errors);
-                }
+                TransactionDispatcher.applyUnconfirmed(trs, sender);
                 i++;
             } else {
-                const undoResponse: Response<void> = await TransactionDispatcher.undoUnconfirmed(trs);
-                if (!undoResponse.success) {
-                    errors.push(...undoResponse.errors);
-                }
+                TransactionDispatcher.undoUnconfirmed(trs);
                 i--;
             }
         }
@@ -542,10 +533,7 @@ class BlockService {
         const errors: Array<string> = [];
         for (const trs of block.transactions) {
             const sender = AccountRepo.getByPublicKey(trs.senderPublicKey);
-            const applyResponse: Response<void> = await TransactionDispatcher.apply(trs, sender);
-            if (!applyResponse.success) {
-                errors.push(...applyResponse.errors);
-            }
+            await TransactionDispatcher.apply(trs, sender);
             if (saveBlock) {
                 trs.blockId = block.id;
                 TransactionRepo.add(trs);
@@ -651,7 +639,7 @@ class BlockService {
                 transactionForReturn.push(removedTrs);
             }
         });
-        const pushResponse: Response<void> = await this.pushInPool(transactionForReturn);
+        const pushResponse: Response<void> = this.pushInPool(transactionForReturn);
         if (!pushResponse.success) {
             errors.push(...pushResponse.errors);
         }
@@ -661,7 +649,7 @@ class BlockService {
             errors.push(...returnResponse.errors);
         }
         if (errors.length) {
-            const pushBackResponse: Response<void> = await this.pushInPool(removedTransactions);
+            const pushBackResponse: Response<void> = this.pushInPool(removedTransactions);
             if (!pushBackResponse.success) {
                 errors.push(...pushBackResponse.errors);
                 logger.error(`[Process][newReceiveBlock] ${JSON.stringify(errors)}`);
@@ -860,14 +848,8 @@ class BlockService {
         const errors: Array<string> = [];
         oldLastBlock.transactions.reverse().forEach(async (transaction) => {
             const sender = AccountRepo.getByPublicKey(transaction.senderPublicKey);
-            const undoResponse: Response<void> = await TransactionDispatcher.undo(transaction, sender);
-            if (!undoResponse.success) {
-                errors.push(...undoResponse.errors);
-            }
-            const undoUnconfirmedResponse: Response<void> = await TransactionDispatcher.undoUnconfirmed(transaction);
-            if (!undoUnconfirmedResponse.success) {
-                errors.push(...undoUnconfirmedResponse.errors);
-            }
+            TransactionDispatcher.undo(transaction, sender);
+            TransactionDispatcher.undoUnconfirmed(transaction);
         });
         if (errors.length) {
             return new Response<Block>({errors});

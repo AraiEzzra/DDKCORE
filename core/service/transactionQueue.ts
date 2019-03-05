@@ -1,10 +1,8 @@
 import { Transaction, TransactionStatus, IAsset } from 'shared/model/transaction';
 import { transactionSortFunc } from 'core/util/transaction';
-import { getOrCreateAccount } from 'shared/util/account';
 import constants from '../../config/mainnet/constants';
 import TransactionDispatcher from 'core/service/transaction';
 import TransactionPool from 'core/service/transactionPool';
-// import db from 'shared/driver/db';
 import {logger} from 'shared/util/logger';
 import { Account } from 'shared/model/account';
 import { SECOND } from 'core/util/const';
@@ -30,7 +28,7 @@ export interface ITransactionQueueService<T extends Object> {
 
     getSize(): { conflictedQueue: number, queue: number };
 
-    verify(trs: Transaction<T>, sender: Account): Promise<ResponseEntity<void>>;
+    verify(trs: Transaction<T>, sender: Account): ResponseEntity<void>;
 }
 
 class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> {
@@ -137,9 +135,9 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
         return { conflictedQueue: this.conflictedQueue.length, queue: this.queue.length };
     }
 
-    async verify(trs: Transaction<T>, sender: Account): Promise<ResponseEntity<void>> {
+    verify(trs: Transaction<T>, sender: Account): ResponseEntity<void> {
         try {
-            await TransactionDispatcher.verifyUnconfirmed(trs, sender);
+            TransactionDispatcher.verifyUnconfirmed(trs, sender);
         } catch (error) {
             logger.error(`[TransactionQueue][verifyUnconfirmed]: ${error}`);
             logger.trace(`[TransactionQueue][verifyUnconfirmed][stack]:\n${error.stack}`);

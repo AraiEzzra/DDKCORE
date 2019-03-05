@@ -259,15 +259,6 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
         undoFrozeOrdersRewardAndUnstake(trs);
     }
 
-    async apply(trs: Transaction<IAssetVote>, sender: Account): Promise<Response<void>> {
-        // todo: check if should change account.votes?
-        return new Response<void>();
-    }
-
-    async undo(trs: Transaction<IAssetVote>, sender: Account): Promise<Response<void>> {
-        return new Response<void>();
-    }
-
     calculateUndoUnconfirmed(trs: Transaction<IAssetVote>, sender: Account): void {
     }
 }

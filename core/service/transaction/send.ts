@@ -36,25 +36,18 @@ class TransactionSendService implements IAssetService<IAssetTransfer> {
         return;
     }
 
-    applyUnconfirmed(trs: Transaction<IAssetTransfer>): Response<void> {
+    applyUnconfirmed(trs: Transaction<IAssetTransfer>): void {
         const amount = trs.asset.amount + trs.fee;
         AccountRepo.updateBalanceByPublicKey(trs.senderPublicKey, -amount);
-        return AccountRepo.updateBalanceByAddress(trs.asset.recipientAddress, trs.asset.amount);
+        AccountRepo.updateBalanceByAddress(trs.asset.recipientAddress, trs.asset.amount);
     }
 
-    undoUnconfirmed(trs: Transaction<IAssetTransfer>, sender: Account): Response<void> {
+    undoUnconfirmed(trs: Transaction<IAssetTransfer>, sender: Account): void {
         const amount = trs.asset.amount + trs.fee;
         AccountRepo.updateBalanceByPublicKey(trs.senderPublicKey, amount);
-        return AccountRepo.updateBalanceByAddress(trs.asset.recipientAddress, -trs.asset.amount);
+        AccountRepo.updateBalanceByAddress(trs.asset.recipientAddress, -trs.asset.amount);
     }
 
-    async apply(trs: Transaction<IAssetTransfer>): Promise<Response<void>> {
-        return null;
-    }
-
-    async undo(trs: Transaction<IAssetTransfer>): Promise<Response<void>> {
-        return null;
-    }
 }
 
 export default new TransactionSendService();

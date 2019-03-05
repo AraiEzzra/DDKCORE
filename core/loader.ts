@@ -20,7 +20,7 @@ class Loader {
     public async start() {
 
         await this.transactionWarmup(this.limit);
-        await this.roundWarmup(this.limit);
+        await this.roundWarmUp(this.limit);
         await BlockService.applyGenesisBlock(config.genesisBlock);
         initControllers();
         messageON('WARM_UP_FINISHED', null);
@@ -52,7 +52,7 @@ class Loader {
         return;
     }
 
-    private async roundWarmup(limit) {
+    private async roundWarmUp(limit) {
         let offset: number = 0;
 
         do {
@@ -63,7 +63,7 @@ class Loader {
             }
 
             for (let round of roundsBatch) {
-                const {data} = RoundService.sumRound(round);
+                const data = RoundService.sumRound(round);
                 RoundService.applyUnconfirmed(data);
             }
 

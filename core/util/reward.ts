@@ -59,6 +59,7 @@ export function getAirdropReward(
     sender: Account,
     amount: number,
     transactionType: TransactionType): IAirdropAsset {
+
     const result: IAirdropAsset = {
         sponsors: {}
     };
@@ -153,7 +154,7 @@ function sendAirdropReward(trs: Transaction<IAssetVote>): void {
         if (rewardAmount === 0) {
             continue;
         }
-        
+
         AccountRepo.updateBalanceByAddress(parseInt(sponsorAddress, 10), rewardAmount);
         AccountRepo.updateBalanceByAddress(config.config.forging.totalSupplyAccount, -rewardAmount);
     }
