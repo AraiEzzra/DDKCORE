@@ -6,15 +6,19 @@ if [ "$MODE" == "WATCH" ]; then
     if [ ! -d node_modules ]; then
         npm install
     fi
-    nc -lk 5000 & npm run watch:core
+    nc -lk 5000 & npm run watch
 else
-    if [ "$MODE" == "TEST" ]; then
-        wait-port "$HOST:${PORT:-7007}"
-        npm run test
-    else
-        wait-port "$DB_HOST:${DB_PORT:-5432}" && \
-        wait-port "$WATCHER_HOST:$WATCHER_PORT" && \
-        sleep 5
-        npm run server:core
-    fi
+    wait-port "$DB_HOST:${DB_PORT:-5432}" && \
+    wait-port "$WATCHER_HOST:$WATCHER_PORT"
+    sleep 5
+        if [ "$MODE" == "TEST" ]; then
+            wait-port "$HOST:${PORT:-7007}"
+            npm run test
+        fi
+        if [ "$SERVICE" == "API" ]; then
+            npm run server:api
+        fi
+        if [ "$SERVICE" == "CORE" ]; then
+            npm run server:core
+        fi
 fi

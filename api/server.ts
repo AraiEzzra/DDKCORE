@@ -1,27 +1,30 @@
-import { Application } from 'express';
-import * as bodyParser from 'body-parser';
-import { logger } from 'shared/util/logger';
-import { Loader } from './loader';
+const port = process.env.API_PORT || 7008;
+const socketConfig = {
+    serveClient: false,
+    wsEngine: 'ws',
+    pingTimeout: 30000,
+    pingInterval: 30000,
+};
+const io: SocketIO.Server = require('socket.io')(port, socketConfig);
 
-const env = process.env;
+io.on('connect', onConnect);
 
-const preconfiguration: Array<Promise<any>> = [];
+function onConnect(socket: any) {
+    console.log('Socket %s connected', JSON.stringify(socket.handshake));
 
-const DEFAULT_PORT = 3001;
-const port = env.SERVER_CORE ? env.SERVER_CORE : DEFAULT_PORT;
-
-const app: Application = require('express')();
-app.use(bodyParser.json());
-
-const loader = new Loader();
-preconfiguration.push(loader.initRoute(app));
-
-Promise.all(preconfiguration)
-    .then(() => {
-        app.listen(port, () => {
-            logger.info('API Server is ready');
-        });
-    })
-    .catch(err => {
-        logger.error('Failed to start the server API. \n', err);
+    socket.on('api_message', function (json: string) {
+        onApiMessage(json, socket);
     });
+
+    socket.on('core_message', function (json: string) {
+        onCoreMessage(json, socket);
+    });
+}
+
+async function onCoreMessage(json: string, socket: any) {
+    console.log('CORE MESSAGE:', JSON.stringify(json));
+}
+
+async function onApiMessage(json: string, socket: any) {
+    console.log('API MESSAGE:', JSON.stringify(json));
+}
