@@ -1,24 +1,16 @@
-import bodyParser = require('body-parser');
-
-const app = require('express')();
-const server = require('http').createServer(app);
-const redis = require('redis');
-const io = require('socket.io')(server, {
+const port = process.env.API_PORT || 7008;
+const socketConfig = {
     serveClient: false,
     wsEngine: 'ws',
     pingTimeout: 30000,
     pingInterval: 30000,
-});
-const cors = require('cors');
-const port = process.env.API_PORT || 4601;
+};
+const io: SocketIO.Server = require('socket.io')(port, socketConfig);
 
-app.use(bodyParser.json());
-app.use(cors());
 io.on('connect', onConnect);
-server.listen(port, () => console.log('API server is listening on port ' + port));
 
 function onConnect(socket: any) {
-    console.log('Socket %s connected', socket);
+    console.log('Socket %s connected', JSON.stringify(socket.handshake));
 
     socket.on('api_message', function (json: string) {
         onApiMessage(json, socket);
@@ -30,9 +22,9 @@ function onConnect(socket: any) {
 }
 
 async function onCoreMessage(json: string, socket: any) {
-    console.log('onMessage here');
+    console.log('CORE MESSAGE:', JSON.stringify(json));
 }
 
 async function onApiMessage(json: string, socket: any) {
-    console.log('onMessage here');
+    console.log('API MESSAGE:', JSON.stringify(json));
 }
