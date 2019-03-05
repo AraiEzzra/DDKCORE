@@ -1,5 +1,5 @@
 import { IAssetService } from 'core/service/transaction';
-import { IAssetDelegate, Transaction } from 'shared/model/transaction';
+import {IAssetDelegate, Transaction, TransactionModel} from 'shared/model/transaction';
 import { Account } from 'shared/model/account';
 import { Delegate } from 'shared/model/delegate';
 import DelegateRepo from 'core/repository/delegate';
@@ -9,16 +9,8 @@ import config from 'shared/util/config';
 
 class TransactionDelegateService implements IAssetService<IAssetDelegate> {
 
-    create(trs: Transaction<IAssetDelegate>, data: IAssetDelegate): IAssetDelegate {
-        const asset: IAssetDelegate = {
-            username: data.username,
-            url: data.url
-        };
-
-        if (asset.username) {
-            asset.username = asset.username.toLowerCase().trim();
-        }
-        return asset;
+    create(trs: TransactionModel<IAssetDelegate>): void {
+        trs.asset.username = trs.asset.username.toLowerCase().trim();
     }
 
     getBytes(trs: Transaction<IAssetDelegate>): Buffer {

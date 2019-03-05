@@ -1,5 +1,5 @@
 import { IAssetService } from 'core/service/transaction';
-import { IAirdropAsset, IAssetVote, Transaction } from 'shared/model/transaction';
+import {IAirdropAsset, IAssetVote, Transaction, TransactionModel} from 'shared/model/transaction';
 import { Account, Stake } from 'shared/model/account';
 import Response from 'shared/model/response';
 import AccountRepo from 'core/repository/account';
@@ -16,17 +16,17 @@ import DelegateRepo from 'core/repository/delegate';
 
 class TransactionVoteService implements IAssetService<IAssetVote> {
 
-    create(trs: Transaction<IAssetVote>, data: IAssetVote ): IAssetVote {
+    create(trs: TransactionModel<IAssetVote>): void {
         const sender: Account = AccountRepo.getByAddress(trs.senderAddress);
         let isDownVote: boolean = false;
-        if (data.votes && data.votes[0]) {
-            isDownVote = data.votes[0][0] === '-';
+        if (trs.asset.votes && trs.asset.votes[0]) {
+            isDownVote = trs.asset.votes[0][0] === '-';
         }
         const totals: { reward: number, unstake: number} = calculateTotalRewardAndUnstake(sender, isDownVote);
         const airdropReward: IAirdropAsset = getAirdropReward(sender, totals.reward, trs.type);
 
-        return {
-            votes: data.votes,
+        trs.asset = {
+            votes: trs.asset.votes,
             reward: totals.reward || 0,
             unstake: totals.unstake || 0,
             airdropReward: airdropReward

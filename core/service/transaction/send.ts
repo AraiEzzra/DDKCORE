@@ -1,5 +1,5 @@
 import { IAssetService } from '../transaction';
-import { IAsset } from 'shared/model/transaction';
+import {IAsset, TransactionModel} from 'shared/model/transaction';
 import { IAssetTransfer, Transaction } from 'shared/model/transaction';
 import { Account } from 'shared/model/account';
 import Response from 'shared/model/response';
@@ -9,7 +9,7 @@ import { TOTAL_PERCENTAGE } from 'core/util/const';
 
 class TransactionSendService implements IAssetService<IAssetTransfer> {
 
-    create(trs: Transaction<IAssetTransfer>): IAssetTransfer {
+    create(trs: TransactionModel<IAssetTransfer>): void {
         return;
     }
 

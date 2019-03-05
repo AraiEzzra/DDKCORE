@@ -2,13 +2,14 @@ import crypto from 'crypto';
 import cryptoBrowserify from 'crypto-browserify';
 
 import {IAsset, IAssetTransfer, Transaction, TransactionModel, TransactionType} from 'shared/model/transaction';
-import { IFunctionResponse, ITableObject } from 'core/util/common';
+import { IFunctionResponse } from 'core/util/common';
 import ResponseEntity from 'shared/model/response';
 import { ed, IKeyPair } from 'shared/util/ed';
 import { Account, Address } from 'shared/model/account';
 import config from 'shared/util/config';
 import AccountRepo from 'core/repository/account';
 import TransactionRepo from 'core/repository/transaction';
+import TransactionPGRepo from 'core/repository/transaction/pg';
 import TransactionPool from 'core/service/transactionPool';
 import TransactionQueue from 'core/service/transactionQueue';
 import { transactionSortFunc, getTransactionServiceByType, TRANSACTION_BUFFER_SIZE } from 'core/util/transaction';
@@ -18,7 +19,7 @@ import { SALT_LENGTH } from 'core/util/const';
 export interface IAssetService<T extends IAsset> {
     getBytes(trs: Transaction<T>): Buffer;
 
-    create(trs: Transaction<T>, data?: T): void;
+    create(trs: TransactionModel<T>): void;
 
     validate(trs: TransactionModel<T>, sender: Account): ResponseEntity<void>;
     verifyUnconfirmed(trs: Transaction<T>, sender: Account): ResponseEntity<void>;
@@ -71,9 +72,6 @@ export interface ITransactionService<T extends IAsset> {
 
     normalize(trs: Transaction<T>): ResponseEntity<Transaction<T>>; // to controller
 
-    dbSave(trs: Transaction<T>): Array<ITableObject>; // Fixme
-    dbRead(fullBlockRow: Transaction<T>): Transaction<T>;
-
     popFromPool(limit: number): Promise<Array<Transaction<IAsset>>>;
 
     returnToQueueConflictedTransactionFromPool(transactions): Promise<ResponseEntity<void>>;
@@ -85,6 +83,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
     }
 
     async apply(trs: Transaction<T>, sender: Account): Promise<ResponseEntity<void>> {
+        await TransactionPGRepo.saveOrUpdate(trs);
         return new ResponseEntity<void>();
     }
 
@@ -184,14 +183,10 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         }
     }
 
-    create(data: Transaction<T>, keyPair: IKeyPair): ResponseEntity<Transaction<IAsset>> {
+    create(data: TransactionModel<T>, keyPair: IKeyPair): ResponseEntity<Transaction<IAsset>> {
         const errors = [];
         if (!TransactionType[data.type]) {
             errors.push(`Unknown transaction type ${data.type}`);
-        }
-
-        if (!data.senderAddress) {
-            errors.push('Invalid sender address');
         }
 
         const sender = AccountRepo.getByPublicKey(data.senderPublicKey);
@@ -208,10 +203,8 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
 
         const trs = new Transaction<T>({
             blockId: data.blockId,
-            senderPublicKey: data.senderPublicKey,
-            senderAddress: data.senderAddress,
+            senderPublicKey: sender.publicKey,
             type: data.type,
-            fee: service.calculateFee(data, sender),
             salt: cryptoBrowserify.randomBytes(SALT_LENGTH).toString('hex'),
             asset: data.asset
         });
@@ -220,14 +213,6 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         trs.id = this.getId(trs);
 
         return new ResponseEntity({ data: trs });
-    }
-
-    dbRead(fullBlockRow: any): Transaction<T> {
-        return undefined;
-    }
-
-    dbSave(trs: Transaction<T>): Array<ITableObject> {
-        return undefined;
     }
 
     getById(): any {
@@ -278,9 +263,6 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
     getVotesById(): any {
     }
 
-    list(): any {
-    }
-
     normalize(trs: Transaction<T>): ResponseEntity<Transaction<T>> {
         return new ResponseEntity<Transaction<T>>({ data: trs });
     }
@@ -290,6 +272,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
     }
 
     async undo(trs: Transaction<T>, sender: Account): Promise<ResponseEntity<void>> {
+        await TransactionPGRepo.deleteById(trs.id);
         return new ResponseEntity<void>();
     }
 

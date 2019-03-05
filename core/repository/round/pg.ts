@@ -16,7 +16,6 @@ class RoundPGRepository implements IRoundPGRepository {
     ];
     private readonly columnSet = new pgpE.helpers.ColumnSet(this.tableFields, {table: this.tableName});
 
-
     serialize(round: Round): RawRound {
         return {
             height_start: round.startHeight,
@@ -35,11 +34,17 @@ class RoundPGRepository implements IRoundPGRepository {
 
     async getByHeight(height: number): Promise<Round> {
         const rawRound: RawRound = await db.oneOrNone(queries.getByHeight, { height });
+        if (!rawRound) {
+            return;
+        }
         return this.deserialize(rawRound);
     }
 
     async getMany(offset: number, limit?: number): Promise<Array<Round>> {
         const rawRounds: Array<RawRound> = await db.manyOrNone(queries.getMany(limit), { offset, limit });
+        if (!rawRounds) {
+            return;
+        }
         const rounds: Array<Round> = rawRounds.map(rawRound => this.deserialize(rawRound));
         return rounds;
     }
@@ -55,6 +60,10 @@ class RoundPGRepository implements IRoundPGRepository {
             this.columnSet.assignColumns({from: 'EXCLUDED', skip: ['height_start', 'height_finish']});
         await db.none(query);
         return null;
+    }
+
+    async delete(round: Round): Promise<void> {
+        await db.none(queries.deleteByStartHeight, {height: round.startHeight});
     }
 }
 
