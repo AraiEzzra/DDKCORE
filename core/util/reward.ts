@@ -20,7 +20,7 @@ class StakeReward {
         return location;
     }
 
-    calcReward = function (height) {
+    calcReward(height) {
         return this.milestones[this.calcMilestone(height)];
     };
 }

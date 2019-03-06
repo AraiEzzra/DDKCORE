@@ -2,35 +2,35 @@ import Response from 'shared/model/response';
 import { Block } from 'shared/model/block';
 
 export interface IDelegateService {
-    fork(block: Block, cause: string): Promise<Response<void>>;
+    fork(block: Block, cause: string): Response<void>;
 
-    validateBlockSlotAgainstPreviousRound(block: Block): Promise<Response<void>>;
+    validateBlockSlotAgainstPreviousRound(block: Block): Response<void>;
 
-    validateBlockSlot(block: Block, delegatesPublicKeys: string[]): Promise<Response<void>>;
+    validateBlockSlot(block: Block, delegatesPublicKeys: string[]): Response<void>;
 
-    loadDelegates(): Promise<Response<void>>;
+    loadDelegates(): Response<void>;
 
-    forge(): Promise<Response<void>>;
+    forge(): Response<void>;
 }
 
 export class DelegateService implements IDelegateService {
-    public async fork(block: Block, cause: string): Promise<Response<void>> {
+    public fork(block: Block, cause: string): Response<void> {
         return new Response({});
     }
 
-    public async forge(): Promise<Response<void>> {
+    public forge(): Response<void> {
         return new Response({});
     }
 
-    public async validateBlockSlot(block: Block, delegatesPublicKeys?: string[]): Promise<Response<void>> {
+    public validateBlockSlot(block: Block, delegatesPublicKeys?: string[]): Response<void> {
         return new Response({});
     }
 
-    public async validateBlockSlotAgainstPreviousRound(block: Block): Promise<Response<void>> {
+    public validateBlockSlotAgainstPreviousRound(block: Block): Response<void> {
         return new Response({});
     }
 
-    public async loadDelegates(): Promise<Response<void>> {
+    public loadDelegates(): Response<void> {
         return new Response({});
     }
 }

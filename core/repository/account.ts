@@ -1,24 +1,24 @@
-import { Account, AccountModel, Address } from 'shared/model/account';
+import { Account, Address, PublicKey } from 'shared/model/account';
 import Response from 'shared/model/response';
-import {Delegate} from 'shared/model/delegate';
+import { Delegate } from 'shared/model/delegate';
+import { getAddressByPublicKey } from 'shared/util/account';
 
 class AccountRepo {
     private memoryAccountsByAddress: { [address: number]: Account } = {};
-    private memoryAccountsByPublicKey: { [publicKey: string]: Account } = {};
 
-    public add(account: AccountModel): Response<Account> {
-        const accountModel = new Account(account);
-        this.memoryAccountsByAddress[account.address] = accountModel;
-        this.memoryAccountsByPublicKey[account.publicKey] = accountModel;
-        return new Response<Account>({ data: accountModel });
+    public add(accountData: { address: Address, publicKey: PublicKey }): Account {
+        const accountModel = new Account(accountData);
+        this.memoryAccountsByAddress[accountData.address] = accountModel;
+        return accountModel;
     }
 
     getByAddress(accountAddress: number): Account {
-        return this.memoryAccountsByAddress[accountAddress].getCopy() || null;
+        return this.memoryAccountsByAddress[accountAddress] || null;
     }
 
+    /** TODO refactor to getByAddress */
     getByPublicKey(accountPublicKey: string): Account {
-        return this.memoryAccountsByPublicKey[accountPublicKey].getCopy() || null;
+        return this.memoryAccountsByAddress[getAddressByPublicKey(accountPublicKey)] || null;
     }
 
     // should be called rarely
@@ -30,17 +30,17 @@ class AccountRepo {
 
     delete(account: Account): Response<void> {
         delete(this.memoryAccountsByAddress[account.address]);
-        delete(this.memoryAccountsByPublicKey[account.publicKey]);
         return new Response<void>();
     }
 
     // example: such functions should be handlers and depends on workflows
     updateBalance(account: Account, balance: number): void {
-        this.memoryAccountsByPublicKey[account.publicKey].actualBalance = balance;
+        this.memoryAccountsByAddress[account.address].actualBalance = balance;
     }
 
-    updateBalanceByPublicKey(publicKey: string, difference: number): void {
-        this.memoryAccountsByPublicKey[publicKey].actualBalance += difference;
+    /** TODO refactor to getByAddress */
+    updateBalanceByPublicKey(publicKey: PublicKey, difference: number): void {
+        this.memoryAccountsByAddress[getAddressByPublicKey(publicKey)].actualBalance += difference;
     }
 
     updateBalanceByAddress(address: Address, difference: number): void {

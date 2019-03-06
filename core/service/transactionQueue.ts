@@ -10,8 +10,6 @@ import AccountRepository from 'core/repository/account';
 import ResponseEntity from 'shared/model/response';
 
 export interface ITransactionQueueService<T extends Object> {
-    reshuffle(): ResponseEntity<void>;
-
     getLockStatus(): boolean;
 
     lock(): void;
@@ -22,7 +20,7 @@ export interface ITransactionQueueService<T extends Object> {
 
     pushInConflictedQueue(trs: Transaction<T>): void;
 
-    reshuffle();
+    reshuffle(): void;
 
     process(): Promise<void>;
 
@@ -77,12 +75,10 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
     }
 
     // TODO can be optimized if check senderId and recipientId
-    reshuffle(): ResponseEntity<void> {
+    reshuffle(): void {
         while (this.getSize().conflictedQueue > 0) {
             this.push(this.conflictedQueue.pop().transaction);
         }
-
-        return new ResponseEntity<void>();
     }
 
     async process(): Promise<void> {
@@ -105,7 +101,13 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
         }
 
         // const sender = await getOrCreateAccount(trs.senderPublicKey);
-        const sender: Account = AccountRepository.getByPublicKey(trs.senderPublicKey);
+        let sender: Account = AccountRepository.getByPublicKey(trs.senderPublicKey);
+        if (!sender) {
+            sender = AccountRepository.add({
+                address: trs.senderAddress,
+                publicKey: trs.senderPublicKey
+            });
+        }
         const verifyStatus = await TransactionDispatcher.verifyUnconfirmed(trs, sender, true);
 
         if (!verifyStatus.success) {

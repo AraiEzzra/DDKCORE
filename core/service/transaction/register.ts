@@ -18,10 +18,6 @@ class TransactionRegisterService implements IAssetService<IAssetRegister> {
         return buff;
     }
 
-    verifyUnconfirmed(trs: Transaction<IAssetRegister>, sender: Account): Response<void> {
-        return new Response();
-    }
-
     validate(trs: Transaction<IAssetRegister>, sender: Account): Response<void> {
         const errors = [];
 
@@ -32,34 +28,26 @@ class TransactionRegisterService implements IAssetService<IAssetRegister> {
         return new Response({ errors });
     }
 
+    verifyUnconfirmed(trs: Transaction<IAssetRegister>, sender: Account): Response<void> {
+        return new Response();
+    }
+
     calculateFee(trs: Transaction<IAssetRegister>, sender: Account): number {
         return 0;
     }
 
-    calculateUndoUnconfirmed(trs: Transaction<IAssetRegister>, sender: Account): void {
-    }
-
-    applyUnconfirmed(trs: Transaction<IAssetRegister>, sender: Account): Response<void> {
+    applyUnconfirmed(trs: Transaction<IAssetRegister>, sender: Account): void {
         const referralAccount: Account = AccountRepo.getByAddress(trs.asset.referral);
         const referrals: Array<Account> =
             referralAccount.referrals.slice(0, config.constants.airdrop.maxReferralCount - 1);
-        const addAccountResponse: Response<Account> =
-            AccountRepo.add({address: trs.senderAddress, publicKey: trs.senderPublicKey});
-        if (!addAccountResponse.success) {
-            return new Response<void>({ errors: [...addAccountResponse.errors, 'Can\'t add account'] });
-        }
-        const targetAccount = addAccountResponse.data;
-        const updateResponse: Response<void> =
-            AccountRepo.updateReferralByAddress(targetAccount.address, [referralAccount, ...referrals]);
-        if (!updateResponse.success) {
-            return new Response<void>({ errors: [...addAccountResponse.errors, 'Can\'t update account referrals'] });
-        }
-        return new Response<void>();
+
+        const targetAccount: Account = AccountRepo.add({ address: trs.senderAddress, publicKey: trs.senderPublicKey });
+        AccountRepo.updateReferralByAddress(targetAccount.address, [referralAccount, ...referrals]);
     }
 
-    undoUnconfirmed(trs: Transaction<IAssetRegister>, sender: Account): Response<void> {
+    undoUnconfirmed(trs: Transaction<IAssetRegister>, sender: Account): void {
+        // TODO strange logic for not referral account
         AccountRepo.delete(sender);
-        return new Response<void>();
     }
 
 }

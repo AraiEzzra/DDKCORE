@@ -4,7 +4,7 @@ import { Peer } from 'shared/model/peer';
 import { messageON } from 'shared/util/bus';
 import { logger } from 'shared/util/logger';
 import io from 'socket.io-client';
-import PeerRepository from 'core/repository/peer';
+import PeerRepository, { BLACK_LIST, TRUSTED_PEERS } from 'core/repository/peer';
 // TODO remove http
 const server = require('http').createServer();
 const ioServer = require('socket.io')(server, {
@@ -12,8 +12,6 @@ const ioServer = require('socket.io')(server, {
     wsEngine: 'ws',
 });
 const env = require('../../config/env').default;
-import { TRUSTED_PEERS } from 'core/repository/peer';
-import { BLACK_LIST } from 'core/repository/peer';
 
 server.listen(
     env.serverPort,
