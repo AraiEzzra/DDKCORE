@@ -1,5 +1,5 @@
 import Response from 'shared/model/response';
-import {BlockService} from 'api/service/block';
+import {BlockService} from 'api_backlog/service/block';
 
 import config from 'shared/util/config';
 

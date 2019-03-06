@@ -34,8 +34,8 @@ interface IPeerRequest {
 }
 
 import { Peer } from 'shared/model/peer';
-import PeerService from 'api/service/peer';
-import { Controller, GET } from "api/util/http_decorator";
+import PeerService from 'api_backlog/service/peer';
+import { Controller, GET } from "api_backlog/util/http_decorator";
 
 @Controller('/peers')
 class PeerController {
