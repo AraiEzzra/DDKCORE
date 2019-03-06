@@ -11,20 +11,11 @@ const publicKeys = [
     '9b2ba1c2c3bf8a663f6ccd5a72756d71a1985f942d1c9c8ae7c38c4f9b1b8a75',
 ];
 
-export const generateAccounts = () => {
-    publicKeys.forEach((publicKey: any) => generateAccount(publicKey));
+export const generateAccounts = (): Array<AccountModel> => {
+    return publicKeys.map((publicKey: any) => generateAccount(publicKey));
 };
 
-export const generateAccount = (publicKey: string) => {
+export const generateAccount = (publicKey: string): AccountModel => {
     const address = getAddressByPublicKey(publicKey);
     return new AccountModel({ address: address, publicKey: publicKey });
 };
-
-// address: Address;
-// publicKey: PublicKey;
-// secondPublicKey?: PublicKey;
-// actualBalance?: number;
-// delegate?: Delegate;
-// votes?: Array<PublicKey>;
-// referrals?: Array<Account>;
-// stakes?: Array<Stake>;

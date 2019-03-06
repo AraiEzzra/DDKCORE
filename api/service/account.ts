@@ -1,18 +1,32 @@
+import { generateAccounts } from 'api/mock/account';
+import { AccountModel } from 'shared/model/account';
+import ResponseEntity from 'shared/model/response';
+
 export interface AccountService {
 
-    getAccountByAddress();
+    getAccountByAddress(address: number): ResponseEntity<AccountModel>;
 
-    getAccountByPublicKey();
-
-}
-
-export class AccountServiceImpl implements AccountService{
-
-    getAccountByAddress() {
-
-    }
-
-    getAccountByPublicKey() {
-    }
+    getAccountByPublicKey(publicKey: string): ResponseEntity<AccountModel>;
 
 }
+
+export class AccountServiceImpl implements AccountService {
+
+    private accounts: Array<AccountModel>; // mock for wallet
+
+    constructor() {
+        this.accounts = generateAccounts();
+    }
+
+    getAccountByAddress(address: number): ResponseEntity<AccountModel> {
+        const account = this.accounts.find((account: any) => account.address == address);
+        return new ResponseEntity({data: account})
+    }
+
+    getAccountByPublicKey(publicKey: string): ResponseEntity<AccountModel> {
+        const account = this.accounts.find((account: AccountModel) => account.publicKey == publicKey);
+        return new ResponseEntity({data: account})
+    }
+}
+
+export default new AccountServiceImpl();
