@@ -1,7 +1,7 @@
 import { Filter } from 'shared/model/types';
 import { Reward } from 'shared/model/reward';
-import { generateRewards } from 'api/mock/reward';
 import ResponseEntity from 'shared/model/response';
+import RewardRepisotory from 'shared/repository/reward';
 
 interface RewardService {
     getRewardByAddress(address: number, filter: Filter): ResponseEntity<Array<Reward>>;
@@ -10,7 +10,8 @@ interface RewardService {
 export class RewardServiceImpl implements RewardService {
 
     getRewardByAddress(address: number, filter: Filter): ResponseEntity<Array<Reward>> {
-        return new ResponseEntity<Array<Reward>>({data: generateRewards()});
+        const rewards = RewardRepisotory.getRewardByAddress(address, filter);
+        return new ResponseEntity({ data: rewards });
     }
 }
 

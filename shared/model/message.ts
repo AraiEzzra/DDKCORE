@@ -14,10 +14,10 @@ export class MessageModel {
     };
     public body: Object;
 
-    constructor(type: MessageType, code: string, body: Object) {
+    constructor(type: MessageType, code: string, body: Object, id? : string) {
         this.code = code;
         this.headers = {
-            id: uuidv4(),
+            id: id || uuidv4(),
             type,
         };
         this.body = body;

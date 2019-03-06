@@ -26,6 +26,6 @@ async function onApiMessage(data: MessageModel, socket: any) {
     const { headers, code, body } = data;
     const result = Middleware.processRequest(code, body);
 
-    const response = new MessageModel(MessageType.RESPONSE, code, result);
+    const response = new MessageModel(MessageType.RESPONSE, code, result, data.headers.id);
     socket.emit('message', response);
 }
