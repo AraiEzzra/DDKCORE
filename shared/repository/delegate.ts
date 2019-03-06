@@ -17,7 +17,7 @@ export class DelegateRepository implements IDelegateRepo {
     async getDelegate(publicKey: string, username: string): Promise<Response<{ delegate: Delegate }>> {
         return new Response({
             data: {
-                delegate: new Delegate(),
+                delegate: new Delegate({ username }),
             }
         });
     }

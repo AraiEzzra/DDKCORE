@@ -4,6 +4,8 @@ import TransactionSendService from '../service/transaction/send';
 import TransactionRegisterService from '../service/transaction/register';
 import TransactionVoteService from '../service/transaction/vote';
 import TransactionDelegateService from '../service/transaction/delegate';
+import TransactionStakeService from 'core/service/transaction/stake';
+
 import BUFFER from 'core/util/buffer';
 
 export const transactionSortFunc = (a: Transaction<any>, b: Transaction<any>): number => {
@@ -38,6 +40,8 @@ export const getTransactionServiceByType = (type: TransactionType): IAssetServic
             return TransactionVoteService;
         case TransactionType.DELEGATE:
             return TransactionDelegateService;
+        case TransactionType.STAKE:
+            return TransactionStakeService;
         default:
             return null;
     }

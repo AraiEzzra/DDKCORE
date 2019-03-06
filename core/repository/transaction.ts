@@ -1,3 +1,4 @@
+const Inserts = require('../../backlog/helpers/inserts.js');
 import db from 'shared/driver/db';
 import { Transaction, IAsset } from 'shared/model/transaction';
 import { ITransactionRepository as ITransactionRepositoryShared } from 'shared/repository/transaction';

@@ -1,5 +1,5 @@
 import { IAssetService } from 'core/service/transaction';
-import { IAirdropAsset, IAssetVote, Transaction } from 'shared/model/transaction';
+import {IAirdropAsset, IAssetVote, Transaction, TransactionModel} from 'shared/model/transaction';
 import { Account, Stake } from 'shared/model/account';
 import Response from 'shared/model/response';
 import AccountRepo from 'core/repository/account';
@@ -16,18 +16,17 @@ import DelegateRepo from 'core/repository/delegate';
 
 class TransactionVoteService implements IAssetService<IAssetVote> {
 
-    create(trs: Transaction<IAssetVote>, data: IAssetVote ): IAssetVote {
+    create(trs: TransactionModel<IAssetVote>): void {
         const sender: Account = AccountRepo.getByAddress(trs.senderAddress);
         let isDownVote: boolean = false;
-        if (data.votes && data.votes[0]) {
-            isDownVote = data.votes[0][0] === '-';
+        if (trs.asset.votes && trs.asset.votes[0]) {
+            isDownVote = trs.asset.votes[0][0] === '-';
         }
         const totals: { reward: number, unstake: number} = calculateTotalRewardAndUnstake(sender, isDownVote);
         const airdropReward: IAirdropAsset = getAirdropReward(sender, totals.reward, trs.type);
 
-        trs.recipientAddress = sender.address;
-        return {
-            votes: data.votes,
+        trs.asset = {
+            votes: trs.asset.votes,
             reward: totals.reward || 0,
             unstake: totals.unstake || 0,
             airdropReward: airdropReward
@@ -103,10 +102,6 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
 
     validate(trs: Transaction<IAssetVote>, sender: Account): Response<void> {
         const errors: Array<string> = [];
-
-        if (trs.recipientAddress !== trs.senderAddress) {
-            errors.push('Invalid recipient');
-        }
 
         if (!trs.asset || !trs.asset.votes) {
             errors.push('Invalid transaction asset');
@@ -262,15 +257,6 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
             }
         });
         undoFrozeOrdersRewardAndUnstake(trs);
-    }
-
-    async apply(trs: Transaction<IAssetVote>, sender: Account): Promise<Response<void>> {
-        // todo: check if should change account.votes?
-        return new Response<void>();
-    }
-
-    async undo(trs: Transaction<IAssetVote>, sender: Account): Promise<Response<void>> {
-        return new Response<void>();
     }
 
     calculateUndoUnconfirmed(trs: Transaction<IAssetVote>, sender: Account): void {

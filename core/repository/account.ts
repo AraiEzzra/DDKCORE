@@ -35,19 +35,16 @@ class AccountRepo {
     }
 
     // example: such functions should be handlers and depends on workflows
-    updateBalance(account: Account, balance: number): Response<void> {
+    updateBalance(account: Account, balance: number): void {
         this.memoryAccountsByPublicKey[account.publicKey].actualBalance = balance;
-        return new Response<void>();
     }
 
-    updateBalanceByPublicKey(publicKey: string, difference: number): Response<void> {
+    updateBalanceByPublicKey(publicKey: string, difference: number): void {
         this.memoryAccountsByPublicKey[publicKey].actualBalance += difference;
-        return new Response<void>();
     }
 
-    updateBalanceByAddress(address: Address, difference: number): Response<void> {
+    updateBalanceByAddress(address: Address, difference: number): void {
         this.memoryAccountsByAddress[address].actualBalance += difference;
-        return new Response<void>();
     }
 
     attachDelegate(account: Account, delegate: Delegate): Response<void> {

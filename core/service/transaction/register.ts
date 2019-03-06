@@ -1,5 +1,5 @@
 import { IAssetService } from 'core/service/transaction';
-import { IAssetRegister, Transaction } from 'shared/model/transaction';
+import {IAssetRegister, Transaction, TransactionModel} from 'shared/model/transaction';
 import { Account } from 'shared/model/account';
 import Response from 'shared/model/response';
 import AccountRepo from 'core/repository/account';
@@ -8,10 +8,8 @@ import BUFFER from 'core/util/buffer';
 
 class TransactionRegisterService implements IAssetService<IAssetRegister> {
 
-    create(trs: Transaction<IAssetRegister>, data: IAssetRegister ): IAssetRegister {
-        return {
-            referral: data.referral
-        };
+    create(trs: TransactionModel<IAssetRegister>): void {
+
     }
 
     getBytes(trs: Transaction<IAssetRegister>): Buffer {
@@ -64,13 +62,6 @@ class TransactionRegisterService implements IAssetService<IAssetRegister> {
         return new Response<void>();
     }
 
-    async apply(trs: Transaction<IAssetRegister>): Promise<Response<void>> {
-        return new Response<void>();
-    }
-
-    async undo(trs: Transaction<IAssetRegister>): Promise<Response<void>> {
-        return new Response<void>();
-    }
 }
 
 export default new TransactionRegisterService();

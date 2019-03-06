@@ -1,7 +1,5 @@
-const constants = { // todo config!
-    epochTime: new Date(Date.UTC(2016, 0, 1, 17, 0, 0, 0)),
-    activeDelegates: 11
-};
+import config from 'shared/util/config';
+import { SECOND } from 'core/util/const';
 
 type EpochTime = number;
 
@@ -16,7 +14,7 @@ class SlotService {
      * @returns {number} epochTime from constants.
      */
     private beginEpochTime(): Date {
-        return constants.epochTime;
+        return new Date(config.constants.epochTime);
     }
 
     /**
@@ -27,7 +25,7 @@ class SlotService {
         const d = this.beginEpochTime();
         const t = d.getTime();
 
-        return Math.floor((time - t) / 1000);
+        return Math.floor((time - t) / SECOND);
     }
 
     /**
@@ -46,9 +44,9 @@ class SlotService {
      */
     public getRealTime(epochTime: EpochTime = this.getTime()): number {
         const d = this.beginEpochTime();
-        const t = Math.floor(d.getTime() / 1000) * 1000;
+        const t = Math.floor(d.getTime() / SECOND) * SECOND;
 
-        return t + epochTime * 1000;
+        return t + epochTime * SECOND;
     }
 
     /**
@@ -86,11 +84,11 @@ class SlotService {
      * // todo mb drop it ?
      */
     public getLastSlot(nextSlot: number): number {
-        return nextSlot + constants.activeDelegates;
+        return nextSlot + config.constants.activeDelegates;
     }
 
     public roundTime(date: Date): number {
-        return Math.floor(date.getTime() / 1000) * 1000;
+        return Math.floor(date.getTime() / SECOND) * SECOND;
     }
 }
 
