@@ -1,4 +1,5 @@
 import Middleware from 'api/middleware/socket';
+import { MessageModel, MessageType } from 'shared/model/message';
 
 const port = process.env.API_PORT || 7008;
 const socketConfig = {
@@ -14,31 +15,17 @@ io.on('connect', onConnect);
 function onConnect(socket: any) {
     console.log('Socket %s connected', JSON.stringify(socket.handshake));
 
-    socket.on('api_message', function (json: string) {
+    socket.on('message', function (json: any) {
         onApiMessage(json, socket);
     });
-
-    socket.on('core_message', function (json: string) {
-        onCoreMessage(json, socket);
-    });
 }
 
-async function onCoreMessage(json: string, socket: any) {
-    console.log('CORE MESSAGE:', JSON.stringify(json));
+async function onApiMessage(data: MessageModel, socket: any) {
+    console.log('API MESSAGE:', data);
 
-}
+    const { headers, code, body } = data;
+    const result = Middleware.processRequest(code, body);
 
-async function onApiMessage(json: string, socket: any) {
-    console.log('API MESSAGE:', JSON.stringify(json));
-
-    const { token, code, data } = JSON.parse(json);
-    const response = Middleware.processRequest(code, data);
-
-    socket.emit(
-        'message',
-        JSON.stringify({
-            code: code + '_RESPONSE',
-            ...response,
-        }),
-    );
+    const response = new MessageModel(MessageType.RESPONSE, code, result);
+    socket.emit('message', response);
 }
