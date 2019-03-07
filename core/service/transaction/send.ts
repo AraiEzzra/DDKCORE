@@ -1,5 +1,5 @@
 import { IAssetService } from '../transaction';
-import { IAsset, TransactionModel, TransactionType } from 'shared/model/transaction';
+import { IAsset, TransactionModel } from 'shared/model/transaction';
 import { IAssetTransfer, Transaction } from 'shared/model/transaction';
 import { Account } from 'shared/model/account';
 import Response from 'shared/model/response';
@@ -16,7 +16,7 @@ class TransactionSendService implements IAssetService<IAssetTransfer> {
 
     getBytes(trs: Transaction<IAssetTransfer>): Buffer {
         const buff = Buffer.alloc(
-            BUFFER.LENGTH.INT64, // recipientAddress
+            BUFFER.LENGTH.INT64 + // recipientAddress
             BUFFER.LENGTH.INT64  // amount
         );
         let offset = BUFFER.writeUInt64LE(buff, trs.asset.recipientAddress, 0);
