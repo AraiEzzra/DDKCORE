@@ -22,7 +22,7 @@ import mainnetGenesisBlock from '../../config/mainnet/genesisBlock.json';
 interface IConstraint {
     publicKey?: string;
     airdrop?: {
-        account?: number;
+        account?: bigint;
         stakeRewardPercent?: number;
         referralPercentPerLevel?: Array<number>;
         maxReferralCount: number;
@@ -283,7 +283,7 @@ interface IConfig {
         access?: {
             whiteList?: Array<string>
         };
-        totalSupplyAccount?: number;
+        totalSupplyAccount?: bigint;
     };
     loading?: {
         verifyOnLoading?: boolean;

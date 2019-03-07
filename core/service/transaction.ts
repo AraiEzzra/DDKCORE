@@ -33,7 +33,7 @@ export interface IAssetService<T extends IAsset> {
 export interface ITransactionService<T extends IAsset> {
 
     checkSenderTransactions(
-        senderAddress: Address, verifiedTransactions: Set<string>, accountsMap: { [address: string]: Account }
+        senderAddress: Address, verifiedTransactions: Set<string>, accountsMap: Map<Address, Account>
     ): void;
 
     validate(trs: Transaction<T>, sender: Account): ResponseEntity<void>;
@@ -124,18 +124,19 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
     checkSenderTransactions(
         senderAddress: Address,
         verifiedTransactions: Set<string>,
-        accountsMap: { [p: number]: Account }
+        accountsMap: Map<Address, Account>
     ): void {
         const senderTransactions = TransactionPool.getBySenderAddress(senderAddress);
         let i = 0;
         for (const senderTrs of senderTransactions) {
             if (!verifiedTransactions.has(senderTrs.id)) {
                 let sender: Account;
-                if (accountsMap[senderAddress]) {
-                    sender = accountsMap[senderAddress];
+                if (accountsMap.has(senderAddress)) {
+                    sender = accountsMap.get(senderAddress);
                 } else {
                     sender = AccountRepo.getByAddress(senderAddress);
-                    accountsMap[sender.address] = sender.getCopy();
+                    sender = sender.getCopy();
+                    accountsMap.set(sender.address, sender);
                 }
 
                 senderTransactions.slice(i, senderTransactions.length).forEach(() => {
@@ -203,7 +204,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         service.create(data);
 
         const trs = new Transaction<T>({
-            blockId: data.blockId,
+            createdAt: data.createdAt,
             senderPublicKey: sender.publicKey,
             type: data.type,
             salt: cryptoBrowserify.randomBytes(SALT_LENGTH).toString('hex'),
@@ -292,7 +293,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             errors.push(`Missing salt`);
         }
 
-        if (!trs.createdAt) {
+        if (!trs.createdAt && trs.createdAt !== 0) {
             errors.push(`Missing creation time`);
         }
 
@@ -345,7 +346,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
 
     returnToQueueConflictedTransactionFromPool(transactions): ResponseEntity<void> {
         const verifiedTransactions: Set<string> = new Set();
-        const accountsMap: { [address: string]: Account } = {};
+        const accountsMap: Map<Address, Account> = new Map<Address, Account>();
         for (const trs of transactions) {
             this.checkSenderTransactions(trs.senderId, verifiedTransactions, accountsMap);
         }

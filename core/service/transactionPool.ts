@@ -52,8 +52,8 @@ export interface ITransactionPoolService<T extends Object> {
 class TransactionPoolService<T extends object> implements ITransactionPoolService<T> {
     private pool: { [transactionId: string]: Transaction<T> } = {};
 
-    poolByRecipient: { [recipientAddress: number]: Array<Transaction<T>> } = {};
-    poolBySender: { [senderAddress: number]: Array<Transaction<T>> } = {};
+    poolByRecipient: Map<Address, Array<Transaction<T>>> = new Map<Address, Array<Transaction<T>>>();
+    poolBySender: Map<Address, Array<Transaction<T>>> = new Map<Address, Array<Transaction<T>>>();
 
     locked: boolean = false;
 
@@ -96,11 +96,11 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
     }
 
     getByRecipientAddress(recipientAddress: Address): Array<Transaction<T>> {
-        return this.poolByRecipient[recipientAddress] || [];
+        return this.poolByRecipient.get(recipientAddress) || [];
     }
 
     getBySenderAddress(senderAddress: Address): Array<Transaction<T>> {
-        return this.poolBySender[senderAddress] || [];
+        return this.poolBySender.get(senderAddress) || [];
     }
 
     removeBySenderAddress(senderAddress: Address): Array<Transaction<T>> {
@@ -134,16 +134,16 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
         this.pool[trs.id] = trs;
         trs.status = TransactionStatus.PUT_IN_POOL;
 
-        if (!this.poolBySender[trs.senderAddress]) {
-            this.poolBySender[trs.senderAddress] = [];
+        if (!this.poolBySender.has(trs.senderAddress)) {
+            this.poolBySender.set(trs.senderAddress, []);
         }
-        this.poolBySender[trs.senderAddress].push(trs);
+        this.poolBySender.get(trs.senderAddress).push(trs);
         if (trs.type === TransactionType.SEND) {
             const asset: IAssetTransfer = <IAssetTransfer>trs.asset;
-            if (!this.poolByRecipient[asset.recipientAddress]) {
-                this.poolByRecipient[asset.recipientAddress] = [];
+            if (!this.poolByRecipient.has(asset.recipientAddress)) {
+                this.poolByRecipient.set(asset.recipientAddress, []);
             }
-            this.poolByRecipient[asset.recipientAddress].push(trs);
+            this.poolByRecipient.get(asset.recipientAddress).push(trs);
         }
 
         if (!sender) {
@@ -184,17 +184,17 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
 
         delete this.pool[trs.id];
 
-        if (this.poolBySender[trs.senderAddress] && this.poolBySender[trs.senderAddress].indexOf(trs) !== -1) {
-            this.poolBySender[trs.senderAddress].splice(this.poolBySender[trs.senderAddress].indexOf(trs), 1);
+        if (this.poolBySender.has(trs.senderAddress) && this.poolBySender.get(trs.senderAddress).indexOf(trs) !== -1) {
+            this.poolBySender.get(trs.senderAddress).splice(this.poolBySender.get(trs.senderAddress).indexOf(trs), 1);
         }
 
         if (trs.type === TransactionType.SEND) {
             const asset: IAssetTransfer = <IAssetTransfer>trs.asset;
-            if (this.poolByRecipient[asset.recipientAddress] &&
-                this.poolByRecipient[asset.recipientAddress].indexOf(trs) !== -1
+            if (this.poolByRecipient.has(asset.recipientAddress) &&
+                this.poolByRecipient.get(asset.recipientAddress).indexOf(trs) !== -1
             ) {
-                this.poolByRecipient[asset.recipientAddress]
-                    .splice(this.poolByRecipient[asset.recipientAddress].indexOf(trs), 1);
+                this.poolByRecipient.get(asset.recipientAddress)
+                    .splice(this.poolByRecipient.get(asset.recipientAddress).indexOf(trs), 1);
             }
         }
         return true;
@@ -235,8 +235,8 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
 
     isPotentialConflict(trs: Transaction<T>): boolean {
         const { senderAddress } = trs;
-        const recipientTrs = this.poolByRecipient[senderAddress] || [];
-        const senderTrs = this.poolBySender[senderAddress] || [];
+        const recipientTrs = this.poolByRecipient.get(senderAddress) || [];
+        const senderTrs = this.poolBySender.get(senderAddress) || [];
         const dependTransactions = [...recipientTrs, ...senderTrs];
 
         if (dependTransactions.length === 0) {
