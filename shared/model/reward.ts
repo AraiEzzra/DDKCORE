@@ -7,7 +7,7 @@ export class Reward {
     createdAt: Timestamp;
     sponsor: Address;
     referral: Address;
-    referralLevel: number;
+    referralLevel?: number;
     amount: number;
 
     constructor(data: Reward){

@@ -10,6 +10,11 @@ export class RewardController {
     getRewardHistory(data: getRewardHistoryProps): ResponseEntity<Array<Reward>> {
         return RewardService.getRewardByAddress(data.address, data.filter);
     }
+
+    @RPC('GET_REFERRED_USERS_REWARD')
+    getReferredUsersReward(data: getRewardHistoryProps): ResponseEntity<Array<Reward>> {
+        return RewardService.getReferredUsersReward(data.address, data.filter);
+    }
 }
 
 export default new RewardController();
