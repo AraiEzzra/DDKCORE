@@ -13,6 +13,7 @@ import { Round } from 'shared/model/round';
 import RoundPGRepository from 'core/repository/round/pg';
 import RoundService from 'core/service/round';
 import BlockService from 'core/service/block';
+import RoundRepository from 'core/repository/round';
 
 class Loader {
     private limit = 1000;
@@ -63,8 +64,10 @@ class Loader {
             }
 
             for (let round of roundsBatch) {
+                RoundRepository.setCurrentRound(round);
                 const data = RoundService.sumRound(round);
                 RoundService.applyUnconfirmed(data);
+                RoundRepository.setPrevRound(round);
             }
 
             if (roundsBatch.length < limit) {
@@ -72,7 +75,6 @@ class Loader {
             }
             offset += limit;
         } while (true);
-
     }
 }
 
