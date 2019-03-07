@@ -2,6 +2,8 @@ import { Timestamp } from 'shared/model/account';
 import { Transaction } from 'shared/model/transaction';
 import config from 'shared/util/config';
 
+export type SortBlock = number | string;
+
 export class BlockModel {
     id?: string | null = null;
     version?: number = config.constants.CURRENT_BLOCK_VERSION;

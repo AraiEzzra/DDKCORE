@@ -3,7 +3,7 @@ import { Transaction, IAsset } from 'shared/model/transaction';
 import {
     ITransactionPGRepository as ITransactionPGRepositoryShared, RawTransaction,
     TransactionsByBlockResponse
-} from 'shared/repository/transaction';
+} from 'shared/repository/transaction/transaction';
 import queries from 'core/repository/queries/transaction';
 
 export interface ITransactionPGRepository<T extends IAsset> extends ITransactionPGRepositoryShared<T> {
