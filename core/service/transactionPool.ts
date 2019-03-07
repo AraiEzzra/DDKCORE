@@ -107,6 +107,7 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
             this.poolBySender.set(trs.senderAddress, []);
         }
         this.poolBySender.get(trs.senderAddress).push(trs);
+
         if (trs.type === TransactionType.SEND) {
             const asset: IAssetTransfer = <IAssetTransfer>trs.asset;
             if (!this.poolByRecipient.has(asset.recipientAddress)) {

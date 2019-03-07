@@ -32,7 +32,7 @@ export interface IAssetService<T extends IAsset> {
     verifyUnconfirmed(trs: Transaction<T>, sender: Account): ResponseEntity<void>;
 
     applyUnconfirmed(trs: Transaction<T>, sender: Account): void;
-    undoUnconfirmed(trs: Transaction<T>, sender: Account): void;
+    undoUnconfirmed(trs: Transaction<T>, sender: Account, senderOnly: boolean): void;
 
     calculateFee(trs: Transaction<IAsset>, sender: Account): number;
 }
@@ -67,7 +67,7 @@ export interface ITransactionService<T extends IAsset> {
     verifyBytes(bytes: Uint8Array, publicKey: string, signature: string): IFunctionResponse;
 
     applyUnconfirmed(trs: Transaction<T>, sender: Account): void;
-    undoUnconfirmed(trs: Transaction<T>, sender?: Account): void;
+    undoUnconfirmed(trs: Transaction<T>, sender?: Account, senderOnly?: boolean): void;
 
     apply(trs: Transaction<T>, sender: Account): Promise<void>;
     undo(trs: Transaction<T>, sender: Account): Promise<void>;
@@ -90,10 +90,10 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         service.applyUnconfirmed(trs, sender);
     }
 
-    undoUnconfirmed(trs: Transaction<{}>, sender: Account): void {
+    undoUnconfirmed(trs: Transaction<T>, sender: Account, senderOnly = false): void {
         sender.actualBalance += trs.fee;
         const service: IAssetService<IAsset> = getTransactionServiceByType(trs.type);
-        return service.undoUnconfirmed(trs, sender);
+        return service.undoUnconfirmed(trs, sender, senderOnly);
     }
 
     async apply(trs: Transaction<T>, sender: Account): Promise<void> {
@@ -148,7 +148,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
                 }
 
                 senderTransactions.slice(i, senderTransactions.length).forEach(() => {
-                    this.undoUnconfirmed(senderTrs, sender);
+                    this.undoUnconfirmed(<Transaction<T>>senderTrs, sender, true);
                 });
 
                 const transactions = [

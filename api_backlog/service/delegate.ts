@@ -1,12 +1,9 @@
-import { Delegate } from 'shared/model/delegate';
 import Response from 'shared/model/response';
-import { IModelTransaction, TransactionType, Transaction } from 'shared/model/transaction';
-import { Account } from 'shared/model/account';
-import { Block } from 'shared/model/block';
+import { Transaction } from 'shared/model/transaction';
 
 interface IResponseGetBlockSlotData {
     time: bigint;
-    keypair: Object;
+    keyPair: Object;
 }
 
 export interface IDelegateService {

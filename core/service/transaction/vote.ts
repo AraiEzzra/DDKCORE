@@ -225,7 +225,7 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
         }
     }
 
-    undoUnconfirmed(trs: Transaction<IAssetVote>, sender: Account): void {
+    undoUnconfirmed(trs: Transaction<IAssetVote>, sender: Account, senderOnly): void {
         const isDownVote = trs.asset.votes[0][0] === '-';
         const votes = trs.asset.votes.map(vote => vote.substring(1));
         if (isDownVote) {

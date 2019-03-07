@@ -6,7 +6,7 @@ import { getAddressByPublicKey } from 'shared/util/account';
 class AccountRepo {
     private memoryAccountsByAddress: Map<Address, Account> = new Map<Address, Account>();
 
-    public add(accountData: { address: Address, publicKey: PublicKey }): Account {
+    public add(accountData: { address: Address, publicKey?: PublicKey }): Account {
         const accountModel = new Account(accountData);
         this.memoryAccountsByAddress.set(accountData.address, accountModel);
         return accountModel;
