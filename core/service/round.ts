@@ -17,6 +17,7 @@ import { Delegate } from 'shared/model/delegate';
 import { logger } from 'shared/util/logger';
 import { compose } from 'core/util/common';
 import RoundPGRepository from 'core/repository/round/pg';
+import { Block } from 'shared/model/block';
 
 const constants = Config.constants;
 
@@ -70,6 +71,8 @@ class RoundService implements IRoundService {
         publicKey: string,
     };
     private logPrefix: string = '[RoundService]';
+    private isBlockChainReady: boolean = false;
+    private isRoundChainRestored: boolean = false;
 
     constructor() {
         const hash = crypto.createHash('sha256').update(process.env.FORGE_SECRET, 'utf8').digest();
@@ -79,6 +82,10 @@ class RoundService implements IRoundService {
             privateKey: keypair.privateKey.toString('hex'),
             publicKey: keypair.publicKey.toString('hex'),
         };
+    }
+
+    setIsBlockChainReady(status: boolean) {
+        this.isBlockChainReady = status;
     }
 
     public generateHashList(params: { activeDelegates: Array<Delegate>, blockId: string }): Array<IHashList> {
@@ -113,6 +120,32 @@ class RoundService implements IRoundService {
             acc[item.generatorPublicKey] = { slot: firstSlot + i };
             return acc;
         }, {});
+    }
+
+    public restoreRounds(block: Block) {
+        if (!this.isBlockChainReady) {
+            return;
+        }
+
+        const currentRound = RoundRepository.getCurrentRound();
+        const firstSlot = RoundRepository.getFirstSlotInRound();
+        const lastSlot = RoundRepository.getLastSlotInRound();
+
+        if (
+            block &&
+            currentRound &&
+            block.createdAt >= firstSlot &&
+            block.createdAt < lastSlot
+        ) {
+            // case when block arrive in the middle of the round
+            return;
+        }
+
+        if (lastSlot >= SlotService.getSlotNumber()) {
+            this.isRoundChainRestored = true;
+        }
+
+        this.generateRound();
     }
 
     public generateRound(): Response<void> {
@@ -161,8 +194,11 @@ class RoundService implements IRoundService {
             `${this.logPrefix}[generateRound] Start round on height: ${RoundRepository.getCurrentRound().startHeight}`
         );
 
-        const mySlot = this.getMyTurn();
+        if (!this.isRoundChainRestored) {
+            return;
+        }
 
+        const mySlot = this.getMyTurn();
         if (mySlot) {
             // start forging block at mySlotTime
             const cellTime = SlotService.getSlotTime(mySlot - SlotService.getSlotNumber());
@@ -228,6 +264,9 @@ class RoundService implements IRoundService {
             let delegateAccount = DelegateRepository.getByPublicKey(delegates[i]).account;
             AccountRepository.updateBalance(delegateAccount, delegateAccount.actualBalance + fee);
         }
+
+        const lastBlock = BlockRepository.getLastBlock();
+        RoundRepository.updateEndHeight(lastBlock.height);
 
         return new Response({data: delegates});
     }
