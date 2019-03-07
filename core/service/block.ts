@@ -8,9 +8,10 @@ import { logger } from 'shared/util/logger';
 import { Account } from 'shared/model/account';
 import { Block, BlockModel } from 'shared/model/block';
 import BlockRepo from 'core/repository/block';
+import BlockPGRepo from 'core/repository/block/pg';
 import AccountRepo from 'core/repository/account';
 import AccountRepository from 'core/repository/account';
-import { IAssetTransfer, Transaction, TransactionType } from 'shared/model/transaction';
+import {IAsset, IAssetTransfer, Transaction, TransactionType} from 'shared/model/transaction';
 import TransactionDispatcher from 'core/service/transaction';
 import TransactionQueue from 'core/service/transactionQueue';
 import TransactionPool from 'core/service/transactionPool';
@@ -25,6 +26,8 @@ import { messageON } from 'shared/util/bus';
 import config from 'shared/util/config';
 import SyncService from 'core/service/sync';
 import system from 'core/repository/system';
+import TransactionPGRepo from 'core/repository/transaction/pg';
+import {getAddressByPublicKey} from 'shared/util/account';
 
 const validator: Validator = new ZSchema({});
 
@@ -131,18 +134,16 @@ class BlockService {
     ): Promise<Response<void>> {
         block = this.addBlockProperties(block, broadcast);
 
-        if (block.height !== 1) {
-            if (verify) {
-                const resultVerifyBlock: IVerifyResult = this.verifyBlock(block, !keypair);
-                if (!resultVerifyBlock.verified) {
-                    return new Response<void>({errors: [...resultVerifyBlock.errors, 'processBlock']});
-                }
-            } else {
-                // TODO: remove when validate will be fix
-                if (keypair) {
-                    const lastBlock: Block = BlockRepo.getLastBlock();
-                    block = this.setHeight(block, lastBlock);
-                }
+        if (verify) {
+            const resultVerifyBlock: IVerifyResult = this.verifyBlock(block, !keypair);
+            if (!resultVerifyBlock.verified) {
+                return new Response<void>({errors: [...resultVerifyBlock.errors, 'processBlock']});
+            }
+        } else {
+            // TODO: remove when validate will be fix
+            if (keypair) {
+                const lastBlock: Block = BlockRepo.getLastBlock();
+                block = this.setHeight(block, lastBlock);
             }
         }
 
@@ -155,7 +156,7 @@ class BlockService {
         // validateBlockSlot TODO enable after fix round
 
         const resultCheckTransactions: Response<void> =
-            await this.checkTransactionsAndApplyUnconfirmed(block, saveBlock, verify);
+            this.checkTransactionsAndApplyUnconfirmed(block, saveBlock, verify);
         if (!resultCheckTransactions.success) {
             return new Response<void>({errors: [...resultCheckTransactions.errors, 'processBlock']});
         }
@@ -173,7 +174,7 @@ class BlockService {
     }
 
     /** TODO deprecated ? */
-    private addBlockProperties(block: Block, broadcast: boolean): Block {
+    public addBlockProperties(block: Block, broadcast: boolean): Block {
         if (broadcast) {
             return block;
         }
@@ -520,13 +521,13 @@ class BlockService {
         messageON('NEW_BLOCKS', block);
 
         if (broadcast) {
-            SyncService.sendNewBlock(block);
+            await SyncService.sendNewBlock(block);
         }
 
         return new Response<void>();
     }
 
-    private addPayloadHash(block: Block, keypair: IKeyPair): Response<Block> {
+    public addPayloadHash(block: Block, keypair: IKeyPair): Response<Block> {
         const payloadHash = crypto.createHash('sha256');
         for (let i = 0; i < block.transactions.length; i++) {
             const transaction = block.transactions[i];
@@ -777,7 +778,21 @@ class BlockService {
         }
     }
 
-    public async applyGenesisBlock(block: Block, verify?: boolean, save?: boolean): Promise<Response<void>> {
+    public async applyGenesisBlock(
+        rawBlock: {[key: string]: any},
+        verify: boolean = false,
+        save?: boolean): Promise<Response<void>> {
+        rawBlock.transactions.forEach((rawTrs) => {
+            const address = getAddressByPublicKey(rawTrs.sender_public_key);
+            const publicKey = rawTrs.sender_public_key;
+            AccountRepo.add({ publicKey: publicKey, address: address});
+        });
+        const resultTransactions = rawBlock.transactions.map((transaction) => {
+            return TransactionPGRepo.deserialize(transaction);
+        });
+        rawBlock.transactions = <Array<Transaction<IAsset>>>resultTransactions;
+        const block = new Block({...rawBlock, createdAt: 0, previousBlockId: null});
+        await BlockPGRepo.saveOrUpdate(block);
         block.transactions = block.transactions.sort(transactionSortFunc);
         return await this.process(block, false, save, null, verify, false);
     }
@@ -849,7 +864,7 @@ class BlockService {
         return new Response<Block>({data: BlockRepo.getLastBlock(), errors});
     }
 
-    private create({transactions, timestamp, previousBlock, keypair}): Block {
+    public create({transactions, timestamp, previousBlock, keypair}): Block {
         const blockTransactions = transactions.sort(transactionSortFunc);
         const block: Block = new Block({
             createdAt: timestamp,

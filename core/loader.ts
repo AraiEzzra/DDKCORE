@@ -19,19 +19,17 @@ class Loader {
     private limit = 1000;
 
     public async start() {
-
+        const pathMockData: string = path.join(process.cwd(), 'core/database/sql');
+        const filePath = path.join(pathMockData, 'init.sql');
+        await db.query(new QueryFile(filePath, { minify: true }));
+        await BlockService.applyGenesisBlock(config.genesisBlock);
         await this.transactionWarmUp(this.limit);
         await this.roundWarmUp(this.limit);
-        await BlockService.applyGenesisBlock(config.genesisBlock);
         initControllers();
         messageON('WARM_UP_FINISHED', null);
     }
 
     private async transactionWarmUp(limit: number) {
-        const pathMockData: string = path.join(process.cwd(), 'core/database/sql');
-        const filePath = path.join(pathMockData, 'init.sql');
-        await db.query(new QueryFile(filePath, { minify: true }));
-
         let offset = 0;
         do {
             const transactionBatch: Array<Transaction<IAsset>> =

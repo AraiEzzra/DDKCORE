@@ -8,14 +8,14 @@ import {
     BlockId, RawBlock,
     IBlockPGRepository as IBlockRepositoryPGShared
 } from 'shared/repository/block';
-import {TransactionsByBlockResponse} from 'shared/repository/transaction';
+import {TransactionsByBlockResponse} from 'shared/repository/transaction/transaction';
 
 export interface IBlockPGRepository extends IBlockRepositoryPGShared {
 
 }
 
 class BlockPGRepo implements IBlockPGRepository {
-    private tableName: string = 'blocks';
+    private tableName: string = 'block';
     private tableFields: Array<string> = [
         'id',
         'version',

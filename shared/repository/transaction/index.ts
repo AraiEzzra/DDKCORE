@@ -5,6 +5,7 @@ export type DeletedTransactionId = string;
 export type TransactionId = string;
 export type BlockId = string;
 export type RawTransaction = {[key: string]: any};
+export type RawAsset = {[key: string]: any};
 
 export interface ITransactionRepository <T extends IAsset> {
 
@@ -14,6 +15,7 @@ export interface ITransactionRepository <T extends IAsset> {
     getByBlockIds(blockIds: Array<BlockId>): TransactionsByBlockResponse;
     getById(trsId: TransactionId): Transaction<T>;
     isExist(trsId: TransactionId): boolean;
+    getMany(limit: number, offset: number, sort?: string, type?: number): Array<Transaction<T>>;
 
 }
 
@@ -28,5 +30,12 @@ export interface ITransactionPGRepository <T extends IAsset> {
     getMany(limit: number, offset: number): Promise<Array<Transaction<T>>>;
     isExist(trsId: TransactionId): Promise<boolean>;
     saveOrUpdate(trs: Transaction<T> | Array<Transaction<T>>): Promise<void>;
+
+}
+
+export interface IAssetRepository <T extends IAsset> {
+
+    serialize(asset: T): RawAsset;
+    deserialize(rawAsset: RawAsset): T;
 
 }

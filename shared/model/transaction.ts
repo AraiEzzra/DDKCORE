@@ -27,7 +27,7 @@ export enum TransactionStatus {
 }
 
 export interface IAirdropAsset {
-    sponsors: { [sponsorAddress: number]: number };
+    sponsors: Map<Address, number>;
 }
 
 export interface IAsset {
@@ -72,7 +72,7 @@ export interface IAssetVote extends IAsset {
 
 export class TransactionModel<T extends IAsset> {
     id?: string;
-    blockId: string;
+    blockId?: string;
     type: TransactionType;
     senderPublicKey: PublicKey;
     senderAddress?: Address; // Memory only
@@ -101,5 +101,14 @@ export class Transaction<T extends IAsset> extends TransactionModel<T> {
 
     public getCopy() {
         return new Transaction<T>(this);
+    }
+}
+
+export class TransactionApi<T extends IAsset> extends Transaction<T> {
+    blockHeight: number;
+
+    constructor(data, blockHeight) {
+        super(data);
+        this.blockHeight = blockHeight;
     }
 }

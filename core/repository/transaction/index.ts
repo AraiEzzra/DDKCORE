@@ -2,7 +2,7 @@ import { Transaction, IAsset } from 'shared/model/transaction';
 import {
     ITransactionRepository as ITransactionRepositoryShared,
     TransactionsByBlockResponse
-} from 'shared/repository/transaction';
+} from 'shared/repository/transaction/transaction';
 
 export interface ITransactionRepository<T extends IAsset> extends ITransactionRepositoryShared<T> {
 

@@ -49,10 +49,10 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
 
         offset = 0;
 
-        Object.keys(trs.asset.airdropReward.sponsors).sort().forEach((address) => {
-            offset = BUFFER.writeUInt64LE(sponsorsBuffer, address, offset);
-            offset = BUFFER.writeUInt64LE(sponsorsBuffer, trs.asset.airdropReward.sponsors[address] || 0, offset);
-        });
+        for (const [sponsorAddress, reward] of trs.asset.airdropReward.sponsors) {
+            offset = BUFFER.writeUInt64LE(sponsorsBuffer, sponsorAddress, offset);
+            offset = BUFFER.writeUInt64LE(sponsorsBuffer, reward || 0, offset);
+        }
 
         const voteBuffer = trs.asset.votes ? Buffer.from(trs.asset.votes.join(''), 'utf8') : Buffer.from([]);
         return Buffer.concat([buff, sponsorsBuffer, voteBuffer]);
