@@ -10,4 +10,3 @@ export type resGetBlocks = {
     blocks: Array<Block>;
     total_count: number;
 };
-

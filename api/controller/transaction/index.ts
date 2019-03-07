@@ -1,6 +1,5 @@
-import Response from 'shared/model/response';
-import { reqGetTransactions, resGetTransactions, ITransaction } from 'api/controller/transaction/types';
-import TransactionRepository from 'api/repository/transaction';
+import ResponseEntity from 'shared/model/response';
+import { reqGetTransactions } from 'api/controller/transaction/types';
 import TransactionService from 'api/service/transaction';
 import { RPC } from 'api/utils/decorators';
 
@@ -11,9 +10,9 @@ class TransactionController {
         return TransactionService.getMany(data.limit, data.offset, data.sort, data.type);
     }
 
-    @RPC('GET_TRS_HISTORY')
+    @RPC('GET_TRS')
     public getTransaction(data: string) {
-        return TransactionRepository.getOne(data);
+        return TransactionService.getOne(data);
     }
 
     @RPC('CREATE_TRS')

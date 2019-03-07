@@ -17,26 +17,6 @@ class TransactionDelegateService implements IAssetService<IAssetDelegate> {
         return Buffer.from(trs.asset.username, 'utf8');
     }
 
-    verifyUnconfirmed(trs: Transaction<IAssetDelegate>, sender: Account): Response<void> {
-        const errors = [];
-
-        if (sender.delegate) {
-            errors.push('Account is already a delegate');
-        }
-
-        const username = String(trs.asset.username)
-            .toLowerCase()
-            .trim();
-
-        const existingDelegate: boolean = DelegateRepo.isUserNameExists(username);
-
-        if (existingDelegate) {
-            errors.push('Username already exists');
-        }
-
-        return new Response({ errors });
-    }
-
     validate(trs: Transaction<IAssetDelegate>, sender: Account): Response<void> {
         const errors = [];
 
@@ -74,29 +54,42 @@ class TransactionDelegateService implements IAssetService<IAssetDelegate> {
         return new Response({ errors });
     }
 
+    verifyUnconfirmed(trs: Transaction<IAssetDelegate>, sender: Account): Response<void> {
+        const errors = [];
+
+        if (sender.delegate) {
+            errors.push('Account is already a delegate');
+        }
+
+        const username = String(trs.asset.username)
+        .toLowerCase()
+        .trim();
+
+        const existingDelegate: boolean = DelegateRepo.isUserNameExists(username);
+
+        if (existingDelegate) {
+            errors.push('Username already exists');
+        }
+
+        return new Response({ errors });
+    }
+
     calculateFee(trs: Transaction<IAssetDelegate>, sender: Account): number {
         return config.constants.fees.delegate;
     }
 
-    applyUnconfirmed(trs: Transaction<IAssetDelegate>, sender: Account): Response<void> {
+    applyUnconfirmed(trs: Transaction<IAssetDelegate>, sender: Account): void {
         const newDelegate: Delegate = DelegateRepo.add(sender, {
             username: trs.asset.username,
             url: trs.asset.url
         });
         AccountRepo.attachDelegate(sender, newDelegate);
-        return new Response<void>();
     }
 
-    undoUnconfirmed(trs: Transaction<IAssetDelegate>, sender: Account): Response<void> {
+    undoUnconfirmed(trs: Transaction<IAssetDelegate>, sender: Account): void {
         DelegateRepo.delete(sender);
         AccountRepo.attachDelegate(sender, null);
-        return new Response<void>();
     }
-
-    calculateUndoUnconfirmed(trs: Transaction<IAssetDelegate>, sender: Account): void {
-        sender.delegate = null;
-    }
-
 }
 
 export default new TransactionDelegateService();

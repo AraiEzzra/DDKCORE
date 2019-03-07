@@ -19,7 +19,7 @@ import { DelegateService } from 'core/service/delegate';
 import slotService from 'core/service/slot';
 import RoundService from 'core/service/round';
 import { transactionSortFunc } from 'core/util/transaction';
-import blockShema from 'core/schema/block';
+import blockSchema from 'core/schema/block';
 import Response from 'shared/model/response';
 import { messageON } from 'shared/util/bus';
 import config from 'shared/util/config';
@@ -131,15 +131,9 @@ class BlockService {
     ): Promise<Response<void>> {
         block = this.addBlockProperties(block, broadcast);
 
-        const resultNormalizeBlock: Response<Block> = await this.normalizeBlock(block);
-        if (!resultNormalizeBlock.success) {
-            return new Response<void>({errors: [...resultNormalizeBlock.errors, 'processBlock']});
-        }
-        block = resultNormalizeBlock.data;
-
         if (block.height !== 1) {
             if (verify) {
-                const resultVerifyBlock: IVerifyResult = await this.verifyBlock(block, !keypair);
+                const resultVerifyBlock: IVerifyResult = this.verifyBlock(block, !keypair);
                 if (!resultVerifyBlock.verified) {
                     return new Response<void>({errors: [...resultVerifyBlock.errors, 'processBlock']});
                 }
@@ -153,7 +147,7 @@ class BlockService {
         }
 
         if (saveBlock) {
-            const resultCheckExists: Response<void> = await this.checkExists(block);
+            const resultCheckExists: Response<void> = this.checkExists(block);
             if (!resultCheckExists.success) {
                 return new Response<void>({errors: [...resultCheckExists.errors, 'processBlock']});
             }
@@ -174,13 +168,11 @@ class BlockService {
         if (!config.config.loading.snapshotRound) {
             // todo modules.system.update?
         }
-        const reshuffleResponse: Response<void> = await TransactionQueue.reshuffle();
-        if (!reshuffleResponse.success) {
-            return new Response<void>({errors: [...reshuffleResponse.errors, 'processBlock']});
-        }
+        TransactionQueue.reshuffle();
         return new Response<void>();
     }
 
+    /** TODO deprecated ? */
     private addBlockProperties(block: Block, broadcast: boolean): Block {
         if (broadcast) {
             return block;
@@ -204,40 +196,7 @@ class BlockService {
         return block;
     }
 
-    private async normalizeBlock(block: Block): Promise<Response<Block>> {
-        block.transactions = block.transactions.sort(transactionSortFunc);
-        const normalizeResponse: Response<Block> = await this.objectNormalize(block);
-        if (!normalizeResponse.success) {
-            normalizeResponse.errors.push('normalizeBlock');
-            return normalizeResponse;
-        }
-        return normalizeResponse;
-    }
-
-    private async objectNormalize(block: Block): Promise<Response<Block>> {
-        let i;
-
-        for (i in block) {
-            if (block[i] === null || typeof block[i] === 'undefined') {
-                delete block[i];
-            }
-        }
-
-        const errors: Array<string> = [];
-        for (i = 0; i < block.transactions.length; i++) {
-            const response: Response<Transaction<object>> =
-                await TransactionDispatcher.normalize(block.transactions[i]);
-            if (!response.success) {
-                errors.push(...response.errors);
-            }
-
-            block.transactions[i] = response.data;
-        }
-
-        return new Response<Block>({data: block, errors: errors});
-    }
-
-    private async verifyBlock(block: Block, verify: boolean): Promise<IVerifyResult> {
+    private verifyBlock(block: Block, verify: boolean): IVerifyResult {
         const lastBlock: Block = BlockRepo.getLastBlock();
 
         block = this.setHeight(block, lastBlock);
@@ -257,7 +216,8 @@ class BlockService {
             result = this.verifyPayload(block, result);
         }
 
-        result = await this.verifyForkOne(block, lastBlock, result);
+        /** TODO deprecated ? */
+        result = this.verifyForkOne(block, lastBlock, result);
         result = this.verifyBlockSlot(block, lastBlock, result);
 
         result.verified = result.errors.length === 0;
@@ -425,9 +385,9 @@ class BlockService {
         return result;
     }
 
-    private async verifyForkOne(block: Block, lastBlock: Block, result: IVerifyResult): Promise<IVerifyResult> {
+    private verifyForkOne(block: Block, lastBlock: Block, result: IVerifyResult): IVerifyResult {
         if (block.previousBlockId && block.previousBlockId !== lastBlock.id) {
-            const forkResponse: Response<void> = await this.delegateService.fork(block, Fork.ONE);
+            const forkResponse: Response<void> = this.delegateService.fork(block, Fork.ONE);
             if (!forkResponse.success) {
                 result.errors.push(...forkResponse.errors);
             }
@@ -447,7 +407,7 @@ class BlockService {
         return result;
     }
 
-    private async checkExists(block: Block): Promise<Response<void>> {
+    private checkExists(block: Block): Response<void> {
         const exists: boolean = BlockRepo.isExist(block.id);
         if (exists) {
             return new Response<void>({errors: [['Block', block.id, 'already exists'].join(' ')]});
@@ -455,10 +415,10 @@ class BlockService {
         return new Response<void>();
     }
 
-    private async checkTransactionsAndApplyUnconfirmed(
+    private checkTransactionsAndApplyUnconfirmed(
         block: Block,
         checkExists: boolean,
-        verify: boolean): Promise<Response<void>> {
+        verify: boolean): Response<void> {
         const errors: Array<string> = [];
         let i = 0;
 
@@ -471,7 +431,7 @@ class BlockService {
                 logger.debug(`[Verify][checkTransactionsAndApplyUnconfirmed][sender] ${JSON.stringify(sender)}`);
                 if (verify) {
                     const resultCheckTransaction: Response<void> =
-                        await this.checkTransaction(block, trs, sender, checkExists);
+                        this.checkTransaction(block, trs, sender, checkExists);
                     if (!resultCheckTransaction.success) {
                         errors.push(...resultCheckTransaction.errors);
                         logger.debug(`[Verify][checkTransactionsAndApplyUnconfirmed][error] ${JSON.stringify(errors)}`);
@@ -483,7 +443,8 @@ class BlockService {
                 TransactionDispatcher.applyUnconfirmed(trs, sender);
                 i++;
             } else {
-                TransactionDispatcher.undoUnconfirmed(trs);
+                const sender: Account = AccountRepository.getByPublicKey(trs.senderPublicKey);
+                TransactionDispatcher.undoUnconfirmed(trs, sender);
                 i--;
             }
         }
@@ -491,22 +452,23 @@ class BlockService {
         return new Response<void>({errors: errors});
     }
 
-    private async checkTransaction(
+    private checkTransaction(
         block: Block,
         trs: Transaction<object>,
         sender: Account,
-        checkExists: boolean): Promise<Response<void>> {
+        checkExists: boolean
+    ): Response<void> {
         trs.id = TransactionDispatcher.getId(trs);
         trs.blockId = block.id;
 
-        const verifyResult = await TransactionDispatcher.verifyUnconfirmed(trs, sender, checkExists);
-        if (!verifyResult.success) {
-            return new Response<void>({errors: [...verifyResult.errors, 'checkTransaction']});
+        const validateResult = TransactionDispatcher.validate(trs, sender);
+        if (!validateResult.success) {
+            return new Response<void>({errors: [...validateResult.errors, 'checkTransaction']});
         }
 
-        const verifyUnconfirmedResult: Response<void> = await TransactionDispatcher.verifyUnconfirmed(trs, sender);
-        if (!verifyUnconfirmedResult.success) {
-            return new Response<void>({errors: [...verifyUnconfirmedResult.errors, 'checkTransaction']});
+        const verifyResult: Response<void> = TransactionDispatcher.verifyUnconfirmed(trs, sender, checkExists);
+        if (!verifyResult.success) {
+            return new Response<void>({errors: [...verifyResult.errors, 'checkTransaction']});
         }
 
         return new Response<void>();
@@ -544,7 +506,7 @@ class BlockService {
         }
 
         if (saveBlock) {
-            const afterSaveResponse: Response<void> = await this.afterSave(block);
+            const afterSaveResponse: Response<void> = this.afterSave(block);
             if (!afterSaveResponse.success) {
                 return new Response<void>({errors: [...afterSaveResponse.errors, 'applyBlock']});
             }
@@ -594,12 +556,12 @@ class BlockService {
         return new Response<Block>({data: block});
     }
 
-    private async afterSave(block: Block): Promise<Response<void>> {
+    private afterSave(block: Block): Response<void> {
         messageON('transactionsSaved', block.transactions);
         const errors: Array<string> = [];
         for (const trs of block.transactions) {
             // how can I call this method in case it exists in service but connection service=service is baned
-            const afterSaveResponse: Response<void> = await TransactionDispatcher.afterSave(trs);
+            const afterSaveResponse: Response<void> = TransactionDispatcher.afterSave(trs);
             if (!afterSaveResponse.success) {
                 errors.push(...afterSaveResponse.errors);
                 logger.error(`[Chain][afterSave]: ${JSON.stringify(afterSaveResponse.errors)}`);
@@ -658,61 +620,19 @@ class BlockService {
         return new Response<void>({errors});
     }
 
-    private async receiveForkOne(block: Block, lastBlock: Block): Promise<Response<void>> {
-        logger.debug(`[Service][Block][receiveForkOne] block ${JSON.stringify(block)}`);
-        let tmpBlock: Block = block.getCopy();
-        const forkResponse: Response<void> = await this.delegateService.fork(block, Fork.ONE);
-        if (!forkResponse.success) {
-            return new Response<void>({errors: [...forkResponse.errors, 'receiveForkOne']});
-        }
-        if (
-            block.createdAt > lastBlock.createdAt ||
-            (block.createdAt === lastBlock.createdAt && block.id > lastBlock.id)
-        ) {
-            logger.info('Last block stands');
-            return new Response<void>();
-        }
-        logger.info('Last block and parent loses');
-        const normalizeResponse: Response<Block> = await this.objectNormalize(tmpBlock);
-        if (!normalizeResponse.success) {
-            return new Response<void>({errors: [...normalizeResponse.errors, 'receiveForkOne']});
-        }
-        tmpBlock = normalizeResponse.data;
 
-        const validateBlockSlotResponse: Response<void> = await this.validateBlockSlot(tmpBlock, lastBlock);
-        if (!validateBlockSlotResponse.success) {
-            return new Response<void>({errors: [...validateBlockSlotResponse.errors, 'receiveForkOne']});
-        }
-
-        const check = this.verifyReceipt(tmpBlock);
-        if (!check.verified) {
-            logger.error(['Block', tmpBlock.id, 'verification failed'].join(' '), check.errors.join(', '));
-            return new Response<void>({errors: [...check.errors, 'receiveForkOne']});
-        }
-
-        const deleteFirstResponse: Response<Block> = await this.deleteLastBlock();
-        if (!deleteFirstResponse.success) {
-            return new Response<void>({errors: [...deleteFirstResponse.errors, 'receiveForkOne']});
-        }
-
-        const deleteSecondResponse: Response<Block> = await this.deleteLastBlock();
-        if (!deleteSecondResponse.success) {
-            return new Response<void>({errors: [...deleteSecondResponse.errors, 'receiveForkOne']});
-        }
-    }
-
-    private async validateBlockSlot(block: Block, lastBlock: Block): Promise<Response<void>> {
+    private validateBlockSlot(block: Block, lastBlock: Block): Response<void> {
         const roundNextBlock = RoundService.calcRound(block.height);
         const roundLastBlock = RoundService.calcRound(lastBlock.height);
         const activeDelegates = config.constants.activeDelegates;
 
         const errors: Array<string> = [];
         const validateBlockSlotAgainstPreviousRoundresponse: Response<void> =
-            await this.delegateService.validateBlockSlotAgainstPreviousRound(block);
+            this.delegateService.validateBlockSlotAgainstPreviousRound(block);
         if (!validateBlockSlotAgainstPreviousRoundresponse.success) {
             errors.push(...validateBlockSlotAgainstPreviousRoundresponse.errors);
         }
-        const validateBlockSlot: Response<void> = await this.delegateService.validateBlockSlot(block);
+        const validateBlockSlot: Response<void> = this.delegateService.validateBlockSlot(block);
         if (!validateBlockSlot.success) {
             errors.push(...validateBlockSlot.errors);
         }
@@ -765,51 +685,7 @@ class BlockService {
         return result;
     }
 
-    private async receiveForkFive(block: Block, lastBlock: Block): Promise<Response<void>> {
-        logger.debug(`[Service][Block][receiveForkFive] block ${JSON.stringify(block)}`);
-        let tmpBlock: Block = block.getCopy();
-        const forkResponse: Response<void> = await this.delegateService.fork(block, Fork.FIVE);
-        if (!forkResponse.success) {
-            return new Response<void>({errors: [...forkResponse.errors, 'receiveForkFive']});
-        }
-        if (block.generatorPublicKey === lastBlock.generatorPublicKey) {
-            logger.warn('Delegate forging on multiple nodes', block.generatorPublicKey);
-        }
-        if (block.createdAt > lastBlock.createdAt ||
-            (block.createdAt === lastBlock.createdAt && block.id > lastBlock.id)) {
-            logger.info('Last block stands');
-            return new Response<void>();
-        }
-        logger.info('Last block loses');
-        const normalizeResponse: Response<Block> = await this.objectNormalize(tmpBlock);
-        if (!normalizeResponse.success) {
-            return new Response<void>({errors: [...normalizeResponse.errors, 'receiveForkFive']});
-        }
-        tmpBlock = normalizeResponse.data;
-
-        const validateBlockSlotResponse: Response<void> = await this.validateBlockSlot(tmpBlock, lastBlock);
-        if (!validateBlockSlotResponse.success) {
-            return new Response<void>({errors: [...validateBlockSlotResponse.errors, 'receiveForkFive']});
-        }
-
-        const check = this.verifyReceipt(tmpBlock);
-        if (!check.verified) {
-            logger.error(['Block', tmpBlock.id, 'verification failed'].join(' '), check.errors.join(', '));
-            return new Response<void>({errors: [...check.errors, 'receiveForkOne']});
-        }
-
-        const deleteResponse: Response<Block> = await this.deleteLastBlock();
-        if (!deleteResponse.success) {
-            return new Response<void>({errors: [...deleteResponse.errors, 'receiveForkFive']});
-        }
-
-        const receiveBlockResponse: Response<void> = await this.receiveBlock(block);
-        if (!receiveBlockResponse.success) {
-            receiveBlockResponse.errors.push('receiveForkFive');
-            return receiveBlockResponse;
-        }
-    }
-
+    /** deprecated ? */
     public async deleteLastBlock(): Promise<Response<Block>> {
         let lastBlock = BlockRepo.getLastBlock();
         logger.warn(`Deleting last block: ${lastBlock.id}`);
@@ -848,8 +724,8 @@ class BlockService {
         const errors: Array<string> = [];
         oldLastBlock.transactions.reverse().forEach(async (transaction) => {
             const sender = AccountRepo.getByPublicKey(transaction.senderPublicKey);
-            TransactionDispatcher.undo(transaction, sender);
-            TransactionDispatcher.undoUnconfirmed(transaction);
+            await TransactionDispatcher.undo(transaction, sender);
+            TransactionDispatcher.undoUnconfirmed(transaction, sender);
         });
         if (errors.length) {
             return new Response<Block>({errors});
@@ -1040,7 +916,7 @@ class BlockService {
     }
 
     public isValid(block: BlockModel): Response<void> {
-        const isValid: boolean = validator.validate(block, blockShema);
+        const isValid: boolean = validator.validate(block, blockSchema);
         if (!isValid) {
             return new Response<void>({
                 errors: validator.getLastErrors().map(err => err.message),

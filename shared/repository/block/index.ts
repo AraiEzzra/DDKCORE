@@ -13,7 +13,7 @@ export interface IBlockRepository {
     getGenesisBlock(): Block;
     getLastBlock(): Block;
     getLastNBlockIds(): Array<BlockId>;
-    getMany(offset: number, limit?: number, sort?: string | number): Array<Block>;
+    getMany(offset: number, limit?: number): Array<Block>;
     isExist(blockId: BlockId): boolean;
     setLastBlock(block: Block): void;
 

@@ -175,7 +175,8 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
         }
 
         try {
-            TransactionDispatcher.undoUnconfirmed(trs);
+            const sender: Account = AccountRepository.getByPublicKey(trs.senderPublicKey);
+            TransactionDispatcher.undoUnconfirmed(trs, sender);
         } catch (e) {
             logger.error(`[TransactionPool][remove]: ${e}`);
             logger.debug(`[TransactionPool][remove][stack]: \n ${e.stack}`);

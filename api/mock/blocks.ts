@@ -8,7 +8,7 @@ export const generateBlocks = (): Array<Block> => {
     return blocks;
 };
 
-export const generateBlock = (index: number) => {
+const generateBlock = (index: number) => {
     return new Block({
         id: '3276517decd6171565151a3537e69c7e4f8d361050a4caf684dfcd796242757' + index,
         version: 1,
