@@ -1,4 +1,4 @@
-import { AccountModel } from 'shared/model/account';
+import { Account, AccountModel } from 'shared/model/account';
 import { getAddressByPublicKey } from 'shared/util/account';
 
 const publicKeys = [
@@ -18,4 +18,9 @@ export const generateAccounts = (): Array<AccountModel> => {
 export const generateAccount = (publicKey: string): AccountModel => {
     const address = getAddressByPublicKey(publicKey);
     return new AccountModel({ address: address, publicKey: publicKey });
+};
+
+export const generateAccountInstance = (publicKey: string): Account => {
+    const address = getAddressByPublicKey(publicKey);
+    return new Account({ address: address, publicKey: publicKey });
 };

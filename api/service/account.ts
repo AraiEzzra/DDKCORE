@@ -20,12 +20,12 @@ export class AccountServiceImpl implements AccountService {
 
     getAccountByAddress(address: number): ResponseEntity<AccountModel> {
         const account = this.accounts.find((account: any) => account.address == address);
-        return new ResponseEntity({data: account})
+        return new ResponseEntity({ data: account });
     }
 
     getAccountByPublicKey(publicKey: string): ResponseEntity<AccountModel> {
         const account = this.accounts.find((account: AccountModel) => account.publicKey == publicKey);
-        return new ResponseEntity({data: account})
+        return new ResponseEntity({ data: account });
     }
 }
 
