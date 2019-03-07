@@ -1,10 +1,10 @@
 import { generateAccounts } from 'api/mock/account';
-import { AccountModel } from 'shared/model/account';
+import { AccountModel, Address } from 'shared/model/account';
 import ResponseEntity from 'shared/model/response';
 
 export interface AccountService {
 
-    getAccountByAddress(address: number): ResponseEntity<AccountModel>;
+    getAccountByAddress(address: Address): ResponseEntity<AccountModel>;
 
     getAccountByPublicKey(publicKey: string): ResponseEntity<AccountModel>;
 
@@ -18,7 +18,7 @@ export class AccountServiceImpl implements AccountService {
         this.accounts = generateAccounts();
     }
 
-    getAccountByAddress(address: number): ResponseEntity<AccountModel> {
+    getAccountByAddress(address: Address): ResponseEntity<AccountModel> {
         const account = this.accounts.find((account: any) => account.address == address);
         return new ResponseEntity({ data: account });
     }

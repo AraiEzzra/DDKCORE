@@ -61,10 +61,12 @@ class TransactionSendService implements IAssetService<IAssetTransfer> {
         recipient.actualBalance += trs.asset.amount;
     }
 
-    undoUnconfirmed(trs: Transaction<IAssetTransfer>, sender: Account): void {
+    undoUnconfirmed(trs: Transaction<IAssetTransfer>, sender: Account, senderOnly): void {
         sender.actualBalance += trs.asset.amount;
-        const recipient = AccountRepo.getByAddress(trs.asset.recipientAddress);
-        recipient.actualBalance -= trs.asset.amount;
+        if (!senderOnly) {
+            const recipient = AccountRepo.getByAddress(trs.asset.recipientAddress);
+            recipient.actualBalance -= trs.asset.amount;
+        }
     }
 
 }

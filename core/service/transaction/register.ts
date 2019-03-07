@@ -46,7 +46,7 @@ class TransactionRegisterService implements IAssetService<IAssetRegister> {
         AccountRepo.updateReferralByAddress(targetAccount.address, [referralAccount, ...referrals]);
     }
 
-    undoUnconfirmed(trs: Transaction<IAssetRegister>, sender: Account): void {
+    undoUnconfirmed(trs: Transaction<IAssetRegister>, sender: Account, senderOnly): void {
         // TODO strange logic for not referral account
         AccountRepo.delete(sender);
     }

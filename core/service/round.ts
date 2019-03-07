@@ -65,7 +65,7 @@ interface IRoundService {
 }
 
 class RoundService implements IRoundService {
-    private keypair: {
+    private readonly keyPair: {
         privateKey: string,
         publicKey: string,
     };
@@ -73,11 +73,11 @@ class RoundService implements IRoundService {
 
     constructor() {
         const hash = crypto.createHash('sha256').update(process.env.FORGE_SECRET, 'utf8').digest();
-        const keypair = ed.makeKeypair(hash);
+        const keyPair = ed.makeKeypair(hash);
 
-        this.keypair = {
-            privateKey: keypair.privateKey.toString('hex'),
-            publicKey: keypair.publicKey.toString('hex'),
+        this.keyPair = {
+            privateKey: keyPair.privateKey.toString('hex'),
+            publicKey: keyPair.publicKey.toString('hex'),
         };
     }
 
@@ -169,7 +169,7 @@ class RoundService implements IRoundService {
             logger.info(`${this.logPrefix}[generateRound] Start forging block to: ${mySlot} after ${cellTime} seconds`);
             createTaskON('BLOCK_GENERATE', cellTime, {
                 timestamp: SlotService.getSlotTime(mySlot),
-                keypair: this.keypair,
+                keyPair: this.keyPair,
             });
         }
 

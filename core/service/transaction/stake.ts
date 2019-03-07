@@ -92,7 +92,7 @@ class TransactionStakeService implements IAssetService<IAssetStake>  {
         // distribute airdrop
     }
 
-    undoUnconfirmed(trs: Transaction<IAssetStake>, sender: Account): void {
+    undoUnconfirmed(trs: Transaction<IAssetStake>, sender: Account, senderOnly): void {
         sender.actualBalance += trs.asset.amount;
         // TODO sender.stakes.splice(sender.stakes.indexOf(stake), 1)
         // get back airdrop

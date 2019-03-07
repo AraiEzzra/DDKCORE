@@ -12,7 +12,7 @@ import SlotService from 'core/service/slot';
 import RoundService from 'core/service/round';
 
 interface BlockGenerateRequest {
-    keypair: {
+    keyPair: {
         privateKey: string,
         publicKey: string
     };
@@ -91,7 +91,7 @@ class BlockController extends BaseController {
     @ON('BLOCK_GENERATE')
     public async generateBlock(data: BlockGenerateRequest): Promise<Response<void>> {
         logger.debug(`[Controller][Block][generateBlock]`);
-        const response: Response<void> = await BlockService.generateBlock(data.keypair, data.timestamp);
+        const response: Response<void> = await BlockService.generateBlock(data.keyPair, data.timestamp);
         if (!response.success) {
             response.errors.push('generateBlock');
         }
