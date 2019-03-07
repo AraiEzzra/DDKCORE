@@ -4,7 +4,7 @@ import {
     IAssetRepository,
     ITransactionPGRepository as ITransactionPGRepositoryShared, RawTransaction,
     TransactionsByBlockResponse
-} from 'shared/repository/transaction';
+} from 'shared/repository/transaction/transaction';
 import queries from 'core/repository/queries/transaction';
 import TransactionDelegateRepo from 'core/repository/transaction/asset/delegate';
 import TransactionRegisterRepo from 'core/repository/transaction/asset/register';

@@ -103,3 +103,12 @@ export class Transaction<T extends IAsset> extends TransactionModel<T> {
         return new Transaction<T>(this);
     }
 }
+
+export class TransactionApi<T extends IAsset> extends Transaction<T> {
+    blockHeight: number;
+
+    constructor(data, blockHeight) {
+        super(data);
+        this.blockHeight = blockHeight;
+    }
+}
