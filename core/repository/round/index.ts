@@ -13,7 +13,7 @@ class RoundRepository implements IRoundRepository {
      * getter for current round
      * @return {Round}
      */
-    getCurrentRound(): Round {
+    public getCurrentRound(): Round {
         return this.currentRound;
     }
 
@@ -21,7 +21,7 @@ class RoundRepository implements IRoundRepository {
      * setter for current round
      * @param {Round} round
      */
-    setCurrentRound(round: RoundModel): void {
+    public setCurrentRound(round: RoundModel): void {
         this.currentRound = new Round({
             startHeight: Number(round.startHeight),
             slots: round.slots,
@@ -32,7 +32,7 @@ class RoundRepository implements IRoundRepository {
      * getter for prevRound round
      * @return {Round}
      */
-    getPrevRound(): Round {
+    public getPrevRound(): Round {
         return this.prevRound;
     }
 
@@ -40,7 +40,7 @@ class RoundRepository implements IRoundRepository {
      * setter for prevRound round
      * @param {Round} round
      */
-    setPrevRound(round: Round): void {
+    public setPrevRound(round: Round): void {
         this.prevRound = round;
     }
 
@@ -49,8 +49,16 @@ class RoundRepository implements IRoundRepository {
      * @param {Round} round
      * @return {number}
      */
-    getLastSlotInRound(round: Round = this.currentRound): number {
+    public getLastSlotInRound(round: Round = this.currentRound): number {
         return round.slots[Object.keys(round.slots)[Object.keys(round.slots).length - 1]].slot;
+    }
+
+    public getFirstSlotInRound(round: Round = this.currentRound): number {
+        return round.slots[Object.keys(round.slots)[0]].slot;
+    }
+    
+    public updateEndHeight(endHeight: number): void {
+        this.currentRound.endHeight = endHeight;
     }
 }
 
