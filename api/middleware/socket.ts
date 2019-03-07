@@ -3,6 +3,8 @@ import RewardControllerInstance, { RewardController } from 'api/controller/rewar
 import ReferredUsersControllerInstance, { ReferredUsersController } from 'api/controller/referredUsers';
 import AccountControllerInstance, { AccountController } from 'api/controller/account';
 import DelegateControllerInstance, { DelegateController } from 'api/controller/delegate';
+import BlockControllerInstance, { BlockController } from 'api/controller/block';
+import TransactionControllerInstance, { TransactionController } from 'api/controller/transaction';
 
 export class Middleware {
 
@@ -10,12 +12,16 @@ export class Middleware {
     private referredUsersController: ReferredUsersController;
     private accountController: AccountController;
     private delegateController: DelegateController;
+    private blockController: BlockController;
+    private transactionController: TransactionController;
 
     constructor() {
         this.rewardController = RewardControllerInstance;
         this.referredUsersController = ReferredUsersControllerInstance;
         this.accountController = AccountControllerInstance;
         this.delegateController = DelegateControllerInstance;
+        this.blockController = BlockControllerInstance;
+        this.transactionController = TransactionControllerInstance;
     }
 
     processRequest(code: string, data: any, token?: string, socket?: any) {
