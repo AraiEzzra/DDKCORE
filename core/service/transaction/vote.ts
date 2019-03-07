@@ -58,7 +58,7 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
         return Buffer.concat([buff, sponsorsBuffer, voteBuffer]);
     }
 
-    validate(trs: Transaction<IAssetVote>, sender: Account): Response<void> {
+    validate(trs: Transaction<IAssetVote>): Response<void> {
         const errors: Array<string> = [];
 
         if (!trs.asset || !trs.asset.votes) {

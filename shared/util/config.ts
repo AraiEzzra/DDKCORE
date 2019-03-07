@@ -108,6 +108,7 @@ interface IConstraint {
     PREVIOUS_DELEGATES_COUNT?: number;
     MASTER_NODE_MIGRATED_BLOCK?: number;
     CURRENT_BLOCK_VERSION?: number;
+    MAX_RELAY: number;
     VERIFY_BLOCK_VERSION?: boolean;
     VERIFY_BLOCK_SIGNATURE?: boolean;
     VERIFY_BLOCK_ID?: boolean;
@@ -349,6 +350,7 @@ class Config {
             PREVIOUS_DELEGATES_COUNT: 3,
             MASTER_NODE_MIGRATED_BLOCK: 0,
             CURRENT_BLOCK_VERSION: 1,
+            MAX_RELAY: 3,
             // Block validate
             VERIFY_BLOCK_VERSION: true,
             VERIFY_BLOCK_SIGNATURE: true,

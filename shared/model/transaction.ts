@@ -1,7 +1,6 @@
-import { getTransactionServiceByType } from 'core/util/transaction';
-import {Account, Address, PublicKey, Timestamp} from 'shared/model/account';
-import {IAssetService} from 'core/service/transaction';
+import { Account, Address, PublicKey, Timestamp } from 'shared/model/account';
 import AccountRepo from 'core/repository/account';
+import { getAddressByPublicKey } from 'shared/util/account';
 
 export enum TransactionType {
     REGISTER = 0,
@@ -74,7 +73,7 @@ export class TransactionModel<T extends IAsset> {
     id?: string;
     blockId?: string;
     type: TransactionType;
-    senderPublicKey: PublicKey;
+    senderPublicKey?: PublicKey;
     senderAddress?: Address; // Memory only
     signature?: string;
     secondSignature?: string;
@@ -82,9 +81,12 @@ export class TransactionModel<T extends IAsset> {
     fee?: number; // Memory only
     status?: TransactionStatus; // Memory only
     salt?: string;
+    relay?: number;
     asset?: T;
 
     constructor(data: TransactionModel<T>) {
+        this.relay = 0;
+        this.senderAddress = data.senderAddress ? data.senderAddress : getAddressByPublicKey(data.senderPublicKey);
         Object.assign(this, data);
     }
 }
@@ -93,10 +95,15 @@ export class Transaction<T extends IAsset> extends TransactionModel<T> {
 
     constructor(data: TransactionModel<T>) {
         super(data);
-        const sender: Account = AccountRepo.getByPublicKey(data.senderPublicKey);
-        this.senderAddress = sender.address;
-        const service: IAssetService<IAsset> = getTransactionServiceByType(data.type);
-        this.fee = service.calculateFee(this, sender);
+        const sender: Account = AccountRepo.getByAddress(data.senderAddress);
+        if (!sender) {
+            AccountRepo.add({
+                publicKey: data.senderPublicKey,
+                address: data.senderAddress
+            })
+        } else {
+            sender.secondPublicKey = data.senderPublicKey;
+        }
     }
 
     public getCopy() {

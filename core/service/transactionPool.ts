@@ -1,4 +1,10 @@
-import { IAssetTransfer, Transaction, TransactionStatus, TransactionType } from 'shared/model/transaction';
+import {
+    IAssetTransfer,
+    Transaction,
+    TransactionModel,
+    TransactionStatus,
+    TransactionType
+} from 'shared/model/transaction';
 import { transactionSortFunc } from 'core/util/transaction';
 import TransactionDispatcher from 'core/service/transaction';
 import Response from 'shared/model/response';
@@ -10,17 +16,15 @@ import AccountRepository from 'core/repository/account';
 
 export interface ITransactionPoolService<T extends Object> {
     /**
-     * old removeFromPool
+     * renamed from removeFromPool
      */
     batchRemove(transactions: Array<Transaction<T>>, withDepend: boolean): Response<Array<Transaction<T>>>;
 
     /**
      *
-     * old pushInPool
+     * renamed from pushInPool
      */
     batchPush(transactions: Array<Transaction<T>>): void;
-
-    getLockStatus(): boolean;
 
     getBySenderAddress(senderAddress: Address): Array<Transaction<T>>;
     getByRecipientAddress(recipientAddress: Address): Array<Transaction<T>>;
@@ -28,7 +32,7 @@ export interface ITransactionPoolService<T extends Object> {
     removeBySenderAddress(senderAddress: Address): Array<Transaction<T>>;
     removeByRecipientAddress(address: Address): Array<Transaction<T>>;
 
-    push(trs: Transaction<T>, sender?: Account, broadcast?: boolean, force?: boolean): Response<void>;
+    push(trs: Transaction<T>, sender?: Account, broadcast?: boolean): void;
 
     remove(trs: Transaction<T>);
 
@@ -43,10 +47,6 @@ export interface ITransactionPoolService<T extends Object> {
     isPotentialConflict(trs: Transaction<T>);
 
     getSize(): number;
-
-    lock(): void;
-
-    unlock(): void;
 }
 
 class TransactionPoolService<T extends object> implements ITransactionPoolService<T> {
@@ -55,8 +55,7 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
     poolByRecipient: Map<Address, Array<Transaction<T>>> = new Map<Address, Array<Transaction<T>>>();
     poolBySender: Map<Address, Array<Transaction<T>>> = new Map<Address, Array<Transaction<T>>>();
 
-    locked: boolean = false;
-
+    /* NOT IMPLEMENTED */
     batchPush(transactions: Array<Transaction<T>>): Promise<void> {
         return undefined;
     }
@@ -81,20 +80,6 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
         return new ResponseEntity<Array<Transaction<T>>>({ data: removedTransactions });
     }
 
-    lock(): Response<void> {
-        this.locked = true;
-        return new Response<void>();
-    }
-
-    unlock(): Response<void> {
-        this.locked = false;
-        return new Response<void>();
-    }
-
-    getLockStatus(): boolean {
-        return this.locked;
-    }
-
     getByRecipientAddress(recipientAddress: Address): Array<Transaction<T>> {
         return this.poolByRecipient.get(recipientAddress) || [];
     }
@@ -113,23 +98,7 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
         return removedTransactions;
     }
 
-    push(
-        trs: Transaction<T>,
-        sender: Account,
-        broadcast: boolean = false,
-        force: boolean = false,
-    ): Response<void> {
-        if ((this.locked && !force)) {
-            return new Response<void>({ errors: [`Cannot push this transaction`] });
-        }
-
-        if (this.has(trs)) {
-            return new Response<void>({ errors: [`Transaction is already in pool`] });
-        }
-
-        if (!force && this.isPotentialConflict(trs)) {
-            return new Response<void>({ errors: [`Transaction is potential conflicted`] });
-        }
+    push(trs: Transaction<T>, sender: Account, broadcast: boolean = false): void {
 
         this.pool[trs.id] = trs;
         trs.status = TransactionStatus.PUT_IN_POOL;
@@ -147,26 +116,16 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
         }
 
         if (!sender) {
-            sender = AccountRepository.getByPublicKey(trs.senderPublicKey);
+            sender = AccountRepository.getByAddress(trs.senderAddress);
         }
 
-        try {
-            TransactionDispatcher.applyUnconfirmed(trs, sender);
-            trs.status = TransactionStatus.UNCONFIRM_APPLIED;
-        } catch (e) {
-            delete this.pool[trs.id];
-            trs.status = TransactionStatus.DECLINED;
-            logger.error(`[TransactionPool][applyUnconfirmed]: ${e}`);
-            logger.error(`[TransactionPool][applyUnconfirmed][stack]: \n ${e.stack}`);
-            return new Response<void>({ errors: [`Cannot apply unconfirmed this transaction`] });
-        }
+        TransactionDispatcher.applyUnconfirmed(trs, sender);
+        trs.status = TransactionStatus.UNCONFIRM_APPLIED;
 
         if (broadcast) {
             // TODO: fix broadcast storm
             SyncService.sendUnconfirmedTransaction(trs);
         }
-
-        return new Response<void>();
     }
 
     remove(trs: Transaction<T>) {
@@ -220,7 +179,7 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
         return deletedValue;
     }
 
-    has(trs: Transaction<T>) {
+    has(trs: Transaction<T> | TransactionModel<T>) {
         return Boolean(this.pool[trs.id]);
     }
 

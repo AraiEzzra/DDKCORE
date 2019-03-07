@@ -84,13 +84,9 @@ class BlockService {
 
         const processBlockResponse: Response<void> = await this.process(block, true, true, keypair, false, true);
         if (!processBlockResponse.success) {
-            const returnResponse: Response<void> =
-                TransactionDispatcher.returnToQueueConflictedTransactionFromPool(transactions);
-            if (!returnResponse.success) {
-                processBlockResponse.errors = [...processBlockResponse.errors, ...returnResponse.errors];
-            }
+            TransactionDispatcher.returnToQueueConflictedTransactionFromPool(transactions);
 
-            processBlockResponse.errors.push('generate block');
+            processBlockResponse.errors.push('[Process][newGenerateBlock] generate block');
             return processBlockResponse;
         }
 
@@ -99,25 +95,18 @@ class BlockService {
         return new Response<void>();
     }
 
-    private pushInPool(transactions: Array<Transaction<object>>): Response<void> {
-        const errors: Array<string> = [];
+    private pushInPool(transactions: Array<Transaction<object>>): void {
         for (const trs of transactions) {
-            let response: Response<void> = TransactionPool.push(trs, undefined, false, true);
-            if (!response.success) {
-                errors.push(...response.errors);
-            }
+            TransactionPool.push(trs, undefined, false);
         }
-        return new Response<void>({errors: errors});
     }
 
     private lockTransactionPoolAndQueue(): void {
         TransactionQueue.lock();
-        TransactionPool.lock();
     }
 
     private unlockTransactionPoolAndQueue(): void {
         TransactionQueue.unlock();
-        TransactionPool.unlock();
         TransactionQueue.process();
     }
 
@@ -429,13 +418,13 @@ class BlockService {
             if (errors.length === 0) {
                 // const sender: Account = await getOrCreateAccount(trs.senderPublicKey);
                 const sender: Account = AccountRepository.getByPublicKey(trs.senderPublicKey);
-                logger.debug(`[Verify][checkTransactionsAndApplyUnconfirmed][sender] ${JSON.stringify(sender)}`);
+                // logger.debug(`[Verify][checkTransactionsAndApplyUnconfirmed][sender] ${JSON.stringify(sender)}`);
                 if (verify) {
                     const resultCheckTransaction: Response<void> =
                         this.checkTransaction(block, trs, sender, checkExists);
                     if (!resultCheckTransaction.success) {
                         errors.push(...resultCheckTransaction.errors);
-                        logger.debug(`[Verify][checkTransactionsAndApplyUnconfirmed][error] ${JSON.stringify(errors)}`);
+                        // logger.debug(`[Verify][checkTransactionsAndApplyUnconfirmed][error] ${JSON.stringify(errors)}`);
                         i--;
                         continue;
                     }
@@ -462,7 +451,7 @@ class BlockService {
         trs.id = TransactionDispatcher.getId(trs);
         trs.blockId = block.id;
 
-        const validateResult = TransactionDispatcher.validate(trs, sender);
+        const validateResult = TransactionDispatcher.validate(trs);
         if (!validateResult.success) {
             return new Response<void>({errors: [...validateResult.errors, 'checkTransaction']});
         }
@@ -602,21 +591,13 @@ class BlockService {
                 transactionForReturn.push(removedTrs);
             }
         });
-        const pushResponse: Response<void> = this.pushInPool(transactionForReturn);
-        if (!pushResponse.success) {
-            errors.push(...pushResponse.errors);
-        }
-        const returnResponse: Response<void> =
-            await TransactionDispatcher.returnToQueueConflictedTransactionFromPool(block.transactions);
-        if (!returnResponse.success) {
-            errors.push(...returnResponse.errors);
-        }
+
+        this.pushInPool(transactionForReturn);
+        TransactionDispatcher.returnToQueueConflictedTransactionFromPool(block.transactions);
+
         if (errors.length) {
-            const pushBackResponse: Response<void> = this.pushInPool(removedTransactions);
-            if (!pushBackResponse.success) {
-                errors.push(...pushBackResponse.errors);
-                logger.error(`[Process][newReceiveBlock] ${JSON.stringify(errors)}`);
-            }
+            this.pushInPool(removedTransactions);
+            logger.error(`[Process][newReceiveBlock] ${JSON.stringify(errors)}`);
         }
         return new Response<void>({errors});
     }
