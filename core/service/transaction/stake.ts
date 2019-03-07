@@ -3,10 +3,10 @@ import {
     IAssetStake,
     Transaction,
     TransactionType,
-    IAirdropAsset,
+    IAirdropAsset, TransactionModel,
 } from 'shared/model/transaction';
 import ResponseEntity from 'shared/model/response';
-import {Address, Account} from 'shared/model/account';
+import {Account} from 'shared/model/account';
 import AccountRepo from 'core/repository/account';
 import { TOTAL_PERCENTAGE } from 'core/util/const';
 import config from 'shared/util/config';
@@ -16,15 +16,15 @@ import { getAirdropReward, verifyAirdrop } from 'core/util/reward';
 
 class TransactionStakeService implements IAssetService<IAssetStake>  {
 
-    create(trs: Transaction<IAssetStake>, data?: IAssetStake ): IAssetStake {
+    create(trs: TransactionModel<IAssetStake>): void {
         const sender: Account = AccountRepo.getByAddress(trs.senderAddress);
         const airdropReward: IAirdropAsset = getAirdropReward(
                 sender,
-                data.amount,
+                trs.asset.amount,
                 TransactionType.STAKE
             );
-        return {
-            amount: data.amount,
+        trs.asset = {
+            amount: trs.asset.amount,
             startTime: trs.createdAt,
             startVoteCount: 0,
             airdropReward: airdropReward
@@ -50,11 +50,11 @@ class TransactionStakeService implements IAssetService<IAssetStake>  {
             BUFFER.LENGTH.INT64   // asset.airdropReward.amount
         );
         offset = 0;
-        if (trs.asset.airdropReward.sponsors && Object.keys(trs.asset.airdropReward.sponsors).length > 0) {
-            // TODO BigInt
-            const address: Address = parseInt(Object.keys(trs.asset.airdropReward.sponsors)[0], 10);
-            offset = BUFFER.writeUInt64LE(referralBuffer, address, offset);
-            BUFFER.writeUInt64LE(referralBuffer, trs.asset.airdropReward.sponsors[address] || 0, offset);
+        if (trs.asset.airdropReward.sponsors && trs.asset.airdropReward.sponsors.size > 0) {
+            for (const [sponsorAddress, reward] of trs.asset.airdropReward.sponsors) {
+                offset = BUFFER.writeUInt64LE(referralBuffer, sponsorAddress, offset);
+                BUFFER.writeUInt64LE(referralBuffer, reward || 0, offset);
+            }
         }
 
         return Buffer.concat([buff, referralBuffer]);

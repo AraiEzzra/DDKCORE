@@ -1,4 +1,4 @@
-import {Account, Stake} from 'shared/model/account';
+import {Address, Account, Stake} from 'shared/model/account';
 import { logger } from 'shared/util/logger';
 import config from 'shared/util/config';
 import BlockRepo from 'core/repository/block';
@@ -61,7 +61,7 @@ export function getAirdropReward(
     transactionType: TransactionType): IAirdropAsset {
 
     const result: IAirdropAsset = {
-        sponsors: {}
+        sponsors: new Map<Address, number>()
     };
 
     const availableAirdropBalance: number = AccountRepo.getByAddress(config.constants.airdrop.account).actualBalance;
@@ -76,13 +76,13 @@ export function getAirdropReward(
     }
 
     let airdropRewardAmount: number = 0;
-    const sponsors: { [sponsorAddress: number]: number } = {};
+    const sponsors: Map<Address, number> = new Map<Address, number>();
 
     sender.referrals.forEach((sponsor: Account, i: number) => {
         const reward = transactionType === TransactionType.STAKE ?
             Math.ceil((amount * config.constants.airdrop.stakeRewardPercent) / 100) :
             Math.ceil(((config.constants.airdrop.referralPercentPerLevel[i]) * amount) / 100);
-        sponsors[sponsor.address] = reward;
+        sponsors.set(sponsor.address, reward);
         airdropRewardAmount += reward;
     });
 
@@ -145,17 +145,11 @@ function applyUnstake(orders: Array<Stake>, voteTransaction: Transaction<IAssetV
 function sendAirdropReward(trs: Transaction<IAssetVote>): void {
     const transactionAirdropReward = trs.asset.airdropReward;
 
-    for (const sponsorAddress in transactionAirdropReward.sponsors) {
-        if (!transactionAirdropReward.sponsors[sponsorAddress]) {
-            continue;
-        }
-        const rewardAmount = transactionAirdropReward.sponsors[sponsorAddress];
-
+    for (const [sponsorAddress, rewardAmount] of transactionAirdropReward.sponsors) {
         if (rewardAmount === 0) {
             continue;
         }
-
-        AccountRepo.updateBalanceByAddress(parseInt(sponsorAddress, 10), rewardAmount);
+        AccountRepo.updateBalanceByAddress(sponsorAddress, rewardAmount);
         AccountRepo.updateBalanceByAddress(config.config.forging.totalSupplyAccount, -rewardAmount);
     }
 }
@@ -189,17 +183,11 @@ function undoRewards(voteTransaction: Transaction<IAssetVote>): void {
 function undoAirdropReward(trs: Transaction<IAssetVote | IAssetStake>): void {
     const transactionAirdropReward = trs.asset.airdropReward;
 
-    for (const sponsorAddress in transactionAirdropReward.sponsors) {
-        if (!transactionAirdropReward.sponsors[sponsorAddress]) {
-            continue;
-        }
-        const rewardAmount = transactionAirdropReward.sponsors[sponsorAddress];
-
+    for (const [sponsorAddress, rewardAmount] of transactionAirdropReward.sponsors) {
         if (rewardAmount === 0) {
             continue;
         }
-
-        AccountRepo.updateBalanceByAddress(parseInt(sponsorAddress, 10), -rewardAmount);
+        AccountRepo.updateBalanceByAddress(sponsorAddress, -rewardAmount);
         AccountRepo.updateBalanceByAddress(config.config.forging.totalSupplyAccount, rewardAmount);
     }
 }
