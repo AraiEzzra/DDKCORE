@@ -8,7 +8,7 @@ const socketConfig = {
     pingTimeout: 30000,
     pingInterval: 30000,
 };
-const io: SocketIO.Server = require('socket.io')(port, socketConfig);
+const io = require('socket.io')(port, socketConfig);
 
 io.on('connect', onConnect);
 

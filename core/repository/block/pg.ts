@@ -15,7 +15,7 @@ export interface IBlockPGRepository extends IBlockRepositoryPGShared {
 }
 
 class BlockPGRepo implements IBlockPGRepository {
-    private tableName: string = 'blocks';
+    private tableName: string = 'block';
     private tableFields: Array<string> = [
         'id',
         'version',
