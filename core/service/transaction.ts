@@ -1,7 +1,14 @@
 import crypto from 'crypto';
 import cryptoBrowserify from 'crypto-browserify';
 
-import {IAsset, IAssetTransfer, Transaction, TransactionModel, TransactionType} from 'shared/model/transaction';
+import {
+    IAsset,
+    IAssetStake,
+    IAssetTransfer,
+    Transaction,
+    TransactionModel,
+    TransactionType
+} from 'shared/model/transaction';
 import { IFunctionResponse } from 'core/util/common';
 import ResponseEntity from 'shared/model/response';
 import { ed, IKeyPair } from 'shared/util/ed';
@@ -12,7 +19,7 @@ import TransactionRepo from 'core/repository/transaction';
 import TransactionPGRepo from 'core/repository/transaction/pg';
 import TransactionPool from 'core/service/transactionPool';
 import TransactionQueue from 'core/service/transactionQueue';
-import { transactionSortFunc, getTransactionServiceByType, TRANSACTION_BUFFER_SIZE } from 'core/util/transaction';
+import { getTransactionServiceByType, TRANSACTION_BUFFER_SIZE, transactionSortFunc } from 'core/util/transaction';
 import BUFFER from 'core/util/buffer';
 import { SALT_LENGTH } from 'core/util/const';
 
@@ -21,7 +28,7 @@ export interface IAssetService<T extends IAsset> {
 
     create(trs: TransactionModel<T>): void;
 
-    validate(trs: TransactionModel<T>, sender: Account): ResponseEntity<void>;
+    validate(trs: TransactionModel<T>): ResponseEntity<void>;
     verifyUnconfirmed(trs: Transaction<T>, sender: Account): ResponseEntity<void>;
 
     applyUnconfirmed(trs: Transaction<T>, sender: Account): void;
@@ -36,7 +43,7 @@ export interface ITransactionService<T extends IAsset> {
         senderAddress: Address, verifiedTransactions: Set<string>, accountsMap: Map<Address, Account>
     ): void;
 
-    validate(trs: Transaction<T>, sender: Account): ResponseEntity<void>;
+    validate(trs: Transaction<T>): ResponseEntity<void>;
     verifyUnconfirmed(trs: Transaction<T>, sender: Account, checkExists: boolean): ResponseEntity<void>;
 
     create(data: Transaction<T>, keyPair: IKeyPair): ResponseEntity<Transaction<IAsset>>;
@@ -69,7 +76,7 @@ export interface ITransactionService<T extends IAsset> {
 
     popFromPool(limit: number): Array<Transaction<IAsset>>;
 
-    returnToQueueConflictedTransactionFromPool(transactions): ResponseEntity<void>;
+    returnToQueueConflictedTransactionFromPool(transactions): void;
 }
 
 class TransactionService<T extends IAsset> implements ITransactionService<T> {
@@ -78,11 +85,13 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
     }
 
     applyUnconfirmed(trs: Transaction<T>, sender: Account): void {
+        sender.actualBalance -= trs.fee;
         const service: IAssetService<IAsset> = getTransactionServiceByType(trs.type);
         service.applyUnconfirmed(trs, sender);
     }
 
     undoUnconfirmed(trs: Transaction<{}>, sender: Account): void {
+        sender.actualBalance += trs.fee;
         const service: IAssetService<IAsset> = getTransactionServiceByType(trs.type);
         return service.undoUnconfirmed(trs, sender);
     }
@@ -105,7 +114,6 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             return new ResponseEntity();
         }
 
-        // TODO: calculate this with sender.totalStakedAmount
         if (sender.actualBalance >= amount) {
             return { success: true };
         }
@@ -159,7 +167,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
                         }
                     });
 
-                const verifyStatus = TransactionQueue.verify(senderTrs, sender);
+                const verifyStatus = this.verifyUnconfirmed(<Transaction<T>>senderTrs, sender);
 
                 if (verifyStatus.success) {
                     verifiedTransactions.add(senderTrs.id);
@@ -194,6 +202,8 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
                 address: data.senderAddress,
                 publicKey: data.senderPublicKey
             });
+        } else {
+            sender.publicKey = data.senderPublicKey;
         }
 
         if (errors.length) {
@@ -206,6 +216,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         const trs = new Transaction<T>({
             createdAt: data.createdAt,
             senderPublicKey: sender.publicKey,
+            senderAddress: sender.address,
             type: data.type,
             salt: cryptoBrowserify.randomBytes(SALT_LENGTH).toString('hex'),
             asset: data.asset
@@ -257,7 +268,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         return ed.sign(this.getHash(trs), keyPair).toString('hex');
     }
 
-    validate(trs: TransactionModel<T>, sender: Account): ResponseEntity<void> {
+    validate(trs: TransactionModel<T>): ResponseEntity<void> {
         const errors = [];
 
         if (!trs) {
@@ -298,7 +309,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         }
 
         const service = getTransactionServiceByType(trs.type);
-        const verifyResponse = service.validate(trs, sender);
+        const verifyResponse = service.validate(trs);
         if (!verifyResponse.success) {
             errors.push(...verifyResponse.errors);
         }
@@ -330,9 +341,8 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             }
         }
 
-        // TODO: add trs.stakedAmount to amount sum
-        if (trs.type === TransactionType.SEND) {
-            const asset: IAssetTransfer = <IAssetTransfer><Object>trs.asset;
+        if (trs.type in [TransactionType.SEND, TransactionType.STAKE]) {
+            const asset: IAssetTransfer | IAssetStake = <IAssetTransfer | IAssetStake><Object>trs.asset;
             const amount = asset.amount + trs.fee;
             const senderBalanceResponse = this.checkBalance(amount, trs, sender);
             if (!senderBalanceResponse.success) {
@@ -344,13 +354,12 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         return service.verifyUnconfirmed(trs, sender);
     }
 
-    returnToQueueConflictedTransactionFromPool(transactions): ResponseEntity<void> {
+    returnToQueueConflictedTransactionFromPool(transactions): void {
         const verifiedTransactions: Set<string> = new Set();
         const accountsMap: Map<Address, Account> = new Map<Address, Account>();
         for (const trs of transactions) {
             this.checkSenderTransactions(trs.senderId, verifiedTransactions, accountsMap);
         }
-        return new ResponseEntity();
     }
 
     popFromPool(limit: number): Array<Transaction<IAsset>> {

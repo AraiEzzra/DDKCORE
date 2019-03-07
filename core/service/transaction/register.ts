@@ -18,7 +18,7 @@ class TransactionRegisterService implements IAssetService<IAssetRegister> {
         return buff;
     }
 
-    validate(trs: Transaction<IAssetRegister>, sender: Account): Response<void> {
+    validate(trs: Transaction<IAssetRegister>): Response<void> {
         const errors = [];
 
         if (!trs.asset.referral) {
@@ -28,6 +28,7 @@ class TransactionRegisterService implements IAssetService<IAssetRegister> {
         return new Response({ errors });
     }
 
+    // TODO check empty account
     verifyUnconfirmed(trs: Transaction<IAssetRegister>, sender: Account): Response<void> {
         return new Response();
     }

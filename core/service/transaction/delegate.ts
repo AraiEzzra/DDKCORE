@@ -17,7 +17,7 @@ class TransactionDelegateService implements IAssetService<IAssetDelegate> {
         return Buffer.from(trs.asset.username, 'utf8');
     }
 
-    validate(trs: Transaction<IAssetDelegate>, sender: Account): Response<void> {
+    validate(trs: Transaction<IAssetDelegate>): Response<void> {
         const errors = [];
 
         if (!trs.asset || !trs.asset.username) {
