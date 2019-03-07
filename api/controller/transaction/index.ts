@@ -1,31 +1,22 @@
-import {IAsset, Transaction, TransactionType} from 'shared/model/transaction';
-import { IListContainer } from '../../util/common';
 import Response from 'shared/model/response';
-import TransactionRepository from '../../repository/transaction';
-import TransactionService from '../../service/transaction';
-import { RPC, SOCKET, VALIDATE, CONTROLLER } from 'api/utils/decorators';
-import { ITransactionRequest } from './interface';
+import { reqGetTransactions, resGetTransactions, ITransaction } from 'api/controller/transaction/types';
+import TransactionRepository from 'api/repository/transaction';
+import TransactionService from 'api/service/transaction';
+import { RPC } from 'api/utils/decorators';
 
-@CONTROLLER('transaction')
 class TransactionController {
 
     @RPC('GET_ALL_TRS_HISTORY')
-    @SOCKET('get_many')
-    getTransactions(data?: ITransactionRequest) {
-        const trs: Response<IListContainer<Transaction<IAsset>>> = TransactionRepository.getMany(data);
-        return trs.data;
+    getTransactions(data?: reqGetTransactions) {
+        return TransactionService.getMany(data.limit, data.offset, data.sort, data.type);
     }
 
     @RPC('GET_TRS_HISTORY')
-    @SOCKET('GET_ONE')
-    @VALIDATE('getTransaction')
     public getTransaction(data: string) {
-        const trs: Response<Transaction<IAsset>> = TransactionRepository.getOne(data);
-        return trs.data;
+        return TransactionRepository.getOne(data);
     }
 
-    @SOCKET('CREATE')
-    @VALIDATE('createTransaction')
+    @RPC('CREATE_TRS')
     public createTransaction(data: any): void {
         /**TODO */
         TransactionService.createTransaction(data);

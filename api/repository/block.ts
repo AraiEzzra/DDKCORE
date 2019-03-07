@@ -1,15 +1,15 @@
 import { generateBlocks } from '../mock/blocks';
-import { IListContainer } from '../util/common';
+import { resGetBlocks } from 'api/controller/block/types';
 import Response from 'shared/model/response';
 import {Block} from 'shared/model/block';
 
 class TransactionRepository {
 
-    getMany(data?: any): Response<IListContainer<Block>> {
+    getMany(data?: any): Response<resGetBlocks> {
         const blocks = generateBlocks();
-        return new Response<IListContainer<Block>>({
+        return new Response<resGetBlocks>({
             data: {
-                data: blocks,
+                blocks,
                 total_count: blocks.length
             }
         });

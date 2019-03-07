@@ -1,7 +1,7 @@
-import {IAsset, Transaction, TransactionStatus, TransactionType} from 'shared/model/transaction';
+import {IAsset, TransactionApi, TransactionStatus, TransactionType} from 'shared/model/transaction';
 
-export const generateTrs = (): Array<Transaction<IAsset>> => {
-    const trs: Array<Transaction<IAsset>> = [];
+export const generateTrs = (): Array<TransactionApi<IAsset>> => {
+    const trs: Array<TransactionApi<IAsset>> = [];
     for (let i = 0; i < 8; i++) {
         trs.push(generateTransaction(i));
     }
@@ -9,7 +9,7 @@ export const generateTrs = (): Array<Transaction<IAsset>> => {
 };
 
 const generateTransaction = (index: number) => {
-    return new Transaction({
+    return new TransactionApi({
         id: '9db32306db544303a4702da927c2d9d05af4fd02c1b4ed0192e16d1f1cb3851' + index,
         blockId: '3276517decd6171565151a3537e69c7e4f8d361050a4caf684dfcd796242757' + index,
         type: TransactionType.VOTE,
@@ -29,6 +29,6 @@ const generateTransaction = (index: number) => {
                 '+3d59755c247abce2d9ea55bc85764563c1880cc057c0b4c1e6805647ea05f0c8'
             ]
         }
-    });
+    }, index);
 };
 

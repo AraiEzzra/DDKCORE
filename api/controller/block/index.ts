@@ -1,17 +1,14 @@
 import {Block} from 'shared/model/block';
 import BlockRepository from 'api/repository/block';
 import Response from 'shared/model/response';
-import { IBlockRequest } from './interface';
-import { IListContainer } from '../../util/common';
-import { RPC, SOCKET, VALIDATE, CONTROLLER } from 'api/utils/decorators';
+import { reqGetBlocks, resGetBlocks } from 'api/controller/block/types';
+import { RPC, VALIDATE } from 'api/utils/decorators';
 
-@CONTROLLER('BLOCK')
 class BlockController {
 
     @RPC('GET_BLOCKS_HISTORY')
-    @SOCKET('GET_MANY')
-    public getBlocksHistory(data?: IBlockRequest) {
-        const blocks: Response<IListContainer<Block>> = BlockRepository.getMany();
+    public getBlocksHistory(data?: reqGetBlocks) {
+        const blocks: Response<resGetBlocks> = BlockRepository.getMany();
         return blocks.data;
     }
 
