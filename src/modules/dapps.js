@@ -195,7 +195,7 @@ __private.list = function (filter, cb) {
 
     if (filter.category) {
         const category = dappCategories[filter.category];
-        if (category != null && category !== undefined) {
+        if (category != null && category != undefined) {
             where.push('"category" = ${category}');
             params.category = category;
         } else {
