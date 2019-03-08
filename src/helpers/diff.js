@@ -51,8 +51,9 @@ module.exports = {
                 }
                 if (index === -1) {
                     return false;
+                } else {
+                    res.splice(index, 1);
                 }
-                res.splice(index, 1);
                 if (!res.length) {
                     res = null;
                 }
