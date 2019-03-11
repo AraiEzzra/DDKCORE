@@ -15,9 +15,7 @@ import { Account, Address } from 'shared/model/account';
 import AccountRepository from 'core/repository/account';
 
 export interface ITransactionPoolService<T extends Object> {
-    /**
-     * renamed from removeFromPool
-     */
+
     batchRemove(transactions: Array<Transaction<T>>, withDepend: boolean): Response<Array<Transaction<T>>>;
 
     /**

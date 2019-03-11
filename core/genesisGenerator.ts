@@ -3,11 +3,12 @@ import TransactionService from 'core/service/transaction';
 import TransactionPGRepo from 'core/repository/transaction/pg';
 import BlockService from 'core/service/block';
 import AccountRepo from 'core/repository/account';
-import {IAsset, Transaction, TransactionModel, TransactionType} from 'shared/model/transaction';
+import { IAsset, Transaction, TransactionModel, TransactionType } from 'shared/model/transaction';
 import { ed } from 'shared/util/ed';
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
+
 const DIR = path.resolve(__dirname);
 
 const rawAccounts = [
@@ -236,7 +237,7 @@ rawAccounts.forEach((rawAccount) => {
 
 const transactions: Array<Transaction<IAsset>> = rawTransactions.map((rawTransaction) => {
     const hash = crypto.createHash('sha256').update(rawTransaction.privateKey).digest();
-    const keyPair = ed.makeKeypair(hash);
+    const keyPair = ed.makeKeyPair(hash);
     rawTransaction.trs.createdAt = 0;
     const response = TransactionService.create(rawTransaction.trs, keyPair);
     return response.data;
@@ -245,12 +246,11 @@ const transactions: Array<Transaction<IAsset>> = rawTransactions.map((rawTransac
 let block = BlockService.create({
     transactions,
     timestamp: 0,
-    previousBlock: { id: null},
-    keyPair: { publicKey: 'f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2'}
+    previousBlock: { id: null },
+    keyPair: { publicKey: 'f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2' }
 });
 
 block.height = 1;
-block = BlockService.addBlockProperties(block, false);
 block = BlockService.addPayloadHash(block, {
     privateKey: 'hen worry two thank unfair salmon smile oven gospel grab latin reason',
     publicKey: ''

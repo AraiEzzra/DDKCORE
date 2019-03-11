@@ -1,21 +1,41 @@
-import {IAsset, TransactionApi } from 'shared/model/transaction';
-import TransactionRepository from 'shared/repository/transaction/memory';
-import Response from 'shared/model/response';
-
-import { resGetTransactions } from 'api/controller/transaction/types';
+import {IAsset, Transaction, TransactionModel, TransactionApi } from 'shared/model/transaction';
+import SharedTransactionRepository from 'shared/repository/transaction/memory';
+import TransactionRepository from 'api/repository/transaction';
+import { Filter } from 'api/controller/transaction/types';
+import ResponseEntity from 'shared/model/response';
+import { TransactionsByBlockResponse } from 'shared/repository/transaction';
 
 interface ITransactionService {
-    createTransaction(data: any);
-    getMany(limit: number, offset: number, sort?: string, type?: number): Response<resGetTransactions>;
+    getMany(limit: number,
+            offset: number,
+            sort?: string,
+            type?: number): ResponseEntity<Array<TransactionModel<IAsset>>>;
+
+    getOne(data: string): ResponseEntity<Transaction<IAsset>>;
+    getTrsByBlockId(blockId: number, limit: number, offset: number);
+
 }
 
-class TransactionService implements ITransactionService{
+class TransactionService implements ITransactionService {
 
     createTransaction(data: any) {}
 
-    getMany(limit: number, offset: number, sort?: string, type?: number): Response<resGetTransactions> {
-        const trs = TransactionRepository.getMany(limit, offset, sort, type);
-        return new Response<resGetTransactions>({ data: trs });
+    getMany(limit: number,
+            offset: number,
+            sort?: string,
+            type?: number): ResponseEntity<Array<TransactionApi<IAsset>>> {
+        const trs: Array<TransactionApi<IAsset>> = TransactionRepository.getMany(limit, offset, sort, type);
+        return new ResponseEntity({ data: trs });
+    }
+
+    getOne(data: string): ResponseEntity<Transaction<IAsset>> {
+        const trs = SharedTransactionRepository.getOne(data);
+        return new ResponseEntity({ data: trs });
+    }
+
+    getTrsByBlockId(blockId: number, limit: number, offset: number): ResponseEntity<Array<TransactionApi<IAsset>>> {
+        const trs: Array<TransactionApi<IAsset>> = TransactionRepository.getTrsByBlockId(blockId, limit, offset);
+        return new ResponseEntity({ data: trs });
     }
 }
 

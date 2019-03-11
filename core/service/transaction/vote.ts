@@ -10,7 +10,9 @@ import {
     getAirdropReward,
     verifyAirdrop,
     applyFrozeOrdersRewardAndUnstake,
-    undoFrozeOrdersRewardAndUnstake
+    undoFrozeOrdersRewardAndUnstake,
+    sendAirdropReward,
+    undoAirdropReward
 } from 'core/util/reward';
 import DelegateRepo from 'core/repository/delegate';
 
@@ -195,7 +197,7 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
                 const targetAccount: Account = AccountRepo.getByPublicKey(newVote);
                 targetAccount.delegate.votes--;
                 DelegateRepo.update(targetAccount.delegate);
-                delete acc[acc.indexOf(newVote)];
+                acc.splice(acc.indexOf(newVote), 1);
                 return acc;
             }, sender.votes);
         } else {
@@ -222,6 +224,7 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
         });
         if (processedOrders && processedOrders.length > 0) {
             applyFrozeOrdersRewardAndUnstake(trs, processedOrders);
+            sendAirdropReward(trs);
         }
     }
 
@@ -240,7 +243,7 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
                 const targetAccount: Account = AccountRepo.getByPublicKey(newVote);
                 targetAccount.delegate.votes--;
                 DelegateRepo.update(targetAccount.delegate);
-                delete acc[acc.indexOf(newVote)];
+                acc.splice(acc.indexOf(newVote), 1);
                 return acc;
             }, sender.votes);
         }
@@ -258,6 +261,7 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
             }
         });
         undoFrozeOrdersRewardAndUnstake(trs);
+        undoAirdropReward(trs);
     }
 }
 

@@ -11,12 +11,11 @@ import BlockRepo from 'core/repository/block';
 import BlockPGRepo from 'core/repository/block/pg';
 import AccountRepo from 'core/repository/account';
 import AccountRepository from 'core/repository/account';
-import {IAsset, IAssetTransfer, Transaction, TransactionType} from 'shared/model/transaction';
+import { IAsset, IAssetTransfer, Transaction, TransactionType } from 'shared/model/transaction';
 import TransactionDispatcher from 'core/service/transaction';
 import TransactionQueue from 'core/service/transactionQueue';
 import TransactionPool from 'core/service/transactionPool';
 import TransactionRepo from 'core/repository/transaction/';
-import { DelegateService } from 'core/service/delegate';
 import slotService from 'core/service/slot';
 import RoundService from 'core/service/round';
 import RoundRepository from 'core/repository/round';
@@ -28,7 +27,7 @@ import config from 'shared/util/config';
 import SyncService from 'core/service/sync';
 import system from 'core/repository/system';
 import TransactionPGRepo from 'core/repository/transaction/pg';
-import {getAddressByPublicKey} from 'shared/util/account';
+import { getAddressByPublicKey } from 'shared/util/account';
 
 const validator: Validator = new ZSchema({});
 
@@ -48,11 +47,8 @@ enum Fork {
 }
 
 class BlockService {
-    // todo: remove after implemented as singleton
-    private delegateService: DelegateService = new DelegateService();
 
     private secondsRadix = 1000;
-    private lastReceipt: number;
     private readonly currentBlockVersion: number = config.constants.CURRENT_BLOCK_VERSION;
 
     private readonly BLOCK_BUFFER_SIZE
@@ -121,7 +117,6 @@ class BlockService {
         keyPair: IKeyPair,
         verify: boolean = true
     ): Promise<Response<void>> {
-        // block = this.addBlockProperties(block, broadcast); TODO deprecated
 
         if (verify) {
             const resultVerifyBlock: IVerifyResult = this.verifyBlock(block, !keyPair);
@@ -163,34 +158,8 @@ class BlockService {
         return new Response<void>();
     }
 
-    /** TODO deprecated ? */
-    public addBlockProperties(block: Block, broadcast: boolean): Block {
-        if (broadcast) {
-            return block;
-        }
-        block.amount = block.amount || 0;
-        block.fee = block.fee || 0;
-
-        if (block.version === undefined) {
-            block.version = config.constants.CURRENT_BLOCK_VERSION;
-        }
-        if (block.transactionCount === undefined) {
-            if (block.transactions === undefined) {
-                block.transactionCount = 0;
-            } else {
-                block.transactionCount = block.transactions.length;
-            }
-        }
-        if (block.transactions === undefined) {
-            block.transactions = [];
-        }
-        return block;
-    }
-
-    private verifyBlock(block: Block, verify: boolean): IVerifyResult {
+    public verifyBlock(block: Block, verify: boolean): IVerifyResult {
         const lastBlock: Block = BlockRepo.getLastBlock();
-
-        block = this.setHeight(block, lastBlock);
 
         let result: IVerifyResult = {verified: false, errors: []};
 
@@ -207,8 +176,6 @@ class BlockService {
             result = this.verifyPayload(block, result);
         }
 
-        /** TODO deprecated ? */
-        result = this.verifyForkOne(block, lastBlock, result);
         result = this.verifyBlockSlot(block, lastBlock, result);
 
         result.verified = result.errors.length === 0;
@@ -299,19 +266,11 @@ class BlockService {
 
     private verifyPayload(block: Block, result: IVerifyResult): IVerifyResult {
         if (block.transactions.length !== block.transactionCount) {
-            if (config.constants.PAYLOAD_VALIDATE.MAX_TRANSACTION_LENGTH) {
-                result.errors.push('Included transactions do not match block transactions count');
-            } else {
-                logger.error('Included transactions do not match block transactions count');
-            }
+            result.errors.push('Included transactions do not match block transactions count');
         }
 
         if (block.transactions.length > config.constants.maxTxsPerBlock) {
-            if (config.constants.PAYLOAD_VALIDATE.MAX_TRANSACTION_IN_BLOCK) {
-                result.errors.push('Number of transactions exceeds maximum per block');
-            } else {
-                logger.error('Number of transactions exceeds maximum per block');
-            }
+            result.errors.push('Number of transactions exceeds maximum per block');
         }
 
         let totalAmount = 0;
@@ -331,11 +290,7 @@ class BlockService {
             }
 
             if (appliedTransactions[trs.id]) {
-                if (config.constants.PAYLOAD_VALIDATE.MAX_TRANSACTION_DUPLICATE) {
-                    result.errors.push(`Encountered duplicate transaction: ${trs.id}`);
-                } else {
-                    logger.error(`Encountered duplicate transaction: ${trs.id}`);
-                }
+                result.errors.push(`Encountered duplicate transaction: ${trs.id}`);
             }
 
             appliedTransactions[trs.id] = trs;
@@ -351,40 +306,16 @@ class BlockService {
         const hex = payloadHash.digest().toString('hex');
 
         if (hex !== block.payloadHash) {
-            if (config.constants.PAYLOAD_VALIDATE.INVALID_HASH) {
-                result.errors.push('Invalid payload hash');
-            } else {
-                logger.error('Invalid payload hash');
-            }
+            result.errors.push('Invalid payload hash');
         }
 
         if (totalAmount !== block.amount) {
-            if (config.constants.PAYLOAD_VALIDATE.TOTAL_AMOUNT) {
-                result.errors.push('Invalid total amount');
-            } else {
-                logger.error('Invalid total amount');
-            }
+            result.errors.push('Invalid total amount');
         }
 
         if (totalFee !== block.fee) {
-            if (config.constants.PAYLOAD_VALIDATE.TOTAL_FEE) {
-                result.errors.push(`Invalid total fee. Expected: ${totalFee}, actual: ${block.fee}`);
-            } else {
-                logger.error('Invalid total fee');
-            }
+            result.errors.push(`Invalid total fee. Expected: ${totalFee}, actual: ${block.fee}`);
         }
-        return result;
-    }
-
-    private verifyForkOne(block: Block, lastBlock: Block, result: IVerifyResult): IVerifyResult {
-        if (block.previousBlockId && block.previousBlockId !== lastBlock.id) {
-            const forkResponse: Response<void> = this.delegateService.fork(block, Fork.ONE);
-            if (!forkResponse.success) {
-                result.errors.push(...forkResponse.errors);
-            }
-            result.errors.push(['Invalid previous block:', block.previousBlockId, 'expected:', lastBlock.id].join(' '));
-        }
-
         return result;
     }
 
@@ -446,7 +377,7 @@ class BlockService {
                         this.checkTransaction(block, trs, sender, checkExists);
                     if (!resultCheckTransaction.success) {
                         errors.push(...resultCheckTransaction.errors);
-                        // logger.debug(`[Verify][checkTransactionsAndApplyUnconfirmed][error] ${JSON.stringify(errors)}`);
+                        logger.debug(`[Verify][checkTransactionsAndApplyUnconfirmed][error] ${errors}`);
                         i--;
                         continue;
                     }
@@ -529,10 +460,10 @@ class BlockService {
         }
 
         BlockRepo.setLastBlock(block);
-        messageON('NEW_BLOCKS', block);
+        // messageON('NEW_BLOCKS', block);
 
         if (broadcast) {
-            await SyncService.sendNewBlock(block); // TODO remove await ?
+            SyncService.sendNewBlock(block);
         }
 
         return new Response<void>();
@@ -590,7 +521,6 @@ class BlockService {
             `slot: ${slotService.getSlotNumber(block.createdAt)}`
         );
 
-        this.updateLastReceipt();
         const removedTransactionsResponse: Response<Array<Transaction<object>>> =
             await TransactionPool.batchRemove(block.transactions, true);
         if (!removedTransactionsResponse.success) {
@@ -601,7 +531,6 @@ class BlockService {
         );
         const removedTransactions: Array<Transaction<object>> = removedTransactionsResponse.data || [];
 
-        // todo: wrong logic with errors!!!
         const errors: Array<string> = [];
         const processBlockResponse: Response<void> = await this.process(block, false, true, null, false);
         if (!processBlockResponse.success) {
@@ -643,28 +572,6 @@ class BlockService {
     //     return new Response<void>({errors});
     // }
     //
-    // private verifyReceipt(block: Block): IVerifyResult {
-    //     const lastBlock = BlockRepo.getLastBlock();
-    //
-    //     block = this.setHeight(block, lastBlock);
-    //
-    //     let result: IVerifyResult = {verified: false, errors: []};
-    //
-    //     result = this.verifySignature(block, result);
-    //     result = this.verifyPreviousBlock(block, result);
-    //     result = this.verifyAgainstLastNBlockIds(block, result);
-    //     result = this.verifyBlockSlotWindow(block, result);
-    //     result = this.verifyVersion(block, result);
-    //     // TODO: validate total fee
-    //     result = this.verifyId(block, result);
-    //     result = this.verifyPayload(block, result);
-    //
-    //     result.verified = result.errors.length === 0;
-    //     result.errors.reverse();
-    //
-    //     return result;
-    // }
-    //
     // private verifyAgainstLastNBlockIds(block: Block, result: IVerifyResult): IVerifyResult {
     //     if (BlockRepo.getLastNBlockIds().indexOf(block.id) !== -1) {
     //         result.errors.push('Block already exists in chain');
@@ -689,74 +596,28 @@ class BlockService {
     //     return result;
     // }
 
-    /** deprecated ? */
     public async deleteLastBlock(): Promise<Response<Block>> {
         let lastBlock = BlockRepo.getLastBlock();
         logger.warn(`Deleting last block: ${lastBlock.id}`);
         if (lastBlock.height === 1) {
             return new Response<Block>({errors: ['Cannot delete genesis block']});
         }
-        const popBlockResponse: Response<Block> = await this.popLastBlock(lastBlock);
-        if (!popBlockResponse.success) {
-            logger.error(
-                `Error deleting last block: ${lastBlock.id}, ` +
-                `message: ${JSON.stringify(popBlockResponse.errors)}`
-            );
-            popBlockResponse.errors.push('deleteLastBlock');
-            return popBlockResponse;
-        }
-        const newLastBlock = popBlockResponse.data;
-
-        return new Response<Block>({data: BlockRepo.setLastBlock(newLastBlock)});
-    }
-
-    private async popLastBlock(oldLastBlock: Block): Promise<Response<Block>> {
-        logger.debug(`[Service][Block][popLastBlock] block id: ${oldLastBlock.id}`);
-        let lastBlock: Block = BlockRepo.getLastBlock();
-        if (oldLastBlock.id !== lastBlock.id) {
-            logger.error(`[Service][Block][popLastBlock] Block ${oldLastBlock.id} is not last`);
-            return new Response<Block>({errors: [`Block is not last: ${JSON.stringify(oldLastBlock)}`]});
-        }
-
-        const loadBlocksPartResponse: Response<Block> = await this.loadBlocksPart(oldLastBlock.previousBlockId);
-        if (!loadBlocksPartResponse.success) {
-            loadBlocksPartResponse.errors.push('receiveForkFive');
-            return loadBlocksPartResponse;
-        }
-        let previousBlock: Block = loadBlocksPartResponse.data;
-
+        
         const errors: Array<string> = [];
-        oldLastBlock.transactions.reverse().forEach(async (transaction) => {
-            const sender = AccountRepo.getByPublicKey(transaction.senderPublicKey);
+        for (const transaction of lastBlock.transactions.reverse()) {
+            const sender = AccountRepo.getByAddress(transaction.senderAddress);
             await TransactionDispatcher.undo(transaction, sender);
             TransactionDispatcher.undoUnconfirmed(transaction, sender);
-        });
+        }
+
         if (errors.length) {
-            return new Response<Block>({errors});
+            return new Response<Block>({ errors });
         }
 
-        await RoundService.rollBack(); // (oldLastBlock, previousBlock);
-
-        const deletedBlockId = BlockRepo.delete(oldLastBlock);
-        if (!deletedBlockId) {
-            return new Response<Block>({errors: ['popLastBlock']});
-        }
-
-        return new Response<Block>({data: previousBlock});
-    }
-
-    private async loadBlocksPart(previousBlockId: string): Promise<Response<Block>> {
-        logger.debug(`[Utils][loadBlocksPart]' previousBlockId: ${previousBlockId}`);
-        const block: Block = await BlockRepo.getById(previousBlockId);
-        if (!block) {
-            return new Response<Block>({errors: ['loadBlocksPart']});
-        }
-        return new Response<Block>({data: block});
-    }
-
-    public updateLastReceipt(): number {
-        this.lastReceipt = Math.floor(Date.now() / this.secondsRadix);
-        return this.lastReceipt;
+        RoundService.rollBack(); // (oldLastBlock, previousBlock);
+        const newLastBlock = BlockRepo.deleteLastBlock();
+        
+        return new Response<Block>({ data: newLastBlock });
     }
 
     // called from app.js
@@ -865,14 +726,14 @@ class BlockService {
     }
 
     // @deprecate
-    public async loadBlocks(blocks: Array<Block>): Promise<void> {
-        for (let block of blocks) {
-            await this.receiveBlock(block);
-        }
-        return;
-    }
+    // public async loadBlocks(blocks: Array<Block>): Promise<void> {
+    //     for (let block of blocks) {
+    //         await this.receiveBlock(block);
+    //     }
+    //     return;
+    // }
 
-    public isValid(block: BlockModel): Response<void> {
+    public validate(block: BlockModel): Response<void> {
         const isValid: boolean = validator.validate(block, blockSchema);
         if (!isValid) {
             return new Response<void>({

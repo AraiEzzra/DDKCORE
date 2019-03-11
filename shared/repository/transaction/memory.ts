@@ -1,5 +1,9 @@
-import { TransactionApi, Transaction, IAsset } from 'shared/model/transaction';
-import { ITransactionRepository } from 'shared/repository/transaction';
+import { Transaction, TransactionApi, IAsset } from 'shared/model/transaction';
+import { ITransactionRepository,
+         DeletedTransactionId,
+         TransactionId,
+         BlockId,
+         TransactionsByBlockResponse } from 'shared/repository/transaction';
 import { generateTrs } from 'api/mock/transactions';
 
 class TransactionRepositoryImpl implements ITransactionRepository<IAsset> {
@@ -9,10 +13,30 @@ class TransactionRepositoryImpl implements ITransactionRepository<IAsset> {
         return trs;
     }
 
-    getMany(limit: number, offset: number, sort?: string, type?: number): Array<Transaction<IAsset>> {
-        const transactions: Array<TransactionApi<IAsset>> = generateTrs();
-        return transactions;
+    add(trs: Transaction<IAsset>): Transaction<IAsset> {
+        return;
     }
+
+    delete(trs: Transaction<IAsset>): DeletedTransactionId {
+        return undefined;
+    }
+
+    getAll(): Array<Transaction<IAsset>> {
+        return undefined;
+    }
+
+    getByBlockIds(blockIds: Array<BlockId>): TransactionsByBlockResponse {
+        return undefined;
+    }
+
+    getById(trsId: TransactionId): Transaction<IAsset> {
+        return undefined;
+    }
+
+    isExist(trsId: TransactionId): boolean {
+        return false;
+    }
+
 }
 
 export default new TransactionRepositoryImpl();
