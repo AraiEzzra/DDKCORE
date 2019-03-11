@@ -8,7 +8,7 @@ import {
 import ResponseEntity from 'shared/model/response';
 import {Account, Stake} from 'shared/model/account';
 import AccountRepo from 'core/repository/account';
-import { TOTAL_PERCENTAGE } from 'core/util/const';
+import { TOTAL_PERCENTAGE, SECONDS_PER_MINUTE } from 'core/util/const';
 import config from 'shared/util/config';
 import BUFFER from 'core/util/buffer';
 
@@ -19,10 +19,10 @@ class TransactionStakeService implements IAssetService<IAssetStake>  {
     create(trs: TransactionModel<IAssetStake>): void {
         const sender: Account = AccountRepo.getByAddress(trs.senderAddress);
         const airdropReward: IAirdropAsset = getAirdropReward(
-                sender,
-                trs.asset.amount,
-                TransactionType.STAKE
-            );
+            sender,
+            trs.asset.amount,
+            TransactionType.STAKE
+        );
         trs.asset = {
             amount: trs.asset.amount,
             startTime: trs.createdAt,
@@ -93,7 +93,7 @@ class TransactionStakeService implements IAssetService<IAssetStake>  {
             isActive: true,
             amount: trs.asset.amount,
             voteCount: 0,
-            nextVoteMilestone: trs.createdAt + config.constants.froze.vTime * 60,
+            nextVoteMilestone: trs.createdAt + config.constants.froze.vTime * SECONDS_PER_MINUTE,
             airdropReward: trs.asset.airdropReward.sponsors,
             sourceTransactionId: trs.id
         }));
