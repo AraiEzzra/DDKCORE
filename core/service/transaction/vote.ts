@@ -15,15 +15,13 @@ import {
     undoAirdropReward
 } from 'core/util/reward';
 import DelegateRepo from 'core/repository/delegate';
+import { SECONDS_PER_MINUTE, TOTAL_PERCENTAGE } from 'core/util/const';
 
 class TransactionVoteService implements IAssetService<IAssetVote> {
 
     create(trs: TransactionModel<IAssetVote>): void {
         const sender: Account = AccountRepo.getByAddress(trs.senderAddress);
-        let isDownVote: boolean = false;
-        if (trs.asset.votes && trs.asset.votes[0]) {
-            isDownVote = trs.asset.votes[0][0] === '-';
-        }
+        const isDownVote: boolean = trs.asset.votes[0][0] === '-';
         const totals: { reward: number, unstake: number} = calculateTotalRewardAndUnstake(sender, isDownVote);
         const airdropReward: IAirdropAsset = getAirdropReward(sender, totals.reward, trs.type);
 
@@ -185,7 +183,7 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
             }
             return acc;
         }, 0);
-        return senderTotalFrozeAmount * config.constants.fees.vote / 100;
+        return senderTotalFrozeAmount * config.constants.fees.vote / TOTAL_PERCENTAGE;
     }
 
 
@@ -218,7 +216,7 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
         sender.stakes.forEach((stake: Stake) => {
             if (stake.isActive && (stake.nextVoteMilestone === 0 || trs.createdAt > stake.nextVoteMilestone)) {
                 stake.voteCount++;
-                stake.nextVoteMilestone = trs.createdAt + config.constants.froze.vTime * 60;
+                stake.nextVoteMilestone = trs.createdAt + config.constants.froze.vTime * SECONDS_PER_MINUTE;
                 processedOrders.push(stake);
             }
         });
@@ -255,7 +253,7 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
 
         sender.stakes.forEach((stake: Stake) => {
             if (stake.isActive && (stake.nextVoteMilestone === 0 ||
-                    trs.createdAt + (config.constants.froze.vTime * 60) === stake.nextVoteMilestone)) {
+                trs.createdAt + (config.constants.froze.vTime * SECONDS_PER_MINUTE) === stake.nextVoteMilestone)) {
                 stake.voteCount--;
                 stake.nextVoteMilestone = 0;
             }
