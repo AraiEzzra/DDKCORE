@@ -1,11 +1,13 @@
 import { Peer } from 'shared/model/peer';
 import { getRandomInt } from 'core/util/common';
-const env = require('../../config/env').default;
-export const TRUSTED_PEERS: Array<any> = env.peers.list;
-export const BLACK_LIST = new Set(env.blackList);
 import { logger } from 'shared/util/logger';
 import { Block } from 'shared/model/block';
 import { MAX_PEER_BLOCKS_IDS } from 'core/util/const';
+
+const env = require('../../config/env').default;
+export const TRUSTED_PEERS: Array<any> = env.peers.list;
+export const BLACK_LIST = new Set(env.blackList);
+
 
 export class PeerRepo {
     private peers: { [string: string]: Peer } = {};
@@ -66,11 +68,21 @@ export class PeerRepo {
         const currentPeer = this.getPeerFromPool(peer);
         Object.assign(currentPeer, headers);
 
+        if (currentPeer.blocksIds.has(headers.height)) {
+           this.clearPoolByHeight(currentPeer.blocksIds, headers.height);
+        }
+
         currentPeer.blocksIds.set(headers.height, headers.broadhash);
         if (currentPeer.blocksIds.size > MAX_PEER_BLOCKS_IDS) {
             const min = Math.min(...currentPeer.blocksIds.keys());
             currentPeer.blocksIds.delete(min);
         }
+    }
+
+    clearPoolByHeight(blocksIds: Map<number, string>, height: number) {
+        [...blocksIds.keys()]
+        .filter(key => key >= height)
+        .map(key => blocksIds.delete(key));
     }
 
     ban(peer) {
@@ -84,22 +96,6 @@ export class PeerRepo {
         return peerList[getRandomInt(peerList.length)];
     }
 
-    // @deprecated
-    getRandomPeers(limit: number = 5, peers: Array<Peer> = null): Array<Peer> {
-        const peerList = peers || this.peerList();
-        if (peerList.length <= limit) {
-            return peerList;
-        }
-        const result = [];
-        while (result.length < limit) {
-            const peer = peerList[getRandomInt(peerList.length)];
-            if (result.indexOf(peer) !== -1) {
-                result.push(peer);
-            }
-        }
-        return result;
-    }
-
     getPeersByFilter(height, broadhash): Array<Peer> {
         return this.peerList().filter(peer => {
             return peer.height >= height
@@ -109,17 +105,6 @@ export class PeerRepo {
 
     getRandomTrustedPeer(): Peer {
         return TRUSTED_PEERS[getRandomInt(TRUSTED_PEERS.length)];
-    }
-
-
-    public getByFilter(filter) {
-        return [];
-    }
-
-    public dbSave() {
-    }
-
-    public dbRead() {
     }
 }
 

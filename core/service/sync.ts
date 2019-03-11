@@ -10,43 +10,43 @@ import SocketRepository from 'core/repository/socket';
 import { messageON } from 'shared/util/bus';
 import { TOTAL_PERCENTAGE } from 'core/util/const';
 import config from 'shared/util/config';
+import { logger } from 'shared/util/logger';
 
 //  TODO get from env
 const MIN_CONSENSUS = 51;
 
 export interface ISyncService {
 
-    requestPeers(): Promise<void>;
+    requestPeers(): void;
 
-    sendPeers(peer: Peer): Promise<void>;
+    sendPeers(peer: Peer): void;
 
-    connectNewPeers(peers: Array<Peer>): Promise<void>;
+    connectNewPeers(peers: Array<Peer>): void;
 
     sendNewBlock(block: Block): void;
 
-    sendUnconfirmedTransaction(trs: Transaction<any>): Promise<void>;
+    sendUnconfirmedTransaction(trs: Transaction<any>): void;
 
-    requestBlocks(block: Block, peer: Peer): Promise<void>;
+    checkCommonBlock(): Promise<void>;
 
-    sendBlocks(data: { height: number, limit: number }, peer: Peer): Promise<void>;
+    requestBlocks(block: Block, peer: Peer): void;
+
+    sendBlocks(data: { height: number, limit: number }, peer: Peer): void;
 
     consensus: boolean;
 }
 
 export class SyncService implements ISyncService {
 
-    constructor() {
-    }
-
-    async requestPeers(): Promise<void> {
+    requestPeers(): void {
         SyncRepository.requestPeers();
     }
 
-    async sendPeers(peer): Promise<void> {
+    sendPeers(peer): void {
         SyncRepository.sendPeers(peer);
     }
 
-    async connectNewPeers(peers: Array<Peer>): Promise<void> {
+    connectNewPeers(peers: Array<Peer>): void {
         peers.forEach(peer => SocketRepository.connectNewPeer(peer));
     }
 
@@ -54,7 +54,7 @@ export class SyncService implements ISyncService {
         SyncRepository.sendNewBlock(block);
     }
 
-    async sendUnconfirmedTransaction(trs: Transaction<any>): Promise<void> {
+    sendUnconfirmedTransaction(trs: Transaction<any>): void {
         trs.relay += 1;
         if (trs.relay < config.constants.MAX_RELAY) {
             SyncRepository.sendUnconfirmedTransaction(trs);
@@ -63,14 +63,18 @@ export class SyncService implements ISyncService {
 
     async checkCommonBlock(): Promise<void> {
         const lastBlock = BlockRepository.getLastBlock();
+        if (!lastBlock) {
+            logger.error('ERROR: last block is undefined');
+        }
         if (this.checkBlockConsensus(lastBlock) || lastBlock.height === 1) {
-            await this.requestBlocks(lastBlock);
+            this.requestBlocks(lastBlock);
         } else {
 
             const randomPeer = PeerRepository.getRandomPeer(
                 PeerRepository.getPeersByFilter(lastBlock.height, SystemRepository.broadhash)
             );
             if (!randomPeer) {
+                logger.error('[Service][Sync][checkCommonBlock]: Peer doesn`t found');
                 return;
             }
             const minHeight = Math.min(...randomPeer.blocksIds.keys());
@@ -87,29 +91,28 @@ export class SyncService implements ISyncService {
         }
     }
 
-
-    async requestBlocks(lastBlock, peer = null): Promise<void> {
-        SyncRepository.requestBlocks({ height: lastBlock.height, limit: 42 }, peer);
+    requestBlocks(lastBlock, peer = null): void {
+        SyncRepository.requestBlocks({ height: lastBlock.height + 1, limit: 42 }, peer);
     }
 
-    async sendBlocks(data: { height: number, limit: number }, peer): Promise<void> {
+    sendBlocks(data: { height: number, limit: number }, peer): void {
         const blocks = BlockRepository.getMany(data.height, data.limit);
         SyncRepository.sendBlocks(blocks, peer);
     }
 
-    async requestCommonBlocks(block): Promise<void> {
+    requestCommonBlocks(block): void {
         SyncRepository.requestCommonBlocks(block);
     }
 
-    async checkCommonBlocks(block: {id: string, height: number}, peer): Promise<void> {
-        const isExist = await BlockRepository.isExist(block.id);
-        SyncRepository.sendCommonBlocksExist({isExist, block}, peer);
+    checkCommonBlocks(block: { id: string, height: number }, peer): void {
+        const isExist = BlockRepository.isExist(block.id);
+        SyncRepository.sendCommonBlocksExist({ isExist, block }, peer);
     }
 
-    async updateHeaders(data: { lastBlock: Block }) {
-        SystemRepository.setBroadhash(data.lastBlock);
-        SystemRepository.addBlockIdInPool(data.lastBlock);
-        SystemRepository.setHeight(data.lastBlock);
+    updateHeaders(lastBlock: Block) {
+        SystemRepository.setBroadhash(lastBlock);
+        SystemRepository.addBlockIdInPool(lastBlock);
+        SystemRepository.setHeight(lastBlock);
         SyncRepository.sendHeaders(
             SystemRepository.getHeaders()
         );
@@ -118,6 +121,9 @@ export class SyncService implements ISyncService {
     getBlockConsensus(block: Block) {
         const peers = PeerRepository.peerList();
         const commonPeers = peers.filter(peer => PeerRepository.checkCommonBlock(peer, block));
+        if (!peers.length) {
+            return 0;
+        }
         return commonPeers.length / peers.length * TOTAL_PERCENTAGE;
     }
 
@@ -130,14 +136,15 @@ export class SyncService implements ISyncService {
         const commonPeers = peers.filter(peer => {
             return peer.broadhash === SystemRepository.broadhash;
         });
+        if (!peers.length) {
+            return 0;
+        }
         return commonPeers.length / peers.length * TOTAL_PERCENTAGE;
     }
-
 
     get consensus(): boolean {
         return this.getConsensus() >= MIN_CONSENSUS;
     }
-
 }
 
 export default new SyncService();

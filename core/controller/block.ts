@@ -10,6 +10,7 @@ import * as blockUtils from 'core/util/block';
 import SyncService from 'core/service/sync';
 import SlotService from 'core/service/slot';
 import RoundService from 'core/service/round';
+import { messageON } from 'shared/util/bus';
 
 interface BlockGenerateRequest {
     keyPair: {
@@ -24,7 +25,7 @@ class BlockController extends BaseController {
     @MAIN('BLOCK_RECEIVE')
     public async onReceiveBlock(action: { data: { block: BlockModel } }): Promise<ResponseEntity<void>> {
         const { data } = action;
-
+        logger.debug(`[Service][Block][onReceiveBlock] id:${data.block.id} height:${data.block.id}`);
         const validateResponse = BlockService.validate(data.block);
         if (!validateResponse.success) {
             return validateResponse;
@@ -71,8 +72,7 @@ class BlockController extends BaseController {
                     return new ResponseEntity<void>({ errors });
                 }
             } else if (!SyncService.consensus) {
-                // TODO: undo to common
-                // TODO: sync / load blocks
+                messageON('EMIT_SYNC_BLOCKS', {});
             }
         } else {
             errors.push(
