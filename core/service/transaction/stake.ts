@@ -60,7 +60,7 @@ class TransactionStakeService implements IAssetService<IAssetStake>  {
         return Buffer.concat([buff, referralBuffer]);
     }
 
-    validate(trs: Transaction<IAssetStake>, sender: Account): ResponseEntity<any> {
+    validate(trs: Transaction<IAssetStake>): ResponseEntity<any> {
         const errors = [];
         if (trs.asset.amount <= 0) {
             errors.push('Invalid transaction amount');
@@ -74,7 +74,6 @@ class TransactionStakeService implements IAssetService<IAssetStake>  {
     }
 
     verifyUnconfirmed(trs: Transaction<IAssetStake>, sender: Account): ResponseEntity<void> {
-        // TODO checkBalance
         let errors = [];
         const airdropCheck: ResponseEntity<any> = verifyAirdrop(trs, trs.asset.amount, sender);
         if (!airdropCheck.success) {
@@ -87,15 +86,16 @@ class TransactionStakeService implements IAssetService<IAssetStake>  {
         return (trs.asset.amount * config.constants.fees.froze) / TOTAL_PERCENTAGE;
     }
 
-    applyUnconfirmed(trs: Transaction<IAssetStake>): void {
-        const totalAmount: number = trs.fee + trs.asset.amount;
-        AccountRepo.updateBalanceByAddress(trs.senderAddress, -totalAmount);
+    applyUnconfirmed(trs: Transaction<IAssetStake>, sender: Account): void {
+        sender.actualBalance -= trs.asset.amount;
+        // TODO sender.stakes.push(new Stake())
+        // distribute airdrop
     }
 
-    undoUnconfirmed(trs: Transaction<IAssetStake>, sender: Account): void {
-        const fee: number = this.calculateFee(trs);
-        const totalAmount: number = fee + trs.asset.amount;
-        AccountRepo.updateBalanceByAddress(trs.senderAddress, totalAmount);
+    undoUnconfirmed(trs: Transaction<IAssetStake>, sender: Account, senderOnly): void {
+        sender.actualBalance += trs.asset.amount;
+        // TODO sender.stakes.splice(sender.stakes.indexOf(stake), 1)
+        // get back airdrop
     }
 
 }

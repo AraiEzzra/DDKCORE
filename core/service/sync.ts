@@ -9,6 +9,8 @@ import SyncRepository from 'core/repository/sync';
 import SocketRepository from 'core/repository/socket';
 import { messageON } from 'shared/util/bus';
 import { TOTAL_PERCENTAGE } from 'core/util/const';
+import config from 'shared/util/config';
+
 //  TODO get from env
 const MIN_CONSENSUS = 51;
 
@@ -53,7 +55,10 @@ export class SyncService implements ISyncService {
     }
 
     async sendUnconfirmedTransaction(trs: Transaction<any>): Promise<void> {
-        SyncRepository.sendUnconfirmedTransaction(trs);
+        trs.relay += 1;
+        if (trs.relay < config.constants.MAX_RELAY) {
+            SyncRepository.sendUnconfirmedTransaction(trs);
+        }
     }
 
     async checkCommonBlock() {

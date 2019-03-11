@@ -246,7 +246,7 @@ let block = BlockService.create({
     transactions,
     timestamp: 0,
     previousBlock: { id: null},
-    keypair: { publicKey: 'f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2'}
+    keyPair: { publicKey: 'f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2'}
 });
 
 block.height = 1;

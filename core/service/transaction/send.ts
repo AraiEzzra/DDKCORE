@@ -24,7 +24,7 @@ class TransactionSendService implements IAssetService<IAssetTransfer> {
         return buff;
     }
 
-    validate(trs: Transaction<IAssetTransfer>, sender: Account): Response<void> {
+    validate(trs: Transaction<IAssetTransfer>): Response<void> {
         const errors = [];
 
         const asset: IAssetTransfer = <IAssetTransfer><Object>trs.asset;
@@ -42,8 +42,7 @@ class TransactionSendService implements IAssetService<IAssetTransfer> {
         return new Response({ errors });
     }
 
-    verifyUnconfirmed(trs: Transaction<IAsset>): Response<void> {
-        // TODO checkBalance
+    verifyUnconfirmed(trs: Transaction<IAsset>, sender: Account): Response<void> {
         return new Response();
     }
 
@@ -51,16 +50,23 @@ class TransactionSendService implements IAssetService<IAssetTransfer> {
         return (trs.asset.amount * config.constants.fees.send) / TOTAL_PERCENTAGE;
     }
 
-    applyUnconfirmed(trs: Transaction<IAssetTransfer>): void {
-        const amount = trs.asset.amount + trs.fee;
-        AccountRepo.updateBalanceByPublicKey(trs.senderPublicKey, -amount);
-        AccountRepo.updateBalanceByAddress(trs.asset.recipientAddress, trs.asset.amount);
+    applyUnconfirmed(trs: Transaction<IAssetTransfer>, sender: Account): void {
+        sender.actualBalance -= trs.asset.amount;
+        let recipient = AccountRepo.getByAddress(trs.asset.recipientAddress);
+        if (!recipient) {
+            recipient = AccountRepo.add({
+                address: trs.asset.recipientAddress
+            });
+        }
+        recipient.actualBalance += trs.asset.amount;
     }
 
-    undoUnconfirmed(trs: Transaction<IAssetTransfer>, sender: Account): void {
-        const amount = trs.asset.amount + trs.fee;
-        AccountRepo.updateBalanceByPublicKey(trs.senderPublicKey, amount);
-        AccountRepo.updateBalanceByAddress(trs.asset.recipientAddress, -trs.asset.amount);
+    undoUnconfirmed(trs: Transaction<IAssetTransfer>, sender: Account, senderOnly): void {
+        sender.actualBalance += trs.asset.amount;
+        if (!senderOnly) {
+            const recipient = AccountRepo.getByAddress(trs.asset.recipientAddress);
+            recipient.actualBalance -= trs.asset.amount;
+        }
     }
 
 }

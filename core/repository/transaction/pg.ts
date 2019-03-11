@@ -1,10 +1,11 @@
 import db, { pgpE } from 'shared/driver/db/index';
-import { Transaction, IAsset, TransactionType } from 'shared/model/transaction';
+import { IAsset, Transaction } from 'shared/model/transaction';
 import {
     IAssetRepository,
-    ITransactionPGRepository as ITransactionPGRepositoryShared, RawTransaction,
+    ITransactionPGRepository as ITransactionPGRepositoryShared,
+    RawTransaction,
     TransactionsByBlockResponse
-} from 'shared/repository/transaction/transaction';
+} from 'shared/repository/transaction';
 import queries from 'core/repository/queries/transaction';
 import TransactionDelegateRepo from 'core/repository/transaction/asset/delegate';
 import TransactionRegisterRepo from 'core/repository/transaction/asset/register';
@@ -70,7 +71,7 @@ class TransactionPGRepo implements ITransactionPGRepository<IAsset> {
             asset: asset
         };
     }
-    
+
     deserialize(rawTrs: RawTransaction): Transaction<IAsset> {
         const assetRepo: IAssetRepository<IAsset> = this.assetRepositories[rawTrs.type];
         let asset = rawTrs.asset;

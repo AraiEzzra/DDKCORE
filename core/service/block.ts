@@ -65,32 +65,28 @@ class BlockService {
         + BUFFER.LENGTH.HEX // generatorPublicKey
     ;
 
-    public async generateBlock(keypair: IKeyPair, timestamp: number): Promise<Response<void>> {
+    public async generateBlock(keyPair: IKeyPair, timestamp: number): Promise<Response<void>> {
         logger.debug(`[Service][Block][generateBlock] timestamp ${timestamp}`);
         this.lockTransactionPoolAndQueue();
 
         const transactions: Array<Transaction<object>> =
-            await TransactionPool.popSortedUnconfirmedTransactions(config.constants.maxTxsPerBlock);
-        logger.debug(`[Process][newGenerateBlock][transactions] ${JSON.stringify(transactions)}`);
+            TransactionPool.popSortedUnconfirmedTransactions(config.constants.maxTxsPerBlock);
+        // logger.debug(`[Process][newGenerateBlock][transactions] ${JSON.stringify(transactions)}`);
 
         const previousBlock: Block = BlockRepo.getLastBlock();
 
         const block: Block = this.create({
-            keypair,
+            keyPair,
             timestamp,
             previousBlock,
             transactions
         });
 
-        const processBlockResponse: Response<void> = await this.process(block, true, true, keypair, false, true);
+        const processBlockResponse: Response<void> = await this.process(block, true, true, keyPair, false);
         if (!processBlockResponse.success) {
-            const returnResponse: Response<void> =
-                TransactionDispatcher.returnToQueueConflictedTransactionFromPool(transactions);
-            if (!returnResponse.success) {
-                processBlockResponse.errors = [...processBlockResponse.errors, ...returnResponse.errors];
-            }
+            TransactionDispatcher.returnToQueueConflictedTransactionFromPool(transactions);
 
-            processBlockResponse.errors.push('generate block');
+            processBlockResponse.errors.push('[Process][newGenerateBlock] generate block');
             return processBlockResponse;
         }
 
@@ -99,25 +95,18 @@ class BlockService {
         return new Response<void>();
     }
 
-    private pushInPool(transactions: Array<Transaction<object>>): Response<void> {
-        const errors: Array<string> = [];
+    private pushInPool(transactions: Array<Transaction<object>>): void {
         for (const trs of transactions) {
-            let response: Response<void> = TransactionPool.push(trs, undefined, false, true);
-            if (!response.success) {
-                errors.push(...response.errors);
-            }
+            TransactionPool.push(trs, undefined, false);
         }
-        return new Response<void>({errors: errors});
     }
 
     private lockTransactionPoolAndQueue(): void {
         TransactionQueue.lock();
-        TransactionPool.lock();
     }
 
     private unlockTransactionPoolAndQueue(): void {
         TransactionQueue.unlock();
-        TransactionPool.unlock();
         TransactionQueue.process();
     }
 
@@ -128,20 +117,19 @@ class BlockService {
         block: Block,
         broadcast: boolean,
         saveBlock: boolean,
-        keypair: IKeyPair,
-        verify: boolean = true,
-        tick: boolean = true
+        keyPair: IKeyPair,
+        verify: boolean = true
     ): Promise<Response<void>> {
-        block = this.addBlockProperties(block, broadcast);
+        // block = this.addBlockProperties(block, broadcast); TODO deprecated
 
         if (verify) {
-            const resultVerifyBlock: IVerifyResult = this.verifyBlock(block, !keypair);
+            const resultVerifyBlock: IVerifyResult = this.verifyBlock(block, !keyPair);
             if (!resultVerifyBlock.verified) {
                 return new Response<void>({errors: [...resultVerifyBlock.errors, 'processBlock']});
             }
         } else {
             // TODO: remove when validate will be fix
-            if (keypair) {
+            if (keyPair) {
                 const lastBlock: Block = BlockRepo.getLastBlock();
                 block = this.setHeight(block, lastBlock);
             }
@@ -161,14 +149,11 @@ class BlockService {
             return new Response<void>({errors: [...resultCheckTransactions.errors, 'processBlock']});
         }
 
-        const applyBlockResponse: Response<void> = await this.applyBlock(block, broadcast, keypair, saveBlock, tick);
+        const applyBlockResponse: Response<void> = await this.applyBlock(block, broadcast, keyPair, saveBlock);
         if (!applyBlockResponse.success) {
             return new Response<void>({errors: [...applyBlockResponse.errors, 'processBlock']});
         }
 
-        if (!config.config.loading.snapshotRound) {
-            // todo modules.system.update?
-        }
         TransactionQueue.reshuffle();
         return new Response<void>();
     }
@@ -429,13 +414,13 @@ class BlockService {
             if (errors.length === 0) {
                 // const sender: Account = await getOrCreateAccount(trs.senderPublicKey);
                 const sender: Account = AccountRepository.getByPublicKey(trs.senderPublicKey);
-                logger.debug(`[Verify][checkTransactionsAndApplyUnconfirmed][sender] ${JSON.stringify(sender)}`);
+                // logger.debug(`[Verify][checkTransactionsAndApplyUnconfirmed][sender] ${JSON.stringify(sender)}`);
                 if (verify) {
                     const resultCheckTransaction: Response<void> =
                         this.checkTransaction(block, trs, sender, checkExists);
                     if (!resultCheckTransaction.success) {
                         errors.push(...resultCheckTransaction.errors);
-                        logger.debug(`[Verify][checkTransactionsAndApplyUnconfirmed][error] ${JSON.stringify(errors)}`);
+                        // logger.debug(`[Verify][checkTransactionsAndApplyUnconfirmed][error] ${JSON.stringify(errors)}`);
                         i--;
                         continue;
                     }
@@ -462,7 +447,7 @@ class BlockService {
         trs.id = TransactionDispatcher.getId(trs);
         trs.blockId = block.id;
 
-        const validateResult = TransactionDispatcher.validate(trs, sender);
+        const validateResult = TransactionDispatcher.validate(trs);
         if (!validateResult.success) {
             return new Response<void>({errors: [...validateResult.errors, 'checkTransaction']});
         }
@@ -478,11 +463,11 @@ class BlockService {
     private async applyBlock(
         block: Block,
         broadcast: boolean,
-        keypair: IKeyPair,
-        saveBlock: boolean,
-        tick: boolean): Promise<Response<void>> {
-        if (keypair) {
-            const addPayloadHashResponse: Response<Block> = this.addPayloadHash(block, keypair);
+        keyPair: IKeyPair,
+        saveBlock: boolean
+    ): Promise<Response<void>> {
+        if (keyPair) {
+            const addPayloadHashResponse: Response<Block> = this.addPayloadHash(block, keyPair);
             if (!addPayloadHashResponse.success) {
                 return new Response<void>({errors: [...addPayloadHashResponse.errors, 'applyBlock']});
             }
@@ -521,13 +506,13 @@ class BlockService {
         messageON('NEW_BLOCKS', block);
 
         if (broadcast) {
-            await SyncService.sendNewBlock(block);
+            await SyncService.sendNewBlock(block); // TODO remove await ?
         }
 
         return new Response<void>();
     }
 
-    public addPayloadHash(block: Block, keypair: IKeyPair): Response<Block> {
+    public addPayloadHash(block: Block, keyPair: IKeyPair): Response<Block> {
         const payloadHash = crypto.createHash('sha256');
         for (let i = 0; i < block.transactions.length; i++) {
             const transaction = block.transactions[i];
@@ -543,7 +528,7 @@ class BlockService {
 
         block.payloadHash = payloadHash.digest().toString('hex');
 
-        const signResponseEntity = this.sign(block, keypair);
+        const signResponseEntity = this.sign(block, keyPair);
         if (!signResponseEntity.success) {
             return new Response<Block>({ errors: [...signResponseEntity.errors, 'addPayloadHash'] });
         }
@@ -592,7 +577,7 @@ class BlockService {
 
         // todo: wrong logic with errors!!!
         const errors: Array<string> = [];
-        const processBlockResponse: Response<void> = await this.process(block, false, true, null, false, true);
+        const processBlockResponse: Response<void> = await this.process(block, false, true, null, false);
         if (!processBlockResponse.success) {
             errors.push(...processBlockResponse.errors);
         }
@@ -602,89 +587,81 @@ class BlockService {
                 transactionForReturn.push(removedTrs);
             }
         });
-        const pushResponse: Response<void> = this.pushInPool(transactionForReturn);
-        if (!pushResponse.success) {
-            errors.push(...pushResponse.errors);
-        }
-        const returnResponse: Response<void> =
-            await TransactionDispatcher.returnToQueueConflictedTransactionFromPool(block.transactions);
-        if (!returnResponse.success) {
-            errors.push(...returnResponse.errors);
-        }
+
+        this.pushInPool(transactionForReturn);
+        TransactionDispatcher.returnToQueueConflictedTransactionFromPool(block.transactions);
+
         if (errors.length) {
-            const pushBackResponse: Response<void> = this.pushInPool(removedTransactions);
-            if (!pushBackResponse.success) {
-                errors.push(...pushBackResponse.errors);
-                logger.error(`[Process][newReceiveBlock] ${JSON.stringify(errors)}`);
-            }
+            this.pushInPool(removedTransactions);
+            logger.error(`[Process][newReceiveBlock] ${JSON.stringify(errors)}`);
         }
         return new Response<void>({errors});
     }
 
 
-    private validateBlockSlot(block: Block, lastBlock: Block): Response<void> {
-        const roundNextBlock = RoundService.calcRound(block.height);
-        const roundLastBlock = RoundService.calcRound(lastBlock.height);
-        const activeDelegates = config.constants.activeDelegates;
-
-        const errors: Array<string> = [];
-        const validateBlockSlotAgainstPreviousRoundresponse: Response<void> =
-            this.delegateService.validateBlockSlotAgainstPreviousRound(block);
-        if (!validateBlockSlotAgainstPreviousRoundresponse.success) {
-            errors.push(...validateBlockSlotAgainstPreviousRoundresponse.errors);
-        }
-        const validateBlockSlot: Response<void> = this.delegateService.validateBlockSlot(block);
-        if (!validateBlockSlot.success) {
-            errors.push(...validateBlockSlot.errors);
-        }
-        return new Response<void>({errors});
-    }
-
-    private verifyReceipt(block: Block): IVerifyResult {
-        const lastBlock = BlockRepo.getLastBlock();
-
-        block = this.setHeight(block, lastBlock);
-
-        let result: IVerifyResult = {verified: false, errors: []};
-
-        result = this.verifySignature(block, result);
-        result = this.verifyPreviousBlock(block, result);
-        result = this.verifyAgainstLastNBlockIds(block, result);
-        result = this.verifyBlockSlotWindow(block, result);
-        result = this.verifyVersion(block, result);
-        // TODO: validate total fee
-        result = this.verifyId(block, result);
-        result = this.verifyPayload(block, result);
-
-        result.verified = result.errors.length === 0;
-        result.errors.reverse();
-
-        return result;
-    }
-
-    private verifyAgainstLastNBlockIds(block: Block, result: IVerifyResult): IVerifyResult {
-        if (BlockRepo.getLastNBlockIds().indexOf(block.id) !== -1) {
-            result.errors.push('Block already exists in chain');
-        }
-        return result;
-    }
-
-    private verifyBlockSlotWindow(block: Block, result: IVerifyResult): IVerifyResult {
-        const currentApplicationSlot = slotService.getSlotNumber();
-        const blockSlot = slotService.getSlotNumber(block.createdAt);
-
-        // Reject block if it's slot is older than BLOCK_SLOT_WINDOW
-        if (currentApplicationSlot - blockSlot > config.constants.blockSlotWindow) {
-            result.errors.push('Block slot is too old');
-        }
-
-        // Reject block if it's slot is in the future
-        if (currentApplicationSlot < blockSlot) {
-            result.errors.push('Block slot is in the future');
-        }
-
-        return result;
-    }
+    // private validateBlockSlot(block: Block, lastBlock: Block): Response<void> {
+    //     const roundNextBlock = RoundService.calcRound(block.height);
+    //     const roundLastBlock = RoundService.calcRound(lastBlock.height);
+    //     const activeDelegates = config.constants.activeDelegates;
+    //
+    //     const errors: Array<string> = [];
+    //     const validateBlockSlotAgainstPreviousRoundresponse: Response<void> =
+    //         this.delegateService.validateBlockSlotAgainstPreviousRound(block);
+    //     if (!validateBlockSlotAgainstPreviousRoundresponse.success) {
+    //         errors.push(...validateBlockSlotAgainstPreviousRoundresponse.errors);
+    //     }
+    //     const validateBlockSlot: Response<void> = this.delegateService.validateBlockSlot(block);
+    //     if (!validateBlockSlot.success) {
+    //         errors.push(...validateBlockSlot.errors);
+    //     }
+    //     return new Response<void>({errors});
+    // }
+    //
+    // private verifyReceipt(block: Block): IVerifyResult {
+    //     const lastBlock = BlockRepo.getLastBlock();
+    //
+    //     block = this.setHeight(block, lastBlock);
+    //
+    //     let result: IVerifyResult = {verified: false, errors: []};
+    //
+    //     result = this.verifySignature(block, result);
+    //     result = this.verifyPreviousBlock(block, result);
+    //     result = this.verifyAgainstLastNBlockIds(block, result);
+    //     result = this.verifyBlockSlotWindow(block, result);
+    //     result = this.verifyVersion(block, result);
+    //     // TODO: validate total fee
+    //     result = this.verifyId(block, result);
+    //     result = this.verifyPayload(block, result);
+    //
+    //     result.verified = result.errors.length === 0;
+    //     result.errors.reverse();
+    //
+    //     return result;
+    // }
+    //
+    // private verifyAgainstLastNBlockIds(block: Block, result: IVerifyResult): IVerifyResult {
+    //     if (BlockRepo.getLastNBlockIds().indexOf(block.id) !== -1) {
+    //         result.errors.push('Block already exists in chain');
+    //     }
+    //     return result;
+    // }
+    //
+    // private verifyBlockSlotWindow(block: Block, result: IVerifyResult): IVerifyResult {
+    //     const currentApplicationSlot = slotService.getSlotNumber();
+    //     const blockSlot = slotService.getSlotNumber(block.createdAt);
+    //
+    //     // Reject block if it's slot is older than BLOCK_SLOT_WINDOW
+    //     if (currentApplicationSlot - blockSlot > config.constants.blockSlotWindow) {
+    //         result.errors.push('Block slot is too old');
+    //     }
+    //
+    //     // Reject block if it's slot is in the future
+    //     if (currentApplicationSlot < blockSlot) {
+    //         result.errors.push('Block slot is in the future');
+    //     }
+    //
+    //     return result;
+    // }
 
     /** deprecated ? */
     public async deleteLastBlock(): Promise<Response<Block>> {
@@ -751,23 +728,9 @@ class BlockService {
         return new Response<Block>({data: block});
     }
 
-    // called in sync
-    public getLastReceipt(): number {
-        return this.lastReceipt;
-    }
-
     public updateLastReceipt(): number {
         this.lastReceipt = Math.floor(Date.now() / this.secondsRadix);
         return this.lastReceipt;
-    }
-
-    // called in sync
-    public isLastReceiptStale(): boolean {
-        if (!this.lastReceipt) {
-            return true;
-        }
-        const secondsAgo = Math.floor(Date.now() / this.secondsRadix) - this.lastReceipt;
-        return (secondsAgo > config.constants.blockReceiptTimeOut);
     }
 
     // called from app.js
@@ -781,7 +744,8 @@ class BlockService {
     public async applyGenesisBlock(
         rawBlock: {[key: string]: any},
         verify: boolean = false,
-        save?: boolean): Promise<Response<void>> {
+        save?: boolean
+    ): Promise<Response<void>> {
         rawBlock.transactions.forEach((rawTrs) => {
             const address = getAddressByPublicKey(rawTrs.sender_public_key);
             const publicKey = rawTrs.sender_public_key;
@@ -794,54 +758,8 @@ class BlockService {
         const block = new Block({...rawBlock, createdAt: 0, previousBlockId: null});
         await BlockPGRepo.saveOrUpdate(block);
         block.transactions = block.transactions.sort(transactionSortFunc);
-        return await this.process(block, false, save, null, verify, false);
+        return await this.process(block, false, save, null, verify);
     }
-
-    // used by rpc getCommonBlock
-    public async recoverChain(): Promise<Response<Block>> {
-        return await this.deleteLastBlock();
-    }
-
-
-    // used by rpc getCommonBlock
-    /*
-    public async getIdSequence(height: number): Promise<Response<{ ids: string }>> {
-        const lastBlock = BlockRepo.getLastBlock();
-        const rowsResponse: Response<Array<string>> =
-            await BlockRepo.getIdSequence({height, limit: 5, delegates: config.constants.activeDelegates});
-        if (!rowsResponse.success) {
-            return new Response({errors: [...rowsResponse.errors, 'getIdSequence']});
-        }
-        const rows = rowsResponse.data;
-        if (rows.length === 0) {
-            return new Response({errors: [`Failed to get id sequence for height: ${height}`]});
-        }
-        const ids: Array<string> = [];
-        // Add genesis block at the end if the set doesn't contain it already
-        if (config.genesisBlock) {
-            const genesisBlockId = config.genesisBlock.id;
-
-            if (rows.indexOf(genesisBlockId) === -1) {
-                rows.push(genesisBlockId);
-            }
-        }
-
-        // Add last block at the beginning if the set doesn't contain it already
-        if (lastBlock && rows.indexOf(lastBlock.id) === -1) {
-            rows.unshift(lastBlock.id);
-        }
-
-        // Extract blocks IDs
-        rows.forEach((row) => {
-            // FIXME: Looks like double check
-            if (ids.indexOf(row)) {
-                ids.push(row);
-            }
-        });
-
-        return new Response({data: {ids: ids.join(',')}});
-    }
-    */
 
     // called from loader
     public async loadBlocksOffset(limit: number, offset: number, verify: boolean): Promise<Response<Block>> {
@@ -864,17 +782,15 @@ class BlockService {
         return new Response<Block>({data: BlockRepo.getLastBlock(), errors});
     }
 
-    public create({transactions, timestamp, previousBlock, keypair}): Block {
+    public create({ transactions, timestamp, previousBlock, keyPair }): Block {
         const blockTransactions = transactions.sort(transactionSortFunc);
-        const block: Block = new Block({
+        return new Block({
             createdAt: timestamp,
             transactionCount: blockTransactions.length,
             previousBlockId: previousBlock.id,
-            generatorPublicKey: keypair.publicKey.toString('hex'),
+            generatorPublicKey: keyPair.publicKey.toString('hex'),
             transactions: blockTransactions
         });
-
-        return block;
     }
 
     private sign(block, keyPair): Response<string> {

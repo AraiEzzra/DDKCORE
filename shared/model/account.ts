@@ -13,11 +13,15 @@ export class Stake {
     voteCount: number;
     nextVoteMilestone: Timestamp;
     airdropReward: AirdropReward;
+
+    constructor(data: Stake) {
+        Object.assign(this, data);
+    }
 }
 
 export class AccountModel {
     address: Address;
-    publicKey: PublicKey;
+    publicKey?: PublicKey;
     secondPublicKey?: PublicKey;
     actualBalance?: number = 0;
     delegate?: Delegate;
@@ -38,8 +42,4 @@ export class Account extends AccountModel {
     public getCopy(): Account {
         return new Account(this);
     }
-
-    // TODO: define what is that sh*t
-    // group_bonus: number;
-    // pending_group_bonus: number;
 }
