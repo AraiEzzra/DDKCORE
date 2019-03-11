@@ -1,11 +1,11 @@
-import {IAssetService} from '../transaction';
+import {IAssetService} from 'core/service/transaction';
 import {
     IAssetStake,
     Transaction,
     TransactionType,
     IAirdropAsset, TransactionModel,
 } from 'shared/model/transaction';
-import ResponseEntity from 'shared/model/response';
+import { ResponseEntity } from 'shared/model/response';
 import {Account, Stake} from 'shared/model/account';
 import AccountRepo from 'core/repository/account';
 import { TOTAL_PERCENTAGE } from 'core/util/const';
@@ -70,16 +70,16 @@ class TransactionStakeService implements IAssetService<IAssetStake>  {
             errors.push('Invalid stake amount: Decimal value');
         }
 
-        return new ResponseEntity({ errors });
+        return new ResponseEntity<void>({ errors });
     }
 
     verifyUnconfirmed(trs: Transaction<IAssetStake>, sender: Account): ResponseEntity<void> {
         let errors = [];
-        const airdropCheck: ResponseEntity<any> = verifyAirdrop(trs, trs.asset.amount, sender);
+        const airdropCheck: ResponseEntity<void> = verifyAirdrop(trs, trs.asset.amount, sender);
         if (!airdropCheck.success) {
             errors = airdropCheck.errors;
         }
-        return new ResponseEntity({ errors });
+        return new ResponseEntity<void>({ errors });
     }
 
     calculateFee(trs: Transaction<IAssetStake>, sender: Account): number {

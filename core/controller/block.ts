@@ -1,4 +1,4 @@
-import Response from 'shared/model/response';
+import { ResponseEntity } from 'shared/model/response';
 import { Block, BlockModel } from 'shared/model/block';
 import BlockService from 'core/service/block';
 import BlockRepo from 'core/repository/block/';
@@ -22,7 +22,7 @@ interface BlockGenerateRequest {
 class BlockController extends BaseController {
 
     @ON('BLOCK_RECEIVE')
-    public async onReceiveBlock(action: { data: { block: BlockModel } }): Promise<Response<void>> {
+    public async onReceiveBlock(action: { data: { block: BlockModel } }): Promise<ResponseEntity<void>> {
         const { data } = action;
 
         const validateResponse = BlockService.validate(data.block);
@@ -35,12 +35,12 @@ class BlockController extends BaseController {
 
         const errors: Array<string> = [];
         if (blockUtils.isLessHeight(lastBlock, receivedBlock)) {
-            return new Response<void>({
+            return new ResponseEntity<void>({
                 errors: [`[Service][Block][processIncomingBlock] Block has less height: ${receivedBlock.id}`],
             });
         }
         if (blockUtils.isEqualId(lastBlock, receivedBlock)) {
-            return new Response<void>({
+            return new ResponseEntity<void>({
                 errors: [`[Service][Block][processIncomingBlock] Block already processed: ${receivedBlock.id}`],
             });
         }
@@ -53,22 +53,22 @@ class BlockController extends BaseController {
             const deleteLastBlockResponse = await BlockService.deleteLastBlock();
             if (!deleteLastBlockResponse.success) {
                 errors.push(...deleteLastBlockResponse.errors, 'processIncomingBlock');
-                return new Response<void>({ errors });
+                return new ResponseEntity<void>({ errors });
             }
-            const receiveResponse: Response<void> = await BlockService.receiveBlock(receivedBlock);
+            const receiveResponse: ResponseEntity<void> = await BlockService.receiveBlock(receivedBlock);
             if (!receiveResponse.success) {
                 errors.push(...receiveResponse.errors, 'processIncomingBlock');
-                return new Response<void>({ errors });
+                return new ResponseEntity<void>({ errors });
             }
-            return new Response<void>({ errors });
+            return new ResponseEntity<void>({ errors });
         }
 
         if (blockUtils.isGreatestHeight(lastBlock, receivedBlock)) {
             if (blockUtils.canBeProcessed(lastBlock, receivedBlock)) {
-                const receiveResponse: Response<void> = await BlockService.receiveBlock(receivedBlock);
+                const receiveResponse: ResponseEntity<void> = await BlockService.receiveBlock(receivedBlock);
                 if (!receiveResponse.success) {
                     errors.push(...receiveResponse.errors, 'processIncomingBlock');
-                    return new Response<void>({ errors });
+                    return new ResponseEntity<void>({ errors });
                 }
             } else if (!SyncService.consensus) {
                 // TODO: undo to common
@@ -85,13 +85,13 @@ class BlockController extends BaseController {
             );
         }
 
-        return new Response<void>({ errors });
+        return new ResponseEntity<void>({ errors });
     }
 
     @ON('BLOCK_GENERATE')
-    public async generateBlock(data: BlockGenerateRequest): Promise<Response<void>> {
+    public async generateBlock(data: BlockGenerateRequest): Promise<ResponseEntity<void>> {
         logger.debug(`[Controller][Block][generateBlock]`);
-        const response: Response<void> = await BlockService.generateBlock(data.keyPair, data.timestamp);
+        const response: ResponseEntity<void> = await BlockService.generateBlock(data.keyPair, data.timestamp);
         if (!response.success) {
             response.errors.push('generateBlock');
         }
@@ -99,25 +99,25 @@ class BlockController extends BaseController {
     }
 
     @ON('BLOCKCHAIN_READY')
-    public async loadLastNBlocks(): Promise<Response<void>> {
+    public async loadLastNBlocks(): Promise<ResponseEntity<void>> {
         const blocks: Array<string> = await BlockPGRepo.getLastNBlockIds();
         BlockRepo.setLastNBlocks(blocks);
-        return new Response<void>();
+        return new ResponseEntity<void>();
     }
 
     // @ON('NEW_BLOCKS')
-    // public updateLastNBlocks(block: Block): Response<void> {
+    // public updateLastNBlocks(block: Block): ResponseEntity<void> {
     //     BlockRepo.appendInLastNBlocks(block);
-    //     return new Response<void>();
+    //     return new ResponseEntity<void>();
     // }
 
     /*
     @RPC('GET_COMMON_BLOCK')
     // called from UI
     private async getCommonBlock(peer: Peer, height: number): Promise<Response<Block>> {
-        const idsResponse: Response<{ids: string}> = await BlockService.getIdSequence(height);
+        const idsResponse: ResponseEntity<{ids: string}> = await BlockService.getIdSequence(height);
         const ids = idsResponse.data.ids;
-        const recoveryResponse: Response<Block> = await BlockService.recoverChain();
+        const recoveryResponse: ResponseEntity<Block> = await BlockService.recoverChain();
         if (!recoveryResponse.success) {
             recoveryResponse.errors.push('getCommonBlock');
         }

@@ -1,4 +1,4 @@
-import Response from 'shared/model/response';
+import { ResponseEntity } from 'shared/model/response';
 import { Account } from 'shared/model/account';
 import Config from 'shared/util/config';
 import { Delegate } from 'shared/model/delegate';
@@ -27,7 +27,7 @@ class DelegateRepository {
      * @implements constants.activeDelegates
      * @return Array<Account>
      */
-    public getActiveDelegates(): Response<Array<Delegate>> {
+    public getActiveDelegates(): ResponseEntity<Array<Delegate>> {
         const activeDelegates: Array<Delegate> = Object.values(this.memoryDelegates).sort((a, b) => {
             if (a.votes > b.votes) {
                 return 1;
@@ -38,9 +38,11 @@ class DelegateRepository {
             return 0;
         }).slice(0, constants.activeDelegates);
         if (activeDelegates.length > 0) {
-            return new Response({data: activeDelegates});
+            return new ResponseEntity({data: activeDelegates});
         } else {
-            return new Response({errors: [`[DelegateRepository][getActiveDelegates] Can't get Active delegates`]});
+            return new ResponseEntity({errors: [
+                `[DelegateRepository][getActiveDelegates] Can't get Active delegates`
+            ]});
         }
     }
 

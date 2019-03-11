@@ -7,7 +7,7 @@ import {logger} from 'shared/util/logger';
 import { Account } from 'shared/model/account';
 import { SECOND } from 'core/util/const';
 import AccountRepository from 'core/repository/account';
-import ResponseEntity from 'shared/model/response';
+import { ResponseEntity } from 'shared/model/response';
 
 export interface ITransactionQueueService<T extends Object> {
     getLockStatus(): boolean;
