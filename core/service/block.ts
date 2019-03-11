@@ -18,6 +18,7 @@ import TransactionPool from 'core/service/transactionPool';
 import TransactionRepo from 'core/repository/transaction/';
 import slotService from 'core/service/slot';
 import RoundService from 'core/service/round';
+import RoundRepository from 'core/repository/round';
 import { transactionSortFunc } from 'core/util/transaction';
 import blockSchema from 'core/schema/block';
 import Response from 'shared/model/response';
@@ -130,13 +131,17 @@ class BlockService {
             }
         }
 
+        const validationResponse = this.validateBlockSlot(block);
+        if (!validationResponse.success) {
+            return new Response<void>({errors: [...validationResponse.errors, 'processBlock']});
+        }
+
         if (saveBlock) {
             const resultCheckExists: Response<void> = this.checkExists(block);
             if (!resultCheckExists.success) {
                 return new Response<void>({errors: [...resultCheckExists.errors, 'processBlock']});
             }
         }
-        // validateBlockSlot TODO enable after fix round
 
         const resultCheckTransactions: Response<void> =
             this.checkTransactionsAndApplyUnconfirmed(block, saveBlock, verify);
@@ -322,6 +327,27 @@ class BlockService {
             result.errors.push('Invalid block timestamp');
         }
         return result;
+    }
+
+    private validateBlockSlot(block: Block): Response<void> {
+        const errors = [];
+        const blockSlot = slotService.getSlotNumber(block.createdAt);
+        const round = RoundRepository.getCurrentRound();
+
+        if (!round) {
+            errors.push(`Can't get current round`);
+        }
+
+        const generatorSlot = round.slots[block.generatorPublicKey];
+
+        if (!generatorSlot) {
+            errors.push(`GeneratorPublicKey does not exist in current round`);
+        }
+        if (blockSlot !== generatorSlot.slot) {
+            errors.push(`Invalid block slot number`);
+        }
+
+        return new Response({errors});
     }
 
     private checkExists(block: Block): Response<void> {

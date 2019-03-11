@@ -12,7 +12,7 @@ class RoundPGRepository implements IRoundPGRepository {
     private readonly tableFields: Array<string> = [
         'height_start',
         'height_finish',
-        'slot'
+        'slots'
     ];
     private readonly columnSet = new pgpE.helpers.ColumnSet(this.tableFields, {table: this.tableName});
 
