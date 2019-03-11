@@ -18,6 +18,7 @@ class RoundController extends BaseController {
     @ON('WARM_UP_FINISHED')
     setIsBlockChainReady() {
         RoundService.setIsBlockChainReady(true);
+        RoundService.restoreRounds();
     }
 }
 
