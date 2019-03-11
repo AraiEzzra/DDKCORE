@@ -3,7 +3,7 @@ import {IAssetDelegate, Transaction, TransactionModel} from 'shared/model/transa
 import { Account } from 'shared/model/account';
 import { Delegate } from 'shared/model/delegate';
 import DelegateRepo from 'core/repository/delegate';
-import Response from 'shared/model/response';
+import { ResponseEntity } from 'shared/model/response';
 import AccountRepo from 'core/repository/account';
 import config from 'shared/util/config';
 
@@ -17,7 +17,7 @@ class TransactionDelegateService implements IAssetService<IAssetDelegate> {
         return Buffer.from(trs.asset.username, 'utf8');
     }
 
-    validate(trs: Transaction<IAssetDelegate>): Response<void> {
+    validate(trs: Transaction<IAssetDelegate>): ResponseEntity<void> {
         const errors = [];
 
         if (!trs.asset || !trs.asset.username) {
@@ -51,10 +51,10 @@ class TransactionDelegateService implements IAssetService<IAssetDelegate> {
             errors.push('Username can only contain alphanumeric characters with the exception of !@$&_.');
         }
 
-        return new Response({ errors });
+        return new ResponseEntity<void>({ errors });
     }
 
-    verifyUnconfirmed(trs: Transaction<IAssetDelegate>, sender: Account): Response<void> {
+    verifyUnconfirmed(trs: Transaction<IAssetDelegate>, sender: Account): ResponseEntity<void> {
         const errors = [];
 
         if (sender.delegate) {
@@ -71,7 +71,7 @@ class TransactionDelegateService implements IAssetService<IAssetDelegate> {
             errors.push('Username already exists');
         }
 
-        return new Response({ errors });
+        return new ResponseEntity<void>({ errors });
     }
 
     calculateFee(trs: Transaction<IAssetDelegate>, sender: Account): number {

@@ -1,6 +1,5 @@
 import DelegateRepo from 'core/repository/delegate';
 import { RPC, ON } from 'core/util/decorator';
-import Response from 'shared/model/response';
 import { BaseController } from 'core/controller/baseController';
 
 export class DelegateController extends BaseController {

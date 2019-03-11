@@ -1,7 +1,7 @@
 import { IAssetService } from 'core/service/transaction';
 import {IAssetRegister, Transaction, TransactionModel} from 'shared/model/transaction';
 import { Account } from 'shared/model/account';
-import Response from 'shared/model/response';
+import { ResponseEntity } from 'shared/model/response';
 import AccountRepo from 'core/repository/account';
 import config from 'shared/util/config';
 import BUFFER from 'core/util/buffer';
@@ -18,18 +18,18 @@ class TransactionRegisterService implements IAssetService<IAssetRegister> {
         return buff;
     }
 
-    validate(trs: Transaction<IAssetRegister>): Response<void> {
+    validate(trs: Transaction<IAssetRegister>): ResponseEntity<void> {
         const errors = [];
 
         if (!trs.asset.referral) {
             errors.push('Missing referral');
         }
 
-        return new Response({ errors });
+        return new ResponseEntity<void>({ errors });
     }
 
     // TODO check empty account
-    verifyUnconfirmed(trs: Transaction<IAssetRegister>, sender: Account): Response<void> {
+    verifyUnconfirmed(trs: Transaction<IAssetRegister>, sender: Account): ResponseEntity<void> {
         if (
             sender.secondPublicKey ||
             sender.actualBalance !== 0 ||
@@ -38,9 +38,9 @@ class TransactionRegisterService implements IAssetService<IAssetRegister> {
             (sender.referrals && sender.referrals.length) ||
             (sender.stakes && sender.stakes.length)
         ) {
-            return new Response({ errors: ['Account already exists.'] });
+            return new ResponseEntity<void>({ errors: ['Account already exists.'] });
         }
-        return new Response();
+        return new ResponseEntity<void>();
     }
 
     calculateFee(trs: Transaction<IAssetRegister>, sender: Account): number {
