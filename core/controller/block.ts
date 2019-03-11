@@ -25,7 +25,7 @@ class BlockController extends BaseController {
     public async onReceiveBlock(action: { data: { block: BlockModel } }): Promise<Response<void>> {
         const { data } = action;
 
-        const validateResponse = BlockService.isValid(data.block);
+        const validateResponse = BlockService.validate(data.block);
         if (!validateResponse.success) {
             return validateResponse;
         }
@@ -34,7 +34,7 @@ class BlockController extends BaseController {
         const lastBlock = BlockRepo.getLastBlock();
 
         const errors: Array<string> = [];
-        if (blockUtils.isHeightLess(lastBlock, receivedBlock)) {
+        if (blockUtils.isLessHeight(lastBlock, receivedBlock)) {
             return new Response<void>({
                 errors: [`[Service][Block][processIncomingBlock] Block has less height: ${receivedBlock.id}`],
             });
@@ -63,7 +63,7 @@ class BlockController extends BaseController {
             return new Response<void>({ errors });
         }
 
-        if (blockUtils.isReceivedBlockAbove(lastBlock, receivedBlock)) {
+        if (blockUtils.isGreatestHeight(lastBlock, receivedBlock)) {
             if (blockUtils.canBeProcessed(lastBlock, receivedBlock)) {
                 const receiveResponse: Response<void> = await BlockService.receiveBlock(receivedBlock);
                 if (!receiveResponse.success) {
@@ -105,11 +105,11 @@ class BlockController extends BaseController {
         return new Response<void>();
     }
 
-    @ON('NEW_BLOCKS')
-    public updateLastNBlocks(block: Block): Response<void> {
-        BlockRepo.appendInLastNBlocks(block);
-        return new Response<void>();
-    }
+    // @ON('NEW_BLOCKS')
+    // public updateLastNBlocks(block: Block): Response<void> {
+    //     BlockRepo.appendInLastNBlocks(block);
+    //     return new Response<void>();
+    // }
 
     /*
     @RPC('GET_COMMON_BLOCK')

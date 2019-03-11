@@ -73,7 +73,7 @@ class RoundService implements IRoundService {
 
     constructor() {
         const hash = crypto.createHash('sha256').update(process.env.FORGE_SECRET, 'utf8').digest();
-        const keyPair = ed.makeKeypair(hash);
+        const keyPair = ed.makeKeyPair(hash);
 
         this.keyPair = {
             privateKey: keyPair.privateKey.toString('hex'),

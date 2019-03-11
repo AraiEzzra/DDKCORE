@@ -22,6 +22,7 @@ import TransactionQueue from 'core/service/transactionQueue';
 import { getTransactionServiceByType, TRANSACTION_BUFFER_SIZE, transactionSortFunc } from 'core/util/transaction';
 import BUFFER from 'core/util/buffer';
 import { SALT_LENGTH } from 'core/util/const';
+import { getAddressByPublicKey } from 'shared/util/account';
 
 export interface IAssetService<T extends IAsset> {
     getBytes(trs: Transaction<T>): Buffer;
@@ -196,7 +197,8 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             errors.push(`Unknown transaction type ${data.type}`);
         }
 
-        let sender = AccountRepo.getByPublicKey(data.senderPublicKey);
+        data.senderAddress = data.senderAddress ? data.senderAddress : getAddressByPublicKey(data.senderPublicKey);
+        let sender = AccountRepo.getByAddress(data.senderAddress);
         if (!sender) {
             sender = AccountRepo.add({
                 address: data.senderAddress,

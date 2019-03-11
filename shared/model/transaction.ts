@@ -1,5 +1,4 @@
-import { Account, Address, PublicKey, Timestamp } from 'shared/model/account';
-import AccountRepo from 'core/repository/account';
+import { Address, PublicKey, Timestamp } from 'shared/model/account';
 import { getAddressByPublicKey } from 'shared/util/account';
 
 export enum TransactionType {
@@ -95,15 +94,6 @@ export class Transaction<T extends IAsset> extends TransactionModel<T> {
 
     constructor(data: TransactionModel<T>) {
         super(data);
-        const sender: Account = AccountRepo.getByAddress(data.senderAddress);
-        if (!sender) {
-            AccountRepo.add({
-                publicKey: data.senderPublicKey,
-                address: data.senderAddress
-            })
-        } else {
-            sender.secondPublicKey = data.senderPublicKey;
-        }
     }
 
     public getCopy() {

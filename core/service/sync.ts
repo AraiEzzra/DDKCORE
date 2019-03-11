@@ -22,7 +22,7 @@ export interface ISyncService {
 
     connectNewPeers(peers: Array<Peer>): Promise<void>;
 
-    sendNewBlock(block: Block): Promise<void>;
+    sendNewBlock(block: Block): void;
 
     sendUnconfirmedTransaction(trs: Transaction<any>): Promise<void>;
 
@@ -50,7 +50,7 @@ export class SyncService implements ISyncService {
         peers.forEach(peer => SocketRepository.connectNewPeer(peer));
     }
 
-    async sendNewBlock(block: Block): Promise<void> {
+    sendNewBlock(block: Block): void {
         SyncRepository.sendNewBlock(block);
     }
 
