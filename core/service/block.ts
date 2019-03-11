@@ -603,7 +603,7 @@ class BlockService {
 
     public async deleteLastBlock(): Promise<Response<Block>> {
         let lastBlock = BlockRepo.getLastBlock();
-        logger.warn(`Deleting last block: ${lastBlock.id}`);
+        logger.warn(`Deleting last block: ${lastBlock.id}, height: ${lastBlock.height}`);
         if (lastBlock.height === 1) {
             return new Response<Block>({errors: ['Cannot delete genesis block']});
         }

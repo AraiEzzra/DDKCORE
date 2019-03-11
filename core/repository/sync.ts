@@ -4,6 +4,7 @@ import { Block } from 'shared/model/block';
 import { Transaction } from 'shared/model/transaction';
 import PeerRepository from 'core/repository/peer';
 import SystemRepository from 'core/repository/system';
+import { logger } from 'shared/util/logger';
 
 interface ISyncRepo {
 
@@ -15,7 +16,7 @@ interface ISyncRepo {
 
     sendUnconfirmedTransaction(trs: Transaction<any>): void;
 
-    requestCommonBlocks(block: {id: string, height: number}): void;
+    requestCommonBlocks(block: { id: string, height: number }): void;
 
     sendCommonBlocksExist(response, peer: Peer): void;
 
@@ -57,6 +58,10 @@ export class Sync implements ISyncRepo {
     requestCommonBlocks(block): void {
         const filteredPeers = PeerRepository.getPeersByFilter(block.height, SystemRepository.broadhash);
         const peer = PeerRepository.getRandomPeer(filteredPeers);
+        if (!peer) {
+            logger.error('[Repository][Sync][requestCommonBlocks]: Peer doesn`t found');
+            return;
+        }
         SocketRepository.emitPeer('REQUEST_COMMON_BLOCKS', { block }, peer);
     }
 

@@ -13,11 +13,12 @@ const ioServer = require('socket.io')(server, {
 });
 const env = require('../../config/env').default;
 
+
 server.listen(
     env.serverPort,
     env.serverHost
 );
-
+const START_PEER_REQUEST = 10000;
 
 export class Socket {
     private static instance: Socket;
@@ -26,12 +27,11 @@ export class Socket {
         if (Socket.instance) {
             return Socket.instance;
         }
-        this.init();
         Socket.instance = this;
     }
 
     init(): void {
-        logger.debug('SOCKET_INIT');
+        logger.debug(`SOCKET_START ${env.serverHost}:${env.serverPort}`);
         TRUSTED_PEERS.forEach((peer: any) => {
             this.connectNewPeer(peer);
         });
@@ -47,6 +47,10 @@ export class Socket {
                 }
             });
         });
+        setTimeout(
+            () => messageON('EMIT_REQUEST_PEERS', {}),
+            START_PEER_REQUEST
+        );
     }
 
     @autobind
