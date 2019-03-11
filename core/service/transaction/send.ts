@@ -42,7 +42,10 @@ class TransactionSendService implements IAssetService<IAssetTransfer> {
         return new Response({ errors });
     }
 
-    verifyUnconfirmed(trs: Transaction<IAsset>, sender: Account): Response<void> {
+    verifyUnconfirmed(trs: Transaction<IAssetTransfer>, sender: Account): Response<void> {
+        if ((trs.fee + trs.asset.amount) > sender.actualBalance) {
+            return new Response({ errors: ['Not enough balance.'] });
+        }
         return new Response();
     }
 

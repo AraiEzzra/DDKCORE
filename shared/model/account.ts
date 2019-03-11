@@ -13,6 +13,7 @@ export class Stake {
     voteCount: number;
     nextVoteMilestone: Timestamp;
     airdropReward: AirdropReward;
+    sourceTransactionId: string;
 
     constructor(data: Stake) {
         Object.assign(this, data);
