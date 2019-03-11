@@ -1,5 +1,7 @@
-import Middleware from 'api/middleware/socket';
-import { MessageModel, MessageType } from 'shared/model/message';
+import SocketMiddleware from 'api/middleware/socket';
+import { Message } from 'shared/model/message';
+import socketCore from 'api/driver/socket/core';
+import { MESSAGE_CHANNEL } from 'api/driver/socket/channel';
 
 const port = process.env.API_PORT || 7008;
 const socketConfig = {
@@ -8,24 +10,14 @@ const socketConfig = {
     pingTimeout: 30000,
     pingInterval: 30000,
 };
-const io: SocketIO.Server = require('socket.io')(port, socketConfig);
 
-io.on('connect', onConnect);
+const socketServer: SocketIO.Server = require('socket.io')(port, socketConfig);
+socketServer.on('connect', onConnect);
 
-function onConnect(socket: any) {
-    console.log('Socket %s connected', JSON.stringify(socket.handshake));
+socketCore.on(MESSAGE_CHANNEL, (message: Message) => SocketMiddleware.onCoreMessage(message));
 
-    socket.on('message', function (json: any) {
-        onApiMessage(json, socket);
-    });
-}
+function onConnect(socketApi: any) {
+    console.log('Socket %s connected', JSON.stringify(socketApi.handshake));
 
-async function onApiMessage(data: MessageModel, socket: any) {
-    console.log('API MESSAGE:', data);
-
-    const { headers, code, body } = data;
-    const result = Middleware.processRequest(code, body);
-
-    const response = new MessageModel(MessageType.RESPONSE, code, result, data.headers.id);
-    socket.emit('message', response);
+    socketApi.on(MESSAGE_CHANNEL, (data: Message) => SocketMiddleware.onAPIMessage(data, socketApi));
 }

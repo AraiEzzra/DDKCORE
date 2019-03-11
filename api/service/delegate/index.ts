@@ -5,13 +5,13 @@ import { generateDelegates } from 'api/mock/delegate';
 
 export interface DelegateService {
 
-    getActiveDelegates(filter: Filter): ResponseEntity<Array<DelegateModel>>;
+    getActiveDelegates(filter: Filter): any;
 
-    getInactiveDelegates(filter: Filter): ResponseEntity<Array<DelegateModel>>;
+    getInactiveDelegates(filter: Filter): any;
 
 }
 
-export class DelegateServiceImpl implements DelegateService {
+export class DelegateMockService implements DelegateService {
 
     private delegates: Array<DelegateModel>; // mock for wallet
 
@@ -32,4 +32,5 @@ export class DelegateServiceImpl implements DelegateService {
 
 }
 
-export default new DelegateServiceImpl();
+
+export default new DelegateMockService();

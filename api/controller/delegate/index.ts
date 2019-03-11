@@ -1,19 +1,19 @@
-import ResponseEntity from 'shared/model/response';
 import { RPC } from 'api/utils/decorators';
-import { DelegateModel } from 'shared/model/delegate';
-import { Filter } from 'shared/model/types';
-import DelegateService from 'api/service/delegate';
+import socketCore from 'api/driver/socket/core';
+import { MESSAGE_CHANNEL } from 'api/driver/socket/channel';
+import { Message } from 'shared/model/message';
 
 export class DelegateController {
 
+    // TODO: Add validation of request
     @RPC('GET_ACTIVE_DELEGATES')
-    getActiveDelegates(filter: Filter): ResponseEntity<Array<DelegateModel>> {
-        return DelegateService.getActiveDelegates(filter);
+    getActiveDelegates(message: Message) {
+        socketCore.emit(MESSAGE_CHANNEL, message);
     }
 
     @RPC('GET_INACTIVE_DELEGATES')
-    getInactiveDelegates(filter: Filter): ResponseEntity<Array<DelegateModel>> {
-        return DelegateService.getInactiveDelegates(filter);
+    getInactiveDelegates(message: Message) {
+        socketCore.emit(MESSAGE_CHANNEL, message);
     }
 
 }
