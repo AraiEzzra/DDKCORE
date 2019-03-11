@@ -25,7 +25,7 @@ class TransactionRepo implements ITransactionRepository<IAsset> {
         const blockTrs: Array<Transaction<IAsset>> = this.memoryTransactionByBlockId[trs.blockId];
         for (let i = 0; i < blockTrs.length; i++) {
             if (blockTrs[i].id === trs.id) {
-                delete blockTrs[i];
+                blockTrs.splice(i, 1);
                 break;
             }
         }
