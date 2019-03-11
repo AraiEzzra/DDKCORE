@@ -5,6 +5,7 @@ import TransactionRegisterService from '../service/transaction/register';
 import TransactionVoteService from '../service/transaction/vote';
 import TransactionDelegateService from '../service/transaction/delegate';
 import TransactionStakeService from 'core/service/transaction/stake';
+import TransactionSignatureService from 'core/service/transaction/signature';
 
 import BUFFER from 'core/util/buffer';
 
@@ -42,6 +43,8 @@ export const getTransactionServiceByType = (type: TransactionType): IAssetServic
             return TransactionDelegateService;
         case TransactionType.STAKE:
             return TransactionStakeService;
+        case TransactionType.SIGNATURE:
+            return TransactionSignatureService;
         default:
             return null;
     }
