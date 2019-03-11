@@ -505,7 +505,7 @@ class Config {
         }
 
         const hash = crypto.createHash('sha256').update(env.FORGE_SECRET, 'utf8').digest();
-        const publicKey = ed.makeKeypair(hash).publicKey.toString('hex');
+        const publicKey = ed.makeKeyPair(hash).publicKey.toString('hex');
         Object.assign(this.constants, {publicKey: publicKey});
 
     }

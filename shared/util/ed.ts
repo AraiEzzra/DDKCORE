@@ -7,7 +7,7 @@ export interface IKeyPair {
 
 class Ed {
 
-    public makeKeypair(hash: Buffer): IKeyPair {
+    public makeKeyPair(hash: Buffer): IKeyPair {
         const keyPair: IKeyPair = {
             publicKey: Buffer.alloc(sodium.crypto_sign_PUBLICKEYBYTES),
             privateKey: Buffer.alloc(sodium.crypto_sign_SECRETKEYBYTES)
@@ -18,7 +18,7 @@ class Ed {
     }
 
     public makePublicKeyHex(hash) {
-        return this.makeKeypair(hash).publicKey.toString('hex');
+        return this.makeKeyPair(hash).publicKey.toString('hex');
     }
 
     public sign(hash: Buffer, keyPair: IKeyPair): Buffer {
