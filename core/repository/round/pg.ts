@@ -19,7 +19,7 @@ class RoundPGRepository implements IRoundPGRepository {
     serialize(round: Round): RawRound {
         return {
             height_start: round.startHeight,
-            height_end: round.endHeight,
+            height_finish: round.endHeight,
             slots: round.slots
         };
     }
@@ -27,7 +27,7 @@ class RoundPGRepository implements IRoundPGRepository {
     deserialize(rawRound: RawRound, radix = 10): Round {
         return new Round({
             startHeight: parseInt(rawRound.height_start, radix),
-            endHeight: parseInt(rawRound.height_end, radix),
+            endHeight: parseInt(rawRound.height_finish, radix),
             slots: rawRound.slots
         });
     }
