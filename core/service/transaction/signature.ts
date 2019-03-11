@@ -6,7 +6,7 @@ import Response from 'shared/model/response';
 import config from 'shared/util/config';
 import AccountRepo from '../../repository/account';
 
-class TransactionSendService implements IAssetService<IAssetSignature> {
+class TransactionSignatureService implements IAssetService<IAssetSignature> {
 
     create(trs: TransactionModel<IAssetSignature>): void {
         return;
@@ -52,4 +52,4 @@ class TransactionSendService implements IAssetService<IAssetSignature> {
     }
 }
 
-export default new TransactionSendService();
+export default new TransactionSignatureService();
