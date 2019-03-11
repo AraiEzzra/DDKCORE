@@ -47,15 +47,15 @@ const highestBlock = new Block({
 describe('Block utils', () => {
     describe('is height less', () => {
         it('previous block', () => {
-            expect(blockUtils.isHeightLess(lastBlock, previousBlock)).equal(true);
+            expect(blockUtils.isLessHeight(lastBlock, previousBlock)).equal(true);
         });
 
         it('equal block', () => {
-            expect(blockUtils.isHeightLess(lastBlock, lastBlock)).equal(false);
+            expect(blockUtils.isLessHeight(lastBlock, lastBlock)).equal(false);
         });
 
         it('next block', () => {
-            expect(blockUtils.isHeightLess(lastBlock, nextBlock)).equal(false);
+            expect(blockUtils.isLessHeight(lastBlock, nextBlock)).equal(false);
         });
     });
 
@@ -129,23 +129,23 @@ describe('Block utils', () => {
 
     describe('is received block above', () => {
         it('equal block', () => {
-            expect(blockUtils.isReceivedBlockAbove(lastBlock, lastBlock)).equal(false);
+            expect(blockUtils.isGreatestHeight(lastBlock, lastBlock)).equal(false);
         });
 
         it('same height block', () => {
-            expect(blockUtils.isReceivedBlockAbove(lastBlock, anotherPreviousBlock)).equal(false);
+            expect(blockUtils.isGreatestHeight(lastBlock, anotherPreviousBlock)).equal(false);
         });
 
         it('next block', () => {
-            expect(blockUtils.isReceivedBlockAbove(lastBlock, nextBlock)).equal(true);
+            expect(blockUtils.isGreatestHeight(lastBlock, nextBlock)).equal(true);
         });
 
         it('previous block', () => {
-            expect(blockUtils.isReceivedBlockAbove(lastBlock, previousBlock)).equal(false);
+            expect(blockUtils.isGreatestHeight(lastBlock, previousBlock)).equal(false);
         });
 
         it('highest block', () => {
-            expect(blockUtils.isReceivedBlockAbove(lastBlock, highestBlock)).equal(true);
+            expect(blockUtils.isGreatestHeight(lastBlock, highestBlock)).equal(true);
         });
     });
 

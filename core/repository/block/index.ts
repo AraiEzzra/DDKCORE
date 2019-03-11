@@ -24,7 +24,7 @@ class BlockRepo implements IBlockRepository {
     public delete(block: Block): DeletedBlockId {
         for (let i = 0; i < this.memoryBlocks.length; i++) {
             if (this.memoryBlocks[i].id === block.id) {
-                delete (this.memoryBlocks[i]);
+                this.memoryBlocks.splice(i, 1);
                 break;
             }
         }
@@ -61,15 +61,19 @@ class BlockRepo implements IBlockRepository {
         return this.lastBlock;
     }
 
-    public getLastNBlockIds(): Array<string> {
-        return this.lastNBlockIds;
-        /*
-        const targetBlocks: Array<Block> = this.memoryBlocks.slice(-config.constants.blockSlotWindow);
-        const ids: Array<string> = targetBlocks.map((block: Block) => {
-            return block.id;
+    public deleteLastBlock(): Block {
+        this.memoryBlocks.length = this.memoryBlocks.length - 1;
+        this.lastBlock = this.memoryBlocks[this.memoryBlocks.length - 1];
+        messageON('LAST_BLOCKS_UPDATE', {
+            lastBlock: this.lastBlock
         });
-        return ids;
-        */
+        return this.lastBlock;
+    }
+
+    public setLastBlock(block: Block): Block {
+        this.lastBlock = block;
+        this.appendInLastNBlocks(block);
+        return this.lastBlock;
     }
 
     public getMany(startHeight: number, limit?: number): Array<Block> {
@@ -90,9 +94,16 @@ class BlockRepo implements IBlockRepository {
         return exists;
     }
 
-    public setLastBlock(block: Block): Block {
-        this.lastBlock = block;
-        return this.lastBlock;
+    /* useless */
+    public getLastNBlockIds(): Array<string> {
+        return this.lastNBlockIds;
+        /*
+        const targetBlocks: Array<Block> = this.memoryBlocks.slice(-config.constants.blockSlotWindow);
+        const ids: Array<string> = targetBlocks.map((block: Block) => {
+            return block.id;
+        });
+        return ids;
+        */
     }
 
     public setLastNBlocks(blocks: Array<string>): void {

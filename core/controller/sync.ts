@@ -60,9 +60,9 @@ export class SyncController extends BaseController {
         const { data, peer } = action;
         logger.debug(`[Controller][Sync][getCommonBlocks]: ${JSON.stringify(data)}`);
         if (data.isExist) {
-            SyncService.requestBlocks(data.block, peer);
+            await SyncService.requestBlocks(data.block, peer);
         } else {
-            BlockService.deleteLastBlock();
+            await BlockService.deleteLastBlock();
             this.startSyncBlocks();
         }
     }
