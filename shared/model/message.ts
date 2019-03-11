@@ -6,15 +6,15 @@ export enum MessageType {
     EVENT,
 }
 
-export class MessageModel {
+export class Message {
     public code: string;
     public headers: {
         id: string;
         type: MessageType;
     };
-    public body: Object;
+    public body: any;
 
-    constructor(type: MessageType, code: string, body: Object, id? : string) {
+    constructor(type: MessageType, code: string, body: any, id? : string) {
         this.code = code;
         this.headers = {
             id: id || uuidv4(),
@@ -24,21 +24,4 @@ export class MessageModel {
     }
 }
 
-export default class Message extends MessageModel {
 
-    public getId = (): string => this.headers.id;
-    public getBody = (): any => this.body;
-    public getCode = (): string => this.code;
-
-    public serialize = (): MessageModel => {
-        return {
-            code: this.code,
-            headers: this.headers,
-            body: this.body,
-        };
-    };
-
-    static deserialize = (message: MessageModel): Message => {
-        return new Message(message.headers.type, message.code, message.body);
-    }
-}

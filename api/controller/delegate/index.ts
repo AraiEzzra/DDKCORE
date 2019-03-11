@@ -1,19 +1,23 @@
-import { ResponseEntity } from 'shared/model/response';
 import { RPC } from 'api/utils/decorators';
-import { DelegateModel } from 'shared/model/delegate';
-import { Filter } from 'shared/model/types';
-import DelegateService from 'api/service/delegate';
+import { Message } from 'shared/model/message';
+import SocketMiddleware from 'api/middleware/socket';
 
 export class DelegateController {
 
+    constructor() {
+        this.getActiveDelegates = this.getActiveDelegates.bind(this);
+        this.getInactiveDelegates = this.getInactiveDelegates.bind(this);
+    }
+
+// TODO: Add validation of request
     @RPC('GET_ACTIVE_DELEGATES')
-    getActiveDelegates(filter: Filter): ResponseEntity<Array<DelegateModel>> {
-        return DelegateService.getActiveDelegates(filter);
+    getActiveDelegates(message: Message, socket: any) {
+        SocketMiddleware.emitToCore(message, socket);
     }
 
     @RPC('GET_INACTIVE_DELEGATES')
-    getInactiveDelegates(filter: Filter): ResponseEntity<Array<DelegateModel>> {
-        return DelegateService.getInactiveDelegates(filter);
+    getInactiveDelegates(message: Message, socket: any) {
+        SocketMiddleware.emitToCore(message, socket);
     }
 
 }
