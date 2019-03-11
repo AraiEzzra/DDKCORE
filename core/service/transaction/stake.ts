@@ -6,13 +6,13 @@ import {
     IAirdropAsset, TransactionModel,
 } from 'shared/model/transaction';
 import ResponseEntity from 'shared/model/response';
-import {Account} from 'shared/model/account';
+import {Account, Stake} from 'shared/model/account';
 import AccountRepo from 'core/repository/account';
 import { TOTAL_PERCENTAGE } from 'core/util/const';
 import config from 'shared/util/config';
 import BUFFER from 'core/util/buffer';
 
-import { getAirdropReward, verifyAirdrop } from 'core/util/reward';
+import {getAirdropReward, sendAirdropReward, undoAirdropReward, verifyAirdrop} from 'core/util/reward';
 
 class TransactionStakeService implements IAssetService<IAssetStake>  {
 
@@ -60,7 +60,7 @@ class TransactionStakeService implements IAssetService<IAssetStake>  {
         return Buffer.concat([buff, referralBuffer]);
     }
 
-    validate(trs: Transaction<IAssetStake>): ResponseEntity<any> {
+    validate(trs: Transaction<IAssetStake>): ResponseEntity<void> {
         const errors = [];
         if (trs.asset.amount <= 0) {
             errors.push('Invalid transaction amount');
@@ -82,20 +82,32 @@ class TransactionStakeService implements IAssetService<IAssetStake>  {
         return new ResponseEntity({ errors });
     }
 
-    calculateFee(trs: Transaction<IAssetStake>, sender?: Account): number {
+    calculateFee(trs: Transaction<IAssetStake>, sender: Account): number {
         return (trs.asset.amount * config.constants.fees.froze) / TOTAL_PERCENTAGE;
     }
 
     applyUnconfirmed(trs: Transaction<IAssetStake>, sender: Account): void {
         sender.actualBalance -= trs.asset.amount;
-        // TODO sender.stakes.push(new Stake())
-        // distribute airdrop
+        sender.stakes.push(new Stake({
+            createdAt: trs.createdAt,
+            isActive: true,
+            amount: trs.asset.amount,
+            voteCount: 0,
+            nextVoteMilestone: trs.createdAt + config.constants.froze.vTime * 60,
+            airdropReward: trs.asset.airdropReward.sponsors,
+            sourceTransactionId: trs.id
+        }));
+        sendAirdropReward(trs);
     }
 
     undoUnconfirmed(trs: Transaction<IAssetStake>, sender: Account, senderOnly): void {
         sender.actualBalance += trs.asset.amount;
-        // TODO sender.stakes.splice(sender.stakes.indexOf(stake), 1)
-        // get back airdrop
+        for (let i = sender.stakes.length; i > -1; i--) {
+            if ( sender.stakes[i].sourceTransactionId === trs.id) {
+                sender.stakes.splice(i, 1);
+            }
+        }
+        undoAirdropReward(trs);
     }
 
 }

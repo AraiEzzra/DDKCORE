@@ -30,6 +30,16 @@ class TransactionRegisterService implements IAssetService<IAssetRegister> {
 
     // TODO check empty account
     verifyUnconfirmed(trs: Transaction<IAssetRegister>, sender: Account): Response<void> {
+        if (
+            sender.secondPublicKey ||
+            sender.actualBalance !== 0 ||
+            sender.delegate ||
+            (sender.votes && sender.votes.length) ||
+            (sender.referrals && sender.referrals.length) ||
+            (sender.stakes && sender.stakes.length)
+        ) {
+            return new Response({ errors: ['Account already exists.'] });
+        }
         return new Response();
     }
 
