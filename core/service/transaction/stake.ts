@@ -23,13 +23,12 @@ class TransactionStakeService implements IAssetService<IAssetStake> {
             trs.asset.amount,
             TransactionType.STAKE
         );
-        trs.asset = {
+        return {
             amount: trs.asset.amount,
             startTime: trs.createdAt,
-            startVoteCount: 0,
+            startVoteCount: trs.asset.startVoteCount || 0, // vulnerability!!
             airdropReward: airdropReward
         };
-        return trs.asset;
     }
 
     getBytes(trs: Transaction<IAssetStake>): Buffer {

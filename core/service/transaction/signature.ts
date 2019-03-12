@@ -9,7 +9,9 @@ import AccountRepo from '../../repository/account';
 class TransactionSignatureService implements IAssetService<IAssetSignature> {
 
     create(trs: TransactionModel<IAssetSignature>): IAssetSignature {
-        return trs.asset;
+        return {
+            publicKey: trs.asset.publicKey,
+        };
     }
 
     getBytes(trs: Transaction<IAssetSignature>): Buffer {
