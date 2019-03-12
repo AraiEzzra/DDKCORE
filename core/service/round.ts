@@ -112,8 +112,11 @@ class RoundService implements IRoundService {
     }
 
     public generatorPublicKeyToSlot(sortedHashList: Array<IHashList>): Slots {
-        let firstSlot = SlotService.getSlotNumber();
-        // set the last round slot
+        const lastRound = RoundRepository.getPrevRound();
+        const lastBlock = BlockRepository.getLastBlock();
+
+        let firstSlot = !lastRound && lastBlock.createdAt === 0 ?
+            SlotService.getTheFirsSlot() : RoundRepository.getLastSlotInRound(lastRound);
 
         return sortedHashList.reduce(
             (acc: Object = {}, item: IHashList, i) => {
