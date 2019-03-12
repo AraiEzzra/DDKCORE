@@ -32,7 +32,7 @@ export class Headers {
     }
 
     setBroadhash(lastBlock: Block) {
-        this.broadhash = lastBlock.id;
+        this.broadhash = lastBlock.id || null;
     }
 
     addBlockIdInPool(lastBlock: Block) {
@@ -44,7 +44,7 @@ export class Headers {
     }
 
     setHeight(lastBlock: Block) {
-        this.height = lastBlock.height;
+        this.height = lastBlock.height || 1;
     }
 
     getHeaders() {
