@@ -1,5 +1,5 @@
 import { ResponseEntity } from 'shared/model/response';
-import crypto from 'crypto';
+import * as crypto from 'crypto';
 import SlotService from 'core/service/slot';
 import Config from 'shared/util/config';
 // todo delete it when find a way to mock services for tests
@@ -49,7 +49,7 @@ interface IRoundService {
 
     rebuild(): void;
 
-    rollBack(): void;
+    rollBack(round: Round): Promise<void>;
 
     validate(): boolean;
 
@@ -116,17 +116,21 @@ class RoundService implements IRoundService {
         // set the last round slot
 
         return sortedHashList.reduce(
-            (acc: Object = {}, item: IHashList, i) => {
+            (acc: Slots = {}, item: IHashList, i) => {
             acc[item.generatorPublicKey] = { slot: firstSlot + i };
             return acc;
         }, {});
     }
 
-    public restoreRounds(block: Block) {
+    public restoreRounds(block: Block = BlockRepository.getLastBlock()) {
         if (!this.isBlockChainReady) {
             return;
         }
-
+        if (!RoundRepository.getCurrentRound()) {
+            this.isRoundChainRestored = true;
+            this.generateRound();
+            return;
+        }
         const currentRound = RoundRepository.getCurrentRound();
         const firstSlot = RoundRepository.getFirstSlotInRound();
         const lastSlot = RoundRepository.getLastSlotInRound();
@@ -156,10 +160,10 @@ class RoundService implements IRoundService {
             RoundRepository.getCurrentRound()
         ) {
             compose(
-                this.apply(),
                 this.applyUnconfirmed,
                 this.sumRound
             )(RoundRepository.getCurrentRound());
+            this.apply();
 
             // store pound as previous
             RoundRepository.setPrevRound(RoundRepository.getCurrentRound());
@@ -244,7 +248,9 @@ class RoundService implements IRoundService {
     public rebuild(): void {
     }
 
-    public rollBack(): void {
+    public async rollBack(round: Round = RoundRepository.getCurrentRound()): Promise<void> {
+        this.undoUnconfirmed(round);
+        await this.undo(round);
     }
 
     public validate(): boolean {
