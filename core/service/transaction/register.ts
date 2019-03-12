@@ -9,7 +9,9 @@ import BUFFER from 'core/util/buffer';
 class TransactionRegisterService implements IAssetService<IAssetRegister> {
 
     create(trs: TransactionModel<IAssetRegister>): IAssetRegister {
-        return trs.asset;
+        return {
+            referral: trs.asset.referral,
+        };
     }
 
     getBytes(trs: Transaction<IAssetRegister>): Buffer {

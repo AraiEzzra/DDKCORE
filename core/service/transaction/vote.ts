@@ -25,13 +25,12 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
         const totals: { reward: number, unstake: number} = calculateTotalRewardAndUnstake(sender, isDownVote);
         const airdropReward: IAirdropAsset = getAirdropReward(sender, totals.reward, trs.type);
 
-        trs.asset = {
+        return {
             votes: trs.asset.votes,
             reward: totals.reward || 0,
             unstake: totals.unstake || 0,
             airdropReward: airdropReward
         };
-        return trs.asset;
     }
 
     getBytes(trs: Transaction<IAssetVote>): Buffer {
