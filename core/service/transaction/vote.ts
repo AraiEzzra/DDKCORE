@@ -19,7 +19,7 @@ import { SECONDS_PER_MINUTE, TOTAL_PERCENTAGE } from 'core/util/const';
 
 class TransactionVoteService implements IAssetService<IAssetVote> {
 
-    create(trs: TransactionModel<IAssetVote>): void {
+    create(trs: TransactionModel<IAssetVote>): IAssetVote {
         const sender: Account = AccountRepo.getByAddress(trs.senderAddress);
         const isDownVote: boolean = trs.asset.votes[0][0] === '-';
         const totals: { reward: number, unstake: number} = calculateTotalRewardAndUnstake(sender, isDownVote);
@@ -31,6 +31,7 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
             unstake: totals.unstake || 0,
             airdropReward: airdropReward
         };
+        return trs.asset;
     }
 
     getBytes(trs: Transaction<IAssetVote>): Buffer {

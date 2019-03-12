@@ -27,7 +27,7 @@ import { getAddressByPublicKey } from 'shared/util/account';
 export interface IAssetService<T extends IAsset> {
     getBytes(trs: Transaction<T>): Buffer;
 
-    create(trs: TransactionModel<T>): void;
+    create(trs: TransactionModel<T>): T;
 
     validate(trs: TransactionModel<T>): ResponseEntity<void>;
     verifyUnconfirmed(trs: Transaction<T>, sender: Account): ResponseEntity<void>;
@@ -47,7 +47,7 @@ export interface ITransactionService<T extends IAsset> {
     validate(trs: Transaction<T>): ResponseEntity<void>;
     verifyUnconfirmed(trs: Transaction<T>, sender: Account, checkExists: boolean): ResponseEntity<void>;
 
-    create(data: Transaction<T>, keyPair: IKeyPair): ResponseEntity<Transaction<IAsset>>;
+    create(data: Transaction<T>, keyPair: IKeyPair): ResponseEntity<Transaction<T>>;
 
     sign(keyPair: IKeyPair, trs: Transaction<T>): string;
 
@@ -190,7 +190,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         }
     }
 
-    create(data: TransactionModel<T>, keyPair: IKeyPair): ResponseEntity<Transaction<IAsset>> {
+    create(data: TransactionModel<T>, keyPair: IKeyPair): ResponseEntity<Transaction<T>> {
         const errors = [];
 
         if (!TransactionType[data.type]) {
@@ -212,8 +212,8 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             return new ResponseEntity({ errors });
         }
 
-        const service: IAssetService<IAsset> = getTransactionServiceByType(data.type);
-        service.create(data);
+        const service = getTransactionServiceByType(data.type);
+        const asset = service.create(data);
 
         const trs = new Transaction<T>({
             createdAt: data.createdAt,
@@ -221,7 +221,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             senderAddress: sender.address,
             type: data.type,
             salt: cryptoBrowserify.randomBytes(SALT_LENGTH).toString('hex'),
-            asset: data.asset
+            asset,
         });
 
         trs.signature = this.sign(keyPair, trs);
