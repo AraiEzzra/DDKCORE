@@ -41,7 +41,7 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
         );
 
         offset = BUFFER.writeUInt64LE(buff, trs.asset.reward, offset);
-        offset = BUFFER.writeUInt64LE(buff, trs.asset.unstake ? (trs.asset.unstake * -1) : 0, offset);
+        offset = BUFFER.writeUInt64LE(buff, trs.asset.unstake, offset);
 
         // airdropReward.sponsors up to 15 sponsors
         const sponsorsBuffer = Buffer.alloc(
@@ -206,7 +206,6 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
             });
             sender.votes.push(...votes);
         }
-        AccountRepo.updateVotes(sender, sender.votes);
 
         if (isDownVote) {
             return;
@@ -245,7 +244,6 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
                 return acc;
             }, sender.votes);
         }
-        AccountRepo.updateVotes(sender, sender.votes);
 
         if (isDownVote) {
             return;
@@ -258,8 +256,10 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
                 stake.nextVoteMilestone = 0;
             }
         });
-        undoFrozeOrdersRewardAndUnstake(trs);
-        undoAirdropReward(trs);
+        undoFrozeOrdersRewardAndUnstake(trs, sender, senderOnly);
+        if (!senderOnly) {
+            undoAirdropReward(trs);
+        }
     }
 }
 
