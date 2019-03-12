@@ -1,7 +1,7 @@
 import { IAssetService } from 'core/service/transaction';
 import {IAirdropAsset, IAssetVote, Transaction, TransactionModel} from 'shared/model/transaction';
 import { Account, Stake } from 'shared/model/account';
-import Response from 'shared/model/response';
+import { ResponseEntity } from 'shared/model/response';
 import AccountRepo from 'core/repository/account';
 import config from 'shared/util/config';
 import BUFFER from 'core/util/buffer';
@@ -58,7 +58,7 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
         return Buffer.concat([buff, sponsorsBuffer, voteBuffer]);
     }
 
-    validate(trs: Transaction<IAssetVote>): Response<void> {
+    validate(trs: Transaction<IAssetVote>): ResponseEntity<void> {
         const errors: Array<string> = [];
 
         if (!trs.asset || !trs.asset.votes) {
@@ -110,10 +110,10 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
             errors.push('Multiple votes for same delegate are not allowed');
         }
 
-        return new Response({ errors });
+        return new ResponseEntity<void>({ errors });
     }
 
-    verifyUnconfirmed(trs: Transaction<IAssetVote>, sender: Account): Response<void> {
+    verifyUnconfirmed(trs: Transaction<IAssetVote>, sender: Account): ResponseEntity<void> {
         const errors: Array<string> = [];
 
         const isDownVote: boolean = trs.asset.votes[0][0] === '-';
@@ -131,7 +131,7 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
             );
         }
 
-        const verifyAirdropResponse: Response<void> = verifyAirdrop(trs, totals.reward, sender);
+        const verifyAirdropResponse: ResponseEntity<void> = verifyAirdrop(trs, totals.reward, sender);
         if (!verifyAirdropResponse.success) {
             errors.push(...verifyAirdropResponse.errors);
         }
@@ -173,7 +173,7 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
 
             errors.push(`Maximum number of votes possible ${config.constants.maxVotes}, exceeded by ${exceeded}`);
         }
-        return new Response({ errors });
+        return new ResponseEntity<void>({ errors });
     }
 
     calculateFee(trs: Transaction<IAssetVote>, sender: Account): number {

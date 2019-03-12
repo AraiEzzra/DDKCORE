@@ -1,4 +1,4 @@
-import path from 'path';
+import * as path from 'path';
 import db from 'shared/driver/db';
 import { QueryFile } from 'pg-promise';
 import TransactionDispatcher from 'core/service/transaction';
