@@ -39,17 +39,8 @@ class AccountRepo {
         this.memoryAccountsByAddress.get(account.address).actualBalance = balance;
     }
 
-    /** TODO refactor to getByAddress */
-    updateBalanceByPublicKey(publicKey: PublicKey, difference: number): void {
-        this.memoryAccountsByAddress.get(getAddressByPublicKey(publicKey)).actualBalance += difference;
-    }
-
     updateBalanceByAddress(address: Address, difference: number): void {
         this.memoryAccountsByAddress.get(address).actualBalance += difference;
-    }
-
-    attachDelegate(account: Account, delegate: Delegate): void {
-        this.memoryAccountsByAddress.get(account.address).delegate = delegate;
     }
 
     updateVotes(account: Account, votes: Array<string> ): void {

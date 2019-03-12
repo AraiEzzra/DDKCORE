@@ -59,8 +59,7 @@ class TransactionRegisterService implements IAssetService<IAssetRegister> {
     }
 
     undoUnconfirmed(trs: Transaction<IAssetRegister>, sender: Account, senderOnly): void {
-        // TODO strange logic for not referral account
-        AccountRepo.delete(sender);
+        sender.referrals = [];
     }
 
 }

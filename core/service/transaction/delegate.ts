@@ -82,16 +82,17 @@ class TransactionDelegateService implements IAssetService<IAssetDelegate> {
     }
 
     applyUnconfirmed(trs: Transaction<IAssetDelegate>, sender: Account): void {
-        const newDelegate: Delegate = DelegateRepo.add(sender, {
+        sender.delegate = DelegateRepo.add(sender, {
             username: trs.asset.username,
             url: trs.asset.url
         });
-        AccountRepo.attachDelegate(sender, newDelegate);
     }
 
     undoUnconfirmed(trs: Transaction<IAssetDelegate>, sender: Account, senderOnly): void {
-        DelegateRepo.delete(sender);
-        AccountRepo.attachDelegate(sender, null);
+        if (!senderOnly) {
+            DelegateRepo.delete(sender);
+        }
+        sender.delegate = null;
     }
 }
 
