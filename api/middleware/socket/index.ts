@@ -5,7 +5,7 @@ import AccountControllerInstance, { AccountController } from 'api/controller/acc
 import DelegateControllerInstance, { DelegateController } from 'api/controller/delegate';
 import { Message, MessageType } from 'shared/model/message';
 import ResponseEntity from 'shared/model/response';
-import { MESSAGE_CHANNEL } from 'api/driver/socket/channel';
+import { MESSAGE_CHANNEL } from 'shared/driver/socket/channels';
 
 export class SocketMiddleware {
 
@@ -21,7 +21,13 @@ export class SocketMiddleware {
         this.referredUsersController = ReferredUsersControllerInstance;
         this.accountController = AccountControllerInstance;
         this.delegateController = DelegateControllerInstance;
-        this.requests = new Map<string, any>();
+
+        this.requests = new Map();
+    }
+
+    onAPIConnect(socketApi: any) {
+        console.log('Socket %s connected', JSON.stringify(socketApi.handshake));
+        socketApi.on(MESSAGE_CHANNEL, (data: Message) => this.onAPIMessage(data, socketApi));
     }
 
     onAPIMessage(message: Message, socketApi: any) {
@@ -35,7 +41,10 @@ export class SocketMiddleware {
         }
     }
 
-    onCoreMessage(data: Message) {
+    onCoreMessage(data: Message, apiSocketServer?: SocketIO.Server) {
+        if (data.headers.type === MessageType.EVENT) {
+            apiSocketServer.emit(MESSAGE_CHANNEL, data);
+        }
         const requestId = data.headers.id;
         if (this.requests.has(requestId)) {
             const socket = this.requests.get(requestId);

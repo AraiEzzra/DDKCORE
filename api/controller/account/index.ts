@@ -1,6 +1,6 @@
 import AccountService from 'api/service/account';
 import { RPC } from 'api/utils/decorators';
-import { MESSAGE_CHANNEL } from 'api/driver/socket/channel';
+import { MESSAGE_CHANNEL } from 'shared/driver/socket/channels';
 import { Message, MessageType } from 'shared/model/message';
 
 export class AccountController {

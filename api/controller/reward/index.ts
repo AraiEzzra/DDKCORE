@@ -5,7 +5,7 @@ import ResponseEntity from 'shared/model/response';
 import { Reward } from 'shared/model/reward';
 import ReferredUsersService from 'api/service/referredUsers';
 import { Message, MessageType } from 'shared/model/message';
-import { MESSAGE_CHANNEL } from 'api/driver/socket/channel';
+import { MESSAGE_CHANNEL } from 'shared/driver/socket/channels';
 
 export class RewardController {
 
