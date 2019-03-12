@@ -31,7 +31,7 @@ export const transactionSortFunc = (a: Transaction<any>, b: Transaction<any>): n
     return 0;
 };
 
-export const getTransactionServiceByType = (type: TransactionType): IAssetService<IAsset> => {
+export const getTransactionServiceByType = (type: TransactionType): IAssetService<any> => {
     switch (type) {
         case TransactionType.SEND:
             return TransactionSendService;

@@ -14,9 +14,9 @@ import BUFFER from 'core/util/buffer';
 
 import {getAirdropReward, sendAirdropReward, undoAirdropReward, verifyAirdrop} from 'core/util/reward';
 
-class TransactionStakeService implements IAssetService<IAssetStake>  {
+class TransactionStakeService implements IAssetService<IAssetStake> {
 
-    create(trs: TransactionModel<IAssetStake>): void {
+    create(trs: TransactionModel<IAssetStake>): IAssetStake {
         const sender: Account = AccountRepo.getByAddress(trs.senderAddress);
         const airdropReward: IAirdropAsset = getAirdropReward(
             sender,
@@ -29,6 +29,7 @@ class TransactionStakeService implements IAssetService<IAssetStake>  {
             startVoteCount: 0,
             airdropReward: airdropReward
         };
+        return trs.asset;
     }
 
     getBytes(trs: Transaction<IAssetStake>): Buffer {

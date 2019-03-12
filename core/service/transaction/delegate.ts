@@ -9,8 +9,9 @@ import config from 'shared/util/config';
 
 class TransactionDelegateService implements IAssetService<IAssetDelegate> {
 
-    create(trs: TransactionModel<IAssetDelegate>): void {
+    create(trs: TransactionModel<IAssetDelegate>): IAssetDelegate {
         trs.asset.username = trs.asset.username.toLowerCase().trim();
+        return trs.asset;
     }
 
     getBytes(trs: Transaction<IAssetDelegate>): Buffer {
