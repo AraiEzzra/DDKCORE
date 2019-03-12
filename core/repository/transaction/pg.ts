@@ -8,6 +8,7 @@ import {
 } from 'shared/repository/transaction';
 import queries from 'core/repository/queries/transaction';
 import TransactionDelegateRepo from 'core/repository/transaction/asset/delegate';
+import TransactionSignatureRepo from 'core/repository/transaction/asset/signature';
 import TransactionRegisterRepo from 'core/repository/transaction/asset/register';
 import TransactionSendRepo from 'core/repository/transaction/asset/send';
 import TransactionStakeRepo from 'core/repository/transaction/asset/stake';
@@ -46,7 +47,7 @@ class TransactionPGRepo implements ITransactionPGRepository<IAsset> {
     private readonly assetRepositories: { [key: number]: IAssetRepository<IAsset> } = {
         0: TransactionRegisterRepo,
         10: TransactionSendRepo,
-        20: null,
+        20: TransactionSignatureRepo,
         30: TransactionDelegateRepo,
         40: TransactionStakeRepo,
         50: null,

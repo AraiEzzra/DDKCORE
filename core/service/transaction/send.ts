@@ -10,8 +10,11 @@ import BUFFER from 'core/util/buffer';
 
 class TransactionSendService implements IAssetService<IAssetTransfer> {
 
-    create(trs: TransactionModel<IAssetTransfer>): void {
-        return;
+    create(trs: TransactionModel<IAssetTransfer>): IAssetTransfer {
+        return {
+            recipientAddress: trs.asset.recipientAddress,
+            amount: trs.asset.amount,
+        };
     }
 
     getBytes(trs: Transaction<IAssetTransfer>): Buffer {

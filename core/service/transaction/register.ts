@@ -8,8 +8,10 @@ import BUFFER from 'core/util/buffer';
 
 class TransactionRegisterService implements IAssetService<IAssetRegister> {
 
-    create(trs: TransactionModel<IAssetRegister>): void {
-
+    create(trs: TransactionModel<IAssetRegister>): IAssetRegister {
+        return {
+            referral: trs.asset.referral,
+        };
     }
 
     getBytes(trs: Transaction<IAssetRegister>): Buffer {
