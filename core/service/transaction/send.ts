@@ -1,10 +1,10 @@
-import { IAssetService } from '../transaction';
-import { IAsset, TransactionModel } from 'shared/model/transaction';
+import { IAssetService } from 'core/service/transaction';
+import { TransactionModel } from 'shared/model/transaction';
 import { IAssetTransfer, Transaction } from 'shared/model/transaction';
 import { Account } from 'shared/model/account';
-import Response from 'shared/model/response';
+import { ResponseEntity } from 'shared/model/response';
 import config from 'shared/util/config';
-import AccountRepo from '../../repository/account';
+import AccountRepo from 'core/repository/account';
 import { TOTAL_PERCENTAGE } from 'core/util/const';
 import BUFFER from 'core/util/buffer';
 
@@ -24,7 +24,7 @@ class TransactionSendService implements IAssetService<IAssetTransfer> {
         return buff;
     }
 
-    validate(trs: Transaction<IAssetTransfer>): Response<void> {
+    validate(trs: Transaction<IAssetTransfer>): ResponseEntity<void> {
         const errors = [];
 
         const asset: IAssetTransfer = <IAssetTransfer><Object>trs.asset;
@@ -39,14 +39,14 @@ class TransactionSendService implements IAssetService<IAssetTransfer> {
             errors.push('Invalid amount');
         }
 
-        return new Response({ errors });
+        return new ResponseEntity<void>({ errors });
     }
 
-    verifyUnconfirmed(trs: Transaction<IAssetTransfer>, sender: Account): Response<void> {
+    verifyUnconfirmed(trs: Transaction<IAssetTransfer>, sender: Account): ResponseEntity<void> {
         if ((trs.fee + trs.asset.amount) > sender.actualBalance) {
-            return new Response({ errors: ['Not enough balance.'] });
+            return new ResponseEntity<void>({ errors: ['Not enough balance.'] });
         }
-        return new Response();
+        return new ResponseEntity<void>();
     }
 
     calculateFee(trs: Transaction<IAssetTransfer>, sender: Account): number {

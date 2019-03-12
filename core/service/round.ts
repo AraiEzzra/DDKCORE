@@ -1,4 +1,4 @@
-import Response from 'shared/model/response';
+import { ResponseEntity } from 'shared/model/response';
 import * as crypto from 'crypto';
 import SlotService from 'core/service/slot';
 import Config from 'shared/util/config';
@@ -41,11 +41,11 @@ interface IRoundService {
 
     generatorPublicKeyToSlot(sortedHashList: Array<{hash: string, generatorPublicKey: string}>): Slots;
 
-    generateRound(): Response<void>;
+    generateRound(): ResponseEntity<void>;
 
     getMyTurn(): number;
 
-    sumRound(round): Response<IRoundSum>;
+    sumRound(round): ResponseEntity<IRoundSum>;
 
     rebuild(): void;
 
@@ -53,9 +53,9 @@ interface IRoundService {
 
     validate(): boolean;
 
-    applyUnconfirmed(param: Response<IRoundSum>): Response<Array<string>>;
+    applyUnconfirmed(param: ResponseEntity<IRoundSum>): ResponseEntity<Array<string>>;
 
-    undoUnconfirmed(round: Round): Response<Array<string>>;
+    undoUnconfirmed(round: Round): ResponseEntity<Array<string>>;
 
     apply(round: Round): Promise<void>;
 
@@ -152,7 +152,7 @@ class RoundService implements IRoundService {
         this.generateRound();
     }
 
-    public generateRound(): Response<void> {
+    public generateRound(): ResponseEntity<void> {
         /**
          * if triggered by ROUND_FINISH event
          */
@@ -172,7 +172,7 @@ class RoundService implements IRoundService {
         const lastBlock = BlockRepository.getLastBlock();
         if (lastBlock == null) {
             logger.error(`${this.logPrefix}[generateRound] Can't start round: lastBlock is undefined`);
-            return new Response({
+            return new ResponseEntity<void>({
                 errors: [`${this.logPrefix}[generateRound] Can't start round: lastBlock is undefined`]
             });
         }
@@ -181,7 +181,7 @@ class RoundService implements IRoundService {
 
         if (!delegateResponse.success) {
             logger.error(`${this.logPrefix}[generateRound] error: ${delegateResponse.errors}`);
-            return new Response({
+            return new ResponseEntity<void>({
                 errors: [...delegateResponse.errors, `${this.logPrefix}[generateRound] Can't get Active delegates`]
             });
         }
@@ -219,14 +219,14 @@ class RoundService implements IRoundService {
         const RoundEndTime = SlotService.getSlotTime(lastSlot + 1 - SlotService.getSlotNumber());
         createTaskON('ROUND_FINISH', RoundEndTime);
 
-        return new Response();
+        return new ResponseEntity<void>();
     }
 
     public getMyTurn(): number {
         return RoundRepository.getCurrentRound().slots[constants.publicKey].slot;
     }
 
-    public sumRound(round: Round): Response<IRoundSum> {
+    public sumRound(round: Round): ResponseEntity<IRoundSum> {
         // load blocks forged in the last round
 
         const limit = Object.keys(round.slots).length;
@@ -242,7 +242,7 @@ class RoundService implements IRoundService {
             resp.roundDelegates.push(blocks[i].generatorPublicKey);
         }
 
-        return new Response({data: resp});
+        return new ResponseEntity<IRoundSum>({data: resp});
     }
 
     public rebuild(): void {
@@ -257,10 +257,10 @@ class RoundService implements IRoundService {
         return undefined;
     }
 
-    public applyUnconfirmed(param: Response<IRoundSum>): Response<Array<string>> {
+    public applyUnconfirmed(param: ResponseEntity<IRoundSum>): ResponseEntity<Array<string>> {
         const roundSumResponse = param;
         if (!roundSumResponse.success) {
-            return new Response({errors: [...roundSumResponse.errors, 'applyUnconfirmed']});
+            return new ResponseEntity<Array<string>>({errors: [...roundSumResponse.errors, 'applyUnconfirmed']});
         }
         // increase delegates balance
         const delegates = roundSumResponse.data.roundDelegates;
@@ -274,13 +274,13 @@ class RoundService implements IRoundService {
         const lastBlock = BlockRepository.getLastBlock();
         RoundRepository.updateEndHeight(lastBlock.height);
 
-        return new Response({data: delegates});
+        return new ResponseEntity<Array<string>>({data: delegates});
     }
 
-    public undoUnconfirmed(round: Round = RoundRepository.getCurrentRound()): Response<Array<string>> {
+    public undoUnconfirmed(round: Round = RoundRepository.getCurrentRound()): ResponseEntity<Array<string>> {
         const roundSumResponse = this.sumRound(round);
         if (!roundSumResponse.success) {
-            return new Response({errors: [...roundSumResponse.errors, 'undoUnconfirmed']});
+            return new ResponseEntity<Array<string>>({errors: [...roundSumResponse.errors, 'undoUnconfirmed']});
         }
         // increase delegates balance
         const delegates = roundSumResponse.data.roundDelegates;
@@ -291,7 +291,7 @@ class RoundService implements IRoundService {
             AccountRepository.updateBalance(delegateAccount, delegateAccount.actualBalance - fee);
         }
 
-        return new Response({data: delegates});
+        return new ResponseEntity<Array<string>>({data: delegates});
     }
 
     public async apply(round: Round = RoundRepository.getCurrentRound()): Promise<void> {

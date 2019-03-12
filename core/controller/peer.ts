@@ -2,7 +2,7 @@ import { Peer } from 'shared/model/peer';
 import { Block } from 'shared/model/block';
 import BlockRepo from 'core/repository/block/';
 import { Transaction } from 'shared/model/transaction';
-import Response from 'shared/model/response';
+import { ResponseEntity } from 'shared/model/response';
 import { ON, RPC } from 'core/util/decorator';
 import { BaseController } from 'core/controller/baseController';
 import PeerRepo from 'core/repository/peer';
@@ -42,58 +42,58 @@ interface IAdditionalData {
 // todo: check if this controller is redundant, cause all actions are for transport
 class PeerController extends BaseController {
 
-    private handshake(ip: string, port: number, headers: object): Response<Peer> {
-        return new Response({data: new Peer()});
+    private handshake(ip: string, port: number, headers: object): ResponseEntity<Peer> {
+        return new ResponseEntity({data: new Peer()});
     }
 
     @RPC('COMMON_BLOCK')
-    public blocksCommon(req: ICommonBlockRequest, additionalData: IAdditionalData): Response<{ common: number; }> {
+    public blocksCommon(req: ICommonBlockRequest, additionalData: IAdditionalData): ResponseEntity<{ common: number; }> {
         let ip: string = additionalData.ip;
         let port: number = additionalData.headers.port;
-        let peerResponse : Response<Peer> = this.handshake(ip, port, additionalData.headers);
+        let peerResponse : ResponseEntity<Peer> = this.handshake(ip, port, additionalData.headers);
         if (peerResponse.errors) {
             peerResponse.errors.push('/blocks/common');
-            return new Response<{common: number}>({ errors: peerResponse.errors });
+            return new ResponseEntity<{common: number}>({ errors: peerResponse.errors });
         }
         PeerRepo.removePeer(peerResponse.data);
-        return new Response({ data: { common: 0 }});
+        return new ResponseEntity<{common: number}>({ data: { common: 0 }});
     }
 
     @RPC('GET_BLOCKS')
-    public blocks(req: IBlockRequest) : Response<{ blocks: Array<Block>; }> {
-        return new Response({ data: { blocks: [] } });
+    public blocks(req: IBlockRequest) : ResponseEntity<{blocks: Array<Block>}> {
+        return new ResponseEntity<{blocks: Array<Block>}>({ data: { blocks: [] } });
     }
 
     @RPC('GET_PEERS_LIST')
-    public list(): Response<Array<Peer>> {
+    public list(): ResponseEntity<Array<Peer>> {
         PeerRepo.peerList();
-        return new Response({ data: [] });
+        return new ResponseEntity<Array<Peer>>({ data: [] });
     }
 
     @RPC('GET_HEIGHT')
-    public height() : Response<{ height: number }> {
-        return new Response<{height: number}>({ data : { height: BlockRepo.getLastBlock().height } });
+    public height() : ResponseEntity<{ height: number }> {
+        return new ResponseEntity<{height: number}>({ data : { height: BlockRepo.getLastBlock().height } });
     }
 
     @RPC('GET_TRANSACTIONS_COUNT')
     public getTransactions() {} // transaction[] unconfirmed + multisignatures + queued
 
     @RPC('RECEIVE_BLOCK')
-    public postBlock(req: IPostBlockRequest, additionalData: IAdditionalData): Response<{ blockId: string }> {
+    public postBlock(req: IPostBlockRequest, additionalData: IAdditionalData): ResponseEntity<{ blockId: string }> {
         let block: Block = req.body.block;
         let ip: string = additionalData.ip;
         let port: number = additionalData.headers.port;
-        let peerResponse : Response<Peer> = this.handshake(ip, port, additionalData.headers);
+        let peerResponse : ResponseEntity<Peer> = this.handshake(ip, port, additionalData.headers);
         if (peerResponse.errors) {
             peerResponse.errors.push('/blocks/common');
-            return new Response<{ blockId: string }>({ errors: peerResponse.errors });
+            return new ResponseEntity<{ blockId: string }>({ errors: peerResponse.errors });
         }
         let peer : Peer = peerResponse.data;
 
         // blockService.objectNormalize ?
         // broadcast 'receiveBlock'
 
-        return new Response({data: { blockId: block.id }});
+        return new ResponseEntity<{ blockId: string }>({data: { blockId: block.id }});
     }
 
     @RPC('RECEIVE_TRANSACTIONS')

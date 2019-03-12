@@ -9,8 +9,7 @@ import {
     TransactionModel,
     TransactionType
 } from 'shared/model/transaction';
-import { IFunctionResponse } from 'core/util/common';
-import ResponseEntity from 'shared/model/response';
+import { ResponseEntity } from 'shared/model/response';
 import { ed, IKeyPair } from 'shared/util/ed';
 import { Account, Address } from 'shared/model/account';
 import config from 'shared/util/config';
@@ -57,15 +56,15 @@ export interface ITransactionService<T extends IAsset> {
 
     getBytes(trs: Transaction<T>): Buffer;
 
-    isConfirmed(trs: Transaction<T>): IFunctionResponse;
+    isConfirmed(trs: Transaction<T>): ResponseEntity<void>;
 
     checkBalance(amount: number, trs: Transaction<T>, sender: Account): ResponseEntity<void>;
 
     calculateFee(trs: Transaction<T>, sender: Account): number;
 
-    verifySignature(trs: Transaction<T>, publicKey: string, signature: string): IFunctionResponse;
-    verifySecondSignature(trs: Transaction<T>, publicKey: string, signature: string): IFunctionResponse;
-    verifyBytes(bytes: Uint8Array, publicKey: string, signature: string): IFunctionResponse;
+    verifySignature(trs: Transaction<T>, publicKey: string, signature: string): ResponseEntity<void>;
+    verifySecondSignature(trs: Transaction<T>, publicKey: string, signature: string): ResponseEntity<void>;
+    verifyBytes(bytes: Uint8Array, publicKey: string, signature: string): ResponseEntity<void>;
 
     applyUnconfirmed(trs: Transaction<T>, sender: Account): void;
     undoUnconfirmed(trs: Transaction<T>, sender?: Account, senderOnly?: boolean): void;
@@ -126,8 +125,9 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         return new ResponseEntity({ errors });
     }
 
-    isConfirmed(trs: Transaction<T>): IFunctionResponse {
-        return { success: TransactionRepo.isExist(trs.id) };
+    isConfirmed(trs: Transaction<T>): ResponseEntity<void> {
+        const errors: Array<string> = TransactionRepo.isExist(trs.id) ? [] : ['Transaction is not confirmed'];
+        return new ResponseEntity<void>({ errors: errors });
     }
 
     checkSenderTransactions(
@@ -319,15 +319,15 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         return new ResponseEntity<void>({ errors });
     }
 
-    verifyBytes(bytes: Uint8Array, publicKey: string, signature: string): IFunctionResponse {
+    verifyBytes(bytes: Uint8Array, publicKey: string, signature: string): ResponseEntity<void> {
         return undefined;
     }
 
-    verifySecondSignature(trs: Transaction<T>, publicKey: string, signature: string): IFunctionResponse {
+    verifySecondSignature(trs: Transaction<T>, publicKey: string, signature: string): ResponseEntity<void> {
         return undefined;
     }
 
-    verifySignature(trs: Transaction<T>, publicKey: string, signature: string): IFunctionResponse {
+    verifySignature(trs: Transaction<T>, publicKey: string, signature: string): ResponseEntity<void> {
         return undefined;
     }
 
