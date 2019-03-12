@@ -331,16 +331,14 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         return undefined;
     }
 
-    verifyUnconfirmed(trs: Transaction<T>, sender: Account, checkExists: boolean = false): ResponseEntity<void> {
+    verifyUnconfirmed(trs: Transaction<T>, sender: Account): ResponseEntity<void> {
         // need for vote trs, staked amount changes fee
         trs.fee = this.calculateFee(trs, sender);
 
-        if (checkExists) {
-            const isConfirmed = this.isConfirmed(trs);
+        const isConfirmed = this.isConfirmed(trs);
 
-            if (isConfirmed.success) {
-                return new ResponseEntity<void>({ errors: [`Transaction is already confirmed: ${trs.id}`] });
-            }
+        if (isConfirmed.success) {
+            return new ResponseEntity<void>({ errors: [`Transaction is already confirmed: ${trs.id}`] });
         }
 
         if (trs.type in [TransactionType.SEND, TransactionType.STAKE]) {
