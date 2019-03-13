@@ -71,10 +71,13 @@ export class SyncController extends BaseController {
     // TODO start if block decline and !consensus
     @ON('EMIT_SYNC_BLOCKS')
     async startSyncBlocks(): Promise<void> {
-        logger.debug(`[Controller][Sync][startSyncBlocks]: CONSENSUS ${SyncService.getConsensus()}%`);
         if (SyncService.consensus) {
+            logger.debug(
+                `[Controller][Sync][startSyncBlocks]: stop sync with consensus ${SyncService.getConsensus()}%`
+            );
             return;
         }
+        logger.debug(`[Controller][Sync][startSyncBlocks]: start sync with consensus ${SyncService.getConsensus()}%`);
         SyncService.checkCommonBlock();
     }
 
