@@ -498,9 +498,9 @@ class BlockService {
 
     public async receiveBlock(block: Block): Promise<ResponseEntity<void>> {
         logger.info(
-            `Received new block id: ${block.id}` +
-            `height: ${block.height}` +
-            `round: ${RoundService.calcRound(block.height)}` +
+            `Received new block id: ${block.id} ` +
+            `height: ${block.height} ` +
+            `round: ${RoundService.calcRound(block.height)} ` +
             `slot: ${slotService.getSlotNumber(block.createdAt)}`
         );
 
@@ -585,7 +585,7 @@ class BlockService {
         if (lastBlock.height === 1) {
             return new ResponseEntity<Block>({errors: ['Cannot delete genesis block']});
         }
-        
+
         const errors: Array<string> = [];
         for (const transaction of lastBlock.transactions.reverse()) {
             const sender = AccountRepo.getByAddress(transaction.senderAddress);
@@ -599,7 +599,7 @@ class BlockService {
 
         RoundService.rollBack(); // (oldLastBlock, previousBlock);
         const newLastBlock = BlockRepo.deleteLastBlock();
-        
+
         return new ResponseEntity<Block>({ data: newLastBlock });
     }
 

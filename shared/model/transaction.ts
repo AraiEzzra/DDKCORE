@@ -58,7 +58,7 @@ export interface IAssetStake extends IAsset {
 }
 
 export interface IAssetSendStake extends IAsset {
-    recipientId: string;
+    recipientAddress: string;
 }
 
 export interface IAssetVote extends IAsset {
@@ -77,10 +77,10 @@ export class TransactionModel<T extends IAsset> {
     signature?: string;
     secondSignature?: string;
     createdAt?: Timestamp;
-    fee?: number; // Memory only
+    fee?: number = 0; // Memory only
     status?: TransactionStatus; // Memory only
     salt?: string;
-    relay?: number;
+    relay?: number; // Memory only
     asset?: T;
 
     constructor(data: TransactionModel<T>) {
