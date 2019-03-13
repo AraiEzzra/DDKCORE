@@ -328,7 +328,7 @@ __private.popLastBlock = function (oldLastBlock, cbPopLastBlock) {
         // TODO: Can be inefficient, need performnce tests
         modules.blocks.utils.loadBlocksPart(oldLastBlock.previousBlock, (err, previousBlock) => {
             if (err) {
-                return setImmediate(cbAdd, err || 'previousBlock is null');
+                return setImmediate(cbAdd, err);
             }
 
             // Reverse order of transactions in last blocks...
