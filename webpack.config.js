@@ -83,6 +83,24 @@ const coreConfig = {
     // ],
 };
 
+const migrationConfig = {
+    entry: path.join(DIR, 'migration', 'migration.ts'),
+    context: path.resolve(DIR, 'migration'),
+    resolve: {
+        extensions: ['.ts', '.js', '.json'],
+        alias: {
+            migration: path.resolve(DIR, 'migration'),
+            shared: path.resolve(DIR, 'shared'),
+            core: path.resolve(DIR, 'core'),
+        },
+    },
+    output: {
+        filename: 'app.js',
+        path: path.join(OUTPUT_DIR, 'migration'),
+        publicPath: '/',
+    },
+};
+
 const generateGenesisConfig = {
     entry: path.join(DIR, 'core', 'genesisGenerator.ts'),
     context: path.resolve(DIR, 'core'),
@@ -110,6 +128,9 @@ module.exports = env => {
             break;
         case 'core':
             appConfig = coreConfig;
+            break;
+        case 'migration':
+            appConfig = migrationConfig;
             break;
         case 'genesis':
             appConfig = generateGenesisConfig;

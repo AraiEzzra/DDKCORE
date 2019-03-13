@@ -3,7 +3,7 @@
     "module": "commonjs",
     "resolveJsonModule": true,
     "esModuleInterop": true,
-    "target": "esnext",
+    "target": "es2018",
     "noImplicitAny": false,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
@@ -15,7 +15,8 @@
       "api/*": ["./api/*"],
       "core/*": ["./core/*"],
       "shared/*": ["./shared/*"],
-      "config/*": ["./config/*"]
+      "config/*": ["./config/*"],
+      "migration/*": ["./migration/*"]
     },
     "skipLibCheck": true,
     "typeRoots": [
@@ -31,6 +32,7 @@
     "core/**/*",
     "shared/**/*",
     "test/**/*",
-    "config/**/*"
+    "config/**/*",
+    "migration/**/*"
   ]
 }
