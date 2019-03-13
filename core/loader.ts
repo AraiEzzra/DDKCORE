@@ -14,7 +14,6 @@ import RoundPGRepository from 'core/repository/round/pg';
 import RoundService from 'core/service/round';
 import BlockService from 'core/service/block';
 import RoundRepository from 'core/repository/round';
-import BlockRepository from 'core/repository/block';
 
 // @ts-ignore
 BigInt.prototype.toJSON = function () {

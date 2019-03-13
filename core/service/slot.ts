@@ -94,6 +94,11 @@ class SlotService {
     public getTheFirsSlot() {
         return Math.floor(this.getSlotNumber() / config.constants.activeDelegates) * config.constants.activeDelegates;
     }
+
+    public getSlotRealTime(slot: number): number {
+        const slotTime = this.getSlotTime(slot);
+        return this.getRealTime(slotTime);
+    }
 }
 
 export default new SlotService();

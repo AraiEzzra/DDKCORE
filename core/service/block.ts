@@ -310,7 +310,7 @@ class BlockService {
 
     private validateBlockSlot(block: Block): ResponseEntity<void> {
         if (block.height === 1) {
-            return new Response();
+            return new ResponseEntity();
         }
 
         const errors = [];
@@ -330,7 +330,7 @@ class BlockService {
             errors.push(`Invalid block slot number: blockSlot ${blockSlot} generator slot ${generatorSlot.slot}`);
         }
 
-        return new Response<void>({errors});
+        return new ResponseEntity<void>({errors});
     }
 
     private checkExists(block: Block): ResponseEntity<void> {
