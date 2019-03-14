@@ -1,4 +1,4 @@
-import ResponseEntity from 'shared/model/response';
+import { ResponseEntity } from 'shared/model/response';
 import { RPC } from 'api/utils/decorators';
 import { DelegateModel } from 'shared/model/delegate';
 import { Filter } from 'shared/model/types';
