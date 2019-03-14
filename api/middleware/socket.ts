@@ -5,6 +5,7 @@ import AccountControllerInstance, { AccountController } from 'api/controller/acc
 import DelegateControllerInstance, { DelegateController } from 'api/controller/delegate';
 import BlockControllerInstance, { BlockController } from 'api/controller/block';
 import TransactionControllerInstance, { TransactionController } from 'api/controller/transaction';
+import { ApiRPC } from 'api/utils/rpc';
 
 export class Middleware {
 
@@ -22,6 +23,8 @@ export class Middleware {
         this.delegateController = DelegateControllerInstance;
         this.blockController = BlockControllerInstance;
         this.transactionController = TransactionControllerInstance;
+
+        this.registerRPC();
     }
 
     processRequest(code: string, data: any, token?: string, socket?: any) {
@@ -29,6 +32,11 @@ export class Middleware {
         if (typeof method === 'function') {
             return method(data, token, socket);
         }
+    }
+
+    registerRPC() {
+        const rps = new ApiRPC();
+        rps.listenRPC();
     }
 }
 

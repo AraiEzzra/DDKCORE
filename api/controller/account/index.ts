@@ -1,6 +1,6 @@
 import AccountService from 'api/service/account';
 import { AccountModel, Address, PublicKey } from 'shared/model/account';
-import ResponseEntity from 'shared/model/response';
+import { ResponseEntity } from 'shared/model/response';
 import { RPC } from 'api/utils/decorators';
 
 export class AccountController {

@@ -1,7 +1,7 @@
 import { getRewardHistoryProps } from 'api/controller/reward/types';
 import RewardService from 'api/service/reward';
 import { RPC } from 'api/utils/decorators';
-import ResponseEntity from 'shared/model/response';
+import { ResponseEntity } from 'shared/model/response';
 import { Reward } from 'shared/model/reward';
 
 export class RewardController {
