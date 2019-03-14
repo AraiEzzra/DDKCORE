@@ -50,7 +50,7 @@ export function calculateTotalRewardAndUnstake(sender: Account, isDownVote: bool
     );
     logger.debug(`[Frozen][calculateTotalRewardAndUnstake] reward: ${reward}`);
     readyToUnstakeOrders.forEach((order) => {
-        unstakeAmount -= order.amount;
+        unstakeAmount += order.amount;
     });
     return { reward, unstake: unstakeAmount };
 }
@@ -152,28 +152,30 @@ export function sendAirdropReward(trs: Transaction<IAssetStake | IAssetVote>): v
     }
 }
 
-export function undoFrozeOrdersRewardAndUnstake(trs: Transaction<IAssetVote>): void {
-    const senderStakes: Array<Stake> = AccountRepo.getByAddress(trs.senderAddress).stakes;
+export function undoFrozeOrdersRewardAndUnstake(trs: Transaction<IAssetVote>, sender: Account, senderOnly: boolean): void {
+    const senderStakes: Array<Stake> = sender.stakes;
     const updatedOrders = senderStakes.map((order: Stake) => {
         if (order.nextVoteMilestone === trs.createdAt + config.constants.froze.vTime * SECONDS_PER_MINUTE) {
             return order;
         }
     });
-    undoUnstake(updatedOrders, trs);
-    undoRewards(trs);
+    undoUnstake(updatedOrders, trs, sender);
+    undoRewards(trs, sender, senderOnly);
 }
 
-function undoUnstake(orders: Array<Stake>, trs: Transaction<IAssetVote>): void {
+function undoUnstake(orders: Array<Stake>, trs: Transaction<IAssetVote>, sender: Account): void {
     const unstakedOrders = orders.filter(order => !order.isActive);
     unstakedOrders.map((order) => {
         order.isActive = true;
     });
-    AccountRepo.updateBalanceByAddress(trs.senderAddress, -trs.asset.unstake);
+    sender.actualBalance -= trs.asset.unstake;
 }
 
-function undoRewards(trs: Transaction<IAssetVote>): void {
-    AccountRepo.updateBalanceByAddress(trs.senderAddress, -trs.asset.reward);
-    AccountRepo.updateBalanceByAddress(config.config.forging.totalSupplyAccount, trs.asset.reward);
+function undoRewards(trs: Transaction<IAssetVote>, sender: Account, senderOnly: boolean): void {
+    sender.actualBalance -= trs.asset.reward;
+    if (!senderOnly) {
+        AccountRepo.updateBalanceByAddress(config.config.forging.totalSupplyAccount, trs.asset.reward);
+    }
 }
 
 export function undoAirdropReward(trs: Transaction<IAssetVote | IAssetStake>): void {

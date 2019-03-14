@@ -4,7 +4,6 @@ import { IAssetSignature, Transaction } from 'shared/model/transaction';
 import { Account } from 'shared/model/account';
 import { ResponseEntity } from 'shared/model/response';
 import config from 'shared/util/config';
-import AccountRepo from '../../repository/account';
 
 class TransactionSignatureService implements IAssetService<IAssetSignature> {
 

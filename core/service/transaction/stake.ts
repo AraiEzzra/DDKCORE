@@ -107,7 +107,9 @@ class TransactionStakeService implements IAssetService<IAssetStake> {
                 sender.stakes.splice(i, 1);
             }
         }
-        undoAirdropReward(trs);
+        if (!senderOnly) {
+            undoAirdropReward(trs);
+        }
     }
 
 }
