@@ -14,6 +14,8 @@ import RoundPGRepository from 'core/repository/round/pg';
 import RoundService from 'core/service/round';
 import BlockService from 'core/service/block';
 import RoundRepository from 'core/repository/round';
+import socket from 'core/repository/socket';
+const START_SYNC_BLOCKS = 15000;
 
 // @ts-ignore
 BigInt.prototype.toJSON = function () {
@@ -27,11 +29,16 @@ class Loader {
         const pathMockData: string = path.join(process.cwd(), 'core/database/sql');
         const filePath = path.join(pathMockData, 'init.sql');
         await db.query(new QueryFile(filePath, { minify: true }));
-        await BlockService.applyGenesisBlock(config.genesisBlock, false);
+        await BlockService.applyGenesisBlock(config.genesisBlock, false, true);
         await this.transactionWarmUp(this.limit);
         await this.roundWarmUp(this.limit);
         initControllers();
         messageON('WARM_UP_FINISHED', null);
+        socket.init();
+        setTimeout(
+            () => messageON('EMIT_SYNC_BLOCKS', {}),
+            START_SYNC_BLOCKS
+        );
     }
 
     private async transactionWarmUp(limit: number) {
