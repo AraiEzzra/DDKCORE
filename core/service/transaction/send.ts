@@ -12,7 +12,7 @@ class TransactionSendService implements IAssetService<IAssetTransfer> {
 
     create(trs: TransactionModel<IAssetTransfer>): IAssetTransfer {
         return {
-            recipientAddress: trs.asset.recipientAddress,
+            recipientAddress: BigInt(trs.asset.recipientAddress),
             amount: trs.asset.amount,
         };
     }

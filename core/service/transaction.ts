@@ -197,7 +197,9 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             errors.push(`Unknown transaction type ${data.type}`);
         }
 
-        data.senderAddress = data.senderAddress ? data.senderAddress : getAddressByPublicKey(data.senderPublicKey);
+        data.senderAddress = data.senderAddress
+            ? BigInt(data.senderAddress)
+            : getAddressByPublicKey(data.senderPublicKey);
         let sender = AccountRepo.getByAddress(data.senderAddress);
         if (!sender) {
             sender = AccountRepo.add({
