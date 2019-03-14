@@ -1,19 +1,23 @@
 import { RPC } from 'api/utils/decorators';
-import coreSocketClient from 'api/driver/socket/core';
-import { MESSAGE_CHANNEL } from 'shared/driver/socket/channels';
 import { Message } from 'shared/model/message';
+import SocketMiddleware from 'api/middleware/socket';
 
 export class DelegateController {
 
-    // TODO: Add validation of request
+    constructor() {
+        this.getActiveDelegates = this.getActiveDelegates.bind(this);
+        this.getInactiveDelegates = this.getInactiveDelegates.bind(this);
+    }
+
+// TODO: Add validation of request
     @RPC('GET_ACTIVE_DELEGATES')
-    getActiveDelegates(message: Message) {
-        coreSocketClient.emit(MESSAGE_CHANNEL, message);
+    getActiveDelegates(message: Message, socket: any) {
+        SocketMiddleware.emitToCore(message, socket);
     }
 
     @RPC('GET_INACTIVE_DELEGATES')
-    getInactiveDelegates(message: Message) {
-        coreSocketClient.emit(MESSAGE_CHANNEL, message);
+    getInactiveDelegates(message: Message, socket: any) {
+        SocketMiddleware.emitToCore(message, socket);
     }
 
 }

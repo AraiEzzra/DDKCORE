@@ -1,7 +1,8 @@
 import { ServerOptions } from 'socket.io';
 import { CONNECT_CHANNEL, MESSAGE_CHANNEL } from 'shared/driver/socket/channels';
 import SocketMiddleware from 'api/middleware/socket';
-import coreSocketClient from 'api/driver/socket/core';
+import coreSocketClient from 'api/socket/client';
+
 import { Message } from 'shared/model/message';
 
 const io = require('socket.io');
@@ -21,9 +22,8 @@ export class SocketServer {
     run() {
         this.socket = io(this.port, this.config);
 
-        this.socket.on(CONNECT_CHANNEL, (socket: any) => SocketMiddleware.onAPIConnect(socket));
-        coreSocketClient.on(MESSAGE_CHANNEL, (message: Message) =>
-            SocketMiddleware.onCoreMessage(message, this.socket));
+        this.socket.on(CONNECT_CHANNEL, (socket: any) => SocketMiddleware.onConnect(socket));
+        coreSocketClient.on(MESSAGE_CHANNEL, (message: Message) => SocketMiddleware.onCoreMessage(message, this.socket));
     }
 }
 

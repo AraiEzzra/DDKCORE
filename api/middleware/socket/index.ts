@@ -6,6 +6,13 @@ import DelegateControllerInstance, { DelegateController } from 'api/controller/d
 import { Message, MessageType } from 'shared/model/message';
 import ResponseEntity from 'shared/model/response';
 import { MESSAGE_CHANNEL } from 'shared/driver/socket/channels';
+import { SOCKET_TIMEOUT_MS } from 'shared/config/socket';
+import coreSocketClient from 'api/socket/client';
+
+type RequestProcessor = {
+    socket: any,
+    cleaner: any
+};
 
 export class SocketMiddleware {
 
@@ -14,7 +21,7 @@ export class SocketMiddleware {
     private accountController: AccountController;
     private delegateController: DelegateController;
 
-    private requests: Map<string, any>;
+    private requests: Map<string, RequestProcessor>;
 
     constructor() {
         this.rewardController = RewardControllerInstance;
@@ -25,43 +32,77 @@ export class SocketMiddleware {
         this.requests = new Map();
     }
 
-    onAPIConnect(socketApi: any) {
-        console.log('Socket %s connected', JSON.stringify(socketApi.handshake));
-        socketApi.on(MESSAGE_CHANNEL, (data: Message) => this.onAPIMessage(data, socketApi));
+    getRequestsPool(): Map<string, any> {
+        return this.requests;
     }
 
-    onAPIMessage(message: Message, socketApi: any) {
+    onConnect(socket: any) {
+        // console.log('Socket %s connected', JSON.stringify(socket.handshake));
+        socket.on(MESSAGE_CHANNEL, (data: Message) => this.onApiMessage(data, socket));
+    }
+
+    onApiMessage(message: Message, socket: any) {
         const { headers } = message;
+        console.log('MESSAGE FOR: ', message.code);
         if (headers.type === MessageType.RESPONSE || headers.type === MessageType.EVENT) {
             message.body = new ResponseEntity({ errors: ['Invalid message type'] });
-            socketApi.emit(MESSAGE_CHANNEL, message);
+            socket.emit(MESSAGE_CHANNEL, message);
         } else {
-            this.requests.set(headers.id, socketApi);
-            this.processMessage(message, socketApi);
+            this.processMessage(message, socket);
         }
     }
 
-    onCoreMessage(data: Message, apiSocketServer?: SocketIO.Server) {
-        if (data.headers.type === MessageType.EVENT) {
-            apiSocketServer.emit(MESSAGE_CHANNEL, data);
+    onCoreMessage(message: Message, socketServer?: SocketIO.Server) {
+        if (message.headers.type === MessageType.EVENT) {
+            socketServer.emit(MESSAGE_CHANNEL, message);
         }
-        const requestId = data.headers.id;
-        if (this.requests.has(requestId)) {
-            const socket = this.requests.get(requestId);
-            socket.emit(MESSAGE_CHANNEL, data);
-            this.requests.delete(requestId);
-        }
+        this.emitToClient(message.headers.id, message.code, message.body);
     }
 
-    processMessage(message: Message, socketApi: any) {
+    processMessage(message: Message, socket: any) {
         const method = RPC_METHODS[message.code];
         if (typeof method === 'function') {
-            method(message, socketApi);
+            method(message, socket);
         } else {
             const errors = new ResponseEntity({ errors: ['Invalid request'] });
             const errorMessage = new Message(MessageType.RESPONSE, message.code, errors, message.headers.id);
-            socketApi.emit(MESSAGE_CHANNEL, errorMessage);
+            socket.emit(MESSAGE_CHANNEL, errorMessage);
         }
+    }
+
+    emitToClient(requestId: string, code: string, data: any, socketClient?: any) {
+        const message = new Message(MessageType.RESPONSE, code, data, requestId);
+
+        if (socketClient) {
+            socketClient.emit(MESSAGE_CHANNEL, message);
+        } else {
+            this.emitAndClear(message);
+        }
+    }
+
+    emitToCore(message: Message, socket: any) {
+        const cleaner = this.buildRequestCleaner(message, socket);
+        this.requests.set(message.headers.id, {socket, cleaner});
+        coreSocketClient.emit(MESSAGE_CHANNEL, message);
+    }
+
+    emitAndClear(message: Message) {
+        if (this.requests.has(message.headers.id)) {
+            const requestProcessor = this.requests.get(message.headers.id);
+            const {socket, cleaner} = requestProcessor;
+            clearInterval(cleaner);
+            socket.emit(MESSAGE_CHANNEL, message);
+            this.requests.delete(message.headers.id);
+        }
+    }
+
+    buildRequestCleaner(message: Message, socket: any) {
+        return setTimeout(() => {
+            message.body = new ResponseEntity({ errors: ['Request timeout'] });
+            message.headers.type = MessageType.RESPONSE;
+            this.requests.delete(message.headers.id);
+            socket.emit(MESSAGE_CHANNEL, message);
+        }, SOCKET_TIMEOUT_MS);
     }
 }
 

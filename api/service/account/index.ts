@@ -4,7 +4,7 @@ import ResponseEntity from 'shared/model/response';
 
 export interface AccountService {
 
-    getAccountByAddress(address: number): ResponseEntity<AccountModel>;
+    getAccountByAddress(address: string): ResponseEntity<AccountModel>;
 
     getAccountByPublicKey(publicKey: string): ResponseEntity<AccountModel>;
 
@@ -18,7 +18,7 @@ export class AccountServiceImpl implements AccountService {
         this.accounts = generateAccounts();
     }
 
-    getAccountByAddress(address: number): ResponseEntity<AccountModel> {
+    getAccountByAddress(address: string): ResponseEntity<AccountModel> {
         const account = this.accounts.find((account: any) => account.address == address);
         return new ResponseEntity({ data: account });
     }

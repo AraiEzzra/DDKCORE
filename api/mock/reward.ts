@@ -53,4 +53,3 @@ export const generateStakeReward = (): Reward => {
         amount: 100,
     });
 };
-

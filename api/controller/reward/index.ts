@@ -1,28 +1,33 @@
-import { getRewardHistoryProps } from 'api/controller/reward/types';
 import RewardService from 'api/service/reward';
 import { RPC } from 'api/utils/decorators';
-import ResponseEntity from 'shared/model/response';
-import { Reward } from 'shared/model/reward';
-import ReferredUsersService from 'api/service/referredUsers';
-import { Message, MessageType } from 'shared/model/message';
-import { MESSAGE_CHANNEL } from 'shared/driver/socket/channels';
+import { Message } from 'shared/model/message';
+import SocketMiddleware from 'api/middleware/socket';
 
 export class RewardController {
+
+    constructor() {
+        this.getRewardHistory = this.getRewardHistory.bind(this);
+        this.getReferredUsersReward = this.getReferredUsersReward.bind(this);
+    }
 
     @RPC('GET_REWARD_HISTORY')
     getRewardHistory(message: Message, socketApi: any) {
         const { body, headers, code } = message;
-        const accounts = RewardService.getRewardByAddress(body.address, body.filter);
-        const socketMessage = new Message(MessageType.RESPONSE, code, accounts, headers.id);
-        socketApi.emit(MESSAGE_CHANNEL, socketMessage);
+        const rewardResponse = RewardService.getRewardByAddress(body.address, body.filter);
+
+        rewardResponse.success
+            ? SocketMiddleware.emitToClient(headers.id, code, rewardResponse, socketApi)
+            : SocketMiddleware.emitToCore(message, socketApi);
     }
 
     @RPC('GET_REFERRED_USERS_REWARD')
     getReferredUsersReward(message: Message, socketApi: any) {
         const { body, headers, code } = message;
-        const accounts = RewardService.getReferredUsersReward(body.address, body.filter);
-        const socketMessage = new Message(MessageType.RESPONSE, code, accounts, headers.id);
-        socketApi.emit(MESSAGE_CHANNEL, socketMessage);
+        const rewardResponse = RewardService.getReferredUsersReward(body.address, body.filter);
+
+        rewardResponse.success
+            ? SocketMiddleware.emitToClient(headers.id, code, rewardResponse, socketApi)
+            : SocketMiddleware.emitToCore(message, socketApi);
     }
 }
 

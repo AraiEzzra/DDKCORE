@@ -1,24 +1,33 @@
 import AccountService from 'api/service/account';
 import { RPC } from 'api/utils/decorators';
-import { MESSAGE_CHANNEL } from 'shared/driver/socket/channels';
-import { Message, MessageType } from 'shared/model/message';
+import { Message } from 'shared/model/message';
+import SocketMiddleware from 'api/middleware/socket';
 
 export class AccountController {
+
+    constructor() {
+        this.getAccountByAddress = this.getAccountByAddress.bind(this);
+        this.getAccountByPublicKey = this.getAccountByPublicKey.bind(this);
+    }
 
     @RPC('GET_ACCOUNT_BY_ADDRESS')
     getAccountByAddress(message: Message, socketApi: any) {
         const { body, headers, code } = message;
-        const accounts = AccountService.getAccountByAddress(body.address);
-        const socketMessage = new Message(MessageType.RESPONSE, code, accounts, headers.id);
-        socketApi.emit(MESSAGE_CHANNEL, socketMessage);
+        const accountsResponse = AccountService.getAccountByAddress(body.address);
+
+        accountsResponse.success
+            ? SocketMiddleware.emitToClient(headers.id, code, accountsResponse, socketApi)
+            : SocketMiddleware.emitToCore(message, socketApi);
     }
 
     @RPC('GET_ACCOUNT_BY_PUBLIC_KEY')
     getAccountByPublicKey(message: Message, socketApi: any) {
         const { body, headers, code } = message;
-        const accounts = AccountService.getAccountByPublicKey(body.publicKey);
-        const socketMessage = new Message(MessageType.RESPONSE, code, accounts, headers.id);
-        socketApi.emit(MESSAGE_CHANNEL, socketMessage);
+        const accountsResponse = AccountService.getAccountByPublicKey(body.publicKey);
+
+        accountsResponse.success
+            ? SocketMiddleware.emitToClient(headers.id, code, accountsResponse, socketApi)
+            : SocketMiddleware.emitToCore(message, socketApi);
     }
 }
 
