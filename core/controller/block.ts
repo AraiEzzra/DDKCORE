@@ -3,7 +3,7 @@ import { Block, BlockModel } from 'shared/model/block';
 import BlockService from 'core/service/block';
 import BlockRepo from 'core/repository/block/';
 import BlockPGRepo from 'core/repository/block/pg';
-import { ON } from 'core/util/decorator';
+import { MAIN, ON } from 'core/util/decorator';
 import { BaseController } from 'core/controller/baseController';
 import { logger } from 'shared/util/logger';
 import * as blockUtils from 'core/util/block';
@@ -21,7 +21,7 @@ interface BlockGenerateRequest {
 
 class BlockController extends BaseController {
 
-    @ON('BLOCK_RECEIVE')
+    @MAIN('BLOCK_RECEIVE')
     public async onReceiveBlock(action: { data: { block: BlockModel } }): Promise<ResponseEntity<void>> {
         const { data } = action;
 
@@ -88,7 +88,7 @@ class BlockController extends BaseController {
         return new ResponseEntity<void>({ errors });
     }
 
-    @ON('BLOCK_GENERATE')
+    @MAIN('BLOCK_GENERATE')
     public async generateBlock(data: BlockGenerateRequest): Promise<ResponseEntity<void>> {
         logger.debug(`[Controller][Block][generateBlock]`);
         if (!SyncService.consensus) {

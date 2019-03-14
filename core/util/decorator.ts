@@ -151,6 +151,13 @@ export function ON(topicName: string) {
     };
 }
 
+export function MAIN(topicName: string) {
+    return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
+        target.eventsMAIN = target.eventsMAIN || {};
+        target.eventsMAIN[topicName] = descriptor.value;
+    };
+}
+
 export function RPC(topicName: string) {
     return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
         target.eventsRPC = target.eventsRPC || [];
