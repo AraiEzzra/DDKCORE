@@ -10,7 +10,7 @@ class TransactionRegisterService implements IAssetService<IAssetRegister> {
 
     create(trs: TransactionModel<IAssetRegister>): IAssetRegister {
         return {
-            referral: trs.asset.referral,
+            referral: BigInt(trs.asset.referral),
         };
     }
 

@@ -102,7 +102,7 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
         }
 
         const sender: Account = AccountRepository.getByAddress(trs.senderAddress);
-        const verifyStatus = TransactionDispatcher.verifyUnconfirmed(trs, sender, true);
+        const verifyStatus = TransactionDispatcher.verifyUnconfirmed(trs, sender);
 
         if (!verifyStatus.success) {
             logger.debug(`TransactionStatus.verifyStatus ${JSON.stringify(verifyStatus)}`);

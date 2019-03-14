@@ -27,7 +27,7 @@ class Loader {
         const pathMockData: string = path.join(process.cwd(), 'core/database/sql');
         const filePath = path.join(pathMockData, 'init.sql');
         await db.query(new QueryFile(filePath, { minify: true }));
-        await BlockService.applyGenesisBlock(config.genesisBlock, false, true);
+        await BlockService.applyGenesisBlock(config.genesisBlock, false);
         await this.transactionWarmUp(this.limit);
         await this.roundWarmUp(this.limit);
         initControllers();

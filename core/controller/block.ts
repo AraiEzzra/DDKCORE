@@ -95,7 +95,7 @@ class BlockController extends BaseController {
             logger.debug(
                 `[Controller][Block][generateBlock]: skip forging block, consensus ${SyncService.getConsensus()}%`
             );
-            return;
+            return new ResponseEntity<void>({ errors: ['Invalid consensus'] });
         }
         const response: ResponseEntity<void> = await BlockService.generateBlock(data.keyPair, data.timestamp);
         if (!response.success) {

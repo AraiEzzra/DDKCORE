@@ -10,7 +10,8 @@ class TransactionVoteRepo implements IAssetRepository<IAssetVote> {
             reward: asset.reward,
             unstake: asset.unstake,
             airdropReward: {
-                sponsors: [...asset.airdropReward.sponsors]
+                sponsors: Array.from(asset.airdropReward.sponsors)
+                    .map(elem => [elem[0].toString(), elem[1]])
             }
         };
     }
@@ -21,7 +22,8 @@ class TransactionVoteRepo implements IAssetRepository<IAssetVote> {
             reward: rawAsset.reward,
             unstake: rawAsset.unstake,
             airdropReward: {
-                sponsors: new Map(rawAsset.airdropReward.sponsors)
+                sponsors: new Map(rawAsset.airdropReward.sponsors
+                    .map((elem: [string, number]) => [BigInt(elem[0]), elem[1]]))
             }
         };
     }
