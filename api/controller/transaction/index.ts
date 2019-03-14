@@ -21,8 +21,9 @@ export class TransactionController {
         TransactionService.createTransaction(data);
     }
 
-    @RPC('GET_TRS_BY_BLOCK_ID)')
-    getTransactionsByBlockId(blockId: number,  filter: Filter) {
+    @RPC('GET_TRS_BY_BLOCK_ID')
+    getTransactionsByBlockId(data) {
+        const { blockId, filter } = data;
         return TransactionService.getTrsByBlockId(blockId, filter.limit, filter.offset);
     }
 }
