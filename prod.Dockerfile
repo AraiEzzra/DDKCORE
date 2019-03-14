@@ -9,7 +9,7 @@ USER    ddk
 RUN     mkdir -p /home/ddk && \
         mkdir -p /home/ddk/dist && \
         mkdir -p /home/ddk/dist/core && \
-        mkdir -p /home/ddk/dist/core && \
+        mkdir -p /home/ddk/dist/api && \
         chmod -R 777 /home/ddk && \
         mkdir -p /home/ddk/logs && \
         mkdir -p /home/ddk/public/images/dapps/logs && \
