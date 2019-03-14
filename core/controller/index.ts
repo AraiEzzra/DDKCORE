@@ -17,7 +17,6 @@ export const initControllers = () => {
         SyncController
     ];
 
-    console.log(JSON.stringify(BlockController.eventsMAIN));
     subjectOn
     .pipe(
         filter((elem: { data, topicName }) =>
