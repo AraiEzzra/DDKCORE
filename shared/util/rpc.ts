@@ -15,9 +15,11 @@ export class RPCConnector {
     }
 
     initServer(host?: string, port?: number) {
+       host = host ? host : this.host;
+       port = port ? port : this.port;
        this.rpcNode = new WebSocketServer({
-           port: port || this.port,
-           host: host || this.host
+           port: port,
+           host: host
        });
     }
 
@@ -28,7 +30,7 @@ export class RPCConnector {
     }
 
     getRPCServer() {
-       return this.rpcNode;
+        return this.rpcNode;
     }
 
     getRPCClient() {

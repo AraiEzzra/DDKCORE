@@ -31,7 +31,8 @@
     "test:address": "export NODE_PATH=./ && mocha --require ts-node/register './test/shared/address/*.test.ts'",
     "test:mock": "export NODE_PATH=./ && mocha --require ts-node/register './test/core/mock/*.test.ts'",
     "test:roundservice": "export NODE_PATH=./ && mocha --require ts-node/register './test/core/service/*.test.ts'",
-    "test:roundrepository": "export NODE_PATH=./ && mocha --require ts-node/register './test/core/repository/round.test.ts'"
+    "test:roundrepository": "export NODE_PATH=./ && mocha --require ts-node/register './test/core/repository/round.test.ts'",
+    "test:decorator:rpc": "export NODE_PATH=./ && mocha --require ts-node/register './test/api/util/rpc.test.ts'"
   },
   "author": "DDK Foundation <http://www.ddkoin.com/>",
   "license": "GPL-3.0",

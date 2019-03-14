@@ -2,7 +2,7 @@ import { RPCConnector } from 'shared/util/rpc';
 import { RPC_METHODS } from 'api/middleware/rpcHolder';
 
 export class ApiRPC {
-    private connection;
+    public connection;
 
     constructor(host?: string, port?: number) {
         this.connection = new RPCConnector();
