@@ -68,7 +68,7 @@ class BlockService {
             transactions
         });
 
-        const processBlockResponse: ResponseEntity<void> = await this.process(block, true, true, keyPair, false);
+        const processBlockResponse: ResponseEntity<void> = await this.process(block, true, keyPair, false);
         if (!processBlockResponse.success) {
             TransactionDispatcher.returnToQueueConflictedTransactionFromPool(transactions);
 
@@ -102,7 +102,6 @@ class BlockService {
     private async process(
         block: Block,
         broadcast: boolean,
-        saveBlock: boolean,
         keyPair: IKeyPair,
         verify: boolean = true
     ): Promise<ResponseEntity<void>> {
@@ -126,20 +125,18 @@ class BlockService {
         //     return new Response<void>({errors: [...validationResponse.errors, 'processBlock']});
         // }
 
-        if (saveBlock) {
-            const resultCheckExists: ResponseEntity<void> = this.checkExists(block);
-            if (!resultCheckExists.success) {
-                return new ResponseEntity<void>({errors: [...resultCheckExists.errors, 'processBlock']});
-            }
+        const resultCheckExists: ResponseEntity<void> = this.checkExists(block);
+        if (!resultCheckExists.success) {
+            return new ResponseEntity<void>({errors: [...resultCheckExists.errors, 'processBlock']});
         }
 
         const resultCheckTransactions: ResponseEntity<void> =
-            this.checkTransactionsAndApplyUnconfirmed(block, saveBlock, verify);
+            this.checkTransactionsAndApplyUnconfirmed(block, verify);
         if (!resultCheckTransactions.success) {
             return new ResponseEntity<void>({errors: [...resultCheckTransactions.errors, 'processBlock']});
         }
 
-        const applyBlockResponse: ResponseEntity<void> = await this.applyBlock(block, broadcast, keyPair, saveBlock);
+        const applyBlockResponse: ResponseEntity<void> = await this.applyBlock(block, broadcast, keyPair);
         if (!applyBlockResponse.success) {
             return new ResponseEntity<void>({errors: [...applyBlockResponse.errors, 'processBlock']});
         }
@@ -341,10 +338,7 @@ class BlockService {
         return new ResponseEntity<void>();
     }
 
-    private checkTransactionsAndApplyUnconfirmed(
-        block: Block,
-        checkExists: boolean,
-        verify: boolean): ResponseEntity<void> {
+    private checkTransactionsAndApplyUnconfirmed(block: Block, verify: boolean): ResponseEntity<void> {
         const errors: Array<string> = [];
         let i = 0;
 
@@ -352,12 +346,21 @@ class BlockService {
             const trs: Transaction<object> = block.transactions[i];
 
             if (errors.length === 0) {
-                // const sender: Account = await getOrCreateAccount(trs.senderPublicKey);
-                const sender: Account = AccountRepository.getByPublicKey(trs.senderPublicKey);
-                // logger.debug(`[Verify][checkTransactionsAndApplyUnconfirmed][sender] ${JSON.stringify(sender)}`);
+
+                trs.senderAddress = trs.senderAddress ? trs.senderAddress : getAddressByPublicKey(trs.senderPublicKey);
+                const sender: Account = AccountRepository.getByAddress(trs.senderAddress);
+                if (!sender) {
+                    AccountRepo.add({
+                        publicKey: trs.senderPublicKey,
+                        address: trs.senderAddress
+                    });
+                } else {
+                    sender.secondPublicKey = trs.senderPublicKey;
+                }
+
                 if (verify) {
                     const resultCheckTransaction: ResponseEntity<void> =
-                        this.checkTransaction(block, trs, sender, checkExists);
+                        this.checkTransaction(block, trs, sender);
                     if (!resultCheckTransaction.success) {
                         errors.push(...resultCheckTransaction.errors);
                         logger.debug(`[Verify][checkTransactionsAndApplyUnconfirmed][error] ${errors}`);
@@ -378,12 +381,7 @@ class BlockService {
         return new ResponseEntity<void>({errors: errors});
     }
 
-    private checkTransaction(
-        block: Block,
-        trs: Transaction<object>,
-        sender: Account,
-        checkExists: boolean
-    ): ResponseEntity<void> {
+    private checkTransaction(block: Block, trs: Transaction<object>, sender: Account): ResponseEntity<void> {
         trs.id = TransactionDispatcher.getId(trs);
         trs.blockId = block.id;
 
@@ -392,7 +390,7 @@ class BlockService {
             return new ResponseEntity<void>({errors: [...validateResult.errors, 'checkTransaction']});
         }
 
-        const verifyResult: ResponseEntity<void> = TransactionDispatcher.verifyUnconfirmed(trs, sender, checkExists);
+        const verifyResult: ResponseEntity<void> = TransactionDispatcher.verifyUnconfirmed(trs, sender);
         if (!verifyResult.success) {
             return new ResponseEntity<void>({errors: [...verifyResult.errors, 'checkTransaction']});
         }
@@ -404,7 +402,6 @@ class BlockService {
         block: Block,
         broadcast: boolean,
         keyPair: IKeyPair,
-        saveBlock: boolean
     ): Promise<ResponseEntity<void>> {
         if (keyPair) {
             const addPayloadHashResponse: ResponseEntity<Block> = this.addPayloadHash(block, keyPair);
@@ -414,33 +411,28 @@ class BlockService {
             block = addPayloadHashResponse.data;
         }
 
-        if (saveBlock) {
-            BlockRepo.add(block);
-        }
+        BlockRepo.add(block);
 
         const errors: Array<string> = [];
         for (const trs of block.transactions) {
             const sender = AccountRepo.getByPublicKey(trs.senderPublicKey);
             await TransactionDispatcher.apply(trs, sender);
-            if (saveBlock) {
-                trs.blockId = block.id;
-                TransactionRepo.add(trs);
-            }
+            trs.blockId = block.id;
+            TransactionRepo.add(trs);
         }
         if (errors.length) {
             return new ResponseEntity<void>({errors: [...errors, 'applyBlock']});
         }
 
-        if (saveBlock) {
-            const afterSaveResponse: ResponseEntity<void> = this.afterSave(block);
-            if (!afterSaveResponse.success) {
-                return new ResponseEntity<void>({errors: [...afterSaveResponse.errors, 'applyBlock']});
-            }
-            const trsLength = block.transactions.length;
-            logger.debug(`[Service][Block][applyBlock] block ${block.id}, height: ${block.height}, ` +
-                `applied with ${trsLength} transactions`
-            );
+        await BlockPGRepo.saveOrUpdate(block);
+        const afterSaveResponse: ResponseEntity<void> = this.afterSave(block);
+        if (!afterSaveResponse.success) {
+            return new ResponseEntity<void>({errors: [...afterSaveResponse.errors, 'applyBlock']});
         }
+        const trsLength = block.transactions.length;
+        logger.debug(`[Service][Block][applyBlock] block ${block.id}, height: ${block.height}, ` +
+            `applied with ${trsLength} transactions`
+        );
 
         BlockRepo.setLastBlock(block);
         // messageON('NEW_BLOCKS', block);
@@ -486,7 +478,6 @@ class BlockService {
         messageON('transactionsSaved', block.transactions);
         const errors: Array<string> = [];
         for (const trs of block.transactions) {
-            // how can I call this method in case it exists in service but connection service=service is baned
             const afterSaveResponse: ResponseEntity<void> = TransactionDispatcher.afterSave(trs);
             if (!afterSaveResponse.success) {
                 errors.push(...afterSaveResponse.errors);
@@ -515,7 +506,7 @@ class BlockService {
         const removedTransactions: Array<Transaction<object>> = removedTransactionsResponse.data || [];
 
         const errors: Array<string> = [];
-        const processBlockResponse: ResponseEntity<void> = await this.process(block, false, true, null, false);
+        const processBlockResponse: ResponseEntity<void> = await this.process(block, false, null, false);
         if (!processBlockResponse.success) {
             errors.push(...processBlockResponse.errors);
         }
@@ -603,18 +594,9 @@ class BlockService {
         return new ResponseEntity<Block>({ data: newLastBlock });
     }
 
-    // called from app.js
-    public async saveGenesisBlock(): Promise<ResponseEntity<void>> {
-        const exists: boolean = BlockRepo.isExist(config.genesisBlock.id);
-        if (!exists) {
-            return await this.applyGenesisBlock(config.genesisBlock, false, true);
-        }
-    }
-
     public async applyGenesisBlock(
         rawBlock: {[key: string]: any},
-        verify: boolean = false,
-        save?: boolean
+        verify: boolean = false
     ): Promise<ResponseEntity<void>> {
         rawBlock.transactions.forEach((rawTrs) => {
             const address = getAddressByPublicKey(rawTrs.sender_public_key);
@@ -628,29 +610,29 @@ class BlockService {
         const block = new Block({...rawBlock, createdAt: 0, previousBlockId: null});
         await BlockPGRepo.saveOrUpdate(block);
         block.transactions = block.transactions.sort(transactionSortFunc);
-        return await this.process(block, false, save, null, verify);
+        return await this.process(block, false,  null, verify);
     }
 
     // called from loader
-    public async loadBlocksOffset(limit: number, offset: number, verify: boolean): Promise<ResponseEntity<Block>> {
-        const newLimit = limit + (offset || 0);
-        logger.debug('Loading blocks offset', {limit, offset, verify});
-
-        const blocks: Array<Block> = BlockRepo.getMany(offset || 0, newLimit);
-
-        const errors: Array<string> = [];
-        blocks.forEach(async (block) => {
-            if (block.id === config.genesisBlock.id) {
-                return await this.applyGenesisBlock(block);
-            }
-
-            const processResponse: ResponseEntity<void> = await this.process(block, false, false, null, verify);
-            if (!processResponse.success) {
-                errors.push(...processResponse.errors, 'loadBlocksOffset');
-            }
-        });
-        return new ResponseEntity<Block>({data: BlockRepo.getLastBlock(), errors});
-    }
+    // public async loadBlocksOffset(limit: number, offset: number, verify: boolean): Promise<ResponseEntity<Block>> {
+    //     const newLimit = limit + (offset || 0);
+    //     logger.debug('Loading blocks offset', {limit, offset, verify});
+    //
+    //     const blocks: Array<Block> = BlockRepo.getMany(offset || 0, newLimit);
+    //
+    //     const errors: Array<string> = [];
+    //     blocks.forEach(async (block) => {
+    //         if (block.id === config.genesisBlock.id) {
+    //             return await this.applyGenesisBlock(block);
+    //         }
+    //
+    //         const processResponse: ResponseEntity<void> = await this.process(block, false, false, null, verify);
+    //         if (!processResponse.success) {
+    //             errors.push(...processResponse.errors, 'loadBlocksOffset');
+    //         }
+    //     });
+    //     return new ResponseEntity<Block>({data: BlockRepo.getLastBlock(), errors});
+    // }
 
     public create({ transactions, timestamp, previousBlock, keyPair }): Block {
         const blockTransactions = transactions.sort(transactionSortFunc);
