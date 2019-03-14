@@ -1,4 +1,4 @@
-import ResponseEntity from 'shared/model/response';
+import { ResponseEntity } from 'shared/model/response';
 import { Filter } from 'api/controller/transaction/types';
 import TransactionService from 'api/service/transaction';
 import { RPC } from 'api/utils/decorators';

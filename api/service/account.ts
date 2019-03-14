@@ -1,6 +1,6 @@
 import { generateAccounts } from 'api/mock/account';
 import { AccountModel, Address } from 'shared/model/account';
-import ResponseEntity from 'shared/model/response';
+import { ResponseEntity } from 'shared/model/response';
 
 export interface AccountService {
 

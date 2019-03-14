@@ -1,5 +1,5 @@
 import { RPC } from 'api/utils/decorators';
-import ResponseEntity from 'shared/model/response';
+import { ResponseEntity } from 'shared/model/response';
 import { Reward } from 'shared/model/reward';
 import { getReferredListByLevelProps, getReferredListProps } from 'api/controller/referredUsers/types';
 import ReferredUsersService from 'api/service/referredUsers';
