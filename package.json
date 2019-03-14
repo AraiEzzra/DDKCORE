@@ -131,6 +131,7 @@
     "coveralls": "=2.11.16",
     "crypto-browserify": "=3.11.0",
     "csv": "=1.1.1",
+    "csv-parser": "^2.2.0",
     "eslint-config-airbnb-base": "^11.3.2",
     "eslint-plugin-async-await": "0.0.0",
     "eslint-plugin-import": "^2.12.0",
