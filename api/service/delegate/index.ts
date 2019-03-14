@@ -1,4 +1,4 @@
-import ResponseEntity from 'shared/model/response';
+import { ResponseEntity } from 'shared/model/response';
 import { Filter } from 'shared/model/types';
 import { DelegateModel } from 'shared/model/delegate';
 import { generateDelegates } from 'api/mock/delegate';

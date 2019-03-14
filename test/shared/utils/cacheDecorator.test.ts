@@ -1,6 +1,6 @@
 import { useCache } from 'shared/util/cacheDecorator';
 import { ICacheRepository } from 'shared/repository/cache';
-import ResponseEntity from 'shared/model/response';
+import { ResponseEntity } from 'shared/model/response';
 import { expect } from 'chai';
 
 class EmulateRedisClient implements ICacheRepository {

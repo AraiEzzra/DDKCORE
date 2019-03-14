@@ -1,7 +1,7 @@
 import { Block, SortBlock } from 'shared/model/block';
 import BlockRepository from 'shared/repository/block/memory';
 import {reqGetBlocks } from 'api/controller/block/types';
-import ResponseEntity from 'shared/model/response';
+import { ResponseEntity } from 'shared/model/response';
 
 interface IBlockService {
     getMany(data?: reqGetBlocks): ResponseEntity<Array<Block>>;

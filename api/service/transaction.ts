@@ -2,7 +2,7 @@ import {IAsset, Transaction, TransactionModel, TransactionApi } from 'shared/mod
 import SharedTransactionRepository from 'shared/repository/transaction/memory';
 import TransactionRepository from 'api/repository/transaction';
 import { Filter } from 'api/controller/transaction/types';
-import ResponseEntity from 'shared/model/response';
+import { ResponseEntity } from 'shared/model/response';
 import { TransactionsByBlockResponse } from 'shared/repository/transaction';
 
 interface ITransactionService {
