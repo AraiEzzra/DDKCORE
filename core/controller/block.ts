@@ -91,6 +91,12 @@ class BlockController extends BaseController {
     @MAIN('BLOCK_GENERATE')
     public async generateBlock(data: BlockGenerateRequest): Promise<ResponseEntity<void>> {
         logger.debug(`[Controller][Block][generateBlock]`);
+        if (!SyncService.consensus) {
+            logger.debug(
+                `[Controller][Block][generateBlock]: skip forging block, consensus ${SyncService.getConsensus()}%`
+            );
+            return new ResponseEntity<void>({ errors: ['Invalid consensus'] });
+        }
         const response: ResponseEntity<void> = await BlockService.generateBlock(data.keyPair, data.timestamp);
         if (!response.success) {
             response.errors.push('generateBlock');

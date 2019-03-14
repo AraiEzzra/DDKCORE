@@ -16,13 +16,13 @@ interface ISyncRepo {
     sendUnconfirmedTransaction(trs: Transaction<any>): void;
 
     requestCommonBlocks(block: {id: string, height: number}): void;
-    
+
     sendCommonBlocksExist(response, peer: Peer): void;
-    
+
     requestBlocks(data: { height: number, limit: number }, peer?): void;
 
     sendBlocks(blocks: Array<Block>, peer): void;
-    
+
     sendHeaders(headers): void;
 }
 
@@ -57,7 +57,7 @@ export class Sync implements ISyncRepo {
     requestCommonBlocks(block): void {
         const filteredPeers = PeerRepository.getPeersByFilter(block.height, SystemRepository.broadhash);
         const peer = PeerRepository.getRandomPeer(filteredPeers);
-        SocketRepository.emitPeer('REQUEST_COMMON_BLOCKS', block, peer);
+        SocketRepository.emitPeer('REQUEST_COMMON_BLOCKS', { block }, peer);
     }
 
     sendCommonBlocksExist(response, peer): void {

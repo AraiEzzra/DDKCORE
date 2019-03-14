@@ -15,5 +15,5 @@ export function createTaskON(topicName: string, callTime: number, data: any = nu
     // todo implement function to create schedule fro messageON
     logger.debug(`[Bus][createTaskON] topicName ${topicName}, time: ${callTime}, data: ${data}`);
 
-    setTimeout(() => messageON(topicName, data), callTime * SECOND);
+    setTimeout(() => messageON(topicName, data), callTime);
 }

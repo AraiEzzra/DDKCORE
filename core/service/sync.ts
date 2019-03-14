@@ -61,15 +61,18 @@ export class SyncService implements ISyncService {
         }
     }
 
-    async checkCommonBlock() {
+    async checkCommonBlock(): Promise<void> {
         const lastBlock = BlockRepository.getLastBlock();
-        if (this.checkBlockConsensus(lastBlock)) {
+        if (this.checkBlockConsensus(lastBlock) || lastBlock.height === 1) {
             await this.requestBlocks(lastBlock);
         } else {
 
             const randomPeer = PeerRepository.getRandomPeer(
                 PeerRepository.getPeersByFilter(lastBlock.height, SystemRepository.broadhash)
             );
+            if (!randomPeer) {
+                return;
+            }
             const minHeight = Math.min(...randomPeer.blocksIds.keys());
             if (minHeight > lastBlock.height) {
                 messageON('EMIT_REQUEST_COMMON_BLOCKS', {

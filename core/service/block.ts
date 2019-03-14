@@ -489,9 +489,9 @@ class BlockService {
 
     public async receiveBlock(block: Block): Promise<ResponseEntity<void>> {
         logger.info(
-            `Received new block id: ${block.id}` +
-            `height: ${block.height}` +
-            `round: ${RoundService.calcRound(block.height)}` +
+            `Received new block id: ${block.id} ` +
+            `height: ${block.height} ` +
+            `round: ${RoundService.calcRound(block.height)} ` +
             `slot: ${slotService.getSlotNumber(block.createdAt)}`
         );
 
