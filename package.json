@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "tsc": "tsc",
-    "build": "npm run build:core & npm run build:api",
+    "build": "npm run build:core && npm run build:api",
     "start": "npm run start:core & npm run start:api",
     "start:api": "node --max-old-space-size=8192 dist/api/app.js",
     "start:core": "node --max-old-space-size=8192 dist/core/app.js",
