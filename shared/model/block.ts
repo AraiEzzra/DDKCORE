@@ -16,10 +16,13 @@ export class BlockModel {
     payloadHash?: string = '';
     generatorPublicKey?: string = '';
     signature?: string = '';
-    transactions?: Array<Transaction<object>> | null = null;
+    relay?: number; // Memory only
+    transactions: Array<Transaction<object>> = [];
 
     constructor(data: BlockModel) {
+        this.relay = 0;
         Object.assign(this, data);
+        this.transactions = (data.transactions || []).map(trs => trs.getCopy());
     }
 }
 

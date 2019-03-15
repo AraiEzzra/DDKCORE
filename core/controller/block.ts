@@ -11,6 +11,7 @@ import SyncService from 'core/service/sync';
 import SlotService from 'core/service/slot';
 import RoundService from 'core/service/round';
 import { messageON } from 'shared/util/bus';
+import TransactionRepo from 'core/repository/transaction';
 
 interface BlockGenerateRequest {
     keyPair: {
@@ -25,7 +26,10 @@ class BlockController extends BaseController {
     @MAIN('BLOCK_RECEIVE')
     public async onReceiveBlock(action: { data: { block: BlockModel } }): Promise<ResponseEntity<void>> {
         const { data } = action;
-        logger.debug(`[Service][Block][onReceiveBlock] id:${data.block.id} height:${data.block.id}`);
+        data.block.transactions = data.block.transactions.map(trs => TransactionRepo.deserialize(trs));
+
+        logger.debug(`[Controller][Block][onReceiveBlock]
+         id: ${data.block.id} height: ${data.block.height} relay: ${data.block.relay}`);
         const validateResponse = BlockService.validate(data.block);
         if (!validateResponse.success) {
             return validateResponse;
