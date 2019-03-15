@@ -1,81 +1,163 @@
-import { IAsset, TransactionModel, TransactionType } from 'shared/model/transaction';
+import { IAsset, IAssetVote, TransactionModel, TransactionType } from 'shared/model/transaction';
+import { TransactionDTO } from 'migration/utils/TransactionDTO';
+
 const csv = require('csv-parser');
 const fs = require('fs');
 
-const transactions = [];
+const filePathNewTransactions = '/home/vitaliy/projects/ddk_deploy/transactionsNew.csv';
+const filePathOldTransactions = '/home/vitaliy/projects/ddk_deploy/transactionsOld.csv';
 
-fs.createReadStream('/home/vitaliy/projects/ddk_deploy/transactions.csv')
-.pipe(csv())
-.on('data', (data) => {
-    transactions.push(data);
-})
-.on('end', () => {
-    console.log('##########################');
-    transactionsHandler(transactions);
-    // console.log(transactions);
-    // [
-    //   { NAME: 'Daffy Duck', AGE: '24' },
-    //   { NAME: 'Bugs Bunny', AGE: '22' }
-    // ]
-});
+const correctTransactions: Array<TransactionModel<IAsset>> = [];
 
-// const file = readFileSync('/home/vitaliy/projects/ddk_deploy/transactions.json', 'utf8');
-// const transactions: Array<object> = JSON.parse(fs.readFileSync(filePath).toString());
-
-function transactionsHandler(transactions) {
-    const newTransactions: Array<TransactionModel<IAsset>> = [];
-
-    transactions.forEach(
+(async function transactionsHandler() {
+    const [newTrs, oldTrs] = [
+        await readTransactionsToArray(filePathNewTransactions),
+        await readTransactionsToMap(filePathOldTransactions)
+    ];
+    console.log(newTrs.length, oldTrs.size);
+    newTrs.forEach(
         function <T extends IAsset>(transaction) {
-            let newTransaction: TransactionModel<T>;
-            console.log('RRRRRRRRRRRRRRRRRRRRRRRRR', transaction);
-            switch (transaction.type) {
+            let correctTransaction: TransactionDTO;
+            let airdropReward = transaction.airdropReward ? JSON.parse(transaction.airdropReward) : {};
+            switch (Number(transaction.type)) {
                 case TransactionType.REGISTER:
-                    console.log('GGGGGGGGGGGGGGGGGG');
-
-                    newTransaction = Object.assign(transaction, { asset: { referral: transaction.referrals[1] } });
+                    correctTransaction = new TransactionDTO({
+                        ...transaction,
+                        asset: {
+                            referral: transaction.referrals.substr(1)
+                            .slice(0, -1)
+                            .replace(/DDK/g, '')
+                            .split(',')[1]
+                        }
+                    });
                     break;
                 case TransactionType.SEND:
-                    newTransaction = Object.assign(transaction,
-                        { asset: { recipientAddress: transaction.recipientAddress, amount: transaction.amount} });
+                    correctTransaction = new TransactionDTO({
+                        ...transaction,
+                        asset: {
+                            recipientAddress: transaction.recipientAddress.replace(/DDK/g, ''),
+                            amount: Number(transaction.amount)
+                        }
+                    });
                     break;
                 case TransactionType.SIGNATURE:
-                    newTransaction = Object.assign(transaction, { asset: { publicKey: transaction.secondPublicKey } });
+                    correctTransaction = new TransactionDTO({
+                        ...transaction,
+                        asset: {
+                            publicKey: transaction.secondPublicKey
+                        }
+                    });
                     break;
                 case TransactionType.DELEGATE:
-                    newTransaction = Object.assign(transaction, { asset: { username: transaction.username } });
+                    correctTransaction = new TransactionDTO({
+                        ...transaction,
+                        asset: {
+                            username: transaction.username
+                        }
+                    });
                     break;
                 case TransactionType.STAKE:
-                    newTransaction = Object.assign(transaction, { asset: { amount: transaction.amount,
-                            startTime: transaction.startTime,
-                            airdropReward: transaction.airdropReward ? transaction.airdropReward.sponsors : transaction.airdropReward } });
+                    const oldTransaction = oldTrs.get(transaction.id);
+                    correctTransaction = new TransactionDTO({
+                        ...transaction,
+                        asset: {
+                            amount: Number(transaction.amount),
+                            startTime: Number(transaction.startTime),
+                            startVoteCount: oldTransaction ? Number(oldTransaction.voteCount) : 0,
+
+
+                        }
+                    });
+                    if (transaction.airdropReward) {
+                        Object.assign(correctTransaction,
+                            {
+                                airdropReward: {
+                                    sponsors: JSON.stringify(transaction.airdropReward.sponsors)
+                                    .replace(/DDK/g, '')
+                                }
+                            });
+                    }
                     break;
                 case TransactionType.SENDSTAKE:
-                    newTransaction = Object.assign(transaction, { asset: { recipientAddress: transaction.recipientAddress } });
+                    correctTransaction = new TransactionDTO({
+                        ...transaction,
+                        asset: {
+                            recipientAddress: transaction.recipientAddress.replace(/DDK/g, '')
+                        }
+                    });
                     break;
                 case TransactionType.VOTE:
-                    newTransaction = Object.assign(transaction, { asset: { votes: transaction.votes,
-                            reward: transaction.reward, unstake: transaction.unstake, airdropReward: transaction.airdropReward } });
+                    correctTransaction = new TransactionDTO({
+                        ...transaction,
+                        asset: {
+                            votes: transaction.votes,
+                            unstake: Number(transaction.unstake),
+                        },
+                    });
+                    if (Number(transaction.reward) > 0) {
+                        Object.assign(correctTransaction,
+                            {
+                                reward: Number(transaction.reward),
+                                airdropReward: JSON.stringify(airdropReward.sponsors).
+                                replace(/DDK/g, ''),
+                            });
+                    }
                     break;
                 default:
-                    newTransaction = Object.assign(transaction, { asset: {} });
+                    correctTransaction = new TransactionDTO({ ...transaction, asset: {} });
 
             }
-            delete newTransaction.referrals;
-            delete newTransaction.recipientAddress;
-            delete newTransaction.amount;
-            delete newTransaction.username;
-            delete newTransaction.secondPublicKey;
-            delete newTransaction.airdropReward;
-            delete newTransaction.startTime;
-            delete newTransaction.sponsors;
-            delete newTransaction.unstake;
-            delete newTransaction.reward;
-            delete newTransaction.votes;
-            newTransactions.push(new TransactionModel(newTransaction));
+
+            correctTransactions.push(new TransactionModel(correctTransaction));
 
         });
 
-    console.log('***************************', newTransactions);
+    console.log('***************************', correctTransactions);
+})();
+
+function readTransactionsToArray(filePath): Promise<Array<Object>> {
+    let count = 0;
+    return new Promise((resolve, reject) => {
+
+        const transactions: Array<Object> = [];
+
+        fs.createReadStream(filePath)
+        .pipe(csv())
+        .on('data', (data) => {
+            // if (count > 999) {
+            //     return;
+            // }
+            transactions.push(data);
+            ++count;
+        })
+        .on('end', () => {
+            resolve(transactions);
+        });
+    });
+
+}
+
+function readTransactionsToMap(filePath): Promise<Map<string, object>> {
+
+    let count = 0;
+
+    return new Promise((resolve, reject) => {
+        const transactions = new Map();
+
+        fs.createReadStream(filePath)
+        .pipe(csv())
+        .on('data', (data) => {
+
+            // if (count > 999) {
+            //     return;
+            // }
+
+            transactions.set(data.id, data);
+            ++count;
+        })
+        .on('end', () => {
+            resolve(transactions);
+        });
+    });
 }
 
