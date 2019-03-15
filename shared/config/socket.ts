@@ -20,3 +20,4 @@ export const CORE_SOCKET_CLIENT_CONFIG: SocketIOClient.ConnectOpts = {
 };
 
 export const SOCKET_TIMEOUT_MS = 10000;
+export const CORE_API_SOCKET_PORT = parseInt(process.env.CORE_API_PORT, 1) || 7006;

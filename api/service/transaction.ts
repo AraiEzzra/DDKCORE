@@ -1,9 +1,7 @@
-import {IAsset, Transaction, TransactionModel, TransactionType } from 'shared/model/transaction';
+import {IAsset, TransactionModel, TransactionType } from 'shared/model/transaction';
 import SharedTransactionRepository from 'shared/repository/transaction/memory';
 import TransactionRepository from 'api/repository/transaction';
 import { ResponseEntity } from 'shared/model/response';
-import {generateAccounts} from 'api/mock/account';
-import {AccountModel} from 'shared/model/account';
 
 interface ITransactionService {
     getMany(limit: number,
@@ -17,7 +15,6 @@ interface ITransactionService {
 }
 
 class TransactionService implements ITransactionService {
-
 
     createTransaction(trs: TransactionModel<IAsset>): ResponseEntity<void> {
         if (!trs.type || !TransactionType[trs.type]) {

@@ -1,4 +1,4 @@
-import { ServerOptions, Server } from 'socket.io';
+import { ServerOptions } from 'socket.io';
 import { CONNECT_CHANNEL, MESSAGE_CHANNEL } from 'shared/driver/socket/channels';
 import SocketMiddleware from 'api/middleware/socket';
 import coreSocketClient from 'api/socket/client';
