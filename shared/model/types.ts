@@ -1,1 +1,4 @@
-export type Filter = { limit: number, offset: number };
+export type Filter = {
+    limit: number,
+    offset: number
+};

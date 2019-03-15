@@ -4,7 +4,7 @@ export default {
     port: parseInt(env.PORT, 10) || 7007,
     address: env.HOST || '0.0.0.0',
     serverProtocol: env.PROTOCOL || 'http',
-    serverHost: env.HOST || '0.0.0.0',
+    serverHost: env.SERVER_HOST || '0.0.0.0',
     serverPort: parseInt(env.PORT, 10) || 7007,
     serverUrl: env.PORT ? `${env.HOST}:${parseInt(env.PORT, 10)}` : `${env.HOST}:7007`,
     version: '0.9.9a',

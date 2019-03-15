@@ -4,6 +4,8 @@ import { Block } from 'shared/model/block';
 import { Transaction } from 'shared/model/transaction';
 import PeerRepository from 'core/repository/peer';
 import SystemRepository from 'core/repository/system';
+import { logger } from 'shared/util/logger';
+import TransactionRepo from 'core/repository/transaction';
 
 interface ISyncRepo {
 
@@ -15,14 +17,14 @@ interface ISyncRepo {
 
     sendUnconfirmedTransaction(trs: Transaction<any>): void;
 
-    requestCommonBlocks(block: {id: string, height: number}): void;
-    
+    requestCommonBlocks(blockData: { id: string, height: number }): void;
+
     sendCommonBlocksExist(response, peer: Peer): void;
-    
+
     requestBlocks(data: { height: number, limit: number }, peer?): void;
 
     sendBlocks(blocks: Array<Block>, peer): void;
-    
+
     sendHeaders(headers): void;
 }
 
@@ -47,17 +49,23 @@ export class Sync implements ISyncRepo {
     }
 
     sendNewBlock(block: Block): void {
-        SocketRepository.emitPeers('BLOCK_RECEIVE', { block });
+        const serializedBlock: Block & { transactions: any } = block.getCopy();
+        serializedBlock.transactions = block.transactions.map(trs => TransactionRepo.serialize(trs));
+        SocketRepository.emitPeers('BLOCK_RECEIVE', { block: serializedBlock });
     }
 
     sendUnconfirmedTransaction(trs: Transaction<any>): void {
-        SocketRepository.emitPeers('TRANSACTION_RECEIVE', { trs });
+        SocketRepository.emitPeers('TRANSACTION_RECEIVE', { trs: TransactionRepo.serialize(trs) });
     }
 
-    requestCommonBlocks(block): void {
-        const filteredPeers = PeerRepository.getPeersByFilter(block.height, SystemRepository.broadhash);
+    requestCommonBlocks(blockData: { id: string, height: number }): void {
+        const filteredPeers = PeerRepository.getPeersByFilter(blockData.height, SystemRepository.broadhash);
         const peer = PeerRepository.getRandomPeer(filteredPeers);
-        SocketRepository.emitPeer('REQUEST_COMMON_BLOCKS', block, peer);
+        if (!peer) {
+            logger.error('[Repository][Sync][requestCommonBlocks]: Peer doesn`t found');
+            return;
+        }
+        SocketRepository.emitPeer('REQUEST_COMMON_BLOCKS', { block: blockData }, peer);
     }
 
     sendCommonBlocksExist(response, peer): void {
@@ -72,7 +80,11 @@ export class Sync implements ISyncRepo {
     }
 
     sendBlocks(blocks: Array<Block>, peer): void {
-        SocketRepository.emitPeer('RESPONSE_BLOCKS', { blocks }, peer);
+        const serializedBlocks: Array<Block & { transactions?: any }> = blocks.map(block => block.getCopy());
+        serializedBlocks.forEach(block => {
+            block.transactions = block.transactions.map(trs => TransactionRepo.serialize(trs));
+        });
+        SocketRepository.emitPeer('RESPONSE_BLOCKS', { blocks: serializedBlocks }, peer);
     }
 
     sendHeaders(headers) {

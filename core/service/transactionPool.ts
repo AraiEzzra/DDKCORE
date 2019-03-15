@@ -7,8 +7,7 @@ import {
 } from 'shared/model/transaction';
 import { transactionSortFunc } from 'core/util/transaction';
 import TransactionDispatcher from 'core/service/transaction';
-import Response from 'shared/model/response';
-import ResponseEntity from 'shared/model/response';
+import { ResponseEntity } from 'shared/model/response';
 import { logger } from 'shared/util/logger';
 import SyncService from 'core/service/sync';
 import { Account, Address } from 'shared/model/account';
@@ -16,7 +15,7 @@ import AccountRepository from 'core/repository/account';
 
 export interface ITransactionPoolService<T extends Object> {
 
-    batchRemove(transactions: Array<Transaction<T>>, withDepend: boolean): Response<Array<Transaction<T>>>;
+    batchRemove(transactions: Array<Transaction<T>>, withDepend: boolean): ResponseEntity<Array<Transaction<T>>>;
 
     /**
      *
@@ -61,7 +60,7 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
     batchRemove(
         transactions: Array<Transaction<T>>,
         withDepend: boolean,
-    ): Response<Array<Transaction<T>>> {
+    ): ResponseEntity<Array<Transaction<T>>> {
         const removedTransactions = [];
         for (const trs of transactions) {
             if (withDepend) {
@@ -122,7 +121,7 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
         trs.status = TransactionStatus.UNCONFIRM_APPLIED;
 
         if (broadcast) {
-            // TODO: fix broadcast storm
+            // TODO: check broadcast storm
             SyncService.sendUnconfirmedTransaction(trs);
         }
     }

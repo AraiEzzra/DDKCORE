@@ -6,6 +6,7 @@ class MockBlockService {
         createdAt: new Date().getTime(),
         height: 1,
         previousBlockId: '001d6450cef6257f45171bbaff1d94bf1ddb912fb4c8d9ba0cfb4c4afcf88c2f',
+        transactions: []
     });
 
     public getLastBlock(): Block {

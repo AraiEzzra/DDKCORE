@@ -1,19 +1,33 @@
-import { getRewardHistoryProps } from 'api/controller/reward/types';
 import RewardService from 'api/service/reward';
 import { RPC } from 'api/utils/decorators';
-import ResponseEntity from 'shared/model/response';
-import { Reward } from 'shared/model/reward';
+import { Message } from 'shared/model/message';
+import SocketMiddleware from 'api/middleware/socket';
 
 export class RewardController {
 
+    constructor() {
+        this.getRewardHistory = this.getRewardHistory.bind(this);
+        this.getReferredUsersReward = this.getReferredUsersReward.bind(this);
+    }
+
     @RPC('GET_REWARD_HISTORY')
-    getRewardHistory(data: getRewardHistoryProps): ResponseEntity<Array<Reward>> {
-        return RewardService.getRewardByAddress(data.address, data.filter);
+    getRewardHistory(message: Message, socket: any) {
+        const { body, headers, code } = message;
+        const rewardResponse = RewardService.getRewardByAddress(body.address, body.filter);
+
+        rewardResponse.success
+            ? SocketMiddleware.emitToClient(headers.id, code, rewardResponse, socket)
+            : SocketMiddleware.emitToCore(message, socket);
     }
 
     @RPC('GET_REFERRED_USERS_REWARD')
-    getReferredUsersReward(data: getRewardHistoryProps): ResponseEntity<Array<Reward>> {
-        return RewardService.getReferredUsersReward(data.address, data.filter);
+    getReferredUsersReward(message: Message, socket: any) {
+        const { body, headers, code } = message;
+        const rewardResponse = RewardService.getReferredUsersReward(body.address, body.filter);
+
+        rewardResponse.success
+            ? SocketMiddleware.emitToClient(headers.id, code, rewardResponse, socket)
+            : SocketMiddleware.emitToCore(message, socket);
     }
 }
 

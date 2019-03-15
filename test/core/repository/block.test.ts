@@ -9,7 +9,7 @@ import db from 'shared/driver/db';
 import { Block } from 'shared/model/block';
 import BlockRepo from 'core/repository/block';
 import { expect } from 'chai';
-import Response from 'shared/model/response';
+import { ResponseEntity } from 'shared/model/response';
 
 const createTable = async () => {
     await db.query(`

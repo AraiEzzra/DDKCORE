@@ -1,5 +1,4 @@
 import {Account, Address, PublicKey} from 'shared/model/account';
-import Response from 'shared/model/response';
 import { Delegate } from 'shared/model/delegate';
 import { getAddressByPublicKey } from 'shared/util/account';
 
@@ -31,9 +30,8 @@ class AccountRepo {
         return accounts;
     }
 
-    delete(account: Account): Response<void> {
+    delete(account: Account): void {
         this.memoryAccountsByAddress.delete(account.address);
-        return new Response<void>();
     }
 
     // example: such functions should be handlers and depends on workflows
@@ -41,28 +39,16 @@ class AccountRepo {
         this.memoryAccountsByAddress.get(account.address).actualBalance = balance;
     }
 
-    /** TODO refactor to getByAddress */
-    updateBalanceByPublicKey(publicKey: PublicKey, difference: number): void {
-        this.memoryAccountsByAddress.get(getAddressByPublicKey(publicKey)).actualBalance += difference;
-    }
-
     updateBalanceByAddress(address: Address, difference: number): void {
         this.memoryAccountsByAddress.get(address).actualBalance += difference;
     }
 
-    attachDelegate(account: Account, delegate: Delegate): Response<void> {
-        this.memoryAccountsByAddress.get(account.address).delegate = delegate;
-        return new Response<void>();
-    }
-
-    updateVotes(account: Account, votes: Array<string> ): Response<void> {
+    updateVotes(account: Account, votes: Array<string> ): void {
         this.memoryAccountsByAddress.get(account.address).votes = votes;
-        return new Response<void>();
     }
 
-    updateReferralByAddress(address: Address, referrals: Array<Account>): Response<void> {
+    updateReferralByAddress(address: Address, referrals: Array<Account>): void {
         this.memoryAccountsByAddress.get(address).referrals = referrals;
-        return new Response<void>();
     }
 }
 

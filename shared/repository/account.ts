@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 import {Account, Address} from 'shared/model/account';
-import ResponseEntity from 'shared/model/response';
+import { ResponseEntity } from 'shared/model/response';
 import { getAddressByPublicKey } from 'shared/util/account';
 import { ed } from 'shared/util/ed';
 

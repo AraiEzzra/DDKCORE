@@ -7,7 +7,7 @@ import {logger} from 'shared/util/logger';
 import { Account } from 'shared/model/account';
 import { SECOND } from 'core/util/const';
 import AccountRepository from 'core/repository/account';
-import ResponseEntity from 'shared/model/response';
+import { ResponseEntity } from 'shared/model/response';
 
 export interface ITransactionQueueService<T extends Object> {
     getLockStatus(): boolean;
@@ -102,7 +102,7 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
         }
 
         const sender: Account = AccountRepository.getByAddress(trs.senderAddress);
-        const verifyStatus = TransactionDispatcher.verifyUnconfirmed(trs, sender, true);
+        const verifyStatus = TransactionDispatcher.verifyUnconfirmed(trs, sender);
 
         if (!verifyStatus.success) {
             logger.debug(`TransactionStatus.verifyStatus ${JSON.stringify(verifyStatus)}`);

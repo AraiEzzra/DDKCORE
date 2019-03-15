@@ -1,17 +1,17 @@
 import os from 'os';
 import { Block } from 'shared/model/block';
-export const MAX_BLOCK_IN_MEMORY = 100;
-export const env = require('../../config/env').default;
+import config from 'shared/util/config';
 
-export class Headers {
+export const MAX_BLOCK_IN_MEMORY = 100;
+const env = require('../../config/env').default;
+
+class Headers {
     os: string;
-    version: string;
+    version: number;
     port: number;
     height: number;
-    nethash: string;
     broadhash: string;
-    minVersion: string;
-    nonce: string;
+    minVersion: number;
     ip: string;
     blocksIds: Map<number, string>;
 
@@ -22,20 +22,25 @@ export class Headers {
         this.ip = env.serverHost;
         this.broadhash = null;
         this.height = 1;
+        this.minVersion = 1;
+        this.version = config.constants.CURRENT_BLOCK_VERSION;
     }
 
     update(data) {
         this.broadhash = data.broadhash || this.broadhash;
         this.height = data.height || this.height;
         this.minVersion = data.minVersion || this.minVersion;
-        this.nonce = data.nonce || this.nonce;
     }
 
     setBroadhash(lastBlock: Block) {
-        this.broadhash = lastBlock.id;
+        this.broadhash = lastBlock.id || null;
     }
 
     addBlockIdInPool(lastBlock: Block) {
+
+        if (this.blocksIds.has(lastBlock.height)) {
+            this.clearPoolByHeight(lastBlock.height);
+        }
         this.blocksIds.set(lastBlock.height, lastBlock.id);
         if (this.blocksIds.size > MAX_BLOCK_IN_MEMORY) {
             const min = Math.min(...this.blocksIds.keys());
@@ -43,16 +48,20 @@ export class Headers {
         }
     }
 
+    clearPoolByHeight(height: number) {
+        [...this.blocksIds.keys()]
+        .filter(key => key >= height)
+        .map(key => this.blocksIds.delete(key));
+    }
+
     setHeight(lastBlock: Block) {
-        this.height = lastBlock.height;
+        this.height = lastBlock.height || 1;
     }
 
     getHeaders() {
         return {
             height: this.height,
-            nethash: this.nethash,
             broadhash: this.broadhash,
-            nonce: this.nonce,
         };
     }
 

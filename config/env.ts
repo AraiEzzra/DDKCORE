@@ -19,9 +19,12 @@ const env = process.env;
  *
  */
 
+const DEFAULT_SERVER_HOST = '0.0.0.0';
+const DEFAULT_SERVER_PORT = 7007;
+
 export default {
-    serverHost: env.HOST || '0.0.0.0',
-    serverPort: parseInt(env.PORT, 10) || 7007,
+    serverHost: env.SERVER_HOST || DEFAULT_SERVER_HOST,
+    serverPort: parseInt(env.PORT, 10) || DEFAULT_SERVER_PORT,
     redisURL: env.REDIS_URL || env.REDISTOGO_URL || '',
     db: {
         password: env.DB_PASSWORD
@@ -95,4 +98,3 @@ export default {
         }
     ],
 };
-

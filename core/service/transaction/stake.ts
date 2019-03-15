@@ -1,32 +1,32 @@
-import {IAssetService} from '../transaction';
+import {IAssetService} from 'core/service/transaction';
 import {
     IAssetStake,
     Transaction,
     TransactionType,
     IAirdropAsset, TransactionModel,
 } from 'shared/model/transaction';
-import ResponseEntity from 'shared/model/response';
+import { ResponseEntity } from 'shared/model/response';
 import {Account, Stake} from 'shared/model/account';
 import AccountRepo from 'core/repository/account';
-import { TOTAL_PERCENTAGE } from 'core/util/const';
+import { TOTAL_PERCENTAGE, SECONDS_PER_MINUTE } from 'core/util/const';
 import config from 'shared/util/config';
 import BUFFER from 'core/util/buffer';
 
 import {getAirdropReward, sendAirdropReward, undoAirdropReward, verifyAirdrop} from 'core/util/reward';
 
-class TransactionStakeService implements IAssetService<IAssetStake>  {
+class TransactionStakeService implements IAssetService<IAssetStake> {
 
-    create(trs: TransactionModel<IAssetStake>): void {
+    create(trs: TransactionModel<IAssetStake>): IAssetStake {
         const sender: Account = AccountRepo.getByAddress(trs.senderAddress);
         const airdropReward: IAirdropAsset = getAirdropReward(
-                sender,
-                trs.asset.amount,
-                TransactionType.STAKE
-            );
-        trs.asset = {
+            sender,
+            trs.asset.amount,
+            TransactionType.STAKE
+        );
+        return {
             amount: trs.asset.amount,
             startTime: trs.createdAt,
-            startVoteCount: 0,
+            startVoteCount: trs.asset.startVoteCount || 0, // vulnerability!!
             airdropReward: airdropReward
         };
     }
@@ -70,16 +70,16 @@ class TransactionStakeService implements IAssetService<IAssetStake>  {
             errors.push('Invalid stake amount: Decimal value');
         }
 
-        return new ResponseEntity({ errors });
+        return new ResponseEntity<void>({ errors });
     }
 
     verifyUnconfirmed(trs: Transaction<IAssetStake>, sender: Account): ResponseEntity<void> {
         let errors = [];
-        const airdropCheck: ResponseEntity<any> = verifyAirdrop(trs, trs.asset.amount, sender);
+        const airdropCheck: ResponseEntity<void> = verifyAirdrop(trs, trs.asset.amount, sender);
         if (!airdropCheck.success) {
             errors = airdropCheck.errors;
         }
-        return new ResponseEntity({ errors });
+        return new ResponseEntity<void>({ errors });
     }
 
     calculateFee(trs: Transaction<IAssetStake>, sender: Account): number {
@@ -93,7 +93,7 @@ class TransactionStakeService implements IAssetService<IAssetStake>  {
             isActive: true,
             amount: trs.asset.amount,
             voteCount: 0,
-            nextVoteMilestone: trs.createdAt + config.constants.froze.vTime * 60,
+            nextVoteMilestone: trs.createdAt + config.constants.froze.vTime * SECONDS_PER_MINUTE,
             airdropReward: trs.asset.airdropReward.sponsors,
             sourceTransactionId: trs.id
         }));
@@ -107,7 +107,9 @@ class TransactionStakeService implements IAssetService<IAssetStake>  {
                 sender.stakes.splice(i, 1);
             }
         }
-        undoAirdropReward(trs);
+        if (!senderOnly) {
+            undoAirdropReward(trs);
+        }
     }
 
 }

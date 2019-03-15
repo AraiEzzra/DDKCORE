@@ -1,20 +1,34 @@
 import AccountService from 'api/service/account';
-import { AccountModel, Address, PublicKey } from 'shared/model/account';
-import ResponseEntity from 'shared/model/response';
 import { RPC } from 'api/utils/decorators';
+import { Message } from 'shared/model/message';
+import SocketMiddleware from 'api/middleware/socket';
 
 export class AccountController {
 
+    constructor() {
+        this.getAccountByAddress = this.getAccountByAddress.bind(this);
+        this.getAccountByPublicKey = this.getAccountByPublicKey.bind(this);
+    }
+
     @RPC('GET_ACCOUNT_BY_ADDRESS')
-    getAccountByAddress(address: Address): ResponseEntity<AccountModel> {
-        return AccountService.getAccountByAddress(address);
-    };
+    getAccountByAddress(message: Message, socket: any) {
+        const { body, headers, code } = message;
+        const accountsResponse = AccountService.getAccountByAddress(body.address);
+
+        accountsResponse.success
+            ? SocketMiddleware.emitToClient(headers.id, code, accountsResponse, socket)
+            : SocketMiddleware.emitToCore(message, socket);
+    }
 
     @RPC('GET_ACCOUNT_BY_PUBLIC_KEY')
-    getAccountByPublicKey(publicKey: PublicKey): ResponseEntity<AccountModel> {
-        return AccountService.getAccountByPublicKey(publicKey);
-    };
+    getAccountByPublicKey(message: Message, socket: any) {
+        const { body, headers, code } = message;
+        const accountsResponse = AccountService.getAccountByPublicKey(body.publicKey);
 
+        accountsResponse.success
+            ? SocketMiddleware.emitToClient(headers.id, code, accountsResponse, socket)
+            : SocketMiddleware.emitToCore(message, socket);
+    }
 }
 
 export default new AccountController();

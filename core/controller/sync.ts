@@ -6,80 +6,65 @@ import { BaseController } from 'core/controller/baseController';
 import PeerService from 'core/service/peer';
 import BlockService from 'core/service/block';
 import { logger } from 'shared/util/logger';
-import { messageON } from 'shared/util/bus';
 import BlockController from 'core/controller/block';
-
-const START_PEER_REQUEST = 10000;
-const START_SYNC_BLOCKS = 15000;
+import PeerRepository from 'core/repository/peer';
+import TransactionRepo from 'core/repository/transaction';
 
 export class SyncController extends BaseController {
 
-    constructor() {
-        super();
-        // TODO remove after test
-        setTimeout(() => {
-            messageON('EMIT_REQUEST_PEERS', {});
-        }, START_PEER_REQUEST);
-        setTimeout(() => {
-            messageON('EMIT_SYNC_BLOCKS', {});
-        }, START_SYNC_BLOCKS);
-    }
-
-    // TODO call after several minutes or by interval
     @ON('EMIT_REQUEST_PEERS')
-    async requestPeers(): Promise<void> {
+    requestPeers(): void {
         SyncService.requestPeers();
     }
 
     @ON('REQUEST_PEERS')
-    async sendPeers(action: { peer: Peer }): Promise<void> {
+    sendPeers(action: { peer: Peer }): void {
         const { peer } = action;
         SyncService.sendPeers(peer);
     }
 
     @ON('RESPONSE_PEERS')
-    async connectNewPeers(action: { data: { peers } }): Promise<void> {
+    connectNewPeers(action: { data: { peers } }): void {
         const { data } = action;
         SyncService.connectNewPeers(data.peers);
     }
 
     @ON('EMIT_REQUEST_COMMON_BLOCKS')
-    async emitRequestCommonBlocks(block: { id: string, height: number }) {
-        logger.debug(`[Controller][Sync][emitRequestCommonBlocks]}`);
-        SyncService.requestCommonBlocks(block);
+    emitRequestCommonBlocks(blockData: { id: string, height: number }): void {
+        logger.debug(`[Service][Block][emitRequestCommonBlocks] id:${blockData.id} height:${blockData.id}`);
+        SyncService.requestCommonBlocks(blockData);
     }
 
     @ON('REQUEST_COMMON_BLOCKS')
-    async checkCommonBlocks(action: { data: { block: { id: string, height: number } }, peer: Peer }) {
+    checkCommonBlocks(action: { data: { block: { id: string, height: number } }, peer: Peer }): void {
         const { data, peer } = action;
+        logger.debug(`[Controller][Sync][checkCommonBlocks]: ${JSON.stringify(data.block)}`);
         SyncService.checkCommonBlocks(data.block, peer);
     }
 
     @ON('RESPONSE_COMMON_BLOCKS')
-    async getCommonBlocks(action: { data: { isExist: boolean, block: {id: string, height: number} }, peer: Peer }) {
+    async getCommonBlocks(action: { data: { isExist: boolean, block: { id: string, height: number } }, peer: Peer }) {
         const { data, peer } = action;
         logger.debug(`[Controller][Sync][getCommonBlocks]: ${JSON.stringify(data)}`);
         if (data.isExist) {
-            await SyncService.requestBlocks(data.block, peer);
+            SyncService.requestBlocks(data.block, peer);
         } else {
             await BlockService.deleteLastBlock();
             this.startSyncBlocks();
         }
     }
 
-    // TODO start on load
-    // TODO start if block decline and !consensus
     @ON('EMIT_SYNC_BLOCKS')
-    async startSyncBlocks(): Promise<void> {
-        logger.debug(`[Controller][Sync][startSyncBlocks]: CONSENSUS ${SyncService.getConsensus()}%`);
-        if (SyncService.consensus) {
+    startSyncBlocks(): void {
+        if (SyncService.consensus || PeerRepository.peerList().length === 0) {
             return;
         }
+        logger.debug(`[Controller][Sync][startSyncBlocks]: start sync with consensus ${SyncService.getConsensus()}%`);
         SyncService.checkCommonBlock();
     }
 
     @ON('REQUEST_BLOCKS')
-    async sendBlocks(action: { data: { height: number, limit: number }, peer: Peer }): Promise<void> {
+    sendBlocks(action: { data: { height: number, limit: number }, peer: Peer }): void {
         const { data, peer } = action;
         SyncService.sendBlocks(data, peer);
     }
@@ -87,8 +72,8 @@ export class SyncController extends BaseController {
     @ON('RESPONSE_BLOCKS')
     async loadBlocks(action: { data: { blocks: Array<Block> }, peer }): Promise<void> {
         const { data } = action;
-        logger.debug(`[Controller][Sync][loadBlocks]: BLOCKS: ${JSON.stringify(data.blocks)}`);
         for (let block of data.blocks) {
+            block.transactions.forEach(trs => TransactionRepo.deserialize(trs));
             await BlockController.onReceiveBlock({ data: { block } });
         }
         if (!SyncService.consensus) {
@@ -97,14 +82,15 @@ export class SyncController extends BaseController {
     }
 
     @ON('PEER_HEADERS_UPDATE')
-    async updatePeer(action: { data, peer }) {
+    updatePeer(action: { data, peer }): void {
         const { data, peer } = action;
         PeerService.update(data, peer);
     }
 
     @ON('LAST_BLOCKS_UPDATE')
-    async updateHeaders(data: { lastBlock }) {
-        await SyncService.updateHeaders(data);
+    updateHeaders(data: { lastBlock }): void {
+        logger.debug(`[Controller][Sync][updateHeaders]: id ${data.lastBlock.id}, height: ${data.lastBlock.height}`);
+        SyncService.updateHeaders(data.lastBlock);
     }
 
 

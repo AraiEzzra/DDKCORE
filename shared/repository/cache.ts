@@ -1,5 +1,5 @@
 import { redisClientAsync, redisClient } from 'shared/driver/redis';
-import ResponseEntity from 'shared/model/response';
+import { ResponseEntity } from 'shared/model/response';
 const errorCacheDisabled = 'Cache Unavailable';
 
 export interface ICacheRepository {

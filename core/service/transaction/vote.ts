@@ -1,7 +1,7 @@
 import { IAssetService } from 'core/service/transaction';
 import {IAirdropAsset, IAssetVote, Transaction, TransactionModel} from 'shared/model/transaction';
 import { Account, Stake } from 'shared/model/account';
-import Response from 'shared/model/response';
+import { ResponseEntity } from 'shared/model/response';
 import AccountRepo from 'core/repository/account';
 import config from 'shared/util/config';
 import BUFFER from 'core/util/buffer';
@@ -15,19 +15,17 @@ import {
     undoAirdropReward
 } from 'core/util/reward';
 import DelegateRepo from 'core/repository/delegate';
+import { SECONDS_PER_MINUTE, TOTAL_PERCENTAGE } from 'core/util/const';
 
 class TransactionVoteService implements IAssetService<IAssetVote> {
 
-    create(trs: TransactionModel<IAssetVote>): void {
+    create(trs: TransactionModel<IAssetVote>): IAssetVote {
         const sender: Account = AccountRepo.getByAddress(trs.senderAddress);
-        let isDownVote: boolean = false;
-        if (trs.asset.votes && trs.asset.votes[0]) {
-            isDownVote = trs.asset.votes[0][0] === '-';
-        }
+        const isDownVote: boolean = trs.asset.votes[0][0] === '-';
         const totals: { reward: number, unstake: number} = calculateTotalRewardAndUnstake(sender, isDownVote);
         const airdropReward: IAirdropAsset = getAirdropReward(sender, totals.reward, trs.type);
 
-        trs.asset = {
+        return {
             votes: trs.asset.votes,
             reward: totals.reward || 0,
             unstake: totals.unstake || 0,
@@ -43,7 +41,7 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
         );
 
         offset = BUFFER.writeUInt64LE(buff, trs.asset.reward, offset);
-        offset = BUFFER.writeUInt64LE(buff, trs.asset.unstake ? (trs.asset.unstake * -1) : 0, offset);
+        offset = BUFFER.writeUInt64LE(buff, trs.asset.unstake, offset);
 
         // airdropReward.sponsors up to 15 sponsors
         const sponsorsBuffer = Buffer.alloc(
@@ -60,7 +58,7 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
         return Buffer.concat([buff, sponsorsBuffer, voteBuffer]);
     }
 
-    validate(trs: Transaction<IAssetVote>): Response<void> {
+    validate(trs: Transaction<IAssetVote>): ResponseEntity<void> {
         const errors: Array<string> = [];
 
         if (!trs.asset || !trs.asset.votes) {
@@ -112,10 +110,10 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
             errors.push('Multiple votes for same delegate are not allowed');
         }
 
-        return new Response({ errors });
+        return new ResponseEntity<void>({ errors });
     }
 
-    verifyUnconfirmed(trs: Transaction<IAssetVote>, sender: Account): Response<void> {
+    verifyUnconfirmed(trs: Transaction<IAssetVote>, sender: Account): ResponseEntity<void> {
         const errors: Array<string> = [];
 
         const isDownVote: boolean = trs.asset.votes[0][0] === '-';
@@ -133,7 +131,7 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
             );
         }
 
-        const verifyAirdropResponse: Response<void> = verifyAirdrop(trs, totals.reward, sender);
+        const verifyAirdropResponse: ResponseEntity<void> = verifyAirdrop(trs, totals.reward, sender);
         if (!verifyAirdropResponse.success) {
             errors.push(...verifyAirdropResponse.errors);
         }
@@ -175,7 +173,7 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
 
             errors.push(`Maximum number of votes possible ${config.constants.maxVotes}, exceeded by ${exceeded}`);
         }
-        return new Response({ errors });
+        return new ResponseEntity<void>({ errors });
     }
 
     calculateFee(trs: Transaction<IAssetVote>, sender: Account): number {
@@ -185,7 +183,7 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
             }
             return acc;
         }, 0);
-        return senderTotalFrozeAmount * config.constants.fees.vote / 100;
+        return senderTotalFrozeAmount * config.constants.fees.vote / TOTAL_PERCENTAGE;
     }
 
 
@@ -208,7 +206,6 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
             });
             sender.votes.push(...votes);
         }
-        AccountRepo.updateVotes(sender, sender.votes);
 
         if (isDownVote) {
             return;
@@ -218,7 +215,7 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
         sender.stakes.forEach((stake: Stake) => {
             if (stake.isActive && (stake.nextVoteMilestone === 0 || trs.createdAt > stake.nextVoteMilestone)) {
                 stake.voteCount++;
-                stake.nextVoteMilestone = trs.createdAt + config.constants.froze.vTime * 60;
+                stake.nextVoteMilestone = trs.createdAt + config.constants.froze.vTime * SECONDS_PER_MINUTE;
                 processedOrders.push(stake);
             }
         });
@@ -247,7 +244,6 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
                 return acc;
             }, sender.votes);
         }
-        AccountRepo.updateVotes(sender, sender.votes);
 
         if (isDownVote) {
             return;
@@ -255,13 +251,15 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
 
         sender.stakes.forEach((stake: Stake) => {
             if (stake.isActive && (stake.nextVoteMilestone === 0 ||
-                    trs.createdAt + (config.constants.froze.vTime * 60) === stake.nextVoteMilestone)) {
+                trs.createdAt + (config.constants.froze.vTime * SECONDS_PER_MINUTE) === stake.nextVoteMilestone)) {
                 stake.voteCount--;
                 stake.nextVoteMilestone = 0;
             }
         });
-        undoFrozeOrdersRewardAndUnstake(trs);
-        undoAirdropReward(trs);
+        undoFrozeOrdersRewardAndUnstake(trs, sender, senderOnly);
+        if (!senderOnly) {
+            undoAirdropReward(trs);
+        }
     }
 }
 
