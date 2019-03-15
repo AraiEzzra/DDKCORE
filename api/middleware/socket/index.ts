@@ -4,10 +4,10 @@ import ReferredUsersControllerInstance, { ReferredUsersController } from 'api/co
 import AccountControllerInstance, { AccountController } from 'api/controller/account';
 import DelegateControllerInstance, { DelegateController } from 'api/controller/delegate';
 import { Message, MessageType } from 'shared/model/message';
-import ResponseEntity from 'shared/model/response';
 import { MESSAGE_CHANNEL } from 'shared/driver/socket/channels';
 import { SOCKET_TIMEOUT_MS } from 'shared/config/socket';
 import coreSocketClient from 'api/socket/client';
+import { ResponseEntity } from 'shared/model/response';
 
 type RequestProcessor = {
     socket: any,
@@ -37,13 +37,12 @@ export class SocketMiddleware {
     }
 
     onConnect(socket: any) {
-        // console.log('Socket %s connected', JSON.stringify(socket.handshake));
+        console.log('Socket %s connected', JSON.stringify(socket.handshake));
         socket.on(MESSAGE_CHANNEL, (data: Message) => this.onApiMessage(data, socket));
     }
 
     onApiMessage(message: Message, socket: any) {
         const { headers } = message;
-        console.log('MESSAGE FOR: ', message.code);
         if (headers.type === MessageType.RESPONSE || headers.type === MessageType.EVENT) {
             message.body = new ResponseEntity({ errors: ['Invalid message type'] });
             socket.emit(MESSAGE_CHANNEL, message);
@@ -70,6 +69,7 @@ export class SocketMiddleware {
         }
     }
 
+    // TODO: extract this to some utils for socket. e.g. driver
     emitToClient(requestId: string, code: string, data: any, socketClient?: any) {
         const message = new Message(MessageType.RESPONSE, code, data, requestId);
 
@@ -80,16 +80,17 @@ export class SocketMiddleware {
         }
     }
 
+    // TODO: extract this to some utils for socket. e.g. driver
     emitToCore(message: Message, socket: any) {
         const cleaner = this.buildRequestCleaner(message, socket);
-        this.requests.set(message.headers.id, {socket, cleaner});
+        this.requests.set(message.headers.id, { socket, cleaner });
         coreSocketClient.emit(MESSAGE_CHANNEL, message);
     }
 
     emitAndClear(message: Message) {
         if (this.requests.has(message.headers.id)) {
             const requestProcessor = this.requests.get(message.headers.id);
-            const {socket, cleaner} = requestProcessor;
+            const { socket, cleaner } = requestProcessor;
             clearInterval(cleaner);
             socket.emit(MESSAGE_CHANNEL, message);
             this.requests.delete(message.headers.id);

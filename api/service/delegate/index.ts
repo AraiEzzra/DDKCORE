@@ -1,13 +1,13 @@
-import { ResponseEntity } from 'shared/model/response';
 import { Filter } from 'shared/model/types';
 import { DelegateModel } from 'shared/model/delegate';
 import { generateDelegates } from 'api/mock/delegate';
+import { ResponseEntity } from 'shared/model/response';
 
 export interface DelegateService {
 
-    getActiveDelegates(filter: Filter): any;
+    getActiveDelegates(filter: Filter): ResponseEntity<Array<DelegateModel>>;
 
-    getInactiveDelegates(filter: Filter): any;
+    getInactiveDelegates(filter: Filter): ResponseEntity<Array<DelegateModel>>;
 
 }
 
@@ -17,7 +17,6 @@ export class DelegateMockService implements DelegateService {
 
     constructor() {
         this.delegates = generateDelegates();
-
     }
 
     getActiveDelegates(filter: Filter): ResponseEntity<Array<DelegateModel>> {
