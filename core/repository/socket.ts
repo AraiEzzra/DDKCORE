@@ -11,6 +11,8 @@ const ioServer = require('socket.io')(server, {
     serveClient: false,
     wsEngine: 'ws',
 });
+import { MESSAGE_CHANNEL } from 'shared/driver/socket/channels';
+
 const env = require('../../config/env').default;
 
 
@@ -36,7 +38,7 @@ export class Socket {
         TRUSTED_PEERS.forEach((peer: any) => {
             this.connectNewPeer(peer);
         });
-        ioServer.on('connect', function (socket) {
+        ioServer.on('connect', (socket) => {
             socket.emit('OPEN');
             socket.on('HEADERS', (data: string) => {
                 logger.debug(`[SOCKET][CLIENT_PEER_HEADERS_RECEIVE], data: ${data}`);
@@ -52,6 +54,13 @@ export class Socket {
             () => messageON('EMIT_REQUEST_PEERS', {}),
             START_PEER_REQUEST
         );
+    }
+
+    messageFromAPI(socket) {
+        socket.on(MESSAGE_CHANNEL, (data) => {
+            logger.debug(`[SOCKET][API], data: ${data}`);
+            messageON(data.code, data.body);
+        });
     }
 
     @autobind
