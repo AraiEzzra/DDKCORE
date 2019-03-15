@@ -1,7 +1,8 @@
 import Middleware from 'api/middleware/socket';
 import { MessageModel, MessageType } from 'shared/model/message';
 
-const port = process.env.API_PORT || 7008;
+const DEFAULT_API_PORT = 7008;
+const port = process.env.API_PORT || DEFAULT_API_PORT;
 const socketConfig = {
     serveClient: false,
     wsEngine: 'ws',

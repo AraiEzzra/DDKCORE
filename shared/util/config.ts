@@ -20,6 +20,8 @@ import testnetGenesisBlock from '../../config/testnet/genesisBlock.json';
 import mainnetGenesisBlock from '../../config/mainnet/genesisBlock.json';
 
 interface IConstraint {
+    serverHost?: string;
+    serverPort?: number;
     publicKey?: string;
     airdrop?: {
         account?: bigint;
