@@ -1,7 +1,7 @@
-import { ResponseEntity } from 'shared/model/response';
 import { Filter } from 'shared/model/types';
 import { DelegateModel } from 'shared/model/delegate';
 import { generateDelegates } from 'api/mock/delegate';
+import { ResponseEntity } from 'shared/model/response';
 
 export interface DelegateService {
 
@@ -11,13 +11,12 @@ export interface DelegateService {
 
 }
 
-export class DelegateServiceImpl implements DelegateService {
+export class DelegateMockService implements DelegateService {
 
     private delegates: Array<DelegateModel>; // mock for wallet
 
     constructor() {
         this.delegates = generateDelegates();
-
     }
 
     getActiveDelegates(filter: Filter): ResponseEntity<Array<DelegateModel>> {
@@ -32,4 +31,5 @@ export class DelegateServiceImpl implements DelegateService {
 
 }
 
-export default new DelegateServiceImpl();
+
+export default new DelegateMockService();
