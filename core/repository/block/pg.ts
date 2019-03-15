@@ -59,7 +59,8 @@ class BlockPGRepo implements IBlockPGRepository {
             fee: rawBlock.fee,
             payloadHash: rawBlock.payload_hash,
             generatorPublicKey: rawBlock.generator_public_key,
-            signature: rawBlock.signature
+            signature: rawBlock.signature,
+            transactions: []
         });
     }
 

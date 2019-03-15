@@ -1,10 +1,13 @@
 import {API_METHODS} from 'core/api/middleware/apiHolder';
 import {Message, MessageType} from 'shared/model/message';
-import {MESSAGE_CHANNEL} from 'shared/driver/socket/channels';
+import {MESSAGE_CHANNEL, CONNECT_TO_CORE} from 'shared/driver/socket/channels';
 import 'core/api/controller/transaction';
-import {ResponseEntity} from 'shared/model/response';
 
 export class SocketMiddleware {
+
+    onConnect(socket: any) {
+        socket.emit(CONNECT_TO_CORE, 'Is Connected');
+    }
 
     registerAPI(socketAPI) {
         socketAPI.on(MESSAGE_CHANNEL, (message: Message) => {
@@ -12,7 +15,8 @@ export class SocketMiddleware {
            const method = API_METHODS[message.code];
 
            if (method && typeof method === 'function' && message.headers.type === MessageType.REQUEST) {
-                method(message);
+               const res = method(message);
+               socketAPI.emit(MESSAGE_CHANNEL, res);
            } else {
                const errorMessage =
                     new Message(MessageType.RESPONSE, message.code, ['Request is failed'], message.headers.id);

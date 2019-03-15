@@ -50,10 +50,6 @@ class AccountRepo {
     updateReferralByAddress(address: Address, referrals: Array<Account>): void {
         this.memoryAccountsByAddress.get(address).referrals = referrals;
     }
-
-    public updateSecondPublicKey = (address: Address, secondPublicKey: PublicKey) => {
-        this.memoryAccountsByAddress.get(address).secondPublicKey = secondPublicKey;
-    }
 }
 
 export default new AccountRepo();

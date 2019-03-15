@@ -1,25 +1,19 @@
 import autobind from 'autobind-decorator';
+import io from 'socket.io-client';
+import socketIO from 'socket.io';
+
 import SystemRepository from 'core/repository/system';
 import { Peer } from 'shared/model/peer';
 import { messageON } from 'shared/util/bus';
 import { logger } from 'shared/util/logger';
-import io from 'socket.io-client';
 import PeerRepository, { BLACK_LIST, TRUSTED_PEERS } from 'core/repository/peer';
-// TODO remove http
-const server = require('http').createServer();
-const ioServer = require('socket.io')(server, {
+import config from 'shared/util/config';
+
+const ioServer = socketIO(config.constants.serverPort, {
     serveClient: false,
-    wsEngine: 'ws',
+    pingTimeout: 30000,
+    pingInterval: 30000,
 });
-import { MESSAGE_CHANNEL } from 'shared/driver/socket/channels';
-
-const env = require('../../config/env').default;
-
-
-server.listen(
-    env.serverPort,
-    env.serverHost
-);
 const START_PEER_REQUEST = 10000;
 
 export class Socket {
@@ -34,11 +28,11 @@ export class Socket {
     }
 
     init(): void {
-        logger.debug(`SOCKET_START ${env.serverHost}:${env.serverPort}`);
+        logger.debug(`SOCKET_START ${config.constants.serverHost}:${config.constants.serverPort}`);
         TRUSTED_PEERS.forEach((peer: any) => {
             this.connectNewPeer(peer);
         });
-        ioServer.on('connect', (socket) => {
+        ioServer.on('connect', function (socket) {
             socket.emit('OPEN');
             socket.on('HEADERS', (data: string) => {
                 logger.debug(`[SOCKET][CLIENT_PEER_HEADERS_RECEIVE], data: ${data}`);
@@ -54,13 +48,6 @@ export class Socket {
             () => messageON('EMIT_REQUEST_PEERS', {}),
             START_PEER_REQUEST
         );
-    }
-
-    messageFromAPI(socket) {
-        socket.on(MESSAGE_CHANNEL, (data) => {
-            logger.debug(`[SOCKET][API], data: ${data}`);
-            messageON(data.code, data.body);
-        });
     }
 
     @autobind

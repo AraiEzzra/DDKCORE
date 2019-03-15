@@ -11,25 +11,25 @@ export class ReferredUsersController {
     }
 
     @RPC('GET_REFERRED_USERS')
-    getReferredUsers(message: Message, socketApi: any) {
+    getReferredUsers(message: Message, socket: any) {
         const { body, headers, code } = message;
         const referredUsersResponse = ReferredUsersService.getReferredUsers(body.address, body.filter);
 
         referredUsersResponse.success
-            ? SocketMiddleware.emitToClient(headers.id, code, referredUsersResponse, socketApi)
-            : SocketMiddleware.emitToCore(message, socketApi);
+            ? SocketMiddleware.emitToClient(headers.id, code, referredUsersResponse, socket)
+            : SocketMiddleware.emitToCore(message, socket);
     }
 
     @RPC('GET_REFERRED_USERS_BY_LEVEL')
-    getReferredUsersByLevel(message: Message, socketApi: any) {
+    getReferredUsersByLevel(message: Message, socket: any) {
         const { body, headers, code } = message;
 
         const referredUsersResponse =
             ReferredUsersService.getReferredUsersByLevel(body.address, body.level, body.filter);
 
         referredUsersResponse.success
-            ? SocketMiddleware.emitToClient(headers.id, code, referredUsersResponse, socketApi)
-            : SocketMiddleware.emitToCore(message, socketApi);
+            ? SocketMiddleware.emitToClient(headers.id, code, referredUsersResponse, socket)
+            : SocketMiddleware.emitToCore(message, socket);
     }
 }
 

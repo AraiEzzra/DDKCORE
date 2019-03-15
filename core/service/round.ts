@@ -1,5 +1,5 @@
 import { ResponseEntity } from 'shared/model/response';
-import crypto from 'crypto';
+import * as crypto from 'crypto';
 import SlotService from 'core/service/slot';
 import Config from 'shared/util/config';
 // todo delete it when find a way to mock services for tests
@@ -19,6 +19,7 @@ import { compose } from 'core/util/common';
 import RoundPGRepository from 'core/repository/round/pg';
 import { Block } from 'shared/model/block';
 
+const MAX_LATENESS_FORGE_TIME = 500;
 const constants = Config.constants;
 
 interface IHashList {
@@ -33,23 +34,23 @@ interface IRoundSum {
 
 interface IRoundService {
 
-    generateHashList(params: {activeDelegates: Array<Delegate>, blockId: string}):
-        Array<{hash: string, generatorPublicKey: string}>;
+    generateHashList(params: { activeDelegates: Array<Delegate>, blockId: string }):
+        Array<{ hash: string, generatorPublicKey: string }>;
 
-    sortHashList(hashList: Array<{hash: string, generatorPublicKey: string}>):
-        Array<{hash: string, generatorPublicKey: string}>;
+    sortHashList(hashList: Array<{ hash: string, generatorPublicKey: string }>):
+        Array<{ hash: string, generatorPublicKey: string }>;
 
-    generatorPublicKeyToSlot(sortedHashList: Array<{hash: string, generatorPublicKey: string}>): Slots;
+    generatorPublicKeyToSlot(sortedHashList: Array<{ hash: string, generatorPublicKey: string }>): Slots;
 
     generateRound(): ResponseEntity<void>;
 
     getMyTurn(): number;
 
-    sumRound(round): ResponseEntity<IRoundSum>;
+    sumRound(round: Round): ResponseEntity<IRoundSum>;
 
     rebuild(): void;
 
-    rollBack(): void;
+    rollBack(round: Round): Promise<void>;
 
     validate(): boolean;
 
@@ -116,20 +117,24 @@ class RoundService implements IRoundService {
         const lastBlock = BlockRepository.getLastBlock();
 
         let firstSlot = !lastRound && lastBlock.createdAt === 0 ?
-            SlotService.getTheFirsSlot() : RoundRepository.getLastSlotInRound(lastRound);
+            SlotService.getTheFirsSlot() : RoundRepository.getLastSlotInRound(lastRound) + 1;
 
         return sortedHashList.reduce(
-            (acc: Object = {}, item: IHashList, i) => {
-            acc[item.generatorPublicKey] = { slot: firstSlot + i };
-            return acc;
-        }, {});
+            (acc: Slots = {}, item: IHashList, i) => {
+                acc[item.generatorPublicKey] = { slot: firstSlot + i };
+                return acc;
+            }, {});
     }
 
-    public restoreRounds(block: Block) {
+    public restoreRounds(block: Block = BlockRepository.getLastBlock()) {
         if (!this.isBlockChainReady) {
             return;
         }
-
+        if (!RoundRepository.getCurrentRound()) {
+            this.isRoundChainRestored = true;
+            this.generateRound();
+            return;
+        }
         const currentRound = RoundRepository.getCurrentRound();
         const firstSlot = RoundRepository.getFirstSlotInRound();
         const lastSlot = RoundRepository.getLastSlotInRound();
@@ -159,10 +164,10 @@ class RoundService implements IRoundService {
             RoundRepository.getCurrentRound()
         ) {
             compose(
-                this.apply(),
                 this.applyUnconfirmed,
                 this.sumRound
             )(RoundRepository.getCurrentRound());
+            this.apply();
 
             // store pound as previous
             RoundRepository.setPrevRound(RoundRepository.getCurrentRound());
@@ -177,7 +182,6 @@ class RoundService implements IRoundService {
         }
 
         const delegateResponse = DelegateRepository.getActiveDelegates();
-
         if (!delegateResponse.success) {
             logger.error(`${this.logPrefix}[generateRound] error: ${delegateResponse.errors}`);
             return new ResponseEntity<void>({
@@ -189,10 +193,9 @@ class RoundService implements IRoundService {
             this.generatorPublicKeyToSlot,
             this.sortHashList,
             this.generateHashList
-        )
-        ({blockId: lastBlock.id, activeDelegates: delegateResponse.data});
+        )({ blockId: lastBlock.id, activeDelegates: delegateResponse.data });
 
-        RoundRepository.setCurrentRound({slots, startHeight: lastBlock.height + 1});
+        RoundRepository.setCurrentRound({ slots, startHeight: lastBlock.height + 1 });
         logger.info(
             `${this.logPrefix}[generateRound] Start round on height: ${RoundRepository.getCurrentRound().startHeight}`
         );
@@ -204,19 +207,33 @@ class RoundService implements IRoundService {
         const mySlot = this.getMyTurn();
         if (mySlot) {
             // start forging block at mySlotTime
-            const cellTime = SlotService.getSlotTime(mySlot - SlotService.getSlotNumber());
-            logger.info(`${this.logPrefix}[generateRound] Start forging block to: ${mySlot} after ${cellTime} seconds`);
-            createTaskON('BLOCK_GENERATE', cellTime, {
-                timestamp: SlotService.getSlotTime(mySlot),
-                keyPair: this.keyPair,
-            });
+            let cellTime = SlotService.getSlotRealTime(mySlot) - new Date().getTime();
+            if (cellTime < 0 && cellTime + MAX_LATENESS_FORGE_TIME >= 0) {
+                cellTime = 0;
+            }
+            if (cellTime >= 0) {
+                logger.info(
+                    `${this.logPrefix}[generateRound] Start forging block to: ${mySlot} after ${cellTime} ms`
+                );
+                createTaskON('BLOCK_GENERATE', cellTime, {
+                    timestamp: SlotService.getSlotTime(mySlot),
+                    keyPair: this.keyPair,
+                });
+            } else {
+                logger.info(
+                    `${this.logPrefix}[generateRound] Skip forging block to: ${mySlot} after ${cellTime} ms`
+                );
+            }
         }
 
         // create event for end of current round
         // lastSlot + 1 for waiting finish last round
         const lastSlot = RoundRepository.getLastSlotInRound();
-        const RoundEndTime = SlotService.getSlotTime(lastSlot + 1 - SlotService.getSlotNumber());
-        createTaskON('ROUND_FINISH', RoundEndTime);
+        const roundEndTime = SlotService.getSlotRealTime(lastSlot + 1) - new Date().getTime();
+        logger.debug(
+            `${this.logPrefix}[generateRound] The round will be completed in ${roundEndTime} ms`
+        );
+        createTaskON('ROUND_FINISH', roundEndTime);
 
         return new ResponseEntity<void>();
     }
@@ -241,13 +258,15 @@ class RoundService implements IRoundService {
             resp.roundDelegates.push(blocks[i].generatorPublicKey);
         }
 
-        return new ResponseEntity<IRoundSum>({data: resp});
+        return new ResponseEntity<IRoundSum>({ data: resp });
     }
 
     public rebuild(): void {
     }
 
-    public rollBack(): void {
+    public async rollBack(round: Round = RoundRepository.getCurrentRound()): Promise<void> {
+        this.undoUnconfirmed(round);
+        await this.undo(round);
     }
 
     public validate(): boolean {
@@ -257,7 +276,7 @@ class RoundService implements IRoundService {
     public applyUnconfirmed(param: ResponseEntity<IRoundSum>): ResponseEntity<Array<string>> {
         const roundSumResponse = param;
         if (!roundSumResponse.success) {
-            return new ResponseEntity<Array<string>>({errors: [...roundSumResponse.errors, 'applyUnconfirmed']});
+            return new ResponseEntity<Array<string>>({ errors: [...roundSumResponse.errors, 'applyUnconfirmed'] });
         }
         // increase delegates balance
         const delegates = roundSumResponse.data.roundDelegates;
@@ -271,13 +290,13 @@ class RoundService implements IRoundService {
         const lastBlock = BlockRepository.getLastBlock();
         RoundRepository.updateEndHeight(lastBlock.height);
 
-        return new ResponseEntity<Array<string>>({data: delegates});
+        return new ResponseEntity<Array<string>>({ data: delegates });
     }
 
     public undoUnconfirmed(round: Round = RoundRepository.getCurrentRound()): ResponseEntity<Array<string>> {
         const roundSumResponse = this.sumRound(round);
         if (!roundSumResponse.success) {
-            return new ResponseEntity<Array<string>>({errors: [...roundSumResponse.errors, 'undoUnconfirmed']});
+            return new ResponseEntity<Array<string>>({ errors: [...roundSumResponse.errors, 'undoUnconfirmed'] });
         }
         // increase delegates balance
         const delegates = roundSumResponse.data.roundDelegates;
@@ -288,7 +307,7 @@ class RoundService implements IRoundService {
             AccountRepository.updateBalance(delegateAccount, delegateAccount.actualBalance - fee);
         }
 
-        return new ResponseEntity<Array<string>>({data: delegates});
+        return new ResponseEntity<Array<string>>({ data: delegates });
     }
 
     public async apply(round: Round = RoundRepository.getCurrentRound()): Promise<void> {

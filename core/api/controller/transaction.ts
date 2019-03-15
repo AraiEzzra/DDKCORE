@@ -5,11 +5,12 @@ import { Message } from 'shared/model/message';
 export class TransactionController {
 
     @API('TRANSACTION_CREATE')
-    public transactionCreate(message: Message): void {
+    public transactionCreate(message: Message): any {
         /**
-         * Some validate
+         * Some validate "message.body"
          */
         messageON('TRANSACTION_CREATE', message.body);
+        return true;
     }
 }
 

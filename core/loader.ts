@@ -15,9 +15,9 @@ import RoundService from 'core/service/round';
 import BlockService from 'core/service/block';
 import RoundRepository from 'core/repository/round';
 import socket from 'core/repository/socket';
-import { socketAPI } from 'core/api/server';
 import { logger } from 'shared/util/logger';
 const START_SYNC_BLOCKS = 15000;
+import { socketAPI } from 'core/api/server';
 
 // @ts-ignore
 BigInt.prototype.toJSON = function () {
@@ -38,11 +38,11 @@ class Loader {
         initControllers();
         messageON('WARM_UP_FINISHED', null);
         socket.init();
-        socketAPI.run();
         setTimeout(
             () => messageON('EMIT_SYNC_BLOCKS', {}),
             START_SYNC_BLOCKS
         );
+        socketAPI.run();
     }
 
     private async transactionWarmUp(limit: number) {
