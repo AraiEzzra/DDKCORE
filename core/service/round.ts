@@ -9,7 +9,7 @@ import Config from 'shared/util/config';
 import BlockRepository from 'core/repository/block';
 import { Round, Slots } from 'shared/model/round';
 import RoundRepository from 'core/repository/round';
-import { createTaskON } from 'shared/util/bus';
+import { createTaskON, resetTaskON } from 'shared/util/bus';
 import DelegateRepository from 'core/repository/delegate';
 import AccountRepository from 'core/repository/account';
 import { ed } from 'shared/util/ed';
@@ -21,6 +21,8 @@ import { Block } from 'shared/model/block';
 
 const MAX_LATENESS_FORGE_TIME = 500;
 const constants = Config.constants;
+const BLOCK_GENERATE = 'BLOCK_GENERATE';
+const ROUND_FINISH = 'ROUND_FINISH';
 
 interface IHashList {
     hash: string;
@@ -90,9 +92,15 @@ class RoundService implements IRoundService {
     }
 
     public generateHashList(params: { activeDelegates: Array<Delegate>, blockId: string }): Array<IHashList> {
+        const slot = RoundRepository.getCurrentRound() ? SlotService.getSlotNumber() : SlotService.getTheFirsSlot();
+        const index = slot % params.activeDelegates.length;
+        const salt = crypto.createHash('md5')
+            .update(SlotService.getSlotNumber() + params.activeDelegates[index].account.publicKey)
+            .digest('hex');
+
         return params.activeDelegates.map((delegate: Delegate) => {
             const publicKey = delegate.account.publicKey;
-            const hash = crypto.createHash('md5').update(publicKey + params.blockId).digest('hex');
+            const hash = crypto.createHash('md5').update(publicKey + salt).digest('hex');
             return {
                 hash,
                 generatorPublicKey: publicKey
@@ -215,7 +223,7 @@ class RoundService implements IRoundService {
                 logger.info(
                     `${this.logPrefix}[generateRound] Start forging block to: ${mySlot} after ${cellTime} ms`
                 );
-                createTaskON('BLOCK_GENERATE', cellTime, {
+                createTaskON(BLOCK_GENERATE, cellTime, {
                     timestamp: SlotService.getSlotTime(mySlot),
                     keyPair: this.keyPair,
                 });
@@ -233,7 +241,7 @@ class RoundService implements IRoundService {
         logger.debug(
             `${this.logPrefix}[generateRound] The round will be completed in ${roundEndTime} ms`
         );
-        createTaskON('ROUND_FINISH', roundEndTime);
+        createTaskON(ROUND_FINISH, roundEndTime);
 
         return new ResponseEntity<void>();
     }
@@ -265,6 +273,8 @@ class RoundService implements IRoundService {
     }
 
     public async rollBack(round: Round = RoundRepository.getCurrentRound()): Promise<void> {
+        resetTaskON(BLOCK_GENERATE);
+        resetTaskON(ROUND_FINISH);
         this.undoUnconfirmed(round);
         await this.undo(round);
     }
