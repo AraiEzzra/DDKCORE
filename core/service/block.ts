@@ -26,7 +26,6 @@ import { messageON } from 'shared/util/bus';
 import config from 'shared/util/config';
 import SyncService from 'core/service/sync';
 import system from 'core/repository/system';
-import TransactionPGRepo from 'core/repository/transaction/pg';
 import { getAddressByPublicKey } from 'shared/util/account';
 
 const validator: Validator = new ZSchema({});
@@ -595,19 +594,19 @@ class BlockService {
     }
 
     public async applyGenesisBlock(
-        rawBlock: {[key: string]: any},
+        rawBlock: BlockModel,
         verify: boolean = false
     ): Promise<ResponseEntity<void>> {
         rawBlock.transactions.forEach((rawTrs) => {
-            const address = getAddressByPublicKey(rawTrs.sender_public_key);
-            const publicKey = rawTrs.sender_public_key;
+            const address = getAddressByPublicKey(rawTrs.senderPublicKey);
+            const publicKey = rawTrs.senderPublicKey;
             AccountRepo.add({ publicKey: publicKey, address: address});
         });
         const resultTransactions = rawBlock.transactions.map((transaction) => {
-            return TransactionPGRepo.deserialize(transaction);
+            return TransactionRepo.deserialize(transaction);
         });
         rawBlock.transactions = <Array<Transaction<IAsset>>>resultTransactions;
-        const block = new Block({...rawBlock, createdAt: 0, previousBlockId: null});
+        const block = new Block({ ...rawBlock, createdAt: 0, previousBlockId: null });
         await BlockPGRepo.saveOrUpdate(block);
         block.transactions = block.transactions.sort(transactionSortFunc);
         return await this.process(block, false,  null, verify);

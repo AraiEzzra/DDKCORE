@@ -100,8 +100,8 @@ export class SyncService implements ISyncService {
         SyncRepository.sendBlocks(blocks, peer);
     }
 
-    requestCommonBlocks(block): void {
-        SyncRepository.requestCommonBlocks(block);
+    requestCommonBlocks(blockData: { id: string, height: number }): void {
+        SyncRepository.requestCommonBlocks(blockData);
     }
 
     checkCommonBlocks(block: { id: string, height: number }, peer): void {

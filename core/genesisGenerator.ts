@@ -1,6 +1,6 @@
 require('dotenv').config();
 import TransactionService from 'core/service/transaction';
-import TransactionPGRepo from 'core/repository/transaction/pg';
+import TransactionRepo from 'core/repository/transaction';
 import BlockService from 'core/service/block';
 import AccountRepo from 'core/repository/account';
 import { IAsset, Transaction, TransactionModel, TransactionType } from 'shared/model/transaction';
@@ -10,6 +10,7 @@ import fs from 'fs';
 import path from 'path';
 
 const DIR = path.resolve(__dirname);
+const SECRET = 'pre worry asd thank unfair lukas smile oven gospel less latin reason';
 
 const rawAccounts = [
     {
@@ -57,7 +58,7 @@ const rawTransactions: Array<{trs: TransactionModel<IAsset>, privateKey: string}
                 recipientAddress: BigInt('933553974927686133')
             }
         },
-        privateKey: 'hen worry two thank unfair salmon smile oven gospel grab latin reason'
+        privateKey: SECRET
     },
     {
         trs: {
@@ -69,7 +70,7 @@ const rawTransactions: Array<{trs: TransactionModel<IAsset>, privateKey: string}
                 recipientAddress: BigInt('3002421063889966908')
             }
         },
-        privateKey: 'hen worry two thank unfair salmon smile oven gospel grab latin reason'
+        privateKey: SECRET
     },
     {
         trs: {
@@ -81,7 +82,7 @@ const rawTransactions: Array<{trs: TransactionModel<IAsset>, privateKey: string}
                 recipientAddress: BigInt('7897332094363171058')
             }
         },
-        privateKey: 'hen worry two thank unfair salmon smile oven gospel grab latin reason'
+        privateKey: SECRET
     },
     {
         trs: {
@@ -231,15 +232,21 @@ const rawTransactions: Array<{trs: TransactionModel<IAsset>, privateKey: string}
     */
 ];
 
-rawAccounts.forEach((rawAccount) => {
-    AccountRepo.add(rawAccount);
-});
+// rawAccounts.forEach((rawAccount) => {
+//     AccountRepo.add(rawAccount);
+// });
+
+const hash = crypto.createHash('sha256').update(SECRET, 'utf8').digest();
+let keyPairBuffer = ed.makeKeyPair(hash);
+
+const keyPair = {
+    privateKey: keyPairBuffer.privateKey.toString('hex'),
+    publicKey: keyPairBuffer.publicKey.toString('hex'),
+};
 
 const transactions: Array<Transaction<IAsset>> = rawTransactions.map((rawTransaction) => {
-    const hash = crypto.createHash('sha256').update(rawTransaction.privateKey).digest();
-    const keyPair = ed.makeKeyPair(hash);
     rawTransaction.trs.createdAt = 0;
-    const response = TransactionService.create(rawTransaction.trs, keyPair);
+    const response = TransactionService.create(rawTransaction.trs, keyPairBuffer);
     return response.data;
 });
 
@@ -247,18 +254,16 @@ let block = BlockService.create({
     transactions,
     timestamp: 0,
     previousBlock: { id: null },
-    keyPair: { publicKey: 'f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2' }
+    keyPair
 });
 
 block.height = 1;
-block = BlockService.addPayloadHash(block, {
-    privateKey: 'hen worry two thank unfair salmon smile oven gospel grab latin reason',
-    publicKey: ''
-}).data;
+
+block = BlockService.addPayloadHash(block, keyPair).data;
 
 const resultTransactions = block.transactions.map((transaction) => {
     transaction.blockId = block.id;
-    return TransactionPGRepo.serialize(transaction);
+    return TransactionRepo.serialize(transaction);
 });
 block.transactions = <Array<Transaction<IAsset>>>resultTransactions;
 

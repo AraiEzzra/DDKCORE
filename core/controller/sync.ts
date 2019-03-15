@@ -8,6 +8,7 @@ import BlockService from 'core/service/block';
 import { logger } from 'shared/util/logger';
 import BlockController from 'core/controller/block';
 import PeerRepository from 'core/repository/peer';
+import TransactionRepo from 'core/repository/transaction';
 
 export class SyncController extends BaseController {
 
@@ -29,9 +30,9 @@ export class SyncController extends BaseController {
     }
 
     @ON('EMIT_REQUEST_COMMON_BLOCKS')
-    emitRequestCommonBlocks(block: { id: string, height: number }): void {
-        logger.debug(`[Service][Block][emitRequestCommonBlocks] id:${block.id} height:${block.id}`);
-        SyncService.requestCommonBlocks(block);
+    emitRequestCommonBlocks(blockData: { id: string, height: number }): void {
+        logger.debug(`[Service][Block][emitRequestCommonBlocks] id:${blockData.id} height:${blockData.id}`);
+        SyncService.requestCommonBlocks(blockData);
     }
 
     @ON('REQUEST_COMMON_BLOCKS')
@@ -72,6 +73,7 @@ export class SyncController extends BaseController {
     async loadBlocks(action: { data: { blocks: Array<Block> }, peer }): Promise<void> {
         const { data } = action;
         for (let block of data.blocks) {
+            block.transactions.forEach(trs => TransactionRepo.deserialize(trs));
             await BlockController.onReceiveBlock({ data: { block } });
         }
         if (!SyncService.consensus) {
