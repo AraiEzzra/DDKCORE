@@ -1,3 +1,5 @@
+import { BlockModel } from 'shared/model/block';
+
 const env = process.env;
 
 import { ed } from 'shared/util/ed';
@@ -20,6 +22,8 @@ import testnetGenesisBlock from '../../config/testnet/genesisBlock.json';
 import mainnetGenesisBlock from '../../config/mainnet/genesisBlock.json';
 
 interface IConstraint {
+    serverHost?: string;
+    serverPort?: number;
     publicKey?: string;
     airdrop?: {
         account?: bigint;
@@ -240,7 +244,7 @@ interface IConfig {
 class Config {
     public config: IConfig;
     public constants: IConstraint;
-    public genesisBlock: any = {}; // todo change it
+    public genesisBlock: BlockModel; // todo change it
 
     constructor() {
         if (!env.NODE_ENV_IN) {
@@ -273,26 +277,26 @@ class Config {
         // For development mode
         if (env.NODE_ENV_IN === 'development') {
             this.config = defaultCfg;
-            Object.assign(this.genesisBlock, defaultGenesisBlock);
+            this.genesisBlock = defaultGenesisBlock;
             Object.assign(this.constants, devConstants);
         }
 
         // For staging environment
         if (env.NODE_ENV_IN === 'testnet') {
-            Object.assign(this.genesisBlock, testnetGenesisBlock);
+            this.genesisBlock = testnetGenesisBlock as any;
             this.config = testnetCfg;
             Object.assign(this.constants, testConstants);
         }
 
         // For production
         if (env.NODE_ENV_IN === 'mainnet') {
-            Object.assign(this.genesisBlock, mainnetGenesisBlock);
+            this.genesisBlock = mainnetGenesisBlock as any;
             this.config = mainnetCfg;
             Object.assign(this.constants, mainConstants);
         }
 
         if (env.NODE_ENV_IN === 'test') {
-            Object.assign(this.genesisBlock, testnetGenesisBlock);
+            this.genesisBlock = testnetGenesisBlock as any;
             this.config = { coverage: true };
             Object.assign(this.constants, testConstants);
         }

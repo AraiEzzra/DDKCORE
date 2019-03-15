@@ -7,6 +7,7 @@ const previousBlock = new Block({
     createdAt: 90,
     previousBlockId: '8',
     height: 9,
+    transactions: []
 });
 
 const lastBlock = new Block({
@@ -14,6 +15,7 @@ const lastBlock = new Block({
     createdAt: 100,
     previousBlockId: '9',
     height: 10,
+    transactions: []
 });
 
 const anotherPreviousBlock = new Block({
@@ -21,6 +23,7 @@ const anotherPreviousBlock = new Block({
     createdAt: 110,
     previousBlockId: '9A',
     height: 10,
+    transactions: []
 });
 
 const nextBlock = new Block({
@@ -28,6 +31,7 @@ const nextBlock = new Block({
     createdAt: 110,
     previousBlockId: '10',
     height: 11,
+    transactions: []
 });
 
 const nextBlockWithAnotherPreviousBlockId = new Block({
@@ -35,6 +39,7 @@ const nextBlockWithAnotherPreviousBlockId = new Block({
     createdAt: 110,
     previousBlockId: '10A',
     height: 11,
+    transactions: []
 });
 
 const highestBlock = new Block({
@@ -42,6 +47,7 @@ const highestBlock = new Block({
     createdAt: 200,
     previousBlockId: '19',
     height: 20,
+    transactions: []
 });
 
 describe('Block utils', () => {

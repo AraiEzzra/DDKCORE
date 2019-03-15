@@ -272,7 +272,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         return ed.sign(this.getHash(trs), keyPair).toString('hex');
     }
 
-    validate(trs: TransactionModel<T>): ResponseEntity<void> {
+    validate(trs: Transaction<T>): ResponseEntity<void> {
         const errors = [];
 
         if (!trs) {
