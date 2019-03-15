@@ -28,7 +28,8 @@ class BlockController extends BaseController {
         const { data } = action;
         data.block.transactions = data.block.transactions.map(trs => TransactionRepo.deserialize(trs));
 
-        logger.debug(`[Service][Block][onReceiveBlock] id:${data.block.id} height:${data.block.id}`);
+        logger.debug(`[Controller][Block][onReceiveBlock]
+         id: ${data.block.id} height: ${data.block.height} relay: ${data.block.relay}`);
         const validateResponse = BlockService.validate(data.block);
         if (!validateResponse.success) {
             return validateResponse;

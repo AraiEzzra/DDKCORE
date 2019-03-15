@@ -121,7 +121,7 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
         trs.status = TransactionStatus.UNCONFIRM_APPLIED;
 
         if (broadcast) {
-            // TODO: fix broadcast storm
+            // TODO: check broadcast storm
             SyncService.sendUnconfirmedTransaction(trs);
         }
     }

@@ -51,7 +51,10 @@ export class SyncService implements ISyncService {
     }
 
     sendNewBlock(block: Block): void {
-        SyncRepository.sendNewBlock(block);
+        block.relay += 1;
+        if (block.relay < config.constants.MAX_RELAY) {
+            SyncRepository.sendNewBlock(block);
+        }
     }
 
     sendUnconfirmedTransaction(trs: Transaction<any>): void {
