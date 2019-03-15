@@ -51,7 +51,6 @@ class BlockService {
     ;
 
     public async generateBlock(keyPair: IKeyPair, timestamp: number): Promise<ResponseEntity<void>> {
-        logger.debug(`[Service][Block][generateBlock] timestamp ${timestamp}`);
         this.lockTransactionPoolAndQueue();
 
         const transactions: Array<Transaction<object>> =
@@ -474,7 +473,6 @@ class BlockService {
     }
 
     private afterSave(block: Block): ResponseEntity<void> {
-        messageON('transactionsSaved', block.transactions);
         const errors: Array<string> = [];
         for (const trs of block.transactions) {
             const afterSaveResponse: ResponseEntity<void> = TransactionDispatcher.afterSave(trs);

@@ -1,5 +1,5 @@
 import { Timestamp } from 'shared/model/account';
-import { Transaction } from 'shared/model/transaction';
+import { Transaction, IAsset } from 'shared/model/transaction';
 import config from 'shared/util/config';
 
 export type SortBlock = number | string;
@@ -17,7 +17,7 @@ export class BlockModel {
     generatorPublicKey?: string = '';
     signature?: string = '';
     relay?: number; // Memory only
-    transactions: Array<Transaction<object>> = [];
+    transactions: Array<Transaction<IAsset>> = [];
 
     constructor(data: BlockModel) {
         this.relay = 0;

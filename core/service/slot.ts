@@ -1,7 +1,7 @@
 import config from 'shared/util/config';
 import { SECOND } from 'core/util/const';
 
-type EpochTime = number;
+export type EpochTime = number;
 
 class SlotService {
     /**
@@ -91,8 +91,10 @@ class SlotService {
         return Math.floor(date.getTime() / SECOND) * SECOND;
     }
 
-    public getTheFirsSlot() {
-        return Math.floor(this.getSlotNumber() / config.constants.activeDelegates) * config.constants.activeDelegates;
+    public getTheFirstSlot(timestamp: number) {
+        return Math.floor(
+            this.getSlotNumber(timestamp) / config.constants.activeDelegates
+        ) * config.constants.activeDelegates;
     }
 
     public getSlotRealTime(slot: number): number {

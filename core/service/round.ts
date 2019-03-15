@@ -1,11 +1,6 @@
-import { ResponseEntity } from 'shared/model/response';
-import * as crypto from 'crypto';
-import SlotService from 'core/service/slot';
-import Config from 'shared/util/config';
-// todo delete it when find a way to mock services for tests
-// import BlockService from 'test/core/mock/blockService';
-// import { createTaskON } from 'test/core/mock/bus';
-// import BlockRepository from 'test/core/mock/blockRepository';
+import crypto from 'crypto';
+import SlotService, { EpochTime } from 'core/service/slot';
+import config from 'shared/util/config';
 import BlockRepository from 'core/repository/block';
 import { Round, Slots } from 'shared/model/round';
 import RoundRepository from 'core/repository/round';
@@ -18,9 +13,11 @@ import { logger } from 'shared/util/logger';
 import { compose } from 'core/util/common';
 import RoundPGRepository from 'core/repository/round/pg';
 import { Block } from 'shared/model/block';
+import { ResponseEntity } from 'shared/model/response';
+import BlockService from 'core/service/block';
 
 const MAX_LATENESS_FORGE_TIME = 500;
-const constants = Config.constants;
+const constants = config.constants;
 
 interface IHashList {
     hash: string;
@@ -40,9 +37,12 @@ interface IRoundService {
     sortHashList(hashList: Array<{ hash: string, generatorPublicKey: string }>):
         Array<{ hash: string, generatorPublicKey: string }>;
 
-    generatorPublicKeyToSlot(sortedHashList: Array<{ hash: string, generatorPublicKey: string }>): Slots;
+    generatorPublicKeyToSlot(
+        sortedHashList: Array<{ hash: string, generatorPublicKey: string }>,
+        timestamp: number
+    ): Slots;
 
-    generateRound(): ResponseEntity<void>;
+    generateRound(timestamp: number): Promise<void>;
 
     getMyTurn(): number;
 
@@ -66,23 +66,35 @@ interface IRoundService {
 
 }
 
+type IKeyPair = {
+    privateKey: string,
+    publicKey: string,
+};
+
+const delegatesSecrets = [
+    'whale slab bridge virus merry ship bright fiber power outdoor main enforce',
+    'artwork relax sheriff sting fruit return spider reflect cupboard dice goddess slice',
+    'milk exhibit cabbage detail village hero script glory tongue post clinic wish',
+];
+
 class RoundService implements IRoundService {
-    private readonly keyPair: {
-        privateKey: string,
-        publicKey: string,
-    };
     private logPrefix: string = '[RoundService]';
     private isBlockChainReady: boolean = false;
     private isRoundChainRestored: boolean = false;
+    private delegates: { [publicKey: string]: IKeyPair };
 
     constructor() {
-        const hash = crypto.createHash('sha256').update(process.env.FORGE_SECRET, 'utf8').digest();
-        const keyPair = ed.makeKeyPair(hash);
+        this.delegates = {};
 
-        this.keyPair = {
-            privateKey: keyPair.privateKey.toString('hex'),
-            publicKey: keyPair.publicKey.toString('hex'),
-        };
+        delegatesSecrets.forEach(secret => {
+            const hash = crypto.createHash('sha256').update(secret, 'utf8').digest();
+            const keyPair = ed.makeKeyPair(hash);
+            const delegateKeyPair = {
+                privateKey: keyPair.privateKey.toString('hex'),
+                publicKey: keyPair.publicKey.toString('hex'),
+            };
+            this.delegates[delegateKeyPair.publicKey] = delegateKeyPair;
+        });
     }
 
     setIsBlockChainReady(status: boolean) {
@@ -112,15 +124,15 @@ class RoundService implements IRoundService {
         });
     }
 
-    public generatorPublicKeyToSlot(sortedHashList: Array<IHashList>): Slots {
+    public generatorPublicKeyToSlot(sortedHashList: Array<IHashList>, timestamp: number): Slots {
         const lastRound = RoundRepository.getPrevRound();
         const lastBlock = BlockRepository.getLastBlock();
 
         let firstSlot = !lastRound && lastBlock.createdAt === 0 ?
-            SlotService.getTheFirsSlot() : RoundRepository.getLastSlotInRound(lastRound) + 1;
+            SlotService.getTheFirstSlot(timestamp) : RoundRepository.getLastSlotInRound(lastRound) + 1;
 
         return sortedHashList.reduce(
-            (acc: Slots = {}, item: IHashList, i) => {
+            (acc: Object = {}, item: IHashList, i) => {
                 acc[item.generatorPublicKey] = { slot: firstSlot + i };
                 return acc;
             }, {});
@@ -156,7 +168,7 @@ class RoundService implements IRoundService {
         this.generateRound();
     }
 
-    public generateRound(): ResponseEntity<void> {
+    public async generateRound(timestamp: number = 10): Promise<void> {
         /**
          * if triggered by ROUND_FINISH event
          */
@@ -176,66 +188,33 @@ class RoundService implements IRoundService {
         const lastBlock = BlockRepository.getLastBlock();
         if (lastBlock == null) {
             logger.error(`${this.logPrefix}[generateRound] Can't start round: lastBlock is undefined`);
-            return new ResponseEntity<void>({
-                errors: [`${this.logPrefix}[generateRound] Can't start round: lastBlock is undefined`]
-            });
+            process.exit(1);
         }
 
         const delegateResponse = DelegateRepository.getActiveDelegates();
         if (!delegateResponse.success) {
             logger.error(`${this.logPrefix}[generateRound] error: ${delegateResponse.errors}`);
-            return new ResponseEntity<void>({
-                errors: [...delegateResponse.errors, `${this.logPrefix}[generateRound] Can't get Active delegates`]
-            });
+            process.exit(1);
         }
 
-        const slots = compose(
-            this.generatorPublicKeyToSlot,
-            this.sortHashList,
-            this.generateHashList
-        )({ blockId: lastBlock.id, activeDelegates: delegateResponse.data });
+        const hashList = this.generateHashList({ blockId: lastBlock.id, activeDelegates: delegateResponse.data });
+        const sortedHashList = this.sortHashList(hashList);
+        const slots = this.generatorPublicKeyToSlot(sortedHashList, timestamp);
 
         RoundRepository.setCurrentRound({ slots, startHeight: lastBlock.height + 1 });
-        logger.info(
-            `${this.logPrefix}[generateRound] Start round on height: ${RoundRepository.getCurrentRound().startHeight}`
-        );
 
         if (!this.isRoundChainRestored) {
             return;
         }
 
-        const mySlot = this.getMyTurn();
-        if (mySlot) {
-            // start forging block at mySlotTime
-            let cellTime = SlotService.getSlotRealTime(mySlot) - new Date().getTime();
-            if (cellTime < 0 && cellTime + MAX_LATENESS_FORGE_TIME >= 0) {
-                cellTime = 0;
-            }
-            if (cellTime >= 0) {
-                logger.info(
-                    `${this.logPrefix}[generateRound] Start forging block to: ${mySlot} after ${cellTime} ms`
-                );
-                createTaskON('BLOCK_GENERATE', cellTime, {
-                    timestamp: SlotService.getSlotTime(mySlot),
-                    keyPair: this.keyPair,
-                });
-            } else {
-                logger.info(
-                    `${this.logPrefix}[generateRound] Skip forging block to: ${mySlot} after ${cellTime} ms`
-                );
-            }
+        for (const publicKey of Object.keys(slots)) {
+            const slotNumber = slots[publicKey].slot;
+            const createdAt = SlotService.getSlotTime(slotNumber);
+
+            await BlockService.generateBlock(this.delegates[publicKey], createdAt);
         }
 
-        // create event for end of current round
-        // lastSlot + 1 for waiting finish last round
-        const lastSlot = RoundRepository.getLastSlotInRound();
-        const roundEndTime = SlotService.getSlotRealTime(lastSlot + 1) - new Date().getTime();
-        logger.debug(
-            `${this.logPrefix}[generateRound] The round will be completed in ${roundEndTime} ms`
-        );
-        createTaskON('ROUND_FINISH', roundEndTime);
-
-        return new ResponseEntity<void>();
+        return this.generateRound();
     }
 
     public getMyTurn(): number {

@@ -9,6 +9,7 @@ import {
     IBlockPGRepository as IBlockRepositoryPGShared
 } from 'shared/repository/block';
 import { TransactionsByBlockResponse } from 'shared/repository/transaction';
+import { logger } from 'shared/util/logger';
 
 export interface IBlockPGRepository extends IBlockRepositoryPGShared {
 
@@ -158,8 +159,9 @@ class BlockPGRepo implements IBlockPGRepository {
         const query = pgpE.helpers.insert(values, this.columnSet) +
             ' ON CONFLICT(id) DO UPDATE SET ' +
             this.columnSet.assignColumns({ from: 'EXCLUDED', skip: 'id' });
-        await db.none(query);
-        return null;
+        console.log(query);
+
+        await db.query(query);
     }
 }
 

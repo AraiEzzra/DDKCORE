@@ -64,9 +64,7 @@ class BlockRepo implements IBlockRepository {
     public deleteLastBlock(): Block {
         this.memoryBlocks.length = this.memoryBlocks.length - 1;
         this.lastBlock = this.memoryBlocks[this.memoryBlocks.length - 1];
-        messageON('LAST_BLOCKS_UPDATE', {
-            lastBlock: this.lastBlock
-        });
+
         return this.lastBlock;
     }
 
@@ -115,9 +113,7 @@ class BlockRepo implements IBlockRepository {
         if (this.lastNBlockIds.length > config.constants.blockSlotWindow) {
             this.lastNBlockIds.shift();
         }
-        messageON('LAST_BLOCKS_UPDATE', {
-            lastBlock: block
-        });
+
     }
 }
 

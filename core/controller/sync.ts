@@ -89,7 +89,6 @@ export class SyncController extends BaseController {
 
     @ON('LAST_BLOCKS_UPDATE')
     updateHeaders(data: { lastBlock }): void {
-        logger.debug(`[Controller][Sync][updateHeaders]: id ${data.lastBlock.id}, height: ${data.lastBlock.height}`);
         SyncService.updateHeaders(data.lastBlock);
     }
 
