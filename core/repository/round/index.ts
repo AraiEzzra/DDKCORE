@@ -21,11 +21,8 @@ class RoundRepository implements IRoundRepository {
      * setter for current round
      * @param {Round} round
      */
-    public setCurrentRound(round: RoundModel): void {
-        this.currentRound = new Round({
-            startHeight: Number(round.startHeight),
-            slots: round.slots,
-        });
+    public setCurrentRound(round: Round): void {
+        this.currentRound = round;
     }
 
     /**

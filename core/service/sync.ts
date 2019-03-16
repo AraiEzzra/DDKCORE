@@ -89,13 +89,16 @@ export class SyncService implements ISyncService {
             } else {
 
                 await BlockService.deleteLastBlock();
-                this.checkCommonBlock();
+                await this.checkCommonBlock();
             }
         }
     }
 
     requestBlocks(lastBlock, peer = null): void {
-        SyncRepository.requestBlocks({ height: lastBlock.height + 1, limit: 42 }, peer);
+        SyncRepository.requestBlocks({
+            height: lastBlock.height + 1,
+            limit: config.constants.REQUEST_BLOCK_LIMIT
+        }, peer);
     }
 
     sendBlocks(data: { height: number, limit: number }, peer): void {
@@ -116,6 +119,7 @@ export class SyncService implements ISyncService {
         SystemRepository.setBroadhash(lastBlock);
         SystemRepository.addBlockIdInPool(lastBlock);
         SystemRepository.setHeight(lastBlock);
+        // TODO disable for sync state
         SyncRepository.sendHeaders(
             SystemRepository.getHeaders()
         );

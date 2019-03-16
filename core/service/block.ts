@@ -411,6 +411,7 @@ class BlockService {
         }
 
         BlockRepo.add(block);
+        await BlockPGRepo.saveOrUpdate(block);
 
         const errors: Array<string> = [];
         for (const trs of block.transactions) {
@@ -423,7 +424,6 @@ class BlockService {
             return new ResponseEntity<void>({errors: [...errors, 'applyBlock']});
         }
 
-        await BlockPGRepo.saveOrUpdate(block);
         const afterSaveResponse: ResponseEntity<void> = this.afterSave(block);
         if (!afterSaveResponse.success) {
             return new ResponseEntity<void>({errors: [...afterSaveResponse.errors, 'applyBlock']});
@@ -432,9 +432,6 @@ class BlockService {
         logger.debug(`[Service][Block][applyBlock] block ${block.id}, height: ${block.height}, ` +
             `applied with ${trsLength} transactions`
         );
-
-        BlockRepo.setLastBlock(block);
-        // messageON('NEW_BLOCKS', block);
 
         if (broadcast) {
             SyncService.sendNewBlock(block);
@@ -593,23 +590,20 @@ class BlockService {
         return new ResponseEntity<Block>({ data: newLastBlock });
     }
 
-    public async applyGenesisBlock(
-        rawBlock: BlockModel,
-        verify: boolean = false
-    ): Promise<ResponseEntity<void>> {
+    public async applyGenesisBlock(rawBlock: BlockModel): Promise<ResponseEntity<void>> {
         rawBlock.transactions.forEach((rawTrs) => {
             const address = getAddressByPublicKey(rawTrs.senderPublicKey);
             const publicKey = rawTrs.senderPublicKey;
             AccountRepo.add({ publicKey: publicKey, address: address});
         });
-        const resultTransactions = rawBlock.transactions.map((transaction) => {
-            return TransactionRepo.deserialize(transaction);
-        });
+        const resultTransactions = rawBlock.transactions.map((transaction) => 
+            TransactionRepo.deserialize(transaction)
+        );
         rawBlock.transactions = <Array<Transaction<IAsset>>>resultTransactions;
         const block = new Block({ ...rawBlock, createdAt: 0, previousBlockId: null });
-        await BlockPGRepo.saveOrUpdate(block);
+        // await BlockPGRepo.saveOrUpdate(block);
         block.transactions = block.transactions.sort(transactionSortFunc);
-        return await this.process(block, false,  null, verify);
+        return await this.process(block, false,  null, false);
     }
 
     // called from loader

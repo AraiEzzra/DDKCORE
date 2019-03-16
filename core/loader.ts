@@ -11,11 +11,15 @@ import config from 'shared/util/config';
 
 import { Round } from 'shared/model/round';
 import RoundPGRepository from 'core/repository/round/pg';
+import BlockPGRepository from 'core/repository/block/pg';
+import BlockRepository from 'core/repository/block';
+
 import RoundService from 'core/service/round';
 import BlockService from 'core/service/block';
 import RoundRepository from 'core/repository/round';
 import socket from 'core/repository/socket';
 import { logger } from 'shared/util/logger';
+import { Block } from 'shared/model/block';
 const START_SYNC_BLOCKS = 15000;
 
 // @ts-ignore
@@ -31,12 +35,19 @@ class Loader {
         const pathMockData: string = path.join(process.cwd(), 'core/database/sql');
         const filePath = path.join(pathMockData, 'init.sql');
         await db.query(new QueryFile(filePath, { minify: true }));
-        await BlockService.applyGenesisBlock(config.genesisBlock, false);
-        await this.transactionWarmUp(this.limit);
-        await this.roundWarmUp(this.limit);
+
+        await this.blockWarmUp(this.limit);
+        if (!BlockRepository.getGenesisBlock()) {
+            
+            await BlockService.applyGenesisBlock(config.genesisBlock);
+        } else {
+            await this.transactionWarmUp(this.limit);
+            await this.roundWarmUp(this.limit);
+        }
+
         initControllers();
-        messageON('WARM_UP_FINISHED', null);
         socket.init();
+        
         setTimeout(
             () => messageON('EMIT_SYNC_BLOCKS', {}),
             START_SYNC_BLOCKS
@@ -49,7 +60,7 @@ class Loader {
             const transactionBatch: Array<Transaction<IAsset>> =
                 await TransactionPGRepo.getMany(limit, offset);
 
-            for (let trs of transactionBatch) {
+            for (const trs of transactionBatch) {
                 const sender = AccountRepo.add({
                     address: trs.senderAddress,
                     publicKey: trs.senderPublicKey
@@ -66,27 +77,52 @@ class Loader {
     }
 
     private async roundWarmUp(limit) {
-        let offset: number = 0;
+        let offset: number = 2;
 
         do {
-            const roundsBatch: Array<Round> = await RoundPGRepository.getMany(offset);
+            const roundsBatch: Array<Round> = await RoundPGRepository.getMany(limit, offset);
 
             if (!roundsBatch) {
                 break;
             }
 
-            for (let round of roundsBatch) {
-                RoundRepository.setCurrentRound(round);
-                const data = RoundService.sumRound(round);
-                RoundService.applyUnconfirmed(data);
-                RoundRepository.setPrevRound(round);
+            for (const round of roundsBatch) {
+                if (round.endHeight) {
+                    const data = RoundService.sumRound(round);
+                    RoundService.applyUnconfirmed(data);
+                }
             }
 
             if (roundsBatch.length < limit) {
+                RoundRepository.setCurrentRound(roundsBatch[roundsBatch.length - 1]);
+                if (roundsBatch.length > 1) {
+                    RoundRepository.setPrevRound(roundsBatch[roundsBatch.length - 1 - 1]);
+                }
                 break;
             }
             offset += limit;
         } while (true);
+    }
+
+    private async blockWarmUp(limit) {
+        let offset: number = 0;
+        do {
+            const blockBatch: Array<Block> = await BlockPGRepository.getMany(limit, offset);
+
+            if (!blockBatch) {
+                break;
+            }
+
+            for (const block of blockBatch) {
+                BlockRepository.add(block);
+            }
+
+            if (blockBatch.length < limit) {
+                break;
+            }
+            offset += limit;
+        } while (true);
+
     }
 }
 

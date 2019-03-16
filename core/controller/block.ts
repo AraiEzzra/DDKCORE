@@ -2,8 +2,7 @@ import { ResponseEntity } from 'shared/model/response';
 import { Block, BlockModel } from 'shared/model/block';
 import BlockService from 'core/service/block';
 import BlockRepo from 'core/repository/block/';
-import BlockPGRepo from 'core/repository/block/pg';
-import { MAIN, ON } from 'core/util/decorator';
+import { MAIN } from 'core/util/decorator';
 import { BaseController } from 'core/controller/baseController';
 import { logger } from 'shared/util/logger';
 import * as blockUtils from 'core/util/block';
@@ -107,33 +106,6 @@ class BlockController extends BaseController {
         }
         return response;
     }
-
-    @ON('BLOCKCHAIN_READY')
-    public async loadLastNBlocks(): Promise<ResponseEntity<void>> {
-        const blocks: Array<string> = await BlockPGRepo.getLastNBlockIds();
-        BlockRepo.setLastNBlocks(blocks);
-        return new ResponseEntity<void>();
-    }
-
-    // @ON('NEW_BLOCKS')
-    // public updateLastNBlocks(block: Block): ResponseEntity<void> {
-    //     BlockRepo.appendInLastNBlocks(block);
-    //     return new ResponseEntity<void>();
-    // }
-
-    /*
-    @RPC('GET_COMMON_BLOCK')
-    // called from UI
-    private async getCommonBlock(peer: Peer, height: number): Promise<Response<Block>> {
-        const idsResponse: ResponseEntity<{ids: string}> = await BlockService.getIdSequence(height);
-        const ids = idsResponse.data.ids;
-        const recoveryResponse: ResponseEntity<Block> = await BlockService.recoverChain();
-        if (!recoveryResponse.success) {
-            recoveryResponse.errors.push('getCommonBlock');
-        }
-        return recoveryResponse;
-    }
-    */
 }
 
 export default new BlockController();

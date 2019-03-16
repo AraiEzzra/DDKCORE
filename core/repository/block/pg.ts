@@ -133,9 +133,8 @@ class BlockPGRepo implements IBlockPGRepository {
         return rawBlockIds.map(block => block.id);
     }
 
-    async getMany(offset: number, limit?: number): Promise<Array<Block>> {
-        const requestLimit = limit || -1;
-        const rawBlocks: Array<RawBlock> = await db.manyOrNone(queries.getMany(requestLimit), { offset, limit });
+    async getMany(limit: number, offset: number): Promise<Array<Block>> {
+        const rawBlocks: Array<RawBlock> = await db.manyOrNone(queries.getMany(limit), { offset, limit });
         if (!rawBlocks || !rawBlocks.length) {
             return null;
         }

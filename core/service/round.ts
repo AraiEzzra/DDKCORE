@@ -42,7 +42,7 @@ interface IRoundService {
 
     generatorPublicKeyToSlot(sortedHashList: Array<{ hash: string, generatorPublicKey: string }>): Slots;
 
-    generateRound(): ResponseEntity<void>;
+    generateRound(): Promise<ResponseEntity<void>>;
 
     getMyTurn(): number;
 
@@ -88,6 +88,10 @@ class RoundService implements IRoundService {
     setIsBlockChainReady(status: boolean) {
         this.isBlockChainReady = status;
     }
+    
+    getIsBlockChainReady(): boolean {
+        return this.isBlockChainReady;
+    }
 
     public generateHashList(params: { activeDelegates: Array<Delegate>, blockId: string }): Array<IHashList> {
         return params.activeDelegates.map((delegate: Delegate) => {
@@ -126,37 +130,84 @@ class RoundService implements IRoundService {
             }, {});
     }
 
-    public restoreRounds(block: Block = BlockRepository.getLastBlock()) {
+    public async restoreRounds(block: Block = BlockRepository.getLastBlock()): Promise<void> {
         if (!this.isBlockChainReady) {
             return;
         }
+
         if (!RoundRepository.getCurrentRound()) {
             this.isRoundChainRestored = true;
-            this.generateRound();
+            await this.generateRound();
             return;
         }
+
         const currentRound = RoundRepository.getCurrentRound();
         const firstSlot = RoundRepository.getFirstSlotInRound();
         const lastSlot = RoundRepository.getLastSlotInRound();
-
+        console.log('block', SlotService.getSlotTime(firstSlot), block.createdAt, SlotService.getSlotTime(lastSlot));
         if (
             block &&
             currentRound &&
-            block.createdAt >= firstSlot &&
-            block.createdAt < lastSlot
+            block.createdAt < SlotService.getSlotTime(lastSlot)
         ) {
-            // case when block arrive in the middle of the round
+            // case when current slot in the past round
+            if (SlotService.getSlotTime(RoundRepository.getLastSlotInRound() + 1) < SlotService.getTime()) {
+                console.log('case when current slot in the past round');
+                await this.generateRound();
+                return;
+            }
+            // case when current slot in the current round
+            console.log('case when current slot in the current round');
+            this.startBlockGenerateTask();
+            this.startRoundFinishTask();
             return;
         }
 
+        // TODO check it
         if (lastSlot >= SlotService.getSlotNumber()) {
             this.isRoundChainRestored = true;
         }
-
-        this.generateRound();
+        await this.generateRound();
+    }
+    
+    startBlockGenerateTask(): void {
+        const mySlot = this.getMyTurn();
+        if (mySlot) {
+            // start forging block at mySlotTime
+            let cellTime = SlotService.getSlotRealTime(mySlot) - new Date().getTime();
+            if (cellTime < 0 && cellTime + MAX_LATENESS_FORGE_TIME >= 0) {
+                cellTime = 0;
+            }
+            if (cellTime >= 0) {
+                logger.info(
+                    `${this.logPrefix}[generateRound] Start forging block to: ${mySlot} after ${cellTime} ms`
+                );
+                console.log('first slot', SlotService.getTime());
+                console.log('my slot', SlotService.getSlotTime(mySlot));
+                createTaskON('BLOCK_GENERATE', cellTime, {
+                    timestamp: SlotService.getSlotTime(mySlot),
+                    keyPair: this.keyPair,
+                });
+            } else {
+                logger.info(
+                    `${this.logPrefix}[generateRound] Skip forging block to: ${mySlot} after ${cellTime} ms`
+                );
+            }
+        }
+    }
+    
+    startRoundFinishTask(): void {
+        // create event for end of current round
+        // lastSlot + 1 for waiting finish last round
+        const lastSlot = RoundRepository.getLastSlotInRound();
+        const roundEndTime = SlotService.getSlotRealTime(lastSlot + 1) - new Date().getTime();
+        logger.debug(
+            `${this.logPrefix}[generateRound] The round will be completed in ${roundEndTime} ms`
+        );
+        createTaskON('ROUND_FINISH', roundEndTime);
     }
 
-    public generateRound(): ResponseEntity<void> {
+    public async generateRound(): Promise<ResponseEntity<void>> {
         /**
          * if triggered by ROUND_FINISH event
          */
@@ -167,10 +218,10 @@ class RoundService implements IRoundService {
                 this.applyUnconfirmed,
                 this.sumRound
             )(RoundRepository.getCurrentRound());
-            this.apply();
 
             // store pound as previous
             RoundRepository.setPrevRound(RoundRepository.getCurrentRound());
+            // TODO update prev round 
         }
 
         const lastBlock = BlockRepository.getLastBlock();
@@ -195,7 +246,14 @@ class RoundService implements IRoundService {
             this.generateHashList
         )({ blockId: lastBlock.id, activeDelegates: delegateResponse.data });
 
-        RoundRepository.setCurrentRound({ slots, startHeight: lastBlock.height + 1 });
+        const currentRound = new Round({
+            startHeight: lastBlock.height + 1,
+            slots: slots,
+        });
+        RoundRepository.setCurrentRound(currentRound);
+
+        await this.apply(currentRound);
+
         logger.info(
             `${this.logPrefix}[generateRound] Start round on height: ${RoundRepository.getCurrentRound().startHeight}`
         );
@@ -204,42 +262,15 @@ class RoundService implements IRoundService {
             return;
         }
 
-        const mySlot = this.getMyTurn();
-        if (mySlot) {
-            // start forging block at mySlotTime
-            let cellTime = SlotService.getSlotRealTime(mySlot) - new Date().getTime();
-            if (cellTime < 0 && cellTime + MAX_LATENESS_FORGE_TIME >= 0) {
-                cellTime = 0;
-            }
-            if (cellTime >= 0) {
-                logger.info(
-                    `${this.logPrefix}[generateRound] Start forging block to: ${mySlot} after ${cellTime} ms`
-                );
-                createTaskON('BLOCK_GENERATE', cellTime, {
-                    timestamp: SlotService.getSlotTime(mySlot),
-                    keyPair: this.keyPair,
-                });
-            } else {
-                logger.info(
-                    `${this.logPrefix}[generateRound] Skip forging block to: ${mySlot} after ${cellTime} ms`
-                );
-            }
-        }
-
-        // create event for end of current round
-        // lastSlot + 1 for waiting finish last round
-        const lastSlot = RoundRepository.getLastSlotInRound();
-        const roundEndTime = SlotService.getSlotRealTime(lastSlot + 1) - new Date().getTime();
-        logger.debug(
-            `${this.logPrefix}[generateRound] The round will be completed in ${roundEndTime} ms`
-        );
-        createTaskON('ROUND_FINISH', roundEndTime);
+        this.startBlockGenerateTask();
+        this.startRoundFinishTask();
 
         return new ResponseEntity<void>();
     }
 
     public getMyTurn(): number {
-        return RoundRepository.getCurrentRound().slots[constants.publicKey].slot;
+        const mySlot = RoundRepository.getCurrentRound().slots[constants.publicKey];
+        return mySlot && mySlot.slot;
     }
 
     public sumRound(round: Round): ResponseEntity<IRoundSum> {
