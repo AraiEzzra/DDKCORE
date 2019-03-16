@@ -20,6 +20,7 @@ import mainConstants from '../../config/mainnet/constants';
 import defaultGenesisBlock from '../../config/default/genesisBlock.json';
 import testnetGenesisBlock from '../../config/testnet/genesisBlock.json';
 import mainnetGenesisBlock from '../../config/mainnet/genesisBlock.json';
+import { Transaction, IAsset } from 'shared/model/transaction';
 
 interface IConstraint {
     serverHost?: string;
@@ -277,7 +278,11 @@ class Config {
         // For development mode
         if (env.NODE_ENV_IN === 'development') {
             this.config = defaultCfg;
-            this.genesisBlock = defaultGenesisBlock;
+
+            this.genesisBlock = {
+                ...defaultGenesisBlock,
+                transactions: defaultGenesisBlock.transactions.map(trs => new Transaction<IAsset>(trs)),
+            };
             Object.assign(this.constants, devConstants);
         }
 
