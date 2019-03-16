@@ -602,31 +602,9 @@ class BlockService {
         );
         rawBlock.transactions = <Array<Transaction<IAsset>>>resultTransactions;
         const block = new Block({ ...rawBlock, createdAt: 0, previousBlockId: null });
-        // await BlockPGRepo.saveOrUpdate(block);
         block.transactions = block.transactions.sort(transactionSortFunc);
         return await this.process(block, false,  null, false);
     }
-
-    // called from loader
-    // public async loadBlocksOffset(limit: number, offset: number, verify: boolean): Promise<ResponseEntity<Block>> {
-    //     const newLimit = limit + (offset || 0);
-    //     logger.debug('Loading blocks offset', {limit, offset, verify});
-    //
-    //     const blocks: Array<Block> = BlockRepo.getMany(offset || 0, newLimit);
-    //
-    //     const errors: Array<string> = [];
-    //     blocks.forEach(async (block) => {
-    //         if (block.id === config.genesisBlock.id) {
-    //             return await this.applyGenesisBlock(block);
-    //         }
-    //
-    //         const processResponse: ResponseEntity<void> = await this.process(block, false, false, null, verify);
-    //         if (!processResponse.success) {
-    //             errors.push(...processResponse.errors, 'loadBlocksOffset');
-    //         }
-    //     });
-    //     return new ResponseEntity<Block>({data: BlockRepo.getLastBlock(), errors});
-    // }
 
     public create({ transactions, timestamp, previousBlock, keyPair }): Block {
         const blockTransactions = transactions.sort(transactionSortFunc);

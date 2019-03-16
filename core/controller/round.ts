@@ -10,11 +10,6 @@ class RoundController extends BaseController {
         await RoundService.generateRound();
     }
 
-    // @ON('NEW_BLOCKS')
-    // async restoreRounds(block: Block): Promise<void> {
-    //     await RoundService.restoreRounds(block);
-    // }
-
     @ON('WARM_UP_FINISHED')
     async setIsBlockChainReady() {
         RoundService.setIsBlockChainReady(true);

@@ -119,7 +119,6 @@ export class SyncService implements ISyncService {
         SystemRepository.setBroadhash(lastBlock);
         SystemRepository.addBlockIdInPool(lastBlock);
         SystemRepository.setHeight(lastBlock);
-        // TODO disable for sync state
         SyncRepository.sendHeaders(
             SystemRepository.getHeaders()
         );
@@ -131,7 +130,7 @@ export class SyncService implements ISyncService {
         if (!peers.length) {
             return 0;
         }
-        return commonPeers.length / peers.length * TOTAL_PERCENTAGE;
+        return (commonPeers.length + 1) / (peers.length + 1) * TOTAL_PERCENTAGE;
     }
 
     checkBlockConsensus(block: Block): boolean {
@@ -146,7 +145,7 @@ export class SyncService implements ISyncService {
         if (!peers.length) {
             return 0;
         }
-        return commonPeers.length / peers.length * TOTAL_PERCENTAGE;
+        return (commonPeers.length + 1) / (peers.length + 1) * TOTAL_PERCENTAGE;
     }
 
     get consensus(): boolean {
