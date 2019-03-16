@@ -36,18 +36,16 @@ class Loader {
         const filePath = path.join(pathMockData, 'init.sql');
         await db.query(new QueryFile(filePath, { minify: true }));
 
+        initControllers();
         await this.blockWarmUp(this.limit);
         if (!BlockRepository.getGenesisBlock()) {
-            
             await BlockService.applyGenesisBlock(config.genesisBlock);
         } else {
             await this.transactionWarmUp(this.limit);
             await this.roundWarmUp(this.limit);
         }
 
-        initControllers();
         socket.init();
-        
         setTimeout(
             () => messageON('EMIT_SYNC_BLOCKS', {}),
             START_SYNC_BLOCKS

@@ -27,6 +27,7 @@ import config from 'shared/util/config';
 import SyncService from 'core/service/sync';
 import system from 'core/repository/system';
 import { getAddressByPublicKey } from 'shared/util/account';
+import { calculateRoundByTimestamp } from 'core/util/round';
 
 const validator: Validator = new ZSchema({});
 
@@ -487,7 +488,7 @@ class BlockService {
         logger.info(
             `Received new block id: ${block.id} ` +
             `height: ${block.height} ` +
-            `round: ${RoundService.calcRound(block.height)} ` +
+            `round: ${calculateRoundByTimestamp(block.createdAt)} ` +
             `slot: ${slotService.getSlotNumber(block.createdAt)}`
         );
 
@@ -525,8 +526,8 @@ class BlockService {
 
 
     // private validateBlockSlot(block: Block, lastBlock: Block): ResponseEntity<void> {
-    //     const roundNextBlock = RoundService.calcRound(block.height);
-    //     const roundLastBlock = RoundService.calcRound(lastBlock.height);
+    //     const roundNextBlock = calculateRoundByTimestamp(block.createdAt);
+    //     const roundLastBlock = calculateRoundByTimestamp(lastBlock.createdAt);
     //     const activeDelegates = config.constants.activeDelegates;
     //
     //     const errors: Array<string> = [];
@@ -596,7 +597,7 @@ class BlockService {
             const publicKey = rawTrs.senderPublicKey;
             AccountRepo.add({ publicKey: publicKey, address: address});
         });
-        const resultTransactions = rawBlock.transactions.map((transaction) => 
+        const resultTransactions = rawBlock.transactions.map((transaction) =>
             TransactionRepo.deserialize(transaction)
         );
         rawBlock.transactions = <Array<Transaction<IAsset>>>resultTransactions;

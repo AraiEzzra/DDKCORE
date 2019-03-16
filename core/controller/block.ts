@@ -11,6 +11,7 @@ import SlotService from 'core/service/slot';
 import RoundService from 'core/service/round';
 import { messageON } from 'shared/util/bus';
 import TransactionRepo from 'core/repository/transaction';
+import { calculateRoundByTimestamp } from 'core/util/round';
 
 interface BlockGenerateRequest {
     keyPair: {
@@ -82,7 +83,7 @@ class BlockController extends BaseController {
                 `[Service][Block][processIncomingBlock] ` +
                 `Discarded block that does not match with current chain: ${receivedBlock.id}, ` +
                 `height: ${receivedBlock.height}, ` +
-                `round: ${RoundService.calcRound(receivedBlock.height)}, ` +
+                `round: ${calculateRoundByTimestamp(receivedBlock.createdAt)}, ` +
                 `slot: ${SlotService.getSlotNumber(receivedBlock.createdAt)}, ` +
                 `generator: ${receivedBlock.generatorPublicKey}`
             );

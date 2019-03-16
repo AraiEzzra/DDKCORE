@@ -18,6 +18,7 @@ import { logger } from 'shared/util/logger';
 import { compose } from 'core/util/common';
 import RoundPGRepository from 'core/repository/round/pg';
 import { Block } from 'shared/model/block';
+import { calculateRoundByTimestamp } from 'core/util/round';
 
 const MAX_LATENESS_FORGE_TIME = 500;
 const constants = Config.constants;
@@ -40,9 +41,12 @@ interface IRoundService {
     sortHashList(hashList: Array<{ hash: string, generatorPublicKey: string }>):
         Array<{ hash: string, generatorPublicKey: string }>;
 
-    generatorPublicKeyToSlot(sortedHashList: Array<{ hash: string, generatorPublicKey: string }>): Slots;
+    generatorPublicKeyToSlot(
+        sortedHashList: Array<{ hash: string, generatorPublicKey: string }>,
+        timestamp: number
+    ): Slots;
 
-    generateRound(): Promise<ResponseEntity<void>>;
+    generateRound(timestamp: number): Promise<ResponseEntity<void>>;
 
     getMyTurn(): number;
 
@@ -61,9 +65,6 @@ interface IRoundService {
     apply(round: Round): Promise<void>;
 
     undo(round: Round): Promise<void>;
-
-    calcRound(height: number): number;
-
 }
 
 class RoundService implements IRoundService {
@@ -73,7 +74,7 @@ class RoundService implements IRoundService {
     };
     private logPrefix: string = '[RoundService]';
     private isBlockChainReady: boolean = false;
-    private isRoundChainRestored: boolean = false;
+    // private isRoundChainRestored: boolean = false;
 
     constructor() {
         const hash = crypto.createHash('sha256').update(process.env.FORGE_SECRET, 'utf8').digest();
@@ -88,7 +89,7 @@ class RoundService implements IRoundService {
     setIsBlockChainReady(status: boolean) {
         this.isBlockChainReady = status;
     }
-    
+
     getIsBlockChainReady(): boolean {
         return this.isBlockChainReady;
     }
@@ -116,13 +117,8 @@ class RoundService implements IRoundService {
         });
     }
 
-    public generatorPublicKeyToSlot(sortedHashList: Array<IHashList>): Slots {
-        const lastRound = RoundRepository.getPrevRound();
-        const lastBlock = BlockRepository.getLastBlock();
-
-        let firstSlot = !lastRound && lastBlock.createdAt === 0 ?
-            SlotService.getTheFirsSlot() : RoundRepository.getLastSlotInRound(lastRound) + 1;
-
+    public generatorPublicKeyToSlot(sortedHashList: Array<IHashList>, timestamp: number): Slots {
+        let firstSlot = calculateRoundByTimestamp(timestamp);
         return sortedHashList.reduce(
             (acc: Slots = {}, item: IHashList, i) => {
                 acc[item.generatorPublicKey] = { slot: firstSlot + i };
@@ -136,8 +132,8 @@ class RoundService implements IRoundService {
         }
 
         if (!RoundRepository.getCurrentRound()) {
-            this.isRoundChainRestored = true;
-            await this.generateRound();
+            // this.isRoundChainRestored = true;
+            await this.generateRound(block.createdAt);
             return;
         }
 
@@ -151,7 +147,7 @@ class RoundService implements IRoundService {
             block.createdAt < SlotService.getSlotTime(lastSlot)
         ) {
             // case when current slot in the past round
-            if (SlotService.getSlotTime(RoundRepository.getLastSlotInRound() + 1) < SlotService.getTime()) {
+            if (SlotService.getSlotTime(lastSlot + 1) < SlotService.getTime()) {
                 console.log('case when current slot in the past round');
                 await this.generateRound();
                 return;
@@ -164,12 +160,12 @@ class RoundService implements IRoundService {
         }
 
         // TODO check it
-        if (lastSlot >= SlotService.getSlotNumber()) {
-            this.isRoundChainRestored = true;
-        }
+        // if (lastSlot >= SlotService.getSlotNumber()) {
+        //     this.isRoundChainRestored = true;
+        // }
         await this.generateRound();
     }
-    
+
     startBlockGenerateTask(): void {
         const mySlot = this.getMyTurn();
         if (mySlot) {
@@ -195,7 +191,7 @@ class RoundService implements IRoundService {
             }
         }
     }
-    
+
     startRoundFinishTask(): void {
         // create event for end of current round
         // lastSlot + 1 for waiting finish last round
@@ -207,7 +203,7 @@ class RoundService implements IRoundService {
         createTaskON('ROUND_FINISH', roundEndTime);
     }
 
-    public async generateRound(): Promise<ResponseEntity<void>> {
+    public async generateRound(timestamp: number = SlotService.getTime()): Promise<ResponseEntity<void>> {
         /**
          * if triggered by ROUND_FINISH event
          */
@@ -221,7 +217,7 @@ class RoundService implements IRoundService {
 
             // store pound as previous
             RoundRepository.setPrevRound(RoundRepository.getCurrentRound());
-            // TODO update prev round 
+            // TODO update prev round
         }
 
         const lastBlock = BlockRepository.getLastBlock();
@@ -240,11 +236,9 @@ class RoundService implements IRoundService {
             });
         }
 
-        const slots = compose(
-            this.generatorPublicKeyToSlot,
-            this.sortHashList,
-            this.generateHashList
-        )({ blockId: lastBlock.id, activeDelegates: delegateResponse.data });
+        const hashList = this.generateHashList({ blockId: lastBlock.id, activeDelegates: delegateResponse.data });
+        const sortedHashList = this.sortHashList(hashList);
+        const slots = this.generatorPublicKeyToSlot(sortedHashList, timestamp);
 
         const currentRound = new Round({
             startHeight: lastBlock.height + 1,
@@ -258,9 +252,9 @@ class RoundService implements IRoundService {
             `${this.logPrefix}[generateRound] Start round on height: ${RoundRepository.getCurrentRound().startHeight}`
         );
 
-        if (!this.isRoundChainRestored) {
-            return;
-        }
+        // if (!this.isRoundChainRestored) {
+        //     return;
+        // }
 
         this.startBlockGenerateTask();
         this.startRoundFinishTask();
@@ -347,10 +341,6 @@ class RoundService implements IRoundService {
 
     public async undo(round: Round = RoundRepository.getCurrentRound()): Promise<void> {
         await RoundPGRepository.delete(round);
-    }
-
-    public calcRound(height: number): number {
-        return Math.ceil(height / constants.activeDelegates); // todo round has diff amount of blocks
     }
 }
 
