@@ -19,8 +19,9 @@ export class SocketMiddleware {
         const method = API_METHODS[message.code];
 
         if (method && typeof method === 'function' && message.headers.type === MessageType.REQUEST) {
-            const response = method(message, socket);
-            socket.emit(MESSAGE_CHANNEL, response);
+            message.body = method(message, socket);
+            message.headers.type = MessageType.RESPONSE;
+            socket.emit(MESSAGE_CHANNEL, message);
         } else {
             const errors = new ResponseEntity({ errors: ['Invalid request'] });
             const errorMessage = new Message(MessageType.RESPONSE, message.code, errors, message.headers.id);
