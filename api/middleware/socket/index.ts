@@ -43,12 +43,14 @@ export class SocketMiddleware {
 
     onApiMessage(message: Message, socket: any) {
         const { headers } = message;
-        if (headers.type === MessageType.RESPONSE || headers.type === MessageType.EVENT) {
+
+        if (headers.type === MessageType.REQUEST) {
+            this.processMessage(message, socket);
+        } else {
             message.body = new ResponseEntity({ errors: ['Invalid message type'] });
             socket.emit(MESSAGE_CHANNEL, message);
-        } else {
-            this.processMessage(message, socket);
         }
+
     }
 
     onCoreMessage(message: Message, socketServer?: SocketIO.Server) {
