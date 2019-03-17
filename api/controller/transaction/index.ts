@@ -1,28 +1,55 @@
-import { ResponseEntity } from 'shared/model/response';
 import { Filter } from 'api/controller/transaction/types';
 import TransactionService from 'api/service/transaction';
 import { RPC } from 'api/utils/decorators';
+import SocketMiddleware from 'api/middleware/socket';
+import { Message } from 'shared/model/message';
+import {
+    CREATE_TRANSACTION,
+    GE_TRANSACTION_BY_ID,
+    GET_TRANSACTION,
+    GET_TRANSACTION_HISTORY,
+    GET_TRANSACTIONS_BY_BLOCK_ID
+} from 'shared/driver/socket/codes';
 
 export class TransactionController {
 
-    @RPC('GET_ALL_TRS_HISTORY')
-    getTransactions(data?: Filter) {
-        return TransactionService.getMany(data.limit, data.offset, data.sort, data.type);
+
+    constructor() {
+        this.createTransaction = this.createTransaction.bind(this);
+        this.getTransactions = this.getTransactions.bind(this);
+        this.getTransactionById = this.getTransactionById.bind(this);
+        this.getTransactions = this.getTransactions.bind(this);
+        this.getTransactionsByBlockId = this.getTransactionsByBlockId.bind(this);
     }
 
-    @RPC('GET_TRS')
-    public getTransaction(data: string) {
-        return TransactionService.getOne(data);
+    @RPC(CREATE_TRANSACTION)
+    createTransaction(message: Message, socket: any) {
+        SocketMiddleware.emitToCore(message, socket);
     }
 
-    @RPC('CREATE_TRS')
-    public createTransaction(data: any): void {
-        /**TODO */
-        TransactionService.createTransaction(data);
+
+    @RPC(GET_TRANSACTION)
+    getTransaction(message: Message, socket: any) {
+        const { body, headers, code } = message;
+
+        const transactionResponse = TransactionService.getOne(body);
+        SocketMiddleware.emitToClient(headers.id, code, transactionResponse, socket);
     }
 
-    @RPC('GET_TRS_BY_BLOCK_ID)')
-    getTransactionsByBlockId(blockId: number,  filter: Filter) {
+    @RPC(GE_TRANSACTION_BY_ID)
+    getTransactionById(message: Message, socket: any) {
+
+    }
+
+    @RPC(GET_TRANSACTION_HISTORY)
+    getTransactions(message: Message, socket: any) {
+        const { body, headers, code } = message;
+        const transactionsResponse = TransactionService.getMany(body.limit, body.offset, body.sort, body.type);
+    }
+
+
+    @RPC(GET_TRANSACTIONS_BY_BLOCK_ID)
+    getTransactionsByBlockId(blockId: number, filter: Filter) {
         return TransactionService.getTrsByBlockId(blockId, filter.limit, filter.offset);
     }
 }

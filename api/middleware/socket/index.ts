@@ -8,6 +8,7 @@ import { MESSAGE_CHANNEL } from 'shared/driver/socket/channels';
 import { SOCKET_TIMEOUT_MS } from 'shared/config/socket';
 import coreSocketClient from 'api/socket/client';
 import { ResponseEntity } from 'shared/model/response';
+import TransactionControllerInstance, { TransactionController } from 'api/controller/transaction';
 
 type RequestProcessor = {
     socket: any,
@@ -20,6 +21,7 @@ export class SocketMiddleware {
     private referredUsersController: ReferredUsersController;
     private accountController: AccountController;
     private delegateController: DelegateController;
+    private transactionController: TransactionController;
 
     private requests: Map<string, RequestProcessor>;
 
@@ -28,6 +30,7 @@ export class SocketMiddleware {
         this.referredUsersController = ReferredUsersControllerInstance;
         this.accountController = AccountControllerInstance;
         this.delegateController = DelegateControllerInstance;
+        this.transactionController = TransactionControllerInstance;
 
         this.requests = new Map();
     }
@@ -43,15 +46,18 @@ export class SocketMiddleware {
 
     onApiMessage(message: Message, socket: any) {
         const { headers } = message;
-        if (headers.type === MessageType.RESPONSE || headers.type === MessageType.EVENT) {
+
+        if (headers.type === MessageType.REQUEST) {
+            this.processMessage(message, socket);
+        } else {
             message.body = new ResponseEntity({ errors: ['Invalid message type'] });
             socket.emit(MESSAGE_CHANNEL, message);
-        } else {
-            this.processMessage(message, socket);
         }
+
     }
 
     onCoreMessage(message: Message, socketServer?: SocketIO.Server) {
+        console.log('ON CORE MESSAGE', message);
         if (message.headers.type === MessageType.EVENT) {
             socketServer.emit(MESSAGE_CHANNEL, message);
         }
@@ -99,6 +105,7 @@ export class SocketMiddleware {
 
     buildRequestCleaner(message: Message, socket: any) {
         return setTimeout(() => {
+            console.log('CLEANING....');
             message.body = new ResponseEntity({ errors: ['Request timeout'] });
             message.headers.type = MessageType.RESPONSE;
             this.requests.delete(message.headers.id);

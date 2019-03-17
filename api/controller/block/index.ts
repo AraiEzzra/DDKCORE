@@ -1,21 +1,37 @@
-import {Block, SortBlock} from 'shared/model/block';
+import { Block } from 'shared/model/block';
 import BlockService from 'api/service/block';
 import { ResponseEntity } from 'shared/model/response';
-import { reqGetBlocks } from 'api/controller/block/types';
 import { RPC } from 'api/utils/decorators';
+import { GET_BLOCK_BY_ID, GET_BLOCKS_HISTORY } from 'shared/driver/socket/codes';
+import SocketMiddleware from 'api/middleware/socket';
+import { Message } from 'shared/model/message';
 
 export class BlockController {
 
-    @RPC('GET_BLOCKS_HISTORY')
-    public getBlocksHistory(data?: reqGetBlocks) {
-        const blocks: ResponseEntity<Array<Block>> = BlockService.getMany(data);
-        return blocks;
+    constructor() {
+        this.getBlocksHistory = this.getBlocksHistory.bind(this);
+        this.getBlock = this.getBlock.bind(this);
     }
 
-    @RPC('GET_BLOCK')
-    public getBlockHistory(data: SortBlock) {
-        const block: ResponseEntity<Block> = BlockService.getOne(data);
-        return block;
+    @RPC(GET_BLOCKS_HISTORY)
+    public getBlocksHistory(message: Message, socket: any) {
+        const { body, headers, code } = message;
+        const blocksResponse: ResponseEntity<Array<Block>> = BlockService.getMany(body);
+
+        blocksResponse.success
+            ? SocketMiddleware.emitToClient(headers.id, code, blocksResponse, socket)
+            : SocketMiddleware.emitToCore(message, socket);
+    }
+
+    @RPC(GET_BLOCK_BY_ID)
+    public getBlock(message: Message, socket: any) {
+
+        const { body, headers, code } = message;
+        const blocksResponse: ResponseEntity<Block> = BlockService.getOne(body);
+
+        blocksResponse.success
+            ? SocketMiddleware.emitToClient(headers.id, code, blocksResponse, socket)
+            : SocketMiddleware.emitToCore(message, socket);
     }
 }
 
