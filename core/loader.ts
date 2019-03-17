@@ -16,6 +16,7 @@ import BlockService from 'core/service/block';
 import RoundRepository from 'core/repository/round';
 import socket from 'core/repository/socket';
 import { logger } from 'shared/util/logger';
+import { socketRPCServer } from 'core/api/server';
 const START_SYNC_BLOCKS = 15000;
 
 // @ts-ignore
@@ -41,6 +42,7 @@ class Loader {
             () => messageON('EMIT_SYNC_BLOCKS', {}),
             START_SYNC_BLOCKS
         );
+        socketRPCServer.run();
     }
 
     private async transactionWarmUp(limit: number) {
