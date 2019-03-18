@@ -2,13 +2,9 @@ import config from 'shared/util/config';
 import { SECOND } from 'core/util/const';
 
 type EpochTime = number;
+const { SLOT_INTERVAL} = config.constants;
 
 class SlotService {
-    /**
-     * @property {number} interval - Slot time interval in seconds.
-     */
-    private interval: number = 10;
-
     /**
      * Gets constant time from ddk epoch.
      * @returns {number} epochTime from constants.
@@ -55,7 +51,7 @@ class SlotService {
      * @return {number} input time / slot interval.
      */
     public getSlotNumber(epochTime: EpochTime = this.getTime()): number {
-        return Math.floor(epochTime / this.interval);
+        return Math.floor(epochTime / SLOT_INTERVAL);
     }
 
     /**
@@ -64,7 +60,7 @@ class SlotService {
      * @return {number} input slot * slot interval.
      */
     public getSlotTime(slot: number): EpochTime {
-        return slot * this.interval;
+        return slot * SLOT_INTERVAL;
     }
 
     /**

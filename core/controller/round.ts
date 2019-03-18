@@ -6,19 +6,14 @@ import { Block } from 'shared/model/block';
 class RoundController extends BaseController {
 
     @ON('ROUND_FINISH')
-    generateRound(): void {
-        RoundService.generateRound();
-    }
-
-    @ON('NEW_BLOCKS')
-    restoreRounds(block: Block) {
-        RoundService.restoreRounds(block);
+    async generateRound(): Promise<void> {
+        await RoundService.generateRound();
     }
 
     @ON('WARM_UP_FINISHED')
-    setIsBlockChainReady() {
+    async setIsBlockChainReady() {
         RoundService.setIsBlockChainReady(true);
-        RoundService.restoreRounds();
+        await RoundService.restoreRounds();
     }
 }
 

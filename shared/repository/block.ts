@@ -7,16 +7,10 @@ export type BlockId = string;
 export interface IBlockRepository {
 
     add(block: Block): Block;
-    delete(block: Block): DeletedBlockId;
-    deleteAfterBlock(blockId: BlockId): void;
-    getById(blockId: BlockId): Block;
     getGenesisBlock(): Block;
     getLastBlock(): Block;
-    getLastNBlockIds(): Array<BlockId>;
     getMany(offset: number, limit?: number): Array<Block>;
     isExist(blockId: BlockId): boolean;
-    setLastBlock(block: Block): void;
-
 }
 
 export interface IBlockPGRepository {
@@ -30,7 +24,7 @@ export interface IBlockPGRepository {
     getGenesisBlock(): Promise<Block>;
     getLastBlock(): Promise<Block>;
     getLastNBlockIds(): Promise<Array<BlockId>>;
-    getMany(offset: number, limit?: number): Promise<Array<Block>>;
+    getMany(limit: number, offset: number): Promise<Array<Block>>;
     isExist(blockId: BlockId): Promise<boolean>;
     saveOrUpdate(block: Block | Array<Block>): Promise<void>;
 

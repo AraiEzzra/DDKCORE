@@ -47,16 +47,16 @@ class BlockPGRepo implements IBlockPGRepository {
         };
     }
 
-    deserialize(rawBlock: RawBlock, radix: number = 10): Block {
+    deserialize(rawBlock: RawBlock): Block {
         return new Block({
             id: rawBlock.id,
-            version: parseInt(rawBlock.version, radix),
-            createdAt: parseInt(rawBlock.created_at, radix),
-            height: parseInt(rawBlock.height, radix),
+            version: Number(rawBlock.version),
+            createdAt: Number(rawBlock.created_at),
+            height: Number(rawBlock.height),
             previousBlockId: rawBlock.previous_block_id,
-            transactionCount: parseInt(rawBlock.transaction_count, radix),
-            amount: rawBlock.amount,
-            fee: rawBlock.fee,
+            transactionCount: Number(rawBlock.transaction_count),
+            amount: Number(rawBlock.amount),
+            fee: Number(rawBlock.fee),
             payloadHash: rawBlock.payload_hash,
             generatorPublicKey: rawBlock.generator_public_key,
             signature: rawBlock.signature,
@@ -133,9 +133,8 @@ class BlockPGRepo implements IBlockPGRepository {
         return rawBlockIds.map(block => block.id);
     }
 
-    async getMany(offset: number, limit?: number): Promise<Array<Block>> {
-        const requestLimit = limit || -1;
-        const rawBlocks: Array<RawBlock> = await db.manyOrNone(queries.getMany(requestLimit), { offset, limit });
+    async getMany(limit: number, offset: number): Promise<Array<Block>> {
+        const rawBlocks: Array<RawBlock> = await db.manyOrNone(queries.getMany(limit), { offset, limit });
         if (!rawBlocks || !rawBlocks.length) {
             return null;
         }

@@ -27,6 +27,7 @@ import config from 'shared/util/config';
 import SyncService from 'core/service/sync';
 import system from 'core/repository/system';
 import { getAddressByPublicKey } from 'shared/util/account';
+import { calculateRoundByTimestamp } from 'core/util/round';
 
 const validator: Validator = new ZSchema({});
 
@@ -411,6 +412,7 @@ class BlockService {
         }
 
         BlockRepo.add(block);
+        await BlockPGRepo.saveOrUpdate(block);
 
         const errors: Array<string> = [];
         for (const trs of block.transactions) {
@@ -423,7 +425,6 @@ class BlockService {
             return new ResponseEntity<void>({errors: [...errors, 'applyBlock']});
         }
 
-        await BlockPGRepo.saveOrUpdate(block);
         const afterSaveResponse: ResponseEntity<void> = this.afterSave(block);
         if (!afterSaveResponse.success) {
             return new ResponseEntity<void>({errors: [...afterSaveResponse.errors, 'applyBlock']});
@@ -432,9 +433,6 @@ class BlockService {
         logger.debug(`[Service][Block][applyBlock] block ${block.id}, height: ${block.height}, ` +
             `applied with ${trsLength} transactions`
         );
-
-        BlockRepo.setLastBlock(block);
-        // messageON('NEW_BLOCKS', block);
 
         if (broadcast) {
             SyncService.sendNewBlock(block);
@@ -490,7 +488,7 @@ class BlockService {
         logger.info(
             `Received new block id: ${block.id} ` +
             `height: ${block.height} ` +
-            `round: ${RoundService.calcRound(block.height)} ` +
+            `round: ${calculateRoundByTimestamp(block.createdAt)} ` +
             `slot: ${slotService.getSlotNumber(block.createdAt)}`
         );
 
@@ -528,8 +526,8 @@ class BlockService {
 
 
     // private validateBlockSlot(block: Block, lastBlock: Block): ResponseEntity<void> {
-    //     const roundNextBlock = RoundService.calcRound(block.height);
-    //     const roundLastBlock = RoundService.calcRound(lastBlock.height);
+    //     const roundNextBlock = calculateRoundByTimestamp(block.createdAt);
+    //     const roundLastBlock = calculateRoundByTimestamp(lastBlock.createdAt);
     //     const activeDelegates = config.constants.activeDelegates;
     //
     //     const errors: Array<string> = [];
@@ -593,45 +591,20 @@ class BlockService {
         return new ResponseEntity<Block>({ data: newLastBlock });
     }
 
-    public async applyGenesisBlock(
-        rawBlock: BlockModel,
-        verify: boolean = false
-    ): Promise<ResponseEntity<void>> {
+    public async applyGenesisBlock(rawBlock: BlockModel): Promise<ResponseEntity<void>> {
         rawBlock.transactions.forEach((rawTrs) => {
             const address = getAddressByPublicKey(rawTrs.senderPublicKey);
             const publicKey = rawTrs.senderPublicKey;
             AccountRepo.add({ publicKey: publicKey, address: address});
         });
-        const resultTransactions = rawBlock.transactions.map((transaction) => {
-            return TransactionRepo.deserialize(transaction);
-        });
+        const resultTransactions = rawBlock.transactions.map((transaction) =>
+            TransactionRepo.deserialize(transaction)
+        );
         rawBlock.transactions = <Array<Transaction<IAsset>>>resultTransactions;
         const block = new Block({ ...rawBlock, createdAt: 0, previousBlockId: null });
-        await BlockPGRepo.saveOrUpdate(block);
         block.transactions = block.transactions.sort(transactionSortFunc);
-        return await this.process(block, false,  null, verify);
+        return await this.process(block, false,  null, false);
     }
-
-    // called from loader
-    // public async loadBlocksOffset(limit: number, offset: number, verify: boolean): Promise<ResponseEntity<Block>> {
-    //     const newLimit = limit + (offset || 0);
-    //     logger.debug('Loading blocks offset', {limit, offset, verify});
-    //
-    //     const blocks: Array<Block> = BlockRepo.getMany(offset || 0, newLimit);
-    //
-    //     const errors: Array<string> = [];
-    //     blocks.forEach(async (block) => {
-    //         if (block.id === config.genesisBlock.id) {
-    //             return await this.applyGenesisBlock(block);
-    //         }
-    //
-    //         const processResponse: ResponseEntity<void> = await this.process(block, false, false, null, verify);
-    //         if (!processResponse.success) {
-    //             errors.push(...processResponse.errors, 'loadBlocksOffset');
-    //         }
-    //     });
-    //     return new ResponseEntity<Block>({data: BlockRepo.getLastBlock(), errors});
-    // }
 
     public create({ transactions, timestamp, previousBlock, keyPair }): Block {
         const blockTransactions = transactions.sort(transactionSortFunc);
