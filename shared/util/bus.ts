@@ -20,7 +20,10 @@ export function createTaskON(topicName: string, callTime: number, data: any = nu
         logger.debug(`[Bus][createTaskON] topicName ${topicName}, the timer has been stopped`);
         clearTimeout(tasks[topicName]);
     }
-    tasks[topicName] = setTimeout(() => messageON(topicName, data), callTime);
+    tasks[topicName] = setTimeout(() => {
+        messageON(topicName, data);
+        delete tasks[topicName];
+    }, callTime);
 }
 
 export function resetTaskON(topicName): void {
