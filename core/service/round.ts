@@ -138,9 +138,8 @@ class RoundService implements IRoundService {
         }
 
         const currentRound = RoundRepository.getCurrentRound();
-        const firstSlot = RoundRepository.getFirstSlotInRound();
         const lastSlot = RoundRepository.getLastSlotInRound();
-        console.log('block', SlotService.getSlotTime(firstSlot), block.createdAt, SlotService.getSlotTime(lastSlot));
+
         if (
             block &&
             currentRound &&
@@ -178,8 +177,6 @@ class RoundService implements IRoundService {
                 logger.info(
                     `${this.logPrefix}[generateRound] Start forging block to: ${mySlot} after ${cellTime} ms`
                 );
-                console.log('first slot', SlotService.getTime());
-                console.log('my slot', SlotService.getSlotTime(mySlot));
                 createTaskON('BLOCK_GENERATE', cellTime, {
                     timestamp: SlotService.getSlotTime(mySlot),
                     keyPair: this.keyPair,

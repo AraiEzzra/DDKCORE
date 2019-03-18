@@ -15,7 +15,6 @@ import mainConstants from '../../config/mainnet/constants';
 import defaultGenesisBlock from '../../config/default/genesisBlock.json';
 import testnetGenesisBlock from '../../config/testnet/genesisBlock.json';
 import mainnetGenesisBlock from '../../config/mainnet/genesisBlock.json';
-import { Transaction, IAsset } from 'shared/model/transaction';
 
 const env = process.env;
 
