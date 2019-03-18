@@ -11,6 +11,7 @@ import { ResponseEntity } from 'shared/model/response';
 import TransactionControllerInstance, { TransactionController } from 'api/controller/transaction';
 import BlockControllerInstance, { BlockController } from 'api/controller/block';
 import RoundControllerInstance, { RoundController } from 'api/controller/round';
+import {logger} from 'shared/util/logger';
 
 type RequestProcessor = {
     socket: any,
@@ -48,6 +49,7 @@ export class SocketMiddleware {
     onConnect(socket: any) {
         console.log('Socket %s connected', JSON.stringify(socket.handshake));
         socket.on(MESSAGE_CHANNEL, (data: Message) => this.onApiMessage(data, socket));
+        logger.info(`[ API ]: CONNECT NEW WALLET ${socket.handshake}`);
     }
 
     onApiMessage(message: Message, socket: any) {
@@ -63,6 +65,7 @@ export class SocketMiddleware {
     onCoreMessage(message: Message, socketServer?: SocketIO.Server) {
         if (message.headers.type === MessageType.EVENT) {
             socketServer.emit(MESSAGE_CHANNEL, message);
+            logger.info(`[ API ]: EMIT TO CORE ${message.code}`);
         }
         this.emitToClient(message.headers.id, message.code, message.body);
     }
@@ -75,6 +78,7 @@ export class SocketMiddleware {
             const errors = new ResponseEntity({ errors: ['Invalid request'] });
             const errorMessage = new Message(MessageType.RESPONSE, message.code, errors, message.headers.id);
             socket.emit(MESSAGE_CHANNEL, errorMessage);
+            logger.error(`ERROR [ API ]: EMIT TO WALLET ${socket.handshake}`);
         }
     }
 
@@ -84,6 +88,7 @@ export class SocketMiddleware {
 
         if (socketClient) {
             socketClient.emit(MESSAGE_CHANNEL, message);
+            logger.info(`[ API ]: Emit to WALLET: code - ${message.code}`);
         } else {
             this.emitAndClear(message);
         }
@@ -94,6 +99,7 @@ export class SocketMiddleware {
         const cleaner = this.buildRequestCleaner(message, socket);
         this.requests.set(message.headers.id, { socket, cleaner });
         coreSocketClient.emit(MESSAGE_CHANNEL, message);
+        logger.info(`[ API ]: Emit to CORE: code - ${message.code}`);
     }
 
     emitAndClear(message: Message) {
@@ -103,6 +109,7 @@ export class SocketMiddleware {
             clearInterval(cleaner);
             socket.emit(MESSAGE_CHANNEL, message);
             this.requests.delete(message.headers.id);
+            logger.info(`[ API ]: Emit and Clear to WALLET: code - ${message.code}`);
         }
     }
 
@@ -112,6 +119,7 @@ export class SocketMiddleware {
             message.headers.type = MessageType.RESPONSE;
             this.requests.delete(message.headers.id);
             socket.emit(MESSAGE_CHANNEL, message);
+            logger.error(`ERROR BY TIMEOUT [ API ]: EMIT TO WALLET: code - ${message.code}`);
         }, SOCKET_TIMEOUT_MS);
     }
 }

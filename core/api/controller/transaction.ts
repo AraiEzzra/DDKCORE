@@ -1,6 +1,7 @@
 import { messageON } from 'shared/util/bus';
 import { API } from 'core/api/util/decorators';
 import { Message } from 'shared/model/message';
+import { logger } from 'shared/util/logger';
 
 export class TransactionController {
 
@@ -10,6 +11,7 @@ export class TransactionController {
          * Some validate
          */
         messageON('TRANSACTION_CREATE', message.body);
+        logger.info('[ CORE | API ]: EVENT "TRANSACTION_CREATE" ADDED TO BUS');
     }
 }
 
