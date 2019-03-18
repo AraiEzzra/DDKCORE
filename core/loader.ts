@@ -1,4 +1,4 @@
-import path from 'path';
+import * as path from 'path';
 import db from 'shared/driver/db';
 import { QueryFile } from 'pg-promise';
 import TransactionDispatcher from 'core/service/transaction';
@@ -13,24 +13,39 @@ import { Round } from 'shared/model/round';
 import RoundPGRepository from 'core/repository/round/pg';
 import RoundService from 'core/service/round';
 import BlockService from 'core/service/block';
+import RoundRepository from 'core/repository/round';
+import socket from 'core/repository/socket';
+import { socketAPI } from 'core/api/server';
+import { logger } from 'shared/util/logger';
+const START_SYNC_BLOCKS = 15000;
+
+// @ts-ignore
+BigInt.prototype.toJSON = function () {
+    return this.toString();
+};
 
 class Loader {
     private limit = 1000;
 
     public async start() {
-
-        await this.transactionWarmUp(this.limit);
-        await this.roundWarmUp(this.limit);
-        await BlockService.applyGenesisBlock(config.genesisBlock);
-        initControllers();
-        messageON('WARM_UP_FINISHED', null);
-    }
-
-    private async transactionWarmUp(limit: number) {
+        logger.debug('LOADER START');
         const pathMockData: string = path.join(process.cwd(), 'core/database/sql');
         const filePath = path.join(pathMockData, 'init.sql');
         await db.query(new QueryFile(filePath, { minify: true }));
+        await BlockService.applyGenesisBlock(config.genesisBlock, false);
+        await this.transactionWarmUp(this.limit);
+        await this.roundWarmUp(this.limit);
+        initControllers();
+        messageON('WARM_UP_FINISHED', null);
+        socket.init();
+        socketAPI.run();
+        setTimeout(
+            () => messageON('EMIT_SYNC_BLOCKS', {}),
+            START_SYNC_BLOCKS
+        );
+    }
 
+    private async transactionWarmUp(limit: number) {
         let offset = 0;
         do {
             const transactionBatch: Array<Transaction<IAsset>> =
@@ -63,8 +78,10 @@ class Loader {
             }
 
             for (let round of roundsBatch) {
+                RoundRepository.setCurrentRound(round);
                 const data = RoundService.sumRound(round);
                 RoundService.applyUnconfirmed(data);
+                RoundRepository.setPrevRound(round);
             }
 
             if (roundsBatch.length < limit) {
@@ -72,7 +89,6 @@ class Loader {
             }
             offset += limit;
         } while (true);
-
     }
 }
 
