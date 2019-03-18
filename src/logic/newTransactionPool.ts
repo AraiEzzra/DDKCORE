@@ -311,9 +311,12 @@ export class TransactionQueue {
 
     // TODO can be optimized if check senderId and recipientId
     reshuffle() {
-        while (this.conflictedQueue.length > 0) {
-            this.push(this.conflictedQueue.pop().transaction);
-        }
+        // while (this.conflictedQueue.length > 0) {
+        //     this.push(this.conflictedQueue.pop().transaction);
+        // }
+        this.queue.push(...this.conflictedQueue.map(obj => obj.transaction));
+        this.conflictedQueue.length = 0;
+        this.process();
     }
 
     async process(): Promise<void> {
