@@ -41,7 +41,7 @@ class RoundPGRepository implements IRoundPGRepository {
     }
 
     async getMany(limit: number, offset: number): Promise<Array<Round>> {
-        const rawRounds: Array<RawRound> = await db.manyOrNone(queries.getMany(limit), { offset, limit });
+        const rawRounds: Array<RawRound> = await db.manyOrNone(queries.getMany, { offset, limit });
         if (!rawRounds) {
             return;
         }
