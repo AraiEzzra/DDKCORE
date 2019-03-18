@@ -4,7 +4,7 @@ import {ISocketServer, SocketServer} from 'shared/driver/socket/server';
 
 const io = require('socket.io');
 
-export class CoreApiSocketServer extends SocketServer implements ISocketServer {
+export class CoreRPCSocketServer extends SocketServer implements ISocketServer {
 
     run() {
         this.socket = io(this.port, this.config);
