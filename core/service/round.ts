@@ -19,6 +19,7 @@ import { compose } from 'core/util/common';
 import RoundPGRepository from 'core/repository/round/pg';
 import { Block } from 'shared/model/block';
 import { ActionTypes } from 'core/util/actionTypes';
+import { calculateRoundByTimestamp } from 'core/util/round';
 
 const MAX_LATENESS_FORGE_TIME = 500;
 const constants = Config.constants;
@@ -42,9 +43,12 @@ interface IRoundService {
     sortHashList(hashList: Array<{ hash: string, generatorPublicKey: string }>):
         Array<{ hash: string, generatorPublicKey: string }>;
 
-    generatorPublicKeyToSlot(sortedHashList: Array<{ hash: string, generatorPublicKey: string }>): Slots;
+    generatorPublicKeyToSlot(
+        sortedHashList: Array<{ hash: string, generatorPublicKey: string }>,
+        timestamp: number
+    ): Slots;
 
-    generateRound(): ResponseEntity<void>;
+    generateRound(timestamp: number): Promise<ResponseEntity<void>>;
 
     getMyTurn(): number;
 
@@ -63,9 +67,6 @@ interface IRoundService {
     apply(round: Round): Promise<void>;
 
     undo(round: Round): Promise<void>;
-
-    calcRound(height: number): number;
-
 }
 
 class RoundService implements IRoundService {
@@ -75,7 +76,7 @@ class RoundService implements IRoundService {
     };
     private logPrefix: string = '[RoundService]';
     private isBlockChainReady: boolean = false;
-    private isRoundChainRestored: boolean = false;
+    // private isRoundChainRestored: boolean = false;
 
     constructor() {
         const hash = crypto.createHash('sha256').update(process.env.FORGE_SECRET, 'utf8').digest();
@@ -89,6 +90,10 @@ class RoundService implements IRoundService {
 
     setIsBlockChainReady(status: boolean) {
         this.isBlockChainReady = status;
+    }
+
+    getIsBlockChainReady(): boolean {
+        return this.isBlockChainReady;
     }
 
     public generateHashList(params: { activeDelegates: Array<Delegate>, blockId: string }): Array<IHashList> {
@@ -114,13 +119,8 @@ class RoundService implements IRoundService {
         });
     }
 
-    public generatorPublicKeyToSlot(sortedHashList: Array<IHashList>): Slots {
-        const lastRound = RoundRepository.getPrevRound();
-        const lastBlock = BlockRepository.getLastBlock();
-
-        let firstSlot = !lastRound && lastBlock.createdAt === 0 ?
-            SlotService.getTheFirsSlot() : RoundRepository.getLastSlotInRound(lastRound) + 1;
-
+    public generatorPublicKeyToSlot(sortedHashList: Array<IHashList>, timestamp: number): Slots {
+        let firstSlot = calculateRoundByTimestamp(timestamp);
         return sortedHashList.reduce(
             (acc: Slots = {}, item: IHashList, i) => {
                 acc[item.generatorPublicKey] = { slot: firstSlot + i };
@@ -128,84 +128,46 @@ class RoundService implements IRoundService {
             }, {});
     }
 
-    public restoreRounds(block: Block = BlockRepository.getLastBlock()) {
+    public async restoreRounds(block: Block = BlockRepository.getLastBlock()): Promise<void> {
         if (!this.isBlockChainReady) {
             return;
         }
+
         if (!RoundRepository.getCurrentRound()) {
-            this.isRoundChainRestored = true;
-            this.generateRound();
+            // this.isRoundChainRestored = true;
+            await this.generateRound(block.createdAt);
             return;
         }
+
         const currentRound = RoundRepository.getCurrentRound();
-        const firstSlot = RoundRepository.getFirstSlotInRound();
         const lastSlot = RoundRepository.getLastSlotInRound();
 
         if (
             block &&
             currentRound &&
-            block.createdAt >= firstSlot &&
-            block.createdAt < lastSlot
+            block.createdAt < SlotService.getSlotTime(lastSlot)
         ) {
-            // case when block arrive in the middle of the round
+            // case when current slot in the past round
+            if (SlotService.getSlotTime(lastSlot + 1) < SlotService.getTime()) {
+                console.log('case when current slot in the past round');
+                await this.generateRound();
+                return;
+            }
+            // case when current slot in the current round
+            console.log('case when current slot in the current round');
+            this.startBlockGenerateTask();
+            this.startRoundFinishTask();
             return;
         }
 
-        if (lastSlot >= SlotService.getSlotNumber()) {
-            this.isRoundChainRestored = true;
-        }
-
-        this.generateRound();
+        // TODO check it
+        // if (lastSlot >= SlotService.getSlotNumber()) {
+        //     this.isRoundChainRestored = true;
+        // }
+        await this.generateRound();
     }
 
-    public generateRound(): ResponseEntity<void> {
-        /**
-         * if triggered by ROUND_FINISH event
-         */
-        if (
-            RoundRepository.getCurrentRound()
-        ) {
-            compose(
-                this.applyUnconfirmed,
-                this.sumRound
-            )(RoundRepository.getCurrentRound());
-            this.apply();
-
-            // store pound as previous
-            RoundRepository.setPrevRound(RoundRepository.getCurrentRound());
-        }
-
-        const lastBlock = BlockRepository.getLastBlock();
-        if (lastBlock == null) {
-            logger.error(`${this.logPrefix}[generateRound] Can't start round: lastBlock is undefined`);
-            return new ResponseEntity<void>({
-                errors: [`${this.logPrefix}[generateRound] Can't start round: lastBlock is undefined`]
-            });
-        }
-
-        const delegateResponse = DelegateRepository.getActiveDelegates();
-        if (!delegateResponse.success) {
-            logger.error(`${this.logPrefix}[generateRound] error: ${delegateResponse.errors}`);
-            return new ResponseEntity<void>({
-                errors: [...delegateResponse.errors, `${this.logPrefix}[generateRound] Can't get Active delegates`]
-            });
-        }
-
-        const slots = compose(
-            this.generatorPublicKeyToSlot,
-            this.sortHashList,
-            this.generateHashList
-        )({ blockId: lastBlock.id, activeDelegates: delegateResponse.data });
-
-        RoundRepository.setCurrentRound({ slots, startHeight: lastBlock.height + 1 });
-        logger.info(
-            `${this.logPrefix}[generateRound] Start round on height: ${RoundRepository.getCurrentRound().startHeight}`
-        );
-
-        if (!this.isRoundChainRestored) {
-            return;
-        }
-
+    startBlockGenerateTask(): void {
         const mySlot = this.getMyTurn();
         if (mySlot) {
             // start forging block at mySlotTime
@@ -227,7 +189,9 @@ class RoundService implements IRoundService {
                 );
             }
         }
+    }
 
+    startRoundFinishTask(): void {
         // create event for end of current round
         // lastSlot + 1 for waiting finish last round
         const lastSlot = RoundRepository.getLastSlotInRound();
@@ -236,12 +200,71 @@ class RoundService implements IRoundService {
             `${this.logPrefix}[generateRound] The round will be completed in ${roundEndTime} ms`
         );
         createTaskON(ActionTypes.RoundFinish, roundEndTime);
+        createTaskON('ROUND_FINISH', roundEndTime);
+    }
+
+    public async generateRound(timestamp: number = SlotService.getTime()): Promise<ResponseEntity<void>> {
+        /**
+         * if triggered by ROUND_FINISH event
+         */
+        if (
+            RoundRepository.getCurrentRound()
+        ) {
+            compose(
+                this.applyUnconfirmed,
+                this.sumRound
+            )(RoundRepository.getCurrentRound());
+
+            // store pound as previous
+            RoundRepository.setPrevRound(RoundRepository.getCurrentRound());
+            // TODO update prev round
+        }
+
+        const lastBlock = BlockRepository.getLastBlock();
+        if (lastBlock == null) {
+            logger.error(`${this.logPrefix}[generateRound] Can't start round: lastBlock is undefined`);
+            return new ResponseEntity<void>({
+                errors: [`${this.logPrefix}[generateRound] Can't start round: lastBlock is undefined`]
+            });
+        }
+
+        const delegateResponse = DelegateRepository.getActiveDelegates();
+        if (!delegateResponse.success) {
+            logger.error(`${this.logPrefix}[generateRound] error: ${delegateResponse.errors}`);
+            return new ResponseEntity<void>({
+                errors: [...delegateResponse.errors, `${this.logPrefix}[generateRound] Can't get Active delegates`]
+            });
+        }
+
+        const hashList = this.generateHashList({ blockId: lastBlock.id, activeDelegates: delegateResponse.data });
+        const sortedHashList = this.sortHashList(hashList);
+        const slots = this.generatorPublicKeyToSlot(sortedHashList, timestamp);
+
+        const currentRound = new Round({
+            startHeight: lastBlock.height + 1,
+            slots: slots,
+        });
+        RoundRepository.setCurrentRound(currentRound);
+
+        await this.apply(currentRound);
+
+        logger.info(
+            `${this.logPrefix}[generateRound] Start round on height: ${RoundRepository.getCurrentRound().startHeight}`
+        );
+
+        // if (!this.isRoundChainRestored) {
+        //     return;
+        // }
+
+        this.startBlockGenerateTask();
+        this.startRoundFinishTask();
 
         return new ResponseEntity<void>();
     }
 
     public getMyTurn(): number {
-        return RoundRepository.getCurrentRound().slots[constants.publicKey].slot;
+        const mySlot = RoundRepository.getCurrentRound().slots[constants.publicKey];
+        return mySlot && mySlot.slot;
     }
 
     public sumRound(round: Round): ResponseEntity<IRoundSum> {
@@ -320,10 +343,6 @@ class RoundService implements IRoundService {
 
     public async undo(round: Round = RoundRepository.getCurrentRound()): Promise<void> {
         await RoundPGRepository.delete(round);
-    }
-
-    public calcRound(height: number): number {
-        return Math.ceil(height / constants.activeDelegates); // todo round has diff amount of blocks
     }
 }
 

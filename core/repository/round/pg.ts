@@ -19,7 +19,7 @@ class RoundPGRepository implements IRoundPGRepository {
     serialize(round: Round): RawRound {
         return {
             height_start: round.startHeight,
-            height_finish: round.endHeight,
+            height_finish: null,
             slots: round.slots
         };
     }
@@ -40,13 +40,12 @@ class RoundPGRepository implements IRoundPGRepository {
         return this.deserialize(rawRound);
     }
 
-    async getMany(offset: number, limit?: number): Promise<Array<Round>> {
-        const rawRounds: Array<RawRound> = await db.manyOrNone(queries.getMany(limit), { offset, limit });
+    async getMany(limit: number, offset: number): Promise<Array<Round>> {
+        const rawRounds: Array<RawRound> = await db.manyOrNone(queries.getMany, { offset, limit });
         if (!rawRounds) {
             return;
         }
-        const rounds: Array<Round> = rawRounds.map(rawRound => this.deserialize(rawRound));
-        return rounds;
+        return rawRounds.map(rawRound => this.deserialize(rawRound));
     }
 
     async saveOrUpdate(round: Round | Array<Round>): Promise<void> {

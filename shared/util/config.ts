@@ -1,14 +1,9 @@
 import { BlockModel } from 'shared/model/block';
-
-const env = process.env;
-
 import { ed } from 'shared/util/ed';
 import crypto from 'crypto';
 
 import Validator from 'z-schema';
 import ZSchema from 'shared/util/z_schema';
-const validator: Validator = new ZSchema({});
-
 import configSchema from '../../config/schema/config';
 import defaultCfg from '../../config/default/config';
 import testnetCfg from '../../config/testnet/config';
@@ -21,7 +16,13 @@ import defaultGenesisBlock from '../../config/default/genesisBlock.json';
 import testnetGenesisBlock from '../../config/testnet/genesisBlock.json';
 import mainnetGenesisBlock from '../../config/mainnet/genesisBlock.json';
 
+const env = process.env;
+
+const validator: Validator = new ZSchema({});
+
 interface IConstraint {
+    SLOT_INTERVAL: number;
+    REQUEST_BLOCK_LIMIT: number;
     serverHost?: string;
     serverPort?: number;
     publicKey?: string;
@@ -244,7 +245,7 @@ interface IConfig {
 class Config {
     public config: IConfig;
     public constants: IConstraint;
-    public genesisBlock: BlockModel; // todo change it
+    public genesisBlock: BlockModel & { transactions: any }; // todo change it to serialized Block
 
     constructor() {
         if (!env.NODE_ENV_IN) {
@@ -252,6 +253,8 @@ class Config {
         }
 
         this.constants = {
+            SLOT_INTERVAL: 10,
+            REQUEST_BLOCK_LIMIT: 42,
             NODE_ENV_IN: env.NODE_ENV_IN,
             PREVIOUS_DELEGATES_COUNT: 3,
             MASTER_NODE_MIGRATED_BLOCK: 0,
@@ -277,7 +280,7 @@ class Config {
         // For development mode
         if (env.NODE_ENV_IN === 'development') {
             this.config = defaultCfg;
-            this.genesisBlock = defaultGenesisBlock;
+            this.genesisBlock = defaultGenesisBlock as any;
             Object.assign(this.constants, devConstants);
         }
 

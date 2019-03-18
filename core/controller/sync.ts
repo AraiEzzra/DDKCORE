@@ -4,11 +4,13 @@ import { Block } from 'shared/model/block';
 import { Peer } from 'shared/model/peer';
 import { BaseController } from 'core/controller/baseController';
 import PeerService from 'core/service/peer';
+import RoundService from 'core/service/round';
 import BlockService from 'core/service/block';
 import { logger } from 'shared/util/logger';
 import BlockController from 'core/controller/block';
 import PeerRepository from 'core/repository/peer';
 import TransactionRepo from 'core/repository/transaction';
+import { messageON } from 'shared/util/bus';
 
 export class SyncController extends BaseController {
 
@@ -55,12 +57,16 @@ export class SyncController extends BaseController {
     }
 
     @ON('EMIT_SYNC_BLOCKS')
-    startSyncBlocks(): void {
+    async startSyncBlocks(): Promise<void> {
         if (SyncService.consensus || PeerRepository.peerList().length === 0) {
+            if (!RoundService.getIsBlockChainReady()) {
+                messageON('WARM_UP_FINISHED', {});
+            }
             return;
         }
         logger.debug(`[Controller][Sync][startSyncBlocks]: start sync with consensus ${SyncService.getConsensus()}%`);
-        SyncService.checkCommonBlock();
+
+        await SyncService.checkCommonBlock();
     }
 
     @ON('REQUEST_BLOCKS')
@@ -77,7 +83,9 @@ export class SyncController extends BaseController {
             await BlockController.onReceiveBlock({ data: { block } });
         }
         if (!SyncService.consensus) {
-            SyncService.checkCommonBlock();
+            await SyncService.checkCommonBlock();
+        } else if (!RoundService.getIsBlockChainReady()) {
+            messageON('WARM_UP_FINISHED', {});
         }
     }
 

@@ -40,6 +40,6 @@ CREATE INDEX IF NOT EXISTS trs_sender_public_key
 CREATE TABLE IF NOT EXISTS round
 (
   height_start  INTEGER PRIMARY KEY,
-  height_finish INTEGER NOT NULL,
+  height_finish INTEGER,
   slots         JSON    NOT NULL DEFAULT '{}' :: JSON
 );
