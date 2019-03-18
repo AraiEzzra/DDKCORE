@@ -20,6 +20,8 @@ import RoundRepository from 'core/repository/round';
 import socket from 'core/repository/socket';
 import { logger } from 'shared/util/logger';
 import { Block } from 'shared/model/block';
+import { getAddressByPublicKey } from 'shared/util/account';
+
 const START_SYNC_BLOCKS = 15000;
 
 // @ts-ignore
@@ -28,7 +30,7 @@ BigInt.prototype.toJSON = function () {
 };
 
 class Loader {
-    private limit = 1000;
+    private limit = 3;
 
     public async start() {
         logger.debug('LOADER START');
@@ -59,10 +61,16 @@ class Loader {
                 await TransactionPGRepo.getMany(limit, offset);
 
             for (const trs of transactionBatch) {
-                const sender = AccountRepo.add({
-                    address: trs.senderAddress,
-                    publicKey: trs.senderPublicKey
-                });
+                let sender = AccountRepo.getByAddress(getAddressByPublicKey(trs.senderPublicKey));
+                if (!sender) {
+                    sender = AccountRepo.add({
+                        address: trs.senderAddress,
+                        publicKey: trs.senderPublicKey
+                    });
+                } else if (!sender.publicKey) {
+                    sender.publicKey = trs.senderPublicKey;
+                }
+
                 TransactionDispatcher.applyUnconfirmed(trs, sender);
             }
             if (transactionBatch.length < limit) {
@@ -74,7 +82,7 @@ class Loader {
         return;
     }
 
-    private async roundWarmUp(limit) {
+    private async roundWarmUp(limit: number) {
         let offset: number = 2;
 
         do {
@@ -102,7 +110,7 @@ class Loader {
         } while (true);
     }
 
-    private async blockWarmUp(limit) {
+    private async blockWarmUp(limit: number) {
         let offset: number = 0;
         do {
             const blockBatch: Array<Block> = await BlockPGRepository.getMany(limit, offset);

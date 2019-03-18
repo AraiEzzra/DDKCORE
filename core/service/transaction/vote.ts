@@ -191,16 +191,16 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
         const isDownVote = trs.asset.votes[0][0] === '-';
         const votes = trs.asset.votes.map(vote => vote.substring(1));
         if (isDownVote) {
-            votes.reduce((acc: Array<string>, newVote: string) => {
-                const targetAccount: Account = AccountRepo.getByPublicKey(newVote);
+            votes.reduce((acc: Array<string>, delegatePublicKey: string) => {
+                const targetAccount: Account = AccountRepo.getByPublicKey(delegatePublicKey);
                 targetAccount.delegate.votes--;
                 DelegateRepo.update(targetAccount.delegate);
-                acc.splice(acc.indexOf(newVote), 1);
+                acc.splice(acc.indexOf(delegatePublicKey), 1);
                 return acc;
             }, sender.votes);
         } else {
-            votes.forEach((newVote) => {
-                const targetAccount: Account = AccountRepo.getByPublicKey(newVote);
+            votes.forEach((delegatePublicKey) => {
+                const targetAccount: Account = AccountRepo.getByPublicKey(delegatePublicKey);
                 targetAccount.delegate.votes++;
                 DelegateRepo.update(targetAccount.delegate);
             });

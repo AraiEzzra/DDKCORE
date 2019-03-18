@@ -1,5 +1,5 @@
 import { ResponseEntity } from 'shared/model/response';
-import { Account } from 'shared/model/account';
+import { Account, Address } from 'shared/model/account';
 import Config from 'shared/util/config';
 import { Delegate } from 'shared/model/delegate';
 
@@ -9,7 +9,7 @@ class DelegateRepository {
     private memoryDelegates: { [publicKey: string]: Delegate } = {};
     private usernames: Set<string> = new Set<string>();
 
-    public add(account: Account, params: {username?: string, url?: string} = {}) {
+    public add(account: Account, params: { username?: string, url?: string } = {}) {
         const delegate: Delegate = new Delegate({
             username: params.username || '',
             url: params.url || '',
@@ -38,11 +38,13 @@ class DelegateRepository {
             return 0;
         }).slice(0, constants.activeDelegates);
         if (activeDelegates.length > 0) {
-            return new ResponseEntity({data: activeDelegates});
+            return new ResponseEntity({ data: activeDelegates });
         } else {
-            return new ResponseEntity({errors: [
-                `[DelegateRepository][getActiveDelegates] Can't get Active delegates`
-            ]});
+            return new ResponseEntity({
+                errors: [
+                    `[DelegateRepository][getActiveDelegates] Can't get Active delegates`
+                ]
+            });
         }
     }
 
