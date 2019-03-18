@@ -355,7 +355,7 @@ class BlockService {
                         address: trs.senderAddress
                     });
                 } else {
-                    sender.secondPublicKey = trs.senderPublicKey;
+                    sender.publicKey = trs.senderPublicKey;
                 }
 
                 if (verify) {

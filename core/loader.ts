@@ -30,7 +30,7 @@ BigInt.prototype.toJSON = function () {
 };
 
 class Loader {
-    private limit = 3;
+    private limit = 1000;
 
     public async start() {
         logger.debug('LOADER START');
