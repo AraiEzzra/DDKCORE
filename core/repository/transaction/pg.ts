@@ -1,11 +1,13 @@
 import db, { pgpE } from 'shared/driver/db/index';
-import { Transaction, IAsset } from 'shared/model/transaction';
+import { IAsset, Transaction } from 'shared/model/transaction';
 import {
-    ITransactionPGRepository as ITransactionPGRepositoryShared, RawTransaction,
+    ITransactionPGRepository as ITransactionPGRepositoryShared,
+    RawTransaction,
     TransactionsByBlockResponse
 } from 'shared/repository/transaction/transaction';
 import queries from 'core/repository/queries/transaction';
 
+import TransactionRepo from 'core/repository/transaction/';
 export interface ITransactionPGRepository<T extends IAsset> extends ITransactionPGRepositoryShared<T> {
 
 }
@@ -26,25 +28,26 @@ class TransactionPGRepo implements ITransactionPGRepository<IAsset> {
     private readonly columnSet = new pgpE.helpers.ColumnSet(this.tableFields, {table: this.tableName});
 
     serialize(trs: Transaction<IAsset>): object {
+        const serializedTrs = TransactionRepo.serialize(trs);
         return {
-            id: trs.id,
-            block_id: trs.blockId,
-            type: trs.type,
-            created_at: trs.createdAt,
-            sender_public_key: trs.senderPublicKey,
-            signature: trs.signature,
-            second_signature: trs.secondSignature,
-            salt: trs.salt,
-            asset: trs.asset
+            id: serializedTrs.id,
+            block_id: serializedTrs.blockId,
+            type: serializedTrs.type,
+            created_at: serializedTrs.createdAt,
+            sender_public_key: serializedTrs.senderPublicKey,
+            signature: serializedTrs.signature,
+            second_signature: serializedTrs.secondSignature,
+            salt: serializedTrs.salt,
+            asset: serializedTrs.asset
         };
     }
-    
-    deserialize(rawTrs: RawTransaction, radix: number = 10): Transaction<IAsset> {
-        return new Transaction<IAsset>({
+
+    deserialize(rawTrs: RawTransaction): Transaction<IAsset> {
+        return TransactionRepo.deserialize({
             id: rawTrs.id,
             blockId: rawTrs.block_id,
-            type: parseInt(rawTrs.type, radix),
-            createdAt: parseInt(rawTrs.created_at, radix),
+            type: Number(rawTrs.type),
+            createdAt: Number(rawTrs.created_at),
             senderPublicKey: rawTrs.sender_public_key,
             signature: rawTrs.signature,
             secondSignature: rawTrs.second_signature,
@@ -54,7 +57,6 @@ class TransactionPGRepo implements ITransactionPGRepository<IAsset> {
     }
 
     async deleteById(trsId: string | Array<string>): Promise<void> {
-        const trsIds: Array<string> = [].concat(trsId);
         await db.none(queries.deleteByIds, [trsId]);
     }
 

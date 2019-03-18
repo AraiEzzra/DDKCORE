@@ -8,14 +8,14 @@ import {
     BlockId, RawBlock,
     IBlockPGRepository as IBlockRepositoryPGShared
 } from 'shared/repository/block';
-import {TransactionsByBlockResponse} from 'shared/repository/transaction/transaction';
+import { TransactionsByBlockResponse } from 'shared/repository/transaction';
 
 export interface IBlockPGRepository extends IBlockRepositoryPGShared {
 
 }
 
 class BlockPGRepo implements IBlockPGRepository {
-    private tableName: string = 'blocks';
+    private tableName: string = 'block';
     private tableFields: Array<string> = [
         'id',
         'version',
@@ -29,7 +29,7 @@ class BlockPGRepo implements IBlockPGRepository {
         'generator_public_key',
         'signature'
     ];
-    private readonly columnSet = new pgpE.helpers.ColumnSet(this.tableFields, {table: this.tableName});
+    private readonly columnSet = new pgpE.helpers.ColumnSet(this.tableFields, { table: this.tableName });
 
     serialize(block: Block): RawBlock {
         return {
@@ -46,7 +46,7 @@ class BlockPGRepo implements IBlockPGRepository {
             signature: block.signature
         };
     }
-    
+
     deserialize(rawBlock: RawBlock, radix: number = 10): Block {
         return new Block({
             id: rawBlock.id,
@@ -59,7 +59,8 @@ class BlockPGRepo implements IBlockPGRepository {
             fee: rawBlock.fee,
             payloadHash: rawBlock.payload_hash,
             generatorPublicKey: rawBlock.generator_public_key,
-            signature: rawBlock.signature
+            signature: rawBlock.signature,
+            transactions: []
         });
     }
 
@@ -124,8 +125,8 @@ class BlockPGRepo implements IBlockPGRepository {
     }
 
     async getLastNBlockIds(): Promise<Array<BlockId>> {
-        const rawBlockIds: Array<{id: string}> =
-            await db.manyOrNone(queries.getLastNBlocks, { blockLimit: config.constants.blockSlotWindow});
+        const rawBlockIds: Array<{ id: string }> =
+            await db.manyOrNone(queries.getLastNBlocks, { blockLimit: config.constants.blockSlotWindow });
         if (!rawBlockIds || !rawBlockIds.length) {
             return null;
         }
@@ -156,7 +157,7 @@ class BlockPGRepo implements IBlockPGRepository {
         });
         const query = pgpE.helpers.insert(values, this.columnSet) +
             ' ON CONFLICT(id) DO UPDATE SET ' +
-            this.columnSet.assignColumns({from: 'EXCLUDED', skip: 'id'});
+            this.columnSet.assignColumns({ from: 'EXCLUDED', skip: 'id' });
         await db.none(query);
         return null;
     }

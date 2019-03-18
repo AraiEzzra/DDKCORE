@@ -11,23 +11,23 @@ export class RewardController {
     }
 
     @RPC('GET_REWARD_HISTORY')
-    getRewardHistory(message: Message, socketApi: any) {
+    getRewardHistory(message: Message, socket: any) {
         const { body, headers, code } = message;
         const rewardResponse = RewardService.getRewardByAddress(body.address, body.filter);
 
         rewardResponse.success
-            ? SocketMiddleware.emitToClient(headers.id, code, rewardResponse, socketApi)
-            : SocketMiddleware.emitToCore(message, socketApi);
+            ? SocketMiddleware.emitToClient(headers.id, code, rewardResponse, socket)
+            : SocketMiddleware.emitToCore(message, socket);
     }
 
     @RPC('GET_REFERRED_USERS_REWARD')
-    getReferredUsersReward(message: Message, socketApi: any) {
+    getReferredUsersReward(message: Message, socket: any) {
         const { body, headers, code } = message;
         const rewardResponse = RewardService.getReferredUsersReward(body.address, body.filter);
 
         rewardResponse.success
-            ? SocketMiddleware.emitToClient(headers.id, code, rewardResponse, socketApi)
-            : SocketMiddleware.emitToCore(message, socketApi);
+            ? SocketMiddleware.emitToClient(headers.id, code, rewardResponse, socket)
+            : SocketMiddleware.emitToCore(message, socket);
     }
 }
 

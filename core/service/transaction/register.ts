@@ -1,15 +1,17 @@
 import { IAssetService } from 'core/service/transaction';
 import {IAssetRegister, Transaction, TransactionModel} from 'shared/model/transaction';
 import { Account } from 'shared/model/account';
-import Response from 'shared/model/response';
+import { ResponseEntity } from 'shared/model/response';
 import AccountRepo from 'core/repository/account';
 import config from 'shared/util/config';
 import BUFFER from 'core/util/buffer';
 
 class TransactionRegisterService implements IAssetService<IAssetRegister> {
 
-    create(trs: TransactionModel<IAssetRegister>): void {
-
+    create(trs: TransactionModel<IAssetRegister>): IAssetRegister {
+        return {
+            referral: BigInt(trs.asset.referral),
+        };
     }
 
     getBytes(trs: Transaction<IAssetRegister>): Buffer {
@@ -18,18 +20,29 @@ class TransactionRegisterService implements IAssetService<IAssetRegister> {
         return buff;
     }
 
-    validate(trs: Transaction<IAssetRegister>, sender: Account): Response<void> {
+    validate(trs: Transaction<IAssetRegister>): ResponseEntity<void> {
         const errors = [];
 
         if (!trs.asset.referral) {
             errors.push('Missing referral');
         }
 
-        return new Response({ errors });
+        return new ResponseEntity<void>({ errors });
     }
 
-    verifyUnconfirmed(trs: Transaction<IAssetRegister>, sender: Account): Response<void> {
-        return new Response();
+    // TODO check empty account
+    verifyUnconfirmed(trs: Transaction<IAssetRegister>, sender: Account): ResponseEntity<void> {
+        if (
+            sender.secondPublicKey ||
+            sender.actualBalance !== 0 ||
+            sender.delegate ||
+            (sender.votes && sender.votes.length) ||
+            (sender.referrals && sender.referrals.length) ||
+            (sender.stakes && sender.stakes.length)
+        ) {
+            return new ResponseEntity<void>({ errors: ['Account already exists.'] });
+        }
+        return new ResponseEntity<void>();
     }
 
     calculateFee(trs: Transaction<IAssetRegister>, sender: Account): number {
@@ -45,9 +58,8 @@ class TransactionRegisterService implements IAssetService<IAssetRegister> {
         AccountRepo.updateReferralByAddress(targetAccount.address, [referralAccount, ...referrals]);
     }
 
-    undoUnconfirmed(trs: Transaction<IAssetRegister>, sender: Account): void {
-        // TODO strange logic for not referral account
-        AccountRepo.delete(sender);
+    undoUnconfirmed(trs: Transaction<IAssetRegister>, sender: Account, senderOnly): void {
+        sender.referrals = [];
     }
 
 }

@@ -7,6 +7,7 @@ const previousBlock = new Block({
     createdAt: 90,
     previousBlockId: '8',
     height: 9,
+    transactions: []
 });
 
 const lastBlock = new Block({
@@ -14,6 +15,7 @@ const lastBlock = new Block({
     createdAt: 100,
     previousBlockId: '9',
     height: 10,
+    transactions: []
 });
 
 const anotherPreviousBlock = new Block({
@@ -21,6 +23,7 @@ const anotherPreviousBlock = new Block({
     createdAt: 110,
     previousBlockId: '9A',
     height: 10,
+    transactions: []
 });
 
 const nextBlock = new Block({
@@ -28,6 +31,7 @@ const nextBlock = new Block({
     createdAt: 110,
     previousBlockId: '10',
     height: 11,
+    transactions: []
 });
 
 const nextBlockWithAnotherPreviousBlockId = new Block({
@@ -35,6 +39,7 @@ const nextBlockWithAnotherPreviousBlockId = new Block({
     createdAt: 110,
     previousBlockId: '10A',
     height: 11,
+    transactions: []
 });
 
 const highestBlock = new Block({
@@ -42,20 +47,21 @@ const highestBlock = new Block({
     createdAt: 200,
     previousBlockId: '19',
     height: 20,
+    transactions: []
 });
 
 describe('Block utils', () => {
     describe('is height less', () => {
         it('previous block', () => {
-            expect(blockUtils.isHeightLess(lastBlock, previousBlock)).equal(true);
+            expect(blockUtils.isLessHeight(lastBlock, previousBlock)).equal(true);
         });
 
         it('equal block', () => {
-            expect(blockUtils.isHeightLess(lastBlock, lastBlock)).equal(false);
+            expect(blockUtils.isLessHeight(lastBlock, lastBlock)).equal(false);
         });
 
         it('next block', () => {
-            expect(blockUtils.isHeightLess(lastBlock, nextBlock)).equal(false);
+            expect(blockUtils.isLessHeight(lastBlock, nextBlock)).equal(false);
         });
     });
 
@@ -129,23 +135,23 @@ describe('Block utils', () => {
 
     describe('is received block above', () => {
         it('equal block', () => {
-            expect(blockUtils.isReceivedBlockAbove(lastBlock, lastBlock)).equal(false);
+            expect(blockUtils.isGreatestHeight(lastBlock, lastBlock)).equal(false);
         });
 
         it('same height block', () => {
-            expect(blockUtils.isReceivedBlockAbove(lastBlock, anotherPreviousBlock)).equal(false);
+            expect(blockUtils.isGreatestHeight(lastBlock, anotherPreviousBlock)).equal(false);
         });
 
         it('next block', () => {
-            expect(blockUtils.isReceivedBlockAbove(lastBlock, nextBlock)).equal(true);
+            expect(blockUtils.isGreatestHeight(lastBlock, nextBlock)).equal(true);
         });
 
         it('previous block', () => {
-            expect(blockUtils.isReceivedBlockAbove(lastBlock, previousBlock)).equal(false);
+            expect(blockUtils.isGreatestHeight(lastBlock, previousBlock)).equal(false);
         });
 
         it('highest block', () => {
-            expect(blockUtils.isReceivedBlockAbove(lastBlock, highestBlock)).equal(true);
+            expect(blockUtils.isGreatestHeight(lastBlock, highestBlock)).equal(true);
         });
     });
 

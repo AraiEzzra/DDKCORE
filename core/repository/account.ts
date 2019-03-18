@@ -1,65 +1,54 @@
-import { Account, Address, PublicKey } from 'shared/model/account';
-import Response from 'shared/model/response';
+import {Account, Address, PublicKey} from 'shared/model/account';
 import { Delegate } from 'shared/model/delegate';
 import { getAddressByPublicKey } from 'shared/util/account';
 
 class AccountRepo {
-    private memoryAccountsByAddress: { [address: number]: Account } = {};
+    private memoryAccountsByAddress: Map<Address, Account> = new Map<Address, Account>();
 
-    public add(accountData: { address: Address, publicKey: PublicKey }): Account {
+    public add(accountData: { address: Address, publicKey?: PublicKey }): Account {
         const accountModel = new Account(accountData);
-        this.memoryAccountsByAddress[accountData.address] = accountModel;
+        this.memoryAccountsByAddress.set(accountData.address, accountModel);
         return accountModel;
     }
 
-    getByAddress(accountAddress: number): Account {
-        return this.memoryAccountsByAddress[accountAddress] || null;
+    getByAddress(accountAddress: Address): Account {
+        return this.memoryAccountsByAddress.get(accountAddress) || null;
     }
 
     /** TODO refactor to getByAddress */
-    getByPublicKey(accountPublicKey: string): Account {
-        return this.memoryAccountsByAddress[getAddressByPublicKey(accountPublicKey)] || null;
+    getByPublicKey(accountPublicKey: PublicKey): Account {
+        const address = getAddressByPublicKey(accountPublicKey);
+        return this.memoryAccountsByAddress.get(address) || null;
     }
 
     // should be called rarely
     getAll(): Array<Account> {
-        return Object.values(this.memoryAccountsByAddress).map((account: Account) => {
-            return account.getCopy();
-        });
+        const accounts: Array<Account> = [];
+        for (let value of this.memoryAccountsByAddress.values()) {
+            accounts.push(value);
+        }
+        return accounts;
     }
 
-    delete(account: Account): Response<void> {
-        delete(this.memoryAccountsByAddress[account.address]);
-        return new Response<void>();
+    delete(account: Account): void {
+        this.memoryAccountsByAddress.delete(account.address);
     }
 
     // example: such functions should be handlers and depends on workflows
     updateBalance(account: Account, balance: number): void {
-        this.memoryAccountsByAddress[account.address].actualBalance = balance;
-    }
-
-    /** TODO refactor to getByAddress */
-    updateBalanceByPublicKey(publicKey: PublicKey, difference: number): void {
-        this.memoryAccountsByAddress[getAddressByPublicKey(publicKey)].actualBalance += difference;
+        this.memoryAccountsByAddress.get(account.address).actualBalance = balance;
     }
 
     updateBalanceByAddress(address: Address, difference: number): void {
-        this.memoryAccountsByAddress[address].actualBalance += difference;
+        this.memoryAccountsByAddress.get(address).actualBalance += difference;
     }
 
-    attachDelegate(account: Account, delegate: Delegate): Response<void> {
-        this.memoryAccountsByAddress[account.address].delegate = delegate;
-        return new Response<void>();
+    updateVotes(account: Account, votes: Array<string> ): void {
+        this.memoryAccountsByAddress.get(account.address).votes = votes;
     }
 
-    updateVotes(account: Account, votes: Array<string> ): Response<void> {
-        this.memoryAccountsByAddress[account.address].votes = votes;
-        return new Response<void>();
-    }
-
-    updateReferralByAddress(address: Address, referrals: Array<Account>): Response<void> {
-        this.memoryAccountsByAddress[address].referrals = referrals;
-        return new Response<void>();
+    updateReferralByAddress(address: Address, referrals: Array<Account>): void {
+        this.memoryAccountsByAddress.get(address).referrals = referrals;
     }
 }
 

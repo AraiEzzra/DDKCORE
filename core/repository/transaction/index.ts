@@ -1,8 +1,25 @@
-import { Transaction, IAsset } from 'shared/model/transaction';
+import { Transaction, IAsset, TransactionType, TransactionModel } from 'shared/model/transaction';
 import {
-    ITransactionRepository as ITransactionRepositoryShared,
+    IAssetRepository,
+    ITransactionRepository as ITransactionRepositoryShared, RawTransaction,
     TransactionsByBlockResponse
-} from 'shared/repository/transaction/transaction';
+} from 'shared/repository/transaction';
+import TransactionDelegateRepo from 'core/repository/transaction/asset/delegate';
+import TransactionRegisterRepo from 'core/repository/transaction/asset/register';
+import TransactionSendRepo from 'core/repository/transaction/asset/send';
+import TransactionStakeRepo from 'core/repository/transaction/asset/stake';
+import TransactionVoteRepo from 'core/repository/transaction/asset/vote';
+
+
+const ASSET_REPOSITORIES: { [key: string]: IAssetRepository<IAsset> } = {
+    [TransactionType.DELEGATE]: TransactionDelegateRepo,
+    [TransactionType.REGISTER]: TransactionRegisterRepo,
+    [TransactionType.SEND]: TransactionSendRepo,
+    [TransactionType.STAKE]: TransactionStakeRepo,
+    [TransactionType.VOTE]: TransactionVoteRepo,
+    [TransactionType.SENDSTAKE]: null,
+    [TransactionType.SIGNATURE]: null
+};
 
 export interface ITransactionRepository<T extends IAsset> extends ITransactionRepositoryShared<T> {
 
@@ -25,7 +42,7 @@ class TransactionRepo implements ITransactionRepository<IAsset> {
         const blockTrs: Array<Transaction<IAsset>> = this.memoryTransactionByBlockId[trs.blockId];
         for (let i = 0; i < blockTrs.length; i++) {
             if (blockTrs[i].id === trs.id) {
-                delete blockTrs[i];
+                blockTrs.splice(i, 1);
                 break;
             }
         }
@@ -54,6 +71,44 @@ class TransactionRepo implements ITransactionRepository<IAsset> {
 
     public isExist(transactionId: string): boolean {
         return !!this.memoryTransactionById[transactionId];
+    }
+    
+    serialize(trs: Transaction<IAsset>): TransactionModel<IAsset> {
+        const assetRepo: IAssetRepository<IAsset> = ASSET_REPOSITORIES[trs.type];
+        let asset = trs.asset;
+        if (assetRepo) {
+            asset = assetRepo.serialize(trs.asset);
+        }
+        return {
+            id: trs.id,
+            blockId: trs.blockId,
+            type: trs.type,
+            createdAt: trs.createdAt,
+            senderPublicKey: trs.senderPublicKey,
+            signature: trs.signature,
+            secondSignature: trs.secondSignature,
+            salt: trs.salt,
+            asset: asset
+        };
+    }
+
+    deserialize(rawTrs: RawTransaction): Transaction<IAsset> {
+        const assetRepo: IAssetRepository<IAsset> = ASSET_REPOSITORIES[rawTrs.type];
+        let asset = rawTrs.asset;
+        if (assetRepo) {
+            asset = assetRepo.deserialize(rawTrs.asset);
+        }
+        return new Transaction<IAsset>({
+            id: rawTrs.id,
+            blockId: rawTrs.blockId,
+            type: Number(rawTrs.type),
+            createdAt: Number(rawTrs.createdAt),
+            senderPublicKey: rawTrs.senderPublicKey,
+            signature: rawTrs.signature,
+            secondSignature: rawTrs.secondSignature,
+            salt: rawTrs.salt,
+            asset: asset,
+        });
     }
 }
 

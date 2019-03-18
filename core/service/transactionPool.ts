@@ -1,26 +1,27 @@
-import { IAssetTransfer, Transaction, TransactionStatus, TransactionType } from 'shared/model/transaction';
+import {
+    IAssetTransfer,
+    Transaction,
+    TransactionModel,
+    TransactionStatus,
+    TransactionType
+} from 'shared/model/transaction';
 import { transactionSortFunc } from 'core/util/transaction';
 import TransactionDispatcher from 'core/service/transaction';
-import Response from 'shared/model/response';
-import ResponseEntity from 'shared/model/response';
+import { ResponseEntity } from 'shared/model/response';
 import { logger } from 'shared/util/logger';
 import SyncService from 'core/service/sync';
 import { Account, Address } from 'shared/model/account';
 import AccountRepository from 'core/repository/account';
 
 export interface ITransactionPoolService<T extends Object> {
-    /**
-     * old removeFromPool
-     */
-    batchRemove(transactions: Array<Transaction<T>>, withDepend: boolean): Response<Array<Transaction<T>>>;
+
+    batchRemove(transactions: Array<Transaction<T>>, withDepend: boolean): ResponseEntity<Array<Transaction<T>>>;
 
     /**
      *
-     * old pushInPool
+     * renamed from pushInPool
      */
     batchPush(transactions: Array<Transaction<T>>): void;
-
-    getLockStatus(): boolean;
 
     getBySenderAddress(senderAddress: Address): Array<Transaction<T>>;
     getByRecipientAddress(recipientAddress: Address): Array<Transaction<T>>;
@@ -28,7 +29,7 @@ export interface ITransactionPoolService<T extends Object> {
     removeBySenderAddress(senderAddress: Address): Array<Transaction<T>>;
     removeByRecipientAddress(address: Address): Array<Transaction<T>>;
 
-    push(trs: Transaction<T>, sender?: Account, broadcast?: boolean, force?: boolean): Response<void>;
+    push(trs: Transaction<T>, sender?: Account, broadcast?: boolean): void;
 
     remove(trs: Transaction<T>);
 
@@ -43,20 +44,15 @@ export interface ITransactionPoolService<T extends Object> {
     isPotentialConflict(trs: Transaction<T>);
 
     getSize(): number;
-
-    lock(): void;
-
-    unlock(): void;
 }
 
 class TransactionPoolService<T extends object> implements ITransactionPoolService<T> {
     private pool: { [transactionId: string]: Transaction<T> } = {};
 
-    poolByRecipient: { [recipientAddress: number]: Array<Transaction<T>> } = {};
-    poolBySender: { [senderAddress: number]: Array<Transaction<T>> } = {};
+    poolByRecipient: Map<Address, Array<Transaction<T>>> = new Map<Address, Array<Transaction<T>>>();
+    poolBySender: Map<Address, Array<Transaction<T>>> = new Map<Address, Array<Transaction<T>>>();
 
-    locked: boolean = false;
-
+    /* NOT IMPLEMENTED */
     batchPush(transactions: Array<Transaction<T>>): Promise<void> {
         return undefined;
     }
@@ -64,7 +60,7 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
     batchRemove(
         transactions: Array<Transaction<T>>,
         withDepend: boolean,
-    ): Response<Array<Transaction<T>>> {
+    ): ResponseEntity<Array<Transaction<T>>> {
         const removedTransactions = [];
         for (const trs of transactions) {
             if (withDepend) {
@@ -81,26 +77,12 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
         return new ResponseEntity<Array<Transaction<T>>>({ data: removedTransactions });
     }
 
-    lock(): Response<void> {
-        this.locked = true;
-        return new Response<void>();
-    }
-
-    unlock(): Response<void> {
-        this.locked = false;
-        return new Response<void>();
-    }
-
-    getLockStatus(): boolean {
-        return this.locked;
-    }
-
     getByRecipientAddress(recipientAddress: Address): Array<Transaction<T>> {
-        return this.poolByRecipient[recipientAddress] || [];
+        return this.poolByRecipient.get(recipientAddress) || [];
     }
 
     getBySenderAddress(senderAddress: Address): Array<Transaction<T>> {
-        return this.poolBySender[senderAddress] || [];
+        return this.poolBySender.get(senderAddress) || [];
     }
 
     removeBySenderAddress(senderAddress: Address): Array<Transaction<T>> {
@@ -113,60 +95,35 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
         return removedTransactions;
     }
 
-    push(
-        trs: Transaction<T>,
-        sender: Account,
-        broadcast: boolean = false,
-        force: boolean = false,
-    ): Response<void> {
-        if ((this.locked && !force)) {
-            return new Response<void>({ errors: [`Cannot push this transaction`] });
-        }
-
-        if (this.has(trs)) {
-            return new Response<void>({ errors: [`Transaction is already in pool`] });
-        }
-
-        if (!force && this.isPotentialConflict(trs)) {
-            return new Response<void>({ errors: [`Transaction is potential conflicted`] });
-        }
+    push(trs: Transaction<T>, sender: Account, broadcast: boolean = false): void {
 
         this.pool[trs.id] = trs;
         trs.status = TransactionStatus.PUT_IN_POOL;
 
-        if (!this.poolBySender[trs.senderAddress]) {
-            this.poolBySender[trs.senderAddress] = [];
+        if (!this.poolBySender.has(trs.senderAddress)) {
+            this.poolBySender.set(trs.senderAddress, []);
         }
-        this.poolBySender[trs.senderAddress].push(trs);
+        this.poolBySender.get(trs.senderAddress).push(trs);
+
         if (trs.type === TransactionType.SEND) {
             const asset: IAssetTransfer = <IAssetTransfer>trs.asset;
-            if (!this.poolByRecipient[asset.recipientAddress]) {
-                this.poolByRecipient[asset.recipientAddress] = [];
+            if (!this.poolByRecipient.has(asset.recipientAddress)) {
+                this.poolByRecipient.set(asset.recipientAddress, []);
             }
-            this.poolByRecipient[asset.recipientAddress].push(trs);
+            this.poolByRecipient.get(asset.recipientAddress).push(trs);
         }
 
         if (!sender) {
-            sender = AccountRepository.getByPublicKey(trs.senderPublicKey);
+            sender = AccountRepository.getByAddress(trs.senderAddress);
         }
 
-        try {
-            TransactionDispatcher.applyUnconfirmed(trs, sender);
-            trs.status = TransactionStatus.UNCONFIRM_APPLIED;
-        } catch (e) {
-            delete this.pool[trs.id];
-            trs.status = TransactionStatus.DECLINED;
-            logger.error(`[TransactionPool][applyUnconfirmed]: ${e}`);
-            logger.error(`[TransactionPool][applyUnconfirmed][stack]: \n ${e.stack}`);
-            return new Response<void>({ errors: [`Cannot apply unconfirmed this transaction`] });
-        }
+        TransactionDispatcher.applyUnconfirmed(trs, sender);
+        trs.status = TransactionStatus.UNCONFIRM_APPLIED;
 
         if (broadcast) {
-            // TODO: fix broadcast storm
+            // TODO: check broadcast storm
             SyncService.sendUnconfirmedTransaction(trs);
         }
-
-        return new Response<void>();
     }
 
     remove(trs: Transaction<T>) {
@@ -184,17 +141,17 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
 
         delete this.pool[trs.id];
 
-        if (this.poolBySender[trs.senderAddress] && this.poolBySender[trs.senderAddress].indexOf(trs) !== -1) {
-            this.poolBySender[trs.senderAddress].splice(this.poolBySender[trs.senderAddress].indexOf(trs), 1);
+        if (this.poolBySender.has(trs.senderAddress) && this.poolBySender.get(trs.senderAddress).indexOf(trs) !== -1) {
+            this.poolBySender.get(trs.senderAddress).splice(this.poolBySender.get(trs.senderAddress).indexOf(trs), 1);
         }
 
         if (trs.type === TransactionType.SEND) {
             const asset: IAssetTransfer = <IAssetTransfer>trs.asset;
-            if (this.poolByRecipient[asset.recipientAddress] &&
-                this.poolByRecipient[asset.recipientAddress].indexOf(trs) !== -1
+            if (this.poolByRecipient.has(asset.recipientAddress) &&
+                this.poolByRecipient.get(asset.recipientAddress).indexOf(trs) !== -1
             ) {
-                this.poolByRecipient[asset.recipientAddress]
-                    .splice(this.poolByRecipient[asset.recipientAddress].indexOf(trs), 1);
+                this.poolByRecipient.get(asset.recipientAddress)
+                    .splice(this.poolByRecipient.get(asset.recipientAddress).indexOf(trs), 1);
             }
         }
         return true;
@@ -220,7 +177,7 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
         return deletedValue;
     }
 
-    has(trs: Transaction<T>) {
+    has(trs: Transaction<T> | TransactionModel<T>) {
         return Boolean(this.pool[trs.id]);
     }
 
@@ -235,8 +192,8 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
 
     isPotentialConflict(trs: Transaction<T>): boolean {
         const { senderAddress } = trs;
-        const recipientTrs = this.poolByRecipient[senderAddress] || [];
-        const senderTrs = this.poolBySender[senderAddress] || [];
+        const recipientTrs = this.poolByRecipient.get(senderAddress) || [];
+        const senderTrs = this.poolBySender.get(senderAddress) || [];
         const dependTransactions = [...recipientTrs, ...senderTrs];
 
         if (dependTransactions.length === 0) {

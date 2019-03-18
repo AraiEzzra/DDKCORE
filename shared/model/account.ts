@@ -1,12 +1,10 @@
 import { Delegate } from 'shared/model/delegate';
 
-export type Address = number;
+export type Address = bigint;
 export type PublicKey = string;
 export type Timestamp = number;
 
-type AirdropReward = {
-    [address: number]: number;
-};
+type AirdropReward = Map<Address, number>;
 
 export class Stake {
     createdAt: Timestamp;
@@ -15,13 +13,18 @@ export class Stake {
     voteCount: number;
     nextVoteMilestone: Timestamp;
     airdropReward: AirdropReward;
+    sourceTransactionId: string;
+
+    constructor(data: Stake) {
+        Object.assign(this, data);
+    }
 }
 
 export class AccountModel {
     address: Address;
-    publicKey: PublicKey;
+    publicKey?: PublicKey;
     secondPublicKey?: PublicKey;
-    actualBalance?: number;
+    actualBalance?: number = 0;
     delegate?: Delegate;
     votes?: Array<PublicKey>;
     referrals?: Array<Account>;
@@ -40,8 +43,4 @@ export class Account extends AccountModel {
     public getCopy(): Account {
         return new Account(this);
     }
-
-    // TODO: define what is that sh*t
-    // group_bonus: number;
-    // pending_group_bonus: number;
 }

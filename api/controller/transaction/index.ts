@@ -31,7 +31,7 @@ export class TransactionController {
     getTransactionsByBlockId(message: Message, socketApi: any) {
         const { body, headers, code } = message;
         const arrayTransactions: ResponseEntity<Array<TransactionModel<IAsset>>> =
-            TransactionService.getTrsByBlockId(body.blockId, body.filter.limit, body.filter.offset);
+            TransactionService.getTrsByBlockId(body.blockId, body.limit, body.offset);
 
         arrayTransactions.success
             ? SocketMiddleware.emitToClient(headers.id, code, arrayTransactions.data, socketApi)

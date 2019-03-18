@@ -27,8 +27,8 @@ export const generateReward = (index: number): Reward => {
         transactionId,
         type: TransactionType.STAKE,
         createdAt: Date.now() / 100,
-        sponsor: 11111111,
-        referral: 22222222,
+        sponsor: BigInt(11111111),
+        referral: BigInt(22222222),
         referralLevel: index + 1,
         amount: 100,
     });
@@ -48,8 +48,8 @@ export const generateStakeReward = (): Reward => {
         transactionId,
         type: TransactionType.STAKE,
         createdAt: Date.now() / 100,
-        sponsor: 11111111,
-        referral: 11111111,
+        sponsor: BigInt(11111111),
+        referral: BigInt(11111111),
         amount: 100,
     });
 };

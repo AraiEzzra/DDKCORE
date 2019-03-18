@@ -7,7 +7,7 @@ import {logger} from 'shared/util/logger';
 import { Account } from 'shared/model/account';
 import { SECOND } from 'core/util/const';
 import AccountRepository from 'core/repository/account';
-import ResponseEntity from 'shared/model/response';
+import { ResponseEntity } from 'shared/model/response';
 
 export interface ITransactionQueueService<T extends Object> {
     getLockStatus(): boolean;
@@ -71,7 +71,6 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
             expire: Math.floor(new Date().getTime() / SECOND) + constants.TRANSACTION_QUEUE_EXPIRE
         });
         trs.status = TransactionStatus.QUEUED_AS_CONFLICTED;
-        // logger.debug(`TransactionStatus.QUEUED_AS_CONFLICTED ${JSON.stringify(trs)}`);
     }
 
     // TODO can be optimized if check senderId and recipientId
@@ -81,6 +80,7 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
         }
     }
 
+    // TODO change to mapReduce
     async process(): Promise<void> {
         if (this.queue.length === 0 || this.locked) {
             return;
@@ -88,6 +88,7 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
 
         const trs = this.pop();
 
+        // TODO redundant in sync variant
         if (TransactionPool.has(trs)) {
             this.process();
             return;
@@ -100,15 +101,8 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
             return;
         }
 
-        // const sender = await getOrCreateAccount(trs.senderPublicKey);
-        let sender: Account = AccountRepository.getByPublicKey(trs.senderPublicKey);
-        if (!sender) {
-            sender = AccountRepository.add({
-                address: trs.senderAddress,
-                publicKey: trs.senderPublicKey
-            });
-        }
-        const verifyStatus = await TransactionDispatcher.verifyUnconfirmed(trs, sender, true);
+        const sender: Account = AccountRepository.getByAddress(trs.senderAddress);
+        const verifyStatus = TransactionDispatcher.verifyUnconfirmed(trs, sender);
 
         if (!verifyStatus.success) {
             logger.debug(`TransactionStatus.verifyStatus ${JSON.stringify(verifyStatus)}`);
@@ -117,17 +111,14 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
             this.process();
             return;
         }
-
         trs.status = TransactionStatus.VERIFIED;
-        // logger.debug(`TransactionStatus.VERIFIED ${JSON.stringify(trs)}`);
 
         if (!this.locked) {
-            const pushed = await TransactionPool.push(trs, sender, true);
-            if (pushed.success) {
-                this.process();
-                return;
-            }
+            TransactionPool.push(trs, sender, true);
+            this.process();
+            return;
         }
+
         this.push(trs);
         this.process();
     }

@@ -1,6 +1,6 @@
 const crypto = require('crypto');
-import { Account } from 'shared/model/account';
-import ResponseEntity from 'shared/model/response';
+import {Account, Address} from 'shared/model/account';
+import { ResponseEntity } from 'shared/model/response';
 import { getAddressByPublicKey } from 'shared/util/account';
 import { ed } from 'shared/util/ed';
 
@@ -42,7 +42,7 @@ export class AccountRepository implements IAccountRepository {
     }
 
     async getAccount(publicKey: string): Promise<ResponseEntity<Account>> {
-        const address: number = getAddressByPublicKey(publicKey);
+        const address: Address = getAddressByPublicKey(publicKey);
         return new ResponseEntity({
             data: null,
         });

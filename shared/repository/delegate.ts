@@ -1,5 +1,5 @@
 import { Delegate } from 'shared/model/delegate';
-import Response from 'shared/model/response';
+import { ResponseEntity } from 'shared/model/response';
 
 interface IDelegatesArray {
     delegates: Delegate[];
@@ -7,23 +7,23 @@ interface IDelegatesArray {
 }
 
 export interface IDelegateRepo {
-    getDelegate(publicKey: string, username: string): Promise<Response <{ delegate: Delegate }>>;
+    getDelegate(publicKey: string, username: string): Promise<ResponseEntity <{ delegate: Delegate }>>;
 
-    getDelegates(orderBy: string, limit: number, offset: number): Promise<Response<IDelegatesArray>>;
+    getDelegates(orderBy: string, limit: number, offset: number): Promise<ResponseEntity<IDelegatesArray>>;
 }
 
 export class DelegateRepository implements IDelegateRepo {
 
-    async getDelegate(publicKey: string, username: string): Promise<Response<{ delegate: Delegate }>> {
-        return new Response({
+    async getDelegate(publicKey: string, username: string): Promise<ResponseEntity<{ delegate: Delegate }>> {
+        return new ResponseEntity({
             data: {
                 delegate: new Delegate({ username }),
             }
         });
     }
 
-    async getDelegates(orderBy: string, limit: number, offset: number): Promise<Response<IDelegatesArray>> {
-        return new Response({
+    async getDelegates(orderBy: string, limit: number, offset: number): Promise<ResponseEntity<IDelegatesArray>> {
+        return new ResponseEntity({
             data: {
                 delegates: []
             }

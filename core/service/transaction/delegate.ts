@@ -3,21 +3,24 @@ import {IAssetDelegate, Transaction, TransactionModel} from 'shared/model/transa
 import { Account } from 'shared/model/account';
 import { Delegate } from 'shared/model/delegate';
 import DelegateRepo from 'core/repository/delegate';
-import Response from 'shared/model/response';
+import { ResponseEntity } from 'shared/model/response';
 import AccountRepo from 'core/repository/account';
 import config from 'shared/util/config';
 
 class TransactionDelegateService implements IAssetService<IAssetDelegate> {
 
-    create(trs: TransactionModel<IAssetDelegate>): void {
-        trs.asset.username = trs.asset.username.toLowerCase().trim();
+    create(trs: TransactionModel<IAssetDelegate>): IAssetDelegate {
+        return {
+            username: trs.asset.username.toLowerCase().trim(),
+            url: trs.asset.url,
+        };
     }
 
     getBytes(trs: Transaction<IAssetDelegate>): Buffer {
         return Buffer.from(trs.asset.username, 'utf8');
     }
 
-    validate(trs: Transaction<IAssetDelegate>, sender: Account): Response<void> {
+    validate(trs: Transaction<IAssetDelegate>): ResponseEntity<void> {
         const errors = [];
 
         if (!trs.asset || !trs.asset.username) {
@@ -51,10 +54,10 @@ class TransactionDelegateService implements IAssetService<IAssetDelegate> {
             errors.push('Username can only contain alphanumeric characters with the exception of !@$&_.');
         }
 
-        return new Response({ errors });
+        return new ResponseEntity<void>({ errors });
     }
 
-    verifyUnconfirmed(trs: Transaction<IAssetDelegate>, sender: Account): Response<void> {
+    verifyUnconfirmed(trs: Transaction<IAssetDelegate>, sender: Account): ResponseEntity<void> {
         const errors = [];
 
         if (sender.delegate) {
@@ -71,7 +74,7 @@ class TransactionDelegateService implements IAssetService<IAssetDelegate> {
             errors.push('Username already exists');
         }
 
-        return new Response({ errors });
+        return new ResponseEntity<void>({ errors });
     }
 
     calculateFee(trs: Transaction<IAssetDelegate>, sender: Account): number {
@@ -79,16 +82,17 @@ class TransactionDelegateService implements IAssetService<IAssetDelegate> {
     }
 
     applyUnconfirmed(trs: Transaction<IAssetDelegate>, sender: Account): void {
-        const newDelegate: Delegate = DelegateRepo.add(sender, {
+        sender.delegate = DelegateRepo.add(sender, {
             username: trs.asset.username,
             url: trs.asset.url
         });
-        AccountRepo.attachDelegate(sender, newDelegate);
     }
 
-    undoUnconfirmed(trs: Transaction<IAssetDelegate>, sender: Account): void {
-        DelegateRepo.delete(sender);
-        AccountRepo.attachDelegate(sender, null);
+    undoUnconfirmed(trs: Transaction<IAssetDelegate>, sender: Account, senderOnly): void {
+        if (!senderOnly) {
+            DelegateRepo.delete(sender);
+        }
+        sender.delegate = null;
     }
 }
 

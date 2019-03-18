@@ -1,10 +1,11 @@
-import {Account, Stake} from 'shared/model/account';
+import {Address, Account, Stake} from 'shared/model/account';
 import { logger } from 'shared/util/logger';
 import config from 'shared/util/config';
 import BlockRepo from 'core/repository/block';
 import {IAirdropAsset, IAssetStake, IAssetVote, Transaction, TransactionType} from 'shared/model/transaction';
 import AccountRepo from 'core/repository/account';
-import Response from 'shared/model/response';
+import { ResponseEntity } from 'shared/model/response';
+import { TOTAL_PERCENTAGE, SECONDS_PER_MINUTE, MONEY_FACTOR } from 'core/util/const';
 
 class StakeReward {
     private readonly milestones = config.constants.froze.rewards.milestones;
@@ -22,7 +23,7 @@ class StakeReward {
 
     calcReward(height) {
         return this.milestones[this.calcMilestone(height)];
-    };
+    }
 }
 
 const stakeReward = new StakeReward();
@@ -41,7 +42,7 @@ export function calculateTotalRewardAndUnstake(sender: Account, isDownVote: bool
         if (order.voteCount > 0 && (order.voteCount + 1) % config.constants.froze.rewardVoteCount === 0) {
             const blockHeight: number = BlockRepo.getLastBlock().height;
             const stakeRewardPercent: number = stakeReward.calcReward(blockHeight);
-            reward += (order.amount * stakeRewardPercent) / 100;
+            reward += (order.amount * stakeRewardPercent) / TOTAL_PERCENTAGE;
         }
     });
     const readyToUnstakeOrders = freezeOrders.filter(
@@ -49,7 +50,7 @@ export function calculateTotalRewardAndUnstake(sender: Account, isDownVote: bool
     );
     logger.debug(`[Frozen][calculateTotalRewardAndUnstake] reward: ${reward}`);
     readyToUnstakeOrders.forEach((order) => {
-        unstakeAmount -= order.amount;
+        unstakeAmount += order.amount;
     });
     return { reward, unstake: unstakeAmount };
 }
@@ -61,11 +62,11 @@ export function getAirdropReward(
     transactionType: TransactionType): IAirdropAsset {
 
     const result: IAirdropAsset = {
-        sponsors: {}
+        sponsors: new Map<Address, number>()
     };
 
     const availableAirdropBalance: number = AccountRepo.getByAddress(config.constants.airdrop.account).actualBalance;
-    logger.info(`availableAirdropBalance: ${availableAirdropBalance / 100000000}`);
+    logger.info(`availableAirdropBalance: ${availableAirdropBalance / MONEY_FACTOR}`);
 
     if (!sender || !sender.referrals || (sender.referrals.length === 0)) {
         return result;
@@ -76,13 +77,13 @@ export function getAirdropReward(
     }
 
     let airdropRewardAmount: number = 0;
-    const sponsors: { [sponsorAddress: number]: number } = {};
+    const sponsors: Map<Address, number> = new Map<Address, number>();
 
     sender.referrals.forEach((sponsor: Account, i: number) => {
         const reward = transactionType === TransactionType.STAKE ?
-            Math.ceil((amount * config.constants.airdrop.stakeRewardPercent) / 100) :
-            Math.ceil(((config.constants.airdrop.referralPercentPerLevel[i]) * amount) / 100);
-        sponsors[sponsor.address] = reward;
+            Math.ceil((amount * config.constants.airdrop.stakeRewardPercent) / TOTAL_PERCENTAGE) :
+            Math.ceil(((config.constants.airdrop.referralPercentPerLevel[i]) * amount) / TOTAL_PERCENTAGE);
+        sponsors.set(sponsor.address, reward);
         airdropRewardAmount += reward;
     });
 
@@ -98,7 +99,7 @@ export function getAirdropReward(
 export function verifyAirdrop(
     trs: Transaction<IAssetStake | IAssetVote>,
     amount: number,
-    sender: Account): Response<void> {
+    sender: Account): ResponseEntity<void> {
     const airdropReward = getAirdropReward(
         sender,
         amount,
@@ -108,98 +109,83 @@ export function verifyAirdrop(
     if (
         JSON.stringify(airdropReward.sponsors) !== JSON.stringify(trs.asset.airdropReward.sponsors)
     ) {
-        return new Response<void>({ errors: [
-            `Verify failed: ${trs.type === TransactionType.STAKE ? 'stake' : 'vote'} airdrop reward is corrupted, 
-            expected: 
-            sponsors: ${JSON.stringify(airdropReward.sponsors)}  
-            actual: 
+        return new ResponseEntity<void>({ errors: [
+            `Verify failed: ${trs.type === TransactionType.STAKE ? 'stake' : 'vote'} airdrop reward is corrupted,
+            expected:
+            sponsors: ${JSON.stringify(airdropReward.sponsors)}
+            actual:
             sponsors: ${JSON.stringify(trs.asset.airdropReward.sponsors)}`
             ] });
     }
-    return new Response<void>();
+    return new ResponseEntity<void>();
 }
 
 export function applyFrozeOrdersRewardAndUnstake(
-    voteTransaction: Transaction<IAssetVote>,
-    activeOrders: Array<Stake>): Response<void> {
-    applyRewards(voteTransaction);
-    sendAirdropReward(voteTransaction);
-    applyUnstake(activeOrders, voteTransaction);
-    return new Response<void>();
+    trs: Transaction<IAssetVote>,
+    activeOrders: Array<Stake>): void {
+    applyRewards(trs);
+    applyUnstake(activeOrders, trs);
 }
 
-function applyRewards(voteTransaction: Transaction<IAssetVote>): void {
-    const reward = voteTransaction.asset.reward;
-    AccountRepo.updateBalanceByAddress(voteTransaction.senderAddress, reward);
-    AccountRepo.updateBalanceByAddress(config.config.forging.totalSupplyAccount, -reward);
+function applyRewards(trs: Transaction<IAssetVote>): void {
+    AccountRepo.updateBalanceByAddress(trs.senderAddress, trs.asset.reward);
+    AccountRepo.updateBalanceByAddress(config.config.forging.totalSupplyAccount, -trs.asset.reward);
 }
 
-function applyUnstake(orders: Array<Stake>, voteTransaction: Transaction<IAssetVote>): void {
+function applyUnstake(orders: Array<Stake>, trs: Transaction<IAssetVote>): void {
     const readyToUnstakeOrders = orders.filter(o => o.voteCount === config.constants.froze.unstakeVoteCount);
     readyToUnstakeOrders.map((order) => {
         order.isActive = false;
     });
-    AccountRepo.updateBalanceByAddress(voteTransaction.senderAddress, voteTransaction.asset.unstake);
+    AccountRepo.updateBalanceByAddress(trs.senderAddress, trs.asset.unstake);
 }
 
-function sendAirdropReward(trs: Transaction<IAssetVote>): void {
+export function sendAirdropReward(trs: Transaction<IAssetStake | IAssetVote>): void {
     const transactionAirdropReward = trs.asset.airdropReward;
 
-    for (const sponsorAddress in transactionAirdropReward.sponsors) {
-        if (!transactionAirdropReward.sponsors[sponsorAddress]) {
-            continue;
-        }
-        const rewardAmount = transactionAirdropReward.sponsors[sponsorAddress];
-
+    for (const [sponsorAddress, rewardAmount] of transactionAirdropReward.sponsors) {
         if (rewardAmount === 0) {
             continue;
         }
-
-        AccountRepo.updateBalanceByAddress(parseInt(sponsorAddress, 10), rewardAmount);
+        AccountRepo.updateBalanceByAddress(sponsorAddress, rewardAmount);
         AccountRepo.updateBalanceByAddress(config.config.forging.totalSupplyAccount, -rewardAmount);
     }
 }
 
-export function undoFrozeOrdersRewardAndUnstake(voteTransaction: Transaction<IAssetVote>): void {
-    const senderStakes: Array<Stake> = AccountRepo.getByAddress(voteTransaction.senderAddress).stakes;
+export function undoFrozeOrdersRewardAndUnstake(trs: Transaction<IAssetVote>, sender: Account, senderOnly: boolean): void {
+    const senderStakes: Array<Stake> = sender.stakes;
     const updatedOrders = senderStakes.map((order: Stake) => {
-        if (order.nextVoteMilestone === voteTransaction.createdAt + config.constants.froze.vTime * 60) {
+        if (order.nextVoteMilestone === trs.createdAt + config.constants.froze.vTime * SECONDS_PER_MINUTE) {
             return order;
         }
     });
-    undoUnstake(updatedOrders, voteTransaction);
-    undoRewards(voteTransaction);
-    undoAirdropReward(voteTransaction);
+    undoUnstake(updatedOrders, trs, sender);
+    undoRewards(trs, sender, senderOnly);
 }
 
-function undoUnstake(orders: Array<Stake>, voteTransaction: Transaction<IAssetVote>): void {
+function undoUnstake(orders: Array<Stake>, trs: Transaction<IAssetVote>, sender: Account): void {
     const unstakedOrders = orders.filter(order => !order.isActive);
     unstakedOrders.map((order) => {
         order.isActive = true;
     });
-    AccountRepo.updateBalanceByAddress(voteTransaction.senderAddress, -voteTransaction.asset.unstake);
+    sender.actualBalance -= trs.asset.unstake;
 }
 
-function undoRewards(voteTransaction: Transaction<IAssetVote>): void {
-    const reward = voteTransaction.asset.reward;
-    AccountRepo.updateBalanceByAddress(voteTransaction.senderAddress, -reward);
-    AccountRepo.updateBalanceByAddress(config.config.forging.totalSupplyAccount, reward);
+function undoRewards(trs: Transaction<IAssetVote>, sender: Account, senderOnly: boolean): void {
+    sender.actualBalance -= trs.asset.reward;
+    if (!senderOnly) {
+        AccountRepo.updateBalanceByAddress(config.config.forging.totalSupplyAccount, trs.asset.reward);
+    }
 }
 
-function undoAirdropReward(trs: Transaction<IAssetVote | IAssetStake>): void {
+export function undoAirdropReward(trs: Transaction<IAssetVote | IAssetStake>): void {
     const transactionAirdropReward = trs.asset.airdropReward;
 
-    for (const sponsorAddress in transactionAirdropReward.sponsors) {
-        if (!transactionAirdropReward.sponsors[sponsorAddress]) {
-            continue;
-        }
-        const rewardAmount = transactionAirdropReward.sponsors[sponsorAddress];
-
+    for (const [sponsorAddress, rewardAmount] of transactionAirdropReward.sponsors) {
         if (rewardAmount === 0) {
             continue;
         }
-
-        AccountRepo.updateBalanceByAddress(parseInt(sponsorAddress, 10), -rewardAmount);
+        AccountRepo.updateBalanceByAddress(sponsorAddress, -rewardAmount);
         AccountRepo.updateBalanceByAddress(config.config.forging.totalSupplyAccount, rewardAmount);
     }
 }
