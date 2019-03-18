@@ -1,4 +1,4 @@
-import { ON } from 'core/util/decorator';
+import { ON, RPC } from 'core/util/decorator';
 import { BaseController } from 'core/controller/baseController';
 import { logger } from 'shared/util/logger';
 import { IAsset, TransactionModel } from 'shared/model/transaction';
@@ -38,7 +38,7 @@ class TransactionController extends BaseController {
         TransactionQueue.push(trs);
     }
 
-    @ON('TRANSACTION_CREATE')
+    @RPC('TRANSACTION_CREATE')
     public async transactionCreate(action: { data: { trs: TransactionModel<IAsset>, secret: string } }): Promise<void> {
         console.log('TRANSACTION RPC CREATING....', JSON.stringify(action.data));
         const keyPair = ed.makeKeyPair(Buffer.from(action.data.secret));
