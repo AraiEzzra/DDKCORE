@@ -11,6 +11,8 @@ const ioServer = require('socket.io')(server, {
     serveClient: false,
     wsEngine: 'ws',
 });
+import { MESSAGE_CHANNEL } from 'shared/driver/socket/channels';
+
 const env = require('../../config/env').default;
 
 server.listen(

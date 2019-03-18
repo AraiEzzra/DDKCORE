@@ -14,7 +14,6 @@ export interface ITransactionRepository <T extends IAsset> {
     getByBlockIds(blockIds: Array<BlockId>): TransactionsByBlockResponse;
     getById(trsId: TransactionId): Transaction<T>;
     isExist(trsId: TransactionId): boolean;
-    getMany(limit: number, offset: number, sort?: string, type?: number): Array<Transaction<T>>;
 
 }
 

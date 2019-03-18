@@ -4,10 +4,13 @@ import ReferredUsersControllerInstance, { ReferredUsersController } from 'api/co
 import AccountControllerInstance, { AccountController } from 'api/controller/account';
 import DelegateControllerInstance, { DelegateController } from 'api/controller/delegate';
 import { Message, MessageType } from 'shared/model/message';
-import ResponseEntity from 'shared/model/response';
+import { ResponseEntity } from 'shared/model/response';
 import { MESSAGE_CHANNEL } from 'shared/driver/socket/channels';
 import { SOCKET_TIMEOUT_MS } from 'shared/config/socket';
 import coreSocketClient from 'api/socket/client';
+import TransactionControllerInstance, { TransactionController } from 'api/controller/transaction';
+import BlockControllerInstance, { BlockController } from 'api/controller/block';
+import RoundControllerInstance, { RoundController } from 'api/controller/round';
 
 type RequestProcessor = {
     socket: any,
@@ -20,6 +23,9 @@ export class SocketMiddleware {
     private referredUsersController: ReferredUsersController;
     private accountController: AccountController;
     private delegateController: DelegateController;
+    private transactionController: TransactionController;
+    private blockController: BlockController;
+    private roundController: RoundController;
 
     private requests: Map<string, RequestProcessor>;
 
@@ -28,6 +34,9 @@ export class SocketMiddleware {
         this.referredUsersController = ReferredUsersControllerInstance;
         this.accountController = AccountControllerInstance;
         this.delegateController = DelegateControllerInstance;
+        this.transactionController = TransactionControllerInstance;
+        this.blockController = BlockControllerInstance;
+        this.roundController = RoundControllerInstance;
 
         this.requests = new Map();
     }
