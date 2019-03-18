@@ -6,15 +6,21 @@ import { Message } from 'shared/model/message';
 import { ISocketServer, SocketServer } from 'shared/driver/socket/server';
 
 const io = require('socket.io');
+import { logger } from 'shared/util/logger';
 
 export class ApiSocketServer extends SocketServer implements ISocketServer {
 
     run() {
-        this.socket = io(this.port, this.config);
+        try {
+            this.socket = io(this.port, this.config);
 
-        this.socket.on(CONNECT_CHANNEL, (socket: any) => SocketMiddleware.onConnect(socket));
-        coreSocketClient.on(MESSAGE_CHANNEL, (message: Message) =>
-            SocketMiddleware.onCoreMessage(message, this.socket));
+            this.socket.on(CONNECT_CHANNEL, (socket: any) => SocketMiddleware.onConnect(socket));
+            coreSocketClient.on(MESSAGE_CHANNEL, (message: Message) =>
+                SocketMiddleware.onCoreMessage(message, this.socket));
+        } catch (error) {
+            logger.error(`ERROR [ API ]: ${ error }`);
+        }
+
     }
 
 }

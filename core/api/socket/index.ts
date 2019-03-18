@@ -18,11 +18,15 @@ export class SocketServerAPI {
     }
 
     run() {
-        this.socket = io(this.port, this.options);
-        this.socket.on(CONNECT_CHANNEL, (socket: any) => {
-            console.log('Socket API Server %s connected', JSON.stringify(socket.handshake));
-            SocketMiddleware.registerAPI(socket);
-            logger.info(`[ CORE | API ] : SOCKET SERVER IS RUN ON THE PORT ${this.port}`);
-        });
+        try {
+            this.socket = io(this.port, this.options);
+            this.socket.on(CONNECT_CHANNEL, (socket: any) => {
+                console.log('Socket API Server %s connected', JSON.stringify(socket.handshake));
+                SocketMiddleware.registerAPI(socket);
+                logger.info(`[ CORE | API ] : SOCKET SERVER IS RUN ON THE PORT ${this.port}`);
+            });
+        } catch (error) {
+            logger.error(`ERROR [ CORE | API ]: ${error}`);
+        }
     }
 }
