@@ -1,6 +1,5 @@
 import { Subject } from 'rxjs';
 import { logger } from 'shared/util/logger';
-import { SECOND } from 'core/util/const';
 
 export const subjectOn = new Subject();
 export const subjectRpc = new Subject();

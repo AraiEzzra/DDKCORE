@@ -89,13 +89,16 @@ export class SyncService implements ISyncService {
             } else {
 
                 await BlockService.deleteLastBlock();
-                this.checkCommonBlock();
+                await this.checkCommonBlock();
             }
         }
     }
 
     requestBlocks(lastBlock, peer = null): void {
-        SyncRepository.requestBlocks({ height: lastBlock.height + 1, limit: 42 }, peer);
+        SyncRepository.requestBlocks({
+            height: lastBlock.height + 1,
+            limit: config.constants.REQUEST_BLOCK_LIMIT
+        }, peer);
     }
 
     sendBlocks(data: { height: number, limit: number }, peer): void {
@@ -127,7 +130,7 @@ export class SyncService implements ISyncService {
         if (!peers.length) {
             return 0;
         }
-        return commonPeers.length / peers.length * TOTAL_PERCENTAGE;
+        return (commonPeers.length + 1) / (peers.length + 1) * TOTAL_PERCENTAGE;
     }
 
     checkBlockConsensus(block: Block): boolean {
@@ -142,7 +145,7 @@ export class SyncService implements ISyncService {
         if (!peers.length) {
             return 0;
         }
-        return commonPeers.length / peers.length * TOTAL_PERCENTAGE;
+        return (commonPeers.length + 1) / (peers.length + 1) * TOTAL_PERCENTAGE;
     }
 
     get consensus(): boolean {
