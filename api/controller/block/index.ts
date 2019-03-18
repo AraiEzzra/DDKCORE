@@ -18,9 +18,7 @@ export class BlockController {
         const { body, headers, code } = message;
         const blocksResponse: ResponseEntity<Array<Block>> = BlockService.getMany(body);
 
-        blocksResponse.success
-            ? SocketMiddleware.emitToClient(headers.id, code, blocksResponse, socket)
-            : SocketMiddleware.emitToCore(message, socket);
+        SocketMiddleware.emitToClient(headers.id, code, blocksResponse, socket);
     }
 
     @RPC(GET_BLOCK_BY_ID)
@@ -29,9 +27,7 @@ export class BlockController {
         const { body, headers, code } = message;
         const blocksResponse: ResponseEntity<Block> = BlockService.getOne(body);
 
-        blocksResponse.success
-            ? SocketMiddleware.emitToClient(headers.id, code, blocksResponse, socket)
-            : SocketMiddleware.emitToCore(message, socket);
+        SocketMiddleware.emitToClient(headers.id, code, blocksResponse, socket);
     }
 }
 

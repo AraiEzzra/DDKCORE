@@ -13,7 +13,7 @@ export const API_SOCKET_SERVER_CONFIG: ServerOptions = {
 export const CORE_HOST = process.env.CORE_HOST || 'localhost';
 export const CORE_PORT = parseInt(process.env.CORE_PORT, 10) || 7007;
 export const CORE_RPC_PORT = parseInt(process.env.CORE_RPC_PORT, 10) || 7009;
-export const CORE_PROTOCOL = process.env.CORE_PROTOCOL || 'ws';
+export const CORE_RPC_PROTOCOL = process.env.CORE_RPC_PROTOCOL || 'ws';
 export const CORE_SOCKET_CLIENT_CONFIG: SocketIOClient.ConnectOpts = {
     transports: [
         'websocket',
