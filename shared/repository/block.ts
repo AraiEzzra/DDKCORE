@@ -18,8 +18,8 @@ export interface IBlockPGRepository {
     serialize(block: Block): RawBlock;
     deserialize(rawBlock: RawBlock): Block;
 
-    deleteById(blockId: BlockId | Array<BlockId>): Promise<void>;
-    deleteAfterBlock(blockId: BlockId): Promise<void>;
+    deleteById(blockId: BlockId | Array<BlockId>): Promise<Array<string>>;
+    deleteAfterBlock(blockId: BlockId): Promise<Array<string>>;
     getById(blockId: BlockId): Promise<Block>;
     getGenesisBlock(): Promise<Block>;
     getLastBlock(): Promise<Block>;

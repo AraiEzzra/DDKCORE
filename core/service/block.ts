@@ -307,7 +307,7 @@ class BlockService {
 
     private validateBlockSlot(block: Block): ResponseEntity<void> {
         if (block.height === 1) {
-            return new ResponseEntity();
+            return new ResponseEntity<void>();
         }
 
         const errors = [];

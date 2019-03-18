@@ -105,7 +105,7 @@ class Loader {
     private async blockWarmUp(limit) {
         let offset: number = 0;
         do {
-            const blockBatch: Array<Block> = await BlockPGRepository.getMany(limit, offset);
+            const blockBatch: Array<Block> = await BlockPGRepository.getMany(offset, limit);
 
             if (!blockBatch) {
                 break;

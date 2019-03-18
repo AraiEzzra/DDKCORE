@@ -26,6 +26,7 @@
     "watch:with_update": "npm install && npm run watch",
     "watch:with_update_clean": "npm run clean && npm install && npm run watch",
     "test": "export NODE_PATH=./ && mocha --require ts-node/register './test/**/*.test.ts'",
+    "test:core": "export NODE_PATH=./ && mocha --require ts-node/register './test/core/**/*.test.ts'",
     "test:decorator": "export NODE_PATH=./ && mocha --require ts-node/register './test/shared/decorator/*.test.ts'",
     "test:migrate": "export NODE_PATH=./ && mocha --require ts-node/register './test/shared/migrate/*.test.ts'",
     "test:address": "export NODE_PATH=./ && mocha --require ts-node/register './test/shared/address/*.test.ts'",
