@@ -1,4 +1,4 @@
-import { ON } from 'core/util/decorator';
+import { ON, RPC } from 'core/util/decorator';
 import { BaseController } from 'core/controller/baseController';
 import { logger } from 'shared/util/logger';
 import { IAsset, TransactionModel } from 'shared/model/transaction';
@@ -16,7 +16,7 @@ class TransactionController extends BaseController {
         const { data } = action;
         const trs = TransactionRepo.deserialize(data.trs);
         logger.debug(`[Controller][Transaction][onReceiveTransaction] ${JSON.stringify(data.trs)}`);
-        
+
         if (!TransactionService.validate(trs)) {
             return;
         }
@@ -34,12 +34,13 @@ class TransactionController extends BaseController {
         } else {
             sender.secondPublicKey = trs.senderPublicKey;
         }
-        
+
         TransactionQueue.push(trs);
     }
-    
-    @ON('TRANSACTION_CREATE')
+
+    @RPC('TRANSACTION_CREATE')
     public async transactionCreate(action: { data: { trs: TransactionModel<IAsset>, secret: string } }): Promise<void> {
+        console.log('TRANSACTION RPC CREATING....', JSON.stringify(action.data));
         const keyPair = ed.makeKeyPair(Buffer.from(action.data.secret));
         const responseTrs = TransactionService.create(action.data.trs, keyPair);
         if (responseTrs.success) {

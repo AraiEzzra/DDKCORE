@@ -10,6 +10,12 @@ export function messageON(topicName: string, data: any) {
     subjectOn.next({ data, topicName });
 }
 
+export function messageRPC(topicName: string, data: any) {
+    logger.debug(`[Bus][messageRPC] topicName ${topicName}, data: ${data}`);
+
+    subjectRpc.next({ data, topicName });
+}
+
 export function createTaskON(topicName: string, callTime: number, data: any = null) {
     // todo implement function to create schedule fro messageON
     logger.debug(`[Bus][createTaskON] topicName ${topicName}, time: ${callTime}, data: ${data}`);
