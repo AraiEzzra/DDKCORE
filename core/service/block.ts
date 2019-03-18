@@ -417,8 +417,8 @@ class BlockService {
         const errors: Array<string> = [];
         for (const trs of block.transactions) {
             const sender = AccountRepo.getByPublicKey(trs.senderPublicKey);
-            await TransactionDispatcher.apply(trs, sender);
             trs.blockId = block.id;
+            await TransactionDispatcher.apply(trs, sender);
             TransactionRepo.add(trs);
         }
         if (errors.length) {

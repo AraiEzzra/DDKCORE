@@ -82,8 +82,8 @@ class Loader {
         return;
     }
 
-    private async roundWarmUp(limit: number) {
-        let offset: number = 2;
+    private async roundWarmUp(limit) {
+        let offset: number = 0;
 
         do {
             const roundsBatch: Array<Round> = await RoundPGRepository.getMany(limit, offset);
