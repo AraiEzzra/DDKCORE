@@ -40,11 +40,7 @@ export class TransactionController {
 
     @RPC('TRANSACTION_CREATE')
     public createTransaction(message: Message, socketApi: any): void {
-        const { body, headers, code } = message;
-        const newTransaction: ResponseEntity<void> = TransactionService.createTransaction(body);
-        newTransaction.success
-            ? SocketMiddleware.emitToCore(message, socketApi)
-            : SocketMiddleware.emitToClient(headers.id, code, newTransaction.errors, socketApi);
+        SocketMiddleware.emitToCore(message, socketApi);
     }
 }
 

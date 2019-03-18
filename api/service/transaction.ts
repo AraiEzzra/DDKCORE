@@ -11,19 +11,9 @@ interface ITransactionService {
 
     getOne(data: string): ResponseEntity<TransactionModel<IAsset>>;
     getTrsByBlockId(blockId: number, limit: number, offset: number);
-    createTransaction(trs: TransactionModel<IAsset>): ResponseEntity<void>;
 }
 
 class TransactionService implements ITransactionService {
-
-    createTransaction(trs: TransactionModel<IAsset>): ResponseEntity<void> {
-        if (!trs.type || !TransactionType[trs.type]) {
-            return new ResponseEntity({
-                errors: ['Not Valid transaction']
-            });
-        }
-        return new ResponseEntity();
-    }
 
     getMany(limit: number,
             offset: number,
