@@ -1,10 +1,8 @@
 import { IAssetService } from 'core/service/transaction';
-import {IAssetDelegate, Transaction, TransactionModel} from 'shared/model/transaction';
+import { IAssetDelegate, Transaction, TransactionModel } from 'shared/model/transaction';
 import { Account } from 'shared/model/account';
-import { Delegate } from 'shared/model/delegate';
 import DelegateRepo from 'core/repository/delegate';
 import { ResponseEntity } from 'shared/model/response';
-import AccountRepo from 'core/repository/account';
 import config from 'shared/util/config';
 
 class TransactionDelegateService implements IAssetService<IAssetDelegate> {
@@ -65,8 +63,8 @@ class TransactionDelegateService implements IAssetService<IAssetDelegate> {
         }
 
         const username = String(trs.asset.username)
-        .toLowerCase()
-        .trim();
+            .toLowerCase()
+            .trim();
 
         const existingDelegate: boolean = DelegateRepo.isUserNameExists(username);
 

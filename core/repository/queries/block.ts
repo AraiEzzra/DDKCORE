@@ -7,9 +7,9 @@ export default {
     getLastNBlocks: 'SELECT id FROM block ORDER BY height DESC LIMIT ${blockLimit}',
     getMany(limit: number) {
         return [
-            'SELECT * FROM block WHERE "height" >= ${offset}',
-            (limit ? 'AND "height" < ${limit}' : ''),
-            'ORDER BY "height"'
+            'SELECT * FROM block WHERE "height" > ${offset}',
+            (limit ? 'AND "height" <= ${offset} + ${limit}' : ''),
+            'ORDER BY "height" LIMIT ${limit}'
         ].filter(Boolean).join(' ');
     },
     isExist: 'SELECT EXISTS(SELECT * FROM block WHERE "id" = ${id})'
