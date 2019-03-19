@@ -6,7 +6,7 @@ export const subjectOn = new Subject();
 export const subjectRpc = new Subject();
 const tasks: { [topicName: string]: Timeout } = {};
 
-export function messageON(topicName: string, data: any) {
+export function messageON(topicName: string, data: any = {}) {
     logger.debug(`[Bus][messageON] topicName ${topicName}, data: ${data}`);
 
     subjectOn.next({ data, topicName });

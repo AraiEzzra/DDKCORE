@@ -8,7 +8,6 @@ import { logger } from 'shared/util/logger';
 import * as blockUtils from 'core/util/block';
 import SyncService from 'core/service/sync';
 import SlotService from 'core/service/slot';
-import RoundService from 'core/service/round';
 import { messageON } from 'shared/util/bus';
 import TransactionRepo from 'core/repository/transaction';
 import { calculateRoundByTimestamp } from 'core/util/round';
@@ -82,7 +81,7 @@ class BlockController extends BaseController {
                     return new ResponseEntity<void>({ errors });
                 }
             } else if (!SyncService.consensus) {
-                messageON('EMIT_SYNC_BLOCKS', {});
+                messageON('EMIT_SYNC_BLOCKS');
             }
         } else {
             errors.push(
@@ -105,6 +104,7 @@ class BlockController extends BaseController {
             logger.debug(
                 `[Controller][Block][generateBlock]: skip forging block, consensus ${SyncService.getConsensus()}%`
             );
+            messageON('EMIT_SYNC_BLOCKS');
             return new ResponseEntity<void>({ errors: ['Invalid consensus'] });
         }
         const response: ResponseEntity<void> = await BlockService.generateBlock(data.keyPair, data.timestamp);
