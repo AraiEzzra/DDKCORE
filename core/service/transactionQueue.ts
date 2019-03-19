@@ -77,6 +77,7 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
     reshuffle(): void {
         this.queue.push(...this.conflictedQueue.map(obj => obj.transaction));
         this.conflictedQueue.length = 0;
+        this.queue.sort(transactionSortFunc);
         this.process();
     }
 
