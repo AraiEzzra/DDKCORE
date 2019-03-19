@@ -3,7 +3,7 @@ import uuidv4 from 'uuid/v4';
 export enum MessageType {
     REQUEST = 1,
     RESPONSE,
-    EVENT,
+    EVENT
 }
 
 export class Message {
@@ -13,6 +13,7 @@ export class Message {
         type: MessageType;
     };
     public body: any;
+    public isValid?: boolean;
 
     constructor(type: MessageType, code: string, body: any, id? : string) {
         this.code = code;

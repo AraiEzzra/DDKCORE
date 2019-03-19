@@ -3,7 +3,7 @@ import { ed } from 'shared/util/ed';
 import crypto from 'crypto';
 
 import Validator from 'z-schema';
-import ZSchema from 'shared/util/z_schema';
+import ZSchema from 'shared/validate/z_schema';
 import configSchema from '../../config/schema/config';
 import defaultCfg from '../../config/default/config';
 import testnetCfg from '../../config/testnet/config';

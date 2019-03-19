@@ -10,6 +10,8 @@ import {
     GET_TRANSACTION_HISTORY,
     GET_TRANSACTIONS_BY_BLOCK_ID
 } from 'shared/driver/socket/codes';
+import { validate } from 'shared/validate';
+import { SCHEMA_CREATE_TRANSACRION } from 'shared/validate/schema/transaction';
 
 export class TransactionController {
 
@@ -22,11 +24,15 @@ export class TransactionController {
     }
 
     @RPC(CREATE_TRANSACTION)
+    @validate(SCHEMA_CREATE_TRANSACRION)
     createTransaction(message: Message, socket: any) {
         // TODO: remove this logic from API
-        message.body.data.trs.createdAt = Date.now() / 1000;
-        console.log('MESSAGE: ', message);
-        SocketMiddleware.emitToCore(message, socket);
+        if (message.isValid) {
+            message.body.data.trs.createdAt = Date.now() / 1000;
+            SocketMiddleware.emitToCore(message, socket);
+        } else {
+           console.log('Not VALID');
+        }
     }
 
 
