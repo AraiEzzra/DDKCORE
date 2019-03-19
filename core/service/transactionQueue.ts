@@ -73,7 +73,7 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
         trs.status = TransactionStatus.QUEUED_AS_CONFLICTED;
     }
 
-    // TODO can be optimized if check senderId and recipientId
+    // TODO can be optimized if check senderAddress and recipientAddress
     reshuffle(): void {
         this.queue.push(...this.conflictedQueue.map(obj => obj.transaction));
         this.conflictedQueue.length = 0;

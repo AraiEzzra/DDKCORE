@@ -356,11 +356,11 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         return service.verifyUnconfirmed(trs, sender);
     }
 
-    returnToQueueConflictedTransactionFromPool(transactions): void {
+    returnToQueueConflictedTransactionFromPool(transactions: Array<Transaction<IAsset>>): void {
         const verifiedTransactions: Set<string> = new Set();
         const accountsMap: Map<Address, Account> = new Map<Address, Account>();
         for (const trs of transactions) {
-            this.checkSenderTransactions(trs.senderId, verifiedTransactions, accountsMap);
+            this.checkSenderTransactions(trs.senderAddress, verifiedTransactions, accountsMap);
         }
     }
 
