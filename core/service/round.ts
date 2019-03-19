@@ -200,7 +200,6 @@ class RoundService implements IRoundService {
             `${this.logPrefix}[generateRound] The round will be completed in ${roundEndTime} ms`
         );
         createTaskON(ActionTypes.RoundFinish, roundEndTime);
-        createTaskON('ROUND_FINISH', roundEndTime);
     }
 
     public async generateRound(timestamp: number = SlotService.getTime()): Promise<ResponseEntity<void>> {
