@@ -76,7 +76,7 @@ export class SyncController extends BaseController {
     }
 
     @ON('RESPONSE_BLOCKS')
-    async loadBlocks(action: { data: { blocks: Array<Block> }, peer }): Promise<void> {
+    async loadBlocks(action: { data: { blocks: Array<Block> }, peer: Peer }): Promise<void> {
         const { data } = action;
         for (let block of data.blocks) {
             block.transactions.forEach(trs => TransactionRepo.deserialize(trs));

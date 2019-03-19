@@ -28,8 +28,10 @@ class BlockController extends BaseController {
         const { data } = action;
         data.block.transactions = data.block.transactions.map(trs => TransactionRepo.deserialize(trs));
 
-        logger.debug(`[Controller][Block][onReceiveBlock]
-         id: ${data.block.id} height: ${data.block.height} relay: ${data.block.relay}`);
+        logger.debug(
+            `[Controller][Block][onReceiveBlock] id: ${data.block.id} ` +
+            `height: ${data.block.height} relay: ${data.block.relay}`
+        );
         const validateResponse = BlockService.validate(data.block);
         if (!validateResponse.success) {
             return validateResponse;
@@ -40,14 +42,18 @@ class BlockController extends BaseController {
 
         const errors: Array<string> = [];
         if (blockUtils.isLessHeight(lastBlock, receivedBlock)) {
-            return new ResponseEntity<void>({
-                errors: [`[Service][Block][processIncomingBlock] Block has less height: ${receivedBlock.id}`],
-            });
+            errors.push(
+                `[Controller][Block][onReceiveBlock] Block ${receivedBlock.id} ` +
+                `has less height: ${receivedBlock.height}, ` +
+                `actual height is ${lastBlock.height}`
+            );
+            logger.info(JSON.stringify(errors));
+            return new ResponseEntity<void>({ errors });
         }
         if (blockUtils.isEqualId(lastBlock, receivedBlock)) {
-            return new ResponseEntity<void>({
-                errors: [`[Service][Block][processIncomingBlock] Block already processed: ${receivedBlock.id}`],
-            });
+            errors.push(`[Controller][Block][onReceiveBlock] Block already processed: ${receivedBlock.id}`);
+            logger.info(JSON.stringify(errors));
+            return new ResponseEntity<void>({ errors });
         }
 
         if (

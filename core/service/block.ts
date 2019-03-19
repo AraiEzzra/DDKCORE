@@ -355,7 +355,7 @@ class BlockService {
                         address: trs.senderAddress
                     });
                 } else {
-                    sender.secondPublicKey = trs.senderPublicKey;
+                    sender.publicKey = trs.senderPublicKey;
                 }
 
                 if (verify) {
@@ -493,12 +493,12 @@ class BlockService {
         );
 
         const removedTransactionsResponse: ResponseEntity<Array<Transaction<object>>> =
-            await TransactionPool.batchRemove(block.transactions, true);
+            TransactionPool.batchRemove(block.transactions, true);
         if (!removedTransactionsResponse.success) {
             return new ResponseEntity<void>({errors: [...removedTransactionsResponse.errors, 'receiveBlock']});
         }
         logger.debug(
-            `[Process][newReceiveBlock] removedTransactions ${JSON.stringify(removedTransactionsResponse.data)}`
+            `[Process][newReceiveBlock] removed transactions count ${removedTransactionsResponse.data.length}`
         );
         const removedTransactions: Array<Transaction<object>> = removedTransactionsResponse.data || [];
 
@@ -586,6 +586,7 @@ class BlockService {
         }
 
         RoundService.rollBack(); // (oldLastBlock, previousBlock);
+        await BlockPGRepo.deleteById(lastBlock.id);
         const newLastBlock = BlockRepo.deleteLastBlock();
 
         return new ResponseEntity<Block>({ data: newLastBlock });

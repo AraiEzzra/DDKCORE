@@ -124,7 +124,7 @@ export class SyncService implements ISyncService {
         );
     }
 
-    getBlockConsensus(block: Block) {
+    getBlockConsensus(block: Block): number {
         const peers = PeerRepository.peerList();
         const commonPeers = peers.filter(peer => PeerRepository.checkCommonBlock(peer, block));
         if (!peers.length) {
