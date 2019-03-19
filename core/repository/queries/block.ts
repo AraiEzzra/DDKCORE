@@ -1,12 +1,5 @@
 export default {
     deleteByIds: 'DELETE FROM block WHERE id IN ($1:csv) RETURNING id',
-    deleteAfterBlock:
-        'DELETE FROM block ' +
-        'WHERE "height" > ( ' +
-        '   SELECT "height" ' +
-        '   FROM block ' +
-        '   WHERE "id" = ${blockId} ) ' +
-        'RETURNING id;',
     getById: 'SELECT * FROM block WHERE "id" = ${blockId}',
     getGenesisBlock: 'SELECT * FROM block WHERE "height" = 1',
     getLastBlock: 'SELECT * FROM block WHERE "height" = ( SELECT MAX("height") FROM block ) ORDER BY "height"',
@@ -15,8 +8,8 @@ export default {
         return [
             'SELECT * FROM block WHERE "height" > ${offset}',
             (limit ? 'AND "height" <= ${offset} + ${limit}' : ''),
-            'ORDER BY "height" LIMIT ${limit}'
+            (limit ? 'ORDER BY "height" LIMIT ${limit}' : '')
         ].filter(Boolean).join(' ');
     },
-    isExist: 'SELECT EXISTS(SELECT * FROM block WHERE "id" = ${blockId})'
+    isExist: 'SELECT EXISTS(SELECT id FROM block WHERE "id" = ${blockId})'
 };

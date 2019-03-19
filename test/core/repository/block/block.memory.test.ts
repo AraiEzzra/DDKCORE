@@ -10,12 +10,15 @@ import {
 } from 'test/core/repository/block/mock';
 import {IAsset, Transaction} from 'shared/model/transaction';
 
-
 const resultTransactions = config.genesisBlock.transactions.map((transaction) =>
     TransactionRepo.deserialize(transaction)
 );
 config.genesisBlock.transactions = <Array<Transaction<IAsset>>>resultTransactions;
 const genesisBlock = new Block(config.genesisBlock);
+
+const getAllBlocks = () => {
+    return BlockRepo.getMany(Number.MAX_SAFE_INTEGER);
+};
 
 describe('Block memory repository', () => {
 
@@ -60,7 +63,7 @@ describe('Block memory repository', () => {
                 const response = BlockRepo.add(firstBlock);
                 expect(response).to.be.an.instanceOf(Block);
                 expect(response.id).to.be.equal(firstBlock.id);
-                const blocks = BlockRepo.getMany();
+                const blocks = getAllBlocks();
                 expect(blocks).to.be.lengthOf(1);
                 expect(blocks[0].id).to.be.equal(firstBlock.id);
             });
@@ -78,7 +81,7 @@ describe('Block memory repository', () => {
             it('should add two blocks to repo', () => {
                 BlockRepo.add(firstBlock);
                 BlockRepo.add(secondBlock);
-                const blocks = BlockRepo.getMany();
+                const blocks = getAllBlocks();
                 expect(blocks).to.be.lengthOf(2);
                 expect(blocks[0].id).to.be.equal(firstBlock.id);
                 expect(blocks[1].id).to.be.equal(secondBlock.id);
@@ -135,7 +138,7 @@ describe('Block memory repository', () => {
                 const response = BlockRepo.deleteLastBlock();
                 expect(response).to.be.eql(block1);
                 expect(BlockRepo.getLastBlock()).to.be.eql(block1);
-                const blocks = BlockRepo.getMany();
+                const blocks = getAllBlocks();
                 expect(blocks).to.be.lengthOf(1);
             });
 
@@ -144,38 +147,6 @@ describe('Block memory repository', () => {
             });
         });
     });
-
-    // describe('lastNBlocks usage', () => {
-    //
-    //     const addition = 10;
-    //     const blocks = [];
-    //     for (let i = 0; i < (config.constants.blockSlotWindow + addition); i++) {
-    //         blocks.push(getNewBlock().id);
-    //     }
-    //
-    //     context('when setting lastNBlocks', () => {
-    //         it('should set and get lastNBlocks', () => {
-    //             BlockRepo.setLastNBlocks([blocks[0], blocks[1]]);
-    //             let response = BlockRepo.getLastNBlockIds();
-    //             expect(response).to.be.eql([blocks[0], blocks[1]]);
-    //         });
-    //
-    //         after(() => {
-    //             BlockRepo.setLastNBlocks([]);
-    //         });
-    //     });
-    //
-    //     context('when appending lastNBlocks', () => {
-    //         it('should shift lastNBlocks array', () => {
-    //             blocks.forEach((blockId) => {
-    //                 BlockRepo.appendInLastNBlocks(blockId);
-    //             });
-    //             let response = BlockRepo.getLastNBlockIds();
-    //             expect(response).to.be.lengthOf(config.constants.blockSlotWindow);
-    //             expect(response[0]).to.be.eql(blocks[config.constants.blockSlotWindow - addition]);
-    //         });
-    //     });
-    // });
 
     describe('function \'isExist\'', () => {
 
@@ -205,6 +176,7 @@ describe('Block memory repository', () => {
 
             after(() => {
                 BlockRepo.deleteLastBlock();
+                BlockRepo.deleteLastBlock();
             });
         });
     });
@@ -232,21 +204,21 @@ describe('Block memory repository', () => {
             });
 
             it('should return empty array if height of first requested block is less than presented in repo', () => {
-                const response = BlockRepo.getMany(firstBlock.height - 6);
+                const response = BlockRepo.getMany(100, firstBlock.height - 6);
                 expect(response).to.be.lengthOf(0);
             });
 
             it('should return requested amount of blocks or less', () => {
-                let response = BlockRepo.getMany(firstBlock.height + 5, 10);
+                let response = BlockRepo.getMany(10, firstBlock.height + 5);
                 expect(response).to.be.an('array');
                 expect(response).to.be.lengthOf(10);
-                expect(response[0]).to.be.eql(blocks[6]);
-                expect(response[response.length - 1]).to.be.eql(blocks[15]);
+                expect(response[0]).to.be.eql(blocks[5]);
+                expect(response[response.length - 1]).to.be.eql(blocks[14]);
 
-                response = BlockRepo.getMany(lastBlock.height - 8, 20);
+                response = BlockRepo.getMany(20, lastBlock.height - 8);
                 expect(response).to.be.an('array');
-                expect(response).to.be.lengthOf(8);
-                expect(response[0]).to.be.eql(blocks[blocks.length - 8]);
+                expect(response).to.be.lengthOf(9);
+                expect(response[0]).to.be.eql(blocks[blocks.length - 9]);
                 expect(response[response.length - 1]).to.be.eql(blocks[blocks.length - 1]);
             });
 

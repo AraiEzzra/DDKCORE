@@ -38,14 +38,14 @@ class BlockRepo implements IBlockRepository {
         return lastBlock;
     }
 
-    public getMany(startHeight?: number, limit?: number): Array<Block> {
+    public getMany(limit: number, offset?: number): Array<Block> {
         if (!this.memoryBlocks[0]) {
             return [];
         }
-        if (startHeight && startHeight < this.memoryBlocks[0].height) {
+        if (offset && offset < this.memoryBlocks[0].height) {
             return [];
         }
-        const from: number = startHeight ? startHeight - this.memoryBlocks[0].height : 0;
+        const from: number = offset ? offset - this.memoryBlocks[0].height : 0;
         const to: number = limit ? from + limit : this.memoryBlocks.length;
         return this.memoryBlocks.slice(from, to);
     }

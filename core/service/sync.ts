@@ -102,7 +102,7 @@ export class SyncService implements ISyncService {
     }
 
     sendBlocks(data: { height: number, limit: number }, peer): void {
-        const blocks = BlockRepository.getMany(data.height, data.limit);
+        const blocks = BlockRepository.getMany(data.limit, data.height);
         SyncRepository.sendBlocks(blocks, peer);
     }
 

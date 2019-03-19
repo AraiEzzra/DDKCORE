@@ -32,10 +32,6 @@ const dropTables = async () => {
     await dropBlockTable();
 };
 
-const getAll = async () => {
-    return await BlockPGRepo.getMany();
-};
-
 describe('Block repository', () => {
 
     describe('getGenesisBlock', () => {
@@ -143,55 +139,6 @@ describe('Block repository', () => {
                 const existingBlocks = await BlockPGRepo.getMany();
                 expect(existingBlocks).to.be.lengthOf(1);
                 expect(existingBlocks[0].id).to.be.equal(secondBlock.id);
-            });
-
-            after(async () => {
-                await dropTables();
-            });
-        });
-    });
-
-    describe('deleteAfterBlock', () => {
-        context('without existing table', () => {
-            it('should return response with error', async () => {
-                try {
-                    await BlockPGRepo.deleteAfterBlock('');
-                } catch (err) {
-                    expect(err).to.exist;
-                }
-            });
-        });
-
-        context('if table is present but empty', () => {
-            before(async () => {
-                await prepareTables();
-            });
-
-            it('should return response with empty array', async () => {
-                const response = await BlockPGRepo.deleteAfterBlock('');
-                expect(response).to.be.lengthOf(0);
-            });
-
-            after(async () => {
-                await dropTables();
-            });
-        });
-
-        context('if deleting blocks exist', () => {
-            let firstBlock, secondBlock, thirdBlock;
-            before(async () => {
-                await prepareTables();
-                firstBlock = await insertBlock();
-                secondBlock = await insertBlock();
-                thirdBlock = await insertBlock();
-            });
-
-            it('should return response with block id', async () => {
-                const response = await BlockPGRepo.deleteAfterBlock(secondBlock.id);
-                expect(response).to.be.lengthOf(1);
-                expect(response[0]).to.be.eq(thirdBlock.id);
-                const existingBlocks = await BlockPGRepo.getMany();
-                expect(existingBlocks).to.be.lengthOf(2);
             });
 
             after(async () => {
@@ -385,15 +332,15 @@ describe('Block repository', () => {
                 let response = await BlockPGRepo.getMany();
                 expect(response).to.be.an('array');
                 expect(response).to.be.lengthOf(99);
-                response = await BlockPGRepo.getMany(38);
+                response = await BlockPGRepo.getMany(100, 38);
                 expect(response).to.be.an('array');
-                expect(response).to.be.lengthOf(63);
-                expect(response[0].id).to.be.equal(blocks[36].id);
+                expect(response).to.be.lengthOf(62);
+                expect(response[0].id).to.be.equal(blocks[37].id);
                 response = await BlockPGRepo.getMany(26, 8);
                 expect(response).to.be.an('array');
-                expect(response).to.be.lengthOf(8);
-                expect(response[0].id).to.be.equal(blocks[24].id);
-                expect(response[7].id).to.be.equal(blocks[31].id);
+                expect(response).to.be.lengthOf(26);
+                expect(response[0].id).to.be.equal(blocks[7].id);
+                expect(response[25].id).to.be.equal(blocks[32].id);
             });
 
             after(async () => {

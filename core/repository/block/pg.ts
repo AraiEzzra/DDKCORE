@@ -88,12 +88,6 @@ class BlockPGRepo implements IBlockPGRepository {
         return ids.map(rawId => rawId.id);
     }
 
-    async deleteAfterBlock(blockId: BlockId): Promise<Array<string>> {
-        const ids = await db.manyOrNone(queries.deleteAfterBlock, { blockId });
-        return ids.map(rawId => rawId.id);
-    }
-
-
     async getById(blockId: BlockId): Promise<Block> {
         const rawBlock: RawBlock = await db.oneOrNone(queries.getById, { blockId });
 
@@ -135,8 +129,7 @@ class BlockPGRepo implements IBlockPGRepository {
         return rawBlockIds.map(block => block.id);
     }
 
-    async getMany(offset: number = 0, limit: number = 0): Promise<Array<Block>> {
-        limit = limit ? offset + limit : 0;
+    async getMany(limit: number = 0, offset: number = 0): Promise<Array<Block>> {
         const rawBlocks: Array<RawBlock> = await db.manyOrNone(queries.getMany(limit), { offset, limit });
         if (!rawBlocks || !rawBlocks.length) {
             return null;
@@ -147,8 +140,8 @@ class BlockPGRepo implements IBlockPGRepository {
     }
 
     async isExist(blockId: BlockId): Promise<boolean> {
-        let exists = await db.oneOrNone(queries.isExist, { blockId });
-        return exists.exists;
+        let response = await db.one(queries.isExist, { blockId });
+        return response.exists;
     }
 
     async saveOrUpdate(block: Block | Array<Block>): Promise<void> {
