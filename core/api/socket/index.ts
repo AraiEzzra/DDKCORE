@@ -1,6 +1,6 @@
 import { CONNECT_CHANNEL } from 'shared/driver/socket/channels';
 import SocketMiddleware from 'core/api/middleware/socket';
-import {ISocketServer, SocketServer} from 'shared/driver/socket/server';
+import { ISocketServer, SocketServer } from 'shared/driver/socket/server';
 
 const io = require('socket.io');
 
