@@ -9,7 +9,7 @@ import Config from 'shared/util/config';
 import BlockRepository from 'core/repository/block';
 import { Round, Slots } from 'shared/model/round';
 import RoundRepository from 'core/repository/round';
-import { createTaskON } from 'shared/util/bus';
+import { createTaskON, resetTaskON } from 'shared/util/bus';
 import DelegateRepository from 'core/repository/delegate';
 import AccountRepository from 'core/repository/account';
 import { ed } from 'shared/util/ed';
@@ -18,10 +18,12 @@ import { logger } from 'shared/util/logger';
 import { compose } from 'core/util/common';
 import RoundPGRepository from 'core/repository/round/pg';
 import { Block } from 'shared/model/block';
+import { ActionTypes } from 'core/util/actionTypes';
 import { calculateRoundByTimestamp } from 'core/util/round';
 
 const MAX_LATENESS_FORGE_TIME = 500;
 const constants = Config.constants;
+
 
 interface IHashList {
     hash: string;
@@ -177,7 +179,7 @@ class RoundService implements IRoundService {
                 logger.info(
                     `${this.logPrefix}[generateRound] Start forging block to: ${mySlot} after ${cellTime} ms`
                 );
-                createTaskON('BLOCK_GENERATE', cellTime, {
+                createTaskON(ActionTypes.BlockGenerate, cellTime, {
                     timestamp: SlotService.getSlotTime(mySlot),
                     keyPair: this.keyPair,
                 });
@@ -197,6 +199,7 @@ class RoundService implements IRoundService {
         logger.debug(
             `${this.logPrefix}[generateRound] The round will be completed in ${roundEndTime} ms`
         );
+        createTaskON(ActionTypes.RoundFinish, roundEndTime);
         createTaskON('ROUND_FINISH', roundEndTime);
     }
 
@@ -287,6 +290,8 @@ class RoundService implements IRoundService {
     }
 
     public async rollBack(round: Round = RoundRepository.getCurrentRound()): Promise<void> {
+        resetTaskON(ActionTypes.BlockGenerate);
+        resetTaskON(ActionTypes.RoundFinish);
         this.undoUnconfirmed(round);
         await this.undo(round);
     }

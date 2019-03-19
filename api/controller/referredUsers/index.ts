@@ -2,6 +2,7 @@ import { RPC } from 'api/utils/decorators';
 import ReferredUsersService from 'api/service/referredUsers';
 import { Message } from 'shared/model/message';
 import SocketMiddleware from 'api/middleware/socket';
+import { GET_REFERRED_USERS, GET_REFERRED_USERS_BY_LEVEL } from 'shared/driver/socket/codes';
 
 export class ReferredUsersController {
 
@@ -10,7 +11,7 @@ export class ReferredUsersController {
         this.getReferredUsersByLevel = this.getReferredUsersByLevel.bind(this);
     }
 
-    @RPC('GET_REFERRED_USERS')
+    @RPC(GET_REFERRED_USERS)
     getReferredUsers(message: Message, socket: any) {
         const { body, headers, code } = message;
         const referredUsersResponse = ReferredUsersService.getReferredUsers(body.address, body.filter);
@@ -20,7 +21,7 @@ export class ReferredUsersController {
             : SocketMiddleware.emitToCore(message, socket);
     }
 
-    @RPC('GET_REFERRED_USERS_BY_LEVEL')
+    @RPC(GET_REFERRED_USERS_BY_LEVEL)
     getReferredUsersByLevel(message: Message, socket: any) {
         const { body, headers, code } = message;
 

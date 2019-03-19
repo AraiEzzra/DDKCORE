@@ -20,6 +20,7 @@ import RoundRepository from 'core/repository/round';
 import socket from 'core/repository/socket';
 import { logger } from 'shared/util/logger';
 import { Block } from 'shared/model/block';
+import { socketRPCServer } from 'core/api/server';
 import { getAddressByPublicKey } from 'shared/util/account';
 
 const START_SYNC_BLOCKS = 15000;
@@ -52,6 +53,7 @@ class Loader {
             () => messageON('EMIT_SYNC_BLOCKS', {}),
             START_SYNC_BLOCKS
         );
+        socketRPCServer.run();
     }
 
     private async transactionWarmUp(limit: number) {
