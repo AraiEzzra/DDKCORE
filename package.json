@@ -50,7 +50,6 @@
     "winston-daily-rotate-file": "^1.7.2",
     "autobind-decorator": "^2.4.0",
     "chai": "^3.5.0",
-    "copy-webpack-plugin": "^4.6.0",
     "crypto-browserify": "=3.11.0",
     "mocha": "^3.5.3",
     "ts-loader": "^5.3.3",
@@ -67,6 +66,7 @@
     "@types/mocha": "^5.2.6",
     "@types/node": "^10.12.18",
     "@types/socket.io": "^2.1.2",
-    "@types/socket.io-client": "^1.4.32"
+    "@types/socket.io-client": "^1.4.32",
+    "@types/z-schema": "^3.16.32"
   }
 }

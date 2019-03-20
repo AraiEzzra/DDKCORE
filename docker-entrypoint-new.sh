@@ -1,5 +1,5 @@
 echo $(node -v)
-# needs defined DB_HOST, ELASTICSEARCH_HOST and REDIS_HOST in environment
+# needs defined DB_HOST in environment
 # and wait-port npm package installed
 
 if [ "$MODE" == "WATCH" ]; then
