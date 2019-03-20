@@ -72,7 +72,7 @@ class TransactionRepo implements ITransactionRepository<IAsset> {
     public isExist(transactionId: string): boolean {
         return !!this.memoryTransactionById[transactionId];
     }
-    
+
     serialize(trs: Transaction<IAsset>): TransactionModel<IAsset> {
         const assetRepo: IAssetRepository<IAsset> = ASSET_REPOSITORIES[trs.type];
         let asset = trs.asset;
@@ -88,7 +88,8 @@ class TransactionRepo implements ITransactionRepository<IAsset> {
             signature: trs.signature,
             secondSignature: trs.secondSignature,
             salt: trs.salt,
-            asset: asset
+            asset: asset,
+            relay: trs.relay,
         };
     }
 
@@ -108,6 +109,7 @@ class TransactionRepo implements ITransactionRepository<IAsset> {
             secondSignature: rawTrs.secondSignature,
             salt: rawTrs.salt,
             asset: asset,
+            relay: rawTrs.relay,
         });
     }
 }
