@@ -39,10 +39,10 @@ class TransactionController extends BaseController {
     }
 
     @RPC('TRANSACTION_CREATE')
-    public async transactionCreate(action: { data: { trs: TransactionModel<IAsset>, secret: string } }): Promise<void> {
-        console.log('TRANSACTION RPC CREATING....', JSON.stringify(action.data));
-        const keyPair = ed.makeKeyPair(Buffer.from(action.data.secret));
-        const responseTrs = TransactionService.create(action.data.trs, keyPair);
+    public async transactionCreate(action: { trs: TransactionModel<IAsset>, secret: string }): Promise<void> {
+        console.log('TRANSACTION RPC CREATING....', JSON.stringify(action));
+        const keyPair = ed.makeKeyPair(Buffer.from(action.secret));
+        const responseTrs = TransactionService.create(action.trs, keyPair);
         if (responseTrs.success) {
             TransactionQueue.push(responseTrs.data);
         }

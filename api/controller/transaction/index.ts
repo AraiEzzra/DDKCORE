@@ -24,7 +24,10 @@ export class TransactionController {
     @RPC(CREATE_TRANSACTION)
     createTransaction(message: Message, socket: any) {
         // TODO: remove this logic from API
-        message.body.data.trs.createdAt = Date.now() / 1000;
+        message.body = {
+            trs: message.body,
+            secret: message.body.secret
+        };
         console.log('MESSAGE: ', message);
         SocketMiddleware.emitToCore(message, socket);
     }
