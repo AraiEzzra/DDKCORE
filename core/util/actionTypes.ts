@@ -1,4 +1,4 @@
 export enum ActionTypes {
-    BlockGenerate = 'BLOCK_GENERATE',
-    RoundFinish = 'ROUND_FINISH'
+    BLOCK_GENERATE = 'BLOCK_GENERATE',
+    ROUND_FINISH = 'ROUND_FINISH'
 }

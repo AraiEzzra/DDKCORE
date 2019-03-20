@@ -50,7 +50,6 @@
     "winston-daily-rotate-file": "^1.7.2",
     "autobind-decorator": "^2.4.0",
     "chai": "^3.5.0",
-    "copy-webpack-plugin": "^4.6.0",
     "crypto-browserify": "=3.11.0",
     "mocha": "^3.5.3",
     "ts-loader": "^5.3.3",
