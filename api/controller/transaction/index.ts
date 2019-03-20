@@ -26,13 +26,7 @@ export class TransactionController {
     @RPC(CREATE_TRANSACTION)
     @validate(SCHEMA_CREATE_TRANSACRION)
     createTransaction(message: Message, socket: any) {
-        // TODO: remove this logic from API
-        if (message.isValid) {
-            message.body.data.trs.createdAt = Date.now() / 1000;
-            SocketMiddleware.emitToCore(message, socket);
-        } else {
-           console.log('Not VALID');
-        }
+        SocketMiddleware.emitToCore(message, socket);
     }
 
 

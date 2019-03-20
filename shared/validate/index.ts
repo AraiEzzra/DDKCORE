@@ -12,8 +12,8 @@ export const validate = (schemaValid: Object) => {
 
         return {
             value: function (message) {
-                validateData(schemaValid, message.body, (data: boolean) => {
-                    message.isValid = data;
+                validateData(schemaValid, message.body, (isValid: boolean) => {
+                    message.isValid = isValid;
                     descriptorFn.apply(this, arguments);
                 });
             }
