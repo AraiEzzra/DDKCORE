@@ -8,7 +8,8 @@ export default {
         return [
             'SELECT * FROM block WHERE "height" > ${offset}',
             (limit ? 'AND "height" <= ${offset} + ${limit}' : ''),
-            (limit ? 'ORDER BY "height" LIMIT ${limit}' : '')
+            'ORDER BY "height" ' +
+            (limit ? 'LIMIT ${limit}' : '')
         ].filter(Boolean).join(' ');
     },
     isExist: 'SELECT EXISTS(SELECT id FROM block WHERE "id" = ${blockId})'
