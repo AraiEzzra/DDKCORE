@@ -19,7 +19,7 @@ import { compose } from 'core/util/common';
 import RoundPGRepository from 'core/repository/round/pg';
 import { Block } from 'shared/model/block';
 import { ActionTypes } from 'core/util/actionTypes';
-import { calculateRoundByTimestamp } from 'core/util/round';
+import { calculateRoundFirstSlotByTimestamp } from 'core/util/round';
 
 const MAX_LATENESS_FORGE_TIME = 500;
 const constants = Config.constants;
@@ -120,7 +120,7 @@ class RoundService implements IRoundService {
     }
 
     public generatorPublicKeyToSlot(sortedHashList: Array<IHashList>, timestamp: number): Slots {
-        let firstSlot = calculateRoundByTimestamp(timestamp);
+        let firstSlot = calculateRoundFirstSlotByTimestamp(timestamp);
         return sortedHashList.reduce(
             (acc: Slots = {}, item: IHashList, i) => {
                 acc[item.generatorPublicKey] = { slot: firstSlot + i };
@@ -200,7 +200,6 @@ class RoundService implements IRoundService {
             `${this.logPrefix}[generateRound] The round will be completed in ${roundEndTime} ms`
         );
         createTaskON(ActionTypes.RoundFinish, roundEndTime);
-        createTaskON('ROUND_FINISH', roundEndTime);
     }
 
     public async generateRound(timestamp: number = SlotService.getTime()): Promise<ResponseEntity<void>> {
