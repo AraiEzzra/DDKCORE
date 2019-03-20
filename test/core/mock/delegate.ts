@@ -13,7 +13,7 @@ class DelegateMock {
             const trs = transactions[i];
             if (trs.type === TransactionType.DELEGATE) {
                 this.delegates.push({
-                    name: trs.asset.delegate.username,
+                    name: trs.asset.username,
                     publicKey: trs.senderPublicKey,
                     votes: 0
                 });

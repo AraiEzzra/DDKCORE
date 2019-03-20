@@ -179,7 +179,7 @@ class RoundService implements IRoundService {
                 logger.info(
                     `${this.logPrefix}[generateRound] Start forging block to: ${mySlot} after ${cellTime} ms`
                 );
-                createTaskON(ActionTypes.BlockGenerate, cellTime, {
+                createTaskON(ActionTypes.BLOCK_GENERATE, cellTime, {
                     timestamp: SlotService.getSlotTime(mySlot),
                     keyPair: this.keyPair,
                 });
@@ -199,7 +199,7 @@ class RoundService implements IRoundService {
         logger.debug(
             `${this.logPrefix}[generateRound] The round will be completed in ${roundEndTime} ms`
         );
-        createTaskON(ActionTypes.RoundFinish, roundEndTime);
+        createTaskON(ActionTypes.ROUND_FINISH, roundEndTime);
     }
 
     public async generateRound(timestamp: number = SlotService.getTime()): Promise<ResponseEntity<void>> {
@@ -270,7 +270,7 @@ class RoundService implements IRoundService {
         // load blocks forged in the last round
 
         const limit = Object.keys(round.slots).length;
-        const blocks = BlockRepository.getMany(round.startHeight, limit);
+        const blocks = BlockRepository.getMany(limit, round.startHeight);
 
         const resp: IRoundSum = {
             roundFees: 0,
@@ -289,8 +289,8 @@ class RoundService implements IRoundService {
     }
 
     public async rollBack(round: Round = RoundRepository.getCurrentRound()): Promise<void> {
-        resetTaskON(ActionTypes.BlockGenerate);
-        resetTaskON(ActionTypes.RoundFinish);
+        resetTaskON(ActionTypes.BLOCK_GENERATE);
+        resetTaskON(ActionTypes.ROUND_FINISH);
         this.undoUnconfirmed(round);
         await this.undo(round);
     }

@@ -82,15 +82,11 @@ class BlockPGRepo implements IBlockPGRepository {
         return blocks;
     }
 
-    async deleteById(blockId: BlockId | Array<BlockId>): Promise<void> {
+    async deleteById(blockId: BlockId | Array<BlockId>): Promise<Array<string>> {
         const blockIds: Array<BlockId> = [].concat(blockId);
-        await db.none(queries.deleteByIds, [blockIds]);
+        const ids = await db.manyOrNone(queries.deleteByIds, [blockIds]);
+        return ids.map(rawId => rawId.id);
     }
-
-    async deleteAfterBlock(blockId: BlockId): Promise<void> {
-        await db.none(queries.deleteAfterBlock, blockId);
-    }
-
 
     async getById(blockId: BlockId): Promise<Block> {
         const rawBlock: RawBlock = await db.oneOrNone(queries.getById, { blockId });
@@ -100,7 +96,7 @@ class BlockPGRepo implements IBlockPGRepository {
         }
 
         let block: Block = this.deserialize(rawBlock);
-        block = this.assignTransactions([block])[0];
+        block = (await this.assignTransactions([block]))[0];
         return block;
     }
 
@@ -110,7 +106,7 @@ class BlockPGRepo implements IBlockPGRepository {
             return null;
         }
         let block: Block = this.deserialize(rawBlock);
-        block = this.assignTransactions([block])[0];
+        block = (await this.assignTransactions([block]))[0];
         return block;
     }
 
@@ -120,7 +116,7 @@ class BlockPGRepo implements IBlockPGRepository {
             return null;
         }
         let block: Block = this.deserialize(rawBlock);
-        block = this.assignTransactions([block])[0];
+        block = (await this.assignTransactions([block]))[0];
         return block;
     }
 
@@ -133,7 +129,7 @@ class BlockPGRepo implements IBlockPGRepository {
         return rawBlockIds.map(block => block.id);
     }
 
-    async getMany(limit: number, offset: number): Promise<Array<Block>> {
+    async getMany(limit: number = 0, offset: number = 0): Promise<Array<Block>> {
         const rawBlocks: Array<RawBlock> = await db.manyOrNone(queries.getMany(limit), { offset, limit });
         if (!rawBlocks || !rawBlocks.length) {
             return null;
@@ -144,8 +140,8 @@ class BlockPGRepo implements IBlockPGRepository {
     }
 
     async isExist(blockId: BlockId): Promise<boolean> {
-        let exists = await db.oneOrNone(queries.isExist, { blockId });
-        return exists === 't';
+        let response = await db.one(queries.isExist, { blockId });
+        return response.exists;
     }
 
     async saveOrUpdate(block: Block | Array<Block>): Promise<void> {
