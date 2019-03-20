@@ -13,7 +13,6 @@ export class Message {
         type: MessageType;
     };
     public body: any;
-    public isValid?: boolean;
 
     constructor(type: MessageType, code: string, body: any, id? : string) {
         this.code = code;

@@ -270,7 +270,7 @@ class RoundService implements IRoundService {
         // load blocks forged in the last round
 
         const limit = Object.keys(round.slots).length;
-        const blocks = BlockRepository.getMany(round.startHeight, limit);
+        const blocks = BlockRepository.getMany(limit, round.startHeight);
 
         const resp: IRoundSum = {
             roundFees: 0,

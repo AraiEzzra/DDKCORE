@@ -300,7 +300,7 @@ class Config {
 
         if (env.NODE_ENV_IN === 'test') {
             this.genesisBlock = testnetGenesisBlock as any;
-            this.config = { coverage: true };
+            this.config = { ...defaultCfg, coverage: true };
             Object.assign(this.constants, testConstants);
         }
 
