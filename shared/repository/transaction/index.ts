@@ -23,7 +23,7 @@ export interface ITransactionPGRepository <T extends IAsset> {
     serialize(trs: Transaction<T>): RawTransaction;
     deserialize(rawTrs: RawTransaction): Transaction<T>;
 
-    deleteById(trsId: TransactionId | Array<TransactionId>): Promise<void>;
+    deleteById(trsId: TransactionId | Array<TransactionId>): Promise<Array<string>>;
     getByBlockIds(blockIds: Array<BlockId>): Promise<TransactionsByBlockResponse>;
     getById(trsId: TransactionId): Promise<Transaction<T>>;
     getMany(limit: number, offset: number): Promise<Array<Transaction<T>>>;
