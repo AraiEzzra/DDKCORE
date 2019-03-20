@@ -1,3 +1,5 @@
+import autobind from 'autobind-decorator';
+
 import { Transaction, TransactionStatus, IAsset } from 'shared/model/transaction';
 import { transactionSortFunc } from 'core/util/transaction';
 import constants from '../../config/mainnet/constants';
@@ -82,6 +84,7 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
     }
 
     // TODO change to mapReduce
+    @autobind
     async process(): Promise<void> {
         if (this.queue.length === 0 || this.locked) {
             return;
@@ -91,14 +94,14 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
 
         // TODO redundant in sync variant
         if (TransactionPool.has(trs)) {
-            this.process();
+            setImmediate(this.process);
             return;
         }
 
         if (TransactionPool.isPotentialConflict(trs)) {
             this.pushInConflictedQueue(trs);
             // notify in socket
-            this.process();
+            setImmediate(this.process);
             return;
         }
 
@@ -109,19 +112,19 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
             logger.debug(`TransactionStatus.verifyStatus ${JSON.stringify(verifyStatus)}`);
             trs.status = TransactionStatus.DECLINED;
             // notify in socket
-            this.process();
+            setImmediate(this.process);
             return;
         }
         trs.status = TransactionStatus.VERIFIED;
 
         if (!this.locked) {
             TransactionPool.push(trs, sender, true);
-            this.process();
+            setImmediate(this.process);
             return;
         }
 
         this.push(trs);
-        this.process();
+        setImmediate(this.process);
     }
 
 
