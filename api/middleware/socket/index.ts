@@ -9,6 +9,7 @@ import { SOCKET_TIMEOUT_MS } from 'shared/config/socket';
 import coreSocketClient from 'api/socket/client';
 import { ResponseEntity } from 'shared/model/response';
 import TransactionControllerInstance, { TransactionController } from 'api/controller/transaction';
+import { logger } from 'shared/util/logger';
 
 type RequestProcessor = {
     socket: any,
@@ -40,24 +41,25 @@ export class SocketMiddleware {
     }
 
     onConnect(socket: any) {
-        console.log('Socket %s connected', JSON.stringify(socket.handshake));
+        logger.info('API: Socket %s connected', JSON.stringify(socket.handshake));
         socket.on(MESSAGE_CHANNEL, (data: Message) => this.onApiMessage(data, socket));
     }
 
     onApiMessage(message: Message, socket: any) {
         const { headers } = message;
-
+        logger.info(`API: EMIT - ${message.code}`);
         if (headers.type === MessageType.REQUEST) {
             this.processMessage(message, socket);
         } else {
             message.body = new ResponseEntity({ errors: ['Invalid message type'] });
+            logger.error(`API. Invalid message type - ${message.code}`);
             socket.emit(MESSAGE_CHANNEL, message);
         }
 
     }
 
     onCoreMessage(message: Message, socketServer?: SocketIO.Server) {
-        console.log('ON CORE MESSAGE', message);
+        logger.info(`API: ON CORE MESSAGE - ${message}`);
         if (message.headers.type === MessageType.EVENT) {
             socketServer.emit(MESSAGE_CHANNEL, message);
         }
@@ -69,6 +71,7 @@ export class SocketMiddleware {
         if (typeof method === 'function') {
             method(message, socket);
         } else {
+            logger.error(`API: Invalid request - ${message.code}`);
             const errors = new ResponseEntity({ errors: ['Invalid request'] });
             const errorMessage = new Message(MessageType.RESPONSE, message.code, errors, message.headers.id);
             socket.emit(MESSAGE_CHANNEL, errorMessage);
@@ -88,6 +91,7 @@ export class SocketMiddleware {
 
     // TODO: extract this to some utils for socket. e.g. driver
     emitToCore(message: Message, socket: any) {
+        logger.info(`API: EMIT CORE MESSAGE - ${message.code}`);
         const cleaner = this.buildRequestCleaner(message, socket);
         this.requests.set(message.headers.id, { socket, cleaner });
         coreSocketClient.emit(MESSAGE_CHANNEL, message);
@@ -105,7 +109,7 @@ export class SocketMiddleware {
 
     buildRequestCleaner(message: Message, socket: any) {
         return setTimeout(() => {
-            console.log('CLEANING....');
+            logger.info(`API: CLEANING ... ${ message.code }`);
             message.body = new ResponseEntity({ errors: ['Request timeout'] });
             message.headers.type = MessageType.RESPONSE;
             this.requests.delete(message.headers.id);
