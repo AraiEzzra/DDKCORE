@@ -19,7 +19,7 @@ import { compose } from 'core/util/common';
 import RoundPGRepository from 'core/repository/round/pg';
 import { Block } from 'shared/model/block';
 import { ActionTypes } from 'core/util/actionTypes';
-import { calculateRoundByTimestamp } from 'core/util/round';
+import { calculateRoundFirstSlotByTimestamp } from 'core/util/round';
 
 const MAX_LATENESS_FORGE_TIME = 500;
 const constants = Config.constants;
@@ -120,7 +120,7 @@ class RoundService implements IRoundService {
     }
 
     public generatorPublicKeyToSlot(sortedHashList: Array<IHashList>, timestamp: number): Slots {
-        let firstSlot = calculateRoundByTimestamp(timestamp);
+        let firstSlot = calculateRoundFirstSlotByTimestamp(timestamp);
         return sortedHashList.reduce(
             (acc: Slots = {}, item: IHashList, i) => {
                 acc[item.generatorPublicKey] = { slot: firstSlot + i };
@@ -179,7 +179,7 @@ class RoundService implements IRoundService {
                 logger.info(
                     `${this.logPrefix}[generateRound] Start forging block to: ${mySlot} after ${cellTime} ms`
                 );
-                createTaskON(ActionTypes.BlockGenerate, cellTime, {
+                createTaskON(ActionTypes.BLOCK_GENERATE, cellTime, {
                     timestamp: SlotService.getSlotTime(mySlot),
                     keyPair: this.keyPair,
                 });
@@ -199,8 +199,7 @@ class RoundService implements IRoundService {
         logger.debug(
             `${this.logPrefix}[generateRound] The round will be completed in ${roundEndTime} ms`
         );
-        createTaskON(ActionTypes.RoundFinish, roundEndTime);
-        createTaskON('ROUND_FINISH', roundEndTime);
+        createTaskON(ActionTypes.ROUND_FINISH, roundEndTime);
     }
 
     public async generateRound(timestamp: number = SlotService.getTime()): Promise<ResponseEntity<void>> {
@@ -290,8 +289,8 @@ class RoundService implements IRoundService {
     }
 
     public async rollBack(round: Round = RoundRepository.getCurrentRound()): Promise<void> {
-        resetTaskON(ActionTypes.BlockGenerate);
-        resetTaskON(ActionTypes.RoundFinish);
+        resetTaskON(ActionTypes.BLOCK_GENERATE);
+        resetTaskON(ActionTypes.ROUND_FINISH);
         this.undoUnconfirmed(round);
         await this.undo(round);
     }

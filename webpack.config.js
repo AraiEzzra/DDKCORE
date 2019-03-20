@@ -1,6 +1,5 @@
 const path = require('path');
 const nodeExternals = require('webpack-node-externals');
-const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 const DIR = path.resolve(__dirname);
 const OUTPUT_DIR = path.resolve(__dirname, 'dist');
@@ -15,11 +14,6 @@ const baseConfig = {
     },
     module: {
         rules: [
-            // {
-            //     test: /\.js$/,
-            //     exclude: /node_modules/,
-            //     use: ['babel-loader'],
-            // },
             {
                 test: /\.ts?$/,
                 exclude: /node_modules/,
@@ -73,14 +67,6 @@ const coreConfig = {
         path: path.join(OUTPUT_DIR, 'core'),
         publicPath: '/',
     },
-    // plugins: [
-    //     new CopyWebpackPlugin([
-    //         {
-    //             from: './build',
-    //             to: './',
-    //         },
-    //     ]),
-    // ],
 };
 
 const generateGenesisConfig = {

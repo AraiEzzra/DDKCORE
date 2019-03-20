@@ -1,5 +1,4 @@
 import BlockController from './block';
-import DelegateController from './delegate';
 import RoundController from './round';
 import SyncController from './sync';
 import TransactionController from './transaction';
@@ -13,7 +12,6 @@ export const initControllers = () => {
         BlockController,
         TransactionController,
         RoundController,
-        DelegateController,
         SyncController
     ];
 
@@ -51,11 +49,4 @@ export const initControllers = () => {
         }
     });
 
-};
-
-export default {
-    BlockController,
-    DelegateController,
-    RoundController,
-    SyncController,
 };
