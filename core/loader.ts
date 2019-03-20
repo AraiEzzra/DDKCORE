@@ -84,7 +84,7 @@ class Loader {
         return;
     }
 
-    private async roundWarmUp(limit) {
+    private async roundWarmUp(limit: number) {
         let offset: number = 0;
 
         do {

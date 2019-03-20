@@ -35,7 +35,7 @@ export class Socket {
         ioServer.on('connect', function (socket) {
             socket.emit('OPEN');
             socket.on('HEADERS', (data: string) => {
-                logger.debug(`[SOCKET][CLIENT_PEER_HEADERS_RECEIVE], data: ${data}`);
+                // logger.debug(`[SOCKET][CLIENT_PEER_HEADERS_RECEIVE], data: ${data}`);
                 const peer = JSON.parse(data);
                 if (Socket.instance.addPeer(peer, socket)) {
                     socket.emit('SERVER_HEADERS', JSON.stringify(
@@ -63,7 +63,7 @@ export class Socket {
                 SystemRepository.getFullHeaders()
             ));
             ws.on('SERVER_HEADERS', (headers: string) => {
-                logger.debug(`[SOCKET][SERVER_PEER_HEADERS_RECEIVE] data: ${headers}`);
+                // logger.debug(`[SOCKET][SERVER_PEER_HEADERS_RECEIVE] data: ${headers}`);
                 const fullPeer = Object.assign(JSON.parse(headers), peer);
                 Socket.instance.addPeer(fullPeer, ws);
             });
@@ -87,19 +87,19 @@ export class Socket {
     @autobind
     onPeerAction(response: string, peer: Peer): void {
         const { code, data } = JSON.parse(response);
-        logger.debug(`[SOCKET][ON_PEER_ACTION][${peer.ip}:${peer.port}], CODE: ${code}, DATA: ${JSON.stringify(data)}`);
+        logger.debug(`[SOCKET][ON_PEER_ACTION][${peer.ip}:${peer.port}], CODE: ${code}`);
         messageON(code, { data, peer });
     }
 
     @autobind
-    emitPeers(code, data, peers: Array<Peer> = null): void {
+    emitPeers(code: string, data, peers: Array<Peer> = null): void {
         (peers || PeerRepository.peerList()).forEach(peer => {
             this.emitPeer(code, data, peer);
         });
     }
 
     @autobind
-    emitPeer(code, data, peer): void {
+    emitPeer(code: string, data, peer: Peer): void {
         if (!(PeerRepository.has(peer))) {
             logger.error(`Peer ${peer.ip}:${peer.port} is offline`);
             return;

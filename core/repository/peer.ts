@@ -49,19 +49,19 @@ export class PeerRepo {
         return false;
     }
 
-    getPeerFromPool(peer) {
+    getPeerFromPool(peer: Peer) {
         return this.peers[`${peer.ip}:${peer.port}`];
     }
 
-    has(peer) {
+    has(peer: Peer) {
         if (`${peer.ip}:${peer.port}` in this.peers) {
             return true;
         }
         return false;
     }
 
-    peerUpdate(headers, peer) {
-        logger.debug(`[Repository][Peer][peerUpdate]: ${JSON.stringify(headers)}`);
+    peerUpdate(headers, peer: Peer): void {
+        logger.debug(`[Repository][Peer][peerUpdate][${peer.ip}:${peer.port}]: ${JSON.stringify(headers)}`);
         if (!this.has(peer)) {
             return;
         }
