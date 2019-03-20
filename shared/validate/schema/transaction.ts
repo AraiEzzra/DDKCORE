@@ -1,5 +1,3 @@
-import { TransactionType } from 'shared/model/transaction';
-
 export const SCHEMA_CREATE_TRANSACRION = {
     id: 'transactions.createTransaction',
     type: 'object',
@@ -16,7 +14,7 @@ export const SCHEMA_CREATE_TRANSACRION = {
         senderAddress: {
             type: 'number'
         },
-        signature: {
+        signature: { // TODO replace on "secret"
             type: 'string'
         },
         secondSignature: {
