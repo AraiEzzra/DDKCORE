@@ -1,20 +1,10 @@
 import { Block } from 'shared/model/block';
-import config from 'shared/util/config';
 import BlockRepo from 'core/repository/block/index';
-import TransactionRepo from 'core/repository/transaction/index';
-import BlockService from 'core/service/block';
 import { expect } from 'chai';
 import {
     getNewBlock, createTrsTable, createBlockTable, dropTrsTable,
     dropBlockTable
 } from 'test/core/repository/block/mock';
-import {IAsset, Transaction} from 'shared/model/transaction';
-
-const resultTransactions = config.genesisBlock.transactions.map((transaction) =>
-    TransactionRepo.deserialize(transaction)
-);
-config.genesisBlock.transactions = <Array<Transaction<IAsset>>>resultTransactions;
-const genesisBlock = new Block(config.genesisBlock);
 
 const getAllBlocks = () => {
     return BlockRepo.getMany(Number.MAX_SAFE_INTEGER);
@@ -37,8 +27,10 @@ describe('Block memory repository', () => {
 
         context('when block exists', () => {
 
-            before(async () => {
-                await BlockService.applyGenesisBlock(genesisBlock);
+            const firstBlock = getNewBlock();
+
+            before(() => {
+                 BlockRepo.add(firstBlock);
             });
 
             it('should return response with genesis block data (blockId = 1)', () => {

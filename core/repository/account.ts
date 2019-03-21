@@ -1,5 +1,4 @@
 import {Account, Address, PublicKey} from 'shared/model/account';
-import { Delegate } from 'shared/model/delegate';
 import { getAddressByPublicKey } from 'shared/util/account';
 
 class AccountRepo {
@@ -35,20 +34,40 @@ class AccountRepo {
     }
 
     // example: such functions should be handlers and depends on workflows
-    updateBalance(account: Account, balance: number): void {
-        this.memoryAccountsByAddress.get(account.address).actualBalance = balance;
+    updateBalance(account: Account, balance: number): boolean {
+        const memoryAccount = this.memoryAccountsByAddress.get(account.address);
+        if (!memoryAccount) {
+            return false;
+        }
+        memoryAccount.actualBalance = balance;
+        return true;
     }
 
-    updateBalanceByAddress(address: Address, difference: number): void {
-        this.memoryAccountsByAddress.get(address).actualBalance += difference;
+    updateBalanceByAddress(address: Address, difference: number): boolean {
+        const memoryAccount = this.memoryAccountsByAddress.get(address);
+        if (!memoryAccount) {
+            return false;
+        }
+        memoryAccount.actualBalance += difference;
+        return true;
     }
 
-    updateVotes(account: Account, votes: Array<string> ): void {
-        this.memoryAccountsByAddress.get(account.address).votes = votes;
+    updateVotes(account: Account, votes: Array<string> ): boolean {
+        const memoryAccount = this.memoryAccountsByAddress.get(account.address);
+        if (!memoryAccount) {
+            return false;
+        }
+        memoryAccount.votes = votes;
+        return true;
     }
 
-    updateReferralByAddress(address: Address, referrals: Array<Account>): void {
-        this.memoryAccountsByAddress.get(address).referrals = referrals;
+    updateReferralByAddress(address: Address, referrals: Array<Account>): boolean {
+        const memoryAccount = this.memoryAccountsByAddress.get(address);
+        if (!memoryAccount) {
+            return false;
+        }
+        memoryAccount.referrals = referrals;
+        return true;
     }
 }
 

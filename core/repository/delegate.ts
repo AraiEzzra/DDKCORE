@@ -29,10 +29,10 @@ class DelegateRepository {
      */
     public getActiveDelegates(): ResponseEntity<Array<Delegate>> {
         const activeDelegates: Array<Delegate> = Object.values(this.memoryDelegates).sort((a, b) => {
-            if (a.votes > b.votes) {
+            if (a.votes < b.votes) {
                 return 1;
             }
-            if (a.votes < b.votes) {
+            if (a.votes > b.votes) {
                 return -1;
             }
             return 0;
@@ -49,12 +49,20 @@ class DelegateRepository {
     }
 
     public update(delegate: Delegate) {
+        if (!delegate.account) {
+            return false;
+        }
+        const presentedDelegate = this.memoryDelegates[delegate.account.publicKey];
+        if (!presentedDelegate) {
+            return false;
+        }
         const oldName = this.memoryDelegates[delegate.account.publicKey].username;
         if (oldName !== delegate.username) {
             this.usernames.delete(oldName);
             this.usernames.add(delegate.username);
         }
         this.memoryDelegates[delegate.account.publicKey] = delegate;
+        return true;
     }
 
     public getByPublicKey(publicKey: string): Delegate {
@@ -66,6 +74,7 @@ class DelegateRepository {
     }
 
     public delete(account: Account): void {
+        this.usernames.delete(this.memoryDelegates[account.publicKey].username);
         delete this.memoryDelegates[account.publicKey];
     }
 }

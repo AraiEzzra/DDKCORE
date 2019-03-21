@@ -5,10 +5,9 @@ import * as crypto from 'crypto';
 let blockIdSequence = 1;
 export const clearSequence = () => blockIdSequence = 1;
 export const getNewBlock = (): Block => {
-    blockIdSequence++;
     return new Block({
         id: crypto.createHash('sha256').update(Buffer.from('' + blockIdSequence)).digest('hex'),
-        height: blockIdSequence,
+        height: blockIdSequence++,
         previousBlockId: null,
         createdAt: Math.floor(Date.now() / 1000),
         transactions: []
