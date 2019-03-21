@@ -1,7 +1,6 @@
 import { API_METHODS } from 'core/api/middleware/apiHolder';
 import { Message, MessageType } from 'shared/model/message';
 import { CONNECT_TO_CORE, MESSAGE_CHANNEL } from 'shared/driver/socket/channels';
-import 'core/api/controller/transaction';
 import { ResponseEntity } from 'shared/model/response';
 
 export class SocketMiddleware {
@@ -23,7 +22,7 @@ export class SocketMiddleware {
             message.headers.type = MessageType.RESPONSE;
             socket.emit(MESSAGE_CHANNEL, message);
         } else {
-            const errors = new ResponseEntity({ errors: ['Invalid request'] });
+            const errors = new ResponseEntity({ errors: ['Invalid request to CORE'] });
             const errorMessage = new Message(MessageType.RESPONSE, message.code, errors, message.headers.id);
             socket.emit(MESSAGE_CHANNEL, errorMessage);
         }
