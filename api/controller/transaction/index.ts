@@ -26,6 +26,10 @@ export class TransactionController {
     @RPC(CREATE_TRANSACTION)
     @validate(SCHEMA_CREATE_TRANSACRION)
     createTransaction(message: Message, socket: any) {
+        message.body = {
+            trs: message.body,
+            secret: message.body.secret
+        };
         SocketMiddleware.emitToCore(message, socket);
     }
 

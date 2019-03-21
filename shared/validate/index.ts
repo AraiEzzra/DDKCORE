@@ -23,7 +23,7 @@ export const validate = (schemaValid: Object) => {
                             socket
                         });
                     } else {
-                        return descriptorFn.apply(this, arguments);
+                        return descriptorFn.call(this, message, socket);
                     }
                 });
             }
