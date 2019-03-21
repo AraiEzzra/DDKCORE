@@ -16,7 +16,7 @@ export class BlockController {
     @RPC(GET_BLOCKS_HISTORY)
     public getBlocksHistory(message: Message, socket: any) {
         const { body, headers, code } = message;
-        const blocksResponse: ResponseEntity<Array<Block>> = BlockService.getMany(body);
+        const blocksResponse: ResponseEntity<Array<Block>> = BlockService.getMany(body.limit, body.offset, body.sort);
 
         SocketMiddleware.emitToClient(headers.id, code, blocksResponse, socket);
     }
