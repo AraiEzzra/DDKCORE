@@ -8,9 +8,8 @@ export const getNewRoundWithHash = () => {
     let hash = [];
     for (let i = 0; i < 3; i++) {
         hash.push({
-            generatorPublicKey: crypto.createHash('md5').update(roundSequence.toString()).digest('hex')
+            generatorPublicKey: crypto.createHash('md5').update((roundSequence + i).toString()).digest('hex')
         });
-        roundSequence++;
     }
     let slots = RoundService.generatorPublicKeyToSlot(hash, Date.now());
     let round = new Round({
@@ -18,6 +17,7 @@ export const getNewRoundWithHash = () => {
         endHeight: roundSequence + 2,
         slots
     });
+    roundSequence += 3;
     return { round, hash };
 };
 
