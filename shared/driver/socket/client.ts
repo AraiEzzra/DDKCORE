@@ -19,6 +19,7 @@ export class SocketClient {
     }
 
     connect() {
+        logger.info(`Socket connecting to: ${this.protocol}://${this.host}:${this.port}`);
         this.socket = io(`${this.protocol}://${this.host}:${this.port}`, this.config);
 
         this.socket.on(CONNECT_CHANNEL, () => {
@@ -32,4 +33,3 @@ export class SocketClient {
         return this.socket;
     }
 }
-
