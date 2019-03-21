@@ -9,9 +9,10 @@ import {
     dropBlockTable
 } from 'test/core/repository/block/mock';
 import {IAsset, Transaction} from 'shared/model/transaction';
+import SharedTransactionRepo from 'shared/repository/transaction';
 
 const resultTransactions = config.genesisBlock.transactions.map((transaction) =>
-    TransactionRepo.deserialize(transaction)
+    SharedTransactionRepo.deserialize(transaction)
 );
 config.genesisBlock.transactions = <Array<Transaction<IAsset>>>resultTransactions;
 const genesisBlock = new Block(config.genesisBlock);

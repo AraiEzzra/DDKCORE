@@ -8,6 +8,7 @@ import { ed } from 'shared/util/ed';
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
+import SharedTransactionRepo from 'shared/repository/transaction';
 
 const DIR = path.resolve(__dirname);
 const SECRET = 'pre worry asd thank unfair lukas smile oven gospel less latin reason';
@@ -263,7 +264,7 @@ block = BlockService.addPayloadHash(block, keyPair).data;
 
 const resultTransactions = block.transactions.map((transaction) => {
     transaction.blockId = block.id;
-    return TransactionRepo.serialize(transaction);
+    return SharedTransactionRepo.serialize(transaction);
 });
 block.transactions = <Array<Transaction<IAsset>>>resultTransactions;
 

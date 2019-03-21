@@ -11,6 +11,7 @@ import SlotService from 'core/service/slot';
 import { messageON } from 'shared/util/bus';
 import TransactionRepo from 'core/repository/transaction';
 import { calculateRoundByTimestamp } from 'core/util/round';
+import SharedTransactionRepo from 'shared/repository/transaction';
 
 interface BlockGenerateRequest {
     keyPair: {
@@ -25,7 +26,7 @@ class BlockController extends BaseController {
     @MAIN('BLOCK_RECEIVE')
     public async onReceiveBlock(action: { data: { block: BlockModel } }): Promise<ResponseEntity<void>> {
         const { data } = action;
-        data.block.transactions = data.block.transactions.map(trs => TransactionRepo.deserialize(trs));
+        data.block.transactions = data.block.transactions.map(trs => SharedTransactionRepo.deserialize(trs));
 
         logger.debug(
             `[Controller][Block][onReceiveBlock] id: ${data.block.id} ` +

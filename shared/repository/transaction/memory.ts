@@ -4,13 +4,12 @@ import { ITransactionRepository,
          TransactionId,
          BlockId,
          TransactionsByBlockResponse } from 'shared/repository/transaction';
-import { generateTrs } from 'api/mock/transactions';
 
 class TransactionRepositoryImpl implements ITransactionRepository<IAsset> {
 
     getOne(id: string): TransactionApi<IAsset> {
-        const trs: TransactionApi<IAsset> = generateTrs().find(item => item.id === id);
-        return trs;
+        // const trs: TransactionApi<IAsset> = generateTrs().find(item => item.id === id);
+        return undefined;
     }
 
     add(trs: Transaction<IAsset>): Transaction<IAsset> {

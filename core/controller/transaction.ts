@@ -10,12 +10,13 @@ import AccountRepo from 'core/repository/account';
 import { ed } from 'shared/util/ed';
 import TransactionRepo from 'core/repository/transaction';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
+import SharedTransactionRepo from 'shared/repository/transaction';
 
 class TransactionController extends BaseController {
     @ON('TRANSACTION_RECEIVE')
     public async onReceiveTransaction(action: { data: { trs: TransactionModel<IAsset> } }): Promise<void> {
         const { data } = action;
-        const trs = TransactionRepo.deserialize(data.trs);
+        const trs = SharedTransactionRepo.deserialize(data.trs);
         logger.debug(`[Controller][Transaction][onReceiveTransaction] ${JSON.stringify(data.trs)}`);
 
         if (!TransactionService.validate(trs)) {

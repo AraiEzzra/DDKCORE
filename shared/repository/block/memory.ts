@@ -1,15 +1,16 @@
 import { IBlockRepository, BlockId, DeletedBlockId } from 'shared/repository/block';
-import { generateBlocks } from 'api/mock/blocks';
 import { Block, SortBlock } from 'shared/model/block';
 
 class BlockRepository implements IBlockRepository {
 
     getMany(limit?: number, offset?: number, sort?: SortBlock): Array<Block> {
-        return generateBlocks();
+        // return generateBlocks();
+        return undefined;
     }
 
     getOne(data: SortBlock): Block {
-        return generateBlocks().find(item => item.id === data || item.height === data);
+        // return generateBlocks().find(item => item.id === data || item.height === data);
+        return undefined;
     }
 
     add(block: Block): Block {
