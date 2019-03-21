@@ -19,7 +19,7 @@ class RoundPGRepository implements IRoundPGRepository {
     serialize(round: Round): RawRound {
         return {
             height_start: round.startHeight,
-            height_finish: null,
+            height_finish: round.endHeight || null,
             slots: round.slots
         };
     }
@@ -56,7 +56,7 @@ class RoundPGRepository implements IRoundPGRepository {
         });
         const query = pgpE.helpers.insert(values, this.columnSet) +
             ' ON CONFLICT(height_start) DO UPDATE SET ' +
-            this.columnSet.assignColumns({from: 'EXCLUDED', skip: ['height_start', 'height_finish']});
+            this.columnSet.assignColumns({from: 'EXCLUDED', skip: ['height_start']});
         await db.none(query);
         return null;
     }

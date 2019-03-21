@@ -313,9 +313,6 @@ class RoundService implements IRoundService {
             AccountRepository.updateBalance(delegateAccount, delegateAccount.actualBalance + fee);
         }
 
-        const lastBlock = BlockRepository.getLastBlock();
-        RoundRepository.updateEndHeight(lastBlock.height);
-
         return new ResponseEntity<Array<string>>({ data: delegates });
     }
 
@@ -337,6 +334,12 @@ class RoundService implements IRoundService {
     }
 
     public async apply(round: Round = RoundRepository.getCurrentRound()): Promise<void> {
+        const prevRound = RoundRepository.getPrevRound();
+        if (prevRound && prevRound.startHeight) {
+            prevRound.endHeight = round.startHeight - 1;
+            await RoundPGRepository.saveOrUpdate(prevRound);
+        }
+
         await RoundPGRepository.saveOrUpdate(round);
     }
 
