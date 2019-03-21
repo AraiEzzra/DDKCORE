@@ -1,4 +1,4 @@
-const sodium = require('sodium-javascript');
+import sodium from 'sodium-javascript';
 
 export interface IKeyPair {
     publicKey: Buffer;
@@ -17,7 +17,7 @@ class Ed {
         return keyPair;
     }
 
-    public makePublicKeyHex(hash) {
+    public makePublicKeyHex(hash: Buffer): string {
         return this.makeKeyPair(hash).publicKey.toString('hex');
     }
 
@@ -27,7 +27,7 @@ class Ed {
         return sig;
     }
 
-    public verify(hash, signatureBuffer, publicKeyBuffer) {
+    public verify(hash: Buffer, signatureBuffer: Buffer, publicKeyBuffer: Buffer) {
         return sodium.crypto_sign_verify_detached(signatureBuffer, hash, publicKeyBuffer);
     }
 }

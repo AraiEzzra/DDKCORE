@@ -69,7 +69,8 @@ class SharedTransactionRepo {
             signature: trs.signature,
             secondSignature: trs.secondSignature,
             salt: trs.salt,
-            asset: asset
+            relay: trs.relay,
+            asset: asset,
         };
     }
 
@@ -88,6 +89,7 @@ class SharedTransactionRepo {
             signature: rawTrs.signature,
             secondSignature: rawTrs.secondSignature,
             salt: rawTrs.salt,
+            relay: rawTrs.relay,
             asset: asset,
         });
     }
