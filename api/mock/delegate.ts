@@ -1,6 +1,7 @@
 import { DelegateModel } from 'shared/model/delegate';
-import { generateAccountInstance } from 'api/mock/account';
 import { getRandomNumber } from 'api/mock/common';
+import { getAddressByPublicKey } from 'shared/util/account';
+import { Account } from 'shared/model/account';
 
 const delegatePublicKeys = [
     '6e044df2a479ef728bde085ada32cbc4c2b4b078e4f8c0456f50994586048478',
@@ -22,7 +23,7 @@ export const generateDelegates = (): Array<DelegateModel> => {
 };
 
 export const generateDelegate = (index: number, publicKey: string): DelegateModel => {
-    const delegatesAccount = generateAccountInstance(publicKey);
+    const delegatesAccount = new Account({ publicKey, address: getAddressByPublicKey(publicKey) });
     return new DelegateModel({
         username: 'Test' + index.toString(),
         url: '/delegateUrl' + index.toString(),
