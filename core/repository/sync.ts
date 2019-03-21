@@ -5,8 +5,10 @@ import { Transaction } from 'shared/model/transaction';
 import PeerRepository from 'core/repository/peer';
 import SystemRepository from 'core/repository/system';
 import { logger } from 'shared/util/logger';
-import TransactionRepo from 'core/repository/transaction';
+import SharedTransactionRepo from 'shared/repository/transaction';
 import { PEERS_COUNT_FOR_DISCOVER } from 'core/util/const';
+import SocketMiddleware from 'core/api/middleware/socket';
+import { EVENT_TYPES } from 'shared/driver/socket/codes';
 
 interface ISyncRepo {
 
@@ -70,12 +72,13 @@ export class Sync implements ISyncRepo {
 
     sendNewBlock(block: Block): void {
         const serializedBlock: Block & { transactions: any } = block.getCopy();
-        serializedBlock.transactions = block.transactions.map(trs => TransactionRepo.serialize(trs));
+        serializedBlock.transactions = block.transactions.map(trs => SharedTransactionRepo.serialize(trs));
+        SocketMiddleware.emitEvent<{ block: Block }>(EVENT_TYPES.APPLY_BLOCK, { block: serializedBlock });
         SocketRepository.broadcastPeers('BLOCK_RECEIVE', { block: serializedBlock });
     }
 
     sendUnconfirmedTransaction(trs: Transaction<any>): void {
-        SocketRepository.broadcastPeers('TRANSACTION_RECEIVE', { trs: TransactionRepo.serialize(trs) });
+        SocketRepository.broadcastPeers('TRANSACTION_RECEIVE', { trs: SharedTransactionRepo.serialize(trs) });
     }
 
     requestCommonBlocks(blockData: { id: string, height: number }): void {
@@ -102,7 +105,7 @@ export class Sync implements ISyncRepo {
     sendBlocks(blocks: Array<Block>, peer): void {
         const serializedBlocks: Array<Block & { transactions?: any }> = blocks.map(block => block.getCopy());
         serializedBlocks.forEach(block => {
-            block.transactions = block.transactions.map(trs => TransactionRepo.serialize(trs));
+            block.transactions = block.transactions.map(trs => SharedTransactionRepo.serialize(trs));
         });
         SocketRepository.broadcastPeer('RESPONSE_BLOCKS', { blocks: serializedBlocks }, peer);
     }

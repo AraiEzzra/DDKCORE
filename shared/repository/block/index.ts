@@ -1,6 +1,5 @@
 import { Block } from 'shared/model/block';
 
-export type DeletedBlockId = string;
 export type RawBlock = {[key: string]: any};
 export type BlockId = string;
 

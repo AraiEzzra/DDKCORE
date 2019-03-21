@@ -29,6 +29,8 @@ import SyncService from 'core/service/sync';
 import system from 'core/repository/system';
 import { getAddressByPublicKey } from 'shared/util/account';
 import { calculateRoundByTimestamp } from 'core/util/round';
+import SocketMiddleware from 'core/api/middleware/socket';
+import { EVENT_TYPES } from 'shared/driver/socket/codes';
 
 const validator: Validator = new ZSchema({});
 
@@ -589,6 +591,10 @@ class BlockService {
         RoundService.rollBack(); // (oldLastBlock, previousBlock);
         await BlockPGRepo.deleteById(lastBlock.id);
         const newLastBlock = BlockRepo.deleteLastBlock();
+
+        const serializedBlock: Block & { transactions: any } = lastBlock.getCopy();
+        serializedBlock.transactions = lastBlock.transactions.map(trs => SharedTransactionRepo.serialize(trs));
+        SocketMiddleware.emitEvent<{ block: Block }>(EVENT_TYPES.UNDO_BLOCK, { block: serializedBlock });
 
         return new ResponseEntity<Block>({ data: newLastBlock });
     }
