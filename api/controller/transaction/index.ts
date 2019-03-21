@@ -48,13 +48,15 @@ export class TransactionController {
             message.body.offset || 0
         );
 
-        SocketMiddleware.emitToClient<Array<TransactionModel<IAsset>>>(
+        const serializedTransactions =
+            transactions.transactions.map(trs => SharedTransactionRepo.serialize(trs));
+
+        SocketMiddleware.emitToClient<{ transactions: Array<TransactionModel<IAsset>>, count: number }>(
             message.headers.id,
             message.code,
-            new ResponseEntity({ data: transactions.map(trs => SharedTransactionRepo.serialize(trs)) }),
+            new ResponseEntity({ data: { transactions: serializedTransactions, count: transactions.count } }),
             socket
         );
-
     }
 
     @RPC(API_ACTION_TYPES.GET_TRANSACTIONS_BY_BLOCK_ID)
@@ -65,10 +67,13 @@ export class TransactionController {
             message.body.limit || DEFAULT_LIMIT,
             message.body.offset || 0
         );
-        SocketMiddleware.emitToClient<Array<TransactionModel<IAsset>>>(
+        const serializedTransactions =
+            transactions.transactions.map(trs => SharedTransactionRepo.serialize(trs));
+
+        SocketMiddleware.emitToClient<{ transactions: Array<TransactionModel<IAsset>>, count: number }>(
             message.headers.id,
             message.code,
-            new ResponseEntity({ data: transactions.map(trs => SharedTransactionRepo.serialize(trs)) }),
+            new ResponseEntity({ data: { transactions: serializedTransactions, count: transactions.count } }),
             socket
         );
     }
