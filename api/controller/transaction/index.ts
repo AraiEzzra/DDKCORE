@@ -28,7 +28,7 @@ export class TransactionController {
 
     @RPC(API_ACTION_TYPES.GET_TRANSACTION)
     async getTransaction(message: Message2<{ id: string }>, socket: any): Promise<void> {
-        SocketMiddleware.emitToClient<ResponseEntity<TransactionModel<IAsset>>>(
+        SocketMiddleware.emitToClient<TransactionModel<IAsset>>(
             message.headers.id,
             message.code,
             new ResponseEntity({
@@ -48,12 +48,10 @@ export class TransactionController {
             message.body.offset || 0
         );
 
-        SocketMiddleware.emitToClient<ResponseEntity<Array<TransactionModel<IAsset>>>>(
+        SocketMiddleware.emitToClient<Array<TransactionModel<IAsset>>>(
             message.headers.id,
             message.code,
-            new ResponseEntity({
-                data: transactions.map(trs => SharedTransactionRepo.serialize(trs))
-            }),
+            new ResponseEntity({ data: transactions.map(trs => SharedTransactionRepo.serialize(trs)) }),
             socket
         );
 
@@ -67,12 +65,10 @@ export class TransactionController {
             message.body.limit || DEFAULT_LIMIT,
             message.body.offset || 0
         );
-        SocketMiddleware.emitToClient<ResponseEntity<Array<TransactionModel<IAsset>>>>(
+        SocketMiddleware.emitToClient<Array<TransactionModel<IAsset>>>(
             message.headers.id,
             message.code,
-            new ResponseEntity({
-                data: transactions.map(trs => SharedTransactionRepo.serialize(trs))
-            }),
+            new ResponseEntity({ data: transactions.map(trs => SharedTransactionRepo.serialize(trs)) }),
             socket
         );
     }

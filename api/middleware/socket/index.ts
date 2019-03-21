@@ -61,7 +61,7 @@ export class SocketMiddleware {
     }
 
     // TODO: extract this to some utils for socket. e.g. driver
-    emitToClient<T>(requestId: string, code: string, data: T, socketClient?: any) {
+    emitToClient<T>(requestId: string, code: string, data: ResponseEntity<T>, socketClient?: any) {
         const message = new Message(MessageType.RESPONSE, code, data, requestId);
 
         if (socketClient) {

@@ -1,34 +1,49 @@
-import { Block } from 'shared/model/block';
-import BlockService from 'api/service/block';
-import { ResponseEntity } from 'shared/model/response';
+import { BlockModel } from 'shared/model/block';
 import { RPC } from 'api/utils/decorators';
-import { GET_BLOCK_BY_ID, GET_BLOCKS_HISTORY } from 'shared/driver/socket/codes';
+import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
 import SocketMiddleware from 'api/middleware/socket';
 import { Message } from 'shared/model/message';
+import BlockPGRepository from 'api/repository/block';
+import { DEFAULT_LIMIT } from 'api/utils/common';
+import { ResponseEntity } from 'shared/model/response';
+
+const ALLOWED_FILTERS = new Set(['height']);
+const ALLOWED_SORT = new Set(['height', 'createdAt']);
 
 export class BlockController {
 
     constructor() {
-        this.getBlocksHistory = this.getBlocksHistory.bind(this);
         this.getBlock = this.getBlock.bind(this);
+        this.getBlocks = this.getBlocks.bind(this);
     }
 
-    @RPC(GET_BLOCKS_HISTORY)
-    public getBlocksHistory(message: Message, socket: any) {
-        const { body, headers, code } = message;
-        const blocksResponse: ResponseEntity<Array<Block>> = BlockService.getMany(body.limit, body.offset, body.sort);
-
-        SocketMiddleware.emitToClient(headers.id, code, blocksResponse, socket);
+    @RPC(API_ACTION_TYPES.GET_BLOCK)
+    public async getBlock(message: Message, socket: any) {
+        SocketMiddleware.emitToClient<BlockModel>(
+            message.headers.id,
+            message.code,
+            new ResponseEntity<BlockModel>({ data: await BlockPGRepository.getOne(message.body.id) }),
+            socket
+        );
     }
 
-    @RPC(GET_BLOCK_BY_ID)
-    public getBlock(message: Message, socket: any) {
-
-        const { body, headers, code } = message;
-        const blocksResponse: ResponseEntity<Block> = BlockService.getOne(body);
-
-        SocketMiddleware.emitToClient(headers.id, code, blocksResponse, socket);
+    @RPC(API_ACTION_TYPES.GET_BLOCKS)
+    public async getBlocks(message: Message, socket: any) {
+        SocketMiddleware.emitToClient<Array<BlockModel>>(
+            message.headers.id,
+            message.code,
+            new ResponseEntity({
+                data: await BlockPGRepository.getMany(
+                    message.body.filter || {},
+                    message.body.sort || [['height', 'DESC']],
+                    message.body.limit || DEFAULT_LIMIT,
+                    message.body.offset || 0
+                )
+            }),
+            socket
+        );
     }
+
 }
 
 export default new BlockController();

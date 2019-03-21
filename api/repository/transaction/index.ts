@@ -14,7 +14,7 @@ class TransactionPGRepository {
 
     async getMany(filter: any, sort: Array<Sort>, limit: number, offset: number): Promise<Array<Transaction<IAsset>>> {
         const transactions = await db.manyOrNone(
-            query.getTransactions(filter, sort.map(elem => `"${toSnakeCase(elem[0])}" ${elem[1]}`).join(', ')), {
+            query.getTransactions(filter, sort.map(elem => `${toSnakeCase(elem[0])} ${elem[1]}`).join(', ')), {
                 ...filter,
                 limit,
                 offset
