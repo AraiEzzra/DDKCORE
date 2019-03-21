@@ -8,6 +8,6 @@ server.run();
 /**
  *  Global error interceptor
  */
-process.on('uncaughtException', function (err) {
-    logger.error('[ERROR][API].', err);
+process.on('uncaughtException', (err: Error) => {
+    logger.error('[ERROR][API].', err.stack);
 });
