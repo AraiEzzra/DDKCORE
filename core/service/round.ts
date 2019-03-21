@@ -72,9 +72,7 @@ type IKeyPair = {
 };
 
 const delegatesSecrets = [
-    'whale slab bridge virus merry ship bright fiber power outdoor main enforce',
-    'artwork relax sheriff sting fruit return spider reflect cupboard dice goddess slice',
-    'milk exhibit cabbage detail village hero script glory tongue post clinic wish',
+    
 ];
 
 class RoundService implements IRoundService {
@@ -85,7 +83,6 @@ class RoundService implements IRoundService {
 
     constructor() {
         this.delegates = {};
-
         delegatesSecrets.forEach(secret => {
             const hash = crypto.createHash('sha256').update(secret, 'utf8').digest();
             const keyPair = ed.makeKeyPair(hash);

@@ -66,6 +66,7 @@ const coreConfig = {
         alias: {
             core: path.resolve(DIR, 'core'),
             shared: path.resolve(DIR, 'shared'),
+            migration: path.resolve(DIR, 'migration'),
         },
     },
     output: {

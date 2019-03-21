@@ -65,8 +65,11 @@ export function getAirdropReward(
         sponsors: new Map<Address, number>()
     };
 
-    const availableAirdropBalance: number = AccountRepo.getByAddress(config.constants.airdrop.account).actualBalance;
-    logger.info(`availableAirdropBalance: ${availableAirdropBalance / MONEY_FACTOR}`);
+    const account = AccountRepo.getByAddress(config.constants.airdrop.account);
+    
+    const availableAirdropBalance: number = account.actualBalance;
+    // TODO commented for migration
+    // logger.info(`availableAirdropBalance: ${availableAirdropBalance / MONEY_FACTOR}`);
 
     if (!sender || !sender.referrals || (sender.referrals.length === 0)) {
         return result;

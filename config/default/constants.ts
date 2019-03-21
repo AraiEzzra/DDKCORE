@@ -41,7 +41,7 @@
  */
 export default {
     airdrop: {
-        account: 10720340277000928808,
+        account: BigInt('7897332094363171058'),
         stakeRewardPercent: 10,
         referralPercentPerLevel: [5, 3, 2, 2, 1, 1, 1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.5, 0.5, 0.5],
         maxReferralCount: 15

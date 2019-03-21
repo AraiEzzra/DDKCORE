@@ -2,6 +2,7 @@ import RoundService from 'core/service/round';
 import { ON } from 'core/util/decorator';
 import { BaseController } from 'core/controller/baseController';
 import { Block } from 'shared/model/block';
+import { startPrepareTransactionsForMigration } from 'migration/migration';
 
 class RoundController extends BaseController {
 
@@ -16,8 +17,9 @@ class RoundController extends BaseController {
     }
 
     @ON('WARM_UP_FINISHED')
-    setIsBlockChainReady() {
+    async setIsBlockChainReady() {
         RoundService.setIsBlockChainReady(true);
+        await startPrepareTransactionsForMigration();
         RoundService.restoreRounds();
     }
 }

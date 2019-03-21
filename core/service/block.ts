@@ -27,6 +27,9 @@ import config from 'shared/util/config';
 import SyncService from 'core/service/sync';
 import system from 'core/repository/system';
 import { getAddressByPublicKey } from 'shared/util/account';
+import { popTransactionsForMigration } from 'migration/migration.ts';
+
+const QUANTITY_TRANSACTIONS = 250;
 
 const validator: Validator = new ZSchema({});
 
@@ -53,8 +56,21 @@ class BlockService {
     public async generateBlock(keyPair: IKeyPair, timestamp: number): Promise<ResponseEntity<void>> {
         this.lockTransactionPoolAndQueue();
 
+        // TODO only for migration
+        console.log('START');
         const transactions: Array<Transaction<object>> =
-            TransactionPool.popSortedUnconfirmedTransactions(config.constants.maxTxsPerBlock);
+            popTransactionsForMigration(QUANTITY_TRANSACTIONS);
+
+        console.log('Got transactions: ', transactions.length);
+        
+        if (transactions.length === 0) {
+            console.log('Migrated all transactions!');
+            process.exit(0);
+        }
+
+        // TODO commented for migration
+        // const transactions: Array<Transaction<object>> =
+        //     TransactionPool.popSortedUnconfirmedTransactions(config.constants.maxTxsPerBlock);
         // logger.debug(`[Process][newGenerateBlock][transactions] ${JSON.stringify(transactions)}`);
 
         const previousBlock: Block = BlockRepo.getLastBlock();
@@ -337,6 +353,7 @@ class BlockService {
     }
 
     private checkTransactionsAndApplyUnconfirmed(block: Block, verify: boolean): ResponseEntity<void> {
+        console.log('checkTransactionsAndApplyUnconfirmed start');
         const errors: Array<string> = [];
         let i = 0;
 
@@ -353,7 +370,7 @@ class BlockService {
                         address: trs.senderAddress
                     });
                 } else {
-                    sender.secondPublicKey = trs.senderPublicKey;
+                    sender.publicKey = trs.senderPublicKey;
                 }
 
                 if (verify) {
@@ -375,7 +392,7 @@ class BlockService {
                 i--;
             }
         }
-
+        console.log('checkTransactionsAndApplyUnconfirmed end')
         return new ResponseEntity<void>({errors: errors});
     }
 
@@ -411,18 +428,20 @@ class BlockService {
 
         BlockRepo.add(block);
 
+        // TODO change this part because transactions have to save first 
+        await BlockPGRepo.saveOrUpdate(block);
+        
         const errors: Array<string> = [];
         for (const trs of block.transactions) {
             const sender = AccountRepo.getByPublicKey(trs.senderPublicKey);
-            await TransactionDispatcher.apply(trs, sender);
             trs.blockId = block.id;
+            await TransactionDispatcher.apply(trs, sender);
             TransactionRepo.add(trs);
         }
         if (errors.length) {
             return new ResponseEntity<void>({errors: [...errors, 'applyBlock']});
         }
 
-        await BlockPGRepo.saveOrUpdate(block);
         const afterSaveResponse: ResponseEntity<void> = this.afterSave(block);
         if (!afterSaveResponse.success) {
             return new ResponseEntity<void>({errors: [...afterSaveResponse.errors, 'applyBlock']});

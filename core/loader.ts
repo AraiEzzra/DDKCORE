@@ -32,15 +32,19 @@ class Loader {
         const filePath = path.join(pathMockData, 'init.sql');
         await db.query(new QueryFile(filePath, { minify: true }));
         await BlockService.applyGenesisBlock(config.genesisBlock, false);
-        await this.transactionWarmUp(this.limit);
-        await this.roundWarmUp(this.limit);
+        
+        // TODO commented for migration 
+        // console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', AccountRepo.getAll());
+        //
+        // await this.transactionWarmUp(this.limit);
+        // await this.roundWarmUp(this.limit);
         initControllers();
         messageON('WARM_UP_FINISHED', null);
-        socket.init();
-        setTimeout(
-            () => messageON('EMIT_SYNC_BLOCKS', {}),
-            START_SYNC_BLOCKS
-        );
+        // socket.init();
+        // setTimeout(
+        //     () => messageON('EMIT_SYNC_BLOCKS', {}),
+        //     START_SYNC_BLOCKS
+        // );
     }
 
     private async transactionWarmUp(limit: number) {

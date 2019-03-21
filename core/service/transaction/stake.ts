@@ -40,7 +40,6 @@ class TransactionStakeService implements IAssetService<IAssetStake> {
         );
         offset = BUFFER.writeUInt64LE(buff, trs.asset.amount || 0, offset);
 
-        offset += BUFFER.LENGTH.UINT32;
         buff.writeInt32LE(trs.asset.startTime, offset);
         offset += BUFFER.LENGTH.UINT32;
         buff.writeInt8(trs.asset.startVoteCount, offset);

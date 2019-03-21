@@ -277,7 +277,7 @@ class Config {
         // For development mode
         if (env.NODE_ENV_IN === 'development') {
             this.config = defaultCfg;
-            this.genesisBlock = defaultGenesisBlock;
+            this.genesisBlock = defaultGenesisBlock as any;
             Object.assign(this.constants, devConstants);
         }
 

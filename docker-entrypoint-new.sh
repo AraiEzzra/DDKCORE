@@ -20,4 +20,8 @@ else
         if [ "$SERVICE" == "CORE" ]; then
             npm run server:core
         fi
+        if [ "$SERVICE" == "MIGRATION" ]; then
+            npm run start:migration
+
+        fi
 fi
