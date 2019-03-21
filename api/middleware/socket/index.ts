@@ -1,14 +1,9 @@
 import { RPC_METHODS } from 'api/middleware/rpcHolder';
-import RewardControllerInstance, { RewardController } from 'api/controller/reward';
-import ReferredUsersControllerInstance, { ReferredUsersController } from 'api/controller/referredUsers';
-import AccountControllerInstance, { AccountController } from 'api/controller/account';
-import DelegateControllerInstance, { DelegateController } from 'api/controller/delegate';
 import { Message, Message2, MessageType } from 'shared/model/message';
 import { MESSAGE_CHANNEL } from 'shared/driver/socket/channels';
 import { SOCKET_TIMEOUT_MS } from 'shared/config/socket';
 import coreSocketClient from 'api/socket/client';
 import { ResponseEntity } from 'shared/model/response';
-import TransactionControllerInstance, { TransactionController } from 'api/controller/transaction';
 import SocketIO from 'socket.io';
 
 type RequestProcessor = {
@@ -18,20 +13,9 @@ type RequestProcessor = {
 
 export class SocketMiddleware {
 
-    private rewardController: RewardController;
-    private referredUsersController: ReferredUsersController;
-    private accountController: AccountController;
-    private delegateController: DelegateController;
-    private transactionController: TransactionController;
-
     private requests: Map<string, RequestProcessor>;
 
     constructor() {
-        this.rewardController = RewardControllerInstance;
-        this.referredUsersController = ReferredUsersControllerInstance;
-        this.accountController = AccountControllerInstance;
-        this.delegateController = DelegateControllerInstance;
-        this.transactionController = TransactionControllerInstance;
 
         this.requests = new Map();
     }

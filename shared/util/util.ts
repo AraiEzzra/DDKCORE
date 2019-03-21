@@ -7,5 +7,13 @@ export function shuffle(array: Array<any>): Array<any> {
 }
 
 export function getRandomInt(min, max): number {
-  return Math.floor(Math.random() * (max - min)) + min;
+    return Math.floor(Math.random() * (max - min)) + min;
+}
+
+export function toSnakeCase(str) {
+    function upperToHyphenLower(match) {
+        return '_' + match.toLowerCase();
+    }
+
+    return str.replace(/[A-Z]/g, upperToHyphenLower);
 }
