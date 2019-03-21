@@ -7,7 +7,7 @@ import { MAX_PEER_BLOCKS_IDS } from 'core/util/const';
 const env = require('../../config/env').default;
 export const TRUSTED_PEERS: Array<any> = env.peers.list;
 export const BLACK_LIST = new Set(env.blackList);
-
+import socket from 'core/repository/socket';
 
 export class PeerRepo {
     private peers: { [string: string]: Peer } = {};
@@ -20,9 +20,9 @@ export class PeerRepo {
         PeerRepo.instance = this;
     }
 
-    addPeer(peer: Peer, socket): boolean {
+    addPeer(peer: Peer, ws): boolean {
         if (!this.has(peer)) {
-            peer.socket = socket;
+            peer.socket = ws;
             peer.blocksIds = new Map(peer.blocksIds);
             this.peers[`${peer.ip}:${peer.port}`] = peer;
             return true;
@@ -37,6 +37,12 @@ export class PeerRepo {
 
     peerList(): Array<Peer> {
         return Object.values(this.peers);
+    }
+
+    disconnectPeers(peers = null) {
+        (peers || this.peerList()).forEach(peer => {
+            peer.socket.disconnect();
+        });
     }
 
     checkCommonBlock(peer: Peer, block: Block): boolean {
@@ -69,7 +75,7 @@ export class PeerRepo {
         Object.assign(currentPeer, headers);
 
         if (currentPeer.blocksIds.has(headers.height)) {
-           this.clearPoolByHeight(currentPeer.blocksIds, headers.height);
+            this.clearPoolByHeight(currentPeer.blocksIds, headers.height);
         }
 
         currentPeer.blocksIds.set(headers.height, headers.broadhash);
@@ -88,12 +94,25 @@ export class PeerRepo {
     ban(peer) {
     }
 
-    unban(peer) {
-    }
-
     getRandomPeer(peers: Array<Peer> = null): Peer {
         const peerList = peers || this.peerList();
         return peerList[getRandomInt(peerList.length)];
+    }
+
+    getRandomPeers(limit: number = 5, peers: Array<Peer> = null): Array<Peer> {
+        const peerList = peers || this.peerList();
+        if (peerList.length <= limit) {
+            return peerList;
+        }
+        const result = [];
+        while (result.length < limit) {
+            const i = getRandomInt(peerList.length);
+            const peer = peerList[i];
+            if (result.indexOf(peer) === -1) {
+                result.push(peer);
+            }
+        }
+        return result;
     }
 
     getPeersByFilter(height, broadhash): Array<Peer> {
@@ -105,6 +124,12 @@ export class PeerRepo {
 
     getRandomTrustedPeer(): Peer {
         return TRUSTED_PEERS[getRandomInt(TRUSTED_PEERS.length)];
+    }
+
+    connectPeers(peers: Array<{ip: string, port: number}>) {
+        peers.forEach(peer => {
+            socket.connectNewPeer(peer);
+        });
     }
 }
 

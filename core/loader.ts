@@ -5,7 +5,7 @@ import TransactionDispatcher from 'core/service/transaction';
 import TransactionPGRepo from 'core/repository/transaction/pg';
 import AccountRepo from 'core/repository/account';
 import { IAsset, Transaction } from 'shared/model/transaction';
-import { messageON } from 'shared/util/bus';
+import { messageON, subjectOn } from 'shared/util/bus';
 import { initControllers } from 'core/controller';
 import config from 'shared/util/config';
 
@@ -22,8 +22,8 @@ import { logger } from 'shared/util/logger';
 import { Block } from 'shared/model/block';
 import { socketRPCServer } from 'core/api/server';
 import { getAddressByPublicKey } from 'shared/util/account';
-
-const START_SYNC_BLOCKS = 15000;
+import { getRandomInt } from 'shared/util/util';
+import { START_SYNC_BLOCKS, PEER_CONNECTION_TIME_REBOOT } from 'core/util/const';
 
 // @ts-ignore
 BigInt.prototype.toJSON = function () {
@@ -49,8 +49,12 @@ class Loader {
         }
 
         socket.init();
+        setInterval(
+            () => messageON('EMIT_REBOOT_PEERS_CONNECTIONS'),
+            getRandomInt(PEER_CONNECTION_TIME_REBOOT.MIN, PEER_CONNECTION_TIME_REBOOT.MAX)
+        );
         setTimeout(
-            () => messageON('EMIT_SYNC_BLOCKS', {}),
+            () => messageON('EMIT_SYNC_BLOCKS'),
             START_SYNC_BLOCKS
         );
         socketRPCServer.run();
