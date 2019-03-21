@@ -50,6 +50,19 @@ class AccountRepo {
     updateReferralByAddress(address: Address, referrals: Array<Account>): void {
         this.memoryAccountsByAddress.get(address).referrals = referrals;
     }
+
+    serialize(account: Account): object {
+        return {
+            address: account.address.toString(),
+            isDelegate: Boolean(account.delegate),
+            publicKey: account.publicKey,
+            secondPublicKey: account.secondPublicKey,
+            actualBalance: account.actualBalance,
+            referrals: account.referrals.map(acc => acc.address.toString()),
+            votes: account.votes,
+            stakes: account.stakes,
+        }
+    }
 }
 
 export default new AccountRepo();
