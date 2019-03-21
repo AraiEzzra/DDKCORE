@@ -6,12 +6,13 @@ import PeerRepository from 'core/repository/peer';
 import SystemRepository from 'core/repository/system';
 import { logger } from 'shared/util/logger';
 import TransactionRepo from 'core/repository/transaction';
+import { PEERS_COUNT_FOR_DISCOVER } from 'core/util/const';
 
 interface ISyncRepo {
 
     requestPeers(): void;
 
-    sendPeers(peer: Peer): void;
+    sendPeers(peer: Peer, queryId): void;
 
     sendNewBlock(block: Block): void;
 
@@ -30,32 +31,51 @@ interface ISyncRepo {
 
 export class Sync implements ISyncRepo {
 
-    constructor() {
+    async requestPeers(): Promise<Array<Peer>> {
+        try {
+            const peer = PeerRepository.getRandomTrustedPeer();
+            return await SocketRepository.peerRPCRequest('REQUEST_PEERS', {}, peer);
+        } catch (e) {
+            logger.error(JSON.stringify(e));
+        }
     }
 
-    requestPeers(): void {
-        const peer = PeerRepository.getRandomTrustedPeer();
-        SocketRepository.emitPeer('REQUEST_PEERS', {}, peer);
+    async discoverPeers(): Promise<Map<string, object>> {
+        const randomPeers = PeerRepository.getRandomPeers(PEERS_COUNT_FOR_DISCOVER);
+
+        const peersPromises = randomPeers.map(peer => {
+            return SocketRepository.peerRPCRequest('REQUEST_PEERS', {}, peer);
+        });
+
+        const peersResponses = await Promise.all(peersPromises)
+        .catch((e) => logger.error(`discover peers ${JSON.stringify(e)}`));
+        const result = new Map();
+        (peersResponses || []).forEach((response: Array<any>) => {
+            response.forEach(peer => {
+                result.set(`${peer.ip}:${peer.port}`, peer);
+            });
+        });
+        return result;
     }
 
-    sendPeers(peer: Peer): void {
+    sendPeers(peer: Peer, requestId): void {
         const peers = PeerRepository.peerList().map(item => ({
                 ip: item.ip,
                 port: item.port,
             })
         );
 
-        SocketRepository.emitPeer('RESPONSE_PEERS', { peers }, peer);
+        SocketRepository.peerRPCResponse('RESPONSE_PEERS', peers, peer, requestId);
     }
 
     sendNewBlock(block: Block): void {
         const serializedBlock: Block & { transactions: any } = block.getCopy();
         serializedBlock.transactions = block.transactions.map(trs => TransactionRepo.serialize(trs));
-        SocketRepository.emitPeers('BLOCK_RECEIVE', { block: serializedBlock });
+        SocketRepository.broadcastPeers('BLOCK_RECEIVE', { block: serializedBlock });
     }
 
     sendUnconfirmedTransaction(trs: Transaction<any>): void {
-        SocketRepository.emitPeers('TRANSACTION_RECEIVE', { trs: TransactionRepo.serialize(trs) });
+        SocketRepository.broadcastPeers('TRANSACTION_RECEIVE', { trs: TransactionRepo.serialize(trs) });
     }
 
     requestCommonBlocks(blockData: { id: string, height: number }): void {
@@ -65,18 +85,18 @@ export class Sync implements ISyncRepo {
             logger.error('[Repository][Sync][requestCommonBlocks]: Peer doesn`t found');
             return;
         }
-        SocketRepository.emitPeer('REQUEST_COMMON_BLOCKS', { block: blockData }, peer);
+        SocketRepository.broadcastPeer('REQUEST_COMMON_BLOCKS', { block: blockData }, peer);
     }
 
     sendCommonBlocksExist(response, peer): void {
-        SocketRepository.emitPeer('RESPONSE_COMMON_BLOCKS', response, peer);
+        SocketRepository.broadcastPeer('RESPONSE_COMMON_BLOCKS', response, peer);
     }
 
     requestBlocks(data: { height: number, limit: number }, peer = null): void {
 
         const filteredPeers = PeerRepository.getPeersByFilter(data.height, SystemRepository.broadhash);
         const currentPeer = peer || PeerRepository.getRandomPeer(filteredPeers);
-        SocketRepository.emitPeer('REQUEST_BLOCKS', data, currentPeer);
+        SocketRepository.broadcastPeer('REQUEST_BLOCKS', data, currentPeer);
     }
 
     sendBlocks(blocks: Array<Block>, peer): void {
@@ -84,11 +104,11 @@ export class Sync implements ISyncRepo {
         serializedBlocks.forEach(block => {
             block.transactions = block.transactions.map(trs => TransactionRepo.serialize(trs));
         });
-        SocketRepository.emitPeer('RESPONSE_BLOCKS', { blocks: serializedBlocks }, peer);
+        SocketRepository.broadcastPeer('RESPONSE_BLOCKS', { blocks: serializedBlocks }, peer);
     }
 
     sendHeaders(headers) {
-        SocketRepository.emitPeers('PEER_HEADERS_UPDATE', headers);
+        SocketRepository.broadcastPeers('PEER_HEADERS_UPDATE', headers);
     }
 }
 
