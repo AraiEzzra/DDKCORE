@@ -2,8 +2,8 @@ import uuidv4 from 'uuid/v4';
 
 export enum MessageType {
     REQUEST = 1,
-    RESPONSE,
-    EVENT,
+    RESPONSE = 2,
+    EVENT = 3,
 }
 
 export class Message {

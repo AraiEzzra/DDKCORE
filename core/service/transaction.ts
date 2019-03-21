@@ -22,6 +22,7 @@ import { getTransactionServiceByType, TRANSACTION_BUFFER_SIZE, transactionSortFu
 import BUFFER from 'core/util/buffer';
 import { SALT_LENGTH } from 'core/util/const';
 import { getAddressByPublicKey } from 'shared/util/account';
+import SlotService from 'core/service/slot';
 
 export interface IAssetService<T extends IAsset> {
     getBytes(trs: Transaction<T>): Buffer;
@@ -218,7 +219,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         const asset = service.create(data);
 
         const trs = new Transaction<T>({
-            createdAt: data.createdAt,
+            createdAt: data.createdAt || SlotService.getTime(),
             senderPublicKey: sender.publicKey,
             senderAddress: sender.address,
             type: data.type,

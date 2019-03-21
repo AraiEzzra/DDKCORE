@@ -8,6 +8,7 @@ import { logger } from 'shared/util/logger';
 import { Account } from 'shared/model/account';
 import { Block, BlockModel } from 'shared/model/block';
 import BlockRepo from 'core/repository/block';
+import SharedTransactionRepo from 'shared/repository/transaction';
 import BlockPGRepo from 'core/repository/block/pg';
 import AccountRepo from 'core/repository/account';
 import AccountRepository from 'core/repository/account';
@@ -599,7 +600,7 @@ class BlockService {
             AccountRepo.add({ publicKey: publicKey, address: address});
         });
         const resultTransactions = rawBlock.transactions.map((transaction) =>
-            TransactionRepo.deserialize(transaction)
+            SharedTransactionRepo.deserialize(transaction)
         );
         rawBlock.transactions = <Array<Transaction<IAsset>>>resultTransactions;
         const block = new Block({ ...rawBlock, createdAt: 0, previousBlockId: null });
