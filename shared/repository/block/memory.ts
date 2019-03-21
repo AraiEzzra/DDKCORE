@@ -4,7 +4,7 @@ import { Block, SortBlock } from 'shared/model/block';
 
 class BlockRepository implements IBlockRepository {
 
-    getMany(offset: number, limit?: number, sort?: SortBlock): Array<Block> {
+    getMany(limit?: number, offset?: number, sort?: SortBlock): Array<Block> {
         return generateBlocks();
     }
 

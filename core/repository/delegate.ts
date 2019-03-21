@@ -61,18 +61,6 @@ class DelegateRepository {
         return this.memoryDelegates[publicKey];
     }
 
-    public forgingDisable(data: any) {
-
-    }
-
-    public forgingEnable(data: any) {
-
-    }
-
-    public forgingStatus(publicKey: string) {
-
-    }
-
     public isUserNameExists(username: string): boolean {
         return this.usernames.has(username);
     }
