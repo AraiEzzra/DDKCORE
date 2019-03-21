@@ -11,15 +11,14 @@ import { messageON } from 'shared/util/bus';
 import { TOTAL_PERCENTAGE } from 'core/util/const';
 import config from 'shared/util/config';
 import { logger } from 'shared/util/logger';
+import RoundService from 'core/service/round';
 
 //  TODO get from env
 const MIN_CONSENSUS = 51;
 
 export interface ISyncService {
 
-    requestPeers(): void;
-
-    sendPeers(peer: Peer): void;
+    sendPeers(peer: Peer, requestId?): void;
 
     connectNewPeers(peers: Array<Peer>): void;
 
@@ -38,16 +37,12 @@ export interface ISyncService {
 
 export class SyncService implements ISyncService {
 
-    requestPeers(): void {
-        SyncRepository.requestPeers();
-    }
-
-    sendPeers(peer): void {
-        SyncRepository.sendPeers(peer);
+    sendPeers(peer, requestId): void {
+        SyncRepository.sendPeers(peer, requestId);
     }
 
     connectNewPeers(peers: Array<Peer>): void {
-        peers.forEach(peer => SocketRepository.connectNewPeer(peer));
+        (peers || []).forEach(peer => SocketRepository.connectNewPeer(peer));
     }
 
     sendNewBlock(block: Block): void {
@@ -67,7 +62,7 @@ export class SyncService implements ISyncService {
     async checkCommonBlock(): Promise<void> {
         const lastBlock = BlockRepository.getLastBlock();
         if (!lastBlock) {
-            logger.error('ERROR: last block is undefined');
+            logger.error('last block is undefined');
         }
         if (this.checkBlockConsensus(lastBlock) || lastBlock.height === 1) {
             this.requestBlocks(lastBlock);
@@ -77,6 +72,7 @@ export class SyncService implements ISyncService {
                 PeerRepository.getPeersByFilter(lastBlock.height, SystemRepository.broadhash)
             );
             if (!randomPeer) {
+                messageON('WARM_UP_FINISHED');
                 logger.error('[Service][Sync][checkCommonBlock]: Peer doesn`t found');
                 return;
             }
@@ -102,7 +98,7 @@ export class SyncService implements ISyncService {
     }
 
     sendBlocks(data: { height: number, limit: number }, peer): void {
-        const blocks = BlockRepository.getMany(data.height, data.limit);
+        const blocks = BlockRepository.getMany(data.limit, data.height);
         SyncRepository.sendBlocks(blocks, peer);
     }
 

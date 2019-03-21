@@ -1,20 +1,27 @@
 import autobind from 'autobind-decorator';
 import io from 'socket.io-client';
 import socketIO from 'socket.io';
-
+import uuid4 from 'uuid/v4';
 import SystemRepository from 'core/repository/system';
 import { Peer } from 'shared/model/peer';
 import { messageON } from 'shared/util/bus';
 import { logger } from 'shared/util/logger';
 import PeerRepository, { BLACK_LIST, TRUSTED_PEERS } from 'core/repository/peer';
 import config from 'shared/util/config';
+import { SocketResponse, SocketResponseRPC } from 'shared/model/socket';
+import {
+    START_PEER_REQUEST,
+    SOCKET_RPC_REQUEST_TIMEOUT,
+    MAX_PEERS_CONNECT_TO,
+    MAX_PEERS_CONNECTED
+} from 'core/util/const';
 
 const ioServer = socketIO(config.constants.serverPort, {
     serveClient: false,
     pingTimeout: 30000,
     pingInterval: 30000,
 });
-const START_PEER_REQUEST = 10000;
+
 
 export class Socket {
     private static instance: Socket;
@@ -33,6 +40,11 @@ export class Socket {
             this.connectNewPeer(peer);
         });
         ioServer.on('connect', function (socket) {
+            if (PeerRepository.peerList().length > MAX_PEERS_CONNECTED) {
+                logger.debug(`[SOCKET][init] peer connection rejected, too many connections`);
+                socket.disconnect();
+                return;
+            }
             socket.emit('OPEN');
             socket.on('HEADERS', (data: string) => {
                 logger.debug(`[SOCKET][CLIENT_PEER_HEADERS_RECEIVE], data: ${data}`);
@@ -51,12 +63,14 @@ export class Socket {
     }
 
     @autobind
-    connectNewPeer(peer: Peer): void {
+    connectNewPeer(peer: { ip: string, port: number }): void {
         if (BLACK_LIST.has(`${peer.ip}`) ||
-            PeerRepository.has(peer)) {
+            PeerRepository.has(peer) ||
+            PeerRepository.peerList().length > MAX_PEERS_CONNECT_TO
+        ) {
             return;
         }
-
+        logger.debug(`[SOCKET][connectNewPeer] connecting to ${peer.ip}:${peer.port}...`);
         const ws = io(`ws://${peer.ip}:${peer.port}`);
         ws.on('OPEN', () => {
             ws.emit('HEADERS', JSON.stringify(
@@ -74,9 +88,14 @@ export class Socket {
     addPeer(peer: Peer, socket): boolean {
         if (PeerRepository.addPeer(peer, socket)) {
             logger.debug(`[SOCKET][ADD_PEER] host: ${peer.ip}:${peer.port}`);
-            socket.on('ACTION', (response: string) => Socket.instance.onPeerAction(response, peer));
+            const listenBroadcast = (response: string) => Socket.instance.onPeerBroadcast(response, peer);
+            const listenRPC = (response: string) => Socket.instance.onPeerRPCRequest(response, peer);
+            socket.on('BROADCAST', listenBroadcast);
+            socket.on('SOCKET_RPC_REQUEST', listenRPC);
 
             peer.socket.on('disconnect', () => {
+                peer.socket.removeListener('BROADCAST', listenBroadcast);
+                peer.socket.removeListener('SOCKET_RPC_REQUEST', listenRPC);
                 PeerRepository.removePeer(peer);
             });
             return true;
@@ -85,32 +104,110 @@ export class Socket {
     }
 
     @autobind
-    onPeerAction(response: string, peer: Peer): void {
-        const { code, data } = JSON.parse(response);
-        logger.debug(`[SOCKET][ON_PEER_ACTION][${peer.ip}:${peer.port}], CODE: ${code}, DATA: ${JSON.stringify(data)}`);
+    onPeerBroadcast(response: string, peer: Peer): void {
+        const { code, data } = new SocketResponse(response);
+        logger.debug(
+            `[SOCKET][ON_PEER_BROADCAST][${peer.ip}:${peer.port}], CODE: ${code}, DATA: ${JSON.stringify(data)}`
+        );
         messageON(code, { data, peer });
     }
 
     @autobind
-    emitPeers(code, data, peers: Array<Peer> = null): void {
+    onPeerRPCRequest(response: string, peer: Peer): void {
+        const { code, data, requestId } = new SocketResponseRPC(response);
+        logger.debug(`[SOCKET][ON_PEER_RPC_REQUEST] from ${peer.ip}:${peer.port}
+          CODE: ${code}, REQUEST_ID: ${requestId} DATA: ${JSON.stringify(data)}`);
+        messageON(code, { data, peer, requestId });
+    }
+
+    @autobind
+    broadcastPeers(code, data, peers: Array<Peer> = null): void {
         (peers || PeerRepository.peerList()).forEach(peer => {
-            this.emitPeer(code, data, peer);
+            this.broadcastPeer(code, data, peer);
         });
     }
 
     @autobind
-    emitPeer(code, data, peer): void {
+    broadcastPeer(code, data, peer): void {
         if (!(PeerRepository.has(peer))) {
             logger.error(`Peer ${peer.ip}:${peer.port} is offline`);
             return;
         }
+
         if (!peer.socket) {
             peer = PeerRepository.getPeerFromPool(peer);
         }
+
         peer.socket.emit(
-            'ACTION',
+            'BROADCAST',
             JSON.stringify({ code, data })
         );
+    }
+
+    @autobind
+    peerRPCResponse(code, data, peer, requestId = null): void {
+        if (!(PeerRepository.has(peer))) {
+            logger.error(`Peer ${peer.ip}:${peer.port} is offline`);
+            return;
+        }
+
+        if (!peer.socket) {
+            peer = PeerRepository.getPeerFromPool(peer);
+        }
+
+        logger.debug(`[SOCKET][PEER_RPC_RESPONSE] to ${peer.ip}:${peer.port}
+          CODE: ${code}, REQUEST_ID: ${requestId} DATA: ${JSON.stringify(data)}`);
+
+        peer.socket.emit(
+            'SOCKET_RPC_RESPONSE',
+            JSON.stringify({ code, data, requestId })
+        );
+    }
+
+    @autobind
+    peerRPCRequest(code, data, peer): Promise<any> {
+        const requestId = uuid4();
+
+        return new Promise((resolve, reject) => {
+
+            const timerId = setTimeout(
+                () => reject('408 Request Timeout'),
+                SOCKET_RPC_REQUEST_TIMEOUT
+            );
+
+            if (!(PeerRepository.has(peer))) {
+                logger.error(`Peer ${peer.ip}:${peer.port} is offline`);
+                reject(`Peer ${peer.ip}:${peer.port} is offline`);
+            }
+
+            if (!peer.socket) {
+                peer = PeerRepository.getPeerFromPool(peer);
+            }
+
+            logger.debug(`[SOCKET][SOCKET_RPC_REQUEST] to ${peer.ip}:${peer.port}
+            CODE: ${code}, REQUEST_ID: ${requestId} DATA: ${JSON.stringify(data)}`);
+
+            peer.socket.emit(
+                'SOCKET_RPC_REQUEST',
+                JSON.stringify({ code, data, requestId })
+            );
+
+            const responseListener = (response) => {
+                response = new SocketResponseRPC(response);
+                if (response.requestId && response.requestId === requestId) {
+
+                    clearTimeout(timerId);
+
+                    logger.debug(`[SOCKET][SOCKET_RPC_RESPONSE] from ${peer.ip}:${peer.port}
+                    CODE: ${response.code}, REQUEST_ID: ${response.requestId}, DATA: ${JSON.stringify(response.data)}`);
+
+                    peer.socket.removeListener('SOCKET_RPC_RESPONSE', responseListener);
+
+                    resolve(response.data);
+                }
+            };
+            peer.socket.on('SOCKET_RPC_RESPONSE', responseListener);
+        });
     }
 }
 

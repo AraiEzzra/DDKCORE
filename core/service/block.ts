@@ -307,7 +307,7 @@ class BlockService {
 
     private validateBlockSlot(block: Block): ResponseEntity<void> {
         if (block.height === 1) {
-            return new ResponseEntity();
+            return new ResponseEntity<void>();
         }
 
         const errors = [];
@@ -498,7 +498,7 @@ class BlockService {
             return new ResponseEntity<void>({errors: [...removedTransactionsResponse.errors, 'receiveBlock']});
         }
         logger.debug(
-            `[Process][newReceiveBlock] removed transactions count ${removedTransactionsResponse.data.length}`
+            `[Process][newReceiveBlock] removed transactions count: ${removedTransactionsResponse.data.length}`
         );
         const removedTransactions: Array<Transaction<object>> = removedTransactionsResponse.data || [];
 
