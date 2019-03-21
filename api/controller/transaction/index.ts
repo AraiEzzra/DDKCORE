@@ -1,59 +1,78 @@
-import { Filter } from 'api/controller/transaction/types';
-import TransactionService from 'api/service/transaction';
 import { RPC } from 'api/utils/decorators';
 import SocketMiddleware from 'api/middleware/socket';
-import { Message } from 'shared/model/message';
-import {
-    CREATE_TRANSACTION,
-    GET_TRANSACTION_BY_ID,
-    GET_TRANSACTION,
-    GET_TRANSACTION_HISTORY,
-    GET_TRANSACTIONS_BY_BLOCK_ID
-} from 'shared/driver/socket/codes';
+import { Message2 } from 'shared/model/message';
+import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
+import TransactionPGRepository from 'api/repository/transaction';
+import { IAsset, TransactionModel } from 'shared/model/transaction';
+import { getTransactionsRequest } from 'api/controller/transaction/types';
+import { DEFAULT_LIMIT } from 'api/utils/common';
+import { ResponseEntity } from 'shared/model/response';
+import SharedTransactionRepo from 'shared/repository/transaction';
+
+const ALLOWED_FILTERS = new Set(['blockId', 'senderPublicKey', 'type']);
+const ALLOWED_SORT = new Set(['blockId', 'createdAt', 'type']);
 
 export class TransactionController {
 
     constructor() {
         this.createTransaction = this.createTransaction.bind(this);
-        // this.getTransactions = this.getTransactions.bind(this);
-        // this.getTransactionById = this.getTransactionById.bind(this);
-        // this.getTransactions = this.getTransactions.bind(this);
-        // this.getTransactionsByBlockId = this.getTransactionsByBlockId.bind(this);
+        this.getTransaction = this.getTransaction.bind(this);
+        this.getTransactions = this.getTransactions.bind(this);
+        this.getTransactionsByBlockId = this.getTransactionsByBlockId.bind(this);
     }
 
-    @RPC(CREATE_TRANSACTION)
-    createTransaction(message: Message, socket: any) {
-        // TODO: remove this logic from API
-        message.body.data.trs.createdAt = Date.now() / 1000;
-        console.log('MESSAGE: ', message);
+    @RPC(API_ACTION_TYPES.CREATE_TRANSACTION)
+    createTransaction(message: Message2<{ secret: string, trs: TransactionModel<IAsset> }>, socket: any) {
         SocketMiddleware.emitToCore(message, socket);
     }
 
+    @RPC(API_ACTION_TYPES.GET_TRANSACTION)
+    async getTransaction(message: Message2<{ id: string }>, socket: any): Promise<void> {
+        SocketMiddleware.emitToClient<TransactionModel<IAsset>>(
+            message.headers.id,
+            message.code,
+            new ResponseEntity({
+                data: SharedTransactionRepo.serialize(await TransactionPGRepository.getOne(message.body.id))
+            }),
+            socket
+        );
+    }
 
-    // @RPC(GET_TRANSACTION)
-    // getTransaction(message: Message, socket: any) {
-    //     const { body, headers, code } = message;
-    //
-    //     const transactionResponse = TransactionService.getOne(body);
-    //     SocketMiddleware.emitToClient(headers.id, code, transactionResponse, socket);
-    // }
-    //
-    // @RPC(GET_TRANSACTION_BY_ID)
-    // getTransactionById(message: Message, socket: any) {
-    //
-    // }
-    //
-    // @RPC(GET_TRANSACTION_HISTORY)
-    // getTransactions(message: Message, socket: any) {
-    //     const { body, headers, code } = message;
-    //     const transactionsResponse = TransactionService.getMany(body.limit, body.offset, body.sort, body.type);
-    // }
-    //
-    //
-    // @RPC(GET_TRANSACTIONS_BY_BLOCK_ID)
-    // getTransactionsByBlockId(blockId: number, filter: Filter) {
-    //     return TransactionService.getTrsByBlockId(blockId, filter.limit, filter.offset);
-    // }
+    @RPC(API_ACTION_TYPES.GET_TRANSACTIONS)
+    async getTransactions(message: Message2<getTransactionsRequest>, socket: any): Promise<void> {
+        // TODO add validation
+        const transactions = await TransactionPGRepository.getMany(
+            message.body.filter || {},
+            message.body.sort || [['createdAt', 'ASC']],
+            message.body.limit || DEFAULT_LIMIT,
+            message.body.offset || 0
+        );
+
+        SocketMiddleware.emitToClient<Array<TransactionModel<IAsset>>>(
+            message.headers.id,
+            message.code,
+            new ResponseEntity({ data: transactions.map(trs => SharedTransactionRepo.serialize(trs)) }),
+            socket
+        );
+
+    }
+
+    @RPC(API_ACTION_TYPES.GET_TRANSACTIONS_BY_BLOCK_ID)
+    async getTransactionsByBlockId(message: Message2<{ limit: number, offset: number, blockId: string }>, socket: any) {
+        const transactions = await TransactionPGRepository.getMany(
+            { block_id: message.body.blockId },
+            [['createdAt', 'ASC']],
+            message.body.limit || DEFAULT_LIMIT,
+            message.body.offset || 0
+        );
+        SocketMiddleware.emitToClient<Array<TransactionModel<IAsset>>>(
+            message.headers.id,
+            message.code,
+            new ResponseEntity({ data: transactions.map(trs => SharedTransactionRepo.serialize(trs)) }),
+            socket
+        );
+    }
+
 }
 
 export default new TransactionController();

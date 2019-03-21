@@ -1,6 +1,5 @@
 import { Block } from 'shared/model/block';
 
-export type DeletedBlockId = string;
 export type RawBlock = {[key: string]: any};
 export type BlockId = string;
 
@@ -14,9 +13,6 @@ export interface IBlockRepository {
 }
 
 export interface IBlockPGRepository {
-
-    serialize(block: Block): RawBlock;
-    deserialize(rawBlock: RawBlock): Block;
 
     deleteById(blockId: BlockId | Array<BlockId>): Promise<Array<string>>;
     getById(blockId: BlockId): Promise<Block>;

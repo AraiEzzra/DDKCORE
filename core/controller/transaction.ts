@@ -8,6 +8,7 @@ import TransactionPool from 'core/service/transactionPool';
 import { Account } from 'shared/model/account';
 import AccountRepo from 'core/repository/account';
 import TransactionRepo from 'core/repository/transaction';
+import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
 import { createKeyPairBySecret } from 'shared/util/crypto';
 
 class TransactionController extends BaseController {
@@ -38,7 +39,7 @@ class TransactionController extends BaseController {
         TransactionQueue.push(trs);
     }
 
-    @RPC('TRANSACTION_CREATE')
+    @RPC(API_ACTION_TYPES.CREATE_TRANSACTION)
     public async transactionCreate(action: { data: { trs: TransactionModel<IAsset>, secret: string } }): Promise<void> {
         console.log('TRANSACTION RPC CREATING....', JSON.stringify(action.data));
 

@@ -1,7 +1,7 @@
 import { RPC } from 'api/utils/decorators';
 import { Message2 } from 'shared/model/message';
 import SocketMiddleware from 'api/middleware/socket';
-import { GET_ACCOUNT, GET_ACCOUNT_BALANCE } from 'shared/driver/socket/codes';
+import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
 
 export class AccountController {
 
@@ -10,12 +10,12 @@ export class AccountController {
         this.getAccountBalance = this.getAccountBalance.bind(this);
     }
 
-    @RPC(GET_ACCOUNT)
+    @RPC(API_ACTION_TYPES.GET_ACCOUNT)
     getAccount(message: Message2<{ address: string }>, socket: any) {
         SocketMiddleware.emitToCore<{ address: string }>(message, socket);
     }
 
-    @RPC(GET_ACCOUNT_BALANCE)
+    @RPC(API_ACTION_TYPES.GET_ACCOUNT_BALANCE)
     getAccountBalance(message: Message2<{ address: string }>, socket: any) {
         SocketMiddleware.emitToCore<{ address: string }>(message, socket);
     }
