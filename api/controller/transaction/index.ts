@@ -28,18 +28,21 @@ export class TransactionController {
     }
 
     @RPC(API_ACTION_TYPES.GET_TRANSACTION)
+    @validate()
     async getTransaction(message: Message2<{ id: string }>, socket: any): Promise<void> {
+        const data = SharedTransactionRepo.serialize(await TransactionPGRepository.getOne(message.body.id));
         SocketMiddleware.emitToClient<TransactionModel<IAsset>>(
             message.headers.id,
             message.code,
             new ResponseEntity({
-                data: SharedTransactionRepo.serialize(await TransactionPGRepository.getOne(message.body.id))
+                data
             }),
             socket
         );
     }
 
     @RPC(API_ACTION_TYPES.GET_TRANSACTIONS)
+    @validate()
     async getTransactions(message: Message2<getTransactionsRequest>, socket: any): Promise<void> {
         // TODO add validation
         const transactions = await TransactionPGRepository.getMany(
@@ -61,6 +64,7 @@ export class TransactionController {
     }
 
     @RPC(API_ACTION_TYPES.GET_TRANSACTIONS_BY_BLOCK_ID)
+    @validate()
     async getTransactionsByBlockId(message: Message2<{ limit: number, offset: number, blockId: string }>, socket: any) {
         const transactions = await TransactionPGRepository.getMany(
             { block_id: message.body.blockId },

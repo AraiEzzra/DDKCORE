@@ -5,6 +5,7 @@ import { logger } from 'shared/util/logger';
 import { MESSAGE_CHANNEL } from 'shared/driver/socket/channels';
 import { ALL_SCHEMAS, MESSAGE } from 'shared/validate/schema';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
+import {RPC_METHODS} from 'api/middleware/rpcHolder';
 
 /**
  * Compile all schemas for validate
@@ -21,7 +22,7 @@ export const validate = () => {
         let descriptorFn = descriptor.value || descriptor.get();
 
         return {
-            value: (message, socket) => {
+            value: (message, socket): any => {
                 let schemaID = message.code;
                 if (schemaID === API_ACTION_TYPES.CREATE_TRANSACTION &&
                     Object.keys(message.body || [])
@@ -50,6 +51,8 @@ export const validate = () => {
 
 export const validateData = (schema, data: Object, callback) => {
     validator.validate(data, schema, (err, report: boolean) => {
+        console.log('schema', schema);
+        console.log('data', data);
         if (err) {
             callback(err[0], report);
             return;
