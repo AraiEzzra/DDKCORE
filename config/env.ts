@@ -44,8 +44,11 @@ export default {
     blackList: (env.PEERS_BLACKLIST || '').split(','),
     forging: {
         secret: env.FORGE_SECRET,
-        totalSupplyAccount: env.TOTAL_SUPPLY_ACCOUNT,
+        totalSupplyAccount: BigInt(env.TOTAL_SUPPLY_ACCOUNT),
         stopForging: (env.STOP_FORGING || 'FALSE').toUpperCase() === 'TRUE',
+    },
+    airdrop: {
+        airdropAccount: BigInt(env.AIRDROP_ACCOUNT)
     },
     ssl: {
         options: {

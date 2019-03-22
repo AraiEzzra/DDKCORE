@@ -8,7 +8,7 @@ import configSchema from '../../config/schema/config';
 import defaultCfg from '../../config/default/config';
 import testnetCfg from '../../config/testnet/config';
 import mainnetCfg from '../../config/mainnet/config';
-import envConstants from '../../config/env';
+import envConfig from '../../config/env';
 import devConstants from '../../config/default/constants';
 import testConstants from '../../config/testnet/constants';
 import mainConstants from '../../config/mainnet/constants';
@@ -193,6 +193,9 @@ interface IConfig {
         };
         totalSupplyAccount?: bigint;
     };
+    airdrop?: {
+        airdropAccount: bigint;
+    }
     loading?: {
         verifyOnLoading?: boolean;
         loadPerIteration?: number;
@@ -275,7 +278,7 @@ class Config {
             },
         };
 
-        Object.assign(this.constants, envConstants);
+        Object.assign(this.constants, envConfig);
 
         // For development mode
         if (env.NODE_ENV_IN === 'development') {
@@ -304,6 +307,7 @@ class Config {
             Object.assign(this.constants, testConstants);
         }
 
+        this.config = Object.assign(envConfig, this.config);
         const valid = validator.validate(this.config, configSchema.config);
 
         if (!valid) {
