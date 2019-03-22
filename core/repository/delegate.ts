@@ -1,5 +1,5 @@
 import { ResponseEntity } from 'shared/model/response';
-import { Account, Address } from 'shared/model/account';
+import { Account, PublicKey } from 'shared/model/account';
 import Config from 'shared/util/config';
 import { Delegate } from 'shared/model/delegate';
 
@@ -23,12 +23,28 @@ class DelegateRepository {
         return delegate;
     }
 
-    /**
-     * @implements constants.activeDelegates
-     * @return Array<Account>
-     */
-    public getActiveDelegates(): ResponseEntity<Array<Delegate>> {
-        const activeDelegates: Array<Delegate> = Object.values(this.memoryDelegates).sort((a, b) => {
+    public getDelegates(limit, offset): Array<Delegate> {
+        return Object.values(this.memoryDelegates).sort((a, b) => {
+            if (a.account.publicKey > b.account.publicKey) {
+                return 1;
+            }
+            if (a.account.publicKey < b.account.publicKey) {
+                return -1;
+            }
+            return 0;
+        }).slice(offset, limit);
+    }
+
+    public getDelegate(publicKey: PublicKey): Delegate {
+        return this.memoryDelegates[publicKey];
+    }
+
+    public getCount() {
+        return Object.keys(this.memoryDelegates).length;
+    }
+
+    public getActiveDelegates(limit?: number, offset?: number): Array<Delegate> {
+        let activeDelegates: Array<Delegate> = Object.values(this.memoryDelegates).sort((a, b) => {
             if (a.votes > b.votes) {
                 return 1;
             }
@@ -37,14 +53,12 @@ class DelegateRepository {
             }
             return 0;
         }).slice(0, constants.activeDelegates);
+
         if (activeDelegates.length > 0) {
-            return new ResponseEntity({ data: activeDelegates });
-        } else {
-            return new ResponseEntity({
-                errors: [
-                    `[DelegateRepository][getActiveDelegates] Can't get Active delegates`
-                ]
-            });
+            if (limit) {
+                activeDelegates = activeDelegates.slice(offset || 0, limit)
+            }
+            return activeDelegates;
         }
     }
 
@@ -67,6 +81,16 @@ class DelegateRepository {
 
     public delete(account: Account): void {
         delete this.memoryDelegates[account.publicKey];
+    }
+
+    public serialize(delegate: Delegate): object {
+        return {
+            username: delegate.username,
+            missedBlocks: delegate.missedBlocks,
+            forgedBlocks: delegate.forgedBlocks,
+            publicKey: delegate.account.publicKey,
+            votes: delegate.votes,
+        }
     }
 }
 

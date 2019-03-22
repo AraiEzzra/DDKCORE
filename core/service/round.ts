@@ -12,7 +12,6 @@ import RoundRepository from 'core/repository/round';
 import { createTaskON, resetTaskON } from 'shared/util/bus';
 import DelegateRepository from 'core/repository/delegate';
 import AccountRepository from 'core/repository/account';
-import { ed } from 'shared/util/ed';
 import { Delegate } from 'shared/model/delegate';
 import { logger } from 'shared/util/logger';
 import { compose } from 'core/util/common';
@@ -20,6 +19,7 @@ import RoundPGRepository from 'core/repository/round/pg';
 import { Block } from 'shared/model/block';
 import { ActionTypes } from 'core/util/actionTypes';
 import { calculateRoundFirstSlotByTimestamp } from 'core/util/round';
+import { createKeyPairBySecret } from 'shared/util/crypto';
 
 const MAX_LATENESS_FORGE_TIME = 500;
 const constants = Config.constants;
@@ -79,8 +79,7 @@ class RoundService implements IRoundService {
     // private isRoundChainRestored: boolean = false;
 
     constructor() {
-        const hash = crypto.createHash('sha256').update(process.env.FORGE_SECRET, 'utf8').digest();
-        const keyPair = ed.makeKeyPair(hash);
+        const keyPair = createKeyPairBySecret(process.env.FORGE_SECRET);
 
         this.keyPair = {
             privateKey: keyPair.privateKey.toString('hex'),
@@ -227,15 +226,9 @@ class RoundService implements IRoundService {
             });
         }
 
-        const delegateResponse = DelegateRepository.getActiveDelegates();
-        if (!delegateResponse.success) {
-            logger.error(`${this.logPrefix}[generateRound] error: ${delegateResponse.errors}`);
-            return new ResponseEntity<void>({
-                errors: [...delegateResponse.errors, `${this.logPrefix}[generateRound] Can't get Active delegates`]
-            });
-        }
+        const activeDelegates = DelegateRepository.getActiveDelegates();
 
-        const hashList = this.generateHashList({ blockId: lastBlock.id, activeDelegates: delegateResponse.data });
+        const hashList = this.generateHashList({ blockId: lastBlock.id, activeDelegates });
         const sortedHashList = this.sortHashList(hashList);
         const slots = this.generatorPublicKeyToSlot(sortedHashList, timestamp);
 

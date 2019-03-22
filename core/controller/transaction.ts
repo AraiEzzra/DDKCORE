@@ -7,8 +7,9 @@ import TransactionService from 'core/service/transaction';
 import TransactionPool from 'core/service/transactionPool';
 import { Account } from 'shared/model/account';
 import AccountRepo from 'core/repository/account';
-import { ed } from 'shared/util/ed';
 import TransactionRepo from 'core/repository/transaction';
+import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
+import { createKeyPairBySecret } from 'shared/util/crypto';
 
 class TransactionController extends BaseController {
     @ON('TRANSACTION_RECEIVE')
@@ -38,11 +39,12 @@ class TransactionController extends BaseController {
         TransactionQueue.push(trs);
     }
 
-    @RPC('TRANSACTION_CREATE')
-    public async transactionCreate(data: { trs: TransactionModel<IAsset>, secret: string }): Promise<void> {
-        console.log('TRANSACTION RPC CREATING....', data.trs.type);
-        const keyPair = ed.makeKeyPair(Buffer.from(data.secret));
-        const responseTrs = TransactionService.create(data.trs, keyPair);
+    @RPC(API_ACTION_TYPES.CREATE_TRANSACTION)
+    public async transactionCreate(action: { data: { trs: TransactionModel<IAsset>, secret: string } }): Promise<void> {
+        console.log('TRANSACTION RPC CREATING....', JSON.stringify(action.data));
+
+        const keyPair = createKeyPairBySecret(action.data.secret);
+        const responseTrs = TransactionService.create(action.data.trs, keyPair);
         if (responseTrs.success) {
             TransactionQueue.push(responseTrs.data);
         }

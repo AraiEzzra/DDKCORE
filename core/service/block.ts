@@ -8,6 +8,7 @@ import { logger } from 'shared/util/logger';
 import { Account } from 'shared/model/account';
 import { Block, BlockModel } from 'shared/model/block';
 import BlockRepo from 'core/repository/block';
+import SharedTransactionRepo from 'shared/repository/transaction';
 import BlockPGRepo from 'core/repository/block/pg';
 import AccountRepo from 'core/repository/account';
 import AccountRepository from 'core/repository/account';
@@ -28,6 +29,8 @@ import SyncService from 'core/service/sync';
 import system from 'core/repository/system';
 import { getAddressByPublicKey } from 'shared/util/account';
 import { calculateRoundByTimestamp } from 'core/util/round';
+import SocketMiddleware from 'core/api/middleware/socket';
+import { EVENT_TYPES } from 'shared/driver/socket/codes';
 
 const validator: Validator = new ZSchema({});
 
@@ -589,6 +592,10 @@ class BlockService {
         await BlockPGRepo.deleteById(lastBlock.id);
         const newLastBlock = BlockRepo.deleteLastBlock();
 
+        const serializedBlock: Block & { transactions: any } = lastBlock.getCopy();
+        serializedBlock.transactions = lastBlock.transactions.map(trs => SharedTransactionRepo.serialize(trs));
+        SocketMiddleware.emitEvent<{ block: Block }>(EVENT_TYPES.UNDO_BLOCK, { block: serializedBlock });
+
         return new ResponseEntity<Block>({ data: newLastBlock });
     }
 
@@ -599,7 +606,7 @@ class BlockService {
             AccountRepo.add({ publicKey: publicKey, address: address});
         });
         const resultTransactions = rawBlock.transactions.map((transaction) =>
-            TransactionRepo.deserialize(transaction)
+            SharedTransactionRepo.deserialize(transaction)
         );
         rawBlock.transactions = <Array<Transaction<IAsset>>>resultTransactions;
         const block = new Block({ ...rawBlock, createdAt: 0, previousBlockId: null });
