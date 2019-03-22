@@ -44,6 +44,8 @@ class TransactionController extends BaseController {
         console.log('TRANSACTION RPC CREATING....', JSON.stringify(action.data));
 
         const keyPair = createKeyPairBySecret(action.data.secret);
+        action.data.trs.senderPublicKey = keyPair.publicKey.toString('hex');
+
         const responseTrs = TransactionService.create(action.data.trs, keyPair);
         if (responseTrs.success) {
             TransactionQueue.push(responseTrs.data);
