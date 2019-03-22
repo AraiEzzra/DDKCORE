@@ -439,6 +439,10 @@ class BlockService {
 
         if (broadcast) {
             SyncService.sendNewBlock(block);
+
+            const serializedBlock: Block & { transactions: any } = block.getCopy();
+            serializedBlock.transactions = block.transactions.map(trs => SharedTransactionRepo.serialize(trs));
+            SocketMiddleware.emitEvent<{ block: Block }>(EVENT_TYPES.APPLY_BLOCK, { block: serializedBlock });
         }
 
         return new ResponseEntity<void>();
@@ -506,7 +510,7 @@ class BlockService {
         const removedTransactions: Array<Transaction<object>> = removedTransactionsResponse.data || [];
 
         const errors: Array<string> = [];
-        const processBlockResponse: ResponseEntity<void> = await this.process(block, false, null, false);
+        const processBlockResponse: ResponseEntity<void> = await this.process(block, true, null, false);
         if (!processBlockResponse.success) {
             errors.push(...processBlockResponse.errors);
         }

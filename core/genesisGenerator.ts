@@ -1,6 +1,6 @@
 require('dotenv').config();
 import TransactionService from 'core/service/transaction';
-import TransactionRepo from 'core/repository/transaction';
+import SharedTransactionRepo from 'shared/repository/transaction';
 import BlockService from 'core/service/block';
 import AccountRepo from 'core/repository/account';
 import { IAsset, Transaction, TransactionModel, TransactionType } from 'shared/model/transaction';
@@ -263,7 +263,7 @@ block = BlockService.addPayloadHash(block, keyPair).data;
 
 const resultTransactions = block.transactions.map((transaction) => {
     transaction.blockId = block.id;
-    return TransactionRepo.serialize(transaction);
+    return SharedTransactionRepo.serialize(transaction);
 });
 block.transactions = <Array<Transaction<IAsset>>>resultTransactions;
 

@@ -10,7 +10,7 @@ import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
  * Compile all schemas for validate
  */
 const validator: Validator = new ZSchema({});
-const isSchemasValid = validator.validateSchema(ALL_SCHEMAS);
+const isSchemasValid: boolean = validator.validateSchema(ALL_SCHEMAS);
 logger.debug('[API][SCHEMAS] VALID:', isSchemasValid);
 
 /**

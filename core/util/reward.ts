@@ -148,7 +148,7 @@ export function sendAirdropReward(trs: Transaction<IAssetStake | IAssetVote>): v
             continue;
         }
         AccountRepo.updateBalanceByAddress(sponsorAddress, rewardAmount);
-        AccountRepo.updateBalanceByAddress(config.config.forging.totalSupplyAccount, -rewardAmount);
+        AccountRepo.updateBalanceByAddress(config.config.airdrop.airdropAccount, -rewardAmount);
     }
 }
 
@@ -190,6 +190,6 @@ export function undoAirdropReward(trs: Transaction<IAssetVote | IAssetStake>): v
             continue;
         }
         AccountRepo.updateBalanceByAddress(sponsorAddress, -rewardAmount);
-        AccountRepo.updateBalanceByAddress(config.config.forging.totalSupplyAccount, rewardAmount);
+        AccountRepo.updateBalanceByAddress(config.config.airdrop.airdropAccount, rewardAmount);
     }
 }
