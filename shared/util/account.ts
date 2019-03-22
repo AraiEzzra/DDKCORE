@@ -1,10 +1,8 @@
 import crypto from 'crypto';
 import { Address, PublicKey } from 'shared/model/account';
 
-declare global {
-    enum EnumSize {
-        INT64 = 8
-    }
+export enum EnumSize {
+    INT64 = 8
 }
 
 const ADDRESS_LENGTH = 8;
