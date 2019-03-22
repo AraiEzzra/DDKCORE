@@ -1,8 +1,8 @@
-import { messageRPC } from 'shared/util/bus';
 import { API } from 'core/api/util/decorators';
 import { Message } from 'shared/model/message';
-import { ResponseEntity } from 'shared/model/response';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
+import { logger } from 'shared/util/logger';
+import TransactionRPCController from 'core/controller/transaction';
 
 export class TransactionController {
 
@@ -15,10 +15,8 @@ export class TransactionController {
         /**
          * Some validate "message.body"
          */
-
-        messageRPC(API_ACTION_TYPES.CREATE_TRANSACTION, message.body);
-        const responseMessage = 'TRANSACTION IS PENDING';
-        return new ResponseEntity({ data: { message: responseMessage } });
+        logger.debug(`[API][TransactionController][createTransaction] ${JSON.stringify(message.body)}`);
+        return TransactionRPCController.transactionCreate(message.body);
     }
 }
 
