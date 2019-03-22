@@ -285,7 +285,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             errors.push('Missing id');
         }
 
-        if (!trs.type) {
+        if (!trs.type && trs.type !== 0) {
             errors.push('Missing type');
         }
 
