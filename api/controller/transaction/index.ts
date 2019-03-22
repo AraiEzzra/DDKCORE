@@ -8,7 +8,7 @@ import { getTransactionsRequest } from 'api/controller/transaction/types';
 import { DEFAULT_LIMIT } from 'api/utils/common';
 import { ResponseEntity } from 'shared/model/response';
 import SharedTransactionRepo from 'shared/repository/transaction';
-
+import { validate } from 'shared/validate';
 const ALLOWED_FILTERS = new Set(['blockId', 'senderPublicKey', 'type']);
 const ALLOWED_SORT = new Set(['blockId', 'createdAt', 'type']);
 
@@ -22,7 +22,7 @@ export class TransactionController {
     }
 
     @RPC(API_ACTION_TYPES.CREATE_TRANSACTION)
-    @validate(SCHEMA_CREATE_TRANSACRION)
+    @validate()
     createTransaction(message: Message2<{ secret: string, trs: TransactionModel<IAsset> }>, socket: any) {
         SocketMiddleware.emitToCore(message, socket);
     }
