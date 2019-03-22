@@ -103,7 +103,13 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
 
         if (TransactionPool.isPotentialConflict(trs)) {
             this.pushInConflictedQueue(trs);
-            // notify in socket
+            // TODO debug only
+            SocketMiddleware.emitEvent<{ transaction: TransactionModel<IAsset>, reason: string }>(
+                EVENT_TYPES.TRANSACTION_CONFLICTED, {
+                    transaction: SharedTransactionRepo.serialize(trs),
+                    reason: 'TRANSACTION_CONFLICTED'
+                }
+            );
             setImmediate(this.process);
             return;
         }
@@ -115,8 +121,11 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
             logger.debug(`TransactionStatus.verifyStatus ${JSON.stringify(verifyStatus)}`);
             trs.status = TransactionStatus.DECLINED;
 
-            SocketMiddleware.emitEvent<{ transaction: TransactionModel<IAsset> }>(
-                EVENT_TYPES.TRANSACTION_DECLINED, { transaction: SharedTransactionRepo.serialize(trs) }
+            SocketMiddleware.emitEvent<{ transaction: TransactionModel<IAsset>, reason: string }>(
+                EVENT_TYPES.TRANSACTION_DECLINED, {
+                    transaction: SharedTransactionRepo.serialize(trs),
+                    reason: verifyStatus.errors.join(', ')
+                }
             );
 
             setImmediate(this.process);

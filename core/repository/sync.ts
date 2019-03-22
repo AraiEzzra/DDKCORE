@@ -7,8 +7,6 @@ import SystemRepository from 'core/repository/system';
 import { logger } from 'shared/util/logger';
 import SharedTransactionRepo from 'shared/repository/transaction';
 import { PEERS_COUNT_FOR_DISCOVER } from 'core/util/const';
-import SocketMiddleware from 'core/api/middleware/socket';
-import { EVENT_TYPES } from 'shared/driver/socket/codes';
 
 interface ISyncRepo {
 
@@ -73,7 +71,6 @@ export class Sync implements ISyncRepo {
     sendNewBlock(block: Block): void {
         const serializedBlock: Block & { transactions: any } = block.getCopy();
         serializedBlock.transactions = block.transactions.map(trs => SharedTransactionRepo.serialize(trs));
-        SocketMiddleware.emitEvent<{ block: Block }>(EVENT_TYPES.APPLY_BLOCK, { block: serializedBlock });
         SocketRepository.broadcastPeers('BLOCK_RECEIVE', { block: serializedBlock });
     }
 
