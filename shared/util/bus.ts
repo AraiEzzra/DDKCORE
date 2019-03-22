@@ -29,7 +29,7 @@ export function createTaskON(topicName: string, callTime: number, data: any = nu
     tasks[topicName] = setTimeout(() => {
         messageON(topicName, data);
         delete tasks[topicName];
-    }, callTime);
+    }, callTime) as Timeout;
 }
 
 export function resetTaskON(topicName: string): void {

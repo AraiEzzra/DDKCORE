@@ -7,18 +7,26 @@ import TransactionService from 'core/service/transaction';
 import TransactionPool from 'core/service/transactionPool';
 import { Account } from 'shared/model/account';
 import AccountRepo from 'core/repository/account';
-import TransactionRepo from 'core/repository/transaction';
-import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
+import SharedTransactionRepo from 'shared/repository/transaction';
+import { API_ACTION_TYPES, EVENT_TYPES } from 'shared/driver/socket/codes';
 import { createKeyPairBySecret } from 'shared/util/crypto';
+import SocketMiddleware from 'core/api/middleware/socket';
 
 class TransactionController extends BaseController {
     @ON('TRANSACTION_RECEIVE')
     public async onReceiveTransaction(action: { data: { trs: TransactionModel<IAsset> } }): Promise<void> {
         const { data } = action;
-        const trs = TransactionRepo.deserialize(data.trs);
+        const trs = SharedTransactionRepo.deserialize(data.trs);
         logger.debug(`[Controller][Transaction][onReceiveTransaction] ${JSON.stringify(data.trs)}`);
 
-        if (!TransactionService.validate(trs)) {
+        const validateResult = TransactionService.validate(trs);
+        if (!validateResult.success) {
+            SocketMiddleware.emitEvent<{ transaction: TransactionModel<IAsset>, reason: string }>(
+                EVENT_TYPES.TRANSACTION_DECLINED, {
+                    transaction: SharedTransactionRepo.serialize(trs),
+                    reason: 'NOT VALID'
+                }
+            );
             return;
         }
 
@@ -46,6 +54,17 @@ class TransactionController extends BaseController {
         const keyPair = createKeyPairBySecret(action.data.secret);
         const responseTrs = TransactionService.create(action.data.trs, keyPair);
         if (responseTrs.success) {
+            const validateResult = TransactionService.validate(responseTrs.data);
+            if (!validateResult.success) {
+                SocketMiddleware.emitEvent<{ transaction: TransactionModel<IAsset>, reason: string }>(
+                    EVENT_TYPES.TRANSACTION_DECLINED, {
+                        transaction: SharedTransactionRepo.serialize(responseTrs.data),
+                        reason: validateResult.errors.join(', ')
+                    }
+                );
+                return;
+            }
+
             TransactionQueue.push(responseTrs.data);
         }
     }

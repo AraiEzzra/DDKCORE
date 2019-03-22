@@ -226,15 +226,9 @@ class RoundService implements IRoundService {
             });
         }
 
-        const delegateResponse = DelegateRepository.getActiveDelegates();
-        if (!delegateResponse.success) {
-            logger.error(`${this.logPrefix}[generateRound] error: ${delegateResponse.errors}`);
-            return new ResponseEntity<void>({
-                errors: [...delegateResponse.errors, `${this.logPrefix}[generateRound] Can't get Active delegates`]
-            });
-        }
+        const activeDelegates = DelegateRepository.getActiveDelegates();
 
-        const hashList = this.generateHashList({ blockId: lastBlock.id, activeDelegates: delegateResponse.data });
+        const hashList = this.generateHashList({ blockId: lastBlock.id, activeDelegates });
         const sortedHashList = this.sortHashList(hashList);
         const slots = this.generatorPublicKeyToSlot(sortedHashList, timestamp);
 

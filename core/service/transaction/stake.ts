@@ -39,8 +39,6 @@ class TransactionStakeService implements IAssetService<IAssetStake> {
             BUFFER.LENGTH.BYTE     // asset.startVoteCount
         );
         offset = BUFFER.writeUInt64LE(buff, trs.asset.amount || 0, offset);
-
-        offset += BUFFER.LENGTH.UINT32;
         buff.writeInt32LE(trs.asset.startTime, offset);
         offset += BUFFER.LENGTH.UINT32;
         buff.writeInt8(trs.asset.startVoteCount, offset);
@@ -62,14 +60,14 @@ class TransactionStakeService implements IAssetService<IAssetStake> {
 
     validate(trs: Transaction<IAssetStake>): ResponseEntity<void> {
         const errors = [];
-        if (trs.asset.amount <= 0) {
+
+        if (!trs.asset.amount || trs.asset.amount < 0) {
             errors.push('Invalid transaction amount');
         }
 
         if ((trs.asset.amount % 1) !== 0) {
             errors.push('Invalid stake amount: Decimal value');
         }
-
         return new ResponseEntity<void>({ errors });
     }
 
@@ -92,7 +90,7 @@ class TransactionStakeService implements IAssetService<IAssetStake> {
             createdAt: trs.createdAt,
             isActive: true,
             amount: trs.asset.amount,
-            voteCount: 0,
+            voteCount: trs.asset.startVoteCount,
             nextVoteMilestone: trs.createdAt + config.constants.froze.vTime * SECONDS_PER_MINUTE,
             airdropReward: trs.asset.airdropReward.sponsors,
             sourceTransactionId: trs.id
@@ -102,7 +100,7 @@ class TransactionStakeService implements IAssetService<IAssetStake> {
 
     undoUnconfirmed(trs: Transaction<IAssetStake>, sender: Account, senderOnly): void {
         sender.actualBalance += trs.asset.amount;
-        for (let i = sender.stakes.length; i > -1; i--) {
+        for (let i = sender.stakes.length - 1; i > -1; i--) {
             if ( sender.stakes[i].sourceTransactionId === trs.id) {
                 sender.stakes.splice(i, 1);
             }

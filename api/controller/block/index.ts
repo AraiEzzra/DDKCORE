@@ -29,16 +29,18 @@ export class BlockController {
 
     @RPC(API_ACTION_TYPES.GET_BLOCKS)
     public async getBlocks(message: Message, socket: any) {
-        SocketMiddleware.emitToClient<Array<BlockModel>>(
+        const blocks = await BlockPGRepository.getMany(
+            message.body.filter || {},
+            message.body.sort || [['height', 'DESC']],
+            message.body.limit || DEFAULT_LIMIT,
+            message.body.offset || 0
+        );
+
+        SocketMiddleware.emitToClient<{ blocks: Array<BlockModel>, count: number }>(
             message.headers.id,
             message.code,
             new ResponseEntity({
-                data: await BlockPGRepository.getMany(
-                    message.body.filter || {},
-                    message.body.sort || [['height', 'DESC']],
-                    message.body.limit || DEFAULT_LIMIT,
-                    message.body.offset || 0
-                )
+                data: blocks
             }),
             socket
         );

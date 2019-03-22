@@ -12,7 +12,6 @@ const ASSET_REPOSITORIES: { [key: string]: IAssetRepository<IAsset> } = {
     [TransactionType.SEND]: TransactionSendRepo,
     [TransactionType.STAKE]: TransactionStakeRepo,
     [TransactionType.VOTE]: TransactionVoteRepo,
-    [TransactionType.SENDSTAKE]: null,
     [TransactionType.SIGNATURE]: null
 };
 

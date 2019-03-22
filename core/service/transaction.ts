@@ -215,17 +215,16 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             return new ResponseEntity({ errors });
         }
 
-        const service = getTransactionServiceByType(data.type);
-        const asset = service.create(data);
-
         const trs = new Transaction<T>({
             createdAt: data.createdAt || SlotService.getTime(),
             senderPublicKey: sender.publicKey,
             senderAddress: sender.address,
             type: data.type,
             salt: cryptoBrowserify.randomBytes(SALT_LENGTH).toString('hex'),
-            asset,
         });
+
+        const service = getTransactionServiceByType(data.type);
+        trs.asset = service.create(data);
 
         trs.signature = this.sign(keyPair, trs);
         trs.id = this.getId(trs);
@@ -301,10 +300,6 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             errors.push(`Missing signature`);
         }
 
-        if (!trs.fee) {
-            errors.push(`Missing fee`);
-        }
-
         if (!trs.salt) {
             errors.push(`Missing salt`);
         }
@@ -318,7 +313,6 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         if (!verifyResponse.success) {
             errors.push(...verifyResponse.errors);
         }
-
         return new ResponseEntity<void>({ errors });
     }
 
@@ -346,7 +340,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
 
         if (trs.type in [TransactionType.SEND, TransactionType.STAKE]) {
             const asset: IAssetTransfer | IAssetStake = <IAssetTransfer | IAssetStake><Object>trs.asset;
-            const amount = asset.amount + trs.fee;
+            const amount = (asset.amount || 0) + trs.fee;
             const senderBalanceResponse = this.checkBalance(amount, trs, sender);
             if (!senderBalanceResponse.success) {
                 return senderBalanceResponse;

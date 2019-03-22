@@ -33,18 +33,18 @@ export const transactionSortFunc = (a: Transaction<any>, b: Transaction<any>): n
 
 export const getTransactionServiceByType = (type: TransactionType): IAssetService<any> => {
     switch (type) {
-        case TransactionType.SEND:
-            return TransactionSendService;
         case TransactionType.REGISTER:
             return TransactionRegisterService;
-        case TransactionType.VOTE:
-            return TransactionVoteService;
+        case TransactionType.SEND:
+            return TransactionSendService;
+        case TransactionType.SIGNATURE:
+            return TransactionSignatureService;
         case TransactionType.DELEGATE:
             return TransactionDelegateService;
         case TransactionType.STAKE:
             return TransactionStakeService;
-        case TransactionType.SIGNATURE:
-            return TransactionSignatureService;
+        case TransactionType.VOTE:
+            return TransactionVoteService;
         default:
             return null;
     }
