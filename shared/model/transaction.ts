@@ -7,7 +7,7 @@ export enum TransactionType {
     SIGNATURE = 20,
     DELEGATE = 30,
     STAKE = 40,
-    SENDSTAKE = 50,
+    // SENDSTAKE = 50,
     VOTE = 60,
 }
 

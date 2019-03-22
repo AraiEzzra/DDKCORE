@@ -9,7 +9,7 @@ import BlockService from 'core/service/block';
 import { logger } from 'shared/util/logger';
 import BlockController from 'core/controller/block';
 import PeerRepository from 'core/repository/peer';
-import TransactionRepo from 'core/repository/transaction';
+import SharedTransactionRepo from 'shared/repository/transaction';
 import { messageON } from 'shared/util/bus';
 import SyncRepository from 'core/repository/sync';
 import { shuffle } from 'shared/util/util';
@@ -94,7 +94,7 @@ export class SyncController extends BaseController {
     async loadBlocks(action: { data: { blocks: Array<Block> }, peer: Peer }): Promise<void> {
         const { data } = action;
         for (let block of data.blocks) {
-            block.transactions.forEach(trs => TransactionRepo.deserialize(trs));
+            block.transactions.forEach(trs => SharedTransactionRepo.deserialize(trs));
             await BlockController.onReceiveBlock({ data: { block } });
         }
         if (!SyncService.consensus) {

@@ -1,6 +1,6 @@
 import autobind from 'autobind-decorator';
 
-import { Transaction, TransactionStatus, IAsset } from 'shared/model/transaction';
+import { Transaction, TransactionStatus, IAsset, TransactionModel } from 'shared/model/transaction';
 import { transactionSortFunc } from 'core/util/transaction';
 import constants from '../../config/mainnet/constants';
 import TransactionDispatcher from 'core/service/transaction';
@@ -10,6 +10,9 @@ import { Account } from 'shared/model/account';
 import { SECOND } from 'core/util/const';
 import AccountRepository from 'core/repository/account';
 import { ResponseEntity } from 'shared/model/response';
+import SocketMiddleware from 'core/api/middleware/socket';
+import { EVENT_TYPES } from 'shared/driver/socket/codes';
+import SharedTransactionRepo from 'shared/repository/transaction'
 
 export interface ITransactionQueueService<T extends Object> {
     getLockStatus(): boolean;
@@ -61,7 +64,7 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
         trs.status = TransactionStatus.QUEUED;
         this.queue.push(trs);
         if (this.queue.length === 1) {
-            this.process();
+            setImmediate(this.process);
         } else {
             this.queue.sort(transactionSortFunc);
         }
@@ -100,7 +103,13 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
 
         if (TransactionPool.isPotentialConflict(trs)) {
             this.pushInConflictedQueue(trs);
-            // notify in socket
+            // TODO debug only
+            SocketMiddleware.emitEvent<{ transaction: TransactionModel<IAsset>, reason: string }>(
+                EVENT_TYPES.TRANSACTION_CONFLICTED, {
+                    transaction: SharedTransactionRepo.serialize(trs),
+                    reason: 'TRANSACTION_CONFLICTED'
+                }
+            );
             setImmediate(this.process);
             return;
         }
@@ -111,7 +120,14 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
         if (!verifyStatus.success) {
             logger.debug(`TransactionStatus.verifyStatus ${JSON.stringify(verifyStatus)}`);
             trs.status = TransactionStatus.DECLINED;
-            // notify in socket
+
+            SocketMiddleware.emitEvent<{ transaction: TransactionModel<IAsset>, reason: string }>(
+                EVENT_TYPES.TRANSACTION_DECLINED, {
+                    transaction: SharedTransactionRepo.serialize(trs),
+                    reason: verifyStatus.errors.join(', ')
+                }
+            );
+
             setImmediate(this.process);
             return;
         }

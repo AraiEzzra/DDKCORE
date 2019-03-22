@@ -32,6 +32,11 @@ class TransactionRegisterService implements IAssetService<IAssetRegister> {
 
     // TODO check empty account
     verifyUnconfirmed(trs: Transaction<IAssetRegister>, sender: Account): ResponseEntity<void> {
+        const errors = [];
+        if (!AccountRepo.getByAddress(trs.asset.referral)) {
+            errors.push(`Referral with address: ${trs.asset.referral} not found!`);
+        }
+
         if (
             sender.secondPublicKey ||
             sender.actualBalance !== 0 ||
@@ -42,7 +47,7 @@ class TransactionRegisterService implements IAssetService<IAssetRegister> {
         ) {
             return new ResponseEntity<void>({ errors: ['Account already exists.'] });
         }
-        return new ResponseEntity<void>();
+        return new ResponseEntity<void>({ errors });
     }
 
     calculateFee(trs: Transaction<IAssetRegister>, sender: Account): number {

@@ -1,7 +1,7 @@
 import { Block } from 'shared/model/block';
 import config from 'shared/util/config';
 import BlockRepo from 'core/repository/block/index';
-import TransactionRepo from 'core/repository/transaction/index';
+import SharedTransactionRepo from 'shared/repository/transaction/index';
 import BlockService from 'core/service/block';
 import { expect } from 'chai';
 import {
@@ -11,7 +11,7 @@ import {
 import {IAsset, Transaction} from 'shared/model/transaction';
 
 const resultTransactions = config.genesisBlock.transactions.map((transaction) =>
-    TransactionRepo.deserialize(transaction)
+    SharedTransactionRepo.deserialize(transaction)
 );
 config.genesisBlock.transactions = <Array<Transaction<IAsset>>>resultTransactions;
 const genesisBlock = new Block(config.genesisBlock);

@@ -1,7 +1,7 @@
-import BlockController from './block';
-import RoundController from './round';
-import SyncController from './sync';
-import TransactionController from './transaction';
+import BlockController from 'core/controller/block';
+import RoundController from 'core/controller/round';
+import SyncController from 'core/controller/sync';
+import TransactionController from 'core/controller/transaction';
 import { filter } from 'rxjs/operators';
 
 import { subjectOn, subjectRpc } from 'shared/util/bus';

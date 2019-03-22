@@ -115,7 +115,7 @@ export function verifyAirdrop(
             sponsors: ${JSON.stringify(airdropReward.sponsors)}
             actual:
             sponsors: ${JSON.stringify(trs.asset.airdropReward.sponsors)}`
-            ] });
+        ] });
     }
     return new ResponseEntity<void>();
 }
@@ -148,11 +148,15 @@ export function sendAirdropReward(trs: Transaction<IAssetStake | IAssetVote>): v
             continue;
         }
         AccountRepo.updateBalanceByAddress(sponsorAddress, rewardAmount);
-        AccountRepo.updateBalanceByAddress(config.config.forging.totalSupplyAccount, -rewardAmount);
+        AccountRepo.updateBalanceByAddress(config.config.airdrop.airdropAccount, -rewardAmount);
     }
 }
 
-export function undoFrozeOrdersRewardAndUnstake(trs: Transaction<IAssetVote>, sender: Account, senderOnly: boolean): void {
+export function undoFrozeOrdersRewardAndUnstake(
+    trs: Transaction<IAssetVote>,
+    sender: Account,
+    senderOnly: boolean
+): void {
     const senderStakes: Array<Stake> = sender.stakes;
     const updatedOrders = senderStakes.map((order: Stake) => {
         if (order.nextVoteMilestone === trs.createdAt + config.constants.froze.vTime * SECONDS_PER_MINUTE) {
@@ -186,6 +190,6 @@ export function undoAirdropReward(trs: Transaction<IAssetVote | IAssetStake>): v
             continue;
         }
         AccountRepo.updateBalanceByAddress(sponsorAddress, -rewardAmount);
-        AccountRepo.updateBalanceByAddress(config.config.forging.totalSupplyAccount, rewardAmount);
+        AccountRepo.updateBalanceByAddress(config.config.airdrop.airdropAccount, rewardAmount);
     }
 }

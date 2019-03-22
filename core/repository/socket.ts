@@ -47,7 +47,7 @@ export class Socket {
             }
             socket.emit('OPEN');
             socket.on('HEADERS', (data: string) => {
-                logger.debug(`[SOCKET][CLIENT_PEER_HEADERS_RECEIVE], data: ${data}`);
+                // logger.debug(`[SOCKET][CLIENT_PEER_HEADERS_RECEIVE], data: ${data}`);
                 const peer = JSON.parse(data);
                 if (Socket.instance.addPeer(peer, socket)) {
                     socket.emit('SERVER_HEADERS', JSON.stringify(
@@ -77,7 +77,7 @@ export class Socket {
                 SystemRepository.getFullHeaders()
             ));
             ws.on('SERVER_HEADERS', (headers: string) => {
-                logger.debug(`[SOCKET][SERVER_PEER_HEADERS_RECEIVE] data: ${headers}`);
+                // logger.debug(`[SOCKET][SERVER_PEER_HEADERS_RECEIVE] data: ${headers}`);
                 const fullPeer = Object.assign(JSON.parse(headers), peer);
                 Socket.instance.addPeer(fullPeer, ws);
             });

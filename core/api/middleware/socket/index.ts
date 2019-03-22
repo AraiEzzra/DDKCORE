@@ -3,10 +3,13 @@ import { Message, MessageType } from 'shared/model/message';
 import { CONNECT_TO_CORE, MESSAGE_CHANNEL } from 'shared/driver/socket/channels';
 import { ResponseEntity } from 'shared/model/response';
 
-export class SocketMiddleware {
+class SocketMiddleware {
+
+    apiSocket: any;
 
     onConnect(socket: any) {
         socket.emit(CONNECT_TO_CORE, 'IS CONNECTED');
+        this.apiSocket = socket;
     }
 
     registerAPI(socket) {
@@ -27,6 +30,13 @@ export class SocketMiddleware {
             socket.emit(MESSAGE_CHANNEL, errorMessage);
         }
 
+    }
+
+    emitEvent<T>(code: string, data: T) {
+        const message = new Message(MessageType.EVENT, code, data);
+        if (this.apiSocket) {
+            this.apiSocket.emit(MESSAGE_CHANNEL, message);
+        }
     }
 }
 

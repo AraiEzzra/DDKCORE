@@ -1,13 +1,10 @@
-import { IAsset, TransactionType } from 'shared/model/transaction';
-import { TransactionModel } from 'shared/model/transaction';
+import { TransactionType } from 'shared/model/transaction';
+import { Pagination, Sort } from 'api/utils/common';
 
-export type Filter = {
-    offset: number,
-    limit: number,
-    sort?: string,
-    type?: TransactionType
-};
-
-export interface ITransaction extends TransactionModel<IAsset> {
-    blockHeight: number;
-}
+export type getTransactionsRequest = {
+    filter: {
+        type?: TransactionType,
+        block_id?: string,
+        sender_public_key?: string,
+    }, sort: Array<Sort>
+} & Pagination;
