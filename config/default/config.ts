@@ -86,7 +86,8 @@ export default {
                 '127.0.0.1',
                 '192.168.9.91'
             ]
-        }
+        },
+        totalSupplyAccount: BigInt(env.TOTAL_SUPPLY_ACCOUNT)
     },
     loading: {
         verifyOnLoading: env.VERIFY_ON_LOADING === 'TRUE',
