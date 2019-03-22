@@ -1,20 +1,10 @@
 import { Block } from 'shared/model/block';
-import config from 'shared/util/config';
 import BlockRepo from 'core/repository/block/index';
-import SharedTransactionRepo from 'shared/repository/transaction/index';
-import BlockService from 'core/service/block';
 import { expect } from 'chai';
 import {
-    getNewBlock, createTrsTable, createBlockTable, dropTrsTable,
-    dropBlockTable
+    getNewBlock
 } from 'test/core/repository/block/mock';
-import {IAsset, Transaction} from 'shared/model/transaction';
-
-const resultTransactions = config.genesisBlock.transactions.map((transaction) =>
-    SharedTransactionRepo.deserialize(transaction)
-);
-config.genesisBlock.transactions = <Array<Transaction<IAsset>>>resultTransactions;
-const genesisBlock = new Block(config.genesisBlock);
+import config from 'shared/util/config';
 
 const getAllBlocks = () => {
     return BlockRepo.getMany(Number.MAX_SAFE_INTEGER);
@@ -22,33 +12,14 @@ const getAllBlocks = () => {
 
 describe('Block memory repository', () => {
 
-    before(async () => {
-        await createBlockTable();
-        await createTrsTable();
-    });
-
     describe('function \'getGenesisBlock\'', () => {
-        context('when genesis block doesn\'t exist' , () => {
-            it('should return response null', () => {
-                const response: Block = BlockRepo.getGenesisBlock();
-                expect(response).to.be.undefined;
-            });
-        });
 
         context('when block exists', () => {
-
-            before(async () => {
-                await BlockService.applyGenesisBlock(genesisBlock);
-            });
 
             it('should return response with genesis block data (blockId = 1)', () => {
                 const response = BlockRepo.getGenesisBlock();
                 expect(response).to.be.an.instanceOf(Block);
                 expect(response.height).to.be.equal(1);
-            });
-
-            after(() => {
-                BlockRepo.deleteLastBlock();
             });
         });
     });
@@ -56,16 +27,19 @@ describe('Block memory repository', () => {
     describe('function \'add\'', () => {
 
         context('when add one block', () => {
+            let firstBlock;
 
-            const firstBlock = getNewBlock();
+            before(() => {
+                firstBlock = getNewBlock();
+            });
 
             it('should add block to repo and return added block', () => {
                 const response = BlockRepo.add(firstBlock);
                 expect(response).to.be.an.instanceOf(Block);
                 expect(response.id).to.be.equal(firstBlock.id);
                 const blocks = getAllBlocks();
-                expect(blocks).to.be.lengthOf(1);
-                expect(blocks[0].id).to.be.equal(firstBlock.id);
+                expect(blocks).to.be.lengthOf(2);
+                expect(blocks[1].id).to.be.equal(firstBlock.id);
             });
 
             after(() => {
@@ -75,16 +49,20 @@ describe('Block memory repository', () => {
 
         context('when add two blocks', () => {
 
-            const firstBlock = getNewBlock();
-            const secondBlock = getNewBlock();
+            let firstBlock, secondBlock;
+
+            before(() => {
+                firstBlock = getNewBlock();
+                secondBlock = getNewBlock();
+            });
 
             it('should add two blocks to repo', () => {
                 BlockRepo.add(firstBlock);
                 BlockRepo.add(secondBlock);
                 const blocks = getAllBlocks();
-                expect(blocks).to.be.lengthOf(2);
-                expect(blocks[0].id).to.be.equal(firstBlock.id);
-                expect(blocks[1].id).to.be.equal(secondBlock.id);
+                expect(blocks).to.be.lengthOf(3);
+                expect(blocks[1].id).to.be.equal(firstBlock.id);
+                expect(blocks[2].id).to.be.equal(secondBlock.id);
             });
 
             after(() => {
@@ -96,8 +74,12 @@ describe('Block memory repository', () => {
 
     describe('lastBlock usage', () => {
 
-        const block1 = getNewBlock();
-        const block2 = getNewBlock();
+        let block1, block2;
+
+        before(() => {
+            block1 = getNewBlock();
+            block2 = getNewBlock();
+        });
 
         it('should set and get lastBlock', () => {
             BlockRepo.add(block1);
@@ -117,19 +99,11 @@ describe('Block memory repository', () => {
     describe('function \'deleteLastBlock\'', () => {
 
         context('when deleting last block', () => {
-
-            it('should return null if there is no blocks in repo', () => {
-                const response = BlockRepo.deleteLastBlock();
-                expect(response).to.be.null;
-            });
-
-        });
-
-        context('when deleting last block', () => {
-            const block1 = getNewBlock();
-            const block2 = getNewBlock();
+            let block1, block2;
 
             before(() => {
+                block1 = getNewBlock();
+                block2 = getNewBlock();
                 BlockRepo.add(block1);
                 BlockRepo.add(block2);
             });
@@ -139,7 +113,7 @@ describe('Block memory repository', () => {
                 expect(response).to.be.eql(block1);
                 expect(BlockRepo.getLastBlock()).to.be.eql(block1);
                 const blocks = getAllBlocks();
-                expect(blocks).to.be.lengthOf(1);
+                expect(blocks).to.be.lengthOf(2);
             });
 
             after(() => {
@@ -152,10 +126,11 @@ describe('Block memory repository', () => {
 
         context('when checking block for existence', () => {
 
-            const block1 = getNewBlock();
-            const block2 = getNewBlock();
+            let block1, block2;
 
             before(() => {
+                block1 = getNewBlock();
+                block2 = getNewBlock();
                 BlockRepo.add(block1);
                 BlockRepo.add(block2);
             });
@@ -191,6 +166,7 @@ describe('Block memory repository', () => {
 
             before(() => {
                 firstBlock = getNewBlock();
+                BlockRepo.deleteLastBlock();
                 blocks.push(firstBlock);
                 BlockRepo.add(firstBlock);
                 for (let i = 0; i < (blocksCount - 2); i++) {
@@ -226,12 +202,8 @@ describe('Block memory repository', () => {
                 for (let i = 0; i < blocks.length; i++) {
                     BlockRepo.deleteLastBlock();
                 }
+                BlockRepo.add(new Block(config.genesisBlock));
             });
         });
-    });
-
-    after(async () => {
-        await dropTrsTable();
-        await dropBlockTable();
     });
 });
