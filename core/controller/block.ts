@@ -11,6 +11,8 @@ import SlotService from 'core/service/slot';
 import { messageON } from 'shared/util/bus';
 import TransactionRepo from 'core/repository/transaction';
 import { calculateRoundByTimestamp } from 'core/util/round';
+import RoundService from 'core/service/round';
+import RoundRepository from 'core/repository/round';
 
 interface BlockGenerateRequest {
     keyPair: {
@@ -70,6 +72,15 @@ class BlockController extends BaseController {
                 errors.push(...receiveResponse.errors, 'processIncomingBlock');
                 return new ResponseEntity<void>({ errors });
             }
+            const prevRound = RoundRepository.getPrevRound();
+            if (prevRound && lastBlock.height === prevRound.endHeight) {
+                RoundService.rebuild(prevRound);
+                (async () => {
+                    await RoundService.rollBack();
+                    await RoundService.generateRound();
+                })();
+            }
+
             return new ResponseEntity<void>({ errors });
         }
 

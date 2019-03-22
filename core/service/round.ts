@@ -54,7 +54,7 @@ interface IRoundService {
 
     sumRound(round: Round): ResponseEntity<IRoundSum>;
 
-    rebuild(): void;
+    rebuild(round: Round): void;
 
     rollBack(round: Round): Promise<void>;
 
@@ -216,7 +216,6 @@ class RoundService implements IRoundService {
 
             // store pound as previous
             RoundRepository.setPrevRound(RoundRepository.getCurrentRound());
-            // TODO update prev round
         }
 
         const lastBlock = BlockRepository.getLastBlock();
@@ -285,7 +284,10 @@ class RoundService implements IRoundService {
         return new ResponseEntity<IRoundSum>({ data: resp });
     }
 
-    public rebuild(): void {
+    public rebuild(round: Round): void {
+        this.undoUnconfirmed(round);
+        this.applyUnconfirmed(this.sumRound(round));
+        this.apply(round);
     }
 
     public async rollBack(round: Round = RoundRepository.getCurrentRound()): Promise<void> {
