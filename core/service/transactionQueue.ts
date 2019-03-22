@@ -64,7 +64,7 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
         trs.status = TransactionStatus.QUEUED;
         this.queue.push(trs);
         if (this.queue.length === 1) {
-            this.process();
+            setImmediate(this.process);
         } else {
             this.queue.sort(transactionSortFunc);
         }

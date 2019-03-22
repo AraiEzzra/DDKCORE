@@ -51,8 +51,6 @@ export const validate = () => {
 
 export const validateData = (schema, data: Object, callback) => {
     validator.validate(data, schema, (err, report: boolean) => {
-        console.log('schema', schema);
-        console.log('data', data);
         if (err) {
             callback(err[0], report);
             return;

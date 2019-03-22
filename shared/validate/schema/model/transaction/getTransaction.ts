@@ -4,7 +4,7 @@ const GET_TRANSACTION = {
     id: API_ACTION_TYPES.GET_TRANSACTION,
     type: 'object',
     properties: {
-        id: {
+        address: {
             type: 'string'
         }
     },
