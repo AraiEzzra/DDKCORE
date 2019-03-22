@@ -3,8 +3,10 @@ import RoundController from 'core/controller/round';
 import SyncController from 'core/controller/sync';
 import EventSerive from 'core/service/events';
 import TransactionController from 'core/controller/transaction';
+import PeerController from 'core/controller/peer';
 import { filter, flatMap } from 'rxjs/operators';
-
+import System from 'core/repository/system';
+import EventsQueue from 'core/repository/eventQueue';
 import { subjectOn, subjectRpc } from 'shared/util/bus';
 import { logger } from 'shared/util/logger';
 import { fromPromise } from 'rxjs/internal-compatibility';
@@ -12,18 +14,37 @@ import { ResponseEntity } from 'shared/model/response';
 import { timer } from 'rxjs';
 import config from 'shared/config';
 
+const UNLOCKED_METHODS: Set<string> = new Set(
+    SyncController.eventsON.map(func => func.handlerTopicName)
+);
+
 export const initControllers = () => {
     const controllers = [
         BlockController,
         TransactionController,
         RoundController,
-        SyncController
+        SyncController,
+        PeerController,
     ];
 
     subjectOn
     .pipe(
-        filter((elem: { data, topicName }) =>
-            ['BLOCK_GENERATE', 'BLOCK_RECEIVE'].indexOf(elem.topicName) !== -1
+        filter((elem: { data, topicName }) => {
+                if (System.synchronization && !UNLOCKED_METHODS.has(elem.topicName)) {
+                    EventsQueue.push({
+                        data: elem.data,
+                        topicName: elem.topicName,
+                        type: 'ON',
+                    });
+                    return false;
+                } else {
+                    return true;
+                }
+            }
+        ),
+        filter((elem: { data, topicName }) => {
+                return ['BLOCK_GENERATE', 'BLOCK_RECEIVE'].indexOf(elem.topicName) !== -1;
+            }
         ),
         flatMap(({ data, topicName }) => {
                 logger.debug(`TASK MAIN ${topicName} start`);

@@ -24,6 +24,7 @@ import { socketRPCServer } from 'core/api/server';
 import { getAddressByPublicKey } from 'shared/util/account';
 import { getRandomInt } from 'shared/util/util';
 import { PEER_CONNECTION_TIME_REBOOT, START_SYNC_BLOCKS } from 'core/util/const';
+import System from 'core/repository/system';
 
 // @ts-ignore
 BigInt.prototype.toJSON = function () {
@@ -55,7 +56,11 @@ class Loader {
             getRandomInt(PEER_CONNECTION_TIME_REBOOT.MIN, PEER_CONNECTION_TIME_REBOOT.MAX)
         );
         setTimeout(
-            () => messageON('EMIT_SYNC_BLOCKS'),
+            () => {
+                if (!System.synchronization) {
+                    messageON('EMIT_SYNC_BLOCKS');
+                }
+            },
             START_SYNC_BLOCKS
         );
         socketRPCServer.run();
