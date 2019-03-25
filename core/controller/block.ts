@@ -62,6 +62,10 @@ class BlockController extends BaseController {
             blockUtils.isEqualPreviousBlock(lastBlock, receivedBlock) &&
             !SyncService.consensus
         ) {
+            const prevRound = RoundRepository.getPrevRound();
+            if (prevRound && lastBlock.height === prevRound.endHeight) {
+                RoundService.rebuild(prevRound);
+            }
             const deleteLastBlockResponse = await BlockService.deleteLastBlock();
             if (!deleteLastBlockResponse.success) {
                 errors.push(...deleteLastBlockResponse.errors, 'processIncomingBlock');
@@ -72,13 +76,9 @@ class BlockController extends BaseController {
                 errors.push(...receiveResponse.errors, 'processIncomingBlock');
                 return new ResponseEntity<void>({ errors });
             }
-            const prevRound = RoundRepository.getPrevRound();
             if (prevRound && lastBlock.height === prevRound.endHeight) {
-                RoundService.rebuild(prevRound);
-                (async () => {
-                    await RoundService.rollBack();
-                    await RoundService.generateRound();
-                })();
+                await RoundService.rollBack();
+                await RoundService.generateRound();
             }
 
             return new ResponseEntity<void>({ errors });
