@@ -25,7 +25,8 @@ export function SCHEMA_MESSAGE (schemaId: string) {
             body: {
                 $ref: schemaId
             }
-        }
+        },
+        required: ['code', 'headers', 'body']
     };
 }
 
