@@ -1,4 +1,5 @@
 import sodium from 'sodium-javascript';
+import crypto from "crypto";
 
 export interface IKeyPair {
     publicKey: Buffer;
@@ -17,17 +18,16 @@ class Ed {
         return keyPair;
     }
 
-    public makePublicKeyHex(hash: Buffer): string {
-        return this.makeKeyPair(hash).publicKey.toString('hex');
-    }
-
     public sign(hash: Buffer, keyPair: IKeyPair): Buffer {
         const sig: Buffer = Buffer.alloc(sodium.crypto_sign_BYTES);
         sodium.crypto_sign_detached(sig, hash, keyPair.privateKey);
         return sig;
     }
 
-    public verify(hash: Buffer, signatureBuffer: Buffer, publicKeyBuffer: Buffer) {
+    public verify(bytes: Uint8Array, publicKey: string, signature: string): boolean {
+        const hash = crypto.createHash('sha256').update(bytes).digest();
+        const signatureBuffer = Buffer.from(signature, 'hex');
+        const publicKeyBuffer = Buffer.from(publicKey, 'hex');
         return sodium.crypto_sign_verify_detached(signatureBuffer, hash, publicKeyBuffer);
     }
 }
