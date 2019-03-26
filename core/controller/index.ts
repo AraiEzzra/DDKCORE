@@ -2,10 +2,12 @@ import BlockController from 'core/controller/block';
 import RoundController from 'core/controller/round';
 import SyncController from 'core/controller/sync';
 import TransactionController from 'core/controller/transaction';
-import { filter } from 'rxjs/operators';
+import { filter, flatMap } from 'rxjs/operators';
 
 import { subjectOn, subjectRpc } from 'shared/util/bus';
 import { logger } from 'shared/util/logger';
+import { fromPromise } from 'rxjs/internal-compatibility';
+import { ResponseEntity } from 'shared/model/response';
 
 export const initControllers = () => {
     const controllers = [
@@ -19,12 +21,15 @@ export const initControllers = () => {
     .pipe(
         filter((elem: { data, topicName }) =>
             ['BLOCK_GENERATE', 'BLOCK_RECEIVE'].indexOf(elem.topicName) !== -1
+        ),
+        flatMap(({ data, topicName }) => {
+                logger.debug(`TASK MAIN ${topicName} start`);
+                return fromPromise(BlockController.eventsMAIN[topicName].apply(BlockController, [data]));
+            }
         )
     )
-    .subscribe(async ({ data, topicName }) => {
-        logger.debug(`TASK MAIN ${topicName} start`);
-        await BlockController.eventsMAIN[topicName].apply(BlockController, [data]);
-        logger.debug(`TASK MAIN ${topicName} finish`);
+    .subscribe((data: ResponseEntity<any>) => {
+        logger.debug(data.success ? 'TASK MAIN finished success' : `TASK MAIN finished with error ${data.errors}`);
     });
 
     controllers.forEach((controller) => {
@@ -32,7 +37,7 @@ export const initControllers = () => {
             controller.eventsON.forEach(({ handlerTopicName, handlerFunc }) => {
                 subjectOn.subscribe(({ data, topicName }) => {
                     if (handlerTopicName === topicName) {
-                        handlerFunc.apply(controller, [data]);
+                        setImmediate(() => handlerFunc.apply(controller, [data]));
                     }
                 });
             });
@@ -42,7 +47,7 @@ export const initControllers = () => {
             controller.eventsRPC.forEach(({ handlerTopicName, handlerFunc }) => {
                 subjectRpc.subscribe(({ data, topicName }) => {
                     if (handlerTopicName === topicName) {
-                        handlerFunc.apply(controller, [data]);
+                        setImmediate(() => handlerFunc.apply(controller, [data]));
                     }
                 });
             });
