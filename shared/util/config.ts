@@ -195,7 +195,7 @@ interface IConfig {
     };
     airdrop?: {
         airdropAccount: bigint;
-    }
+    };
     loading?: {
         verifyOnLoading?: boolean;
         loadPerIteration?: number;
@@ -307,7 +307,7 @@ class Config {
             Object.assign(this.constants, testConstants);
         }
 
-        this.config = Object.assign(envConfig, this.config);
+        this.config = {...envConfig, ...this.config};
         const valid = validator.validate(this.config, configSchema.config);
 
         if (!valid) {

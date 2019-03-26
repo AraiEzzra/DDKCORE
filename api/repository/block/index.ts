@@ -13,8 +13,7 @@ class BlockPGRepository {
     }
 
     async getMany(filter: any, sort: Array<Sort>, limit: number, offset: number):
-        Promise<{ blocks: Array<BlockModel>, count: number }>
-    {
+        Promise<{ blocks: Array<BlockModel>, count: number }> {
         const blocks = await db.manyOrNone(
             query.getBlocks(filter, sort.map(elem => `${toSnakeCase(elem[0])} ${elem[1]}`).join(', ')), {
                 ...filter,

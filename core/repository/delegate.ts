@@ -56,7 +56,7 @@ class DelegateRepository {
 
         if (activeDelegates.length > 0) {
             if (limit) {
-                activeDelegates = activeDelegates.slice(offset || 0, limit)
+                activeDelegates = activeDelegates.slice(offset || 0, limit);
             }
             return activeDelegates;
         }
@@ -90,7 +90,7 @@ class DelegateRepository {
             forgedBlocks: delegate.forgedBlocks,
             publicKey: delegate.account.publicKey,
             votes: delegate.votes,
-        }
+        };
     }
 }
 
