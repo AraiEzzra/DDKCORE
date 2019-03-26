@@ -1,5 +1,4 @@
-import {Account, Address, PublicKey} from 'shared/model/account';
-import { Delegate } from 'shared/model/delegate';
+import { Account, Address, PublicKey } from 'shared/model/account';
 import { getAddressByPublicKey } from 'shared/util/account';
 
 class AccountRepo {
@@ -30,6 +29,26 @@ class AccountRepo {
         return accounts;
     }
 
+    getStatistics(): { tokenHolders: number, totalStakeAmount: number, totalStakeholders: number } {
+        let tokenHolders = 0;
+        let totalStakeAmount = 0;
+        let totalStakeholders = 0;
+        for (const account of this.memoryAccountsByAddress.values()) {
+            if (account.actualBalance > 0) {
+                tokenHolders++;
+            }
+
+            const activeStakes = account.stakes.filter(stake => stake.isActive);
+
+            if (activeStakes.length > 0) {
+                totalStakeAmount += activeStakes.reduce((sum, stake) => sum += stake.amount, 0);
+                totalStakeholders += 1;
+            }
+        }
+        return { tokenHolders, totalStakeAmount, totalStakeholders };
+
+    }
+
     delete(account: Account): void {
         this.memoryAccountsByAddress.delete(account.address);
     }
@@ -43,7 +62,7 @@ class AccountRepo {
         this.memoryAccountsByAddress.get(address).actualBalance += difference;
     }
 
-    updateVotes(account: Account, votes: Array<string> ): void {
+    updateVotes(account: Account, votes: Array<string>): void {
         this.memoryAccountsByAddress.get(account.address).votes = votes;
     }
 

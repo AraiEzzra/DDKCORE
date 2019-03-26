@@ -21,6 +21,7 @@ const env = process.env;
 const validator: Validator = new ZSchema({});
 
 interface IConstraint {
+    UPDATE_BLOCKCHAIN_INFO_INTERVAL: number;
     SLOT_INTERVAL: number;
     REQUEST_BLOCK_LIMIT: number;
     serverHost?: string;
@@ -256,6 +257,7 @@ class Config {
         }
 
         this.constants = {
+            UPDATE_BLOCKCHAIN_INFO_INTERVAL: 10000,
             SLOT_INTERVAL: 10,
             REQUEST_BLOCK_LIMIT: 42,
             NODE_ENV_IN: env.NODE_ENV_IN,
