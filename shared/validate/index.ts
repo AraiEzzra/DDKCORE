@@ -5,7 +5,6 @@ import { logger } from 'shared/util/logger';
 import { MESSAGE_CHANNEL } from 'shared/driver/socket/channels';
 import { ALL_SCHEMAS, MESSAGE } from 'shared/validate/schema';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
-import {RPC_METHODS} from 'api/middleware/rpcHolder';
 
 /**
  * Compile all schemas for validate
@@ -25,9 +24,7 @@ export const validate = () => {
             value: (message, socket): any => {
                 let schemaID = message.code;
                 if (schemaID === API_ACTION_TYPES.CREATE_TRANSACTION &&
-                    Object.keys(message.body || [])
-                        .concat(Object.keys(message.body.data || []))
-                        .includes('trs')
+                    listKeys(message).includes('body.data.trs.type')
                 ) {
                     schemaID += '_' + message.body.data.trs.type;
                 }
@@ -64,4 +61,14 @@ const handlerError = (data) => {
     data.socket.emit(MESSAGE_CHANNEL, data.message);
 };
 
+const listKeys = (data: Object) => {
+    let listFields: Array<string> = Object.keys(data);
 
+    for (let key in data) {
+        if (typeof data[key] === 'object') {
+            let subKeys = listKeys(data[key]);
+            listFields = listFields.concat(subKeys.map((subkey) => key + '.' + subkey));
+        }
+    }
+    return listFields;
+};

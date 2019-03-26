@@ -12,7 +12,7 @@ import AccountRepository from 'core/repository/account';
 import { ResponseEntity } from 'shared/model/response';
 import SocketMiddleware from 'core/api/middleware/socket';
 import { EVENT_TYPES } from 'shared/driver/socket/codes';
-import SharedTransactionRepo from 'shared/repository/transaction'
+import SharedTransactionRepo from 'shared/repository/transaction';
 
 export interface ITransactionQueueService<T extends Object> {
     getLockStatus(): boolean;
