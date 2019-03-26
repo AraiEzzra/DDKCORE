@@ -60,6 +60,9 @@ class Config {
         SOCKET: {
             PORT: number;
         };
+        RPC: {
+            PROTOCOL: string;
+        };
         PEERS: {
             TRUSTED: Array<{ ip: string, port: number }>;
             BLACKLIST: Array<string>;
@@ -91,7 +94,6 @@ class Config {
         if (!process.env.NODE_ENV_IN) {
             throw 'env config should be present';
         }
-        const validator: Validator = new ZSchema({});
 
         this.IS_SECURE = process.env.IS_SECURE === 'TRUE' || false;
         this.PUBLIC_HOST = process.env.SERVER_HOST;
@@ -107,6 +109,9 @@ class Config {
         this.CORE = {
             SOCKET: {
                 PORT: Number(process.env.PORT) || DEFAULT_CORE_SOCKET_PORT,
+            },
+            RPC: {
+                PROTOCOL: process.env.CORE_RPC_PROTOCOL || 'ws',
             },
             FORGING: {
                 SECRET: process.env.FORGE_SECRET,
@@ -128,11 +133,12 @@ class Config {
         this.CONSTANTS = getConstantsByNodeEnv(this.NODE_ENV_IN);
         this.GENESIS_BLOCK = getGenesisBlockByNodeEnv(this.NODE_ENV_IN) as any;
 
-        const valid = validator.validate(this, configSchema);
-
-        if (!valid) {
-            throw 'config is invalid';
-        }
+        const validator: Validator = new ZSchema({});
+        validator.validate(this, configSchema, (err, valid) => {
+            if (!valid) {
+                throw `Config is invalid: ${err}`;
+            }
+        });
     }
 }
 

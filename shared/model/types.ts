@@ -8,7 +8,7 @@ export type Filter = {
 
 export type CreateTransactionParams = { trs: TransactionModel<IAsset>, secret: string };
 
-export interface IConstants {
+export type IConstants = {
     AIRDROP: {
         ADDRESS: Address;
         STAKE_REWARD_PERCENT: number;
@@ -61,4 +61,4 @@ export interface IConstants {
     PRE_ORDER_LAST_MIGRATED_BLOCK: number;
     PRE_ORDER_PUBLIC_KEY: string;
     UPDATE_BLOCKCHAIN_INFO_INTERVAL: number;
-}
+};

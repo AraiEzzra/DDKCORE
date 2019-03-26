@@ -79,6 +79,15 @@ const configSchema = {
                     },
                     required: ['PORT']
                 },
+                RPC: {
+                    type: 'object',
+                    properties: {
+                        PROTOCOL: {
+                            type: 'string'
+                        },
+                    },
+                    required: ['PROTOCOL']
+                },
                 FORGING: {
                     type: 'object',
                     properties: {
@@ -101,10 +110,10 @@ const configSchema = {
                     required: ['TRUSTED', 'BLACKLIST']
                 },
             },
-            required: ['SOCKET', 'FORGING', 'PEERS']
+            required: ['SOCKET', 'FORGING', 'PEERS', 'RPC']
         },
     },
-    required: ['DB', 'API', 'CORE', 'GENESIS_BLOCK', 'CONSTANTS']
+    required: ['DB', 'API', 'CORE', 'GENESIS_BLOCK', 'CONSTANTS', 'PUBLIC_HOST', 'NODE_ENV_IN']
 };
 
 export default configSchema;
