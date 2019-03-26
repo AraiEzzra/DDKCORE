@@ -29,7 +29,8 @@ class DelegateController {
     }
 
     @API(API_ACTION_TYPES.GET_ACTIVE_DELEGATES)
-    public getActiveDelegates(message: Message2<Pagination>): ResponseEntity<{ delegates: Array<object>, count: number }> {
+    public getActiveDelegates(message: Message2<Pagination>): 
+        ResponseEntity<{ delegates: Array<object>, count: number }> {
         return new ResponseEntity({
             data: {
                 delegates: DelegateRepository.getActiveDelegates(message.body.limit, message.body.offset).map(

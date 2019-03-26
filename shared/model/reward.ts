@@ -10,7 +10,7 @@ export class Reward {
     referralLevel?: number;
     amount: number;
 
-    constructor(data: Reward){
+    constructor(data: Reward) {
         Object.assign(this, data);
     }
 }

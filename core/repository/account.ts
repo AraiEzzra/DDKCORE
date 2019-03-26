@@ -61,7 +61,7 @@ class AccountRepo {
             referrals: account.referrals.map(acc => acc.address.toString()),
             votes: account.votes,
             stakes: account.stakes,
-        }
+        };
     }
 }
 
