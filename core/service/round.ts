@@ -1,7 +1,7 @@
 import { ResponseEntity } from 'shared/model/response';
 import * as crypto from 'crypto';
 import SlotService from 'core/service/slot';
-import Config from 'shared/util/config';
+import config from 'shared/config';
 // todo delete it when find a way to mock services for tests
 // import BlockService from 'test/core/mock/blockService';
 // import { createTaskON } from 'test/core/mock/bus';
@@ -22,8 +22,6 @@ import { calculateRoundFirstSlotByTimestamp } from 'core/util/round';
 import { createKeyPairBySecret } from 'shared/util/crypto';
 
 const MAX_LATENESS_FORGE_TIME = 500;
-const constants = Config.constants;
-
 
 interface IHashList {
     hash: string;
@@ -71,8 +69,8 @@ interface IRoundService {
 
 class RoundService implements IRoundService {
     private readonly keyPair: {
-        privateKey: string,
-        publicKey: string,
+        privateKey: string;
+        publicKey: string;
     };
     private logPrefix: string = '[RoundService]';
     private isBlockChainReady: boolean = false;
@@ -97,7 +95,7 @@ class RoundService implements IRoundService {
 
     public generateHashList(params: { activeDelegates: Array<Delegate>, blockId: string }): Array<IHashList> {
         return params.activeDelegates.map((delegate: Delegate) => {
-            const publicKey = delegate.account.publicKey;
+            const { publicKey } = delegate.account;
             const hash = crypto.createHash('md5').update(publicKey + params.blockId).digest('hex');
             return {
                 hash,
@@ -255,7 +253,7 @@ class RoundService implements IRoundService {
     }
 
     public getMyTurn(): number {
-        const mySlot = RoundRepository.getCurrentRound().slots[constants.publicKey];
+        const mySlot = RoundRepository.getCurrentRound().slots[this.keyPair.publicKey];
         return mySlot && mySlot.slot;
     }
 

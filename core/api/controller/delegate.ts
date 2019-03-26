@@ -5,8 +5,7 @@ import { Pagination } from 'api/utils/common';
 import DelegateRepository from 'core/repository/delegate';
 import AccountRepository from 'core/repository/account';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
-import Config from 'shared/util/config';
-
+import config from 'shared/config';
 
 class DelegateController {
 
@@ -29,13 +28,15 @@ class DelegateController {
     }
 
     @API(API_ACTION_TYPES.GET_ACTIVE_DELEGATES)
-    public getActiveDelegates(message: Message2<Pagination>): ResponseEntity<{ delegates: Array<object>, count: number }> {
+    public getActiveDelegates(
+        message: Message2<Pagination>,
+    ): ResponseEntity<{ delegates: Array<object>, count: number }> {
         return new ResponseEntity({
             data: {
                 delegates: DelegateRepository.getActiveDelegates(message.body.limit, message.body.offset).map(
                     delegate => DelegateRepository.serialize(delegate)
                 ),
-                count: Math.min(Config.constants.activeDelegates, DelegateRepository.getCount()),
+                count: Math.min(config.CONSTANTS.ACTIVE_DELEGATES, DelegateRepository.getCount()),
             }
         });
     }

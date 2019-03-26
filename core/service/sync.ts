@@ -9,7 +9,7 @@ import SyncRepository from 'core/repository/sync';
 import SocketRepository from 'core/repository/socket';
 import { messageON } from 'shared/util/bus';
 import { TOTAL_PERCENTAGE } from 'core/util/const';
-import config from 'shared/util/config';
+import config from 'shared/config';
 import { logger } from 'shared/util/logger';
 import RoundService from 'core/service/round';
 
@@ -47,14 +47,14 @@ export class SyncService implements ISyncService {
 
     sendNewBlock(block: Block): void {
         block.relay += 1;
-        if (block.relay < config.constants.MAX_RELAY) {
+        if (block.relay < config.CONSTANTS.TRANSFER.MAX_RELAY) {
             SyncRepository.sendNewBlock(block);
         }
     }
 
     sendUnconfirmedTransaction(trs: Transaction<any>): void {
         trs.relay += 1;
-        if (trs.relay < config.constants.MAX_RELAY) {
+        if (trs.relay < config.CONSTANTS.TRANSFER.MAX_RELAY) {
             SyncRepository.sendUnconfirmedTransaction(trs);
         }
     }
@@ -93,7 +93,7 @@ export class SyncService implements ISyncService {
     requestBlocks(lastBlock, peer = null): void {
         SyncRepository.requestBlocks({
             height: lastBlock.height + 1,
-            limit: config.constants.REQUEST_BLOCK_LIMIT
+            limit: config.CONSTANTS.TRANSFER.REQUEST_BLOCK_LIMIT
         }, peer);
     }
 

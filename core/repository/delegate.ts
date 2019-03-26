@@ -1,9 +1,7 @@
 import { ResponseEntity } from 'shared/model/response';
 import { Account, PublicKey } from 'shared/model/account';
-import Config from 'shared/util/config';
+import config from 'shared/config';
 import { Delegate } from 'shared/model/delegate';
-
-const constants = Config.constants;
 
 class DelegateRepository {
     private memoryDelegates: { [publicKey: string]: Delegate } = {};
@@ -52,11 +50,11 @@ class DelegateRepository {
                 return -1;
             }
             return 0;
-        }).slice(0, constants.activeDelegates);
+        }).slice(0, config.CONSTANTS.ACTIVE_DELEGATES);
 
         if (activeDelegates.length > 0) {
             if (limit) {
-                activeDelegates = activeDelegates.slice(offset || 0, limit)
+                activeDelegates = activeDelegates.slice(offset || 0, limit);
             }
             return activeDelegates;
         }
@@ -90,7 +88,7 @@ class DelegateRepository {
             forgedBlocks: delegate.forgedBlocks,
             publicKey: delegate.account.publicKey,
             votes: delegate.votes,
-        }
+        };
     }
 }
 

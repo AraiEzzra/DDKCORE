@@ -1,5 +1,5 @@
 import { Block } from 'shared/model/block';
-import config from 'shared/util/config';
+import config from 'shared/config';
 import BlockRepo from 'core/repository/block/index';
 import SharedTransactionRepo from 'shared/repository/transaction/index';
 import BlockService from 'core/service/block';
@@ -10,11 +10,11 @@ import {
 } from 'test/core/repository/block/mock';
 import {IAsset, Transaction} from 'shared/model/transaction';
 
-const resultTransactions = config.genesisBlock.transactions.map((transaction) =>
+const resultTransactions = config.GENESIS_BLOCK.transactions.map((transaction) =>
     SharedTransactionRepo.deserialize(transaction)
 );
-config.genesisBlock.transactions = <Array<Transaction<IAsset>>>resultTransactions;
-const genesisBlock = new Block(config.genesisBlock);
+config.GENESIS_BLOCK.transactions = <Array<Transaction<IAsset>>>resultTransactions;
+const genesisBlock = new Block(config.GENESIS_BLOCK);
 
 const getAllBlocks = () => {
     return BlockRepo.getMany(Number.MAX_SAFE_INTEGER);
