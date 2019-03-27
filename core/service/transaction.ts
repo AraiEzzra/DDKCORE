@@ -100,7 +100,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
     }
 
     undoUnconfirmed(trs: Transaction<T>, sender: Account, senderOnly = false): void {
-        sender.actualBalance += trs.fee;
+        sender.actualBalance += trs.fee || 0;
         const service: IAssetService<IAsset> = getTransactionServiceByType(trs.type);
         return service.undoUnconfirmed(trs, sender, senderOnly);
     }
