@@ -1,14 +1,18 @@
-import RoundService from 'api/service/round';
 import { RPC } from 'api/utils/decorators';
-import { ResponseEntity } from 'shared/model/response';
-import { Round } from 'shared/model/round';
-import { GET_CURRENT_ROUND } from 'shared/driver/socket/codes';
+import SocketMiddleware from 'api/middleware/socket';
+import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
+import {Message2} from 'shared/model/message';
 
 class RoundController {
 
-    @RPC(GET_CURRENT_ROUND)
-    getCurrentRound(): ResponseEntity<Round> {
-        return RoundService.getCurrentRound();
+    constructor() {
+        this.getCurrentRound = this.getCurrentRound.bind(this);
+    }
+
+
+    @RPC(API_ACTION_TYPES.GET_CURRENT_ROUND)
+    getCurrentRound(message: Message2<{}>, socket: any) {
+        SocketMiddleware.emitToCore<{}>(message, socket);
     }
 }
 
