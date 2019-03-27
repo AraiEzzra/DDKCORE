@@ -119,11 +119,10 @@ class BlockService {
             }
         }
 
-        // todo fix issue with invalid block slot
-        // const validationResponse = this.validateBlockSlot(block);
-        // if (!validationResponse.success) {
-        //     return new Response<void>({errors: [...validationResponse.errors, 'processBlock']});
-        // }
+        const validationResponse = this.validateBlockSlot(block);
+        if (!validationResponse.success) {
+            return new Response<void>({errors: [...validationResponse.errors, 'processBlock']});
+        }
 
         const resultCheckExists: ResponseEntity<void> = this.checkExists(block);
         if (!resultCheckExists.success) {
