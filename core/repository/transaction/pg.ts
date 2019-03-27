@@ -27,8 +27,9 @@ class TransactionPGRepo implements ITransactionPGRepository<IAsset> {
     ];
     private readonly columnSet = new pgpE.helpers.ColumnSet(this.tableFields, {table: this.tableName});
 
-    async deleteById(trsId: string | Array<string>): Promise<void> {
-        await db.none(queries.deleteByIds, [trsId]);
+    async deleteById(trsId: string | Array<string>): Promise<Array<string>> {
+        const response = await db.manyOrNone(queries.deleteByIds, [trsId]);
+        return response.map(item => item.id);
     }
 
     async getByBlockIds(blockIds: Array<string>): Promise<TransactionsByBlockResponse> {

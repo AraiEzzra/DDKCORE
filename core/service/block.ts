@@ -183,7 +183,7 @@ class BlockService {
         return response;
     }
 
-    private setHeight(block: Block, lastBlock: Block): Block {
+    public setHeight(block: Block, lastBlock: Block): Block {
         block.height = lastBlock.height + 1;
         return block;
     }

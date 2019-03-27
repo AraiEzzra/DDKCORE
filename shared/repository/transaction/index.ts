@@ -35,7 +35,7 @@ export interface ITransactionRepository <T extends IAsset> {
 
 export interface ITransactionPGRepository <T extends IAsset> {
 
-    deleteById(trsId: TransactionId | Array<TransactionId>): Promise<void>;
+    deleteById(trsId: TransactionId | Array<TransactionId>): Promise<Array<string>>;
     getByBlockIds(blockIds: Array<BlockId>): Promise<TransactionsByBlockResponse>;
     getById(trsId: TransactionId): Promise<Transaction<T>>;
     getMany(limit: number, offset: number): Promise<Array<Transaction<T>>>;
