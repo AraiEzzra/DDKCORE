@@ -182,8 +182,16 @@ class RoundService implements IRoundService {
         // lastSlot + 1 for waiting finish last round
         const lastSlot = RoundRepository.getLastSlotInRound();
         const roundEndTime = SlotService.getSlotRealTime(lastSlot + 1) - new Date().getTime();
+
+        if (roundEndTime < 0) {
+            logger.info(
+                `${this.logPrefix}[startRoundFinishTask] Skip finish round`
+            );
+            return;
+        }
+
         logger.debug(
-            `${this.logPrefix}[generateRound] The round will be completed in ${roundEndTime} ms`
+            `${this.logPrefix}[startRoundFinishTask] The round will be completed in ${roundEndTime} ms`
         );
         createTaskON(ActionTypes.ROUND_FINISH, roundEndTime);
     }
