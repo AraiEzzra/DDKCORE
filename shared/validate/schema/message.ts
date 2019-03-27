@@ -1,4 +1,4 @@
-const HEADER_MESSAGE  = {
+export const HEADER_MESSAGE  = {
     id: 'HEADERS',
         type: 'object',
         properties: {
@@ -29,7 +29,3 @@ export function SCHEMA_MESSAGE (schemaId: string) {
         required: ['code', 'headers', 'body']
     };
 }
-
-export const SCHEMAS = [].concat(
-    HEADER_MESSAGE
-);

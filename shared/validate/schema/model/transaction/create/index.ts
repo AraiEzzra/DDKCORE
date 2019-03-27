@@ -14,4 +14,4 @@ const SCHEMAS_TRANSACTION = [].concat(
     COMPONENTS_TRS_VOTE
 );
 
-export const SCHEMAS_TRS = [].concat(SCHEMAS_TRANSACTION);
+export const SCHEMAS_TRS = SCHEMAS_TRANSACTION;

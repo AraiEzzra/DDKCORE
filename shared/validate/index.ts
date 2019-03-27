@@ -3,7 +3,7 @@ import Validator from 'z-schema';
 import { ResponseEntity } from 'shared/model/response';
 import { logger } from 'shared/util/logger';
 import { MESSAGE_CHANNEL } from 'shared/driver/socket/channels';
-import { ALL_SCHEMAS, MESSAGE } from 'shared/validate/schema';
+import { ALL_SCHEMAS, MESSAGE } from 'shared/validate/schema/init';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
 
 /**
