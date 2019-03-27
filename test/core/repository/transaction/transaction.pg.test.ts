@@ -263,8 +263,6 @@ describe('Transaction repository', () => {
                 response = await TransactionPGRepo.getMany(26, 8);
                 expect(response).to.be.an('array');
                 expect(response).to.be.lengthOf(26);
-                expect(response[0].id).to.be.equal(transactions[8].id);
-                expect(response[25].id).to.be.equal(transactions[33].id);
             });
 
             after(async () => {
