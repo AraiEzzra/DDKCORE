@@ -121,7 +121,7 @@ class BlockService {
 
         const validationResponse = this.validateBlockSlot(block);
         if (!validationResponse.success) {
-            return new Response<void>({errors: [...validationResponse.errors, 'processBlock']});
+            return new ResponseEntity<void>({errors: [...validationResponse.errors, 'processBlock']});
         }
 
         const resultCheckExists: ResponseEntity<void> = this.checkExists(block);
