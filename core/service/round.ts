@@ -49,7 +49,7 @@ interface IRoundService {
 
     rebuild(): void;
 
-    rollBack(round: Round): Promise<void>;
+    rollBack(): Promise<void>;
 
     validate(): boolean;
 
@@ -219,13 +219,13 @@ class RoundService implements IRoundService {
         const sortedHashList = this.sortHashList(hashList);
         const slots = this.generatorPublicKeyToSlot(sortedHashList, timestamp);
 
-        const currentRound = new Round({
+        const newCurrentRound = new Round({
             startHeight: lastBlock.height + 1,
             slots: slots,
         });
-        RoundRepository.setCurrentRound(currentRound);
+        RoundRepository.setCurrentRound(newCurrentRound);
 
-        await this.apply(currentRound);
+        await this.apply(newCurrentRound);
 
         logger.info(
             `${this.logPrefix}[generateRound] Start round on height: ${RoundRepository.getCurrentRound().startHeight}`
@@ -264,11 +264,11 @@ class RoundService implements IRoundService {
     public rebuild(): void {
     }
 
-    public async rollBack(round: Round = RoundRepository.getCurrentRound()): Promise<void> {
+    public async rollBack(): Promise<void> {
         resetTaskON(ActionTypes.BLOCK_GENERATE);
         resetTaskON(ActionTypes.ROUND_FINISH);
-        this.undoUnconfirmed(round);
-        await this.undo(round);
+        await this.undo(RoundRepository.getCurrentRound());
+        this.undoUnconfirmed(RoundRepository.getPrevRound());
     }
 
     public validate(): boolean {
@@ -288,9 +288,6 @@ class RoundService implements IRoundService {
             const delegateAccount = AccountRepository.getByPublicKey(publicKey);
             delegateAccount.actualBalance += fee;
         });
-
-        const lastBlock = BlockRepository.getLastBlock();
-        RoundRepository.updateEndHeight(lastBlock.height);
 
         return new ResponseEntity<Array<string>>({ data: delegates });
     }

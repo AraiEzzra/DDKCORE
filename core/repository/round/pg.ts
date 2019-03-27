@@ -11,7 +11,6 @@ class RoundPGRepository implements IRoundPGRepository {
     private readonly tableName: string = 'round';
     private readonly tableFields: Array<string> = [
         'height_start',
-        'height_finish',
         'slots'
     ];
     private readonly columnSet = new pgpE.helpers.ColumnSet(this.tableFields, {table: this.tableName});
@@ -19,7 +18,6 @@ class RoundPGRepository implements IRoundPGRepository {
     serialize(round: Round): RawRound {
         return {
             height_start: round.startHeight,
-            height_finish: null,
             slots: round.slots
         };
     }
@@ -27,7 +25,6 @@ class RoundPGRepository implements IRoundPGRepository {
     deserialize(rawRound: RawRound, radix = 10): Round {
         return new Round({
             startHeight: parseInt(rawRound.height_start, radix),
-            endHeight: parseInt(rawRound.height_finish, radix),
             slots: rawRound.slots
         });
     }
@@ -48,6 +45,14 @@ class RoundPGRepository implements IRoundPGRepository {
         return rawRounds.map(rawRound => this.deserialize(rawRound));
     }
 
+    async getCount(): Promise<number> {
+        const result: { count: number } = await db.one(queries.getCount);
+        if (!result) {
+            return 0;
+        }
+        return result.count;
+    }
+
     async saveOrUpdate(round: Round | Array<Round>): Promise<void> {
         const rounds: Array<Round> = [].concat(round);
         const values: Array<object> = [];
@@ -56,7 +61,7 @@ class RoundPGRepository implements IRoundPGRepository {
         });
         const query = pgpE.helpers.insert(values, this.columnSet) +
             ' ON CONFLICT(height_start) DO UPDATE SET ' +
-            this.columnSet.assignColumns({from: 'EXCLUDED', skip: ['height_start', 'height_finish']});
+            this.columnSet.assignColumns({from: 'EXCLUDED', skip: ['height_start']});
         await db.none(query);
         return null;
     }
