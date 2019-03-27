@@ -9,6 +9,7 @@ const constants: IConstants = {
     },
     TOTAL_SUPPLY: {
         ADDRESS: BigInt('4995063339468361088'),
+        AMOUNT: 4500000000000000,
     },
     BLOCK_SLOT_WINDOW: 5,
     ACTIVE_DELEGATES: 11,

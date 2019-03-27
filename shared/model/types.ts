@@ -16,6 +16,7 @@ export type IConstants = {
     };
     TOTAL_SUPPLY: {
         ADDRESS: Address;
+        AMOUNT: number;
     };
     BLOCK_SLOT_WINDOW: number;
     ACTIVE_DELEGATES: number;

@@ -183,7 +183,7 @@ class BlockService {
         return response;
     }
 
-    private setHeight(block: Block, lastBlock: Block): Block {
+    public setHeight(block: Block, lastBlock: Block): Block {
         block.height = lastBlock.height + 1;
         return block;
     }
@@ -440,7 +440,7 @@ class BlockService {
 
             const serializedBlock: Block & { transactions: any } = block.getCopy();
             serializedBlock.transactions = block.transactions.map(trs => SharedTransactionRepo.serialize(trs));
-            SocketMiddleware.emitEvent<{ block: Block }>(EVENT_TYPES.APPLY_BLOCK, { block: serializedBlock });
+            SocketMiddleware.emitEvent<Block>(EVENT_TYPES.APPLY_BLOCK, serializedBlock);
         }
 
         return new ResponseEntity<void>();
@@ -596,7 +596,7 @@ class BlockService {
 
         const serializedBlock: Block & { transactions: any } = lastBlock.getCopy();
         serializedBlock.transactions = lastBlock.transactions.map(trs => SharedTransactionRepo.serialize(trs));
-        SocketMiddleware.emitEvent<{ block: Block }>(EVENT_TYPES.UNDO_BLOCK, { block: serializedBlock });
+        SocketMiddleware.emitEvent<Block>(EVENT_TYPES.UNDO_BLOCK, serializedBlock);
 
         return new ResponseEntity<Block>({ data: newLastBlock });
     }
