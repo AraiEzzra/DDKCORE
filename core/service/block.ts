@@ -309,24 +309,26 @@ class BlockService {
             return new ResponseEntity<void>();
         }
 
-        const errors = [];
         const blockSlot = slotService.getSlotNumber(block.createdAt);
         const round = RoundRepository.getCurrentRound();
 
         if (!round) {
-            errors.push(`Can't get current round`);
+            return new ResponseEntity<void>( { errors: [`Can't get current round`] });
         }
 
         const generatorSlot = round.slots[block.generatorPublicKey];
 
         if (!generatorSlot) {
-            errors.push(`GeneratorPublicKey does not exist in current round`);
-        }
-        if (blockSlot !== generatorSlot.slot) {
-            errors.push(`Invalid block slot number: blockSlot ${blockSlot} generator slot ${generatorSlot.slot}`);
+            return new ResponseEntity<void>( { errors: [`GeneratorPublicKey does not exist in current round`] });
         }
 
-        return new ResponseEntity<void>({errors});
+        if (blockSlot !== generatorSlot.slot) {
+            return new ResponseEntity<void>(
+                { errors: [`Invalid block slot number: blockSlot ${blockSlot} generator slot ${generatorSlot.slot}`] }
+            );
+        }
+
+        return new ResponseEntity<void>({});
     }
 
     private checkExists(block: Block): ResponseEntity<void> {
