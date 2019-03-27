@@ -125,7 +125,11 @@ class RoundService implements IRoundService {
         }
 
         if (!RoundRepository.getCurrentRound()) {
-            await this.generateRound(block.createdAt);
+            if (block.createdAt === 0) {
+                await this.generateRound();
+            } else {
+                await this.generateRound(block.createdAt);
+            }
             return;
         }
 
