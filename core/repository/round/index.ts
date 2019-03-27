@@ -1,4 +1,4 @@
-import {Round, RoundModel} from 'shared/model/round';
+import {Round} from 'shared/model/round';
 import {IRoundRepository as IRoundRepositoryShared} from 'shared/repository/round';
 
 export interface IRoundRepository extends IRoundRepositoryShared {
