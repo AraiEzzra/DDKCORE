@@ -1,14 +1,15 @@
 import { IAsset, Transaction, TransactionModel, TransactionType } from 'shared/model/transaction';
 import { TransactionDTO } from 'migration/utils/TransactionDTO';
 import TransactionService from 'core/service/transaction';
-import crypto from "crypto";
-import { ed } from 'shared/util/ed';
+import crypto from 'crypto';
+import { ed, IKeyPair } from 'shared/util/ed';
 import Loader from 'core/loader';
+import { getAddressByPublicKey } from 'shared/util/account';
 
 const csv = require('csv-parser');
 const fs = require('fs');
 
-const QUANTITY_PARSE_TRS = 0;
+const QUANTITY_PARSE_TRS = 1000;
 
 const secret = 'sing traffic unfold witness fruit frame bonus can cost warrior few flock';
 
@@ -28,21 +29,24 @@ const mapOldAndNewDelegatesPublicKey: Map<string, string> = new Map([
 
 const filePathNewTransactions = './transactionsNew.csv';
 const filePathOldTransactions = './transactionsOld.csv';
+const filePathAddressesWithNegativeBalance = './addressesWithNegativeBalance.csv';
 
 const correctTransactions: Array<Transaction<IAsset>> = [];
 
 Loader.start();
 
 export async function startPrepareTransactionsForMigration() {
-    const [newTrs, oldTrs] = [
+    const [newTrs, oldTrs, accounts] = [
         await readTransactionsToArray(filePathNewTransactions),
-        await readTransactionsToMap(filePathOldTransactions)
+        await readTransactionsToMap(filePathOldTransactions),
+        await readAccountsToMap(filePathAddressesWithNegativeBalance)
     ];
     let count = 0;
     console.log(newTrs.length, oldTrs.size);
     newTrs.forEach(
         function <T extends IAsset>(transaction) {
-            let correctTransaction: TransactionDTO;
+            let correctTransaction: TransactionDTO = null;
+            let additionalTransaction: TransactionDTO = null;
             let airdropReward = transaction.airdropReward ? JSON.parse(transaction.airdropReward) : {};
             switch (Number(transaction.type)) {
                 case TransactionType.REGISTER:
@@ -55,6 +59,19 @@ export async function startPrepareTransactionsForMigration() {
                             .split(',')[0]
                         }
                     });
+                    const address = getAddressByPublicKey(correctTransaction.senderPublicKey);
+                    if (accounts.has(address.toString())) {
+                        const negativeAmount: number = Number(accounts.get(address.toString()));
+                        additionalTransaction = new TransactionDTO({
+                            type: TransactionType.SEND,
+                            senderPublicKey: 'b12a7faba4784d79c7298ce49ef5131b291abd70728e6f2bd1bc2207ea4b7947',
+                            createdAt: Number(transaction.createdAt) + 1,
+                            asset: {
+                                recipientAddress: address,
+                                amount: Math.abs(negativeAmount)
+                            }
+                        });
+                    }
                     break;
                 case TransactionType.SEND:
                     correctTransaction = new TransactionDTO({
@@ -114,17 +131,17 @@ export async function startPrepareTransactionsForMigration() {
                 case TransactionType.VOTE:
                     
                     const votes: Array<string> = transaction.votes.split(',') || [];
-                    if(votes.length > 0){
-                        for (let i = 0; i < votes.length; i++){
-                            let vote = votes[i].slice(0,1);
-                            let delegatePublicKey = votes[i].slice(1,votes[i].length);
-                            
-                            if (mapOldAndNewDelegatesPublicKey.has(delegatePublicKey)) {
-                                votes[i] = vote + mapOldAndNewDelegatesPublicKey.get(delegatePublicKey);
-                            } 
-                            
-                        } 
-                    }
+                    // if(votes.length > 0){
+                    //     for (let i = 0; i < votes.length; i++){
+                    //         let vote = votes[i].slice(0,1);
+                    //         let delegatePublicKey = votes[i].slice(1,votes[i].length);
+                    //        
+                    //         if (mapOldAndNewDelegatesPublicKey.has(delegatePublicKey)) {
+                    //             votes[i] = vote + mapOldAndNewDelegatesPublicKey.get(delegatePublicKey);
+                    //         } 
+                    //        
+                    //     } 
+                    // }
                     correctTransaction = new TransactionDTO({
                         ...transaction,
                         asset: {
@@ -146,13 +163,16 @@ export async function startPrepareTransactionsForMigration() {
 
             }
 
-            const hash = crypto.createHash('sha256').update(secret, 'utf8').digest();
-            const keyPair = ed.makeKeyPair(hash);
             ++count;
             if(Number.isInteger(count / 1000)){
                 console.log('COUNT: ', count);    
             }
-            correctTransactions.push(TransactionService.create(new TransactionModel(correctTransaction), keyPair).data);
+            correctTransactions.push(TransactionService.create(new TransactionModel(correctTransaction),
+                getKeyPair(correctTransaction.senderPublicKey)).data);
+            if (additionalTransaction) {
+                correctTransactions.push(TransactionService.create(new TransactionModel(additionalTransaction),
+                    getKeyPair(additionalTransaction.senderPublicKey)).data)
+            }
         });
     
     newTrs.length = 0;
@@ -189,7 +209,7 @@ function readTransactionsToArray(filePath): Promise<Array<Object>> {
             ++count;
         })
         .on('end', () => {
-            console.log('Parsed transactions new', count);
+            console.log('Parsed transactions new: ', count);
             resolve(transactions);
         });
     });
@@ -213,9 +233,34 @@ function readTransactionsToMap(filePath): Promise<Map<string, object>> {
             ++count;
         })
         .on('end', () => {
-            console.log('Parsed transactions old', count);
+            console.log('Parsed transactions old: ', count);
             resolve(transactions);
         });
     });
+}
+
+function readAccountsToMap(filePath): Promise<Map<string, object>> {
+
+    let count = 0;
+
+    return new Promise((resolve, reject) => {
+        const accounts = new Map();
+
+        fs.createReadStream(filePath)
+        .pipe(csv())
+        .on('data', (data) => {
+            accounts.set(data.address.replace(/DDK/ig, ''), data.amount);
+            ++count;
+        })
+        .on('end', () => {
+            console.log('Parsed accounts with negative balance: ', count);
+            resolve(accounts);
+        });
+    });
+}
+
+function getKeyPair(publicKey: string): IKeyPair {
+    const hash = crypto.createHash('sha256').update(publicKey, 'utf8').digest();
+    return ed.makeKeyPair(hash);
 }
 

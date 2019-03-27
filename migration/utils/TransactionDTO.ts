@@ -21,11 +21,11 @@ export class TransactionDTO {
     // reward: any;
     // unstake: any;
 
-    constructor(data: TransactionModel<IAssetVote>) {
+    constructor(data: TransactionModel<IAsset>) {
         this.id = data.id;
         this.relay = 0;
         this.type = Number(data.type);
-        this.senderPublicKey = data.senderPublicKey;
+        this.senderPublicKey = data.senderPublicKey.replace(/DDK/ig, '');
         this.signature = data.signature;
         this.createdAt = Number(data.createdAt);
         this.salt = data.salt;
