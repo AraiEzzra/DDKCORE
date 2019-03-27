@@ -110,7 +110,6 @@ describe('Delegate repository', () => {
 
             it(`should return ${config.CONSTANTS.ACTIVE_DELEGATES} delegates from repo`, () => {
                 let activeDelegates = DelegateRepo.getActiveDelegates();
-                console.log(activeDelegates);
                 expect(activeDelegates).to.be.lengthOf(config.CONSTANTS.ACTIVE_DELEGATES);
                 expect(activeDelegates[0].account).to.be.eql(rawDelegates[0].account)   ;
             });
