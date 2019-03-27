@@ -82,7 +82,7 @@ export class SocketMiddleware {
         if (this.requests.has(message.headers.id)) {
             const requestProcessor = this.requests.get(message.headers.id);
             const { socket, cleaner } = requestProcessor;
-            clearInterval(cleaner);
+            clearTimeout(cleaner);
             socket.emit(MESSAGE_CHANNEL, message);
             this.requests.delete(message.headers.id);
         }
