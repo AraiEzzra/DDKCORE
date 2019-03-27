@@ -13,9 +13,6 @@ else
         wait-port "$WATCHER_HOST:$WATCHER_PORT"
     fi
     sleep 5
-    if [ "$MODE" == "TEST" ]; then
-        npm run test
-    fi
     if [ "$SERVICE" == "API" ]; then
         npm run server:api
     fi

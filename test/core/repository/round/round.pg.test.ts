@@ -8,8 +8,8 @@ import {
 
 const insertRound = async () => {
     let round = getNewRound();
-    await db.query(`INSERT INTO round(height_start, height_finish, slots)
-        VALUES ($1, $2, $3);`, [round.startHeight, round.endHeight, round.slots]);
+    await db.query(`INSERT INTO round(height_start, slots)
+        VALUES ($1, $2);`, [round.startHeight, round.slots]);
     return round;
 };
 

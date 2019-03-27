@@ -118,12 +118,10 @@ class BlockService {
                 block = this.setHeight(block, lastBlock);
             }
         }
-
-        const validationResponse = this.validateBlockSlot(block);
-        if (!validationResponse.success) {
-            return new ResponseEntity<void>({errors: [...validationResponse.errors, 'processBlock']});
-        }
-
+        // const validationResponse = this.validateBlockSlot(block);
+        // if (!validationResponse.success) {
+        //     return new ResponseEntity<void>({errors: [...validationResponse.errors, 'processBlock']});
+        // }
         const resultCheckExists: ResponseEntity<void> = this.checkExists(block);
         if (!resultCheckExists.success) {
             return new ResponseEntity<void>({errors: [...resultCheckExists.errors, 'processBlock']});

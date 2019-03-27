@@ -14,7 +14,6 @@ export const getNewRoundWithHash = () => {
     let slots = RoundService.generatorPublicKeyToSlot(hash, Date.now());
     let round = new Round({
         startHeight: roundSequence,
-        endHeight: roundSequence + 2,
         slots
     });
     roundSequence += 3;
@@ -29,7 +28,6 @@ export const createRoundTable = async () => {
     await db.query(`
         CREATE TABLE IF NOT EXISTS "round" (
             "height_start"  INTEGER PRIMARY KEY,
-            "height_finish" INTEGER,
             "slots"         JSON    NOT NULL DEFAULT '{}' :: JSON
         );
     `);

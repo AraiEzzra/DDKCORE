@@ -1,5 +1,5 @@
 import { IAssetService } from 'core/service/transaction';
-import {IAirdropAsset, IAssetVote, Transaction, TransactionModel} from 'shared/model/transaction';
+import { IAirdropAsset, IAssetVote, Transaction, TransactionModel } from 'shared/model/transaction';
 import { Account, Stake } from 'shared/model/account';
 import { ResponseEntity } from 'shared/model/response';
 import AccountRepo from 'core/repository/account';
@@ -161,7 +161,8 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
                 }
                 default: errors.push('Invalid math operator for vote' + vote);
             }
-            if (!AccountRepo.getByPublicKey(publicKey).delegate) {
+            const targetAccount = AccountRepo.getByPublicKey(publicKey);
+            if (!targetAccount || !targetAccount.delegate) {
                 errors.push('Delegate not found, vote: ' + vote);
             }
         });

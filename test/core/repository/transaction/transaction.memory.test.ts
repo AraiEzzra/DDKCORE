@@ -9,10 +9,13 @@ import {
     getNewTransactionWithRandomBlockIdFromList
 } from 'test/core/repository/transaction/mock';
 import { Transaction } from 'shared/model/transaction';
+import config from 'shared/config';
 
 const getAllByBlockId = (blockId) => {
     return TransactionRepo.getByBlockIds([blockId])[blockId];
 };
+
+const genesisBlockTrsCount = config.GENESIS_BLOCK.transactionCount;
 
 describe('Transaction memory repository', () => {
 
@@ -27,8 +30,8 @@ describe('Transaction memory repository', () => {
                 expect(response).to.be.an.instanceOf(Transaction);
                 expect(response.id).to.be.equal(firstTransaction.id);
                 const transactions = TransactionRepo.getAll();
-                expect(transactions).to.be.lengthOf(1);
-                expect(transactions[0].id).to.be.equal(firstTransaction.id);
+                expect(transactions).to.be.lengthOf(1 + genesisBlockTrsCount);
+                expect(transactions[0 + genesisBlockTrsCount].id).to.be.equal(firstTransaction.id);
                 const transactionsByBlock = getAllByBlockId(blockId2);
                 expect(transactionsByBlock).to.be.lengthOf(1);
                 expect(transactionsByBlock[0].id).to.be.equal(firstTransaction.id);
@@ -48,9 +51,9 @@ describe('Transaction memory repository', () => {
                 TransactionRepo.add(firstTransaction);
                 TransactionRepo.add(secondTransaction);
                 const transactions = TransactionRepo.getAll();
-                expect(transactions).to.be.lengthOf(2);
-                expect(transactions[0].id).to.be.equal(firstTransaction.id);
-                expect(transactions[1].id).to.be.equal(secondTransaction.id);
+                expect(transactions).to.be.lengthOf(2 + genesisBlockTrsCount);
+                expect(transactions[0 + genesisBlockTrsCount].id).to.be.equal(firstTransaction.id);
+                expect(transactions[1 + genesisBlockTrsCount].id).to.be.equal(secondTransaction.id);
                 const transactionsByBlock = getAllByBlockId(blockId2);
                 expect(transactionsByBlock).to.be.lengthOf(2);
                 expect(transactionsByBlock[0].id).to.be.equal(firstTransaction.id);
@@ -80,14 +83,14 @@ describe('Transaction memory repository', () => {
                 let response = TransactionRepo.delete(firstTransaction);
                 expect(response).to.be.equal(firstTransaction.id);
                 let transactions = TransactionRepo.getAll();
-                expect(transactions).to.be.lengthOf(1);
+                expect(transactions).to.be.lengthOf(1 + genesisBlockTrsCount);
                 let transactionsByBlock = getAllByBlockId(blockId2);
                 expect(transactionsByBlock).to.be.lengthOf(1);
 
                 response = TransactionRepo.delete(secondTransaction);
                 expect(response).to.be.equal(secondTransaction.id);
                 transactions = TransactionRepo.getAll();
-                expect(transactions).to.be.lengthOf(0);
+                expect(transactions).to.be.lengthOf(0 + genesisBlockTrsCount);
                 transactionsByBlock = getAllByBlockId(blockId2);
                 expect(transactionsByBlock).to.be.lengthOf(0);
             });
@@ -113,7 +116,7 @@ describe('Transaction memory repository', () => {
             it('should return requested amount of blocks or less', () => {
                 let response = TransactionRepo.getAll();
                 expect(response).to.be.an('array');
-                expect(response).to.be.lengthOf(transactionsCount);
+                expect(response).to.be.lengthOf(transactionsCount + genesisBlockTrsCount);
 
                 let block2Trs = TransactionRepo.getByBlockIds([blockId2])[blockId2];
                 let block4Trs = TransactionRepo.getByBlockIds([blockId4])[blockId4];
@@ -164,7 +167,7 @@ describe('Transaction memory repository', () => {
             it('should return requested amount of blocks or less', () => {
                 let response = TransactionRepo.getAll();
                 expect(response).to.be.an('array');
-                expect(response).to.be.lengthOf(transactionsCount2 + transactionsCount4 + transactionsCount6);
+                expect(response).to.be.lengthOf(transactionsCount2 + transactionsCount4 + transactionsCount6 + genesisBlockTrsCount);
 
                 let block2Trs = TransactionRepo.getByBlockIds([blockId2])[blockId2];
                 let block4Trs = TransactionRepo.getByBlockIds([blockId4])[blockId4];
