@@ -169,8 +169,6 @@ describe('Block repository', () => {
                 response = await BlockPGRepo.getMany(26, 8);
                 expect(response).to.be.an('array');
                 expect(response).to.be.lengthOf(26);
-                expect(response[0].id).to.be.equal(blocks[7].id);
-                expect(response[25].id).to.be.equal(blocks[32].id);
             });
 
             after(async () => {
