@@ -3,13 +3,13 @@ import SocketMiddleware from 'api/middleware/socket';
 import { Message2 } from 'shared/model/message';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
 import TransactionPGRepository from 'api/repository/transaction';
-import { IAsset, TransactionModel } from 'shared/model/transaction';
+import { IAsset, SerializedTransaction, TransactionModel } from 'shared/model/transaction';
 import { getTransactionsRequest } from 'api/controller/transaction/types';
 import { DEFAULT_LIMIT } from 'api/utils/common';
 import { ResponseEntity } from 'shared/model/response';
 import SharedTransactionRepo from 'shared/repository/transaction';
 import { validate } from 'shared/validate';
-const ALLOWED_FILTERS = new Set(['blockId', 'senderPublicKey', 'type']);
+
 const ALLOWED_SORT = new Set(['blockId', 'createdAt', 'type']);
 
 export class TransactionController {
@@ -31,10 +31,10 @@ export class TransactionController {
     @validate()
     async getTransaction(message: Message2<{ id: string }>, socket: any): Promise<void> {
         const data = SharedTransactionRepo.serialize(await TransactionPGRepository.getOne(message.body.id));
-        SocketMiddleware.emitToClient<TransactionModel<IAsset>>(
+        SocketMiddleware.emitToClient<SerializedTransaction<IAsset>>(
             message.headers.id,
             message.code,
-            new ResponseEntity({
+            new ResponseEntity<SerializedTransaction<any>>({
                 data
             }),
             socket
@@ -55,7 +55,7 @@ export class TransactionController {
         const serializedTransactions =
             transactions.transactions.map(trs => SharedTransactionRepo.serialize(trs));
 
-        SocketMiddleware.emitToClient<{ transactions: Array<TransactionModel<IAsset>>, count: number }>(
+        SocketMiddleware.emitToClient<{ transactions: Array<SerializedTransaction<IAsset>>, count: number }>(
             message.headers.id,
             message.code,
             new ResponseEntity({ data: { transactions: serializedTransactions, count: transactions.count } }),
@@ -75,7 +75,7 @@ export class TransactionController {
         const serializedTransactions =
             transactions.transactions.map(trs => SharedTransactionRepo.serialize(trs));
 
-        SocketMiddleware.emitToClient<{ transactions: Array<TransactionModel<IAsset>>, count: number }>(
+        SocketMiddleware.emitToClient<{ transactions: Array<SerializedTransaction<IAsset>>, count: number }>(
             message.headers.id,
             message.code,
             new ResponseEntity({ data: { transactions: serializedTransactions, count: transactions.count } }),

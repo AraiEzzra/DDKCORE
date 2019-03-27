@@ -5,6 +5,9 @@ import { BlockModel } from 'shared/model/block';
 import { toSnakeCase } from 'shared/util/util';
 import SharedBlockPGRepository from 'shared/repository/block/pg';
 
+export type AllowedFilters = {
+    height?: number;
+}
 
 class BlockPGRepository {
 
@@ -13,7 +16,7 @@ class BlockPGRepository {
     }
 
     async getMany(
-        filter: any,
+        filter: AllowedFilters,
         sort: Array<Sort>,
         limit: number,
         offset: number,
