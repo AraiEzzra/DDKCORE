@@ -310,8 +310,11 @@ class BlockService {
         }
 
         const blockSlot = slotService.getSlotNumber(block.createdAt);
+        logger.debug(`[Service][Block][validateBlockSlot]: blockSlot ${blockSlot}`);
+        
         const round = RoundRepository.getCurrentRound();
-
+        logger.debug(`[Service][Block][validateBlockSlot]: round ${round}`);
+        
         if (!round) {
             return new ResponseEntity<void>( { errors: [`Can't get current round`] });
         }
