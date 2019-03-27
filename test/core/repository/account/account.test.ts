@@ -152,14 +152,8 @@ describe('Account repository', () => {
                 AccountRepo.add(account);
             });
 
-            it('should return false if account doesn\'t exist', () => {
-                let response = AccountRepo.updateBalance(new Account({ address: 1000n }), 0 );
-                expect(response).to.be.false;
-            });
-
             it('should return true and update balance if account exists', () => {
-                let response = AccountRepo.updateBalance(account, 1000 );
-                expect(response).to.be.true;
+                AccountRepo.updateBalance(account, 1000 );
                 expect(AccountRepo.getByAddress(account.address).actualBalance).to.equal(1000);
             });
 
@@ -179,14 +173,8 @@ describe('Account repository', () => {
                 AccountRepo.add(account);
             });
 
-            it('should return false if account doesn\'t exist', () => {
-                let response = AccountRepo.updateBalanceByAddress(1000n, 0 );
-                expect(response).to.be.false;
-            });
-
             it('should return true and update balance if account exists', () => {
-                let response = AccountRepo.updateBalanceByAddress(account.address, 1000);
-                expect(response).to.be.true;
+                AccountRepo.updateBalanceByAddress(account.address, 1000);
                 expect(AccountRepo.getByAddress(account.address).actualBalance).to.equal(1000);
             });
 
@@ -206,15 +194,9 @@ describe('Account repository', () => {
                 AccountRepo.add(account);
             });
 
-            it('should return false if account doesn\'t exist', () => {
-                let response = AccountRepo.updateVotes(new Account({ address: 1000n }), []);
-                expect(response).to.be.false;
-            });
-
             it('should return true and update votes if account exists', () => {
                 const votes = ['1', '2', '3'];
-                let response = AccountRepo.updateVotes(account, votes);
-                expect(response).to.be.true;
+                AccountRepo.updateVotes(account, votes);
                 expect(AccountRepo.getByAddress(account.address).votes).to.eql(votes);
             });
 
@@ -234,15 +216,9 @@ describe('Account repository', () => {
                 AccountRepo.add(account);
             });
 
-            it('should return false if account doesn\'t exist', () => {
-                let response = AccountRepo.updateReferralByAddress(1000n, []);
-                expect(response).to.be.false;
-            });
-
             it('should return true and update votes if account exists', () => {
                 const referrals = [new Account({address: 1n}), new Account({address: 2n}), new Account({address: 3n})];
-                let response = AccountRepo.updateReferralByAddress(account.address, referrals);
-                expect(response).to.be.true;
+                AccountRepo.updateReferralByAddress(account.address, referrals);
                 expect(AccountRepo.getByAddress(account.address).referrals).to.eql(referrals);
             });
 

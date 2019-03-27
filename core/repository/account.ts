@@ -60,40 +60,20 @@ class AccountRepository {
     }
 
     // example: such functions should be handlers and depends on workflows
-    updateBalance(account: Account, balance: number): boolean {
-        const memoryAccount = this.memoryAccountsByAddress.get(account.address);
-        if (!memoryAccount) {
-            return false;
-        }
-        memoryAccount.actualBalance = balance;
-        return true;
+    updateBalance(account: Account, balance: number): void {
+        this.memoryAccountsByAddress.get(account.address).actualBalance = balance;
     }
 
-    updateBalanceByAddress(address: Address, difference: number): boolean {
-        const memoryAccount = this.memoryAccountsByAddress.get(address);
-        if (!memoryAccount) {
-            return false;
-        }
-        memoryAccount.actualBalance += difference;
-        return true;
+    updateBalanceByAddress(address: Address, difference: number): void {
+        this.memoryAccountsByAddress.get(address).actualBalance += difference;
     }
 
-    updateVotes(account: Account, votes: Array<string>): boolean {
-        const memoryAccount = this.memoryAccountsByAddress.get(account.address);
-        if (!memoryAccount) {
-            return false;
-        }
-        memoryAccount.votes = votes;
-        return true;
+    updateVotes(account: Account, votes: Array<string>): void {
+        this.memoryAccountsByAddress.get(account.address).votes = votes;
     }
 
-    updateReferralByAddress(address: Address, referrals: Array<Account>): boolean {
-        const memoryAccount = this.memoryAccountsByAddress.get(address);
-        if (!memoryAccount) {
-            return false;
-        }
-        memoryAccount.referrals = referrals;
-        return true;
+    updateReferralByAddress(address: Address, referrals: Array<Account>): void {
+        this.memoryAccountsByAddress.get(address).referrals = referrals;
     }
 
     serialize(account: Account): object {
