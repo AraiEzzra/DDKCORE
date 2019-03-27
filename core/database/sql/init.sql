@@ -31,14 +31,16 @@ CREATE TABLE IF NOT EXISTS trs
   signature         CHAR(128) NOT NULL,
   second_signature  CHAR(128),
   salt              CHAR(32)  NOT NULL DEFAULT '' :: BPCHAR,
-  asset             JSON      NOT NULL DEFAULT '{}' :: JSON
+  asset             JSONB      NOT NULL DEFAULT '{}' :: JSONB
 );
 
 CREATE INDEX IF NOT EXISTS trs_sender_public_key
   ON trs (sender_public_key);
 
+CREATE INDEX IF NOT EXISTS trs_asset_index ON trs USING GIN ((asset -> 'recipientAddress'));
+
 CREATE TABLE IF NOT EXISTS round
 (
   height_start  INTEGER PRIMARY KEY,
-  slots         JSON    NOT NULL DEFAULT '{}' :: JSON
+  slots         JSONB    NOT NULL DEFAULT '{}' :: JSONB
 );

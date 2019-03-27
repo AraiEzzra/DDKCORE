@@ -6,21 +6,35 @@ import SharedTransactionPGRepo from 'shared/repository/transaction/pg';
 import { toSnakeCase } from 'shared/util/util';
 
 
+type AllowedFilters = {
+    blockId?: string;
+    senderPublicKey?: string;
+    type?: number;
+    recipientAddress?: string;
+    asset?: string;
+}
+
 class TransactionPGRepository {
 
     async getOne(id: string): Promise<Transaction<IAsset>> {
         return SharedTransactionPGRepo.deserialize(await db.oneOrNone(query.getTransaction, { id }));
     }
 
-    async getMany(filter: any, sort: Array<Sort>, limit: number, offset: number):
+    async getMany(filter: AllowedFilters, sort: Array<Sort>, limit: number, offset: number):
         Promise<{ transactions: Array<Transaction<IAsset>>, count: number }> {
+        if (filter && filter.recipientAddress) {
+            filter.asset = `{"recipientAddress": "${filter.recipientAddress}"}`;
+            delete filter.recipientAddress;
+        }
+        console.log(filter);
+        console.log(query.getTransactions(filter, sort.map(elem => `${toSnakeCase(elem[0])} ${elem[1]}`).join(', ')));
         const transactions = await db.manyOrNone(
             query.getTransactions(filter, sort.map(elem => `${toSnakeCase(elem[0])} ${elem[1]}`).join(', ')), {
                 ...filter,
                 limit,
                 offset
             });
-        if (transactions) {
+        if (transactions && transactions.length) {
             return {
                 transactions: transactions.map(trs => SharedTransactionPGRepo.deserialize(trs)),
                 count: Number(transactions[0].count)
