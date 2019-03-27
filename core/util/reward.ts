@@ -55,7 +55,6 @@ export function calculateTotalRewardAndUnstake(sender: Account, isDownVote: bool
     return { reward, unstake: unstakeAmount };
 }
 
-// todo: check if available, redis
 export function getAirdropReward(
     sender: Account,
     amount: number,
