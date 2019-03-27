@@ -6,7 +6,7 @@ import TransactionPGRepo from 'core/repository/transaction/pg';
 import AccountRepo from 'core/repository/account';
 import { IAsset, Transaction } from 'shared/model/transaction';
 import { messageON } from 'shared/util/bus';
-import { initControllers } from 'core/controller';
+import { initControllers, initShedulers } from 'core/controller';
 import config from 'shared/config';
 
 import { Round } from 'shared/model/round';
@@ -23,7 +23,7 @@ import { Block } from 'shared/model/block';
 import { socketRPCServer } from 'core/api/server';
 import { getAddressByPublicKey } from 'shared/util/account';
 import { getRandomInt } from 'shared/util/util';
-import { START_SYNC_BLOCKS, PEER_CONNECTION_TIME_REBOOT } from 'core/util/const';
+import { PEER_CONNECTION_TIME_REBOOT, START_SYNC_BLOCKS } from 'core/util/const';
 
 // @ts-ignore
 BigInt.prototype.toJSON = function () {
@@ -49,6 +49,9 @@ class Loader {
         }
 
         socket.init();
+
+        initShedulers();
+
         setInterval(
             () => messageON('EMIT_REBOOT_PEERS_CONNECTIONS'),
             getRandomInt(PEER_CONNECTION_TIME_REBOOT.MIN, PEER_CONNECTION_TIME_REBOOT.MAX)
