@@ -3,7 +3,7 @@ import {IAirdropAsset, IAssetVote, Transaction, TransactionModel} from 'shared/m
 import { Account, Stake } from 'shared/model/account';
 import { ResponseEntity } from 'shared/model/response';
 import AccountRepo from 'core/repository/account';
-import config from 'shared/util/config';
+import config from 'shared/config';
 import BUFFER from 'core/util/buffer';
 import {
     calculateTotalRewardAndUnstake,
@@ -45,7 +45,7 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
 
         // airdropReward.sponsors up to 15 sponsors
         const sponsorsBuffer = Buffer.alloc(
-            (BUFFER.LENGTH.INT64 + BUFFER.LENGTH.INT64) * config.constants.airdrop.maxReferralCount);
+            (BUFFER.LENGTH.INT64 + BUFFER.LENGTH.INT64) * config.CONSTANTS.REFERRAL.MAX_COUNT);
 
         offset = 0;
 
@@ -73,10 +73,10 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
             errors.push('Invalid votes. Must not be empty');
         }
 
-        if (trs.asset.votes && trs.asset.votes.length > config.constants.maxVotesPerTransaction) {
+        if (trs.asset.votes && trs.asset.votes.length > config.CONSTANTS.MAX_VOTES_PER_TRANSACTION) {
             errors.push([
                 'Voting limit exceeded. Maximum is',
-                config.constants.maxVotesPerTransaction,
+                config.CONSTANTS.MAX_VOTES_PER_TRANSACTION,
                 'votes per transaction'
             ].join(' '));
         }
@@ -91,7 +91,7 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
                 votesErrors.push('Invalid vote format');
             }
 
-            if (vote.length !== config.constants.signatureLength) {
+            if (vote.length !== config.CONSTANTS.SIGNATURE_LENGTH) {
                 votesErrors.push('Invalid vote length');
             }
         });
@@ -168,10 +168,10 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
 
         const totalVotes: number = (senderVotes.length + additions) - removals;
 
-        if (totalVotes > config.constants.maxVotes) {
-            const exceeded = totalVotes - config.constants.maxVotes;
+        if (totalVotes > config.CONSTANTS.MAX_VOTES) {
+            const exceeded = totalVotes - config.CONSTANTS.MAX_VOTES;
 
-            errors.push(`Maximum number of votes possible ${config.constants.maxVotes}, exceeded by ${exceeded}`);
+            errors.push(`Maximum number of votes possible ${config.CONSTANTS.MAX_VOTES}, exceeded by ${exceeded}`);
         }
         return new ResponseEntity<void>({ errors });
     }
@@ -183,7 +183,7 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
             }
             return acc;
         }, 0);
-        return senderTotalFrozeAmount * config.constants.fees.vote / TOTAL_PERCENTAGE;
+        return senderTotalFrozeAmount * config.CONSTANTS.FEES.VOTE / TOTAL_PERCENTAGE;
     }
 
 
@@ -215,7 +215,7 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
         sender.stakes.forEach((stake: Stake) => {
             if (stake.isActive && (stake.nextVoteMilestone === 0 || trs.createdAt > stake.nextVoteMilestone)) {
                 stake.voteCount++;
-                stake.nextVoteMilestone = trs.createdAt + config.constants.froze.vTime * SECONDS_PER_MINUTE;
+                stake.nextVoteMilestone = trs.createdAt + config.CONSTANTS.FROZE.VOTE_MILESTONE;
                 processedOrders.push(stake);
             }
         });
@@ -251,7 +251,8 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
 
         sender.stakes.forEach((stake: Stake) => {
             if (stake.isActive && (stake.nextVoteMilestone === 0 ||
-                trs.createdAt + (config.constants.froze.vTime * SECONDS_PER_MINUTE) === stake.nextVoteMilestone)) {
+                trs.createdAt + (config.CONSTANTS.FROZE.VOTE_MILESTONE) === stake.nextVoteMilestone)
+            ) {
                 stake.voteCount--;
                 stake.nextVoteMilestone = 0;
             }

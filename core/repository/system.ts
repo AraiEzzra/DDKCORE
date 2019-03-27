@@ -1,9 +1,8 @@
 import os from 'os';
 import { Block } from 'shared/model/block';
-import config from 'shared/util/config';
+import config from 'shared/config';
 
 export const MAX_BLOCK_IN_MEMORY = 100;
-const env = require('../../config/env').default;
 
 class Headers {
     os: string;
@@ -18,12 +17,12 @@ class Headers {
     constructor() {
         this.blocksIds = new Map();
         this.os = os.platform() + os.release();
-        this.port = env.serverPort;
-        this.ip = env.serverHost;
+        this.port = config.CORE.SOCKET.PORT;
+        this.ip = config.PUBLIC_HOST;
         this.broadhash = null;
         this.height = 1;
         this.minVersion = 1;
-        this.version = config.constants.CURRENT_BLOCK_VERSION;
+        this.version = config.CONSTANTS.FORGING.CURRENT_BLOCK_VERSION;
     }
 
     update(data) {

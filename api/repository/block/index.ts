@@ -12,8 +12,12 @@ class BlockPGRepository {
         return SharedBlockPGRepository.deserialize(await db.oneOrNone(query.getBlock, { id }));
     }
 
-    async getMany(filter: any, sort: Array<Sort>, limit: number, offset: number):
-        Promise<{ blocks: Array<BlockModel>, count: number }> {
+    async getMany(
+        filter: any,
+        sort: Array<Sort>,
+        limit: number,
+        offset: number,
+    ): Promise<{ blocks: Array<BlockModel>, count: number }> {
         const blocks = await db.manyOrNone(
             query.getBlocks(filter, sort.map(elem => `${toSnakeCase(elem[0])} ${elem[1]}`).join(', ')), {
                 ...filter,

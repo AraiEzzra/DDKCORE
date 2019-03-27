@@ -12,9 +12,9 @@ import {
 import { ResponseEntity } from 'shared/model/response';
 import { ed, IKeyPair } from 'shared/util/ed';
 import { Account, Address } from 'shared/model/account';
-import config from 'shared/util/config';
 import AccountRepo from 'core/repository/account';
 import TransactionRepo from 'core/repository/transaction';
+import BlockRepository from 'core/repository/block';
 import TransactionPGRepo from 'core/repository/transaction/pg';
 import TransactionPool from 'core/service/transactionPool';
 import TransactionQueue from 'core/service/transactionQueue';
@@ -111,7 +111,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
     }
 
     checkBalance(amount: number, trs: Transaction<T>, sender: Account): ResponseEntity<void> {
-        if (trs.blockId === config.genesisBlock.id) {
+        if (trs.blockId === BlockRepository.getGenesisBlock().id) {
             return new ResponseEntity();
         }
 

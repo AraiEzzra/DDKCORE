@@ -1,5 +1,5 @@
 import SlotService from 'core/service/slot';
-import config from 'shared/util/config';
+import config from 'shared/config';
 
 export const isLastSlot = (timestamp: number): boolean => {
     if (timestamp === 0) {
@@ -7,7 +7,7 @@ export const isLastSlot = (timestamp: number): boolean => {
     }
 
     const slot = SlotService.getSlotNumber(timestamp);
-    if (slot % config.constants.activeDelegates === 0) {
+    if (slot % config.CONSTANTS.ACTIVE_DELEGATES === 0) {
         return true;
     }
 
