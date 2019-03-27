@@ -11,7 +11,6 @@ export class ApiSocketServer extends SocketServer implements ISocketServer {
 
     run() {
         this.socket = io(this.port, this.config);
-
         this.socket.on(CONNECT_CHANNEL, (socket: any) => SocketMiddleware.onConnect(socket));
         coreSocketClient.on(MESSAGE_CHANNEL, (message: Message) =>
             SocketMiddleware.onCoreMessage(message, this.socket));
