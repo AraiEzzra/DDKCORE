@@ -35,9 +35,7 @@ class Loader {
 
     public async start() {
         logger.debug('LOADER START');
-        const pathMockData: string = path.join(process.cwd(), 'core/database/sql');
-        const filePath = path.join(pathMockData, 'init.sql');
-        await db.query(new QueryFile(filePath, { minify: true }));
+        await this.initDatabase();
 
         initControllers();
         await this.blockWarmUp(this.limit);
@@ -58,6 +56,12 @@ class Loader {
             START_SYNC_BLOCKS
         );
         socketRPCServer.run();
+    }
+
+    public async initDatabase() {
+        const pathMockData: string = path.join(process.cwd(), 'core/database/sql');
+        const filePath = path.join(pathMockData, 'init.sql');
+        await db.query(new QueryFile(filePath, { minify: true }));
     }
 
     private async transactionWarmUp(limit: number) {
