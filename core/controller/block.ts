@@ -62,17 +62,18 @@ class BlockController extends BaseController {
             blockUtils.isEqualPreviousBlock(lastBlock, receivedBlock) &&
             !SyncService.consensus
         ) {
-            const prevRound = RoundRepository.getPrevRound();
-            const blockSlot = SlotService.getSlotNumber(lastBlock.createdAt);
 
-            let deleteLastBlockResponse;
-            if (RoundRepository.getLastSlotInRound() === blockSlot) {
+            // TODO check if slot lastBlock and receivedBlock is not equal
+            const blockSlot = SlotService.getSlotNumber(receivedBlock.createdAt);
+            const isLastBlockInPrevRound =
+                RoundRepository.getLastSlotInRound(RoundRepository.getPrevRound()) === blockSlot;
+
+            if (isLastBlockInPrevRound) {
                 await RoundService.rollBack();
-                deleteLastBlockResponse = await BlockService.deleteLastBlock();
-                await RoundService.generateRound();
-            } else {
-                deleteLastBlockResponse = await BlockService.deleteLastBlock();
             }
+
+            const deleteLastBlockResponse = await BlockService.deleteLastBlock();
+
             if (!deleteLastBlockResponse.success) {
                 errors.push(...deleteLastBlockResponse.errors, 'processIncomingBlock');
                 return new ResponseEntity<void>({ errors });
@@ -84,8 +85,7 @@ class BlockController extends BaseController {
                 return new ResponseEntity<void>({ errors });
             }
 
-            if (prevRound && RoundRepository.getLastSlotInRound(prevRound) === blockSlot) {
-                await RoundService.rollBack();
+            if (isLastBlockInPrevRound) {
                 await RoundService.generateRound();
             }
 
