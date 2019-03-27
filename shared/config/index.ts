@@ -1,7 +1,7 @@
 import Validator from 'z-schema';
 
 import { IConstants } from 'shared/model/types';
-import ZSchema from 'shared/util/z_schema';
+import ZSchema from 'shared/validate/z_schema';
 import configSchema from 'config/schema';
 import developmentConstants from 'config/default/constants';
 import testnetConstants from 'config/testnet/constants';

@@ -6,5 +6,6 @@ export type getTransactionsRequest = {
         type?: TransactionType,
         block_id?: string,
         sender_public_key?: string,
-    }, sort: Array<Sort>
+    },
+    sort: Array<Sort>
 } & Pagination;

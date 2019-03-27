@@ -8,7 +8,7 @@ import { getTransactionsRequest } from 'api/controller/transaction/types';
 import { DEFAULT_LIMIT } from 'api/utils/common';
 import { ResponseEntity } from 'shared/model/response';
 import SharedTransactionRepo from 'shared/repository/transaction';
-
+import { validate } from 'shared/validate';
 const ALLOWED_FILTERS = new Set(['blockId', 'senderPublicKey', 'type']);
 const ALLOWED_SORT = new Set(['blockId', 'createdAt', 'type']);
 
@@ -22,23 +22,27 @@ export class TransactionController {
     }
 
     @RPC(API_ACTION_TYPES.CREATE_TRANSACTION)
+    @validate()
     createTransaction(message: Message2<{ secret: string, trs: TransactionModel<IAsset> }>, socket: any) {
         SocketMiddleware.emitToCore(message, socket);
     }
 
     @RPC(API_ACTION_TYPES.GET_TRANSACTION)
+    @validate()
     async getTransaction(message: Message2<{ id: string }>, socket: any): Promise<void> {
+        const data = SharedTransactionRepo.serialize(await TransactionPGRepository.getOne(message.body.id));
         SocketMiddleware.emitToClient<TransactionModel<IAsset>>(
             message.headers.id,
             message.code,
             new ResponseEntity({
-                data: SharedTransactionRepo.serialize(await TransactionPGRepository.getOne(message.body.id))
+                data
             }),
             socket
         );
     }
 
     @RPC(API_ACTION_TYPES.GET_TRANSACTIONS)
+    @validate()
     async getTransactions(message: Message2<getTransactionsRequest>, socket: any): Promise<void> {
         // TODO add validation
         const transactions = await TransactionPGRepository.getMany(
@@ -60,6 +64,7 @@ export class TransactionController {
     }
 
     @RPC(API_ACTION_TYPES.GET_TRANSACTIONS_BY_BLOCK_ID)
+    @validate()
     async getTransactionsByBlockId(message: Message2<{ limit: number, offset: number, blockId: string }>, socket: any) {
         const transactions = await TransactionPGRepository.getMany(
             { block_id: message.body.blockId },

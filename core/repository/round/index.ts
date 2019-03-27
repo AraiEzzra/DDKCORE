@@ -1,4 +1,4 @@
-import {Round, RoundModel} from 'shared/model/round';
+import {Round} from 'shared/model/round';
 import {IRoundRepository as IRoundRepositoryShared} from 'shared/repository/round';
 
 export interface IRoundRepository extends IRoundRepositoryShared {
@@ -52,10 +52,6 @@ class RoundRepository implements IRoundRepository {
 
     public getFirstSlotInRound(round: Round = this.currentRound): number {
         return round.slots[Object.keys(round.slots)[0]].slot;
-    }
-    
-    public updateEndHeight(endHeight: number): void {
-        this.currentRound.endHeight = endHeight;
     }
 }
 

@@ -13,8 +13,9 @@ class AccountController {
 
     @API(API_ACTION_TYPES.GET_ACCOUNT)
     public getAccount(message: Message2<{ address: string }>): ResponseEntity<object> {
+        const account = AccountRepo.getByAddress(BigInt(message.body.address));
         return new ResponseEntity({
-            data: AccountRepo.serialize(AccountRepo.getByAddress(BigInt(message.body.address)))
+            data: account ? AccountRepo.serialize(account) : null
         });
     }
 

@@ -3,7 +3,7 @@ import * as sodium from 'sodium-javascript';
 import BUFFER from 'core/util/buffer';
 
 import Validator from 'z-schema';
-import ZSchema from 'shared/util/z_schema';
+import ZSchema from 'shared/validate/z_schema';
 import { logger } from 'shared/util/logger';
 import { Account } from 'shared/model/account';
 import { Block, BlockModel } from 'shared/model/block';
@@ -119,7 +119,7 @@ class BlockService {
             }
         }
 
-        const validationResponse = this.validateBlockSlot(block);
+        const validationResponse = await this.validateBlockSlot(block);
         if (!validationResponse.success) {
             return new ResponseEntity<void>({errors: [...validationResponse.errors, 'processBlock']});
         }
@@ -183,7 +183,7 @@ class BlockService {
         return response;
     }
 
-    private setHeight(block: Block, lastBlock: Block): Block {
+    public setHeight(block: Block, lastBlock: Block): Block {
         block.height = lastBlock.height + 1;
         return block;
     }
@@ -304,16 +304,23 @@ class BlockService {
         }
     }
 
-    private validateBlockSlot(block: Block): ResponseEntity<void> {
+    private async validateBlockSlot(block: Block): Promise<ResponseEntity<void>> {
         if (block.height === 1) {
             return new ResponseEntity<void>();
         }
 
         const blockSlot = slotService.getSlotNumber(block.createdAt);
-        const round = RoundRepository.getCurrentRound();
+        logger.debug(`[Service][Block][validateBlockSlot]: blockSlot ${blockSlot}`);
+
+        let round = RoundRepository.getCurrentRound();
+        logger.debug(`[Service][Block][validateBlockSlot]: round ${round}`);
 
         if (!round) {
-            return new ResponseEntity<void>( { errors: [`Can't get current round`] });
+            await RoundService.generateRound(block.createdAt);
+            round = RoundRepository.getCurrentRound();
+            if (!round) {
+                return new ResponseEntity<void>({ errors: [`Can't get block round`] });
+            }
         }
 
         const generatorSlot = round.slots[block.generatorPublicKey];
@@ -323,9 +330,8 @@ class BlockService {
         }
 
         if (blockSlot !== generatorSlot.slot) {
-            return new ResponseEntity<void>(
-                { errors: [`Invalid block slot number: blockSlot ${blockSlot} generator slot ${generatorSlot.slot}`] }
-            );
+            await RoundService.generateRound(block.createdAt);
+            return await this.validateBlockSlot(block);
         }
 
         return new ResponseEntity<void>({});
@@ -440,7 +446,7 @@ class BlockService {
 
             const serializedBlock: Block & { transactions: any } = block.getCopy();
             serializedBlock.transactions = block.transactions.map(trs => SharedTransactionRepo.serialize(trs));
-            SocketMiddleware.emitEvent<{ block: Block }>(EVENT_TYPES.APPLY_BLOCK, { block: serializedBlock });
+            SocketMiddleware.emitEvent<Block>(EVENT_TYPES.APPLY_BLOCK, serializedBlock);
         }
 
         return new ResponseEntity<void>();
@@ -590,13 +596,12 @@ class BlockService {
             return new ResponseEntity<Block>({ errors });
         }
 
-        RoundService.rollBack(); // (oldLastBlock, previousBlock);
         await BlockPGRepo.deleteById(lastBlock.id);
         const newLastBlock = BlockRepo.deleteLastBlock();
 
         const serializedBlock: Block & { transactions: any } = lastBlock.getCopy();
         serializedBlock.transactions = lastBlock.transactions.map(trs => SharedTransactionRepo.serialize(trs));
-        SocketMiddleware.emitEvent<{ block: Block }>(EVENT_TYPES.UNDO_BLOCK, { block: serializedBlock });
+        SocketMiddleware.emitEvent<Block>(EVENT_TYPES.UNDO_BLOCK, serializedBlock);
 
         return new ResponseEntity<Block>({ data: newLastBlock });
     }

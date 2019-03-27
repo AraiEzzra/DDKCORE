@@ -1,7 +1,6 @@
 import RoundService from 'core/service/round';
 import { ON } from 'core/util/decorator';
 import { BaseController } from 'core/controller/baseController';
-import { Block } from 'shared/model/block';
 
 class RoundController extends BaseController {
 
