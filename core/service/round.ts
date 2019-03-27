@@ -1,11 +1,6 @@
 import { ResponseEntity } from 'shared/model/response';
 import * as crypto from 'crypto';
 import SlotService from 'core/service/slot';
-import config from 'shared/config';
-// todo delete it when find a way to mock services for tests
-// import BlockService from 'test/core/mock/blockService';
-// import { createTaskON } from 'test/core/mock/bus';
-// import BlockRepository from 'test/core/mock/blockRepository';
 import BlockRepository from 'core/repository/block';
 import { Round, Slots } from 'shared/model/round';
 import RoundRepository from 'core/repository/round';
@@ -74,7 +69,6 @@ class RoundService implements IRoundService {
     };
     private logPrefix: string = '[RoundService]';
     private isBlockChainReady: boolean = false;
-    // private isRoundChainRestored: boolean = false;
 
     constructor() {
         const keyPair = createKeyPairBySecret(process.env.FORGE_SECRET);
@@ -131,7 +125,6 @@ class RoundService implements IRoundService {
         }
 
         if (!RoundRepository.getCurrentRound()) {
-            // this.isRoundChainRestored = true;
             await this.generateRound(block.createdAt);
             return;
         }
@@ -157,10 +150,6 @@ class RoundService implements IRoundService {
             return;
         }
 
-        // TODO check it
-        // if (lastSlot >= SlotService.getSlotNumber()) {
-        //     this.isRoundChainRestored = true;
-        // }
         await this.generateRound();
     }
 
@@ -242,10 +231,6 @@ class RoundService implements IRoundService {
             `${this.logPrefix}[generateRound] Start round on height: ${RoundRepository.getCurrentRound().startHeight}`
         );
 
-        // if (!this.isRoundChainRestored) {
-        //     return;
-        // }
-
         this.startBlockGenerateTask();
         this.startRoundFinishTask();
 
@@ -299,10 +284,10 @@ class RoundService implements IRoundService {
         const delegates = roundSumResponse.data.roundDelegates;
         const fee = Math.floor(roundSumResponse.data.roundFees / delegates.length);
 
-        for (let i = 0; i < delegates.length; i++) {
-            let delegateAccount = DelegateRepository.getByPublicKey(delegates[i]).account;
-            AccountRepository.updateBalance(delegateAccount, delegateAccount.actualBalance + fee);
-        }
+        delegates.forEach(publicKey => {
+            const delegateAccount = AccountRepository.getByPublicKey(publicKey);
+            delegateAccount.actualBalance += fee;
+        });
 
         return new ResponseEntity<Array<string>>({ data: delegates });
     }
@@ -316,10 +301,10 @@ class RoundService implements IRoundService {
         const delegates = roundSumResponse.data.roundDelegates;
         const fee = Math.floor(roundSumResponse.data.roundFees / delegates.length);
 
-        for (let i = 0; i < delegates.length; i++) {
-            let delegateAccount = DelegateRepository.getByPublicKey(delegates[i]).account;
-            AccountRepository.updateBalance(delegateAccount, delegateAccount.actualBalance - fee);
-        }
+        delegates.forEach(publicKey => {
+            const delegateAccount = AccountRepository.getByPublicKey(publicKey);
+            delegateAccount.actualBalance -= fee;
+        });
 
         return new ResponseEntity<Array<string>>({ data: delegates });
     }
