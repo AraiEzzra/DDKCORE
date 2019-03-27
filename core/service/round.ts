@@ -1,18 +1,12 @@
 import { ResponseEntity } from 'shared/model/response';
 import * as crypto from 'crypto';
 import SlotService from 'core/service/slot';
-import Config from 'shared/util/config';
-// todo delete it when find a way to mock services for tests
-// import BlockService from 'test/core/mock/blockService';
-// import { createTaskON } from 'test/core/mock/bus';
-// import BlockRepository from 'test/core/mock/blockRepository';
 import BlockRepository from 'core/repository/block';
 import { Round, Slots } from 'shared/model/round';
 import RoundRepository from 'core/repository/round';
 import { createTaskON, resetTaskON } from 'shared/util/bus';
 import DelegateRepository from 'core/repository/delegate';
 import AccountRepository from 'core/repository/account';
-import { ed } from 'shared/util/ed';
 import { Delegate } from 'shared/model/delegate';
 import { logger } from 'shared/util/logger';
 import { compose } from 'core/util/common';
@@ -20,10 +14,9 @@ import RoundPGRepository from 'core/repository/round/pg';
 import { Block } from 'shared/model/block';
 import { ActionTypes } from 'core/util/actionTypes';
 import { calculateRoundFirstSlotByTimestamp } from 'core/util/round';
+import { createKeyPairBySecret } from 'shared/util/crypto';
 
 const MAX_LATENESS_FORGE_TIME = 500;
-const constants = Config.constants;
-
 
 interface IHashList {
     hash: string;
@@ -71,16 +64,14 @@ interface IRoundService {
 
 class RoundService implements IRoundService {
     private readonly keyPair: {
-        privateKey: string,
-        publicKey: string,
+        privateKey: string;
+        publicKey: string;
     };
     private logPrefix: string = '[RoundService]';
     private isBlockChainReady: boolean = false;
-    // private isRoundChainRestored: boolean = false;
 
     constructor() {
-        const hash = crypto.createHash('sha256').update(process.env.FORGE_SECRET, 'utf8').digest();
-        const keyPair = ed.makeKeyPair(hash);
+        const keyPair = createKeyPairBySecret(process.env.FORGE_SECRET);
 
         this.keyPair = {
             privateKey: keyPair.privateKey.toString('hex'),
@@ -98,7 +89,7 @@ class RoundService implements IRoundService {
 
     public generateHashList(params: { activeDelegates: Array<Delegate>, blockId: string }): Array<IHashList> {
         return params.activeDelegates.map((delegate: Delegate) => {
-            const publicKey = delegate.account.publicKey;
+            const { publicKey } = delegate.account;
             const hash = crypto.createHash('md5').update(publicKey + params.blockId).digest('hex');
             return {
                 hash,
@@ -134,7 +125,6 @@ class RoundService implements IRoundService {
         }
 
         if (!RoundRepository.getCurrentRound()) {
-            // this.isRoundChainRestored = true;
             await this.generateRound(block.createdAt);
             return;
         }
@@ -160,10 +150,6 @@ class RoundService implements IRoundService {
             return;
         }
 
-        // TODO check it
-        // if (lastSlot >= SlotService.getSlotNumber()) {
-        //     this.isRoundChainRestored = true;
-        // }
         await this.generateRound();
     }
 
@@ -227,15 +213,9 @@ class RoundService implements IRoundService {
             });
         }
 
-        const delegateResponse = DelegateRepository.getActiveDelegates();
-        if (!delegateResponse.success) {
-            logger.error(`${this.logPrefix}[generateRound] error: ${delegateResponse.errors}`);
-            return new ResponseEntity<void>({
-                errors: [...delegateResponse.errors, `${this.logPrefix}[generateRound] Can't get Active delegates`]
-            });
-        }
+        const activeDelegates = DelegateRepository.getActiveDelegates();
 
-        const hashList = this.generateHashList({ blockId: lastBlock.id, activeDelegates: delegateResponse.data });
+        const hashList = this.generateHashList({ blockId: lastBlock.id, activeDelegates });
         const sortedHashList = this.sortHashList(hashList);
         const slots = this.generatorPublicKeyToSlot(sortedHashList, timestamp);
 
@@ -251,10 +231,6 @@ class RoundService implements IRoundService {
             `${this.logPrefix}[generateRound] Start round on height: ${RoundRepository.getCurrentRound().startHeight}`
         );
 
-        // if (!this.isRoundChainRestored) {
-        //     return;
-        // }
-
         this.startBlockGenerateTask();
         this.startRoundFinishTask();
 
@@ -262,7 +238,7 @@ class RoundService implements IRoundService {
     }
 
     public getMyTurn(): number {
-        const mySlot = RoundRepository.getCurrentRound().slots[constants.publicKey];
+        const mySlot = RoundRepository.getCurrentRound().slots[this.keyPair.publicKey];
         return mySlot && mySlot.slot;
     }
 
@@ -308,10 +284,10 @@ class RoundService implements IRoundService {
         const delegates = roundSumResponse.data.roundDelegates;
         const fee = Math.floor(roundSumResponse.data.roundFees / delegates.length);
 
-        for (let i = 0; i < delegates.length; i++) {
-            let delegateAccount = DelegateRepository.getByPublicKey(delegates[i]).account;
-            AccountRepository.updateBalance(delegateAccount, delegateAccount.actualBalance + fee);
-        }
+        delegates.forEach(publicKey => {
+            const delegateAccount = AccountRepository.getByPublicKey(publicKey);
+            delegateAccount.actualBalance += fee;
+        });
 
         const lastBlock = BlockRepository.getLastBlock();
         RoundRepository.updateEndHeight(lastBlock.height);
@@ -328,10 +304,10 @@ class RoundService implements IRoundService {
         const delegates = roundSumResponse.data.roundDelegates;
         const fee = Math.floor(roundSumResponse.data.roundFees / delegates.length);
 
-        for (let i = 0; i < delegates.length; i++) {
-            let delegateAccount = DelegateRepository.getByPublicKey(delegates[i]).account;
-            AccountRepository.updateBalance(delegateAccount, delegateAccount.actualBalance - fee);
-        }
+        delegates.forEach(publicKey => {
+            const delegateAccount = AccountRepository.getByPublicKey(publicKey);
+            delegateAccount.actualBalance -= fee;
+        });
 
         return new ResponseEntity<Array<string>>({ data: delegates });
     }

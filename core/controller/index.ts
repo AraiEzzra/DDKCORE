@@ -1,11 +1,16 @@
-import BlockController from './block';
-import RoundController from './round';
-import SyncController from './sync';
-import TransactionController from './transaction';
-import { filter } from 'rxjs/operators';
+import BlockController from 'core/controller/block';
+import RoundController from 'core/controller/round';
+import SyncController from 'core/controller/sync';
+import EventSerive from 'core/service/events';
+import TransactionController from 'core/controller/transaction';
+import { filter, flatMap } from 'rxjs/operators';
 
 import { subjectOn, subjectRpc } from 'shared/util/bus';
 import { logger } from 'shared/util/logger';
+import { fromPromise } from 'rxjs/internal-compatibility';
+import { ResponseEntity } from 'shared/model/response';
+import { timer } from 'rxjs';
+import config from 'shared/config';
 
 export const initControllers = () => {
     const controllers = [
@@ -19,12 +24,15 @@ export const initControllers = () => {
     .pipe(
         filter((elem: { data, topicName }) =>
             ['BLOCK_GENERATE', 'BLOCK_RECEIVE'].indexOf(elem.topicName) !== -1
+        ),
+        flatMap(({ data, topicName }) => {
+                logger.debug(`TASK MAIN ${topicName} start`);
+                return fromPromise(BlockController.eventsMAIN[topicName].apply(BlockController, [data]));
+            }
         )
     )
-    .subscribe(async ({ data, topicName }) => {
-        logger.debug(`TASK MAIN ${topicName} start`);
-        await BlockController.eventsMAIN[topicName].apply(BlockController, [data]);
-        logger.debug(`TASK MAIN ${topicName} finish`);
+    .subscribe((data: ResponseEntity<any>) => {
+        logger.debug(data.success ? 'TASK MAIN finished success' : `TASK MAIN finished with error ${data.errors}`);
     });
 
     controllers.forEach((controller) => {
@@ -32,7 +40,7 @@ export const initControllers = () => {
             controller.eventsON.forEach(({ handlerTopicName, handlerFunc }) => {
                 subjectOn.subscribe(({ data, topicName }) => {
                     if (handlerTopicName === topicName) {
-                        handlerFunc.apply(controller, [data]);
+                        setImmediate(() => handlerFunc.apply(controller, [data]));
                     }
                 });
             });
@@ -42,11 +50,17 @@ export const initControllers = () => {
             controller.eventsRPC.forEach(({ handlerTopicName, handlerFunc }) => {
                 subjectRpc.subscribe(({ data, topicName }) => {
                     if (handlerTopicName === topicName) {
-                        handlerFunc.apply(controller, [data]);
+                        setImmediate(() => handlerFunc.apply(controller, [data]));
                     }
                 });
             });
         }
     });
 
+};
+
+export const initShedulers = () => {
+    timer(0, config.CONSTANTS.UPDATE_BLOCKCHAIN_INFO_INTERVAL).subscribe(() => {
+        EventSerive.updateBlockchainInfo();
+    });
 };

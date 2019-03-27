@@ -1,4 +1,4 @@
-import { peer } from './peers';
+import { peer } from 'core/schema/peers';
 
 export {
     peer

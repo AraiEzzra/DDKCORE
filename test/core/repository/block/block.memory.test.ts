@@ -1,5 +1,8 @@
 import { Block } from 'shared/model/block';
+import config from 'shared/config';
 import BlockRepo from 'core/repository/block/index';
+import SharedTransactionRepo from 'shared/repository/transaction/index';
+import BlockService from 'core/service/block';
 import { expect } from 'chai';
 import {
     getNewBlock, createTrsTable, createBlockTable, dropTrsTable,

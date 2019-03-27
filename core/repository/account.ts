@@ -1,7 +1,13 @@
-import {Account, Address, PublicKey} from 'shared/model/account';
+import { Account, Address, PublicKey } from 'shared/model/account';
 import { getAddressByPublicKey } from 'shared/util/account';
 
-class AccountRepo {
+export type Statistics = {
+    tokenHolders: number;
+    totalStakeAmount: number;
+    totalStakeholders: number;
+}
+
+class AccountRepository {
     private memoryAccountsByAddress: Map<Address, Account> = new Map<Address, Account>();
 
     public add(accountData: { address: Address, publicKey?: PublicKey }): Account {
@@ -29,6 +35,26 @@ class AccountRepo {
         return accounts;
     }
 
+    getStatistics(): Statistics {
+        let tokenHolders = 0;
+        let totalStakeAmount = 0;
+        let totalStakeholders = 0;
+        for (const account of this.memoryAccountsByAddress.values()) {
+            if (account.actualBalance > 0) {
+                tokenHolders++;
+            }
+
+            const activeStakes = account.stakes.filter(stake => stake.isActive);
+
+            if (activeStakes.length > 0) {
+                totalStakeAmount += activeStakes.reduce((sum, stake) => sum += stake.amount, 0);
+                totalStakeholders += 1;
+            }
+        }
+        return { tokenHolders, totalStakeAmount, totalStakeholders };
+
+    }
+
     delete(account: Account): void {
         this.memoryAccountsByAddress.delete(account.address);
     }
@@ -52,7 +78,7 @@ class AccountRepo {
         return true;
     }
 
-    updateVotes(account: Account, votes: Array<string> ): boolean {
+    updateVotes(account: Account, votes: Array<string>): boolean {
         const memoryAccount = this.memoryAccountsByAddress.get(account.address);
         if (!memoryAccount) {
             return false;
@@ -69,6 +95,19 @@ class AccountRepo {
         memoryAccount.referrals = referrals;
         return true;
     }
+
+    serialize(account: Account): object {
+        return {
+            address: account.address.toString(),
+            isDelegate: Boolean(account.delegate),
+            publicKey: account.publicKey,
+            secondPublicKey: account.secondPublicKey,
+            actualBalance: account.actualBalance,
+            referrals: account.referrals.map(acc => acc.address.toString()),
+            votes: account.votes,
+            stakes: account.stakes,
+        };
+    }
 }
 
-export default new AccountRepo();
+export default new AccountRepository();

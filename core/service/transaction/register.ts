@@ -3,7 +3,7 @@ import {IAssetRegister, Transaction, TransactionModel} from 'shared/model/transa
 import { Account } from 'shared/model/account';
 import { ResponseEntity } from 'shared/model/response';
 import AccountRepo from 'core/repository/account';
-import config from 'shared/util/config';
+import config from 'shared/config';
 import BUFFER from 'core/util/buffer';
 
 class TransactionRegisterService implements IAssetService<IAssetRegister> {
@@ -32,6 +32,11 @@ class TransactionRegisterService implements IAssetService<IAssetRegister> {
 
     // TODO check empty account
     verifyUnconfirmed(trs: Transaction<IAssetRegister>, sender: Account): ResponseEntity<void> {
+        const errors = [];
+        if (!AccountRepo.getByAddress(trs.asset.referral)) {
+            errors.push(`Referral with address: ${trs.asset.referral} not found!`);
+        }
+
         if (
             sender.secondPublicKey ||
             sender.actualBalance !== 0 ||
@@ -42,7 +47,7 @@ class TransactionRegisterService implements IAssetService<IAssetRegister> {
         ) {
             return new ResponseEntity<void>({ errors: ['Account already exists.'] });
         }
-        return new ResponseEntity<void>();
+        return new ResponseEntity<void>({ errors });
     }
 
     calculateFee(trs: Transaction<IAssetRegister>, sender: Account): number {
@@ -52,7 +57,7 @@ class TransactionRegisterService implements IAssetService<IAssetRegister> {
     applyUnconfirmed(trs: Transaction<IAssetRegister>, sender: Account): void {
         const referralAccount: Account = AccountRepo.getByAddress(trs.asset.referral);
         const referrals: Array<Account> =
-            referralAccount.referrals.slice(0, config.constants.airdrop.maxReferralCount - 1);
+            referralAccount.referrals.slice(0, config.CONSTANTS.REFERRAL.MAX_COUNT - 1);
 
         const targetAccount: Account = AccountRepo.add({ address: trs.senderAddress, publicKey: trs.senderPublicKey });
         AccountRepo.updateReferralByAddress(targetAccount.address, [referralAccount, ...referrals]);

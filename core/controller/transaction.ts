@@ -1,4 +1,4 @@
-import { ON, RPC } from 'core/util/decorator';
+import { ON } from 'core/util/decorator';
 import { BaseController } from 'core/controller/baseController';
 import { logger } from 'shared/util/logger';
 import { IAsset, TransactionModel } from 'shared/model/transaction';
@@ -7,17 +7,27 @@ import TransactionService from 'core/service/transaction';
 import TransactionPool from 'core/service/transactionPool';
 import { Account } from 'shared/model/account';
 import AccountRepo from 'core/repository/account';
-import { ed } from 'shared/util/ed';
-import TransactionRepo from 'core/repository/transaction';
+import SharedTransactionRepo from 'shared/repository/transaction';
+import { EVENT_TYPES } from 'shared/driver/socket/codes';
+import { createKeyPairBySecret } from 'shared/util/crypto';
+import SocketMiddleware from 'core/api/middleware/socket';
+import { ResponseEntity } from 'shared/model/response';
+import { CreateTransactionParams } from 'shared/model/types';
+
 
 class TransactionController extends BaseController {
     @ON('TRANSACTION_RECEIVE')
     public async onReceiveTransaction(action: { data: { trs: TransactionModel<IAsset> } }): Promise<void> {
         const { data } = action;
-        const trs = TransactionRepo.deserialize(data.trs);
+        const trs = SharedTransactionRepo.deserialize(data.trs);
         logger.debug(`[Controller][Transaction][onReceiveTransaction] ${JSON.stringify(data.trs)}`);
 
-        if (!TransactionService.validate(trs)) {
+        const validateResult = TransactionService.validate(trs);
+        if (!validateResult.success) {
+            SocketMiddleware.emitEvent<TransactionModel<IAsset>>(
+                EVENT_TYPES.DECLINE_TRANSACTION,
+                SharedTransactionRepo.serialize(trs)
+            );
             return;
         }
 
@@ -38,13 +48,18 @@ class TransactionController extends BaseController {
         TransactionQueue.push(trs);
     }
 
-    @RPC('TRANSACTION_CREATE')
-    public async transactionCreate(action: { data: { trs: TransactionModel<IAsset>, secret: string } }): Promise<void> {
-        console.log('TRANSACTION RPC CREATING....', JSON.stringify(action.data));
-        const keyPair = ed.makeKeyPair(Buffer.from(action.data.secret));
-        const responseTrs = TransactionService.create(action.data.trs, keyPair);
+    // TODO: extract this somewhere and make it async
+    public transactionCreate(data: CreateTransactionParams) {
+        const keyPair = createKeyPairBySecret(data.secret);
+        const responseTrs = TransactionService.create(data.trs, keyPair);
         if (responseTrs.success) {
+            const validateResult = TransactionService.validate(responseTrs.data);
+            if (!validateResult.success) {
+                logger.debug(`[RPC][TransactionController][transactionCreate]Validation of ${responseTrs.data} failed`);
+                return new ResponseEntity({ errors: validateResult.errors });
+            }
             TransactionQueue.push(responseTrs.data);
+            return SharedTransactionRepo.serialize(responseTrs.data);
         }
     }
 

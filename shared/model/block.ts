@@ -1,12 +1,12 @@
 import { Timestamp } from 'shared/model/account';
 import { Transaction } from 'shared/model/transaction';
-import config from 'shared/util/config';
+import config from 'shared/config';
 
 export type SortBlock = number | string;
 
 export class BlockModel {
     id?: string | null = null;
-    version?: number = config.constants.CURRENT_BLOCK_VERSION;
+    version?: number = config.CONSTANTS.FORGING.CURRENT_BLOCK_VERSION;
     createdAt: Timestamp;
     height?: number | null = null;
     previousBlockId: string | null;

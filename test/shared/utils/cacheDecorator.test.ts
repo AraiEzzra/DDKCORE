@@ -11,7 +11,7 @@ class EmulateRedisClient implements ICacheRepository {
     }
 
     public async get(key): Promise<ResponseEntity<any>> {
-        return new ResponseEntity({ data: this.store[key] })
+        return new ResponseEntity({ data: this.store[key] });
     }
 
     public async set(key: string, value: any, expired?: number): Promise<boolean> {
