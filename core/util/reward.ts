@@ -1,15 +1,15 @@
 import {Address, Account, Stake} from 'shared/model/account';
 import { logger } from 'shared/util/logger';
-import config from 'shared/util/config';
+import config from 'shared/config';
 import BlockRepo from 'core/repository/block';
 import {IAirdropAsset, IAssetStake, IAssetVote, Transaction, TransactionType} from 'shared/model/transaction';
 import AccountRepo from 'core/repository/account';
 import { ResponseEntity } from 'shared/model/response';
-import { TOTAL_PERCENTAGE, SECONDS_PER_MINUTE, MONEY_FACTOR } from 'core/util/const';
+import { TOTAL_PERCENTAGE, MONEY_FACTOR } from 'core/util/const';
 
 class StakeReward {
-    private readonly milestones = config.constants.froze.rewards.milestones;
-    private readonly distance = Math.floor(config.constants.froze.rewards.distance);
+    private readonly milestones = config.CONSTANTS.FROZE.REWARDS.MILESTONES;
+    private readonly distance = Math.floor(config.CONSTANTS.FROZE.REWARDS.DISTANCE);
 
     calcMilestone(height) {
         const location = Math.trunc((height) / this.distance);
@@ -39,14 +39,14 @@ export function calculateTotalRewardAndUnstake(sender: Account, isDownVote: bool
     logger.debug(`[Frozen][calculateTotalRewardAndUnstake] freezeOrders: ${JSON.stringify(freezeOrders)}`);
 
     freezeOrders.forEach((order: Stake) => {
-        if (order.voteCount > 0 && (order.voteCount + 1) % config.constants.froze.rewardVoteCount === 0) {
+        if (order.voteCount > 0 && (order.voteCount + 1) % config.CONSTANTS.FROZE.REWARD_VOTE_COUNT === 0) {
             const blockHeight: number = BlockRepo.getLastBlock().height;
             const stakeRewardPercent: number = stakeReward.calcReward(blockHeight);
             reward += (order.amount * stakeRewardPercent) / TOTAL_PERCENTAGE;
         }
     });
     const readyToUnstakeOrders = freezeOrders.filter(
-        o => (o.voteCount + 1) === config.constants.froze.unstakeVoteCount
+        o => (o.voteCount + 1) === config.CONSTANTS.FROZE.UNSTAKE_VOTE_COUNT
     );
     logger.debug(`[Frozen][calculateTotalRewardAndUnstake] reward: ${reward}`);
     readyToUnstakeOrders.forEach((order) => {
@@ -65,7 +65,7 @@ export function getAirdropReward(
         sponsors: new Map<Address, number>()
     };
 
-    const availableAirdropBalance: number = AccountRepo.getByAddress(config.constants.airdrop.account).actualBalance;
+    const availableAirdropBalance: number = AccountRepo.getByAddress(config.CONSTANTS.AIRDROP.ADDRESS).actualBalance;
     logger.info(`availableAirdropBalance: ${availableAirdropBalance / MONEY_FACTOR}`);
 
     if (!sender || !sender.referrals || (sender.referrals.length === 0)) {
@@ -81,8 +81,8 @@ export function getAirdropReward(
 
     sender.referrals.forEach((sponsor: Account, i: number) => {
         const reward = transactionType === TransactionType.STAKE ?
-            Math.ceil((amount * config.constants.airdrop.stakeRewardPercent) / TOTAL_PERCENTAGE) :
-            Math.ceil(((config.constants.airdrop.referralPercentPerLevel[i]) * amount) / TOTAL_PERCENTAGE);
+            Math.ceil((amount * config.CONSTANTS.AIRDROP.STAKE_REWARD_PERCENT) / TOTAL_PERCENTAGE) :
+            Math.ceil(((config.CONSTANTS.AIRDROP.REFERRAL_PERCENT_PER_LEVEL[i]) * amount) / TOTAL_PERCENTAGE);
         sponsors.set(sponsor.address, reward);
         airdropRewardAmount += reward;
     });
@@ -115,7 +115,7 @@ export function verifyAirdrop(
             sponsors: ${JSON.stringify(airdropReward.sponsors)}
             actual:
             sponsors: ${JSON.stringify(trs.asset.airdropReward.sponsors)}`
-            ] });
+        ] });
     }
     return new ResponseEntity<void>();
 }
@@ -129,11 +129,11 @@ export function applyFrozeOrdersRewardAndUnstake(
 
 function applyRewards(trs: Transaction<IAssetVote>): void {
     AccountRepo.updateBalanceByAddress(trs.senderAddress, trs.asset.reward);
-    AccountRepo.updateBalanceByAddress(config.config.forging.totalSupplyAccount, -trs.asset.reward);
+    AccountRepo.updateBalanceByAddress(config.CONSTANTS.TOTAL_SUPPLY.ADDRESS, -trs.asset.reward);
 }
 
 function applyUnstake(orders: Array<Stake>, trs: Transaction<IAssetVote>): void {
-    const readyToUnstakeOrders = orders.filter(o => o.voteCount === config.constants.froze.unstakeVoteCount);
+    const readyToUnstakeOrders = orders.filter(o => o.voteCount === config.CONSTANTS.FROZE.UNSTAKE_VOTE_COUNT);
     readyToUnstakeOrders.map((order) => {
         order.isActive = false;
     });
@@ -148,14 +148,18 @@ export function sendAirdropReward(trs: Transaction<IAssetStake | IAssetVote>): v
             continue;
         }
         AccountRepo.updateBalanceByAddress(sponsorAddress, rewardAmount);
-        AccountRepo.updateBalanceByAddress(config.config.forging.totalSupplyAccount, -rewardAmount);
+        AccountRepo.updateBalanceByAddress(config.CONSTANTS.AIRDROP.ADDRESS, -rewardAmount);
     }
 }
 
-export function undoFrozeOrdersRewardAndUnstake(trs: Transaction<IAssetVote>, sender: Account, senderOnly: boolean): void {
+export function undoFrozeOrdersRewardAndUnstake(
+    trs: Transaction<IAssetVote>,
+    sender: Account,
+    senderOnly: boolean
+): void {
     const senderStakes: Array<Stake> = sender.stakes;
     const updatedOrders = senderStakes.map((order: Stake) => {
-        if (order.nextVoteMilestone === trs.createdAt + config.constants.froze.vTime * SECONDS_PER_MINUTE) {
+        if (order.nextVoteMilestone === trs.createdAt + config.CONSTANTS.FROZE.VOTE_MILESTONE) {
             return order;
         }
     });
@@ -174,7 +178,7 @@ function undoUnstake(orders: Array<Stake>, trs: Transaction<IAssetVote>, sender:
 function undoRewards(trs: Transaction<IAssetVote>, sender: Account, senderOnly: boolean): void {
     sender.actualBalance -= trs.asset.reward;
     if (!senderOnly) {
-        AccountRepo.updateBalanceByAddress(config.config.forging.totalSupplyAccount, trs.asset.reward);
+        AccountRepo.updateBalanceByAddress(config.CONSTANTS.TOTAL_SUPPLY.ADDRESS, trs.asset.reward);
     }
 }
 
@@ -186,6 +190,6 @@ export function undoAirdropReward(trs: Transaction<IAssetVote | IAssetStake>): v
             continue;
         }
         AccountRepo.updateBalanceByAddress(sponsorAddress, -rewardAmount);
-        AccountRepo.updateBalanceByAddress(config.config.forging.totalSupplyAccount, rewardAmount);
+        AccountRepo.updateBalanceByAddress(config.CONSTANTS.AIRDROP.ADDRESS, rewardAmount);
     }
 }

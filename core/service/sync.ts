@@ -9,17 +9,16 @@ import SyncRepository from 'core/repository/sync';
 import SocketRepository from 'core/repository/socket';
 import { messageON } from 'shared/util/bus';
 import { TOTAL_PERCENTAGE } from 'core/util/const';
-import config from 'shared/util/config';
+import config from 'shared/config';
 import { logger } from 'shared/util/logger';
+import RoundService from 'core/service/round';
 
 //  TODO get from env
 const MIN_CONSENSUS = 51;
 
 export interface ISyncService {
 
-    requestPeers(): void;
-
-    sendPeers(peer: Peer): void;
+    sendPeers(peer: Peer, requestId?): void;
 
     connectNewPeers(peers: Array<Peer>): void;
 
@@ -38,28 +37,24 @@ export interface ISyncService {
 
 export class SyncService implements ISyncService {
 
-    requestPeers(): void {
-        SyncRepository.requestPeers();
-    }
-
-    sendPeers(peer): void {
-        SyncRepository.sendPeers(peer);
+    sendPeers(peer, requestId): void {
+        SyncRepository.sendPeers(peer, requestId);
     }
 
     connectNewPeers(peers: Array<Peer>): void {
-        peers.forEach(peer => SocketRepository.connectNewPeer(peer));
+        (peers || []).forEach(peer => SocketRepository.connectNewPeer(peer));
     }
 
     sendNewBlock(block: Block): void {
         block.relay += 1;
-        if (block.relay < config.constants.MAX_RELAY) {
+        if (block.relay < config.CONSTANTS.TRANSFER.MAX_RELAY) {
             SyncRepository.sendNewBlock(block);
         }
     }
 
     sendUnconfirmedTransaction(trs: Transaction<any>): void {
         trs.relay += 1;
-        if (trs.relay < config.constants.MAX_RELAY) {
+        if (trs.relay < config.CONSTANTS.TRANSFER.MAX_RELAY) {
             SyncRepository.sendUnconfirmedTransaction(trs);
         }
     }
@@ -67,7 +62,7 @@ export class SyncService implements ISyncService {
     async checkCommonBlock(): Promise<void> {
         const lastBlock = BlockRepository.getLastBlock();
         if (!lastBlock) {
-            logger.error('ERROR: last block is undefined');
+            logger.error('last block is undefined');
         }
         if (this.checkBlockConsensus(lastBlock) || lastBlock.height === 1) {
             this.requestBlocks(lastBlock);
@@ -77,6 +72,7 @@ export class SyncService implements ISyncService {
                 PeerRepository.getPeersByFilter(lastBlock.height, SystemRepository.broadhash)
             );
             if (!randomPeer) {
+                messageON('WARM_UP_FINISHED');
                 logger.error('[Service][Sync][checkCommonBlock]: Peer doesn`t found');
                 return;
             }
@@ -97,7 +93,7 @@ export class SyncService implements ISyncService {
     requestBlocks(lastBlock, peer = null): void {
         SyncRepository.requestBlocks({
             height: lastBlock.height + 1,
-            limit: config.constants.REQUEST_BLOCK_LIMIT
+            limit: config.CONSTANTS.TRANSFER.REQUEST_BLOCK_LIMIT
         }, peer);
     }
 

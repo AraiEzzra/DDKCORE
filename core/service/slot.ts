@@ -1,8 +1,7 @@
-import config from 'shared/util/config';
+import config from 'shared/config';
 import { SECOND } from 'core/util/const';
 
 type EpochTime = number;
-const { SLOT_INTERVAL} = config.constants;
 
 class SlotService {
     /**
@@ -10,7 +9,7 @@ class SlotService {
      * @returns {number} epochTime from constants.
      */
     private beginEpochTime(): Date {
-        return new Date(config.constants.epochTime);
+        return new Date(config.CONSTANTS.EPOCH_TIME);
     }
 
     /**
@@ -51,7 +50,7 @@ class SlotService {
      * @return {number} input time / slot interval.
      */
     public getSlotNumber(epochTime: EpochTime = this.getTime()): number {
-        return Math.floor(epochTime / SLOT_INTERVAL);
+        return Math.floor(epochTime / config.CONSTANTS.FORGING.SLOT_INTERVAL);
     }
 
     /**
@@ -60,7 +59,7 @@ class SlotService {
      * @return {number} input slot * slot interval.
      */
     public getSlotTime(slot: number): EpochTime {
-        return slot * SLOT_INTERVAL;
+        return slot * config.CONSTANTS.FORGING.SLOT_INTERVAL;
     }
 
     /**
@@ -80,7 +79,7 @@ class SlotService {
      * // todo mb drop it ?
      */
     public getLastSlot(nextSlot: number): number {
-        return nextSlot + config.constants.activeDelegates;
+        return nextSlot + config.CONSTANTS.ACTIVE_DELEGATES;
     }
 
     public roundTime(date: Date): number {
@@ -88,7 +87,7 @@ class SlotService {
     }
 
     public getTheFirsSlot() {
-        return Math.floor(this.getSlotNumber() / config.constants.activeDelegates) * config.constants.activeDelegates;
+        return Math.floor(this.getSlotNumber() / config.CONSTANTS.ACTIVE_DELEGATES) * config.CONSTANTS.ACTIVE_DELEGATES;
     }
 
     public getSlotRealTime(slot: number): number {

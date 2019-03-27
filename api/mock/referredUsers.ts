@@ -1,5 +1,5 @@
 import { AccountModel } from 'shared/model/account';
-import { generateAccount } from 'api/mock/account';
+import { getAddressByPublicKey } from 'shared/util/account';
 
 export const referredUsersPublicKeys = [
     'bfae604a708b7b8a036ac638c6896cd8afb620f5b0bf91dcc03d1eddf370f61b',
@@ -9,5 +9,7 @@ export const referredUsersPublicKeys = [
 ];
 
 export const generateReferredUsers = (): Array<AccountModel> => {
-    return referredUsersPublicKeys.map((publicKey: string) => generateAccount(publicKey));
+    return referredUsersPublicKeys.map((publicKey: string) => ({
+        publicKey, address: getAddressByPublicKey(publicKey)
+    }));
 };

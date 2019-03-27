@@ -1,4 +1,6 @@
 import io from 'socket.io-client';
+import { CONNECT_CHANNEL, DISCONNECT_CHANNEL } from 'shared/driver/socket/channels';
+import { logger } from 'shared/util/logger';
 
 export class SocketClient {
 
@@ -17,8 +19,17 @@ export class SocketClient {
     }
 
     connect() {
+        logger.info(`Socket connecting to: ${this.protocol}://${this.host}:${this.port}`);
         this.socket = io(`${this.protocol}://${this.host}:${this.port}`, this.config);
+
+        this.socket.on(CONNECT_CHANNEL, () => {
+            logger.info(`Socket connected to: ${this.protocol}://${this.host}:${this.port}`);
+        });
+
+        this.socket.on(DISCONNECT_CHANNEL, () => {
+            logger.info(`Socket disconnected from: ${this.protocol}://${this.host}:${this.port}`);
+        });
+
         return this.socket;
     }
 }
-

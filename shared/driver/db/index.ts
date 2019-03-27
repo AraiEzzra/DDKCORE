@@ -1,16 +1,16 @@
 import pgp, { IMain, IDatabase } from 'pg-promise';
-const DEFAULT_PG_PORT = 5432;
+import config from 'shared/config';
 
 const connectionOptions = {
-    host: process.env.DB_HOST || '0.0.0.0',
-    port: parseInt(process.env.DB_PORT, 10) || DEFAULT_PG_PORT,
-    database: process.env.DB_NAME || 'DDK_test',
-    user: process.env.DB_USER || '',
-    password: process.env.DB_PASSWORD || 'password',
-    poolSize: 95,
-    poolIdleTimeout: 30000,
-    reapIntervalMillis: 1000,
-    logEvents: ['error'],
+    host: config.DB.HOST,
+    port: config.DB.PORT,
+    database: config.DB.DATABASE,
+    user: config.DB.USER,
+    password: config.DB.PASSWORD,
+    poolSize: config.DB.POOL_SIZE,
+    poolIdleTimeout: config.DB.POOL_IDLE_TIMEOUT,
+    reapIntervalMillis: config.DB.REAP_INTERVAL_MILLIS,
+    logEvents: config.DB.LOG_EVENTS,
 };
 
 export const pgpE: IMain = pgp();

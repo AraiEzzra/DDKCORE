@@ -1,4 +1,4 @@
-import Loader from './loader';
+import Loader from 'core/loader';
 import { logger } from 'shared/util/logger';
 
 const preconfiguration: Array<Promise<any>> = [];

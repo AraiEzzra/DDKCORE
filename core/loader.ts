@@ -7,7 +7,7 @@ import AccountRepo from 'core/repository/account';
 import { IAsset, Transaction } from 'shared/model/transaction';
 import { messageON } from 'shared/util/bus';
 import { initControllers } from 'core/controller';
-import config from 'shared/util/config';
+import config from 'shared/config';
 
 import { Round } from 'shared/model/round';
 import RoundPGRepository from 'core/repository/round/pg';
@@ -22,8 +22,8 @@ import { logger } from 'shared/util/logger';
 import { Block } from 'shared/model/block';
 import { socketRPCServer } from 'core/api/server';
 import { getAddressByPublicKey } from 'shared/util/account';
-
-const START_SYNC_BLOCKS = 15000;
+import { getRandomInt } from 'shared/util/util';
+import { START_SYNC_BLOCKS, PEER_CONNECTION_TIME_REBOOT } from 'core/util/const';
 
 // @ts-ignore
 BigInt.prototype.toJSON = function () {
@@ -42,15 +42,19 @@ class Loader {
         initControllers();
         await this.blockWarmUp(this.limit);
         if (!BlockRepository.getGenesisBlock()) {
-            await BlockService.applyGenesisBlock(config.genesisBlock);
+            await BlockService.applyGenesisBlock(config.GENESIS_BLOCK);
         } else {
             await this.transactionWarmUp(this.limit);
             await this.roundWarmUp(this.limit);
         }
 
         socket.init();
+        setInterval(
+            () => messageON('EMIT_REBOOT_PEERS_CONNECTIONS'),
+            getRandomInt(PEER_CONNECTION_TIME_REBOOT.MIN, PEER_CONNECTION_TIME_REBOOT.MAX)
+        );
         setTimeout(
-            () => messageON('EMIT_SYNC_BLOCKS', {}),
+            () => messageON('EMIT_SYNC_BLOCKS'),
             START_SYNC_BLOCKS
         );
         socketRPCServer.run();
@@ -84,7 +88,7 @@ class Loader {
         return;
     }
 
-    private async roundWarmUp(limit) {
+    private async roundWarmUp(limit: number) {
         let offset: number = 0;
 
         do {

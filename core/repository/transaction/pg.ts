@@ -5,9 +5,9 @@ import {
     RawTransaction,
     TransactionsByBlockResponse
 } from 'shared/repository/transaction';
+import SharedTransactionPGRepo from 'shared/repository/transaction/pg';
 import queries from 'core/repository/queries/transaction';
 
-import TransactionRepo from 'core/repository/transaction/';
 export interface ITransactionPGRepository<T extends IAsset> extends ITransactionPGRepositoryShared<T> {
 
 }
@@ -27,35 +27,6 @@ class TransactionPGRepo implements ITransactionPGRepository<IAsset> {
     ];
     private readonly columnSet = new pgpE.helpers.ColumnSet(this.tableFields, {table: this.tableName});
 
-    serialize(trs: Transaction<IAsset>): object {
-        const serializedTrs = TransactionRepo.serialize(trs);
-        return {
-            id: serializedTrs.id,
-            block_id: serializedTrs.blockId,
-            type: serializedTrs.type,
-            created_at: serializedTrs.createdAt,
-            sender_public_key: serializedTrs.senderPublicKey,
-            signature: serializedTrs.signature,
-            second_signature: serializedTrs.secondSignature,
-            salt: serializedTrs.salt,
-            asset: serializedTrs.asset
-        };
-    }
-
-    deserialize(rawTrs: RawTransaction): Transaction<IAsset> {
-        return TransactionRepo.deserialize({
-            id: rawTrs.id,
-            blockId: rawTrs.block_id,
-            type: Number(rawTrs.type),
-            createdAt: Number(rawTrs.created_at),
-            senderPublicKey: rawTrs.sender_public_key,
-            signature: rawTrs.signature,
-            secondSignature: rawTrs.second_signature,
-            salt: rawTrs.salt,
-            asset: rawTrs.asset,
-        });
-    }
-
     async deleteById(trsId: string | Array<string>): Promise<Array<string>> {
         const response = await db.manyOrNone(queries.deleteByIds, [trsId]);
         return response.map(item => item.id);
@@ -69,7 +40,7 @@ class TransactionPGRepo implements ITransactionPGRepository<IAsset> {
             return result;
         }
         rawTransactions.forEach((rawTransaction: RawTransaction) =>  {
-            const transaction: Transaction<IAsset> = this.deserialize(rawTransaction);
+            const transaction: Transaction<IAsset> = SharedTransactionPGRepo.deserialize(rawTransaction);
             if (!result[transaction.blockId]) {
                 result[transaction.blockId] = [];
             }
@@ -83,7 +54,7 @@ class TransactionPGRepo implements ITransactionPGRepository<IAsset> {
         if (!rawTransaction) {
             return;
         }
-        return this.deserialize(rawTransaction);
+        return SharedTransactionPGRepo.deserialize(rawTransaction);
     }
 
     async getMany(limit: number, offset: number): Promise<Array<Transaction<IAsset>>> {
@@ -94,7 +65,7 @@ class TransactionPGRepo implements ITransactionPGRepository<IAsset> {
             return result;
         }
         rawTransactions.forEach((rawTransaction: RawTransaction) => {
-            result.push(this.deserialize(rawTransaction));
+            result.push(SharedTransactionPGRepo.deserialize(rawTransaction));
         });
         return result;
     }
@@ -108,7 +79,7 @@ class TransactionPGRepo implements ITransactionPGRepository<IAsset> {
         const transactions: Array<Transaction<IAsset>> = [].concat(trs);
         const values: Array<object> = [];
         transactions.forEach((transaction) => {
-            values.push(this.serialize(transaction));
+            values.push(SharedTransactionPGRepo.serialize(transaction));
         });
         const query = pgpE.helpers.insert(values, this.columnSet) +
             ' ON CONFLICT(id) DO UPDATE SET ' +

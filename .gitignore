@@ -20,3 +20,4 @@ dapps/
 .nyc_output
 .npm/
 .node-gyp/
+/client.js

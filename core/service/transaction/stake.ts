@@ -1,4 +1,4 @@
-import {IAssetService} from 'core/service/transaction';
+import { IAssetService } from 'core/service/transaction';
 import {
     IAssetStake,
     Transaction,
@@ -6,13 +6,13 @@ import {
     IAirdropAsset, TransactionModel,
 } from 'shared/model/transaction';
 import { ResponseEntity } from 'shared/model/response';
-import {Account, Stake} from 'shared/model/account';
+import { Account, Stake } from 'shared/model/account';
 import AccountRepo from 'core/repository/account';
-import { TOTAL_PERCENTAGE, SECONDS_PER_MINUTE } from 'core/util/const';
-import config from 'shared/util/config';
+import { TOTAL_PERCENTAGE } from 'core/util/const';
+import config from 'shared/config';
 import BUFFER from 'core/util/buffer';
 
-import {getAirdropReward, sendAirdropReward, undoAirdropReward, verifyAirdrop} from 'core/util/reward';
+import { getAirdropReward, sendAirdropReward, undoAirdropReward, verifyAirdrop } from 'core/util/reward';
 
 class TransactionStakeService implements IAssetService<IAssetStake> {
 
@@ -39,8 +39,6 @@ class TransactionStakeService implements IAssetService<IAssetStake> {
             BUFFER.LENGTH.BYTE     // asset.startVoteCount
         );
         offset = BUFFER.writeUInt64LE(buff, trs.asset.amount || 0, offset);
-
-        offset += BUFFER.LENGTH.UINT32;
         buff.writeInt32LE(trs.asset.startTime, offset);
         offset += BUFFER.LENGTH.UINT32;
         buff.writeInt8(trs.asset.startVoteCount, offset);
@@ -62,14 +60,14 @@ class TransactionStakeService implements IAssetService<IAssetStake> {
 
     validate(trs: Transaction<IAssetStake>): ResponseEntity<void> {
         const errors = [];
-        if (trs.asset.amount <= 0) {
+
+        if (!trs.asset.amount || trs.asset.amount < 0) {
             errors.push('Invalid transaction amount');
         }
 
         if ((trs.asset.amount % 1) !== 0) {
             errors.push('Invalid stake amount: Decimal value');
         }
-
         return new ResponseEntity<void>({ errors });
     }
 
@@ -83,7 +81,7 @@ class TransactionStakeService implements IAssetService<IAssetStake> {
     }
 
     calculateFee(trs: Transaction<IAssetStake>, sender: Account): number {
-        return (trs.asset.amount * config.constants.fees.froze) / TOTAL_PERCENTAGE;
+        return (trs.asset.amount * config.CONSTANTS.FEES.FROZE) / TOTAL_PERCENTAGE;
     }
 
     applyUnconfirmed(trs: Transaction<IAssetStake>, sender: Account): void {
@@ -92,18 +90,18 @@ class TransactionStakeService implements IAssetService<IAssetStake> {
             createdAt: trs.createdAt,
             isActive: true,
             amount: trs.asset.amount,
-            voteCount: 0,
-            nextVoteMilestone: trs.createdAt + config.constants.froze.vTime * SECONDS_PER_MINUTE,
+            voteCount: trs.asset.startVoteCount,
+            nextVoteMilestone: trs.createdAt + config.CONSTANTS.FROZE.VOTE_MILESTONE,
             airdropReward: trs.asset.airdropReward.sponsors,
             sourceTransactionId: trs.id
         }));
         sendAirdropReward(trs);
     }
 
-    undoUnconfirmed(trs: Transaction<IAssetStake>, sender: Account, senderOnly): void {
+    undoUnconfirmed(trs: Transaction<IAssetStake>, sender: Account, senderOnly: boolean): void {
         sender.actualBalance += trs.asset.amount;
-        for (let i = sender.stakes.length; i > -1; i--) {
-            if ( sender.stakes[i].sourceTransactionId === trs.id) {
+        for (let i = sender.stakes.length - 1; i > -1; i--) {
+            if (sender.stakes[i].sourceTransactionId === trs.id) {
                 sender.stakes.splice(i, 1);
             }
         }

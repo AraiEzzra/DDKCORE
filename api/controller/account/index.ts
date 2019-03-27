@@ -1,35 +1,25 @@
-import AccountService from 'api/service/account';
 import { RPC } from 'api/utils/decorators';
-import { Message } from 'shared/model/message';
+import { Message2 } from 'shared/model/message';
 import SocketMiddleware from 'api/middleware/socket';
-import { GET_ACCOUNT_BY_ADDRESS, GET_ACCOUNT_BY_PUBLIC_KEY } from 'shared/driver/socket/codes';
+import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
 
 export class AccountController {
 
     constructor() {
-        this.getAccountByAddress = this.getAccountByAddress.bind(this);
-        this.getAccountByPublicKey = this.getAccountByPublicKey.bind(this);
+        this.getAccount = this.getAccount.bind(this);
+        this.getAccountBalance = this.getAccountBalance.bind(this);
     }
 
-    @RPC(GET_ACCOUNT_BY_ADDRESS)
-    getAccountByAddress(message: Message, socket: any) {
-        const { body, headers, code } = message;
-        const accountsResponse = AccountService.getAccountByAddress(body.address);
-
-        accountsResponse.success
-            ? SocketMiddleware.emitToClient(headers.id, code, accountsResponse, socket)
-            : SocketMiddleware.emitToCore(message, socket);
+    @RPC(API_ACTION_TYPES.GET_ACCOUNT)
+    getAccount(message: Message2<{ address: string }>, socket: any) {
+        SocketMiddleware.emitToCore<{ address: string }>(message, socket);
     }
 
-    @RPC(GET_ACCOUNT_BY_PUBLIC_KEY)
-    getAccountByPublicKey(message: Message, socket: any) {
-        const { body, headers, code } = message;
-        const accountsResponse = AccountService.getAccountByPublicKey(body.publicKey);
-
-        accountsResponse.success
-            ? SocketMiddleware.emitToClient(headers.id, code, accountsResponse, socket)
-            : SocketMiddleware.emitToCore(message, socket);
+    @RPC(API_ACTION_TYPES.GET_ACCOUNT_BALANCE)
+    getAccountBalance(message: Message2<{ address: string }>, socket: any) {
+        SocketMiddleware.emitToCore<{ address: string }>(message, socket);
     }
+
 }
 
 export default new AccountController();
