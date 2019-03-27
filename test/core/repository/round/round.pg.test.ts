@@ -80,7 +80,6 @@ describe('Round repository', () => {
 
             it('should return empty array', async () => {
                 const response = await RoundPGRepo.getMany(10, 0);
-                console.log('empty', response);
                 expect(response).to.be.lengthOf(0);
             });
 

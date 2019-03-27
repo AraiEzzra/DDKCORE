@@ -12,10 +12,8 @@ describe('Round memory repository', () => {
         let round = getNewRoundWithHash().round;
 
         it('should return current round', () => {
-            let response = RoundRepo.getCurrentRound();
-            expect(response).to.be.undefined;
             RoundRepo.setCurrentRound(round);
-            response = RoundRepo.getCurrentRound();
+            const response = RoundRepo.getCurrentRound();
             expect(response).to.be.instanceOf(Round);
             expect(response.startHeight).to.be.equal(round.startHeight);
         });
