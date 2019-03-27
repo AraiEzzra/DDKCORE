@@ -1,65 +1,39 @@
-import db from 'shared/driver/db/index';
 import { Transaction } from 'shared/model/transaction';
 import TransactionPGRepo from 'core/repository/transaction/pg';
+import BlockPGRepo from 'core/repository/block/pg';
 import { expect } from 'chai';
 import {
-    getNewTransactionWithBlockId, getNewTransactionWithRandomBlockId,
-    blockId2, blockId4, blockId6, createTrsTable, dropTrsTable
+    getNewTransactionWithBlockId, getNewTransactionWithRandomBlockId, setBlocksIds
 } from 'test/core/repository/transaction/mock';
+import { getNewBlock } from 'test/core/repository/block/mock';
+import config from 'shared/config';
 
 // @ts-ignore
 BigInt.prototype.toJSON = function () {
     return this.toString();
 };
 
-const insertTransaction = async (transaction, ) => {
-    await db.query(`INSERT INTO trs(id, block_id, type, created_at, sender_public_key, signature, salt, asset)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8);`, [
-        transaction.id,
-        transaction.blockId,
-        transaction.type,
-        Date.now() / 1000,
-        transaction.senderPublicKey,
-        transaction.signature,
-        transaction.salt,
-        transaction.asset
-    ]);
-};
+const genesisBlockTrsCount = config.GENESIS_BLOCK.transactionCount;
 
 describe('Transaction repository', () => {
 
+    const blocks = [];
+
+    before(async () => {
+        for (let i = 0; i < 3; i++) {
+            blocks.push(getNewBlock());
+        }
+        await BlockPGRepo.saveOrUpdate(blocks);
+        setBlocksIds(blocks.map(block => block.id));
+    });
+
     describe('deleteById', () => {
-        context('without existing table', () => {
-            it('should return response with error', async () => {
-                try {
-                    await TransactionPGRepo.deleteById('');
-                } catch (err) {
-                    expect(err).to.exist;
-                }
-            });
-        });
-
-        context('if table is present but empty', () => {
-            before(async () => {
-                await createTrsTable();
-            });
-
-            it('should return response with empty array', async () => {
-                const response = await TransactionPGRepo.deleteById('');
-                expect(response).to.be.lengthOf(0);
-            });
-
-            after(async () => {
-                await dropTrsTable();
-            });
-        });
 
         context('if deleting transaction exists', () => {
             let newTransaction;
             before(async () => {
-                await createTrsTable();
                 newTransaction = getNewTransactionWithRandomBlockId();
-                await insertTransaction(newTransaction);
+                await TransactionPGRepo.saveOrUpdate(newTransaction);
             });
 
             it('should return response with transaction id', async () => {
@@ -69,20 +43,19 @@ describe('Transaction repository', () => {
             });
 
             after(async () => {
-                await dropTrsTable();
+                await TransactionPGRepo.deleteById(newTransaction.id);
             });
         });
 
         context('if deleting transaction exist', () => {
             let firstTransaction, secondTransaction, thirdTransaction;
             before(async () => {
-                await createTrsTable();
                 firstTransaction = getNewTransactionWithRandomBlockId();
-                await insertTransaction(firstTransaction);
+                await TransactionPGRepo.saveOrUpdate(firstTransaction);
                 secondTransaction = getNewTransactionWithRandomBlockId();
-                await insertTransaction(secondTransaction);
+                await TransactionPGRepo.saveOrUpdate(secondTransaction);
                 thirdTransaction = getNewTransactionWithRandomBlockId();
-                await insertTransaction(thirdTransaction);
+                await TransactionPGRepo.saveOrUpdate(thirdTransaction);
             });
 
             it('should return response with transaction id', async () => {
@@ -91,48 +64,25 @@ describe('Transaction repository', () => {
                 expect(response[0]).to.be.eq(firstTransaction.id);
                 expect(response[1]).to.be.eq(thirdTransaction.id);
                 const existingTransactions = await TransactionPGRepo.getMany(100, 0);
-                expect(existingTransactions).to.be.lengthOf(1);
-                expect(existingTransactions[0].id).to.be.equal(secondTransaction.id);
+                expect(existingTransactions).to.be.lengthOf(1 + genesisBlockTrsCount);
+                expect(existingTransactions[existingTransactions.length - 1].id).to.be.equal(secondTransaction.id);
             });
 
             after(async () => {
-                await dropTrsTable();
+                await await TransactionPGRepo.deleteById(firstTransaction.id);
+                await await TransactionPGRepo.deleteById(secondTransaction.id);
+                await await TransactionPGRepo.deleteById(thirdTransaction.id);
             });
         });
     });
 
     describe('getById', () => {
-        context('without existing table', () => {
-            it('should return response with error', async () => {
-                try {
-                    await TransactionPGRepo.getById('');
-                } catch (err) {
-                    expect(err).to.exist;
-                }
-            });
-        });
-
-        context('if table is present but empty', () => {
-            before(async () => {
-                await createTrsTable();
-            });
-
-            it('should return undefined', async () => {
-                const response = await TransactionPGRepo.getById('');
-                expect(response).to.be.undefined;
-            });
-
-            after(async () => {
-                await dropTrsTable();
-            });
-        });
 
         context('if requested transaction exists', () => {
             let firstTransaction;
             before(async () => {
-                await createTrsTable();
                 firstTransaction = getNewTransactionWithRandomBlockId();
-                await insertTransaction(firstTransaction);
+                await TransactionPGRepo.saveOrUpdate(firstTransaction);
             });
 
             it('should return response with Transaction', async () => {
@@ -142,55 +92,34 @@ describe('Transaction repository', () => {
             });
 
             after(async () => {
-                await dropTrsTable();
+                await await TransactionPGRepo.deleteById(firstTransaction.id);
             });
         });
     });
 
     describe('getByBlockIds', () => {
-        context('without existing table', () => {
-            it('should return response with error', async () => {
-                try {
-                    await TransactionPGRepo.getByBlockIds([]);
-                } catch (err) {
-                    expect(err).to.exist;
-                }
-            });
-        });
-
-        context('if table is present but empty', () => {
-            before(async () => {
-                await createTrsTable();
-            });
-
-            it('should return empty object', async () => {
-                const response = await TransactionPGRepo.getByBlockIds(['123', '123']);
-                expect(response).to.be.empty;
-            });
-
-            after(async () => {
-                await dropTrsTable();
-            });
-        });
 
         context('if at least one transaction exists', () => {
             const transactionsCount2 = 20;
             const transactionsCount4 = 20;
             const transactionsCount6 = 20;
+            const transactions = [];
 
             before(async () => {
-                await createTrsTable();
                 for (let i = 0; i < transactionsCount2; i++) {
-                    const newTransaction = getNewTransactionWithBlockId(blockId2);
-                    await insertTransaction(newTransaction);
+                    const newTransaction = getNewTransactionWithBlockId(blocks[0].id);
+                    transactions.push(newTransaction);
+                    await TransactionPGRepo.saveOrUpdate(newTransaction);
                 }
                 for (let i = 0; i < transactionsCount4; i++) {
-                    const newTransaction = getNewTransactionWithBlockId(blockId4);
-                    await insertTransaction(newTransaction);
+                    const newTransaction = getNewTransactionWithBlockId(blocks[1].id);
+                    transactions.push(newTransaction);
+                    await TransactionPGRepo.saveOrUpdate(newTransaction);
                 }
                 for (let i = 0; i < transactionsCount6; i++) {
-                    const newTransaction = getNewTransactionWithBlockId(blockId6);
-                    await insertTransaction(newTransaction);
+                    const newTransaction = getNewTransactionWithBlockId(blocks[2].id);
+                    transactions.push(newTransaction);
+                    await TransactionPGRepo.saveOrUpdate(newTransaction);
                 }
             });
 
@@ -200,54 +129,31 @@ describe('Transaction repository', () => {
             });
 
             it('should return response with transactions mapped to their own blockIds', async () => {
-                let block2Trs = (await TransactionPGRepo.getByBlockIds([blockId2]))[blockId2];
-                let block4Trs = (await TransactionPGRepo.getByBlockIds([blockId4]))[blockId4];
-                let block6Trs = (await TransactionPGRepo.getByBlockIds([blockId6]))[blockId6];
+                let block2Trs = (await TransactionPGRepo.getByBlockIds([blocks[0].id]))[blocks[0].id];
+                let block4Trs = (await TransactionPGRepo.getByBlockIds([blocks[1].id]))[blocks[1].id];
+                let block6Trs = (await TransactionPGRepo.getByBlockIds([blocks[2].id]))[blocks[2].id];
                 expect(block2Trs.length).to.be.equal(transactionsCount2);
                 expect(block4Trs.length).to.be.equal(transactionsCount4);
                 expect(block6Trs.length).to.be.equal(transactionsCount6);
             });
 
             after(async () => {
-                await dropTrsTable();
+                for (let i = 0; i < transactions.length; i++) {
+                    await await TransactionPGRepo.deleteById(transactions[i].id);
+                }
             });
         });
     });
 
     describe('getMany', () => {
-        context('without existing table', () => {
-            it('should return response with error', async () => {
-                try {
-                    await TransactionPGRepo.getMany(100, 0);
-                } catch (err) {
-                    expect(err).to.exist;
-                }
-            });
-        });
-
-        context('if table is present but empty', () => {
-            before(async () => {
-                await createTrsTable();
-            });
-
-            it('should return empty array', async () => {
-                const response = await TransactionPGRepo.getMany(100, 0);
-                expect(response).to.be.empty;
-            });
-
-            after(async () => {
-                await dropTrsTable();
-            });
-        });
 
         context('if at least one transaction exists', () => {
             let transactions = [];
             const count = 99;
             before(async () => {
-                await createTrsTable();
                 for (let i = 0; i < count; i++) {
                     const transaction = getNewTransactionWithRandomBlockId();
-                    await insertTransaction(transaction);
+                    await TransactionPGRepo.saveOrUpdate(transaction);
                     transactions.push(transaction);
                 }
             });
@@ -255,54 +161,30 @@ describe('Transaction repository', () => {
             it('should return response with array of transactions', async () => {
                 let response = await TransactionPGRepo.getMany(1000, 0);
                 expect(response).to.be.an('array');
-                expect(response).to.be.lengthOf(99);
+                expect(response).to.be.lengthOf(99 + genesisBlockTrsCount);
                 response = await TransactionPGRepo.getMany(1000, 38);
                 expect(response).to.be.an('array');
-                expect(response).to.be.lengthOf(61);
-                expect(response[0].id).to.be.equal(transactions[38].id);
+                expect(response).to.be.lengthOf(61 + genesisBlockTrsCount);
                 response = await TransactionPGRepo.getMany(26, 8);
                 expect(response).to.be.an('array');
                 expect(response).to.be.lengthOf(26);
             });
 
             after(async () => {
-                await dropTrsTable();
+                for (let i = 0; i < transactions.length; i++) {
+                    await await TransactionPGRepo.deleteById(transactions[i].id);
+                }
             });
         });
     });
 
     describe('isExist', () => {
-        context('without existing table', () => {
-            it('should return response with error', async () => {
-                try {
-                    await TransactionPGRepo.isExist('');
-                } catch (err) {
-                    expect(err).to.exist;
-                }
-            });
-        });
-
-        context('if table is present but empty', () => {
-            before(async () => {
-                await createTrsTable();
-            });
-
-            it('should return null', async () => {
-                const response = await TransactionPGRepo.isExist('');
-                expect(response).to.be.false;
-            });
-
-            after(async () => {
-                await dropTrsTable();
-            });
-        });
 
         context('if transaction exists', () => {
             let transaction;
             before(async () => {
-                await createTrsTable();
                 transaction = getNewTransactionWithRandomBlockId();
-                await insertTransaction(transaction);
+                await TransactionPGRepo.saveOrUpdate(transaction);
             });
 
             it('should return response with boolean value', async () => {
@@ -313,27 +195,17 @@ describe('Transaction repository', () => {
             });
 
             after(async () => {
-                await dropTrsTable();
+                await await TransactionPGRepo.deleteById(transaction.id);
             });
         });
     });
 
     describe('saveOrUpdate', () => {
-        context('without existing table', () => {
-            it('should return response with error', async () => {
-                try {
-                    await TransactionPGRepo.saveOrUpdate(getNewTransactionWithRandomBlockId());
-                } catch (err) {
-                    expect(err).to.exist;
-                }
-            });
-        });
 
         context('if table is present', () => {
             let transactions = [];
             const count = 99;
             before(async () => {
-                await createTrsTable();
                 for (let i = 0; i < count; i++) {
                     transactions.push(getNewTransactionWithRandomBlockId());
                 }
@@ -342,17 +214,23 @@ describe('Transaction repository', () => {
             it('should save block', async () => {
                 await TransactionPGRepo.saveOrUpdate(transactions[0]);
                 let response = await TransactionPGRepo.getMany(1000, 0);
-                expect(response).to.be.lengthOf(1);
-                expect(response[0].id).to.be.equal(transactions[0].id);
+                expect(response).to.be.lengthOf(1 + genesisBlockTrsCount);
                 await TransactionPGRepo.saveOrUpdate(transactions);
                 response = await TransactionPGRepo.getMany(1000, 0);
-                expect(response).to.be.lengthOf(99);
-                expect(response[98].id).to.be.equal(transactions[98].id);
+                expect(response).to.be.lengthOf(99 + genesisBlockTrsCount);
             });
 
             after(async () => {
-                await dropTrsTable();
+                for (let i = 0; i < transactions.length; i++) {
+                    await await TransactionPGRepo.deleteById(transactions[i].id);
+                }
             });
         });
+    });
+
+    after(async () => {
+        for (let i = 0; i < blocks.length; i++) {
+            await BlockPGRepo.deleteById(blocks[i].id);
+        }
     });
 });

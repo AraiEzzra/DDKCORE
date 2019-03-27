@@ -19,6 +19,12 @@ export const getNewTransaction = () => {
     });
 };
 
+export let blocksIds = [];
+
+export const setBlocksIds = (ids) => {
+    blocksIds = ids;
+};
+
 export const blockId2 = crypto.createHash('sha256').update(Buffer.from('2')).digest('hex');
 export const blockId4 = crypto.createHash('sha256').update(Buffer.from('4')).digest('hex');
 export const blockId6 = crypto.createHash('sha256').update(Buffer.from('6')).digest('hex');
@@ -29,28 +35,14 @@ export const getNewTransactionWithBlockId = (blockId) => {
     return trs;
 };
 
-export const getNewTransactionWithRandomBlockId = () => {
+export const getNewTransactionWithRandomBlockIdFromList = () => {
     const trs = getNewTransaction();
     trs.blockId = [blockId2, blockId4, blockId6][Math.floor(Math.random() * Math.floor(3))];
     return trs;
 };
 
-export const createTrsTable = async () => {
-    await db.query(`
-        CREATE TABLE IF NOT EXISTS "trs" (
-            "id"                CHAR(64)  NOT NULL PRIMARY KEY,
-            "block_id"          CHAR(64)  NOT NULL,
-            "type"              SMALLINT  NOT NULL,
-            "created_at"        INTEGER   NOT NULL,
-            "sender_public_key" CHAR(64)  NOT NULL,
-            "signature"         CHAR(128) NOT NULL,
-            "second_signature"  CHAR(128),
-            "salt"              CHAR(32)  NOT NULL DEFAULT '' :: BPCHAR,
-            "asset"             JSON      NOT NULL DEFAULT '{}' :: JSON
-        );
-    `);
-};
-
-export const dropTrsTable = async () => {
-    await db.query('DROP TABLE trs;');
+export const getNewTransactionWithRandomBlockId = () => {
+    const trs = getNewTransaction();
+    trs.blockId = blocksIds[Math.floor(Math.random() * Math.floor(3))];
+    return trs;
 };

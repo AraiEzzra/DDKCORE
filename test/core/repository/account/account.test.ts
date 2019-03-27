@@ -5,7 +5,13 @@ import {
     getNewAccount
 } from 'test/core/repository/account/mock';
 
+let accountCountBefore;
+
 describe('Account repository', () => {
+
+    before(() => {
+        accountCountBefore = AccountRepo.getAll().length;
+    });
 
     describe('function \'add\'', () => {
 
@@ -14,12 +20,13 @@ describe('Account repository', () => {
             const firstAccount = getNewAccount();
 
             it('should add account to repo and return added account', () => {
+                console.log(AccountRepo.getAll());
                 const response = AccountRepo.add(firstAccount);
                 expect(response).to.be.an.instanceOf(Account);
                 expect(response.address).to.be.equal(firstAccount.address);
-                const blocks = AccountRepo.getAll();
-                expect(blocks).to.be.lengthOf(1);
-                expect(blocks[0].address).to.be.equal(firstAccount.address);
+                const accounts = AccountRepo.getAll();
+                expect(accounts).to.be.lengthOf(1 + accountCountBefore);
+                expect(accounts[0 + accountCountBefore].address).to.be.equal(firstAccount.address);
             });
 
             after(() => {
@@ -36,9 +43,9 @@ describe('Account repository', () => {
                 AccountRepo.add(firstAccount);
                 AccountRepo.add(secondAccount);
                 const Accounts = AccountRepo.getAll();
-                expect(Accounts).to.be.lengthOf(2);
-                expect(Accounts[0].address).to.be.equal(firstAccount.address);
-                expect(Accounts[1].address).to.be.equal(secondAccount.address);
+                expect(Accounts).to.be.lengthOf(2 + accountCountBefore);
+                expect(Accounts[0 + accountCountBefore].address).to.be.equal(firstAccount.address);
+                expect(Accounts[1 + accountCountBefore].address).to.be.equal(secondAccount.address);
             });
 
             after(() => {
@@ -62,11 +69,11 @@ describe('Account repository', () => {
             it('should delete account from repo', () => {
                 AccountRepo.delete(account1);
                 let accounts = AccountRepo.getAll();
-                expect(accounts).to.be.lengthOf(1);
-                expect(accounts[0]).to.be.eql(account2);
+                expect(accounts).to.be.lengthOf(1 + accountCountBefore);
+                expect(accounts[0 + accountCountBefore]).to.be.eql(account2);
                 AccountRepo.delete(account2);
                 accounts = AccountRepo.getAll();
-                expect(accounts).to.be.empty;
+                expect(accounts).to.be.lengthOf(0 + accountCountBefore);
             });
         });
     });
@@ -109,7 +116,7 @@ describe('Account repository', () => {
         context('when getting pack of accounts', () => {
             it('should return empty array if repo empty', () => {
                 const response = AccountRepo.getAll();
-                expect(response).to.be.lengthOf(0);
+                expect(response).to.be.lengthOf(0 + accountCountBefore);
             });
         });
 
@@ -129,8 +136,8 @@ describe('Account repository', () => {
             it('should return all accounts from repo', () => {
                 let response = AccountRepo.getAll();
                 expect(response).to.be.an('array');
-                expect(response).to.be.lengthOf(100);
-                expect(response[0]).to.be.eql(accounts[0]);
+                expect(response).to.be.lengthOf(100 + accountCountBefore);
+                expect(response[0 + accountCountBefore]).to.be.eql(accounts[0]);
                 expect(response[response.length - 1]).to.be.eql(accounts[accountsCount - 1]);
             });
 

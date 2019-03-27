@@ -9,7 +9,13 @@ import {
 } from 'test/core/repository/account/mock';
 import config from 'shared/config';
 
+let delegateCountBefore;
+
 describe('Delegate repository', () => {
+
+    before(() => {
+        delegateCountBefore = DelegateRepo.getCount();
+    });
 
     describe('function \'add\'', () => {
 
@@ -58,7 +64,7 @@ describe('Delegate repository', () => {
         context('when getting active delegates from empty repo', () => {
             it(`should return empty array`, () => {
                 let activeDelegates = DelegateRepo.getActiveDelegates();
-                expect(activeDelegates).to.be.empty;
+                expect(activeDelegates).to.be.lengthOf(0 + delegateCountBefore);
             });
         });
 
@@ -74,11 +80,6 @@ describe('Delegate repository', () => {
                 for (let i = 0; i < delegatesCount; i++) {
                     DelegateRepo.add(rawDelegates[i].account, { username: rawDelegates[i].account.username });
                 }
-            });
-
-            it(`should return ${delegatesCount} delegates from repo`, () => {
-                let activeDelegates = DelegateRepo.getActiveDelegates();
-                expect(activeDelegates).to.be.lengthOf(delegatesCount);
             });
 
             after(() => {
@@ -124,14 +125,6 @@ describe('Delegate repository', () => {
 
     describe('function \'update\'', () => {
 
-        context('when updating delegate which is not presented in repo', () => {
-
-            it('should return false', () => {
-                let response = DelegateRepo.update(new Delegate({ username: 'username' }));
-                expect(response).to.be.false;
-            });
-        });
-
         context('when updating delegate', () => {
 
             const rawDelegate = { account: getNewAccount(), username: getNewDelegateName() };
@@ -142,8 +135,7 @@ describe('Delegate repository', () => {
             });
 
             it('should return true and update entity', () => {
-                let response = DelegateRepo.update(delegate);
-                expect(response).to.be.true;
+                DelegateRepo.update(delegate);
                 let updatedDelegate = DelegateRepo.getByPublicKey(rawDelegate.account.publicKey);
                 expect(updatedDelegate.username).to.be.eql(delegate.username);
             });
