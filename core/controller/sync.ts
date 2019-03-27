@@ -95,7 +95,12 @@ export class SyncController extends BaseController {
         const { data } = action;
         for (let block of data.blocks) {
             block.transactions.forEach(trs => SharedTransactionRepo.deserialize(trs));
-            await BlockController.onReceiveBlock({ data: { block } });
+            const receive = await BlockController.onReceiveBlock({ data: { block } });
+            // TODO to fix slots with rounds and then remove checking
+            if (!receive.success) {
+                logger.error(`[Controller][Sync][loadBlocks] error load blocks!`);
+                return;
+            }
         }
         if (!SyncService.consensus) {
             await SyncService.checkCommonBlock();
