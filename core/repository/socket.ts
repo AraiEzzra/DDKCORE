@@ -6,8 +6,8 @@ import SystemRepository from 'core/repository/system';
 import { Peer } from 'shared/model/peer';
 import { messageON } from 'shared/util/bus';
 import { logger } from 'shared/util/logger';
-import PeerRepository, { BLACK_LIST, TRUSTED_PEERS } from 'core/repository/peer';
-import config from 'shared/util/config';
+import PeerRepository from 'core/repository/peer';
+import config from 'shared/config';
 import { SocketResponse, SocketResponseRPC } from 'shared/model/socket';
 import {
     START_PEER_REQUEST,
@@ -16,7 +16,7 @@ import {
     MAX_PEERS_CONNECTED
 } from 'core/util/const';
 
-const ioServer = socketIO(config.constants.serverPort, {
+const ioServer = socketIO(config.CORE.SOCKET.PORT, {
     serveClient: false,
     pingTimeout: 30000,
     pingInterval: 30000,
@@ -31,12 +31,12 @@ export class Socket {
             return Socket.instance;
         }
         Socket.instance = this;
-        logger.debug('SOCKET CONSTRUCTOR', JSON.stringify(TRUSTED_PEERS));
+        logger.debug('SOCKET CONSTRUCTOR', JSON.stringify(config.CORE.PEERS.TRUSTED));
     }
 
     init(): void {
-        logger.debug(`SOCKET_START ${config.constants.serverHost}:${config.constants.serverPort}`);
-        TRUSTED_PEERS.forEach((peer: any) => {
+        logger.debug(`WebSocket listening on port ${config.CORE.SOCKET.PORT}`);
+        config.CORE.PEERS.TRUSTED.forEach((peer) => {
             this.connectNewPeer(peer);
         });
         ioServer.on('connect', function (socket) {
@@ -47,7 +47,7 @@ export class Socket {
             }
             socket.emit('OPEN');
             socket.on('HEADERS', (data: string) => {
-                logger.debug(`[SOCKET][CLIENT_PEER_HEADERS_RECEIVE], data: ${data}`);
+                // logger.debug(`[SOCKET][CLIENT_PEER_HEADERS_RECEIVE], data: ${data}`);
                 const peer = JSON.parse(data);
                 if (Socket.instance.addPeer(peer, socket)) {
                     socket.emit('SERVER_HEADERS', JSON.stringify(
@@ -64,7 +64,7 @@ export class Socket {
 
     @autobind
     connectNewPeer(peer: { ip: string, port: number }): void {
-        if (BLACK_LIST.has(`${peer.ip}`) ||
+        if (config.CORE.PEERS.BLACKLIST.includes(peer.ip) ||
             PeerRepository.has(peer) ||
             PeerRepository.peerList().length > MAX_PEERS_CONNECT_TO
         ) {
@@ -77,7 +77,7 @@ export class Socket {
                 SystemRepository.getFullHeaders()
             ));
             ws.on('SERVER_HEADERS', (headers: string) => {
-                logger.debug(`[SOCKET][SERVER_PEER_HEADERS_RECEIVE] data: ${headers}`);
+                // logger.debug(`[SOCKET][SERVER_PEER_HEADERS_RECEIVE] data: ${headers}`);
                 const fullPeer = Object.assign(JSON.parse(headers), peer);
                 Socket.instance.addPeer(fullPeer, ws);
             });

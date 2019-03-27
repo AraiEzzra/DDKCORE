@@ -96,7 +96,6 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
     }
 
     push(trs: Transaction<T>, sender: Account, broadcast: boolean = false): void {
-
         this.pool[trs.id] = trs;
         trs.status = TransactionStatus.PUT_IN_POOL;
 

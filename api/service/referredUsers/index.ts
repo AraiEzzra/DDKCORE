@@ -1,7 +1,6 @@
 import { Filter } from 'shared/model/types';
-import { Reward } from 'shared/model/reward';
 import { ResponseEntity } from 'shared/model/response';
-import { Account, AccountModel, Address } from 'shared/model/account';
+import { AccountModel, Address } from 'shared/model/account';
 import { generateReferredUsers } from 'api/mock/referredUsers';
 
 interface ReferredUsersService {

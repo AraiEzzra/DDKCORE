@@ -1,7 +1,7 @@
 import db from 'shared/driver/db/index';
 import { Block } from 'shared/model/block';
 import BlockPGRepo from 'core/repository/block/pg';
-import config from 'shared/util/config';
+import config from 'shared/config';
 import { expect } from 'chai';
 import {
     getNewBlock, createBlockTable, createTrsTable, dropBlockTable, dropTrsTable,
@@ -265,7 +265,7 @@ describe('Block repository', () => {
 
         context('if at least one block exists', () => {
             let blocks = [];
-            const n = config.constants.blockSlotWindow;
+            const n = config.CONSTANTS.BLOCK_SLOT_WINDOW;
             const ids = [];
             before(async () => {
                 await prepareTables();

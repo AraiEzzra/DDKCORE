@@ -1,13 +1,15 @@
 import TransactionRepo from 'core/repository/transaction/pg';
 import { Block } from 'shared/model/block';
 import db, { pgpE } from 'shared/driver/db/index';
-import config from 'shared/util/config';
+import config from 'shared/config';
 import queries from 'core/repository/queries/block';
 
 import {
     BlockId, RawBlock,
     IBlockPGRepository as IBlockRepositoryPGShared
 } from 'shared/repository/block';
+
+import SharedBlockPgRepository from 'shared/repository/block/pg';
 import { TransactionsByBlockResponse } from 'shared/repository/transaction';
 
 export interface IBlockPGRepository extends IBlockRepositoryPGShared {
@@ -30,39 +32,6 @@ class BlockPGRepo implements IBlockPGRepository {
         'signature'
     ];
     private readonly columnSet = new pgpE.helpers.ColumnSet(this.tableFields, { table: this.tableName });
-
-    serialize(block: Block): RawBlock {
-        return {
-            id: block.id,
-            version: block.version,
-            created_at: block.createdAt,
-            height: block.height,
-            previous_block_id: block.previousBlockId,
-            transaction_count: block.transactionCount,
-            amount: block.amount,
-            fee: block.fee,
-            payload_hash: block.payloadHash,
-            generator_public_key: block.generatorPublicKey,
-            signature: block.signature
-        };
-    }
-
-    deserialize(rawBlock: RawBlock): Block {
-        return new Block({
-            id: rawBlock.id,
-            version: Number(rawBlock.version),
-            createdAt: Number(rawBlock.created_at),
-            height: Number(rawBlock.height),
-            previousBlockId: rawBlock.previous_block_id,
-            transactionCount: Number(rawBlock.transaction_count),
-            amount: Number(rawBlock.amount),
-            fee: Number(rawBlock.fee),
-            payloadHash: rawBlock.payload_hash,
-            generatorPublicKey: rawBlock.generator_public_key,
-            signature: rawBlock.signature,
-            transactions: []
-        });
-    }
 
     private async assignTransactions(blocks: Array<Block>): Promise<Array<Block>> {
         let totalTransactionCount = 0;
@@ -95,7 +64,7 @@ class BlockPGRepo implements IBlockPGRepository {
             return null;
         }
 
-        let block: Block = this.deserialize(rawBlock);
+        let block: Block = SharedBlockPgRepository.deserialize(rawBlock);
         block = (await this.assignTransactions([block]))[0];
         return block;
     }
@@ -105,7 +74,7 @@ class BlockPGRepo implements IBlockPGRepository {
         if (!rawBlock) {
             return null;
         }
-        let block: Block = this.deserialize(rawBlock);
+        let block: Block = SharedBlockPgRepository.deserialize(rawBlock);
         block = (await this.assignTransactions([block]))[0];
         return block;
     }
@@ -115,14 +84,14 @@ class BlockPGRepo implements IBlockPGRepository {
         if (!rawBlock) {
             return null;
         }
-        let block: Block = this.deserialize(rawBlock);
+        let block: Block = SharedBlockPgRepository.deserialize(rawBlock);
         block = (await this.assignTransactions([block]))[0];
         return block;
     }
 
     async getLastNBlockIds(): Promise<Array<BlockId>> {
         const rawBlockIds: Array<{ id: string }> =
-            await db.manyOrNone(queries.getLastNBlocks, { blockLimit: config.constants.blockSlotWindow });
+            await db.manyOrNone(queries.getLastNBlocks, { blockLimit: config.CONSTANTS.BLOCK_SLOT_WINDOW });
         if (!rawBlockIds || !rawBlockIds.length) {
             return null;
         }
@@ -134,7 +103,7 @@ class BlockPGRepo implements IBlockPGRepository {
         if (!rawBlocks || !rawBlocks.length) {
             return null;
         }
-        let blocks: Array<Block> = rawBlocks.map(rawBlock => this.deserialize(rawBlock));
+        let blocks: Array<Block> = rawBlocks.map(rawBlock => SharedBlockPgRepository.deserialize(rawBlock));
         blocks = await this.assignTransactions(blocks);
         return blocks;
     }
@@ -148,7 +117,7 @@ class BlockPGRepo implements IBlockPGRepository {
         const blocks: Array<Block> = [].concat(block);
         const values: Array<object> = [];
         blocks.forEach((blockEntity) => {
-            values.push(this.serialize(blockEntity));
+            values.push(SharedBlockPgRepository.serialize(blockEntity));
         });
         const query = pgpE.helpers.insert(values, this.columnSet) +
             ' ON CONFLICT(id) DO UPDATE SET ' +

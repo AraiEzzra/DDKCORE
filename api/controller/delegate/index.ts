@@ -1,24 +1,31 @@
 import { RPC } from 'api/utils/decorators';
-import { Message } from 'shared/model/message';
+import { Message2 } from 'shared/model/message';
 import SocketMiddleware from 'api/middleware/socket';
-import { GET_ACTIVE_DELEGATES, GET_INACTIVE_DELEGATES } from 'shared/driver/socket/codes';
+import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
+import { Pagination } from 'api/utils/common';
 
 export class DelegateController {
 
     constructor() {
+        this.getDelegates = this.getDelegates.bind(this);
         this.getActiveDelegates = this.getActiveDelegates.bind(this);
-        this.getInactiveDelegates = this.getInactiveDelegates.bind(this);
+        this.getMyDelegates = this.getMyDelegates.bind(this);
+
     }
 
-// TODO: Add validation of request
-    @RPC(GET_ACTIVE_DELEGATES)
-    getActiveDelegates(message: Message, socket: any) {
-        SocketMiddleware.emitToCore(message, socket);
+    @RPC(API_ACTION_TYPES.GET_DELEGATES)
+    getDelegates(message: Message2<Pagination>, socket: any) {
+        SocketMiddleware.emitToCore<Pagination>(message, socket);
     }
 
-    @RPC(GET_INACTIVE_DELEGATES)
-    getInactiveDelegates(message: Message, socket: any) {
-        SocketMiddleware.emitToCore(message, socket);
+    @RPC(API_ACTION_TYPES.GET_ACTIVE_DELEGATES)
+    getActiveDelegates(message: Message2<Pagination>, socket: any) {
+        SocketMiddleware.emitToCore<Pagination>(message, socket);
+    }
+
+    @RPC(API_ACTION_TYPES.GET_MY_DELEGATES)
+    getMyDelegates(message: Message2<Pagination & { address: string }>, socket: any) {
+        SocketMiddleware.emitToCore<Pagination & { address: string }>(message, socket);
     }
 
 }

@@ -10,7 +10,18 @@ export class Reward {
     referralLevel?: number;
     amount: number;
 
-    constructor(data: Reward){
+    constructor(data: Reward) {
+        Object.assign(this, data);
+    }
+}
+
+export class StakeReward {
+    transactionId: string;
+    createdAt: Timestamp;
+    referralRewards: Array<{ referral: string, amount: number }>;
+    amount: number;
+
+    constructor(data: StakeReward) {
         Object.assign(this, data);
     }
 }

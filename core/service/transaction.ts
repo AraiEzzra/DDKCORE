@@ -12,7 +12,6 @@ import {
 import { ResponseEntity } from 'shared/model/response';
 import { ed, IKeyPair } from 'shared/util/ed';
 import { Account, Address } from 'shared/model/account';
-import config from 'shared/util/config';
 import AccountRepo from 'core/repository/account';
 import TransactionRepo from 'core/repository/transaction';
 import TransactionPGRepo from 'core/repository/transaction/pg';
@@ -22,6 +21,9 @@ import { getTransactionServiceByType, TRANSACTION_BUFFER_SIZE, transactionSortFu
 import BUFFER from 'core/util/buffer';
 import { SALT_LENGTH } from 'core/util/const';
 import { getAddressByPublicKey } from 'shared/util/account';
+import SlotService from 'core/service/slot';
+import BlockRepository from 'core/repository/block';
+import config from 'shared/config'
 
 export interface IAssetService<T extends IAsset> {
     getBytes(trs: Transaction<T>): Buffer;
@@ -29,9 +31,11 @@ export interface IAssetService<T extends IAsset> {
     create(trs: TransactionModel<T>): T;
 
     validate(trs: TransactionModel<T>): ResponseEntity<void>;
+
     verifyUnconfirmed(trs: Transaction<T>, sender: Account): ResponseEntity<void>;
 
     applyUnconfirmed(trs: Transaction<T>, sender: Account): void;
+
     undoUnconfirmed(trs: Transaction<T>, sender: Account, senderOnly: boolean): void;
 
     calculateFee(trs: Transaction<IAsset>, sender: Account): number;
@@ -44,6 +48,7 @@ export interface ITransactionService<T extends IAsset> {
     ): void;
 
     validate(trs: Transaction<T>): ResponseEntity<void>;
+
     verifyUnconfirmed(trs: Transaction<T>, sender: Account, checkExists: boolean): ResponseEntity<void>;
 
     create(data: Transaction<T>, keyPair: IKeyPair): ResponseEntity<Transaction<T>>;
@@ -62,14 +67,18 @@ export interface ITransactionService<T extends IAsset> {
 
     calculateFee(trs: Transaction<T>, sender: Account): number;
 
-    verifySignature(trs: Transaction<T>, publicKey: string, signature: string): ResponseEntity<void>;
-    verifySecondSignature(trs: Transaction<T>, publicKey: string, signature: string): ResponseEntity<void>;
-    verifyBytes(bytes: Uint8Array, publicKey: string, signature: string): ResponseEntity<void>;
+    verifySignature(trs: Transaction<T>, publicKey: string): boolean;
+
+    verifySecondSignature(trs: Transaction<T>, publicKey: string): boolean;
+
+    verifyBytes(bytes: Uint8Array, publicKey: string, signature: string): boolean;
 
     applyUnconfirmed(trs: Transaction<T>, sender: Account): void;
+
     undoUnconfirmed(trs: Transaction<T>, sender?: Account, senderOnly?: boolean): void;
 
     apply(trs: Transaction<T>, sender: Account): Promise<void>;
+
     undo(trs: Transaction<T>, sender: Account): Promise<void>;
 
     afterSave(trs: Transaction<T>): void;
@@ -110,7 +119,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
     }
 
     checkBalance(amount: number, trs: Transaction<T>, sender: Account): ResponseEntity<void> {
-        if (trs.blockId === config.genesisBlock.id) {
+        if (trs.blockId === BlockRepository.getGenesisBlock().id) {
             return new ResponseEntity();
         }
 
@@ -214,17 +223,16 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             return new ResponseEntity({ errors });
         }
 
-        const service = getTransactionServiceByType(data.type);
-        const asset = service.create(data);
-
         const trs = new Transaction<T>({
-            createdAt: data.createdAt,
+            createdAt: data.createdAt || SlotService.getTime(),
             senderPublicKey: sender.publicKey,
             senderAddress: sender.address,
             type: data.type,
             salt: cryptoBrowserify.randomBytes(SALT_LENGTH).toString('hex'),
-            asset,
         });
+
+        const service = getTransactionServiceByType(data.type);
+        trs.asset = service.create(data);
 
         trs.signature = this.sign(keyPair, trs);
         trs.id = this.getId(trs);
@@ -232,7 +240,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         return new ResponseEntity({ data: trs });
     }
 
-    getBytes(trs: Transaction<T>): Buffer {
+    getBytes(trs: Transaction<T>, skipSignature: boolean = false, skipSecondSignature: boolean = false): Buffer {
         const transactionService = getTransactionServiceByType(trs.type);
         const assetBytes = transactionService.getBytes(trs);
 
@@ -246,12 +254,12 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         offset = BUFFER.writeInt32LE(bytes, trs.createdAt, offset);
         offset = BUFFER.writeNotNull(bytes, trs.senderPublicKey, offset, BUFFER.LENGTH.HEX);
 
-        if (trs.signature) {
+        if (!skipSignature && trs.signature) {
             bytes.write(trs.signature, offset, BUFFER.LENGTH.DOUBLE_HEX, 'hex');
         }
         offset += BUFFER.LENGTH.DOUBLE_HEX;
 
-        if (trs.secondSignature) {
+        if (!skipSecondSignature && trs.secondSignature) {
             bytes.write(trs.secondSignature, offset, BUFFER.LENGTH.DOUBLE_HEX, 'hex');
         }
 
@@ -284,7 +292,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             errors.push('Missing id');
         }
 
-        if (!trs.type) {
+        if (!trs.type && trs.type !== 0) {
             errors.push('Missing type');
         }
 
@@ -300,10 +308,6 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             errors.push(`Missing signature`);
         }
 
-        if (!trs.fee) {
-            errors.push(`Missing fee`);
-        }
-
         if (!trs.salt) {
             errors.push(`Missing salt`);
         }
@@ -317,20 +321,26 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         if (!verifyResponse.success) {
             errors.push(...verifyResponse.errors);
         }
-
         return new ResponseEntity<void>({ errors });
     }
 
-    verifyBytes(bytes: Uint8Array, publicKey: string, signature: string): ResponseEntity<void> {
-        return undefined;
+    verifyBytes(bytes: Uint8Array, publicKey: string, signature: string): boolean {
+        return ed.verify(bytes, publicKey, signature);
     }
 
-    verifySecondSignature(trs: Transaction<T>, publicKey: string, signature: string): ResponseEntity<void> {
-        return undefined;
+    verifySecondSignature(trs: Transaction<T>, publicKey: string): boolean {
+        const bytes = this.getBytes(trs, false, true);
+        return this.verifyBytes(bytes, publicKey, trs.signature);
     }
 
-    verifySignature(trs: Transaction<T>, publicKey: string, signature: string): ResponseEntity<void> {
-        return undefined;
+    verifySignature(trs: Transaction<T>, publicKey: string): boolean {
+        const bytes = this.getBytes(trs, true, true);
+
+        if (BlockRepository.getLastBlock().height < config.CONSTANTS.PRE_ORDER_LAST_MIGRATED_BLOCK) {
+            return this.verifyBytes(bytes, config.CONSTANTS.PRE_ORDER_PUBLIC_KEY, trs.signature);
+        } else {
+            return this.verifyBytes(bytes, publicKey, trs.signature);
+        }
     }
 
     verifyUnconfirmed(trs: Transaction<T>, sender: Account): ResponseEntity<void> {
@@ -343,9 +353,21 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             return new ResponseEntity<void>({ errors: [`Transaction is already confirmed: ${trs.id}`] });
         }
 
+        if (!this.verifySignature(trs, sender.publicKey)) {
+            return new ResponseEntity<void>({ errors: ['Transaction signature is invalid'] });
+        }
+
+        if (sender.secondPublicKey && !this.verifySecondSignature(trs, sender.secondPublicKey)) {
+            return new ResponseEntity<void>({ errors: ['Transaction second signature is invalid'] });
+        }
+
+        if (SlotService.getSlotNumber(trs.createdAt) > SlotService.getSlotNumber()) {
+            throw new ResponseEntity<void>({ errors: ['Invalid transaction timestamp. CreatedAt is in the future'] });
+        }
+
         if (trs.type in [TransactionType.SEND, TransactionType.STAKE]) {
             const asset: IAssetTransfer | IAssetStake = <IAssetTransfer | IAssetStake><Object>trs.asset;
-            const amount = asset.amount + trs.fee;
+            const amount = (asset.amount || 0) + trs.fee;
             const senderBalanceResponse = this.checkBalance(amount, trs, sender);
             if (!senderBalanceResponse.success) {
                 return senderBalanceResponse;
