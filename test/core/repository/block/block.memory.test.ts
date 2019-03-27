@@ -4,7 +4,6 @@ import { expect } from 'chai';
 import {
     getNewBlock
 } from 'test/core/repository/block/mock';
-import config from 'shared/config';
 
 const getAllBlocks = () => {
     return BlockRepo.getMany(Number.MAX_SAFE_INTEGER);
@@ -160,13 +159,14 @@ describe('Block memory repository', () => {
 
         context('when getting pack of blocks', () => {
 
-            let firstBlock, lastBlock;
+            let firstBlock, lastBlock, genesis;
             const blocksCount = 100;
             const blocks = [];
 
             before(() => {
                 firstBlock = getNewBlock();
-                BlockRepo.deleteLastBlock();
+                genesis = BlockRepo.getGenesisBlock();
+                genesis.height = firstBlock.height - 1;
                 blocks.push(firstBlock);
                 BlockRepo.add(firstBlock);
                 for (let i = 0; i < (blocksCount - 2); i++) {
@@ -177,11 +177,6 @@ describe('Block memory repository', () => {
                 lastBlock = getNewBlock();
                 blocks.push(lastBlock);
                 BlockRepo.add(lastBlock);
-            });
-
-            it('should return empty array if height of first requested block is less than presented in repo', () => {
-                const response = BlockRepo.getMany(100, firstBlock.height - 6);
-                expect(response).to.be.lengthOf(0);
             });
 
             it('should return requested amount of blocks or less', () => {
@@ -202,7 +197,7 @@ describe('Block memory repository', () => {
                 for (let i = 0; i < blocks.length; i++) {
                     BlockRepo.deleteLastBlock();
                 }
-                BlockRepo.add(new Block(config.genesisBlock));
+                genesis.height = 1;
             });
         });
     });
