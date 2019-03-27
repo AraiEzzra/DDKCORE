@@ -1,9 +1,9 @@
-import { IAssetService } from '../transaction';
+import { IAssetService } from 'core/service/transaction';
 import { TransactionModel } from 'shared/model/transaction';
 import { IAssetSignature, Transaction } from 'shared/model/transaction';
 import { Account } from 'shared/model/account';
 import { ResponseEntity } from 'shared/model/response';
-import config from 'shared/util/config';
+import config from 'shared/config';
 
 class TransactionSignatureService implements IAssetService<IAssetSignature> {
 
@@ -41,7 +41,7 @@ class TransactionSignatureService implements IAssetService<IAssetSignature> {
     }
 
     calculateFee(trs: Transaction<IAssetSignature>, sender: Account): number {
-        return config.constants.fees.secondsignature;
+        return config.CONSTANTS.FEES.SECOND_SIGNATURE;
     }
 
     applyUnconfirmed(trs: Transaction<IAssetSignature>, sender: Account): void {

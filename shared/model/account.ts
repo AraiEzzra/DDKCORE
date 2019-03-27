@@ -1,6 +1,6 @@
 import { Delegate } from 'shared/model/delegate';
 
-export type Address = bigint;
+export type Address = BigInt;
 export type PublicKey = string;
 export type Timestamp = number;
 

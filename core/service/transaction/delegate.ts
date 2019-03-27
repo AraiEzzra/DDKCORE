@@ -3,7 +3,7 @@ import { IAssetDelegate, Transaction, TransactionModel } from 'shared/model/tran
 import { Account } from 'shared/model/account';
 import DelegateRepo from 'core/repository/delegate';
 import { ResponseEntity } from 'shared/model/response';
-import config from 'shared/util/config';
+import config from 'shared/config';
 
 class TransactionDelegateService implements IAssetService<IAssetDelegate> {
 
@@ -40,7 +40,7 @@ class TransactionDelegateService implements IAssetService<IAssetDelegate> {
             errors.push('Empty username');
         }
 
-        if (username.length > config.constants.maxDelegateUsernameLength) {
+        if (username.length > config.CONSTANTS.MAX_DELEGATE_USERNAME_LENGTH) {
             errors.push('Username is too long. Maximum is 20 characters');
         }
 
@@ -76,7 +76,7 @@ class TransactionDelegateService implements IAssetService<IAssetDelegate> {
     }
 
     calculateFee(trs: Transaction<IAssetDelegate>, sender: Account): number {
-        return config.constants.fees.delegate;
+        return config.CONSTANTS.FEES.DELEGATE;
     }
 
     applyUnconfirmed(trs: Transaction<IAssetDelegate>, sender: Account): void {

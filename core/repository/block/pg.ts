@@ -1,7 +1,7 @@
 import TransactionRepo from 'core/repository/transaction/pg';
 import { Block } from 'shared/model/block';
 import db, { pgpE } from 'shared/driver/db/index';
-import config from 'shared/util/config';
+import config from 'shared/config';
 import queries from 'core/repository/queries/block';
 
 import {
@@ -91,7 +91,7 @@ class BlockPGRepo implements IBlockPGRepository {
 
     async getLastNBlockIds(): Promise<Array<BlockId>> {
         const rawBlockIds: Array<{ id: string }> =
-            await db.manyOrNone(queries.getLastNBlocks, { blockLimit: config.constants.blockSlotWindow });
+            await db.manyOrNone(queries.getLastNBlocks, { blockLimit: config.CONSTANTS.BLOCK_SLOT_WINDOW });
         if (!rawBlockIds || !rawBlockIds.length) {
             return null;
         }

@@ -3,7 +3,7 @@ import { TransactionModel } from 'shared/model/transaction';
 import { IAssetTransfer, Transaction } from 'shared/model/transaction';
 import { Account } from 'shared/model/account';
 import { ResponseEntity } from 'shared/model/response';
-import config from 'shared/util/config';
+import config from 'shared/config';
 import AccountRepo from 'core/repository/account';
 import { TOTAL_PERCENTAGE } from 'core/util/const';
 import BUFFER from 'core/util/buffer';
@@ -53,7 +53,7 @@ class TransactionSendService implements IAssetService<IAssetTransfer> {
     }
 
     calculateFee(trs: Transaction<IAssetTransfer>, sender: Account): number {
-        return (trs.asset.amount * config.constants.fees.send) / TOTAL_PERCENTAGE;
+        return (trs.asset.amount * config.CONSTANTS.FEES.SEND) / TOTAL_PERCENTAGE;
     }
 
     applyUnconfirmed(trs: Transaction<IAssetTransfer>, sender: Account): void {

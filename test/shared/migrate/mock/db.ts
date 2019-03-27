@@ -1,15 +1,16 @@
 import pgp, { IDatabase } from 'pg-promise';
+import config from 'shared/config';
 
 const connectionOptions = {
-    host: '0.0.0.0',
-    port: 5432,
-    database: 'ddk_test',
-    user: 'postgres',
-    password: 'postgres',
-    poolSize: 95,
-    poolIdleTimeout: 30000,
-    reapIntervalMillis: 1000,
-    logEvents: ['error'],
+    host: config.DB.HOST,
+    port: config.DB.PORT,
+    database: config.DB.DATABASE,
+    user: config.DB.USER,
+    password: config.DB.PASSWORD,
+    poolSize: config.DB.POOL_SIZE,
+    poolIdleTimeout: config.DB.POOL_IDLE_TIMEOUT,
+    reapIntervalMillis: config.DB.REAP_INTERVAL_MILLIS,
+    logEvents: config.DB.LOG_EVENTS,
 };
 
 const pgpE = pgp();
