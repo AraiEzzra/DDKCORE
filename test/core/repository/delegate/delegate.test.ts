@@ -7,7 +7,7 @@ import {
 import {
     getNewAccount
 } from 'test/core/repository/account/mock';
-import config from 'shared/util/config';
+import config from 'shared/config';
 
 describe('Delegate repository', () => {
 
@@ -56,16 +56,16 @@ describe('Delegate repository', () => {
     describe('function \'getActiveDelegates\'', () => {
 
         context('when getting active delegates from empty repo', () => {
-            it(`should return response with error`, () => {
-                let activeDelegatesResponse = DelegateRepo.getActiveDelegates();
-                expect(activeDelegatesResponse.success).to.be.false;
+            it(`should return empty array`, () => {
+                let activeDelegates = DelegateRepo.getActiveDelegates();
+                expect(activeDelegates).to.be.empty;
             });
         });
 
         context('when getting active delegates which count is less than required', () => {
 
             const rawDelegates = [];
-            const delegatesCount = config.constants.activeDelegates - 1;
+            const delegatesCount = config.CONSTANTS.ACTIVE_DELEGATES - 1;
             for (let i = 0; i < delegatesCount; i++) {
                 rawDelegates.push({ account: getNewAccount(), username: getNewDelegateName() });
             }
@@ -77,9 +77,8 @@ describe('Delegate repository', () => {
             });
 
             it(`should return ${delegatesCount} delegates from repo`, () => {
-                let activeDelegatesResponse = DelegateRepo.getActiveDelegates();
-                expect(activeDelegatesResponse.success).to.be.true;
-                expect(activeDelegatesResponse.data).to.be.lengthOf(delegatesCount);
+                let activeDelegates = DelegateRepo.getActiveDelegates();
+                expect(activeDelegates).to.be.lengthOf(delegatesCount);
             });
 
             after(() => {
@@ -109,11 +108,11 @@ describe('Delegate repository', () => {
                 }
             });
 
-            it(`should return ${config.constants.activeDelegates} delegates from repo`, () => {
-                let activeDelegatesResponse = DelegateRepo.getActiveDelegates();
-                expect(activeDelegatesResponse.success).to.be.true;
-                expect(activeDelegatesResponse.data).to.be.lengthOf(config.constants.activeDelegates);
-                expect(activeDelegatesResponse.data[0].account).to.be.eql(rawDelegates[0].account);
+            it(`should return ${config.CONSTANTS.ACTIVE_DELEGATES} delegates from repo`, () => {
+                let activeDelegates = DelegateRepo.getActiveDelegates();
+                console.log(activeDelegates);
+                expect(activeDelegates).to.be.lengthOf(config.CONSTANTS.ACTIVE_DELEGATES);
+                expect(activeDelegates[0].account).to.be.eql(rawDelegates[0].account)   ;
             });
 
             after(() => {

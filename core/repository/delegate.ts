@@ -43,9 +43,6 @@ class DelegateRepository {
 
     public getActiveDelegates(limit?: number, offset?: number): Array<Delegate> {
         let activeDelegates: Array<Delegate> = Object.values(this.memoryDelegates).sort((a, b) => {
-            if (a.votes > b.votes) {
-                return 1;
-            }
             if (a.votes < b.votes) {
                 return 1;
             }
