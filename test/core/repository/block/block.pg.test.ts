@@ -1,6 +1,6 @@
 import { Block } from 'shared/model/block';
 import BlockPGRepo from 'core/repository/block/pg';
-import config from 'shared/util/config';
+import config from 'shared/config';
 import { expect } from 'chai';
 import {
     getNewBlock, restartIteration
@@ -120,7 +120,7 @@ describe('Block repository', () => {
     describe('getLastNBlockIds', () => {
         context('if at least one block exists', () => {
             let blocks = [];
-            const n = config.constants.blockSlotWindow;
+            const n = config.CONSTANTS.BLOCK_SLOT_WINDOW;
             const ids = [];
             before(async () => {
                 for (let i = 0; i < (n + 2); i++) {

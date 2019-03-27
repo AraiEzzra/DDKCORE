@@ -4,7 +4,7 @@ import { expect } from 'chai';
 import {
     getNewBlock
 } from 'test/core/repository/block/mock';
-import config from 'shared/util/config';
+import config from 'shared/config';
 
 const getAllBlocks = () => {
     return BlockRepo.getMany(Number.MAX_SAFE_INTEGER);

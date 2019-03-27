@@ -2,17 +2,17 @@ import autobind from 'autobind-decorator';
 
 import { Transaction, TransactionStatus, IAsset, TransactionModel } from 'shared/model/transaction';
 import { transactionSortFunc } from 'core/util/transaction';
-import constants from '../../config/mainnet/constants';
 import TransactionDispatcher from 'core/service/transaction';
 import TransactionPool from 'core/service/transactionPool';
-import {logger} from 'shared/util/logger';
+import { logger } from 'shared/util/logger';
 import { Account } from 'shared/model/account';
 import { SECOND } from 'core/util/const';
 import AccountRepository from 'core/repository/account';
 import { ResponseEntity } from 'shared/model/response';
 import SocketMiddleware from 'core/api/middleware/socket';
 import { EVENT_TYPES } from 'shared/driver/socket/codes';
-import SharedTransactionRepo from 'shared/repository/transaction'
+import SharedTransactionRepo from 'shared/repository/transaction';
+import config from 'shared/config';
 
 export interface ITransactionQueueService<T extends Object> {
     getLockStatus(): boolean;
@@ -64,7 +64,7 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
         trs.status = TransactionStatus.QUEUED;
         this.queue.push(trs);
         if (this.queue.length === 1) {
-            this.process();
+            setImmediate(this.process);
         } else {
             this.queue.sort(transactionSortFunc);
         }
@@ -73,7 +73,7 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
     pushInConflictedQueue(trs: Transaction<T>): void {
         this.conflictedQueue.push({
             transaction: trs,
-            expire: Math.floor(new Date().getTime() / SECOND) + constants.TRANSACTION_QUEUE_EXPIRE
+            expire: Math.floor(new Date().getTime() / SECOND) + config.CONSTANTS.TRANSACTION_QUEUE_EXPIRE
         });
         trs.status = TransactionStatus.QUEUED_AS_CONFLICTED;
     }

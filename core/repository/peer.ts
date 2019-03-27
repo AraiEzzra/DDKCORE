@@ -3,11 +3,8 @@ import { getRandomInt } from 'core/util/common';
 import { logger } from 'shared/util/logger';
 import { Block } from 'shared/model/block';
 import { MAX_PEER_BLOCKS_IDS } from 'core/util/const';
-
-const env = require('../../config/env').default;
-export const TRUSTED_PEERS: Array<any> = env.peers.list;
-export const BLACK_LIST = new Set(env.blackList);
 import socket from 'core/repository/socket';
+import config from 'shared/config';
 
 export class PeerRepo {
     private peers: { [string: string]: Peer } = {};
@@ -123,7 +120,7 @@ export class PeerRepo {
     }
 
     getRandomTrustedPeer(): Peer {
-        return TRUSTED_PEERS[getRandomInt(TRUSTED_PEERS.length)];
+        return config.CORE.PEERS.TRUSTED[getRandomInt(config.CORE.PEERS.TRUSTED.length)];
     }
 
     connectPeers(peers: Array<{ip: string, port: number}>) {

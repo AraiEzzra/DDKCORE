@@ -43,6 +43,7 @@ const apiConfig = {
         alias: {
             api: path.resolve(DIR, 'api'),
             shared: path.resolve(DIR, 'shared'),
+            config: path.resolve(DIR, 'config'),
         },
     },
     output: {
@@ -60,6 +61,7 @@ const coreConfig = {
         alias: {
             core: path.resolve(DIR, 'core'),
             shared: path.resolve(DIR, 'shared'),
+            config: path.resolve(DIR, 'config'),
         },
     },
     output: {

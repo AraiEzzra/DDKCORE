@@ -68,6 +68,7 @@
     "@types/node": "^10.12.18",
     "@types/socket.io": "^2.1.2",
     "@types/socket.io-client": "^1.4.32",
-    "@types/z-schema": "^3.16.32"
+    "@types/z-schema": "^3.16.32",
+    "ts-node": "^8.0.3"
   }
 }

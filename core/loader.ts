@@ -5,9 +5,9 @@ import TransactionDispatcher from 'core/service/transaction';
 import TransactionPGRepo from 'core/repository/transaction/pg';
 import AccountRepo from 'core/repository/account';
 import { IAsset, Transaction } from 'shared/model/transaction';
-import { messageON, subjectOn } from 'shared/util/bus';
+import { messageON } from 'shared/util/bus';
 import { initControllers } from 'core/controller';
-import config from 'shared/util/config';
+import config from 'shared/config';
 
 import { Round } from 'shared/model/round';
 import RoundPGRepository from 'core/repository/round/pg';
@@ -40,7 +40,7 @@ class Loader {
         initControllers();
         await this.blockWarmUp(this.limit);
         if (!BlockRepository.getGenesisBlock()) {
-            await BlockService.applyGenesisBlock(config.genesisBlock);
+            await BlockService.applyGenesisBlock(config.GENESIS_BLOCK);
         } else {
             await this.transactionWarmUp(this.limit);
             await this.roundWarmUp(this.limit);

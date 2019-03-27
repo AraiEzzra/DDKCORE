@@ -24,9 +24,8 @@ import { transactionSortFunc } from 'core/util/transaction';
 import blockSchema from 'core/schema/block';
 import { ResponseEntity } from 'shared/model/response';
 import { messageON } from 'shared/util/bus';
-import config from 'shared/util/config';
+import config from 'shared/config';
 import SyncService from 'core/service/sync';
-import system from 'core/repository/system';
 import { getAddressByPublicKey } from 'shared/util/account';
 import { calculateRoundByTimestamp } from 'core/util/round';
 import SocketMiddleware from 'core/api/middleware/socket';
@@ -40,9 +39,7 @@ interface IKeyPair {
 }
 
 class BlockService {
-
-    private readonly currentBlockVersion: number = config.constants.CURRENT_BLOCK_VERSION;
-
+    private readonly currentBlockVersion: number = config.CONSTANTS.FORGING.CURRENT_BLOCK_VERSION;
     private readonly BLOCK_BUFFER_SIZE
         = BUFFER.LENGTH.UINT32 // version
         + BUFFER.LENGTH.INT64 // timestamp
@@ -59,7 +56,7 @@ class BlockService {
         this.lockTransactionPoolAndQueue();
 
         const transactions: Array<Transaction<object>> =
-            TransactionPool.popSortedUnconfirmedTransactions(config.constants.maxTxsPerBlock);
+            TransactionPool.popSortedUnconfirmedTransactions(config.CONSTANTS.MAX_TRANSACTIONS_PER_BLOCK);
         // logger.debug(`[Process][newGenerateBlock][transactions] ${JSON.stringify(transactions)}`);
 
         const previousBlock: Block = BlockRepo.getLastBlock();
@@ -122,11 +119,10 @@ class BlockService {
             }
         }
 
-        // todo fix issue with invalid block slot
-        // const validationResponse = this.validateBlockSlot(block);
-        // if (!validationResponse.success) {
-        //     return new Response<void>({errors: [...validationResponse.errors, 'processBlock']});
-        // }
+        const validationResponse = this.validateBlockSlot(block);
+        if (!validationResponse.success) {
+            return new ResponseEntity<void>({errors: [...validationResponse.errors, 'processBlock']});
+        }
 
         const resultCheckExists: ResponseEntity<void> = this.checkExists(block);
         if (!resultCheckExists.success) {
@@ -250,7 +246,7 @@ class BlockService {
             errors.push('Included transactions do not match block transactions count');
         }
 
-        if (block.transactions.length > config.constants.maxTxsPerBlock) {
+        if (block.transactions.length > config.CONSTANTS.MAX_TRANSACTIONS_PER_BLOCK) {
             errors.push('Number of transactions exceeds maximum per block');
         }
 
@@ -313,24 +309,26 @@ class BlockService {
             return new ResponseEntity<void>();
         }
 
-        const errors = [];
         const blockSlot = slotService.getSlotNumber(block.createdAt);
         const round = RoundRepository.getCurrentRound();
 
         if (!round) {
-            errors.push(`Can't get current round`);
+            return new ResponseEntity<void>( { errors: [`Can't get current round`] });
         }
 
         const generatorSlot = round.slots[block.generatorPublicKey];
 
         if (!generatorSlot) {
-            errors.push(`GeneratorPublicKey does not exist in current round`);
-        }
-        if (blockSlot !== generatorSlot.slot) {
-            errors.push(`Invalid block slot number: blockSlot ${blockSlot} generator slot ${generatorSlot.slot}`);
+            return new ResponseEntity<void>( { errors: [`GeneratorPublicKey does not exist in current round`] });
         }
 
-        return new ResponseEntity<void>({errors});
+        if (blockSlot !== generatorSlot.slot) {
+            return new ResponseEntity<void>(
+                { errors: [`Invalid block slot number: blockSlot ${blockSlot} generator slot ${generatorSlot.slot}`] }
+            );
+        }
+
+        return new ResponseEntity<void>({});
     }
 
     private checkExists(block: Block): ResponseEntity<void> {
