@@ -6,6 +6,7 @@ import { Message } from 'shared/model/message';
 import BlockPGRepository from 'api/repository/block';
 import { DEFAULT_LIMIT } from 'api/utils/common';
 import { ResponseEntity } from 'shared/model/response';
+import { validate } from 'shared/validate';
 
 const ALLOWED_FILTERS = new Set(['height']);
 const ALLOWED_SORT = new Set(['height', 'createdAt']);
@@ -18,6 +19,7 @@ export class BlockController {
     }
 
     @RPC(API_ACTION_TYPES.GET_BLOCK)
+    @validate()
     public async getBlock(message: Message, socket: any) {
         SocketMiddleware.emitToClient<BlockModel>(
             message.headers.id,
@@ -28,6 +30,7 @@ export class BlockController {
     }
 
     @RPC(API_ACTION_TYPES.GET_BLOCKS)
+    @validate()
     public async getBlocks(message: Message, socket: any) {
         const blocks = await BlockPGRepository.getMany(
             message.body.filter || {},

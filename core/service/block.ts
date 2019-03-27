@@ -3,7 +3,7 @@ import * as sodium from 'sodium-javascript';
 import BUFFER from 'core/util/buffer';
 
 import Validator from 'z-schema';
-import ZSchema from 'shared/util/z_schema';
+import ZSchema from 'shared/validate/z_schema';
 import { logger } from 'shared/util/logger';
 import { Account } from 'shared/model/account';
 import { Block, BlockModel } from 'shared/model/block';

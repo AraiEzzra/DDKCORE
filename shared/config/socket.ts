@@ -4,9 +4,7 @@ export const API_SOCKET_SERVER_CONFIG: ServerOptions = {
     serveClient: false,
     pingTimeout: 30000,
     pingInterval: 30000,
-    transports: [
-        'websocket',
-    ],
+    transports: ['websocket'],
 };
 
 // Define separate config for CORE

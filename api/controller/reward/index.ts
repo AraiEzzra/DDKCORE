@@ -4,6 +4,7 @@ import SocketMiddleware from 'api/middleware/socket';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
 import { ResponseEntity } from 'shared/model/response';
 import { Reward } from 'shared/model/reward';
+import { validate } from 'shared/validate';
 
 export class RewardController {
 
@@ -13,6 +14,7 @@ export class RewardController {
     }
 
     @RPC(API_ACTION_TYPES.GET_STAKE_REWARDS)
+    @validate()
     getStakeRewards(message: Message2<{ address: string }>, socket: any) {
         SocketMiddleware.emitToClient(
             message.headers.id,
@@ -23,6 +25,7 @@ export class RewardController {
     }
 
     @RPC(API_ACTION_TYPES.GET_AIRDROP_REWARDS)
+    @validate()
     getAirdropRewards(message: Message2<{ address: string }>, socket: any) {
         SocketMiddleware.emitToClient(
             message.headers.id,
