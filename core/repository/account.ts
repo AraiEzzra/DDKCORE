@@ -1,7 +1,13 @@
 import { Account, Address, PublicKey } from 'shared/model/account';
 import { getAddressByPublicKey } from 'shared/util/account';
 
-class AccountRepo {
+export type Statistics = {
+    tokenHolders: number;
+    totalStakeAmount: number;
+    totalStakeholders: number;
+}
+
+class AccountRepository {
     private memoryAccountsByAddress: Map<Address, Account> = new Map<Address, Account>();
 
     public add(accountData: { address: Address, publicKey?: PublicKey }): Account {
@@ -29,7 +35,7 @@ class AccountRepo {
         return accounts;
     }
 
-    getStatistics(): { tokenHolders: number, totalStakeAmount: number, totalStakeholders: number } {
+    getStatistics(): Statistics {
         let tokenHolders = 0;
         let totalStakeAmount = 0;
         let totalStakeholders = 0;
@@ -84,4 +90,4 @@ class AccountRepo {
     }
 }
 
-export default new AccountRepo();
+export default new AccountRepository();
