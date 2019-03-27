@@ -57,10 +57,12 @@ class Config {
     PUBLIC_HOST: string;
     NODE_ENV_IN: string;
     CORE: {
+        HOST: string;
         SOCKET: {
             PORT: number;
         };
         RPC: {
+            PORT: number;
             PROTOCOL: string;
         };
         PEERS: {
@@ -96,7 +98,7 @@ class Config {
         }
 
         this.IS_SECURE = process.env.IS_SECURE === 'TRUE' || false;
-        this.PUBLIC_HOST = process.env.SERVER_HOST;
+        this.PUBLIC_HOST = process.env.PUBLIC_HOST || process.env.SERVER_HOST;
         this.NODE_ENV_IN = process.env.NODE_ENV_IN || 'development';
         this.DB = {
             ...DEFAULT_DB_CONFIGS,
@@ -107,11 +109,13 @@ class Config {
             PASSWORD: process.env.DB_PASSWORD,
         };
         this.CORE = {
+            HOST: process.env.CORE_HOST || 'localhost',
             SOCKET: {
                 PORT: Number(process.env.PORT) || DEFAULT_CORE_SOCKET_PORT,
             },
             RPC: {
                 PROTOCOL: process.env.CORE_RPC_PROTOCOL || 'ws',
+                PORT: Number(process.env.CORE_RPC_PORT) || DEFAULT_CORE_RPC_PORT,
             },
             FORGING: {
                 SECRET: process.env.FORGE_SECRET,
