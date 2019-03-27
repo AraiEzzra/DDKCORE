@@ -11,6 +11,8 @@ import SlotService from 'core/service/slot';
 import { messageON } from 'shared/util/bus';
 import SharedTransactionRepo from 'shared/repository/transaction';
 import { calculateRoundByTimestamp } from 'core/util/round';
+import RoundService from 'core/service/round';
+import RoundRepository from 'core/repository/round';
 
 interface BlockGenerateRequest {
     keyPair: {
@@ -60,16 +62,33 @@ class BlockController extends BaseController {
             blockUtils.isEqualPreviousBlock(lastBlock, receivedBlock) &&
             !SyncService.consensus
         ) {
-            const deleteLastBlockResponse = await BlockService.deleteLastBlock();
+            const prevRound = RoundRepository.getPrevRound();
+            const blockSlot = SlotService.getSlotNumber(lastBlock.createdAt);
+
+            let deleteLastBlockResponse;
+            if (RoundRepository.getLastSlotInRound() === blockSlot) {
+                await RoundService.rollBack();
+                deleteLastBlockResponse = await BlockService.deleteLastBlock();
+                await RoundService.generateRound();
+            } else {
+                deleteLastBlockResponse = await BlockService.deleteLastBlock();
+            }
             if (!deleteLastBlockResponse.success) {
                 errors.push(...deleteLastBlockResponse.errors, 'processIncomingBlock');
                 return new ResponseEntity<void>({ errors });
             }
+
             const receiveResponse: ResponseEntity<void> = await BlockService.receiveBlock(receivedBlock);
             if (!receiveResponse.success) {
                 errors.push(...receiveResponse.errors, 'processIncomingBlock');
                 return new ResponseEntity<void>({ errors });
             }
+
+            if (prevRound && RoundRepository.getLastSlotInRound(prevRound) === blockSlot) {
+                await RoundService.rollBack();
+                await RoundService.generateRound();
+            }
+
             return new ResponseEntity<void>({ errors });
         }
 

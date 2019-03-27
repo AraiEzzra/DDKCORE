@@ -589,7 +589,6 @@ class BlockService {
             return new ResponseEntity<Block>({ errors });
         }
 
-        RoundService.rollBack(); // (oldLastBlock, previousBlock);
         await BlockPGRepo.deleteById(lastBlock.id);
         const newLastBlock = BlockRepo.deleteLastBlock();
 

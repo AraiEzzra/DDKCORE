@@ -304,9 +304,6 @@ class RoundService implements IRoundService {
             AccountRepository.updateBalance(delegateAccount, delegateAccount.actualBalance + fee);
         }
 
-        const lastBlock = BlockRepository.getLastBlock();
-        RoundRepository.updateEndHeight(lastBlock.height);
-
         return new ResponseEntity<Array<string>>({ data: delegates });
     }
 

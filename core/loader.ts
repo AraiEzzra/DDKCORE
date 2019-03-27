@@ -90,6 +90,8 @@ class Loader {
 
     private async roundWarmUp(limit: number) {
         let offset: number = 0;
+        const totalCount = await RoundPGRepository.getCount();
+        let i = 1;
 
         do {
             const roundsBatch: Array<Round> = await RoundPGRepository.getMany(limit, offset);
@@ -99,7 +101,7 @@ class Loader {
             }
 
             for (const round of roundsBatch) {
-                if (round.endHeight) {
+                if (i < totalCount ) {
                     const data = RoundService.sumRound(round);
                     RoundService.applyUnconfirmed(data);
                 }
@@ -113,6 +115,7 @@ class Loader {
                 break;
             }
             offset += limit;
+            i++;
         } while (true);
     }
 
