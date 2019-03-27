@@ -5,6 +5,9 @@ import { SOCKET_TIMEOUT_MS } from 'shared/config/socket';
 import coreSocketClient from 'api/socket/client';
 import { ResponseEntity } from 'shared/model/response';
 import SocketIO from 'socket.io';
+import { SECOND } from 'shared/util/const';
+import { Socket } from 'dgram';
+import config from 'shared/config';
 
 type RequestProcessor = {
     socket: any,
@@ -12,12 +15,33 @@ type RequestProcessor = {
 };
 
 export class SocketMiddleware {
-
     private requests: Map<string, RequestProcessor>;
 
-    constructor() {
+    private requestsPerSecond: number;
+    private readonly requestsPerSecondLimit: number;
+    private requestsQueue: Array<{ message: Message2<any>, socket: Socket }>;
 
+    constructor() {
         this.requests = new Map();
+        this.requestsPerSecond = 0;
+        this.requestsPerSecondLimit = config.API.REQUESTS_PER_SECOND_LIMIT;
+        this.requestsQueue = [];
+
+        setInterval(() => {
+            this.requestsPerSecond = 0;
+            this.processQueue();
+        }, SECOND);
+    }
+
+    processQueue = () => {
+        let request: { message: Message2<any>, socket: Socket };
+        while ((request = this.requestsQueue.pop()) && request) {
+            const { message, socket } = request;
+            this.emitToCore(message, socket);
+            if (this.requestsPerSecond >= this.requestsPerSecondLimit) {
+                break;
+            }
+        }
     }
 
     getRequestsPool(): Map<string, any> {
@@ -42,7 +66,6 @@ export class SocketMiddleware {
     }
 
     onCoreMessage(message: Message, socketServer?: SocketIO.Server) {
-        console.log('ON CORE MESSAGE', message);
         if (message.headers.type === MessageType.EVENT) {
             socketServer.emit(MESSAGE_CHANNEL, message);
         }
@@ -73,6 +96,16 @@ export class SocketMiddleware {
 
     // TODO: extract this to some utils for socket. e.g. driver
     emitToCore<T>(message: Message2<T>, socket: any) {
+        if (this.requestsPerSecond >= this.requestsPerSecondLimit) {
+            this.requestsQueue.unshift({
+                message,
+                socket,
+            });
+            return;
+        } else {
+            this.requestsPerSecond++;
+        }
+
         const cleaner = this.buildRequestCleaner(message, socket);
         this.requests.set(message.headers.id, { socket, cleaner });
         coreSocketClient.emit(MESSAGE_CHANNEL, message);
