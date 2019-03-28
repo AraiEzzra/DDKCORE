@@ -11,43 +11,13 @@ import BlockController from 'core/controller/block';
 import PeerRepository from 'core/repository/peer';
 import SharedTransactionRepo from 'shared/repository/transaction';
 import { messageON } from 'shared/util/bus';
-import SyncRepository from 'core/repository/sync';
-import { shuffle } from 'shared/util/util';
-import { PEERS_DISCOVER } from 'core/util/const';
+import System from 'core/repository/system';
 
 export class SyncController extends BaseController {
 
-    @ON('EMIT_REQUEST_PEERS')
-    async connectNewPeers(): Promise<void> {
-        const peers = await SyncRepository.requestPeers();
-        SyncService.connectNewPeers(peers);
-    }
-
-    @ON('REQUEST_PEERS')
-    sendPeers(action: { peer: Peer, requestId: string }): void {
-        const { peer, requestId } = action;
-        SyncService.sendPeers(peer, requestId);
-    }
-
-    @ON('EMIT_REBOOT_PEERS_CONNECTIONS')
-    async rebootPeersConnections(): Promise<void> {
-        const discoveredPeers = await SyncRepository.discoverPeers();
-        if (discoveredPeers.size < PEERS_DISCOVER.MIN) {
-            return;
-        }
-
-        PeerRepository.disconnectPeers();
-        logger.debug('[Controller][Sync][rebootPeersConnections]: DISCONNECTED ALL PEERS');
-
-        const shuffledPeers = shuffle([...discoveredPeers.values()]);
-        const peers = shuffledPeers.slice(0, PEERS_DISCOVER.MAX);
-        logger.debug(`[Controller][Sync][rebootPeersConnections]: DISCOVERED PEERS ${JSON.stringify(peers)}`);
-        PeerRepository.connectPeers(peers);
-    }
-
     @ON('EMIT_REQUEST_COMMON_BLOCKS')
     emitRequestCommonBlocks(blockData: { id: string, height: number }): void {
-        logger.debug(`[Service][Block][emitRequestCommonBlocks] id: ${blockData.id} height: ${blockData.id}`);
+        logger.debug(`[Controller][Sync][emitRequestCommonBlocks] id: ${blockData.id} height: ${blockData.height}`);
         SyncService.requestCommonBlocks(blockData);
     }
 
@@ -74,10 +44,12 @@ export class SyncController extends BaseController {
     async startSyncBlocks(): Promise<void> {
         if (SyncService.consensus || PeerRepository.peerList().length === 0) {
             if (!RoundService.getIsBlockChainReady()) {
+                System.synchronization = false;
                 messageON('WARM_UP_FINISHED', {});
             }
             return;
         }
+        System.synchronization = true;
         RoundService.setIsBlockChainReady(false);
         logger.debug(`[Controller][Sync][startSyncBlocks]: start sync with consensus ${SyncService.getConsensus()}%`);
 
@@ -105,6 +77,7 @@ export class SyncController extends BaseController {
         if (!SyncService.consensus) {
             await SyncService.checkCommonBlock();
         } else if (!RoundService.getIsBlockChainReady()) {
+            System.synchronization = false;
             messageON('WARM_UP_FINISHED');
         }
     }

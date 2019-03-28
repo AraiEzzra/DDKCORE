@@ -1,6 +1,8 @@
 import os from 'os';
 import { Block } from 'shared/model/block';
 import config from 'shared/config';
+import { logger } from 'shared/util/logger';
+import EventQueue from 'core/repository/eventQueue';
 
 export const MAX_BLOCK_IN_MEMORY = 100;
 
@@ -13,6 +15,7 @@ class Headers {
     minVersion: number;
     ip: string;
     blocksIds: Map<number, string>;
+    synchronizationStatus: boolean;
 
     constructor() {
         this.blocksIds = new Map();
@@ -23,6 +26,21 @@ class Headers {
         this.height = 1;
         this.minVersion = 1;
         this.version = config.CONSTANTS.FORGING.CURRENT_BLOCK_VERSION;
+    }
+
+    get synchronization(): boolean {
+        return this.synchronizationStatus;
+    }
+
+    set synchronization(data: boolean) {
+        logger.debug(`[Repository][System][synchronization] SET value: ${data}`);
+        if (data === false && this.synchronizationStatus === true) {
+            this.synchronizationStatus = data;
+            logger.debug(`[Repository][System][synchronization]: RUN event pool ${EventQueue.pool.length}`);
+            EventQueue.process();
+        }
+
+        this.synchronizationStatus = data;
     }
 
     update(data) {

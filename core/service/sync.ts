@@ -67,10 +67,20 @@ export class SyncService implements ISyncService {
         if (this.checkBlockConsensus(lastBlock) || lastBlock.height === 1) {
             this.requestBlocks(lastBlock);
         } else {
-
-            const randomPeer = PeerRepository.getRandomPeer(
-                PeerRepository.getPeersByFilter(lastBlock.height, SystemRepository.broadhash)
-            );
+            logger.debug(`[PeerRepository.peers], ${PeerRepository.peerList().length}`);
+            const peers = PeerRepository.getPeersByFilter(lastBlock.height, SystemRepository.broadhash);
+            logger.debug(`[PeerRepository.getPeersByFilter], ${peers.length}`);
+            if (peers.length === 0) {
+                logger.debug(`[Service][Sync][checkCommonBlock] 
+                lastBlock.height: ${lastBlock.height}, lastBlock.id: ${lastBlock.id}`);
+                PeerRepository.peerList().forEach((peer) => {
+                    logger.debug(`Peer: ${peer.ip}: height: ${peer.height}, broadhash: ${peer.broadhash}`);
+                });
+                SystemRepository.synchronization = false;
+                return;
+            }
+            const randomPeer = PeerRepository.getRandomPeer(peers);
+            logger.debug(`[PeerRepository.getRandomPeer], ${randomPeer.ip}:${randomPeer.port}`);
             if (!randomPeer) {
                 messageON('WARM_UP_FINISHED');
                 logger.error('[Service][Sync][checkCommonBlock]: Peer doesn`t found');

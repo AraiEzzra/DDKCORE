@@ -47,12 +47,14 @@ export class Socket {
             }
             socket.emit('OPEN');
             socket.on('HEADERS', (data: string) => {
-                // logger.debug(`[SOCKET][CLIENT_PEER_HEADERS_RECEIVE], data: ${data}`);
+                logger.debug(`[SOCKET][CLIENT_PEER_HEADERS_RECEIVE], data: ${data}`);
                 const peer = JSON.parse(data);
                 if (Socket.instance.addPeer(peer, socket)) {
                     socket.emit('SERVER_HEADERS', JSON.stringify(
                         SystemRepository.getFullHeaders()
                     ));
+                } else {
+                    socket.disconnect();
                 }
             });
         });
@@ -77,7 +79,7 @@ export class Socket {
                 SystemRepository.getFullHeaders()
             ));
             ws.on('SERVER_HEADERS', (headers: string) => {
-                // logger.debug(`[SOCKET][SERVER_PEER_HEADERS_RECEIVE] data: ${headers}`);
+                logger.debug(`[SOCKET][SERVER_PEER_HEADERS_RECEIVE] data: ${headers}`);
                 const fullPeer = Object.assign(JSON.parse(headers), peer);
                 Socket.instance.addPeer(fullPeer, ws);
             });
@@ -170,28 +172,6 @@ export class Socket {
 
         return new Promise((resolve, reject) => {
 
-            const timerId = setTimeout(
-                () => reject('408 Request Timeout'),
-                SOCKET_RPC_REQUEST_TIMEOUT
-            );
-
-            if (!(PeerRepository.has(peer))) {
-                logger.error(`Peer ${peer.ip}:${peer.port} is offline`);
-                reject(`Peer ${peer.ip}:${peer.port} is offline`);
-            }
-
-            if (!peer.socket) {
-                peer = PeerRepository.getPeerFromPool(peer);
-            }
-
-            logger.debug(`[SOCKET][SOCKET_RPC_REQUEST] to ${peer.ip}:${peer.port}
-            CODE: ${code}, REQUEST_ID: ${requestId} DATA: ${JSON.stringify(data)}`);
-
-            peer.socket.emit(
-                'SOCKET_RPC_REQUEST',
-                JSON.stringify({ code, data, requestId })
-            );
-
             const responseListener = (response) => {
                 response = new SocketResponseRPC(response);
                 if (response.requestId && response.requestId === requestId) {
@@ -206,6 +186,31 @@ export class Socket {
                     resolve(response.data);
                 }
             };
+
+            if (!(PeerRepository.has(peer))) {
+                logger.error(`Peer ${peer.ip}:${peer.port} is offline`);
+                reject(`Peer ${peer.ip}:${peer.port} is offline`);
+            }
+
+            if (!peer.socket) {
+                peer = PeerRepository.getPeerFromPool(peer);
+            }
+
+            const timerId = setTimeout(
+                () => {
+                    reject('408 Request Timeout');
+                },
+                SOCKET_RPC_REQUEST_TIMEOUT
+            );
+
+            logger.debug(`[SOCKET][SOCKET_RPC_REQUEST] to ${peer.ip}:${peer.port}
+            CODE: ${code}, REQUEST_ID: ${requestId} DATA: ${JSON.stringify(data)}`);
+
+            peer.socket.emit(
+                'SOCKET_RPC_REQUEST',
+                JSON.stringify({ code, data, requestId })
+            );
+
             peer.socket.on('SOCKET_RPC_RESPONSE', responseListener);
         });
     }
