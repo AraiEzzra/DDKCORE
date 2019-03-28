@@ -2,8 +2,13 @@ require('dotenv').config();
 import TransactionService from 'core/service/transaction';
 import SharedTransactionRepo from 'shared/repository/transaction';
 import BlockService from 'core/service/block';
-import AccountRepo from 'core/repository/account';
-import { IAsset, Transaction, TransactionModel, TransactionType } from 'shared/model/transaction';
+import {
+    IAsset,
+    SerializedTransaction,
+    Transaction,
+    TransactionModel,
+    TransactionType
+} from 'shared/model/transaction';
 import { ed } from 'shared/util/ed';
 import crypto from 'crypto';
 import fs from 'fs';
@@ -265,7 +270,7 @@ const resultTransactions = block.transactions.map((transaction) => {
     transaction.blockId = block.id;
     return SharedTransactionRepo.serialize(transaction);
 });
-block.transactions = <Array<Transaction<IAsset>>>resultTransactions;
+block.transactions = <Array<SerializedTransaction<IAsset>>>resultTransactions as any;
 
 console.log(block);
 fs.writeFileSync(path.resolve(DIR, '..', 'genesisBlock_' + Date.now().toString() + '.json'), JSON.stringify(block));

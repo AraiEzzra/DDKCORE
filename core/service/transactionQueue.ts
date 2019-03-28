@@ -1,6 +1,12 @@
 import autobind from 'autobind-decorator';
 
-import { Transaction, TransactionStatus, IAsset, TransactionModel } from 'shared/model/transaction';
+import {
+    Transaction,
+    TransactionStatus,
+    IAsset,
+    TransactionModel,
+    SerializedTransaction
+} from 'shared/model/transaction';
 import { transactionSortFunc } from 'core/util/transaction';
 import TransactionDispatcher from 'core/service/transaction';
 import TransactionPool from 'core/service/transactionPool';
@@ -104,7 +110,7 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
         if (TransactionPool.isPotentialConflict(trs)) {
             this.pushInConflictedQueue(trs);
             // TODO debug only
-            SocketMiddleware.emitEvent<TransactionModel<IAsset>>(
+            SocketMiddleware.emitEvent<SerializedTransaction<IAsset>>(
                 EVENT_TYPES.TRANSACTION_CONFLICTED,
                 SharedTransactionRepo.serialize(trs),
             );
@@ -119,7 +125,7 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
             logger.debug(`TransactionStatus.verifyStatus ${JSON.stringify(verifyStatus)}`);
             trs.status = TransactionStatus.DECLINED;
 
-            SocketMiddleware.emitEvent<TransactionModel<IAsset>>(
+            SocketMiddleware.emitEvent<SerializedTransaction<IAsset>>(
                 EVENT_TYPES.DECLINE_TRANSACTION,
                 SharedTransactionRepo.serialize(trs)
             );

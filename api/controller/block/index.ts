@@ -8,7 +8,6 @@ import { DEFAULT_LIMIT } from 'api/utils/common';
 import { ResponseEntity } from 'shared/model/response';
 import { validate } from 'shared/validate';
 
-const ALLOWED_FILTERS = new Set(['height']);
 const ALLOWED_SORT = new Set(['height', 'createdAt']);
 
 export class BlockController {
