@@ -10,6 +10,7 @@ class RoundController {
     constructor() {
         this.getCurrentRound = this.getCurrentRound.bind(this);
         this.getRounds = this.getRounds.bind(this);
+        this.getRound = this.getRound.bind(this);
     }
 
     @RPC(API_ACTION_TYPES.GET_CURRENT_ROUND)
@@ -20,6 +21,12 @@ class RoundController {
     @RPC(API_ACTION_TYPES.GET_ROUNDS)
     getRounds(message: Message2<Pagination>, socket: any) {
         SocketMiddleware.emitToCore<Pagination>(message, socket);
+    }
+
+    @RPC(API_ACTION_TYPES.GET_ROUND)
+    @validate()
+    getRound(message: Message2<{height: number}>, socket: any) {
+        SocketMiddleware.emitToCore<{height: number}>(message, socket);
     }
 }
 

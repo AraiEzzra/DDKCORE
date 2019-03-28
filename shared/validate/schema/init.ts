@@ -6,6 +6,7 @@ import { SCHEMAS_DELEGATES } from 'shared/validate/schema/model/delegate';
 import { SCHEMAS_BLOCKS } from 'shared/validate/schema/model/block';
 import { SCHEMA_REFERRED_USERS } from 'shared/validate/schema/model/referredUser';
 import { SCHEMAS_REWARD } from 'shared/validate/schema/model/reward';
+import { SCHEMAS_ROUND } from 'shared/validate/schema/model/round';
 
 export const ALL_SCHEMAS = [].concat(
     SCHEMAS_TRS,
@@ -16,7 +17,8 @@ export const ALL_SCHEMAS = [].concat(
     SCHEMAS_BLOCKS,
     SCHEMAS_DELEGATES,
     SCHEMA_REFERRED_USERS,
-    SCHEMAS_REWARD
+    SCHEMAS_REWARD,
+    SCHEMAS_ROUND
 );
 
 export const MESSAGE = SCHEMA_MESSAGE;

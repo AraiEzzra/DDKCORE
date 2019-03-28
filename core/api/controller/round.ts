@@ -13,6 +13,7 @@ class RoundController {
     constructor() {
         this.getCurrentRound = this.getCurrentRound.bind(this);
         this.getRounds = this.getRounds.bind(this);
+        this.getRound = this.getRound.bind(this);
     }
 
     @API(API_ACTION_TYPES.GET_CURRENT_ROUND)
@@ -28,6 +29,13 @@ class RoundController {
         logger.debug(`[API][Round][getMany] ${JSON.stringify(message.body)}`);
         const data = await RoundRepositoryPG.getMany(message.body.limit, message.body.offset);
         return new ResponseEntity<Array<Round>>({ data });
+    }
+
+    @API(API_ACTION_TYPES.GET_ROUND)
+    public async getRound(message: Message2<{ height: number }>): Promise<ResponseEntity<Round>> {
+        logger.debug(`[API][Round][getRound] ${JSON.stringify(message.body)}`);
+        const data = await RoundRepositoryPG.getByHeight(message.body.height);
+        return new ResponseEntity({ data });
     }
 }
 
