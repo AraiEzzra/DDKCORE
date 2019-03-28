@@ -23,7 +23,7 @@ import { SALT_LENGTH } from 'core/util/const';
 import { getAddressByPublicKey } from 'shared/util/account';
 import SlotService from 'core/service/slot';
 import BlockRepository from 'core/repository/block';
-import config from 'shared/config'
+import config from 'shared/config';
 
 export interface IAssetService<T extends IAsset> {
     getBytes(trs: Transaction<T>): Buffer;
