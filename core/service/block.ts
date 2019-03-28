@@ -118,10 +118,12 @@ class BlockService {
                 block = this.setHeight(block, lastBlock);
             }
         }
+
         // const validationResponse = this.validateBlockSlot(block);
         // if (!validationResponse.success) {
         //     return new ResponseEntity<void>({errors: [...validationResponse.errors, 'processBlock']});
         // }
+          
         const resultCheckExists: ResponseEntity<void> = this.checkExists(block);
         if (!resultCheckExists.success) {
             return new ResponseEntity<void>({errors: [...resultCheckExists.errors, 'processBlock']});
@@ -302,19 +304,23 @@ class BlockService {
         }
     }
 
-    private validateBlockSlot(block: Block): ResponseEntity<void> {
+    private async validateBlockSlot(block: Block): Promise<ResponseEntity<void>> {
         if (block.height === 1) {
             return new ResponseEntity<void>();
         }
 
         const blockSlot = slotService.getSlotNumber(block.createdAt);
         logger.debug(`[Service][Block][validateBlockSlot]: blockSlot ${blockSlot}`);
-        
-        const round = RoundRepository.getCurrentRound();
+
+        let round = RoundRepository.getCurrentRound();
         logger.debug(`[Service][Block][validateBlockSlot]: round ${round}`);
-        
+
         if (!round) {
-            return new ResponseEntity<void>( { errors: [`Can't get current round`] });
+            await RoundService.generateRound(block.createdAt);
+            round = RoundRepository.getCurrentRound();
+            if (!round) {
+                return new ResponseEntity<void>({ errors: [`Can't get block round`] });
+            }
         }
 
         const generatorSlot = round.slots[block.generatorPublicKey];
@@ -324,9 +330,8 @@ class BlockService {
         }
 
         if (blockSlot !== generatorSlot.slot) {
-            return new ResponseEntity<void>(
-                { errors: [`Invalid block slot number: blockSlot ${blockSlot} generator slot ${generatorSlot.slot}`] }
-            );
+            await RoundService.generateRound(block.createdAt);
+            return await this.validateBlockSlot(block);
         }
 
         return new ResponseEntity<void>({});

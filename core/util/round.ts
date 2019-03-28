@@ -15,5 +15,5 @@ export const calculateRoundByTimestamp = (timestamp: number): number => {
 
 // invalid method
 export const calculateRound = (slot: number, activeDelegates: number): number => {
-    return Math.ceil(slot / activeDelegates);
+    return Math.floor(slot / activeDelegates);
 };
