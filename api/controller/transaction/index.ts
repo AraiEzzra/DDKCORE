@@ -44,7 +44,6 @@ export class TransactionController {
     @RPC(API_ACTION_TYPES.GET_TRANSACTIONS)
     @validate()
     async getTransactions(message: Message2<getTransactionsRequest>, socket: any): Promise<void> {
-        // TODO add validation
         const transactions = await TransactionPGRepository.getMany(
             message.body.filter || {},
             message.body.sort || [['createdAt', 'ASC']],
@@ -67,7 +66,7 @@ export class TransactionController {
     @validate()
     async getTransactionsByBlockId(message: Message2<{ limit: number, offset: number, blockId: string }>, socket: any) {
         const transactions = await TransactionPGRepository.getMany(
-            { block_id: message.body.blockId },
+            { blockId: message.body.blockId },
             [['createdAt', 'ASC']],
             message.body.limit || DEFAULT_LIMIT,
             message.body.offset || 0

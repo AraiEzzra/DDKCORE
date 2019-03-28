@@ -27,7 +27,7 @@ class BlockPGRepository {
                 limit,
                 offset
             });
-        if (blocks) {
+        if (blocks && blocks.length) {
             return {
                 blocks: blocks.map(block => SharedBlockPGRepository.deserialize(block)),
                 count: Number(blocks[0].count)
