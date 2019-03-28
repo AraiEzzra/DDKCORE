@@ -8,17 +8,13 @@ export const COMPONENTS_TRS_VOTE = [
             votes: {
                 type: 'array'
             },
-            reward: {
-                type: 'number',
-                minimum: 0
-            },
-            unstake: {
-                type: 'number',
-                minimum: 0
-            },
-
+            type: {
+                type: 'string',
+                minLength: 1,
+                maxLength: 1
+            }
         },
-        required: ['votes']
+        required: ['votes', 'type']
     },
     {
         id: 'TRANSACTION_VOTE',
@@ -47,7 +43,11 @@ export const COMPONENTS_TRS_VOTE = [
                     },
                     secret: {
                         type: 'string',
-                        minLength: 1
+                        minLength: 1,
+                    },
+                    secondSecret: {
+                        type: 'string',
+                        minLength: 1,
                     }
                 },
                 required: ['trs', 'secret']

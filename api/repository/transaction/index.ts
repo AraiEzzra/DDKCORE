@@ -12,7 +12,7 @@ type AllowedFilters = {
     type?: number;
     recipientAddress?: string;
     asset?: string;
-}
+};
 
 class TransactionPGRepository {
 
@@ -26,8 +26,7 @@ class TransactionPGRepository {
             filter.asset = `{"recipientAddress": "${filter.recipientAddress}"}`;
             delete filter.recipientAddress;
         }
-        console.log(filter);
-        console.log(query.getTransactions(filter, sort.map(elem => `${toSnakeCase(elem[0])} ${elem[1]}`).join(', ')));
+
         const transactions = await db.manyOrNone(
             query.getTransactions(filter, sort.map(elem => `${toSnakeCase(elem[0])} ${elem[1]}`).join(', ')), {
                 ...filter,

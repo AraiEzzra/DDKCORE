@@ -6,7 +6,7 @@ export type Filter = {
     offset: number
 };
 
-export type CreateTransactionParams = { trs: TransactionModel<IAsset>, secret: string };
+export type CreateTransactionParams = { trs: TransactionModel<IAsset>, secret: string, secondSecret?: string };
 
 export type IConstants = {
     AIRDROP: {
