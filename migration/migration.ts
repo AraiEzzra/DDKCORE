@@ -36,17 +36,15 @@ const correctTransactions: Array<Transaction<IAsset>> = [];
 Loader.start();
 
 export async function startPrepareTransactionsForMigration() {
-    const [newTrs, oldTrs, accounts] = [
+    const [newTrs, oldTrs] = [
         await readTransactionsToArray(filePathNewTransactions),
         await readTransactionsToMap(filePathOldTransactions),
-        await readAccountsToMap(filePathAddressesWithNegativeBalance)
     ];
     let count = 0;
     console.log(newTrs.length, oldTrs.size);
     newTrs.forEach(
         function <T extends IAsset>(transaction) {
             let correctTransaction: TransactionDTO = null;
-            let additionalTransaction: TransactionDTO = null;
             let airdropReward = transaction.airdropReward ? JSON.parse(transaction.airdropReward) : {};
             switch (Number(transaction.type)) {
                 case TransactionType.REGISTER:
@@ -59,19 +57,6 @@ export async function startPrepareTransactionsForMigration() {
                             .split(',')[0]
                         }
                     });
-                    const address = getAddressByPublicKey(correctTransaction.senderPublicKey);
-                    if (accounts.has(address.toString())) {
-                        const negativeAmount: number = Number(accounts.get(address.toString()));
-                        additionalTransaction = new TransactionDTO({
-                            type: TransactionType.SEND,
-                            senderPublicKey: 'b12a7faba4784d79c7298ce49ef5131b291abd70728e6f2bd1bc2207ea4b7947',
-                            createdAt: Number(transaction.createdAt) + 1,
-                            asset: {
-                                recipientAddress: address,
-                                amount: Math.abs(negativeAmount)
-                            }
-                        });
-                    }
                     break;
                 case TransactionType.SEND:
                     correctTransaction = new TransactionDTO({
@@ -169,11 +154,10 @@ export async function startPrepareTransactionsForMigration() {
             }
             correctTransactions.push(TransactionService.create(new TransactionModel(correctTransaction),
                 getKeyPair(correctTransaction.senderPublicKey)).data);
-            if (additionalTransaction) {
-                correctTransactions.push(TransactionService.create(new TransactionModel(additionalTransaction),
-                    getKeyPair(additionalTransaction.senderPublicKey)).data)
-            }
         });
+
+    await addMoneyForNegativeBalanceAccounts();
+    
     
     newTrs.length = 0;
     oldTrs.clear();
@@ -183,6 +167,43 @@ export async function startPrepareTransactionsForMigration() {
     console.log('Prepared transactions: ', correctTransactions.length);
 
 
+}
+
+async function addMoneyForNegativeBalanceAccounts() {
+    const accounts: Map<number, number> = await readAccountsToMap(filePathAddressesWithNegativeBalance);
+    console.log('START FIX NEGATIVE BALANCES', accounts.size);
+    let lastRegisterIndexCount = 0;
+    let createdAtRegisterTrs = 0;
+    for (let i = 0; i < correctTransactions.length; i++) {
+        const transaction = correctTransactions[i];
+        if (transaction.type === TransactionType.REGISTER && createdAtRegisterTrs === 0) {
+            lastRegisterIndexCount = i;
+            createdAtRegisterTrs = transaction.createdAt;
+        } else if (transaction.type === TransactionType.REGISTER && transaction.createdAt === createdAtRegisterTrs) {
+            ++lastRegisterIndexCount;
+        } else if (i - lastRegisterIndexCount > 1000) {
+            break;
+        }
+    }
+
+    const additionalSendTransactions: Array<Transaction<IAsset>> = [];
+    const senderPublicKey = 'b12a7faba4784d79c7298ce49ef5131b291abd70728e6f2bd1bc2207ea4b7947';
+    const keyPair: IKeyPair = getKeyPair(senderPublicKey);
+    accounts.forEach(((value, key) => {
+        const additionalSendTransaction = new TransactionDTO({
+            type: TransactionType.SEND,
+            senderPublicKey: senderPublicKey,
+            createdAt: createdAtRegisterTrs + 1,
+            asset: {
+                recipientAddress: key,
+                amount: Math.abs(value)
+            }
+        });
+        additionalSendTransactions.push(TransactionService.create(new TransactionModel(additionalSendTransaction),
+            keyPair).data);
+    }));
+    correctTransactions.splice(lastRegisterIndexCount, 0, ...additionalSendTransactions);
+    console.log('FINISH FIX NEGATIVE BALANCES');
 }
 
 export function popTransactionsForMigration(quantity: number) {
@@ -239,17 +260,17 @@ function readTransactionsToMap(filePath): Promise<Map<string, object>> {
     });
 }
 
-function readAccountsToMap(filePath): Promise<Map<string, object>> {
+function readAccountsToMap(filePath): Promise<Map<number, number>> {
 
     let count = 0;
 
     return new Promise((resolve, reject) => {
-        const accounts = new Map();
+        const accounts: Map<number, number> = new Map();
 
         fs.createReadStream(filePath)
         .pipe(csv())
         .on('data', (data) => {
-            accounts.set(data.address.replace(/DDK/ig, ''), data.amount);
+            accounts.set(Number(data.address.replace(/DDK/ig, '')), Number(data.amount));
             ++count;
         })
         .on('end', () => {
