@@ -1,7 +1,7 @@
 import { ON } from 'core/util/decorator';
 import { BaseController } from 'core/controller/baseController';
 import { logger } from 'shared/util/logger';
-import { IAsset, TransactionModel } from 'shared/model/transaction';
+import { IAsset, SerializedTransaction, TransactionModel } from 'shared/model/transaction';
 import TransactionQueue from 'core/service/transactionQueue';
 import TransactionService from 'core/service/transaction';
 import TransactionPool from 'core/service/transactionPool';
@@ -24,7 +24,7 @@ class TransactionController extends BaseController {
 
         const validateResult = TransactionService.validate(trs);
         if (!validateResult.success) {
-            SocketMiddleware.emitEvent<TransactionModel<IAsset>>(
+            SocketMiddleware.emitEvent<SerializedTransaction<IAsset>>(
                 EVENT_TYPES.DECLINE_TRANSACTION,
                 SharedTransactionRepo.serialize(trs)
             );

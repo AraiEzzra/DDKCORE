@@ -1,9 +1,16 @@
-import { IAsset, Transaction, TransactionModel, TransactionType } from 'shared/model/transaction';
+import {
+    IAsset,
+    SerializedTransaction,
+    Transaction,
+    TransactionModel,
+    TransactionType
+} from 'shared/model/transaction';
 import TransactionDelegateRepo from 'shared/repository/transaction/asset/delegate';
 import TransactionRegisterRepo from 'shared/repository/transaction/asset/register';
 import TransactionSendRepo from 'shared/repository/transaction/asset/send';
 import TransactionStakeRepo from 'shared/repository/transaction/asset/stake';
 import TransactionVoteRepo from 'shared/repository/transaction/asset/vote';
+import { getAddressByPublicKey } from 'shared/util/account';
 
 
 const ASSET_REPOSITORIES: { [key: string]: IAssetRepository<IAsset> } = {
@@ -53,7 +60,7 @@ export interface IAssetRepository <T extends IAsset> {
 
 class SharedTransactionRepo {
 
-    serialize(trs: Transaction<IAsset>): TransactionModel<IAsset> {
+    serialize(trs: Transaction<IAsset>): SerializedTransaction<IAsset> {
         const assetRepo: IAssetRepository<IAsset> = ASSET_REPOSITORIES[trs.type];
         let asset = trs.asset;
         if (assetRepo) {
@@ -65,6 +72,7 @@ class SharedTransactionRepo {
             type: trs.type,
             createdAt: trs.createdAt,
             senderPublicKey: trs.senderPublicKey,
+            senderAddress: (trs.senderAddress || getAddressByPublicKey(trs.senderPublicKey)).toString(),
             signature: trs.signature,
             secondSignature: trs.secondSignature,
             salt: trs.salt,

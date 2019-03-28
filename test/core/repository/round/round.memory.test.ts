@@ -67,16 +67,16 @@ describe('Round memory repository', () => {
         });
     });
 
-    describe('updateEndHeight', () => {
-
-        let roundEntity = getNewRoundWithHash();
-
-        it('should return current round', () => {
-            RoundRepo.setCurrentRound(roundEntity.round);
-            RoundRepo.updateEndHeight(400);
-            const response = RoundRepo.getCurrentRound();
-            expect(response.endHeight).to.be.equal(400);
-
-        });
-    });
+    // describe('updateEndHeight', () => {
+    //
+    //     let roundEntity = getNewRoundWithHash();
+    //
+    //     it('should return current round', () => {
+    //         RoundRepo.setCurrentRound(roundEntity.round);
+    //         RoundRepo.updateEndHeight(400);
+    //         const response = RoundRepo.getCurrentRound();
+    //         expect(response.endHeight).to.be.equal(400);
+    //
+    //     });
+    // });
 });
