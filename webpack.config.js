@@ -88,6 +88,23 @@ const generateGenesisConfig = {
     }
 };
 
+const checkAddressConfig = {
+    entry: path.join(DIR, 'addressFromPublicKeyTest.ts'),
+    context: path.resolve(DIR, 'core'),
+    resolve: {
+        extensions: ['.ts'],
+        alias: {
+            core: path.resolve(DIR, 'core'),
+            shared: path.resolve(DIR, 'shared'),
+        },
+    },
+    output: {
+        filename: 'addressFromPublicKeyTest.js',
+        path: path.join(OUTPUT_DIR),
+        publicPath: '/',
+    }
+};
+
 module.exports = env => {
 
     let appConfig;
@@ -101,6 +118,9 @@ module.exports = env => {
             break;
         case 'genesis':
             appConfig = generateGenesisConfig;
+            break;
+        case 'check-address':
+            appConfig = checkAddressConfig;
             break;
     }
     return Object.assign({}, baseConfig, appConfig);

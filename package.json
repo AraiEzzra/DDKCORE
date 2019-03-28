@@ -19,6 +19,7 @@
     "build:core": "./node_modules/webpack/bin/webpack.js --env.service=core --progress --profile --colors --display-modules",
     "build:genesis": "./node_modules/webpack/bin/webpack.js --env.service=genesis",
     "generate": "npm run build:genesis && NODE_ENV_IN=development node --max-old-space-size=8192 dist/generateGenesis.js",
+    "check:address": "./node_modules/webpack/bin/webpack.js --env.service=check-address && node dist/addressFromPublicKeyTest.js",
     "watch": "npm run watch:core & npm run watch:api",
     "watch:api": "./node_modules/webpack/bin/webpack.js --env.service=api --progress --colors --watch",
     "watch:core": "./node_modules/webpack/bin/webpack.js --env.service=core --progress --colors --watch",
