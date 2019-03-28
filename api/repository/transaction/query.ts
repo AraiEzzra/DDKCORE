@@ -7,7 +7,7 @@ export default {
         `SELECT *, count(1) over () as count FROM trs 
           ${Object.keys(filter).length
             ? `WHERE ${Object.keys(filter).map(
-                key => `${toSnakeCase(key)} ${key === 'asset' ? '@>' : '='} \${${key}}`)
+                key => `${toSnakeCase(key)} ${key === 'asset' ? '@>' : '='} \${${key}}`).join(' OR ')
                 } `
             : ''} 
           ORDER BY ${sort} LIMIT \${limit} OFFSET \${offset}`,

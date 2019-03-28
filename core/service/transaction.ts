@@ -51,7 +51,7 @@ export interface ITransactionService<T extends IAsset> {
 
     verifyUnconfirmed(trs: Transaction<T>, sender: Account, checkExists: boolean): ResponseEntity<void>;
 
-    create(data: Transaction<T>, keyPair: IKeyPair): ResponseEntity<Transaction<T>>;
+    create(data: Transaction<T>, keyPair: IKeyPair, secondKeyPair: IKeyPair): ResponseEntity<Transaction<T>>;
 
     sign(keyPair: IKeyPair, trs: Transaction<T>): string;
 
@@ -199,7 +199,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         }
     }
 
-    create(data: TransactionModel<T>, keyPair: IKeyPair): ResponseEntity<Transaction<T>> {
+    create(data: TransactionModel<T>, keyPair: IKeyPair, secondKeyPair?: IKeyPair): ResponseEntity<Transaction<T>> {
         const errors = [];
 
         if (!TransactionType[data.type]) {
@@ -235,6 +235,9 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         trs.asset = service.create(data);
 
         trs.signature = this.sign(keyPair, trs);
+        if (secondKeyPair) {
+            trs.secondSignature = this.sign(secondKeyPair, trs);
+        }
         trs.id = this.getId(trs);
 
         return new ResponseEntity({ data: trs });

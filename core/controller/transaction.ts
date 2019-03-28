@@ -51,7 +51,9 @@ class TransactionController extends BaseController {
     // TODO: extract this somewhere and make it async
     public transactionCreate(data: CreateTransactionParams) {
         const keyPair = createKeyPairBySecret(data.secret);
-        const responseTrs = TransactionService.create(data.trs, keyPair);
+        const secondKeyPair = data.secondSecret ? createKeyPairBySecret(data.secondSecret) : undefined;
+        
+        const responseTrs = TransactionService.create(data.trs, keyPair, secondKeyPair);
         if (responseTrs.success) {
             const validateResult = TransactionService.validate(responseTrs.data);
             if (!validateResult.success) {

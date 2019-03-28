@@ -12,9 +12,6 @@ export class TransactionController {
 
     @API(API_ACTION_TYPES.CREATE_TRANSACTION)
     public createTransaction(message: Message) {
-        /**
-         * Some validate "message.body"
-         */
         logger.debug(`[API][TransactionController][createTransaction] ${JSON.stringify(message.body)}`);
         return TransactionRPCController.transactionCreate(message.body);
     }

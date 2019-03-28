@@ -1,6 +1,11 @@
 import { Address, PublicKey, Timestamp } from 'shared/model/account';
 import { getAddressByPublicKey } from 'shared/util/account';
 
+export enum VoteType {
+    VOTE = '+',
+    DOWN_VOTE = '-'
+}
+
 export enum TransactionType {
     REGISTER = 0,
     SEND = 10,
@@ -63,6 +68,7 @@ export interface IAssetSendStake extends IAsset {
 
 export interface IAssetVote extends IAsset {
     votes: Array<string>;
+    type?: VoteType;
     reward?: number;
     unstake?: number;
     airdropReward?: IAirdropAsset;

@@ -1,32 +1,32 @@
 import { IAssetService } from 'core/service/transaction';
-import {IAirdropAsset, IAssetVote, Transaction, TransactionModel} from 'shared/model/transaction';
+import { IAirdropAsset, IAssetVote, Transaction, TransactionModel, VoteType } from 'shared/model/transaction';
 import { Account, Stake } from 'shared/model/account';
 import { ResponseEntity } from 'shared/model/response';
 import AccountRepo from 'core/repository/account';
 import config from 'shared/config';
 import BUFFER from 'core/util/buffer';
 import {
+    applyFrozeOrdersRewardAndUnstake,
     calculateTotalRewardAndUnstake,
     getAirdropReward,
-    verifyAirdrop,
-    applyFrozeOrdersRewardAndUnstake,
-    undoFrozeOrdersRewardAndUnstake,
     sendAirdropReward,
-    undoAirdropReward
+    undoAirdropReward,
+    undoFrozeOrdersRewardAndUnstake,
+    verifyAirdrop
 } from 'core/util/reward';
 import DelegateRepo from 'core/repository/delegate';
-import { SECONDS_PER_MINUTE, TOTAL_PERCENTAGE } from 'core/util/const';
+import { TOTAL_PERCENTAGE } from 'core/util/const';
 
 class TransactionVoteService implements IAssetService<IAssetVote> {
 
     create(trs: TransactionModel<IAssetVote>): IAssetVote {
         const sender: Account = AccountRepo.getByAddress(trs.senderAddress);
-        const isDownVote: boolean = trs.asset.votes[0][0] === '-';
-        const totals: { reward: number, unstake: number} = calculateTotalRewardAndUnstake(sender, isDownVote);
+        const totals: { reward: number, unstake: number} = 
+            calculateTotalRewardAndUnstake(sender, trs.asset.type === VoteType.DOWN_VOTE);
         const airdropReward: IAirdropAsset = getAirdropReward(sender, totals.reward, trs.type);
 
         return {
-            votes: trs.asset.votes,
+            votes: trs.asset.votes.map((vote: string) => `${trs.asset.type}${vote}`),
             reward: totals.reward || 0,
             unstake: totals.unstake || 0,
             airdropReward: airdropReward

@@ -5,13 +5,11 @@ import { COMPONENTS_TRS_DELEGATE } from 'shared/validate/schema/model/transactio
 import { COMPONENTS_TRS_STAKE } from 'shared/validate/schema/model/transaction/create/stake';
 import { COMPONENTS_TRS_VOTE } from 'shared/validate/schema/model/transaction/create/vote';
 
-const SCHEMAS_TRANSACTION = [].concat(
+export const SCHEMAS_TRS_ASSET = [
     COMPONENTS_TRS_SEND,
     COMPONENTS_TRS_REGISTER,
     COMPONENTS_TRS_SIGNATURE,
     COMPONENTS_TRS_DELEGATE,
     COMPONENTS_TRS_STAKE,
     COMPONENTS_TRS_VOTE
-);
-
-export const SCHEMAS_TRS = SCHEMAS_TRANSACTION;
+];
