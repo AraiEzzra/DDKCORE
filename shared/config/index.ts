@@ -40,6 +40,7 @@ const getGenesisBlockByNodeEnv = (nodeEnv: string) => {
 export const DEFAULT_CORE_SOCKET_PORT = 7007;
 export const DEFAULT_CORE_RPC_PORT = 7009;
 export const DEFAULT_API_SOCKET_PORT = 7008;
+export const DEFAULT_REQUESTS_PER_SECOND_LIMIT = 5000;
 const DEFAULT_DB_CONFIGS = {
     HOST: '0.0.0.0',
     PORT: 5432,
@@ -74,6 +75,7 @@ class Config {
         };
     };
     API: {
+        REQUESTS_PER_SECOND_LIMIT: number;
         SOCKET: {
             PORT: number;
         };
@@ -129,6 +131,8 @@ class Config {
             },
         };
         this.API = {
+            REQUESTS_PER_SECOND_LIMIT: Number(process.env.REQUESTS_PER_SECOND_LIMIT) ||
+                DEFAULT_REQUESTS_PER_SECOND_LIMIT,
             SOCKET: {
                 PORT: Number(process.env.API_PORT) || DEFAULT_API_SOCKET_PORT,
             },

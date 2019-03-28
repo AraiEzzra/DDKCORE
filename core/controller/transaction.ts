@@ -41,8 +41,8 @@ class TransactionController extends BaseController {
                 publicKey: trs.senderPublicKey,
                 address: trs.senderAddress
             });
-        } else {
-            sender.secondPublicKey = trs.senderPublicKey;
+        } else if (!sender.publicKey) {
+            sender.publicKey = trs.senderPublicKey;
         }
 
         TransactionQueue.push(trs);
