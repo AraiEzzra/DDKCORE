@@ -5,6 +5,7 @@ import { logger } from 'shared/util/logger';
 import { MESSAGE_CHANNEL } from 'shared/driver/socket/channels';
 import { ALL_SCHEMAS, MESSAGE } from 'shared/validate/schema/init';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
+import { Message2 } from 'shared/model/message';
 
 /**
  * Compile all schemas for validate
@@ -24,19 +25,16 @@ export const validate = () => {
             value: (message, socket): any => {
                 let schemaID = message.code;
                 if (schemaID === API_ACTION_TYPES.CREATE_TRANSACTION &&
-                    listKeys(message).includes('body.data.trs.type')
+                    listKeys(message).includes('body.trs.type')
                 ) {
-                    schemaID += '_' + message.body.data.trs.type;
+                    schemaID += '_' + message.body.trs.type;
                 }
                 validateData(MESSAGE(schemaID), message, (err, valid: boolean) => {
                     if (err) {
-                        const error = new ResponseEntity({
+                        message.body = new ResponseEntity({
                             errors: [`IS NOT VALID REQUEST:'${ message.code }'... ${err.message}`]
                         });
-                        return handlerError.call(this, {
-                            message: error,
-                            socket
-                        });
+                        return handlerError.call(this, message, socket);
                     } else {
                         return descriptorFn.call(this, message, socket);
                     }
@@ -56,9 +54,9 @@ export const validateData = (schema, data: Object, callback) => {
     });
 };
 
-const handlerError = (data) => {
-    logger.error(data.message);
-    data.socket.emit(MESSAGE_CHANNEL, data.message);
+const handlerError = (message: Message2<any>, socket: any) => {
+    logger.error(message.body.errors);
+    socket.emit(MESSAGE_CHANNEL, message);
 };
 
 const listKeys = (data: Object) => {

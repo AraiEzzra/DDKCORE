@@ -1,7 +1,12 @@
 import TransactionRepo from 'core/repository/transaction/index';
 import { expect } from 'chai';
 import {
-    getNewTransaction, getNewTransactionWithBlockId, getNewTransactionWithRandomBlockId, blockId2, blockId4, blockId6
+    getNewTransaction,
+    getNewTransactionWithBlockId,
+    blockId2,
+    blockId4,
+    blockId6,
+    getNewTransactionWithRandomBlockIdFromList
 } from 'test/core/repository/transaction/mock';
 import { Transaction } from 'shared/model/transaction';
 
@@ -99,7 +104,7 @@ describe('Transaction memory repository', () => {
 
             before(() => {
                 for (let i = 0; i < transactionsCount; i++) {
-                    const newTransaction = getNewTransactionWithRandomBlockId();
+                    const newTransaction = getNewTransactionWithRandomBlockIdFromList();
                     transactions.push(newTransaction);
                     TransactionRepo.add(newTransaction);
                 }
@@ -186,7 +191,7 @@ describe('Transaction memory repository', () => {
 
             before(() => {
                 for (let i = 0; i < transactionsCount; i++) {
-                    const newTransaction = getNewTransactionWithRandomBlockId();
+                    const newTransaction = getNewTransactionWithRandomBlockIdFromList();
                     transactions.push(newTransaction);
                     TransactionRepo.add(newTransaction);
                 }

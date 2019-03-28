@@ -12,7 +12,6 @@ class RoundController {
         this.getRounds = this.getRounds.bind(this);
     }
 
-
     @RPC(API_ACTION_TYPES.GET_CURRENT_ROUND)
     getCurrentRound(message: Message2<{}>, socket: any) {
         SocketMiddleware.emitToCore<{}>(message, socket);

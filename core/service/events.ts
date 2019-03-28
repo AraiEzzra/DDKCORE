@@ -15,9 +15,9 @@ export type BlockchainInfo = {
 class EventService {
 
     updateBlockchainInfo() {
-        const totalSupply = AccountRepository.getByAddress(config.CONSTANTS.TOTAL_SUPPLY.ADDRESS).actualBalance;
-        const circulatingSupply = config.CONSTANTS.TOTAL_SUPPLY.AMOUNT -
-            AccountRepository.getByAddress(config.CONSTANTS.TOTAL_SUPPLY.ADDRESS).actualBalance;
+        const totalSupplyAccount = AccountRepository.getByAddress(config.CONSTANTS.TOTAL_SUPPLY.ADDRESS);
+        const totalSupply = totalSupplyAccount ? totalSupplyAccount.actualBalance : 0;
+        const circulatingSupply = config.CONSTANTS.TOTAL_SUPPLY.AMOUNT - totalSupply;
         const statistics = AccountRepository.getStatistics();
 
         SocketMiddleware.emitEvent<BlockchainInfo>(EVENT_TYPES.UPDATE_BLOCKCHAIN_INFO, {

@@ -36,5 +36,5 @@ export const createRoundTable = async () => {
 };
 
 export const dropRoundTable = async () => {
-    await db.query('DROP TABLE round;');
+    await db.query('TRUNCATE round;');
 };

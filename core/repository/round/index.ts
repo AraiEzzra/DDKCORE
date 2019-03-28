@@ -53,10 +53,6 @@ class RoundRepository implements IRoundRepository {
     public getFirstSlotInRound(round: Round = this.currentRound): number {
         return round.slots[Object.keys(round.slots)[0]].slot;
     }
-    
-    public updateEndHeight(endHeight: number): void {
-        this.currentRound.endHeight = endHeight;
-    }
 }
 
 export default new RoundRepository();

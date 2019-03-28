@@ -49,7 +49,7 @@ interface IRoundService {
 
     rebuild(): void;
 
-    rollBack(round: Round): Promise<void>;
+    rollBack(): Promise<void>;
 
     validate(): boolean;
 
@@ -125,7 +125,11 @@ class RoundService implements IRoundService {
         }
 
         if (!RoundRepository.getCurrentRound()) {
-            await this.generateRound(block.createdAt);
+            if (block.createdAt === 0) {
+                await this.generateRound();
+            } else {
+                await this.generateRound(block.createdAt);
+            }
             return;
         }
 
@@ -182,8 +186,16 @@ class RoundService implements IRoundService {
         // lastSlot + 1 for waiting finish last round
         const lastSlot = RoundRepository.getLastSlotInRound();
         const roundEndTime = SlotService.getSlotRealTime(lastSlot + 1) - new Date().getTime();
+
+        if (roundEndTime < 0) {
+            logger.info(
+                `${this.logPrefix}[startRoundFinishTask] Skip finish round`
+            );
+            return;
+        }
+
         logger.debug(
-            `${this.logPrefix}[generateRound] The round will be completed in ${roundEndTime} ms`
+            `${this.logPrefix}[startRoundFinishTask] The round will be completed in ${roundEndTime} ms`
         );
         createTaskON(ActionTypes.ROUND_FINISH, roundEndTime);
     }
@@ -219,13 +231,13 @@ class RoundService implements IRoundService {
         const sortedHashList = this.sortHashList(hashList);
         const slots = this.generatorPublicKeyToSlot(sortedHashList, timestamp);
 
-        const currentRound = new Round({
+        const newCurrentRound = new Round({
             startHeight: lastBlock.height + 1,
             slots: slots,
         });
-        RoundRepository.setCurrentRound(currentRound);
+        RoundRepository.setCurrentRound(newCurrentRound);
 
-        await this.apply(currentRound);
+        await this.apply(newCurrentRound);
 
         logger.info(
             `${this.logPrefix}[generateRound] Start round on height: ${RoundRepository.getCurrentRound().startHeight}`
@@ -264,11 +276,11 @@ class RoundService implements IRoundService {
     public rebuild(): void {
     }
 
-    public async rollBack(round: Round = RoundRepository.getCurrentRound()): Promise<void> {
+    public async rollBack(): Promise<void> {
         resetTaskON(ActionTypes.BLOCK_GENERATE);
         resetTaskON(ActionTypes.ROUND_FINISH);
-        this.undoUnconfirmed(round);
-        await this.undo(round);
+        await this.undo(RoundRepository.getCurrentRound());
+        this.undoUnconfirmed(RoundRepository.getPrevRound());
     }
 
     public validate(): boolean {
@@ -288,9 +300,6 @@ class RoundService implements IRoundService {
             const delegateAccount = AccountRepository.getByPublicKey(publicKey);
             delegateAccount.actualBalance += fee;
         });
-
-        const lastBlock = BlockRepository.getLastBlock();
-        RoundRepository.updateEndHeight(lastBlock.height);
 
         return new ResponseEntity<Array<string>>({ data: delegates });
     }
