@@ -2,17 +2,25 @@ import { RPC } from 'api/utils/decorators';
 import SocketMiddleware from 'api/middleware/socket';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
 import {Message2} from 'shared/model/message';
+import { validate } from 'shared/validate';
 
 class RoundController {
 
     constructor() {
         this.getCurrentRound = this.getCurrentRound.bind(this);
+        this.getRound = this.getRound.bind(this);
     }
 
 
     @RPC(API_ACTION_TYPES.GET_CURRENT_ROUND)
     getCurrentRound(message: Message2<{}>, socket: any) {
         SocketMiddleware.emitToCore<{}>(message, socket);
+    }
+
+    @RPC(API_ACTION_TYPES.GET_ROUND)
+    @validate()
+    getRound(message: Message2<{height: number}>, socket: any) {
+        SocketMiddleware.emitToCore<{height: number}>(message, socket);
     }
 }
 

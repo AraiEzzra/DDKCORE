@@ -16,12 +16,12 @@ class SocketMiddleware {
         socket.on(MESSAGE_CHANNEL, (message: Message) => this.onMessage(message, socket));
     }
 
-    onMessage(message: Message, socket: any) {
+    async onMessage(message: Message, socket: any) {
 
         const method = API_METHODS[message.code];
 
         if (method && typeof method === 'function' && message.headers.type === MessageType.REQUEST) {
-            message.body = method(message, socket);
+            message.body = await method(message, socket);
             message.headers.type = MessageType.RESPONSE;
             socket.emit(MESSAGE_CHANNEL, message);
         } else {
