@@ -89,6 +89,9 @@ class Loader {
                     sender.publicKey = trs.senderPublicKey;
                 }
 
+                if (trs.createdAt) {
+                    trs.fee = TransactionDispatcher.calculateFee(trs, sender);
+                }
                 TransactionDispatcher.applyUnconfirmed(trs, sender);
             }
             if (transactionBatch.length < limit) {

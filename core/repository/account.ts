@@ -5,7 +5,7 @@ export type Statistics = {
     tokenHolders: number;
     totalStakeAmount: number;
     totalStakeholders: number;
-}
+};
 
 class AccountRepository {
     private memoryAccountsByAddress: Map<Address, Account> = new Map<Address, Account>();
