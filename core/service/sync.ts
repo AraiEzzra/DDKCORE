@@ -12,6 +12,8 @@ import { TOTAL_PERCENTAGE } from 'core/util/const';
 import config from 'shared/config';
 import { logger } from 'shared/util/logger';
 import RoundService from 'core/service/round';
+import SlotService from 'core/service/slot';
+import RoundRepository from 'core/repository/round';
 
 //  TODO get from env
 const MIN_CONSENSUS = 51;
@@ -88,16 +90,31 @@ export class SyncService implements ISyncService {
             }
             const minHeight = Math.min(...randomPeer.blocksIds.keys());
             if (minHeight > lastBlock.height) {
+
                 messageON('EMIT_REQUEST_COMMON_BLOCKS', {
                     id: lastBlock.id,
                     height: lastBlock.height
                 });
             } else {
-
-                await BlockService.deleteLastBlock();
+                await this.rollback();
                 await this.checkCommonBlock();
             }
         }
+    }
+
+    async rollback() {
+        const blockSlot = SlotService.getSlotNumber(BlockRepository.getLastBlock().createdAt);
+        const lastSlotInRound = RoundRepository.getLastSlotInRound(RoundRepository.getPrevRound());
+
+        logger.debug(`[Controller][Sync][rollback] lastSlotInRound: ${lastSlotInRound}, blockSlot: ${blockSlot}`);
+
+        if (lastSlotInRound >= blockSlot) {
+            logger.debug(`[Controller][Sync][rollback] round rollback`);
+            await RoundService.rollBack();
+        }
+
+        await BlockService.deleteLastBlock();
+
     }
 
     requestBlocks(lastBlock, peer = null): void {

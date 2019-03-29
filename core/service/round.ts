@@ -15,6 +15,8 @@ import { Block } from 'shared/model/block';
 import { ActionTypes } from 'core/util/actionTypes';
 import { calculateRoundFirstSlotByTimestamp } from 'core/util/round';
 import { createKeyPairBySecret } from 'shared/util/crypto';
+import System from 'core/repository/system';
+import SyncService from 'core/service/sync';
 
 const MAX_LATENESS_FORGE_TIME = 500;
 
@@ -243,6 +245,9 @@ class RoundService implements IRoundService {
             `${this.logPrefix}[generateRound] Start round on height: ${RoundRepository.getCurrentRound().startHeight}`
         );
 
+        if (System.synchronization) {
+            return new ResponseEntity<void>();
+        }
         this.startBlockGenerateTask();
         this.startRoundFinishTask();
 
@@ -279,8 +284,15 @@ class RoundService implements IRoundService {
     public async rollBack(): Promise<void> {
         resetTaskON(ActionTypes.BLOCK_GENERATE);
         resetTaskON(ActionTypes.ROUND_FINISH);
+        const prevRound = RoundRepository.getPrevRound();
+        if (!prevRound) {
+            return;
+        }
         await this.undo(RoundRepository.getCurrentRound());
-        this.undoUnconfirmed(RoundRepository.getPrevRound());
+        this.undoUnconfirmed(prevRound);
+        RoundRepository.setCurrentRound(RoundRepository.getPrevRound());
+        const currentRound = RoundRepository.getCurrentRound();
+        RoundRepository.setPrevRound(await RoundPGRepository.getLast(currentRound.startHeight));
     }
 
     public validate(): boolean {

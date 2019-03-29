@@ -5,7 +5,6 @@ import { Peer } from 'shared/model/peer';
 import { BaseController } from 'core/controller/baseController';
 import PeerService from 'core/service/peer';
 import RoundService from 'core/service/round';
-import BlockService from 'core/service/block';
 import { logger } from 'shared/util/logger';
 import BlockController from 'core/controller/block';
 import PeerRepository from 'core/repository/peer';
@@ -32,10 +31,13 @@ export class SyncController extends BaseController {
     async getCommonBlocks(action: { data: { isExist: boolean, block: { id: string, height: number } }, peer: Peer }) {
         const { data, peer } = action;
         logger.debug(`[Controller][Sync][getCommonBlocks]: ${JSON.stringify(data)}`);
+
         if (data.isExist) {
             SyncService.requestBlocks(data.block, peer);
         } else {
-            await BlockService.deleteLastBlock();
+
+            await SyncService.rollback();
+            
             this.startSyncBlocks();
         }
     }

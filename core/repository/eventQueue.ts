@@ -22,7 +22,7 @@ class EventQueue {
     process() {
         while (this.pool.length > 0) {
             const event = this.pool.pop();
-            logger.debug(`[Repository][runQue]: run ${event.topicName}, ${this.pool.length}`);
+            logger.debug(`[Repository][EventQueue][process]: run ${event.topicName}, ${this.pool.length}`);
             switch (event.type) {
                 case 'ON':
                     messageON(event.topicName, event.data);
