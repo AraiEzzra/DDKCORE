@@ -116,6 +116,7 @@ export type SerializedTransaction<T> = {
     senderAddress: string;
     signature: string;
     secondSignature: string;
+    fee: number;
     salt: string;
     relay: number;
     asset: T;
