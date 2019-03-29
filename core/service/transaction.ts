@@ -369,13 +369,11 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             throw new ResponseEntity<void>({ errors: ['Invalid transaction timestamp. CreatedAt is in the future'] });
         }
 
-        if (trs.type in [TransactionType.SEND, TransactionType.STAKE]) {
-            const asset: IAssetTransfer | IAssetStake = <IAssetTransfer | IAssetStake><Object>trs.asset;
-            const amount = (asset.amount || 0) + trs.fee;
-            const senderBalanceResponse = this.checkBalance(amount, trs, sender);
-            if (!senderBalanceResponse.success) {
-                return senderBalanceResponse;
-            }
+        const asset: IAssetTransfer | IAssetStake = <IAssetTransfer | IAssetStake><Object>trs.asset;
+        const amount = (asset.amount || 0) + trs.fee;
+        const senderBalanceResponse = this.checkBalance(amount, trs, sender);
+        if (!senderBalanceResponse.success) {
+            return senderBalanceResponse;
         }
 
         const service: IAssetService<IAsset> = getTransactionServiceByType(trs.type);
