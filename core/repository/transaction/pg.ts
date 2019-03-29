@@ -22,6 +22,7 @@ class TransactionPGRepo implements ITransactionPGRepository<IAsset> {
         'sender_public_key',
         'signature',
         'second_signature',
+        'fee',
         'salt',
         'asset'
     ];

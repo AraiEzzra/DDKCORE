@@ -228,6 +228,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             senderPublicKey: sender.publicKey,
             senderAddress: sender.address,
             type: data.type,
+            fee: 0,
             salt: cryptoBrowserify.randomBytes(SALT_LENGTH).toString('hex'),
         });
 
