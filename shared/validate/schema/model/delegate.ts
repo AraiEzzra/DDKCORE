@@ -6,7 +6,22 @@ export const SCHEMAS_DELEGATES = [
         type: 'object',
         properties: {
             limit: {
+                type: 'number',
+                max: 100
+            },
+            offset: {
                 type: 'number'
+            }
+        },
+        required: ['limit', 'offset']
+    },
+    {
+        id: API_ACTION_TYPES.GET_ACTIVE_DELEGATES,
+        type: 'object',
+        properties: {
+            limit: {
+                type: 'number',
+                max: 100
             },
             offset: {
                 type: 'number'
@@ -19,7 +34,8 @@ export const SCHEMAS_DELEGATES = [
         type: 'object',
         properties: {
             limit: {
-                type: 'number'
+                type: 'number',
+                max: 100
             },
             offset: {
                 type: 'number'
