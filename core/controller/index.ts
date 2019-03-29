@@ -18,6 +18,8 @@ const UNLOCKED_METHODS: Set<string> = new Set(
     SyncController.eventsON.map(func => func.handlerTopicName)
 );
 
+UNLOCKED_METHODS.add('transactionsSaved');
+
 export const initControllers = () => {
     const controllers = [
         BlockController,
