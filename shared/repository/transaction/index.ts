@@ -96,7 +96,7 @@ class SharedTransactionRepo {
             senderPublicKey: rawTrs.senderPublicKey,
             signature: rawTrs.signature,
             secondSignature: rawTrs.secondSignature,
-            fee: rawTrs.fee,
+            fee: Number(rawTrs.fee),
             salt: rawTrs.salt,
             relay: rawTrs.relay,
             asset: asset,

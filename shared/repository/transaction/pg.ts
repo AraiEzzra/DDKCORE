@@ -28,7 +28,7 @@ class SharedTransactionPGRepo  {
             senderPublicKey: rawTrs.sender_public_key,
             signature: rawTrs.signature,
             secondSignature: rawTrs.second_signature,
-            fee: rawTrs.fee,
+            fee: Number(rawTrs.fee),
             salt: rawTrs.salt,
             asset: rawTrs.asset,
         });
