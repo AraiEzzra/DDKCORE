@@ -355,9 +355,9 @@ class BlockService {
             if (errors.length === 0) {
 
                 trs.senderAddress = trs.senderAddress ? trs.senderAddress : getAddressByPublicKey(trs.senderPublicKey);
-                const sender: Account = AccountRepository.getByAddress(trs.senderAddress);
+                let sender: Account = AccountRepository.getByAddress(trs.senderAddress);
                 if (!sender) {
-                    AccountRepo.add({
+                    sender = AccountRepo.add({
                         publicKey: trs.senderPublicKey,
                         address: trs.senderAddress
                     });
