@@ -52,7 +52,7 @@ class TransactionController extends BaseController {
     public transactionCreate(data: CreateTransactionParams) {
         const keyPair = createKeyPairBySecret(data.secret);
         const secondKeyPair = data.secondSecret ? createKeyPairBySecret(data.secondSecret) : undefined;
-        
+
         const responseTrs = TransactionService.create(data.trs, keyPair, secondKeyPair);
         if (responseTrs.success) {
             const validateResult = TransactionService.validate(responseTrs.data);
