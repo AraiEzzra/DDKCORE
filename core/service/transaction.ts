@@ -270,12 +270,10 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         return Buffer.concat([bytes, assetBytes]);
     }
 
-    // can be called without signature
     getHash(trs: Transaction<T>): Buffer {
         return crypto.createHash('sha256').update(this.getBytes(trs)).digest();
     }
 
-    // called with signature
     getId(trs: Transaction<T>): string {
         return this.getHash(trs).toString('hex');
     }
@@ -334,7 +332,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
 
     verifySecondSignature(trs: Transaction<T>, publicKey: string): boolean {
         const bytes = this.getBytes(trs, false, true);
-        return this.verifyBytes(bytes, publicKey, trs.signature);
+        return this.verifyBytes(bytes, publicKey, trs.secondSignature);
     }
 
     verifySignature(trs: Transaction<T>, publicKey: string): boolean {

@@ -24,9 +24,12 @@ class TransactionController extends BaseController {
 
         const validateResult = TransactionService.validate(trs);
         if (!validateResult.success) {
-            SocketMiddleware.emitEvent<SerializedTransaction<IAsset>>(
+            SocketMiddleware.emitEvent<{ transaction: SerializedTransaction<IAsset>, reason: Array<string> }>(
                 EVENT_TYPES.DECLINE_TRANSACTION,
-                SharedTransactionRepo.serialize(trs)
+                {
+                    transaction: SharedTransactionRepo.serialize(trs),
+                    reason: validateResult.errors
+                }
             );
             return;
         }
