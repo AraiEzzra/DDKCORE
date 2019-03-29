@@ -6,10 +6,9 @@ export const COMPONENTS_TRS_DELEGATE = [
         type: 'object',
         properties: {
             username: {
-                type: 'string'
-            },
-            url: {
-                type: 'string'
+                type: 'string',
+                minLength: 1,
+                maxLength: 20
             }
         },
         required: ['username']
