@@ -78,7 +78,7 @@ export default {
         maxTxsPerQueue: 1000
     },
     forging: {
-        totalSupplyAccount: BigInt('4995063339468361088'),
+        totalSupplyAccount: BigInt('13566253584516829136'),
         force: true,
         minBroadhashConsensus: parseInt(env.MIN_CONSENSUS, 10) || 0,
         secret: env.FORGE_SECRET || '',

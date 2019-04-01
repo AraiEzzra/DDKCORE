@@ -72,7 +72,6 @@ type IKeyPair = {
 };
 
 const delegatesSecrets = [
-    
 ];
 
 class RoundService implements IRoundService {

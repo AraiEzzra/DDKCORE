@@ -9,23 +9,8 @@ import { getAddressByPublicKey } from 'shared/util/account';
 const csv = require('csv-parser');
 const fs = require('fs');
 
-const QUANTITY_PARSE_TRS = 1000;
-
-const secret = 'sing traffic unfold witness fruit frame bonus can cost warrior few flock';
-
-const mapOldAndNewDelegatesPublicKey: Map<string, string> = new Map([
-    ['276f0d09e64b68566fb458b7c71aeb62411d0b633ad6c038e5a4a042ec588af9', '83cb3d8641c8e73735cc1b70c915602ffcb6e5a68f14a71056511699050a1a05'],
-    ['3f0348b6d3ecaeaeca0a05ee4c2d7b4b7895ef0a12d8023ba245b6b8022833e5', 'f959e6c8d279c97d3ec5ba993f04ab740a6e50bec4aad75a8a1e7808a6c5eec7'],
-    ['3f1ecf6de517a6bf2f5c7a8226a478dc571ed0100d53ee104842f4d443e49806', '137b9f0f839ab3ecd2146bfecd64d31e127d79431211e352bedfeba5fd61a57a'],
-    ['2432531ba2ed00f673d7742bf3894bf31ef80cc2253c4347e4450a30f8bba06f', 'bf39c78c418e8b270fbb57537fee56bde776c449e01c5330dbe1daf1c44bbb33'],
-    ['1beb2d8cf4b1b849a443cd236c0ec194ead6390f4b0671cdb008d0558e252b91', '1de2f26471c9a46fa30ab357a378e0df6a2d22f757edc88ec8f8eb6897cea56a'],
-    ['d4999726b7db7e0e5c0d5f441e43d0e0b471aebb46178b9286f275f1f5911208', '485e5e9da8a5960645fd133b6b80dc613db115fb6aaf802b2adab775db365d06'],
-    ['ca3ccbb56fd111b31f11818bfd8b38d3c77b84a2ebd4983e4584eda4d7197e41', '23efdae2f13e70db15b9c32415cbf5dfb37eb0d546cfa57244a34a823434fa37'],
-    ['33ecad8ba399744276b9fb43480537141f84b369c235044bffc43536a9ff19b5', 'dbdca1c3c7c36f61f7f93684607cc663a33163d1c6f10d827f1ddc049993cffc'],
-    ['ed6e8f15d1e6495fe613b42af080c84f8b6e23148686c4851d82287785265332', '44ca95e90fa08cfe25940acfd0202c9bb33c97757987f2f4c482fbe70a4e8f33'],
-    ['e1c567be066129f28f23f1b90fe76d5d45661f64b1f38426cca4f3c77d1a92f4', '48eef7e87948611958c10dee9463d73fe987533acf8c1f3980e1757d2d17b573'],
-    ['6690354691aa0374dca6ff7dd643d1e5a3e5f5fb97c1170413a7ba4c0efb1a4f', '63778928fdc0d35bd19919004fa6b20d754077dc562f97b570cd85917909ecb4'],
-]);
+// 0 for all transactions
+const QUANTITY_PARSE_TRS = 0;
 
 const filePathNewTransactions = './transactionsNew.csv';
 const filePathOldTransactions = './transactionsOld.csv';
@@ -91,8 +76,6 @@ export async function startPrepareTransactionsForMigration() {
                             amount: Number(transaction.amount),
                             startTime: Number(transaction.startTime),
                             startVoteCount: oldTransaction ? Number(oldTransaction.voteCount) : 0,
-
-
                         }
                     });
                     if (transaction.airdropReward) {
@@ -116,17 +99,6 @@ export async function startPrepareTransactionsForMigration() {
                 case TransactionType.VOTE:
                     
                     const votes: Array<string> = transaction.votes.split(',') || [];
-                    // if(votes.length > 0){
-                    //     for (let i = 0; i < votes.length; i++){
-                    //         let vote = votes[i].slice(0,1);
-                    //         let delegatePublicKey = votes[i].slice(1,votes[i].length);
-                    //        
-                    //         if (mapOldAndNewDelegatesPublicKey.has(delegatePublicKey)) {
-                    //             votes[i] = vote + mapOldAndNewDelegatesPublicKey.get(delegatePublicKey);
-                    //         } 
-                    //        
-                    //     } 
-                    // }
                     correctTransaction = new TransactionDTO({
                         ...transaction,
                         asset: {
@@ -156,6 +128,7 @@ export async function startPrepareTransactionsForMigration() {
                 getKeyPair(correctTransaction.senderPublicKey)).data);
         });
 
+    await changeSendAndStakeTrsOrder();
     await addMoneyForNegativeBalanceAccounts();
     
     
@@ -167,6 +140,35 @@ export async function startPrepareTransactionsForMigration() {
     console.log('Prepared transactions: ', correctTransactions.length);
 
 
+}
+
+function changeSendAndStakeTrsOrder(){
+    console.log('START CHANGE SEND AND STAKE ORDER');
+    const setAddress: Set<number> = new Set();
+    const mapAddressIndex: Map<number, number> = new Map();
+
+    for (let i = 0; i < correctTransactions.length; i++) {
+        const address: number = Number(getAddressByPublicKey(correctTransactions[i].senderPublicKey));
+        if (!setAddress.has(address)) {
+            setAddress.add(address);
+            if (correctTransactions[i].type === TransactionType.STAKE) {
+                mapAddressIndex.set(address, i);
+            }
+        }
+
+        if (correctTransactions[i].type === TransactionType.SEND && mapAddressIndex.has(address)) {
+            let index = mapAddressIndex.get(address);
+            let intermediateTrs = correctTransactions[index];
+            let intermediateCreatedAt = intermediateTrs.createdAt;
+            correctTransactions[index] = correctTransactions[i];
+            intermediateTrs.createdAt = correctTransactions[index].createdAt;
+            correctTransactions[index].createdAt = intermediateCreatedAt;
+            correctTransactions[i] = intermediateTrs;
+
+            mapAddressIndex.delete(address);
+        }
+    }
+    console.log('FINISH CHANGE SEND AND STAKE ORDER');
 }
 
 async function addMoneyForNegativeBalanceAccounts() {
