@@ -6,63 +6,79 @@ export const SCHEMAS_REWARD = [
         type: 'object',
         properties: {
             address: {
-                type: 'string'
+                type: 'string',
+                format: 'address'
             },
-            filter: {
-                type: 'object',
-                properties: {
-                    limit: {
-                        type: 'number'
-                    },
-                    offset: {
-                        type: 'number'
-                    }
-                },
-                required: ['limit', 'offset']
+            limit: {
+                type: 'integer',
+                minimum: 1,
+                maximum: 100
+            },
+            offset: {
+                type: 'integer',
+                minimum: 0,
             }
         },
-        required: ['address', 'filter']
+        required: ['address', 'limit', 'offset']
     },
     {
         id: API_ACTION_TYPES.GET_REFERRED_USERS_REWARDS,
         type: 'object',
         properties: {
             address: {
-                type: 'string'
+                type: 'string',
+                format: 'address'
             },
-            filter: {
-                type: 'object',
-                properties: {
-                    limit: {
-                        type: 'number'
-                    },
-                    offset: {
-                        type: 'number'
-                    }
-                },
-                required: ['limit', 'offset']
+            limit: {
+                type: 'integer',
+                minimum: 1,
+                maximum: 100
+            },
+            offset: {
+                type: 'integer',
+                minimum: 0,
             }
         },
-        required: ['address', 'filter']
+        required: ['address', 'limit', 'offset']
     },
     {
         id: API_ACTION_TYPES.GET_STAKE_REWARDS,
         type: 'object',
         properties: {
             address: {
-                type: 'string'
+                type: 'string',
+                format: 'address'
+            },
+            limit: {
+                type: 'integer',
+                minimum: 1,
+                maximum: 100
+            },
+            offset: {
+                type: 'integer',
+                minimum: 0,
             }
         },
-        required: ['address']
+        required: ['address', 'limit', 'offset']
     },
     {
         id: API_ACTION_TYPES.GET_AIRDROP_REWARDS,
         type: 'object',
         properties: {
             address: {
-                type: 'string'
+                type: 'string',
+                format: 'address'
+            },
+            limit: {
+                type: 'integer',
+                minimum: 1,
+                maximum: 100
+            },
+            offset: {
+                type: 'integer',
+                minimum: 0,
             }
         },
-        required: ['address']
+        required: ['address', 'limit', 'offset']
     }
 ];

@@ -6,7 +6,8 @@ export const SCHEMAS_BLOCKS = [
         type: 'object',
         properties: {
             id: {
-                type: 'string'
+                type: 'string',
+                format: 'id'
             },
         },
         required: ['id']
@@ -16,18 +17,34 @@ export const SCHEMAS_BLOCKS = [
         type: 'object',
         properties: {
             filter: {
-                type: 'object'
+                type: 'object',
+                properties: {
+                    height: {
+                        type: 'integer',
+                        minimum: 1
+                    },
+                }
             },
             sort: {
-                type: 'array'
+                type: 'array',
+                items: {
+                    type: 'array',
+                    items: {
+                        type: 'string',
+                        enum: ['ASC', 'DESC', 'createdAt', 'height'],
+                    }
+                }
             },
             limit: {
-                type: 'number'
+                type: 'integer',
+                minimum: 1,
+                maximum: 100
             },
             offset: {
-                type: 'number'
+                type: 'integer',
+                minimum: 0,
             }
         },
-        required: ['filter', 'limit', 'offset']
+        required: ['limit', 'offset']
     }
 ];
