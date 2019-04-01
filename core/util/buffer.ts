@@ -4,8 +4,9 @@ class BUFFER {
         BYTE: 1,
         UINT32: 4,
         INT64: 8,
-        HEX: 32,
-        DOUBLE_HEX: 64
+        SALT: 32,
+        PUBLIC_KEY: 64,
+        SIGNATURE: 64
     };
 
     public stringNullGenerator(count) {

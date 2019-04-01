@@ -251,23 +251,17 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         const bytes = Buffer.alloc(TRANSACTION_BUFFER_SIZE);
         let offset = 0;
 
-        bytes.write(trs.salt, offset, BUFFER.LENGTH.HEX);
-        offset += BUFFER.LENGTH.HEX;
-
         offset = BUFFER.writeInt8(bytes, trs.type, offset);
-        offset = BUFFER.writeInt32LE(bytes, trs.createdAt, offset);
-        offset = BUFFER.writeNotNull(bytes, trs.senderPublicKey, offset, BUFFER.LENGTH.HEX);
+        BUFFER.writeInt32LE(bytes, trs.createdAt, offset);
 
-        if (!skipSignature && trs.signature) {
-            bytes.write(trs.signature, offset, BUFFER.LENGTH.DOUBLE_HEX, 'hex');
-        }
-        offset += BUFFER.LENGTH.DOUBLE_HEX;
-
-        if (!skipSecondSignature && trs.secondSignature) {
-            bytes.write(trs.secondSignature, offset, BUFFER.LENGTH.DOUBLE_HEX, 'hex');
-        }
-
-        return Buffer.concat([bytes, assetBytes]);
+        return Buffer.concat([
+            bytes,
+            Buffer.from(trs.salt, 'hex'),
+            Buffer.from(trs.senderPublicKey, 'hex'),
+            Buffer.from(!skipSignature && trs.signature ? trs.signature : '', 'hex'),
+            Buffer.from(!skipSecondSignature && trs.secondSignature ? trs.secondSignature : '', 'hex'),
+            assetBytes
+        ]);
     }
 
     getHash(trs: Transaction<T>): Buffer {

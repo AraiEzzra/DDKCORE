@@ -6,20 +6,33 @@ export const SCHEMAS_ROUND = [
         type: 'object',
         properties: {
             height: {
-                type: 'number'
+                type: 'integer',
+                minimum: 1,
+            },
+            limit: {
+                type: 'integer',
+                minimum: 1,
+                maximum: 100
+            },
+            offset: {
+                type: 'integer',
+                minimum: 0,
             }
         },
-        required: ['height']
+        required: ['height', 'limit', 'offset']
     },
     {
         id: API_ACTION_TYPES.GET_ROUNDS,
         type: 'object',
         properties: {
             limit: {
-                type: 'number'
+                type: 'integer',
+                minimum: 1,
+                maximum: 100
             },
             offset: {
-                type: 'number'
+                type: 'integer',
+                minimum: 0,
             }
         },
         required: ['limit', 'offset']

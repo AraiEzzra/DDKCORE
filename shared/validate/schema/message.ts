@@ -1,7 +1,7 @@
-export const HEADER_MESSAGE  = {
+export const HEADER_MESSAGE = {
     id: 'HEADERS',
-        type: 'object',
-        properties: {
+    type: 'object',
+    properties: {
         id: {
             type: 'string'
         },
@@ -12,9 +12,10 @@ export const HEADER_MESSAGE  = {
     required: ['id', 'type']
 };
 
-export function SCHEMA_MESSAGE (schemaId: string) {
+export function SCHEMA_MESSAGE(schemaId: string) {
     return {
         id: 'message',
+        type: 'object',
         properties: {
             code: {
                 type: 'string'

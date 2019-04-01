@@ -7,7 +7,7 @@ import SharedBlockPGRepository from 'shared/repository/block/pg';
 
 export type AllowedFilters = {
     height?: number;
-}
+};
 
 class BlockPGRepository {
 

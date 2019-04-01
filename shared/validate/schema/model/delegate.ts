@@ -6,11 +6,13 @@ export const SCHEMAS_DELEGATES = [
         type: 'object',
         properties: {
             limit: {
-                type: 'number',
-                max: 100
+                type: 'integer',
+                minimum: 1,
+                maximum: 100
             },
             offset: {
-                type: 'number'
+                type: 'integer',
+                minimum: 0,
             }
         },
         required: ['limit', 'offset']
@@ -20,11 +22,13 @@ export const SCHEMAS_DELEGATES = [
         type: 'object',
         properties: {
             limit: {
-                type: 'number',
-                max: 100
+                type: 'integer',
+                minimum: 1,
+                maximum: 100
             },
             offset: {
-                type: 'number'
+                type: 'integer',
+                minimum: 0,
             }
         },
         required: ['limit', 'offset']
@@ -34,14 +38,17 @@ export const SCHEMAS_DELEGATES = [
         type: 'object',
         properties: {
             limit: {
-                type: 'number',
-                max: 100
+                type: 'integer',
+                minimum: 1,
+                maximum: 100
             },
             offset: {
-                type: 'number'
+                type: 'integer',
+                minimum: 0,
             },
             address: {
-                type: 'string'
+                type: 'string',
+                format: 'address'
             }
         },
         required: ['limit', 'offset', 'address']

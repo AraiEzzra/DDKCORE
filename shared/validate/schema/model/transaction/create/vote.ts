@@ -1,57 +1,26 @@
-import { TransactionType } from 'shared/model/transaction';
+import { TransactionType, VoteType } from 'shared/model/transaction';
 
-export const COMPONENTS_TRS_VOTE = [
+export const ASSET_TRS_VOTE = [
     {
-        id: 'ASSET.VOTE',
+        id: `ASSET.${TransactionType.VOTE}`,
         type: 'object',
         properties: {
             votes: {
-                type: 'array'
+                type: 'array',
+                items: {
+                    type: 'string',
+                    format: 'publicKey'
+                },
+                maxItems: 3,
             },
             type: {
                 type: 'string',
-                minLength: 1,
-                maxLength: 1
+                enum: [
+                    VoteType.VOTE,
+                    VoteType.DOWN_VOTE
+                ]
             }
         },
         required: ['votes', 'type']
-    },
-    {
-        id: 'TRANSACTION_VOTE',
-        type: 'object',
-        properties: {
-            type: {
-                type: 'number',
-            },
-            senderPublicKey: {
-                type: 'string'
-            },
-            asset: {
-                $ref: 'ASSET.VOTE'
-            }
-        },
-        required: ['type', 'senderPublicKey', 'asset']
-    },
-    {
-        id: `CREATE_TRANSACTION_${TransactionType.VOTE}`,
-        type: 'object',
-        properties: {
-            data: {
-                properties: {
-                    trs: {
-                        $ref: 'TRANSACTION_VOTE'
-                    },
-                    secret: {
-                        type: 'string',
-                        minLength: 1,
-                    },
-                    secondSecret: {
-                        type: 'string',
-                        minLength: 1,
-                    }
-                },
-                required: ['trs', 'secret']
-            }
-        },
     }
 ];

@@ -10,8 +10,6 @@ import { ResponseEntity } from 'shared/model/response';
 import SharedTransactionRepo from 'shared/repository/transaction';
 import { validate } from 'shared/validate';
 
-const ALLOWED_SORT = new Set(['blockId', 'createdAt', 'type']);
-
 export class TransactionController {
 
     constructor() {

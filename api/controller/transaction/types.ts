@@ -4,8 +4,8 @@ import { Pagination, Sort } from 'api/utils/common';
 export type getTransactionsRequest = {
     filter: {
         type?: TransactionType,
-        block_id?: string,
-        sender_public_key?: string,
+        blockId?: string,
+        senderPublicKey?: string,
     },
     sort: Array<Sort>
 } & Pagination;

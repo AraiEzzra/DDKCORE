@@ -10,7 +10,12 @@ import { Message2 } from 'shared/model/message';
 /**
  * Compile all schemas for validate
  */
-const validator: Validator = new ZSchema({});
+const validator: Validator = new ZSchema({
+    noTypeless: true,
+    noExtraKeywords: true,
+    noEmptyArrays: true,
+    noEmptyStrings: true
+});
 const isSchemasValid: boolean = validator.validateSchema(ALL_SCHEMAS);
 logger.debug('[API][SCHEMAS] VALID:', isSchemasValid);
 
@@ -18,21 +23,19 @@ logger.debug('[API][SCHEMAS] VALID:', isSchemasValid);
  * Decorator for validate request
  */
 export const validate = () => {
-    return function ( target: any, propertyName: string, descriptor: PropertyDescriptor) {
+    return function (target: any, propertyName: string, descriptor: PropertyDescriptor) {
         let descriptorFn = descriptor.value || descriptor.get();
 
         return {
             value: (message, socket): any => {
                 let schemaID = message.code;
-                if (schemaID === API_ACTION_TYPES.CREATE_TRANSACTION &&
-                    listKeys(message).includes('body.trs.type')
-                ) {
-                    schemaID += '_' + message.body.trs.type;
+                if (schemaID === API_ACTION_TYPES.CREATE_TRANSACTION && message.body && message.body.trs) {
+                    schemaID = `CREATE_TRANSACTION.${message.body.trs.type}`;
                 }
-                validateData(MESSAGE(schemaID), message, (err, valid: boolean) => {
-                    if (err) {
+                validateData(MESSAGE(schemaID), message, (err: Validator.SchemaError, isValid: boolean) => {
+                    if (!isValid) {
                         message.body = new ResponseEntity({
-                            errors: [`IS NOT VALID REQUEST:'${ message.code }'... ${err.message}`]
+                            errors: [`IS NOT VALID REQUEST:'${message.code}'... ${err.message}`]
                         });
                         return handlerError.call(this, message, socket);
                     } else {
@@ -45,28 +48,16 @@ export const validate = () => {
 };
 
 export const validateData = (schema, data: Object, callback) => {
-    validator.validate(data, schema, (err, report: boolean) => {
+    validator.validate(data, schema, (err: Array<Validator.SchemaError>, isValid: boolean) => {
         if (err) {
-            callback(err[0], report);
+            callback(err[0], isValid);
             return;
         }
-        callback(null, report);
+        callback(null, isValid);
     });
 };
 
 const handlerError = (message: Message2<any>, socket: any) => {
     logger.error(message.body.errors);
     socket.emit(MESSAGE_CHANNEL, message);
-};
-
-const listKeys = (data: Object) => {
-    let listFields: Array<string> = Object.keys(data);
-
-    for (let key in data) {
-        if (typeof data[key] === 'object') {
-            let subKeys = listKeys(data[key]);
-            listFields = listFields.concat(subKeys.map((subkey) => key + '.' + subkey));
-        }
-    }
-    return listFields;
 };

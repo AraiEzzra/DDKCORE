@@ -6,7 +6,8 @@ export const SCHEMAS_ACCOUNTS = [
         type: 'object',
         properties: {
             address: {
-                type: 'string'
+                type: 'string',
+                format: 'address'
             }
         },
         required: ['address']
@@ -16,7 +17,8 @@ export const SCHEMAS_ACCOUNTS = [
         type: 'object',
         properties: {
             address: {
-                type: 'string'
+                type: 'string',
+                format: 'address'
             }
         },
         required: ['address']
