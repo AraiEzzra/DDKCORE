@@ -4,7 +4,7 @@ import { getAddressByPublicKey } from 'shared/util/account';
 export type Statistics = {
     tokenHolders: number;
     totalStakeAmount: number;
-    totalStakeholders: number;
+    totalStakeHolders: number;
 };
 
 class AccountRepository {
@@ -38,7 +38,7 @@ class AccountRepository {
     getStatistics(): Statistics {
         let tokenHolders = 0;
         let totalStakeAmount = 0;
-        let totalStakeholders = 0;
+        let totalStakeHolders = 0;
         for (const account of this.memoryAccountsByAddress.values()) {
             if (account.actualBalance > 0) {
                 tokenHolders++;
@@ -48,10 +48,10 @@ class AccountRepository {
 
             if (activeStakes.length > 0) {
                 totalStakeAmount += activeStakes.reduce((sum, stake) => sum += stake.amount, 0);
-                totalStakeholders += 1;
+                totalStakeHolders += 1;
             }
         }
-        return { tokenHolders, totalStakeAmount, totalStakeholders };
+        return { tokenHolders, totalStakeAmount, totalStakeHolders };
 
     }
 

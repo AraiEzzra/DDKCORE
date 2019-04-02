@@ -7,7 +7,7 @@ export const ASSET_TRS_SEND = [
         properties: {
             amount: {
                 type: 'integer',
-                minimum: 1,
+                minimum: 10000,
                 maximum: 4500000000000000
             },
             recipientAddress: {

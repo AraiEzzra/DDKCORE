@@ -115,7 +115,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
 
     calculateFee(trs: Transaction<T>, sender: Account): number {
         const service: IAssetService<IAsset> = getTransactionServiceByType(trs.type);
-        return service.calculateFee(trs, sender);
+        return Math.ceil(service.calculateFee(trs, sender));
     }
 
     checkBalance(amount: number, trs: Transaction<T>, sender: Account): ResponseEntity<void> {
