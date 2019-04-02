@@ -1,6 +1,6 @@
 import { MessageType } from 'shared/model/message';
 import { db } from 'shared/driver';
-import { getTime, randNumber, randStr } from 'test/api/base/mock';
+import { getTime, randNumber, randStr } from 'test/api/base/util';
 import { createBlockQuery, createTransactionQuery } from 'test/api/base/query';
 
 export const GENESIS_BLOCK_ID = 'cbb9449abb9672d33fa2eb200b1c8b03db7c6572dfb6e59dc334c0ab82b63ab0';
@@ -63,7 +63,7 @@ export class Fixture {
     static async removeTransaction(id: string) {
         await db.none('DELETE FROM trs where id=${id}', { id });
     }
-    
+
     static async removeBlock(id: string) {
         await db.none('DELETE FROM block where id=${id}', { id });
     }
