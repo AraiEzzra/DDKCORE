@@ -11,4 +11,4 @@ Ubuntu 16.04 (LTS) x86_64
 ```
 Use docker and be happy
 
-### [API documentation](docs/api/index)
+### [API documentation](docs/api/index.md)
