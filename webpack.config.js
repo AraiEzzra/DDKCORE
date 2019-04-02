@@ -71,6 +71,24 @@ const coreConfig = {
     },
 };
 
+const testAPIConfig = {
+    entry: path.join(DIR, 'test', 'api', 'test.ts'),
+    context: path.resolve(DIR, 'test', 'api'),
+    resolve: {
+        extensions: ['.ts', '.json'],
+        alias: {
+            test: path.resolve(DIR, 'test'),
+            shared: path.resolve(DIR, 'shared'),
+            config: path.resolve(DIR, 'config'),
+        },
+    },
+    output: {
+        filename: 'app.js',
+        path: path.join(OUTPUT_DIR, 'test', 'api'),
+        publicPath: '/',
+    },
+};
+
 const generateGenesisConfig = {
     entry: path.join(DIR, 'core', 'genesisGenerator.ts'),
     context: path.resolve(DIR, 'core'),
@@ -102,6 +120,8 @@ module.exports = env => {
         case 'genesis':
             appConfig = generateGenesisConfig;
             break;
+        case 'test-api':
+            appConfig = testAPIConfig;
     }
     return Object.assign({}, baseConfig, appConfig);
 };

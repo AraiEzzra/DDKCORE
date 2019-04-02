@@ -21,3 +21,4 @@ dapps/
 .npm/
 .node-gyp/
 /client.js
+/v8-compile-cache-0/

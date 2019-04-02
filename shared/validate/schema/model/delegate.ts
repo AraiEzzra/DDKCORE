@@ -6,10 +6,29 @@ export const SCHEMAS_DELEGATES = [
         type: 'object',
         properties: {
             limit: {
-                type: 'number'
+                type: 'integer',
+                minimum: 1,
+                maximum: 100
             },
             offset: {
-                type: 'number'
+                type: 'integer',
+                minimum: 0,
+            }
+        },
+        required: ['limit', 'offset']
+    },
+    {
+        id: API_ACTION_TYPES.GET_ACTIVE_DELEGATES,
+        type: 'object',
+        properties: {
+            limit: {
+                type: 'integer',
+                minimum: 1,
+                maximum: 100
+            },
+            offset: {
+                type: 'integer',
+                minimum: 0,
             }
         },
         required: ['limit', 'offset']
@@ -19,13 +38,17 @@ export const SCHEMAS_DELEGATES = [
         type: 'object',
         properties: {
             limit: {
-                type: 'number'
+                type: 'integer',
+                minimum: 1,
+                maximum: 100
             },
             offset: {
-                type: 'number'
+                type: 'integer',
+                minimum: 0,
             },
             address: {
-                type: 'string'
+                type: 'string',
+                format: 'address'
             }
         },
         required: ['limit', 'offset', 'address']

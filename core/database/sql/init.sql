@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS trs
   sender_public_key CHAR(64)  NOT NULL,
   signature         CHAR(128) NOT NULL,
   second_signature  CHAR(128),
+  fee               BIGINT    NOT NULL DEFAULT 0,
   salt              CHAR(32)  NOT NULL DEFAULT '' :: BPCHAR,
   asset             JSONB      NOT NULL DEFAULT '{}' :: JSONB
 );

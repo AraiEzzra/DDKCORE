@@ -51,9 +51,5 @@ export const getTransactionServiceByType = (type: TransactionType): IAssetServic
 };
 
 export const TRANSACTION_BUFFER_SIZE =
-    BUFFER.LENGTH.HEX +         // salt
     BUFFER.LENGTH.BYTE +        // type
-    BUFFER.LENGTH.UINT32 +      // createdAt
-    BUFFER.LENGTH.HEX +         // senderPublicKey
-    BUFFER.LENGTH.DOUBLE_HEX +  // signature
-    BUFFER.LENGTH.DOUBLE_HEX;   // secondSignature
+    BUFFER.LENGTH.UINT32;       // createdAt

@@ -1,12 +1,14 @@
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
+import { ALLOWED_TRANSACTION_TYPES_ARRAY } from 'shared/validate/schema/common';
 
 export const SCHEMAS_TRANSACTIONS = [
     {
         id: API_ACTION_TYPES.GET_TRANSACTION,
         type: 'object',
         properties: {
-            address: {
-                type: 'string'
+            id: {
+                type: 'string',
+                format: 'id'
             }
         },
         required: ['id']
@@ -19,42 +21,59 @@ export const SCHEMAS_TRANSACTIONS = [
                 type: 'object',
                 properties: {
                     type: {
-                        type: 'number'
+                        type: 'integer',
+                        enum: ALLOWED_TRANSACTION_TYPES_ARRAY
                     },
-                    block_id: {
-                        type: 'string'
+                    blockId: {
+                        type: 'string',
+                        format: 'id'
                     },
-                    sender_public_key: {
-                        type: 'string'
+                    senderPublicKey: {
+                        type: 'string',
+                        format: 'publicKey'
                     }
                 }
             },
             sort: {
-                type: 'array'
+                type: 'array',
+                items: {
+                    type: 'array',
+                    items: {
+                        type: 'string',
+                        enum: ['ASC', 'DESC', 'createdAt', 'blockId', 'type'],
+                    }
+                }
             },
             limit: {
-                type: 'number'
+                type: 'integer',
+                minimum: 1,
+                maximum: 100
             },
             offset: {
-                type: 'number'
+                type: 'integer',
+                minimum: 0,
             }
         },
-        required: ['filter']
+        required: ['limit', 'offset']
     },
     {
         id: API_ACTION_TYPES.GET_TRANSACTIONS_BY_BLOCK_ID,
         type: 'object',
         properties: {
             blockId: {
-                type: 'string'
+                type: 'string',
+                format: 'id'
             },
             limit: {
-                type: 'number'
+                type: 'integer',
+                minimum: 1,
+                maximum: 100
             },
             offset: {
-                type: 'number'
+                type: 'integer',
+                minimum: 0,
             }
         },
-        required: ['blockId']
-    }
+        required: ['blockId', 'limit', 'offset']
+    },
 ];

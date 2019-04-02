@@ -1,12 +1,6 @@
 import autobind from 'autobind-decorator';
 
-import {
-    Transaction,
-    TransactionStatus,
-    IAsset,
-    TransactionModel,
-    SerializedTransaction
-} from 'shared/model/transaction';
+import { IAsset, SerializedTransaction, Transaction, TransactionStatus } from 'shared/model/transaction';
 import { transactionSortFunc } from 'core/util/transaction';
 import TransactionDispatcher from 'core/service/transaction';
 import TransactionPool from 'core/service/transactionPool';
@@ -14,7 +8,6 @@ import { logger } from 'shared/util/logger';
 import { Account } from 'shared/model/account';
 import { SECOND } from 'core/util/const';
 import AccountRepository from 'core/repository/account';
-import { ResponseEntity } from 'shared/model/response';
 import SocketMiddleware from 'core/api/middleware/socket';
 import { EVENT_TYPES } from 'shared/driver/socket/codes';
 import SharedTransactionRepo from 'shared/repository/transaction';
@@ -24,9 +17,11 @@ export interface ITransactionQueueService<T extends Object> {
     getLockStatus(): boolean;
 
     lock(): void;
+
     unlock(): void;
 
     push(trs: Transaction<T>): void;
+
     pop(): Transaction<T>;
 
     pushInConflictedQueue(trs: Transaction<T>): void;
@@ -37,7 +32,6 @@ export interface ITransactionQueueService<T extends Object> {
 
     getSize(): { conflictedQueue: number, queue: number };
 
-    verify(trs: Transaction<T>, sender: Account): ResponseEntity<void>;
 }
 
 class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> {
@@ -125,9 +119,12 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
             logger.debug(`TransactionStatus.verifyStatus ${JSON.stringify(verifyStatus)}`);
             trs.status = TransactionStatus.DECLINED;
 
-            SocketMiddleware.emitEvent<SerializedTransaction<IAsset>>(
+            SocketMiddleware.emitEvent<{ transaction: SerializedTransaction<IAsset>, reason: Array<string> }>(
                 EVENT_TYPES.DECLINE_TRANSACTION,
-                SharedTransactionRepo.serialize(trs)
+                {
+                    transaction: SharedTransactionRepo.serialize(trs),
+                    reason: verifyStatus.errors
+                }
             );
 
             setImmediate(this.process);
@@ -148,18 +145,6 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
 
     getSize(): { conflictedQueue: number, queue: number } {
         return { conflictedQueue: this.conflictedQueue.length, queue: this.queue.length };
-    }
-
-    verify(trs: Transaction<T>, sender: Account): ResponseEntity<void> {
-        try {
-            TransactionDispatcher.verifyUnconfirmed(trs, sender);
-        } catch (error) {
-            logger.error(`[TransactionQueue][verifyUnconfirmed]: ${error}`);
-            logger.trace(`[TransactionQueue][verifyUnconfirmed][stack]:\n${error.stack}`);
-            return new ResponseEntity<void>({ errors: [error] });
-        }
-
-        return new ResponseEntity<void>();
     }
 }
 

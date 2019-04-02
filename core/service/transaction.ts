@@ -228,6 +228,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             senderPublicKey: sender.publicKey,
             senderAddress: sender.address,
             type: data.type,
+            fee: 0,
             salt: cryptoBrowserify.randomBytes(SALT_LENGTH).toString('hex'),
         });
 
@@ -250,31 +251,23 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         const bytes = Buffer.alloc(TRANSACTION_BUFFER_SIZE);
         let offset = 0;
 
-        bytes.write(trs.salt, offset, BUFFER.LENGTH.HEX);
-        offset += BUFFER.LENGTH.HEX;
-
         offset = BUFFER.writeInt8(bytes, trs.type, offset);
-        offset = BUFFER.writeInt32LE(bytes, trs.createdAt, offset);
-        offset = BUFFER.writeNotNull(bytes, trs.senderPublicKey, offset, BUFFER.LENGTH.HEX);
+        BUFFER.writeInt32LE(bytes, trs.createdAt, offset);
 
-        if (!skipSignature && trs.signature) {
-            bytes.write(trs.signature, offset, BUFFER.LENGTH.DOUBLE_HEX, 'hex');
-        }
-        offset += BUFFER.LENGTH.DOUBLE_HEX;
-
-        if (!skipSecondSignature && trs.secondSignature) {
-            bytes.write(trs.secondSignature, offset, BUFFER.LENGTH.DOUBLE_HEX, 'hex');
-        }
-
-        return Buffer.concat([bytes, assetBytes]);
+        return Buffer.concat([
+            bytes,
+            Buffer.from(trs.salt, 'hex'),
+            Buffer.from(trs.senderPublicKey, 'hex'),
+            Buffer.from(!skipSignature && trs.signature ? trs.signature : '', 'hex'),
+            Buffer.from(!skipSecondSignature && trs.secondSignature ? trs.secondSignature : '', 'hex'),
+            assetBytes
+        ]);
     }
 
-    // can be called without signature
     getHash(trs: Transaction<T>): Buffer {
         return crypto.createHash('sha256').update(this.getBytes(trs)).digest();
     }
 
-    // called with signature
     getId(trs: Transaction<T>): string {
         return this.getHash(trs).toString('hex');
     }
@@ -333,7 +326,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
 
     verifySecondSignature(trs: Transaction<T>, publicKey: string): boolean {
         const bytes = this.getBytes(trs, false, true);
-        return this.verifyBytes(bytes, publicKey, trs.signature);
+        return this.verifyBytes(bytes, publicKey, trs.secondSignature);
     }
 
     verifySignature(trs: Transaction<T>, publicKey: string): boolean {
@@ -368,13 +361,11 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             throw new ResponseEntity<void>({ errors: ['Invalid transaction timestamp. CreatedAt is in the future'] });
         }
 
-        if (trs.type in [TransactionType.SEND, TransactionType.STAKE]) {
-            const asset: IAssetTransfer | IAssetStake = <IAssetTransfer | IAssetStake><Object>trs.asset;
-            const amount = (asset.amount || 0) + trs.fee;
-            const senderBalanceResponse = this.checkBalance(amount, trs, sender);
-            if (!senderBalanceResponse.success) {
-                return senderBalanceResponse;
-            }
+        const asset: IAssetTransfer | IAssetStake = <IAssetTransfer | IAssetStake><Object>trs.asset;
+        const amount = (asset.amount || 0) + trs.fee;
+        const senderBalanceResponse = this.checkBalance(amount, trs, sender);
+        if (!senderBalanceResponse.success) {
+            return senderBalanceResponse;
         }
 
         const service: IAssetService<IAsset> = getTransactionServiceByType(trs.type);

@@ -24,9 +24,12 @@ class TransactionController extends BaseController {
 
         const validateResult = TransactionService.validate(trs);
         if (!validateResult.success) {
-            SocketMiddleware.emitEvent<SerializedTransaction<IAsset>>(
+            SocketMiddleware.emitEvent<{ transaction: SerializedTransaction<IAsset>, reason: Array<string> }>(
                 EVENT_TYPES.DECLINE_TRANSACTION,
-                SharedTransactionRepo.serialize(trs)
+                {
+                    transaction: SharedTransactionRepo.serialize(trs),
+                    reason: validateResult.errors
+                }
             );
             return;
         }
@@ -52,7 +55,7 @@ class TransactionController extends BaseController {
     public transactionCreate(data: CreateTransactionParams) {
         const keyPair = createKeyPairBySecret(data.secret);
         const secondKeyPair = data.secondSecret ? createKeyPairBySecret(data.secondSecret) : undefined;
-        
+
         const responseTrs = TransactionService.create(data.trs, keyPair, secondKeyPair);
         if (responseTrs.success) {
             const validateResult = TransactionService.validate(responseTrs.data);
