@@ -7,7 +7,7 @@ export const ASSET_TRS_STAKE = [
         properties: {
             amount: {
                 type: 'integer',
-                minimum: 1,
+                minimum: 100000000,
                 maximum: 4500000000000000
             },
         },

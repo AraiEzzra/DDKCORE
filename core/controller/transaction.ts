@@ -64,7 +64,7 @@ class TransactionController extends BaseController {
                 return new ResponseEntity({ errors: validateResult.errors });
             }
             TransactionQueue.push(responseTrs.data);
-            return SharedTransactionRepo.serialize(responseTrs.data);
+            return new ResponseEntity({ data: SharedTransactionRepo.serialize(responseTrs.data) });
         }
     }
 
