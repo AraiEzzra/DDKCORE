@@ -14,10 +14,10 @@ Body parameters
 
 Response
 
-| Parameter | Type    | Description      |
-|-----------|---------|------------------|
-| success   | boolean | Operation status |
-| data      | Block   | Requested block  |
+| Parameter | Type                     | Description      |
+|-----------|--------------------------|------------------|
+| success   | boolean                  | Operation status |
+| data      | [Block](models.md#block) | Requested block  |
 
 ### Examples
 
@@ -78,20 +78,20 @@ Code: `GET_BLOCKS`
 
 Body parameters
 
-| Parameter | Type                 | Is Required | Description |
-|-----------|----------------------|-------------|-------------|
-| filter    | Filter               | -           | Filter      |
-| sort      | array<[Sort](#sort)> | -           | Sort        |
-| limit     | number               | -           | Limit       |
-| offset    | number               | -           | Offset      |
+| Parameter | Type                          | Is Required | Description |
+|-----------|-------------------------------|-------------|-------------|
+| filter    | Filter                        | -           | Filter      |
+| sort      | array<[Sort](models.md#sort)> | -           | Sort        |
+| limit     | number                        | -           | Limit       |
+| offset    | number                        | -           | Offset      |
 
 Response
 
-| Parameter   | Type                         | Description                            |
-|-------------|------------------------------|----------------------------------------|
-| success     | boolean                      | Operation status                       |
-| data.blocks | Array<[Block](models#block)> | Blocks                                 |
-| data.count  | number                       | Total number of entries for the filter |
+| Parameter   | Type                            | Description                            |
+|-------------|---------------------------------|----------------------------------------|
+| success     | boolean                         | Operation status                       |
+| data.blocks | Array<[Block](models.md#block)> | Blocks                                 |
+| data.count  | number                          | Total number of entries for the filter |
 
 ### Examples
 

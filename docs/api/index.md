@@ -1,15 +1,15 @@
 DDK API works with WebSockets via [Socket.IO](https://socket.io/) library
 
-[Account](account)
+[Account](account.md)
 
-[Block](block)
+[Block](block.md)
 
-[Delegate](delegate)
+[Delegate](delegate.md)
 
-[Event](event)
+[Event](event.md)
 
-[Transaction](transaction)
+[Transaction](transaction.md)
 
-[Models](models)
+[Models](models.md)
 
-[Examples](example)
+[Examples](example.md)
