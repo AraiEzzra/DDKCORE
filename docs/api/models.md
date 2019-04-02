@@ -27,48 +27,48 @@
 
 ## Transaction
 
-| Parameter       | Type              | Description                       |
-|-----------------|-------------------|-----------------------------------|
-| id              | string            | Address                           |
-| blockId         | string            | Block id                          |
-| type            | [TransactionType] | Type                              |
-| createdAt       | number            | Creation time in epochtime format |
-| senderPublicKey | string            | Sender public key                 |
-| senderAddress   | string            | Sender address                    |
-| signature       | string            | Signature                         |
-| secondSignature | string            | Second signature                  |
-| salt            | string            | Salt                              |
-| relay           | number            | Transfer count                    |
-| asset           | [Asset]           | Asset by type                     |
+| Parameter       | Type                                   | Description                       |
+|-----------------|----------------------------------------|-----------------------------------|
+| id              | string                                 | Address                           |
+| blockId         | string                                 | Block id                          |
+| type            | [Transaction Type](#transaction-types) | Type                              |
+| createdAt       | number                                 | Creation time in epochtime format |
+| senderPublicKey | string                                 | Sender public key                 |
+| senderAddress   | string                                 | Sender address                    |
+| signature       | string                                 | Signature                         |
+| secondSignature | string                                 | Second signature                  |
+| salt            | string                                 | Salt                              |
+| relay           | number                                 | Transfer count                    |
+| asset           | [Asset](#asset)                        | Asset by type                     |
 
 ## Block
 
-| Parameter          | Type               | Description                          |
-|--------------------|--------------------|--------------------------------------|
-| id                 | string             | Id                                   |
-| version            | number             | Version                              |
-| createdAt          | number             | Creation time in epochtime format    |
-| height             | number             | Height                               |
-| previousBlockId    | string             | Previous block id                    |
-| transactionCount   | number             | Transaction count                    |
-| amount             | number             | Amount                               |
-| fee                | number             | Fee                                  |
-| payloadHash        | string             | Transactions hash                    |
-| generatorPublicKey | string             | Delegate public key who signed block |
-| signature          | string             | Signature                            |
-| transactions       | Array[Transaction] | Array of transactions                |
+| Parameter          | Type                               | Description                          |
+|--------------------|------------------------------------|--------------------------------------|
+| id                 | string                             | Id                                   |
+| version            | number                             | Version                              |
+| createdAt          | number                             | Creation time in epochtime format    |
+| height             | number                             | Height                               |
+| previousBlockId    | string                             | Previous block id                    |
+| transactionCount   | number                             | Transaction count                    |
+| amount             | number                             | Amount                               |
+| fee                | number                             | Fee                                  |
+| payloadHash        | string                             | Transactions hash                    |
+| generatorPublicKey | string                             | Delegate public key who signed block |
+| signature          | string                             | Signature                            |
+| transactions       | Array<[Transaction](#transaction)> | Array of transactions                |
 
 ## Reward
 
-| Parameter     | Type              | Description                       |
-|---------------|-------------------|-----------------------------------|
-| transactionId | string            | Id                                |
-| type          | [TransactionType] | Version                           |
-| createdAt     | number            | Creation time in epochtime format |
-| sponsor       | string            | Sponsor address                   |
-| referral      | string            | Referral address                  |
-| referralLevel | number            | Referral level                    |
-| amount        | number            | Amount                            |
+| Parameter     | Type                                   | Description                       |
+|---------------|----------------------------------------|-----------------------------------|
+| transactionId | string                                 | Id                                |
+| type          | [Transaction Type](#transaction-types) | Version                           |
+| createdAt     | number                                 | Creation time in epochtime format |
+| sponsor       | string                                 | Sponsor address                   |
+| referral      | string                                 | Referral address                  |
+| referralLevel | number                                 | Referral level                    |
+| amount        | number                                 | Amount                            |
 
 ## Referral Rewards
 
@@ -79,12 +79,12 @@
 
 ## Stake Reward
 
-| Parameter       | Type                   | Description                       |
-|-----------------|------------------------|-----------------------------------|
-| transactionId   | string                 | Unique identifier                 |
-| createdAt       | number                 | Creation time in epochtime format |
-| referralRewards | Array[ReferralRewards] | Referral rewards                  |
-| amount          | number                 | Amount                            |
+| Parameter       | Type                                         | Description                       |
+|-----------------|----------------------------------------------|-----------------------------------|
+| transactionId   | string                                       | Unique identifier                 |
+| createdAt       | number                                       | Creation time in epochtime format |
+| referralRewards | Array<[Referral Rewards](#referral-rewards)> | Referral rewards                  |
+| amount          | number                                       | Amount                            |
 
 ## Delegate
 
@@ -95,3 +95,26 @@
 | forgedBlocks | number | Number of blocks that were forged     |
 | publicKey    | string | Public key                            |
 | votes        | number | Number of votes for the delegate      |
+
+## Message
+
+| Parameter | Type                                | Description  |
+|-----------|-------------------------------------|--------------|
+| code      | string                              | Request code |
+| headers   | [Message Headers](#message-headers) | Headers      |
+| body      | object                              | Body         |
+
+## Message Headers
+
+| Parameter | Type                          | Description       |
+|-----------|-------------------------------|-------------------|
+| id        | string                        | Unique identifier |
+| type      | [Message Type](#message-type) | Request type      |
+
+## Message Type
+
+| Parameter | Value | Description                 |
+|-----------|-------|-----------------------------|
+| REQUEST   | 1     | Uses for requests to API    |
+| RESPONSE  | 2     | Uses for responses from API |
+| EVENT     | 3     | Event created by core       |

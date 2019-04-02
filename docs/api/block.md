@@ -72,26 +72,26 @@ Failed response
 
 ## GET BLOCKS
 
-Returns block without transactions
+Returns blocks by filter without transactions
 
 Code: `GET_BLOCKS`
 
 Body parameters
 
-| Parameter | Type        | Is Required | Description |
-|-----------|-------------|-------------|-------------|
-| filter    | Filter      | -           | Filter      |
-| sort      | array[Sort] | -           | Sort        |
-| limit     | number      | -           | Limit       |
-| offset    | number      | -           | Offset      |
+| Parameter | Type                 | Is Required | Description |
+|-----------|----------------------|-------------|-------------|
+| filter    | Filter               | -           | Filter      |
+| sort      | array<[Sort](#sort)> | -           | Sort        |
+| limit     | number               | -           | Limit       |
+| offset    | number               | -           | Offset      |
 
 Response
 
-| Parameter   | Type         | Description                            |
-|-------------|--------------|----------------------------------------|
-| success     | boolean      | Operation status                       |
-| data.blocks | Array[Block] | Blocks                                 |
-| data.count  | number       | Total number of entries for the filter |
+| Parameter   | Type                         | Description                            |
+|-------------|------------------------------|----------------------------------------|
+| success     | boolean                      | Operation status                       |
+| data.blocks | Array<[Block](models#block)> | Blocks                                 |
+| data.count  | number                       | Total number of entries for the filter |
 
 ### Examples
 

@@ -13,11 +13,11 @@ Body parameters
 
 Response
 
-| Parameter      | Type            | Description             |
-|----------------|-----------------|-------------------------|
-| success        | boolean         | Operation status        |
-| data.delegates | Array[Delegate] | Delegates               |
-| data.count     | number          | Total number of entries |
+| Parameter      | Type                               | Description             |
+|----------------|------------------------------------|-------------------------|
+| success        | boolean                            | Operation status        |
+| data.delegates | Array<[Delegate](models#delegate)> | Delegates               |
+| data.count     | number                             | Total number of entries |
 
 ### Examples
 
@@ -84,11 +84,11 @@ Body parameters
 
 Response
 
-| Parameter      | Type            | Description             |
-|----------------|-----------------|-------------------------|
-| success        | boolean         | Operation status        |
-| data.delegates | Array[Delegate] | Delegates               |
-| data.count     | number          | Total number of entries |
+| Parameter      | Type                               | Description             |
+|----------------|------------------------------------|-------------------------|
+| success        | boolean                            | Operation status        |
+| data.delegates | Array<[Delegate](models#delegate)> | Delegates               |
+| data.count     | number                             | Total number of entries |
 
 ### Examples
 
@@ -156,11 +156,11 @@ Body parameters
 
 Response
 
-| Parameter      | Type            | Description             |
-|----------------|-----------------|-------------------------|
-| success        | boolean         | Operation status        |
-| data.delegates | Array[Delegate] | Delegates               |
-| data.count     | number          | Total number of entries |
+| Parameter      | Type                               | Description             |
+|----------------|------------------------------------|-------------------------|
+| success        | boolean                            | Operation status        |
+| data.delegates | Array<[Delegate](models#delegate)> | Delegates               |
+| data.count     | number                             | Total number of entries |
 
 ### Examples
 
