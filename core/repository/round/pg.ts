@@ -36,6 +36,14 @@ class RoundPGRepository implements IRoundPGRepository {
         }
         return this.deserialize(rawRound);
     }
+    
+    async getLast(height): Promise<Round> {
+        const rawRound: RawRound = await db.oneOrNone(queries.getLast, { height });
+        if (!rawRound) {
+            return;
+        }
+        return this.deserialize(rawRound);
+    }
 
     async getMany(limit: number, offset: number): Promise<Array<Round>> {
         const rawRounds: Array<RawRound> = await db.manyOrNone(queries.getMany, { offset, limit });

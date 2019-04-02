@@ -1,5 +1,5 @@
-import {Round} from 'shared/model/round';
-import {IRoundRepository as IRoundRepositoryShared} from 'shared/repository/round';
+import { Round } from 'shared/model/round';
+import { IRoundRepository as IRoundRepositoryShared } from 'shared/repository/round';
 
 export interface IRoundRepository extends IRoundRepositoryShared {
 
@@ -47,11 +47,11 @@ class RoundRepository implements IRoundRepository {
      * @return {number}
      */
     public getLastSlotInRound(round: Round = this.currentRound): number {
-        return round.slots[Object.keys(round.slots)[Object.keys(round.slots).length - 1]].slot;
+        return Math.max(...Object.values(round.slots).map(slot => slot.slot));
     }
 
     public getFirstSlotInRound(round: Round = this.currentRound): number {
-        return round.slots[Object.keys(round.slots)[0]].slot;
+        return Math.min(...Object.values(round.slots).map(slot => slot.slot));
     }
 }
 
