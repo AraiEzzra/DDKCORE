@@ -65,7 +65,7 @@ export class TransactionController {
     async getTransactionsByBlockId(message: Message2<{ limit: number, offset: number, blockId: string }>, socket: any) {
         const transactions = await TransactionPGRepository.getMany(
             { blockId: message.body.blockId },
-            [['createdAt', 'ASC']],
+            [['type', 'ASC'], ['createdAt', 'ASC'], ['id', 'ASC']],
             message.body.limit || DEFAULT_LIMIT,
             message.body.offset || 0
         );

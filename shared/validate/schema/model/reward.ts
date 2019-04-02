@@ -45,9 +45,9 @@ export const SCHEMAS_REWARD = [
         id: API_ACTION_TYPES.GET_STAKE_REWARDS,
         type: 'object',
         properties: {
-            address: {
+            senderPublicKey: {
                 type: 'string',
-                format: 'address'
+                format: 'publicKey'
             },
             limit: {
                 type: 'integer',
@@ -59,7 +59,7 @@ export const SCHEMAS_REWARD = [
                 minimum: 0,
             }
         },
-        required: ['address', 'limit', 'offset']
+        required: ['senderPublicKey', 'limit', 'offset']
     },
     {
         id: API_ACTION_TYPES.GET_AIRDROP_REWARDS,
