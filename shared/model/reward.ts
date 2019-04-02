@@ -16,9 +16,7 @@ export class Reward {
 }
 
 export class StakeReward {
-    transactionId: string;
     createdAt: Timestamp;
-    referralRewards: Array<{ referral: string, amount: number }>;
     amount: number;
 
     constructor(data: StakeReward) {

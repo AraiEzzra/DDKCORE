@@ -8,7 +8,7 @@ import { getSocket } from 'test/api/base';
 
 describe('Test GET_TRANSACTION', () => {
 
-    it('Success test GET_TRANSACTION', (done) => {
+    it('Positive', (done) => {
         const SUCCESS_TRANSACTION = {
             'id': '2c52682e6a51a9ddfd48a679a95c9fea4e693790aec5968535a482088b6c75bf',
             'blockId': 'cbb9449abb9672d33fa2eb200b1c8b03db7c6572dfb6e59dc334c0ab82b63ab0',
@@ -44,7 +44,7 @@ describe('Test GET_TRANSACTION', () => {
         });
     });
 
-    it('Negative test GET_TRANSACTION', (done) => {
+    it('Negative', (done) => {
         const GET_TRANSACTION_FAILED_HEADERS = Fixture.getBaseHeaders();
         const GET_TRANSACTION_FAILED = {
             headers: GET_TRANSACTION_FAILED_HEADERS,

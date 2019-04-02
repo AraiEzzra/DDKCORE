@@ -15,7 +15,8 @@
       "api/*": ["./api/*"],
       "core/*": ["./core/*"],
       "shared/*": ["./shared/*"],
-      "config/*": ["./config/*"]
+      "config/*": ["./config/*"],
+      "test/*": ["./test/*"]
     },
     "skipLibCheck": true,
     "typeRoots": [

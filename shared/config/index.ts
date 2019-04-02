@@ -78,6 +78,7 @@ class Config {
         REQUESTS_PER_SECOND_LIMIT: number;
         SOCKET: {
             PORT: number;
+            HOST: string;
         };
     };
     DB: {
@@ -135,6 +136,7 @@ class Config {
                 DEFAULT_REQUESTS_PER_SECOND_LIMIT,
             SOCKET: {
                 PORT: Number(process.env.API_PORT) || DEFAULT_API_SOCKET_PORT,
+                HOST: process.env.API_HOST || 'localhost'
             },
         };
 

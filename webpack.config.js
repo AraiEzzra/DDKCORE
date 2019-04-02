@@ -73,9 +73,9 @@ const coreConfig = {
 
 const testAPIConfig = {
     entry: path.join(DIR, 'test', 'api', 'test.ts'),
-    context: path.resolve(DIR, 'test', 'api'),
+    context: path.resolve(DIR, 'test'),
     resolve: {
-        extensions: ['.ts', '.json'],
+        extensions: ['.ts', '.js', '.json'],
         alias: {
             test: path.resolve(DIR, 'test'),
             shared: path.resolve(DIR, 'shared'),

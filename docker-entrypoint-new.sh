@@ -14,6 +14,8 @@ else
     fi
     sleep 5
     if [ "$MODE" == "TEST" ]; then
+        wait-port "$API_HOST:${API_PORT:-7008}"
+        wait-port "$CORE_HOST:${CORE_RPC_PORT:-7009}"
         npm run test
     fi
     if [ "$SERVICE" == "API" ]; then

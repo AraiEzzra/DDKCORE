@@ -1,6 +1,6 @@
-export const API_URL = process.env.API_HOST && process.env.API_PORT
-    ? `${process.env.API_HOST}:${process.env.API_PORT}`
-    : 'ws://0.0.0.0:7008';
+import config from 'shared/config';
+
+export const API_URL = `ws://${config.API.SOCKET.HOST}:${config.API.SOCKET.PORT}`;
 
 export const socket = require('socket.io-client')(API_URL, {
     transports: ['websocket'],
