@@ -2,6 +2,10 @@
 
 [Block](block)
 
-[Transaction](transaction)
+[Delegate](delegate)
 
 [Event](event)
+
+[Transaction](transaction)
+
+[Models](models)

@@ -63,7 +63,7 @@ Failed response
 
 ```
 {
-   "success":true,
+   "success":false,
    "data":null
 }
 ```
@@ -117,7 +117,7 @@ Failed response
 
 ```
 {
-   "success":true,
+   "success":false,
    "data":null
 }
 ```

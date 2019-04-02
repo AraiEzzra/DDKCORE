@@ -139,7 +139,7 @@ Failed response
 
 ```
 {
-   "success":true,
+   "success":false,
    "data":null
 }
 ```
@@ -161,11 +161,11 @@ Body parameters
 
 Response
 
-| Parameter         | Type               | Description                  |
-|-------------------|--------------------|------------------------------|
-| success           | boolean            | Operation status             |
-| data.transactions | array[Transaction] | Transactions                 |
-| data.count        | number             | Total number of transactions |
+| Parameter         | Type               | Description                            |
+|-------------------|--------------------|----------------------------------------|
+| success           | boolean            | Operation status                       |
+| data.transactions | array[Transaction] | Transactions                           |
+| data.count        | number             | Total number of entries for the filter |
 
 ### Examples
 
@@ -243,11 +243,11 @@ Code: `GET_TRANSACTIONS_BY_BLOCK_ID`
 
 Body parameters
 
-| Parameter | Type        | Is Required | Description |
-|-----------|-------------|-------------|-------------|
-| blockId    | string      | +           | Block id      |
-| limit     | number      | -           | Limit       |
-| offset    | number      | -           | Offset      |
+| Parameter | Type   | Is Required | Description |
+|-----------|--------|-------------|-------------|
+| blockId   | string | +           | Block id    |
+| limit     | number | -           | Limit       |
+| offset    | number | -           | Offset      |
 
 Response
 
