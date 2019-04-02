@@ -8,7 +8,7 @@ export type BlockchainInfo = {
     circulatingSupply: number;
     tokenHolders: number;
     totalStakeAmount: number;
-    totalStakeholders: number;
+    totalStakeHolders: number;
 };
 
 
@@ -25,7 +25,7 @@ class EventService {
             circulatingSupply,
             tokenHolders: statistics.tokenHolders,
             totalStakeAmount: statistics.totalStakeAmount,
-            totalStakeholders: statistics.totalStakeholders
+            totalStakeHolders: statistics.totalStakeHolders
         });
     }
 }
