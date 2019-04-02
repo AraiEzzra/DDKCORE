@@ -7,10 +7,6 @@ const enum LENGTH {
 }
 
 Validator.registerFormat('id', (str) => {
-    if (str.length === 0) {
-        return true;
-    }
-
     try {
         const publicKey = Buffer.from(str, 'hex');
         return publicKey.length === LENGTH.PUBLIC_KEY_SIZE;
@@ -28,10 +24,6 @@ Validator.registerFormat('address', (str) => {
 });
 
 Validator.registerFormat('username', (str) => {
-    if (str.length === 0) {
-        return true;
-    }
-
     return /^[a-z0-9!@$&_.]{1,20}$/ig.test(str);
 });
 
@@ -46,10 +38,6 @@ Validator.registerFormat('hex', (str) => {
 });
 
 Validator.registerFormat('publicKey', (str: PublicKey) => {
-    if (str.length === 0) {
-        return true;
-    }
-
     try {
         const publicKey = Buffer.from(str, 'hex');
 
