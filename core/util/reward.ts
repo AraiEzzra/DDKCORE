@@ -6,6 +6,7 @@ import {IAirdropAsset, IAssetStake, IAssetVote, Transaction, TransactionType} fr
 import AccountRepo from 'core/repository/account';
 import { ResponseEntity } from 'shared/model/response';
 import { TOTAL_PERCENTAGE, MONEY_FACTOR } from 'core/util/const';
+import { isEqualMaps } from 'core/util/common';
 
 class StakeReward {
     private readonly milestones = config.CONSTANTS.FROZE.REWARDS.MILESTONES;
@@ -55,13 +56,13 @@ export function calculateTotalRewardAndUnstake(sender: Account, isDownVote: bool
     return { reward, unstake: unstakeAmount };
 }
 
-export function getAirdropReward(
+export const getAirdropReward = (
     sender: Account,
     amount: number,
-    transactionType: TransactionType): IAirdropAsset {
-
+    transactionType: TransactionType
+): IAirdropAsset => {
     const result: IAirdropAsset = {
-        sponsors: new Map<Address, number>()
+        sponsors: new Map<Address, number>(),
     };
 
     const availableAirdropBalance: number = AccountRepo.getByAddress(config.CONSTANTS.AIRDROP.ADDRESS).actualBalance;
@@ -93,31 +94,25 @@ export function getAirdropReward(
     result.sponsors = sponsors;
 
     return result;
-}
+};
 
-export function verifyAirdrop(
+export const verifyAirdrop = (
     trs: Transaction<IAssetStake | IAssetVote>,
     amount: number,
-    sender: Account): ResponseEntity<void> {
-    const airdropReward = getAirdropReward(
-        sender,
-        amount,
-        trs.type
-    );
+    sender: Account
+): ResponseEntity<void> => {
+    const airdropReward = getAirdropReward(sender, amount, trs.type);
 
-    if (
-        JSON.stringify(airdropReward.sponsors) !== JSON.stringify(trs.asset.airdropReward.sponsors)
-    ) {
+    if (!isEqualMaps(airdropReward.sponsors, trs.asset.airdropReward.sponsors)) {
         return new ResponseEntity<void>({ errors: [
-            `Verify failed: ${trs.type === TransactionType.STAKE ? 'stake' : 'vote'} airdrop reward is corrupted,
-            expected:
-            sponsors: ${JSON.stringify(airdropReward.sponsors)}
-            actual:
-            sponsors: ${JSON.stringify(trs.asset.airdropReward.sponsors)}`
+            `Verify failed: ${trs.type === TransactionType.STAKE ? 'stake' : 'vote'} airdrop reward is corrupted, ` +
+            `expected: ${JSON.stringify([...airdropReward.sponsors])}, ` +
+            `actual: ${JSON.stringify([...trs.asset.airdropReward.sponsors])}`
         ] });
     }
+
     return new ResponseEntity<void>();
-}
+};
 
 export function applyFrozeOrdersRewardAndUnstake(
     trs: Transaction<IAssetVote>,
