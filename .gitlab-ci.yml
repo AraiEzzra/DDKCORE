@@ -10,6 +10,7 @@ manual_build_core:
     - ddk-deploy
   script:
     - cd /root/DDK.Delegat.Install.Environment/
+    - docker rmi ddkoin/core:build -f
     - ./build.tag.newcore.sh build split-api-core
 
 
