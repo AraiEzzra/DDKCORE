@@ -65,10 +65,9 @@ class BlockController extends BaseController {
 
             // TODO check if slot lastBlock and receivedBlock is not equal
             const blockSlot = SlotService.getSlotNumber(receivedBlock.createdAt);
-            const isLastBlockInPrevRound =
-                RoundRepository.getLastSlotInRound(RoundRepository.getPrevRound()) >= blockSlot;
+            const lastBlockInPrevRound = RoundRepository.getLastSlotInRound(RoundRepository.getPrevRound());
 
-            if (isLastBlockInPrevRound) {
+            if (lastBlockInPrevRound >= blockSlot) {
                 await RoundService.rollBack();
             }
 
@@ -85,7 +84,7 @@ class BlockController extends BaseController {
                 return new ResponseEntity<void>({ errors });
             }
 
-            if (isLastBlockInPrevRound) {
+            if (lastBlockInPrevRound === blockSlot) {
                 await RoundService.generateRound();
             }
 
