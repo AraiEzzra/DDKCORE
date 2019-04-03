@@ -1,4 +1,3 @@
-import { ResponseEntity } from 'shared/model/response';
 import { Account, PublicKey } from 'shared/model/account';
 import config from 'shared/config';
 import { Delegate } from 'shared/model/delegate';

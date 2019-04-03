@@ -1,5 +1,6 @@
 import { Account, Address, PublicKey } from 'shared/model/account';
 import { getAddressByPublicKey } from 'shared/util/account';
+import DelegateRepository from 'core/repository/delegate';
 
 export type Statistics = {
     tokenHolders: number;
@@ -84,7 +85,8 @@ class AccountRepository {
             secondPublicKey: account.secondPublicKey,
             actualBalance: account.actualBalance,
             referrals: account.referrals.map(acc => acc.address.toString()),
-            votes: account.votes,
+            votes: account.votes.map(
+                (publicKey: PublicKey) => DelegateRepository.serialize(DelegateRepository.getDelegate(publicKey))),
             stakes: account.stakes,
         };
     }
