@@ -7,6 +7,7 @@ import { Peer } from 'shared/model/peer';
 import { messageON } from 'shared/util/bus';
 import { logger } from 'shared/util/logger';
 import PeerRepository from 'core/repository/peer';
+import http from 'http';
 import config from 'shared/config';
 import { SocketResponse, SocketResponseRPC } from 'shared/model/socket';
 import {
@@ -16,7 +17,13 @@ import {
     MAX_PEERS_CONNECTED
 } from 'core/util/const';
 
-const ioServer = socketIO(config.CORE.SOCKET.PORT, {
+const server = http.createServer();
+
+server.listen(
+    config.CORE.SOCKET.PORT,
+    config.PUBLIC_HOST
+);
+const ioServer = socketIO(server, {
     serveClient: false,
     pingTimeout: 30000,
     pingInterval: 30000,
