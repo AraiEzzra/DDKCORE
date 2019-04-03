@@ -91,7 +91,7 @@ class TransactionStakeService implements IAssetService<IAssetStake> {
             isActive: true,
             amount: trs.asset.amount,
             voteCount: trs.asset.startVoteCount,
-            nextVoteMilestone: trs.createdAt + config.CONSTANTS.FROZE.VOTE_MILESTONE,
+            nextVoteMilestone: trs.createdAt,
             airdropReward: trs.asset.airdropReward.sponsors,
             sourceTransactionId: trs.id
         }));
