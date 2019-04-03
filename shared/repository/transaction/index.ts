@@ -2,11 +2,11 @@ import {
     IAsset,
     SerializedTransaction,
     Transaction,
-    TransactionModel,
     TransactionType
 } from 'shared/model/transaction';
 import TransactionDelegateRepo from 'shared/repository/transaction/asset/delegate';
 import TransactionRegisterRepo from 'shared/repository/transaction/asset/register';
+import TransactionSignatureRepo from 'shared/repository/transaction/asset/signature';
 import TransactionSendRepo from 'shared/repository/transaction/asset/send';
 import TransactionStakeRepo from 'shared/repository/transaction/asset/stake';
 import TransactionVoteRepo from 'shared/repository/transaction/asset/vote';
@@ -14,52 +14,45 @@ import { getAddressByPublicKey } from 'shared/util/account';
 
 
 const ASSET_REPOSITORIES: { [key: string]: IAssetRepository<IAsset> } = {
-    [TransactionType.DELEGATE]: TransactionDelegateRepo,
     [TransactionType.REGISTER]: TransactionRegisterRepo,
     [TransactionType.SEND]: TransactionSendRepo,
+    [TransactionType.SIGNATURE]: TransactionSignatureRepo,
+    [TransactionType.DELEGATE]: TransactionDelegateRepo,
     [TransactionType.STAKE]: TransactionStakeRepo,
     [TransactionType.VOTE]: TransactionVoteRepo,
-    [TransactionType.SIGNATURE]: null
 };
 
-export type TransactionsByBlockResponse = { [blockId: string]:  Array<Transaction<IAsset>> };
+export type TransactionsByBlockResponse = { [blockId: string]: Array<Transaction<IAsset>> };
 export type DeletedTransactionId = string;
 export type TransactionId = string;
 export type BlockId = string;
-export type RawTransaction = {[key: string]: any};
-export type RawAsset = {[key: string]: any};
+export type RawTransaction = { [key: string]: any };
+export type RawAsset = { [key: string]: any };
 
-export interface ITransactionRepository <T extends IAsset> {
-
+export interface ITransactionRepository<T extends IAsset> {
     add(trs: Transaction<T>): Transaction<T>;
     delete(trs: Transaction<T>): DeletedTransactionId;
     getAll(): Array<Transaction<T>>;
     getByBlockIds(blockIds: Array<BlockId>): TransactionsByBlockResponse;
     getById(trsId: TransactionId): Transaction<T>;
     isExist(trsId: TransactionId): boolean;
-
 }
 
-export interface ITransactionPGRepository <T extends IAsset> {
-
+export interface ITransactionPGRepository<T extends IAsset> {
     deleteById(trsId: TransactionId | Array<TransactionId>): Promise<Array<string>>;
     getByBlockIds(blockIds: Array<BlockId>): Promise<TransactionsByBlockResponse>;
     getById(trsId: TransactionId): Promise<Transaction<T>>;
     getMany(limit: number, offset: number): Promise<Array<Transaction<T>>>;
     isExist(trsId: TransactionId): Promise<boolean>;
     saveOrUpdate(trs: Transaction<T> | Array<Transaction<T>>): Promise<void>;
-
 }
 
-export interface IAssetRepository <T extends IAsset> {
-
+export interface IAssetRepository<T extends IAsset> {
     serialize(asset: T): RawAsset;
     deserialize(rawAsset: RawAsset): T;
-
 }
 
 class SharedTransactionRepo {
-
     serialize(trs: Transaction<IAsset>): SerializedTransaction<IAsset> {
         const assetRepo: IAssetRepository<IAsset> = ASSET_REPOSITORIES[trs.type];
         let asset = trs.asset;
