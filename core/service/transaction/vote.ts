@@ -21,7 +21,7 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
 
     create(trs: TransactionModel<IAssetVote>): IAssetVote {
         const sender: Account = AccountRepo.getByAddress(trs.senderAddress);
-        const totals: { reward: number, unstake: number} = 
+        const totals: { reward: number, unstake: number} =
             calculateTotalRewardAndUnstake(sender, trs.asset.type === VoteType.DOWN_VOTE);
         const airdropReward: IAirdropAsset = getAirdropReward(sender, totals.reward, trs.type);
 
@@ -186,7 +186,6 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
         return senderTotalFrozeAmount * config.CONSTANTS.FEES.VOTE / TOTAL_PERCENTAGE;
     }
 
-
     applyUnconfirmed(trs: Transaction<IAssetVote>, sender: Account): void {
         const isDownVote = trs.asset.votes[0][0] === '-';
         const votes = trs.asset.votes.map(vote => vote.substring(1));
@@ -213,7 +212,7 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
 
         const processedOrders: Array<Stake> = [];
         sender.stakes.forEach((stake: Stake) => {
-            if (stake.isActive && (stake.nextVoteMilestone === 0 || trs.createdAt > stake.nextVoteMilestone)) {
+            if (stake.isActive && (stake.nextVoteMilestone === 0 || trs.createdAt >= stake.nextVoteMilestone)) {
                 stake.voteCount++;
                 stake.nextVoteMilestone = trs.createdAt + config.CONSTANTS.FROZE.VOTE_MILESTONE;
                 processedOrders.push(stake);
@@ -249,6 +248,11 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
             return;
         }
 
+        undoFrozeOrdersRewardAndUnstake(trs, sender, senderOnly);
+        if (!senderOnly) {
+            undoAirdropReward(trs);
+        }
+
         sender.stakes.forEach((stake: Stake) => {
             if (stake.isActive && (stake.nextVoteMilestone === 0 ||
                 trs.createdAt + (config.CONSTANTS.FROZE.VOTE_MILESTONE) === stake.nextVoteMilestone)
@@ -257,10 +261,6 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
                 stake.nextVoteMilestone = 0;
             }
         });
-        undoFrozeOrdersRewardAndUnstake(trs, sender, senderOnly);
-        if (!senderOnly) {
-            undoAirdropReward(trs);
-        }
     }
 }
 

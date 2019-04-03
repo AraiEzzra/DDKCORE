@@ -65,6 +65,10 @@ export const getAirdropReward = (
         sponsors: new Map<Address, number>(),
     };
 
+    if (!amount) {
+        return result;
+    }
+
     const availableAirdropBalance: number = AccountRepo.getByAddress(config.CONSTANTS.AIRDROP.ADDRESS).actualBalance;
     logger.info(`availableAirdropBalance: ${availableAirdropBalance / MONEY_FACTOR}`);
 
@@ -151,10 +155,9 @@ export function undoFrozeOrdersRewardAndUnstake(
     sender: Account,
     senderOnly: boolean
 ): void {
-    const senderStakes: Array<Stake> = sender.stakes;
-    const updatedOrders = senderStakes.map((order: Stake) => {
-        if (order.nextVoteMilestone === trs.createdAt + config.CONSTANTS.FROZE.VOTE_MILESTONE) {
-            return order;
+    const updatedOrders = sender.stakes.map((stake: Stake) => {
+        if (stake.nextVoteMilestone === trs.createdAt + config.CONSTANTS.FROZE.VOTE_MILESTONE) {
+            return stake;
         }
     });
     undoUnstake(updatedOrders, trs, sender);
