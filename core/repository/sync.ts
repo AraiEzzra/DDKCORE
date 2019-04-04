@@ -111,7 +111,7 @@ export class Sync implements ISyncRepo {
 
         const filteredPeers = PeerRepository.getPeersByFilter(data.height, SystemRepository.broadhash);
         const currentPeer = peer || PeerRepository.getRandomPeer(filteredPeers);
-        return await SocketRepository.peerRPCRequest('REQUEST_BLOCKS', data, currentPeer);
+        return SocketRepository.peerRPCRequest('REQUEST_BLOCKS', data, currentPeer);
     }
 
     sendBlocks(blocks: Array<Block>, peer, requestId): void {

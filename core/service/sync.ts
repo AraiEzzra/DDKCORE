@@ -123,7 +123,7 @@ export class SyncService implements ISyncService {
     }
 
     async requestBlocks(lastBlock, peer = null): Promise<ResponseEntity<Array<Block>>> {
-        return await SyncRepository.requestBlocks({
+        return SyncRepository.requestBlocks({
             height: lastBlock.height + 1,
             limit: config.CONSTANTS.TRANSFER.REQUEST_BLOCK_LIMIT
         }, peer);

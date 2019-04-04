@@ -67,9 +67,6 @@ export class SyncController extends BaseController {
             }
             const responseBlocks = await SyncService.requestBlocks(lastBlock, peer);
             if (!responseBlocks.success) {
-                if (responseCommonBlocks.errors.indexOf(REQUEST_TIMEOUT) !== -1) {
-                    continue;
-                }
                 continue;
             }
             await SyncService.loadBlocks(responseBlocks.data);
