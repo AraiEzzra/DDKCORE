@@ -16,6 +16,7 @@ import {
     MAX_PEERS_CONNECTED
 } from 'core/util/const';
 import { ResponseEntity } from 'shared/model/response';
+
 export const REQUEST_TIMEOUT = '408 Request Timeout';
 
 const ioServer = socketIO(config.CORE.SOCKET.PORT, {
@@ -185,13 +186,13 @@ export class Socket {
 
                     peer.socket.removeListener('SOCKET_RPC_RESPONSE', responseListener);
 
-                    resolve(new ResponseEntity( { data: response.data }));
+                    resolve(new ResponseEntity({ data: response.data }));
                 }
             };
 
             if (!(PeerRepository.has(peer))) {
                 logger.error(`Peer ${peer.ip}:${peer.port} is offline`);
-                resolve(new ResponseEntity({ errors: [`Peer ${peer.ip}:${peer.port} is offline`]}));
+                resolve(new ResponseEntity({ errors: [`Peer ${peer.ip}:${peer.port} is offline`] }));
             }
 
             if (!peer.socket) {
@@ -200,7 +201,7 @@ export class Socket {
 
             const timerId = setTimeout(
                 () => {
-                    resolve(new ResponseEntity({ errors: [REQUEST_TIMEOUT]}));
+                    resolve(new ResponseEntity({ errors: [REQUEST_TIMEOUT] }));
                 },
                 SOCKET_RPC_REQUEST_TIMEOUT
             );
