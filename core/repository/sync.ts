@@ -34,12 +34,8 @@ interface ISyncRepo {
 export class Sync implements ISyncRepo {
 
     async requestPeers(): Promise<ResponseEntity<Array<Peer>>> {
-        try {
-            const peer = PeerRepository.getRandomTrustedPeer();
-            return await SocketRepository.peerRPCRequest('REQUEST_PEERS', {}, peer);
-        } catch (e) {
-            logger.error(JSON.stringify(e));
-        }
+        const peer = PeerRepository.getRandomTrustedPeer();
+        return SocketRepository.peerRPCRequest('REQUEST_PEERS', {}, peer);
     }
 
     async discoverPeers(): Promise<Map<string, object>> {
@@ -119,7 +115,7 @@ export class Sync implements ISyncRepo {
         serializedBlocks.forEach(block => {
             block.transactions = block.transactions.map(trs => SharedTransactionRepo.serialize(trs));
         });
-        SocketRepository.peerRPCResponse('RESPONSE_BLOCKS',  serializedBlocks, peer, requestId);
+        SocketRepository.peerRPCResponse('RESPONSE_BLOCKS', serializedBlocks, peer, requestId);
     }
 
     sendHeaders(headers) {
