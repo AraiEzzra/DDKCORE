@@ -14,6 +14,10 @@ export class PeerController extends BaseController {
     @ON('EMIT_REQUEST_PEERS')
     async connectNewPeers(): Promise<void> {
         const response = await SyncRepository.requestPeers();
+        if (!response.success) {
+            logger.error(`[Controller][Peer][connectNewPeers] ${JSON.stringify(response.errors)}`);
+            return;
+        }
         SyncService.connectNewPeers(response.data);
     }
 
