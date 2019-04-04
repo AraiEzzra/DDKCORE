@@ -25,6 +25,8 @@ import { getAddressByPublicKey } from 'shared/util/account';
 import { getRandomInt } from 'shared/util/util';
 import { PEER_CONNECTION_TIME_REBOOT, START_SYNC_BLOCKS } from 'core/util/const';
 import System from 'core/repository/system';
+import SyncService from 'core/service/sync';
+import PeerRepository from 'core/repository/peer';
 
 // @ts-ignore
 BigInt.prototype.toJSON = function () {
@@ -113,7 +115,7 @@ class Loader {
             }
 
             for (const round of roundsBatch) {
-                if (i < totalCount ) {
+                if (i < totalCount) {
                     const data = RoundService.sumRound(round);
                     RoundService.applyUnconfirmed(data);
                 }

@@ -15,11 +15,13 @@ import {
     MAX_PEERS_CONNECT_TO,
     MAX_PEERS_CONNECTED
 } from 'core/util/const';
+import { ResponseEntity } from 'shared/model/response';
+export const REQUEST_TIMEOUT = '408 Request Timeout';
 
 const ioServer = socketIO(config.CORE.SOCKET.PORT, {
     serveClient: false,
-    pingTimeout: 30000,
-    pingInterval: 30000,
+    pingTimeout: 10000,
+    pingInterval: 10000,
 });
 
 export class Socket {
@@ -46,7 +48,7 @@ export class Socket {
             }
             socket.emit('OPEN');
             socket.on('HEADERS', (data: string) => {
-                logger.debug(`[SOCKET][CLIENT_PEER_HEADERS_RECEIVE]`);
+                logger.debug(`[SOCKET][HEADERS_FROM_CLIENT]`);
                 const peer = JSON.parse(data);
                 if (Socket.instance.addPeer(peer, socket)) {
                     socket.emit('SERVER_HEADERS', JSON.stringify(
@@ -78,7 +80,7 @@ export class Socket {
                 SystemRepository.getFullHeaders()
             ));
             ws.on('SERVER_HEADERS', (headers: string) => {
-                logger.debug(`[SOCKET][SERVER_PEER_HEADERS_RECEIVE]`);
+                logger.debug(`[SOCKET][HEADERS_FROM_SERVER]`);
                 const fullPeer = Object.assign(JSON.parse(headers), peer);
                 Socket.instance.addPeer(fullPeer, ws);
             });
@@ -94,7 +96,8 @@ export class Socket {
             socket.on('BROADCAST', listenBroadcast);
             socket.on('SOCKET_RPC_REQUEST', listenRPC);
 
-            peer.socket.on('disconnect', () => {
+            peer.socket.on('disconnect', (reason) => {
+                logger.debug(`REASON ${reason}`);
                 peer.socket.removeListener('BROADCAST', listenBroadcast);
                 peer.socket.removeListener('SOCKET_RPC_REQUEST', listenRPC);
                 PeerRepository.removePeer(peer);
@@ -146,7 +149,7 @@ export class Socket {
     }
 
     @autobind
-    peerRPCResponse(code, data, peer, requestId = null): void {
+    peerRPCResponse(code, data, peer, requestId): void {
         if (!(PeerRepository.has(peer))) {
             logger.error(`Peer ${peer.ip}:${peer.port} is offline`);
             return;
@@ -166,10 +169,10 @@ export class Socket {
     }
 
     @autobind
-    peerRPCRequest(code, data, peer): Promise<any> {
+    peerRPCRequest(code, data, peer): Promise<ResponseEntity<any>> {
         const requestId = uuid4();
 
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
 
             const responseListener = (response) => {
                 response = new SocketResponseRPC(response);
@@ -182,13 +185,13 @@ export class Socket {
 
                     peer.socket.removeListener('SOCKET_RPC_RESPONSE', responseListener);
 
-                    resolve(response.data);
+                    resolve(new ResponseEntity( { data: response.data }));
                 }
             };
 
             if (!(PeerRepository.has(peer))) {
                 logger.error(`Peer ${peer.ip}:${peer.port} is offline`);
-                reject(`Peer ${peer.ip}:${peer.port} is offline`);
+                resolve(new ResponseEntity({ errors: [`Peer ${peer.ip}:${peer.port} is offline`]}));
             }
 
             if (!peer.socket) {
@@ -197,7 +200,7 @@ export class Socket {
 
             const timerId = setTimeout(
                 () => {
-                    reject('408 Request Timeout');
+                    resolve(new ResponseEntity({ errors: [REQUEST_TIMEOUT]}));
                 },
                 SOCKET_RPC_REQUEST_TIMEOUT
             );

@@ -15,9 +15,10 @@ class Headers {
     minVersion: number;
     ip: string;
     blocksIds: Map<number, string>;
-    synchronizationStatus: boolean;
+    synchronization: boolean;
 
     constructor() {
+        this.synchronization = false;
         this.blocksIds = new Map();
         this.os = os.platform() + os.release();
         this.port = config.CORE.SOCKET.PORT;
@@ -26,21 +27,6 @@ class Headers {
         this.height = 1;
         this.minVersion = 1;
         this.version = config.CONSTANTS.FORGING.CURRENT_BLOCK_VERSION;
-    }
-
-    get synchronization(): boolean {
-        return this.synchronizationStatus;
-    }
-
-    set synchronization(data: boolean) {
-        logger.debug(`[Repository][System][synchronization] SET value: ${data}`);
-        if (data === false && this.synchronizationStatus === true) {
-            this.synchronizationStatus = data;
-            logger.debug(`[Repository][System][synchronization]: RUN event pool ${EventQueue.pool.length}`);
-            EventQueue.process();
-        }
-
-        this.synchronizationStatus = data;
     }
 
     update(data) {

@@ -1,46 +1,37 @@
 import SyncService from 'core/service/sync';
 import { ON } from 'core/util/decorator';
-import { Block } from 'shared/model/block';
 import { Peer } from 'shared/model/peer';
 import { BaseController } from 'core/controller/baseController';
 import PeerService from 'core/service/peer';
 import RoundService from 'core/service/round';
 import { logger } from 'shared/util/logger';
-import BlockController from 'core/controller/block';
 import PeerRepository from 'core/repository/peer';
-import SharedTransactionRepo from 'shared/repository/transaction';
 import { messageON } from 'shared/util/bus';
 import System from 'core/repository/system';
+import BlockRepository from 'core/repository/block';
+import EventQueue from 'core/repository/eventQueue';
+import { REQUEST_TIMEOUT } from 'core/repository/socket';
+
+type checkCommonBlocksRequest = {
+    data: {
+        block: {
+            id: string, height: number
+        }
+    },
+    peer: Peer,
+    requestId: string,
+};
 
 export class SyncController extends BaseController {
 
-    @ON('EMIT_REQUEST_COMMON_BLOCKS')
-    emitRequestCommonBlocks(blockData: { id: string, height: number }): void {
-        logger.debug(`[Controller][Sync][emitRequestCommonBlocks] id: ${blockData.id} height: ${blockData.height}`);
-        SyncService.requestCommonBlocks(blockData);
-    }
 
     @ON('REQUEST_COMMON_BLOCKS')
-    checkCommonBlocks(action: { data: { block: { id: string, height: number } }, peer: Peer }): void {
-        const { data, peer } = action;
+    checkCommonBlocks(action: checkCommonBlocksRequest): void {
+        const { data, peer, requestId } = action;
         logger.debug(`[Controller][Sync][checkCommonBlocks]: ${JSON.stringify(data.block)}`);
-        SyncService.checkCommonBlocks(data.block, peer);
+        SyncService.checkCommonBlocks(data.block, peer, requestId);
     }
 
-    @ON('RESPONSE_COMMON_BLOCKS')
-    async getCommonBlocks(action: { data: { isExist: boolean, block: { id: string, height: number } }, peer: Peer }) {
-        const { data, peer } = action;
-        logger.debug(`[Controller][Sync][getCommonBlocks]: ${JSON.stringify(data)}`);
-
-        if (data.isExist) {
-            SyncService.requestBlocks(data.block, peer);
-        } else {
-
-            await SyncService.rollback();
-            
-            this.startSyncBlocks();
-        }
-    }
 
     @ON('EMIT_SYNC_BLOCKS')
     async startSyncBlocks(): Promise<void> {
@@ -55,33 +46,44 @@ export class SyncController extends BaseController {
         RoundService.setIsBlockChainReady(false);
         logger.debug(`[Controller][Sync][startSyncBlocks]: start sync with consensus ${SyncService.getConsensus()}%`);
 
-        await SyncService.checkCommonBlock();
+        while (!SyncService.consensus) {
+            const lastBlock = await BlockRepository.getLastBlock();
+            if (!lastBlock) {
+                logger.error(`[Controller][Sync][startSyncBlocks] lastBlock undefined`);
+                break;
+            }
+            const responseCommonBlocks = await SyncService.checkCommonBlock(lastBlock);
+            if (!responseCommonBlocks.success) {
+                logger.error(`[Controller][Sync][startSyncBlocks]: ${JSON.stringify(responseCommonBlocks.errors)}`);
+                if (responseCommonBlocks.errors.indexOf(REQUEST_TIMEOUT) !== -1) {
+                    continue;
+                }
+                break;
+            }
+            const { isExist, peer = null } = responseCommonBlocks.data;
+            if (!isExist) {
+                await SyncService.rollback();
+                continue;
+            }
+            const responseBlocks = await SyncService.requestBlocks(lastBlock, peer);
+            if (!responseBlocks.success) {
+                if (responseCommonBlocks.errors.indexOf(REQUEST_TIMEOUT) !== -1) {
+                    continue;
+                }
+                continue;
+            }
+            await SyncService.loadBlocks(responseBlocks.data);
+        }
+        messageON('WARM_UP_FINISHED');
+        System.synchronization = false;
+        EventQueue.process();
+        logger.debug('[Controller][Sync][startSyncBlocks] SYNCHRONIZATION DONE SUCCESS');
     }
 
     @ON('REQUEST_BLOCKS')
-    sendBlocks(action: { data: { height: number, limit: number }, peer: Peer }): void {
-        const { data, peer } = action;
-        SyncService.sendBlocks(data, peer);
-    }
-
-    @ON('RESPONSE_BLOCKS')
-    async loadBlocks(action: { data: { blocks: Array<Block> }, peer: Peer }): Promise<void> {
-        const { data } = action;
-        for (let block of data.blocks) {
-            block.transactions.forEach(trs => SharedTransactionRepo.deserialize(trs));
-            const receive = await BlockController.onReceiveBlock({ data: { block } });
-            // TODO to fix slots with rounds and then remove checking
-            if (!receive.success) {
-                logger.error(`[Controller][Sync][loadBlocks] error load blocks!`);
-                return;
-            }
-        }
-        if (!SyncService.consensus) {
-            await SyncService.checkCommonBlock();
-        } else if (!RoundService.getIsBlockChainReady()) {
-            System.synchronization = false;
-            messageON('WARM_UP_FINISHED');
-        }
+    sendBlocks(action: { data: { height: number, limit: number }, peer: Peer, requestId: string }): void {
+        const { data, peer, requestId } = action;
+        SyncService.sendBlocks(data, peer, requestId);
     }
 
     @ON('PEER_HEADERS_UPDATE')
