@@ -228,12 +228,12 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             senderPublicKey: sender.publicKey,
             senderAddress: sender.address,
             type: data.type,
-            fee: 0,
             salt: cryptoBrowserify.randomBytes(SALT_LENGTH).toString('hex'),
         });
 
         const service = getTransactionServiceByType(data.type);
         trs.asset = service.create(data);
+        trs.fee = this.calculateFee(trs, sender);
 
         trs.signature = this.sign(keyPair, trs);
         if (secondKeyPair) {
