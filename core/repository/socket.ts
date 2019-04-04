@@ -192,6 +192,7 @@ export class Socket {
 
             if (!(PeerRepository.has(peer))) {
                 logger.error(`Peer ${peer.ip}:${peer.port} is offline`);
+                peer.socket.removeListener('SOCKET_RPC_RESPONSE', responseListener);
                 resolve(new ResponseEntity({ errors: [`Peer ${peer.ip}:${peer.port} is offline`] }));
             }
 
@@ -200,9 +201,12 @@ export class Socket {
             }
 
             const timerId = setTimeout(
-                () => {
-                    resolve(new ResponseEntity({ errors: [REQUEST_TIMEOUT] }));
-                },
+                ((socket, res) => {
+                    return () => {
+                        socket.removeListener('SOCKET_RPC_RESPONSE', responseListener);
+                        res(new ResponseEntity({ errors: [REQUEST_TIMEOUT] }));
+                    };
+                })(peer.socket, resolve),
                 SOCKET_RPC_REQUEST_TIMEOUT
             );
 
