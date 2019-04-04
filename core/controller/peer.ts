@@ -7,13 +7,14 @@ import { Peer } from 'shared/model/peer';
 import PeerRepository from 'core/repository/peer';
 import { logger } from 'shared/util/logger';
 import { shuffle } from 'shared/util/util';
+import config from 'shared/config';
 
 export class PeerController extends BaseController {
 
     @ON('EMIT_REQUEST_PEERS')
     async connectNewPeers(): Promise<void> {
-        const peers = await SyncRepository.requestPeers();
-        SyncService.connectNewPeers(peers);
+        const response = await SyncRepository.requestPeers();
+        SyncService.connectNewPeers(response.data);
     }
 
     @ON('REQUEST_PEERS')
@@ -25,16 +26,14 @@ export class PeerController extends BaseController {
     @ON('EMIT_REBOOT_PEERS_CONNECTIONS')
     async rebootPeersConnections(): Promise<void> {
         const discoveredPeers = await SyncRepository.discoverPeers();
-        if (discoveredPeers.size < PEERS_DISCOVER.MIN) {
-            return;
-        }
-
         PeerRepository.disconnectPeers();
         logger.debug('[Controller][Peer][rebootPeersConnections]: DISCONNECTED ALL PEERS');
 
-        const shuffledPeers = shuffle([...discoveredPeers.values()]);
+        let shuffledPeers = shuffle([...discoveredPeers.values()]);
+        if (discoveredPeers.size < PEERS_DISCOVER.MIN) {
+            shuffledPeers = [...config.CORE.PEERS.TRUSTED];
+        }
         const peers = shuffledPeers.slice(0, PEERS_DISCOVER.MAX);
-        logger.debug(`[Controller][Peer][rebootPeersConnections]: DISCOVERED PEERS ${JSON.stringify(peers)}`);
         PeerRepository.connectPeers(peers);
     }
 }

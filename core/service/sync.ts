@@ -14,13 +14,17 @@ import { logger } from 'shared/util/logger';
 import RoundService from 'core/service/round';
 import SlotService from 'core/service/slot';
 import RoundRepository from 'core/repository/round';
+import SharedTransactionRepo from 'shared/repository/transaction';
+import BlockController from 'core/controller/block';
+import System from 'core/repository/system';
+import { ResponseEntity } from 'shared/model/response';
 
 //  TODO get from env
 const MIN_CONSENSUS = 51;
 
 export interface ISyncService {
 
-    sendPeers(peer: Peer, requestId?): void;
+    sendPeers(peer: Peer, requestId): void;
 
     connectNewPeers(peers: Array<Peer>): void;
 
@@ -28,11 +32,11 @@ export interface ISyncService {
 
     sendUnconfirmedTransaction(trs: Transaction<any>): void;
 
-    checkCommonBlock(): Promise<void>;
+    checkCommonBlock(lastBlock: Block): Promise<ResponseEntity<{ isExist: boolean, peer?: Peer }>>;
 
-    requestBlocks(block: Block, peer: Peer): void;
+    requestBlocks(lastBlock: Block, peer: Peer): Promise<ResponseEntity<Array<Block>>>;
 
-    sendBlocks(data: { height: number, limit: number }, peer: Peer): void;
+    sendBlocks(data: { height: number, limit: number }, peer: Peer, requestId: string): void;
 
     consensus: boolean;
 }
@@ -61,45 +65,46 @@ export class SyncService implements ISyncService {
         }
     }
 
-    async checkCommonBlock(): Promise<void> {
-        const lastBlock = BlockRepository.getLastBlock();
-        if (!lastBlock) {
-            logger.error('last block is undefined');
-        }
+    async checkCommonBlock(lastBlock: Block): Promise<ResponseEntity<{ isExist: boolean, peer?: Peer }>> {
+
+        const errors: Array<string> = [];
+
         if (this.checkBlockConsensus(lastBlock) || lastBlock.height === 1) {
-            this.requestBlocks(lastBlock);
+            return new ResponseEntity({ data: { isExist: true } });
         } else {
-            logger.debug(`[PeerRepository.peers], ${PeerRepository.peerList().length}`);
+
             const peers = PeerRepository.getPeersByFilter(lastBlock.height, SystemRepository.broadhash);
-            logger.debug(`[PeerRepository.getPeersByFilter], ${peers.length}`);
+
             if (peers.length === 0) {
-                logger.debug(`[Service][Sync][checkCommonBlock] 
-                lastBlock.height: ${lastBlock.height}, lastBlock.id: ${lastBlock.id}`);
-                PeerRepository.peerList().forEach((peer) => {
-                    logger.debug(`Peer: ${peer.ip}: height: ${peer.height}, broadhash: ${peer.broadhash}`);
-                });
-                SystemRepository.synchronization = false;
-                return;
+                errors.push(`PeerRepository.getPeersByFilter: ${peers.length} of ${PeerRepository.peerList().length}`);
+                return new ResponseEntity({ errors });
             }
             const randomPeer = PeerRepository.getRandomPeer(peers);
             logger.debug(`[PeerRepository.getRandomPeer], ${randomPeer.ip}:${randomPeer.port}`);
+
             if (!randomPeer) {
-                messageON('WARM_UP_FINISHED');
-                logger.error('[Service][Sync][checkCommonBlock]: Peer doesn`t found');
-                return;
+                errors.push(`random peer not found`);
+                return new ResponseEntity({ errors });
             }
+
             const minHeight = Math.min(...randomPeer.blocksIds.keys());
             if (minHeight > lastBlock.height) {
 
-                messageON('EMIT_REQUEST_COMMON_BLOCKS', {
-                    id: lastBlock.id,
-                    height: lastBlock.height
-                });
-            } else {
-                await this.rollback();
-                await this.checkCommonBlock();
+                const response = await SyncRepository.requestCommonBlocks(
+                    { id: lastBlock.id, height: lastBlock.height }
+                );
+
+                if (!response.success) {
+                    errors.push(`response from peer not success`);
+                    return new ResponseEntity({ errors });
+                }
+                const { isExist, peer } = response.data;
+                if (isExist) {
+                    return new ResponseEntity({ data: { peer, isExist } });
+                }
             }
         }
+        return new ResponseEntity({ data: { isExist: false } });
     }
 
     async rollback() {
@@ -117,25 +122,35 @@ export class SyncService implements ISyncService {
 
     }
 
-    requestBlocks(lastBlock, peer = null): void {
-        SyncRepository.requestBlocks({
+    async requestBlocks(lastBlock, peer = null): Promise<ResponseEntity<Array<Block>>> {
+        return await SyncRepository.requestBlocks({
             height: lastBlock.height + 1,
             limit: config.CONSTANTS.TRANSFER.REQUEST_BLOCK_LIMIT
         }, peer);
     }
 
-    sendBlocks(data: { height: number, limit: number }, peer): void {
+    sendBlocks(data: { height: number, limit: number }, peer, requestId): void {
         const blocks = BlockRepository.getMany(data.limit, data.height);
-        SyncRepository.sendBlocks(blocks, peer);
+        SyncRepository.sendBlocks(blocks, peer, requestId);
     }
 
-    requestCommonBlocks(blockData: { id: string, height: number }): void {
-        SyncRepository.requestCommonBlocks(blockData);
+    async loadBlocks(blocks: Array<Block>): Promise<ResponseEntity<any>> {
+        const errors: Array<string> = [];
+
+        for (let block of blocks) {
+            block.transactions.forEach(trs => SharedTransactionRepo.deserialize(trs));
+            const receive = await BlockController.onReceiveBlock({ data: { block } });
+            if (!receive.success) {
+                errors.push('[Service][Sync][loadBlocks] error load blocks!');
+                return new ResponseEntity({ errors });
+            }
+        }
+        return new ResponseEntity();
     }
 
-    checkCommonBlocks(block: { id: string, height: number }, peer): void {
+    checkCommonBlocks(block: { id: string, height: number }, peer, requestId): void {
         const isExist = BlockRepository.isExist(block.id);
-        SyncRepository.sendCommonBlocksExist({ isExist, block }, peer);
+        SyncRepository.sendCommonBlocksExist({ isExist }, peer, requestId);
     }
 
     updateHeaders(lastBlock: Block) {

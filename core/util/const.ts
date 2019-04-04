@@ -10,13 +10,13 @@ export const MAX_PEERS_CONNECT_TO = 100;
 export const MAX_PEERS_CONNECTED = 300;
 export const PEERS_DISCOVER = {
     MAX: 100,
-    MIN: 2,
+    MIN: 3,
 };
 export const START_SYNC_BLOCKS = 15000;
 /* tslint:disable */
 export const PEER_CONNECTION_TIME_REBOOT = {
-    MIN: 15 * 60 * 1000,
-    MAX: 25 * 60 * 1000,
+    MIN: 3 * 60 * 1000,
+    MAX: 5 * 60 * 1000,
 };
 /* tslint:enable */
 export const PEERS_COUNT_FOR_DISCOVER = 2;
