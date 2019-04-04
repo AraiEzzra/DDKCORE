@@ -3,16 +3,16 @@ import { IConstants } from 'shared/model/types';
 /* tslint:disable:no-magic-numbers */
 const constants: IConstants = {
     AIRDROP: {
-        ADDRESS: BigInt('7897332094363171058'),
+        ADDRESS: BigInt('11696703665952770027'),
         STAKE_REWARD_PERCENT: 10,
         REFERRAL_PERCENT_PER_LEVEL: [5, 3, 2, 2, 1, 1, 1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.5, 0.5, 0.5],
     },
     TOTAL_SUPPLY: {
-        ADDRESS: BigInt('4995063339468361088'),
+        ADDRESS: BigInt('13566253584516829136'),
         AMOUNT: 4500000000000000,
     },
     BLOCK_SLOT_WINDOW: 5,
-    ACTIVE_DELEGATES: 201,
+    ACTIVE_DELEGATES: 11,
     MAX_VOTES: 201,
     MAX_VOTES_PER_TRANSACTION: 3,
     MAX_DELEGATE_USERNAME_LENGTH: 20,
