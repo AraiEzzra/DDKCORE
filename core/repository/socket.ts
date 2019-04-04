@@ -174,7 +174,9 @@ export class Socket {
         const requestId = uuid4();
 
         return new Promise((resolve) => {
-
+            if (!peer.socket) {
+                peer = PeerRepository.getPeerFromPool(peer);
+            }
             const responseListener = (response) => {
                 response = new SocketResponseRPC(response);
                 if (response.requestId && response.requestId === requestId) {
