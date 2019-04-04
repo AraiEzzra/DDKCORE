@@ -29,7 +29,7 @@ class DelegateRepository {
                 return -1;
             }
             return 0;
-        }).slice(offset, limit);
+        }).slice(offset, offset + limit);
     }
 
     public getDelegate(publicKey: PublicKey): Delegate {
@@ -53,7 +53,7 @@ class DelegateRepository {
 
         if (activeDelegates.length > 0) {
             if (limit) {
-                activeDelegates = activeDelegates.slice(offset || 0, limit);
+                activeDelegates = activeDelegates.slice(offset || 0, (offset || 0) + limit);
             }
             return activeDelegates;
         }

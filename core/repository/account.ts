@@ -86,8 +86,9 @@ class AccountRepository {
             actualBalance: account.actualBalance,
             referrals: account.referrals.map(acc => acc.address.toString()),
             votes: account.votes.map(
-                (publicKey: PublicKey) => DelegateRepository.serialize(DelegateRepository.getDelegate(publicKey))),
-            stakes: account.stakes,
+                (publicKey: PublicKey) => DelegateRepository.serialize(DelegateRepository.getDelegate(publicKey))
+            ).reverse(),
+            stakes: account.stakes.reverse(),
         };
     }
 }
