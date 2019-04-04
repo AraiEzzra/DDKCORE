@@ -1,5 +1,5 @@
 import { IAssetService } from 'core/service/transaction';
-import {IAssetRegister, Transaction, TransactionModel} from 'shared/model/transaction';
+import { IAssetRegister, Transaction, TransactionModel } from 'shared/model/transaction';
 import { Account } from 'shared/model/account';
 import { ResponseEntity } from 'shared/model/response';
 import AccountRepo from 'core/repository/account';
@@ -59,8 +59,11 @@ class TransactionRegisterService implements IAssetService<IAssetRegister> {
         const referrals: Array<Account> =
             referralAccount.referrals.slice(0, config.CONSTANTS.REFERRAL.MAX_COUNT - 1);
 
-        const targetAccount: Account = AccountRepo.add({ address: trs.senderAddress, publicKey: trs.senderPublicKey });
-        AccountRepo.updateReferralByAddress(targetAccount.address, [referralAccount, ...referrals]);
+        const targetAccount: Account = AccountRepo.add({
+            address: trs.senderAddress,
+            publicKey: trs.senderPublicKey
+        });
+        targetAccount.referrals = [referralAccount, ...referrals];
     }
 
     undoUnconfirmed(trs: Transaction<IAssetRegister>, sender: Account, senderOnly: boolean): void {
