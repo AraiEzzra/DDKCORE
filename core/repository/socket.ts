@@ -174,9 +174,16 @@ export class Socket {
         const requestId = uuid4();
 
         return new Promise((resolve) => {
+
+            if (!(PeerRepository.has(peer))) {
+                logger.error(`Peer ${peer.ip}:${peer.port} is offline`);
+                resolve(new ResponseEntity({ errors: [`Peer ${peer.ip}:${peer.port} is offline`] }));
+            }
+
             if (!peer.socket) {
                 peer = PeerRepository.getPeerFromPool(peer);
             }
+            
             const responseListener = (response) => {
                 response = new SocketResponseRPC(response);
                 if (response.requestId && response.requestId === requestId) {
@@ -191,16 +198,6 @@ export class Socket {
                     resolve(new ResponseEntity({ data: response.data }));
                 }
             };
-
-            if (!(PeerRepository.has(peer))) {
-                logger.error(`Peer ${peer.ip}:${peer.port} is offline`);
-                peer.socket.removeListener('SOCKET_RPC_RESPONSE', responseListener);
-                resolve(new ResponseEntity({ errors: [`Peer ${peer.ip}:${peer.port} is offline`] }));
-            }
-
-            if (!peer.socket) {
-                peer = PeerRepository.getPeerFromPool(peer);
-            }
 
             const timerId = setTimeout(
                 ((socket, res) => {
