@@ -15,8 +15,8 @@ export const PEERS_DISCOVER = {
 export const START_SYNC_BLOCKS = 15000;
 /* tslint:disable */
 export const PEER_CONNECTION_TIME_REBOOT = {
-    MIN: 15 * 60 * 1000,
-    MAX: 25 * 60 * 1000,
+    MIN: 25 * 60 * 1000,
+    MAX: 30 * 60 * 1000,
 };
 /* tslint:enable */
 export const PEERS_COUNT_FOR_DISCOVER = 2;
