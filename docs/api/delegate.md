@@ -8,8 +8,8 @@ Body parameters
 
 | Parameter | Type   | Is Required | Description |
 |-----------|--------|-------------|-------------|
-| limit     | number | -           | Limit       |
-| offset    | number | -           | Offset      |
+| limit     | number | +           | Limit       |
+| offset    | number | +           | Offset      |
 
 Response
 
@@ -79,8 +79,8 @@ Body parameters
 
 | Parameter | Type   | Is Required | Description |
 |-----------|--------|-------------|-------------|
-| limit     | number | -           | Limit       |
-| offset    | number | -           | Offset      |
+| limit     | number | +           | Limit       |
+| offset    | number | +           | Offset      |
 
 Response
 
@@ -151,8 +151,8 @@ Body parameters
 | Parameter | Type   | Is Required | Description          |
 |-----------|--------|-------------|----------------------|
 | address   | string | +           | User account address |
-| limit     | number | -           | Limit                |
-| offset    | number | -           | Offset               |
+| limit     | number | +           | Limit                |
+| offset    | number | +           | Offset               |
 
 Response
 
