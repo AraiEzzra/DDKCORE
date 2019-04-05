@@ -155,10 +155,8 @@ export function undoFrozeOrdersRewardAndUnstake(
     sender: Account,
     senderOnly: boolean
 ): void {
-    const updatedOrders = sender.stakes.map((stake: Stake) => {
-        if (stake.nextVoteMilestone === trs.createdAt + config.CONSTANTS.FROZE.VOTE_MILESTONE) {
-            return stake;
-        }
+    const updatedOrders = sender.stakes.filter((order: Stake) => {
+        return order.nextVoteMilestone === trs.createdAt + config.CONSTANTS.FROZE.VOTE_MILESTONE;
     });
     undoUnstake(updatedOrders, trs, sender);
     undoRewards(trs, sender, senderOnly);
