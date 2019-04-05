@@ -1,6 +1,8 @@
 import SocketMiddleware from 'core/api/middleware/socket';
 import { EVENT_TYPES } from 'shared/driver/socket/codes';
 import AccountRepository from 'core/repository/account';
+import BlockRepository from 'core/repository/block';
+import SyncService from 'core/service/sync';
 import config from 'shared/config';
 
 export type BlockchainInfo = {
@@ -9,6 +11,8 @@ export type BlockchainInfo = {
     tokenHolders: number;
     totalStakeAmount: number;
     totalStakeHolders: number;
+    height: number;
+    consensus: number;
 };
 
 
@@ -25,7 +29,9 @@ class EventService {
             circulatingSupply,
             tokenHolders: statistics.tokenHolders,
             totalStakeAmount: statistics.totalStakeAmount,
-            totalStakeHolders: statistics.totalStakeHolders
+            totalStakeHolders: statistics.totalStakeHolders,
+            height: BlockRepository.getLastBlock() ? BlockRepository.getLastBlock().height : 0,
+            consensus: SyncService.getConsensus()
         });
     }
 }
