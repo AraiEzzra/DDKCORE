@@ -62,4 +62,17 @@ export type IConstants = {
     PRE_ORDER_LAST_MIGRATED_BLOCK: number;
     PRE_ORDER_PUBLIC_KEY: string;
     UPDATE_BLOCKCHAIN_INFO_INTERVAL: number;
+    MAX_PEERS_CONNECT_TO: number;
+    MAX_PEERS_CONNECTED: number
+    PEERS_DISCOVER: {
+        MAX: number;
+        MIN: number;
+    };
+    TIMEOUT_START_SYNC_BLOCKS: number;
+    TIMEOUT_START_PEER_REQUEST: number;
+    PEER_CONNECTION_TIME_INTERVAL_REBOOT: {
+        MIN: number;
+        MAX: number;
+    };
+    PEERS_COUNT_FOR_DISCOVER: number;
 };

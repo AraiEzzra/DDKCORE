@@ -1,8 +1,7 @@
 import os from 'os';
 import { Block } from 'shared/model/block';
 import config from 'shared/config';
-import { logger } from 'shared/util/logger';
-import EventQueue from 'core/repository/eventQueue';
+import PeerRepository from 'core/repository/peer';
 
 export const MAX_BLOCK_IN_MEMORY = 100;
 
@@ -27,6 +26,10 @@ class Headers {
         this.height = 1;
         this.minVersion = 1;
         this.version = config.CONSTANTS.FORGING.CURRENT_BLOCK_VERSION;
+    }
+    
+    get peerCount(): number {
+        return PeerRepository.peerList().length;
     }
 
     update(data) {
@@ -65,6 +68,7 @@ class Headers {
         return {
             height: this.height,
             broadhash: this.broadhash,
+            peerCount: this.peerCount,
         };
     }
 

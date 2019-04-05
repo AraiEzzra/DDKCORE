@@ -6,12 +6,10 @@ import PeerRepository from 'core/repository/peer';
 import SystemRepository from 'core/repository/system';
 import { logger } from 'shared/util/logger';
 import SharedTransactionRepo from 'shared/repository/transaction';
-import { PEERS_COUNT_FOR_DISCOVER } from 'core/util/const';
+import config from 'shared/config';
 import { ResponseEntity } from 'shared/model/response';
 
 interface ISyncRepo {
-
-    requestPeers(): void;
 
     sendPeers(peer: Peer, queryId): void;
 
@@ -33,13 +31,8 @@ interface ISyncRepo {
 
 export class Sync implements ISyncRepo {
 
-    async requestPeers(): Promise<ResponseEntity<Array<Peer>>> {
-        const peer = PeerRepository.getRandomTrustedPeer();
-        return SocketRepository.peerRPCRequest('REQUEST_PEERS', {}, peer);
-    }
-
     async discoverPeers(): Promise<Map<string, object>> {
-        const randomPeers = PeerRepository.getRandomPeers(PEERS_COUNT_FOR_DISCOVER);
+        const randomPeers = PeerRepository.getRandomPeers(config.CONSTANTS.PEERS_COUNT_FOR_DISCOVER);
 
         const peersPromises = randomPeers.map(peer => {
             return SocketRepository.peerRPCRequest('REQUEST_PEERS', {}, peer);
@@ -61,6 +54,7 @@ export class Sync implements ISyncRepo {
         const peers = PeerRepository.peerList().map(item => ({
                 ip: item.ip,
                 port: item.port,
+                peerCount: item.peerCount
             })
         );
 

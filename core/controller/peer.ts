@@ -1,5 +1,4 @@
 import { BaseController } from 'core/controller/baseController';
-import { PEERS_DISCOVER } from 'core/util/const';
 import { ON } from 'core/util/decorator';
 import SyncRepository from 'core/repository/sync';
 import SyncService from 'core/service/sync';
@@ -8,17 +7,24 @@ import PeerRepository from 'core/repository/peer';
 import { logger } from 'shared/util/logger';
 import { shuffle } from 'shared/util/util';
 import config from 'shared/config';
+import System from 'core/repository/system';
 
 export class PeerController extends BaseController {
 
     @ON('EMIT_REQUEST_PEERS')
     async connectNewPeers(): Promise<void> {
-        const response = await SyncRepository.requestPeers();
-        if (!response.success) {
-            logger.error(`[Controller][Peer][connectNewPeers] ${JSON.stringify(response.errors)}`);
+
+        if (System.peerCount >= config.CONSTANTS.MAX_PEERS_CONNECT_TO) {
             return;
         }
-        SyncService.connectNewPeers(response.data);
+        const discoveredPeers = await SyncRepository.discoverPeers();
+        const filteredPeers = [...discoveredPeers.values()].filter((peer: Peer) => {
+            return peer.peerCount < config.CONSTANTS.MAX_PEERS_CONNECTED &&
+                config.CORE.PEERS.BLACKLIST.indexOf(peer.ip) === -1;
+        });
+        const shuffledPeers = shuffle(filteredPeers);
+        const peers = shuffledPeers.slice(0, config.CONSTANTS.MAX_PEERS_CONNECT_TO - System.peerCount);
+        PeerRepository.connectPeers(peers);
     }
 
     @ON('REQUEST_PEERS')
@@ -33,11 +39,15 @@ export class PeerController extends BaseController {
         PeerRepository.disconnectPeers();
         logger.debug('[Controller][Peer][rebootPeersConnections]: DISCONNECTED ALL PEERS');
 
-        let shuffledPeers = shuffle([...discoveredPeers.values()]);
-        if (discoveredPeers.size < PEERS_DISCOVER.MIN) {
+        const filteredPeers = [...discoveredPeers.values()].filter((peer: Peer) => {
+            return peer.peerCount < config.CONSTANTS.MAX_PEERS_CONNECTED &&
+                config.CORE.PEERS.BLACKLIST.indexOf(peer.ip) === -1;
+        });
+        let shuffledPeers = shuffle(filteredPeers);
+        if (discoveredPeers.size < config.CONSTANTS.PEERS_DISCOVER.MIN) {
             shuffledPeers = [...config.CORE.PEERS.TRUSTED];
         }
-        const peers = shuffledPeers.slice(0, PEERS_DISCOVER.MAX);
+        const peers = shuffledPeers.slice(0, config.CONSTANTS.PEERS_DISCOVER.MAX);
         PeerRepository.connectPeers(peers);
     }
 }

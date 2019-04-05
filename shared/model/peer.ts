@@ -8,6 +8,7 @@ export class Peer {
     id?: number;
     ip: string;
     port: number;
+    peerCount?: number;
     state?: PeerState;
     os?: string;
     version?: string;

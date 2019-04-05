@@ -123,7 +123,7 @@ export class PeerRepo {
         return config.CORE.PEERS.TRUSTED[getRandomInt(config.CORE.PEERS.TRUSTED.length)];
     }
 
-    connectPeers(peers: Array<{ip: string, port: number}>) {
+    connectPeers(peers: Array<{ip: string, port: number}> = []) {
         peers.forEach(peer => {
             socket.connectNewPeer(peer);
         });

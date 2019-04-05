@@ -68,7 +68,21 @@ const constants: IConstants = {
     PRE_ORDER_LAST_MIGRATED_BLOCK: 0,
     PRE_ORDER_PUBLIC_KEY: 'd8299cb39f5dd81b6e999228e7ca0b4cf596ac33f7b9d0e36471ac657f0e844b',
     UPDATE_BLOCKCHAIN_INFO_INTERVAL: 10000,
+    MAX_PEERS_CONNECT_TO: 3,
+    MAX_PEERS_CONNECTED: 3,
+    PEERS_DISCOVER: {
+        MAX: 3,
+        MIN: 2,
+    },
+    TIMEOUT_START_SYNC_BLOCKS: 20000,
+    TIMEOUT_START_PEER_REQUEST: 10000,
+    PEER_CONNECTION_TIME_INTERVAL_REBOOT: {
+        MIN: 10 * 60 * 1000,
+        MAX: 15 * 60 * 1000,
+    },
+    PEERS_COUNT_FOR_DISCOVER: 2,
 };
 /* tslint:enable */
+
 
 export default constants;

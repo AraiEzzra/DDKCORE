@@ -6,8 +6,6 @@ import BlockService from 'core/service/block';
 import BlockRepository from 'core/repository/block/index';
 import PeerRepository from 'core/repository/peer';
 import SyncRepository from 'core/repository/sync';
-import SocketRepository from 'core/repository/socket';
-import { messageON } from 'shared/util/bus';
 import { TOTAL_PERCENTAGE } from 'core/util/const';
 import config from 'shared/config';
 import { logger } from 'shared/util/logger';
@@ -16,7 +14,6 @@ import SlotService from 'core/service/slot';
 import RoundRepository from 'core/repository/round';
 import SharedTransactionRepo from 'shared/repository/transaction';
 import BlockController from 'core/controller/block';
-import System from 'core/repository/system';
 import { ResponseEntity } from 'shared/model/response';
 
 //  TODO get from env
@@ -25,8 +22,6 @@ const MIN_CONSENSUS = 51;
 export interface ISyncService {
 
     sendPeers(peer: Peer, requestId): void;
-
-    connectNewPeers(peers: Array<Peer>): void;
 
     sendNewBlock(block: Block): void;
 
@@ -45,10 +40,6 @@ export class SyncService implements ISyncService {
 
     sendPeers(peer, requestId): void {
         SyncRepository.sendPeers(peer, requestId);
-    }
-
-    connectNewPeers(peers: Array<Peer>): void {
-        (peers || []).forEach(peer => SocketRepository.connectNewPeer(peer));
     }
 
     sendNewBlock(block: Block): void {
