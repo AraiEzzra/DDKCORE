@@ -82,8 +82,8 @@ Body parameters
 |-----------|-------------------------------|-------------|-------------|
 | filter    | Filter                        | -           | Filter      |
 | sort      | array<[Sort](models.md#sort)> | -           | Sort        |
-| limit     | number                        | -           | Limit       |
-| offset    | number                        | -           | Offset      |
+| limit     | number                        | +           | Limit       |
+| offset    | number                        | +           | Offset      |
 
 Response
 

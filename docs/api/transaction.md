@@ -152,20 +152,20 @@ Code: `GET_TRANSACTIONS`
 
 Body parameters
 
-| Parameter | Type        | Is Required | Description |
-|-----------|-------------|-------------|-------------|
-| filter    | Filter      | -           | Filter      |
-| sort      | array[Sort] | -           | Sort        |
-| limit     | number      | -           | Limit       |
-| offset    | number      | -           | Offset      |
+| Parameter | Type                                   | Is Required | Description                |
+|-----------|----------------------------------------|-------------|----------------------------|
+| filter    | [Transaction Type](#transaction-types) | -           | Filter by transaction type |
+| sort      | array<[Sort](models.md#sort)>          | -           | Sort                       |
+| limit     | number                                 | +           | Limit                      |
+| offset    | number                                 | +           | Offset                     |
 
 Response
 
-| Parameter         | Type               | Description                            |
-|-------------------|--------------------|----------------------------------------|
-| success           | boolean            | Operation status                       |
-| data.transactions | array[Transaction] | Transactions                           |
-| data.count        | number             | Total number of entries for the filter |
+| Parameter         | Type                                        | Description                            |
+|-------------------|---------------------------------------------|----------------------------------------|
+| success           | boolean                                     | Operation status                       |
+| data.transactions | array<[Transaction](models.md#transaction)> | Transactions                           |
+| data.count        | number                                      | Total number of entries for the filter |
 
 ### Examples
 
@@ -246,16 +246,16 @@ Body parameters
 | Parameter | Type   | Is Required | Description |
 |-----------|--------|-------------|-------------|
 | blockId   | string | +           | Block id    |
-| limit     | number | -           | Limit       |
-| offset    | number | -           | Offset      |
+| limit     | number | +           | Limit       |
+| offset    | number | +           | Offset      |
 
 Response
 
-| Parameter         | Type               | Description                  |
-|-------------------|--------------------|------------------------------|
-| success           | boolean            | Operation status             |
-| data.transactions | array[Transaction] | Transactions                 |
-| data.count        | number             | Total number of transactions |
+| Parameter         | Type                                        | Description                  |
+|-------------------|---------------------------------------------|------------------------------|
+| success           | boolean                                     | Operation status             |
+| data.transactions | array<[Transaction](models.md#transaction)> | Transactions                 |
+| data.count        | number                                      | Total number of transactions |
 
 ### Examples
 
