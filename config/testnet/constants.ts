@@ -12,7 +12,7 @@ const constants: IConstants = {
         AMOUNT: 4500000000000000,
     },
     BLOCK_SLOT_WINDOW: 5,
-    ACTIVE_DELEGATES: 11,
+    ACTIVE_DELEGATES: 60,
     MAX_VOTES: 11,
     MAX_VOTES_PER_TRANSACTION: 3,
     MAX_DELEGATE_USERNAME_LENGTH: 20,
@@ -38,7 +38,7 @@ const constants: IConstants = {
     },
     SIGNATURE_LENGTH: 65,
     FROZE: {
-        VOTE_MILESTONE: 120, // in seconds
+        VOTE_MILESTONE: 10, // in seconds
         REWARDS: {
             MILESTONES: [
                 10, // 10% For 0-6 months
@@ -68,6 +68,19 @@ const constants: IConstants = {
     PRE_ORDER_LAST_MIGRATED_BLOCK: 0,
     PRE_ORDER_PUBLIC_KEY: 'd8299cb39f5dd81b6e999228e7ca0b4cf596ac33f7b9d0e36471ac657f0e844b',
     UPDATE_BLOCKCHAIN_INFO_INTERVAL: 10000,
+    MAX_PEERS_CONNECT_TO: 20,
+    MAX_PEERS_CONNECTED: 40,
+    PEERS_DISCOVER: {
+        MAX: 20,
+        MIN: 5,
+    },
+    TIMEOUT_START_SYNC_BLOCKS: 20000,
+    TIMEOUT_START_PEER_REQUEST: 10000,
+    PEER_CONNECTION_TIME_INTERVAL_REBOOT: {
+        MIN: 25 * 60 * 1000,
+        MAX: 30 * 60 * 1000,
+    },
+    PEERS_COUNT_FOR_DISCOVER: 4,
 };
 /* tslint:enable */
 

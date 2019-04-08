@@ -9,13 +9,8 @@ import { logger } from 'shared/util/logger';
 import PeerRepository from 'core/repository/peer';
 import config from 'shared/config';
 import { SocketResponse, SocketResponseRPC } from 'shared/model/socket';
-import {
-    START_PEER_REQUEST,
-    SOCKET_RPC_REQUEST_TIMEOUT,
-    MAX_PEERS_CONNECT_TO,
-    MAX_PEERS_CONNECTED
-} from 'core/util/const';
 import { ResponseEntity } from 'shared/model/response';
+import { SOCKET_RPC_REQUEST_TIMEOUT } from 'core/util/const';
 
 export const REQUEST_TIMEOUT = '408 Request Timeout';
 
@@ -42,7 +37,7 @@ export class Socket {
             this.connectNewPeer(peer);
         });
         ioServer.on('connect', function (socket) {
-            if (PeerRepository.peerList().length > MAX_PEERS_CONNECTED) {
+            if (PeerRepository.peerList().length > config.CONSTANTS.MAX_PEERS_CONNECTED) {
                 logger.debug(`[SOCKET][init] peer connection rejected, too many connections`);
                 socket.disconnect();
                 return;
@@ -62,7 +57,7 @@ export class Socket {
         });
         setTimeout(
             () => messageON('EMIT_REQUEST_PEERS', {}),
-            START_PEER_REQUEST
+            config.CONSTANTS.TIMEOUT_START_PEER_REQUEST
         );
     }
 
@@ -70,7 +65,7 @@ export class Socket {
     connectNewPeer(peer: { ip: string, port: number }): void {
         if (config.CORE.PEERS.BLACKLIST.includes(peer.ip) ||
             PeerRepository.has(peer) ||
-            PeerRepository.peerList().length > MAX_PEERS_CONNECT_TO
+            PeerRepository.peerList().length > config.CONSTANTS.MAX_PEERS_CONNECT_TO
         ) {
             return;
         }
@@ -183,7 +178,7 @@ export class Socket {
             if (!peer.socket) {
                 peer = PeerRepository.getPeerFromPool(peer);
             }
-            
+
             const responseListener = (response) => {
                 response = new SocketResponseRPC(response);
                 if (response.requestId && response.requestId === requestId) {

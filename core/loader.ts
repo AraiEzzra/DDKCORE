@@ -23,7 +23,6 @@ import { Block } from 'shared/model/block';
 import { socketRPCServer } from 'core/api/server';
 import { getAddressByPublicKey } from 'shared/util/account';
 import { getRandomInt } from 'shared/util/util';
-import { PEER_CONNECTION_TIME_REBOOT, START_SYNC_BLOCKS } from 'core/util/const';
 import System from 'core/repository/system';
 
 // @ts-ignore
@@ -53,7 +52,10 @@ class Loader {
 
         setInterval(
             () => messageON('EMIT_REBOOT_PEERS_CONNECTIONS'),
-            getRandomInt(PEER_CONNECTION_TIME_REBOOT.MIN, PEER_CONNECTION_TIME_REBOOT.MAX)
+            getRandomInt(
+                config.CONSTANTS.PEER_CONNECTION_TIME_INTERVAL_REBOOT.MIN,
+                config.CONSTANTS.PEER_CONNECTION_TIME_INTERVAL_REBOOT.MAX
+            )
         );
         setTimeout(
             () => {
@@ -61,7 +63,7 @@ class Loader {
                     messageON('EMIT_SYNC_BLOCKS');
                 }
             },
-            START_SYNC_BLOCKS
+            config.CONSTANTS.TIMEOUT_START_SYNC_BLOCKS
         );
         socketRPCServer.run();
     }
