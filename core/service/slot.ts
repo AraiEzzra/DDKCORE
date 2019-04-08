@@ -1,5 +1,10 @@
+import * as crypto from 'crypto';
 import config from 'shared/config';
 import { SECOND } from 'core/util/const';
+import { Delegate } from 'shared/model/delegate';
+import { Timestamp } from 'shared/model/account';
+import { Slot, Slots } from 'shared/model/round';
+import { sortHashListFunc } from 'core/util/slot';
 
 type EpochTime = number;
 
@@ -62,37 +67,31 @@ class SlotService {
         return slot * config.CONSTANTS.FORGING.SLOT_INTERVAL;
     }
 
-    /**
-     * @method
-     * @return {number} current slot number + 1.
-     */
-    public getNextSlot(): number {
-        const slot = this.getSlotNumber();
-
-        return slot + 1;
-    }
-
-    /**
-     * @method
-     * @param {number} nextSlot
-     * @return {number} input next slot + delegates.
-     * // todo mb drop it ?
-     */
-    public getLastSlot(nextSlot: number): number {
-        return nextSlot + config.CONSTANTS.ACTIVE_DELEGATES;
-    }
-
-    public roundTime(date: Date): number {
-        return Math.floor(date.getTime() / SECOND) * SECOND;
-    }
-
-    public getTheFirsSlot() {
-        return Math.floor(this.getSlotNumber() / config.CONSTANTS.ACTIVE_DELEGATES) * config.CONSTANTS.ACTIVE_DELEGATES;
-    }
-
     public getSlotRealTime(slot: number): number {
-        const slotTime = this.getSlotTime(slot);
+        const slotTime = slot * config.CONSTANTS.FORGING.SLOT_INTERVAL;
         return this.getRealTime(slotTime);
+    }
+    
+    public generate(blockId: string, delegates: Array<Delegate>, firstSlot: Slot): Slots {
+        const hashedDelegates = delegates.map((delegate: Delegate) => {
+            const { publicKey } = delegate.account;
+            const hash = crypto.createHash('md5').update(publicKey + blockId).digest('hex');
+            return {
+                hash,
+                generatorPublicKey: publicKey
+            };
+        });
+        const sortedDelegates = hashedDelegates.sort(sortHashListFunc);
+        const slots: Slots = {};
+        sortedDelegates.forEach((delegate, index) => {
+            slots[delegate.generatorPublicKey] = firstSlot + index;
+        });
+        return slots;
+    }
+
+    public getTruncTime(): Timestamp {
+        return Math.floor(this.getTime() / config.CONSTANTS.FORGING.SLOT_INTERVAL) *
+            config.CONSTANTS.FORGING.SLOT_INTERVAL;
     }
 }
 

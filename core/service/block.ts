@@ -18,7 +18,6 @@ import TransactionQueue from 'core/service/transactionQueue';
 import TransactionPool from 'core/service/transactionPool';
 import TransactionRepo from 'core/repository/transaction/';
 import slotService from 'core/service/slot';
-import RoundService from 'core/service/round';
 import RoundRepository from 'core/repository/round';
 import { transactionSortFunc } from 'core/util/transaction';
 import blockSchema from 'core/schema/block';
@@ -27,7 +26,6 @@ import { messageON } from 'shared/util/bus';
 import config from 'shared/config';
 import SyncService from 'core/service/sync';
 import { getAddressByPublicKey } from 'shared/util/account';
-import { calculateRoundByTimestamp } from 'core/util/round';
 import SocketMiddleware from 'core/api/middleware/socket';
 import { EVENT_TYPES } from 'shared/driver/socket/codes';
 
@@ -54,7 +52,6 @@ class BlockService {
 
         const transactions: Array<Transaction<object>> =
             TransactionPool.popSortedUnconfirmedTransactions(config.CONSTANTS.MAX_TRANSACTIONS_PER_BLOCK);
-        // logger.debug(`[Process][newGenerateBlock][transactions] ${JSON.stringify(transactions)}`);
 
         const previousBlock: Block = BlockRepo.getLastBlock();
 
@@ -108,17 +105,17 @@ class BlockService {
             if (!resultVerifyBlock.success) {
                 return new ResponseEntity<void>({ errors: [...resultVerifyBlock.errors, 'processBlock'] });
             }
+
+            const validationResponse = this.validateBlockSlot(block);
+            if (!validationResponse.success) {
+                return new ResponseEntity<void>({ errors: [...validationResponse.errors, 'processBlock'] });
+            }
         } else {
             // TODO: remove when validate will be fix
             if (keyPair) {
                 const lastBlock: Block = BlockRepo.getLastBlock();
                 block = this.setHeight(block, lastBlock);
             }
-        }
-
-        const validationResponse = await this.validateBlockSlot(block);
-        if (!validationResponse.success) {
-            return new ResponseEntity<void>({ errors: [...validationResponse.errors, 'processBlock'] });
         }
 
         const resultCheckExists: ResponseEntity<void> = this.checkExists(block);
@@ -301,7 +298,7 @@ class BlockService {
         }
     }
 
-    private async validateBlockSlot(block: Block): Promise<ResponseEntity<void>> {
+    private validateBlockSlot(block: Block): ResponseEntity<void> {
         if (block.height === 1) {
             return new ResponseEntity<void>();
         }
@@ -309,26 +306,21 @@ class BlockService {
         const blockSlot = slotService.getSlotNumber(block.createdAt);
         logger.debug(`[Service][Block][validateBlockSlot]: blockSlot ${blockSlot}`);
 
-        let round = RoundRepository.getCurrentRound();
-        logger.debug(`[Service][Block][validateBlockSlot]: round ${round}`);
+        let currentRound = RoundRepository.getCurrentRound();
+        logger.debug(`[Service][Block][validateBlockSlot]: round ${currentRound}`);
 
-        if (!round) {
-            await RoundService.generateRound(block.createdAt);
-            round = RoundRepository.getCurrentRound();
-            if (!round) {
-                return new ResponseEntity<void>({ errors: [`Can't get block round`] });
-            }
-        }
-
-        const generatorSlot = round.slots[block.generatorPublicKey];
+        const generatorSlot = currentRound.slots[block.generatorPublicKey];
 
         if (!generatorSlot) {
-            return new ResponseEntity<void>({ errors: [`GeneratorPublicKey does not exist in current round`] });
+            return new ResponseEntity<void>({ errors: ['GeneratorPublicKey does not exist in current round'] });
         }
 
-        if (blockSlot !== generatorSlot.slot) {
-            await RoundService.generateRound(block.createdAt);
-            return await this.validateBlockSlot(block);
+        if (blockSlot !== generatorSlot) {
+            // await RoundService.generateRound(block.createdAt);
+            // return await this.validateBlockSlot(block);
+            return new ResponseEntity<void>(
+                { errors: [`blockSlot: ${blockSlot} not equal with generatorSlot: ${generatorSlot}`] }
+            );
         }
 
         return new ResponseEntity<void>({});
@@ -496,7 +488,6 @@ class BlockService {
         logger.info(
             `Received new block id: ${block.id} ` +
             `height: ${block.height} ` +
-            `round: ${calculateRoundByTimestamp(block.createdAt)} ` +
             `slot: ${slotService.getSlotNumber(block.createdAt)}`
         );
 
@@ -531,49 +522,6 @@ class BlockService {
         }
         return new ResponseEntity<void>({ errors });
     }
-
-
-    // private validateBlockSlot(block: Block, lastBlock: Block): ResponseEntity<void> {
-    //     const roundNextBlock = calculateRoundByTimestamp(block.createdAt);
-    //     const roundLastBlock = calculateRoundByTimestamp(lastBlock.createdAt);
-    //     const activeDelegates = config.constants.activeDelegates;
-    //
-    //     const errors: Array<string> = [];
-    //     const validateBlockSlotAgainstPreviousRoundresponse: ResponseEntity<void> =
-    //         this.delegateService.validateBlockSlotAgainstPreviousRound(block);
-    //     if (!validateBlockSlotAgainstPreviousRoundresponse.success) {
-    //         errors.push(...validateBlockSlotAgainstPreviousRoundresponse.errors);
-    //     }
-    //     const validateBlockSlot: ResponseEntity<void> = this.delegateService.validateBlockSlot(block);
-    //     if (!validateBlockSlot.success) {
-    //         errors.push(...validateBlockSlot.errors);
-    //     }
-    //     return new ResponseEntity<void>({errors});
-    // }
-    //
-    // private verifyAgainstLastNBlockIds(block: Block, result: IVerifyResult): IVerifyResult {
-    //     if (BlockRepo.getLastNBlockIds().indexOf(block.id) !== -1) {
-    //         result.errors.push('Block already exists in chain');
-    //     }
-    //     return result;
-    // }
-    //
-    // private verifyBlockSlotWindow(block: Block, result: IVerifyResult): IVerifyResult {
-    //     const currentApplicationSlot = slotService.getSlotNumber();
-    //     const blockSlot = slotService.getSlotNumber(block.createdAt);
-    //
-    //     // Reject block if it's slot is older than BLOCK_SLOT_WINDOW
-    //     if (currentApplicationSlot - blockSlot > config.constants.blockSlotWindow) {
-    //         result.errors.push('Block slot is too old');
-    //     }
-    //
-    //     // Reject block if it's slot is in the future
-    //     if (currentApplicationSlot < blockSlot) {
-    //         result.errors.push('Block slot is in the future');
-    //     }
-    //
-    //     return result;
-    // }
 
     public async deleteLastBlock(): Promise<ResponseEntity<Block>> {
         let lastBlock = BlockRepo.getLastBlock();
@@ -667,14 +615,6 @@ class BlockService {
             Buffer.from(block.generatorPublicKey, 'hex')
         ]);
     }
-
-    // @deprecate
-    // public async loadBlocks(blocks: Array<Block>): Promise<void> {
-    //     for (let block of blocks) {
-    //         await this.receiveBlock(block);
-    //     }
-    //     return;
-    // }
 
     public validate(block: BlockModel): ResponseEntity<void> {
         const isValid: boolean = validator.validate(block, blockSchema);

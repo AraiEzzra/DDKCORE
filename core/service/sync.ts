@@ -15,6 +15,7 @@ import RoundRepository from 'core/repository/round';
 import SharedTransactionRepo from 'shared/repository/transaction';
 import BlockController from 'core/controller/block';
 import { ResponseEntity } from 'shared/model/response';
+import { getLastSlotInRound } from 'core/util/round';
 
 //  TODO get from env
 const MIN_CONSENSUS = 51;
@@ -100,17 +101,16 @@ export class SyncService implements ISyncService {
 
     async rollback() {
         const blockSlot = SlotService.getSlotNumber(BlockRepository.getLastBlock().createdAt);
-        const lastSlotInRound = RoundRepository.getLastSlotInRound(RoundRepository.getPrevRound());
+        const lastSlotInRound = getLastSlotInRound(RoundRepository.getPrevRound());
 
         logger.debug(`[Controller][Sync][rollback] lastSlotInRound: ${lastSlotInRound}, blockSlot: ${blockSlot}`);
 
         if (lastSlotInRound >= blockSlot) {
             logger.debug(`[Controller][Sync][rollback] round rollback`);
-            await RoundService.rollBack();
+            await RoundService.backwardProcess();
         }
 
         await BlockService.deleteLastBlock();
-
     }
 
     async requestBlocks(lastBlock, peer = null): Promise<ResponseEntity<Array<Block>>> {

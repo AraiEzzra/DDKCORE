@@ -8,15 +8,9 @@ import { IAsset, Transaction } from 'shared/model/transaction';
 import { messageON } from 'shared/util/bus';
 import { initControllers, initShedulers } from 'core/controller';
 import config from 'shared/config';
-
-import { Round } from 'shared/model/round';
-import RoundPGRepository from 'core/repository/round/pg';
 import BlockPGRepository from 'core/repository/block/pg';
 import BlockRepository from 'core/repository/block';
-
-import RoundService from 'core/service/round';
 import BlockService from 'core/service/block';
-import RoundRepository from 'core/repository/round';
 import socket from 'core/repository/socket';
 import { logger } from 'shared/util/logger';
 import { Block } from 'shared/model/block';
@@ -43,7 +37,6 @@ class Loader {
             await BlockService.applyGenesisBlock(config.GENESIS_BLOCK);
         } else {
             await this.transactionWarmUp(this.limit);
-            await this.roundWarmUp(this.limit);
         }
 
         socket.init();
@@ -102,37 +95,6 @@ class Loader {
         return;
     }
 
-    private async roundWarmUp(limit: number) {
-        let offset: number = 0;
-        const totalCount = await RoundPGRepository.getCount();
-        let i = 1;
-
-        do {
-            const roundsBatch: Array<Round> = await RoundPGRepository.getMany(limit, offset);
-
-            if (!roundsBatch) {
-                break;
-            }
-
-            for (const round of roundsBatch) {
-                if (i < totalCount) {
-                    const data = RoundService.sumRound(round);
-                    RoundService.applyUnconfirmed(data);
-                }
-            }
-
-            if (roundsBatch.length < limit) {
-                RoundRepository.setCurrentRound(roundsBatch[roundsBatch.length - 1]);
-                if (roundsBatch.length > 1) {
-                    RoundRepository.setPrevRound(roundsBatch[roundsBatch.length - 1 - 1]);
-                }
-                break;
-            }
-            offset += limit;
-            i++;
-        } while (true);
-    }
-
     private async blockWarmUp(limit: number) {
         let offset: number = 0;
         do {
@@ -144,6 +106,7 @@ class Loader {
 
             for (const block of blockBatch) {
                 BlockRepository.add(block);
+                // TODO refactor warmUp
             }
 
             if (blockBatch.length < limit) {

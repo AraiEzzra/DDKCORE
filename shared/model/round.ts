@@ -1,4 +1,5 @@
-export type Slots = { [generatorPublicKey: string]: { slot: number } };
+export type Slot = number;
+export type Slots = { [generatorPublicKey: string]: Slot };
 
 export class RoundModel {
     slots: Slots;

@@ -33,7 +33,7 @@ class DelegateRepository {
     }
 
     public getDelegate(publicKey: PublicKey): Delegate {
-        return this.memoryDelegates[publicKey];
+        return this.memoryDelegates[publicKey] || null;
     }
 
     public getCount() {
