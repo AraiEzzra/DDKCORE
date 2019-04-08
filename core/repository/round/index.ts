@@ -6,52 +6,25 @@ export interface IRoundRepository extends IRoundRepositoryShared {
 }
 
 class RoundRepository implements IRoundRepository {
-    private prevRound: Round;
-    private currentRound: Round;
+    private rounds: Array<Round> = [];
+    
+    deleteLastRound(): void {
+        if (this.rounds.length > 0) {
+            this.rounds.length--;
+        }
+    }
 
-    /**
-     * getter for current round
-     * @return {Round}
-     */
+    add(round: Round): void {
+        this.rounds.push(round);
+    }
+
+
     public getCurrentRound(): Round {
-        return this.currentRound;
+        return this.rounds.length > 0 ? this.rounds[this.rounds.length - 1] : null;
     }
 
-    /**
-     * setter for current round
-     * @param {Round} round
-     */
-    public setCurrentRound(round: Round): void {
-        this.currentRound = round;
-    }
-
-    /**
-     * getter for prevRound round
-     * @return {Round}
-     */
     public getPrevRound(): Round {
-        return this.prevRound;
-    }
-
-    /**
-     * setter for prevRound round
-     * @param {Round} round
-     */
-    public setPrevRound(round: Round): void {
-        this.prevRound = round;
-    }
-
-    /**
-     * get last slot in round (current round by default)
-     * @param {Round} round
-     * @return {number}
-     */
-    public getLastSlotInRound(round: Round = this.currentRound): number {
-        return Math.max(...Object.values(round.slots).map(slot => slot.slot));
-    }
-
-    public getFirstSlotInRound(round: Round = this.currentRound): number {
-        return Math.min(...Object.values(round.slots).map(slot => slot.slot));
+        return this.rounds.length > 1 ? this.rounds[this.rounds.length - 2] : null;
     }
 }
 

@@ -10,9 +10,10 @@ import SyncService from 'core/service/sync';
 import SlotService from 'core/service/slot';
 import { messageON } from 'shared/util/bus';
 import SharedTransactionRepo from 'shared/repository/transaction';
-import { calculateRoundByTimestamp } from 'core/util/round';
+import { getLastSlotInRound } from 'core/util/round';
 import RoundService from 'core/service/round';
 import RoundRepository from 'core/repository/round';
+import { ActionTypes } from 'core/util/actionTypes';
 
 interface BlockGenerateRequest {
     keyPair: {
@@ -65,10 +66,11 @@ class BlockController extends BaseController {
 
             // TODO check if slot lastBlock and receivedBlock is not equal
             const blockSlot = SlotService.getSlotNumber(receivedBlock.createdAt);
-            const lastBlockInPrevRound = RoundRepository.getLastSlotInRound(RoundRepository.getPrevRound());
+            const lastBlockInPrevRound = RoundRepository.getPrevRound() &&
+                getLastSlotInRound(RoundRepository.getPrevRound());
 
             if (lastBlockInPrevRound >= blockSlot) {
-                await RoundService.rollBack();
+                await RoundService.backwardProcess();
             }
 
             const deleteLastBlockResponse = await BlockService.deleteLastBlock();
@@ -85,7 +87,7 @@ class BlockController extends BaseController {
             }
 
             if (lastBlockInPrevRound === blockSlot) {
-                await RoundService.generateRound();
+                RoundService.forwardProcess();
             }
 
             return new ResponseEntity<void>({ errors });
@@ -106,7 +108,6 @@ class BlockController extends BaseController {
                 `[Service][Block][processIncomingBlock] ` +
                 `Discarded block that does not match with current chain: ${receivedBlock.id}, ` +
                 `height: ${receivedBlock.height}, ` +
-                `round: ${calculateRoundByTimestamp(receivedBlock.createdAt)}, ` +
                 `slot: ${SlotService.getSlotNumber(receivedBlock.createdAt)}, ` +
                 `generator: ${receivedBlock.generatorPublicKey}`
             );
@@ -115,7 +116,7 @@ class BlockController extends BaseController {
         return new ResponseEntity<void>({ errors });
     }
 
-    @MAIN('BLOCK_GENERATE')
+    @MAIN(ActionTypes.BLOCK_GENERATE)
     public async generateBlock(data: BlockGenerateRequest): Promise<ResponseEntity<void>> {
         logger.debug(`[Controller][Block][generateBlock]`);
         if (!SyncService.consensus) {

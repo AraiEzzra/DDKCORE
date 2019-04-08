@@ -7,18 +7,18 @@ import { logger } from 'shared/util/logger';
 class RoundController extends BaseController {
 
     @ON('ROUND_FINISH')
-    async generateRound(): Promise<void> {
+    generateRound(): void {
         if (SyncService.consensus) {
-            await RoundService.generateRound();
+            RoundService.forwardProcess();
         } else {
             logger.debug(`[Controller][Round][generateRound]: consensus ${SyncService.getConsensus()}`);
         }
     }
 
     @ON('WARM_UP_FINISHED')
-    async setIsBlockChainReady() {
+     setIsBlockChainReady(): void {
         RoundService.setIsBlockChainReady(true);
-        await RoundService.restoreRounds();
+        RoundService.restore();
     }
 }
 
