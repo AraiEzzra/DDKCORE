@@ -39,7 +39,7 @@ export class Socket {
         ioServer.on('connect', function (socket) {
             if (PeerRepository.peerList().length > config.CONSTANTS.MAX_PEERS_CONNECTED) {
                 logger.debug(`[SOCKET][init] peer connection rejected, too many connections`);
-                socket.disconnect();
+                socket.disconnect(true);
                 return;
             }
             socket.emit('OPEN');
@@ -51,7 +51,7 @@ export class Socket {
                         SystemRepository.getFullHeaders()
                     ));
                 } else {
-                    socket.disconnect();
+                    socket.disconnect(true);
                 }
             });
         });

@@ -38,7 +38,7 @@ export class PeerRepo {
 
     disconnectPeers(peers = null) {
         (peers || this.peerList()).forEach(peer => {
-            peer.socket.disconnect();
+            peer.socket.disconnect(true);
         });
     }
 
