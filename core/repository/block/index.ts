@@ -1,8 +1,6 @@
 import { Block } from 'shared/model/block';
-import {
-    IBlockRepository as IBlockRepositoryShared
-} from 'shared/repository/block';
-import {messageON} from 'shared/util/bus';
+import { IBlockRepository as IBlockRepositoryShared } from 'shared/repository/block';
+import { messageON } from 'shared/util/bus';
 
 export interface IBlockRepository extends IBlockRepositoryShared {
 
@@ -32,6 +30,7 @@ class BlockRepo implements IBlockRepository {
     public deleteLastBlock(): Block {
         this.memoryBlocks.pop();
         const lastBlock = this.getLastBlock();
+
         messageON('LAST_BLOCKS_UPDATE', {
             lastBlock: this.getLastBlock()
         });
@@ -45,9 +44,9 @@ class BlockRepo implements IBlockRepository {
         if (offset && offset < this.memoryBlocks[0].height) {
             return [];
         }
-        const from: number = offset ? offset - this.memoryBlocks[0].height : 0;
-        const to: number = limit ? from + limit : this.memoryBlocks.length;
-        return this.memoryBlocks.slice(from, to);
+        const from: number = offset || 0;
+        console.log('from', from, limit);
+        return this.memoryBlocks.slice(from, from + limit);
     }
 
     public isExist(blockId: string): boolean {

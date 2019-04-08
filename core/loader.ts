@@ -2,7 +2,6 @@ import * as path from 'path';
 import db from 'shared/driver/db';
 import { QueryFile } from 'pg-promise';
 import TransactionDispatcher from 'core/service/transaction';
-import TransactionPGRepo from 'core/repository/transaction/pg';
 import AccountRepo from 'core/repository/account';
 import { IAsset, Transaction } from 'shared/model/transaction';
 import { messageON } from 'shared/util/bus';
@@ -18,6 +17,11 @@ import { socketRPCServer } from 'core/api/server';
 import { getAddressByPublicKey } from 'shared/util/account';
 import { getRandomInt } from 'shared/util/util';
 import System from 'core/repository/system';
+import RoundService from 'core/service/round';
+import SlotService from 'core/service/slot';
+import RoundRepository from 'core/repository/round';
+import { getLastSlotInRound } from 'core/util/round';
+import { MIN_ROUND_BLOCK } from 'core/util/block';
 
 // @ts-ignore
 BigInt.prototype.toJSON = function () {
@@ -35,8 +39,6 @@ class Loader {
         await this.blockWarmUp(this.limit);
         if (!BlockRepository.getGenesisBlock()) {
             await BlockService.applyGenesisBlock(config.GENESIS_BLOCK);
-        } else {
-            await this.transactionWarmUp(this.limit);
         }
 
         socket.init();
@@ -67,34 +69,6 @@ class Loader {
         await db.query(new QueryFile(filePath, { minify: true }));
     }
 
-    private async transactionWarmUp(limit: number) {
-        let offset = 0;
-        do {
-            const transactionBatch: Array<Transaction<IAsset>> =
-                await TransactionPGRepo.getMany(limit, offset);
-
-            for (const trs of transactionBatch) {
-                let sender = AccountRepo.getByAddress(getAddressByPublicKey(trs.senderPublicKey));
-                if (!sender) {
-                    sender = AccountRepo.add({
-                        address: trs.senderAddress,
-                        publicKey: trs.senderPublicKey
-                    });
-                } else if (!sender.publicKey) {
-                    sender.publicKey = trs.senderPublicKey;
-                }
-
-                TransactionDispatcher.applyUnconfirmed(trs, sender);
-            }
-            if (transactionBatch.length < limit) {
-                break;
-            }
-            offset += limit;
-        } while (true);
-
-        return;
-    }
-
     private async blockWarmUp(limit: number) {
         let offset: number = 0;
         do {
@@ -105,8 +79,32 @@ class Loader {
             }
 
             for (const block of blockBatch) {
-                BlockRepository.add(block);
-                // TODO refactor warmUp
+
+                if (block.height === 1) {
+                    BlockRepository.add(block);
+                    this.transactionsWarmUp(block.transactions);
+                }
+
+                if (block.height === MIN_ROUND_BLOCK) {
+                    const newRound = RoundService.generate(SlotService.getSlotNumber(block.createdAt));
+                    RoundRepository.add(newRound);
+                }
+
+                if (block.height >= MIN_ROUND_BLOCK) {
+                    const lastSlotInRound = getLastSlotInRound(RoundRepository.getCurrentRound());
+                    const blockSlotNumber = SlotService.getSlotNumber(block.createdAt);
+                    if (lastSlotInRound === blockSlotNumber) {
+                        RoundService.processReward(RoundRepository.getCurrentRound());
+                        const newRound = RoundService.generate(blockSlotNumber);
+                        RoundRepository.add(newRound);
+                    }
+
+                    BlockRepository.add(block);
+                    this.transactionsWarmUp(block.transactions);
+
+                    const currentRound = RoundRepository.getCurrentRound();
+                    currentRound.slots[block.generatorPublicKey].isForged = true;
+                }
             }
 
             if (blockBatch.length < limit) {
@@ -115,6 +113,22 @@ class Loader {
             offset += limit;
         } while (true);
 
+    }
+
+    private transactionsWarmUp(transactions: Array<Transaction<IAsset>>): void {
+        for (const trs of transactions) {
+            let sender = AccountRepo.getByAddress(getAddressByPublicKey(trs.senderPublicKey));
+            if (!sender) {
+                sender = AccountRepo.add({
+                    address: trs.senderAddress,
+                    publicKey: trs.senderPublicKey
+                });
+            } else if (!sender.publicKey) {
+                sender.publicKey = trs.senderPublicKey;
+            }
+
+            TransactionDispatcher.applyUnconfirmed(trs, sender);
+        }
     }
 }
 

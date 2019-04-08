@@ -14,13 +14,15 @@ const MAX_LATENESS_FORGE_TIME = 500;
 
 interface IRoundService {
 
-    generate(firstSlot: Slot): Round;
+    generate(firstSlotNumber: number): Round;
 
     restore(): void;
 
     forwardProcess(): void;
 
     backwardProcess(): void;
+    
+    processReward(round: Round, undo?: Boolean): void;
 }
 
 class RoundService implements IRoundService {
@@ -58,41 +60,41 @@ class RoundService implements IRoundService {
             RoundRepository.add(newRound);
         }
         this.createBlockGenerateTask();
-        this.startRoundFinishTask();
+        this.createRoundFinishTask();
     }
 
     private createBlockGenerateTask(): void {
         const mySlot = this.getMySlot();
         if (mySlot) {
-            let cellTime = SlotService.getSlotRealTime(mySlot) - new Date().getTime();
+            let cellTime = SlotService.getSlotRealTime(mySlot.slot) - new Date().getTime();
             if (cellTime < 0 && cellTime + MAX_LATENESS_FORGE_TIME >= 0) {
                 cellTime = 0;
             }
             if (cellTime >= 0) {
                 logger.info(
-                    `${this.logPrefix}[generateRound] Start forging block to: ${mySlot} after ${cellTime} ms`
+                    `${this.logPrefix}[generateRound] Start forging block to: ${mySlot.slot} after ${cellTime} ms`
                 );
                 createTaskON(ActionTypes.BLOCK_GENERATE, cellTime, {
-                    timestamp: SlotService.getSlotTime(mySlot),
+                    timestamp: SlotService.getSlotTime(mySlot.slot),
                     keyPair: this.keyPair,
                 });
             } else {
                 logger.info(
-                    `${this.logPrefix}[generateRound] Skip forging block to: ${mySlot} after ${cellTime} ms`
+                    `${this.logPrefix}[generateRound] Skip forging block to: ${mySlot.slot} after ${cellTime} ms`
                 );
             }
         }
     }
 
-    private startRoundFinishTask(): void {
+    private createRoundFinishTask(): void {
         const lastSlot = getLastSlotInRound(RoundRepository.getCurrentRound());
-        const roundEndTime = SlotService.getSlotRealTime(lastSlot + 1) - new Date().getTime();
+        let roundEndTime = SlotService.getSlotRealTime(lastSlot + 1) - new Date().getTime();
 
         if (roundEndTime < 0) {
             logger.info(
                 `${this.logPrefix}[startRoundFinishTask] Skip finish round`
             );
-            return;
+            roundEndTime = 0;
         }
 
         logger.debug(
@@ -101,17 +103,17 @@ class RoundService implements IRoundService {
         createTaskON(ActionTypes.ROUND_FINISH, roundEndTime);
     }
 
-    public getMySlot(): number {
+    public getMySlot(): Slot {
         return RoundRepository.getCurrentRound().slots[this.keyPair.publicKey];
     }
 
-    private processReward(round: Round, undo?: Boolean): void {
-        const forgedBlocksCount = Object.keys(round.slots).length;
+    public processReward(round: Round, undo?: Boolean): void {
+        const forgedBlocksCount = Object.values(round.slots).filter(slot => slot.isForged).length;
         const lastBlock = BlockRepository.getLastBlock();
+        console.log('forgedBlocksCount', forgedBlocksCount, lastBlock.height - forgedBlocksCount)
         const blocks = BlockRepository.getMany(forgedBlocksCount, lastBlock.height - forgedBlocksCount);
-        const delegates = blocks
-            .map(block => DelegateRepository.getDelegate(block.generatorPublicKey))
-            .filter(delegate => Boolean(delegate));
+        console.log('blocks', blocks);
+        const delegates = blocks.map(block => DelegateRepository.getDelegate(block.generatorPublicKey));
         logger.debug('[Round][Service][processReward][delegate]', delegates);
         const fee = Math.ceil(blocks.reduce((sum, block) => sum += block.fee, 0) / delegates.length);
 
@@ -120,10 +122,10 @@ class RoundService implements IRoundService {
         });
     }
 
-    public generate(firstSlot: Slot): Round {
+    public generate(firstSlotNumber: number): Round {
         const lastBlock = BlockRepository.getLastBlock();
         const delegates = DelegateRepository.getActiveDelegates();
-        const slots = SlotService.generate(lastBlock.id, delegates, firstSlot);
+        const slots = SlotService.generateSlots(lastBlock.id, delegates, firstSlotNumber);
 
         const newCurrentRound = new Round({
             slots: slots
@@ -139,7 +141,7 @@ class RoundService implements IRoundService {
         const newRound = this.generate(getLastSlotInRound(currentRound) + 1);
         RoundRepository.add(newRound);
         this.createBlockGenerateTask();
-        this.startRoundFinishTask();
+        this.createRoundFinishTask();
     }
 
     public backwardProcess(): void {

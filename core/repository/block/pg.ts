@@ -11,6 +11,7 @@ import {
 
 import SharedBlockPgRepository from 'shared/repository/block/pg';
 import { TransactionsByBlockResponse } from 'shared/repository/transaction';
+import { transactionSortFunc } from 'core/util/transaction';
 
 export interface IBlockPGRepository extends IBlockRepositoryPGShared {
 
@@ -44,9 +45,7 @@ class BlockPGRepo implements IBlockPGRepository {
         }
         const transactions: TransactionsByBlockResponse = await TransactionRepo.getByBlockIds(ids);
         blocks.forEach((block: Block) => {
-            if (transactions[block.id]) {
-                block.transactions = transactions[block.id];
-            }
+            block.transactions = (transactions[block.id] || []).sort(transactionSortFunc);
         });
         return blocks;
     }

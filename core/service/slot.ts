@@ -72,7 +72,7 @@ class SlotService {
         return this.getRealTime(slotTime);
     }
     
-    public generate(blockId: string, delegates: Array<Delegate>, firstSlot: Slot): Slots {
+    public generateSlots(blockId: string, delegates: Array<Delegate>, firstSlotNumber: number): Slots {
         const hashedDelegates = delegates.map((delegate: Delegate) => {
             const { publicKey } = delegate.account;
             const hash = crypto.createHash('md5').update(publicKey + blockId).digest('hex');
@@ -84,7 +84,7 @@ class SlotService {
         const sortedDelegates = hashedDelegates.sort(sortHashListFunc);
         const slots: Slots = {};
         sortedDelegates.forEach((delegate, index) => {
-            slots[delegate.generatorPublicKey] = firstSlot + index;
+            slots[delegate.generatorPublicKey] = new Slot(firstSlotNumber + index);
         });
         return slots;
     }

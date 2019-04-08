@@ -17,8 +17,9 @@ import TransactionDispatcher from 'core/service/transaction';
 import TransactionQueue from 'core/service/transactionQueue';
 import TransactionPool from 'core/service/transactionPool';
 import TransactionRepo from 'core/repository/transaction/';
-import slotService from 'core/service/slot';
+import SlotService from 'core/service/slot';
 import RoundRepository from 'core/repository/round';
+import RoundService from 'core/service/round';
 import { transactionSortFunc } from 'core/util/transaction';
 import blockSchema from 'core/schema/block';
 import { ResponseEntity } from 'shared/model/response';
@@ -28,6 +29,9 @@ import SyncService from 'core/service/sync';
 import { getAddressByPublicKey } from 'shared/util/account';
 import SocketMiddleware from 'core/api/middleware/socket';
 import { EVENT_TYPES } from 'shared/driver/socket/codes';
+import { MIN_ROUND_BLOCK } from 'core/util/block';
+import { getFirstSlotNumberInRound } from 'core/util/slot';
+import DelegateRepository from 'core/repository/delegate';
 
 const validator: Validator = new ZSchema({});
 
@@ -290,10 +294,10 @@ class BlockService {
     }
 
     private verifyBlockSlot(block: Block, lastBlock: Block, errors: Array<string>): void {
-        const blockSlotNumber = slotService.getSlotNumber(block.createdAt);
-        const lastBlockSlotNumber = slotService.getSlotNumber(lastBlock.createdAt);
+        const blockSlotNumber = SlotService.getSlotNumber(block.createdAt);
+        const lastBlockSlotNumber = SlotService.getSlotNumber(lastBlock.createdAt);
 
-        if (blockSlotNumber > slotService.getSlotNumber() || blockSlotNumber <= lastBlockSlotNumber) {
+        if (blockSlotNumber > SlotService.getSlotNumber() || blockSlotNumber <= lastBlockSlotNumber) {
             errors.push('Invalid block timestamp');
         }
     }
@@ -303,7 +307,7 @@ class BlockService {
             return new ResponseEntity<void>();
         }
 
-        const blockSlot = slotService.getSlotNumber(block.createdAt);
+        const blockSlot = SlotService.getSlotNumber(block.createdAt);
         logger.debug(`[Service][Block][validateBlockSlot]: blockSlot ${blockSlot}`);
 
         let currentRound = RoundRepository.getCurrentRound();
@@ -315,11 +319,9 @@ class BlockService {
             return new ResponseEntity<void>({ errors: ['GeneratorPublicKey does not exist in current round'] });
         }
 
-        if (blockSlot !== generatorSlot) {
-            // await RoundService.generateRound(block.createdAt);
-            // return await this.validateBlockSlot(block);
+        if (blockSlot !== generatorSlot.slot) {
             return new ResponseEntity<void>(
-                { errors: [`blockSlot: ${blockSlot} not equal with generatorSlot: ${generatorSlot}`] }
+                { errors: [`blockSlot: ${blockSlot} not equal with generatorSlot: ${generatorSlot.slot}`] }
             );
         }
 
@@ -410,6 +412,10 @@ class BlockService {
         BlockRepo.add(block);
         await BlockPGRepo.saveOrUpdate(block);
 
+        if (block.height >= MIN_ROUND_BLOCK) {
+            RoundRepository.getCurrentRound().slots[block.generatorPublicKey].isForged = true;
+        }
+
         const errors: Array<string> = [];
         for (const trs of block.transactions) {
             const sender = AccountRepo.getByPublicKey(trs.senderPublicKey);
@@ -488,7 +494,7 @@ class BlockService {
         logger.info(
             `Received new block id: ${block.id} ` +
             `height: ${block.height} ` +
-            `slot: ${slotService.getSlotNumber(block.createdAt)}`
+            `slot: ${SlotService.getSlotNumber(block.createdAt)}`
         );
 
         const removedTransactionsResponse: ResponseEntity<Array<Transaction<object>>> =
