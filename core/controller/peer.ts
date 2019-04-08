@@ -40,11 +40,11 @@ export class PeerController extends BaseController {
         logger.debug('[Controller][Peer][rebootPeersConnections]: DISCONNECTED ALL PEERS');
 
         const filteredPeers = [...discoveredPeers.values()].filter((peer: Peer) => {
-            return peer.peerCount < config.CONSTANTS.MAX_PEERS_CONNECTED &&
+            return peer.peerCount <= config.CONSTANTS.MAX_PEERS_CONNECTED &&
                 config.CORE.PEERS.BLACKLIST.indexOf(peer.ip) === -1;
         });
         let shuffledPeers = shuffle(filteredPeers);
-        if (discoveredPeers.size < config.CONSTANTS.PEERS_DISCOVER.MIN) {
+        if (discoveredPeers.size <= config.CONSTANTS.PEERS_DISCOVER.MIN) {
             shuffledPeers = [...config.CORE.PEERS.TRUSTED];
         }
         const peers = shuffledPeers.slice(0, config.CONSTANTS.PEERS_DISCOVER.MAX);

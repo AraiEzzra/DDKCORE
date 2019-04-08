@@ -71,7 +71,7 @@ const constants: IConstants = {
     MAX_PEERS_CONNECT_TO: 6,
     MAX_PEERS_CONNECTED: 11,
     PEERS_DISCOVER: {
-        MAX: 6,
+        MAX: 8,
         MIN: 3,
     },
     TIMEOUT_START_SYNC_BLOCKS: 20000,
