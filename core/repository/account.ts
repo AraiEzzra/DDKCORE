@@ -88,7 +88,7 @@ class AccountRepository {
             votes: account.votes.map(
                 (publicKey: PublicKey) => DelegateRepository.serialize(DelegateRepository.getDelegate(publicKey))
             ).reverse(),
-            stakes: account.stakes.reverse(),
+            stakes: [...account.stakes].reverse(),
         };
     }
 }
