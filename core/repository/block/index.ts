@@ -45,7 +45,6 @@ class BlockRepo implements IBlockRepository {
             return [];
         }
         const from: number = offset || 0;
-        console.log('from', from, limit);
         return this.memoryBlocks.slice(from, from + limit);
     }
 

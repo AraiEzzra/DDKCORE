@@ -93,7 +93,8 @@ export class Socket {
             socket.on('SOCKET_RPC_REQUEST', listenRPC);
 
             peer.socket.on('disconnect', (reason) => {
-                logger.debug(`REASON ${reason}`);
+                logger.debug(`[SOCKET][DISCONNECT_REASON] ${reason}`);
+                peer.socket.disconnect(true);
                 peer.socket.removeListener('BROADCAST', listenBroadcast);
                 peer.socket.removeListener('SOCKET_RPC_REQUEST', listenRPC);
                 PeerRepository.removePeer(peer);
