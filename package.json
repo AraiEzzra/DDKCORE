@@ -9,6 +9,8 @@
     "start": "npm run start:core & npm run start:api",
     "start:api": "node --max-old-space-size=8192 dist/api/app.js",
     "start:core": "node --max-old-space-size=8192 dist/core/app.js",
+    "start:api:profiling": "node --prof --log-timer-events --max-old-space-size=8192 dist/api/app.js",
+    "start:core:profiling": "node --prof --log-timer-events --max-old-space-size=8192 dist/core/app.js",
     "server": "npm run server:core & npm run server:api",
     "server:api": "nodemon --max-old-space-size=8192 --watch dist/api/app.js dist/api/app.js",
     "server:core": "nodemon --max-old-space-size=8192 --watch dist/core/app.js dist/core/app.js",
