@@ -101,7 +101,12 @@ export class SyncService implements ISyncService {
 
     async rollback() {
         const blockSlot = SlotService.getSlotNumber(BlockRepository.getLastBlock().createdAt);
-        const lastSlotInRound = getLastSlotInRound(RoundRepository.getPrevRound());
+        const prevRound = RoundRepository.getPrevRound();
+        if (!prevRound) {
+            await BlockService.deleteLastBlock();
+            return;
+        }
+        const lastSlotInRound = getLastSlotInRound(prevRound);
 
         logger.debug(`[Controller][Sync][rollback] lastSlotInRound: ${lastSlotInRound}, blockSlot: ${blockSlot}`);
 
@@ -111,6 +116,7 @@ export class SyncService implements ISyncService {
         }
 
         await BlockService.deleteLastBlock();
+        return;
     }
 
     async requestBlocks(lastBlock, peer = null): Promise<ResponseEntity<Array<Block>>> {
