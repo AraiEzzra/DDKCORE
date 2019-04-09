@@ -7,8 +7,16 @@ sleep 5
         npm run test
     fi
     if [ "$SERVICE" == "API" ]; then
-        npm run start:api
+        if $PROFILING; then
+            npm run start:api:profiling
+        else
+            npm run start:api
+        fi
     fi
     if [ "$SERVICE" == "CORE" ]; then
-        npm run start:core
+        if $PROFILING; then
+            npm run start:core:profiling
+        else
+            npm run start:core
+        fi
 fi
