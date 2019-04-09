@@ -21,7 +21,7 @@ interface IRoundService {
     forwardProcess(): void;
 
     backwardProcess(): void;
-    
+
     processReward(round: Round, undo?: Boolean): void;
 }
 
@@ -110,9 +110,7 @@ class RoundService implements IRoundService {
     public processReward(round: Round, undo?: Boolean): void {
         const forgedBlocksCount = Object.values(round.slots).filter(slot => slot.isForged).length;
         const lastBlock = BlockRepository.getLastBlock();
-        console.log('forgedBlocksCount', forgedBlocksCount, lastBlock.height - forgedBlocksCount)
         const blocks = BlockRepository.getMany(forgedBlocksCount, lastBlock.height - forgedBlocksCount);
-        console.log('blocks', blocks);
         const delegates = blocks.map(block => DelegateRepository.getDelegate(block.generatorPublicKey));
         logger.debug('[Round][Service][processReward][delegate]', delegates);
         const fee = Math.ceil(blocks.reduce((sum, block) => sum += block.fee, 0) / delegates.length);

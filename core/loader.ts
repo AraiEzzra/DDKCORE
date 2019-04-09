@@ -22,6 +22,8 @@ import SlotService from 'core/service/slot';
 import RoundRepository from 'core/repository/round';
 import { getLastSlotInRound } from 'core/util/round';
 import { MIN_ROUND_BLOCK } from 'core/util/block';
+import { getFirstSlotNumberInRound } from 'core/util/slot';
+import DelegateRepository from 'core/repository/delegate';
 
 // @ts-ignore
 BigInt.prototype.toJSON = function () {
@@ -39,6 +41,11 @@ class Loader {
         await this.blockWarmUp(this.limit);
         if (!BlockRepository.getGenesisBlock()) {
             await BlockService.applyGenesisBlock(config.GENESIS_BLOCK);
+            const newRound = RoundService.generate(
+                getFirstSlotNumberInRound(SlotService.getTruncTime(), DelegateRepository.getActiveDelegates().length)
+            );
+            RoundRepository.add(newRound);
+
         }
 
         socket.init();
