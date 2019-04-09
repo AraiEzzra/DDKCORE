@@ -76,14 +76,17 @@ export const getAirdropReward = (
         return result;
     }
 
+    const referrals = [];
     if (transactionType === TransactionType.STAKE) {
-        sender.referrals = [sender.referrals[0]];
+        referrals.push(sender.referrals[0]);
+    } else {
+        referrals.push(...sender.referrals);
     }
 
     let airdropRewardAmount: number = 0;
     const sponsors: Map<Address, number> = new Map<Address, number>();
 
-    sender.referrals.forEach((sponsor: Account, i: number) => {
+    referrals.forEach((sponsor: Account, i: number) => {
         const reward = transactionType === TransactionType.STAKE ?
             Math.ceil((amount * config.CONSTANTS.AIRDROP.STAKE_REWARD_PERCENT) / TOTAL_PERCENTAGE) :
             Math.ceil(((config.CONSTANTS.AIRDROP.REFERRAL_PERCENT_PER_LEVEL[i]) * amount) / TOTAL_PERCENTAGE);
