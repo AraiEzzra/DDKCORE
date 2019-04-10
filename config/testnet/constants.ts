@@ -72,7 +72,7 @@ const constants: IConstants = {
     MAX_PEERS_CONNECTED: 40,
     PEERS_DISCOVER: {
         MAX: 35,
-        MIN: 5,
+        MIN: 12,
     },
     TIMEOUT_START_SYNC_BLOCKS: 20000,
     TIMEOUT_START_PEER_REQUEST: 10000,
@@ -80,7 +80,7 @@ const constants: IConstants = {
         MIN: 25 * 60 * 1000,
         MAX: 30 * 60 * 1000,
     },
-    PEERS_COUNT_FOR_DISCOVER: 4,
+    PEERS_COUNT_FOR_DISCOVER: 6,
 };
 /* tslint:enable */
 

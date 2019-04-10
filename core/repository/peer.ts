@@ -57,7 +57,7 @@ export class PeerRepo {
     }
 
     has(peer: Peer) {
-        if (`${peer.ip}:${peer.port}` in this.peers) {
+        if (peer && (`${peer.ip}:${peer.port}` in this.peers)) {
             return true;
         }
         return false;

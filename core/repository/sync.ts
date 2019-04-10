@@ -4,10 +4,11 @@ import { Block } from 'shared/model/block';
 import { Transaction } from 'shared/model/transaction';
 import PeerRepository from 'core/repository/peer';
 import SystemRepository from 'core/repository/system';
-import { logger } from 'shared/util/logger';
 import SharedTransactionRepo from 'shared/repository/transaction';
 import config from 'shared/config';
 import { ResponseEntity } from 'shared/model/response';
+
+export const ERROR_NOT_ENOUGH_PEERS = 'ERROR_NOT_ENOUGH_PEERS';
 
 interface ISyncRepo {
 
@@ -80,8 +81,9 @@ export class Sync implements ISyncRepo {
         const peer = PeerRepository.getRandomPeer(filteredPeers);
 
         if (!peer) {
-            logger.error('[Repository][Sync][requestCommonBlocks]: Peer doesn`t found');
-            return;
+            return new ResponseEntity(
+                { errors: [ERROR_NOT_ENOUGH_PEERS] }
+            );
         }
 
         const response = await SocketRepository.peerRPCRequest(
@@ -90,6 +92,11 @@ export class Sync implements ISyncRepo {
             peer
         );
 
+        if (!response.success) {
+            return new ResponseEntity(
+                { errors: response.errors }
+            );
+        }
         return new ResponseEntity({ data: { isExist: response.data.isExist, peer } });
     }
 
@@ -99,9 +106,15 @@ export class Sync implements ISyncRepo {
 
     async requestBlocks(data: { height: number, limit: number }, peer = null): Promise<ResponseEntity<Array<Block>>> {
 
-        const filteredPeers = PeerRepository.getPeersByFilter(data.height, SystemRepository.broadhash);
-        const currentPeer = peer || PeerRepository.getRandomPeer(filteredPeers);
-        return SocketRepository.peerRPCRequest('REQUEST_BLOCKS', data, currentPeer);
+        if (peer === null) {
+            const filteredPeers = PeerRepository.getPeersByFilter(data.height, SystemRepository.broadhash);
+            if (!filteredPeers.length) {
+                return new ResponseEntity({ errors: [ERROR_NOT_ENOUGH_PEERS] });
+            }
+            peer = PeerRepository.getRandomPeer(filteredPeers);
+        }
+
+        return SocketRepository.peerRPCRequest('REQUEST_BLOCKS', data, peer);
     }
 
     sendBlocks(blocks: Array<Block>, peer, requestId): void {
