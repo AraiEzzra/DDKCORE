@@ -11,6 +11,7 @@ import System from 'core/repository/system';
 import BlockRepository from 'core/repository/block';
 import EventQueue from 'core/repository/eventQueue';
 import { REQUEST_TIMEOUT } from 'core/repository/socket';
+import { ERROR_NOT_ENOUGH_PEERS } from 'core/repository/sync';
 
 type checkCommonBlocksRequest = {
     data: {
@@ -67,9 +68,16 @@ export class SyncController extends BaseController {
             }
             const responseBlocks = await SyncService.requestBlocks(lastBlock, peer);
             if (!responseBlocks.success) {
+                logger.error(`[Controller][Sync][startSyncBlocks]: ${JSON.stringify(responseBlocks.errors)}`);
+                if (responseCommonBlocks.errors.indexOf(ERROR_NOT_ENOUGH_PEERS) !== -1) {
+                    break;
+                }
                 continue;
             }
-            await SyncService.loadBlocks(responseBlocks.data);
+            const loadStatus = await SyncService.loadBlocks(responseBlocks.data);
+            if (!loadStatus.success) {
+                logger.error(`[Controller][Sync][startSyncBlocks]: ${JSON.stringify(loadStatus.errors)}`);
+            }
         }
         messageON('WARM_UP_FINISHED');
         System.synchronization = false;

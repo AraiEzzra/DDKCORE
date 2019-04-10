@@ -88,6 +88,7 @@ export class SyncService implements ISyncService {
 
                 if (!response.success) {
                     errors.push(`response from peer not success`);
+                    errors.push(...response.errors);
                     return new ResponseEntity({ errors });
                 }
                 const { isExist, peer } = response.data;
