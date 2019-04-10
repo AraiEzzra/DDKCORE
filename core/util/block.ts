@@ -31,5 +31,9 @@ export const isLastBlockInvalid = (lastBlock: Block, receivedBlock: Block): bool
 };
 
 export const canBeProcessed = (lastBlock: Block, receivedBlock: Block): boolean => {
-    return  receivedBlock.previousBlockId === lastBlock.id && isNext(lastBlock, receivedBlock);
+    return receivedBlock.previousBlockId === lastBlock.id && isNext(lastBlock, receivedBlock);
+};
+
+export const isReceivedBlockNewer = (lastBlock: Block, receivedBlock: Block): boolean => {
+    return receivedBlock.createdAt > lastBlock.createdAt;
 };
