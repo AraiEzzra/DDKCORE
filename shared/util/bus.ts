@@ -4,7 +4,7 @@ import Timeout = NodeJS.Timeout;
 
 export const subjectOn = new Subject();
 export const subjectRpc = new Subject();
-const tasks: { [topicName: string]: Timeout } = {};
+const tasks: { [topicName: string]: Timeout | any } = {};
 
 export function messageON(topicName: string, data: any = {}) {
     logger.debug(`[Bus][messageON] topicName ${topicName}`);
@@ -29,7 +29,7 @@ export function createTaskON(topicName: string, callTime: number, data: any = nu
     tasks[topicName] = setTimeout(() => {
         messageON(topicName, data);
         delete tasks[topicName];
-    }, callTime) as Timeout;
+    }, callTime);
 }
 
 export function resetTaskON(topicName: string): void {

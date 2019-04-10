@@ -97,7 +97,7 @@ class BlockService {
     /**
      * @implements system.update
      */
-    private async process(
+    public async process(
         block: Block,
         broadcast: boolean,
         keyPair: IKeyPair,
@@ -110,34 +110,40 @@ class BlockService {
                 return new ResponseEntity<void>({ errors: [...resultVerifyBlock.errors, 'processBlock'] });
             }
 
+            console.log('ServiceBlock process 1');
             const validationResponse = this.validateBlockSlot(block);
             if (!validationResponse.success) {
                 return new ResponseEntity<void>({ errors: [...validationResponse.errors, 'processBlock'] });
             }
         } else {
             // TODO: remove when validate will be fix
+            console.log('ServiceBlock process 2');
             if (keyPair) {
                 const lastBlock: Block = BlockRepo.getLastBlock();
                 block = this.setHeight(block, lastBlock);
             }
         }
 
+        console.log('ServiceBlock process 3');
         const resultCheckExists: ResponseEntity<void> = this.checkExists(block);
         if (!resultCheckExists.success) {
             return new ResponseEntity<void>({ errors: [...resultCheckExists.errors, 'processBlock'] });
         }
 
+        console.log('ServiceBlock process 4');
         const resultCheckTransactions: ResponseEntity<void> =
             this.checkTransactionsAndApplyUnconfirmed(block, verify);
         if (!resultCheckTransactions.success) {
             return new ResponseEntity<void>({ errors: [...resultCheckTransactions.errors, 'processBlock'] });
         }
 
+        console.log('ServiceBlock process 5');
         const applyBlockResponse: ResponseEntity<void> = await this.applyBlock(block, broadcast, keyPair);
         if (!applyBlockResponse.success) {
             return new ResponseEntity<void>({ errors: [...applyBlockResponse.errors, 'processBlock'] });
         }
 
+        console.log('ServiceBlock process 6');
         TransactionQueue.reshuffle();
         return new ResponseEntity<void>();
     }
@@ -204,6 +210,7 @@ class BlockService {
     }
 
     private verifyPreviousBlock(block: Block, errors: Array<string>): void {
+        console.log('block.previousBlockId: ', block.previousBlockId);
         if (!block.previousBlockId && block.height !== 1) {
             errors.push('Invalid previous block');
         }
@@ -411,6 +418,9 @@ class BlockService {
 
         BlockRepo.add(block);
         await BlockPGRepo.saveOrUpdate(block);
+
+        console.log(`[Service] [block] [applyBlock] block generatorPublicKey: ${JSON.stringify(block.generatorPublicKey)}`);
+        console.log(`[Service] [block] [applyBlock] slots: ${JSON.stringify(RoundRepository.getCurrentRound())}`);
 
         if (block.height >= MIN_ROUND_BLOCK) {
             RoundRepository.getCurrentRound().slots[block.generatorPublicKey].isForged = true;

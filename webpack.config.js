@@ -62,6 +62,7 @@ const coreConfig = {
             core: path.resolve(DIR, 'core'),
             shared: path.resolve(DIR, 'shared'),
             config: path.resolve(DIR, 'config'),
+            migration: path.resolve(DIR, 'migration'),
         },
     },
     output: {
@@ -106,6 +107,26 @@ const generateGenesisConfig = {
     }
 };
 
+const migrationConfig = {
+    entry: path.join(DIR, 'migration', 'migration.ts'),
+    context: path.resolve(DIR, 'migration'),
+    resolve: {
+        extensions: ['.ts', '.js', '.json'],
+        alias: {
+            migration: path.resolve(DIR, 'migration'),
+            shared: path.resolve(DIR, 'shared'),
+            core: path.resolve(DIR, 'core'),
+            config: path.resolve(DIR, 'config'),
+        },
+    },
+    output: {
+        filename: 'app.js',
+        path: path.join(OUTPUT_DIR, 'migration'),
+        publicPath: '/',
+    },
+};
+
+
 module.exports = env => {
 
     let appConfig;
@@ -119,6 +140,9 @@ module.exports = env => {
             break;
         case 'genesis':
             appConfig = generateGenesisConfig;
+            break;
+        case 'migration':
+            appConfig = migrationConfig;
             break;
         case 'test-api':
             appConfig = testAPIConfig;

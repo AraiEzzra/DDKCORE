@@ -113,6 +113,7 @@ class BlockPGRepo implements IBlockPGRepository {
     }
 
     async saveOrUpdate(block: Block | Array<Block>): Promise<void> {
+        console.log(`Try to save block: ${block}`);
         const blocks: Array<Block> = [].concat(block);
         const values: Array<object> = [];
         blocks.forEach((blockEntity) => {
@@ -122,6 +123,7 @@ class BlockPGRepo implements IBlockPGRepository {
             ' ON CONFLICT(id) DO UPDATE SET ' +
             this.columnSet.assignColumns({ from: 'EXCLUDED', skip: 'id' });
         await db.none(query);
+        console.log(`Saved block!`);
         return null;
     }
 }
