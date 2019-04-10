@@ -49,16 +49,17 @@ class BlockController extends BaseController {
                 `has less height: ${receivedBlock.height}, ` +
                 `actual height is ${lastBlock.height}`
             );
-            logger.info(JSON.stringify(errors));
+            logger.info(errors.join('. '));
             return new ResponseEntity<void>({ errors });
         }
         if (blockUtils.isEqualId(lastBlock, receivedBlock)) {
             errors.push(`[Controller][Block][onReceiveBlock] Block already processed: ${receivedBlock.id}`);
-            logger.info(JSON.stringify(errors));
+            logger.info(errors.join('. '));
             return new ResponseEntity<void>({ errors });
         }
 
         if (
+            blockUtils.isReceivedBlockNewer(lastBlock, receivedBlock) &&
             blockUtils.isEqualHeight(lastBlock, receivedBlock) &&
             blockUtils.isEqualPreviousBlock(lastBlock, receivedBlock) &&
             !SyncService.consensus
