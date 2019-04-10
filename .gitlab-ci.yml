@@ -5,19 +5,19 @@ stages:
 manual_build_core:
   stage: build_core
   only:
-    - split-api-core
+    - master
   tags:
     - ddk-deploy
   script:
     - cd /root/DDK.Delegat.Install.Environment/
     - docker rmi ddkoin/core:build -f
-    - ./build.tag.newcore.sh build split-api-core
+    - ./build.tag.newcore.sh build master
 
 
 updating:
  stage: start_core
  only:
-   - split-api-core
+   - master
  tags:
    - ddk-deploy
  script:
