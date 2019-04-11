@@ -9,6 +9,7 @@ import { ActionTypes } from 'core/util/actionTypes';
 import { getLastSlotInRound } from 'core/util/round';
 import { createKeyPairBySecret } from 'shared/util/crypto';
 import { getFirstSlotNumberInRound } from 'core/util/slot';
+import { IKeyPair } from 'shared/util/ed';
 
 const MAX_LATENESS_FORGE_TIME = 500;
 
@@ -26,20 +27,12 @@ interface IRoundService {
 }
 
 class RoundService implements IRoundService {
-    private readonly keyPair: {
-        privateKey: string;
-        publicKey: string;
-    };
+    private readonly keyPair: IKeyPair;
     private logPrefix: string = '[RoundService]';
     private isBlockChainReady: boolean = false;
 
     constructor() {
-        const keyPair = createKeyPairBySecret(process.env.FORGE_SECRET);
-
-        this.keyPair = {
-            privateKey: keyPair.privateKey.toString('hex'),
-            publicKey: keyPair.publicKey.toString('hex'),
-        };
+        this.keyPair = createKeyPairBySecret(process.env.FORGE_SECRET);
     }
 
     // TODO useless
@@ -104,7 +97,7 @@ class RoundService implements IRoundService {
     }
 
     public getMySlot(): Slot {
-        return RoundRepository.getCurrentRound().slots[this.keyPair.publicKey];
+        return RoundRepository.getCurrentRound().slots[this.keyPair.publicKey.toString('hex')];
     }
 
     public processReward(round: Round, undo?: Boolean): void {

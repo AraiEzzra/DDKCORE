@@ -14,12 +14,10 @@ import { getLastSlotInRound } from 'core/util/round';
 import RoundService from 'core/service/round';
 import RoundRepository from 'core/repository/round';
 import { ActionTypes } from 'core/util/actionTypes';
+import { IKeyPair } from 'shared/util/ed';
 
 interface BlockGenerateRequest {
-    keyPair: {
-        privateKey: string,
-        publicKey: string
-    };
+    keyPair: IKeyPair;
     timestamp: number;
 }
 

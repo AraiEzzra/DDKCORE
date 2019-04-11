@@ -242,16 +242,11 @@ const rawTransactions: Array<{trs: TransactionModel<IAsset>, privateKey: string}
 // });
 
 const hash = crypto.createHash('sha256').update(SECRET, 'utf8').digest();
-let keyPairBuffer = ed.makeKeyPair(hash);
-
-const keyPair = {
-    privateKey: keyPairBuffer.privateKey.toString('hex'),
-    publicKey: keyPairBuffer.publicKey.toString('hex'),
-};
+const keyPair = ed.makeKeyPair(hash);
 
 const transactions: Array<Transaction<IAsset>> = rawTransactions.map((rawTransaction) => {
     rawTransaction.trs.createdAt = 0;
-    const response = TransactionService.create(rawTransaction.trs, keyPairBuffer);
+    const response = TransactionService.create(rawTransaction.trs, keyPair);
     return response.data;
 });
 
