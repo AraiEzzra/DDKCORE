@@ -9,8 +9,10 @@
     "start": "npm run start:core & npm run start:api",
     "start:api": "node --max-old-space-size=8192 dist/api/app.js",
     "start:core": "node --max-old-space-size=8192 dist/core/app.js",
+    "start:migration": "node --max-old-space-size=12288 dist/migration/app.js --no-cluster --expose-gc",
     "start:api:profiling": "node --prof --log-timer-events --max-old-space-size=8192 dist/api/app.js",
     "start:core:profiling": "node --prof --log-timer-events --max-old-space-size=8192 dist/core/app.js",
+    "start:migration:profiling": "node --prof --log-timer-events --max-old-space-size=12288 dist/migration/app.js",
     "server": "npm run server:core & npm run server:api",
     "server:api": "nodemon --max-old-space-size=8192 --watch dist/api/app.js dist/api/app.js",
     "server:core": "nodemon --max-old-space-size=8192 --watch dist/core/app.js dist/core/app.js",
@@ -19,12 +21,14 @@
     "server-docs": "npm run jsdoc && http-server docs/jsdoc/",
     "build:api": "./node_modules/webpack/bin/webpack.js --env.service=api --progress --profile --colors --display-modules",
     "build:core": "./node_modules/webpack/bin/webpack.js --env.service=core --progress --profile --colors --display-modules",
+    "build:migration": "./node_modules/webpack/bin/webpack.js --env.service=migration --progress --profile --colors --display-modules",
     "build:genesis": "./node_modules/webpack/bin/webpack.js --env.service=genesis",
     "build:test:api": "./node_modules/webpack/bin/webpack.js --env.service=test-api --colors",
     "generate": "npm run build:genesis && NODE_ENV_IN=development node --max-old-space-size=8192 dist/generateGenesis.js",
     "watch": "npm run watch:core & npm run watch:api",
     "watch:api": "./node_modules/webpack/bin/webpack.js --env.service=api --progress --colors --watch",
     "watch:core": "./node_modules/webpack/bin/webpack.js --env.service=core --progress --colors --watch",
+    "watch:migration": "./node_modules/webpack/bin/webpack.js --env.service=migration --progress --colors --watch",
     "clean": "rm -rf node_modules/ dist/ dapps/ .nyc_output/ logs/ .npm/ .config/ .node-gyp",
     "watch:with_update": "npm install && npm run watch",
     "watch:with_update_clean": "npm run clean && npm install && npm run watch",
@@ -66,6 +70,8 @@
     "@types/socket.io": "^2.1.2",
     "@types/socket.io-client": "^1.4.32",
     "@types/z-schema": "^3.16.32",
-    "ts-node": "^8.0.3"
+    "ts-node": "^8.0.3",
+    "csv": "=1.1.1",
+    "csv-parser": "^2.2.0"
   }
 }

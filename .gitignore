@@ -12,6 +12,12 @@ config.json
 .nyc_output/
 api/rpc/client.js
 
+transactionsNew.csv
+transactionsOld.csv
+addressesWithNegativeBalance.csv
+transactionsNew_16_04_2019.csv
+transactionsNew_18_04_2019.csv
+
 # volumes system directories for docker containers
 dist/
 .bash_history

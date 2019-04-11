@@ -13,8 +13,8 @@ export const sortHashListFunc = (a, b) => {
 
 export const getFirstSlotNumberInRound = (timestamp: Timestamp, activeDelegatesLength: number) => {
     let slot = timestamp / config.CONSTANTS.FORGING.SLOT_INTERVAL;
-    while (slot % activeDelegatesLength === activeDelegatesLength - 1) {
-        slot -= config.CONSTANTS.FORGING.SLOT_INTERVAL;
+    while (slot % activeDelegatesLength !== activeDelegatesLength - 1) {
+        slot -= 1;
     }
     return slot;
 };

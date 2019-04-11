@@ -6,6 +6,13 @@ CREATE TABLE IF NOT EXISTS migrations
   name TEXT        NOT NULL
 );
 
+-- Only for migrations
+CREATE TABLE IF NOT EXISTS baskets
+(
+  id INTEGER PRIMARY KEY,
+  basket JSONB
+);
+
 CREATE TABLE IF NOT EXISTS block
 (
   id                   CHAR(64)  NOT NULL PRIMARY KEY,
