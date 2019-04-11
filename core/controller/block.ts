@@ -52,7 +52,6 @@ class BlockController extends BaseController {
         }
         if (blockUtils.isEqualId(lastBlock, receivedBlock)) {
             errors.push(`[Controller][Block][onReceiveBlock] Block already processed: ${receivedBlock.id}`);
-            logger.info(errors.join('. '));
             return new ResponseEntity<void>({ errors });
         }
 
