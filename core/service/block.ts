@@ -295,7 +295,7 @@ class BlockService {
         logger.debug(`[Service][Block][validateBlockSlot]: blockSlot ${blockSlot}`);
 
         let currentRound = RoundRepository.getCurrentRound();
-        logger.debug(`[Service][Block][validateBlockSlot]: round ${currentRound}`);
+        logger.debug(`[Service][Block][validateBlockSlot]: round ${JSON.stringify(currentRound)}`);
 
         const generatorSlot = currentRound.slots[block.generatorPublicKey];
 
@@ -453,7 +453,6 @@ class BlockService {
     }
 
     private afterSave(block: Block): ResponseEntity<void> {
-        messageON('transactionsSaved', block.transactions);
         const errors: Array<string> = [];
         for (const trs of block.transactions) {
             const afterSaveResponse: ResponseEntity<void> = TransactionDispatcher.afterSave(trs);

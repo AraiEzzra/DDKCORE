@@ -68,11 +68,13 @@ export class SyncService implements ISyncService {
             const peers = PeerRepository.getPeersByFilter(lastBlock.height, SystemRepository.broadhash);
 
             if (peers.length === 0) {
-                errors.push(`PeerRepository.getPeersByFilter: ${peers.length} of ${PeerRepository.peerList().length}`);
+                errors.push(
+                    `[PeerRepository][getPeersByFilter]: ${peers.length} of ${PeerRepository.peerList().length}`
+                );
                 return new ResponseEntity({ errors });
             }
             const randomPeer = PeerRepository.getRandomPeer(peers);
-            logger.debug(`[PeerRepository.getRandomPeer], ${randomPeer.ip}:${randomPeer.port}`);
+            logger.debug(`[PeerRepository][getRandomPeer], ${randomPeer.ip}:${randomPeer.port}`);
 
             if (!randomPeer) {
                 errors.push(`random peer not found`);

@@ -15,7 +15,7 @@ class EventQueue {
     }
 
     push(data: IEvent) {
-        logger.debug(`[Repository][Events][push]: TopicName ${data.topicName}`);
+        logger.debug(`[Repository][EventQueue][push]: TopicName ${data.topicName}, length: ${this.pool.length}`);
         this.pool.unshift(data);
     }
 

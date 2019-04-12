@@ -29,20 +29,9 @@ interface IRoundService {
 class RoundService implements IRoundService {
     private readonly keyPair: IKeyPair;
     private logPrefix: string = '[RoundService]';
-    private isBlockChainReady: boolean = false;
 
     constructor() {
         this.keyPair = createKeyPairBySecret(process.env.FORGE_SECRET);
-    }
-
-    // TODO useless
-    setIsBlockChainReady(status: boolean) {
-        this.isBlockChainReady = status;
-    }
-
-    // TODO useless
-    getIsBlockChainReady(): boolean {
-        return this.isBlockChainReady;
     }
 
     restore(): void {
@@ -108,6 +97,13 @@ class RoundService implements IRoundService {
         logger.debug('[Round][Service][processReward][delegate]', delegates);
         const fee = Math.ceil(blocks.reduce((sum, block) => sum += block.fee, 0) / delegates.length);
 
+        logger.warn(`generators: ${JSON.stringify(
+            blocks.map(block => block.generatorPublicKey)
+        )}`);
+        logger.warn(`delegates: ${JSON.stringify(
+            delegates.map(delegate => ({ ...delegate, account: -1,  }))
+        )}`);
+
         delegates.forEach(delegate => {
             delegate.account.actualBalance += (undo ? -fee : fee);
         });
@@ -121,7 +117,7 @@ class RoundService implements IRoundService {
         const newCurrentRound = new Round({
             slots: slots
         });
-        logger.debug('[Round][Service][newGenerateRound]', newCurrentRound);
+        logger.debug('[Round][Service][generate]', JSON.stringify(newCurrentRound));
         return newCurrentRound;
     }
 

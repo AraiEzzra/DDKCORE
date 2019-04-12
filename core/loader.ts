@@ -41,11 +41,12 @@ class Loader {
         await this.blockWarmUp(this.limit);
         if (!BlockRepository.getGenesisBlock()) {
             await BlockService.applyGenesisBlock(config.GENESIS_BLOCK);
-            const newRound = RoundService.generate(
-                getFirstSlotNumberInRound(SlotService.getTruncTime(), DelegateRepository.getActiveDelegates().length)
-            );
-            RoundRepository.add(newRound);
 
+            // it can be incorrect, when need to sync
+            // const newRound = RoundService.generate(
+            //     getFirstSlotNumberInRound(SlotService.getTruncTime(), DelegateRepository.getActiveDelegates().length)
+            // );
+            // RoundRepository.add(newRound);
         }
 
         socket.init();
@@ -93,24 +94,33 @@ class Loader {
                 }
 
                 if (block.height === MIN_ROUND_BLOCK) {
-                    const newRound = RoundService.generate(SlotService.getSlotNumber(block.createdAt));
+                    console.log('0000001');
+                    const newRound = RoundService.generate(
+                        getFirstSlotNumberInRound(
+                            block.createdAt,
+                            DelegateRepository.getActiveDelegates().length,
+                        ),
+                    );
+
                     RoundRepository.add(newRound);
                 }
 
                 if (block.height >= MIN_ROUND_BLOCK) {
                     const lastSlotInRound = getLastSlotInRound(RoundRepository.getCurrentRound());
                     const blockSlotNumber = SlotService.getSlotNumber(block.createdAt);
-                    if (lastSlotInRound === blockSlotNumber) {
-                        RoundService.processReward(RoundRepository.getCurrentRound());
-                        const newRound = RoundService.generate(blockSlotNumber);
-                        RoundRepository.add(newRound);
-                    }
 
                     BlockRepository.add(block);
                     this.transactionsWarmUp(block.transactions);
 
                     const currentRound = RoundRepository.getCurrentRound();
                     currentRound.slots[block.generatorPublicKey].isForged = true;
+
+                    if (blockSlotNumber === lastSlotInRound) {
+                        RoundService.processReward(RoundRepository.getCurrentRound());
+                        console.log('0000002');
+                        const newRound = RoundService.generate(blockSlotNumber + 1);
+                        RoundRepository.add(newRound);
+                    }
                 }
             }
 

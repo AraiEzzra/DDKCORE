@@ -27,8 +27,6 @@ type checkCommonBlocksRequest = {
 const SYNC_TIMEOUT = 10000;
 
 export class SyncController extends BaseController {
-
-
     @ON('REQUEST_COMMON_BLOCKS')
     checkCommonBlocks(action: checkCommonBlocksRequest): void {
         const { data, peer, requestId } = action;
@@ -36,25 +34,21 @@ export class SyncController extends BaseController {
         SyncService.checkCommonBlocks(data.block, peer, requestId);
     }
 
-
     @ON('EMIT_SYNC_BLOCKS')
     async startSyncBlocks(): Promise<void> {
         if (SyncService.consensus || PeerRepository.peerList().length === 0) {
-            if (!RoundService.getIsBlockChainReady()) {
-                System.synchronization = false;
-                messageON('WARM_UP_FINISHED', {});
-            }
+            System.synchronization = false;
+            messageON('WARM_UP_FINISHED');
             return;
         }
         System.synchronization = true;
-        RoundService.setIsBlockChainReady(false);
         logger.debug(`[Controller][Sync][startSyncBlocks]: start sync with consensus ${SyncService.getConsensus()}%`);
 
         // TODO: change sync timeout logic
-        let isFirstSync = true;
+        let needDelay = false;
         while (!SyncService.consensus) {
-            if (isFirstSync) {
-                isFirstSync = false;
+            if (!needDelay) {
+                needDelay = true;
             } else {
                 logger.info(`Sync starts after ${SYNC_TIMEOUT} ms`);
                 await asyncTimeout(SYNC_TIMEOUT);
@@ -62,7 +56,7 @@ export class SyncController extends BaseController {
 
             const lastBlock = await BlockRepository.getLastBlock();
             if (!lastBlock) {
-                logger.error(`[Controller][Sync][startSyncBlocks] lastBlock undefined`);
+                logger.error(`[Controller][Sync][startSyncBlocks] lastBlock is undefined`);
                 break;
             }
             const responseCommonBlocks = await SyncService.checkCommonBlock(lastBlock);
@@ -94,6 +88,8 @@ export class SyncController extends BaseController {
             const loadStatus = await SyncService.loadBlocks(responseBlocks.data);
             if (!loadStatus.success) {
                 logger.error(`[Controller][Sync][startSyncBlocks][loadStatus]: ${JSON.stringify(loadStatus.errors)}`);
+            } else {
+                needDelay = false;
             }
         }
         messageON('WARM_UP_FINISHED');

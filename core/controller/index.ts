@@ -29,32 +29,27 @@ export const initControllers = () => {
         PeerController,
     ];
 
-    subjectOn
-    .pipe(
+    subjectOn.pipe(
         filter((elem: { data, topicName }) => {
-                if (System.synchronization && !UNLOCKED_METHODS.has(elem.topicName)) {
-                    EventsQueue.push({
-                        data: elem.data,
-                        topicName: elem.topicName,
-                        type: 'ON',
-                    });
-                    return false;
-                } else {
-                    return true;
-                }
+            if (System.synchronization && !UNLOCKED_METHODS.has(elem.topicName)) {
+                EventsQueue.push({
+                    data: elem.data,
+                    topicName: elem.topicName,
+                    type: 'ON',
+                });
+                return false;
+            } else {
+                return true;
             }
-        ),
+        }),
         filter((elem: { data, topicName }) => {
-                return ['BLOCK_GENERATE', 'BLOCK_RECEIVE'].indexOf(elem.topicName) !== -1;
-            }
-        ),
+            return ['BLOCK_GENERATE', 'BLOCK_RECEIVE'].indexOf(elem.topicName) !== -1;
+        }),
         flatMap(({ data, topicName }) => {
-                logger.debug(`TASK MAIN ${topicName} start`);
-                return fromPromise(BlockController.eventsMAIN[topicName].apply(BlockController, [data]));
-            }
-        )
-    )
-    .subscribe((data: ResponseEntity<any>) => {
+            logger.debug(`TASK MAIN ${topicName} start`);
+            return fromPromise(BlockController.eventsMAIN[topicName].apply(BlockController, [data]));
+        }),
+    ).subscribe((data: ResponseEntity<any>) => {
         logger.debug(data.success ? 'TASK MAIN finished success' : `TASK MAIN finished with error ${data.errors}`);
     });
 

@@ -20,6 +20,13 @@ const ioServer = socketIO(config.CORE.SOCKET.PORT, {
     pingInterval: 10000,
 });
 
+export const BROADCAST = 'BROADCAST';
+export const SOCKET_RPC_REQUEST = 'SOCKET_RPC_REQUEST';
+export const SOCKET_RPC_RESPONSE = 'SOCKET_RPC_RESPONSE';
+export const SERVER_HEADERS = 'SERVER_HEADERS';
+export const OPEN = 'OPEN';
+export const HEADERS = 'HEADERS';
+
 export class Socket {
     private static instance: Socket;
 
@@ -42,12 +49,12 @@ export class Socket {
                 socket.disconnect(true);
                 return;
             }
-            socket.emit('OPEN');
-            socket.on('HEADERS', (data: string) => {
+            socket.emit(OPEN);
+            socket.on(HEADERS, (data: string) => {
                 logger.debug(`[SOCKET][HEADERS_FROM_CLIENT]`);
                 const peer = JSON.parse(data);
                 if (Socket.instance.addPeer(peer, socket)) {
-                    socket.emit('SERVER_HEADERS', JSON.stringify(
+                    socket.emit(SERVER_HEADERS, JSON.stringify(
                         SystemRepository.getFullHeaders()
                     ));
                 } else {
@@ -56,7 +63,7 @@ export class Socket {
             });
         });
         setTimeout(
-            () => messageON('EMIT_REQUEST_PEERS', {}),
+            () => messageON('EMIT_REQUEST_PEERS'),
             config.CONSTANTS.TIMEOUT_START_PEER_REQUEST
         );
     }
@@ -71,11 +78,11 @@ export class Socket {
         }
         logger.debug(`[SOCKET][connectNewPeer] connecting to ${peer.ip}:${peer.port}...`);
         const ws = io(`ws://${peer.ip}:${peer.port}`);
-        ws.on('OPEN', () => {
-            ws.emit('HEADERS', JSON.stringify(
-                SystemRepository.getFullHeaders()
-            ));
-            ws.on('SERVER_HEADERS', (headers: string) => {
+        ws.on(OPEN, () => {
+            logger.debug(`[SOCKET][connectNewPeer] connected to ${peer.ip}:${peer.port}`);
+
+            ws.emit(HEADERS, JSON.stringify(SystemRepository.getFullHeaders()));
+            ws.on(SERVER_HEADERS, (headers: string) => {
                 logger.debug(`[SOCKET][HEADERS_FROM_SERVER]`);
                 const fullPeer = Object.assign(JSON.parse(headers), peer);
                 Socket.instance.addPeer(fullPeer, ws);
@@ -84,18 +91,29 @@ export class Socket {
     }
 
     @autobind
-    addPeer(peer: Peer, socket): boolean {
+    addPeer(peer: Peer, socket: SocketIOClient.Socket | SocketIO.Socket): boolean {
         if (PeerRepository.addPeer(peer, socket)) {
             logger.debug(`[SOCKET][ADD_PEER] host: ${peer.ip}:${peer.port}`);
             const listenBroadcast = (response: string) => Socket.instance.onPeerBroadcast(response, peer);
-            const listenRPC = (response: string) => Socket.instance.onPeerRPCRequest(response, peer);
-            socket.on('BROADCAST', listenBroadcast);
-            socket.on('SOCKET_RPC_REQUEST', listenRPC);
+            const listenRPC = (response: string) => {
+                console.log(`!!!!!!!!! response: ${JSON.stringify(response)}`);
+
+                return Socket.instance.onPeerRPCRequest(response, peer);
+            };
+            socket.on(BROADCAST, listenBroadcast);
+            socket.on(SOCKET_RPC_REQUEST, listenRPC);
+
+            socket.on('ping', () => {
+                logger.debug(`PING TO: ${peer.ip}:${peer.port}`);
+            });
+            socket.on('pong', (latency: number) => {
+                logger.debug(`PONG FROM: ${peer.ip}:${peer.port} -> ${latency} ms`);
+            });
 
             peer.socket.on('disconnect', (reason) => {
                 logger.debug(`[SOCKET][DISCONNECT_REASON] ${reason}`);
-                peer.socket.removeListener('BROADCAST', listenBroadcast);
-                peer.socket.removeListener('SOCKET_RPC_REQUEST', listenRPC);
+                peer.socket.removeListener(BROADCAST, listenBroadcast);
+                peer.socket.removeListener(SOCKET_RPC_REQUEST, listenRPC);
                 PeerRepository.removePeer(peer);
             });
             return true;
@@ -155,11 +173,10 @@ export class Socket {
             peer = PeerRepository.getPeerFromPool(peer);
         }
 
-        logger.debug(`[SOCKET][PEER_RPC_RESPONSE] to ${peer.ip}:${peer.port}
-          CODE: ${code}, REQUEST_ID: ${requestId} DATA: ${JSON.stringify(data)}`);
+        logger.debug(`[SOCKET][PEER_RPC_RESPONSE] to ${peer.ip}:${peer.port} CODE: ${code}, REQUEST_ID: ${requestId}`);
 
         peer.socket.emit(
-            'SOCKET_RPC_RESPONSE',
+            SOCKET_RPC_RESPONSE,
             JSON.stringify({ code, data, requestId })
         );
     }
@@ -188,7 +205,7 @@ export class Socket {
                     logger.debug(`[SOCKET][SOCKET_RPC_RESPONSE] from ${peer.ip}:${peer.port}
                     CODE: ${response.code}, REQUEST_ID: ${response.requestId}, DATA: ${JSON.stringify(response.data)}`);
 
-                    peer.socket.removeListener('SOCKET_RPC_RESPONSE', responseListener);
+                    peer.socket.removeListener(SOCKET_RPC_RESPONSE, responseListener);
 
                     resolve(new ResponseEntity({ data: response.data }));
                 }
@@ -197,7 +214,7 @@ export class Socket {
             const timerId = setTimeout(
                 ((socket, res) => {
                     return () => {
-                        socket.removeListener('SOCKET_RPC_RESPONSE', responseListener);
+                        socket.removeListener(SOCKET_RPC_RESPONSE, responseListener);
                         res(new ResponseEntity({ errors: [REQUEST_TIMEOUT] }));
                     };
                 })(peer.socket, resolve),
@@ -208,11 +225,11 @@ export class Socket {
             CODE: ${code}, REQUEST_ID: ${requestId} DATA: ${JSON.stringify(data)}`);
 
             peer.socket.emit(
-                'SOCKET_RPC_REQUEST',
+                SOCKET_RPC_REQUEST,
                 JSON.stringify({ code, data, requestId })
             );
 
-            peer.socket.on('SOCKET_RPC_RESPONSE', responseListener);
+            peer.socket.on(SOCKET_RPC_RESPONSE, responseListener);
         });
     }
 }
