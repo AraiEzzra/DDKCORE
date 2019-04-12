@@ -98,7 +98,6 @@ class BlockController extends BaseController {
                 const currectRound = RoundRepository.getCurrentRound();
                 const receivedBlockSlot = SlotService.getSlotNumber(receivedBlock.createdAt);
                 if (!currectRound) {
-                    logger.warn(`11111111111111111111`);
                     const newRound = RoundService.generate(
                         getFirstSlotNumberInRound(
                             receivedBlock.createdAt,

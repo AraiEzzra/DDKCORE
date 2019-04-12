@@ -43,12 +43,6 @@ class Loader {
         System.synchronization = false;
         if (!BlockRepository.getGenesisBlock()) {
             await BlockService.applyGenesisBlock(config.GENESIS_BLOCK);
-
-            // it can be incorrect, when need to sync
-            // const newRound = RoundService.generate(
-            //     getFirstSlotNumberInRound(SlotService.getTruncTime(), DelegateRepository.getActiveDelegates().length)
-            // );
-            // RoundRepository.add(newRound);
         }
 
         socket.init();
