@@ -71,6 +71,7 @@ class SharedTransactionRepo {
             fee: trs.fee,
             salt: trs.salt,
             relay: trs.relay,
+            confirmations: trs.confirmations,
             asset: asset,
         };
     }
@@ -92,6 +93,7 @@ class SharedTransactionRepo {
             fee: Number(rawTrs.fee),
             salt: rawTrs.salt,
             relay: rawTrs.relay,
+            confirmations: rawTrs.confirmations,
             asset: asset,
         });
     }

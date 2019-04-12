@@ -2,9 +2,11 @@
 import { toSnakeCase } from 'shared/util/util';
 
 export default {
-    getTransaction: 'SELECT * FROM trs WHERE trs.id = ${id}',
+    getTransaction: 'SELECT *,' +
+    ' (SELECT max(height) from block) - (select height from block where block.id = trs.block_id) as confirmations ' +
+    ' FROM trs WHERE trs.id = ${id}',
     getTransactions: (filter, sort) =>
-        `SELECT *, count(1) over () as count FROM trs 
+        `SELECT *, 0 as confirmations, count(1) over () as count FROM trs 
           ${Object.keys(filter).length
             ? `WHERE ${Object.keys(filter).map(
                 key => `${toSnakeCase(key)} ${key === 'asset' ? '@>' : '='} \${${key}}`).join(' OR ')
