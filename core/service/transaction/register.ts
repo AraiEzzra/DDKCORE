@@ -55,7 +55,14 @@ class TransactionRegisterService implements IAssetService<IAssetRegister> {
     }
 
     applyUnconfirmed(trs: Transaction<IAssetRegister>, sender: Account): void {
-        const referralAccount: Account = AccountRepo.getByAddress(trs.asset.referral);
+        let referralAccount: Account = AccountRepo.getByAddress(trs.asset.referral);
+
+        if (!referralAccount) {
+            referralAccount = AccountRepo.add({
+                address: trs.asset.referral,
+            });
+        }
+
         const referrals: Array<Account> =
             referralAccount.referrals.slice(0, config.CONSTANTS.REFERRAL.MAX_COUNT - 1);
 
