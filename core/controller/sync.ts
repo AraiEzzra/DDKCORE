@@ -39,6 +39,7 @@ export class SyncController extends BaseController {
         if (SyncService.consensus || PeerRepository.peerList().length === 0) {
             System.synchronization = false;
             messageON('WARM_UP_FINISHED');
+            logger.debug(`[Controller][Sync][startSyncBlocks]: Unable to sync`);
             return;
         }
         System.synchronization = true;
@@ -63,7 +64,7 @@ export class SyncController extends BaseController {
             if (!responseCommonBlocks.success) {
                 logger.error(
                     `[Controller][Sync][startSyncBlocks][responseCommonBlocks]: ` +
-                    JSON.stringify(responseCommonBlocks.errors)
+                    responseCommonBlocks.errors.join('. ')
                 );
                 if (responseCommonBlocks.errors.indexOf(REQUEST_TIMEOUT) !== -1) {
                     continue;
@@ -78,7 +79,7 @@ export class SyncController extends BaseController {
             const responseBlocks = await SyncService.requestBlocks(lastBlock, peer);
             if (!responseBlocks.success) {
                 logger.error(
-                    `[Controller][Sync][startSyncBlocks][responseBlocks]: ${JSON.stringify(responseBlocks.errors)}`
+                    `[Controller][Sync][startSyncBlocks][responseBlocks]: ${responseBlocks.errors.join('. ')}`
                 );
                 if (responseCommonBlocks.errors.indexOf(ERROR_NOT_ENOUGH_PEERS) !== -1) {
                     break;
@@ -87,13 +88,13 @@ export class SyncController extends BaseController {
             }
             const loadStatus = await SyncService.loadBlocks(responseBlocks.data);
             if (!loadStatus.success) {
-                logger.error(`[Controller][Sync][startSyncBlocks][loadStatus]: ${JSON.stringify(loadStatus.errors)}`);
+                logger.error(`[Controller][Sync][startSyncBlocks][loadStatus]: ${loadStatus.errors.join('. ')}`);
             } else {
                 needDelay = false;
             }
         }
-        messageON('WARM_UP_FINISHED');
         System.synchronization = false;
+        messageON('WARM_UP_FINISHED');
         EventQueue.process();
         logger.debug('[Controller][Sync][startSyncBlocks] SYNCHRONIZATION DONE SUCCESS');
     }

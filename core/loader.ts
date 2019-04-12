@@ -38,7 +38,9 @@ class Loader {
         await this.initDatabase();
 
         initControllers();
+        System.synchronization = true;
         await this.blockWarmUp(this.limit);
+        System.synchronization = false;
         if (!BlockRepository.getGenesisBlock()) {
             await BlockService.applyGenesisBlock(config.GENESIS_BLOCK);
 
@@ -78,8 +80,6 @@ class Loader {
     }
 
     private async blockWarmUp(limit: number) {
-        System.synchronization = true;
-
         let offset: number = 0;
         do {
             const blockBatch: Array<Block> = await BlockPGRepository.getMany(limit, offset);
@@ -96,7 +96,6 @@ class Loader {
                 }
 
                 if (block.height === MIN_ROUND_BLOCK) {
-                    console.log('0000001');
                     const newRound = RoundService.generate(
                         getFirstSlotNumberInRound(
                             block.createdAt,
@@ -128,8 +127,6 @@ class Loader {
             }
             offset += limit;
         } while (true);
-
-        System.synchronization = false;
     }
 
     private transactionsWarmUp(transactions: Array<Transaction<IAsset>>): void {

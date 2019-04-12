@@ -11,14 +11,11 @@ import config from 'shared/config';
 import { SocketResponse, SocketResponseRPC } from 'shared/model/socket';
 import { ResponseEntity } from 'shared/model/response';
 import { SOCKET_RPC_REQUEST_TIMEOUT } from 'core/util/const';
+import { CORE_SOCKET_CLIENT_CONFIG, API_SOCKET_SERVER_CONFIG } from 'shared/config/socket';
 
 export const REQUEST_TIMEOUT = '408 Request Timeout';
 
-const ioServer = socketIO(config.CORE.SOCKET.PORT, {
-    serveClient: false,
-    pingTimeout: 10000,
-    pingInterval: 10000,
-});
+const ioServer = socketIO(config.CORE.SOCKET.PORT, API_SOCKET_SERVER_CONFIG);
 
 export const BROADCAST = 'BROADCAST';
 export const SOCKET_RPC_REQUEST = 'SOCKET_RPC_REQUEST';
@@ -41,14 +38,17 @@ export class Socket {
     init(): void {
         logger.debug(`WebSocket listening on port ${config.CORE.SOCKET.PORT}`);
         config.CORE.PEERS.TRUSTED.forEach((peer) => {
-            this.connectNewPeer(peer);
+            setTimeout(() => {
+                this.connectNewPeer(peer);
+            }, Math.floor(Math.random() * 11 * 1000));
         });
-        ioServer.on('connect', function (socket) {
+        ioServer.on('connect', (socket) => {
             if (PeerRepository.peerList().length > config.CONSTANTS.MAX_PEERS_CONNECTED) {
                 logger.debug(`[SOCKET][init] peer connection rejected, too many connections`);
                 socket.disconnect(true);
                 return;
             }
+
             socket.emit(OPEN);
             socket.on(HEADERS, (data: string) => {
                 logger.debug(`[SOCKET][HEADERS_FROM_CLIENT]`);
@@ -58,6 +58,7 @@ export class Socket {
                         SystemRepository.getFullHeaders()
                     ));
                 } else {
+                    console.log(`disconnect ${JSON.stringify(data)}`);
                     socket.disconnect(true);
                 }
             });
@@ -77,7 +78,7 @@ export class Socket {
             return;
         }
         logger.debug(`[SOCKET][connectNewPeer] connecting to ${peer.ip}:${peer.port}...`);
-        const ws = io(`ws://${peer.ip}:${peer.port}`);
+        const ws = io(`ws://${peer.ip}:${peer.port}`, CORE_SOCKET_CLIENT_CONFIG);
         ws.on(OPEN, () => {
             logger.debug(`[SOCKET][connectNewPeer] connected to ${peer.ip}:${peer.port}`);
 
@@ -95,20 +96,9 @@ export class Socket {
         if (PeerRepository.addPeer(peer, socket)) {
             logger.debug(`[SOCKET][ADD_PEER] host: ${peer.ip}:${peer.port}`);
             const listenBroadcast = (response: string) => Socket.instance.onPeerBroadcast(response, peer);
-            const listenRPC = (response: string) => {
-                console.log(`!!!!!!!!! response: ${JSON.stringify(response)}`);
-
-                return Socket.instance.onPeerRPCRequest(response, peer);
-            };
+            const listenRPC = (response: string) => Socket.instance.onPeerRPCRequest(response, peer);
             socket.on(BROADCAST, listenBroadcast);
             socket.on(SOCKET_RPC_REQUEST, listenRPC);
-
-            socket.on('ping', () => {
-                logger.debug(`PING TO: ${peer.ip}:${peer.port}`);
-            });
-            socket.on('pong', (latency: number) => {
-                logger.debug(`PONG FROM: ${peer.ip}:${peer.port} -> ${latency} ms`);
-            });
 
             peer.socket.on('disconnect', (reason) => {
                 logger.debug(`[SOCKET][DISCONNECT_REASON] ${reason}`);

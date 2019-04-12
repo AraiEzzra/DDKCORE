@@ -74,7 +74,6 @@ export const initControllers = () => {
             });
         }
     });
-
 };
 
 export const initShedulers = () => {
