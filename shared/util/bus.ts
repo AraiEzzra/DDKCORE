@@ -33,6 +33,8 @@ export function createTaskON(topicName: string, callTime: number, data: any = nu
 }
 
 export function resetTaskON(topicName: string): void {
-    clearTimeout(tasks[topicName]);
-    logger.debug(`[Bus][resetTaskON] topicName ${topicName}, the timer has been stopped`);
+    if (tasks[topicName]) {
+        clearTimeout(tasks[topicName]);
+        logger.debug(`[Bus][resetTaskON] topicName ${topicName}, the timer has been stopped`);
+    }
 }

@@ -10,6 +10,7 @@ import { getLastSlotInRound } from 'core/util/round';
 import { createKeyPairBySecret } from 'shared/util/crypto';
 import { getFirstSlotNumberInRound } from 'core/util/slot';
 import { IKeyPair } from 'shared/util/ed';
+import System from 'core/repository/system';
 
 const MAX_LATENESS_FORGE_TIME = 500;
 
@@ -122,13 +123,19 @@ class RoundService implements IRoundService {
     }
 
     public forwardProcess(): void {
+        resetTaskON(ActionTypes.BLOCK_GENERATE);
+        resetTaskON(ActionTypes.ROUND_FINISH);
+
         const currentRound = RoundRepository.getCurrentRound();
         this.processReward(currentRound);
 
         const newRound = this.generate(getLastSlotInRound(currentRound) + 1);
         RoundRepository.add(newRound);
-        this.createBlockGenerateTask();
-        this.createRoundFinishTask();
+
+        if (!System.synchronization) {
+            this.createBlockGenerateTask();
+            this.createRoundFinishTask();
+        }
     }
 
     public backwardProcess(): void {

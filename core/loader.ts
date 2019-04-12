@@ -78,6 +78,8 @@ class Loader {
     }
 
     private async blockWarmUp(limit: number) {
+        System.synchronization = true;
+
         let offset: number = 0;
         do {
             const blockBatch: Array<Block> = await BlockPGRepository.getMany(limit, offset);
@@ -116,10 +118,7 @@ class Loader {
                     currentRound.slots[block.generatorPublicKey].isForged = true;
 
                     if (blockSlotNumber === lastSlotInRound) {
-                        RoundService.processReward(RoundRepository.getCurrentRound());
-                        console.log('0000002');
-                        const newRound = RoundService.generate(blockSlotNumber + 1);
-                        RoundRepository.add(newRound);
+                        RoundService.forwardProcess();
                     }
                 }
             }
@@ -130,6 +129,7 @@ class Loader {
             offset += limit;
         } while (true);
 
+        System.synchronization = false;
     }
 
     private transactionsWarmUp(transactions: Array<Transaction<IAsset>>): void {

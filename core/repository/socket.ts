@@ -124,9 +124,7 @@ export class Socket {
     @autobind
     onPeerBroadcast(response: string, peer: Peer): void {
         const { code, data } = new SocketResponse(response);
-        logger.debug(
-            `[SOCKET][ON_PEER_BROADCAST][${peer.ip}:${peer.port}], CODE: ${code}, DATA: ${JSON.stringify(data)}`
-        );
+        logger.debug(`[SOCKET][ON_PEER_BROADCAST][${peer.ip}:${peer.port}], CODE: ${code}`);
         messageON(code, { data, peer });
     }
 
@@ -221,8 +219,9 @@ export class Socket {
                 SOCKET_RPC_REQUEST_TIMEOUT
             );
 
-            logger.debug(`[SOCKET][SOCKET_RPC_REQUEST] to ${peer.ip}:${peer.port}
-            CODE: ${code}, REQUEST_ID: ${requestId} DATA: ${JSON.stringify(data)}`);
+            logger.debug(
+                `[SOCKET][SOCKET_RPC_REQUEST] to ${peer.ip}:${peer.port} CODE: ${code}, REQUEST_ID: ${requestId}`
+            );
 
             peer.socket.emit(
                 SOCKET_RPC_REQUEST,

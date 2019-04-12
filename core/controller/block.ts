@@ -49,7 +49,6 @@ class BlockController extends BaseController {
                 `has less height: ${receivedBlock.height}, ` +
                 `actual height is ${lastBlock.height}`
             );
-            logger.info(errors.join('. '));
             return new ResponseEntity<void>({ errors });
         }
         if (blockUtils.isEqualId(lastBlock, receivedBlock)) {
@@ -126,14 +125,7 @@ class BlockController extends BaseController {
 
                 const lastSlot = getLastSlotInRound(RoundRepository.getCurrentRound());
                 if (receivedBlockSlot === lastSlot) {
-                    // TODO: forwardProcess creates task on sync!!!
-                    // RoundService.forwardProcess();
-
-                    const currentRound = RoundRepository.getCurrentRound();
-                    RoundService.processReward(currentRound);
-
-                    const newRound = RoundService.generate(lastSlot + 1);
-                    RoundRepository.add(newRound);
+                    RoundService.forwardProcess();
                 }
             } else if (!SyncService.consensus) {
                 messageON('EMIT_SYNC_BLOCKS');
