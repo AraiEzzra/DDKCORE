@@ -12,6 +12,7 @@ import BlockRepository from 'core/repository/block';
 import EventQueue from 'core/repository/eventQueue';
 import { REQUEST_TIMEOUT } from 'core/repository/socket';
 import { ERROR_NOT_ENOUGH_PEERS } from 'core/repository/sync';
+import { asyncTimeout } from 'shared/util/timer';
 
 type checkCommonBlocksRequest = {
     data: {
@@ -23,9 +24,9 @@ type checkCommonBlocksRequest = {
     requestId: string,
 };
 
+const SYNC_TIMEOUT = 10000;
+
 export class SyncController extends BaseController {
-
-
     @ON('REQUEST_COMMON_BLOCKS')
     checkCommonBlocks(action: checkCommonBlocksRequest): void {
         const { data, peer, requestId } = action;
@@ -33,29 +34,38 @@ export class SyncController extends BaseController {
         SyncService.checkCommonBlocks(data.block, peer, requestId);
     }
 
-
     @ON('EMIT_SYNC_BLOCKS')
     async startSyncBlocks(): Promise<void> {
         if (SyncService.consensus || PeerRepository.peerList().length === 0) {
-            if (!RoundService.getIsBlockChainReady()) {
-                System.synchronization = false;
-                messageON('WARM_UP_FINISHED', {});
-            }
+            System.synchronization = false;
+            messageON('WARM_UP_FINISHED');
+            logger.debug(`[Controller][Sync][startSyncBlocks]: Unable to sync`);
             return;
         }
         System.synchronization = true;
-        RoundService.setIsBlockChainReady(false);
         logger.debug(`[Controller][Sync][startSyncBlocks]: start sync with consensus ${SyncService.getConsensus()}%`);
 
+        // TODO: change sync timeout logic
+        let needDelay = false;
         while (!SyncService.consensus) {
+            if (!needDelay) {
+                needDelay = true;
+            } else {
+                logger.info(`Sync starts after ${SYNC_TIMEOUT} ms`);
+                await asyncTimeout(SYNC_TIMEOUT);
+            }
+
             const lastBlock = await BlockRepository.getLastBlock();
             if (!lastBlock) {
-                logger.error(`[Controller][Sync][startSyncBlocks] lastBlock undefined`);
+                logger.error(`[Controller][Sync][startSyncBlocks] lastBlock is undefined`);
                 break;
             }
             const responseCommonBlocks = await SyncService.checkCommonBlock(lastBlock);
             if (!responseCommonBlocks.success) {
-                logger.error(`[Controller][Sync][startSyncBlocks]: ${JSON.stringify(responseCommonBlocks.errors)}`);
+                logger.error(
+                    `[Controller][Sync][startSyncBlocks][responseCommonBlocks]: ` +
+                    responseCommonBlocks.errors.join('. ')
+                );
                 if (responseCommonBlocks.errors.indexOf(REQUEST_TIMEOUT) !== -1) {
                     continue;
                 }
@@ -68,7 +78,9 @@ export class SyncController extends BaseController {
             }
             const responseBlocks = await SyncService.requestBlocks(lastBlock, peer);
             if (!responseBlocks.success) {
-                logger.error(`[Controller][Sync][startSyncBlocks]: ${JSON.stringify(responseBlocks.errors)}`);
+                logger.error(
+                    `[Controller][Sync][startSyncBlocks][responseBlocks]: ${responseBlocks.errors.join('. ')}`
+                );
                 if (responseCommonBlocks.errors.indexOf(ERROR_NOT_ENOUGH_PEERS) !== -1) {
                     break;
                 }
@@ -76,11 +88,13 @@ export class SyncController extends BaseController {
             }
             const loadStatus = await SyncService.loadBlocks(responseBlocks.data);
             if (!loadStatus.success) {
-                logger.error(`[Controller][Sync][startSyncBlocks]: ${JSON.stringify(loadStatus.errors)}`);
+                logger.error(`[Controller][Sync][startSyncBlocks][loadStatus]: ${loadStatus.errors.join('. ')}`);
+            } else {
+                needDelay = false;
             }
         }
-        messageON('WARM_UP_FINISHED');
         System.synchronization = false;
+        messageON('WARM_UP_FINISHED');
         EventQueue.process();
         logger.debug('[Controller][Sync][startSyncBlocks] SYNCHRONIZATION DONE SUCCESS');
     }

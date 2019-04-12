@@ -9,6 +9,8 @@ import { ActionTypes } from 'core/util/actionTypes';
 import { getLastSlotInRound } from 'core/util/round';
 import { createKeyPairBySecret } from 'shared/util/crypto';
 import { getFirstSlotNumberInRound } from 'core/util/slot';
+import { IKeyPair } from 'shared/util/ed';
+import System from 'core/repository/system';
 
 const MAX_LATENESS_FORGE_TIME = 500;
 
@@ -26,30 +28,11 @@ interface IRoundService {
 }
 
 class RoundService implements IRoundService {
-    private readonly keyPair: {
-        privateKey: string;
-        publicKey: string;
-    };
+    private readonly keyPair: IKeyPair;
     private logPrefix: string = '[RoundService]';
-    private isBlockChainReady: boolean = false;
 
     constructor() {
-        const keyPair = createKeyPairBySecret(process.env.FORGE_SECRET);
-
-        this.keyPair = {
-            privateKey: keyPair.privateKey.toString('hex'),
-            publicKey: keyPair.publicKey.toString('hex'),
-        };
-    }
-
-    // TODO useless
-    setIsBlockChainReady(status: boolean) {
-        this.isBlockChainReady = status;
-    }
-
-    // TODO useless
-    getIsBlockChainReady(): boolean {
-        return this.isBlockChainReady;
+        this.keyPair = createKeyPairBySecret(process.env.FORGE_SECRET);
     }
 
     restore(): void {
@@ -104,7 +87,7 @@ class RoundService implements IRoundService {
     }
 
     public getMySlot(): Slot {
-        return RoundRepository.getCurrentRound().slots[this.keyPair.publicKey];
+        return RoundRepository.getCurrentRound().slots[this.keyPair.publicKey.toString('hex')];
     }
 
     public processReward(round: Round, undo?: Boolean): void {
@@ -114,6 +97,13 @@ class RoundService implements IRoundService {
         const delegates = blocks.map(block => DelegateRepository.getDelegate(block.generatorPublicKey));
         logger.debug('[Round][Service][processReward][delegate]', delegates);
         const fee = Math.ceil(blocks.reduce((sum, block) => sum += block.fee, 0) / delegates.length);
+
+        logger.warn(`generators: ${JSON.stringify(
+            blocks.map(block => block.generatorPublicKey)
+        )}`);
+        logger.warn(`delegates: ${JSON.stringify(
+            delegates.map(delegate => ({ ...delegate, account: -1,  }))
+        )}`);
 
         delegates.forEach(delegate => {
             delegate.account.actualBalance += (undo ? -fee : fee);
@@ -128,18 +118,24 @@ class RoundService implements IRoundService {
         const newCurrentRound = new Round({
             slots: slots
         });
-        logger.debug('[Round][Service][newGenerateRound]', newCurrentRound);
+        logger.debug('[Round][Service][generate]', JSON.stringify(newCurrentRound));
         return newCurrentRound;
     }
 
     public forwardProcess(): void {
+        resetTaskON(ActionTypes.BLOCK_GENERATE);
+        resetTaskON(ActionTypes.ROUND_FINISH);
+
         const currentRound = RoundRepository.getCurrentRound();
         this.processReward(currentRound);
 
         const newRound = this.generate(getLastSlotInRound(currentRound) + 1);
         RoundRepository.add(newRound);
-        this.createBlockGenerateTask();
-        this.createRoundFinishTask();
+
+        if (!System.synchronization) {
+            this.createBlockGenerateTask();
+            this.createRoundFinishTask();
+        }
     }
 
     public backwardProcess(): void {

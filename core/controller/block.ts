@@ -14,12 +14,12 @@ import { getLastSlotInRound } from 'core/util/round';
 import RoundService from 'core/service/round';
 import RoundRepository from 'core/repository/round';
 import { ActionTypes } from 'core/util/actionTypes';
+import { IKeyPair } from 'shared/util/ed';
+import { getFirstSlotNumberInRound } from 'core/util/slot';
+import DelegateRepository from 'core/repository/delegate';
 
 interface BlockGenerateRequest {
-    keyPair: {
-        privateKey: string,
-        publicKey: string
-    };
+    keyPair: IKeyPair;
     timestamp: number;
 }
 
@@ -49,12 +49,10 @@ class BlockController extends BaseController {
                 `has less height: ${receivedBlock.height}, ` +
                 `actual height is ${lastBlock.height}`
             );
-            logger.info(errors.join('. '));
             return new ResponseEntity<void>({ errors });
         }
         if (blockUtils.isEqualId(lastBlock, receivedBlock)) {
             errors.push(`[Controller][Block][onReceiveBlock] Block already processed: ${receivedBlock.id}`);
-            logger.info(errors.join('. '));
             return new ResponseEntity<void>({ errors });
         }
 
@@ -96,10 +94,37 @@ class BlockController extends BaseController {
 
         if (blockUtils.isGreatestHeight(lastBlock, receivedBlock)) {
             if (blockUtils.canBeProcessed(lastBlock, receivedBlock)) {
+                // Check this logic. Need for first sync
+                const currectRound = RoundRepository.getCurrentRound();
+                const receivedBlockSlot = SlotService.getSlotNumber(receivedBlock.createdAt);
+                if (!currectRound) {
+                    const newRound = RoundService.generate(
+                        getFirstSlotNumberInRound(
+                            receivedBlock.createdAt,
+                            DelegateRepository.getActiveDelegates().length,
+                        ),
+                    );
+                    RoundRepository.add(newRound);
+                } else if (receivedBlockSlot > getLastSlotInRound(RoundRepository.getCurrentRound())) {
+                    // logic when received block in a next round
+                    RoundService.processReward(currectRound); const newRound = RoundService.generate(
+                        getFirstSlotNumberInRound(
+                            receivedBlock.createdAt,
+                            DelegateRepository.getActiveDelegates().length,
+                        ),
+                    );
+                    RoundRepository.add(newRound);
+                }
+
                 const receiveResponse: ResponseEntity<void> = await BlockService.receiveBlock(receivedBlock);
                 if (!receiveResponse.success) {
                     errors.push(...receiveResponse.errors, 'processIncomingBlock');
                     return new ResponseEntity<void>({ errors });
+                }
+
+                const lastSlot = getLastSlotInRound(RoundRepository.getCurrentRound());
+                if (receivedBlockSlot === lastSlot) {
+                    RoundService.forwardProcess();
                 }
             } else if (!SyncService.consensus) {
                 messageON('EMIT_SYNC_BLOCKS');

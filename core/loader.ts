@@ -38,14 +38,11 @@ class Loader {
         await this.initDatabase();
 
         initControllers();
+        System.synchronization = true;
         await this.blockWarmUp(this.limit);
+        System.synchronization = false;
         if (!BlockRepository.getGenesisBlock()) {
             await BlockService.applyGenesisBlock(config.GENESIS_BLOCK);
-            const newRound = RoundService.generate(
-                getFirstSlotNumberInRound(SlotService.getTruncTime(), DelegateRepository.getActiveDelegates().length)
-            );
-            RoundRepository.add(newRound);
-
         }
 
         socket.init();
@@ -93,24 +90,29 @@ class Loader {
                 }
 
                 if (block.height === MIN_ROUND_BLOCK) {
-                    const newRound = RoundService.generate(SlotService.getSlotNumber(block.createdAt));
+                    const newRound = RoundService.generate(
+                        getFirstSlotNumberInRound(
+                            block.createdAt,
+                            DelegateRepository.getActiveDelegates().length,
+                        ),
+                    );
+
                     RoundRepository.add(newRound);
                 }
 
                 if (block.height >= MIN_ROUND_BLOCK) {
                     const lastSlotInRound = getLastSlotInRound(RoundRepository.getCurrentRound());
                     const blockSlotNumber = SlotService.getSlotNumber(block.createdAt);
-                    if (lastSlotInRound === blockSlotNumber) {
-                        RoundService.processReward(RoundRepository.getCurrentRound());
-                        const newRound = RoundService.generate(blockSlotNumber);
-                        RoundRepository.add(newRound);
-                    }
 
                     BlockRepository.add(block);
                     this.transactionsWarmUp(block.transactions);
 
                     const currentRound = RoundRepository.getCurrentRound();
                     currentRound.slots[block.generatorPublicKey].isForged = true;
+
+                    if (blockSlotNumber === lastSlotInRound) {
+                        RoundService.forwardProcess();
+                    }
                 }
             }
 
@@ -119,7 +121,6 @@ class Loader {
             }
             offset += limit;
         } while (true);
-
     }
 
     private transactionsWarmUp(transactions: Array<Transaction<IAsset>>): void {

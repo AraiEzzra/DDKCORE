@@ -32,13 +32,9 @@ import { EVENT_TYPES } from 'shared/driver/socket/codes';
 import { MIN_ROUND_BLOCK } from 'core/util/block';
 import { getFirstSlotNumberInRound } from 'core/util/slot';
 import DelegateRepository from 'core/repository/delegate';
+import { IKeyPair, ed } from 'shared/util/ed';
 
 const validator: Validator = new ZSchema({});
-
-interface IKeyPair {
-    privateKey: string;
-    publicKey: string;
-}
 
 class BlockService {
     private readonly currentBlockVersion: number = config.CONSTANTS.FORGING.CURRENT_BLOCK_VERSION;
@@ -103,16 +99,15 @@ class BlockService {
         keyPair: IKeyPair,
         verify: boolean = true
     ): Promise<ResponseEntity<void>> {
-
         if (verify) {
             const resultVerifyBlock: ResponseEntity<void> = this.verifyBlock(block, !keyPair);
             if (!resultVerifyBlock.success) {
-                return new ResponseEntity<void>({ errors: [...resultVerifyBlock.errors, 'processBlock'] });
+                return new ResponseEntity<void>({ errors: [...resultVerifyBlock.errors, 'process'] });
             }
 
             const validationResponse = this.validateBlockSlot(block);
             if (!validationResponse.success) {
-                return new ResponseEntity<void>({ errors: [...validationResponse.errors, 'processBlock'] });
+                return new ResponseEntity<void>({ errors: [...validationResponse.errors, 'process'] });
             }
         } else {
             // TODO: remove when validate will be fix
@@ -124,18 +119,18 @@ class BlockService {
 
         const resultCheckExists: ResponseEntity<void> = this.checkExists(block);
         if (!resultCheckExists.success) {
-            return new ResponseEntity<void>({ errors: [...resultCheckExists.errors, 'processBlock'] });
+            return new ResponseEntity<void>({ errors: [...resultCheckExists.errors, 'process'] });
         }
 
         const resultCheckTransactions: ResponseEntity<void> =
             this.checkTransactionsAndApplyUnconfirmed(block, verify);
         if (!resultCheckTransactions.success) {
-            return new ResponseEntity<void>({ errors: [...resultCheckTransactions.errors, 'processBlock'] });
+            return new ResponseEntity<void>({ errors: [...resultCheckTransactions.errors, 'process'] });
         }
 
         const applyBlockResponse: ResponseEntity<void> = await this.applyBlock(block, broadcast, keyPair);
         if (!applyBlockResponse.success) {
-            return new ResponseEntity<void>({ errors: [...applyBlockResponse.errors, 'processBlock'] });
+            return new ResponseEntity<void>({ errors: [...applyBlockResponse.errors, 'process'] });
         }
 
         TransactionQueue.reshuffle();
@@ -188,7 +183,7 @@ class BlockService {
 
     private verifySignature(block: Block, errors: Array<string>): void {
         let valid: boolean = false;
-        const hash = crypto.createHash('sha256').update(this.getBytes(block)).digest();
+        const hash = this.getHash(block, true);
         const blockSignatureBuffer = Buffer.from(block.signature, 'hex');
         const generatorPublicKeyBuffer = Buffer.from(block.generatorPublicKey, 'hex');
 
@@ -218,25 +213,14 @@ class BlockService {
     }
 
     private verifyId(block: Block, errors: Array<string>): void {
-        const idResponse: ResponseEntity<string> = this.getId(block);
-        if (!idResponse.success) {
-            errors.push(...idResponse.errors);
-            return;
-        }
-        const blockId: string = idResponse.data;
-        if (block.id !== blockId) {
-            errors.push(`Block id is corrupted expected: ${blockId} actual: ${block.id}`);
+        const id: string = this.getId(block);
+        if (block.id !== id) {
+            errors.push(`Block id is corrupted expected: ${id} actual: ${block.id}`);
         }
     }
 
-    private getId(block: Block): ResponseEntity<string> {
-        let id: string = null;
-        try {
-            id = crypto.createHash('sha256').update(this.getBytes(block)).digest('hex');
-        } catch (err) {
-            return new ResponseEntity<string>({ errors: [err, 'getId'] });
-        }
-        return new ResponseEntity<string>({ data: id });
+    private getId(block: Block): string {
+        return this.getHash(block, false).toString('hex');
     }
 
     private verifyPayload(block: Block, errors: Array<string>): void {
@@ -254,7 +238,7 @@ class BlockService {
         const appliedTransactions = {};
 
         for (const trs of block.transactions) {
-            let bytes;
+            let bytes: Buffer;
 
             try {
                 logger.debug(`Transaction ${JSON.stringify(trs)}`);
@@ -311,7 +295,7 @@ class BlockService {
         logger.debug(`[Service][Block][validateBlockSlot]: blockSlot ${blockSlot}`);
 
         let currentRound = RoundRepository.getCurrentRound();
-        logger.debug(`[Service][Block][validateBlockSlot]: round ${currentRound}`);
+        logger.debug(`[Service][Block][validateBlockSlot]: round ${JSON.stringify(currentRound)}`);
 
         const generatorSlot = currentRound.slots[block.generatorPublicKey];
 
@@ -462,23 +446,13 @@ class BlockService {
         }
 
         block.payloadHash = payloadHash.digest().toString('hex');
+        block.signature = this.calculateSignature(block, keyPair);
+        block.id = this.getId(block);
 
-        const signResponseEntity = this.sign(block, keyPair);
-        if (!signResponseEntity.success) {
-            return new ResponseEntity<Block>({ errors: [...signResponseEntity.errors, 'addPayloadHash'] });
-        }
-
-        block.signature = signResponseEntity.data;
-        const idResponse: ResponseEntity<string> = this.getId(block);
-        if (!idResponse.success) {
-            return new ResponseEntity<Block>({ errors: [...idResponse.errors, 'addPayloadHash'] });
-        }
-        block.id = idResponse.data;
         return new ResponseEntity<Block>({ data: block });
     }
 
     private afterSave(block: Block): ResponseEntity<void> {
-        messageON('transactionsSaved', block.transactions);
         const errors: Array<string> = [];
         for (const trs of block.transactions) {
             const afterSaveResponse: ResponseEntity<void> = TransactionDispatcher.afterSave(trs);
@@ -508,7 +482,7 @@ class BlockService {
         const removedTransactions: Array<Transaction<object>> = removedTransactionsResponse.data || [];
 
         const errors: Array<string> = [];
-        const processBlockResponse: ResponseEntity<void> = await this.process(block, true, null, false);
+        const processBlockResponse: ResponseEntity<void> = await this.process(block, true, null, true);
         if (!processBlockResponse.success) {
             errors.push(...processBlockResponse.errors);
         }
@@ -583,28 +557,18 @@ class BlockService {
         });
     }
 
-    private sign(block, keyPair): ResponseEntity<string> {
-        const blockHash = this.getHash(block);
-        if (!blockHash.success) {
-            return new ResponseEntity<string>({ errors: [...blockHash.errors, 'sign'] });
-        }
-
-        const sig = Buffer.alloc(sodium.crypto_sign_BYTES);
-        sodium.crypto_sign_detached(sig, blockHash.data, keyPair.privateKey);
-        return new ResponseEntity<string>({ data: sig.toString('hex') });
+    private calculateSignature(block: Block, keyPair: IKeyPair): string {
+        const blockHash = this.getHash(block, true);
+        const signature = Buffer.alloc(sodium.crypto_sign_BYTES);
+        sodium.crypto_sign_detached(signature, blockHash, keyPair.privateKey);
+        return signature.toString('hex');
     }
 
-    private getHash(block: Block): ResponseEntity<Buffer> {
-        let hash: Buffer = null;
-        try {
-            hash = crypto.createHash('sha256').update(this.getBytes(block)).digest();
-        } catch (err) {
-            return new ResponseEntity<Buffer>({ errors: [err, 'getHash'] });
-        }
-        return new ResponseEntity<Buffer>({ data: hash });
+    private getHash(block: Block, skipSignature: boolean = false): Buffer {
+        return crypto.createHash('sha256').update(this.getBytes(block, skipSignature)).digest();
     }
 
-    private getBytes(block: Block): Buffer {
+    private getBytes(block: Block, skipSignature: boolean = false): Buffer {
         const buf = Buffer.alloc(this.BLOCK_BUFFER_SIZE);
         let offset = 0;
 
@@ -618,7 +582,8 @@ class BlockService {
             buf,
             Buffer.from(block.previousBlockId ? block.previousBlockId : '', 'hex'),
             Buffer.from(block.payloadHash, 'hex'),
-            Buffer.from(block.generatorPublicKey, 'hex')
+            Buffer.from(block.generatorPublicKey, 'hex'),
+            Buffer.from(!skipSignature && block.signature ? block.signature : '', 'hex'),
         ]);
     }
 
