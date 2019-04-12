@@ -20,6 +20,7 @@ describe('Test GET_TRANSACTION', () => {
                 '2ffd89b160d93a4bbd59f0c129bc669598b522da8000',
             'secondSignature': null,
             'fee': 0,
+            'confirmations': 0,
             'salt': '6f5b997e54d3f6a249d9be019814a66a',
             'asset': { 'recipientAddress': '7897332094363171058', 'amount': 90000000000000 }
         };
@@ -44,7 +45,29 @@ describe('Test GET_TRANSACTION', () => {
         });
     });
 
-    it('Negative', (done) => {
+    it('Positive empty', (done) => {
+        const GET_TRANSACTION_FAILED_HEADERS = Fixture.getBaseHeaders();
+        const GET_TRANSACTION_FAILED = {
+            headers: GET_TRANSACTION_FAILED_HEADERS,
+            code: API_ACTION_TYPES.GET_TRANSACTION,
+            body: {
+                id: '2c52682e6a51a9ddfd48a679a95c9fea4e693790aec5968535a482088b6c75b1'
+            }
+        };
+
+        const socket = getSocket();
+        socket.emit('message', GET_TRANSACTION_FAILED);
+        socket.on('message', (response: Message2<ResponseEntity<any>>) => {
+            if (response.headers.id === GET_TRANSACTION_FAILED_HEADERS.id) {
+                expect(response.body.success).to.equal(true);
+                expect(response.body.data).to.equal(null);
+                socket.close();
+                done();
+            }
+        });
+    });
+
+    it('Negative validate', (done) => {
         const GET_TRANSACTION_FAILED_HEADERS = Fixture.getBaseHeaders();
         const GET_TRANSACTION_FAILED = {
             headers: GET_TRANSACTION_FAILED_HEADERS,

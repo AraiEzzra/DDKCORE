@@ -21,8 +21,9 @@ class AccountController {
 
     @API(API_ACTION_TYPES.GET_ACCOUNT_BALANCE)
     public getAccountBalance(message: Message2<{ address: string }>): ResponseEntity<number> {
+        const account = AccountRepo.getByAddress(BigInt(message.body.address));
         return new ResponseEntity({
-            data: AccountRepo.getByAddress(BigInt(message.body.address)).actualBalance
+            data: account ? account.actualBalance: 0
         });
     }
 

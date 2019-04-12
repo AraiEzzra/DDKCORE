@@ -31,6 +31,7 @@ class SharedTransactionPGRepo  {
             fee: Number(rawTrs.fee),
             salt: rawTrs.salt,
             asset: rawTrs.asset,
+            confirmations: Number(rawTrs.confirmations)
         });
     }
 }

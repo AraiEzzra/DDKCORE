@@ -16,8 +16,9 @@ type AllowedFilters = {
 
 class TransactionPGRepository {
 
-    async getOne(id: string): Promise<Transaction<IAsset>> {
-        return SharedTransactionPGRepo.deserialize(await db.oneOrNone(query.getTransaction, { id }));
+    async getOne(id: string): Promise<Transaction<IAsset> | null> {
+        const transaction = await db.oneOrNone(query.getTransaction, { id });
+        return transaction ? SharedTransactionPGRepo.deserialize(transaction) : null;
     }
 
     async getMany(filter: AllowedFilters, sort: Array<Sort>, limit: number, offset: number):

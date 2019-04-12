@@ -28,13 +28,12 @@ export class TransactionController {
     @RPC(API_ACTION_TYPES.GET_TRANSACTION)
     @validate()
     async getTransaction(message: Message2<{ id: string }>, socket: any): Promise<void> {
-        const data = SharedTransactionRepo.serialize(await TransactionPGRepository.getOne(message.body.id));
+        const transaction = await TransactionPGRepository.getOne(message.body.id);
+        const data = transaction ? SharedTransactionRepo.serialize(transaction) : null;
         SocketMiddleware.emitToClient<SerializedTransaction<IAsset>>(
             message.headers.id,
             message.code,
-            new ResponseEntity<SerializedTransaction<any>>({
-                data
-            }),
+            new ResponseEntity<SerializedTransaction<any>>({ data }),
             socket
         );
     }

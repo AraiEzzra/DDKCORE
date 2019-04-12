@@ -87,10 +87,12 @@ export class TransactionModel<T extends IAsset> {
     status?: TransactionStatus; // Memory only
     salt?: string;
     relay?: number; // Memory only
+    confirmations?: number;
     asset?: T;
 
     constructor(data: TransactionModel<T>) {
         this.relay = 0;
+        this.confirmations = 0;
         this.senderAddress = data.senderAddress ? data.senderAddress : getAddressByPublicKey(data.senderPublicKey);
         Object.assign(this, data);
     }
@@ -119,5 +121,6 @@ export type SerializedTransaction<T> = {
     fee: number;
     salt: string;
     relay: number;
+    confirmations: number,
     asset: T;
 };
