@@ -121,8 +121,10 @@ export class Socket {
     @autobind
     onPeerRPCRequest(response: string, peer: Peer): void {
         const { code, data, requestId } = new SocketResponseRPC(response);
-        logger.debug(`[SOCKET][ON_PEER_RPC_REQUEST] from ${peer.ip}:${peer.port}
-          CODE: ${code}, REQUEST_ID: ${requestId} DATA: ${JSON.stringify(data)}`);
+        logger.debug(
+            `[SOCKET][ON_PEER_RPC_REQUEST] from ${peer.ip}:${peer.port} CODE: ${code}, ` +
+            ` REQUEST_ID: ${requestId} DATA: ${JSON.stringify(data)}`
+        );
         messageON(code, { data, peer, requestId });
     }
 
