@@ -17,6 +17,7 @@ import { ActionTypes } from 'core/util/actionTypes';
 import { IKeyPair } from 'shared/util/ed';
 import { getFirstSlotNumberInRound } from 'core/util/slot';
 import DelegateRepository from 'core/repository/delegate';
+import system from 'core/repository/system';
 
 interface BlockGenerateRequest {
     keyPair: IKeyPair;
@@ -75,13 +76,13 @@ class BlockController extends BaseController {
             const deleteLastBlockResponse = await BlockService.deleteLastBlock();
 
             if (!deleteLastBlockResponse.success) {
-                errors.push(...deleteLastBlockResponse.errors, 'processIncomingBlock');
+                errors.push(...deleteLastBlockResponse.errors, 'onReceiveBlock');
                 return new ResponseEntity<void>({ errors });
             }
 
             const receiveResponse: ResponseEntity<void> = await BlockService.receiveBlock(receivedBlock);
             if (!receiveResponse.success) {
-                errors.push(...receiveResponse.errors, 'processIncomingBlock');
+                errors.push(...receiveResponse.errors, 'onReceiveBlock');
                 return new ResponseEntity<void>({ errors });
             }
 
@@ -95,9 +96,9 @@ class BlockController extends BaseController {
         if (blockUtils.isGreatestHeight(lastBlock, receivedBlock)) {
             if (blockUtils.canBeProcessed(lastBlock, receivedBlock)) {
                 // Check this logic. Need for first sync
-                const currectRound = RoundRepository.getCurrentRound();
+                const currentRound = RoundRepository.getCurrentRound();
                 const receivedBlockSlot = SlotService.getSlotNumber(receivedBlock.createdAt);
-                if (!currectRound) {
+                if (!currentRound) {
                     const newRound = RoundService.generate(
                         getFirstSlotNumberInRound(
                             receivedBlock.createdAt,
@@ -105,20 +106,16 @@ class BlockController extends BaseController {
                         ),
                     );
                     RoundRepository.add(newRound);
-                } else if (receivedBlockSlot > getLastSlotInRound(RoundRepository.getCurrentRound())) {
-                    // logic when received block in a next round
-                    RoundService.processReward(currectRound); const newRound = RoundService.generate(
-                        getFirstSlotNumberInRound(
-                            receivedBlock.createdAt,
-                            DelegateRepository.getActiveDelegates().length,
-                        ),
-                    );
-                    RoundRepository.add(newRound);
+                } else if (
+                    receivedBlockSlot > getLastSlotInRound(RoundRepository.getCurrentRound()) &&
+                    system.synchronization
+                ) {
+                    RoundService.forwardProcess();
                 }
 
                 const receiveResponse: ResponseEntity<void> = await BlockService.receiveBlock(receivedBlock);
                 if (!receiveResponse.success) {
-                    errors.push(...receiveResponse.errors, 'processIncomingBlock');
+                    errors.push(...receiveResponse.errors, 'onReceiveBlock');
                     return new ResponseEntity<void>({ errors });
                 }
 
@@ -127,11 +124,14 @@ class BlockController extends BaseController {
                     RoundService.forwardProcess();
                 }
             } else if (!SyncService.consensus) {
-                messageON('EMIT_SYNC_BLOCKS');
+                if (!system.synchronization) {
+                    messageON('EMIT_SYNC_BLOCKS');
+                }
+                errors.push(`[Service][Block][onReceiveBlock] Invalid block`);
             }
         } else {
             errors.push(
-                `[Service][Block][processIncomingBlock] ` +
+                `[Service][Block][onReceiveBlock] ` +
                 `Discarded block that does not match with current chain: ${receivedBlock.id}, ` +
                 `height: ${receivedBlock.height}, ` +
                 `slot: ${SlotService.getSlotNumber(receivedBlock.createdAt)}, ` +

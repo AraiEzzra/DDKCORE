@@ -141,7 +141,7 @@ export class SyncService implements ISyncService {
             block.transactions.forEach(trs => SharedTransactionRepo.deserialize(trs));
             const receive = await BlockController.onReceiveBlock({ data: { block } });
             if (!receive.success) {
-                errors.push('[Service][Sync][loadBlocks] error load blocks!');
+                errors.push(...receive.errors, '[Service][Sync][loadBlocks] error load blocks!');
                 return new ResponseEntity({ errors });
             }
         }

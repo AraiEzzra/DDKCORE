@@ -190,8 +190,10 @@ export class Socket {
 
                     clearTimeout(timerId);
 
-                    logger.debug(`[SOCKET][SOCKET_RPC_RESPONSE] from ${peer.ip}:${peer.port}
-                    CODE: ${response.code}, REQUEST_ID: ${response.requestId}, DATA: ${JSON.stringify(response.data)}`);
+                    logger.debug(
+                        `[SOCKET][SOCKET_RPC_RESPONSE] from ${peer.ip}:${peer.port} ` +
+                        `CODE: ${response.code}, REQUEST_ID: ${response.requestId}`
+                    );
 
                     peer.socket.removeListener(SOCKET_RPC_RESPONSE, responseListener);
 
