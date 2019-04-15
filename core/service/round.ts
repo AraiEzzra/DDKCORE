@@ -36,14 +36,10 @@ class RoundService implements IRoundService {
     }
 
     restore(): void {
-        if (!RoundRepository.getCurrentRound()) {
-            const newRound = this.generate(
-                getFirstSlotNumberInRound(SlotService.getTruncTime(), DelegateRepository.getActiveDelegates().length)
-            );
-            RoundRepository.add(newRound);
+        if (RoundRepository.getCurrentRound()) {
+            this.createBlockGenerateTask();
+            this.createRoundFinishTask();
         }
-        this.createBlockGenerateTask();
-        this.createRoundFinishTask();
     }
 
     private createBlockGenerateTask(): void {
@@ -98,12 +94,12 @@ class RoundService implements IRoundService {
         logger.debug('[Round][Service][processReward][delegate]', delegates);
         const fee = Math.ceil(blocks.reduce((sum, block) => sum += block.fee, 0) / delegates.length);
 
-        logger.warn(`generators: ${JSON.stringify(
-            blocks.map(block => block.generatorPublicKey)
-        )}`);
-        logger.warn(`delegates: ${JSON.stringify(
-            delegates.map(delegate => ({ ...delegate, account: -1,  }))
-        )}`);
+        // logger.warn(`generators: ${JSON.stringify(
+        //     blocks.map(block => block.generatorPublicKey)
+        // )}`);
+        // logger.warn(`delegates: ${JSON.stringify(
+        //     delegates.map(delegate => ({ ...delegate, account: -1,  }))
+        // )}`);
 
         delegates.forEach(delegate => {
             delegate.account.actualBalance += (undo ? -fee : fee);
