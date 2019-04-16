@@ -40,7 +40,6 @@ class Loader {
         initControllers();
         System.synchronization = true;
         await this.blockWarmUp(this.limit);
-        System.synchronization = false;
         if (!BlockRepository.getGenesisBlock()) {
             await BlockService.applyGenesisBlock(config.GENESIS_BLOCK);
         }
