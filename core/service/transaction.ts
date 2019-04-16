@@ -1,5 +1,4 @@
 import crypto from 'crypto';
-import cryptoBrowserify from 'crypto-browserify';
 
 import {
     IAsset,
@@ -228,7 +227,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             senderPublicKey: sender.publicKey,
             senderAddress: sender.address,
             type: data.type,
-            salt: cryptoBrowserify.randomBytes(SALT_LENGTH).toString('hex'),
+            salt: crypto.randomBytes(SALT_LENGTH).toString('hex')
         });
 
         const service = getTransactionServiceByType(data.type);

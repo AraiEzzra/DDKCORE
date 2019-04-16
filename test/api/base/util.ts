@@ -1,6 +1,7 @@
 import { SECOND } from 'core/util/const';
 import { Timestamp } from 'shared/model/account';
 import config from 'shared/config';
+import { TransactionModel } from 'shared/model/transaction';
 
 const TWO = 2;
 const FIVE = 5;
@@ -32,4 +33,32 @@ export const getEpochTime = (time: number = Date.now()): Timestamp => {
 
 export const getTime = (time?: number): Timestamp => {
     return this.getEpochTime(time);
+};
+
+export const getTransactionData = <T>(data: TransactionModel<T>): TransactionModel<T> => ({
+    asset: data.asset,
+    type: data.type,
+    fee: data.fee,
+    senderAddress: data.senderAddress,
+    senderPublicKey: data.senderPublicKey
+});
+
+export const getPreparedTransactionData = <T>(data: TransactionModel<T>): TransactionModel<T> => {
+    const result: TransactionModel<T> = {
+        id: data.id,
+        asset: data.asset,
+        type: data.type,
+        fee: data.fee,
+        senderAddress: data.senderAddress,
+        senderPublicKey: data.senderPublicKey,
+        signature: data.signature,
+        salt: data.salt,
+        createdAt: data.createdAt
+    };
+
+    if (data.secondSignature !== undefined) {
+        result.secondSignature = data.secondSignature;
+    }
+
+    return result;
 };

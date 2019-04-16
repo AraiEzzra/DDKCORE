@@ -70,6 +70,7 @@ export const getAirdropReward = (
     }
 
     const availableAirdropBalance: number = AccountRepo.getByAddress(config.CONSTANTS.AIRDROP.ADDRESS).actualBalance;
+
     logger.info(`availableAirdropBalance: ${availableAirdropBalance / MONEY_FACTOR}`);
 
     if (!sender || !sender.referrals || (sender.referrals.length === 0)) {
