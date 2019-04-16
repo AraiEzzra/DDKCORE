@@ -16,7 +16,7 @@ export class Peer {
     broadhash?: string;
     height?: number;
     string?: string;
-    socket?: any;
+    socket?: SocketIO.Socket;
     blocksIds?: Map<number, string>;
 
     constructor() {
