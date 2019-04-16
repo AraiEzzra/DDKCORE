@@ -36,15 +36,17 @@ class RoundService implements IRoundService {
     }
 
     restore(): void {
-        if (RoundRepository.getCurrentRound()) {
-            this.createBlockGenerateTask();
-            this.createRoundFinishTask();
-        } else {
+        if (!RoundRepository.getCurrentRound()) {
             const newRound = this.generate(
-                getFirstSlotNumberInRound(SlotService.getTruncTime(), DelegateRepository.getActiveDelegates().length)
+                getFirstSlotNumberInRound(
+                    SlotService.getTruncTime(),
+                    DelegateRepository.getActiveDelegates().length
+                ),
             );
             RoundRepository.add(newRound);
         }
+        this.createBlockGenerateTask();
+        this.createRoundFinishTask();
     }
 
     private createBlockGenerateTask(): void {
