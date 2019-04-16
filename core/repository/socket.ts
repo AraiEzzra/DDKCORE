@@ -37,11 +37,7 @@ export class Socket {
 
     init(): void {
         logger.debug(`WebSocket listening on port ${config.CORE.SOCKET.PORT}`);
-        config.CORE.PEERS.TRUSTED.forEach((peer) => {
-            setTimeout(() => {
-                this.connectNewPeer(peer);
-            }, Math.floor(Math.random() * 11 * 1000));
-        });
+        config.CORE.PEERS.TRUSTED.forEach((peer) => this.connectNewPeer(peer));
         ioServer.on('connect', (socket) => {
             if (PeerRepository.peerList().length > config.CONSTANTS.MAX_PEERS_CONNECTED) {
                 logger.debug(`[SOCKET][init] peer connection rejected, too many connections`);
@@ -92,7 +88,7 @@ export class Socket {
     }
 
     @autobind
-    addPeer(peer: Peer, socket: SocketIOClient.Socket | SocketIO.Socket): boolean {
+    addPeer(peer: Peer, socket: SocketIO.Socket | any): boolean {
         if (PeerRepository.addPeer(peer, socket)) {
             logger.debug(`[SOCKET][ADD_PEER] host: ${peer.ip}:${peer.port}`);
             const listenBroadcast = (response: string) => Socket.instance.onPeerBroadcast(response, peer);
@@ -100,7 +96,7 @@ export class Socket {
             socket.on(BROADCAST, listenBroadcast);
             socket.on(SOCKET_RPC_REQUEST, listenRPC);
 
-            peer.socket.on('disconnect', (reason) => {
+            peer.socket.on('disconnect', (reason: string): void => {
                 logger.debug(`[SOCKET][DISCONNECT_REASON] ${reason}`);
                 peer.socket.removeListener(BROADCAST, listenBroadcast);
                 peer.socket.removeListener(SOCKET_RPC_REQUEST, listenRPC);
