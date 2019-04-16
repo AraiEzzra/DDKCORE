@@ -54,7 +54,6 @@ export class Socket {
                         SystemRepository.getFullHeaders()
                     ));
                 } else {
-                    console.log(`disconnect ${JSON.stringify(data)}`);
                     socket.disconnect(true);
                 }
             });

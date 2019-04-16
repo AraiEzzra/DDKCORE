@@ -43,10 +43,7 @@ class SlotService {
      * @return {number} constant time from ddk epoch + input time.
      */
     public getRealTime(epochTime: EpochTime = this.getTime()): number {
-        const d = this.beginEpochTime();
-        const t = Math.floor(d.getTime() / SECOND) * SECOND;
-
-        return t + epochTime * SECOND;
+        return this.beginEpochTime().getTime() + epochTime * SECOND;
     }
 
     /**
@@ -71,7 +68,7 @@ class SlotService {
         const slotTime = slot * config.CONSTANTS.FORGING.SLOT_INTERVAL;
         return this.getRealTime(slotTime);
     }
-    
+
     public generateSlots(blockId: string, delegates: Array<Delegate>, firstSlotNumber: number): Slots {
         const hashedDelegates = delegates.map((delegate: Delegate) => {
             const { publicKey } = delegate.account;
