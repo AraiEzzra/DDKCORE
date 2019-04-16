@@ -53,7 +53,7 @@ class DelegateController {
 
         return new ResponseEntity({
             data: {
-                delegates: myDelegates.splice(message.body.offset, message.body.limit).map(
+                delegates: myDelegates.slice(message.body.offset, message.body.offset + message.body.limit).map(
                     delegate => DelegateRepository.serialize(delegate)
                 ),
                 count: myDelegates.length,
