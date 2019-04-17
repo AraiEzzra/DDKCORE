@@ -13,8 +13,8 @@ export type BlockchainInfo = {
     totalStakeHolders: number;
     height: number;
     consensus: number;
+    datetime: Date;
 };
-
 
 class EventService {
 
@@ -31,7 +31,8 @@ class EventService {
             totalStakeAmount: statistics.totalStakeAmount,
             totalStakeHolders: statistics.totalStakeHolders,
             height: BlockRepository.getLastBlock() ? BlockRepository.getLastBlock().height : 0,
-            consensus: SyncService.getConsensus()
+            consensus: SyncService.getConsensus(),
+            datetime: new Date(),
         });
     }
 }
