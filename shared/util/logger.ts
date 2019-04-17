@@ -74,7 +74,7 @@ class LoggerClass {
         });
 
         this.consoleTransport = new transports.Console({
-            level: process.env.NODE_ENV_IN === 'development' ? 'debug' : 'info',
+            level: process.env.NODE_ENV_IN === 'development' ? 'debug' : 'debug',
         });
     }
 }
