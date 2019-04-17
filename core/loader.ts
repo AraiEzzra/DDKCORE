@@ -98,17 +98,17 @@ class Loader {
                     if (blockSlotNumber > getLastSlotInRound(round)) {
                         // block with last round slot is missing
                         while (blockSlotNumber !== round.slots[block.generatorPublicKey].slot) {
-                            // forward until we find the right round
-                            RoundService.forwardProcess();
-                            round = RoundRepository.getCurrentRound();
-
-                            if (blockSlotNumber > getLastSlotInRound(round)) {
+                            if (getLastSlotInRound(round) > blockSlotNumber) {
                                 logger.error(
-                                    `Impossible to build a round for block with id: ${block.id}, ` +
+                                    `[Loader] Impossible to build a round for block with id: ${block.id}, ` +
                                     `height: ${block.height}`
                                 );
                                 process.exit(1);
                             }
+
+                            // forward until we find the right round
+                            RoundService.forwardProcess();
+                            round = RoundRepository.getCurrentRound();
                         }
                     }
 
