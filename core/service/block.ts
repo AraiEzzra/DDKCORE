@@ -33,6 +33,7 @@ import { MIN_ROUND_BLOCK } from 'core/util/block';
 import { getFirstSlotNumberInRound } from 'core/util/slot';
 import DelegateRepository from 'core/repository/delegate';
 import { IKeyPair, ed } from 'shared/util/ed';
+import system from 'core/repository/system';
 
 const validator: Validator = new ZSchema({});
 
@@ -420,7 +421,7 @@ class BlockService {
             `applied with ${trsLength} transactions`
         );
 
-        if (broadcast) {
+        if (broadcast && !system.synchronization) {
             SyncService.sendNewBlock(block);
 
             const serializedBlock: Block & { transactions: any } = block.getCopy();
