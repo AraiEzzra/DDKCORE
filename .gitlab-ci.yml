@@ -1,6 +1,6 @@
 stages:
  - build_core
- - start_core
+ - generate_docker-compose
 
 build_image_tag:
   stage: build_core
@@ -12,13 +12,24 @@ build_image_tag:
     - cd /root/DDK.Delegat.Install.Environment/
     - ./build.tag.newcore.gitlab.sh
 
+PROD-generate_docker-compose:
+  stage: generate_docker-compose
+  when: manual
+  tags:
+    - ssh_depoloy_vagga_stage
+  script:
+    - cd /var/ddk.builds/data/DDKCORE/
+    - tag=$(git describe --tags $(git rev-list --tags --max-count=1))
+    - cd /root/DDK.Delegat.Install.Environment/
+    - ./refresh_and_generate_new_core.sh ./inventory.newcore.prod.env 0.0.2 $tag mainnet
 
-updating:
- stage: start_core
- only:
-   - tags
- tags:
-   - ddk-deploy
- script:
-   - cd /root/DDK.Delegat.Install.Environment/
-   - docker images
+DELEGATES-generate_docker-compose:
+  stage: generate_docker-compose
+  when: manual
+  tags:
+    - ssh_depoloy_vagga_stage
+  script:   
+    - cd /var/ddk.builds/data/DDKCORE/
+    - tag=$(git describe --tags $(git rev-list --tags --max-count=1))
+    - cd /root/DDK.Delegat.Install.Environment/
+    - ./refresh_and_generate_new_core.sh ./inventory.newcore.preprod.delegates.env 0.0.2 $tag testnet
