@@ -2,25 +2,21 @@ stages:
  - build_core
  - start_core
 
-manual_build_core:
+build_image_tag:
   stage: build_core
   only:
-    - autodeploy-gitlab-tags
     - tags
   tags:
     - ddk-deploy
   script:
-    - cd /var/ddk.builds/data/DDKCORE
-    - TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
     - cd /root/DDK.Delegat.Install.Environment/
-    - docker rmi ddkoin/core:$TAG -f
-    - ./build.tag.newcore.sh $TAG autodeploy-gitlab-tags
+    - ./build.tag.newcore.gitlab.sh
 
 
 updating:
  stage: start_core
  only:
-   - autodeploy-gitlab-tags
+   - tags
  tags:
    - ddk-deploy
  script:
