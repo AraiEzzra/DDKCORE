@@ -14,6 +14,7 @@ export class TransactionController {
 
     constructor() {
         this.createTransaction = this.createTransaction.bind(this);
+        this.createPreparedTransaction = this.createPreparedTransaction.bind(this);
         this.getTransaction = this.getTransaction.bind(this);
         this.getTransactions = this.getTransactions.bind(this);
         this.getTransactionsByBlockId = this.getTransactionsByBlockId.bind(this);
@@ -22,6 +23,12 @@ export class TransactionController {
     @RPC(API_ACTION_TYPES.CREATE_TRANSACTION)
     @validate()
     createTransaction(message: Message2<{ secret: string, trs: TransactionModel<IAsset> }>, socket: any) {
+        SocketMiddleware.emitToCore(message, socket);
+    }
+
+    @RPC(API_ACTION_TYPES.CREATE_PREPARED_TRANSACTION)
+    @validate()
+    createPreparedTransaction(message: Message2<{ secret: string, trs: TransactionModel<IAsset> }>, socket: any) {
         SocketMiddleware.emitToCore(message, socket);
     }
 
