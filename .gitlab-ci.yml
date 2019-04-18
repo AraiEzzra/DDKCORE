@@ -10,10 +10,11 @@ manual_build_core:
   tags:
     - ddk-deploy
   script:
-    - echo $CI_COMMIT_TAG
+    - cd /var/ddk.builds/data/DDKCORE
+    - TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
     - cd /root/DDK.Delegat.Install.Environment/
-    - docker rmi ddkoin/core:$CI_COMMIT_TAG -f
-    - ./build.tag.newcore.sh $CI_COMMIT_TAG autodeploy-gitlab-tags
+    - docker rmi ddkoin/core:$TAG -f
+    - ./build.tag.newcore.sh $TAG autodeploy-gitlab-tags
 
 
 updating:
