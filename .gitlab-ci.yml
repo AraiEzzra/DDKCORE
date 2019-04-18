@@ -6,6 +6,7 @@ manual_build_core:
   stage: build_core
   only:
     - autodeploy-gitlab-tags
+    - tags
   tags:
     - ddk-deploy
   script:
