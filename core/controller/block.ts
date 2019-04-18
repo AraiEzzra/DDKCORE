@@ -17,7 +17,7 @@ import { ActionTypes } from 'core/util/actionTypes';
 import { IKeyPair } from 'shared/util/ed';
 import { getFirstSlotNumberInRound } from 'core/util/slot';
 import DelegateRepository from 'core/repository/delegate';
-import system from 'core/repository/system';
+import System from 'core/repository/system';
 
 interface BlockGenerateRequest {
     keyPair: IKeyPair;
@@ -70,7 +70,7 @@ class BlockController extends BaseController {
                 getLastSlotInRound(RoundRepository.getPrevRound());
 
             if (lastBlockInPrevRound >= blockSlot) {
-                if (system.synchronization) {
+                if (System.synchronization) {
                     let round = RoundRepository.getCurrentRound();
                     const receivedBlockSlotNumber = SlotService.getSlotNumber(receivedBlock.createdAt);
                     while (receivedBlockSlotNumber !== round.slots[receivedBlock.generatorPublicKey].slot) {
@@ -127,7 +127,7 @@ class BlockController extends BaseController {
                     RoundRepository.add(newRound);
                 } else if (
                     receivedBlockSlot > getLastSlotInRound(RoundRepository.getCurrentRound()) &&
-                    system.synchronization
+                    System.synchronization
                 ) {
                     let round = RoundRepository.getCurrentRound();
                     const receivedBlockSlotNumber = SlotService.getSlotNumber(receivedBlock.createdAt);
@@ -158,7 +158,7 @@ class BlockController extends BaseController {
                     RoundService.forwardProcess();
                 }
             } else if (!SyncService.consensus) {
-                if (!system.synchronization) {
+                if (!System.synchronization) {
                     messageON('EMIT_SYNC_BLOCKS');
                 }
                 errors.push(`[Service][Block][onReceiveBlock] Invalid block`);

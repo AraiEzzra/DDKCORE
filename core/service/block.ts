@@ -19,21 +19,17 @@ import TransactionPool from 'core/service/transactionPool';
 import TransactionRepo from 'core/repository/transaction/';
 import SlotService from 'core/service/slot';
 import RoundRepository from 'core/repository/round';
-import RoundService from 'core/service/round';
 import { transactionSortFunc } from 'core/util/transaction';
 import blockSchema from 'core/schema/block';
 import { ResponseEntity } from 'shared/model/response';
-import { messageON } from 'shared/util/bus';
 import config from 'shared/config';
 import SyncService from 'core/service/sync';
 import { getAddressByPublicKey } from 'shared/util/account';
 import SocketMiddleware from 'core/api/middleware/socket';
 import { EVENT_TYPES } from 'shared/driver/socket/codes';
 import { MIN_ROUND_BLOCK } from 'core/util/block';
-import { getFirstSlotNumberInRound } from 'core/util/slot';
-import DelegateRepository from 'core/repository/delegate';
 import { IKeyPair, ed } from 'shared/util/ed';
-import system from 'core/repository/system';
+import System from 'core/repository/system';
 
 const validator: Validator = new ZSchema({});
 
@@ -421,7 +417,7 @@ class BlockService {
             `applied with ${trsLength} transactions`
         );
 
-        if (broadcast && !system.synchronization) {
+        if (broadcast && !System.synchronization) {
             SyncService.sendNewBlock(block);
 
             const serializedBlock: Block & { transactions: any } = block.getCopy();
