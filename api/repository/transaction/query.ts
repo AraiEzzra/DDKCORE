@@ -15,5 +15,6 @@ export default {
           ORDER BY ${sort} LIMIT \${limit} OFFSET \${offset}`,
     getVotesWithStakeReward: 'SELECT *, count(1) over () as count FROM trs' +
         ' where trs.sender_public_key = ${senderPublicKey} ' +
-        ' and trs.type = ${voteType} and (asset ->> \'reward\')::bigint != 0 LIMIT ${limit} OFFSET ${offset}'
+        ' and trs.type = ${voteType} and (asset ->> \'reward\')::bigint != 0' +
+        ' ORDER BY trs.created_at DESC LIMIT ${limit} OFFSET ${offset}'
 };
