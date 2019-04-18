@@ -33,9 +33,6 @@ class TransactionRegisterService implements IAssetService<IAssetRegister> {
     // TODO check empty account
     verifyUnconfirmed(trs: Transaction<IAssetRegister>, sender: Account): ResponseEntity<void> {
         const errors = [];
-        if (!AccountRepo.getByAddress(trs.asset.referral)) {
-            errors.push(`Referral with address: ${trs.asset.referral} not found!`);
-        }
 
         if (
             sender.secondPublicKey ||

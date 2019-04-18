@@ -88,7 +88,7 @@ class BlockController extends BaseController {
                         round = RoundRepository.getCurrentRound();
                     }
                 } else {
-                    await RoundService.backwardProcess();
+                    RoundService.backwardProcess();
                 }
             }
 
