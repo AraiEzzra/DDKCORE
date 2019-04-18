@@ -95,21 +95,19 @@ class Loader {
                 if (block.height >= MIN_ROUND_BLOCK) {
                     let round = RoundRepository.getCurrentRound();
                     const blockSlotNumber = SlotService.getSlotNumber(block.createdAt);
-                    if (blockSlotNumber > getLastSlotInRound(round)) {
-                        // block with last round slot is missing
-                        while (blockSlotNumber !== round.slots[block.generatorPublicKey].slot) {
-                            // forward until we find the right round
-                            RoundService.forwardProcess();
-                            round = RoundRepository.getCurrentRound();
 
-                            if (blockSlotNumber > getLastSlotInRound(round)) {
-                                logger.error(
-                                    `Impossible to build a round for block with id: ${block.id}, ` +
-                                    `height: ${block.height}`
-                                );
-                                process.exit(1);
-                            }
+                    while (blockSlotNumber !== round.slots[block.generatorPublicKey].slot) {
+                        if (getLastSlotInRound(round) > blockSlotNumber) {
+                            logger.error(
+                                `[Loader] Impossible to build a round for block with id: ${block.id}, ` +
+                                `height: ${block.height}`
+                            );
+                            process.exit(1);
                         }
+
+                        // forward until we find the right round
+                        RoundService.forwardProcess();
+                        round = RoundRepository.getCurrentRound();
                     }
 
                     BlockRepository.add(block);

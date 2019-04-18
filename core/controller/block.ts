@@ -17,7 +17,7 @@ import { ActionTypes } from 'core/util/actionTypes';
 import { IKeyPair } from 'shared/util/ed';
 import { getFirstSlotNumberInRound } from 'core/util/slot';
 import DelegateRepository from 'core/repository/delegate';
-import system from 'core/repository/system';
+import System from 'core/repository/system';
 
 interface BlockGenerateRequest {
     keyPair: IKeyPair;
@@ -70,7 +70,26 @@ class BlockController extends BaseController {
                 getLastSlotInRound(RoundRepository.getPrevRound());
 
             if (lastBlockInPrevRound >= blockSlot) {
-                await RoundService.backwardProcess();
+                if (System.synchronization) {
+                    let round = RoundRepository.getCurrentRound();
+                    const receivedBlockSlotNumber = SlotService.getSlotNumber(receivedBlock.createdAt);
+                    while (receivedBlockSlotNumber !== round.slots[receivedBlock.generatorPublicKey].slot) {
+                        if (getLastSlotInRound(round) < receivedBlockSlotNumber) {
+                            logger.error(
+                                `[Controller][Block][onReceiveBlock] Impossible to rollback round ` +
+                                `for received block with id: ${receivedBlock.id}, ` +
+                                `height: ${receivedBlock.height}`
+                            );
+                            process.exit(1);
+                        }
+
+                        // backward until we find the right round
+                        RoundService.backwardProcess();
+                        round = RoundRepository.getCurrentRound();
+                    }
+                } else {
+                    RoundService.backwardProcess();
+                }
             }
 
             const deleteLastBlockResponse = await BlockService.deleteLastBlock();
@@ -108,9 +127,24 @@ class BlockController extends BaseController {
                     RoundRepository.add(newRound);
                 } else if (
                     receivedBlockSlot > getLastSlotInRound(RoundRepository.getCurrentRound()) &&
-                    system.synchronization
+                    System.synchronization
                 ) {
-                    RoundService.forwardProcess();
+                    let round = RoundRepository.getCurrentRound();
+                    const receivedBlockSlotNumber = SlotService.getSlotNumber(receivedBlock.createdAt);
+                    while (receivedBlockSlotNumber !== round.slots[receivedBlock.generatorPublicKey].slot) {
+                        if (getLastSlotInRound(round) > receivedBlockSlotNumber) {
+                            logger.error(
+                                `[Controller][Block][onReceiveBlock] Impossible to build a round ` +
+                                `for received block with id: ${receivedBlock.id}, ` +
+                                `height: ${receivedBlock.height}`
+                            );
+                            process.exit(1);
+                        }
+
+                        // forward until we find the right round
+                        RoundService.forwardProcess();
+                        round = RoundRepository.getCurrentRound();
+                    }
                 }
 
                 const receiveResponse: ResponseEntity<void> = await BlockService.receiveBlock(receivedBlock);
@@ -124,7 +158,7 @@ class BlockController extends BaseController {
                     RoundService.forwardProcess();
                 }
             } else if (!SyncService.consensus) {
-                if (!system.synchronization) {
+                if (!System.synchronization) {
                     messageON('EMIT_SYNC_BLOCKS');
                 }
                 errors.push(`[Service][Block][onReceiveBlock] Invalid block`);

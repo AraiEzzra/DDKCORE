@@ -115,7 +115,7 @@ export class SyncService implements ISyncService {
 
         if (lastSlotInRound >= blockSlot) {
             logger.debug(`[Controller][Sync][rollback] round rollback`);
-            await RoundService.backwardProcess();
+            RoundService.backwardProcess();
         }
 
         await BlockService.deleteLastBlock();
