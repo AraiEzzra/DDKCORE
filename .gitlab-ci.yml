@@ -5,23 +5,21 @@ stages:
 manual_build_core:
   stage: build_core
   only:
-    - master
+    - autodeploy-gitlab-tags
   tags:
     - ddk-deploy
   script:
     - cd /root/DDK.Delegat.Install.Environment/
-    - docker rmi ddkoin/core:build -f
-    - ./build.tag.newcore.sh build master
+    - docker rmi ddkoin/core:$CI_COMMIT_TAG -f
+    - ./build.tag.newcore.sh $CI_COMMIT_TAG autodeploy-gitlab-tags
 
 
 updating:
  stage: start_core
  only:
-   - master
+   - autodeploy-gitlab-tags
  tags:
    - ddk-deploy
  script:
    - cd /root/DDK.Delegat.Install.Environment/
-   - ansible-playbook -i ./inventory.newcore.skctestnet.env --limit SKC-TESTBUILD-CORE ./books/stop_docker_clean_volume.yml
-   - ansible-playbook -i ./inventory.newcore.skctestnet.env --limit SKC-TESTBUILD-CORE ./books/clean_docker_image_core.yml
-   - ansible-playbook -i ./inventory.newcore.skctestnet.env --limit SKC-TESTBUILD-CORE ./books/start_build_docker-compose.yml
+   - docker images
