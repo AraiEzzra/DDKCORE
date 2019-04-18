@@ -14,7 +14,7 @@
     "server": "npm run server:core & npm run server:api",
     "server:api": "nodemon --max-old-space-size=8192 --watch dist/api/app.js dist/api/app.js",
     "server:core": "nodemon --max-old-space-size=8192 --watch dist/core/app.js dist/core/app.js",
-    "debug": "node --inspect=0.0.0.0:9229 app.js",
+    "debug:core": "nodemon --inspect=0.0.0.0:9229 --max-old-space-size=8192 --watch dist/core/app.js dist/core/app.js",
     "jsdoc": "jsdoc -c docs/conf.json --verbose --pedantic",
     "server-docs": "npm run jsdoc && http-server docs/jsdoc/",
     "build:api": "./node_modules/webpack/bin/webpack.js --env.service=api --progress --profile --colors --display-modules",

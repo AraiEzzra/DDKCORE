@@ -32,9 +32,6 @@ export type RawAsset = { [key: string]: any };
 export interface ITransactionRepository<T extends IAsset> {
     add(trs: Transaction<T>): Transaction<T>;
     delete(trs: Transaction<T>): DeletedTransactionId;
-    getAll(): Array<Transaction<T>>;
-    getByBlockIds(blockIds: Array<BlockId>): TransactionsByBlockResponse;
-    getById(trsId: TransactionId): Transaction<T>;
     isExist(trsId: TransactionId): boolean;
 }
 

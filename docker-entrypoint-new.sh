@@ -22,6 +22,10 @@ else
         npm run server:api
     fi
     if [ "$SERVICE" == "CORE" ]; then
-        npm run server:core
+        if [ "$MODE" == "DEBUG" ]; then
+            npm run debug:core
+        else
+            npm run server:core
+        fi
     fi
 fi
