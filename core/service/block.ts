@@ -402,7 +402,6 @@ class BlockService {
             const sender = AccountRepo.getByPublicKey(trs.senderPublicKey);
             trs.blockId = block.id;
             await TransactionDispatcher.apply(trs, sender);
-            TransactionRepo.add(trs);
         }
         if (errors.length) {
             return new ResponseEntity<void>({ errors: [...errors, 'applyBlock'] });

@@ -107,10 +107,12 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
 
     async apply(trs: Transaction<T>, sender: Account): Promise<void> {
         await TransactionPGRepo.saveOrUpdate(trs);
+        TransactionRepo.add(trs);
     }
 
     async undo(trs: Transaction<T>, sender: Account): Promise<void> {
         await TransactionPGRepo.deleteById(trs.id);
+        TransactionRepo.delete(trs);
     }
 
     calculateFee(trs: Transaction<T>, sender: Account): number {
