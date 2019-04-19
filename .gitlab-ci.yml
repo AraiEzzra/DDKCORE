@@ -37,6 +37,8 @@ PROD-generate_docker-compose:
     - tag=$(git describe --tags $(git rev-list --tags --max-count=1))
     - cd /root/DDK.Delegat.Install.Environment/
     - ./refresh_and_generate_new_core.sh ./inventory.newcore.prod.env 0.0.2 $tag mainnet
+    - cd /root/DDK.Delegat.Install.Environment/
+    - ansible-playbook -i ./inventory.newcore.prod.env --limit PROD-CORE ./books/update.docker.compose.yml
 
 DELEGATES-generate_docker-compose:
   stage: generate_docker-compose
@@ -48,3 +50,5 @@ DELEGATES-generate_docker-compose:
     - tag=$(git describe --tags $(git rev-list --tags --max-count=1))
     - cd /root/DDK.Delegat.Install.Environment/
     - ./refresh_and_generate_new_core.sh ./inventory.newcore.preprod.delegates.env 0.0.2 $tag testnet
+    - cd /root/DDK.Delegat.Install.Environment/
+    - ansible-playbook -i ./inventory.newcore.preprod.delegates.env ./books/update.docker.compose.yml
