@@ -1,5 +1,6 @@
 stages:
  - build_core
+ - deploy-PREPROD
  - generate_docker-compose
 
 build_image_tag:
@@ -11,6 +12,19 @@ build_image_tag:
   script:
     - cd /root/DDK.Delegat.Install.Environment/
     - ./build.tag.newcore.gitlab.sh
+
+PREPROD-deploy-imege-with-last-tag:
+  stage: deploy-PREPROD
+  only:
+    - tags
+  tags:
+    - ddk-deploy
+  script:
+    - cd /var/ddk.builds/data/DDKCORE/
+    - tag=$(git describe --tags $(git rev-list --tags --max-count=1))
+    - cd /root/DDK.Delegat.Install.Environment/
+    - ./refresh_and_generate_new_core.sh ./inventory.newcore.preprod.env 0.0.2 $tag development
+    - ansible-playbook -i ./inventory.newcore.preprod.env ./books/update.docker.compose.yml --limit SKC-TESTNET
 
 PROD-generate_docker-compose:
   stage: generate_docker-compose
