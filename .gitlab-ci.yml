@@ -24,6 +24,7 @@ PREPROD-deploy-imege-with-last-tag:
     - tag=$(git describe --tags $(git rev-list --tags --max-count=1))
     - cd /root/DDK.Delegat.Install.Environment/
     - ./refresh_and_generate_new_core.sh ./inventory.newcore.preprod.env 0.0.2 $tag development
+    - cd /root/DDK.Delegat.Install.Environment/
     - ansible-playbook -i ./inventory.newcore.preprod.env ./books/update.docker.compose.yml --limit SKC-TESTNET
 
 PROD-generate_docker-compose:
