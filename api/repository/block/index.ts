@@ -12,7 +12,8 @@ export type AllowedFilters = {
 class BlockPGRepository {
 
     async getOne(id: string): Promise<BlockModel> {
-        return SharedBlockPGRepository.deserialize(await db.oneOrNone(query.getBlock, { id }));
+        const block = await db.oneOrNone(query.getBlock, { id });
+        return block && SharedBlockPGRepository.deserialize(block);
     }
 
     async getMany(
