@@ -193,7 +193,6 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
             votes.reduce((acc: Array<string>, delegatePublicKey: string) => {
                 const targetAccount: Account = AccountRepo.getByPublicKey(delegatePublicKey);
                 targetAccount.delegate.votes--;
-                DelegateRepo.update(targetAccount.delegate);
                 acc.splice(acc.indexOf(delegatePublicKey), 1);
                 return acc;
             }, sender.votes);
@@ -201,7 +200,6 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
             votes.forEach((delegatePublicKey) => {
                 const targetAccount: Account = AccountRepo.getByPublicKey(delegatePublicKey);
                 targetAccount.delegate.votes++;
-                DelegateRepo.update(targetAccount.delegate);
             });
             sender.votes.push(...votes);
         }
@@ -231,14 +229,12 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
             votes.forEach((newVote) => {
                 const targetAccount: Account = AccountRepo.getByPublicKey(newVote);
                 targetAccount.delegate.votes++;
-                DelegateRepo.update(targetAccount.delegate);
             });
             sender.votes.push(...votes);
         } else {
             votes.reduce((acc: Array<string>, newVote: string) => {
                 const targetAccount: Account = AccountRepo.getByPublicKey(newVote);
                 targetAccount.delegate.votes--;
-                DelegateRepo.update(targetAccount.delegate);
                 acc.splice(acc.indexOf(newVote), 1);
                 return acc;
             }, sender.votes);

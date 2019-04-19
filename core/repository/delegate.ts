@@ -59,19 +59,6 @@ class DelegateRepository {
         }
     }
 
-    public update(delegate: Delegate) {
-        const presentedDelegate = this.memoryDelegates[delegate.account.publicKey];
-        if (!presentedDelegate) {
-            return;
-        }
-        const oldName = this.memoryDelegates[delegate.account.publicKey].username;
-        if (oldName !== delegate.username) {
-            this.usernames.delete(oldName);
-            this.usernames.add(delegate.username);
-        }
-        this.memoryDelegates[delegate.account.publicKey] = delegate;
-    }
-
     public getByPublicKey(publicKey: string): Delegate {
         return this.memoryDelegates[publicKey];
     }
