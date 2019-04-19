@@ -1,3 +1,5 @@
+import { Direction } from 'api/utils/common';
+
 export function shuffle(array: Array<any>): Array<any> {
     for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -16,4 +18,16 @@ export function toSnakeCase(str) {
     }
 
     return str.replace(/[A-Z]/g, upperToHyphenLower);
+}
+
+export function sortByKey(key: string, direction?: Direction): (a: any, b: any) => number {
+    return (a: { key: any } & any, b: { key: any } & any) => {
+        if (a[key] > b[key]) {
+            return direction === 'ASC' ? 1 : -1;
+        }
+        if (a[key] < b[key]) {
+            return direction === 'ASC' ? -1 : 1;
+        }
+        return 0;
+    };
 }
