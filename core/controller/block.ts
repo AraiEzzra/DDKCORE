@@ -80,7 +80,7 @@ class BlockController extends BaseController {
                                 `for received block with id: ${receivedBlock.id}, ` +
                                 `height: ${receivedBlock.height}`
                             );
-                            process.exit(1);
+                            break;
                         }
 
                         // backward until we find the right round
@@ -138,7 +138,7 @@ class BlockController extends BaseController {
                                 `for received block with id: ${receivedBlock.id}, ` +
                                 `height: ${receivedBlock.height}`
                             );
-                            process.exit(1);
+                            break;
                         }
 
                         // forward until we find the right round

@@ -102,7 +102,7 @@ class Loader {
                                 `[Loader] Impossible to build a round for block with id: ${block.id}, ` +
                                 `height: ${block.height}`
                             );
-                            process.exit(1);
+                            break;
                         }
 
                         // forward until we find the right round
