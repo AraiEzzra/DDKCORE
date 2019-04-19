@@ -9,12 +9,16 @@ import mainnetConstants from 'config/mainnet/constants';
 import developmentGenesisBlock from 'config/default/genesisBlock.json';
 import testnetGenesisBlock from 'config/testnet/genesisBlock.json';
 import mainnetGenesisBlock from 'config/mainnet/genesisBlock.json';
+import testConstants from 'config/test/constants';
+import testGenesisBlock from 'config/test/genesisBlock.json';
 import { BlockModel } from 'shared/model/block';
 
 const getConstantsByNodeEnv = (nodeEnv: string): IConstants => {
     switch (nodeEnv) {
         case 'development':
             return developmentConstants;
+        case 'test':
+            return testConstants;
         case 'testnet':
             return testnetConstants;
         case 'mainnet':
@@ -28,6 +32,8 @@ const getGenesisBlockByNodeEnv = (nodeEnv: string) => {
     switch (nodeEnv) {
         case 'development':
             return developmentGenesisBlock;
+        case 'test':
+            return testGenesisBlock;
         case 'testnet':
             return testnetGenesisBlock;
         case 'mainnet':
