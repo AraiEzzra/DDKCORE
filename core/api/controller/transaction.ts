@@ -1,6 +1,7 @@
 import { API } from 'core/api/util/decorators';
 import { Message2 } from 'shared/model/message';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
+import { getAddressByPublicKey } from 'shared/util/account';
 import { logger } from 'shared/util/logger';
 import TransactionRPCController from 'core/controller/transaction';
 import TransactionQueue from 'core/service/transactionQueue';
@@ -35,12 +36,18 @@ export class TransactionController {
             return new ResponseEntity({ errors: validateResult.errors });
         }
 
+        transaction.senderAddress = transaction.senderAddress
+            ? BigInt(transaction.senderAddress)
+            : getAddressByPublicKey(transaction.senderPublicKey);
+
         let sender = AccountRepo.getByAddress(transaction.senderAddress);
         if (!sender) {
-            AccountRepo.add({
+            sender = AccountRepo.add({
                 address: transaction.senderAddress,
                 publicKey: transaction.senderPublicKey
             });
+        } else {
+            sender.publicKey = transaction.senderPublicKey;
         }
 
         TransactionQueue.push(transaction);
