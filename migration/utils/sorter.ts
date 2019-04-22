@@ -6,6 +6,7 @@ const NOT_CORRECT_REFERRALS = 3305;
 type SerializedRegisterTransactions = Array<{ referrals: Array<string>, senderAddress: BigInt }>;
 
 export const sortRegisterTrs = (transactions: SerializedRegisterTransactions): SerializedRegisterTransactions => {
+    console.log('START sort trs!');
     const migratedAddresses = new Set<string>();
 
     transactions.sort((a, b) => {
@@ -45,5 +46,6 @@ export const sortRegisterTrs = (transactions: SerializedRegisterTransactions): S
 
     console.log('cleared notSortedTransactions: ', notSortedTransactions);
     console.log('cleared migratedAddresses: ', migratedAddresses);
+    console.log('FINISH sort trs');
     return sortedTransactions;
 };
