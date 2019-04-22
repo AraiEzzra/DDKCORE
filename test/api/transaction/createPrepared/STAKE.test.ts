@@ -9,50 +9,45 @@ describe('Test CREATE_PREPARED_TRANSACTION STAKE', () => {
 
     it('Positive', async () => {
         const REQUEST = {
-            headers: Fixture.getBaseHeaders(),
-            code: API_ACTION_TYPES.CREATE_PREPARED_TRANSACTION,
-            body: {
-                'createdAt': 103662553,
-                'senderPublicKey': '04b3e3318ad30573b8e78c7920f007ca88bbd9a13c2b708b56b705d872e7ebc0',
-                'senderAddress': '13866654931132093576',
+            headers: Fixture.getBaseHeaders(), code: API_ACTION_TYPES.CREATE_PREPARED_TRANSACTION, body: {
+                'createdAt': 0,
+                'senderPublicKey': 'ddef0a8a7fe290ca950fd74d83d31f4a32b014d0b675636cf6573cf434ef524f',
+                'senderAddress': '17720385936796370956',
                 'type': TransactionType.STAKE,
-                'salt': 'cf45b312af7aac3324b3432889442643',
+                'salt': '0c7757e8c51b71c5d89fa79e56d12232',
                 'asset': {
-                    'amount': 100000000,
-                    'startTime': 103662553,
+                    'amount': 10000000000,
+                    'startTime': 104013582,
                     'startVoteCount': 0,
-                    'airdropReward': { 'sponsors': [['4995063339468361088', 10000000]] }
+                    'airdropReward': {
+                        'sponsors': []
+                    }
                 },
-                'fee': 10000,
-                'signature': '3c18f669619ea46d15feab827aa2aa6d149700c56d3709ba7b79545d0e2cedb6b2a868c8db373aba6f' +
-                    '3d69804fb5d756871207aa8c4bb257cf2eaca53b861e00',
-                'id': '4b2bc36b8242acc65bdf60c906532dd7f7c77024b300db6ea8c209de72ac3917'
+                'fee': 1000000,
+                'signature': '0543484362f52200fed35ab7eb99a4cc752bcad96e244072fe46dc2cb05a59bccd0e78d18cd09ef6e76' +
+                    '223a8dd2dea19bfa4eff0495900aad1dcb4a9d0f3460e',
+                'id': '01d5ae1df9973595e4a8394ce97f71e7f5eccb87ccdb53ed8f58b714cca0386a'
             }
         };
 
         const SUCCESS = {
+            'id': '01d5ae1df9973595e4a8394ce97f71e7f5eccb87ccdb53ed8f58b714cca0386a',
             'type': TransactionType.STAKE,
-            'createdAt': 103662553,
-            'senderPublicKey': '04b3e3318ad30573b8e78c7920f007ca88bbd9a13c2b708b56b705d872e7ebc0',
-            'senderAddress': '13866654931132093576',
-            'salt': 'cf45b312af7aac3324b3432889442643',
+            'createdAt': 0,
+            'senderPublicKey': 'ddef0a8a7fe290ca950fd74d83d31f4a32b014d0b675636cf6573cf434ef524f',
+            'senderAddress': '17720385936796370956',
+            'signature': '0543484362f52200fed35ab7eb99a4cc752bcad96e244072fe46dc2cb05a59bccd0e78d18cd09ef6e76223a8dd' +
+                '2dea19bfa4eff0495900aad1dcb4a9d0f3460e',
+            'fee': 1000000,
+            'salt': '0c7757e8c51b71c5d89fa79e56d12232',
             'asset': {
-                'amount': 100000000,
-                'startTime': 103662553,
+                'amount': 10000000000,
+                'startTime': 104013582,
                 'startVoteCount': 0,
                 'airdropReward': {
-                    'sponsors': [
-                        [
-                            '4995063339468361088',
-                            10000000
-                        ]
-                    ]
+                    'sponsors': []
                 }
-            },
-            'fee': 10000,
-            'signature': '3c18f669619ea46d15feab827aa2aa6d149700c56d3709ba7b79545d0e2cedb6b2a868c8db' +
-                '373aba6f3d69804fb5d756871207aa8c4bb257cf2eaca53b861e00',
-            'id': '4b2bc36b8242acc65bdf60c906532dd7f7c77024b300db6ea8c209de72ac3917'
+            }
         };
 
         const response = await socketRequest(REQUEST);
@@ -64,9 +59,7 @@ describe('Test CREATE_PREPARED_TRANSACTION STAKE', () => {
     it('Negative', async () => {
 
         const REQUEST = {
-            headers: Fixture.getBaseHeaders(),
-            code: API_ACTION_TYPES.CREATE_PREPARED_TRANSACTION,
-            body: {
+            headers: Fixture.getBaseHeaders(), code: API_ACTION_TYPES.CREATE_PREPARED_TRANSACTION, body: {
                 'type': TransactionType.STAKE
             }
         };

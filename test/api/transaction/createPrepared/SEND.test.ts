@@ -9,36 +9,37 @@ describe('Test CREATE_PREPARED_TRANSACTION SEND', () => {
 
     it('Positive', async () => {
         const REQUEST = {
-            headers: Fixture.getBaseHeaders(),
-            code: API_ACTION_TYPES.CREATE_PREPARED_TRANSACTION,
-            body: {
-                'createdAt': 103758007,
-                'senderPublicKey': 'f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2',
-                'senderAddress': '4995063339468361088',
+            headers: Fixture.getBaseHeaders(), code: API_ACTION_TYPES.CREATE_PREPARED_TRANSACTION, body: {
+                'createdAt': 0,
+                'senderPublicKey': 'ddef0a8a7fe290ca950fd74d83d31f4a32b014d0b675636cf6573cf434ef524f',
+                'senderAddress': '17720385936796370956',
                 'type': TransactionType.SEND,
-                'salt': 'f2c29354024c7dcbda111057cd8553ec',
+                'salt': '97458fd644164a2e71f0312fbc15db50',
                 'asset': {
-                    'recipientAddress': '7897332094363171058',
-                    'amount': 1000000000
+                    'recipientAddress': '4995063339468361088',
+                    'amount': 10000000000
                 },
-                'fee': 100000,
-                'signature': '15a91453e38c6807e1f060c9e6f8b1cad45a2f1a6af7349d129a3f43d84b3ae7d2e7f0ecd3e5fe6c14c51' +
-                    '83642f661b69119201bacd10594a6a4d4b6cada6801',
-                'id': '30a10d9c9352d2b554f951689499adc6f2baf7689faea6b776e55b173094f4a5'
+                'fee': 1000000,
+                'signature': '1e61ae799ebbc98f87600d6db8a26031a414297d3a0f5aa7c4c1325b2b8768a0d861e5730ea4acfe5e92fe' +
+                    '78740935e8a16dce5397f844e9a7c9c7129e470208',
+                'id': '75c75b630e214b75df80988dfe0bc837dd08d58076cae41f8dd901df9f1c59a9'
             }
         };
 
         const SUCCESS = {
-            'id': '30a10d9c9352d2b554f951689499adc6f2baf7689faea6b776e55b173094f4a5',
+            'id': '75c75b630e214b75df80988dfe0bc837dd08d58076cae41f8dd901df9f1c59a9',
             'type': TransactionType.SEND,
-            'createdAt': 103758007,
-            'senderPublicKey': 'f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2',
-            'senderAddress': '4995063339468361088',
-            'signature': '15a91453e38c6807e1f060c9e6f8b1cad45a2f1a6af7349d129a3f43d84b3ae7d2e7f0ecd3e5fe6c14c51836' +
-                '42f661b69119201bacd10594a6a4d4b6cada6801',
-            'fee': 100000,
-            'salt': 'f2c29354024c7dcbda111057cd8553ec',
-            'asset': { 'recipientAddress': '7897332094363171058', 'amount': 1000000000 }
+            'createdAt': 0,
+            'senderPublicKey': 'ddef0a8a7fe290ca950fd74d83d31f4a32b014d0b675636cf6573cf434ef524f',
+            'senderAddress': '17720385936796370956',
+            'signature': '1e61ae799ebbc98f87600d6db8a26031a414297d3a0f5aa7c4c1325b2b8768a0d861e5730ea4acfe5e92fe7874' +
+                '0935e8a16dce5397f844e9a7c9c7129e470208',
+            'fee': 1000000,
+            'salt': '97458fd644164a2e71f0312fbc15db50',
+            'asset': {
+                'recipientAddress': '4995063339468361088',
+                'amount': 10000000000
+            }
         };
 
         const response = await socketRequest(REQUEST);
@@ -50,9 +51,7 @@ describe('Test CREATE_PREPARED_TRANSACTION SEND', () => {
     it('Negative', async () => {
 
         const REQUEST = {
-            headers: Fixture.getBaseHeaders(),
-            code: API_ACTION_TYPES.CREATE_PREPARED_TRANSACTION,
-            body: {
+            headers: Fixture.getBaseHeaders(), code: API_ACTION_TYPES.CREATE_PREPARED_TRANSACTION, body: {
                 'type': TransactionType.SEND
             }
         };

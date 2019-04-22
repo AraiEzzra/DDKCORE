@@ -14,20 +14,20 @@ describe('Test CREATE_TRANSACTION STAKE', () => {
             body: {
                 'trs': {
                     'type': TransactionType.STAKE,
-                    'senderPublicKey': 'b4483a6b0677cda5e1fd6e508385ee654970db60e8c4c60ba2560c377e884527',
-                    'senderAddress': '11911485691700170025',
+                    'senderPublicKey': 'ddef0a8a7fe290ca950fd74d83d31f4a32b014d0b675636cf6573cf434ef524f',
+                    'senderAddress': '17720385936796370956',
                     'asset': {
                         'amount': 100000000
                     }
                 },
-                'secret': 'lumber network degree concert shadow protect violin aim scorpion clap busy plunge'
+                'secret': 'region again shield depart fashion token ecology enhance alarm rail choice garlic'
             }
         };
 
         const SUCCESS = {
             'type': TransactionType.STAKE,
-            'senderPublicKey': 'b4483a6b0677cda5e1fd6e508385ee654970db60e8c4c60ba2560c377e884527',
-            'senderAddress': '11911485691700170025',
+            'senderPublicKey': 'ddef0a8a7fe290ca950fd74d83d31f4a32b014d0b675636cf6573cf434ef524f',
+            'senderAddress': '17720385936796370956',
             'fee': 10000,
             'asset': {
                 'amount': 100000000,

@@ -12,36 +12,38 @@ describe('Test CREATE_PREPARED_TRANSACTION SIGNATURE', () => {
             headers: Fixture.getBaseHeaders(),
             code: API_ACTION_TYPES.CREATE_PREPARED_TRANSACTION,
             body: {
-                'createdAt': 103680787,
-                'senderPublicKey': 'f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2',
-                'senderAddress': '4995063339468361088',
+                'createdAt': 0,
+                'senderPublicKey': 'dfa3f8f1360a220ea7b8b68b791d25e7169aaaa2624fbdc4dfbaa6ca7999136f',
+                'senderAddress': '1445661318589395015',
                 'type': TransactionType.SIGNATURE,
-                'salt': 'c4e0c6a35cbf7f1dc3f91a176c687250',
+                'salt': '0b19affd71faf8987dbb05c5911bab85',
                 'asset': {
-                    'publicKey': '74832421fdd0023c33ba323ae2618e5651e73c0463130eb31912c158fb85d744'
+                    'publicKey': '27eb63b7630cbcc5e5ec6612f18e6156a4d867969c1dec53ddbe9487ee6991a4'
                 },
                 'fee': 1000000,
-                'signature': '03f5469dadbc841363b7f4ed24db446ec4cfff757dc389c811378c87e170177f5c08acaa84c9f5ff9' +
-                    'a1bd74142b2b750026bfb127d1098bec109b142dd70dd0f',
-                'secondSignature': '5caf9d53a11122c9ebef20f2df63574a495aca013943e7c7ec32ccf2b61cd1e09315d04fd07d2' +
-                    'ebe93a26bb2fb04626724ec4a9ed67e982b7800637d450eee02',
-                'id': 'e94b19d4036296c422e98040de3d22db4161786217c557feb3e06a4809320d3c'
+                'signature': '6fc06248ce91d28b2101120ec0788ab8d463d87e4635f2aea382cb2e45af572e6d2c5d8ff82a70705a5cbf' +
+                    '0a4dca3c6cddb97910f715f74479a5249cb4549c09',
+                'secondSignature': '759e2c23520165fd680b2ffaaf6e4fc6dee537ac2ec9969ac52e9a4f8a20a22c680803da7e8ffb99' +
+                    'ea1be7e46e0235d8eeaffc7e790798af8f79902652624c03',
+                'id': '162320e5590716ffeec4d3cc30915f3b26fac5f218ca431106c944e92e8cb713'
             }
         };
 
         const SUCCESS = {
-            'fee': 1000000,
-            'senderAddress': '4995063339468361088',
-            'id': 'e94b19d4036296c422e98040de3d22db4161786217c557feb3e06a4809320d3c',
+            'id': '162320e5590716ffeec4d3cc30915f3b26fac5f218ca431106c944e92e8cb713',
             'type': TransactionType.SIGNATURE,
-            'createdAt': 103680787,
-            'senderPublicKey': 'f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2',
-            'signature': '03f5469dadbc841363b7f4ed24db446ec4cfff757dc389c811378c87e170177f5c08acaa84c9f5ff9a1bd' +
-                '74142b2b750026bfb127d1098bec109b142dd70dd0f',
-            'secondSignature': '5caf9d53a11122c9ebef20f2df63574a495aca013943e7c7ec32ccf2b61cd1e09315d04fd07d2ebe93a2' +
-                '6bb2fb04626724ec4a9ed67e982b7800637d450eee02',
-            'salt': 'c4e0c6a35cbf7f1dc3f91a176c687250',
-            'asset': { 'publicKey': '74832421fdd0023c33ba323ae2618e5651e73c0463130eb31912c158fb85d744' }
+            'createdAt': 0,
+            'senderPublicKey': 'dfa3f8f1360a220ea7b8b68b791d25e7169aaaa2624fbdc4dfbaa6ca7999136f',
+            'senderAddress': '1445661318589395015',
+            'signature': '6fc06248ce91d28b2101120ec0788ab8d463d87e4635f2aea382cb2e45af572e6d2c5d8ff82a70705a5cbf0a4dc' +
+                'a3c6cddb97910f715f74479a5249cb4549c09',
+            'secondSignature': '759e2c23520165fd680b2ffaaf6e4fc6dee537ac2ec9969ac52e9a4f8a20a22c680803da7e8ffb99ea1be' +
+                '7e46e0235d8eeaffc7e790798af8f79902652624c03',
+            'fee': 1000000,
+            'salt': '0b19affd71faf8987dbb05c5911bab85',
+            'asset': {
+                'publicKey': '27eb63b7630cbcc5e5ec6612f18e6156a4d867969c1dec53ddbe9487ee6991a4'
+            }
         };
 
         const response = await socketRequest(REQUEST);

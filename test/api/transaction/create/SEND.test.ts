@@ -14,20 +14,26 @@ describe('Test CREATE_TRANSACTION SEND', () => {
             body: {
                 'trs': {
                     'type': TransactionType.SEND,
-                    'senderPublicKey': 'f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2',
-                    'senderAddress': '4995063339468361088',
-                    'asset': { 'recipientAddress': '7897332094363171058', 'amount': 100000000 }
+                    'senderPublicKey': 'ddef0a8a7fe290ca950fd74d83d31f4a32b014d0b675636cf6573cf434ef524f',
+                    'senderAddress': '17720385936796370956',
+                    'asset': {
+                        'recipientAddress': '4995063339468361088',
+                        'amount': 10000000000
+                    }
                 },
-                'secret': 'hen worry two thank unfair salmon smile oven gospel grab latin reason'
+                'secret': 'region again shield depart fashion token ecology enhance alarm rail choice garlic'
             }
         };
 
         const SUCCESS = {
             'type': TransactionType.SEND,
-            'senderPublicKey': 'f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2',
-            'senderAddress': '4995063339468361088',
-            'fee': 10000,
-            'asset': { 'recipientAddress': '7897332094363171058', 'amount': 100000000 }
+            'senderPublicKey': 'ddef0a8a7fe290ca950fd74d83d31f4a32b014d0b675636cf6573cf434ef524f',
+            'senderAddress': '17720385936796370956',
+            'fee': 1000000,
+            'asset': {
+                'recipientAddress': '4995063339468361088',
+                'amount': 10000000000
+            }
         };
 
         const response = await socketRequest(REQUEST);
