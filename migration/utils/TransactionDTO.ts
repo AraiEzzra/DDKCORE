@@ -10,6 +10,7 @@ export class TransactionDTO {
     createdAt?: Timestamp;
     salt?: string;
     relay?: number;
+    secondSignature?: string;
     asset?: IAsset;
 
     constructor(data: TransactionModel<IAsset>) {
@@ -20,6 +21,7 @@ export class TransactionDTO {
         this.signature = data.signature;
         this.createdAt = Number(data.createdAt);
         this.salt = data.salt;
+        this.secondSignature = data.secondSignature || '';
         this.asset = data.asset;
     }
 }

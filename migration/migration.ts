@@ -36,6 +36,19 @@ class Basket {
     }
 }
 
+const allSecretsData: any = fs.readFileSync('./secrets.json');
+
+// TODO need default secret
+const DEFAULT_KEY_PAIR_FOR_TRANSACTION: IKeyPair = getKeyPair(
+    allSecretsData.defaultSecretForTransaction
+);
+// TODO need default secret for second signature
+const DEFAULT_KEY_PAIR_SECOND_SIGNATURE: IKeyPair = getKeyPair(
+    allSecretsData.defaultSecretForSecondSignature
+);
+// TODO need secrets all delegates
+const DELEGATES_SECRETS: Array<string> = allSecretsData.delegatesSecrets;
+
 const PREPARE_TRANSACTIONS_AND_WRITE_TO_DB_AS_BASKETS = true;
 const START_CREATE_ROUNDS_AND_BLOCKS = true;
 
@@ -54,24 +67,16 @@ const SENDER_PUBLIC_KEY_FOR_NEGATIVE_BALANCE_ACCOUNTS =
 const filePathNewTransactions = './transactionsNew_19_04_2019_T13_30.csv';
 const filePathAddressesWithNegativeBalance = './addressesWithNegativeBalance.csv';
 
-// TODO need default secret
-const DEFAULT_KEY_PAIR: IKeyPair = getKeyPair(
-    ''
-);
-
-// TODO need secrets all delegates
-const delegatesSecrets = [
-];
-
 const publicKeyToKeyPairKeyMap: Map<string, IKeyPair> = new Map();
 
-delegatesSecrets.forEach((secret: string) => {
+DELEGATES_SECRETS.forEach((secret: string) => {
     const keyPair: IKeyPair = getKeyPair(secret);
     publicKeyToKeyPairKeyMap.set(keyPair.publicKey.toString('hex'), keyPair)
 });
 
 const correctTransactions: Array<TransactionModel<IAsset>> = [];
 const basketsWithTransactionsForBlocks: Array<Basket> = [];
+const senderPublicKeyFromSecondSignatureTrsSet: Set<string> = new Set();
 
 let accounts: Map<number, number> = new Map();
 let countForUsedBasket = 0;
@@ -216,6 +221,9 @@ async function startPrepareTransactionsForMigration() {
                             amount: Number(transaction.amount)
                         }
                     });
+                    if (senderPublicKeyFromSecondSignatureTrsSet.has(correctTransaction.senderPublicKey)){
+                        correctTransaction.secondSignature = DEFAULT_KEY_PAIR_SECOND_SIGNATURE.publicKey.toString()
+                    }
                     break;
                 case TransactionType.SIGNATURE:
                     correctTransaction = new TransactionDTO({
@@ -224,6 +232,7 @@ async function startPrepareTransactionsForMigration() {
                             publicKey: transaction.secondPublicKey
                         }
                     });
+                    senderPublicKeyFromSecondSignatureTrsSet.add(correctTransaction.senderPublicKey);
                     break;
                 case TransactionType.DELEGATE:
                     correctTransaction = new TransactionDTO({
@@ -232,9 +241,11 @@ async function startPrepareTransactionsForMigration() {
                             username: transaction.username
                         }
                     });
+                    if (senderPublicKeyFromSecondSignatureTrsSet.has(correctTransaction.senderPublicKey)){
+                        correctTransaction.secondSignature = DEFAULT_KEY_PAIR_SECOND_SIGNATURE.publicKey.toString()
+                    }
                     break;
                 case TransactionType.STAKE:
-                    // const oldTransaction: any = oldTrs.get(transaction.id);
                     correctTransaction = new TransactionDTO({
                         ...transaction,
                         asset: {
@@ -252,9 +263,11 @@ async function startPrepareTransactionsForMigration() {
                                 }
                             });
                     }
+                    if (senderPublicKeyFromSecondSignatureTrsSet.has(correctTransaction.senderPublicKey)){
+                        correctTransaction.secondSignature = DEFAULT_KEY_PAIR_SECOND_SIGNATURE.publicKey.toString()
+                    }
                     break;
                 case TransactionType.VOTE:
-
                     const votes: Array<string> = transaction.votes.split(',') || [];
                     correctTransaction = new TransactionDTO({
                         ...transaction,
@@ -270,6 +283,9 @@ async function startPrepareTransactionsForMigration() {
                                 reward: Number(transaction.reward),
                                 airdropReward: JSON.stringify(airdropReward.sponsors).replace(/DDK/ig, ''),
                             });
+                    }
+                    if (senderPublicKeyFromSecondSignatureTrsSet.has(correctTransaction.senderPublicKey)){
+                        correctTransaction.secondSignature = DEFAULT_KEY_PAIR_SECOND_SIGNATURE.publicKey.toString()
                     }
                     break;
                 default:
@@ -392,7 +408,7 @@ async function createFirstRoundAndBlocksForThisRound() {
         let transactions:Array<TransactionModel<IAsset>> = [];
         if (startedCreateFilledBlock) {
             transactions = basketsWithTransactionsForBlocks[countForUsedBasket].transactions.map(
-                trs => TransactionService.create(trs, DEFAULT_KEY_PAIR).data
+                trs => TransactionService.create(trs, DEFAULT_KEY_PAIR_FOR_TRANSACTION).data
             );
         }
 
@@ -452,7 +468,7 @@ async function createNextRoundsAndBlocks() {
                 slot.slot === newBlockTimestamp / 10
             )[0]);
 
-            const transactions = basket.transactions.map(trs => TransactionService.create(trs, DEFAULT_KEY_PAIR).data);
+            const transactions = basket.transactions.map(trs => TransactionService.create(trs, DEFAULT_KEY_PAIR_FOR_TRANSACTION).data);
             const block: Block = await BlockService.create({
                 keyPair,
                 timestamp: newBlockTimestamp,
@@ -556,7 +572,7 @@ async function addMoneyForNegativeBalanceAccounts() {
     }
 
     const additionalSendTransactions: Array<Transaction<IAsset>> = [];
-    const keyPair: IKeyPair = DEFAULT_KEY_PAIR;
+    const keyPair: IKeyPair = DEFAULT_KEY_PAIR_FOR_TRANSACTION;
     accounts.forEach(((value, key) => {
         const additionalSendTransaction = new TransactionDTO({
             type: TransactionType.SEND,
