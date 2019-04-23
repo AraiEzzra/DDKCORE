@@ -1,5 +1,4 @@
 import crypto from 'crypto';
-import cryptoBrowserify from 'crypto-browserify';
 
 import {
     IAsset,
@@ -107,10 +106,12 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
 
     async apply(trs: Transaction<T>, sender: Account): Promise<void> {
         await TransactionPGRepo.saveOrUpdate(trs);
+        TransactionRepo.add(trs);
     }
 
     async undo(trs: Transaction<T>, sender: Account): Promise<void> {
         await TransactionPGRepo.deleteById(trs.id);
+        TransactionRepo.delete(trs);
     }
 
     calculateFee(trs: Transaction<T>, sender: Account): number {
@@ -228,7 +229,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             senderPublicKey: sender.publicKey,
             senderAddress: sender.address,
             type: data.type,
-            salt: cryptoBrowserify.randomBytes(SALT_LENGTH).toString('hex'),
+            salt: crypto.randomBytes(SALT_LENGTH).toString('hex')
         });
 
         const service = getTransactionServiceByType(data.type);

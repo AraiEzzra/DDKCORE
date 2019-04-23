@@ -1,4 +1,4 @@
-import genesisBlock from 'config/default/genesisBlock.json';
+import genesisBlock from 'config/test/genesisBlock.json';
 import { TransactionType } from 'shared/model/transaction';
 
 const transactions: any = genesisBlock.transactions;

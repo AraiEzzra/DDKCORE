@@ -20,11 +20,13 @@ interface IRoundService {
 
     restore(): void;
 
-    forwardProcess(): void;
+    forwardProcess(): Round;
 
-    backwardProcess(): void;
+    backwardProcess(): Round;
 
     processReward(round: Round, undo?: Boolean): void;
+
+    rollbackToLastBlock(): Round;
 }
 
 class RoundService implements IRoundService {
@@ -125,7 +127,7 @@ class RoundService implements IRoundService {
         return newCurrentRound;
     }
 
-    public forwardProcess(): void {
+    public forwardProcess(): Round {
         resetTaskON(ActionTypes.BLOCK_GENERATE);
         resetTaskON(ActionTypes.ROUND_FINISH);
 
@@ -139,15 +141,46 @@ class RoundService implements IRoundService {
             this.createBlockGenerateTask();
             this.createRoundFinishTask();
         }
+        return newRound;
     }
 
-    public backwardProcess(): void {
+    public backwardProcess(): Round {
         resetTaskON(ActionTypes.BLOCK_GENERATE);
         resetTaskON(ActionTypes.ROUND_FINISH);
         if (RoundRepository.getPrevRound()) {
             RoundRepository.deleteLastRound();
             this.processReward(RoundRepository.getCurrentRound(), true);
         }
+        return RoundRepository.getCurrentRound();
+    }
+
+    public rollbackToLastBlock = (): Round => {
+        let round = RoundRepository.getCurrentRound();
+        if (!round) {
+            return null;
+        }
+
+        const lastBlock = BlockRepository.getLastBlock();
+        const lastBlockSlot = SlotService.getSlotNumber(lastBlock.createdAt);
+
+        while (round.slots[lastBlock.generatorPublicKey].slot !== lastBlockSlot) {
+            if (getLastSlotInRound(round) < lastBlockSlot) {
+                logger.error(
+                    `${this.logPrefix}[rollbackToLastBlock] Impossible to rollback round ` +
+                    `to block with id: ${lastBlock.id}, ` +
+                    `height: ${lastBlock.height}`
+                );
+                break;
+            }
+            logger.debug(
+                `${this.logPrefix}[rollbackToLastBlock] round rollback ${JSON.stringify(round)}`
+            );
+            round = this.backwardProcess();
+        }
+
+        logger.info(`${this.logPrefix}[rollbackToLastBlock]: restored round ${JSON.stringify(round)}`);
+
+        return round;
     }
 }
 

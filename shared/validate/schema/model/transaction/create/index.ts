@@ -1,9 +1,9 @@
-import { ASSET_TRS_SEND } from 'shared/validate/schema/model/transaction/create/send';
-import { ASSET_TRS_REGISTER } from 'shared/validate/schema/model/transaction/create/register';
-import { ASSET_TRS_SIGNATURE } from 'shared/validate/schema/model/transaction/create/signature';
-import { ASSET_TRS_DELEGATE } from 'shared/validate/schema/model/transaction/create/delegate';
-import { ASSET_TRS_STAKE } from 'shared/validate/schema/model/transaction/create/stake';
-import { ASSET_TRS_VOTE } from 'shared/validate/schema/model/transaction/create/vote';
+import { ASSET_TRS_SEND } from 'shared/validate/schema/model/transaction/create/asset/send';
+import { ASSET_TRS_REGISTER } from 'shared/validate/schema/model/transaction/create/asset/register';
+import { ASSET_TRS_SIGNATURE } from 'shared/validate/schema/model/transaction/create/asset/signature';
+import { ASSET_TRS_DELEGATE } from 'shared/validate/schema/model/transaction/create/asset/delegate';
+import { ASSET_TRS_STAKE } from 'shared/validate/schema/model/transaction/create/asset/stake';
+import { ASSET_TRS_VOTE } from 'shared/validate/schema/model/transaction/create/asset/vote';
 import { TransactionType } from 'shared/model/transaction';
 import { ALLOWED_TRANSACTION_TYPES_ARRAY } from 'shared/validate/schema/common';
 

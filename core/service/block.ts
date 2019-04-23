@@ -19,20 +19,17 @@ import TransactionPool from 'core/service/transactionPool';
 import TransactionRepo from 'core/repository/transaction/';
 import SlotService from 'core/service/slot';
 import RoundRepository from 'core/repository/round';
-import RoundService from 'core/service/round';
 import { transactionSortFunc } from 'core/util/transaction';
 import blockSchema from 'core/schema/block';
 import { ResponseEntity } from 'shared/model/response';
-import { messageON } from 'shared/util/bus';
 import config from 'shared/config';
 import SyncService from 'core/service/sync';
 import { getAddressByPublicKey } from 'shared/util/account';
 import SocketMiddleware from 'core/api/middleware/socket';
 import { EVENT_TYPES } from 'shared/driver/socket/codes';
 import { MIN_ROUND_BLOCK } from 'core/util/block';
-import { getFirstSlotNumberInRound } from 'core/util/slot';
-import DelegateRepository from 'core/repository/delegate';
 import { IKeyPair, ed } from 'shared/util/ed';
+import System from 'core/repository/system';
 
 const validator: Validator = new ZSchema({});
 
@@ -241,7 +238,7 @@ class BlockService {
             let bytes: Buffer;
 
             try {
-                logger.debug(`Transaction ${JSON.stringify(trs)}`);
+                // logger.debug(`Transaction ${JSON.stringify(trs)}`);
                 bytes = TransactionDispatcher.getBytes(trs);
                 logger.trace(`Bytes ${JSON.stringify(bytes)}`);
             } catch (e) {
@@ -405,7 +402,6 @@ class BlockService {
             const sender = AccountRepo.getByPublicKey(trs.senderPublicKey);
             trs.blockId = block.id;
             await TransactionDispatcher.apply(trs, sender);
-            TransactionRepo.add(trs);
         }
         if (errors.length) {
             return new ResponseEntity<void>({ errors: [...errors, 'applyBlock'] });
@@ -420,7 +416,7 @@ class BlockService {
             `applied with ${trsLength} transactions`
         );
 
-        if (broadcast) {
+        if (broadcast && !System.synchronization) {
             SyncService.sendNewBlock(block);
 
             const serializedBlock: Block & { transactions: any } = block.getCopy();

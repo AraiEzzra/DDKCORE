@@ -1,5 +1,6 @@
 import { HEADER_MESSAGE, SCHEMA_MESSAGE } from 'shared/validate/schema/message';
 import { CREATE_TRS_SCHEMAS } from 'shared/validate/schema/model/transaction/create';
+import { CREATE_PREPARED_TRS_SCHEMAS } from 'shared/validate/schema/model/transaction/createPrepared';
 import { SCHEMAS_TRANSACTIONS } from 'shared/validate/schema/model/transaction/getTransaction';
 import { SCHEMAS_ACCOUNTS } from 'shared/validate/schema/model/account';
 import { SCHEMAS_DELEGATES } from 'shared/validate/schema/model/delegate';
@@ -14,6 +15,7 @@ function flattenDeep(arr1) {
 
 export const ALL_SCHEMAS = flattenDeep([
     CREATE_TRS_SCHEMAS,
+    CREATE_PREPARED_TRS_SCHEMAS,
     HEADER_MESSAGE,
 
     SCHEMAS_TRANSACTIONS,

@@ -51,6 +51,7 @@ export class SyncController extends BaseController {
         }
         System.synchronization = true;
         logger.debug(`${LOG_PREFIX}[startSyncBlocks]: start sync with consensus ${SyncService.getConsensus()}%`);
+        RoundService.rollbackToLastBlock();
 
         // TODO: change sync timeout logic
         let needDelay = false;

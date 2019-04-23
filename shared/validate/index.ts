@@ -32,6 +32,9 @@ export const validate = () => {
                 if (schemaID === API_ACTION_TYPES.CREATE_TRANSACTION && message.body && message.body.trs) {
                     schemaID = `CREATE_TRANSACTION.${message.body.trs.type}`;
                 }
+                if (schemaID === API_ACTION_TYPES.CREATE_PREPARED_TRANSACTION && message.body) {
+                    schemaID = `CREATE_PREPARED_TRANSACTION.${message.body.type}`;
+                }
                 validateData(MESSAGE(schemaID), message, (err: Validator.SchemaError, isValid: boolean) => {
                     if (!isValid) {
                         message.body = new ResponseEntity({

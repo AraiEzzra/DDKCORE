@@ -1,12 +1,13 @@
-import {Address, Account, Stake} from 'shared/model/account';
+import { Address, Account, Stake } from 'shared/model/account';
 import { logger } from 'shared/util/logger';
 import config from 'shared/config';
 import BlockRepo from 'core/repository/block';
-import {IAirdropAsset, IAssetStake, IAssetVote, Transaction, TransactionType} from 'shared/model/transaction';
+import { IAirdropAsset, IAssetStake, IAssetVote, Transaction, TransactionType } from 'shared/model/transaction';
 import AccountRepo from 'core/repository/account';
 import { ResponseEntity } from 'shared/model/response';
 import { TOTAL_PERCENTAGE, MONEY_FACTOR } from 'core/util/const';
 import { isEqualMaps } from 'core/util/common';
+import SlotService from 'core/service/slot';
 
 class StakeReward {
     private readonly milestones = config.CONSTANTS.FROZE.REWARDS.MILESTONES;
@@ -29,8 +30,10 @@ class StakeReward {
 
 const stakeReward = new StakeReward();
 
-export function calculateTotalRewardAndUnstake(sender: Account, isDownVote: boolean)
-        : { reward: number, unstake: number} {
+export const calculateTotalRewardAndUnstake = (
+    sender: Account,
+    isDownVote: boolean,
+): { reward: number, unstake: number } => {
     let reward: number = 0;
     let unstakeAmount: number = 0;
     if (isDownVote) {
@@ -39,13 +42,15 @@ export function calculateTotalRewardAndUnstake(sender: Account, isDownVote: bool
     const freezeOrders: Array<Stake> = sender.stakes;
     logger.debug(`[Frozen][calculateTotalRewardAndUnstake] freezeOrders: ${JSON.stringify(freezeOrders)}`);
 
-    freezeOrders.forEach((order: Stake) => {
-        if (order.voteCount > 0 && (order.voteCount + 1) % config.CONSTANTS.FROZE.REWARD_VOTE_COUNT === 0) {
-            const blockHeight: number = BlockRepo.getLastBlock().height;
-            const stakeRewardPercent: number = stakeReward.calcReward(blockHeight);
-            reward += (order.amount * stakeRewardPercent) / TOTAL_PERCENTAGE;
-        }
-    });
+    freezeOrders
+        .filter(stake => SlotService.getTime() > stake.nextVoteMilestone)
+        .forEach((stake: Stake) => {
+            if (stake.voteCount > 0 && (stake.voteCount + 1) % config.CONSTANTS.FROZE.REWARD_VOTE_COUNT === 0) {
+                const blockHeight: number = BlockRepo.getLastBlock().height;
+                const stakeRewardPercent: number = stakeReward.calcReward(blockHeight);
+                reward += (stake.amount * stakeRewardPercent) / TOTAL_PERCENTAGE;
+            }
+        });
     const readyToUnstakeOrders = freezeOrders.filter(
         o => (o.voteCount + 1) === config.CONSTANTS.FROZE.UNSTAKE_VOTE_COUNT
     );
@@ -54,7 +59,7 @@ export function calculateTotalRewardAndUnstake(sender: Account, isDownVote: bool
         unstakeAmount += order.amount;
     });
     return { reward, unstake: unstakeAmount };
-}
+};
 
 export const getAirdropReward = (
     sender: Account,
@@ -70,6 +75,7 @@ export const getAirdropReward = (
     }
 
     const availableAirdropBalance: number = AccountRepo.getByAddress(config.CONSTANTS.AIRDROP.ADDRESS).actualBalance;
+
     logger.info(`availableAirdropBalance: ${availableAirdropBalance / MONEY_FACTOR}`);
 
     if (!sender || !sender.referrals || (sender.referrals.length === 0)) {
@@ -87,9 +93,9 @@ export const getAirdropReward = (
     const sponsors: Map<Address, number> = new Map<Address, number>();
 
     referrals.forEach((sponsor: Account, i: number) => {
-        const reward = transactionType === TransactionType.STAKE ?
-            Math.ceil((amount * config.CONSTANTS.AIRDROP.STAKE_REWARD_PERCENT) / TOTAL_PERCENTAGE) :
-            Math.ceil(((config.CONSTANTS.AIRDROP.REFERRAL_PERCENT_PER_LEVEL[i]) * amount) / TOTAL_PERCENTAGE);
+        const reward = transactionType === TransactionType.STAKE
+            ? Math.ceil((amount * config.CONSTANTS.AIRDROP.STAKE_REWARD_PERCENT) / TOTAL_PERCENTAGE)
+            : Math.ceil(((config.CONSTANTS.AIRDROP.REFERRAL_PERCENT_PER_LEVEL[i]) * amount) / TOTAL_PERCENTAGE);
         sponsors.set(sponsor.address, reward);
         airdropRewardAmount += reward;
     });
@@ -111,11 +117,14 @@ export const verifyAirdrop = (
     const airdropReward = getAirdropReward(sender, amount, trs.type);
 
     if (!isEqualMaps(airdropReward.sponsors, trs.asset.airdropReward.sponsors)) {
-        return new ResponseEntity<void>({ errors: [
-            `Verify failed: ${trs.type === TransactionType.STAKE ? 'stake' : 'vote'} airdrop reward is corrupted, ` +
-            `expected: ${JSON.stringify([...airdropReward.sponsors])}, ` +
-            `actual: ${JSON.stringify([...trs.asset.airdropReward.sponsors])}`
-        ] });
+        return new ResponseEntity<void>({
+            errors: [
+                `Verify failed: ${trs.type === TransactionType.STAKE ? 'stake' : 'vote'}` +
+                `airdrop reward is corrupted, ` +
+                `expected: ${JSON.stringify([...airdropReward.sponsors])}, ` +
+                `actual: ${JSON.stringify([...trs.asset.airdropReward.sponsors])}`
+            ]
+        });
     }
 
     return new ResponseEntity<void>();

@@ -1,8 +1,11 @@
 stages:
  - build_core
  - start_core
+ - build_core_tag
+ - deploy-PREPROD
+ - generate_docker-compose
 
-manual_build_core:
+build_core_tag_build:
   stage: build_core
   only:
     - master
@@ -14,7 +17,7 @@ manual_build_core:
     - ./build.tag.newcore.sh build master
 
 
-updating:
+deploy_STAGE:
  stage: start_core
  only:
    - master
@@ -25,3 +28,53 @@ updating:
    - ansible-playbook -i ./inventory.newcore.skctestnet.env --limit SKC-TESTBUILD-CORE ./books/stop_docker_clean_volume.yml
    - ansible-playbook -i ./inventory.newcore.skctestnet.env --limit SKC-TESTBUILD-CORE ./books/clean_docker_image_core.yml
    - ansible-playbook -i ./inventory.newcore.skctestnet.env --limit SKC-TESTBUILD-CORE ./books/start_build_docker-compose.yml
+
+build_image_tag:
+  stage: build_core_tag
+  only:
+    - tags
+  tags:
+    - ddk-deploy
+  script:
+    - cd /root/DDK.Delegat.Install.Environment/
+    - ./build.tag.newcore.gitlab.sh
+
+deploy_PREPROD_tag:
+  stage: deploy-PREPROD
+  only:
+    - tags
+  tags:
+    - ddk-deploy
+  script:
+    - cd /var/ddk.builds/data/DDKCORE/
+    - tag=$(git describe --tags $(git rev-list --tags --max-count=1))
+    - cd /root/DDK.Delegat.Install.Environment/
+    - ./refresh_and_generate_new_core.sh ./inventory.newcore.preprod.env 0.0.2 $tag development
+    - cd /root/DDK.Delegat.Install.Environment/
+    - ansible-playbook -i ./inventory.newcore.skctestnet.env --limit SKC-TESTNET ./books/update.docker.compose.yml
+
+deploy_PROD_last_tag:
+  stage: generate_docker-compose
+  when: manual
+  tags:
+    - ddk-deploy
+  script:
+    - cd /var/ddk.builds/data/DDKCORE/
+    - tag=$(git describe --tags $(git rev-list --tags --max-count=1))
+    - cd /root/DDK.Delegat.Install.Environment/
+    - ./refresh_and_generate_new_core.sh ./inventory.newcore.prod.env 0.0.2 $tag mainnet
+    - cd /root/DDK.Delegat.Install.Environment/
+    - ansible-playbook -i ./inventory.newcore.prod.env --limit PROD-CORE ./books/update.docker.compose.yml
+
+deploy_DELEGATES_last_tag:
+  stage: generate_docker-compose
+  when: manual
+  tags:
+    - ddk-deploy
+  script:   
+    - cd /var/ddk.builds/data/DDKCORE/
+    - tag=$(git describe --tags $(git rev-list --tags --max-count=1))
+    - cd /root/DDK.Delegat.Install.Environment/
+    - ./refresh_and_generate_new_core.sh ./inventory.newcore.preprod.delegates.env 0.0.2 $tag testnet
+    - cd /root/DDK.Delegat.Install.Environment/
+    - ansible-playbook -i ./inventory.newcore.preprod.delegates.env ./books/update.docker.compose.yml
