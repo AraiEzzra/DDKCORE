@@ -1,9 +1,4 @@
-import {
-    IAsset,
-    Transaction,
-    TransactionModel,
-    TransactionType
-} from 'shared/model/transaction';
+import { IAsset, Transaction, TransactionModel, TransactionType } from 'shared/model/transaction';
 import { TransactionDTO } from 'migration/utils/TransactionDTO';
 import TransactionService from 'core/service/transaction';
 import crypto from 'crypto';
@@ -36,7 +31,7 @@ class Basket {
     }
 }
 
-const allSecretsData: any = fs.readFileSync('./secrets.json');
+const allSecretsData: any = JSON.parse(fs.readFileSync('./secrets.json'));
 
 // TODO need default secret
 const DEFAULT_KEY_PAIR_FOR_TRANSACTION: IKeyPair = getKeyPair(
@@ -74,12 +69,73 @@ DELEGATES_SECRETS.forEach((secret: string) => {
     publicKeyToKeyPairKeyMap.set(keyPair.publicKey.toString('hex'), keyPair)
 });
 
-const correctTransactions: Array<TransactionModel<IAsset>> = [];
+const registerTransactions: Array<TransactionModel<IAsset>> = [];
+let correctTransactions: Array<TransactionModel<IAsset>> = [];
+const genesisAccountsSendTransactions: Array<TransactionModel<IAsset>> = [];
 const basketsWithTransactionsForBlocks: Array<Basket> = [];
 const senderPublicKeyFromSecondSignatureTrsSet: Set<string> = new Set();
 
 let accounts: Map<number, number> = new Map();
 let countForUsedBasket = 0;
+
+const OLD_TO_NEW_SENDER_PUBLIC_KEY: Map<string, string> = new Map([
+    // "amount": 4500000000000000
+    ['f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2', '86231c9dc4202ba0e27e063f431ef868b4e38669931202a83482c70091714e13'],
+
+    // "amount": 171000000000000
+    ['0ffbd8ef561024e20ca356889b5be845759356492ac8237c9bc5159b9d1b0135', 'b12a7faba4784d79c7298ce49ef5131b291abd70728e6f2bd1bc2207ea4b7947'],
+
+    // amount: 9000000000000, new address: 2529254201347404107
+    // ['', 'bb49f7f0727847a30f2780b14353d44aec0875e8a4ed77f123fc65f4f66cb3c8'],
+
+    // amount: 2250000000000, newAddress: 13761141028469814636
+    ['97c406096a6201a60086e1644cba59af1401b33ba1bbfa1ddccd62fb55374755', '873a809f9b766fc410a6dde5333c73bed36592d7ac5e354eb529591b3ed8dc29'],
+
+    // amount: 11250000000000, newAddress: 3729625658841791180
+    // ['', '207deb32d9af211f662d11e20ba88460325fb5e2e18dafc39d054ee1557e5eb0'],
+
+    // amount: 11250000000000, newAddress: 16136522303332999295
+    ['14e7911f7fe3c092ce3161a524a6daa2d897e413e684cc934b1ee782122bb934', '0485a185159ae76fbd149e3e6db8ca2ccc01476dce6c7726d7c83e989f456601'],
+
+    // amount: 11250000000000, newAddress: 4694024168786046092
+    ['123951bdc3d0608feb8ebd0defd180bfac0dc243e44ac6087749c1f32d3b3ff4', '9807d077e0c0ac95d37819f223506e64e1dbd20c3fbaf003d921c8aed9d426bf'],
+
+    // amount: 45000000000000, newAddress: 7830105952002929850
+    ['cb1cb6ee818b958385a50a02cf0fafe9c3b494f524be11894c69df23e7b271fa', 'b9c4743cd3ad541a0334904ebd278a2eaec262f71e5919ebfb8052b720111ff2'],
+]);
+const OLD_TO_NEW_ADDRESS: Map<string, string> = new Map([
+    // "amount": 4500000000000000
+    ['DDK4995063339468361088', 'DDK13566253584516829136'],
+
+    // "amount": 171000000000000
+    ['DDK8999840344646463126', 'DDK9671894634278263097'],
+
+    // amount: 9000000000000,
+    // ['DDK5143663806878841341', 'DDK2529254201347404107'],
+
+    // amount: 2250000000000
+    ['DDK7214959811294852078', 'DDK13761141028469814636'],
+
+    // amount: 11250000000000,
+    // ['DDK14224602569244644359', 'DDK3729625658841791180'],
+
+    // amount: 11250000000000,
+    ['DDK9758601670400927807', 'DDK16136522303332999295'],
+
+    // amount: 11250000000000,
+    ['DDK12671171770945235882', 'DDK4694024168786046092'],
+
+    // amount: 45000000000000,
+    ['DDK5216737955302030643', 'DDK7830105952002929850'],
+]);
+
+const SET_SENDER_PUBLIC_KEY_FROM_GENESIS: Set<string> = new Set(
+    ['b12a7faba4784d79c7298ce49ef5131b291abd70728e6f2bd1bc2207ea4b7947',
+    '873a809f9b766fc410a6dde5333c73bed36592d7ac5e354eb529591b3ed8dc29',
+    '0485a185159ae76fbd149e3e6db8ca2ccc01476dce6c7726d7c83e989f456601',
+    'b9c4743cd3ad541a0334904ebd278a2eaec262f71e5919ebfb8052b720111ff2'
+    ],
+);
 
 (async () => {
     await Loader.start();
@@ -108,6 +164,8 @@ async function startMigration() {
 
 }
 
+let allRegisterTrsCount = 0;
+
 async function startPrepareTransactionsForMigration() {
     console.log('START prepare transaction!!!');
 
@@ -118,56 +176,6 @@ async function startPrepareTransactionsForMigration() {
         await readTransactionsToArray(filePathNewTransactions),
     ];
 
-    const OLD_TO_NEW_SENDER_PUBLIC_KEY: Map<string, string> = new Map([
-        // "amount": 4500000000000000
-        ['f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2', '86231c9dc4202ba0e27e063f431ef868b4e38669931202a83482c70091714e13'],
-
-        // "amount": 171000000000000
-        ['0ffbd8ef561024e20ca356889b5be845759356492ac8237c9bc5159b9d1b0135', 'b12a7faba4784d79c7298ce49ef5131b291abd70728e6f2bd1bc2207ea4b7947'],
-
-        // amount: 9000000000000, new address: 2529254201347404107
-        // ['', 'bb49f7f0727847a30f2780b14353d44aec0875e8a4ed77f123fc65f4f66cb3c8'],
-
-        // amount: 2250000000000, newAddress: 13761141028469814636
-        ['97c406096a6201a60086e1644cba59af1401b33ba1bbfa1ddccd62fb55374755', '873a809f9b766fc410a6dde5333c73bed36592d7ac5e354eb529591b3ed8dc29'],
-
-        // amount: 11250000000000, newAddress: 3729625658841791180
-        // ['', '207deb32d9af211f662d11e20ba88460325fb5e2e18dafc39d054ee1557e5eb0'],
-
-        // amount: 11250000000000, newAddress: 16136522303332999295
-        ['14e7911f7fe3c092ce3161a524a6daa2d897e413e684cc934b1ee782122bb934', '0485a185159ae76fbd149e3e6db8ca2ccc01476dce6c7726d7c83e989f456601'],
-
-        // amount: 11250000000000, newAddress: 4694024168786046092
-        ['123951bdc3d0608feb8ebd0defd180bfac0dc243e44ac6087749c1f32d3b3ff4', '9807d077e0c0ac95d37819f223506e64e1dbd20c3fbaf003d921c8aed9d426bf'],
-
-        // amount: 45000000000000, newAddress: 7830105952002929850
-        ['cb1cb6ee818b958385a50a02cf0fafe9c3b494f524be11894c69df23e7b271fa', 'b9c4743cd3ad541a0334904ebd278a2eaec262f71e5919ebfb8052b720111ff2'],
-    ]);
-    const OLD_TO_NEW_ADDRESS: Map<string, string> = new Map([
-        // "amount": 4500000000000000
-        ['DDK4995063339468361088', 'DDK13566253584516829136'],
-
-        // "amount": 171000000000000
-        ['DDK8999840344646463126', 'DDK9671894634278263097'],
-
-        // amount: 9000000000000,
-        // ['DDK5143663806878841341', 'DDK2529254201347404107'],
-
-        // amount: 2250000000000
-        ['DDK7214959811294852078', 'DDK13761141028469814636'],
-
-        // amount: 11250000000000,
-        // ['DDK14224602569244644359', 'DDK3729625658841791180'],
-
-        // amount: 11250000000000,
-        ['DDK9758601670400927807', 'DDK16136522303332999295'],
-
-        // amount: 11250000000000,
-        ['DDK12671171770945235882', 'DDK4694024168786046092'],
-
-        // amount: 45000000000000,
-        ['DDK5216737955302030643', 'DDK7830105952002929850'],
-    ]);
     newTrs.forEach(((trs: any) => {
         if (OLD_TO_NEW_SENDER_PUBLIC_KEY.has(trs.senderPublicKey)) {
             const tempTrsSenderPublicKey = trs.senderPublicKey;
@@ -212,6 +220,7 @@ async function startPrepareTransactionsForMigration() {
                         asset: {
                             referral: transaction.referrals[0]}
                     });
+                    ++allRegisterTrsCount;
                     break;
                 case TransactionType.SEND:
                     correctTransaction = new TransactionDTO({
@@ -296,10 +305,21 @@ async function startPrepareTransactionsForMigration() {
             if (Number.isInteger(count / 1000)) {
                 console.log('COUNT: ', count);
             }
-            correctTransactions.push(new TransactionModel(correctTransaction));
+            
+            if (correctTransaction.type === TransactionType.SEND &&
+                SET_SENDER_PUBLIC_KEY_FROM_GENESIS.has(correctTransaction.senderPublicKey)) {
+                genesisAccountsSendTransactions.push(correctTransaction);
+            } else if (correctTransaction.type === TransactionType.REGISTER){
+                registerTransactions.push(correctTransaction);
+            } else {
+                correctTransactions.push(new TransactionModel(correctTransaction));
+            }
         });
 
+    correctTransactions = await concatRegisterAndSendAndAllAthersTrs();
+
     console.log('newTrs length: ', newTrs.length);
+    console.log('correctTransactions length: ', correctTransactions.length);
     newTrs.length = 0;
 
     runGarbageCollection();
@@ -309,7 +329,7 @@ async function startPrepareTransactionsForMigration() {
 
     await changeSendAndStakeTrsOrder();
 
-    await addMoneyForNegativeBalanceAccounts();
+    // await addMoneyForNegativeBalanceAccounts();
     accounts.clear();
     
     runGarbageCollection();
@@ -331,6 +351,15 @@ async function startPrepareTransactionsForMigration() {
 async function startCreateRoundsAndBlocks(){
     await createFirstRoundAndBlocksForThisRound();
     await createNextRoundsAndBlocks();
+}
+
+async function concatRegisterAndSendAndAllAthersTrs() {
+    console.log('SET SEND trs to after register index: ', allRegisterTrsCount);
+    console.log('genesisAccountsSendTransactions.length: ', genesisAccountsSendTransactions.length);
+    console.log('correctTransactions.length: ', correctTransactions.length);
+    const allTrs = await registerTransactions.concat(genesisAccountsSendTransactions).concat(correctTransactions);
+    console.log('FINISH SET SEND trs to after register! allTrs.length', allTrs.length);
+    return allTrs;
 }
 
 async function saveBasketsToDB() {
