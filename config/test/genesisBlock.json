@@ -329,6 +329,48 @@
             "fee": 1000000,
             "signature": "b006831cf01fdb90dfc84f5424b398aba76155b2a1ff0e8e0ee0bc85bcdbfe4023b9101a932fe4e4fc16b1cac175b0828e4adbce5bbd758bd150707c7d1ca406",
             "id": "e4866146acb535667b8e18149bdfc503c35704ebb8d117de8aa15bb434f6ef64"
+        },
+        {
+            "__comment": "Test GET_ACTIVE_DELEGATES Positive",
+            "createdAt": 104008352,
+            "senderPublicKey": "3b42f966cd767b1a2c172c173cc733af793bd1ec06263ffa26440ce16e98da5c",
+            "senderAddress": "12073694219267661597",
+            "type": 60,
+            "salt": "e0d5e11a2a32dcb9b0c105d5e241e495",
+            "asset": {
+                "votes": [
+                    "+f959e6c8d279c97d3ec5ba993f04ab740a6e50bec4aad75a8a1e7808a6c5eec7"
+                ],
+                "reward": 0,
+                "unstake": 0,
+                "airdropReward": {
+                    "sponsors": []
+                }
+            },
+            "fee": 0,
+            "signature": "25d14b6bd989f24c331f4d5d67c9303584df3ca452a504b8e6ff43164552ed0163cb67e0b113c0fd6db6d1e0159f1e69eae0a0fafd47b96f8d889a8bea533400",
+            "id": "9746e900f1a707faaaa060d21b409deb6eb677ab1185edae5fc6855cdabd72c4"
+        },
+        {
+            "__comment": "Test GET_ACTIVE_DELEGATES Positive",
+            "createdAt": 104008352,
+            "senderPublicKey": "b3d90f2d3b6aba2e6bcdcf3c1473c7f4365e3ceb15b682155136127606ab76c0",
+            "senderAddress": "10775058514794264480",
+            "type": 60,
+            "salt": "e0d5e11a2a32dcb9b0c105d5e241e495",
+            "asset": {
+                "votes": [
+                    "+f959e6c8d279c97d3ec5ba993f04ab740a6e50bec4aad75a8a1e7808a6c5eec7"
+                ],
+                "reward": 0,
+                "unstake": 0,
+                "airdropReward": {
+                    "sponsors": []
+                }
+            },
+            "fee": 0,
+            "signature": "25d14b6bd989f24c331f4d5d67c9303584df3ca452a504b8e6ff43164552ed0163cb67e0b113c0fd6db6d1e0159f1e69eae0a0fafd47b96f8d889a8bea533400",
+            "id": "9746e900f1a707fbbbb060d21b409deb6eb677ab1185edae5fc6855cdabd72c4"
         }
     ],
     "createdAt": 0,
