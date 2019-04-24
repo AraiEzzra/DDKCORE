@@ -14,19 +14,24 @@ describe('Test CREATE_TRANSACTION REGISTER', () => {
             body: {
                 'trs': {
                     'type': TransactionType.REGISTER,
-                    'senderPublicKey': '3ddc5f3fd3e526c8b53fe2256d909eda2f93f6a5b918a2c8ead9284d3f2fcb99',
-                    'senderAddress': '12379386896170364096',
-                    'asset': { 'referral': '4995063339468361088' }
-                }, 'secret': 'merge corn predict dumb hat robust lion hammer night enhance cattle lobster'
+                    'senderPublicKey': '7f4f01aa4bf5244690c365befb8be5a5b6a533c83b115c94da61120ed879d5b2',
+                    'senderAddress': '1359126885585611505',
+                    'asset': {
+                        'referral': '3832834549593264844'
+                    }
+                },
+                'secret': 'region again shield depart fashion token ecology enhance alarm rail choice garlic'
             }
         };
 
         const SUCCESS = {
             'type': TransactionType.REGISTER,
-            'senderPublicKey': '3ddc5f3fd3e526c8b53fe2256d909eda2f93f6a5b918a2c8ead9284d3f2fcb99',
-            'senderAddress': '12379386896170364096',
+            'senderPublicKey': '7f4f01aa4bf5244690c365befb8be5a5b6a533c83b115c94da61120ed879d5b2',
+            'senderAddress': '1359126885585611505',
             'fee': 0,
-            'asset': { 'referral': '4995063339468361088' }
+            'asset': {
+                'referral': '3832834549593264844'
+            }
         };
 
         const response = await socketRequest(REQUEST);

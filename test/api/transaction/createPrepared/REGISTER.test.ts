@@ -12,32 +12,34 @@ describe('Test CREATE_PREPARED_TRANSACTION REGISTER', () => {
             headers: Fixture.getBaseHeaders(),
             code: API_ACTION_TYPES.CREATE_PREPARED_TRANSACTION,
             body: {
-                'createdAt': 103667065,
-                'senderPublicKey': '5366eb43bf46f651e0e7527f39a811773e4c4351e21712a1c525e4f24a098279',
-                'senderAddress': '5475462032979311250',
+                'createdAt': 0,
+                'senderPublicKey': '7f4f01aa4bf5244690c365befb8be5a5b6a533c83b115c94da61120ed879d5b2',
+                'senderAddress': '1359126885585611505',
                 'type': TransactionType.REGISTER,
-                'salt': 'ee1300500d42b88fee7e9c43c8ded89b',
-                'asset': { 'referral': '4995063339468361088' },
+                'salt': 'd4ae3b9d0f0d590ec12fc1517333d7b7',
+                'asset': {
+                    'referral': '3832834549593264844'
+                },
                 'fee': 0,
-                'signature': 'f8f60f4c7b28f3e5ce96e27ba70fbf312304f429f091790642608aef7b61dc89eb24d839c3fc5ce' +
-                    '2abe530e5c53cb331c326b086a360c496326fd48804d9cd06',
-                'id': 'f031e51328f3282dd966403599797e207aad60b05649f53592244b2ced739d90'
+                'signature': '029cd1ae38aae53c32bc3aad9055ee3bcdb5e14addef5e5d558fe8334d5eb8d1f6e8c22a67cbaa6de7dc31' +
+                    'd1c67f703ec1d9d09ad7112040e4774b20a574ef0b',
+                'id': '375a70978ccdde2cb2efe68ec6007e7bb956ae1ebac7041e72667f55f4a9200b'
             }
         };
 
         const SUCCESS = {
-            'createdAt': 103667065,
-            'senderPublicKey': '5366eb43bf46f651e0e7527f39a811773e4c4351e21712a1c525e4f24a098279',
-            'senderAddress': '5475462032979311250',
+            'id': '375a70978ccdde2cb2efe68ec6007e7bb956ae1ebac7041e72667f55f4a9200b',
             'type': TransactionType.REGISTER,
-            'salt': 'ee1300500d42b88fee7e9c43c8ded89b',
-            'asset': {
-                'referral': '4995063339468361088'
-            },
+            'createdAt': 0,
+            'senderPublicKey': '7f4f01aa4bf5244690c365befb8be5a5b6a533c83b115c94da61120ed879d5b2',
+            'senderAddress': '1359126885585611505',
+            'signature': '029cd1ae38aae53c32bc3aad9055ee3bcdb5e14addef5e5d558fe8334d5eb8d1f6e8c22a67cbaa6de7dc31d1c6' +
+                '7f703ec1d9d09ad7112040e4774b20a574ef0b',
             'fee': 0,
-            'signature': 'f8f60f4c7b28f3e5ce96e27ba70fbf312304f429f091790642608aef7b61dc89eb24d839c3fc5ce2abe530e5c5' +
-                '3cb331c326b086a360c496326fd48804d9cd06',
-            'id': 'f031e51328f3282dd966403599797e207aad60b05649f53592244b2ced739d90'
+            'salt': 'd4ae3b9d0f0d590ec12fc1517333d7b7',
+            'asset': {
+                'referral': '3832834549593264844'
+            }
         };
 
         const response = await socketRequest(REQUEST);

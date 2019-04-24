@@ -14,24 +14,24 @@ describe('Test CREATE_TRANSACTION SIGNATURE', () => {
             body: {
                 'trs': {
                     'type': TransactionType.SIGNATURE,
-                    'senderPublicKey': 'f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2',
-                    'senderAddress': '4995063339468361088',
+                    'senderPublicKey': 'dfa3f8f1360a220ea7b8b68b791d25e7169aaaa2624fbdc4dfbaa6ca7999136f',
+                    'senderAddress': '1445661318589395015',
                     'asset': {
-                        'publicKey': 'a79b405e6db83dc64986d3e28ab9283534350f6f961c5114e903d0f7e4cba21a'
+                        'publicKey': '27eb63b7630cbcc5e5ec6612f18e6156a4d867969c1dec53ddbe9487ee6991a4'
                     }
                 },
-                'secret': 'hen worry two thank unfair salmon smile oven gospel grab latin reason',
-                'secondSecret': 'wrong they bundle onion dutch stay dilemma social abandon raise weird arena'
+                'secret': 'jaguar spray sentence celery elite favorite lunar motion theory supreme penalty rib',
+                'secondSecret': 'alcohol quality obey win image pigeon similar cash mango receive round ride'
             }
         };
 
         const SUCCESS = {
             'type': TransactionType.SIGNATURE,
-            'senderPublicKey': 'f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2',
-            'senderAddress': '4995063339468361088',
+            'senderPublicKey': 'dfa3f8f1360a220ea7b8b68b791d25e7169aaaa2624fbdc4dfbaa6ca7999136f',
+            'senderAddress': '1445661318589395015',
             'fee': 1000000,
             'asset': {
-                'publicKey': 'a79b405e6db83dc64986d3e28ab9283534350f6f961c5114e903d0f7e4cba21a'
+                'publicKey': '27eb63b7630cbcc5e5ec6612f18e6156a4d867969c1dec53ddbe9487ee6991a4'
             }
         };
 

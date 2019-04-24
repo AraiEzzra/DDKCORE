@@ -14,20 +14,20 @@ describe('Test CREATE_TRANSACTION DELEGATE', () => {
             body: {
                 'trs': {
                     'type': TransactionType.DELEGATE,
-                    'senderPublicKey': 'f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2',
-                    'senderAddress': '4995063339468361088',
+                    'senderPublicKey': 'ddef0a8a7fe290ca950fd74d83d31f4a32b014d0b675636cf6573cf434ef524f',
+                    'senderAddress': '17720385936796370956',
                     'asset': {
                         'username': 'foo'
                     }
                 },
-                'secret': 'hen worry two thank unfair salmon smile oven gospel grab latin reason'
+                'secret': 'region again shield depart fashion token ecology enhance alarm rail choice garlic'
             }
         };
 
         const SUCCESS = {
             'type': TransactionType.DELEGATE,
-            'senderPublicKey': 'f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2',
-            'senderAddress': '4995063339468361088',
+            'senderPublicKey': 'ddef0a8a7fe290ca950fd74d83d31f4a32b014d0b675636cf6573cf434ef524f',
+            'senderAddress': '17720385936796370956',
             'fee': 1000000000,
             'asset': {
                 'username': 'foo'
