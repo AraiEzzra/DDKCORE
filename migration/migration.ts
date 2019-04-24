@@ -60,7 +60,7 @@ const SENDER_PUBLIC_KEY_FOR_NEGATIVE_BALANCE_ACCOUNTS =
     'b12a7faba4784d79c7298ce49ef5131b291abd70728e6f2bd1bc2207ea4b7947';
 
 const filePathNewTransactions = './transactionsNew_19_04_2019_T13_30.csv';
-const filePathAddressesWithNegativeBalance = './addressesWithNegativeBalance.csv';
+const filePathAddressesWithNegativeBalance = './newAddressesWithNegativeBalance.csv';
 
 const publicKeyToKeyPairKeyMap: Map<string, IKeyPair> = new Map();
 
@@ -329,7 +329,7 @@ async function startPrepareTransactionsForMigration() {
 
     await changeSendAndStakeTrsOrder();
 
-    // await addMoneyForNegativeBalanceAccounts();
+    await addMoneyForNegativeBalanceAccounts();
     accounts.clear();
     
     runGarbageCollection();
@@ -684,10 +684,12 @@ function readAccountsToMap(filePath): Promise<Map<number, number>> {
         fs.createReadStream(filePath)
         .pipe(csv())
         .on('data', (data) => {
-            accounts.set(Number(data.address.replace(/DDK/ig, '')), Number(data.amount));
+            // accounts.set(Number(data.address.replace(/DDK/ig, '')), Number(data.amount));
+            accounts.set(Number(data[Object.keys(data)[0]]), Number(data.amount));
         })
         .on('end', () => {
             console.log('Parsed accounts with negative balance: ', accounts.size);
+            console.log('accounts', accounts);
             resolve(accounts);
         });
     });
