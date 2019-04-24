@@ -1,4 +1,5 @@
-export type Sort = [string, 'ASC' | 'DESC'];
+export type Direction = 'ASC' | 'DESC';
+export type Sort = [string, Direction];
 export type Pagination = {
     limit: number,
     offset: number

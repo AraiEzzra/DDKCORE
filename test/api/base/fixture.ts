@@ -21,23 +21,26 @@ export class Fixture {
         };
     }
 
-    static async createBlock() {
+    static async createBlock(data: any = {}) {
         const rawBlock: any = await db.one(createBlockQuery, {
-            id: randStr(64),
-            version: 0,
-            created_at: getTime(),
-            height: randNumber(2, 1000),
-            previous_block_id: GENESIS_BLOCK_ID,
-            transaction_count: 0,
-            amount: 0,
-            fee: 0,
-            payload_hash: randStr(64),
-            generator_public_key: BASE_ACCOUNT.publicKey,
-            signature: randStr(64)
+            ...{
+                id: randStr(64),
+                version: 0,
+                created_at: getTime(),
+                height: randNumber(2, 100),
+                previous_block_id: GENESIS_BLOCK_ID,
+                transaction_count: 0,
+                amount: 0,
+                fee: 0,
+                payload_hash: randStr(64),
+                generator_public_key: BASE_ACCOUNT.publicKey,
+                signature: randStr(64)
+            }, ...data
         });
 
         return {
             id: rawBlock.id,
+            height: rawBlock.height
         };
     }
 
