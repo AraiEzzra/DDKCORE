@@ -20,7 +20,6 @@ export class TransactionController {
 
     @API(API_ACTION_TYPES.CREATE_TRANSACTION)
     public createTransaction(message: Message2<any>) {
-        logger.debug(`[API][TransactionController][createTransaction] ${JSON.stringify(message.body)}`);
         return TransactionRPCController.transactionCreate(message.body);
     }
 
@@ -56,4 +55,3 @@ export class TransactionController {
 }
 
 export default new TransactionController();
-

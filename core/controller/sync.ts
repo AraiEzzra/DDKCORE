@@ -12,6 +12,7 @@ import EventQueue from 'core/repository/eventQueue';
 import { REQUEST_TIMEOUT } from 'core/repository/socket';
 import { ERROR_NOT_ENOUGH_PEERS } from 'core/repository/sync';
 import { asyncTimeout } from 'shared/util/timer';
+import RoundService from 'core/service/round';
 
 type checkCommonBlocksRequest = {
     data: {
