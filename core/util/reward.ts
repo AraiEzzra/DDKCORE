@@ -119,7 +119,7 @@ export const verifyAirdrop = (
     if (!isEqualMaps(airdropReward.sponsors, trs.asset.airdropReward.sponsors)) {
         return new ResponseEntity<void>({
             errors: [
-                `Verify failed: ${trs.type === TransactionType.STAKE ? 'stake' : 'vote'}` +
+                `Verify failed: ${trs.type === TransactionType.STAKE ? 'stake' : 'vote'} ` +
                 `airdrop reward is corrupted, ` +
                 `expected: ${JSON.stringify([...airdropReward.sponsors])}, ` +
                 `actual: ${JSON.stringify([...trs.asset.airdropReward.sponsors])}`
