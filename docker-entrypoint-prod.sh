@@ -3,7 +3,9 @@ echo $(node -v)
 # and wait-port npm package installed
 wait-port "$DB_HOST:${DB_PORT:-5432}"
 sleep 5
-    if [ "$MODE" == "TEST" ]; then
+    if [ "$SERVICE" == "TEST" ]; then
+        wait-port "$API_HOST:${API_PORT:-7008}"
+        wait-port "$CORE_HOST:${CORE_RPC_PORT:-7009}"
         npm run test
     fi
     if [ "$SERVICE" == "API" ]; then
