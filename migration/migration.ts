@@ -61,7 +61,7 @@ const SENDER_PUBLIC_KEY_FOR_NEGATIVE_BALANCE_ACCOUNTS =
     'b12a7faba4784d79c7298ce49ef5131b291abd70728e6f2bd1bc2207ea4b7947';
 
 const filePathNewTransactions = './transactionsNew_19_04_2019_T13_30.csv';
-const filePathAddressesWithNegativeBalance = './newAddressesWithNegativeBalance.csv';
+const filePathAddressesWithNegativeBalance = './addressesWithNegativeBalance25_4_2019.csv';
 
 const publicKeyToKeyPairKeyMap: Map<string, IKeyPair> = new Map();
 
@@ -713,7 +713,7 @@ function getCorrectStartVoteCount(voteCount: number): number {
     if (voteCount === 24) {
         return 20;
     } else if (voteCount < 24) {
-        return Math.floor(voteCount / 4);
+        return Math.floor(voteCount / 4) * 4;
     } else {
         return 0;
     }
