@@ -35,30 +35,30 @@ export const calculateTotalRewardAndUnstake = (
     isDownVote: boolean,
 ): { reward: number, unstake: number } => {
     let reward: number = 0;
-    let unstakeAmount: number = 0;
+    let unstake: number = 0;
     if (isDownVote) {
-        return { reward, unstake: unstakeAmount };
+        return { reward, unstake };
     }
-    const freezeOrders: Array<Stake> = sender.stakes;
-    logger.debug(`[Frozen][calculateTotalRewardAndUnstake] freezeOrders: ${JSON.stringify(freezeOrders)}`);
 
-    freezeOrders
-        .filter(stake => SlotService.getTime() > stake.nextVoteMilestone)
-        .forEach((stake: Stake) => {
-            if (stake.voteCount > 0 && (stake.voteCount + 1) % config.CONSTANTS.FROZE.REWARD_VOTE_COUNT === 0) {
-                const blockHeight: number = BlockRepo.getLastBlock().height;
-                const stakeRewardPercent: number = stakeReward.calcReward(blockHeight);
-                reward += (stake.amount * stakeRewardPercent) / TOTAL_PERCENTAGE;
-            }
-        });
-    const readyToUnstakeOrders = freezeOrders.filter(
-        o => (o.voteCount + 1) === config.CONSTANTS.FROZE.UNSTAKE_VOTE_COUNT
+    logger.debug(`[Frozen][calculateTotalRewardAndUnstake] freezeOrders: ${JSON.stringify(sender.stakes)}`);
+    const activeStakes = sender.stakes.filter(
+        stake => stake.isActive && SlotService.getTime() > stake.nextVoteMilestone
+    );
+    activeStakes.forEach((stake: Stake) => {
+        if (stake.voteCount > 0 && (stake.voteCount + 1) % config.CONSTANTS.FROZE.REWARD_VOTE_COUNT === 0) {
+            const lastBlockHeight: number = BlockRepo.getLastBlock().height;
+            const stakeRewardPercent: number = stakeReward.calcReward(lastBlockHeight);
+            reward += (stake.amount * stakeRewardPercent) / TOTAL_PERCENTAGE;
+        }
+    });
+    const readyToUnstake = activeStakes.filter(
+        stake => (stake.voteCount + 1) === config.CONSTANTS.FROZE.UNSTAKE_VOTE_COUNT
     );
     logger.debug(`[Frozen][calculateTotalRewardAndUnstake] reward: ${reward}`);
-    readyToUnstakeOrders.forEach((order) => {
-        unstakeAmount += order.amount;
+    readyToUnstake.forEach((order) => {
+        unstake += order.amount;
     });
-    return { reward, unstake: unstakeAmount };
+    return { reward, unstake };
 };
 
 export const getAirdropReward = (
