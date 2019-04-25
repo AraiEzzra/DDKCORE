@@ -55,7 +55,7 @@ describe('Test GET_TRANSACTIONS_BY_BLOCK_ID', () => {
             code: API_ACTION_TYPES.GET_TRANSACTIONS_BY_BLOCK_ID,
             body: {
                 limit: 2,
-                offset: 2,
+                offset: 3,
                 blockId: 'cbb9449abb9672d33fa2eb200b1c8b03db7c6572dfb6e59dc334c0ab82b63ab0'
             }
         };

@@ -137,7 +137,31 @@ describe('Test GET_ACCOUNT', () => {
                 'missedBlocks': 0,
                 'forgedBlocks': 0,
                 'publicKey': '83cb3d8641c8e73735cc1b70c915602ffcb6e5a68f14a71056511699050a1a05',
-                'votes': 1
+                'votes': 2
+            }],
+            'stakes': [{
+                'createdAt': 0,
+                'isActive': true,
+                'amount': 10000000000,
+                'voteCount': 1,
+                'nextVoteMilestone': 104008362,
+                'airdropReward': {},
+                'sourceTransactionId': '42d253826012103aec237eed68ca8093692bec7640df4359ea1e41a3240d100c'
+            }]
+        };
+
+        const expected = {
+            'address': '10775058514794264480',
+            'isDelegate': false,
+            'publicKey': 'b3d90f2d3b6aba2e6bcdcf3c1473c7f4365e3ceb15b682155136127606ab76c0',
+            'actualBalance': 89999000000,
+            'referrals': [],
+            'votes': [{
+                'username': 'delegate1',
+                'missedBlocks': 0,
+                'forgedBlocks': 0,
+                'publicKey': '83cb3d8641c8e73735cc1b70c915602ffcb6e5a68f14a71056511699050a1a05',
+                'votes': 2
             }],
             'stakes': [{
                 'createdAt': 0,
