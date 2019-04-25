@@ -5,6 +5,7 @@ import { ResponseEntity } from 'shared/model/response';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
 import { getSocket } from 'test/api/base';
 import { IAsset, SerializedTransaction } from 'shared/model/transaction';
+import config from 'shared/config';
 
 
 describe('Test GET_TRANSACTIONS', () => {
@@ -29,7 +30,7 @@ describe('Test GET_TRANSACTIONS', () => {
             ) => {
                 if (response.headers.id === HEADERS.id) {
                     expect(response.body.success).to.equal(true);
-                    expect(response.body.data.count).to.equal(7);
+                    expect(response.body.data.count).to.equal(config.GENESIS_BLOCK.transactions.length);
                     expect(response.body.data.transactions[0]).to.haveOwnProperty('id');
                     expect(response.body.data.transactions[0]).to.haveOwnProperty('senderAddress');
                     socket.close();
