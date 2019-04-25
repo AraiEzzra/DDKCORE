@@ -17,6 +17,7 @@ import slot from 'core/service/slot';
 import BlockService from 'core/service/block';
 import { sortRegisterTrs } from 'migration/utils/sorter';
 import db from 'shared/driver/db/index';
+import { Address } from 'shared/model/account';
 
 const csv = require('csv-parser');
 const fs = require('fs');
@@ -71,11 +72,11 @@ DELEGATES_SECRETS.forEach((secret: string) => {
 
 const registerTransactions: Array<TransactionModel<IAsset>> = [];
 let correctTransactions: Array<TransactionModel<IAsset>> = [];
-const genesisAccountsSendTransactions: Array<TransactionModel<IAsset>> = [];
+let genesisAccountsSendTransactions: Array<TransactionModel<IAsset>> = [];
 const basketsWithTransactionsForBlocks: Array<Basket> = [];
 const senderPublicKeyFromSecondSignatureTrsSet: Set<string> = new Set();
 
-let accounts: Map<number, number> = new Map();
+let accounts: Map<Address, number> = new Map();
 let countForUsedBasket = 0;
 
 const OLD_TO_NEW_SENDER_PUBLIC_KEY: Map<string, string> = new Map([
@@ -316,22 +317,22 @@ async function startPrepareTransactionsForMigration() {
             }
         });
 
-    correctTransactions = await concatRegisterAndSendAndAllAthersTrs();
 
+    await changeSendAndStakeTrsOrder();
+    await addMoneyForNegativeBalanceAccounts();
+
+
+    correctTransactions = concatRegisterAndSendAndAllOthersTrs();
     console.log('newTrs length: ', newTrs.length);
     console.log('correctTransactions length: ', correctTransactions.length);
+
     newTrs.length = 0;
 
     runGarbageCollection();
-    
     console.log('Cleared newTrs!');
+
     console.log('newTrs length: ', newTrs.length);
 
-    await changeSendAndStakeTrsOrder();
-
-    await addMoneyForNegativeBalanceAccounts();
-    accounts.clear();
-    
     runGarbageCollection();
 
     console.log('Prepared transactions: ', correctTransactions.length);
@@ -353,11 +354,11 @@ async function startCreateRoundsAndBlocks(){
     await createNextRoundsAndBlocks();
 }
 
-async function concatRegisterAndSendAndAllAthersTrs() {
+function concatRegisterAndSendAndAllOthersTrs() {
     console.log('SET SEND trs to after register index: ', allRegisterTrsCount);
     console.log('genesisAccountsSendTransactions.length: ', genesisAccountsSendTransactions.length);
     console.log('correctTransactions.length: ', correctTransactions.length);
-    const allTrs = await registerTransactions.concat(genesisAccountsSendTransactions).concat(correctTransactions);
+    const allTrs = registerTransactions.concat(genesisAccountsSendTransactions).concat(correctTransactions);
     console.log('FINISH SET SEND trs to after register! allTrs.length', allTrs.length);
     return allTrs;
 }
@@ -555,11 +556,11 @@ function createArrayBasketsTrsForBlocks() {
 
 function changeSendAndStakeTrsOrder() {
     console.log('START CHANGE SEND AND STAKE ORDER');
-    const setAddress: Set<number> = new Set();
-    const mapAddressIndex: Map<number, number> = new Map();
+    const setAddress: Set<Address> = new Set();
+    const mapAddressIndex: Map<Address, number> = new Map();
 
     for (let i = 0; i < correctTransactions.length; i++) {
-        const address: number = Number(getAddressByPublicKey(correctTransactions[i].senderPublicKey));
+        const address: Address = getAddressByPublicKey(correctTransactions[i].senderPublicKey);
         if (!setAddress.has(address)) {
             setAddress.add(address);
             if (correctTransactions[i].type === TransactionType.STAKE) {
@@ -586,37 +587,38 @@ function changeSendAndStakeTrsOrder() {
 
 async function addMoneyForNegativeBalanceAccounts() {
     console.log('START FIX NEGATIVE BALANCES', accounts.size);
-    let lastRegisterIndexCount = 0;
-    let createdAtRegisterTrs = 0;
-    for (let i = 0; i < correctTransactions.length; i++) {
-        const transaction = correctTransactions[i];
-        if (transaction.type === TransactionType.REGISTER && createdAtRegisterTrs === 0) {
-            lastRegisterIndexCount = i;
-            createdAtRegisterTrs = transaction.createdAt;
-        } else if (transaction.type === TransactionType.REGISTER && transaction.createdAt === createdAtRegisterTrs) {
-            ++lastRegisterIndexCount;
-        } else if (i - lastRegisterIndexCount > 1000) {
-            break;
-        }
-    }
+    // let lastRegisterIndexCount = 0;
+    // let createdAtRegisterTrs = 0;
+    // for (let i = 0; i < correctTransactions.length; i++) {
+    //     const transaction = correctTransactions[i];
+    //     if (transaction.type === TransactionType.REGISTER && createdAtRegisterTrs === 0) {
+    //         lastRegisterIndexCount = i;
+    //         createdAtRegisterTrs = transaction.createdAt;
+    //     } else if (transaction.type === TransactionType.REGISTER && transaction.createdAt === createdAtRegisterTrs) {
+    //         ++lastRegisterIndexCount;
+    //     } else if (i - lastRegisterIndexCount > 1000) {
+    //         break;
+    //     }
+    // }
 
-    const additionalSendTransactions: Array<Transaction<IAsset>> = [];
-    const keyPair: IKeyPair = DEFAULT_KEY_PAIR_FOR_TRANSACTION;
-    accounts.forEach(((value, key) => {
+    let createdAt = genesisAccountsSendTransactions[genesisAccountsSendTransactions.length - 1].createdAt;
+    const additionalSendTransactions: Array<TransactionModel<IAsset>> = [];
+    // const keyPair: IKeyPair = DEFAULT_KEY_PAIR_FOR_TRANSACTION;
+    accounts.forEach((value, key) => {
         const additionalSendTransaction = new TransactionDTO({
             type: TransactionType.SEND,
             senderPublicKey: SENDER_PUBLIC_KEY_FOR_NEGATIVE_BALANCE_ACCOUNTS,
-            createdAt: createdAtRegisterTrs + 1,
+            createdAt: ++createdAt,
             asset: {
-                recipientAddress: key,
+                recipientAddress: key.toString(),
                 amount: Math.abs(value)
             }
         });
-        additionalSendTransactions.push(TransactionService.create(new TransactionModel(additionalSendTransaction),
-            keyPair).data);
-    }));
-    await correctTransactions.splice(lastRegisterIndexCount, 0, ...additionalSendTransactions);
-    console.log('FINISH FIX NEGATIVE BALANCES');
+        additionalSendTransactions.push(new TransactionModel(additionalSendTransaction));
+    });
+    genesisAccountsSendTransactions = genesisAccountsSendTransactions.concat(additionalSendTransactions);
+    accounts.clear();
+    console.log('FINISH FIX NEGATIVE BALANCES', genesisAccountsSendTransactions.length, additionalSendTransactions.length);
 }
 
 function popTransactionsForMigration(quantity: number) {
@@ -676,16 +678,16 @@ function readTransactionsToMap(filePath): Promise<Map<string, object>> {
     });
 }
 
-function readAccountsToMap(filePath): Promise<Map<number, number>> {
+function readAccountsToMap(filePath): Promise<Map<Address, number>> {
     console.log('START parse csv with negative balances accounts!');
     return new Promise((resolve, reject) => {
-        const accounts: Map<number, number> = new Map();
+        const accounts: Map<Address, number> = new Map();
 
         fs.createReadStream(filePath)
         .pipe(csv())
         .on('data', (data) => {
             // accounts.set(Number(data.address.replace(/DDK/ig, '')), Number(data.amount));
-            accounts.set(Number(data[Object.keys(data)[0]]), Number(data.amount));
+            accounts.set(BigInt(data[Object.keys(data)[0]]), Number(data.amount));
         })
         .on('end', () => {
             console.log('Parsed accounts with negative balance: ', accounts.size);
