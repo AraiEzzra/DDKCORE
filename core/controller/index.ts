@@ -9,8 +9,6 @@ import System from 'core/repository/system';
 import EventsQueue from 'core/repository/eventQueue';
 import { subjectOn, subjectRpc } from 'shared/util/bus';
 import { logger } from 'shared/util/logger';
-import { fromPromise } from 'rxjs/internal-compatibility';
-import { ResponseEntity } from 'shared/model/response';
 import { timer } from 'rxjs';
 import config from 'shared/config';
 
@@ -20,58 +18,82 @@ const UNLOCKED_METHODS: Set<string> = new Set(
 
 UNLOCKED_METHODS.add('transactionsSaved');
 
+type Event = {
+    topicName: string;
+    data: any;
+};
+
+const MAIN_QUEUE: Array<Event> = [];
+const processMainQueue = async (): Promise<void> => {
+    if (MAIN_QUEUE.length === 0) {
+        return;
+    }
+
+    const event: Event = MAIN_QUEUE[MAIN_QUEUE.length - 1];
+    await BlockController.eventsMAIN[event.topicName].apply(BlockController, [event.data]);
+    MAIN_QUEUE.length = MAIN_QUEUE.length - 1;
+    if (MAIN_QUEUE.length) {
+        setImmediate(processMainQueue);
+    }
+};
+
 export const initControllers = () => {
     const controllers = [
-        BlockController,
         TransactionController,
         RoundController,
         SyncController,
         PeerController,
     ];
 
+    const methods = new Map();
+
+    controllers.forEach(controller => {
+        if (controller.eventsON && controller.eventsON.length) {
+            controller.eventsON.forEach(({ handlerTopicName, handlerFunc }) => {
+                methods.set(handlerTopicName, handlerFunc);
+            });
+        }
+    });
+
+
     subjectOn.pipe(
-        filter((elem: { data, topicName }) => {
+        filter((elem: Event) => {
+            return ['BLOCK_GENERATE', 'BLOCK_RECEIVE'].indexOf(elem.topicName) !== -1;
+        }),
+        filter((elem: Event) => {
             if (System.synchronization && !UNLOCKED_METHODS.has(elem.topicName)) {
                 EventsQueue.push({
                     data: elem.data,
                     topicName: elem.topicName,
-                    type: 'ON',
+                    type: 'MAIN',
                 });
                 return false;
             } else {
                 return true;
             }
         }),
-        filter((elem: { data, topicName }) => {
-            return ['BLOCK_GENERATE', 'BLOCK_RECEIVE'].indexOf(elem.topicName) !== -1;
-        }),
-        flatMap(({ data, topicName }) => {
-            logger.debug(`TASK MAIN ${topicName} start`);
-            return fromPromise(BlockController.eventsMAIN[topicName].apply(BlockController, [data]));
-        }),
-    ).subscribe((data: ResponseEntity<any>) => {
+    ).subscribe(async ({ data, topicName }: Event) => {
+        MAIN_QUEUE.unshift({ data, topicName });
+        if (MAIN_QUEUE.length === 1) {
+            setImmediate(processMainQueue);
+        }
+
         logger.debug(data.success ? 'TASK MAIN finished success' : `TASK MAIN finished with error ${data.errors}`);
     });
 
-    controllers.forEach((controller) => {
-        if (controller.eventsON && controller.eventsON.length) {
-            controller.eventsON.forEach(({ handlerTopicName, handlerFunc }) => {
-                subjectOn.subscribe(({ data, topicName }) => {
-                    if (handlerTopicName === topicName) {
-                        setImmediate(() => handlerFunc.apply(controller, [data]));
-                    }
-                });
+    subjectOn.pipe(
+        filter((elem: { data, topicName }) => {
+            return methods.has(elem.topicName);
+        })
+    ).subscribe(({ data, topicName }) => {
+        if (System.synchronization && !UNLOCKED_METHODS.has(topicName)) {
+            EventsQueue.push({
+                data: data,
+                topicName: topicName,
+                type: 'ON',
             });
-        }
-
-        if (controller.eventsRPC && controller.eventsRPC.length) {
-            controller.eventsRPC.forEach(({ handlerTopicName, handlerFunc }) => {
-                subjectRpc.subscribe(({ data, topicName }) => {
-                    if (handlerTopicName === topicName) {
-                        setImmediate(() => handlerFunc.apply(controller, [data]));
-                    }
-                });
-            });
+        } else {
+            setImmediate(() => methods.get(topicName)(data));
         }
     });
 };

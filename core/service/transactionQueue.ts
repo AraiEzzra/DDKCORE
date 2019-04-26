@@ -83,7 +83,7 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
         this.queue.push(...this.conflictedQueue.map(obj => obj.transaction));
         this.conflictedQueue.length = 0;
         this.queue.sort(transactionSortFunc);
-        this.process();
+        setImmediate(this.process);
     }
 
     // TODO change to mapReduce

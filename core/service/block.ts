@@ -84,7 +84,7 @@ class BlockService {
 
     private unlockTransactionPoolAndQueue(): void {
         TransactionQueue.unlock();
-        TransactionQueue.process();
+        setImmediate(TransactionQueue.process);
     }
 
     /**
