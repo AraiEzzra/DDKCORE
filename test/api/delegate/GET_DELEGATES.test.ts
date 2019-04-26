@@ -7,7 +7,7 @@ describe('Test GET_DELEGATES', () => {
 
     const TOTAL_DELEGATES_COUNT = 4;
 
-    it('GET_DELEGATES Positive', async () => {
+    it('Positive', async () => {
         const REQUEST = {
             headers: Fixture.getBaseHeaders(),
             code: API_ACTION_TYPES.GET_DELEGATES,
@@ -44,7 +44,7 @@ describe('Test GET_DELEGATES', () => {
         expect(response.body.data.count).to.equal(TOTAL_DELEGATES_COUNT);
     });
 
-    it('GET_ONE_DELEGATE Positive', async () => {
+    it('Get One', async () => {
         const REQUEST = {
             headers: Fixture.getBaseHeaders(),
             code: API_ACTION_TYPES.GET_DELEGATES,
@@ -60,7 +60,7 @@ describe('Test GET_DELEGATES', () => {
         expect(response.body.data.delegates.length).to.equal(1);
     });
 
-    it('GET EMPTY DELEGATES Positive', async () => {
+    it('Empty', async () => {
         const REQUEST = {
             headers: Fixture.getBaseHeaders(),
             code: API_ACTION_TYPES.GET_DELEGATES,
