@@ -61,7 +61,7 @@ const SENDER_PUBLIC_KEY_FOR_NEGATIVE_BALANCE_ACCOUNTS =
     'b12a7faba4784d79c7298ce49ef5131b291abd70728e6f2bd1bc2207ea4b7947';
 
 const filePathNewTransactions = './transactionsNew_19_04_2019_T13_30.csv';
-const filePathAddressesWithNegativeBalance = './addressesWithNegativeBalance25_4_2019.csv';
+const filePathAddressesWithNegativeBalance = './addressesWithNegativeBalances_26_04_2019.csv';
 
 const publicKeyToKeyPairKeyMap: Map<string, IKeyPair> = new Map();
 
@@ -169,8 +169,6 @@ let allRegisterTrsCount = 0;
 
 async function startPrepareTransactionsForMigration() {
     console.log('START prepare transaction!!!');
-
-    accounts = await readAccountsToMap(filePathAddressesWithNegativeBalance);
 
 
     let [newTrs] = [
@@ -319,7 +317,8 @@ async function startPrepareTransactionsForMigration() {
         });
 
 
-    await changeSendAndStakeTrsOrder();
+    // await changeSendAndStakeTrsOrder();
+
     await addMoneyForNegativeBalanceAccounts();
 
 
@@ -565,7 +564,7 @@ function changeSendAndStakeTrsOrder() {
 
     for (let i = 0; i < correctTransactions.length; i++) {
         const address: Address = getAddressByPublicKey(correctTransactions[i].senderPublicKey);
-        if (!setAddress.has(address)) {
+        if (!setAddress.has(address) && correctTransactions[i].type !== TransactionType.REGISTER) {
             setAddress.add(address);
             if (correctTransactions[i].type === TransactionType.STAKE) {
                 mapAddressIndex.set(address, i);
@@ -591,6 +590,7 @@ function changeSendAndStakeTrsOrder() {
 
 async function addMoneyForNegativeBalanceAccounts() {
     console.log('START FIX NEGATIVE BALANCES', accounts.size);
+    accounts = await readAccountsToMap(filePathAddressesWithNegativeBalance);
     // let lastRegisterIndexCount = 0;
     // let createdAtRegisterTrs = 0;
     // for (let i = 0; i < correctTransactions.length; i++) {
