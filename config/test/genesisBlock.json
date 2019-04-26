@@ -2,7 +2,7 @@
     "id": "cbb9449abb9672d33fa2eb200b1c8b03db7c6572dfb6e59dc334c0ab82b63ab0",
     "version": 1,
     "height": 1,
-    "transactionCount": 7,
+    "transactionCount": 24,
     "amount": 4797000000000000,
     "fee": 482700000000,
     "payloadHash": "7e6ba6ec459d96207414f61b67ecd2ecd8c946507bb102a1e47a0ce987e494d0",
@@ -329,8 +329,64 @@
             "fee": 1000000,
             "signature": "b006831cf01fdb90dfc84f5424b398aba76155b2a1ff0e8e0ee0bc85bcdbfe4023b9101a932fe4e4fc16b1cac175b0828e4adbce5bbd758bd150707c7d1ca406",
             "id": "e4866146acb535667b8e18149bdfc503c35704ebb8d117de8aa15bb434f6ef64"
+        },
+        {
+            "__comment": "Test GET_ACTIVE_DELEGATES Positive",
+            "createdAt": 0,
+            "senderPublicKey": "f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2",
+            "senderAddress": "4995063339468361088",
+            "type": 10,
+            "salt": "d7f83875308f49f4c170c6e41bffb2e6",
+            "asset": {
+                "recipientAddress": "4793028192854197360",
+                "amount": 100000000000
+            },
+            "fee": 10000000,
+            "signature": "51f47d8bc5022b18dac6ea2b82e31a4bc27a54c5f0c6011763318224582ed869bb269022d7f344e3b4d627f06a88da5c5420fe4c83bd3657ebe90979b815dd0b",
+            "id": "193c9b0ecaaf30729353bd17b527189db784822d255071799b508c7c7bfafca2"
+        },
+        {
+            "__comment": "Test GET_ACTIVE_DELEGATES Positive",
+            "createdAt": 0,
+            "senderPublicKey": "f4cd70d17938f5953ea4317d461bd092592b79a086222657fc00abc7d01dd9cc",
+            "senderAddress": "4793028192854197360",
+            "type": 40,
+            "salt": "0f430494dcf600a4176d1875c8427f60",
+            "asset": {
+                "amount": 10000000000,
+                "startTime": 104008317,
+                "startVoteCount": 0,
+                "airdropReward": {
+                    "sponsors": []
+                }
+            },
+            "fee": 1000000,
+            "signature": "abb9f10dac407ed48b6dce636f6ed8aa4dc3684f06f004fc83b52daca8bfd48f14fa9bb29ae1ec49c04b10a31d208f6814d5ecf908354de0f1670afb6c1cf40d",
+            "id": "22d253826012103aec237eed68ca8093692bec7640df4359ea1e41a3240d100c"
+        },
+        {
+            "__comment": "Test GET_ACTIVE_DELEGATES Positive",
+            "createdAt": 104008352,
+            "senderPublicKey": "f4cd70d17938f5953ea4317d461bd092592b79a086222657fc00abc7d01dd9cc",
+            "senderAddress": "4793028192854197360",
+            "type": 60,
+            "salt": "e0d5e11a2a3ddcb9b0c105d5e241e495",
+            "asset": {
+                "votes": [
+                    "+83cb3d8641c8e73735cc1b70c915602ffcb6e5a68f14a71056511699050a1a05"
+                ],
+                "reward": 0,
+                "unstake": 0,
+                "airdropReward": {
+                    "sponsors": []
+                }
+            },
+            "fee": 0,
+            "signature": "25d14b6bd989f24c331f4d5d67c9303584df3ca452a504b8e6ff43164552ed0163cb67e0b113c0fd6db6d1e0159f1e69eae0a0fafd47b96f8d889a8bea533400",
+            "id": "3746e900f1a707f8def060d21b409deb6eb677ab1185edae5fc6855cdabd72c4"
         }
     ],
     "createdAt": 0,
     "previousBlockId": null
 }
+
