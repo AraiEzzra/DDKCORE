@@ -1,5 +1,5 @@
 import * as crypto from 'crypto';
-import * as sodium from 'sodium-javascript';
+import * as sodium from 'sodium-native';
 import BUFFER from 'core/util/buffer';
 
 import Validator from 'z-schema';
