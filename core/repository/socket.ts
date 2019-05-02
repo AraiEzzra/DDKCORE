@@ -109,7 +109,7 @@ export class Socket {
     @autobind
     onPeerBroadcast(response: string, peer: Peer): void {
         const { code, data } = new SocketResponse(response);
-        logger.debug(`[SOCKET][ON_PEER_BROADCAST][${peer.ip}:${peer.port}], CODE: ${code}`);
+        logger.trace(`[SOCKET][ON_PEER_BROADCAST][${peer.ip}:${peer.port}], CODE: ${code}`);
         messageON(code, { data, peer });
     }
 

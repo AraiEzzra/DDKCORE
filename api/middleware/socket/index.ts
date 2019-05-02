@@ -8,6 +8,7 @@ import SocketIO from 'socket.io';
 import { SECOND } from 'shared/util/const';
 import { Socket } from 'dgram';
 import config from 'shared/config';
+import { logger } from 'shared/util/logger';
 
 type RequestProcessor = {
     socket: any,
@@ -49,7 +50,7 @@ export class SocketMiddleware {
     }
 
     onConnect(socket: any) {
-        console.log('Socket %s connected', JSON.stringify(socket.handshake));
+        logger.trace('Socket %s connected', JSON.stringify(socket.handshake));
         socket.on(MESSAGE_CHANNEL, (data: Message) => this.onApiMessage(data, socket));
     }
 

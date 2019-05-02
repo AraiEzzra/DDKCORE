@@ -25,7 +25,7 @@ export class TransactionController {
 
     @API(API_ACTION_TYPES.CREATE_PREPARED_TRANSACTION)
     public createPreparedTransaction(message: Message2<SerializedTransaction<any>>) {
-        logger.debug(`[API][TransactionController][createPreparedTransaction] ${JSON.stringify(message.body)}`);
+        logger.trace(`[API][TransactionController][createPreparedTransaction] ${JSON.stringify(message.body)}`);
 
         const transaction = SharedTransactionRepo.deserialize(message.body);
 
