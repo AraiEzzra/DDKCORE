@@ -30,7 +30,13 @@ const processMainQueue = async (): Promise<void> => {
     }
 
     const event: Event = MAIN_QUEUE[MAIN_QUEUE.length - 1];
-    await BlockController.eventsMAIN[event.topicName].apply(BlockController, [event.data]);
+    const response = await BlockController.eventsMAIN[event.topicName].apply(BlockController, [event.data]);
+    if (response.success) {
+        logger.debug(`[processMainQueue] Main task ${event.topicName} completed successfully`);
+    } else {
+        logger.debug(`[processMainQueue] Main task ${event.topicName} failed: ${response.errors.join('. ')}`);
+    }
+
     MAIN_QUEUE.length = MAIN_QUEUE.length - 1;
     if (MAIN_QUEUE.length) {
         setImmediate(processMainQueue);
@@ -77,8 +83,6 @@ export const initControllers = () => {
         if (MAIN_QUEUE.length === 1) {
             setImmediate(processMainQueue);
         }
-
-        logger.debug(data.success ? 'TASK MAIN finished success' : `TASK MAIN finished with error ${data.errors}`);
     });
 
     subjectOn.pipe(

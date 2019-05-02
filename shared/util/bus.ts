@@ -7,7 +7,7 @@ export const subjectRpc = new Subject();
 const tasks: { [topicName: string]: Timeout } = {};
 
 export function messageON(topicName: string, data: any = {}) {
-    logger.debug(`[Bus][messageON] topicName ${topicName}`);
+    logger.trace(`[Bus][messageON] topicName ${topicName}`);
 
     subjectOn.next({ data, topicName });
 }
