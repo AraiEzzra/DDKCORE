@@ -1,4 +1,4 @@
-import sodium from 'sodium-javascript';
+import sodium from 'sodium-native';
 import crypto from 'crypto';
 
 export interface IKeyPair {
