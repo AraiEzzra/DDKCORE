@@ -123,7 +123,6 @@ export class SocketMiddleware {
 
     buildRequestCleaner(message: Message, socket: any) {
         return setTimeout(() => {
-            console.log('CLEANING....');
             message.body = new ResponseEntity({ errors: ['Request timeout from CORE'] });
             message.headers.type = MessageType.RESPONSE;
             this.requests.delete(message.headers.id);
