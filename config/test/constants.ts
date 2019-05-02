@@ -58,7 +58,7 @@ const constants: IConstants = {
         REQUEST_BLOCK_LIMIT: 42,
     },
     REFERRAL: {
-        MAX_COUNT: 15,
+        MAX_COUNT: 3,
     },
     FORGING: {
         SLOT_INTERVAL: 10,
