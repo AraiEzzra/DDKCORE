@@ -81,6 +81,18 @@ const constants: IConstants = {
         MAX: 25 * 60 * 1000,
     },
     PEERS_COUNT_FOR_DISCOVER: 2,
+    PRE_MINED_ACCOUNTS: [
+        BigInt('13566253584516829136'),
+        BigInt('11696703665952770027'),
+        BigInt('7830105952002929850'),
+        BigInt('3729625658841791180'),
+        BigInt('9671894634278263097'),
+        BigInt('2529254201347404107'),
+        BigInt('3729625658841791180'),
+        BigInt('16136522303332999295'),
+        BigInt('7043806098403384872'),
+        BigInt('13761141028469814636'),
+    ]
 };
 /* tslint:enable */
 

@@ -75,4 +75,5 @@ export type IConstants = {
         MAX: number;
     };
     PEERS_COUNT_FOR_DISCOVER: number;
+    PRE_MINED_ACCOUNTS: Array<Address>;
 };

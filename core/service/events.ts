@@ -4,6 +4,7 @@ import AccountRepository from 'core/repository/account';
 import BlockRepository from 'core/repository/block';
 import SyncService from 'core/service/sync';
 import config from 'shared/config';
+import { Address } from 'shared/model/account';
 
 export type BlockchainInfo = {
     totalSupply: number;
@@ -19,13 +20,15 @@ export type BlockchainInfo = {
 class EventService {
 
     updateBlockchainInfo() {
-        const totalSupplyAccount = AccountRepository.getByAddress(config.CONSTANTS.TOTAL_SUPPLY.ADDRESS);
-        const totalSupply = totalSupplyAccount ? totalSupplyAccount.actualBalance : 0;
-        const circulatingSupply = config.CONSTANTS.TOTAL_SUPPLY.AMOUNT - totalSupply;
+        const preMinedAccounts = config.CONSTANTS.PRE_MINED_ACCOUNTS.map((address: Address) => 
+            AccountRepository.getByAddress(address)
+        );
+        const circulatingSupply = config.CONSTANTS.TOTAL_SUPPLY.AMOUNT - 
+            preMinedAccounts.reduce((sum, acc) => sum += (acc ? acc.actualBalance : 0), 0);
         const statistics = AccountRepository.getStatistics();
 
         SocketMiddleware.emitEvent<BlockchainInfo>(EVENT_TYPES.UPDATE_BLOCKCHAIN_INFO, {
-            totalSupply,
+            totalSupply: config.CONSTANTS.TOTAL_SUPPLY.AMOUNT,
             circulatingSupply,
             tokenHolders: statistics.tokenHolders,
             totalStakeAmount: statistics.totalStakeAmount,
