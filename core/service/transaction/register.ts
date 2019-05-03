@@ -3,6 +3,7 @@ import { IAssetRegister, Transaction, TransactionModel } from 'shared/model/tran
 import { Account } from 'shared/model/account';
 import { ResponseEntity } from 'shared/model/response';
 import AccountRepo from 'core/repository/account';
+import ReferredUsersRepo from 'core/repository/referredUsers/index';
 import config from 'shared/config';
 import BUFFER from 'core/util/buffer';
 
@@ -56,8 +57,10 @@ class TransactionRegisterService implements IAssetService<IAssetRegister> {
 
         if (!referralAccount) {
             referralAccount = AccountRepo.add({
-                address: trs.asset.referral,
+                address: trs.asset.referral
             });
+
+            ReferredUsersRepo.add(referralAccount);
         }
 
         const referrals: Array<Account> =
@@ -68,6 +71,8 @@ class TransactionRegisterService implements IAssetService<IAssetRegister> {
             publicKey: trs.senderPublicKey
         });
         targetAccount.referrals = [referralAccount, ...referrals];
+
+        ReferredUsersRepo.add(targetAccount);
     }
 
     undoUnconfirmed(trs: Transaction<IAssetRegister>, sender: Account, senderOnly: boolean): void {

@@ -24,7 +24,7 @@ export const ALL_SCHEMAS = flattenDeep([
     SCHEMAS_DELEGATES,
     SCHEMA_REFERRED_USERS,
     SCHEMAS_REWARD,
-    SCHEMAS_ROUND,
+    SCHEMAS_ROUND
 ]);
 
 export const MESSAGE = SCHEMA_MESSAGE;
