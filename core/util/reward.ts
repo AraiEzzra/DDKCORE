@@ -47,7 +47,6 @@ export const calculateTotalRewardAndUnstake = (
         return { reward, unstake: unstakeAmount };
     }
     const freezeOrders: Array<Stake> = sender.stakes;
-    // logger.debug(`[Frozen][calculateTotalRewardAndUnstake] freezeOrders: ${JSON.stringify(freezeOrders)}`);
 
     freezeOrders
         .filter(stake => stake.isActive && trs.createdAt >= stake.nextVoteMilestone)
@@ -61,7 +60,6 @@ export const calculateTotalRewardAndUnstake = (
     const readyToUnstakeOrders = freezeOrders.filter(
         o => (o.voteCount + 1) === config.CONSTANTS.FROZE.UNSTAKE_VOTE_COUNT
     );
-    // logger.debug(`[Frozen][calculateTotalRewardAndUnstake] reward: ${reward}`);
     readyToUnstakeOrders.forEach((order) => {
         unstakeAmount += order.amount;
     });
