@@ -44,7 +44,9 @@ describe('ReferredUsers repository', () => {
 
             before(() => {
                 ReferredUserRepo.add(referral);
+
                 ReferredUserRepo.add(account);
+                ReferredUserRepo.updateCount(account);
             })
 
             it('return added node with children', () => {
@@ -82,7 +84,9 @@ describe('ReferredUsers repository', () => {
 
             before(() => {
                 ReferredUserRepo.add(referral);
+
                 ReferredUserRepo.add(account);
+                ReferredUserRepo.updateCount(account);
             })
 
             it('one referred User', () => {
@@ -125,8 +129,12 @@ describe('ReferredUsers repository', () => {
 
             before(() => {
                 ReferredUserRepo.add(root);
+
                 ReferredUserRepo.add(account1);
+                ReferredUserRepo.updateCount(account1);
+
                 ReferredUserRepo.add(account2);
+                ReferredUserRepo.updateCount(account2);
             })
 
             it('one referred User', () => {
@@ -179,11 +187,15 @@ describe('ReferredUsers repository', () => {
 
             before(() => {
                 ReferredUserRepo.add(root);
+
                 ReferredUserRepo.add(account1);
+                ReferredUserRepo.updateCount(account1);
+
                 ReferredUserRepo.add(account2);
+                ReferredUserRepo.updateCount(account2);
             });
 
-            it('one referred User', () => {
+            it('two referred User', () => {
 
                 expect(ReferredUserRepo.getUsers(root, 0)).to.deep.equal([
                     {
