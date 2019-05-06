@@ -15,7 +15,9 @@ class ReferredUsersController {
     public getReferredUsers(message: Message2<{ address: string, level: number }>): ResponseEntity<object> {
         const { address, level } = message.body;
         const account = AccountRepo.getByAddress(BigInt(address));
-        const referredUsers = ReferredUsersRepo.getUsers(account, level);
+        const referredUsers = account
+            ? ReferredUsersRepo.getUsers(account, level)
+            : [];
 
         return new ResponseEntity({
             data: {

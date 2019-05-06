@@ -24,21 +24,25 @@ export default class ReferredUsersTree implements IReferredUsers {
             }
 
             root.addChild(node);
-
-            let parent = root;
-
-            for (let level = config.CONSTANTS.REFERRAL.MAX_COUNT - 1; level >= 0; level--) {
-                parent.addFactor(FactorType.COUNT, level, 1);
-                parent = parent.parent;
-                if (parent === null) {
-                    break;
-                }
-            }
         }
     }
 
     delete(account: Account) {
         this.tree.removeNode(account.address);
+    }
+
+    updateCount(account: Account, count: number = 1): void {
+        const node = this.tree.getNode(account.address);
+
+        let parent = node.parent;
+
+        for (let level = config.CONSTANTS.REFERRAL.MAX_COUNT - 1; level >= 0; level--) {
+            if (parent === null) {
+                break;
+            }
+            parent.addFactor(FactorType.COUNT, level, count);
+            parent = parent.parent;
+        }
     }
 
     getUsers(account: Account, level: number): Array<IReferredUser> {

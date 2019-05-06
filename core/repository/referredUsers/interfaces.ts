@@ -4,6 +4,7 @@ export interface IReferredUsers {
     add(account: Account): void;
     delete(account: Account): void;
     getUsers(account: Account, level: number): Array<IReferredUser>;
+    updateCount(account: Account, count: number): void;
 }
 
 export interface IReferredUser {

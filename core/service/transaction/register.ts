@@ -73,9 +73,11 @@ class TransactionRegisterService implements IAssetService<IAssetRegister> {
         targetAccount.referrals = [referralAccount, ...referrals];
 
         ReferredUsersRepo.add(targetAccount);
+        ReferredUsersRepo.updateCount(targetAccount);
     }
 
     undoUnconfirmed(trs: Transaction<IAssetRegister>, sender: Account, senderOnly: boolean): void {
+        ReferredUsersRepo.updateCount(sender, -1);
         sender.referrals = [];
     }
 
