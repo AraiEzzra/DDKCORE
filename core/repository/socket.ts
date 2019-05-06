@@ -56,8 +56,6 @@ export class Socket {
                     socket.emit(SERVER_HEADERS, JSON.stringify(
                         SystemRepository.getFullHeaders()
                     ));
-                } else {
-                    socket.disconnect(true);
                 }
             });
         });
@@ -91,22 +89,24 @@ export class Socket {
 
     @autobind
     addPeer(peer: Peer, socket: SocketIO.Socket | any): boolean {
-        if (PeerRepository.addPeer(peer, socket)) {
-            logger.debug(`[SOCKET][ADD_PEER] host: ${peer.ip}:${peer.port}`);
-            const listenBroadcast = (response: string) => Socket.instance.onPeerBroadcast(response, peer);
-            const listenRPC = (response: string) => Socket.instance.onPeerRPCRequest(response, peer);
-            socket.on(BROADCAST, listenBroadcast);
-            socket.on(SOCKET_RPC_REQUEST, listenRPC);
-
-            peer.socket.on('disconnect', (reason: string): void => {
-                logger.debug(`[SOCKET][DISCONNECT_REASON] ${reason}`);
-                peer.socket.removeListener(BROADCAST, listenBroadcast);
-                peer.socket.removeListener(SOCKET_RPC_REQUEST, listenRPC);
-                PeerRepository.removePeer(peer);
-            });
-            return true;
+        if (!PeerRepository.addPeer(peer, socket)) {
+            socket.disconnect(true);
+            return false;
         }
-        return false;
+
+        logger.debug(`[SOCKET][ADD_PEER] host: ${peer.ip}:${peer.port}`);
+        const listenBroadcast = (response: string) => Socket.instance.onPeerBroadcast(response, peer);
+        const listenRPC = (response: string) => Socket.instance.onPeerRPCRequest(response, peer);
+        socket.on(BROADCAST, listenBroadcast);
+        socket.on(SOCKET_RPC_REQUEST, listenRPC);
+
+        peer.socket.on('disconnect', (reason: string): void => {
+            logger.debug(`[SOCKET][DISCONNECT_REASON] ${reason}`);
+            peer.socket.removeListener(BROADCAST, listenBroadcast);
+            peer.socket.removeListener(SOCKET_RPC_REQUEST, listenRPC);
+            PeerRepository.removePeer(peer);
+        });
+        return true;
     }
 
     @autobind

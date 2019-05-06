@@ -5,7 +5,7 @@ import SystemRepository from 'core/repository/system';
 import BlockService from 'core/service/block';
 import BlockRepository from 'core/repository/block/index';
 import PeerRepository from 'core/repository/peer';
-import SyncRepository from 'core/repository/sync';
+import SyncRepository, { ERROR_NOT_ENOUGH_PEERS } from 'core/repository/sync';
 import { TOTAL_PERCENTAGE } from 'core/util/const';
 import config from 'shared/config';
 import { logger } from 'shared/util/logger';
@@ -60,31 +60,26 @@ export class SyncService implements ISyncService {
     async checkCommonBlock(lastBlock: Block): Promise<ResponseEntity<{ isExist: boolean, peer?: Peer }>> {
 
         const errors: Array<string> = [];
+        const filteredPeers = PeerRepository.getPeersByFilter(lastBlock.height, SystemRepository.broadhash);
+
+        if (!filteredPeers.length) {
+            return new ResponseEntity({ errors: [ERROR_NOT_ENOUGH_PEERS] });
+        }
+
+        const randomPeer = PeerRepository.getRandomPeer(filteredPeers);
+        if (!randomPeer) {
+            errors.push(`random peer not found`);
+            return new ResponseEntity({ errors });
+        }
 
         if (this.checkBlockConsensus(lastBlock) || lastBlock.height === 1) {
-            return new ResponseEntity({ data: { isExist: true } });
+
+            return new ResponseEntity({ data: { isExist: true, peer: randomPeer } });
+
         } else {
-
-            const peers = PeerRepository.getPeersByFilter(lastBlock.height, SystemRepository.broadhash);
-
-            if (peers.length === 0) {
-                errors.push(
-                    `[Service][Sync][checkCommonBlock][getPeersByFilter]: ` +
-                    `${peers.length} of ${PeerRepository.peerList().length}`
-                );
-                return new ResponseEntity({ errors });
-            }
-            const randomPeer = PeerRepository.getRandomPeer(peers);
-            logger.debug(`[Service][Sync][checkCommonBlock][getRandomPeer] ${randomPeer.ip}:${randomPeer.port}`);
-
-            if (!randomPeer) {
-                errors.push(`random peer not found`);
-                return new ResponseEntity({ errors });
-            }
 
             const minHeight = Math.min(...randomPeer.blocksIds.keys());
             if (minHeight > lastBlock.height) {
-
                 const response = await SyncRepository.requestCommonBlocks(
                     { id: lastBlock.id, height: lastBlock.height }
                 );
@@ -123,7 +118,7 @@ export class SyncService implements ISyncService {
         return;
     }
 
-    async requestBlocks(lastBlock, peer = null): Promise<ResponseEntity<Array<Block>>> {
+    async requestBlocks(lastBlock, peer): Promise<ResponseEntity<Array<Block>>> {
         return SyncRepository.requestBlocks({
             height: lastBlock.height,
             limit: config.CONSTANTS.TRANSFER.REQUEST_BLOCK_LIMIT

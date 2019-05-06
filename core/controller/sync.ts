@@ -10,7 +10,6 @@ import System from 'core/repository/system';
 import BlockRepository from 'core/repository/block';
 import EventQueue from 'core/repository/eventQueue';
 import { REQUEST_TIMEOUT } from 'core/repository/socket';
-import { ERROR_NOT_ENOUGH_PEERS } from 'core/repository/sync';
 import { asyncTimeout } from 'shared/util/timer';
 import RoundService from 'core/service/round';
 
@@ -37,6 +36,7 @@ export class SyncController extends BaseController {
 
     @ON('EMIT_SYNC_BLOCKS')
     async startSyncBlocks(): Promise<void> {
+        let lastPeerRequested = null;
         if (SyncService.consensus || PeerRepository.peerList().length === 0) {
             System.synchronization = false;
             messageON('WARM_UP_FINISHED');
@@ -54,6 +54,7 @@ export class SyncController extends BaseController {
         logger.debug(`${LOG_PREFIX}[startSyncBlocks]: start sync with consensus ${SyncService.getConsensus()}%`);
         RoundService.rollbackToLastBlock();
 
+        // TODO: delete away this crutch from my code
         // TODO: change sync timeout logic
         let needDelay = false;
         while (!SyncService.consensus) {
@@ -82,17 +83,19 @@ export class SyncController extends BaseController {
             }
             const { isExist, peer = null } = responseCommonBlocks.data;
             if (!isExist) {
+                if (lastPeerRequested) {
+                    PeerRepository.ban(lastPeerRequested);
+                    lastPeerRequested = null;
+                }
                 await SyncService.rollback();
                 continue;
             }
+            lastPeerRequested = peer;
             const responseBlocks = await SyncService.requestBlocks(lastBlock, peer);
             if (!responseBlocks.success) {
                 logger.error(
                     `${LOG_PREFIX}[startSyncBlocks][responseBlocks]: ${responseBlocks.errors.join('. ')}`
                 );
-                if (responseCommonBlocks.errors.indexOf(ERROR_NOT_ENOUGH_PEERS) !== -1) {
-                    break;
-                }
                 continue;
             }
             const loadStatus = await SyncService.loadBlocks(responseBlocks.data);

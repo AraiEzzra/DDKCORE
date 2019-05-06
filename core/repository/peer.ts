@@ -9,22 +9,25 @@ import config from 'shared/config';
 export class PeerRepo {
     private peers: { [string: string]: Peer } = {};
     private static instance: PeerRepo;
+    private banList: Set<string>;
 
     constructor() {
         if (PeerRepo.instance) {
             return PeerRepo.instance;
         }
         PeerRepo.instance = this;
+        this.banList = new Set();
     }
 
     addPeer(peer: Peer, ws): boolean {
-        if (!this.has(peer)) {
-            peer.socket = ws;
-            peer.blocksIds = new Map(peer.blocksIds);
-            this.peers[`${peer.ip}:${peer.port}`] = peer;
-            return true;
+        if (this.has(peer) || this.isBanned(peer)) {
+            return false;
         }
-        return false;
+        peer.socket = ws;
+        peer.blocksIds = new Map(peer.blocksIds);
+        this.peers[`${peer.ip}:${peer.port}`] = peer;
+        return true;
+
     }
 
     removePeer(peer: Peer): void {
@@ -36,8 +39,8 @@ export class PeerRepo {
         return Object.values(this.peers);
     }
 
-    disconnectPeers(peers = null) {
-        (peers || this.peerList()).forEach(peer => {
+    disconnectPeers() {
+        this.peerList().forEach(peer => {
             peer.socket.disconnect(true);
         });
     }
@@ -63,6 +66,24 @@ export class PeerRepo {
         return false;
     }
 
+    ban(peer: Peer) {
+        if (!this.has(peer)) {
+            return;
+        }
+        logger.debug(`[Repository][Peer][ban] peer ${peer.ip}:${peer.port} has been banned`);
+        peer = this.getPeerFromPool(peer);
+        peer.socket.disconnect(true);
+        this.banList.add(`${peer.ip}:${peer.port}`);
+    }
+
+    isBanned(peer: Peer): boolean {
+        return this.banList.has(`${peer.ip}:${peer.port}`);
+    }
+
+    clearBanList() {
+        this.banList.clear();
+    }
+
     peerUpdate(headers, peer: Peer): void {
         logger.debug(`[Repository][Peer][peerUpdate][${peer.ip}:${peer.port}]: ${JSON.stringify(headers)}`);
         if (!this.has(peer)) {
@@ -86,9 +107,6 @@ export class PeerRepo {
         [...blocksIds.keys()]
         .filter(key => key >= height)
         .map(key => blocksIds.delete(key));
-    }
-
-    ban(peer) {
     }
 
     getRandomPeer(peers: Array<Peer> = null): Peer {
@@ -123,7 +141,7 @@ export class PeerRepo {
         return config.CORE.PEERS.TRUSTED[getRandomInt(config.CORE.PEERS.TRUSTED.length)];
     }
 
-    connectPeers(peers: Array<{ip: string, port: number}> = []) {
+    connectPeers(peers: Array<{ ip: string, port: number }> = []) {
         peers.forEach(peer => {
             socket.connectNewPeer(peer);
         });
