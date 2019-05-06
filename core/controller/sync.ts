@@ -31,7 +31,7 @@ export class SyncController extends BaseController {
     @ON('REQUEST_COMMON_BLOCKS')
     checkCommonBlocks(action: checkCommonBlocksRequest): void {
         const { data, peer, requestId } = action;
-        logger.debug(`${LOG_PREFIX}[checkCommonBlocks]: ${JSON.stringify(data.block)}`);
+        logger.debug(`${LOG_PREFIX}[checkCommonBlocks]: ${JSON.stringify(data.block)}, peer: ${peer.ip}`);
         SyncService.checkCommonBlocks(data.block, peer, requestId);
     }
 

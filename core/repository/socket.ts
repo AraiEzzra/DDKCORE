@@ -12,6 +12,7 @@ import { SocketResponse, SocketResponseRPC } from 'shared/model/socket';
 import { ResponseEntity } from 'shared/model/response';
 import { SOCKET_RPC_REQUEST_TIMEOUT } from 'core/util/const';
 import { CORE_SOCKET_CLIENT_CONFIG, API_SOCKET_SERVER_CONFIG } from 'shared/config/socket';
+import { IPRegExp } from 'core/util/common';
 
 export const REQUEST_TIMEOUT = '408 Request Timeout';
 
@@ -48,7 +49,9 @@ export class Socket {
             socket.emit(OPEN);
             socket.on(HEADERS, (data: string) => {
                 logger.debug(`[SOCKET][HEADERS_FROM_CLIENT]`);
-                const peer = JSON.parse(data);
+
+                const ip = socket.handshake.address.match(IPRegExp);
+                const peer = { ...JSON.parse(data), ip };
                 if (Socket.instance.addPeer(peer, socket)) {
                     socket.emit(SERVER_HEADERS, JSON.stringify(
                         SystemRepository.getFullHeaders()
@@ -118,7 +121,7 @@ export class Socket {
         const { code, data, requestId } = new SocketResponseRPC(response);
         logger.debug(
             `[SOCKET][ON_PEER_RPC_REQUEST] from ${peer.ip}:${peer.port} CODE: ${code}, ` +
-            ` REQUEST_ID: ${requestId} DATA: ${JSON.stringify(data)}`
+            `REQUEST_ID: ${requestId} DATA: ${JSON.stringify(data)}`
         );
         messageON(code, { data, peer, requestId });
     }

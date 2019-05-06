@@ -14,15 +14,15 @@ import {
     undoFrozeOrdersRewardAndUnstake,
     verifyAirdrop
 } from 'core/util/reward';
-import DelegateRepo from 'core/repository/delegate';
 import { TOTAL_PERCENTAGE } from 'core/util/const';
+import AccountRepository from 'core/repository/account';
 
 class TransactionVoteService implements IAssetService<IAssetVote> {
 
     create(trs: TransactionModel<IAssetVote>): IAssetVote {
         const sender: Account = AccountRepo.getByAddress(trs.senderAddress);
         const totals: { reward: number, unstake: number} =
-            calculateTotalRewardAndUnstake(sender, trs.asset.type === VoteType.DOWN_VOTE);
+            calculateTotalRewardAndUnstake(trs, sender, trs.asset.type === VoteType.DOWN_VOTE);
         const airdropReward: IAirdropAsset = getAirdropReward(sender, totals.reward, trs.type);
 
         return {
@@ -117,17 +117,17 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
         const errors: Array<string> = [];
 
         const isDownVote: boolean = trs.asset.votes[0][0] === '-';
-        const totals: { reward: number, unstake: number} = calculateTotalRewardAndUnstake(sender, isDownVote);
+        const totals: { reward: number, unstake: number } = calculateTotalRewardAndUnstake(trs, sender, isDownVote);
 
         if (totals.reward !== trs.asset.reward) {
             errors.push(
-                `Verify failed: vote reward is corrupted, expected: ${totals.reward}, actual: ${trs.asset.reward}`
+                `Verify failed: vote reward is corrupted, expected: ${trs.asset.reward}, actual: ${totals.reward}`
             );
         }
 
         if (totals.unstake !== trs.asset.unstake) {
             errors.push(
-                `Verify failed: vote unstake is corrupted, expected: ${totals.unstake}, actual: ${trs.asset.unstake}`
+                `Verify failed: vote unstake is corrupted, expected: ${trs.asset.unstake}, actual: ${totals.unstake}`
             );
         }
 
@@ -173,6 +173,14 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
 
             errors.push(`Maximum number of votes possible ${config.CONSTANTS.MAX_VOTES}, exceeded by ${exceeded}`);
         }
+
+        if (errors.length) {
+            errors.push(
+                `Transaction: ${JSON.stringify(trs)}.` +
+                `Account: ${JSON.stringify(AccountRepository.serialize(sender))}`
+            );
+        }
+
         return new ResponseEntity<void>({ errors });
     }
 

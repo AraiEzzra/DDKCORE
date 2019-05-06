@@ -116,7 +116,10 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
         const verifyStatus = TransactionDispatcher.verifyUnconfirmed(trs, sender);
 
         if (!verifyStatus.success) {
-            logger.debug(`TransactionStatus.verifyStatus ${JSON.stringify(verifyStatus)}`);
+            logger.error(
+                `[Service][TransactionQueue][process][verifyUnconfirmed] ` +
+                `${JSON.stringify(verifyStatus.errors.join('. '))}. Transaction: ${JSON.stringify(trs)}`
+            );
             trs.status = TransactionStatus.DECLINED;
 
             SocketMiddleware.emitEvent<{ transaction: SerializedTransaction<IAsset>, reason: Array<string> }>(

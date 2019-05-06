@@ -224,8 +224,12 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             return new ResponseEntity({ errors });
         }
 
+        if (!data.createdAt) {
+            data.createdAt = SlotService.getTime();
+        }
+
         const trs = new Transaction<T>({
-            createdAt: data.createdAt || SlotService.getTime(),
+            createdAt: data.createdAt,
             senderPublicKey: sender.publicKey,
             senderAddress: sender.address,
             type: data.type,
