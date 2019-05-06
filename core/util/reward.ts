@@ -2,12 +2,18 @@ import { Address, Account, Stake } from 'shared/model/account';
 import { logger } from 'shared/util/logger';
 import config from 'shared/config';
 import BlockRepo from 'core/repository/block';
-import { IAirdropAsset, IAssetStake, IAssetVote, Transaction, TransactionType } from 'shared/model/transaction';
+import {
+    IAirdropAsset,
+    IAssetStake,
+    IAssetVote,
+    Transaction,
+    TransactionType,
+    TransactionModel,
+} from 'shared/model/transaction';
 import AccountRepo from 'core/repository/account';
 import { ResponseEntity } from 'shared/model/response';
 import { TOTAL_PERCENTAGE, MONEY_FACTOR } from 'core/util/const';
 import { isEqualMaps } from 'core/util/common';
-import SlotService from 'core/service/slot';
 
 class StakeReward {
     private readonly milestones = config.CONSTANTS.FROZE.REWARDS.MILESTONES;
@@ -31,6 +37,7 @@ class StakeReward {
 const stakeReward = new StakeReward();
 
 export const calculateTotalRewardAndUnstake = (
+    trs: TransactionModel<IAssetVote>,
     sender: Account,
     isDownVote: boolean,
 ): { reward: number, unstake: number } => {
@@ -40,10 +47,10 @@ export const calculateTotalRewardAndUnstake = (
         return { reward, unstake: unstakeAmount };
     }
     const freezeOrders: Array<Stake> = sender.stakes;
-    logger.debug(`[Frozen][calculateTotalRewardAndUnstake] freezeOrders: ${JSON.stringify(freezeOrders)}`);
+    // logger.debug(`[Frozen][calculateTotalRewardAndUnstake] freezeOrders: ${JSON.stringify(freezeOrders)}`);
 
     freezeOrders
-        .filter(stake => SlotService.getTime() > stake.nextVoteMilestone)
+        .filter(stake => stake.isActive && trs.createdAt >= stake.nextVoteMilestone)
         .forEach((stake: Stake) => {
             if (stake.voteCount > 0 && (stake.voteCount + 1) % config.CONSTANTS.FROZE.REWARD_VOTE_COUNT === 0) {
                 const blockHeight: number = BlockRepo.getLastBlock().height;
@@ -54,7 +61,7 @@ export const calculateTotalRewardAndUnstake = (
     const readyToUnstakeOrders = freezeOrders.filter(
         o => (o.voteCount + 1) === config.CONSTANTS.FROZE.UNSTAKE_VOTE_COUNT
     );
-    logger.debug(`[Frozen][calculateTotalRewardAndUnstake] reward: ${reward}`);
+    // logger.debug(`[Frozen][calculateTotalRewardAndUnstake] reward: ${reward}`);
     readyToUnstakeOrders.forEach((order) => {
         unstakeAmount += order.amount;
     });
@@ -75,8 +82,6 @@ export const getAirdropReward = (
     }
 
     const availableAirdropBalance: number = AccountRepo.getByAddress(config.CONSTANTS.AIRDROP.ADDRESS).actualBalance;
-
-    logger.info(`availableAirdropBalance: ${availableAirdropBalance / MONEY_FACTOR}`);
 
     if (!sender || !sender.referrals || (sender.referrals.length === 0)) {
         return result;
@@ -121,8 +126,8 @@ export const verifyAirdrop = (
             errors: [
                 `Verify failed: ${trs.type === TransactionType.STAKE ? 'stake' : 'vote'} ` +
                 `airdrop reward is corrupted, ` +
-                `expected: ${JSON.stringify([...airdropReward.sponsors])}, ` +
-                `actual: ${JSON.stringify([...trs.asset.airdropReward.sponsors])}`
+                `expected: ${JSON.stringify([...trs.asset.airdropReward.sponsors])}, ` +
+                `actual: ${JSON.stringify([...airdropReward.sponsors])}`
             ]
         });
     }

@@ -14,15 +14,15 @@ import {
     undoFrozeOrdersRewardAndUnstake,
     verifyAirdrop
 } from 'core/util/reward';
-import DelegateRepo from 'core/repository/delegate';
 import { TOTAL_PERCENTAGE } from 'core/util/const';
+import AccountRepository from 'core/repository/account';
 
 class TransactionVoteService implements IAssetService<IAssetVote> {
 
     create(trs: TransactionModel<IAssetVote>): IAssetVote {
         const sender: Account = AccountRepo.getByAddress(trs.senderAddress);
         const totals: { reward: number, unstake: number} =
-            calculateTotalRewardAndUnstake(sender, trs.asset.type === VoteType.DOWN_VOTE);
+            calculateTotalRewardAndUnstake(trs, sender, trs.asset.type === VoteType.DOWN_VOTE);
         const airdropReward: IAirdropAsset = getAirdropReward(sender, totals.reward, trs.type);
 
         return {
