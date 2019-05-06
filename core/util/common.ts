@@ -24,3 +24,5 @@ export const isEqualMaps = (map1: Map<any, any>, map2: Map<any, any>) => {
     }
     return true;
 };
+
+export const IPRegExp = /\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/;

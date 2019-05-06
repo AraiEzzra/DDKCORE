@@ -28,7 +28,7 @@ import { getAddressByPublicKey } from 'shared/util/account';
 import SocketMiddleware from 'core/api/middleware/socket';
 import { EVENT_TYPES } from 'shared/driver/socket/codes';
 import { MIN_ROUND_BLOCK } from 'core/util/block';
-import { IKeyPair, ed } from 'shared/util/ed';
+import { IKeyPair } from 'shared/util/ed';
 import System from 'core/repository/system';
 
 const validator: Validator = new ZSchema({});
@@ -342,7 +342,10 @@ class BlockService {
                         this.checkTransaction(block, trs, sender);
                     if (!resultCheckTransaction.success) {
                         errors.push(...resultCheckTransaction.errors);
-                        logger.debug(`[Verify][checkTransactionsAndApplyUnconfirmed][error] ${errors}`);
+                        logger.error(
+                            `[Service][Block][checkTransactionsAndApplyUnconfirmed][error] ${errors.join('. ')}. ` +
+                            `Transaction: ${trs}`
+                        );
                         i--;
                         continue;
                     }
