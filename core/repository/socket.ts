@@ -50,8 +50,7 @@ export class Socket {
             socket.on(HEADERS, (data: string) => {
                 logger.debug(`[SOCKET][HEADERS_FROM_CLIENT]`);
 
-                const ip = socket.handshake.address.match(IPRegExp);
-                const peer = { ...JSON.parse(data), ip };
+                const peer = JSON.parse(data);
                 if (Socket.instance.addPeer(peer, socket)) {
                     socket.emit(SERVER_HEADERS, JSON.stringify(
                         SystemRepository.getFullHeaders()
