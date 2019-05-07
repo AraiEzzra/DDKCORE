@@ -51,7 +51,7 @@ const PREPARE_TRANSACTIONS_AND_WRITE_TO_DB_AS_BASKETS = true;
 const USE_TEMPORARY_DB_TABLE_WITH_BASKETS = true;
 const START_CREATE_ROUNDS_AND_BLOCKS = true;
 const START_SORT_TRANSACTIONS = true;
-const FIX_NEGATIVE_BALANCES = false;
+const FIX_NEGATIVE_BALANCES = true;
 
 // 0 for all transactions
 const QUANTITY_PARSE_TRS = 0;
@@ -67,7 +67,7 @@ const SENDER_PUBLIC_KEY_FOR_NEGATIVE_BALANCE_ACCOUNTS =
     'b12a7faba4784d79c7298ce49ef5131b291abd70728e6f2bd1bc2207ea4b7947';
 
 const filePathNewTransactions = './transactionsNew_19_04_2019_T13_30.csv';
-const filePathAddressesWithNegativeBalance = './addressesWithNegativeBalance_06_05_2019.csv';
+const filePathAddressesWithNegativeBalance = './08_05_2019_T8_00_addressesWithNegativeBalance.csv';
 
 const publicKeyToKeyPairKeyMap: Map<string, IKeyPair> = new Map();
 

@@ -39,24 +39,26 @@ class Loader {
 
         initControllers();
         System.synchronization = true;
-        await this.blockWarmUp(this.limit);
+        // TODO commented for migration
+        // await this.blockWarmUp(this.limit);
         if (!BlockRepository.getGenesisBlock()) {
             await BlockService.applyGenesisBlock(config.GENESIS_BLOCK);
         }
 
-        socket.init();
+        // TODO commented for migration
+        // socket.init();
 
-        initShedulers();
+        // initShedulers();
 
-        setInterval(
-            () => messageON('EMIT_REBOOT_PEERS_CONNECTIONS'),
-            getRandomInt(
-                config.CONSTANTS.PEER_CONNECTION_TIME_INTERVAL_REBOOT.MIN,
-                config.CONSTANTS.PEER_CONNECTION_TIME_INTERVAL_REBOOT.MAX
-            )
-        );
-        setTimeout(() => messageON('EMIT_SYNC_BLOCKS'), config.CONSTANTS.TIMEOUT_START_SYNC_BLOCKS);
-        socketRPCServer.run();
+        // setInterval(
+        //     () => messageON('EMIT_REBOOT_PEERS_CONNECTIONS'),
+        //     getRandomInt(
+        //         config.CONSTANTS.PEER_CONNECTION_TIME_INTERVAL_REBOOT.MIN,
+        //         config.CONSTANTS.PEER_CONNECTION_TIME_INTERVAL_REBOOT.MAX
+        //     )
+        // );
+        // setTimeout(() => messageON('EMIT_SYNC_BLOCKS'), config.CONSTANTS.TIMEOUT_START_SYNC_BLOCKS);
+        // socketRPCServer.run();
     }
 
     public async initDatabase() {
