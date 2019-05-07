@@ -61,6 +61,7 @@ export type IConstants = {
     TRANSACTION_QUEUE_EXPIRE: number;
     PRE_ORDER_LAST_MIGRATED_BLOCK: number;
     PRE_ORDER_PUBLIC_KEY: string;
+    PRE_ORDER_SECOND_PUBLIC_KEY: string;
     UPDATE_BLOCKCHAIN_INFO_INTERVAL: number;
     MAX_PEERS_CONNECT_TO: number;
     MAX_PEERS_CONNECTED: number
