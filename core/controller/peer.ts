@@ -36,6 +36,7 @@ export class PeerController extends BaseController {
     @ON('EMIT_REBOOT_PEERS_CONNECTIONS')
     async rebootPeersConnections(): Promise<void> {
         const discoveredPeers = await SyncRepository.discoverPeers();
+        PeerRepository.clearBanList();
         PeerRepository.disconnectPeers();
         logger.debug('[Controller][Peer][rebootPeersConnections]: DISCONNECTED ALL PEERS');
 

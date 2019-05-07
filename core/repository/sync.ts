@@ -104,15 +104,7 @@ export class Sync implements ISyncRepo {
         SocketRepository.peerRPCResponse('RESPONSE_COMMON_BLOCKS', response, peer, requestId);
     }
 
-    async requestBlocks(data: { height: number, limit: number }, peer = null): Promise<ResponseEntity<Array<Block>>> {
-
-        if (peer === null) {
-            const filteredPeers = PeerRepository.getPeersByFilter(data.height, SystemRepository.broadhash);
-            if (!filteredPeers.length) {
-                return new ResponseEntity({ errors: [ERROR_NOT_ENOUGH_PEERS] });
-            }
-            peer = PeerRepository.getRandomPeer(filteredPeers);
-        }
+    async requestBlocks(data: { height: number, limit: number }, peer): Promise<ResponseEntity<Array<Block>>> {
 
         return SocketRepository.peerRPCRequest('REQUEST_BLOCKS', data, peer);
     }
