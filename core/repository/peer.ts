@@ -23,11 +23,11 @@ export class PeerRepo {
         if (this.has(peer) || this.isBanned(peer)) {
             return false;
         }
+
         peer.socket = ws;
         peer.blocksIds = new Map(peer.blocksIds);
         this.peers[`${peer.ip}:${peer.port}`] = peer;
         return true;
-
     }
 
     removePeer(peer: Peer): void {
