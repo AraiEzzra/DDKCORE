@@ -39,7 +39,7 @@ export class Socket {
         logger.debug('SOCKET CONSTRUCTOR', JSON.stringify(config.CORE.PEERS.TRUSTED));
     }
 
-    clientConnectToOwnServer(socket: socketIO.Socket): void {
+    onServerConnect(socket: socketIO.Socket): void {
         if (PeerRepository.peerList().length > config.CONSTANTS.MAX_PEERS_CONNECTED) {
             logger.debug(`[SOCKET][init] peer connection rejected, too many connections`);
             socket.disconnect(true);
@@ -73,7 +73,7 @@ export class Socket {
     initServer(): void {
         const ioServer = socketIO(config.CORE.SOCKET.PORT, API_SOCKET_SERVER_CONFIG);
 
-        ioServer.on(CONNECT, Socket.instance.clientConnectToOwnServer);
+        ioServer.on(CONNECT, Socket.instance.onServerConnect);
         setTimeout(
             () => messageON('EMIT_REQUEST_PEERS'),
             config.CONSTANTS.TIMEOUT_START_PEER_REQUEST
