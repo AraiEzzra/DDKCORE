@@ -23,7 +23,7 @@ class AccountController {
     public getAccountBalance(message: Message2<{ address: string }>): ResponseEntity<number> {
         const account = AccountRepo.getByAddress(BigInt(message.body.address));
         return new ResponseEntity({
-            data: account ? account.actualBalance: 0
+            data: account ? account.actualBalance : 0
         });
     }
 

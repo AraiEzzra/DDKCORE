@@ -31,10 +31,6 @@ class BlockController extends BaseController {
         const { data } = action;
         data.block.transactions = data.block.transactions.map(trs => SharedTransactionRepo.deserialize(trs));
 
-        logger.debug(
-            `[Controller][Block][onReceiveBlock] id: ${data.block.id} ` +
-            `height: ${data.block.height} relay: ${data.block.relay}`
-        );
         const validateResponse = BlockService.validate(data.block);
         if (!validateResponse.success) {
             return validateResponse;
@@ -56,6 +52,11 @@ class BlockController extends BaseController {
             errors.push(`[Controller][Block][onReceiveBlock] Block already processed: ${receivedBlock.id}`);
             return new ResponseEntity<void>({ errors });
         }
+
+        logger.debug(
+            `[Controller][Block][onReceiveBlock] id: ${data.block.id} ` +
+            `height: ${data.block.height} relay: ${data.block.relay}`
+        );
 
         if (
             blockUtils.isReceivedBlockNewer(lastBlock, receivedBlock) &&
