@@ -11,6 +11,7 @@ import { subjectOn, subjectRpc } from 'shared/util/bus';
 import { logger } from 'shared/util/logger';
 import { timer } from 'rxjs';
 import config from 'shared/config';
+import { ResponseEntity } from 'shared/model/response';
 
 const UNLOCKED_METHODS: Set<string> = new Set(
     SyncController.eventsON.map(func => func.handlerTopicName)
@@ -30,11 +31,15 @@ const processMainQueue = async (): Promise<void> => {
     }
 
     const event: Event = MAIN_QUEUE[MAIN_QUEUE.length - 1];
-    const response = await BlockController.eventsMAIN[event.topicName].apply(BlockController, [event.data]);
+    const response: ResponseEntity<void> = await BlockController.eventsMAIN[event.topicName]
+        .apply(BlockController, [event.data]);
     if (response.success) {
         logger.debug(`[processMainQueue] Main task ${event.topicName} completed successfully`);
     } else {
-        logger.debug(`[processMainQueue] Main task ${event.topicName} failed: ${response.errors.join('. ')}`);
+        const errorMessage = response.errors.join('. ');
+        if (!errorMessage.includes('Block already processed')) {
+            logger.debug(`[processMainQueue] Main task ${event.topicName} failed: ${response.errors.join('. ')}`);
+        }
     }
 
     MAIN_QUEUE.length = MAIN_QUEUE.length - 1;
