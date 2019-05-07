@@ -25,6 +25,7 @@ type checkCommonBlocksRequest = {
 
 const SYNC_TIMEOUT = 10000;
 const LOG_PREFIX = '[Controller][Sync]';
+let lastSyncTime: number = 0;
 
 export class SyncController extends BaseController {
     @ON('REQUEST_COMMON_BLOCKS')
@@ -37,6 +38,13 @@ export class SyncController extends BaseController {
     @ON('EMIT_SYNC_BLOCKS')
     async startSyncBlocks(): Promise<void> {
         let lastPeerRequested = null;
+        const currentTime = new Date().getTime();
+        const syncTimeDiff = currentTime - lastSyncTime;
+        if (lastSyncTime && syncTimeDiff < SYNC_TIMEOUT) {
+            logger.info(`Wait ${syncTimeDiff} ms for next sync`);
+            await asyncTimeout(syncTimeDiff);
+        }
+        lastSyncTime = currentTime;
         if (SyncService.consensus || PeerRepository.peerList().length === 0) {
             System.synchronization = false;
             messageON('WARM_UP_FINISHED');
@@ -54,7 +62,6 @@ export class SyncController extends BaseController {
         logger.debug(`${LOG_PREFIX}[startSyncBlocks]: start sync with consensus ${SyncService.getConsensus()}%`);
         RoundService.rollbackToLastBlock();
 
-        // TODO: delete away this crutch from my code
         // TODO: change sync timeout logic
         let needDelay = false;
         while (!SyncService.consensus) {
