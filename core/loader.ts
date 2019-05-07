@@ -141,6 +141,15 @@ class Loader {
                 sender.publicKey = trs.senderPublicKey;
             }
 
+            const verifyRes = TransactionDispatcher.verifyUnconfirmed(trs, sender);
+            if (!verifyRes.success) {
+                logger.warn(
+                    `[WARMUP1] Error: ${verifyRes.errors.join('. ')}. ` +
+                    `Transaction: ${JSON.stringify(trs)}` +
+                    `Account: ${JSON.stringify(AccountRepo.serialize(sender))}`
+                );
+            }
+
             TransactionDispatcher.applyUnconfirmed(trs, sender);
         }
     }
