@@ -34,7 +34,8 @@ export class AccountModel {
         Object.assign(this, data);
         this.votes = (data.votes || []).slice();
         this.referrals = (data.referrals || []).slice();
-        this.stakes = (data.stakes || []).slice();
+        this.stakes = (data.stakes || []).map(stake => ({ ...stake }));
+        this.delegate = data.delegate && new Delegate(data.delegate);
     }
 }
 
