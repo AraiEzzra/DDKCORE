@@ -17,7 +17,8 @@ import slot from 'core/service/slot';
 import BlockService from 'core/service/block';
 import { sortRegisterTrs } from 'migration/utils/sorter';
 import db from 'shared/driver/db/index';
-import { Address } from 'shared/model/account';
+import { Address, Timestamp } from 'shared/model/account';
+import { transactionSortFunc } from 'core/util/transaction';
 
 const csv = require('csv-parser');
 const fs = require('fs');
@@ -67,7 +68,7 @@ const SENDER_PUBLIC_KEY_FOR_NEGATIVE_BALANCE_ACCOUNTS =
     'b12a7faba4784d79c7298ce49ef5131b291abd70728e6f2bd1bc2207ea4b7947';
 
 const filePathNewTransactions = './transactionsNew_19_04_2019_T13_30.csv';
-const filePathAddressesWithNegativeBalance = './08_05_2019_T8_00_addressesWithNegativeBalance.csv';
+const filePathAddressesWithNegativeBalance = './08_05_2019_T20_00_addressesWithNegativeBalance.csv';
 
 const publicKeyToKeyPairKeyMap: Map<string, IKeyPair> = new Map();
 
@@ -584,8 +585,30 @@ function createArrayBasketsTrsForBlocks() {
     let transactions: Array<TransactionModel<IAsset>> = [];
     let count = 0;
     let maxTransactionsCreatedAtInBasket = 0;
+    // const mapForCreatedAtFix: Map<Timestamp, number> = new Map();
     do {
         transactions = popTransactionsForMigration(QUANTITY_TRS_IN_BLOCK);
+        // transactions.forEach(transaction => {
+        //     console.log('==================================================');
+        //     console.log('BEFORE: ', transaction.createdAt);
+        //     if (!mapForCreatedAtFix.has(transaction.createdAt)) {
+        //         console.log('if')
+        //         mapForCreatedAtFix.set(transaction.createdAt, 1)
+        //     } else {
+        //         console.log('else')
+        //         console.log('mapForCreatedAtFix.get(transaction.createdAt): ', mapForCreatedAtFix.get(transaction.createdAt));
+        //         let tempCreatedAt = transaction.createdAt;
+        //         transaction.createdAt = transaction.createdAt + mapForCreatedAtFix.get(transaction.createdAt);
+        //         console.log('transaction.createdAt: ', transaction.createdAt);
+        //         let matchesCount = mapForCreatedAtFix.get(tempCreatedAt) + 1;
+        //         console.log('matchesCount: ', matchesCount);
+        //         mapForCreatedAtFix.set(tempCreatedAt, matchesCount);
+        //         console.log('mapForCreatedAtFix.get(transaction.createdAt)): ', mapForCreatedAtFix.get(tempCreatedAt));
+        //     }
+        //     console.log('AFTER: ', transaction.createdAt);
+        //     console.log('==================================================');
+        // });
+        // mapForCreatedAtFix.clear();
         if (transactions.length) {
             if (maxTransactionsCreatedAtInBasket) {
                 maxTransactionsCreatedAtInBasket -= 10;
@@ -674,10 +697,18 @@ async function addMoneyForNegativeBalanceAccounts() {
 }
 
 function popTransactionsForMigration(quantity: number) {
+    let transactions = [];
     if (correctTransactions.length > quantity) {
-        return correctTransactions.splice(correctTransactions.length - quantity, quantity);
+        transactions = correctTransactions.splice(correctTransactions.length - quantity, quantity).sort(transactionSortFunc);
+    } else {
+        transactions = correctTransactions.splice(0, correctTransactions.length).sort(transactionSortFunc);
     }
-    return correctTransactions.splice(0, correctTransactions.length);
+
+    transactions.forEach((trs, index) => {
+        trs.createdAt += index;
+    });
+
+    return transactions.sort(transactionSortFunc);
 }
 
 function readTransactionsToArray(filePath): Promise<Array<Object>> {
