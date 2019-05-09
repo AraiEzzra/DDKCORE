@@ -5,6 +5,7 @@ import {
     IAssetStake,
     IAssetTransfer,
     Transaction,
+    TransactionLifecycle,
     TransactionModel,
     TransactionType
 } from 'shared/model/transaction';
@@ -93,15 +94,42 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
     }
 
     applyUnconfirmed(trs: Transaction<T>, sender: Account): void {
+        if (config.CORE.IS_HISTORY) {
+            trs.addBeforeHistory(TransactionLifecycle.APPLY_UNCONFIRMED, sender);
+        }
+
         sender.actualBalance -= trs.fee || 0;
         const service: IAssetService<IAsset> = getTransactionServiceByType(trs.type);
         service.applyUnconfirmed(trs, sender);
+
+        if (config.CORE.IS_HISTORY) {
+            trs.addAfterHistory(TransactionLifecycle.APPLY_UNCONFIRMED, sender);
+        }
     }
 
     undoUnconfirmed(trs: Transaction<T>, sender: Account, senderOnly = false): void {
+        if (config.CORE.IS_HISTORY) {
+            if (senderOnly) {
+                trs.addBeforeHistory(TransactionLifecycle.VIRTUAL_UNDO_UNCONFIRMED, sender);
+            } else {
+                trs.addBeforeHistory(TransactionLifecycle.UNDO_UNCONFIRMED, sender);
+            }
+
+        }
+
         sender.actualBalance += trs.fee || 0;
         const service: IAssetService<IAsset> = getTransactionServiceByType(trs.type);
-        return service.undoUnconfirmed(trs, sender, senderOnly);
+        const result = service.undoUnconfirmed(trs, sender, senderOnly);
+
+        if (config.CORE.IS_HISTORY) {
+            if (senderOnly) {
+                trs.addAfterHistory(TransactionLifecycle.VIRTUAL_UNDO_UNCONFIRMED, sender);
+            } else {
+                trs.addAfterHistory(TransactionLifecycle.UNDO_UNCONFIRMED, sender);
+            }
+        }
+
+        return result;
     }
 
     async apply(trs: Transaction<T>, sender: Account): Promise<void> {
@@ -245,6 +273,10 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             trs.secondSignature = this.sign(secondKeyPair, trs);
         }
         trs.id = this.getId(trs);
+        
+        if (config.CORE.IS_HISTORY) {
+            trs.addHistory(TransactionLifecycle.CREATE);
+        }
 
         return new ResponseEntity({ data: trs });
     }

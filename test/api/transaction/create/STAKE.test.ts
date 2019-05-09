@@ -36,11 +36,12 @@ describe('Test CREATE_TRANSACTION STAKE', () => {
                     'sponsors': []
                 }
             }
-        };
+        } as any;
 
         const response = await socketRequest(REQUEST);
 
         expect(response.body.success).to.equal(true);
+        SUCCESS.asset.startTime = response.body.data.asset.startTime;
         expect(getTransactionData<IAssetStake>(response.body.data)).to.deep.equal(SUCCESS);
     });
 

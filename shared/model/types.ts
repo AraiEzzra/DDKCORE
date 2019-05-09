@@ -1,5 +1,5 @@
-import { IAsset, TransactionModel } from 'shared/model/transaction';
-import { Address } from 'shared/model/account';
+import { IAsset, TransactionLifecycle, TransactionModel } from 'shared/model/transaction';
+import { Address, Account } from 'shared/model/account';
 
 export type Filter = {
     limit: number,
@@ -78,3 +78,11 @@ export type IConstants = {
     PEERS_COUNT_FOR_DISCOVER: number;
     PRE_MINED_ACCOUNTS: Array<Address>;
 };
+
+export type TransactionHistoryAction = {
+    action: TransactionLifecycle;
+    accountStateBefore?: AccountState;
+    accountStateAfter?: AccountState;
+};
+
+export type AccountState = Account;

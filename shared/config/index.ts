@@ -79,6 +79,7 @@ class Config {
         FORGING: {
             SECRET: string;
         };
+        IS_HISTORY: boolean;
     };
     API: {
         REQUESTS_PER_SECOND_LIMIT: number;
@@ -106,7 +107,7 @@ class Config {
             throw 'env config should be present';
         }
 
-        this.IS_SECURE = process.env.IS_SECURE === 'TRUE' || false;
+        this.IS_SECURE = process.env.IS_SECURE === 'TRUE';
         this.PUBLIC_HOST = process.env.PUBLIC_HOST || process.env.SERVER_HOST;
         this.NODE_ENV_IN = process.env.NODE_ENV_IN || 'development';
         this.DB = {
@@ -136,6 +137,8 @@ class Config {
                     .map(([ip, port]: [string, string]) => ({ ip, port: Number(port) })),
                 BLACKLIST: (process.env.PEERS_BLACKLIST || '').split(','),
             },
+            IS_HISTORY: process.env.IS_HISTORY  === 'TRUE',
+            
         };
         this.API = {
             REQUESTS_PER_SECOND_LIMIT: Number(process.env.REQUESTS_PER_SECOND_LIMIT) ||

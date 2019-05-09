@@ -1,4 +1,5 @@
 import { Delegate } from 'shared/model/delegate';
+import { AccountState } from 'shared/model/types';
 
 export type Address = BigInt;
 export type PublicKey = string;
@@ -40,8 +41,17 @@ export class AccountModel {
 }
 
 export class Account extends AccountModel {
+    
+    history: Array<AccountState> = [];
 
     public getCopy(): Account {
-        return new Account(this);
+        return new Account( { ...this, history: [] });
+    }
+    
+    historify(): AccountState {
+        const account = this.getCopy();
+        // TODO can be optimized if we will store only changed accounts
+        this.history.push(account);
+        return account;
     }
 }

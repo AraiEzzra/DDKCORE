@@ -1,5 +1,6 @@
-import { Address, PublicKey, Timestamp } from 'shared/model/account';
+import { Account, Address, PublicKey, Timestamp } from 'shared/model/account';
 import { getAddressByPublicKey } from 'shared/util/account';
+import { TransactionHistoryAction } from 'shared/model/types';
 
 export enum VoteType {
     VOTE = '+',
@@ -14,6 +15,13 @@ export enum TransactionType {
     STAKE = 40,
     // SENDSTAKE = 50,
     VOTE = 60,
+}
+
+export enum TransactionLifecycle {
+    CREATE = 'CREATE',
+    APPLY_UNCONFIRMED = 'APPLY_UNCONFIRMED',
+    UNDO_UNCONFIRMED = 'UNDO_UNCONFIRMED',
+    VIRTUAL_UNDO_UNCONFIRMED = 'VIRTUAL_UNDO_UNCONFIRMED',
 }
 
 export enum TransactionStatus {
@@ -99,13 +107,35 @@ export class TransactionModel<T extends IAsset> {
 }
 
 export class Transaction<T extends IAsset> extends TransactionModel<T> {
+    
+    history: Array<TransactionHistoryAction> = [];
 
     constructor(data: TransactionModel<T>) {
         super(data);
     }
 
     public getCopy() {
-        return new Transaction<T>(this);
+        return new Transaction<T>({ ...this, history: [] });
+    }
+    
+    addHistory(action: TransactionLifecycle): void {
+        this.history.push({ action });
+    }
+    
+    addBeforeHistory(action: TransactionLifecycle, account: Account): void {
+        this.history.push({
+            action,
+            accountStateBefore: account.historify(),
+        });
+    }
+    
+    addAfterHistory(action: TransactionLifecycle, account: Account): void {
+        for (let i = this.history.length - 1; i > 0; i--) {
+            if (this.history[i].action === action) {
+                this.history[i].accountStateAfter = account.historify();
+                break;
+            }
+        }
     }
 }
 

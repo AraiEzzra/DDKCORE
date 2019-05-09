@@ -109,6 +109,9 @@ const configSchema = {
                     },
                     required: ['TRUSTED', 'BLACKLIST']
                 },
+                IS_HISTORY: {
+                    type: 'boolean'
+                }
             },
             required: ['SOCKET', 'FORGING', 'PEERS', 'RPC']
         },

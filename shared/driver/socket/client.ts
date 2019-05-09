@@ -19,15 +19,15 @@ export class SocketClient {
     }
 
     connect() {
-        logger.info(`Socket connecting to: ${this.protocol}://${this.host}:${this.port}`);
+        logger.trace(`Socket connecting to: ${this.protocol}://${this.host}:${this.port}`);
         this.socket = io(`${this.protocol}://${this.host}:${this.port}`, this.config);
 
         this.socket.on(CONNECT_CHANNEL, () => {
-            logger.info(`Socket connected to: ${this.protocol}://${this.host}:${this.port}`);
+            logger.trace(`Socket connected to: ${this.protocol}://${this.host}:${this.port}`);
         });
 
         this.socket.on(DISCONNECT_CHANNEL, () => {
-            logger.info(`Socket disconnected from: ${this.protocol}://${this.host}:${this.port}`);
+            logger.trace(`Socket disconnected from: ${this.protocol}://${this.host}:${this.port}`);
         });
 
         return this.socket;
