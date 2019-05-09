@@ -211,8 +211,8 @@ async function startPrepareTransactionsForMigration() {
             .slice(0, -1)
             .replace(/DDK/ig, '')
             .split(',');
+            trs.senderAddress = getAddressByPublicKey(trs.senderPublicKey);
         }
-        trs.senderAddress = getAddressByPublicKey(trs.senderPublicKey);
     }));
 
     if (START_SORT_TRANSACTIONS) {
@@ -227,7 +227,7 @@ async function startPrepareTransactionsForMigration() {
     newTrs.forEach(
         function <T extends IAsset>(transaction) {
             let correctTransaction: TransactionDTO = null;
-            let airdropReward = transaction.airdropReward ? JSON.parse(transaction.airdropReward) : {};
+            // let airdropReward = transaction.airdropReward ? JSON.parse(transaction.airdropReward) : {};
             switch (Number(transaction.type)) {
                 case TransactionType.REGISTER:
                     correctTransaction = new TransactionDTO({
@@ -489,7 +489,7 @@ async function createFirstRoundAndBlocksForThisRound() {
             keyPair,
             timestamp,
             previousBlock,
-            transactions: transactions.map(trs => new Transaction(trs))
+            transactions
         });
         await BlockService.process(block, false, {
             privateKey: keyPair.privateKey,
@@ -535,6 +535,7 @@ async function createNextRoundsAndBlocks() {
             )[0]);
 
             const transactions = basket.transactions.map(trs => {
+                trs.senderAddress = getAddressByPublicKey(trs.senderPublicKey);
                 const sender = AccountRepository.getByAddress(trs.senderAddress);
                 const transaction = TransactionService.create(
                     trs,
@@ -558,7 +559,7 @@ async function createNextRoundsAndBlocks() {
                 keyPair,
                 timestamp: newBlockTimestamp,
                 previousBlock,
-                transactions: transactions,
+                transactions,
             });
             await BlockService.process(block, false, {
                 privateKey: keyPair.privateKey,
