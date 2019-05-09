@@ -1,6 +1,7 @@
 import { Account, Address, PublicKey, Timestamp } from 'shared/model/account';
 import { getAddressByPublicKey } from 'shared/util/account';
 import { TransactionHistoryAction } from 'shared/model/types';
+import config from 'shared/config';
 
 export enum VoteType {
     VOTE = '+',
@@ -119,10 +120,18 @@ export class Transaction<T extends IAsset> extends TransactionModel<T> {
     }
 
     addHistory(action: TransactionLifecycle): void {
+        if (!config.CORE.IS_HISTORY) {
+            return;
+        }
+
         this.history.push({ action });
     }
 
     addBeforeHistory(action: TransactionLifecycle, account: Account): void {
+        if (!config.CORE.IS_HISTORY) {
+            return;
+        }
+
         this.history.push({
             action,
             accountStateBefore: account.historify(),
@@ -130,6 +139,10 @@ export class Transaction<T extends IAsset> extends TransactionModel<T> {
     }
 
     addAfterHistory(action: TransactionLifecycle, account: Account): void {
+        if (!config.CORE.IS_HISTORY) {
+            return;
+        }
+
         for (let i = this.history.length - 1; i >= 0; i--) {
             if (this.history[i].action === action) {
                 this.history[i].accountStateAfter = account.historify();

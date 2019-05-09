@@ -1,6 +1,7 @@
 import { Account, Address, PublicKey } from 'shared/model/account';
 import { getAddressByPublicKey } from 'shared/util/account';
 import DelegateRepository from 'core/repository/delegate';
+import { SerializedAccount } from 'shared/model/types';
 
 export type Statistics = {
     tokenHolders: number;
@@ -8,7 +9,6 @@ export type Statistics = {
     totalStakeHolders: number;
 };
 
-export type SerializedAccount = object;
 
 class AccountRepository {
     private memoryAccountsByAddress: Map<Address, Account> = new Map<Address, Account>();

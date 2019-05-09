@@ -2,13 +2,12 @@ import { API } from 'core/api/util/decorators';
 import { Message2 } from 'shared/model/message';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
 import { ResponseEntity } from 'shared/model/response';
-import { SerializedAccount } from 'core/repository/account';
-import { PublicKey, Address } from 'shared/model/account';
+import { Address } from 'shared/model/account';
 import BlockRepository from 'core/repository/block';
 import TransactionRepository from 'core/repository/transaction';
 import AccountRepository from 'core/repository/account';
 import { Block } from 'shared/model/block';
-import { AccountState, SerializedTransactionHistoryAction } from 'shared/model/types';
+import { AccountState, SerializedAccount, SerializedTransactionHistoryAction } from 'shared/model/types';
 
 class SystemController {
     constructor() {
