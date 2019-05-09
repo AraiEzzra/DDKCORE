@@ -7,6 +7,7 @@ import Loader from 'core/loader';
 import { getAddressByPublicKey } from 'shared/util/account';
 import { Block } from 'shared/model/block';
 import BlockRepo from 'core/repository/block';
+import AccountRepository from 'core/repository/account';
 import RoundService from 'core/service/round';
 import { getFirstSlotNumberInRound } from 'core/util/slot';
 import DelegateRepository from 'core/repository/delegate';
@@ -17,7 +18,7 @@ import slot from 'core/service/slot';
 import BlockService from 'core/service/block';
 import { sortRegisterTrs } from 'migration/utils/sorter';
 import db from 'shared/driver/db/index';
-import { Address, Timestamp } from 'shared/model/account';
+import { Address } from 'shared/model/account';
 import { transactionSortFunc } from 'core/util/transaction';
 
 const csv = require('csv-parser');
@@ -43,7 +44,7 @@ const DEFAULT_KEY_PAIR_FOR_TRANSACTION: IKeyPair = getKeyPair(
 const DEFAULT_KEY_PAIR_SECOND_SIGNATURE: IKeyPair = getKeyPair(
     allSecretsData.defaultSecretForSecondSignature
 );
-const DEFAULT_PUBLIC_KEY_SECOND_SIGNATURE = DEFAULT_KEY_PAIR_SECOND_SIGNATURE.publicKey.toString('hex');
+// const DEFAULT_PUBLIC_KEY_SECOND_SIGNATURE = DEFAULT_KEY_PAIR_SECOND_SIGNATURE.publicKey.toString('hex');
 
 // TODO need secrets all delegates
 const DELEGATES_SECRETS: Array<string> = allSecretsData.delegatesSecrets;
@@ -68,7 +69,7 @@ const SENDER_PUBLIC_KEY_FOR_NEGATIVE_BALANCE_ACCOUNTS =
     'b12a7faba4784d79c7298ce49ef5131b291abd70728e6f2bd1bc2207ea4b7947';
 
 const filePathNewTransactions = './transactionsNew_19_04_2019_T13_30.csv';
-const filePathAddressesWithNegativeBalance = './08_05_2019_T20_00_addressesWithNegativeBalance.csv';
+const filePathAddressesWithNegativeBalance = './09_05_2019_T14_00_addressesWithNegativeBalance.csv';
 
 const publicKeyToKeyPairKeyMap: Map<string, IKeyPair> = new Map();
 
@@ -210,8 +211,8 @@ async function startPrepareTransactionsForMigration() {
             .slice(0, -1)
             .replace(/DDK/ig, '')
             .split(',');
-            trs.senderAddress = getAddressByPublicKey(trs.senderPublicKey);
         }
+        trs.senderAddress = getAddressByPublicKey(trs.senderPublicKey);
     }));
 
     if (START_SORT_TRANSACTIONS) {
@@ -245,9 +246,6 @@ async function startPrepareTransactionsForMigration() {
                             amount: Number(transaction.amount)
                         }
                     });
-                    if (senderPublicKeyFromSecondSignatureTrsSet.has(correctTransaction.senderPublicKey)) {
-                        correctTransaction.secondSignature = DEFAULT_PUBLIC_KEY_SECOND_SIGNATURE;
-                    }
                     break;
                 case TransactionType.SIGNATURE:
                     correctTransaction = new TransactionDTO({
@@ -256,9 +254,6 @@ async function startPrepareTransactionsForMigration() {
                             publicKey: transaction.secondPublicKey
                         }
                     });
-                    console.log('SIGNATURE correctTransaction.senderPublicKey: ', correctTransaction.senderPublicKey);
-                    senderPublicKeyFromSecondSignatureTrsSet.add(correctTransaction.senderPublicKey);
-                    console.log('senderPublicKeyFromSecondSignatureTrsSet.has: ', senderPublicKeyFromSecondSignatureTrsSet.has(correctTransaction.senderPublicKey));
                     break;
                 case TransactionType.DELEGATE:
                     correctTransaction = new TransactionDTO({
@@ -267,9 +262,6 @@ async function startPrepareTransactionsForMigration() {
                             username: transaction.username
                         }
                     });
-                    if (senderPublicKeyFromSecondSignatureTrsSet.has(correctTransaction.senderPublicKey)) {
-                        correctTransaction.secondSignature = DEFAULT_PUBLIC_KEY_SECOND_SIGNATURE;
-                    }
                     break;
                 case TransactionType.STAKE:
                     correctTransaction = new TransactionDTO({
@@ -289,9 +281,6 @@ async function startPrepareTransactionsForMigration() {
                                 }
                             });
                     }
-                    if (senderPublicKeyFromSecondSignatureTrsSet.has(correctTransaction.senderPublicKey)) {
-                        correctTransaction.secondSignature = DEFAULT_PUBLIC_KEY_SECOND_SIGNATURE;
-                    }
                     break;
                 case TransactionType.VOTE:
                     const votes: Array<string> = transaction.votes.split(',') || [];
@@ -303,16 +292,13 @@ async function startPrepareTransactionsForMigration() {
                         },
                     });
 
-                    if (Number(transaction.reward) > 0) {
-                        Object.assign(correctTransaction,
-                            {
-                                reward: Number(transaction.reward),
-                                airdropReward: JSON.stringify(airdropReward.sponsors).replace(/DDK/ig, ''),
-                            });
-                    }
-                    if (senderPublicKeyFromSecondSignatureTrsSet.has(correctTransaction.senderPublicKey)) {
-                        correctTransaction.secondSignature = DEFAULT_PUBLIC_KEY_SECOND_SIGNATURE;
-                    }
+                    // if (Number(transaction.reward) > 0) {
+                    //     Object.assign(correctTransaction.asset,
+                    //         {
+                    //             reward: Number(transaction.reward),
+                    //             airdropReward: JSON.stringify(airdropReward.sponsors).replace(/DDK/ig, ''),
+                    //         });
+                    // }
                     break;
                 default:
 
@@ -340,7 +326,7 @@ async function startPrepareTransactionsForMigration() {
 
 
     // await changeSendAndStakeTrsOrder();
-    
+
     changeCreatedAtForRegisterTransactionsWithDefaultCreatedAt();
 
     if (FIX_NEGATIVE_BALANCES) {
@@ -419,14 +405,14 @@ async function getBatchBasketsByLimit(limit: number) {
 
 }
 
-async function getBatchBasketsFromDbByLimit(limit: number){
+async function getBatchBasketsFromDbByLimit(limit: number) {
     try {
         const baskets: Array<Basket> = [];
         const basketIds: Array<number> = [];
         const rowBaskets: Array<any> = await db.manyOrNone(QUERY_SELECT_BASKETS, [limit, offset]);
         rowBaskets.forEach((dbBasket) => {
             baskets.push(dbBasket.basket);
-            basketIds.push(dbBasket.id)
+            basketIds.push(dbBasket.id);
         });
         console.log('OFFSET: ', offset);
         console.log('LIMIT: ', limit);
@@ -511,8 +497,8 @@ async function createFirstRoundAndBlocksForThisRound() {
         }, false);
 
         // if (startedCreateFilledBlock) {
-            // basketsWithTransactionsForBlocks[countForUsedBasket].transactions.length = 0;
-            // ++countForUsedBasket;
+        // basketsWithTransactionsForBlocks[countForUsedBasket].transactions.length = 0;
+        // ++countForUsedBasket;
         // }
 
     }
@@ -530,6 +516,7 @@ async function createNextRoundsAndBlocks() {
     const limit = activeDelegates.length;
     let batchBaskets: Array<Basket> = await getBatchBasketsByLimit(limit);
     let countForCreateNewRound = 0;
+    // const setForSecond;
     while (batchBaskets.length > 0) {
         for (const basket of <Array<Basket>>batchBaskets) {
             if (countForCreateNewRound === 0) {
@@ -542,23 +529,36 @@ async function createNextRoundsAndBlocks() {
             newBlockTimestamp += 10;
             console.log('basket.transactions.length ', basket.transactions.length);
             console.log('slotsFromCurrentRound ', slotsFromCurrentRound);
-            // console.log('Object.entries(slotsFromCurrentRound) ', Object.entries(slotsFromCurrentRound));
             console.log('newBlockTimestamp ', newBlockTimestamp);
             const keyPair: IKeyPair = publicKeyToKeyPairKeyMap.get(Object.entries(slotsFromCurrentRound).find(([key, slot]: [string, Slot]) =>
                 slot.slot === newBlockTimestamp / 10
             )[0]);
 
-            const transactions = basket.transactions.map(trs => TransactionService.create(
+            const transactions = basket.transactions.map(trs => {
+                const sender = AccountRepository.getByAddress(trs.senderAddress);
+                const transaction = TransactionService.create(
                     trs,
                     DEFAULT_KEY_PAIR_FOR_TRANSACTION,
-                    trs.secondSignature && DEFAULT_KEY_PAIR_SECOND_SIGNATURE
-                ).data
-            );
+                    sender && sender.secondPublicKey && DEFAULT_KEY_PAIR_SECOND_SIGNATURE
+                ).data;
+                TransactionService.applyUnconfirmed(
+                    transaction,
+                    sender || AccountRepository.getByAddress(trs.senderAddress)
+                );
+                return transaction;
+            });
+
+            const reversedTransaction = [...transactions];
+            reversedTransaction.reverse();
+            reversedTransaction.forEach(trs => {
+                TransactionService.undoUnconfirmed(trs, AccountRepository.getByAddress(trs.senderAddress))
+            });
+
             const block: Block = await BlockService.create({
                 keyPair,
                 timestamp: newBlockTimestamp,
                 previousBlock,
-                transactions: transactions.map(trs => new Transaction(trs)),
+                transactions: transactions,
             });
             await BlockService.process(block, false, {
                 privateKey: keyPair.privateKey,
@@ -589,30 +589,8 @@ function createArrayBasketsTrsForBlocks() {
     let transactions: Array<TransactionModel<IAsset>> = [];
     let count = 0;
     let maxTransactionsCreatedAtInBasket = 0;
-    // const mapForCreatedAtFix: Map<Timestamp, number> = new Map();
     do {
         transactions = popTransactionsForMigration(QUANTITY_TRS_IN_BLOCK);
-        // transactions.forEach(transaction => {
-        //     console.log('==================================================');
-        //     console.log('BEFORE: ', transaction.createdAt);
-        //     if (!mapForCreatedAtFix.has(transaction.createdAt)) {
-        //         console.log('if')
-        //         mapForCreatedAtFix.set(transaction.createdAt, 1)
-        //     } else {
-        //         console.log('else')
-        //         console.log('mapForCreatedAtFix.get(transaction.createdAt): ', mapForCreatedAtFix.get(transaction.createdAt));
-        //         let tempCreatedAt = transaction.createdAt;
-        //         transaction.createdAt = transaction.createdAt + mapForCreatedAtFix.get(transaction.createdAt);
-        //         console.log('transaction.createdAt: ', transaction.createdAt);
-        //         let matchesCount = mapForCreatedAtFix.get(tempCreatedAt) + 1;
-        //         console.log('matchesCount: ', matchesCount);
-        //         mapForCreatedAtFix.set(tempCreatedAt, matchesCount);
-        //         console.log('mapForCreatedAtFix.get(transaction.createdAt)): ', mapForCreatedAtFix.get(tempCreatedAt));
-        //     }
-        //     console.log('AFTER: ', transaction.createdAt);
-        //     console.log('==================================================');
-        // });
-        // mapForCreatedAtFix.clear();
         if (transactions.length) {
             if (maxTransactionsCreatedAtInBasket) {
                 maxTransactionsCreatedAtInBasket -= 10;
@@ -796,8 +774,8 @@ function readAccountsToMap(filePath): Promise<Map<Address, number>> {
 }
 
 function changeCreatedAtForRegisterTransactionsWithDefaultCreatedAt() {
-    for (let i = 0; i < registerTransactions.length; i++){
-        if (registerTransactions[i].createdAt === OLD_DEFAULT_CREATED_AT_REGISTER_TRANSACTION){
+    for (let i = 0; i < registerTransactions.length; i++) {
+        if (registerTransactions[i].createdAt === OLD_DEFAULT_CREATED_AT_REGISTER_TRANSACTION) {
             registerTransactions[i].createdAt += i;
         }
     }
