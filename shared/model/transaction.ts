@@ -107,7 +107,7 @@ export class TransactionModel<T extends IAsset> {
 }
 
 export class Transaction<T extends IAsset> extends TransactionModel<T> {
-    
+
     history: Array<TransactionHistoryAction> = [];
 
     constructor(data: TransactionModel<T>) {
@@ -117,20 +117,20 @@ export class Transaction<T extends IAsset> extends TransactionModel<T> {
     public getCopy() {
         return new Transaction<T>({ ...this, history: [] });
     }
-    
+
     addHistory(action: TransactionLifecycle): void {
         this.history.push({ action });
     }
-    
+
     addBeforeHistory(action: TransactionLifecycle, account: Account): void {
         this.history.push({
             action,
             accountStateBefore: account.historify(),
         });
     }
-    
+
     addAfterHistory(action: TransactionLifecycle, account: Account): void {
-        for (let i = this.history.length - 1; i > 0; i--) {
+        for (let i = this.history.length - 1; i >= 0; i--) {
             if (this.history[i].action === action) {
                 this.history[i].accountStateAfter = account.historify();
                 break;

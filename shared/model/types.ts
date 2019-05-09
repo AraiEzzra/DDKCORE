@@ -1,5 +1,6 @@
 import { IAsset, TransactionLifecycle, TransactionModel } from 'shared/model/transaction';
 import { Address, Account } from 'shared/model/account';
+import { SerializedAccount } from 'core/repository/account';
 
 export type Filter = {
     limit: number,
@@ -83,6 +84,12 @@ export type TransactionHistoryAction = {
     action: TransactionLifecycle;
     accountStateBefore?: AccountState;
     accountStateAfter?: AccountState;
+};
+
+export type SerializedTransactionHistoryAction = {
+    action: TransactionLifecycle;
+    accountStateBefore?: SerializedAccount;
+    accountStateAfter?: SerializedAccount;
 };
 
 export type AccountState = Account;

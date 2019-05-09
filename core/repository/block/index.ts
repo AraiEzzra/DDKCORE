@@ -8,9 +8,11 @@ export interface IBlockRepository extends IBlockRepositoryShared {
 
 class BlockRepo implements IBlockRepository {
     private memoryBlocks: Array<Block> = [];
+    private readonly memoryBlocksById: { [blockId: string]: Block } = {};
 
     public add(block: Block): Block {
         this.memoryBlocks.push(block);
+        this.memoryBlocksById[block.id] = block;
 
         messageON('LAST_BLOCKS_UPDATE', {
             lastBlock: block
@@ -28,7 +30,9 @@ class BlockRepo implements IBlockRepository {
     }
 
     public deleteLastBlock(): Block {
-        this.memoryBlocks.pop();
+        const block = this.memoryBlocks.pop();
+        delete this.memoryBlocksById[block.id];
+
         const lastBlock = this.getLastBlock();
 
         messageON('LAST_BLOCKS_UPDATE', {
@@ -48,15 +52,12 @@ class BlockRepo implements IBlockRepository {
         return this.memoryBlocks.slice(from, from + limit);
     }
 
-    public isExist(blockId: string): boolean {
-        let exists = false;
-        for (let i = this.memoryBlocks.length - 1; i >= 0; i--) {
-            if (this.memoryBlocks[i].id === blockId) {
-                exists = true;
-                break;
-            }
-        }
-        return exists;
+    public isExist(id: string): boolean {
+        return this.memoryBlocksById.hasOwnProperty(id);
+    }
+
+    public getById(id: string): Block {
+        return this.memoryBlocksById[id];
     }
 }
 

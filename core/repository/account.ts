@@ -8,6 +8,8 @@ export type Statistics = {
     totalStakeHolders: number;
 };
 
+export type SerializedAccount = object;
+
 class AccountRepository {
     private memoryAccountsByAddress: Map<Address, Account> = new Map<Address, Account>();
 
@@ -77,7 +79,7 @@ class AccountRepository {
         this.memoryAccountsByAddress.get(address).referrals = referrals;
     }
 
-    serialize(account: Account): object {
+    serialize(account: Account): SerializedAccount {
         return {
             address: account.address.toString(),
             isDelegate: Boolean(account.delegate),

@@ -25,6 +25,9 @@ class TransactionRepo implements ITransactionRepository<IAsset> {
         return !!this.memoryTransactionById[transactionId];
     }
 
+    public getById(id: string): Transaction<IAsset> {
+        return this.memoryTransactionById[id];
+    }
 }
 
 export default new TransactionRepo();
