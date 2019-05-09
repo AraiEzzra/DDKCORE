@@ -1,4 +1,4 @@
-import { IAsset, TransactionLifecycle, TransactionModel } from 'shared/model/transaction';
+import { IAsset, Transaction, TransactionLifecycle, TransactionModel } from 'shared/model/transaction';
 import { Address, Account } from 'shared/model/account';
 
 export type Filter = {
@@ -93,3 +93,7 @@ export type SerializedTransactionHistoryAction = {
 
 export type AccountState = Account;
 export type SerializedAccount = object;
+
+export type TransactionId = string;
+export type RawTransaction = { [key: string]: any };
+export type RawAsset = { [key: string]: any };

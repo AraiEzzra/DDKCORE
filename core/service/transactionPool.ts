@@ -1,6 +1,7 @@
 import {
     IAssetTransfer,
     Transaction,
+    TransactionLifecycle,
     TransactionModel,
     TransactionStatus,
     TransactionType
@@ -116,6 +117,7 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
             sender = AccountRepository.getByAddress(trs.senderAddress);
         }
 
+        trs.addHistory(TransactionLifecycle.PUSH_IN_POOL);
         TransactionDispatcher.applyUnconfirmed(trs, sender);
         trs.status = TransactionStatus.UNCONFIRM_APPLIED;
 
@@ -153,6 +155,7 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
                     .splice(this.poolByRecipient.get(asset.recipientAddress).indexOf(trs), 1);
             }
         }
+        trs.addHistory(TransactionLifecycle.POP_FROM_POOL);
         return true;
     }
 

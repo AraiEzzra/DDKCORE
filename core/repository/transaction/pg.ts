@@ -1,15 +1,17 @@
 import db, { pgpE } from 'shared/driver/db/index';
 import { IAsset, Transaction } from 'shared/model/transaction';
-import {
-    ITransactionPGRepository as ITransactionPGRepositoryShared,
-    RawTransaction,
-    TransactionsByBlockResponse
-} from 'shared/repository/transaction';
 import SharedTransactionPGRepo from 'shared/repository/transaction/pg';
 import queries from 'core/repository/queries/transaction';
+import { BlockId } from 'shared/repository/block';
+import { RawTransaction, TransactionId } from 'shared/model/types';
 
-export interface ITransactionPGRepository<T extends IAsset> extends ITransactionPGRepositoryShared<T> {
-
+export interface ITransactionPGRepository<T extends IAsset> {
+    deleteById(trsId: TransactionId | Array<TransactionId>): Promise<Array<string>>;
+    getByBlockIds(blockIds: Array<BlockId>): Promise<{ [blockId: string]: Array<Transaction<IAsset>> }>;
+    getById(trsId: TransactionId): Promise<Transaction<T>>;
+    getMany(limit: number, offset: number): Promise<Array<Transaction<T>>>;
+    isExist(trsId: TransactionId): Promise<boolean>;
+    saveOrUpdate(trs: Transaction<T> | Array<Transaction<T>>): Promise<void>;
 }
 
 class TransactionPGRepo implements ITransactionPGRepository<IAsset> {
@@ -33,8 +35,8 @@ class TransactionPGRepo implements ITransactionPGRepository<IAsset> {
         return response.map(item => item.id);
     }
 
-    async getByBlockIds(blockIds: Array<string>): Promise<TransactionsByBlockResponse> {
-        let result: TransactionsByBlockResponse = {};
+    async getByBlockIds(blockIds: Array<string>): Promise<{ [blockId: string]: Array<Transaction<IAsset>> }> {
+        let result = {};
         const rawTransactions: Array<RawTransaction> =
             await db.manyOrNone(queries.getByBlockIds, [blockIds]);
         if (!rawTransactions) {

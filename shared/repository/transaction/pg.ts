@@ -1,5 +1,6 @@
 import { IAsset, Transaction } from 'shared/model/transaction';
-import SharedTransactionRepo, { RawTransaction } from 'shared/repository/transaction';
+import SharedTransactionRepo from 'shared/repository/transaction';
+import { RawTransaction } from 'shared/model/types';
 
 class SharedTransactionPGRepo  {
 

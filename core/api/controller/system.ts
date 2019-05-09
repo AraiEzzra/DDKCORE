@@ -36,6 +36,11 @@ class SystemController {
         message: Message2<{ id: string }>
     ): ResponseEntity<Array<SerializedTransactionHistoryAction>> {
         const transaction = TransactionRepository.getById(message.body.id);
+
+        if (!transaction) {
+            return new ResponseEntity({ errors: ['Transaction not exist']});
+        }
+
         const response = transaction.history.map(trsHistory => ({
             action: trsHistory.action,
             accountStateBefore:
