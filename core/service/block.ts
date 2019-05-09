@@ -16,7 +16,6 @@ import { IAsset, IAssetTransfer, Transaction, TransactionType } from 'shared/mod
 import TransactionDispatcher from 'core/service/transaction';
 import TransactionQueue from 'core/service/transactionQueue';
 import TransactionPool from 'core/service/transactionPool';
-import TransactionRepo from 'core/repository/transaction/';
 import SlotService from 'core/service/slot';
 import RoundRepository from 'core/repository/round';
 import { transactionSortFunc } from 'core/util/transaction';
@@ -356,6 +355,11 @@ class BlockService {
                         i--;
                         continue;
                     }
+                }
+
+                // TODO FOR MIGRATION ONLY
+                if (trs.type === TransactionType.VOTE) {
+                    trs.fee = TransactionDispatcher.calculateFee(trs, sender);
                 }
 
                 TransactionDispatcher.applyUnconfirmed(trs, sender);

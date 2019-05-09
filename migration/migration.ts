@@ -184,6 +184,7 @@ let allRegisterTrsCount = 0;
 async function startPrepareTransactionsForMigration() {
     console.log('START prepare transaction!!!');
 
+    const setForRegisterTrsSenderPublicKey: Set<string> = new Set();
 
     let [newTrs] = [
         await readTransactionsToArray(filePathNewTransactions),
@@ -326,7 +327,10 @@ async function startPrepareTransactionsForMigration() {
                 SET_SENDER_PUBLIC_KEY_FROM_GENESIS.has(correctTransaction.senderPublicKey)) {
                 genesisAccountsSendTransactions.push(correctTransaction);
             } else if (correctTransaction.type === TransactionType.REGISTER) {
-                registerTransactions.push(correctTransaction);
+                if (!setForRegisterTrsSenderPublicKey.has(correctTransaction.senderPublicKey)) {
+                    registerTransactions.push(correctTransaction);
+                    setForRegisterTrsSenderPublicKey.add(correctTransaction.senderPublicKey);
+                }
             } else {
                 correctTransactions.push(new TransactionModel(correctTransaction));
             }
