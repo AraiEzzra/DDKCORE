@@ -363,8 +363,13 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             return new ResponseEntity<void>({ errors: ['Transaction signature is invalid'] });
         }
 
-        if (sender.secondPublicKey && !this.verifySecondSignature(trs, sender.secondPublicKey)) {
-            return new ResponseEntity<void>({ errors: ['Transaction second signature is invalid'] });
+        if (sender.secondPublicKey) {
+            if (!trs.secondSignature) {
+                return new ResponseEntity<void>({ errors: ['Second signature is missing'] });
+            }
+            if (!this.verifySecondSignature(trs, sender.secondPublicKey)) {
+                return new ResponseEntity<void>({ errors: ['Second signature is invalid'] });
+            }
         }
 
         if (SlotService.getSlotNumber(trs.createdAt) > SlotService.getSlotNumber()) {
