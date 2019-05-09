@@ -69,7 +69,7 @@ const SENDER_PUBLIC_KEY_FOR_NEGATIVE_BALANCE_ACCOUNTS =
     'b12a7faba4784d79c7298ce49ef5131b291abd70728e6f2bd1bc2207ea4b7947';
 
 const filePathNewTransactions = './transactionsNew_19_04_2019_T13_30.csv';
-const filePathAddressesWithNegativeBalance = './09_05_2019_T14_00_addressesWithNegativeBalance.csv';
+const filePathAddressesWithNegativeBalance = './10_05_2019_T12_00_addressesWithNegativeBalance.csv';
 
 const publicKeyToKeyPairKeyMap: Map<string, IKeyPair> = new Map();
 
@@ -146,6 +146,20 @@ const SET_SENDER_PUBLIC_KEY_FROM_GENESIS: Set<string> = new Set(
         '0485a185159ae76fbd149e3e6db8ca2ccc01476dce6c7726d7c83e989f456601',
         'b9c4743cd3ad541a0334904ebd278a2eaec262f71e5919ebfb8052b720111ff2'
     ],
+);
+
+const SET_TRS_IDS_FOR_REMOVE_TRANSACTIONS: Set<string> = new Set(
+    [
+        '425ddef7b6282dd6ec2f1eb5d92a21d6589c0d0475f3761b752ccd297ffa2987',
+        'e863f34f77698742ca003ec25f9c33a9e09e630d651df5d863b41d1faee7ad38',
+        '08a9a657842b747d797806fd7bca1c5b1d87efb227110f8bf5c64177c9e3d36f',
+        'f082778d3eaabc65a5f6cefc27d5cd4cbcf1519f5821143eb3236fc5db498e8f',
+        '47117efc9467078bc53612dc1978e8b09b6216447c8ce1cb43b2a7fe4ec032ec',
+        'a1406ce6e9cae460816224f995650c9248b649fd218d2ecb7611039f0f1fe518',
+        '17d0bfc5a43de509c842a0756a73c25719453f568155f69f4cf6d068b355a2de', // 7249643049702615870  timestamp 99030000
+        'c3e94e5c69ff3c9bb04fe5a4f9af36320777e2c3e3ea82d269fc845d2cb6d7f7', // 7249643049702615870 timestamp 100182835
+        '70d96395482df06df61e75fbaf9876726b9067c7e6da4a187427860893497aa0'  // 13886699056015278412 timestamp 100183472
+    ]
 );
 
 (async () => {
@@ -226,99 +240,101 @@ async function startPrepareTransactionsForMigration() {
     console.log(newTrs.length);
     newTrs.forEach(
         function <T extends IAsset>(transaction) {
-            let correctTransaction: TransactionDTO = null;
-            // let airdropReward = transaction.airdropReward ? JSON.parse(transaction.airdropReward) : {};
-            switch (Number(transaction.type)) {
-                case TransactionType.REGISTER:
-                    correctTransaction = new TransactionDTO({
-                        ...transaction,
-                        asset: {
-                            referral: transaction.referrals[0]
+            if (!SET_TRS_IDS_FOR_REMOVE_TRANSACTIONS.has(transaction.id)) {
+                let correctTransaction: TransactionDTO = null;
+                // let airdropReward = transaction.airdropReward ? JSON.parse(transaction.airdropReward) : {};
+                switch (Number(transaction.type)) {
+                    case TransactionType.REGISTER:
+                        correctTransaction = new TransactionDTO({
+                            ...transaction,
+                            asset: {
+                                referral: transaction.referrals[0]
+                            }
+                        });
+                        ++allRegisterTrsCount;
+                        break;
+                    case TransactionType.SEND:
+                        correctTransaction = new TransactionDTO({
+                            ...transaction,
+                            asset: {
+                                recipientAddress: transaction.recipientAddress.replace(/DDK/ig, ''),
+                                amount: Number(transaction.amount)
+                            }
+                        });
+                        break;
+                    case TransactionType.SIGNATURE:
+                        correctTransaction = new TransactionDTO({
+                            ...transaction,
+                            asset: {
+                                publicKey: transaction.secondPublicKey
+                            }
+                        });
+                        break;
+                    case TransactionType.DELEGATE:
+                        correctTransaction = new TransactionDTO({
+                            ...transaction,
+                            asset: {
+                                username: transaction.username
+                            }
+                        });
+                        break;
+                    case TransactionType.STAKE:
+                        correctTransaction = new TransactionDTO({
+                            ...transaction,
+                            asset: {
+                                amount: Number(transaction.stakedAmount),
+                                startTime: Number(transaction.startTime),
+                                startVoteCount: getCorrectStartVoteCount(Number(transaction.voteCount)),
+                            }
+                        });
+                        if (transaction.airdropReward) {
+                            Object.assign(correctTransaction,
+                                {
+                                    airdropReward: {
+                                        sponsors: JSON.stringify(transaction.airdropReward.sponsors)
+                                        .replace(/DDK/ig, '')
+                                    }
+                                });
                         }
-                    });
-                    ++allRegisterTrsCount;
-                    break;
-                case TransactionType.SEND:
-                    correctTransaction = new TransactionDTO({
-                        ...transaction,
-                        asset: {
-                            recipientAddress: transaction.recipientAddress.replace(/DDK/ig, ''),
-                            amount: Number(transaction.amount)
-                        }
-                    });
-                    break;
-                case TransactionType.SIGNATURE:
-                    correctTransaction = new TransactionDTO({
-                        ...transaction,
-                        asset: {
-                            publicKey: transaction.secondPublicKey
-                        }
-                    });
-                    break;
-                case TransactionType.DELEGATE:
-                    correctTransaction = new TransactionDTO({
-                        ...transaction,
-                        asset: {
-                            username: transaction.username
-                        }
-                    });
-                    break;
-                case TransactionType.STAKE:
-                    correctTransaction = new TransactionDTO({
-                        ...transaction,
-                        asset: {
-                            amount: Number(transaction.stakedAmount),
-                            startTime: Number(transaction.startTime),
-                            startVoteCount: getCorrectStartVoteCount(Number(transaction.voteCount)),
-                        }
-                    });
-                    if (transaction.airdropReward) {
-                        Object.assign(correctTransaction,
-                            {
-                                airdropReward: {
-                                    sponsors: JSON.stringify(transaction.airdropReward.sponsors)
-                                    .replace(/DDK/ig, '')
-                                }
-                            });
-                    }
-                    break;
-                case TransactionType.VOTE:
-                    const votes: Array<string> = transaction.votes.split(',') || [];
-                    correctTransaction = new TransactionDTO({
-                        ...transaction,
-                        asset: {
-                            votes: votes.map(oldVote => oldVote.slice(1)),
-                            type: votes[0][0]
-                        },
-                    });
+                        break;
+                    case TransactionType.VOTE:
+                        const votes: Array<string> = transaction.votes.split(',') || [];
+                        correctTransaction = new TransactionDTO({
+                            ...transaction,
+                            asset: {
+                                votes: votes.map(oldVote => oldVote.slice(1)),
+                                type: votes[0][0]
+                            },
+                        });
 
-                    // if (Number(transaction.reward) > 0) {
-                    //     Object.assign(correctTransaction.asset,
-                    //         {
-                    //             reward: Number(transaction.reward),
-                    //             airdropReward: JSON.stringify(airdropReward.sponsors).replace(/DDK/ig, ''),
-                    //         });
-                    // }
-                    break;
-                default:
+                        // if (Number(transaction.reward) > 0) {
+                        //     Object.assign(correctTransaction.asset,
+                        //         {
+                        //             reward: Number(transaction.reward),
+                        //             airdropReward: JSON.stringify(airdropReward.sponsors).replace(/DDK/ig, ''),
+                        //         });
+                        // }
+                        break;
+                    default:
 
-            }
-
-            ++count;
-            if (Number.isInteger(count / 1000)) {
-                console.log('COUNT: ', count);
-            }
-
-            if (correctTransaction.type === TransactionType.SEND &&
-                SET_SENDER_PUBLIC_KEY_FROM_GENESIS.has(correctTransaction.senderPublicKey)) {
-                genesisAccountsSendTransactions.push(correctTransaction);
-            } else if (correctTransaction.type === TransactionType.REGISTER) {
-                if (!setForRegisterTrsSenderPublicKey.has(correctTransaction.senderPublicKey)) {
-                    registerTransactions.push(correctTransaction);
-                    setForRegisterTrsSenderPublicKey.add(correctTransaction.senderPublicKey);
                 }
-            } else {
-                correctTransactions.push(new TransactionModel(correctTransaction));
+
+                ++count;
+                if (Number.isInteger(count / 1000)) {
+                    console.log('COUNT: ', count);
+                }
+
+                if (correctTransaction.type === TransactionType.SEND &&
+                    SET_SENDER_PUBLIC_KEY_FROM_GENESIS.has(correctTransaction.senderPublicKey)) {
+                    genesisAccountsSendTransactions.push(correctTransaction);
+                } else if (correctTransaction.type === TransactionType.REGISTER) {
+                    if (!setForRegisterTrsSenderPublicKey.has(correctTransaction.senderPublicKey)) {
+                        registerTransactions.push(correctTransaction);
+                        setForRegisterTrsSenderPublicKey.add(correctTransaction.senderPublicKey);
+                    }
+                } else {
+                    correctTransactions.push(new TransactionModel(correctTransaction));
+                }
             }
         });
 
@@ -552,7 +568,7 @@ async function createNextRoundsAndBlocks() {
             const reversedTransaction = [...transactions];
             reversedTransaction.reverse();
             reversedTransaction.forEach(trs => {
-                TransactionService.undoUnconfirmed(trs, AccountRepository.getByAddress(trs.senderAddress))
+                TransactionService.undoUnconfirmed(trs, AccountRepository.getByAddress(trs.senderAddress));
             });
 
             const block: Block = await BlockService.create({
