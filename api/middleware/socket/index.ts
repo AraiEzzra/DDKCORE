@@ -73,7 +73,7 @@ export class SocketMiddleware {
         this.emitToClient(message.headers.id, message.code, message.body);
     }
 
-    processMessage(message: Message, socket: any) {
+    processMessage(message: Message, socket: SocketIO.Socket) {
         const method = RPC_METHODS[message.code];
         if (typeof method === 'function') {
             method(message, socket);
