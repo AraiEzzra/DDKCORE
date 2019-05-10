@@ -26,7 +26,7 @@ class SystemController {
 
         const response = account.history.map((accountState: AccountState) => ({
             ...accountState,
-            state: AccountRepository.serialize(accountState.state)
+            state: AccountRepository.serialize(accountState.state, false)
         }));
 
         return new ResponseEntity({ data: response });
