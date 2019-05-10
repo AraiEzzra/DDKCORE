@@ -1,7 +1,15 @@
-import { Account, Address, PublicKey, Timestamp } from 'shared/model/account';
+import { Account} from 'shared/model/account';
 import { getAddressByPublicKey } from 'shared/util/account';
-import { TransactionHistoryAction } from 'shared/model/types';
+import {
+    Address,
+    AirdropReward,
+    PublicKey,
+    Timestamp,
+    TransactionHistoryAction,
+    TransactionId
+} from 'shared/model/types';
 import config from 'shared/config';
+import { BlockId } from 'shared/repository/block';
 
 export enum VoteType {
     VOTE = '+',
@@ -96,8 +104,8 @@ export interface IAssetVote extends IAsset {
 }
 
 export class TransactionModel<T extends IAsset> {
-    id?: string;
-    blockId?: string;
+    id?: TransactionId;
+    blockId?: BlockId;
     type: TransactionType;
     senderPublicKey?: PublicKey;
     senderAddress?: Address; // Memory only
@@ -146,7 +154,7 @@ export class Transaction<T extends IAsset> extends TransactionModel<T> {
 
         this.history.push({
             action,
-            accountStateBefore: account.historify(),
+            accountStateBefore: account.getCopy(),
         });
     }
 
@@ -157,7 +165,7 @@ export class Transaction<T extends IAsset> extends TransactionModel<T> {
 
         for (let i = this.history.length - 1; i >= 0; i--) {
             if (this.history[i].action === action) {
-                this.history[i].accountStateAfter = account.historify();
+                this.history[i].accountStateAfter = account.getCopy();
                 break;
             }
         }
@@ -179,3 +187,17 @@ export type SerializedTransaction<T> = {
     confirmations: number,
     asset: T;
 };
+
+export class Stake {
+    createdAt: Timestamp;
+    isActive: boolean;
+    amount: number;
+    voteCount: number;
+    nextVoteMilestone: Timestamp;
+    airdropReward: AirdropReward;
+    sourceTransactionId: string;
+
+    constructor(data: Stake) {
+        Object.assign(this, data);
+    }
+}

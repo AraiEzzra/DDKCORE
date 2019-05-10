@@ -1,5 +1,5 @@
 import config from 'shared/config';
-import { Timestamp } from 'shared/model/account';
+import { Timestamp } from 'shared/model/types';
 
 export const sortHashListFunc = (a, b) => {
     if (a.hash > b.hash) {

@@ -1,5 +1,6 @@
 import { TransactionType } from 'shared/model/transaction';
-import { Address, Timestamp } from 'shared/model/account';
+import { Address} from 'shared/model/types';
+import { Timestamp } from 'shared/model/types';
 
 export class Reward {
     transactionId: string;

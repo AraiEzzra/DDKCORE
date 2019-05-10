@@ -13,19 +13,19 @@ class SystemController {
 
     @RPC(API_ACTION_TYPES.GET_ACCOUNT_HISTORY)
     @validate()
-    public getAccountHistory(message: Message2<any>, socket: SocketIO.Socket): void {
+    public getAccountHistory(message: Message2<any>, socket: any): void {
         SocketMiddleware.emitToCore<any>(message, socket);
     }
 
     @RPC(API_ACTION_TYPES.GET_BLOCK_HISTORY)
     @validate()
-    public getBlockHistory(message: Message2<any>, socket: SocketIO.Socket): void {
+    public getBlockHistory(message: Message2<any>, socket: any): void {
         SocketMiddleware.emitToCore<any>(message, socket);
     }
 
     @RPC(API_ACTION_TYPES.GET_TRANSACTION_HISTORY)
     @validate()
-    public getTransactionHistory(message: Message2<any>, socket: SocketIO.Socket): void {
+    public getTransactionHistory(message: Message2<any>, socket: any): void {
         SocketMiddleware.emitToCore<any>(message, socket);
     }
 }

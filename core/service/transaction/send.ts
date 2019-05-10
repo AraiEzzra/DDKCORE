@@ -1,7 +1,7 @@
 import { IAssetService } from 'core/service/transaction';
 import { TransactionModel } from 'shared/model/transaction';
 import { IAssetTransfer, Transaction } from 'shared/model/transaction';
-import { Account } from 'shared/model/account';
+import { Account, AccountChangeAction } from 'shared/model/account';
 import { ResponseEntity } from 'shared/model/response';
 import config from 'shared/config';
 import AccountRepo from 'core/repository/account';
@@ -65,6 +65,7 @@ class TransactionSendService implements IAssetService<IAssetTransfer> {
             });
         }
         recipient.actualBalance += trs.asset.amount;
+        recipient.historify(AccountChangeAction.MONEY_RECEIVE, trs.id);
     }
 
     undoUnconfirmed(trs: Transaction<IAssetTransfer>, sender: Account, senderOnly: boolean): void {
@@ -72,6 +73,7 @@ class TransactionSendService implements IAssetService<IAssetTransfer> {
         if (!senderOnly) {
             const recipient = AccountRepo.getByAddress(trs.asset.recipientAddress);
             recipient.actualBalance -= trs.asset.amount;
+            recipient.historify(AccountChangeAction.MONEY_RECEIVE_UNDO, trs.id);
         }
     }
 

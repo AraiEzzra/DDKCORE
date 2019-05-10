@@ -11,7 +11,7 @@ import {
 } from 'shared/model/transaction';
 import { ResponseEntity } from 'shared/model/response';
 import { ed, IKeyPair } from 'shared/util/ed';
-import { Account, Address } from 'shared/model/account';
+import { Account, AccountChangeAction } from 'shared/model/account';
 import AccountRepo from 'core/repository/account';
 import TransactionRepo from 'core/repository/transaction';
 import TransactionPGRepo from 'core/repository/transaction/pg';
@@ -24,6 +24,7 @@ import { getAddressByPublicKey } from 'shared/util/account';
 import SlotService from 'core/service/slot';
 import BlockRepository from 'core/repository/block';
 import config from 'shared/config';
+import { Address } from 'shared/model/types';
 
 export interface IAssetService<T extends IAsset> {
     getBytes(trs: Transaction<T>): Buffer;
@@ -99,6 +100,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         sender.actualBalance -= trs.fee || 0;
         const service: IAssetService<IAsset> = getTransactionServiceByType(trs.type);
         service.applyUnconfirmed(trs, sender);
+        sender.historify(AccountChangeAction.TRANSACTION_APPLY_UNCONFIRMED, trs.id);
 
         trs.addAfterHistory(TransactionLifecycle.APPLY_UNCONFIRMED, sender);
     }
@@ -115,8 +117,10 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         const result = service.undoUnconfirmed(trs, sender, senderOnly);
 
         if (senderOnly) {
+            sender.historify(AccountChangeAction.VIRTUAL_UNDO_UNCONFIRMED, trs.id);
             trs.addAfterHistory(TransactionLifecycle.VIRTUAL_UNDO_UNCONFIRMED, sender);
         } else {
+            sender.historify(AccountChangeAction.TRANSACTION_UNDO_UNCONFIRMED, trs.id);
             trs.addAfterHistory(TransactionLifecycle.UNDO_UNCONFIRMED, sender);
         }
 

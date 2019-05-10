@@ -1,4 +1,5 @@
-import { Account, Address } from 'shared/model/account';
+import { Account} from 'shared/model/account';
+import { Address } from 'shared/model/types';
 
 export interface IReferredUsers {
     add(account: Account): void;

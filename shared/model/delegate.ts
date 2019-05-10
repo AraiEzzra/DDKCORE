@@ -1,4 +1,5 @@
-import { Account, PublicKey } from 'shared/model/account';
+import { Account} from 'shared/model/account';
+import { PublicKey } from 'shared/model/types';
 
 // todo interface for example delegate model for delegatesRepository. Discuss it
 export class DelegateModel {

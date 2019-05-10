@@ -3,10 +3,10 @@ import {
     IAssetStake,
     Transaction,
     TransactionType,
-    IAirdropAsset, TransactionModel,
+    IAirdropAsset, TransactionModel, Stake,
 } from 'shared/model/transaction';
 import { ResponseEntity } from 'shared/model/response';
-import { Account, Stake } from 'shared/model/account';
+import { Account} from 'shared/model/account';
 import AccountRepo from 'core/repository/account';
 import { TOTAL_PERCENTAGE } from 'core/util/const';
 import config from 'shared/config';
