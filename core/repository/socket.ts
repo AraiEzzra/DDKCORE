@@ -41,7 +41,13 @@ export class Socket {
 
     onServerConnect(socket: socketIO.Socket): void {
         if (PeerRepository.peerList().length > config.CONSTANTS.MAX_PEERS_CONNECTED) {
-            logger.debug(`[SOCKET][init] peer connection rejected, too many connections`);
+            logger.debug(`[SOCKET][onServerConnect] peer connection rejected, too many connections`);
+            socket.disconnect(true);
+            return;
+        }
+
+        if (!socket.handshake.address) {
+            logger.warn(`[SOCKET][onServerConnect] socket handshake address is missing`);
             socket.disconnect(true);
             return;
         }
