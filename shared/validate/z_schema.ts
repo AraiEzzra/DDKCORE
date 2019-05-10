@@ -31,7 +31,7 @@ Validator.registerFormat('address', (str) => {
         return true;
     }
 
-    return /^\d{15,21}$/.test(str);
+    return /^\d{8,21}$/.test(str);
 });
 
 Validator.registerFormat('username', (str) => {
