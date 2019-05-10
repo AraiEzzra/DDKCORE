@@ -65,7 +65,7 @@ class TransactionSendService implements IAssetService<IAssetTransfer> {
             });
         }
         recipient.actualBalance += trs.asset.amount;
-        recipient.historify(AccountChangeAction.MONEY_RECEIVE, trs.id);
+        recipient.addHistory(AccountChangeAction.MONEY_RECEIVE, trs.id);
     }
 
     undoUnconfirmed(trs: Transaction<IAssetTransfer>, sender: Account, senderOnly: boolean): void {
@@ -73,7 +73,7 @@ class TransactionSendService implements IAssetService<IAssetTransfer> {
         if (!senderOnly) {
             const recipient = AccountRepo.getByAddress(trs.asset.recipientAddress);
             recipient.actualBalance -= trs.asset.amount;
-            recipient.historify(AccountChangeAction.MONEY_RECEIVE_UNDO, trs.id);
+            recipient.addHistory(AccountChangeAction.MONEY_RECEIVE_UNDO, trs.id);
         }
     }
 

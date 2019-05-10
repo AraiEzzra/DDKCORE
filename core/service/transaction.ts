@@ -100,7 +100,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         sender.actualBalance -= trs.fee || 0;
         const service: IAssetService<IAsset> = getTransactionServiceByType(trs.type);
         service.applyUnconfirmed(trs, sender);
-        sender.historify(AccountChangeAction.TRANSACTION_APPLY_UNCONFIRMED, trs.id);
+        sender.addHistory(AccountChangeAction.TRANSACTION_APPLY_UNCONFIRMED, trs.id);
 
         trs.addAfterHistory(TransactionLifecycle.APPLY_UNCONFIRMED, sender);
     }
@@ -117,10 +117,10 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         const result = service.undoUnconfirmed(trs, sender, senderOnly);
 
         if (senderOnly) {
-            sender.historify(AccountChangeAction.VIRTUAL_UNDO_UNCONFIRMED, trs.id);
+            sender.addHistory(AccountChangeAction.VIRTUAL_UNDO_UNCONFIRMED, trs.id);
             trs.addAfterHistory(TransactionLifecycle.VIRTUAL_UNDO_UNCONFIRMED, sender);
         } else {
-            sender.historify(AccountChangeAction.TRANSACTION_UNDO_UNCONFIRMED, trs.id);
+            sender.addHistory(AccountChangeAction.TRANSACTION_UNDO_UNCONFIRMED, trs.id);
             trs.addAfterHistory(TransactionLifecycle.UNDO_UNCONFIRMED, sender);
         }
 
