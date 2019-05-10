@@ -1,6 +1,6 @@
 import { Account, PublicKey } from 'shared/model/account';
 import config from 'shared/config';
-import { Delegate } from 'shared/model/delegate';
+import { Delegate, SerializedDelegate } from 'shared/model/delegate';
 
 class DelegateRepository {
     private memoryDelegates: Map<PublicKey, Delegate> = new Map();
@@ -64,11 +64,15 @@ class DelegateRepository {
     }
 
     public delete(account: Account): void {
-        this.usernames.delete(this.memoryDelegates.get(account.publicKey).username);
         this.memoryDelegates.delete(account.publicKey);
+
+        const delegate = this.getDelegate(account.publicKey);
+        if (delegate) {
+            this.usernames.delete(delegate.username);
+        }
     }
 
-    public serialize(delegate: Delegate): object {
+    public serialize(delegate: Delegate): SerializedDelegate {
         return {
             username: delegate.username,
             missedBlocks: delegate.missedBlocks,

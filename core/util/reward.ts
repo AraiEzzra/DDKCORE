@@ -1,5 +1,4 @@
-import { Address, Account, Stake } from 'shared/model/account';
-import { logger } from 'shared/util/logger';
+import { Account, Address, Stake } from 'shared/model/account';
 import config from 'shared/config';
 import BlockRepo from 'core/repository/block';
 import {
@@ -7,12 +6,12 @@ import {
     IAssetStake,
     IAssetVote,
     Transaction,
-    TransactionType,
     TransactionModel,
+    TransactionType,
 } from 'shared/model/transaction';
 import AccountRepo from 'core/repository/account';
 import { ResponseEntity } from 'shared/model/response';
-import { TOTAL_PERCENTAGE, MONEY_FACTOR } from 'core/util/const';
+import { TOTAL_PERCENTAGE } from 'core/util/const';
 import { isEqualMaps } from 'core/util/common';
 
 class StakeReward {

@@ -1,5 +1,6 @@
 import { IAsset, Transaction } from 'shared/model/transaction';
 import { TransactionId } from 'shared/model/types';
+import { Address } from 'shared/model/account';
 
 export interface ITransactionRepository<T extends IAsset> {
     add(trs: Transaction<T>): Transaction<T>;
@@ -9,23 +10,34 @@ export interface ITransactionRepository<T extends IAsset> {
 }
 
 class TransactionRepo implements ITransactionRepository<IAsset> {
-    private readonly memoryTransactionById: Map<TransactionId, Transaction<IAsset>> = new Map();
+    private readonly memoryTransactionsById: Map<TransactionId, Transaction<IAsset>> = new Map();
 
     add(trs: Transaction<IAsset>): Transaction<IAsset> {
-        this.memoryTransactionById.set(trs.id, trs);
+        this.memoryTransactionsById.set(trs.id, trs);
         return trs;
     }
 
     delete(trs: Transaction<IAsset>): void {
-        this.memoryTransactionById.delete(trs.id);
+        this.memoryTransactionsById.delete(trs.id);
     }
 
     public isExist(id: TransactionId): boolean {
-        return !!this.memoryTransactionById[id];
+        return !!this.memoryTransactionsById[id];
     }
 
     public getById(id: TransactionId): Transaction<IAsset> {
-        return this.memoryTransactionById.get(id);
+        return this.memoryTransactionsById.get(id);
+    }
+    
+    /* Only for system usage */
+    public getByAddress(address: Address): Array<Transaction<IAsset>> {
+        const filteredTransaction = [];
+        for (const trs of this.memoryTransactionsById.values()) {
+            if (trs.senderAddress === address) {
+                filteredTransaction.push(trs);
+            }
+        }
+        return filteredTransaction;
     }
 }
 
