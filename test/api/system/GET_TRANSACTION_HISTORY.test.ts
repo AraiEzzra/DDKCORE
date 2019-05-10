@@ -4,7 +4,6 @@ import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
 import { socketRequest } from 'test/api/base';
 
 describe('Test GET_TRANSACTION_HISTORY', () => {
-
     it('Positive', async () => {
         const SUCCESS = [
             {
@@ -27,7 +26,10 @@ describe('Test GET_TRANSACTION_HISTORY', () => {
                     votes: [],
                     stakes: []
                 }
-            }
+            },
+            {
+                action: 'APPLY',
+            },
         ];
 
         const REQUEST = {
@@ -40,5 +42,22 @@ describe('Test GET_TRANSACTION_HISTORY', () => {
 
         expect(response.body.success).to.equal(true);
         expect(response.body.data).to.deep.equal(SUCCESS);
+    });
+
+    it('Negative', async () => {
+        const EXPECTED = [
+            'IS NOT VALID REQUEST:\'GET_TRANSACTION_HISTORY\'... Expected type object but found type string'
+        ];
+
+        const REQUEST = {
+            headers: Fixture.getBaseHeaders(),
+            code: API_ACTION_TYPES.GET_TRANSACTION_HISTORY,
+            body: '9e805d3e4efb5e371a1f48beb8a95e6144cfd57681a47a55043daf897ba466ea',
+        };
+
+        const response = await socketRequest(REQUEST);
+
+        expect(response.body.success).to.equal(false);
+        expect(response.body.errors).to.deep.equal(EXPECTED);
     });
 });
