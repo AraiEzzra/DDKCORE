@@ -21,7 +21,7 @@ interface BlockGenerateRequest {
 
 class BlockController extends BaseController {
 
-    @MAIN(ActionTypes.BLOCK_RECEIVE)
+   @MAIN(ActionTypes.BLOCK_RECEIVE)
     public async onReceiveBlock({ data }: { data: { block: BlockModel } }): Promise<ResponseEntity<void>> {
 
         const validateResponse = BlockService.validate(data.block);
@@ -36,7 +36,7 @@ class BlockController extends BaseController {
         const receivedBlock = new Block(data.block);
         receivedBlock.transactions = receivedBlock.transactions.map(
             trs => SharedTransactionRepo.deserialize(trs)
-        ); 
+        );
         let lastBlock = BlockRepository.getLastBlock();
 
         const validateReceivedBlocKResponse = BlockService.validateReceivedBlock(lastBlock, receivedBlock);
@@ -59,12 +59,12 @@ class BlockController extends BaseController {
 
         const currentSlotNumber = SlotService.getSlotNumber(SlotService.getTime(Date.now()));
         RoundService.restoreToSlot(currentSlotNumber);
-        
+
         RoundService.restore(false);
 
         if (!receiveBlockResponse.success) {
             if (!SyncService.getMyConsensus()) {
-                messageON('EMIT_SYNC_BLOCKS');
+                messageON(ActionTypes.EMIT_SYNC_BLOCKS);
             }
             return new ResponseEntity<void>({
                 errors: [
@@ -84,7 +84,7 @@ class BlockController extends BaseController {
             logger.debug(
                 `[Controller][Block][generateBlock]: skip forging block, consensus ${SyncService.getConsensus()}%`
             );
-            messageON('EMIT_SYNC_BLOCKS');
+            messageON(ActionTypes.EMIT_SYNC_BLOCKS);
             return new ResponseEntity<void>({ errors: ['Invalid consensus'] });
         }
         const response: ResponseEntity<void> = await BlockService.generateBlock(data.keyPair, data.timestamp);

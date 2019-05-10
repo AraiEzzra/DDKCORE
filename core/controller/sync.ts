@@ -1,27 +1,33 @@
 import SyncService from 'core/service/sync';
 import { ON } from 'core/util/decorator';
-import { Peer } from 'shared/model/peer';
 import { BaseController } from 'core/controller/baseController';
 import PeerService from 'core/service/peer';
 import { logger } from 'shared/util/logger';
-import PeerRepository from 'core/repository/peer';
 import { messageON } from 'shared/util/bus';
 import System from 'core/repository/system';
 import BlockRepository from 'core/repository/block';
 import EventQueue from 'core/repository/eventQueue';
-import { REQUEST_TIMEOUT } from 'core/repository/socket';
 import { asyncTimeout } from 'shared/util/timer';
 import RoundService from 'core/service/round';
+import PeerNetworkRepository from 'core/repository/peer/peerNetwork';
+import { BlockData, BlockLimit, PeerAddress, RequestPeerInfo } from 'shared/model/types';
+import { REQUEST_TIMEOUT } from 'core/driver/socket';
+import { ActionTypes } from 'core/util/actionTypes';
+import { Headers } from 'shared/model/Peer/headers';
 import SlotService from 'core/service/slot';
 
-type checkCommonBlocksRequest = {
-    data: {
-        block: {
-            id: string, height: number
-        }
-    },
-    peer: Peer,
-    requestId: string,
+type CheckCommonBlocksRequest = {
+    data: BlockData,
+    requestPeerInfo: RequestPeerInfo
+};
+
+type PeerUpdateHeaders = {
+    data: Headers,
+    peerAddress: PeerAddress
+};
+type BlocksRequest = {
+    data: BlockLimit,
+    requestPeerInfo: RequestPeerInfo
 };
 
 const SYNC_TIMEOUT = 10000;
@@ -29,14 +35,15 @@ const LOG_PREFIX = '[Controller][Sync]';
 let lastSyncTime: number = 0;
 
 export class SyncController extends BaseController {
-    @ON('REQUEST_COMMON_BLOCKS')
-    checkCommonBlocks(action: checkCommonBlocksRequest): void {
-        const { data, peer, requestId } = action;
-        logger.debug(`${LOG_PREFIX}[checkCommonBlocks]: ${JSON.stringify(data.block)}, peer: ${peer.ip}`);
-        SyncService.checkCommonBlocks(data.block, peer, requestId);
+
+    @ON(ActionTypes.REQUEST_COMMON_BLOCKS)
+    checkCommonBlocks({ data, requestPeerInfo }: CheckCommonBlocksRequest): void {
+        logger.debug(`${LOG_PREFIX}[checkCommonBlocks]: ${JSON.stringify(data)}, ` +
+            `peer: ${requestPeerInfo.peerAddress.ip}`);
+        SyncService.checkCommonBlocks(data, requestPeerInfo);
     }
 
-    @ON('EMIT_SYNC_BLOCKS')
+    @ON(ActionTypes.EMIT_SYNC_BLOCKS)
     async startSyncBlocks(): Promise<void> {
         let lastPeerRequested = null;
         const currentTime = new Date().getTime();
@@ -46,19 +53,20 @@ export class SyncController extends BaseController {
             await asyncTimeout(syncTimeDiff);
         }
         lastSyncTime = currentTime;
-        if (SyncService.getMyConsensus() || PeerRepository.peerList().length === 0) {
+
+        if (SyncService.getMyConsensus() || !PeerNetworkRepository.count) {
             System.synchronization = false;
             messageON('WARM_UP_FINISHED');
 
             const logMessage = `${LOG_PREFIX}[startSyncBlocks]: Unable to sync`;
             if (SyncService.getMyConsensus()) {
                 logger.info(`${logMessage}. Consensus is ${SyncService.getConsensus()}%`);
-            } else if (PeerRepository.peerList().length === 0) {
+            } else if (!PeerNetworkRepository.count) {
                 logger.info(`${logMessage}. No peers to sync`);
             }
-
             return;
         }
+
         System.synchronization = true;
         logger.debug(`${LOG_PREFIX}[startSyncBlocks]: start sync with consensus ${SyncService.getConsensus()}%`);
         const lastBlockSlotNumber = SlotService.getSlotNumber(BlockRepository.getLastBlock().createdAt);
@@ -79,7 +87,12 @@ export class SyncController extends BaseController {
                 logger.error(`${LOG_PREFIX}[startSyncBlocks] lastBlock is undefined`);
                 break;
             }
-            const responseCommonBlocks = await SyncService.checkCommonBlock(lastBlock);
+
+            const responseCommonBlocks = await SyncService.checkCommonBlock({
+                id: lastBlock.id,
+                height: lastBlock.height,
+            });
+
             if (!responseCommonBlocks.success) {
                 logger.error(
                     `${LOG_PREFIX}[startSyncBlocks][responseCommonBlocks]: ` +
@@ -90,18 +103,23 @@ export class SyncController extends BaseController {
                 }
                 break;
             }
-            const { isExist, peer = null } = responseCommonBlocks.data;
+            const { isExist, peerAddress = null } = responseCommonBlocks.data;
             if (!isExist) {
                 if (lastPeerRequested) {
-                    PeerRepository.ban(lastPeerRequested);
+                    PeerNetworkRepository.ban(lastPeerRequested);
                     lastPeerRequested = null;
                 }
-                await SyncService.rollback();
+                const status = await SyncService.rollback();
+                if (!status.success) {
+                    logger.error(
+                        `${LOG_PREFIX}[startSyncBlocks][rollback]: ${status.errors.join('. ')}`
+                    );
+                }
                 needDelay = false;
                 continue;
             }
-            lastPeerRequested = peer;
-            const responseBlocks = await SyncService.requestBlocks(lastBlock, peer);
+            lastPeerRequested = peerAddress;
+            const responseBlocks = await SyncService.requestBlocks(lastBlock, peerAddress);
             if (!responseBlocks.success) {
                 logger.error(
                     `${LOG_PREFIX}[startSyncBlocks][responseBlocks]: ${responseBlocks.errors.join('. ')}`
@@ -125,21 +143,21 @@ export class SyncController extends BaseController {
         logger.info(`${LOG_PREFIX}[startSyncBlocks] SYNCHRONIZATION DONE SUCCESS`);
     }
 
-    @ON('REQUEST_BLOCKS')
-    sendBlocks(action: { data: { height: number, limit: number }, peer: Peer, requestId: string }): void {
-        const { data, peer, requestId } = action;
-        SyncService.sendBlocks(data, peer, requestId);
+    @ON(ActionTypes.REQUEST_BLOCKS)
+    sendBlocks({ data, requestPeerInfo }: BlocksRequest): void {
+        SyncService.sendBlocks(data, requestPeerInfo);
     }
 
-    @ON('PEER_HEADERS_UPDATE')
-    updatePeer(action: { data, peer }): void {
-        const { data, peer } = action;
-        PeerService.update(data, peer);
+    @ON(ActionTypes.PEER_HEADERS_UPDATE)
+    updatePeer({ data, peerAddress }: PeerUpdateHeaders): void {
+        logger.debug(`${LOG_PREFIX}[updatePeer][${peerAddress.ip}:${peerAddress.port}] ` +
+            `broadhash ${data.broadhash}, height: ${data.height}`);
+        PeerService.update(peerAddress, data);
     }
 
-    @ON('LAST_BLOCKS_UPDATE')
+    @ON(ActionTypes.LAST_BLOCKS_UPDATE)
     updateHeaders(data: { lastBlock }): void {
-        logger.debug(`${LOG_PREFIX}[updateHeaders]: id ${data.lastBlock.id}, height: ${data.lastBlock.height}`);
+        logger.debug(`${LOG_PREFIX}[updateHeaders]: broadhash ${data.lastBlock.id}, height: ${data.lastBlock.height}`);
         SyncService.updateHeaders(data.lastBlock);
     }
 }

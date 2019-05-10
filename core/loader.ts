@@ -10,7 +10,7 @@ import config from 'shared/config';
 import BlockPGRepository from 'core/repository/block/pg';
 import BlockRepository from 'core/repository/block';
 import BlockService from 'core/service/block';
-import socket from 'core/repository/socket';
+import SocketDriver from 'core/driver/socket/index';
 import { logger } from 'shared/util/logger';
 import { Block } from 'shared/model/block';
 import { socketRPCServer } from 'core/api/server';
@@ -56,7 +56,7 @@ class Loader {
         if (!config.CORE.IS_HISTORY_ON_WARMUP) {
             config.CORE.IS_HISTORY = historyState;
         }
-        socket.init();
+        SocketDriver.initServer();
 
         initShedulers();
 

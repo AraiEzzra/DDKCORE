@@ -77,8 +77,8 @@ const constants: IConstants = {
         MAX: 11,
         MIN: 3,
     },
-    TIMEOUT_START_SYNC_BLOCKS: 20000,
-    TIMEOUT_START_PEER_REQUEST: 10000,
+    TIMEOUT_START_SYNC_BLOCKS: 30000,
+    TIMEOUT_START_PEER_REQUEST: 20000,
     PEER_CONNECTION_TIME_INTERVAL_REBOOT: {
         MIN: 5 * 60 * 1000,
         MAX: 10 * 60 * 1000,
@@ -96,6 +96,7 @@ const constants: IConstants = {
         BigInt('7043806098403384872'),
         BigInt('13761141028469814636'),
     ],
+    TIMEOUT_START_PEER_CONNECT: 10000,
     ADDRESSES_BLACKLIST: new Set([
         BigInt('14418097244087628'),
         BigInt('44824014520664003'),
