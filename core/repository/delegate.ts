@@ -1,6 +1,7 @@
-import { Account, PublicKey } from 'shared/model/account';
+import { Account} from 'shared/model/account';
 import config from 'shared/config';
 import { Delegate, SerializedDelegate } from 'shared/model/delegate';
+import { PublicKey } from 'shared/model/types';
 
 class DelegateRepository {
     private memoryDelegates: Map<PublicKey, Delegate> = new Map();

@@ -2,12 +2,12 @@ import { API } from 'core/api/util/decorators';
 import { Message2 } from 'shared/model/message';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
 import { ResponseEntity } from 'shared/model/response';
-import { Address } from 'shared/model/account';
+import { Address } from 'shared/model/types';
 import BlockRepository from 'core/repository/block';
 import TransactionRepository from 'core/repository/transaction';
 import AccountRepository from 'core/repository/account';
 import { Block } from 'shared/model/block';
-import { AccountState, SerializedAccount, SerializedTransactionHistoryAction } from 'shared/model/types';
+import { AccountState, SerializedAccountState, SerializedTransactionHistoryAction } from 'shared/model/types';
 
 class SystemController {
     constructor() {
@@ -17,9 +17,17 @@ class SystemController {
     }
 
     @API(API_ACTION_TYPES.GET_ACCOUNT_HISTORY)
-    public getAccountHistory(message: Message2<{ address: Address }>): ResponseEntity<Array<SerializedAccount>> {
-        const account = AccountRepository.getByAddress(message.body.address);
-        const response = account.history.map((state: AccountState) => AccountRepository.serialize(state));
+    public getAccountHistory(message: Message2<{ address: Address }>): ResponseEntity<Array<SerializedAccountState>> {
+        const account = AccountRepository.getByAddress(BigInt(message.body.address));
+
+        if (!account) {
+            return new ResponseEntity({ errors: ['Account not exist'] });
+        }
+
+        const response = account.history.map((accountState: AccountState) => ({
+            ...accountState,
+            state: AccountRepository.serialize(accountState.state)
+        }));
 
         return new ResponseEntity({ data: response });
     }

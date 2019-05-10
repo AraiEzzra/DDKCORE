@@ -1,5 +1,6 @@
 import crypto from 'crypto';
-import { Address, PublicKey } from 'shared/model/account';
+import { Address} from 'shared/model/types';
+import { PublicKey } from 'shared/model/types';
 
 export enum EnumSize {
     INT64 = 8

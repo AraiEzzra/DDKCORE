@@ -1,4 +1,4 @@
-import { IConstants } from 'shared/model/types';
+import { IConstants } from 'shared/config/types';
 
 /* tslint:disable:no-magic-numbers */
 const constants: IConstants = {

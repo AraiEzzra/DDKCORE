@@ -1,5 +1,5 @@
 import Validator, { registerFormat } from 'z-schema';
-import { PublicKey } from 'shared/model/account';
+import { PublicKey } from 'shared/model/types';
 import { VoteType } from 'shared/model/transaction';
 
 const enum LENGTH {

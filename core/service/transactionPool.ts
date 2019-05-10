@@ -11,8 +11,9 @@ import TransactionDispatcher from 'core/service/transaction';
 import { ResponseEntity } from 'shared/model/response';
 import { logger } from 'shared/util/logger';
 import SyncService from 'core/service/sync';
-import { Account, Address } from 'shared/model/account';
+import { Account} from 'shared/model/account';
 import AccountRepository from 'core/repository/account';
+import { Address } from 'shared/model/types';
 
 export interface ITransactionPoolService<T extends Object> {
 

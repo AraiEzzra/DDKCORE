@@ -4,7 +4,7 @@ import AccountRepository from 'core/repository/account';
 import BlockRepository from 'core/repository/block';
 import SyncService from 'core/service/sync';
 import config from 'shared/config';
-import { Address } from 'shared/model/account';
+import { Address } from 'shared/model/types';
 
 export type BlockchainInfo = {
     totalSupply: number;

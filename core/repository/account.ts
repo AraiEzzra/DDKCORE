@@ -1,7 +1,7 @@
-import { Account, Address, PublicKey } from 'shared/model/account';
+import { Account} from 'shared/model/account';
 import { getAddressByPublicKey } from 'shared/util/account';
 import DelegateRepository from 'core/repository/delegate';
-import { SerializedAccount } from 'shared/model/types';
+import { Address, PublicKey, SerializedAccount } from 'shared/model/types';
 
 export type Statistics = {
     tokenHolders: number;
@@ -79,7 +79,7 @@ class AccountRepository {
         this.memoryAccountsByAddress.get(address).referrals = referrals;
     }
 
-    serialize(account: Account): SerializedAccount {
+    serialize(account: Account, withDelegates = true): SerializedAccount {
         return {
             address: account.address.toString(),
             isDelegate: Boolean(account.delegate),
@@ -87,9 +87,9 @@ class AccountRepository {
             secondPublicKey: account.secondPublicKey,
             actualBalance: account.actualBalance,
             referrals: account.referrals.map(acc => acc.address.toString()),
-            votes: account.votes.map(
+            votes: withDelegates ? account.votes.map(
                 (publicKey: PublicKey) => DelegateRepository.serialize(DelegateRepository.getDelegate(publicKey))
-            ).reverse(),
+            ).reverse() : account.votes,
             stakes: [...account.stakes].reverse(),
         };
     }

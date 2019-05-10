@@ -1,6 +1,6 @@
 import { IAsset, Transaction } from 'shared/model/transaction';
 import { TransactionId } from 'shared/model/types';
-import { Address } from 'shared/model/account';
+import { Address } from 'shared/model/types';
 
 export interface ITransactionRepository<T extends IAsset> {
     add(trs: Transaction<T>): Transaction<T>;

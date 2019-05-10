@@ -1,4 +1,4 @@
-import { Timestamp } from 'shared/model/account';
+import { Timestamp } from 'shared/model/types';
 import { Transaction } from 'shared/model/transaction';
 import config from 'shared/config';
 

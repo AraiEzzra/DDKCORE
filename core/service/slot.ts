@@ -2,7 +2,7 @@ import * as crypto from 'crypto';
 import config from 'shared/config';
 import { SECOND } from 'core/util/const';
 import { Delegate } from 'shared/model/delegate';
-import { Timestamp } from 'shared/model/account';
+import { Timestamp } from 'shared/model/types';
 import { Slot, Slots } from 'shared/model/round';
 import { sortHashListFunc } from 'core/util/slot';
 
