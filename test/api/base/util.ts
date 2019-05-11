@@ -1,5 +1,5 @@
 import { SECOND } from 'core/util/const';
-import { Timestamp } from 'shared/model/account';
+import { Timestamp } from 'shared/model/types';
 import config from 'shared/config';
 import { TransactionModel } from 'shared/model/transaction';
 

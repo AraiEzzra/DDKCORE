@@ -1,6 +1,12 @@
 import autobind from 'autobind-decorator';
 
-import { IAsset, SerializedTransaction, Transaction, TransactionStatus } from 'shared/model/transaction';
+import {
+    IAsset,
+    SerializedTransaction,
+    Transaction,
+    TransactionLifecycle,
+    TransactionStatus
+} from 'shared/model/transaction';
 import { transactionSortFunc } from 'core/util/transaction';
 import TransactionDispatcher from 'core/service/transaction';
 import TransactionPool from 'core/service/transactionPool';
@@ -63,6 +69,8 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
 
         trs.status = TransactionStatus.QUEUED;
         this.queue.push(trs);
+        trs.addHistory(TransactionLifecycle.PUSH_IN_QUEUE);
+        
         if (this.queue.length === 1) {
             setImmediate(this.process);
         } else {
@@ -76,6 +84,7 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
             expire: Math.floor(new Date().getTime() / SECOND) + config.CONSTANTS.TRANSACTION_QUEUE_EXPIRE
         });
         trs.status = TransactionStatus.QUEUED_AS_CONFLICTED;
+        trs.addHistory(TransactionLifecycle.PUSH_IN_CONFLICTED_QUEUE);
     }
 
     // TODO can be optimized if check senderAddress and recipientAddress
@@ -94,6 +103,7 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
         }
 
         const trs = this.pop();
+        trs.addHistory(TransactionLifecycle.PROCESS);
 
         // TODO redundant in sync variant
         if (TransactionPool.has(trs)) {
@@ -103,11 +113,6 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
 
         if (TransactionPool.isPotentialConflict(trs)) {
             this.pushInConflictedQueue(trs);
-            // TODO debug only
-            SocketMiddleware.emitEvent<SerializedTransaction<IAsset>>(
-                EVENT_TYPES.TRANSACTION_CONFLICTED,
-                SharedTransactionRepo.serialize(trs),
-            );
             setImmediate(this.process);
             return;
         }
@@ -121,6 +126,7 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
                 `${JSON.stringify(verifyStatus.errors.join('. '))}. Transaction: ${JSON.stringify(trs)}`
             );
             trs.status = TransactionStatus.DECLINED;
+            trs.addHistory(TransactionLifecycle.DECLINE);
 
             SocketMiddleware.emitEvent<{ transaction: SerializedTransaction<IAsset>, reason: Array<string> }>(
                 EVENT_TYPES.DECLINE_TRANSACTION,

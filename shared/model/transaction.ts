@@ -1,5 +1,15 @@
-import { Address, PublicKey, Timestamp } from 'shared/model/account';
+import { Account} from 'shared/model/account';
 import { getAddressByPublicKey } from 'shared/util/account';
+import {
+    Address,
+    AirdropReward,
+    PublicKey,
+    Timestamp,
+    TransactionHistoryAction,
+    TransactionId
+} from 'shared/model/types';
+import config from 'shared/config';
+import { BlockId } from 'shared/repository/block';
 
 export enum VoteType {
     VOTE = '+',
@@ -14,6 +24,25 @@ export enum TransactionType {
     STAKE = 40,
     // SENDSTAKE = 50,
     VOTE = 60,
+}
+
+export enum TransactionLifecycle {
+    VALIDATE = 'VALIDATE',
+    CREATE = 'CREATE',
+    PUSH_IN_QUEUE = 'PUSH_IN_QUEUE',
+    PROCESS = 'PROCESS',
+    PUSH_IN_CONFLICTED_QUEUE = 'PUSH_IN_CONFLICTED_QUEUE',
+    VERIFY = 'VERIFY',
+    DECLINE = 'DECLINE',
+    PUSH_IN_POOL = 'PUSH_IN_POOL',
+    CHECK_TRS_FOR_EXIST_POOL = 'CHECK_TRS_FOR_EXIST_POOL',
+    RETURN_TO_QUEUE = 'RETURN_TO_QUEUE',
+    POP_FROM_POOL = 'POP_FROM_POOL',
+    APPLY_UNCONFIRMED = 'APPLY_UNCONFIRMED',
+    UNDO_UNCONFIRMED = 'UNDO_UNCONFIRMED',
+    VIRTUAL_UNDO_UNCONFIRMED = 'VIRTUAL_UNDO_UNCONFIRMED',
+    APPLY = 'APPLY',
+    UNDO = 'UNDO'
 }
 
 export enum TransactionStatus {
@@ -75,8 +104,8 @@ export interface IAssetVote extends IAsset {
 }
 
 export class TransactionModel<T extends IAsset> {
-    id?: string;
-    blockId?: string;
+    id?: TransactionId;
+    blockId?: BlockId;
     type: TransactionType;
     senderPublicKey?: PublicKey;
     senderAddress?: Address; // Memory only
@@ -100,12 +129,46 @@ export class TransactionModel<T extends IAsset> {
 
 export class Transaction<T extends IAsset> extends TransactionModel<T> {
 
+    history: Array<TransactionHistoryAction> = [];
+
     constructor(data: TransactionModel<T>) {
         super(data);
     }
 
     public getCopy() {
-        return new Transaction<T>(this);
+        return new Transaction<T>({ ...this, history: [] });
+    }
+
+    addHistory(action: TransactionLifecycle): void {
+        if (!config.CORE.IS_HISTORY) {
+            return;
+        }
+
+        this.history.push({ action });
+    }
+
+    addBeforeHistory(action: TransactionLifecycle, account: Account): void {
+        if (!config.CORE.IS_HISTORY) {
+            return;
+        }
+
+        this.history.push({
+            action,
+            accountStateBefore: account.getCopy(),
+        });
+    }
+
+    addAfterHistory(action: TransactionLifecycle, account: Account): void {
+        if (!config.CORE.IS_HISTORY) {
+            return;
+        }
+
+        for (let i = this.history.length - 1; i >= 0; i--) {
+            if (this.history[i].action === action) {
+                this.history[i].accountStateAfter = account.getCopy();
+                break;
+            }
+        }
     }
 }
 
@@ -124,3 +187,17 @@ export type SerializedTransaction<T> = {
     confirmations: number,
     asset: T;
 };
+
+export class Stake {
+    createdAt: Timestamp;
+    isActive: boolean;
+    amount: number;
+    voteCount: number;
+    nextVoteMilestone: Timestamp;
+    airdropReward: AirdropReward;
+    sourceTransactionId: string;
+
+    constructor(data: Stake) {
+        Object.assign(this, data);
+    }
+}

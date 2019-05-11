@@ -1,19 +1,20 @@
-import { Address, Account, Stake } from 'shared/model/account';
-import { logger } from 'shared/util/logger';
+import { Account, AccountChangeAction } from 'shared/model/account';
 import config from 'shared/config';
 import BlockRepo from 'core/repository/block';
 import {
     IAirdropAsset,
     IAssetStake,
-    IAssetVote,
+    IAssetVote, 
+    Stake,
     Transaction,
-    TransactionType,
     TransactionModel,
+    TransactionType,
 } from 'shared/model/transaction';
 import AccountRepo from 'core/repository/account';
 import { ResponseEntity } from 'shared/model/response';
-import { TOTAL_PERCENTAGE, MONEY_FACTOR } from 'core/util/const';
+import { TOTAL_PERCENTAGE } from 'core/util/const';
 import { isEqualMaps } from 'core/util/common';
+import { Address } from 'shared/model/types';
 
 class StakeReward {
     private readonly milestones = config.CONSTANTS.FROZE.REWARDS.MILESTONES;
@@ -160,8 +161,26 @@ export function sendAirdropReward(trs: Transaction<IAssetStake | IAssetVote>): v
         if (rewardAmount === 0) {
             continue;
         }
-        AccountRepo.updateBalanceByAddress(sponsorAddress, rewardAmount);
+
+        const recipient = AccountRepo.getByAddress(sponsorAddress);
+        recipient.actualBalance += rewardAmount;
+        recipient.addHistory(AccountChangeAction.AIRDROP_REWARD_RECEIVE, trs.id);
+        
         AccountRepo.updateBalanceByAddress(config.CONSTANTS.AIRDROP.ADDRESS, -rewardAmount);
+    }
+}
+
+export function undoAirdropReward(trs: Transaction<IAssetVote | IAssetStake>): void {
+    const transactionAirdropReward = trs.asset.airdropReward;
+
+    for (const [sponsorAddress, rewardAmount] of transactionAirdropReward.sponsors) {
+        if (rewardAmount === 0) {
+            continue;
+        }
+        const recipient = AccountRepo.getByAddress(sponsorAddress);
+        recipient.actualBalance -= rewardAmount;
+        recipient.addHistory(AccountChangeAction.AIRDROP_REWARD_RECEIVE_UNDO, trs.id);
+        AccountRepo.updateBalanceByAddress(config.CONSTANTS.AIRDROP.ADDRESS, rewardAmount);
     }
 }
 
@@ -189,17 +208,5 @@ function undoRewards(trs: Transaction<IAssetVote>, sender: Account, senderOnly: 
     sender.actualBalance -= trs.asset.reward;
     if (!senderOnly) {
         AccountRepo.updateBalanceByAddress(config.CONSTANTS.TOTAL_SUPPLY.ADDRESS, trs.asset.reward);
-    }
-}
-
-export function undoAirdropReward(trs: Transaction<IAssetVote | IAssetStake>): void {
-    const transactionAirdropReward = trs.asset.airdropReward;
-
-    for (const [sponsorAddress, rewardAmount] of transactionAirdropReward.sponsors) {
-        if (rewardAmount === 0) {
-            continue;
-        }
-        AccountRepo.updateBalanceByAddress(sponsorAddress, -rewardAmount);
-        AccountRepo.updateBalanceByAddress(config.CONSTANTS.AIRDROP.ADDRESS, rewardAmount);
     }
 }

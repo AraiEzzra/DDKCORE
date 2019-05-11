@@ -1,30 +1,44 @@
 import { IAsset, Transaction } from 'shared/model/transaction';
-import {
-    ITransactionRepository as ITransactionRepositoryShared,
-    TransactionsByBlockResponse
-} from 'shared/repository/transaction';
+import { TransactionId } from 'shared/model/types';
+import { Address } from 'shared/model/types';
 
-export interface ITransactionRepository<T extends IAsset> extends ITransactionRepositoryShared<T> {
-
+export interface ITransactionRepository<T extends IAsset> {
+    add(trs: Transaction<T>): Transaction<T>;
+    delete(trs: Transaction<T>): void;
+    isExist(trsId: TransactionId): boolean;
+    getById(transactionId: string): Transaction<IAsset>;
 }
 
 class TransactionRepo implements ITransactionRepository<IAsset> {
-    private readonly memoryTransactionById: { [transactionId: string]: Transaction<IAsset> } = {};
+    private readonly memoryTransactionsById: Map<TransactionId, Transaction<IAsset>> = new Map();
 
     add(trs: Transaction<IAsset>): Transaction<IAsset> {
-        this.memoryTransactionById[trs.id] = trs;
+        this.memoryTransactionsById.set(trs.id, trs);
         return trs;
     }
 
-    delete(trs: Transaction<IAsset>): string {
-        delete this.memoryTransactionById[trs.id];
-        return trs.id;
+    delete(trs: Transaction<IAsset>): void {
+        this.memoryTransactionsById.delete(trs.id);
     }
 
-    public isExist(transactionId: string): boolean {
-        return !!this.memoryTransactionById[transactionId];
+    public isExist(id: TransactionId): boolean {
+        return !!this.memoryTransactionsById[id];
     }
 
+    public getById(id: TransactionId): Transaction<IAsset> {
+        return this.memoryTransactionsById.get(id);
+    }
+    
+    /* Only for system usage */
+    public getByAddress(address: Address): Array<Transaction<IAsset>> {
+        const filteredTransaction = [];
+        for (const trs of this.memoryTransactionsById.values()) {
+            if (trs.senderAddress === address) {
+                filteredTransaction.push(trs);
+            }
+        }
+        return filteredTransaction;
+    }
 }
 
 export default new TransactionRepo();

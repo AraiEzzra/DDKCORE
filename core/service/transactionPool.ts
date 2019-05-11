@@ -1,6 +1,7 @@
 import {
     IAssetTransfer,
     Transaction,
+    TransactionLifecycle,
     TransactionModel,
     TransactionStatus,
     TransactionType
@@ -10,8 +11,9 @@ import TransactionDispatcher from 'core/service/transaction';
 import { ResponseEntity } from 'shared/model/response';
 import { logger } from 'shared/util/logger';
 import SyncService from 'core/service/sync';
-import { Account, Address } from 'shared/model/account';
+import { Account} from 'shared/model/account';
 import AccountRepository from 'core/repository/account';
+import { Address } from 'shared/model/types';
 
 export interface ITransactionPoolService<T extends Object> {
 
@@ -116,6 +118,7 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
             sender = AccountRepository.getByAddress(trs.senderAddress);
         }
 
+        trs.addHistory(TransactionLifecycle.PUSH_IN_POOL);
         TransactionDispatcher.applyUnconfirmed(trs, sender);
         trs.status = TransactionStatus.UNCONFIRM_APPLIED;
 
@@ -153,6 +156,7 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
                     .splice(this.poolByRecipient.get(asset.recipientAddress).indexOf(trs), 1);
             }
         }
+        trs.addHistory(TransactionLifecycle.POP_FROM_POOL);
         return true;
     }
 

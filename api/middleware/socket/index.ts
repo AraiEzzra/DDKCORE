@@ -6,7 +6,6 @@ import coreSocketClient from 'api/socket/client';
 import { ResponseEntity } from 'shared/model/response';
 import SocketIO from 'socket.io';
 import { SECOND } from 'shared/util/const';
-import { Socket } from 'dgram';
 import config from 'shared/config';
 import { logger } from 'shared/util/logger';
 
@@ -20,7 +19,7 @@ export class SocketMiddleware {
 
     private requestsPerSecond: number;
     private readonly requestsPerSecondLimit: number;
-    private requestsQueue: Array<{ message: Message2<any>, socket: Socket }>;
+    private requestsQueue: Array<{ message: Message2<any>, socket: SocketIO.Socket }>;
 
     constructor() {
         this.requests = new Map();
@@ -35,7 +34,7 @@ export class SocketMiddleware {
     }
 
     processQueue = () => {
-        let request: { message: Message2<any>, socket: Socket };
+        let request: { message: Message2<any>, socket: SocketIO.Socket };
         while ((request = this.requestsQueue.pop()) && request) {
             const { message, socket } = request;
             this.emitToCore(message, socket);
@@ -73,7 +72,7 @@ export class SocketMiddleware {
         this.emitToClient(message.headers.id, message.code, message.body);
     }
 
-    processMessage(message: Message, socket: any) {
+    processMessage(message: Message, socket: SocketIO.Socket) {
         const method = RPC_METHODS[message.code];
         if (typeof method === 'function') {
             method(message, socket);

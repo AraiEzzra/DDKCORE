@@ -6,6 +6,7 @@ import DelegateRepository from 'core/repository/delegate';
 import AccountRepository from 'core/repository/account';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
 import config from 'shared/config';
+import { SerializedDelegate } from 'shared/model/delegate';
 
 class DelegateController {
 
@@ -16,7 +17,8 @@ class DelegateController {
     }
 
     @API(API_ACTION_TYPES.GET_DELEGATES)
-    public getDelegates(message: Message2<Pagination>): ResponseEntity<{ delegates: Array<object>, count: number }> {
+    public getDelegates(message: Message2<Pagination>):
+        ResponseEntity<{ delegates: Array<SerializedDelegate>, count: number }> {
         return new ResponseEntity({
             data: {
                 delegates: DelegateRepository.getDelegates(message.body.limit, message.body.offset).map(
@@ -30,7 +32,7 @@ class DelegateController {
     @API(API_ACTION_TYPES.GET_ACTIVE_DELEGATES)
     public getActiveDelegates(
         message: Message2<Pagination>,
-    ): ResponseEntity<{ delegates: Array<object>, count: number }> {
+    ): ResponseEntity<{ delegates: Array<SerializedDelegate>, count: number }> {
         return new ResponseEntity({
             data: {
                 delegates: DelegateRepository.getActiveDelegates(message.body.limit, message.body.offset).map(
@@ -43,7 +45,7 @@ class DelegateController {
 
     @API(API_ACTION_TYPES.GET_MY_DELEGATES)
     public getMyDelegates(message: Message2<{ address: string } & Pagination>):
-        ResponseEntity<{ delegates: Array<object>, count: number }> {
+        ResponseEntity<{ delegates: Array<SerializedDelegate>, count: number }> {
 
         const account = AccountRepository.getByAddress(BigInt(message.body.address));
         if (!account) {

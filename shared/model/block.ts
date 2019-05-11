@@ -1,8 +1,6 @@
-import { Timestamp } from 'shared/model/account';
+import { Timestamp } from 'shared/model/types';
 import { Transaction } from 'shared/model/transaction';
 import config from 'shared/config';
-
-export type SortBlock = number | string;
 
 export class BlockModel {
     id?: string | null = null;
@@ -17,12 +15,14 @@ export class BlockModel {
     generatorPublicKey?: string = '';
     signature?: string = '';
     relay?: number; // Memory only
-    transactions: Array<Transaction<object>> = [];
+    transactions: Array<Transaction<object>>;
 
     constructor(data: BlockModel) {
         this.relay = 0;
+        this.transactions = [];
         Object.assign(this, data);
-        this.transactions = (data.transactions || []).map(trs => trs.getCopy());
+        // TODO check next 
+        // this.transactions = (data.transactions || []).map(trs => trs.getCopy());
     }
 }
 

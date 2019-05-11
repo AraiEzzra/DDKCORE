@@ -1,7 +1,8 @@
 import { IReferredUser, IReferredUsers, FactorType } from 'core/repository/referredUsers/interfaces';
 import FactorTree from 'core/repository/referredUsers/tree/FactorTree';
 import config from 'shared/config/index';
-import { Account, Address } from 'shared/model/account';
+import { Account} from 'shared/model/account';
+import { Address } from 'shared/model/types';
 
 export default class ReferredUsersTree implements IReferredUsers {
 

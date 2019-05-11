@@ -1,23 +1,16 @@
 import { Delegate } from 'shared/model/delegate';
+import { AccountState, Address, PublicKey, TransactionId } from 'shared/model/types';
+import { Stake } from 'shared/model/transaction';
+import config from 'shared/config';
 
-export type Address = BigInt;
-export type PublicKey = string;
-export type Timestamp = number;
-
-type AirdropReward = Map<Address, number>;
-
-export class Stake {
-    createdAt: Timestamp;
-    isActive: boolean;
-    amount: number;
-    voteCount: number;
-    nextVoteMilestone: Timestamp;
-    airdropReward: AirdropReward;
-    sourceTransactionId: string;
-
-    constructor(data: Stake) {
-        Object.assign(this, data);
-    }
+export enum AccountChangeAction {
+    TRANSACTION_APPLY_UNCONFIRMED = 'TRANSACTION_APPLY_UNCONFIRMED',
+    TRANSACTION_UNDO_UNCONFIRMED = 'TRANSACTION_UNDO_UNCONFIRMED',
+    VIRTUAL_UNDO_UNCONFIRMED = 'VIRTUAL_UNDO_UNCONFIRMED',
+    MONEY_RECEIVE = 'MONEY_RECEIVE',
+    MONEY_RECEIVE_UNDO = 'MONEY_RECEIVE_UNDO',
+    AIRDROP_REWARD_RECEIVE = 'AIRDROP_REWARD_RECEIVE',
+    AIRDROP_REWARD_RECEIVE_UNDO = 'AIRDROP_REWARD_RECEIVE_UNDO',
 }
 
 export class AccountModel {
@@ -40,8 +33,22 @@ export class AccountModel {
 }
 
 export class Account extends AccountModel {
+    
+    history: Array<AccountState> = [];
 
     public getCopy(): Account {
-        return new Account(this);
+        return new Account( { ...this, history: [] });
+    }
+    
+    addHistory(action: AccountChangeAction, transactionId: TransactionId): void {
+        if (!config.CORE.IS_HISTORY) {
+            return;
+        }
+
+        this.history.push({
+            action,
+            state: this.getCopy(),
+            transactionId: transactionId
+        });
     }
 }

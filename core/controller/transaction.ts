@@ -12,7 +12,7 @@ import { EVENT_TYPES } from 'shared/driver/socket/codes';
 import { createKeyPairBySecret } from 'shared/util/crypto';
 import SocketMiddleware from 'core/api/middleware/socket';
 import { ResponseEntity } from 'shared/model/response';
-import { CreateTransactionParams } from 'shared/model/types';
+import { CreateTransactionParams } from 'core/controller/types';
 
 
 class TransactionController extends BaseController {

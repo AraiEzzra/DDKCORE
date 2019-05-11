@@ -1,5 +1,6 @@
 import { IAssetRegister } from 'shared/model/transaction';
-import { IAssetRepository, RawAsset } from 'shared/repository/transaction';
+import { IAssetRepository } from 'shared/repository/transaction';
+import { RawAsset } from 'shared/model/types';
 
 class TransactionRegisterRepo implements IAssetRepository<IAssetRegister> {
 

@@ -1,9 +1,10 @@
-import { Account, PublicKey } from 'shared/model/account';
+import { Account} from 'shared/model/account';
 import config from 'shared/config';
-import { Delegate } from 'shared/model/delegate';
+import { Delegate, SerializedDelegate } from 'shared/model/delegate';
+import { PublicKey } from 'shared/model/types';
 
 class DelegateRepository {
-    private memoryDelegates: { [publicKey: string]: Delegate } = {};
+    private memoryDelegates: Map<PublicKey, Delegate> = new Map();
     private usernames: Set<string> = new Set<string>();
 
     public add(account: Account, params: { username?: string, url?: string } = {}) {
@@ -15,13 +16,13 @@ class DelegateRepository {
             account: account,
             votes: 0
         });
-        this.memoryDelegates[account.publicKey] = delegate;
+        this.memoryDelegates.set(account.publicKey, delegate);
         this.usernames.add(delegate.username);
         return delegate;
     }
 
     public getDelegates(limit, offset): Array<Delegate> {
-        return Object.values(this.memoryDelegates).sort((a, b) => {
+        return [...this.memoryDelegates.values()].sort((a, b) => {
             if (a.account.publicKey > b.account.publicKey) {
                 return 1;
             }
@@ -33,15 +34,15 @@ class DelegateRepository {
     }
 
     public getDelegate(publicKey: PublicKey): Delegate {
-        return this.memoryDelegates[publicKey] || null;
+        return this.memoryDelegates.get(publicKey) || null;
     }
 
     public getCount() {
-        return Object.keys(this.memoryDelegates).length;
+        return this.memoryDelegates.size;
     }
 
     public getActiveDelegates(limit?: number, offset?: number): Array<Delegate> {
-        let activeDelegates: Array<Delegate> = Object.values(this.memoryDelegates).sort((a, b) => {
+        let activeDelegates: Array<Delegate> = [...this.memoryDelegates.values()].sort((a, b) => {
             if (a.votes < b.votes) {
                 return 1;
             }
@@ -59,20 +60,20 @@ class DelegateRepository {
         }
     }
 
-    public getByPublicKey(publicKey: string): Delegate {
-        return this.memoryDelegates[publicKey];
-    }
-
     public isUserNameExists(username: string): boolean {
         return this.usernames.has(username);
     }
 
     public delete(account: Account): void {
-        this.usernames.delete(this.memoryDelegates[account.publicKey].username);
-        delete this.memoryDelegates[account.publicKey];
+        this.memoryDelegates.delete(account.publicKey);
+
+        const delegate = this.getDelegate(account.publicKey);
+        if (delegate) {
+            this.usernames.delete(delegate.username);
+        }
     }
 
-    public serialize(delegate: Delegate): object {
+    public serialize(delegate: Delegate): SerializedDelegate {
         return {
             username: delegate.username,
             missedBlocks: delegate.missedBlocks,
