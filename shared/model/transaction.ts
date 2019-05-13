@@ -89,6 +89,7 @@ export class TransactionModel<T extends IAsset> {
     relay?: number; // Memory only
     confirmations?: number;
     asset?: T;
+    height?: number;
 
     constructor(data: TransactionModel<T>) {
         this.relay = 0;

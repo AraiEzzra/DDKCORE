@@ -21,6 +21,7 @@ import db from 'shared/driver/db/index';
 import { Address } from 'shared/model/account';
 import { transactionSortFunc } from 'core/util/transaction';
 import { Delegate } from 'shared/model/delegate';
+import config from 'shared/config';
 
 const csv = require('csv-parser');
 const fs = require('fs');
@@ -37,7 +38,7 @@ class Basket {
 
 const allSecretsData: any = JSON.parse(fs.readFileSync('./secrets.json'));
 const filePathNewTransactions = './transactionsNew_19_04_2019_T13_30.csv';
-const filePathAddressesWithNegativeBalance = './10_05_2019_T12_00_addressesWithNegativeBalanceWithFixStakeNotEnough.csv';
+const filePathAddressesWithNegativeBalance = './13_05_2019_T19_00_addressesWithNegativeBalance.csv';
 const filePathNewTransactionsFromProduction = './newTrsFromProd_001.csv';
 
 // TODO need default secret
@@ -160,7 +161,7 @@ let genesisAccountsSendTransactions: Array<TransactionModel<IAsset>> = [];
 const basketsWithTransactionsForBlocks: Array<Basket> = [];
 const senderPublicKeyFromSecondSignatureTrsSet: Set<string> = new Set();
 const allBasketsIds: Array<number> = [];
-const newTransactionFromProd = [];
+const newTransactionFromProd: Array<TransactionModel<IAsset>> = [];
 
 let accounts: Map<Address, number> = new Map();
 let countForUsedBasket = 0;
@@ -382,13 +383,34 @@ async function startPrepareTransactionsForMigration() {
 
     runGarbageCollection();
     console.log('Cleared newTrs!');
-
-    runGarbageCollection();
-
     console.log('Prepared transactions: ', correctTransactions.length);
 
-    await createArrayBasketsTrsForBlocks();
-    await basketsWithTransactionsForBlocks.reverse();
+    createArrayBasketsTrsForBlocks();
+    basketsWithTransactionsForBlocks.reverse();
+
+    const oneNewBlock = [];
+    let lastHeight = 7025;
+
+    for (const trs of newTransactionFromProd) {
+        if (trs.height === lastHeight) {
+            oneNewBlock.push(trs);
+        } else {
+            basketsWithTransactionsForBlocks.push({
+                transactions: [...oneNewBlock],
+                createdAt: basketsWithTransactionsForBlocks[basketsWithTransactionsForBlocks.length - 1].createdAt + 10,
+            });
+            oneNewBlock.length = 0;
+            oneNewBlock.push(trs);
+            lastHeight = trs.height;
+        }
+    }
+
+    basketsWithTransactionsForBlocks.push({
+        transactions: [...oneNewBlock],
+        createdAt: basketsWithTransactionsForBlocks[basketsWithTransactionsForBlocks.length - 1].createdAt + 10,
+    });
+    console.log('Last basket timestamp', new Date(
+        basketsWithTransactionsForBlocks[basketsWithTransactionsForBlocks.length - 1].createdAt * 1000 + 1451667600000));
 
     if (USE_TEMPORARY_DB_TABLE_WITH_BASKETS) {
         await saveBasketsToDB();
@@ -409,8 +431,8 @@ function concatRegisterAndSendAndAllOthersTrs() {
     console.log('newTransactionFromProd.length: ', newTransactionFromProd.length);
     const allTrs = registerTransactions
     .concat(genesisAccountsSendTransactions)
-    .concat(correctTransactions)
-    .concat(newTransactionFromProd);
+    .concat(correctTransactions);
+    // .concat(newTransactionFromProd);
     console.log('FINISH SET SEND trs to after register! allTrs.length', allTrs.length);
     return allTrs;
 }
@@ -489,6 +511,11 @@ async function createFirstRoundAndBlocksForThisRound() {
     const batchBaskets: Array<Basket> = await getBatchBasketsByLimit(limit);
     console.log('batchBaskets[0].createdAt: ', batchBaskets[0].createdAt);
     console.log('limit: ', limit);
+    const slot = getFirstSlotNumberInRound(
+        batchBaskets[0].createdAt,
+        DelegateRepository.getActiveDelegates().length
+    );
+    console.log('slot: ', slot);
     const firstRound: Round = RoundService.generate(
         getFirstSlotNumberInRound(
             batchBaskets[0].createdAt,
@@ -656,7 +683,7 @@ function createArrayBasketsTrsForBlocks() {
     console.log('START create baskets');
     let transactions: Array<TransactionModel<IAsset>> = [];
     let count = 0;
-    let maxTransactionsCreatedAtInBasket = 0;
+    let maxTransactionsCreatedAtInBasket = Math.ceil( 105670644 / 10) * 10;
     do {
         transactions = popTransactionsForMigration(QUANTITY_TRS_IN_BLOCK);
         if (transactions.length) {

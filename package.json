@@ -74,7 +74,7 @@
     "@types/socket.io-client": "^1.4.32",
     "@types/z-schema": "^3.16.32",
     "csv": "=1.1.1",
-    "csv-parser": "^2.2.0",
+    "csv-parser": "^2.3.0",
     "ts-node": "^8.0.3"
   }
 }

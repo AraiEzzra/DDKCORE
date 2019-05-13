@@ -12,6 +12,7 @@ export class TransactionDTO {
     relay?: number;
     secondSignature?: string;
     asset?: IAsset;
+    height?: number;
 
     constructor(data: TransactionModel<IAsset>) {
         this.id = data.id;
@@ -23,5 +24,6 @@ export class TransactionDTO {
         this.salt = data.salt;
         this.secondSignature = data.secondSignature || '';
         this.asset = data.asset;
+        this.height = Number(data.height);
     }
 }
