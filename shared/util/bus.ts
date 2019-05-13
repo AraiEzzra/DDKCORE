@@ -1,10 +1,9 @@
 import { Subject } from 'rxjs';
 import { logger } from 'shared/util/logger';
-import Timeout = NodeJS.Timeout;
 
 export const subjectOn = new Subject();
 export const subjectRpc = new Subject();
-const tasks: Map<string, Timeout> = new Map();
+const tasks: Map<string, NodeJS.Timeout> = new Map();
 
 export function messageON(topicName: string, data: any = {}) {
     logger.trace(`[Bus][messageON] topicName ${topicName}`);
@@ -29,7 +28,7 @@ export function createTaskON(topicName: string, callTime: number, data: any = nu
     tasks.set(topicName, setTimeout(() => {
         messageON(topicName, data);
         tasks.delete(topicName);
-    }, callTime) as Timeout);
+    }, callTime));
 }
 
 export function resetTaskON(topicName: string): void {
