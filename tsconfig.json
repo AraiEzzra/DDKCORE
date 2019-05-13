@@ -24,8 +24,7 @@
     ],
     "lib": [
       "es2018",
-      "esnext",
-      "dom"
+      "esnext"
     ]
   },
   "include": [
