@@ -4,7 +4,7 @@ import Timeout = NodeJS.Timeout;
 
 export const subjectOn = new Subject();
 export const subjectRpc = new Subject();
-const tasks: { [topicName: string]: Timeout } = {};
+const tasks: Map<string, Timeout> = new Map();
 
 export function messageON(topicName: string, data: any = {}) {
     logger.trace(`[Bus][messageON] topicName ${topicName}`);
@@ -22,19 +22,19 @@ export function createTaskON(topicName: string, callTime: number, data: any = nu
     // todo implement function to create schedule fro messageON
     logger.debug(`[Bus][createTaskON] topicName ${topicName}, time: ${callTime}`);
 
-    if (tasks[topicName]) {
+    if (tasks.get(topicName)) {
         logger.debug(`[Bus][createTaskON] topicName ${topicName}, the timer has been stopped`);
-        clearTimeout(tasks[topicName]);
+        clearTimeout(tasks.get(topicName));
     }
-    tasks[topicName] = setTimeout(() => {
+    tasks.set(topicName, setTimeout(() => {
         messageON(topicName, data);
-        delete tasks[topicName];
-    }, callTime) as Timeout;
+        tasks.delete(topicName);
+    }, callTime) as Timeout);
 }
 
 export function resetTaskON(topicName: string): void {
-    if (tasks[topicName]) {
-        clearTimeout(tasks[topicName]);
+    if (tasks.get(topicName)) {
+        clearTimeout(tasks.get(topicName));
         logger.debug(`[Bus][resetTaskON] topicName ${topicName}, the timer has been stopped`);
     }
 }

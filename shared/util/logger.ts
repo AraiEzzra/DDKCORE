@@ -1,4 +1,5 @@
 import { transports, Logger } from 'winston';
+import config from 'shared/config';
 import 'winston-daily-rotate-file';
 
 /**
@@ -74,7 +75,7 @@ class LoggerClass {
         });
 
         this.consoleTransport = new transports.Console({
-            level: process.env.NODE_ENV_IN === 'development' ? 'debug' : 'debug',
+            level: config.NODE_ENV_IN === 'development' ? 'debug' : 'debug',
         });
     }
 }
