@@ -16,7 +16,9 @@ secrets.json
 transactionsNew.csv
 addressesWithNegativeBalance.csv
 transactionsNew_19_04_2019_T13_30.csv
-addressesWithNegativeBalance_03_05_2019.csv
+10_05_2019_T12_00_addressesWithNegativeBalanceWithFixStakeNotEnough.csv
+newTrsFromProd.csv
+newTrsFromProd_001.csv
 
 # volumes system directories for docker containers
 dist/

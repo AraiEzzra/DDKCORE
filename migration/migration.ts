@@ -1,4 +1,4 @@
-import { IAsset, Transaction, TransactionModel, TransactionType } from 'shared/model/transaction';
+import { IAsset, TransactionModel, TransactionType } from 'shared/model/transaction';
 import { TransactionDTO } from 'migration/utils/TransactionDTO';
 import TransactionService from 'core/service/transaction';
 import crypto from 'crypto';
@@ -12,7 +12,7 @@ import RoundService from 'core/service/round';
 import { getFirstSlotNumberInRound } from 'core/util/slot';
 import DelegateRepository from 'core/repository/delegate';
 import RoundRepository from 'core/repository/round';
-import { getLastSlotInRound } from 'core/util/round';
+import { getFirstSlotInRound, getLastSlotInRound } from 'core/util/round';
 import { Round, Slot, Slots } from 'shared/model/round';
 import slot from 'core/service/slot';
 import BlockService from 'core/service/block';
@@ -20,6 +20,7 @@ import { sortRegisterTrs } from 'migration/utils/sorter';
 import db from 'shared/driver/db/index';
 import { Address } from 'shared/model/account';
 import { transactionSortFunc } from 'core/util/transaction';
+import { Delegate } from 'shared/model/delegate';
 
 const csv = require('csv-parser');
 const fs = require('fs');
@@ -35,6 +36,9 @@ class Basket {
 }
 
 const allSecretsData: any = JSON.parse(fs.readFileSync('./secrets.json'));
+const filePathNewTransactions = './transactionsNew_19_04_2019_T13_30.csv';
+const filePathAddressesWithNegativeBalance = './10_05_2019_T12_00_addressesWithNegativeBalanceWithFixStakeNotEnough.csv';
+const filePathNewTransactionsFromProduction = './newTrsFromProd_001.csv';
 
 // TODO need default secret
 const DEFAULT_KEY_PAIR_FOR_TRANSACTION: IKeyPair = getKeyPair(
@@ -54,6 +58,7 @@ const USE_TEMPORARY_DB_TABLE_WITH_BASKETS = true;
 const START_CREATE_ROUNDS_AND_BLOCKS = true;
 const START_SORT_TRANSACTIONS = true;
 const FIX_NEGATIVE_BALANCES = true;
+const ADD_NEW_TRANSACTION_FROM_PROD = true;
 
 // 0 for all transactions
 const QUANTITY_PARSE_TRS = 0;
@@ -68,26 +73,13 @@ const QUERY_SELECT_BASKET_BY_ID = 'SELECT * FROM baskets WHERE id = $1:numeric';
 const SENDER_PUBLIC_KEY_FOR_NEGATIVE_BALANCE_ACCOUNTS =
     'b12a7faba4784d79c7298ce49ef5131b291abd70728e6f2bd1bc2207ea4b7947';
 
-const filePathNewTransactions = './transactionsNew_19_04_2019_T13_30.csv';
-const filePathAddressesWithNegativeBalance = './10_05_2019_T12_00_addressesWithNegativeBalance.csv';
-
 const publicKeyToKeyPairKeyMap: Map<string, IKeyPair> = new Map();
 
 DELEGATES_SECRETS.forEach((secret: string) => {
     const keyPair: IKeyPair = getKeyPair(secret);
     publicKeyToKeyPairKeyMap.set(keyPair.publicKey.toString('hex'), keyPair);
 });
-
-const registerTransactions: Array<TransactionModel<IAsset>> = [];
-let correctTransactions: Array<TransactionModel<IAsset>> = [];
-let genesisAccountsSendTransactions: Array<TransactionModel<IAsset>> = [];
-const basketsWithTransactionsForBlocks: Array<Basket> = [];
-const senderPublicKeyFromSecondSignatureTrsSet: Set<string> = new Set();
-const allBasketsIds: Array<number> = [];
-
-let accounts: Map<Address, number> = new Map();
-let countForUsedBasket = 0;
-let offset = 0;
+console.log('publicKeyToKeyPairKeyMap: ', publicKeyToKeyPairKeyMap);
 
 const OLD_TO_NEW_SENDER_PUBLIC_KEY: Map<string, string> = new Map([
     // "amount": 4500000000000000
@@ -162,18 +154,33 @@ const SET_TRS_IDS_FOR_REMOVE_TRANSACTIONS: Set<string> = new Set(
     ]
 );
 
+const registerTransactions: Array<TransactionModel<IAsset>> = [];
+let correctTransactions: Array<TransactionModel<IAsset>> = [];
+let genesisAccountsSendTransactions: Array<TransactionModel<IAsset>> = [];
+const basketsWithTransactionsForBlocks: Array<Basket> = [];
+const senderPublicKeyFromSecondSignatureTrsSet: Set<string> = new Set();
+const allBasketsIds: Array<number> = [];
+const newTransactionFromProd = [];
+
+let accounts: Map<Address, number> = new Map();
+let countForUsedBasket = 0;
+let offset = 0;
+
 (async () => {
     await Loader.start();
     await startMigration();
 })().then(_ => console.log('final'));
 
-async function startMigration() {
 
+async function startMigration() {
+    console.log('=========================================================================');
     console.log('PREPARE_TRANSACTIONS_AND_WRITE_TO_DB_AS_BASKETS: ', PREPARE_TRANSACTIONS_AND_WRITE_TO_DB_AS_BASKETS);
     console.log('USE_TEMPORARY_DB_TABLE_WITH_BASKETS: ', USE_TEMPORARY_DB_TABLE_WITH_BASKETS);
     console.log('START_CREATE_ROUNDS_AND_BLOCKS: ', START_CREATE_ROUNDS_AND_BLOCKS);
     console.log('START_SORT_TRANSACTIONS: ', START_SORT_TRANSACTIONS);
     console.log('FIX_NEGATIVE_BALANCES: ', FIX_NEGATIVE_BALANCES);
+    console.log('ADD_NEW_TRANSACTION_FROM_PROD: ', ADD_NEW_TRANSACTION_FROM_PROD);
+    console.log('=========================================================================');
 
     const startTime = new Date();
     console.log('START TIME ', getFormattedDate());
@@ -204,6 +211,26 @@ async function startPrepareTransactionsForMigration() {
     let [newTrs] = [
         await readTransactionsToArray(filePathNewTransactions),
     ];
+
+    if (ADD_NEW_TRANSACTION_FROM_PROD) {
+        const [rawNewTransactionsFromProduction] = [
+            await readTransactionsToArray(filePathNewTransactionsFromProduction),
+        ];
+
+        rawNewTransactionsFromProduction.forEach((transaction: any) => {
+            const trs = new TransactionModel(new TransactionDTO({
+                ...transaction,
+                asset: JSON.parse(transaction.asset)
+            }));
+            if (trs.type === TransactionType.VOTE) {
+                trs.asset = {
+                    votes: (trs.asset as any).votes.map(oldVote => oldVote.slice(1)),
+                    type: (trs.asset as any).votes[0][0]
+                };
+            }
+            newTransactionFromProd.push(trs);
+        });
+    }
 
     newTrs.forEach(((trs: any) => {
         if (OLD_TO_NEW_SENDER_PUBLIC_KEY.has(trs.senderPublicKey)) {
@@ -340,9 +367,6 @@ async function startPrepareTransactionsForMigration() {
 
     console.log('senderPublicKeyFromSecondSignatureTrsSet: ', senderPublicKeyFromSecondSignatureTrsSet);
 
-
-    // await changeSendAndStakeTrsOrder();
-
     changeCreatedAtForRegisterTransactionsWithDefaultCreatedAt();
 
     if (FIX_NEGATIVE_BALANCES) {
@@ -382,7 +406,11 @@ function concatRegisterAndSendAndAllOthersTrs() {
     console.log('SET SEND trs to after register index: ', allRegisterTrsCount);
     console.log('genesisAccountsSendTransactions.length: ', genesisAccountsSendTransactions.length);
     console.log('correctTransactions.length: ', correctTransactions.length);
-    const allTrs = registerTransactions.concat(genesisAccountsSendTransactions).concat(correctTransactions);
+    console.log('newTransactionFromProd.length: ', newTransactionFromProd.length);
+    const allTrs = registerTransactions
+    .concat(genesisAccountsSendTransactions)
+    .concat(correctTransactions)
+    .concat(newTransactionFromProd);
     console.log('FINISH SET SEND trs to after register! allTrs.length', allTrs.length);
     return allTrs;
 }
@@ -436,6 +464,7 @@ async function getBatchBasketsFromDbByLimit(limit: number) {
         offset += baskets.length;
         allBasketsIds.concat(basketIds);
         console.log('allBasketsIds: ', allBasketsIds);
+        console.log('baskets.length: ', baskets.length);
         return baskets;
     } catch (err) {
         console.log('Problem with [getBasketsFromDB]');
@@ -458,12 +487,15 @@ async function createFirstRoundAndBlocksForThisRound() {
     const limit = DelegateRepository.getActiveDelegates().length;
 
     const batchBaskets: Array<Basket> = await getBatchBasketsByLimit(limit);
+    console.log('batchBaskets[0].createdAt: ', batchBaskets[0].createdAt);
+    console.log('limit: ', limit);
     const firstRound: Round = RoundService.generate(
         getFirstSlotNumberInRound(
             batchBaskets[0].createdAt,
             DelegateRepository.getActiveDelegates().length
         )
     );
+    console.log('firstRound', firstRound);
 
     RoundRepository.add(firstRound);
     let startedCreateFilledBlock = false;
@@ -500,6 +532,7 @@ async function createFirstRoundAndBlocksForThisRound() {
         console.log('timestamp ', timestamp);
         console.log('previousBlockId ', previousBlock.id);
         console.log('transactions.length ', transactions.length);
+        console.log('Try to create block with transactions:', JSON.stringify(transactions));
 
         const block: Block = await BlockService.create({
             keyPair,
@@ -507,10 +540,12 @@ async function createFirstRoundAndBlocksForThisRound() {
             previousBlock,
             transactions
         });
+        console.log('BLOCK created!');
         await BlockService.process(block, false, {
             privateKey: keyPair.privateKey,
             publicKey: keyPair.publicKey,
         }, false);
+        console.log('BLOCK processed!');
 
         // if (startedCreateFilledBlock) {
         // basketsWithTransactionsForBlocks[countForUsedBasket].transactions.length = 0;
@@ -526,66 +561,82 @@ async function createFirstRoundAndBlocksForThisRound() {
 }
 
 async function createNextRoundsAndBlocks() {
-    console.log('START create next round!');
-    let newBlockTimestamp = Math.floor(BlockRepo.getLastBlock().createdAt);
-    const activeDelegates = DelegateRepository.getActiveDelegates();
-    const limit = activeDelegates.length;
-    let batchBaskets: Array<Basket> = await getBatchBasketsByLimit(limit);
-    let countForCreateNewRound = 0;
-    // const setForSecond;
-    while (batchBaskets.length > 0) {
-        for (const basket of <Array<Basket>>batchBaskets) {
-            if (countForCreateNewRound === 0) {
-                forwardProcess();
-                countForCreateNewRound = activeDelegates.length;
-            }
-            const slotsFromCurrentRound: Slots = await RoundRepository.getCurrentRound().slots;
-            const previousBlock = await BlockRepo.getLastBlock();
-            console.log('previousBlockId: ', previousBlock.id);
-            newBlockTimestamp += 10;
-            console.log('basket.transactions.length ', basket.transactions.length);
-            console.log('slotsFromCurrentRound ', slotsFromCurrentRound);
-            console.log('newBlockTimestamp ', newBlockTimestamp);
-            const keyPair: IKeyPair = publicKeyToKeyPairKeyMap.get(Object.entries(slotsFromCurrentRound).find(([key, slot]: [string, Slot]) =>
-                slot.slot === newBlockTimestamp / 10
-            )[0]);
-
-            const transactions = basket.transactions.map(trs => {
-                trs.senderAddress = getAddressByPublicKey(trs.senderPublicKey);
-                const sender = AccountRepository.getByAddress(trs.senderAddress);
-                const transaction = TransactionService.create(
-                    trs,
-                    DEFAULT_KEY_PAIR_FOR_TRANSACTION,
-                    sender && sender.secondPublicKey && DEFAULT_KEY_PAIR_SECOND_SIGNATURE
-                ).data;
-                TransactionService.applyUnconfirmed(
-                    transaction,
-                    sender || AccountRepository.getByAddress(trs.senderAddress)
-                );
-                return transaction;
-            });
-
-            const reversedTransaction = [...transactions];
-            reversedTransaction.reverse();
-            reversedTransaction.forEach(trs => {
-                TransactionService.undoUnconfirmed(trs, AccountRepository.getByAddress(trs.senderAddress));
-            });
-
-            const block: Block = await BlockService.create({
-                keyPair,
-                timestamp: newBlockTimestamp,
-                previousBlock,
-                transactions,
-            });
-            await BlockService.process(block, false, {
-                privateKey: keyPair.privateKey,
-                publicKey: keyPair.publicKey,
-            }, false);
-
-            basket.transactions.length = 0;
-            --countForCreateNewRound;
+    while (true) {
+        forwardProcess();
+        const myActiveDelegates = DelegateRepository.getActiveDelegates().filter((delegate: Delegate) => {
+            console.log('publicKeyToKeyPairKeyMap.has(delegate.account.publicKey): ', delegate.account.publicKey, publicKeyToKeyPairKeyMap.has(delegate.account.publicKey));
+            return publicKeyToKeyPairKeyMap.has(delegate.account.publicKey);
+        });
+        const batchBaskets = await getBatchBasketsByLimit(myActiveDelegates.length);
+        if (!batchBaskets.length) {
+            break;
         }
-        batchBaskets = await getBatchBasketsByLimit(limit);
+        await createBlocksForOneRound(batchBaskets);
+    }
+}
+
+async function createBlocksForOneRound(batchBaskets) {
+    console.log('START create next round!');
+    const currentRound = RoundRepository.getCurrentRound();
+    const slotsFromCurrentRound: Slots = currentRound.slots;
+    let currentSlot = getFirstSlotInRound(currentRound);
+    for (const basket of <Array<Basket>>batchBaskets) {
+
+        const previousBlock = await BlockRepo.getLastBlock();
+        console.log('previousBlockId: ', previousBlock.id);
+        console.log('basket.transactions.length ', basket.transactions.length);
+        console.log('slotsFromCurrentRound ', slotsFromCurrentRound);
+        const [publicKey, slot] = Object.entries(slotsFromCurrentRound).find(([key, slot]: [string, Slot]) =>
+            slot.slot === currentSlot
+        );
+        let keyPair: IKeyPair = publicKeyToKeyPairKeyMap.get(publicKey);
+
+        if (!keyPair && slot.slot === getLastSlotInRound(RoundRepository.getCurrentRound())) {
+            break;
+        }
+
+        while (!keyPair) {
+            currentSlot++;
+            keyPair = publicKeyToKeyPairKeyMap.get(Object.entries(slotsFromCurrentRound).find(([key, slot]: [string, Slot]) =>
+                slot.slot === currentSlot
+            )[0]);
+        }
+
+        const transactions = basket.transactions.map(trs => {
+            trs.senderAddress = getAddressByPublicKey(trs.senderPublicKey);
+            const sender = AccountRepository.getByAddress(trs.senderAddress);
+            const transaction = TransactionService.create(
+                trs,
+                DEFAULT_KEY_PAIR_FOR_TRANSACTION,
+                sender && sender.secondPublicKey && DEFAULT_KEY_PAIR_SECOND_SIGNATURE
+            ).data;
+            TransactionService.applyUnconfirmed(
+                transaction,
+                sender || AccountRepository.getByAddress(trs.senderAddress)
+            );
+            return transaction;
+        });
+
+        const reversedTransaction = [...transactions];
+        reversedTransaction.reverse();
+        reversedTransaction.forEach(trs => {
+            TransactionService.undoUnconfirmed(trs, AccountRepository.getByAddress(trs.senderAddress));
+        });
+
+        console.log('keyPair.publicKey.toString: ', keyPair.publicKey.toString('hex'));
+        const block: Block = await BlockService.create({
+            keyPair,
+            timestamp: currentSlot * 10,
+            previousBlock,
+            transactions,
+        });
+        await BlockService.process(block, false, {
+            privateKey: keyPair.privateKey,
+            publicKey: keyPair.publicKey,
+        }, false);
+
+        basket.transactions.length = 0;
+        currentSlot++;
     }
     console.log('FINISH create round: ', roundCounter);
 }
@@ -624,6 +675,7 @@ function createArrayBasketsTrsForBlocks() {
         }
     } while (transactions.length > 0);
 
+    console.log(`maxTransactionsCreatedAtInBasket: ${maxTransactionsCreatedAtInBasket}!`);
     console.log(`FINISH create basket! Created: ${count} baskets!`);
 }
 
