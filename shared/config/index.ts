@@ -15,13 +15,13 @@ import { BlockModel } from 'shared/model/block';
 
 const getConstantsByNodeEnv = (nodeEnv: string): IConstants => {
     switch (nodeEnv) {
-        case 'development':
+        case NODE_ENV_ENUM.DEVELOPMENT:
             return developmentConstants;
-        case 'test':
+        case NODE_ENV_ENUM.TEST:
             return testConstants;
-        case 'testnet':
+        case NODE_ENV_ENUM.TESTNET:
             return testnetConstants;
-        case 'mainnet':
+        case NODE_ENV_ENUM.MAINNET:
             return mainnetConstants;
         default:
             return null;
@@ -30,13 +30,13 @@ const getConstantsByNodeEnv = (nodeEnv: string): IConstants => {
 
 const getGenesisBlockByNodeEnv = (nodeEnv: string) => {
     switch (nodeEnv) {
-        case 'development':
+        case NODE_ENV_ENUM.DEVELOPMENT:
             return developmentGenesisBlock;
-        case 'test':
+        case NODE_ENV_ENUM.TEST:
             return testGenesisBlock;
-        case 'testnet':
+        case NODE_ENV_ENUM.TESTNET:
             return testnetGenesisBlock;
-        case 'mainnet':
+        case NODE_ENV_ENUM.MAINNET:
             return mainnetGenesisBlock;
         default:
             return null;
@@ -59,10 +59,17 @@ const DEFAULT_DB_CONFIGS = {
     LOG_EVENTS: ['error'],
 };
 
+export enum NODE_ENV_ENUM {
+    DEVELOPMENT = 'development',
+    TESTNET = 'testnet',
+    MAINNET = 'mainnet',
+    TEST = 'test'
+}
+
 class Config {
     IS_SECURE: boolean;
     PUBLIC_HOST: string;
-    NODE_ENV_IN: string;
+    NODE_ENV_IN: NODE_ENV_ENUM;
     CORE: {
         HOST: string;
         SOCKET: {
@@ -109,7 +116,7 @@ class Config {
 
         this.IS_SECURE = process.env.IS_SECURE === 'TRUE';
         this.PUBLIC_HOST = process.env.PUBLIC_HOST || process.env.SERVER_HOST;
-        this.NODE_ENV_IN = process.env.NODE_ENV_IN || 'development';
+        this.NODE_ENV_IN = (process.env.NODE_ENV_IN as NODE_ENV_ENUM) || NODE_ENV_ENUM.DEVELOPMENT;
         this.DB = {
             ...DEFAULT_DB_CONFIGS,
             HOST: process.env.DB_HOST,
