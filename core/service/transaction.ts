@@ -51,7 +51,7 @@ export interface ITransactionService<T extends IAsset> {
 
     validate(trs: Transaction<T>): ResponseEntity<void>;
 
-    verifyUnconfirmed(trs: Transaction<T>, sender: Account, checkExists: boolean): ResponseEntity<void>;
+    verifyUnconfirmed(trs: Transaction<T>, sender: Account, skipSignature: boolean): ResponseEntity<void>;
 
     create(data: Transaction<T>, keyPair: IKeyPair, secondKeyPair: IKeyPair): ResponseEntity<Transaction<T>>;
 
@@ -99,7 +99,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         sender.actualBalance -= trs.fee || 0;
         const service: IAssetService<IAsset> = getTransactionServiceByType(trs.type);
         service.applyUnconfirmed(trs, sender);
-        sender.historify(AccountChangeAction.TRANSACTION_APPLY_UNCONFIRMED, trs.id);
+        sender.addHistory(AccountChangeAction.TRANSACTION_APPLY_UNCONFIRMED, trs.id);
 
         TransactionHistoryRepository.addAfterState(
             trs.id,
@@ -411,7 +411,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         }
     }
 
-    verifyUnconfirmed(trs: Transaction<T>, sender: Account): ResponseEntity<void> {
+    verifyUnconfirmed(trs: Transaction<T>, sender: Account, skipSignature: boolean = false): ResponseEntity<void> {
         TransactionHistoryRepository.addBeforeState(
             trs.id,
             TransactionLifecycle.VERIFY,
@@ -427,16 +427,18 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             return new ResponseEntity<void>({ errors: [`Transaction is already confirmed: ${trs.id}`] });
         }
 
-        if (!this.verifySignature(trs, sender.publicKey)) {
-            return new ResponseEntity<void>({ errors: ['Transaction signature is invalid'] });
-        }
-
-        if (sender.secondPublicKey) {
-            if (!trs.secondSignature) {
-                return new ResponseEntity<void>({ errors: ['Second signature is missing'] });
+        if (!skipSignature) {
+            if (!this.verifySignature(trs, sender.publicKey)) {
+                return new ResponseEntity<void>({ errors: ['Transaction signature is invalid'] });
             }
-            if (!this.verifySecondSignature(trs, sender.secondPublicKey)) {
-                return new ResponseEntity<void>({ errors: ['Second signature is invalid'] });
+
+            if (sender.secondPublicKey) {
+                if (!trs.secondSignature) {
+                    return new ResponseEntity<void>({ errors: ['Second signature is missing'] });
+                }
+                if (!this.verifySecondSignature(trs, sender.secondPublicKey)) {
+                    return new ResponseEntity<void>({ errors: ['Second signature is invalid'] });
+                }
             }
         }
 

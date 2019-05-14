@@ -224,10 +224,8 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
                 processedOrders.push(stake);
             }
         });
-        if (processedOrders && processedOrders.length > 0) {
-            applyFrozeOrdersRewardAndUnstake(trs, processedOrders);
-            sendAirdropReward(trs);
-        }
+        applyFrozeOrdersRewardAndUnstake(trs, processedOrders);
+        sendAirdropReward(trs);
     }
 
     undoUnconfirmed(trs: Transaction<IAssetVote>, sender: Account, senderOnly): void {

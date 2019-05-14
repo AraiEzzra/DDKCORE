@@ -13,17 +13,13 @@ import { logger } from 'shared/util/logger';
 import SyncService from 'core/service/sync';
 import { Account} from 'shared/model/account';
 import AccountRepository from 'core/repository/account';
-import { Address } from 'shared/model/types';
+import { Address, TransactionId } from 'shared/model/types';
 import TransactionHistoryRepository from 'core/repository/history/transaction';
 
 export interface ITransactionPoolService<T extends Object> {
 
     batchRemove(transactions: Array<Transaction<T>>, withDepend: boolean): ResponseEntity<Array<Transaction<T>>>;
 
-    /**
-     *
-     * renamed from pushInPool
-     */
     batchPush(transactions: Array<Transaction<T>>): void;
 
     getBySenderAddress(senderAddress: Address): Array<Transaction<T>>;
@@ -36,7 +32,7 @@ export interface ITransactionPoolService<T extends Object> {
 
     remove(trs: Transaction<T>);
 
-    get(id: string): Transaction<T>;
+    get(id: TransactionId): Transaction<T>;
 
     pop(trs: Transaction<T>): Transaction<T>;
 
@@ -50,7 +46,7 @@ export interface ITransactionPoolService<T extends Object> {
 }
 
 class TransactionPoolService<T extends object> implements ITransactionPoolService<T> {
-    private pool: { [transactionId: string]: Transaction<T> } = {};
+    private pool: Map<TransactionId, Transaction<T>> = new Map();
 
     poolByRecipient: Map<Address, Array<Transaction<T>>> = new Map<Address, Array<Transaction<T>>>();
     poolBySender: Map<Address, Array<Transaction<T>>> = new Map<Address, Array<Transaction<T>>>();
@@ -99,7 +95,7 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
     }
 
     push(trs: Transaction<T>, sender: Account, broadcast: boolean = false): void {
-        this.pool[trs.id] = trs;
+        this.pool.set(trs.id, trs);
         trs.status = TransactionStatus.PUT_IN_POOL;
 
         if (!this.poolBySender.has(trs.senderAddress)) {
@@ -130,7 +126,7 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
     }
 
     remove(trs: Transaction<T>) {
-        if (!this.pool[trs.id]) {
+        if (!this.pool.has(trs.id)) {
             return false;
         }
 
@@ -142,7 +138,7 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
             logger.debug(`[TransactionPool][remove][stack]: \n ${e.stack}`);
         }
 
-        delete this.pool[trs.id];
+        this.pool.delete(trs.id);
 
         if (this.poolBySender.has(trs.senderAddress) && this.poolBySender.get(trs.senderAddress).indexOf(trs) !== -1) {
             this.poolBySender.get(trs.senderAddress).splice(this.poolBySender.get(trs.senderAddress).indexOf(trs), 1);
@@ -171,8 +167,8 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
         return removedTransactions;
     }
 
-    get(id: string): Transaction<T> {
-        return this.pool[id];
+    get(id: TransactionId): Transaction<T> {
+        return this.pool.get(id);
     }
 
     pop(trs: Transaction<T>): Transaction<T> {
@@ -182,11 +178,11 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
     }
 
     has(trs: Transaction<T> | TransactionModel<T>) {
-        return Boolean(this.pool[trs.id]);
+        return this.pool.has(trs.id);
     }
 
     popSortedUnconfirmedTransactions(limit: number): Array<Transaction<T>> {
-        const transactions = Object.values(this.pool).sort(transactionSortFunc).slice(0, limit);
+        const transactions = [...this.pool.values()].sort(transactionSortFunc).slice(0, limit);
         for (const trs of transactions) {
             this.remove(trs);
         }
@@ -231,7 +227,7 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
     }
 
     getSize(): number {
-        return Object.keys(this.pool).length;
+        return this.pool.size;
     }
 }
 

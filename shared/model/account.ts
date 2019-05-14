@@ -40,7 +40,7 @@ export class Account extends AccountModel {
         return new Account( { ...this, history: [] });
     }
     
-    historify(action: AccountChangeAction, transactionId: TransactionId): void {
+    addHistory(action: AccountChangeAction, transactionId: TransactionId): void {
         if (!config.CORE.IS_HISTORY) {
             return;
         }

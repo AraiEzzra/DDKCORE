@@ -1,5 +1,5 @@
 import { Block } from 'shared/model/block';
-import { IBlockRepository as IBlockRepositoryShared } from 'shared/repository/block';
+import { BlockId, IBlockRepository as IBlockRepositoryShared } from 'shared/repository/block';
 import { messageON } from 'shared/util/bus';
 
 export interface IBlockRepository extends IBlockRepositoryShared {
@@ -8,11 +8,11 @@ export interface IBlockRepository extends IBlockRepositoryShared {
 
 class BlockRepo implements IBlockRepository {
     private memoryBlocks: Array<Block> = [];
-    private readonly memoryBlocksById: { [blockId: string]: Block } = {};
+    private memoryBlocksById: Map<BlockId, Block> = new Map();
 
     public add(block: Block): Block {
         this.memoryBlocks.push(block);
-        this.memoryBlocksById[block.id] = block;
+        this.memoryBlocksById.set(block.id, block);
 
         messageON('LAST_BLOCKS_UPDATE', {
             lastBlock: block
@@ -31,7 +31,7 @@ class BlockRepo implements IBlockRepository {
 
     public deleteLastBlock(): Block {
         const block = this.memoryBlocks.pop();
-        delete this.memoryBlocksById[block.id];
+        this.memoryBlocksById.delete(block.id);
 
         const lastBlock = this.getLastBlock();
 
@@ -52,11 +52,11 @@ class BlockRepo implements IBlockRepository {
         return this.memoryBlocks.slice(from, from + limit);
     }
 
-    public isExist(id: string): boolean {
-        return this.memoryBlocksById.hasOwnProperty(id);
+    public isExist(id: BlockId): boolean {
+        return this.memoryBlocksById.has(id);
     }
 
-    public getById(id: string): Block {
+    public getById(id: BlockId): Block {
         return this.memoryBlocksById[id];
     }
 }

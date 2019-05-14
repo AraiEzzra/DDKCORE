@@ -16,7 +16,7 @@ import { IAsset, IAssetTransfer, Transaction, TransactionType, BlockLifecycle } 
 import TransactionDispatcher from 'core/service/transaction';
 import TransactionQueue from 'core/service/transactionQueue';
 import TransactionPool from 'core/service/transactionPool';
-import TransactionRepo from 'core/repository/transaction/';
+import TransactionService from 'core/service/transaction';
 import SlotService from 'core/service/slot';
 import RoundRepository from 'core/repository/round';
 import { transactionSortFunc } from 'core/util/transaction';
@@ -75,7 +75,13 @@ class BlockService {
 
     private pushInPool(transactions: Array<Transaction<object>>): void {
         for (const trs of transactions) {
-            TransactionPool.push(trs, undefined, false);
+            const sender = AccountRepository.getByAddress(trs.senderAddress); 
+            const verifyResult = TransactionService.verifyUnconfirmed(trs, sender, true);
+            if (verifyResult.success) {
+                TransactionPool.push(trs, sender, false);
+            } else {
+                logger.debug(`[Service][Block][pushInPool] remove trs ${trs.id} by error: ${verifyResult.errors}`);
+            }
         }
     }
 

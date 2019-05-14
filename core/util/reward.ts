@@ -134,9 +134,7 @@ export const verifyAirdrop = (
     return new ResponseEntity<void>();
 };
 
-export function applyFrozeOrdersRewardAndUnstake(
-    trs: Transaction<IAssetVote>,
-    activeOrders: Array<Stake>): void {
+export function applyFrozeOrdersRewardAndUnstake(trs: Transaction<IAssetVote>, activeOrders: Array<Stake>): void {
     applyRewards(trs);
     applyUnstake(activeOrders, trs);
 }
@@ -164,7 +162,7 @@ export function sendAirdropReward(trs: Transaction<IAssetStake | IAssetVote>): v
 
         const recipient = AccountRepo.getByAddress(sponsorAddress);
         recipient.actualBalance += rewardAmount;
-        recipient.historify(AccountChangeAction.AIRDROP_REWARD_RECEIVE, trs.id);
+        recipient.addHistory(AccountChangeAction.AIRDROP_REWARD_RECEIVE, trs.id);
         
         AccountRepo.updateBalanceByAddress(config.CONSTANTS.AIRDROP.ADDRESS, -rewardAmount);
     }
@@ -179,7 +177,7 @@ export function undoAirdropReward(trs: Transaction<IAssetVote | IAssetStake>): v
         }
         const recipient = AccountRepo.getByAddress(sponsorAddress);
         recipient.actualBalance -= rewardAmount;
-        recipient.historify(AccountChangeAction.AIRDROP_REWARD_RECEIVE_UNDO, trs.id);
+        recipient.addHistory(AccountChangeAction.AIRDROP_REWARD_RECEIVE_UNDO, trs.id);
         AccountRepo.updateBalanceByAddress(config.CONSTANTS.AIRDROP.ADDRESS, rewardAmount);
     }
 }

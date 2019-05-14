@@ -6,7 +6,7 @@ import AccountRepo from 'core/repository/account';
 import { IAsset, Transaction } from 'shared/model/transaction';
 import { messageON } from 'shared/util/bus';
 import { initControllers, initShedulers } from 'core/controller';
-import config from 'shared/config';
+import config, { NODE_ENV_ENUM } from 'shared/config';
 import BlockPGRepository from 'core/repository/block/pg';
 import BlockRepository from 'core/repository/block';
 import BlockService from 'core/service/block';
@@ -35,6 +35,11 @@ class Loader {
 
     public async start() {
         logger.debug('LOADER START');
+        const historyState = config.CORE.IS_HISTORY;
+        if (config.NODE_ENV_IN === NODE_ENV_ENUM.MAINNET) {
+            config.CORE.IS_HISTORY = false;
+        }
+        
         await this.initDatabase();
 
         initControllers();
@@ -43,7 +48,7 @@ class Loader {
         if (!BlockRepository.getGenesisBlock()) {
             await BlockService.applyGenesisBlock(config.GENESIS_BLOCK);
         }
-
+        config.CORE.IS_HISTORY = historyState;
         socket.init();
 
         initShedulers();
