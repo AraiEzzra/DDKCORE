@@ -11,6 +11,7 @@ import { createKeyPairBySecret } from 'shared/util/crypto';
 import { getFirstSlotNumberInRound } from 'core/util/slot';
 import { IKeyPair } from 'shared/util/ed';
 import System from 'core/repository/system';
+import { AccountChangeAction } from 'shared/model/account';
 
 const MAX_LATENESS_FORGE_TIME = 500;
 
@@ -103,15 +104,12 @@ class RoundService implements IRoundService {
         logger.debug('[Round][Service][processReward][delegate]', delegates);
         const fee = Math.ceil(blocks.reduce((sum, block) => sum += block.fee, 0) / delegates.length);
 
-        // logger.warn(`generators: ${JSON.stringify(
-        //     blocks.map(block => block.generatorPublicKey)
-        // )}`);
-        // logger.warn(`delegates: ${JSON.stringify(
-        //     delegates.map(delegate => ({ ...delegate, account: -1,  }))
-        // )}`);
-
         delegates.forEach(delegate => {
             delegate.account.actualBalance += (undo ? -fee : fee);
+            delegate.account.addHistory(undo
+                ? AccountChangeAction.DISTRIBUTE_FEE_UNDO :
+                AccountChangeAction.DISTRIBUTE_FEE, null
+            );
         });
     }
 
