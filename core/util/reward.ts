@@ -134,9 +134,7 @@ export const verifyAirdrop = (
     return new ResponseEntity<void>();
 };
 
-export function applyFrozeOrdersRewardAndUnstake(
-    trs: Transaction<IAssetVote>,
-    activeOrders: Array<Stake>): void {
+export function applyFrozeOrdersRewardAndUnstake(trs: Transaction<IAssetVote>, activeOrders: Array<Stake>): void {
     applyRewards(trs);
     applyUnstake(activeOrders, trs);
 }
