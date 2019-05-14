@@ -176,8 +176,8 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
 
         if (errors.length) {
             errors.push(
-                `Transaction: ${JSON.stringify(trs)}.` +
-                `Account: ${JSON.stringify(AccountRepository.serialize(sender))}`
+                `Transaction: ${trs.id}.` +
+                `Account: ${sender.address}`
             );
         }
 

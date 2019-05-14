@@ -244,7 +244,6 @@ class BlockService {
             let bytes: Buffer;
 
             try {
-                // logger.debug(`Transaction ${JSON.stringify(trs)}`);
                 bytes = TransactionDispatcher.getBytes(trs);
                 logger.trace(`Bytes ${JSON.stringify(bytes)}`);
             } catch (e) {
