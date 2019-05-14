@@ -18,6 +18,7 @@ import SocketMiddleware from 'core/api/middleware/socket';
 import { EVENT_TYPES } from 'shared/driver/socket/codes';
 import SharedTransactionRepo from 'shared/repository/transaction';
 import config from 'shared/config';
+import TransactionHistoryRepository from 'core/repository/history/transaction';
 
 export interface ITransactionQueueService<T extends Object> {
     getLockStatus(): boolean;
@@ -69,8 +70,8 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
 
         trs.status = TransactionStatus.QUEUED;
         this.queue.push(trs);
-        trs.addHistory(TransactionLifecycle.PUSH_IN_QUEUE);
-        
+        TransactionHistoryRepository.add(trs.id, { action: TransactionLifecycle.PUSH_IN_QUEUE });
+
         if (this.queue.length === 1) {
             setImmediate(this.process);
         } else {
@@ -84,7 +85,7 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
             expire: Math.floor(new Date().getTime() / SECOND) + config.CONSTANTS.TRANSACTION_QUEUE_EXPIRE
         });
         trs.status = TransactionStatus.QUEUED_AS_CONFLICTED;
-        trs.addHistory(TransactionLifecycle.PUSH_IN_CONFLICTED_QUEUE);
+        TransactionHistoryRepository.add(trs.id, { action: TransactionLifecycle.PUSH_IN_CONFLICTED_QUEUE });
     }
 
     // TODO can be optimized if check senderAddress and recipientAddress
@@ -103,7 +104,7 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
         }
 
         const trs = this.pop();
-        trs.addHistory(TransactionLifecycle.PROCESS);
+        TransactionHistoryRepository.add(trs.id, { action: TransactionLifecycle.PROCESS });
 
         // TODO redundant in sync variant
         if (TransactionPool.has(trs)) {
@@ -126,7 +127,7 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
                 `${JSON.stringify(verifyStatus.errors.join('. '))}. Transaction: ${JSON.stringify(trs)}`
             );
             trs.status = TransactionStatus.DECLINED;
-            trs.addHistory(TransactionLifecycle.DECLINE);
+            TransactionHistoryRepository.add(trs.id, { action: TransactionLifecycle.DECLINE });
 
             SocketMiddleware.emitEvent<{ transaction: SerializedTransaction<IAsset>, reason: Array<string> }>(
                 EVENT_TYPES.DECLINE_TRANSACTION,

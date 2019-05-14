@@ -1,5 +1,5 @@
-import { Timestamp } from 'shared/model/types';
-import { Transaction } from 'shared/model/transaction';
+import { Timestamp, BlockHistoryEvent, BlockHistoryState } from 'shared/model/types';
+import { Transaction, BlockLifecycle } from 'shared/model/transaction';
 import config from 'shared/config';
 
 export class BlockModel {
@@ -21,13 +21,23 @@ export class BlockModel {
         this.relay = 0;
         this.transactions = [];
         Object.assign(this, data);
-        // TODO check next 
+        // TODO check next
         // this.transactions = (data.transactions || []).map(trs => trs.getCopy());
     }
 }
 
 export class Block extends BlockModel {
+    history: Array<BlockHistoryEvent> = [];
+
     public getCopy(): Block {
         return new Block(this);
+    }
+
+    addHistory(action: BlockLifecycle, state?: BlockHistoryState): void {
+        if (!config.CORE.IS_HISTORY) {
+            return;
+        }
+
+        this.history.push({ action, state });
     }
 }

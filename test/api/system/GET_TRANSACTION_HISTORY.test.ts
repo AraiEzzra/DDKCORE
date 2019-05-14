@@ -40,6 +40,10 @@ describe('Test GET_TRANSACTION_HISTORY', () => {
 
         const response = await socketRequest(REQUEST);
 
+        console.log(`aa: `, JSON.stringify(response));
+        console.log(`bb: `, JSON.stringify(SUCCESS));
+
+
         expect(response.body.success).to.equal(true);
         expect(response.body.data).to.deep.equal(SUCCESS);
     });

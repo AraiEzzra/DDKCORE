@@ -4,10 +4,10 @@ import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
 import { ResponseEntity } from 'shared/model/response';
 import { Address } from 'shared/model/types';
 import BlockRepository from 'core/repository/block';
-import TransactionRepository from 'core/repository/transaction';
 import AccountRepository from 'core/repository/account';
 import { Block } from 'shared/model/block';
 import { AccountState, SerializedAccountState, SerializedTransactionHistoryAction } from 'shared/model/types';
+import TransactionHistoryRepository from 'core/repository/history/transaction';
 
 class SystemController {
     constructor() {
@@ -43,18 +43,18 @@ class SystemController {
     public getTransactionHistory(
         message: Message2<{ id: string }>
     ): ResponseEntity<Array<SerializedTransactionHistoryAction>> {
-        const transaction = TransactionRepository.getById(message.body.id);
+        const history = TransactionHistoryRepository.get(message.body.id);
 
-        if (!transaction) {
+        if (!history) {
             return new ResponseEntity({ errors: ['Transaction not exist']});
         }
 
-        const response = transaction.history.map(trsHistory => ({
-            action: trsHistory.action,
+        const response = history.map(event => ({
+            action: event.action,
             accountStateBefore:
-                trsHistory.accountStateBefore && AccountRepository.serialize(trsHistory.accountStateBefore),
+                event.accountStateBefore && AccountRepository.serialize(event.accountStateBefore),
             accountStateAfter:
-                trsHistory.accountStateAfter && AccountRepository.serialize(trsHistory.accountStateAfter),
+                event.accountStateAfter && AccountRepository.serialize(event.accountStateAfter),
         }));
 
         return new ResponseEntity({ data: response });

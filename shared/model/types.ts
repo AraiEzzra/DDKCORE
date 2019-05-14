@@ -1,15 +1,28 @@
-import { TransactionLifecycle } from 'shared/model/transaction';
+import { TransactionLifecycle, BlockLifecycle } from 'shared/model/transaction';
 import { Account, AccountChangeAction } from 'shared/model/account';
+import { Round } from 'shared/model/round';
 
 export type Filter = {
     limit: number,
     offset: number
 };
 
-export type TransactionHistoryAction = {
-    action: TransactionLifecycle;
+export type HistoryEvent<T> = {
+    action: T;
+};
+
+
+export type TransactionHistoryEvent = HistoryEvent<TransactionLifecycle> & {
     accountStateBefore?: Account;
     accountStateAfter?: Account;
+};
+
+export type BlockHistoryState = {
+    round: Round,
+};
+
+export type BlockHistoryEvent = HistoryEvent<BlockLifecycle> & {
+    state?: BlockHistoryState,
 };
 
 export type SerializedTransactionHistoryAction = {

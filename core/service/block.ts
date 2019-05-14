@@ -12,7 +12,7 @@ import SharedTransactionRepo from 'shared/repository/transaction';
 import BlockPGRepo from 'core/repository/block/pg';
 import AccountRepo from 'core/repository/account';
 import AccountRepository from 'core/repository/account';
-import { IAsset, IAssetTransfer, Transaction, TransactionType } from 'shared/model/transaction';
+import { IAsset, IAssetTransfer, Transaction, TransactionType, BlockLifecycle } from 'shared/model/transaction';
 import TransactionDispatcher from 'core/service/transaction';
 import TransactionQueue from 'core/service/transactionQueue';
 import TransactionPool from 'core/service/transactionPool';
@@ -30,6 +30,7 @@ import { EVENT_TYPES } from 'shared/driver/socket/codes';
 import { MIN_ROUND_BLOCK } from 'core/util/block';
 import { IKeyPair } from 'shared/util/ed';
 import System from 'core/repository/system';
+import BlockHistoryRepository from 'core/repository/history/block';
 
 const validator: Validator = new ZSchema({});
 
@@ -97,6 +98,7 @@ class BlockService {
         verify: boolean = true
     ): Promise<ResponseEntity<void>> {
         if (verify) {
+            block.addHistory(BlockLifecycle.VERIFY);
             const resultVerifyBlock: ResponseEntity<void> = this.verifyBlock(block, !keyPair);
             if (!resultVerifyBlock.success) {
                 return new ResponseEntity<void>({ errors: [...resultVerifyBlock.errors, 'process'] });
@@ -344,7 +346,7 @@ class BlockService {
                         errors.push(...resultCheckTransaction.errors);
                         logger.error(
                             `[Service][Block][checkTransactionsAndApplyUnconfirmed][error] ${errors.join('. ')}. ` +
-                            `Transaction: ${trs}`
+                            `Transaction id: ${trs.id}`,
                         );
                         i--;
                         continue;
@@ -393,6 +395,7 @@ class BlockService {
             block = addPayloadHashResponse.data;
         }
 
+        block.addHistory(BlockLifecycle.APPLY);
         BlockRepo.add(block);
         await BlockPGRepo.saveOrUpdate(block);
 
@@ -410,10 +413,6 @@ class BlockService {
             return new ResponseEntity<void>({ errors: [...errors, 'applyBlock'] });
         }
 
-        const afterSaveResponse: ResponseEntity<void> = this.afterSave(block);
-        if (!afterSaveResponse.success) {
-            return new ResponseEntity<void>({ errors: [...afterSaveResponse.errors, 'applyBlock'] });
-        }
         const trsLength = block.transactions.length;
         logger.debug(`[Service][Block][applyBlock] block ${block.id}, height: ${block.height}, ` +
             `applied with ${trsLength} transactions`
@@ -448,22 +447,13 @@ class BlockService {
         block.signature = this.calculateSignature(block, keyPair);
         block.id = this.getId(block);
 
+
+
         return new ResponseEntity<Block>({ data: block });
     }
 
-    private afterSave(block: Block): ResponseEntity<void> {
-        const errors: Array<string> = [];
-        for (const trs of block.transactions) {
-            const afterSaveResponse: ResponseEntity<void> = TransactionDispatcher.afterSave(trs);
-            if (!afterSaveResponse.success) {
-                errors.push(...afterSaveResponse.errors);
-                logger.error(`[Chain][afterSave]: ${JSON.stringify(afterSaveResponse.errors)}`);
-            }
-        }
-        return new ResponseEntity<void>({ errors });
-    }
-
     public async receiveBlock(block: Block): Promise<ResponseEntity<void>> {
+        BlockHistoryRepository.add(block.id, { action: BlockLifecycle.RECEIVE });
         logger.info(
             `Received new block id: ${block.id} ` +
             `height: ${block.height} ` +
@@ -522,6 +512,7 @@ class BlockService {
 
         await BlockPGRepo.deleteById(lastBlock.id);
         const newLastBlock = BlockRepo.deleteLastBlock();
+        BlockHistoryRepository.add(lastBlock.id, { action: BlockLifecycle.UNDO });
 
         const serializedBlock: Block & { transactions: any } = lastBlock.getCopy();
         serializedBlock.transactions = lastBlock.transactions.map(trs => SharedTransactionRepo.serialize(trs));
@@ -547,13 +538,15 @@ class BlockService {
 
     public create({ transactions, timestamp, previousBlock, keyPair }): Block {
         const blockTransactions = transactions.sort(transactionSortFunc);
-        return new Block({
+        const block = new Block({
             createdAt: timestamp,
             transactionCount: blockTransactions.length,
             previousBlockId: previousBlock.id,
             generatorPublicKey: keyPair.publicKey.toString('hex'),
             transactions: blockTransactions
         });
+        block.addHistory(BlockLifecycle.CREATE);
+        return block;
     }
 
     private calculateSignature(block: Block, keyPair: IKeyPair): string {

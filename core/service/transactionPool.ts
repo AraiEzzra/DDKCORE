@@ -14,6 +14,7 @@ import SyncService from 'core/service/sync';
 import { Account} from 'shared/model/account';
 import AccountRepository from 'core/repository/account';
 import { Address } from 'shared/model/types';
+import TransactionHistoryRepository from 'core/repository/history/transaction';
 
 export interface ITransactionPoolService<T extends Object> {
 
@@ -118,7 +119,7 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
             sender = AccountRepository.getByAddress(trs.senderAddress);
         }
 
-        trs.addHistory(TransactionLifecycle.PUSH_IN_POOL);
+        TransactionHistoryRepository.add(trs.id, { action: TransactionLifecycle.PUSH_IN_POOL });
         TransactionDispatcher.applyUnconfirmed(trs, sender);
         trs.status = TransactionStatus.UNCONFIRM_APPLIED;
 
@@ -156,7 +157,7 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
                     .splice(this.poolByRecipient.get(asset.recipientAddress).indexOf(trs), 1);
             }
         }
-        trs.addHistory(TransactionLifecycle.POP_FROM_POOL);
+        TransactionHistoryRepository.add(trs.id, { action: TransactionLifecycle.POP_FROM_POOL });
         return true;
     }
 

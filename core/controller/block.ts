@@ -18,6 +18,7 @@ import { IKeyPair } from 'shared/util/ed';
 import { getFirstSlotNumberInRound } from 'core/util/slot';
 import DelegateRepository from 'core/repository/delegate';
 import System from 'core/repository/system';
+import { BlockLifecycle } from 'shared/model/transaction';
 
 interface BlockGenerateRequest {
     keyPair: IKeyPair;
