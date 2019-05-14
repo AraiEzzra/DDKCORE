@@ -128,14 +128,14 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         const result = service.undoUnconfirmed(trs, sender, senderOnly);
 
         if (senderOnly) {
-            sender.historify(AccountChangeAction.VIRTUAL_UNDO_UNCONFIRMED, trs.id);
+            sender.addHistory(AccountChangeAction.VIRTUAL_UNDO_UNCONFIRMED, trs.id);
             TransactionHistoryRepository.addAfterState(
                 trs.id,
                 TransactionLifecycle.VIRTUAL_UNDO_UNCONFIRMED,
                 sender,
             );
         } else {
-            sender.historify(AccountChangeAction.TRANSACTION_UNDO_UNCONFIRMED, trs.id);
+            sender.addHistory(AccountChangeAction.TRANSACTION_UNDO_UNCONFIRMED, trs.id);
             TransactionHistoryRepository.addAfterState(
                 trs.id,
                 TransactionLifecycle.UNDO_UNCONFIRMED,
