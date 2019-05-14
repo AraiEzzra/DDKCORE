@@ -151,7 +151,15 @@ const SET_TRS_IDS_FOR_REMOVE_TRANSACTIONS: Set<string> = new Set(
         'a1406ce6e9cae460816224f995650c9248b649fd218d2ecb7611039f0f1fe518',
         '17d0bfc5a43de509c842a0756a73c25719453f568155f69f4cf6d068b355a2de', // 7249643049702615870  timestamp 99030000
         'c3e94e5c69ff3c9bb04fe5a4f9af36320777e2c3e3ea82d269fc845d2cb6d7f7', // 7249643049702615870 timestamp 100182835
-        '70d96395482df06df61e75fbaf9876726b9067c7e6da4a187427860893497aa0'  // 13886699056015278412 timestamp 100183472
+        '5d1e1ed9b689c7726e09f54d1d1c83f2d94b7a64e3d95853ce512eaf8c56fd62', // 7249643049702615870 timestamp 104635114
+        'cab4ebeaac4bac6bbc535b76b7ec1defcecdc53c57ce1ba15e136e049e156346', // 7249643049702615870 timestamp 105667214
+        '70d96395482df06df61e75fbaf9876726b9067c7e6da4a187427860893497aa0',  // 13886699056015278412 timestamp 100183472
+        '1f28984e3ac97fe5cbb30f2b304352d51a6a00e8222731d6a1ab6a1caacaa56c',  // 13886699056015278412 timestamp 104640993
+        '3f606b01b7507463bd52b3d0c39ce66dc0fdd085d3f590b252425feddfddfa9f',  // 13886699056015278412 timestamp 104660802
+        '2828a2c22d63c8eea6bc349ff5275f48326f1cb3b0651ee84522569023e4d3f2',  // 13886699056015278412 timestamp 104793443
+        'c1d47feb1264ca174ee55b184012e792b31463a756fefd17d865e69014660543',  // 13886699056015278412 timestamp 105588253
+        '8ff80724c37f65d5ead0246ad201f4d7fa7ef84a2e18e0f0cc9cbd367d3ca79f',  // 5270872160260712099 timestamp 104660255
+        'e8f50f544b4514478e69fd9c9c190ef315f8281d97d9c7efcf6b6429e2c91baf',  // 5270872160260712099 timestamp 105577043
     ]
 );
 
@@ -162,6 +170,7 @@ const basketsWithTransactionsForBlocks: Array<Basket> = [];
 const senderPublicKeyFromSecondSignatureTrsSet: Set<string> = new Set();
 const allBasketsIds: Array<number> = [];
 const newTransactionFromProd: Array<TransactionModel<IAsset>> = [];
+const arrForRemovedTransactions = [];
 
 let accounts: Map<Address, number> = new Map();
 let countForUsedBasket = 0;
@@ -195,7 +204,8 @@ async function startMigration() {
     }
 
     console.log('USED BASKETS IDs: ', allBasketsIds);
-
+    console.log('REMOVED TRANSACTIONS', arrForRemovedTransactions);
+    console.log('REMOVED TRANSACTIONS SIZE', arrForRemovedTransactions.length);
     const endTime = new Date();
     console.log('START TIME ', startTime);
     console.log('END TIME ', endTime);
@@ -219,17 +229,22 @@ async function startPrepareTransactionsForMigration() {
         ];
 
         rawNewTransactionsFromProduction.forEach((transaction: any) => {
-            const trs = new TransactionModel(new TransactionDTO({
-                ...transaction,
-                asset: JSON.parse(transaction.asset)
-            }));
-            if (trs.type === TransactionType.VOTE) {
-                trs.asset = {
-                    votes: (trs.asset as any).votes.map(oldVote => oldVote.slice(1)),
-                    type: (trs.asset as any).votes[0][0]
-                };
+            if (!SET_TRS_IDS_FOR_REMOVE_TRANSACTIONS.has(transaction.id)) {
+                const trs = new TransactionModel(new TransactionDTO({
+                    ...transaction,
+                    asset: JSON.parse(transaction.asset)
+                }));
+                if (trs.type === TransactionType.VOTE) {
+                    trs.asset = {
+                        votes: (trs.asset as any).votes.map(oldVote => oldVote.slice(1)),
+                        type: (trs.asset as any).votes[0][0]
+                    };
+                }
+                newTransactionFromProd.push(trs);
+            } else {
+                arrForRemovedTransactions.push(transaction);
+                console.log('REMOVED TRANSACTION: ', JSON.stringify(transaction))
             }
-            newTransactionFromProd.push(trs);
         });
     }
 
@@ -363,6 +378,9 @@ async function startPrepareTransactionsForMigration() {
                 } else {
                     correctTransactions.push(new TransactionModel(correctTransaction));
                 }
+            } else {
+                arrForRemovedTransactions.push(transaction);
+                console.log('REMOVED TRANSACTION: ', JSON.stringify(transaction))
             }
         });
 
