@@ -55,7 +55,7 @@ const constants: IConstants = {
     },
     TRANSFER: {
         MAX_RELAY: 3,
-        REQUEST_BLOCK_LIMIT: 42,
+        REQUEST_BLOCK_LIMIT: 10,
     },
     REFERRAL: {
         MAX_COUNT: 15,

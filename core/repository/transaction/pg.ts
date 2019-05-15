@@ -4,14 +4,16 @@ import SharedTransactionPGRepo from 'shared/repository/transaction/pg';
 import queries from 'core/repository/queries/transaction';
 import { BlockId } from 'shared/repository/block';
 import { RawTransaction, TransactionId } from 'shared/model/types';
+import { ResponseEntity } from 'shared/model/response';
+import { logger } from 'shared/util/logger';
 
 export interface ITransactionPGRepository<T extends IAsset> {
-    deleteById(trsId: TransactionId | Array<TransactionId>): Promise<Array<string>>;
+    deleteById(trsId: TransactionId | Array<TransactionId>): Promise<ResponseEntity<Array<string>>>;
     getByBlockIds(blockIds: Array<BlockId>): Promise<{ [blockId: string]: Array<Transaction<IAsset>> }>;
     getById(trsId: TransactionId): Promise<Transaction<T>>;
     getMany(limit: number, offset: number): Promise<Array<Transaction<T>>>;
     isExist(trsId: TransactionId): Promise<boolean>;
-    saveOrUpdate(trs: Transaction<T> | Array<Transaction<T>>): Promise<void>;
+    save(trs: Transaction<T> | Array<Transaction<T>>): Promise<ResponseEntity<void>>;
 }
 
 class TransactionPGRepo implements ITransactionPGRepository<IAsset> {
@@ -26,13 +28,19 @@ class TransactionPGRepo implements ITransactionPGRepository<IAsset> {
         'second_signature',
         'fee',
         'salt',
-        'asset'
+        'asset',
     ];
     private readonly columnSet = new pgpE.helpers.ColumnSet(this.tableFields, {table: this.tableName});
 
-    async deleteById(trsId: string | Array<string>): Promise<Array<string>> {
-        const response = await db.manyOrNone(queries.deleteByIds, [trsId]);
-        return response.map(item => item.id);
+    async deleteById(trsId: string | Array<string>): Promise<ResponseEntity<Array<string>>> {
+        try {
+            const response = await db.many(queries.deleteByIds, [trsId]);
+
+            return new ResponseEntity({ data: response.map(item => item.id) });
+        } catch (error) {
+            logger.debug(`[Core][Repository][Transaction][deleteById] error.stack: ${error.stack}`);
+            return new ResponseEntity({ errors: [`Unable to remove transactions. Error: ${error}`] });
+        }
     }
 
     async getByBlockIds(blockIds: Array<string>): Promise<{ [blockId: string]: Array<Transaction<IAsset>> }> {
@@ -78,17 +86,24 @@ class TransactionPGRepo implements ITransactionPGRepository<IAsset> {
         return !!transaction;
     }
 
-    async saveOrUpdate(trs: Transaction<IAsset> | Array<Transaction<IAsset>>): Promise<void> {
+    async save(trs: Transaction<IAsset> | Array<Transaction<IAsset>>): Promise<ResponseEntity<void>> {
         const transactions: Array<Transaction<IAsset>> = [].concat(trs);
         const values: Array<object> = [];
         transactions.forEach((transaction) => {
             values.push(SharedTransactionPGRepo.serialize(transaction));
         });
-        const query = pgpE.helpers.insert(values, this.columnSet) +
-            ' ON CONFLICT(id) DO UPDATE SET ' +
-            this.columnSet.assignColumns({from: 'EXCLUDED', skip: 'id'});
-        await db.none(query);
-        return null;
+        const query = pgpE.helpers.insert(values, this.columnSet);
+
+        try {
+            await db.query(query);
+        } catch (error) {
+            logger.debug(`[Core][Repository][Transaction][save] error.stack: ${error.stack}`);
+            return new ResponseEntity({
+                errors: [`Unable to save transactions to database. Error: ${error}`],
+            });
+        }
+
+        return new ResponseEntity();
     }
 }
 

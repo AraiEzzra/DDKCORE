@@ -15,6 +15,7 @@ export type HistoryEvent<T> = {
 export type TransactionHistoryEvent = HistoryEvent<TransactionLifecycle> & {
     accountStateBefore?: Account;
     accountStateAfter?: Account;
+    errors?: Array<string>;
 };
 
 export type BlockHistoryState = {

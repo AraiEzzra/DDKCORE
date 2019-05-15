@@ -39,14 +39,18 @@ class Loader {
         if (config.NODE_ENV_IN === NODE_ENV_ENUM.MAINNET) {
             config.CORE.IS_HISTORY = false;
         }
-        
+
         await this.initDatabase();
 
         initControllers();
         System.synchronization = true;
         await this.blockWarmUp(this.limit);
         if (!BlockRepository.getGenesisBlock()) {
-            await BlockService.applyGenesisBlock(config.GENESIS_BLOCK);
+            const result = await BlockService.applyGenesisBlock(config.GENESIS_BLOCK);
+            if (!result.success) {
+                logger.error(`[Loader] Unable to apply genesis block. ${result.errors.join('. ')}`);
+                process.exit(1);
+            }
         }
         config.CORE.IS_HISTORY = historyState;
         socket.init();

@@ -1,4 +1,5 @@
 import { Block } from 'shared/model/block';
+import { ResponseEntity } from 'shared/model/response';
 
 export type RawBlock = {[key: string]: any};
 export type BlockId = string;
@@ -14,13 +15,13 @@ export interface IBlockRepository {
 
 export interface IBlockPGRepository {
 
-    deleteById(blockId: BlockId | Array<BlockId>): Promise<Array<string>>;
+    deleteById(blockId: BlockId | Array<BlockId>): Promise<ResponseEntity<Array<string>>>;
     getById(blockId: BlockId): Promise<Block>;
     getGenesisBlock(): Promise<Block>;
     getLastBlock(): Promise<Block>;
     getLastNBlockIds(): Promise<Array<BlockId>>;
     getMany(limit: number, offset: number): Promise<Array<Block>>;
     isExist(blockId: BlockId): Promise<boolean>;
-    saveOrUpdate(block: Block | Array<Block>): Promise<void>;
+    save(block: Block | Array<Block>): Promise<ResponseEntity<void>>;
 
 }
