@@ -5,6 +5,7 @@ import queries from 'core/repository/queries/transaction';
 import { BlockId } from 'shared/repository/block';
 import { RawTransaction, TransactionId } from 'shared/model/types';
 import { ResponseEntity } from 'shared/model/response';
+import { logger } from 'shared/util/logger';
 
 export interface ITransactionPGRepository<T extends IAsset> {
     deleteById(trsId: TransactionId | Array<TransactionId>): Promise<ResponseEntity<Array<string>>>;
@@ -37,6 +38,7 @@ class TransactionPGRepo implements ITransactionPGRepository<IAsset> {
 
             return new ResponseEntity({ data: response.map(item => item.id) });
         } catch (error) {
+            logger.debug(`[Core][Repository][Transaction][deleteById] error.stack: ${error.stack}`);
             return new ResponseEntity({ errors: [`Unable to remove transactions. Error: ${error}`] });
         }
     }
@@ -95,6 +97,7 @@ class TransactionPGRepo implements ITransactionPGRepository<IAsset> {
         try {
             await db.query(query);
         } catch (error) {
+            logger.debug(`[Core][Repository][Transaction][save] error.stack: ${error.stack}`);
             return new ResponseEntity({
                 errors: [`Unable to save transactions to database. Error: ${error}`],
             });
