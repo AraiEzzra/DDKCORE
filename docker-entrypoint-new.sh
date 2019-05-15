@@ -18,6 +18,9 @@ else
         wait-port "$CORE_HOST:${CORE_RPC_PORT:-7009}"
         npm run test
     fi
+    if [ "$SERVICE" == "TEST_FUNCTIONALITY" ]; then
+        npm run test:functionality
+    fi
     if [ "$SERVICE" == "API" ]; then
         npm run server:api
     fi
