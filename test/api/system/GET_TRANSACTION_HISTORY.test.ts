@@ -41,7 +41,8 @@ describe('Test GET_TRANSACTION_HISTORY', () => {
         const response = await socketRequest(REQUEST);
 
         expect(response.body.success).to.equal(true);
-        expect(response.body.data).to.deep.equal(SUCCESS);
+        expect(response.body.data).to.have.property('entity');
+        expect(response.body.data.events).to.deep.equal(SUCCESS);
     });
 
     it('Negative', async () => {

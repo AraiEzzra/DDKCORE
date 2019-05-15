@@ -5,7 +5,7 @@ import {
     AirdropReward,
     PublicKey,
     Timestamp,
-    TransactionHistoryAction,
+    TransactionHistoryEvent,
     TransactionId
 } from 'shared/model/types';
 import config from 'shared/config';
@@ -42,7 +42,17 @@ export enum TransactionLifecycle {
     UNDO_UNCONFIRMED = 'UNDO_UNCONFIRMED',
     VIRTUAL_UNDO_UNCONFIRMED = 'VIRTUAL_UNDO_UNCONFIRMED',
     APPLY = 'APPLY',
-    UNDO = 'UNDO'
+    UNDO = 'UNDO',
+}
+
+export enum BlockLifecycle {
+    VALIDATE = 'VALIDATE',
+    CREATE = 'CREATE',
+    RECEIVE = 'RECEIVE',
+    PROCESS = 'PROCESS',
+    VERIFY = 'VERIFY',
+    APPLY = 'APPLY',
+    UNDO = 'UNDO',
 }
 
 export enum TransactionStatus {
@@ -55,7 +65,7 @@ export enum TransactionStatus {
     PUT_IN_POOL,
     BROADCASTED,
     APPLIED,
-    DECLINED
+    DECLINED,
 }
 
 export interface IAirdropAsset {
@@ -128,47 +138,12 @@ export class TransactionModel<T extends IAsset> {
 }
 
 export class Transaction<T extends IAsset> extends TransactionModel<T> {
-
-    history: Array<TransactionHistoryAction> = [];
-
     constructor(data: TransactionModel<T>) {
         super(data);
     }
 
     public getCopy() {
         return new Transaction<T>({ ...this, history: [] });
-    }
-
-    addHistory(action: TransactionLifecycle): void {
-        if (!config.CORE.IS_HISTORY) {
-            return;
-        }
-
-        this.history.push({ action });
-    }
-
-    addBeforeHistory(action: TransactionLifecycle, account: Account): void {
-        if (!config.CORE.IS_HISTORY) {
-            return;
-        }
-
-        this.history.push({
-            action,
-            accountStateBefore: account.getCopy(),
-        });
-    }
-
-    addAfterHistory(action: TransactionLifecycle, account: Account): void {
-        if (!config.CORE.IS_HISTORY) {
-            return;
-        }
-
-        for (let i = this.history.length - 1; i >= 0; i--) {
-            if (this.history[i].action === action) {
-                this.history[i].accountStateAfter = account.getCopy();
-                break;
-            }
-        }
     }
 }
 

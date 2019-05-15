@@ -25,6 +25,7 @@ import SlotService from 'core/service/slot';
 import BlockRepository from 'core/repository/block';
 import config from 'shared/config';
 import { Address } from 'shared/model/types';
+import TransactionHistoryRepository from 'core/repository/history/transaction';
 
 export interface IAssetService<T extends IAsset> {
     getBytes(trs: Transaction<T>): Buffer;
@@ -82,34 +83,44 @@ export interface ITransactionService<T extends IAsset> {
 
     undo(trs: Transaction<T>, sender: Account): Promise<void>;
 
-    afterSave(trs: Transaction<T>): void;
-
     popFromPool(limit: number): Array<Transaction<IAsset>>;
 
     returnToQueueConflictedTransactionFromPool(transactions): void;
 }
 
 class TransactionService<T extends IAsset> implements ITransactionService<T> {
-    afterSave(trs: Transaction<T>): ResponseEntity<void> {
-        return new ResponseEntity<void>();
-    }
-
     applyUnconfirmed(trs: Transaction<T>, sender: Account): void {
-        trs.addBeforeHistory(TransactionLifecycle.APPLY_UNCONFIRMED, sender);
+        TransactionHistoryRepository.addBeforeState(
+            trs,
+            TransactionLifecycle.APPLY_UNCONFIRMED,
+            sender,
+        );
 
         sender.actualBalance -= trs.fee || 0;
         const service: IAssetService<IAsset> = getTransactionServiceByType(trs.type);
         service.applyUnconfirmed(trs, sender);
         sender.addHistory(AccountChangeAction.TRANSACTION_APPLY_UNCONFIRMED, trs.id);
 
-        trs.addAfterHistory(TransactionLifecycle.APPLY_UNCONFIRMED, sender);
+        TransactionHistoryRepository.addAfterState(
+            trs,
+            TransactionLifecycle.APPLY_UNCONFIRMED,
+            sender,
+        );
     }
 
     undoUnconfirmed(trs: Transaction<T>, sender: Account, senderOnly = false): void {
         if (senderOnly) {
-            trs.addBeforeHistory(TransactionLifecycle.VIRTUAL_UNDO_UNCONFIRMED, sender);
+            TransactionHistoryRepository.addBeforeState(
+                trs,
+                TransactionLifecycle.VIRTUAL_UNDO_UNCONFIRMED,
+                sender,
+            );
         } else {
-            trs.addBeforeHistory(TransactionLifecycle.UNDO_UNCONFIRMED, sender);
+            TransactionHistoryRepository.addBeforeState(
+                trs,
+                TransactionLifecycle.UNDO_UNCONFIRMED,
+                sender,
+            );
         }
 
         sender.actualBalance += trs.fee || 0;
@@ -118,10 +129,18 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
 
         if (senderOnly) {
             sender.addHistory(AccountChangeAction.VIRTUAL_UNDO_UNCONFIRMED, trs.id);
-            trs.addAfterHistory(TransactionLifecycle.VIRTUAL_UNDO_UNCONFIRMED, sender);
+            TransactionHistoryRepository.addAfterState(
+                trs,
+                TransactionLifecycle.VIRTUAL_UNDO_UNCONFIRMED,
+                sender,
+            );
         } else {
             sender.addHistory(AccountChangeAction.TRANSACTION_UNDO_UNCONFIRMED, trs.id);
-            trs.addAfterHistory(TransactionLifecycle.UNDO_UNCONFIRMED, sender);
+            TransactionHistoryRepository.addAfterState(
+                trs,
+                TransactionLifecycle.UNDO_UNCONFIRMED,
+                sender,
+            );
         }
 
         return result;
@@ -130,13 +149,13 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
     async apply(trs: Transaction<T>, sender: Account): Promise<void> {
         await TransactionPGRepo.saveOrUpdate(trs);
         TransactionRepo.add(trs);
-        trs.addHistory(TransactionLifecycle.APPLY);
+        TransactionHistoryRepository.addEvent(trs, { action: TransactionLifecycle.APPLY });
     }
 
     async undo(trs: Transaction<T>, sender: Account): Promise<void> {
         await TransactionPGRepo.deleteById(trs.id);
         TransactionRepo.delete(trs);
-        trs.addHistory(TransactionLifecycle.UNDO);
+        TransactionHistoryRepository.addEvent(trs, { action: TransactionLifecycle.UNDO });
     }
 
     calculateFee(trs: Transaction<T>, sender: Account): number {
@@ -155,7 +174,8 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
 
         const errors = [];
         errors.push(
-            `Not enough money on account ${sender.address}: balance ${sender.actualBalance}, amount: ${amount}`
+            `Not enough money on account ${sender.address}: balance ${sender.actualBalance}, amount: ${amount}, ` +
+            `difference: ${sender.actualBalance - amount}, transaction id: ${trs.id}`,
         );
         return new ResponseEntity({ errors });
     }
@@ -173,7 +193,10 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         const senderTransactions = TransactionPool.getBySenderAddress(senderAddress);
         let i = 0;
         for (const senderTrs of senderTransactions) {
-            senderTrs.addHistory(TransactionLifecycle.CHECK_TRS_FOR_EXIST_POOL);
+            TransactionHistoryRepository.addEvent(
+                senderTrs,
+                { action: TransactionLifecycle.CHECK_TRS_FOR_EXIST_POOL },
+            );
             if (!verifiedTransactions.has(senderTrs.id)) {
                 let sender: Account;
                 if (accountsMap.has(senderAddress)) {
@@ -212,7 +235,10 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
                     TransactionPool.remove(senderTrs);
                     TransactionQueue.push(senderTrs);
 
-                    senderTrs.addHistory(TransactionLifecycle.RETURN_TO_QUEUE);
+                    TransactionHistoryRepository.addEvent(
+                        senderTrs,
+                        { action: TransactionLifecycle.RETURN_TO_QUEUE },
+                    );
 
                     if (senderTrs.type === TransactionType.SEND) {
                         const asset: IAssetTransfer = <IAssetTransfer><Object>senderTrs.asset;
@@ -274,7 +300,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         }
         trs.id = this.getId(trs);
 
-        trs.addHistory(TransactionLifecycle.CREATE);
+        TransactionHistoryRepository.addEvent(trs, { action: TransactionLifecycle.CREATE });
 
         return new ResponseEntity({ data: trs });
     }
@@ -353,7 +379,10 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             errors.push(...verifyResponse.errors);
         }
 
-        trs.addHistory(TransactionLifecycle.VALIDATE);
+        TransactionHistoryRepository.addEvent(
+            trs,
+            { action: TransactionLifecycle.VALIDATE },
+        );
 
         return new ResponseEntity<void>({ errors });
     }
@@ -383,7 +412,11 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
     }
 
     verifyUnconfirmed(trs: Transaction<T>, sender: Account, skipSignature: boolean = false): ResponseEntity<void> {
-        trs.addBeforeHistory(TransactionLifecycle.VERIFY, sender);
+        TransactionHistoryRepository.addBeforeState(
+            trs,
+            TransactionLifecycle.VERIFY,
+            sender,
+        );
 
         // need for vote trs, staked amount changes fee
         trs.fee = this.calculateFee(trs, sender);
@@ -422,7 +455,11 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
 
         const service: IAssetService<IAsset> = getTransactionServiceByType(trs.type);
         const result = service.verifyUnconfirmed(trs, sender);
-        trs.addAfterHistory(TransactionLifecycle.VERIFY, sender);
+        TransactionHistoryRepository.addAfterState(
+            trs,
+            TransactionLifecycle.VERIFY,
+            sender,
+        );
         return result;
 
     }
