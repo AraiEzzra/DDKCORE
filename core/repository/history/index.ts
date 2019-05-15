@@ -21,8 +21,6 @@ export class HistoryRepository<Entity extends EntityWithId, EventType> {
             return;
         }
 
-        console.log(`entity.id`, entity.id, `event`, event);
-
         if (this.store.get(entity.id)) {
             this.store.get(entity.id).events.push(event);
         } else {
