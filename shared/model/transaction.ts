@@ -51,7 +51,6 @@ export enum BlockLifecycle {
     RECEIVE = 'RECEIVE',
     PROCESS = 'PROCESS',
     VERIFY = 'VERIFY',
-    DECLINE = 'DECLINE',
     APPLY = 'APPLY',
     UNDO = 'UNDO',
 }

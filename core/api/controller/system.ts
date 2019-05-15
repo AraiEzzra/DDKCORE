@@ -2,12 +2,13 @@ import { API } from 'core/api/util/decorators';
 import { Message2 } from 'shared/model/message';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
 import { ResponseEntity } from 'shared/model/response';
-import { Address } from 'shared/model/types';
-import BlockRepository from 'core/repository/block';
+import { Address, BlockHistoryEvent } from 'shared/model/types';
 import AccountRepository from 'core/repository/account';
 import { Block } from 'shared/model/block';
 import { AccountState, SerializedAccountState, SerializedTransactionHistoryAction } from 'shared/model/types';
 import TransactionHistoryRepository from 'core/repository/history/transaction';
+import { Transaction } from 'shared/model/transaction';
+import BlockHistoryRepository from 'core/repository/history/block';
 
 class SystemController {
     constructor() {
@@ -33,23 +34,29 @@ class SystemController {
     }
 
     @API(API_ACTION_TYPES.GET_BLOCK_HISTORY)
-    public getBlockHistory(message: Message2<{ id: string }>): ResponseEntity<Block> {
-        const block = BlockRepository.getById(message.body.id);
+    public getBlockHistory(
+        message: Message2<{ id: string }>
+    ): ResponseEntity<{ events: Array<BlockHistoryEvent>, entity: Block }> {
+        const history = BlockHistoryRepository.get(message.body.id);
 
-        return new ResponseEntity({ data: block });
+        if (!history) {
+            return new ResponseEntity({ errors: ['Block does not exist'] });
+        }
+
+        return new ResponseEntity({ data: history });
     }
 
     @API(API_ACTION_TYPES.GET_TRANSACTION_HISTORY)
     public getTransactionHistory(
         message: Message2<{ id: string }>
-    ): ResponseEntity<Array<SerializedTransactionHistoryAction>> {
+    ): ResponseEntity<{ events: Array<SerializedTransactionHistoryAction>, entity: Transaction<any> }> {
         const history = TransactionHistoryRepository.get(message.body.id);
 
         if (!history) {
-            return new ResponseEntity({ errors: ['Transaction not exist']});
+            return new ResponseEntity({ errors: ['Transaction does not exist']});
         }
 
-        const response = history.map(event => ({
+        const serializedEvents = history.events.map(event => ({
             action: event.action,
             accountStateBefore:
                 event.accountStateBefore && AccountRepository.serialize(event.accountStateBefore),
@@ -57,7 +64,7 @@ class SystemController {
                 event.accountStateAfter && AccountRepository.serialize(event.accountStateAfter),
         }));
 
-        return new ResponseEntity({ data: response });
+        return new ResponseEntity({ data: { entity: history.entity, events: serializedEvents } });
     }
 }
 

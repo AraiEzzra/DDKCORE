@@ -70,7 +70,7 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
 
         trs.status = TransactionStatus.QUEUED;
         this.queue.push(trs);
-        TransactionHistoryRepository.add(trs.id, { action: TransactionLifecycle.PUSH_IN_QUEUE });
+        TransactionHistoryRepository.addEvent(trs, { action: TransactionLifecycle.PUSH_IN_QUEUE });
 
         if (this.queue.length === 1) {
             setImmediate(this.process);
@@ -85,7 +85,7 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
             expire: Math.floor(new Date().getTime() / SECOND) + config.CONSTANTS.TRANSACTION_QUEUE_EXPIRE
         });
         trs.status = TransactionStatus.QUEUED_AS_CONFLICTED;
-        TransactionHistoryRepository.add(trs.id, { action: TransactionLifecycle.PUSH_IN_CONFLICTED_QUEUE });
+        TransactionHistoryRepository.addEvent(trs, { action: TransactionLifecycle.PUSH_IN_CONFLICTED_QUEUE });
     }
 
     // TODO can be optimized if check senderAddress and recipientAddress
@@ -104,7 +104,7 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
         }
 
         const trs = this.pop();
-        TransactionHistoryRepository.add(trs.id, { action: TransactionLifecycle.PROCESS });
+        TransactionHistoryRepository.addEvent(trs, { action: TransactionLifecycle.PROCESS });
 
         // TODO redundant in sync variant
         if (TransactionPool.has(trs)) {
@@ -127,7 +127,7 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
                 `${JSON.stringify(verifyStatus.errors.join('. '))}. Transaction: ${JSON.stringify(trs)}`
             );
             trs.status = TransactionStatus.DECLINED;
-            TransactionHistoryRepository.add(trs.id, { action: TransactionLifecycle.DECLINE });
+            TransactionHistoryRepository.addEvent(trs, { action: TransactionLifecycle.DECLINE });
 
             SocketMiddleware.emitEvent<{ transaction: SerializedTransaction<IAsset>, reason: Array<string> }>(
                 EVENT_TYPES.DECLINE_TRANSACTION,

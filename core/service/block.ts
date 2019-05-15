@@ -75,7 +75,7 @@ class BlockService {
 
     private pushInPool(transactions: Array<Transaction<object>>): void {
         for (const trs of transactions) {
-            const sender = AccountRepository.getByAddress(trs.senderAddress); 
+            const sender = AccountRepository.getByAddress(trs.senderAddress);
             const verifyResult = TransactionService.verifyUnconfirmed(trs, sender, true);
             if (verifyResult.success) {
                 TransactionPool.push(trs, sender, false);
@@ -103,8 +103,9 @@ class BlockService {
         keyPair: IKeyPair,
         verify: boolean = true
     ): Promise<ResponseEntity<void>> {
+        BlockHistoryRepository.addEvent(block, { action: BlockLifecycle.PROCESS });
         if (verify) {
-            block.addHistory(BlockLifecycle.VERIFY);
+            BlockHistoryRepository.addEvent(block, { action: BlockLifecycle.VERIFY });
             const resultVerifyBlock: ResponseEntity<void> = this.verifyBlock(block, !keyPair);
             if (!resultVerifyBlock.success) {
                 return new ResponseEntity<void>({ errors: [...resultVerifyBlock.errors, 'process'] });
@@ -398,10 +399,9 @@ class BlockService {
             if (!addPayloadHashResponse.success) {
                 return new ResponseEntity<void>({ errors: [...addPayloadHashResponse.errors, 'applyBlock'] });
             }
-            block = addPayloadHashResponse.data;
         }
 
-        block.addHistory(BlockLifecycle.APPLY);
+        BlockHistoryRepository.addEvent(block, { action: BlockLifecycle.APPLY });
         BlockRepo.add(block);
         await BlockPGRepo.saveOrUpdate(block);
 
@@ -453,13 +453,14 @@ class BlockService {
         block.signature = this.calculateSignature(block, keyPair);
         block.id = this.getId(block);
 
-
+        BlockHistoryRepository.addEvent(block, { action: BlockLifecycle.CREATE });
 
         return new ResponseEntity<Block>({ data: block });
     }
 
     public async receiveBlock(block: Block): Promise<ResponseEntity<void>> {
-        BlockHistoryRepository.add(block.id, { action: BlockLifecycle.RECEIVE });
+        BlockHistoryRepository.addEvent(block, { action: BlockLifecycle.RECEIVE });
+
         logger.info(
             `Received new block id: ${block.id} ` +
             `height: ${block.height} ` +
@@ -518,7 +519,7 @@ class BlockService {
 
         await BlockPGRepo.deleteById(lastBlock.id);
         const newLastBlock = BlockRepo.deleteLastBlock();
-        BlockHistoryRepository.add(lastBlock.id, { action: BlockLifecycle.UNDO });
+        BlockHistoryRepository.addEvent(lastBlock, { action: BlockLifecycle.UNDO });
 
         const serializedBlock: Block & { transactions: any } = lastBlock.getCopy();
         serializedBlock.transactions = lastBlock.transactions.map(trs => SharedTransactionRepo.serialize(trs));
@@ -551,7 +552,6 @@ class BlockService {
             generatorPublicKey: keyPair.publicKey.toString('hex'),
             transactions: blockTransactions
         });
-        block.addHistory(BlockLifecycle.CREATE);
         return block;
     }
 
@@ -586,6 +586,8 @@ class BlockService {
     }
 
     public validate(block: BlockModel): ResponseEntity<void> {
+        BlockHistoryRepository.addEvent(block as Block, { action: BlockLifecycle.VALIDATE });
+
         const isValid: boolean = validator.validate(block, blockSchema);
         if (!isValid) {
             return new ResponseEntity<void>({

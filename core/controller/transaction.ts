@@ -13,7 +13,7 @@ import { createKeyPairBySecret } from 'shared/util/crypto';
 import SocketMiddleware from 'core/api/middleware/socket';
 import { ResponseEntity } from 'shared/model/response';
 import { CreateTransactionParams } from 'core/controller/types';
-
+import TransactionHistoryRepository from 'core/repository/history/transaction';
 
 class TransactionController extends BaseController {
     @ON('TRANSACTION_RECEIVE')

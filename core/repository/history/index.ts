@@ -1,27 +1,36 @@
 import config from 'shared/config';
 
-export class HistoryRepository<T> {
-    store: Map<string, Array<T>>;
+export type EntityWithId = {
+    id?: string;
+};
+
+export type History<Entity extends EntityWithId, EventType> = {
+    entity: Entity,
+    events: Array<EventType>,
+};
+
+export class HistoryRepository<Entity extends EntityWithId, EventType> {
+    store: Map<string, History<Entity, EventType>>;
 
     constructor() {
         this.store = new Map();
     }
 
-    add = (id: string, event: T) => {
+    addEvent(entity: Entity, event: EventType): void {
         if (!config.CORE.IS_HISTORY) {
             return;
         }
 
-        const history = this.store.get(id);
+        console.log(`entity.id`, entity.id, `event`, event);
 
-        history
-            ? this.store.get(id).push(event)
-            : this.store.set(id, [event]);
-
-        return this.store.get(id);
+        if (this.store.get(entity.id)) {
+            this.store.get(entity.id).events.push(event);
+        } else {
+            this.store.set(entity.id, { entity, events: [event] });
+        }
     }
 
-    get = (id: string): Array<T> => {
+    get(id: string): History<Entity, EventType> {
         return this.store.get(id);
     }
 }

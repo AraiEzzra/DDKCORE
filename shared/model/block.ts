@@ -32,12 +32,4 @@ export class Block extends BlockModel {
     public getCopy(): Block {
         return new Block(this);
     }
-
-    addHistory(action: BlockLifecycle, state?: BlockHistoryState): void {
-        if (!config.CORE.IS_HISTORY) {
-            return;
-        }
-
-        this.history.push({ action, state });
-    }
 }

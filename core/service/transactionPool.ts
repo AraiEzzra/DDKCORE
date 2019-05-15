@@ -115,7 +115,7 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
             sender = AccountRepository.getByAddress(trs.senderAddress);
         }
 
-        TransactionHistoryRepository.add(trs.id, { action: TransactionLifecycle.PUSH_IN_POOL });
+        TransactionHistoryRepository.addEvent(trs, { action: TransactionLifecycle.PUSH_IN_POOL });
         TransactionDispatcher.applyUnconfirmed(trs, sender);
         trs.status = TransactionStatus.UNCONFIRM_APPLIED;
 
@@ -153,7 +153,7 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
                     .splice(this.poolByRecipient.get(asset.recipientAddress).indexOf(trs), 1);
             }
         }
-        TransactionHistoryRepository.add(trs.id, { action: TransactionLifecycle.POP_FROM_POOL });
+        TransactionHistoryRepository.addEvent(trs, { action: TransactionLifecycle.POP_FROM_POOL });
         return true;
     }
 
