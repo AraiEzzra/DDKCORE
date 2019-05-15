@@ -23,7 +23,7 @@ describe('Transaction repository', () => {
         for (let i = 0; i < 3; i++) {
             blocks.push(getNewBlock());
         }
-        await BlockPGRepo.saveOrUpdate(blocks);
+        await BlockPGRepo.save(blocks);
         setBlocksIds(blocks.map(block => block.id));
     });
 
@@ -33,7 +33,7 @@ describe('Transaction repository', () => {
             let newTransaction;
             before(async () => {
                 newTransaction = getNewTransactionWithRandomBlockId();
-                await TransactionPGRepo.saveOrUpdate(newTransaction);
+                await TransactionPGRepo.save(newTransaction);
             });
 
             it('should return response with transaction id', async () => {
@@ -51,11 +51,11 @@ describe('Transaction repository', () => {
             let firstTransaction, secondTransaction, thirdTransaction;
             before(async () => {
                 firstTransaction = getNewTransactionWithRandomBlockId();
-                await TransactionPGRepo.saveOrUpdate(firstTransaction);
+                await TransactionPGRepo.save(firstTransaction);
                 secondTransaction = getNewTransactionWithRandomBlockId();
-                await TransactionPGRepo.saveOrUpdate(secondTransaction);
+                await TransactionPGRepo.save(secondTransaction);
                 thirdTransaction = getNewTransactionWithRandomBlockId();
-                await TransactionPGRepo.saveOrUpdate(thirdTransaction);
+                await TransactionPGRepo.save(thirdTransaction);
             });
 
             it('should return response with transaction id', async () => {
@@ -82,7 +82,7 @@ describe('Transaction repository', () => {
             let firstTransaction;
             before(async () => {
                 firstTransaction = getNewTransactionWithRandomBlockId();
-                await TransactionPGRepo.saveOrUpdate(firstTransaction);
+                await TransactionPGRepo.save(firstTransaction);
             });
 
             it('should return response with Transaction', async () => {
@@ -109,17 +109,17 @@ describe('Transaction repository', () => {
                 for (let i = 0; i < transactionsCount2; i++) {
                     const newTransaction = getNewTransactionWithBlockId(blocks[0].id);
                     transactions.push(newTransaction);
-                    await TransactionPGRepo.saveOrUpdate(newTransaction);
+                    await TransactionPGRepo.save(newTransaction);
                 }
                 for (let i = 0; i < transactionsCount4; i++) {
                     const newTransaction = getNewTransactionWithBlockId(blocks[1].id);
                     transactions.push(newTransaction);
-                    await TransactionPGRepo.saveOrUpdate(newTransaction);
+                    await TransactionPGRepo.save(newTransaction);
                 }
                 for (let i = 0; i < transactionsCount6; i++) {
                     const newTransaction = getNewTransactionWithBlockId(blocks[2].id);
                     transactions.push(newTransaction);
-                    await TransactionPGRepo.saveOrUpdate(newTransaction);
+                    await TransactionPGRepo.save(newTransaction);
                 }
             });
 
@@ -153,7 +153,7 @@ describe('Transaction repository', () => {
             before(async () => {
                 for (let i = 0; i < count; i++) {
                     const transaction = getNewTransactionWithRandomBlockId();
-                    await TransactionPGRepo.saveOrUpdate(transaction);
+                    await TransactionPGRepo.save(transaction);
                     transactions.push(transaction);
                 }
             });
@@ -184,7 +184,7 @@ describe('Transaction repository', () => {
             let transaction;
             before(async () => {
                 transaction = getNewTransactionWithRandomBlockId();
-                await TransactionPGRepo.saveOrUpdate(transaction);
+                await TransactionPGRepo.save(transaction);
             });
 
             it('should return response with boolean value', async () => {
@@ -212,10 +212,10 @@ describe('Transaction repository', () => {
             });
 
             it('should save block', async () => {
-                await TransactionPGRepo.saveOrUpdate(transactions[0]);
+                await TransactionPGRepo.save(transactions[0]);
                 let response = await TransactionPGRepo.getMany(1000, 0);
                 expect(response).to.be.lengthOf(1 + genesisBlockTrsCount);
-                await TransactionPGRepo.saveOrUpdate(transactions);
+                await TransactionPGRepo.save(transactions);
                 response = await TransactionPGRepo.getMany(1000, 0);
                 expect(response).to.be.lengthOf(99 + genesisBlockTrsCount);
             });

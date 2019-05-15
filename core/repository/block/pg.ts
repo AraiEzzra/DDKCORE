@@ -11,6 +11,7 @@ import {
 
 import SharedBlockPgRepository from 'shared/repository/block/pg';
 import { transactionSortFunc } from 'core/util/transaction';
+import { ResponseEntity } from 'shared/model/response';
 
 export interface IBlockPGRepository extends IBlockRepositoryPGShared {
 
@@ -49,10 +50,17 @@ class BlockPGRepo implements IBlockPGRepository {
         return blocks;
     }
 
-    async deleteById(blockId: BlockId | Array<BlockId>): Promise<Array<string>> {
+    async deleteById(blockId: BlockId | Array<BlockId>): Promise<ResponseEntity<Array<string>>> {
         const blockIds: Array<BlockId> = [].concat(blockId);
-        const ids = await db.manyOrNone(queries.deleteByIds, [blockIds]);
-        return ids.map(rawId => rawId.id);
+        try {
+            const ids = await db.many(queries.deleteByIds, [blockIds]);
+            return new ResponseEntity({ data: ids.map(rawId => rawId.id) });
+        } catch (error) {
+            return new ResponseEntity({
+                errors: [`Unable to delete blocks ${JSON.stringify(blockIds)}. Error: ${error}`],
+            });
+        }
+
     }
 
     async getById(blockId: BlockId): Promise<Block> {
@@ -111,17 +119,25 @@ class BlockPGRepo implements IBlockPGRepository {
         return response.exists;
     }
 
-    async saveOrUpdate(block: Block | Array<Block>): Promise<void> {
+    async save(block: Block | Array<Block>): Promise<ResponseEntity<void>> {
         const blocks: Array<Block> = [].concat(block);
         const values: Array<object> = [];
         blocks.forEach((blockEntity) => {
             values.push(SharedBlockPgRepository.serialize(blockEntity));
         });
-        const query = pgpE.helpers.insert(values, this.columnSet) +
-            ' ON CONFLICT(id) DO UPDATE SET ' +
-            this.columnSet.assignColumns({ from: 'EXCLUDED', skip: 'id' });
-        await db.none(query);
-        return null;
+        const query = pgpE.helpers.insert(values, this.columnSet);
+
+        try {
+            await db.query(query);
+        } catch (error) {
+            return new ResponseEntity({
+                errors: [
+                    `Unable to save blocks with ids ${blocks.map(b => b.id)} to database. Error: ${error}`,
+                ],
+            });
+        }
+
+        return new ResponseEntity();
     }
 }
 

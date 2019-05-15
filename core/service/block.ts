@@ -400,9 +400,14 @@ class BlockService {
             }
         }
 
-        BlockHistoryRepository.addEvent(block, { action: BlockLifecycle.APPLY });
+        const saveResult = await BlockPGRepo.save(block);
+        if (!saveResult.success) {
+            saveResult.errors.push('applyBlock');
+            return saveResult;
+        }
+
         BlockRepo.add(block);
-        await BlockPGRepo.saveOrUpdate(block);
+        BlockHistoryRepository.addEvent(block, { action: BlockLifecycle.APPLY });
 
         if (block.height >= MIN_ROUND_BLOCK) {
             RoundRepository.getCurrentRound().slots[block.generatorPublicKey].isForged = true;
@@ -412,7 +417,15 @@ class BlockService {
         for (const trs of block.transactions) {
             const sender = AccountRepo.getByPublicKey(trs.senderPublicKey);
             trs.blockId = block.id;
-            await TransactionDispatcher.apply(trs, sender);
+
+            const applyResult = await TransactionDispatcher.apply(trs, sender);
+            if (!applyResult.success) {
+                // TODO: Add removing previous transactions
+                // https://trello.com/c/28oG2DxZ/326-save-transaction-using-batch-ideology-on-apply-block
+
+                applyResult.errors.push('applyBlock');
+                return applyResult;
+            }
         }
         if (errors.length) {
             return new ResponseEntity<void>({ errors: [...errors, 'applyBlock'] });
@@ -500,25 +513,25 @@ class BlockService {
 
     public async deleteLastBlock(): Promise<ResponseEntity<Block>> {
         let lastBlock = BlockRepo.getLastBlock();
-        logger.warn(`Deleting last block: ${lastBlock.id}, height: ${lastBlock.height}`);
+        logger.info(`Deleting last block: ${lastBlock.id}, height: ${lastBlock.height}`);
         if (lastBlock.height === 1) {
             return new ResponseEntity<Block>({ errors: ['Cannot delete genesis block'] });
         }
 
-        const errors: Array<string> = [];
+        const deleteResult = await BlockPGRepo.deleteById(lastBlock.id);
+        if (!deleteResult.success) {
+            deleteResult.errors.push('deleteLastBlock');
+            return new ResponseEntity({ errors: deleteResult.errors });
+        }
+
+        const newLastBlock = BlockRepo.deleteLastBlock();
+        BlockHistoryRepository.addEvent(lastBlock, { action: BlockLifecycle.UNDO });
+
         for (const transaction of lastBlock.transactions.reverse()) {
             const sender = AccountRepo.getByAddress(transaction.senderAddress);
             await TransactionDispatcher.undo(transaction, sender);
             TransactionDispatcher.undoUnconfirmed(transaction, sender);
         }
-
-        if (errors.length) {
-            return new ResponseEntity<Block>({ errors });
-        }
-
-        await BlockPGRepo.deleteById(lastBlock.id);
-        const newLastBlock = BlockRepo.deleteLastBlock();
-        BlockHistoryRepository.addEvent(lastBlock, { action: BlockLifecycle.UNDO });
 
         const serializedBlock: Block & { transactions: any } = lastBlock.getCopy();
         serializedBlock.transactions = lastBlock.transactions.map(trs => SharedTransactionRepo.serialize(trs));
@@ -539,7 +552,7 @@ class BlockService {
         rawBlock.transactions = <Array<Transaction<IAsset>>>resultTransactions;
         const block = new Block({ ...rawBlock, createdAt: 0, previousBlockId: null });
         block.transactions = block.transactions.sort(transactionSortFunc);
-        return await this.process(block, false, null, false);
+        return this.process(block, false, null, false);
     }
 
     public create({ transactions, timestamp, previousBlock, keyPair }): Block {

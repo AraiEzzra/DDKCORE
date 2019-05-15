@@ -79,9 +79,9 @@ export interface ITransactionService<T extends IAsset> {
 
     undoUnconfirmed(trs: Transaction<T>, sender?: Account, senderOnly?: boolean): void;
 
-    apply(trs: Transaction<T>, sender: Account): Promise<void>;
+    apply(trs: Transaction<T>, sender: Account): Promise<ResponseEntity<void>>;
 
-    undo(trs: Transaction<T>, sender: Account): Promise<void>;
+    undo(trs: Transaction<T>, sender: Account): Promise<ResponseEntity<void>>;
 
     popFromPool(limit: number): Array<Transaction<IAsset>>;
 
@@ -146,16 +146,26 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         return result;
     }
 
-    async apply(trs: Transaction<T>, sender: Account): Promise<void> {
-        await TransactionPGRepo.saveOrUpdate(trs);
-        TransactionRepo.add(trs);
-        TransactionHistoryRepository.addEvent(trs, { action: TransactionLifecycle.APPLY });
+    async apply(trs: Transaction<T>, sender: Account): Promise<ResponseEntity<void>> {
+        const saveResult = await TransactionPGRepo.save(trs);
+        if (saveResult.success) {
+            TransactionRepo.add(trs);
+        }
+        TransactionHistoryRepository.addEvent(trs, {
+            action: TransactionLifecycle.APPLY,
+            errors: saveResult.errors,
+        });
+        return saveResult;
     }
 
-    async undo(trs: Transaction<T>, sender: Account): Promise<void> {
-        await TransactionPGRepo.deleteById(trs.id);
+    async undo(trs: Transaction<T>, sender: Account): Promise<ResponseEntity<void>> {
+        // Deleting block removes transactions from the database
+        // Need remove only from memory
+
         TransactionRepo.delete(trs);
         TransactionHistoryRepository.addEvent(trs, { action: TransactionLifecycle.UNDO });
+
+        return new ResponseEntity();
     }
 
     calculateFee(trs: Transaction<T>, sender: Account): number {

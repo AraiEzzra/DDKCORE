@@ -10,7 +10,7 @@ import db from 'shared/driver/db';
 
 const insertBlock = async () => {
     let block = getNewBlock();
-    await BlockPGRepo.saveOrUpdate(block);
+    await BlockPGRepo.save(block);
     return block;
 };
 
@@ -212,11 +212,11 @@ describe('Block repository', () => {
             });
 
             it('should save block', async () => {
-                await BlockPGRepo.saveOrUpdate(blocks[0]);
+                await BlockPGRepo.save(blocks[0]);
                 let response = await BlockPGRepo.getMany();
                 expect(response).to.be.lengthOf(2);
                 expect(response[1].id).to.be.equal(blocks[0].id);
-                await BlockPGRepo.saveOrUpdate(blocks);
+                await BlockPGRepo.save(blocks);
                 response = await BlockPGRepo.getMany();
                 expect(response).to.be.lengthOf(100);
                 expect(response[99].id).to.be.equal(blocks[98].id);

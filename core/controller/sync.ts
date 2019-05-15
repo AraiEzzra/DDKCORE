@@ -95,6 +95,7 @@ export class SyncController extends BaseController {
                     lastPeerRequested = null;
                 }
                 await SyncService.rollback();
+                needDelay = false;
                 continue;
             }
             lastPeerRequested = peer;
