@@ -1,5 +1,6 @@
 import sodium from 'sodium-native';
 import crypto from 'crypto';
+import { logger } from 'shared/util/logger';
 
 export interface IKeyPair {
     publicKey: Buffer;
@@ -25,6 +26,8 @@ class Ed {
     }
 
     public verify(bytes: Uint8Array, publicKey: string, signature: string): boolean {
+        // logger.info('ed', bytes, publicKey, signature);
+
         const hash = crypto.createHash('sha256').update(bytes).digest();
         const signatureBuffer = Buffer.from(signature, 'hex');
         const publicKeyBuffer = Buffer.from(publicKey, 'hex');

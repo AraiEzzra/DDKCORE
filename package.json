@@ -40,6 +40,7 @@
     "chai-sorted": "^0.2.0",
     "crypto-browserify": "=3.11.0",
     "dotenv": "^4.0.0",
+    "export-to-csv": "^0.2.1",
     "ip": "=1.1.5",
     "mocha": "^3.5.3",
     "nodemon": "^1.18.9",
