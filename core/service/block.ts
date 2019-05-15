@@ -545,14 +545,13 @@ class BlockService {
 
     public create({ transactions, timestamp, previousBlock, keyPair }): Block {
         const blockTransactions = transactions.sort(transactionSortFunc);
-        const block = new Block({
+        return new Block({
             createdAt: timestamp,
             transactionCount: blockTransactions.length,
             previousBlockId: previousBlock.id,
             generatorPublicKey: keyPair.publicKey.toString('hex'),
             transactions: blockTransactions
         });
-        return block;
     }
 
     private calculateSignature(block: Block, keyPair: IKeyPair): string {
