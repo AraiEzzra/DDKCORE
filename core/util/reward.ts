@@ -43,26 +43,24 @@ export const calculateTotalRewardAndUnstake = (
 ): { reward: number, unstake: number } => {
     let reward: number = 0;
     let unstakeAmount: number = 0;
+
     if (isDownVote) {
         return { reward, unstake: unstakeAmount };
     }
-    const freezeOrders: Array<Stake> = sender.stakes;
 
-    freezeOrders
-        .filter(stake => stake.isActive && trs.createdAt >= stake.nextVoteMilestone)
-        .forEach((stake: Stake) => {
-            if (stake.voteCount > 0 && (stake.voteCount + 1) % config.CONSTANTS.FROZE.REWARD_VOTE_COUNT === 0) {
-                const blockHeight: number = BlockRepo.getLastBlock().height;
-                const stakeRewardPercent: number = stakeReward.calcReward(blockHeight);
-                reward += (stake.amount * stakeRewardPercent) / TOTAL_PERCENTAGE;
-            }
-        });
-    const readyToUnstakeOrders = freezeOrders.filter(
-        o => (o.voteCount + 1) === config.CONSTANTS.FROZE.UNSTAKE_VOTE_COUNT
-    );
-    readyToUnstakeOrders.forEach((order) => {
-        unstakeAmount += order.amount;
+    sender.stakes
+    .filter(stake => stake.isActive && trs.createdAt >= stake.nextVoteMilestone)
+    .forEach((stake: Stake) => {
+        if (stake.voteCount > 0 && (stake.voteCount + 1) % config.CONSTANTS.FROZE.REWARD_VOTE_COUNT === 0) {
+            const blockHeight: number = BlockRepo.getLastBlock().height;
+            const stakeRewardPercent: number = stakeReward.calcReward(blockHeight);
+            reward += (stake.amount * stakeRewardPercent) / TOTAL_PERCENTAGE;
+        }
+        if (stake.voteCount + 1 === config.CONSTANTS.FROZE.UNSTAKE_VOTE_COUNT) {
+            unstakeAmount += stake.amount;
+        }
     });
+
     return { reward, unstake: unstakeAmount };
 };
 
