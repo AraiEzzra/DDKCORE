@@ -133,7 +133,7 @@ class BlockPGRepo implements IBlockPGRepository {
         } catch (error) {
             return new ResponseEntity({
                 errors: [
-                    `Unable to save blocks with ids ${blocks.map(b => b.id)} to database. Error: ${error}`,
+                    `Unable to save blocks with ids ${blocks.map(b => b.id).join(', ')} to database. Error: ${error}`,
                 ],
             });
         }
@@ -142,10 +142,13 @@ class BlockPGRepo implements IBlockPGRepository {
     }
 
     async batchSave(block: Block): Promise<ResponseEntity<void>> {
-        const serializedBlock = SharedBlockPgRepository.serialize(block);
+        if (block.transactionCount === 0) {
+            return this.save(block);
+        }
 
+        const serializedBlock = SharedBlockPgRepository.serialize(block);
         try {
-            db.tx(t => t.batch([
+            await db.tx(t => t.batch([
                 t.none(pgpE.helpers.insert(serializedBlock, this.columnSet)),
                 t.none(TransactionPGRepo.createInsertQuery(block.transactions)),
             ]));

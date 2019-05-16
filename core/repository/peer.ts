@@ -85,7 +85,7 @@ export class PeerRepo {
     }
 
     peerUpdate(headers, peer: Peer): void {
-        logger.debug(`[Repository][Peer][peerUpdate][${peer.ip}:${peer.port}]: ${JSON.stringify(headers)}`);
+        logger.trace(`[Repository][Peer][peerUpdate][${peer.ip}:${peer.port}]: ${JSON.stringify(headers)}`);
         if (!this.has(peer)) {
             return;
         }
