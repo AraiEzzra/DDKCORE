@@ -65,12 +65,11 @@ class DelegateRepository {
     }
 
     public delete(account: Account): void {
-        this.memoryDelegates.delete(account.publicKey);
-
         const delegate = this.getDelegate(account.publicKey);
         if (delegate) {
             this.usernames.delete(delegate.username);
         }
+        this.memoryDelegates.delete(account.publicKey);
     }
 
     public serialize(delegate: Delegate): SerializedDelegate {

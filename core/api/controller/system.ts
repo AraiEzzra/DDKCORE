@@ -59,9 +59,9 @@ class SystemController {
         const serializedEvents = history.events.map(event => ({
             action: event.action,
             accountStateBefore:
-                event.accountStateBefore && AccountRepository.serialize(event.accountStateBefore),
+                event.accountStateBefore && AccountRepository.serialize(event.accountStateBefore, false),
             accountStateAfter:
-                event.accountStateAfter && AccountRepository.serialize(event.accountStateAfter),
+                event.accountStateAfter && AccountRepository.serialize(event.accountStateAfter, false),
         }));
 
         return new ResponseEntity({ data: { entity: history.entity, events: serializedEvents } });
