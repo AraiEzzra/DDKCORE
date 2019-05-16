@@ -79,7 +79,7 @@ export interface ITransactionService<T extends IAsset> {
 
     undoUnconfirmed(trs: Transaction<T>, sender?: Account, senderOnly?: boolean): void;
 
-    apply(trs: Transaction<T>, sender: Account): Promise<ResponseEntity<void>>;
+    apply(trs: Transaction<T>, sender: Account): void;
 
     undo(trs: Transaction<T>, sender: Account): Promise<ResponseEntity<void>>;
 
@@ -146,16 +146,9 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         return result;
     }
 
-    async apply(trs: Transaction<T>, sender: Account): Promise<ResponseEntity<void>> {
-        const saveResult = await TransactionPGRepo.save(trs);
-        if (saveResult.success) {
-            TransactionRepo.add(trs);
-        }
-        TransactionHistoryRepository.addEvent(trs, {
-            action: TransactionLifecycle.APPLY,
-            errors: saveResult.errors,
-        });
-        return saveResult;
+    apply(trs: Transaction<T>, sender: Account): void {
+        TransactionRepo.add(trs);
+        TransactionHistoryRepository.addEvent(trs, { action: TransactionLifecycle.APPLY });
     }
 
     async undo(trs: Transaction<T>, sender: Account): Promise<ResponseEntity<void>> {

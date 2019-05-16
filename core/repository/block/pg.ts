@@ -3,6 +3,7 @@ import { Block } from 'shared/model/block';
 import db, { pgpE } from 'shared/driver/db/index';
 import config from 'shared/config';
 import queries from 'core/repository/queries/block';
+import TransactionPGRepo from 'core/repository/transaction/pg';
 
 import {
     BlockId, RawBlock,
@@ -133,6 +134,25 @@ class BlockPGRepo implements IBlockPGRepository {
             return new ResponseEntity({
                 errors: [
                     `Unable to save blocks with ids ${blocks.map(b => b.id)} to database. Error: ${error}`,
+                ],
+            });
+        }
+
+        return new ResponseEntity();
+    }
+
+    async batchSave(block: Block): Promise<ResponseEntity<void>> {
+        const serializedBlock = SharedBlockPgRepository.serialize(block);
+
+        try {
+            db.tx(t => t.batch([
+                t.none(pgpE.helpers.insert(serializedBlock, this.columnSet)),
+                t.none(TransactionPGRepo.createInsertQuery(block.transactions)),
+            ]));
+        } catch (error) {
+            return new ResponseEntity({
+                errors: [
+                    `Unable to save block with id ${block.id} to database. Error: ${error}`,
                 ],
             });
         }

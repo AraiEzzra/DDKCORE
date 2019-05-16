@@ -86,13 +86,16 @@ class TransactionPGRepo implements ITransactionPGRepository<IAsset> {
         return !!transaction;
     }
 
+    createInsertQuery(transactions: Array<Transaction<IAsset>>) {
+        const serializedTransactions = transactions
+            .map((transaction) => SharedTransactionPGRepo.serialize(transaction));
+
+        return pgpE.helpers.insert(serializedTransactions, this.columnSet);
+    }
+
     async save(trs: Transaction<IAsset> | Array<Transaction<IAsset>>): Promise<ResponseEntity<void>> {
         const transactions: Array<Transaction<IAsset>> = [].concat(trs);
-        const values: Array<object> = [];
-        transactions.forEach((transaction) => {
-            values.push(SharedTransactionPGRepo.serialize(transaction));
-        });
-        const query = pgpE.helpers.insert(values, this.columnSet);
+        const query = this.createInsertQuery(transactions);
 
         try {
             await db.query(query);

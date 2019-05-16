@@ -373,7 +373,6 @@ class BlockService {
 
     private checkTransaction(block: Block, trs: Transaction<object>, sender: Account): ResponseEntity<void> {
         trs.id = TransactionDispatcher.getId(trs);
-        trs.blockId = block.id;
 
         const validateResult = TransactionDispatcher.validate(trs);
         if (!validateResult.success) {
@@ -400,7 +399,7 @@ class BlockService {
             }
         }
 
-        const saveResult = await BlockPGRepo.save(block);
+        const saveResult = await BlockPGRepo.batchSave(block);
         if (!saveResult.success) {
             saveResult.errors.push('applyBlock');
             return saveResult;
@@ -409,31 +408,14 @@ class BlockService {
         BlockRepo.add(block);
         BlockHistoryRepository.addEvent(block, { action: BlockLifecycle.APPLY });
 
-        if (block.height >= MIN_ROUND_BLOCK) {
-            RoundRepository.getCurrentRound().slots[block.generatorPublicKey].isForged = true;
-        }
-
-        const errors: Array<string> = [];
         for (const trs of block.transactions) {
             const sender = AccountRepo.getByPublicKey(trs.senderPublicKey);
-            trs.blockId = block.id;
-
-            const applyResult = await TransactionDispatcher.apply(trs, sender);
-            if (!applyResult.success) {
-                // TODO: Add removing previous transactions
-                // https://trello.com/c/28oG2DxZ/326-save-transaction-using-batch-ideology-on-apply-block
-
-                applyResult.errors.push('applyBlock');
-                return applyResult;
-            }
-        }
-        if (errors.length) {
-            return new ResponseEntity<void>({ errors: [...errors, 'applyBlock'] });
+            TransactionDispatcher.apply(trs, sender);
         }
 
-        const trsLength = block.transactions.length;
-        logger.debug(`[Service][Block][applyBlock] block ${block.id}, height: ${block.height}, ` +
-            `applied with ${trsLength} transactions`
+        logger.debug(
+            `[Service][Block][applyBlock] block ${block.id}, height: ${block.height}, ` +
+            `applied with ${block.transactionCount} transactions`
         );
 
         if (broadcast && !System.synchronization) {
@@ -442,6 +424,10 @@ class BlockService {
             const serializedBlock: Block & { transactions: any } = block.getCopy();
             serializedBlock.transactions = block.transactions.map(trs => SharedTransactionRepo.serialize(trs));
             SocketMiddleware.emitEvent<Block>(EVENT_TYPES.APPLY_BLOCK, serializedBlock);
+        }
+
+        if (block.height >= MIN_ROUND_BLOCK) {
+            RoundRepository.getCurrentRound().slots[block.generatorPublicKey].isForged = true;
         }
 
         return new ResponseEntity<void>();
@@ -464,6 +450,10 @@ class BlockService {
         block.payloadHash = payloadHash.digest().toString('hex');
         block.signature = this.calculateSignature(block, keyPair);
         block.id = this.getId(block);
+
+        for (const transaction of block.transactions) {
+            transaction.blockId = block.id;
+        }
 
         BlockHistoryRepository.addEvent(block, { action: BlockLifecycle.CREATE });
 
