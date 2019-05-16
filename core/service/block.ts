@@ -527,7 +527,8 @@ class BlockService {
         const newLastBlock = BlockRepo.deleteLastBlock();
         BlockHistoryRepository.addEvent(lastBlock, { action: BlockLifecycle.UNDO });
 
-        for (const transaction of lastBlock.transactions.reverse()) {
+        const reversedTransactions = [...lastBlock.transactions].reverse();
+        for (const transaction of reversedTransactions) {
             const sender = AccountRepo.getByAddress(transaction.senderAddress);
             await TransactionDispatcher.undo(transaction, sender);
             TransactionDispatcher.undoUnconfirmed(transaction, sender);
