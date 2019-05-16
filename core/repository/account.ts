@@ -1,4 +1,4 @@
-import { Account} from 'shared/model/account';
+import { Account } from 'shared/model/account';
 import { getAddressByPublicKey } from 'shared/util/account';
 import DelegateRepository from 'core/repository/delegate';
 import { Address, PublicKey, SerializedAccount } from 'shared/model/types';
@@ -23,7 +23,6 @@ class AccountRepository {
         return this.memoryAccountsByAddress.get(accountAddress) || null;
     }
 
-    /** TODO refactor to getByAddress */
     getByPublicKey(accountPublicKey: PublicKey): Account {
         const address = getAddressByPublicKey(accountPublicKey);
         return this.memoryAccountsByAddress.get(address) || null;
