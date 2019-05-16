@@ -255,14 +255,15 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
             undoAirdropReward(trs);
         }
 
-        sender.stakes.forEach((stake: Stake) => {
-            if (stake.isActive && (stake.nextVoteMilestone === 0 ||
-                trs.createdAt + (config.CONSTANTS.FROZE.VOTE_MILESTONE) === stake.nextVoteMilestone)
-            ) {
+        sender.stakes
+            .filter(stake =>
+                stake.isActive &&
+                trs.createdAt + config.CONSTANTS.FROZE.VOTE_MILESTONE === stake.nextVoteMilestone
+            )
+            .forEach((stake: Stake) => {
                 stake.voteCount--;
                 stake.nextVoteMilestone = 0;
-            }
-        });
+            });
     }
 }
 
