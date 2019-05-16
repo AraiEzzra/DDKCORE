@@ -63,7 +63,7 @@ class BlockController extends BaseController {
             blockUtils.isReceivedBlockNewer(lastBlock, receivedBlock) &&
             blockUtils.isEqualHeight(lastBlock, receivedBlock) &&
             blockUtils.isEqualPreviousBlock(lastBlock, receivedBlock) &&
-            !SyncService.consensus
+            !SyncService.getMyConsensus()
         ) {
 
             // TODO check if slot lastBlock and receivedBlock is not equal
@@ -159,7 +159,7 @@ class BlockController extends BaseController {
                 if (receivedBlockSlot === lastSlot) {
                     RoundService.forwardProcess();
                 }
-            } else if (!SyncService.consensus) {
+            } else if (!SyncService.getMyConsensus()) {
                 if (!System.synchronization) {
                     messageON('EMIT_SYNC_BLOCKS');
                 }
@@ -181,7 +181,7 @@ class BlockController extends BaseController {
     @MAIN(ActionTypes.BLOCK_GENERATE)
     public async generateBlock(data: BlockGenerateRequest): Promise<ResponseEntity<void>> {
         logger.debug(`[Controller][Block][generateBlock]`);
-        if (!SyncService.consensus) {
+        if (!SyncService.getMyConsensus()) {
             logger.debug(
                 `[Controller][Block][generateBlock]: skip forging block, consensus ${SyncService.getConsensus()}%`
             );
