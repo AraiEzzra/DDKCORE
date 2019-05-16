@@ -4,7 +4,7 @@ import BlockRepo from 'core/repository/block';
 import {
     IAirdropAsset,
     IAssetStake,
-    IAssetVote, 
+    IAssetVote,
     Stake,
     Transaction,
     TransactionModel,
@@ -44,12 +44,12 @@ export const calculateTotalRewardAndUnstake = (
 ): { reward: number, unstake: number } => {
     let reward: number = 0;
     let unstakeAmount: number = 0;
+
     if (isDownVote) {
         return { reward, unstake: unstakeAmount };
     }
-    const freezeOrders: Array<Stake> = sender.stakes;
 
-    freezeOrders
+    sender.stakes
         .filter(stake => stake.isActive && trs.createdAt >= stake.nextVoteMilestone)
         .forEach((stake: Stake) => {
             if (stake.voteCount > 0 && (stake.voteCount + 1) % config.CONSTANTS.FROZE.REWARD_VOTE_COUNT === 0) {
@@ -57,13 +57,11 @@ export const calculateTotalRewardAndUnstake = (
                 const stakeRewardPercent: number = stakeReward.calcReward(blockHeight);
                 reward += (stake.amount * stakeRewardPercent) / TOTAL_PERCENTAGE;
             }
+            if (stake.voteCount + 1 === config.CONSTANTS.FROZE.UNSTAKE_VOTE_COUNT) {
+                unstakeAmount += stake.amount;
+            }
         });
-    const readyToUnstakeOrders = freezeOrders.filter(
-        o => (o.voteCount + 1) === config.CONSTANTS.FROZE.UNSTAKE_VOTE_COUNT
-    );
-    readyToUnstakeOrders.forEach((order) => {
-        unstakeAmount += order.amount;
-    });
+
     return { reward, unstake: unstakeAmount };
 };
 
@@ -163,7 +161,7 @@ export function sendAirdropReward(trs: Transaction<IAssetStake | IAssetVote>): v
         const recipient = AccountRepo.getByAddress(sponsorAddress);
         recipient.actualBalance += rewardAmount;
         recipient.addHistory(AccountChangeAction.AIRDROP_REWARD_RECEIVE, trs.id);
-        
+
         AccountRepo.updateBalanceByAddress(config.CONSTANTS.AIRDROP.ADDRESS, -rewardAmount);
     }
 }
