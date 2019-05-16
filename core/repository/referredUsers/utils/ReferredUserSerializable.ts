@@ -5,7 +5,7 @@ export default class ReferredUserSerializable {
         return {
             address: referredUser.address,
             isEmpty: referredUser.isEmpty,
-            factors: [...referredUser.factors.entries()]
+            factors: referredUser.factors.toObject()
         };
     }
 }

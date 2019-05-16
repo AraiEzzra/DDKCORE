@@ -1,4 +1,4 @@
-import { IReferredUser, IReferredUsers, FactorType } from 'core/repository/referredUsers/interfaces';
+import { IReferredUser, IReferredUsers, FactorType, FactorAction } from 'core/repository/referredUsers/interfaces';
 import FactorTree from 'core/repository/referredUsers/tree/FactorTree';
 import config from 'shared/config/index';
 import { Account} from 'shared/model/account';
@@ -32,28 +32,33 @@ export default class ReferredUsersTree implements IReferredUsers {
         this.tree.removeNode(account.address);
     }
 
-    updateCount(account: Account, count: number = 1): void {
+    updateCountFactor(account: Account, action: FactorAction = FactorAction.ADD) {
         const node = this.tree.getNode(account.address);
 
-        let parent = node.parent;
+        this.tree.eachParents(node, (parent, level) => {
+            parent.addFactor(FactorType.COUNT, level, 1, action);
+        });
+    }
 
-        for (let level = config.CONSTANTS.REFERRAL.MAX_COUNT - 1; level >= 0; level--) {
-            if (parent === null) {
-                break;
+    updateRewardFactor(account: Account, sponsors: Map<Address, number>, action: FactorAction = FactorAction.ADD) {
+        const node = this.tree.getNode(account.address);
+
+        this.tree.eachParents(node, (parent, level) => {
+            const rewardAmount = sponsors.get(parent.data);
+            if (rewardAmount) {
+                parent.addFactor(FactorType.REWARD, level, rewardAmount, action);
             }
-            parent.addFactor(FactorType.COUNT, level, count);
-            parent = parent.parent;
-        }
+        });
     }
 
     getUsers(account: Account, level: number): Array<IReferredUser> {
         const node = this.tree.getNode(account.address);
 
         if (node !== undefined) {
-            return [...node.children.values()].map(node => ({
-                address: node.data,
-                isEmpty: node.children.size === 0 || level === config.CONSTANTS.REFERRAL.MAX_COUNT - 1,
-                factors: node.getFactorsByLevel(level)
+            return [...node.children.values()].map(item => ({
+                address: item.data,
+                isEmpty: item.children.size === 0 || level === config.CONSTANTS.REFERRAL.MAX_COUNT - 1,
+                factors: item.getFactorsByLevel(level)
             }));
         }
 

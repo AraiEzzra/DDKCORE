@@ -4,4 +4,3 @@ import ReferredUserSerializable from 'core/repository/referredUsers/utils/Referr
 export default new ReferredUsersTree();
 
 export const referredUserSerializable = new ReferredUserSerializable();
-

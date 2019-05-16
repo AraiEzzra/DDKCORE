@@ -11,6 +11,7 @@ import {
     TransactionType,
 } from 'shared/model/transaction';
 import AccountRepo from 'core/repository/account';
+import ReferredUsersRepo, { ReferredUserFactor } from 'core/repository/referredUsers/index';
 import { ResponseEntity } from 'shared/model/response';
 import { TOTAL_PERCENTAGE } from 'core/util/const';
 import { isEqualMaps } from 'core/util/common';
@@ -150,6 +151,10 @@ function applyUnstake(orders: Array<Stake>, trs: Transaction<IAssetVote>): void 
     AccountRepo.updateBalanceByAddress(trs.senderAddress, trs.asset.unstake);
 }
 
+export function isSponsorsExist(trs: Transaction<IAssetStake | IAssetVote>): boolean {
+    return trs.asset.airdropReward.sponsors.size !== 0;
+}
+
 export function sendAirdropReward(trs: Transaction<IAssetStake | IAssetVote>): void {
     const transactionAirdropReward = trs.asset.airdropReward;
 
@@ -164,6 +169,11 @@ export function sendAirdropReward(trs: Transaction<IAssetStake | IAssetVote>): v
 
         AccountRepo.updateBalanceByAddress(config.CONSTANTS.AIRDROP.ADDRESS, -rewardAmount);
     }
+
+    ReferredUsersRepo.updateRewardFactor(
+        AccountRepo.getByAddress(trs.senderAddress),
+        transactionAirdropReward.sponsors
+    );
 }
 
 export function undoAirdropReward(trs: Transaction<IAssetVote | IAssetStake>): void {
@@ -178,6 +188,12 @@ export function undoAirdropReward(trs: Transaction<IAssetVote | IAssetStake>): v
         recipient.addHistory(AccountChangeAction.AIRDROP_REWARD_RECEIVE_UNDO, trs.id);
         AccountRepo.updateBalanceByAddress(config.CONSTANTS.AIRDROP.ADDRESS, rewardAmount);
     }
+
+    ReferredUsersRepo.updateRewardFactor(
+        AccountRepo.getByAddress(trs.senderAddress),
+        transactionAirdropReward.sponsors,
+        ReferredUserFactor.ACTION.SUBTRACT
+    );
 }
 
 export function undoFrozeOrdersRewardAndUnstake(
