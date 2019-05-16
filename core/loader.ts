@@ -36,9 +36,7 @@ class Loader {
     public async start() {
         logger.debug('LOADER START');
         const historyState = config.CORE.IS_HISTORY;
-        if (config.NODE_ENV_IN === NODE_ENV_ENUM.MAINNET) {
-            config.CORE.IS_HISTORY = false;
-        }
+        config.CORE.IS_HISTORY = false;
 
         await this.initDatabase();
 
