@@ -55,7 +55,7 @@ class TransactionController extends BaseController {
     // TODO: extract this somewhere and make it async
     public transactionCreate(data: CreateTransactionParams) {
         if (config.NODE_ENV_IN === NODE_ENV_ENUM.MAINNET) {
-            return new ResponseEntity({ errors: ['Transaction creation disabled on core'] });
+            return new ResponseEntity({ errors: ['Transaction creation on core is disabled'] });
         }
 
         const keyPair = createKeyPairBySecret(data.secret);
