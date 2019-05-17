@@ -12,11 +12,11 @@ import SharedTransactionRepo from 'shared/repository/transaction';
 import BlockPGRepo from 'core/repository/block/pg';
 import AccountRepo from 'core/repository/account';
 import AccountRepository from 'core/repository/account';
-import { IAsset, IAssetTransfer, Transaction, TransactionType, BlockLifecycle } from 'shared/model/transaction';
+import { BlockLifecycle, IAsset, IAssetTransfer, Transaction, TransactionType } from 'shared/model/transaction';
 import TransactionDispatcher from 'core/service/transaction';
+import TransactionService from 'core/service/transaction';
 import TransactionQueue from 'core/service/transactionQueue';
 import TransactionPool from 'core/service/transactionPool';
-import TransactionService from 'core/service/transaction';
 import SlotService from 'core/service/slot';
 import RoundRepository from 'core/repository/round';
 import { transactionSortFunc } from 'core/util/transaction';
@@ -80,7 +80,10 @@ class BlockService {
             if (verifyResult.success) {
                 TransactionPool.push(trs, sender, false);
             } else {
-                logger.debug(`[Service][Block][pushInPool] remove trs ${trs.id} by error: ${verifyResult.errors}`);
+                TransactionQueue.push(trs);
+                logger.debug(
+                    `[Service][Block][pushInPool] trs ${trs.id} returned to queue by error: ${verifyResult.errors}`
+                );
             }
         }
     }
@@ -484,19 +487,24 @@ class BlockService {
         if (!processBlockResponse.success) {
             errors.push(...processBlockResponse.errors);
         }
-        const transactionForReturn: Array<Transaction<object>> = [];
-        removedTransactions.forEach((removedTrs) => {
-            if (!(block.transactions.find(trs => trs.id === removedTrs.id))) {
-                transactionForReturn.push(removedTrs);
-            }
-        });
-
-        this.pushInPool(transactionForReturn);
-        TransactionDispatcher.returnToQueueConflictedTransactionFromPool(block.transactions);
 
         if (errors.length) {
             this.pushInPool(removedTransactions);
             logger.error(`[Process][newReceiveBlock] ${JSON.stringify(errors)}`);
+            // TODO check it
+            // block.transactions.forEach(trs => {
+            //     TransactionQueue.push(trs);
+            // });
+        } else {
+            const transactionForReturn: Array<Transaction<IAsset>> = [];
+            removedTransactions.forEach((removedTrs) => {
+                if (!(block.transactions.find(trs => trs.id === removedTrs.id))) {
+                    transactionForReturn.push(removedTrs);
+                }
+            });
+
+            this.pushInPool(transactionForReturn);
+            TransactionDispatcher.returnToQueueConflictedTransactionFromPool(block.transactions);
         }
         return new ResponseEntity<void>({ errors });
     }

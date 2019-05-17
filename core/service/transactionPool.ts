@@ -20,8 +20,6 @@ export interface ITransactionPoolService<T extends Object> {
 
     batchRemove(transactions: Array<Transaction<T>>, withDepend: boolean): ResponseEntity<Array<Transaction<T>>>;
 
-    batchPush(transactions: Array<Transaction<T>>): void;
-
     getBySenderAddress(senderAddress: Address): Array<Transaction<T>>;
     getByRecipientAddress(recipientAddress: Address): Array<Transaction<T>>;
 
@@ -51,17 +49,12 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
     poolByRecipient: Map<Address, Array<Transaction<T>>> = new Map<Address, Array<Transaction<T>>>();
     poolBySender: Map<Address, Array<Transaction<T>>> = new Map<Address, Array<Transaction<T>>>();
 
-    /* NOT IMPLEMENTED */
-    batchPush(transactions: Array<Transaction<T>>): Promise<void> {
-        return undefined;
-    }
-
     batchRemove(
         transactions: Array<Transaction<T>>,
         withDepend: boolean,
     ): ResponseEntity<Array<Transaction<T>>> {
         const removedTransactions = [];
-        for (const trs of transactions) {
+        for (const trs of [...transactions].reverse()) {
             if (withDepend) {
                 removedTransactions.push(...this.removeBySenderAddress(trs.senderAddress));
                 removedTransactions.push(...this.removeByRecipientAddress(trs.senderAddress));
@@ -87,7 +80,7 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
     removeBySenderAddress(senderAddress: Address): Array<Transaction<T>> {
         const removedTransactions = [];
         const transactions = this.getBySenderAddress(senderAddress);
-        for (const trs of transactions) {
+        for (const trs of [...transactions].reverse()) {
             this.remove(trs);
             removedTransactions.push(trs);
         }
@@ -160,7 +153,7 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
     removeByRecipientAddress(address: Address): Array<Transaction<T>> {
         const removedTransactions = [];
         const transactions = this.getByRecipientAddress(address);
-        for (const trs of transactions) {
+        for (const trs of [...transactions].reverse()) {
             this.remove(trs);
             removedTransactions.push(trs);
         }
@@ -183,7 +176,8 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
 
     popSortedUnconfirmedTransactions(limit: number): Array<Transaction<T>> {
         const transactions = [...this.pool.values()].sort(transactionSortFunc).slice(0, limit);
-        for (const trs of transactions) {
+        const reversedTransactions = [...transactions].reverse(); 
+        for (const trs of reversedTransactions) {
             this.remove(trs);
         }
 
