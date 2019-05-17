@@ -14,6 +14,7 @@ import SocketMiddleware from 'core/api/middleware/socket';
 import { ResponseEntity } from 'shared/model/response';
 import { CreateTransactionParams } from 'core/controller/types';
 import TransactionHistoryRepository from 'core/repository/history/transaction';
+import config, { NODE_ENV_ENUM } from 'shared/config';
 
 class TransactionController extends BaseController {
     @ON('TRANSACTION_RECEIVE')
@@ -53,6 +54,10 @@ class TransactionController extends BaseController {
 
     // TODO: extract this somewhere and make it async
     public transactionCreate(data: CreateTransactionParams) {
+        if (config.NODE_ENV_IN === NODE_ENV_ENUM.MAINNET) {
+            return new ResponseEntity({ errors: ['Transaction creation disabled on core'] });
+        }
+
         const keyPair = createKeyPairBySecret(data.secret);
         const secondKeyPair = data.secondSecret ? createKeyPairBySecret(data.secondSecret) : undefined;
 
