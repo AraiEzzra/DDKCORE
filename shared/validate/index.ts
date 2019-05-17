@@ -61,6 +61,6 @@ export const validateData = (schema, data: Object, callback) => {
 };
 
 const handlerError = (message: Message2<any>, socket: any) => {
-    logger.error(message.body.errors);
+    logger.error(`[Validation] ${message.body.errors.join('. ')}`);
     socket.emit(MESSAGE_CHANNEL, message);
 };
