@@ -7,6 +7,7 @@ import config from 'shared/config';
 import { Address } from 'shared/model/types';
 import TransactionPool from 'core/service/transactionPool';
 import TransactionQueue from 'core/service/transactionQueue';
+import PeerRepository from 'core/repository/peer';
 
 export type BlockchainInfo = {
     totalSupply: number;
@@ -14,14 +15,20 @@ export type BlockchainInfo = {
     tokenHolders: number;
     totalStakeAmount: number;
     totalStakeHolders: number;
+};
+
+export type SystemInfo = {
     height: number;
     consensus: number;
     datetime: Date;
-    metrics: {
+    transactionsCount: {
         queue: number,
         conflictedQueue: number,
         pool: number,
     },
+    peersCount: number;
+    broadhash: string;
+    version: string,
 };
 
 class EventService {
@@ -40,10 +47,22 @@ class EventService {
             tokenHolders: statistics.tokenHolders,
             totalStakeAmount: statistics.totalStakeAmount,
             totalStakeHolders: statistics.totalStakeHolders,
-            height: BlockRepository.getLastBlock() ? BlockRepository.getLastBlock().height : 0,
+        });
+    }
+
+    updateSystemInfo() {
+        const height = BlockRepository.getLastBlock() ? BlockRepository.getLastBlock().height : 0;
+        const broadhash = BlockRepository.getLastBlock() ? BlockRepository.getLastBlock().id : '';
+        const peersCount = PeerRepository.peerList().length;
+
+        SocketMiddleware.emitEvent<SystemInfo>(EVENT_TYPES.UPDATE_SYSTEM_INFO, {
+            height,
+            peersCount,
+            broadhash,
             consensus: SyncService.getConsensus(),
             datetime: new Date(),
-            metrics: {
+            version: config.CORE.VERSION,
+            transactionsCount: {
                 queue: TransactionQueue.getSize().queue,
                 conflictedQueue: TransactionQueue.getSize().conflictedQueue,
                 pool: TransactionPool.getSize(),

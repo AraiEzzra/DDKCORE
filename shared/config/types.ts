@@ -55,6 +55,7 @@ export type IConstants = {
     PRE_ORDER_PUBLIC_KEY: string;
     PRE_ORDER_SECOND_PUBLIC_KEY: string;
     UPDATE_BLOCKCHAIN_INFO_INTERVAL: number;
+    UPDATE_SYSTEM_INFO_INTERVAL: number;
     MAX_PEERS_CONNECT_TO: number;
     MAX_PEERS_CONNECTED: number
     PEERS_DISCOVER: {

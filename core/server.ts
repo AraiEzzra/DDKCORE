@@ -14,7 +14,7 @@ setInterval(() => {
         `conflicred queue size: ${TransactionQueue.getSize().conflictedQueue}, ` +
         `pool size: ${TransactionPool.getSize()}`
     );
-}, config.CONSTANTS.UPDATE_BLOCKCHAIN_INFO_INTERVAL);
+}, config.CONSTANTS.UPDATE_SYSTEM_INFO_INTERVAL);
 
 Promise.all(preconfiguration)
     .then(() => {})
