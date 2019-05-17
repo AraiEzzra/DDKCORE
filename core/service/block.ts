@@ -473,7 +473,7 @@ class BlockService {
         );
 
         const removedTransactionsResponse: ResponseEntity<Array<Transaction<object>>> =
-            TransactionPool.batchRemove(block.transactions, true);
+            TransactionPool.batchRemove(block.transactions);
         if (!removedTransactionsResponse.success) {
             return new ResponseEntity<void>({ errors: [...removedTransactionsResponse.errors, 'receiveBlock'] });
         }
