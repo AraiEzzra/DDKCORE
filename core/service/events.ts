@@ -8,6 +8,7 @@ import { Address } from 'shared/model/types';
 import TransactionPool from 'core/service/transactionPool';
 import TransactionQueue from 'core/service/transactionQueue';
 import PeerRepository from 'core/repository/peer';
+import { logger } from 'shared/util/logger';
 
 export type BlockchainInfo = {
     totalSupply: number;
@@ -54,6 +55,12 @@ class EventService {
         const height = BlockRepository.getLastBlock() ? BlockRepository.getLastBlock().height : 0;
         const broadhash = BlockRepository.getLastBlock() ? BlockRepository.getLastBlock().id : '';
         const peersCount = PeerRepository.peerList().length;
+
+        logger.debug(
+            `[Server] Queue size: ${TransactionQueue.getSize().queue}, ` +
+            `conflicred queue size: ${TransactionQueue.getSize().conflictedQueue}, ` +
+            `pool size: ${TransactionPool.getSize()}`
+        );
 
         SocketMiddleware.emitEvent<SystemInfo>(EVENT_TYPES.UPDATE_SYSTEM_INFO, {
             height,
