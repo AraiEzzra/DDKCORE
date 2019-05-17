@@ -10,5 +10,3 @@ Promise.all(preconfiguration)
     .catch(err => {
         logger.error('Failed to start the server CORE. \n', err);
     });
-
-

@@ -7,7 +7,7 @@ export const MAX_BLOCK_IN_MEMORY = 100;
 
 class Headers {
     os: string;
-    version: number;
+    version: string;
     port: number;
     height: number;
     broadhash: string;
@@ -25,9 +25,9 @@ class Headers {
         this.broadhash = null;
         this.height = 1;
         this.minVersion = 1;
-        this.version = config.CONSTANTS.FORGING.CURRENT_BLOCK_VERSION;
+        this.version = config.CORE.VERSION;
     }
-    
+
     get peerCount(): number {
         return PeerRepository.peerList().length;
     }

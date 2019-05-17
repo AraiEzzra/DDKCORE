@@ -13,7 +13,7 @@ import { createKeyPairBySecret } from 'shared/util/crypto';
 import SocketMiddleware from 'core/api/middleware/socket';
 import { ResponseEntity } from 'shared/model/response';
 import { CreateTransactionParams } from 'core/controller/types';
-import TransactionHistoryRepository from 'core/repository/history/transaction';
+import config from 'shared/config';
 
 class TransactionController extends BaseController {
     @ON('TRANSACTION_RECEIVE')
@@ -53,6 +53,10 @@ class TransactionController extends BaseController {
 
     // TODO: extract this somewhere and make it async
     public transactionCreate(data: CreateTransactionParams) {
+        if (config.CORE.IS_DISABLED_TRANSACTION_CREATION) {
+            return new ResponseEntity({ errors: ['Transaction creation on core is disabled'] });
+        }
+
         const keyPair = createKeyPairBySecret(data.secret);
         const secondKeyPair = data.secondSecret ? createKeyPairBySecret(data.secondSecret) : undefined;
 
@@ -60,7 +64,9 @@ class TransactionController extends BaseController {
         if (responseTrs.success) {
             const validateResult = TransactionService.validate(responseTrs.data);
             if (!validateResult.success) {
-                logger.debug(`[RPC][TransactionController][transactionCreate]Validation of ${responseTrs.data} failed`);
+                logger.debug(
+                    `[RPC][TransactionController][transactionCreate] Validation of ${responseTrs.data} failed`
+                );
                 return new ResponseEntity({ errors: validateResult.errors });
             }
             TransactionQueue.push(responseTrs.data);

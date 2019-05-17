@@ -68,7 +68,7 @@ class SharedTransactionRepo {
             secondSignature: rawTrs.secondSignature,
             fee: Number(rawTrs.fee),
             salt: rawTrs.salt,
-            relay: rawTrs.relay,
+            relay: rawTrs.relay || 0,
             confirmations: rawTrs.confirmations,
             asset: asset,
         });

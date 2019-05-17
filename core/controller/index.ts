@@ -1,7 +1,7 @@
 import BlockController from 'core/controller/block';
 import RoundController from 'core/controller/round';
 import SyncController from 'core/controller/sync';
-import EventSerive from 'core/service/events';
+import EventService from 'core/service/events';
 import TransactionController from 'core/controller/transaction';
 import PeerController from 'core/controller/peer';
 import { filter, flatMap } from 'rxjs/operators';
@@ -109,6 +109,9 @@ export const initControllers = () => {
 
 export const initShedulers = () => {
     timer(0, config.CONSTANTS.UPDATE_BLOCKCHAIN_INFO_INTERVAL).subscribe(() => {
-        EventSerive.updateBlockchainInfo();
+        EventService.updateBlockchainInfo();
+    });
+    timer(0, config.CONSTANTS.UPDATE_SYSTEM_INFO_INTERVAL).subscribe(() => {
+        EventService.updateSystemInfo();
     });
 };
