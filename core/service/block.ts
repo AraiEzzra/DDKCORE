@@ -12,7 +12,14 @@ import SharedTransactionRepo from 'shared/repository/transaction';
 import BlockPGRepo from 'core/repository/block/pg';
 import AccountRepo from 'core/repository/account';
 import AccountRepository from 'core/repository/account';
-import { BlockLifecycle, IAsset, IAssetTransfer, Transaction, TransactionType } from 'shared/model/transaction';
+import {
+    BlockLifecycle,
+    IAsset,
+    IAssetTransfer,
+    Transaction,
+    TransactionLifecycle,
+    TransactionType
+} from 'shared/model/transaction';
 import TransactionDispatcher from 'core/service/transaction';
 import TransactionService from 'core/service/transaction';
 import TransactionQueue from 'core/service/transactionQueue';
@@ -31,6 +38,7 @@ import { MIN_ROUND_BLOCK } from 'core/util/block';
 import { IKeyPair } from 'shared/util/ed';
 import System from 'core/repository/system';
 import BlockHistoryRepository from 'core/repository/history/block';
+import TransactionHistoryRepository from 'core/repository/history/transaction';
 
 const validator: Validator = new ZSchema({});
 
@@ -139,6 +147,13 @@ class BlockService {
 
         const applyBlockResponse: ResponseEntity<void> = await this.applyBlock(block, broadcast, keyPair);
         if (!applyBlockResponse.success) {
+            [...block.transactions]
+                .reverse()
+                .forEach(trs => {
+                    const sender = AccountRepository.getByAddress(trs.senderAddress);
+                    TransactionDispatcher.undoUnconfirmed(trs, sender);
+                    TransactionHistoryRepository.addEvent(trs, { action: TransactionLifecycle.UNDO_BY_FAILED_APPLY });
+                });
             return new ResponseEntity<void>({ errors: [...applyBlockResponse.errors, 'process'] });
         }
 
