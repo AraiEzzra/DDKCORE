@@ -54,7 +54,7 @@ class TransactionController extends BaseController {
 
     // TODO: extract this somewhere and make it async
     public transactionCreate(data: CreateTransactionParams) {
-        if (config.NODE_ENV_IN === NODE_ENV_ENUM.MAINNET) {
+        if (config.CORE.IS_DISABLED_TRANSACTION_CREATION) {
             return new ResponseEntity({ errors: ['Transaction creation on core is disabled'] });
         }
 
@@ -65,7 +65,9 @@ class TransactionController extends BaseController {
         if (responseTrs.success) {
             const validateResult = TransactionService.validate(responseTrs.data);
             if (!validateResult.success) {
-                logger.debug(`[RPC][TransactionController][transactionCreate]Validation of ${responseTrs.data} failed`);
+                logger.debug(
+                    `[RPC][TransactionController][transactionCreate] Validation of ${responseTrs.data} failed`
+                );
                 return new ResponseEntity({ errors: validateResult.errors });
             }
             TransactionQueue.push(responseTrs.data);
