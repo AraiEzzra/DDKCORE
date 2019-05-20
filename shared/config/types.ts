@@ -40,7 +40,8 @@ export type IConstants = {
         UNSTAKE_VOTE_COUNT: number;
     };
     TRANSFER: {
-        MAX_RELAY: number;
+        MAX_TRS_RELAY: number;
+        MAX_BLOCK_RELAY: number;
         REQUEST_BLOCK_LIMIT: number;
     };
     REFERRAL: {
