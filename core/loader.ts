@@ -1,12 +1,14 @@
 import * as path from 'path';
-import db from 'shared/driver/db';
+import fs from 'fs';
 import { QueryFile } from 'pg-promise';
+
+import db from 'shared/driver/db';
 import TransactionDispatcher from 'core/service/transaction';
 import AccountRepo from 'core/repository/account';
 import { IAsset, Transaction } from 'shared/model/transaction';
 import { messageON } from 'shared/util/bus';
 import { initControllers, initShedulers } from 'core/controller';
-import config, { NODE_ENV_ENUM } from 'shared/config';
+import config from 'shared/config';
 import BlockPGRepository from 'core/repository/block/pg';
 import BlockRepository from 'core/repository/block';
 import BlockService from 'core/service/block';
@@ -50,6 +52,26 @@ class Loader {
                 process.exit(1);
             }
         }
+
+        const lastBlock = BlockRepository.getLastBlock();
+        const offset = lastBlock.height - 100;
+        const state = {
+            accounts: AccountRepo.getAll().map(account => AccountRepo.serialize(account)),
+            rounds: [
+                RoundRepository.getPrevRound(),
+                RoundRepository.getCurrentRound(),
+            ],
+            blocks: BlockRepository.getMany(100, offset),
+        };
+        await new Promise(((resolve, reject) => {
+            fs.writeFile('state.json', JSON.stringify(state), 'utf8', (err => {
+                if (err) {
+                    reject(err);
+                }
+                resolve();
+            }));
+        }));
+
         config.CORE.IS_HISTORY = historyState;
         socket.init();
 
