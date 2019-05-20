@@ -15,7 +15,7 @@ import RoundRepository from 'core/repository/round';
 import SharedTransactionRepo from 'shared/repository/transaction';
 import BlockController from 'core/controller/block';
 import { ResponseEntity } from 'shared/model/response';
-import { getLastSlotInRound } from 'core/util/round';
+import { getLastSlotNumberInRound } from 'core/util/round';
 
 //  TODO get from env
 const MIN_CONSENSUS = 51;
@@ -106,7 +106,7 @@ export class SyncService implements ISyncService {
             await BlockService.deleteLastBlock();
             return;
         }
-        const lastSlotInRound = getLastSlotInRound(prevRound);
+        const lastSlotInRound = getLastSlotNumberInRound(prevRound);
 
         logger.debug(`[Controller][Sync][rollback] lastSlotInRound: ${lastSlotInRound}, blockSlot: ${blockSlot}`);
 

@@ -6,7 +6,7 @@ import { createTaskON, resetTaskON } from 'shared/util/bus';
 import DelegateRepository from 'core/repository/delegate';
 import { logger } from 'shared/util/logger';
 import { ActionTypes } from 'core/util/actionTypes';
-import { getLastSlotInRound } from 'core/util/round';
+import { getLastSlotNumberInRound } from 'core/util/round';
 import { createKeyPairBySecret } from 'shared/util/crypto';
 import { getFirstSlotNumberInRound } from 'core/util/slot';
 import { IKeyPair } from 'shared/util/ed';
@@ -52,6 +52,7 @@ class RoundService implements IRoundService {
             RoundRepository.add(newRound);
         }
         this.createBlockGenerateTask();
+        // TODO refactor to sync create round in the past
         this.createRoundFinishTask();
     }
 
@@ -79,7 +80,7 @@ class RoundService implements IRoundService {
     }
 
     private createRoundFinishTask(): void {
-        const lastSlot = getLastSlotInRound(RoundRepository.getCurrentRound());
+        const lastSlot = getLastSlotNumberInRound(RoundRepository.getCurrentRound());
         let roundEndTime = SlotService.getSlotRealTime(lastSlot + 1) - new Date().getTime();
 
         if (roundEndTime < 0) {
@@ -134,7 +135,7 @@ class RoundService implements IRoundService {
         const currentRound = RoundRepository.getCurrentRound();
         this.processReward(currentRound);
 
-        const newRound = this.generate(getLastSlotInRound(currentRound) + 1);
+        const newRound = this.generate(getLastSlotNumberInRound(currentRound) + 1);
         RoundRepository.add(newRound);
 
         if (!System.synchronization) {
@@ -164,7 +165,7 @@ class RoundService implements IRoundService {
         const lastBlockSlot = SlotService.getSlotNumber(lastBlock.createdAt);
 
         while (round.slots[lastBlock.generatorPublicKey].slot !== lastBlockSlot) {
-            if (getLastSlotInRound(round) < lastBlockSlot) {
+            if (getLastSlotNumberInRound(round) < lastBlockSlot) {
                 logger.error(
                     `${this.logPrefix}[rollbackToLastBlock] Impossible to rollback round ` +
                     `to block with id: ${lastBlock.id}, ` +
@@ -186,19 +187,27 @@ class RoundService implements IRoundService {
     public restoreForBlock(block: Block, isForward = true): void {
         let round = RoundRepository.getCurrentRound();
         const blockSlotNumber = SlotService.getSlotNumber(block.createdAt);
-
         while (blockSlotNumber !== round.slots[block.generatorPublicKey].slot) {
-            if (getLastSlotInRound(round) < blockSlotNumber) {
-                logger.error(
-                    `${this.logPrefix}[backwardToBlock] Impossible to rollback round ` +
-                    `for block with id: ${block.id}, height: ${block.height}`
-                );
-                break;
+            if (isForward) {
+                if (getLastSlotNumberInRound(round) > blockSlotNumber) {
+                    logger.error(
+                        `${this.logPrefix}[forwardToBlock] Impossible to rollback round ` +
+                        `for block with id: ${block.id}, height: ${block.height}`
+                    );
+                    break;
+                }
+                this.forwardProcess();
+            } else {
+                if (getLastSlotNumberInRound(round) < blockSlotNumber) {
+                    logger.error(
+                        `${this.logPrefix}[backwardToBlock] Impossible to rollback round ` +
+                        `for block with id: ${block.id}, height: ${block.height}`
+                    );
+                    break;
+                }
+                this.backwardProcess();
             }
 
-            isForward
-                ? this.forwardProcess()
-                : this.backwardProcess();
             round = RoundRepository.getCurrentRound();
         }
     }

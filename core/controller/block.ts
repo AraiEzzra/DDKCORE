@@ -10,7 +10,7 @@ import SyncService from 'core/service/sync';
 import SlotService from 'core/service/slot';
 import { messageON } from 'shared/util/bus';
 import SharedTransactionRepo from 'shared/repository/transaction';
-import { getLastSlotInRound } from 'core/util/round';
+import { getLastSlotNumberInRound } from 'core/util/round';
 import RoundService from 'core/service/round';
 import RoundRepository from 'core/repository/round';
 import { ActionTypes } from 'core/util/actionTypes';
@@ -67,14 +67,10 @@ class BlockController extends BaseController {
             // TODO check if slot lastBlock and receivedBlock is not equal
             const receivedBlockSlotNumber = SlotService.getSlotNumber(receivedBlock.createdAt);
             const lastSlotNumberInPrevRound = RoundRepository.getPrevRound() &&
-                getLastSlotInRound(RoundRepository.getPrevRound());
+                getLastSlotNumberInRound(RoundRepository.getPrevRound());
 
             if (lastSlotNumberInPrevRound >= receivedBlockSlotNumber) {
-                if (System.synchronization) {
-                    RoundService.restoreForBlock(lastBlock, false);
-                } else {
-                    RoundService.backwardProcess();
-                }
+                RoundService.restoreForBlock(lastBlock, false);
             }
 
             const deleteLastBlockResponse = await BlockService.deleteLastBlock();
@@ -112,7 +108,7 @@ class BlockController extends BaseController {
                     );
                     RoundRepository.add(newRound);
                 } else if (
-                    receivedBlockSlot > getLastSlotInRound(RoundRepository.getCurrentRound()) &&
+                    receivedBlockSlot > getLastSlotNumberInRound(RoundRepository.getCurrentRound()) &&
                     System.synchronization
                 ) {
                     RoundService.restoreForBlock(receivedBlock);
@@ -124,7 +120,7 @@ class BlockController extends BaseController {
                     return new ResponseEntity<void>({ errors });
                 }
 
-                const lastSlot = getLastSlotInRound(RoundRepository.getCurrentRound());
+                const lastSlot = getLastSlotNumberInRound(RoundRepository.getCurrentRound());
                 if (receivedBlockSlot === lastSlot) {
                     RoundService.forwardProcess();
                 }

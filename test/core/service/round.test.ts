@@ -38,8 +38,8 @@
 //             SlotService.getSlotNumber() > 0).to.equal(true);
 //     });
 //
-//     it('RoundRepository.getLastSlotInRound() Should return number and should be > then current slot', () => {
-//         const lastSlot: Number = RoundRepository.getLastSlotInRound();
+//     it('RoundRepository.getLastSlotNumberInRound() Should return number and should be > then current slot', () => {
+//         const lastSlot: Number = RoundRepository.getLastSlotNumberInRound();
 //         expect(lastSlot > SlotService.getSlotNumber()).to.equal(true);
 //     });
 // });

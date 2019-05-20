@@ -20,7 +20,7 @@ import System from 'core/repository/system';
 import RoundService from 'core/service/round';
 import SlotService from 'core/service/slot';
 import RoundRepository from 'core/repository/round';
-import { getLastSlotInRound } from 'core/util/round';
+import { getLastSlotNumberInRound } from 'core/util/round';
 import { MIN_ROUND_BLOCK } from 'core/util/block';
 import { getFirstSlotNumberInRound } from 'core/util/slot';
 import DelegateRepository from 'core/repository/delegate';
@@ -104,7 +104,7 @@ class Loader {
                     const blockSlotNumber = SlotService.getSlotNumber(block.createdAt);
 
                     while (blockSlotNumber !== round.slots[block.generatorPublicKey].slot) {
-                        if (getLastSlotInRound(round) > blockSlotNumber) {
+                        if (getLastSlotNumberInRound(round) > blockSlotNumber) {
                             logger.error(
                                 `[Loader] Impossible to build a round for block with id: ${block.id}, ` +
                                 `height: ${block.height}`
@@ -123,7 +123,7 @@ class Loader {
                     const currentRound = RoundRepository.getCurrentRound();
                     currentRound.slots[block.generatorPublicKey].isForged = true;
 
-                    if (blockSlotNumber === getLastSlotInRound(round)) {
+                    if (blockSlotNumber === getLastSlotNumberInRound(round)) {
                         RoundService.forwardProcess();
                     }
                 }

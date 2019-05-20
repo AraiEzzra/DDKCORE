@@ -33,17 +33,17 @@
 //         });
 //     });
 //
-//     describe('getLastSlotInRound', () => {
+//     describe('getLastSlotNumberInRound', () => {
 //
 //         let roundEntity = getNewRoundWithHash();
 //
 //         it('should return current round', () => {
-//             let response = RoundRepo.getLastSlotInRound(roundEntity.round);
+//             let response = RoundRepo.getLastSlotNumberInRound(roundEntity.round);
 //             let lastHash = roundEntity.hash[roundEntity.hash.length - 1].generatorPublicKey;
 //             expect(response).to.be.equal(roundEntity.round.slots[lastHash].slot);
 //             roundEntity = getNewRoundWithHash();
 //             RoundRepo.setCurrentRound(roundEntity.round);
-//             response = RoundRepo.getLastSlotInRound();
+//             response = RoundRepo.getLastSlotNumberInRound();
 //             lastHash = roundEntity.hash[roundEntity.hash.length - 1].generatorPublicKey;
 //             expect(response).to.be.equal(roundEntity.round.slots[lastHash].slot);
 //
