@@ -104,7 +104,6 @@ class RoundService implements IRoundService {
         const lastBlock = BlockRepository.getLastBlock();
         const blocks = BlockRepository.getMany(forgedBlocksCount, lastBlock.height - forgedBlocksCount);
         const delegates = blocks.map(block => DelegateRepository.getDelegate(block.generatorPublicKey));
-        logger.debug('[Round][Service][processReward][delegate]', delegates);
         const fee = Math.ceil(blocks.reduce((sum, block) => sum += block.fee, 0) / delegates.length);
 
         delegates.forEach(delegate => {
