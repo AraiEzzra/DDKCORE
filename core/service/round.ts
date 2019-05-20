@@ -12,6 +12,7 @@ import { getFirstSlotNumberInRound } from 'core/util/slot';
 import { IKeyPair } from 'shared/util/ed';
 import System from 'core/repository/system';
 import { AccountChangeAction } from 'shared/model/account';
+import { Block } from 'shared/model/block';
 
 const MAX_LATENESS_FORGE_TIME = 500;
 
@@ -28,6 +29,8 @@ interface IRoundService {
     processReward(round: Round, undo?: Boolean): void;
 
     rollbackToLastBlock(): Round;
+
+    restoreForBlock(block: Block): void;
 }
 
 class RoundService implements IRoundService {
@@ -179,6 +182,26 @@ class RoundService implements IRoundService {
         logger.info(`${this.logPrefix}[rollbackToLastBlock]: restored round ${JSON.stringify(round)}`);
 
         return round;
+    }
+
+    public restoreForBlock(block: Block, isForward = true): void {
+        let round = RoundRepository.getCurrentRound();
+        const blockSlotNumber = SlotService.getSlotNumber(block.createdAt);
+
+        while (blockSlotNumber !== round.slots[block.generatorPublicKey].slot) {
+            if (getLastSlotInRound(round) < blockSlotNumber) {
+                logger.error(
+                    `${this.logPrefix}[backwardToBlock] Impossible to rollback round ` +
+                    `for block with id: ${block.id}, height: ${block.height}`
+                );
+                break;
+            }
+
+            isForward
+                ? this.forwardProcess()
+                : this.backwardProcess();
+            round = RoundRepository.getCurrentRound();
+        }
     }
 }
 
