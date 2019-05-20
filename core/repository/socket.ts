@@ -28,6 +28,13 @@ export const HEADERS = 'HEADERS';
 
 export const MAX_CONNECT_PEER_TIMEOUT = 10000;
 
+export const ALLOWED_METHODS: Set<string> = new Set([
+    'REQUEST_BLOCKS',
+    'REQUEST_COMMON_BLOCKS',
+    'PEER_HEADERS_UPDATE',
+    'REQUEST_PEERS',
+]);
+
 export class Socket {
     private static instance: Socket;
 
@@ -150,8 +157,13 @@ export class Socket {
     @autobind
     onPeerBroadcast(response: string, peer: Peer): void {
         const { code, data } = new SocketResponse(response);
-        logger.trace(`[SOCKET][ON_PEER_BROADCAST][${peer.ip}], CODE: ${code}`);
-        messageON(code, { data, peer });
+        if (ALLOWED_METHODS.has(code) || !PeerRepository.isBanned(peer)) {
+            logger.debug(`[SOCKET][ON_PEER_BROADCAST][${peer.ip}], CODE: ${code}`);
+            messageON(code, { data, peer });
+        } else {
+            logger.debug(`[SOCKET][ON_PEER_BROADCAST][${peer.ip}] CODE: ${code} try to broadcast,` +
+            `but it has been banned`);
+        }
     }
 
     @autobind
