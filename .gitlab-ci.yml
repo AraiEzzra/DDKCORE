@@ -76,7 +76,7 @@ deploy_PROD_last_tag:
     - cd /root/DDK.Delegat.Install.Environment/
     - ./refresh_and_generate_new_core.sh ./inventory.newcore.prod.env 0.0.2 $tag mainnet
     - cd /root/DDK.Delegat.Install.Environment/
-    - ansible-playbook -i ./inventory.newcore.prod.env --limit PROD-CORE ./books/update.docker.compose.yml
+    - ansible-playbook -i ./inventory.newcore.prod.env --limit PROD-CORE ./books/update.docker.compose.prod.yml
     - ./manual.scripts/start.logs.prod.sh
     
 deploy_DELEGATES_last_tag:
