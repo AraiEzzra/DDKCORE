@@ -28,9 +28,12 @@ export type SystemInfo = {
         pool: number,
     },
     peersCount: number;
+    peers: Array<any>;
     broadhash: string;
     version: string,
 };
+
+const LAST_PEER_BLOCKS_COUNT = 10;
 
 class EventService {
 
@@ -55,6 +58,13 @@ class EventService {
         const height = BlockRepository.getLastBlock() ? BlockRepository.getLastBlock().height : 0;
         const broadhash = BlockRepository.getLastBlock() ? BlockRepository.getLastBlock().id : '';
         const peersCount = PeerRepository.peerList().length;
+        const peers = PeerRepository.peerList().map(peer => ({
+            ...peer,
+            socket: undefined,
+            blocksIds: [...peer.blocksIds.entries()]
+                .sort((a: [number, string], b: [number, string]) => b[0] - a[0])
+                .splice(0, LAST_PEER_BLOCKS_COUNT)
+        }));
 
         logger.debug(
             `[Server] Queue size: ${TransactionQueue.getSize().queue}, ` +
@@ -64,6 +74,7 @@ class EventService {
 
         SocketMiddleware.emitEvent<SystemInfo>(EVENT_TYPES.UPDATE_SYSTEM_INFO, {
             height,
+            peers,
             peersCount,
             broadhash,
             consensus: SyncService.getConsensus(),
