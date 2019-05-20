@@ -11,7 +11,7 @@ import {
     TransactionType,
 } from 'shared/model/transaction';
 import AccountRepo from 'core/repository/account';
-import ReferredUsersRepo, { ReferredUserFactor } from 'core/repository/referredUsers/index';
+import ReferredUsersRepo, { ReferredUserFactor } from 'core/repository/referredUsers';
 import { ResponseEntity } from 'shared/model/response';
 import { TOTAL_PERCENTAGE } from 'core/util/const';
 import { isEqualMaps } from 'core/util/common';
