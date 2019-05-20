@@ -117,8 +117,8 @@ class Loader {
                         round = RoundRepository.getCurrentRound();
                     }
 
-                    BlockRepository.add(block);
                     this.transactionsWarmUp(block.transactions);
+                    BlockRepository.add(block);
 
                     const currentRound = RoundRepository.getCurrentRound();
                     currentRound.slots[block.generatorPublicKey].isForged = true;
