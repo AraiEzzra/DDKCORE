@@ -5,7 +5,8 @@ import {
     SerializedTransaction,
     Transaction,
     TransactionLifecycle,
-    TransactionStatus
+    TransactionStatus,
+    TransactionType
 } from 'shared/model/transaction';
 import { transactionSortFunc } from 'core/util/transaction';
 import TransactionDispatcher from 'core/service/transaction';
@@ -119,6 +120,9 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
         }
 
         const sender: Account = AccountRepository.getByAddress(trs.senderAddress);
+        if (trs.type === TransactionType.VOTE) {
+            trs.fee = TransactionDispatcher.calculateFee(trs, sender);
+        }
         const verifyStatus = TransactionDispatcher.verifyUnconfirmed(trs, sender);
 
         if (!verifyStatus.success) {
