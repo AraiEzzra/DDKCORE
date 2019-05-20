@@ -9,7 +9,6 @@ import TransactionPool from 'core/service/transactionPool';
 import TransactionQueue from 'core/service/transactionQueue';
 import PeerRepository from 'core/repository/peer';
 import { logger } from 'shared/util/logger';
-import { Peer } from 'shared/model/peer';
 
 export type BlockchainInfo = {
     totalSupply: number;
@@ -29,10 +28,12 @@ export type SystemInfo = {
         pool: number,
     },
     peersCount: number;
-    peers: Array<Peer>;
+    peers: Array<any>;
     broadhash: string;
     version: string,
 };
+
+const LAST_PEER_BLOCKS_COUNT = 10;
 
 class EventService {
 
@@ -59,7 +60,10 @@ class EventService {
         const peersCount = PeerRepository.peerList().length;
         const peers = PeerRepository.peerList().map(peer => ({
             ...peer,
-            blocksIds: undefined,
+            socket: undefined,
+            blocksIds: [...peer.blocksIds.entries()]
+                .sort((a: [number, string], b: [number, string]) => b[0] - a[0])
+                .splice(0, LAST_PEER_BLOCKS_COUNT)
         }));
 
         logger.debug(
