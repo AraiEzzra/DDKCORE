@@ -45,12 +45,12 @@ export class SyncController extends BaseController {
             await asyncTimeout(syncTimeDiff);
         }
         lastSyncTime = currentTime;
-        if (SyncService.consensus || PeerRepository.peerList().length === 0) {
+        if (SyncService.getMyConsensus() || PeerRepository.peerList().length === 0) {
             System.synchronization = false;
             messageON('WARM_UP_FINISHED');
 
             const logMessage = `${LOG_PREFIX}[startSyncBlocks]: Unable to sync`;
-            if (SyncService.consensus) {
+            if (SyncService.getMyConsensus()) {
                 logger.info(`${logMessage}. Consensus is ${SyncService.getConsensus()}%`);
             } else if (PeerRepository.peerList().length === 0) {
                 logger.info(`${logMessage}. No peers to sync`);
@@ -64,7 +64,7 @@ export class SyncController extends BaseController {
 
         // TODO: change sync timeout logic
         let needDelay = false;
-        while (!SyncService.consensus) {
+        while (!SyncService.getMyConsensus()) {
             if (!needDelay) {
                 needDelay = true;
             } else {

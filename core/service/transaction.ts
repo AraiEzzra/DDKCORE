@@ -14,7 +14,6 @@ import { ed, IKeyPair } from 'shared/util/ed';
 import { Account, AccountChangeAction } from 'shared/model/account';
 import AccountRepo from 'core/repository/account';
 import TransactionRepo from 'core/repository/transaction';
-import TransactionPGRepo from 'core/repository/transaction/pg';
 import TransactionPool from 'core/service/transactionPool';
 import TransactionQueue from 'core/service/transactionQueue';
 import { getTransactionServiceByType, TRANSACTION_BUFFER_SIZE, transactionSortFunc } from 'core/util/transaction';

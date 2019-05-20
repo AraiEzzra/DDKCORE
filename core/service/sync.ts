@@ -34,10 +34,11 @@ export interface ISyncService {
 
     sendBlocks(data: { height: number, limit: number }, peer: Peer, requestId: string): void;
 
-    consensus: boolean;
 }
 
 export class SyncService implements ISyncService {
+
+    consensus: boolean;
 
     sendPeers(peer, requestId): void {
         SyncRepository.sendPeers(peer, requestId);
@@ -182,8 +183,12 @@ export class SyncService implements ISyncService {
         return (commonPeers.length + 1) / (peers.length + 1) * TOTAL_PERCENTAGE;
     }
 
-    get consensus(): boolean {
+    getMyConsensus(): boolean {
         return this.getConsensus() >= MIN_CONSENSUS;
+    }
+
+    setConsensus(value: boolean) {
+        this.consensus = value;
     }
 }
 
