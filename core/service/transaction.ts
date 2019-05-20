@@ -396,7 +396,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
     verifySecondSignature(trs: Transaction<T>, publicKey: string): boolean {
         const bytes = this.getBytes(trs, false, true);
 
-        if (BlockRepository.getLastBlock().height <= config.CONSTANTS.PRE_ORDER_LAST_MIGRATED_BLOCK) {
+        if (BlockRepository.getLastBlock().height < config.CONSTANTS.PRE_ORDER_LAST_MIGRATED_BLOCK) {
             return this.verifyBytes(bytes, config.CONSTANTS.PRE_ORDER_SECOND_PUBLIC_KEY, trs.secondSignature);
         } else {
             return this.verifyBytes(bytes, publicKey, trs.secondSignature);
@@ -406,7 +406,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
     verifySignature(trs: Transaction<T>, publicKey: string): boolean {
         const bytes = this.getBytes(trs, true, true);
 
-        if (BlockRepository.getLastBlock().height <= config.CONSTANTS.PRE_ORDER_LAST_MIGRATED_BLOCK) {
+        if (BlockRepository.getLastBlock().height < config.CONSTANTS.PRE_ORDER_LAST_MIGRATED_BLOCK) {
             return this.verifyBytes(bytes, config.CONSTANTS.PRE_ORDER_PUBLIC_KEY, trs.signature);
         } else {
             return this.verifyBytes(bytes, publicKey, trs.signature);
