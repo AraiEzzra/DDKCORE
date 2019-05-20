@@ -160,7 +160,9 @@ export class SyncService implements ISyncService {
     }
 
     getBlockConsensus(block: Block): number {
-        const peers = PeerRepository.peerList();
+        const peers = PeerRepository.peerList()
+            .filter(peer => !PeerRepository.isBanned(peer));
+
         const commonPeers = peers.filter(peer => PeerRepository.checkCommonBlock(peer, block));
         if (!peers.length) {
             return 0;
@@ -173,7 +175,9 @@ export class SyncService implements ISyncService {
     }
 
     getConsensus(): number {
-        const peers = PeerRepository.peerList();
+        const peers = PeerRepository.peerList()
+            .filter(peer => !PeerRepository.isBanned(peer));
+
         const commonPeers = peers.filter(peer => {
             return peer.broadhash === SystemRepository.broadhash;
         });

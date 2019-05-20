@@ -4,7 +4,11 @@ import { logger } from 'shared/util/logger';
 import { Block } from 'shared/model/block';
 import { MAX_PEER_BLOCKS_IDS } from 'core/util/const';
 import socket from 'core/repository/socket';
-import config from 'shared/config';
+
+export type PeerAddress = {
+    ip: string;
+    port: number;
+};
 
 export class PeerRepo {
     private peers: { [string: string]: Peer } = {};
@@ -20,7 +24,7 @@ export class PeerRepo {
     }
 
     addPeer(peer: Peer, ws): boolean {
-        if (this.has(peer) || this.isBanned(peer)) {
+        if (this.has(peer)) {
             return false;
         }
 
@@ -59,7 +63,7 @@ export class PeerRepo {
         return this.peers[`${peer.ip}:${peer.port}`];
     }
 
-    has(peer: Peer) {
+    has(peer: PeerAddress) {
         if (peer && (`${peer.ip}:${peer.port}` in this.peers)) {
             return true;
         }
@@ -71,13 +75,16 @@ export class PeerRepo {
             return;
         }
         logger.debug(`[Repository][Peer][ban] peer ${peer.ip}:${peer.port} has been banned`);
-        peer = this.getPeerFromPool(peer);
-        peer.socket.disconnect(true);
         this.banList.add(`${peer.ip}:${peer.port}`);
     }
 
     isBanned(peer: Peer): boolean {
         return this.banList.has(`${peer.ip}:${peer.port}`);
+    }
+
+    unban(peer: Peer) {
+        logger.debug(`[Repository][Peer][ban] peer ${peer.ip}:${peer.port} removed from ban list`);
+        this.banList.delete(`${peer.ip}:${peer.port}`);
     }
 
     clearBanList() {
@@ -90,7 +97,9 @@ export class PeerRepo {
             return;
         }
         const currentPeer = this.getPeerFromPool(peer);
-        Object.assign(currentPeer, headers);
+        currentPeer.height = headers.height;
+        currentPeer.broadhash = headers.broadhash;
+        currentPeer.peerCount = headers.peerCount;
 
         if (currentPeer.blocksIds.has(headers.height)) {
             this.clearPoolByHeight(currentPeer.blocksIds, headers.height);
@@ -105,8 +114,8 @@ export class PeerRepo {
 
     clearPoolByHeight(blocksIds: Map<number, string>, height: number) {
         [...blocksIds.keys()]
-        .filter(key => key >= height)
-        .map(key => blocksIds.delete(key));
+            .filter(key => key >= height)
+            .forEach(key => blocksIds.delete(key));
     }
 
     getRandomPeer(peers: Array<Peer> = null): Peer {
@@ -133,12 +142,9 @@ export class PeerRepo {
     getPeersByFilter(height, broadhash): Array<Peer> {
         return this.peerList().filter(peer => {
             return peer.height >= height
-                && peer.broadhash !== broadhash;
+                && peer.broadhash !== broadhash
+                && !this.isBanned(peer);
         });
-    }
-
-    getRandomTrustedPeer(): Peer {
-        return config.CORE.PEERS.TRUSTED[getRandomInt(config.CORE.PEERS.TRUSTED.length)];
     }
 
     connectPeers(peers: Array<{ ip: string, port: number }> = []) {
