@@ -71,7 +71,7 @@ class BlockController extends BaseController {
 
             if (lastSlotNumberInPrevRound >= receivedBlockSlotNumber) {
                 if (System.synchronization) {
-                    RoundService.backwardToBlock(lastBlock);
+                    RoundService.restoreForBlock(lastBlock, false);
                 } else {
                     RoundService.backwardProcess();
                 }
@@ -83,7 +83,7 @@ class BlockController extends BaseController {
                 return new ResponseEntity<void>({ errors });
             }
 
-            RoundService.forwardToBlock(receivedBlock);
+            RoundService.restoreForBlock(receivedBlock);
 
             const receiveResponse: ResponseEntity<void> = await BlockService.receiveBlock(receivedBlock);
             if (!receiveResponse.success) {
@@ -115,7 +115,7 @@ class BlockController extends BaseController {
                     receivedBlockSlot > getLastSlotInRound(RoundRepository.getCurrentRound()) &&
                     System.synchronization
                 ) {
-                    RoundService.forwardToBlock(receivedBlock);
+                    RoundService.restoreForBlock(receivedBlock);
                 }
 
                 const receiveResponse: ResponseEntity<void> = await BlockService.receiveBlock(receivedBlock);

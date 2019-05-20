@@ -30,8 +30,7 @@ interface IRoundService {
 
     rollbackToLastBlock(): Round;
 
-    backwardToBlock(block: Block): void;
-    forwardToBlock(block: Block): void;
+    restoreForBlock(block: Block): void;
 }
 
 class RoundService implements IRoundService {
@@ -185,7 +184,7 @@ class RoundService implements IRoundService {
         return round;
     }
 
-    public backwardToBlock(block: Block): void {
+    public restoreForBlock(block: Block, isForward = true): void {
         let round = RoundRepository.getCurrentRound();
         const blockSlotNumber = SlotService.getSlotNumber(block.createdAt);
 
@@ -198,27 +197,9 @@ class RoundService implements IRoundService {
                 break;
             }
 
-            // backward until we find the right round
-            this.backwardProcess();
-            round = RoundRepository.getCurrentRound();
-        }
-    }
-
-    public forwardToBlock(block: Block): void {
-        let round = RoundRepository.getCurrentRound();
-        const blockSlotNumber = SlotService.getSlotNumber(block.createdAt);
-
-        while (blockSlotNumber !== round.slots[block.generatorPublicKey].slot) {
-            if (getLastSlotInRound(round) > blockSlotNumber) {
-                logger.error(
-                    `${this.logPrefix}[forwardToBlock] Impossible to build a round ` +
-                    `for block with id: ${block.id}, height: ${block.height}`
-                );
-                break;
-            }
-
-            // forward until we find the right round
-            this.forwardProcess();
+            isForward
+                ? this.forwardProcess()
+                : this.backwardProcess();
             round = RoundRepository.getCurrentRound();
         }
     }
