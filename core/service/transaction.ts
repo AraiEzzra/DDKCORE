@@ -229,6 +229,9 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
                         }
                     });
 
+                if (senderTrs.type === TransactionType.VOTE) {
+                    senderTrs.fee = this.calculateFee(<Transaction<T>>senderTrs, sender);
+                }
                 const verifyStatus = this.verifyUnconfirmed(<Transaction<T>>senderTrs, sender);
 
                 if (verifyStatus.success) {
@@ -419,9 +422,6 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             TransactionLifecycle.VERIFY,
             sender,
         );
-
-        // need for vote trs, staked amount changes fee
-        trs.fee = this.calculateFee(trs, sender);
 
         const isConfirmed = this.isConfirmed(trs);
 

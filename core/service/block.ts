@@ -375,6 +375,11 @@ class BlockService {
                         i--;
                         continue;
                     }
+                } else {
+                    // recalculate vote fee before block generation
+                    if (trs.type === TransactionType.VOTE) {
+                        trs.fee = TransactionDispatcher.calculateFee(trs, sender);
+                    }
                 }
 
                 TransactionDispatcher.applyUnconfirmed(trs, sender);
