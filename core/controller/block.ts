@@ -98,7 +98,7 @@ class BlockController extends BaseController {
             if (blockUtils.canBeProcessed(lastBlock, receivedBlock)) {
                 // Check this logic. Need for first sync
                 const currentRound = RoundRepository.getCurrentRound();
-                const receivedBlockSlot = SlotService.getSlotNumber(receivedBlock.createdAt);
+                const receivedBlockSlotNumber = SlotService.getSlotNumber(receivedBlock.createdAt);
                 if (!currentRound) {
                     const newRound = RoundService.generate(
                         getFirstSlotNumberInRound(
@@ -108,7 +108,7 @@ class BlockController extends BaseController {
                     );
                     RoundRepository.add(newRound);
                 } else if (
-                    receivedBlockSlot > getLastSlotNumberInRound(RoundRepository.getCurrentRound()) &&
+                    receivedBlockSlotNumber > getLastSlotNumberInRound(RoundRepository.getCurrentRound()) &&
                     System.synchronization
                 ) {
                     RoundService.restoreForBlock(receivedBlock);
@@ -121,7 +121,7 @@ class BlockController extends BaseController {
                 }
 
                 const lastSlot = getLastSlotNumberInRound(RoundRepository.getCurrentRound());
-                if (receivedBlockSlot === lastSlot) {
+                if (receivedBlockSlotNumber === lastSlot) {
                     RoundService.forwardProcess();
                 }
             } else if (!SyncService.getMyConsensus()) {
