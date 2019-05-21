@@ -16,6 +16,7 @@ describe('Test GET_TRANSACTIONS_BY_BLOCK_ID', () => {
             blockId: 'cbb9449abb9672d33fa2eb200b1c8b03db7c6572dfb6e59dc334c0ab82b63ab0',
             type: 10,
             createdAt: 0,
+            relay: 0,
             senderPublicKey: 'f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2',
             senderAddress: '4995063339468361088',
             signature: '24327b2214249fadd07f1b1487be40a69deb73d03908726e4e4d880b75b7c9cc541ff8' +
@@ -25,30 +26,31 @@ describe('Test GET_TRANSACTIONS_BY_BLOCK_ID', () => {
             salt: '8396e8c4472f12ccb7d60a1e10392bee',
             confirmations: 0,
             asset:
-                {
-                    recipientAddress: '3995920038576041585',
-                    amount: 100000000000
-                }
-        },
             {
-                id: '2c52682e6a51a9ddfd48a679a95c9fea4e693790aec5968535a482088b6c75bf',
-                blockId: 'cbb9449abb9672d33fa2eb200b1c8b03db7c6572dfb6e59dc334c0ab82b63ab0',
-                type: 10,
-                createdAt: 0,
-                senderPublicKey: 'f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2',
-                senderAddress: '4995063339468361088',
-                signature: 'dfe6697977493108a37dfd2727c85bd88d8aaf062973bdf6e4b99dd024a251e91319267b0e' +
-                    '6e51731fa32ffd89b160d93a4bbd59f0c129bc669598b522da8000',
-                secondSignature: null,
-                fee: 0,
-                salt: '6f5b997e54d3f6a249d9be019814a66a',
-                confirmations: 0,
-                asset:
-                    {
-                        recipientAddress: '7897332094363171058',
-                        amount: 90000000000000
-                    }
-            }];
+                recipientAddress: '3995920038576041585',
+                amount: 100000000000
+            }
+        },
+        {
+            id: '2c52682e6a51a9ddfd48a679a95c9fea4e693790aec5968535a482088b6c75bf',
+            blockId: 'cbb9449abb9672d33fa2eb200b1c8b03db7c6572dfb6e59dc334c0ab82b63ab0',
+            type: 10,
+            createdAt: 0,
+            relay: 0,
+            senderPublicKey: 'f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2',
+            senderAddress: '4995063339468361088',
+            signature: 'dfe6697977493108a37dfd2727c85bd88d8aaf062973bdf6e4b99dd024a251e91319267b0e' +
+                '6e51731fa32ffd89b160d93a4bbd59f0c129bc669598b522da8000',
+            secondSignature: null,
+            fee: 0,
+            salt: '6f5b997e54d3f6a249d9be019814a66a',
+            confirmations: 0,
+            asset:
+            {
+                recipientAddress: '7897332094363171058',
+                amount: 90000000000000
+            }
+        }];
         const HEADERS = Fixture.getBaseHeaders();
         const SUCCESS_MESSAGE = {
             headers: HEADERS,
@@ -102,5 +104,3 @@ describe('Test GET_TRANSACTIONS_BY_BLOCK_ID', () => {
             });
     });
 });
-
-
