@@ -31,7 +31,18 @@
     "test": "npm run test:api",
     "test:api": "export NODE_PATH=./ && mocha --require ts-node/register './test/api/**/*.test.ts'",
     "test:core": "export NODE_PATH=./ && mocha --require ts-node/register './test/core/**/*.test.ts'",
-    "test:functionality": "export NODE_PATH=./ && mocha --require ts-node/register ./test/functionality/server-loader.ts './test/functionality/**/*.test.ts'"
+    "test:functionality": "export NODE_PATH=./ && nyc --include core/controller/ --reporter=text mocha --require ts-node/register ./test/functionality/server-loader.ts './test/functionality/**/*.test.ts'"
+  },
+  "nyc": {
+    "extension": [
+      ".ts",
+      ".tsx"
+    ],
+    "exclude": [
+      "**/*.d.ts",
+      "**/*.test.ts"
+    ],
+    "all": true
   },
   "author": "DDK Foundation <http://www.ddkoin.com/>",
   "license": "GPL-3.0",
@@ -39,6 +50,7 @@
     "autobind-decorator": "^2.4.0",
     "chai": "^4.2.0",
     "chai-sorted": "^0.2.0",
+    "chai-spies": "^1.0.0",
     "crypto-browserify": "=3.11.0",
     "dotenv": "^4.0.0",
     "ip": "=1.1.5",
@@ -69,6 +81,7 @@
     "@types/socket.io": "^2.1.2",
     "@types/socket.io-client": "^1.4.32",
     "@types/z-schema": "^3.16.32",
+    "nyc": "^14.1.1",
     "ts-node": "^8.0.3"
   }
 }
