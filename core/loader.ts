@@ -36,7 +36,9 @@ class Loader {
     public async start() {
         logger.debug('LOADER START');
         const historyState = config.CORE.IS_HISTORY;
-        config.CORE.IS_HISTORY = false;
+        if (!config.CORE.IS_HISTORY_ON_WARMUP) {
+            config.CORE.IS_HISTORY = false;
+        }
 
         await this.initDatabase();
 
@@ -50,7 +52,9 @@ class Loader {
                 process.exit(1);
             }
         }
-        config.CORE.IS_HISTORY = historyState;
+        if (!config.CORE.IS_HISTORY_ON_WARMUP) {
+            config.CORE.IS_HISTORY = historyState;
+        }
         socket.init();
 
         initShedulers();
