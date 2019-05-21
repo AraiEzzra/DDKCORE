@@ -120,8 +120,8 @@ class BlockController extends BaseController {
                     return new ResponseEntity<void>({ errors });
                 }
 
-                const lastSlot = getLastSlotNumberInRound(RoundRepository.getCurrentRound());
-                if (receivedBlockSlotNumber === lastSlot) {
+                const lastSlotNumber = getLastSlotNumberInRound(RoundRepository.getCurrentRound());
+                if (receivedBlockSlot === lastSlotNumber) {
                     RoundService.forwardProcess();
                 }
             } else if (!SyncService.getMyConsensus()) {
