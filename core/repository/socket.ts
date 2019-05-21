@@ -73,12 +73,18 @@ export class Socket {
             logger.trace(`[SOCKET][clientConnectToOwnServer] ${ip}`);
 
             const peer = JSON.parse(data);
+            if (peer.version !== config.CORE.VERSION) {
+                socket.disconnect(true);
+                return;
+            }
+
             if (Socket.instance.addPeer(peer, socket)) {
                 socket.emit(SERVER_HEADERS, JSON.stringify(
                     SystemRepository.getFullHeaders()
                 ));
             } else {
                 socket.disconnect(true);
+                return;
             }
         });
     }
@@ -158,7 +164,7 @@ export class Socket {
     onPeerBroadcast(response: string, peer: Peer): void {
         const { code, data } = new SocketResponse(response);
         if (ALLOWED_METHODS.has(code) || !PeerRepository.isBanned(peer)) {
-            logger.debug(`[SOCKET][ON_PEER_BROADCAST][${peer.ip}], CODE: ${code}`);
+            logger.trace(`[SOCKET][ON_PEER_BROADCAST][${peer.ip}], CODE: ${code}`);
             messageON(code, { data, peer });
         } else {
             logger.debug(`[SOCKET][ON_PEER_BROADCAST][${peer.ip}] CODE: ${code} try to broadcast,` +
