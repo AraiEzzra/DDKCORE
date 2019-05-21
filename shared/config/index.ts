@@ -89,6 +89,7 @@ class Config {
         IS_HISTORY: boolean;
         IS_DISABLED_TRANSACTION_CREATION: boolean;
         VERSION: string;
+        MIN_VERSION: string;
     };
     API: {
         REQUESTS_PER_SECOND_LIMIT: number;
@@ -149,6 +150,7 @@ class Config {
             IS_HISTORY: process.env.IS_HISTORY === 'TRUE',
             IS_DISABLED_TRANSACTION_CREATION: process.env.IS_DISABLED_TRANSACTION_CREATION === 'TRUE',
             VERSION: '0.0.42',
+            MIN_VERSION: '0.0.42',
         };
         this.API = {
             REQUESTS_PER_SECOND_LIMIT: Number(process.env.REQUESTS_PER_SECOND_LIMIT) ||

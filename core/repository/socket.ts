@@ -73,7 +73,7 @@ export class Socket {
             logger.trace(`[SOCKET][clientConnectToOwnServer] ${ip}`);
 
             const peer = JSON.parse(data);
-            if (peer.version !== config.CORE.VERSION) {
+            if (peer.version.replace(/[.]/g, '') < config.CORE.MIN_VERSION.replace(/[.]/g, '')) {
                 socket.disconnect(true);
                 return;
             }
