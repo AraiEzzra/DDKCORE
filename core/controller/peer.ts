@@ -8,6 +8,7 @@ import { logger } from 'shared/util/logger';
 import { shuffle } from 'shared/util/util';
 import config from 'shared/config';
 import System from 'core/repository/system';
+import { ActionTypes } from 'core/util/actionTypes';
 
 export class PeerController extends BaseController {
 
@@ -33,7 +34,7 @@ export class PeerController extends BaseController {
         SyncService.sendPeers(peer, requestId);
     }
 
-    @ON('EMIT_REBOOT_PEERS_CONNECTIONS')
+    @ON(ActionTypes.EMIT_REBOOT_PEERS_CONNECTIONS)
     async rebootPeersConnections(): Promise<void> {
         const discoveredPeers = await SyncRepository.discoverPeers();
         PeerRepository.clearBanList();
