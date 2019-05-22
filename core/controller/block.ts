@@ -121,7 +121,7 @@ class BlockController extends BaseController {
                 }
 
                 const lastSlotNumber = getLastSlotNumberInRound(RoundRepository.getCurrentRound());
-                if (receivedBlockSlot === lastSlotNumber) {
+                if (receivedBlockSlotNumber === lastSlotNumber) {
                     RoundService.forwardProcess();
                 }
             } else if (!SyncService.getMyConsensus()) {
