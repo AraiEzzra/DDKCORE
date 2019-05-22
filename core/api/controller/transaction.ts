@@ -31,7 +31,9 @@ export class TransactionController {
 
         const validateResult = TransactionService.validate(transaction);
         if (!validateResult.success) {
-            logger.debug(`[RPC][TransactionController][createPreparedTransaction]Validation of ${transaction} failed`);
+            logger.debug(
+                `[RPC][TransactionController][createPreparedTransaction]Validation of ${transaction.id} failed`
+            );
             return new ResponseEntity({ errors: validateResult.errors });
         }
 
