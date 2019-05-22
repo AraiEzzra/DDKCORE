@@ -60,7 +60,7 @@ export class SyncController extends BaseController {
         }
         System.synchronization = true;
         logger.debug(`${LOG_PREFIX}[startSyncBlocks]: start sync with consensus ${SyncService.getConsensus()}%`);
-        RoundService.rollbackToLastBlock();
+        RoundService.restoreForBlock(BlockRepository.getLastBlock(), false);
 
         // TODO: change sync timeout logic
         let needDelay = false;
@@ -136,8 +136,6 @@ export class SyncController extends BaseController {
         logger.debug(`${LOG_PREFIX}[updateHeaders]: id ${data.lastBlock.id}, height: ${data.lastBlock.height}`);
         SyncService.updateHeaders(data.lastBlock);
     }
-
-
 }
 
 export default new SyncController();

@@ -87,6 +87,7 @@ class Config {
             SECRET: string;
         };
         IS_HISTORY: boolean;
+        IS_HISTORY_ON_WARMUP: boolean;
         IS_DISABLED_TRANSACTION_CREATION: boolean;
         VERSION: string;
     };
@@ -147,6 +148,7 @@ class Config {
                 BLACKLIST: (process.env.PEERS_BLACKLIST || '').split(','),
             },
             IS_HISTORY: process.env.IS_HISTORY === 'TRUE',
+            IS_HISTORY_ON_WARMUP: process.env.IS_HISTORY_ON_WARMUP === 'TRUE',
             IS_DISABLED_TRANSACTION_CREATION: process.env.IS_DISABLED_TRANSACTION_CREATION === 'TRUE',
             VERSION: '0.0.42',
         };
