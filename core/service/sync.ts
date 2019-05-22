@@ -106,12 +106,11 @@ export class SyncService implements ISyncService {
             await BlockService.deleteLastBlock();
             return;
         }
-        const lastSlotInRound = getLastSlotNumberInRound(prevRound);
+        const lastSlotInPrevRound = getLastSlotNumberInRound(prevRound);
 
-        logger.debug(`[Controller][Sync][rollback] lastSlotInRound: ${lastSlotInRound}, blockSlot: ${blockSlot}`);
-
-        if (lastSlotInRound >= blockSlot) {
-            logger.debug(`[Controller][Sync][rollback] round rollback`);
+        logger.debug(`[Service][Sync][rollback] lastSlotInRound: ${lastSlotInPrevRound}, blockSlot: ${blockSlot}`);
+        if (lastSlotInPrevRound >= blockSlot) {
+            logger.debug(`[Service][Sync][rollback] round rollback`);
             RoundService.backwardProcess();
         }
 

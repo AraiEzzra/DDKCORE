@@ -79,7 +79,12 @@ class BlockController extends BaseController {
                 return new ResponseEntity<void>({ errors });
             }
 
-            RoundService.restoreForBlock(receivedBlock);
+            const newLastBlock = BlockRepo.getLastBlock();
+            RoundService.restoreForBlock(newLastBlock, false);
+            const newLastBlockSlotNumber = SlotService.getSlotNumber(newLastBlock.createdAt);
+            if (getLastSlotNumberInRound(RoundRepository.getPrevRound()) === newLastBlockSlotNumber) {
+                RoundService.forwardProcess();
+            }
 
             const receiveResponse: ResponseEntity<void> = await BlockService.receiveBlock(receivedBlock);
             if (!receiveResponse.success) {
