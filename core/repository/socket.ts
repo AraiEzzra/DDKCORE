@@ -14,6 +14,7 @@ import { SOCKET_RPC_REQUEST_TIMEOUT } from 'core/util/const';
 import { CORE_SOCKET_CLIENT_CONFIG, API_SOCKET_SERVER_CONFIG } from 'shared/config/socket';
 import { IPRegExp } from 'core/util/common';
 import { getRandomInt } from 'shared/util/util';
+import { isAcceptableVersion } from 'core/util/strings';
 
 export const REQUEST_TIMEOUT = '408 Request Timeout';
 
@@ -73,7 +74,7 @@ export class Socket {
             logger.trace(`[SOCKET][clientConnectToOwnServer] ${ip}`);
 
             const peer = JSON.parse(data);
-            if (peer.version.replace(/[.]/g, '') < config.CORE.MIN_VERSION.replace(/[.]/g, '')) {
+            if (!isAcceptableVersion(peer.version)) {
                 socket.disconnect(true);
                 return;
             }
