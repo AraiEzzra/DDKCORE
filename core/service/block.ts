@@ -498,7 +498,7 @@ class BlockService {
             return new ResponseEntity<void>({ errors: [...removedTransactionsResponse.errors, 'receiveBlock'] });
         }
         logger.debug(
-            `[Process][newReceiveBlock] removed transactions count: ${removedTransactionsResponse.data.length}`
+            `[Service][Block][receiveBlock] removed transactions count: ${removedTransactionsResponse.data.length}`
         );
         const removedTransactions: Array<Transaction<object>> = removedTransactionsResponse.data || [];
 
@@ -510,7 +510,7 @@ class BlockService {
 
         if (errors.length) {
             this.pushInPool(removedTransactions);
-            logger.error(`[Process][newReceiveBlock] blockId: ${block.id} errors: ${JSON.stringify(errors)}`);
+            logger.error(`[Service][Block][receiveBlock] blockId: ${block.id} errors: ${JSON.stringify(errors)}`);
             // TODO check it
             // block.transactions.forEach(trs => {
             //     TransactionQueue.push(trs);

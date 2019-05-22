@@ -11,6 +11,7 @@ import {
     TransactionId
 } from 'shared/model/types';
 import AccountRepository from 'core/repository/account';
+import TransactionRepository from 'shared/repository/transaction';
 import { Block } from 'shared/model/block';
 import TransactionHistoryRepository from 'core/repository/history/transaction';
 import { IAsset, SerializedTransaction, Transaction } from 'shared/model/transaction';
@@ -18,12 +19,14 @@ import BlockHistoryRepository from 'core/repository/history/block';
 import TransactionQueue from 'core/service/transactionQueue';
 import TransactionPool from 'core/service/transactionPool';
 import { uniqueFilterByKey } from 'core/util/transaction';
+import { Pagination } from 'api/utils/common';
 
 class SystemController {
     constructor() {
         this.getAccountHistory = this.getAccountHistory.bind(this);
         this.getBlockHistory = this.getBlockHistory.bind(this);
         this.getTransactionHistory = this.getTransactionHistory.bind(this);
+        this.getAllUnconfirmedTransactions = this.getAllUnconfirmedTransactions.bind(this);
     }
 
     @API(API_ACTION_TYPES.GET_ACCOUNT_HISTORY)
@@ -78,14 +81,17 @@ class SystemController {
 
     @API(API_ACTION_TYPES.GET_ALL_UNCONFIRMED_TRANSACTIONS)
     public getAllUnconfirmedTransactions(
-        message: Message<{}>
-    ): ResponseEntity<{ transactions: Array<SerializedTransaction<IAsset>>, batch: number }> {
+        message: Message<Pagination>
+    ): ResponseEntity<{ transactions: Array<SerializedTransaction<IAsset>>, count: number }> {
         const allTransactions = uniqueFilterByKey<TransactionId>('id',
-            [...TransactionQueue.getUniqueTransactions(), ...TransactionPool.getTransactions()]);
+            [...TransactionQueue.getUniqueTransactions(), ...TransactionPool.getTransactions()]
+        );
         return new ResponseEntity({
             data: {
-                transactions: allTransactions,
-                batch: 1
+                transactions: allTransactions
+                    .slice(message.body.offset || 0, (message.body.offset || 0) + message.body.limit)
+                    .map(trs => TransactionRepository.serialize(trs)),
+                count: allTransactions.length
             }
         });
     }
