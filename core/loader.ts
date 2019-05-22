@@ -24,6 +24,7 @@ import { getLastSlotNumberInRound } from 'core/util/round';
 import { MIN_ROUND_BLOCK } from 'core/util/block';
 import { getFirstSlotNumberInRound } from 'core/util/slot';
 import DelegateRepository from 'core/repository/delegate';
+import { ActionTypes } from 'core/util/actionTypes';
 
 // @ts-ignore
 BigInt.prototype.toJSON = function () {
@@ -60,7 +61,7 @@ class Loader {
         initShedulers();
 
         setInterval(
-            () => messageON('EMIT_REBOOT_PEERS_CONNECTIONS'),
+            () => messageON(ActionTypes.EMIT_REBOOT_PEERS_CONNECTIONS),
             getRandomInt(
                 config.CONSTANTS.PEER_CONNECTION_TIME_INTERVAL_REBOOT.MIN,
                 config.CONSTANTS.PEER_CONNECTION_TIME_INTERVAL_REBOOT.MAX
