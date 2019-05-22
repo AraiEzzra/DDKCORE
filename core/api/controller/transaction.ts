@@ -1,5 +1,5 @@
 import { API } from 'core/api/util/decorators';
-import { Message2 } from 'shared/model/message';
+import { Message } from 'shared/model/message';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
 import { getAddressByPublicKey } from 'shared/util/account';
 import { logger } from 'shared/util/logger';
@@ -19,12 +19,12 @@ export class TransactionController {
     }
 
     @API(API_ACTION_TYPES.CREATE_TRANSACTION)
-    public createTransaction(message: Message2<any>) {
+    public createTransaction(message: Message<any>) {
         return TransactionRPCController.transactionCreate(message.body);
     }
 
     @API(API_ACTION_TYPES.CREATE_PREPARED_TRANSACTION)
-    public createPreparedTransaction(message: Message2<SerializedTransaction<any>>) {
+    public createPreparedTransaction(message: Message<SerializedTransaction<any>>) {
         logger.trace(`[API][TransactionController][createPreparedTransaction] ${JSON.stringify(message.body)}`);
 
         const transaction = SharedTransactionRepo.deserialize(message.body);

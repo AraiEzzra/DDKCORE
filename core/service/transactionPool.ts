@@ -1,4 +1,5 @@
 import {
+    IAsset,
     IAssetTransfer,
     Transaction,
     TransactionLifecycle,
@@ -41,6 +42,8 @@ export interface ITransactionPoolService<T extends Object> {
     isPotentialConflict(trs: Transaction<T>);
 
     getSize(): number;
+
+    getTransactions(): Array<Transaction<T>>;
 }
 
 class TransactionPoolService<T extends object> implements ITransactionPoolService<T> {
@@ -217,6 +220,10 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
 
     getSize(): number {
         return this.pool.size;
+    }
+
+    getTransactions(): Array<Transaction<T>> {
+        return [...this.pool.values()];
     }
 }
 

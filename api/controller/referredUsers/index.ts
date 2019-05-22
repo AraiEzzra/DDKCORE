@@ -3,6 +3,7 @@ import { Message } from 'shared/model/message';
 import SocketMiddleware from 'api/middleware/socket';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
 import { validate } from 'shared/validate';
+import { ResponseEntity } from 'shared/model/response';
 
 export class ReferredUsersController {
 
@@ -12,7 +13,7 @@ export class ReferredUsersController {
 
     @RPC(API_ACTION_TYPES.GET_REFERRED_USERS)
     @validate()
-    getReferredUsers(message: Message, socket: any) {
+    getReferredUsers(message: Message<ResponseEntity<{ address: string, level: number }>>, socket: any) {
         SocketMiddleware.emitToCore(message, socket);
     }
 }

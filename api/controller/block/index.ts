@@ -2,11 +2,12 @@ import { BlockModel } from 'shared/model/block';
 import { RPC } from 'api/utils/decorators';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
 import SocketMiddleware from 'api/middleware/socket';
-import { Message } from 'shared/model/message';
 import BlockPGRepository from 'api/repository/block';
-import { DEFAULT_LIMIT } from 'api/utils/common';
+import { DEFAULT_LIMIT, Pagination, Sort } from 'api/utils/common';
 import { ResponseEntity } from 'shared/model/response';
 import { validate } from 'shared/validate';
+import { Message } from 'shared/model/message';
+import { BlockId } from 'shared/repository/block';
 
 export class BlockController {
 
@@ -17,7 +18,7 @@ export class BlockController {
 
     @RPC(API_ACTION_TYPES.GET_BLOCK)
     @validate()
-    public async getBlock(message: Message, socket: any) {
+    public async getBlock(message: Message<{ id: BlockId }>, socket: any) {
         SocketMiddleware.emitToClient<BlockModel>(
             message.headers.id,
             message.code,
@@ -28,7 +29,7 @@ export class BlockController {
 
     @RPC(API_ACTION_TYPES.GET_BLOCKS)
     @validate()
-    public async getBlocks(message: Message, socket: any) {
+    public async getBlocks(message: Message<Pagination & { filter: any, sort: Array<Sort> }>, socket: any) {
         const blocks = await BlockPGRepository.getMany(
             message.body.filter || {},
             message.body.sort || [['height', 'DESC']],

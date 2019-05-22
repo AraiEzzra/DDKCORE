@@ -1,5 +1,5 @@
 import { Fixture } from 'test/api/base/fixture';
-import { Message2 } from 'shared/model/message';
+import { Message } from 'shared/model/message';
 import { expect } from 'chai';
 import { ResponseEntity } from 'shared/model/response';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
@@ -18,7 +18,7 @@ describe('Test GET_BLOCK', () => {
 
         const socket = getSocket();
         socket.emit('message', REQUEST);
-        socket.on('message', (response: Message2<ResponseEntity<any>>) => {
+        socket.on('message', (response: Message<ResponseEntity<any>>) => {
                 if (response.headers.id === HEADERS.id) {
                     console.log(response);
                     expect(response.body.success).to.equal(true);
@@ -55,7 +55,7 @@ describe('Test GET_BLOCK', () => {
 
         const socket = getSocket();
         socket.emit('message', REQUEST);
-        socket.on('message', (response: Message2<ResponseEntity<any>>) => {
+        socket.on('message', (response: Message<ResponseEntity<any>>) => {
             if (response.headers.id === HEADERS.id) {
                 expect(response.body.success).to.equal(true);
                 expect(response.body.data).to.equal(null);
@@ -75,7 +75,7 @@ describe('Test GET_BLOCK', () => {
 
         const socket = getSocket();
         socket.emit('message', REQUEST);
-        socket.on('message', (response: Message2<ResponseEntity<any>>) => {
+        socket.on('message', (response: Message<ResponseEntity<any>>) => {
             if (response.headers.id === HEADERS.id) {
                 expect(response.body.success).to.equal(false);
                 expect(response.body.errors).to.deep.equal(

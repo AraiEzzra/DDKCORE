@@ -1,14 +1,23 @@
 import { API } from 'core/api/util/decorators';
-import { Message2 } from 'shared/model/message';
+import { Message } from 'shared/model/message';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
 import { ResponseEntity } from 'shared/model/response';
-import { Address, BlockHistoryEvent } from 'shared/model/types';
+import {
+    AccountState,
+    Address,
+    BlockHistoryEvent,
+    SerializedAccountState,
+    SerializedTransactionHistoryAction,
+    TransactionId
+} from 'shared/model/types';
 import AccountRepository from 'core/repository/account';
 import { Block } from 'shared/model/block';
-import { AccountState, SerializedAccountState, SerializedTransactionHistoryAction } from 'shared/model/types';
 import TransactionHistoryRepository from 'core/repository/history/transaction';
-import { Transaction } from 'shared/model/transaction';
+import { IAsset, SerializedTransaction, Transaction } from 'shared/model/transaction';
 import BlockHistoryRepository from 'core/repository/history/block';
+import TransactionQueue from 'core/service/transactionQueue';
+import TransactionPool from 'core/service/transactionPool';
+import { uniqueFilterByKey } from 'core/util/transaction';
 
 class SystemController {
     constructor() {
@@ -18,7 +27,7 @@ class SystemController {
     }
 
     @API(API_ACTION_TYPES.GET_ACCOUNT_HISTORY)
-    public getAccountHistory(message: Message2<{ address: Address }>): ResponseEntity<Array<SerializedAccountState>> {
+    public getAccountHistory(message: Message<{ address: Address }>): ResponseEntity<Array<SerializedAccountState>> {
         const account = AccountRepository.getByAddress(BigInt(message.body.address));
 
         if (!account) {
@@ -35,7 +44,7 @@ class SystemController {
 
     @API(API_ACTION_TYPES.GET_BLOCK_HISTORY)
     public getBlockHistory(
-        message: Message2<{ id: string }>
+        message: Message<{ id: string }>
     ): ResponseEntity<{ events: Array<BlockHistoryEvent>, entity: Block }> {
         const history = BlockHistoryRepository.get(message.body.id);
 
@@ -48,12 +57,12 @@ class SystemController {
 
     @API(API_ACTION_TYPES.GET_TRANSACTION_HISTORY)
     public getTransactionHistory(
-        message: Message2<{ id: string }>
+        message: Message<{ id: string }>
     ): ResponseEntity<{ events: Array<SerializedTransactionHistoryAction>, entity: Transaction<any> }> {
         const history = TransactionHistoryRepository.get(message.body.id);
 
         if (!history) {
-            return new ResponseEntity({ errors: ['Transaction does not exist']});
+            return new ResponseEntity({ errors: ['Transaction does not exist'] });
         }
 
         const serializedEvents = history.events.map(event => ({
@@ -65,6 +74,20 @@ class SystemController {
         }));
 
         return new ResponseEntity({ data: { entity: history.entity, events: serializedEvents } });
+    }
+
+    @API(API_ACTION_TYPES.GET_ALL_UNCONFIRMED_TRANSACTIONS)
+    public getAllUnconfirmedTransactions(
+        message: Message<{}>
+    ): ResponseEntity<{ transactions: Array<SerializedTransaction<IAsset>>, batch: number }> {
+        const allTransactions = uniqueFilterByKey<TransactionId>('id',
+            [...TransactionQueue.getUniqueTransactions(), ...TransactionPool.getTransactions()]);
+        return new ResponseEntity({
+            data: {
+                transactions: allTransactions,
+                batch: 1
+            }
+        });
     }
 }
 

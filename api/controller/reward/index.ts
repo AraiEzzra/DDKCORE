@@ -1,5 +1,5 @@
 import { RPC } from 'api/utils/decorators';
-import { Message2 } from 'shared/model/message';
+import { Message } from 'shared/model/message';
 import SocketMiddleware from 'api/middleware/socket';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
 import { ResponseEntity } from 'shared/model/response';
@@ -17,7 +17,7 @@ export class RewardController {
 
     @RPC(API_ACTION_TYPES.GET_STAKE_REWARDS)
     @validate()
-    async getStakeRewards(message: Message2<{ senderPublicKey: string } & Pagination>, socket: any) {
+    async getStakeRewards(message: Message<{ senderPublicKey: string } & Pagination>, socket: any) {
         const { senderPublicKey, limit, offset } = message.body;
         const transactions = await TransactionRepository.getVotesWithStakeReward(senderPublicKey, limit, offset);
 
@@ -39,7 +39,7 @@ export class RewardController {
 
     @RPC(API_ACTION_TYPES.GET_AIRDROP_REWARDS)
     @validate()
-    getAirdropRewards(message: Message2<{ address: string } & Pagination>, socket: any) {
+    getAirdropRewards(message: Message<{ address: string } & Pagination>, socket: any) {
         SocketMiddleware.emitToClient(
             message.headers.id,
             message.code,

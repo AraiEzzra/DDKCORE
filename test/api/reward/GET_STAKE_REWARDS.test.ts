@@ -2,7 +2,7 @@ import { BASE_ACCOUNT, Fixture } from 'test/api/base/fixture';
 import { TransactionType } from 'shared/model/transaction';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
 import { getSocket } from 'test/api/base';
-import { Message2 } from 'shared/model/message';
+import { Message } from 'shared/model/message';
 import { ResponseEntity } from 'shared/model/response';
 import { expect } from 'chai';
 import { StakeReward } from 'shared/model/reward';
@@ -47,7 +47,7 @@ describe('Test GET_STAKE_REWARDS', () => {
 
             const socket = getSocket();
             socket.emit('message', SUCCESS);
-            socket.on('message', (response: Message2<ResponseEntity<{
+            socket.on('message', (response: Message<ResponseEntity<{
                 rewards: Array<StakeReward>, count: number
             }>>) => {
                 if (response.headers.id === HEADERS.id) {

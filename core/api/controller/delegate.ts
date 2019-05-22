@@ -1,5 +1,5 @@
 import { API } from 'core/api/util/decorators';
-import { Message2 } from 'shared/model/message';
+import { Message } from 'shared/model/message';
 import { ResponseEntity } from 'shared/model/response';
 import { Pagination } from 'api/utils/common';
 import DelegateRepository from 'core/repository/delegate';
@@ -17,7 +17,7 @@ class DelegateController {
     }
 
     @API(API_ACTION_TYPES.GET_DELEGATES)
-    public getDelegates(message: Message2<Pagination>):
+    public getDelegates(message: Message<Pagination>):
         ResponseEntity<{ delegates: Array<SerializedDelegate>, count: number }> {
         return new ResponseEntity({
             data: {
@@ -31,7 +31,7 @@ class DelegateController {
 
     @API(API_ACTION_TYPES.GET_ACTIVE_DELEGATES)
     public getActiveDelegates(
-        message: Message2<Pagination>,
+        message: Message<Pagination>,
     ): ResponseEntity<{ delegates: Array<SerializedDelegate>, count: number }> {
         return new ResponseEntity({
             data: {
@@ -44,7 +44,7 @@ class DelegateController {
     }
 
     @API(API_ACTION_TYPES.GET_MY_DELEGATES)
-    public getMyDelegates(message: Message2<{ address: string } & Pagination>):
+    public getMyDelegates(message: Message<{ address: string } & Pagination>):
         ResponseEntity<{ delegates: Array<SerializedDelegate>, count: number }> {
 
         const account = AccountRepository.getByAddress(BigInt(message.body.address));

@@ -510,7 +510,7 @@ class BlockService {
 
         if (errors.length) {
             this.pushInPool(removedTransactions);
-            logger.error(`[Process][newReceiveBlock] ${JSON.stringify(errors)}`);
+            logger.error(`[Process][newReceiveBlock] blockId: ${block.id} errors: ${JSON.stringify(errors)}`);
             // TODO check it
             // block.transactions.forEach(trs => {
             //     TransactionQueue.push(trs);
