@@ -9,12 +9,13 @@ BigInt.prototype.toJSON = function () {
     return this.toString();
 };
 
+process.addListener('unhandledRejection', err => {
+    logger.error(`[API][Process][unhandledRejection] ${err.message} \n ${err.stack}`);
+});
+
+process.addListener('uncaughtException', err => {
+    logger.error(`[API][Process][uncaughtException] ${err.message} \n ${err.stack}`); 
+});
+
 const server = new ApiSocketServer(config.API.SOCKET.PORT, API_SOCKET_SERVER_CONFIG);
 server.run();
-
-/**
- *  Global error interceptor
- */
-process.on('uncaughtException', (err: Error) => {
-    logger.error('[ERROR][API].', err.stack);
-});
