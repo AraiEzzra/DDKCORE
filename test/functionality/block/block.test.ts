@@ -1,13 +1,14 @@
-import BlockRepo from 'core/repository/block';
+import BlockRepo from 'core/repository/block/index';
 import BlockController from 'core/controller/block';
+import TransactionController from 'core/controller/transaction';
+import TransactionPoolService from 'core/service/transactionPool';
+
 // import chai, { expect } from 'chai';
 import spies from 'chai-spies';
-import { applyBlock, clean, EXPECTED_BLOCK } from 'test/functionality/utils';
+import { applyBlock, clean, TEST_BLOCK } from 'test/functionality/utils/index';
 import SyncService from 'core/service/sync';
-import RoundService from 'core/service/round';
-import RoundRepository from 'core/repository/round';
-import { messageON } from 'shared/util/bus';
 import System from 'core/repository/system';
+import { SECRET, TRANSACTION } from 'test/functionality/utils/transaction';
 
 const chai = require('chai'),
     expect = chai.expect; // preference and tested with expect
@@ -25,7 +26,7 @@ describe('ON RECEIVE BLOCK TEST', () => {
             const lastBlock = await BlockRepo.getLastBlock();
 
             expect(response.success).to.equal(true);
-            expect(lastBlock).to.deep.equal(EXPECTED_BLOCK);
+            expect(lastBlock).to.deep.equal(TEST_BLOCK);
         });
         it('New block with less height', async () => {
 
@@ -86,6 +87,7 @@ describe('ON RECEIVE BLOCK TEST', () => {
 
     context('Without consensus & without synchronization', () => {
         before(async () => {
+            SyncService.setConsensus(false);
             System.synchronization = false;
         });
         it('New block with higher height', async () => {
@@ -107,15 +109,12 @@ describe('ON RECEIVE BLOCK TEST', () => {
                 previousBlockId: '541416300f24a495dbcd28738f2824805b38682a96d26a133b0b36c10ca86ec5',
                 history: []
             };
-
-            const EXPECTED_ERRORS = [ 'Invalid block' ];
-            const messageOnSpy = chai.spy(messageON);
+            const EXPECTED_ERRORS = ['Invalid block'];
 
             const response = await BlockController.onReceiveBlock({ data: { block: ACTUAL_BLOCK } });
 
             expect(response.success).to.equal(false);
             expect(response.errors).to.deep.equal(EXPECTED_ERRORS);
-            // expect(messageOnSpy).to.have.been.called();
         });
     });
 
@@ -143,14 +142,34 @@ describe('ON RECEIVE BLOCK TEST', () => {
                 previousBlockId: 'cbb9449abb9672d33fa2eb200b1c8b03db7c6572dfb6e59dc334c0ab82b63ab0',
                 history: []
             };
+            const EXPECTED_BLOCK = { ...ACTUAL_BLOCK, relay: 3 };
 
             const response = await BlockController.onReceiveBlock({ data: { block: ACTUAL_BLOCK } });
             const lastBlock = await BlockRepo.getLastBlock();
 
             expect(response.success).to.equal(true);
-            expect(lastBlock).to.deep.equal(ACTUAL_BLOCK);
+            expect(lastBlock).to.deep.equal(EXPECTED_BLOCK);
         });
+        after(clean);
+    });
 
+    context('With consensus & with transactions', () => {
+        before(async () => {
+            const transactionRequest = { trs: TRANSACTION, secret: SECRET };
+
+            const firstTransactionResponse = TransactionController.transactionCreate(transactionRequest);
+            const secondTransactionResponse = TransactionController.transactionCreate(transactionRequest);
+
+            console.log('FIRST: ', JSON.stringify(firstTransactionResponse));
+            console.log('SECOND: ', JSON.stringify(secondTransactionResponse));
+
+            const transactionsNumber = TransactionPoolService.getSize();
+
+            console.log('NUMBER: ', transactionsNumber);
+        });
+        it('hello world', () => {
+            console.log('TEST HERE');
+        });
     });
 
 });

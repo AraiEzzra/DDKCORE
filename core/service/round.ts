@@ -62,7 +62,7 @@ class RoundService implements IRoundService {
                 cellTime = 0;
             }
             if (cellTime >= 0) {
-                logger.info(
+                logger.debug(
                     `${this.logPrefix}[generateRound] Start forging block to: ${mySlot.slot} after ${cellTime} ms`
                 );
                 createTaskON(ActionTypes.BLOCK_GENERATE, cellTime, {
@@ -70,7 +70,7 @@ class RoundService implements IRoundService {
                     keyPair: this.keyPair,
                 });
             } else {
-                logger.info(
+                logger.debug(
                     `${this.logPrefix}[generateRound] Skip forging block to: ${mySlot.slot} after ${cellTime} ms`
                 );
             }
@@ -82,7 +82,7 @@ class RoundService implements IRoundService {
         let roundEndTime = SlotService.getSlotRealTime(lastSlot + 1) - new Date().getTime();
 
         if (roundEndTime < 0) {
-            logger.info(
+            logger.debug(
                 `${this.logPrefix}[startRoundFinishTask] Skip finish round`
             );
             roundEndTime = 0;

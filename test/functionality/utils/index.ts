@@ -4,7 +4,7 @@ import BlockRepo from 'core/repository/block';
 import BlockPGRepo from 'core/repository/block/pg';
 import BlockController from 'core/controller/block';
 
-export const EXPECTED_BLOCK = {
+export const TEST_BLOCK = {
     id: 'bf230d87d2c346a598b6547e7dcbea3d52baac4dea6b1e8254ed87950c991ca4',
     version: 1,
     height: 2,
@@ -22,41 +22,7 @@ export const EXPECTED_BLOCK = {
     history: []
 };
 
-const abc = {
-    'slots': {
-        '83cb3d8641c8e73735cc1b70c915602ffcb6e5a68f14a71056511699050a1a05': {
-            'slot': 10635086,
-            'isForged': false
-        },
-        'f959e6c8d279c97d3ec5ba993f04ab740a6e50bec4aad75a8a1e7808a6c5eec7': {
-            'slot': 10635087,
-            'isForged': false
-        },
-        '137b9f0f839ab3ecd2146bfecd64d31e127d79431211e352bedfeba5fd61a57a': {
-            'slot': 10635088,
-            'isForged': false
-        }
-    }
-};
-
-const bcd = {
-    'slots': {
-        '83cb3d8641c8e73735cc1b70c915602ffcb6e5a68f14a71056511699050a1a05': {
-            'slot': 10635086,
-            'isForged': false
-        },
-        'f959e6c8d279c97d3ec5ba993f04ab740a6e50bec4aad75a8a1e7808a6c5eec7': {
-            'slot': 10635087,
-            'isForged': false },
-        '137b9f0f839ab3ecd2146bfecd64d31e127d79431211e352bedfeba5fd61a57a': {
-            'slot': 10635088,
-            'isForged': false }
-    }
-};
-
 export const clean = async () => {
-    RoundService.restore();
-    RoundRepository.deleteLastRound();
     const memoryBlock = BlockRepo.getLastBlock();
     if (memoryBlock && memoryBlock.height !== 1) {
         BlockRepo.deleteLastBlock();
@@ -68,5 +34,5 @@ export const clean = async () => {
 };
 
 export const applyBlock = async () => {
-    return BlockController.onReceiveBlock({ data: { block: EXPECTED_BLOCK } });
+    return BlockController.onReceiveBlock({ data: { block: TEST_BLOCK } });
 };

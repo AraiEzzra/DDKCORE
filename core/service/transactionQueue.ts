@@ -68,6 +68,9 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
     }
 
     push(trs: Transaction<T>): void {
+
+        console.log('TRS: ', JSON.stringify(trs));
+
         if (this.queue.findIndex(t => t.id === trs.id) !== -1) {
             return;
         }
