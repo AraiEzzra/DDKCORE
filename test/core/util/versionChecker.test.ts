@@ -31,6 +31,30 @@ describe('Version checker', () => {
                 version: '0.0.0',
                 expected: false,
             },
+            {
+                version: '1.2.c',
+                expected: false,
+            },
+            {
+                version: '1.2',
+                expected: false,
+            },
+            {
+                version: '1.2.',
+                expected: false,
+            },
+            {
+                version: '1.2.3.4.5',
+                expected: false,
+            },
+            {
+                version: '...',
+                expected: false,
+            },
+            {
+                version: '3a2b11',
+                expected: false,
+            },
         ];
 
         tests.forEach(test => {
