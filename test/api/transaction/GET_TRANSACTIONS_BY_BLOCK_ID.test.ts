@@ -1,5 +1,5 @@
 import { Fixture } from 'test/api/base/fixture';
-import { Message2 } from 'shared/model/message';
+import { Message } from 'shared/model/message';
 import { expect } from 'chai';
 import { ResponseEntity } from 'shared/model/response';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
@@ -65,7 +65,7 @@ describe('Test GET_TRANSACTIONS_BY_BLOCK_ID', () => {
         const socket = getSocket();
         socket.emit('message', SUCCESS_MESSAGE);
         socket.on('message',
-            (response: Message2<ResponseEntity<{ transactions: Array<SerializedTransaction<IAsset>>, count: number }>>
+            (response: Message<ResponseEntity<{ transactions: Array<SerializedTransaction<IAsset>>, count: number }>>
             ) => {
                 if (response.headers.id === HEADERS.id) {
                     expect(response.body.success).to.equal(true);
@@ -91,7 +91,7 @@ describe('Test GET_TRANSACTIONS_BY_BLOCK_ID', () => {
         const socket = getSocket();
         socket.emit('message', FAILED_MESSAGE);
         socket.on('message',
-            (response: Message2<ResponseEntity<{ transactions: Array<SerializedTransaction<IAsset>>, count: number }>>
+            (response: Message<ResponseEntity<{ transactions: Array<SerializedTransaction<IAsset>>, count: number }>>
             ) => {
                 if (response.headers.id === HEADERS.id) {
                     expect(response.body.success).to.equal(false);

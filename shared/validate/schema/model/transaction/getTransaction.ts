@@ -1,5 +1,5 @@
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
-import { ALLOWED_TRANSACTION_TYPES_ARRAY } from 'shared/validate/schema/common';
+import { ALLOWED_TRANSACTION_TYPES_ARRAY, PAGINATION_SCHEME } from 'shared/validate/schema/common';
 
 export const SCHEMAS_TRANSACTIONS = [
     {
@@ -44,15 +44,7 @@ export const SCHEMAS_TRANSACTIONS = [
                     }
                 }
             },
-            limit: {
-                type: 'integer',
-                minimum: 1,
-                maximum: 100
-            },
-            offset: {
-                type: 'integer',
-                minimum: 0,
-            }
+            ...PAGINATION_SCHEME
         },
         required: ['limit', 'offset']
     },
@@ -64,15 +56,7 @@ export const SCHEMAS_TRANSACTIONS = [
                 type: 'string',
                 format: 'id'
             },
-            limit: {
-                type: 'integer',
-                minimum: 1,
-                maximum: 100
-            },
-            offset: {
-                type: 'integer',
-                minimum: 0,
-            }
+            ...PAGINATION_SCHEME
         },
         required: ['blockId', 'limit', 'offset']
     },

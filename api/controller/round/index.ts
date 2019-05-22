@@ -1,7 +1,7 @@
 import { RPC } from 'api/utils/decorators';
 import SocketMiddleware from 'api/middleware/socket';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
-import {Message2} from 'shared/model/message';
+import { Message } from 'shared/model/message';
 import { Pagination } from 'api/utils/common';
 import { validate } from 'shared/validate';
 
@@ -14,19 +14,19 @@ class RoundController {
     }
 
     @RPC(API_ACTION_TYPES.GET_CURRENT_ROUND)
-    getCurrentRound(message: Message2<{}>, socket: any) {
+    getCurrentRound(message: Message<{}>, socket: any) {
         SocketMiddleware.emitToCore<{}>(message, socket);
     }
 
     @RPC(API_ACTION_TYPES.GET_ROUNDS)
-    getRounds(message: Message2<Pagination>, socket: any) {
+    getRounds(message: Message<Pagination>, socket: any) {
         SocketMiddleware.emitToCore<Pagination>(message, socket);
     }
 
     @RPC(API_ACTION_TYPES.GET_ROUND)
     @validate()
-    getRound(message: Message2<{height: number}>, socket: any) {
-        SocketMiddleware.emitToCore<{height: number}>(message, socket);
+    getRound(message: Message<{ height: number }>, socket: any) {
+        SocketMiddleware.emitToCore<{ height: number }>(message, socket);
     }
 }
 

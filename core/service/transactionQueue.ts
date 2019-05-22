@@ -8,7 +8,7 @@ import {
     TransactionStatus,
     TransactionType
 } from 'shared/model/transaction';
-import { transactionSortFunc } from 'core/util/transaction';
+import { transactionSortFunc, uniqueFilterByKey } from 'core/util/transaction';
 import TransactionDispatcher from 'core/service/transaction';
 import TransactionPool from 'core/service/transactionPool';
 import { logger } from 'shared/util/logger';
@@ -20,6 +20,7 @@ import { EVENT_TYPES } from 'shared/driver/socket/codes';
 import SharedTransactionRepo from 'shared/repository/transaction';
 import config from 'shared/config';
 import TransactionHistoryRepository from 'core/repository/history/transaction';
+import { TransactionId } from 'shared/model/types';
 
 export interface ITransactionQueueService<T extends Object> {
     getLockStatus(): boolean;
@@ -39,12 +40,14 @@ export interface ITransactionQueueService<T extends Object> {
     process(): Promise<void>;
 
     getSize(): { conflictedQueue: number, queue: number };
+    
+    getUniqueTransactions(): Array<Transaction<IAsset>>;
 
 }
 
 class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> {
     private queue: Array<Transaction<T>> = [];
-    private conflictedQueue: Array<{ transaction: Transaction<T>, expire: number }> = [];
+    private conflictedQueue: Array<Transaction<T>> = [];
 
     private locked: boolean = false;
 
@@ -81,17 +84,14 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
     }
 
     pushInConflictedQueue(trs: Transaction<T>): void {
-        this.conflictedQueue.push({
-            transaction: trs,
-            expire: Math.floor(new Date().getTime() / SECOND) + config.CONSTANTS.TRANSACTION_QUEUE_EXPIRE
-        });
+        this.conflictedQueue.push(trs);
         trs.status = TransactionStatus.QUEUED_AS_CONFLICTED;
         TransactionHistoryRepository.addEvent(trs, { action: TransactionLifecycle.PUSH_IN_CONFLICTED_QUEUE });
     }
 
     // TODO can be optimized if check senderAddress and recipientAddress
     reshuffle(): void {
-        this.queue.push(...this.conflictedQueue.map(obj => obj.transaction));
+        this.queue.push(...this.conflictedQueue);
         this.conflictedQueue.length = 0;
         this.queue.sort(transactionSortFunc);
         setImmediate(this.process);
@@ -126,7 +126,7 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
         const verifyStatus = TransactionDispatcher.verifyUnconfirmed(trs, sender);
 
         if (!verifyStatus.success) {
-            logger.error(
+            logger.debug(
                 `[Service][TransactionQueue][process][verifyUnconfirmed] ` +
                 `${JSON.stringify(verifyStatus.errors.join('. '))}. Transaction: ${trs.id}`
             );
@@ -160,6 +160,11 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
     getSize(): { conflictedQueue: number, queue: number } {
         return { conflictedQueue: this.conflictedQueue.length, queue: this.queue.length };
     }
+    
+    getUniqueTransactions(): Array<Transaction<IAsset>> {
+        const transactions = [...this.queue, ...this.conflictedQueue].sort(transactionSortFunc);
+        return uniqueFilterByKey<TransactionId>('id',  transactions);
+    } 
 }
 
 export default new TransactionQueue();

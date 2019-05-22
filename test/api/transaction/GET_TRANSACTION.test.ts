@@ -1,5 +1,5 @@
 import { Fixture } from 'test/api/base/fixture';
-import { Message2 } from 'shared/model/message';
+import { Message } from 'shared/model/message';
 import { expect } from 'chai';
 import { ResponseEntity } from 'shared/model/response';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
@@ -35,7 +35,7 @@ describe('Test GET_TRANSACTION', () => {
 
         const socket = getSocket();
         socket.emit('message', GET_TRANSACTION_SUCCESS);
-        socket.on('message', (response: Message2<ResponseEntity<any>>) => {
+        socket.on('message', (response: Message<ResponseEntity<any>>) => {
             if (response.headers.id === GET_TRANSACTION_SUCCESS_HEADERS.id) {
                 expect(response.body.success).to.equal(true);
                 expect(response.body.data).to.deep.equal(SUCCESS_TRANSACTION);
@@ -57,7 +57,7 @@ describe('Test GET_TRANSACTION', () => {
 
         const socket = getSocket();
         socket.emit('message', GET_TRANSACTION_FAILED);
-        socket.on('message', (response: Message2<ResponseEntity<any>>) => {
+        socket.on('message', (response: Message<ResponseEntity<any>>) => {
             if (response.headers.id === GET_TRANSACTION_FAILED_HEADERS.id) {
                 expect(response.body.success).to.equal(true);
                 expect(response.body.data).to.equal(null);
@@ -77,7 +77,7 @@ describe('Test GET_TRANSACTION', () => {
 
         const socket = getSocket();
         socket.emit('message', GET_TRANSACTION_FAILED);
-        socket.on('message', (response: Message2<ResponseEntity<any>>) => {
+        socket.on('message', (response: Message<ResponseEntity<any>>) => {
             if (response.headers.id === GET_TRANSACTION_FAILED_HEADERS.id) {
                 expect(response.body.success).to.equal(false);
                 expect(response.body.errors).to.deep.equal(

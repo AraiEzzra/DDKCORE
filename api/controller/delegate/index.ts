@@ -1,5 +1,5 @@
 import { RPC } from 'api/utils/decorators';
-import { Message2 } from 'shared/model/message';
+import { Message } from 'shared/model/message';
 import SocketMiddleware from 'api/middleware/socket';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
 import { Pagination } from 'api/utils/common';
@@ -16,19 +16,19 @@ export class DelegateController {
 
     @RPC(API_ACTION_TYPES.GET_DELEGATES)
     @validate()
-    getDelegates(message: Message2<Pagination>, socket: any) {
+    getDelegates(message: Message<Pagination>, socket: any) {
         SocketMiddleware.emitToCore<Pagination>(message, socket);
     }
 
     @RPC(API_ACTION_TYPES.GET_ACTIVE_DELEGATES)
     @validate()
-    getActiveDelegates(message: Message2<Pagination>, socket: any) {
+    getActiveDelegates(message: Message<Pagination>, socket: any) {
         SocketMiddleware.emitToCore<Pagination>(message, socket);
     }
 
     @RPC(API_ACTION_TYPES.GET_MY_DELEGATES)
     @validate()
-    getMyDelegates(message: Message2<Pagination & { address: string }>, socket: any) {
+    getMyDelegates(message: Message<Pagination & { address: string }>, socket: any) {
         SocketMiddleware.emitToCore<Pagination & { address: string }>(message, socket);
     }
 

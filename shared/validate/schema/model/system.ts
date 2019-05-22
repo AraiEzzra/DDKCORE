@@ -1,4 +1,5 @@
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
+import { PAGINATION_SCHEME } from 'shared/validate/schema/common';
 
 export const SCHEMAS_SYSTEM = [
     {
@@ -34,4 +35,13 @@ export const SCHEMAS_SYSTEM = [
         },
         required: ['id']
     },
+    {
+        id: API_ACTION_TYPES.GET_ALL_UNCONFIRMED_TRANSACTIONS,
+        type: 'object',
+        properties: {
+            ...PAGINATION_SCHEME
+        },
+        required: ['limit', 'offset']
+    },
+    
 ];

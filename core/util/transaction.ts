@@ -53,3 +53,14 @@ export const getTransactionServiceByType = (type: TransactionType): IAssetServic
 export const TRANSACTION_BUFFER_SIZE =
     BUFFER.LENGTH.BYTE +        // type
     BUFFER.LENGTH.UINT32;       // createdAt
+
+export const uniqueFilterByKey = <T>(key: T, array: Array<{ key: T } & any>) => {
+    const uniq = new Set<T>();
+    return array.filter(item => {
+        if (uniq.has(item[key])) {
+            return false;
+        }
+        uniq.add(item[key]);
+        return true;
+    });
+};

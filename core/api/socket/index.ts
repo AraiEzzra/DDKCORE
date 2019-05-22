@@ -6,12 +6,12 @@ import io from 'socket.io';
 
 export class CoreRPCSocketServer extends SocketServer implements ISocketServer {
 
-    run() {
+    run<T>() {
         this.socket = io(this.port, this.config);
         this.socket.on(CONNECT_CHANNEL, (socket: SocketIO.Socket) => {
             logger.info('API connected to socket server');
             SocketMiddleware.onConnect(socket);
-            SocketMiddleware.registerAPI(socket);
+            SocketMiddleware.registerAPI<T>(socket);
         });
     }
 }

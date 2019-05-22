@@ -1,6 +1,6 @@
 import { RPC } from 'api/utils/decorators';
 import SocketMiddleware from 'api/middleware/socket';
-import { Message2 } from 'shared/model/message';
+import { Message } from 'shared/model/message';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
 import TransactionPGRepository from 'api/repository/transaction';
 import { IAsset, SerializedTransaction, TransactionModel } from 'shared/model/transaction';
@@ -22,19 +22,19 @@ export class TransactionController {
 
     @RPC(API_ACTION_TYPES.CREATE_TRANSACTION)
     @validate()
-    createTransaction(message: Message2<{ secret: string, trs: TransactionModel<IAsset> }>, socket: any) {
+    createTransaction(message: Message<{ secret: string, trs: TransactionModel<IAsset> }>, socket: any) {
         SocketMiddleware.emitToCore(message, socket);
     }
 
     @RPC(API_ACTION_TYPES.CREATE_PREPARED_TRANSACTION)
     @validate()
-    createPreparedTransaction(message: Message2<{ secret: string, trs: TransactionModel<IAsset> }>, socket: any) {
+    createPreparedTransaction(message: Message<{ secret: string, trs: TransactionModel<IAsset> }>, socket: any) {
         SocketMiddleware.emitToCore(message, socket);
     }
 
     @RPC(API_ACTION_TYPES.GET_TRANSACTION)
     @validate()
-    async getTransaction(message: Message2<{ id: string }>, socket: any): Promise<void> {
+    async getTransaction(message: Message<{ id: string }>, socket: any): Promise<void> {
         const transaction = await TransactionPGRepository.getOne(message.body.id);
         const data = transaction ? SharedTransactionRepo.serialize(transaction) : null;
         SocketMiddleware.emitToClient<SerializedTransaction<IAsset>>(
@@ -47,7 +47,7 @@ export class TransactionController {
 
     @RPC(API_ACTION_TYPES.GET_TRANSACTIONS)
     @validate()
-    async getTransactions(message: Message2<getTransactionsRequest>, socket: any): Promise<void> {
+    async getTransactions(message: Message<getTransactionsRequest>, socket: any): Promise<void> {
         const transactions = await TransactionPGRepository.getMany(
             message.body.filter || {},
             message.body.sort || [['createdAt', 'ASC']],
@@ -68,7 +68,7 @@ export class TransactionController {
 
     @RPC(API_ACTION_TYPES.GET_TRANSACTIONS_BY_BLOCK_ID)
     @validate()
-    async getTransactionsByBlockId(message: Message2<{ limit: number, offset: number, blockId: string }>, socket: any) {
+    async getTransactionsByBlockId(message: Message<{ limit: number, offset: number, blockId: string }>, socket: any) {
         const transactions = await TransactionPGRepository.getMany(
             { blockId: message.body.blockId },
             [['type', 'ASC'], ['createdAt', 'ASC'], ['id', 'ASC']],

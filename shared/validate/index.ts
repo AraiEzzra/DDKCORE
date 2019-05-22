@@ -5,7 +5,7 @@ import { logger } from 'shared/util/logger';
 import { MESSAGE_CHANNEL } from 'shared/driver/socket/channels';
 import { ALL_SCHEMAS, MESSAGE } from 'shared/validate/schema/init';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
-import { Message2 } from 'shared/model/message';
+import { Message } from 'shared/model/message';
 
 /**
  * Compile all schemas for validate
@@ -60,7 +60,7 @@ export const validateData = (schema, data: Object, callback) => {
     });
 };
 
-const handlerError = (message: Message2<any>, socket: any) => {
+const handlerError = (message: Message<any>, socket: any) => {
     logger.error(`[Validation] ${message.body.errors.join('. ')}`);
     socket.emit(MESSAGE_CHANNEL, message);
 };

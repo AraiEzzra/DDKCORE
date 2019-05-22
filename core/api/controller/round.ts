@@ -1,4 +1,4 @@
-import { Message2 } from 'shared/model/message';
+import { Message } from 'shared/model/message';
 import { ResponseEntity } from 'shared/model/response';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
 import { API } from 'core/api/util/decorators';
@@ -17,7 +17,7 @@ class RoundController {
     }
 
     @API(API_ACTION_TYPES.GET_CURRENT_ROUND)
-    public getCurrentRound(message: Message2<{}>): ResponseEntity<Round> {
+    public getCurrentRound(message: Message<{}>): ResponseEntity<Round> {
         logger.debug(`[API][Round][getCurrentRound] ${JSON.stringify(message.body)}`);
         return new ResponseEntity({
             data: RoundRepository.getCurrentRound()
@@ -25,14 +25,14 @@ class RoundController {
     }
 
     @API(API_ACTION_TYPES.GET_ROUNDS)
-    public async getRounds(message: Message2<Pagination>): Promise<ResponseEntity<Array<Round>>> {
+    public async getRounds(message: Message<Pagination>): Promise<ResponseEntity<Array<Round>>> {
         logger.debug(`[API][Round][getMany] ${JSON.stringify(message.body)}`);
         const data = await RoundRepositoryPG.getMany(message.body.limit, message.body.offset);
         return new ResponseEntity<Array<Round>>({ data });
     }
 
     @API(API_ACTION_TYPES.GET_ROUND)
-    public async getRound(message: Message2<{ height: number }>): Promise<ResponseEntity<Round>> {
+    public async getRound(message: Message<{ height: number }>): Promise<ResponseEntity<Round>> {
         logger.debug(`[API][Round][getRound] ${JSON.stringify(message.body)}`);
         const data = await RoundRepositoryPG.getByHeight(message.body.height);
         return new ResponseEntity({ data });

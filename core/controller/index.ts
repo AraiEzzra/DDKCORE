@@ -4,10 +4,10 @@ import SyncController from 'core/controller/sync';
 import EventService from 'core/service/events';
 import TransactionController from 'core/controller/transaction';
 import PeerController from 'core/controller/peer';
-import { filter, flatMap } from 'rxjs/operators';
+import { filter } from 'rxjs/operators';
 import System from 'core/repository/system';
 import EventsQueue from 'core/repository/eventQueue';
-import { subjectOn, subjectRpc } from 'shared/util/bus';
+import { subjectOn } from 'shared/util/bus';
 import { logger } from 'shared/util/logger';
 import { timer } from 'rxjs';
 import config from 'shared/config';
@@ -38,7 +38,7 @@ const processMainQueue = async (): Promise<void> => {
     } else {
         const errorMessage = response.errors.join('. ');
         if (!errorMessage.includes('Block already processed')) {
-            logger.debug(`[processMainQueue] Main task ${event.topicName} failed: ${errorMessage}`);
+            logger.error(`[processMainQueue] Main task ${event.topicName} failed: ${errorMessage}`);
         }
     }
 

@@ -12,7 +12,7 @@ export class ReferredUsersController {
 
     @RPC(API_ACTION_TYPES.GET_REFERRED_USERS)
     @validate()
-    getReferredUsers(message: Message, socket: any) {
+    getReferredUsers(message: Message<{ address: string, level: number }>, socket: any) {
         SocketMiddleware.emitToCore(message, socket);
     }
 }
