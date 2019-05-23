@@ -189,7 +189,7 @@ class RoundService implements IRoundService {
             round = RoundRepository.getCurrentRound();
         }
 
-        logger.debug(`${this.logPrefix}[restoreToSlot]: restored round ${JSON.stringify(round)}`);
+        logger.trace(`${this.logPrefix}[restoreToSlot]: restored round ${JSON.stringify(round)}`);
     }
 }
 
