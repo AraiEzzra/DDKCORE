@@ -8,14 +8,11 @@ import PeerRepository from 'core/repository/peer';
 import SyncRepository, { ERROR_NOT_ENOUGH_PEERS } from 'core/repository/sync';
 import { TOTAL_PERCENTAGE } from 'core/util/const';
 import config from 'shared/config';
-import { logger } from 'shared/util/logger';
 import RoundService from 'core/service/round';
 import SlotService from 'core/service/slot';
-import RoundRepository from 'core/repository/round';
 import SharedTransactionRepo from 'shared/repository/transaction';
 import BlockController from 'core/controller/block';
 import { ResponseEntity } from 'shared/model/response';
-import { getLastSlotNumberInRound } from 'core/util/round';
 
 //  TODO get from env
 const MIN_CONSENSUS = 51;
@@ -100,23 +97,13 @@ export class SyncService implements ISyncService {
     }
 
     async rollback() {
-        const blockSlot = SlotService.getSlotNumber(BlockRepository.getLastBlock().createdAt);
-        const prevRound = RoundRepository.getPrevRound();
-        if (!prevRound) {
-            await BlockService.deleteLastBlock();
+        const deleteResponse = await BlockService.deleteLastBlock();
+        if (!deleteResponse.success) {
             return;
         }
-        const lastSlotInRound = getLastSlotNumberInRound(prevRound);
 
-        logger.debug(`[Controller][Sync][rollback] lastSlotInRound: ${lastSlotInRound}, blockSlot: ${blockSlot}`);
-
-        if (lastSlotInRound >= blockSlot) {
-            logger.debug(`[Controller][Sync][rollback] round rollback`);
-            RoundService.backwardProcess();
-        }
-
-        await BlockService.deleteLastBlock();
-        return;
+        const newLastBlock = BlockRepository.getLastBlock();
+        RoundService.restoreToSlot(SlotService.getSlotNumber(newLastBlock.createdAt));
     }
 
     async requestBlocks(lastBlock, peer): Promise<ResponseEntity<Array<Block>>> {

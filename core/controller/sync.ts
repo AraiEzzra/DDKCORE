@@ -12,6 +12,7 @@ import EventQueue from 'core/repository/eventQueue';
 import { REQUEST_TIMEOUT } from 'core/repository/socket';
 import { asyncTimeout } from 'shared/util/timer';
 import RoundService from 'core/service/round';
+import SlotService from 'core/service/slot';
 
 type checkCommonBlocksRequest = {
     data: {
@@ -60,7 +61,8 @@ export class SyncController extends BaseController {
         }
         System.synchronization = true;
         logger.debug(`${LOG_PREFIX}[startSyncBlocks]: start sync with consensus ${SyncService.getConsensus()}%`);
-        RoundService.restoreForBlock(BlockRepository.getLastBlock(), false);
+        const lastBlockSlotNumber = SlotService.getSlotNumber(BlockRepository.getLastBlock().createdAt);
+        RoundService.restoreToSlot(lastBlockSlotNumber);
 
         // TODO: change sync timeout logic
         let needDelay = false;

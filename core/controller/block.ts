@@ -10,7 +10,6 @@ import SyncService from 'core/service/sync';
 import SlotService from 'core/service/slot';
 import { messageON } from 'shared/util/bus';
 import SharedTransactionRepo from 'shared/repository/transaction';
-import { getLastSlotNumberInRound } from 'core/util/round';
 import RoundService from 'core/service/round';
 import RoundRepository from 'core/repository/round';
 import { ActionTypes } from 'core/util/actionTypes';
@@ -65,30 +64,19 @@ class BlockController extends BaseController {
             !SyncService.getMyConsensus()
         ) {
             // TODO check if slot lastBlock and receivedBlock is not equal
-            const receivedBlockSlotNumber = SlotService.getSlotNumber(receivedBlock.createdAt);
-            const lastSlotNumberInPrevRound = RoundRepository.getPrevRound() &&
-                getLastSlotNumberInRound(RoundRepository.getPrevRound());
 
-            if (lastSlotNumberInPrevRound >= receivedBlockSlotNumber) {
-                RoundService.restoreForBlock(lastBlock, false);
-            }
-
+            RoundService.restoreToSlot(SlotService.getSlotNumber(lastBlock.createdAt));
             const deleteLastBlockResponse = await BlockService.deleteLastBlock();
             if (!deleteLastBlockResponse.success) {
                 errors.push(...deleteLastBlockResponse.errors, 'onReceiveBlock');
                 return new ResponseEntity<void>({ errors });
             }
 
-            RoundService.restoreForBlock(receivedBlock);
-
+            RoundService.restoreToSlot(SlotService.getSlotNumber(receivedBlock.createdAt));
             const receiveResponse: ResponseEntity<void> = await BlockService.receiveBlock(receivedBlock);
             if (!receiveResponse.success) {
                 errors.push(...receiveResponse.errors, 'onReceiveBlock');
                 return new ResponseEntity<void>({ errors });
-            }
-
-            if (lastSlotNumberInPrevRound === receivedBlockSlotNumber) {
-                RoundService.forwardProcess();
             }
 
             return new ResponseEntity<void>({ errors });
@@ -107,32 +95,23 @@ class BlockController extends BaseController {
                         ),
                     );
                     RoundRepository.add(newRound);
-                } else if (
-                    receivedBlockSlotNumber > getLastSlotNumberInRound(RoundRepository.getCurrentRound()) &&
-                    System.synchronization
-                ) {
-                    RoundService.restoreForBlock(receivedBlock);
                 }
 
+                RoundService.restoreToSlot(SlotService.getSlotNumber(receivedBlock.createdAt));
                 const receiveResponse: ResponseEntity<void> = await BlockService.receiveBlock(receivedBlock);
                 if (!receiveResponse.success) {
                     errors.push(...receiveResponse.errors, 'onReceiveBlock');
                     return new ResponseEntity<void>({ errors });
                 }
-
-                const lastSlotNumber = getLastSlotNumberInRound(RoundRepository.getCurrentRound());
-                if (receivedBlockSlotNumber === lastSlotNumber) {
-                    RoundService.forwardProcess();
-                }
             } else if (!SyncService.getMyConsensus()) {
                 if (!System.synchronization) {
                     messageON('EMIT_SYNC_BLOCKS');
                 }
-                errors.push(`[Service][Block][onReceiveBlock] Invalid block`);
+                errors.push(`[Controller][Block][onReceiveBlock] Invalid block`);
             }
         } else {
             errors.push(
-                `[Service][Block][onReceiveBlock] ` +
+                `[Controller][Block][onReceiveBlock] ` +
                 `Discarded block that does not match with current chain: ${receivedBlock.id}, ` +
                 `height: ${receivedBlock.height}, ` +
                 `slot: ${SlotService.getSlotNumber(receivedBlock.createdAt)}, ` +
