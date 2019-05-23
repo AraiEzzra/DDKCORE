@@ -1,7 +1,6 @@
 stages:
  - build_core
  - start_core
- - auto_tests
  - build_core_tag
  - deploy-PREPROD
  - generate_docker-compose
@@ -30,15 +29,6 @@ deploy_STAGE:
    - ansible-playbook -i ./inventory.newcore.skctestnet.env --limit SKC-TESTBUILD-CORE ./books/clean_docker_image_core.yml
    - ansible-playbook -i ./inventory.newcore.skctestnet.env --limit SKC-TESTBUILD-CORE ./books/start_build_docker-compose.yml
    - ./manual.scripts/start.logs.stage.sh
-
-auto_tests:
-  stage: auto_tests
-  only:
-    - tags
-  tags:
-    - ddk-tests
-  script:
-    - /var/www/ddktest/auto_tests.sh
 
 build_image_tag:
   stage: build_core_tag
