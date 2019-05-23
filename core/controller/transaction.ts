@@ -1,36 +1,27 @@
 import { ON } from 'core/util/decorator';
 import { BaseController } from 'core/controller/baseController';
 import { logger } from 'shared/util/logger';
-import { IAsset, SerializedTransaction, TransactionModel } from 'shared/model/transaction';
+import { IAsset, SerializedTransaction } from 'shared/model/transaction';
 import TransactionQueue from 'core/service/transactionQueue';
 import TransactionService from 'core/service/transaction';
 import TransactionPool from 'core/service/transactionPool';
 import { Account } from 'shared/model/account';
 import AccountRepo from 'core/repository/account';
 import SharedTransactionRepo from 'shared/repository/transaction';
-import { EVENT_TYPES } from 'shared/driver/socket/codes';
 import { createKeyPairBySecret } from 'shared/util/crypto';
-import SocketMiddleware from 'core/api/middleware/socket';
 import { ResponseEntity } from 'shared/model/response';
 import { CreateTransactionParams } from 'core/controller/types';
 import config from 'shared/config';
 
 class TransactionController extends BaseController {
+
     @ON('TRANSACTION_RECEIVE')
-    public async onReceiveTransaction(action: { data: { trs: TransactionModel<IAsset> } }): Promise<void> {
-        const { data } = action;
+    public async onReceiveTransaction({ data } : { data: { trs: SerializedTransaction<IAsset> } }): Promise<void> {
         const trs = SharedTransactionRepo.deserialize(data.trs);
         logger.trace(`[Controller][Transaction][onReceiveTransaction] ${JSON.stringify(data.trs)}`);
 
         const validateResult = TransactionService.validate(trs);
         if (!validateResult.success) {
-            SocketMiddleware.emitEvent<{ transaction: SerializedTransaction<IAsset>, reason: Array<string> }>(
-                EVENT_TYPES.DECLINE_TRANSACTION,
-                {
-                    transaction: SharedTransactionRepo.serialize(trs),
-                    reason: validateResult.errors
-                }
-            );
             return;
         }
 
@@ -39,6 +30,7 @@ class TransactionController extends BaseController {
         }
 
         const sender: Account = AccountRepo.getByAddress(trs.senderAddress);
+        console.log('SENDER', sender);
         if (!sender) {
             AccountRepo.add({
                 publicKey: trs.senderPublicKey,

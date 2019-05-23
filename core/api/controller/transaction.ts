@@ -7,7 +7,7 @@ import TransactionRPCController from 'core/controller/transaction';
 import TransactionQueue from 'core/service/transactionQueue';
 import { ResponseEntity } from 'shared/model/response';
 import SharedTransactionRepo from 'shared/repository/transaction';
-import { SerializedTransaction } from 'shared/model/transaction';
+import { IAsset, SerializedTransaction } from 'shared/model/transaction';
 import TransactionService from 'core/service/transaction';
 import AccountRepo from 'core/repository/account';
 
@@ -32,7 +32,7 @@ export class TransactionController {
         const validateResult = TransactionService.validate(transaction);
         if (!validateResult.success) {
             logger.debug(
-                `[RPC][TransactionController][createPreparedTransaction]Validation of ${transaction.id} failed`
+                `[RPC][TransactionController][createPreparedTransaction] Validation of ${transaction.id} failed`
             );
             return new ResponseEntity({ errors: validateResult.errors });
         }
@@ -43,7 +43,7 @@ export class TransactionController {
 
         let sender = AccountRepo.getByAddress(transaction.senderAddress);
         if (!sender) {
-            sender = AccountRepo.add({
+            AccountRepo.add({
                 address: transaction.senderAddress,
                 publicKey: transaction.senderPublicKey
             });

@@ -12,6 +12,7 @@ import { messageON } from 'shared/util/bus';
 import RoundService from 'core/service/round';
 import { ActionTypes } from 'core/util/actionTypes';
 import { IKeyPair } from 'shared/util/ed';
+import SharedTransactionRepo from 'shared/repository/transaction';
 
 interface BlockGenerateRequest {
     keyPair: IKeyPair;
@@ -33,6 +34,9 @@ class BlockController extends BaseController {
         }
 
         const receivedBlock = new Block(data.block);
+        receivedBlock.transactions = receivedBlock.transactions.map(
+            trs => SharedTransactionRepo.deserialize(trs)
+        ); 
         let lastBlock = BlockRepository.getLastBlock();
 
         const validateReceivedBlocKResponse = BlockService.validateReceivedBlock(lastBlock, receivedBlock);

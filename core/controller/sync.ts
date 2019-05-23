@@ -118,6 +118,8 @@ export class SyncController extends BaseController {
             }
         }
         System.synchronization = false;
+        const currentSlotNumber = SlotService.getSlotNumber(SlotService.getTime(Date.now()));
+        RoundService.restoreToSlot(currentSlotNumber);
         messageON('WARM_UP_FINISHED');
         EventQueue.process();
         logger.info(`${LOG_PREFIX}[startSyncBlocks] SYNCHRONIZATION DONE SUCCESS`);
