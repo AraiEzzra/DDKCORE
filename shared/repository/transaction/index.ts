@@ -64,6 +64,9 @@ class SharedTransactionRepo {
             type: Number(rawTrs.type),
             createdAt: Number(rawTrs.createdAt),
             senderPublicKey: rawTrs.senderPublicKey,
+            senderAddress: rawTrs.senderAddress 
+                ? BigInt(rawTrs.senderAddress) 
+                : getAddressByPublicKey(rawTrs.senderPublicKey),
             signature: rawTrs.signature,
             secondSignature: rawTrs.secondSignature,
             fee: Number(rawTrs.fee),

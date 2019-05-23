@@ -1,6 +1,6 @@
 import { IAssetService } from 'core/service/transaction';
 import { IAirdropAsset, IAssetVote, Stake, Transaction, TransactionModel, VoteType } from 'shared/model/transaction';
-import { Account} from 'shared/model/account';
+import { Account } from 'shared/model/account';
 import { ResponseEntity } from 'shared/model/response';
 import AccountRepo from 'core/repository/account';
 import config from 'shared/config';
@@ -15,13 +15,13 @@ import {
     verifyAirdrop
 } from 'core/util/reward';
 import { TOTAL_PERCENTAGE } from 'core/util/const';
-import AccountRepository from 'core/repository/account';
+import { PublicKey } from 'shared/model/types';
 
 class TransactionVoteService implements IAssetService<IAssetVote> {
 
     create(trs: TransactionModel<IAssetVote>): IAssetVote {
         const sender: Account = AccountRepo.getByAddress(trs.senderAddress);
-        const totals: { reward: number, unstake: number} =
+        const totals: { reward: number, unstake: number } =
             calculateTotalRewardAndUnstake(trs, sender, trs.asset.type === VoteType.DOWN_VOTE);
         const airdropReward: IAirdropAsset = getAirdropReward(sender, totals.reward, trs.type);
 
@@ -106,6 +106,7 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
             }
             return acc;
         }, []);
+
         if (trs.asset.votes.length > uniqVotes.length) {
             errors.push('Multiple votes for same delegate are not allowed');
         }
@@ -159,7 +160,8 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
                     removals++;
                     break;
                 }
-                default: errors.push('Invalid math operator for vote' + vote);
+                default:
+                    errors.push('Invalid math operator for vote' + vote);
             }
             if (!AccountRepo.getByPublicKey(publicKey).delegate) {
                 errors.push('Delegate not found, vote: ' + vote);
@@ -232,18 +234,21 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
         const isDownVote = trs.asset.votes[0][0] === '-';
         const votes = trs.asset.votes.map(vote => vote.substring(1));
         if (isDownVote) {
-            votes.forEach((newVote) => {
-                const targetAccount: Account = AccountRepo.getByPublicKey(newVote);
-                targetAccount.delegate.votes++;
-            });
             sender.votes.push(...votes);
+            if (!senderOnly) {
+                votes.forEach((newVote) => {
+                    const targetAccount: Account = AccountRepo.getByPublicKey(newVote);
+                    targetAccount.delegate.votes++;
+                });
+            }
         } else {
-            votes.reduce((acc: Array<string>, newVote: string) => {
-                const targetAccount: Account = AccountRepo.getByPublicKey(newVote);
-                targetAccount.delegate.votes--;
-                acc.splice(acc.indexOf(newVote), 1);
-                return acc;
-            }, sender.votes);
+            votes.forEach((vote: PublicKey) => {
+                sender.votes.splice(sender.votes.indexOf(vote), 1);
+                if (!senderOnly) {
+                    const targetAccount: Account = AccountRepo.getByPublicKey(vote);
+                    targetAccount.delegate.votes--;
+                }
+            });
         }
 
         if (isDownVote) {

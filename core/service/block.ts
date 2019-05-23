@@ -52,6 +52,7 @@ import TransactionHistoryRepository from 'core/repository/history/transaction';
 import { getFirstSlotNumberInRound } from 'core/util/slot';
 import RoundService from 'core/service/round';
 import DelegateRepository from 'core/repository/delegate';
+import { messageON } from 'shared/util/bus';
 
 const validator: Validator = new ZSchema({});
 
@@ -232,6 +233,10 @@ class BlockService {
 
         if (isGreatestHeight(lastBlock, receivedBlock)) {
             if (!isNext(lastBlock, receivedBlock) || !isBlockCanBeProcessed(lastBlock, receivedBlock)) {
+                // TODO replace it
+                if (!SyncService.getMyConsensus()) {
+                    messageON('EMIT_SYNC_BLOCKS');
+                }
                 return new ResponseEntity<void>({
                     errors: [
                         `[validateReceivedBlock] Block not close: ${receivedBlock.id}`
@@ -243,7 +248,7 @@ class BlockService {
         if (isEqualHeight(lastBlock, receivedBlock)) {
             if (
                 !isNewer(lastBlock, receivedBlock) ||
-                !SyncService.getMyConsensus() ||
+                SyncService.getMyConsensus() ||
                 !isEqualPreviousBlock(lastBlock, receivedBlock)
             ) {
                 return new ResponseEntity<void>({
@@ -376,7 +381,10 @@ class BlockService {
         const lastBlockSlotNumber = SlotService.getSlotNumber(lastBlock.createdAt);
         const currentSlotNumber = SlotService.getSlotNumber();
 
-        if (receivedBlockSlotNumber > currentSlotNumber || receivedBlockSlotNumber <= lastBlockSlotNumber) {
+        if (
+            receivedBlockSlotNumber > currentSlotNumber + config.CONSTANTS.ACTIVE_DELEGATES - 1 ||
+            receivedBlockSlotNumber <= lastBlockSlotNumber
+        ) {
             errors.push('Invalid block timestamp');
         }
     }
@@ -423,8 +431,6 @@ class BlockService {
             const trs: Transaction<object> = block.transactions[i];
 
             if (errors.length === 0) {
-
-                trs.senderAddress = trs.senderAddress ? trs.senderAddress : getAddressByPublicKey(trs.senderPublicKey);
                 let sender: Account = AccountRepository.getByAddress(trs.senderAddress);
                 if (!sender) {
                     sender = AccountRepo.add({
@@ -436,8 +442,7 @@ class BlockService {
                 }
 
                 if (verify) {
-                    const resultCheckTransaction: ResponseEntity<void> =
-                        this.checkTransaction(block, trs, sender);
+                    const resultCheckTransaction: ResponseEntity<void> = this.checkTransaction(trs, sender);
                     if (!resultCheckTransaction.success) {
                         errors.push(...resultCheckTransaction.errors);
                         logger.error(
@@ -466,9 +471,7 @@ class BlockService {
         return new ResponseEntity<void>({ errors: errors });
     }
 
-    private checkTransaction(block: Block, trs: Transaction<object>, sender: Account): ResponseEntity<void> {
-        trs.id = TransactionDispatcher.getId(trs);
-
+    private checkTransaction(trs: Transaction<object>, sender: Account): ResponseEntity<void> {
         const validateResult = TransactionDispatcher.validate(trs);
         if (!validateResult.success) {
             return new ResponseEntity<void>({ errors: [...validateResult.errors, 'checkTransaction'] });

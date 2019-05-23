@@ -27,8 +27,8 @@ export class AccountModel {
 
     constructor(data: AccountModel) {
         Object.assign(this, data);
-        this.votes = (data.votes || []).slice();
-        this.referrals = (data.referrals || []).slice();
+        this.votes = [...(data.votes || [])];
+        this.referrals = [...(data.referrals || [])];
         this.stakes = (data.stakes || []).map(stake => ({ ...stake }));
         this.delegate = data.delegate && new Delegate(data.delegate);
     }
