@@ -59,6 +59,8 @@ class BlockController extends BaseController {
 
         const currentSlotNumber = SlotService.getSlotNumber(SlotService.getTime(Date.now()));
         RoundService.restoreToSlot(currentSlotNumber);
+        
+        RoundService.restore(false);
 
         if (!receiveBlockResponse.success) {
             if (!SyncService.getMyConsensus()) {
