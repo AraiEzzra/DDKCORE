@@ -1,12 +1,13 @@
 import SocketRepository from 'core/repository/socket';
 import { Peer } from 'shared/model/peer';
-import { Block } from 'shared/model/block';
+import { Block, BlockModel } from 'shared/model/block';
 import { Transaction } from 'shared/model/transaction';
 import PeerRepository from 'core/repository/peer';
 import SystemRepository from 'core/repository/system';
 import SharedTransactionRepo from 'shared/repository/transaction';
 import config from 'shared/config';
 import { ResponseEntity } from 'shared/model/response';
+import BlockService from 'core/service/block';
 
 export const ERROR_NOT_ENOUGH_PEERS = 'ERROR_NOT_ENOUGH_PEERS';
 
@@ -86,7 +87,7 @@ export class Sync implements ISyncRepo {
             );
         }
 
-        const response = await SocketRepository.peerRPCRequest(
+        const response = await SocketRepository.peerRPCRequest<{ isExist: boolean }>(
             'REQUEST_COMMON_BLOCKS',
             { block: blockData },
             peer
@@ -105,10 +106,31 @@ export class Sync implements ISyncRepo {
     }
 
     async requestBlocks(data: { height: number, limit: number }, peer): Promise<ResponseEntity<Array<Block>>> {
+        const blocksResponse = await SocketRepository.peerRPCRequest<Array<BlockModel>>('REQUEST_BLOCKS', data, peer);
+        if (blocksResponse.success) {
+            const blocks = blocksResponse.data.map(blockModel => {
+                const block = new Block(blockModel);
+                block.transactions = block.transactions.map(trs => SharedTransactionRepo.deserialize(trs));
+                return block;
+            });
 
-        return SocketRepository.peerRPCRequest('REQUEST_BLOCKS', data, peer);
+            for (const block of blocksResponse.data) {
+                const validateResponse = BlockService.validate(block);
+                if (!validateResponse.success) {
+                    return new ResponseEntity({
+                        errors: [
+                            `[Repository][Sync][requestBlocks] Block not valid: ${validateResponse.errors}`
+                        ]
+                    });
+                }
+            }
+
+            return new ResponseEntity({ data: blocks });
+        }
+        return new ResponseEntity({ errors: blocksResponse.errors });
     }
 
+    // TODO add SharedBlockRepo serialize
     sendBlocks(blocks: Array<Block>, peer, requestId): void {
         const serializedBlocks: Array<Block & { transactions?: any }> = blocks.map(block => block.getCopy());
         serializedBlocks.forEach(block => {

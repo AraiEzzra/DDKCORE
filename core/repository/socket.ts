@@ -227,7 +227,7 @@ export class Socket {
     }
 
     @autobind
-    peerRPCRequest(code, data, peer): Promise<ResponseEntity<any>> {
+    peerRPCRequest<T>(code, data, peer): Promise<ResponseEntity<T>> {
         const requestId = uuid4();
 
         return new Promise((resolve) => {

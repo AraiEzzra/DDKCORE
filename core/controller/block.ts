@@ -58,7 +58,7 @@ class BlockController extends BaseController {
         }
 
         RoundService.restoreToSlot(SlotService.getSlotNumber(receivedBlock.createdAt));
-        const receiveBlockResponse = await BlockService.receiveBlock(lastBlock); // TODO can be failed
+        const receiveBlockResponse = await BlockService.receiveBlock(lastBlock);
 
         const currentSlotNumber = SlotService.getSlotNumber(SlotService.getTime(Date.now()));
         RoundService.restoreToSlot(currentSlotNumber);

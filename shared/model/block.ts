@@ -21,8 +21,6 @@ export class BlockModel {
         this.relay = 0;
         this.transactions = [];
         Object.assign(this, data);
-        // TODO check next
-        // this.transactions = (data.transactions || []).map(trs => trs.getCopy());
     }
 }
 

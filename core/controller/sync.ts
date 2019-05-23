@@ -108,9 +108,11 @@ export class SyncController extends BaseController {
                 );
                 continue;
             }
-            const loadStatus = await SyncService.saveRequestedBlocks(responseBlocks.data);
-            if (!loadStatus.success) {
-                logger.error(`${LOG_PREFIX}[startSyncBlocks][loadStatus]: ${loadStatus.errors.join('. ')}`);
+            const saveRequestedBlocksResponse = await SyncService.saveRequestedBlocks(responseBlocks.data);
+            if (!saveRequestedBlocksResponse.success) {
+                logger.error(
+                    `${LOG_PREFIX}[startSyncBlocks][loadStatus]: ${saveRequestedBlocksResponse.errors.join('. ')}`
+                );
             } else {
                 needDelay = false;
             }
