@@ -49,6 +49,9 @@ import { IKeyPair } from 'shared/util/ed';
 import System from 'core/repository/system';
 import BlockHistoryRepository from 'core/repository/history/block';
 import TransactionHistoryRepository from 'core/repository/history/transaction';
+import { getFirstSlotNumberInRound } from 'core/util/slot';
+import RoundService from 'core/service/round';
+import DelegateRepository from 'core/repository/delegate';
 
 const validator: Validator = new ZSchema({});
 
@@ -570,6 +573,13 @@ class BlockService {
             `[Service][Block][receiveBlock] removed transactions count: ${removedTransactionsResponse.data.length}`
         );
         const removedTransactions: Array<Transaction<object>> = removedTransactionsResponse.data || [];
+
+        if (!RoundRepository.getCurrentRound()) {
+            const activeDelegatesCount = DelegateRepository.getActiveDelegates().length;
+            const firstSlotNumber = getFirstSlotNumberInRound(block.createdAt, activeDelegatesCount);
+            const newRound = RoundService.generate(firstSlotNumber);
+            RoundRepository.add(newRound);
+        }
 
         const errors: Array<string> = [];
         const processBlockResponse: ResponseEntity<void> = await this.process(block, true, null, true);

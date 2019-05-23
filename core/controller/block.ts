@@ -45,20 +45,19 @@ class BlockController extends BaseController {
         if (!validateReceivedBlocKResponse.success) {
             return new ResponseEntity<void>({
                 errors: [
-                    `[Controller][Block][onNewReceiveBlock] Received block not valid: 
+                    `[Controller][Block][onNewReceiveBlock] Received block not valid:
                     ${validateReceivedBlocKResponse.errors}`
                 ]
             });
         }
 
         if (isEqualHeight(lastBlock, receivedBlock)) {
-            await BlockService.deleteLastBlock();
-            lastBlock = BlockRepository.getLastBlock();
             RoundService.restoreToSlot(SlotService.getSlotNumber(lastBlock.createdAt));
+            await BlockService.deleteLastBlock();
         }
 
         RoundService.restoreToSlot(SlotService.getSlotNumber(receivedBlock.createdAt));
-        const receiveBlockResponse = await BlockService.receiveBlock(lastBlock);
+        const receiveBlockResponse = await BlockService.receiveBlock(receivedBlock);
 
         const currentSlotNumber = SlotService.getSlotNumber(SlotService.getTime(Date.now()));
         RoundService.restoreToSlot(currentSlotNumber);
@@ -71,7 +70,7 @@ class BlockController extends BaseController {
             }
             return new ResponseEntity<void>({
                 errors: [
-                    `[Controller][Block][receiveBlockResponse] block: ${receivedBlock.id} 
+                    `[Controller][Block][receiveBlockResponse] block: ${receivedBlock.id}
                     errors: ${validateResponse.errors}`
                 ]
             });
