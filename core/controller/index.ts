@@ -39,7 +39,7 @@ const processMainQueue = async (): Promise<void> => {
     } else {
         const errorMessage = response.errors.join('. ');
         if (!errorMessage.includes('Block already processed')) {
-            logger.error(`[processMainQueue] Main task ${event.topicName} failed: ${errorMessage}`);
+            logger.debug(`[processMainQueue] Main task ${event.topicName} failed: ${errorMessage}`);
         }
     }
 
