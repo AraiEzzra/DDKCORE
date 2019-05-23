@@ -28,7 +28,7 @@ interface IRoundService {
 
     processReward(round: Round, undo?: Boolean): void;
 
-    restoreForBlock(block: Block): void;
+    restoreToSlot(slotNumber: number): void;
 }
 
 class RoundService implements IRoundService {
@@ -100,6 +100,10 @@ class RoundService implements IRoundService {
 
     public processReward(round: Round, undo?: Boolean): void {
         const forgedBlocksCount = Object.values(round.slots).filter(slot => slot.isForged).length;
+        if (!forgedBlocksCount) {
+            return;
+        }
+
         const lastBlock = BlockRepository.getLastBlock();
         const blocks = BlockRepository.getMany(forgedBlocksCount, lastBlock.height - forgedBlocksCount);
         const delegates = blocks.map(block => DelegateRepository.getDelegate(block.generatorPublicKey));
@@ -153,29 +157,29 @@ class RoundService implements IRoundService {
         return RoundRepository.getCurrentRound();
     }
 
-    public restoreForBlock(block: Block, isForward = true): void {
+    public restoreToSlot(slotNumber: number): void {
         let round = RoundRepository.getCurrentRound();
         if (!round) {
             return;
         }
 
-        const blockSlotNumber = SlotService.getSlotNumber(block.createdAt);
+        const isForward = slotNumber > getLastSlotNumberInRound(round);
 
-        while (blockSlotNumber !== round.slots[block.generatorPublicKey].slot) {
+        while (!Object.values(round.slots).find(slot => slot.slot === slotNumber)) {
             if (isForward) {
-                if (getLastSlotNumberInRound(round) > blockSlotNumber) {
+                if (getLastSlotNumberInRound(round) > slotNumber) {
                     logger.error(
-                        `${this.logPrefix}[restoreForBlock] Impossible to forward round ` +
-                        `for block with id: ${block.id}, height: ${block.height}`
+                        `${this.logPrefix}[restoreToSlot] Impossible to forward round ` +
+                        `to slot ${slotNumber}`
                     );
                     break;
                 }
                 this.forwardProcess();
             } else {
-                if (getLastSlotNumberInRound(round) < blockSlotNumber) {
+                if (getLastSlotNumberInRound(round) < slotNumber) {
                     logger.error(
-                        `${this.logPrefix}[restoreForBlock] Impossible to backward round ` +
-                        `for block with id: ${block.id}, height: ${block.height}`
+                        `${this.logPrefix}[restoreToSlot] Impossible to backward round ` +
+                        `to slot ${slotNumber}`
                     );
                     break;
                 }
@@ -185,7 +189,7 @@ class RoundService implements IRoundService {
             round = RoundRepository.getCurrentRound();
         }
 
-        logger.debug(`${this.logPrefix}[restoreForBlock]: restored round ${JSON.stringify(round)}`);
+        logger.debug(`${this.logPrefix}[restoreToSlot]: restored round ${JSON.stringify(round)}`);
     }
 }
 

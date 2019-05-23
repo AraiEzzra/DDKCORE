@@ -47,6 +47,8 @@ export const DEFAULT_CORE_SOCKET_PORT = 7007;
 export const DEFAULT_CORE_RPC_PORT = 7009;
 export const DEFAULT_API_SOCKET_PORT = 7008;
 export const DEFAULT_REQUESTS_PER_SECOND_LIMIT = 5000;
+export const DEFAULT_CONSENSUS = 51;
+
 const DEFAULT_DB_CONFIGS = {
     HOST: '0.0.0.0',
     PORT: 5432,
@@ -91,6 +93,7 @@ class Config {
         IS_DISABLED_TRANSACTION_CREATION: boolean;
         VERSION: string;
         MIN_VERSION: string;
+        MIN_CONSENSUS: number;
     };
     API: {
         REQUESTS_PER_SECOND_LIMIT: number;
@@ -152,7 +155,8 @@ class Config {
             IS_HISTORY_ON_WARMUP: process.env.IS_HISTORY_ON_WARMUP === 'TRUE',
             IS_DISABLED_TRANSACTION_CREATION: process.env.IS_DISABLED_TRANSACTION_CREATION === 'TRUE',
             VERSION: '0.0.42',
-            MIN_VERSION: '0.0.1',
+            MIN_VERSION: '0.0.42',
+            MIN_CONSENSUS: Number(process.env.MIN_CONSENSUS) || DEFAULT_CONSENSUS
         };
         this.API = {
             REQUESTS_PER_SECOND_LIMIT: Number(process.env.REQUESTS_PER_SECOND_LIMIT) ||

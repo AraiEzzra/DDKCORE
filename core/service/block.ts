@@ -34,11 +34,24 @@ import SyncService from 'core/service/sync';
 import { getAddressByPublicKey } from 'shared/util/account';
 import SocketMiddleware from 'core/api/middleware/socket';
 import { EVENT_TYPES } from 'shared/driver/socket/codes';
-import { MIN_ROUND_BLOCK } from 'core/util/block';
+import {
+    isBlockCanBeProcessed,
+    isEqualHeight,
+    isEqualId,
+    isEqualPreviousBlock,
+    isGreatestHeight,
+    isLessHeight,
+    isNewer,
+    isNext,
+    MIN_ROUND_BLOCK
+} from 'core/util/block';
 import { IKeyPair } from 'shared/util/ed';
 import System from 'core/repository/system';
 import BlockHistoryRepository from 'core/repository/history/block';
 import TransactionHistoryRepository from 'core/repository/history/transaction';
+import { getFirstSlotNumberInRound } from 'core/util/slot';
+import RoundService from 'core/service/round';
+import DelegateRepository from 'core/repository/delegate';
 
 const validator: Validator = new ZSchema({});
 
@@ -122,7 +135,7 @@ class BlockService {
                 return new ResponseEntity<void>({ errors: [...resultVerifyBlock.errors, 'process'] });
             }
 
-            const validationResponse = this.validateBlockSlot(block);
+            const validationResponse = this.verifyBlockSlot(block);
             if (!validationResponse.success) {
                 return new ResponseEntity<void>({ errors: [...validationResponse.errors, 'process'] });
             }
@@ -179,7 +192,7 @@ class BlockService {
             this.verifyPayload(block, errors);
         }
 
-        this.verifyBlockSlot(block, lastBlock, errors);
+        this.verifyBlockSlotNumber(block, lastBlock, errors);
 
         const response = new ResponseEntity<void>({ errors: errors.reverse() });
 
@@ -198,6 +211,64 @@ class BlockService {
             );
         }
         return response;
+    }
+
+    public validateReceivedBlock(lastBlock: Block, receivedBlock: Block): ResponseEntity<void> {
+        if (isEqualId(lastBlock, receivedBlock)) {
+            return new ResponseEntity<void>({
+                errors: [
+                    `[validateReceivedBlock] Block already processed: ${receivedBlock.id}`
+                ]
+            });
+        }
+
+        if (isLessHeight(lastBlock, receivedBlock)) {
+            return new ResponseEntity<void>({
+                errors: [
+                    `[validateReceivedBlock] received block less then last block: ${receivedBlock.id}`
+                ]
+            });
+        }
+
+        if (isGreatestHeight(lastBlock, receivedBlock)) {
+            if (!isNext(lastBlock, receivedBlock) || !isBlockCanBeProcessed(lastBlock, receivedBlock)) {
+                return new ResponseEntity<void>({
+                    errors: [
+                        `[validateReceivedBlock] Block not close: ${receivedBlock.id}`
+                    ]
+                });
+            }
+        }
+
+        if (isEqualHeight(lastBlock, receivedBlock)) {
+            if (
+                !isNewer(lastBlock, receivedBlock) ||
+                !SyncService.getMyConsensus() ||
+                !isEqualPreviousBlock(lastBlock, receivedBlock)
+            ) {
+                return new ResponseEntity<void>({
+                    errors: [
+                        `[validateReceivedBlock] receive not valid equal block: ${receivedBlock.id}`
+                    ]
+                });
+            }
+
+            const verifyEqualResponse = this.verifyEqualBlock(receivedBlock);
+            if (!verifyEqualResponse.success) {
+                return new ResponseEntity<void>({
+                    errors: [
+                        `[validateReceivedBlock] verify failed for equal block: ${receivedBlock.id}
+                    errors: ${verifyEqualResponse.errors}`
+                    ]
+                });
+            }
+        }
+
+        return new ResponseEntity<void>();
+    }
+
+    public verifyEqualBlock(receivedBlock: Block): ResponseEntity<void> {
+        return new ResponseEntity<void>();
     }
 
     public setHeight(block: Block, lastBlock: Block): Block {
@@ -300,16 +371,17 @@ class BlockService {
         }
     }
 
-    private verifyBlockSlot(block: Block, lastBlock: Block, errors: Array<string>): void {
-        const blockSlotNumber = SlotService.getSlotNumber(block.createdAt);
+    private verifyBlockSlotNumber(receivedBlock: Block, lastBlock: Block, errors: Array<string>): void {
+        const receivedBlockSlotNumber = SlotService.getSlotNumber(receivedBlock.createdAt);
         const lastBlockSlotNumber = SlotService.getSlotNumber(lastBlock.createdAt);
+        const currentSlotNumber = SlotService.getSlotNumber();
 
-        if (blockSlotNumber > SlotService.getSlotNumber() || blockSlotNumber <= lastBlockSlotNumber) {
+        if (receivedBlockSlotNumber > currentSlotNumber || receivedBlockSlotNumber <= lastBlockSlotNumber) {
             errors.push('Invalid block timestamp');
         }
     }
 
-    private validateBlockSlot(block: Block): ResponseEntity<void> {
+    private verifyBlockSlot(block: Block): ResponseEntity<void> {
         if (block.height === 1) {
             return new ResponseEntity<void>();
         }
@@ -502,6 +574,13 @@ class BlockService {
         );
         const removedTransactions: Array<Transaction<object>> = removedTransactionsResponse.data || [];
 
+        if (!RoundRepository.getCurrentRound()) {
+            const activeDelegatesCount = DelegateRepository.getActiveDelegates().length;
+            const firstSlotNumber = getFirstSlotNumberInRound(block.createdAt, activeDelegatesCount);
+            const newRound = RoundService.generate(firstSlotNumber);
+            RoundRepository.add(newRound);
+        }
+
         const errors: Array<string> = [];
         const processBlockResponse: ResponseEntity<void> = await this.process(block, true, null, true);
         if (!processBlockResponse.success) {
@@ -541,6 +620,9 @@ class BlockService {
             deleteResult.errors.push('deleteLastBlock');
             return new ResponseEntity({ errors: deleteResult.errors });
         }
+
+        const currentRound = RoundRepository.getCurrentRound();
+        currentRound.slots[lastBlock.generatorPublicKey].isForged = false;
 
         const newLastBlock = BlockRepo.deleteLastBlock();
         BlockHistoryRepository.addEvent(lastBlock, { action: BlockLifecycle.UNDO });
@@ -615,17 +697,17 @@ class BlockService {
         ]);
     }
 
-    public validate(block: BlockModel): ResponseEntity<void> {
+    public validate(block: BlockModel): ResponseEntity<null> {
         BlockHistoryRepository.addEvent(block as Block, { action: BlockLifecycle.VALIDATE });
 
         const isValid: boolean = validator.validate(block, blockSchema);
         if (!isValid) {
-            return new ResponseEntity<void>({
+            return new ResponseEntity<null>({
                 errors: validator.getLastErrors().map(err => err.message),
             });
         }
 
-        return new ResponseEntity<void>();
+        return new ResponseEntity<null>();
     }
 }
 

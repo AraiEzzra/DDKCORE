@@ -105,32 +105,13 @@ class Loader {
                 }
 
                 if (block.height >= MIN_ROUND_BLOCK) {
-                    let round = RoundRepository.getCurrentRound();
-                    const blockSlotNumber = SlotService.getSlotNumber(block.createdAt);
-
-                    while (blockSlotNumber !== round.slots[block.generatorPublicKey].slot) {
-                        if (getLastSlotNumberInRound(round) > blockSlotNumber) {
-                            logger.error(
-                                `[Loader] Impossible to build a round for block with id: ${block.id}, ` +
-                                `height: ${block.height}`
-                            );
-                            break;
-                        }
-
-                        // forward until we find the right round
-                        RoundService.forwardProcess();
-                        round = RoundRepository.getCurrentRound();
-                    }
+                    RoundService.restoreToSlot(SlotService.getSlotNumber(block.createdAt));
 
                     this.transactionsWarmUp(block.transactions);
                     BlockRepository.add(block);
 
                     const currentRound = RoundRepository.getCurrentRound();
                     currentRound.slots[block.generatorPublicKey].isForged = true;
-
-                    if (blockSlotNumber === getLastSlotNumberInRound(round)) {
-                        RoundService.forwardProcess();
-                    }
                 }
             }
 

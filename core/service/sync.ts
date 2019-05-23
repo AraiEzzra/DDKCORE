@@ -8,17 +8,9 @@ import PeerRepository from 'core/repository/peer';
 import SyncRepository, { ERROR_NOT_ENOUGH_PEERS } from 'core/repository/sync';
 import { TOTAL_PERCENTAGE } from 'core/util/const';
 import config from 'shared/config';
-import { logger } from 'shared/util/logger';
 import RoundService from 'core/service/round';
 import SlotService from 'core/service/slot';
-import RoundRepository from 'core/repository/round';
-import SharedTransactionRepo from 'shared/repository/transaction';
-import BlockController from 'core/controller/block';
 import { ResponseEntity } from 'shared/model/response';
-import { getLastSlotNumberInRound } from 'core/util/round';
-
-//  TODO get from env
-const MIN_CONSENSUS = 51;
 
 export interface ISyncService {
 
@@ -100,23 +92,13 @@ export class SyncService implements ISyncService {
     }
 
     async rollback() {
-        const blockSlot = SlotService.getSlotNumber(BlockRepository.getLastBlock().createdAt);
-        const prevRound = RoundRepository.getPrevRound();
-        if (!prevRound) {
-            await BlockService.deleteLastBlock();
+        const deleteResponse = await BlockService.deleteLastBlock();
+        if (!deleteResponse.success) {
             return;
         }
-        const lastSlotInRound = getLastSlotNumberInRound(prevRound);
 
-        logger.debug(`[Controller][Sync][rollback] lastSlotInRound: ${lastSlotInRound}, blockSlot: ${blockSlot}`);
-
-        if (lastSlotInRound >= blockSlot) {
-            logger.debug(`[Controller][Sync][rollback] round rollback`);
-            RoundService.backwardProcess();
-        }
-
-        await BlockService.deleteLastBlock();
-        return;
+        const newLastBlock = BlockRepository.getLastBlock();
+        RoundService.restoreToSlot(SlotService.getSlotNumber(newLastBlock.createdAt));
     }
 
     async requestBlocks(lastBlock, peer): Promise<ResponseEntity<Array<Block>>> {
@@ -131,15 +113,19 @@ export class SyncService implements ISyncService {
         SyncRepository.sendBlocks(blocks, peer, requestId);
     }
 
-    async loadBlocks(blocks: Array<Block>): Promise<ResponseEntity<any>> {
-        const errors: Array<string> = [];
+    async saveRequestedBlocks(blocks: Array<Block>): Promise<ResponseEntity<void>> {
+        for (const receivedBlock of blocks) {
 
-        for (let block of blocks) {
-            block.transactions.forEach(trs => SharedTransactionRepo.deserialize(trs));
-            const receive = await BlockController.onReceiveBlock({ data: { block } });
-            if (!receive.success) {
-                errors.push(...receive.errors, '[Service][Sync][loadBlocks] error load blocks!');
-                return new ResponseEntity({ errors });
+            RoundService.restoreToSlot(SlotService.getSlotNumber(receivedBlock.createdAt));
+            const receivedBlockResponse = await BlockService.receiveBlock(receivedBlock);
+
+            if (!receivedBlockResponse.success) {
+                return new ResponseEntity({
+                    errors: [
+                        ...receivedBlockResponse.errors, 
+                        '[Service][Sync][saveRequestedBlocks] error save requested blocks!'
+                    ]
+                });
             }
         }
         return new ResponseEntity();
@@ -171,7 +157,7 @@ export class SyncService implements ISyncService {
     }
 
     checkBlockConsensus(block: Block): boolean {
-        return this.getBlockConsensus(block) >= MIN_CONSENSUS;
+        return this.getBlockConsensus(block) >= config.CORE.MIN_CONSENSUS;
     }
 
     getConsensus(): number {
@@ -188,7 +174,7 @@ export class SyncService implements ISyncService {
     }
 
     getMyConsensus(): boolean {
-        return this.getConsensus() >= MIN_CONSENSUS;
+        return this.getConsensus() >= config.CORE.MIN_CONSENSUS;
     }
 
     setConsensus(value: boolean) {
