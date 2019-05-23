@@ -131,7 +131,7 @@ export class SyncService implements ISyncService {
         SyncRepository.sendBlocks(blocks, peer, requestId);
     }
 
-    async loadBlocks(blocks: Array<Block>): Promise<ResponseEntity<any>> {
+    async saveRequestedBlocks(blocks: Array<Block>): Promise<ResponseEntity<any>> {
         const errors: Array<string> = [];
 
         for (let block of blocks) {

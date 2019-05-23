@@ -106,7 +106,7 @@ export class SyncController extends BaseController {
                 );
                 continue;
             }
-            const loadStatus = await SyncService.loadBlocks(responseBlocks.data);
+            const loadStatus = await SyncService.saveRequestedBlocks(responseBlocks.data);
             if (!loadStatus.success) {
                 logger.error(`${LOG_PREFIX}[startSyncBlocks][loadStatus]: ${loadStatus.errors.join('. ')}`);
             } else {

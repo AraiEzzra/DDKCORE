@@ -29,6 +29,8 @@ interface IRoundService {
     processReward(round: Round, undo?: Boolean): void;
 
     restoreForBlock(block: Block): void;
+
+    restoreToSlot(slotNumber: number): void;
 }
 
 class RoundService implements IRoundService {
@@ -186,6 +188,9 @@ class RoundService implements IRoundService {
         }
 
         logger.debug(`${this.logPrefix}[restoreForBlock]: restored round ${JSON.stringify(round)}`);
+    }
+
+    restoreToSlot(slotNumber: number) {
     }
 }
 
