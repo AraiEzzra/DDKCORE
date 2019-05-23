@@ -154,8 +154,8 @@ class Config {
             IS_HISTORY: process.env.IS_HISTORY === 'TRUE',
             IS_HISTORY_ON_WARMUP: process.env.IS_HISTORY_ON_WARMUP === 'TRUE',
             IS_DISABLED_TRANSACTION_CREATION: process.env.IS_DISABLED_TRANSACTION_CREATION === 'TRUE',
-            VERSION: '0.0.44',
-            MIN_VERSION: '0.0.44',
+            VERSION: '0.0.46',
+            MIN_VERSION: '0.0.46',
             MIN_CONSENSUS: Number(process.env.MIN_CONSENSUS) || DEFAULT_CONSENSUS
         };
         this.API = {

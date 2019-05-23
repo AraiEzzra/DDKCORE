@@ -139,8 +139,8 @@ class RoundService implements IRoundService {
         RoundRepository.add(newRound);
 
         if (!System.synchronization) {
-            this.createBlockGenerateTask();
-            this.createRoundFinishTask();
+            this.createBlockGenerateTask(true);
+            this.createRoundFinishTask(true);
         }
         return newRound;
     }
