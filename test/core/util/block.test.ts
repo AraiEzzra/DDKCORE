@@ -167,27 +167,23 @@ describe('Block utils', () => {
 
     describe('can be processed', () => {
         it('equal block', () => {
-            expect(blockUtils.canBeProcessed(lastBlock, lastBlock)).equal(false);
+            expect(blockUtils.isBlockCanBeProcessed(lastBlock, lastBlock)).equal(false);
         });
 
         it('same height block', () => {
-            expect(blockUtils.canBeProcessed(lastBlock, anotherPreviousBlock)).equal(false);
+            expect(blockUtils.isBlockCanBeProcessed(lastBlock, anotherPreviousBlock)).equal(false);
         });
 
         it('next block', () => {
-            expect(blockUtils.canBeProcessed(lastBlock, nextBlock)).equal(true);
+            expect(blockUtils.isBlockCanBeProcessed(lastBlock, nextBlock)).equal(true);
         });
 
         it('previous block', () => {
-            expect(blockUtils.canBeProcessed(lastBlock, previousBlock)).equal(false);
-        });
-
-        it('highest block', () => {
-            expect(blockUtils.canBeProcessed(lastBlock, highestBlock)).equal(false);
+            expect(blockUtils.isBlockCanBeProcessed(lastBlock, previousBlock)).equal(false);
         });
 
         it('next block with another previous block id', () => {
-            expect(blockUtils.canBeProcessed(lastBlock, nextBlockWithAnotherPreviousBlockId)).equal(false);
+            expect(blockUtils.isBlockCanBeProcessed(lastBlock, nextBlockWithAnotherPreviousBlockId)).equal(false);
         });
     });
 });

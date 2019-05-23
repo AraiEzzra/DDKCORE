@@ -1,11 +1,12 @@
 import { ResponseEntity } from 'shared/model/response';
 import { Block, BlockModel } from 'shared/model/block';
 import BlockService from 'core/service/block';
-import BlockRepo from 'core/repository/block/';
+import BlockRepository from 'core/repository/block/';
 import { MAIN } from 'core/util/decorator';
 import { BaseController } from 'core/controller/baseController';
 import { logger } from 'shared/util/logger';
 import * as blockUtils from 'core/util/block';
+import { isEqualHeight } from 'core/util/block';
 import SyncService from 'core/service/sync';
 import SlotService from 'core/service/slot';
 import { messageON } from 'shared/util/bus';
@@ -26,7 +27,60 @@ interface BlockGenerateRequest {
 class BlockController extends BaseController {
 
     @MAIN('BLOCK_RECEIVE')
-    public async onReceiveBlock(action: { data: { block: BlockModel } }): Promise<ResponseEntity<void>> {
+    public async onReceiveBlock({ data }: { data: { block: BlockModel } }): Promise<ResponseEntity<void>> {
+
+        const validateResponse = BlockService.validate(data.block);
+        if (!validateResponse.success) {
+            return new ResponseEntity<void>({
+                errors: [
+                    `[Controller][Block][onNewReceiveBlock] Block not valid: ${validateResponse.errors}`
+                ]
+            });
+        }
+
+        const receivedBlock = new Block(data.block);
+        let lastBlock = BlockRepository.getLastBlock();
+
+        const validateReceivedBlocKResponse = BlockService.validateReceivedBlock(lastBlock, receivedBlock);
+        if (!validateReceivedBlocKResponse.success) {
+            return new ResponseEntity<void>({
+                errors: [
+                    `[Controller][Block][onNewReceiveBlock] Received block not valid: 
+                    ${validateReceivedBlocKResponse.errors}`
+                ]
+            });
+        }
+
+        if (isEqualHeight(lastBlock, receivedBlock)) {
+            await BlockService.deleteLastBlock();
+            lastBlock = BlockRepository.getLastBlock();
+            RoundService.restoreToSlot(SlotService.getSlotNumber(lastBlock.createdAt));
+        }
+
+        RoundService.restoreToSlot(SlotService.getSlotNumber(receivedBlock.createdAt));
+        const receiveBlockResponse = await BlockService.receiveBlock(lastBlock); // TODO can be failed
+
+        const currentSlotNumber = SlotService.getSlotNumber(SlotService.getTime(Date.now()));
+        RoundService.restoreToSlot(currentSlotNumber);
+
+        if (!receiveBlockResponse.success) {
+            if (!SyncService.getMyConsensus()) {
+                if (!System.synchronization) {// TODO remove it if
+                    messageON('EMIT_SYNC_BLOCKS');
+                }
+            }
+            return new ResponseEntity<void>({
+                errors: [
+                    `[Controller][Block][receiveBlockResponse] block: ${receivedBlock.id} 
+                    errors: ${validateResponse.errors}`
+                ]
+            });
+        }
+
+        return new ResponseEntity<void>();
+    }
+
+    public async onOldReceiveBlock(action: { data: { block: BlockModel } }): Promise<ResponseEntity<void>> {
         const { data } = action;
         data.block.transactions = data.block.transactions.map(trs => SharedTransactionRepo.deserialize(trs));
 
@@ -36,7 +90,7 @@ class BlockController extends BaseController {
         }
 
         const receivedBlock = new Block(data.block);
-        const lastBlock = BlockRepo.getLastBlock();
+        const lastBlock = BlockRepository.getLastBlock();
 
         const errors: Array<string> = [];
         if (blockUtils.isLessHeight(lastBlock, receivedBlock)) {
@@ -58,7 +112,7 @@ class BlockController extends BaseController {
         );
 
         if (
-            blockUtils.isReceivedBlockNewer(lastBlock, receivedBlock) &&
+            blockUtils.isNewer(lastBlock, receivedBlock) &&
             blockUtils.isEqualHeight(lastBlock, receivedBlock) &&
             blockUtils.isEqualPreviousBlock(lastBlock, receivedBlock) &&
             !SyncService.getMyConsensus()
@@ -83,7 +137,7 @@ class BlockController extends BaseController {
         }
 
         if (blockUtils.isGreatestHeight(lastBlock, receivedBlock)) {
-            if (blockUtils.canBeProcessed(lastBlock, receivedBlock)) {
+            if (blockUtils.isBlockCanBeProcessed(lastBlock, receivedBlock)) {
                 // Check this logic. Need for first sync
                 const currentRound = RoundRepository.getCurrentRound();
                 const receivedBlockSlotNumber = SlotService.getSlotNumber(receivedBlock.createdAt);

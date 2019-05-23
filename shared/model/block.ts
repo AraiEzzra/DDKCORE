@@ -1,5 +1,5 @@
-import { Timestamp, BlockHistoryEvent, BlockHistoryState } from 'shared/model/types';
-import { Transaction, BlockLifecycle } from 'shared/model/transaction';
+import { BlockHistoryEvent, Timestamp } from 'shared/model/types';
+import { Transaction } from 'shared/model/transaction';
 import config from 'shared/config';
 
 export class BlockModel {
