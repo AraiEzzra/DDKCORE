@@ -12,7 +12,6 @@ import { getFirstSlotNumberInRound } from 'core/util/slot';
 import { IKeyPair } from 'shared/util/ed';
 import System from 'core/repository/system';
 import { AccountChangeAction } from 'shared/model/account';
-import { Block } from 'shared/model/block';
 
 const MAX_LATENESS_FORGE_TIME = 500;
 
@@ -20,7 +19,7 @@ interface IRoundService {
 
     generate(firstSlotNumber: number): Round;
 
-    restore(): void;
+    restore(force: boolean): void;
 
     forwardProcess(): Round;
 
@@ -39,7 +38,7 @@ class RoundService implements IRoundService {
         this.keyPair = createKeyPairBySecret(process.env.FORGE_SECRET);
     }
 
-    restore(): void {
+    restore(force = true): void {
         if (!RoundRepository.getCurrentRound()) {
             const newRound = this.generate(
                 getFirstSlotNumberInRound(
@@ -49,12 +48,11 @@ class RoundService implements IRoundService {
             );
             RoundRepository.add(newRound);
         }
-        this.createBlockGenerateTask();
-        // TODO refactor to sync create round in the past
-        this.createRoundFinishTask();
+        this.createBlockGenerateTask(force);
+        this.createRoundFinishTask(force);
     }
 
-    private createBlockGenerateTask(): void {
+    private createBlockGenerateTask(force: boolean): void {
         const mySlot = this.getMySlot();
         if (mySlot) {
             let cellTime = SlotService.getSlotRealTime(mySlot.slot) - new Date().getTime();
@@ -68,7 +66,7 @@ class RoundService implements IRoundService {
                 createTaskON(ActionTypes.BLOCK_GENERATE, cellTime, {
                     timestamp: SlotService.getSlotTime(mySlot.slot),
                     keyPair: this.keyPair,
-                });
+                }, force);
             } else {
                 logger.info(
                     `${this.logPrefix}[generateRound] Skip forging block to: ${mySlot.slot} after ${cellTime} ms`
@@ -77,7 +75,7 @@ class RoundService implements IRoundService {
         }
     }
 
-    private createRoundFinishTask(): void {
+    private createRoundFinishTask(force: boolean): void {
         const lastSlot = getLastSlotNumberInRound(RoundRepository.getCurrentRound());
         let roundEndTime = SlotService.getSlotRealTime(lastSlot + 1) - new Date().getTime();
 
@@ -91,7 +89,7 @@ class RoundService implements IRoundService {
         logger.debug(
             `${this.logPrefix}[startRoundFinishTask] The round will be completed in ${roundEndTime} ms`
         );
-        createTaskON(ActionTypes.ROUND_FINISH, roundEndTime);
+        createTaskON(ActionTypes.ROUND_FINISH, roundEndTime, null, force);
     }
 
     public getMySlot(): Slot {
