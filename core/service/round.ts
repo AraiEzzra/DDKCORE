@@ -100,6 +100,10 @@ class RoundService implements IRoundService {
 
     public processReward(round: Round, undo?: Boolean): void {
         const forgedBlocksCount = Object.values(round.slots).filter(slot => slot.isForged).length;
+        if (!forgedBlocksCount) {
+            return;
+        }
+
         const lastBlock = BlockRepository.getLastBlock();
         const blocks = BlockRepository.getMany(forgedBlocksCount, lastBlock.height - forgedBlocksCount);
         const delegates = blocks.map(block => DelegateRepository.getDelegate(block.generatorPublicKey));

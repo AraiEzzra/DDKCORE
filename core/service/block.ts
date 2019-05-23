@@ -611,6 +611,9 @@ class BlockService {
             return new ResponseEntity({ errors: deleteResult.errors });
         }
 
+        const currentRound = RoundRepository.getCurrentRound();
+        currentRound.slots[lastBlock.generatorPublicKey].isForged = false;
+
         const newLastBlock = BlockRepo.deleteLastBlock();
         BlockHistoryRepository.addEvent(lastBlock, { action: BlockLifecycle.UNDO });
 
