@@ -12,6 +12,7 @@ import { logger } from 'shared/util/logger';
 import { BlockData, BlockLimit } from 'shared/model/types';
 
 export const ERROR_NOT_ENOUGH_PEERS = 'ERROR_NOT_ENOUGH_PEERS';
+export const ERROR_ALL_PEERS_ARE_BANNED = 'ERROR_ALL_PEERS_ARE_BANNED';
 
 interface ISyncRepo {
 

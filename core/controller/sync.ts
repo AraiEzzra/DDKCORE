@@ -13,6 +13,8 @@ import { REQUEST_TIMEOUT } from 'core/repository/socket';
 import { asyncTimeout } from 'shared/util/timer';
 import RoundService from 'core/service/round';
 import SlotService from 'core/service/slot';
+import { ERROR_ALL_PEERS_ARE_BANNED } from 'core/repository/sync';
+import TransactionService from 'core/service/transaction';
 
 type checkCommonBlocksRequest = {
     data: {
@@ -85,7 +87,13 @@ export class SyncController extends BaseController {
                     `${LOG_PREFIX}[startSyncBlocks][responseCommonBlocks]: ` +
                     responseCommonBlocks.errors.join('. ')
                 );
-                if (responseCommonBlocks.errors.indexOf(REQUEST_TIMEOUT) !== -1) {
+                if (responseCommonBlocks.errors.includes(ERROR_ALL_PEERS_ARE_BANNED)) {
+                    TransactionService.returnToQueueAllTransactionFromPool();
+                    // TODO add unban all peers on refactored peers
+                    PeerRepository.clearBanList();
+                    continue;
+                }
+                if (responseCommonBlocks.errors.includes(REQUEST_TIMEOUT)) {
                     continue;
                 }
                 break;
@@ -96,7 +104,12 @@ export class SyncController extends BaseController {
                     PeerRepository.ban(lastPeerRequested);
                     lastPeerRequested = null;
                 }
-                await SyncService.rollback();
+                const rollbackStatus = await SyncService.rollback();
+                if (!rollbackStatus.success) {
+                    logger.error(
+                        `${LOG_PREFIX}[startSyncBlocks][rollback]: ${rollbackStatus.errors.join('. ')}`
+                    );
+                }
                 needDelay = false;
                 continue;
             }

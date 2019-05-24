@@ -44,6 +44,8 @@ export interface IAssetService<T extends IAsset> {
     apply?(trs: Transaction<T>, sender: Account): void;
 
     undo?(trs: Transaction<T>, sender: Account): void;
+
+    returnToQueueAllTransactionFromPool(): void;
 }
 
 export interface ITransactionService<T extends IAsset> {
@@ -488,6 +490,13 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
 
     popFromPool(limit: number): Array<Transaction<IAsset>> {
         return TransactionPool.popSortedUnconfirmedTransactions(limit);
+    }
+
+    returnToQueueAllTransactionFromPool(): void {
+        TransactionPool.popSortedUnconfirmedTransactions(TransactionPool.getSize())
+            .forEach(transaction => {
+                TransactionQueue.push(transaction);
+            });
     }
 }
 

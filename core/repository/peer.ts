@@ -142,8 +142,7 @@ export class PeerRepo {
     getHigherPeersByFilter(height, broadhash): Array<Peer> {
         return this.peerList().filter((peer: Peer) => {
             return peer.height >= height
-                && peer.broadhash !== broadhash
-                && !this.isBanned(peer);
+                && peer.broadhash !== broadhash;
         });
     }
 

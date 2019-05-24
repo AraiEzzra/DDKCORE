@@ -5,7 +5,7 @@ import SystemRepository from 'core/repository/system';
 import BlockService from 'core/service/block';
 import BlockRepository from 'core/repository/block/index';
 import PeerRepository from 'core/repository/peer';
-import SyncRepository, { ERROR_NOT_ENOUGH_PEERS } from 'core/repository/sync';
+import SyncRepository, { ERROR_ALL_PEERS_ARE_BANNED, ERROR_NOT_ENOUGH_PEERS } from 'core/repository/sync';
 import { TOTAL_PERCENTAGE } from 'core/util/const';
 import config from 'shared/config';
 import RoundService from 'core/service/round';
@@ -67,11 +67,16 @@ export class SyncService implements ISyncService {
         const errors: Array<string> = [];
         const filteredPeers = PeerRepository.getHigherPeersByFilter(lastBlock.height, SystemRepository.broadhash);
 
-        if (!filteredPeers.length) {
+        const unbannedPeers = filteredPeers.filter(peer => !PeerRepository.isBanned(peer));
+
+        if (unbannedPeers.length === 0) {
+            if (filteredPeers.length !== 0) {
+                return new ResponseEntity({ errors: [ERROR_ALL_PEERS_ARE_BANNED] });
+            }
             return new ResponseEntity({ errors: [ERROR_NOT_ENOUGH_PEERS] });
         }
 
-        const randomPeer = PeerRepository.getRandomPeer(filteredPeers);
+        const randomPeer = PeerRepository.getRandomPeer(unbannedPeers);
         if (!randomPeer) {
             errors.push(`random peer not found`);
             return new ResponseEntity({ errors });
@@ -104,14 +109,15 @@ export class SyncService implements ISyncService {
         return new ResponseEntity({ data: { isExist: false } });
     }
 
-    async rollback() {
+    async rollback(): Promise<ResponseEntity<void>> {
         const deleteResponse = await BlockService.deleteLastBlock();
         if (!deleteResponse.success) {
-            return;
+            return new ResponseEntity({ errors: deleteResponse.errors });
         }
 
         const newLastBlock = BlockRepository.getLastBlock();
         RoundService.restoreToSlot(SlotService.getSlotNumber(newLastBlock.createdAt));
+        return new ResponseEntity();
     }
 
     async requestBlocks(lastBlock, peer): Promise<ResponseEntity<Array<Block>>> {
