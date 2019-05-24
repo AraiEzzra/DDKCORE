@@ -122,8 +122,8 @@ export class SyncService implements ISyncService {
             if (!receivedBlockResponse.success) {
                 return new ResponseEntity({
                     errors: [
-                        ...receivedBlockResponse.errors, 
-                        '[Service][Sync][saveRequestedBlocks] error save requested blocks!'
+                        ...receivedBlockResponse.errors,
+                        `[Service][Sync][saveRequestedBlocks] error save requested block with id: ${receivedBlock.id}`,
                     ]
                 });
             }

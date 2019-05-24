@@ -128,7 +128,10 @@ class BlockService {
         keyPair: IKeyPair,
         verify: boolean = true
     ): Promise<ResponseEntity<void>> {
-        BlockHistoryRepository.addEvent(block, { action: BlockLifecycle.PROCESS });
+        const round = RoundRepository.getCurrentRound();
+        const prevRound = RoundRepository.getPrevRound();
+        BlockHistoryRepository.addEvent(block, { action: BlockLifecycle.PROCESS, state: { round, prevRound } });
+
         if (verify) {
             BlockHistoryRepository.addEvent(block, { action: BlockLifecycle.VERIFY });
             const resultVerifyBlock: ResponseEntity<void> = this.verifyBlock(block, !keyPair);
@@ -553,7 +556,9 @@ class BlockService {
             transaction.blockId = block.id;
         }
 
-        BlockHistoryRepository.addEvent(block, { action: BlockLifecycle.CREATE });
+        const round = RoundRepository.getCurrentRound();
+        const prevRound = RoundRepository.getPrevRound();
+        BlockHistoryRepository.addEvent(block, { action: BlockLifecycle.CREATE, state: { round, prevRound } });
 
         return new ResponseEntity<Block>({ data: block });
     }
@@ -628,7 +633,9 @@ class BlockService {
         currentRound.slots[lastBlock.generatorPublicKey].isForged = false;
 
         const newLastBlock = BlockRepo.deleteLastBlock();
-        BlockHistoryRepository.addEvent(lastBlock, { action: BlockLifecycle.UNDO });
+        const round = RoundRepository.getCurrentRound();
+        const prevRound = RoundRepository.getPrevRound();
+        BlockHistoryRepository.addEvent(lastBlock, { action: BlockLifecycle.UNDO, state: { round, prevRound } });
 
         const reversedTransactions = [...lastBlock.transactions].reverse();
         for (const transaction of reversedTransactions) {
@@ -701,7 +708,12 @@ class BlockService {
     }
 
     public validate(block: BlockModel): ResponseEntity<null> {
-        BlockHistoryRepository.addEvent(block as Block, { action: BlockLifecycle.VALIDATE });
+        const round = RoundRepository.getCurrentRound();
+        const prevRound = RoundRepository.getPrevRound();
+        BlockHistoryRepository.addEvent(
+            block as Block,
+            { action: BlockLifecycle.VALIDATE, state: { round, prevRound } },
+        );
 
         const isValid: boolean = validator.validate(block, blockSchema);
         if (!isValid) {

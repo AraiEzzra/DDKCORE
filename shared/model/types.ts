@@ -19,6 +19,7 @@ export type TransactionHistoryEvent = HistoryEvent<TransactionLifecycle> & {
 };
 
 export type BlockHistoryState = {
+    prevRound: Round,
     round: Round,
 };
 

@@ -21,7 +21,6 @@ describe('ON RECEIVE BLOCK TEST', () => {
             transactions: [],
             createdAt: 106350850,
             previousBlockId: 'cbb9449abb9672d33fa2eb200b1c8b03db7c6572dfb6e59dc334c0ab82b63ab0',
-            history: []
         };
 
         const response = await BlockController.onReceiveBlock({ data: { block: EXPECTED } });
@@ -32,5 +31,3 @@ describe('ON RECEIVE BLOCK TEST', () => {
         expect(lastBlock).to.deep.equal(EXPECTED);
     });
 });
-
-
