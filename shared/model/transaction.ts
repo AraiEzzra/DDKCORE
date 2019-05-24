@@ -38,7 +38,7 @@ export enum TransactionLifecycle {
     CHECK_TRS_FOR_EXIST_POOL = 'CHECK_TRS_FOR_EXIST_POOL',
     RETURN_TO_QUEUE = 'RETURN_TO_QUEUE',
     REMOVED_BY_SENDER_ADDRESS = 'REMOVED_BY_SENDER_ADDRESS',
-    REMOVED_BY_RECIPIENT_ADDRESS = 'REMOVED_BY_RECIPIENT_ADDRESS', 
+    REMOVED_BY_RECIPIENT_ADDRESS = 'REMOVED_BY_RECIPIENT_ADDRESS',
     POP_FOR_BLOCK = 'POP_FOR_BLOCK',
     APPLY_UNCONFIRMED = 'APPLY_UNCONFIRMED',
     UNDO_UNCONFIRMED = 'UNDO_UNCONFIRMED',
@@ -146,7 +146,7 @@ export class Transaction<T extends IAsset> extends TransactionModel<T> {
     }
 
     public getCopy() {
-        return new Transaction<T>({ ...this, history: [] });
+        return new Transaction<T>({ ...this });
     }
 }
 

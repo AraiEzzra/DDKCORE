@@ -5,7 +5,10 @@ import { socketRequest } from 'test/api/base';
 
 describe('Test GET_BLOCK_HISTORY', () => {
     it('Positive', async () => {
-        const SUCCESS = [{ action: 'PROCESS' }, { action: 'APPLY' }]
+        const SUCCESS = [
+            { action: 'PROCESS', state: { round: null, prevRound: null } },
+            { action: 'APPLY' }
+        ];
 
         const REQUEST = {
             headers: Fixture.getBaseHeaders(),
