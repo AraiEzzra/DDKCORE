@@ -53,6 +53,12 @@ class Loader {
                 process.exit(1);
             }
         }
+
+        const delegates = DelegateRepository.getDelegates(DelegateRepository.getCount(), 0);
+        delegates.forEach(delegate => {
+            delegate.confirmedVoteCount = delegate.votes;
+        });
+
         if (!config.CORE.IS_HISTORY_ON_WARMUP) {
             config.CORE.IS_HISTORY = historyState;
         }
@@ -81,7 +87,6 @@ class Loader {
         let offset: number = 0;
         do {
             const blockBatch: Array<Block> = await BlockPGRepository.getMany(limit, offset);
-
             if (!blockBatch) {
                 break;
             }

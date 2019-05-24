@@ -640,7 +640,7 @@ class BlockService {
         const reversedTransactions = [...lastBlock.transactions].reverse();
         for (const transaction of reversedTransactions) {
             const sender = AccountRepo.getByAddress(transaction.senderAddress);
-            await TransactionDispatcher.undo(transaction, sender);
+            TransactionDispatcher.undo(transaction, sender);
             TransactionDispatcher.undoUnconfirmed(transaction, sender);
         }
 

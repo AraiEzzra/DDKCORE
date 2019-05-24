@@ -9,6 +9,7 @@ export class DelegateModel {
     forgedBlocks?: number;
     account?: Account;
     votes?: number;
+    confirmedVoteCount?: number;
 
     constructor(data: DelegateModel) {
         Object.assign(this, data);
@@ -29,4 +30,5 @@ export type SerializedDelegate = {
     forgedBlocks: number;
     publicKey: PublicKey;
     votes: number;
+    confirmedVoteCount: number;
 };

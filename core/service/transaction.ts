@@ -40,6 +40,10 @@ export interface IAssetService<T extends IAsset> {
     undoUnconfirmed(trs: Transaction<T>, sender: Account, senderOnly: boolean): void;
 
     calculateFee(trs: Transaction<IAsset>, sender: Account): number;
+
+    apply?(trs: Transaction<T>, sender: Account): void;
+
+    undo?(trs: Transaction<T>, sender: Account): void;
 }
 
 export interface ITransactionService<T extends IAsset> {
@@ -80,7 +84,7 @@ export interface ITransactionService<T extends IAsset> {
 
     apply(trs: Transaction<T>, sender: Account): void;
 
-    undo(trs: Transaction<T>, sender: Account): Promise<ResponseEntity<void>>;
+    undo(trs: Transaction<T>, sender: Account): void;
 
     popFromPool(limit: number): Array<Transaction<IAsset>>;
 
@@ -148,16 +152,24 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
     apply(trs: Transaction<T>, sender: Account): void {
         TransactionRepo.add(trs);
         TransactionHistoryRepository.addEvent(trs, { action: TransactionLifecycle.APPLY });
+
+        if (trs.type === TransactionType.VOTE) {
+            const service: IAssetService<IAsset> = getTransactionServiceByType(trs.type);
+            service.apply(trs, sender);
+        }
     }
 
-    async undo(trs: Transaction<T>, sender: Account): Promise<ResponseEntity<void>> {
+    undo(trs: Transaction<T>, sender: Account): void {
         // Deleting block removes transactions from the database
         // Need remove only from memory
 
         TransactionRepo.delete(trs);
         TransactionHistoryRepository.addEvent(trs, { action: TransactionLifecycle.UNDO });
 
-        return new ResponseEntity();
+        if (trs.type === TransactionType.VOTE) {
+            const service: IAssetService<IAsset> = getTransactionServiceByType(trs.type);
+            service.undo(trs, sender);
+        }
     }
 
     calculateFee(trs: Transaction<T>, sender: Account): number {
