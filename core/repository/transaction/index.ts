@@ -7,6 +7,7 @@ export interface ITransactionRepository<T extends IAsset> {
     delete(trs: Transaction<T>): void;
     isExist(trsId: TransactionId): boolean;
     getById(transactionId: string): Transaction<IAsset>;
+    size(): number;
 }
 
 class TransactionRepo implements ITransactionRepository<IAsset> {
@@ -38,6 +39,10 @@ class TransactionRepo implements ITransactionRepository<IAsset> {
             }
         }
         return filteredTransaction;
+    }
+    
+    size() {
+        return this.memoryTransactionsById.size;
     }
 }
 
