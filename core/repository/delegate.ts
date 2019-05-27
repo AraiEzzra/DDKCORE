@@ -14,7 +14,8 @@ class DelegateRepository {
             missedBlocks: 0,
             forgedBlocks: 0,
             account: account,
-            votes: 0
+            votes: 0,
+            confirmedVoteCount: 0,
         });
         this.memoryDelegates.set(account.publicKey, delegate);
         this.usernames.add(delegate.username);
