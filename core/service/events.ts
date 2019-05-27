@@ -57,7 +57,9 @@ class EventService {
     updateSystemInfo() {
         const height = BlockRepository.getLastBlock() ? BlockRepository.getLastBlock().height : 0;
         const broadhash = BlockRepository.getLastBlock() ? BlockRepository.getLastBlock().id : '';
-        const peersCount = PeerRepository.peerList().length;
+        const peersCount = PeerRepository.peerList().filter(peer => {
+            return !PeerRepository.isBanned(peer);
+        }).length;
         const peers = PeerRepository.peerList().map(peer => ({
             ...peer,
             socket: undefined,
