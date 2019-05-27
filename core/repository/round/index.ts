@@ -31,6 +31,10 @@ class RoundRepository implements IRoundRepository {
             ? this.rounds[this.rounds.length - PREVIOUS_ROUND_OFFSET_FROM_END]
             : null;
     }
+
+    public getRounds(): Array<Round> {
+        return this.rounds;
+    }
 }
 
 export default new RoundRepository();
