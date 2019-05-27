@@ -3,10 +3,10 @@ import db from 'shared/driver/db';
 import { QueryFile } from 'pg-promise';
 import TransactionDispatcher from 'core/service/transaction';
 import AccountRepo from 'core/repository/account';
-import { IAsset, Transaction } from 'shared/model/transaction';
+import { IAsset, Transaction, TransactionType } from 'shared/model/transaction';
 import { messageON } from 'shared/util/bus';
 import { initControllers, initShedulers } from 'core/controller';
-import config, { NODE_ENV_ENUM } from 'shared/config';
+import config from 'shared/config';
 import BlockPGRepository from 'core/repository/block/pg';
 import BlockRepository from 'core/repository/block';
 import BlockService from 'core/service/block';
@@ -20,7 +20,6 @@ import System from 'core/repository/system';
 import RoundService from 'core/service/round';
 import SlotService from 'core/service/slot';
 import RoundRepository from 'core/repository/round';
-import { getLastSlotNumberInRound } from 'core/util/round';
 import { MIN_ROUND_BLOCK } from 'core/util/block';
 import { getFirstSlotNumberInRound } from 'core/util/slot';
 import DelegateRepository from 'core/repository/delegate';
@@ -53,6 +52,7 @@ class Loader {
                 process.exit(1);
             }
         }
+
         if (!config.CORE.IS_HISTORY_ON_WARMUP) {
             config.CORE.IS_HISTORY = historyState;
         }
@@ -81,7 +81,6 @@ class Loader {
         let offset: number = 0;
         do {
             const blockBatch: Array<Block> = await BlockPGRepository.getMany(limit, offset);
-
             if (!blockBatch) {
                 break;
             }
@@ -135,6 +134,10 @@ class Loader {
             }
 
             TransactionDispatcher.applyUnconfirmed(trs, sender);
+
+            if (trs.type === TransactionType.VOTE) {
+                TransactionDispatcher.apply(trs, sender);
+            }
         }
     }
 }

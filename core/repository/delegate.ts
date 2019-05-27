@@ -14,14 +14,15 @@ class DelegateRepository {
             missedBlocks: 0,
             forgedBlocks: 0,
             account: account,
-            votes: 0
+            votes: 0,
+            confirmedVoteCount: 0,
         });
         this.memoryDelegates.set(account.publicKey, delegate);
         this.usernames.add(delegate.username);
         return delegate;
     }
 
-    public getDelegates(limit, offset): Array<Delegate> {
+    public getDelegates(limit: number, offset: number): Array<Delegate> {
         return [...this.memoryDelegates.values()].sort((a, b) => {
             if (a.account.publicKey > b.account.publicKey) {
                 return 1;
@@ -43,10 +44,10 @@ class DelegateRepository {
 
     public getActiveDelegates(limit?: number, offset?: number): Array<Delegate> {
         let activeDelegates: Array<Delegate> = [...this.memoryDelegates.values()].sort((a, b) => {
-            if (a.votes < b.votes) {
+            if (a.confirmedVoteCount < b.confirmedVoteCount) {
                 return 1;
             }
-            if (a.votes > b.votes) {
+            if (a.confirmedVoteCount > b.confirmedVoteCount) {
                 return -1;
             }
             return 0;
@@ -79,6 +80,7 @@ class DelegateRepository {
             forgedBlocks: delegate.forgedBlocks,
             publicKey: delegate.account.publicKey,
             votes: delegate.votes,
+            confirmedVoteCount: delegate.confirmedVoteCount,
         };
     }
 }

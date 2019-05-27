@@ -18,23 +18,26 @@ describe('Test GET_DELEGATES', () => {
         };
 
         const SUCCESS = [{
-            'username': 'delegate3',
-            'missedBlocks': 0,
-            'forgedBlocks': 0,
-            'publicKey': '137b9f0f839ab3ecd2146bfecd64d31e127d79431211e352bedfeba5fd61a57a',
-            'votes': 0
+            username: 'delegate3',
+            missedBlocks: 0,
+            forgedBlocks: 0,
+            publicKey: '137b9f0f839ab3ecd2146bfecd64d31e127d79431211e352bedfeba5fd61a57a',
+            votes: 0,
+            confirmedVoteCount: 0,
         }, {
-            'username': 'delegate4',
-            'missedBlocks': 0,
-            'forgedBlocks': 0,
-            'publicKey': '80ede51ab3ca44ff66c9d5e0edebf2b0c94c8d09c5963bc8e80c7cdbb37a4914',
-            'votes': 0
+            username: 'delegate4',
+            missedBlocks: 0,
+            forgedBlocks: 0,
+            publicKey: '80ede51ab3ca44ff66c9d5e0edebf2b0c94c8d09c5963bc8e80c7cdbb37a4914',
+            votes: 0,
+            confirmedVoteCount: 0,
         }, {
-            'username': 'delegate1',
-            'missedBlocks': 0,
-            'forgedBlocks': 0,
-            'publicKey': '83cb3d8641c8e73735cc1b70c915602ffcb6e5a68f14a71056511699050a1a05',
-            'votes': 2
+            username: 'delegate1',
+            missedBlocks: 0,
+            forgedBlocks: 0,
+            publicKey: '83cb3d8641c8e73735cc1b70c915602ffcb6e5a68f14a71056511699050a1a05',
+            votes: 2,
+            confirmedVoteCount: 2,
         }];
 
         const response = await socketRequest(REQUEST);
@@ -95,4 +98,3 @@ describe('Test GET_DELEGATES', () => {
         );
     });
 });
-

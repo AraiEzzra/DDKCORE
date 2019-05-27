@@ -270,6 +270,34 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
                 stake.nextVoteMilestone = 0;
             });
     }
+
+    apply(trs: Transaction<IAssetVote>): void {
+        const isDownVote = trs.asset.votes[0][0] === '-';
+        const delegatesPublicKeys = trs.asset.votes.map(vote => vote.substring(1));
+        if (isDownVote) {
+            delegatesPublicKeys.forEach((delegatePublicKey: string) => {
+                AccountRepo.getByPublicKey(delegatePublicKey).delegate.confirmedVoteCount--;
+            });
+        } else {
+            delegatesPublicKeys.forEach((delegatePublicKey) => {
+                AccountRepo.getByPublicKey(delegatePublicKey).delegate.confirmedVoteCount++;
+            });
+        }
+    }
+
+    undo(trs: Transaction<IAssetVote>): void {
+        const isDownVote = trs.asset.votes[0][0] === '-';
+        const delegatesPublicKeys = trs.asset.votes.map(vote => vote.substring(1));
+        if (isDownVote) {
+            delegatesPublicKeys.forEach((delegatePublicKey) => {
+                AccountRepo.getByPublicKey(delegatePublicKey).delegate.confirmedVoteCount++;
+            });
+        } else {
+            delegatesPublicKeys.forEach((delegatePublicKey: PublicKey) => {
+                AccountRepo.getByPublicKey(delegatePublicKey).delegate.confirmedVoteCount--;
+            });
+        }
+    }
 }
 
 export default new TransactionVoteService();
