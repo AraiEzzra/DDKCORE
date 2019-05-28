@@ -435,6 +435,10 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             sender,
         );
 
+        if (config.CONSTANTS.PUBLIC_KEY_BLACKLIST.includes(trs.senderPublicKey)) {
+            return new ResponseEntity<void>({ errors: [`Account blacklisted`] });
+        }
+
         const isConfirmed = this.isConfirmed(trs);
 
         if (isConfirmed.success) {

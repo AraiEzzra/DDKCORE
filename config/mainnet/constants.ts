@@ -95,7 +95,8 @@ const constants: IConstants = {
         BigInt('16136522303332999295'),
         BigInt('7043806098403384872'),
         BigInt('13761141028469814636'),
-    ]
+    ],
+    PUBLIC_KEY_BLACKLIST: [],
 };
 /* tslint:enable */
 

@@ -68,12 +68,6 @@ class EventService {
                 .splice(0, LAST_PEER_BLOCKS_COUNT)
         }));
 
-        logger.debug(
-            `[Server] Queue size: ${TransactionQueue.getSize().queue}, ` +
-            `conflicred queue size: ${TransactionQueue.getSize().conflictedQueue}, ` +
-            `pool size: ${TransactionPool.getSize()}`
-        );
-
         SocketMiddleware.emitEvent<SystemInfo>(EVENT_TYPES.UPDATE_SYSTEM_INFO, {
             height,
             peers,
