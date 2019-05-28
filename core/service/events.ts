@@ -1,6 +1,7 @@
 import SocketMiddleware from 'core/api/middleware/socket';
 import { EVENT_TYPES } from 'shared/driver/socket/codes';
 import AccountRepository from 'core/repository/account';
+import TransactionRepository from 'core/repository/transaction';
 import BlockRepository from 'core/repository/block';
 import SyncService from 'core/service/sync';
 import config from 'shared/config';
@@ -16,6 +17,7 @@ export type BlockchainInfo = {
     tokenHolders: number;
     totalStakeAmount: number;
     totalStakeHolders: number;
+    transactionsCount: number;
 };
 
 export type SystemInfo = {
@@ -51,6 +53,7 @@ class EventService {
             tokenHolders: statistics.tokenHolders,
             totalStakeAmount: statistics.totalStakeAmount,
             totalStakeHolders: statistics.totalStakeHolders,
+            transactionsCount: TransactionRepository.size()
         });
     }
 
