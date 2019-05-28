@@ -7,6 +7,16 @@ export type Filter = {
     offset: number
 };
 
+export type BlockData = {
+    id: string;
+    height: number;
+};
+
+export type BlockLimit = {
+    height: number,
+    limit: number
+};
+
 export type HistoryEvent<T> = {
     action: T;
 };

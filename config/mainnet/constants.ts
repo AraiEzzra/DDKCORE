@@ -54,7 +54,7 @@ const constants: IConstants = {
         UNSTAKE_VOTE_COUNT: 24,
     },
     TRANSFER: {
-        MAX_TRS_RELAY: 2,
+        MAX_TRS_RELAY: 3,
         MAX_BLOCK_RELAY: 3,
         REQUEST_BLOCK_LIMIT: 10,
     },
@@ -71,8 +71,8 @@ const constants: IConstants = {
     PRE_ORDER_SECOND_PUBLIC_KEY: 'a9e121acbf07a8140ed7388fe1e8a4b77bb9c7972bbca32725c6a8f1841db333',
     UPDATE_BLOCKCHAIN_INFO_INTERVAL: 60 * 1000,
     UPDATE_SYSTEM_INFO_INTERVAL: 1000,
-    MAX_PEERS_CONNECT_TO: 6,
-    MAX_PEERS_CONNECTED: 11,
+    MAX_PEERS_CONNECT_TO: 100,
+    MAX_PEERS_CONNECTED: 200,
     PEERS_DISCOVER: {
         MAX: 11,
         MIN: 3,

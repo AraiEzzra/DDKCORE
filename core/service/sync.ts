@@ -11,6 +11,10 @@ import config from 'shared/config';
 import RoundService from 'core/service/round';
 import SlotService from 'core/service/slot';
 import { ResponseEntity } from 'shared/model/response';
+import { logger } from 'shared/util/logger';
+import SharedTransactionRepo from 'shared/repository/transaction';
+import SocketRepository from 'core/repository/socket';
+import { ActionTypes } from 'core/util/actionTypes';
 
 export interface ISyncService {
 
@@ -37,23 +41,31 @@ export class SyncService implements ISyncService {
     }
 
     sendNewBlock(block: Block): void {
+        // TODO for debug only, remove after test
+        logger.debug(`[Service][Sync][sendNewBlock] height: ${block.height}, relay: ${block.relay}`);
         block.relay += 1;
-        if (block.relay < config.CONSTANTS.TRANSFER.MAX_BLOCK_RELAY) {
-            SyncRepository.sendNewBlock(block);
-        }
+
+        const serializedBlock: Block & { transactions: any } = block.getCopy();
+        serializedBlock.transactions = block.transactions.map(trs => SharedTransactionRepo.serialize(trs));
+
+        const filteredPeers = PeerRepository.getLessPeersByFilter(block.height, block.id);
+        SocketRepository.broadcastPeers(ActionTypes.BLOCK_RECEIVE, { block: serializedBlock }, filteredPeers);
     }
 
     sendUnconfirmedTransaction(trs: Transaction<any>): void {
         trs.relay += 1;
         if (trs.relay < config.CONSTANTS.TRANSFER.MAX_TRS_RELAY) {
-            SyncRepository.sendUnconfirmedTransaction(trs);
+            SocketRepository.broadcastPeers(
+                ActionTypes.TRANSACTION_RECEIVE,
+                { trs: SharedTransactionRepo.serialize(trs) }
+            );
         }
     }
 
     async checkCommonBlock(lastBlock: Block): Promise<ResponseEntity<{ isExist: boolean, peer?: Peer }>> {
 
         const errors: Array<string> = [];
-        const filteredPeers = PeerRepository.getPeersByFilter(lastBlock.height, SystemRepository.broadhash);
+        const filteredPeers = PeerRepository.getHigherPeersByFilter(lastBlock.height, SystemRepository.broadhash);
 
         if (!filteredPeers.length) {
             return new ResponseEntity({ errors: [ERROR_NOT_ENOUGH_PEERS] });
@@ -74,7 +86,8 @@ export class SyncService implements ISyncService {
             const minHeight = Math.min(...randomPeer.blocksIds.keys());
             if (minHeight > lastBlock.height) {
                 const response = await SyncRepository.requestCommonBlocks(
-                    { id: lastBlock.id, height: lastBlock.height }
+                    { id: lastBlock.id, height: lastBlock.height },
+                    randomPeer
                 );
 
                 if (!response.success) {
@@ -82,9 +95,9 @@ export class SyncService implements ISyncService {
                     errors.push(...response.errors);
                     return new ResponseEntity({ errors });
                 }
-                const { isExist, peer } = response.data;
+                const { isExist } = response.data;
                 if (isExist) {
-                    return new ResponseEntity({ data: { peer, isExist } });
+                    return new ResponseEntity({ data: { peer: randomPeer, isExist } });
                 }
             }
         }
