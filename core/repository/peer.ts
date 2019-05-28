@@ -88,6 +88,7 @@ export class PeerRepo {
     }
 
     clearBanList() {
+        logger.debug(`[Repository][Peer][clearBanList] removed all from ban list`);
         this.banList.clear();
     }
 

@@ -1,14 +1,11 @@
 import SocketRepository from 'core/repository/socket';
 import { Peer } from 'shared/model/peer';
 import { Block, BlockModel } from 'shared/model/block';
-import { Transaction } from 'shared/model/transaction';
 import PeerRepository from 'core/repository/peer';
-import SystemRepository from 'core/repository/system';
 import SharedTransactionRepo from 'shared/repository/transaction';
 import config from 'shared/config';
 import { ResponseEntity } from 'shared/model/response';
 import BlockService from 'core/service/block';
-import { logger } from 'shared/util/logger';
 import { BlockData, BlockLimit } from 'shared/model/types';
 
 export const ERROR_NOT_ENOUGH_PEERS = 'ERROR_NOT_ENOUGH_PEERS';

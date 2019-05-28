@@ -15,6 +15,7 @@ import RoundService from 'core/service/round';
 import SlotService from 'core/service/slot';
 import { ERROR_ALL_PEERS_ARE_BANNED } from 'core/repository/sync';
 import TransactionService from 'core/service/transaction';
+import TransactionQueue from 'core/service/transactionQueue';
 
 type checkCommonBlocksRequest = {
     data: {
@@ -88,9 +89,10 @@ export class SyncController extends BaseController {
                     responseCommonBlocks.errors.join('. ')
                 );
                 if (responseCommonBlocks.errors.includes(ERROR_ALL_PEERS_ARE_BANNED)) {
-                    TransactionService.returnToQueueAllTransactionFromPool();
+                   
                     // TODO add unban all peers on refactored peers
                     PeerRepository.clearBanList();
+                    await RoundService.regenerateRound();
                     continue;
                 }
                 if (responseCommonBlocks.errors.includes(REQUEST_TIMEOUT)) {

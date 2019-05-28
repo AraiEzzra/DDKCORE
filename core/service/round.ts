@@ -6,12 +6,15 @@ import { createTaskON, resetTaskON } from 'shared/util/bus';
 import DelegateRepository from 'core/repository/delegate';
 import { logger } from 'shared/util/logger';
 import { ActionTypes } from 'core/util/actionTypes';
-import { getLastSlotNumberInRound } from 'core/util/round';
+import { compareRounds, getLastSlotNumberInRound } from 'core/util/round';
 import { createKeyPairBySecret } from 'shared/util/crypto';
 import { getFirstSlotNumberInRound } from 'core/util/slot';
 import { IKeyPair } from 'shared/util/ed';
 import System from 'core/repository/system';
 import { AccountChangeAction } from 'shared/model/account';
+import TransactionService from 'core/service/transaction';
+import TransactionQueue from 'core/service/transactionQueue';
+import BlockPGRepo from 'core/repository/block/pg';
 
 const MAX_LATENESS_FORGE_TIME = 500;
 
@@ -145,6 +148,34 @@ class RoundService implements IRoundService {
         return newRound;
     }
 
+    public async regenerateRound() {
+        const prevRound = RoundRepository.getPrevRound();
+        if (!prevRound) {
+            return;
+        }
+        TransactionQueue.lock();
+        TransactionService.returnToQueueAllTransactionFromPool();
+        const newRound = this.generate(getLastSlotNumberInRound(prevRound) + 1);
+        const currentRound = RoundRepository.getCurrentRound();
+        const prevRoundFinish = SlotService.getSlotTime(getLastSlotNumberInRound(prevRound));
+        if (!compareRounds(currentRound, newRound)) {
+            while (true) {
+                const lastBlock = BlockRepository.getLastBlock();
+                if (lastBlock.createdAt <= prevRoundFinish) {
+                    break;
+                }
+                BlockRepository.deleteLastBlock();
+                await BlockPGRepo.deleteById(lastBlock.id);
+
+            }
+            RoundRepository.deleteLastRound();
+            RoundRepository.add(newRound);
+        }
+        TransactionQueue.unlock();
+        setImmediate(TransactionQueue.process);
+    }
+
+
     public backwardProcess(): Round {
         resetTaskON(ActionTypes.BLOCK_GENERATE);
         resetTaskON(ActionTypes.ROUND_FINISH);
@@ -183,7 +214,7 @@ class RoundService implements IRoundService {
                 }
                 this.backwardProcess();
             }
-
+            //  TODO fix looping on height 1
             round = RoundRepository.getCurrentRound();
         }
 
