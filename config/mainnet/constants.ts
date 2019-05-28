@@ -96,7 +96,7 @@ const constants: IConstants = {
         BigInt('7043806098403384872'),
         BigInt('13761141028469814636'),
     ],
-    PUBLIC_KEY_BLACKLIST: [
+    PUBLIC_KEY_BLACKLIST: new Set([
         '9b53d8c2f96e8575a044c4439f7cc2a35b5ec9e484f12af373bb4b3e5dc143a1',
         'be75e60ea832d6c784d443e222caec94debd900f0cd341f24fc1d0f32c1f1504',
         '2b7a5c4626b3aa78093e48cddc3b306e61d9ef649b3ee413c27122cd07fe05d8',
@@ -280,7 +280,7 @@ const constants: IConstants = {
         'da116b1d6ee829a64cb07bf79fc72a21dd5e293883d90b59e87c1f1865aba5fd',
         '9ca2aa8bd7c691a057b6760cb0b8a2e935f7242ec82db92924a86ba7a924ce89',
         '7a6b9da9ad000a0ce46ea2ec7cc6ae4f1659f174fbc1fa2f9738990654ff7ebd',
-    ],
+    ]),
 };
 /* tslint:enable */
 

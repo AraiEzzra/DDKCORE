@@ -71,5 +71,5 @@ export type IConstants = {
     };
     PEERS_COUNT_FOR_DISCOVER: number;
     PRE_MINED_ACCOUNTS: Array<Address>;
-    PUBLIC_KEY_BLACKLIST: Array<PublicKey>;
+    PUBLIC_KEY_BLACKLIST: Set<PublicKey>;
 };
