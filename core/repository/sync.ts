@@ -8,6 +8,8 @@ import SharedTransactionRepo from 'shared/repository/transaction';
 import config from 'shared/config';
 import { ResponseEntity } from 'shared/model/response';
 import BlockService from 'core/service/block';
+import { logger } from 'shared/util/logger';
+import { BlockData, BlockLimit } from 'shared/model/types';
 
 export const ERROR_NOT_ENOUGH_PEERS = 'ERROR_NOT_ENOUGH_PEERS';
 
@@ -15,12 +17,8 @@ interface ISyncRepo {
 
     sendPeers(peer: Peer, queryId): void;
 
-    sendNewBlock(block: Block): void;
-
-    sendUnconfirmedTransaction(trs: Transaction<any>): void;
-
-    requestCommonBlocks(blockData: { id: string, height: number }):
-        Promise<ResponseEntity<{ isExist: boolean, peer: Peer }>>;
+    requestCommonBlocks(blockData: BlockData, peer: Peer):
+        Promise<ResponseEntity<{ isExist: boolean }>>;
 
     sendCommonBlocksExist(response, peer: Peer, requestId: string): void;
 
@@ -63,29 +61,8 @@ export class Sync implements ISyncRepo {
         SocketRepository.peerRPCResponse('RESPONSE_PEERS', peers, peer, requestId);
     }
 
-    sendNewBlock(block: Block): void {
-        const serializedBlock: Block & { transactions: any } = block.getCopy();
-        serializedBlock.transactions = block.transactions.map(trs => SharedTransactionRepo.serialize(trs));
-        SocketRepository.broadcastPeers('BLOCK_RECEIVE', { block: serializedBlock });
-    }
-
-    sendUnconfirmedTransaction(trs: Transaction<any>): void {
-        SocketRepository.broadcastPeers(
-            'TRANSACTION_RECEIVE',
-            { trs: SharedTransactionRepo.serialize(trs) }
-        );
-    }
-
-    async requestCommonBlocks(blockData: { id: string, height: number }):
-        Promise<ResponseEntity<{ isExist: boolean, peer: Peer }>> {
-        const filteredPeers = PeerRepository.getPeersByFilter(blockData.height, SystemRepository.broadhash);
-        const peer = PeerRepository.getRandomPeer(filteredPeers);
-
-        if (!peer) {
-            return new ResponseEntity(
-                { errors: [ERROR_NOT_ENOUGH_PEERS] }
-            );
-        }
+    async requestCommonBlocks(blockData: BlockData, peer: Peer):
+        Promise<ResponseEntity<{ isExist: boolean }>> {
 
         const response = await SocketRepository.peerRPCRequest<{ isExist: boolean }>(
             'REQUEST_COMMON_BLOCKS',
@@ -98,14 +75,15 @@ export class Sync implements ISyncRepo {
                 { errors: response.errors }
             );
         }
-        return new ResponseEntity({ data: { isExist: response.data.isExist, peer } });
+        return new ResponseEntity({ data: { isExist: response.data.isExist } });
     }
 
     sendCommonBlocksExist(response, peer, requestId): void {
         SocketRepository.peerRPCResponse('RESPONSE_COMMON_BLOCKS', response, peer, requestId);
     }
 
-    async requestBlocks(data: { height: number, limit: number }, peer): Promise<ResponseEntity<Array<Block>>> {
+    async requestBlocks(data: BlockLimit, peer):
+        Promise<ResponseEntity<Array<Block>>> {
         const blocksResponse = await SocketRepository.peerRPCRequest<Array<BlockModel>>('REQUEST_BLOCKS', data, peer);
         if (blocksResponse.success) {
             const blocks = blocksResponse.data.map(blockModel => {

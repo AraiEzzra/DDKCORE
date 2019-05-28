@@ -12,10 +12,11 @@ import { createKeyPairBySecret } from 'shared/util/crypto';
 import { ResponseEntity } from 'shared/model/response';
 import { CreateTransactionParams } from 'core/controller/types';
 import config from 'shared/config';
+import { ActionTypes } from 'core/util/actionTypes';
 
 class TransactionController extends BaseController {
 
-    @ON('TRANSACTION_RECEIVE')
+    @ON(ActionTypes.TRANSACTION_RECEIVE)
     public async onReceiveTransaction({ data } : { data: { trs: SerializedTransaction<IAsset> } }): Promise<void> {
         const trs = SharedTransactionRepo.deserialize(data.trs);
         logger.trace(`[Controller][Transaction][onReceiveTransaction] ${JSON.stringify(data.trs)}`);

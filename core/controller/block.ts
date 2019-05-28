@@ -21,7 +21,7 @@ interface BlockGenerateRequest {
 
 class BlockController extends BaseController {
 
-    @MAIN('BLOCK_RECEIVE')
+    @MAIN(ActionTypes.BLOCK_RECEIVE)
     public async onReceiveBlock({ data }: { data: { block: BlockModel } }): Promise<ResponseEntity<void>> {
 
         const validateResponse = BlockService.validate(data.block);
