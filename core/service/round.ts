@@ -122,7 +122,8 @@ class RoundService implements IRoundService {
         const slots = SlotService.generateSlots(lastBlock.id, delegates, firstSlotNumber);
 
         const newCurrentRound = new Round({
-            slots: slots
+            slots: slots,
+            lastBlockId: lastBlock.id,
         });
         logger.debug('[Round][Service][generate]', JSON.stringify(newCurrentRound));
         return newCurrentRound;

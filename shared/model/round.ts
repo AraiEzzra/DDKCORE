@@ -15,6 +15,9 @@ export class RoundModel {
     startHeight?: number;
     endHeight?: number;
 
+    // TODO: for debugger
+    lastBlockId?: string;
+
     constructor(data: RoundModel) {
         Object.assign(this, data); // todo workaround
     }
