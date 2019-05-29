@@ -90,8 +90,8 @@ const constants: IConstants = {
         BigInt('933553974927686133'),
         BigInt('4995063339468361088')
     ],
+    ADDRESSES_BLACKLIST: new Set([]),
 };
 /* tslint:enable */
-
 
 export default constants;
