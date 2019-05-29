@@ -40,11 +40,8 @@ const LAST_PEER_BLOCKS_COUNT = 10;
 class EventService {
 
     updateBlockchainInfo() {
-        const preMinedAccounts = config.CONSTANTS.PRE_MINED_ACCOUNTS.map((address: Address) =>
-            AccountRepository.getByAddress(address)
-        );
         const circulatingSupply = config.CONSTANTS.TOTAL_SUPPLY.AMOUNT -
-            preMinedAccounts.reduce((sum, acc) => sum += (acc ? acc.actualBalance : 0), 0);
+            AccountRepository.getByAddress(config.CONSTANTS.TOTAL_SUPPLY.ADDRESS).actualBalance;
         const statistics = AccountRepository.getStatistics();
 
         SocketMiddleware.emitEvent<BlockchainInfo>(EVENT_TYPES.UPDATE_BLOCKCHAIN_INFO, {
