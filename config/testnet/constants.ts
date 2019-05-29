@@ -90,7 +90,7 @@ const constants: IConstants = {
         BigInt('933553974927686133'),
         BigInt('4995063339468361088')
     ],
-    PUBLIC_KEY_BLACKLIST: new Set([]),
+    ADDRESSES_BLACKLIST: new Set([]),
 };
 /* tslint:enable */
 
