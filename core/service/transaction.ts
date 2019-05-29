@@ -283,7 +283,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             : getAddressByPublicKey(data.senderPublicKey);
 
         if (config.CONSTANTS.ADDRESSES_BLACKLIST.has(data.senderAddress)) {
-            return new ResponseEntity({ errors: [`Account blacklisted`] });
+            return new ResponseEntity({ errors: [`Account in blacklist`] });
         }
 
         let sender = AccountRepo.getByAddress(data.senderAddress);
@@ -441,7 +441,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         );
 
         if (config.CONSTANTS.ADDRESSES_BLACKLIST.has(trs.senderAddress)) {
-            return new ResponseEntity<void>({ errors: [`Account blacklisted`] });
+            return new ResponseEntity<void>({ errors: [`Account in blacklist`] });
         }
 
         const isConfirmed = this.isConfirmed(trs);
