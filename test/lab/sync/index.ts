@@ -1,51 +1,56 @@
 import Loader from 'core/loader';
-import { getSocketConnection } from 'test/lab/utils/socket/client';
-import { TestSocketServer } from 'test/lab/utils/socket/testSocketServer';
-import { TEST_SOCKET_SERVER_CONFIG } from 'test/lab/utils/socket/config';
+import socketFactory from 'test/lab/utils/socket/client';
+import testSocketServer from 'test/lab/utils/socket/testSocketServer';
+import { SOCKET_EMIT_INTERVAL } from 'test/lab/config';
 
 export const prepare = async (testName: string, methodA = null, methodB = null, methodRunner = null) => {
     const nodeName = process.env.NODE_NAME;
-    if (methodRunner && nodeName === 'TEST_RUNNER') {
-        await methodRunner();
-        // TODO: wait for server
+    if (nodeName === 'TEST_RUNNER') {
+        if (methodRunner) {
+            await methodRunner();
+        }
+        await testFunction(testName);
     } else {
         if (methodA && nodeName === 'NODE_A') {
+            console.log('RUNNING PREPARE METHOD FOR: ', nodeName);
             await methodA();
         }
 
         if (methodB && nodeName === 'NODE_B') {
+            console.log('RUNNING PREPARE METHOD FOR: ', nodeName);
             await methodB();
         }
-
-        await socketRequest(testName);
+        await socketRequest(testName, { node: nodeName });
     }
 };
 
-export const socketRequest = (testName: string) =>
+export const socketRequest = (testName: string, data: any) =>
     new Promise(resolve => {
-        const socket = getSocketConnection();
-        socket.emit(testName);
-        socket.on(testName + '_RESPONSE', () => resolve());
+        const socket = socketFactory.socketConnection;
+        const timer = setInterval(() => socket.emit(testName, data), SOCKET_EMIT_INTERVAL);
+        socket.emit(testName, data);
+        socket.on(testName + '_RESPONSE', () => {
+            clearInterval(timer);
+            resolve();
+        });
     });
 
 export const prepareLoader = async () => {
     await Loader.start();
 };
 
-export const testFunction = async () => {
-    const testSocketServer = new TestSocketServer(4000, TEST_SOCKET_SERVER_CONFIG);
-    await testSocketServer.run();
-    const resultObj = new Map();
-
-    // console.log('BINDING...');
-    // testSocketServer.on('abc', (response: any) => {
-    //     console.log('RESPONSEEEE ', response);
-    //     const peerName = response.node;
-    //     resultObj.set(peerName, true);
-    //     const result = [...resultObj.values()];
-    //     // if (result.length && result.length === 2) {
-    //     //     resolve();
-    //     // }
-    // });
-
+export const testFunction = async (testName: string) => {
+    return new Promise(resolve => {
+        const resultObj = new Map();
+        testSocketServer.register(testName, (socket: any, response: any) => {
+            console.log('RESPONSEEEE ', response);
+            const peerName = response.node;
+            resultObj.set(peerName, true);
+            const resultCount = resultObj.size;
+            socket.emit(testName + '_RESPONSE');
+            if (resultCount === 2) {
+                resolve();
+            }
+        });
+    });
 };

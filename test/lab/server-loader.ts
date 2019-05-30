@@ -1,17 +1,21 @@
 import { expect } from 'chai';
 import { getSocketConnection } from 'test/lab/utils/socket/client';
-import { testFunction } from 'test/lab/sync';
+import { socketRequest, testFunction } from 'test/lab/sync';
+import testSocketServer from 'test/lab/utils/socket/testSocketServer';
+import socketFactory from 'test/lab/utils/socket/client';
+import { DEFAULT_TEST_TIMEOUT } from 'test/lab/config';
 
 const synchronization: Map<string, boolean> = new Map();
 
 describe('Sync test environment...', function () {
-    this.timeout(50000);
+    this.timeout(DEFAULT_TEST_TIMEOUT);
     before(async () => {
         const nodeName = process.env.NODE_NAME;
         if (nodeName === 'TEST_RUNNER') {
-            await testFunction();
+            await testSocketServer.run();
+            await testFunction('abc');
         } else {
-            const socketConnection = getSocketConnection();
+            const socketConnection = socketFactory.socketConnection;
             socketConnection.emit('sync', { node: nodeName, sync: true });
             const promise = new Promise(resolve => {
                 socketConnection.on('SYNC_RESPONSE', () => {
@@ -20,12 +24,7 @@ describe('Sync test environment...', function () {
             });
             await promise;
             console.log('EMITTING...', nodeName);
-            socketConnection.emit('abc', { node: nodeName, test: 1 });
-            const testPromise = new Promise(resolve => {
-                socketConnection.on('abc_RESPONSE', () => console.log('WE CAN MOVE ON!'));
-                resolve();
-            });
-            await testPromise;
+            await socketRequest('abc', { node: nodeName });
         }
     });
     it('Sync test environment', () => {

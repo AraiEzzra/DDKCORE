@@ -1,0 +1,2 @@
+export const DEFAULT_TEST_TIMEOUT = 50000;
+export const SOCKET_EMIT_INTERVAL = 1000;

@@ -11,3 +11,22 @@ export const getSocketConnection = (): SocketIOClient.Socket | null => {
 
     return socket.connect();
 };
+
+class SocketFactory {
+
+    private _socketConnection: SocketIOClient.Socket;
+
+    constructor() {
+        if (this._socketConnection || process.env.NODE_NAME === 'TEST_RUNNER') {
+            return;
+        }
+        const socket = new SocketClient(TEST_RUNNER_HOST, TEST_RUNNER_PORT, 'ws', SOCKET_CLIENT_CONFIG);
+        this._socketConnection = socket.connect();
+    }
+
+    get socketConnection(): SocketIOClient.Socket {
+        return this._socketConnection;
+    }
+}
+
+export default new SocketFactory();
