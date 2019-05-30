@@ -42,7 +42,7 @@ export default class AirdropHistoryRepository implements IAirdropHistoryReposito
         const storage = this.getStorage(query.referralAddress);
         const groupByDate = new Map<Timestamp, AirdropDailyHistory>();
 
-        for (let item of storage) {
+        for (const item of storage) {
             const realTime = SlotService.getRealTime(item.rewardTime);
             const startOfDay = new Date(realTime).setHours(0,0,0,0);
 

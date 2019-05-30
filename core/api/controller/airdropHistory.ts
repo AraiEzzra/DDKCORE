@@ -1,5 +1,5 @@
 import { API } from 'core/api/util/decorators';
-import { Message2 } from 'shared/model/message';
+import { Message } from 'shared/model/message';
 import { ResponseEntity } from 'shared/model/response';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
 import AirdropHistoryRepository, {
@@ -15,7 +15,7 @@ class AirdropHistoryController {
     }
 
     @API(API_ACTION_TYPES.GET_AIRDROP_REWARD_HISTORY)
-    public getHistory(message: Message2<AirdropHistoryQuery>): ResponseEntity<object> {
+    public getHistory(message: Message<AirdropHistoryQuery>): ResponseEntity<object> {
         const query = {
             ...message.body,
             referralAddress: BigInt(message.body.referralAddress)
@@ -27,7 +27,7 @@ class AirdropHistoryController {
     }
 
     @API(API_ACTION_TYPES.GET_AIRDROP_REWARD_DAILY_HISTORY)
-    public getDailyHistory(message: Message2<AirdropDailyHistoryQuery>): ResponseEntity<object> {
+    public getDailyHistory(message: Message<AirdropDailyHistoryQuery>): ResponseEntity<object> {
 
         const query = {
             ...message.body,

@@ -15,6 +15,7 @@ import { MemoryPeer } from 'shared/model/Peer/memoryPeer';
 import { NetworkPeer } from 'shared/model/Peer/networkPeer';
 
 export type BlockchainInfo = {
+    airdropBalance: number;
     totalSupply: number;
     circulatingSupply: number;
     tokenHolders: number;
@@ -49,6 +50,7 @@ class EventService {
 
         SocketMiddleware.emitEvent<BlockchainInfo>(EVENT_TYPES.UPDATE_BLOCKCHAIN_INFO, {
             totalSupply: config.CONSTANTS.TOTAL_SUPPLY.AMOUNT,
+            airdropBalance: AccountRepository.getByAddress(config.CONSTANTS.AIRDROP.ADDRESS).actualBalance,
             circulatingSupply,
             tokenHolders: statistics.tokenHolders,
             totalStakeAmount: statistics.totalStakeAmount,

@@ -60,12 +60,4 @@ export class ReferredUserFactor {
     getItems(): Array<number> {
         return this.items;
     }
-
-    toObject(): object {
-        return {
-            'count': this.getItem(FactorType.COUNT),
-            'reward': this.getItem(FactorType.REWARD),
-            'stakeAmount': this.getItem(FactorType.STAKE_AMOUNT)
-        };
-    }
 }
