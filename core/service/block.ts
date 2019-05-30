@@ -68,7 +68,7 @@ class BlockService {
 
     public async generateBlock(keyPair: IKeyPair, timestamp: number): Promise<ResponseEntity<void>> {
         logger.debug(`[Service][Block][generateBlock] timestamp ${timestamp}`);
-        this.lockTransactionPoolAndQueue();
+        this.lockTransactionQueueProcess();
 
         const transactions: Array<Transaction<object>> =
             TransactionPool.popSortedUnconfirmedTransactions(config.CONSTANTS.MAX_TRANSACTIONS_PER_BLOCK);
@@ -87,10 +87,11 @@ class BlockService {
             TransactionDispatcher.returnToQueueConflictedTransactionFromPool(transactions);
 
             processBlockResponse.errors.push('[Process][newGenerateBlock] generate block');
+            this.unlockTransactionQueueProcess();
             return processBlockResponse;
         }
 
-        this.unlockTransactionPoolAndQueue();
+        this.unlockTransactionQueueProcess();
 
         return new ResponseEntity<void>();
     }
@@ -110,11 +111,11 @@ class BlockService {
         }
     }
 
-    private lockTransactionPoolAndQueue(): void {
+    private lockTransactionQueueProcess(): void {
         TransactionQueue.lock();
     }
 
-    private unlockTransactionPoolAndQueue(): void {
+    private unlockTransactionQueueProcess(): void {
         TransactionQueue.unlock();
         setImmediate(TransactionQueue.process);
     }
@@ -572,15 +573,12 @@ class BlockService {
             `slot: ${SlotService.getSlotNumber(block.createdAt)}`
         );
 
-        const removedTransactionsResponse: ResponseEntity<Array<Transaction<object>>> =
-            TransactionPool.batchRemove(block.transactions);
-        if (!removedTransactionsResponse.success) {
-            return new ResponseEntity<void>({ errors: [...removedTransactionsResponse.errors, 'receiveBlock'] });
-        }
+        this.lockTransactionQueueProcess();
+
+        const removedTransactions = TransactionPool.batchRemove(block.transactions);
         logger.debug(
-            `[Service][Block][receiveBlock] removed transactions count: ${removedTransactionsResponse.data.length}`
+            `[Service][Block][receiveBlock] removed transactions count: ${removedTransactions.length}`
         );
-        const removedTransactions: Array<Transaction<object>> = removedTransactionsResponse.data || [];
 
         if (!RoundRepository.getCurrentRound()) {
             const activeDelegatesCount = DelegateRepository.getActiveDelegates().length;
@@ -613,6 +611,7 @@ class BlockService {
             this.pushInPool(transactionForReturn);
             TransactionDispatcher.returnToQueueConflictedTransactionFromPool(block.transactions);
         }
+        this.unlockTransactionQueueProcess();
         return new ResponseEntity<void>({ errors });
     }
 

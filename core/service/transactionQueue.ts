@@ -153,7 +153,8 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
         }
 
         this.push(trs);
-        setImmediate(this.process);
+        // TODO exclude to config
+        setTimeout(this.process, 100);
     }
 
 

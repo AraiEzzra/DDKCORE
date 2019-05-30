@@ -19,7 +19,7 @@ import TransactionHistoryRepository from 'core/repository/history/transaction';
 
 export interface ITransactionPoolService<T extends Object> {
 
-    batchRemove(transactions: Array<Transaction<T>>): ResponseEntity<Array<Transaction<T>>>;
+    batchRemove(transactions: Array<Transaction<T>>): Array<Transaction<T>>;
 
     getBySenderAddress(senderAddress: Address): Array<Transaction<T>>;
 
@@ -52,14 +52,14 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
     poolByRecipient: Map<Address, Array<Transaction<T>>> = new Map<Address, Array<Transaction<T>>>();
     poolBySender: Map<Address, Array<Transaction<T>>> = new Map<Address, Array<Transaction<T>>>();
 
-    batchRemove(transactions: Array<Transaction<T>>): ResponseEntity<Array<Transaction<T>>> {
+    batchRemove(transactions: Array<Transaction<T>>): Array<Transaction<T>> {
         const removedTransactions = [];
         for (const trs of [...transactions].reverse()) {
             removedTransactions.push(...this.removeBySenderAddress(trs.senderAddress));
             removedTransactions.push(...this.removeByRecipientAddress(trs.senderAddress));
         }
 
-        return new ResponseEntity<Array<Transaction<T>>>({ data: removedTransactions });
+        return removedTransactions;
     }
 
     getByRecipientAddress(recipientAddress: Address): Array<Transaction<T>> {
