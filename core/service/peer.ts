@@ -11,6 +11,8 @@ import { Headers } from 'shared/model/Peer/headers';
 import { sortByKey } from 'shared/util/util';
 import VersionChecker from 'core/util/versionChecker';
 import { isArray } from 'util';
+import SwapTransactionQueue from 'core/service/swapTransactiontQueue';
+
 const LOG_PREFIX = `[Service][Peer]`;
 export const ERROR_NOT_ENOUGH_PEERS = 'ERROR_NOT_ENOUGH_PEERS';
 
@@ -66,7 +68,12 @@ export class PeerService {
         PeerNetworkRepository.removeAll();
     }
 
-    broadcast(code: string, data: any, peerAddresses?: Array<PeerAddress>): void {
+    broadcast(code: string, data: any, peerAddresses?: Array<PeerAddress>, checkQueue: boolean = true): void {
+
+        if (checkQueue && SwapTransactionQueue.size && PeerNetworkRepository.count) {
+            SwapTransactionQueue.process();
+        }
+
         let peers: Array<NetworkPeer> = [];
         if (peerAddresses && isArray(peerAddresses)) {
             peers = PeerNetworkRepository.getManyByAddress(peerAddresses);
