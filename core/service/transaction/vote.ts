@@ -161,10 +161,13 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
                     break;
                 }
                 default:
-                    errors.push('Invalid math operator for vote' + vote);
+                    errors.push(`Invalid math operator for vote: ${vote}`);
             }
-            if (!AccountRepo.getByPublicKey(publicKey).delegate) {
-                errors.push('Delegate not found, vote: ' + vote);
+
+            if (!AccountRepo.getByPublicKey(publicKey)) {
+                errors.push(`Delegate account not found, vote: ${vote}`);
+            } else if (!AccountRepo.getByPublicKey(publicKey).delegate) {
+                errors.push(`Delegate not found, vote: ${vote}`);
             }
         });
 
@@ -178,7 +181,7 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
 
         if (errors.length) {
             errors.push(
-                `Transaction: ${trs.id}.` +
+                `Transaction id: ${trs.id}. ` +
                 `Account: ${sender.address}`
             );
         }

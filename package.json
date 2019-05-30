@@ -28,7 +28,7 @@
     "clean": "rm -rf node_modules/ dist/ dapps/ .nyc_output/ logs/ .npm/ .config/ .node-gyp",
     "watch:with_update": "npm install && npm run watch",
     "watch:with_update_clean": "npm run clean && npm install && npm run watch",
-    "test": "npm run test:api",
+    "test": "export NODE_PATH=./ && mocha --require ts-node/register './test/core/service/transaction/vote.test.ts'",
     "test:api": "export NODE_PATH=./ && mocha --require ts-node/register './test/api/**/*.test.ts'",
     "test:core": "export NODE_PATH=./ && mocha --require ts-node/register './test/core/**/*.test.ts'",
     "test:functionality": "export NODE_PATH=./ && mocha --require ts-node/register ./test/functionality/server-loader.ts './test/functionality/**/*.test.ts'"
