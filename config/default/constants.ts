@@ -91,6 +91,9 @@ const constants: IConstants = {
         BigInt('4995063339468361088')
     ],
     ADDRESSES_BLACKLIST: new Set([]),
+    START_FEATURE_BLOCK: {
+        ACCOUNT_BLACKLIST: 0
+    },
 };
 /* tslint:enable */
 

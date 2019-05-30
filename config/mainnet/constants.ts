@@ -763,6 +763,9 @@ const constants: IConstants = {
         BigInt('18384869144023112990'),
         BigInt('18419869020790234625'),
     ]),
+    START_FEATURE_BLOCK: {
+        ACCOUNT_BLACKLIST: 70000
+    },
 };
 /* tslint:enable */
 
