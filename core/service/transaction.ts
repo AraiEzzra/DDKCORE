@@ -491,11 +491,27 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
     }
 
     returnToQueueConflictedTransactionFromPool(transactions: Array<Transaction<IAsset>>): void {
-        const verifiedTransactions: Set<string> = new Set();
-        const accountsMap: Map<Address, Account> = new Map<Address, Account>();
-        for (const trs of transactions) {
-            this.checkSenderTransactions(trs.senderAddress, verifiedTransactions, accountsMap);
-        }
+        // const verifiedTransactions: Set<string> = new Set();
+        // const accountsMap: Map<Address, Account> = new Map<Address, Account>();
+        // for (const trs of transactions) {
+        //     this.checkSenderTransactions(trs.senderAddress, verifiedTransactions, accountsMap);
+        // }
+        // TODO optimize it
+
+        const removedTransactions = TransactionPool.getTransactions();
+        removedTransactions.forEach((trs: Transaction<T>) => {
+            TransactionPool.remove(trs);
+        });
+
+        removedTransactions.forEach((trs: Transaction<T>) => {
+            const sender = AccountRepo.getByAddress(trs.senderAddress);
+            const verifyUnconfirmedResponse = this.verifyUnconfirmed(trs, sender);
+            if (verifyUnconfirmedResponse.success) {
+                TransactionPool.push(trs, sender, false);
+            } else {
+                TransactionQueue.push(trs);
+            }
+        });
     }
 
     popFromPool(limit: number): Array<Transaction<IAsset>> {

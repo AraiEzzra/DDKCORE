@@ -13,14 +13,13 @@ import TransactionDispatcher from 'core/service/transaction';
 import TransactionPool from 'core/service/transactionPool';
 import { logger } from 'shared/util/logger';
 import { Account } from 'shared/model/account';
-import { SECOND } from 'core/util/const';
 import AccountRepository from 'core/repository/account';
 import SocketMiddleware from 'core/api/middleware/socket';
 import { EVENT_TYPES } from 'shared/driver/socket/codes';
 import SharedTransactionRepo from 'shared/repository/transaction';
-import config from 'shared/config';
 import TransactionHistoryRepository from 'core/repository/history/transaction';
 import { TransactionId } from 'shared/model/types';
+import SystemRepository from 'core/repository/system';
 
 export interface ITransactionQueueService<T extends Object> {
     getLockStatus(): boolean;
@@ -100,7 +99,7 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
     // TODO change to mapReduce
     @autobind
     async process(): Promise<void> {
-        if (this.queue.length === 0 || this.locked) {
+        if (this.queue.length === 0 || this.locked || SystemRepository.synchronization) {
             return;
         }
 
