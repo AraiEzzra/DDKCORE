@@ -8,8 +8,11 @@ import config from 'shared/config';
 import { Address } from 'shared/model/types';
 import TransactionPool from 'core/service/transactionPool';
 import TransactionQueue from 'core/service/transactionQueue';
-import PeerRepository from 'core/repository/peer';
+import PeerMemoryRepository from 'core/repository/peer/peerMemory';
+import PeerNetworkRepository from 'core/repository/peer/peerNetwork';
 import { logger } from 'shared/util/logger';
+import { MemoryPeer } from 'shared/model/Peer/memoryPeer';
+import { NetworkPeer } from 'shared/model/Peer/networkPeer';
 
 export type BlockchainInfo = {
     totalSupply: number;
@@ -57,16 +60,18 @@ class EventService {
     updateSystemInfo() {
         const height = BlockRepository.getLastBlock() ? BlockRepository.getLastBlock().height : 0;
         const broadhash = BlockRepository.getLastBlock() ? BlockRepository.getLastBlock().id : '';
-        const peersCount = PeerRepository.peerList().filter(peer => {
-            return !PeerRepository.isBanned(peer);
-        }).length;
-        const peers = PeerRepository.peerList().map(peer => ({
-            ...peer,
-            socket: undefined,
-            blocksIds: [...peer.blocksIds.entries()]
-                .sort((a: [number, string], b: [number, string]) => b[0] - a[0])
-                .splice(0, LAST_PEER_BLOCKS_COUNT)
-        }));
+        const peersCount = PeerNetworkRepository.getAll()
+            .filter((peer: NetworkPeer) => !peer.isBanned).length;
+
+        const peers = PeerMemoryRepository.getAll().map((peer: MemoryPeer) => {
+            const SerializedPeerHeaders = peer.headers.serialize();
+            return {
+                ...SerializedPeerHeaders,
+                blocksIds: SerializedPeerHeaders.blocksIds
+                    .sort((a: [number, string], b: [number, string]) => b[0] - a[0])
+                    .splice(0, LAST_PEER_BLOCKS_COUNT)
+            };
+        });
 
         SocketMiddleware.emitEvent<SystemInfo>(EVENT_TYPES.UPDATE_SYSTEM_INFO, {
             height,
