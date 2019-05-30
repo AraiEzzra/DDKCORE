@@ -56,9 +56,6 @@ export class Migrator {
             return;
         }
 
-        console.log(JSON.stringify(files));
-
-
         for (let file of files) {
             const sql = new QueryFile(file.path, { minify: true });
 
