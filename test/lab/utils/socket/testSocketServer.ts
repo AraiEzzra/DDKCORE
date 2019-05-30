@@ -2,6 +2,7 @@ import { CONNECT_CHANNEL } from 'shared/driver/socket/channels';
 import { ISocketServer, SocketServer } from 'shared/driver/socket/server';
 import io from 'socket.io';
 import { TEST_SOCKET_SERVER_CONFIG } from 'test/lab/utils/socket/config';
+import { TEST_SYNC_NAME } from 'test/lab/utils/constants';
 
 export class TestSocketServer extends SocketServer implements ISocketServer {
 
@@ -15,45 +16,27 @@ export class TestSocketServer extends SocketServer implements ISocketServer {
     async run() {
         this.socket = io(this.port, this.config);
 
-        const testResult = new Map();
-
         return new Promise(resolve => {
-            const resultObj = new Map();
             this.socket.on(CONNECT_CHANNEL, (socket: SocketIO.Socket) => {
                 console.log(`Test node ${JSON.stringify(socket.handshake.address)} is connected to server`);
-                socket.on('sync', (data: any) => {
-                    console.log(`Node: ${data.node} is trying to establish before test`);
+                socket.on(TEST_SYNC_NAME, (data: any) => {
+                    // console.log(`Node: ${data.node} is synchronizing`);
                     const peerName = data.node;
                     this.socketPool.set(peerName, socket);
                     const connectionCount = this.socketPool.size;
-                    socket.emit('SYNC_RESPONSE');
+                    socket.emit(TEST_SYNC_NAME, { success: true });
                     if (connectionCount === 2) {
-                        console.log('RESOLVING...');
                         resolve();
                     }
                 });
-                // socket.on('abc', (response: any) => {
-                //     console.log('RESPONSEEEE ', response);
-                //     const peerName = response.node;
-                //     testResult.set(peerName, true);
-                //     const resultCount = testResult.size;
-                //     socket.emit('abc_RESPONSE', {});
-                //     if (resultCount === 2) {
-                //         resolve();
-                //     }
-                // });
             });
         });
-
-        // await syncPromise;
     }
 
     register(channel: string, listener: any) {
         const sockets = [...this.socketPool.values()];
-        console.log('SOCKET COUNT: ', sockets.length);
         sockets.forEach((socket: any) => {
             socket.on(channel, (data: any) => {
-                console.log('CHANNEL: ', channel);
                 listener(socket, data);
                 socket.emit(channel + '_RESPONSE', {});
             });
