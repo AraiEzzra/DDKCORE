@@ -1,9 +1,10 @@
 import { expect } from 'chai';
+import { prepare, prepareLoader } from 'test/lab/sync/index';
 
 describe('SYNCHRONIZATION TEST', () => {
-    before(() => {
-        console.log('BEFORE!');
-    });
+    // before(async () => {
+    //     await prepare('TEST_SYNC', prepareLoader, prepareLoader);
+    // });
     it('Test synchronization', async () => {
         console.log('TEST IS HERE...');
     });
