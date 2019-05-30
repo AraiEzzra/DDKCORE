@@ -2,6 +2,8 @@ import path from 'path';
 import fs from 'fs';
 import { QueryFile, IDatabase } from 'pg-promise';
 
+import { compareTags } from 'core/util/versionChecker';
+
 type PropertyFile = {
     id: number | bigint;
     name: string | any;
@@ -27,7 +29,7 @@ export class Migrator {
 
         const filesMigration: Array<PropertyFile> = [];
         fs.readdirSync(migrationsPath)
-            .sort()
+            .sort(compareTags)
             .forEach(file => {
                 const pathToFile: string = path.join(migrationsPath, file);
                 const isFile: boolean = fs.statSync(pathToFile).isFile() && /\.sql$/.test(pathToFile);
