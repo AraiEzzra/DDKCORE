@@ -170,10 +170,7 @@ export function sendAirdropReward(trs: Transaction<IAssetStake | IAssetVote>): v
         AccountRepo.updateBalanceByAddress(config.CONSTANTS.AIRDROP.ADDRESS, -rewardAmount);
     }
 
-    ReferredUsersRepo.updateRewardFactor(
-        AccountRepo.getByAddress(trs.senderAddress),
-        transactionAirdropReward.sponsors
-    );
+    ReferredUsersRepo.updateRewardFactor(trs);
 }
 
 export function undoAirdropReward(trs: Transaction<IAssetVote | IAssetStake>): void {
@@ -186,14 +183,11 @@ export function undoAirdropReward(trs: Transaction<IAssetVote | IAssetStake>): v
         const recipient = AccountRepo.getByAddress(sponsorAddress);
         recipient.actualBalance -= rewardAmount;
         recipient.addHistory(AccountChangeAction.AIRDROP_REWARD_RECEIVE_UNDO, trs.id);
+
         AccountRepo.updateBalanceByAddress(config.CONSTANTS.AIRDROP.ADDRESS, rewardAmount);
     }
 
-    ReferredUsersRepo.updateRewardFactor(
-        AccountRepo.getByAddress(trs.senderAddress),
-        transactionAirdropReward.sponsors,
-        ReferredUserFactor.ACTION.SUBTRACT
-    );
+    ReferredUsersRepo.updateRewardFactor(trs, ReferredUserFactor.ACTION.SUBTRACT);
 }
 
 export function undoFrozeOrdersRewardAndUnstake(

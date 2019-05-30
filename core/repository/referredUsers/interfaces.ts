@@ -1,12 +1,13 @@
 import { Account} from 'shared/model/account';
 import { Address } from 'shared/model/types';
+import { IAssetRegister, IAssetStake, IAssetVote, Transaction } from 'shared/model/transaction';
 
 export interface IReferredUsers {
     add(account: Account): void;
     delete(account: Account): void;
     getUsers(account: Account, level: number): Array<IReferredUser>;
-    updateCountFactor(account: Account, count: number): void;
-    updateRewardFactor(account: Account, sponsors: Map<Address, number>): void;
+    updateCountFactor(trs: Transaction<IAssetRegister>, action: FactorAction): void;
+    updateRewardFactor(trs: Transaction<IAssetStake | IAssetVote>, action: FactorAction): void;
 }
 
 export interface IReferredUser {
@@ -32,7 +33,7 @@ export class ReferredUserFactor {
 
     static ACTION = FactorAction;
 
-    static COUNT: number = 3;
+    static COUNT: number = Object.keys(FactorType).length / 2;
 
     static createEmpty(): ReferredUserFactor {
         return new ReferredUserFactor();

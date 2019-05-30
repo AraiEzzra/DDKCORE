@@ -10,13 +10,13 @@ export default class FactorTree<T> extends Tree<T, FactorNode<T>> {
 
     eachParents(node: FactorNode<T>, cb: (parent: FactorNode<T>, level: number) => void) {
         let parent = node.parent;
-
-        for (let level = config.CONSTANTS.REFERRAL.MAX_COUNT - 1; level >= 0; level--) {
+        for (let level = 1; level <= config.CONSTANTS.REFERRAL.MAX_COUNT; level++) {
             if (parent === null) {
                 break;
             }
             cb(parent, level);
             parent = parent.parent;
         }
+
     }
 }

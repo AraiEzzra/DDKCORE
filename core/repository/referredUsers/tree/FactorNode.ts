@@ -9,15 +9,15 @@ export default class FactorNode<T> extends Node<T> {
     constructor(data: T) {
         super(data);
 
-        this.levelSummary = new Array(config.CONSTANTS.REFERRAL.MAX_COUNT);
+        this.levelSummary = new Array(config.CONSTANTS.REFERRAL.MAX_COUNT + 1);
 
-        for (let i = 0; i < config.CONSTANTS.REFERRAL.MAX_COUNT; i++) {
+        for (let i = 1; i <= config.CONSTANTS.REFERRAL.MAX_COUNT; i++) {
             this.levelSummary[i] = ReferredUserFactor.createEmpty();
         }
     }
 
     private idLevelValid(level: number): boolean {
-        return level >= 0 && level < config.CONSTANTS.REFERRAL.MAX_COUNT;
+        return level >= 1 && level <= config.CONSTANTS.REFERRAL.MAX_COUNT;
     }
 
     getFactorsByLevel(level: number): ReferredUserFactor {
@@ -28,7 +28,7 @@ export default class FactorNode<T> extends Node<T> {
     }
 
     addFactor(type: FactorType, level: number, value: number, action: FactorAction) {
-        for (let i = 0; i < level; i++) {
+        for (let i = 1; i <= config.CONSTANTS.REFERRAL.MAX_COUNT - level; i++) {
             const factor = this.levelSummary[i];
             factor.update(type, value, action);
         }
