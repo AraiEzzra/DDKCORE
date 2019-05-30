@@ -10,7 +10,7 @@ export interface IBlockRepository {
     getGenesisBlock(): Block;
     getLastBlock(): Block;
     getMany(required: number, offset: number): Array<Block>;
-    isExist(blockId: BlockId): boolean;
+    has(blockId: BlockId): boolean;
 }
 
 export interface IBlockPGRepository {

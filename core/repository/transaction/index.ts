@@ -5,7 +5,7 @@ import { Address } from 'shared/model/types';
 export interface ITransactionRepository<T extends IAsset> {
     add(trs: Transaction<T>): Transaction<T>;
     delete(trs: Transaction<T>): void;
-    isExist(trsId: TransactionId): boolean;
+    has(trsId: TransactionId): boolean;
     getById(transactionId: string): Transaction<IAsset>;
     size(): number;
 }
@@ -22,14 +22,14 @@ class TransactionRepo implements ITransactionRepository<IAsset> {
         this.memoryTransactionsById.delete(trs.id);
     }
 
-    public isExist(id: TransactionId): boolean {
-        return !!this.memoryTransactionsById[id];
+    public has(id: TransactionId): boolean {
+        return this.memoryTransactionsById.has(id);
     }
 
     public getById(id: TransactionId): Transaction<IAsset> {
         return this.memoryTransactionsById.get(id);
     }
-    
+
     /* Only for system usage */
     public getByAddress(address: Address): Array<Transaction<IAsset>> {
         const filteredTransaction = [];
@@ -40,7 +40,7 @@ class TransactionRepo implements ITransactionRepository<IAsset> {
         }
         return filteredTransaction;
     }
-    
+
     size() {
         return this.memoryTransactionsById.size;
     }

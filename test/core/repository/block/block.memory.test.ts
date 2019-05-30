@@ -135,16 +135,16 @@ describe('Block memory repository', () => {
             });
 
             it('should return false if block doesn\'t exist', () => {
-                let response = BlockRepo.isExist('a1b2c3d4');
+                let response = BlockRepo.has('a1b2c3d4');
                 expect(response).to.be.false;
-                response = BlockRepo.isExist('d1c2b3a4');
+                response = BlockRepo.has('d1c2b3a4');
                 expect(response).to.be.false;
             });
 
             it('should return true if block exists', () => {
-                let response = BlockRepo.isExist(block2.id);
+                let response = BlockRepo.has(block2.id);
                 expect(response).to.be.true;
-                response = BlockRepo.isExist(block1.id);
+                response = BlockRepo.has(block1.id);
                 expect(response).to.be.true;
             });
 

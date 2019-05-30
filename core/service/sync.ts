@@ -145,7 +145,7 @@ export class SyncService implements ISyncService {
     }
 
     checkCommonBlocks(block: { id: string, height: number }, peer, requestId): void {
-        const isExist = BlockRepository.isExist(block.id);
+        const isExist = BlockRepository.has(block.id);
         SyncRepository.sendCommonBlocksExist({ isExist }, peer, requestId);
     }
 
