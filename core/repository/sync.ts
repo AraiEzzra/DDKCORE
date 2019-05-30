@@ -7,6 +7,7 @@ import SystemRepository from 'core/repository/system';
 import SharedTransactionRepo from 'shared/repository/transaction';
 import config from 'shared/config';
 import { ResponseEntity } from 'shared/model/response';
+import SwapTransactionQueue from 'core/repository/swapTransactiontQueue';
 
 export const ERROR_NOT_ENOUGH_PEERS = 'ERROR_NOT_ENOUGH_PEERS';
 
@@ -69,9 +70,17 @@ export class Sync implements ISyncRepo {
     }
 
     sendUnconfirmedTransaction(trs: Transaction<any>): void {
+        const serializedTransaction = SharedTransactionRepo.serialize(trs);
+        if (PeerRepository.peerList().length === 0) {
+            SwapTransactionQueue.push(serializedTransaction);
+            return;
+        }
+        if (SwapTransactionQueue.size && PeerRepository.peerList().length) {
+            SwapTransactionQueue.process();
+        }
         SocketRepository.broadcastPeers(
             'TRANSACTION_RECEIVE',
-            { trs: SharedTransactionRepo.serialize(trs) }
+            { trs: serializedTransaction }
         );
     }
 

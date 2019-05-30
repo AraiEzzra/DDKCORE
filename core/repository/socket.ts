@@ -24,6 +24,7 @@ export const SERVER_HEADERS = 'SERVER_HEADERS';
 export const OPEN = 'OPEN';
 export const HEADERS = 'HEADERS';
 
+
 export class Socket {
     private static instance: Socket;
 
@@ -125,7 +126,9 @@ export class Socket {
 
     @autobind
     broadcastPeers(code, data, peers: Array<Peer> = null): void {
-        (peers || PeerRepository.peerList()).forEach(peer => {
+        const peerList = peers || PeerRepository.peerList();
+
+        peerList.forEach(peer => {
             this.broadcastPeer(code, data, peer);
         });
     }
