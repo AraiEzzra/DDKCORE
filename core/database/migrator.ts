@@ -57,13 +57,12 @@ export class Migrator {
         }
 
         for (let file of files) {
-            const sql = new QueryFile(file.path, { minify: true });
-
             const result = await this.db.query(
                 'INSERT INTO migrations (id, name) VALUES($1, $2) ON CONFLICT DO NOTHING RETURNING id ',
                 [file.id.toString(), file.name]
             );
             if (result.length) {
+                const sql = new QueryFile(file.path, { minify: true });
                 await this.db.query(sql);
             }
         }
