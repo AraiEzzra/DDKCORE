@@ -37,6 +37,7 @@
   "license": "GPL-3.0",
   "dependencies": {
     "autobind-decorator": "^2.4.0",
+    "binary-search-tree": "^0.2.6",
     "chai": "^4.2.0",
     "chai-sorted": "^0.2.0",
     "crypto-browserify": "=3.11.0",

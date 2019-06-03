@@ -91,6 +91,7 @@ class Config {
         IS_HISTORY: boolean;
         IS_HISTORY_ON_WARMUP: boolean;
         IS_DISABLED_TRANSACTION_CREATION: boolean;
+        IS_REFERRED_USERS_ENABLED: boolean;
         VERSION: string;
         MIN_VERSION: string;
         MIN_CONSENSUS: number;
@@ -154,6 +155,7 @@ class Config {
             IS_HISTORY: process.env.IS_HISTORY === 'TRUE',
             IS_HISTORY_ON_WARMUP: process.env.IS_HISTORY_ON_WARMUP === 'TRUE',
             IS_DISABLED_TRANSACTION_CREATION: process.env.IS_DISABLED_TRANSACTION_CREATION === 'TRUE',
+            IS_REFERRED_USERS_ENABLED: process.env.IS_REFERRED_USERS_ENABLED  === 'TRUE',
             VERSION: '0.0.54',
             MIN_VERSION: '0.0.46',
             MIN_CONSENSUS: Number(process.env.MIN_CONSENSUS) || DEFAULT_CONSENSUS

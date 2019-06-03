@@ -3,7 +3,7 @@ import { IAssetRegister, Transaction, TransactionModel } from 'shared/model/tran
 import { Account } from 'shared/model/account';
 import { ResponseEntity } from 'shared/model/response';
 import AccountRepo from 'core/repository/account';
-import ReferredUsersRepo from 'core/repository/referredUsers/index';
+import ReferredUsersRepo, { ReferredUserFactor } from 'core/repository/referredUsers';
 import config from 'shared/config';
 import BUFFER from 'core/util/buffer';
 
@@ -73,11 +73,11 @@ class TransactionRegisterService implements IAssetService<IAssetRegister> {
         targetAccount.referrals = [referralAccount, ...referrals];
 
         ReferredUsersRepo.add(targetAccount);
-        ReferredUsersRepo.updateCount(targetAccount);
+        ReferredUsersRepo.updateCountFactor(trs);
     }
 
     undoUnconfirmed(trs: Transaction<IAssetRegister>, sender: Account, senderOnly: boolean): void {
-        ReferredUsersRepo.updateCount(sender, -1);
+        ReferredUsersRepo.updateCountFactor(trs, ReferredUserFactor.ACTION.SUBTRACT);
         sender.referrals = [];
     }
 
