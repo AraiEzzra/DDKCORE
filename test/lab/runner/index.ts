@@ -7,11 +7,11 @@ export class TestRunner {
     private _synchronizer: NetworkSynchronizer;
 
     constructor(testName: string,
-                testRunnerMethod: Function = null,
                 firstPeerMethod: Function = null,
-                secondPeeMethod: Function = null
+                secondPeeMethod: Function = null,
+                testRunnerMethod: Function = null,
     ) {
-        this._preparer = new NodesTestPreparer(testName, testRunnerMethod, firstPeerMethod, secondPeeMethod);
+        this._preparer = new NodesTestPreparer(testName, firstPeerMethod, secondPeeMethod, testRunnerMethod);
         this._synchronizer = new NodesNetworkSynchronizer(testName);
     }
 

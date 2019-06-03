@@ -18,19 +18,19 @@ export class NodesTestPreparer implements TestPreparer {
 
     testRunnerMethod: Function;
     firstPeerMethod: Function;
-    secondPeeMethod: Function;
+    secondPeerMethod: Function;
 
     private testName: string;
 
     constructor(testName: string,
-                testRunnerMethod: Function = null,
                 firstPeerMethod: Function = null,
-                secondPeeMethod: Function = null
+                secondPeerMethod: Function = null,
+                testRunnerMethod: Function = null
     ) {
         this.networkSynchronizer = new NodesNetworkSynchronizer(testName);
-        this.testRunnerMethod = testRunnerMethod;
         this.firstPeerMethod = firstPeerMethod;
-        this.secondPeeMethod = secondPeeMethod;
+        this.secondPeerMethod = secondPeerMethod;
+        this.testRunnerMethod = testRunnerMethod;
         this.testName = testName;
     }
 
@@ -54,8 +54,8 @@ export class NodesTestPreparer implements TestPreparer {
             await this.firstPeerMethod();
         }
 
-        if (this.secondPeeMethod && NODE_NAME === SECOND_PEER_NAME) {
-            await this.secondPeeMethod();
+        if (this.secondPeerMethod && NODE_NAME === SECOND_PEER_NAME) {
+            await this.secondPeerMethod();
         }
         await this.networkSynchronizer.syncPeerNode();
     }
