@@ -79,7 +79,7 @@ class TransactionStakeService implements IAssetService<IAssetStake> {
             BlockRepository.getLastBlock().height > config.CONSTANTS.PRE_ORDER_LAST_MIGRATED_BLOCK &&
             trs.asset.startVoteCount && trs.asset.startVoteCount !== 0
         ) {
-            errors.push('Invalid asset');
+            errors.push('Invalid startVoteCount, must be a 0');
         }
 
         const airdropCheck: ResponseEntity<void> = verifyAirdrop(trs, trs.asset.amount, sender);
