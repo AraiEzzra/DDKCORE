@@ -490,8 +490,8 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         // }
         // TODO optimize it
 
-        const removedTransactions = TransactionPool.getTransactions();
-        removedTransactions.forEach((trs: Transaction<T>) => {
+        const removedTransactions = TransactionPool.getTransactions().sort(transactionSortFunc);
+        [...removedTransactions].reverse().forEach((trs: Transaction<T>) => {
             TransactionPool.remove(trs);
         });
 
