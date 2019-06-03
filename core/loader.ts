@@ -24,6 +24,7 @@ import { MIN_ROUND_BLOCK } from 'core/util/block';
 import { getFirstSlotNumberInRound } from 'core/util/slot';
 import DelegateRepository from 'core/repository/delegate';
 import { ActionTypes } from 'core/util/actionTypes';
+import { Migrator } from 'core/database/migrator';
 
 // @ts-ignore
 BigInt.prototype.toJSON = function () {
@@ -41,6 +42,7 @@ class Loader {
         }
 
         await this.initDatabase();
+        await new Migrator(db).run();
 
         initControllers();
         System.synchronization = true;
