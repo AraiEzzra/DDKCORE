@@ -11,6 +11,7 @@ import AccountRepo from 'core/repository/account';
 import { TOTAL_PERCENTAGE } from 'core/util/const';
 import config from 'shared/config';
 import BUFFER from 'core/util/buffer';
+import BlockRepository from 'core/repository/block';
 
 import { getAirdropReward, sendAirdropReward, undoAirdropReward, verifyAirdrop } from 'core/util/reward';
 
@@ -73,6 +74,14 @@ class TransactionStakeService implements IAssetService<IAssetStake> {
 
     verifyUnconfirmed(trs: Transaction<IAssetStake>, sender: Account): ResponseEntity<void> {
         let errors = [];
+
+        if (
+            BlockRepository.getLastBlock().height > config.CONSTANTS.PRE_ORDER_LAST_MIGRATED_BLOCK &&
+            trs.asset.startVoteCount && trs.asset.startVoteCount !== 0
+        ) {
+            errors.push('Invalid asset');
+        }
+
         const airdropCheck: ResponseEntity<void> = verifyAirdrop(trs, trs.asset.amount, sender);
         if (!airdropCheck.success) {
             errors = airdropCheck.errors;
