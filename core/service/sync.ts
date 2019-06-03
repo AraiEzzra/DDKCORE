@@ -18,6 +18,7 @@ import { getRandom, getRandomElements } from 'core/util/common';
 import { NetworkPeer } from 'shared/model/Peer/networkPeer';
 import { MemoryPeer } from 'shared/model/Peer/memoryPeer';
 import { logger } from 'shared/util/logger';
+import SwapTransactionQueue from 'core/service/swapTransactiontQueue';
 
 export interface ISyncService {
 
@@ -75,7 +76,8 @@ export class SyncService implements ISyncService {
         block.relay += 1;
         if (block.relay < config.CONSTANTS.TRANSFER.MAX_BLOCK_RELAY) {
             const serializedBlock: Block & { transactions: any } = block.getCopy();
-            serializedBlock.transactions = block.transactions.map(trs => SharedTransactionRepository.serialize(trs));
+            serializedBlock.transactions = block.transactions
+                .map(trs => SharedTransactionRepository.serialize(trs));
 
             const filteredPeerAddresses = PeerMemoryRepository
                 .getLessPeersByFilter(block.height, block.id)
@@ -88,9 +90,16 @@ export class SyncService implements ISyncService {
     sendUnconfirmedTransaction(trs: Transaction<any>): void {
         trs.relay += 1;
         if (trs.relay < config.CONSTANTS.TRANSFER.MAX_TRS_RELAY) {
+            const serializedTransaction = SharedTransactionRepository.serialize(trs);
+
+            if (PeerNetworkRepository.count === 0) {
+                SwapTransactionQueue.push(serializedTransaction);
+                return;
+            }
+
             PeerService.broadcast(
                 ActionTypes.TRANSACTION_RECEIVE,
-                { trs: SharedTransactionRepository.serialize(trs) }
+                { trs: serializedTransaction }
             );
         }
     }
