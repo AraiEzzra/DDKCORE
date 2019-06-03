@@ -21,6 +21,9 @@ else
     if [ "$SERVICE" == "TEST_FUNCTIONALITY" ]; then
         npm run test:functionality
     fi
+    if [ "$SERVICE" == "TEST_LAB" ]; then
+        npm run test:lab
+    fi
     if [ "$SERVICE" == "API" ]; then
         npm run server:api
     fi
