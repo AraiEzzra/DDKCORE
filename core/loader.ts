@@ -134,10 +134,7 @@ class Loader {
             }
 
             TransactionDispatcher.applyUnconfirmed(trs, sender);
-
-            if (trs.type === TransactionType.VOTE) {
-                TransactionDispatcher.apply(trs, sender);
-            }
+            TransactionDispatcher.apply(trs, sender);
         }
     }
 }

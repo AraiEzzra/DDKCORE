@@ -420,7 +420,7 @@ class BlockService {
     }
 
     private checkExists(block: Block): ResponseEntity<void> {
-        const exists: boolean = BlockRepo.isExist(block.id);
+        const exists: boolean = BlockRepo.has(block.id);
         if (exists) {
             return new ResponseEntity<void>({ errors: [['Block', block.id, 'already exists'].join(' ')] });
         }

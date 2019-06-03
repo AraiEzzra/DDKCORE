@@ -53,7 +53,7 @@ class BlockRepo implements IBlockRepository {
         return this.memoryBlocks.slice(from, from + limit);
     }
 
-    public isExist(id: BlockId): boolean {
+    public has(id: BlockId): boolean {
         return this.memoryBlocksById.has(id);
     }
 

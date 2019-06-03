@@ -165,7 +165,7 @@ export class SyncService implements ISyncService {
     }
 
     sendBlocks(data: BlockLimit, requestPeerInfo: RequestPeerInfo): void {
-        
+
         const { peerAddress, requestId } = requestPeerInfo;
         const blocks = BlockRepository.getMany(data.limit, data.height);
         const serializedBlocks: Array<Block & { transactions?: any }> = blocks.map(block => block.getCopy());
@@ -199,11 +199,11 @@ export class SyncService implements ISyncService {
     }
 
     checkCommonBlocks(block: BlockData, requestPeerInfo: RequestPeerInfo): void {
-        const isExist = BlockRepository.isExist(block.id);
+        const isExist = BlockRepository.has(block.id);
         logger.trace(`[Service][Sync][checkCommonBlocks] block: ${block.height} exist: ${isExist}`);
         if (!PeerNetworkRepository.has(requestPeerInfo.peerAddress)) {
-            logger.debug(`[Service][Sync][checkCommonBlocks] peer is offline for response` +
-                ` ${requestPeerInfo.peerAddress.ip}`);
+            logger.debug(`[Service][Sync][checkCommonBlocks] peer is offline for response ` +
+                `${requestPeerInfo.peerAddress.ip}`);
             return;
         }
         const networkPeer = PeerNetworkRepository.get(requestPeerInfo.peerAddress);

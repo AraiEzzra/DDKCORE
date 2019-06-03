@@ -66,8 +66,6 @@ export interface ITransactionService<T extends IAsset> {
 
     getBytes(trs: Transaction<T>): Buffer;
 
-    isConfirmed(trs: Transaction<T>): ResponseEntity<void>;
-
     checkBalance(amount: number, trs: Transaction<T>, sender: Account): ResponseEntity<void>;
 
     calculateFee(trs: Transaction<T>, sender: Account): number;
@@ -150,6 +148,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
     }
 
     apply(trs: Transaction<T>, sender: Account): void {
+        // TODO: migrate TransactionRepo.add to apply unconfirmed
         TransactionRepo.add(trs);
         TransactionHistoryRepository.addEvent(trs, { action: TransactionLifecycle.APPLY });
 
@@ -192,11 +191,6 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             `difference: ${sender.actualBalance - amount}, transaction id: ${trs.id}`,
         );
         return new ResponseEntity({ errors });
-    }
-
-    isConfirmed(trs: Transaction<T>): ResponseEntity<void> {
-        const errors: Array<string> = TransactionRepo.isExist(trs.id) ? [] : ['Transaction is not confirmed'];
-        return new ResponseEntity<void>({ errors: errors });
     }
 
     checkSenderTransactions(
@@ -447,9 +441,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             return new ResponseEntity<void>({ errors: [`Account in blacklist`] });
         }
 
-        const isConfirmed = this.isConfirmed(trs);
-
-        if (isConfirmed.success) {
+        if (TransactionRepo.has(trs.id)) {
             return new ResponseEntity<void>({ errors: [`Transaction is already confirmed: ${trs.id}`] });
         }
 
