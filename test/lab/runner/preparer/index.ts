@@ -6,9 +6,9 @@ export interface TestPreparer {
 
     prepare(): Promise<void>;
 
-    preparePeerNode(testName: string): Promise<void>;
-
     prepareTestRunnerNode(testName: string): Promise<void>;
+
+    preparePeerNode(testName: string): Promise<void>;
 
 }
 
@@ -36,18 +36,18 @@ export class NodesTestPreparer implements TestPreparer {
 
     async prepare(): Promise<void> {
         NODE_NAME === TEST_RUNNER_NAME
-            ? await this.preparePeerNode()
-            : await this.prepareTestRunnerNode();
+            ? await this.prepareTestRunnerNode()
+            : await this.preparePeerNode();
     }
 
-    async preparePeerNode(): Promise<void> {
+    async prepareTestRunnerNode(): Promise<void> {
         if (this.testRunnerMethod) {
             await this.testRunnerMethod();
         }
         await this.networkSynchronizer.syncTestRunnerNode();
     }
 
-    async prepareTestRunnerNode(): Promise<void> {
+    async preparePeerNode(): Promise<void> {
         console.log(`Executing method for test: ${this.testName}, node: ${NODE_NAME}`);
 
         if (this.firstPeerMethod && NODE_NAME === FIRST_PEER_NAME) {
