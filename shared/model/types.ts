@@ -3,8 +3,18 @@ import { Account, AccountChangeAction } from 'shared/model/account';
 import { Round } from 'shared/model/round';
 
 export type Filter = {
-    limit: number,
-    offset: number
+    limit: number;
+    offset: number;
+};
+
+export type PeerAddress = {
+    ip: string;
+    port: number;
+};
+
+export type RequestPeerInfo = {
+    peerAddress: PeerAddress,
+    requestId: string,
 };
 
 export type BlockData = {

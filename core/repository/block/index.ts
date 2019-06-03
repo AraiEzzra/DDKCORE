@@ -1,6 +1,7 @@
 import { Block } from 'shared/model/block';
 import { BlockId, IBlockRepository as IBlockRepositoryShared } from 'shared/repository/block';
 import { messageON } from 'shared/util/bus';
+import { ActionTypes } from 'core/util/actionTypes';
 
 export interface IBlockRepository extends IBlockRepositoryShared {
 
@@ -14,7 +15,7 @@ class BlockRepo implements IBlockRepository {
         this.memoryBlocks.push(block);
         this.memoryBlocksById.set(block.id, block);
 
-        messageON('LAST_BLOCKS_UPDATE', {
+        messageON(ActionTypes.LAST_BLOCKS_UPDATE, {
             lastBlock: block
         });
 
@@ -35,7 +36,7 @@ class BlockRepo implements IBlockRepository {
 
         const lastBlock = this.getLastBlock();
 
-        messageON('LAST_BLOCKS_UPDATE', {
+        messageON(ActionTypes.LAST_BLOCKS_UPDATE, {
             lastBlock: this.getLastBlock()
         });
         return lastBlock;
