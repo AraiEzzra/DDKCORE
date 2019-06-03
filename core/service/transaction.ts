@@ -148,6 +148,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
     }
 
     apply(trs: Transaction<T>, sender: Account): void {
+        // TODO: migrate TransactionRepo.add to apply unconfirmed
         TransactionRepo.add(trs);
         TransactionHistoryRepository.addEvent(trs, { action: TransactionLifecycle.APPLY });
 
