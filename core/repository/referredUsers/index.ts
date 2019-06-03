@@ -10,12 +10,12 @@ export {
     ReferredUserFactor
 };
 
-const gerReferredUserRepository = () => {
+const getReferredUserRepository = () => {
     if (config.CORE.IS_REFERRED_USERS_ENABLED) {
         return new ReferredUsersTree();
     }
     return new ReferredUsersFake();
 };
 
-export default gerReferredUserRepository();
+export default getReferredUserRepository();
 

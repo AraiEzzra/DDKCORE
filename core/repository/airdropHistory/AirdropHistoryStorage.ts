@@ -11,11 +11,11 @@ type Where = {
     }
 };
 
-export default class HistoryStorage {
+export default class AirdropHistoryStorage {
 
     private readonly storage: Map<TransactionId, AirdropHistory>;
 
-    private readonly rewardTimeIndex: AVLTree;
+    private rewardTimeIndex: AVLTree;
 
     constructor() {
         this.storage = new Map();
@@ -28,8 +28,13 @@ export default class HistoryStorage {
     }
 
     remove(data: AirdropHistory) {
-        this.storage.get(data.transactionId);
+        this.storage.delete(data.transactionId);
         this.rewardTimeIndex.delete(data.rewardTime);
+    }
+
+    clear() {
+        this.storage.clear();
+        this.rewardTimeIndex = new AVLTree();
     }
 
     [Symbol.iterator]() {

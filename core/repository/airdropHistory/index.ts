@@ -11,11 +11,11 @@ export {
     AirdropDailyHistoryQuery
 };
 
-const gerAirdropHistoryRepository = () => {
+const getAirdropHistoryRepository = () => {
     if (config.CORE.IS_REFERRED_USERS_ENABLED) {
         return new AirdropHistoryRepository();
     }
     return new AirdropHistoryFakeRepository();
 };
 
-export default gerAirdropHistoryRepository();
+export default getAirdropHistoryRepository();

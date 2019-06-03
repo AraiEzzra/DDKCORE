@@ -7,13 +7,13 @@ import {
     AirdropDailyHistory,
     AirdropDailyHistoryQuery,
 } from 'core/repository/airdropHistory/interfaces';
-import HistoryStorage from 'core/repository/airdropHistory/HistoryStorage';
+import AirdropHistoryStorage from 'core/repository/airdropHistory/AirdropHistoryStorage';
 
-type GroupByReferralAddress = Map<Address, HistoryStorage>;
+type AirdropHistoryByAddress = Map<Address, AirdropHistoryStorage>;
 
 export default class AirdropHistoryRepository implements IAirdropHistoryRepository {
 
-    private readonly storage: GroupByReferralAddress;
+    private readonly storage: AirdropHistoryByAddress;
 
     constructor() {
         this.storage = new Map();
@@ -21,7 +21,7 @@ export default class AirdropHistoryRepository implements IAirdropHistoryReposito
 
     private getStorage(referralAddress: Address) {
         if (!this.storage.has(referralAddress)) {
-            this.storage.set(referralAddress, new HistoryStorage());
+            this.storage.set(referralAddress, new AirdropHistoryStorage());
         }
         return this.storage.get(referralAddress);
     }
@@ -44,7 +44,7 @@ export default class AirdropHistoryRepository implements IAirdropHistoryReposito
 
         for (const item of storage) {
             const realTime = SlotService.getRealTime(item.rewardTime);
-            const startOfDay = new Date(realTime).setHours(0,0,0,0);
+            const startOfDay = new Date(realTime).setHours(0, 0, 0, 0);
 
             const history = groupByDate.get(startOfDay) || {
                 rewardAmount: 0,
