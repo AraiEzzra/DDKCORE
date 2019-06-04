@@ -21,6 +21,8 @@ import TransactionHistoryRepository from 'core/repository/history/transaction';
 import { TransactionId } from 'shared/model/types';
 import SystemRepository from 'core/repository/system';
 
+const PROCESS_QUEUE_DELAY = 100;
+
 export interface ITransactionQueueService<T extends Object> {
     getLockStatus(): boolean;
 
@@ -39,7 +41,7 @@ export interface ITransactionQueueService<T extends Object> {
     process(): Promise<void>;
 
     getSize(): { conflictedQueue: number, queue: number };
-    
+
     getUniqueTransactions(): Array<Transaction<IAsset>>;
 
 }
@@ -153,18 +155,18 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
 
         this.push(trs);
         // TODO exclude to config
-        setTimeout(this.process, 100);
+        setTimeout(this.process, PROCESS_QUEUE_DELAY);
     }
 
 
     getSize(): { conflictedQueue: number, queue: number } {
         return { conflictedQueue: this.conflictedQueue.length, queue: this.queue.length };
     }
-    
+
     getUniqueTransactions(): Array<Transaction<IAsset>> {
         const transactions = [...this.queue, ...this.conflictedQueue].sort(transactionSortFunc);
         return uniqueFilterByKey<TransactionId>('id',  transactions);
-    } 
+    }
 }
 
 export default new TransactionQueue();

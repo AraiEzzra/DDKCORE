@@ -13,7 +13,6 @@ import TransactionVoteRepo from 'shared/repository/transaction/asset/vote';
 import { getAddressByPublicKey } from 'shared/util/account';
 import { RawAsset, RawTransaction } from 'shared/model/types';
 
-
 const ASSET_REPOSITORIES: { [key: string]: IAssetRepository<IAsset> } = {
     [TransactionType.REGISTER]: TransactionRegisterRepo,
     [TransactionType.SEND]: TransactionSendRepo,
@@ -64,8 +63,8 @@ class SharedTransactionRepo {
             type: Number(rawTrs.type),
             createdAt: Number(rawTrs.createdAt),
             senderPublicKey: rawTrs.senderPublicKey,
-            senderAddress: rawTrs.senderAddress 
-                ? BigInt(rawTrs.senderAddress) 
+            senderAddress: rawTrs.senderAddress
+                ? BigInt(rawTrs.senderAddress)
                 : getAddressByPublicKey(rawTrs.senderPublicKey),
             signature: rawTrs.signature,
             secondSignature: rawTrs.secondSignature,

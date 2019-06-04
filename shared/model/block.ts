@@ -1,5 +1,6 @@
-import { BlockHistoryEvent, Timestamp } from 'shared/model/types';
-import { Transaction } from 'shared/model/transaction';
+import { Timestamp } from 'shared/model/types';
+import { Transaction, SerializedTransaction } from 'shared/model/transaction';
+import SharedTransactionRepo from 'shared/repository/transaction';
 import config from 'shared/config';
 
 export class BlockModel {
@@ -14,7 +15,7 @@ export class BlockModel {
     payloadHash?: string = '';
     generatorPublicKey?: string = '';
     signature?: string = '';
-    relay?: number; // Memory only
+    relay?: number;
     transactions: Array<Transaction<object>>;
 
     constructor(data: BlockModel) {
@@ -24,8 +25,60 @@ export class BlockModel {
     }
 }
 
+export type SerializedBlock = {
+    id: string;
+    version: number;
+    createdAt: Timestamp;
+    height: number;
+    previousBlockId: string;
+    transactionCount: number;
+    amount: number;
+    fee: number;
+    payloadHash: string;
+    generatorPublicKey: string;
+    signature: string;
+    relay: number;
+    transactions: Array<SerializedTransaction<any>>;
+};
+
 export class Block extends BlockModel {
     public getCopy(): Block {
-        return new Block(this);
+        return new Block({ ...this });
+    }
+
+    public serialize = (): SerializedBlock => {
+        return {
+            id: this.id,
+            version: this.version,
+            createdAt: this.createdAt,
+            height: this.height,
+            previousBlockId: this.previousBlockId,
+            transactionCount: this.transactionCount,
+            amount: this.amount,
+            fee: this.fee,
+            payloadHash: this.payloadHash,
+            generatorPublicKey: this.generatorPublicKey,
+            signature: this.signature,
+            relay: this.relay,
+            transactions: this.transactions.map(trs => SharedTransactionRepo.serialize(trs)),
+        };
+    }
+
+    static deserialize = (block: SerializedBlock): Block => {
+        return new Block({
+            id: block.id,
+            version: block.version,
+            createdAt: block.createdAt,
+            height: block.height,
+            previousBlockId: block.previousBlockId,
+            transactionCount: block.transactionCount,
+            amount: block.amount,
+            fee: block.fee,
+            payloadHash: block.payloadHash,
+            generatorPublicKey: block.generatorPublicKey,
+            signature: block.signature,
+            relay: block.relay,
+            transactions: block.transactions.map(trs => SharedTransactionRepo.deserialize(trs)),
+        });
     }
 }
