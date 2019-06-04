@@ -3,6 +3,7 @@ import { Message } from 'shared/model/message';
 import SocketMiddleware from 'api/middleware/socket';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
 import { validate } from 'shared/validate';
+import { AirdropHistoryQuery, AirdropDailyHistoryQuery } from 'core/repository/airdropHistory';
 
 export class AirdropHistoryController {
 
@@ -13,13 +14,13 @@ export class AirdropHistoryController {
 
     @RPC(API_ACTION_TYPES.GET_AIRDROP_REWARD_HISTORY)
     @validate()
-    getHistory(message: Message, socket: any) {
+    getHistory(message: Message<AirdropHistoryQuery>, socket: any) {
         SocketMiddleware.emitToCore(message, socket);
     }
 
     @RPC(API_ACTION_TYPES.GET_AIRDROP_REWARD_DAILY_HISTORY)
     @validate()
-    getDailyHistory(message: Message, socket: any) {
+    getDailyHistory(message: Message<AirdropDailyHistoryQuery>, socket: any) {
         SocketMiddleware.emitToCore(message, socket);
     }
 }
