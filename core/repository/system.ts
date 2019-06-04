@@ -22,7 +22,7 @@ class SystemRepository {
             broadhash: null,
             height: 1,
             version: config.CORE.VERSION,
-            minVersion: 1,
+            minVersion: config.CORE.MIN_VERSION,
             peerCount: 0,
         });
     }

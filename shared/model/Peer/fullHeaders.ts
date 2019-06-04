@@ -3,7 +3,7 @@ import { Headers, SerializedHeaders } from 'shared/model/Peer/headers';
 export type SerializedFullHeaders = SerializedHeaders & {
     os: string;
     version: string;
-    minVersion: number;
+    minVersion: string;
     blocksIds: Array<[number, string]>;
 };
 
@@ -12,7 +12,7 @@ export class FullHeaders extends Headers {
     private _os: string;
     private _version: string;
     private _blocksIds: Map<number, string>;
-    private _minVersion: number;
+    private _minVersion: string;
 
     constructor(fullHeaders: SerializedFullHeaders) {
         super(fullHeaders);
@@ -39,11 +39,11 @@ export class FullHeaders extends Headers {
         this._version = value;
     }
 
-    get minVersion(): number {
+    get minVersion(): string {
         return this._minVersion;
     }
 
-    set minVersion(value: number) {
+    set minVersion(value: string) {
         this._minVersion = value;
     }
 
