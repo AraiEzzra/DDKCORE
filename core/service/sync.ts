@@ -193,6 +193,11 @@ export class SyncService implements ISyncService {
         for (const receivedBlock of blocks) {
 
             RoundService.restoreToSlot(SlotService.getSlotNumber(receivedBlock.createdAt));
+
+            receivedBlock.transactions = receivedBlock.transactions.map(
+                trs => SharedTransactionRepository.deserialize(trs)
+            );
+
             const receivedBlockResponse = await BlockService.receiveBlock(receivedBlock);
 
             if (!receivedBlockResponse.success) {
