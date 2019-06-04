@@ -190,7 +190,9 @@ export class SyncService implements ISyncService {
     }
 
     async saveRequestedBlocks(blocks: Array<Block>): Promise<ResponseEntity<void>> {
-        for (const receivedBlock of blocks) {
+        for (const block of blocks) {
+
+            const receivedBlock = new Block(block);
 
             RoundService.restoreToSlot(SlotService.getSlotNumber(receivedBlock.createdAt));
 

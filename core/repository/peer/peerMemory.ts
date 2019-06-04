@@ -3,7 +3,6 @@ import { MemoryPeer } from 'shared/model/Peer/memoryPeer';
 import IPeerRepository from 'core/repository/peer/index';
 import { SerializedFullHeaders } from 'shared/model/Peer/fullHeaders';
 import PeerNetworkRepository from 'core/repository/peer/peerNetwork';
-import { NetworkPeer } from 'shared/model/Peer/networkPeer';
 
 class PeerMemoryRepository implements IPeerRepository <PeerAddress, MemoryPeer> {
     private peers: Map<string, MemoryPeer>;
