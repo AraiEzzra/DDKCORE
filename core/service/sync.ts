@@ -1,5 +1,5 @@
 import { Block } from 'shared/model/block';
-import { Transaction } from 'shared/model/transaction';
+import { IAsset, SerializedTransaction, Transaction } from 'shared/model/transaction';
 import SystemRepository from 'core/repository/system';
 import BlockService from 'core/service/block';
 import BlockRepository from 'core/repository/block/index';
@@ -193,6 +193,11 @@ export class SyncService implements ISyncService {
         for (const receivedBlock of blocks) {
 
             RoundService.restoreToSlot(SlotService.getSlotNumber(receivedBlock.createdAt));
+
+            receivedBlock.transactions = receivedBlock.transactions.map(
+                trs => SharedTransactionRepository.deserialize(trs)
+            );
+
             const receivedBlockResponse = await BlockService.receiveBlock(receivedBlock);
 
             if (!receivedBlockResponse.success) {
