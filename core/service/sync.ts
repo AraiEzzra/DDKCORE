@@ -19,6 +19,7 @@ import { NetworkPeer } from 'shared/model/Peer/networkPeer';
 import { MemoryPeer } from 'shared/model/Peer/memoryPeer';
 import { logger } from 'shared/util/logger';
 import SwapTransactionQueue from 'core/service/swapTransactiontQueue';
+import System from 'core/repository/system';
 
 export interface ISyncService {
 
@@ -223,11 +224,13 @@ export class SyncService implements ISyncService {
             height: lastBlock.height,
         });
         SystemRepository.addBlockIdInPool(lastBlock);
-        logger.debug(`[Service][Sync][updateHeaders]: height ${lastBlock.height}, broadhash ${lastBlock.id}`);
-        PeerService.broadcast(
-            ActionTypes.PEER_HEADERS_UPDATE,
-            SystemRepository.getHeaders()
-        );
+
+        if (!System.synchronization) {
+            PeerService.broadcast(
+                ActionTypes.PEER_HEADERS_UPDATE,
+                SystemRepository.getHeaders()
+            );
+        }
     }
 
     getBlockConsensus(block: BlockData): number {
