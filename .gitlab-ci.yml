@@ -52,7 +52,7 @@ build_image_tag:
     - cd /root/DDK.Delegat.Install.Environment/
     - ./build.tag.newcore.gitlab.sh
 
-deploy_TEST-NODE_last_tag:
+deploy_TEST_NODE_last_tag:
   stage: generate_docker-compose
   when: tags
   tags:
