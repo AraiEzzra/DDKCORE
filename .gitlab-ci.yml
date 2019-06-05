@@ -29,7 +29,7 @@ deploy_STAGE:
    - ansible-playbook -i ./inventory.newcore.skctestnet.env --limit SKC-STAGE-CORE ./books/start.docker.containers.yml
    - ./manual.scripts/start.logs.stage.sh
 
-  deploy_LAB:
+deploy_LAB:
  stage: start_core
  only:
    - master
