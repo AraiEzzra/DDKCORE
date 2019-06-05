@@ -54,7 +54,8 @@ build_image_tag:
 
 deploy_TEST_NODE_last_tag:
   stage: generate_docker-compose
-  when: tags
+  only:
+    - tags
   tags:
     - ddk-deploy
   script:   
