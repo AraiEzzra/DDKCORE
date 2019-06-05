@@ -37,7 +37,7 @@ deploy_LAB:
    - ddk-deploy
  script:
    - cd /root/DDK.Delegat.Install.Environment/
-   - ansible-playbook -i ./inventory.newcore.skctestnet.env --limit SKC-LAB-CORE ./books/stop.docker.containers.yml
+   - ansible-playbook -i ./inventory.newcore.skctestnet.env --limit SKC-LAB-CORE ./books/stop_docker_clean_volume.yml
    - ansible-playbook -i ./inventory.newcore.skctestnet.env --limit SKC-LAB-CORE ./books/clean_docker_image_core.yml
    - ansible-playbook -i ./inventory.newcore.skctestnet.env --limit SKC-LAB-CORE ./books/start.docker.containers.yml
    - ./manual.scripts/start.logs.lab.sh
