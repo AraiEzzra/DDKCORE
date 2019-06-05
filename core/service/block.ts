@@ -6,7 +6,7 @@ import Validator from 'z-schema';
 import ZSchema from 'shared/validate/z_schema';
 import { logger } from 'shared/util/logger';
 import { Account } from 'shared/model/account';
-import { Block, BlockModel } from 'shared/model/block';
+import { Block, BlockModel, SerializedBlock } from 'shared/model/block';
 import BlockRepo from 'core/repository/block';
 import SharedTransactionRepo from 'shared/repository/transaction';
 import BlockPGRepo from 'core/repository/block/pg';
@@ -521,11 +521,10 @@ class BlockService {
         );
 
         if (broadcast && !System.synchronization) {
-            SyncService.sendNewBlock(block);
+            const serializedBlock = block.serialize();
 
-            const serializedBlock: Block & { transactions: any } = block.getCopy();
-            serializedBlock.transactions = block.transactions.map(trs => SharedTransactionRepo.serialize(trs));
-            SocketMiddleware.emitEvent<Block>(EVENT_TYPES.APPLY_BLOCK, serializedBlock);
+            SocketMiddleware.emitEvent(EVENT_TYPES.APPLY_BLOCK, serializedBlock);
+            SyncService.sendNewBlock(serializedBlock);
         }
 
         if (block.height >= MIN_ROUND_BLOCK) {

@@ -1,4 +1,4 @@
-import { Block } from 'shared/model/block';
+import { Block, SerializedBlock } from 'shared/model/block';
 import { IAsset, SerializedTransaction, Transaction } from 'shared/model/transaction';
 import SystemRepository from 'core/repository/system';
 import BlockService from 'core/service/block';
@@ -24,13 +24,13 @@ export interface ISyncService {
 
     sendPeers(requestPeerInfo: RequestPeerInfo): void;
 
-    sendNewBlock(block: Block): void;
+    sendNewBlock(block: SerializedBlock): void;
 
     sendUnconfirmedTransaction(trs: Transaction<any>): void;
 
     checkCommonBlock(lastBlock: BlockData): Promise<ResponseEntity<{ isExist: boolean, peer?: MemoryPeer }>>;
 
-    requestBlocks(lastBlock: Block, peer: PeerAddress): Promise<ResponseEntity<Array<Block>>>;
+    requestBlocks(lastBlock: Block, peer: PeerAddress): Promise<ResponseEntity<Array<SerializedBlock>>>;
 
     sendBlocks(data: BlockLimit, requestFromPeer: RequestPeerInfo): void;
 
@@ -70,20 +70,16 @@ export class SyncService implements ISyncService {
         networkPeer.responseRPC(ActionTypes.RESPONSE_PEERS, peerAddresses, requestPeerInfo.requestId);
     }
 
-    sendNewBlock(block: Block): void {
-
+    sendNewBlock(block: SerializedBlock): void {
         logger.trace(`[Service][Sync][sendNewBlock] height: ${block.height} relay: ${block.relay}`);
+
         block.relay += 1;
         if (block.relay < config.CONSTANTS.TRANSFER.MAX_BLOCK_RELAY) {
-            const serializedBlock: Block & { transactions: any } = block.getCopy();
-            serializedBlock.transactions = block.transactions
-                .map(trs => SharedTransactionRepository.serialize(trs));
-
             const filteredPeerAddresses = PeerMemoryRepository
                 .getLessPeersByFilter(block.height, block.id)
                 .map((memoryPeer: MemoryPeer) => memoryPeer.peerAddress);
 
-            PeerService.broadcast(ActionTypes.BLOCK_RECEIVE, { block: serializedBlock }, filteredPeerAddresses);
+            PeerService.broadcast(ActionTypes.BLOCK_RECEIVE, { block }, filteredPeerAddresses);
         }
     }
 
@@ -162,7 +158,7 @@ export class SyncService implements ISyncService {
         return new ResponseEntity();
     }
 
-    async requestBlocks(lastBlock, peerAddress): Promise<ResponseEntity<Array<Block>>> {
+    async requestBlocks(lastBlock, peerAddress): Promise<ResponseEntity<Array<SerializedBlock>>> {
         if (!PeerNetworkRepository.has(peerAddress)) {
             return new ResponseEntity({ errors: [] });
         }
@@ -189,16 +185,11 @@ export class SyncService implements ISyncService {
         networkPeer.responseRPC(ActionTypes.RESPONSE_BLOCKS, serializedBlocks, requestId);
     }
 
-    async saveRequestedBlocks(blocks: Array<Block>): Promise<ResponseEntity<void>> {
+    async saveRequestedBlocks(blocks: Array<SerializedBlock>): Promise<ResponseEntity<void>> {
         for (const block of blocks) {
-
-            const receivedBlock = new Block(block);
+            const receivedBlock = Block.deserialize(block);
 
             RoundService.restoreToSlot(SlotService.getSlotNumber(receivedBlock.createdAt));
-
-            receivedBlock.transactions = receivedBlock.transactions.map(
-                trs => SharedTransactionRepository.deserialize(trs)
-            );
 
             const receivedBlockResponse = await BlockService.receiveBlock(receivedBlock);
 

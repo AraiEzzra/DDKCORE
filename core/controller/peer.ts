@@ -12,6 +12,7 @@ import { PEER_SOCKET_TYPE } from 'core/driver/socket/socketsTypes';
 import SystemRepository from 'core/repository/system';
 import { SerializedFullHeaders } from 'shared/model/Peer/fullHeaders';
 import { asyncTimeout } from 'shared/util/timer';
+
 const RECONNECT_DELAY = 1600;
 
 type ReceiveHeaders = {

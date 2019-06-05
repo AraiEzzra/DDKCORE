@@ -7,7 +7,7 @@ import TransactionRPCController from 'core/controller/transaction';
 import TransactionQueue from 'core/service/transactionQueue';
 import { ResponseEntity } from 'shared/model/response';
 import SharedTransactionRepo from 'shared/repository/transaction';
-import { IAsset, SerializedTransaction } from 'shared/model/transaction';
+import { SerializedTransaction } from 'shared/model/transaction';
 import TransactionService from 'core/service/transaction';
 import AccountRepo from 'core/repository/account';
 

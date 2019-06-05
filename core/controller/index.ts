@@ -20,7 +20,6 @@ const UNLOCKED_METHODS: Set<string> = new Set(
     ]
 );
 
-
 type Event = {
     topicName: string;
     data: any;
