@@ -41,7 +41,7 @@ describe('Test GET_ACTIVE_DELEGATES', () => {
         expect(response.body.success).to.equal(true);
         expect(response.body.data.delegates).to.have.lengthOf(0);
         expect(response.body.data.count).to.equal(config.CONSTANTS.ACTIVE_DELEGATES);
-        expect(response.body.errors).to.have.lengthOf(0);
+        expect(response.body.errors).to.equal(undefined);
     });
 
     it('Negative', async () => {

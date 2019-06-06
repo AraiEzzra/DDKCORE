@@ -7,6 +7,7 @@ import RoundRepository from 'core/repository/round';
 import RoundRepositoryPG from 'core/repository/round/pg';
 import { Round } from 'shared/model/round';
 import { Pagination } from 'api/utils/common';
+import RoundService from 'core/service/round';
 
 class RoundController {
 

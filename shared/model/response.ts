@@ -10,7 +10,7 @@ export class ResponseEntity<T> {
 
     constructor(params: ResponseEntityParams<T> = {}) {
         this.success = params.errors ? !Boolean(params.errors.length) : true;
-        this.errors = params.errors || [];
+        this.errors = params.errors;
         this.data = params.data;
     }
 }
