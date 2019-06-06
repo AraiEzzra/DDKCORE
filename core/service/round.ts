@@ -12,6 +12,8 @@ import { getFirstSlotNumberInRound } from 'core/util/slot';
 import { IKeyPair } from 'shared/util/ed';
 import System from 'core/repository/system';
 import { AccountChangeAction } from 'shared/model/account';
+import { EVENT_TYPES } from 'shared/driver/socket/codes';
+import SocketMiddleware from 'core/api/middleware/socket';
 
 const MAX_LATENESS_FORGE_TIME = 500;
 
@@ -126,6 +128,14 @@ class RoundService implements IRoundService {
             lastBlockId: lastBlock.id,
         });
         logger.debug('[Round][Service][generate]', JSON.stringify(newCurrentRound));
+
+        if (!System.synchronization) {
+            SocketMiddleware.emitEvent<Round>(
+                EVENT_TYPES.NEW_ROUND,
+                newCurrentRound,
+            );
+        }
+
         return newCurrentRound;
     }
 
