@@ -346,7 +346,6 @@ class BlockService {
 
             try {
                 bytes = TransactionDispatcher.getBytes(trs);
-                logger.trace(`Bytes ${JSON.stringify(bytes)}`);
             } catch (e) {
                 errors.push(e.toString());
             }

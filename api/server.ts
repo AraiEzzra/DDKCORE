@@ -10,11 +10,11 @@ BigInt.prototype.toJSON = function () {
 };
 
 process.addListener('unhandledRejection', err => {
-    logger.error(`[API][Process][unhandledRejection] ${err.message} \n ${err.stack}`);
+    logger.error(`[API][Process][unhandledRejection] ${JSON.stringify(err)}`);
 });
 
 process.addListener('uncaughtException', err => {
-    logger.error(`[API][Process][uncaughtException] ${err.message} \n ${err.stack}`); 
+    logger.error(`[API][Process][uncaughtException] ${err.message} stack: ${err.stack}`);
 });
 
 const server = new ApiSocketServer(config.API.SOCKET.PORT, API_SOCKET_SERVER_CONFIG);
