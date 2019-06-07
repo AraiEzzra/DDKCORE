@@ -1,6 +1,6 @@
 import SlotService from 'core/service/slot';
 import BlockRepository from 'core/repository/block';
-import { Round, Slot } from 'shared/model/round';
+import { Round, Slot, SerializedRound } from 'shared/model/round';
 import RoundRepository from 'core/repository/round';
 import { createTaskON, resetTaskON } from 'shared/util/bus';
 import DelegateRepository from 'core/repository/delegate';
@@ -38,6 +38,17 @@ class RoundService implements IRoundService {
 
     constructor() {
         this.keyPair = createKeyPairBySecret(process.env.FORGE_SECRET);
+    }
+
+    private serialize = (round: Round): SerializedRound => {
+        return Object.entries(round).map((value: [string, Slot]) => {
+            const delegate = DelegateRepository.serialize(DelegateRepository.getDelegate(value[0]));
+
+            return {
+                delegate,
+                slotNumber: value[1].slot,
+            };
+        });
     }
 
     restore(force = true): void {
@@ -130,9 +141,9 @@ class RoundService implements IRoundService {
         logger.debug('[Round][Service][generate]', JSON.stringify(newCurrentRound));
 
         if (!System.synchronization) {
-            SocketMiddleware.emitEvent<Round>(
+            SocketMiddleware.emitEvent<SerializedRound>(
                 EVENT_TYPES.NEW_ROUND,
-                newCurrentRound,
+                this.serialize(newCurrentRound),
             );
         }
 
