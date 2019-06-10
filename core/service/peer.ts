@@ -69,7 +69,6 @@ export class PeerService {
     }
 
     broadcast(code: string, data: any, peerAddresses?: Array<PeerAddress>, checkQueue: boolean = true): void {
-
         if (checkQueue && SwapTransactionQueue.size && PeerNetworkRepository.count) {
             SwapTransactionQueue.process();
         }
