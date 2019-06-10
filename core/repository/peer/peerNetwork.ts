@@ -51,6 +51,9 @@ class PeerNetworkRepository implements IPeerRepository <PeerAddress, NetworkPeer
     }
 
     remove(peerAddress: PeerAddress): void {
+        if (!this.has(peerAddress)) {
+            return;
+        }
         const peer = this.get(peerAddress);
         peer.disconnect();
         this.peers.delete(`${peerAddress.ip}:${peerAddress.port}`);
