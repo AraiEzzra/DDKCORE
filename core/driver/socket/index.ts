@@ -11,23 +11,23 @@ import { SerializedFullHeaders } from 'shared/model/Peer/fullHeaders';
 import { PEER_SOCKET_EVENTS, PEER_SOCKET_TYPE } from 'core/driver/socket/socketsTypes';
 
 export const REQUEST_TIMEOUT = '408 Request Timeout';
-export class Index {
-    private static instance: Index;
+export class Socket {
+    private static instance: Socket;
     private static ioServer;
 
     constructor() {
-        if (Index.instance) {
-            return Index.instance;
+        if (Socket.instance) {
+            return Socket.instance;
         }
-        Index.instance = this;
+        Socket.instance = this;
     }
 
     initServer(): void {
-        Index.ioServer = socketIO(config.CORE.SOCKET.PORT, API_SOCKET_SERVER_CONFIG);
+        Socket.ioServer = socketIO(config.CORE.SOCKET.PORT, API_SOCKET_SERVER_CONFIG);
 
         logger.debug(`WebSocket listening on port ${config.CORE.SOCKET.PORT}`);
 
-        Index.ioServer.on(PEER_SOCKET_EVENTS.CONNECT, Index.instance.onServerConnect);
+        Socket.ioServer.on(PEER_SOCKET_EVENTS.CONNECT, Socket.instance.onServerConnect);
 
         setTimeout(() => messageON(ActionTypes.PEER_CONNECT_RUN),
             config.CONSTANTS.TIMEOUT_START_PEER_CONNECT);
@@ -52,13 +52,13 @@ export class Index {
             socket.disconnect(true);
         }
 
-        if (Index.ioServer.clients().length > config.CONSTANTS.MAX_PEERS_CONNECTED) {
+        if (Socket.ioServer.clients().length > config.CONSTANTS.MAX_PEERS_CONNECTED) {
             logger.warn(`[SOCKET][onServerConnect] too many connections, sorry ${ip}`);
             socket.disconnect(true);
         }
 
         socket.on(PEER_SOCKET_EVENTS.HEADERS, (response) => {
-                Index.instance.onHeadersReceive(
+                Socket.instance.onHeadersReceive(
                     response, {
                         ip: ip,
                         port: DEFAULT_CORE_SOCKET_PORT
@@ -79,7 +79,7 @@ export class Index {
 
             ws.emit(PEER_SOCKET_EVENTS.HEADERS, JSON.stringify(headers));
             ws.on(PEER_SOCKET_EVENTS.HEADERS, (response: string) => {
-                Index.instance.onHeadersReceive(response, peerAddress, ws, PEER_SOCKET_TYPE.SERVER);
+                Socket.instance.onHeadersReceive(response, peerAddress, ws, PEER_SOCKET_TYPE.SERVER);
             });
         });
     }
@@ -98,4 +98,4 @@ export class Index {
     }
 }
 
-export default new Index();
+export default new Socket();

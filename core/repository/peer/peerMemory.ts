@@ -3,6 +3,7 @@ import { MemoryPeer } from 'shared/model/Peer/memoryPeer';
 import IPeerRepository from 'core/repository/peer/index';
 import { SerializedFullHeaders } from 'shared/model/Peer/fullHeaders';
 import PeerNetworkRepository from 'core/repository/peer/peerNetwork';
+import SystemRepository from 'core/repository/system';
 
 class PeerMemoryRepository implements IPeerRepository <PeerAddress, MemoryPeer> {
     private peers: Map<string, MemoryPeer>;
@@ -16,14 +17,17 @@ class PeerMemoryRepository implements IPeerRepository <PeerAddress, MemoryPeer> 
             `${peerAddress.ip}:${peerAddress.port}`,
             new MemoryPeer({ peerAddress, headers })
         );
+        SystemRepository.update({ peerCount: this.count });
     }
 
     remove(peerAddress: PeerAddress): void {
         this.peers.delete(`${peerAddress.ip}:${peerAddress.port}`);
+        SystemRepository.update({ peerCount: this.count });
     }
 
     removeAll() {
         this.peers.clear();
+        SystemRepository.update({ peerCount: this.count });
     }
 
     get(peerAddress: PeerAddress): MemoryPeer {
