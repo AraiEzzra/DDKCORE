@@ -81,7 +81,7 @@ deploy_DELEGATES_last_tag:
     - ansible-playbook -i ./inventory.newcore.preprod.delegates.env ./books/update.docker.compose.yml
     - ./manual.scripts/start.logs.delegates.sh
 
-build_image_tag:
+build_image_tag_stable:
   stage: build_core_tag_stable
   only:
     - tags
