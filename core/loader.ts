@@ -70,7 +70,7 @@ class Loader {
                 config.CONSTANTS.PEER_CONNECTION_TIME_INTERVAL_REBOOT.MAX
             )
         );
-        setTimeout(() => messageON('EMIT_SYNC_BLOCKS'), config.CONSTANTS.TIMEOUT_START_SYNC_BLOCKS);
+        setTimeout(() => messageON(ActionTypes.EMIT_SYNC_BLOCKS), config.CONSTANTS.TIMEOUT_START_SYNC_BLOCKS);
         socketRPCServer.run();
     }
 

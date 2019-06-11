@@ -238,7 +238,7 @@ class BlockService {
         if (isGreatestHeight(lastBlock, receivedBlock)) {
             if (!isNext(lastBlock, receivedBlock) || !isBlockCanBeProcessed(lastBlock, receivedBlock)) {
                 // TODO replace it
-                if (!SyncService.getMyConsensus()) {
+                if (!SyncService.getMyConsensus() && !System.synchronization) {
                     messageON('EMIT_SYNC_BLOCKS');
                 }
                 return new ResponseEntity<void>({
