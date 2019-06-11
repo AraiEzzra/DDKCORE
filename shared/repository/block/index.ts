@@ -20,7 +20,7 @@ export interface IBlockPGRepository {
     getGenesisBlock(): Promise<Block>;
     getLastBlock(): Promise<Block>;
     getLastNBlockIds(): Promise<Array<BlockId>>;
-    getMany(limit: number, offset: number): Promise<Array<Block>>;
+    getMany(limit: number, offset: number): Promise<ResponseEntity<Array<Block>>>;
     isExist(blockId: BlockId): Promise<boolean>;
     save(block: Block | Array<Block>): Promise<ResponseEntity<void>>;
 

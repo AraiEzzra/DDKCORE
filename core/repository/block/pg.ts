@@ -35,20 +35,32 @@ class BlockPGRepo implements IBlockPGRepository {
     ];
     private readonly columnSet = new pgpE.helpers.ColumnSet(this.tableFields, { table: this.tableName });
 
-    private async assignTransactions(blocks: Array<Block>): Promise<Array<Block>> {
+    private async assignTransactions(
+        blocks: Array<Block>,
+    ): Promise<ResponseEntity<Array<Block>>> {
         let totalTransactionCount = 0;
         const ids: Array<string> = blocks.map((block: Block) => {
             totalTransactionCount += block.transactionCount;
             return block.id;
         });
         if (!totalTransactionCount) {
-            return blocks;
+            return new ResponseEntity({ data: blocks });
         }
-        const transactions = await TransactionRepo.getByBlockIds(ids);
+
+        const transactionsResponse = await TransactionRepo.getByBlockIds(ids);
+        if (!transactionsResponse.success) {
+            return new ResponseEntity({ errors: [
+                ...transactionsResponse.errors,
+                'assignTransactions',
+            ] });
+        }
+
+        const transactions = transactionsResponse.data;
         blocks.forEach((block: Block) => {
             block.transactions = (transactions[block.id] || []).sort(transactionSortFunc);
         });
-        return blocks;
+
+        return new ResponseEntity({ data: blocks });
     }
 
     async deleteById(blockId: BlockId | Array<BlockId>): Promise<ResponseEntity<Array<string>>> {
@@ -105,14 +117,28 @@ class BlockPGRepo implements IBlockPGRepository {
         return rawBlockIds.map(block => block.id);
     }
 
-    async getMany(limit: number = 0, offset: number = 0): Promise<Array<Block>> {
-        const rawBlocks: Array<RawBlock> = await db.manyOrNone(queries.getMany(limit), { offset, limit });
-        if (!rawBlocks || !rawBlocks.length) {
-            return null;
+    async getMany(limit: number = 0, offset: number = 0): Promise<ResponseEntity<Array<Block>>> {
+        try {
+            const rawBlocks: Array<RawBlock> = await db.many(
+                queries.getMany(limit),
+                { offset, limit },
+            );
+
+            const blocks = rawBlocks.map(rawBlock => SharedBlockPgRepository.deserialize(rawBlock));
+            const blocksWithTrsResponse = await this.assignTransactions(blocks);
+            if (!blocksWithTrsResponse.success) {
+                return new ResponseEntity({ errors: [
+                    ...blocksWithTrsResponse.errors,
+                    'getMany',
+                ] });
+            }
+
+            return new ResponseEntity({ data: blocksWithTrsResponse.data });
+        } catch (error) {
+            return new ResponseEntity({
+                errors: [`Unable to load blocks from database. Error: ${error}`],
+            });
         }
-        let blocks: Array<Block> = rawBlocks.map(rawBlock => SharedBlockPgRepository.deserialize(rawBlock));
-        blocks = await this.assignTransactions(blocks);
-        return blocks;
     }
 
     async isExist(blockId: BlockId): Promise<boolean> {
