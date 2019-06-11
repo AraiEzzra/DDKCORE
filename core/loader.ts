@@ -25,7 +25,7 @@ import { getFirstSlotNumberInRound } from 'core/util/slot';
 import DelegateRepository from 'core/repository/delegate';
 import { ActionTypes } from 'core/util/actionTypes';
 import { Migrator } from 'core/database/migrator';
-import { EXIT_FROM_WARMUP } from 'shared/config/exitCodes';
+import { ERROR_CODES } from 'shared/config/errorCodes';
 
 // @ts-ignore
 BigInt.prototype.toJSON = function () {
@@ -86,7 +86,7 @@ class Loader {
             const blocksResponse = await BlockPGRepository.getMany(limit, offset);
             if (!blocksResponse.success) {
                 logger.error(blocksResponse.errors.join('. '));
-                process.exit(EXIT_FROM_WARMUP);
+                process.exit(ERROR_CODES.WARMUP_FAILED);
             }
 
             const blocks = blocksResponse.data;
