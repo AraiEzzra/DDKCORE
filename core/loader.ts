@@ -1,9 +1,10 @@
 import * as path from 'path';
-import db from 'shared/driver/db';
 import { QueryFile } from 'pg-promise';
+
+import db from 'shared/driver/db';
 import TransactionDispatcher from 'core/service/transaction';
 import AccountRepo from 'core/repository/account';
-import { IAsset, Transaction, TransactionType } from 'shared/model/transaction';
+import { IAsset, Transaction } from 'shared/model/transaction';
 import { messageON } from 'shared/util/bus';
 import { initControllers, initShedulers } from 'core/controller';
 import config from 'shared/config';
@@ -12,7 +13,6 @@ import BlockRepository from 'core/repository/block';
 import BlockService from 'core/service/block';
 import SocketDriver from 'core/driver/socket/index';
 import { logger } from 'shared/util/logger';
-import { Block } from 'shared/model/block';
 import { socketRPCServer } from 'core/api/server';
 import { getAddressByPublicKey } from 'shared/util/account';
 import { getRandomInt } from 'shared/util/util';
@@ -25,6 +25,7 @@ import { getFirstSlotNumberInRound } from 'core/util/slot';
 import DelegateRepository from 'core/repository/delegate';
 import { ActionTypes } from 'core/util/actionTypes';
 import { Migrator } from 'core/database/migrator';
+import { EXIT_FROM_WARMUP } from 'shared/config/exitCodes';
 
 // @ts-ignore
 BigInt.prototype.toJSON = function () {
@@ -82,12 +83,14 @@ class Loader {
     private async blockWarmUp(limit: number) {
         let offset: number = 0;
         do {
-            const blockBatch: Array<Block> = await BlockPGRepository.getMany(limit, offset);
-            if (!blockBatch) {
-                break;
+            const blocksResponse = await BlockPGRepository.getMany(limit, offset);
+            if (!blocksResponse.success) {
+                logger.error(blocksResponse.errors.join('. '));
+                process.exit(EXIT_FROM_WARMUP);
             }
 
-            for (const block of blockBatch) {
+            const blocks = blocksResponse.data;
+            for (const block of blocks) {
 
                 if (block.height === 1) {
                     BlockRepository.add(block);
@@ -116,7 +119,7 @@ class Loader {
                 }
             }
 
-            if (blockBatch.length < limit) {
+            if (blocks.length < limit) {
                 break;
             }
             offset += limit;
