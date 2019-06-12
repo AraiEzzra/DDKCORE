@@ -55,7 +55,7 @@ const constants: IConstants = {
     },
     TRANSFER: {
         MAX_TRS_RELAY: 3,
-        MAX_BLOCK_RELAY: 3,
+        MAX_BLOCK_RELAY: 6,
         REQUEST_BLOCK_LIMIT: 10,
     },
     REFERRAL: {
@@ -71,19 +71,19 @@ const constants: IConstants = {
     PRE_ORDER_SECOND_PUBLIC_KEY: 'a9e121acbf07a8140ed7388fe1e8a4b77bb9c7972bbca32725c6a8f1841db333',
     UPDATE_BLOCKCHAIN_INFO_INTERVAL: 60 * 1000,
     UPDATE_SYSTEM_INFO_INTERVAL: 1000,
-    MAX_PEERS_CONNECT_TO: 100,
-    MAX_PEERS_CONNECTED: 200,
+    MAX_PEERS_CONNECT_TO: 20,
+    MAX_PEERS_CONNECTED: 30,
     PEERS_DISCOVER: {
-        MAX: 11,
-        MIN: 3,
+        MAX: 25,
+        MIN: 5,
     },
-    TIMEOUT_START_SYNC_BLOCKS: 20000,
-    TIMEOUT_START_PEER_REQUEST: 10000,
+    TIMEOUT_START_SYNC_BLOCKS: 30000,
+    TIMEOUT_START_PEER_REQUEST: 20000,
     PEER_CONNECTION_TIME_INTERVAL_REBOOT: {
-        MIN: 5 * 60 * 1000,
-        MAX: 10 * 60 * 1000,
+        MIN: 20 * 60 * 1000,
+        MAX: 25 * 60 * 1000,
     },
-    PEERS_COUNT_FOR_DISCOVER: 2,
+    PEERS_COUNT_FOR_DISCOVER: 4,
     PRE_MINED_ACCOUNTS: [
         BigInt('13566253584516829136'),
         BigInt('11696703665952770027'),
@@ -96,7 +96,10 @@ const constants: IConstants = {
         BigInt('7043806098403384872'),
         BigInt('13761141028469814636'),
     ],
+    TIMEOUT_START_PEER_CONNECT: 10000,
     ADDRESSES_BLACKLIST: new Set([
+        BigInt('11696703665952770027'), // Airdrop
+        BigInt('13566253584516829136'), // Total supply
         BigInt('14418097244087628'),
         BigInt('44824014520664003'),
         BigInt('55875831923250533'),
@@ -764,7 +767,7 @@ const constants: IConstants = {
         BigInt('18419869020790234625'),
     ]),
     START_FEATURE_BLOCK: {
-        ACCOUNT_BLACKLIST: 70000
+        ACCOUNT_BLACKLIST: 70000,
     },
 };
 /* tslint:enable */

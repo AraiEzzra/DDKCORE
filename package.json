@@ -31,12 +31,14 @@
     "test": "npm run test:api",
     "test:api": "export NODE_PATH=./ && mocha --require ts-node/register './test/api/**/*.test.ts'",
     "test:core": "export NODE_PATH=./ && mocha --require ts-node/register './test/core/**/*.test.ts'",
-    "test:functionality": "export NODE_PATH=./ && mocha --require ts-node/register ./test/functionality/server-loader.ts './test/functionality/**/*.test.ts'"
+    "test:functionality": "export NODE_PATH=./ && mocha --require ts-node/register ./test/functionality/server-loader.ts './test/functionality/**/*.test.ts'",
+    "test:lab": "export NODE_PATH=./ && mocha --require ts-node/register ./test/lab/server-loader.ts './test/lab/**/*.test.ts'"
   },
   "author": "DDK Foundation <http://www.ddkoin.com/>",
   "license": "GPL-3.0",
   "dependencies": {
     "autobind-decorator": "^2.4.0",
+    "binary-search-tree": "^0.2.6",
     "chai": "^4.2.0",
     "chai-sorted": "^0.2.0",
     "crypto-browserify": "=3.11.0",

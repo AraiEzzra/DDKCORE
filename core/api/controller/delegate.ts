@@ -17,8 +17,9 @@ class DelegateController {
     }
 
     @API(API_ACTION_TYPES.GET_DELEGATES)
-    public getDelegates(message: Message<Pagination>):
-        ResponseEntity<{ delegates: Array<SerializedDelegate>, count: number }> {
+    public getDelegates(
+        message: Message<Pagination>,
+    ): ResponseEntity<{ delegates: Array<SerializedDelegate>, count: number }> {
         return new ResponseEntity({
             data: {
                 delegates: DelegateRepository.getDelegates(message.body.limit, message.body.offset).map(
@@ -44,8 +45,9 @@ class DelegateController {
     }
 
     @API(API_ACTION_TYPES.GET_MY_DELEGATES)
-    public getMyDelegates(message: Message<{ address: string } & Pagination>):
-        ResponseEntity<{ delegates: Array<SerializedDelegate>, count: number }> {
+    public getMyDelegates(
+        message: Message<{ address: string } & Pagination>,
+    ): ResponseEntity<{ delegates: Array<SerializedDelegate>, count: number }> {
 
         const account = AccountRepository.getByAddress(BigInt(message.body.address));
         if (!account) {

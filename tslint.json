@@ -79,7 +79,8 @@
         "import-spacing": true,
         "variable-name": [
             true,
-            "allow-pascal-case"
+            "allow-pascal-case",
+            "allow-leading-underscore"
         ]
     }
 }

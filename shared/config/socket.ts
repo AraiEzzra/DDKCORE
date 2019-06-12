@@ -2,8 +2,8 @@ import { ServerOptions } from 'socket.io';
 
 export const API_SOCKET_SERVER_CONFIG: ServerOptions = {
     serveClient: false,
-    pingTimeout: 30000,
-    pingInterval: 30000,
+    pingTimeout: 5000,
+    pingInterval: 10000,
 };
 
 // Define separate config for CORE

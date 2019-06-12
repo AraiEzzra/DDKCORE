@@ -12,7 +12,8 @@ import {
     sendAirdropReward,
     undoAirdropReward,
     undoFrozeOrdersRewardAndUnstake,
-    verifyAirdrop
+    verifyAirdrop,
+    isSponsorsExist
 } from 'core/util/reward';
 import { TOTAL_PERCENTAGE } from 'core/util/const';
 import { PublicKey } from 'shared/model/types';
@@ -227,7 +228,9 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
             }
         });
         applyFrozeOrdersRewardAndUnstake(trs, processedOrders);
-        sendAirdropReward(trs);
+        if (isSponsorsExist(trs)) {
+            sendAirdropReward(trs);
+        }
     }
 
     undoUnconfirmed(trs: Transaction<IAssetVote>, sender: Account, senderOnly): void {
@@ -256,7 +259,7 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
         }
 
         undoFrozeOrdersRewardAndUnstake(trs, sender, senderOnly);
-        if (!senderOnly) {
+        if (!senderOnly && isSponsorsExist(trs)) {
             undoAirdropReward(trs);
         }
 

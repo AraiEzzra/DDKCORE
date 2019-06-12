@@ -1,9 +1,11 @@
 import { expect } from 'chai';
-import ReferredUserRepo from 'core/repository/referredUsers';
-import { FactorType } from 'core/repository/referredUsers/interfaces';
+import ReferredUsersTree from 'core/repository/referredUsers/tree/ReferredUsersTree';
 import {
     getNewAccount
 } from 'test/core/repository/account/mock';
+import { Transaction } from 'shared/model/transaction';
+
+const referredUsersTreeRepo = new ReferredUsersTree();
 
 describe('ReferredUsers repository', () => {
 
@@ -13,7 +15,7 @@ describe('ReferredUsers repository', () => {
 
             const account = getNewAccount();
 
-            expect(ReferredUserRepo.getUsers(account, 0)).to.deep.equal([]);
+            expect(referredUsersTreeRepo.getUsers(account, 1)).to.deep.equal([]);
         });
 
         context('add one account', () => {
@@ -21,97 +23,104 @@ describe('ReferredUsers repository', () => {
             const account = getNewAccount();
 
             before(() => {
-                ReferredUserRepo.add(account);
-            })
+                referredUsersTreeRepo.add(account);
+            });
 
             it('return added node', () => {
-                expect(ReferredUserRepo.getUsers(account, 0)).to.deep.equal([]);
+                expect(referredUsersTreeRepo.getUsers(account, 1)).to.deep.equal([]);
             });
 
             after(() => {
-                ReferredUserRepo.delete(account);
+                referredUsersTreeRepo.delete(account);
             });
         });
 
-        context('add one account with referrals', () => {
+        context('root->account', () => {
 
-            const referral = getNewAccount();
+            const root = getNewAccount();
             const account = getNewAccount();
 
             account.referrals = [
-                referral
+                root
             ];
 
             before(() => {
-                ReferredUserRepo.add(referral);
+                referredUsersTreeRepo.add(root);
 
-                ReferredUserRepo.add(account);
-                ReferredUserRepo.updateCount(account);
-            })
+                referredUsersTreeRepo.add(account);
+                referredUsersTreeRepo.updateCountFactor(new Transaction({
+                    'senderAddress': account.address,
+                    'type': 0,
+                    'asset': {
+                        'referral': root.address
+                    },
+                    'id': '7db638aada1d50b87a09229bedcd9381597f76ac18fe63df695eb57961761540'
+                }));
+            });
 
-            it('return added node with children', () => {
-
-                expect(ReferredUserRepo.getUsers(account, 0)).to.deep.equal([]);
-
-                expect(ReferredUserRepo.getUsers(referral, 0)).to.deep.equal([
+            it('root level 1', () => {
+                expect(referredUsersTreeRepo.getUsers(root, 1)).to.deep.equal([
                     {
                         address: account.address,
                         isEmpty: true,
-                        factors: new Map([
-                            [FactorType.COUNT, 0],
-                            [FactorType.REWARD, 0],
-                            [FactorType.STAKE_AMOUNT, 0]
-                        ])
-                    }
-                ]);
-
-            });
-
-            after(() => {
-                ReferredUserRepo.delete(referral);
-                ReferredUserRepo.delete(account);
-            });
-        });
-
-        context('level 0 one child', () => {
-
-            const referral = getNewAccount();
-            const account = getNewAccount();
-
-            account.referrals = [
-                referral
-            ];
-
-            before(() => {
-                ReferredUserRepo.add(referral);
-
-                ReferredUserRepo.add(account);
-                ReferredUserRepo.updateCount(account);
-            })
-
-            it('one referred User', () => {
-
-                expect(ReferredUserRepo.getUsers(referral, 0)).to.deep.equal([
-                    {
-                        address: account.address,
-                        isEmpty: true,
-                        factors: new Map([
-                            [FactorType.COUNT, 0],
-                            [FactorType.REWARD, 0],
-                            [FactorType.STAKE_AMOUNT, 0]
-                        ])
+                        factors: {
+                            items: [0, 0, 0]
+                        }
                     }
                 ]);
             });
 
+            it('root level 2', () => {
+                expect(referredUsersTreeRepo.getUsers(root, 2)).to.deep.equal([
+                    {
+                        address: account.address,
+                        isEmpty: true,
+                        factors: {
+                            items: [0, 0, 0]
+                        }
+                    }
+                ]);
+            });
+
+            it('root level 3', () => {
+                expect(referredUsersTreeRepo.getUsers(root, 3)).to.deep.equal([
+                    {
+                        address: account.address,
+                        isEmpty: true,
+                        factors: {
+                            items: [0, 0, 0]
+                        }
+                    }
+                ]);
+            });
+
+            it('root level 4', () => {
+                expect(referredUsersTreeRepo.getUsers(root, 4)).to.deep.equal([]);
+            });
+
+            it('account level 1', () => {
+                expect(referredUsersTreeRepo.getUsers(account, 1)).to.deep.equal([]);
+            });
+
+            it('account level 2', () => {
+                expect(referredUsersTreeRepo.getUsers(account, 2)).to.deep.equal([]);
+            });
+
+            it('account level 3', () => {
+                expect(referredUsersTreeRepo.getUsers(account, 3)).to.deep.equal([]);
+            });
+
+            it('account level 4', () => {
+                expect(referredUsersTreeRepo.getUsers(account, 4)).to.deep.equal([]);
+            });
+
             after(() => {
-                ReferredUserRepo.delete(referral);
-                ReferredUserRepo.delete(account);
+                referredUsersTreeRepo.delete(root);
+                referredUsersTreeRepo.delete(account);
             });
         });
 
-
-        context('level 0 two child', () => {
+        context('root->(account1, account2)', () => {
 
             const root = getNewAccount();
 
@@ -128,47 +137,130 @@ describe('ReferredUsers repository', () => {
             ];
 
             before(() => {
-                ReferredUserRepo.add(root);
+                referredUsersTreeRepo.add(root);
 
-                ReferredUserRepo.add(account1);
-                ReferredUserRepo.updateCount(account1);
+                referredUsersTreeRepo.add(account1);
+                referredUsersTreeRepo.updateCountFactor(new Transaction({
+                    'senderAddress': account1.address,
+                    'type': 0,
+                    'asset': {
+                        'referral': root.address
+                    },
+                    'id': '7db638aada1d50b87a09229bedcd9381597f76ac18fe63df695eb57961761540'
+                }));
 
-                ReferredUserRepo.add(account2);
-                ReferredUserRepo.updateCount(account2);
-            })
+                referredUsersTreeRepo.add(account2);
+                referredUsersTreeRepo.updateCountFactor(new Transaction({
+                    'senderAddress': account2.address,
+                    'type': 0,
+                    'asset': {
+                        'referral': root.address
+                    },
+                    'id': '7db638aada1d50b87a09229bedcd9381597f76ac18fe63df695eb57961761540'
+                }));
+            });
 
-            it('one referred User', () => {
-
-                expect(ReferredUserRepo.getUsers(root, 0)).to.deep.equal([
+            it('root level 1', () => {
+                expect(referredUsersTreeRepo.getUsers(root, 1)).to.deep.equal([
                     {
                         address: account1.address,
                         isEmpty: true,
-                        factors: new Map([
-                            [FactorType.COUNT, 0],
-                            [FactorType.REWARD, 0],
-                            [FactorType.STAKE_AMOUNT, 0]
-                        ])
+                        factors: {
+                            items: [0, 0, 0]
+                        }
                     },
                     {
                         address: account2.address,
                         isEmpty: true,
-                        factors: new Map([
-                            [FactorType.COUNT, 0],
-                            [FactorType.REWARD, 0],
-                            [FactorType.STAKE_AMOUNT, 0]
-                        ])
+                        factors: {
+                            items: [0, 0, 0]
+                        }
                     }
                 ]);
             });
 
+            it('root level 2', () => {
+                expect(referredUsersTreeRepo.getUsers(root, 2)).to.deep.equal([
+                    {
+                        address: account1.address,
+                        isEmpty: true,
+                        factors: {
+                            items: [0, 0, 0]
+                        }
+                    },
+                    {
+                        address: account2.address,
+                        isEmpty: true,
+                        factors: {
+                            items: [0, 0, 0]
+                        }
+                    }
+                ]);
+            });
+
+            it('root level 3', () => {
+                expect(referredUsersTreeRepo.getUsers(root, 3)).to.deep.equal([
+                    {
+                        address: account1.address,
+                        isEmpty: true,
+                        factors: {
+                            items: [0, 0, 0]
+                        }
+                    },
+                    {
+                        address: account2.address,
+                        isEmpty: true,
+                        factors: {
+                            items: [0, 0, 0]
+                        }
+                    }
+                ]);
+            });
+
+            it('root level 4', () => {
+                expect(referredUsersTreeRepo.getUsers(root, 4)).to.deep.equal([]);
+            });
+
+            it('account1 level 1', () => {
+                expect(referredUsersTreeRepo.getUsers(account1, 1)).to.deep.equal([]);
+            });
+
+            it('account1 level 2', () => {
+                expect(referredUsersTreeRepo.getUsers(account1, 2)).to.deep.equal([]);
+            });
+
+            it('account1 level 3', () => {
+                expect(referredUsersTreeRepo.getUsers(account1, 3)).to.deep.equal([]);
+            });
+
+            it('account1 level 4', () => {
+                expect(referredUsersTreeRepo.getUsers(account1, 4)).to.deep.equal([]);
+            });
+
+            it('account2 level 1', () => {
+                expect(referredUsersTreeRepo.getUsers(account2, 1)).to.deep.equal([]);
+            });
+
+            it('account2 level 2', () => {
+                expect(referredUsersTreeRepo.getUsers(account2, 2)).to.deep.equal([]);
+            });
+
+            it('account2 level 3', () => {
+                expect(referredUsersTreeRepo.getUsers(account2, 3)).to.deep.equal([]);
+            });
+
+            it('account2 level 4', () => {
+                expect(referredUsersTreeRepo.getUsers(account2, 4)).to.deep.equal([]);
+            });
+
             after(() => {
-                ReferredUserRepo.delete(root);
-                ReferredUserRepo.delete(account1);
-                ReferredUserRepo.delete(account2);
+                referredUsersTreeRepo.delete(root);
+                referredUsersTreeRepo.delete(account1);
+                referredUsersTreeRepo.delete(account2);
             });
         });
 
-        context('level 0 two child', () => {
+        context('root->account1->account2', () => {
 
             const root = getNewAccount();
 
@@ -186,50 +278,132 @@ describe('ReferredUsers repository', () => {
             ];
 
             before(() => {
-                ReferredUserRepo.add(root);
+                referredUsersTreeRepo.add(root);
 
-                ReferredUserRepo.add(account1);
-                ReferredUserRepo.updateCount(account1);
+                referredUsersTreeRepo.add(account1);
+                referredUsersTreeRepo.updateCountFactor(new Transaction({
+                    'senderAddress': account1.address,
+                    'type': 0,
+                    'asset': {
+                        'referral': root.address
+                    },
+                    'id': '7db638aada1d50b87a09229bedcd9381597f76ac18fe63df695eb57961761540'
+                }));
 
-                ReferredUserRepo.add(account2);
-                ReferredUserRepo.updateCount(account2);
+                referredUsersTreeRepo.add(account2);
+                referredUsersTreeRepo.updateCountFactor(new Transaction({
+                    'senderAddress': account2.address,
+                    'type': 0,
+                    'asset': {
+                        'referral': account1.address
+                    },
+                    'id': '7db638aada1d50b87a09229bedcd9381597f76ac18fe63df695eb57961761546'
+                }));
             });
 
-            it('two referred User', () => {
-
-                expect(ReferredUserRepo.getUsers(root, 0)).to.deep.equal([
+            it('root level 1', () => {
+                expect(referredUsersTreeRepo.getUsers(root, 1)).to.deep.equal([
                     {
                         address: account1.address,
                         isEmpty: false,
-                        factors: new Map([
-                            [FactorType.COUNT, 1],
-                            [FactorType.REWARD, 0],
-                            [FactorType.STAKE_AMOUNT, 0]
-                        ])
+                        factors: {
+                            items: [1, 0, 0]
+                        }
                     }
                 ]);
+            });
 
-                expect(ReferredUserRepo.getUsers(account1, 0)).to.deep.equal([
+            it('root level 2', () => {
+                expect(referredUsersTreeRepo.getUsers(root, 2)).to.deep.equal([
+                    {
+                        address: account1.address,
+                        isEmpty: false,
+                        factors: {
+                            items: [1, 0, 0]
+                        }
+                    }
+                ]);
+            });
+
+            it('root level 3', () => {
+                expect(referredUsersTreeRepo.getUsers(root, 3)).to.deep.equal([
+                    {
+                        address: account1.address,
+                        isEmpty: true,
+                        factors: {
+                            items: [0, 0, 0]
+                        }
+                    }
+                ]);
+            });
+
+            it('root level 4', () => {
+                expect(referredUsersTreeRepo.getUsers(root, 4)).to.deep.equal([]);
+            });
+
+            it('account1 level 1', () => {
+                expect(referredUsersTreeRepo.getUsers(account1, 1)).to.deep.equal([
                     {
                         address: account2.address,
                         isEmpty: true,
-                        factors: new Map([
-                            [FactorType.COUNT, 0],
-                            [FactorType.REWARD, 0],
-                            [FactorType.STAKE_AMOUNT, 0]
-                        ])
+                        factors: {
+                            items: [0, 0, 0]
+                        }
                     }
                 ]);
+            });
 
+            it('account1 level 2', () => {
+                expect(referredUsersTreeRepo.getUsers(account1, 2)).to.deep.equal([
+                    {
+                        address: account2.address,
+                        isEmpty: true,
+                        factors: {
+                            items: [0, 0, 0]
+                        }
+                    }
+                ]);
+            });
+
+            it('account1 level 3', () => {
+                expect(referredUsersTreeRepo.getUsers(account1, 3)).to.deep.equal([
+                    {
+                        address: account2.address,
+                        isEmpty: true,
+                        factors: {
+                            items: [0, 0, 0]
+                        }
+                    }
+                ]);
+            });
+
+            it('account1 level 4', () => {
+                expect(referredUsersTreeRepo.getUsers(account1, 4)).to.deep.equal([]);
+            });
+
+            it('account2 level 1', () => {
+                expect(referredUsersTreeRepo.getUsers(account2, 1)).to.deep.equal([]);
+            });
+
+            it('account2 level 2', () => {
+                expect(referredUsersTreeRepo.getUsers(account2, 2)).to.deep.equal([]);
+            });
+
+            it('account2 level 3', () => {
+                expect(referredUsersTreeRepo.getUsers(account2, 3)).to.deep.equal([]);
+            });
+
+            it('account2 level 4', () => {
+                expect(referredUsersTreeRepo.getUsers(account2, 4)).to.deep.equal([]);
             });
 
             after(() => {
-                ReferredUserRepo.delete(root);
-                ReferredUserRepo.delete(account1);
-                ReferredUserRepo.delete(account2);
+                referredUsersTreeRepo.delete(root);
+                referredUsersTreeRepo.delete(account1);
+                referredUsersTreeRepo.delete(account2);
             });
         });
 
-    })
+    });
 
 });

@@ -7,7 +7,6 @@ import { ResponseEntity } from 'shared/model/response';
 import SocketIO from 'socket.io';
 import { SECOND } from 'shared/util/const';
 import config from 'shared/config';
-import { logger } from 'shared/util/logger';
 import { API_ACTION_TYPES, EVENT_TYPES } from 'shared/driver/socket/codes';
 
 type RequestProcessor = {
@@ -46,7 +45,6 @@ export class SocketMiddleware {
     }
 
     onConnect(socket: any) {
-        logger.trace('Socket %s connected', JSON.stringify(socket.handshake));
         socket.on(MESSAGE_CHANNEL, (data: Message<any>) => this.onApiMessage(data, socket));
     }
 

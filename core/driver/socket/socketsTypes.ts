@@ -1,0 +1,17 @@
+export const PEER_SOCKET_EVENTS = {
+    DISCONNECT: 'disconnect',
+    CONNECT: 'connect',
+    HEADERS: 'HEADERS',
+};
+
+export const PEER_SOCKET_CHANNELS = {
+    HEADERS: 'HEADERS',
+    BROADCAST: 'BROADCAST',
+    SOCKET_RPC_REQUEST: 'SOCKET_RPC_REQUEST',
+    SOCKET_RPC_RESPONSE: 'SOCKET_RPC_RESPONSE',
+};
+
+export enum PEER_SOCKET_TYPE {
+    SERVER = 'SERVER',
+    CLIENT = 'CLIENT',
+}

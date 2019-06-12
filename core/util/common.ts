@@ -2,6 +2,25 @@ export function getRandomInt(max: number): number {
     return Math.floor(Math.random() * Math.floor(max));
 }
 
+export function getRandom<T>(array: Array<T>): T {
+    return array[getRandomInt(array.length)];
+}
+
+export function getRandomElements<T>(limit: number, array: Array<T>): Array<T> {
+    if (array.length <= limit) {
+        return array;
+    }
+    const result = [];
+    while (result.length < limit) {
+        const i = getRandomInt(array.length);
+        const temp = array[i];
+        if (result.indexOf(temp) === -1) {
+            result.push(temp);
+        }
+    }
+    return result;
+}
+
 export const compose = (...fns): any => {
     return fns.reduceRight((prevFn, nextFn) =>
         (...args) => nextFn(prevFn(...args)),

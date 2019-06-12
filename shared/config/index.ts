@@ -96,6 +96,7 @@ class Config {
             TRANSACTIONS: boolean,
         };
         IS_DISABLED_TRANSACTION_CREATION: boolean;
+        IS_REFERRED_USERS_ENABLED: boolean;
         VERSION: string;
         MIN_VERSION: string;
         MIN_CONSENSUS: number;
@@ -164,8 +165,9 @@ class Config {
                 TRANSACTIONS: process.env.IS_TRANSACTIONS_HISTORY === 'TRUE',
             },
             IS_DISABLED_TRANSACTION_CREATION: process.env.IS_DISABLED_TRANSACTION_CREATION === 'TRUE',
-            VERSION: '0.0.54',
-            MIN_VERSION: '0.0.46',
+            IS_REFERRED_USERS_ENABLED: process.env.IS_REFERRED_USERS_ENABLED  === 'TRUE',
+            VERSION: '0.0.59',
+            MIN_VERSION: '0.0.56',
             MIN_CONSENSUS: Number(process.env.MIN_CONSENSUS) || DEFAULT_CONSENSUS
         };
         this.API = {

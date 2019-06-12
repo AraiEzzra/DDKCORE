@@ -1,18 +1,18 @@
 import * as path from 'path';
-import db from 'shared/driver/db';
 import { QueryFile } from 'pg-promise';
+
+import db from 'shared/driver/db';
 import TransactionDispatcher from 'core/service/transaction';
 import AccountRepo from 'core/repository/account';
-import { IAsset, Transaction, TransactionType } from 'shared/model/transaction';
+import { IAsset, Transaction } from 'shared/model/transaction';
 import { messageON } from 'shared/util/bus';
 import { initControllers, initShedulers } from 'core/controller';
 import config from 'shared/config';
 import BlockPGRepository from 'core/repository/block/pg';
 import BlockRepository from 'core/repository/block';
 import BlockService from 'core/service/block';
-import socket from 'core/repository/socket';
+import SocketDriver from 'core/driver/socket/index';
 import { logger } from 'shared/util/logger';
-import { Block } from 'shared/model/block';
 import { socketRPCServer } from 'core/api/server';
 import { getAddressByPublicKey } from 'shared/util/account';
 import { getRandomInt } from 'shared/util/util';
@@ -25,6 +25,7 @@ import { getFirstSlotNumberInRound } from 'core/util/slot';
 import DelegateRepository from 'core/repository/delegate';
 import { ActionTypes } from 'core/util/actionTypes';
 import { Migrator } from 'core/database/migrator';
+import { ERROR_CODES } from 'shared/config/errorCodes';
 
 // @ts-ignore
 BigInt.prototype.toJSON = function () {
@@ -58,7 +59,7 @@ class Loader {
         if (!config.CORE.IS_HISTORY_ON_WARMUP) {
             config.CORE.IS_HISTORY = historyState;
         }
-        socket.init();
+        SocketDriver.initServer();
 
         initShedulers();
 
@@ -69,7 +70,7 @@ class Loader {
                 config.CONSTANTS.PEER_CONNECTION_TIME_INTERVAL_REBOOT.MAX
             )
         );
-        setTimeout(() => messageON('EMIT_SYNC_BLOCKS'), config.CONSTANTS.TIMEOUT_START_SYNC_BLOCKS);
+        setTimeout(() => messageON(ActionTypes.EMIT_SYNC_BLOCKS), config.CONSTANTS.TIMEOUT_START_SYNC_BLOCKS);
         socketRPCServer.run();
     }
 
@@ -82,12 +83,14 @@ class Loader {
     private async blockWarmUp(limit: number) {
         let offset: number = 0;
         do {
-            const blockBatch: Array<Block> = await BlockPGRepository.getMany(limit, offset);
-            if (!blockBatch) {
-                break;
+            const blocksResponse = await BlockPGRepository.getMany(limit, offset);
+            if (!blocksResponse.success) {
+                logger.error(blocksResponse.errors.join('. '));
+                process.exit(ERROR_CODES.WARMUP_FAILED);
             }
 
-            for (const block of blockBatch) {
+            const blocks = blocksResponse.data;
+            for (const block of blocks) {
 
                 if (block.height === 1) {
                     BlockRepository.add(block);
@@ -116,7 +119,7 @@ class Loader {
                 }
             }
 
-            if (blockBatch.length < limit) {
+            if (blocks.length < limit) {
                 break;
             }
             offset += limit;

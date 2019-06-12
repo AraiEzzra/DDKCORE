@@ -15,15 +15,15 @@ class ReferredUsersController {
     public getReferredUsers(message: Message<{ address: string, level: number }>): ResponseEntity<object> {
         const { address, level } = message.body;
         const account = AccountRepo.getByAddress(BigInt(address));
-        const referredUsers = account
-            ? ReferredUsersRepo.getUsers(account, level)
-            : [];
+
+        if (!account) {
+            return new ResponseEntity({ errors: ['Account not exist'] });
+        }
+
+        const referredUsers = ReferredUsersRepo.getUsers(account, level);
 
         return new ResponseEntity({
-            data: {
-                address,
-                referredUsers: referredUsers.map(item => referredUserSerializable.serialize(item))
-            }
+            data: referredUsers.map(item => referredUserSerializable.serialize(item))
         });
     }
 }

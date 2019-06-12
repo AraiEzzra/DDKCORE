@@ -7,7 +7,7 @@ import TransactionRPCController from 'core/controller/transaction';
 import TransactionQueue from 'core/service/transactionQueue';
 import { ResponseEntity } from 'shared/model/response';
 import SharedTransactionRepo from 'shared/repository/transaction';
-import { IAsset, SerializedTransaction } from 'shared/model/transaction';
+import { SerializedTransaction } from 'shared/model/transaction';
 import TransactionService from 'core/service/transaction';
 import AccountRepo from 'core/repository/account';
 
@@ -25,8 +25,6 @@ export class TransactionController {
 
     @API(API_ACTION_TYPES.CREATE_PREPARED_TRANSACTION)
     public createPreparedTransaction(message: Message<SerializedTransaction<any>>) {
-        logger.trace(`[API][TransactionController][createPreparedTransaction] ${JSON.stringify(message.body)}`);
-
         const transaction = SharedTransactionRepo.deserialize(message.body);
 
         const validateResult = TransactionService.validate(transaction);

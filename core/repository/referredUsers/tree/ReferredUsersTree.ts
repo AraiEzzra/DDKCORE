@@ -1,8 +1,10 @@
-import { IReferredUser, IReferredUsers, FactorType } from 'core/repository/referredUsers/interfaces';
+import { FactorAction, FactorType, IReferredUser, IReferredUsers } from 'core/repository/referredUsers/interfaces';
+import AirdropHistoryRepository, { AirdropHistory } from 'core/repository/airdropHistory';
 import FactorTree from 'core/repository/referredUsers/tree/FactorTree';
 import config from 'shared/config/index';
-import { Account} from 'shared/model/account';
+import { Account } from 'shared/model/account';
 import { Address } from 'shared/model/types';
+import { IAssetRegister, IAssetStake, IAssetVote, Transaction } from 'shared/model/transaction';
 
 export default class ReferredUsersTree implements IReferredUsers {
 
@@ -32,28 +34,62 @@ export default class ReferredUsersTree implements IReferredUsers {
         this.tree.removeNode(account.address);
     }
 
-    updateCount(account: Account, count: number = 1): void {
-        const node = this.tree.getNode(account.address);
+    updateCountFactor(trs: Transaction<IAssetRegister>, action: FactorAction = FactorAction.ADD) {
+        const node = this.tree.getNode(trs.senderAddress);
 
-        let parent = node.parent;
+        this.tree.eachParents(node, (parent, level) => {
+            parent.addFactor(FactorType.COUNT, level, 1, action);
+        });
+    }
 
-        for (let level = config.CONSTANTS.REFERRAL.MAX_COUNT - 1; level >= 0; level--) {
-            if (parent === null) {
-                break;
+    updateRewardFactor(trs: Transaction<IAssetStake | IAssetVote>, action: FactorAction = FactorAction.ADD) {
+        const node = this.tree.getNode(trs.senderAddress);
+        const { sponsors } = trs.asset.airdropReward;
+
+        this.tree.eachParents(node, (parent, level) => {
+            const rewardAmount = sponsors.get(parent.data);
+            if (rewardAmount) {
+                parent.addFactor(FactorType.REWARD, level, rewardAmount, action);
+
+                const airdropHistory = {
+                    referralAddress: parent.data,
+                    transactionId: trs.id,
+                    transactionType: trs.type,
+                    rewardAmount,
+                    rewardTime: trs.createdAt,
+                    sponsorAddress: trs.senderAddress,
+                    sponsorLevel: level
+                };
+
+                this.updateAirdropHistory(airdropHistory, action);
             }
-            parent.addFactor(FactorType.COUNT, level, count);
-            parent = parent.parent;
+        });
+    }
+
+    private updateAirdropHistory(data: AirdropHistory, action: FactorAction = FactorAction.ADD) {
+        switch (action) {
+            case FactorAction.ADD:
+                AirdropHistoryRepository.add(data);
+                break;
+            case FactorAction.SUBTRACT:
+                AirdropHistoryRepository.remove(data);
+                break;
+            default:
         }
     }
 
     getUsers(account: Account, level: number): Array<IReferredUser> {
+        if (level === config.CONSTANTS.REFERRAL.MAX_COUNT + 1) {
+            return [];
+        }
+
         const node = this.tree.getNode(account.address);
 
         if (node !== undefined) {
-            return [...node.children.values()].map(node => ({
-                address: node.data,
-                isEmpty: node.children.size === 0 || level === config.CONSTANTS.REFERRAL.MAX_COUNT - 1,
-                factors: node.getFactorsByLevel(level)
+            return [...node.children.values()].map(item => ({
+                address: item.data,
+                isEmpty: item.children.size === 0 || level === config.CONSTANTS.REFERRAL.MAX_COUNT,
+                factors: item.getFactorsByLevel(level)
             }));
         }
 

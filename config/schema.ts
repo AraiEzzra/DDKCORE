@@ -111,6 +111,9 @@ const configSchema = {
                 },
                 IS_HISTORY: {
                     type: 'boolean'
+                },
+                IS_REFERRED_USERS_ENABLED: {
+                    type: 'boolean'
                 }
             },
             required: ['SOCKET', 'FORGING', 'PEERS', 'RPC']
