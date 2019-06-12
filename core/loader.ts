@@ -24,6 +24,7 @@ import { MIN_ROUND_BLOCK } from 'core/util/block';
 import { getFirstSlotNumberInRound } from 'core/util/slot';
 import DelegateRepository from 'core/repository/delegate';
 import { ActionTypes } from 'core/util/actionTypes';
+const fs = require("fs");
 import { Migrator } from 'core/database/migrator';
 import { ERROR_CODES } from 'shared/config/errorCodes';
 
@@ -31,6 +32,24 @@ import { ERROR_CODES } from 'shared/config/errorCodes';
 BigInt.prototype.toJSON = function () {
     return this.toString();
 };
+
+function ConvertToCSV(objArray) {
+    var array = typeof objArray != 'object' ? JSON.parse(objArray) : objArray;
+    var str = '';
+
+    for (var i = 0; i < array.length; i++) {
+        var line = '';
+        for (var index in array[i]) {
+            if (line != '') line += ','
+
+            line += array[i][index];
+        }
+
+        str += line + '\r\n';
+    }
+
+    return str;
+}
 
 class Loader {
     private limit = 1000;
@@ -82,6 +101,10 @@ class Loader {
 
     private async blockWarmUp(limit: number) {
         let offset: number = 0;
+
+        let lastDate = new Date(0);
+        let statistic = {};
+
         do {
             const blocksResponse = await BlockPGRepository.getMany(limit, offset);
             if (!blocksResponse.success) {
@@ -91,6 +114,11 @@ class Loader {
 
             const blocks = blocksResponse.data;
             for (const block of blocks) {
+
+                if (lastDate.getTime() === 0) {
+                    const realtime3 = SlotService.getRealTime(block.createdAt);
+                    lastDate = new Date(realtime3);
+                }
 
                 if (block.height === 1) {
                     BlockRepository.add(block);
@@ -117,13 +145,58 @@ class Loader {
                     const currentRound = RoundRepository.getCurrentRound();
                     currentRound.slots[block.generatorPublicKey].isForged = true;
                 }
+
+                const realtime = SlotService.getRealTime(block.createdAt);
+                const currentDay = new Date(realtime);
+                console.log('currentDay', currentDay.getDay(), currentDay.toISOString());
+                console.log('lastDate', lastDate.getDay(), lastDate.toISOString());
+
+                if (currentDay.getDay() !== lastDate.getDay()) {
+                    const realtime2 = SlotService.getRealTime(block.createdAt);
+                    lastDate = new Date(realtime2);
+                    const date = new Date(realtime2);
+
+                    const totalStakedAmount = AccountRepo.getAll().reduce((a, b) => {
+                        return a + b.stakes.filter(stake => stake.isActive).reduce((c, d) => {
+                            return c + d.amount;
+                        }, 0);
+                    }, 0);
+
+                    console.log(`totalStakedAmount: ${totalStakedAmount}`);
+
+
+                    if (totalStakedAmount !== 0) {
+                        statistic[date.getTime()] = {
+                            time: date.getTime(),
+                            date: date.toISOString(),
+                            totalStakedAmount: totalStakedAmount / 100000000,
+                        };
+
+                    }
+                }
             }
 
             if (blocks.length < limit) {
                 break;
             }
             offset += limit;
+
+
+            // if (offset > 19000) {
+            //     break;
+            // }
         } while (true);
+
+        var csv = ConvertToCSV(JSON.stringify(Object.values(statistic)));
+
+        // console.log('statistic', JSON.stringify(statistic));
+        await new Promise((resolve) => {
+            fs.writeFile('./logs/8.log', csv, function (error) {
+                resolve();
+            });
+        });
+
+        process.exit(1);
     }
 
     private transactionsWarmUp(transactions: Array<Transaction<IAsset>>): void {
