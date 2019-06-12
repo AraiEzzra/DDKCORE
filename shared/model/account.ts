@@ -12,7 +12,7 @@ export enum AccountChangeAction {
     AIRDROP_REWARD_RECEIVE = 'AIRDROP_REWARD_RECEIVE',
     AIRDROP_REWARD_RECEIVE_UNDO = 'AIRDROP_REWARD_RECEIVE_UNDO',
     DISTRIBUTE_FEE = 'DISTRIBUTE_FEE',
-    DISTRIBUTE_FEE_UNDO = 'DISTRIBUTE_FEE_UNDO', 
+    DISTRIBUTE_FEE_UNDO = 'DISTRIBUTE_FEE_UNDO',
 }
 
 export class AccountModel {
@@ -35,15 +35,15 @@ export class AccountModel {
 }
 
 export class Account extends AccountModel {
-    
+
     history: Array<AccountState> = [];
 
     public getCopy(): Account {
         return new Account( { ...this, history: [] });
     }
-    
+
     addHistory(action: AccountChangeAction, transactionId: TransactionId): void {
-        if (!config.CORE.IS_HISTORY) {
+        if (!config.CORE.IS_HISTORY || !config.CORE.HISTORY.ACCOUNTS) {
             return;
         }
 

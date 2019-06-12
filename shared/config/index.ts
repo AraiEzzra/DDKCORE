@@ -90,6 +90,11 @@ class Config {
         };
         IS_HISTORY: boolean;
         IS_HISTORY_ON_WARMUP: boolean;
+        HISTORY: {
+            BLOCKS: boolean,
+            ACCOUNTS: boolean,
+            TRANSACTIONS: boolean,
+        };
         IS_DISABLED_TRANSACTION_CREATION: boolean;
         IS_REFERRED_USERS_ENABLED: boolean;
         VERSION: string;
@@ -154,6 +159,11 @@ class Config {
             },
             IS_HISTORY: process.env.IS_HISTORY === 'TRUE',
             IS_HISTORY_ON_WARMUP: process.env.IS_HISTORY_ON_WARMUP === 'TRUE',
+            HISTORY: {
+                BLOCKS: process.env.IS_BLOCKS_HISTORY === 'TRUE',
+                ACCOUNTS: process.env.IS_ACCOUNTS_HISTORY === 'TRUE',
+                TRANSACTIONS: process.env.IS_TRANSACTIONS_HISTORY === 'TRUE',
+            },
             IS_DISABLED_TRANSACTION_CREATION: process.env.IS_DISABLED_TRANSACTION_CREATION === 'TRUE',
             IS_REFERRED_USERS_ENABLED: process.env.IS_REFERRED_USERS_ENABLED  === 'TRUE',
             VERSION: '0.0.59',
