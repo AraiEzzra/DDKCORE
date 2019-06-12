@@ -67,9 +67,11 @@ class Loader {
             () => messageON(ActionTypes.EMIT_REBOOT_PEERS_CONNECTIONS),
             getRandomInt(
                 config.CONSTANTS.PEER_CONNECTION_TIME_INTERVAL_REBOOT.MIN,
-                config.CONSTANTS.PEER_CONNECTION_TIME_INTERVAL_REBOOT.MAX
+                config.CONSTANTS.PEER_CONNECTION_TIME_INTERVAL_REBOOT.MAX,
             )
         );
+
+        System.synchronization = false;
         setTimeout(() => messageON(ActionTypes.EMIT_SYNC_BLOCKS), config.CONSTANTS.TIMEOUT_START_SYNC_BLOCKS);
         socketRPCServer.run();
     }
