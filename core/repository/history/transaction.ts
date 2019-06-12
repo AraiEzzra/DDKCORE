@@ -7,7 +7,7 @@ import { HistoryRepository } from 'core/repository/history';
 
 class TransactionHistoryRepository extends HistoryRepository<Transaction<any>, TransactionHistoryEvent> {
     addBeforeState(transaction: Transaction<any>, action: TransactionLifecycle, account: Account): void {
-        if (!config.CORE.IS_HISTORY) {
+        if (!config.CORE.IS_HISTORY || !config.CORE.HISTORY.TRANSACTIONS) {
             return;
         }
 
@@ -15,7 +15,7 @@ class TransactionHistoryRepository extends HistoryRepository<Transaction<any>, T
     }
 
     addAfterState(transaction: Transaction<any>, action: TransactionLifecycle, account: Account): void {
-        if (!config.CORE.IS_HISTORY) {
+        if (!config.CORE.IS_HISTORY || !config.CORE.HISTORY.TRANSACTIONS) {
             return;
         }
 
