@@ -154,14 +154,14 @@ export class SyncController extends BaseController {
 
     @ON(ActionTypes.PEER_HEADERS_UPDATE)
     updatePeer({ data, peerAddress }: PeerUpdateHeaders): void {
-        logger.debug(`${LOG_PREFIX}[updatePeer][${peerAddress.ip}:${peerAddress.port}] ` +
+        logger.trace(`${LOG_PREFIX}[updatePeer][${peerAddress.ip}:${peerAddress.port}] ` +
             `broadhash ${data.broadhash}, height: ${data.height}`);
         PeerService.update(peerAddress, data);
     }
 
     @ON(ActionTypes.LAST_BLOCKS_UPDATE)
     updateHeaders(data: { lastBlock }): void {
-        logger.debug(`${LOG_PREFIX}[updateHeaders]: broadhash ${data.lastBlock.id}, height: ${data.lastBlock.height}`);
+        logger.info(`${LOG_PREFIX}[updateHeaders]: broadhash ${data.lastBlock.id}, height: ${data.lastBlock.height}`);
         SyncService.updateHeaders(data.lastBlock);
     }
 }

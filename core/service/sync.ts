@@ -224,7 +224,7 @@ export class SyncService implements ISyncService {
             height: lastBlock.height,
         });
         SystemRepository.addBlockIdInPool(lastBlock);
-        logger.debug(`[Service][Sync][updateHeaders]: height ${lastBlock.height}, broadhash ${lastBlock.id}`);
+        logger.trace(`[Service][Sync][updateHeaders]: height ${lastBlock.height}, broadhash ${lastBlock.id}`);
         PeerService.broadcast(
             ActionTypes.PEER_HEADERS_UPDATE,
             SystemRepository.getHeaders()

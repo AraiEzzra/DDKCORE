@@ -133,7 +133,7 @@ export class NetworkPeer extends Peer {
         const { code, data } = new SocketResponse(response);
 
         if (ALLOWED_METHODS.has(code) || !this._isBanned) {
-            logger.debug(`[SOCKET][ON_PEER_BROADCAST][${this.peerAddress.ip}], CODE: ${code}`);
+            logger.trace(`[SOCKET][ON_PEER_BROADCAST][${this.peerAddress.ip}], CODE: ${code}`);
             messageON(code, { data, peerAddress });
         } else {
             logger.debug(`[SOCKET][ON_PEER_BROADCAST][${this.peerAddress.ip}] CODE: ${code} try to broadcast,` +
