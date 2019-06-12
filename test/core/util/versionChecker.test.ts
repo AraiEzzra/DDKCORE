@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 
-import { VersionChecker } from 'core/util/versionChecker';
+import { VersionChecker, compareTags } from 'core/util/versionChecker';
 
 describe('Version checker', () => {
     it('Is acceptable', () => {
@@ -62,5 +62,45 @@ describe('Version checker', () => {
 
             expect(test.expected).equal(actual, `version: ${test.version}`);
         });
+    });
+
+    it('Tags sorting', () => {
+        const tags = [
+            '3.4.743',
+            '3.4.743',
+            '1.4.143',
+            '3.4.5',
+            '3.4.5',
+            '3.4.5',
+            '3.4.4',
+            '3.4.41',
+            '0.0.1',
+            '0.0.1',
+            '0.0.0',
+            '3.4.1',
+            '3.4.1',
+            '3.6.73',
+        ];
+
+        const sorted = tags.sort(compareTags);
+
+        const expected = [
+            '0.0.0',
+            '0.0.1',
+            '0.0.1',
+            '1.4.143',
+            '3.4.1',
+            '3.4.1',
+            '3.4.4',
+            '3.4.5',
+            '3.4.5',
+            '3.4.5',
+            '3.4.41',
+            '3.4.743',
+            '3.4.743',
+            '3.6.73',
+        ];
+
+        expect(expected).to.eql(sorted);
     });
 });
