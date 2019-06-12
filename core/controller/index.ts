@@ -13,27 +13,26 @@ import { subjectOn, MainTasks } from 'shared/util/bus';
 import { logger } from 'shared/util/logger';
 import config from 'shared/config';
 import { ResponseEntity } from 'shared/model/response';
-import { BaseController } from 'core/controller/baseController';
-
-const UNLOCKED_METHODS: Set<string> = new Set([
-    ...SyncController.eventsON.map(func => func.handlerTopicName),
-    ...PeerController.eventsON.map(func => func.handlerTopicName),
-]);
+import { ActionTypes } from 'core/util/actionTypes';
 
 type Event = {
     topicName: string;
     data: any;
 };
 
-const getControllerByTopicName = (topicName: string): BaseController => {
-    if (BlockController.eventsMAIN[topicName]) {
-        return BlockController;
-    } else if (SyncController.eventsMAIN[topicName]) {
-        return SyncController;
-    }
-};
+const UNLOCKED_METHODS: Set<string> = new Set([
+    ...SyncController.eventsON.keys(),
+    ...PeerController.eventsON.keys()
+]);
+
+const mainQueueMethods: Map<string, Function> = new Map([
+    ...BlockController.eventsMAIN,
+    ...SyncController.eventsMAIN
+]);
+
 
 const MAIN_QUEUE: Array<Event> = [];
+
 const processMainQueue = async (): Promise<void> => {
     if (MAIN_QUEUE.length === 0) {
         return;
@@ -41,15 +40,8 @@ const processMainQueue = async (): Promise<void> => {
 
     const event: Event = MAIN_QUEUE[MAIN_QUEUE.length - 1];
 
-    // TODO: Refactor it
-    // https://trello.com/c/QvKuByD0/372-refactor-main-queue
-    const controller = getControllerByTopicName(event.topicName);
-    if (!controller) {
-        logger.error(`Contoller with topic: ${event.topicName} not found`);
-    } else {
-        const response: ResponseEntity<void> = await controller.eventsMAIN[event.topicName]
-            .apply(controller, [event.data]);
-
+    if (mainQueueMethods.has(event.topicName)) {
+        const response: ResponseEntity<void> = await mainQueueMethods.get(event.topicName)(event.data);
         if (response.success) {
             logger.debug(`[processMainQueue] Main task ${event.topicName} completed successfully`);
         } else {
@@ -67,22 +59,13 @@ const processMainQueue = async (): Promise<void> => {
 };
 
 export const initControllers = () => {
-    const controllers = [
-        TransactionController,
-        RoundController,
-        SyncController,
-        PeerController,
-    ];
 
-    const methods = new Map();
-
-    controllers.forEach(controller => {
-        if (controller.eventsON && controller.eventsON.length) {
-            controller.eventsON.forEach(({ handlerTopicName, handlerFunc }) => {
-                methods.set(handlerTopicName, handlerFunc);
-            });
-        }
-    });
+    const onMethods = new Map([
+        ...TransactionController.eventsON,
+        ...RoundController.eventsON,
+        ...SyncController.eventsON,
+        ...PeerController.eventsON,
+    ]);
 
 
     subjectOn.pipe(
@@ -114,7 +97,7 @@ export const initControllers = () => {
 
     subjectOn.pipe(
         filter((elem: { data, topicName }) => {
-            return methods.has(elem.topicName);
+            return onMethods.has(elem.topicName);
         })
     ).subscribe(({ data, topicName }) => {
         if (System.synchronization && !UNLOCKED_METHODS.has(topicName)) {
@@ -124,7 +107,9 @@ export const initControllers = () => {
                 type: 'ON',
             });
         } else {
-            setImmediate(() => methods.get(topicName)(data));
+            setImmediate(() => {
+                onMethods.get(topicName)(data);
+            });
         }
     });
 };
