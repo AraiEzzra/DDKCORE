@@ -188,7 +188,18 @@ export class SyncService implements ISyncService {
     async saveRequestedBlocks(blocks: Array<SerializedBlock>): Promise<ResponseEntity<void>> {
         const errors = [];
         for (const block of blocks) {
+
             const receivedBlock = Block.deserialize(block);
+            const lastBlock = BlockRepository.getLastBlock();
+            const validateReceivedBlocKResponse = BlockService.validateReceivedBlock(lastBlock, receivedBlock);
+
+            if (!validateReceivedBlocKResponse.success) {
+                errors.push(
+                    `[Service][Sync][onSaveNewBlock] Received block not valid:` +
+                    `${validateReceivedBlocKResponse.errors}`,
+                );
+                break;
+            }
 
             RoundService.restoreToSlot(SlotService.getSlotNumber(receivedBlock.createdAt));
 
