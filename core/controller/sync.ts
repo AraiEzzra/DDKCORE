@@ -1,5 +1,5 @@
 import SyncService from 'core/service/sync';
-import { ON } from 'core/util/decorator';
+import { ON, MAIN } from 'core/util/decorator';
 import { BaseController } from 'core/controller/baseController';
 import PeerService from 'core/service/peer';
 import { logger } from 'shared/util/logger';
@@ -15,6 +15,7 @@ import { REQUEST_TIMEOUT } from 'core/driver/socket';
 import { ActionTypes } from 'core/util/actionTypes';
 import { Headers } from 'shared/model/Peer/headers';
 import SlotService from 'core/service/slot';
+import { ResponseEntity } from 'shared/model/response';
 
 type CheckCommonBlocksRequest = {
     data: BlockData,
@@ -43,8 +44,8 @@ export class SyncController extends BaseController {
         SyncService.checkCommonBlocks(data, requestPeerInfo);
     }
 
-    @ON(ActionTypes.EMIT_SYNC_BLOCKS)
-    async startSyncBlocks(): Promise<void> {
+    @MAIN(ActionTypes.EMIT_SYNC_BLOCKS)
+    async startSyncBlocks(): Promise<ResponseEntity<void>> {
         let lastPeerRequested = null;
         const currentTime = new Date().getTime();
         const syncTimeDiff = currentTime - lastSyncTime;
@@ -141,6 +142,8 @@ export class SyncController extends BaseController {
         messageON('WARM_UP_FINISHED');
         EventQueue.process();
         logger.info(`${LOG_PREFIX}[startSyncBlocks] SYNCHRONIZATION DONE SUCCESS`);
+
+        return new ResponseEntity();
     }
 
     @ON(ActionTypes.REQUEST_BLOCKS)

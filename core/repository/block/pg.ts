@@ -39,10 +39,12 @@ class BlockPGRepo implements IBlockPGRepository {
         blocks: Array<Block>,
     ): Promise<ResponseEntity<Array<Block>>> {
         let totalTransactionCount = 0;
-        const ids: Array<string> = blocks.map((block: Block) => {
-            totalTransactionCount += block.transactionCount;
-            return block.id;
-        });
+        const ids: Array<string> = blocks
+            .filter(block => block.transactionCount !== 0)
+            .map((block: Block) => {
+                totalTransactionCount += block.transactionCount;
+                return block.id;
+            });
         if (!totalTransactionCount) {
             return new ResponseEntity({ data: blocks });
         }
