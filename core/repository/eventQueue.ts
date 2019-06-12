@@ -1,5 +1,5 @@
 import { logger } from 'shared/util/logger';
-import { messageON, messageRPC } from 'shared/util/bus';
+import { messageON } from 'shared/util/bus';
 
 interface IEvent {
     data: any;

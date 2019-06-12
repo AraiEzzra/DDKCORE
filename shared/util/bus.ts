@@ -1,20 +1,21 @@
 import { Subject } from 'rxjs';
+
 import { logger } from 'shared/util/logger';
 
 export const subjectOn = new Subject();
-export const subjectRpc = new Subject();
+
+export enum MainTasks {
+    BLOCK_GENERATE = 'BLOCK_GENERATE',
+    BLOCK_RECEIVE = 'BLOCK_RECEIVE',
+    EMIT_SYNC_BLOCKS = 'EMIT_SYNC_BLOCKS',
+}
+
 const tasks: Map<string, NodeJS.Timeout> = new Map();
 
 export function messageON(topicName: string, data: any = {}): void {
     logger.trace(`[Bus][messageON] topicName ${topicName}`);
 
     subjectOn.next({ data, topicName });
-}
-
-export function messageRPC(topicName: string, data: any): void {
-    logger.debug(`[Bus][messageRPC] topicName ${topicName}`);
-
-    subjectRpc.next({ data, topicName });
 }
 
 export function createTaskON(topicName: string, callTime: number, data: any = null, force: boolean = true): void {

@@ -398,10 +398,10 @@ class BlockService {
         }
 
         const blockSlot = SlotService.getSlotNumber(block.createdAt);
-        logger.debug(`[Service][Block][validateBlockSlot]: blockSlot ${blockSlot}`);
+        logger.trace(`[Service][Block][validateBlockSlot]: blockSlot ${blockSlot}`);
 
         let currentRound = RoundRepository.getCurrentRound();
-        logger.debug(`[Service][Block][validateBlockSlot]: round ${JSON.stringify(currentRound)}`);
+        logger.trace(`[Service][Block][validateBlockSlot]: round ${JSON.stringify(currentRound)}`);
 
         const generatorSlot = currentRound.slots[block.generatorPublicKey];
 

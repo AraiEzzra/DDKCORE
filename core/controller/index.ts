@@ -1,28 +1,36 @@
+import { timer } from 'rxjs';
+import { filter } from 'rxjs/operators';
+
 import BlockController from 'core/controller/block';
 import RoundController from 'core/controller/round';
 import SyncController from 'core/controller/sync';
 import EventService from 'core/service/events';
 import TransactionController from 'core/controller/transaction';
 import PeerController from 'core/controller/peer';
-import { filter } from 'rxjs/operators';
 import System from 'core/repository/system';
 import EventsQueue from 'core/repository/eventQueue';
-import { subjectOn } from 'shared/util/bus';
+import { subjectOn, MainTasks } from 'shared/util/bus';
 import { logger } from 'shared/util/logger';
-import { timer } from 'rxjs';
 import config from 'shared/config';
 import { ResponseEntity } from 'shared/model/response';
+import { BaseController } from 'core/controller/baseController';
 
-const UNLOCKED_METHODS: Set<string> = new Set(
-    [
-        ...SyncController.eventsON.map(func => func.handlerTopicName),
-        ...PeerController.eventsON.map(func => func.handlerTopicName)
-    ]
-);
+const UNLOCKED_METHODS: Set<string> = new Set([
+    ...SyncController.eventsON.map(func => func.handlerTopicName),
+    ...PeerController.eventsON.map(func => func.handlerTopicName),
+]);
 
 type Event = {
     topicName: string;
     data: any;
+};
+
+const getControllerByTopicName = (topicName: string): BaseController => {
+    if (BlockController.eventsMAIN[topicName]) {
+        return BlockController;
+    } else if (SyncController.eventsMAIN[topicName]) {
+        return SyncController;
+    }
 };
 
 const MAIN_QUEUE: Array<Event> = [];
@@ -32,18 +40,27 @@ const processMainQueue = async (): Promise<void> => {
     }
 
     const event: Event = MAIN_QUEUE[MAIN_QUEUE.length - 1];
-    const response: ResponseEntity<void> = await BlockController.eventsMAIN[event.topicName]
-        .apply(BlockController, [event.data]);
-    if (response.success) {
-        logger.debug(`[processMainQueue] Main task ${event.topicName} completed successfully`);
+
+    // TODO: Refactor it
+    // https://trello.com/c/QvKuByD0/372-refactor-main-queue
+    const controller = getControllerByTopicName(event.topicName);
+    if (!controller) {
+        logger.error(`Contoller with topic: ${event.topicName} not found`);
     } else {
-        const errorMessage = response.errors.join('. ');
-        if (!errorMessage.includes('Block already processed')) {
-            logger.debug(`[processMainQueue] Main task ${event.topicName} failed: ${errorMessage}`);
+        const response: ResponseEntity<void> = await controller.eventsMAIN[event.topicName]
+            .apply(controller, [event.data]);
+
+        if (response.success) {
+            logger.debug(`[processMainQueue] Main task ${event.topicName} completed successfully`);
+        } else {
+            const errorMessage = response.errors.join('. ');
+            if (!errorMessage.includes('Block already processed')) {
+                logger.debug(`[processMainQueue] Main task ${event.topicName} failed: ${errorMessage}`);
+            }
         }
     }
 
-    MAIN_QUEUE.length = MAIN_QUEUE.length - 1;
+    MAIN_QUEUE.length -= 1;
     if (MAIN_QUEUE.length) {
         setImmediate(processMainQueue);
     }
@@ -70,7 +87,11 @@ export const initControllers = () => {
 
     subjectOn.pipe(
         filter((elem: Event) => {
-            return ['BLOCK_GENERATE', 'BLOCK_RECEIVE'].indexOf(elem.topicName) !== -1;
+            return [
+                MainTasks.BLOCK_GENERATE,
+                MainTasks.BLOCK_RECEIVE,
+                MainTasks.EMIT_SYNC_BLOCKS,
+            ].indexOf(elem.topicName as MainTasks) !== -1;
         }),
         filter((elem: Event) => {
             if (System.synchronization && !UNLOCKED_METHODS.has(elem.topicName)) {
