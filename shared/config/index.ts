@@ -166,8 +166,8 @@ class Config {
             },
             IS_DISABLED_TRANSACTION_CREATION: process.env.IS_DISABLED_TRANSACTION_CREATION === 'TRUE',
             IS_REFERRED_USERS_ENABLED: process.env.IS_REFERRED_USERS_ENABLED  === 'TRUE',
-            VERSION: '0.0.59',
-            MIN_VERSION: '0.0.56',
+            VERSION: '0.0.60',
+            MIN_VERSION: '0.0.60',
             MIN_CONSENSUS: Number(process.env.MIN_CONSENSUS) || DEFAULT_CONSENSUS
         };
         this.API = {
