@@ -121,10 +121,13 @@ class BlockPGRepo implements IBlockPGRepository {
 
     async getMany(limit: number = 0, offset: number = 0): Promise<ResponseEntity<Array<Block>>> {
         try {
-            const rawBlocks: Array<RawBlock> = await db.many(
+            const rawBlocks: Array<RawBlock> = await db.manyOrNone(
                 queries.getMany(limit),
                 { offset, limit },
             );
+            if (!rawBlocks || !rawBlocks.length) {
+                return new ResponseEntity({ data: [] });
+            }
 
             const blocks = rawBlocks.map(rawBlock => SharedBlockPgRepository.deserialize(rawBlock));
             const blocksWithTrsResponse = await this.assignTransactions(blocks);

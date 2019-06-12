@@ -55,17 +55,18 @@ export class SyncController extends BaseController {
         }
         lastSyncTime = currentTime;
 
+        const errors = [];
         if (SyncService.getMyConsensus() || !PeerNetworkRepository.count) {
             System.synchronization = false;
             messageON('WARM_UP_FINISHED');
 
             const logMessage = `${LOG_PREFIX}[startSyncBlocks]: Unable to sync`;
             if (SyncService.getMyConsensus()) {
-                logger.info(`${logMessage}. Consensus is ${SyncService.getConsensus()}%`);
+                errors.push(`${logMessage}. Consensus is ${SyncService.getConsensus()}%`);
             } else if (!PeerNetworkRepository.count) {
-                logger.info(`${logMessage}. No peers to sync`);
+                errors.push(`${logMessage}. No peers to sync`);
             }
-            return;
+            return new ResponseEntity({ errors });
         }
 
         System.synchronization = true;

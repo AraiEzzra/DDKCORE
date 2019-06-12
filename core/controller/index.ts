@@ -13,16 +13,24 @@ import { subjectOn, MainTasks } from 'shared/util/bus';
 import { logger } from 'shared/util/logger';
 import config from 'shared/config';
 import { ResponseEntity } from 'shared/model/response';
+import { BaseController } from 'core/controller/baseController';
 
 const UNLOCKED_METHODS: Set<string> = new Set([
     ...SyncController.eventsON.map(func => func.handlerTopicName),
     ...PeerController.eventsON.map(func => func.handlerTopicName),
-    MainTasks.EMIT_SYNC_BLOCKS,
 ]);
 
 type Event = {
     topicName: string;
     data: any;
+};
+
+const getControllerByTopicName = (topicName: string): BaseController => {
+    if (BlockController.eventsMAIN[topicName]) {
+        return BlockController;
+    } else if (SyncController.eventsMAIN[topicName]) {
+        return SyncController;
+    }
 };
 
 const MAIN_QUEUE: Array<Event> = [];
@@ -35,21 +43,24 @@ const processMainQueue = async (): Promise<void> => {
 
     // TODO: Refactor it
     // https://trello.com/c/QvKuByD0/372-refactor-main-queue
-    const response: ResponseEntity<void> = await (
-        BlockController.eventsMAIN[event.topicName] ||
-        SyncController.eventsMAIN[event.topicName]
-    ).apply(BlockController, [event.data]);
-
-    if (response.success) {
-        logger.debug(`[processMainQueue] Main task ${event.topicName} completed successfully`);
+    const controller = getControllerByTopicName(event.topicName);
+    if (!controller) {
+        logger.error(`Contoller with topic: ${event.topicName} not found`);
     } else {
-        const errorMessage = response.errors.join('. ');
-        if (!errorMessage.includes('Block already processed')) {
-            logger.debug(`[processMainQueue] Main task ${event.topicName} failed: ${errorMessage}`);
+        const response: ResponseEntity<void> = await controller.eventsMAIN[event.topicName]
+            .apply(controller, [event.data]);
+
+        if (response.success) {
+            logger.debug(`[processMainQueue] Main task ${event.topicName} completed successfully`);
+        } else {
+            const errorMessage = response.errors.join('. ');
+            if (!errorMessage.includes('Block already processed')) {
+                logger.debug(`[processMainQueue] Main task ${event.topicName} failed: ${errorMessage}`);
+            }
         }
     }
 
-    MAIN_QUEUE.length--;
+    MAIN_QUEUE.length -= 1;
     if (MAIN_QUEUE.length) {
         setImmediate(processMainQueue);
     }
