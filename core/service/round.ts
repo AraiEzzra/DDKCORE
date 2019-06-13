@@ -116,18 +116,28 @@ class RoundService implements IRoundService {
         if (!forgedBlocksCount) {
             return;
         }
+        const missedDelegates = Object.entries(round.slots)
+            .filter(([, slot]) => !slot.isForged)
+            .map(([publicKey]) => {
+                return DelegateRepository.getDelegate(publicKey);
+            });
 
         const lastBlock = BlockRepository.getLastBlock();
         const blocks = BlockRepository.getMany(forgedBlocksCount, lastBlock.height - forgedBlocksCount);
-        const delegates = blocks.map(block => DelegateRepository.getDelegate(block.generatorPublicKey));
-        const fee = Math.ceil(blocks.reduce((sum, block) => sum += block.fee, 0) / delegates.length);
+        const forgedDelegates = blocks.map(block => DelegateRepository.getDelegate(block.generatorPublicKey));
+        const fee = Math.ceil(blocks.reduce((sum, block) => sum += block.fee, 0) / forgedDelegates.length);
 
-        delegates.forEach(delegate => {
+        forgedDelegates.forEach(delegate => {
             delegate.account.actualBalance += (undo ? -fee : fee);
+            delegate.forgedBlocks++;
+
             delegate.account.addHistory(undo
                 ? AccountChangeAction.DISTRIBUTE_FEE_UNDO :
                 AccountChangeAction.DISTRIBUTE_FEE, null
             );
+        });
+        missedDelegates.forEach(delegate => {
+            delegate.missedBlocks++;
         });
     }
 
@@ -138,6 +148,7 @@ class RoundService implements IRoundService {
             return {
                 slotNumber: slot.slot,
                 ...delegate,
+                account: undefined,
                 publicKey: delegate.account.publicKey,
                 unconfirmedVoteCount: delegate.votes,
             };
