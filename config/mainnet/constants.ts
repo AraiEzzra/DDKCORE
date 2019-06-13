@@ -72,7 +72,7 @@ const constants: IConstants = {
     UPDATE_BLOCKCHAIN_INFO_INTERVAL: 60 * 1000,
     UPDATE_SYSTEM_INFO_INTERVAL: 1000,
     MAX_PEERS_CONNECT_TO: 20,
-    MAX_PEERS_CONNECTED: 20,
+    MAX_PEERS_CONNECTED: 26,
     PEERS_DISCOVER: {
         MAX: 25,
         MIN: 12,
@@ -83,7 +83,7 @@ const constants: IConstants = {
         MIN: 20 * 60 * 1000,
         MAX: 25 * 60 * 1000,
     },
-    PEERS_COUNT_FOR_DISCOVER: 4,
+    PEERS_COUNT_FOR_DISCOVER: 6,
     PRE_MINED_ACCOUNTS: [
         BigInt('13566253584516829136'),
         BigInt('11696703665952770027'),

@@ -2,18 +2,18 @@ import { BaseController } from 'core/controller/baseController';
 import { ON } from 'core/util/decorator';
 import SyncService from 'core/service/sync';
 import { logger } from 'shared/util/logger';
-import { shuffle } from 'shared/util/util';
+import { sortByKey } from 'shared/util/util';
 import config from 'shared/config';
 import { ActionTypes } from 'core/util/actionTypes';
 import PeerNetworkRepository from 'core/repository/peer/peerNetwork';
-import { PeerAddress, RequestPeerInfo } from 'shared/model/types';
+import { PeerAddress } from 'shared/model/types';
 import PeerService from 'core/service/peer';
 import { PEER_SOCKET_TYPE } from 'core/driver/socket/socketsTypes';
 import SystemRepository from 'core/repository/system';
 import { SerializedFullHeaders } from 'shared/model/Peer/fullHeaders';
 import { asyncTimeout } from 'shared/util/timer';
 
-const RECONNECT_DELAY = 1600;
+const RECONNECT_DELAY_MS = 900;
 
 type ReceiveHeaders = {
     peerAddress: PeerAddress,
@@ -42,8 +42,10 @@ export class PeerController extends BaseController {
                 !PeerNetworkRepository.isBanned(peerAddress) &&
                 config.CORE.PEERS.BLACKLIST.indexOf(peerAddress.ip) === -1;
         });
-        const shuffledPeers = shuffle(filteredPeers);
-        const peers = shuffledPeers.slice(0, config.CONSTANTS.MAX_PEERS_CONNECT_TO - PeerNetworkRepository.count);
+        const sortedPeers = filteredPeers.sort(sortByKey('peerCount', 'ASC'));
+        logger.trace(`[Controller][Peer][discoverNewPeers] sortedPeers: ${JSON.stringify(sortedPeers)}`);
+
+        const peers = sortedPeers.slice(0, config.CONSTANTS.MAX_PEERS_CONNECT_TO - PeerNetworkRepository.count);
         PeerService.connectPeers(peers);
     }
 
@@ -66,13 +68,15 @@ export class PeerController extends BaseController {
             }
         );
 
-        let shuffledPeers = shuffle(filteredPeers);
+        let sortedPeers: Array<PeerAddress & { peerCount?: number }> = filteredPeers
+            .sort(sortByKey('peerCount', 'ASC'));
+
         if (discoveredPeers.length <= config.CONSTANTS.PEERS_DISCOVER.MIN) {
-            shuffledPeers = [...config.CORE.PEERS.TRUSTED];
+            sortedPeers = [...config.CORE.PEERS.TRUSTED];
         }
 
-        const peers = shuffledPeers.slice(0, config.CONSTANTS.PEERS_DISCOVER.MAX);
-        await asyncTimeout(RECONNECT_DELAY);
+        const peers = sortedPeers.slice(0, config.CONSTANTS.PEERS_DISCOVER.MAX);
+        await asyncTimeout(RECONNECT_DELAY_MS);
         PeerService.connectPeers(peers);
     }
 
