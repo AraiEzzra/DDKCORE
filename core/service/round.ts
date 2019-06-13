@@ -1,3 +1,5 @@
+import { ActiveDelegate } from 'ddk.registry/src/model/common/delegate';
+
 import SlotService from 'core/service/slot';
 import BlockRepository from 'core/repository/block';
 import { Round, Slot, SerializedRound } from 'shared/model/round';
@@ -129,25 +131,38 @@ class RoundService implements IRoundService {
         });
     }
 
+    private getDelegates = (round: Round): Array<ActiveDelegate> => {
+        return Object.entries(round.slots).map(([publicKey, slot]) => {
+            const delegate = DelegateRepository.getDelegate(publicKey);
+
+            return {
+                slotNumber: slot.slot,
+                ...delegate,
+                publicKey: delegate.account.publicKey,
+                unconfirmedVoteCount: delegate.votes,
+            };
+        });
+    }
+
     public generate(firstSlotNumber: number): Round {
         const lastBlock = BlockRepository.getLastBlock();
         const delegates = DelegateRepository.getActiveDelegates();
         const slots = SlotService.generateSlots(lastBlock.id, delegates, firstSlotNumber);
 
-        const newCurrentRound = new Round({
+        const round = new Round({
             slots: slots,
             lastBlockId: lastBlock.id,
         });
-        logger.debug('[Round][Service][generate]', JSON.stringify(newCurrentRound));
+        logger.debug('[Round][Service][generate]', JSON.stringify(round));
 
         if (!System.synchronization) {
-            SocketMiddleware.emitEvent<SerializedRound>(
+            SocketMiddleware.emitEvent<Array<ActiveDelegate>>(
                 EVENT_TYPES.NEW_ROUND,
-                this.serialize(newCurrentRound),
+                this.getDelegates(round),
             );
         }
 
-        return newCurrentRound;
+        return round;
     }
 
     public forwardProcess(): Round {
