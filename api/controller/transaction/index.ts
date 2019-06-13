@@ -5,7 +5,7 @@ import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
 import TransactionPGRepository from 'api/repository/transaction';
 import { IAsset, SerializedTransaction, TransactionModel } from 'shared/model/transaction';
 import { getTransactionsRequest } from 'api/controller/transaction/types';
-import { DEFAULT_LIMIT } from 'api/utils/common';
+import { DEFAULT_LIMIT } from 'shared/util/common';
 import { ResponseEntity } from 'shared/model/response';
 import SharedTransactionRepo from 'shared/repository/transaction';
 import { validate } from 'shared/validate';

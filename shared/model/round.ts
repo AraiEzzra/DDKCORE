@@ -1,5 +1,3 @@
-import { SerializedDelegate } from 'shared/model/delegate';
-
 export class Slot {
     slot: number;
     isForged: boolean;
@@ -24,11 +22,6 @@ export class RoundModel {
         Object.assign(this, data); // todo workaround
     }
 }
-
-export type SerializedRound = Array<{
-    slotNumber: number,
-    delegate: SerializedDelegate,
-}>;
 
 export class Round extends RoundModel {
     getCopy(): Round {

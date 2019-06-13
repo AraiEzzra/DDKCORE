@@ -1,7 +1,7 @@
 import { IAsset, IAssetVote, Transaction, TransactionType } from 'shared/model/transaction';
 import db from 'shared/driver/db';
 import query from 'api/repository/transaction/query';
-import { Sort } from 'api/utils/common';
+import { Sort } from 'shared/util/common';
 import SharedTransactionPGRepo from 'shared/repository/transaction/pg';
 import { toSnakeCase } from 'shared/util/util';
 

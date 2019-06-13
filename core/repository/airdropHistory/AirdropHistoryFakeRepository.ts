@@ -4,7 +4,7 @@ import {
     AirdropHistory,
     AirdropDailyHistory,
     AirdropDailyHistoryQuery,
-} from 'core/repository/airdropHistory/interfaces';
+} from 'shared/repository/airdropHistory/interfaces';
 
 export default class AirdropHistoryFakeRepository implements IAirdropHistoryRepository {
 

@@ -19,7 +19,7 @@ import BlockHistoryRepository from 'core/repository/history/block';
 import TransactionQueue from 'core/service/transactionQueue';
 import TransactionPool from 'core/service/transactionPool';
 import { uniqueFilterByKey } from 'core/util/transaction';
-import { Pagination } from 'api/utils/common';
+import { Pagination } from 'shared/util/common';
 
 class SystemController {
     constructor() {

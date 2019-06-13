@@ -1,4 +1,4 @@
-import { Direction } from 'api/utils/common';
+import { Direction } from 'shared/util/common';
 
 export function getRandomInt(min, max): number {
     return Math.floor(Math.random() * (max - min)) + min;

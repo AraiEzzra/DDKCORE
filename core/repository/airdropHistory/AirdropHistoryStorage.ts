@@ -1,5 +1,5 @@
 import { AVLTree } from 'binary-search-tree';
-import { AirdropHistory } from 'core/repository/airdropHistory/interfaces';
+import { AirdropHistory } from 'shared/repository/airdropHistory/interfaces';
 import { TransactionId, Timestamp } from 'shared/model/types';
 
 type Where = {

@@ -6,7 +6,7 @@ import {
     AirdropHistory,
     AirdropDailyHistory,
     AirdropDailyHistoryQuery,
-} from 'core/repository/airdropHistory/interfaces';
+} from 'shared/repository/airdropHistory/interfaces';
 import AirdropHistoryStorage from 'core/repository/airdropHistory/AirdropHistoryStorage';
 
 type AirdropHistoryByAddress = Map<Address, AirdropHistoryStorage>;

@@ -2,7 +2,7 @@ import { RPC } from 'api/utils/decorators';
 import SocketMiddleware from 'api/middleware/socket';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
 import { Message } from 'shared/model/message';
-import { Pagination } from 'api/utils/common';
+import { Pagination } from 'shared/util/common';
 import { validate } from 'shared/validate';
 
 class RoundController {
