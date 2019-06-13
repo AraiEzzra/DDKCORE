@@ -1,16 +1,15 @@
 FROM    node:10-alpine
+
 RUN     apk add --no-cache python curl bash automake autoconf libtool git alpine-sdk postgresql-dev netcat-openbsd
 RUN     addgroup ddk -g 1100 && \
         adduser -D -u 1100 ddk -G ddk
+
 WORKDIR /home/ddk
 USER    ddk
 RUN     mkdir -p /home/ddk && \
-        mkdir -p /home/ddk/dist && \
         chmod -R 777 /home/ddk && \
+        mkdir -p /home/ddk/dist && \
         mkdir -p /home/ddk/logs && \
-        mkdir -p /home/ddk/public/images/dapps/logs && \
-        mkdir -p /home/ddk/public/images/dapps/pids && \
-        mkdir -p /home/ddk/public/images/dapps/public && \
         touch /home/ddk/LICENSE
 
 USER    root

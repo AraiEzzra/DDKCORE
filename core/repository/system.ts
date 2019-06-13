@@ -1,7 +1,6 @@
 import os from 'os';
 import { Block } from 'shared/model/block';
 import config from 'shared/config';
-import PeerMemoryRepository from 'core/repository/peer/peerMemory';
 import { FullHeaders } from 'shared/model/Peer/fullHeaders';
 import { PeerAddress } from 'shared/model/types';
 
@@ -30,6 +29,7 @@ class SystemRepository {
     update(data) {
         this.headers.broadhash = data.broadhash || this.headers.broadhash;
         this.headers.height = data.height || this.headers.height;
+        this.headers.peerCount = data.peerCount || this.headers.peerCount;
     }
 
     addBlockIdInPool(lastBlock: Block) {
@@ -54,7 +54,7 @@ class SystemRepository {
         return {
             height: this.headers.height,
             broadhash: this.headers.broadhash,
-            peerCount: PeerMemoryRepository.count,
+            peerCount: this.headers.peerCount,
         };
     }
 

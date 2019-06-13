@@ -164,7 +164,11 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
                 default:
                     errors.push('Invalid math operator for vote' + vote);
             }
-            if (!AccountRepo.getByPublicKey(publicKey).delegate) {
+
+            const account = AccountRepo.getByPublicKey(publicKey);
+            if (!account) {
+                errors.push('Account not found, vote: ' + vote);
+            } else if (!account.delegate) {
                 errors.push('Delegate not found, vote: ' + vote);
             }
         });

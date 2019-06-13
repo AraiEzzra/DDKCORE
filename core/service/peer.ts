@@ -12,6 +12,9 @@ import { sortByKey } from 'shared/util/util';
 import VersionChecker from 'core/util/versionChecker';
 import { isArray } from 'util';
 import SwapTransactionQueue from 'core/service/swapTransactiontQueue';
+import { MemoryPeer } from 'shared/model/Peer/memoryPeer';
+import { messageON } from 'shared/util/bus';
+import { ActionTypes } from 'core/util/actionTypes';
 
 const LOG_PREFIX = `[Service][Peer]`;
 export const ERROR_NOT_ENOUGH_PEERS = 'ERROR_NOT_ENOUGH_PEERS';
@@ -61,6 +64,9 @@ export class PeerService {
         logger.debug(`${LOG_PREFIX}[remove] ${peerAddress.ip}:${peerAddress.port}`);
         PeerMemoryRepository.remove(peerAddress);
         PeerNetworkRepository.remove(peerAddress);
+        if (PeerMemoryRepository.count < config.CONSTANTS.PEERS_DISCOVER.MIN) {
+            messageON(ActionTypes.EMIT_REQUEST_PEERS);
+        }
     }
 
     removeAll() {
@@ -69,7 +75,6 @@ export class PeerService {
     }
 
     broadcast(code: string, data: any, peerAddresses?: Array<PeerAddress>, checkQueue: boolean = true): void {
-
         if (checkQueue && SwapTransactionQueue.size && PeerNetworkRepository.count) {
             SwapTransactionQueue.process();
         }

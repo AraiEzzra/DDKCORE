@@ -1,6 +1,5 @@
-
 export class BaseController {
-    eventsON: Array<any>;
-    eventsRPC: Array<any>;
-    eventsMAIN: { [topicName: string]: Function };
+    eventsON: Map<string, Function>;
+    eventsRPC: Map<string, Function>;
+    eventsMAIN: Map<string, Function>;
 }

@@ -79,7 +79,7 @@ class BlockController extends BaseController {
 
     @MAIN(ActionTypes.BLOCK_GENERATE)
     public async generateBlock(data: BlockGenerateRequest): Promise<ResponseEntity<void>> {
-        logger.debug(`[Controller][Block][generateBlock]`);
+        logger.trace(`[Controller][Block][generateBlock]`);
         if (!SyncService.getMyConsensus()) {
             logger.debug(
                 `[Controller][Block][generateBlock]: skip forging block, consensus ${SyncService.getConsensus()}%`

@@ -238,7 +238,7 @@ class BlockService {
         if (isGreatestHeight(lastBlock, receivedBlock)) {
             if (!isNext(lastBlock, receivedBlock) || !isBlockCanBeProcessed(lastBlock, receivedBlock)) {
                 // TODO replace it
-                if (!SyncService.getMyConsensus()) {
+                if (!SyncService.getMyConsensus() && !System.synchronization) {
                     messageON('EMIT_SYNC_BLOCKS');
                 }
                 return new ResponseEntity<void>({
@@ -346,7 +346,6 @@ class BlockService {
 
             try {
                 bytes = TransactionDispatcher.getBytes(trs);
-                logger.trace(`Bytes ${JSON.stringify(bytes)}`);
             } catch (e) {
                 errors.push(e.toString());
             }
@@ -399,10 +398,10 @@ class BlockService {
         }
 
         const blockSlot = SlotService.getSlotNumber(block.createdAt);
-        logger.debug(`[Service][Block][validateBlockSlot]: blockSlot ${blockSlot}`);
+        logger.trace(`[Service][Block][validateBlockSlot]: blockSlot ${blockSlot}`);
 
         let currentRound = RoundRepository.getCurrentRound();
-        logger.debug(`[Service][Block][validateBlockSlot]: round ${JSON.stringify(currentRound)}`);
+        logger.trace(`[Service][Block][validateBlockSlot]: round ${JSON.stringify(currentRound)}`);
 
         const generatorSlot = currentRound.slots[block.generatorPublicKey];
 

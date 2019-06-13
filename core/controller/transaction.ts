@@ -17,10 +17,8 @@ import { ActionTypes } from 'core/util/actionTypes';
 class TransactionController extends BaseController {
 
     @ON(ActionTypes.TRANSACTION_RECEIVE)
-    public async onReceiveTransaction({ data } : { data: { trs: SerializedTransaction<IAsset> } }): Promise<void> {
+    public onReceiveTransaction({ data } : { data: { trs: SerializedTransaction<IAsset> } }): void {
         const trs = SharedTransactionRepo.deserialize(data.trs);
-        logger.trace(`[Controller][Transaction][onReceiveTransaction] ${JSON.stringify(data.trs)}`);
-
         const validateResult = TransactionService.validate(trs);
         if (!validateResult.success) {
             return;

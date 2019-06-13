@@ -47,7 +47,7 @@ class LoggerClass {
          * @desc Creating file transport to write logs into a file. This file daily rotates
          */
         this.transport = new transports.DailyRotateFile({
-            filename: 'logs/./log',
+            filename: './logs/debug.log',
             datePattern: 'yyyy-MM-dd.',
             prepend: true,
             json: false,

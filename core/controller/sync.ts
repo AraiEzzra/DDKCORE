@@ -1,5 +1,5 @@
 import SyncService from 'core/service/sync';
-import { ON } from 'core/util/decorator';
+import { ON, MAIN } from 'core/util/decorator';
 import { BaseController } from 'core/controller/baseController';
 import PeerService from 'core/service/peer';
 import { logger } from 'shared/util/logger';
@@ -15,6 +15,7 @@ import { REQUEST_TIMEOUT } from 'core/driver/socket';
 import { ActionTypes } from 'core/util/actionTypes';
 import { Headers } from 'shared/model/Peer/headers';
 import SlotService from 'core/service/slot';
+import { ResponseEntity } from 'shared/model/response';
 
 type CheckCommonBlocksRequest = {
     data: BlockData,
@@ -43,8 +44,8 @@ export class SyncController extends BaseController {
         SyncService.checkCommonBlocks(data, requestPeerInfo);
     }
 
-    @ON(ActionTypes.EMIT_SYNC_BLOCKS)
-    async startSyncBlocks(): Promise<void> {
+    @MAIN(ActionTypes.EMIT_SYNC_BLOCKS)
+    async startSyncBlocks(): Promise<ResponseEntity<void>> {
         let lastPeerRequested = null;
         const currentTime = new Date().getTime();
         const syncTimeDiff = currentTime - lastSyncTime;
@@ -54,17 +55,18 @@ export class SyncController extends BaseController {
         }
         lastSyncTime = currentTime;
 
+        const errors = [];
         if (SyncService.getMyConsensus() || !PeerNetworkRepository.count) {
             System.synchronization = false;
             messageON('WARM_UP_FINISHED');
 
             const logMessage = `${LOG_PREFIX}[startSyncBlocks]: Unable to sync`;
             if (SyncService.getMyConsensus()) {
-                logger.info(`${logMessage}. Consensus is ${SyncService.getConsensus()}%`);
+                errors.push(`${logMessage}. Consensus is ${SyncService.getConsensus()}%`);
             } else if (!PeerNetworkRepository.count) {
-                logger.info(`${logMessage}. No peers to sync`);
+                errors.push(`${logMessage}. No peers to sync`);
             }
-            return;
+            return new ResponseEntity({ errors });
         }
 
         System.synchronization = true;
@@ -141,6 +143,8 @@ export class SyncController extends BaseController {
         messageON('WARM_UP_FINISHED');
         EventQueue.process();
         logger.info(`${LOG_PREFIX}[startSyncBlocks] SYNCHRONIZATION DONE SUCCESS`);
+
+        return new ResponseEntity();
     }
 
     @ON(ActionTypes.REQUEST_BLOCKS)
@@ -150,14 +154,14 @@ export class SyncController extends BaseController {
 
     @ON(ActionTypes.PEER_HEADERS_UPDATE)
     updatePeer({ data, peerAddress }: PeerUpdateHeaders): void {
-        logger.debug(`${LOG_PREFIX}[updatePeer][${peerAddress.ip}:${peerAddress.port}] ` +
+        logger.trace(`${LOG_PREFIX}[updatePeer][${peerAddress.ip}:${peerAddress.port}] ` +
             `broadhash ${data.broadhash}, height: ${data.height}`);
         PeerService.update(peerAddress, data);
     }
 
     @ON(ActionTypes.LAST_BLOCKS_UPDATE)
     updateHeaders(data: { lastBlock }): void {
-        logger.debug(`${LOG_PREFIX}[updateHeaders]: broadhash ${data.lastBlock.id}, height: ${data.lastBlock.height}`);
+        logger.info(`${LOG_PREFIX}[updateHeaders]: broadhash ${data.lastBlock.id}, height: ${data.lastBlock.height}`);
         SyncService.updateHeaders(data.lastBlock);
     }
 }

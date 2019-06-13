@@ -1,5 +1,5 @@
 import { Block, SerializedBlock } from 'shared/model/block';
-import { IAsset, SerializedTransaction, Transaction } from 'shared/model/transaction';
+import { Transaction } from 'shared/model/transaction';
 import SystemRepository from 'core/repository/system';
 import BlockService from 'core/service/block';
 import BlockRepository from 'core/repository/block/index';
@@ -186,23 +186,35 @@ export class SyncService implements ISyncService {
     }
 
     async saveRequestedBlocks(blocks: Array<SerializedBlock>): Promise<ResponseEntity<void>> {
+        const errors = [];
         for (const block of blocks) {
+
             const receivedBlock = Block.deserialize(block);
+            const lastBlock = BlockRepository.getLastBlock();
+            const validateReceivedBlocKResponse = BlockService.validateReceivedBlock(lastBlock, receivedBlock);
+
+            if (!validateReceivedBlocKResponse.success) {
+                errors.push(
+                    `[Service][Sync][onSaveNewBlock] Received block not valid:` +
+                    `${validateReceivedBlocKResponse.errors}`,
+                );
+                break;
+            }
 
             RoundService.restoreToSlot(SlotService.getSlotNumber(receivedBlock.createdAt));
 
             const receivedBlockResponse = await BlockService.receiveBlock(receivedBlock);
 
             if (!receivedBlockResponse.success) {
-                return new ResponseEntity({
-                    errors: [
-                        ...receivedBlockResponse.errors,
-                        `[Service][Sync][saveRequestedBlocks] error save requested block with id: ${receivedBlock.id}`,
-                    ]
-                });
+                errors.push(
+                    ...receivedBlockResponse.errors,
+                    `[Service][Sync][saveRequestedBlocks] error save requested block with id: ${receivedBlock.id}`,
+                );
+                break;
             }
         }
-        return new ResponseEntity();
+
+        return new ResponseEntity({ errors });
     }
 
     checkCommonBlocks(block: BlockData, requestPeerInfo: RequestPeerInfo): void {
@@ -223,7 +235,7 @@ export class SyncService implements ISyncService {
             height: lastBlock.height,
         });
         SystemRepository.addBlockIdInPool(lastBlock);
-        logger.debug(`[Service][Sync][updateHeaders]: height ${lastBlock.height}, broadhash ${lastBlock.id}`);
+        logger.trace(`[Service][Sync][updateHeaders]: height ${lastBlock.height}, broadhash ${lastBlock.id}`);
         PeerService.broadcast(
             ActionTypes.PEER_HEADERS_UPDATE,
             SystemRepository.getHeaders()
