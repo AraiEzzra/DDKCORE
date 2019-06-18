@@ -35,9 +35,15 @@ type BlocksRequest = {
 
 const SYNC_TIMEOUT = 10000;
 const LOG_PREFIX = '[Controller][Sync]';
-let lastSyncTime: number = 0;
 
 export class SyncController extends BaseController {
+    private lastSyncTime: number;
+
+    constructor() {
+        super();
+
+        this.lastSyncTime = 0;
+    }
 
     @ON(ActionTypes.REQUEST_COMMON_BLOCKS)
     checkCommonBlocks({ data, requestPeerInfo }: CheckCommonBlocksRequest): void {
@@ -50,13 +56,13 @@ export class SyncController extends BaseController {
     async startSyncBlocks(): Promise<ResponseEntity<void>> {
         let lastPeerRequested = null;
 
-        const differenceBetweenLastSync = new Date().getTime() - lastSyncTime;
-        if (lastSyncTime && differenceBetweenLastSync < SYNC_TIMEOUT) {
+        const differenceBetweenLastSync = new Date().getTime() - this.lastSyncTime;
+        if (this.lastSyncTime && differenceBetweenLastSync < SYNC_TIMEOUT) {
             const delay = SYNC_TIMEOUT - differenceBetweenLastSync;
             logger.info(`Wait ${delay} ms for next sync`);
             await asyncTimeout(delay);
         }
-        lastSyncTime = new Date().getTime();
+        this.lastSyncTime = new Date().getTime();
 
         const errors = [];
         if (SyncService.getMyConsensus() || !PeerNetworkRepository.count) {
@@ -77,7 +83,7 @@ export class SyncController extends BaseController {
         TransactionQueue.lock();
         TransactionPool
             .popSortedUnconfirmedTransactions(TransactionPool.getSize())
-            .forEach(TransactionQueue.push);
+            .forEach((transaction) => TransactionQueue.push(transaction));
 
         logger.debug(`${LOG_PREFIX}[startSyncBlocks]: start sync with consensus ${SyncService.getConsensus()}%`);
         const lastBlockSlotNumber = SlotService.getSlotNumber(BlockRepository.getLastBlock().createdAt);
