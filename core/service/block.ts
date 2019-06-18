@@ -1,8 +1,8 @@
 import * as crypto from 'crypto';
 import * as sodium from 'sodium-native';
-import BUFFER from 'core/util/buffer';
-
 import Validator from 'z-schema';
+
+import BUFFER from 'core/util/buffer';
 import ZSchema from 'shared/validate/z_schema';
 import { logger } from 'shared/util/logger';
 import { Account } from 'shared/model/account';
@@ -68,7 +68,6 @@ class BlockService {
 
     public async generateBlock(keyPair: IKeyPair, timestamp: number): Promise<ResponseEntity<void>> {
         logger.debug(`[Service][Block][generateBlock] timestamp ${timestamp}`);
-        this.lockTransactionQueueProcess();
 
         const transactions: Array<Transaction<object>> =
             TransactionPool.popSortedUnconfirmedTransactions(config.CONSTANTS.MAX_TRANSACTIONS_PER_BLOCK);
@@ -87,11 +86,8 @@ class BlockService {
             TransactionDispatcher.returnToQueueConflictedTransactionFromPool(transactions);
 
             processBlockResponse.errors.push('[Process][newGenerateBlock] generate block');
-            this.unlockTransactionQueueProcess();
             return processBlockResponse;
         }
-
-        this.unlockTransactionQueueProcess();
 
         return new ResponseEntity<void>();
     }
@@ -105,24 +101,13 @@ class BlockService {
             } else {
                 TransactionQueue.push(trs);
                 logger.debug(
-                    `[Service][Block][pushInPool] trs ${trs.id} returned to queue by error: ${verifyResult.errors}`
+                    `[Service][Block][pushInPool] Transaction with id ${trs.id} returned to queue` +
+                    ` by error: ${verifyResult.errors.join('.')}`
                 );
             }
         }
     }
 
-    private lockTransactionQueueProcess(): void {
-        TransactionQueue.lock();
-    }
-
-    private unlockTransactionQueueProcess(): void {
-        TransactionQueue.unlock();
-        setImmediate(TransactionQueue.process);
-    }
-
-    /**
-     * @implements system.update
-     */
     private async process(
         block: Block,
         broadcast: boolean,
@@ -175,7 +160,6 @@ class BlockService {
             return new ResponseEntity<void>({ errors: [...applyBlockResponse.errors, 'process'] });
         }
 
-        TransactionQueue.reshuffle();
         return new ResponseEntity<void>();
     }
 
@@ -571,8 +555,6 @@ class BlockService {
             `slot: ${SlotService.getSlotNumber(block.createdAt)}`
         );
 
-        this.lockTransactionQueueProcess();
-
         const removedTransactions = TransactionPool.batchRemove(block.transactions);
         logger.debug(
             `[Service][Block][receiveBlock] removed transactions count: ${removedTransactions.length}`
@@ -609,7 +591,7 @@ class BlockService {
             this.pushInPool(transactionForReturn);
             TransactionDispatcher.returnToQueueConflictedTransactionFromPool(block.transactions);
         }
-        this.unlockTransactionQueueProcess();
+
         return new ResponseEntity<void>({ errors });
     }
 
