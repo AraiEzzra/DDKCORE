@@ -61,6 +61,8 @@ class Loader {
         }
         SocketDriver.initServer();
 
+        setInterval(() => messageON(ActionTypes.EMIT_PING), config.CONSTANTS.PEER_PING_PONG_INTERVAL);
+
         initShedulers();
 
         setInterval(

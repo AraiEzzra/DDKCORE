@@ -83,6 +83,7 @@ const constants: IConstants = {
         MIN: 25 * 60 * 1000,
         MAX: 30 * 60 * 1000,
     },
+    PEER_PING_PONG_INTERVAL: 10000,
     PEERS_COUNT_FOR_DISCOVER: 6,
     PRE_MINED_ACCOUNTS: [
         BigInt('7897332094363171058'),
