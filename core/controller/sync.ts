@@ -49,13 +49,14 @@ export class SyncController extends BaseController {
     @MAIN(ActionTypes.EMIT_SYNC_BLOCKS)
     async startSyncBlocks(): Promise<ResponseEntity<void>> {
         let lastPeerRequested = null;
-        const currentTime = new Date().getTime();
-        const syncTimeDiff = currentTime - lastSyncTime;
-        if (lastSyncTime && syncTimeDiff < SYNC_TIMEOUT) {
-            logger.info(`Wait ${syncTimeDiff} ms for next sync`);
-            await asyncTimeout(syncTimeDiff);
+
+        const differenceBetweenLastSync = new Date().getTime() - lastSyncTime;
+        if (lastSyncTime && differenceBetweenLastSync < SYNC_TIMEOUT) {
+            const delay = SYNC_TIMEOUT - differenceBetweenLastSync;
+            logger.info(`Wait ${delay} ms for next sync`);
+            await asyncTimeout(delay);
         }
-        lastSyncTime = currentTime;
+        lastSyncTime = new Date().getTime();
 
         const errors = [];
         if (SyncService.getMyConsensus() || !PeerNetworkRepository.count) {
