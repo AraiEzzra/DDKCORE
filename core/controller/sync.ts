@@ -16,6 +16,8 @@ import { ActionTypes } from 'core/util/actionTypes';
 import { Headers } from 'shared/model/Peer/headers';
 import SlotService from 'core/service/slot';
 import { ResponseEntity } from 'shared/model/response';
+import TransactionPool from 'core/service/transactionPool';
+import TransactionQueue from 'core/service/transactionQueue';
 
 type CheckCommonBlocksRequest = {
     data: BlockData,
@@ -33,9 +35,15 @@ type BlocksRequest = {
 
 const SYNC_TIMEOUT = 10000;
 const LOG_PREFIX = '[Controller][Sync]';
-let lastSyncTime: number = 0;
 
 export class SyncController extends BaseController {
+    private lastSyncTime: number;
+
+    constructor() {
+        super();
+
+        this.lastSyncTime = 0;
+    }
 
     @ON(ActionTypes.REQUEST_COMMON_BLOCKS)
     checkCommonBlocks({ data, requestPeerInfo }: CheckCommonBlocksRequest): void {
@@ -47,13 +55,14 @@ export class SyncController extends BaseController {
     @MAIN(ActionTypes.EMIT_SYNC_BLOCKS)
     async startSyncBlocks(): Promise<ResponseEntity<void>> {
         let lastPeerRequested = null;
-        const currentTime = new Date().getTime();
-        const syncTimeDiff = currentTime - lastSyncTime;
-        if (lastSyncTime && syncTimeDiff < SYNC_TIMEOUT) {
-            logger.info(`Wait ${syncTimeDiff} ms for next sync`);
-            await asyncTimeout(syncTimeDiff);
+
+        const differenceBetweenLastSync = new Date().getTime() - this.lastSyncTime;
+        if (this.lastSyncTime && differenceBetweenLastSync < SYNC_TIMEOUT) {
+            const delay = SYNC_TIMEOUT - differenceBetweenLastSync;
+            logger.info(`Wait ${delay} ms for next sync`);
+            await asyncTimeout(delay);
         }
-        lastSyncTime = currentTime;
+        this.lastSyncTime = new Date().getTime();
 
         const errors = [];
         if (SyncService.getMyConsensus() || !PeerNetworkRepository.count) {
@@ -70,6 +79,12 @@ export class SyncController extends BaseController {
         }
 
         System.synchronization = true;
+
+        TransactionQueue.lock();
+        TransactionPool
+            .popSortedUnconfirmedTransactions(TransactionPool.getSize())
+            .forEach((transaction) => TransactionQueue.push(transaction));
+
         logger.debug(`${LOG_PREFIX}[startSyncBlocks]: start sync with consensus ${SyncService.getConsensus()}%`);
         const lastBlockSlotNumber = SlotService.getSlotNumber(BlockRepository.getLastBlock().createdAt);
         RoundService.restoreToSlot(lastBlockSlotNumber);
@@ -137,11 +152,16 @@ export class SyncController extends BaseController {
                 needDelay = false;
             }
         }
+
         System.synchronization = false;
+
         const currentSlotNumber = SlotService.getSlotNumber(SlotService.getTime(Date.now()));
         RoundService.restoreToSlot(currentSlotNumber);
+
         messageON('WARM_UP_FINISHED');
         EventQueue.process();
+        TransactionQueue.unlock();
+
         logger.info(`${LOG_PREFIX}[startSyncBlocks] SYNCHRONIZATION DONE SUCCESS`);
 
         return new ResponseEntity();
