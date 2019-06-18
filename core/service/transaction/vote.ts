@@ -17,6 +17,7 @@ import {
 } from 'core/util/reward';
 import { TOTAL_PERCENTAGE } from 'core/util/const';
 import { PublicKey } from 'shared/model/types';
+import BlockRepository from 'core/repository/block';
 
 class TransactionVoteService implements IAssetService<IAssetVote> {
 
@@ -117,6 +118,13 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
 
     verifyUnconfirmed(trs: Transaction<IAssetVote>, sender: Account): ResponseEntity<void> {
         const errors: Array<string> = [];
+        if (
+            BlockRepository.getLastBlock().height > config.CONSTANTS.START_FEATURE_BLOCK.VOTE_WITH_ACTIVE_STAKE &&
+            !sender.getActiveStakes().length
+        ) {
+            errors.push(`No active stakes`);
+            return new ResponseEntity<void>({ errors });
+        }
 
         const isDownVote: boolean = trs.asset.votes[0][0] === '-';
         const totals: { reward: number, unstake: number } = calculateTotalRewardAndUnstake(trs, sender, isDownVote);
@@ -179,13 +187,6 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
             const exceeded = totalVotes - config.CONSTANTS.MAX_VOTES;
 
             errors.push(`Maximum number of votes possible ${config.CONSTANTS.MAX_VOTES}, exceeded by ${exceeded}`);
-        }
-
-        if (errors.length) {
-            errors.push(
-                `Transaction: ${trs.id}.` +
-                `Account: ${sender.address}`
-            );
         }
 
         return new ResponseEntity<void>({ errors });
