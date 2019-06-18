@@ -5,57 +5,54 @@ import SocketDriver from 'core/driver/socket/index';
 import SystemRepository from 'core/repository/system';
 import config from 'shared/config';
 import { logger } from 'shared/util/logger';
-import { SerializedFullHeaders } from 'shared/model/Peer/fullHeaders';
-import { PeerAddress } from 'shared/model/types';
+import { PeerAddress, PeerHeadersReceived, RequestPeerInfo } from 'shared/model/types';
 import { Headers } from 'shared/model/Peer/headers';
 import { sortByKey } from 'shared/util/util';
 import VersionChecker from 'core/util/versionChecker';
 import { isArray } from 'util';
 import SwapTransactionQueue from 'core/service/swapTransactiontQueue';
-import { MemoryPeer } from 'shared/model/Peer/memoryPeer';
 import { messageON } from 'shared/util/bus';
 import { ActionTypes } from 'core/util/actionTypes';
+import { ResponseEntity } from 'shared/model/response';
 
 const LOG_PREFIX = `[Service][Peer]`;
 export const ERROR_NOT_ENOUGH_PEERS = 'ERROR_NOT_ENOUGH_PEERS';
 
 export class PeerService {
 
-    add(peerAddress: PeerAddress, headers: SerializedFullHeaders,
-        socket: SocketIO.Socket | SocketIOClient.Socket): boolean {
-        if (config.CORE.PEERS.BLACKLIST.indexOf(peerAddress.ip) !== -1 ||
-            !VersionChecker.isAcceptable(headers.version)) {
-            socket.disconnect(true);
+    add(data: PeerHeadersReceived): boolean {
+        if (config.CORE.PEERS.BLACKLIST.indexOf(data.peerAddress.ip) !== -1 ||
+            !VersionChecker.isAcceptable(data.peerHeaders.version)) {
+            data.socket.disconnect(true);
             return false;
         }
 
-        if (PeerMemoryRepository.has(peerAddress)) {
-            return this.resolveConnectionConflict(peerAddress, headers, socket);
+        if (PeerMemoryRepository.has(data.peerAddress)) {
+            return this.resolveConnectionConflict(data);
         } else {
-            PeerMemoryRepository.add(peerAddress, headers);
-            PeerNetworkRepository.add(peerAddress, socket);
+            PeerMemoryRepository.add(data.peerAddress, data.peerHeaders, data.type);
+            PeerNetworkRepository.add(data.peerAddress, data.socket);
         }
         return true;
     }
 
-    resolveConnectionConflict(peerAddress: PeerAddress, headers: SerializedFullHeaders,
-                              socket: SocketIO.Socket | SocketIOClient.Socket): boolean {
+    resolveConnectionConflict(data: PeerHeadersReceived): boolean {
 
-        logger.debug(`${LOG_PREFIX}[add] sockets conflict detected on ${peerAddress.ip}`);
+        logger.debug(`${LOG_PREFIX}[add] sockets conflict detected on ${data.peerAddress.ip}`);
 
-        const networkPeer = PeerNetworkRepository.get(peerAddress);
-        const ids = [socket, networkPeer].sort(sortByKey('id'));
+        const networkPeer = PeerNetworkRepository.get(data.peerAddress);
+        const ids = [data.socket, networkPeer].sort(sortByKey('id'));
 
         if (ids.indexOf(networkPeer) === 0) {
-            logger.debug(`${LOG_PREFIX}[add] destroy new connection on ${peerAddress.ip}, id ${socket.id}`);
-            socket.disconnect(true);
+            logger.debug(`${LOG_PREFIX}[add] destroy new connection on ${data.peerAddress.ip}, id ${data.socket.id}`);
+            data.socket.disconnect(true);
             return false;
         } else {
             logger.debug(`${LOG_PREFIX}[add] delete old connection ${networkPeer.id}, create new peer ` +
-                `${peerAddress.ip}`);
-            this.remove(peerAddress);
-            PeerMemoryRepository.add(peerAddress, headers);
-            PeerNetworkRepository.add(peerAddress, socket);
+                `${data.peerAddress.ip}`);
+            this.remove(data.peerAddress);
+            PeerMemoryRepository.add(data.peerAddress, data.peerHeaders, data.type);
+            PeerNetworkRepository.add(data.peerAddress, data.socket);
             return true;
         }
     }
@@ -113,6 +110,29 @@ export class PeerService {
                 SocketDriver.connectPeer(peerAddress, headers.serialize());
             }
         });
+    }
+
+    ping() {
+        PeerNetworkRepository.getAll().forEach((peer: NetworkPeer) => {
+            logger.trace(`[Service][Peer][ping] ${peer.peerAddress.ip}`);
+
+            peer.requestRPC(ActionTypes.PING, {})
+                .then((response: ResponseEntity<{}>) => {
+                    if (!response.success) {
+                        logger.debug(`[Service][Peer][ping] pong was failed ${peer.peerAddress.ip}`);
+                        messageON(ActionTypes.REMOVE_PEER, peer.peerAddress);
+                    }
+                });
+        });
+    }
+
+    pong(requestPeerInfo: RequestPeerInfo): void {
+        if (!PeerNetworkRepository.has(requestPeerInfo.peerAddress)) {
+            logger.trace(`[Service][Peer][pong] peer is offline for response ${requestPeerInfo.peerAddress.ip}`);
+            return;
+        }
+        const networkPeer = PeerNetworkRepository.get(requestPeerInfo.peerAddress);
+        networkPeer.responseRPC(ActionTypes.PONG, {}, requestPeerInfo.requestId);
     }
 
 }

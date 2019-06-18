@@ -75,7 +75,7 @@ const constants: IConstants = {
     MAX_PEERS_CONNECTED: 26,
     PEERS_DISCOVER: {
         MAX: 25,
-        MIN: 12,
+        MIN: 8,
     },
     TIMEOUT_START_SYNC_BLOCKS: 20000,
     TIMEOUT_START_PEER_REQUEST: 10000,
@@ -83,6 +83,7 @@ const constants: IConstants = {
         MIN: 20 * 60 * 1000,
         MAX: 25 * 60 * 1000,
     },
+    PEER_PING_PONG_INTERVAL: 10000,
     PEERS_COUNT_FOR_DISCOVER: 6,
     PRE_MINED_ACCOUNTS: [
         BigInt('13566253584516829136'),

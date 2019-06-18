@@ -4,6 +4,7 @@ import IPeerRepository from 'core/repository/peer/index';
 import { SerializedFullHeaders } from 'shared/model/Peer/fullHeaders';
 import PeerNetworkRepository from 'core/repository/peer/peerNetwork';
 import SystemRepository from 'core/repository/system';
+import { PEER_SOCKET_TYPE } from 'shared/model/types';
 
 class PeerMemoryRepository implements IPeerRepository <PeerAddress, MemoryPeer> {
     private peers: Map<string, MemoryPeer>;
@@ -12,10 +13,10 @@ class PeerMemoryRepository implements IPeerRepository <PeerAddress, MemoryPeer> 
         this.peers = new Map();
     }
 
-    add(peerAddress: PeerAddress, headers: SerializedFullHeaders) {
+    add(peerAddress: PeerAddress, headers: SerializedFullHeaders, connectionType: PEER_SOCKET_TYPE) {
         this.peers.set(
             `${peerAddress.ip}:${peerAddress.port}`,
-            new MemoryPeer({ peerAddress, headers })
+            new MemoryPeer({ peerAddress, headers, connectionType })
         );
         SystemRepository.update({ peerCount: this.count });
     }

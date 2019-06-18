@@ -1,6 +1,7 @@
 import { TransactionLifecycle, BlockLifecycle } from 'shared/model/transaction';
 import { Account, AccountChangeAction } from 'shared/model/account';
 import { Round } from 'shared/model/round';
+import { SerializedFullHeaders } from 'shared/model/Peer/fullHeaders';
 
 export type Filter = {
     limit: number;
@@ -16,6 +17,18 @@ export type RequestPeerInfo = {
     peerAddress: PeerAddress,
     requestId: string,
 };
+
+export type PeerHeadersReceived = {
+    peerAddress: PeerAddress,
+    peerHeaders: SerializedFullHeaders,
+    socket: SocketIO.Socket | SocketIOClient.Socket,
+    type: PEER_SOCKET_TYPE,
+};
+
+export enum PEER_SOCKET_TYPE {
+    SERVER = 'SERVER',
+    CLIENT = 'CLIENT',
+}
 
 export type BlockData = {
     id: string;
