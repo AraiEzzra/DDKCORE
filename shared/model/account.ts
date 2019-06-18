@@ -53,4 +53,8 @@ export class Account extends AccountModel {
             transactionId: transactionId
         });
     }
+
+    public getActiveStakes = (): Array<Stake> => {
+        return this.stakes.filter(stake => stake.isActive);
+    }
 }

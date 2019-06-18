@@ -129,7 +129,8 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
         if (!verifyStatus.success) {
             logger.debug(
                 `[Service][TransactionQueue][process][verifyUnconfirmed] ` +
-                `${JSON.stringify(verifyStatus.errors.join('. '))}. Transaction: ${trs.id}`
+                `${JSON.stringify(verifyStatus.errors.join('. '))}. ` +
+                `Transaction id: ${trs.id}. Account address: ${sender.address}`
             );
             trs.status = TransactionStatus.DECLINED;
             TransactionHistoryRepository.addEvent(trs, { action: TransactionLifecycle.DECLINE });

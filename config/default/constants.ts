@@ -93,7 +93,8 @@ const constants: IConstants = {
     TIMEOUT_START_PEER_CONNECT: 3000,
     ADDRESSES_BLACKLIST: new Set([]),
     START_FEATURE_BLOCK: {
-        ACCOUNT_BLACKLIST: 0
+        ACCOUNT_BLACKLIST: 0,
+        VOTE_WITH_ACTIVE_STAKE: 0,
     },
 };
 /* tslint:enable */
