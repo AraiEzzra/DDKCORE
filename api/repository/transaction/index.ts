@@ -21,10 +21,11 @@ class TransactionPGRepository {
     constructor() {
         this.transactionsCount = 0;
 
+        this.updateTransactionsCount();
         setInterval(this.updateTransactionsCount, UPDATE_TRANSACTIONS_COUNT_INTERVAL);
     }
 
-    private updateTransactionsCount = async (): Promise<void> => {
+    private async updateTransactionsCount(): Promise<void> {
         const result = await db.oneOrNone(query.getTransactionsCount);
         if (result) {
             this.transactionsCount = Number(result.count);
@@ -51,12 +52,12 @@ class TransactionPGRepository {
             query.getTransactions(filter, sort.map(elem => `${toSnakeCase(elem[0])} ${elem[1]}`).join(', ')), {
                 ...filter,
                 limit,
-                offset
+                offset,
             });
         if (transactions && transactions.length) {
             return {
                 transactions: transactions.map(trs => SharedTransactionPGRepo.deserialize(trs)),
-                count: this.transactionsCount,
+                count: transactions[0].count ? Number(transactions[0].count) : this.transactionsCount,
             };
         }
 

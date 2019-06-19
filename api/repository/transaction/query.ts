@@ -9,7 +9,9 @@ export default {
         ' FROM trs WHERE trs.id = ${id}',
     getTransactions: (filter, sort) =>
         `WITH max_height AS (SELECT max(height) as height FROM block)
-            SELECT trs.*, (select max_height.height - b.height from max_height) as confirmations
+            SELECT trs.*,
+            (select max_height.height - b.height from max_height) as confirmations
+            ${Object.keys(filter).length ? ', count(1) over () as count ' : ''}
             FROM trs INNER JOIN block b on trs.block_id = b.id
             ${Object.keys(filter).length ? `WHERE ${Object.keys(filter).map(
                 key => `${toSnakeCase(key)} ${key === 'asset' ? '@>' : '='} \${${key}}`).join(' OR ')
