@@ -14,7 +14,7 @@ const constants: IConstants = {
     BLOCK_SLOT_WINDOW: 5,
     ACTIVE_DELEGATES: new Map<number, number>([
         [0, 11],
-        [27800, 61], // TODO: update height before deploy to mainnet
+        [28000, 61], // TODO: update height before deploy to mainnet
     ]),
     MAX_VOTES: 201,
     MAX_VOTES_PER_TRANSACTION: 3,
