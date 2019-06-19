@@ -5,7 +5,6 @@ import { Sort } from 'api/utils/common';
 import SharedTransactionPGRepo from 'shared/repository/transaction/pg';
 import { toSnakeCase } from 'shared/util/util';
 
-
 type AllowedFilters = {
     blockId?: string;
     senderPublicKey?: string;
@@ -14,7 +13,23 @@ type AllowedFilters = {
     asset?: string;
 };
 
+const UPDATE_TRANSACTIONS_COUNT_INTERVAL = 30000;
+
 class TransactionPGRepository {
+    private transactionsCount: number;
+
+    constructor() {
+        this.transactionsCount = 0;
+
+        setInterval(this.updateTransactionsCount, UPDATE_TRANSACTIONS_COUNT_INTERVAL);
+    }
+
+    private updateTransactionsCount = async (): Promise<void> => {
+        const result = await db.oneOrNone(query.getTransactionsCount);
+        if (result) {
+            this.transactionsCount = Number(result.count);
+        }
+    }
 
     async getOne(id: string): Promise<Transaction<IAsset> | null> {
         const transaction = await db.oneOrNone(query.getTransaction, { id });
@@ -41,13 +56,13 @@ class TransactionPGRepository {
         if (transactions && transactions.length) {
             return {
                 transactions: transactions.map(trs => SharedTransactionPGRepo.deserialize(trs)),
-                count: Number(transactions[0].count)
+                count: this.transactionsCount,
             };
         }
 
         return {
             transactions: [],
-            count: 0
+            count: 0,
         };
 
     }
@@ -66,7 +81,7 @@ class TransactionPGRepository {
                 transactions: transactions.map(
                     trs => SharedTransactionPGRepo.deserialize(trs) as Transaction<IAssetVote>
                 ),
-                count: Number(transactions[0].count)
+                count: this.transactionsCount,
             };
         }
 
