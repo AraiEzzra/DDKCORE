@@ -385,9 +385,9 @@ class BlockService {
         const lastBlockSlotNumber = SlotService.getSlotNumber(lastBlock.createdAt);
         const currentSlotNumber = SlotService.getSlotNumber();
 
-        const activeDelegateCount = DelegateService.getActiveDelegatesCount();
+        const activeDelegatesCount = DelegateService.getActiveDelegatesCount();
         if (
-            receivedBlockSlotNumber > currentSlotNumber + activeDelegateCount - 1 ||
+            receivedBlockSlotNumber > currentSlotNumber + activeDelegatesCount - 1 ||
             receivedBlockSlotNumber <= lastBlockSlotNumber
         ) {
             errors.push('Invalid block timestamp');
