@@ -57,7 +57,7 @@ class TransactionPGRepository {
         if (transactions && transactions.length) {
             return {
                 transactions: transactions.map(trs => SharedTransactionPGRepo.deserialize(trs)),
-                count: transactions[0].count ? Number(transactions[0].count) : this.transactionsCount,
+                count: Object.keys(filter).length ? Number(transactions[0].count) : this.transactionsCount,
             };
         }
 
