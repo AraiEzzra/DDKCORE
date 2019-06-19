@@ -1,12 +1,15 @@
 // TODO add blockHeight
 import { toSnakeCase } from 'shared/util/util';
 
+const confirmationsSelector = `(SELECT max(height) from block) - ` +
+    ` (select height from block where block.id = trs.block_id) as confirmations`;
+
 export default {
-    getTransaction: 'SELECT *,' +
-        ' (SELECT max(height) from block) - (select height from block where block.id = trs.block_id) as confirmations' +
+    getTransaction: `SELECT *, ${confirmationsSelector} ` +
         ' FROM trs WHERE trs.id = ${id}',
     getTransactions: (filter, sort) =>
-        `SELECT *, 0 as confirmations, count(1) over () as count FROM trs
+        `SELECT *, ${confirmationsSelector}, ` +
+        ` count(1) over () as count FROM trs
           ${Object.keys(filter).length
             ? `WHERE ${Object.keys(filter).map(
                 key => `${toSnakeCase(key)} ${key === 'asset' ? '@>' : '='} \${${key}}`).join(' OR ')
