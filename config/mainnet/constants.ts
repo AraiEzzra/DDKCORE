@@ -101,6 +101,7 @@ const constants: IConstants = {
     ADDRESSES_BLACKLIST: new Set([
         BigInt('11696703665952770027'), // Airdrop
         BigInt('13566253584516829136'), // Total supply
+        BigInt('7043806098403384872'), // From genesis block
         BigInt('14418097244087628'),
         BigInt('44824014520664003'),
         BigInt('55875831923250533'),
