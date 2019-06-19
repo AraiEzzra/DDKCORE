@@ -21,8 +21,12 @@ class TransactionPGRepository {
         return transaction ? SharedTransactionPGRepo.deserialize(transaction) : null;
     }
 
-    async getMany(filter: AllowedFilters, sort: Array<Sort>, limit: number, offset: number):
-        Promise<{ transactions: Array<Transaction<IAsset>>, count: number }> {
+    async getMany(
+        filter: AllowedFilters,
+        sort: Array<Sort>,
+        limit: number,
+        offset: number,
+    ): Promise<{ transactions: Array<Transaction<IAsset>>, count: number }> {
         if (filter && filter.recipientAddress) {
             filter.asset = `{"recipientAddress": "${filter.recipientAddress}"}`;
             delete filter.recipientAddress;
