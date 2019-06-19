@@ -20,8 +20,6 @@ export function messageON(topicName: string, data: any = {}): void {
 
 export function createTaskON(topicName: string, callTime: number, data: any = null, force: boolean = true): void {
     // todo implement function to create schedule fro messageON
-    logger.debug(`[Bus][createTaskON] topicName ${topicName}, time: ${callTime}`);
-
     if (tasks.get(topicName)) {
         if (!force) {
             return;
@@ -29,6 +27,8 @@ export function createTaskON(topicName: string, callTime: number, data: any = nu
         logger.debug(`[Bus][createTaskON] topicName ${topicName}, the timer has been stopped`);
         clearTimeout(tasks.get(topicName));
     }
+
+    logger.debug(`[Bus][createTaskON] topicName ${topicName}, time: ${callTime}`);
     tasks.set(topicName, setTimeout(() => {
         messageON(topicName, data);
         tasks.delete(topicName);

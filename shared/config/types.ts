@@ -69,6 +69,7 @@ export type IConstants = {
         MIN: number;
         MAX: number;
     };
+    PEER_PING_PONG_INTERVAL: number;
     PEERS_COUNT_FOR_DISCOVER: number;
     PRE_MINED_ACCOUNTS: Array<Address>;
     TIMEOUT_START_PEER_CONNECT: number;

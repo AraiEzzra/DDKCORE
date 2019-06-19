@@ -78,7 +78,7 @@ const constants: IConstants = {
     MAX_PEERS_CONNECTED: 26,
     PEERS_DISCOVER: {
         MAX: 25,
-        MIN: 12,
+        MIN: 8,
     },
     TIMEOUT_START_SYNC_BLOCKS: 20000,
     TIMEOUT_START_PEER_REQUEST: 10000,
@@ -86,6 +86,7 @@ const constants: IConstants = {
         MIN: 20 * 60 * 1000,
         MAX: 25 * 60 * 1000,
     },
+    PEER_PING_PONG_INTERVAL: 15000,
     PEERS_COUNT_FOR_DISCOVER: 6,
     PRE_MINED_ACCOUNTS: [
         BigInt('13566253584516829136'),
@@ -103,6 +104,7 @@ const constants: IConstants = {
     ADDRESSES_BLACKLIST: new Set([
         BigInt('11696703665952770027'), // Airdrop
         BigInt('13566253584516829136'), // Total supply
+        BigInt('7043806098403384872'), // From genesis block
         BigInt('14418097244087628'),
         BigInt('44824014520664003'),
         BigInt('55875831923250533'),
