@@ -11,7 +11,7 @@ export type IConstants = {
         AMOUNT: number;
     };
     BLOCK_SLOT_WINDOW: number;
-    ACTIVE_DELEGATES: number;
+    ACTIVE_DELEGATES: Map<number, number>;
     MAX_VOTES: number;
     MAX_VOTES_PER_TRANSACTION: number;
     MAX_DELEGATE_USERNAME_LENGTH: number;

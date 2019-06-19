@@ -22,7 +22,7 @@ import SlotService from 'core/service/slot';
 import RoundRepository from 'core/repository/round';
 import { MIN_ROUND_BLOCK } from 'core/util/block';
 import { getFirstSlotNumberInRound } from 'core/util/slot';
-import DelegateRepository from 'core/repository/delegate';
+import DelegateService from 'core/service/delegate';
 import { ActionTypes } from 'core/util/actionTypes';
 import { Migrator } from 'core/database/migrator';
 import { ERROR_CODES } from 'shared/config/errorCodes';
@@ -103,7 +103,7 @@ class Loader {
                     const newRound = RoundService.generate(
                         getFirstSlotNumberInRound(
                             block.createdAt,
-                            DelegateRepository.getActiveDelegates().length,
+                            DelegateService.getActiveDelegatesCount(),
                         ),
                     );
 

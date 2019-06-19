@@ -42,23 +42,8 @@ class DelegateRepository {
         return this.memoryDelegates.size;
     }
 
-    public getActiveDelegates(limit?: number, offset?: number): Array<Delegate> {
-        let activeDelegates: Array<Delegate> = [...this.memoryDelegates.values()].sort((a, b) => {
-            if (a.confirmedVoteCount < b.confirmedVoteCount) {
-                return 1;
-            }
-            if (a.confirmedVoteCount > b.confirmedVoteCount) {
-                return -1;
-            }
-            return 0;
-        }).slice(0, config.CONSTANTS.ACTIVE_DELEGATES);
-
-        if (activeDelegates.length > 0) {
-            if (limit) {
-                activeDelegates = activeDelegates.slice(offset || 0, (offset || 0) + limit);
-            }
-            return activeDelegates;
-        }
+    public getAll(): Array<Delegate> {
+        return [...this.memoryDelegates.values()];
     }
 
     public isUserNameExists(username: string): boolean {

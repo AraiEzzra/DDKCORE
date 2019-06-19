@@ -12,6 +12,8 @@ import mainnetGenesisBlock from 'config/mainnet/genesisBlock.json';
 import testConstants from 'config/test/constants';
 import testGenesisBlock from 'config/test/genesisBlock.json';
 import { BlockModel } from 'shared/model/block';
+import { ERROR_CODES } from 'shared/config/errorCodes';
+import { logger } from 'shared/util/logger';
 
 const getConstantsByNodeEnv = (nodeEnv: string): IConstants => {
     switch (nodeEnv) {
@@ -181,6 +183,14 @@ class Config {
 
         this.CONSTANTS = getConstantsByNodeEnv(this.NODE_ENV_IN);
         this.GENESIS_BLOCK = getGenesisBlockByNodeEnv(this.NODE_ENV_IN) as any;
+
+        let lastHeight = -1;
+        for (const [height] of this.CONSTANTS.ACTIVE_DELEGATES) {
+            if (height <= lastHeight) {
+                throw `Invalid active delegates config. Height should only increase`;
+            }
+            lastHeight = height;
+        }
 
         const validator: Validator = new ZSchema({});
         validator.validate(this, configSchema, (err, valid) => {
