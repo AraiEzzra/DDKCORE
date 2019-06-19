@@ -13,7 +13,6 @@ import { subjectOn, MainTasks } from 'shared/util/bus';
 import { logger } from 'shared/util/logger';
 import config from 'shared/config';
 import { ResponseEntity } from 'shared/model/response';
-import { ActionTypes } from 'core/util/actionTypes';
 
 type Event = {
     topicName: string;
