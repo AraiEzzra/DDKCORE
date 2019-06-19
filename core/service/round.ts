@@ -4,6 +4,7 @@ import { Round, Slot } from 'shared/model/round';
 import RoundRepository from 'core/repository/round';
 import { createTaskON, resetTaskON } from 'shared/util/bus';
 import DelegateRepository from 'core/repository/delegate';
+import DelegateService from 'core/service/delegate';
 import { logger } from 'shared/util/logger';
 import { ActionTypes } from 'core/util/actionTypes';
 import { getLastSlotNumberInRound } from 'core/util/round';
@@ -43,7 +44,7 @@ class RoundService implements IRoundService {
             const newRound = this.generate(
                 getFirstSlotNumberInRound(
                     SlotService.getTruncTime(),
-                    DelegateRepository.getActiveDelegates().length
+                    DelegateService.getActiveDelegatesCount(),
                 ),
             );
             RoundRepository.add(newRound);
@@ -118,7 +119,7 @@ class RoundService implements IRoundService {
 
     public generate(firstSlotNumber: number): Round {
         const lastBlock = BlockRepository.getLastBlock();
-        const delegates = DelegateRepository.getActiveDelegates();
+        const delegates = DelegateService.getAllActiveDelegates();
         const slots = SlotService.generateSlots(lastBlock.id, delegates, firstSlotNumber);
 
         const newCurrentRound = new Round({
