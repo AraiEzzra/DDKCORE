@@ -20,11 +20,12 @@ class DelegateService {
         const activeDelegatesCount = this.getActiveDelegatesCount();
 
         return delegates.sort((a, b) => {
-            const voteCountDifference = a.confirmedVoteCount - b.confirmedVoteCount;
-            if (voteCountDifference) {
-                return voteCountDifference;
+            if (a.confirmedVoteCount < b.confirmedVoteCount) {
+                return 1;
             }
-
+            if (a.confirmedVoteCount > b.confirmedVoteCount) {
+                return -1;
+            }
             if (a.account.publicKey > b.account.publicKey) {
                 return 1;
             }
