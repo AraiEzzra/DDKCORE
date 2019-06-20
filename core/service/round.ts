@@ -164,6 +164,7 @@ class RoundService implements IRoundService {
         }
 
         const isForward = slotNumber > getLastSlotNumberInRound(round);
+        const lastBlockSlotNumber = SlotService.getSlotNumber(BlockRepository.getLastBlock().createdAt);
 
         while (!Object.values(round.slots).find(slot => slot.slot === slotNumber)) {
             if (isForward) {
@@ -182,7 +183,14 @@ class RoundService implements IRoundService {
                         `to slot ${slotNumber}`
                     );
                     break;
+                } else if (Object.values(round.slots).find(slot => slot.slot === lastBlockSlotNumber)) {
+                    logger.error(
+                        `${this.logPrefix}[restoreToSlot] Impossible to backward round ` +
+                        `last block is in current round`
+                    );
+                    break;
                 }
+
                 this.backwardProcess();
             }
 

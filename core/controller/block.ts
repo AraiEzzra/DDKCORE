@@ -61,20 +61,14 @@ class BlockController extends BaseController {
         const receiveBlockResponse = await BlockService.receiveBlock(receivedBlock);
         TransactionQueue.unlock();
 
-        // TODO: check it
-        const currentSlotNumber = SlotService.getSlotNumber(SlotService.getTime(Date.now()));
-        RoundService.restoreToSlot(currentSlotNumber);
-
-        RoundService.restore(false);
-
         if (!receiveBlockResponse.success) {
             if (!SyncService.getMyConsensus()) {
                 messageON(ActionTypes.EMIT_SYNC_BLOCKS);
             }
             return new ResponseEntity<void>({
                 errors: [
-                    `[Controller][Block][receiveBlockResponse] block: ${receivedBlock.id}
-                    errors: ${validateResponse.errors}`
+                    `[Controller][Block][receiveBlockResponse] block: ${receivedBlock.id} ` +
+                    `errors: ${validateResponse.errors}`
                 ]
             });
         }
