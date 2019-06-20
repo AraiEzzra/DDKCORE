@@ -14,6 +14,21 @@ export const SCHEMAS_BLOCKS = [
         required: ['id']
     },
     {
+        id: API_ACTION_TYPES.GET_BLOCK_BY_HEIGHT,
+        type: 'object',
+        properties: {
+            height: {
+                type: 'integer',
+                minimum: 1
+            },
+        },
+        required: ['height']
+    },
+    {
+        id: API_ACTION_TYPES.GET_LAST_BLOCK,
+        type: 'object',
+    },
+    {
         id: API_ACTION_TYPES.GET_BLOCKS,
         type: 'object',
         properties: {
