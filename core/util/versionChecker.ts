@@ -21,6 +21,8 @@ export class VersionChecker {
         for (let index = 0; index < this.splittedMinVersion.length; index++) {
             if (Number(splittedVersion[index]) < Number(this.splittedMinVersion[index])) {
                 return false;
+            } else if (Number(splittedVersion[index]) > Number(this.splittedMinVersion[index])) {
+                return true;
             }
         }
 
