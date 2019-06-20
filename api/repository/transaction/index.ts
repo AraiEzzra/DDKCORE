@@ -5,7 +5,6 @@ import { Sort } from 'shared/util/common';
 import SharedTransactionPGRepo from 'shared/repository/transaction/pg';
 import { toSnakeCase } from 'shared/util/util';
 
-
 type AllowedFilters = {
     blockId?: string;
     senderPublicKey?: string;
@@ -14,15 +13,36 @@ type AllowedFilters = {
     asset?: string;
 };
 
+const UPDATE_TRANSACTIONS_COUNT_INTERVAL = 30000;
+
 class TransactionPGRepository {
+    private transactionsCount: number;
+
+    constructor() {
+        this.transactionsCount = 0;
+
+        this.updateTransactionsCount();
+        setInterval(this.updateTransactionsCount, UPDATE_TRANSACTIONS_COUNT_INTERVAL);
+    }
+
+    private async updateTransactionsCount(): Promise<void> {
+        const result = await db.oneOrNone(query.getTransactionsCount);
+        if (result) {
+            this.transactionsCount = Number(result.count);
+        }
+    }
 
     async getOne(id: string): Promise<Transaction<IAsset> | null> {
         const transaction = await db.oneOrNone(query.getTransaction, { id });
         return transaction ? SharedTransactionPGRepo.deserialize(transaction) : null;
     }
 
-    async getMany(filter: AllowedFilters, sort: Array<Sort>, limit: number, offset: number):
-        Promise<{ transactions: Array<Transaction<IAsset>>, count: number }> {
+    async getMany(
+        filter: AllowedFilters,
+        sort: Array<Sort>,
+        limit: number,
+        offset: number,
+    ): Promise<{ transactions: Array<Transaction<IAsset>>, count: number }> {
         if (filter && filter.recipientAddress) {
             filter.asset = `{"recipientAddress": "${filter.recipientAddress}"}`;
             delete filter.recipientAddress;
@@ -32,18 +52,18 @@ class TransactionPGRepository {
             query.getTransactions(filter, sort.map(elem => `${toSnakeCase(elem[0])} ${elem[1]}`).join(', ')), {
                 ...filter,
                 limit,
-                offset
+                offset,
             });
         if (transactions && transactions.length) {
             return {
                 transactions: transactions.map(trs => SharedTransactionPGRepo.deserialize(trs)),
-                count: Number(transactions[0].count)
+                count: Object.keys(filter).length ? Number(transactions[0].count) : this.transactionsCount,
             };
         }
 
         return {
             transactions: [],
-            count: 0
+            count: 0,
         };
 
     }
@@ -62,7 +82,7 @@ class TransactionPGRepository {
                 transactions: transactions.map(
                     trs => SharedTransactionPGRepo.deserialize(trs) as Transaction<IAssetVote>
                 ),
-                count: Number(transactions[0].count)
+                count: this.transactionsCount,
             };
         }
 

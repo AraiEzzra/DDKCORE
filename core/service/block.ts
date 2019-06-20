@@ -1,12 +1,12 @@
 import * as crypto from 'crypto';
 import * as sodium from 'sodium-native';
-import BUFFER from 'core/util/buffer';
-
 import Validator from 'z-schema';
+
+import BUFFER from 'core/util/buffer';
 import ZSchema from 'shared/validate/z_schema';
 import { logger } from 'shared/util/logger';
 import { Account } from 'shared/model/account';
-import { Block, BlockModel, SerializedBlock } from 'shared/model/block';
+import { Block, BlockModel } from 'shared/model/block';
 import BlockRepo from 'core/repository/block';
 import SharedTransactionRepo from 'shared/repository/transaction';
 import BlockPGRepo from 'core/repository/block/pg';
@@ -53,6 +53,7 @@ import { getFirstSlotNumberInRound } from 'core/util/slot';
 import RoundService from 'core/service/round';
 import DelegateRepository from 'core/repository/delegate';
 import { messageON } from 'shared/util/bus';
+import DelegateService from 'core/service/delegate';
 
 const validator: Validator = new ZSchema({});
 
@@ -68,7 +69,6 @@ class BlockService {
 
     public async generateBlock(keyPair: IKeyPair, timestamp: number): Promise<ResponseEntity<void>> {
         logger.debug(`[Service][Block][generateBlock] timestamp ${timestamp}`);
-        this.lockTransactionQueueProcess();
 
         const transactions: Array<Transaction<object>> =
             TransactionPool.popSortedUnconfirmedTransactions(config.CONSTANTS.MAX_TRANSACTIONS_PER_BLOCK);
@@ -87,11 +87,8 @@ class BlockService {
             TransactionDispatcher.returnToQueueConflictedTransactionFromPool(transactions);
 
             processBlockResponse.errors.push('[Process][newGenerateBlock] generate block');
-            this.unlockTransactionQueueProcess();
             return processBlockResponse;
         }
-
-        this.unlockTransactionQueueProcess();
 
         return new ResponseEntity<void>();
     }
@@ -105,24 +102,13 @@ class BlockService {
             } else {
                 TransactionQueue.push(trs);
                 logger.debug(
-                    `[Service][Block][pushInPool] trs ${trs.id} returned to queue by error: ${verifyResult.errors}`
+                    `[Service][Block][pushInPool] Transaction with id ${trs.id} returned to queue` +
+                    ` by error: ${verifyResult.errors.join('.')}`
                 );
             }
         }
     }
 
-    private lockTransactionQueueProcess(): void {
-        TransactionQueue.lock();
-    }
-
-    private unlockTransactionQueueProcess(): void {
-        TransactionQueue.unlock();
-        setImmediate(TransactionQueue.process);
-    }
-
-    /**
-     * @implements system.update
-     */
     private async process(
         block: Block,
         broadcast: boolean,
@@ -175,7 +161,6 @@ class BlockService {
             return new ResponseEntity<void>({ errors: [...applyBlockResponse.errors, 'process'] });
         }
 
-        TransactionQueue.reshuffle();
         return new ResponseEntity<void>();
     }
 
@@ -384,8 +369,9 @@ class BlockService {
         const lastBlockSlotNumber = SlotService.getSlotNumber(lastBlock.createdAt);
         const currentSlotNumber = SlotService.getSlotNumber();
 
+        const activeDelegatesCount = DelegateService.getActiveDelegatesCount();
         if (
-            receivedBlockSlotNumber > currentSlotNumber + config.CONSTANTS.ACTIVE_DELEGATES - 1 ||
+            receivedBlockSlotNumber > currentSlotNumber + activeDelegatesCount - 1 ||
             receivedBlockSlotNumber <= lastBlockSlotNumber
         ) {
             errors.push('Invalid block timestamp');
@@ -571,15 +557,13 @@ class BlockService {
             `slot: ${SlotService.getSlotNumber(block.createdAt)}`
         );
 
-        this.lockTransactionQueueProcess();
-
         const removedTransactions = TransactionPool.batchRemove(block.transactions);
         logger.debug(
             `[Service][Block][receiveBlock] removed transactions count: ${removedTransactions.length}`
         );
 
         if (!RoundRepository.getCurrentRound()) {
-            const activeDelegatesCount = DelegateRepository.getActiveDelegates().length;
+            const activeDelegatesCount = DelegateService.getActiveDelegatesCount();
             const firstSlotNumber = getFirstSlotNumberInRound(block.createdAt, activeDelegatesCount);
             const newRound = RoundService.generate(firstSlotNumber);
             RoundRepository.add(newRound);
@@ -609,7 +593,7 @@ class BlockService {
             this.pushInPool(transactionForReturn);
             TransactionDispatcher.returnToQueueConflictedTransactionFromPool(block.transactions);
         }
-        this.unlockTransactionQueueProcess();
+
         return new ResponseEntity<void>({ errors });
     }
 

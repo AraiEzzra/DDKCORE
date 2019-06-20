@@ -12,7 +12,9 @@ const constants: IConstants = {
         AMOUNT: 4500000000000000,
     },
     BLOCK_SLOT_WINDOW: 5,
-    ACTIVE_DELEGATES: 60,
+    ACTIVE_DELEGATES: new Map<number, number>([
+        [0, 61],
+    ]),
     MAX_VOTES: 11,
     MAX_VOTES_PER_TRANSACTION: 3,
     MAX_DELEGATE_USERNAME_LENGTH: 20,
@@ -83,6 +85,7 @@ const constants: IConstants = {
         MIN: 25 * 60 * 1000,
         MAX: 30 * 60 * 1000,
     },
+    PEER_PING_PONG_INTERVAL: 15000,
     PEERS_COUNT_FOR_DISCOVER: 6,
     PRE_MINED_ACCOUNTS: [
         BigInt('7897332094363171058'),
@@ -93,7 +96,8 @@ const constants: IConstants = {
     TIMEOUT_START_PEER_CONNECT: 3000,
     ADDRESSES_BLACKLIST: new Set([]),
     START_FEATURE_BLOCK: {
-        ACCOUNT_BLACKLIST: 0
+        ACCOUNT_BLACKLIST: 0,
+        VOTE_WITH_ACTIVE_STAKE: 0,
     },
 };
 /* tslint:enable */

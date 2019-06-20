@@ -12,7 +12,10 @@ const constants: IConstants = {
         AMOUNT: 4500000000000000,
     },
     BLOCK_SLOT_WINDOW: 5,
-    ACTIVE_DELEGATES: 11,
+    ACTIVE_DELEGATES: new Map<number, number>([
+        [0, 11],
+        [28050, 61], // TODO: update height before deploy to mainnet
+    ]),
     MAX_VOTES: 201,
     MAX_VOTES_PER_TRANSACTION: 3,
     MAX_DELEGATE_USERNAME_LENGTH: 20,
@@ -75,7 +78,7 @@ const constants: IConstants = {
     MAX_PEERS_CONNECTED: 26,
     PEERS_DISCOVER: {
         MAX: 25,
-        MIN: 12,
+        MIN: 8,
     },
     TIMEOUT_START_SYNC_BLOCKS: 20000,
     TIMEOUT_START_PEER_REQUEST: 10000,
@@ -83,6 +86,7 @@ const constants: IConstants = {
         MIN: 20 * 60 * 1000,
         MAX: 25 * 60 * 1000,
     },
+    PEER_PING_PONG_INTERVAL: 15000,
     PEERS_COUNT_FOR_DISCOVER: 6,
     PRE_MINED_ACCOUNTS: [
         BigInt('13566253584516829136'),
@@ -100,6 +104,7 @@ const constants: IConstants = {
     ADDRESSES_BLACKLIST: new Set([
         BigInt('11696703665952770027'), // Airdrop
         BigInt('13566253584516829136'), // Total supply
+        BigInt('7043806098403384872'), // From genesis block
         BigInt('14418097244087628'),
         BigInt('44824014520664003'),
         BigInt('55875831923250533'),
@@ -768,6 +773,7 @@ const constants: IConstants = {
     ]),
     START_FEATURE_BLOCK: {
         ACCOUNT_BLACKLIST: 70000,
+        VOTE_WITH_ACTIVE_STAKE: 225000,
     },
 };
 /* tslint:enable */

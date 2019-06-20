@@ -13,6 +13,7 @@ import RoundService from 'core/service/round';
 import { ActionTypes } from 'core/util/actionTypes';
 import { IKeyPair } from 'shared/util/ed';
 import SharedTransactionRepo from 'shared/repository/transaction';
+import TransactionQueue from 'core/service/transactionQueue';
 
 interface BlockGenerateRequest {
     keyPair: IKeyPair;
@@ -21,7 +22,7 @@ interface BlockGenerateRequest {
 
 class BlockController extends BaseController {
 
-   @MAIN(ActionTypes.BLOCK_RECEIVE)
+    @MAIN(ActionTypes.BLOCK_RECEIVE)
     public async onReceiveBlock({ data }: { data: { block: BlockModel } }): Promise<ResponseEntity<void>> {
 
         const validateResponse = BlockService.validate(data.block);
@@ -39,13 +40,13 @@ class BlockController extends BaseController {
         );
         let lastBlock = BlockRepository.getLastBlock();
 
-        const validateReceivedBlocKResponse = BlockService.validateReceivedBlock(lastBlock, receivedBlock);
-        if (!validateReceivedBlocKResponse.success) {
+        const validateReceivedBlockResponse = BlockService.validateReceivedBlock(lastBlock, receivedBlock);
+        if (!validateReceivedBlockResponse.success) {
             return new ResponseEntity<void>({
                 errors: [
                     '[Controller][Block][onNewReceiveBlock] Received block not valid: ' +
-                    `${validateReceivedBlocKResponse.errors}`
-                ]
+                    `${validateReceivedBlockResponse.errors}`
+                ],
             });
         }
 
@@ -55,12 +56,10 @@ class BlockController extends BaseController {
         }
 
         RoundService.restoreToSlot(SlotService.getSlotNumber(receivedBlock.createdAt));
+
+        TransactionQueue.lock();
         const receiveBlockResponse = await BlockService.receiveBlock(receivedBlock);
-
-        const currentSlotNumber = SlotService.getSlotNumber(SlotService.getTime(Date.now()));
-        RoundService.restoreToSlot(currentSlotNumber);
-
-        RoundService.restore(false);
+        TransactionQueue.unlock();
 
         if (!receiveBlockResponse.success) {
             if (!SyncService.getMyConsensus()) {
@@ -68,8 +67,8 @@ class BlockController extends BaseController {
             }
             return new ResponseEntity<void>({
                 errors: [
-                    `[Controller][Block][receiveBlockResponse] block: ${receivedBlock.id}
-                    errors: ${validateResponse.errors}`
+                    `[Controller][Block][receiveBlockResponse] block: ${receivedBlock.id} ` +
+                    `errors: ${validateResponse.errors}`
                 ]
             });
         }
@@ -87,7 +86,11 @@ class BlockController extends BaseController {
             messageON(ActionTypes.EMIT_SYNC_BLOCKS);
             return new ResponseEntity<void>({ errors: ['Invalid consensus'] });
         }
+
+        TransactionQueue.lock();
         const response: ResponseEntity<void> = await BlockService.generateBlock(data.keyPair, data.timestamp);
+        TransactionQueue.unlock();
+
         if (!response.success) {
             response.errors.push('generateBlock');
         }

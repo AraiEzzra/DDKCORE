@@ -1,20 +1,23 @@
-import { BlockData, PeerAddress } from 'shared/model/types';
+import { BlockData } from 'shared/model/types';
 import { MAX_PEER_BLOCKS_IDS } from 'core/util/const';
 import { FullHeaders, SerializedFullHeaders } from 'shared/model/Peer/fullHeaders';
 import { Headers } from 'shared/model/Peer/headers';
 import { Peer, SerializedPeer } from 'shared/model/Peer/index';
+import { PEER_SOCKET_TYPE } from 'shared/model/types';
 
 type SerializedMemoryPeer = SerializedPeer & {
     headers: SerializedFullHeaders;
+    connectionType: PEER_SOCKET_TYPE;
 };
 
 export class MemoryPeer extends Peer {
     private _headers: FullHeaders;
+    private _connectionType: PEER_SOCKET_TYPE;
 
     constructor(data: SerializedMemoryPeer) {
         super(data);
         this._headers = new FullHeaders(data.headers);
-
+        this._connectionType = data.connectionType;
     }
 
     private clearBlockIdPoolByHeight(height: number) {

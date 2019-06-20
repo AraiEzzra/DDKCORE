@@ -6,21 +6,13 @@ import { sortByKey } from 'shared/util/util';
 import config from 'shared/config';
 import { ActionTypes } from 'core/util/actionTypes';
 import PeerNetworkRepository from 'core/repository/peer/peerNetwork';
-import { PeerAddress } from 'shared/model/types';
+import { PeerAddress, PeerHeadersReceived } from 'shared/model/types';
 import PeerService from 'core/service/peer';
-import { PEER_SOCKET_TYPE } from 'core/driver/socket/socketsTypes';
+import { PEER_SOCKET_TYPE } from 'shared/model/types';
 import SystemRepository from 'core/repository/system';
-import { SerializedFullHeaders } from 'shared/model/Peer/fullHeaders';
 import { asyncTimeout } from 'shared/util/timer';
 
 const RECONNECT_DELAY_MS = 900;
-
-type ReceiveHeaders = {
-    peerAddress: PeerAddress,
-    peerHeaders: SerializedFullHeaders,
-    socket,
-    type: PEER_SOCKET_TYPE,
-};
 
 export class PeerController extends BaseController {
 
@@ -81,14 +73,24 @@ export class PeerController extends BaseController {
     }
 
     @ON(ActionTypes.HEADERS_RECEIVE)
-    headersReceive(data: ReceiveHeaders) {
+    headersReceive(data: PeerHeadersReceived) {
         logger.debug(`[Controller][Peer][headersReceive] peer ${data.peerAddress.ip} connecting as ${data.type}`);
-        const result = PeerService.add(data.peerAddress, data.peerHeaders, data.socket);
+        const result = PeerService.add(data);
         if (result && data.type === PEER_SOCKET_TYPE.CLIENT) {
             const peer = PeerNetworkRepository.get(data.peerAddress);
             peer.sendFullHeaders(SystemRepository.getFullHeaders().serialize());
 
         }
+    }
+
+    @ON(ActionTypes.EMIT_PING)
+    ping(): void {
+        PeerService.ping();
+    }
+
+    @ON(ActionTypes.PING)
+    pong({ requestPeerInfo }): void {
+        PeerService.pong(requestPeerInfo);
     }
 
     @ON(ActionTypes.REMOVE_PEER)

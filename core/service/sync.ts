@@ -191,12 +191,12 @@ export class SyncService implements ISyncService {
 
             const receivedBlock = Block.deserialize(block);
             const lastBlock = BlockRepository.getLastBlock();
-            const validateReceivedBlocKResponse = BlockService.validateReceivedBlock(lastBlock, receivedBlock);
+            const validateReceivedBlockResponse = BlockService.validateReceivedBlock(lastBlock, receivedBlock);
 
-            if (!validateReceivedBlocKResponse.success) {
+            if (!validateReceivedBlockResponse.success) {
                 errors.push(
                     `[Service][Sync][onSaveNewBlock] Received block not valid:` +
-                    `${validateReceivedBlocKResponse.errors}`,
+                    `${validateReceivedBlockResponse.errors}`,
                 );
                 break;
             }

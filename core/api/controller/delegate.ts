@@ -3,9 +3,9 @@ import { Message } from 'shared/model/message';
 import { ResponseEntity } from 'shared/model/response';
 import { Pagination } from 'shared/util/common';
 import DelegateRepository from 'core/repository/delegate';
+import DelegateService from 'core/service/delegate';
 import AccountRepository from 'core/repository/account';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
-import config from 'shared/config';
 import { SerializedDelegate } from 'shared/model/delegate';
 
 class DelegateController {
@@ -36,10 +36,10 @@ class DelegateController {
     ): ResponseEntity<{ delegates: Array<SerializedDelegate>, count: number }> {
         return new ResponseEntity({
             data: {
-                delegates: DelegateRepository.getActiveDelegates(message.body.limit, message.body.offset).map(
+                delegates: DelegateService.getActiveDelegates(message.body.limit, message.body.offset).map(
                     delegate => DelegateRepository.serialize(delegate)
                 ),
-                count: Math.min(config.CONSTANTS.ACTIVE_DELEGATES, DelegateRepository.getCount()),
+                count: Math.min(DelegateService.getActiveDelegatesCount(), DelegateRepository.getCount()),
             }
         });
     }

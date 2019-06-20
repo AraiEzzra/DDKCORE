@@ -5,12 +5,12 @@ import { API_SOCKET_SERVER_CONFIG, CORE_SOCKET_CLIENT_CONFIG } from 'shared/conf
 import { messageON } from 'shared/util/bus';
 import { logger } from 'shared/util/logger';
 import { IPRegExp } from 'core/util/common';
-import { PeerAddress } from 'shared/model/types';
+import { PEER_SOCKET_TYPE, PeerAddress } from 'shared/model/types';
 import { ActionTypes } from 'core/util/actionTypes';
 import { SerializedFullHeaders } from 'shared/model/Peer/fullHeaders';
-import { PEER_SOCKET_EVENTS, PEER_SOCKET_TYPE } from 'core/driver/socket/socketsTypes';
-
+import { PEER_SOCKET_EVENTS } from 'core/driver/socket/socketsTypes';
 export const REQUEST_TIMEOUT = '408 Request Timeout';
+
 export class Socket {
     private static instance: Socket;
     private static ioServer;
@@ -56,7 +56,6 @@ export class Socket {
             logger.warn(`[SOCKET][onServerConnect] too many connections, sorry ${ip}`);
             socket.disconnect(true);
         }
-
         socket.on(PEER_SOCKET_EVENTS.HEADERS, (response) => {
                 Socket.instance.onHeadersReceive(
                     response, {

@@ -6,6 +6,7 @@ import { Round, Slot } from 'shared/model/round';
 import RoundRepository from 'core/repository/round';
 import { createTaskON, resetTaskON } from 'shared/util/bus';
 import DelegateRepository from 'core/repository/delegate';
+import DelegateService from 'core/service/delegate';
 import { logger } from 'shared/util/logger';
 import { ActionTypes } from 'core/util/actionTypes';
 import { getLastSlotNumberInRound } from 'core/util/round';
@@ -47,7 +48,7 @@ class RoundService implements IRoundService {
             const newRound = this.generate(
                 getFirstSlotNumberInRound(
                     SlotService.getTruncTime(),
-                    DelegateRepository.getActiveDelegates().length
+                    DelegateService.getActiveDelegatesCount(),
                 ),
             );
             RoundRepository.add(newRound);
@@ -146,7 +147,7 @@ class RoundService implements IRoundService {
 
     public generate(firstSlotNumber: number): Round {
         const lastBlock = BlockRepository.getLastBlock();
-        const delegates = DelegateRepository.getActiveDelegates();
+        const delegates = DelegateService.getAllActiveDelegates();
         const slots = SlotService.generateSlots(lastBlock.id, delegates, firstSlotNumber);
 
         const round = new Round({
@@ -199,6 +200,7 @@ class RoundService implements IRoundService {
         }
 
         const isForward = slotNumber > getLastSlotNumberInRound(round);
+        const lastBlockSlotNumber = SlotService.getSlotNumber(BlockRepository.getLastBlock().createdAt);
 
         while (!Object.values(round.slots).find(slot => slot.slot === slotNumber)) {
             if (isForward) {
@@ -217,7 +219,14 @@ class RoundService implements IRoundService {
                         `to slot ${slotNumber}`
                     );
                     break;
+                } else if (Object.values(round.slots).find(slot => slot.slot === lastBlockSlotNumber)) {
+                    logger.error(
+                        `${this.logPrefix}[restoreToSlot] Impossible to backward round ` +
+                        `last block is in current round`
+                    );
+                    break;
                 }
+
                 this.backwardProcess();
             }
 

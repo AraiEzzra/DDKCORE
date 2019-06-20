@@ -58,6 +58,10 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
 
     unlock(): void {
         this.locked = false;
+
+        this.reshuffle();
+
+        setImmediate(this.process);
     }
 
     getLockStatus(): boolean {
@@ -95,7 +99,6 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
         this.queue.push(...this.conflictedQueue);
         this.conflictedQueue.length = 0;
         this.queue.sort(transactionSortFunc);
-        setImmediate(this.process);
     }
 
     // TODO change to mapReduce
@@ -129,7 +132,8 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
         if (!verifyStatus.success) {
             logger.debug(
                 `[Service][TransactionQueue][process][verifyUnconfirmed] ` +
-                `${JSON.stringify(verifyStatus.errors.join('. '))}. Transaction: ${trs.id}`
+                `${JSON.stringify(verifyStatus.errors.join('. '))}. ` +
+                `Transaction id: ${trs.id}. Account address: ${sender.address}`
             );
             trs.status = TransactionStatus.DECLINED;
             TransactionHistoryRepository.addEvent(trs, { action: TransactionLifecycle.DECLINE });

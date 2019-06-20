@@ -11,7 +11,7 @@ export type IConstants = {
         AMOUNT: number;
     };
     BLOCK_SLOT_WINDOW: number;
-    ACTIVE_DELEGATES: number;
+    ACTIVE_DELEGATES: Map<number, number>;
     MAX_VOTES: number;
     MAX_VOTES_PER_TRANSACTION: number;
     MAX_DELEGATE_USERNAME_LENGTH: number;
@@ -69,11 +69,13 @@ export type IConstants = {
         MIN: number;
         MAX: number;
     };
+    PEER_PING_PONG_INTERVAL: number;
     PEERS_COUNT_FOR_DISCOVER: number;
     PRE_MINED_ACCOUNTS: Array<Address>;
     TIMEOUT_START_PEER_CONNECT: number;
     ADDRESSES_BLACKLIST: Set<Address>;
     START_FEATURE_BLOCK: {
         ACCOUNT_BLACKLIST: number;
+        VOTE_WITH_ACTIVE_STAKE: number;
     }
 };

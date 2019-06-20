@@ -11,10 +11,7 @@ import { Peer, SerializedPeer } from 'shared/model/Peer/index';
 import { REQUEST_TIMEOUT } from 'core/driver/socket';
 
 export const ALLOWED_METHODS: Set<string> = new Set([
-    ActionTypes.RESPONSE_BLOCKS,
-    ActionTypes.REQUEST_COMMON_BLOCKS,
     ActionTypes.PEER_HEADERS_UPDATE,
-    ActionTypes.REQUEST_PEERS,
 ]);
 
 type SerializedNetworkPeer = SerializedPeer & {
@@ -143,7 +140,7 @@ export class NetworkPeer extends Peer {
 
     private _onRPCRequest(response: string): void {
         const { code, data, requestId } = new SocketResponseRPC(response);
-        logger.debug(
+        logger.trace(
             `[Peer][${this.peerAddress.ip}:${this.peerAddress.port}][onRPCRequest] CODE: ${code}, ` +
             `REQUEST_ID: ${requestId}}`
         );
