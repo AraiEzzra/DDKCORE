@@ -69,6 +69,7 @@ export class SyncController extends BaseController {
                 errors.push(`${logMessage}. Consensus is ${SyncService.getConsensus()}%`);
             } else if (!PeerNetworkRepository.count) {
                 errors.push(`${logMessage}. No peers to sync`);
+                messageON(ActionTypes.PEER_CONNECT_RUN);
             }
             return new ResponseEntity({ errors });
         }
