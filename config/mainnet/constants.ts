@@ -773,7 +773,7 @@ const constants: IConstants = {
     ]),
     START_FEATURE_BLOCK: {
         ACCOUNT_BLACKLIST: 70000,
-        VOTE_WITH_ACTIVE_STAKE: 225000,
+        VOTE_WITH_ACTIVE_STAKE: 245000,
     },
 };
 /* tslint:enable */
