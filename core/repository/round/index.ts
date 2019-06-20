@@ -31,6 +31,19 @@ class RoundRepository implements IRoundRepository {
             ? this.rounds[this.rounds.length - PREVIOUS_ROUND_OFFSET_FROM_END]
             : null;
     }
+
+    public getByIndex(index: number): Round {
+        return this.rounds[index];
+    }
+
+    public getMany(limit: number = 100, offset: number = 0): Array<Round> {
+        offset = this.rounds.length - 1 - offset - limit;
+        if (offset < 0) {
+            offset = 0;
+        }
+
+        return this.rounds.slice(offset, limit).reverse();
+    }
 }
 
 export default new RoundRepository();

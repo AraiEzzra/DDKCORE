@@ -131,7 +131,7 @@ class RoundService implements IRoundService {
         });
     }
 
-    private getDelegates = (round: Round): Array<ActiveDelegate> => {
+    public getDelegates = (round: Round): Array<ActiveDelegate> => {
         return Object.entries(round.slots).map(([publicKey, slot]) => {
             const delegate = DelegateRepository.getDelegate(publicKey);
 
