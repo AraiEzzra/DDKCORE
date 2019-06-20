@@ -40,6 +40,17 @@ class BlockPGRepository {
         };
 
     }
+
+    async getByHeight(height: number): Promise<BlockModel> {
+        const block = await db.oneOrNone(query.getBlockByHeight, { height });
+        return block && SharedBlockPGRepository.deserialize(block);
+    }
+
+    async getLastBlock(): Promise<BlockModel> {
+        const block = await db.oneOrNone(query.getLastBlock, {});
+        return block && SharedBlockPGRepository.deserialize(block);
+    }
+
 }
 
 export default new BlockPGRepository();

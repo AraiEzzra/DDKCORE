@@ -31,6 +31,10 @@ export const SCHEMAS_TRANSACTIONS = [
                     senderPublicKey: {
                         type: 'string',
                         format: 'publicKey'
+                    },
+                    height: {
+                        type: 'integer',
+                        minimum: 1
                     }
                 }
             },
@@ -59,5 +63,25 @@ export const SCHEMAS_TRANSACTIONS = [
             ...PAGINATION_SCHEME
         },
         required: ['blockId', 'limit', 'offset']
+    },
+    {
+        id: API_ACTION_TYPES.GET_TRANSACTIONS_BY_HEIGHT,
+        type: 'object',
+        properties: {
+            limit: {
+                type: 'integer',
+                minimum: 1,
+                maximum: 250
+            },
+            offset: {
+                type: 'integer',
+                minimum: 0,
+            },
+            height: {
+                type: 'integer',
+                minimum: 1
+            }
+        },
+        required: ['height', 'limit', 'offset']
     },
 ];

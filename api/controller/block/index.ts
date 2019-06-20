@@ -14,6 +14,8 @@ export class BlockController {
     constructor() {
         this.getBlock = this.getBlock.bind(this);
         this.getBlocks = this.getBlocks.bind(this);
+        this.getBlockByHeight = this.getBlockByHeight.bind(this);
+        this.getLastBlock = this.getLastBlock.bind(this);
     }
 
     @RPC(API_ACTION_TYPES.GET_BLOCK)
@@ -23,6 +25,28 @@ export class BlockController {
             message.headers.id,
             message.code,
             new ResponseEntity<BlockModel>({ data: await BlockPGRepository.getOne(message.body.id) }),
+            socket
+        );
+    }
+
+    @RPC(API_ACTION_TYPES.GET_BLOCK_BY_HEIGHT)
+    @validate()
+    public async getBlockByHeight(message: Message<{ height: number }>, socket: any) {
+        SocketMiddleware.emitToClient(
+            message.headers.id,
+            message.code,
+            new ResponseEntity({ data: await BlockPGRepository.getByHeight(message.body.height) }),
+            socket
+        );
+    }
+    
+    @RPC(API_ACTION_TYPES.GET_LAST_BLOCK)
+    @validate()
+    public async getLastBlock(message: Message<{}>, socket: any) {
+        SocketMiddleware.emitToClient(
+            message.headers.id,
+            message.code,
+            new ResponseEntity({ data: await BlockPGRepository.getLastBlock() }),
             socket
         );
     }
