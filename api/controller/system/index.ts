@@ -3,7 +3,7 @@ import SocketMiddleware from 'api/middleware/socket';
 import { Message } from 'shared/model/message';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
 import { validate } from 'shared/validate';
-import { Pagination } from 'api/utils/common';
+import { Pagination } from 'shared/util/common';
 
 class SystemController {
     constructor() {

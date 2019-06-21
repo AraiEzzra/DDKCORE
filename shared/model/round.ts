@@ -24,9 +24,7 @@ export class RoundModel {
 }
 
 export class Round extends RoundModel {
-
     getCopy(): Round {
         return new Round(this);
     }
-
 }

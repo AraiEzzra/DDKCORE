@@ -1,4 +1,4 @@
-import { Account} from 'shared/model/account';
+import { Account } from 'shared/model/account';
 import config from 'shared/config';
 import { Delegate, SerializedDelegate } from 'shared/model/delegate';
 import { PublicKey } from 'shared/model/types';

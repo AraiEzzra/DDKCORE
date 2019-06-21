@@ -5,7 +5,7 @@ import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
 import { ResponseEntity } from 'shared/model/response';
 import { Reward, StakeReward } from 'shared/model/reward';
 import { validate } from 'shared/validate';
-import { Pagination } from 'api/utils/common';
+import { Pagination } from 'shared/util/common';
 import TransactionRepository from 'api/repository/transaction';
 
 export class RewardController {

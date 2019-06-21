@@ -1,5 +1,5 @@
 import { TransactionType } from 'shared/model/transaction';
-import { Pagination, Sort } from 'api/utils/common';
+import { Pagination, Sort } from 'shared/util/common';
 
 export type getTransactionsRequest = {
     filter: {

@@ -1,7 +1,7 @@
 import { IAsset, IAssetVote, Transaction, TransactionType } from 'shared/model/transaction';
 import db from 'shared/driver/db';
 import query from 'api/repository/transaction/query';
-import { Sort } from 'api/utils/common';
+import { Sort } from 'shared/util/common';
 import SharedTransactionPGRepo from 'shared/repository/transaction/pg';
 import { toSnakeCase } from 'shared/util/util';
 
@@ -75,7 +75,7 @@ class TransactionPGRepository {
             senderPublicKey,
             voteType: TransactionType.VOTE,
             limit,
-            offset
+            offset,
         });
 
         if (transactions && transactions.length) {
@@ -83,13 +83,13 @@ class TransactionPGRepository {
                 transactions: transactions.map(
                     trs => SharedTransactionPGRepo.deserialize(trs) as Transaction<IAssetVote>
                 ),
-                count: this.transactionsCount,
+                count: Number(transactions[0].count),
             };
         }
 
         return {
             transactions: [],
-            count: 0
+            count: 0,
         };
     }
 }

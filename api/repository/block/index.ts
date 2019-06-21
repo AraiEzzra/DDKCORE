@@ -1,6 +1,6 @@
 import db from 'shared/driver/db';
 import query from 'api/repository/block/query';
-import { Sort } from 'api/utils/common';
+import { Sort } from 'shared/util/common';
 import { BlockModel } from 'shared/model/block';
 import { toSnakeCase } from 'shared/util/util';
 import SharedBlockPGRepository from 'shared/repository/block/pg';

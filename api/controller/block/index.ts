@@ -3,7 +3,7 @@ import { RPC } from 'api/utils/decorators';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
 import SocketMiddleware from 'api/middleware/socket';
 import BlockPGRepository from 'api/repository/block';
-import { DEFAULT_LIMIT, Pagination, Sort } from 'api/utils/common';
+import { DEFAULT_LIMIT, Pagination, Sort } from 'shared/util/common';
 import { ResponseEntity } from 'shared/model/response';
 import { validate } from 'shared/validate';
 import { Message } from 'shared/model/message';
@@ -74,4 +74,3 @@ export class BlockController {
 }
 
 export default new BlockController();
-

@@ -1,3 +1,5 @@
+import { ActiveDelegate } from 'ddk.registry/src/model/common/delegate';
+
 import SlotService from 'core/service/slot';
 import BlockRepository from 'core/repository/block';
 import { Round, Slot } from 'shared/model/round';
@@ -14,6 +16,8 @@ import { IKeyPair } from 'shared/util/ed';
 import System from 'core/repository/system';
 import { AccountChangeAction } from 'shared/model/account';
 import FailService from 'core/service/fail';
+import { EVENT_TYPES } from 'shared/driver/socket/codes';
+import SocketMiddleware from 'core/api/middleware/socket';
 
 const MAX_LATENESS_FORGE_TIME = 500;
 
@@ -103,18 +107,42 @@ class RoundService implements IRoundService {
         if (!forgedBlocksCount) {
             return;
         }
+        const missedDelegates = Object.entries(round.slots)
+            .filter(([, slot]) => !slot.isForged)
+            .map(([publicKey]) => {
+                return DelegateRepository.getDelegate(publicKey);
+            });
 
         const lastBlock = BlockRepository.getLastBlock();
         const blocks = BlockRepository.getMany(forgedBlocksCount, lastBlock.height - forgedBlocksCount);
-        const delegates = blocks.map(block => DelegateRepository.getDelegate(block.generatorPublicKey));
-        const fee = Math.ceil(blocks.reduce((sum, block) => sum += block.fee, 0) / delegates.length);
+        const forgedDelegates = blocks.map(block => DelegateRepository.getDelegate(block.generatorPublicKey));
+        const fee = Math.ceil(blocks.reduce((sum, block) => sum += block.fee, 0) / forgedDelegates.length);
 
-        delegates.forEach(delegate => {
+        forgedDelegates.forEach(delegate => {
             delegate.account.actualBalance += (undo ? -fee : fee);
+            delegate.forgedBlocks++;
+
             delegate.account.addHistory(undo
                 ? AccountChangeAction.DISTRIBUTE_FEE_UNDO :
                 AccountChangeAction.DISTRIBUTE_FEE, null
             );
+        });
+        missedDelegates.forEach(delegate => {
+            delegate.missedBlocks++;
+        });
+    }
+
+    public getDelegates = (round: Round): Array<ActiveDelegate> => {
+        return Object.entries(round.slots).map(([publicKey, slot]) => {
+            const delegate = DelegateRepository.getDelegate(publicKey);
+
+            return {
+                slotNumber: slot.slot,
+                ...delegate,
+                account: undefined,
+                publicKey: delegate.account.publicKey,
+                unconfirmedVoteCount: delegate.votes,
+            };
         });
     }
 
@@ -123,9 +151,17 @@ class RoundService implements IRoundService {
         const delegates = DelegateService.getAllActiveDelegates();
         const slots = SlotService.generateSlots(lastBlockId, delegates, firstSlotNumber);
 
-        const newCurrentRound = new Round({ slots, lastBlockId });
-        logger.debug('[Round][Service][generate]', JSON.stringify(newCurrentRound));
-        return newCurrentRound;
+        const round = new Round({ slots, lastBlockId });
+        logger.debug('[Round][Service][generate]', JSON.stringify(round));
+
+        if (!System.synchronization) {
+            SocketMiddleware.emitEvent<Array<ActiveDelegate>>(
+                EVENT_TYPES.NEW_ROUND,
+                this.getDelegates(round),
+            );
+        }
+
+        return round;
     }
 
     public forwardProcess(): Round {

@@ -2,7 +2,7 @@ import AirdropHistoryRepository from 'core/repository/airdropHistory/AirdropHist
 import AirdropHistoryFakeRepository from 'core/repository/airdropHistory/AirdropHistoryFakeRepository';
 import {
     AirdropHistory, AirdropDailyHistoryQuery, AirdropHistoryQuery
-} from 'core/repository/airdropHistory/interfaces';
+} from 'shared/repository/airdropHistory/interfaces';
 import config from 'shared/config';
 
 export {

@@ -1,7 +1,7 @@
 import { API } from 'core/api/util/decorators';
 import { Message } from 'shared/model/message';
 import { ResponseEntity } from 'shared/model/response';
-import { Pagination } from 'api/utils/common';
+import { Pagination } from 'shared/util/common';
 import DelegateRepository from 'core/repository/delegate';
 import DelegateService from 'core/service/delegate';
 import AccountRepository from 'core/repository/account';

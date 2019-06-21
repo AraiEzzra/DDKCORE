@@ -78,7 +78,7 @@ describe('Test GET_DELEGATES', () => {
         expect(response.body.success).to.equal(true);
         expect(response.body.data.delegates).to.have.lengthOf(0);
         expect(response.body.data.count).to.equal(TOTAL_DELEGATES_COUNT);
-        expect(response.body.errors).to.have.lengthOf(0);
+        expect(response.body.errors).to.equal(undefined);
     });
 
     it('Negative', async () => {
