@@ -15,6 +15,7 @@ import { getFirstSlotNumberInRound } from 'core/util/slot';
 import { IKeyPair } from 'shared/util/ed';
 import System from 'core/repository/system';
 import { AccountChangeAction } from 'shared/model/account';
+import FailService from 'core/service/fail';
 import { EVENT_TYPES } from 'shared/driver/socket/codes';
 import SocketMiddleware from 'core/api/middleware/socket';
 
@@ -146,14 +147,11 @@ class RoundService implements IRoundService {
     }
 
     public generate(firstSlotNumber: number): Round {
-        const lastBlock = BlockRepository.getLastBlock();
+        const lastBlockId = FailService.getRightLastRoundBlockId(BlockRepository.getLastBlock().id);
         const delegates = DelegateService.getAllActiveDelegates();
-        const slots = SlotService.generateSlots(lastBlock.id, delegates, firstSlotNumber);
+        const slots = SlotService.generateSlots(lastBlockId, delegates, firstSlotNumber);
 
-        const round = new Round({
-            slots: slots,
-            lastBlockId: lastBlock.id,
-        });
+        const round = new Round({ slots, lastBlockId });
         logger.debug('[Round][Service][generate]', JSON.stringify(round));
 
         if (!System.synchronization) {
