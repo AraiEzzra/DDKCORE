@@ -86,6 +86,11 @@ class PeerNetworkRepository implements IPeerRepository <PeerAddress, NetworkPeer
     get count(): number {
         return this.peers.size;
     }
+
+    get unbanCount(): number {
+        return this.getAll()
+            .filter((networkPeer: NetworkPeer) => !this.isBanned(networkPeer.peerAddress)).length;
+    }
 }
 
 export default new PeerNetworkRepository();
