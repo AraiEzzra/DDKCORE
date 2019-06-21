@@ -19,11 +19,11 @@ Response
 | success   | boolean                  | Operation status |
 | data      | [Block](models.md#block) | Requested block  |
 
-### Examples
+### GET BLOCK EXAMPLES
 
 Request
 
-```
+```json
 {
     "code":"GET_BLOCK",
     "headers":{
@@ -38,7 +38,7 @@ Request
 
 Successful response
 
-```
+```json
 {
     "success":true,
     "data":{
@@ -63,7 +63,7 @@ Successful response
 
 Failed response
 
-```
+```json
 {
    "success": false,
    "errors": ["Block with this id does not exist"]
@@ -93,11 +93,11 @@ Response
 | data.blocks | Array<[Block](models.md#block)> | Blocks                                 |
 | data.count  | number                          | Total number of entries for the filter |
 
-### Examples
+### GET BLOCKS EXAMPLES
 
 Request
 
-```
+```json
 {
     "code":"GET_BLOCKS",
     "headers":{
@@ -122,7 +122,7 @@ Request
 
 Successful response
 
-```
+```json
 {
     "success":true,
     "data":{
@@ -146,6 +146,116 @@ Successful response
             }
         ],
         "count":149
+    }
+}
+```
+
+## GET BLOCK BY HEIGHT
+
+Returns block by height without transactions
+
+Code: `GET_BLOCK_BY_HEIGHT`
+
+Body parameters
+
+| Parameter | Type                          | Is Required | Description  |
+|-----------|-------------------------------|-------------|--------------|
+| height    | number                        | +           | Block height |
+
+Response
+
+| Parameter   | Type                            | Description                            |
+|-------------|---------------------------------|----------------------------------------|
+| success     | boolean                         | Operation status                       |
+| data        | [Block](models.md#block)        | Requested block                        |
+
+### GET BLOCK BY HEIGHT EXAMPLES
+
+Request
+
+```json
+{
+    "code":"GET_BLOCK_BY_HEIGHT",
+    "headers":{
+        "id":"821ceb52-c7cc-4926-bb77-1d9b3c720861",
+        "type":1
+    },
+    "body":{
+        "height":1
+    }
+}
+```
+
+Successful response
+
+```json
+{
+    "success":true,
+    "data":{
+        "id":"aa766bd5342fcde5f7d21ac52a6c0361e9e90a0df54632a22b4110c5d469af28",
+        "version":1,
+        "height":1,
+        "transactionCount":21,
+        "amount":4797000000000000,
+        "fee":0,
+        "payloadHash":"250ef38d19cf927f4cd9e176b5bfd2b953ef7521a5383e4c0b2b0894a93306c6",
+        "generatorPublicKey":"86231c9dc4202ba0e27e063f431ef868b4e38669931202a83482c70091714e13",
+        "signature":"83abaa4eddfdfc59b17e57d9b9a4dd41f8c3b26bb100e68ae5395f9e2d20e7f4e0fcebde211b5de72078d2a101d7e90cab426511a666c4f0ddab220493a8470c",
+        "relay":0,
+        "transactions":[],
+        "createdAt":0,
+        "previousBlockId":null
+    }
+}
+```
+
+## GET LAST BLOCK
+
+Returns last appied block without transactions
+
+Code: `GET_LAST_BLOCK`
+
+Response
+
+| Parameter   | Type                            | Description                            |
+|-------------|---------------------------------|----------------------------------------|
+| success     | boolean                         | Operation status                       |
+| data        | [Block](models.md#block)        | Last block                             |
+
+### GET LAST BLOCK EXAMPLES
+
+Request
+
+```json
+{
+    "code":"GET_LAST_BLOCK",
+    "headers":{
+        "id":"821ceb52-c7cc-4926-bb77-1d9b3c720861",
+        "type":1
+    },
+    "body":{}
+}
+```
+
+Successful response
+
+```json
+{
+    "success":true,
+    "data":{
+        "id":"fb41fcaa1a3a1fdf05131f6e2b6725d4d94d309dca85352bfda36cf1eedf2618",
+        "version":1,
+        "height":250949,
+        "transactionCount":3,
+        "amount":310000000,
+        "fee":41000,
+        "payloadHash":"a4f3c59c690bf18ce206b5dafdfe6d9a26713f7a230019e7f83c8c439b164c0f",
+        "generatorPublicKey":"276f0d09e64b68566fb458b7c71aeb62411d0b633ad6c038e5a4a042ec588af9",
+        "signature":"a8f22d95e7383378f1e138c77f20244b0ee24d9c159aff8708c1856aa0996e81b8bc7ded32b17d9f4326d593eeabc51e30949bf84537632daf6cc155c0def803",
+        "relay":0,
+        "transactions":[],
+        "createdAt":109456340,
+        "previousBlockId":"ad35239706b1b231f0ca7a73166dbcb89d948609103ef8496fbac3f3ad4fb131"
     }
 }
 ```

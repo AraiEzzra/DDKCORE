@@ -8,11 +8,11 @@ Code: `APPLY_BLOCK`
 
 Event body contains a [Block](models.md#block).
 
-### Examples
+### APPLY BLOCK EXAMPLES
 
 Event
 
-```
+```json
 {
     "code":"APPLY_BLOCK",
     "headers":{
@@ -44,11 +44,11 @@ Code: `UNDO_BLOCK`
 
 Event body contains a [Block](models.md#block).
 
-### Examples
+### UNDO BLOCK EXAMPLES
 
 Event
 
-```
+```json
 {
     "code":"UNDO_BLOCK",
     "headers":{
@@ -85,11 +85,11 @@ Event body
 | transaction | [Transaction](#transaction) | Declined transaction |
 | reason      | Array<[string]>             | Reason               |
 
-### Examples
+### DECLINE TRANSACTION EXAMPLES
 
 Event
 
-```
+```json
 {
     "code":"DECLINE_TRANSACTION",
     "headers":{
@@ -133,11 +133,11 @@ Body
 | totalStakeHolders | number | Number of stake holders     |
 | totalSupply       | number | Total supply                |
 
-### Examples
+### UPDATE BLOCKCHAIN INFO EXAMPLES
 
 Event
 
-```
+```json
 {
     "code":"UPDATE_BLOCKCHAIN_INFO",
     "headers":{

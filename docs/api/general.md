@@ -21,7 +21,7 @@ Body
 
 Request
 
-```
+```json
 {
     "code":"GET_BLOCKCHAIN_INFO",
     "headers":{
@@ -34,7 +34,7 @@ Request
 
 Response
 
-```
+```json
 {
     "code":"GET_BLOCKCHAIN_INFO",
     "headers":{

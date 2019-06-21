@@ -25,7 +25,7 @@ Response
 
 Request
 
-```
+```json
 {
    "code":"CREATE_TRANSACTION",
    "headers":{
@@ -48,7 +48,7 @@ Request
 
 Successful response
 
-```
+```json
 {
    "id":"568c252bf8ecd33af580caa23027cc349ff652dd7ca21a8cf5fd153e55173322",
    "type":10,
@@ -67,7 +67,7 @@ Successful response
 
 Failed response
 
-```
+```json
 {
    "success":false,
    "errors":[
@@ -95,11 +95,11 @@ Response
 | success   | boolean | Operation status  |
 | data      | Account | Requested account |
 
-### Examples
+### GET TRANSACTION EXAMPLES
 
 Request
 
-```
+```json
 {
    "code":"GET_TRANSACTION",
    "headers":{
@@ -114,7 +114,7 @@ Request
 
 Successful response
 
-```
+```json
 {
    "success":true,
    "data":{
@@ -137,7 +137,7 @@ Successful response
 
 Failed response
 
-```
+```json
 {
    "success":false,
    "data":null
@@ -167,11 +167,11 @@ Response
 | data.transactions | array<[Transaction](models.md#transaction)> | Transactions                           |
 | data.count        | number                                      | Total number of entries for the filter |
 
-### Examples
+### GET TRANSACTIONS EXAMPLES
 
 Request
 
-```
+```json
 {
    "code":"GET_TRANSACTIONS",
    "headers":{
@@ -198,7 +198,7 @@ Request
 
 Successful response
 
-```
+```json
 {
    "success":true,
    "data":{
@@ -226,7 +226,7 @@ Successful response
 
 Failed response
 
-```
+```json
 {
    "success":false,
    "errors":[
@@ -257,11 +257,11 @@ Response
 | data.transactions | array<[Transaction](models.md#transaction)> | Transactions                 |
 | data.count        | number                                      | Total number of transactions |
 
-### Examples
+### GET TRANSACTIONS BY BLOCK ID EXAMPLES
 
 Request
 
-```
+```json
 {
    "code":"GET_TRANSACTIONS_BY_BLOCK_ID",
    "headers":{
@@ -278,7 +278,7 @@ Request
 
 Successful response
 
-```
+```json
 {
    "success":true,
    "data":{
@@ -306,11 +306,83 @@ Successful response
 
 Failed response
 
-```
+```json
 {
    "success":false,
    "errors":[
       "IS NOT VALID REQUEST:'GET_TRANSACTIONS_BY_BLOCK_ID'... Reference could not be resolved: GET_TRANSACTIONS_BY_BLOCK_ID"
    ]
+}
+```
+
+## GET TRANSACTIONS BY HEIGHT
+
+Returns transactions with requested height
+
+Code: `GET_TRANSACTIONS_BY_HEIGHT`
+
+Body parameters
+
+| Parameter | Type   | Is Required | Description  |
+|-----------|--------|-------------|--------------|
+| height    | number | +           | Block height |
+| limit     | number | +           | Limit        |
+| offset    | number | +           | Offset       |
+
+Response
+
+| Parameter         | Type                                        | Description                            |
+|-------------------|---------------------------------------------|----------------------------------------|
+| success           | boolean                                     | Operation status                       |
+| data.transactions | [Transactions](models.md#transaction)       | Transactions by requested block height |
+| data.count        | number                                      | Total number of entries for the block  |
+
+### GET TRANSACTIONS BY HEIGHT EXAMPLES
+
+Request
+
+```json
+{
+   "code":"GET_TRANSACTIONS_BY_HEIGHT",
+   "headers":{
+      "id":"d388bfb1-3ed4-4e8f-ad77-d39f753653b9",
+      "type":1
+   },
+   "body":{
+      "height":1,
+      "limit":1,
+      "offset":0
+   }
+}
+```
+
+Successful response
+
+```json
+{
+   "success":true,
+   "data":{
+      "transactions":[
+         {
+               "id":"18ecf494840cfb3ad59d521e5896d6e4bce15aca4988722741a5e47446de3aa5",
+               "blockId":"aa766bd5342fcde5f7d21ac52a6c0361e9e90a0df54632a22b4110c5d469af28",
+               "type":10,
+               "createdAt":0,
+               "senderPublicKey":"e0ead349bfb8851d3f4949862f89a93e8c5dd31c345092b34f92b8c1fabfc8b3",
+               "senderAddress":"17119487529442639627",
+               "signature":"f93b31e7bad55ff41fb01cc7501928919d0a0d9932cafaeafcab94700eade698b251a6b8b80ae7d566e1912cdd17dc2afffc7b58f92a35cc197e309289386f09",
+               "secondSignature":null,
+               "fee":0,
+               "salt":"9e0910c2e2eab7ae84f6c18f306d5157",
+               "relay":0,
+               "confirmations":251039,
+               "asset":{
+                  "recipientAddress":"13566253584516829136",
+                  "amount":4500000000000000
+               }
+         }
+      ],
+      "count":21
+   }
 }
 ```
