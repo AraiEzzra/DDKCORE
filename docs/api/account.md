@@ -19,11 +19,11 @@ Response
 | success   | boolean | Operation status  |
 | data      | Account | Requested account |
 
-### Examples
+### GET ACCOUNT EXAMPLES
 
 Request
 
-```
+```json
 {
    "code":"GET_ACCOUNT",
    "headers":{
@@ -38,7 +38,7 @@ Request
 
 Successful response
 
-```
+```json
 {
    "success":true,
    "data":{
@@ -61,7 +61,7 @@ Successful response
 
 Failed response
 
-```
+```json
 {
    "success":false,
    "data":null
@@ -87,11 +87,11 @@ Response
 | success   | boolean | Operation status          |
 | data      | number  | Requested account balance |
 
-### Examples
+### GET ACCOUNT BALANCE EXAMPLES
 
 Request
 
-```
+```json
 {
    "code":"GET_ACCOUNT_BALANCE",
    "headers":{
@@ -106,7 +106,7 @@ Request
 
 Successful response
 
-```
+```json
 {
    "success":true,
    "data": 4202989898990000
@@ -115,7 +115,7 @@ Successful response
 
 Failed response
 
-```
+```json
 {
    "success":false,
    "data":null

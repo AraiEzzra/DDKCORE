@@ -2,7 +2,7 @@
 
 ## Connect to API
 
-```
+```javascript
 import io from 'socket.io-client';
 
 const ws = io(`ws://localhost:7008`, { transports: ['websocket'] });
@@ -10,7 +10,7 @@ const ws = io(`ws://localhost:7008`, { transports: ['websocket'] });
 
 ## Send request
 
-```
+```javascript
 ws.emit('message', {
     code': 'GET_ACCOUNT',
     headers': {

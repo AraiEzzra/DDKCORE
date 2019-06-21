@@ -19,11 +19,11 @@ Response
 | data.delegates | Array<[Delegate](models.md#delegate)> | Delegates               |
 | data.count     | number                                | Total number of entries |
 
-### Examples
+### GET DELEGATES EXAMPLES
 
 Request
 
-```
+```json
 {
     "code":"GET_DELEGATES",
     "headers":{
@@ -39,7 +39,7 @@ Request
 
 Successful response
 
-```
+```json
 {
     "success":true,
     "data":{
@@ -90,11 +90,11 @@ Response
 | data.delegates | Array<[Delegate](models.md#delegate)> | Delegates               |
 | data.count     | number                                | Total number of entries |
 
-### Examples
+### GET ACTIVE DELEGATES EXAMPLES
 
 Request
 
-```
+```json
 {
     "code":"GET_ACTIVE_DELEGATES",
     "headers":{
@@ -110,7 +110,7 @@ Request
 
 Successful response
 
-```
+```json
 {
     "success":true,
     "data":{
@@ -162,11 +162,11 @@ Response
 | data.delegates | Array<[Delegate](models.md#delegate)> | Delegates               |
 | data.count     | number                                | Total number of entries |
 
-### Examples
+### GET MY DELEGATES EXAMPLES
 
 Request
 
-```
+```json
 {
     "code":"GET_MY_DELEGATES",
     "headers":{
@@ -183,7 +183,7 @@ Request
 
 Successful response
 
-```
+```json
 {
     "success":true,
     "data":{

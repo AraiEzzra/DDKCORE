@@ -1,6 +1,6 @@
-DDK API works with WebSockets via [Socket.IO](https://socket.io/) library.
+# DDK API works with WebSockets via [Socket.IO](https://socket.io/) library
 
-In order to communicate with DDK API, please use socket.io [client](https://socket.io/docs/client-api/).
+## In order to communicate with DDK API, please use socket.io [client](https://socket.io/docs/client-api/)
 
 [General](General.md)
 
