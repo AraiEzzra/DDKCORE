@@ -11,6 +11,7 @@ type AllowedFilters = {
     type?: number;
     recipientAddress?: string;
     asset?: string;
+    height?: number;
 };
 
 const UPDATE_TRANSACTIONS_COUNT_INTERVAL = 30000;
