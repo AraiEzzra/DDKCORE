@@ -7,4 +7,6 @@ export default {
             ? `WHERE ${Object.keys(filter).map(key => `${toSnakeCase(key)} = \${${key}}`)} `
             : ''} 
           ORDER BY ${sort} LIMIT \${limit} OFFSET \${offset}`,
+    getBlockByHeight: 'SELECT * FROM block WHERE block.height = ${height}',
+    getLastBlock: 'SELECT * FROM block ORDER BY height DESC LIMIT 1',
 };

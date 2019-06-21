@@ -29,6 +29,7 @@ export class PeerService {
     add(data: PeerHeadersReceived): boolean {
         if (config.CORE.PEERS.BLACKLIST.indexOf(data.peerAddress.ip) !== -1 ||
             !VersionChecker.isAcceptable(data.peerHeaders.version)) {
+            logger.debug(`[Service][peer][add] invalid version ${data.peerHeaders.version}`);
             data.socket.disconnect(true);
             return false;
         }

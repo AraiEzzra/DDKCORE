@@ -12,7 +12,9 @@ const constants: IConstants = {
         AMOUNT: 4500000000000000,
     },
     BLOCK_SLOT_WINDOW: 5,
-    ACTIVE_DELEGATES: 60,
+    ACTIVE_DELEGATES: new Map<number, number>([
+        [0, 61],
+    ]),
     MAX_VOTES: 11,
     MAX_VOTES_PER_TRANSACTION: 3,
     MAX_DELEGATE_USERNAME_LENGTH: 20,

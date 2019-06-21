@@ -6,7 +6,7 @@ import BUFFER from 'core/util/buffer';
 import ZSchema from 'shared/validate/z_schema';
 import { logger } from 'shared/util/logger';
 import { Account } from 'shared/model/account';
-import { Block, BlockModel, SerializedBlock } from 'shared/model/block';
+import { Block, BlockModel } from 'shared/model/block';
 import BlockRepo from 'core/repository/block';
 import SharedTransactionRepo from 'shared/repository/transaction';
 import BlockPGRepo from 'core/repository/block/pg';
@@ -53,6 +53,7 @@ import { getFirstSlotNumberInRound } from 'core/util/slot';
 import RoundService from 'core/service/round';
 import DelegateRepository from 'core/repository/delegate';
 import { messageON } from 'shared/util/bus';
+import DelegateService from 'core/service/delegate';
 
 const validator: Validator = new ZSchema({});
 
@@ -368,8 +369,9 @@ class BlockService {
         const lastBlockSlotNumber = SlotService.getSlotNumber(lastBlock.createdAt);
         const currentSlotNumber = SlotService.getSlotNumber();
 
+        const activeDelegatesCount = DelegateService.getActiveDelegatesCount();
         if (
-            receivedBlockSlotNumber > currentSlotNumber + config.CONSTANTS.ACTIVE_DELEGATES - 1 ||
+            receivedBlockSlotNumber > currentSlotNumber + activeDelegatesCount - 1 ||
             receivedBlockSlotNumber <= lastBlockSlotNumber
         ) {
             errors.push('Invalid block timestamp');
@@ -561,7 +563,7 @@ class BlockService {
         );
 
         if (!RoundRepository.getCurrentRound()) {
-            const activeDelegatesCount = DelegateRepository.getActiveDelegates().length;
+            const activeDelegatesCount = DelegateService.getActiveDelegatesCount();
             const firstSlotNumber = getFirstSlotNumberInRound(block.createdAt, activeDelegatesCount);
             const newRound = RoundService.generate(firstSlotNumber);
             RoundRepository.add(newRound);

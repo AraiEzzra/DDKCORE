@@ -67,8 +67,8 @@ class BlockController extends BaseController {
             }
             return new ResponseEntity<void>({
                 errors: [
-                    `[Controller][Block][receiveBlockResponse] block: ${receivedBlock.id}
-                    errors: ${validateResponse.errors}`
+                    `[Controller][Block][receiveBlockResponse] block: ${receivedBlock.id} ` +
+                    `errors: ${validateResponse.errors}`
                 ]
             });
         }
