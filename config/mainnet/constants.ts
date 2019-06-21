@@ -83,8 +83,8 @@ const constants: IConstants = {
     TIMEOUT_START_SYNC_BLOCKS: 20000,
     TIMEOUT_START_PEER_REQUEST: 10000,
     PEER_CONNECTION_TIME_INTERVAL_REBOOT: {
-        MIN: 20 * 60 * 1000,
-        MAX: 25 * 60 * 1000,
+        MIN: 8 * 60 * 1000,
+        MAX: 15 * 60 * 1000,
     },
     PEER_PING_PONG_INTERVAL: 15000,
     PEERS_COUNT_FOR_DISCOVER: 6,

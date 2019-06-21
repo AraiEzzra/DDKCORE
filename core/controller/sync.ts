@@ -70,6 +70,9 @@ export class SyncController extends BaseController {
             } else if (!PeerNetworkRepository.count) {
                 errors.push(`${logMessage}. No peers to sync`);
                 messageON(ActionTypes.PEER_CONNECT_RUN);
+            } else if (!PeerNetworkRepository.unbanCount) {
+                errors.push(`${logMessage}. All peers are banned`);
+                messageON(ActionTypes.EMIT_REBOOT_PEERS_CONNECTIONS);
             }
             return new ResponseEntity({ errors });
         }
