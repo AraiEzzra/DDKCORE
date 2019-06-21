@@ -17,7 +17,7 @@ export default {
                 key => `${toSnakeCase(key)} ${key === 'asset' ? '@>' : '='} \${${key}}`).join(' OR ')
             } ` : ''}
             ORDER BY ${sort} LIMIT \${limit} OFFSET \${offset}`,
-    getVotesWithStakeReward: 'SELECT * FROM trs' +
+    getVotesWithStakeReward: 'SELECT *, count(1) over () as count FROM trs ' +
         ' where trs.sender_public_key = ${senderPublicKey} ' +
         ' and trs.type = ${voteType} and (asset ->> \'reward\')::bigint != 0' +
         ' ORDER BY trs.created_at DESC LIMIT ${limit} OFFSET ${offset}',

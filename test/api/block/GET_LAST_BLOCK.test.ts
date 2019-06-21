@@ -20,7 +20,6 @@ describe('Test GET_LAST_BLOCK', () => {
         socket.emit('message', REQUEST);
         socket.on('message', (response: Message<ResponseEntity<any>>) => {
                 if (response.headers.id === HEADERS.id) {
-                    console.log(response);
                     expect(response.body.success).to.equal(true);
                     expect(response.body.data).to.deep.equal({
                         id: 'cbb9449abb9672d33fa2eb200b1c8b03db7c6572dfb6e59dc334c0ab82b63ab0',

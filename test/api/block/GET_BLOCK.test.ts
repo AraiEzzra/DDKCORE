@@ -20,13 +20,12 @@ describe('Test GET_BLOCK', () => {
         socket.emit('message', REQUEST);
         socket.on('message', (response: Message<ResponseEntity<any>>) => {
                 if (response.headers.id === HEADERS.id) {
-                    console.log(response);
                     expect(response.body.success).to.equal(true);
                     expect(response.body.data).to.deep.equal({
                         id: 'cbb9449abb9672d33fa2eb200b1c8b03db7c6572dfb6e59dc334c0ab82b63ab0',
                         version: 1,
                         height: 1,
-                        transactionCount: 7,
+                        transactionCount: 24,
                         amount: 4797000000000000,
                         fee: 482700000000,
                         payloadHash: '7e6ba6ec459d96207414f61b67ecd2ecd8c946507bb102a1e47a0ce987e494d0',

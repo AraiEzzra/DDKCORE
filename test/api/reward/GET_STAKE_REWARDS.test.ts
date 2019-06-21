@@ -51,6 +51,9 @@ describe('Test GET_STAKE_REWARDS', () => {
                 rewards: Array<StakeReward>, count: number
             }>>) => {
                 if (response.headers.id === HEADERS.id) {
+                    console.log(JSON.stringify(response.body));
+
+
                     expect(response.body.success).to.equal(true);
                     expect(response.body.data.count).to.equal(1);
                     expect(response.body.data.rewards[0].amount).to.equal(100);
@@ -70,9 +73,8 @@ describe('Test GET_STAKE_REWARDS', () => {
 
 
     });
-    // });
 
     it('Negative', () => {
-    });
 
+    });
 });

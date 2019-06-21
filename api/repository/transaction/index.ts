@@ -75,7 +75,7 @@ class TransactionPGRepository {
             senderPublicKey,
             voteType: TransactionType.VOTE,
             limit,
-            offset
+            offset,
         });
 
         if (transactions && transactions.length) {
@@ -83,13 +83,13 @@ class TransactionPGRepository {
                 transactions: transactions.map(
                     trs => SharedTransactionPGRepo.deserialize(trs) as Transaction<IAssetVote>
                 ),
-                count: this.transactionsCount,
+                count: Number(transactions[0].count),
             };
         }
 
         return {
             transactions: [],
-            count: 0
+            count: 0,
         };
     }
 }

@@ -13,34 +13,28 @@ describe('Test GET_ACTIVE_DELEGATES', () => {
         const REQUEST = {
             headers: Fixture.getBaseHeaders(),
             code: API_ACTION_TYPES.GET_ACTIVE_DELEGATES,
-            body: {
-                limit: 2,
-                offset: 0
-            }
+            body: { limit: 2, offset: 0 },
         };
 
         const response = await socketRequest(REQUEST);
 
         expect(response.body.success).to.equal(true);
         expect(response.body.data.delegates).to.be.descendingBy('votes');
-        expect(response.body.data.count).to.equal(config.CONSTANTS.ACTIVE_DELEGATES);
+        expect(response.body.data.count).to.equal(config.CONSTANTS.ACTIVE_DELEGATES.get(0));
     });
 
     it('Empty', async () => {
         const REQUEST = {
             headers: Fixture.getBaseHeaders(),
             code: API_ACTION_TYPES.GET_ACTIVE_DELEGATES,
-            body: {
-                limit: 10,
-                offset: 5
-            }
+            body: { limit: 10, offset: 5 },
         };
 
         const response = await socketRequest(REQUEST);
 
         expect(response.body.success).to.equal(true);
         expect(response.body.data.delegates).to.have.lengthOf(0);
-        expect(response.body.data.count).to.equal(config.CONSTANTS.ACTIVE_DELEGATES);
+        expect(response.body.data.count).to.equal(config.CONSTANTS.ACTIVE_DELEGATES.get(0));
         expect(response.body.errors).to.equal(undefined);
     });
 
@@ -48,10 +42,7 @@ describe('Test GET_ACTIVE_DELEGATES', () => {
         const REQUEST = {
             headers: Fixture.getBaseHeaders(),
             code: API_ACTION_TYPES.GET_ACTIVE_DELEGATES,
-            body: {
-                offset: 0,
-                limit: -123,
-            }
+            body: { offset: 0, limit: -123 },
         };
 
         const response = await socketRequest(REQUEST);
