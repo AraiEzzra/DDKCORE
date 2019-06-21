@@ -12,6 +12,7 @@ import { getFirstSlotNumberInRound } from 'core/util/slot';
 import { IKeyPair } from 'shared/util/ed';
 import System from 'core/repository/system';
 import { AccountChangeAction } from 'shared/model/account';
+import FailService from 'core/service/fail';
 
 const MAX_LATENESS_FORGE_TIME = 500;
 
@@ -117,14 +118,11 @@ class RoundService implements IRoundService {
     }
 
     public generate(firstSlotNumber: number): Round {
-        const lastBlock = BlockRepository.getLastBlock();
+        const lastBlockId = FailService.getRightLastRoundBlockId(BlockRepository.getLastBlock().id);
         const delegates = DelegateRepository.getActiveDelegates();
-        const slots = SlotService.generateSlots(lastBlock.id, delegates, firstSlotNumber);
+        const slots = SlotService.generateSlots(lastBlockId, delegates, firstSlotNumber);
 
-        const newCurrentRound = new Round({
-            slots: slots,
-            lastBlockId: lastBlock.id,
-        });
+        const newCurrentRound = new Round({ slots, lastBlockId });
         logger.debug('[Round][Service][generate]', JSON.stringify(newCurrentRound));
         return newCurrentRound;
     }
@@ -163,6 +161,7 @@ class RoundService implements IRoundService {
         }
 
         const isForward = slotNumber > getLastSlotNumberInRound(round);
+        const lastBlockSlotNumber = SlotService.getSlotNumber(BlockRepository.getLastBlock().createdAt);
 
         while (!Object.values(round.slots).find(slot => slot.slot === slotNumber)) {
             if (isForward) {
@@ -179,6 +178,12 @@ class RoundService implements IRoundService {
                     logger.error(
                         `${this.logPrefix}[restoreToSlot] Impossible to backward round ` +
                         `to slot ${slotNumber}`
+                    );
+                    break;
+                } else if (Object.values(round.slots).find(slot => slot.slot === lastBlockSlotNumber)) {
+                    logger.error(
+                        `${this.logPrefix}[restoreToSlot] Impossible to backward round ` +
+                        `last block is in current round`
                     );
                     break;
                 }
