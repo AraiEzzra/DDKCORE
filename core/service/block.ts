@@ -54,6 +54,7 @@ import RoundService from 'core/service/round';
 import DelegateRepository from 'core/repository/delegate';
 import { messageON } from 'shared/util/bus';
 import DelegateService from 'core/service/delegate';
+import FailService from 'core/service/fail';
 
 const validator: Validator = new ZSchema({});
 
@@ -379,11 +380,11 @@ class BlockService {
     }
 
     private verifyBlockSlot(block: Block): ResponseEntity<void> {
-        if (block.height === 1) {
+        const blockSlot = SlotService.getSlotNumber(block.createdAt);
+        if (block.height === 1 || !FailService.isValidateBlockSlot(blockSlot)) {
             return new ResponseEntity<void>();
         }
 
-        const blockSlot = SlotService.getSlotNumber(block.createdAt);
         logger.trace(`[Service][Block][validateBlockSlot]: blockSlot ${blockSlot}`);
 
         let currentRound = RoundRepository.getCurrentRound();

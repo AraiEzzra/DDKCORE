@@ -14,7 +14,7 @@ const constants: IConstants = {
     BLOCK_SLOT_WINDOW: 5,
     ACTIVE_DELEGATES: new Map<number, number>([
         [0, 11],
-        [250500, 61],
+        [251000, 61],
     ]),
     MAX_VOTES: 201,
     MAX_VOTES_PER_TRANSACTION: 3,
