@@ -102,6 +102,7 @@ class Config {
         VERSION: string;
         MIN_VERSION: string;
         MIN_CONSENSUS: number;
+        LOG_LEVEL: string;
     };
     API: {
         REQUESTS_PER_SECOND_LIMIT: number;
@@ -170,7 +171,8 @@ class Config {
             IS_REFERRED_USERS_ENABLED: process.env.IS_REFERRED_USERS_ENABLED  === 'TRUE',
             VERSION: '1.1.1',
             MIN_VERSION: '1.0.0',
-            MIN_CONSENSUS: Number(process.env.MIN_CONSENSUS) || DEFAULT_CONSENSUS
+            MIN_CONSENSUS: Number(process.env.MIN_CONSENSUS) || DEFAULT_CONSENSUS,
+            LOG_LEVEL: process.env.LOG_LEVEL || 'info',
         };
         this.API = {
             REQUESTS_PER_SECOND_LIMIT: Number(process.env.REQUESTS_PER_SECOND_LIMIT) ||

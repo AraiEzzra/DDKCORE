@@ -1,6 +1,7 @@
 import { transports, Logger } from 'winston';
-import config from 'shared/config';
 import 'winston-daily-rotate-file';
+
+import config from 'shared/config';
 
 /**
  * @desc custom levels for winston logger
@@ -25,21 +26,21 @@ class LoggerClass {
     private traceTransport;
 
     constructor() {
-       if (this.logger) {
-           return this;
-       }
-       this.init();
+        if (this.logger) {
+            return this;
+        }
+        this.init();
 
-       this.transport.formatter = (opt) => {
-            return `${opt.timestamp()} - [${ opt.level }] : ${opt.message}`;
-       };
-       this.traceTransport.formatter = function (options) {
-           return `${options.timestamp()}  - [${options.level}] : ${options.message}`;
-       };
-       this.logger = new Logger({
-           levels,
-           transports: [this.traceTransport, this.transport, this.consoleTransport]
-       });
+        this.transport.formatter = (opt) => {
+            return `${opt.timestamp()} - [${opt.level}] : ${opt.message}`;
+        };
+        this.traceTransport.formatter = function (options) {
+            return `${options.timestamp()}  - [${options.level}] : ${options.message}`;
+        };
+        this.logger = new Logger({
+            levels,
+            transports: [this.traceTransport, this.transport, this.consoleTransport],
+        });
     }
 
     private init() {
@@ -75,12 +76,9 @@ class LoggerClass {
         });
 
         this.consoleTransport = new transports.Console({
-            level: config.NODE_ENV_IN === 'development' ? 'debug' : 'debug',
+            level: config.CORE.LOG_LEVEL || 'info',
         });
     }
 }
 
 export const logger = new LoggerClass().logger;
-
-
-/** ************************************* END OF FILE ************************************ */
