@@ -108,7 +108,6 @@ export class SyncController extends BaseController {
                 id: lastBlock.id,
                 height: lastBlock.height,
             });
-
             if (!responseCommonBlocks.success) {
                 logger.error(
                     `${LOG_PREFIX}[startSyncBlocks][responseCommonBlocks]: ` +
@@ -134,7 +133,6 @@ export class SyncController extends BaseController {
                 needDelay = false;
                 continue;
             }
-            lastPeerRequested = peerAddress;
             const responseBlocks = await SyncService.requestBlocks(lastBlock, peerAddress);
             if (!responseBlocks.success) {
                 logger.error(
@@ -148,6 +146,7 @@ export class SyncController extends BaseController {
                     `${LOG_PREFIX}[startSyncBlocks][loadStatus]: ${saveRequestedBlocksResponse.errors.join('. ')}`
                 );
             } else {
+                lastPeerRequested = peerAddress;
                 needDelay = false;
             }
         }

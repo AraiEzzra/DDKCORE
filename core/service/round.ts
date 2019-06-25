@@ -1,4 +1,5 @@
-import { ActiveDelegate } from 'ddk.registry/src/model/common/delegate';
+import { ActiveDelegate, ForgeStatus } from 'ddk.registry/dist/model/common/delegate';
+import { getWholePercent } from 'ddk.registry/dist/util/percentage';
 
 import SlotService from 'core/service/slot';
 import BlockRepository from 'core/repository/block';
@@ -18,6 +19,7 @@ import { AccountChangeAction } from 'shared/model/account';
 import FailService from 'core/service/fail';
 import { EVENT_TYPES } from 'shared/driver/socket/codes';
 import SocketMiddleware from 'core/api/middleware/socket';
+import { DEFAULT_FRACTION_DIGIST } from 'shared/util/common';
 
 const MAX_LATENESS_FORGE_TIME = 500;
 
@@ -121,6 +123,10 @@ class RoundService implements IRoundService {
         forgedDelegates.forEach(delegate => {
             delegate.account.actualBalance += (undo ? -fee : fee);
             delegate.forgedBlocks++;
+            delegate.approval = Number(getWholePercent(
+                delegate.forgedBlocks,
+                delegate.forgedBlocks + delegate.missedBlocks,
+            ).toFixed(DEFAULT_FRACTION_DIGIST));
 
             delegate.account.addHistory(undo
                 ? AccountChangeAction.DISTRIBUTE_FEE_UNDO :
@@ -129,6 +135,10 @@ class RoundService implements IRoundService {
         });
         missedDelegates.forEach(delegate => {
             delegate.missedBlocks++;
+            delegate.approval = Number(getWholePercent(
+                delegate.forgedBlocks,
+                delegate.forgedBlocks + delegate.missedBlocks,
+            ).toFixed(DEFAULT_FRACTION_DIGIST));
         });
     }
 
@@ -142,6 +152,7 @@ class RoundService implements IRoundService {
                 account: undefined,
                 publicKey: delegate.account.publicKey,
                 unconfirmedVoteCount: delegate.votes,
+                status: ForgeStatus.WAITING,
             };
         });
     }
