@@ -15,4 +15,12 @@ export const CORE_SOCKET_CLIENT_CONFIG: SocketIOClient.ConnectOpts = {
     ],
 };
 
+export const PEER_SOCKET_CLIENT_CONFIG: SocketIOClient.ConnectOpts = {
+    transports: [
+        'websocket',
+    ],
+    reconnection: false,
+    timeout: 10000,
+};
+
 export const SOCKET_TIMEOUT_MS = 10000;

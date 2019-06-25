@@ -19,6 +19,7 @@ import { NetworkPeer } from 'shared/model/Peer/networkPeer';
 import { MemoryPeer } from 'shared/model/Peer/memoryPeer';
 import { logger } from 'shared/util/logger';
 import SwapTransactionQueue from 'core/service/swapTransactiontQueue';
+import { blockHeightMemoryConsensus } from 'core/util/peer';
 
 export interface ISyncService {
 
@@ -104,30 +105,44 @@ export class SyncService implements ISyncService {
         Promise<ResponseEntity<{ isExist: boolean, peerAddress?: PeerAddress }>> {
 
         const errors: Array<string> = [];
-        const filteredMemoryPeers = PeerMemoryRepository.getHigherPeersByFilter(lastBlock.height, lastBlock.id);
 
-        if (!filteredMemoryPeers.length) {
+        const unbanPeers = PeerMemoryRepository.getUnbanPeers();
+        const memoryConsensusHeight = blockHeightMemoryConsensus(unbanPeers);
+
+        if (!unbanPeers.length) {
             return new ResponseEntity({ errors: [ERROR_NOT_ENOUGH_PEERS] });
         }
-        const randomMemoryPeer = getRandom(filteredMemoryPeers);
 
-        if (this.checkBlockConsensus(lastBlock) || lastBlock.height === 1) {
+        if (memoryConsensusHeight.MAX_HEIGHT < lastBlock.height) {
+            return new ResponseEntity({
+                errors: [
+                    `Memory consensus height ${memoryConsensusHeight.MAX_HEIGHT} is less then ${lastBlock.height}`
+                ]
+            });
+        }
 
+        const suitableMemoryPeers = PeerMemoryRepository.getByHeightBlockExist(
+            memoryConsensusHeight.MAX_HEIGHT,
+            unbanPeers
+        );
+
+        const suitableRandomMemoryPeer = getRandom(suitableMemoryPeers);
+        if (lastBlock.height === 1 || this.checkBlockConsensus(lastBlock)) {
             return new ResponseEntity({
                 data: {
                     isExist: true,
-                    peerAddress: randomMemoryPeer.peerAddress
+                    peerAddress: suitableRandomMemoryPeer.peerAddress,
                 }
             });
 
         } else {
+            if (memoryConsensusHeight.MIN_HEIGHT > lastBlock.height) {
 
-            if (randomMemoryPeer.minHeight > lastBlock.height) {
-                if (!PeerNetworkRepository.has(randomMemoryPeer.peerAddress)) {
-                    errors.push(`Peer ${randomMemoryPeer.peerAddress.ip} is offline`);
+                if (!PeerNetworkRepository.has(suitableRandomMemoryPeer.peerAddress)) {
+                    errors.push(`Peer ${suitableRandomMemoryPeer.peerAddress.ip} is offline`);
                     return new ResponseEntity({ errors });
                 }
-                const networkPeer = PeerNetworkRepository.get(randomMemoryPeer.peerAddress);
+                const networkPeer = PeerNetworkRepository.get(suitableRandomMemoryPeer.peerAddress);
                 const response = await networkPeer.requestRPC<{ isExist: boolean }>(
                     ActionTypes.REQUEST_COMMON_BLOCKS,
                     lastBlock
@@ -138,10 +153,13 @@ export class SyncService implements ISyncService {
                     errors.push(...response.errors);
                     return new ResponseEntity({ errors });
                 }
-                const { isExist } = response.data;
-                if (isExist) {
-                    return new ResponseEntity({ data: { peerAddress: networkPeer.peerAddress, isExist } });
-                }
+
+                return new ResponseEntity({
+                    data: {
+                        peerAddress: networkPeer.peerAddress,
+                        isExist: response.data.isExist
+                    }
+                });
             }
         }
         return new ResponseEntity({ data: { isExist: false } });

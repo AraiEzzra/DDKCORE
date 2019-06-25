@@ -1,4 +1,4 @@
-import { PeerAddress } from 'shared/model/types';
+import { BlockData, PeerAddress } from 'shared/model/types';
 import { MemoryPeer } from 'shared/model/Peer/memoryPeer';
 import IPeerRepository from 'core/repository/peer/index';
 import { SerializedFullHeaders } from 'shared/model/Peer/fullHeaders';
@@ -61,6 +61,18 @@ class PeerMemoryRepository implements IPeerRepository <PeerAddress, MemoryPeer> 
             return peer.headers.height >= height
                 && peer.headers.broadhash !== broadhash
                 && !PeerNetworkRepository.isBanned(peer.peerAddress);
+        });
+    }
+
+    getUnbanPeers(): Array<MemoryPeer> {
+        return [...this.peers.values()].filter((peer: MemoryPeer) => {
+            return !PeerNetworkRepository.isBanned(peer.peerAddress);
+        });
+    }
+    
+    getByHeightBlockExist(height: number, memoryPeers?: Array<MemoryPeer>): Array<MemoryPeer> {
+        return (memoryPeers || [...this.peers.values()]).filter((memoryPeer: MemoryPeer) => {
+            return memoryPeer.blockHeightExist(height);
         });
     }
 
