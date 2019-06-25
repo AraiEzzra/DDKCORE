@@ -44,17 +44,24 @@ class TransactionPGRepository {
         limit: number,
         offset: number,
     ): Promise<{ transactions: Array<Transaction<IAsset>>, count: number }> {
+        let getTransactionsQuery: string;
         if (filter && filter.recipientAddress) {
             filter.asset = `{"recipientAddress": "${filter.recipientAddress}"}`;
             delete filter.recipientAddress;
+            getTransactionsQuery = query.getTransactionsByAsset(
+                filter, sort.map(elem => `${toSnakeCase(elem[0])} ${elem[1]}`).join(', '),
+            );
+        } else {
+            getTransactionsQuery = query.getTransactions(
+                filter, sort.map(elem => `${toSnakeCase(elem[0])} ${elem[1]}`).join(', '),
+            );
         }
 
-        const transactions = await db.manyOrNone(
-            query.getTransactions(filter, sort.map(elem => `${toSnakeCase(elem[0])} ${elem[1]}`).join(', ')), {
-                ...filter,
-                limit,
-                offset,
-            });
+        const transactions = await db.manyOrNone(getTransactionsQuery, {
+            ...filter,
+            limit,
+            offset,
+        });
         if (transactions && transactions.length) {
             return {
                 transactions: transactions.map(trs => SharedTransactionPGRepo.deserialize(trs)),
