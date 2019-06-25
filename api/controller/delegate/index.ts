@@ -34,8 +34,6 @@ export class DelegateController {
             sort: message.body.sort,
         }, message.headers.id);
 
-        console.log(JSON.stringify(coreMessage));
-
         SocketMiddleware.emitToCore<RequestDelegates>(coreMessage, socket);
     }
 
