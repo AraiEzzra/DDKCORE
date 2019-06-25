@@ -20,12 +20,6 @@ export const ERROR_NOT_ENOUGH_PEERS = 'ERROR_NOT_ENOUGH_PEERS';
 
 export class PeerService {
 
-    private peerVersionChecker: PeerVersionChecker;
-
-    constructor() {
-        this.peerVersionChecker = new PeerVersionChecker(config.CORE.VERSION);
-    }
-
     add(data: PeerHeadersReceived): boolean {
         if (config.CORE.PEERS.BLACKLIST.indexOf(data.peerAddress.ip) !== -1 ||
             !VersionChecker.isAcceptable(data.peerHeaders.version)) {
@@ -120,13 +114,7 @@ export class PeerService {
     }
 
     ping() {
-        // TODO delete this crutch in a far future
-        const peerList = PeerNetworkRepository.getAll().filter((networkPeer: NetworkPeer) => {
-            return this.peerVersionChecker.isAcceptable(
-                PeerMemoryRepository.get(networkPeer.peerAddress).headers.version
-            );
-        });
-        peerList.forEach((peer: NetworkPeer) => {
+        PeerNetworkRepository.getAll().forEach((peer: NetworkPeer) => {
             logger.trace(`[Service][Peer][ping] ${peer.peerAddress.ip}`);
 
             peer.requestRPC(ActionTypes.PING, {})

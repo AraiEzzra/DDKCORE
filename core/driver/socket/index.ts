@@ -1,7 +1,7 @@
 import io from 'socket.io-client';
 import socketIO from 'socket.io';
 import config, { DEFAULT_CORE_SOCKET_PORT } from 'shared/config/index';
-import { API_SOCKET_SERVER_CONFIG, CORE_SOCKET_CLIENT_CONFIG } from 'shared/config/socket';
+import { API_SOCKET_SERVER_CONFIG, PEER_SOCKET_CLIENT_CONFIG } from 'shared/config/socket';
 import { messageON } from 'shared/util/bus';
 import { logger } from 'shared/util/logger';
 import { IPRegExp } from 'core/util/common';
@@ -9,6 +9,7 @@ import { PEER_SOCKET_TYPE, PeerAddress } from 'shared/model/types';
 import { ActionTypes } from 'core/util/actionTypes';
 import { SerializedFullHeaders } from 'shared/model/Peer/fullHeaders';
 import { PEER_SOCKET_EVENTS } from 'core/driver/socket/socketsTypes';
+
 export const REQUEST_TIMEOUT = '408 Request Timeout';
 
 export class Socket {
@@ -70,7 +71,10 @@ export class Socket {
     connectPeer(peerAddress: PeerAddress, headers: SerializedFullHeaders): void {
 
         logger.debug(`[SOCKET][connectPeer] connecting to ${peerAddress.ip}:${peerAddress.port}...`);
-        const ws: SocketIOClient.Socket = io(`ws://${peerAddress.ip}:${peerAddress.port}`, CORE_SOCKET_CLIENT_CONFIG);
+        const ws: SocketIOClient.Socket = io(
+            `ws://${peerAddress.ip}:${peerAddress.port}`,
+            PEER_SOCKET_CLIENT_CONFIG
+        );
 
         ws.on(PEER_SOCKET_EVENTS.CONNECT, () => {
 

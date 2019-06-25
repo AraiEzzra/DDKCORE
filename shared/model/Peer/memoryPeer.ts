@@ -59,4 +59,8 @@ export class MemoryPeer extends Peer {
         return this.headers.blocksIds.has(blockData.height)
             && this.headers.blocksIds.get(blockData.height) === blockData.id;
     }
+
+    blockHeightExist(height: number): boolean {
+        return this.headers.blocksIds.has(height);
+    }
 }
