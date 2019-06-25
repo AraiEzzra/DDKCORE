@@ -2,6 +2,7 @@ import { TransactionLifecycle, BlockLifecycle } from 'shared/model/transaction';
 import { Account, AccountChangeAction } from 'shared/model/account';
 import { Round } from 'shared/model/round';
 import { SerializedFullHeaders } from 'shared/model/Peer/fullHeaders';
+import { Pagination, Sort } from 'shared/util/common';
 
 export type Filter = {
     limit: number;
@@ -87,3 +88,5 @@ export type Address = BigInt;
 export type PublicKey = string;
 export type Timestamp = number;
 export type AirdropReward = Map<Address, number>;
+
+export type RequestDelegates = { filter: Pagination & { username: string }, sort: Array<Sort> };

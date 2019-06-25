@@ -1,12 +1,13 @@
 import { API } from 'core/api/util/decorators';
 import { Message } from 'shared/model/message';
 import { ResponseEntity } from 'shared/model/response';
-import { Pagination } from 'shared/util/common';
+import { Pagination, Sort } from 'shared/util/common';
 import DelegateRepository from 'core/repository/delegate';
 import DelegateService from 'core/service/delegate';
 import AccountRepository from 'core/repository/account';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
 import { SerializedDelegate } from 'shared/model/delegate';
+import { RequestDelegates } from 'shared/model/types';
 
 class DelegateController {
 
@@ -18,14 +19,17 @@ class DelegateController {
 
     @API(API_ACTION_TYPES.GET_DELEGATES)
     public getDelegates(
-        message: Message<Pagination>,
+        message: Message<RequestDelegates>,
     ): ResponseEntity<{ delegates: Array<SerializedDelegate>, count: number }> {
+        const result = DelegateRepository.getMany(
+            message.body.filter,
+            message.body.sort,
+        );
+
         return new ResponseEntity({
             data: {
-                delegates: DelegateRepository.getDelegates(message.body.limit, message.body.offset).map(
-                    delegate => DelegateRepository.serialize(delegate)
-                ),
-                count: DelegateRepository.getCount(),
+                delegates: result.delegates.map(delegate => DelegateRepository.serialize(delegate)),
+                count: result.count,
             }
         });
     }

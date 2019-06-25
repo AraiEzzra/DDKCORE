@@ -6,6 +6,7 @@ if [ "$SERVICE" == "WATCH" ]; then
     if [ ! -d node_modules ]; then
         npm install
     fi
+    npm update ddk.registry
     nc -lk 5000 & npm run watch
 else
     wait-port "$DB_HOST:${DB_PORT:-5432}" && \

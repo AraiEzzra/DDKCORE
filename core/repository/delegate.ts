@@ -1,7 +1,13 @@
 import { Account } from 'shared/model/account';
-import config from 'shared/config';
 import { Delegate, SerializedDelegate } from 'shared/model/delegate';
 import { PublicKey } from 'shared/model/types';
+import { Sort, customSort } from 'shared/util/common';
+import { sortByKey } from 'shared/util/util';
+
+const sortingFuncs = {
+    'approval': sortByKey('approval', 'ASC'),
+    'publicKey': sortByKey('publicKey', 'ASC'),
+};
 
 class DelegateRepository {
     private memoryDelegates: Map<PublicKey, Delegate> = new Map();
@@ -16,22 +22,32 @@ class DelegateRepository {
             account: account,
             votes: 0,
             confirmedVoteCount: 0,
+            approval: 0,
         });
         this.memoryDelegates.set(account.publicKey, delegate);
         this.usernames.add(delegate.username);
         return delegate;
     }
 
-    public getDelegates(limit: number, offset: number): Array<Delegate> {
-        return [...this.memoryDelegates.values()].sort((a, b) => {
-            if (a.account.publicKey > b.account.publicKey) {
-                return 1;
-            }
-            if (a.account.publicKey < b.account.publicKey) {
-                return -1;
-            }
-            return 0;
-        }).slice(offset, offset + limit);
+    public getAll(): Array<Delegate> {
+        return [...this.memoryDelegates.values()];
+    }
+
+    public getMany(
+        filter: { limit: number, offset: number, username: string },
+        sort: Array<Sort>,
+    ): { delegates: Array<Delegate>, count: number } {
+        let delegates = this.getAll();
+        if (filter.username) {
+            delegates = delegates.filter(
+                delegate => delegate.username.toLowerCase().includes(filter.username.toLowerCase()),
+            );
+        }
+
+        return {
+            delegates: customSort<Delegate>(delegates, sortingFuncs, { ...filter, sort }),
+            count: delegates.length,
+        };
     }
 
     public getDelegate(publicKey: PublicKey): Delegate {
@@ -40,10 +56,6 @@ class DelegateRepository {
 
     public getCount() {
         return this.memoryDelegates.size;
-    }
-
-    public getAll(): Array<Delegate> {
-        return [...this.memoryDelegates.values()];
     }
 
     public isUserNameExists(username: string): boolean {
@@ -66,6 +78,7 @@ class DelegateRepository {
             publicKey: delegate.account.publicKey,
             votes: delegate.votes,
             confirmedVoteCount: delegate.confirmedVoteCount,
+            approval: delegate.approval,
         };
     }
 }
