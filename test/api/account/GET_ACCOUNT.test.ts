@@ -139,6 +139,7 @@ describe('Test GET_ACCOUNT', () => {
                 publicKey: '83cb3d8641c8e73735cc1b70c915602ffcb6e5a68f14a71056511699050a1a05',
                 votes: 2,
                 confirmedVoteCount: 2,
+                approval: 0,
             }],
             stakes: [{
                 createdAt: 0,

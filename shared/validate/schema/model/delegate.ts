@@ -6,23 +6,29 @@ export const SCHEMAS_DELEGATES = [
         id: API_ACTION_TYPES.GET_DELEGATES,
         type: 'object',
         properties: {
-            ...PAGINATION_SCHEME
+            ...PAGINATION_SCHEME,
+            username: {
+                type: 'string',
+                format: 'username',
+            },
+            sort: {
+                type: 'array',
+                items: {
+                    type: 'array',
+                    items: {
+                        type: 'string',
+                        enum: ['ASC', 'DESC', 'approval', 'publicKey'],
+                    },
+                },
+            },
         },
-        required: ['limit', 'offset']
+        required: ['limit', 'offset'],
     },
     {
         id: API_ACTION_TYPES.GET_ACTIVE_DELEGATES,
         type: 'object',
         properties: {
-            limit: {
-                type: 'integer',
-                minimum: 1,
-                maximum: 100
-            },
-            offset: {
-                type: 'integer',
-                minimum: 0,
-            }
+            ...PAGINATION_SCHEME,
         },
         required: ['limit', 'offset']
     },
@@ -30,15 +36,7 @@ export const SCHEMAS_DELEGATES = [
         id: API_ACTION_TYPES.GET_MY_DELEGATES,
         type: 'object',
         properties: {
-            limit: {
-                type: 'integer',
-                minimum: 1,
-                maximum: 100
-            },
-            offset: {
-                type: 'integer',
-                minimum: 0,
-            },
+            ...PAGINATION_SCHEME,
             address: {
                 type: 'string',
                 format: 'address'
