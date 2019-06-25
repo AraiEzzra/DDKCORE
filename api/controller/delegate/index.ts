@@ -2,7 +2,7 @@ import { RPC } from 'api/utils/decorators';
 import { Message } from 'shared/model/message';
 import SocketMiddleware from 'api/middleware/socket';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
-import { Pagination, Sort, Direction } from 'shared/util/common';
+import { Pagination, Sort } from 'shared/util/common';
 import { validate } from 'shared/validate';
 import { RequestDelegates } from 'shared/model/types';
 
@@ -19,9 +19,8 @@ export class DelegateController {
     @validate()
     getDelegates(message: Message<Pagination & { sort: Array<Sort>, username: string }>, socket: any) {
         if (!message.body.sort) {
-            message.body.sort = [];
-        }
-        if (!message.body.sort.length) {
+            message.body.sort = [['approval', 'DESC'], ['publicKey', 'ASC']];
+        } else if (!message.body.sort.length) {
             message.body.sort.push(['approval', 'DESC'], ['publicKey', 'ASC']);
         }
 

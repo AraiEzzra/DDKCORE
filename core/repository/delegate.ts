@@ -2,30 +2,11 @@ import { Account } from 'shared/model/account';
 import { Delegate, SerializedDelegate } from 'shared/model/delegate';
 import { PublicKey } from 'shared/model/types';
 import { Sort, customSort } from 'shared/util/common';
-
-const approvalSort = (a: Delegate, b: Delegate): number => {
-    if (a.approval > b.approval) {
-        return 1;
-    }
-    if (a.approval < b.approval) {
-        return -1;
-    }
-    return 0;
-};
-
-const publicKeySort = (a: Delegate, b: Delegate): number => {
-    if (a.account.publicKey > b.account.publicKey) {
-        return 1;
-    }
-    if (a.account.publicKey < b.account.publicKey) {
-        return -1;
-    }
-    return 0;
-};
+import { sortByKey } from 'shared/util/util';
 
 const sortingFuncs = {
-    'approval': approvalSort,
-    'publicKey': publicKeySort,
+    'approval': sortByKey('approval', 'ASC'),
+    'publicKey': sortByKey('publicKey', 'ASC'),
 };
 
 class DelegateRepository {
