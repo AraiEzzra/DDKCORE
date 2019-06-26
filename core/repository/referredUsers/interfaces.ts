@@ -1,4 +1,4 @@
-import { Account} from 'shared/model/account';
+import { Account } from 'shared/model/account';
 import { Address } from 'shared/model/types';
 import { IAssetRegister, IAssetStake, IAssetVote, Transaction } from 'shared/model/transaction';
 
@@ -8,6 +8,7 @@ export interface IReferredUsers {
     getUsers(account: Account, level: number): Array<IReferredUser>;
     updateCountFactor(trs: Transaction<IAssetRegister>, action: FactorAction): void;
     updateRewardFactor(trs: Transaction<IAssetStake | IAssetVote>, action: FactorAction): void;
+    updateStakeAmountFactor(address: Address, amount: number, action: FactorAction): void;
 }
 
 export interface IReferredUser {

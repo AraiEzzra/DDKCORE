@@ -1,6 +1,7 @@
 import { IReferredUser, IReferredUsers, FactorAction } from 'core/repository/referredUsers/interfaces';
-import { Account} from 'shared/model/account';
+import { Account } from 'shared/model/account';
 import { IAssetRegister, IAssetStake, IAssetVote, Transaction } from 'shared/model/transaction';
+import { Address } from 'ddk.registry/dist/model/common/type';
 
 export default class ReferredUsersFake implements IReferredUsers {
 
@@ -14,6 +15,9 @@ export default class ReferredUsersFake implements IReferredUsers {
     }
 
     updateRewardFactor(trs: Transaction<IAssetStake | IAssetVote>, action: FactorAction = FactorAction.ADD) {
+    }
+
+    updateStakeAmountFactor(address: Address, amount: number, action: FactorAction) {
     }
 
     getUsers(account: Account, level: number): Array<IReferredUser> {

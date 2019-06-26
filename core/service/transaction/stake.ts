@@ -12,6 +12,8 @@ import { TOTAL_PERCENTAGE } from 'core/util/const';
 import config from 'shared/config';
 import BUFFER from 'core/util/buffer';
 import BlockRepository from 'core/repository/block';
+import ReferredUsersRepo from 'core/repository/referredUsers';
+import { FactorAction } from 'core/repository/referredUsers/interfaces';
 
 import {
     getAirdropReward,
@@ -113,6 +115,8 @@ class TransactionStakeService implements IAssetService<IAssetStake> {
         if (isSponsorsExist(trs)) {
             sendAirdropReward(trs);
         }
+
+        ReferredUsersRepo.updateStakeAmountFactor(sender.address, trs.asset.amount, FactorAction.ADD);
     }
 
     undoUnconfirmed(trs: Transaction<IAssetStake>, sender: Account, senderOnly: boolean): void {
@@ -125,6 +129,8 @@ class TransactionStakeService implements IAssetService<IAssetStake> {
         if (!senderOnly && isSponsorsExist(trs)) {
             undoAirdropReward(trs);
         }
+
+        ReferredUsersRepo.updateStakeAmountFactor(sender.address, trs.asset.amount, FactorAction.SUBTRACT);
     }
 
 }

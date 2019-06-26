@@ -16,6 +16,7 @@ import { ResponseEntity } from 'shared/model/response';
 import { TOTAL_PERCENTAGE } from 'core/util/const';
 import { isEqualMaps } from 'core/util/common';
 import { Address } from 'shared/model/types';
+import { FactorAction } from 'core/repository/referredUsers/interfaces';
 
 class StakeReward {
     private readonly milestones = config.CONSTANTS.FROZE.REWARDS.MILESTONES;
@@ -149,6 +150,8 @@ function applyUnstake(orders: Array<Stake>, trs: Transaction<IAssetVote>): void 
         order.isActive = false;
     });
     AccountRepo.updateBalanceByAddress(trs.senderAddress, trs.asset.unstake);
+
+    ReferredUsersRepo.updateStakeAmountFactor(trs.senderAddress, trs.asset.unstake, FactorAction.SUBTRACT);
 }
 
 export function isSponsorsExist(trs: Transaction<IAssetStake | IAssetVote>): boolean {
@@ -208,6 +211,8 @@ function undoUnstake(orders: Array<Stake>, trs: Transaction<IAssetVote>, sender:
         order.isActive = true;
     });
     sender.actualBalance -= trs.asset.unstake;
+
+    ReferredUsersRepo.updateStakeAmountFactor(sender.address, trs.asset.unstake, FactorAction.ADD);
 }
 
 function undoRewards(trs: Transaction<IAssetVote>, sender: Account, senderOnly: boolean): void {
