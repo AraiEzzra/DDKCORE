@@ -133,18 +133,20 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
             logger.debug(
                 `[Service][TransactionQueue][process][verifyUnconfirmed] ` +
                 `${JSON.stringify(verifyStatus.errors.join('. '))}. ` +
-                `Transaction id: ${trs.id}. Account address: ${sender.address}`
+                `Transaction id: ${trs.id}. Account address: ${sender.address}, Relay: ${trs.relay}`
             );
-            trs.status = TransactionStatus.DECLINED;
-            TransactionHistoryRepository.addEvent(trs, { action: TransactionLifecycle.DECLINE });
 
-            SocketMiddleware.emitEvent<{ transaction: SerializedTransaction<IAsset>, reason: Array<string> }>(
-                EVENT_TYPES.DECLINE_TRANSACTION,
-                {
-                    transaction: SharedTransactionRepo.serialize(trs),
-                    reason: verifyStatus.errors
-                }
-            );
+            if (trs.relay === 0) {
+                trs.status = TransactionStatus.DECLINED;
+                TransactionHistoryRepository.addEvent(trs, { action: TransactionLifecycle.DECLINE });
+                SocketMiddleware.emitEvent<{ transaction: SerializedTransaction<IAsset>, reason: Array<string> }>(
+                    EVENT_TYPES.DECLINE_TRANSACTION,
+                    {
+                        transaction: SharedTransactionRepo.serialize(trs),
+                        reason: verifyStatus.errors
+                    }
+                );
+            }
 
             setImmediate(this.process);
             return;
@@ -169,7 +171,7 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
 
     getUniqueTransactions(): Array<Transaction<IAsset>> {
         const transactions = [...this.queue, ...this.conflictedQueue].sort(transactionSortFunc);
-        return uniqueFilterByKey<TransactionId>('id',  transactions);
+        return uniqueFilterByKey<TransactionId>('id', transactions);
     }
 }
 

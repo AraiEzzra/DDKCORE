@@ -55,21 +55,12 @@ class PeerMemoryRepository implements IPeerRepository <PeerAddress, MemoryPeer> 
         return this.peers.has(`${peerAddress.ip}:${peerAddress.port}`);
     }
 
-    getHigherPeersByFilter(height, broadhash): Array<MemoryPeer> {
-
-        return [...this.peers.values()].filter((peer: MemoryPeer) => {
-            return peer.headers.height >= height
-                && peer.headers.broadhash !== broadhash
-                && !PeerNetworkRepository.isBanned(peer.peerAddress);
-        });
-    }
-
     getUnbanPeers(): Array<MemoryPeer> {
         return [...this.peers.values()].filter((peer: MemoryPeer) => {
             return !PeerNetworkRepository.isBanned(peer.peerAddress);
         });
     }
-    
+
     getByHeightBlockExist(height: number, memoryPeers?: Array<MemoryPeer>): Array<MemoryPeer> {
         return (memoryPeers || [...this.peers.values()]).filter((memoryPeer: MemoryPeer) => {
             return memoryPeer.blockHeightExist(height);
