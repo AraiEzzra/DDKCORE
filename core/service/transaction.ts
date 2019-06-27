@@ -461,7 +461,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         }
 
         if (SlotService.getSlotNumber(trs.createdAt) > SlotService.getSlotNumber()) {
-            throw new ResponseEntity<void>({ errors: ['Invalid transaction timestamp. CreatedAt is in the future'] });
+            return new ResponseEntity<void>({ errors: ['Invalid transaction timestamp. CreatedAt is in the future'] });
         }
 
         const asset: IAssetTransfer | IAssetStake = <IAssetTransfer | IAssetStake><Object>trs.asset;
