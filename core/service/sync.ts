@@ -105,44 +105,30 @@ export class SyncService implements ISyncService {
         Promise<ResponseEntity<{ isExist: boolean, peerAddress?: PeerAddress }>> {
 
         const errors: Array<string> = [];
+        const filteredMemoryPeers = PeerMemoryRepository.getHigherPeersByFilter(lastBlock.height, lastBlock.id);
 
-        const unbanPeers = PeerMemoryRepository.getUnbanPeers();
-        const memoryConsensusHeight = blockHeightMemoryConsensus(unbanPeers);
-
-        if (!unbanPeers.length) {
+        if (!filteredMemoryPeers.length) {
             return new ResponseEntity({ errors: [ERROR_NOT_ENOUGH_PEERS] });
         }
+        const randomMemoryPeer = getRandom(filteredMemoryPeers);
 
-        if (memoryConsensusHeight.MAX_HEIGHT < lastBlock.height) {
-            return new ResponseEntity({
-                errors: [
-                    `Memory consensus height ${memoryConsensusHeight.MAX_HEIGHT} is less then ${lastBlock.height}`
-                ]
-            });
-        }
+        if (this.checkBlockConsensus(lastBlock) || lastBlock.height === 1) {
 
-        const suitableMemoryPeers = PeerMemoryRepository.getByHeightBlockExist(
-            memoryConsensusHeight.MAX_HEIGHT,
-            unbanPeers
-        );
-
-        const suitableRandomMemoryPeer = getRandom(suitableMemoryPeers);
-        if (lastBlock.height === 1 || this.checkBlockConsensus(lastBlock)) {
             return new ResponseEntity({
                 data: {
                     isExist: true,
-                    peerAddress: suitableRandomMemoryPeer.peerAddress,
+                    peerAddress: randomMemoryPeer.peerAddress
                 }
             });
 
         } else {
-            if (memoryConsensusHeight.MIN_HEIGHT > lastBlock.height) {
 
-                if (!PeerNetworkRepository.has(suitableRandomMemoryPeer.peerAddress)) {
-                    errors.push(`Peer ${suitableRandomMemoryPeer.peerAddress.ip} is offline`);
+            if (randomMemoryPeer.minHeight > lastBlock.height) {
+                if (!PeerNetworkRepository.has(randomMemoryPeer.peerAddress)) {
+                    errors.push(`Peer ${randomMemoryPeer.peerAddress.ip} is offline`);
                     return new ResponseEntity({ errors });
                 }
-                const networkPeer = PeerNetworkRepository.get(suitableRandomMemoryPeer.peerAddress);
+                const networkPeer = PeerNetworkRepository.get(randomMemoryPeer.peerAddress);
                 const response = await networkPeer.requestRPC<{ isExist: boolean }>(
                     ActionTypes.REQUEST_COMMON_BLOCKS,
                     lastBlock
@@ -153,7 +139,6 @@ export class SyncService implements ISyncService {
                     errors.push(...response.errors);
                     return new ResponseEntity({ errors });
                 }
-
                 return new ResponseEntity({
                     data: {
                         peerAddress: networkPeer.peerAddress,

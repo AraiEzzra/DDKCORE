@@ -67,6 +67,15 @@ class PeerMemoryRepository implements IPeerRepository <PeerAddress, MemoryPeer> 
         });
     }
 
+    getHigherPeersByFilter(height, broadhash): Array<MemoryPeer> {
+
+        return [...this.peers.values()].filter((peer: MemoryPeer) => {
+            return peer.headers.height >= height
+                && peer.headers.broadhash !== broadhash
+                && !PeerNetworkRepository.isBanned(peer.peerAddress);
+        });
+    }
+    
     getLessPeersByFilter(height, broadhash): Array<MemoryPeer> {
 
         return [...this.peers.values()].filter((peer: MemoryPeer) => {
