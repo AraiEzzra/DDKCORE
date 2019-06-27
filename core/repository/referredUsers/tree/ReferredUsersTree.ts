@@ -1,10 +1,11 @@
 import { FactorAction, FactorType, IReferredUser, IReferredUsers } from 'core/repository/referredUsers/interfaces';
 import AirdropHistoryRepository, { AirdropHistory } from 'core/repository/airdropHistory';
 import FactorTree from 'core/repository/referredUsers/tree/FactorTree';
-import config from 'shared/config/index';
+import config from 'shared/config';
 import { Account } from 'shared/model/account';
 import { Address } from 'shared/model/types';
 import { IAssetRegister, IAssetStake, IAssetVote, Transaction } from 'shared/model/transaction';
+import AccountRepository from 'core/repository/account';
 
 export default class ReferredUsersTree implements IReferredUsers {
 
@@ -40,6 +41,14 @@ export default class ReferredUsersTree implements IReferredUsers {
         this.tree.eachParents(node, (parent, level) => {
             parent.addFactor(FactorType.COUNT, level, 1, action);
         });
+    }
+
+    updateStakeAmountFactor(address: Address, amount: number, action: FactorAction = FactorAction.ADD) {
+        const node = this.tree.getNode(address);
+
+        if (node) {
+            node.addFactor(FactorType.STAKE_AMOUNT, 0, amount, action);
+        }
     }
 
     updateRewardFactor(trs: Transaction<IAssetStake | IAssetVote>, action: FactorAction = FactorAction.ADD) {
@@ -84,15 +93,21 @@ export default class ReferredUsersTree implements IReferredUsers {
         }
 
         const node = this.tree.getNode(account.address);
-
-        if (node !== undefined) {
-            return [...node.children.values()].map(item => ({
-                address: item.data,
-                isEmpty: item.children.size === 0 || level === config.CONSTANTS.REFERRAL.MAX_COUNT,
-                factors: item.getFactorsByLevel(level)
-            }));
+        if (!node) {
+            return [];
         }
 
-        return [];
+        return [...node.children.values()].map(item => {
+            const referredAccount = AccountRepository.getByAddress(item.data);
+
+            return {
+                address: item.data,
+                stakeAmount: referredAccount
+                    .getActiveStakes()
+                    .reduce((accumulator, stake) => accumulator + stake.amount, 0),
+                isEmpty: item.children.size === 0 || level === config.CONSTANTS.REFERRAL.MAX_COUNT,
+                factors: item.getFactorsByLevel(level),
+            };
+        });
     }
 }
