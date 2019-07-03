@@ -27,7 +27,7 @@ const constants: IConstants = {
         FROZE: 0.01,
         SEND_STAKE: 0.1,
     },
-    MAX_TRANSACTIONS_PER_BLOCK: 250,
+    MAX_TRANSACTIONS_PER_BLOCK: 10000,
     REWARDS: {
         MILESTONES: [
             500000000, // Initial Reward
