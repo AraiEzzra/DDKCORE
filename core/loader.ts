@@ -1,4 +1,5 @@
 import * as path from 'path';
+import fs from 'fs';
 import { QueryFile } from 'pg-promise';
 
 import db from 'shared/driver/db';
@@ -26,6 +27,8 @@ import DelegateService from 'core/service/delegate';
 import { ActionTypes } from 'core/util/actionTypes';
 import { Migrator } from 'core/database/migrator';
 import { ERROR_CODES } from 'shared/config/errorCodes';
+import transactionQueue from 'core/service/transactionQueue';
+import SharedTransactionRepo from 'shared/repository/transaction';
 
 // @ts-ignore
 BigInt.prototype.toJSON = function () {
@@ -59,6 +62,16 @@ class Loader {
         if (!config.CORE.IS_HISTORY_ON_WARMUP) {
             config.CORE.IS_HISTORY = historyState;
         }
+
+        const transactions: Array<Transaction<any>> = await new Promise(resolve => {
+            fs.readFile('transactions.json', 'utf8', (_, data) => resolve(JSON.parse(data)));
+        });
+        transactions.forEach(transaction => {
+            const trs = SharedTransactionRepo.deserialize(transaction);
+
+            transactionQueue.pushInConflictedQueue(trs);
+        });
+
         SocketDriver.initServer();
 
         setInterval(() => messageON(ActionTypes.EMIT_PING), config.CONSTANTS.PEER_PING_PONG_INTERVAL);
