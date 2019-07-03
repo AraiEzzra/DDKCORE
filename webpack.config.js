@@ -5,7 +5,7 @@ const DIR = path.resolve(__dirname);
 const OUTPUT_DIR = path.resolve(__dirname, 'dist');
 
 const baseConfig = {
-    mode: 'production',
+    mode: 'development',
     target: 'node',
     externals: [nodeExternals()],
     node: {
