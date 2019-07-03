@@ -56,9 +56,9 @@ const constants: IConstants = {
         UNSTAKE_VOTE_COUNT: 4
     },
     TRANSFER: {
-        MAX_TRS_RELAY: 4,
-        MAX_BLOCK_RELAY: 3,
-        REQUEST_BLOCK_LIMIT: 10,
+        MAX_TRS_RELAY: 2,
+        MAX_BLOCK_RELAY: 2,
+        REQUEST_BLOCK_LIMIT: 1,
     },
     REFERRAL: {
         MAX_COUNT: 15,
