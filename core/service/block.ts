@@ -68,11 +68,19 @@ class BlockService {
         + BUFFER.LENGTH.INT64 // fee
     ;
 
+    getTransactions = (): Array<Transaction<any>> => {
+        const lastBlock: Block = BlockRepo.getLastBlock();
+        if (lastBlock.height < 20) {
+            return [];
+        } else {
+            return TransactionPool.popSortedUnconfirmedTransactions(config.CONSTANTS.MAX_TRANSACTIONS_PER_BLOCK);
+        }
+    }
+
     public async generateBlock(keyPair: IKeyPair, timestamp: number): Promise<ResponseEntity<void>> {
         logger.debug(`[Service][Block][generateBlock] timestamp ${timestamp}`);
 
-        const transactions: Array<Transaction<object>> =
-            TransactionPool.popSortedUnconfirmedTransactions(config.CONSTANTS.MAX_TRANSACTIONS_PER_BLOCK);
+        const transactions: Array<Transaction<object>> = this.getTransactions();
 
         const previousBlock: Block = BlockRepo.getLastBlock();
 
@@ -649,13 +657,12 @@ class BlockService {
     }
 
     public create({ transactions, timestamp, previousBlock, keyPair }): Block {
-        const blockTransactions = transactions.sort(transactionSortFunc);
         return new Block({
             createdAt: timestamp,
-            transactionCount: blockTransactions.length,
+            transactionCount: transactions.length,
             previousBlockId: previousBlock.id,
             generatorPublicKey: keyPair.publicKey.toString('hex'),
-            transactions: blockTransactions
+            transactions,
         });
     }
 
