@@ -20,6 +20,7 @@ import SharedTransactionRepo from 'shared/repository/transaction';
 import TransactionHistoryRepository from 'core/repository/history/transaction';
 import { TransactionId } from 'shared/model/types';
 import SystemRepository from 'core/repository/system';
+import BlockRepository from 'core/repository/block';
 
 const PROCESS_QUEUE_DELAY = 100;
 
@@ -109,6 +110,9 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
         }
 
         if (TransactionPool.getSize() >= 3000) {
+            return;
+        }
+        if (BlockRepository.getLastBlock().height < 10) {
             return;
         }
 
