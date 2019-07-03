@@ -108,7 +108,7 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
             return;
         }
 
-        if (TransactionPool.getSize() >= 5000) {
+        if (TransactionPool.getSize() >= 3000) {
             return;
         }
 
