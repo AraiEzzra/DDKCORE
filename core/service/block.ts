@@ -570,8 +570,13 @@ class BlockService {
             RoundRepository.add(newRound);
         }
 
+        let isVerify = true;
+        if (!FailService.isVerifyBlock(block.id)) {
+            isVerify = false;
+        }
+
         const errors: Array<string> = [];
-        const processBlockResponse: ResponseEntity<void> = await this.process(block, true, null, true);
+        const processBlockResponse: ResponseEntity<void> = await this.process(block, true, null, isVerify);
         if (!processBlockResponse.success) {
             errors.push(...processBlockResponse.errors);
         }

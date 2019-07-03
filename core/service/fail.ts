@@ -6,6 +6,8 @@ const TRUE_ROUND_BUILD_BLOCK_ID_245191 = '369538bb46848894a66a7bc974d9c3ea76e9e7
 const FIRST_SLOT_BROKEN_ROUND = 10939114;
 const LAST_SLOT_BROKEN_ROUND = 10939124;
 
+const BAD_BLOCK_ID_310567 = 'b21408ea3aa1303ea3a3d63f640b2942208fb382bb4d6ce878a126dd5c054590';
+
 class FailService {
     public getRightLastRoundBlockId = (id: BlockId): BlockId => {
         return id === FAIL_ROUND_BUILD_BLOCK_ID_245191 ? TRUE_ROUND_BUILD_BLOCK_ID_245191 : id;
@@ -16,6 +18,10 @@ class FailService {
             return false;
         }
         return true;
+    }
+
+    public isVerifyBlock = (id: BlockId): boolean => {
+        return id !== BAD_BLOCK_ID_310567;
     }
 }
 
