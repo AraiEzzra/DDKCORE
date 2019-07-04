@@ -18,7 +18,8 @@ import {
     IAssetTransfer,
     Transaction,
     TransactionLifecycle,
-    TransactionType
+    TransactionType,
+    TransactionModel
 } from 'shared/model/transaction';
 import TransactionDispatcher from 'core/service/transaction';
 import TransactionService from 'core/service/transaction';
@@ -553,7 +554,7 @@ class BlockService {
         BlockHistoryRepository.addEvent(block, { action: BlockLifecycle.RECEIVE });
 
         logger.info(
-            `Received new block id: ${block.id} ` +
+            `[Service][Block][receiveBlock] Received new block id: ${block.id} ` +
             `height: ${block.height} ` +
             `slot: ${SlotService.getSlotNumber(block.createdAt)}`
         );
@@ -694,6 +695,20 @@ class BlockService {
         ]);
     }
 
+    private validateTransactionsSorting(transactions: Array<TransactionModel<any>>): boolean {
+        for (let index = 1; index < transactions.length; index++) {
+            const prevTransaction = transactions[index - 1];
+            const curTransaction = transactions[index];
+
+            const sorted = [prevTransaction, curTransaction].sort(transactionSortFunc);
+            if (sorted[0] !== prevTransaction) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     public validate(block: BlockModel): ResponseEntity<null> {
         const round = RoundRepository.getCurrentRound();
         const prevRound = RoundRepository.getPrevRound();
@@ -706,6 +721,12 @@ class BlockService {
         if (!isValid) {
             return new ResponseEntity<null>({
                 errors: validator.getLastErrors().map(err => err.message),
+            });
+        }
+
+        if (!this.validateTransactionsSorting(block.transactions)) {
+            return new ResponseEntity<null>({
+                errors: [`Incorrectly sorted transactions`],
             });
         }
 
