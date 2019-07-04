@@ -2,7 +2,7 @@
     "id": "cbb9449abb9672d33fa2eb200b1c8b03db7c6572dfb6e59dc334c0ab82b63ab0",
     "version": 1,
     "height": 1,
-    "transactionCount": 7,
+    "transactionCount": 13,
     "amount": 4797000000000000,
     "fee": 482700000000,
     "payloadHash": "7e6ba6ec459d96207414f61b67ecd2ecd8c946507bb102a1e47a0ce987e494d0",
@@ -63,6 +63,90 @@
             "asset": {
                 "recipientAddress": "4995063339468361088",
                 "amount": 4500000000000000
+            }
+        },
+        {
+            "id": "bf072e8025398640bc7eb3e19a9305dddd14230f9728a2daa32d5ece77ad1595",
+            "blockId": "cbb9449abb9672d33fa2eb200b1c8b03db7c6572dfb6e59dc334c0ab82b63ab0",
+            "type": 10,
+            "createdAt": 0,
+            "senderPublicKey": "f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2",
+            "signature": "f93b31e7bad55ff41fb01cc7501928919d0a0d9932cafaeafcab94700eade698b251a6b8b80ae7d566e1912cdd17dc2afffc7b58f92a35cc197e309289386f09",
+            "fee": 0,
+            "salt": "9e0910c2e2eab7ae84f6c18f306d5157",
+            "asset": {
+                "amount": 9000000000000,
+                "recipientAddress": "8726697212794509502"
+            }
+        },
+        {
+            "id": "bf072e8025398640bc7eb3e19a9305dddd14230f9728a2daa32d5ece77ad1596",
+            "blockId": "cbb9449abb9672d33fa2eb200b1c8b03db7c6572dfb6e59dc334c0ab82b63ab0",
+            "type": 10,
+            "createdAt": 0,
+            "senderPublicKey": "f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2",
+            "signature": "f93b31e7bad55ff41fb01cc7501928919d0a0d9932cafaeafcab94700eade698b251a6b8b80ae7d566e1912cdd17dc2afffc7b58f92a35cc197e309289386f09",
+            "fee": 0,
+            "salt": "9e0910c2e2eab7ae84f6c18f306d5157",
+            "asset": {
+                "amount": 2250000000000,
+                "recipientAddress": "13204560599307969984"
+            }
+        },
+        {
+            "id": "bf072e8025398640bc7eb3e19a9305dddd14230f9728a2daa32d5ece77ad1597",
+            "blockId": "cbb9449abb9672d33fa2eb200b1c8b03db7c6572dfb6e59dc334c0ab82b63ab0",
+            "type": 10,
+            "createdAt": 0,
+            "senderPublicKey": "f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2",
+            "signature": "f93b31e7bad55ff41fb01cc7501928919d0a0d9932cafaeafcab94700eade698b251a6b8b80ae7d566e1912cdd17dc2afffc7b58f92a35cc197e309289386f09",
+            "fee": 0,
+            "salt": "9e0910c2e2eab7ae84f6c18f306d5157",
+            "asset": {
+                "amount": 11250000000000,
+                "recipientAddress": "17145406432233353379"
+            }
+        },
+        {
+            "id": "bf072e8025398640bc7eb3e19a9305dddd14230f9728a2daa32d5ece77ad1598",
+            "blockId": "cbb9449abb9672d33fa2eb200b1c8b03db7c6572dfb6e59dc334c0ab82b63ab0",
+            "type": 10,
+            "createdAt": 0,
+            "senderPublicKey": "f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2",
+            "signature": "f93b31e7bad55ff41fb01cc7501928919d0a0d9932cafaeafcab94700eade698b251a6b8b80ae7d566e1912cdd17dc2afffc7b58f92a35cc197e309289386f09",
+            "fee": 0,
+            "salt": "9e0910c2e2eab7ae84f6c18f306d5157",
+            "asset": {
+                "amount": 11250000000000,
+                "recipientAddress": "11875315753614908232"
+            }
+        },
+        {
+            "id": "bf072e8025398640bc7eb3e19a9305dddd14230f9728a2daa32d5ece77ad1599",
+            "blockId": "cbb9449abb9672d33fa2eb200b1c8b03db7c6572dfb6e59dc334c0ab82b63ab0",
+            "type": 10,
+            "createdAt": 0,
+            "senderPublicKey": "f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2",
+            "signature": "f93b31e7bad55ff41fb01cc7501928919d0a0d9932cafaeafcab94700eade698b251a6b8b80ae7d566e1912cdd17dc2afffc7b58f92a35cc197e309289386f09",
+            "fee": 0,
+            "salt": "9e0910c2e2eab7ae84f6c18f306d5157",
+            "asset": {
+                "amount": 11250000000000,
+                "recipientAddress": "8413923777450711005"
+            }
+        },
+        {
+            "id": "bf072e8025398640bc7eb3e19a9305dddd14230f9728a2daa32d5ece77ad1600",
+            "blockId": "cbb9449abb9672d33fa2eb200b1c8b03db7c6572dfb6e59dc334c0ab82b63ab0",
+            "type": 10,
+            "createdAt": 0,
+            "senderPublicKey": "f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2",
+            "signature": "f93b31e7bad55ff41fb01cc7501928919d0a0d9932cafaeafcab94700eade698b251a6b8b80ae7d566e1912cdd17dc2afffc7b58f92a35cc197e309289386f09",
+            "fee": 0,
+            "salt": "9e0910c2e2eab7ae84f6c18f306d5157",
+            "asset": {
+                "amount": 45000000000000,
+                "recipientAddress": "3700083563600701931"
             }
         },
         {
