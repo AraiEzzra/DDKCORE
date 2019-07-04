@@ -18,7 +18,8 @@ import {
     IAssetTransfer,
     Transaction,
     TransactionLifecycle,
-    TransactionType
+    TransactionType,
+    TransactionModel
 } from 'shared/model/transaction';
 import TransactionDispatcher from 'core/service/transaction';
 import TransactionService from 'core/service/transaction';
@@ -55,6 +56,7 @@ import DelegateRepository from 'core/repository/delegate';
 import { messageON } from 'shared/util/bus';
 import DelegateService from 'core/service/delegate';
 import FailService from 'core/service/fail';
+import { validateTransactionsSorting } from 'core/util/validate/transaction';
 
 const validator: Validator = new ZSchema({});
 
@@ -553,7 +555,7 @@ class BlockService {
         BlockHistoryRepository.addEvent(block, { action: BlockLifecycle.RECEIVE });
 
         logger.info(
-            `Received new block id: ${block.id} ` +
+            `[Service][Block][receiveBlock] Received new block id: ${block.id} ` +
             `height: ${block.height} ` +
             `slot: ${SlotService.getSlotNumber(block.createdAt)}`
         );
@@ -706,6 +708,12 @@ class BlockService {
         if (!isValid) {
             return new ResponseEntity<null>({
                 errors: validator.getLastErrors().map(err => err.message),
+            });
+        }
+
+        if (!validateTransactionsSorting(block.transactions)) {
+            return new ResponseEntity<null>({
+                errors: [`Incorrectly sorted transactions`],
             });
         }
 

@@ -26,6 +26,7 @@ export const combineSortFuncs = <T>(sortFuncs: SortFuncs<T>, sort: Array<Sort>):
             }
             return result;
         }
+        return 0;
     };
 };
 
@@ -35,7 +36,7 @@ export const customSort = <T>(
     params: Pagination & { sort: Array<Sort> },
 ): Array<T> => {
     const sortFunc = combineSortFuncs<T>(sortFuncs, params.sort);
-    const sorted = data.sort(sortFunc);
+    data.sort(sortFunc);
 
-    return sorted.slice(params.offset, params.offset + params.limit);
+    return data.slice(params.offset, params.offset + params.limit);
 };

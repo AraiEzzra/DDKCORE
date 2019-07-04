@@ -13,11 +13,16 @@ export function toSnakeCase(str) {
 }
 
 export function sortByKey(key: string, direction?: Direction): (a: any, b: any) => number {
-    return (a: { key: any } & any, b: { key: any } & any) => {
-        if (a[key] > b[key]) {
+    const path = key.split('.');
+
+    return (a: { key: any } & any, b: { key: any } & any): number => {
+        const aValue = path.reduce((current, value) => current[value], a);
+        const bValue = path.reduce((current, value) => current[value], b);
+
+        if (aValue > bValue) {
             return direction === 'ASC' ? 1 : -1;
         }
-        if (a[key] < b[key]) {
+        if (aValue < bValue) {
             return direction === 'ASC' ? -1 : 1;
         }
         return 0;
