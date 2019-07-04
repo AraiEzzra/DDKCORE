@@ -56,6 +56,7 @@ import DelegateRepository from 'core/repository/delegate';
 import { messageON } from 'shared/util/bus';
 import DelegateService from 'core/service/delegate';
 import FailService from 'core/service/fail';
+import { validateTransactionsSorting } from 'core/util/validate/transaction';
 
 const validator: Validator = new ZSchema({});
 
@@ -695,20 +696,6 @@ class BlockService {
         ]);
     }
 
-    private validateTransactionsSorting(transactions: Array<TransactionModel<any>>): boolean {
-        for (let index = 1; index < transactions.length; index++) {
-            const prevTransaction = transactions[index - 1];
-            const curTransaction = transactions[index];
-
-            const sorted = [prevTransaction, curTransaction].sort(transactionSortFunc);
-            if (sorted[0] !== prevTransaction) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
     public validate(block: BlockModel): ResponseEntity<null> {
         const round = RoundRepository.getCurrentRound();
         const prevRound = RoundRepository.getPrevRound();
@@ -724,7 +711,7 @@ class BlockService {
             });
         }
 
-        if (!this.validateTransactionsSorting(block.transactions)) {
+        if (!validateTransactionsSorting(block.transactions)) {
             return new ResponseEntity<null>({
                 errors: [`Incorrectly sorted transactions`],
             });
