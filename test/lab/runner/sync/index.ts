@@ -31,7 +31,9 @@ export class NodesNetworkSynchronizer implements NetworkSynchronizer {
         return new Promise(resolve => {
             const data = { node: NODE_NAME };
             const socket = socketFactory.socketConnection;
-            const timer = setInterval(() => socket.emit(testStageName, data), SOCKET_EMIT_INTERVAL);
+            const timer = setInterval(() => {
+                socket.emit(testStageName, data);
+            }, SOCKET_EMIT_INTERVAL);
             socket.on(testStageName, (response: any) => {
                 clearInterval(timer);
                 if (response.success) {

@@ -29,7 +29,9 @@ class SystemRepository {
     update(data) {
         this.headers.broadhash = data.broadhash || this.headers.broadhash;
         this.headers.height = data.height || this.headers.height;
-        this.headers.peerCount = data.peerCount || this.headers.peerCount;
+        if (data.peerCount !== undefined) {
+            this.headers.peerCount = data.peerCount;
+        }
     }
 
     addBlockIdInPool(lastBlock: Block) {

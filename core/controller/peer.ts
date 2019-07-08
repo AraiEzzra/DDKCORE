@@ -98,6 +98,11 @@ export class PeerController extends BaseController {
         PeerService.remove(peerAddress);
     }
 
+    @ON(ActionTypes.REMOVE_ALL_PEERS)
+    removeAll() {
+        PeerService.removeAll();
+    }
+
 }
 
 export default new PeerController();

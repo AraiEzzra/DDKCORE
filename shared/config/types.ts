@@ -77,5 +77,6 @@ export type IConstants = {
     START_FEATURE_BLOCK: {
         ACCOUNT_BLACKLIST: number;
         VOTE_WITH_ACTIVE_STAKE: number;
-    }
+    };
+    CORE_REQUEST_TIMEOUT: number;
 };

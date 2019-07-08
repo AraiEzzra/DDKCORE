@@ -3,16 +3,13 @@ import { PEER_SOCKET_CHANNELS, PEER_SOCKET_EVENTS } from 'core/driver/socket/soc
 import { ResponseEntity } from 'shared/model/response';
 import { logger } from 'shared/util/logger';
 import { SocketResponse, SocketResponseRPC } from 'shared/model/socket';
-import { SOCKET_RPC_REQUEST_TIMEOUT } from 'core/util/const';
 import { PeerAddress } from 'shared/model/types';
 import { messageON } from 'shared/util/bus';
 import { ActionTypes } from 'core/util/actionTypes';
 import { Peer, SerializedPeer } from 'shared/model/Peer/index';
 import { REQUEST_TIMEOUT } from 'core/driver/socket';
-
-export const ALLOWED_METHODS: Set<string> = new Set([
-    ActionTypes.PEER_HEADERS_UPDATE,
-]);
+import config, { NODE_ENV_ENUM } from 'shared/config';
+import { ALLOWED_BAN_PEER_METHODS, ALLOWED_METHODS } from 'core/util/allowedPeerMethods';
 
 type SerializedNetworkPeer = SerializedPeer & {
     socket: SocketIO.Socket | SocketIOClient.Socket;
@@ -97,7 +94,7 @@ export class NetworkPeer extends Peer {
                         res(new ResponseEntity({ errors: [REQUEST_TIMEOUT] }));
                     };
                 })(this._socket, resolve),
-                SOCKET_RPC_REQUEST_TIMEOUT
+                config.CONSTANTS.CORE_REQUEST_TIMEOUT
             );
 
             this._socket.emit(
@@ -129,7 +126,12 @@ export class NetworkPeer extends Peer {
     private _onBroadcast(response: string, peerAddress: PeerAddress): void {
         const { code, data } = new SocketResponse(response);
 
-        if (ALLOWED_METHODS.has(code) || !this._isBanned) {
+        if (!ALLOWED_METHODS.has(code) && config.NODE_ENV_IN !== NODE_ENV_ENUM.TEST) {
+            return logger.error(`[SOCKET][ON_PEER_BROADCAST][${this.peerAddress.ip}] CODE: ${code} ` +
+                +`try to execute disallowed method`);
+        }
+
+        if (ALLOWED_BAN_PEER_METHODS.has(code) || !this._isBanned) {
             logger.trace(`[SOCKET][ON_PEER_BROADCAST][${this.peerAddress.ip}], CODE: ${code}`);
             messageON(code, { data, peerAddress });
         } else {
@@ -140,6 +142,11 @@ export class NetworkPeer extends Peer {
 
     private _onRPCRequest(response: string): void {
         const { code, data, requestId } = new SocketResponseRPC(response);
+
+        if (!ALLOWED_METHODS.has(code)) {
+            return logger.error(`[SOCKET][ON_PEER_BROADCAST][${this.peerAddress.ip}] CODE: ${code} ` +
+                +`try to execute disallowed method`);
+        }
         logger.trace(
             `[Peer][${this.peerAddress.ip}:${this.peerAddress.port}][onRPCRequest] CODE: ${code}, ` +
             `REQUEST_ID: ${requestId}}`
