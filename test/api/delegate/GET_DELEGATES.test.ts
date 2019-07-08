@@ -132,6 +132,25 @@ describe('Test GET_DELEGATES', () => {
         expect(response.body.data.count).to.equal(SUCCESS.count);
     });
 
+    it('By empty username', async () => {
+        const REQUEST = {
+            headers: Fixture.getBaseHeaders(),
+            code: API_ACTION_TYPES.GET_DELEGATES,
+            body: {
+                username: '',
+                limit: 3,
+                offset: 0,
+            },
+        };
+
+        const response = await socketRequest(REQUEST);
+
+        expect(response.body.success).to.equal(false);
+        expect(response.body.errors).to.deep.equal(
+            ['IS NOT VALID REQUEST:\'GET_DELEGATES\'... String is too short (0 chars), minimum 1']
+        );
+    });
+
     it('DESC sorting by public key', async () => {
         const REQUEST = {
             headers: Fixture.getBaseHeaders(),
