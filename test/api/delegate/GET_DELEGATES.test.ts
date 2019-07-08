@@ -151,6 +151,57 @@ describe('Test GET_DELEGATES', () => {
         );
     });
 
+    it('Username is undefined', async () => {
+        const REQUEST = {
+            headers: Fixture.getBaseHeaders(),
+            code: API_ACTION_TYPES.GET_DELEGATES,
+            body: {
+                username: undefined,
+                limit: 3,
+                offset: 0,
+            },
+        };
+
+        const SUCCESS = {
+            delegates: [
+                {
+                    username: 'delegate3',
+                    missedBlocks: 0,
+                    forgedBlocks: 0,
+                    publicKey: '137b9f0f839ab3ecd2146bfecd64d31e127d79431211e352bedfeba5fd61a57a',
+                    votes: 0,
+                    confirmedVoteCount: 0,
+                    approval: 0
+                },
+                {
+                    username: 'delegate4',
+                    missedBlocks: 0,
+                    forgedBlocks: 0,
+                    publicKey: '80ede51ab3ca44ff66c9d5e0edebf2b0c94c8d09c5963bc8e80c7cdbb37a4914',
+                    votes: 0,
+                    confirmedVoteCount: 0,
+                    approval: 0
+                },
+                {
+                    username: 'delegate1',
+                    missedBlocks: 0,
+                    forgedBlocks: 0,
+                    publicKey: '83cb3d8641c8e73735cc1b70c915602ffcb6e5a68f14a71056511699050a1a05',
+                    votes: 2,
+                    confirmedVoteCount: 2,
+                    approval: 0
+                }
+            ],
+            count: 4
+        };
+
+        const response = await socketRequest(REQUEST);
+
+        expect(response.body.success).to.equal(true);
+        expect(response.body.data.delegates).to.deep.equal(SUCCESS.delegates);
+        expect(response.body.data.count).to.equal(SUCCESS.count);
+    });
+
     it('DESC sorting by public key', async () => {
         const REQUEST = {
             headers: Fixture.getBaseHeaders(),
