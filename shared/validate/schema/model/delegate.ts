@@ -9,7 +9,7 @@ export const SCHEMAS_DELEGATES = [
             ...PAGINATION_SCHEME,
             username: {
                 type: 'string',
-                format: 'username',
+                minLength: 3,
             },
             sort: {
                 type: 'array',
