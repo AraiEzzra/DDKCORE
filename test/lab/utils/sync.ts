@@ -1,8 +1,5 @@
 import Loader from 'core/loader';
 
-export const prepareLoader = async () => {
+export const coreServerRun = async () => {
     await Loader.start();
 };
-
-
-

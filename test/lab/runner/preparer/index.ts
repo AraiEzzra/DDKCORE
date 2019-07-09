@@ -13,7 +13,7 @@ export interface TestPreparer {
 }
 
 export class NodesTestPreparer implements TestPreparer {
-
+    
     networkSynchronizer: NetworkSynchronizer;
 
     testRunnerMethod: Function;

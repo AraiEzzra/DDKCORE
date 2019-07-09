@@ -8,7 +8,7 @@ import { logger } from 'shared/util/logger';
 import { PeerAddress, PeerHeadersReceived, RequestPeerInfo } from 'shared/model/types';
 import { Headers } from 'shared/model/Peer/headers';
 import { sortByKey } from 'shared/util/util';
-import VersionChecker, { VersionChecker as PeerVersionChecker } from 'core/util/versionChecker';
+import VersionChecker from 'core/util/versionChecker';
 import { isArray } from 'util';
 import SwapTransactionQueue from 'core/service/swapTransactiontQueue';
 import { messageON } from 'shared/util/bus';

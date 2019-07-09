@@ -50,6 +50,7 @@ export class SyncController extends BaseController {
     @MAIN(ActionTypes.EMIT_SYNC_BLOCKS)
     async startSyncBlocks(): Promise<ResponseEntity<void>> {
         let lastPeerRequested = null;
+        System.synchronization = true;
 
         const differenceBetweenLastSync = new Date().getTime() - lastSyncTime;
         if (lastSyncTime && differenceBetweenLastSync < SYNC_TIMEOUT) {
@@ -76,8 +77,6 @@ export class SyncController extends BaseController {
             }
             return new ResponseEntity({ errors });
         }
-
-        System.synchronization = true;
 
         TransactionQueue.lock();
         TransactionPool

@@ -67,7 +67,7 @@
     "@types/chai": "^4.1.7",
     "@types/chai-arrays": "^1.0.2",
     "@types/express": "^4.16.1",
-    "@types/mocha": "^5.2.6",
+    "@types/mocha": "^5.2.7",
     "@types/node": "^10.12.18",
     "@types/socket.io": "^2.1.2",
     "@types/socket.io-client": "^1.4.32",

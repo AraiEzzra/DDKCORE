@@ -557,7 +557,8 @@ class BlockService {
         logger.info(
             `[Service][Block][receiveBlock] Received new block id: ${block.id} ` +
             `height: ${block.height} ` +
-            `slot: ${SlotService.getSlotNumber(block.createdAt)}`
+            `slot: ${SlotService.getSlotNumber(block.createdAt)} ` +
+            `relay: ${block.relay}`
         );
 
         const removedTransactions = TransactionPool.batchRemove(block.transactions);

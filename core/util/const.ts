@@ -4,4 +4,3 @@ export const SALT_LENGTH = 16;
 export const MAX_PEER_BLOCKS_IDS = 100;
 export const SECONDS_PER_MINUTE = 60;
 export const MONEY_FACTOR = 100000000;
-export const SOCKET_RPC_REQUEST_TIMEOUT = 10000;

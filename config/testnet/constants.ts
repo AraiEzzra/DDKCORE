@@ -99,6 +99,7 @@ const constants: IConstants = {
         ACCOUNT_BLACKLIST: 0,
         VOTE_WITH_ACTIVE_STAKE: 0,
     },
+    CORE_REQUEST_TIMEOUT: 10000,
 };
 /* tslint:enable */
 
