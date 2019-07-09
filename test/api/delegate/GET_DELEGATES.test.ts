@@ -147,7 +147,7 @@ describe('Test GET_DELEGATES', () => {
 
         expect(response.body.success).to.equal(false);
         expect(response.body.errors).to.deep.equal(
-            ['IS NOT VALID REQUEST:\'GET_DELEGATES\'... String is too short (0 chars), minimum 1']
+            ['IS NOT VALID REQUEST:\'GET_DELEGATES\'... String is too short (0 chars), minimum 3']
         );
     });
 
