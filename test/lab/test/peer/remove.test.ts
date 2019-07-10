@@ -3,7 +3,7 @@ import { DEFAULT_TEST_TIMEOUT, NODE_NAME } from 'test/lab/config';
 import { TestRunner } from 'test/lab/runner';
 import { asyncTimeout } from 'shared/util/timer';
 import SystemRepository from 'core/repository/system';
-import { CUSTOM_CONFIG, PEER, } from 'test/lab/runner/preparer/config';
+import { PEER, } from 'test/lab/runner/preparer/peerNames';
 import { preparePeerNode } from 'test/lab/runner/preparer/peerPreparator';
 import PeerMemoryRepository from 'core/repository/peer/peerMemory';
 import PeerNetworkRepository from 'core/repository/peer/peerNetwork';
@@ -22,9 +22,9 @@ describe('PEER REMOVE', function () {
 
     const testRunner = new TestRunner(
         TEST_NAME,
-        preparePeerNode({ customConfig: CUSTOM_CONFIG, trustedPeers: [] }),
-        preparePeerNode({ customConfig: CUSTOM_CONFIG, trustedPeers: [] }),
-        preparePeerNode({ customConfig: CUSTOM_CONFIG, trustedPeers: [PEER.ONE, PEER.TWO] })
+        preparePeerNode({ trustedPeers: [] }),
+        preparePeerNode({ trustedPeers: [] }),
+        preparePeerNode({ trustedPeers: [PEER.ONE, PEER.TWO] })
     );
 
     before(async () => {
@@ -65,12 +65,14 @@ describe('PEER REMOVE', function () {
         await asyncTimeout(TEST_ASYNC_TIMEOUT);
 
         if (NODE_NAME === TEST_RUNNER_NAME) {
+
             expect(PeerMemoryRepository.getAll().length).to.equal(2);
             expect(PeerNetworkRepository.getAll().length).to.equal(2);
             expect(SystemRepository.getHeaders().peerCount).to.equal(2);
 
             PeerService.broadcast(ActionTypes.REMOVE_ALL_PEERS, {}, [PEER.TWO]);
             await asyncTimeout(TEST_ASYNC_TIMEOUT * 5);
+
             expect(PeerMemoryRepository.has(PEER.ONE)).to.equal(true);
             expect(PeerMemoryRepository.getAll().length).to.equal(1);
             expect(PeerNetworkRepository.getAll().length).to.equal(1);
@@ -78,6 +80,7 @@ describe('PEER REMOVE', function () {
 
             PeerService.broadcast(ActionTypes.REMOVE_ALL_PEERS, {}, [PEER.ONE]);
             await asyncTimeout(TEST_ASYNC_TIMEOUT * 5);
+
             expect(PeerMemoryRepository.getAll().length).to.equal(0);
             expect(PeerNetworkRepository.getAll().length).to.equal(0);
             expect(SystemRepository.getHeaders().peerCount).to.equal(0);

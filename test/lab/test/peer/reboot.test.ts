@@ -3,7 +3,7 @@ import { DEFAULT_TEST_TIMEOUT, NODE_NAME } from 'test/lab/config';
 import { TestRunner } from 'test/lab/runner';
 import { asyncTimeout } from 'shared/util/timer';
 import SystemRepository from 'core/repository/system';
-import { CUSTOM_CONFIG, PEER, } from 'test/lab/runner/preparer/config';
+import { PEER, } from 'test/lab/runner/preparer/peerNames';
 import { preparePeerNode } from 'test/lab/runner/preparer/peerPreparator';
 import PeerMemoryRepository from 'core/repository/peer/peerMemory';
 import PeerController from 'core/controller/peer';
@@ -19,9 +19,9 @@ describe('PEER RECONNECT', function () {
 
     const testRunner = new TestRunner(
         TEST_NAME,
-        preparePeerNode({customConfig: CUSTOM_CONFIG, trustedPeers: [PEER.TWO]}),
-        preparePeerNode({customConfig: CUSTOM_CONFIG, trustedPeers: []}),
-        preparePeerNode({customConfig: CUSTOM_CONFIG, trustedPeers: [PEER.ONE]})
+        preparePeerNode({ trustedPeers: [PEER.TWO] }),
+        preparePeerNode({ trustedPeers: [] }),
+        preparePeerNode({ trustedPeers: [PEER.ONE] })
     );
 
     before(async () => {

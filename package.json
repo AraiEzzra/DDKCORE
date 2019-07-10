@@ -32,7 +32,7 @@
     "test:api": "export NODE_PATH=./ && mocha --require ts-node/register './test/api/**/*.test.ts'",
     "test:core": "export NODE_PATH=./ && mocha --require ts-node/register './test/core/**/*.test.ts'",
     "test:functionality": "export NODE_PATH=./ && mocha --require ts-node/register ./test/functionality/server-loader.ts './test/functionality/**/*.test.ts'",
-    "test:lab": "export NODE_PATH=./ && mocha --require ts-node/register ./test/lab/server-loader.ts './test/lab/**/*.test.ts'"
+    "test:lab": "export NODE_PATH=./ && mocha --require ts-node/register ./test/lab/server-loader.ts './test/lab/**/*.test.ts'  --max-old-space-size=4096"
   },
   "author": "DDK Foundation <http://www.ddkoin.com/>",
   "license": "GPL-3.0",

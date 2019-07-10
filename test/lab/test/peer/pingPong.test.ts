@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { DEFAULT_TEST_TIMEOUT, NODE_NAME } from 'test/lab/config';
 import { TestRunner } from 'test/lab/runner';
 import { asyncTimeout } from 'shared/util/timer';
-import { CUSTOM_CONFIG, PEER, } from 'test/lab/runner/preparer/config';
+import { PEER, } from 'test/lab/runner/preparer/peerNames';
 import { preparePeerNode } from 'test/lab/runner/preparer/peerPreparator';
 import PeerController from 'core/controller/peer';
 import PeerService from 'core/service/peer';
@@ -20,9 +20,9 @@ describe('PEER PING PONG', function () {
 
     const testRunner = new TestRunner(
         TEST_NAME,
-        preparePeerNode({customConfig: CUSTOM_CONFIG, trustedPeers: []}),
-        preparePeerNode({customConfig: CUSTOM_CONFIG, trustedPeers: []}),
-        preparePeerNode({customConfig: CUSTOM_CONFIG, trustedPeers: [PEER.ONE, PEER.TWO]})
+        preparePeerNode({ trustedPeers: [] }),
+        preparePeerNode({ trustedPeers: [] }),
+        preparePeerNode({ trustedPeers: [PEER.ONE, PEER.TWO] })
     );
 
     before(async () => {
