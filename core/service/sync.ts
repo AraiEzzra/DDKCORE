@@ -19,7 +19,7 @@ import { NetworkPeer } from 'shared/model/Peer/networkPeer';
 import { MemoryPeer } from 'shared/model/Peer/memoryPeer';
 import { logger } from 'shared/util/logger';
 import SwapTransactionQueue from 'core/service/swapTransactiontQueue';
-import { blockHeightMemoryConsensus } from 'core/util/peer';
+import TransactionQueue from 'core/service/transactionQueue';
 
 export interface ISyncService {
 
@@ -206,7 +206,11 @@ export class SyncService implements ISyncService {
 
             RoundService.restoreToSlot(SlotService.getSlotNumber(receivedBlock.createdAt));
 
+            TransactionQueue.lock();
+
             const receivedBlockResponse = await BlockService.receiveBlock(receivedBlock);
+
+            TransactionQueue.unlock();
 
             if (!receivedBlockResponse.success) {
                 errors.push(
