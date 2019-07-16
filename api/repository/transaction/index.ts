@@ -64,11 +64,10 @@ class TransactionPGRepository {
             offset,
         });
 
-
+        // TODO: optimize
         let transactionsCount;
-
         if (isFiltered(filter)) {
-            if (isFiltered(filter, new Set['type'])) {
+            if (isFiltered(filter, new Set(['type']))) {
                 transactionsCount = DEFAULT_COUNT;
             } else {
                 transactionsCount = transactions[0].count;
