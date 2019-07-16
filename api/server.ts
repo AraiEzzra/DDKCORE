@@ -10,7 +10,7 @@ BigInt.prototype.toJSON = function () {
 };
 
 process.addListener('unhandledRejection', err => {
-    logger.error(`[API][Process][unhandledRejection] ${JSON.stringify(err)}`);
+    logger.error(`[API][Process][unhandledRejection] ${err}`);
 });
 
 process.addListener('uncaughtException', err => {

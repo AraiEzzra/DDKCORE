@@ -64,20 +64,18 @@ class TransactionPGRepository {
             offset,
         });
 
-        // TODO: optimize
-        let transactionsCount;
-        if (isFiltered(filter)) {
-            if (isFiltered(filter, new Set(['type']))) {
-                transactionsCount = DEFAULT_COUNT;
-            } else {
-                transactionsCount = transactions[0].count;
-            }
-        } else {
-            transactionsCount = this.transactionsCount;
-        }
-
 
         if (transactions && transactions.length) {
+            // TODO: optimize and refactor this
+            let transactionsCount;
+            if (isFiltered(filter)) {
+                isFiltered(filter, new Set(['type']))
+                    ? transactionsCount = DEFAULT_COUNT
+                    : transactionsCount = transactions[0].count;
+            } else {
+                transactionsCount = this.transactionsCount;
+            }
+
             return {
                 transactions: transactions.map(trs => SharedTransactionPGRepo.deserialize(trs)),
                 count: transactionsCount
