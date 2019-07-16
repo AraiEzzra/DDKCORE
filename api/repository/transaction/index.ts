@@ -1,9 +1,10 @@
 import { IAsset, IAssetVote, Transaction, TransactionType } from 'shared/model/transaction';
 import db from 'shared/driver/db';
 import query from 'api/repository/transaction/query';
-import { Sort } from 'shared/util/common';
+import { DEFAULT_COUNT, Sort } from 'shared/util/common';
 import SharedTransactionPGRepo from 'shared/repository/transaction/pg';
 import { toSnakeCase } from 'shared/util/util';
+import { isFiltered } from 'shared/util/filter';
 
 type AllowedFilters = {
     blockId?: string;
@@ -62,10 +63,25 @@ class TransactionPGRepository {
             limit,
             offset,
         });
+
+
+        let transactionsCount;
+
+        if (isFiltered(filter)) {
+            if (isFiltered(filter, new Set['type'])) {
+                transactionsCount = DEFAULT_COUNT;
+            } else {
+                transactionsCount = transactions[0].count;
+            }
+        } else {
+            transactionsCount = this.transactionsCount;
+        }
+
+
         if (transactions && transactions.length) {
             return {
                 transactions: transactions.map(trs => SharedTransactionPGRepo.deserialize(trs)),
-                count: Object.keys(filter).length ? Number(transactions[0].count) : this.transactionsCount,
+                count: transactionsCount
             };
         }
 
