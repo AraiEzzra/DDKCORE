@@ -1,5 +1,6 @@
 // TODO add blockHeight
 import { toSnakeCase } from 'shared/util/util';
+import { isFiltered } from 'shared/util/filter';
 
 const confirmationsSelector = `(SELECT max(height) from block) - ` +
     ` (select height from block where block.id = trs.block_id) as confirmations`;
@@ -11,16 +12,16 @@ export default {
         `WITH max_height AS (SELECT max(height) as height FROM block)
             SELECT trs.*,
             (select max_height.height - b.height from max_height) as confirmations
-            ${Object.keys(filter).length ? ', count(1) over () as count ' : ''}
+            ${!isFiltered(filter, new Set(['type'])) ? ', count(1) over () as count ' : ''}
             FROM trs INNER JOIN block b on trs.block_id = b.id
-            ${Object.keys(filter).length ? `WHERE ${Object.keys(filter).map(
+            ${isFiltered(filter) ? `WHERE ${Object.keys(filter).map(
                 key => `${toSnakeCase(key)} ${key === 'asset' ? '@>' : '='} \${${key}}`).join(' OR ')
             } ` : ''}
             ORDER BY ${sort} LIMIT \${limit} OFFSET \${offset}`,
     getTransactionsByAsset: (filter: { [key: string]: any }, sort: string) =>
         `WITH max_height AS (SELECT max(height) as height FROM block)
         SELECT t.*, (select max_height.height - b.height from max_height) as confirmations
-            ${Object.keys(filter).length ? ', count(1) over () as count ' : ''}
+            ${!isFiltered(filter, new Set(['type'])) ? ', count(1) over () as count ' : ''}
         FROM (
             SELECT trs.* FROM trs
             ${Object.keys(filter).filter(key => key === 'asset').length ?

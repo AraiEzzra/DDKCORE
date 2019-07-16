@@ -6,6 +6,7 @@ export type Pagination = {
 };
 
 export const DEFAULT_LIMIT = 10;
+export const DEFAULT_COUNT = 1000;
 export const DEFAULT_FRACTION_DIGIST = 2;
 
 export type SortFuncs<T> = { [field: string]: (a: T, b: T) => number };

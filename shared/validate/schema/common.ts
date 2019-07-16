@@ -18,5 +18,6 @@ export const PAGINATION_SCHEME = {
     offset: {
         type: 'integer',
         minimum: 0,
+        maximum: 1000,
     }
 };
