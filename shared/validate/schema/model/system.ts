@@ -39,9 +39,12 @@ export const SCHEMAS_SYSTEM = [
         id: API_ACTION_TYPES.GET_ALL_UNCONFIRMED_TRANSACTIONS,
         type: 'object',
         properties: {
-            ...PAGINATION_SCHEME
+            ...PAGINATION_SCHEME,
+            offset: {
+                maximum: 100000,
+            },
         },
         required: ['limit', 'offset']
     },
-    
+
 ];
