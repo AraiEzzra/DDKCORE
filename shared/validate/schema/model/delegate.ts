@@ -17,7 +17,7 @@ export const SCHEMAS_DELEGATES = [
                     type: 'array',
                     items: {
                         type: 'string',
-                        enum: ['ASC', 'DESC', 'approval', 'publicKey'],
+                        enum: ['ASC', 'DESC', 'approval', 'publicKey', 'votes', 'username'],
                     },
                 },
             },

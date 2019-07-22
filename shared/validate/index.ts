@@ -5,7 +5,7 @@ import { logger } from 'shared/util/logger';
 import { MESSAGE_CHANNEL } from 'shared/driver/socket/channels';
 import { ALL_SCHEMAS, MESSAGE } from 'shared/validate/schema/init';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
-import { Message } from 'shared/model/message';
+import { Message, MessageType } from 'shared/model/message';
 
 /**
  * Compile all schemas for validate
@@ -27,8 +27,8 @@ export const validate = () => {
         let descriptorFn = descriptor.value || descriptor.get();
 
         return {
-            value: (message, socket): any => {
-                let schemaID = message.code;
+            value: (message: Message<any>, socket: any): any => {
+                let schemaID = message.code.toString();
                 if (schemaID === API_ACTION_TYPES.CREATE_TRANSACTION && message.body && message.body.trs) {
                     schemaID = `CREATE_TRANSACTION.${message.body.trs.type}`;
                 }
@@ -40,6 +40,7 @@ export const validate = () => {
                         message.body = new ResponseEntity({
                             errors: [`IS NOT VALID REQUEST:'${message.code}'... ${err.message}`]
                         });
+                        message.headers.type = MessageType.RESPONSE;
                         return handlerError.call(this, message, socket);
                     } else {
                         return descriptorFn.call(this, message, socket);

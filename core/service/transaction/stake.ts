@@ -35,7 +35,7 @@ class TransactionStakeService implements IAssetService<IAssetStake> {
         return {
             amount: trs.asset.amount,
             startTime: trs.createdAt,
-            startVoteCount: trs.asset.startVoteCount || 0, // vulnerability!!
+            startVoteCount: trs.asset.startVoteCount || 0,
             airdropReward: airdropReward
         };
     }
