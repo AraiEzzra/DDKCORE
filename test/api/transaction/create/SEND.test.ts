@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
 import { socketRequest } from 'test/api/base';
 import { getTransactionData } from 'test/api/base/util';
-import { IAssetTransfer, TransactionType } from 'shared/model/transaction';
+import { IAssetTransfer, TransactionType, Transaction } from 'shared/model/transaction';
 
 describe('Test CREATE_TRANSACTION SEND', () => {
 
@@ -36,7 +36,7 @@ describe('Test CREATE_TRANSACTION SEND', () => {
             }
         };
 
-        const response = await socketRequest(REQUEST);
+        const response = await socketRequest<any, Transaction<IAssetTransfer>>(REQUEST);
 
         expect(response.body.success).to.equal(true);
         expect(getTransactionData<IAssetTransfer>(response.body.data)).to.deep.equal(SUCCESS);

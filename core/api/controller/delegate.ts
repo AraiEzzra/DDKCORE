@@ -7,7 +7,7 @@ import DelegateService from 'core/service/delegate';
 import AccountRepository from 'core/repository/account';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
 import { SerializedDelegate } from 'shared/model/delegate';
-import { RequestDelegates } from 'shared/model/types';
+import { RequestDelegates, ResponseDelegates } from 'shared/model/types';
 
 class DelegateController {
 
@@ -20,7 +20,7 @@ class DelegateController {
     @API(API_ACTION_TYPES.GET_DELEGATES)
     public getDelegates(
         message: Message<RequestDelegates>,
-    ): ResponseEntity<{ delegates: Array<SerializedDelegate>, count: number }> {
+    ): ResponseEntity<ResponseDelegates> {
         const result = DelegateRepository.getMany(
             message.body.filter,
             message.body.sort,

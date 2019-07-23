@@ -41,6 +41,7 @@ export const SCHEMAS_SYSTEM = [
         properties: {
             ...PAGINATION_SCHEME,
             offset: {
+                ...PAGINATION_SCHEME.offset,
                 maximum: 100000,
             },
         },

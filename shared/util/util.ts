@@ -12,7 +12,7 @@ export function toSnakeCase(str) {
     return str.replace(/[A-Z]/g, upperToHyphenLower);
 }
 
-export function sortByKey(key: string, direction?: Direction): (a: any, b: any) => number {
+export function sortByKey(key: string, direction: Direction = 'ASC'): (a: any, b: any) => number {
     const path = key.split('.');
 
     return (a: { key: any } & any, b: { key: any } & any): number => {

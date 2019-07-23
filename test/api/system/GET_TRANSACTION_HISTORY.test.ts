@@ -2,6 +2,7 @@ import { Fixture } from 'test/api/base/fixture';
 import { expect } from 'chai';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
 import { socketRequest } from 'test/api/base';
+import { ResponseTransactionHistory } from 'shared/model/types';
 
 describe('Test GET_TRANSACTION_HISTORY', () => {
     it('Positive', async () => {
@@ -38,7 +39,7 @@ describe('Test GET_TRANSACTION_HISTORY', () => {
             body: { id: '9e805d3e4efb5e371a1f48beb8a95e6144cfd57681a47a55043daf897ba466ea' }
         };
 
-        const response = await socketRequest(REQUEST);
+        const response = await socketRequest<any, ResponseTransactionHistory>(REQUEST);
 
         expect(response.body.success).to.equal(true);
         expect(response.body.data).to.have.property('entity');

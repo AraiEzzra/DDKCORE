@@ -2,6 +2,7 @@ import { Fixture } from 'test/api/base/fixture';
 import { expect } from 'chai';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
 import { socketRequest } from 'test/api/base';
+import { ResponseBlockHistory } from 'shared/model/types';
 
 describe('Test GET_BLOCK_HISTORY', () => {
     it('Positive', async () => {
@@ -16,7 +17,7 @@ describe('Test GET_BLOCK_HISTORY', () => {
             body: { id: 'cbb9449abb9672d33fa2eb200b1c8b03db7c6572dfb6e59dc334c0ab82b63ab0' }
         };
 
-        const response = await socketRequest(REQUEST);
+        const response = await socketRequest<any, ResponseBlockHistory>(REQUEST);
 
         expect(response.body.success).to.equal(true);
         expect(response.body.data).to.have.property('entity');

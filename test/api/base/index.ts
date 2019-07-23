@@ -14,11 +14,11 @@ export const getSocket = () => {
     return socketClient.connect();
 };
 
-export const socketRequest = <T>(message: Message<T>): Promise<Message<ResponseEntity<any>>> =>
+export const socketRequest = <T, R>(message: Message<T>): Promise<Message<ResponseEntity<R>>> =>
     new Promise(resolve => {
         const socket = getSocket();
         socket.emit('message', message);
-        socket.on('message', (response: Message<ResponseEntity<any>>) => {
+        socket.on('message', (response: Message<ResponseEntity<R>>) => {
             if (response.headers.id === message.headers.id) {
                 resolve(response);
                 socket.close();

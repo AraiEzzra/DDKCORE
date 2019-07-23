@@ -95,7 +95,6 @@ class Loader {
 
             const blocks = blocksResponse.data;
             for (const block of blocks) {
-
                 if (block.height === 1) {
                     BlockRepository.add(block);
                     this.transactionsWarmUp(block.transactions);

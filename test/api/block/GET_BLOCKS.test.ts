@@ -3,6 +3,7 @@ import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
 import { socketRequest } from 'test/api/base';
 import { expect } from 'chai';
 import { sortByKey } from 'shared/util/util';
+import { BlockModel } from 'shared/model/block';
 
 describe('Test GET_BLOCKS', () => {
     context('Add 10 blocks to DB', async () => {
@@ -25,7 +26,7 @@ describe('Test GET_BLOCKS', () => {
                     offset: 2
                 }
             };
-            const response = await socketRequest(REQUEST);
+            const response = await socketRequest<any, { blocks: Array<BlockModel>, count: number }>(REQUEST);
             expect(response.body.success).to.equal(true);
             const expectedBlocks = blocks.slice(0).sort(sortByKey('height', 'DESC')).slice(2);
             expectedBlocks.forEach((block, index) => {
