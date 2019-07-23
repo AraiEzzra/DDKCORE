@@ -5,8 +5,10 @@ import { Sort, customSort } from 'shared/util/common';
 import { sortByKey } from 'shared/util/util';
 
 const sortingFuncs = {
-    approval: sortByKey('approval', 'ASC'),
-    publicKey: sortByKey('account.publicKey', 'ASC'),
+    approval: sortByKey('approval'),
+    publicKey: sortByKey('account.publicKey'),
+    username: sortByKey('username'),
+    votes: sortByKey('votes'),
 };
 
 class DelegateRepository {
