@@ -94,6 +94,9 @@ export type AirdropReward = Map<Address, number>;
 export type RequestDelegates = { filter: Pagination & { username: string }, sort: Array<Sort> };
 export type ResponseDelegates = { delegates: Array<SerializedDelegate>, count: number };
 
+export type RequestActiveDelegates = { filter: Pagination, sort?: Array<Sort> };
+export type ResponseActiveDelegates = { delegates: Array<SerializedDelegate>, count: number };
+
 export type ResponseTransactionHistory = {
     events: Array<SerializedTransactionHistoryAction>,
     entity: Transaction<any>,

@@ -1,13 +1,18 @@
 import { API } from 'core/api/util/decorators';
 import { Message } from 'shared/model/message';
 import { ResponseEntity } from 'shared/model/response';
-import { Pagination, Sort } from 'shared/util/common';
+import { Pagination } from 'shared/util/common';
 import DelegateRepository from 'core/repository/delegate';
 import DelegateService from 'core/service/delegate';
 import AccountRepository from 'core/repository/account';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
 import { SerializedDelegate } from 'shared/model/delegate';
-import { RequestDelegates, ResponseDelegates } from 'shared/model/types';
+import {
+    RequestDelegates,
+    ResponseDelegates,
+    RequestActiveDelegates,
+    ResponseActiveDelegates,
+} from 'shared/model/types';
 
 class DelegateController {
 
@@ -36,14 +41,16 @@ class DelegateController {
 
     @API(API_ACTION_TYPES.GET_ACTIVE_DELEGATES)
     public getActiveDelegates(
-        message: Message<Pagination>,
-    ): ResponseEntity<{ delegates: Array<SerializedDelegate>, count: number }> {
+        message: Message<RequestActiveDelegates>,
+    ): ResponseEntity<ResponseActiveDelegates> {
+        const result = DelegateService.getActiveDelegates(message.body.filter, message.body.sort);
+
         return new ResponseEntity({
             data: {
-                delegates: DelegateService.getActiveDelegates(message.body.limit, message.body.offset).map(
-                    delegate => DelegateRepository.serialize(delegate)
+                ...result,
+                delegates: result.delegates.map(
+                    delegate => DelegateRepository.serialize(delegate),
                 ),
-                count: Math.min(DelegateService.getActiveDelegatesCount(), DelegateRepository.getCount()),
             }
         });
     }

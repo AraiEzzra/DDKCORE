@@ -4,7 +4,7 @@ import { PublicKey } from 'shared/model/types';
 import { Sort, customSort } from 'shared/util/common';
 import { sortByKey } from 'shared/util/util';
 
-const sortingFuncs = {
+export const sortingDelegateFuncs = {
     approval: sortByKey('approval'),
     publicKey: sortByKey('account.publicKey'),
     username: sortByKey('username'),
@@ -47,7 +47,7 @@ class DelegateRepository {
         }
 
         return {
-            delegates: customSort<Delegate>(delegates, sortingFuncs, { ...filter, sort }),
+            delegates: customSort<Delegate>(delegates, sortingDelegateFuncs, { ...filter, sort }),
             count: delegates.length,
         };
     }
