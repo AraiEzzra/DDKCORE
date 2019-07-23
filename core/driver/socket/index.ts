@@ -9,6 +9,7 @@ import { PEER_SOCKET_TYPE, PeerAddress } from 'shared/model/types';
 import { ActionTypes } from 'core/util/actionTypes';
 import { SerializedFullHeaders } from 'shared/model/Peer/fullHeaders';
 import { PEER_SOCKET_EVENTS } from 'core/driver/socket/socketsTypes';
+import { peerAddressToString } from 'core/util/peer';
 
 export const REQUEST_TIMEOUT = '408 Request Timeout';
 
@@ -70,15 +71,15 @@ export class Socket {
 
     connectPeer(peerAddress: PeerAddress, headers: SerializedFullHeaders): void {
 
-        logger.debug(`[SOCKET][connectPeer] connecting to ${peerAddress.ip}:${peerAddress.port}...`);
+        logger.debug(`[SOCKET][connectPeer] connecting to ${peerAddressToString(peerAddress)}...`);
         const ws: SocketIOClient.Socket = io(
-            `ws://${peerAddress.ip}:${peerAddress.port}`,
+            `ws://${peerAddressToString(peerAddress)}`,
             PEER_SOCKET_CLIENT_CONFIG
         );
 
         ws.on(PEER_SOCKET_EVENTS.CONNECT, () => {
 
-            logger.debug(`[SOCKET][connectPeer] connected to ${peerAddress.ip}:${peerAddress.port}`);
+            logger.debug(`[SOCKET][connectPeer] connected to ${peerAddressToString(peerAddress)}`);
 
             ws.emit(PEER_SOCKET_EVENTS.HEADERS, JSON.stringify(headers));
             ws.on(PEER_SOCKET_EVENTS.HEADERS, (response: string) => {

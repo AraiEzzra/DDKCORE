@@ -1,10 +1,11 @@
-import { BlockData, PeerAddress } from 'shared/model/types';
+import { BlockData, PeerAddress, ShortPeerInfo } from 'shared/model/types';
 import { MemoryPeer } from 'shared/model/Peer/memoryPeer';
 import IPeerRepository from 'core/repository/peer/index';
 import { SerializedFullHeaders } from 'shared/model/Peer/fullHeaders';
 import PeerNetworkRepository from 'core/repository/peer/peerNetwork';
 import SystemRepository from 'core/repository/system';
 import { PEER_SOCKET_TYPE } from 'shared/model/types';
+import { peerAddressToString } from 'core/util/peer';
 
 class PeerMemoryRepository implements IPeerRepository <PeerAddress, MemoryPeer> {
     private peers: Map<string, MemoryPeer>;
@@ -15,14 +16,14 @@ class PeerMemoryRepository implements IPeerRepository <PeerAddress, MemoryPeer> 
 
     add(peerAddress: PeerAddress, headers: SerializedFullHeaders, connectionType: PEER_SOCKET_TYPE) {
         this.peers.set(
-            `${peerAddress.ip}:${peerAddress.port}`,
+            peerAddressToString(peerAddress),
             new MemoryPeer({ peerAddress, headers, connectionType })
         );
         SystemRepository.update({ peerCount: this.count });
     }
 
     remove(peerAddress: PeerAddress): void {
-        this.peers.delete(`${peerAddress.ip}:${peerAddress.port}`);
+        this.peers.delete(peerAddressToString(peerAddress));
         SystemRepository.update({ peerCount: this.count });
     }
 
@@ -32,7 +33,7 @@ class PeerMemoryRepository implements IPeerRepository <PeerAddress, MemoryPeer> 
     }
 
     get(peerAddress: PeerAddress): MemoryPeer {
-        return this.peers.get(`${peerAddress.ip}:${peerAddress.port}`);
+        return this.peers.get(peerAddressToString(peerAddress));
     }
 
     getManyByAddress(peerAddresses: Array<PeerAddress>): Array<MemoryPeer> {
@@ -44,7 +45,7 @@ class PeerMemoryRepository implements IPeerRepository <PeerAddress, MemoryPeer> 
         return [...this.peers.values()];
     }
 
-    getPeerAddresses(): Array<PeerAddress & { peerCount: number }> {
+    getPeerAddresses(): Array<ShortPeerInfo> {
         return this.getAll().map((peer: MemoryPeer) => ({
             ...peer.peerAddress,
             peerCount: peer.headers.peerCount,
@@ -52,19 +53,7 @@ class PeerMemoryRepository implements IPeerRepository <PeerAddress, MemoryPeer> 
     }
 
     has(peerAddress: PeerAddress): boolean {
-        return this.peers.has(`${peerAddress.ip}:${peerAddress.port}`);
-    }
-
-    getUnbanPeers(): Array<MemoryPeer> {
-        return [...this.peers.values()].filter((peer: MemoryPeer) => {
-            return !PeerNetworkRepository.isBanned(peer.peerAddress);
-        });
-    }
-
-    getByHeightBlockExist(height: number, memoryPeers?: Array<MemoryPeer>): Array<MemoryPeer> {
-        return (memoryPeers || [...this.peers.values()]).filter((memoryPeer: MemoryPeer) => {
-            return memoryPeer.blockHeightExist(height);
-        });
+        return this.peers.has(peerAddressToString(peerAddress));
     }
 
     getHigherPeersByFilter(height, broadhash): Array<MemoryPeer> {
@@ -75,7 +64,7 @@ class PeerMemoryRepository implements IPeerRepository <PeerAddress, MemoryPeer> 
                 && !PeerNetworkRepository.isBanned(peer.peerAddress);
         });
     }
-    
+
     getLessPeersByFilter(height, broadhash): Array<MemoryPeer> {
 
         return [...this.peers.values()].filter((peer: MemoryPeer) => {

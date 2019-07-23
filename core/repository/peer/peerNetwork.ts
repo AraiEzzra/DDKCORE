@@ -2,6 +2,7 @@ import { NetworkPeer } from 'shared/model/Peer/networkPeer';
 import { PeerAddress } from 'shared/model/types';
 import IPeerRepository from 'core/repository/peer/index';
 import { logger } from 'shared/util/logger';
+import { peerAddressToString } from 'core/util/peer';
 
 
 class PeerNetworkRepository implements IPeerRepository <PeerAddress, NetworkPeer> {
@@ -14,8 +15,8 @@ class PeerNetworkRepository implements IPeerRepository <PeerAddress, NetworkPeer
     }
 
     ban(peerAddress: PeerAddress): void {
-        logger.debug(`[Repository][Peer][ban] peer ${peerAddress.ip}:${peerAddress.port} has been banned`);
-        this.banList.add(`${peerAddress.ip}:${peerAddress.port}`);
+        logger.debug(`[Repository][Peer][ban] peer ${peerAddressToString(peerAddress)} has been banned`);
+        this.banList.add(peerAddressToString(peerAddress));
         if (this.has(peerAddress)) {
             const peer = this.get(peerAddress);
             peer.ban();
@@ -23,8 +24,8 @@ class PeerNetworkRepository implements IPeerRepository <PeerAddress, NetworkPeer
     }
 
     unban(peerAddress: PeerAddress): void {
-        logger.debug(`[Repository][Peer][unban] peer ${peerAddress.ip}:${peerAddress.port}`);
-        this.banList.delete(`${peerAddress.ip}:${peerAddress.port}`);
+        logger.debug(`[Repository][Peer][unban] peer ${peerAddressToString(peerAddress)}`);
+        this.banList.delete(peerAddressToString(peerAddress));
         if (this.has(peerAddress)) {
             const peer = this.get(peerAddress);
             peer.unban();
@@ -32,7 +33,7 @@ class PeerNetworkRepository implements IPeerRepository <PeerAddress, NetworkPeer
     }
 
     isBanned(peerAddress: PeerAddress): boolean {
-        return this.banList.has(`${peerAddress.ip}:${peerAddress.port}`);
+        return this.banList.has(peerAddressToString(peerAddress));
     }
 
     clearBanList(): void {
@@ -41,7 +42,7 @@ class PeerNetworkRepository implements IPeerRepository <PeerAddress, NetworkPeer
 
     add(peerAddress: PeerAddress, socket: SocketIO.Socket | SocketIOClient.Socket): void {
         this.peers.set(
-            `${peerAddress.ip}:${peerAddress.port}`,
+            peerAddressToString(peerAddress),
             new NetworkPeer({
                 peerAddress,
                 socket,
@@ -56,7 +57,7 @@ class PeerNetworkRepository implements IPeerRepository <PeerAddress, NetworkPeer
         }
         const peer = this.get(peerAddress);
         peer.disconnect();
-        this.peers.delete(`${peerAddress.ip}:${peerAddress.port}`);
+        this.peers.delete(peerAddressToString(peerAddress));
     }
 
     removeAll(): void {
@@ -67,7 +68,7 @@ class PeerNetworkRepository implements IPeerRepository <PeerAddress, NetworkPeer
     }
 
     get(peerAddress: PeerAddress): NetworkPeer {
-        return this.peers.get(`${peerAddress.ip}:${peerAddress.port}`);
+        return this.peers.get(peerAddressToString(peerAddress));
     }
 
     getManyByAddress(peerAddresses: Array<PeerAddress>): Array<NetworkPeer> {
@@ -80,7 +81,7 @@ class PeerNetworkRepository implements IPeerRepository <PeerAddress, NetworkPeer
     }
 
     has(peerAddress: PeerAddress): boolean {
-        return this.peers.has(`${peerAddress.ip}:${peerAddress.port}`);
+        return this.peers.has(peerAddressToString(peerAddress));
     }
 
     get count(): number {

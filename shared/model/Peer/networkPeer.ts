@@ -10,6 +10,7 @@ import { Peer, SerializedPeer } from 'shared/model/Peer/index';
 import { REQUEST_TIMEOUT } from 'core/driver/socket';
 import config, { NODE_ENV_ENUM } from 'shared/config';
 import { ALLOWED_BAN_PEER_METHODS, ALLOWED_METHODS } from 'core/util/allowedPeerMethods';
+import { peerAddressToString } from 'core/util/peer';
 
 type SerializedNetworkPeer = SerializedPeer & {
     socket: SocketIO.Socket | SocketIOClient.Socket;
@@ -23,7 +24,7 @@ export class NetworkPeer extends Peer {
     constructor(data: SerializedNetworkPeer) {
         super(data);
 
-        logger.debug(`[Peer][new peer] ${data.peerAddress.ip}:${data.peerAddress.port}`);
+        logger.debug(`[Peer][new peer] ${peerAddressToString(data.peerAddress)}`);
         this._isBanned = data.isBanned;
 
         this._socket = data.socket;
@@ -148,7 +149,7 @@ export class NetworkPeer extends Peer {
                 +`try to execute disallowed method`);
         }
         logger.trace(
-            `[Peer][${this.peerAddress.ip}:${this.peerAddress.port}][onRPCRequest] CODE: ${code}, ` +
+            `[Peer][${peerAddressToString(this.peerAddress)}][onRPCRequest] CODE: ${code}, ` +
             `REQUEST_ID: ${requestId}}`
         );
         messageON(code, { data, requestPeerInfo: { peerAddress: this.peerAddress, requestId } });

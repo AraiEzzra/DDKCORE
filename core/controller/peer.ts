@@ -10,9 +10,7 @@ import { PeerAddress, PeerHeadersReceived } from 'shared/model/types';
 import PeerService from 'core/service/peer';
 import { PEER_SOCKET_TYPE } from 'shared/model/types';
 import SystemRepository from 'core/repository/system';
-import { asyncTimeout } from 'shared/util/timer';
-
-const RECONNECT_DELAY_MS = 900;
+import PeerMemoryRepository from 'core/repository/peer/peerMemory';
 
 export class PeerController extends BaseController {
 
@@ -27,13 +25,9 @@ export class PeerController extends BaseController {
         if (PeerNetworkRepository.count >= config.CONSTANTS.MAX_PEERS_CONNECT_TO) {
             return;
         }
-        const discoveredPeers = await SyncService.discoverPeers();
-        const filteredPeers = discoveredPeers.filter((peerAddress: PeerAddress & { peerCount: number }) => {
-            return peerAddress.peerCount < config.CONSTANTS.MAX_PEERS_CONNECTED &&
-                !PeerNetworkRepository.has(peerAddress) &&
-                !PeerNetworkRepository.isBanned(peerAddress) &&
-                config.CORE.PEERS.BLACKLIST.indexOf(peerAddress.ip) === -1;
-        });
+        const pickedPeers = await SyncService.pickNewPeers();
+        const filteredPeers = PeerService.filterPeers(pickedPeers);
+
         const sortedPeers = filteredPeers.sort(sortByKey('peerCount', 'ASC'));
         logger.trace(`[Controller][Peer][discoverNewPeers] sortedPeers: ${JSON.stringify(sortedPeers)}`);
 
@@ -48,28 +42,23 @@ export class PeerController extends BaseController {
 
     @ON(ActionTypes.EMIT_REBOOT_PEERS_CONNECTIONS)
     async rebootPeersConnections(): Promise<void> {
-        const discoveredPeers = await SyncService.discoverPeers();
-        PeerNetworkRepository.clearBanList();
-        PeerService.removeAll();
-        logger.debug('[Controller][Peer][rebootPeersConnections]: DISCONNECTED ALL PEERS');
+        const pickedPeers = await SyncService.pickNewPeers();
 
-        const filteredPeers = [...discoveredPeers.values()].filter(
-            (peer: PeerAddress & { peerCount: number }) => {
-                return peer.peerCount <= config.CONSTANTS.MAX_PEERS_CONNECTED &&
-                    config.CORE.PEERS.BLACKLIST.indexOf(peer.ip) === -1;
-            }
-        );
+        PeerNetworkRepository.clearBanList();
+
+        const filteredPeers = PeerService.filterPeers(pickedPeers);
+        const currentPeers = PeerMemoryRepository.getPeerAddresses();
 
         let sortedPeers: Array<PeerAddress & { peerCount?: number }> = filteredPeers
             .sort(sortByKey('peerCount', 'ASC'));
 
-        if (discoveredPeers.length <= config.CONSTANTS.PEERS_DISCOVER.MIN) {
+        if (filteredPeers.length <= config.CONSTANTS.PEERS_DISCOVER.MIN) {
             sortedPeers = [...config.CORE.PEERS.TRUSTED];
         }
 
-        const peers = sortedPeers.slice(0, config.CONSTANTS.PEERS_DISCOVER.MAX);
-        await asyncTimeout(RECONNECT_DELAY_MS);
-        PeerService.connectPeers(peers);
+        const newPeers = sortedPeers.slice(0, config.CONSTANTS.PEERS_DISCOVER.MAX);
+
+        PeerService.stepReconnect(currentPeers, newPeers);
     }
 
     @ON(ActionTypes.HEADERS_RECEIVE)

@@ -13,13 +13,14 @@ import PeerMemoryRepository from 'core/repository/peer/peerMemory';
 import PeerNetworkRepository from 'core/repository/peer/peerNetwork';
 import PeerService, { ERROR_NOT_ENOUGH_PEERS } from 'core/service/peer';
 import { ActionTypes } from 'core/util/actionTypes';
-import { BlockData, BlockLimit, PeerAddress, RequestPeerInfo } from 'shared/model/types';
+import { BlockData, BlockLimit, PeerAddress, RequestPeerInfo, ShortPeerInfo } from 'shared/model/types';
 import { getRandom, getRandomElements } from 'core/util/common';
 import { NetworkPeer } from 'shared/model/Peer/networkPeer';
 import { MemoryPeer } from 'shared/model/Peer/memoryPeer';
 import { logger } from 'shared/util/logger';
 import SwapTransactionQueue from 'core/service/swapTransactiontQueue';
 import TransactionQueue from 'core/service/transactionQueue';
+import { peerAddressToString } from 'core/util/peer';
 
 export interface ISyncService {
 
@@ -41,7 +42,7 @@ export class SyncService implements ISyncService {
 
     consensus: boolean;
 
-    async discoverPeers(): Promise<Array<PeerAddress & { peerCount: number }>> {
+    async pickNewPeers(): Promise<Array<ShortPeerInfo>> {
         const fullNetworkPeerList = PeerNetworkRepository.getAll();
         const randomNetworkPeers = getRandomElements(config.CONSTANTS.PEERS_COUNT_FOR_DISCOVER, fullNetworkPeerList);
         const peersPromises = randomNetworkPeers.map((peer: NetworkPeer) => {
@@ -49,16 +50,19 @@ export class SyncService implements ISyncService {
         });
 
         const peersResponses = await Promise.all(peersPromises);
-        const result = new Map();
-        peersResponses.forEach((response: ResponseEntity<Array<PeerAddress & { peerCount: number }>>) => {
+        const pickedPeers = new Map();
+        peersResponses.forEach((response: ResponseEntity<Array<ShortPeerInfo>>) => {
             if (response.success) {
                 response.data.forEach(peer => {
-                    result.set(`${peer.ip}:${peer.port}`, peer);
+                    pickedPeers.set(peerAddressToString(peer), peer);
                 });
             }
         });
-        return [...result.values()];
+
+
+        return [...pickedPeers.values()];
     }
+
 
     sendPeers(requestPeerInfo: RequestPeerInfo): void {
         if (!PeerNetworkRepository.has(requestPeerInfo.peerAddress)) {

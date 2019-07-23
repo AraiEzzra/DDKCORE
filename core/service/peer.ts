@@ -5,15 +5,19 @@ import SocketDriver from 'core/driver/socket/index';
 import SystemRepository from 'core/repository/system';
 import config from 'shared/config';
 import { logger } from 'shared/util/logger';
-import { PeerAddress, PeerHeadersReceived, RequestPeerInfo } from 'shared/model/types';
+import { PeerAddress, PeerHeadersReceived, RequestPeerInfo, ShortPeerInfo } from 'shared/model/types';
 import { Headers } from 'shared/model/Peer/headers';
-import { sortByKey } from 'shared/util/util';
+import { diffArray, sortByKey } from 'shared/util/util';
 import VersionChecker from 'core/util/versionChecker';
 import { isArray } from 'util';
 import SwapTransactionQueue from 'core/service/swapTransactiontQueue';
 import { messageON } from 'shared/util/bus';
 import { ActionTypes } from 'core/util/actionTypes';
 import { ResponseEntity } from 'shared/model/response';
+import { asyncTimeout } from 'shared/util/timer';
+import { peerAddressToString } from 'core/util/peer';
+
+const STEP_RECONNECT_DELAY = 300;
 
 const LOG_PREFIX = `[Service][Peer]`;
 export const ERROR_NOT_ENOUGH_PEERS = 'ERROR_NOT_ENOUGH_PEERS';
@@ -59,7 +63,7 @@ export class PeerService {
     }
 
     remove(peerAddress: PeerAddress) {
-        logger.debug(`${LOG_PREFIX}[remove] ${peerAddress.ip}:${peerAddress.port}`);
+        logger.debug(`${LOG_PREFIX}[remove] ${peerAddressToString(peerAddress)}`);
         PeerMemoryRepository.remove(peerAddress);
         PeerNetworkRepository.remove(peerAddress);
         if (PeerMemoryRepository.count < config.CONSTANTS.PEERS_DISCOVER.MIN) {
@@ -103,13 +107,44 @@ export class PeerService {
         }
     }
 
-    connectPeers(peerList: Array<PeerAddress>) {
+    filterPeers(peers: Array<ShortPeerInfo>): Array<ShortPeerInfo> {
 
-        const headers = SystemRepository.getFullHeaders();
-        peerList.forEach((peerAddress: PeerAddress) => {
-            if (!PeerMemoryRepository.has(peerAddress)) {
-                SocketDriver.connectPeer(peerAddress, headers.serialize());
+        return peers.filter((peer: ShortPeerInfo) => {
+            return peer.peerCount < config.CONSTANTS.MAX_PEERS_CONNECTED &&
+                !PeerNetworkRepository.isBanned(peer) &&
+                config.CORE.PEERS.BLACKLIST.indexOf(peer.ip) === -1;
+        });
+    }
+
+
+    async stepReconnect(currentPeers: Array<PeerAddress>, newPeers: Array<PeerAddress>) {
+
+        const currentUnique = diffArray(currentPeers, newPeers);
+        const newUnique = diffArray(newPeers, currentPeers);
+
+        let i = 0;
+        while (i < currentUnique.length || i < newUnique.length) {
+            if (currentUnique[i]) {
+                this.remove(currentUnique[i]);
             }
+            if (newUnique[i]) {
+                this.connectPeer(newUnique[i]);
+            }
+            i++;
+            await asyncTimeout(STEP_RECONNECT_DELAY);
+        }
+    }
+
+    connectPeer(peerAddress: PeerAddress) {
+        const headers = SystemRepository.getFullHeaders();
+        if (!PeerMemoryRepository.has(peerAddress)) {
+            SocketDriver.connectPeer(peerAddress, headers.serialize());
+        }
+    }
+
+    connectPeers(peerList: Array<PeerAddress>) {
+        peerList.forEach((peerAddress: PeerAddress) => {
+            this.connectPeer(peerAddress);
         });
     }
 
