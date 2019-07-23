@@ -1,8 +1,10 @@
-import { TransactionLifecycle, BlockLifecycle } from 'shared/model/transaction';
+import { TransactionLifecycle, BlockLifecycle, Transaction } from 'shared/model/transaction';
 import { Account, AccountChangeAction } from 'shared/model/account';
 import { Round } from 'shared/model/round';
 import { SerializedFullHeaders } from 'shared/model/Peer/fullHeaders';
 import { Pagination, Sort } from 'shared/util/common';
+import { SerializedDelegate } from 'shared/model/delegate';
+import { Block } from 'shared/model/block';
 
 export type Filter = {
     limit: number;
@@ -90,3 +92,11 @@ export type Timestamp = number;
 export type AirdropReward = Map<Address, number>;
 
 export type RequestDelegates = { filter: Pagination & { username: string }, sort: Array<Sort> };
+export type ResponseDelegates = { delegates: Array<SerializedDelegate>, count: number };
+
+export type ResponseTransactionHistory = {
+    events: Array<SerializedTransactionHistoryAction>,
+    entity: Transaction<any>,
+};
+
+export type ResponseBlockHistory = { events: Array<BlockHistoryEvent>, entity: Block };

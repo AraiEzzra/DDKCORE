@@ -2,6 +2,7 @@ import { Fixture } from 'test/api/base/fixture';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
 import { socketRequest } from 'test/api/base';
 import config from 'shared/config';
+import { ResponseDelegates } from 'shared/model/types';
 
 const chai = require('chai'),
     expect = chai.expect; // preference and tested with expect
@@ -16,7 +17,7 @@ describe('Test GET_ACTIVE_DELEGATES', () => {
             body: { limit: 2, offset: 0 },
         };
 
-        const response = await socketRequest(REQUEST);
+        const response = await socketRequest<any, ResponseDelegates>(REQUEST);
 
         expect(response.body.success).to.equal(true);
         expect(response.body.data.delegates).to.be.descendingBy('votes');
@@ -30,7 +31,7 @@ describe('Test GET_ACTIVE_DELEGATES', () => {
             body: { limit: 10, offset: 5 },
         };
 
-        const response = await socketRequest(REQUEST);
+        const response = await socketRequest<any, ResponseDelegates>(REQUEST);
 
         expect(response.body.success).to.equal(true);
         expect(response.body.data.delegates).to.have.lengthOf(0);
@@ -45,7 +46,7 @@ describe('Test GET_ACTIVE_DELEGATES', () => {
             body: { offset: 0, limit: -123 },
         };
 
-        const response = await socketRequest(REQUEST);
+        const response = await socketRequest<any, ResponseDelegates>(REQUEST);
 
         expect(response.body.success).to.equal(false);
         expect(response.body.errors).to.deep.equal(

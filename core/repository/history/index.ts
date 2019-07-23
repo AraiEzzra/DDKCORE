@@ -17,9 +17,12 @@ export class HistoryRepository<Entity extends EntityWithId, EventType> {
     }
 
     addEvent(entity: Entity, event: EventType): void {
+        console.log(`addEvent: ${JSON.stringify(entity)}, ${JSON.stringify(event)}`);
+
         if (!config.CORE.IS_HISTORY) {
             return;
         }
+        console.log(`addEvent 2: ${JSON.stringify(entity)}, ${JSON.stringify(event)}`);
 
         if (this.store.get(entity.id)) {
             this.store.get(entity.id).events.push(event);

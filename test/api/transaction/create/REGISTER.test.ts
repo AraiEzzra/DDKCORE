@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
 import { socketRequest } from 'test/api/base';
 import { getTransactionData } from 'test/api/base/util';
-import { IAssetRegister, TransactionType } from 'shared/model/transaction';
+import { IAssetRegister, TransactionType, Transaction } from 'shared/model/transaction';
 
 describe('Test CREATE_TRANSACTION REGISTER', () => {
 
@@ -34,7 +34,7 @@ describe('Test CREATE_TRANSACTION REGISTER', () => {
             }
         };
 
-        const response = await socketRequest(REQUEST);
+        const response = await socketRequest<any, Transaction<IAssetRegister>>(REQUEST);
 
         expect(response.body.success).to.equal(true);
         expect(getTransactionData<IAssetRegister>(response.body.data)).to.deep.equal(SUCCESS);
@@ -57,4 +57,3 @@ describe('Test CREATE_TRANSACTION REGISTER', () => {
         expect(response.body.errors).to.deep.equal(FAILED);
     });
 });
-

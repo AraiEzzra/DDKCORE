@@ -21,6 +21,6 @@ export class Message<MessageBody> {
             id: id || uuidv4(),
             type,
         };
-        this.body = body;
+        this.body = body || {};
     }
 }

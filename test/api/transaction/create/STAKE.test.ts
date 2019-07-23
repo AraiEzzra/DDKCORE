@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
 import { socketRequest } from 'test/api/base';
 import { getTransactionData } from 'test/api/base/util';
-import { IAssetStake, TransactionType } from 'shared/model/transaction';
+import { IAssetStake, TransactionType, Transaction } from 'shared/model/transaction';
 
 describe('Test CREATE_TRANSACTION STAKE', () => {
 
@@ -38,7 +38,7 @@ describe('Test CREATE_TRANSACTION STAKE', () => {
             }
         } as any;
 
-        const response = await socketRequest(REQUEST);
+        const response = await socketRequest<any, Transaction<IAssetStake>>(REQUEST);
 
         expect(response.body.success).to.equal(true);
         SUCCESS.asset.startTime = response.body.data.asset.startTime;
@@ -62,4 +62,3 @@ describe('Test CREATE_TRANSACTION STAKE', () => {
         expect(response.body.errors).to.deep.equal(FAILED);
     });
 });
-

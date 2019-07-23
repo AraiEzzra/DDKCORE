@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
 import { socketRequest } from 'test/api/base';
 import { getPreparedTransactionData } from 'test/api/base/util';
-import { IAssetVote, TransactionType } from 'shared/model/transaction';
+import { IAssetVote, TransactionType, Transaction } from 'shared/model/transaction';
 
 describe('Test CREATE_PREPARED_TRANSACTION VOTE', () => {
 
@@ -56,7 +56,7 @@ describe('Test CREATE_PREPARED_TRANSACTION VOTE', () => {
             }
         };
 
-        const response = await socketRequest(REQUEST);
+        const response = await socketRequest<any, Transaction<IAssetVote>>(REQUEST);
 
         expect(response.body.success).to.equal(true);
         expect(getPreparedTransactionData<IAssetVote>(response.body.data)).to.deep.equal(SUCCESS);
@@ -80,8 +80,3 @@ describe('Test CREATE_PREPARED_TRANSACTION VOTE', () => {
         expect(response.body.errors).to.deep.equal(FAILED);
     });
 });
-
-
-
-
-
