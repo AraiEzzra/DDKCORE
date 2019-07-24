@@ -41,13 +41,14 @@ export class Socket {
 
     onServerConnect(socket: socketIO.Socket): void {
 
-        if (!socket.handshake.address) {
+        const address = socket.handshake.address || socket.request.connection.remoteAddress;
+        if (!address) {
             logger.warn(`[SOCKET][onServerConnect] socket handshake address is missing`);
             socket.disconnect(true);
             return;
         }
 
-        const ip = socket.handshake.address.match(IPRegExp).toString();
+        const ip = address.match(IPRegExp).toString();
 
         if (config.CORE.PEERS.BLACKLIST.indexOf(ip) !== -1) {
             logger.warn(`[SOCKET][onServerConnect] trying to connect from black ip`);
