@@ -4,7 +4,7 @@ import SocketMiddleware from 'api/middleware/socket';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
 import { Pagination, Sort } from 'shared/util/common';
 import { validate } from 'shared/validate';
-import { RequestDelegates } from 'shared/model/types';
+import { RequestDelegates, RequestActiveDelegates } from 'shared/model/types';
 
 export class DelegateController {
 
@@ -12,7 +12,6 @@ export class DelegateController {
         this.getDelegates = this.getDelegates.bind(this);
         this.getActiveDelegates = this.getActiveDelegates.bind(this);
         this.getMyDelegates = this.getMyDelegates.bind(this);
-
     }
 
     @RPC(API_ACTION_TYPES.GET_DELEGATES)
@@ -39,7 +38,15 @@ export class DelegateController {
     @RPC(API_ACTION_TYPES.GET_ACTIVE_DELEGATES)
     @validate()
     getActiveDelegates(message: Message<Pagination & { sort: Array<Sort> }>, socket: any) {
-        SocketMiddleware.emitToCore<Pagination>(message, socket);
+        const coreMessage = new Message<RequestActiveDelegates>(message.headers.type, message.code, {
+            filter: {
+                limit: message.body.limit,
+                offset: message.body.offset,
+            },
+            sort: message.body.sort,
+        }, message.headers.id);
+
+        SocketMiddleware.emitToCore<RequestActiveDelegates>(coreMessage, socket);
     }
 
     @RPC(API_ACTION_TYPES.GET_MY_DELEGATES)

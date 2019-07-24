@@ -1,7 +1,9 @@
 import config from 'shared/config';
 import { Delegate } from 'shared/model/delegate';
 import BlockRepository from 'core/repository/block';
-import DelegateRepository from 'core/repository/delegate';
+import DelegateRepository, { sortingDelegateFuncs } from 'core/repository/delegate';
+import { Pagination, Sort, customSort } from 'shared/util/common';
+import { ResponseActiveDelegates } from 'shared/model/types';
 
 class DelegateService {
     public getActiveDelegatesCount = (): number => {
@@ -36,8 +38,23 @@ class DelegateService {
         }).slice(0, activeDelegatesCount);
     }
 
-    public getActiveDelegates = (limit: number = 10, offset: number = 0): Array<Delegate> => {
-        return this.getAllActiveDelegates().slice(offset, offset + limit);
+    public getActiveDelegates = (
+        filter: Pagination,
+        sort: Array<Sort>,
+    ): { delegates: Array<Delegate>, count: number } => {
+        const activeDelegates = this.getAllActiveDelegates();
+
+        if (sort && sort.length) {
+            return {
+                delegates: customSort<Delegate>(activeDelegates, sortingDelegateFuncs, { ...filter, sort }),
+                count: activeDelegates.length,
+            };
+        }
+
+        return {
+            delegates: activeDelegates.slice(filter.offset, filter.offset + filter.limit),
+            count: activeDelegates.length,
+        };
     }
 }
 
