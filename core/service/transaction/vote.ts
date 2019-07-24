@@ -225,13 +225,14 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
         }
 
         const processedOrders: Array<Stake> = [];
-        sender.stakes.forEach((stake: Stake) => {
-            if (stake.isActive && (stake.nextVoteMilestone === 0 || trs.createdAt >= stake.nextVoteMilestone)) {
+        sender.stakes
+            .filter(stake => stake.isActive && trs.createdAt >= stake.nextVoteMilestone)
+            .forEach((stake: Stake) => {
                 stake.voteCount++;
                 stake.nextVoteMilestone = trs.createdAt + config.CONSTANTS.FROZE.VOTE_MILESTONE;
+                stake.dependentTransactions.push(trs);
                 processedOrders.push(stake);
-            }
-        });
+            });
         applyFrozeOrdersRewardAndUnstake(trs, processedOrders);
         if (isSponsorsExist(trs)) {
             sendAirdropReward(trs);
@@ -275,7 +276,14 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
             )
             .forEach((stake: Stake) => {
                 stake.voteCount--;
-                stake.nextVoteMilestone = 0;
+                stake.dependentTransactions.pop();
+
+                if (stake.dependentTransactions.length) {
+                    const lastDependedTransaction = stake.dependentTransactions[stake.dependentTransactions.length - 1];
+                    stake.nextVoteMilestone = lastDependedTransaction.createdAt + config.CONSTANTS.FROZE.VOTE_MILESTONE;
+                } else {
+                    stake.nextVoteMilestone = stake.createdAt;
+                }
             });
     }
 
