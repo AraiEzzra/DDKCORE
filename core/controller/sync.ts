@@ -18,6 +18,7 @@ import SlotService from 'core/service/slot';
 import { ResponseEntity } from 'shared/model/response';
 import TransactionPool from 'core/service/transactionPool';
 import TransactionQueue from 'core/service/transactionQueue';
+import { peerAddressToString } from 'core/util/peer';
 
 type CheckCommonBlocksRequest = {
     data: BlockData,
@@ -171,7 +172,7 @@ export class SyncController extends BaseController {
 
     @ON(ActionTypes.PEER_HEADERS_UPDATE)
     updatePeer({ data, peerAddress }: PeerUpdateHeaders): void {
-        logger.trace(`${LOG_PREFIX}[updatePeer][${peerAddress.ip}:${peerAddress.port}] ` +
+        logger.trace(`${LOG_PREFIX}[updatePeer][${peerAddressToString(peerAddress)}] ` +
             `broadhash ${data.broadhash}, height: ${data.height}`);
         PeerService.update(peerAddress, data);
     }

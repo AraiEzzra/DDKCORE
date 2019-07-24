@@ -16,6 +16,10 @@ export type PeerAddress = {
     port: number;
 };
 
+export type ShortPeerInfo = PeerAddress & {
+    peerCount: number
+};
+
 export type RequestPeerInfo = {
     peerAddress: PeerAddress,
     requestId: string,

@@ -42,3 +42,7 @@ export const blockHeightMemoryConsensus = (memoryPeers: Array<MemoryPeer>): Memo
         MIN_HEIGHT: Math.min(...MaxMatchesHeight)
     };
 };
+
+export const peerAddressToString = (peerAddress: PeerAddress): string => {
+    return `${peerAddress.ip}:${peerAddress.port}`;
+};
