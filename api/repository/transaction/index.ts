@@ -67,18 +67,18 @@ class TransactionPGRepository {
 
         if (transactions && transactions.length) {
             // TODO: optimize and refactor this
-            let transactionsCount;
+            let transactionsCount: number;
             if (isFiltered(filter)) {
                 isFiltered(filter, new Set(['type']))
                     ? transactionsCount = DEFAULT_COUNT
-                    : transactionsCount = transactions[0].count;
+                    : transactionsCount = Number(transactions[0].count);
             } else {
                 transactionsCount = this.transactionsCount;
             }
 
             return {
                 transactions: transactions.map(trs => SharedTransactionPGRepo.deserialize(trs)),
-                count: transactionsCount
+                count: transactionsCount,
             };
         }
 
