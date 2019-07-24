@@ -15,6 +15,7 @@ const constants: IConstants = {
     ACTIVE_DELEGATES: new Map<number, number>([
         [0, 11],
         [251000, 61],
+        [453500, 101],
     ]),
     MAX_VOTES: 201,
     MAX_VOTES_PER_TRANSACTION: 3,
