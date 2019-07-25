@@ -12,8 +12,6 @@ import mainnetGenesisBlock from 'config/mainnet/genesisBlock.json';
 import testConstants from 'config/test/constants';
 import testGenesisBlock from 'config/test/genesisBlock.json';
 import { BlockModel } from 'shared/model/block';
-import { ERROR_CODES } from 'shared/config/errorCodes';
-import { logger } from 'shared/util/logger';
 
 const getConstantsByNodeEnv = (nodeEnv: string): IConstants => {
     switch (nodeEnv) {

@@ -427,6 +427,17 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         }
     }
 
+    verifyByBlacklist(trs: Transaction<T>): boolean {
+        if (
+            BlockRepository.getLastBlock().height > config.CONSTANTS.START_FEATURE_BLOCK.ACCOUNT_BLACKLIST &&
+            config.CONSTANTS.ADDRESSES_BLACKLIST.has(trs.senderAddress)
+        ) {
+            return false;
+        }
+
+        return true;
+    }
+
     verifyUnconfirmed(trs: Transaction<T>, sender: Account, skipSignature: boolean = false): ResponseEntity<void> {
         TransactionHistoryRepository.addBeforeState(
             trs,
@@ -434,10 +445,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             sender,
         );
 
-        if (
-            BlockRepository.getLastBlock().height > config.CONSTANTS.START_FEATURE_BLOCK.ACCOUNT_BLACKLIST &&
-            config.CONSTANTS.ADDRESSES_BLACKLIST.has(trs.senderAddress)
-        ) {
+        if (!this.verifyByBlacklist(trs)) {
             return new ResponseEntity<void>({ errors: [`Account in blacklist`] });
         }
 
