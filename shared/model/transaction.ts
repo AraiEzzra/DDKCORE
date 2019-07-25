@@ -166,6 +166,16 @@ export type SerializedTransaction<T> = {
     asset: T;
 };
 
+export type StakeSchema = {
+    createdAt: Timestamp;
+    isActive: boolean;
+    amount: number;
+    voteCount: number;
+    nextVoteMilestone: Timestamp;
+    airdropReward: AirdropReward;
+    sourceTransactionId: string;
+};
+
 export class Stake {
     createdAt: Timestamp;
     isActive: boolean;
@@ -174,8 +184,16 @@ export class Stake {
     nextVoteMilestone: Timestamp;
     airdropReward: AirdropReward;
     sourceTransactionId: string;
+    dependentTransactions: Array<Transaction<IAssetVote>>;
 
-    constructor(data: Stake) {
-        Object.assign(this, data);
+    constructor(data: StakeSchema) {
+        this.createdAt = data.createdAt;
+        this.isActive = data.isActive;
+        this.amount = data.amount;
+        this.voteCount = data.voteCount;
+        this.nextVoteMilestone = data.nextVoteMilestone;
+        this.airdropReward = data.airdropReward;
+        this.sourceTransactionId = data.sourceTransactionId;
+        this.dependentTransactions = [];
     }
 }

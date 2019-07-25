@@ -25,6 +25,7 @@ import BlockRepository from 'core/repository/block';
 import config from 'shared/config';
 import { Address } from 'shared/model/types';
 import TransactionHistoryRepository from 'core/repository/history/transaction';
+import FailService from 'core/service/fail';
 
 export interface IAssetService<T extends IAsset> {
     getBytes(trs: Transaction<T>): Buffer;
@@ -471,6 +472,27 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         if (SlotService.getSlotNumber(trs.createdAt) > SlotService.getSlotNumber()) {
             return new ResponseEntity<void>({ errors: ['Invalid transaction timestamp. CreatedAt is in the future'] });
         }
+
+        if (trs.blockId) {
+            if (FailService.isVerifyTransactionInThePast(trs)) {
+                if (SlotService.getSlotNumber(trs.createdAt + config.CONSTANTS.TRANSACTION_TTL) <
+                    (SlotService.getSlotNumber(BlockRepository.getById(trs.blockId).createdAt))
+                ) {
+                    return new ResponseEntity({
+                        errors: ['Invalid transaction timestamp. CreatedAt is in the far past']
+                    });
+                }
+            }
+        } else {
+            if (SlotService.getSlotNumber(trs.createdAt + config.CONSTANTS.TRANSACTION_TTL) <
+                SlotService.getSlotNumber()
+            ) {
+                return new ResponseEntity({
+                    errors: ['Invalid transaction timestamp. CreatedAt is in the far past']
+                });
+            }
+        }
+
 
         const asset: IAssetTransfer | IAssetStake = <IAssetTransfer | IAssetStake><Object>trs.asset;
         const amount = (asset.amount || 0) + trs.fee;

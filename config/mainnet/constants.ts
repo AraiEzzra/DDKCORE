@@ -1592,7 +1592,9 @@ const constants: IConstants = {
     START_FEATURE_BLOCK: {
         ACCOUNT_BLACKLIST: 70000,
         VOTE_WITH_ACTIVE_STAKE: 245000,
+        FIX_TRANSACTION_IN_THE_PAST_BLOCK_HEIGHT: 455155,
     },
+    TRANSACTION_TTL: 5 * 24 * 60 * 60,
 };
 /* tslint:enable */
 
