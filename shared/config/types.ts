@@ -52,6 +52,7 @@ export type IConstants = {
         SLOT_INTERVAL: number;
     };
     TRANSACTION_QUEUE_EXPIRE: number;
+    TRANSACTION_TTL: number;
     PRE_ORDER_LAST_MIGRATED_BLOCK: number;
     PRE_ORDER_PUBLIC_KEY: string;
     PRE_ORDER_SECOND_PUBLIC_KEY: string;
@@ -77,6 +78,7 @@ export type IConstants = {
     START_FEATURE_BLOCK: {
         ACCOUNT_BLACKLIST: number;
         VOTE_WITH_ACTIVE_STAKE: number;
+        FIX_TRANSACTION_IN_THE_PAST_BLOCK_HEIGHT: number;
     };
     CORE_REQUEST_TIMEOUT: number;
 };
