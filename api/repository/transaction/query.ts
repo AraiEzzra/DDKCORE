@@ -12,7 +12,9 @@ export default {
         `WITH max_height AS (SELECT max(height) as height FROM block)
             SELECT trs.*,
             (select max_height.height - b.height from max_height) as confirmations
-            ${!isFiltered(filter, new Set(['type'])) ? ', count(1) over () as count ' : ''}
+            ${Object.keys(filter).length && !isFiltered(filter, new Set(['type']))
+                ? ', count(1) over () as count '
+                : ''}
             FROM trs INNER JOIN block b on trs.block_id = b.id
             ${isFiltered(filter) ? `WHERE ${Object.keys(filter).map(
                 key => `${toSnakeCase(key)} ${key === 'asset' ? '@>' : '='} \${${key}}`).join(' OR ')
@@ -21,7 +23,9 @@ export default {
     getTransactionsByAsset: (filter: { [key: string]: any }, sort: string) =>
         `WITH max_height AS (SELECT max(height) as height FROM block)
         SELECT t.*, (select max_height.height - b.height from max_height) as confirmations
-            ${!isFiltered(filter, new Set(['type'])) ? ', count(1) over () as count ' : ''}
+            ${Object.keys(filter).length && !isFiltered(filter, new Set(['type']))
+                ? ', count(1) over () as count '
+                : ''}
         FROM (
             SELECT trs.* FROM trs
             ${Object.keys(filter).filter(key => key === 'asset').length ?
