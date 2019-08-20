@@ -90,10 +90,10 @@ Body parameters
 
 Response
 
-| Parameter | Type    | Description       |
-|-----------|---------|-------------------|
-| success   | boolean | Operation status  |
-| data      | Account | Requested account |
+| Parameter | Type        | Description           |
+|-----------|-------------|-----------------------|
+| success   | boolean     | Operation status      |
+| data      | Transaction | Requested transaction |
 
 ### GET TRANSACTION EXAMPLES
 
