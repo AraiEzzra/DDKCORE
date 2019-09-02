@@ -1,7 +1,10 @@
 import { Timestamp } from 'shared/model/types';
-import { Transaction, SerializedTransaction } from 'shared/model/transaction';
+import { SerializedTransaction, Transaction } from 'shared/model/transaction';
 import SharedTransactionRepo from 'shared/repository/transaction';
 import config from 'shared/config';
+import { SchemaName } from 'shared/util/byteSerializer/config';
+import { createBufferArray, createBufferObject } from 'shared/util/byteSerializer';
+import { BufferTypes } from 'shared/util/byteSerializer/types';
 
 export class BlockModel {
     id?: string | null = null;
@@ -62,6 +65,30 @@ export class Block extends BlockModel {
             relay: this.relay,
             transactions: this.transactions.map(trs => SharedTransactionRepo.serialize(trs)),
         };
+    }
+
+    public byteSerialize = (): Buffer => {
+        const serializedTransactions = this.transactions.map(trs => SharedTransactionRepo.byteSerialize(trs));
+
+        const byteBlock = createBufferObject({
+            id: this.id,
+            version: this.version,
+            createdAt: this.createdAt,
+            height: this.height,
+            previousBlockId: this.previousBlockId,
+            transactionCount: this.transactionCount,
+            amount: this.amount,
+            fee: this.fee,
+            payloadHash: this.payloadHash,
+            generatorPublicKey: this.generatorPublicKey,
+            signature: this.signature,
+            relay: this.relay,
+            transactions: createBufferArray(
+                serializedTransactions,
+                new BufferTypes.Object(SchemaName.Transaction)
+            ),
+        }, SchemaName.Block);
+        return byteBlock;
     }
 
     static deserialize = (block: SerializedBlock): Block => {

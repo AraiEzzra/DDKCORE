@@ -1,6 +1,8 @@
 import { IAssetVote } from 'shared/model/transaction';
 import { IAssetRepository } from 'shared/repository/transaction';
 import { RawAsset } from 'shared/model/types';
+import { SchemaName } from 'shared/util/byteSerializer/config';
+import { createBufferObject } from 'shared/util/byteSerializer';
 
 class TransactionVoteRepo implements IAssetRepository<IAssetVote> {
 
@@ -15,6 +17,10 @@ class TransactionVoteRepo implements IAssetRepository<IAssetVote> {
                     .map(elem => [elem[0].toString(), elem[1]])
             }
         };
+    }
+
+    byteSerialize(asset: IAssetVote): Buffer {
+        return createBufferObject(asset, SchemaName.TransactionAssetVote);
     }
 
     deserialize(rawAsset: RawAsset): IAssetVote {

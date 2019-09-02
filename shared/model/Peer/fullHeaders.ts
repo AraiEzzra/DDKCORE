@@ -4,7 +4,7 @@ export type SerializedFullHeaders = SerializedHeaders & {
     os: string;
     version: string;
     minVersion: string;
-    blocksIds: Array<[number, string]>;
+    blocksIds: Array<[number, string]> | Map<number, string>;
 };
 
 export class FullHeaders extends Headers {
@@ -19,7 +19,14 @@ export class FullHeaders extends Headers {
         this._os = fullHeaders.os;
         this._version = fullHeaders.version;
         this._minVersion = fullHeaders.minVersion;
-        this._blocksIds = new Map(fullHeaders.blocksIds);
+
+        // TODO delete crutch after migration
+        if (Array.isArray(fullHeaders.blocksIds)) {
+            this._blocksIds = new Map(fullHeaders.blocksIds);
+        } else {
+            this._blocksIds = fullHeaders.blocksIds;
+        }
+
     }
 
 

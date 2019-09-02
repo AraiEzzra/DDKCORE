@@ -45,7 +45,7 @@
     "ddk.registry": "git+https://github.com/AraiEzzra/DDK.REGISTRY.git",
     "dotenv": "^4.0.0",
     "ip": "=1.1.5",
-    "mocha": "^3.5.3",
+    "mocha": "^6.2.0",
     "nodemon": "^1.18.9",
     "pg-promise": "^8.6.0",
     "rxjs": "^6.4.0",

@@ -16,9 +16,9 @@ class SystemRepository {
         this.address = { ip: config.PUBLIC_HOST, port: config.CORE.SOCKET.PORT };
 
         this.headers = new FullHeaders({
-            blocksIds: [],
+            blocksIds: new Map(),
             os: os.platform() + os.release(),
-            broadhash: null,
+            broadhash: '',
             height: 1,
             version: config.CORE.VERSION,
             minVersion: config.CORE.MIN_VERSION,

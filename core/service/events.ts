@@ -71,7 +71,7 @@ class EventService {
                 ...SerializedPeerHeaders,
                 ...peer.peerAddress,
                 peersCount: SerializedPeerHeaders.peerCount,
-                blocksIds: SerializedPeerHeaders.blocksIds
+                blocksIds: [...SerializedPeerHeaders.blocksIds]
                     .sort((a: [number, string], b: [number, string]) => b[0] - a[0])
                     .splice(0, LAST_PEER_BLOCKS_COUNT)
             };

@@ -1,6 +1,8 @@
 import { IAssetStake } from 'shared/model/transaction';
 import { IAssetRepository } from 'shared/repository/transaction';
 import { RawAsset } from 'shared/model/types';
+import { SchemaName } from 'shared/util/byteSerializer/config';
+import { createBufferObject } from 'shared/util/byteSerializer';
 
 class TransactionStakeRepo implements IAssetRepository<IAssetStake> {
 
@@ -15,6 +17,10 @@ class TransactionStakeRepo implements IAssetRepository<IAssetStake> {
                     .map(elem => [elem[0].toString(), elem[1]])
             }
         };
+    }
+
+    byteSerialize(asset: IAssetStake): Buffer {
+        return createBufferObject(asset, SchemaName.TransactionAssetStake);
     }
 
     deserialize(rawAsset: RawAsset): IAssetStake {
