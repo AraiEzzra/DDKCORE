@@ -1,5 +1,5 @@
 import { Block, SerializedBlock } from 'shared/model/block';
-import { Transaction } from 'shared/model/transaction';
+import { IAsset, Transaction } from 'shared/model/transaction';
 import SystemRepository from 'core/repository/system';
 import BlockService from 'core/service/block';
 import BlockRepository from 'core/repository/block/index';
@@ -18,7 +18,7 @@ import { getRandom, getRandomElements } from 'core/util/common';
 import { NetworkPeer } from 'shared/model/Peer/networkPeer';
 import { MemoryPeer } from 'shared/model/Peer/memoryPeer';
 import { logger } from 'shared/util/logger';
-import SwapTransactionQueue from 'core/service/swapTransactiontQueue';
+import SwapTransactionQueue from 'core/service/swapTransactionQueue';
 import TransactionQueue from 'core/service/transactionQueue';
 import { peerAddressToString } from 'core/util/peer';
 
@@ -59,14 +59,13 @@ export class SyncService implements ISyncService {
             }
         });
 
-
         return [...pickedPeers.values()];
     }
 
 
     sendPeers(requestPeerInfo: RequestPeerInfo): void {
         if (!PeerNetworkRepository.has(requestPeerInfo.peerAddress)) {
-            logger.trace(`[Service][Sync][sendPeers] peer is offline for response` +
+            logger.debug(`[Service][Sync][sendPeers] peer is offline for response` +
                 ` ${requestPeerInfo.peerAddress.ip}`);
             return;
         }
@@ -88,7 +87,7 @@ export class SyncService implements ISyncService {
         }
     }
 
-    sendUnconfirmedTransaction(trs: Transaction<any>): void {
+    sendUnconfirmedTransaction(trs: Transaction<IAsset>): void {
         trs.relay += 1;
         if (trs.relay < config.CONSTANTS.TRANSFER.MAX_TRS_RELAY) {
             const serializedTransaction = SharedTransactionRepository.serialize(trs);

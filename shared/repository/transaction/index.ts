@@ -1,9 +1,4 @@
-import {
-    IAsset, IAssetRegister,
-    SerializedTransaction,
-    Transaction,
-    TransactionType
-} from 'shared/model/transaction';
+import { IAsset, SerializedTransaction, Transaction, TransactionType } from 'shared/model/transaction';
 import TransactionDelegateRepo from 'shared/repository/transaction/asset/delegate';
 import TransactionRegisterRepo from 'shared/repository/transaction/asset/register';
 import TransactionSignatureRepo from 'shared/repository/transaction/asset/signature';
@@ -12,9 +7,6 @@ import TransactionStakeRepo from 'shared/repository/transaction/asset/stake';
 import TransactionVoteRepo from 'shared/repository/transaction/asset/vote';
 import { getAddressByPublicKey } from 'shared/util/account';
 import { RawAsset, RawTransaction } from 'shared/model/types';
-import { SchemaName } from 'shared/util/byteSerializer/config';
-import { logger } from 'shared/util/logger';
-import { createBufferObject } from 'shared/util/byteSerializer';
 
 const ASSET_REPOSITORIES: { [key: string]: IAssetRepository<IAsset> } = {
     [TransactionType.REGISTER]: TransactionRegisterRepo,
@@ -27,8 +19,6 @@ const ASSET_REPOSITORIES: { [key: string]: IAssetRepository<IAsset> } = {
 
 export interface IAssetRepository<T extends IAsset> {
     serialize(asset: T): RawAsset;
-
-    byteSerialize(asset: T): Buffer;
 
     deserialize(rawAsset: RawAsset): T;
 }
@@ -55,30 +45,6 @@ class SharedTransactionRepo {
             confirmations: trs.confirmations,
             asset: asset,
         };
-    }
-
-    byteSerialize(trs: Transaction<IAsset>): Buffer {
-        const assetRepo: IAssetRepository<IAsset> = ASSET_REPOSITORIES[trs.type];
-        if (!assetRepo) {
-            logger.error(`[Repository][SharedTransactionRepo][byteSerialize]: unknown transaction type ${trs.type}`);
-        }
-        const byteAsset = assetRepo.byteSerialize(trs.asset);
-        const byteTransaction = createBufferObject({
-            id: trs.id,
-            blockId: trs.blockId,
-            type: trs.type,
-            createdAt: trs.createdAt,
-            senderPublicKey: trs.senderPublicKey,
-            senderAddress: trs.senderAddress || getAddressByPublicKey(trs.senderPublicKey),
-            signature: trs.signature,
-            secondSignature: trs.secondSignature,
-            fee: trs.fee,
-            salt: trs.salt,
-            relay: trs.relay,
-            confirmations: trs.confirmations,
-            asset: byteAsset,
-        }, SchemaName.Transaction);
-        return byteTransaction;
     }
 
     deserialize(rawTrs: RawTransaction): Transaction<IAsset> {

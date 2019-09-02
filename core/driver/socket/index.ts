@@ -10,7 +10,7 @@ import { ActionTypes } from 'core/util/actionTypes';
 import { SerializedFullHeaders } from 'shared/model/Peer/fullHeaders';
 import { PEER_SOCKET_EVENTS } from 'core/driver/socket/socketsTypes';
 import { peerAddressToString } from 'core/util/peer';
-import { deserialize } from 'shared/util/byteSerializer';
+import { BusyWorkParser } from 'core/util/busyWorkParser';
 
 export const REQUEST_TIMEOUT = '408 Request Timeout';
 
@@ -83,9 +83,6 @@ export class Socket {
 
             logger.debug(`[SOCKET][connectPeer] connected to ${peerAddressToString(peerAddress)}`);
 
-            // TODO Uncomment after update network
-            // ws.emit(PEER_SOCKET_EVENTS.HEADERS, createBufferObject(headers, SchemaName.FullHeaders));
-
             ws.emit(PEER_SOCKET_EVENTS.HEADERS, JSON.stringify(headers));
             ws.on(PEER_SOCKET_EVENTS.HEADERS, (response: Buffer | string) => {
                 Socket.instance.onHeadersReceive(response, peerAddress, ws, PEER_SOCKET_TYPE.SERVER);
@@ -95,13 +92,8 @@ export class Socket {
 
     onHeadersReceive(response: Buffer | string, peerAddress: PeerAddress, socket, type: PEER_SOCKET_TYPE) {
 
-         // TODO delete crutch after migration
-        let peerHeaders;
-        if (Buffer.isBuffer(response)) {
-            peerHeaders = deserialize(response);
-        } else {
-            peerHeaders = JSON.parse(response);
-        }
+        const migrateParser = new BusyWorkParser();
+        const peerHeaders = migrateParser.parseJsonByte(response);
 
         logger.info(`[Driver][Socket][onHeadersReceive] ${type} ${peerAddress.ip}, ` +
             `broadhash: ${peerHeaders.broadhash}, height: ${peerHeaders.height}, ` +

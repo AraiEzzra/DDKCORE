@@ -36,6 +36,13 @@ class PeerMemoryRepository implements IPeerRepository <PeerAddress, MemoryPeer> 
         return this.peers.get(peerAddressToString(peerAddress));
     }
 
+    getVersion(peerAddress: PeerAddress): string {
+        if (!this.has(peerAddress)) {
+            return;
+        }
+        return this.get(peerAddress).headers.version;
+    }
+
     getManyByAddress(peerAddresses: Array<PeerAddress>): Array<MemoryPeer> {
         return peerAddresses.filter((peerAddress: PeerAddress) => this.has(peerAddress))
             .map((peerAddress: PeerAddress) => this.get(peerAddress));

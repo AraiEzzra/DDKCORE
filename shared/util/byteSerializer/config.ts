@@ -9,16 +9,17 @@ export enum SchemaName {
     BlockData = 4,
     Block = 5,
     Transaction = 6,
-    TransactionAssetRegister = 7,
-    TransactionAssetSend = 8,
-    TransactionAssetSignature = 9,
-    TransactionAssetDelegate = 10,
-    TransactionAssetStake = 11,
-    TransactionAssetVote = 12,
-    AirdropReward = 13,
-    CommonBlockResponse = 14,
-    RequestBlocks = 15,
-    Empty = 16
+    TransactionBlock = 7,
+    TransactionAssetRegister = 8,
+    TransactionAssetSend = 9,
+    TransactionAssetSignature = 10,
+    TransactionAssetDelegate = 11,
+    TransactionAssetStake = 12,
+    TransactionAssetVote = 13,
+    AirdropReward = 14,
+    CommonBlockResponse = 15,
+    RequestBlocks = 16,
+    Empty = 17,
 }
 
 schemaStore.add(SchemaName.Request, {
@@ -75,7 +76,6 @@ schemaStore.add(SchemaName.Block, {
 
 schemaStore.add(SchemaName.Transaction, {
     id: new BufferTypes.Utf8(),
-    blockId: new BufferTypes.Utf8(),
     type: new BufferTypes.Uint8(),
     createdAt: new BufferTypes.Uint32(),
     senderPublicKey: new BufferTypes.Utf8(),
@@ -86,9 +86,23 @@ schemaStore.add(SchemaName.Transaction, {
     salt: new BufferTypes.Utf8(),
     relay: new BufferTypes.Uint8(),
     confirmations: new BufferTypes.Uint32(),
-    asset: new BufferTypes.Buffer(),
+    asset: new BufferTypes.Buffer()
 });
 
+schemaStore.add(SchemaName.TransactionBlock, {
+    id: new BufferTypes.Utf8(),
+    blockId: new BufferTypes.Utf8(),
+    type: new BufferTypes.Uint8(),
+    createdAt: new BufferTypes.Uint32(),
+    senderPublicKey: new BufferTypes.Utf8(),
+    senderAddress: new BufferTypes.Uint64(),
+    signature: new BufferTypes.Utf8(),
+    secondSignature: new BufferTypes.Utf8(),
+    fee: new BufferTypes.Number64(),
+    salt: new BufferTypes.Utf8(),
+    confirmations: new BufferTypes.Uint32(),
+    asset: new BufferTypes.Buffer(),
+});
 
 schemaStore.add(SchemaName.TransactionAssetRegister, {
     referral: new BufferTypes.Uint64()

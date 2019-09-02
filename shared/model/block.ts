@@ -5,6 +5,7 @@ import config from 'shared/config';
 import { SchemaName } from 'shared/util/byteSerializer/config';
 import { createBufferArray, createBufferObject } from 'shared/util/byteSerializer';
 import { BufferTypes } from 'shared/util/byteSerializer/types';
+import { serializeAssetTransaction } from 'shared/util/transaction';
 
 export class BlockModel {
     id?: string | null = null;
@@ -68,8 +69,7 @@ export class Block extends BlockModel {
     }
 
     public byteSerialize = (): Buffer => {
-        const serializedTransactions = this.transactions.map(trs => SharedTransactionRepo.byteSerialize(trs));
-
+        const byteAssetsTransactions = this.transactions.map(trs => serializeAssetTransaction(trs));
         const byteBlock = createBufferObject({
             id: this.id,
             version: this.version,
@@ -84,8 +84,8 @@ export class Block extends BlockModel {
             signature: this.signature,
             relay: this.relay,
             transactions: createBufferArray(
-                serializedTransactions,
-                new BufferTypes.Object(SchemaName.Transaction)
+                byteAssetsTransactions,
+                new BufferTypes.Object(SchemaName.TransactionBlock)
             ),
         }, SchemaName.Block);
         return byteBlock;
