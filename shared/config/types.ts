@@ -76,11 +76,13 @@ export type IConstants = {
     TIMEOUT_START_PEER_CONNECT: number;
     ADDRESSES_BLACKLIST: Set<Address>;
     THIEVES_ADDRESSES_BLACKLIST: Set<Address>;
+    FRAUD_OPERATION_BLACKLIST: Set<Address>;
     START_FEATURE_BLOCK: {
         ACCOUNT_BLACKLIST: number;
         THIEVES_ACCOUNT_BLACKLIST: number;
         VOTE_WITH_ACTIVE_STAKE: number;
         FIX_TRANSACTION_IN_THE_PAST_BLOCK_HEIGHT: number;
+        FRAUD_OPERATION_BLACKLIST: number;
     };
     CORE_REQUEST_TIMEOUT: number;
 };

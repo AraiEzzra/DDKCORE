@@ -1,4 +1,5 @@
 import { IConstants } from 'shared/config/types';
+import { Address } from 'shared/model/types';
 
 /* tslint:disable:no-magic-numbers */
 const constants: IConstants = {
@@ -97,11 +98,13 @@ const constants: IConstants = {
     TIMEOUT_START_PEER_CONNECT: 3000,
     ADDRESSES_BLACKLIST: new Set([]),
     THIEVES_ADDRESSES_BLACKLIST: new Set([]),
+    FRAUD_OPERATION_BLACKLIST: new Set([]),
     START_FEATURE_BLOCK: {
         ACCOUNT_BLACKLIST: 0,
         THIEVES_ACCOUNT_BLACKLIST: 0,
         VOTE_WITH_ACTIVE_STAKE: 0,
         FIX_TRANSACTION_IN_THE_PAST_BLOCK_HEIGHT: 0,
+        FRAUD_OPERATION_BLACKLIST: 0,
     },
     CORE_REQUEST_TIMEOUT: 10000,
 };
