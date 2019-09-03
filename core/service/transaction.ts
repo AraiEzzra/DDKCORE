@@ -443,6 +443,13 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             return false;
         }
 
+         if (
+            BlockRepository.getLastBlock().height > config.CONSTANTS.START_FEATURE_BLOCK.FRAUD_OPERATION_BLACKLIST &&
+            config.CONSTANTS.FRAUD_OPERATION_BLACKLIST.has(trs.senderAddress)
+        ) {
+            return false;
+        }
+
         return true;
     }
 
