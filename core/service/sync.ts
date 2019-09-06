@@ -1,4 +1,4 @@
-import { Block, SerializedBlock } from 'shared/model/block';
+import { Block, BlockModel, SerializedBlock } from 'shared/model/block';
 import { IAsset, Transaction } from 'shared/model/transaction';
 import SystemRepository from 'core/repository/system';
 import BlockService from 'core/service/block';
@@ -21,6 +21,7 @@ import { logger } from 'shared/util/logger';
 import SwapTransactionQueue from 'core/service/swapTransactionQueue';
 import TransactionQueue from 'core/service/transactionQueue';
 import { peerAddressToString } from 'core/util/peer';
+import { migrateVersionChecker } from 'core/util/migrateVersionChecker';
 
 export interface ISyncService {
 
@@ -32,7 +33,7 @@ export interface ISyncService {
 
     checkCommonBlock(lastBlock: BlockData): Promise<ResponseEntity<{ isExist: boolean, peer?: MemoryPeer }>>;
 
-    requestBlocks(lastBlock: Block, peer: PeerAddress): Promise<ResponseEntity<Array<SerializedBlock>>>;
+    requestBlocks(lastBlock: Block, peer: PeerAddress): Promise<ResponseEntity<Array<SerializedBlock | BlockModel>>>;
 
     sendBlocks(data: BlockLimit, requestFromPeer: RequestPeerInfo): void;
 
@@ -164,7 +165,7 @@ export class SyncService implements ISyncService {
         return new ResponseEntity();
     }
 
-    async requestBlocks(lastBlock, peerAddress): Promise<ResponseEntity<Array<SerializedBlock>>> {
+    async requestBlocks(lastBlock, peerAddress): Promise<ResponseEntity<Array<SerializedBlock | BlockModel>>> {
         if (!PeerNetworkRepository.has(peerAddress)) {
             return new ResponseEntity({ errors: [] });
         }
@@ -191,11 +192,10 @@ export class SyncService implements ISyncService {
         networkPeer.responseRPC(ActionTypes.RESPONSE_BLOCKS, serializedBlocks, requestId);
     }
 
-    async saveRequestedBlocks(blocks: Array<SerializedBlock>): Promise<ResponseEntity<void>> {
+    async saveRequestedBlocks(blocks: Array<BlockModel>): Promise<ResponseEntity<void>> {
         const errors = [];
         for (const block of blocks) {
-
-            const receivedBlock = Block.deserialize(block);
+            const receivedBlock = new Block(block);
             const lastBlock = BlockRepository.getLastBlock();
             const validateReceivedBlockResponse = BlockService.validateReceivedBlock(lastBlock, receivedBlock);
 
