@@ -5,7 +5,7 @@ import PeerService from 'core/service/peer';
 import { ActionTypes } from 'core/util/actionTypes';
 
 
-class SwapTransactiontQueue {
+class SwapTransactionQueue {
     pool: Array<SerializedTransaction<IAsset>>;
 
     constructor() {
@@ -34,4 +34,4 @@ class SwapTransactiontQueue {
     }
 }
 
-export default new SwapTransactiontQueue();
+export default new SwapTransactionQueue();

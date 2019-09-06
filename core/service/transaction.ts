@@ -370,6 +370,10 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             errors.push('Missing type');
         }
 
+        if (!Object.values(TransactionType).includes(trs.type)) {
+            errors.push('Unknown type');
+        }
+
         if (!trs.senderAddress) {
             errors.push('Missing sender address');
         }
@@ -443,7 +447,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             return false;
         }
 
-         if (
+        if (
             BlockRepository.getLastBlock().height > config.CONSTANTS.START_FEATURE_BLOCK.FRAUD_OPERATION_BLACKLIST &&
             config.CONSTANTS.FRAUD_OPERATION_BLACKLIST.has(trs.senderAddress)
         ) {

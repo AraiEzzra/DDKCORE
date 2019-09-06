@@ -10,7 +10,7 @@ import { Headers } from 'shared/model/Peer/headers';
 import { diffArray, sortByKey } from 'shared/util/util';
 import VersionChecker from 'core/util/versionChecker';
 import { isArray } from 'util';
-import SwapTransactionQueue from 'core/service/swapTransactiontQueue';
+import SwapTransactionQueue from 'core/service/swapTransactionQueue';
 import { messageON } from 'shared/util/bus';
 import { ActionTypes } from 'core/util/actionTypes';
 import { ResponseEntity } from 'shared/model/response';

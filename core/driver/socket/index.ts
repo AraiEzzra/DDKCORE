@@ -10,6 +10,7 @@ import { ActionTypes } from 'core/util/actionTypes';
 import { SerializedFullHeaders } from 'shared/model/Peer/fullHeaders';
 import { PEER_SOCKET_EVENTS } from 'core/driver/socket/socketsTypes';
 import { peerAddressToString } from 'core/util/peer';
+import { BusyWorkParser } from 'core/util/busyWorkParser';
 
 export const REQUEST_TIMEOUT = '408 Request Timeout';
 
@@ -59,10 +60,10 @@ export class Socket {
             logger.warn(`[SOCKET][onServerConnect] too many connections, sorry ${ip}`);
             socket.disconnect(true);
         }
-        socket.on(PEER_SOCKET_EVENTS.HEADERS, (response) => {
+        socket.on(PEER_SOCKET_EVENTS.HEADERS, (response: Buffer | string) => {
                 Socket.instance.onHeadersReceive(
                     response, {
-                        ip: ip,
+                        ip,
                         port: DEFAULT_CORE_SOCKET_PORT
                     },
                     socket, PEER_SOCKET_TYPE.CLIENT);
@@ -83,16 +84,20 @@ export class Socket {
             logger.debug(`[SOCKET][connectPeer] connected to ${peerAddressToString(peerAddress)}`);
 
             ws.emit(PEER_SOCKET_EVENTS.HEADERS, JSON.stringify(headers));
-            ws.on(PEER_SOCKET_EVENTS.HEADERS, (response: string) => {
+            ws.on(PEER_SOCKET_EVENTS.HEADERS, (response: Buffer | string) => {
                 Socket.instance.onHeadersReceive(response, peerAddress, ws, PEER_SOCKET_TYPE.SERVER);
             });
         });
     }
 
-    onHeadersReceive(response: string, peerAddress: PeerAddress, socket, type: PEER_SOCKET_TYPE) {
-        const peerHeaders = JSON.parse(response);
-        logger.debug(`HEADERS FROM ${type} ${peerAddress.ip}, broadhash: ${peerHeaders.broadhash}, ` +
-            `height: ${peerHeaders.height}`);
+    onHeadersReceive(response: Buffer | string, peerAddress: PeerAddress, socket, type: PEER_SOCKET_TYPE) {
+
+        const migrateParser = new BusyWorkParser();
+        const peerHeaders = migrateParser.parseJsonByte(response);
+
+        logger.info(`[Driver][Socket][onHeadersReceive] ${type} ${peerAddress.ip}, ` +
+            `broadhash: ${peerHeaders.broadhash}, height: ${peerHeaders.height}, ` +
+            `buffer size: ${response.length} byte`);
 
         messageON(ActionTypes.HEADERS_RECEIVE, {
             peerAddress,

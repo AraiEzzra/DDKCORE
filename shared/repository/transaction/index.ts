@@ -1,9 +1,4 @@
-import {
-    IAsset,
-    SerializedTransaction,
-    Transaction,
-    TransactionType
-} from 'shared/model/transaction';
+import { IAsset, SerializedTransaction, Transaction, TransactionType } from 'shared/model/transaction';
 import TransactionDelegateRepo from 'shared/repository/transaction/asset/delegate';
 import TransactionRegisterRepo from 'shared/repository/transaction/asset/register';
 import TransactionSignatureRepo from 'shared/repository/transaction/asset/signature';
@@ -24,6 +19,7 @@ const ASSET_REPOSITORIES: { [key: string]: IAssetRepository<IAsset> } = {
 
 export interface IAssetRepository<T extends IAsset> {
     serialize(asset: T): RawAsset;
+
     deserialize(rawAsset: RawAsset): T;
 }
 
