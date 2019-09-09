@@ -19,6 +19,7 @@ export class Bool extends ModelType {
     }
 
     write(buffer, value: boolean, offset) {
+        value = Boolean(value);
         offset = this.writeTypeId(buffer, offset);
         return buffer.writeUInt8(value === true ? 1 : 0, offset);
     }
