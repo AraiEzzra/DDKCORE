@@ -448,7 +448,8 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         }
 
         if (
-            BlockRepository.getLastBlock().height > config.CONSTANTS.START_FEATURE_BLOCK.FRAUD_OPERATION_BLACKLIST &&
+            BlockRepository.getLastBlock().height >
+            config.CONSTANTS.START_FEATURE_BLOCK.FRAUD_OPERATION_BLACKLIST_BLOCK_HEIGHT &&
             config.CONSTANTS.FRAUD_OPERATION_BLACKLIST.has(trs.senderAddress)
         ) {
             return false;
