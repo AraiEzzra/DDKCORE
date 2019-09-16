@@ -95,7 +95,7 @@ export class Socket {
         const migrateParser = new BusyWorkParser();
         const peerHeaders = migrateParser.parseJsonByte(response);
 
-        logger.info(`[Driver][Socket][onHeadersReceive] ${type} ${peerAddress.ip}, ` +
+        logger.debug(`[Driver][Socket][onHeadersReceive] ${type} ${peerAddress.ip}, ` +
             `broadhash: ${peerHeaders.broadhash}, height: ${peerHeaders.height}, ` +
             `buffer size: ${response.length} byte`);
 

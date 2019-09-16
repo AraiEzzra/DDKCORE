@@ -1,10 +1,9 @@
 import { IAsset, IAssetVote, Transaction, TransactionType } from 'shared/model/transaction';
 import db from 'shared/driver/db';
 import query from 'api/repository/transaction/query';
-import { DEFAULT_COUNT, Sort } from 'shared/util/common';
+import { Sort } from 'shared/util/common';
 import SharedTransactionPGRepo from 'shared/repository/transaction/pg';
 import { toSnakeCase } from 'shared/util/util';
-import { isFiltered } from 'shared/util/filter';
 
 type AllowedFilters = {
     blockId?: string;
@@ -64,17 +63,11 @@ class TransactionPGRepository {
             offset,
         });
 
-
         if (transactions && transactions.length) {
             // TODO: optimize and refactor this
-            let transactionsCount: number;
-            if (isFiltered(filter)) {
-                isFiltered(filter, new Set(['type']))
-                    ? transactionsCount = DEFAULT_COUNT
-                    : transactionsCount = Number(transactions[0].count);
-            } else {
-                transactionsCount = this.transactionsCount;
-            }
+            const transactionsCount: number = transactions[0].count
+                ? Number(transactions[0].count)
+                : this.transactionsCount;
 
             return {
                 transactions: transactions.map(trs => SharedTransactionPGRepo.deserialize(trs)),
@@ -86,7 +79,6 @@ class TransactionPGRepository {
             transactions: [],
             count: 0,
         };
-
     }
 
     async getVotesWithStakeReward(senderPublicKey: string, limit: number, offset: number):

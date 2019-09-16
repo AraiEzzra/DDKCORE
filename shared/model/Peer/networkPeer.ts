@@ -155,7 +155,7 @@ export class NetworkPeer extends Peer {
         }
 
         if (ALLOWED_BAN_PEER_METHODS.has(response.code) || !this._isBanned) {
-            logger.info(`[SOCKET][ON_PEER_BROADCAST][${this.peerAddress.ip}], CODE: ${response.code}`);
+            logger.debug(`[SOCKET][ON_PEER_BROADCAST][${this.peerAddress.ip}], CODE: ${response.code}`);
             messageON(response.code, { data: response.data, peerAddress });
         } else {
             logger.debug(`[SOCKET][ON_PEER_BROADCAST][${this.peerAddress.ip}] CODE: ${response.code} ` +
