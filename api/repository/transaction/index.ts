@@ -64,6 +64,7 @@ class TransactionPGRepository {
         });
 
         if (transactions && transactions.length) {
+            // TODO: optimize and refactor this
             const transactionsCount: number = transactions[0].count
                 ? Number(transactions[0].count)
                 : this.transactionsCount;

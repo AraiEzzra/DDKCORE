@@ -27,10 +27,10 @@ export default {
             ${Object.keys(filter).filter(key => key === 'asset').length ?
             `WHERE ${Object.keys(filter).filter(key => key === 'asset').map(
                 key => `${toSnakeCase(key)} @> \${${key}}`
-            ).join(' AND ')} ` : ''}
+            ).join(' OR ')} ` : ''}
             ${Object.keys(filter).filter(key => key !== 'asset').length ?
             `UNION SELECT trs.* FROM trs WHERE ${Object.keys(filter).filter(key => key !== 'asset').map(
-                key => `${toSnakeCase(key)} = \${${key}}`).join(' AND ')
+                key => `${toSnakeCase(key)} = \${${key}}`).join(' OR ')
             } ` : ''}
         ) t
         INNER JOIN block b on t.block_id = b.id
