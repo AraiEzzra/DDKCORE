@@ -1,5 +1,10 @@
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
-import { ALLOWED_TRANSACTION_TYPES_ARRAY, PAGINATION_SCHEME } from 'shared/validate/schema/common';
+import {
+    ALLOWED_TRANSACTION_TYPES_ARRAY,
+    PAGINATION_SCHEME,
+    DEFAULT_OFFSET_SCHEMA,
+    TRANSACTIONS_LIMIT_SCHEMA,
+} from 'shared/validate/schema/common';
 
 export const SCHEMAS_TRANSACTIONS = [
     {
@@ -8,10 +13,10 @@ export const SCHEMAS_TRANSACTIONS = [
         properties: {
             id: {
                 type: 'string',
-                format: 'id'
-            }
+                format: 'id',
+            },
         },
-        required: ['id']
+        required: ['id'],
     },
     {
         id: API_ACTION_TYPES.GET_TRANSACTIONS,
@@ -34,7 +39,7 @@ export const SCHEMAS_TRANSACTIONS = [
                     },
                     height: {
                         type: 'integer',
-                        minimum: 1
+                        minimum: 1,
                     }
                 }
             },
@@ -48,9 +53,10 @@ export const SCHEMAS_TRANSACTIONS = [
                     }
                 }
             },
-            ...PAGINATION_SCHEME
+            offset: DEFAULT_OFFSET_SCHEMA,
+            limit: TRANSACTIONS_LIMIT_SCHEMA,
         },
-        required: ['limit', 'offset']
+        required: ['limit', 'offset'],
     },
     {
         id: API_ACTION_TYPES.GET_TRANSACTIONS_BY_BLOCK_ID,
@@ -60,28 +66,22 @@ export const SCHEMAS_TRANSACTIONS = [
                 type: 'string',
                 format: 'id'
             },
-            ...PAGINATION_SCHEME
+            offset: DEFAULT_OFFSET_SCHEMA,
+            limit: TRANSACTIONS_LIMIT_SCHEMA,
         },
-        required: ['blockId', 'limit', 'offset']
+        required: ['blockId', 'limit', 'offset'],
     },
     {
         id: API_ACTION_TYPES.GET_TRANSACTIONS_BY_HEIGHT,
         type: 'object',
         properties: {
-            limit: {
-                type: 'integer',
-                minimum: 1,
-                maximum: 250
-            },
-            offset: {
-                type: 'integer',
-                minimum: 0,
-            },
+            offset: DEFAULT_OFFSET_SCHEMA,
+            limit: TRANSACTIONS_LIMIT_SCHEMA,
             height: {
                 type: 'integer',
-                minimum: 1
+                minimum: 1,
             }
         },
-        required: ['height', 'limit', 'offset']
+        required: ['height', 'limit', 'offset'],
     },
 ];
