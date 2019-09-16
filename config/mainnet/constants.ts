@@ -1484,7 +1484,7 @@ const BLACKLIST = {
         BigInt('7043806098403384872'), // From genesis block
     ]),
     FRAUD_OPERATION: new Set([
-        BigInt('1221945365509763761'),
+        BigInt('4151982851684386211'),
         BigInt('7043806098403384872'),
         BigInt('13761141028469814636'),
         BigInt('2529254201347404107'),
