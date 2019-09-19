@@ -44,7 +44,7 @@ import {
     isLessHeight,
     isNewer,
     isNext,
-    MIN_ROUND_BLOCK
+    MIN_ROUND_BLOCK_HEIGHT
 } from 'core/util/block';
 import { IKeyPair } from 'shared/util/ed';
 import System from 'core/repository/system';
@@ -77,19 +77,18 @@ class BlockService {
             TransactionPool.popSortedUnconfirmedTransactions(config.CONSTANTS.MAX_TRANSACTIONS_PER_BLOCK);
 
         const previousBlock: Block = BlockRepo.getLastBlock();
-
         const block: Block = this.create({
             keyPair,
             timestamp,
             previousBlock,
-            transactions
+            transactions,
         });
 
         const processBlockResponse: ResponseEntity<void> = await this.process(block, true, keyPair, false);
         if (!processBlockResponse.success) {
             TransactionDispatcher.returnToQueueConflictedTransactionFromPool(transactions);
 
-            processBlockResponse.errors.push('[Process][newGenerateBlock] generate block');
+            processBlockResponse.errors.push('generate block');
             return processBlockResponse;
         }
 
@@ -132,12 +131,6 @@ class BlockService {
             const validationResponse = this.verifyBlockSlot(block);
             if (!validationResponse.success) {
                 return new ResponseEntity<void>({ errors: [...validationResponse.errors, 'process'] });
-            }
-        } else {
-            // TODO: remove when validate will be fix
-            if (keyPair) {
-                const lastBlock: Block = BlockRepo.getLastBlock();
-                block = this.setHeight(block, lastBlock);
             }
         }
 
@@ -188,19 +181,10 @@ class BlockService {
         this.verifyBlockSlotNumber(block, lastBlock, errors);
 
         const response = new ResponseEntity<void>({ errors: errors.reverse() });
-
-        if (response.success) {
-            logger.info(
-                `Verify->verifyBlock succeeded for block ${block.id} at height ${
-                    block.height
-                    }.`
-            );
-        } else {
+        if (!response.success) {
             logger.error(
-                `Verify->verifyBlock failed for block ${block.id} at height ${
-                    block.height
-                    }.`,
-                JSON.stringify(response.errors)
+                `[Service][Block][verifyBlock] block ${block.id} at height ${block.height} is invalid. Error: ` +
+                `${response.errors.join('. ')}`
             );
         }
         return response;
@@ -264,6 +248,7 @@ class BlockService {
         return new ResponseEntity<void>();
     }
 
+    // TODO: what does it do?
     public verifyEqualBlock(receivedBlock: Block): ResponseEntity<void> {
         return new ResponseEntity<void>();
     }
@@ -300,7 +285,7 @@ class BlockService {
         const version: number = block.version;
         if (version !== this.currentBlockVersion) {
             errors.push('Invalid block version',
-                'No exceptions found. Block version doesn\'t match te current one.');
+                'No exceptions found. Block version doesn\'t match the current one.');
         }
     }
 
@@ -419,48 +404,45 @@ class BlockService {
         const errors: Array<string> = [];
         let i = 0;
 
-        while ((i < block.transactions.length && errors.length === 0) || (i >= 0 && errors.length !== 0)) {
+        while (i < block.transactions.length) {
             const trs: Transaction<object> = block.transactions[i];
 
-            if (errors.length === 0) {
-                let sender: Account = AccountRepository.getByAddress(trs.senderAddress);
-                if (!sender) {
-                    sender = AccountRepo.add({
-                        publicKey: trs.senderPublicKey,
-                        address: trs.senderAddress
-                    });
-                } else {
-                    sender.publicKey = trs.senderPublicKey;
-                }
+            let sender: Account = AccountRepository.getByAddress(trs.senderAddress);
+            if (!sender) {
+                sender = AccountRepo.add({
+                    publicKey: trs.senderPublicKey,
+                    address: trs.senderAddress
+                });
+            } else if (!sender.publicKey) {
+                sender.publicKey = trs.senderPublicKey;
+            }
 
-                if (verify) {
-                    const resultCheckTransaction: ResponseEntity<void> = this.checkTransaction(trs, sender);
-                    if (!resultCheckTransaction.success) {
-                        errors.push(...resultCheckTransaction.errors);
-                        logger.error(
-                            `[Service][Block][checkTransactionsAndApplyUnconfirmed][error] ${errors.join('. ')}. ` +
-                            `Transaction id: ${trs.id}`,
-                        );
-                        i--;
-                        continue;
-                    }
-                } else {
-                    // recalculate vote fee before block generation
-                    if (trs.type === TransactionType.VOTE) {
-                        trs.fee = TransactionDispatcher.calculateFee(trs, sender);
-                    }
+            if (verify) {
+                const resultCheckTransaction: ResponseEntity<void> = this.checkTransaction(trs, sender);
+                if (!resultCheckTransaction.success) {
+                    errors.push(...resultCheckTransaction.errors);
+                    logger.error(
+                        `[Service][Block][checkTransactionsAndApplyUnconfirmed][error] ${errors.join('. ')}. `,
+                    );
+                    i--;
+                    break;
                 }
+            }
 
-                TransactionDispatcher.applyUnconfirmed(trs, sender);
-                i++;
-            } else {
+            TransactionDispatcher.applyUnconfirmed(trs, sender);
+            i++;
+        }
+
+        if (errors.length) {
+            while (i >= 0) {
+                const trs: Transaction<object> = block.transactions[i];
                 const sender: Account = AccountRepository.getByPublicKey(trs.senderPublicKey);
                 TransactionDispatcher.undoUnconfirmed(trs, sender);
                 i--;
             }
         }
 
-        return new ResponseEntity<void>({ errors: errors });
+        return new ResponseEntity<void>({ errors });
     }
 
     private checkTransaction(trs: Transaction<object>, sender: Account): ResponseEntity<void> {
@@ -503,7 +485,7 @@ class BlockService {
             TransactionDispatcher.apply(trs, sender);
         }
 
-        logger.debug(
+        logger.info(
             `[Service][Block][applyBlock] block ${block.id}, height: ${block.height}, ` +
             `applied with ${block.transactionCount} transactions`
         );
@@ -515,7 +497,7 @@ class BlockService {
             SyncService.sendNewBlock(serializedBlock);
         }
 
-        if (block.height >= MIN_ROUND_BLOCK) {
+        if (block.height >= MIN_ROUND_BLOCK_HEIGHT) {
             RoundRepository.getCurrentRound().slots[block.generatorPublicKey].isForged = true;
         }
 
@@ -645,7 +627,7 @@ class BlockService {
         rawBlock.transactions.forEach((rawTrs) => {
             const address = getAddressByPublicKey(rawTrs.senderPublicKey);
             const publicKey = rawTrs.senderPublicKey;
-            AccountRepo.add({ publicKey: publicKey, address: address });
+            AccountRepo.add({ publicKey, address });
         });
         const resultTransactions = rawBlock.transactions.map((transaction) =>
             SharedTransactionRepo.deserialize(transaction)
@@ -658,10 +640,12 @@ class BlockService {
 
     public create({ transactions, timestamp, previousBlock, keyPair }): Block {
         const blockTransactions = transactions.sort(transactionSortFunc);
+
         return new Block({
             createdAt: timestamp,
             transactionCount: blockTransactions.length,
             previousBlockId: previousBlock.id,
+            height: previousBlock.height + 1,
             generatorPublicKey: keyPair.publicKey.toString('hex'),
             transactions: blockTransactions
         });

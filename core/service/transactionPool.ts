@@ -47,10 +47,10 @@ export interface ITransactionPoolService<T extends Object> {
 }
 
 class TransactionPoolService<T extends object> implements ITransactionPoolService<T> {
-    private pool: Map<TransactionId, Transaction<T>> = new Map();
+    private readonly pool: Map<TransactionId, Transaction<T>> = new Map();
 
-    poolByRecipient: Map<Address, Array<Transaction<T>>> = new Map<Address, Array<Transaction<T>>>();
-    poolBySender: Map<Address, Array<Transaction<T>>> = new Map<Address, Array<Transaction<T>>>();
+    private readonly poolByRecipient: Map<Address, Array<Transaction<T>>> = new Map<Address, Array<Transaction<T>>>();
+    private readonly poolBySender: Map<Address, Array<Transaction<T>>> = new Map<Address, Array<Transaction<T>>>();
 
     batchRemove(transactions: Array<Transaction<T>>): Array<Transaction<T>> {
         const removedTransactions = [];
@@ -85,6 +85,11 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
     }
 
     push(trs: Transaction<T>, sender: Account, broadcast: boolean = false): void {
+        if (this.has(trs)) {
+            logger.error(`[Service][TransactionPool][push] Transaction is already applied`);
+            return;
+        }
+
         this.pool.set(trs.id, trs);
         trs.status = TransactionStatus.PUT_IN_POOL;
 
@@ -115,8 +120,9 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
         }
     }
 
-    remove(trs: Transaction<T>) {
+    remove(trs: Transaction<T>): boolean {
         if (!this.pool.has(trs.id)) {
+            logger.error(`[Service][TransactionPool][remove] Transaction is not applied to the pool`);
             return false;
         }
 

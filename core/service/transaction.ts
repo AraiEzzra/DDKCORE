@@ -26,6 +26,7 @@ import config from 'shared/config';
 import { Address } from 'shared/model/types';
 import TransactionHistoryRepository from 'core/repository/history/transaction';
 import FailService from 'core/service/fail';
+import { logger } from 'shared/util/logger';
 
 export interface IAssetService<T extends IAsset> {
     getBytes(trs: Transaction<T>): Buffer;
@@ -92,6 +93,15 @@ export interface ITransactionService<T extends IAsset> {
 
 class TransactionService<T extends IAsset> implements ITransactionService<T> {
     applyUnconfirmed(trs: Transaction<T>, sender: Account): void {
+        // TODO: Apply / undo unconfirmed must be used only for an unconfirmed state (with transaction pool)
+        // and apply method must be used only for an confirmed state
+
+        if (TransactionRepo.has(trs.id)) {
+            logger.error(`[Service][Transaction][applyUnconfirmed] Transaction is already applied`);
+            return;
+        }
+
+        TransactionRepo.add(trs);
         TransactionHistoryRepository.addBeforeState(
             trs,
             TransactionLifecycle.APPLY_UNCONFIRMED,
@@ -108,26 +118,18 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             TransactionLifecycle.APPLY_UNCONFIRMED,
             sender,
         );
+
     }
 
     undoUnconfirmed(trs: Transaction<T>, sender: Account, senderOnly = false): void {
-        if (senderOnly) {
-            TransactionHistoryRepository.addBeforeState(
-                trs,
-                TransactionLifecycle.VIRTUAL_UNDO_UNCONFIRMED,
-                sender,
-            );
-        } else {
-            TransactionHistoryRepository.addBeforeState(
-                trs,
-                TransactionLifecycle.UNDO_UNCONFIRMED,
-                sender,
-            );
+        if (!TransactionRepo.has(trs.id)) {
+            logger.error(`[Service][Transaction][undoUnconfirmed] Transaction is not applied`);
+            return;
         }
 
         sender.actualBalance += trs.fee || 0;
         const service: IAssetService<IAsset> = getTransactionServiceByType(trs.type);
-        const result = service.undoUnconfirmed(trs, sender, senderOnly);
+        service.undoUnconfirmed(trs, sender, senderOnly);
 
         if (senderOnly) {
             sender.addHistory(AccountChangeAction.VIRTUAL_UNDO_UNCONFIRMED, trs.id);
@@ -143,16 +145,14 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
                 TransactionLifecycle.UNDO_UNCONFIRMED,
                 sender,
             );
-        }
 
-        return result;
+            // Deleting block removes transactions from the database
+            // Need remove only from memory
+            TransactionRepo.delete(trs);
+        }
     }
 
     apply(trs: Transaction<T>, sender: Account): void {
-        // TODO: migrate TransactionRepo.add to apply unconfirmed
-        TransactionRepo.add(trs);
-        TransactionHistoryRepository.addEvent(trs, { action: TransactionLifecycle.APPLY });
-
         if (trs.type === TransactionType.VOTE) {
             const service: IAssetService<IAsset> = getTransactionServiceByType(trs.type);
             service.apply(trs, sender);
@@ -160,12 +160,6 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
     }
 
     undo(trs: Transaction<T>, sender: Account): void {
-        // Deleting block removes transactions from the database
-        // Need remove only from memory
-
-        TransactionRepo.delete(trs);
-        TransactionHistoryRepository.addEvent(trs, { action: TransactionLifecycle.UNDO });
-
         if (trs.type === TransactionType.VOTE) {
             const service: IAssetService<IAsset> = getTransactionServiceByType(trs.type);
             service.undo(trs, sender);
@@ -512,6 +506,10 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             }
         }
 
+        const service: IAssetService<IAsset> = getTransactionServiceByType(trs.type);
+        if (trs.type === TransactionType.VOTE) {
+            trs.fee = service.calculateFee(trs, sender);
+        }
 
         const asset: IAssetTransfer | IAssetStake = <IAssetTransfer | IAssetStake><Object>trs.asset;
         const amount = (asset.amount || 0) + trs.fee;
@@ -520,7 +518,6 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             return senderBalanceResponse;
         }
 
-        const service: IAssetService<IAsset> = getTransactionServiceByType(trs.type);
         const result = service.verifyUnconfirmed(trs, sender);
         TransactionHistoryRepository.addAfterState(
             trs,

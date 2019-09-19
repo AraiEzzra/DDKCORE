@@ -208,6 +208,10 @@ class RoundService implements IRoundService {
             return;
         }
 
+        if (Object.values(round.slots).find(slot => slot.slot === slotNumber)) {
+            return;
+        }
+
         const isForward = slotNumber > getLastSlotNumberInRound(round);
         const lastBlockSlotNumber = SlotService.getSlotNumber(BlockRepository.getLastBlock().createdAt);
 

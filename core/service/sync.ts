@@ -78,8 +78,8 @@ export class SyncService implements ISyncService {
     sendNewBlock(block: SerializedBlock): void {
         logger.trace(`[Service][Sync][sendNewBlock] height: ${block.height} relay: ${block.relay}`);
 
-        block.relay += 1;
-        if (block.relay < config.CONSTANTS.TRANSFER.MAX_BLOCK_RELAY) {
+        if (block.relay < config.CONSTANTS.TRANSFER.MAX_BLOCK_RELAY - 1) {
+            block.relay += 1;
             const filteredPeerAddresses = PeerMemoryRepository
                 .getLessPeersByFilter(block.height, block.id)
                 .map((memoryPeer: MemoryPeer) => memoryPeer.peerAddress);
@@ -89,8 +89,8 @@ export class SyncService implements ISyncService {
     }
 
     sendUnconfirmedTransaction(trs: Transaction<IAsset>): void {
-        trs.relay += 1;
-        if (trs.relay < config.CONSTANTS.TRANSFER.MAX_TRS_RELAY) {
+        if (trs.relay < config.CONSTANTS.TRANSFER.MAX_TRS_RELAY - 1) {
+            trs.relay += 1;
             const serializedTransaction = SharedTransactionRepository.serialize(trs);
 
             if (PeerNetworkRepository.count === 0) {
