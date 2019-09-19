@@ -78,31 +78,34 @@ export class SyncService implements ISyncService {
     sendNewBlock(block: SerializedBlock): void {
         logger.trace(`[Service][Sync][sendNewBlock] height: ${block.height} relay: ${block.relay}`);
 
-        if (block.relay < config.CONSTANTS.TRANSFER.MAX_BLOCK_RELAY - 1) {
-            block.relay += 1;
-            const filteredPeerAddresses = PeerMemoryRepository
-                .getLessPeersByFilter(block.height, block.id)
-                .map((memoryPeer: MemoryPeer) => memoryPeer.peerAddress);
-
-            PeerService.broadcast(ActionTypes.BLOCK_RECEIVE, { block }, filteredPeerAddresses);
+        if (block.relay >= config.CONSTANTS.TRANSFER.MAX_BLOCK_RELAY) {
+            return;
         }
+
+        block.relay += 1;
+        const filteredPeerAddresses = PeerMemoryRepository
+            .getLessPeersByFilter(block.height, block.id)
+            .map((memoryPeer: MemoryPeer) => memoryPeer.peerAddress);
+
+        PeerService.broadcast(ActionTypes.BLOCK_RECEIVE, { block }, filteredPeerAddresses);
     }
 
     sendUnconfirmedTransaction(trs: Transaction<IAsset>): void {
-        if (trs.relay < config.CONSTANTS.TRANSFER.MAX_TRS_RELAY - 1) {
-            trs.relay += 1;
-            const serializedTransaction = SharedTransactionRepository.serialize(trs);
-
-            if (PeerNetworkRepository.count === 0) {
-                SwapTransactionQueue.push(serializedTransaction);
-                return;
-            }
-
-            PeerService.broadcast(
-                ActionTypes.TRANSACTION_RECEIVE,
-                { trs: serializedTransaction }
-            );
+        if (trs.relay >= config.CONSTANTS.TRANSFER.MAX_TRS_RELAY) {
+            return;
         }
+
+        trs.relay += 1;
+        const serializedTransaction = SharedTransactionRepository.serialize(trs);
+        if (PeerNetworkRepository.count === 0) {
+            SwapTransactionQueue.push(serializedTransaction);
+            return;
+        }
+
+        PeerService.broadcast(
+            ActionTypes.TRANSACTION_RECEIVE,
+            { trs: serializedTransaction }
+        );
     }
 
     async checkCommonBlock(lastBlock: BlockData):
