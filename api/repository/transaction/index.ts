@@ -46,11 +46,7 @@ class TransactionPGRepository {
     ): Promise<{ transactions: Array<Transaction<IAsset>>, count: number }> {
         let getTransactionsQuery: string;
         if (filter && filter.recipientAddress) {
-            filter.asset = `{"recipientAddress": "${filter.recipientAddress}"}`;
-            delete filter.recipientAddress;
-            getTransactionsQuery = query.getTransactionsByAsset(
-                filter, sort.map(elem => `${toSnakeCase(elem[0])} ${elem[1]}`).join(', '),
-            );
+            getTransactionsQuery = query.getUserTransactions;
         } else {
             getTransactionsQuery = query.getTransactions(
                 filter, sort.map(elem => `${toSnakeCase(elem[0])} ${elem[1]}`).join(', '),
