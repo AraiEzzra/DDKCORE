@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS address_to_trs
 (
-  trs_id               CHAR(64)  NOT NULL PRIMARY KEY,
+  trs_id               CHAR(64)  NOT NULL PRIMARY KEY REFERENCES trs ON DELETE CASCADE,
   recipient_address    CHAR(32)  NOT NULL
 );
 
