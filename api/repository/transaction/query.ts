@@ -15,7 +15,7 @@ export default {
             ${Object.keys(filter).length ? ', count(1) over () as count ' : ''}
             FROM trs INNER JOIN block b on trs.block_id = b.id
             ${isFiltered(filter) ? `WHERE ${Object.keys(filter)
-                .map(key => `${toSnakeCase(key)} ${key === 'asset' ? '@>' : '='} \${${key}}`).join(' AND ')
+            .map(key => `${toSnakeCase(key)} ${key === 'asset' ? '@>' : '='} \${${key}}`).join(' AND ')
             }` : ''}
             ORDER BY ${sort} LIMIT \${limit} OFFSET \${offset}`,
     getTransactionsByAsset: (filter: { [key: string]: any }, sort: string) =>
@@ -40,4 +40,12 @@ export default {
         ' and trs.type = ${voteType} and (asset ->> \'reward\')::bigint != 0' +
         ' ORDER BY trs.created_at DESC LIMIT ${limit} OFFSET ${offset}',
     getTransactionsCount: 'SELECT count(1) from trs',
+    getUserTransactions:
+        `SELECT t.*, count(1) over () as count FROM ( ` +
+        ` SELECT trs.* FROM address_to_trs ` +
+        ` LEFT JOIN trs ON trs.id = address_to_trs.trs_id ` +
+        ` WHERE address_to_trs.recipient_address = \${recipientAddress} ` +
+        ` UNION ALL ` +
+        ` SELECT trs.* FROM trs WHERE sender_public_key = \${senderPublicKey} ` +
+        ` ) t ORDER BY t.created_at desc LIMIT \${limit} OFFSET \${offset};`,
 };

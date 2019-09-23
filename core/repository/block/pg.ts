@@ -13,6 +13,8 @@ import {
 import SharedBlockPgRepository from 'shared/repository/block/pg';
 import { transactionSortFunc } from 'core/util/transaction';
 import { ResponseEntity } from 'shared/model/response';
+import { AddressToTransactionPGRepo } from 'core/repository/addressToTransaction/pg';
+import { TransactionType } from 'shared/model/transaction';
 
 export interface IBlockPGRepository extends IBlockRepositoryPGShared {
 
@@ -179,10 +181,18 @@ class BlockPGRepo implements IBlockPGRepository {
 
         const serializedBlock = SharedBlockPgRepository.serialize(block);
         try {
-            await db.tx(t => t.batch([
-                t.none(pgpE.helpers.insert(serializedBlock, this.columnSet)),
-                t.none(TransactionPGRepo.createInsertQuery(block.transactions)),
-            ]));
+            await db.tx(t => {
+                const dbQueries = [
+                    t.none(pgpE.helpers.insert(serializedBlock, this.columnSet)),
+                    t.none(TransactionPGRepo.createInsertQuery(block.transactions)),
+                ];
+
+                if (block.transactions.filter(trs => trs.type === TransactionType.SEND).length) {
+                    dbQueries.push(t.none(AddressToTransactionPGRepo.createInsertQuery(block.transactions)));
+                }
+
+                return t.batch(dbQueries);
+            });
         } catch (error) {
             return new ResponseEntity({
                 errors: [
