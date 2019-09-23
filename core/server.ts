@@ -6,7 +6,7 @@ process.addListener('unhandledRejection', err => {
 });
 
 process.addListener('uncaughtException', err => {
-    logger.error(`[Core][Process][uncaughtException] ${err.message} \n ${err.stack}`);
+    logger.error(`[Core][Process][uncaughtException] ${JSON.stringify(err)} \n ${err.stack}`);
 });
 
 const preconfiguration: Array<Promise<any>> = [];
