@@ -9,7 +9,6 @@ import {
 } from 'test/lab/test/transaction/mock';
 import AccountRepository from 'core/repository/account';
 import TransactionDispatcher from 'core/service/transaction';
-import BlockRepo from 'core/repository/block/index';
 import { DEFAULT_TEST_TIMEOUT, NODE_NAME } from 'test/lab/config';
 import { TestRunner } from 'test/lab/runner';
 import { preparePeerNode } from 'test/lab/runner/preparer/peerPreparator';
@@ -63,7 +62,6 @@ describe('TRANSACTION APPLY', function () {
                     AccountRepository.getByAddress(senderAddress)
                 );
             }
-            console.log(AccountRepository.getByAddress(recipientAddress).actualBalance);
             expect(AccountRepository.getByAddress(recipientAddress).actualBalance).to.equal(amount);
         }
         await testRunner.synchronizer.syncAll(TEST_DONE_STAGE_1);
@@ -77,7 +75,6 @@ describe('TRANSACTION APPLY', function () {
                     AccountRepository.getByAddress(senderAddress)
                 );
             }
-            console.log(AccountRepository.getByAddress(recipientAddress).actualBalance);
             expect(AccountRepository.getByAddress(recipientAddress).actualBalance).to.equal(0);
         }
         await testRunner.synchronizer.syncAll(TEST_DONE_STAGE_2);
