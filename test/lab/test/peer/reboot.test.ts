@@ -35,21 +35,21 @@ describe('PEER RECONNECT', function () {
         if (NODE_NAME === TEST_RUNNER_NAME) {
 
             await PeerController.rebootPeersConnections();
-            await asyncTimeout(TEST_ASYNC_TIMEOUT);
+            await asyncTimeout(TEST_ASYNC_TIMEOUT * 3);
 
             expect(PeerMemoryRepository.has(PEER.TWO)).to.equal(true);
             expect(PeerMemoryRepository.getAll().length).to.equal(1);
             expect(SystemRepository.getHeaders().peerCount).to.equal(1);
 
             await PeerController.rebootPeersConnections();
-            await asyncTimeout(TEST_ASYNC_TIMEOUT);
+            await asyncTimeout(TEST_ASYNC_TIMEOUT * 3);
 
             expect(PeerMemoryRepository.has(PEER.ONE)).to.equal(true);
             expect(PeerMemoryRepository.getAll().length).to.equal(1);
             expect(SystemRepository.getHeaders().peerCount).to.equal(1);
 
             await PeerController.rebootPeersConnections();
-            await asyncTimeout(TEST_ASYNC_TIMEOUT);
+            await asyncTimeout(TEST_ASYNC_TIMEOUT * 3);
 
             expect(PeerMemoryRepository.has(PEER.TWO)).to.equal(true);
             expect(PeerMemoryRepository.getAll().length).to.equal(1);

@@ -4,4 +4,4 @@ export const SECOND_PEER_NAME = 'NODE_B';
 
 export const TEST_SYNC_NAME = 'SYNC';
 
-export const TEST_ASYNC_TIMEOUT = 360;
+export const TEST_ASYNC_TIMEOUT = 560;
