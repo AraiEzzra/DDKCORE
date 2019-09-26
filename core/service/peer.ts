@@ -62,7 +62,7 @@ export class PeerService {
         }
     }
 
-    remove(peerAddress: PeerAddress, checkMinPeerCount? = true) {
+    remove(peerAddress: PeerAddress, checkMinPeerCount: boolean = true) {
         logger.debug(`${LOG_PREFIX}[remove] ${peerAddressToString(peerAddress)}`);
         PeerMemoryRepository.remove(peerAddress);
         PeerNetworkRepository.remove(peerAddress);
