@@ -55,18 +55,18 @@ export class PeerService {
         } else {
             logger.debug(`${LOG_PREFIX}[add] delete old connection ${networkPeer.id}, create new peer ` +
                 `${data.peerAddress.ip}`);
-            this.remove(data.peerAddress);
+            this.remove(data.peerAddress, false);
             PeerMemoryRepository.add(data.peerAddress, data.peerHeaders, data.type);
             PeerNetworkRepository.add(data.peerAddress, data.socket);
             return true;
         }
     }
 
-    remove(peerAddress: PeerAddress) {
+    remove(peerAddress: PeerAddress, checkMinPeerCount: boolean = true) {
         logger.debug(`${LOG_PREFIX}[remove] ${peerAddressToString(peerAddress)}`);
         PeerMemoryRepository.remove(peerAddress);
         PeerNetworkRepository.remove(peerAddress);
-        if (PeerMemoryRepository.count < config.CONSTANTS.PEERS_DISCOVER.MIN) {
+        if (checkMinPeerCount && PeerMemoryRepository.count < config.CONSTANTS.PEERS_DISCOVER.MIN) {
             messageON(ActionTypes.EMIT_REQUEST_PEERS);
         }
     }
@@ -125,7 +125,7 @@ export class PeerService {
         let i = 0;
         while (i < currentUnique.length || i < newUnique.length) {
             if (currentUnique[i]) {
-                this.remove(currentUnique[i]);
+                this.remove(currentUnique[i], false);
             }
             if (newUnique[i]) {
                 this.connectPeer(newUnique[i]);
