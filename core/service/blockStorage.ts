@@ -64,13 +64,13 @@ class BlockStorageService {
         return BlockHeadersRepository.get(id);
     }
 
-    async getMany(limit: number, height: number = 0): Promise<ResponseEntity<Array<Block>>> {
-        const blocks = BlockRepository.getMany(limit, height);
+    async getMany(limit: number, offset: number = 0): Promise<ResponseEntity<Array<Block>>> {
+        const blocks = BlockRepository.getMany(limit, offset);
         if (blocks.length) {
             return new ResponseEntity({ data: blocks });
         }
 
-        return BlockPGRepository.getMany(limit, height);
+        return BlockPGRepository.getMany(limit, offset);
     }
 }
 

@@ -50,9 +50,9 @@ class BlockRepo implements IBlockRepository {
         return lastBlock;
     }
 
-    getMany(limit: number, height: number = 0): Array<Block> {
+    getMany(limit: number, offset: number = 0): Array<Block> {
         const blocks: Array<Block> = [];
-        for (let index = height; index < height + limit; index++) {
+        for (let height = offset + 1; height <= offset + limit; height++) {
             const block = this.memoryBlocksByHeight.get(height);
             if (!block) {
                 return blocks;
