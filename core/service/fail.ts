@@ -28,7 +28,7 @@ class FailService {
     }
 
     public isVerifyTransactionInThePast(trs: Transaction<any>): boolean {
-        return trs.blockId && BlockStorageService.getById(trs.blockId)
+        return trs.blockId && BlockStorageService.getHeaders(trs.blockId)
             && BlockStorageService.getHeaders(trs.blockId).height >
             config.CONSTANTS.START_FEATURE_BLOCK.FIX_TRANSACTION_IN_THE_PAST_BLOCK_HEIGHT;
     }
