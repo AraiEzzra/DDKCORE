@@ -7,7 +7,7 @@ import ZSchema from 'shared/validate/z_schema';
 import { logger } from 'shared/util/logger';
 import { Account } from 'shared/model/account';
 import { Block, BlockModel } from 'shared/model/block';
-import BlockRepo from 'core/repository/block';
+import BlockStorageService from 'core/service/blockStorage';
 import SharedTransactionRepo from 'shared/repository/transaction';
 import BlockPGRepo from 'core/repository/block/pg';
 import AccountRepo from 'core/repository/account';
@@ -76,7 +76,7 @@ class BlockService {
         const transactions: Array<Transaction<object>> =
             TransactionPool.popSortedUnconfirmedTransactions(config.CONSTANTS.MAX_TRANSACTIONS_PER_BLOCK);
 
-        const previousBlock: Block = BlockRepo.getLastBlock();
+        const previousBlock: Block = BlockStorageService.getLast();
 
         const block: Block = this.create({
             keyPair,
@@ -136,7 +136,7 @@ class BlockService {
         } else {
             // TODO: remove when validate will be fix
             if (keyPair) {
-                const lastBlock: Block = BlockRepo.getLastBlock();
+                const lastBlock: Block = BlockStorageService.getLast();
                 block = this.setHeight(block, lastBlock);
             }
         }
@@ -168,7 +168,7 @@ class BlockService {
     }
 
     public verifyBlock(block: Block, verify: boolean): ResponseEntity<void> {
-        const lastBlock: Block = BlockRepo.getLastBlock();
+        const lastBlock: Block = BlockStorageService.getLast();
 
         let errors: Array<string> = [];
 
@@ -408,7 +408,7 @@ class BlockService {
     }
 
     private checkExists(block: Block): ResponseEntity<void> {
-        const exists: boolean = BlockRepo.has(block.id);
+        const exists: boolean = BlockStorageService.has(block.id);
         if (exists) {
             return new ResponseEntity<void>({ errors: [['Block', block.id, 'already exists'].join(' ')] });
         }
@@ -495,7 +495,7 @@ class BlockService {
             return saveResult;
         }
 
-        BlockRepo.add(block);
+        BlockStorageService.push(block);
         BlockHistoryRepository.addEvent(block, { action: BlockLifecycle.APPLY });
 
         for (const trs of block.transactions) {
@@ -607,7 +607,7 @@ class BlockService {
     }
 
     public async deleteLastBlock(): Promise<ResponseEntity<Block>> {
-        let lastBlock = BlockRepo.getLastBlock();
+        let lastBlock = BlockStorageService.getLast();
         logger.info(`Deleting last block: ${lastBlock.id}, height: ${lastBlock.height}`);
         if (lastBlock.height === 1) {
             return new ResponseEntity<Block>({ errors: ['Cannot delete genesis block'] });
@@ -622,7 +622,7 @@ class BlockService {
         const currentRound = RoundRepository.getCurrentRound();
         currentRound.slots[lastBlock.generatorPublicKey].isForged = false;
 
-        const newLastBlock = BlockRepo.deleteLastBlock();
+        const newLastBlock = BlockStorageService.popLast();
         const round = RoundRepository.getCurrentRound();
         const prevRound = RoundRepository.getPrevRound();
         BlockHistoryRepository.addEvent(lastBlock, { action: BlockLifecycle.UNDO, state: { round, prevRound } });

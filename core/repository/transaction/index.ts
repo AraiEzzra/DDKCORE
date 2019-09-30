@@ -4,7 +4,7 @@ import { Address } from 'shared/model/types';
 
 export interface ITransactionRepository<T extends IAsset> {
     add(trs: Transaction<T>): Transaction<T>;
-    delete(trs: Transaction<T>): void;
+    delete(id: TransactionId): void;
     has(trsId: TransactionId): boolean;
     getById(transactionId: string): Transaction<IAsset>;
     size(): number;
@@ -18,8 +18,8 @@ class TransactionRepo implements ITransactionRepository<IAsset> {
         return trs;
     }
 
-    delete(trs: Transaction<IAsset>): void {
-        this.memoryTransactionsById.delete(trs.id);
+    delete(id: TransactionId): void {
+        this.memoryTransactionsById.delete(id);
     }
 
     public has(id: TransactionId): boolean {

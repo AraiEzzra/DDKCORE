@@ -1,11 +1,10 @@
 import { Block } from 'shared/model/block';
 import { ResponseEntity } from 'shared/model/response';
 
-export type RawBlock = {[key: string]: any};
+export type RawBlock = { [key: string]: any };
 export type BlockId = string;
 
 export interface IBlockRepository {
-
     add(block: Block): Block;
     getGenesisBlock(): Block;
     getLastBlock(): Block;

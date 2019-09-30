@@ -3,17 +3,22 @@ import { BlockId, IBlockRepository as IBlockRepositoryShared } from 'shared/repo
 import { messageON } from 'shared/util/bus';
 import { ActionTypes } from 'core/util/actionTypes';
 
-export interface IBlockRepository extends IBlockRepositoryShared {
-
-}
+export interface IBlockRepository extends IBlockRepositoryShared {}
 
 class BlockRepo implements IBlockRepository {
     private memoryBlocks: Array<Block> = [];
     private memoryBlocksById: Map<BlockId, Block> = new Map();
+    private memoryBlocksByHeight: Map<number, Block> = new Map();
+    private genesis: Block;
 
     public add(block: Block): Block {
+        if (block.height === 1) {
+            this.genesis = block;
+        }
+
         this.memoryBlocks.push(block);
         this.memoryBlocksById.set(block.id, block);
+        this.memoryBlocksByHeight.set(block.height, block);
 
         messageON(ActionTypes.LAST_BLOCKS_UPDATE, {
             lastBlock: block
@@ -23,16 +28,19 @@ class BlockRepo implements IBlockRepository {
     }
 
     public getGenesisBlock(): Block {
-        return this.memoryBlocks[0];
+        return this.genesis;
     }
 
     public getLastBlock(): Block {
-        return this.memoryBlocks.length ? this.memoryBlocks[this.memoryBlocks.length - 1] : null;
+        return this.memoryBlocks.length
+            ? this.memoryBlocks[this.memoryBlocks.length - 1]
+            : null;
     }
 
     public deleteLastBlock(): Block {
         const block = this.memoryBlocks.pop();
         this.memoryBlocksById.delete(block.id);
+        this.memoryBlocksByHeight.delete(block.height);
 
         const lastBlock = this.getLastBlock();
 
@@ -42,15 +50,18 @@ class BlockRepo implements IBlockRepository {
         return lastBlock;
     }
 
-    public getMany(limit: number, offset?: number): Array<Block> {
-        if (!this.memoryBlocks[0]) {
-            return [];
+    getMany(limit: number, height: number = 0): Array<Block> {
+        const blocks: Array<Block> = [];
+        for (let index = height; index < height + limit; index++) {
+            const block = this.memoryBlocksByHeight.get(height);
+            if (!block) {
+                return blocks;
+            }
+
+            blocks.push(block);
         }
-        if (offset && offset < this.memoryBlocks[0].height) {
-            return [];
-        }
-        const from: number = offset || 0;
-        return this.memoryBlocks.slice(from, from + limit);
+
+        return blocks;
     }
 
     public has(id: BlockId): boolean {
@@ -59,6 +70,23 @@ class BlockRepo implements IBlockRepository {
 
     public getById(id: BlockId): Block {
         return this.memoryBlocksById[id];
+    }
+
+    get size(): number {
+        return this.memoryBlocks.length;
+    }
+
+    deleteFirst(): Block {
+        const block = this.memoryBlocks[0];
+        if (!block) {
+            return;
+        }
+
+        this.memoryBlocks.shift();
+        this.memoryBlocksByHeight.delete(block.height);
+        this.memoryBlocksById.delete(block.id);
+
+        return block;
     }
 }
 
