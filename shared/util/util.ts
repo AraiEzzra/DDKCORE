@@ -28,8 +28,3 @@ export function sortByKey(key: string, direction: Direction = 'ASC'): (a: any, b
         return 0;
     };
 }
-
-export const diffArray = <T>(arrayA: Array<T>, arrayB: Array<T>): Array<T> => {
-    const set = new Set([...arrayB]);
-    return arrayA.filter(str => !set.has(str));
-};
