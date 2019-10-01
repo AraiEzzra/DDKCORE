@@ -4,9 +4,9 @@ export default {
     getGenesisBlock: 'SELECT * FROM block WHERE "height" = 1',
     getLastBlock: 'SELECT * FROM block WHERE "height" = ( SELECT MAX("height") FROM block ) ORDER BY "height"',
     getLastNBlocks: 'SELECT id FROM block ORDER BY height DESC LIMIT ${blockLimit}',
-    getMany(limit: number) {
+    getMany(fields: Array<string>, limit: number) {
         return [
-            'SELECT * FROM block WHERE "height" > ${offset}',
+            `SELECT ${fields.join()} FROM block WHERE "height" > \${offset}`,
             (limit ? 'AND "height" <= ${offset} + ${limit}' : ''),
             'ORDER BY "height"'
         ].filter(Boolean).join(' ');

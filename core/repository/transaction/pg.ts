@@ -48,7 +48,7 @@ class TransactionPGRepo implements ITransactionPGRepository<IAsset> {
     ): Promise<ResponseEntity<{ [blockId: string]: Array<Transaction<IAsset>> }>> {
         try {
             const rawTransactions: Array<RawTransaction> =
-                await db.many(queries.getByBlockIds, [blockIds]);
+                await db.many(queries.getByBlockIds(this.tableFields), [blockIds]);
 
             const result = {};
             rawTransactions.forEach((rawTransaction: RawTransaction) => {

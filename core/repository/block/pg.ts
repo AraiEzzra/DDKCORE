@@ -124,7 +124,7 @@ class BlockPGRepo implements IBlockPGRepository {
     async getMany(limit: number = 0, offset: number = 0): Promise<ResponseEntity<Array<Block>>> {
         try {
             const rawBlocks: Array<RawBlock> = await db.manyOrNone(
-                queries.getMany(limit),
+                queries.getMany(this.tableFields, limit),
                 { offset, limit },
             );
             if (!rawBlocks || !rawBlocks.length) {
