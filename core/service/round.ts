@@ -41,7 +41,7 @@ interface IRoundService {
 
 class RoundService implements IRoundService {
     private readonly keyPair: IKeyPair;
-    private logPrefix: string = '[RoundService]';
+    private readonly logPrefix: string = '[Service][Round]';
 
     constructor() {
         this.keyPair = createKeyPairBySecret(process.env.FORGE_SECRET);
@@ -159,11 +159,12 @@ class RoundService implements IRoundService {
     }
 
     public generate(firstSlotNumber: number): Round {
-        const lastBlockId = FailService.getRightLastRoundBlockId(BlockStorageService.getLast().id);
+        const lastBlockId = BlockStorageService.getLast().id;
+        const rightLastBlockId = FailService.getRightLastRoundBlockId(lastBlockId);
         const delegates = DelegateService.getAllActiveDelegates();
-        const slots = SlotService.generateSlots(lastBlockId, delegates, firstSlotNumber);
+        const slots = SlotService.generateSlots(rightLastBlockId, delegates, firstSlotNumber);
 
-        const round = new Round({ slots, lastBlockId });
+        const round = new Round({ slots, lastBlockId: rightLastBlockId });
         logger.debug('[Round][Service][generate]', JSON.stringify(round));
 
         if (!System.synchronization) {

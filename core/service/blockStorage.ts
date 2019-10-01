@@ -4,26 +4,30 @@ import BlockPGRepository from 'core/repository/block/pg';
 import { Block } from 'shared/model/block';
 import { BlockId } from 'shared/repository/block';
 import { ResponseEntity } from 'shared/model/response';
-import { BlockHeadersRepository } from 'core/repository/block/headers';
+import { BlockHeadersStorage } from 'core/repository/storage/blockHeaders';
 import { BlockHeaders } from 'shared/model/headers/block';
 
 const MEMORY_BLOCKS_LIMIT = 1000;
 
 class BlockStorageService {
+    cleanup() {
+        while (BlockRepository.size > MEMORY_BLOCKS_LIMIT) {
+            const removedBlock = BlockRepository.deleteFirst();
+            if (!removedBlock) {
+                return;
+            }
+
+            removedBlock.transactions.forEach(transaction => TransactionRepository.delete(transaction.id));
+        }
+    }
+
     push(block: Block) {
         BlockRepository.add(block);
-        BlockHeadersRepository.set(block.id, { id: block.id, height: block.height });
+        BlockHeadersStorage.set(block.id, { id: block.id, height: block.height });
 
-        if (BlockRepository.size <= MEMORY_BLOCKS_LIMIT) {
-            return;
+        if (BlockRepository.size > MEMORY_BLOCKS_LIMIT) {
+            this.cleanup();
         }
-
-        const removedBlock = BlockRepository.deleteFirst();
-        if (!removedBlock) {
-            return;
-        }
-
-        removedBlock.transactions.forEach(transaction => TransactionRepository.delete(transaction.id));
     }
 
     getGenesis(): Block {
@@ -42,13 +46,13 @@ class BlockStorageService {
         const blockForRemove = BlockRepository.getLastBlock();
         const newLastBlock = BlockRepository.deleteLastBlock();
 
-        BlockHeadersRepository.delete(blockForRemove.id);
+        BlockHeadersStorage.delete(blockForRemove.id);
 
         return newLastBlock;
     }
 
     has(id: BlockId): boolean {
-        return BlockHeadersRepository.has(id);
+        return BlockHeadersStorage.has(id);
     }
 
     async getById(id: BlockId): Promise<Block> {
@@ -61,7 +65,7 @@ class BlockStorageService {
     }
 
     getHeaders(id: BlockId): BlockHeaders {
-        return BlockHeadersRepository.get(id);
+        return BlockHeadersStorage.get(id);
     }
 
     async getMany(limit: number, offset: number = 0): Promise<ResponseEntity<Array<Block>>> {
