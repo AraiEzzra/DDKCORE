@@ -7,7 +7,7 @@ import config from 'shared/config';
 import { logger } from 'shared/util/logger';
 import { PeerAddress, PeerHeadersReceived, RequestPeerInfo, ShortPeerInfo } from 'shared/model/types';
 import { Headers } from 'shared/model/Peer/headers';
-import { diffArray, sortByKey } from 'shared/util/util';
+import { sortByKey } from 'shared/util/util';
 import VersionChecker from 'core/util/versionChecker';
 import { isArray } from 'util';
 import SwapTransactionQueue from 'core/service/swapTransactionQueue';
@@ -15,7 +15,7 @@ import { messageON } from 'shared/util/bus';
 import { ActionTypes } from 'core/util/actionTypes';
 import { ResponseEntity } from 'shared/model/response';
 import { asyncTimeout } from 'shared/util/timer';
-import { peerAddressToString } from 'core/util/peer';
+import { diffArrayPeers, peerAddressToString } from 'core/util/peer';
 
 const STEP_RECONNECT_DELAY = 300;
 
@@ -31,7 +31,6 @@ export class PeerService {
             data.socket.disconnect(true);
             return false;
         }
-
         if (PeerMemoryRepository.has(data.peerAddress)) {
             return this.resolveConnectionConflict(data);
         } else {
@@ -119,9 +118,8 @@ export class PeerService {
 
     async stepReconnect(currentPeers: Array<PeerAddress>, newPeers: Array<PeerAddress>) {
 
-        const currentUnique = diffArray(currentPeers, newPeers);
-        const newUnique = diffArray(newPeers, currentPeers);
-
+        const currentUnique = diffArrayPeers(currentPeers, newPeers);
+        const newUnique = diffArrayPeers(newPeers, currentPeers);
         let i = 0;
         while (i < currentUnique.length || i < newUnique.length) {
             if (currentUnique[i]) {
