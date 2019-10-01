@@ -1,16 +1,14 @@
 import SocketMiddleware from 'core/api/middleware/socket';
 import { EVENT_TYPES } from 'shared/driver/socket/codes';
 import AccountRepository from 'core/repository/account';
-import TransactionRepository from 'core/repository/transaction';
+import TransactionStorageService from 'core/service/transactionStorage';
 import BlockRepository from 'core/repository/block';
 import SyncService from 'core/service/sync';
 import config from 'shared/config';
-import { Address } from 'shared/model/types';
 import TransactionPool from 'core/service/transactionPool';
 import TransactionQueue from 'core/service/transactionQueue';
 import PeerMemoryRepository from 'core/repository/peer/peerMemory';
 import PeerNetworkRepository from 'core/repository/peer/peerNetwork';
-import { logger } from 'shared/util/logger';
 import { MemoryPeer } from 'shared/model/Peer/memoryPeer';
 import { NetworkPeer } from 'shared/model/Peer/networkPeer';
 
@@ -55,7 +53,7 @@ class EventService {
             tokenHolders: statistics.tokenHolders,
             totalStakeAmount: statistics.totalStakeAmount,
             totalStakeHolders: statistics.totalStakeHolders,
-            transactionsCount: TransactionRepository.size()
+            transactionsCount: TransactionStorageService.size,
         });
     }
 

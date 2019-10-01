@@ -7,7 +7,7 @@ import ZSchema from 'shared/validate/z_schema';
 import { logger } from 'shared/util/logger';
 import { Account } from 'shared/model/account';
 import { Block, BlockModel } from 'shared/model/block';
-import BlockRepo from 'core/repository/block';
+import BlockStorageService from 'core/service/blockStorage';
 import SharedTransactionRepo from 'shared/repository/transaction';
 import BlockPGRepo from 'core/repository/block/pg';
 import AccountRepo from 'core/repository/account';
@@ -52,7 +52,6 @@ import BlockHistoryRepository from 'core/repository/history/block';
 import TransactionHistoryRepository from 'core/repository/history/transaction';
 import { getFirstSlotNumberInRound } from 'core/util/slot';
 import RoundService from 'core/service/round';
-import DelegateRepository from 'core/repository/delegate';
 import { messageON } from 'shared/util/bus';
 import DelegateService from 'core/service/delegate';
 import FailService from 'core/service/fail';
@@ -71,26 +70,24 @@ class BlockService {
     ;
 
     public async generateBlock(keyPair: IKeyPair, timestamp: number): Promise<ResponseEntity<void>> {
-        logger.debug(`[Service][Block][generateBlock] timestamp ${timestamp}`);
+        logger.info(`[Service][Block][generate] timestamp ${timestamp}`);
 
         const transactions: Array<Transaction<object>> =
             TransactionPool.popSortedUnconfirmedTransactions(config.CONSTANTS.MAX_TRANSACTIONS_PER_BLOCK);
 
-        const previousBlock: Block = BlockRepo.getLastBlock();
-
         const block: Block = this.create({
             keyPair,
             timestamp,
-            previousBlock,
-            transactions
+            previousBlock: BlockStorageService.getLast(),
+            transactions,
         });
 
-        const processBlockResponse: ResponseEntity<void> = await this.process(block, true, keyPair, false);
-        if (!processBlockResponse.success) {
+        const processResponse: ResponseEntity<void> = await this.process(block, true, keyPair, false);
+        if (!processResponse.success) {
             TransactionDispatcher.returnToQueueConflictedTransactionFromPool(transactions);
 
-            processBlockResponse.errors.push('[Process][newGenerateBlock] generate block');
-            return processBlockResponse;
+            processResponse.errors.push('generate block');
+            return processResponse;
         }
 
         return new ResponseEntity<void>();
@@ -133,12 +130,6 @@ class BlockService {
             if (!validationResponse.success) {
                 return new ResponseEntity<void>({ errors: [...validationResponse.errors, 'process'] });
             }
-        } else {
-            // TODO: remove when validate will be fix
-            if (keyPair) {
-                const lastBlock: Block = BlockRepo.getLastBlock();
-                block = this.setHeight(block, lastBlock);
-            }
         }
 
         const resultCheckExists: ResponseEntity<void> = this.checkExists(block);
@@ -168,7 +159,7 @@ class BlockService {
     }
 
     public verifyBlock(block: Block, verify: boolean): ResponseEntity<void> {
-        const lastBlock: Block = BlockRepo.getLastBlock();
+        const lastBlock: Block = BlockStorageService.getLast();
 
         let errors: Array<string> = [];
 
@@ -254,8 +245,8 @@ class BlockService {
             if (!verifyEqualResponse.success) {
                 return new ResponseEntity<void>({
                     errors: [
-                        `[validateReceivedBlock] verify failed for equal block: ${receivedBlock.id}
-                    errors: ${verifyEqualResponse.errors}`
+                        `[validateReceivedBlock] verify failed for equal block: ${receivedBlock.id} ` +
+                        `errors: ${verifyEqualResponse.errors}`
                     ]
                 });
             }
@@ -266,11 +257,6 @@ class BlockService {
 
     public verifyEqualBlock(receivedBlock: Block): ResponseEntity<void> {
         return new ResponseEntity<void>();
-    }
-
-    public setHeight(block: Block, lastBlock: Block): Block {
-        block.height = lastBlock.height + 1;
-        return block;
     }
 
     private verifySignature(block: Block, errors: Array<string>): void {
@@ -300,7 +286,7 @@ class BlockService {
         const version: number = block.version;
         if (version !== this.currentBlockVersion) {
             errors.push('Invalid block version',
-                'No exceptions found. Block version doesn\'t match te current one.');
+                'No exceptions found. Block version doesn\'t match the current one.');
         }
     }
 
@@ -408,7 +394,7 @@ class BlockService {
     }
 
     private checkExists(block: Block): ResponseEntity<void> {
-        const exists: boolean = BlockRepo.has(block.id);
+        const exists: boolean = BlockStorageService.has(block.id);
         if (exists) {
             return new ResponseEntity<void>({ errors: [['Block', block.id, 'already exists'].join(' ')] });
         }
@@ -495,7 +481,7 @@ class BlockService {
             return saveResult;
         }
 
-        BlockRepo.add(block);
+        BlockStorageService.push(block);
         BlockHistoryRepository.addEvent(block, { action: BlockLifecycle.APPLY });
 
         for (const trs of block.transactions) {
@@ -503,8 +489,8 @@ class BlockService {
             TransactionDispatcher.apply(trs, sender);
         }
 
-        logger.debug(
-            `[Service][Block][applyBlock] block ${block.id}, height: ${block.height}, ` +
+        logger.info(
+            `[Service][Block][apply] block ${block.id}, height: ${block.height}, ` +
             `applied with ${block.transactionCount} transactions`
         );
 
@@ -555,9 +541,9 @@ class BlockService {
         BlockHistoryRepository.addEvent(block, { action: BlockLifecycle.RECEIVE });
 
         logger.info(
-            `[Service][Block][receiveBlock] Received new block id: ${block.id} ` +
-            `height: ${block.height} ` +
-            `slot: ${SlotService.getSlotNumber(block.createdAt)} ` +
+            `[Service][Block][receiveBlock] Received block: ${block.id}, ` +
+            `height: ${block.height}, ` +
+            `slot: ${SlotService.getSlotNumber(block.createdAt)}, ` +
             `relay: ${block.relay}`
         );
 
@@ -607,7 +593,7 @@ class BlockService {
     }
 
     public async deleteLastBlock(): Promise<ResponseEntity<Block>> {
-        let lastBlock = BlockRepo.getLastBlock();
+        let lastBlock = BlockStorageService.getLast();
         logger.info(`Deleting last block: ${lastBlock.id}, height: ${lastBlock.height}`);
         if (lastBlock.height === 1) {
             return new ResponseEntity<Block>({ errors: ['Cannot delete genesis block'] });
@@ -622,7 +608,7 @@ class BlockService {
         const currentRound = RoundRepository.getCurrentRound();
         currentRound.slots[lastBlock.generatorPublicKey].isForged = false;
 
-        const newLastBlock = BlockRepo.deleteLastBlock();
+        const newLastBlock = BlockStorageService.popLast();
         const round = RoundRepository.getCurrentRound();
         const prevRound = RoundRepository.getPrevRound();
         BlockHistoryRepository.addEvent(lastBlock, { action: BlockLifecycle.UNDO, state: { round, prevRound } });
@@ -657,13 +643,15 @@ class BlockService {
     }
 
     public create({ transactions, timestamp, previousBlock, keyPair }): Block {
-        const blockTransactions = transactions.sort(transactionSortFunc);
+        transactions.sort(transactionSortFunc);
+
         return new Block({
             createdAt: timestamp,
-            transactionCount: blockTransactions.length,
+            transactionCount: transactions.length,
             previousBlockId: previousBlock.id,
             generatorPublicKey: keyPair.publicKey.toString('hex'),
-            transactions: blockTransactions
+            transactions,
+            height: previousBlock.height + 1,
         });
     }
 

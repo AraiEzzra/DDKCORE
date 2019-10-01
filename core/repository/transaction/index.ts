@@ -4,10 +4,10 @@ import { Address } from 'shared/model/types';
 
 export interface ITransactionRepository<T extends IAsset> {
     add(trs: Transaction<T>): Transaction<T>;
-    delete(trs: Transaction<T>): void;
+    delete(id: TransactionId): void;
     has(trsId: TransactionId): boolean;
     getById(transactionId: string): Transaction<IAsset>;
-    size(): number;
+    size: number;
 }
 
 class TransactionRepo implements ITransactionRepository<IAsset> {
@@ -18,8 +18,8 @@ class TransactionRepo implements ITransactionRepository<IAsset> {
         return trs;
     }
 
-    delete(trs: Transaction<IAsset>): void {
-        this.memoryTransactionsById.delete(trs.id);
+    delete(id: TransactionId): void {
+        this.memoryTransactionsById.delete(id);
     }
 
     public has(id: TransactionId): boolean {
@@ -41,7 +41,7 @@ class TransactionRepo implements ITransactionRepository<IAsset> {
         return filteredTransaction;
     }
 
-    size() {
+    get size(): number {
         return this.memoryTransactionsById.size;
     }
 }

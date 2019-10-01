@@ -3,6 +3,7 @@ import { IAsset, Transaction } from 'shared/model/transaction';
 import SystemRepository from 'core/repository/system';
 import BlockService from 'core/service/block';
 import BlockRepository from 'core/repository/block/index';
+import BlockStorageService from 'core/service/blockStorage';
 import { TOTAL_PERCENTAGE } from 'core/util/const';
 import config from 'shared/config';
 import RoundService from 'core/service/round';
@@ -21,7 +22,6 @@ import { logger } from 'shared/util/logger';
 import SwapTransactionQueue from 'core/service/swapTransactionQueue';
 import TransactionQueue from 'core/service/transactionQueue';
 import { peerAddressToString } from 'core/util/peer';
-import { migrateVersionChecker } from 'core/util/migrateVersionChecker';
 
 export interface ISyncService {
 
@@ -177,11 +177,17 @@ export class SyncService implements ISyncService {
         });
     }
 
-    sendBlocks(data: BlockLimit, requestPeerInfo: RequestPeerInfo): void {
-
+    async sendBlocks(data: BlockLimit, requestPeerInfo: RequestPeerInfo): Promise<void> {
         const { peerAddress, requestId } = requestPeerInfo;
-        const blocks = BlockRepository.getMany(data.limit, data.height);
-        const serializedBlocks: Array<Block & { transactions?: any }> = blocks.map(block => block.getCopy());
+
+        const networkPeer = PeerNetworkRepository.get(peerAddress);
+        const blocksResponse = await BlockStorageService.getMany(data.limit, data.height);
+        if (!blocksResponse.success) {
+            return networkPeer.responseRPC(ActionTypes.RESPONSE_BLOCKS, [], requestId);
+        }
+
+        const blocks = blocksResponse.data;
+        const serializedBlocks: Array<Block & { transactions: any }> = blocks.map(block => block.getCopy());
         serializedBlocks.forEach(block => {
             block.transactions = block.transactions.map(trs => SharedTransactionRepository.serialize(trs));
         });
@@ -189,7 +195,6 @@ export class SyncService implements ISyncService {
             logger.debug(`[Service][Sync][sendBlocks] peer is offline for response ${peerAddress.ip}`);
             return;
         }
-        const networkPeer = PeerNetworkRepository.get(peerAddress);
         networkPeer.responseRPC(ActionTypes.RESPONSE_BLOCKS, serializedBlocks, requestId);
     }
 
@@ -229,7 +234,7 @@ export class SyncService implements ISyncService {
     }
 
     checkCommonBlocks(block: BlockData, requestPeerInfo: RequestPeerInfo): void {
-        const isExist = BlockRepository.has(block.id);
+        const isExist = BlockStorageService.has(block.id);
         logger.trace(`[Service][Sync][checkCommonBlocks] block: ${block.height} exist: ${isExist}`);
         if (!PeerNetworkRepository.has(requestPeerInfo.peerAddress)) {
             logger.debug(`[Service][Sync][checkCommonBlocks] peer is offline for response ` +

@@ -3,6 +3,7 @@ import { getWholePercent } from 'ddk.registry/dist/util/percentage';
 
 import SlotService from 'core/service/slot';
 import BlockRepository from 'core/repository/block';
+import BlockStorageService from 'core/service/blockStorage';
 import { Round, Slot } from 'shared/model/round';
 import RoundRepository from 'core/repository/round';
 import { createTaskON, resetTaskON } from 'shared/util/bus';
@@ -40,7 +41,7 @@ interface IRoundService {
 
 class RoundService implements IRoundService {
     private readonly keyPair: IKeyPair;
-    private logPrefix: string = '[RoundService]';
+    private readonly logPrefix: string = '[Service][Round]';
 
     constructor() {
         this.keyPair = createKeyPairBySecret(process.env.FORGE_SECRET);
@@ -115,7 +116,7 @@ class RoundService implements IRoundService {
                 return DelegateRepository.getDelegate(publicKey);
             });
 
-        const lastBlock = BlockRepository.getLastBlock();
+        const lastBlock = BlockStorageService.getLast();
         const blocks = BlockRepository.getMany(forgedBlocksCount, lastBlock.height - forgedBlocksCount);
         const forgedDelegates = blocks.map(block => DelegateRepository.getDelegate(block.generatorPublicKey));
         const fee = Math.ceil(blocks.reduce((sum, block) => sum += block.fee, 0) / forgedDelegates.length);
@@ -158,11 +159,12 @@ class RoundService implements IRoundService {
     }
 
     public generate(firstSlotNumber: number): Round {
-        const lastBlockId = FailService.getRightLastRoundBlockId(BlockRepository.getLastBlock().id);
+        const lastBlock = BlockStorageService.getLast();
+        const lastBlockId = FailService.getRightLastRoundBlockId(lastBlock.id);
         const delegates = DelegateService.getAllActiveDelegates();
         const slots = SlotService.generateSlots(lastBlockId, delegates, firstSlotNumber);
 
-        const round = new Round({ slots, lastBlockId });
+        const round = new Round({ slots, lastBlockId: lastBlockId });
         logger.debug('[Round][Service][generate]', JSON.stringify(round));
 
         if (!System.synchronization) {
@@ -209,7 +211,7 @@ class RoundService implements IRoundService {
         }
 
         const isForward = slotNumber > getLastSlotNumberInRound(round);
-        const lastBlockSlotNumber = SlotService.getSlotNumber(BlockRepository.getLastBlock().createdAt);
+        const lastBlockSlotNumber = SlotService.getSlotNumber(BlockStorageService.getLast().createdAt);
 
         while (!Object.values(round.slots).find(slot => slot.slot === slotNumber)) {
             if (isForward) {
