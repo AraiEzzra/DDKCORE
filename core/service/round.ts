@@ -159,12 +159,12 @@ class RoundService implements IRoundService {
     }
 
     public generate(firstSlotNumber: number): Round {
-        const lastBlockId = BlockStorageService.getLast().id;
-        const rightLastBlockId = FailService.getRightLastRoundBlockId(lastBlockId);
+        const lastBlock = BlockStorageService.getLast();
+        const lastBlockId = FailService.getRightLastRoundBlockId(lastBlock.id);
         const delegates = DelegateService.getAllActiveDelegates();
-        const slots = SlotService.generateSlots(rightLastBlockId, delegates, firstSlotNumber);
+        const slots = SlotService.generateSlots(lastBlockId, delegates, firstSlotNumber);
 
-        const round = new Round({ slots, lastBlockId: rightLastBlockId });
+        const round = new Round({ slots, lastBlockId: lastBlockId });
         logger.debug('[Round][Service][generate]', JSON.stringify(round));
 
         if (!System.synchronization) {
