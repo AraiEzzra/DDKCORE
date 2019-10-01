@@ -11,6 +11,7 @@ import PeerService from 'core/service/peer';
 import { PEER_SOCKET_TYPE } from 'shared/model/types';
 import SystemRepository from 'core/repository/system';
 import PeerMemoryRepository from 'core/repository/peer/peerMemory';
+import { diffArrayPeers } from 'core/util/peer';
 
 export class PeerController extends BaseController {
 
@@ -25,11 +26,12 @@ export class PeerController extends BaseController {
         if (PeerNetworkRepository.count >= config.CONSTANTS.MAX_PEERS_CONNECT_TO) {
             return;
         }
+
         const pickedPeers = await SyncService.pickNewPeers();
         const filteredPeers = PeerService.filterPeers(pickedPeers);
 
-        const sortedPeers = filteredPeers.sort(sortByKey('peerCount', 'ASC'));
-        logger.trace(`[Controller][Peer][discoverNewPeers] sortedPeers: ${JSON.stringify(sortedPeers)}`);
+        const newUniquePeers = diffArrayPeers(filteredPeers, PeerMemoryRepository.getPeerAddresses());
+        const sortedPeers = newUniquePeers.sort(sortByKey('peerCount', 'ASC'));
 
         const peers = sortedPeers.slice(0, config.CONSTANTS.MAX_PEERS_CONNECT_TO - PeerNetworkRepository.count);
         PeerService.connectPeers(peers);
