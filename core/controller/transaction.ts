@@ -16,6 +16,8 @@ import { ActionTypes } from 'core/util/actionTypes';
 import { PeerAddress } from 'shared/model/types';
 import PeerMemoryRepository from 'core/repository/peer/peerMemory';
 import { migrateVersionChecker } from 'core/util/migrateVersionChecker';
+import RoundService from 'core/service/round';
+import SyncService from 'core/service/sync';
 
 type TransactionReceiveData = {
     data: Transaction<IAsset>,
@@ -34,6 +36,11 @@ class TransactionController extends BaseController {
             transaction = SharedTransactionRepo.deserialize(response.data.trs);
         } else {
             transaction = response.data;
+        }
+
+        if (!RoundService.getMySlot()) {
+            SyncService.sendUnconfirmedTransaction(transaction);
+            return;
         }
 
         const validateResult = TransactionService.validate(transaction);
