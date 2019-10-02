@@ -1,5 +1,3 @@
-import autobind from 'autobind-decorator';
-
 import {
     IAsset,
     SerializedTransaction,
@@ -52,6 +50,10 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
 
     private locked: boolean = false;
 
+    constructor() {
+        this.process = this.process.bind(this);
+    }
+
     lock(): void {
         this.locked = true;
     }
@@ -102,7 +104,6 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
     }
 
     // TODO change to mapReduce
-    @autobind
     async process(): Promise<void> {
         if (this.queue.length === 0 || this.locked || SystemRepository.synchronization) {
             return;
