@@ -37,6 +37,9 @@ class LoggerClass {
         this.traceTransport.formatter = function (options) {
             return `${options.timestamp()}  - [${options.level}] : ${options.message}`;
         };
+        this.consoleTransport.formatter = function (options) {
+            return `${options.timestamp()} [${options.level}] ${options.message}`;
+        };
         this.logger = new Logger({
             levels,
             transports: [this.traceTransport, this.transport, this.consoleTransport],
@@ -53,10 +56,7 @@ class LoggerClass {
             prepend: true,
             json: false,
             level: 'debug',
-            timestamp() {
-                const today = new Date();
-                return today.toISOString();
-            }
+            timestamp: this.timestamp
         });
 
         /**
@@ -69,15 +69,18 @@ class LoggerClass {
             levelOnly: true,
             prepend: true,
             json: false,
-            timestamp() {
-                const today = new Date();
-                return today.toISOString();
-            }
+            timestamp: this.timestamp
         });
 
         this.consoleTransport = new transports.Console({
             level: config.CORE.LOG_LEVEL || 'info',
+            timestamp: this.timestamp
         });
+    }
+
+    private timestamp() {
+        const today = new Date();
+        return today.toISOString();
     }
 }
 
