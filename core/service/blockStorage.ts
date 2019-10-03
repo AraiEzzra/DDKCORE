@@ -39,10 +39,6 @@ class BlockStorageService {
     }
 
     popLast(): Block {
-        return BlockRepository.deleteLastBlock();
-    }
-
-    pop(): Block {
         const blockForRemove = BlockRepository.getLastBlock();
         const newLastBlock = BlockRepository.deleteLastBlock();
 

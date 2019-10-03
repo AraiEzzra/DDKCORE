@@ -140,7 +140,7 @@ export class TransactionModel<T extends IAsset> {
     }
 }
 
-export class Transaction<T extends IAsset> extends TransactionModel<T> {
+export class Transaction<T extends IAsset = any> extends TransactionModel<T> {
     constructor(data: TransactionModel<T>) {
         super(data);
     }
