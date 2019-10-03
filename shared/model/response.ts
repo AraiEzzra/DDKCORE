@@ -3,7 +3,7 @@ export interface ResponseEntityParams<T> {
     data?: T;
 }
 
-export class ResponseEntity<T> {
+export class ResponseEntity<T = void> {
     success: boolean;
     errors?: Array<string>;
     data?: T;
