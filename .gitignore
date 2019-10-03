@@ -11,6 +11,7 @@ config.json
 .idea/
 .nyc_output/
 api/rpc/client.js
+state/*
 
 # volumes system directories for docker containers
 dist/

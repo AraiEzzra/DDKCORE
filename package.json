@@ -31,6 +31,7 @@
     "test": "npm run test:api",
     "test:api": "export NODE_PATH=./ && mocha --require ts-node/register './test/api/**/*.test.ts'",
     "test:core": "export NODE_PATH=./ && mocha --require ts-node/register './test/core/**/*.test.ts'",
+    "test:shared": "export NODE_PATH=./ && mocha --require ts-node/register './test/shared/util/state/saver.test.ts'",
     "test:functionality": "export NODE_PATH=./ && mocha --require ts-node/register ./test/functionality/server-loader.ts './test/functionality/**/*.test.ts'",
     "test:lab": "export NODE_PATH=./ && mocha --require ts-node/register ./test/lab/server-loader.ts './test/lab/**/*.test.ts'"
   },

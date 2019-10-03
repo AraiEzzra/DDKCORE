@@ -1,5 +1,5 @@
 import { ResponseEntity } from 'shared/model/response';
-import { Block, BlockModel, SerializedBlock } from 'shared/model/block';
+import { Block, SerializedBlock } from 'shared/model/block';
 import BlockService from 'core/service/block';
 import BlockRepository from 'core/repository/block/';
 import { MAIN } from 'core/util/decorator';

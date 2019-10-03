@@ -88,6 +88,10 @@ class BlockRepo implements IBlockRepository {
 
         return block;
     }
+
+    getAll(): Array<Block> {
+        return this.memoryBlocks;
+    }
 }
 
 export default new BlockRepo();

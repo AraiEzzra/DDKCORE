@@ -26,6 +26,7 @@ import DelegateService from 'core/service/delegate';
 import { ActionTypes } from 'core/util/actionTypes';
 import { Migrator } from 'core/database/migrator';
 import { ERROR_CODES } from 'shared/config/errorCodes';
+import { StateManager } from 'core/util/stateManager';
 
 // @ts-ignore
 BigInt.prototype.toJSON = function () {
@@ -33,10 +34,10 @@ BigInt.prototype.toJSON = function () {
 };
 
 class Loader {
-    private limit = 1000;
+    private readonly limit = 1000;
 
     public async start() {
-        logger.debug('LOADER START');
+        logger.info('[Loader] Start');
         const historyState = config.CORE.IS_HISTORY;
         if (!config.CORE.IS_HISTORY_ON_WARMUP) {
             config.CORE.IS_HISTORY = false;
@@ -47,7 +48,30 @@ class Loader {
 
         initControllers();
         System.synchronization = true;
-        await this.blockWarmUp(this.limit);
+
+        logger.info('[Loader] Load state');
+        const stateManager = new StateManager();
+        const stateloaderResponse = await stateManager.load();
+        if (!stateloaderResponse.success) {
+            logger.error(`[Loader] Unable to load state: ${stateloaderResponse.errors.join('. ')}`);
+            process.exit(1);
+        }
+        logger.info('[Loader] State was loaded');
+
+        logger.info('[Loader] Warm up');
+        const lastBlock = BlockStorageService.getLast();
+        const warmUpOffset = lastBlock ? lastBlock.height : 0;
+        await this.blockWarmUp(this.limit, warmUpOffset);
+        if (BlockStorageService.getLast() !== lastBlock) {
+            logger.info('[Loader] Save state');
+            const stateSaverResponse = await stateManager.save();
+            if (!stateSaverResponse.success) {
+                logger.error(`[Loader] Unable to save state: ${stateSaverResponse.errors.join('. ')}`);
+                process.exit(1);
+            }
+            logger.info('[Loader] State was saved');
+        }
+
         if (!BlockStorageService.getGenesis()) {
             const result = await BlockService.applyGenesisBlock(config.GENESIS_BLOCK);
             if (!result.success) {
@@ -55,6 +79,8 @@ class Loader {
                 process.exit(1);
             }
         }
+
+        return;
 
         if (!config.CORE.IS_HISTORY_ON_WARMUP) {
             config.CORE.IS_HISTORY = historyState;
@@ -84,8 +110,7 @@ class Loader {
         await db.query(new QueryFile(filePath, { minify: true }));
     }
 
-    private async blockWarmUp(limit: number) {
-        let offset: number = 0;
+    private async blockWarmUp(limit: number, offset: number = 0) {
         do {
             const blocksResponse = await BlockPGRepository.getMany(limit, offset);
             if (!blocksResponse.success) {

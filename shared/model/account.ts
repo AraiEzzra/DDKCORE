@@ -31,6 +31,10 @@ export class AccountModel {
         this.referrals = [...(data.referrals || [])];
         this.stakes = (data.stakes || []).map(stake => ({ ...stake }));
         this.delegate = data.delegate && new Delegate(data.delegate);
+
+        if (typeof this.address === 'string') {
+            this.address = BigInt(data.address);
+        }
     }
 }
 

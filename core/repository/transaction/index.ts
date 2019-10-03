@@ -2,7 +2,7 @@ import { IAsset, Transaction } from 'shared/model/transaction';
 import { TransactionId } from 'shared/model/types';
 import { Address } from 'shared/model/types';
 
-export interface ITransactionRepository<T extends IAsset> {
+export interface ITransactionRepository<T extends IAsset = any> {
     add(trs: Transaction<T>): Transaction<T>;
     delete(id: TransactionId): void;
     has(trsId: TransactionId): boolean;

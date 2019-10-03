@@ -19,6 +19,10 @@ class AccountRepository {
         return accountModel;
     }
 
+    push(account: Account) {
+        this.memoryAccountsByAddress.set(account.address, account);
+    }
+
     getByAddress(accountAddress: Address): Account {
         return this.memoryAccountsByAddress.get(accountAddress) || null;
     }
@@ -30,11 +34,7 @@ class AccountRepository {
 
     // should be called rarely
     getAll(): Array<Account> {
-        const accounts: Array<Account> = [];
-        for (let value of this.memoryAccountsByAddress.values()) {
-            accounts.push(value);
-        }
-        return accounts;
+        return [...this.memoryAccountsByAddress.values()];
     }
 
     getStatistics(): Statistics {

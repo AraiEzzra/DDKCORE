@@ -192,8 +192,10 @@ export class SyncController extends BaseController {
 
     @ON(ActionTypes.LAST_BLOCKS_UPDATE)
     updateHeaders(data: { lastBlock }): void {
-        logger.info(`${LOG_PREFIX}[updateHeaders]: broadhash ${data.lastBlock.id}, height: ${data.lastBlock.height}`);
-        SyncService.updateHeaders(data.lastBlock);
+        const { lastBlock } = data;
+
+        logger.trace(`${LOG_PREFIX}[updateHeaders] broadhash ${lastBlock.id}, height: ${lastBlock.height}`);
+        SyncService.updateHeaders(lastBlock);
     }
 }
 

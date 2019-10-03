@@ -21,7 +21,7 @@ class DelegateRepository {
             url: params.url || '',
             missedBlocks: 0,
             forgedBlocks: 0,
-            account: account,
+            account,
             votes: 0,
             confirmedVoteCount: 0,
             approval: 0,
@@ -29,6 +29,11 @@ class DelegateRepository {
         this.memoryDelegates.set(account.publicKey, delegate);
         this.usernames.add(delegate.username);
         return delegate;
+    }
+
+    public push(delegate: Delegate) {
+        this.memoryDelegates.set(delegate.account.publicKey, delegate);
+        this.usernames.add(delegate.username);
     }
 
     public getAll(): Array<Delegate> {

@@ -44,6 +44,10 @@ class RoundRepository implements IRoundRepository {
 
         return this.rounds.slice(offset, limit).reverse();
     }
+
+    getAll(): Array<Round> {
+        return this.rounds;
+    }
 }
 
 export default new RoundRepository();
