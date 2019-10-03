@@ -19,7 +19,6 @@ import {
     Transaction,
     TransactionLifecycle,
     TransactionType,
-    TransactionModel
 } from 'shared/model/transaction';
 import TransactionDispatcher from 'core/service/transaction';
 import TransactionService from 'core/service/transaction';
@@ -57,9 +56,29 @@ import DelegateService from 'core/service/delegate';
 import FailService from 'core/service/fail';
 import { validateTransactionsSorting } from 'core/util/validate/transaction';
 
+export interface IBlockService {
+    generateBlock(keyPair: IKeyPair, timestamp: number): Promise<ResponseEntity>;
+
+    verifyBlock(block: Block, verify: boolean): ResponseEntity;
+
+    validateReceivedBlock(lastBlock: Block, receivedBlock: Block): ResponseEntity;
+
+    addPayloadHash(block: Block, keyPair: IKeyPair): ResponseEntity<Block>;
+
+    receiveBlock(block: Block): Promise<ResponseEntity>;
+
+    deleteLastBlock(): Promise<ResponseEntity<Block>>;
+
+    applyGenesisBlock(rawBlock: BlockModel): Promise<ResponseEntity>;
+
+    create({ transactions, timestamp, previousBlock, keyPair }): Block;
+
+    validate(block: BlockModel): ResponseEntity<null>;
+}
+
 const validator: Validator = new ZSchema({});
 
-class BlockService {
+class BlockService implements IBlockService {
     private readonly currentBlockVersion: number = config.CONSTANTS.FORGING.CURRENT_BLOCK_VERSION;
     private readonly BLOCK_BUFFER_SIZE
         = BUFFER.LENGTH.UINT32 // version
@@ -157,7 +176,7 @@ class BlockService {
         return new ResponseEntity();
     }
 
-    public verifyBlock(block: Block, verify: boolean): ResponseEntity {
+    verifyBlock(block: Block, verify: boolean): ResponseEntity {
         const lastBlock: Block = BlockStorageService.getLast();
 
         let errors: Array<string> = [];
@@ -196,7 +215,7 @@ class BlockService {
         return response;
     }
 
-    public validateReceivedBlock(lastBlock: Block, receivedBlock: Block): ResponseEntity {
+    validateReceivedBlock(lastBlock: Block, receivedBlock: Block): ResponseEntity {
         if (isEqualId(lastBlock, receivedBlock)) {
             return new ResponseEntity({
                 errors: [
@@ -499,7 +518,7 @@ class BlockService {
         return new ResponseEntity();
     }
 
-    public addPayloadHash(block: Block, keyPair: IKeyPair): ResponseEntity<Block> {
+    addPayloadHash(block: Block, keyPair: IKeyPair): ResponseEntity<Block> {
         const payloadHash = crypto.createHash('sha256');
         for (let i = 0; i < block.transactions.length; i++) {
             const transaction = block.transactions[i];
