@@ -507,11 +507,6 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             }
         }
 
-        const service: IAssetService<IAsset> = getTransactionServiceByType(trs.type);
-        if (trs.type === TransactionType.VOTE) {
-            trs.fee = service.calculateFee(trs, sender);
-        }
-
         const asset: IAssetTransfer | IAssetStake = <IAssetTransfer | IAssetStake><Object>trs.asset;
         const amount = (asset.amount || 0) + trs.fee;
         const senderBalanceResponse = this.checkBalance(amount, trs, sender);
@@ -519,6 +514,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             return senderBalanceResponse;
         }
 
+        const service: IAssetService<IAsset> = getTransactionServiceByType(trs.type);
         const result = service.verifyUnconfirmed(trs, sender);
         TransactionHistoryRepository.addAfterState(
             trs,

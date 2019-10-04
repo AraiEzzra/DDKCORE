@@ -429,6 +429,9 @@ class BlockService implements IBlockService {
                     i--;
                     break;
                 }
+            } else if (trs.type === TransactionType.VOTE) {
+                // recalculate vote fee before block generation
+                trs.fee = TransactionDispatcher.calculateFee(trs, sender);
             }
 
             TransactionDispatcher.applyUnconfirmed(trs, sender);
