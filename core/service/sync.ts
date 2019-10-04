@@ -22,6 +22,7 @@ import { logger } from 'shared/util/logger';
 import SwapTransactionQueue from 'core/service/swapTransactionQueue';
 import TransactionQueue from 'core/service/transactionQueue';
 import { peerAddressToString } from 'core/util/peer';
+import { messageON } from 'shared/util/bus';
 
 export interface ISyncService {
 
@@ -38,6 +39,9 @@ export interface ISyncService {
     sendBlocks(data: BlockLimit, requestFromPeer: RequestPeerInfo): void;
 
 }
+
+export const ERROR_NO_WORTHY_PEERS = 'Error no worthy peers';
+const LOG_PREFIX = '[Service][Sync]';
 
 export class SyncService implements ISyncService {
 
@@ -66,7 +70,7 @@ export class SyncService implements ISyncService {
 
     sendPeers(requestPeerInfo: RequestPeerInfo): void {
         if (!PeerNetworkRepository.has(requestPeerInfo.peerAddress)) {
-            logger.debug(`[Service][Sync][sendPeers] peer is offline for response` +
+            logger.error(`${LOG_PREFIX}[sendPeers] peer is offline for response` +
                 ` ${requestPeerInfo.peerAddress.ip}`);
             return;
         }
@@ -76,7 +80,6 @@ export class SyncService implements ISyncService {
     }
 
     sendNewBlock(block: SerializedBlock): void {
-        logger.trace(`[Service][Sync][sendNewBlock] height: ${block.height} relay: ${block.relay}`);
 
         if (block.relay >= config.CONSTANTS.TRANSFER.MAX_BLOCK_RELAY) {
             return;
@@ -113,7 +116,18 @@ export class SyncService implements ISyncService {
         const filteredMemoryPeers = PeerMemoryRepository.getHigherPeersByFilter(lastBlock.height, lastBlock.id);
 
         if (!filteredMemoryPeers.length) {
-            return new ResponseEntity({ errors: [ERROR_NOT_ENOUGH_PEERS] });
+
+            if (!PeerNetworkRepository.count) {
+                errors.push(`${LOG_PREFIX}[checkCommonBlock] No one peer`);
+                messageON(ActionTypes.PEER_CONNECT_RUN);
+            } else if (!PeerNetworkRepository.unbanCount) {
+                errors.push(`${LOG_PREFIX}[checkCommonBlock] All peers are banned`);
+                messageON(ActionTypes.EMIT_REBOOT_PEERS_CONNECTIONS);
+            } else {
+                errors.push(ERROR_NO_WORTHY_PEERS);
+            }
+
+            return new ResponseEntity({ errors });
         }
         const randomMemoryPeer = getRandom(filteredMemoryPeers);
 
