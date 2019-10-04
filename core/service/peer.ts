@@ -17,7 +17,7 @@ import { ResponseEntity } from 'shared/model/response';
 import { asyncTimeout } from 'shared/util/timer';
 import { diffArrayPeers, peerAddressToString } from 'core/util/peer';
 
-const STEP_RECONNECT_DELAY = 300;
+const STEP_RECONNECT_DELAY = 600;
 
 const LOG_PREFIX = `[Service][Peer]`;
 export const ERROR_NOT_ENOUGH_PEERS = 'ERROR_NOT_ENOUGH_PEERS';
