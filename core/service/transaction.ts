@@ -96,18 +96,6 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         // TODO: Apply / undo unconfirmed must be used only for an unconfirmed state (with transaction pool)
         // and apply method must be used only for an confirmed state
 
-        if (TransactionRepo.has(trs.id)) {
-            logger.error(`[Service][Transaction][applyUnconfirmed] Transaction is already applied`);
-            return;
-        }
-
-        TransactionRepo.add(trs);
-        TransactionHistoryRepository.addBeforeState(
-            trs,
-            TransactionLifecycle.APPLY_UNCONFIRMED,
-            sender,
-        );
-
         sender.actualBalance -= trs.fee || 0;
         const service: IAssetService<IAsset> = getTransactionServiceByType(trs.type);
         service.applyUnconfirmed(trs, sender);
@@ -118,15 +106,9 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             TransactionLifecycle.APPLY_UNCONFIRMED,
             sender,
         );
-
     }
 
     undoUnconfirmed(trs: Transaction<T>, sender: Account, senderOnly = false): void {
-        if (!TransactionRepo.has(trs.id)) {
-            logger.error(`[Service][Transaction][undoUnconfirmed] Transaction is not applied`);
-            return;
-        }
-
         sender.actualBalance += trs.fee || 0;
         const service: IAssetService<IAsset> = getTransactionServiceByType(trs.type);
         service.undoUnconfirmed(trs, sender, senderOnly);
@@ -145,17 +127,21 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
                 TransactionLifecycle.UNDO_UNCONFIRMED,
                 sender,
             );
-
-            // Deleting block removes transactions from the database
-            // Need remove only from memory
-            TransactionRepo.delete(trs);
         }
     }
 
     apply(trs: Transaction<T>, sender: Account): void {
-        // TODO: migrate TransactionRepo.add to apply unconfirmed
+        if (TransactionStorageService.has(trs.id)) {
+            logger.error(`[Service][Transaction][apply] Transaction is already applied`);
+            return;
+        }
+
         TransactionStorageService.add(trs);
-        TransactionHistoryRepository.addEvent(trs, { action: TransactionLifecycle.APPLY });
+        TransactionHistoryRepository.addBeforeState(
+            trs,
+            TransactionLifecycle.APPLY,
+            sender,
+        );
 
         if (trs.type === TransactionType.VOTE) {
             const service: IAssetService<IAsset> = getTransactionServiceByType(trs.type);
@@ -166,6 +152,11 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
     undo(trs: Transaction<T>, sender: Account): void {
         // Deleting block removes transactions from the database
         // Need remove only from memory
+
+        if (!TransactionStorageService.has(trs.id)) {
+            logger.error(`[Service][Transaction][undo] Transaction is not applied yet`);
+            return;
+        }
 
         TransactionStorageService.delete(trs.id);
         TransactionHistoryRepository.addEvent(trs, { action: TransactionLifecycle.UNDO });

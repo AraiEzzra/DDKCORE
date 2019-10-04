@@ -650,7 +650,6 @@ class BlockService implements IBlockService {
             height: previousBlock.height + 1,
             generatorPublicKey: keyPair.publicKey.toString('hex'),
             transactions,
-            height: previousBlock.height + 1,
         });
     }
 
