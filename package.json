@@ -44,6 +44,7 @@
     "crypto-browserify": "=3.11.0",
     "ddk.registry": "git+https://github.com/AraiEzzra/DDK.REGISTRY.git",
     "dotenv": "^4.0.0",
+    "eska-common": "^1.0.15",
     "ip": "=1.1.5",
     "mocha": "^6.2.0",
     "nodemon": "^1.18.9",

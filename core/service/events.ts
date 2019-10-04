@@ -13,6 +13,7 @@ import PeerNetworkRepository from 'core/repository/peer/peerNetwork';
 import { logger } from 'shared/util/logger';
 import { MemoryPeer } from 'shared/model/Peer/memoryPeer';
 import { NetworkPeer } from 'shared/model/Peer/networkPeer';
+import { timeService } from 'shared/util/timeServiceClient';
 
 export type BlockchainInfo = {
     airdropBalance: number;
@@ -83,7 +84,7 @@ class EventService {
             peersCount,
             broadhash,
             consensus: SyncService.getConsensus(),
-            datetime: new Date(),
+            datetime: new Date(timeService.getTime()),
             version: config.CORE.VERSION,
             transactionsCount: {
                 queue: TransactionQueue.getSize().queue,
