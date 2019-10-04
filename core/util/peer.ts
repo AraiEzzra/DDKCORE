@@ -46,3 +46,8 @@ export const blockHeightMemoryConsensus = (memoryPeers: Array<MemoryPeer>): Memo
 export const peerAddressToString = (peerAddress: PeerAddress): string => {
     return `${peerAddress.ip}:${peerAddress.port}`;
 };
+
+export const diffArrayPeers = (arrayA: Array<PeerAddress>, arrayB: Array<PeerAddress>): Array<PeerAddress> => {
+    const setIp = new Set(arrayB.map(peer => peer.ip));
+    return arrayA.filter(str => !setIp.has(str.ip));
+};

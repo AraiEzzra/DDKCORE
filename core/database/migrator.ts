@@ -30,7 +30,7 @@ export class Migrator {
         const filesMigration: Array<PropertyFile> = [];
         fs.readdirSync(migrationsPath)
             .sort(compareTags)
-            .forEach(file => {
+            .forEach((file, id) => {
                 const pathToFile: string = path.join(migrationsPath, file);
                 const isFile: boolean = fs.statSync(pathToFile).isFile() && /\.sql$/.test(pathToFile);
 
@@ -39,9 +39,8 @@ export class Migrator {
                     const fileName = file.match(/^\d+\.\d+\.\d+\.sql$/);
 
                     filesMigration.push({
-                        id: parseInt(splitName[0], 10),
-                        name: Array.isArray(fileName) ? fileName[0]
-                            .replace(/\.sql$/, '') : null,
+                        id,
+                        name: Array.isArray(fileName) ? fileName[0].replace(/\.sql$/, '') : null,
                         path: pathToFile
                     });
                 }

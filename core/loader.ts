@@ -9,7 +9,7 @@ import { messageON } from 'shared/util/bus';
 import { initControllers, initShedulers } from 'core/controller';
 import config from 'shared/config';
 import BlockPGRepository from 'core/repository/block/pg';
-import BlockRepository from 'core/repository/block';
+import BlockStorageService from 'core/service/blockStorage';
 import BlockService from 'core/service/block';
 import SocketDriver from 'core/driver/socket/index';
 import { logger } from 'shared/util/logger';
@@ -48,7 +48,7 @@ class Loader {
         initControllers();
         System.synchronization = true;
         await this.blockWarmUp(this.limit);
-        if (!BlockRepository.getGenesisBlock()) {
+        if (!BlockStorageService.getGenesis()) {
             const result = await BlockService.applyGenesisBlock(config.GENESIS_BLOCK);
             if (!result.success) {
                 logger.error(`[Loader] Unable to apply genesis block. ${result.errors.join('. ')}`);
@@ -96,7 +96,7 @@ class Loader {
             const blocks = blocksResponse.data;
             for (const block of blocks) {
                 if (block.height === 1) {
-                    BlockRepository.add(block);
+                    BlockStorageService.push(block);
                     this.transactionsWarmUp(block.transactions);
                 }
 
@@ -115,7 +115,7 @@ class Loader {
                     RoundService.restoreToSlot(SlotService.getSlotNumber(block.createdAt));
 
                     this.transactionsWarmUp(block.transactions);
-                    BlockRepository.add(block);
+                    BlockStorageService.push(block);
 
                     const currentRound = RoundRepository.getCurrentRound();
                     currentRound.slots[block.generatorPublicKey].isForged = true;

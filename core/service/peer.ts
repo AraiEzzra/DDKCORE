@@ -7,7 +7,7 @@ import config from 'shared/config';
 import { logger } from 'shared/util/logger';
 import { PeerAddress, PeerHeadersReceived, RequestPeerInfo, ShortPeerInfo } from 'shared/model/types';
 import { Headers } from 'shared/model/Peer/headers';
-import { diffArray, sortByKey } from 'shared/util/util';
+import { sortByKey } from 'shared/util/util';
 import VersionChecker from 'core/util/versionChecker';
 import { isArray } from 'util';
 import SwapTransactionQueue from 'core/service/swapTransactionQueue';
@@ -15,7 +15,7 @@ import { messageON } from 'shared/util/bus';
 import { ActionTypes } from 'core/util/actionTypes';
 import { ResponseEntity } from 'shared/model/response';
 import { asyncTimeout } from 'shared/util/timer';
-import { peerAddressToString } from 'core/util/peer';
+import { diffArrayPeers, peerAddressToString } from 'core/util/peer';
 
 const STEP_RECONNECT_DELAY = 300;
 
@@ -31,7 +31,6 @@ export class PeerService {
             data.socket.disconnect(true);
             return false;
         }
-
         if (PeerMemoryRepository.has(data.peerAddress)) {
             return this.resolveConnectionConflict(data);
         } else {
@@ -55,18 +54,18 @@ export class PeerService {
         } else {
             logger.debug(`${LOG_PREFIX}[add] delete old connection ${networkPeer.id}, create new peer ` +
                 `${data.peerAddress.ip}`);
-            this.remove(data.peerAddress);
+            this.remove(data.peerAddress, false);
             PeerMemoryRepository.add(data.peerAddress, data.peerHeaders, data.type);
             PeerNetworkRepository.add(data.peerAddress, data.socket);
             return true;
         }
     }
 
-    remove(peerAddress: PeerAddress) {
+    remove(peerAddress: PeerAddress, checkMinPeerCount: boolean = true) {
         logger.debug(`${LOG_PREFIX}[remove] ${peerAddressToString(peerAddress)}`);
         PeerMemoryRepository.remove(peerAddress);
         PeerNetworkRepository.remove(peerAddress);
-        if (PeerMemoryRepository.count < config.CONSTANTS.PEERS_DISCOVER.MIN) {
+        if (checkMinPeerCount && PeerMemoryRepository.count < config.CONSTANTS.PEERS_DISCOVER.MIN) {
             messageON(ActionTypes.EMIT_REQUEST_PEERS);
         }
     }
@@ -119,13 +118,12 @@ export class PeerService {
 
     async stepReconnect(currentPeers: Array<PeerAddress>, newPeers: Array<PeerAddress>) {
 
-        const currentUnique = diffArray(currentPeers, newPeers);
-        const newUnique = diffArray(newPeers, currentPeers);
-
+        const currentUnique = diffArrayPeers(currentPeers, newPeers);
+        const newUnique = diffArrayPeers(newPeers, currentPeers);
         let i = 0;
         while (i < currentUnique.length || i < newUnique.length) {
             if (currentUnique[i]) {
-                this.remove(currentUnique[i]);
+                this.remove(currentUnique[i], false);
             }
             if (newUnique[i]) {
                 this.connectPeer(newUnique[i]);

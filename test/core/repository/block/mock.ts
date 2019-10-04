@@ -31,7 +31,6 @@ export const getNewBlock = (): Block => {
             }
         }, keyPairTrs).data]
     });
-    block = BlockService.setHeight(block, lastBlock);
     block = BlockService.addPayloadHash(block, keyPairTrs).data;
     lastBlock = block;
     return block;

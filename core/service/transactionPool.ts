@@ -9,7 +9,6 @@ import {
 } from 'shared/model/transaction';
 import { transactionSortFunc } from 'core/util/transaction';
 import TransactionDispatcher from 'core/service/transaction';
-import { ResponseEntity } from 'shared/model/response';
 import { logger } from 'shared/util/logger';
 import SyncService from 'core/service/sync';
 import { Account } from 'shared/model/account';

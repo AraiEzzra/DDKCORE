@@ -13,7 +13,7 @@ import { ResponseEntity } from 'shared/model/response';
 import { ed, IKeyPair } from 'shared/util/ed';
 import { Account, AccountChangeAction } from 'shared/model/account';
 import AccountRepo from 'core/repository/account';
-import TransactionRepo from 'core/repository/transaction';
+import TransactionStorageService from 'core/service/transactionStorage';
 import TransactionPool from 'core/service/transactionPool';
 import TransactionQueue from 'core/service/transactionQueue';
 import { getTransactionServiceByType, TRANSACTION_BUFFER_SIZE, transactionSortFunc } from 'core/util/transaction';
@@ -153,6 +153,10 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
     }
 
     apply(trs: Transaction<T>, sender: Account): void {
+        // TODO: migrate TransactionRepo.add to apply unconfirmed
+        TransactionStorageService.add(trs);
+        TransactionHistoryRepository.addEvent(trs, { action: TransactionLifecycle.APPLY });
+
         if (trs.type === TransactionType.VOTE) {
             const service: IAssetService<IAsset> = getTransactionServiceByType(trs.type);
             service.apply(trs, sender);
@@ -160,6 +164,12 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
     }
 
     undo(trs: Transaction<T>, sender: Account): void {
+        // Deleting block removes transactions from the database
+        // Need remove only from memory
+
+        TransactionStorageService.delete(trs.id);
+        TransactionHistoryRepository.addEvent(trs, { action: TransactionLifecycle.UNDO });
+
         if (trs.type === TransactionType.VOTE) {
             const service: IAssetService<IAsset> = getTransactionServiceByType(trs.type);
             service.undo(trs, sender);
@@ -463,7 +473,7 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             return new ResponseEntity<void>({ errors: [`Account in blacklist`] });
         }
 
-        if (TransactionRepo.has(trs.id)) {
+        if (TransactionStorageService.has(trs.id)) {
             return new ResponseEntity<void>({ errors: [`Transaction is already confirmed: ${trs.id}`] });
         }
 

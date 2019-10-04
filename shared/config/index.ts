@@ -167,7 +167,7 @@ class Config {
             },
             IS_DISABLED_TRANSACTION_CREATION: process.env.IS_DISABLED_TRANSACTION_CREATION === 'TRUE',
             IS_REFERRED_USERS_ENABLED: process.env.IS_REFERRED_USERS_ENABLED  === 'TRUE',
-            VERSION: '1.2.8',
+            VERSION: '1.2.11',
             MIN_VERSION: '1.0.2',
             MIN_CONSENSUS: Number(process.env.MIN_CONSENSUS) || DEFAULT_CONSENSUS,
             LOG_LEVEL: process.env.LOG_LEVEL || 'info',
