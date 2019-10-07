@@ -107,6 +107,7 @@ export class SyncService implements ISyncService {
         if (trs.relay >= config.CONSTANTS.TRANSFER.MAX_TRS_RELAY) {
             return;
         }
+
         trs.relay += 1;
 
         const byteAssetTransaction = serializeAssetTransaction(trs);
@@ -116,6 +117,7 @@ export class SyncService implements ISyncService {
             SwapTransactionQueue.push(byteTransaction);
             return;
         }
+
         PeerService.broadcast(
             ActionTypes.TRANSACTION_RECEIVE,
             byteTransaction
