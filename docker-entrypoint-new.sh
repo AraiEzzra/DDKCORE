@@ -1,4 +1,5 @@
 echo $(node -v)
+echo $(id -u -n)
 # needs defined DB_HOST in environment
 # and wait-port npm package installed
 
