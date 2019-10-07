@@ -39,7 +39,6 @@ export class Uint64 extends ModelType {
     }
 
     write(buffer, value: number, offset) {
-
         let bin = (value || 0).toString(2);
         bin = this._stringNullGenerator(BODY_BINARY_LENGTH - bin.length) + bin;
 

@@ -66,7 +66,7 @@ export class FullHeaders extends Headers {
         return {
             height: this.height,
             broadhash: this.broadhash,
-            blocksIds: [...this._blocksIds],
+            blocksIds: this._blocksIds,
             os: this.os,
             version: this._version,
             minVersion: this._minVersion,

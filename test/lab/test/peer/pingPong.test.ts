@@ -6,10 +6,12 @@ import { CUSTOM_CONFIG, PEER, } from 'test/lab/runner/preparer/config';
 import { preparePeerNode } from 'test/lab/runner/preparer/peerPreparator';
 import PeerController from 'core/controller/peer';
 import PeerService from 'core/service/peer';
-import { TEST_RUNNER_NAME, TEST_ASYNC_TIMEOUT } from 'test/lab/utils/constants';
+import { TEST_ASYNC_TIMEOUT, TEST_RUNNER_NAME } from 'test/lab/utils/constants';
 import PeerNetworkRepository from 'core/repository/peer/peerNetwork';
 import { ActionTypes } from 'core/util/actionTypes';
 import { getRandom } from 'core/util/common';
+import { createBufferObject } from 'shared/util/byteSerializer';
+import { SchemaName } from 'shared/util/byteSerializer/config';
 
 const TEST_NAME = 'TEST_PEER_PING';
 const TEST_DONE_STAGE = 'TEST_PEER_PING_DONE';
@@ -38,7 +40,7 @@ describe('PEER PING PONG', function () {
             const peer = getRandom(PeerNetworkRepository.getAll());
             for (let i = 0; i < 16; i++) {
                 const start = new Date().getTime();
-                const response = await peer.requestRPC(ActionTypes.PING, {});
+                const response = await peer.requestRPC(ActionTypes.PING, createBufferObject({}, SchemaName.Empty));
                 if (response.success) {
                     const finish = new Date().getTime();
                     console.log(`${peer.peerAddress.ip}: ping....${finish - start} ms`);

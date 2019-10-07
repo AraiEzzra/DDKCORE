@@ -508,7 +508,8 @@ class BlockService implements IBlockService {
             const serializedBlock = block.serialize();
 
             SocketMiddleware.emitEvent(EVENT_TYPES.APPLY_BLOCK, serializedBlock);
-            SyncService.sendNewBlock(serializedBlock);
+
+            SyncService.sendNewBlock(block);
         }
 
         if (block.height >= MIN_ROUND_BLOCK) {

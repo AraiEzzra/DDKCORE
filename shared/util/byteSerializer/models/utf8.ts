@@ -11,7 +11,10 @@ export class Utf8 extends ModelType {
     }
 
     getLength(value: string) {
+
         value = value || '';
+        value = String(value);
+
         return this.length.type + this.length.head + Buffer.byteLength(value);
     }
 
@@ -30,7 +33,10 @@ export class Utf8 extends ModelType {
     }
 
     write(buffer, value: string, offset) {
+
         value = value || '';
+        value = String(value);
+
         this.length.body = Buffer.byteLength(value);
 
         offset = this.writeTypeId(buffer, offset);

@@ -63,21 +63,21 @@ export class NetworkPeer extends Peer {
         this._isBanned = false;
     }
 
-    send(code: string, data: any): void {
+    send(data: Buffer): void {
         this._socket.emit(
             PEER_SOCKET_CHANNELS.BROADCAST,
-            JSON.stringify({ code, data })
+            data
         );
     }
 
     sendFullHeaders(fullHeaders): void {
         this._socket.emit(
             PEER_SOCKET_CHANNELS.HEADERS,
-            JSON.stringify(fullHeaders)
+            createBufferObject(fullHeaders, SchemaName.FullHeaders),
         );
     }
 
-    async requestRPC<T>(code, data): Promise<ResponseEntity<T>> {
+    async requestRPC<T>(code, data: Buffer): Promise<ResponseEntity<T>> {
         const requestId = uuid4();
         const serializer = new SocketBufferRPC();
         return new Promise((resolve) => {
@@ -120,17 +120,18 @@ export class NetworkPeer extends Peer {
 
             this._socket.emit(
                 PEER_SOCKET_CHANNELS.SOCKET_RPC_REQUEST,
-                JSON.stringify({ code, data, requestId })
+                serializer.pack(code, data, requestId),
             );
 
             this._socket.on(PEER_SOCKET_CHANNELS.SOCKET_RPC_RESPONSE, responseListener);
         });
     }
 
-    responseRPC(code, data, requestId): void {
+    responseRPC(code, data: Buffer, requestId): void {
+        const serializer = new SocketBufferRPC();
         this._socket.emit(
             PEER_SOCKET_CHANNELS.SOCKET_RPC_RESPONSE,
-            JSON.stringify({ code, data, requestId })
+            serializer.pack(code, data, requestId)
         );
     }
 
