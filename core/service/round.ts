@@ -102,7 +102,9 @@ class RoundService implements IRoundService {
     }
 
     public getMySlot(): Slot {
-        return RoundRepository.getCurrentRound().slots[this.keyPair.publicKey.toString('hex')];
+        return RoundRepository.getCurrentRound()
+            ? RoundRepository.getCurrentRound().slots[this.keyPair.publicKey.toString('hex')]
+            : null;
     }
 
     public processReward(round: Round, undo?: Boolean): void {
