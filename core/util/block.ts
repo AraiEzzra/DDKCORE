@@ -1,6 +1,6 @@
 import { Block } from 'shared/model/block';
 
-export const MIN_ROUND_BLOCK = 2;
+export const MIN_ROUND_BLOCK_HEIGHT = 2;
 
 export const isLessHeight = (lastBlock: Block, receivedBlock: Block): boolean => {
     return receivedBlock.height < lastBlock.height;

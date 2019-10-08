@@ -1,18 +1,17 @@
 import { logger } from 'shared/util/logger';
 
-import { IAsset, SerializedTransaction } from 'shared/model/transaction';
 import PeerService from 'core/service/peer';
 import { ActionTypes } from 'core/util/actionTypes';
 
 
 class SwapTransactionQueue {
-    pool: Array<SerializedTransaction<IAsset>>;
+    pool: Array<Buffer>;
 
     constructor() {
         this.pool = [];
     }
 
-    push(data: SerializedTransaction<IAsset>) {
+    push(data: Buffer) {
         logger.debug(`[Repository][SwapTransactionQueue][push]`);
         this.pool.unshift(data);
     }
@@ -23,10 +22,10 @@ class SwapTransactionQueue {
 
     process(): void {
         while (this.pool.length > 0) {
-            const serializedTransaction = this.pool.pop();
+            const bufferTransaction = this.pool.pop();
             PeerService.broadcast(
                 ActionTypes.TRANSACTION_RECEIVE,
-                { trs: serializedTransaction },
+                bufferTransaction,
                 null,
                 false,
             );

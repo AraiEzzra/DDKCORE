@@ -9,7 +9,6 @@ import config from 'shared/config';
 import RoundService from 'core/service/round';
 import SlotService from 'core/service/slot';
 import { ResponseEntity } from 'shared/model/response';
-import SharedTransactionRepository from 'shared/repository/transaction';
 import PeerMemoryRepository from 'core/repository/peer/peerMemory';
 import PeerNetworkRepository from 'core/repository/peer/peerNetwork';
 import PeerService, { ERROR_NOT_ENOUGH_PEERS } from 'core/service/peer';
@@ -22,12 +21,17 @@ import { logger } from 'shared/util/logger';
 import SwapTransactionQueue from 'core/service/swapTransactionQueue';
 import TransactionQueue from 'core/service/transactionQueue';
 import { peerAddressToString } from 'core/util/peer';
+import { SchemaName } from 'shared/util/byteSerializer/config';
+import { createBufferArray, createBufferObject } from 'shared/util/byteSerializer';
+import { BufferTypes } from 'shared/util/byteSerializer/types';
+import { serializeAssetTransaction } from 'shared/util/transaction';
+import { messageON } from 'shared/util/bus';
 
 export interface ISyncService {
 
     sendPeers(requestPeerInfo: RequestPeerInfo): void;
 
-    sendNewBlock(block: SerializedBlock): void;
+    sendNewBlock(block: Block): void;
 
     sendUnconfirmedTransaction(trs: Transaction<any>): void;
 
@@ -39,6 +43,9 @@ export interface ISyncService {
 
 }
 
+export const ERROR_NO_WORTHY_PEERS = 'Error no worthy peers';
+const LOG_PREFIX = '[Service][Sync]';
+
 export class SyncService implements ISyncService {
 
     consensus: boolean;
@@ -47,7 +54,7 @@ export class SyncService implements ISyncService {
         const fullNetworkPeerList = PeerNetworkRepository.getAll();
         const randomNetworkPeers = getRandomElements(config.CONSTANTS.PEERS_COUNT_FOR_DISCOVER, fullNetworkPeerList);
         const peersPromises = randomNetworkPeers.map((peer: NetworkPeer) => {
-            return peer.requestRPC(ActionTypes.REQUEST_PEERS, {});
+            return peer.requestRPC(ActionTypes.REQUEST_PEERS, createBufferObject({}, SchemaName.Empty));
         });
 
         const peersResponses = await Promise.all(peersPromises);
@@ -66,16 +73,21 @@ export class SyncService implements ISyncService {
 
     sendPeers(requestPeerInfo: RequestPeerInfo): void {
         if (!PeerNetworkRepository.has(requestPeerInfo.peerAddress)) {
-            logger.debug(`[Service][Sync][sendPeers] peer is offline for response` +
+            logger.error(`${LOG_PREFIX}[sendPeers] peer is offline for response` +
                 ` ${requestPeerInfo.peerAddress.ip}`);
             return;
         }
         const networkPeer = PeerNetworkRepository.get(requestPeerInfo.peerAddress);
         const peerAddresses = PeerMemoryRepository.getPeerAddresses();
-        networkPeer.responseRPC(ActionTypes.RESPONSE_PEERS, peerAddresses, requestPeerInfo.requestId);
+
+        const data = createBufferArray(
+            peerAddresses,
+            new BufferTypes.Object(SchemaName.ShortPeerInfo)
+        );
+        networkPeer.responseRPC(ActionTypes.RESPONSE_PEERS, data, requestPeerInfo.requestId);
     }
 
-    sendNewBlock(block: SerializedBlock): void {
+    sendNewBlock(block: Block): void {
         logger.trace(`[Service][Sync][sendNewBlock] height: ${block.height} relay: ${block.relay}`);
 
         if (block.relay >= config.CONSTANTS.TRANSFER.MAX_BLOCK_RELAY) {
@@ -83,27 +95,34 @@ export class SyncService implements ISyncService {
         }
 
         block.relay += 1;
+
         const filteredPeerAddresses = PeerMemoryRepository
             .getLessPeersByFilter(block.height, block.id)
             .map((memoryPeer: MemoryPeer) => memoryPeer.peerAddress);
+        PeerService.broadcast(ActionTypes.BLOCK_RECEIVE, block.byteSerialize(), filteredPeerAddresses);
 
-        PeerService.broadcast(ActionTypes.BLOCK_RECEIVE, { block }, filteredPeerAddresses);
     }
 
     sendUnconfirmedTransaction(trs: Transaction<IAsset>): void {
         if (trs.relay >= config.CONSTANTS.TRANSFER.MAX_TRS_RELAY) {
             return;
         }
+
         trs.relay += 1;
-        const serializedTransaction = SharedTransactionRepository.serialize(trs);
+
+        const byteAssetTransaction = serializeAssetTransaction(trs);
+        const byteTransaction = createBufferObject(byteAssetTransaction, SchemaName.Transaction);
+
         if (PeerNetworkRepository.count === 0) {
-            SwapTransactionQueue.push(serializedTransaction);
+            SwapTransactionQueue.push(byteTransaction);
             return;
         }
+
         PeerService.broadcast(
             ActionTypes.TRANSACTION_RECEIVE,
-            { trs: serializedTransaction }
+            byteTransaction
         );
+
     }
 
     async checkCommonBlock(lastBlock: BlockData):
@@ -113,7 +132,18 @@ export class SyncService implements ISyncService {
         const filteredMemoryPeers = PeerMemoryRepository.getHigherPeersByFilter(lastBlock.height, lastBlock.id);
 
         if (!filteredMemoryPeers.length) {
-            return new ResponseEntity({ errors: [ERROR_NOT_ENOUGH_PEERS] });
+
+            if (!PeerNetworkRepository.count) {
+                errors.push(`${LOG_PREFIX}[checkCommonBlock] No one peer`);
+                messageON(ActionTypes.PEER_CONNECT_RUN);
+            } else if (!PeerNetworkRepository.unbanCount) {
+                errors.push(`${LOG_PREFIX}[checkCommonBlock] All peers are banned`);
+                messageON(ActionTypes.EMIT_REBOOT_PEERS_CONNECTIONS);
+            } else {
+                errors.push(ERROR_NO_WORTHY_PEERS);
+            }
+
+            return new ResponseEntity({ errors });
         }
         const randomMemoryPeer = getRandom(filteredMemoryPeers);
 
@@ -136,7 +166,7 @@ export class SyncService implements ISyncService {
                 const networkPeer = PeerNetworkRepository.get(randomMemoryPeer.peerAddress);
                 const response = await networkPeer.requestRPC<{ isExist: boolean }>(
                     ActionTypes.REQUEST_COMMON_BLOCKS,
-                    lastBlock
+                    createBufferObject(lastBlock, SchemaName.BlockData)
                 );
 
                 if (!response.success) {
@@ -171,31 +201,31 @@ export class SyncService implements ISyncService {
             return new ResponseEntity({ errors: [] });
         }
         const networkPeer = PeerNetworkRepository.get(peerAddress);
-        return await networkPeer.requestRPC(ActionTypes.REQUEST_BLOCKS, {
-            height: lastBlock.height,
-            limit: config.CONSTANTS.TRANSFER.REQUEST_BLOCK_LIMIT
-        });
+        return await networkPeer.requestRPC(ActionTypes.REQUEST_BLOCKS, createBufferObject({
+                height: lastBlock.height,
+                limit: config.CONSTANTS.TRANSFER.REQUEST_BLOCK_LIMIT
+            }, SchemaName.RequestBlocks)
+        );
     }
 
     async sendBlocks(data: BlockLimit, requestPeerInfo: RequestPeerInfo): Promise<void> {
         const { peerAddress, requestId } = requestPeerInfo;
-
-        const networkPeer = PeerNetworkRepository.get(peerAddress);
-        const blocksResponse = await BlockStorageService.getMany(data.limit, data.height);
-        if (!blocksResponse.success) {
-            return networkPeer.responseRPC(ActionTypes.RESPONSE_BLOCKS, [], requestId);
-        }
-
-        const blocks = blocksResponse.data;
-        const serializedBlocks: Array<Block & { transactions: any }> = blocks.map(block => block.getCopy());
-        serializedBlocks.forEach(block => {
-            block.transactions = block.transactions.map(trs => SharedTransactionRepository.serialize(trs));
+        const blocks = BlockRepository.getMany(data.limit, data.height);
+        const blocksCopy: Array<Block & { transactions?: any }> = blocks.map(block => block.getCopy());
+        blocksCopy.forEach(block => {
+            block.transactions = block.transactions.map(trs => serializeAssetTransaction(trs));
+            block.transactions = createBufferArray(
+                block.transactions,
+                new BufferTypes.Object(SchemaName.TransactionBlock)
+            );
         });
         if (!PeerNetworkRepository.has(peerAddress)) {
             logger.debug(`[Service][Sync][sendBlocks] peer is offline for response ${peerAddress.ip}`);
             return;
         }
-        networkPeer.responseRPC(ActionTypes.RESPONSE_BLOCKS, serializedBlocks, requestId);
+        const networkPeer = PeerNetworkRepository.get(peerAddress);
+        const byteArrayBlock = createBufferArray(blocksCopy, new BufferTypes.Object(SchemaName.Block));
+        networkPeer.responseRPC(ActionTypes.RESPONSE_BLOCKS, byteArrayBlock, requestId);
     }
 
     async saveRequestedBlocks(blocks: Array<BlockModel>): Promise<ResponseEntity<void>> {
@@ -242,7 +272,11 @@ export class SyncService implements ISyncService {
             return;
         }
         const networkPeer = PeerNetworkRepository.get(requestPeerInfo.peerAddress);
-        networkPeer.responseRPC(ActionTypes.RESPONSE_COMMON_BLOCKS, { isExist }, requestPeerInfo.requestId);
+        networkPeer.responseRPC(
+            ActionTypes.RESPONSE_COMMON_BLOCKS,
+            createBufferObject({ isExist }, SchemaName.CommonBlockResponse),
+            requestPeerInfo.requestId
+        );
     }
 
     updateHeaders(lastBlock: Block) {
@@ -254,7 +288,7 @@ export class SyncService implements ISyncService {
         logger.trace(`[Service][Sync][updateHeaders]: height ${lastBlock.height}, broadhash ${lastBlock.id}`);
         PeerService.broadcast(
             ActionTypes.PEER_HEADERS_UPDATE,
-            SystemRepository.getHeaders()
+            createBufferObject(SystemRepository.getHeaders(), SchemaName.Headers)
         );
     }
 

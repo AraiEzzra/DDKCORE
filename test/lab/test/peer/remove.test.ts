@@ -9,8 +9,10 @@ import PeerMemoryRepository from 'core/repository/peer/peerMemory';
 import PeerNetworkRepository from 'core/repository/peer/peerNetwork';
 import PeerController from 'core/controller/peer';
 import PeerService from 'core/service/peer';
-import { TEST_RUNNER_NAME, TEST_ASYNC_TIMEOUT } from 'test/lab/utils/constants';
+import { TEST_ASYNC_TIMEOUT, TEST_RUNNER_NAME } from 'test/lab/utils/constants';
 import { ActionTypes } from 'core/util/actionTypes';
+import { createBufferObject } from 'shared/util/byteSerializer';
+import { SchemaName } from 'shared/util/byteSerializer/config';
 
 const TEST_NAME = 'TEST_PEER_REMOVE';
 const TEST_DONE_STAGE_1 = 'TEST_PEER_REMOVE_DONE';
@@ -69,14 +71,22 @@ describe('PEER REMOVE', function () {
             expect(PeerNetworkRepository.getAll().length).to.equal(2);
             expect(SystemRepository.getHeaders().peerCount).to.equal(2);
 
-            PeerService.broadcast(ActionTypes.REMOVE_ALL_PEERS, {}, [PEER.TWO]);
+            PeerService.broadcast(
+                ActionTypes.REMOVE_ALL_PEERS,
+                createBufferObject({}, SchemaName.Empty),
+                [PEER.TWO]
+            );
             await asyncTimeout(TEST_ASYNC_TIMEOUT * 5);
             expect(PeerMemoryRepository.has(PEER.ONE)).to.equal(true);
             expect(PeerMemoryRepository.getAll().length).to.equal(1);
             expect(PeerNetworkRepository.getAll().length).to.equal(1);
             expect(SystemRepository.getHeaders().peerCount).to.equal(1);
 
-            PeerService.broadcast(ActionTypes.REMOVE_ALL_PEERS, {}, [PEER.ONE]);
+            PeerService.broadcast(
+                ActionTypes.REMOVE_ALL_PEERS,
+                createBufferObject({}, SchemaName.Empty),
+                [PEER.ONE]
+            );
             await asyncTimeout(TEST_ASYNC_TIMEOUT * 5);
             expect(PeerMemoryRepository.getAll().length).to.equal(0);
             expect(PeerNetworkRepository.getAll().length).to.equal(0);

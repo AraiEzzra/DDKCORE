@@ -43,7 +43,7 @@ import {
     isLessHeight,
     isNewer,
     isNext,
-    MIN_ROUND_BLOCK
+    MIN_ROUND_BLOCK_HEIGHT
 } from 'core/util/block';
 import { IKeyPair } from 'shared/util/ed';
 import System from 'core/repository/system';
@@ -196,20 +196,11 @@ class BlockService implements IBlockService {
 
         this.verifyBlockSlotNumber(block, lastBlock, errors);
 
-        const response = new ResponseEntity({ errors: errors.reverse() });
-
-        if (response.success) {
-            logger.info(
-                `Verify->verifyBlock succeeded for block ${block.id} at height ${
-                    block.height
-                    }.`
-            );
-        } else {
+        const response = new ResponseEntity<void>({ errors: errors.reverse() });
+        if (!response.success) {
             logger.error(
-                `Verify->verifyBlock failed for block ${block.id} at height ${
-                    block.height
-                    }.`,
-                JSON.stringify(response.errors)
+                `[Service][Block][verifyBlock] block ${block.id} at height ${block.height} is invalid. Error: ` +
+                `${response.errors.join('. ')}`
             );
         }
         return response;
@@ -415,41 +406,41 @@ class BlockService implements IBlockService {
         const errors: Array<string> = [];
         let i = 0;
 
-        while ((i < block.transactions.length && errors.length === 0) || (i >= 0 && errors.length !== 0)) {
+        while (i < block.transactions.length) {
             const trs: Transaction<object> = block.transactions[i];
 
-            if (errors.length === 0) {
-                let sender: Account = AccountRepository.getByAddress(trs.senderAddress);
-                if (!sender) {
-                    sender = AccountRepo.add({
-                        publicKey: trs.senderPublicKey,
-                        address: trs.senderAddress
-                    });
-                } else {
-                    sender.publicKey = trs.senderPublicKey;
-                }
+            let sender: Account = AccountRepository.getByAddress(trs.senderAddress);
+            if (!sender) {
+                sender = AccountRepo.add({
+                    publicKey: trs.senderPublicKey,
+                    address: trs.senderAddress
+                });
+            } else if (!sender.publicKey) {
+                sender.publicKey = trs.senderPublicKey;
+            }
 
-                if (verify) {
-                    const resultCheckTransaction: ResponseEntity = this.checkTransaction(trs, sender);
-                    if (!resultCheckTransaction.success) {
-                        errors.push(...resultCheckTransaction.errors);
-                        logger.error(
-                            `[Service][Block][checkTransactionsAndApplyUnconfirmed][error] ${errors.join('. ')}. ` +
-                            `Transaction id: ${trs.id}`,
-                        );
-                        i--;
-                        continue;
-                    }
-                } else {
-                    // recalculate vote fee before block generation
-                    if (trs.type === TransactionType.VOTE) {
-                        trs.fee = TransactionDispatcher.calculateFee(trs, sender);
-                    }
+            if (verify) {
+                const resultCheckTransaction: ResponseEntity<void> = this.checkTransaction(trs, sender);
+                if (!resultCheckTransaction.success) {
+                    errors.push(...resultCheckTransaction.errors);
+                    logger.error(
+                        `[Service][Block][checkTransactionsAndApplyUnconfirmed][error] ${errors.join('. ')}. `,
+                    );
+                    i--;
+                    break;
                 }
+            } else if (trs.type === TransactionType.VOTE) {
+                // recalculate vote fee before block generation
+                trs.fee = TransactionDispatcher.calculateFee(trs, sender);
+            }
 
-                TransactionDispatcher.applyUnconfirmed(trs, sender);
-                i++;
-            } else {
+            TransactionDispatcher.applyUnconfirmed(trs, sender);
+            i++;
+        }
+
+        if (errors.length) {
+            while (i >= 0) {
+                const trs: Transaction<object> = block.transactions[i];
                 const sender: Account = AccountRepository.getByPublicKey(trs.senderPublicKey);
                 TransactionDispatcher.undoUnconfirmed(trs, sender);
                 i--;
@@ -508,10 +499,11 @@ class BlockService implements IBlockService {
             const serializedBlock = block.serialize();
 
             SocketMiddleware.emitEvent(EVENT_TYPES.APPLY_BLOCK, serializedBlock);
-            SyncService.sendNewBlock(serializedBlock);
+
+            SyncService.sendNewBlock(block);
         }
 
-        if (block.height >= MIN_ROUND_BLOCK) {
+        if (block.height >= MIN_ROUND_BLOCK_HEIGHT) {
             RoundRepository.getCurrentRound().slots[block.generatorPublicKey].isForged = true;
         }
 
@@ -641,7 +633,7 @@ class BlockService implements IBlockService {
         rawBlock.transactions.forEach((rawTrs) => {
             const address = getAddressByPublicKey(rawTrs.senderPublicKey);
             const publicKey = rawTrs.senderPublicKey;
-            AccountRepo.add({ publicKey: publicKey, address: address });
+            AccountRepo.add({ publicKey, address });
         });
         const resultTransactions = rawBlock.transactions.map((transaction) =>
             SharedTransactionRepo.deserialize(transaction)
@@ -659,9 +651,9 @@ class BlockService implements IBlockService {
             createdAt: timestamp,
             transactionCount: transactions.length,
             previousBlockId: previousBlock.id,
+            height: previousBlock.height + 1,
             generatorPublicKey: keyPair.publicKey.toString('hex'),
             transactions,
-            height: previousBlock.height + 1,
         });
     }
 

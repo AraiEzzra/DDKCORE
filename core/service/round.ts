@@ -11,7 +11,7 @@ import DelegateRepository from 'core/repository/delegate';
 import DelegateService from 'core/service/delegate';
 import { logger } from 'shared/util/logger';
 import { ActionTypes } from 'core/util/actionTypes';
-import { getLastSlotNumberInRound } from 'core/util/round';
+import { getLastSlotNumberInRound, isSlotNumberInRound } from 'core/util/round';
 import { createKeyPairBySecret } from 'shared/util/crypto';
 import { getFirstSlotNumberInRound } from 'core/util/slot';
 import { IKeyPair } from 'shared/util/ed';
@@ -102,7 +102,9 @@ class RoundService implements IRoundService {
     }
 
     public getMySlot(): Slot {
-        return RoundRepository.getCurrentRound().slots[this.keyPair.publicKey.toString('hex')];
+        return RoundRepository.getCurrentRound()
+            ? RoundRepository.getCurrentRound().slots[this.keyPair.publicKey.toString('hex')]
+            : null;
     }
 
     public processReward(round: Round, undo?: Boolean): void {
@@ -208,12 +210,14 @@ class RoundService implements IRoundService {
         let round = RoundRepository.getCurrentRound();
         if (!round) {
             return;
+        } else if (isSlotNumberInRound(round, slotNumber)) {
+            return;
         }
 
         const isForward = slotNumber > getLastSlotNumberInRound(round);
         const lastBlockSlotNumber = SlotService.getSlotNumber(BlockStorageService.getLast().createdAt);
 
-        while (!Object.values(round.slots).find(slot => slot.slot === slotNumber)) {
+        while (!isSlotNumberInRound(round, slotNumber)) {
             if (isForward) {
                 if (getLastSlotNumberInRound(round) > slotNumber) {
                     logger.error(
@@ -230,7 +234,7 @@ class RoundService implements IRoundService {
                         `to slot ${slotNumber}`
                     );
                     break;
-                } else if (Object.values(round.slots).find(slot => slot.slot === lastBlockSlotNumber)) {
+                } else if (isSlotNumberInRound(round, lastBlockSlotNumber)) {
                     logger.error(
                         `${this.logPrefix}[restoreToSlot] Impossible to backward round ` +
                         `last block is in current round`

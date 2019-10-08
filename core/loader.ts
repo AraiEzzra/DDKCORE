@@ -20,7 +20,7 @@ import System from 'core/repository/system';
 import RoundService from 'core/service/round';
 import SlotService from 'core/service/slot';
 import RoundRepository from 'core/repository/round';
-import { MIN_ROUND_BLOCK } from 'core/util/block';
+import { MIN_ROUND_BLOCK_HEIGHT } from 'core/util/block';
 import { getFirstSlotNumberInRound } from 'core/util/slot';
 import DelegateService from 'core/service/delegate';
 import { ActionTypes } from 'core/util/actionTypes';
@@ -100,7 +100,7 @@ class Loader {
                     this.transactionsWarmUp(block.transactions);
                 }
 
-                if (block.height === MIN_ROUND_BLOCK) {
+                if (block.height === MIN_ROUND_BLOCK_HEIGHT) {
                     const newRound = RoundService.generate(
                         getFirstSlotNumberInRound(
                             block.createdAt,
@@ -111,7 +111,7 @@ class Loader {
                     RoundRepository.add(newRound);
                 }
 
-                if (block.height >= MIN_ROUND_BLOCK) {
+                if (block.height >= MIN_ROUND_BLOCK_HEIGHT) {
                     RoundService.restoreToSlot(SlotService.getSlotNumber(block.createdAt));
 
                     this.transactionsWarmUp(block.transactions);
