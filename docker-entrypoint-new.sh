@@ -1,10 +1,13 @@
-echo $(node -v)
-echo $(id -u -n)
+echo node version $(node -v)
+echo npm version $(npm -v)
+echo user $(id -u -n)
+
 # needs defined DB_HOST in environment
 # and wait-port npm package installed
 
 if [ "$SERVICE" == "WATCH" ]; then
     if [ ! -d node_modules ]; then
+        echo Folder 'node_modules' is missing. Install modules...
         npm install
     fi
     npm update ddk.registry
