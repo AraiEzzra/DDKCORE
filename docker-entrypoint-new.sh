@@ -10,7 +10,7 @@ if [ "$SERVICE" == "WATCH" ]; then
     npm update ddk.registry
     nc -lk 5000 & npm run watch
 else
-    wait-port "$DB_HOST:${DB_PORT:-5432}" && \
+    wait-port "$DB_HOST:${DB_PORT:-5432}"
     if [ "$MODE" == "WATCH" ]; then
         wait-port "$WATCHER_HOST:$WATCHER_PORT"
     fi
