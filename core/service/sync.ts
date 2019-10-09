@@ -210,17 +210,25 @@ export class SyncService implements ISyncService {
 
     async sendBlocks(data: BlockLimit, requestPeerInfo: RequestPeerInfo): Promise<void> {
         const { peerAddress, requestId } = requestPeerInfo;
-        const blocks = BlockRepository.getMany(data.limit, data.height);
-        const blocksCopy: Array<Block & { transactions?: any }> = blocks.map(block => block.getCopy());
-        blocksCopy.forEach(block => {
-            block.transactions = block.transactions.map(trs => serializeAssetTransaction(trs));
-            block.transactions = createBufferArray(
-                block.transactions,
-                new BufferTypes.Object(SchemaName.TransactionBlock)
-            );
-        });
+        const blocksResponse = await BlockStorageService.getMany(data.limit, data.height);
+        let blocksCopy = [];
+
+        if (blocksResponse.success) {
+            blocksCopy = blocksResponse.data.map(block => block.getCopy());
+
+            blocksCopy.forEach(block => {
+                block.transactions = block.transactions.map(trs => serializeAssetTransaction(trs));
+                block.transactions = createBufferArray(
+                    block.transactions,
+                    new BufferTypes.Object(SchemaName.TransactionBlock)
+                );
+            });
+        } else {
+            logger.error(`[Service][Sync][sendBlocks]: ${blocksResponse.errors.join(', ')}`);
+        }
+
         if (!PeerNetworkRepository.has(peerAddress)) {
-            logger.debug(`[Service][Sync][sendBlocks] peer is offline for response ${peerAddress.ip}`);
+            logger.trace(`[Service][Sync][sendBlocks] peer is offline for response ${peerAddress.ip}`);
             return;
         }
         const networkPeer = PeerNetworkRepository.get(peerAddress);
