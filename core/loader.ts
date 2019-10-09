@@ -27,6 +27,9 @@ import { ActionTypes } from 'core/util/actionTypes';
 import { Migrator } from 'core/database/migrator';
 import { ERROR_CODES } from 'shared/config/errorCodes';
 
+const http = require('http');
+const heapdump = require('heapdump');
+
 // @ts-ignore
 BigInt.prototype.toJSON = function () {
     return this.toString();
@@ -56,26 +59,46 @@ class Loader {
             }
         }
 
-        if (!config.CORE.IS_HISTORY_ON_WARMUP) {
-            config.CORE.IS_HISTORY = historyState;
-        }
-        SocketDriver.initServer();
+        const requestLogs = [];
+        const server = http.createServer((req, res) => {
+            if (req.url === '/heapdump') {
+                heapdump.writeSnapshot((err, filename) => {
+                    if (err) {
+                        console.log(err);
+                    }
 
-        setInterval(() => messageON(ActionTypes.EMIT_PING), config.CONSTANTS.PEER_PING_PONG_INTERVAL);
+                    console.log('Heap dump written to', filename)
+                });
+            }
 
-        initShedulers();
+            requestLogs.push({ url: req.url, date: new Date() });
+            res.end(JSON.stringify(requestLogs));
+        });
 
-        setInterval(
-            () => messageON(ActionTypes.EMIT_REBOOT_PEERS_CONNECTIONS),
-            getRandomInt(
-                config.CONSTANTS.PEER_CONNECTION_TIME_INTERVAL_REBOOT.MIN,
-                config.CONSTANTS.PEER_CONNECTION_TIME_INTERVAL_REBOOT.MAX,
-            )
-        );
+        server.listen(3000);
+        console.log('Server listening to port 3000. Press Ctrl+C to stop it.');
+        console.log(`Heapdump enabled. Run "kill -USR2 ${process.pid}" or send a request to "/heapdump" to generate a heapdump.`);
 
-        System.synchronization = false;
-        setTimeout(() => messageON(ActionTypes.EMIT_SYNC_BLOCKS), config.CONSTANTS.TIMEOUT_START_SYNC_BLOCKS);
-        socketRPCServer.run();
+        // if (!config.CORE.IS_HISTORY_ON_WARMUP) {
+        //     config.CORE.IS_HISTORY = historyState;
+        // }
+        // SocketDriver.initServer();
+
+        // setInterval(() => messageON(ActionTypes.EMIT_PING), config.CONSTANTS.PEER_PING_PONG_INTERVAL);
+
+        // initShedulers();
+
+        // setInterval(
+        //     () => messageON(ActionTypes.EMIT_REBOOT_PEERS_CONNECTIONS),
+        //     getRandomInt(
+        //         config.CONSTANTS.PEER_CONNECTION_TIME_INTERVAL_REBOOT.MIN,
+        //         config.CONSTANTS.PEER_CONNECTION_TIME_INTERVAL_REBOOT.MAX,
+        //     )
+        // );
+
+        // System.synchronization = false;
+        // setTimeout(() => messageON(ActionTypes.EMIT_SYNC_BLOCKS), config.CONSTANTS.TIMEOUT_START_SYNC_BLOCKS);
+        // socketRPCServer.run();
     }
 
     public async initDatabase() {
