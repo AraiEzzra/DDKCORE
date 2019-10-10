@@ -29,7 +29,7 @@ export class AccountModel {
         Object.assign(this, data);
         this.votes = [...(data.votes || [])];
         this.referrals = [...(data.referrals || [])];
-        this.stakes = (data.stakes || []).map(stake => ({ ...stake }));
+        this.stakes = (data.stakes || []).map(stake => new Stake({ ...stake }));
         this.delegate = data.delegate && new Delegate(data.delegate);
     }
 }

@@ -230,7 +230,6 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
             .forEach((stake: Stake) => {
                 stake.voteCount++;
                 stake.nextVoteMilestone = trs.createdAt + config.CONSTANTS.FROZE.VOTE_MILESTONE;
-                stake.dependentTransactions.push(trs);
                 processedOrders.push(stake);
             });
         applyFrozeOrdersRewardAndUnstake(trs, processedOrders);
@@ -239,7 +238,7 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
         }
     }
 
-    undoUnconfirmed(trs: Transaction<IAssetVote>, sender: Account, senderOnly): void {
+    undoUnconfirmed(trs: Transaction<IAssetVote>, sender: Account, senderOnly: boolean): void {
         const isDownVote = trs.asset.votes[0][0] === '-';
         const votes = trs.asset.votes.map(vote => vote.substring(1));
         if (isDownVote) {
@@ -276,14 +275,7 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
             )
             .forEach((stake: Stake) => {
                 stake.voteCount--;
-                stake.dependentTransactions.pop();
-
-                if (stake.dependentTransactions.length) {
-                    const lastDependedTransaction = stake.dependentTransactions[stake.dependentTransactions.length - 1];
-                    stake.nextVoteMilestone = lastDependedTransaction.createdAt + config.CONSTANTS.FROZE.VOTE_MILESTONE;
-                } else {
-                    stake.nextVoteMilestone = stake.createdAt;
-                }
+                stake.nextVoteMilestone = stake.createdAt;
             });
     }
 
