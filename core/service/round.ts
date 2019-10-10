@@ -21,6 +21,7 @@ import FailService from 'core/service/fail';
 import { EVENT_TYPES } from 'shared/driver/socket/codes';
 import SocketMiddleware from 'core/api/middleware/socket';
 import { DEFAULT_FRACTION_DIGIST } from 'shared/util/common';
+import { timeService } from 'shared/util/timeServiceClient';
 
 const MAX_LATENESS_FORGE_TIME = 500;
 
@@ -64,7 +65,8 @@ class RoundService implements IRoundService {
     private createBlockGenerateTask(force: boolean): void {
         const mySlot = this.getMySlot();
         if (mySlot) {
-            let cellTime = SlotService.getSlotRealTime(mySlot.slot) - new Date().getTime();
+            let cellTime = SlotService.getSlotRealTime(mySlot.slot) - timeService.getTime();
+
             if (cellTime < 0 && cellTime + MAX_LATENESS_FORGE_TIME >= 0) {
                 cellTime = 0;
             }
@@ -86,7 +88,7 @@ class RoundService implements IRoundService {
 
     private createRoundFinishTask(force: boolean): void {
         const lastSlot = getLastSlotNumberInRound(RoundRepository.getCurrentRound());
-        let roundEndTime = SlotService.getSlotRealTime(lastSlot + 1) - new Date().getTime();
+        let roundEndTime = SlotService.getSlotRealTime(lastSlot + 1) - timeService.getTime();
 
         if (roundEndTime < 0) {
             logger.info(
