@@ -11,7 +11,7 @@ import { SerializedFullHeaders } from 'shared/model/Peer/fullHeaders';
 import { PEER_SOCKET_EVENTS } from 'core/driver/socket/socketsTypes';
 import { peerAddressToString } from 'core/util/peer';
 import { BusyWorkParser } from 'core/util/busyWorkParser';
-import { createBufferObject } from 'shared/util/byteSerializer';
+import { bufferToString, createBufferObject } from 'shared/util/byteSerializer';
 import { SchemaName } from 'shared/util/byteSerializer/config';
 
 export const REQUEST_TIMEOUT = '408 Request Timeout';
@@ -93,7 +93,9 @@ export class Socket {
     }
 
     onHeadersReceive(response: Buffer | string, peerAddress: PeerAddress, socket, type: PEER_SOCKET_TYPE) {
-
+        if (Buffer.isBuffer(response)) {
+            logger.debug(`[SOCKET][onHeadersReceive] ${bufferToString(response)}`);
+        }
         const migrateParser = new BusyWorkParser();
         const peerHeaders = migrateParser.parseJsonByte(response);
 
