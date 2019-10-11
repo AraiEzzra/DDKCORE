@@ -1,24 +1,51 @@
 import { SchemaName } from 'shared/util/byteSerializer/config';
 import { ModelType } from 'shared/util/byteSerializer/models/modelType';
 import { BufferTypes } from 'shared/util/byteSerializer/types';
+import { logger } from 'shared/util/logger';
 
 export function deserialize(buffer, offset = 0): any {
-    const dynamicBuffer = new BufferTypes.Buffer();
-    const data = dynamicBuffer.read(buffer, offset);
-    return data.value;
+    try {
+        const dynamicBuffer = new BufferTypes.Buffer();
+        const data = dynamicBuffer.read(buffer, offset);
+        return data.value;
+    } catch (e) {
+        logger.error(`[ByteSerializer][deserialize]`, e);
+    }
 }
 
 export function createBufferObject(data, schema: SchemaName): Buffer {
-    const object = new BufferTypes.Object(schema);
-    return object.create(data);
+    try {
+        const object = new BufferTypes.Object(schema);
+        return object.create(data);
+    } catch (e) {
+        logger.error(`[ByteSerializer][createBufferObject]`, e);
+    }
 }
 
 export function createBufferArray(data: Array<any>, typeElement: ModelType): Buffer {
-    const array = new BufferTypes.Array(typeElement);
-    return array.create(data);
+    try {
+        const array = new BufferTypes.Array(typeElement);
+        return array.create(data);
+    } catch (e) {
+        logger.error(`[ByteSerializer][createBufferArray]`, e);
+    }
 }
 
 export function createBufferUtf8(data: string): Buffer {
     const utf8 = new BufferTypes.Utf8();
     return utf8.create(data);
 }
+
+export const bufferToString = (buffer: Buffer): string => {
+    let arr = [];
+    for (let ii = 0; ii < buffer.length; ii++) {
+        let temp = buffer[ii].toString(16);
+        if (temp.length === 0) {
+            temp = '00';
+        } else if (temp.length === 1) {
+            temp = '0' + temp;
+        }
+        arr.push(temp);
+    }
+    return `[${arr.join(' ')}]`;
+};

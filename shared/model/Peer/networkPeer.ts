@@ -11,7 +11,7 @@ import { REQUEST_TIMEOUT } from 'core/driver/socket';
 import config, { NODE_ENV_ENUM } from 'shared/config';
 import { ALLOWED_BAN_PEER_METHODS, ALLOWED_METHODS } from 'core/util/allowedPeerMethods';
 import { peerAddressToString } from 'core/util/peer';
-import { createBufferObject, deserialize } from 'shared/util/byteSerializer';
+import { bufferToString, createBufferObject, deserialize } from 'shared/util/byteSerializer';
 import { SchemaName } from 'shared/util/byteSerializer/config';
 import { BusyWorkParser } from 'core/util/busyWorkParser';
 
@@ -86,6 +86,8 @@ export class NetworkPeer extends Peer {
                 if (Buffer.isBuffer(response)) {
                     if (serializer.getRequestId(response) === requestId) {
 
+                        logger.debug(`[NetworkPeer][requestRPC] response ${bufferToString(response)}`);
+
                         const result = serializer.unpack(response);
                         clearTimeout(timerId);
 
@@ -148,6 +150,11 @@ export class NetworkPeer extends Peer {
     private _onBroadcast(str: Buffer | string, peerAddress: PeerAddress): void {
 
         const migrateParser = new BusyWorkParser();
+
+        if (Buffer.isBuffer(str)) {
+            logger.debug(`[NetworkPeer][onBroadcast] ${bufferToString(str)}`);
+        }
+
         const response = migrateParser.parseBroadcast(str);
 
         if (!ALLOWED_METHODS.has(response.code) && config.NODE_ENV_IN !== NODE_ENV_ENUM.TEST) {
@@ -168,6 +175,10 @@ export class NetworkPeer extends Peer {
 
         const migrateParser = new BusyWorkParser();
         const response = migrateParser.parseRPCRequest(str);
+        if (Buffer.isBuffer(str)) {
+            logger.debug(`[NetworkPeer][onRPCReques] ${bufferToString(str)}`);
+        }
+
 
         if (!ALLOWED_METHODS.has(response.code)) {
             return logger.error(`[SOCKET][ON_PEER_BROADCAST][${this.peerAddress.ip}] CODE: ${response.code} ` +
