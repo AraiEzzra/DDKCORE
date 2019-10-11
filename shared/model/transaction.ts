@@ -170,8 +170,8 @@ export type StakeSchema = {
     voteCount: number;
     nextVoteMilestone: Timestamp;
     airdropReward: AirdropReward;
-    sourceTransactionId: string;
-    previousMilestones: Array<number>;
+    sourceTransactionId: Buffer;
+    previousMilestones?: Array<number>;
 };
 
 export class Stake implements StakeSchema {
@@ -181,7 +181,7 @@ export class Stake implements StakeSchema {
     voteCount: number;
     nextVoteMilestone: Timestamp;
     airdropReward: AirdropReward;
-    sourceTransactionId: string;
+    sourceTransactionId: Buffer;
     previousMilestones: Array<number>;
 
     constructor(data: StakeSchema) {
