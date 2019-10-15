@@ -1,5 +1,6 @@
 import { ModelType } from './modelType';
 import { BufferTypesId } from './../types';
+import { logger } from 'shared/util/logger';
 
 const HEADER_LENGTH = 2;
 
@@ -19,13 +20,17 @@ export class Utf8 extends ModelType {
     }
 
     read(buffer, offset) {
-        offset += this.length.type;
-        const size = buffer.readUInt16BE(offset);
-        offset += this.length.head;
-        return {
-            value: buffer.toString('utf8', offset, offset += size),
-            offset: offset
-        };
+        try {
+            offset += this.length.type;
+            const size = buffer.readUInt16BE(offset);
+            offset += this.length.head;
+            return {
+                value: buffer.toString('utf8', offset, offset += size),
+                offset: offset
+            };
+        } catch (e) {
+            logger.error(`[ByteSerializer][utf8][read] error`, e);
+        }
     }
 
     private writeHead(buffer: Buffer, bodyLength: number, offset: number): number {

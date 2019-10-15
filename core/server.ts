@@ -2,7 +2,7 @@ import Loader from 'core/loader';
 import { logger } from 'shared/util/logger';
 
 process.addListener('unhandledRejection', reason => {
-    logger.error(`[Core][Process][unhandledRejection] `, reason);
+    logger.error(`[Core][Process][unhandledRejection] `, reason, JSON.stringify(reason));
 });
 
 process.addListener('uncaughtException', err => {
