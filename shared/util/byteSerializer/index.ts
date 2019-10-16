@@ -1,34 +1,21 @@
 import { SchemaName } from 'shared/util/byteSerializer/config';
 import { ModelType } from 'shared/util/byteSerializer/models/modelType';
 import { BufferTypes } from 'shared/util/byteSerializer/types';
-import { logger } from 'shared/util/logger';
 
 export function deserialize(buffer, offset = 0): any {
-    try {
-        const dynamicBuffer = new BufferTypes.Buffer();
-        const data = dynamicBuffer.read(buffer, offset);
-        return data.value;
-    } catch (e) {
-        logger.error(`[ByteSerializer][deserialize]`, e, JSON.stringify(e));
-    }
+    const dynamicBuffer = new BufferTypes.Buffer();
+    const data = dynamicBuffer.read(buffer, offset);
+    return data.value;
 }
 
 export function createBufferObject(data, schema: SchemaName): Buffer {
-    try {
-        const object = new BufferTypes.Object(schema);
-        return object.create(data);
-    } catch (e) {
-        logger.error(`[ByteSerializer][createBufferObject]`, e);
-    }
+    const object = new BufferTypes.Object(schema);
+    return object.create(data);
 }
 
 export function createBufferArray(data: Array<any>, typeElement: ModelType): Buffer {
-    try {
-        const array = new BufferTypes.Array(typeElement);
-        return array.create(data);
-    } catch (e) {
-        logger.error(`[ByteSerializer][createBufferArray]`, e);
-    }
+    const array = new BufferTypes.Array(typeElement);
+    return array.create(data);
 }
 
 export function createBufferUtf8(data: string): Buffer {
