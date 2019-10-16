@@ -33,8 +33,10 @@ class BlockController extends BaseController {
     public async onReceiveBlock(response: BlockSchema | any): Promise<ResponseEntity<void>> {
 
         const peerVersion = PeerMemoryRepository.getVersion(response.peerAddress);
+        logger.debug(`[Controller][Block][onReceiveBlock] peer version: ${peerVersion},
+         ${migrateVersionChecker.isAcceptable(peerVersion)}`);
 
-        if (!migrateVersionChecker.isAcceptable(peerVersion)) {
+        if (!migrateVersionChecker.isAcceptable(peerVersion) && response.data.block) {
             response.data = Block.deserialize(response.data.block);
         }
         logger.debug(`[Controller][Block][onReceiveBlock]`, JSON.stringify(response.data));

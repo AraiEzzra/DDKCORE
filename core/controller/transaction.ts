@@ -32,7 +32,10 @@ class TransactionController extends BaseController {
         const peerVersion = PeerMemoryRepository.getVersion(response.peerAddress);
         let transaction;
 
-        if (!migrateVersionChecker.isAcceptable(peerVersion)) {
+        logger.debug(`[Controller][Transaction][onReceiveTransaction] peer version: ${peerVersion},
+         ${migrateVersionChecker.isAcceptable(peerVersion)}`);
+
+        if (!migrateVersionChecker.isAcceptable(peerVersion) && response.data.trs) {
             transaction = SharedTransactionRepo.deserialize(response.data.trs);
         } else {
             transaction = response.data;
