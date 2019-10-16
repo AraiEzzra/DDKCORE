@@ -1,14 +1,11 @@
-import { Account} from 'shared/model/account';
 import { getAddressByPublicKey } from 'shared/util/account';
 import {
     Address,
     AirdropReward,
     PublicKey,
     Timestamp,
-    TransactionHistoryEvent,
     TransactionId
 } from 'shared/model/types';
-import config from 'shared/config';
 import { BlockId } from 'shared/repository/block';
 
 export enum VoteType {
@@ -173,18 +170,19 @@ export type StakeSchema = {
     voteCount: number;
     nextVoteMilestone: Timestamp;
     airdropReward: AirdropReward;
-    sourceTransactionId: string;
+    sourceTransactionId: Buffer;
+    previousMilestones?: Array<number>;
 };
 
-export class Stake {
+export class Stake implements StakeSchema {
     createdAt: Timestamp;
     isActive: boolean;
     amount: number;
     voteCount: number;
     nextVoteMilestone: Timestamp;
     airdropReward: AirdropReward;
-    sourceTransactionId: string;
-    dependentTransactions: Array<Transaction<IAssetVote>>;
+    sourceTransactionId: Buffer;
+    previousMilestones: Array<number>;
 
     constructor(data: StakeSchema) {
         this.createdAt = data.createdAt;
@@ -194,6 +192,6 @@ export class Stake {
         this.nextVoteMilestone = data.nextVoteMilestone;
         this.airdropReward = data.airdropReward;
         this.sourceTransactionId = data.sourceTransactionId;
-        this.dependentTransactions = [];
+        this.previousMilestones = data.previousMilestones || [];
     }
 }
