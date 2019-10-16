@@ -52,7 +52,7 @@ const processMainQueue = async (): Promise<void> => {
             }
         } catch (e) {
             logger.error(`[Controller][Index][processMainQueue] Main task ${event.topicName} error`,
-                e, JSON.stringify(e));
+                e, JSON.stringify(e), JSON.stringify(e.stack));
         }
     }
 
@@ -106,8 +106,8 @@ export const initControllers = () => {
     ).subscribe(({ data, topicName }) => {
         if (System.synchronization && !UNLOCKED_METHODS.has(topicName)) {
             EventsQueue.push({
-                data: data,
-                topicName: topicName,
+                data,
+                topicName,
                 type: 'ON',
             });
         } else {
@@ -116,7 +116,7 @@ export const initControllers = () => {
                     onMethods.get(topicName)(data);
                 } catch (e) {
                     logger.error(`[Controller][Index][processQueue] task ON ${topicName} error`,
-                        e, JSON.stringify(e));
+                        e, JSON.stringify(e), JSON.stringify(e.stack));
                 }
             });
         }
