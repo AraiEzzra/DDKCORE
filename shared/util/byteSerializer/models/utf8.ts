@@ -20,17 +20,13 @@ export class Utf8 extends ModelType {
     }
 
     read(buffer, offset) {
-        try {
-            offset += this.length.type;
-            const size = buffer.readUInt16BE(offset);
-            offset += this.length.head;
-            return {
-                value: buffer.toString('utf8', offset, offset += size),
-                offset: offset
-            };
-        } catch (e) {
-            logger.error(`[ByteSerializer][utf8][read] error`, e);
-        }
+        offset += this.length.type;
+        const size = buffer.readUInt16BE(offset);
+        offset += this.length.head;
+        return {
+            value: buffer.toString('utf8', offset, offset += size),
+            offset: offset
+        };
     }
 
     private writeHead(buffer: Buffer, bodyLength: number, offset: number): number {

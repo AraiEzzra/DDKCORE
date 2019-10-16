@@ -16,7 +16,7 @@ import { ActionTypes } from 'core/util/actionTypes';
 import { ResponseEntity } from 'shared/model/response';
 import { asyncTimeout } from 'shared/util/timer';
 import { diffArrayPeers, peerAddressToString } from 'core/util/peer';
-import { bufferToString, createBufferObject } from 'shared/util/byteSerializer';
+import { createBufferObject } from 'shared/util/byteSerializer';
 import { SchemaName } from 'shared/util/byteSerializer/config';
 
 const STEP_RECONNECT_DELAY = 600;
@@ -81,7 +81,7 @@ export class PeerService {
         if (checkQueue && SwapTransactionQueue.size && PeerNetworkRepository.count) {
             SwapTransactionQueue.process();
         }
-        logger.debug(`${LOG_PREFIX}[broadcast] code: ${code}, ${bufferToString(data)}`);
+     
         let peers: Array<NetworkPeer> = [];
         if (peerAddresses && isArray(peerAddresses)) {
             peers = PeerNetworkRepository.getManyByAddress(peerAddresses);

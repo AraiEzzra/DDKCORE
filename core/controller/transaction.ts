@@ -32,15 +32,12 @@ class TransactionController extends BaseController {
         const peerVersion = PeerMemoryRepository.getVersion(response.peerAddress);
         let transaction;
 
-        logger.debug(`[Controller][Transaction][onReceiveTransaction] peer version: ${peerVersion},
-         ${migrateVersionChecker.isAcceptable(peerVersion)}`);
-
         if (!migrateVersionChecker.isAcceptable(peerVersion) && response.data.trs) {
             transaction = SharedTransactionRepo.deserialize(response.data.trs);
         } else {
             transaction = response.data;
         }
-        logger.debug(`[Controller][Transaction][onReceiveTransaction]`, JSON.stringify(transaction));
+    
         if (!RoundService.getMySlot()) {
             SyncService.sendUnconfirmedTransaction(transaction);
             return;
