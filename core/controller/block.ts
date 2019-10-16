@@ -37,7 +37,7 @@ class BlockController extends BaseController {
         if (!migrateVersionChecker.isAcceptable(peerVersion)) {
             response.data = Block.deserialize(response.data.block);
         }
-
+        logger.debug(`[Controller][Block][onReceiveBlock]`, JSON.stringify(response.data));
         const receivedBlock = new Block(response.data);
         const validateResponse = BlockService.validate(receivedBlock);
         if (!validateResponse.success) {
