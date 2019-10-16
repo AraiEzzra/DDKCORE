@@ -34,7 +34,7 @@ class BlockController extends BaseController {
 
         const peerVersion = PeerMemoryRepository.getVersion(response.peerAddress);
 
-        if (!migrateVersionChecker.isAcceptable(peerVersion)) {
+        if (!migrateVersionChecker.isAcceptable(peerVersion) && response.data.block) {
             response.data = Block.deserialize(response.data.block);
         }
 
