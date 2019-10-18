@@ -101,8 +101,8 @@ export const initControllers = () => {
     ).subscribe(({ data, topicName }) => {
         if (System.synchronization && !UNLOCKED_METHODS.has(topicName)) {
             EventsQueue.push({
-                data: data,
-                topicName: topicName,
+                data,
+                topicName,
                 type: 'ON',
             });
         } else {

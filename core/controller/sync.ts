@@ -1,4 +1,4 @@
-import SyncService from 'core/service/sync';
+import SyncService, { ERROR_NO_WORTHY_PEERS } from 'core/service/sync';
 import { ON, MAIN } from 'core/util/decorator';
 import { BaseController } from 'core/controller/baseController';
 import PeerService from 'core/service/peer';
@@ -11,7 +11,6 @@ import { asyncTimeout } from 'shared/util/timer';
 import RoundService from 'core/service/round';
 import PeerNetworkRepository from 'core/repository/peer/peerNetwork';
 import { BlockData, BlockLimit, PeerAddress, RequestPeerInfo } from 'shared/model/types';
-import { REQUEST_TIMEOUT } from 'core/driver/socket';
 import { ActionTypes } from 'core/util/actionTypes';
 import { Headers } from 'shared/model/Peer/headers';
 import SlotService from 'core/service/slot';
@@ -21,7 +20,7 @@ import TransactionQueue from 'core/service/transactionQueue';
 import { peerAddressToString } from 'core/util/peer';
 import { migrateVersionChecker } from 'core/util/migrateVersionChecker';
 import PeerMemoryRepository from 'core/repository/peer/peerMemory';
-import { Block, BlockModel, SerializedBlock } from 'shared/model/block';
+import { Block, SerializedBlock } from 'shared/model/block';
 
 type CheckCommonBlocksRequest = {
     data: BlockData,
@@ -65,20 +64,11 @@ export class SyncController extends BaseController {
         lastSyncTime = new Date().getTime();
 
         const errors = [];
-        if (SyncService.getMyConsensus() || !PeerNetworkRepository.count) {
+        if (SyncService.getMyConsensus()) {
             System.synchronization = false;
             messageON('WARM_UP_FINISHED');
 
-            const logMessage = `${LOG_PREFIX}[startSyncBlocks]: Unable to sync`;
-            if (SyncService.getMyConsensus()) {
-                errors.push(`${logMessage}. Consensus is ${SyncService.getConsensus()}%`);
-            } else if (!PeerNetworkRepository.count) {
-                errors.push(`${logMessage}. No peers to sync`);
-                messageON(ActionTypes.PEER_CONNECT_RUN);
-            } else if (!PeerNetworkRepository.unbanCount) {
-                errors.push(`${logMessage}. All peers are banned`);
-                messageON(ActionTypes.EMIT_REBOOT_PEERS_CONNECTIONS);
-            }
+            errors.push(`${LOG_PREFIX}[startSyncBlocks]: Consensus is ${SyncService.getConsensus()}%`);
             return new ResponseEntity({ errors });
         }
 
@@ -102,10 +92,6 @@ export class SyncController extends BaseController {
             }
 
             const lastBlock = await BlockRepository.getLastBlock();
-            if (!lastBlock) {
-                logger.error(`${LOG_PREFIX}[startSyncBlocks] lastBlock is undefined`);
-                break;
-            }
 
             const responseCommonBlocks = await SyncService.checkCommonBlock({
                 id: lastBlock.id,
@@ -116,10 +102,10 @@ export class SyncController extends BaseController {
                     `${LOG_PREFIX}[startSyncBlocks][responseCommonBlocks]: ` +
                     responseCommonBlocks.errors.join('. ')
                 );
-                if (responseCommonBlocks.errors.indexOf(REQUEST_TIMEOUT) !== -1) {
-                    continue;
+                if (responseCommonBlocks.errors.indexOf(ERROR_NO_WORTHY_PEERS) !== -1) {
+                    break;
                 }
-                break;
+                continue;
             }
             const { isExist, peerAddress = null } = responseCommonBlocks.data;
             if (!isExist) {

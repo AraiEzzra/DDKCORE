@@ -1,3 +1,5 @@
+import { logger } from 'shared/util/logger';
+
 class MetaLength {
     readonly type: number;
     head: number;
@@ -24,13 +26,16 @@ export abstract class ModelType {
     protected abstract write(buffer: Buffer, value: any, offset: number): number;
 
     public create(data): Buffer {
+        try {
+            const length = this.getLength(data);
 
-        const length = this.getLength(data);
+            const buffer = Buffer.alloc(length);
 
-        const buffer = Buffer.alloc(length);
-
-        this.write(buffer, data, 0);
-        return buffer;
+            this.write(buffer, data, 0);
+            return buffer;
+        } catch (e) {
+            logger.error(`[ByteSerializer][create] error`, e);
+        }
     }
 
     protected writeTypeId(buffer: Buffer, offset: number): number {

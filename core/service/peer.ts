@@ -16,8 +16,10 @@ import { ActionTypes } from 'core/util/actionTypes';
 import { ResponseEntity } from 'shared/model/response';
 import { asyncTimeout } from 'shared/util/timer';
 import { diffArrayPeers, peerAddressToString } from 'core/util/peer';
+import { createBufferObject } from 'shared/util/byteSerializer';
+import { SchemaName } from 'shared/util/byteSerializer/config';
 
-const STEP_RECONNECT_DELAY = 300;
+const STEP_RECONNECT_DELAY = 600;
 
 const LOG_PREFIX = `[Service][Peer]`;
 export const ERROR_NOT_ENOUGH_PEERS = 'ERROR_NOT_ENOUGH_PEERS';
@@ -75,19 +77,20 @@ export class PeerService {
         PeerNetworkRepository.removeAll();
     }
 
-    broadcast(code: string, data: any, peerAddresses?: Array<PeerAddress>, checkQueue: boolean = true): void {
+    broadcast(code: string, data: Buffer, peerAddresses?: Array<PeerAddress>, checkQueue: boolean = true): void {
         if (checkQueue && SwapTransactionQueue.size && PeerNetworkRepository.count) {
             SwapTransactionQueue.process();
         }
-
+     
         let peers: Array<NetworkPeer> = [];
         if (peerAddresses && isArray(peerAddresses)) {
             peers = PeerNetworkRepository.getManyByAddress(peerAddresses);
         } else {
             peers = PeerNetworkRepository.getAll();
         }
-        logger.trace(`${LOG_PREFIX}[broadcast]: code ${code} data ${JSON.stringify(data)}`);
-        peers.forEach((peer: NetworkPeer) => peer.send(code, data));
+        const byteMessage = createBufferObject({ code, data }, SchemaName.Request);
+
+        peers.forEach((peer: NetworkPeer) => peer.send(byteMessage));
     }
 
     update(peerAddress: PeerAddress, headers: Headers): void {
@@ -150,7 +153,7 @@ export class PeerService {
         PeerNetworkRepository.getAll().forEach((peer: NetworkPeer) => {
             logger.trace(`[Service][Peer][ping] ${peer.peerAddress.ip}`);
 
-            peer.requestRPC(ActionTypes.PING, {})
+            peer.requestRPC(ActionTypes.PING, createBufferObject({}, SchemaName.Empty))
                 .then((response: ResponseEntity<{}>) => {
                     if (!response.success) {
                         logger.debug(`[Service][Peer][ping] pong was failed ${peer.peerAddress.ip}`);
@@ -166,7 +169,11 @@ export class PeerService {
             return;
         }
         const networkPeer = PeerNetworkRepository.get(requestPeerInfo.peerAddress);
-        networkPeer.responseRPC(ActionTypes.PONG, {}, requestPeerInfo.requestId);
+        networkPeer.responseRPC(
+            ActionTypes.PONG,
+            createBufferObject({}, SchemaName.Empty),
+            requestPeerInfo.requestId
+        );
     }
 
 }

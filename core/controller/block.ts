@@ -31,7 +31,6 @@ class BlockController extends BaseController {
 
     @MAIN(ActionTypes.BLOCK_RECEIVE)
     public async onReceiveBlock(message: BlockReceiveSchema | any): Promise<ResponseEntity<void>> {
-
         const peerVersion = PeerMemoryRepository.getVersion(message.peerAddress);
 
         if (!migrateVersionChecker.isAcceptable(peerVersion) && message.data.block) {

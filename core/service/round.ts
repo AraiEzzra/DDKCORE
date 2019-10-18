@@ -11,7 +11,7 @@ import DelegateRepository from 'core/repository/delegate';
 import DelegateService from 'core/service/delegate';
 import { logger } from 'shared/util/logger';
 import { ActionTypes } from 'core/util/actionTypes';
-import { getLastSlotNumberInRound } from 'core/util/round';
+import { getLastSlotNumberInRound, isSlotNumberInRound } from 'core/util/round';
 import { createKeyPairBySecret } from 'shared/util/crypto';
 import { getFirstSlotNumberInRound } from 'core/util/slot';
 import { IKeyPair } from 'shared/util/ed';
@@ -21,6 +21,7 @@ import FailService from 'core/service/fail';
 import { EVENT_TYPES } from 'shared/driver/socket/codes';
 import SocketMiddleware from 'core/api/middleware/socket';
 import { DEFAULT_FRACTION_DIGIST } from 'shared/util/common';
+import { timeService } from 'shared/util/timeServiceClient';
 
 const MAX_LATENESS_FORGE_TIME = 500;
 
@@ -64,7 +65,8 @@ class RoundService implements IRoundService {
     private createBlockGenerateTask(force: boolean): void {
         const mySlot = this.getMySlot();
         if (mySlot) {
-            let cellTime = SlotService.getSlotRealTime(mySlot.slot) - new Date().getTime();
+            let cellTime = SlotService.getSlotRealTime(mySlot.slot) - timeService.getTime();
+
             if (cellTime < 0 && cellTime + MAX_LATENESS_FORGE_TIME >= 0) {
                 cellTime = 0;
             }
@@ -86,7 +88,7 @@ class RoundService implements IRoundService {
 
     private createRoundFinishTask(force: boolean): void {
         const lastSlot = getLastSlotNumberInRound(RoundRepository.getCurrentRound());
-        let roundEndTime = SlotService.getSlotRealTime(lastSlot + 1) - new Date().getTime();
+        let roundEndTime = SlotService.getSlotRealTime(lastSlot + 1) - timeService.getTime();
 
         if (roundEndTime < 0) {
             logger.info(
@@ -102,7 +104,9 @@ class RoundService implements IRoundService {
     }
 
     public getMySlot(): Slot {
-        return RoundRepository.getCurrentRound().slots[this.keyPair.publicKey.toString('hex')];
+        return RoundRepository.getCurrentRound()
+            ? RoundRepository.getCurrentRound().slots[this.keyPair.publicKey.toString('hex')]
+            : null;
     }
 
     public processReward(round: Round, undo?: Boolean): void {
@@ -206,12 +210,14 @@ class RoundService implements IRoundService {
         let round = RoundRepository.getCurrentRound();
         if (!round) {
             return;
+        } else if (isSlotNumberInRound(round, slotNumber)) {
+            return;
         }
 
         const isForward = slotNumber > getLastSlotNumberInRound(round);
         const lastBlockSlotNumber = SlotService.getSlotNumber(BlockStorageService.getLast().createdAt);
 
-        while (!Object.values(round.slots).find(slot => slot.slot === slotNumber)) {
+        while (!isSlotNumberInRound(round, slotNumber)) {
             if (isForward) {
                 if (getLastSlotNumberInRound(round) > slotNumber) {
                     logger.error(
@@ -228,7 +234,7 @@ class RoundService implements IRoundService {
                         `to slot ${slotNumber}`
                     );
                     break;
-                } else if (Object.values(round.slots).find(slot => slot.slot === lastBlockSlotNumber)) {
+                } else if (isSlotNumberInRound(round, lastBlockSlotNumber)) {
                     logger.error(
                         `${this.logPrefix}[restoreToSlot] Impossible to backward round ` +
                         `last block is in current round`

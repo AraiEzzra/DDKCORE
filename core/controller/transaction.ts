@@ -37,7 +37,7 @@ class TransactionController extends BaseController {
         } else {
             transaction = response.data;
         }
-
+    
         if (!RoundService.getMySlot()) {
             SyncService.sendUnconfirmedTransaction(transaction);
             return;

@@ -110,7 +110,7 @@ class TransactionStakeService implements IAssetService<IAssetStake> {
             voteCount: trs.asset.startVoteCount,
             nextVoteMilestone: trs.createdAt,
             airdropReward: trs.asset.airdropReward.sponsors,
-            sourceTransactionId: trs.id
+            sourceTransactionId: Buffer.from(trs.id),
         }));
         if (isSponsorsExist(trs)) {
             sendAirdropReward(trs);
@@ -122,7 +122,7 @@ class TransactionStakeService implements IAssetService<IAssetStake> {
     undoUnconfirmed(trs: Transaction<IAssetStake>, sender: Account, senderOnly: boolean): void {
         sender.actualBalance += trs.asset.amount;
         for (let i = sender.stakes.length - 1; i > -1; i--) {
-            if (sender.stakes[i].sourceTransactionId === trs.id) {
+            if (sender.stakes[i].sourceTransactionId.toString() === trs.id) {
                 sender.stakes.splice(i, 1);
             }
         }

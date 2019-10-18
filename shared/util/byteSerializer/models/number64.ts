@@ -54,4 +54,5 @@ export class Number64 extends ModelType {
         return buffer.writeUInt32BE(parseInt(bin.slice(BODY_BINARY_ALLOCATION, BODY_BINARY_LENGTH), 2), offset);
     }
 }
+
 /* tslint:enable */

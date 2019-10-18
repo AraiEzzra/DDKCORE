@@ -11,7 +11,7 @@ import { REQUEST_TIMEOUT } from 'core/driver/socket';
 import config, { NODE_ENV_ENUM } from 'shared/config';
 import { ALLOWED_BAN_PEER_METHODS, ALLOWED_METHODS } from 'core/util/allowedPeerMethods';
 import { peerAddressToString } from 'core/util/peer';
-import { createBufferObject, deserialize } from 'shared/util/byteSerializer';
+import { createBufferObject } from 'shared/util/byteSerializer';
 import { SchemaName } from 'shared/util/byteSerializer/config';
 import { BusyWorkParser } from 'core/util/busyWorkParser';
 
@@ -63,21 +63,21 @@ export class NetworkPeer extends Peer {
         this._isBanned = false;
     }
 
-    send(code: string, data: any): void {
+    send(data: Buffer): void {
         this._socket.emit(
             PEER_SOCKET_CHANNELS.BROADCAST,
-            JSON.stringify({ code, data })
+            data
         );
     }
 
     sendFullHeaders(fullHeaders): void {
         this._socket.emit(
             PEER_SOCKET_CHANNELS.HEADERS,
-            JSON.stringify(fullHeaders)
+            createBufferObject(fullHeaders, SchemaName.FullHeaders),
         );
     }
 
-    async requestRPC<T>(code, data): Promise<ResponseEntity<T>> {
+    async requestRPC<T>(code, data: Buffer): Promise<ResponseEntity<T>> {
         const requestId = uuid4();
         const serializer = new SocketBufferRPC();
         return new Promise((resolve) => {
@@ -120,17 +120,18 @@ export class NetworkPeer extends Peer {
 
             this._socket.emit(
                 PEER_SOCKET_CHANNELS.SOCKET_RPC_REQUEST,
-                JSON.stringify({ code, data, requestId })
+                serializer.pack(code, data, requestId),
             );
 
             this._socket.on(PEER_SOCKET_CHANNELS.SOCKET_RPC_RESPONSE, responseListener);
         });
     }
 
-    responseRPC(code, data, requestId): void {
+    responseRPC(code, data: Buffer, requestId): void {
+        const serializer = new SocketBufferRPC();
         this._socket.emit(
             PEER_SOCKET_CHANNELS.SOCKET_RPC_RESPONSE,
-            JSON.stringify({ code, data, requestId })
+            serializer.pack(code, data, requestId)
         );
     }
 
@@ -147,6 +148,7 @@ export class NetworkPeer extends Peer {
     private _onBroadcast(str: Buffer | string, peerAddress: PeerAddress): void {
 
         const migrateParser = new BusyWorkParser();
+
         const response = migrateParser.parseBroadcast(str);
 
         if (!ALLOWED_METHODS.has(response.code) && config.NODE_ENV_IN !== NODE_ENV_ENUM.TEST) {

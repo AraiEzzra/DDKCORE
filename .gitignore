@@ -22,3 +22,6 @@ dapps/
 .node-gyp/
 /client.js
 /v8-compile-cache-0/
+.npmrc
+npm-global
+.cache
