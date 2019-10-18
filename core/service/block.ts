@@ -86,7 +86,7 @@ class BlockService implements IBlockService {
         + BUFFER.LENGTH.UINT32 // transactionCount
         + BUFFER.LENGTH.INT64 // amount
         + BUFFER.LENGTH.INT64 // fee
-    ;
+        ;
 
     public async generateBlock(keyPair: IKeyPair, timestamp: number): Promise<ResponseEntity> {
         logger.info(`[Service][Block][generate] timestamp ${timestamp}`);
@@ -197,19 +197,10 @@ class BlockService implements IBlockService {
         this.verifyBlockSlotNumber(block, lastBlock, errors);
 
         const response = new ResponseEntity({ errors: errors.reverse() });
-
-        if (response.success) {
-            logger.info(
-                `Verify->verifyBlock succeeded for block ${block.id} at height ${
-                    block.height
-                    }.`
-            );
-        } else {
+        if (!response.success) {
             logger.error(
-                `Verify->verifyBlock failed for block ${block.id} at height ${
-                    block.height
-                    }.`,
-                JSON.stringify(response.errors)
+                `[Service][Block][verifyBlock] failed for block ${block.id} at height ${block.height}`,
+                JSON.stringify(response.errors),
             );
         }
         return response;
