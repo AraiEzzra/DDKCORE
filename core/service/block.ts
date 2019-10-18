@@ -705,14 +705,14 @@ class BlockService implements IBlockService {
             });
         }
 
-        // for (const transaction of block.transactions) {
-        //     const validateResult = TransactionService.validate(transaction);
-        //     if (!validateResult.success) {
-        //         return new ResponseEntity<null>({
-        //             errors: [`Transaction '${transaction.id}' is invalid`],
-        //         });
-        //     }
-        // }
+        for (const transaction of block.transactions) {
+            const validateResult = TransactionService.validate(transaction);
+            if (!validateResult.success) {
+                return new ResponseEntity<null>({
+                    errors: [`Transaction '${transaction.id}' is invalid`],
+                });
+            }
+        }
 
         if (!validateTransactionsSorting(block.transactions)) {
             return new ResponseEntity<null>({
