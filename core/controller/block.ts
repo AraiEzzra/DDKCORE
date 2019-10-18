@@ -22,7 +22,7 @@ interface BlockGenerateRequest {
     timestamp: number;
 }
 
-type BlockSchema = {
+type BlockReceiveSchema = {
     data: SerializedBlock,
     peerAddress: PeerAddress
 };
@@ -30,20 +30,20 @@ type BlockSchema = {
 class BlockController extends BaseController {
 
     @MAIN(ActionTypes.BLOCK_RECEIVE)
-    public async onReceiveBlock(response: BlockSchema | any): Promise<ResponseEntity<void>> {
+    public async onReceiveBlock(message: BlockReceiveSchema | any): Promise<ResponseEntity<void>> {
 
-        const peerVersion = PeerMemoryRepository.getVersion(response.peerAddress);
+        const peerVersion = PeerMemoryRepository.getVersion(message.peerAddress);
 
-        if (!migrateVersionChecker.isAcceptable(peerVersion) && response.data.block) {
-            response.data = Block.deserialize(response.data.block);
+        if (!migrateVersionChecker.isAcceptable(peerVersion) && message.data.block) {
+            message.data = Block.deserialize(message.data.block);
         }
 
-        const receivedBlock = new Block(response.data);
+        const receivedBlock = new Block(message.data);
         const validateResponse = BlockService.validate(receivedBlock);
         if (!validateResponse.success) {
             return new ResponseEntity<void>({
                 errors: [
-                    `[Controller][Block][onNewReceiveBlock] Block not valid: ${validateResponse.errors}`
+                    `[Controller][Block][onReceiveBlock] Block not valid: ${validateResponse.errors}`
                 ]
             });
         }
@@ -54,7 +54,7 @@ class BlockController extends BaseController {
         if (!validateReceivedBlockResponse.success) {
             return new ResponseEntity<void>({
                 errors: [
-                    '[Controller][Block][onNewReceiveBlock] Received block not valid: ' +
+                    '[Controller][Block][onReceiveBlock] Received block not valid: ' +
                     `${validateReceivedBlockResponse.errors}`
                 ],
             });
