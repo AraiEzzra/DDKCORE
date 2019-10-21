@@ -86,7 +86,7 @@ class BlockService implements IBlockService {
         + BUFFER.LENGTH.UINT32 // transactionCount
         + BUFFER.LENGTH.INT64 // amount
         + BUFFER.LENGTH.INT64 // fee
-    ;
+        ;
 
     public async generateBlock(keyPair: IKeyPair, timestamp: number): Promise<ResponseEntity> {
         logger.info(`[Service][Block][generate] timestamp ${timestamp}`);
@@ -595,8 +595,8 @@ class BlockService implements IBlockService {
     }
 
     public async deleteLastBlock(): Promise<ResponseEntity<Block>> {
-        let lastBlock = BlockStorageService.getLast();
-        logger.info(`Deleting last block: ${lastBlock.id}, height: ${lastBlock.height}`);
+        const lastBlock = BlockStorageService.getLast();
+        logger.info(`[Service][Block][deleteLastBlock] ${lastBlock.id}, height: ${lastBlock.height}`);
         if (lastBlock.height === 1) {
             return new ResponseEntity<Block>({ errors: ['Cannot delete genesis block'] });
         }
@@ -607,13 +607,16 @@ class BlockService implements IBlockService {
             return new ResponseEntity({ errors: deleteResult.errors });
         }
 
+        RoundService.restoreToSlot(SlotService.getSlotNumber(lastBlock.createdAt));
         const currentRound = RoundRepository.getCurrentRound();
         currentRound.slots[lastBlock.generatorPublicKey].isForged = false;
 
         const newLastBlock = BlockStorageService.popLast();
-        const round = RoundRepository.getCurrentRound();
         const prevRound = RoundRepository.getPrevRound();
-        BlockHistoryRepository.addEvent(lastBlock, { action: BlockLifecycle.UNDO, state: { round, prevRound } });
+        BlockHistoryRepository.addEvent(
+            lastBlock,
+            { action: BlockLifecycle.UNDO, state: { round: currentRound, prevRound } },
+        );
 
         const reversedTransactions = [...lastBlock.transactions].reverse();
         for (const transaction of reversedTransactions) {
@@ -700,6 +703,15 @@ class BlockService implements IBlockService {
             return new ResponseEntity<null>({
                 errors: validator.getLastErrors().map(err => err.message),
             });
+        }
+
+        for (const transaction of block.transactions) {
+            const validateResult = TransactionService.validate(transaction);
+            if (!validateResult.success) {
+                return new ResponseEntity<null>({
+                    errors: [`Transaction '${transaction.id}' is invalid`],
+                });
+            }
         }
 
         if (!validateTransactionsSorting(block.transactions)) {

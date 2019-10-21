@@ -116,9 +116,7 @@ class RoundService implements IRoundService {
         }
         const missedDelegates = Object.entries(round.slots)
             .filter(([, slot]) => !slot.isForged)
-            .map(([publicKey]) => {
-                return DelegateRepository.getDelegate(publicKey);
-            });
+            .map(([publicKey]) => DelegateRepository.getDelegate(publicKey));
 
         const lastBlock = BlockStorageService.getLast();
         const blocks = BlockRepository.getMany(forgedBlocksCount, lastBlock.height - forgedBlocksCount);
@@ -127,19 +125,19 @@ class RoundService implements IRoundService {
 
         forgedDelegates.forEach(delegate => {
             delegate.account.actualBalance += (undo ? -fee : fee);
-            delegate.forgedBlocks++;
+            delegate.forgedBlocks += (undo ? -1 : 1);
             delegate.approval = Number(getWholePercent(
                 delegate.forgedBlocks,
                 delegate.forgedBlocks + delegate.missedBlocks,
             ).toFixed(DEFAULT_FRACTION_DIGIST));
 
             delegate.account.addHistory(undo
-                ? AccountChangeAction.DISTRIBUTE_FEE_UNDO :
-                AccountChangeAction.DISTRIBUTE_FEE, null
+                ? AccountChangeAction.DISTRIBUTE_FEE_UNDO
+                : AccountChangeAction.DISTRIBUTE_FEE, null
             );
         });
         missedDelegates.forEach(delegate => {
-            delegate.missedBlocks++;
+            delegate.missedBlocks += (undo ? -1 : 1);
             delegate.approval = Number(getWholePercent(
                 delegate.forgedBlocks,
                 delegate.forgedBlocks + delegate.missedBlocks,
@@ -169,7 +167,7 @@ class RoundService implements IRoundService {
         const slots = SlotService.generateSlots(lastBlockId, delegates, firstSlotNumber);
 
         const round = new Round({ slots, lastBlockId: lastBlockId });
-        logger.debug('[Round][Service][generate]', JSON.stringify(round));
+        logger.trace('[Round][Service][generate]', JSON.stringify(round));
 
         if (!System.synchronization) {
             SocketMiddleware.emitEvent<Array<ActiveDelegate>>(

@@ -192,7 +192,9 @@ export class SyncService implements ISyncService {
         }
 
         const newLastBlock = BlockRepository.getLastBlock();
-        RoundService.restoreToSlot(SlotService.getSlotNumber(newLastBlock.createdAt));
+        if (newLastBlock.height !== 1) {
+            RoundService.restoreToSlot(SlotService.getSlotNumber(newLastBlock.createdAt));
+        }
         return new ResponseEntity();
     }
 

@@ -1,0 +1,81 @@
+import { Block } from 'ddk.registry/dist/model/common/block';
+import { Transaction } from 'ddk.registry/dist/model/common/transaction';
+import { AssetSend } from 'ddk.registry/dist/model/common/transaction/asset/send';
+
+export const blocks = [
+    new Block({
+        id: '7cb34221f25408e2b47b5377125dcbe745ff46a4dac01442127f4aa1456da1cf',
+        version: 1,
+        createdAt: 119561300,
+        height: 2,
+        previousBlockId: 'cbb9449abb9672d33fa2eb200b1c8b03db7c6572dfb6e59dc334c0ab82b63ab0',
+        transactionCount: 1,
+        amount: 100000000,
+        fee: 10000,
+        payloadHash: '313a23b6323211d6e58831dac99ad3ccdc7549d18eb61d3e1e1be132a1f0e778',
+        generatorPublicKey: '137b9f0f839ab3ecd2146bfecd64d31e127d79431211e352bedfeba5fd61a57a',
+        signature: '9ac7c340d647c14646bc1fd4ed24730df2ef171b9d8c61dcb5f3cb796be846c88e15d6b61a77128d712acca1b0347fbd9e9c2087d7bda7d2452d20e12fc79b04',
+        transactions: [
+            new Transaction<AssetSend>({
+                id: '313a23b6323211d6e58831dac99ad3ccdc7549d18eb61d3e1e1be132a1f0e778',
+                type: 10,
+                senderPublicKey: 'f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2',
+                signature: '94a94d5ec9bcd588a868037836768ca7b6be09ed7ab77fca4864ad19390abb310d2283472b3e9802e3ccbfa4396fafa5e21e5c867cfe4e72625a2bb40ee24e09',
+                createdAt: 94676700,
+                asset: new AssetSend({
+                    recipientAddress: BigInt('4957046151241062484'),
+                    amount: 100000000,
+                }),
+                salt: '894cdfa99bc38ca098d38d305c811496',
+                fee: 10000,
+                blockId: '7cb34221f25408e2b47b5377125dcbe745ff46a4dac01442127f4aa1456da1cf',
+            }),
+        ],
+        relay: 100,
+    }),
+    new Block({
+        id: '7ad34bd670afe000731dd8659c3251d73d9393e7f9d65ccd8a5babdc3f7dcb90',
+        version: 1,
+        createdAt: 119561320,
+        height: 3,
+        previousBlockId: '7cb34221f25408e2b47b5377125dcbe745ff46a4dac01442127f4aa1456da1cf',
+        transactionCount: 1,
+        amount: 900000000,
+        fee: 90000,
+        payloadHash: '14dc1bab7b107320deacf5f13c6531cf6845db99cc0b1ed8202041a20aa175c3',
+        generatorPublicKey: '83cb3d8641c8e73735cc1b70c915602ffcb6e5a68f14a71056511699050a1a05',
+        signature: 'c9b55d4910908bf875c7831b9c3d7a80dcec23b53a32c7ba6c828327f5d13131e579cb36a3902ab0b59152381d169d01a0cb088b7758eae66dda0ef0069a370b',
+        transactions: [
+            new Transaction<AssetSend>({
+                id: '14dc1bab7b107320deacf5f13c6531cf6845db99cc0b1ed8202041a20aa175c3',
+                type: 10,
+                senderPublicKey: 'f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2',
+                signature: 'b21f071e97bc943e937f7addfbce34604db378aba380a0b1492da1338875c2d3ceaab30090dbc9b6889dbe09e5d72d95fec165973fce7106c29b3a8d0f8b830c',
+                createdAt: 94677000,
+                asset: new AssetSend({
+                    recipientAddress: BigInt('4957046151241062483'),
+                    amount: 900000000,
+                }),
+                salt: '894cdfa99bc38ca098d38d305c811496',
+                fee: 90000,
+                blockId: '7ad34bd670afe000731dd8659c3251d73d9393e7f9d65ccd8a5babdc3f7dcb90',
+            }),
+        ],
+        relay: 100,
+    }),
+    new Block({
+        id: '875408fe9279ca9fc5fe3862cf736c3ebb8fc84079ef46021c4109c9f19ac844',
+        version: 1,
+        createdAt: 119561340,
+        height: 4,
+        previousBlockId: '7ad34bd670afe000731dd8659c3251d73d9393e7f9d65ccd8a5babdc3f7dcb90',
+        transactionCount: 0,
+        amount: 0,
+        fee: 0,
+        payloadHash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+        generatorPublicKey: '137b9f0f839ab3ecd2146bfecd64d31e127d79431211e352bedfeba5fd61a57a',
+        signature: '7f3ef8f834028cb34dcac45c6ae7403eab580ed1f8b7a02a4ea07714f8ba78d052f652bd1fedb9c9c31b068e198171d23d9757ba60f025fb88e4616ffcd6150e',
+        transactions: [],
+        relay: 100,
+    }),
+];
