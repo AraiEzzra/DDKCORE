@@ -1,11 +1,16 @@
 import { SchemaName } from 'shared/util/byteSerializer/config';
 import { ModelType } from 'shared/util/byteSerializer/models/modelType';
 import { BufferTypes } from 'shared/util/byteSerializer/types';
+import { logger } from 'shared/util/logger';
 
 export function deserialize(buffer, offset = 0): any {
-    const dynamicBuffer = new BufferTypes.Buffer();
-    const data = dynamicBuffer.read(buffer, offset);
-    return data.value;
+    try {
+        const dynamicBuffer = new BufferTypes.Buffer();
+        const data = dynamicBuffer.read(buffer, offset);
+        return data.value;
+    } catch (e) {
+        logger.error(`[ByteSerializer][deserialize] error ${e.stack}`);
+    }
 }
 
 export function createBufferObject(data, schema: SchemaName): Buffer {
