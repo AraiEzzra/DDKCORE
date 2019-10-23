@@ -40,14 +40,18 @@ const processMainQueue = async (): Promise<void> => {
     const event: Event = MAIN_QUEUE[MAIN_QUEUE.length - 1];
 
     if (mainQueueMethods.has(event.topicName)) {
-        const response: ResponseEntity<void> = await mainQueueMethods.get(event.topicName)(event.data);
-        if (response.success) {
-            logger.debug(`[processMainQueue] Main task ${event.topicName} completed successfully`);
-        } else {
-            const errorMessage = response.errors.join('. ');
-            if (!errorMessage.includes('Block already processed')) {
-                logger.debug(`[processMainQueue] Main task ${event.topicName} failed: ${errorMessage}`);
+        try {
+            const response: ResponseEntity<void> = await mainQueueMethods.get(event.topicName)(event.data);
+            if (response.success) {
+                logger.debug(`[processMainQueue] Main task ${event.topicName} completed successfully`);
+            } else {
+                const errorMessage = response.errors.join('. ');
+                if (!errorMessage.includes('Block already processed')) {
+                    logger.debug(`[processMainQueue] Main task ${event.topicName} failed: ${errorMessage}`);
+                }
             }
+        } catch (e) {
+            logger.error(`[Controller][Index][processMainQueue] Main task ${event.topicName} error ${e.stack}`);
         }
     }
 
@@ -107,7 +111,11 @@ export const initControllers = () => {
             });
         } else {
             setImmediate(() => {
-                onMethods.get(topicName)(data);
+                try {
+                    onMethods.get(topicName)(data);
+                } catch (e) {
+                    logger.error(`[Controller][Index][processQueue] task ON ${topicName} error ${e.stack}`);
+                }
             });
         }
     });
