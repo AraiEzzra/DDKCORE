@@ -18,9 +18,6 @@ import { ResponseEntity } from 'shared/model/response';
 import TransactionPool from 'core/service/transactionPool';
 import TransactionQueue from 'core/service/transactionQueue';
 import { peerAddressToString } from 'core/util/peer';
-import { migrateVersionChecker } from 'core/util/migrateVersionChecker';
-import PeerMemoryRepository from 'core/repository/peer/peerMemory';
-import { Block, SerializedBlock } from 'shared/model/block';
 
 type CheckCommonBlocksRequest = {
     data: BlockData,
@@ -130,16 +127,7 @@ export class SyncController extends BaseController {
                 continue;
             }
 
-            // TODO delete after migration
-            const peerVersion = PeerMemoryRepository.getVersion(peerAddress);
-            let blocks = [];
-            if (!migrateVersionChecker.isAcceptable(peerVersion)) {
-                blocks = responseBlocks.data.map((block: SerializedBlock) => Block.deserialize(block));
-            } else {
-                blocks = responseBlocks.data;
-            }
-
-            const saveRequestedBlocksResponse = await SyncService.saveRequestedBlocks(blocks);
+            const saveRequestedBlocksResponse = await SyncService.saveRequestedBlocks(responseBlocks.data);
             if (!saveRequestedBlocksResponse.success) {
                 logger.error(
                     `${LOG_PREFIX}[startSyncBlocks][loadStatus]: ${saveRequestedBlocksResponse.errors.join('. ')}`

@@ -14,8 +14,6 @@ import { CreateTransactionParams } from 'core/controller/types';
 import config from 'shared/config';
 import { ActionTypes } from 'core/util/actionTypes';
 import { PeerAddress } from 'shared/model/types';
-import PeerMemoryRepository from 'core/repository/peer/peerMemory';
-import { migrateVersionChecker } from 'core/util/migrateVersionChecker';
 import RoundService from 'core/service/round';
 import SyncService from 'core/service/sync';
 
@@ -27,17 +25,10 @@ type TransactionReceiveData = {
 class TransactionController extends BaseController {
 
     @ON(ActionTypes.TRANSACTION_RECEIVE)
-    public onReceiveTransaction(response: TransactionReceiveData | any): void {
-
-        const peerVersion = PeerMemoryRepository.getVersion(response.peerAddress);
-        let transaction;
-
-        if (!migrateVersionChecker.isAcceptable(peerVersion) && response.data.trs) {
-            transaction = SharedTransactionRepo.deserialize(response.data.trs);
-        } else {
-            transaction = response.data;
-        }
-    
+    public onReceiveTransaction(response: TransactionReceiveData): void {
+        
+        const transaction = response.data;
+        
         if (!RoundService.getMySlot()) {
             SyncService.sendUnconfirmedTransaction(transaction);
             return;

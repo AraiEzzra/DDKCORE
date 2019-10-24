@@ -1,5 +1,5 @@
 import { ResponseEntity } from 'shared/model/response';
-import { Block, BlockModel, SerializedBlock } from 'shared/model/block';
+import { Block, BlockModel } from 'shared/model/block';
 import BlockService from 'core/service/block';
 import BlockRepository from 'core/repository/block/';
 import { MAIN } from 'core/util/decorator';
@@ -14,8 +14,7 @@ import { ActionTypes } from 'core/util/actionTypes';
 import { IKeyPair } from 'shared/util/ed';
 import TransactionQueue from 'core/service/transactionQueue';
 import { PeerAddress } from 'shared/model/types';
-import PeerMemoryRepository from 'core/repository/peer/peerMemory';
-import { migrateVersionChecker } from 'core/util/migrateVersionChecker';
+import { BlockSchema } from 'ddk.registry/dist/model/common/block';
 
 interface BlockGenerateRequest {
     keyPair: IKeyPair;
@@ -23,22 +22,18 @@ interface BlockGenerateRequest {
 }
 
 type BlockReceiveSchema = {
-    data: SerializedBlock,
+    data: BlockSchema,
     peerAddress: PeerAddress
 };
 
 class BlockController extends BaseController {
 
     @MAIN(ActionTypes.BLOCK_RECEIVE)
-    public async onReceiveBlock(message: BlockReceiveSchema | any): Promise<ResponseEntity<void>> {
-        const peerVersion = PeerMemoryRepository.getVersion(message.peerAddress);
-
-        if (!migrateVersionChecker.isAcceptable(peerVersion) && message.data.block) {
-            message.data = Block.deserialize(message.data.block);
-        }
+    public async onReceiveBlock(message: BlockReceiveSchema): Promise<ResponseEntity<void>> {
 
         const receivedBlock = new Block(message.data);
         const validateResponse = BlockService.validate(receivedBlock);
+
         if (!validateResponse.success) {
             return new ResponseEntity<void>({
                 errors: [

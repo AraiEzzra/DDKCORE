@@ -4,26 +4,14 @@ import { createBufferObject, createBufferUtf8, deserialize } from 'shared/util/b
 
 const utf8 = new Utf8();
 
-export class SocketResponse {
+type SocketResponse = {
     code: string;
     data: any;
+};
 
-    constructor(responseJSON: string) {
-        const response: SocketResponse = JSON.parse(responseJSON);
-        this.code = response.code;
-        this.data = response.data;
-    }
-}
-
-export class SocketResponseRPC extends SocketResponse {
+type SocketResponseRPC = SocketResponse & {
     requestId: string;
-
-    constructor(responseJSON: string) {
-        super(responseJSON);
-        const response: SocketResponseRPC = JSON.parse(responseJSON);
-        this.requestId = response.requestId;
-    }
-}
+};
 
 export class SocketBufferRPC {
     static instance: SocketBufferRPC;

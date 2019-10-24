@@ -3,7 +3,7 @@ import { ModelType } from 'shared/util/byteSerializer/models/modelType';
 import { BufferTypes } from 'shared/util/byteSerializer/types';
 import { logger } from 'shared/util/logger';
 
-export function deserialize(buffer, offset = 0): any {
+export function deserialize(buffer: Buffer, offset = 0): any {
     try {
         const dynamicBuffer = new BufferTypes.Buffer();
         const data = dynamicBuffer.read(buffer, offset);

@@ -1,12 +1,13 @@
 import BlockRepo from 'core/repository/block';
 import BlockController from 'core/controller/block';
 import { expect } from 'chai';
+import { Block } from 'ddk.registry/dist/model/common/block';
 
 describe('ON RECEIVE BLOCK TEST', () => {
 
     it('New block without transactions', async () => {
 
-        const EXPECTED = {
+        const EXPECTED = new Block({
             id: 'bf230d87d2c346a598b6547e7dcbea3d52baac4dea6b1e8254ed87950c991ca4',
             version: 1,
             height: 2,
@@ -21,9 +22,12 @@ describe('ON RECEIVE BLOCK TEST', () => {
             transactions: [],
             createdAt: 106350850,
             previousBlockId: 'cbb9449abb9672d33fa2eb200b1c8b03db7c6572dfb6e59dc334c0ab82b63ab0',
-        };
+        });
 
-        const response = await BlockController.onReceiveBlock({ data: { block: EXPECTED } });
+        const response = await BlockController.onReceiveBlock({
+            data: EXPECTED,
+            peerAddress: { ip: '10.10.0.5', port: 7007 }
+        });
 
         const lastBlock = await BlockRepo.getLastBlock();
 

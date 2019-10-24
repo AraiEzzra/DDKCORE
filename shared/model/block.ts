@@ -6,6 +6,7 @@ import { SchemaName } from 'shared/util/byteSerializer/config';
 import { createBufferArray, createBufferObject } from 'shared/util/byteSerializer';
 import { BufferTypes } from 'shared/util/byteSerializer/types';
 import { serializeAssetTransaction } from 'shared/util/transaction';
+import { BlockSchema } from 'ddk.registry/dist/model/common/block';
 
 export class BlockModel {
     id?: string | null = null;
@@ -22,7 +23,7 @@ export class BlockModel {
     relay?: number;
     transactions: Array<Transaction<object>>;
 
-    constructor(data: BlockModel) {
+    constructor(data: BlockModel | BlockSchema) {
         this.relay = 0;
         this.transactions = [];
         Object.assign(this, data);
