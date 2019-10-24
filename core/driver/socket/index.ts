@@ -10,8 +10,7 @@ import { ActionTypes } from 'core/util/actionTypes';
 import { SerializedFullHeaders } from 'shared/model/Peer/fullHeaders';
 import { PEER_SOCKET_EVENTS } from 'core/driver/socket/socketsTypes';
 import { peerAddressToString } from 'core/util/peer';
-import { BusyWorkParser } from 'core/util/busyWorkParser';
-import { createBufferObject } from 'shared/util/byteSerializer';
+import { createBufferObject, deserialize } from 'shared/util/byteSerializer';
 import { SchemaName } from 'shared/util/byteSerializer/config';
 
 export const REQUEST_TIMEOUT = '408 Request Timeout';
@@ -62,7 +61,7 @@ export class Socket {
             logger.warn(`[SOCKET][onServerConnect] too many connections, sorry ${ip}`);
             socket.disconnect(true);
         }
-        socket.on(PEER_SOCKET_EVENTS.HEADERS, (response: Buffer | string) => {
+        socket.on(PEER_SOCKET_EVENTS.HEADERS, (response: Buffer) => {
                 Socket.instance.onHeadersReceive(
                     response, {
                         ip,
@@ -86,16 +85,15 @@ export class Socket {
             logger.debug(`[SOCKET][connectPeer] connected to ${peerAddressToString(peerAddress)}`);
 
             ws.emit(PEER_SOCKET_EVENTS.HEADERS, createBufferObject(headers, SchemaName.FullHeaders));
-            ws.on(PEER_SOCKET_EVENTS.HEADERS, (response: Buffer | string) => {
+            ws.on(PEER_SOCKET_EVENTS.HEADERS, (response: Buffer) => {
                 Socket.instance.onHeadersReceive(response, peerAddress, ws, PEER_SOCKET_TYPE.SERVER);
             });
         });
     }
 
-    onHeadersReceive(response: Buffer | string, peerAddress: PeerAddress, socket, type: PEER_SOCKET_TYPE) {
+    onHeadersReceive(response: Buffer, peerAddress: PeerAddress, socket, type: PEER_SOCKET_TYPE) {
         
-        const migrateParser = new BusyWorkParser();
-        const peerHeaders = migrateParser.parseJsonByte(response);
+        const peerHeaders = deserialize(response);
 
         logger.debug(`[Driver][Socket][onHeadersReceive] ${type} ${peerAddress.ip}, ` +
             `broadhash: ${peerHeaders.broadhash}, height: ${peerHeaders.height}, ` +

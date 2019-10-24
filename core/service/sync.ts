@@ -37,7 +37,7 @@ export interface ISyncService {
 
     checkCommonBlock(lastBlock: BlockData): Promise<ResponseEntity<{ isExist: boolean, peer?: MemoryPeer }>>;
 
-    requestBlocks(lastBlock: Block, peer: PeerAddress): Promise<ResponseEntity<Array<SerializedBlock | BlockModel>>>;
+    requestBlocks(lastBlock: Block, peer: PeerAddress): Promise<ResponseEntity<Array<BlockModel>>>;
 
     sendBlocks(data: BlockLimit, requestFromPeer: RequestPeerInfo): void;
 
@@ -198,7 +198,7 @@ export class SyncService implements ISyncService {
         return new ResponseEntity();
     }
 
-    async requestBlocks(lastBlock, peerAddress): Promise<ResponseEntity<Array<SerializedBlock | BlockModel>>> {
+    async requestBlocks(lastBlock, peerAddress): Promise<ResponseEntity<Array<BlockModel>>> {
         if (!PeerNetworkRepository.has(peerAddress)) {
             return new ResponseEntity({ errors: [] });
         }
