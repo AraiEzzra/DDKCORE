@@ -6,9 +6,9 @@ import {
     IAirdropAsset, TransactionModel, Stake,
 } from 'shared/model/transaction';
 import { ResponseEntity } from 'shared/model/response';
-import { Account} from 'shared/model/account';
+import { Account } from 'shared/model/account';
 import AccountRepo from 'core/repository/account';
-import { TOTAL_PERCENTAGE } from 'core/util/const';
+import { MONEY_FACTOR, TOTAL_PERCENTAGE } from 'core/util/const';
 import config from 'shared/config';
 import BUFFER from 'core/util/buffer';
 import BlockRepository from 'core/repository/block';
@@ -22,6 +22,10 @@ import {
     verifyAirdrop,
     isSponsorsExist
 } from 'core/util/reward';
+import FailService from 'core/service/fail';
+import BlockStorageService from 'core/service/blockStorage';
+
+const MIN_STAKE_AMOUNT = MONEY_FACTOR;
 
 class TransactionStakeService implements IAssetService<IAssetStake> {
 
@@ -94,6 +98,14 @@ class TransactionStakeService implements IAssetService<IAssetStake> {
         if (!airdropCheck.success) {
             errors = airdropCheck.errors;
         }
+
+        if (trs.asset.amount < MIN_STAKE_AMOUNT || trs.asset.amount % MONEY_FACTOR !== 0) {
+            if (BlockStorageService.getLast().height >
+                config.CONSTANTS.START_FEATURE_BLOCK.VERIFY_STAKE_TRANSACTION_BLOCK_HEIGHT) {
+                errors.push(`Stake amount ${trs.asset.amount / MONEY_FACTOR} must be a unsigned integer`);
+            }
+        }
+
         return new ResponseEntity<void>({ errors });
     }
 
