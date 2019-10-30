@@ -83,6 +83,7 @@ export type IConstants = {
         VOTE_WITH_ACTIVE_STAKE: number;
         FIX_TRANSACTION_IN_THE_PAST_BLOCK_HEIGHT: number;
         FRAUD_OPERATION_BLACKLIST_BLOCK_HEIGHT: number;
+        VERIFY_STAKE_TRANSACTION_BLOCK_HEIGHT: number;
     };
     CORE_REQUEST_TIMEOUT: number;
 };

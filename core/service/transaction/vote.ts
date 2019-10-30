@@ -18,6 +18,7 @@ import {
 import { TOTAL_PERCENTAGE } from 'core/util/const';
 import { PublicKey } from 'shared/model/types';
 import BlockRepository from 'core/repository/block';
+import FailService from 'core/service/fail';
 
 class TransactionVoteService implements IAssetService<IAssetVote> {
 
@@ -128,6 +129,10 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
 
         const isDownVote: boolean = trs.asset.votes[0][0] === '-';
         const totals: { reward: number, unstake: number } = calculateTotalRewardAndUnstake(trs, sender, isDownVote);
+
+        if (FailService.isFailedVoteReward(trs)) {
+            trs.asset.reward = totals.reward;
+        }
 
         if (totals.reward !== trs.asset.reward) {
             errors.push(
