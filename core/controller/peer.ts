@@ -45,12 +45,12 @@ export class PeerController extends BaseController {
     @ON(ActionTypes.EMIT_REBOOT_PEERS_CONNECTIONS)
     async rebootPeersConnections(): Promise<void> {
         const pickedPeers = await SyncService.pickNewPeers();
-
+        console.log('\x1b[34m', 'REBOOT');
         PeerNetworkRepository.clearBanList();
-
+console.log('pickedPeers', pickedPeers)
         const filteredPeers = PeerService.filterPeers(pickedPeers);
         const currentPeers = PeerMemoryRepository.getPeerAddresses();
-
+console.log('filteredPeers', filteredPeers)
         let sortedPeers: Array<PeerAddress & { peerCount?: number }> = filteredPeers
             .sort(sortByKey('peerCount', 'ASC'));
 

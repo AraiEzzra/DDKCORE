@@ -12,7 +12,7 @@ import config from 'shared/config';
 import BlockPGRepository from 'core/repository/block/pg';
 import BlockStorageService from 'core/service/blockStorage';
 import BlockService from 'core/service/block';
-import SocketDriver from 'core/driver/socket/index';
+import SocketDriver from 'core/driver/socket/socketDriver';
 import { logger } from 'shared/util/logger';
 import { socketRPCServer } from 'core/api/server';
 import { getAddressByPublicKey } from 'shared/util/account';

@@ -74,7 +74,7 @@ class LoggerClass {
         });
 
         this.consoleTransport = new transports.Console({
-            level: config.LOGGER.LEVEL || 'info',
+            level: 'trace' || 'info',
             timestamp: this.timestamp
         });
     }

@@ -1,26 +1,25 @@
-import uuid4 from 'uuid/v4';
-import { PEER_SOCKET_CHANNELS, PEER_SOCKET_EVENTS } from 'core/driver/socket/socketsTypes';
+import { EVENT_CORE_TYPES } from 'core/driver/socket/socketsTypes';
 import { ResponseEntity } from 'shared/model/response';
 import { logger } from 'shared/util/logger';
-import { SocketBufferRPC } from 'shared/model/socket';
 import { PeerAddress } from 'shared/model/types';
 import { messageON } from 'shared/util/bus';
-import { ActionTypes } from 'core/util/actionTypes';
 import { Peer, SerializedPeer } from 'shared/model/Peer/index';
-import { REQUEST_TIMEOUT } from 'core/driver/socket';
 import config, { NODE_ENV_ENUM } from 'shared/config';
 import { ALLOWED_BAN_PEER_METHODS, ALLOWED_METHODS } from 'core/util/allowedPeerMethods';
 import { peerAddressToString } from 'core/util/peer';
-import { createBufferObject, deserialize } from 'shared/util/byteSerializer';
+import { createBufferObject } from 'shared/util/byteSerializer';
 import { SchemaName } from 'shared/util/byteSerializer/config';
+import { SocketModel } from 'shared/model/socketModel';
+import { Message, MessageType } from 'eska-common';
+import { ActionTypes } from 'core/util/actionTypes';
 
 type SerializedNetworkPeer = SerializedPeer & {
-    socket: SocketIO.Socket | SocketIOClient.Socket;
+    socket: SocketModel;
     isBanned: boolean;
 };
 
 export class NetworkPeer extends Peer {
-    private _socket: SocketIO.Socket | SocketIOClient.Socket;
+    private _socket: SocketModel;
     private _isBanned: boolean;
 
     constructor(data: SerializedNetworkPeer) {
@@ -30,18 +29,15 @@ export class NetworkPeer extends Peer {
         this._isBanned = data.isBanned;
 
         this._socket = data.socket;
-        this._socket.on(PEER_SOCKET_CHANNELS.SOCKET_RPC_REQUEST, (response: Buffer) => {
-            this._onRPCRequest(response);
-        });
-        this._socket.on(PEER_SOCKET_CHANNELS.BROADCAST, (response: Buffer) => {
-            this._onBroadcast(response, this.peerAddress);
-        });
 
-        this._socket.on(PEER_SOCKET_EVENTS.DISCONNECT, (reason) => {
-            logger.debug(`[NetworkPeer][disconnect]: ${reason}`);
-            this._socket.removeAllListeners();
-            if (reason !== 'client namespace disconnect') {
-                messageON(ActionTypes.REMOVE_PEER, data.peerAddress);
+        this._socket.onCloseFn = this._onClose(this.peerAddress);
+
+        this._socket.subscribe(EVENT_CORE_TYPES.MESSAGE, (message: Message<any, any>) => {
+
+            if (message.headers.type === MessageType.EVENT) {
+                this._onBroadcast(message.getBody(), this.peerAddress);
+            } else if (message.headers.type === MessageType.REQUEST) {
+                this._onRPCRequest(message.getBody(), message.getId());
             }
         });
     }
@@ -63,82 +59,49 @@ export class NetworkPeer extends Peer {
     }
 
     send(data: Buffer): void {
-        this._socket.emit(
-            PEER_SOCKET_CHANNELS.BROADCAST,
+        this._socket.send(
+            EVENT_CORE_TYPES.MESSAGE,
             data
         );
     }
 
     sendFullHeaders(fullHeaders): void {
-        this._socket.emit(
-            PEER_SOCKET_CHANNELS.HEADERS,
+        this._socket.send(
+            EVENT_CORE_TYPES.HEADERS,
             createBufferObject(fullHeaders, SchemaName.FullHeaders),
         );
     }
 
     async requestRPC<T>(code, data: Buffer): Promise<ResponseEntity<T>> {
-        const requestId = uuid4();
-        const serializer = new SocketBufferRPC();
-        return new Promise((resolve) => {
-            const responseListener = (response) => {
-
-                if (Buffer.isBuffer(response)) {
-                    if (serializer.getRequestId(response) === requestId) {
-
-                        const result = serializer.unpack(response);
-                        clearTimeout(timerId);
-
-                        this._socket.removeListener(PEER_SOCKET_CHANNELS.SOCKET_RPC_RESPONSE, responseListener);
-
-                        resolve(new ResponseEntity({ data: result.data }));
-                    }
-                }
-            };
-
-            const timerId = setTimeout(
-                ((socket, res) => {
-                    return () => {
-                        socket.removeListener(PEER_SOCKET_CHANNELS.SOCKET_RPC_RESPONSE, responseListener);
-                        res(new ResponseEntity({ errors: [REQUEST_TIMEOUT] }));
-                    };
-                })(this._socket, resolve),
-                config.CONSTANTS.CORE_REQUEST_TIMEOUT
-            );
-
-            this._socket.emit(
-                PEER_SOCKET_CHANNELS.SOCKET_RPC_REQUEST,
-                serializer.pack(code, data, requestId),
-            );
-
-            this._socket.on(PEER_SOCKET_CHANNELS.SOCKET_RPC_RESPONSE, responseListener);
-        });
+        return await this._socket.request(EVENT_CORE_TYPES.MESSAGE, createBufferObject({
+            code,
+            data
+        }, SchemaName.Request));
     }
 
-    responseRPC(code, data: Buffer, requestId): void {
-        const serializer = new SocketBufferRPC();
-        this._socket.emit(
-            PEER_SOCKET_CHANNELS.SOCKET_RPC_RESPONSE,
-            serializer.pack(code, data, requestId)
+    responseRPC(code, data: Buffer, requestId: string): void {
+        this._socket.response(EVENT_CORE_TYPES.MESSAGE,
+            createBufferObject({
+                code,
+                data
+            }, SchemaName.Request),
+            requestId
         );
     }
 
     disconnect(): void {
-        this._socket.removeAllListeners();
-        logger.debug(`[NetworkPeer][disconnect] ${this.peerAddress.ip}`);
-        if (this._socket.connected) {
-            logger.debug(`[NetworkPeer][disconnect] ${this.peerAddress.ip} was connected`);
-            this._socket.disconnect(true);
-            logger.debug(`[NetworkPeer][disconnect] ${this.peerAddress.ip} has disconnected`);
-        }
+        this._socket.disconnect(config.PUBLIC_HOST);
     }
 
-    private _onBroadcast(str: Buffer, peerAddress: PeerAddress): void {
+    private _onClose(peerAddress) {
+        return (code, reason) => {
+            if (reason !== config.PUBLIC_HOST) {
+                messageON(ActionTypes.REMOVE_PEER, peerAddress);
+            }
+        };
+    }
 
-        if (!Buffer.isBuffer(str)) {
-            return;
-        }
-        
-        const response = deserialize(str);
+    private _onBroadcast(response, peerAddress: PeerAddress): void {
 
         if (!ALLOWED_METHODS.has(response.code) && config.NODE_ENV_IN !== NODE_ENV_ENUM.TEST) {
             return logger.error(`[SOCKET][ON_PEER_BROADCAST][${this.peerAddress.ip}] CODE: ${response.code} ` +
@@ -154,29 +117,19 @@ export class NetworkPeer extends Peer {
         }
     }
 
-    private _onRPCRequest(str: Buffer): void {
-
-        if (!Buffer.isBuffer(str)) {
-            return;
-        }
-
-        const serializer = new SocketBufferRPC();
-        const response = serializer.unpack(str);
+    private _onRPCRequest(response, id: string): void {
 
         if (!ALLOWED_METHODS.has(response.code)) {
             return logger.error(`[SOCKET][ON_PEER_BROADCAST][${this.peerAddress.ip}] CODE: ${response.code} ` +
                 +`try to execute disallowed method`);
         }
-        logger.trace(
-            `[Peer][${peerAddressToString(this.peerAddress)}][onRPCRequest] CODE: ${response.code}, ` +
-            `REQUEST_ID: ${response.requestId}}`
-        );
+
         messageON(
             response.code, {
                 data: response.data,
                 requestPeerInfo: {
                     peerAddress: this.peerAddress,
-                    requestId: response.requestId
+                    requestId: id
                 }
             });
     }

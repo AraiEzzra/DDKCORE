@@ -1,12 +1,14 @@
-import { NetworkPeer } from 'shared/model/Peer/networkPeer';
+import { NetworkPeerIO } from 'shared/model/Peer/networkPeerIO';
 import { PeerAddress } from 'shared/model/types';
 import IPeerRepository from 'core/repository/peer/index';
 import { logger } from 'shared/util/logger';
 import { peerAddressToString } from 'core/util/peer';
+import { NetworkPeer } from 'shared/model/Peer/networkPeer';
+import { SocketModel } from 'shared/model/socketModel';
 
 
-class PeerNetworkRepository implements IPeerRepository <PeerAddress, NetworkPeer> {
-    private peers: Map<string, NetworkPeer>;
+class PeerNetworkRepository implements IPeerRepository <PeerAddress, NetworkPeerIO | NetworkPeer> {
+    private peers: Map<string, NetworkPeerIO | NetworkPeer>;
     private banList: Set<string>;
 
     constructor() {
@@ -40,7 +42,20 @@ class PeerNetworkRepository implements IPeerRepository <PeerAddress, NetworkPeer
         this.banList.clear();
     }
 
-    add(peerAddress: PeerAddress, socket: SocketIO.Socket | SocketIOClient.Socket): void {
+
+    // TODO remove after migration
+    addPeerIO(peerAddress: PeerAddress, socket: SocketIO.Socket | SocketIOClient.Socket): void {
+        this.peers.set(
+            peerAddressToString(peerAddress),
+            new NetworkPeerIO({
+                peerAddress,
+                socket,
+                isBanned: this.isBanned(peerAddress)
+            })
+        );
+    }
+
+    add(peerAddress: PeerAddress, socket: SocketModel): void {
         this.peers.set(
             peerAddressToString(peerAddress),
             new NetworkPeer({
@@ -67,16 +82,16 @@ class PeerNetworkRepository implements IPeerRepository <PeerAddress, NetworkPeer
         });
     }
 
-    get(peerAddress: PeerAddress): NetworkPeer {
+    get(peerAddress: PeerAddress): NetworkPeerIO | NetworkPeer {
         return this.peers.get(peerAddressToString(peerAddress));
     }
 
-    getManyByAddress(peerAddresses: Array<PeerAddress>): Array<NetworkPeer> {
+    getManyByAddress(peerAddresses: Array<PeerAddress>): Array<NetworkPeerIO| NetworkPeer> {
         return peerAddresses.filter((peerAddress: PeerAddress) => this.has(peerAddress))
             .map((peerAddress: PeerAddress) => this.get(peerAddress));
     }
 
-    getAll(): Array<NetworkPeer> {
+    getAll(): Array<NetworkPeerIO | NetworkPeer> {
         return [...this.peers.values()];
     }
 
@@ -90,7 +105,7 @@ class PeerNetworkRepository implements IPeerRepository <PeerAddress, NetworkPeer
 
     get unbanCount(): number {
         return this.getAll()
-            .filter((networkPeer: NetworkPeer) => !this.isBanned(networkPeer.peerAddress)).length;
+            .filter((networkPeer: NetworkPeerIO) => !this.isBanned(networkPeer.peerAddress)).length;
     }
 }
 

@@ -5,6 +5,7 @@ import { SerializedFullHeaders } from 'shared/model/Peer/fullHeaders';
 import { Pagination, Sort } from 'shared/util/common';
 import { SerializedDelegate } from 'shared/model/delegate';
 import { Block } from 'shared/model/block';
+import { SocketModel } from 'shared/model/socketModel';
 
 export type Filter = {
     limit: number;
@@ -28,7 +29,7 @@ export type RequestPeerInfo = {
 export type PeerHeadersReceived = {
     peerAddress: PeerAddress,
     peerHeaders: SerializedFullHeaders,
-    socket: SocketIO.Socket | SocketIOClient.Socket,
+    socket:  SocketModel,
     type: PEER_SOCKET_TYPE,
 };
 

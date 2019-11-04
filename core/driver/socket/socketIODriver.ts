@@ -13,8 +13,6 @@ import { peerAddressToString } from 'core/util/peer';
 import { createBufferObject, deserialize } from 'shared/util/byteSerializer';
 import { SchemaName } from 'shared/util/byteSerializer/config';
 
-export const REQUEST_TIMEOUT = '408 Request Timeout';
-
 export class Socket {
     private static instance: Socket;
     private static ioServer;

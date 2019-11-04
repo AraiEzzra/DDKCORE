@@ -1,7 +1,7 @@
 import PeerMemoryRepository from 'core/repository/peer/peerMemory';
 import PeerNetworkRepository from 'core/repository/peer/peerNetwork';
 import { NetworkPeer } from 'shared/model/Peer/networkPeer';
-import SocketDriver from 'core/driver/socket/index';
+import SocketDriver from 'core/driver/socket/socketDriver';
 import SystemRepository from 'core/repository/system';
 import config from 'shared/config';
 import { logger } from 'shared/util/logger';
@@ -18,6 +18,7 @@ import { asyncTimeout } from 'shared/util/timer';
 import { diffArrayPeers, peerAddressToString } from 'core/util/peer';
 import { createBufferObject } from 'shared/util/byteSerializer';
 import { SchemaName } from 'shared/util/byteSerializer/config';
+import { NetworkPeerIO } from 'shared/model/Peer/networkPeerIO';
 
 const STEP_RECONNECT_DELAY = 600;
 
@@ -81,8 +82,8 @@ export class PeerService {
         if (checkQueue && SwapTransactionQueue.size && PeerNetworkRepository.count) {
             SwapTransactionQueue.process();
         }
-     
-        let peers: Array<NetworkPeer> = [];
+
+        let peers: Array<NetworkPeerIO | NetworkPeer> = [];
         if (peerAddresses && isArray(peerAddresses)) {
             peers = PeerNetworkRepository.getManyByAddress(peerAddresses);
         } else {
@@ -90,7 +91,7 @@ export class PeerService {
         }
         const byteMessage = createBufferObject({ code, data }, SchemaName.Request);
 
-        peers.forEach((peer: NetworkPeer) => peer.send(byteMessage));
+        peers.forEach((peer: NetworkPeerIO) => peer.send(byteMessage));
     }
 
     update(peerAddress: PeerAddress, headers: Headers): void {
@@ -150,7 +151,7 @@ export class PeerService {
     }
 
     ping() {
-        PeerNetworkRepository.getAll().forEach((peer: NetworkPeer) => {
+        PeerNetworkRepository.getAll().forEach((peer: NetworkPeerIO) => {
             logger.trace(`[Service][Peer][ping] ${peer.peerAddress.ip}`);
 
             peer.requestRPC(ActionTypes.PING, createBufferObject({}, SchemaName.Empty))

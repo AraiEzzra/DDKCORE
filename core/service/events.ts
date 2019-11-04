@@ -10,8 +10,9 @@ import TransactionQueue from 'core/service/transactionQueue';
 import PeerMemoryRepository from 'core/repository/peer/peerMemory';
 import PeerNetworkRepository from 'core/repository/peer/peerNetwork';
 import { MemoryPeer } from 'shared/model/Peer/memoryPeer';
-import { NetworkPeer } from 'shared/model/Peer/networkPeer';
+import { NetworkPeerIO } from 'shared/model/Peer/networkPeerIO';
 import { timeService } from 'shared/util/timeServiceClient';
+import { NetworkPeer } from 'shared/model/Peer/networkPeer';
 
 export type BlockchainInfo = {
     airdropBalance: number;
@@ -62,7 +63,7 @@ class EventService {
         const height = BlockRepository.getLastBlock() ? BlockRepository.getLastBlock().height : 0;
         const broadhash = BlockRepository.getLastBlock() ? BlockRepository.getLastBlock().id : '';
         const peersCount = PeerNetworkRepository.getAll()
-            .filter((peer: NetworkPeer) => !peer.isBanned).length;
+            .filter((peer: NetworkPeerIO | NetworkPeer) => !peer.isBanned).length;
 
         const peers = PeerMemoryRepository.getAll().map((peer: MemoryPeer) => {
             const SerializedPeerHeaders = peer.headers.serialize();

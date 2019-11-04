@@ -20,6 +20,8 @@ export enum SchemaName {
     CommonBlockResponse = 15,
     RequestBlocks = 16,
     Empty = 17,
+    Message = 18,
+    MessageHeaders = 19,
 }
 
 schemaStore.add(SchemaName.Request, {
@@ -149,3 +151,14 @@ schemaStore.add(SchemaName.RequestBlocks, {
 });
 
 schemaStore.add(SchemaName.Empty, {});
+
+schemaStore.add(SchemaName.Message, {
+    code: new BufferTypes.Utf8(),
+    headers: new BufferTypes.Object(SchemaName.MessageHeaders),
+    body: new BufferTypes.Buffer(),
+});
+
+schemaStore.add(SchemaName.MessageHeaders, {
+    id: new BufferTypes.Utf8(),
+    type: new BufferTypes.Uint8()
+});

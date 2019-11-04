@@ -15,7 +15,7 @@ import PeerService, { ERROR_NOT_ENOUGH_PEERS } from 'core/service/peer';
 import { ActionTypes } from 'core/util/actionTypes';
 import { BlockData, BlockLimit, PeerAddress, RequestPeerInfo, ShortPeerInfo } from 'shared/model/types';
 import { getRandom, getRandomElements } from 'core/util/common';
-import { NetworkPeer } from 'shared/model/Peer/networkPeer';
+import { NetworkPeerIO } from 'shared/model/Peer/networkPeerIO';
 import { MemoryPeer } from 'shared/model/Peer/memoryPeer';
 import { logger } from 'shared/util/logger';
 import SwapTransactionQueue from 'core/service/swapTransactionQueue';
@@ -53,7 +53,7 @@ export class SyncService implements ISyncService {
     async pickNewPeers(): Promise<Array<ShortPeerInfo>> {
         const fullNetworkPeerList = PeerNetworkRepository.getAll();
         const randomNetworkPeers = getRandomElements(config.CONSTANTS.PEERS_COUNT_FOR_DISCOVER, fullNetworkPeerList);
-        const peersPromises = randomNetworkPeers.map((peer: NetworkPeer) => {
+        const peersPromises = randomNetworkPeers.map((peer: NetworkPeerIO) => {
             return peer.requestRPC(ActionTypes.REQUEST_PEERS, createBufferObject({}, SchemaName.Empty));
         });
 
