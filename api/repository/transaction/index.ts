@@ -47,6 +47,9 @@ class TransactionPGRepository {
         let getTransactionsQuery: string;
         if (filter && filter.recipientAddress) {
             getTransactionsQuery = query.getUserTransactions;
+            if (!filter.senderPublicKey) {
+                filter.senderPublicKey = '';
+            }
         } else {
             getTransactionsQuery = query.getTransactions(
                 filter, sort.map(elem => `${toSnakeCase(elem[0])} ${elem[1]}`).join(', '),
