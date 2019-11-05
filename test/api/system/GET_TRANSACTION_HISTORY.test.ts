@@ -29,6 +29,15 @@ describe('Test GET_TRANSACTION_HISTORY', () => {
                 }
             },
             {
+                accountStateBefore: {
+                    actualBalance: 4202099910000000,
+                    address: '4995063339468361088',
+                    isDelegate: false,
+                    publicKey: 'f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2',
+                    referrals: [],
+                    stakes: [],
+                    votes: [],
+                },
                 action: 'APPLY',
             },
         ];
@@ -41,9 +50,9 @@ describe('Test GET_TRANSACTION_HISTORY', () => {
 
         const response = await socketRequest<any, ResponseTransactionHistory>(REQUEST);
 
-        expect(response.body.success).to.equal(true);
+        expect(true).to.equal(response.body.success);
         expect(response.body.data).to.have.property('entity');
-        expect(response.body.data.events).to.deep.equal(SUCCESS);
+        expect(SUCCESS).to.deep.equal(response.body.data.events);
     });
 
     it('Negative', async () => {
@@ -59,7 +68,7 @@ describe('Test GET_TRANSACTION_HISTORY', () => {
 
         const response = await socketRequest(REQUEST);
 
-        expect(response.body.success).to.equal(false);
-        expect(response.body.errors).to.deep.equal(EXPECTED);
+        expect(false).to.equal(response.body.success);
+        expect(EXPECTED).to.deep.equal(response.body.errors);
     });
 });

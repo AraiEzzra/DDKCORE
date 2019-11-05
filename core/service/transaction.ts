@@ -96,6 +96,12 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
         // TODO: Apply / undo unconfirmed must be used only for an unconfirmed state (with transaction pool)
         // and apply method must be used only for an confirmed state
 
+        TransactionHistoryRepository.addBeforeState(
+            trs,
+            TransactionLifecycle.APPLY_UNCONFIRMED,
+            sender,
+        );
+
         sender.actualBalance -= trs.fee || 0;
         const service: IAssetService<IAsset> = getTransactionServiceByType(trs.type);
         service.applyUnconfirmed(trs, sender);

@@ -41,11 +41,17 @@ export default {
         ' ORDER BY trs.created_at DESC LIMIT ${limit} OFFSET ${offset}',
     getTransactionsCount: 'SELECT count(1) from trs',
     getUserTransactions:
-        `SELECT t.*, count(1) over () as count FROM ( ` +
-        ` SELECT trs.* FROM address_to_trs ` +
+        `WITH last_block AS (SELECT max(height) as height FROM block) ` +
+        ` SELECT t.*, count(1) over () as count ` +
+        ` , (select last_block.height - t.height from last_block) as confirmations` +
+        ` FROM ( ` +
+        ` SELECT trs.*, height FROM address_to_trs ` +
         ` LEFT JOIN trs ON trs.id = address_to_trs.trs_id ` +
+        ` LEFT JOIN block ON block.id = trs.block_id ` +
         ` WHERE address_to_trs.recipient_address = \${recipientAddress} ` +
         ` UNION ALL ` +
-        ` SELECT trs.* FROM trs WHERE sender_public_key = \${senderPublicKey} ` +
+        ` SELECT trs.*, height FROM trs ` +
+        ` LEFT JOIN block ON block.id = trs.block_id ` +
+        ` WHERE sender_public_key = \${senderPublicKey} ` +
         ` ) t ORDER BY t.created_at desc LIMIT \${limit} OFFSET \${offset};`,
 };
