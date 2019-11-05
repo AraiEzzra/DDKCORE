@@ -61,6 +61,8 @@ const DEFAULT_DB_CONFIGS = {
     LOG_EVENTS: ['error'],
 };
 
+const DEFAULT_MAX_LOGGER_FILES = 5;
+
 export enum NODE_ENV_ENUM {
     DEVELOPMENT = 'development',
     TESTNET = 'testnet',
@@ -100,7 +102,10 @@ class Config {
         VERSION: string;
         MIN_VERSION: string;
         MIN_CONSENSUS: number;
-        LOG_LEVEL: string;
+    };
+    LOGGER: {
+        LEVEL: string;
+        MAX_FILES: number;
     };
     API: {
         REQUESTS_PER_SECOND_LIMIT: number;
@@ -170,7 +175,10 @@ class Config {
             VERSION: '1.3.3',
             MIN_VERSION: '1.3.0',
             MIN_CONSENSUS: Number(process.env.MIN_CONSENSUS) || DEFAULT_CONSENSUS,
-            LOG_LEVEL: process.env.LOG_LEVEL || 'info',
+        };
+        this.LOGGER = {
+            LEVEL: process.env.LOG_LEVEL || 'info',
+            MAX_FILES: Number(process.env.MAX_LOGGER_FILES) || DEFAULT_MAX_LOGGER_FILES,
         };
         this.API = {
             REQUESTS_PER_SECOND_LIMIT: Number(process.env.REQUESTS_PER_SECOND_LIMIT) ||
