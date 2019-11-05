@@ -88,27 +88,28 @@ describe('Test GET_ACCOUNT', () => {
 
         const response = await socketRequest(REQUEST);
 
-        expect(response.body.success).to.equal(true);
-        expect(response.body.data).to.deep.equal(SUCCESS);
+        expect(true).to.equal(response.body.success);
+        expect(SUCCESS).to.deep.equal(response.body.data);
     });
 
     it('Positive stakes', async () => {
 
         const SUCCESS = {
-            'address': '7396561962357959155',
-            'isDelegate': false,
-            'publicKey': '03c2741f6719392a94603062f7535416abbda71e1c1c5287f9417d3724d70ea1',
-            'actualBalance': 89999000000,
-            'referrals': [],
-            'votes': [],
-            'stakes': [{
-                'createdAt': 0,
-                'isActive': true,
-                'amount': 10000000000,
-                'voteCount': 0,
-                'nextVoteMilestone': 0,
-                'airdropReward': {},
-                'sourceTransactionId': '2417a12ffff13cc6eff34d79791f908f5b52bc9976a1769fbf8bbdc3220c97d9'
+            address: '7396561962357959155',
+            isDelegate: false,
+            publicKey: '03c2741f6719392a94603062f7535416abbda71e1c1c5287f9417d3724d70ea1',
+            actualBalance: 89999000000,
+            referrals: [],
+            votes: [],
+            stakes: [{
+                createdAt: 0,
+                isActive: true,
+                amount: 10000000000,
+                voteCount: 0,
+                nextVoteMilestone: 0,
+                airdropReward: {},
+                previousMilestones: [],
+                sourceTransactionId: Buffer.from('2417a12ffff13cc6eff34d79791f908f5b52bc9976a1769fbf8bbdc3220c97d9', 'hex'),
             }]
         };
 
@@ -120,8 +121,8 @@ describe('Test GET_ACCOUNT', () => {
 
         const response = await socketRequest(REQUEST);
 
-        expect(response.body.success).to.equal(true);
-        expect(response.body.data).to.deep.equal(SUCCESS);
+        expect(true).to.equal(response.body.success);
+        expect(SUCCESS).to.deep.equal(response.body.data);
     });
 
     it('Positive votes', async () => {
@@ -148,7 +149,8 @@ describe('Test GET_ACCOUNT', () => {
                 voteCount: 1,
                 nextVoteMilestone: 104008362,
                 airdropReward: {},
-                sourceTransactionId: '42d253826012103aec237eed68ca8093692bec7640df4359ea1e41a3240d100c'
+                previousMilestones: [0],
+                sourceTransactionId: Buffer.from('42d253826012103aec237eed68ca8093692bec7640df4359ea1e41a3240d100c', 'hex')
             }]
         };
 
@@ -160,8 +162,8 @@ describe('Test GET_ACCOUNT', () => {
 
         const response = await socketRequest(REQUEST);
 
-        expect(response.body.success).to.equal(true);
-        expect(response.body.data).to.deep.equal(SUCCESS);
+        expect(true).to.equal(response.body.success);
+        expect(SUCCESS).to.deep.equal(response.body.data);
     });
 
     it('Negative', async () => {
@@ -174,7 +176,7 @@ describe('Test GET_ACCOUNT', () => {
 
         const response = await socketRequest(REQUEST);
 
-        expect(response.body.success).to.equal(false);
-        expect(response.body.errors).to.deep.equal(FAILED);
+        expect(false).to.equal(response.body.success);
+        expect(FAILED).to.deep.equal(response.body.errors);
     });
 });
