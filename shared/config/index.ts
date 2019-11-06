@@ -61,6 +61,9 @@ const DEFAULT_DB_CONFIGS = {
     LOG_EVENTS: ['error'],
 };
 
+const DEFAULT_MAX_LOGGER_FILES = 5;
+const DEFAULT_LOGGER_MAX_FILE_SIZE = 1073741824;
+
 export enum NODE_ENV_ENUM {
     DEVELOPMENT = 'development',
     TESTNET = 'testnet',
@@ -100,7 +103,11 @@ class Config {
         VERSION: string;
         MIN_VERSION: string;
         MIN_CONSENSUS: number;
-        LOG_LEVEL: string;
+    };
+    LOGGER: {
+        LEVEL: string;
+        MAX_FILES: number;
+        MAX_FILE_SIZE: number;
     };
     API: {
         REQUESTS_PER_SECOND_LIMIT: number;
@@ -167,10 +174,14 @@ class Config {
             },
             IS_DISABLED_TRANSACTION_CREATION: process.env.IS_DISABLED_TRANSACTION_CREATION === 'TRUE',
             IS_REFERRED_USERS_ENABLED: process.env.IS_REFERRED_USERS_ENABLED  === 'TRUE',
-            VERSION: '1.3.3',
+            VERSION: '1.3.4',
             MIN_VERSION: '1.3.0',
             MIN_CONSENSUS: Number(process.env.MIN_CONSENSUS) || DEFAULT_CONSENSUS,
-            LOG_LEVEL: process.env.LOG_LEVEL || 'info',
+        };
+        this.LOGGER = {
+            LEVEL: process.env.LOG_LEVEL || 'info',
+            MAX_FILES: Number(process.env.MAX_LOGGER_FILES) || DEFAULT_MAX_LOGGER_FILES,
+            MAX_FILE_SIZE: Number(process.env.LOGGER_MAX_FILE_SIZE) || DEFAULT_LOGGER_MAX_FILE_SIZE,
         };
         this.API = {
             REQUESTS_PER_SECOND_LIMIT: Number(process.env.REQUESTS_PER_SECOND_LIMIT) ||

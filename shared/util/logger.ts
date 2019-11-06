@@ -56,7 +56,9 @@ class LoggerClass {
             prepend: true,
             json: false,
             level: 'debug',
-            timestamp: this.timestamp
+            timestamp: this.timestamp,
+            maxFiles: config.LOGGER.MAX_FILES,
+            maxsize: config.LOGGER.MAX_FILE_SIZE,
         });
 
         /**
@@ -73,7 +75,7 @@ class LoggerClass {
         });
 
         this.consoleTransport = new transports.Console({
-            level: config.CORE.LOG_LEVEL || 'info',
+            level: config.LOGGER.LEVEL || 'info',
             timestamp: this.timestamp
         });
     }
