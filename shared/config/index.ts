@@ -62,7 +62,6 @@ const DEFAULT_DB_CONFIGS = {
 };
 
 const DEFAULT_MAX_LOGGER_FILES = 5;
-const DEFAULT_LOGGER_MAX_FILE_SIZE = 1073741824;
 
 export enum NODE_ENV_ENUM {
     DEVELOPMENT = 'development',
