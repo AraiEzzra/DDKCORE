@@ -107,7 +107,6 @@ class Config {
     LOGGER: {
         LEVEL: string;
         MAX_FILES: number;
-        MAX_FILE_SIZE: number;
     };
     API: {
         REQUESTS_PER_SECOND_LIMIT: number;
@@ -181,7 +180,6 @@ class Config {
         this.LOGGER = {
             LEVEL: process.env.LOG_LEVEL || 'info',
             MAX_FILES: Number(process.env.MAX_LOGGER_FILES) || DEFAULT_MAX_LOGGER_FILES,
-            MAX_FILE_SIZE: Number(process.env.LOGGER_MAX_FILE_SIZE) || DEFAULT_LOGGER_MAX_FILE_SIZE,
         };
         this.API = {
             REQUESTS_PER_SECOND_LIMIT: Number(process.env.REQUESTS_PER_SECOND_LIMIT) ||
