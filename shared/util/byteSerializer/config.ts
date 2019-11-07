@@ -8,25 +8,18 @@ export enum SchemaName {
     FullHeaders = 3,
     BlockData = 4,
     Block = 5,
-    OldTransaction = 6,
-    OldTransactionBlock = 7,
-    OldTransactionAssetRegister = 8,
-    OldTransactionAssetSend = 9,
+    Transaction = 6,
+    TransactionBlock = 7,
+    TransactionAssetRegister = 8,
+    TransactionAssetSend = 9,
     TransactionAssetSignature = 10,
     TransactionAssetDelegate = 11,
-    OldTransactionAssetStake = 12,
-    OldTransactionAssetVote = 13,
-    OldAirdropReward = 14,
+    TransactionAssetStake = 12,
+    TransactionAssetVote = 13,
+    AirdropReward = 14,
     CommonBlockResponse = 15,
     RequestBlocks = 16,
     Empty = 17,
-    Transaction = 18,
-    TransactionBlock = 19,
-    TransactionAssetRegister = 20,
-    TransactionAssetSend = 21,
-    TransactionAssetStake = 22,
-    TransactionAssetVote = 23,
-    AirdropReward = 24,
 }
 
 schemaStore.add(SchemaName.Request, {
@@ -81,91 +74,12 @@ schemaStore.add(SchemaName.Block, {
     transactions: new BufferTypes.Buffer(),
 });
 
-// TODO destroy after full migration
-schemaStore.add(SchemaName.OldTransaction, {
-    id: new BufferTypes.Utf8(),
-    type: new BufferTypes.Uint8(),
-    createdAt: new BufferTypes.Uint32(),
-    senderPublicKey: new BufferTypes.Utf8(),
-    senderAddress: new BufferTypes.Uint64(),
-    signature: new BufferTypes.Utf8(),
-    secondSignature: new BufferTypes.Utf8(),
-    fee: new BufferTypes.Number64(),
-    salt: new BufferTypes.Utf8(),
-    relay: new BufferTypes.Uint8(),
-    confirmations: new BufferTypes.Uint32(),
-    asset: new BufferTypes.Buffer()
-});
-
-schemaStore.add(SchemaName.OldTransactionBlock, {
-    id: new BufferTypes.Utf8(),
-    blockId: new BufferTypes.Utf8(),
-    type: new BufferTypes.Uint8(),
-    createdAt: new BufferTypes.Uint32(),
-    senderPublicKey: new BufferTypes.Utf8(),
-    senderAddress: new BufferTypes.Uint64(),
-    signature: new BufferTypes.Utf8(),
-    secondSignature: new BufferTypes.Utf8(),
-    fee: new BufferTypes.Number64(),
-    salt: new BufferTypes.Utf8(),
-    confirmations: new BufferTypes.Uint32(),
-    asset: new BufferTypes.Buffer(),
-});
-
-schemaStore.add(SchemaName.OldTransactionAssetRegister, {
-    referral: new BufferTypes.Uint64()
-});
-
-schemaStore.add(SchemaName.OldTransactionAssetSend, {
-    recipientAddress: new BufferTypes.Uint64(),
-    amount: new BufferTypes.Number64()
-});
-
-schemaStore.add(SchemaName.TransactionAssetSignature, {
-    publicKey: new BufferTypes.Utf8(),
-});
-
-schemaStore.add(SchemaName.TransactionAssetDelegate, {
-    username: new BufferTypes.Utf8()
-});
-
-schemaStore.add(SchemaName.OldTransactionAssetStake, {
-    amount: new BufferTypes.Number64(),
-    startTime: new BufferTypes.Uint32(),
-    startVoteCount: new BufferTypes.Uint8(),
-    airdropReward: new BufferTypes.Object(SchemaName.OldAirdropReward)
-});
-
-schemaStore.add(SchemaName.OldTransactionAssetVote, {
-    votes: new BufferTypes.Array(new BufferTypes.Utf8()),
-    reward: new BufferTypes.Number64(),
-    unstake: new BufferTypes.Number64(),
-    airdropReward: new BufferTypes.Object(SchemaName.OldAirdropReward)
-});
-
-schemaStore.add(SchemaName.OldAirdropReward, {
-    sponsors: new BufferTypes.Map(new BufferTypes.Uint64(), new BufferTypes.Number64())
-});
-
-schemaStore.add(SchemaName.CommonBlockResponse, {
-    isExist: new BufferTypes.Boolean()
-});
-
-schemaStore.add(SchemaName.RequestBlocks, {
-    height: new BufferTypes.Uint32(),
-    limit: new BufferTypes.Uint8()
-});
-
-schemaStore.add(SchemaName.Empty, {});
-
-
-
 schemaStore.add(SchemaName.Transaction, {
     id: new BufferTypes.Utf8(),
     type: new BufferTypes.Uint8(),
     createdAt: new BufferTypes.Uint32(),
     senderPublicKey: new BufferTypes.Utf8(),
-    senderAddress: new BufferTypes.Uint128(),
+    senderAddress: new BufferTypes.Uint64(),
     signature: new BufferTypes.Utf8(),
     secondSignature: new BufferTypes.Utf8(),
     fee: new BufferTypes.Number64(),
@@ -181,7 +95,7 @@ schemaStore.add(SchemaName.TransactionBlock, {
     type: new BufferTypes.Uint8(),
     createdAt: new BufferTypes.Uint32(),
     senderPublicKey: new BufferTypes.Utf8(),
-    senderAddress: new BufferTypes.Uint128(),
+    senderAddress: new BufferTypes.Uint64(),
     signature: new BufferTypes.Utf8(),
     secondSignature: new BufferTypes.Utf8(),
     fee: new BufferTypes.Number64(),
@@ -191,16 +105,20 @@ schemaStore.add(SchemaName.TransactionBlock, {
 });
 
 schemaStore.add(SchemaName.TransactionAssetRegister, {
-    referral: new BufferTypes.Uint128()
+    referral: new BufferTypes.Uint64()
 });
 
 schemaStore.add(SchemaName.TransactionAssetSend, {
-    recipientAddress: new BufferTypes.Uint128(),
+    recipientAddress: new BufferTypes.Uint64(),
     amount: new BufferTypes.Number64()
 });
 
-schemaStore.add(SchemaName.AirdropReward, {
-    sponsors: new BufferTypes.Map(new BufferTypes.Uint128(), new BufferTypes.Number64())
+schemaStore.add(SchemaName.TransactionAssetSignature, {
+    publicKey: new BufferTypes.Utf8(),
+});
+
+schemaStore.add(SchemaName.TransactionAssetDelegate, {
+    username: new BufferTypes.Utf8()
 });
 
 schemaStore.add(SchemaName.TransactionAssetStake, {
@@ -216,3 +134,19 @@ schemaStore.add(SchemaName.TransactionAssetVote, {
     unstake: new BufferTypes.Number64(),
     airdropReward: new BufferTypes.Object(SchemaName.AirdropReward)
 });
+
+schemaStore.add(SchemaName.AirdropReward, {
+    sponsors: new BufferTypes.Map(new BufferTypes.Uint64(), new BufferTypes.Number64())
+});
+
+schemaStore.add(SchemaName.CommonBlockResponse, {
+    isExist: new BufferTypes.Boolean()
+});
+
+schemaStore.add(SchemaName.RequestBlocks, {
+    height: new BufferTypes.Uint32(),
+    limit: new BufferTypes.Uint8()
+});
+
+schemaStore.add(SchemaName.Empty, {});
+
