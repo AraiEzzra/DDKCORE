@@ -134,6 +134,10 @@ export class NetworkPeer extends Peer {
 
     private _onBroadcast(str: Buffer, peerAddress: PeerAddress): void {
 
+        if (!Buffer.isBuffer(str)) {
+            return;
+        }
+        
         const response = deserialize(str);
 
         if (!ALLOWED_METHODS.has(response.code) && config.NODE_ENV_IN !== NODE_ENV_ENUM.TEST) {
