@@ -9,7 +9,7 @@ export function deserialize(buffer: Buffer, offset = 0): any {
         const data = dynamicBuffer.read(buffer, offset);
         return data.value;
     } catch (e) {
-        logger.error(`[ByteSerializer][deserialize] error ${e.stack}`);
+        logger.error(`[ByteSerializer][deserialize] error ${e.stack}, Buffer: ${bufferToString(buffer)}`);
     }
 }
 

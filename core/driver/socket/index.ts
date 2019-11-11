@@ -92,7 +92,14 @@ export class Socket {
     }
 
     onHeadersReceive(response: Buffer, peerAddress: PeerAddress, socket, type: PEER_SOCKET_TYPE) {
-        
+
+        if (!Buffer.isBuffer(response)) {
+            logger.error(`[SOCKET][onHeadersReceive] ${peerAddressToString(peerAddress)} ` +
+                `as ${type} has sent: ${response}`);
+            socket.disconnect(true);
+            return;
+        }
+
         const peerHeaders = deserialize(response);
 
         logger.debug(`[Driver][Socket][onHeadersReceive] ${type} ${peerAddress.ip}, ` +
