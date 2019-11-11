@@ -58,7 +58,6 @@ class LoggerClass {
             level: 'debug',
             timestamp: this.timestamp,
             maxFiles: config.LOGGER.MAX_FILES,
-            maxsize: config.LOGGER.MAX_FILE_SIZE,
         });
 
         /**
