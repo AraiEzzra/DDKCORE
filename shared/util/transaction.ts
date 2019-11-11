@@ -7,10 +7,10 @@ export const serializeAssetTransaction = (trs: Transaction<IAsset>) => {
     let assetSchema: SchemaName;
     switch (trs.type) {
         case TransactionType.REGISTER:
-            assetSchema = SchemaName.TransactionAssetRegister;
+            assetSchema = SchemaName.OldTransactionAssetRegister;
             break;
         case TransactionType.SEND:
-            assetSchema = SchemaName.TransactionAssetSend;
+            assetSchema = SchemaName.OldTransactionAssetSend;
             break;
         case TransactionType.SIGNATURE:
             assetSchema = SchemaName.TransactionAssetSignature;
@@ -19,10 +19,10 @@ export const serializeAssetTransaction = (trs: Transaction<IAsset>) => {
             assetSchema = SchemaName.TransactionAssetDelegate;
             break;
         case TransactionType.STAKE:
-            assetSchema = SchemaName.TransactionAssetStake;
+            assetSchema = SchemaName.OldTransactionAssetStake;
             break;
         case TransactionType.VOTE:
-            assetSchema = SchemaName.TransactionAssetVote;
+            assetSchema = SchemaName.OldTransactionAssetVote;
             break;
         default:
             assetSchema = SchemaName.Empty;
