@@ -111,7 +111,7 @@ export class SyncService implements ISyncService {
         trs.relay += 1;
 
         const byteAssetTransaction = serializeAssetTransaction(trs);
-        const byteTransaction = createBufferObject(byteAssetTransaction, SchemaName.Transaction);
+        const byteTransaction = createBufferObject(byteAssetTransaction, SchemaName.OldTransaction);
 
         if (PeerNetworkRepository.count === 0) {
             SwapTransactionQueue.push(byteTransaction);
@@ -222,7 +222,7 @@ export class SyncService implements ISyncService {
                 block.transactions = block.transactions.map(trs => serializeAssetTransaction(trs));
                 block.transactions = createBufferArray(
                     block.transactions,
-                    new BufferTypes.Object(SchemaName.TransactionBlock)
+                    new BufferTypes.Object(SchemaName.OldTransactionBlock)
                 );
             });
         } else {

@@ -86,7 +86,7 @@ export class Block extends BlockModel {
             relay: this.relay,
             transactions: createBufferArray(
                 byteAssetsTransactions,
-                new BufferTypes.Object(SchemaName.TransactionBlock)
+                new BufferTypes.Object(SchemaName.OldTransactionBlock)
             ),
         }, SchemaName.Block);
         return byteBlock;
