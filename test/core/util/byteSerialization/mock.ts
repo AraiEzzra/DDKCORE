@@ -3,9 +3,7 @@ import { BlockModel } from 'shared/model/block';
 import SlotService from 'core/service/slot';
 
 export const recipientAddress = BigInt('15984232642719285606');
-export const senderAddress = BigInt('146774622526351529950');
-export const maxBigInt64 = BigInt('18446744073709551615');
-export const maxBigInt128 = BigInt('339839638364267983187767400417961964696');
+export const senderAddress = BigInt('4995063339468361088');
 
 /* tslint:disable:no-magic-numbers */
 
@@ -86,7 +84,7 @@ export const transactionStake = new Transaction({
                 startVoteCount: 0,
                 airdropReward: {
                     sponsors: new Map([
-                        [maxBigInt64, 10000000]
+                        [BigInt('4995063339468361088'), 10000000]
                     ])
                 }
             }
@@ -116,8 +114,7 @@ export const transactionVote = new Transaction({
                 unstake: 0,
                 airdropReward: {
                     sponsors: new Map([
-                        [maxBigInt64, 10000000],
-                        [maxBigInt128, 10000000]
+                        [BigInt('4995063339468361088'), 10000000]
                     ])
                 }
             }

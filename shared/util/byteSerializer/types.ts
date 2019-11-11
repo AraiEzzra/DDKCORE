@@ -14,7 +14,6 @@ import { BufferMap } from './models/map';
 import { BufferSet } from './models/set';
 import { Bool } from './models/boolean';
 import { Number64 } from './models/number64';
-import { Uint128 } from './models/uint128';
 
 export const BufferTypes = {
     Int8,
@@ -33,7 +32,6 @@ export const BufferTypes = {
     Map: BufferMap,
     Boolean: Bool,
     Number64,
-    Uint128,
 };
 
 export enum BufferTypesId {
@@ -52,7 +50,6 @@ export enum BufferTypesId {
     BufferMap,
     Bool,
     Number64,
-    Uint128,
 }
 
 export const mapPrimitiveCode = new Map();
@@ -72,4 +69,3 @@ mapPrimitiveCode.set(BufferTypesId.BufferSet, BufferSet);
 mapPrimitiveCode.set(BufferTypesId.BufferMap, BufferMap);
 mapPrimitiveCode.set(BufferTypesId.Bool, Bool);
 mapPrimitiveCode.set(BufferTypesId.Number64, Number64);
-mapPrimitiveCode.set(BufferTypesId.Uint128, Uint128);
