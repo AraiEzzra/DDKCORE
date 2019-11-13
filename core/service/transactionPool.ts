@@ -1,6 +1,6 @@
 import {
-    IAsset,
     IAssetTransfer,
+    IAssetVote,
     Transaction,
     TransactionLifecycle,
     TransactionModel,
@@ -99,10 +99,14 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
 
         if (trs.type === TransactionType.SEND) {
             const asset: IAssetTransfer = <IAssetTransfer>trs.asset;
-            if (!this.poolByRecipient.has(asset.recipientAddress)) {
-                this.poolByRecipient.set(asset.recipientAddress, []);
+            this.addOneToPoolByRecipient(asset.recipientAddress, trs);
+        }
+
+        if (trs.type === TransactionType.VOTE) {
+            const asset: IAssetVote = <IAssetVote>trs.asset;
+            if (asset.reward || asset.unstake) {
+                this.addOneToPoolByRecipient(trs.senderAddress, trs);
             }
-            this.poolByRecipient.get(asset.recipientAddress).push(trs);
         }
 
         if (!sender) {
@@ -141,14 +145,32 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
 
         if (trs.type === TransactionType.SEND) {
             const asset: IAssetTransfer = <IAssetTransfer>trs.asset;
-            if (this.poolByRecipient.has(asset.recipientAddress) &&
-                this.poolByRecipient.get(asset.recipientAddress).indexOf(trs) !== -1
-            ) {
-                this.poolByRecipient.get(asset.recipientAddress)
-                    .splice(this.poolByRecipient.get(asset.recipientAddress).indexOf(trs), 1);
-            }
+            this.removeOneFromPoolByRecipient(asset.recipientAddress, trs);
         }
+
+        if (trs.type === TransactionType.VOTE) {
+            this.removeOneFromPoolByRecipient(trs.senderAddress, trs);
+        }
+
         return true;
+    }
+
+    addOneToPoolByRecipient(address: Address, trs: Transaction<T>): void {
+        if (!this.poolByRecipient.has(address)) {
+            this.poolByRecipient.set(address, []);
+        }
+        console.log('-----add trs to poll - ', trs.type, trs.id);
+        this.poolByRecipient.get(address).push(trs);
+    }
+
+    removeOneFromPoolByRecipient(address: Address, trs: Transaction<T>): void {
+        if (this.poolByRecipient.has(address) &&
+            this.poolByRecipient.get(address).indexOf(trs) !== -1
+        ) {
+            console.log('-----remove trs from poll - ', trs.type, trs.id);
+            this.poolByRecipient.get(address)
+                .splice(this.poolByRecipient.get(address).indexOf(trs), 1);
+        }
     }
 
     removeByRecipientAddress(address: Address): Array<Transaction<T>> {
@@ -201,15 +223,15 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
             return true;
         }
 
-        if (
-            (
-                trs.type === TransactionType.VOTE ||
-                trs.type === TransactionType.SEND ||
-                trs.type === TransactionType.STAKE
-            ) && dependTransactions.find((t: Transaction<T>) => t.type === TransactionType.VOTE)
-        ) {
-            return true;
-        }
+        // if (
+        //     (
+        //         trs.type === TransactionType.VOTE ||
+        //         trs.type === TransactionType.SEND ||
+        //         trs.type === TransactionType.STAKE
+        //     ) && dependTransactions.find((t: Transaction<T>) => t.type === TransactionType.VOTE)
+        // ) {
+        //     return true;
+        // }
 
         if (
             trs.type === TransactionType.REGISTER &&
