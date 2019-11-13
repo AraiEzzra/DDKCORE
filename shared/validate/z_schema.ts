@@ -5,6 +5,7 @@ import { VoteType } from 'shared/model/transaction';
 const enum LENGTH {
     PUBLIC_KEY_SIZE = 32,
     SIGNATURE_SIZE = 64,
+    ADDRESS_BINARY_SIZE = 64,
 }
 
 const isPublicKey = (str: PublicKey) => {
@@ -27,11 +28,11 @@ Validator.registerFormat('id', (str) => {
 });
 
 Validator.registerFormat('address', (str) => {
-    if (str.length === 0) {
-        return true;
+    try {
+        return BigInt(str).toString(2).length <= LENGTH.ADDRESS_BINARY_SIZE;
+    } catch (e) {
+        return false;
     }
-
-    return /^\d{8,21}$/.test(str);
 });
 
 Validator.registerFormat('username', (str) => {
