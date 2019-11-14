@@ -1,4 +1,5 @@
 import {
+    IAssetStake,
     IAssetTransfer,
     IAssetVote,
     Transaction,
@@ -105,8 +106,17 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
         if (trs.type === TransactionType.VOTE) {
             const asset: IAssetVote = <IAssetVote>trs.asset;
             if (asset.reward || asset.unstake) {
-                this.addOneToPoolByRecipient(trs.senderAddress, trs);
+                [...asset.airdropReward.sponsors.keys()].forEach((address: Address) => {
+                    this.addOneToPoolByRecipient(address, trs);
+                });
             }
+        }
+
+        if (trs.type === TransactionType.STAKE) {
+            const asset: IAssetStake = <IAssetStake>trs.asset;
+            [...asset.airdropReward.sponsors.keys()].forEach((address: Address) => {
+                this.addOneToPoolByRecipient(address, trs);
+            });
         }
 
         if (!sender) {
@@ -148,9 +158,13 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
             this.removeOneFromPoolByRecipient(asset.recipientAddress, trs);
         }
 
-        if (trs.type === TransactionType.VOTE) {
-            this.removeOneFromPoolByRecipient(trs.senderAddress, trs);
+        if (trs.type === TransactionType.VOTE || trs.type === TransactionType.STAKE) {
+            const asset: IAssetVote | IAssetStake = <IAssetVote | IAssetStake>trs.asset;
+            [...asset.airdropReward.sponsors.keys()].forEach((address: Address) => {
+                this.removeOneFromPoolByRecipient(address, trs);
+            });
         }
+        
 
         return true;
     }
@@ -159,7 +173,6 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
         if (!this.poolByRecipient.has(address)) {
             this.poolByRecipient.set(address, []);
         }
-        console.log('-----add trs to poll - ', trs.type, trs.id);
         this.poolByRecipient.get(address).push(trs);
     }
 
@@ -167,7 +180,6 @@ class TransactionPoolService<T extends object> implements ITransactionPoolServic
         if (this.poolByRecipient.has(address) &&
             this.poolByRecipient.get(address).indexOf(trs) !== -1
         ) {
-            console.log('-----remove trs from poll - ', trs.type, trs.id);
             this.poolByRecipient.get(address)
                 .splice(this.poolByRecipient.get(address).indexOf(trs), 1);
         }
