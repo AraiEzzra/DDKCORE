@@ -420,11 +420,12 @@ class BlockService implements IBlockService {
             }
 
             if (verify) {
-                const resultCheckTransaction: ResponseEntity<void> = this.checkTransaction(trs, sender);
-                if (!resultCheckTransaction.success) {
-                    errors.push(...resultCheckTransaction.errors);
+                const verifyResult: ResponseEntity = TransactionDispatcher.verifyUnconfirmed(trs, sender);
+                if (!verifyResult.success) {
+                    errors.push(...verifyResult.errors);
                     logger.error(
-                        `[Service][Block][checkTransactionsAndApplyUnconfirmed][error] ${errors.join('. ')}. `,
+                        `[Service][Block][checkTransactionsAndApplyUnconfirmed] ` +
+                        `${errors.join('. ')}. trs id: ${trs.id}`,
                     );
                     i--;
                     break;
@@ -448,20 +449,6 @@ class BlockService implements IBlockService {
         }
 
         return new ResponseEntity({ errors });
-    }
-
-    private checkTransaction(trs: Transaction<object>, sender: Account): ResponseEntity {
-        const validateResult = TransactionDispatcher.validate(trs);
-        if (!validateResult.success) {
-            return new ResponseEntity({ errors: [...validateResult.errors, 'checkTransaction'] });
-        }
-
-        const verifyResult: ResponseEntity = TransactionDispatcher.verifyUnconfirmed(trs, sender);
-        if (!verifyResult.success) {
-            return new ResponseEntity({ errors: [...verifyResult.errors, 'checkTransaction'] });
-        }
-
-        return new ResponseEntity();
     }
 
     private async applyBlock(
