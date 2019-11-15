@@ -26,7 +26,7 @@ export class NetworkPeer extends Peer {
     constructor(data: SerializedNetworkPeer) {
         super(data);
 
-        logger.debug(`[Peer][new peer] ${peerAddressToString(data.peerAddress)}`);
+        logger.trace(`[Peer][new peer] ${peerAddressToString(data.peerAddress)}`);
         this._isBanned = data.isBanned;
 
         this._socket = data.socket;
@@ -38,7 +38,7 @@ export class NetworkPeer extends Peer {
         });
 
         this._socket.on(PEER_SOCKET_EVENTS.DISCONNECT, (reason) => {
-            logger.debug(`[NetworkPeer][disconnect]: ${reason}`);
+            logger.trace(`[NetworkPeer][disconnect]: ${reason}`);
             this._socket.removeAllListeners();
             if (reason !== 'client namespace disconnect') {
                 messageON(ActionTypes.REMOVE_PEER, data.peerAddress);
@@ -124,11 +124,11 @@ export class NetworkPeer extends Peer {
 
     disconnect(): void {
         this._socket.removeAllListeners();
-        logger.debug(`[NetworkPeer][disconnect] ${this.peerAddress.ip}`);
+        logger.trace(`[NetworkPeer][disconnect] ${this.peerAddress.ip}`);
         if (this._socket.connected) {
-            logger.debug(`[NetworkPeer][disconnect] ${this.peerAddress.ip} was connected`);
+            logger.trace(`[NetworkPeer][disconnect] ${this.peerAddress.ip} was connected`);
             this._socket.disconnect(true);
-            logger.debug(`[NetworkPeer][disconnect] ${this.peerAddress.ip} has disconnected`);
+            logger.trace(`[NetworkPeer][disconnect] ${this.peerAddress.ip} has disconnected`);
         }
     }
 
@@ -137,7 +137,7 @@ export class NetworkPeer extends Peer {
         if (!Buffer.isBuffer(str)) {
             return;
         }
-        
+
         const response = deserialize(str);
 
         if (!ALLOWED_METHODS.has(response.code) && config.NODE_ENV_IN !== NODE_ENV_ENUM.TEST) {
@@ -146,7 +146,7 @@ export class NetworkPeer extends Peer {
         }
 
         if (ALLOWED_BAN_PEER_METHODS.has(response.code) || !this._isBanned) {
-            logger.debug(`[SOCKET][ON_PEER_BROADCAST][${this.peerAddress.ip}], CODE: ${response.code}`);
+            logger.trace(`[SOCKET][ON_PEER_BROADCAST][${this.peerAddress.ip}], CODE: ${response.code}`);
             messageON(response.code, { data: response.data, peerAddress });
         } else {
             logger.debug(`[SOCKET][ON_PEER_BROADCAST][${this.peerAddress.ip}] CODE: ${response.code} ` +

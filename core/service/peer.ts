@@ -64,7 +64,7 @@ export class PeerService {
     }
 
     remove(peerAddress: PeerAddress, checkMinPeerCount: boolean = true) {
-        logger.debug(`${LOG_PREFIX}[remove] ${peerAddressToString(peerAddress)}`);
+        logger.trace(`${LOG_PREFIX}[remove] ${peerAddressToString(peerAddress)}`);
         PeerMemoryRepository.remove(peerAddress);
         PeerNetworkRepository.remove(peerAddress);
         if (checkMinPeerCount && PeerMemoryRepository.count < config.CONSTANTS.PEERS_DISCOVER.MIN) {
@@ -81,7 +81,7 @@ export class PeerService {
         if (checkQueue && SwapTransactionQueue.size && PeerNetworkRepository.count) {
             SwapTransactionQueue.process();
         }
-     
+
         let peers: Array<NetworkPeer> = [];
         if (peerAddresses && isArray(peerAddresses)) {
             peers = PeerNetworkRepository.getManyByAddress(peerAddresses);

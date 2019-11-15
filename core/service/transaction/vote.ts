@@ -32,7 +32,7 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
             votes: trs.asset.votes.map((vote: string) => `${trs.asset.type}${vote}`),
             reward: totals.reward || 0,
             unstake: totals.unstake || 0,
-            airdropReward: airdropReward
+            airdropReward,
         };
     }
 
@@ -102,12 +102,12 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
             errors.push(...votesErrors);
         }
 
-        const uniqVotes = trs.asset.votes.reduce((acc: Array<string>, vote: string) => {
-            const slicedVote: string = vote.slice(1);
-            if (acc.indexOf(slicedVote) === -1) {
-                acc.push(slicedVote);
+        const uniqVotes = trs.asset.votes.reduce((publicKeys: Array<string>, vote: string) => {
+            const publicKey: string = vote.slice(1);
+            if (publicKeys.indexOf(publicKey) === -1) {
+                publicKeys.push(publicKey);
             }
-            return acc;
+            return publicKeys;
         }, []);
 
         if (trs.asset.votes.length > uniqVotes.length) {
@@ -211,16 +211,16 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
         const isDownVote = trs.asset.votes[0][0] === '-';
         const votes = trs.asset.votes.map(vote => vote.substring(1));
         if (isDownVote) {
-            votes.reduce((acc: Array<string>, delegatePublicKey: string) => {
-                const targetAccount: Account = AccountRepo.getByPublicKey(delegatePublicKey);
-                targetAccount.delegate.votes--;
-                acc.splice(acc.indexOf(delegatePublicKey), 1);
-                return acc;
+            votes.reduce((publicKeys: Array<string>, delegatePublicKey: string) => {
+                const delegateAccount: Account = AccountRepo.getByPublicKey(delegatePublicKey);
+                delegateAccount.delegate.votes--;
+                publicKeys.splice(publicKeys.indexOf(delegatePublicKey), 1);
+                return publicKeys;
             }, sender.votes);
         } else {
             votes.forEach((delegatePublicKey) => {
-                const targetAccount: Account = AccountRepo.getByPublicKey(delegatePublicKey);
-                targetAccount.delegate.votes++;
+                const delegateAccount: Account = AccountRepo.getByPublicKey(delegatePublicKey);
+                delegateAccount.delegate.votes++;
             });
             sender.votes.push(...votes);
         }
@@ -251,16 +251,16 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
             sender.votes.push(...votes);
             if (!senderOnly) {
                 votes.forEach((newVote) => {
-                    const targetAccount: Account = AccountRepo.getByPublicKey(newVote);
-                    targetAccount.delegate.votes++;
+                    const delegateAccount: Account = AccountRepo.getByPublicKey(newVote);
+                    delegateAccount.delegate.votes++;
                 });
             }
         } else {
             votes.forEach((vote: PublicKey) => {
                 sender.votes.splice(sender.votes.indexOf(vote), 1);
                 if (!senderOnly) {
-                    const targetAccount: Account = AccountRepo.getByPublicKey(vote);
-                    targetAccount.delegate.votes--;
+                    const delegateAccount: Account = AccountRepo.getByPublicKey(vote);
+                    delegateAccount.delegate.votes--;
                 }
             });
         }

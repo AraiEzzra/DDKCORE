@@ -74,7 +74,7 @@ export class Socket {
 
     connectPeer(peerAddress: PeerAddress, headers: SerializedFullHeaders): void {
 
-        logger.debug(`[SOCKET][connectPeer] connecting to ${peerAddressToString(peerAddress)}...`);
+        logger.trace(`[SOCKET][connectPeer] connecting to ${peerAddressToString(peerAddress)}...`);
         const ws: SocketIOClient.Socket = io(
             `ws://${peerAddressToString(peerAddress)}`,
             PEER_SOCKET_CLIENT_CONFIG
@@ -82,7 +82,7 @@ export class Socket {
 
         ws.on(PEER_SOCKET_EVENTS.CONNECT, () => {
 
-            logger.debug(`[SOCKET][connectPeer] connected to ${peerAddressToString(peerAddress)}`);
+            logger.trace(`[SOCKET][connectPeer] connected to ${peerAddressToString(peerAddress)}`);
 
             ws.emit(PEER_SOCKET_EVENTS.HEADERS, createBufferObject(headers, SchemaName.FullHeaders));
             ws.on(PEER_SOCKET_EVENTS.HEADERS, (response: Buffer) => {
@@ -102,7 +102,7 @@ export class Socket {
 
         const peerHeaders = deserialize(response);
 
-        logger.debug(`[Driver][Socket][onHeadersReceive] ${type} ${peerAddress.ip}, ` +
+        logger.trace(`[Driver][Socket][onHeadersReceive] ${type} ${peerAddress.ip}, ` +
             `broadhash: ${peerHeaders.broadhash}, height: ${peerHeaders.height}, ` +
             `buffer size: ${response.length} byte`);
 
