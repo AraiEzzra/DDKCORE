@@ -18,6 +18,7 @@ import SharedTransactionRepo from 'shared/repository/transaction';
 import TransactionHistoryRepository from 'core/repository/history/transaction';
 import { TransactionId } from 'shared/model/types';
 import SystemRepository from 'core/repository/system';
+import PeerNetworkRepository from 'core/repository/peer/peerNetwork';
 
 const PROCESS_QUEUE_DELAY = 100;
 
@@ -105,7 +106,10 @@ class TransactionQueue<T extends IAsset> implements ITransactionQueueService<T> 
 
     // TODO change to mapReduce
     async process(): Promise<void> {
-        if (this.queue.length === 0 || this.locked || SystemRepository.synchronization) {
+        if (this.queue.length === 0 ||
+            this.locked ||
+            SystemRepository.synchronization ||
+            PeerNetworkRepository.count === 0) {
             return;
         }
 
