@@ -65,7 +65,7 @@ export class PeerController extends BaseController {
 
     @ON(ActionTypes.HEADERS_RECEIVE)
     headersReceive(data: PeerHeadersReceived) {
-        logger.debug(`[Controller][Peer][headersReceive] peer ${data.peerAddress.ip} connecting as ${data.type}`);
+        logger.trace(`[Controller][Peer][headersReceive] peer ${data.peerAddress.ip} connecting as ${data.type}`);
         const result = PeerService.add(data);
         if (result && data.type === PEER_SOCKET_TYPE.CLIENT) {
             const peer = PeerNetworkRepository.get(data.peerAddress);

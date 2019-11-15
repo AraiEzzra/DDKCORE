@@ -1,6 +1,5 @@
 import * as path from 'path';
 import { QueryFile } from 'pg-promise';
-import { timeService as EskaTimeService } from 'eska-common';
 
 import db from 'shared/driver/db';
 import TransactionDispatcher from 'core/service/transaction';

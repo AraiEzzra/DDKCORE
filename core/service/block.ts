@@ -550,7 +550,7 @@ class BlockService implements IBlockService {
         );
 
         const removedTransactions = TransactionPool.batchRemove(block.transactions);
-        logger.debug(
+        logger.trace(
             `[Service][Block][receiveBlock] removed transactions count: ${removedTransactions.length}`
         );
 
