@@ -137,7 +137,7 @@ export class NetworkPeer extends Peer {
         if (!Buffer.isBuffer(str)) {
             return;
         }
-        
+
         const response = deserialize(str);
 
         if (!ALLOWED_METHODS.has(response.code) && config.NODE_ENV_IN !== NODE_ENV_ENUM.TEST) {
@@ -149,7 +149,7 @@ export class NetworkPeer extends Peer {
             logger.trace(`[SOCKET][ON_PEER_BROADCAST][${this.peerAddress.ip}], CODE: ${response.code}`);
             messageON(response.code, { data: response.data, peerAddress });
         } else {
-            logger.trace(`[SOCKET][ON_PEER_BROADCAST][${this.peerAddress.ip}] CODE: ${response.code} ` +
+            logger.debug(`[SOCKET][ON_PEER_BROADCAST][${this.peerAddress.ip}] CODE: ${response.code} ` +
                 +`try to broadcast, but it has been banned`);
         }
     }
