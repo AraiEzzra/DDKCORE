@@ -168,6 +168,7 @@ class BlockService implements IBlockService {
                 .forEach(trs => {
                     const sender = AccountRepository.getByAddress(trs.senderAddress);
                     TransactionDispatcher.undoUnconfirmed(trs, sender);
+                    TransactionQueue.push(trs);
                     TransactionHistoryRepository.addEvent(trs, { action: TransactionLifecycle.UNDO_BY_FAILED_APPLY });
                 });
             return new ResponseEntity({ errors: [...applyBlockResponse.errors, 'process'] });
