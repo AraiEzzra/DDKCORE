@@ -23,4 +23,11 @@ export const PEER_SOCKET_CLIENT_CONFIG: SocketIOClient.ConnectOpts = {
     timeout: 10000,
 };
 
+export const PEER_SOCKET_SERVER_CONFIG: SocketIOClient.ConnectOpts = {
+    ...API_SOCKET_SERVER_CONFIG,
+    transports: [
+        'websocket',
+    ],
+};
+
 export const SOCKET_TIMEOUT_MS = 10000;
