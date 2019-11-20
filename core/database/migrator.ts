@@ -3,6 +3,7 @@ import fs from 'fs';
 import { QueryFile, IDatabase } from 'pg-promise';
 
 import { compareTags } from 'core/util/versionChecker';
+import migration_1_3_9 from 'core/database/migrations/1.3.9';
 
 type PropertyFile = {
     id: number | bigint;
@@ -20,6 +21,8 @@ export class Migrator {
     async run(migrationsPath = undefined) {
         const filesMigration = this.read(migrationsPath);
         await this.runMigrate(filesMigration);
+
+        await migration_1_3_9(this.db);
     }
 
     read(migrationsPath?: string): Array<Object | void> {
