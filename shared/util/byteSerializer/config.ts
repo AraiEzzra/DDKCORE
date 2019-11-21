@@ -8,8 +8,8 @@ export enum SchemaName {
     FullHeaders = 3,
     BlockData = 4,
     Block = 5,
-    Transaction = 6,
-    TransactionBlock = 7,
+    OldTransaction = 6,
+    OldTransactionBlock = 7,
     TransactionAssetRegister = 8,
     TransactionAssetSend = 9,
     TransactionAssetSignature = 10,
@@ -20,6 +20,8 @@ export enum SchemaName {
     CommonBlockResponse = 15,
     RequestBlocks = 16,
     Empty = 17,
+    Transaction = 18,
+    TransactionBlock = 19,
 }
 
 schemaStore.add(SchemaName.Request, {
@@ -74,7 +76,7 @@ schemaStore.add(SchemaName.Block, {
     transactions: new BufferTypes.Buffer(),
 });
 
-schemaStore.add(SchemaName.Transaction, {
+schemaStore.add(SchemaName.OldTransaction, {
     id: new BufferTypes.Utf8(),
     type: new BufferTypes.Uint8(),
     createdAt: new BufferTypes.Uint32(),
@@ -89,7 +91,7 @@ schemaStore.add(SchemaName.Transaction, {
     asset: new BufferTypes.Buffer()
 });
 
-schemaStore.add(SchemaName.TransactionBlock, {
+schemaStore.add(SchemaName.OldTransactionBlock, {
     id: new BufferTypes.Utf8(),
     blockId: new BufferTypes.Utf8(),
     type: new BufferTypes.Uint8(),
@@ -149,3 +151,33 @@ schemaStore.add(SchemaName.RequestBlocks, {
 });
 
 schemaStore.add(SchemaName.Empty, {});
+
+schemaStore.add(SchemaName.Transaction, {
+    id: new BufferTypes.Utf8(),
+    type: new BufferTypes.Uint8(),
+    createdAt: new BufferTypes.Uint32(),
+    senderPublicKey: new BufferTypes.Utf8(),
+    senderAddress: new BufferTypes.Uint64(),
+    signature: new BufferTypes.Utf8(),
+    secondSignature: new BufferTypes.Utf8JS(),
+    fee: new BufferTypes.Number64(),
+    salt: new BufferTypes.Utf8(),
+    relay: new BufferTypes.Uint8(),
+    confirmations: new BufferTypes.Uint32(),
+    asset: new BufferTypes.Buffer()
+});
+
+schemaStore.add(SchemaName.TransactionBlock, {
+    id: new BufferTypes.Utf8(),
+    blockId: new BufferTypes.Utf8(),
+    type: new BufferTypes.Uint8(),
+    createdAt: new BufferTypes.Uint32(),
+    senderPublicKey: new BufferTypes.Utf8(),
+    senderAddress: new BufferTypes.Uint64(),
+    signature: new BufferTypes.Utf8(),
+    secondSignature: new BufferTypes.Utf8JS(),
+    fee: new BufferTypes.Number64(),
+    salt: new BufferTypes.Utf8(),
+    confirmations: new BufferTypes.Uint32(),
+    asset: new BufferTypes.Buffer(),
+});

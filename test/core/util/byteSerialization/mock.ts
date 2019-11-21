@@ -173,8 +173,58 @@ blockModel.transactions = allTransactions.map((transaction: Transaction<any>) =>
     return trs;
 });
 
+
+export const transactionWithNullSecondSignature = new Transaction({
+    id: '440b6c8433b9c9784121c4f4a3a990569be32ad51d4ff6192b0e72e151b5ce26',
+    type: TransactionType.SEND,
+    createdAt: SlotService.getTime(),
+    senderPublicKey: 'f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2',
+    senderAddress: senderAddress,
+    signature: '6986fe85e0eb0236289274ec83defb81f4b3c5cf078bdeff29e3b8dfbc7670c7a56d3f3d4090d8b60c' +
+        'b5b63fddbeb6452c32521488d908ce8f811979b401ef0a',
+    secondSignature: null,
+    fee: 1000000,
+    salt: 'f74f89ef5eb66be0b8e069f854d2a7ec',
+    relay: 2,
+    confirmations: 0,
+    asset: { recipientAddress: recipientAddress, amount: amount }
+});
+
+export const transactionWithoutSecondSignature = new Transaction({
+    id: '440b6c8433b9c9784121c4f4a3a990569be32ad51d4ff6192b0e72e151b5ce26',
+    type: TransactionType.SEND,
+    createdAt: SlotService.getTime(),
+    senderPublicKey: 'f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2',
+    senderAddress: senderAddress,
+    signature: '6986fe85e0eb0236289274ec83defb81f4b3c5cf078bdeff29e3b8dfbc7670c7a56d3f3d4090d8b60c' +
+        'b5b63fddbeb6452c32521488d908ce8f811979b401ef0a',
+    secondSignature: undefined,
+    fee: 1000000,
+    salt: 'f74f89ef5eb66be0b8e069f854d2a7ec',
+    relay: 2,
+    confirmations: 0,
+    asset: { recipientAddress: recipientAddress, amount: amount }
+});
+
+export const transactionWithSecondSignature = new Transaction({
+    id: '440b6c8433b9c9784121c4f4a3a990569be32ad51d4ff6192b0e72e151b5ce26',
+    type: TransactionType.SEND,
+    createdAt: SlotService.getTime(),
+    senderPublicKey: 'f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc2',
+    senderAddress: senderAddress,
+    signature: '6986fe85e0eb0236289274ec83defb81f4b3c5cf078bdeff29e3b8dfbc7670c7a56d3f3d4090d8b60c' +
+        'b5b63fddbeb6452c32521488d908ce8f811979b401ef0a',
+    secondSignature: '6986fe85e0eb02362892754c83defb81f4b3c5cf078bdeff29e3b8dfbc7670c7a56d3f3d4090d8b60c' +
+        'b5b63fddbeb6452c32521488d908ce8f811979b401ef0a',
+    fee: 1000000,
+    salt: 'f74f89ef5eb66be0b8e069f854d2a7ec',
+    relay: 2,
+    confirmations: 0,
+    asset: { recipientAddress: recipientAddress, amount: amount }
+});
+
 export const blocks = [
-    {...blockModel},
-    {...blockModel},
-    {...blockModel},
+    { ...blockModel },
+    { ...blockModel },
+    { ...blockModel },
 ];
