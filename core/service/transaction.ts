@@ -527,6 +527,10 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
             }
         }
 
+        if (trs.id !== this.getId(trs)) {
+            return new ResponseEntity({ errors: ['Invalid id'] });
+        }
+
         const asset: IAssetTransfer | IAssetStake = <IAssetTransfer | IAssetStake><Object>trs.asset;
         const amount = (asset.amount || 0) + trs.fee;
         const senderBalanceResponse = this.checkBalance(amount, trs, sender);
