@@ -45,8 +45,6 @@ class Loader {
         await this.initDatabase();
         await new Migrator(db).run();
 
-        return;
-
         initControllers();
         System.synchronization = true;
         await this.blockWarmUp(this.limit);
