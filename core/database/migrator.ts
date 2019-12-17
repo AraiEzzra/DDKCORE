@@ -3,11 +3,13 @@ import fs from 'fs';
 import { QueryFile, IDatabase } from 'pg-promise';
 
 import { compareTags } from 'core/util/versionChecker';
+import migration_1_3_11 from 'core/database/migrations/1.3.11';
 
 type PropertyFile = {
     id: number | bigint;
     name: string | any;
     path: string;
+    type: string;
 };
 
 export class Migrator {
@@ -20,6 +22,7 @@ export class Migrator {
     async run(migrationsPath = undefined) {
         const filesMigration = this.read(migrationsPath);
         await this.runMigrate(filesMigration);
+
     }
 
     read(migrationsPath?: string): Array<Object | void> {
@@ -32,16 +35,15 @@ export class Migrator {
             .sort(compareTags)
             .forEach((file, id) => {
                 const pathToFile: string = path.join(migrationsPath, file);
-                const isFile: boolean = fs.statSync(pathToFile).isFile() && /\.sql$/.test(pathToFile);
+                const isFile: boolean = fs.statSync(pathToFile).isFile() && /\.sql|\.ts$/.test(pathToFile);
 
                 if (isFile) {
-                    const splitName = file.split('_');
-                    const fileName = file.match(/^\d+\.\d+\.\d+\.sql$/);
-
+                    const fileName = file.match(/^(\d+\.\d+\.\d+)\.(sql|ts)$/);
                     filesMigration.push({
                         id,
-                        name: Array.isArray(fileName) ? fileName[0].replace(/\.sql$/, '') : null,
-                        path: pathToFile
+                        name: fileName[1],
+                        path: pathToFile,
+                        type: fileName[2]
                     });
                 }
             });
@@ -58,14 +60,20 @@ export class Migrator {
         }
 
         for (let file of files) {
+
             const result = await this.db.query(
                 'INSERT INTO migrations (id, name) VALUES($1, $2) ON CONFLICT DO NOTHING RETURNING id ',
                 [file.id.toString(), file.name]
             );
             if (result.length) {
-                const sql = new QueryFile(file.path, { minify: true });
-                await this.db.query(sql);
+                if (file.type === 'sql') {
+                    const sql = new QueryFile(file.path, { minify: true });
+                    await this.db.query(sql);
+                } else if (file.name === '1.3.11' && file.type === 'ts') {
+                    await migration_1_3_11(this.db);
+                }
             }
         }
     }
 }
+
