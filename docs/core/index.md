@@ -10,6 +10,8 @@
 
 ## Other
 
+* [Block verification](block/verification.md)
+
 * [Core-wallet interaction](core_wallet_interaction.md)
 
 * [Encryption](encryption.md)
