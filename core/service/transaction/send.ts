@@ -46,7 +46,7 @@ class TransactionSendService implements IAssetService<IAssetTransfer> {
     }
 
     verifyUnconfirmed(trs: Transaction<IAssetTransfer>, sender: Account): ResponseEntity<void> {
-        if ((trs.fee + trs.asset.amount) > sender.actualBalance) {
+        if ((trs.fee + trs.asset.amount) >= sender.actualBalance) {
             return new ResponseEntity<void>({ errors: ['Not enough balance.'] });
         }
         return new ResponseEntity<void>();
