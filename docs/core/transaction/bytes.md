@@ -2,7 +2,7 @@
 
 ## Get bytes
 
-Get bytes is converting main transaction data a to buffer
+Get bytes is converting main transaction data to a buffer
 
 The main transaction data are:
 
