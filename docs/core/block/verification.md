@@ -14,13 +14,11 @@ For sign verification use [sodium-native](https://www.npmjs.com/package/sodium-n
 
 #### ID
 
-Calculate [sha256](https://en.wikipedia.org/wiki/SHA-2), using [NodeJS Crypto](https://nodejs.org/api/crypto.html),
-form data buffer of signed block and compare result with existing `id`.
+[Get bytes](bytes.md) from signed block and compare result with existing `id`.
 
 #### Payload
 
-Calculate [sha256](https://en.wikipedia.org/wiki/SHA-2), using [NodeJS Crypto](https://nodejs.org/api/crypto.html),
-from buffers of all transactions in block and compare result with existing `payload hash`
+Calculate [payload hash](payload_hash.md) and compare result with existing `payload hash`
 
 #### Generator Public Key
 
