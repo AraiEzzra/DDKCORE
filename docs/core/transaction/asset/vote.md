@@ -1,5 +1,24 @@
 # Transaction vote asset
 
+```json
+{ 
+   "votes":[ 
+      "+346c289605878e7cfe49e824bcc12faa773b3714e8ef6281d0d99c0c3048d2b6",
+      "-5c6e95e404b1c78ecfaf897fdc0003679ba4c5397635a39c7a2cb358eecba7db"
+   ],
+   "reward":0,
+   "unstake":0,
+   "airdropReward":{ 
+      "sponsors":[ 
+         [ 
+            "12836959705098885161",
+            500000
+         ]
+      ]
+   }
+}
+```
+
 ## Verify
 
 To verify `vote asset`, you need to check:
