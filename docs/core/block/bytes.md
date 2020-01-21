@@ -17,6 +17,24 @@ The main block data are:
 
 In some cases, the bytes may contain a `signature`
 
+Amount of bytes to allocate (safe alloc) for each field: 
+
+| Field                | Type           | Bytes | Required |
+|----------------------|----------------|-------|----------|
+| version              | int32          | 4     | true     |
+| createdAt            | int32          | 8     | true     |
+| transactionCount     | int32          | 4     | true     |
+| amount               | uint64         | 8     | true     |
+| fee                  | uint64         | 8     | true     |
+| previousBlockId      | string         | 32    | true     |
+| payloadHash          | string         | 32    | true     |
+| generatorPublicKey   | string         | 32    | true     |
+| signature            | string         | 64    | false    |
+
+Bytes should be written in `Little Endian` order and in order that shown in table.
+
+`for compatibility, after timestamp we should write 4 bytes filled with 0`
+
 ### Example get bytes
 
 Get bytes from a block
