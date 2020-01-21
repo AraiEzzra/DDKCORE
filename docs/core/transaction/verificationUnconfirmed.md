@@ -1,7 +1,7 @@
 # Verification unconfirmed transaction
 Transaction verify takes place in several steps.
  * Check the absence of sender `address` in black list.
- * Check the absence of transaction `id` in confirmed transaction repository.
+ * Check the absence of transaction `id` in [transaction storage](transaction/memoryStorage.md).
  * Verifying the `signature` of transaction.
  To verify `signature`, you need to get a data buffer from type of transaction, creation time, salt, sender public key and asset.
  Create hash sha256 from data buffer, using [NodeJS Crypto](https://nodejs.org/api/crypto.html)
