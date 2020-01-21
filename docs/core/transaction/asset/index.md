@@ -14,14 +14,15 @@ DDK using multiple transaction types:
 Each transaction type has its own asset.
 
 * Send
-    + [Verify](asset/send#verify)
+    + [Get Bytes](send#get-bytes)
+    + [Verify](send#verify)
 * Referral
-    + [Verify](asset/referral#verify)
+    + [Verify](referral#verify)
 * Delegate
-    + [Verify](asset/delegate#verify)
+    + [Verify](delegate#verify)
 * Signature
-    + [Verify](asset/signature#verify)
+    + [Verify](signature#verify)
 * Stake
-    + [Verify](asset/stake#verify)
+    + [Verify](stake#verify)
 * Vote
-    + [Verify](asset/vote#verify)
+    + [Verify](vote#verify)
