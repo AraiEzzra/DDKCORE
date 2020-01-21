@@ -4,19 +4,21 @@
 
 Get bytes is converting main transaction data to a buffer
 
-The main transaction data are:
+| Field           | Type         | Bytes | Required |
+|-----------------|--------------|-------|----------|
+| type            | int8         | 1     | +        |
+| createdAt       | int32        | 4     | +        |
+| salt            | string       | 16    | +        |
+| senderPublicKey | string       | 32    | +        |
+| asset           | byte array   | X     | +        |
+| signature       | string       | 64    | -        |
+| secondSignature | string       | 64    | -        |
 
-1. Type
-2. Creation time
-3. Salt
-4. Sender public key
-5. Asset
-
-In some cases, the bytes may contain a signature and a second signature
+Bytes should be written in `Little Endian` order and in order that shown in table
 
 ### Example get bytes
 
-Get bytes from a transaction
+Get bytes from a send transaction
 
 ```json
 {
@@ -36,5 +38,5 @@ The result of getting bytes from this transaction will be the following buffer
 For convenience, it is converted to hexadecimal code
 
 ```text
-14da3a9806894cdfa99bc38ca098d38d305c811496f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc21aa981869d400a578c11c6dd0d65fa89a21557db44e5d876dcd0cc461db1bfd2
+0ada3a9806894cdfa99bc38ca098d38d305c811496f4ae589b02f97e9ab5bce61cf187bcc96cfb3fdf9a11333703a682b7d47c8dc236f7ca4455d8f0030200000000e40b54
 ```
