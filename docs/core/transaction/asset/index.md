@@ -1,5 +1,7 @@
 # Transaction asset
 
+## Types
+
 DDK using multiple transaction types:
 
 | Type      | Code   |
@@ -10,6 +12,8 @@ DDK using multiple transaction types:
 | DELEGATE  | 30     |
 | STAKE     | 40     |
 | VOTE      | 60     |
+
+## Assets
 
 Each transaction type has its own asset.
 
