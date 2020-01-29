@@ -3,9 +3,10 @@ import { IAssetRegister, Transaction, TransactionModel } from 'shared/model/tran
 import { Account } from 'shared/model/account';
 import { ResponseEntity } from 'shared/model/response';
 import AccountRepo from 'core/repository/account';
-import ReferredUsersRepo, { ReferredUserFactor } from 'core/repository/referredUsers';
+import { referredUsersFactory, FactorAction } from 'core/repository/referredUsers';
 import config from 'shared/config';
 import BUFFER from 'core/util/buffer';
+import { isARPEnabled } from 'core/util/feature';
 
 class TransactionRegisterService implements IAssetService<IAssetRegister> {
 
@@ -60,27 +61,37 @@ class TransactionRegisterService implements IAssetService<IAssetRegister> {
                 address: trs.asset.referral
             });
 
-            ReferredUsersRepo.add(referralAccount);
+            referredUsersFactory.get().add(referralAccount);
         }
-
-        const referrals: Array<Account> =
-            referralAccount.referrals.slice(0, config.CONSTANTS.REFERRAL.MAX_COUNT - 1);
 
         const targetAccount: Account = AccountRepo.add({
             address: trs.senderAddress,
             publicKey: trs.senderPublicKey
         });
-        targetAccount.referrals = [referralAccount, ...referrals];
 
-        ReferredUsersRepo.add(targetAccount);
-        ReferredUsersRepo.updateCountFactor(trs);
+        this.addReferral(referralAccount, targetAccount);
+
+        referredUsersFactory.get().add(targetAccount);
+        referredUsersFactory.get().updateCountFactor(trs, FactorAction.ADD);
     }
 
     undoUnconfirmed(trs: Transaction<IAssetRegister>, sender: Account, senderOnly: boolean): void {
-        ReferredUsersRepo.updateCountFactor(trs, ReferredUserFactor.ACTION.SUBTRACT);
+        referredUsersFactory.get().updateCountFactor(trs, FactorAction.SUBTRACT);
         sender.referrals = [];
     }
 
+    private addReferral(referralAccount: Account, targetAccount: Account) {
+        let referrals: Array<Account>;
+
+        if (isARPEnabled()) {
+            referrals = referralAccount.arp.referrals.slice(0, config.CONSTANTS.REFERRAL.MAX_COUNT - 1);
+            targetAccount.arp.referrals = [referralAccount, ...referrals];
+            return;
+        }
+
+        referrals = referralAccount.referrals.slice(0, config.CONSTANTS.REFERRAL.MAX_COUNT - 1);
+        targetAccount.referrals = [referralAccount, ...referrals];
+    }
 }
 
 export default new TransactionRegisterService();

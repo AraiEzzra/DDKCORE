@@ -2,7 +2,8 @@ import { API } from 'core/api/util/decorators';
 import { Message } from 'shared/model/message';
 import { ResponseEntity } from 'shared/model/response';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
-import AirdropHistoryRepository, {
+import {
+    airdropHistoryFactory,
     AirdropDailyHistoryQuery,
     AirdropHistoryQuery
 } from 'core/repository/airdropHistory';
@@ -22,7 +23,7 @@ class AirdropHistoryController {
         };
 
         return new ResponseEntity({
-            data: AirdropHistoryRepository.getHistory(query)
+            data: airdropHistoryFactory.get(query.airdropType).getHistory(query)
         });
     }
 
@@ -35,7 +36,7 @@ class AirdropHistoryController {
         };
 
         return new ResponseEntity({
-            data: AirdropHistoryRepository.getDailyHistory(query)
+            data: airdropHistoryFactory.get(query.airdropType).getDailyHistory(query)
         });
     }
 

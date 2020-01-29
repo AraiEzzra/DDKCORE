@@ -1,6 +1,7 @@
 import { Delegate } from 'shared/model/delegate';
 import { AccountState, Address, PublicKey, TransactionId } from 'shared/model/types';
 import { Stake } from 'shared/model/transaction';
+import { Airdrop } from 'shared/model/airdrop';
 import config from 'shared/config';
 
 export enum AccountChangeAction {
@@ -15,6 +16,7 @@ export enum AccountChangeAction {
     DISTRIBUTE_FEE_UNDO = 'DISTRIBUTE_FEE_UNDO',
 }
 
+
 export class AccountModel {
     address: Address;
     publicKey?: PublicKey;
@@ -24,6 +26,7 @@ export class AccountModel {
     votes?: Array<PublicKey>;
     referrals?: Array<Account>;
     stakes?: Array<Stake>;
+    arp?: Airdrop;
 
     constructor(data: AccountModel) {
         Object.assign(this, data);
@@ -31,6 +34,7 @@ export class AccountModel {
         this.referrals = [...(data.referrals || [])];
         this.stakes = (data.stakes || []).map(stake => new Stake({ ...stake }));
         this.delegate = data.delegate && new Delegate(data.delegate);
+        this.arp = new Airdrop(this.arp);
     }
 }
 
@@ -39,7 +43,7 @@ export class Account extends AccountModel {
     history: Array<AccountState> = [];
 
     public getCopy(): Account {
-        return new Account( { ...this, history: [] });
+        return new Account({ ...this, history: [] });
     }
 
     addHistory(action: AccountChangeAction, transactionId: TransactionId): void {

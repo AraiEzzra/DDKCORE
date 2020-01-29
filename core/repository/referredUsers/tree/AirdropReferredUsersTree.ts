@@ -1,25 +1,37 @@
 import { FactorAction, FactorType, IReferredUser, IReferredUsers } from 'core/repository/referredUsers/interfaces';
-import AirdropHistoryRepository, { AirdropHistory } from 'core/repository/airdropHistory';
+import { AirdropHistory, IAirdropHistoryRepository } from 'core/repository/airdropHistory';
 import FactorTree from 'core/repository/referredUsers/tree/FactorTree';
 import config from 'shared/config';
 import { Account } from 'shared/model/account';
 import { Address } from 'shared/model/types';
-import { IAssetRegister, IAssetStake, IAssetVote, Transaction } from 'shared/model/transaction';
+import { IAssetRegister, IAssetStake, IAssetVote, Transaction, Stake } from 'shared/model/transaction';
 import AccountRepository from 'core/repository/account';
 
-export default class ReferredUsersTree implements IReferredUsers {
+export default class AirdropReferredUsersTree implements IReferredUsers {
 
     private tree: FactorTree<Address>;
 
-    constructor() {
+    private airdropHistoryRepository: IAirdropHistoryRepository;
+
+    constructor(airdropHistoryRepository: IAirdropHistoryRepository) {
+        this.airdropHistoryRepository = airdropHistoryRepository;
         this.tree = new FactorTree();
+    }
+
+    protected getAccountReferrals(account: Account): Array<Account> {
+        return account.referrals;
+    }
+
+    protected getAccountActiveStakes(account: Account): Array<Stake> {
+        return account.stakes.filter(stake => stake.isActive);
     }
 
     add(account: Account) {
         const node = this.tree.addNode(account.address);
+        const referrals = this.getAccountReferrals(account);
 
-        if (account.referrals.length > 0) {
-            const firstReferralAddress = account.referrals[0].address;
+        if (referrals.length > 0) {
+            const firstReferralAddress = referrals[0].address;
 
             let root = this.tree.getNode(firstReferralAddress);
 
@@ -78,10 +90,10 @@ export default class ReferredUsersTree implements IReferredUsers {
     private updateAirdropHistory(data: AirdropHistory, action: FactorAction = FactorAction.ADD) {
         switch (action) {
             case FactorAction.ADD:
-                AirdropHistoryRepository.add(data);
+                this.airdropHistoryRepository.add(data);
                 break;
             case FactorAction.SUBTRACT:
-                AirdropHistoryRepository.remove(data);
+                this.airdropHistoryRepository.remove(data);
                 break;
             default:
         }
@@ -102,8 +114,7 @@ export default class ReferredUsersTree implements IReferredUsers {
 
             return {
                 address: item.data,
-                stakeAmount: referredAccount
-                    .getActiveStakes()
+                stakeAmount: this.getAccountActiveStakes(referredAccount)
                     .reduce((accumulator, stake) => accumulator + stake.amount, 0),
                 isEmpty: item.children.size === 0 || level === config.CONSTANTS.REFERRAL.MAX_COUNT,
                 factors: item.getFactorsByLevel(level),
