@@ -1,8 +1,7 @@
-import { Delegate } from 'shared/model/delegate';
-import { AccountState, Address, PublicKey, TransactionId } from 'shared/model/types';
-import { Stake } from 'shared/model/transaction';
-import { Airdrop } from 'shared/model/airdrop';
+import { Account as AccountModel } from 'ddk.registry/dist/model/common/account';
+import { Stake } from 'ddk.registry/dist/model/common/transaction/stake';
 import config from 'shared/config';
+import { AccountState, TransactionId } from 'shared/model/types';
 
 export enum AccountChangeAction {
     TRANSACTION_APPLY_UNCONFIRMED = 'TRANSACTION_APPLY_UNCONFIRMED',
@@ -14,28 +13,6 @@ export enum AccountChangeAction {
     AIRDROP_REWARD_RECEIVE_UNDO = 'AIRDROP_REWARD_RECEIVE_UNDO',
     DISTRIBUTE_FEE = 'DISTRIBUTE_FEE',
     DISTRIBUTE_FEE_UNDO = 'DISTRIBUTE_FEE_UNDO',
-}
-
-
-export class AccountModel {
-    address: Address;
-    publicKey?: PublicKey;
-    secondPublicKey?: PublicKey;
-    actualBalance?: number = 0;
-    delegate?: Delegate;
-    votes?: Array<PublicKey>;
-    referrals?: Array<Account>;
-    stakes?: Array<Stake>;
-    arp?: Airdrop;
-
-    constructor(data: AccountModel) {
-        Object.assign(this, data);
-        this.votes = [...(data.votes || [])];
-        this.referrals = [...(data.referrals || [])];
-        this.stakes = (data.stakes || []).map(stake => new Stake({ ...stake }));
-        this.delegate = data.delegate && new Delegate(data.delegate);
-        this.arp = new Airdrop(this.arp);
-    }
 }
 
 export class Account extends AccountModel {

@@ -1,9 +1,11 @@
+import { Stake } from 'ddk.registry/dist/model/common/transaction/stake';
 import { IAssetService } from 'core/service/transaction';
 import {
     IAssetStake,
     Transaction,
     TransactionType,
-    IAirdropAsset, TransactionModel, Stake,
+    IAirdropAsset,
+    TransactionModel,
 } from 'shared/model/transaction';
 import { ResponseEntity } from 'shared/model/response';
 import { Account } from 'shared/model/account';
@@ -13,7 +15,6 @@ import config from 'shared/config';
 import BUFFER from 'core/util/buffer';
 import BlockRepository from 'core/repository/block';
 import { referredUsersFactory, FactorAction } from 'core/repository/referredUsers';
-
 import {
     getAirdropReward,
     sendAirdropReward,
@@ -21,7 +22,6 @@ import {
     verifyAirdrop,
     isSponsorsExist
 } from 'core/util/reward';
-import FailService from 'core/service/fail';
 import BlockStorageService from 'core/service/blockStorage';
 
 const MIN_STAKE_AMOUNT = MONEY_FACTOR;
@@ -120,7 +120,7 @@ class TransactionStakeService implements IAssetService<IAssetStake> {
             amount: trs.asset.amount,
             voteCount: trs.asset.startVoteCount,
             nextVoteMilestone: trs.createdAt,
-            airdropReward: trs.asset.airdropReward.sponsors,
+            airdropReward: trs.asset.airdropReward,
             sourceTransactionId: Buffer.from(trs.id, 'hex'),
         }));
         if (isSponsorsExist(trs)) {

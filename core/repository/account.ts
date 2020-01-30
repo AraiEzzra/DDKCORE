@@ -1,7 +1,8 @@
-import { Account } from 'shared/model/account';
-import { getAddressByPublicKey } from 'shared/util/account';
+import { Address } from 'ddk.registry/dist/model/common/type';
 import DelegateRepository from 'core/repository/delegate';
-import { Address, PublicKey, SerializedAccount } from 'shared/model/types';
+import { Account } from 'shared/model/account';
+import { PublicKey, SerializedAccount } from 'shared/model/types';
+import { getAddressByPublicKey } from 'shared/util/account';
 
 export type Statistics = {
     tokenHolders: number;
@@ -9,11 +10,10 @@ export type Statistics = {
     totalStakeHolders: number;
 };
 
-
 class AccountRepository {
     private memoryAccountsByAddress: Map<Address, Account> = new Map<Address, Account>();
 
-    public add(accountData: { address: Address, publicKey?: PublicKey }): Account {
+    public add(accountData: { address: Address, publicKey: PublicKey; }): Account {
         const accountModel = new Account(accountData);
         this.memoryAccountsByAddress.set(accountData.address, accountModel);
         return accountModel;

@@ -1,21 +1,24 @@
-import { Account, AccountChangeAction } from 'shared/model/account';
-import config from 'shared/config';
-import BlockRepo from 'core/repository/block';
+import AccountRepo from 'core/repository/account';
+import { referredUsersFactory, FactorAction } from 'core/repository/referredUsers';
+import { ResponseEntity } from 'shared/model/response';
 import {
     IAirdropAsset,
     IAssetStake,
     IAssetVote,
-    Stake,
     Transaction,
     TransactionModel,
     TransactionType,
 } from 'shared/model/transaction';
-import AccountRepo from 'core/repository/account';
-import { referredUsersFactory, FactorAction } from 'core/repository/referredUsers';
-import { ResponseEntity } from 'shared/model/response';
+import { Address } from 'shared/model/types';
+import { isARPEnabled } from 'core/util/feature';
+import DDKRegistry from 'ddk.registry';
+import { Account, AccountChangeAction } from 'shared/model/account';
+import config from 'shared/config';
+import { Stake } from 'ddk.registry/dist/model/common/transaction/stake';
+import { createAirdropReward } from 'ddk.registry/dist/util/arp/util';
 import { TOTAL_PERCENTAGE } from 'core/util/const';
 import { isEqualMaps } from 'core/util/common';
-import { Address } from 'shared/model/types';
+import BlockRepo from 'core/repository/block';
 
 class StakeReward {
     private readonly milestones = config.CONSTANTS.FROZE.REWARDS.MILESTONES;
@@ -112,12 +115,45 @@ export const getAirdropReward = (
     return result;
 };
 
+const mergedAirdrops = (...airdrops: Array<IAirdropAsset>): IAirdropAsset => {
+    const mergedAirdrop = createAirdropReward();
+
+    airdrops.forEach(airdrop => {
+        airdrop.sponsors.forEach((reward, address) => {
+            mergedAirdrop.sponsors.set(address, reward);
+        });
+    });
+
+    return mergedAirdrop;
+};
+
+const getARPReward = (trs: Transaction<IAssetStake | IAssetVote>, sender: Account): IAirdropAsset => {
+    const availableAirdropBalance = AccountRepo
+        .getByAddress(BigInt(DDKRegistry.config.ARP.ADDRESS)).actualBalance;
+
+    if (trs.type === TransactionType.STAKE) {
+        return DDKRegistry.stakeARPCalculator.calculate(
+            sender,
+            (trs as Transaction<IAssetStake>).asset.amount,
+            availableAirdropBalance,
+        );
+    }
+
+    return DDKRegistry.voteARPCalculator
+        .calculate(sender, availableAirdropBalance, trs.createdAt);
+};
+
 export const verifyAirdrop = (
     trs: Transaction<IAssetStake | IAssetVote>,
     amount: number,
     sender: Account
 ): ResponseEntity<void> => {
-    const airdropReward = getAirdropReward(sender, amount, trs.type);
+    const airdropReward = isARPEnabled()
+        ? mergedAirdrops(
+            getAirdropReward(sender, amount, trs.type),
+            getARPReward(trs, sender),
+        )
+        : getAirdropReward(sender, amount, trs.type);
 
     if (!isEqualMaps(airdropReward.sponsors, trs.asset.airdropReward.sponsors)) {
         return new ResponseEntity<void>({

@@ -1,5 +1,11 @@
 import { IAssetService } from 'core/service/transaction';
-import { IAirdropAsset, IAssetVote, Stake, Transaction, TransactionModel, VoteType } from 'shared/model/transaction';
+import {
+    IAirdropAsset,
+    IAssetVote,
+    Transaction,
+    TransactionModel,
+    VoteType,
+} from 'shared/model/transaction';
 import { Account } from 'shared/model/account';
 import { ResponseEntity } from 'shared/model/response';
 import AccountRepo from 'core/repository/account';
@@ -19,6 +25,7 @@ import { TOTAL_PERCENTAGE } from 'core/util/const';
 import { PublicKey } from 'shared/model/types';
 import BlockRepository from 'core/repository/block';
 import FailService from 'core/service/fail';
+import { Stake } from 'ddk.registry/dist/model/common/transaction/stake';
 
 class TransactionVoteService implements IAssetService<IAssetVote> {
 
