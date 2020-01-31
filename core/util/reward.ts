@@ -115,7 +115,7 @@ export const getAirdropReward = (
     return result;
 };
 
-const mergedAirdrops = (...airdrops: Array<IAirdropAsset>): IAirdropAsset => {
+const mergeAirdrops = (...airdrops: Array<IAirdropAsset>): IAirdropAsset => {
     const mergedAirdrop = createAirdropReward();
 
     airdrops.forEach(airdrop => {
@@ -149,7 +149,7 @@ export const verifyAirdrop = (
     sender: Account
 ): ResponseEntity<void> => {
     const airdropReward = isARPEnabled()
-        ? mergedAirdrops(
+        ? mergeAirdrops(
             getAirdropReward(sender, amount, trs.type),
             getARPReward(trs, sender),
         )
