@@ -120,7 +120,9 @@ const mergeAirdrops = (...airdrops: Array<IAirdropAsset>): IAirdropAsset => {
 
     airdrops.forEach(airdrop => {
         airdrop.sponsors.forEach((reward, address) => {
-            mergedAirdrop.sponsors.set(address, reward);
+            const currentReward = mergedAirdrop.sponsors.get(address) || 0;
+
+            mergedAirdrop.sponsors.set(address, reward + currentReward);
         });
     });
 
