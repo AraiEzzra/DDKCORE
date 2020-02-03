@@ -1,9 +1,10 @@
+import DDK from 'ddk.registry';
+import { createAssetStake } from 'ddk.registry/dist/service/transaction/stake';
 import { IAssetService } from 'core/service/transaction';
 import {
     IAssetStake,
     Transaction,
-    TransactionType,
-    IAirdropAsset, TransactionModel, Stake,
+    TransactionModel,
 } from 'shared/model/transaction';
 import { ResponseEntity } from 'shared/model/response';
 import { Account } from 'shared/model/account';
@@ -14,34 +15,32 @@ import BUFFER from 'core/util/buffer';
 import BlockRepository from 'core/repository/block';
 import ReferredUsersRepo from 'core/repository/referredUsers';
 import { FactorAction } from 'core/repository/referredUsers/interfaces';
-
 import {
-    getAirdropReward,
     sendAirdropReward,
     undoAirdropReward,
     verifyAirdrop,
-    isSponsorsExist
+    isSponsorsExist,
 } from 'core/util/reward';
-import FailService from 'core/service/fail';
 import BlockStorageService from 'core/service/blockStorage';
+import { Stake } from 'ddk.registry/dist/model/common/transaction/stake';
 
 const MIN_STAKE_AMOUNT = MONEY_FACTOR;
 
 class TransactionStakeService implements IAssetService<IAssetStake> {
 
     create(trs: TransactionModel<IAssetStake>): IAssetStake {
+        const airdropAccount = AccountRepo.getByAddress(config.CONSTANTS.AIRDROP.ADDRESS);
+        const arpAccount = AccountRepo.getByAddress(BigInt(DDK.config.ARP.ADDRESS));
+        const lastBlock = BlockRepository.getLastBlock();
         const sender: Account = AccountRepo.getByAddress(trs.senderAddress);
-        const airdropReward: IAirdropAsset = getAirdropReward(
+
+        return createAssetStake(
+            trs.asset,
             sender,
-            trs.asset.amount,
-            TransactionType.STAKE
+            lastBlock.height,
+            airdropAccount.actualBalance,
+            arpAccount.actualBalance,
         );
-        return {
-            amount: trs.asset.amount,
-            startTime: trs.createdAt,
-            startVoteCount: trs.asset.startVoteCount || 0,
-            airdropReward: airdropReward
-        };
     }
 
     getBytes(trs: Transaction<IAssetStake>): Buffer {
@@ -121,7 +120,7 @@ class TransactionStakeService implements IAssetService<IAssetStake> {
             amount: trs.asset.amount,
             voteCount: trs.asset.startVoteCount,
             nextVoteMilestone: trs.createdAt,
-            airdropReward: trs.asset.airdropReward.sponsors,
+            airdropReward: trs.asset.airdropReward,
             sourceTransactionId: Buffer.from(trs.id, 'hex'),
         }));
         if (isSponsorsExist(trs)) {
