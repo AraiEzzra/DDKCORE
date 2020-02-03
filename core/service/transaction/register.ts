@@ -6,6 +6,7 @@ import AccountRepo from 'core/repository/account';
 import ReferredUsersRepo, { ReferredUserFactor } from 'core/repository/referredUsers';
 import config from 'shared/config';
 import BUFFER from 'core/util/buffer';
+import { isAccountReferrer } from 'core/util/referral';
 
 class TransactionRegisterService implements IAssetService<IAssetRegister> {
 
@@ -45,6 +46,12 @@ class TransactionRegisterService implements IAssetService<IAssetRegister> {
         ) {
             return new ResponseEntity<void>({ errors: ['Account already exists.'] });
         }
+
+        const referrer: Account = AccountRepo.getByAddress(trs.asset.referral);
+        if (!isAccountReferrer(referrer)) {
+            return new ResponseEntity<void>({ errors: ['Referral link is invalid.'] });
+        }
+
         return new ResponseEntity<void>({ errors });
     }
 

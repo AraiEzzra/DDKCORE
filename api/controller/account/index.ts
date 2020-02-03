@@ -23,6 +23,12 @@ export class AccountController {
         SocketMiddleware.emitToCore<{ address: string }>(message, socket);
     }
 
+    @RPC(API_ACTION_TYPES.IS_ACCOUNT_REFERRER)
+    @validate()
+    isAccountReferrer(message: Message<{ address: string }>, socket: any) {
+        SocketMiddleware.emitToCore<{ address: string }>(message, socket);
+    }
+
 }
 
 export default new AccountController();
