@@ -27,23 +27,25 @@ class ReferredUsersFactory {
     }
 
     get(type?: AirdropType): IReferredUsers {
+        if (!config.CORE.IS_REFERRED_USERS_ENABLED) {
+            return this.fake;
+        }
+
         if (type) {
-            // tslint:disable-next-line: switch-default
             switch (type) {
                 case AirdropType.AIRDROP:
                     return this.airdrop;
                 case AirdropType.ARP:
                     return this.arp;
+                default:
+                    return this.fake;
             }
         }
 
         if (isARPEnabled()) {
             return this.arp;
         }
-        if (config.CORE.IS_REFERRED_USERS_ENABLED) {
-            return this.airdrop;
-        }
-        return this.fake;
+        return this.airdrop;
     }
 }
 

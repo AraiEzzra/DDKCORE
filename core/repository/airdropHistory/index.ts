@@ -1,5 +1,4 @@
 import AirdropHistoryRepository from 'core/repository/airdropHistory/AirdropHistoryRepository';
-import ARPHistoryRepository from 'core/repository/airdropHistory/ARPHistoryRepository';
 import AirdropHistoryFakeRepository from 'core/repository/airdropHistory/AirdropHistoryFakeRepository';
 import {
     AirdropHistory, AirdropDailyHistoryQuery, AirdropHistoryQuery, IAirdropHistoryRepository
@@ -23,27 +22,29 @@ class AirdropHistoryFactory {
     constructor() {
         this.fake = new AirdropHistoryFakeRepository();
         this.airdrop = new AirdropHistoryRepository();
-        this.arp = new ARPHistoryRepository();
+        this.arp = new AirdropHistoryRepository();
     }
 
     get(type?: AirdropType): IAirdropHistoryRepository {
+        if (!config.CORE.IS_REFERRED_USERS_ENABLED) {
+            return this.fake;
+        }
+
         if (type) {
-            // tslint:disable-next-line: switch-default
             switch (type) {
                 case AirdropType.AIRDROP:
                     return this.airdrop;
                 case AirdropType.ARP:
                     return this.arp;
+                default:
+                    return this.fake;
             }
         }
 
         if (isARPEnabled()) {
             return this.arp;
         }
-        if (config.CORE.IS_REFERRED_USERS_ENABLED) {
-            return this.airdrop;
-        }
-        return this.fake;
+        return this.airdrop;
     }
 }
 
