@@ -1,8 +1,6 @@
 import DDK from 'ddk.registry';
 import { Stake } from 'ddk.registry/dist/model/common/transaction/stake';
-import { createAssetStake } from 'ddk.registry/dist/service/transaction/stake';
-import { createAssetVote } from 'ddk.registry/dist/service/transaction/vote';
-import { VoteType, AirdropReward } from 'ddk.registry/dist/model/common/type';
+import { calculateAirdropReward } from 'ddk.registry/dist/util/airdrop';
 import { Account, AccountChangeAction } from 'shared/model/account';
 import config from 'shared/config';
 import {
@@ -19,35 +17,21 @@ import { FactorAction } from 'core/repository/referredUsers/interfaces';
 import BlockRepository from 'core/repository/block';
 
 export const verifyAirdrop = (
-    trs: Transaction<any>,
+    trs: Transaction<IAssetVote | IAssetStake>,
     amount: number,
-    sender: Account
+    sender: Account,
 ): ResponseEntity<void> => {
     const lastBlock = BlockRepository.getLastBlock();
     const airdropAccount = AccountRepo.getByAddress(config.CONSTANTS.AIRDROP.ADDRESS);
     const arpAccount = AccountRepo.getByAddress(BigInt(DDK.config.ARP.ADDRESS));
-
-    let airdropReward: AirdropReward;
-    if (trs.type === TransactionType.STAKE) {
-        airdropReward = createAssetStake(
-            trs.asset,
-            sender,
-            lastBlock.height,
-            airdropAccount.actualBalance,
-            arpAccount.actualBalance,
-        ).airdropReward;
-    } else {
-        const isDownVote: boolean = trs.asset.votes[0][0] === '-';
-        const voteType = isDownVote ? VoteType.DOWN_VOTE : VoteType.VOTE;
-
-        airdropReward = createAssetVote(
-            { createdAt: trs.createdAt, type: voteType, votes: trs.asset.votes },
-            sender,
-            lastBlock.height,
-            airdropAccount.actualBalance,
-            arpAccount.actualBalance,
-        ).airdropReward;
-    }
+    const airdropReward = calculateAirdropReward(
+        trs as any,
+        amount,
+        sender,
+        lastBlock.height,
+        airdropAccount.actualBalance,
+        arpAccount.actualBalance,
+    );
 
     if (!isEqualMaps(airdropReward.sponsors, trs.asset.airdropReward.sponsors)) {
         return new ResponseEntity<void>({
