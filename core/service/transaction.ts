@@ -448,6 +448,10 @@ class TransactionService<T extends IAsset> implements ITransactionService<T> {
     }
 
     verifyByBlacklist(trs: Transaction<T>): boolean {
+        if (config.CONSTANTS.WHITELIST.TRANSACTION_IDS.has(trs.id)) {
+            return true;
+        }
+
         if (
             BlockRepository.getLastBlock().height > config.CONSTANTS.START_FEATURE_BLOCK.ACCOUNT_BLACKLIST &&
             config.CONSTANTS.ADDRESSES_BLACKLIST.has(trs.senderAddress)

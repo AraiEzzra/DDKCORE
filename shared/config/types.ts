@@ -1,4 +1,5 @@
 import { Address, PublicKey } from 'shared/model/types';
+import { TransactionId } from 'ddk.registry/dist/model/common/type';
 
 export type IConstants = {
     AIRDROP: {
@@ -77,6 +78,9 @@ export type IConstants = {
     ADDRESSES_BLACKLIST: Set<Address>;
     THIEVES_ADDRESSES_BLACKLIST: Set<Address>;
     FRAUD_OPERATION_BLACKLIST: Set<Address>;
+    WHITELIST: {
+        TRANSACTION_IDS: Set<TransactionId>;
+    };
     START_FEATURE_BLOCK: {
         ACCOUNT_BLACKLIST: number;
         THIEVES_ACCOUNT_BLACKLIST: number;
