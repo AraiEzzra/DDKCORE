@@ -1,7 +1,7 @@
 import { VoteType } from 'ddk.registry/dist/model/common/type';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
 
-export const SCHEMAS_DELEGATES = [
+export const SCHEMAS_ASSET_CREATION = [
     {
         id: API_ACTION_TYPES.CREATE_STAKE_ASSET,
         type: 'object',

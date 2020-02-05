@@ -63,7 +63,7 @@ class TransactionRegisterService implements IAssetService<IAssetRegister> {
             ReferredUsersRepo.add(referralAccount);
         }
 
-        const referrals: Array<Account> =
+        const referrals: Array<any> =
             referralAccount.referrals.slice(0, config.CONSTANTS.REFERRAL.MAX_COUNT - 1);
 
         const targetAccount: Account = AccountRepo.add({

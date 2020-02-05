@@ -10,6 +10,7 @@ import { SCHEMAS_REWARD } from 'shared/validate/schema/model/reward';
 import { SCHEMAS_ROUND } from 'shared/validate/schema/model/round';
 import { SCHEMAS_SYSTEM } from 'shared/validate/schema/model/system';
 import { SCHEMA_AIRDROP_REWARD_HISTORY } from 'shared/validate/schema/model/airdropRewardHistory';
+import { SCHEMAS_ASSET_CREATION } from 'shared/validate/schema/model/assetCreation';
 
 function flattenDeep(arr1) {
     return arr1.reduce((acc, val) => Array.isArray(val) ? acc.concat(flattenDeep(val)) : acc.concat(val), []);
@@ -29,6 +30,7 @@ export const ALL_SCHEMAS = flattenDeep([
     SCHEMAS_ROUND,
     SCHEMAS_SYSTEM,
     SCHEMA_AIRDROP_REWARD_HISTORY,
+    SCHEMAS_ASSET_CREATION,
 ]);
 
 export const MESSAGE = SCHEMA_MESSAGE;

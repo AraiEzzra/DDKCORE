@@ -23,3 +23,5 @@ export class AssetController {
         SocketMiddleware.emitToCore(message, socket);
     }
 }
+
+export default new AssetController();
