@@ -1,7 +1,8 @@
 import { Account as AccountModel } from 'ddk.registry/dist/model/common/account';
 import { Stake } from 'ddk.registry/dist/model/common/transaction/stake';
-import { AccountState, TransactionId } from 'shared/model/types';
 import config from 'shared/config';
+import { AccountState, TransactionId } from 'shared/model/types';
+import { Airdrop } from 'shared/model/airdrop';
 
 export enum AccountChangeAction {
     TRANSACTION_APPLY_UNCONFIRMED = 'TRANSACTION_APPLY_UNCONFIRMED',
@@ -16,6 +17,7 @@ export enum AccountChangeAction {
 }
 
 export class Account extends AccountModel {
+    referrals: Array<Account>;
 
     history: Array<AccountState> = [];
 

@@ -28,7 +28,7 @@ describe('AirdropHistoryRepository', () => {
             const history = airdropHistoryRepository.getHistory({
                 referralAddress: BigInt('12562513182843957946'),
                 startTime: SlotService.getRealTime(85432294 - 1),
-                endTime: SlotService.getRealTime(85432294 + 1)
+                endTime: SlotService.getRealTime(85432294 + 1),
             });
 
             expect(history).to.deep.equal([item1]);

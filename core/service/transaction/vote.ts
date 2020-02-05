@@ -3,7 +3,12 @@ import { createAssetVote } from 'ddk.registry/dist/service/transaction/vote';
 import { Stake } from 'ddk.registry/dist/model/common/transaction/stake';
 import { AssetVote } from 'ddk.registry/dist/model/common/transaction/asset/vote';
 import { IAssetService } from 'core/service/transaction';
-import { IAssetVote, Transaction, TransactionModel, VoteType } from 'shared/model/transaction';
+import {
+    IAssetVote,
+    Transaction,
+    TransactionModel,
+    VoteType,
+} from 'shared/model/transaction';
 import { Account } from 'shared/model/account';
 import { ResponseEntity } from 'shared/model/response';
 import AccountRepo from 'core/repository/account';

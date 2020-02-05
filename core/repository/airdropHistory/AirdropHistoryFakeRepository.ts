@@ -8,11 +8,11 @@ import {
 
 export default class AirdropHistoryFakeRepository implements IAirdropHistoryRepository {
 
-    add(data: AirdropHistory) {}
+    add(data: AirdropHistory) { }
 
-    clear(): void {}
+    clear(): void { }
 
-    remove(data: AirdropHistory) {}
+    remove(data: AirdropHistory) { }
 
     getDailyHistory(query: AirdropDailyHistoryQuery): ReadonlyArray<AirdropDailyHistory> {
         return [];

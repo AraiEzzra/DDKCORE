@@ -3,6 +3,8 @@ import { Stake } from 'ddk.registry/dist/model/common/transaction/stake';
 import { calculateAirdropReward } from 'ddk.registry/dist/util/airdrop';
 import { Account, AccountChangeAction } from 'shared/model/account';
 import config from 'shared/config';
+import { referredUsersFactory, FactorAction } from 'core/repository/referredUsers';
+import { ResponseEntity } from 'shared/model/response';
 import {
     IAssetStake,
     IAssetVote,
@@ -10,10 +12,7 @@ import {
     TransactionType,
 } from 'shared/model/transaction';
 import AccountRepo from 'core/repository/account';
-import ReferredUsersRepo, { ReferredUserFactor } from 'core/repository/referredUsers';
-import { ResponseEntity } from 'shared/model/response';
 import { isEqualMaps } from 'core/util/common';
-import { FactorAction } from 'core/repository/referredUsers/interfaces';
 import BlockRepository from 'core/repository/block';
 
 export const verifyAirdrop = (
@@ -64,7 +63,7 @@ function applyUnstake(orders: Array<Stake>, trs: Transaction<IAssetVote>): void 
     });
     AccountRepo.updateBalanceByAddress(trs.senderAddress, trs.asset.unstake);
 
-    ReferredUsersRepo.updateStakeAmountFactor(trs.senderAddress, trs.asset.unstake, FactorAction.SUBTRACT);
+    referredUsersFactory.get().updateStakeAmountFactor(trs.senderAddress, trs.asset.unstake, FactorAction.SUBTRACT);
 }
 
 export function isSponsorsExist(trs: Transaction<IAssetStake | IAssetVote>): boolean {
@@ -86,7 +85,7 @@ export function sendAirdropReward(trs: Transaction<IAssetStake | IAssetVote>): v
         AccountRepo.updateBalanceByAddress(config.CONSTANTS.AIRDROP.ADDRESS, -rewardAmount);
     }
 
-    ReferredUsersRepo.updateRewardFactor(trs);
+    referredUsersFactory.get().updateRewardFactor(trs, FactorAction.ADD);
 }
 
 export function undoAirdropReward(trs: Transaction<IAssetVote | IAssetStake>): void {
@@ -103,7 +102,7 @@ export function undoAirdropReward(trs: Transaction<IAssetVote | IAssetStake>): v
         AccountRepo.updateBalanceByAddress(config.CONSTANTS.AIRDROP.ADDRESS, rewardAmount);
     }
 
-    ReferredUsersRepo.updateRewardFactor(trs, ReferredUserFactor.ACTION.SUBTRACT);
+    referredUsersFactory.get().updateRewardFactor(trs, FactorAction.SUBTRACT);
 }
 
 export function undoFrozeOrdersRewardAndUnstake(
@@ -125,7 +124,7 @@ function undoUnstake(orders: Array<Stake>, trs: Transaction<IAssetVote>, sender:
     });
     sender.actualBalance -= trs.asset.unstake;
 
-    ReferredUsersRepo.updateStakeAmountFactor(sender.address, trs.asset.unstake, FactorAction.ADD);
+    referredUsersFactory.get().updateStakeAmountFactor(sender.address, trs.asset.unstake, FactorAction.ADD);
 }
 
 function undoRewards(trs: Transaction<IAssetVote>, sender: Account, senderOnly: boolean): void {
