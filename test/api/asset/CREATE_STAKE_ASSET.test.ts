@@ -2,7 +2,6 @@ import { expect } from 'chai';
 import DDK, { WORKSPACE } from 'ddk.registry';
 import { Account } from 'ddk.registry/dist/model/common/account';
 import { COIN_MULTIPLIER } from 'ddk.registry/dist/config/const';
-import { createAirdropReward } from 'ddk.registry/dist/util/arp/util';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
 import { Fixture } from 'test/api/base/fixture';
 import { socketRequest } from 'test/api/base';
@@ -25,7 +24,7 @@ describe('[API] Stake asset', () => {
             amount: 100000000,
             startVoteCount: 0,
             airdropReward: {
-                sponsors: {}
+                sponsors: []
             },
         };
         const REQUEST = {
