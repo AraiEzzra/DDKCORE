@@ -3,6 +3,7 @@ import { Stake } from 'ddk.registry/dist/model/common/transaction/stake';
 import config from 'shared/config';
 import { AccountState, TransactionId } from 'shared/model/types';
 import { Airdrop } from 'shared/model/airdrop';
+import { isARPEnabled } from 'core/util/feature';
 
 export enum AccountChangeAction {
     TRANSACTION_APPLY_UNCONFIRMED = 'TRANSACTION_APPLY_UNCONFIRMED',
@@ -43,5 +44,20 @@ export class Account extends AccountModel {
 
     getARPActiveStakes = (): Array<Stake> => {
         return this.arp.stakes.filter(stake => stake.isActive);
+    }
+
+    getStakes = (): Array<Stake> => {
+        return isARPEnabled()
+            ? this.arp.stakes
+            : this.stakes;
+    }
+
+    getTotalStakeAmount = (): number => {
+        return this.getStakes().reduce((acc: number, stake: Stake) => {
+            if (stake.isActive) {
+                acc += stake.amount;
+            }
+            return acc;
+        }, 0);
     }
 }

@@ -26,6 +26,7 @@ import { TOTAL_PERCENTAGE } from 'core/util/const';
 import { PublicKey } from 'shared/model/types';
 import BlockRepository from 'core/repository/block';
 import FailService from 'core/service/fail';
+import { isARPEnabled } from 'core/util/feature';
 
 class TransactionVoteService implements IAssetService<IAssetVote> {
     private calculateVoteAsset(trs: TransactionModel<IAssetVote>, sender: Account): AssetVote {
@@ -218,13 +219,7 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
     }
 
     calculateFee(trs: Transaction<IAssetVote>, sender: Account): number {
-        const senderTotalFrozeAmount = sender.stakes.reduce((acc: number, stake: Stake) => {
-            if (stake.isActive) {
-                acc += stake.amount;
-            }
-            return acc;
-        }, 0);
-        return senderTotalFrozeAmount * config.CONSTANTS.FEES.VOTE / TOTAL_PERCENTAGE;
+        return sender.getTotalStakeAmount() * config.CONSTANTS.FEES.VOTE / TOTAL_PERCENTAGE;
     }
 
     applyUnconfirmed(trs: Transaction<IAssetVote>, sender: Account): void {
@@ -250,7 +245,7 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
         }
 
         const processedOrders: Array<Stake> = [];
-        sender.stakes
+        sender.getStakes()
             .filter(stake => stake.isActive && trs.createdAt >= stake.nextVoteMilestone)
             .forEach((stake: Stake) => {
                 stake.voteCount++;
@@ -258,6 +253,7 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
                 stake.nextVoteMilestone = trs.createdAt + config.CONSTANTS.FROZE.VOTE_MILESTONE;
                 processedOrders.push(stake);
             });
+
         applyFrozeOrdersRewardAndUnstake(trs, processedOrders);
         if (isSponsorsExist(trs)) {
             sendAirdropReward(trs);
@@ -294,7 +290,7 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
             undoAirdropReward(trs);
         }
 
-        sender.stakes
+        sender.getStakes()
             .filter(stake =>
                 stake.isActive &&
                 trs.createdAt + config.CONSTANTS.FROZE.VOTE_MILESTONE === stake.nextVoteMilestone
