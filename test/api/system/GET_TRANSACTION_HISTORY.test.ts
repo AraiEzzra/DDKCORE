@@ -16,7 +16,11 @@ describe('Test GET_TRANSACTION_HISTORY', () => {
                     actualBalance: -126800080000000,
                     referrals: [],
                     votes: [],
-                    stakes: []
+                    stakes: [],
+                    arp: {
+                        referrals: [],
+                        stakes: [],
+                    },
                 },
                 accountStateAfter: {
                     address: '4995063339468361088',
@@ -25,7 +29,11 @@ describe('Test GET_TRANSACTION_HISTORY', () => {
                     actualBalance: -297800080000000,
                     referrals: [],
                     votes: [],
-                    stakes: []
+                    stakes: [],
+                    arp: {
+                        referrals: [],
+                        stakes: [],
+                    },
                 }
             },
             {
@@ -37,6 +45,10 @@ describe('Test GET_TRANSACTION_HISTORY', () => {
                     referrals: [],
                     stakes: [],
                     votes: [],
+                    arp: {
+                        referrals: [],
+                        stakes: [],
+                    },
                 },
                 action: 'APPLY',
             },
