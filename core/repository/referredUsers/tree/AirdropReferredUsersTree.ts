@@ -4,8 +4,14 @@ import FactorTree from 'core/repository/referredUsers/tree/FactorTree';
 import config from 'shared/config';
 import { Account } from 'shared/model/account';
 import { Address } from 'shared/model/types';
-import { IAssetRegister, IAssetStake, IAssetVote, Transaction, Stake } from 'shared/model/transaction';
+import {
+    IAssetRegister,
+    IAssetStake,
+    IAssetVote,
+    Transaction,
+} from 'shared/model/transaction';
 import AccountRepository from 'core/repository/account';
+import { Stake } from 'ddk.registry/dist/model/common/transaction/stake';
 
 export default class AirdropReferredUsersTree implements IReferredUsers {
 

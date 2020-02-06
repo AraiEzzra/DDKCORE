@@ -1,10 +1,10 @@
+import DDK from 'ddk.registry';
+import { createAssetStake } from 'ddk.registry/dist/service/transaction/stake';
 import { Stake } from 'ddk.registry/dist/model/common/transaction/stake';
 import { IAssetService } from 'core/service/transaction';
 import {
     IAssetStake,
     Transaction,
-    TransactionType,
-    IAirdropAsset,
     TransactionModel,
 } from 'shared/model/transaction';
 import { ResponseEntity } from 'shared/model/response';
@@ -16,11 +16,10 @@ import BUFFER from 'core/util/buffer';
 import BlockRepository from 'core/repository/block';
 import { referredUsersFactory, FactorAction } from 'core/repository/referredUsers';
 import {
-    getAirdropReward,
     sendAirdropReward,
     undoAirdropReward,
     verifyAirdrop,
-    isSponsorsExist
+    isSponsorsExist,
 } from 'core/util/reward';
 import BlockStorageService from 'core/service/blockStorage';
 
@@ -29,18 +28,18 @@ const MIN_STAKE_AMOUNT = MONEY_FACTOR;
 class TransactionStakeService implements IAssetService<IAssetStake> {
 
     create(trs: TransactionModel<IAssetStake>): IAssetStake {
+        const airdropAccount = AccountRepo.getByAddress(config.CONSTANTS.AIRDROP.ADDRESS);
+        const arpAccount = AccountRepo.getByAddress(BigInt(DDK.config.ARP.ADDRESS));
+        const lastBlock = BlockRepository.getLastBlock();
         const sender: Account = AccountRepo.getByAddress(trs.senderAddress);
-        const airdropReward: IAirdropAsset = getAirdropReward(
+
+        return createAssetStake(
+            trs.asset,
             sender,
-            trs.asset.amount,
-            TransactionType.STAKE
+            lastBlock.height,
+            airdropAccount.actualBalance,
+            arpAccount.actualBalance,
         );
-        return {
-            amount: trs.asset.amount,
-            startTime: trs.createdAt,
-            startVoteCount: trs.asset.startVoteCount || 0,
-            airdropReward: airdropReward
-        };
     }
 
     getBytes(trs: Transaction<IAssetStake>): Buffer {

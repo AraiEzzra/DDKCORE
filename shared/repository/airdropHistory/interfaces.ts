@@ -1,6 +1,6 @@
 import { Address, TransactionId, Timestamp } from 'shared/model/types';
 import { TransactionType } from 'shared/model/transaction';
-import { AirdropType } from 'shared/model/airdrop';
+import { AirdropType } from 'ddk.registry/dist/model/common/airdrop';
 
 export interface IAirdropHistoryRepository {
     add(data: AirdropHistory);
@@ -14,7 +14,7 @@ export type AirdropHistoryQuery = {
     referralAddress: Address;
     startTime: Timestamp;
     endTime: Timestamp;
-    airdropType: AirdropType;
+    airdropType?: AirdropType;
 };
 
 export type AirdropHistory = {
@@ -29,7 +29,7 @@ export type AirdropHistory = {
 
 export type AirdropDailyHistoryQuery = {
     referralAddress: Address;
-    airdropType: AirdropType;
+    airdropType?: AirdropType;
 };
 
 export type AirdropDailyHistory = {

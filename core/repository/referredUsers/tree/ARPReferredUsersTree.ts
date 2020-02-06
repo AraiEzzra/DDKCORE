@@ -1,11 +1,11 @@
+import { Stake } from 'ddk.registry/dist/model/common/transaction/stake';
 import AirdropReferredUsersTree from 'core/repository/referredUsers/tree/AirdropReferredUsersTree';
 import { Account } from 'shared/model/account';
-import { Stake } from 'shared/model/transaction';
 
 export default class ARPReferredUsersTree extends AirdropReferredUsersTree {
 
     protected getAccountReferrals(account: Account): Array<Account> {
-        return account.arp.referrals;
+        return account.arp.referrals.map(referral => new Account(referral));
     }
 
     protected getAccountActiveStakes(account: Account): Array<Stake> {

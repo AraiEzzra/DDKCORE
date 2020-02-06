@@ -6,7 +6,7 @@ import ReferredUserSerializable from 'core/repository/referredUsers/utils/Referr
 import { ReferredUserFactor, IReferredUsers, FactorAction } from 'core/repository/referredUsers/interfaces';
 import config from 'shared/config';
 import { isARPEnabled } from 'core/util/feature';
-import { AirdropType } from 'shared/model/airdrop';
+import { AirdropType } from 'ddk.registry/dist/model/common/airdrop';
 
 export const referredUserSerializable = new ReferredUserSerializable();
 

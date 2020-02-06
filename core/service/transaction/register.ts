@@ -7,6 +7,7 @@ import { referredUsersFactory, FactorAction } from 'core/repository/referredUser
 import config from 'shared/config';
 import BUFFER from 'core/util/buffer';
 import { isARPEnabled } from 'core/util/feature';
+import account from 'api/controller/account';
 
 class TransactionRegisterService implements IAssetService<IAssetRegister> {
 
@@ -84,7 +85,9 @@ class TransactionRegisterService implements IAssetService<IAssetRegister> {
         let referrals: Array<Account>;
 
         if (isARPEnabled()) {
-            referrals = referralAccount.arp.referrals.slice(0, config.CONSTANTS.REFERRAL.MAX_COUNT - 1);
+            referrals = referralAccount.arp.referrals
+                .slice(0, config.CONSTANTS.REFERRAL.MAX_COUNT - 1)
+                .map(referral => new Account(referral));
             targetAccount.arp.referrals = [referralAccount, ...referrals];
             return;
         }

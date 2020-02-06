@@ -3,9 +3,9 @@ import AirdropHistoryFakeRepository from 'core/repository/airdropHistory/Airdrop
 import {
     AirdropHistory, AirdropDailyHistoryQuery, AirdropHistoryQuery, IAirdropHistoryRepository
 } from 'shared/repository/airdropHistory/interfaces';
-import { AirdropType } from 'shared/model/airdrop';
 import config from 'shared/config';
 import { isARPEnabled } from 'core/util/feature';
+import { AirdropType } from 'ddk.registry/dist/model/common/airdrop';
 
 export {
     AirdropHistoryQuery,

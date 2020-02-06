@@ -1,10 +1,5 @@
 import { Account } from 'shared/model/account';
-import { Stake } from 'shared/model/transaction';
-
-export enum AirdropType {
-    AIRDROP = 'airdrop',
-    ARP = 'arp'
-}
+import { Stake } from 'ddk.registry/dist/model/common/transaction/stake';
 
 export class Airdrop {
     referrals?: Array<Account>;

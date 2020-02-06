@@ -1,161 +1,36 @@
-import AccountRepo from 'core/repository/account';
+import DDK from 'ddk.registry';
+import { Stake } from 'ddk.registry/dist/model/common/transaction/stake';
+import { calculateAirdropReward } from 'ddk.registry/dist/util/airdrop';
+import { Account, AccountChangeAction } from 'shared/model/account';
+import config from 'shared/config';
 import { referredUsersFactory, FactorAction } from 'core/repository/referredUsers';
 import { ResponseEntity } from 'shared/model/response';
 import {
-    IAirdropAsset,
     IAssetStake,
     IAssetVote,
     Transaction,
-    TransactionModel,
     TransactionType,
 } from 'shared/model/transaction';
-import { Address } from 'shared/model/types';
-import { isARPEnabled } from 'core/util/feature';
-import DDKRegistry from 'ddk.registry';
-import { Account, AccountChangeAction } from 'shared/model/account';
-import config from 'shared/config';
-import { Stake } from 'ddk.registry/dist/model/common/transaction/stake';
-import { createAirdropReward } from 'ddk.registry/dist/util/arp/util';
-import { TOTAL_PERCENTAGE } from 'core/util/const';
+import AccountRepo from 'core/repository/account';
 import { isEqualMaps } from 'core/util/common';
-import BlockRepo from 'core/repository/block';
-
-class StakeReward {
-    private readonly milestones = config.CONSTANTS.FROZE.REWARDS.MILESTONES;
-    private readonly distance = Math.floor(config.CONSTANTS.FROZE.REWARDS.DISTANCE);
-
-    calcMilestone(height) {
-        const location = Math.trunc((height) / this.distance);
-        const lastMile = this.milestones[this.milestones.length - 1];
-
-        if (location > (this.milestones.length - 1)) {
-            return this.milestones.lastIndexOf(lastMile);
-        }
-        return location;
-    }
-
-    calcReward(height) {
-        return this.milestones[this.calcMilestone(height)];
-    }
-}
-
-const stakeReward = new StakeReward();
-
-export const calculateTotalRewardAndUnstake = (
-    trs: TransactionModel<IAssetVote>,
-    sender: Account,
-    isDownVote: boolean,
-): { reward: number, unstake: number } => {
-    let reward: number = 0;
-    let unstakeAmount: number = 0;
-
-    if (isDownVote) {
-        return { reward, unstake: unstakeAmount };
-    }
-
-    sender.stakes
-        .filter(stake => stake.isActive && trs.createdAt >= stake.nextVoteMilestone)
-        .forEach((stake: Stake) => {
-            if (stake.voteCount > 0 && (stake.voteCount + 1) % config.CONSTANTS.FROZE.REWARD_VOTE_COUNT === 0) {
-                const blockHeight: number = BlockRepo.getLastBlock().height;
-                const stakeRewardPercent: number = stakeReward.calcReward(blockHeight);
-                reward += (stake.amount * stakeRewardPercent) / TOTAL_PERCENTAGE;
-            }
-            if (stake.voteCount + 1 === config.CONSTANTS.FROZE.UNSTAKE_VOTE_COUNT) {
-                unstakeAmount += stake.amount;
-            }
-        });
-
-    return { reward, unstake: unstakeAmount };
-};
-
-export const getAirdropReward = (
-    sender: Account,
-    amount: number,
-    transactionType: TransactionType
-): IAirdropAsset => {
-    const result: IAirdropAsset = {
-        sponsors: new Map<Address, number>(),
-    };
-
-    if (!amount) {
-        return result;
-    }
-
-    const availableAirdropBalance: number = AccountRepo.getByAddress(config.CONSTANTS.AIRDROP.ADDRESS).actualBalance;
-
-    if (!sender || !sender.referrals || (sender.referrals.length === 0)) {
-        return result;
-    }
-
-    const referrals = [];
-    if (transactionType === TransactionType.STAKE) {
-        referrals.push(sender.referrals[0]);
-    } else {
-        referrals.push(...sender.referrals);
-    }
-
-    let airdropRewardAmount: number = 0;
-    const sponsors: Map<Address, number> = new Map<Address, number>();
-
-    referrals.forEach((sponsor: Account, i: number) => {
-        const reward = transactionType === TransactionType.STAKE
-            ? Math.ceil((amount * config.CONSTANTS.AIRDROP.STAKE_REWARD_PERCENT) / TOTAL_PERCENTAGE)
-            : Math.ceil(((config.CONSTANTS.AIRDROP.REFERRAL_PERCENT_PER_LEVEL[i]) * amount) / TOTAL_PERCENTAGE);
-        sponsors.set(sponsor.address, reward);
-        airdropRewardAmount += reward;
-    });
-
-    if (availableAirdropBalance < airdropRewardAmount) {
-        return result;
-    }
-
-    result.sponsors = sponsors;
-
-    return result;
-};
-
-const mergeAirdrops = (...airdrops: Array<IAirdropAsset>): IAirdropAsset => {
-    const mergedAirdrop = createAirdropReward();
-
-    airdrops.forEach(airdrop => {
-        airdrop.sponsors.forEach((reward, address) => {
-            const currentReward = mergedAirdrop.sponsors.get(address) || 0;
-
-            mergedAirdrop.sponsors.set(address, reward + currentReward);
-        });
-    });
-
-    return mergedAirdrop;
-};
-
-const getARPReward = (trs: Transaction<IAssetStake | IAssetVote>, sender: Account): IAirdropAsset => {
-    const availableAirdropBalance = AccountRepo
-        .getByAddress(BigInt(DDKRegistry.config.ARP.ADDRESS)).actualBalance;
-
-    if (trs.type === TransactionType.STAKE) {
-        return DDKRegistry.stakeARPCalculator.calculate(
-            sender,
-            (trs as Transaction<IAssetStake>).asset.amount,
-            availableAirdropBalance,
-        );
-    }
-
-    return DDKRegistry.voteARPCalculator
-        .calculate(sender, availableAirdropBalance, trs.createdAt);
-};
+import BlockRepository from 'core/repository/block';
 
 export const verifyAirdrop = (
-    trs: Transaction<IAssetStake | IAssetVote>,
+    trs: Transaction<IAssetVote | IAssetStake>,
     amount: number,
-    sender: Account
+    sender: Account,
 ): ResponseEntity<void> => {
-    const airdropReward = isARPEnabled()
-        ? mergeAirdrops(
-            getAirdropReward(sender, amount, trs.type),
-            getARPReward(trs, sender),
-        )
-        : getAirdropReward(sender, amount, trs.type);
+    const lastBlock = BlockRepository.getLastBlock();
+    const airdropAccount = AccountRepo.getByAddress(config.CONSTANTS.AIRDROP.ADDRESS);
+    const arpAccount = AccountRepo.getByAddress(BigInt(DDK.config.ARP.ADDRESS));
+    const airdropReward = calculateAirdropReward(
+        trs as any,
+        amount,
+        sender,
+        lastBlock.height,
+        airdropAccount.actualBalance,
+        arpAccount.actualBalance,
+    );
 
     if (!isEqualMaps(airdropReward.sponsors, trs.asset.airdropReward.sponsors)) {
         return new ResponseEntity<void>({

@@ -1,6 +1,9 @@
+import DDK from 'ddk.registry';
+import { createAssetVote } from 'ddk.registry/dist/service/transaction/vote';
+import { Stake } from 'ddk.registry/dist/model/common/transaction/stake';
+import { AssetVote } from 'ddk.registry/dist/model/common/transaction/asset/vote';
 import { IAssetService } from 'core/service/transaction';
 import {
-    IAirdropAsset,
     IAssetVote,
     Transaction,
     TransactionModel,
@@ -13,33 +16,43 @@ import config from 'shared/config';
 import BUFFER from 'core/util/buffer';
 import {
     applyFrozeOrdersRewardAndUnstake,
-    calculateTotalRewardAndUnstake,
-    getAirdropReward,
     sendAirdropReward,
     undoAirdropReward,
     undoFrozeOrdersRewardAndUnstake,
     verifyAirdrop,
-    isSponsorsExist
+    isSponsorsExist,
 } from 'core/util/reward';
 import { TOTAL_PERCENTAGE } from 'core/util/const';
 import { PublicKey } from 'shared/model/types';
 import BlockRepository from 'core/repository/block';
 import FailService from 'core/service/fail';
-import { Stake } from 'ddk.registry/dist/model/common/transaction/stake';
 
 class TransactionVoteService implements IAssetService<IAssetVote> {
+    private calculateVoteAsset(trs: TransactionModel<IAssetVote>, sender: Account): AssetVote {
+        const isDownVote: boolean = trs.asset.votes[0][0] === '-';
+        const voteType = isDownVote ? VoteType.DOWN_VOTE : VoteType.VOTE;
+        const lastBlock = BlockRepository.getLastBlock();
+        const airdropAccount = AccountRepo.getByAddress(config.CONSTANTS.AIRDROP.ADDRESS);
+        const arpAccount = AccountRepo.getByAddress(BigInt(DDK.config.ARP.ADDRESS));
+
+        return createAssetVote(
+            { createdAt: trs.createdAt, type: voteType, votes: trs.asset.votes },
+            sender,
+            lastBlock.height,
+            airdropAccount.actualBalance,
+            arpAccount.actualBalance,
+        );
+    }
 
     create(trs: TransactionModel<IAssetVote>): IAssetVote {
         const sender: Account = AccountRepo.getByAddress(trs.senderAddress);
-        const totals: { reward: number, unstake: number } =
-            calculateTotalRewardAndUnstake(trs, sender, trs.asset.type === VoteType.DOWN_VOTE);
-        const airdropReward: IAirdropAsset = getAirdropReward(sender, totals.reward, trs.type);
+        const asset = this.calculateVoteAsset(trs, sender);
 
         return {
             votes: trs.asset.votes.map((vote: string) => `${trs.asset.type}${vote}`),
-            reward: totals.reward || 0,
-            unstake: totals.unstake || 0,
-            airdropReward,
+            reward: asset.reward || 0,
+            unstake: asset.unstake || 0,
+            airdropReward: asset.airdropReward,
         };
     }
 
@@ -128,32 +141,32 @@ class TransactionVoteService implements IAssetService<IAssetVote> {
         const errors: Array<string> = [];
         if (
             BlockRepository.getLastBlock().height > config.CONSTANTS.START_FEATURE_BLOCK.VOTE_WITH_ACTIVE_STAKE &&
-            !sender.getActiveStakes().length
+            !sender.getActiveStakes().length &&
+            !sender.getARPActiveStakes().length
         ) {
             errors.push(`No active stakes`);
             return new ResponseEntity<void>({ errors });
         }
 
-        const isDownVote: boolean = trs.asset.votes[0][0] === '-';
-        const totals: { reward: number, unstake: number } = calculateTotalRewardAndUnstake(trs, sender, isDownVote);
+        const voteAsset = this.calculateVoteAsset(trs, sender);
 
         if (FailService.isFailedVoteReward(trs)) {
-            trs.asset.reward = totals.reward;
+            trs.asset.reward = voteAsset.reward;
         }
 
-        if (totals.reward !== trs.asset.reward) {
+        if (voteAsset.reward !== trs.asset.reward) {
             errors.push(
-                `Verify failed: vote reward is corrupted, expected: ${trs.asset.reward}, actual: ${totals.reward}`
+                `Verify failed: vote reward is corrupted, expected: ${trs.asset.reward}, actual: ${voteAsset.reward}`
             );
         }
 
-        if (totals.unstake !== trs.asset.unstake) {
+        if (voteAsset.unstake !== trs.asset.unstake) {
             errors.push(
-                `Verify failed: vote unstake is corrupted, expected: ${trs.asset.unstake}, actual: ${totals.unstake}`
+                `Verify failed: vote unstake is corrupted, expected: ${trs.asset.unstake}, actual: ${voteAsset.unstake}`
             );
         }
 
-        const verifyAirdropResponse: ResponseEntity<void> = verifyAirdrop(trs, totals.reward, sender);
+        const verifyAirdropResponse: ResponseEntity<void> = verifyAirdrop(trs, voteAsset.reward, sender);
         if (!verifyAirdropResponse.success) {
             errors.push(...verifyAirdropResponse.errors);
         }

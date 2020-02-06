@@ -2,6 +2,7 @@ import { Account as AccountModel } from 'ddk.registry/dist/model/common/account'
 import { Stake } from 'ddk.registry/dist/model/common/transaction/stake';
 import config from 'shared/config';
 import { AccountState, TransactionId } from 'shared/model/types';
+import { Airdrop } from 'shared/model/airdrop';
 
 export enum AccountChangeAction {
     TRANSACTION_APPLY_UNCONFIRMED = 'TRANSACTION_APPLY_UNCONFIRMED',
@@ -16,6 +17,7 @@ export enum AccountChangeAction {
 }
 
 export class Account extends AccountModel {
+    referrals: Array<Account>;
 
     history: Array<AccountState> = [];
 
@@ -35,7 +37,11 @@ export class Account extends AccountModel {
         });
     }
 
-    public getActiveStakes = (): Array<Stake> => {
+    getActiveStakes = (): Array<Stake> => {
         return this.stakes.filter(stake => stake.isActive);
+    }
+
+    getARPActiveStakes = (): Array<Stake> => {
+        return this.arp.stakes.filter(stake => stake.isActive);
     }
 }

@@ -7,3 +7,4 @@ import 'api/controller/referredUsers';
 import 'api/controller/reward';
 import 'api/controller/system';
 import 'api/controller/airdropHistory';
+import 'api/controller/asset';

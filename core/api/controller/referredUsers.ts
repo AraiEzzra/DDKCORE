@@ -4,7 +4,7 @@ import { Message } from 'shared/model/message';
 import { ResponseEntity } from 'shared/model/response';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
 import { referredUsersFactory, referredUserSerializable } from 'core/repository/referredUsers/index';
-import { AirdropType } from 'shared/model/airdrop';
+import { AirdropType } from 'ddk.registry/dist/model/common/airdrop';
 
 type ReferredUsersMessage = Message<{
     address: string,
