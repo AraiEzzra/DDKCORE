@@ -3,7 +3,14 @@ import { API } from 'core/api/util/decorators';
 import { Message } from 'shared/model/message';
 import { ResponseEntity } from 'shared/model/response';
 import { API_ACTION_TYPES } from 'shared/driver/socket/codes';
-import ReferredUsersRepo, { referredUserSerializable } from 'core/repository/referredUsers/index';
+import { referredUsersFactory, referredUserSerializable } from 'core/repository/referredUsers/index';
+import { AirdropType } from 'ddk.registry/dist/model/common/airdrop';
+
+type ReferredUsersMessage = Message<{
+    address: string,
+    level: number,
+    airdropType: AirdropType
+}>;
 
 class ReferredUsersController {
 
@@ -12,15 +19,15 @@ class ReferredUsersController {
     }
 
     @API(API_ACTION_TYPES.GET_REFERRED_USERS)
-    public getReferredUsers(message: Message<{ address: string, level: number }>): ResponseEntity<object> {
-        const { address, level } = message.body;
+    public getReferredUsers(message: ReferredUsersMessage): ResponseEntity<object> {
+        const { address, level, airdropType } = message.body;
         const account = AccountRepo.getByAddress(BigInt(address));
 
         if (!account) {
             return new ResponseEntity({ errors: ['Account not exist'] });
         }
 
-        const referredUsers = ReferredUsersRepo.getUsers(account, level);
+        const referredUsers = referredUsersFactory.get(airdropType).getUsers(account, level);
 
         return new ResponseEntity({
             data: referredUsers.map(item => referredUserSerializable.serialize(item))

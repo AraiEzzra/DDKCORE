@@ -1,11 +1,12 @@
 import { expect } from 'chai';
-import ReferredUsersTree from 'core/repository/referredUsers/tree/ReferredUsersTree';
+import ReferredUsersTree from 'core/repository/referredUsers/tree/AirdropReferredUsersTree';
+import AirdropHistoryRepository from 'core/repository/airdropHistory/AirdropHistoryRepository';
 import {
     getNewAccount
 } from 'test/core/repository/account/mock';
 import { Transaction } from 'shared/model/transaction';
 
-const referredUsersTreeRepo = new ReferredUsersTree();
+const referredUsersTreeRepo = new ReferredUsersTree(new AirdropHistoryRepository());
 
 describe('ReferredUsers repository', () => {
 

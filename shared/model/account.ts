@@ -1,7 +1,8 @@
-import { Delegate } from 'shared/model/delegate';
-import { AccountState, Address, PublicKey, TransactionId } from 'shared/model/types';
-import { Stake } from 'shared/model/transaction';
+import { Account as AccountModel } from 'ddk.registry/dist/model/common/account';
+import { Stake } from 'ddk.registry/dist/model/common/transaction/stake';
 import config from 'shared/config';
+import { AccountState, TransactionId } from 'shared/model/types';
+import { Airdrop } from 'shared/model/airdrop';
 
 export enum AccountChangeAction {
     TRANSACTION_APPLY_UNCONFIRMED = 'TRANSACTION_APPLY_UNCONFIRMED',
@@ -15,31 +16,13 @@ export enum AccountChangeAction {
     DISTRIBUTE_FEE_UNDO = 'DISTRIBUTE_FEE_UNDO',
 }
 
-export class AccountModel {
-    address: Address;
-    publicKey?: PublicKey;
-    secondPublicKey?: PublicKey;
-    actualBalance?: number = 0;
-    delegate?: Delegate;
-    votes?: Array<PublicKey>;
-    referrals?: Array<Account>;
-    stakes?: Array<Stake>;
-
-    constructor(data: AccountModel) {
-        Object.assign(this, data);
-        this.votes = [...(data.votes || [])];
-        this.referrals = [...(data.referrals || [])];
-        this.stakes = (data.stakes || []).map(stake => new Stake({ ...stake }));
-        this.delegate = data.delegate && new Delegate(data.delegate);
-    }
-}
-
 export class Account extends AccountModel {
+    referrals: Array<Account>;
 
     history: Array<AccountState> = [];
 
     public getCopy(): Account {
-        return new Account( { ...this, history: [] });
+        return new Account({ ...this, history: [] });
     }
 
     addHistory(action: AccountChangeAction, transactionId: TransactionId): void {
@@ -54,7 +37,11 @@ export class Account extends AccountModel {
         });
     }
 
-    public getActiveStakes = (): Array<Stake> => {
+    getActiveStakes = (): Array<Stake> => {
         return this.stakes.filter(stake => stake.isActive);
+    }
+
+    getARPActiveStakes = (): Array<Stake> => {
+        return this.arp.stakes.filter(stake => stake.isActive);
     }
 }
