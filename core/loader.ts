@@ -29,7 +29,7 @@ import { ERROR_CODES } from 'shared/config/errorCodes';
 import DDKRegistry from 'ddk.registry';
 
 // @ts-ignore
-BigInt.prototype.toJSON = function () {
+BigInt.prototype.toJSON = function() {
     return this.toString();
 };
 

@@ -4,7 +4,7 @@ import BlockRepository from 'core/repository/block';
 
 export const isFeatureEnabled = (feature: Feature, blockHeight?: number): boolean => {
     const height = blockHeight === undefined
-        ? BlockRepository.getLastBlock().height
+        ? (BlockRepository.getLastBlock() || { height: 0 }).height
         : blockHeight;
 
     return DDKRegistry.isFeatureEnabled(feature, height);
