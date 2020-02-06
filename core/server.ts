@@ -14,7 +14,6 @@ const preconfiguration: Array<Promise<any>> = [];
 preconfiguration.push(Loader.start());
 
 Promise.all(preconfiguration)
-    .then(() => {})
     .catch(err => {
-        logger.error('Failed to start the server CORE. \n', err);
+        logger.error(`Failed to start the server CORE.\n${err}`);
     });
