@@ -12,8 +12,9 @@ import mainnetGenesisBlock from 'config/mainnet/genesisBlock.json';
 import testConstants from 'config/test/constants';
 import testGenesisBlock from 'config/test/genesisBlock.json';
 import { BlockModel } from 'shared/model/block';
+import { WORKSPACE } from 'ddk.registry';
 
-const getConstantsByNodeEnv = (nodeEnv: string): IConstants => {
+export const getConstantsByNodeEnv = (nodeEnv: string): IConstants => {
     switch (nodeEnv) {
         case NODE_ENV_ENUM.DEVELOPMENT:
             return developmentConstants;
@@ -23,6 +24,21 @@ const getConstantsByNodeEnv = (nodeEnv: string): IConstants => {
             return testnetConstants;
         case NODE_ENV_ENUM.MAINNET:
             return mainnetConstants;
+        default:
+            return null;
+    }
+};
+
+const getRegistryWorkspaceByNodeEnv = (nodeEnv: string): WORKSPACE => {
+    switch (nodeEnv) {
+        case NODE_ENV_ENUM.DEVELOPMENT:
+            return WORKSPACE.DEVELOPMENT;
+        case NODE_ENV_ENUM.TEST:
+            return WORKSPACE.DEVELOPMENT;
+        case NODE_ENV_ENUM.TESTNET:
+            return WORKSPACE.TESTNET;
+        case NODE_ENV_ENUM.MAINNET:
+            return WORKSPACE.MAINNET;
         default:
             return null;
     }
@@ -74,6 +90,9 @@ class Config {
     IS_SECURE: boolean;
     PUBLIC_HOST: string;
     NODE_ENV_IN: NODE_ENV_ENUM;
+    REGISTRY: {
+        WORKSPACE: WORKSPACE
+    };
     CORE: {
         HOST: string;
         SOCKET: {
@@ -143,6 +162,9 @@ class Config {
             DATABASE: process.env.DB_NAME,
             USER: process.env.DB_USER,
             PASSWORD: process.env.DB_PASSWORD,
+        };
+        this.REGISTRY = {
+            WORKSPACE: getRegistryWorkspaceByNodeEnv(this.NODE_ENV_IN)
         };
         this.CORE = {
             HOST: process.env.CORE_HOST || 'localhost',

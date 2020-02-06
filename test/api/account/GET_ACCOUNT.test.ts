@@ -8,12 +8,17 @@ describe('Test GET_ACCOUNT', () => {
     it('Positive', async () => {
 
         const SUCCESS = {
-            'address': '3995920038576041585',
-            'isDelegate': false,
-            'actualBalance': 100000000000,
-            'referrals': [],
-            'votes': [],
-            'stakes': []
+            address: '3995920038576041585',
+            publicKey: '',
+            isDelegate: false,
+            actualBalance: 100000000000,
+            referrals: [],
+            votes: [],
+            stakes: [],
+            arp: {
+                referrals: [],
+                stakes: [],
+            },
         };
 
         const REQUEST = {
@@ -53,7 +58,11 @@ describe('Test GET_ACCOUNT', () => {
             'actualBalance': 99000000000,
             'referrals': [],
             'votes': [],
-            'stakes': []
+            'stakes': [],
+            arp: {
+                referrals: [],
+                stakes: [],
+            },
         };
 
         const REQUEST = {
@@ -71,13 +80,17 @@ describe('Test GET_ACCOUNT', () => {
     it('Positive referrals', async () => {
 
         const SUCCESS = {
-            'address': '11403542362421729442',
-            'isDelegate': false,
-            'publicKey': '385834ab939bbfb13f115baeb54c7d524f76256f853207f948c776c321181c44',
-            'actualBalance': 0,
-            'referrals': ['2875425441375077387'],
-            'votes': [],
-            'stakes': []
+            address: '11403542362421729442',
+            isDelegate: false,
+            publicKey: '385834ab939bbfb13f115baeb54c7d524f76256f853207f948c776c321181c44',
+            actualBalance: 0,
+            referrals: [],
+            votes: [],
+            stakes: [],
+            arp: {
+                referrals: ['2875425441375077387'],
+                stakes: [],
+            }
         };
 
         const REQUEST = {
@@ -107,10 +120,16 @@ describe('Test GET_ACCOUNT', () => {
                 amount: 10000000000,
                 voteCount: 0,
                 nextVoteMilestone: 0,
-                airdropReward: {},
+                airdropReward: {
+                    sponsors: {},
+                },
                 previousMilestones: [],
                 sourceTransactionId: Buffer.from('2417a12ffff13cc6eff34d79791f908f5b52bc9976a1769fbf8bbdc3220c97d9', 'hex'),
-            }]
+            }],
+            arp: {
+                referrals: [],
+                stakes: [],
+            },
         };
 
         const REQUEST = {
@@ -148,10 +167,16 @@ describe('Test GET_ACCOUNT', () => {
                 amount: 10000000000,
                 voteCount: 1,
                 nextVoteMilestone: 104008362,
-                airdropReward: {},
+                airdropReward: {
+                    sponsors: {},
+                },
                 previousMilestones: [0],
                 sourceTransactionId: Buffer.from('42d253826012103aec237eed68ca8093692bec7640df4359ea1e41a3240d100c', 'hex')
-            }]
+            }],
+            arp: {
+                referrals: [],
+                stakes: [],
+            },
         };
 
         const REQUEST = {

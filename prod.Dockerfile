@@ -19,7 +19,7 @@ RUN     npm install --global npm@latest && \
 
 USER ddk
 WORKDIR /home/DDK.REGISTRY
-RUN     git clone https://github.com/AraiEzzra/DDK.REGISTRY.git .
+RUN     git clone https://gitlab.com/ddkoin-official/registry.git .
 
 WORKDIR /home/ddk
 COPY    ./package*.json /home/ddk/

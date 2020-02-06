@@ -53,7 +53,7 @@ export default class AirdropHistoryRepository implements IAirdropHistoryReposito
             };
 
             history.rewardAmount += item.rewardAmount;
-            history.usersCount ++;
+            history.usersCount++;
 
             groupByDate.set(startOfDay, history);
         }

@@ -26,9 +26,10 @@ import DelegateService from 'core/service/delegate';
 import { ActionTypes } from 'core/util/actionTypes';
 import { Migrator } from 'core/database/migrator';
 import { ERROR_CODES } from 'shared/config/errorCodes';
+import DDKRegistry from 'ddk.registry';
 
 // @ts-ignore
-BigInt.prototype.toJSON = function () {
+BigInt.prototype.toJSON = function() {
     return this.toString();
 };
 
@@ -41,6 +42,8 @@ class Loader {
         if (!config.CORE.IS_HISTORY_ON_WARMUP) {
             config.CORE.IS_HISTORY = false;
         }
+
+        DDKRegistry.initialize(config.REGISTRY.WORKSPACE);
 
         await this.initDatabase();
         await new Migrator(db).run();

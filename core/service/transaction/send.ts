@@ -61,7 +61,8 @@ class TransactionSendService implements IAssetService<IAssetTransfer> {
         let recipient = AccountRepo.getByAddress(trs.asset.recipientAddress);
         if (!recipient) {
             recipient = AccountRepo.add({
-                address: trs.asset.recipientAddress
+                address: trs.asset.recipientAddress,
+                publicKey: '',
             });
         }
         recipient.actualBalance += trs.asset.amount;
