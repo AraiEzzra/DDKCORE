@@ -105,8 +105,12 @@ export default class AirdropReferredUsersTree implements IReferredUsers {
         }
     }
 
+    protected get referralMaxCount(): number {
+        return config.CONSTANTS.REFERRAL.MAX_COUNT;
+    }
+
     getUsers(account: Account, level: number): Array<IReferredUser> {
-        if (level === config.CONSTANTS.REFERRAL.MAX_COUNT + 1) {
+        if (level === this.referralMaxCount + 1) {
             return [];
         }
 
@@ -122,7 +126,7 @@ export default class AirdropReferredUsersTree implements IReferredUsers {
                 address: item.data,
                 stakeAmount: this.getAccountActiveStakes(referredAccount)
                     .reduce((accumulator, stake) => accumulator + stake.amount, 0),
-                isEmpty: item.children.size === 0 || level === config.CONSTANTS.REFERRAL.MAX_COUNT,
+                isEmpty: item.children.size === 0 || level === this.referralMaxCount,
                 factors: item.getFactorsByLevel(level),
             };
         });

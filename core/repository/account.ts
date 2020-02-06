@@ -90,6 +90,10 @@ class AccountRepository {
                 (publicKey: PublicKey) => DelegateRepository.serialize(DelegateRepository.getDelegate(publicKey))
             ).reverse() : account.votes,
             stakes: [...account.stakes].reverse(),
+            arp: {
+                referrals: account.arp.referrals.map(acc => acc.address.toString()),
+                stakes: [...account.arp.stakes].reverse(),
+            }
         };
     }
 }
