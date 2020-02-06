@@ -24,7 +24,9 @@ describe('[API] Stake asset', () => {
         const SUCCESS = {
             amount: 100000000,
             startVoteCount: 0,
-            airdropReward: createAirdropReward(),
+            airdropReward: {
+                sponsors: {}
+            },
         };
         const REQUEST = {
             headers: Fixture.getBaseHeaders(),
