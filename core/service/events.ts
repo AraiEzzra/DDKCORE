@@ -1,3 +1,4 @@
+import DDK from 'ddk.registry';
 import SocketMiddleware from 'core/api/middleware/socket';
 import { EVENT_TYPES } from 'shared/driver/socket/codes';
 import AccountRepository from 'core/repository/account';
@@ -15,6 +16,7 @@ import { timeService } from 'shared/util/timeServiceClient';
 
 export type BlockchainInfo = {
     airdropBalance: number;
+    arpBalance: number;
     totalSupply: number;
     circulatingSupply: number;
     tokenHolders: number;
@@ -46,10 +48,12 @@ class EventService {
         const circulatingSupply = config.CONSTANTS.TOTAL_SUPPLY.AMOUNT -
             AccountRepository.getByAddress(config.CONSTANTS.TOTAL_SUPPLY.ADDRESS).actualBalance;
         const statistics = AccountRepository.getStatistics();
+        const arpAccount = AccountRepository.getByAddress(BigInt(DDK.config.ARP.ADDRESS))
 
         SocketMiddleware.emitEvent<BlockchainInfo>(EVENT_TYPES.UPDATE_BLOCKCHAIN_INFO, {
             totalSupply: config.CONSTANTS.TOTAL_SUPPLY.AMOUNT,
             airdropBalance: AccountRepository.getByAddress(config.CONSTANTS.AIRDROP.ADDRESS).actualBalance,
+            arpBalance: arpAccount ? arpAccount.actualBalance : 0,
             circulatingSupply,
             tokenHolders: statistics.tokenHolders,
             totalStakeAmount: statistics.totalStakeAmount,
