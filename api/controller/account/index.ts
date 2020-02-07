@@ -9,6 +9,7 @@ export class AccountController {
     constructor() {
         this.getAccount = this.getAccount.bind(this);
         this.getAccountBalance = this.getAccountBalance.bind(this);
+        this.isAccountReferrer = this.isAccountReferrer.bind(this);
     }
 
     @RPC(API_ACTION_TYPES.GET_ACCOUNT)
